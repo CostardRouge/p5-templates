@@ -1,0 +1,21 @@
+html {
+  background-color: black;
+}
+
+body {
+  background-color: white;
+  font-size: x-large;
+}
+
+#root, html, #root > div {
+  max-height: 1350px;
+  max-width: 1080px;
+}
+
+#root #image {
+  max-height: calc(1350px - 4rem)
+}
+
+#root:has(#exif-info) #image {
+  max-height: calc(1350px - 8rem)
+}
