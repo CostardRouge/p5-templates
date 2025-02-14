@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     // Read output file into buffer and delete it immediately
     const fileBuffer = await fs.readFile(outputPath);
     const fileName = path.basename(outputPath);
+
     await fs.unlink(outputPath); // Delete output file here
 
     // Create stream from buffer

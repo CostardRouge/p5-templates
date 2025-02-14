@@ -10,14 +10,14 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install
 
-# Build the project
-RUN npm run build
-
 # Copy the rest of the project files
 COPY . .
+
+# Build the project
+RUN npm run build
 
 # Expose ports for API
 EXPOSE 3000
 
-## Start both Vite and Express servers
-CMD ["npm", "run start"]
+## Start nextjs project
+CMD ["npm run start"]

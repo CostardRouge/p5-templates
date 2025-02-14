@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+    background-color: black;
+}
+
+body, html, body > div {
+    max-height: 1350px;
+    max-width: 1080px;
+}
