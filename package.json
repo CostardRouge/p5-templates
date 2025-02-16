@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "exifreader": "^4.26.1",
+    "mime-types": "^2.1.35",
     "next": "15.1.7",
     "playwright": "^1.50.1",
     "react": "^19.0.0",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/mime-types": "^2.1.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

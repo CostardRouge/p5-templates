@@ -4,10 +4,10 @@ export default function Home() {
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
         <a
             className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-            href="/exif-detail"
+            href="/html/exif-detail"
             rel="noopener noreferrer"
         >
-          /exif-detail
+          /html/exif-detail
         </a>
 
         <a

@@ -1,0 +1,16 @@
+body {
+  background-color: white;
+  font-size: x-large;
+}
+
+body > div #image {
+  max-height: calc(1350px - 4rem)
+}
+
+body > div:has(#exif-info) #image {
+  max-height: calc(1350px - 8rem)
+}
+
+nextjs-portal {
+  display: none;
+}

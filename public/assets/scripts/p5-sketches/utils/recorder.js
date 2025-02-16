@@ -92,4 +92,6 @@ const recorder = {
 
 recorder.render();
 
+window.startLoopRecording = () => recorder.start(animation.maximumFramesCount);
+
 export default recorder;

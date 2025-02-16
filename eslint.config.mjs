@@ -14,6 +14,8 @@ const eslintConfig = [
   ...compat.config({
     rules: {
       "@next/next/no-html-link-for-pages": 'off',
+      "@next/next/no-img-element": 'off',
+      "@typescript-eslint/ban-ts-comment": 'off',
     },
   }),
 ];
