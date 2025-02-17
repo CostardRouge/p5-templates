@@ -3,16 +3,33 @@ import downloadFileResponse from "@/utils/downloadFileResponse";
 import fs from "node:fs/promises";
 
 const { createPage } = await createBrowserPage({
-    headless: false
+    headless: false,
+    deviceScaleFactor: 1
 });
+
+function minifyAndEncodeCaptureOptions(captureOptions: Record<string, any>) {
+    const jsonString = JSON.stringify(captureOptions);
+
+    return Buffer.from(jsonString).toString('base64');
+}
 
 export async function POST(
     request: Request,
     { params }: { params: Promise<{ template: string }> }
 ) {
+    const captureOptions = {};
+
+    try {
+        const data = await request.json();
+        Object.assign(captureOptions, ...data);
+    } catch (e) {}
+
+    // return Response.json({captureOptions, encoded: minifyAndEncodeCaptureOptions(captureOptions)});
+    console.log({captureOptions, encoded: minifyAndEncodeCaptureOptions(captureOptions)});
+
     const template = (await params).template;
     const page = await createPage();
-    const url = `http://localhost:3000/p5/${template}`;
+    const url = `http://localhost:3000/p5/${template}?captureOptions=${minifyAndEncodeCaptureOptions(captureOptions)}`;
 
     await page.goto(url, { waitUntil: "networkidle" });
 

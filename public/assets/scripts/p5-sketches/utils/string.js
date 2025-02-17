@@ -47,6 +47,8 @@ const string = {
       showBox = false,
       showLines = false,
       center = false,
+      right = false,
+      bottom = false,
     } = options;
     if (!font?.font) {
       return;
@@ -62,7 +64,7 @@ const string = {
     graphics.textSize(size);
     graphics.textFont?.(font);
 
-    const box = font.textBounds(str, 0, 0, size);
+    const box = font.textBounds(str, x, y, size);
     const asc =  int(textAscent() * 0.8);
     const desc = int(textDescent() * 0.8);
 
@@ -70,6 +72,16 @@ const string = {
       // translate( -box.w / 2, (asc + desc)/4 );
       position.add( -box.w / 2, (asc + desc)/4 );
       // position.add( -(asc + desc)/3, box.h/2 );
+    }
+
+    // console.log({box})
+
+    if ( right ) {
+      position.add( -box.w, 0 );
+    }
+
+    if ( bottom ) {
+      position.add( 0, box.h );
     }
 
     if ( showLines ) {
@@ -83,7 +95,7 @@ const string = {
 
     if ( showBox ) {
       push()
-      translate(position.x, position.y)
+      // translate(position.x, position.y)
       graphics.stroke(255)
       graphics.strokeWeight(1)
       graphics.noFill()

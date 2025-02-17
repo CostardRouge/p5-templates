@@ -4,7 +4,9 @@ const recorder = {
   savedFramesCount: 0,
   recording: false,
   capturer: undefined,
-  createRecorder: async () => {
+  createRecorder: () => {
+    console.log('recorder saved', options.get('recording-framerate'));
+
     recorder.capturer = new CCapture({
       format: options.get('recording-format'),
       quality: "best",
@@ -20,7 +22,7 @@ const recorder = {
     }
 
     if (maximumFrames) {
-      animation.time = 0;
+      animation.reset();
 
       if (!document.getElementById('recording-progression')) {
         const progressBar = document.createElement('div')

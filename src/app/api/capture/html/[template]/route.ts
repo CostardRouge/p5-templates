@@ -6,7 +6,8 @@ import fs from "node:fs/promises";
 import path from "path";
 
 const { createPage } = await createBrowserPage({
-    headless: true
+    headless: true,
+    deviceScaleFactor: 1
 });
 
 export async function POST(
