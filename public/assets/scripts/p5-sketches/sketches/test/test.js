@@ -5,17 +5,39 @@ function getCaptureOptions() {
     const base64 = urlParams.get("captureOptions");
 
     if (!base64) {
-        return null;
+        return {};
     }
 
     return JSON.parse(atob(base64))
 }
 
-const options = getCaptureOptions();
+const options = Object.assign(getCaptureOptions(), {
+    "size": {
+      "width": 1080,
+      "height": 1080
+    },
+    "animation": {
+      "framerate": 30,
+      "duration": 5
+    },
+    "texts": {
+      "top": "top",
+      "bottom": "bottom"
+    },
+    "colors": {
+      "text": [0,0,0],
+      "background": [230, 230, 230]
+    }
+});
+
+let graphic = null;
 
 sketch.setup(
     () => {
+        graphic = createGraphics(options.size.width, options.size.height);
+
         background(...options.colors.background);
+        graphic.background(...options.colors.background);
     },
     {
         size: {
@@ -29,16 +51,16 @@ sketch.setup(
     }
 );
 
-
 sketch.draw( (time, center, favoriteColor) => {
     // options.colors.text = [252, 209, 83]
+    // blendMode(HARD_LIGHT);
 
     background(...options.colors.background);
 
     string.write(options.texts.top, width*.1, height*.2, {
         size: 92,
         stroke: color(...options.colors.background),
-        fill: color(...options.colors.text),
+        fill: color(...options.colors.text, 190),
         font: string.fonts.martian
     })
 
@@ -48,16 +70,19 @@ sketch.draw( (time, center, favoriteColor) => {
 
         size: 92,
         stroke: color(...options.colors.background),
-        fill: color(...options.colors.text),
+        fill: color(...options.colors.text, 190),
         font: string.fonts.martian
     })
 
-    fill(0);
-    // stroke(favoriteColor);
+    graphic.background(...options.colors.background, 120);
 
-    circle(
+    graphic.fill(0);
+    graphic.circle(
         mappers.fn(sin(animation.sinAngle), -1, 1, 100, width-100),
         mappers.fn(cos(animation.cosAngle), -1, 1, 100, width-100),
         90
     )
+
+    image(graphic, 0, 0, SCREEN);
+    blend(graphic, 0, 0, width, height, 0, 0, width, height, SCREEN);
 });

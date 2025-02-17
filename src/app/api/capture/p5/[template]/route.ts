@@ -20,11 +20,29 @@ export async function POST(
     request: Request,
     { params }: { params: Promise<{ template: string }> }
 ) {
-    const captureOptions = {};
+    const captureOptions =  {
+        size: {
+            width: 512,
+            height: 512
+        },
+        animation: {
+            framerate: 30,
+            duration: 5
+        },
+        texts: {
+            top: "top",
+            bottom: "bottom"
+        },
+        colors: {
+            text: [0,0,0],
+            background: [230, 230, 230]
+        }
+    };
     const tempDir = path.join(process.cwd(), 'public', 'uploads', `temp_${Date.now()}`);
 
     try {
         const data = await request.json();
+
         Object.assign(captureOptions, ...data);
 
         // return Response.json({captureOptions, encoded: minifyAndEncodeCaptureOptions(captureOptions)});
@@ -40,9 +58,7 @@ export async function POST(
         await page.evaluate(() => window.startLoopRecording());
 
         // Wait for download
-        const downloadPromise = page.waitForEvent('download');
-        const download = await downloadPromise;
-
+        const download = await page.waitForEvent('download');
         const outputPath = `./public/uploads/${(new Date()).getTime()}_${download.suggestedFilename()}`;
 
         await download.saveAs(outputPath);
@@ -56,12 +72,14 @@ export async function POST(
             cwd: tempDir
         });
 
+        fs.unlink(outputPath)
+
         // Generate video from frames
         const videoPath = path.join(process.cwd(), 'public', 'uploads', `${Date.now()}_output.mp4`);
 
         await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', [
-                '-framerate', '60',
+                '-framerate', String(captureOptions.animation.framerate),
                 '-pattern_type', 'glob',
                 '-i', '*.png',
                 '-c:v', 'libx264',
@@ -83,20 +101,14 @@ export async function POST(
         });
 
         // Cleanup temporary files
-        await Promise.all([
-            fs.rm(tempDir, { recursive: true, force: true }),
-            fs.unlink(outputPath)
-        ]);
+        await fs.rm(tempDir, { recursive: true, force: true })
 
         return downloadFileResponse(videoPath, async () => {
             await fs.unlink(videoPath);
         });
     } catch (error) {
         // Cleanup on error
-        await Promise.all([
-            fs.rm(tempDir, { recursive: true, force: true }).catch(() => {}),
-            // fs.unlink(outputPath).catch(() => {})
-        ]);
+        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
 
         console.error('Processing error:', error);
         return new Response('Video processing failed', { status: 500 });
