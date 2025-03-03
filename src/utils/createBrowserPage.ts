@@ -4,8 +4,9 @@ async function createBrowserPage({
     initialPage = false,
     headless = true,
     deviceScaleFactor = 2,
+    timeout = 3000000
 } = {}) {
-    const browser = await chromium.launch({ headless });
+    const browser = await chromium.launch({ headless, timeout });
     const createPage = async ({
           viewportSize = { width: 1080, height: 1350 }
       } = {}) => {

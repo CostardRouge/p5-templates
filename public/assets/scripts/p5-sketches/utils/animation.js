@@ -23,38 +23,37 @@ const animation = {
     requestAnimationFrame(animate);
   },
 
-  time: 0,
-  reset() {
-    animation.time = 0;
-  },
   get maximumFramesCount() {
     return sketch.sketchOptions?.animation?.duration * sketch.sketchOptions?.animation?.framerate
   },
-  incrementTime() {
-    const timeIncrement = 1 / animation.maximumFramesCount;
-
-    animation.time += timeIncrement; 
-  },
-
   get progression() {
     return time.seconds() % sketch.sketchOptions?.animation?.duration / sketch.sketchOptions?.animation?.duration;
   },
   get circularProgression() {
     return mappers.circular(animation.progression, 0, 1);
   },
+  triangleProgression: (speedFactor = 1) => {
+    const progress = (animation.progression * speedFactor) % 1;
+
+    return progress < 0.5
+        ? progress * 2  // Linear up (0 → 1)
+        : (1 - progress) * 2; // Linear down (1 → 0)
+  },
+
+  linearProgression: (speedFactor = 1) => {
+    return (animation.progression * speedFactor) % 1;
+  },
 
   get angle() {
-    return animation.time * TAU
-    return map(animation.circularProgression, 0, 1, 0, TAU)
+    return animation.progression * TAU
+    // return map(animation.circularProgression, 0, 1, 0, TAU)
   },
 
   get sinAngle() {
-    return animation.angle
-    return map(animation.circularProgression, 0, 1, -PI/2, PI/2)
+    return map(animation.progression, 0, 1, -PI/2, PI/2)
   },
   get cosAngle() {
-    return animation.angle
-    return map(animation.circularProgression, 0, 1, PI, TAU)
+    return map(animation.progression, 0, 1, PI, TAU)
   },
 
   get sinOscillation() {

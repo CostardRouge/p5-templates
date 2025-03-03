@@ -13,6 +13,7 @@ import recorder from './recorder.js';
 import animation from './animation.js';
 import iterators from './iterators.js';
 import converters from './converters.js';
+import captureOptions from './captureOptions.js';
 
 export {
   grid,
@@ -29,5 +30,6 @@ export {
   recorder,
   animation,
   iterators,
-  converters
+  converters,
+  captureOptions
 };

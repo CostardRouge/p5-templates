@@ -47,8 +47,8 @@ const ImageInfoHelper = () => {
                     type: tags?.FileType?.description,
                     date: new Date(tags?.DateCreated?.description),
                     gps: {
-                        latitude: tags?.GPSLatitude?.description || "",
-                        longitude: tags?.GPSLongitude?.description || "",
+                        latitude: Number(tags?.GPSLatitude?.description) || -1,
+                        longitude: Number(tags?.GPSLongitude?.description) || -1,
                     }
                 });
             })
@@ -82,18 +82,18 @@ const ImageInfoHelper = () => {
             image={image}
             onImageDrop={handleImageFile}
             onClick={() => setShowExif(!showExif)}
-            className="flex flex-col items-center justify-center p-8"
+            className="p-8"
         >
-            {image && (
-                <img
-                    id="image"
-                    src={image}
-                    alt="Uploaded"
-                    className="max-w-full"
-                />
-            )}
-
-            <ExifInfo exifData={exifData} visible={showExif}/>
+            <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col justify-center">
+                {image && (
+                    <img
+                        id="image"
+                        src={image}
+                        alt="Uploaded"
+                        className="max-w-full object-contain"
+                    />
+                )}
+            </ExifInfo>
         </ImageDropzone>
     );
 };

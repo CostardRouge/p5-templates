@@ -21,7 +21,7 @@ export type ExifData = {
   },
   date: Date,
   gps: {
-    latitude: string
-    longitude: string
+    latitude: number
+    longitude: number
   }
 }

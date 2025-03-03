@@ -7,7 +7,7 @@ import path from "path";
 
 const { createPage } = await createBrowserPage({
     headless: true,
-    deviceScaleFactor: 1
+    deviceScaleFactor: 2
 });
 
 export async function POST(
@@ -39,6 +39,7 @@ export async function POST(
     await fs.writeFile(uploadPath, buffer);
     await takeScreenshot({
         url: `http://localhost:3000/html/${template}?image=${encodeURIComponent(uploadPath.replace("./public", ""))}`,
+        selectorToWaitFor: "div#loaded",
         outputPath,
         page
     });

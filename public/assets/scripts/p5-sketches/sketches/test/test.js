@@ -1,4 +1,4 @@
-import { sketch, mappers, animation, string } from '/assets/scripts/p5-sketches/utils/index.js';
+import { sketch, mappers, animation, string, time } from '/assets/scripts/p5-sketches/utils/index.js';
 
 function getCaptureOptions() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -17,8 +17,8 @@ const options = Object.assign(getCaptureOptions(), {
       "height": 1080
     },
     "animation": {
-      "framerate": 30,
-      "duration": 5
+      "framerate": 60,
+      "duration": 6
     },
     "texts": {
       "top": "top",
@@ -51,6 +51,25 @@ sketch.setup(
     }
 );
 
+function sketchDurationBar(color) {
+    const sketchDurationBarStartPosition = createVector(0, height-2);
+    const sketchDurationBarEndPosition = createVector(width, height-2);
+    const sketchDurationBarCurrentPosition = p5.Vector.lerp(
+        sketchDurationBarStartPosition,
+        sketchDurationBarEndPosition,
+        animation.progression
+    )
+
+    stroke(color);
+    strokeWeight(2);
+    line(
+        sketchDurationBarStartPosition.x,
+        sketchDurationBarStartPosition.y,
+        sketchDurationBarCurrentPosition.x,
+        sketchDurationBarCurrentPosition.y
+    );
+}
+
 sketch.draw( (time, center, favoriteColor) => {
     // options.colors.text = [252, 209, 83]
     // blendMode(HARD_LIGHT);
@@ -79,10 +98,18 @@ sketch.draw( (time, center, favoriteColor) => {
     graphic.fill(0);
     graphic.circle(
         mappers.fn(sin(animation.sinAngle), -1, 1, 100, width-100),
-        mappers.fn(cos(animation.cosAngle), -1, 1, 100, width-100),
+        mappers.fn(cos(animation.sinAngle), -1, 1, 100, width-100),
         90
     )
 
+    // console.log(animation.progression)
+
+    console.log(time.elapsed)
+
     image(graphic, 0, 0, SCREEN);
     blend(graphic, 0, 0, width, height, 0, 0, width, height, SCREEN);
+
+
+    sketchDurationBar(favoriteColor)
+
 });

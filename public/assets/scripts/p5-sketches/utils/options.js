@@ -95,6 +95,7 @@ const getDefaultOptions = () => {
       max: 120,
       marks: [
         { value: 30, label: '30 fps' },
+        { value: 30, label: '30 fps' },
         { value: 60, label: '60 fps' },
         { value: 90, label: '90 fps' }
       ],
@@ -266,35 +267,6 @@ const getDefaultOptions = () => {
           value: 'webm',
           label: '.webm',
         }
-      ],
-      category: 'Video recorder'
-    },
-    {
-      id: 'recording-framerate',
-      type: 'select',
-      label: 'Recording framerate',
-      defaultValue: String(defaultFramerate),
-      options: [
-        {
-          value: '10',
-          label: '10 fps',
-        },
-        {
-          value: '25',
-          label: '25 fps',
-        },
-        {
-          value: '30',
-          label: '30 fps',
-        },
-        {
-          value: '60',
-          label: '60 fps',
-        },
-        {
-          value: '120',
-          label: '120 fps',
-        },
       ],
       category: 'Video recorder'
     },

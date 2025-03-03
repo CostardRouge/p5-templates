@@ -20,7 +20,7 @@ async function takeScreenshot({
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(url, { waitUntil: "networkidle" });
     await page.waitForSelector(selectorToWaitFor);
-    await page.locator("body").screenshot({ path: outputPath });
+    await page.locator("body > div").screenshot({ path: outputPath });
 }
 
 export default takeScreenshot;

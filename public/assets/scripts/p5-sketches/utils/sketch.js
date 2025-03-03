@@ -1,4 +1,4 @@
-import { events, debug, options, animation } from './index.js';
+import { events, debug, options, time } from './index.js';
 import engines from './engine/index.js';
 
 const sketch = {
@@ -57,7 +57,7 @@ const sketch = {
   },
   draw: (drawFunction) => {
     events.register("pre-draw", debug.fps);
-    events.register("pre-draw", animation.incrementTime);
+    events.register("pre-draw", time.incrementElapsedTime);
     events.register("draw", drawFunction);
   },
 };

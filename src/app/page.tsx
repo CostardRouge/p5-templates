@@ -1,30 +1,47 @@
+const templates = {
+  html: [
+    "/html/exif-detail"
+  ],
+  p5: [
+    "/p5/test",
+    "/p5/letter-3d-show",
+
+    "/p5/photo-switch",
+    "/p5/photo-perspective",
+    "/p5/photo-stack-center",
+    "/p5/photo-stack-top-bottom",
+  ]
+}
+
 export default function Home() {
   return (
-    <div className="bg-white grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <a
-            className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-            href="/html/exif-detail"
-            rel="noopener noreferrer"
-        >
-          /html/exif-detail
-        </a>
+    <div className="bg-white min-h-screen p-8">
+      <main className="flex items-center">
 
-        <a
-            className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-            href="/p5/test"
-            rel="noopener noreferrer"
-        >
-          /p5/test
-        </a>
-
-        <a
-            className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-            href="/p5/letter-3d-show"
-            rel="noopener noreferrer"
-        >
-          /p5/letter-3d-show
-        </a>
+        <ul>
+          {
+            Object.entries(templates).map( ( [ templateCategory, categoryTemplates ]) => (
+              <li key={ templateCategory } className="mt-8">
+                <span className="underline">{ templateCategory }</span>
+                <ul className="ml-3">
+                  {
+                    categoryTemplates.map( ( categoryTemplate, index ) => (
+                        <li key={ categoryTemplate }>
+                          <a
+                              className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+                              href={ categoryTemplate }
+                              rel="noopener noreferrer"
+                          >
+                            { categoryTemplate }
+                          </a>
+                        </li>
+                    ))
+                  }
+                </ul>
+              </li>
+            ))
+          }
+        </ul>
       </main>
     </div>
   );

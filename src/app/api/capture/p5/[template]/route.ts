@@ -2,11 +2,11 @@ import createBrowserPage from "@/utils/createBrowserPage";
 import downloadFileResponse from "@/utils/downloadFileResponse";
 import fs from "node:fs/promises";
 import path from 'path';
-import * as tar from 'tar';
+// import * as tar from 'tar';
 import { spawn } from 'child_process';
 
-const { createPage } = await createBrowserPage({
-    headless: true,
+const { createPage, browser } = await createBrowserPage({
+    headless: false,
     deviceScaleFactor: 1
 });
 
@@ -27,7 +27,7 @@ export async function POST(
         },
         animation: {
             framerate: 30,
-            duration: 5
+            duration: 1
         },
         texts: {
             top: "top",
@@ -38,7 +38,13 @@ export async function POST(
             background: [230, 230, 230]
         }
     };
+
     const tempDir = path.join(process.cwd(), 'public', 'uploads', `temp_${Date.now()}`);
+
+    // Create temporary directory
+    await fs.mkdir(tempDir, { recursive: true });
+
+    console.log(tempDir)
 
     try {
         const data = await request.json();
@@ -53,42 +59,38 @@ export async function POST(
         const url = `http://localhost:3000/p5/${template}?captureOptions=${minifyAndEncodeCaptureOptions(captureOptions)}`;
 
         await page.goto(url, { waitUntil: "networkidle" });
+        await page.waitForSelector("canvas#defaultCanvas0");
 
         // @ts-ignore
         await page.evaluate(() => window.startLoopRecording());
 
         // Wait for download
-        const download = await page.waitForEvent('download');
-        const outputPath = `./public/uploads/${(new Date()).getTime()}_${download.suggestedFilename()}`;
+        const download = await page.waitForEvent('download', {
+            timeout: 30_000
+        });
+        const outputPath = path.join(tempDir, download.suggestedFilename());
 
         await download.saveAs(outputPath);
-
-        // Create temporary directory
-        await fs.mkdir(tempDir, { recursive: true });
-
-        // Extract tar file
-        await tar.x({
-            file: outputPath,
-            cwd: tempDir
-        });
-
-        fs.unlink(outputPath)
+        await page.close()
 
         // Generate video from frames
-        const videoPath = path.join(process.cwd(), 'public', 'uploads', `${Date.now()}_output.mp4`);
+        const videoPath = path.join(tempDir, "output.mp4");
+
+        const ffmpegOptions = [
+            '-r', String(captureOptions.animation.framerate),
+            '-i', outputPath,
+            '-c:v', 'libx264',
+            '-pix_fmt', 'yuv420p',
+            '-preset', 'fast',
+            '-crf', '23',
+            '-y',
+            videoPath
+        ]
+
+        console.log({outputPath, videoPath, ffmpegOptions})
 
         await new Promise((resolve, reject) => {
-            const ffmpeg = spawn('ffmpeg', [
-                '-framerate', String(captureOptions.animation.framerate),
-                '-pattern_type', 'glob',
-                '-i', '*.png',
-                '-c:v', 'libx264',
-                '-pix_fmt', 'yuv420p',
-                '-preset', 'fast',
-                '-crf', '23',
-                '-y',
-                videoPath
-            ], {
+            const ffmpeg = spawn('ffmpeg', ffmpegOptions, {
                 cwd: tempDir
             });
 
@@ -100,14 +102,12 @@ export async function POST(
             ffmpeg.on('error', reject);
         });
 
-        // Cleanup temporary files
-        await fs.rm(tempDir, { recursive: true, force: true })
-
         return downloadFileResponse(videoPath, async () => {
-            await fs.unlink(videoPath);
+            // Cleanup temporary files
+            await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
         });
     } catch (error) {
-        // Cleanup on error
+        // Cleanup temporary files on error
         await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
 
         console.error('Processing error:', error);

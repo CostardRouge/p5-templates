@@ -8,7 +8,7 @@ body > div #image {
 }
 
 body > div:has(#exif-info) #image {
-  max-height: calc(1350px - 8rem)
+  max-height: calc(1350px - 12rem)
 }
 
 nextjs-portal {

@@ -62,28 +62,29 @@ const ImageDropzone = ({ image, onImageDrop, className, children, onClick }: Ima
       className={className}
     >
       {image !== null ? children : (
-          <div
-            className={
-              `w-full max-w-2xl aspect-video border-2 border-dashed transition-colors duration-200 flex flex-col items-center justify-center cursor-pointer ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"}`
-            }
-          >
-            <label
+          <label
               htmlFor="file-input"
               className="cursor-pointer"
+          >
+            <div
+                className={
+                  `w-full aspect-video border-2 border-dashed transition-colors duration-200 flex flex-col items-center justify-center cursor-pointer ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"}`
+                }
             >
+
               <div className="flex flex-col items-center gap-4">
                 Upload
               </div>
-            </label>
-          </div>
+            </div>
+          </label>
       )}
 
       <input
-        type="file"
-        accept="image/*"
-        onChange={handleFileInput}
-        className="hidden"
-        id="file-input"
+          type="file"
+          accept="image/*"
+          onChange={handleFileInput}
+          className="hidden"
+          id="file-input"
       />
     </div>
   );

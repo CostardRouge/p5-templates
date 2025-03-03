@@ -1,11 +1,63 @@
 import { ExifData } from "@/types/types";
+import React, { useState, useEffect } from "react";
+import { MapPin, CalendarClock } from "lucide-react";
 
 interface ExifInfoProps {
+  children: React.ReactNode;
   exifData: ExifData | null;
+  className?: string;
   visible: boolean;
 }
 
-const ExifInfo = ({ exifData, visible }: ExifInfoProps) => {
+const friendlyCameraModelNames: Record<string, string> = {
+  "ILCE-7CM2": "ALPHA 7CII"
+};
+
+async function formatGPSCoordinates(coordinates?: ExifData["gps"]) {
+  if (!coordinates) {
+    return null;
+  }
+
+  const { latitude, longitude } = coordinates;
+
+  if (latitude === -1 || longitude === -1) {
+    return null;
+  }
+
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.address) {
+      return data.address.city || data.address.town || data.address.village || formatCoordinates(latitude, longitude);
+    }
+  } catch (error) {
+    console.error('Error fetching city:', error);
+  }
+
+  return formatCoordinates(latitude, longitude);
+}
+
+function formatCoordinates(latitude: number, longitude: number, precision = 2) {
+  const latDir = latitude >= 0 ? 'N' : 'S';
+  const lonDir = longitude >= 0 ? 'E' : 'W';
+
+  return `${Math.abs(latitude).toFixed(precision)}° ${latDir}, ${Math.abs(longitude).toFixed(precision)}° ${lonDir}`;
+}
+
+const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => {
+  const [computedGPSInfo, setComputedGPSInfo] = useState<string | null | undefined>(undefined)
+
+  useEffect( () => {
+    if (!exifData?.gps) {
+      return setComputedGPSInfo(null);
+    }
+
+    formatGPSCoordinates(exifData?.gps).then(setComputedGPSInfo)
+  }, [ exifData?.gps ] )
+
   if (![exifData?.iso, exifData?.shutterSpeed, exifData?.aperture].every(Boolean)) return null;
 
   const formatFocalLength = (focalLength?: ExifData["focalLength"]) => {
@@ -48,33 +100,93 @@ const ExifInfo = ({ exifData, visible }: ExifInfoProps) => {
     return `ƒ/${fStop}`
   };
 
-  if (visible && exifData) {
-    return (
-        <div
-            id="exif-info"
-            className="flex gap-8 pt-8"
-        >
-          <div className="flex items-center">
-            <span className="text-gray-700">{formatFocalLength(exifData.focalLength)}</span>
-          </div>
+  const formatCameraModel = (camera?: ExifData["camera"]) => {
+    if (!camera) {
+      return;
+    }
 
-          <div className="flex items-center">
-            <span className="text-gray-700">{formatAperture(exifData.aperture)}</span>
+    const { brand, model } = camera;
 
-          </div>
+    return `${brand} ${friendlyCameraModelNames[model] ?? model}`
+  };
 
-          <div className="flex items-center">
-            <span className="text-gray-700">{formatShutterSpeed(exifData.shutterSpeed)}</span>
-          </div>
+  const formatPhotoDate = (date?: ExifData["date"]) => {
+    if (!date) {
+      return;
+    }
 
-          <div className="flex items-center">
-            <span className="text-gray-700">ISO {exifData.iso}</span>
-          </div>
-        </div>
-    )
-  }
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      // weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
 
-  return null
+    return formatter.format(date);
+  };
+
+  return (
+      <div id={computedGPSInfo === undefined ? 'loading' : 'loaded'} className={className}>
+        { visible && exifData && (
+            <div
+                id="exif-info"
+                className="flex justify-between pb-8"
+            >
+              <div className="flex gap-8">
+                <div className="flex uppercase">
+                  <CalendarClock className="inline mr-1.5 h-9" />
+                  <span>{formatPhotoDate(exifData.date)}</span>
+                </div>
+              </div>
+
+              { computedGPSInfo && (
+                  <div className="flex">
+                    <span className="text-gray-700 uppercase">
+                      <MapPin className="inline mr-1.5 h-9 align-top" />
+                      <span>
+                        {computedGPSInfo}
+                      </span>
+                    </span>
+                  </div>
+              ) }
+            </div>
+        )}
+
+        { children}
+
+        { visible && exifData && (
+            <div
+                id="exif-info"
+                className="flex justify-between pt-8"
+            >
+              <div className="flex gap-8">
+                <div className="flex">
+                  <span className="text-gray-700">{formatFocalLength(exifData.focalLength)}</span>
+                </div>
+
+                <div className="flex">
+                  <span className="text-gray-700">{formatAperture(exifData.aperture)}</span>
+
+                </div>
+
+                <div className="flex">
+                  <span className="text-gray-700">{formatShutterSpeed(exifData.shutterSpeed)}</span>
+                </div>
+
+                <div className="flex">
+                  <span className="text-gray-700">ISO {exifData.iso}</span>
+                </div>
+              </div>
+
+              <div className="flex">
+                <span className="text-gray-700 uppercase">
+                  {formatCameraModel(exifData.camera)}
+                </span>
+              </div>
+            </div>
+        )}
+      </div>
+  );
 };
 
 export default ExifInfo;

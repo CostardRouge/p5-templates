@@ -1,28 +1,28 @@
-import { sketch, options, debug, animation } from './index.js';
+import { sketch, options, debug, animation, events, time } from './index.js';
 
 const recorder = {
   savedFramesCount: 0,
   recording: false,
   capturer: undefined,
   createRecorder: () => {
-    console.log('recorder saved', options.get('recording-framerate'));
-
     recorder.capturer = new CCapture({
-      format: options.get('recording-format'),
+      // format: options.get('recording-format'),
+      format: "webm",
       quality: "best",
-      framerate: options.get('recording-framerate'),
+      framerate: sketch.engine.getFrameRate(),
       verbose: false,
       name: sketch.name,
       workersPath: "libraries/",
-    })
+    });
+
+    events.handle("engine-framerate-change")
   },
   start: (maximumFrames) => {
     if (true === recorder.recording) {
       return;
     }
-
     if (maximumFrames) {
-      animation.reset();
+      time.reset();
 
       if (!document.getElementById('recording-progression')) {
         const progressBar = document.createElement('div')
@@ -33,13 +33,12 @@ const recorder = {
       }
     }
 
-    recorder.recording = true;
-
     recorder.createRecorder();
     recorder.capturer.start();
 
-    recorder.savedFramesCount = 0;
     recorder.maximumFrames = maximumFrames;
+    recorder.savedFramesCount = 0;
+    recorder.recording = true;
 
     document.body.classList.add("recording");
   },
@@ -55,24 +54,24 @@ const recorder = {
   render: () => {
     requestAnimationFrame(recorder.render);
 
-    debug.createElement( "body", "recorder-saved-frames", () => {
-      if (recorder.maximumFrames) {
-        return `${recorder.savedFramesCount} / ${recorder.maximumFrames}`
-      }
-
-      return recorder.savedFramesCount
-    }, !recorder.recording)
-
-    if (recorder.maximumFrames && document.getElementById('recording-progression')) {
-      document.getElementById('recording-progression').style.width = (recorder.savedFramesCount / recorder.maximumFrames) * 100 + '%';
-    }
-
     if (undefined === recorder.capturer) {
       return;
     }
 
     if (true !== recorder.recording) {
       return;
+    }
+
+    debug.createElement( "body", "recorder-saved-frames", () => {
+      if (recorder.maximumFrames) {
+        return `${recorder.savedFramesCount} / ${recorder.maximumFrames}`
+      }
+
+      return recorder.savedFramesCount;
+    }, !recorder.recording)
+
+    if (recorder.maximumFrames && document.getElementById('recording-progression')) {
+      document.getElementById('recording-progression').style.width = (recorder.savedFramesCount / recorder.maximumFrames) * 100 + '%';
     }
 
     const canvasElement = sketch?.engine?.getCanvasElement();
