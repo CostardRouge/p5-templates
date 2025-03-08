@@ -1,0 +1,402 @@
+import { sketch, easing, mappers, exif, animation, string, events, cache, captureOptions } from '/assets/scripts/p5-sketches/utils/index.js';
+
+const options = Object.assign( {
+    "size": {
+      "width": 1080,
+      "height": 1920
+    },
+    "animation": {
+      "framerate": 60,
+      "duration": 12
+    },
+    "texts": {
+      "top": "top",
+      "bottom": "bottom"
+    },
+    "colors": {
+        "accent": [128,128,255],
+
+        "text": [0,0,0],
+        "background": [230, 230, 230],
+
+        // "background": [0,0,0],
+        // "text": [230, 230, 230],
+    },
+    // "lines": true,
+    "durationBar": true
+}, captureOptions);
+
+console.log(captureOptions)
+
+console.log(options.assets)
+
+
+if (!options.assets) {
+    options.assets = [
+        "/assets/images/samples/_00001.jpeg",
+        "/assets/images/samples/_00002.jpeg",
+        "/assets/images/samples/_00003.jpeg",
+        "/assets/images/samples/_00004.jpeg",
+        "/assets/images/samples/_00005.jpeg",
+    ]
+}
+
+events.register("engine-window-preload", () => {
+    cache.store("images", () => options.assets.map( (path) => ({
+        path,
+        img: loadImage(path),
+        filename: path.split("/").pop()
+    }) ) );
+});
+
+function displayImage(img, x, y, margin = 80, graphics = window) {
+    // Determine if the image is portrait or landscape
+    const isPortrait = img.height > img.width;
+
+    // Apply different margins based on orientation
+    const marginX = isPortrait ? margin * 1.5 : margin; // Extra margin for portrait
+    const marginY = isPortrait ? margin : margin * 1.5; // Extra margin for landscape
+
+    const availableWidth = width - 2 * marginX;
+    const availableHeight = height - 2 * marginY;
+
+    // Scale factor to fit inside the available area
+    const scale = Math.min(availableWidth / img.width, availableHeight / img.height);
+
+    // Compute the new dimensions
+    const newWidth = img.width * scale;
+    const newHeight = img.height * scale;
+
+    // Draw the image
+    graphics.image(img, x - newWidth / 2, y - newHeight / 2, newWidth, newHeight);
+}
+
+function circularConstrain(value, min, max) {
+    if (value >= min && value <= max) {
+        return value;
+    }
+
+    const rest = value % max;
+
+    if (value > max) {
+        return circularConstrain(min + rest, min, max);
+    }
+
+    const diff = min - value;
+
+    if (value < min) {
+        return circularConstrain(max -diff, min, max);
+    }
+}
+
+function hl(y) {
+    line(0, y, width, y)
+}
+
+function vl(x) {
+    line(x, 0, x, height)
+}
+
+function sketchDurationBar(color) {
+    const sketchDurationBarStartPosition = createVector(0, 3);
+    const sketchDurationBarEndPosition = createVector(width, 3);
+    const sketchDurationBarCurrentPosition = p5.Vector.lerp(
+        sketchDurationBarStartPosition,
+        sketchDurationBarEndPosition,
+        animation.progression
+    )
+
+    stroke(color);
+    strokeWeight(2);
+    line(
+        sketchDurationBarStartPosition.x,
+        sketchDurationBarStartPosition.y,
+        sketchDurationBarCurrentPosition.x,
+        sketchDurationBarCurrentPosition.y
+    );
+}
+
+class Card {
+    constructor({ position, index }) {
+        this.index = index;
+        this.position = position;
+        this.img = cache.get("images")?.[this.index]?.img;
+        this.path = cache.get("images")?.[this.index]?.path;
+        this.filename = cache.get("images")?.[this.index]?.filename;
+        this.exif = undefined;
+
+        exif.load("http://localhost:3000/" + this.path)
+             .then( exifInfo => {
+                 this.exif = exifInfo;
+             })
+            .catch( () => {
+                this.exif = null;
+            })
+    }
+
+    update() {
+        // const { x: start, y: end } = this.limits;
+
+        // const stepSize = (end - start) / 360; // Compute step size dynamically
+        // const limitsLength = (end-start);
+        // const limitUnit = abs(limitsLength)/cardsLength;
+
+        // this.position.y += (
+        //     easing.easeInOutExpo(animation.progression)
+        // )*stepSize
+
+        // this.position = animation.ease({
+        //     values: cache.get("positions"),
+        //     currentTime: (
+        //         animation.progression*cardsLength
+        //         +this.index
+        //     ),
+        //     easingFn: easing.easeInOutExpo,
+        //     lerpFn: p5.Vector.lerp
+        // });
+
+        // this.position.y = circularConstrain(this.position.y, start, end)
+
+        this.updatePosition();
+    }
+
+    updatePosition() {
+        const positions = cache.get("positions");
+        const positionsCount = positions.length;
+
+        // Calculate phase progression (0-1 loop) with staggered start per card
+        const phase = (animation.progression + this.index / positionsCount) % 1;
+
+        // Get current and next position indices with wrap-around
+        const rawIndex = phase * positionsCount;
+        this.currentIndex = Math.floor(rawIndex);
+        this.nextIndex = (this.currentIndex + 1) % positionsCount;
+
+        // Calculate easing between current and next position
+        const t = rawIndex - this.currentIndex;
+        const easedT = easing.easeOutSine(t);
+
+        // Lerp between positions
+        this.position = p5.Vector.lerp(
+            positions[this.currentIndex],
+            positions[this.nextIndex],
+            easedT
+        );
+
+        if (this.nextIndex === 0) {
+            this.position = positions[0].copy()
+        }
+    }
+
+    draw(graphics) {
+        if (!this.img) {
+            return
+        }
+
+        graphics.push()
+        graphics.translate(0, 0, this.position.z);
+        displayImage(this.img, this.position.x, this.position.y, 70, graphics)
+        graphics.pop();
+
+        if (!this.exif) {
+            return
+        }
+
+        if (this.currentIndex === options.assets.length-2) {
+            const exifInfoText = [
+                exif.formatFocalLength(this?.exif?.focalLength),
+                exif.formatAperture(this?.exif?.aperture),
+                exif.formatShutterSpeed(this?.exif?.shutterSpeed),
+                `ISO ${this.exif.iso}`
+            ].join(" · ");
+
+            push()
+            translate(50, height/2);
+            rotate(-PI/2)
+            string.write(
+                exifInfoText,
+                0, 0,
+                {
+                    // graphics,
+                    size: 24,
+                    // fill: color(...options.colors.text),
+                    // stroke: color(...options.colors.background),
+
+                    stroke: color(...options.colors.text),
+                    fill: color(...options.colors.background),
+
+                    font: string.fonts.martian,
+                    center: true,
+                    blendMode: DIFFERENCE
+                }
+            )
+            pop();
+        }
+    }
+}
+
+const cards = [];
+const canvases = {};
+const cardsLength = options.assets.length;
+
+sketch.setup(
+    () => {
+        canvases._3d = createGraphics(
+            sketch?.engine?.canvas?.width,
+            sketch?.engine?.canvas?.height,
+            "webgl"
+        );
+
+        background(...options.colors.background);
+
+        const start = createVector(0, height*1/8-height/2, -500);
+        const end = createVector(0, height*2.75/4-height/2);
+
+        cache.store("positions", () => (
+            Array.from({ length: cardsLength }).map( (_, index) => {
+                const position = p5.Vector.lerp(start, end, index/(cardsLength));
+
+                cards.push(new Card({
+                    position,
+                    index,
+                }));
+
+                return position;
+            })
+        ) );
+    },
+    {
+        size: {
+            width: options.size.width,
+            height: options.size.height,
+        },
+        animation: {
+            framerate: options.animation.framerate,
+            duration: options.animation.duration,
+        }
+    }
+);
+
+sketch.draw( (_time, center, favoriteColor) => {
+    // options.colors.text = [252, 209, 83]
+    // background(...options.colors.background);
+
+    // PHOTO 3D SLIDER
+    image(canvases._3d, 0, 0, width, height);
+
+    canvases._3d.background(...options.colors.background);
+    for (const card of cards) {
+        card.update();
+        card.draw(canvases._3d);
+    }
+
+    // push()
+    // translate(width/2, 50);
+    // string.write(
+    //     "vertical-3d-photo-stack",
+    //     0, 0,
+    //     {
+    //         size: 24,
+    //         fill: color(...options.colors.text),
+    //         stroke: color(...options.colors.background),
+    //         font: string.fonts.martian,
+    //         center: true,
+    //     }
+    // )
+    // pop();
+    //
+    // push()
+    // translate(width/2, height-50);
+    // string.write(
+    //     "@costardrouge.jpg",
+    //     0, 0,
+    //     {
+    //         size: 24,
+    //         fill: color(...options.colors.text),
+    //         stroke: color(...options.colors.background),
+    //         font: string.fonts.martian,
+    //         center: true,
+    //     }
+    // )
+    // pop();
+
+    push();
+    translate(width-50, height/2);
+    rotate(PI/2)
+    string.write(
+        String(Number(animation.progression).toPrecision(3)).slice(0, 5),
+        0, 0,
+        {
+            size: 24,
+            fill: color(...options.colors.text),
+            stroke: color(...options.colors.background),
+            font: string.fonts.martian,
+            center: true,
+        }
+    )
+    pop();
+
+    // TEXTS OVER
+    const textWriteOptions = {
+        size: 172,
+        stroke: color(...options.colors.text),
+        fill: color(...options.colors.background),
+
+        // stroke: color(0),
+        // fill: color(255),
+        font: string.fonts.martian,
+        center: true,
+    }
+
+    string.write(
+        options.texts.top,
+        width/2,
+        animation.ease({
+            values: [
+                height/2-200,
+                height*1/8,
+            ],
+            currentTime: animation.circularProgression,
+            easingFn: easing.easeOutQuint
+        }),
+        {
+            ...textWriteOptions,
+            blendMode: EXCLUSION
+        }
+    )
+
+    string.write(
+        options.texts.bottom,
+        width/2,
+        animation.ease({
+            values: [
+                height/2+200,
+                height*6.5/8
+            ],
+            currentTime: animation.circularProgression,
+            easingFn: easing.easeOutQuint
+        }),
+        {
+            ...textWriteOptions,
+            blendMode: EXCLUSION
+        }
+    )
+
+    if (options.lines) {
+        stroke(options.colors.accent)
+
+        hl(0);
+        hl(height);
+
+        vl(0);
+        vl(width);
+    }
+
+    if (options.durationBar) {
+        sketchDurationBar(color(...options.colors.accent))
+    }
+
+    if (cards.every(card => card.exif !== undefined)) {
+        document.querySelector("canvas#defaultCanvas0").classList.add("loaded");
+    }
+});

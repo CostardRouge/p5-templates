@@ -21,7 +21,7 @@ const ImageInfoHelper = () => {
             .load(file)
             .then( tags => {
                 console.log(tags)
-                setExifData({
+                return ({
                     iso: Number(tags?.ISOSpeedRatings?.description),
                     shutterSpeed: {
                         description: tags?.ExposureTime?.description || "",
@@ -41,7 +41,6 @@ const ImageInfoHelper = () => {
                     },
                     aperture: {
                         description: tags?.FNumber?.description || "",
-                        // @ts-expect-error NEEDS
                         value: tags?.FNumber?.value,
                     },
                     type: tags?.FileType?.description,
@@ -50,8 +49,9 @@ const ImageInfoHelper = () => {
                         latitude: Number(tags?.GPSLatitude?.description) || -1,
                         longitude: Number(tags?.GPSLongitude?.description) || -1,
                     }
-                });
+                }) as ExifData;
             })
+            .then(setExifData)
 
         if (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
             setImage(URL.createObjectURL(file));

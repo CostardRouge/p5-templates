@@ -31,7 +31,6 @@ const options = Object.assign( {
         // "/assets/images/8.jpeg",
 
         "/assets/images/_1.jpeg",
-        "/assets/images/_2.jpeg",
         "/assets/images/_3.jpeg",
         "/assets/images/_4.jpeg",
         "/assets/images/_5.jpeg",

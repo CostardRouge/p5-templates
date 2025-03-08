@@ -1,13 +1,13 @@
 import createBrowserPage from "@/utils/createBrowserPage";
 import downloadFileResponse from "@/utils/downloadFileResponse";
+
+import { spawn } from 'child_process';
 import fs from "node:fs/promises";
 import path from 'path';
-// import * as tar from 'tar';
-import { spawn } from 'child_process';
 
-const { createPage, browser } = await createBrowserPage({
-    headless: false,
-    deviceScaleFactor: 1
+const { createPage } = await createBrowserPage({
+    headless: true,
+    deviceScaleFactor: 2
 });
 
 function minifyAndEncodeCaptureOptions(captureOptions: Record<string, any>) {
@@ -20,74 +20,63 @@ export async function POST(
     request: Request,
     { params }: { params: Promise<{ template: string }> }
 ) {
-    const captureOptions =  {
-        size: {
-            width: 512,
-            height: 512
-        },
-        animation: {
-            framerate: 30,
-            duration: 1
-        },
-        texts: {
-            top: "top",
-            bottom: "bottom"
-        },
-        colors: {
-            text: [0,0,0],
-            background: [230, 230, 230]
-        }
-    };
-
-    const tempDir = path.join(process.cwd(), 'public', 'uploads', `temp_${Date.now()}`);
+    let page = undefined;
+    const timestamp = Date.now();
+    const tempDir = path.join(process.cwd(), 'public', 'uploads', `temp_${timestamp}`);
 
     // Create temporary directory
     await fs.mkdir(tempDir, { recursive: true });
 
-    console.log(tempDir)
-
     try {
-        const data = await request.json();
+        const formData = await request.formData();
+        const captureOptions = JSON.parse(<string>formData.get('options'));
 
-        Object.assign(captureOptions, ...data);
+        captureOptions.assets = [];
 
-        // return Response.json({captureOptions, encoded: minifyAndEncodeCaptureOptions(captureOptions)});
-        // console.log({captureOptions, encoded: minifyAndEncodeCaptureOptions(captureOptions)});
+        const files = formData.getAll('files[]');
+
+        for (const file of files) {
+            const imageFile = file as unknown as File;
+            const buffer = new Uint8Array(await imageFile.arrayBuffer());
+            const filePath = path.join(tempDir, imageFile.name);
+
+            await fs.writeFile(filePath, buffer);
+
+            captureOptions.assets.push(path.join('/uploads', `temp_${timestamp}`, imageFile.name));
+        }
 
         const template = (await params).template;
-        const page = await createPage();
         const url = `http://localhost:3000/p5/${template}?captureOptions=${minifyAndEncodeCaptureOptions(captureOptions)}`;
 
+        page = await createPage()
         await page.goto(url, { waitUntil: "networkidle" });
-        await page.waitForSelector("canvas#defaultCanvas0");
+        await page.waitForSelector("canvas#defaultCanvas0.loaded");
 
         // @ts-ignore
         await page.evaluate(() => window.startLoopRecording());
 
         // Wait for download
-        const download = await page.waitForEvent('download', {
-            timeout: 30_000
-        });
-        const outputPath = path.join(tempDir, download.suggestedFilename());
+        const download = await page.waitForEvent('download', { timeout: 30_000_000 });
+        const downloadPath = path.join(tempDir, download.suggestedFilename());
 
-        await download.saveAs(outputPath);
-        await page.close()
+        await download.saveAs(downloadPath);
+        await page.close();
 
         // Generate video from frames
-        const videoPath = path.join(tempDir, "output.mp4");
+        const outputPath = path.join(tempDir, "output.mp4");
 
         const ffmpegOptions = [
             '-r', String(captureOptions.animation.framerate),
-            '-i', outputPath,
-            '-c:v', 'libx264',
-            '-pix_fmt', 'yuv420p',
-            '-preset', 'fast',
-            '-crf', '23',
+            '-i', downloadPath,
+            // '-c:v', 'libx264',
+            // '-pix_fmt', 'yuv420p',
+            // '-preset', 'fast',
+            // '-crf', '23',
             '-y',
-            videoPath
-        ]
+            outputPath
+        ];
 
-        console.log({outputPath, videoPath, ffmpegOptions})
+        console.log({tempDir, captureOptions, downloadPath, outputPath, ffmpegOptions});
 
         await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', ffmpegOptions, {
@@ -102,11 +91,13 @@ export async function POST(
             ffmpeg.on('error', reject);
         });
 
-        return downloadFileResponse(videoPath, async () => {
+        return downloadFileResponse(outputPath, async () => {
             // Cleanup temporary files
             await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
         });
     } catch (error) {
+        await page?.close();
+
         // Cleanup temporary files on error
         await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
 

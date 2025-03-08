@@ -7,9 +7,11 @@ const templates = {
     "/p5/letter-3d-show",
 
     "/p5/photo-switch",
-    "/p5/photo-perspective",
+    "/p5/photo-unzoom",
     "/p5/photo-stack-center",
     "/p5/photo-stack-top-bottom",
+
+    "/p5/vertical-3d-photo-stack"
   ]
 }
 

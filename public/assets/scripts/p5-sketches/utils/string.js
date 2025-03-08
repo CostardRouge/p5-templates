@@ -49,6 +49,8 @@ const string = {
       center = false,
       right = false,
       bottom = false,
+      blendMode = BLEND,
+
     } = options;
     if (!font?.font) {
       return;
@@ -57,6 +59,8 @@ const string = {
     const position = createVector( x, y )
 
     push()
+
+    graphics.blendMode(blendMode);
 
     graphics.fill(fill);
     graphics.stroke(stroke);
@@ -70,7 +74,9 @@ const string = {
 
     if ( center ) {
       // translate( -box.w / 2, (asc + desc)/4 );
-      position.add( -box.w / 2, (asc + desc)/4 );
+      // position.add( -box.w / 2, (asc + desc)/4 );
+      graphics.textAlign(CENTER, CENTER);
+
       // position.add( -(asc + desc)/3, box.h/2 );
     }
 
@@ -104,8 +110,6 @@ const string = {
 
       pop()
     }
-
-    // rect( box.x, box.y, box.w, box.h )
 
     graphics.text(str, position.x, position.y);
 

@@ -15,11 +15,15 @@ export async function POST(
     { params }: { params: Promise<{ template: string }> }
 ) {
     const { headers } = request;
-    const template = (await params).template;
-    const page = await createPage()
 
     if (!headers.get('content-type')?.includes('multipart/form-data')) {
         return new Response(`missing form-data!`, { status: 400 });
+    }
+
+    const template = (await params).template;
+
+    if (!template) {
+        return;
     }
 
     const data = await request.formData();
@@ -33,10 +37,12 @@ export async function POST(
     const uploadPath = `./public/uploads/${timestamp}_${imageFile.name}`;
     const outputPath = `./public/outputs/${timestamp}_${path.basename(uploadPath, path.extname(uploadPath))}_result.png`;
 
-    const arrayBuffer = await imageFile.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
+    const buffer = new Uint8Array(await imageFile.arrayBuffer());
 
     await fs.writeFile(uploadPath, buffer);
+
+    const page = await createPage();
+
     await takeScreenshot({
         url: `http://localhost:3000/html/${template}?image=${encodeURIComponent(uploadPath.replace("./public", ""))}`,
         selectorToWaitFor: "div#loaded",
@@ -44,7 +50,7 @@ export async function POST(
         page
     });
 
-    page.close();
+    await page.close();
 
     return downloadFileResponse(outputPath, async () => {
         await fs.unlink(uploadPath);

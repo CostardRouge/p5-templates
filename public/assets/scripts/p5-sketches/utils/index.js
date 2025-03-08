@@ -1,5 +1,6 @@
 import grid from './grid.js';
 import time from './time.js';
+import exif from './exif.js';
 import cache from './cache.js';
 import debug from './debug.js';
 import string from './string.js';
@@ -17,6 +18,7 @@ import captureOptions from './captureOptions.js';
 
 export {
   grid,
+  exif,
   time,
   cache,
   debug,

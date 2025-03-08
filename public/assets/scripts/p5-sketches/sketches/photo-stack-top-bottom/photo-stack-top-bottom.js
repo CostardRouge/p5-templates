@@ -31,7 +31,6 @@ const options = Object.assign( {
         // "/assets/images/8.jpeg",
 
         "/assets/images/_1.jpeg",
-        "/assets/images/_2.jpeg",
         "/assets/images/_3.jpeg",
         "/assets/images/_4.jpeg",
         "/assets/images/_5.jpeg",
@@ -145,11 +144,7 @@ sketch.draw( (_time, center, favoriteColor) => {
     const margin = 80;
     const imageIndexDisplay = map(animation.triangleProgression(2), 0, 1, 0, images.length, easing.easeInOutExpo_);
 
-    const minHeight = 100;
-    const maxHeight = height - 2 * margin;
-    const maxWidth = width - 2 * margin;
-
-// Calculate step size for vertical positioning
+    // Calculate step size for vertical positioning
     const availableVerticalSpace = height - 2 * margin;
     const step = availableVerticalSpace / (images.length - 1 || 1);
 
