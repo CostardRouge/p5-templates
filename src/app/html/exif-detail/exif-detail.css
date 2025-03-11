@@ -1,10 +1,25 @@
 body {
-  background-color: white;
   font-size: x-large;
 }
 
-body > div #image {
-  max-height: calc(1350px - 4rem)
+body, html {
+  background-color: black;
+}
+
+body > div {
+  max-height: 1350px;
+  max-width: 1080px;
+  min-width: 1080px;
+
+  margin: auto;
+
+  #image {
+    max-height: calc(1350px - 4rem)
+  }
+}
+
+html:has(body.bg-white) {
+  background: white;
 }
 
 body > div:has(#exif-info) #image {

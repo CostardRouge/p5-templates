@@ -1,6 +1,9 @@
 body {
-  background-color: white;
   position: relative !important;
+}
+
+body, html {
+  background: black;
 }
 
 body.preview fps-counter,
@@ -82,4 +85,8 @@ canvas-overlay {
   padding: 4px 4px;
   font-family: system-ui;
   text-shadow: 0 0 3px rgb(24 24 24);
+}
+
+canvas#defaultCanvas0 {
+  margin: auto;
 }

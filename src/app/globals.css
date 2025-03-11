@@ -3,11 +3,10 @@
 @tailwind utilities;
 
 html {
-    background-color: black;
-    /*background-color: #00000000;*/
+    background-color: white;
 }
 
-body, html, body > div {
-    max-height: 1350px;
-    max-width: 1080px;
-}
+/*body, html, body > div {*/
+/*    max-height: 1350px;*/
+/*    max-width: 1080px;*/
+/*}*/

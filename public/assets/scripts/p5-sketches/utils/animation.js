@@ -26,6 +26,7 @@ const animation = {
   get maximumFramesCount() {
     return sketch.sketchOptions?.animation?.duration * sketch.sketchOptions?.animation?.framerate
   },
+
   get progression() {
     return time.seconds() % sketch.sketchOptions?.animation?.duration / sketch.sketchOptions?.animation?.duration;
   },
@@ -39,7 +40,6 @@ const animation = {
         ? progress * 2  // Linear up (0 → 1)
         : (1 - progress) * 2; // Linear down (1 → 0)
   },
-
   linearProgression: (speedFactor = 1) => {
     return (animation.progression * speedFactor) % 1;
   },

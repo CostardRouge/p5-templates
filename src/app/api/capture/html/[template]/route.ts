@@ -7,7 +7,7 @@ import path from "path";
 
 const { createPage } = await createBrowserPage({
     headless: true,
-    deviceScaleFactor: 2
+    deviceScaleFactor: 1
 });
 
 export async function POST(
@@ -55,5 +55,5 @@ export async function POST(
     return downloadFileResponse(outputPath, async () => {
         await fs.unlink(uploadPath);
         await fs.unlink(outputPath);
-    })
+    });
 }

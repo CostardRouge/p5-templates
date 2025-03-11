@@ -30,6 +30,8 @@ async function formatGPSCoordinates(coordinates?: ExifData["gps"]) {
     const response = await fetch(url);
     const data = await response.json();
 
+    console.log(data)
+
     if (data.address) {
       return data.address.city || data.address.town || data.address.village || formatCoordinates(latitude, longitude);
     }
@@ -49,6 +51,8 @@ function formatCoordinates(latitude: number, longitude: number, precision = 2) {
 
 const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => {
   const [computedGPSInfo, setComputedGPSInfo] = useState<string | null | undefined>(undefined)
+
+  console.log({computedGPSInfo})
 
   useEffect( () => {
     if (!exifData?.gps) {
@@ -166,7 +170,6 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
 
                 <div className="flex">
                   <span className="text-gray-700">{formatAperture(exifData.aperture)}</span>
-
                 </div>
 
                 <div className="flex">

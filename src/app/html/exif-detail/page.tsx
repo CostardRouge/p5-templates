@@ -20,6 +20,21 @@ const ImageInfoHelper = () => {
         ExifReader
             .load(file)
             .then( tags => {
+                const parseDate= (tags: ExifReader.Tags) => {
+                    const dateString = tags?.DateTimeOriginal?.description;
+
+                    if (!dateString) {
+                        return;
+                    }
+
+                    const [datePart, timePart] = dateString.split(" ");
+
+                    const [year, month, day] = datePart.split(":").map(Number);
+                    const [hours, minutes, seconds] = timePart.split(":").map(Number);
+
+                    return new Date(year, month - 1, day, hours, minutes, seconds);
+                }
+
                 console.log(tags)
                 return ({
                     iso: Number(tags?.ISOSpeedRatings?.description),
@@ -44,7 +59,7 @@ const ImageInfoHelper = () => {
                         value: tags?.FNumber?.value,
                     },
                     type: tags?.FileType?.description,
-                    date: new Date(tags?.DateCreated?.description),
+                    date: parseDate(tags),
                     gps: {
                         latitude: Number(tags?.GPSLatitude?.description) || -1,
                         longitude: Number(tags?.GPSLongitude?.description) || -1,
@@ -82,7 +97,7 @@ const ImageInfoHelper = () => {
             image={image}
             onImageDrop={handleImageFile}
             onClick={() => setShowExif(!showExif)}
-            className="p-8"
+            className="p-8 bg-white"
         >
             <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col justify-center">
                 {image && (

@@ -7,7 +7,7 @@ import path from 'path';
 
 const { createPage } = await createBrowserPage({
     headless: true,
-    deviceScaleFactor: 2
+    deviceScaleFactor: 1
 });
 
 function minifyAndEncodeCaptureOptions(captureOptions: Record<string, any>) {
@@ -20,6 +20,12 @@ export async function POST(
     request: Request,
     { params }: { params: Promise<{ template: string }> }
 ) {
+    const template = (await params).template;
+
+    if (!template) {
+        return new Response('Missing template', { status: 403 });
+    }
+
     let page = undefined;
     const timestamp = Date.now();
     const tempDir = path.join(process.cwd(), 'public', 'uploads', `temp_${timestamp}`);
@@ -33,23 +39,23 @@ export async function POST(
 
         captureOptions.assets = [];
 
-        const files = formData.getAll('files[]');
+        const files = formData.getAll('files[]').filter(
+            file => (
+                (file as File)?.size && (file as File)?.name
+            )
+        );
 
         for (const file of files) {
-            const imageFile = file as unknown as File;
-            const buffer = new Uint8Array(await imageFile.arrayBuffer());
-            const filePath = path.join(tempDir, imageFile.name);
+            const buffer = new Uint8Array(await (file as File).arrayBuffer());
+            const filePath = path.join(tempDir, (file as File).name);
 
             await fs.writeFile(filePath, buffer);
 
-            captureOptions.assets.push(path.join('/uploads', `temp_${timestamp}`, imageFile.name));
+            captureOptions.assets.push(path.join('/uploads', `temp_${timestamp}`, (file as File).name));
         }
 
-        const template = (await params).template;
-        const url = `http://localhost:3000/p5/${template}?captureOptions=${minifyAndEncodeCaptureOptions(captureOptions)}`;
-
         page = await createPage()
-        await page.goto(url, { waitUntil: "networkidle" });
+        await page.goto(`http://localhost:3000/p5/${template}?captureOptions=${minifyAndEncodeCaptureOptions(captureOptions)}`, { waitUntil: "networkidle" });
         await page.waitForSelector("canvas#defaultCanvas0.loaded");
 
         // @ts-ignore
@@ -102,6 +108,6 @@ export async function POST(
         await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
 
         console.error('Processing error:', error);
-        return new Response('Video processing failed', { status: 500 });
+        return new Response('Video processing failed: ' + JSON.stringify(error), { status: 500 });
     }
 }

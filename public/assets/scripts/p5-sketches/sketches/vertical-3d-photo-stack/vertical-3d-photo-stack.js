@@ -1,13 +1,13 @@
-import { sketch, easing, mappers, exif, animation, string, events, cache, captureOptions } from '/assets/scripts/p5-sketches/utils/index.js';
+import { sketch, easing, mappers, recorder, exif, animation, string, events, cache, captureOptions } from '/assets/scripts/p5-sketches/utils/index.js';
 
 const options = Object.assign( {
     "size": {
       "width": 1080,
-      "height": 1920
+      "height": 1080
     },
     "animation": {
       "framerate": 60,
-      "duration": 12
+      "duration": 6
     },
     "texts": {
       "top": "top",
@@ -27,9 +27,6 @@ const options = Object.assign( {
 }, captureOptions);
 
 console.log(captureOptions)
-
-console.log(options.assets)
-
 
 if (!options.assets) {
     options.assets = [
@@ -290,36 +287,6 @@ sketch.draw( (_time, center, favoriteColor) => {
         card.draw(canvases._3d);
     }
 
-    // push()
-    // translate(width/2, 50);
-    // string.write(
-    //     "vertical-3d-photo-stack",
-    //     0, 0,
-    //     {
-    //         size: 24,
-    //         fill: color(...options.colors.text),
-    //         stroke: color(...options.colors.background),
-    //         font: string.fonts.martian,
-    //         center: true,
-    //     }
-    // )
-    // pop();
-    //
-    // push()
-    // translate(width/2, height-50);
-    // string.write(
-    //     "@costardrouge.jpg",
-    //     0, 0,
-    //     {
-    //         size: 24,
-    //         fill: color(...options.colors.text),
-    //         stroke: color(...options.colors.background),
-    //         font: string.fonts.martian,
-    //         center: true,
-    //     }
-    // )
-    // pop();
-
     push();
     translate(width-50, height/2);
     rotate(PI/2)
@@ -396,7 +363,7 @@ sketch.draw( (_time, center, favoriteColor) => {
         sketchDurationBar(color(...options.colors.accent))
     }
 
-    if (cards.every(card => card.exif !== undefined)) {
+    if ( document.querySelector("canvas#defaultCanvas0.loaded") === null && cards.every(card => card.exif !== undefined)) {
         document.querySelector("canvas#defaultCanvas0").classList.add("loaded");
     }
 });

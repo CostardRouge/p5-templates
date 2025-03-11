@@ -1,32 +1,34 @@
-import { sketch, options, debug, animation, events, time } from './index.js';
+import { sketch, events, debug, animation, time } from './index.js';
 
 const recorder = {
   savedFramesCount: 0,
   recording: false,
   capturer: undefined,
   createRecorder: () => {
+    if (recorder.capturer) {
+      return;
+    }
+
     recorder.capturer = new CCapture({
       // format: options.get('recording-format'),
-      format: "webm",
+      format: "png",
       quality: "best",
       framerate: sketch.engine.getFrameRate(),
       verbose: false,
       name: sketch.name,
-      workersPath: "libraries/",
+      manualStart: true,
+      // workersPath: "libraries/",
     });
-
-    events.handle("engine-framerate-change")
   },
   start: (maximumFrames) => {
     if (true === recorder.recording) {
       return;
     }
-    if (maximumFrames) {
-      time.reset();
 
+    if (maximumFrames) {
       if (!document.getElementById('recording-progression')) {
         const progressBar = document.createElement('div')
-        
+
         progressBar.id = 'recording-progression';
 
         document.getElementsByTagName('main')[0].prepend(progressBar);
@@ -51,8 +53,8 @@ const recorder = {
     recorder.capturer.stop();
     recorder.capturer.save();
   },
-  render: () => {
-    requestAnimationFrame(recorder.render);
+  onDraw: () => {
+    // requestAnimationFrame(recorder.onDraw);
 
     if (undefined === recorder.capturer) {
       return;
@@ -74,15 +76,21 @@ const recorder = {
       document.getElementById('recording-progression').style.width = (recorder.savedFramesCount / recorder.maximumFrames) * 100 + '%';
     }
 
-    const canvasElement = sketch?.engine?.getCanvasElement();
-
-    if (undefined === canvasElement) {
+    if (recorder.maximumFrames === recorder.savedFramesCount) {
+      recorder.stop();
       return;
     }
 
-    if (recorder.maximumFrames === recorder.savedFramesCount) {
-      recorder.stop();
-      requestAnimationFrame(recorder.render);
+    if (recorder.maximumFrames && recorder.savedFramesCount === 0) {
+      time.reset();
+      redraw();
+
+      console.log("time.reset, redraw");
+    }
+
+    const canvasElement = sketch?.engine?.getCanvasElement();
+
+    if (undefined === canvasElement) {
       return;
     }
 
@@ -91,7 +99,7 @@ const recorder = {
   },
 };
 
-recorder.render();
+// recorder.onDraw();
 
 window.startLoopRecording = () => recorder.start(animation.maximumFramesCount);
 
