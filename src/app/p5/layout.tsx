@@ -18,6 +18,7 @@ export default function RootLayout({
     <body>
         <div id="sketch-ui-drawer"></div>
         <span id="sketch-ui-icon"></span>
+        <Script src="/assets/librairies/tar.js"/>
         <Script src="/assets/librairies/p5.min.js"/>
         <Script src="/assets/librairies/exif-reader.js"/>
         <Script src="/assets/librairies/CCapture.all.min.js"/>

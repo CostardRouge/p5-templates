@@ -58,8 +58,8 @@ const sketch = {
   draw: (drawFunction) => {
     events.register("pre-draw", debug.fps);
     events.register("pre-draw", time.incrementElapsedTime);
-    events.register("draw", recorder.onDraw);
     events.register("draw", drawFunction);
+    events.register("draw", recorder.onDraw);
   },
 };
 

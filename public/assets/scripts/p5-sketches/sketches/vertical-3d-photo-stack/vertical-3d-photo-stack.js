@@ -3,7 +3,7 @@ import { sketch, easing, mappers, recorder, exif, animation, string, events, cac
 const options = Object.assign( {
     "size": {
       "width": 1080,
-      "height": 1080
+      "height": 1350
     },
     "animation": {
       "framerate": 60,
