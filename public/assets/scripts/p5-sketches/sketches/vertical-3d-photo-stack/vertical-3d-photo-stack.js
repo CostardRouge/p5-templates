@@ -1,42 +1,4 @@
-import { sketch, easing, mappers, recorder, exif, animation, string, events, cache, captureOptions } from '/assets/scripts/p5-sketches/utils/index.js';
-
-const options = Object.assign( {
-    "size": {
-      "width": 1080,
-      "height": 1350
-    },
-    "animation": {
-      "framerate": 60,
-      "duration": 6
-    },
-    "texts": {
-      "top": "top",
-      "bottom": "bottom"
-    },
-    "colors": {
-        "accent": [128,128,255],
-
-        "text": [0,0,0],
-        "background": [230, 230, 230],
-
-        // "background": [0,0,0],
-        // "text": [230, 230, 230],
-    },
-    // "lines": true,
-    "durationBar": true
-}, captureOptions);
-
-console.log(captureOptions)
-
-if (!options.assets) {
-    options.assets = [
-        "/assets/images/samples/_00001.jpeg",
-        "/assets/images/samples/_00002.jpeg",
-        "/assets/images/samples/_00003.jpeg",
-        "/assets/images/samples/_00004.jpeg",
-        "/assets/images/samples/_00005.jpeg",
-    ]
-}
+import { sketch, easing, mappers, recorder, exif, animation, string, events, cache, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
 
 events.register("engine-window-preload", () => {
     cache.store("images", () => options.assets.map( (path) => ({

@@ -11,7 +11,8 @@ const templates = {
     "/p5/photo-stack-center",
     "/p5/photo-stack-top-bottom",
 
-    "/p5/vertical-3d-photo-stack"
+    "/p5/vertical-3d-photo-stack",
+    "/p5/dominant-colors-block-switch"
   ]
 }
 

@@ -52,6 +52,40 @@ const colors = {
       4, 2, 8
     )
   ),
+
+  chunk: (array, chunkSize)=> {
+    const chunkedArray = [];
+
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunkedArray.push(array.slice(i, i + chunkSize));
+    }
+
+    return chunkedArray;
+  },
+  getDominantColorFromPixels: ( pixels, precision = 100 ) => {
+    const chunkedPixels = colors.chunk( pixels, 4 );
+
+    const filteredPixels = chunkedPixels
+        .filter( ( [ r, g, b ], index ) => (
+            index % precision === 0 && [ r, g, b ].every( channel => channel > 10 )
+        ) )
+
+    return filteredPixels.reduce( ( accumulator, [ r, g, b, a ] ) => {
+      const pixelColor = color( r, g, b, a );
+
+      if ( null === accumulator ) {
+        return pixelColor;
+      }
+
+      return lerpColor( accumulator, pixelColor, 0.5 )
+    }, null );
+  },
+
+  getDominantColor: ( img, precision ) => {
+    img.loadPixels()
+
+    return colors.getDominantColorFromPixels( img.pixels, precision );
+  }
 };
 
 export default colors;

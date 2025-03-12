@@ -30,6 +30,9 @@ const string = {
     get agiro() {
       return string.fonts.loadFont("agiro", "/assets/fonts/agiro.otf");
     },
+    get peix() {
+      return string.fonts.loadFont("peix", "/assets/fonts/peix.ttf");
+    },
   },
   write: function (
     str,
