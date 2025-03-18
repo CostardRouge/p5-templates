@@ -14,10 +14,28 @@ const mappers = {
     return map( fn(map(value, min, max, 0, 1)), 0, 1, start, end)
   },
   circularIndex: function (index, values) {
+    // return values[~~(mappers.circularConstrain(index, 0, values.length-1)) % values.length];
     return values[~~(abs(index)) % values.length];
   },
   circularValueOn: function (index, values, scale = values.length - 1) {
     return values[ceil(circularMap(index, scale, 0, values.length - 1))];
+  },
+  circularConstrain: function(value, min, max) {
+    if (value >= min && value <= max) {
+      return value;
+    }
+
+    const rest = value % max;
+
+    if (value > max) {
+      return mappers.circularConstrain(min + rest, min, max);
+    }
+
+    const diff = min - value;
+
+    if (value < min) {
+      return mappers.circularConstrain(max -diff, min, max);
+    }
   },
   lerpPoints: (from, to, amount, fn = p5.Vector?.lerp) => {
     const result = [];

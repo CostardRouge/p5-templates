@@ -86,6 +86,7 @@ const recorder2 = {
 
     if (recorder2.maximumFrames && recorder2.savedFramesCount === 0) {
       time.reset();
+      redraw();
       console.log("time.reset, redraw");
     }
 

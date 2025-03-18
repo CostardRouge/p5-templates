@@ -1,47 +1,4 @@
-import { sketch, easing, mappers, animation, string, events, cache, captureOptions } from '/assets/scripts/p5-sketches/utils/index.js';
-
-const options = Object.assign( {
-    "size": {
-      "width": 1080,
-      "height": 1920
-    },
-    "animation": {
-      "framerate": 60,
-      "duration": 6
-    },
-    "texts": {
-      "top": "top",
-      "bottom": "bottom"
-    },
-    "colors": {
-        "text": [0,0,0],
-        "accent": [128,128,255],
-        "background": [0, 0, 0],
-    },
-    "lines": true,
-    // "durationBar": true,
-    "count": 4,
-    "assets": [
-        "/assets/images/1.jpeg",
-        "/assets/images/2.jpeg",
-        "/assets/images/3.jpeg",
-        "/assets/images/4.jpeg",
-        "/assets/images/5.jpeg",
-        "/assets/images/6.jpeg",
-        "/assets/images/7.jpeg",
-        "/assets/images/8.jpeg"
-
-        // "/assets/images/_1.jpeg",
-        // "/assets/images/_2.jpeg",
-        // "/assets/images/_3.jpeg",
-        // "/assets/images/_4.jpeg",
-        // "/assets/images/_5.jpeg",
-        // "/assets/images/_6.jpeg",
-        // "/assets/images/_7.jpeg",
-    ]
-}, captureOptions);
-
-console.log({captureOptions})
+import { sketch, easing, mappers, animation, events, cache, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
 
 let graphic = null;
 
@@ -83,7 +40,7 @@ function vl(x) {
 function displayImage(img, x, y, w, h, _text)  {
     image(img, x, y, w, h);
 
-    if (options.lines) {
+    if (options.lines || true) {
         stroke(options.colors.accent)
 
         hl(y);
@@ -126,7 +83,7 @@ sketch.draw( (_time, center, favoriteColor) => {
 
     background(...options.colors.background);
 
-    if (options.lines) {
+    if (options.lines || true) {
         stroke(options.colors.accent)
 
         hl(0);
@@ -136,11 +93,11 @@ sketch.draw( (_time, center, favoriteColor) => {
         vl(width);
     }
 
-    if (options.durationBar) {
+    if (options.durationBar || true) {
         sketchDurationBar(color(...options.colors.accent))
     }
 
-    const count = options.count;
+    const count = options.count || 5;
     const imageIndexDisplay = ~~(animation.progression * images.length) % images.length;
 
     const { img, filename } = images[imageIndexDisplay];
@@ -154,6 +111,7 @@ sketch.draw( (_time, center, favoriteColor) => {
 
         const t = i / (count - 1 || 1);
         const scale = lerp(1, 0.7, t);
+        // const scale = mappers.fn(t, 1, 0, 0.7, 1, easing.d);
 
         // Compute available space (ensuring aspect ratio)
         const availableWidth = width * scale;
