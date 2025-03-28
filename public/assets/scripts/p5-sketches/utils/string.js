@@ -49,7 +49,8 @@ const string = {
       graphics = window,
       showBox = false,
       showLines = false,
-      center = false,
+      // center = false,
+      textAlign = [],
       right = false,
       bottom = false,
       blendMode = BLEND,
@@ -70,28 +71,29 @@ const string = {
     graphics.strokeWeight(strokeWeight);
     graphics.textSize(size);
     graphics.textFont?.(font);
+    graphics.textAlign(...textAlign);
 
     const box = font.textBounds(str, x, y, size);
     const asc =  int(textAscent() * 0.8);
     const desc = int(textDescent() * 0.8);
 
-    if ( center ) {
+
+    // if ( center ) {
       // translate( -box.w / 2, (asc + desc)/4 );
       // position.add( -box.w / 2, (asc + desc)/4 );
-      graphics.textAlign(CENTER, CENTER);
 
       // position.add( -(asc + desc)/3, box.h/2 );
-    }
+    // }
 
     // console.log({box})
 
-    if ( right ) {
-      position.add( -box.w, 0 );
-    }
-
-    if ( bottom ) {
-      position.add( 0, box.h );
-    }
+    // if ( right ) {
+    //   position.add( -box.w, 0 );
+    // }
+    //
+    // if ( bottom ) {
+    //   position.add( 0, box.h );
+    // }
 
     if ( showLines ) {
       push()

@@ -5,16 +5,14 @@ import { spawn } from 'child_process';
 import fs from "node:fs/promises";
 import path from 'path';
 
+import minifyAndEncodeCaptureOptions from "@/utils/minifyAndEncodeCaptureOptions";
+
+import * as tar from 'tar';
+
 const { createPage } = await createBrowserPage({
     headless: true,
     deviceScaleFactor: 1
 });
-
-function minifyAndEncodeCaptureOptions(captureOptions: Record<string, any>) {
-    const jsonString = JSON.stringify(captureOptions);
-
-    return Buffer.from(jsonString).toString('base64');
-}
 
 export async function POST(
     request: Request,
@@ -68,16 +66,25 @@ export async function POST(
         await download.saveAs(downloadPath);
         await page.close();
 
+        // Extract tar file
+        // await tar.x({
+        //     file: downloadPath,
+        //     cwd: tempDir
+        // });
+
         // Generate video from frames
-        const outputPath = path.join(tempDir, "output.mp4");
+        const outputPath = path.join(tempDir, `output_${timestamp}.mp4`);
 
         const ffmpegOptions = [
             '-r', String(captureOptions.animation.framerate),
             '-i', downloadPath,
-            // '-c:v', 'libx264',
-            // '-pix_fmt', 'yuv420p',
-            // '-preset', 'fast',
-            // '-crf', '23',
+
+            // '-pattern_type', 'glob',
+            // '-i', '*.png',
+            '-c:v', 'libx264',
+            '-pix_fmt', 'yuv420p',
+            '-preset', 'fast',
+            '-crf', '23',
             '-y',
             outputPath
         ];
@@ -90,8 +97,12 @@ export async function POST(
             });
 
             ffmpeg.on('close', (code) => {
-                if (code !== 0) reject(new Error(`FFmpeg exited with code ${code}`));
-                else resolve(true);
+                if (code !== 0) {
+                    reject(new Error(`FFmpeg exited with code ${code}`))
+                }
+                else {
+                    resolve(true)
+                }
             });
 
             ffmpeg.on('error', reject);

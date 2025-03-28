@@ -1,22 +1,43 @@
+import listDirectory from "@/utils/listDirectory";
+import minifyAndEncodeCaptureOptions from "@/utils/minifyAndEncodeCaptureOptions";
+
+const p5sketchesFolderFileNames = await listDirectory("public/assets/scripts/p5-sketches/sketches");
+const testImageFileNames = await listDirectory("public/assets/images/test");
+
+const acceptedImageTypes = ["png", "jpg", "arw", "jpeg", "webp"];
+
+export const revalidate = 5;
+
+const captureOptions = {
+  texts: {
+    title: "SYNDEY\nPHOTO\nDUMP"
+  },
+  size: {
+    width: 1080,
+    height: 1350
+  },
+  count: 24,
+  animationProgression: "linearProgression",
+  animation: {
+    duration: 6,
+    framerate: 60,
+  },
+  assets: testImageFileNames
+      .filter( testImageFileName => acceptedImageTypes.includes(testImageFileName.split(".")[1]) )
+      .map( testImageFileName => `/assets/images/test/${testImageFileName}` )
+}
+
+const p5sketchNames = p5sketchesFolderFileNames
+    .filter( p5sketchFileName => p5sketchFileName.endsWith(".js") )
+    .map( p5sketchFileName => `/p5/${p5sketchFileName.replace(".js", "")}` )
+    .map( p5sketchFilePath => `${p5sketchFilePath}` );
+
 const templates = {
   html: [
     "/html/exif-detail"
   ],
-  p5: [
-    "/p5/test",
-    "/p5/letter-3d-show",
-
-    "/p5/photo-switch",
-    "/p5/photo-unzoom",
-    "/p5/photo-unzoom-switch",
-
-    "/p5/photo-stack-center",
-    "/p5/photo-stack-top-bottom",
-
-    "/p5/vertical-3d-photo-stack",
-    "/p5/dominant-colors-block-switch"
-  ]
-}
+  p5: p5sketchNames
+};
 
 export default function Home() {
   return (
@@ -34,7 +55,7 @@ export default function Home() {
                         <li key={ categoryTemplate }>
                           <a
                               className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-                              href={ categoryTemplate }
+                              href={ `${categoryTemplate}?captureOptions=${minifyAndEncodeCaptureOptions(captureOptions)}` }
                               rel="noopener noreferrer"
                           >
                             { categoryTemplate }

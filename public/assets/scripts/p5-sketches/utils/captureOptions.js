@@ -27,16 +27,20 @@ const captureOptions = Object.assign( {
     "accent": [128,128,255],
     "background": [230, 230, 230],
   },
-  "assets": [
-    "/assets/images/samples/_00001.jpeg",
-    "/assets/images/samples/_00002.jpeg",
-    "/assets/images/samples/_00003.jpeg",
-    "/assets/images/samples/_00004.jpeg",
-    "/assets/images/samples/_00005.jpeg",
-  ],
+  "assets": [],
   // "lines": true,
   "durationBar": true
 }, getCaptureOptions());
+
+if (!captureOptions.assets.length) {
+  captureOptions.assets = [
+    "/assets/images/samples/xiamen/_00001.jpeg",
+    "/assets/images/samples/xiamen/_00002.jpeg",
+    "/assets/images/samples/xiamen/_00003.jpeg",
+    "/assets/images/samples/xiamen/_00004.jpeg",
+    "/assets/images/samples/xiamen/_00005.jpeg",
+  ];
+}
 
 console.log({
   captureOptions

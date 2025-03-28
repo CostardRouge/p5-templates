@@ -128,7 +128,7 @@ const mappers = {
     const storedValue = cache.store(cacheKey, () => undefined );
   
     return cache.set( cacheKey, {
-      value: storedValue?.value,
+      // value: storedValue?.value,
       value: value,
       min: Math.min(storedValue?.min ?? Infinity, value),
       max: Math.max(storedValue?.max ?? -Infinity, value),

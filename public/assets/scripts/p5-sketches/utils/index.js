@@ -10,11 +10,14 @@ import colors from './colors.js';
 import events from './events.js';
 import mappers from './mappers.js';
 import options from './options.js';
-import recorder from './recorder.js';
 import animation from './animation.js';
 import iterators from './iterators.js';
 import converters from './converters.js';
+import imageUtils from './imageUtils.js';
 import captureOptions from './captureOptions.js';
+
+// import recorder from './recorder-ccapture.js';
+import recorder from './recorder-media-recorder.js';
 
 export {
   grid,
@@ -33,5 +36,6 @@ export {
   animation,
   iterators,
   converters,
+  imageUtils,
   captureOptions
 };

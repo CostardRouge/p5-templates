@@ -2,6 +2,10 @@ const friendlyCameraModelNames = {
     "ILCE-7CM2": "ALPHA 7CII"
 };
 
+const friendlyLensModelNames = {
+    "Sony FE 50mm F1.4 GM (SEL50F14GM)": "Sony FE 50mm F1.4 GM"
+};
+
 const exif = {
     load: (file) => {
         return ExifReader.load(file)
@@ -73,6 +77,13 @@ const exif = {
 
         return `ƒ/${fStop}`
     },
+    formatISO: (iso) => {
+        if (!iso) {
+            return;
+        }
+
+        return `ISO ${iso}`
+    },
     formatCameraModel: (camera) => {
         if (!camera) {
             return;
@@ -81,6 +92,13 @@ const exif = {
         const { brand, model } = camera;
 
         return `${brand} ${friendlyCameraModelNames[model] ?? model}`
+    },
+    formatLensModel: (lens) => {
+        if (!lens) {
+            return;
+        }
+
+        return `${friendlyLensModelNames[lens] ?? lens}`
     },
     formatPhotoDate: (date) => {
         if (!date) {
