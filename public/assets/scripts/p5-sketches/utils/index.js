@@ -16,8 +16,8 @@ import converters from './converters.js';
 import imageUtils from './imageUtils.js';
 import captureOptions from './captureOptions.js';
 
-// import recorder from './recorder-ccapture.js';
-import recorder from './recorder-media-recorder.js';
+import recorder from './recorder-ccapture.js';
+// import recorder from './recorder-media-recorder.js';
 
 export {
   grid,

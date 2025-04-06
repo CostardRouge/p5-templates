@@ -9,7 +9,7 @@ sketch.setup(
           sketch?.engine?.canvas?.height,
       );
 
-      canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0075);
+      // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
 
       background(...options.colors.background);
       options.noSmooth && noSmooth();
@@ -49,9 +49,9 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
     const images = cache.get("images");
 
-    const borderSize = 100;
-    const rows = options.rows || 2//columns*height/width;
-    const columns = options.columns || 2//rows*width/height;
+    const borderSize = 10;
+    const rows = options.rows || 3//columns*height/width;
+    const columns = options.columns || 3//rows*width/height;
     const gridOptions = {
         topLeft: createVector( borderSize, borderSize ),
         topRight: createVector( width-borderSize, borderSize ),
@@ -109,16 +109,18 @@ sketch.draw( ( time, center, favoriteColor ) => {
     filter(BLUR, options.blur || 9, true);
     // filter(POSTERIZE, options.blur || 9, true);
 
-    gridCells.forEach( ({ position, xIndex, yIndex, width: W, height: H }) => {
+    gridCells.forEach( ({ position, xIndex, yIndex, width: W, height: H }, cellIndex ) => {
         const { x, y } = position;
-        const imageObjectAtIndex = mappers.circularIndex(
-            (
-                +animation.progression*images.length
-                +(
-                    +xIndex/columns
-                    +yIndex/rows
-                )
-            ),
+        const imageObjectAtIndex =
+          mappers.circularIndex(
+            cellIndex,
+            // (
+            //     +animation.progression*images.length
+            //     +(
+            //         +xIndex/columns
+            //         +yIndex/rows
+            //     )
+            // ),
             images
         );
         const imageAtIndex = imageObjectAtIndex.img;
@@ -127,31 +129,33 @@ sketch.draw( ( time, center, favoriteColor ) => {
             img: imageAtIndex,
             position: createVector(x+W/2, y+H/2),
             boundary: {
-                height: H/2,
-                width: W/2
+                height: H,
+                width: W
             },
             center: true,
+            fill: true,
+            margin: 0,
         });
     })
 
     const defaultTitle = "photo-grip-dump".toUpperCase().replaceAll('-', "\n")
 
-    if (animation.progression < 0.2) {
-        string.write(
-            defaultTitle,
-            // options.texts.title || defaultTitle,
-            width/2,
-            height/2,
-            {
-              size: 128,
-              stroke: color(...options.colors.text),
-              fill: color(...options.colors.background),
-              font: string.fonts.martian,
-              textAlign: [CENTER, CENTER],
-              blendMode: EXCLUSION
-            }
-        )
-    }
+    // if (animation.progression < 0.2) {
+    //     string.write(
+    //         defaultTitle,
+    //         // options.texts.title || defaultTitle,
+    //         width/2,
+    //         height/2,
+    //         {
+    //           size: 128,
+    //           stroke: color(...options.colors.text),
+    //           fill: color(...options.colors.background),
+    //           font: string.fonts.martian,
+    //           textAlign: [CENTER, CENTER],
+    //           blendMode: EXCLUSION
+    //         }
+    //     )
+    // }
 
     if ( document.querySelector("canvas#defaultCanvas0.loaded") === null && images.every(image => image.exif !== undefined)) {
         document.querySelector("canvas#defaultCanvas0").classList.add("loaded");

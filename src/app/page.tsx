@@ -1,45 +1,43 @@
 import listDirectory from "@/utils/listDirectory";
 import minifyAndEncodeCaptureOptions from "@/utils/minifyAndEncodeCaptureOptions";
 
-const p5sketchesFolderFileNames = await listDirectory("public/assets/scripts/p5-sketches/sketches");
-const testImageFileNames = await listDirectory("public/assets/images/test");
+export default async function Home() {
+  const p5sketchesFolderFileNames = await listDirectory("public/assets/scripts/p5-sketches/sketches");
+  const testImageFileNames = await listDirectory("public/assets/images/test");
 
-const acceptedImageTypes = ["png", "jpg", "arw", "jpeg", "webp"];
+  const acceptedImageTypes = ["png", "jpg", "arw", "jpeg", "webp"];
 
-export const revalidate = 5;
+  const captureOptions = {
+    texts: {
+      title: "SYNDEY\nPHOTO\nDUMP"
+    },
+    size: {
+      width: 1080,
+      height: 1920
+    },
+    count: 24,
+    animationProgression: "linearProgression",
+    animation: {
+      duration: 12,
+      framerate: 60,
+    },
+    assets: testImageFileNames
+        .filter( testImageFileName => acceptedImageTypes.includes(testImageFileName.split(".")[1]) )
+        .map( testImageFileName => `/assets/images/test/${testImageFileName}` )
+  }
 
-const captureOptions = {
-  texts: {
-    title: "SYNDEY\nPHOTO\nDUMP"
-  },
-  size: {
-    width: 1080,
-    height: 1350
-  },
-  count: 24,
-  animationProgression: "linearProgression",
-  animation: {
-    duration: 6,
-    framerate: 60,
-  },
-  assets: testImageFileNames
-      .filter( testImageFileName => acceptedImageTypes.includes(testImageFileName.split(".")[1]) )
-      .map( testImageFileName => `/assets/images/test/${testImageFileName}` )
-}
+  const p5sketchNames = p5sketchesFolderFileNames
+      .filter( p5sketchFileName => p5sketchFileName.endsWith(".js") )
+      .map( p5sketchFileName => `/p5/${p5sketchFileName.replace(".js", "")}` )
+      .map( p5sketchFilePath => `${p5sketchFilePath}` );
 
-const p5sketchNames = p5sketchesFolderFileNames
-    .filter( p5sketchFileName => p5sketchFileName.endsWith(".js") )
-    .map( p5sketchFileName => `/p5/${p5sketchFileName.replace(".js", "")}` )
-    .map( p5sketchFilePath => `${p5sketchFilePath}` );
+  const templates = {
+    html: [
+      "/html/exif-detail"
+    ],
+    p5: p5sketchNames
+  };
 
-const templates = {
-  html: [
-    "/html/exif-detail"
-  ],
-  p5: p5sketchNames
-};
-
-export default function Home() {
   return (
     <div className="bg-white min-h-screen p-8">
       <main className="flex items-center">

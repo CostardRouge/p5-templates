@@ -1,45 +1,4 @@
-import { sketch, easing, mappers, animation, string, events, cache, captureOptions } from '/assets/scripts/p5-sketches/utils/index.js';
-
-const options = Object.assign( {
-    "size": {
-      "width": 1080,
-      "height": 1920
-    },
-    "animation": {
-      "framerate": 60,
-      "duration": 6
-    },
-    "texts": {
-      "top": "top",
-      "bottom": "bottom"
-    },
-    "colors": {
-        "text": [0,0,0],
-        "accent": [128,128,255],
-        "background": [0, 0, 0],
-    },
-    "lines": true,
-    "durationBar": true,
-    "assets": [
-        // "/assets/images/1.jpeg",
-        // "/assets/images/2.jpeg",
-        // "/assets/images/3.jpeg",
-        // "/assets/images/4.jpeg",
-        // "/assets/images/5.jpeg",
-        // "/assets/images/6.jpeg",
-        // "/assets/images/7.jpeg",
-        // "/assets/images/8.jpeg",
-
-        "/assets/images/_1.jpeg",
-        "/assets/images/_3.jpeg",
-        "/assets/images/_4.jpeg",
-        "/assets/images/_5.jpeg",
-        "/assets/images/_6.jpeg",
-        "/assets/images/_7.jpeg",
-    ]
-}, captureOptions);
-
-console.log({captureOptions})
+import { sketch, easing, mappers, animation, string, events, cache, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
 
 let graphic = null;
 
