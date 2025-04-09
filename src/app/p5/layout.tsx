@@ -1,5 +1,6 @@
 import "./p5.css";
 
+
 import type { Metadata } from "next";
 import Script from 'next/script';
 

@@ -13,7 +13,7 @@ export default async function Home() {
     },
     size: {
       width: 1080,
-      height: 1920
+      height: 1350
     },
     count: 24,
     animationProgression: "linearProgression",

@@ -13,8 +13,9 @@
     "exifreader": "^4.26.1",
     "lucide-react": "^0.477.0",
     "mime-types": "^2.1.35",
-    "next": "15.1.7",
+    "next": "^15.2.5",
     "playwright": "^1.50.1",
+    "poly-decomp": "^0.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tar": "^7.4.3"

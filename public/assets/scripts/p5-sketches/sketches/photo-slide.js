@@ -148,7 +148,6 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
 	image(canvases.sliderBuffer, 0, 0)
 
-
 	offset -= 1//((width)/imageIndices.length)/options.animation.duration;
 	if (offset <= -width) {
 		offset = 0;

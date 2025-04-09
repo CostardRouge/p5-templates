@@ -49,20 +49,17 @@ const string = {
       graphics = window,
       showBox = false,
       showLines = false,
-      // center = false,
       textAlign = [],
-      right = false,
-      bottom = false,
       blendMode = BLEND,
-
+      popPush = true,
     } = options;
     if (!font?.font) {
       return;
     }
 
-    const position = createVector( x, y )
+    const position = graphics.createVector( x, y )
 
-    push()
+    popPush && graphics.push()
 
     graphics.blendMode(blendMode);
 
@@ -74,9 +71,8 @@ const string = {
     graphics.textAlign(...textAlign);
 
     const box = font.textBounds(str, x, y, size);
-    const asc =  int(textAscent() * 0.8);
+    const asc = int(textAscent() * 0.8);
     const desc = int(textDescent() * 0.8);
-
 
     // if ( center ) {
       // translate( -box.w / 2, (asc + desc)/4 );
@@ -96,31 +92,31 @@ const string = {
     // }
 
     if ( showLines ) {
-      push()
+      graphics.push()
       // translate(position.x, position.y)
-      line(-width / 2, position.y - asc, width / 2, position.y - asc);
-      line(-width / 2, position.y + desc, width / 2, position.y + desc);
-      line(-width / 2, position.y, width, position.y); // baseline
-      pop()
+      graphics.line(-width / 2, position.y - asc, width / 2, position.y - asc);
+      graphics.line(-width / 2, position.y + desc, width / 2, position.y + desc);
+      graphics.line(-width / 2, position.y, width, position.y); // baseline
+      graphics.pop()
     }
 
     if ( showBox ) {
-      push()
+      graphics.push()
       // translate(position.x, position.y)
       graphics.stroke(255)
       graphics.strokeWeight(1)
       graphics.noFill()
       // rect( 0, 0, box.w, -box.h )
-      rect( box.x, box.y, box.w, box.h )
+      graphics.rect( box.x, box.y, box.w, box.h )
 
-      pop()
+      graphics.pop()
     }
 
     graphics.text(str, position.x, position.y);
 
-    pop()
+    popPush && graphics.pop()
   },
-  getTextPoints: ({ text, size, font, position = createVector(0, 0), sampleFactor, simplifyThreshold }) => {
+  getTextPoints: ({ text, size, font, position = createVector(0, 0), sampleFactor = 1, simplifyThreshold = 0 }) => {
     if (!font?.font) {
       return;
     }
