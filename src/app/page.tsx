@@ -15,10 +15,13 @@ export default async function Home() {
       width: 1080,
       height: 1350
     },
-    count: 24,
+    count: 20,
+    // rotate: true,
+    zoom: true,
     animationProgression: "linearProgression",
+    // animationProgression: "triangleProgression",
     animation: {
-      duration: 12,
+      duration: 9,
       framerate: 60,
     },
     assets: testImageFileNames

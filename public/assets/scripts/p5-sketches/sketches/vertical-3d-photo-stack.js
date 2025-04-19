@@ -1,4 +1,4 @@
-import { sketch, easing, mappers, recorder, exif, animation, string, events, cache, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
+import { sketch, easing, mappers, recorder, shapes, imageUtils, exif, animation, string, events, cache, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
 
 events.register("engine-window-preload", () => {
     cache.store("images", () => options.assets.map( (path) => ({
@@ -7,54 +7,6 @@ events.register("engine-window-preload", () => {
         filename: path.split("/").pop()
     }) ) );
 });
-
-function displayImage(img, x, y, margin = 80, graphics = window) {
-    // Determine if the image is portrait or landscape
-    const isPortrait = img.height > img.width;
-
-    // Apply different margins based on orientation
-    const marginX = isPortrait ? margin * 1.5 : margin; // Extra margin for portrait
-    const marginY = isPortrait ? margin : margin * 1.5; // Extra margin for landscape
-
-    const availableWidth = width - 2 * marginX;
-    const availableHeight = height - 2 * marginY;
-
-    // Scale factor to fit inside the available area
-    const scale = Math.min(availableWidth / img.width, availableHeight / img.height);
-
-    // Compute the new dimensions
-    const newWidth = img.width * scale;
-    const newHeight = img.height * scale;
-
-    // Draw the image
-    graphics.image(img, x - newWidth / 2, y - newHeight / 2, newWidth, newHeight);
-}
-
-function circularConstrain(value, min, max) {
-    if (value >= min && value <= max) {
-        return value;
-    }
-
-    const rest = value % max;
-
-    if (value > max) {
-        return circularConstrain(min + rest, min, max);
-    }
-
-    const diff = min - value;
-
-    if (value < min) {
-        return circularConstrain(max -diff, min, max);
-    }
-}
-
-function hl(y) {
-    line(0, y, width, y)
-}
-
-function vl(x) {
-    line(x, 0, x, height)
-}
 
 function sketchDurationBar(color) {
     const sketchDurationBarStartPosition = createVector(0, 3);
@@ -153,8 +105,13 @@ class Card {
         }
 
         graphics.push()
-        graphics.translate(0, 0, this.position.z);
-        displayImage(this.img, this.position.x, this.position.y, 70, graphics)
+        graphics.translate(this.position);
+        imageUtils.marginImage({
+            img: this.img,
+            scale: .7,
+            center: true,
+            graphics,
+        });
         graphics.pop();
 
         if (!this.exif) {
@@ -314,11 +271,11 @@ sketch.draw( (_time, center, favoriteColor) => {
     if (options.lines) {
         stroke(options.colors.accent)
 
-        hl(0);
-        hl(height);
+        shapes.hl(0);
+        shapes.hl(height);
 
-        vl(0);
-        vl(width);
+        shapes.vl(0);
+        shapes.vl(width);
     }
 
     if (options.durationBar) {

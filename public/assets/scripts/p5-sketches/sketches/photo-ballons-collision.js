@@ -128,7 +128,7 @@ sketch.setup(
 		addBoundary(-thickness/2+margin, height/2, thickness, height);
 		addBoundary(width+thickness/2-margin, height/2, thickness, height);
 
-		for (let i = 0; i <= 50; i++) {
+		for (let i = 0; i <= 10; i++) {
 			addImageBall(
 				// random(cache.get("images")).img,
 				cache.get("images")[0].img,

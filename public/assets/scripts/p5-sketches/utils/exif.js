@@ -3,7 +3,9 @@ const friendlyCameraModelNames = {
 };
 
 const friendlyLensModelNames = {
-    "Sony FE 50mm F1.4 GM (SEL50F14GM)": "Sony FE 50mm F1.4 GM"
+    "Sony FE 50mm F1.4 GM (SEL50F14GM)": "Sony FE 50mm F1.4 GM",
+    "Sony FE PZ 16-35mm F4 G (SELP1635G)": "Sony FE PZ 16-35mm F4 G",
+    "Sony FE 24-105mm F4 G OSS (SEL24105G)": "Sony FE 24-105mm F4 G OSS",
 };
 
 const exif = {

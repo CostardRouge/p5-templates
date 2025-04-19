@@ -1,12 +1,14 @@
 import { sketch, animation, easing, exif, mappers, string, events, captureOptions as options, cache, grid, colors, imageUtils } from '/assets/scripts/p5-sketches/utils/index.js';
 
 function resetBallPositions() {
-	cache.get("images").forEach( ({ img, ball }) => {
-		ball.position.set(width/2, height/2);
-		ball.size = random(200, 300, 400, 600)*1.5;
-		ball.vx = random(-1, 1);
-		ball.vy = random(-1, 1);
-	})
+	cache.get("images").forEach( image => {
+		image.ball = {
+			position: createVector(width/2, height/2),
+			size: random(200, 300, 400),
+			vx: random(-1, 1),
+			vy: random(-1, 1),
+		};
+	});
 }
 
 const canvases = {
@@ -73,20 +75,6 @@ sketch.setup(
 	}
 );
 
-events.register("engine-window-preload", () => {
-	cache.store("images", () => options.assets.slice(0, 5).map( imagePath => ({
-		path: imagePath,
-		img: loadImage( imagePath ),
-		filename: imagePath.split("/").pop(),
-		ball: {
-			position: createVector(),
-			size: random(200, 300, 400),
-			vx: random(-1, 1),
-			vy: random(-1, 1),
-		}
-	}) ) );
-});
-
 sketch.draw( ( time, center, favoriteColor ) => {
 	background(...options.colors.background);
 
@@ -95,25 +83,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
 	const links = [];
 
 	imageObjects.forEach(({ ball }, index) => {
-		const { size, position, vx, vy } = ball;
-
-		// // Update position based on velocity and time delta
-		// position.x += vx * 20//time * 60; // Scale velocity for frame independence
-		// position.y += vy * 20//time * 60;
-		//
-		// // Boundary collision detection based on time and frame rate
-		// if (position.x - size / 2 < 0 || position.x + size / 2 > width) {
-		// 	ball.vx *= -1;
-		// 	position.x = constrain(position.x, size / 2, width - size / 2);
-		// }
-		// if (position.y - size / 2 < 0 || position.y + size / 2 > height) {
-		// 	ball.vy *= -1;
-		// 	position.y = constrain(position.y, size / 2, height - size / 2);
-		// }
-		// // Apply friction for smoother motion
-		// ball.vx *= friction;
-		// ball.vy *= friction;
-
+		const { position, vx, vy } = ball;
 		const m = 100;
 
 		const w = width/2;
@@ -128,11 +98,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
 		position.x += w;
 		position.y += h;
 
-		// position.x = constrain(position.x, m+size/2, width-m-size/2);
-		// position.y = constrain(position.y, m+size/2, height-m-size/2);
-
 		stroke(0, 0, 0, 230);
-		// strokeWeight(.5);
 
 		imageObjects.forEach( ({ img, ball }, _index) => {
 			if (index == _index) {

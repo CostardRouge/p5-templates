@@ -9,7 +9,8 @@ sketch.setup(
 			sketch?.engine?.canvas?.height,
 		);
 
-		canvases.background.pixelDensity(options.backgroundPixelDensity || 0.05);
+		canvases.background.pixelDensity(options.backgroundPixelDensity || 0.055);
+		canvases.background.drawingContext.filter = "blur(2px)";
 
 		background(...options.colors.background);
 		options.noSmooth && noSmooth();
@@ -68,7 +69,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
 	// canvases.background.background(...options.colors.background, 0);
 	// canvases.background.background(0, 0 ,0, 90);
 	image(canvases.background, 0, 0, width, height);
-	filter(BLUR, options.blur || 9, true);
+	// filter(BLUR, options.blur || 2);
 	// filter(POSTERIZE, options.blur || 9, true);
 
 	// background(...options.colors.background);
@@ -76,7 +77,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
 	imageUtils.marginImage({
 		img: imageAtIndex,
 		// graphics: canvases.background,
-		margin: width*.05,
+		margin: width*.1,
 		center: true,
 		position: createVector(width/2, height/2),
 		// scale: .5,
@@ -151,7 +152,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
 			width/2,
 			height/2,
 			{
-				size: 172,
+				size: 144,
 				stroke: color(...options.colors.text),
 				fill: color(...options.colors.background),
 				font: string.fonts.martian,

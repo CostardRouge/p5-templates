@@ -49,8 +49,8 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
     const images = cache.get("images");
 
-    const borderSize = 10;
-    const rows = options.rows || 3//columns*height/width;
+    const borderSize = 0;
+    const rows = options.rows || 4//columns*height/width;
     const columns = options.columns || 3//rows*width/height;
     const gridOptions = {
         topLeft: createVector( borderSize, borderSize ),
@@ -103,6 +103,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
         position: createVector(width/2, height/2),
         graphics: canvases.background,
         center: true,
+        fill: true,
     });
 
     image(canvases.background, 0, 0, width, height);
@@ -111,18 +112,18 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
     gridCells.forEach( ({ position, xIndex, yIndex, width: W, height: H }, cellIndex ) => {
         const { x, y } = position;
-        const imageObjectAtIndex =
-          mappers.circularIndex(
-            cellIndex,
-            // (
-            //     +animation.progression*images.length
-            //     +(
-            //         +xIndex/columns
-            //         +yIndex/rows
-            //     )
-            // ),
-            images
+        const imageObjectAtIndex = mappers.circularIndex(
+          cellIndex,
+          // (
+          //     +animation.progression*images.length
+          //     +(
+          //         +xIndex/columns
+          //         +yIndex/rows
+          //     )
+          // ),
+          images
         );
+
         const imageAtIndex = imageObjectAtIndex.img;
 
         imageUtils.marginImage({
@@ -134,7 +135,9 @@ sketch.draw( ( time, center, favoriteColor ) => {
             },
             center: true,
             fill: true,
-            margin: 0,
+            scale: .9,
+            clip: true,
+            margin: 10,
         });
     })
 

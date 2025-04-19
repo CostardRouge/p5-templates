@@ -18,6 +18,9 @@ const string = {
     get tilt() {
       return string.fonts.loadFont("tilt", "/assets/fonts/tilt-prism.ttf");
     },
+    get stardom() {
+      return string.fonts.loadFont("stardom", "/assets/fonts/stardom.ttf");
+    },
     get multicoloure() {
       return string.fonts.loadFont("multicoloure", "/assets/fonts/multicoloure.ttf");
     },

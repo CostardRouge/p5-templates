@@ -1,4 +1,4 @@
-import { sketch, mappers, animation, string, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
+import { sketch, mappers, animation, string, captureOptions as options, shapes } from '/assets/scripts/p5-sketches/utils/index.js';
 
 let graphic = null;
 
@@ -20,25 +20,6 @@ sketch.setup(
         },
     }
 );
-
-function sketchDurationBar(color) {
-    const sketchDurationBarStartPosition = createVector(0, height-2);
-    const sketchDurationBarEndPosition = createVector(width, height-2);
-    const sketchDurationBarCurrentPosition = p5.Vector.lerp(
-        sketchDurationBarStartPosition,
-        sketchDurationBarEndPosition,
-        animation.progression
-    )
-
-    stroke(color);
-    strokeWeight(2);
-    line(
-        sketchDurationBarStartPosition.x,
-        sketchDurationBarStartPosition.y,
-        sketchDurationBarCurrentPosition.x,
-        sketchDurationBarCurrentPosition.y
-    );
-}
 
 sketch.draw( (time, center, favoriteColor) => {
     // options.colors.text = [252, 209, 83]
@@ -88,5 +69,5 @@ sketch.draw( (time, center, favoriteColor) => {
     image(graphic, 0, 0, SCREEN);
     blend(graphic, 0, 0, width, height, 0, 0, width, height, EXCLUSION);
 
-    sketchDurationBar(favoriteColor)
+    shapes.sketchDurationBar(favoriteColor)
 });

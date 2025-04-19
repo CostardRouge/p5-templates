@@ -8,6 +8,7 @@ import easing from './easing.js';
 import sketch from './sketch.js';
 import colors from './colors.js';
 import events from './events.js';
+import shapes from './shapes.js';
 import mappers from './mappers.js';
 import options from './options.js';
 import animation from './animation.js';
@@ -29,6 +30,7 @@ export {
   easing,
   sketch,
   colors,
+  shapes,
   events,
   mappers,
   options,

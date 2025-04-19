@@ -16,10 +16,6 @@ sketch.setup(
     }
 );
 
-events.register("engine-window-preload", () => {
-  cache.store("images", () => options.assets.map( (path) => loadImage(path) ) );
-});
-
 const borderSize = 0;
 
 function getImagePart(img, x, y, w, h) {
@@ -74,9 +70,9 @@ sketch.draw( ( time, center, favoriteColor ) => {
   const { cells: gridCells } = grid.create( gridOptions );
 
   const imageParts = cache.store(`image-parts-${columns}-${rows}`, () => (
-    cache.get("images").map( image => (
+    cache.get("images").map( ({img}) => (
       gridCells.reduce( ( imageCells, { x , y } ) => {
-        const imagePart = getImagePart( image, x, y, W, H );
+        const imagePart = getImagePart( img, x, y, W, H );
 
         imageCells.push( {
           imagePart,

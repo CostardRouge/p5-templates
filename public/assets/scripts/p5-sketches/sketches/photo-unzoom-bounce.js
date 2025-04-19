@@ -1,21 +1,8 @@
-import { sketch, easing, string, mappers, animation, events, cache, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
-
-let graphic = null;
-
-events.register("engine-window-preload", () => {
-    cache.store("images", () => options.assets.map( path => ({
-        path,
-        img: loadImage( path ),
-        filename: path.split("/").pop()
-    }) ) )
-});
+import { sketch, easing, string, mappers, animation, events, shapes, cache, captureOptions as options, imageUtils } from '/assets/scripts/p5-sketches/utils/index.js';
 
 sketch.setup(
     () => {
-        graphic = createGraphics(options.size.width, options.size.height);
-
         background(...options.colors.background);
-        graphic.background(...options.colors.background);
     },
     {
         size: {
@@ -28,29 +15,6 @@ sketch.setup(
         },
     }
 );
-
-function hl(y) {
-    line(0, y, width, y)
-}
-
-function vl(x) {
-    line(x, 0, x, height)
-}
-
-function displayImage(img, x, y, w, h, _text)  {
-    image(img, x, y, w, h);
-
-    if (options.lines || false) {
-        stroke(options.colors.accent)
-        stroke(0)
-
-        hl(y);
-        hl(y+h);
-
-        vl(x);
-        vl(x+w);
-    }
-}
 
 function sketchDurationBar(color) {
     const sketchDurationBarStartPosition = createVector(0, height-2);
@@ -80,11 +44,11 @@ sketch.draw( (_time, center, favoriteColor) => {
         stroke(options.colors.accent)
         stroke(0)
 
-        hl(0);
-        hl(height);
+        shapes.hl(0);
+        shapes.hl(height);
 
-        vl(0);
-        vl(width);
+        shapes.vl(0);
+        shapes.vl(width);
     }
 
     if (options.durationBar || true) {
@@ -102,11 +66,14 @@ sketch.draw( (_time, center, favoriteColor) => {
     const { img, filename } = images[imageIndex];
 
     const imageStepAnimationProgression = options.animationProgression || "triangleProgression";
+    // const imageStepAnimationProgression = options.animationProgression || "linearProgression";
     const imageStepAnimationProgressionComponent = animation?.[imageStepAnimationProgression];
     const isImageStepAnimationProgressionComponentFunction = typeof imageStepAnimationProgressionComponent === 'function';
 
     const imageStepIndexMapValue = isImageStepAnimationProgressionComponentFunction ? imageStepAnimationProgressionComponent(images.length) : imageStepAnimationProgressionComponent;
-    const imageStepIndex = map(imageStepIndexMapValue, 0, 1, 0, count);
+    const imageStepMin = options.zoom ? 1 : 0;
+    const imageStepMax = options.zoom ? 0 : 1;
+    const imageStepIndex = map(imageStepIndexMapValue, imageStepMin, imageStepMax, 0, count);
 
     for (let i = 0; i < count; i++) {
         if (imageStepIndex < i) {
@@ -114,67 +81,31 @@ sketch.draw( (_time, center, favoriteColor) => {
         }
 
         const t = i / count;
-        const scaleEasingFunction = options?.scaleEasingFunctionName || "easeInSine";
-        const scale = mappers.fn(t, 1, Number(options.scaleStart) || 0, Number(options.scaleEnd) || 0, 1, easing?.[scaleEasingFunction]);
-
-        const screenScale = (height / img.height)
-        const h = img.height * screenScale * scale;
-        const w = img.width * screenScale * scale;
-
-        // Center the image
-        const x = (width - w) / 2;
-        const y = (height - h) / 2;
-
-        // if (count-1 === i) {
-        //     string.write(
-        //         options.texts.title || "BOUNCE",
-        //         x+w/2,
-        //         y,
-        //         // height/2,
-        //         {
-        //             size: 172*scale,
-        //             size: 172,
-        //             stroke: color(...options.colors.text),
-        //             fill: color(...options.colors.background),
-        //             font: string.fonts.martian,
-        //             textAlign: [CENTER, CENTER],
-        //             blendMode: EXCLUSION
-        //         }
-        //     )
-        //
-        //     string.write(
-        //         options.texts.title || "BOUNCE",
-        //         x+w/2,
-        //         y+h,
-        //         // height/2,
-        //         {
-        //             size: 172*scale,
-        //             size: 172,
-        //             stroke: color(...options.colors.text),
-        //             fill: color(...options.colors.background),
-        //             font: string.fonts.martian,
-        //             textAlign: [CENTER, CENTER],
-        //             blendMode: EXCLUSION
-        //         }
-        //     )
-        // }
+        const scaleEasingFunction = options?.scaleEasingFunctionName || "easeOutQuad";
+        // const scaleEasingFunction = options?.scaleEasingFunctionName || "easeOutBounce";
 
         push();
-        translate(x+w/2, y+h/2);
+        translate(width/2, height/2);
 
         if (options.rotate || false) {
-            rotate(map(i, 0, count, 0, PI))
+            rotate(map(i, 0, count, 0, PI/2))
         }
 
-        // displayImage(img, x, y, w, h);
-        displayImage(img, -w/2, -h/2, w, h);
+        imageUtils.marginImage({
+            img,
+            position: createVector(0, 0),
+            center: true,
+            fill: true,
+            scale: mappers.fn(t, 1, Number(options.scaleStart) || 0, Number(options.scaleEnd) || 0, 1, easing?.[scaleEasingFunction])
+        });
 
         pop()
     }
 
     if (animation.progression < 0.1) {
         string.write(
-            options.texts.title || "PHOTO\nSTACK",
+            // options.texts.title || "PHOTO\nSTACK",
+            "BEACH\nDUMP",
             width/2,
             height/2,
             {
