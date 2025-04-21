@@ -1,31 +1,4 @@
-import { sketch, easing, mappers, recorder, shapes, imageUtils, exif, animation, string, events, cache, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
-
-events.register("engine-window-preload", () => {
-    cache.store("images", () => options.assets.map( (path) => ({
-        path,
-        img: loadImage(path),
-        filename: path.split("/").pop()
-    }) ) );
-});
-
-function sketchDurationBar(color) {
-    const sketchDurationBarStartPosition = createVector(0, 3);
-    const sketchDurationBarEndPosition = createVector(width, 3);
-    const sketchDurationBarCurrentPosition = p5.Vector.lerp(
-        sketchDurationBarStartPosition,
-        sketchDurationBarEndPosition,
-        animation.progression
-    )
-
-    stroke(color);
-    strokeWeight(2);
-    line(
-        sketchDurationBarStartPosition.x,
-        sketchDurationBarStartPosition.y,
-        sketchDurationBarCurrentPosition.x,
-        sketchDurationBarCurrentPosition.y
-    );
-}
+import { sketch, easing, mappers, shapes, imageUtils, exif, animation, string, events, cache, captureOptions as options } from '/assets/scripts/p5-sketches/utils/index.js';
 
 class Card {
     constructor({ position, index }) {
@@ -34,15 +7,7 @@ class Card {
         this.img = cache.get("images")?.[this.index]?.img;
         this.path = cache.get("images")?.[this.index]?.path;
         this.filename = cache.get("images")?.[this.index]?.filename;
-        this.exif = undefined;
-
-        exif.load("http://localhost:3000/" + this.path)
-            .then( exifInfo => {
-                this.exif = exifInfo;
-            })
-            .catch( () => {
-                this.exif = null;
-            })
+        this.exif = cache.get("images")?.[this.index]?.exif;
     }
 
     update() {
@@ -108,7 +73,7 @@ class Card {
         graphics.translate(this.position);
         imageUtils.marginImage({
             img: this.img,
-            scale: .7,
+            scale: .85,
             center: true,
             graphics,
         });
@@ -279,7 +244,7 @@ sketch.draw( (_time, center, favoriteColor) => {
     }
 
     if (options.durationBar) {
-        sketchDurationBar(color(...options.colors.accent))
+        shapes.sketchDurationBar(color(...options.colors.accent))
     }
 
     if ( document.querySelector("canvas#defaultCanvas0.loaded") === null && cards.every(card => card.exif !== undefined)) {
