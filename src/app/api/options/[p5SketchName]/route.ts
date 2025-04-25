@@ -1,12 +1,8 @@
-import React from "react";
-
 import listDirectory from "@/utils/listDirectory";
 import getSketchOptions from "@/utils/getSketchOptions";
 
-import ClientProcessingSketch from "@/components/ProcessingSketch";
-
-const testImageFileNames = await listDirectory("public/assets/images/test");
 const acceptedImageTypes = ["png", "jpg", "arw", "jpeg", "webp"];
+const testImageFileNames = await listDirectory("public/assets/images/test");
 
 const defaultSketchOptions = {
     size: {
@@ -19,9 +15,12 @@ const defaultSketchOptions = {
     }
 }
 
-async function ProcessingSketch({ params }: { params: Promise<{ sketch: string }> }) {
-    const sketchName = (await params).sketch;
-    const sketchOptions = Object.assign( defaultSketchOptions, getSketchOptions( sketchName ) );
+export async function GET(
+    _: Request,
+    { params }: { params: Promise<{ p5SketchName: string }> }
+) {
+    const p5SketchName = (await params).p5SketchName;
+    const sketchOptions = Object.assign( defaultSketchOptions, getSketchOptions( p5SketchName ) );
 
     if (!sketchOptions?.assets) {
         sketchOptions.assets = testImageFileNames
@@ -29,12 +28,5 @@ async function ProcessingSketch({ params }: { params: Promise<{ sketch: string }
             .map( testImageFileName => `/assets/images/test/${testImageFileName}` )
     }
 
-    return (
-        <ClientProcessingSketch
-            name={sketchName}
-            options={sketchOptions}
-        />
-    )
+    return Response.json(sketchOptions, { status: 200 });
 }
-
-export default ProcessingSketch;

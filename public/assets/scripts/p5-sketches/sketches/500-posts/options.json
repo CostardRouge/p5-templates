@@ -1,0 +1,16 @@
+{
+  "texts": {
+    "title": "SYNDEY\nPHOTO\nDUMP"
+  },
+  "size": {
+    "width": 1080,
+    "height": 1350
+  },
+  "count": 20,
+  "zoom": true,
+  "animationProgression": "linearProgression",
+  "animation": {
+    "duration": 9,
+    "framerate": 60
+  }
+}

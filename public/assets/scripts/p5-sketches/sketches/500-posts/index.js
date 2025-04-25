@@ -45,7 +45,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
 		// string.fonts.cloitre,
 		// string.fonts.serif,
 		string.fonts.agiro,
-		// string.fonts.martian,
+		string.fonts.martian,
 		// string.fonts.tilt,
 		// string.fonts.openSans,
 		// string.fonts.multicoloure,

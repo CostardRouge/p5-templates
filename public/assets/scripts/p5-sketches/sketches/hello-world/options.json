@@ -1,0 +1,10 @@
+{
+  "texts": {
+    "top": "hello",
+    "bottom": "world"
+  },
+  "animation": {
+    "duration": 1,
+    "framerate": 10
+  }
+}

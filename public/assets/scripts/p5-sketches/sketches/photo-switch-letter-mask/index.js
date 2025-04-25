@@ -24,23 +24,6 @@ sketch.setup(
 	}
 );
 
-events.register("engine-window-preload", () => {
-	cache.store("images", () => options.assets.map( imagePath => ({
-		path: imagePath,
-		exif: undefined,
-		img: loadImage( imagePath ),
-		filename: imagePath.split("/").pop(),
-	}) ) );
-
-	cache.get("images").forEach( async( imageObject ) => {
-		const { path } = imageObject;
-
-		imageObject.exif = await exif.load("http://localhost:3000/" + path);
-
-		console.log(imageObject.exif)
-	} );
-});
-
 sketch.draw( ( time, center, favoriteColor ) => {
 	const images = cache.get("images");
 	const imageSwitchSpeed = 3/2//images.length;

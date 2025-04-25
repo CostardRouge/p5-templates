@@ -4,6 +4,8 @@ const recorder = {
   savedFramesCount: 0,
   recording: false,
   capturer: undefined,
+  saveCallback: undefined,
+  maximumFrames: undefined,
   createCapturer: () => {
     if (recorder.capturer) {
       return;
@@ -20,7 +22,7 @@ const recorder = {
       // workersPath: "libraries/",
     });
   },
-  start: (maximumFrames) => {
+  start: (maximumFrames, saveCallback) => {
     if (true === recorder.recording) {
       return;
     }
@@ -38,21 +40,22 @@ const recorder = {
     recorder.createCapturer();
     recorder.capturer.start();
 
-    recorder.maximumFrames = maximumFrames;
-    recorder.savedFramesCount = 0;
     recorder.recording = true;
+    recorder.savedFramesCount = 0;
+    recorder.saveCallback = saveCallback;
+    recorder.maximumFrames = maximumFrames;
 
     document.body.classList.add("recording");
   },
   stop: () => {
     recorder.recording = false;
-    recorder.readyToRecord = false;
+    recorder.saveCallback = undefined;
     recorder.maximumFrames = undefined;
 
     document.body.classList.remove("recording");
 
     recorder.capturer.stop();
-    recorder.capturer.save();
+    recorder.capturer.save( recorder.saveCallback );
   },
   onDraw: async() => {
     requestAnimationFrame(recorder.onDraw);
@@ -85,18 +88,11 @@ const recorder = {
     if (recorder.maximumFrames && recorder.savedFramesCount === 0) {
       time.reset();
       redraw();
-      console.log("time.reset, redraw");
     }
 
     recorder.captureFrame();
-
-    // recorder.readyToRecord = true;
   },
   captureFrame: () => {
-    // if (!recorder.readyToRecord) {
-    //   return;
-    // }
-
     const canvasElement = sketch?.engine?.getCanvasElement();
 
     if (undefined === canvasElement) {
@@ -105,12 +101,16 @@ const recorder = {
 
     recorder.capturer.capture(canvasElement);
     recorder.savedFramesCount++;
-  },
-  readyToRecord: false
+  }
 };
 
-recorder.onDraw();
+// recorder.onDraw();
+// events.register("draw", recorder.onDraw);
 
+requestAnimationFrame(recorder.onDraw);
+
+window.recorder = recorder;
 window.startLoopRecording = () => recorder.start(animation.maximumFramesCount);
+window.startLoopRecordingWithSaveCallback = saveCallback => recorder.start(animation.maximumFramesCount, saveCallback);
 
 export default recorder;

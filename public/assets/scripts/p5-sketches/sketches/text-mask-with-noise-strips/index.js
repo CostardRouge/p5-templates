@@ -23,21 +23,20 @@ sketch.setup(
 );
 
 sketch.draw((time) => {
-  // background(...options.colors.background);
-  background(0);
+  background(...options.colors.background);
 
   const textFontSize = (height+width)/2.3;
 
   canvases.mask.clear()
 
   string.write(
-    "500",
+    options.title,
     width/2,
     height/2-textFontSize/8,
     {
       size: textFontSize,
       // fill: color(...options.colors.background),
-      font: string.fonts.cloitre,
+      font: string.fonts?.[options.font],
       textAlign: [CENTER, CENTER],
       // blendMode: EXCLUSION,
       popPush: false,
@@ -45,7 +44,7 @@ sketch.draw((time) => {
     }
   )
 
-  const rows = 50;
+  const rows = 25;
   const columns = 300;
   const gridOptions = {
     topLeft: createVector( 0, 0 ),
@@ -63,11 +62,12 @@ sketch.draw((time) => {
     0.45,
   );
 
+
   grid.draw(gridOptions, (cellVector, { x, y}) => {
-    const xOff = x/columns;
-    const yOff = y/rows;
-    const angle = mappers.fn(noise(xOff, yOff), 0, 1, -TAU, TAU, easing.easeInOutSine)
-    const weight = mappers.fn(noise(xOff+yOff, animation.circularProgression), 0, 1, 50, 90, easing.easeInOutExpo)
+    const xOff = x/width*1.5;
+    const yOff = y/height*1.5;
+    const angle = mappers.fn(noise(xOff+time/2, yOff/2-time/4), 0, 1, -TAU, TAU, easing.easeInOutSine)
+    const weight = mappers.fn(noise(xOff, yOff+y, animation.circularProgression), 0, 1, 150, 200, easing.easeInOutBack)
 
     const colorFunction = mappers.circularIndex(0, [
       colors.rainbow,
@@ -78,7 +78,7 @@ sketch.draw((time) => {
       hueOffset: 0,
       hueIndex: angle,// map(angle, -10, 10, -PI, TAU),
       // opacityFactor: map(sin(animation.progression+xOff+yOff), -1, 1, 2.5, 1),
-      opacityFactor: mappers.fn(noise(xOff, yOff, animation.circularProgression), 0, 1, 2, 1, easing.easeInOutQuint)
+      opacityFactor: mappers.fn(noise(xOff, yOff, animation.circularProgression), 0, 1, 2, 1, easing.easeInOutSine)
     }))
 
     push();
@@ -88,7 +88,7 @@ sketch.draw((time) => {
     // strokeWeight(50);
     point(
       scale * sin(angle),
-      scale * cos(angle+yOff)
+      angle * scale * cos(angle+y)
     )
     // point( 0, 0);
 
@@ -100,6 +100,6 @@ sketch.draw((time) => {
   maskedImage.mask(canvases.mask);
 
   background(...options.colors.background);
-  background(0)
+
   image(maskedImage, 0, 0)
 });

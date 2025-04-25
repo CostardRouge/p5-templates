@@ -11,6 +11,7 @@
   "dependencies": {
     "@types/tar": "^6.1.13",
     "exifreader": "^4.26.1",
+    "json-edit-react": "^1.26.1",
     "lucide-react": "^0.477.0",
     "mime-types": "^2.1.35",
     "next": "^15.2.5",

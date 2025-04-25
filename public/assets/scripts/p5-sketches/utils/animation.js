@@ -43,6 +43,9 @@ const animation = {
   linearProgression: (speedFactor = 1) => {
     return (animation.progression * speedFactor) % 1;
   },
+  get noiseProgression() {
+    return noise(animation.circularProgression);
+  },
 
   get angle() {
     return animation.progression * TAU
