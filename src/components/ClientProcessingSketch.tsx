@@ -4,7 +4,7 @@ import React, { useState, Fragment } from "react";
 import Script from "next/script";
 import CaptureBanner from "@/components/CaptureBanner";
 
-function ProcessingSketch({ name, options }: { name: string, options: Record<string, unknown> }) {
+function ClientProcessingSketch({ name, options }: { name: string, options: Record<string, unknown> }) {
     const [ sketchOptions, setSketchOptions ] = useState<Record<string, unknown>>(options);
 
     return (
@@ -28,4 +28,4 @@ function ProcessingSketch({ name, options }: { name: string, options: Record<str
     )
 }
 
-export default ProcessingSketch;
+export default ClientProcessingSketch;

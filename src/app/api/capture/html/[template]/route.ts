@@ -7,7 +7,7 @@ import path from "path";
 
 const { createPage } = await createBrowserPage({
     headless: true,
-    deviceScaleFactor: 1
+    deviceScaleFactor: 2
 });
 
 export async function POST(

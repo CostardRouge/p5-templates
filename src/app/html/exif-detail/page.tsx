@@ -6,7 +6,7 @@ import ExifInfo from "./components/ExifInfo";
 import ExifReader from 'exifreader';
 import { ExifData } from "@/types/types";
 
-import "./exif-detail.css"
+import "./exif-detail.css";
 
 const ImageInfoHelper = () => {
     const [image, setImage] = useState<string | null>(null);
@@ -40,13 +40,11 @@ const ImageInfoHelper = () => {
                     iso: Number(tags?.ISOSpeedRatings?.description),
                     shutterSpeed: {
                         description: tags?.ExposureTime?.description || "",
-                        // @ts-expect-error NEEDS
-                        value: tags?.ExposureTime.value
+                        value: tags?.ExposureTime?.value
                     },
                     focalLength: {
                         description: tags?.FocalLength?.description || "",
-                        // @ts-expect-error NEEDS
-                        value: tags?.FocalLength.value
+                        value: tags?.FocalLength?.value
                     },
                     // lens: tags?.LensModel?.description,
                     lens: tags?.Lens?.description,
@@ -82,34 +80,58 @@ const ImageInfoHelper = () => {
 
         if (imageUrl) {
             fetch(imageUrl)
-                .then((response) => response.blob())
-                .then((blob) => {
+                .then(response => response.blob())
+                .then(blob => {
                     handleImageFile(new File([blob], 'image.jpg', { type: blob.type }));
                 })
-                .catch((error) => {
+                .catch(error => {
                     console.error('Error fetching image:', error);
                 });
         }
     }, []);
 
     return (
-        <ImageDropzone
-            image={image}
-            onImageDrop={handleImageFile}
-            onClick={() => setShowExif(!showExif)}
-            className="p-8 bg-white"
+        <form
+            action="/api/capture/html/exif-detail"
+            encType="multipart/form-data"
+            method="POST"
+            target="_blank"
         >
-            <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col justify-center">
-                {image && (
-                    <img
-                        id="image"
-                        src={image}
-                        alt="Uploaded"
-                        className="max-w-full object-contain"
-                    />
-                )}
-            </ExifInfo>
-        </ImageDropzone>
+            <div className="flex flex-col items-center justify-center h-[100svh]">
+                <div
+                    id="div-to-capture"
+                    className="p-8 bg-white max-h-[1350px] w-[1080px] max-w-[1080px] scale-[0.375] md:scale-[0.6] lg:scale-[0.9] xl:scale-100"
+                >
+                    <ImageDropzone
+                        image={image}
+                        onImageDrop={handleImageFile}
+                        onClick={() => setShowExif(!showExif)}
+                    >
+                        <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col items-cnter">
+                            {image && (
+                                <img
+                                    id="image"
+                                    src={image}
+                                    alt="Uploaded"
+                                    className="max-w-full object-contain"
+                                />
+                            )}
+                        </ExifInfo>
+                    </ImageDropzone>
+                </div>
+            </div>
+
+            {image && (
+                <div className="fixed left-0 bottom-0 w-full bg-white py-3 text-center">
+                    <button
+                        type="submit"
+                        className="rounded-sm px-4 underline"
+                    >
+                        Download the render
+                    </button>
+                </div>
+            )}
+        </form>
     );
 };
 

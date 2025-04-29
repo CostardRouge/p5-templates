@@ -52,14 +52,14 @@ function formatCoordinates(latitude: number, longitude: number, precision = 2) {
 const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => {
   const [computedGPSInfo, setComputedGPSInfo] = useState<string | null | undefined>(undefined)
 
-  console.log({computedGPSInfo})
+  console.log({computedGPSInfo});
 
   useEffect( () => {
     if (!exifData?.gps) {
       return setComputedGPSInfo(null);
     }
 
-    formatGPSCoordinates(exifData?.gps).then(setComputedGPSInfo)
+    formatGPSCoordinates(exifData?.gps).then(setComputedGPSInfo);
   }, [ exifData?.gps ] )
 
   if (![exifData?.iso, exifData?.shutterSpeed, exifData?.aperture].every(Boolean)) return null;
@@ -70,9 +70,9 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
     }
 
     const [ numerator, denominator ] = focalLength.value;
-    const FL = (numerator/denominator).toPrecision(4).replace(".00", "")
+    const FL = (numerator/denominator).toPrecision(4).replace(".00", "");
 
-    return `${FL} MM`
+    return `${FL} MM`;
   };
 
   const formatShutterSpeed = (speed?: ExifData["shutterSpeed"]) => {
@@ -83,14 +83,14 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
     const [ numerator, denominator ] = speed.value;
 
     if (numerator > 1) {
-      return `${speed.description}"`
+      return `${speed.description}"`;
     }
 
     if (numerator === 1 && denominator === 1) {
-      return `1"`
+      return `1"`;
     }
 
-    return `${numerator}/${denominator}s`
+    return `${numerator}/${denominator}s`;
   };
 
   const formatAperture = (aperture?: ExifData["aperture"]) => {
@@ -101,7 +101,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
     const [ numerator, denominator ] = aperture.value;
     const fStop = (numerator/denominator).toFixed(1)
 
-    return `ƒ/${fStop}`
+    return `ƒ/${fStop}`;
   };
 
   const formatCameraModel = (camera?: ExifData["camera"]) => {
@@ -111,7 +111,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
 
     const { brand, model } = camera;
 
-    return `${brand} ${friendlyCameraModelNames[model] ?? model}`
+    return `${brand} ${friendlyCameraModelNames[model] ?? model}`;
   };
 
   const formatPhotoDate = (date?: ExifData["date"]) => {
@@ -134,11 +134,11 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
         { visible && exifData && (
             <div
                 id="exif-info"
-                className="flex justify-between pb-8"
+                className="flex justify-between pb-8 text-xl"
             >
               <div className="flex gap-8">
                 <div className="flex uppercase">
-                  <CalendarClock className="inline mr-1.5 h-9" />
+                  <CalendarClock className="inline mr-1.5 h-7" />
                   <span>{formatPhotoDate(exifData.date)}</span>
                 </div>
               </div>
@@ -146,7 +146,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
               { computedGPSInfo && (
                   <div className="flex">
                     <span className="text-gray-700 uppercase">
-                      <MapPin className="inline mr-1.5 h-9 align-top" />
+                      <MapPin className="inline mr-1.5 h-7 align-top" />
                       <span>
                         {computedGPSInfo}
                       </span>
@@ -161,7 +161,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
         { visible && exifData && (
             <div
                 id="exif-info"
-                className="flex justify-between pt-8"
+                className="flex justify-between pt-8 text-xl"
             >
               <div className="flex gap-8">
                 <div className="flex">

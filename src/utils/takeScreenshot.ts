@@ -5,6 +5,7 @@ async function takeScreenshot({
       url,
       outputPath,
       selectorToWaitFor = "#image",
+      selectorToCapture = "#div-to-capture",
       selectorWaitForTimeout = 10_000_000,
       viewportSize = { width: 1080, height: 1350 }
 }: {
@@ -12,6 +13,7 @@ async function takeScreenshot({
     url: string,
     outputPath: string,
     selectorToWaitFor?: string,
+    selectorToCapture?: string,
     selectorWaitForTimeout?: number,
     viewportSize?: {
         width: number,
@@ -22,7 +24,7 @@ async function takeScreenshot({
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(url, { waitUntil: "networkidle" });
     await page.waitForSelector(selectorToWaitFor, { timeout: selectorWaitForTimeout });
-    await page.locator("body > div").screenshot({ path: outputPath });
+    await page.locator(selectorToCapture).screenshot({ path: outputPath });
 }
 
 export default takeScreenshot;

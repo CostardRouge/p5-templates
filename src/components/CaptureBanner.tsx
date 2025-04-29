@@ -8,7 +8,8 @@ function CaptureBanner({ options, setOptions }: { options: Record<string, any>, 
 
     return (
         <div
-            className="fixed items-end bottom-0 left-0 w-full bg-white/80 text-white px-4 gap-2 py-2 flex justify-between text-sm z-50">
+            className="fixed items-end bottom-0 left-0 w-full bg-white/80 text-white px-4 gap-2 py-2 flex justify-between text-sm z-50"
+        >
             <span className="font-mono">🎥 Recording options</span>
 
             <JsonEditor

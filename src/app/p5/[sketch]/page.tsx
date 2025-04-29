@@ -3,7 +3,7 @@ import React from "react";
 import listDirectory from "@/utils/listDirectory";
 import getSketchOptions from "@/utils/getSketchOptions";
 
-import ClientProcessingSketch from "@/components/ProcessingSketch";
+import ClientProcessingSketch from "@/components/ClientProcessingSketch";
 
 const testImageFileNames = await listDirectory("public/assets/images/test");
 const acceptedImageTypes = ["png", "jpg", "arw", "jpeg", "webp"];

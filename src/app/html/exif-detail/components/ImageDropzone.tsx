@@ -4,11 +4,10 @@ interface ImageDropzoneProps {
   onImageDrop: (data: File) => void;
   image: string | null,
   children: React.ReactNode;
-  className?: string;
   onClick: () => void;
 }
 
-const ImageDropzone = ({ image, onImageDrop, className, children, onClick }: ImageDropzoneProps) => {
+const ImageDropzone = ({ image, onImageDrop, children, onClick }: ImageDropzoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -59,7 +58,6 @@ const ImageDropzone = ({ image, onImageDrop, className, children, onClick }: Ima
       onDragOver={handleDrag}
       onDrop={handleDrop}
       onClick={onClick}
-      className={className}
     >
       {image !== null ? children : (
           <label
@@ -84,6 +82,7 @@ const ImageDropzone = ({ image, onImageDrop, className, children, onClick }: Ima
           accept="image/*"
           onChange={handleFileInput}
           className="hidden"
+          name="image"
           id="file-input"
       />
     </div>
