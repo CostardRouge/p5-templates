@@ -62,10 +62,8 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
     formatGPSCoordinates(exifData?.gps).then(setComputedGPSInfo);
   }, [ exifData?.gps ] )
 
-  if (![exifData?.iso, exifData?.shutterSpeed, exifData?.aperture].every(Boolean)) return null;
-
   const formatFocalLength = (focalLength?: ExifData["focalLength"]) => {
-    if (!focalLength) {
+    if (!focalLength || !focalLength.value) {
       return;
     }
 
@@ -76,7 +74,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
   };
 
   const formatShutterSpeed = (speed?: ExifData["shutterSpeed"]) => {
-    if (!speed) {
+    if (!speed || !speed.value) {
       return;
     }
 
@@ -94,7 +92,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
   };
 
   const formatAperture = (aperture?: ExifData["aperture"]) => {
-    if (!aperture) {
+    if (!aperture || !aperture.value) {
       return;
     }
 
@@ -136,25 +134,29 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
                 id="exif-info"
                 className="flex justify-between pb-8 text-xl"
             >
-              <div className="flex gap-8">
-                <div className="flex uppercase">
-                  <CalendarClock className="inline mr-1.5 h-7" />
-                  <span>{formatPhotoDate(exifData.date)}</span>
-                </div>
-              </div>
+              {
+                exifData.date && (
+                  <div className="flex gap-8">
+                    <div className="flex uppercase">
+                      <CalendarClock className="inline mr-1.5 h-7"/>
+                      <span>{formatPhotoDate(exifData.date)}</span>
+                    </div>
+                  </div>
+                )
+              }
 
               { computedGPSInfo && (
-                  <div className="flex">
+                <div className="flex">
                     <span className="text-gray-700 uppercase">
-                      <MapPin className="inline mr-1.5 h-7 align-top" />
+                      <MapPin className="inline mr-1.5 h-7 align-top"/>
                       <span>
                         {computedGPSInfo}
                       </span>
                     </span>
                   </div>
-              ) }
-            </div>
-        )}
+                ) }
+              </div>
+          )}
 
         { children}
 
@@ -177,7 +179,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
                 </div>
 
                 <div className="flex">
-                  <span className="text-gray-700">ISO {exifData.iso}</span>
+                  <span className="text-gray-700">{ Boolean(exifData.iso) && `ISO ${exifData.iso}`}</span>
                 </div>
               </div>
 

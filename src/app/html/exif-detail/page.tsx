@@ -8,10 +8,14 @@ import { ExifData } from "@/types/types";
 
 import "./exif-detail.css";
 
+const scalingStyle = "scale-[0.375] md:scale-[0.6] lg:scale-[0.7] xl:scale-9";
+const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
 const ImageInfoHelper = () => {
     const [image, setImage] = useState<string | null>(null);
     const [exifData, setExifData] = useState<ExifData | null>(null);
     const [showExif, setShowExif] = useState(true);
+    const [scaleRender, setScaleRender] = useState(true);
 
     const handleImageFile = (file: File) => {
         setExifData(null);
@@ -65,8 +69,9 @@ const ImageInfoHelper = () => {
                 }) as ExifData;
             })
             .then(setExifData)
+            .catch(console.error);
 
-        if (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        if (supportedImageTypes.includes(file.type)) {
             setImage(URL.createObjectURL(file));
         }
         else {
@@ -95,19 +100,18 @@ const ImageInfoHelper = () => {
             action="/api/capture/html/exif-detail"
             encType="multipart/form-data"
             method="POST"
-            target="_blank"
         >
             <div className="flex flex-col items-center justify-center h-[100svh]">
                 <div
                     id="div-to-capture"
-                    className="p-8 bg-white max-h-[1350px] w-[1080px] max-w-[1080px] scale-[0.375] md:scale-[0.6] lg:scale-[0.9] xl:scale-100"
+                    className={`p-8 bg-white max-h-[1350px] w-[1080px] max-w-[1080px] ${scaleRender ? scalingStyle : ''}`}
                 >
                     <ImageDropzone
                         image={image}
                         onImageDrop={handleImageFile}
                         onClick={() => setShowExif(!showExif)}
                     >
-                        <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col items-cnter">
+                        <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col">
                             {image && (
                                 <img
                                     id="image"
@@ -122,12 +126,22 @@ const ImageInfoHelper = () => {
             </div>
 
             {image && (
-                <div className="fixed left-0 bottom-0 w-full bg-white py-3 text-center">
+                <div className="flex justify-center gap-2 fixed left-0 bottom-0 w-full bg-white py-3 text-center border border-t-1 border-black">
+                    <button
+                        className="rounded-sm px-4 border border-t-1 border-black"
+                        onClick={event => {
+                            event.preventDefault();
+                            setScaleRender(!scaleRender);
+                        }}
+                    >
+                        {scaleRender ? "Zoom to 100%" : "Scale to fit"}
+                    </button>
+
                     <button
                         type="submit"
-                        className="rounded-sm px-4 underline"
+                        className="rounded-sm px-4 border border-t-1 border-black"
                     >
-                        Download the render
+                        Download the image
                     </button>
                 </div>
             )}
