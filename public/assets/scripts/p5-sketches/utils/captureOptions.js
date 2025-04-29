@@ -12,7 +12,7 @@ const sketchOptions = Object.assign( {
 }, window.sketchOptions);
 
 events.register("engine-window-preload", () => {
-  cache.store("images", () => captureOptions.assets.map( imagePath => ({
+  cache.store("images", () => sketchOptions.assets.map( imagePath => ({
     path: imagePath,
     exif: undefined,
     img: loadImage( imagePath ),

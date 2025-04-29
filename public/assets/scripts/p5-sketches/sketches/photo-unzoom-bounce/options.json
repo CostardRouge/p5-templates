@@ -1,0 +1,14 @@
+{
+  "title": "500",
+  "font": "cloitre",
+  "colors": {
+    "text": [0, 0, 0],
+    "background": [230, 230, 230],
+    "accent": [128, 128, 255]
+  },
+  "animation": {
+    "duration": 6,
+    "framerate": 60
+  },
+  "lines": false
+}

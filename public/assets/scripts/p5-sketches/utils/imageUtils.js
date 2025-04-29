@@ -78,11 +78,11 @@ const imageUtils = {
 		if (options.lines) {
 			stroke(options?.colors?.accent)
 
-			shapes.hl(y);
-			shapes.hl(y+h);
+			shapes.hl(position.y);
+			shapes.hl(position.y+h);
 
-			shapes.vl(x);
-			shapes.vl(x+w);
+			shapes.vl(position.x);
+			shapes.vl(position.x+w);
 		}
 	}
 };
