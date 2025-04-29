@@ -80,10 +80,12 @@ const ImageInfoHelper = () => {
     }
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const imageUrl = params.get('image');
+        const urlParams = new URLSearchParams(window.location.search);
+        const imageFilename = urlParams.get('image');
 
-        if (imageUrl) {
+        if (imageFilename) {
+            const imageUrl = `/api/tmp-file?name=${encodeURIComponent(imageFilename)}`;
+
             fetch(imageUrl)
                 .then(response => response.blob())
                 .then(blob => {

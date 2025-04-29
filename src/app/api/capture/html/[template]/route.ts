@@ -4,10 +4,11 @@ import takeScreenshot from "@/utils/takeScreenshot";
 
 import fs from "node:fs/promises";
 import path from "path";
+import os from "node:os";
 
 const { createPage } = await createBrowserPage({
     headless: true,
-    deviceScaleFactor: 1
+    deviceScaleFactor: 2
 });
 
 export async function POST(
@@ -34,8 +35,13 @@ export async function POST(
     }
 
     const timestamp = (new Date()).getTime();
-    const uploadPath = `./public/uploads/${timestamp}_${imageFile.name}`;
-    const outputPath = `./public/outputs/${timestamp}_${path.basename(uploadPath, path.extname(uploadPath))}_result.png`;
+
+    const tmpDir = os.tmpdir();
+    const uploadFilename = `${timestamp}_${imageFile.name}`;
+    const uploadPath = path.join(tmpDir, uploadFilename);
+
+    const outputFilename = `${timestamp}_${path.basename(uploadFilename, path.extname(uploadFilename))}_result.png`;
+    const outputPath = path.join(tmpDir, outputFilename);
 
     const buffer = new Uint8Array(await imageFile.arrayBuffer());
 
@@ -44,7 +50,7 @@ export async function POST(
     const page = await createPage();
 
     await takeScreenshot({
-        url: `http://localhost:3000/html/${template}?image=${encodeURIComponent(uploadPath.replace("./public", ""))}`,
+        url: `http://localhost:3000/html/${template}?image=${encodeURIComponent(uploadFilename)}`,
         selectorToWaitFor: "div#loaded",
         outputPath,
         page
@@ -53,7 +59,7 @@ export async function POST(
     await page.close();
 
     return downloadFileResponse(outputPath, async () => {
-        await fs.unlink(uploadPath);
-        await fs.unlink(outputPath);
+        await fs.unlink(uploadPath).catch(() => {});
+        await fs.unlink(outputPath).catch(() => {});
     });
 }
