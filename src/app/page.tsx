@@ -15,7 +15,6 @@ export default async function Home() {
 
   return (
     <div className="bg-white min-h-screen p-8">
-      <p>test</p>
       <main className="flex items-center">
         <ul>
           {

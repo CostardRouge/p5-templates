@@ -17,9 +17,7 @@ const ImageInfoHelper = () => {
     const [showExif, setShowExif] = useState(true);
     const [scaleRender, setScaleRender] = useState(true);
 
-    useEffect(() => {
-        setScaleRender(!(new URLSearchParams(window.location.search)).has("zoom-to-fit"));
-    }, []);
+    console.log({image})
 
     const handleImageFile = (file: File) => {
         setExifData(null);
@@ -86,6 +84,9 @@ const ImageInfoHelper = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const imageFilename = urlParams.get('image');
 
+        setShowExif(!urlParams.has("hide-exif"));
+        setScaleRender(!urlParams.has("zoom-to-fit"));
+
         if (imageFilename) {
             const imageUrl = `/api/tmp-file?name=${encodeURIComponent(imageFilename)}`;
 
@@ -105,7 +106,6 @@ const ImageInfoHelper = () => {
             action="/api/capture/html/exif-detail"
             encType="multipart/form-data"
             method="POST"
-            target="_blank"
         >
             <div className="flex flex-col items-center justify-center h-[100svh]">
                 <div
@@ -131,26 +131,42 @@ const ImageInfoHelper = () => {
                 </div>
             </div>
 
-            {image && (
-                <div className="flex justify-center gap-2 fixed left-0 bottom-0 w-full bg-white py-3 text-center border border-t-1 border-black">
+            <div
+                className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black"
+            >
+                {exifData && (
                     <button
                         className="rounded-sm px-4 border border-t-1 border-black"
                         onClick={event => {
                             event.preventDefault();
-                            setScaleRender(!scaleRender);
+                            setShowExif(!showExif);
                         }}
                     >
-                        {scaleRender ? "Zoom to 100%" : "Scale to fit"}
+                        {showExif ? "Hide exif" : "Show exif"}
                     </button>
+                )}
 
+                <input type="hidden" name="showExif" value={showExif ? "true" : "false"} />
+
+                <button
+                    className="rounded-sm px-4 border border-t-1 border-black"
+                    onClick={event => {
+                        event.preventDefault();
+                        setScaleRender(!scaleRender);
+                    }}
+                >
+                    {scaleRender ? "Zoom to 100%" : "Scale to fit"}
+                </button>
+
+                {image && (
                     <button
                         type="submit"
                         className="rounded-sm px-4 border border-t-1 border-black"
                     >
                         Download the image
                     </button>
-                </div>
-            )}
+                )}
+            </div>
         </form>
     );
 };
