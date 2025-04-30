@@ -30,6 +30,7 @@ export async function POST(
     const data = await request.formData();
     const imageFile = data.get("image") as unknown as File;
     const hideExif = data.get("showExif") === "false";
+    const objectStyle = data.get("objectStyle") as string;
 
     if (!imageFile) {
         return new Response(`missing image!`, { status: 400 });
@@ -44,25 +45,25 @@ export async function POST(
     const tmpDir = os.tmpdir();
     const uploadFilename = `${timestamp}_${imageFile.name}`;
     const uploadPath = path.join(tmpDir, uploadFilename);
-
     const outputFilename = `${timestamp}_${path.basename(uploadFilename, path.extname(uploadFilename))}_result.png`;
     const outputPath = path.join(tmpDir, outputFilename);
-
-    console.log({
-        uploadFilename,
-        uploadPath,
-        imageFile,
-        name: imageFile.name
-    })
-
     const buffer = new Uint8Array(await imageFile.arrayBuffer());
 
     await fs.writeFile(uploadPath, buffer);
 
+    const url = new URL(`http://localhost:3000/html/${template}`);
+
+    url.searchParams.set("image", uploadFilename);
+    url.searchParams.set("zoom-to-fit", "");
+    url.searchParams.set("capturing", "");
+
+    if (hideExif) url.searchParams.set("hide-exif", "");
+    if (objectStyle) url.searchParams.set("object-style", objectStyle);
+
     const page = await createPage();
 
     await takeScreenshot({
-        url: `http://localhost:3000/html/${template}?image=${encodeURIComponent(uploadFilename)}&zoom-to-fit${hideExif ? "&hide-exif" : ''}`,
+        url: url.toString(),
         selectorToWaitFor: "div#loaded",
         outputPath,
         page
