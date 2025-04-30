@@ -50,7 +50,7 @@ export async function POST(
     const page = await createPage();
 
     await takeScreenshot({
-        url: `http://localhost:3000/html/${template}?image=${encodeURIComponent(uploadFilename)}`,
+        url: `http://localhost:3000/html/${template}?image=${encodeURIComponent(uploadFilename)}&zoom-to-fit`,
         selectorToWaitFor: "div#loaded",
         outputPath,
         page

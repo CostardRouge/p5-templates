@@ -17,6 +17,10 @@ const ImageInfoHelper = () => {
     const [showExif, setShowExif] = useState(true);
     const [scaleRender, setScaleRender] = useState(true);
 
+    useEffect(() => {
+        setScaleRender(!(new URLSearchParams(window.location.search)).has("zoom-to-fit"));
+    }, []);
+
     const handleImageFile = (file: File) => {
         setExifData(null);
         setImage(null);
@@ -72,11 +76,10 @@ const ImageInfoHelper = () => {
             .catch(console.error);
 
         if (supportedImageTypes.includes(file.type)) {
-            setImage(URL.createObjectURL(file));
+            return setImage(URL.createObjectURL(file));
         }
-        else {
-            setImage(null)
-        }
+
+        setImage(null)
     }
 
     useEffect(() => {
@@ -102,6 +105,7 @@ const ImageInfoHelper = () => {
             action="/api/capture/html/exif-detail"
             encType="multipart/form-data"
             method="POST"
+            target="_blank"
         >
             <div className="flex flex-col items-center justify-center h-[100svh]">
                 <div
