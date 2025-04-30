@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from 'next/navigation';
 
 import ImageDropzone from "./components/ImageDropzone";
 import ExifInfo from "./components/ExifInfo";
@@ -11,17 +10,17 @@ import { ExifData } from "@/types/types";
 import "./exif-detail.css";
 
 const scalingStyle = "scale-[0.375] md:scale-[0.6] lg:scale-[0.7] xl:scale-9";
-const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const supportedObjectStyles = ['object-fit', 'object-cover', 'object-contain'];
+const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 const ImageInfoHelper = () => {
+    const [showExif, setShowExif] = useState(true);
+    const [capturing, setCapturing] = useState(false);
+    const [scaleRender, setScaleRender] = useState(true);
     const [image, setImage] = useState<string | null>(null);
     const [rawFile, setRawFile] = useState<File | null>(null);
     const [exifData, setExifData] = useState<ExifData | null>(null);
-    const [showExif, setShowExif] = useState(true);
-    const [scaleRender, setScaleRender] = useState(true);
     const [objectStyle, setObjectStyle] = useState<string>(supportedObjectStyles[0]);
-    const searchParams = useSearchParams();
 
     const handleImageFile = (file: File) => {
         setExifData(null);
@@ -98,12 +97,17 @@ const ImageInfoHelper = () => {
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
 
-        console.log({blob})
+        const contentDisposition = response.headers.get("Content-Disposition");
+        let filename = "download.png";
+
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?(.+?)"?$/);
+            if (match) filename = match[1];
+        }
 
         const a = document.createElement("a");
         a.href = url;
-        a.target = "_blank";
-        a.download = "rendered-image.png";
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -111,9 +115,11 @@ const ImageInfoHelper = () => {
     };
 
     useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
         const imageFilename = searchParams.get('image');
 
         setShowExif(!searchParams.has("hide-exif"));
+        setCapturing(searchParams.has("capturing"));
         setScaleRender(!searchParams.has("zoom-to-fit"));
 
         const objectStyle = searchParams.get("object-style");
@@ -156,7 +162,7 @@ const ImageInfoHelper = () => {
                 </div>
             </div>
 
-            { !searchParams.has("capturing") && (
+            { !capturing && (
                 <div
                     className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black"
                 >
