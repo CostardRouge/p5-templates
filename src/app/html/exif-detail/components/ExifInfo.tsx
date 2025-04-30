@@ -132,13 +132,13 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
         { visible && exifData && (
             <div
                 id="exif-info"
-                className="flex justify-between pb-8 text-xl"
+                className="flex justify-between pb-8 text-2xl"
             >
               {
                 exifData.date && (
                   <div className="flex gap-8">
                     <div className="flex uppercase">
-                      <CalendarClock className="inline mr-1.5 h-7"/>
+                      <CalendarClock className="inline mr-1.5 h-8"/>
                       <span>{formatPhotoDate(exifData.date)}</span>
                     </div>
                   </div>
@@ -148,7 +148,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
               { computedGPSInfo && (
                 <div className="flex">
                     <span className="text-gray-700 uppercase">
-                      <MapPin className="inline mr-1.5 h-7 align-top"/>
+                      <MapPin className="inline mr-1.5 h-8 align-top"/>
                       <span>
                         {computedGPSInfo}
                       </span>
@@ -163,7 +163,7 @@ const ExifInfo = ({ exifData, visible, className, children }: ExifInfoProps) => 
         { visible && exifData && (
             <div
                 id="exif-info"
-                className="flex justify-between pt-8 text-xl"
+                className="flex justify-between pt-8 text-2xl"
             >
               <div className="flex gap-8">
                 <div className="flex">
