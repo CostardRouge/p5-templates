@@ -4,19 +4,22 @@ import React, { useState, useEffect, Fragment } from "react";
 import Script from "next/script";
 import CaptureBanner from "@/components/CaptureBanner";
 
-function ClientProcessingSketch({ name, options }: { name: string, options: Record<string, unknown> }) {
-    const [ sketchOptions, setSketchOptions ] = useState<Record<string, unknown>>(options);
+import { setSketchOptions, subscribeSketchOptions, getSketchOptions } from '@/shared/syncSketchOptions.js';
 
-    useEffect(() => {
-        (window as any).sketchOptions = sketchOptions;
-        window.dispatchEvent(new CustomEvent('sketch-options', { detail: sketchOptions }));
-    }, [sketchOptions]);
+function ClientProcessingSketch({ name, options }: { name: string, options: Record<string, unknown> }) {
+    const [ clientOptions, setClientOptions ] = useState(() => ({ ...getSketchOptions(), ...options }));
+
+    /* push local edits → p5 */
+    useEffect(() => setSketchOptions(clientOptions, 'react'), [clientOptions]);
+
+    /* listen for p5 edits → React state */
+    useEffect(() => subscribeSketchOptions( (options: any) => setClientOptions(options)), []);
 
     return (
         <Fragment>
             <script
                 dangerouslySetInnerHTML={{
-                    __html: `window.sketchOptions = ${JSON.stringify(sketchOptions)};`,
+                    __html: `window.sketchOptions = ${JSON.stringify(clientOptions)};`,
                 }}
             />
 
@@ -29,8 +32,8 @@ function ClientProcessingSketch({ name, options }: { name: string, options: Reco
             { options.capturing !== true && (
                 <CaptureBanner
                     name={name}
-                    options={sketchOptions}
-                    setOptions={options => setSketchOptions(options as Record<string, unknown>)}
+                    options={clientOptions}
+                    setOptions={options => setClientOptions(options as Record<string, unknown>) }
                 />
             ) }
         </Fragment>

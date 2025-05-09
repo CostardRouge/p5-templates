@@ -1,71 +1,68 @@
 import { cache, events, exif } from './index.js';
+import {
+  getSketchOptions,
+  subscribeSketchOptions,
+  setSketchOptions,
+} from '/shared/syncSketchOptions.js';
 
-const sketchOptions = Object.assign( {
-  size: {
-    width: 1080,
-    height: 1350
-  },
-  "colors": {
-    "text": [0,0,0],
-    "accent": [128,128,255],
-    "background": [230, 230, 230],
-  },
-  animation: {
-    duration: 12,
-    framerate: 60
-  },
-  "assets": [],
-  "lines": false,
-  "durationBar": true
-}, window.sketchOptions);
+const sketchOptions = {
+  size: { width: 1080, height: 1350 },
+  colors: { text: [0, 0, 0], accent: [128, 128, 255], background: [230, 230, 230] },
+  animation: { duration: 12, framerate: 60 },
+  assets: [],
+  lines: false,
+  durationBar: true,
+  ...getSketchOptions()
+};
 
-function getImagePath( path ) {
-  if (sketchOptions.id) {
-    return `${window.location.origin}/api/tmp-file?name=${encodeURIComponent(path)}&folder=${sketchOptions.id}`;
-  }
+/* ---------- helpers ---------- */
+const broadcast = partial => setSketchOptions(partial, 'p5');
 
-  return `${window.location.origin}/${path}`;
-}
+const getImagePath = path =>
+  sketchOptions.id
+    ? `${location.origin}/api/tmp-file?name=${encodeURIComponent(path)}&folder=${sketchOptions.id}`
+    : `${location.origin}/${path}`;
 
 function refreshAssets() {
-  if (sketchOptions.assets.length === 0) {
-    document.querySelector("canvas#defaultCanvas0").classList.add("loaded");
+  if (!sketchOptions.assets?.length) {
+    document.querySelector('canvas#defaultCanvas0')?.classList.add('loaded');
     return;
   }
 
-  cache.store("images", () => sketchOptions.assets.map( path => ({
-    path,
-    exif: undefined,
-    img: loadImage( getImagePath( path ) ),
-    filename: path.split("/").pop(),
-  }) ) );
+  cache.store('images', () =>
+    sketchOptions.assets.map(path => ({
+      path,
+      exif: undefined,
+      img: loadImage(getImagePath(path)),
+      filename: path.split('/').pop(),
+    })),
+  );
 
-  cache.get("images").forEach( async( imageObject ) => {
-    const { path } = imageObject;
-
-    imageObject.exif = await exif.load( getImagePath( path ) );
-  } );
+  cache.get('images').forEach(async imgObj => {
+    imgObj.exif = await exif.load(getImagePath(imgObj.path));
+  });
 }
 
-function callbackForImagesExifLoaded() {
-  if (document.querySelector("canvas#defaultCanvas0.loaded") !== null) {
-    return;
-  }
-
-  if (cache.get("images").every(image => image.exif === undefined)) {
-    return;
-  }
-
-  document.querySelector("canvas#defaultCanvas0").classList.add("loaded");
+function markLoadedWhenExifReady() {
+  const c = document.querySelector('canvas#defaultCanvas0');
+  if (!c || c.classList.contains('loaded')) return;
+  if (cache.get('images')?.every(img => img.exif === undefined)) return;
+  c.classList.add('loaded');
 }
 
-events.register("engine-window-preload", refreshAssets);
-events.register("pre-draw", callbackForImagesExifLoaded);
-
-window.addEventListener('sketch-options', ({ detail }) => {
-  Object.assign(sketchOptions, detail);          // mutate in place => refs stay valid
-  refreshAssets();                               // anything that depends on options
+/* ---------- option sync ---------- */
+/* React ➜ p5  */
+subscribeSketchOptions((newOptions, origin) => {
+  console.log({origin})
+  Object.assign(sketchOptions, newOptions);
+  refreshAssets();
   console.info('[p5] options updated', sketchOptions);
 });
+
+/* ---------- engine hooks ---------- */
+events.register('engine-window-preload', refreshAssets);
+events.register('pre-draw', markLoadedWhenExifReady);
+
+broadcast(sketchOptions);
 
 export default sketchOptions;

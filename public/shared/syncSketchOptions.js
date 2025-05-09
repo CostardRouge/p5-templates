@@ -16,13 +16,17 @@ function merge(a, b) {
 }
 
 export function setSketchOptions(update, origin = 'react') {
-  current = merge({ ...current }, update);
+  const merged = merge({ ...current }, update);
+  // const merged = Object.assign(current, update);
+  if (JSON.stringify(merged) === JSON.stringify(current)) return;
+
+  current = merged;
   globalThis.sketchOptions = current; // keep legacy global
   window.dispatchEvent(new CustomEvent(EVENT, { detail: { opts: current, origin } }));
 }
 
 export function subscribeSketchOptions(cb) {
-  const handler = e => cb(e.detail.opts);
+  const handler = e => cb(e.detail.opts, e.detail.origin);
   window.addEventListener(EVENT, handler);
   return () => window.removeEventListener(EVENT, handler);
 }

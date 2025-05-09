@@ -41,7 +41,6 @@ sketch.draw( (time, center, favoriteColor) => {
         stroke: color(...options.colors.background),
         fill: color(...options.colors.text, 190),
         font: string.fonts.martian
-
     })
 
     graphic.background(...options.colors.background, 120);
@@ -69,5 +68,5 @@ sketch.draw( (time, center, favoriteColor) => {
     image(graphic, 0, 0, SCREEN);
     blend(graphic, 0, 0, width, height, 0, 0, width, height, EXCLUSION);
 
-    shapes.sketchDurationBar(favoriteColor)
+    options.durationBar && shapes.sketchDurationBar(favoriteColor)
 });

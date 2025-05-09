@@ -11,7 +11,7 @@ import minifyAndEncodeCaptureOptions from "@/utils/minifyAndEncodeCaptureOptions
 import * as tar from 'tar';
 
 const { createPage } = await createBrowserPage({
-    headless: false,
+    headless: true,
     deviceScaleFactor: 1
 });
 
@@ -117,8 +117,8 @@ export async function POST(
     } catch (error) {
         await page?.close();
 
-        // // Cleanup temporary files on error
-        // await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+        // Cleanup temporary files on error
+        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
 
         console.error('Processing error:', error);
         return new Response('Video processing failed: ' + JSON.stringify(error), { status: 500 });
