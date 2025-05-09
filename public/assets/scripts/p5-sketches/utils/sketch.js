@@ -10,7 +10,7 @@ const sketch = {
       engine: "p5js",
       animation: {
         framerate: 60,
-        duration: 10
+        duration: 12
       }
     }
   ) => {

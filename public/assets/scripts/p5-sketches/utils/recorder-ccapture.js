@@ -1,28 +1,30 @@
-import { sketch, events, debug, animation, time } from './index.js';
+import { sketch, events, debug, animation, time, scripts, captureOptions as options } from './index.js';
 
 const recorder = {
   savedFramesCount: 0,
   recording: false,
-  capturer: undefined,
+  lib: undefined,
   saveCallback: undefined,
   maximumFrames: undefined,
-  createCapturer: () => {
-    if (recorder.capturer) {
+  load: async () => {
+    if (recorder.lib) {
       return;
     }
 
-    recorder.capturer = new CCapture({
+    await scripts.load("/assets/libraries/CCapture.all.min.js")
+
+    recorder.lib = new CCapture({
       // format: options.get('recording-format'),
       format: "png",
       quality: "best",
       framerate: sketch.engine.getFrameRate(),
       verbose: false,
-      name: sketch.name,
+      name: options.name || sketch.name,
       manualStart: true,
-      // workersPath: "libraries/",
+      workersPath: "libraries/",
     });
   },
-  start: (maximumFrames, saveCallback) => {
+  start: async (maximumFrames, saveCallback) => {
     if (true === recorder.recording) {
       return;
     }
@@ -37,8 +39,8 @@ const recorder = {
       }
     }
 
-    recorder.createCapturer();
-    recorder.capturer.start();
+    await recorder.load();
+    recorder.lib.start();
 
     recorder.recording = true;
     recorder.savedFramesCount = 0;
@@ -54,13 +56,13 @@ const recorder = {
 
     document.body.classList.remove("recording");
 
-    recorder.capturer.stop();
-    recorder.capturer.save( recorder.saveCallback );
+    recorder.lib.stop();
+    recorder.lib.save( recorder.saveCallback );
   },
-  onDraw: async() => {
+  onDraw: () => {
     requestAnimationFrame(recorder.onDraw);
 
-    if (undefined === recorder.capturer) {
+    if (undefined === recorder.lib) {
       return;
     }
 
@@ -99,7 +101,7 @@ const recorder = {
       return;
     }
 
-    recorder.capturer.capture(canvasElement);
+    recorder.lib.capture(canvasElement);
     recorder.savedFramesCount++;
   }
 };
@@ -110,7 +112,7 @@ const recorder = {
 requestAnimationFrame(recorder.onDraw);
 
 window.recorder = recorder;
-window.startLoopRecording = () => recorder.start(animation.maximumFramesCount);
-window.startLoopRecordingWithSaveCallback = saveCallback => recorder.start(animation.maximumFramesCount, saveCallback);
+window.startLoopRecording = async () => recorder.start(animation.maximumFramesCount);
+window.startLoopRecordingWithSaveCallback = async saveCallback => recorder.start(animation.maximumFramesCount, saveCallback);
 
 export default recorder;

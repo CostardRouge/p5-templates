@@ -1,3 +1,5 @@
+import { scripts } from "./index.js";
+
 const friendlyCameraModelNames = {
     "ILCE-7CM2": "ALPHA 7CII"
 };
@@ -9,7 +11,18 @@ const friendlyLensModelNames = {
 };
 
 const exif = {
-    load: (file) => {
+    loadedScripts: false,
+    loadScripts: async () => {
+        if (exif.loadedScripts !== false) {
+            return
+        }
+
+        await scripts.load("/assets/libraries/exif-reader.js");
+        exif.loadedScripts = true
+    },
+    load: async (file) => {
+        await exif.loadScripts()
+
         return ExifReader.load(file)
             .then( tags => ({
                 iso: Number(tags?.ISOSpeedRatings?.description),

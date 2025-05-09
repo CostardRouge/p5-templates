@@ -10,7 +10,7 @@ const defaultSketchOptions = {
         height: 1350
     },
     animation: {
-        duration: 6,
+        duration: 12,
         framerate: 60
     }
 }

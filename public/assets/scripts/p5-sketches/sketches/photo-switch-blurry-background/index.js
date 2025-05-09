@@ -127,11 +127,11 @@ sketch.draw( ( time, center, favoriteColor ) => {
 		}
 	});
 
-	const defaultTitle = "photo-switch-mosaic-background".replaceAll('-', "\n")
+	const defaultTitle = options?.name?.replaceAll('-', "\n")
 
 	if (animation.progression < 0.2) {
 		string.write(
-			options.texts.title || defaultTitle,
+			options?.texts?.title || defaultTitle,
 			width/2,
 			height/2,
 			{

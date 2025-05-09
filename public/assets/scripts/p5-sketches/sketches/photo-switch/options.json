@@ -1,11 +1,9 @@
 {
-  "title": "500",
-  "font": "cloitre",
   "colors": {
     "background": [230]
   },
   "animation": {
-    "duration": 6,
+    "duration": 1,
     "framerate": 60
   }
 }

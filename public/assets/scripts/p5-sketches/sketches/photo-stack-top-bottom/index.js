@@ -24,20 +24,6 @@ sketch.draw( (_time, center, favoriteColor) => {
 
     background(...options.colors.background);
 
-    if (options.lines) {
-        stroke(options.colors.accent)
-
-        shapes.hl(0);
-        shapes.hl(height);
-
-        shapes.vl(0);
-        shapes.vl(width);
-    }
-
-    if (options.durationBar) {
-        shapes.sketchDurationBar(color(...options.colors.accent))
-    }
-
     const margin = 80;
     const imageIndexDisplay = map(animation.triangleProgression(2), 0, 1, 0, images.length, easing.easeInOutExpo_);
 

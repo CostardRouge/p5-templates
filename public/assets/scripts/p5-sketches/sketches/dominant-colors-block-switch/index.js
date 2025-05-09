@@ -96,6 +96,8 @@ sketch.draw( ( time, center, favoriteColor ) => {
       +noise(xIndex/columns, yIndex/rows, animation.circularProgression)
       +xIndex/columns
       +yIndex/rows
+      // +x/width
+      // +y/height
     )
     const imageIndex = mappers.circularIndex(
       (

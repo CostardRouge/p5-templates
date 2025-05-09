@@ -55,8 +55,9 @@ function dice(size = width, render) {
 }
 
 sketch.draw( ( time, center, favoriteColor ) => {
-    // background(...options.colors.background);
-  background(230)
+  background(...options.colors.background);
+
+  console.log(options)
 
   const images = cache.get("images");
 
@@ -82,7 +83,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
   canvases.dice.push()
 
-  canvases.dice.background(230)
+  canvases.dice.background(...options.colors.background);
   canvases.dice.orbitControl()
 
   canvases.dice.rotateX(rX)

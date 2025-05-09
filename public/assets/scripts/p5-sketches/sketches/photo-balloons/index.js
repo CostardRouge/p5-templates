@@ -77,6 +77,7 @@ sketch.setup(
 
 sketch.draw( ( time, center, favoriteColor ) => {
 	background(...options.colors.background);
+	background(...options.colors.background);
 
 	const imageObjects = cache.get("images");
 

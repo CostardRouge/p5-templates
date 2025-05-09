@@ -11,5 +11,11 @@ export async function GET(request: Request) {
         return new Response("Missing file name", { status: 400 });
     }
 
+    const folder = searchParams.get("folder");
+
+    if (folder) {
+        return downloadFileResponse(path.join(os.tmpdir(), folder, name));
+    }
+
     return downloadFileResponse(path.join(os.tmpdir(), name));
 }

@@ -9,6 +9,7 @@ import sketch from './sketch.js';
 import colors from './colors.js';
 import events from './events.js';
 import shapes from './shapes.js';
+import scripts from './scripts.js';
 import mappers from './mappers.js';
 import options from './options.js';
 import animation from './animation.js';
@@ -32,6 +33,7 @@ export {
   colors,
   shapes,
   events,
+  scripts,
   mappers,
   options,
   recorder,

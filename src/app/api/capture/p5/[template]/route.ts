@@ -4,13 +4,14 @@ import downloadFileResponse from "@/utils/downloadFileResponse";
 import { spawn } from 'child_process';
 import fs from "node:fs/promises";
 import path from 'path';
+import os from "node:os";
 
 import minifyAndEncodeCaptureOptions from "@/utils/minifyAndEncodeCaptureOptions";
 
 import * as tar from 'tar';
 
 const { createPage } = await createBrowserPage({
-    headless: true,
+    headless: false,
     deviceScaleFactor: 1
 });
 
@@ -25,8 +26,8 @@ export async function POST(
     }
 
     let page = undefined;
-    const timestamp = Date.now();
-    const tempDir = path.join(process.cwd(), 'public', 'uploads', `temp_${timestamp}`);
+    const id = `${Date.now()}`;
+    const tempDir = path.join(os.tmpdir(), id);
 
     // Create temporary directory
     await fs.mkdir(tempDir, { recursive: true });
@@ -36,6 +37,7 @@ export async function POST(
         const captureOptions = JSON.parse(<string>formData.get('options'));
 
         captureOptions.assets = [];
+        captureOptions.id = id;
 
         const files = formData.getAll('files[]').filter(
             file => (
@@ -49,7 +51,7 @@ export async function POST(
 
             await fs.writeFile(filePath, buffer);
 
-            captureOptions.assets.push(path.join('/uploads', `temp_${timestamp}`, (file as File).name));
+            captureOptions.assets.push((file as File).name);
         }
 
         page = await createPage()
@@ -67,20 +69,20 @@ export async function POST(
         await page.close();
 
         // Extract tar file
-        // await tar.x({
-        //     file: downloadPath,
-        //     cwd: tempDir
-        // });
+        await tar.x({
+            file: downloadPath,
+            cwd: tempDir
+        });
 
         // Generate video from frames
-        const outputPath = path.join(tempDir, `output_${timestamp}.mp4`);
+        const outputPath = path.join(tempDir, `output_${id}_${template}.mp4`);
 
         const ffmpegOptions = [
             '-r', String(captureOptions.animation.framerate),
-            '-i', downloadPath,
+            // '-i', downloadPath,
 
-            // '-pattern_type', 'glob',
-            // '-i', '*.png',
+            '-pattern_type', 'glob',
+            '-i', '*.png',
             '-c:v', 'libx264',
             '-pix_fmt', 'yuv420p',
             '-preset', 'fast',
@@ -89,7 +91,7 @@ export async function POST(
             outputPath
         ];
 
-        console.log({tempDir, captureOptions, downloadPath, outputPath, ffmpegOptions});
+        //console.log({tempDir, captureOptions, downloadPath, outputPath, ffmpegOptions});
 
         await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', ffmpegOptions, {
@@ -115,8 +117,8 @@ export async function POST(
     } catch (error) {
         await page?.close();
 
-        // Cleanup temporary files on error
-        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+        // // Cleanup temporary files on error
+        // await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
 
         console.error('Processing error:', error);
         return new Response('Video processing failed: ' + JSON.stringify(error), { status: 500 });

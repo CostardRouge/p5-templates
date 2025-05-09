@@ -120,8 +120,4 @@ sketch.draw( ( time, center, favoriteColor ) => {
 			}
 		)
 	}
-
-	if ( document.querySelector("canvas#defaultCanvas0.loaded") === null) {
-		document.querySelector("canvas#defaultCanvas0").classList.add("loaded");
-	}
 });

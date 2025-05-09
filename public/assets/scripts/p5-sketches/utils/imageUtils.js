@@ -76,7 +76,7 @@ const imageUtils = {
 		callback?.(position.x, position.y, w, h);
 
 		if (options.lines) {
-			stroke(options?.colors?.accent)
+			stroke(options?.colors?.accent || color(128, 128, 255))
 
 			shapes.hl(position.y);
 			shapes.hl(position.y+h);
@@ -84,6 +84,23 @@ const imageUtils = {
 			shapes.vl(position.x);
 			shapes.vl(position.x+w);
 		}
+	},
+	clearColor: (img, clr = color(255, 255, 255)) => {
+		img.loadPixels();
+
+		const { levels: [ _r, _g, _b ] } = clr;
+
+		for (let i = 0; i < img.pixels.length; i += 4) {
+			let r = img.pixels[i];
+			let g = img.pixels[i + 1];
+			let b = img.pixels[i + 2];
+
+			if (r === _r && g === _g && b === _b) {
+				img.pixels[i + 3] = 0;
+			}
+		}
+
+		img.updatePixels();
 	}
 };
 

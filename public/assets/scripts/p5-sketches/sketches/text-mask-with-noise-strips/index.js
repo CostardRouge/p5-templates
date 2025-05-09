@@ -24,6 +24,7 @@ sketch.setup(
 
 sketch.draw((time) => {
   background(...options.colors.background);
+  console.log(options)
 
   const textFontSize = (height+width)/2.3;
 

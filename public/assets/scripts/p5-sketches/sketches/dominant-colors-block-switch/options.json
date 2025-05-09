@@ -2,7 +2,11 @@
   "title": "500",
   "font": "cloitre",
   "colors": {
-    "background": [230]
+    "background": [0, 0, 0],
+    "text": [128, 128, 255]
+  },
+  "texts": {
+    "title": "dominant\ncolors"
   },
   "animation": {
     "duration": 6,

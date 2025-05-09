@@ -233,20 +233,6 @@ sketch.draw( (_time, center, favoriteColor) => {
         }
     )
 
-    if (options.lines) {
-        stroke(options.colors.accent)
-
-        shapes.hl(0);
-        shapes.hl(height);
-
-        shapes.vl(0);
-        shapes.vl(width);
-    }
-
-    if (options.durationBar) {
-        shapes.sketchDurationBar(color(...options.colors.accent))
-    }
-
     if ( document.querySelector("canvas#defaultCanvas0.loaded") === null && cards.every(card => card.exif !== undefined)) {
         document.querySelector("canvas#defaultCanvas0").classList.add("loaded");
     }

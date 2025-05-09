@@ -17,6 +17,8 @@ sketch.setup(
     }
 );
 
+console.log(options)
+
 sketch.draw( ( time, center, favoriteColor ) => {
     background(...options.colors.background);
 

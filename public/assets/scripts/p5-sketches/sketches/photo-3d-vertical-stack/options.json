@@ -10,6 +10,10 @@
     "duration": 12,
     "framerate": 60
   },
+  "texts": {
+    "top": "3d\nphoto",
+    "bottom": "stack\nscroll"
+  },
   "count": 200,
   "lines": false,
   "rotate": true

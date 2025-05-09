@@ -164,7 +164,7 @@ const ImageInfoHelper = () => {
 
             { !capturing && (
                 <div
-                    className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black"
+                    className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black sm:h-20"
                 >
                     {image && (
                         <button
@@ -182,7 +182,7 @@ const ImageInfoHelper = () => {
                     )}
 
                     <button
-                        className="rounded-sm px-4 border border-t-1 border-black"
+                        className="rounded-sm px-4 border border-black"
                         onClick={(e) => {
                             e.preventDefault();
                             setScaleRender(!scaleRender);
@@ -193,7 +193,7 @@ const ImageInfoHelper = () => {
 
                     {exifData && (
                         <button
-                            className="rounded-sm px-4 border border-t-1 border-black"
+                            className="rounded-sm px-4 border border-black"
                             onClick={(e) => {
                                 e.preventDefault();
                                 setShowExif(!showExif);
@@ -205,10 +205,10 @@ const ImageInfoHelper = () => {
 
                     {image && (
                         <button
-                            className="rounded-sm px-4 border border-t-1 border-black"
+                            className="rounded-sm px-4 border border-black"
                             onClick={(e) => {
                                 e.preventDefault();
-                                handleDownload();
+                                handleDownload().then();
                             }}
                         >
                             Download the image

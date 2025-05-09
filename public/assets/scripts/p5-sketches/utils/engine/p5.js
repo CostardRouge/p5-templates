@@ -1,4 +1,4 @@
-import { events, options, time } from "../index.js";
+import { events, options, time, scripts } from "../index.js";
 
 const p5js = {
   camera: undefined,
@@ -23,7 +23,8 @@ const p5js = {
   getFrameRate: () => frameRate(),
   getElapsedTime: () => millis(),
   loadScripts: async () => {
-    //await loadScript("libraries/p5.min.js");
+    await scripts.load("/assets/libraries/p5.min.js");
+    //await scripts.load("/assets/libraries/q5.js");
   },
   attachGlobalFunctions: () => {
     window.setup = () => {
