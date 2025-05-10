@@ -9,16 +9,6 @@ sketch.setup(
         background(...options.colors.background);
         graphic.background(...options.colors.background);
     },
-    {
-        size: {
-            width: options.size.width,
-            height: options.size.height,
-        },
-        animation: {
-            framerate: options.animation.framerate,
-            duration: options.animation.duration,
-        },
-    }
 );
 
 sketch.draw( (time, center, favoriteColor) => {

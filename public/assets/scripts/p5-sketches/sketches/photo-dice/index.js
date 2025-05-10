@@ -57,8 +57,6 @@ function dice(size = width, render) {
 sketch.draw( ( time, center, favoriteColor ) => {
   background(...options.colors.background);
 
-  console.log(options)
-
   const images = cache.get("images");
 
   const {

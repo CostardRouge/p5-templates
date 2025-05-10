@@ -88,25 +88,25 @@ function CaptureBanner({ name, options, setOptions }: { name: string, options: R
                     className="rounded-sm px-4 border border-black"
                     onClick={() => {
                         // @ts-ignore
-                        window.startLoopRecording()
+                        // window.startLoopRecording()
                     }}
                 >
-                    Start front-end recording
+                    Front-end recording
                 </button>
 
                 <button
                     className="rounded-sm px-4 border border-black"
                     onClick={handleBackRecording}
                 >
-                    Start back-end recording
+                    Back-end recording (playwright)
                 </button>
 
-                <button
-                    className="rounded-sm px-4 border border-black"
-                    // onClick={() => startHybridCapture()}
-                >
-                    Start hybrid recording
-                </button>
+                {/*<button*/}
+                {/*    className="rounded-sm px-4 border border-black"*/}
+                {/*    // onClick={() => startHybridCapture()}*/}
+                {/*>*/}
+                {/*    Start hybrid recording*/}
+                {/*</button>*/}
             </div>
         </div>
     )

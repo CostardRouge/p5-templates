@@ -1,14 +1,9 @@
-import { sketch, animation, easing, exif, mappers, string, events, captureOptions as options, cache, grid, colors, imageUtils } from '/assets/scripts/p5-sketches/utils/index.js';
+import { sketch, animation, easing, exif, mappers, string, events, scripts, captureOptions as options, cache, grid, colors, imageUtils } from '/assets/scripts/p5-sketches/utils/index.js';
+
+await scripts.load("/assets/libraries/decomp.min.js");
+await scripts.load("/assets/libraries/matter.min.js");
 
 const { Engine, Body, Bodies, Vector, Composite } = Matter;
-
-events.register("engine-window-preload", () => {
-	cache.store("images", () => options.assets.slice(0, 5).map( imagePath => ({
-		path: imagePath,
-		img: loadImage( imagePath ),
-		filename: imagePath.split("/").pop(),
-	}) ) );
-});
 
 events.register("engine-mouse-dragged", () => {
 	addImageBall(

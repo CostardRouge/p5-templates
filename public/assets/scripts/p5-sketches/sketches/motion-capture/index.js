@@ -80,7 +80,7 @@ sketch.setup(
 		animation: {
 			framerate: options.animation.framerate,
 			duration: options.animation.duration,
-		},
+		}
 	}
 );
 

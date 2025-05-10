@@ -1,4 +1,4 @@
-import { cache, events, exif } from './index.js';
+import { cache, events, exif, sketch } from './index.js';
 import {
   getSketchOptions,
   subscribeSketchOptions,
@@ -14,9 +14,6 @@ const sketchOptions = {
   durationBar: true,
   ...getSketchOptions()
 };
-
-/* ---------- helpers ---------- */
-const broadcast = partial => setSketchOptions(partial, 'p5');
 
 const getImagePath = path =>
   sketchOptions.id
@@ -50,19 +47,23 @@ function markLoadedWhenExifReady() {
   c.classList.add('loaded');
 }
 
-/* ---------- option sync ---------- */
-/* React ➜ p5  */
-subscribeSketchOptions((newOptions, origin) => {
-  console.log({origin})
-  Object.assign(sketchOptions, newOptions);
-  refreshAssets();
-  console.info('[p5] options updated', sketchOptions);
-});
-
-/* ---------- engine hooks ---------- */
 events.register('engine-window-preload', refreshAssets);
 events.register('pre-draw', markLoadedWhenExifReady);
+events.register('pre-setup', () => {
+  subscribeSketchOptions((newOptions, _origin) => {
+    console.info('[p5] options updated', sketchOptions);
+    Object.assign(sketchOptions, newOptions);
 
-broadcast(sketchOptions);
+    refreshAssets();
+
+    events.handle("engine-resize-canvas", newOptions?.size?.width, newOptions?.size?.height);
+    events.handle("engine-framerate-change", newOptions?.animation?.framerate);
+
+    sketch.sketchOptions.animation = newOptions?.animation;
+    sketch.sketchOptions.size = newOptions?.size;
+  });
+
+  setSketchOptions(sketchOptions, sketch.sketchOptions.engine);
+});
 
 export default sketchOptions;

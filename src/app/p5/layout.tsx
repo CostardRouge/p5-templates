@@ -18,8 +18,6 @@ export default function RootLayout({
     <body>
         <div id="sketch-ui-drawer"></div>
         <span id="sketch-ui-icon"></span>
-        <Script src="/assets/libraries/decomp.min.js"/>
-        <Script src="/assets/libraries/matter.min.js"/>
         {children}
     </body>
     </html>

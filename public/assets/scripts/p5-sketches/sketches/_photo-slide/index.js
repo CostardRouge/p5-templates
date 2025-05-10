@@ -70,14 +70,6 @@ sketch.setup(
 	}
 );
 
-events.register("engine-window-preload", () => {
-	cache.store("images", () => options.assets.slice(0, 5).map( imagePath => ({
-		path: imagePath,
-		img: loadImage( imagePath ),
-		filename: imagePath.split("/").pop(),
-	}) ) );
-});
-
 let offset = 0;
 
 sketch.draw( ( time, center, favoriteColor ) => {

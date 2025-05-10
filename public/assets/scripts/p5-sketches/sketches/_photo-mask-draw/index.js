@@ -49,17 +49,16 @@ sketch.setup(
 );
 
 events.register("engine-window-preload", () => {
-	cache.store("images", () => options.assets.slice(0, 5).map( imagePath => ({
-		path: imagePath,
-		img: loadImage( imagePath ),
-		filename: imagePath.split("/").pop(),
-		ball: {
-			position: createVector(),
-			size: random(200, 300, 400),
-			vx: random(-1, 1),
-			vy: random(-1, 1),
-		}
-	}) ) );
+	cache.get("images").forEach( image => {
+		Object.assign(image, {
+			ball: {
+				position: createVector(),
+				size: random(200, 300, 400),
+				vx: random(-1, 1),
+				vy: random(-1, 1),
+			}
+		})
+	} );
 });
 
 sketch.draw( ( time, center, favoriteColor ) => {

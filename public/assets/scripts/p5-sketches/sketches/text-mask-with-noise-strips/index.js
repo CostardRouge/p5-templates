@@ -24,8 +24,6 @@ sketch.setup(
 
 sketch.draw((time) => {
   background(...options.colors.background);
-  console.log(options)
-
   const textFontSize = (height+width)/2.3;
 
   canvases.mask.clear()
@@ -62,7 +60,6 @@ sketch.draw((time) => {
     3,
     0.45,
   );
-
 
   grid.draw(gridOptions, (cellVector, { x, y}) => {
     const xOff = x/width*1.5;

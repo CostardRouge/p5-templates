@@ -1,16 +1,11 @@
-try {
-	Matter
-}
-catch (_) {
-	window.location.reload()
-}
+import { sketch, animation, easing, scripts, exif, mappers, string, events, captureOptions as options, cache, grid, colors, imageUtils } from '/assets/scripts/p5-sketches/utils/index.js';
+
+await scripts.load("/assets/libraries/decomp.min.js");
+await scripts.load("/assets/libraries/matter.min.js");
 
 const { Engine, Body, Bodies, Vector, Composite, Common } = Matter;
 
 Common.setDecomp(window.decomp)
-
-
-import { sketch, animation, easing, exif, mappers, string, events, captureOptions as options, cache, grid, colors, imageUtils } from '/assets/scripts/p5-sketches/utils/index.js';
 
 const shape = [];
 
@@ -224,8 +219,6 @@ sketch.draw( ( time, center, favoriteColor ) => {
 			point(x, y);
 			return
 		}
-
-		// console.log(body)
 
 		const { position: { x: mX, y: mY }, vertices, angle } = body;
 
