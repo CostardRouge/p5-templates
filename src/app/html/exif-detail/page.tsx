@@ -9,6 +9,8 @@ import { ExifData } from "@/types/types";
 
 import "./exif-detail.css";
 
+import fetchDownload from "@/components/utils/fetchDownload";
+
 const scalingStyle = "scale-[0.375] md:scale-[0.6] lg:scale-[0.7] xl:scale-9";
 const supportedObjectStyles = ['object-fit', 'object-cover', 'object-contain'];
 const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -84,34 +86,10 @@ const ImageInfoHelper = () => {
         formData.append("showExif", String(showExif));
         formData.append("objectStyle", objectStyle);
 
-        const response = await fetch("/api/capture/html/exif-detail", {
+        await fetchDownload("/api/capture/html/exif-detail", {
             method: "POST",
             body: formData,
         });
-
-        if (!response.ok) {
-            console.error("Capture failed");
-            return;
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-
-        const contentDisposition = response.headers.get("Content-Disposition");
-        let filename = "download.png";
-
-        if (contentDisposition) {
-            const match = contentDisposition.match(/filename="?(.+?)"?$/);
-            if (match) filename = match[1];
-        }
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
     };
 
     useEffect(() => {

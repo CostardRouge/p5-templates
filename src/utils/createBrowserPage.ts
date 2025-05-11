@@ -16,7 +16,7 @@ async function createBrowserPage({
 
         return page;
     };
-    const page = initialPage ? createPage() : undefined;
+    const page = initialPage ? await createPage() : undefined;
 
     return {
         createPage,

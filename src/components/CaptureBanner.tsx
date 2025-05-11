@@ -2,12 +2,14 @@
 
 import { JsonEditor, JsonData } from 'json-edit-react'
 import React, { useState } from "react";
+import { Download, Loader } from "lucide-react";
+
+import fetchDownload from "@/components/utils/fetchDownload";
 
 function CaptureBanner({ name, options, setOptions }: { name: string, options: Record<string, any>, setOptions: (options: JsonData) => void }) {
-    // const [ jsonEditorState, setJsonEditorState ] = useState<Record<string, any>>(options);
+    const [ loading, setLoading ] = useState(false);
 
     async function handleBackRecording() {
-        // 1. build payload
         const formData = new FormData();
 
         formData.append('options', JSON.stringify(options));
@@ -24,41 +26,12 @@ function CaptureBanner({ name, options, setOptions }: { name: string, options: R
             );
         }
 
-        const response = await fetch(`/api/capture/p5/${encodeURIComponent(name)}`, {
+        setLoading(true)
+
+        fetchDownload(`/api/capture/p5/${encodeURIComponent(name)}`, {
             method: 'POST',
-            body: formData,
-        });
-
-        if (!response.ok) throw new Error('recording failed');
-
-        // // 3. let user download video
-        // const video = await res.blob();
-        // const link = document.createElement('a');
-        // link.href = URL.createObjectURL(video);
-        // link.download = `${sketchName}-${Date.now()}.mp4`;
-        // link.click();
-        // URL.revokeObjectURL(link.href);
-
-
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-
-        const contentDisposition = response.headers.get("Content-Disposition");
-        let filename = "download.png";
-
-        if (contentDisposition) {
-            const match = contentDisposition.match(/filename="?(.+?)"?$/);
-            if (match) filename = match[1];
-        }
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+            body: formData
+        }).finally(() => setLoading(false));
     }
 
     return (
@@ -84,25 +57,30 @@ function CaptureBanner({ name, options, setOptions }: { name: string, options: R
             </div>
 
             <div className="flex gap-2">
-                <button
-                    className="rounded-sm px-4 border border-black"
-                    onClick={() => {
-                        // @ts-ignore
-                        // window.startLoopRecording()
-                    }}
-                >
-                    Front-end recording
-                </button>
+                {/*<button*/}
+                {/*    className="rounded-sm px-4 border border-black"*/}
+                {/*    onClick={() => {*/}
+                {/*        // @ts-ignore*/}
+                {/*        window.startLoopRecording()*/}
+                {/*    }}*/}
+                {/*    disabled={loading}*/}
+                {/*>*/}
+                {/*    Front-end recording*/}
+                {/*</button>*/}
 
                 <button
                     className="rounded-sm px-4 border border-black"
                     onClick={handleBackRecording}
+                    disabled={loading}
                 >
-                    Back-end recording (playwright)
+                    { loading ? <Loader className="inline mr-1" /> : <Download className="inline mr-1" /> }
+
+                     Back-end recording (SSR)
                 </button>
 
                 {/*<button*/}
                 {/*    className="rounded-sm px-4 border border-black"*/}
+                {/*    disabled={loading}*/}
                 {/*    // onClick={() => startHybridCapture()}*/}
                 {/*>*/}
                 {/*    Start hybrid recording*/}
