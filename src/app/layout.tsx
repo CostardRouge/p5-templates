@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import type {
+  Metadata
+} from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,11 +8,11 @@ export const metadata: Metadata = {
   description: "Generate social-templates with html and javascript",
 };
 
-export default async function RootLayout({
-    children,
+export default async function RootLayout( {
+  children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}> ) {
   return (
     <html lang="en">
       <body>

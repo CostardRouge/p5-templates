@@ -1,50 +1,63 @@
-import { NextRequest } from 'next/server';
-import { getProgress, hasJob } from '@/lib/progressStore';
+import {
+  NextRequest
+} from "next/server";
+import {
+  getProgress, hasJob
+} from "@/lib/progressStore";
 
-/**
- * EventSource endpoint.
- * GET /api/record-progress?id=<jobId>
- */
-export async function GET(req: NextRequest) {
-    const id = req.nextUrl.searchParams.get('id');
-    if (!id || !hasJob(id)) {
-        return new Response('unknown jobId', { status: 404 });
-    }
+export async function GET( req: NextRequest ) {
+  const id = req.nextUrl.searchParams.get( "id" );
 
-    let intervalId = undefined;
+  if ( !id || !hasJob( id ) ) {
+    return new Response(
+      "unknown jobId",
+      {
+        status: 404
+      }
+    );
+  }
 
-    const stream = new ReadableStream({
-        start(controller) {
-            const sendUpdate = () => {
-                const progress = getProgress(id);
+  const intervalId = undefined;
 
-                if (!progress) {
-                    clearInterval(intervalId);
-                    controller.close();
-                    return;
-                }
+  const stream = new ReadableStream( {
+    start( controller ) {
+      const sendUpdate = () => {
+        const progress = getProgress( id );
 
-                controller.enqueue(`data: ${JSON.stringify(progress)}\n\n`);
-
-                if (progress.step === 'done' || progress.step === 'error') {
-                    clearInterval(intervalId);
-                    controller.close();
-                }
-            };
-
-            const intervalId = setInterval(sendUpdate, 500);
-            sendUpdate();
-        },
-        cancel() {
-            clearInterval(intervalId);
+        if ( !progress ) {
+          clearInterval( intervalId );
+          controller.close();
+          return;
         }
-    });
 
-    return new Response(stream, {
-        headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-        },
-    });
+        controller.enqueue( `data: ${ JSON.stringify( progress ) }\n\n` );
+
+        if ( progress.step === "done" || progress.step === "error" ) {
+          clearInterval( intervalId );
+          controller.close();
+        }
+      };
+
+      const intervalId = setInterval(
+        sendUpdate,
+        500
+      );
+
+      sendUpdate();
+    },
+    cancel() {
+      clearInterval( intervalId );
+    }
+  } );
+
+  return new Response(
+    stream,
+    {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    }
+  );
 }

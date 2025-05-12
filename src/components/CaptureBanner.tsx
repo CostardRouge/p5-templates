@@ -1,93 +1,170 @@
-'use client';
+"use client";
 
-import { JsonEditor, JsonData } from 'json-edit-react'
-import React, { useState } from "react";
-import { Download, Loader } from "lucide-react";
+import {
+  JsonData, JsonEditor
+} from "json-edit-react";
+import React, {
+  useState
+} from "react";
+import {
+  Download, Loader
+} from "lucide-react";
 
 import fetchDownload from "@/components/utils/fetchDownload";
 
-function CaptureBanner({ name, options, setOptions }: { name: string, options: Record<string, any>, setOptions: (options: JsonData) => void }) {
-    const [ loading, setLoading ] = useState(false);
+type ProgressData = {
+ stepName: string; percentage: number
+} | null;
 
-    async function handleBackRecording() {
-        const formData = new FormData();
+export default function CaptureBanner( {
+  name,
+  options,
+  setOptions
+}: {
+    name: string;
+    options: Record<string, unknown>;
+    setOptions: ( nextOptions: JsonData ) => void;
+} ) {
+  const [
+    isRecording,
+    setIsRecording
+  ] = useState( false );
+  const [
+    recordingProgress,
+    setRecordingProgress
+  ] = useState<ProgressData>( null );
 
-        formData.append('options', JSON.stringify(options));
+  function subscribeToRecordingProgress( jobId: string ): void {
+    const source = new EventSource( `/api/record-progress?id=${ jobId }` );
 
-        if (Array.isArray(options.assets)) {
-            await Promise.all(
-                options.assets.map(async (url: string, i) => {
-                    const resp = await fetch(url);
-                    const blob = await resp.blob();
-                    const name = url.split('/').pop() ?? `asset-${i}.png`;
+    source.onmessage = async( event: MessageEvent<string> ): Promise<void> => {
+      const progress: {
+ step: string; pct: number
+} = JSON.parse( event.data );
 
-                    formData.append('files[]', new File([blob], name, { type: blob.type }));
-                }),
-            );
-        }
+      setRecordingProgress( {
+        stepName: progress.step,
+        percentage: progress.pct,
+      } );
 
-        setLoading(true)
+      if ( progress.step === "done" ) {
+        source.close();
+        await fetchDownload(
+          `/api/video?id=${ jobId }`,
+          {
+            method: "GET",
+          }
+        );
+        setIsRecording( false );
+      }
 
-        fetchDownload(`/api/capture/p5/${encodeURIComponent(name)}`, {
-            method: 'POST',
-            body: formData
-        }).finally(() => setLoading(false));
+      if ( progress.step === "error" ) {
+        source.close();
+        alert( "Recording failed" );
+        setIsRecording( false );
+      }
+    };
+  }
+
+  async function startBackendRecording(): Promise<void> {
+    const formData = new FormData();
+
+    formData.append(
+      "options",
+      JSON.stringify( options )
+    );
+
+    if ( Array.isArray( options.assets ) ) {
+      await Promise.all( options.assets.map( async( assetUrl: string, index: number ) => {
+        const assetResponse = await fetch( assetUrl );
+        const assetBlob = await assetResponse.blob();
+        const assetName = assetUrl.split( "/" ).pop() ?? `asset-${ index }`;
+
+        formData.append(
+          "files[]",
+          new File(
+            [
+              assetBlob
+            ],
+            assetName,
+            {
+              type: assetBlob.type
+            }
+          )
+        );
+      } ), );
     }
 
-    return (
-        <div
-            className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black z-50"
-        >
-            <div className="rounded-sm border border-black">
-                <JsonEditor
-                    collapse={true}
-                    data={options}
-                    setData={setOptions}
-                    theme={
-                        {
-                            styles: {
-                                container: {
-                                    backgroundColor: '#f6f6f6',
-                                    fontFamily: 'monospace'
-                                }
-                            }
-                        }
-                    }
-                />
-            </div>
+    setIsRecording( true );
 
-            <div className="flex gap-2">
-                {/*<button*/}
-                {/*    className="rounded-sm px-4 border border-black"*/}
-                {/*    onClick={() => {*/}
-                {/*        // @ts-ignore*/}
-                {/*        window.startLoopRecording()*/}
-                {/*    }}*/}
-                {/*    disabled={loading}*/}
-                {/*>*/}
-                {/*    Front-end recording*/}
-                {/*</button>*/}
+    const startResponse = await fetch(
+      `/api/server-record/${ encodeURIComponent( name ) }`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
-                <button
-                    className="rounded-sm px-4 border border-black"
-                    onClick={handleBackRecording}
-                    disabled={loading}
-                >
-                    { loading ? <Loader className="inline mr-1" /> : <Download className="inline mr-1" /> }
+    if ( !startResponse.ok ) {
+      alert( "Could not start recording" );
+      setIsRecording( false );
+      return;
+    }
 
-                     Back-end recording (SSR)
-                </button>
+    const startResponseJson: {
+ jobId: string
+} = await startResponse.json();
 
-                {/*<button*/}
-                {/*    className="rounded-sm px-4 border border-black"*/}
-                {/*    disabled={loading}*/}
-                {/*    // onClick={() => startHybridCapture()}*/}
-                {/*>*/}
-                {/*    Start hybrid recording*/}
-                {/*</button>*/}
-            </div>
-        </div>
-    )
+    subscribeToRecordingProgress( startResponseJson.jobId );
+  }
+
+  return (
+    <div
+      className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black z-50">
+      <div className="rounded-sm border border-black">
+        <JsonEditor
+          collapse
+          data={options}
+          setData={setOptions}
+          theme={{
+            styles: {
+              container: {
+                backgroundColor: "#f6f6f6",
+                fontFamily: "monospace"
+              },
+            },
+          }}
+        />
+      </div>
+
+      <div className="flex flex-col justify-start gap-1">
+        {!recordingProgress && (
+          <button
+            className="rounded-sm px-4 border border-black disabled:opacity-50"
+            onClick={startBackendRecording}
+            disabled={isRecording}
+          >
+            {isRecording ? <Loader className="inline mr-1 animate-spin"/> :
+              <Download className="inline mr-1"/>}
+            Start backend recording
+          </button>
+        )}
+
+        {!isRecording && recordingProgress && (
+          <div className="w-64 h-3 bg-gray-200 rounded">
+            <div
+              className="h-full bg-black rounded"
+              style={{
+                width: `${ recordingProgress.percentage }%`
+              }}
+            />
+
+            <span className="text-xs">
+              {recordingProgress.stepName} – {Math.round( recordingProgress.percentage )}%
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
-
-export default CaptureBanner;

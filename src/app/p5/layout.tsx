@@ -1,25 +1,27 @@
 import "./p5.css";
 
-import type { Metadata } from "next";
-import Script from 'next/script';
+import type {
+  Metadata
+} from "next";
+import Script from "next/script";
 
 export const metadata: Metadata = {
-    title: "Social-templates-renderer | p5js",
-    description: "Generate social-templates with 5js",
+  title: "Social-templates-renderer | p5js",
+  description: "Generate social-templates with 5js",
 };
 
-export default function RootLayout({
+export default function RootLayout( {
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}> ) {
   return (
     <html lang="en">
-    <body>
+      <body>
         <div id="sketch-ui-drawer"></div>
         <span id="sketch-ui-icon"></span>
         {children}
-    </body>
+      </body>
     </html>
   );
 }
