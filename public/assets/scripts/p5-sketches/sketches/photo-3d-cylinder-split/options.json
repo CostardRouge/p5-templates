@@ -1,0 +1,11 @@
+{
+  "colors": {
+    "text": [0, 0, 0],
+    "background": [0, 0, 0],
+    "accent": [128, 128, 255]
+  },
+  "animation": {
+    "duration": 8,
+    "framerate": 60
+  }
+}

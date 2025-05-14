@@ -32,13 +32,6 @@ const eslintConfig = [
       "react/react-in-jsx-scope": "off",
 
       // Example rules (customize as needed)
-      "@stylistic/js/indent": [
-        "error",
-        2,
-        {
-          SwitchCase: 1
-        }
-      ],
       "@stylistic/js/semi": [
         "error",
         "always"
@@ -68,10 +61,10 @@ const eslintConfig = [
           afterColon: true
         }
       ],
-      "@stylistic/js/function-paren-newline": [
-        "error",
-        "multiline-arguments"
-      ],
+      // "@stylistic/js/function-paren-newline": [
+      //   "error",
+      //   "multiline-arguments"
+      // ],
       "@stylistic/js/function-call-argument-newline": [
         "error",
         "always"
@@ -151,6 +144,14 @@ const eslintConfig = [
         "error",
         {
           blocks: "never"
+        }
+      ],
+      "@stylistic/js/indent": [
+        "error",
+        2,
+        {
+          SwitchCase: 1,
+          ObjectExpression: 1,
         }
       ],
 

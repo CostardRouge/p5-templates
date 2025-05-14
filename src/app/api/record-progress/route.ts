@@ -2,11 +2,16 @@ import {
   NextRequest
 } from "next/server";
 import {
-  getProgress, hasJob
+  getProgress, hasJob, jobs
 } from "@/lib/progressStore";
 
 export async function GET( req: NextRequest ) {
   const id = req.nextUrl.searchParams.get( "id" );
+
+  console.log(
+    "GET",
+    id,
+    jobs );
 
   if ( !id || !hasJob( id ) ) {
     return new Response(

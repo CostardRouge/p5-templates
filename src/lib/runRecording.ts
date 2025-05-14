@@ -1,4 +1,3 @@
-// lib/runRecording.ts
 import createBrowserPage from "@/utils/createBrowserPage";
 import {
   Page
@@ -91,6 +90,7 @@ export async function runRecording(
     } );
 
     page = await createPage();
+
     await page.goto(
       `http://localhost:3000/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
       {
@@ -98,12 +98,22 @@ export async function runRecording(
       },
     );
     await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
-
-    /* ---------- 4. capture frames ---------- */
     setProgress(
       jobId,
-      "capture-frames",
-      35
+      "starting-capture",
+      25
+    );
+
+    /* ---------- 4. capture frames ---------- */
+    await page.exposeFunction(
+      "reportCaptureProgress",
+      ( percentage: number ) => {
+        setProgress(
+          jobId,
+          "capturing-frames",
+          25 + ( percentage * 35 )
+        );
+      }
     );
     // @ts-ignore
     await page.evaluate( () => window.startLoopRecording() );
@@ -182,7 +192,7 @@ export async function runRecording(
         if ( m ) {
           const pct = 65 + Math.min(
             34,
-            ( +m[ 1 ] / ( fps * captureOptions.animation.duration ) ) * 34
+            ( +m[ 1 ] / ( fps * captureOptions?.animation?.duration ) ) * 34
           );
 
           setProgress(

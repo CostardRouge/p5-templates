@@ -39,12 +39,13 @@ export default function CaptureBanner( {
 
     source.onmessage = async( event: MessageEvent<string> ): Promise<void> => {
       const progress: {
- step: string; pct: number
-} = JSON.parse( event.data );
+        step: string;
+        percentage: number
+      } = JSON.parse( event.data );
 
       setRecordingProgress( {
         stepName: progress.step,
-        percentage: progress.pct,
+        percentage: progress.percentage,
       } );
 
       if ( progress.step === "done" ) {
@@ -56,12 +57,14 @@ export default function CaptureBanner( {
           }
         );
         setIsRecording( false );
+        setRecordingProgress( null );
       }
 
       if ( progress.step === "error" ) {
         source.close();
         alert( "Recording failed" );
         setIsRecording( false );
+        setRecordingProgress( null );
       }
     };
   }
@@ -75,24 +78,27 @@ export default function CaptureBanner( {
     );
 
     if ( Array.isArray( options.assets ) ) {
-      await Promise.all( options.assets.map( async( assetUrl: string, index: number ) => {
-        const assetResponse = await fetch( assetUrl );
-        const assetBlob = await assetResponse.blob();
-        const assetName = assetUrl.split( "/" ).pop() ?? `asset-${ index }`;
+      await Promise
+        .all( options.assets
+          .map( async( assetUrl: string, index: number ) => {
+            const assetResponse = await fetch( assetUrl );
+            const assetBlob = await assetResponse.blob();
+            const assetName = assetUrl.split( "/" ).pop() ?? `asset-${ index }`;
 
-        formData.append(
-          "files[]",
-          new File(
-            [
-              assetBlob
-            ],
-            assetName,
-            {
-              type: assetBlob.type
-            }
-          )
-        );
-      } ), );
+            formData
+              .append(
+                "files[]",
+                new File(
+                  [
+                    assetBlob
+                  ],
+                  assetName,
+                  {
+                    type: assetBlob.type
+                  }
+                )
+              );
+          } ), );
     }
 
     setIsRecording( true );
@@ -112,8 +118,8 @@ export default function CaptureBanner( {
     }
 
     const startResponseJson: {
- jobId: string
-} = await startResponse.json();
+      jobId: string
+    } = await startResponse.json();
 
     subscribeToRecordingProgress( startResponseJson.jobId );
   }
@@ -137,34 +143,35 @@ export default function CaptureBanner( {
         />
       </div>
 
-      <div className="flex flex-col justify-start gap-1">
-        {!recordingProgress && (
-          <button
-            className="rounded-sm px-4 border border-black disabled:opacity-50"
-            onClick={startBackendRecording}
-            disabled={isRecording}
-          >
-            {isRecording ? <Loader className="inline mr-1 animate-spin"/> :
-              <Download className="inline mr-1"/>}
-            Start backend recording
-          </button>
-        )}
+      {!recordingProgress && (
+        <button
+          className="rounded-sm px-4 border border-black disabled:opacity-50"
+          onClick={startBackendRecording}
+          disabled={isRecording}
+        >
+          {isRecording ? <Loader className="inline mr-1 animate-spin"/> :
+            <Download className="inline mr-1"/>}
+          Start backend recording
+        </button>
+      )}
 
-        {!isRecording && recordingProgress && (
-          <div className="w-64 h-3 bg-gray-200 rounded">
+      {isRecording && recordingProgress && (
+        <div className="flex flex-col justify-start">
+          <div className="w-64 h-full bg-gray-200 rounded">
             <div
               className="h-full bg-black rounded"
               style={{
                 width: `${ recordingProgress.percentage }%`
               }}
             />
-
-            <span className="text-xs">
-              {recordingProgress.stepName} – {Math.round( recordingProgress.percentage )}%
-            </span>
           </div>
-        )}
-      </div>
+
+          <span className="text-sm">
+            {recordingProgress.stepName} – {Math.round( recordingProgress.percentage )}%
+          </span>
+        </div>
+      ) }
     </div>
-  );
+  )
+  ;
 }

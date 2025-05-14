@@ -1,0 +1,13 @@
+{
+  "texts": {
+    "top": "hello",
+    "bottom": "world"
+  },
+  "colors": {
+    "background": [0, 0, 0]
+  },
+  "animation": {
+    "framerate": 60,
+    "duration": 6
+  }
+}

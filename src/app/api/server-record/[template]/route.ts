@@ -17,12 +17,12 @@ export async function POST(
   {
     params
   }: {
- params: {
- template: string
-}
-},
+       params: Promise<{
+         template: string
+       }>
+  },
 ) {
-  const template = params.template;
+  const template = ( await params ).template;
 
   if ( !template ) return new NextResponse(
     "Missing template",

@@ -1,25 +1,26 @@
 type Progress = {
- step: string; pct: number
+  step: string;
+  percentage: number
 };
 
-const TTL = 5 * 60 * 1000; // keep entries 5 min after finish/error
+const TTL = 15 * 60 * 1000; // keep entries 15min after finish/error
 
-/* singleton Map<jobId, Progress & { ts: number }> */
-const jobs = new Map<
+export const jobs = new Map<
     string,
     Progress & {
- ts: number; done?: boolean
-}
+      timestamp: number;
+      done?: boolean
+    }
 >();
 
 /* ------- helpers ------- */
-export function setProgress( id: string, step: string, pct: number ) {
+export function setProgress( id: string, step: string, percentage: number ) {
   jobs.set(
     id,
     {
       step,
-      pct,
-      ts: Date.now(),
+      percentage,
+      timestamp: Date.now(),
       done: step === "done" || step === "error"
     }
   );
@@ -30,7 +31,7 @@ export function getProgress( id: string ): Progress | undefined {
 
   return job && {
     step: job.step,
-    pct: job.pct
+    percentage: job.percentage
   };
 }
 
@@ -47,8 +48,8 @@ setInterval(
       id,
       entry
     ] of jobs ) {
-      if ( entry.done && now - entry.ts > TTL ) jobs.delete( id );
+      if ( entry.done && now - entry.timestamp > TTL ) jobs.delete( id );
     }
   },
   60_000
-); // run every minute
+);
