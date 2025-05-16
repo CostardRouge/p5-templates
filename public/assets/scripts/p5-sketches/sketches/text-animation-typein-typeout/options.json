@@ -4,7 +4,8 @@
     "bottom": "world"
   },
   "colors": {
-    "background": [0, 0, 0]
+    "background": [0, 0, 0],
+    "text": [128, 128, 255]
   },
   "animation": {
     "framerate": 60,

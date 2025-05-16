@@ -1,0 +1,21 @@
+{
+  "colors": {
+    "text": [128, 128, 255],
+    "background": [0, 0, 0]
+  },
+  "animation": {
+    "duration": 8,
+    "framerate": 60
+  },
+  "vertical": false,
+  "rotateX": false,
+  "rotateZ": false,
+  "variableBackgroundColor": false,
+  "variableZoom": false,
+  "zoom": -2000,
+  "title": {
+    "font": "martian",
+    "content": "photo-3d-sphere",
+    "size": 450
+  }
+}

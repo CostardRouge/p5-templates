@@ -98,18 +98,18 @@ events.register(
 
       refreshAssets();
 
-      // events.handle(
-      //   "engine-resize-canvas",
-      //   newOptions?.size?.width,
-      //   newOptions?.size?.height
-      // );
-      // events.handle(
-      //   "engine-framerate-change",
-      //   newOptions?.animation?.framerate
-      // );
+      events.handle(
+        "engine-resize-canvas",
+        newOptions?.size?.width,
+        newOptions?.size?.height
+      );
+      events.handle(
+        "engine-framerate-change",
+        newOptions?.animation?.framerate
+      );
 
-      // sketch.sketchOptions.animation = newOptions?.animation;
-      // sketch.sketchOptions.size = newOptions?.size;
+      sketch.sketchOptions.animation = newOptions?.animation;
+      sketch.sketchOptions.size = newOptions?.size;
     } );
 
     setSketchOptions(

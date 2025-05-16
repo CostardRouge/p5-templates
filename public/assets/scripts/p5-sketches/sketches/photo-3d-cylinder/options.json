@@ -1,0 +1,20 @@
+{
+  "colors": {
+    "text": [128, 128, 255],
+    "background": [0, 0, 0]
+  },
+  "animation": {
+    "duration": 8,
+    "framerate": 60
+  },
+  "vertical": false,
+  "rotateX": true,
+  "variableBackgroundColor": true,
+  "variableZoom": false,
+  "zoom": -2000,
+  "title": {
+    "font": "martian",
+    "content": null,
+    "size": 450
+  }
+}

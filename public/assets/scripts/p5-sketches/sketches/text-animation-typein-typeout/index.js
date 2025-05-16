@@ -134,7 +134,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
       ] = cornerPositionCorrections[ cornerIndex ];
 
       const margin = 10;
-      const length = 20;
+      const length = 30;
 
       line(
         cornerPosition.x + ( xShift * margin ),
@@ -149,6 +149,49 @@ sketch.draw( ( time, center, favoriteColor ) => {
         cornerPosition.x,
         cornerPosition.y + ( yShift * length ),
       );
+
+      if ( cornerIndex === 0 ) {
+        // string.write(
+        //   String( Number( cornerPosition.x ) ),
+        //   cornerPosition.x - ( xShift * margin ),
+        //   cornerPosition.y + ( yShift * ( length / 2 ) + ( yShift * margin * 2 / 3 ) ),
+        //   {
+        //     size: margin * 2,
+        //     stroke: color( 255 ),
+        //     strokeWeight: 0,
+        //     fill: color( 255 ),
+        //     font: string.fonts.martian,
+        //     textAlign: [
+        //       LEFT,
+        //       CENTER
+        //     ],
+        //   }
+        // );
+
+        push();
+        translate(
+          cornerPosition.x - ( xShift * margin ),
+          cornerPosition.y + ( yShift * ( length / 2 ) + ( yShift * margin * 2 / 3 ) ),
+        );
+        rotate( PI / 2 );
+        string.write(
+          String( Number( cornerPosition.x ) ),
+          0,
+          0,
+          {
+            size: margin * 2,
+            stroke: color( 255 ),
+            strokeWeight: 0,
+            fill: color( 255 ),
+            font: string.fonts.martian,
+            textAlign: [
+              CENTER,
+              CENTER
+            ],
+          }
+        );
+        pop();
+      }
     }
   } );
 
@@ -158,7 +201,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
   shapes.hl( height - 1 );
 
   // string.write(
-  //   options.texts.top || "top",
+  //   "top",
   //   width * .1,
   //   height * .2,
   //   {
