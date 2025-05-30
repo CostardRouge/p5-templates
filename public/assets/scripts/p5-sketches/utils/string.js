@@ -82,6 +82,7 @@ const string = {
       strokeWeight = 2,
       font = string.fonts.serif,
       graphics = window,
+      textWidth = graphics.width,
       showBox = false,
       showLines = false,
       textAlign = [
@@ -99,7 +100,9 @@ const string = {
       y
     );
 
-    popPush && graphics.push();
+    if ( popPush ) {
+      graphics.push();
+    }
 
     graphics.blendMode( blendMode );
 
@@ -109,6 +112,7 @@ const string = {
     graphics.textSize( size );
     graphics.textFont?.( font );
     graphics.textAlign( ...textAlign );
+    graphics.textWrap( WORD );
 
     const box = font.textBounds(
       str,
@@ -118,23 +122,6 @@ const string = {
     );
     const asc = int( textAscent() * 0.8 );
     const desc = int( textDescent() * 0.8 );
-
-    // if ( center ) {
-    // translate( -box.w / 2, (asc + desc)/4 );
-    // position.add( -box.w / 2, (asc + desc)/4 );
-
-    // position.add( -(asc + desc)/3, box.h/2 );
-    // }
-
-    // console.log({box})
-
-    // if ( right ) {
-    //   position.add( -box.w, 0 );
-    // }
-    //
-    // if ( bottom ) {
-    //   position.add( 0, box.h );
-    // }
 
     if ( showLines ) {
       graphics.push();
@@ -180,10 +167,13 @@ const string = {
     graphics.text(
       str,
       position.x,
-      position.y
+      position.y,
+      textWidth
     );
 
-    popPush && graphics.pop();
+    if ( popPush ) {
+      graphics.pop();
+    }
   },
   getTextPoints: ( {
     text, size, font, position = createVector(
