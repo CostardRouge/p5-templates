@@ -61,13 +61,15 @@ const eslintConfig = [
           afterColon: true
         }
       ],
-      // "@stylistic/js/function-paren-newline": [
-      //   "error",
-      //   "multiline-arguments"
-      // ],
       "@stylistic/js/function-call-argument-newline": [
         "error",
         "always"
+      ],
+      "@stylistic/js/function-paren-newline": [
+        "error",
+        {
+          minItems: 2
+        }
       ],
       "@stylistic/js/no-trailing-spaces": "error",
       "@stylistic/js/no-multiple-empty-lines": [
