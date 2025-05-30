@@ -204,7 +204,9 @@ export async function runRecording(
       }
     );
 
-    await new Promise<void>( ( res, rej ) => {
+    await new Promise<void>( (
+      res, rej
+    ) => {
       ff.on(
         "close",
         c => ( c === 0 ? res() : rej( new Error( `ffmpeg ${ c }` ) ) )

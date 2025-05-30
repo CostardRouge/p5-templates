@@ -59,7 +59,9 @@ async function formatGPSCoordinates( coordinates?: ExifData["gps"] ) {
   );
 }
 
-function formatCoordinates( latitude: number, longitude: number, precision = 2 ) {
+function formatCoordinates(
+  latitude: number, longitude: number, precision = 2
+) {
   const latDir = latitude >= 0 ? "N" : "S";
   const lonDir = longitude >= 0 ? "E" : "W";
 

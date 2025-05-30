@@ -3,7 +3,9 @@ import path from "path";
 
 import mime from "mime-types";
 
-async function downloadFileResponse( filePath: string, onFileRead?: ( fileBuffer: Buffer<ArrayBufferLike> ) => void ) {
+async function downloadFileResponse(
+  filePath: string, onFileRead?: ( fileBuffer: Buffer<ArrayBufferLike> ) => void
+) {
   const fileBuffer = await fs.readFile( filePath );
   const fileName = path.basename( filePath );
 

@@ -14,7 +14,9 @@ export const jobs = new Map<
 >();
 
 /* ------- helpers ------- */
-export function setProgress( id: string, step: string, percentage: number ) {
+export function setProgress(
+  id: string, step: string, percentage: number
+) {
   jobs.set(
     id,
     {

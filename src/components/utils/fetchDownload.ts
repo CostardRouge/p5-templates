@@ -1,6 +1,8 @@
-async function fetchDownload( url: string, options?: {
+async function fetchDownload(
+  url: string, options?: {
  method?: string, body?: FormData
-} ) {
+}
+) {
   const {
     method = "POST", body
   } = options || {

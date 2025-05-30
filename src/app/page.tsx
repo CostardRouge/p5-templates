@@ -26,7 +26,9 @@ export default async function Home() {
                 <span className="underline">{ templateCategory }</span>
                 <ul className="ml-3">
                   {
-                    categoryTemplates.map( ( categoryTemplate, index ) => (
+                    categoryTemplates.map( (
+                      categoryTemplate, index
+                    ) => (
                       <li key={ categoryTemplate }>
                         <a
                           className="flex items-center gap-2 hover:underline hover:underline-offset-4"

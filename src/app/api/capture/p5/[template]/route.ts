@@ -144,7 +144,9 @@ export async function POST(
 
     // console.log({tempDir, captureOptions, downloadPath, outputPath, ffmpegOptions});
 
-    await new Promise( ( resolve, reject ) => {
+    await new Promise( (
+      resolve, reject
+    ) => {
       const ffmpeg = spawn(
         "ffmpeg",
         ffmpegOptions,

@@ -11,7 +11,8 @@ export async function GET( req: NextRequest ) {
   console.log(
     "GET",
     id,
-    jobs );
+    jobs
+  );
 
   if ( !id || !hasJob( id ) ) {
     return new Response(

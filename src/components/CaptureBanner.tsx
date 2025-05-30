@@ -80,7 +80,9 @@ export default function CaptureBanner( {
     if ( Array.isArray( options.assets ) ) {
       await Promise
         .all( options.assets
-          .map( async( assetUrl: string, index: number ) => {
+          .map( async(
+            assetUrl: string, index: number
+          ) => {
             const assetResponse = await fetch( assetUrl );
             const assetBlob = await assetResponse.blob();
             const assetName = assetUrl.split( "/" ).pop() ?? `asset-${ index }`;
