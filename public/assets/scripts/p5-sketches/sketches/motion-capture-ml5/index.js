@@ -42,7 +42,8 @@ const _ml5 = {
   segmentation: undefined,
 };
 
-events.register( "engine-window-preload",
+events.register(
+  "engine-window-preload",
   () => {
     _ml5.handPose = ml5.handPose( {
       maxHands: 4,
@@ -51,12 +52,15 @@ events.register( "engine-window-preload",
       modelType: "full",
     } );
 
-    _ml5.bodySegmentation = ml5.bodySegmentation( "BodyPix",
+    _ml5.bodySegmentation = ml5.bodySegmentation(
+      "BodyPix",
       {
         maskType: "parts"
-      } );
+      }
+    );
   // _ml5.faceMesh = ml5.faceMesh();
-  } );
+  }
+);
 
 sketch.setup(
   () => {
@@ -67,30 +71,40 @@ sketch.setup(
       sketch?.engine?.canvas?.height
     );
 
-    _ml5.capture.element = createCapture( VIDEO,
+    _ml5.capture.element = createCapture(
+      VIDEO,
       {
         flipped: true
-      } );
-    _ml5.capture.element.size( _ml5.capture.size.width,
-      _ml5.capture.size.height );
+      }
+    );
+    _ml5.capture.element.size(
+      _ml5.capture.size.width,
+      _ml5.capture.size.height
+    );
     _ml5.capture.element.hide();
 
-    _ml5.webcam.element = createCapture( VIDEO,
+    _ml5.webcam.element = createCapture(
+      VIDEO,
       {
         flipped: true
-      } );
-    _ml5.webcam.element.size( _ml5.webcam.size.width,
-      _ml5.webcam.size.height );
+      }
+    );
+    _ml5.webcam.element.size(
+      _ml5.webcam.size.width,
+      _ml5.webcam.size.height
+    );
     _ml5.webcam.element.hide();
 
     // _ml5.handPose.detectStart(_ml5.capture.element, results => {
     // 	_ml5.hands = results;
     // })
 
-    _ml5.bodySegmentation.detectStart( _ml5.capture.element,
+    _ml5.bodySegmentation.detectStart(
+      _ml5.capture.element,
       results => {
         _ml5.segmentation = results;
-      } );
+      }
+    );
   },
   {
     size: {
@@ -104,20 +118,26 @@ sketch.setup(
   }
 );
 
-function drawHand( hand, color, graphics = window ) {
+function drawHand(
+  hand, color, graphics = window
+) {
   graphics.beginShape();
   hand.forEach( tip => {
     graphics.vertex(
-      map( tip.x,
+      map(
+        tip.x,
         0,
         _ml5.capture.size.width,
         0,
-        _ml5.webcam.size.width ),
-      map( tip.y,
+        _ml5.webcam.size.width
+      ),
+      map(
+        tip.y,
         0,
         _ml5.capture.size.height,
         0,
-        _ml5.webcam.size.height ),
+        _ml5.webcam.size.height
+      ),
     );
   } );
   graphics.strokeWeight( 5 );
@@ -126,44 +146,60 @@ function drawHand( hand, color, graphics = window ) {
   graphics.endShape( CLOSE );
 }
 
-sketch.draw( ( time, center, favoriteColor ) => {
-  background( ...options.colors.background,
-    10 );
+sketch.draw( (
+  time, center, favoriteColor
+) => {
+  background(
+    ...options.colors.background,
+    10
+  );
 
-  // _ml5.handPose?.detect(_ml5.capture.element, results => {
-  // 	_ml5.hands = results;
-  // });
+  _ml5.handPose?.detect(
+    _ml5.capture.element,
+    results => {
+      _ml5.hands = results;
+    }
+  );
 
-  // _ml5.bodySegmentation?.detect(_ml5.capture.element, results => {
-  // 	_ml5.segmentation = results;
-  // });
+  // _ml5.bodySegmentation?.detect(
+  //   _ml5.capture.element,
+  //   results => {
+  //     _ml5.segmentation = results;
+  //   }
+  // );
 
-  // const handFingers = {};
-  //
-  // for (let i = 0; i < _ml5.hands.length; i++) {
-  // 	const hand = _ml5.hands[i];
-  // 	const handedness = `${hand.handedness}-${i}`;
-  //
-  // 	handFingers[handedness] = handFingers[handedness] ?? [];
-  //
-  // 	trackedHandParts.forEach( trackedHandPart => {
-  // 		handFingers[handedness].push(createVector(
-  // 			// mappers.smoother(`${handedness}-${trackedHandPart}-x`, hand[trackedHandPart].x, 0.35),
-  // 			// mappers.smoother(`${handedness}-${trackedHandPart}-y`, hand[trackedHandPart].y, 0.35),
-  // 			hand[trackedHandPart].x,
-  // 			hand[trackedHandPart].y,
-  // 		))
-  // 	})
-  // }
+  const handFingers = {
+  };
 
-  // for (const handedness in handFingers) {
-  // 	const eraseMode = handedness.indexOf("Left") !== -1;
-  // 	const color = eraseMode ? "red" : "green";
-  //
-  // 	eraseMode && _ml5.drawing.erase()
-  // 	drawHand(handFingers[handedness], color, _ml5.drawing)
-  // 	_ml5.drawing.noErase()
-  // }
+  for ( let i = 0; i < _ml5.hands.length; i++ ) {
+    const hand = _ml5.hands[ i ];
+    const handedness = `${ hand.handedness }-${ i }`;
+
+    handFingers[ handedness ] = handFingers[ handedness ] ?? [
+    ];
+
+    trackedHandParts.forEach( trackedHandPart => {
+      handFingers[ handedness ].push( createVector(
+        // mappers.smoother(`${handedness}-${trackedHandPart}-x`, hand[trackedHandPart].x, 0.35),
+        // mappers.smoother(`${handedness}-${trackedHandPart}-y`, hand[trackedHandPart].y, 0.35),
+        hand[ trackedHandPart ].x,
+        hand[ trackedHandPart ].y,
+      ) );
+    } );
+  }
+
+  for ( const handedness in handFingers ) {
+    const eraseMode = handedness.indexOf( "Left" ) !== -1;
+    const color = eraseMode ? "red" : "green";
+
+    // eraseMode && _ml5.drawing.erase()
+    drawHand(
+      handFingers[ handedness ],
+      color,
+      _ml5.drawing
+    );
+    // _ml5.drawing.noErase()
+  }
 
   // image(_ml5.webcam.element, 0, 0, _ml5.webcam.size.width, _ml5.webcam.size.height);
   // image(_ml5.drawing, 0, 0, _ml5.webcam.size.width, _ml5.webcam.size.height);
@@ -174,15 +210,21 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
     imageMode( CORNER );
     push();
-    translate( width,
-      0 );
-    scale( -1,
-      1 );
-    image( _ml5.segmentation.mask,
+    translate(
+      width,
+      0
+    );
+    scale(
+      -1,
+      1
+    );
+    image(
+      _ml5.segmentation.mask,
       0,
       0,
       width,
-      height );
+      height
+    );
     pop();
   }
 
@@ -193,17 +235,25 @@ sketch.draw( ( time, center, favoriteColor ) => {
   // 	drawHand(handFingers[handedness], color)
   // }
 
-  string.write( options.name,
-    width / 2,
+  string.write(
+    options.name.replaceAll(
+      "-",
+      "\n"
+    ),
+    0,
     height * .2,
     {
       size: 92,
       stroke: color( ...options.colors.background ),
-      fill: color( ...options.colors.text,
-        190 ),
+      fill: color(
+        ...options.colors.text,
+        190
+      ),
       font: string.fonts.martian,
+      textWidth: width,
       textAlign: [
         CENTER
       ],
-    } );
+    }
+  );
 } );

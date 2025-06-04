@@ -186,19 +186,19 @@ const drawHandLandmarks = () => {
   if ( handResult === null ) {
     return;
   }
+  stroke(
+    0,
+    255,
+    0
+  );
+  strokeWeight( 5 );
 
   handResult.landmarks.forEach( ( handLandmarkArray ) => {
     handLandmarkArray.forEach( ( joint ) => {
-      fill(
-        0,
-        255,
-        0
-      );
-      noStroke();
       circle(
         inverseX( joint.x ) * width,
         joint.y * height,
-        6
+        16
       );
     } );
   } );
@@ -226,7 +226,7 @@ const drawFaceDetections = () => {
     0,
     255
   );
-  strokeWeight( 2 );
+  strokeWeight( 5 );
 
   faceResult.detections.forEach( ( detection ) => {
     const boundingBox = detection.boundingBox;
@@ -238,14 +238,8 @@ const drawFaceDetections = () => {
         mediapipe.capture.size.width
       ) ),
       scaleY( boundingBox.originY ),
-      -scaleX(
-        boundingBox.width,
-        mediapipe.capture.size.width
-      ),
-      scaleY(
-        boundingBox.height,
-        mediapipe.capture.size.height
-      )
+      -scaleX( boundingBox.width ),
+      scaleY( boundingBox.height )
     );
 
     beginShape( POINTS );
@@ -255,7 +249,7 @@ const drawFaceDetections = () => {
         keypoint.y * height
       );
     } );
-    strokeWeight( 5 );
+    strokeWeight( 10 );
     endShape();
   } );
 };
