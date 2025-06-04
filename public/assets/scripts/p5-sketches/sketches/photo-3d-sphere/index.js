@@ -19,7 +19,9 @@ sketch.setup(
 
 const borderSize = 0;
 
-sketch.draw( ( time, center, favoriteColor ) => {
+sketch.draw( (
+  time, center, favoriteColor
+) => {
   if ( options.variableBackgroundColor ) {
     const backgroundColor = lerpColor(
       color( ...options.colors.background ),
@@ -145,9 +147,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
   const {
     cells
-  } = grid.create(
-    gridOptions
-  );
+  } = grid.create( gridOptions );
 
   const imageParts = cache.store(
     `image-parts-${ columns }-${ rows }`,
@@ -179,9 +179,11 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
           return (
             cells.reduce(
-              ( imageCells, {
-                x, y
-              } ) => {
+              (
+                imageCells, {
+                  x, y
+                }
+              ) => {
                 const imagePart = buffer.get(
                   x,
                   y,
@@ -212,9 +214,11 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
   // background( ...options.colors.background );
 
-  cells.forEach( ( {
-    center, xIndex, yIndex, corners, absoluteCorners, width: cellWidth, height: cellHeight, row, column
-  }, cellIndex ) => {
+  cells.forEach( (
+    {
+      center, xIndex, yIndex, corners, absoluteCorners, width: cellWidth, height: cellHeight, row, column
+    }, cellIndex
+  ) => {
     // const circonference = ( options.vertical ? cellHeight : cellWidth ) * images.length;
     const circonference = ( cellWidth * images.length ) * 1.15;
 
@@ -237,7 +241,9 @@ sketch.draw( ( time, center, favoriteColor ) => {
       rotateFunction( angle );
 
       rotateFunction( animation.ease( {
-        values: images.map( ( _, index ) => [
+        values: images.map( (
+          _, index
+        ) => [
           ( index / images.length ) * TAU
         ] ).flat( Infinity ),
         currentTime: (
@@ -251,7 +257,9 @@ sketch.draw( ( time, center, favoriteColor ) => {
       } ) );
 
       rotateX( animation.ease( {
-        values: images.map( ( _, index ) => [
+        values: images.map( (
+          _, index
+        ) => [
           ( index / images.length ) * TAU
         ] ).flat( Infinity ),
         currentTime: (
@@ -298,7 +306,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
       "-",
       "\n"
     ),
-    width / 2,
+    0,
     height / 2,
     {
       size: options?.title?.size ?? 450,
@@ -306,6 +314,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
       stroke: color( ...options.colors.text ),
       fill: color( ...options.colors.text ),
       font: string.fonts?.[ options?.title?.font ] ?? string.fonts.martian,
+      textWidth: width,
       textAlign: [
         CENTER,
         CENTER

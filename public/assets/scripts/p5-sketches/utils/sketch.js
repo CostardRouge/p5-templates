@@ -1,8 +1,14 @@
-import { events, debug, options, time } from './index.js';
-import engines from './engine/index.js';
+import {
+  events, debug, options, time
+} from "./index.js";
+import engines from "./engine/index.js";
 
 const sketch = {
-  name: location.pathname.split("/").slice(1, -1).join("-"),
+  name: location.pathname.split( "/" ).slice(
+    1,
+    -1
+  )
+    .join( "-" ),
   engine: undefined,
   setup: (
     setupEngineFunction,
@@ -15,24 +21,32 @@ const sketch = {
     }
   ) => {
     // persist sketchOptions
-    sketch.sketchOptions = sketchOptions
+    sketch.sketchOptions = sketchOptions;
 
     // options system
     options.init( );
 
     // canvas size
-    const [canvasWidth, canvasHeight] = sketch.getDefaultCanvasSize();
+    const [
+      canvasWidth,
+      canvasHeight
+    ] = sketch.getDefaultCanvasSize();
 
     // engine system
-    const { engine = "p5js", ...engineOptions } = sketchOptions;
+    const {
+      engine = "p5js", ...engineOptions
+    } = sketchOptions;
 
-    sketch.engine = engines[ engine ].init( {
-      size: {
-        width: canvasWidth,
-        height: canvasHeight
+    sketch.engine = engines[ engine ].init(
+      {
+        size: {
+          width: canvasWidth,
+          height: canvasHeight
+        },
+        ...engineOptions
       },
-      ...engineOptions
-    }, setupEngineFunction );
+      setupEngineFunction
+    );
 
     // sketch events
     events.toggleNoLoopOnSingleClick();
@@ -42,23 +56,35 @@ const sketch = {
     events.toggleFullScreenOnDoubleClick();
     events.extendCanvasOnResize();
   },
-  getDefaultCanvasSize: (value) => {
+  getDefaultCanvasSize: ( value ) => {
     const canvasSize = (
-      value                                                           ??
-      (new URLSearchParams(document.location.search)).get('size')     ??
-      options.get("canvas-size")
+      value ??
+      ( new URLSearchParams( document.location.search ) ).get( "size" ) ??
+      options.get( "canvas-size" )
     );
 
-    if ('fill' === canvasSize) {
-      return [window.innerWidth, window.innerHeight];
+    if ( "fill" === canvasSize ) {
+      return [
+        window.innerWidth,
+        window.innerHeight
+      ];
     }
 
-    return canvasSize.split('x').map(Number);
+    return canvasSize.split( "x" ).map( Number );
   },
-  draw: (drawFunction) => {
-    events.register("pre-draw", debug.fps);
-    events.register("pre-draw", time.incrementElapsedTime);
-    events.register("draw", drawFunction);
+  draw: ( drawFunction ) => {
+    events.register(
+      "pre-draw",
+      debug.fps
+    );
+    events.register(
+      "pre-draw",
+      time.incrementElapsedTime
+    );
+    events.register(
+      "draw",
+      drawFunction
+    );
   },
 };
 

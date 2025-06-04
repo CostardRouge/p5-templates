@@ -8,29 +8,13 @@ import {
   shapes,
   sketch,
   slides,
-  string
+  string,
+  common
 } from "/assets/scripts/p5-sketches/utils/index.js";
-
-let slideSelect = undefined;
-
-const slideSelectOptions = options?.slides?.map( ( {
-  template, title
-}, index ) => `${ index + 1 } / ${ title ?? template }` );
 
 sketch.setup(
   () => {
     background( ...options.colors.background );
-
-    if ( slideSelectOptions ) {
-      slideSelect = createSelect();
-      slideSelect.position(
-        100,
-        options.size.height + 10
-      );
-
-      slideSelectOptions.forEach( slideSelectOption => slideSelect.option( slideSelectOption ) );
-      slideSelect.selected( slideSelectOptions[ slides.currentIndex ] );
-    }
   },
   {
     size: {
@@ -145,29 +129,25 @@ function neonGraffiti( {
         )
       );
 
-      fill(
-        colors.rainbow( {
-          opacityFactor: map(
-            shadowIndex,
-            0,
-            shadowsCount,
-            1,
-            2.25
-          ),
-          hueOffset: easing.easeInBack( stepProgression ),
-          hueIndex: map(
-            Math.sin(
-              animation.angle
-              + easing.easeInOutBack( stepProgression ) * 2
-              + shadowProgression
-            ),
-            -1,
-            1,
-            -PI,
-            PI
-          ),
-        } )
-      );
+      fill( colors.rainbow( {
+        opacityFactor: map(
+          shadowIndex,
+          0,
+          shadowsCount,
+          1,
+          2.25
+        ),
+        hueOffset: easing.easeInBack( stepProgression ),
+        hueIndex: map(
+          Math.sin( animation.angle
+            + easing.easeInOutBack( stepProgression ) * 2
+            + shadowProgression ),
+          -1,
+          1,
+          -PI,
+          PI
+        ),
+      } ) );
 
       circle(
         position.x,
@@ -207,9 +187,7 @@ function drawSlideMeta( options ) {
       0,
       0
     ),
-    fill: color(
-      ...options.colors.text,
-    ),
+    fill: color( ...options.colors.text, ),
     font: string.fonts.martian,
     textAlign: [
       LEFT,
@@ -255,7 +233,7 @@ function drawSlideMeta( options ) {
 
   // bottom-right
   string.write(
-    `${ slides.currentIndex + 1 } / ${ slides.maxIndex }`,
+    `${ slides.index + 1 } / ${ slides.count }`,
     -width * horizontalMargin,
     height * ( 1 - verticalMargin ),
     {
@@ -293,9 +271,7 @@ function drawIntroSlide( options ) {
       0,
       0
     ),
-    fill: color(
-      ...options.colors.text,
-    ),
+    fill: color( ...options.colors.text, ),
     font: string.fonts.martian,
     textAlign: [
       CENTER,
@@ -350,9 +326,7 @@ function drawTextSlide( options ) {
       0,
       0
     ),
-    fill: color(
-      ...options.colors.text,
-    ),
+    fill: color( ...options.colors.text, ),
     font: string.fonts.martian,
     textAlign: [
       LEFT,
@@ -388,11 +362,9 @@ function drawTextSlide( options ) {
   drawSlideMeta( options );
 }
 
-sketch.draw( ( time, center, favoriteColor ) => {
-  const selectedSlideOption = slideSelect.selected();
-
-  slides.currentIndex = slideSelectOptions.indexOf( selectedSlideOption );
-
+sketch.draw( (
+  time, center, favoriteColor
+) => {
   const {
     template, ...slideOptions
   } = slides.current;
@@ -401,42 +373,9 @@ sketch.draw( ( time, center, favoriteColor ) => {
     intro: drawIntroSlide,
     text: drawTextSlide,
     outro: drawIntroSlide,
-  } )?.[ template ](
-    deepMerge(
-      slideOptions,
-      options
-    )
-  );
+  } )?.[ template ]( common.deepMerge(
+    slideOptions,
+    options
+  ) );
 } );
 
-function deepMerge( target = {
-}, source = {
-} ) {
-  if ( typeof target !== "object" || target === null ) return target;
-  if ( typeof source !== "object" || source === null ) return target;
-
-  for ( const [
-    key,
-    value
-  ] of Object.entries( source ) ) {
-    const tVal = target[ key ];
-
-    if (
-      value &&
-      typeof value === "object" &&
-      !Array.isArray( value ) &&
-      tVal &&
-      typeof tVal === "object" &&
-      !Array.isArray( tVal )
-    ) {
-      deepMerge( tVal,
-        value ); // recurse on nested plain objects
-    } else {
-      target[ key ] = Array.isArray( value ) ? [
-        ...value
-      ] : value; // copy / overwrite
-    }
-  }
-
-  return target;
-}
