@@ -161,7 +161,6 @@ sketch.draw( (
         stroke: color( ...options.colors.text ),
         fill: color( ...options.colors.background ),
         font: string.fonts.martian,
-        textWidth: width,
         textAlign: [
           CENTER,
           CENTER
@@ -170,9 +169,5 @@ sketch.draw( (
         graphics: canvases.foreground
       }
     );
-  }
-
-  if ( document.querySelector( "canvas#defaultCanvas0.loaded" ) === null && images.every( image => image.exif !== undefined ) ) {
-    document.querySelector( "canvas#defaultCanvas0" ).classList.add( "loaded" );
   }
 } );

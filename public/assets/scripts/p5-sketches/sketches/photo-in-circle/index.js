@@ -110,7 +110,7 @@ sketch.draw( (
     pop();
   }
 
-  const defaultTitle = "photo-in-circle".toUpperCase().replaceAll(
+  const defaultTitle = options.name.toUpperCase().replaceAll(
     "-",
     "\n"
   );
@@ -126,7 +126,6 @@ sketch.draw( (
         stroke: color( ...options.colors.text ),
         fill: color( ...options.colors.background ),
         font: string.fonts.martian,
-        textWidth: width,
 
         textAlign: [
           CENTER,
@@ -135,9 +134,5 @@ sketch.draw( (
         blendMode: EXCLUSION
       }
     );
-  }
-
-  if ( document.querySelector( "canvas#defaultCanvas0.loaded" ) === null && images.every( image => image.exif !== undefined ) ) {
-    document.querySelector( "canvas#defaultCanvas0" ).classList.add( "loaded" );
   }
 } );

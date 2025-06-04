@@ -20,7 +20,9 @@ sketch.setup(
 
 const borderSize = 0;
 
-sketch.draw( ( time, center, favoriteColor ) => {
+sketch.draw( (
+  time, center, favoriteColor
+) => {
   background( ...options.colors.background );
 
   const rows = options.rows || 16;// columns*height/width;
@@ -80,9 +82,11 @@ sketch.draw( ( time, center, favoriteColor ) => {
 
           return (
             gridCells.reduce(
-              ( imageCells, {
-                x, y
-              } ) => {
+              (
+                imageCells, {
+                  x, y
+                }
+              ) => {
                 const imagePart = buffer.get(
                   x,
                   y,
@@ -106,7 +110,9 @@ sketch.draw( ( time, center, favoriteColor ) => {
     }
   );
 
-  const imageIndexes = imageParts.map( ( _, index ) => [
+  const imageIndexes = imageParts.map( (
+    _, index
+  ) => [
     index,
     index
   ] ).flat( Infinity );
@@ -114,9 +120,11 @@ sketch.draw( ( time, center, favoriteColor ) => {
   noFill();
   stroke( favoriteColor );
 
-  gridCells.forEach( ( {
-    position, xIndex, yIndex
-  }, cellIndex ) => {
+  gridCells.forEach( (
+    {
+      position, xIndex, yIndex
+    }, cellIndex
+  ) => {
     const {
       x, y
     } = position;
@@ -166,7 +174,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
         "-",
         "\n"
       ),
-      width / 2,
+      0,
       height / 2,
       {
         size: 172,
@@ -181,9 +189,5 @@ sketch.draw( ( time, center, favoriteColor ) => {
         blendMode: EXCLUSION
       }
     );
-  }
-
-  if ( document.querySelector( "canvas#defaultCanvas0.loaded" ) === null ) {
-    document.querySelector( "canvas#defaultCanvas0" ).classList.add( "loaded" );
   }
 } );

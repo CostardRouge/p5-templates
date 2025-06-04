@@ -59,7 +59,9 @@ function drawRectangle( {
         firstCornerPosition.x,
         firstCornerPosition.y + height,
       )
-    ].forEach( ( cornerPosition, cornerIndex ) => atCorner?.(
+    ].forEach( (
+      cornerPosition, cornerIndex
+    ) => atCorner?.(
       cornerPosition,
       cornerIndex
     ) );
@@ -87,7 +89,9 @@ const cornerPositionCorrections = [
   ]
 ];
 
-sketch.draw( ( time, center, favoriteColor ) => {
+sketch.draw( (
+  time, center, favoriteColor
+) => {
   background( ...options.colors.background );
 
   const {
@@ -127,7 +131,9 @@ sketch.draw( ( time, center, favoriteColor ) => {
     firstCornerPosition: firstRectangleCornerPosition,
     oppositeCornerPosition: oppositeRectangleCornerPosition,
     thickness: 4,
-    atCorner: ( cornerPosition, cornerIndex ) => {
+    atCorner: (
+      cornerPosition, cornerIndex
+    ) => {
       const [
         xShift,
         yShift
@@ -184,6 +190,7 @@ sketch.draw( ( time, center, favoriteColor ) => {
             strokeWeight: 0,
             fill: color( 255 ),
             font: string.fonts.martian,
+            textWidth: 0,
             textAlign: [
               CENTER,
               CENTER

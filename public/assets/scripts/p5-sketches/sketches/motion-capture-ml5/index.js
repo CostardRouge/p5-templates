@@ -250,7 +250,6 @@ sketch.draw( (
         190
       ),
       font: string.fonts.martian,
-      textWidth: width,
       textAlign: [
         CENTER
       ],

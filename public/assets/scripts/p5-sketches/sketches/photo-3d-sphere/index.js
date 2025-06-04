@@ -314,7 +314,6 @@ sketch.draw( (
       stroke: color( ...options.colors.text ),
       fill: color( ...options.colors.text ),
       font: string.fonts?.[ options?.title?.font ] ?? string.fonts.martian,
-      textWidth: width,
       textAlign: [
         CENTER,
         CENTER

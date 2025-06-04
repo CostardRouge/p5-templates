@@ -97,8 +97,10 @@ class Card {
       ].join( " · " );
 
       push();
-      translate( 50,
-        height / 2 );
+      translate(
+        50,
+        height
+      );
       rotate( -PI / 2 );
       string.write(
         exifInfoText,
@@ -114,6 +116,8 @@ class Card {
           fill: color( ...options.colors.background ),
 
           font: string.fonts.martian,
+          textWidth: height,
+          popPush: false,
           textAlign: [
             CENTER,
             CENTER
@@ -142,20 +146,29 @@ sketch.setup(
 
     background( ...options.colors.background );
 
-    const start = createVector( 0,
+    const start = createVector(
+      0,
       height * 1 / 8 - height / 2,
-      -500 );
-    const end = createVector( 0,
-      height * 2.75 / 4 - height / 2 );
+      -500
+    );
+    const end = createVector(
+      0,
+      height * 2.75 / 4 - height / 2
+    );
 
-    cache.store( "positions",
+    cache.store(
+      "positions",
       () => (
         Array.from( {
           length: cardsLength
-        } ).map( ( _, index ) => {
-          const position = p5.Vector.lerp( start,
+        } ).map( (
+          _, index
+        ) => {
+          const position = p5.Vector.lerp(
+            start,
             end,
-            index / ( cardsLength ) );
+            index / ( cardsLength )
+          );
 
           cards.push( new Card( {
             position,
@@ -164,7 +177,8 @@ sketch.setup(
 
           return position;
         } )
-      ) );
+      )
+    );
   },
   {
     size: {
@@ -178,16 +192,20 @@ sketch.setup(
   }
 );
 
-sketch.draw( ( _time, center, favoriteColor ) => {
+sketch.draw( (
+  _time, center, favoriteColor
+) => {
   // options.colors.text = [252, 209, 83]
   // background(...options.colors.background);
 
   // PHOTO 3D SLIDER
-  image( canvases._3d,
+  image(
+    canvases._3d,
     0,
     0,
     width,
-    height );
+    height
+  );
 
   canvases._3d.background( ...options.colors.background );
   for ( const card of cards ) {
@@ -196,12 +214,16 @@ sketch.draw( ( _time, center, favoriteColor ) => {
   }
 
   push();
-  translate( width - 50,
-    height / 2 );
+  translate(
+    width - 50,
+    0
+  );
   rotate( PI / 2 );
   string.write(
-    String( Number( animation.progression ).toPrecision( 3 ) ).slice( 0,
-      5 ),
+    String( Number( animation.progression ).toPrecision( 3 ) ).slice(
+      0,
+      5
+    ),
     0,
     0,
     {
@@ -209,6 +231,8 @@ sketch.draw( ( _time, center, favoriteColor ) => {
       fill: color( ...options.colors.text ),
       stroke: color( ...options.colors.background ),
       font: string.fonts.martian,
+      textWidth: height,
+      popPush: false,
       textAlign: [
         CENTER,
         CENTER
@@ -234,7 +258,7 @@ sketch.draw( ( _time, center, favoriteColor ) => {
 
   string.write(
     options.texts.top || "top",
-    width / 2,
+    0,
     animation.ease( {
       values: [
         height / 2 - 200,
@@ -251,7 +275,7 @@ sketch.draw( ( _time, center, favoriteColor ) => {
 
   string.write(
     options.texts.bottom || "bottom",
-    width / 2,
+    0,
     animation.ease( {
       values: [
         height / 2 + 200,
@@ -265,8 +289,4 @@ sketch.draw( ( _time, center, favoriteColor ) => {
       blendMode: EXCLUSION
     }
   );
-
-  if ( document.querySelector( "canvas#defaultCanvas0.loaded" ) === null && cards.every( card => card.exif !== undefined ) ) {
-    document.querySelector( "canvas#defaultCanvas0" ).classList.add( "loaded" );
-  }
 } );
