@@ -1,0 +1,80 @@
+import {
+  spawn
+} from "child_process";
+
+async function encodeVideoFromFrames(
+  framesDirectory: string,
+  outputVideo: string,
+  animationOptions: any,
+  onProgress: ( pct: number ) => void
+) {
+  const fps = animationOptions?.framerate ?? 60;
+
+  return new Promise<void>( (
+    resolve, reject
+  ) => {
+    const ffmpegProcess = spawn(
+      "ffmpeg",
+      [
+        "-r",
+        String( fps ),
+        "-pattern_type",
+        "glob",
+        "-i",
+        "*.png",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-preset",
+        "fast",
+        "-crf",
+        "23",
+        "-y",
+        outputVideo,
+        "-progress",
+        "pipe:1",
+        "-loglevel",
+        "error",
+      ],
+      {
+        cwd: framesDirectory
+      }
+    );
+
+    ffmpegProcess.stdout.on(
+      "data",
+      buffer => {
+        const match = /frame=\s*(\d+)/.exec( buffer.toString() );
+
+        if ( match ) {
+          const framesRendered = +match[ 1 ];
+          const totalFrames = fps * ( animationOptions?.duration || 5 );
+
+          onProgress( Math.min(
+            framesRendered / totalFrames,
+            1
+          ) );
+        }
+      }
+    );
+
+    ffmpegProcess.on(
+      "close",
+      ( code ) => {
+        if ( code === 0 ) {
+          return resolve();
+        }
+
+        return reject( new Error( `ffmpeg failed: ${ code }` ) );
+      }
+    );
+
+    ffmpegProcess.on(
+      "error",
+      reject
+    );
+  } );
+}
+
+export default encodeVideoFromFrames;

@@ -173,7 +173,7 @@ const ImageInfoHelper = () => {
       if ( objectStyle ) setObjectStyle( objectStyle );
 
       if ( imageFilename ) {
-        const imageUrl = `/api/tmp-file?name=${ encodeURIComponent( imageFilename ) }`;
+        const imageUrl = `/api/assets?name=${ encodeURIComponent( imageFilename ) }`;
 
         fetch( imageUrl )
           .then( res => res.blob() )

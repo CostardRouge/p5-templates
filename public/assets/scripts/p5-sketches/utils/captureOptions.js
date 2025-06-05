@@ -42,7 +42,7 @@ const sketchOptions = {
 
 const getImagePath = path =>
   sketchOptions.id
-    ? `${ location.origin }/api/tmp-file?name=${ encodeURIComponent( path ) }&folder=${ sketchOptions.id }`
+    ? `${ location.origin }/api/assets?name=${ encodeURIComponent( path ) }&folder=${ sketchOptions.id }`
     : `${ location.origin }/${ path }`;
 
 function refreshAssets() {
@@ -86,7 +86,9 @@ events.register(
 events.register(
   "pre-setup",
   () => {
-    subscribeSketchOptions( ( newOptions, _origin ) => {
+    subscribeSketchOptions( (
+      newOptions, _origin
+    ) => {
       console.info(
         "[p5] options updated",
         sketchOptions

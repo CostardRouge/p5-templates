@@ -11,7 +11,7 @@ export async function GET( request: Request ) {
 
   if ( !name ) {
     return new Response(
-      "Missing file name",
+      "Missing asset name",
       {
         status: 400
       }
@@ -24,6 +24,7 @@ export async function GET( request: Request ) {
     return downloadFileResponse( path.join(
       os.tmpdir(),
       folder,
+      "assets",
       name
     ) );
   }

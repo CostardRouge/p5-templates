@@ -79,11 +79,23 @@ sketch.draw( (
   );
 
   graphic.fill( 0 );
-  // graphic.circle(
-  //     mappers.fn(animation.circularProgression, 0, 1, 100, width-100),
-  //     mappers.fn(animation.circularProgression, 1, 0, 100, height-100),
-  //     90
-  // )
+  graphic.circle(
+    mappers.fn(
+      animation.circularProgression,
+      0,
+      1,
+      100,
+      width - 100
+    ),
+    mappers.fn(
+      animation.circularProgression,
+      1,
+      0,
+      100,
+      height - 100
+    ),
+    90
+  );
 
   const w = width / 2;
   const h = height / 2;
@@ -96,14 +108,14 @@ sketch.draw( (
   );
   graphic.circle(
     mappers.fn(
-      animation.sinOscillation,
+      Math.sin( animation.sinAngle ),
       -1,
       1,
       -w + m,
       w - m
     ),
     mappers.fn(
-      animation.cosOscillation,
+      Math.cos( animation.cosAngle ),
       -1,
       1,
       -h + m,
@@ -132,5 +144,7 @@ sketch.draw( (
     EXCLUSION
   );
 
-  options.durationBar && shapes.sketchDurationBar( favoriteColor );
+  if ( options.durationBar ) {
+    shapes.sketchDurationBar( favoriteColor );
+  }
 } );

@@ -1,241 +1,81 @@
-import createBrowserPage from "@/utils/createBrowserPage";
-import {
-  Page
-} from "playwright";
+import recordSketch from "@/lib/recordSketch";
 import {
   setProgress
 } from "@/lib/progressStore";
-import minifyAndEncode from "@/utils/minifyAndEncodeCaptureOptions";
 
-import {
-  spawn
-} from "child_process";
 import fs from "node:fs/promises";
 import path from "path";
 import os from "node:os";
-import * as tar from "tar";
+import recordSketchSlides from "@/lib/recordSketchSlides";
 
-export async function runRecording(
+async function runRecording(
   jobId: string,
   template: string,
   formData: FormData,
 ) {
-  let page: Page | undefined = undefined;
-
-  /* ---------- workspace ---------- */
-  const id = jobId;
-  const tempDir = path.join(
+  const temporaryDirectoryPath = path.join(
     os.tmpdir(),
-    id
+    jobId
   );
 
   await fs.mkdir(
-    tempDir,
+    temporaryDirectoryPath,
     {
       recursive: true
     }
   );
 
-  try {
-    /* ---------- 1. parse options ---------- */
-    setProgress(
-      jobId,
-      "parse-options",
-      5
-    );
-    const captureOptions = JSON.parse( formData.get( "options" ) as string );
+  const temporaryAssetsDirectoryPath = path.join(
+    temporaryDirectoryPath,
+    "assets"
+  );
 
-    captureOptions.assets = [
-    ];
-    captureOptions.id = id;
-
-    /* ---------- 2. write asset files ---------- */
-    const files = formData
-      .getAll( "files[]" )
-      .filter( f => ( f as File ).size );
-
-    let done = 0;
-
-    for ( const f of files ) {
-      const buf = new Uint8Array( await ( f as File ).arrayBuffer() );
-
-      await fs.writeFile(
-        path.join(
-          tempDir,
-          ( f as File ).name
-        ),
-        buf
-      );
-      captureOptions.assets.push( ( f as File ).name );
-
-      done++;
-      setProgress(
-        jobId,
-        "save-assets",
-        5 + Math.round( ( done / files.length ) * 10 )
-      );
+  await fs.mkdir(
+    temporaryAssetsDirectoryPath,
+    {
+      recursive: true
     }
+  );
 
-    /* ---------- 3. launch browser & load sketch ---------- */
-    setProgress(
-      jobId,
-      "launch-browser",
-      20
-    );
-    const {
-      createPage
-    } = await createBrowserPage( {
-      headless: true,
-      deviceScaleFactor: 1
-    } );
+  const captureOptions = JSON.parse( formData.get( "options" ) as string );
+  const slides = captureOptions.slides ?? null;
 
-    page = await createPage();
+  const assetFiles = formData.getAll( "files[]" ).filter( file => ( file as File ).size );
 
-    await page.goto(
-      `http://localhost:3000/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
-      {
-        waitUntil: "networkidle"
-      },
-    );
-    await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
-    setProgress(
-      jobId,
-      "starting-capture",
-      25
-    );
+  // Save assets once
+  captureOptions.assets = [
+  ];
+  captureOptions.id = jobId;
 
-    /* ---------- 4. capture frames ---------- */
-    await page.exposeFunction(
-      "reportCaptureProgress",
-      ( percentage: number ) => {
-        setProgress(
-          jobId,
-          "capturing-frames",
-          25 + ( percentage * 35 )
-        );
-      }
-    );
-    // @ts-ignore
-    await page.evaluate( () => window.startLoopRecording() );
+  for ( let assetFileIndex = 0; assetFileIndex < assetFiles.length; assetFileIndex++ ) {
+    const assetFile = assetFiles[ assetFileIndex ];
+    const fileBuffer = new Uint8Array( await ( assetFile as File ).arrayBuffer() );
 
-    const dl = await page.waitForEvent(
-      "download",
-      {
-        timeout: 30_000_000
-      }
+    await fs.writeFile(
+      path.join(
+        temporaryAssetsDirectoryPath,
+        ( assetFile as File ).name
+      ),
+      fileBuffer
     );
-    const tarPath = path.join(
-      tempDir,
-      dl.suggestedFilename()
-    );
-
-    await dl.saveAs( tarPath );
-    await page.close();
+    captureOptions.assets.push( ( assetFile as File ).name );
 
     setProgress(
       jobId,
-      "download-frames",
-      60
+      "save-assets",
+      5 + Math.round( ( assetFileIndex / assetFiles.length ) * 10 )
     );
-
-    /* ---------- 5. untar ---------- */
-    await tar.x( {
-      file: tarPath,
-      cwd: tempDir
-    } );
-    setProgress(
-      jobId,
-      "extract-frames",
-      65
-    );
-
-    /* ---------- 6. encode video ---------- */
-    const out = path.join(
-      tempDir,
-      `output_${ id }_${ template }.mp4`
-    );
-    const fps = captureOptions.animation?.framerate ?? 60;
-    const ff = spawn(
-      "ffmpeg",
-      [
-        "-r",
-        String( fps ),
-        "-pattern_type",
-        "glob",
-        "-i",
-        "*.png",
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "-preset",
-        "fast",
-        "-crf",
-        "23",
-        "-y",
-        out,
-        "-progress",
-        "pipe:1",
-        "-loglevel",
-        "error",
-      ],
-      {
-        cwd: tempDir
-      },
-    );
-
-    ff.stdout.on(
-      "data",
-      b => {
-        const m = /frame=\s*(\d+)/.exec( b.toString() );
-
-        if ( m ) {
-          const pct = 65 + Math.min(
-            34,
-            ( +m[ 1 ] / ( fps * captureOptions?.animation?.duration ) ) * 34
-          );
-
-          setProgress(
-            jobId,
-            "encoding",
-            Math.round( pct )
-          );
-        }
-      }
-    );
-
-    await new Promise<void>( (
-      res, rej
-    ) => {
-      ff.on(
-        "close",
-        c => ( c === 0 ? res() : rej( new Error( `ffmpeg ${ c }` ) ) )
-      );
-      ff.on(
-        "error",
-        rej
-      );
-    } );
-
-    setProgress(
-      jobId,
-      "done",
-      100
-    );
-  } catch ( err ) {
-    setProgress(
-      jobId,
-      "error",
-      100
-    );
-    await page?.close();
-    await fs.rm(
-      tempDir,
-      {
-        recursive: true,
-        force: true
-      }
-    ).catch( () => {} );
-    throw err;
   }
+
+  const recordFunction = slides && Array.isArray( slides ) && slides.length > 0 ? recordSketchSlides : recordSketch;
+
+  await recordFunction(
+    jobId,
+    template,
+    captureOptions,
+    temporaryDirectoryPath,
+    temporaryAssetsDirectoryPath
+  );
 }
+
+export default runRecording;

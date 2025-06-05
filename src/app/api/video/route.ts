@@ -30,10 +30,8 @@ export async function GET( request: NextRequest ) {
   );
 
   try {
-    /* locate the MP4 file (pattern output_<id>_*.mp4) */
     const fileNames = await fsPromises.readdir( recordingDirectory );
-    const videoFileName =
-            fileNames.find( name => name.startsWith( `output_${ jobId }_` ) && name.endsWith( ".mp4" ) ) ?? null;
+    const videoFileName = fileNames.find( name => name.endsWith( ".mp4" ) ) ?? null;
 
     if ( !videoFileName ) {
       return new NextResponse(

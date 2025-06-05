@@ -1,4 +1,4 @@
-// app/api/server-record/[template]/route.ts
+
 import {
   NextRequest, NextResponse
 } from "next/server";
@@ -8,12 +8,10 @@ import {
 import {
   setProgress
 } from "@/lib/progressStore";
-import {
-  runRecording
-} from "@/lib/runRecording";
+import runRecording from "@/lib/runRecording";
 
 export async function POST(
-  req: NextRequest,
+  request: NextRequest,
   {
     params
   }: {
@@ -24,18 +22,17 @@ export async function POST(
 ) {
   const template = ( await params ).template;
 
-  if ( !template ) return new NextResponse(
-    "Missing template",
-    {
-      status: 400
-    }
-  );
+  if ( !template ) {
+    return new NextResponse(
+      "Missing template",
+      {
+        status: 400
+      }
+    );
+  }
 
-  /* grab caller payload (options + files[]), but don’t block the response */
-  const formData = await req.formData();
-
-  /* 1️⃣ create job entry */
   const jobId = uuid();
+  const formData = await request.formData();
 
   setProgress(
     jobId,
@@ -43,16 +40,15 @@ export async function POST(
     0
   );
 
-  /* 2️⃣ fire‑and‑forget recording pipeline */
   runRecording(
     jobId,
     template,
     formData
-  ).catch( err => {
+  ).catch( error => {
     console.error(
       "[record] job failed",
       jobId,
-      err
+      error
     );
     setProgress(
       jobId,
@@ -61,8 +57,9 @@ export async function POST(
     );
   } );
 
-  /* 3️⃣ return jobId so client can open SSE */
-  return NextResponse.json( {
-    jobId
-  } );
+  return (
+    NextResponse.json( {
+      jobId
+    } )
+  );
 }
