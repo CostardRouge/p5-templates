@@ -7,6 +7,7 @@ import {
 } from "uuid";
 import { setProgress } from "@/lib/progressStore";
 import { jobQueue } from "@/lib/jobQueue";
+import { createJob } from "@/lib/jobsDB";
 import type { JobAsset } from "@/lib/jobQueue";
 import { uploadFile } from "@/lib/s3";
 
@@ -32,6 +33,7 @@ export async function POST(
   }
 
   const jobId = uuid();
+  createJob({ id: jobId, template, step: 'queued', progress: 0, createdAt: Date.now(), updatedAt: Date.now() });
   const formData = await request.formData();
 
   const options = JSON.parse(formData.get('options') as string);

@@ -1,3 +1,5 @@
+import { updateJob } from './jobsDB';
+
 type Progress = {
   step: string;
   percentage: number
@@ -26,6 +28,7 @@ export function setProgress(
       done: step === "done" || step === "error"
     }
   );
+  updateJob(id, { step, progress: percentage });
 }
 
 export function getProgress( id: string ): Progress | undefined {

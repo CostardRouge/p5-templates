@@ -46,5 +46,6 @@ S3_REGION="us-east-1"
 S3_ACCESS_KEY="your-access-key"
 S3_SECRET_KEY="your-secret"
 S3_BUCKET="renderer"
+DB_PATH="./jobs.json" # path to store persistent job info
 ```
 

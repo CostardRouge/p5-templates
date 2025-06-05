@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jobQueue } from '@/lib/jobQueue';
 import { getSignedDownloadUrl } from '@/lib/s3';
+import { updateJob, getJob } from '@/lib/jobsDB';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string; action: string }> }) {
   const { id, action } = await params;
@@ -9,10 +10,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (action === 'cancel') {
     await job.remove();
+    updateJob(id, { step: 'cancelled' });
   } else if (action === 'stop') {
     await job.moveToFailed(new Error('stopped by user'), true);
+    updateJob(id, { step: 'stopped' });
   } else if (action === 'retry') {
     await job.retry();
+    updateJob(id, { step: 'queued', progress: 0 });
   } else {
     return new NextResponse('unknown action', { status: 400 });
   }

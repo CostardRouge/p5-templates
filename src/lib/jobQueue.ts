@@ -2,6 +2,7 @@ import IORedis from 'ioredis';
 import { Queue, Worker, Job } from 'bullmq';
 import runRecording from './runRecording';
 import { setProgress } from './progressStore';
+import { updateJob } from './jobsDB';
 import { uploadFile } from './s3';
 import fs from 'node:fs/promises';
 import path from 'path';
@@ -30,6 +31,7 @@ export const worker = new Worker<JobData>(
   'render-jobs',
   async job => {
     setProgress(job.id, 'processing', 10);
+    updateJob(job.id, { step: 'processing', progress: 10 });
     const outputPath = await runRecording(job.id, job.data.template, {
       options: job.data.options,
       assets: job.data.assets,
@@ -40,6 +42,7 @@ export const worker = new Worker<JobData>(
     const data = await fs.readFile(outputPath);
     const key = `jobs/${job.id}/result${ext}`;
     await uploadFile(key, data, contentType);
+    updateJob(job.id, { resultKey: key });
     return { key };
   },
   { connection }
@@ -47,10 +50,14 @@ export const worker = new Worker<JobData>(
 
 worker.on('completed', job => {
   setProgress(job.id, 'done', 100);
+  updateJob(job.id, { step: 'done', progress: 100 });
 });
 
 worker.on('failed', (job, err) => {
   console.error('job failed', job?.id, err);
-  if (job) setProgress(job.id, 'error', 100);
+  if (job) {
+    setProgress(job.id, 'error', 100);
+    updateJob(job.id, { step: 'error', progress: 100, error: String(err) });
+  }
 });
 

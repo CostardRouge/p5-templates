@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 interface Job {
   id: string;
-  status: string;
+  step: string;
   progress: number;
 }
 
@@ -24,7 +24,7 @@ export default function JobsPage() {
   useEffect(() => {
     const sources: Record<string, EventSource> = {};
     jobs.forEach(job => {
-      if (job.status === 'active' && !sources[job.id]) {
+      if (job.step === 'processing' && !sources[job.id]) {
         const source = new EventSource(`/api/record-progress?id=${job.id}`);
         source.onmessage = e => {
           const p = JSON.parse(e.data);
@@ -63,7 +63,7 @@ export default function JobsPage() {
           {jobs.map(job => (
             <tr key={job.id} className="border-b">
               <td className="p-2">{job.id}</td>
-              <td className="p-2">{job.status}</td>
+              <td className="p-2">{job.step}</td>
               <td className="p-2">{Math.round(job.progress || 0)}%</td>
               <td className="p-2 flex gap-2">
                 <button onClick={() => action(job.id,'cancel')} className="underline">Cancel</button>
