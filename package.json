@@ -10,8 +10,11 @@
     "lint:fix": "next lint --fix"
   },
   "dependencies": {
+    "@prisma/client": "^6.9.0",
     "@types/tar": "^6.1.13",
+    "bullmq": "^5.53.2",
     "exifreader": "^4.26.1",
+    "ioredis": "^5.6.1",
     "json-edit-react": "^1.26.1",
     "lucide-react": "^0.477.0",
     "mime-types": "^2.1.35",
