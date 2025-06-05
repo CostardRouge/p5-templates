@@ -30,15 +30,11 @@ async function recordSketchSlides(
     page: undefined
   };
 
-  console.log( {
-    temporaryDirectory
-  } );
-
   try {
     const {
       createPage
     } = await createBrowserPage( {
-      headless: false,
+      headless: true,
       deviceScaleFactor: 1
     } );
 

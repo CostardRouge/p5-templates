@@ -23,7 +23,7 @@ export async function GET( req: NextRequest ) {
     );
   }
 
-  const intervalId = undefined;
+  let intervalId: NodeJS.Timeout | undefined = undefined;
 
   const stream = new ReadableStream( {
     start( controller ) {
@@ -31,7 +31,10 @@ export async function GET( req: NextRequest ) {
         const progress = getProgress( id );
 
         if ( !progress ) {
-          clearInterval( intervalId );
+          if ( intervalId ) {
+            clearInterval( intervalId );
+          }
+
           controller.close();
           return;
         }
@@ -39,12 +42,15 @@ export async function GET( req: NextRequest ) {
         controller.enqueue( `data: ${ JSON.stringify( progress ) }\n\n` );
 
         if ( progress.step === "done" || progress.step === "error" ) {
-          clearInterval( intervalId );
+          if ( intervalId ) {
+            clearInterval( intervalId );
+          }
+
           controller.close();
         }
       };
 
-      const intervalId = setInterval(
+      intervalId = setInterval(
         sendUpdate,
         500
       );
@@ -52,7 +58,9 @@ export async function GET( req: NextRequest ) {
       sendUpdate();
     },
     cancel() {
-      clearInterval( intervalId );
+      if ( intervalId ) {
+        clearInterval( intervalId );
+      }
     }
   } );
 
