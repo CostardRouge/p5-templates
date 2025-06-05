@@ -158,6 +158,8 @@ async function recordSketch(
       "done",
       100
     );
+
+    return outputVideoPath;
   }
   catch ( error ) {
     setProgress(

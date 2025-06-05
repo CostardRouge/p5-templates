@@ -5,10 +5,10 @@ import {
 import {
   v4 as uuid
 } from "uuid";
-import {
-  setProgress
-} from "@/lib/progressStore";
-import runRecording from "@/lib/runRecording";
+import { setProgress } from "@/lib/progressStore";
+import { jobQueue } from "@/lib/jobQueue";
+import type { JobAsset } from "@/lib/jobQueue";
+import { uploadFile } from "@/lib/s3";
 
 export async function POST(
   request: NextRequest,
@@ -34,28 +34,19 @@ export async function POST(
   const jobId = uuid();
   const formData = await request.formData();
 
-  setProgress(
-    jobId,
-    "queued",
-    0
-  );
+  const options = JSON.parse(formData.get('options') as string);
+  const assetFiles = formData.getAll('files[]').filter(f => (f as File).size) as File[];
+  const assets: JobAsset[] = [];
+  for (const file of assetFiles) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    assets.push({ name: file.name, buffer, type: file.type });
+    await uploadFile(`jobs/${jobId}/assets/${file.name}`, buffer, file.type || 'application/octet-stream');
+  }
+  await uploadFile(`jobs/${jobId}/options.json`, JSON.stringify(options), 'application/json');
 
-  runRecording(
-    jobId,
-    template,
-    formData
-  ).catch( error => {
-    console.error(
-      "[record] job failed",
-      jobId,
-      error
-    );
-    setProgress(
-      jobId,
-      "error",
-      100
-    );
-  } );
+  setProgress(jobId, 'queued', 0);
+
+  await jobQueue.add('render', { template, options, assets }, { jobId });
 
   return (
     NextResponse.json( {

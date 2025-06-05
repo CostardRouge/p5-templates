@@ -191,6 +191,8 @@ async function recordSketchSlides(
       "done",
       100
     );
+
+    return zipOutputPath;
   }
   catch ( error ) {
     setProgress(

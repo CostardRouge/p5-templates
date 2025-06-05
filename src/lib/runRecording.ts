@@ -1,17 +1,20 @@
 import recordSketch from "@/lib/recordSketch";
-import {
-  setProgress
-} from "@/lib/progressStore";
+import { setProgress } from "@/lib/progressStore";
 
 import fs from "node:fs/promises";
 import path from "path";
 import os from "node:os";
 import recordSketchSlides from "@/lib/recordSketchSlides";
 
+export interface RecordingInput {
+  options: any;
+  assets: { name: string; buffer: Buffer }[];
+}
+
 async function runRecording(
   jobId: string,
   template: string,
-  formData: FormData,
+  data: RecordingInput,
 ) {
   const temporaryDirectoryPath = path.join(
     os.tmpdir(),
@@ -37,10 +40,10 @@ async function runRecording(
     }
   );
 
-  const captureOptions = JSON.parse( formData.get( "options" ) as string );
+  const captureOptions = data.options;
   const slides = captureOptions.slides ?? null;
 
-  const assetFiles = formData.getAll( "files[]" ).filter( file => ( file as File ).size );
+  const assetFiles = data.assets;
 
   // Save assets once
   captureOptions.assets = [
@@ -49,16 +52,15 @@ async function runRecording(
 
   for ( let assetFileIndex = 0; assetFileIndex < assetFiles.length; assetFileIndex++ ) {
     const assetFile = assetFiles[ assetFileIndex ];
-    const fileBuffer = new Uint8Array( await ( assetFile as File ).arrayBuffer() );
 
     await fs.writeFile(
       path.join(
         temporaryAssetsDirectoryPath,
-        ( assetFile as File ).name
+        assetFile.name
       ),
-      fileBuffer
+      assetFile.buffer
     );
-    captureOptions.assets.push( ( assetFile as File ).name );
+    captureOptions.assets.push( assetFile.name );
 
     setProgress(
       jobId,
@@ -69,13 +71,15 @@ async function runRecording(
 
   const recordFunction = slides && Array.isArray( slides ) && slides.length > 0 ? recordSketchSlides : recordSketch;
 
-  await recordFunction(
+  const outputPath = await recordFunction(
     jobId,
     template,
     captureOptions,
     temporaryDirectoryPath,
     temporaryAssetsDirectoryPath
   );
+
+  return outputPath;
 }
 
 export default runRecording;
