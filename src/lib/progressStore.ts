@@ -1,57 +1,55 @@
-type Progress = {
-  step: string;
-  percentage: number
-};
+/* --------------------------------------------------------------------------
+   lib/progressStore.ts
+   --------------------------------------------------------------------------
+   Centralized progress updater:
+   • updates BullMQ job progress
+   • persists status & progress into Prisma
+   -------------------------------------------------------------------------- */
 
-const TTL = 15 * 60 * 1000; // keep entries 15min after finish/error
+import {
+  recordQueue
+} from "@/lib/recordQueue";
+import {
+  updateJob
+} from "@/lib/jobStore";
 
-export const jobs = new Map<
-    string,
-    Progress & {
-      timestamp: number;
-      done?: boolean
+/**
+ * Update the progress & status of a given job.
+ * 1) Update BullMQ’s progress so listeners (SSE) get notified.
+ * 2) Persist status & progress in the database.
+ */
+export async function setProgress(
+  jobId: string,
+  status: string,
+  progressPercent: number
+): Promise<void> {
+  // 1) Update BullMQ job progress (if the job still exists in Redis)
+  try {
+    const bullJob = await recordQueue.getJob( jobId );
+
+    if ( bullJob ) {
+      await bullJob.updateProgress( progressPercent );
     }
->();
+  } catch ( error ) {
+    console.warn(
+      `[setProgress] could not update BullMQ job ${ jobId }`,
+      error
+    );
+  }
 
-/* ------- helpers ------- */
-export function setProgress(
-  id: string, step: string, percentage: number
-) {
-  jobs.set(
-    id,
-    {
-      step,
-      percentage,
-      timestamp: Date.now(),
-      done: step === "done" || step === "error"
-    }
-  );
+  // 2) Persist into Prisma
+  try {
+    await updateJob(
+      jobId,
+      {
+        status,
+        progress: progressPercent,
+      }
+    );
+  } catch ( error ) {
+    console.error(
+      `[setProgress] failed to update DB for job ${ jobId }`,
+      error
+    );
+  }
 }
-
-export function getProgress( id: string ): Progress | undefined {
-  const job = jobs.get( id );
-
-  return job && {
-    step: job.step,
-    percentage: job.percentage
-  };
-}
-
-export function hasJob( id: string ) {
-  return jobs.has( id );
-}
-
-/* optional: periodically prune old finished jobs */
-setInterval(
-  () => {
-    const now = Date.now();
-
-    for ( const [
-      id,
-      entry
-    ] of jobs ) {
-      if ( entry.done && now - entry.timestamp > TTL ) jobs.delete( id );
-    }
-  },
-  60_000
-);

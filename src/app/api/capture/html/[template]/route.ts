@@ -18,10 +18,10 @@ export async function POST(
   {
     params
   }: {
- params: Promise<{
- template: string
-}>
-}
+   params: Promise<{
+     template: string
+    }>
+  }
 ) {
   const {
     headers

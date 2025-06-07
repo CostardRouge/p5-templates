@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Job {
+  id         String   @id
+  template   String
+  status     String   // queued|active|completed|failed|cancelled
+  progress   Int
+  resultUrl  String?
+  optionsKey String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

@@ -9,6 +9,7 @@ async function encodeVideoFromFrames(
   onProgress: ( pct: number ) => void
 ) {
   const fps = animationOptions?.framerate ?? 60;
+  const duration = animationOptions?.duration ?? 5;
 
   return new Promise<void>( (
     resolve, reject
@@ -48,8 +49,11 @@ async function encodeVideoFromFrames(
         const match = /frame=\s*(\d+)/.exec( buffer.toString() );
 
         if ( match ) {
-          const framesRendered = +match[ 1 ];
-          const totalFrames = fps * ( animationOptions?.duration || 5 );
+          const framesRendered = parseInt(
+            match[ 1 ],
+            10
+          );
+          const totalFrames = fps * duration;
 
           onProgress( Math.min(
             framesRendered / totalFrames,

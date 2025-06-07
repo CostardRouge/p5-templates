@@ -2,9 +2,8 @@ import fs from "fs";
 import path from "path";
 
 import listDirectory from "@/utils/listDirectory";
-import {
-  SKETCHES_DIRECTORY
-} from "@/constants";
+
+const SKETCHES_DIRECTORY: string = process.env.SKETCHES_DIRECTORY!;
 
 async function getSketchList( folderPath = SKETCHES_DIRECTORY ) {
   const p5sketchesFolderContent = await listDirectory( folderPath );

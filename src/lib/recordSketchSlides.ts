@@ -1,3 +1,12 @@
+import * as tar from "tar";
+
+import path from "path";
+import fs from "node:fs/promises";
+
+import {
+  Page
+} from "playwright";
+
 import {
   setProgress
 } from "@/lib/progressStore";
@@ -8,14 +17,13 @@ import minifyAndEncode from "@/utils/minifyAndEncodeCaptureOptions";
 import encodeVideoFromFrames from "@/lib/encodeVideoFromFrames";
 import createBrowserPage from "@/utils/createBrowserPage";
 
-import * as tar from "tar";
-
-import path from "path";
-import fs from "node:fs/promises";
+import {
+  updateJob
+} from "@/lib/jobStore";
 
 import {
-  Page
-} from "playwright";
+  uploadArtifact
+} from "@/lib/s3";
 
 async function recordSketchSlides(
   jobId: string,
@@ -39,16 +47,17 @@ async function recordSketchSlides(
     } );
 
     const slides = captureOptions.slides;
-    const slideVideos: string[] = [
+    const slideVideoPaths: string[] = [
     ];
 
     for ( let slideIndex = 0; slideIndex < slides.length; slideIndex++ ) {
       const slideProgressBase = ( slideIndex / slides.length ) * 90;
 
-      setProgress(
+      // ─── 6.1 Launch browser for this slide ───────────────────────────────────
+      await setProgress(
         jobId,
         `slide-${ slideIndex }-browser`,
-        slideProgressBase + 5
+        15 + slideProgressBase
       );
 
       recordingState.page = await createPage();
@@ -67,21 +76,22 @@ async function recordSketchSlides(
         slideIndex
       );
 
+      await setProgress(
+        jobId,
+        `slide-${ slideIndex }-capturing`,
+        slideProgressBase + 15
+      );
+
+      // ─── 6.2 Capture frames for this slide ──────────────────────────────────
       await recordingState.page.exposeFunction(
         "reportCaptureProgress",
-        ( percentage: number ) => {
-          setProgress(
+        async( percentage: number ) => {
+          await setProgress(
             jobId,
             `slide-${ slideIndex }-capturing`,
             slideProgressBase + 15 + percentage * 40
           );
         }
-      );
-
-      setProgress(
-        jobId,
-        `slide-${ slideIndex }-capturing`,
-        slideProgressBase + 15
       );
 
       // @ts-ignore
@@ -101,7 +111,8 @@ async function recordSketchSlides(
       await downloadEvent.saveAs( slideTarPath );
       await recordingState.page.close();
 
-      setProgress(
+      // ─── 6.3 Extract and encode this slide ─────────────────────────────────
+      await setProgress(
         jobId,
         `slide-${ slideIndex }-extracting`,
         slideProgressBase + 60
@@ -132,8 +143,8 @@ async function recordSketchSlides(
         slideFramesDirectory,
         slideVideoPath,
         captureOptions.animation,
-        ( percentage: number ) => {
-          setProgress(
+        async( percentage: number ) => {
+          await setProgress(
             jobId,
             `slide-${ slideIndex }-encoding`,
             slideProgressBase + 60 + percentage * 20
@@ -141,7 +152,7 @@ async function recordSketchSlides(
         }
       );
 
-      slideVideos.push( slideVideoPath );
+      slideVideoPaths.push( slideVideoPath );
 
       await fs.rm(
         slideFramesDirectory,
@@ -162,7 +173,8 @@ async function recordSketchSlides(
       }
     ).catch( () => {} );
 
-    setProgress(
+    // ─── 7. Bundle all .mp4s into ZIP ───────────────────────────────────────────
+    await setProgress(
       jobId,
       "zipping-slides",
       95
@@ -174,22 +186,37 @@ async function recordSketchSlides(
     );
 
     await zipFiles(
-      slideVideos,
+      slideVideoPaths,
       zipOutputPath
     );
 
-    for ( const slideVideoPath of slideVideos ) {
+    for ( const slideVideoPath of slideVideoPaths ) {
       await fs.unlink( slideVideoPath ).catch( () => {} );
     }
 
-    setProgress(
+    // ─── 8. Upload ZIP to S3 ───────────────────────────────────────────────────
+    await setProgress(
       jobId,
-      "done",
-      100
+      "upload-zip",
+      95
+    );
+
+    const zipS3Url = await uploadArtifact(
+      jobId,
+      zipOutputPath
+    );
+
+    await updateJob(
+      jobId,
+      {
+        status: "completed",
+        progress: 100,
+        resultUrl: zipS3Url
+      }
     );
   }
   catch ( error ) {
-    setProgress(
+    await setProgress(
       jobId,
       "error",
       100

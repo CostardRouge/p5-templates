@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "lint:fix": "next lint --fix"
+    "lint:fix": "next lint --fix",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.825.0",
     "@prisma/client": "^6.9.0",
     "@types/tar": "^6.1.13",
     "bullmq": "^5.53.2",
@@ -39,6 +41,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "postcss": "^8",
+    "prisma": "^6.9.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

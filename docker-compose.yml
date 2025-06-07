@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # ─── Next.js app (API + web) ───────────────────────────────────────────────
+  app:
+    build: .
+    env_file: .env
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      - redis
+      - minio
+    volumes:
+      # Persist Prisma SQLite (or dev schema) if using SQLite
+      - ./prisma:/app/prisma
+      # Optional: mount uploads or other volumes here
+    # Healthcheck to know when Next.js is ready
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+#      interval: 10s
+#      retries: 3
+
+  # ─── Worker (BullMQ) ──────────────────────────────────────────────────────
+#  worker:
+#    build: .
+#    env_file: .env
+#    command: npm run start:worker     # Assumes you have a "start:worker" script
+#    depends_on:
+#      - redis
+#    volumes:
+#      - ./prisma:/app/prisma
+
+  # ─── Redis for BullMQ queue ────────────────────────────────────────────────
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+#    healthcheck:
+#      test: ["CMD", "redis-cli", "ping"]
+#      interval: 10s
+#      retries: 3
+
+  # ─── MinIO for S3-compatible storage ──────────────────────────────────────
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT:-9001}"
+    restart: unless-stopped
+    ports:
+      - "${S3_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER:     ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes:
+      - minio-data:/data
+
+volumes:
+  minio-data:
