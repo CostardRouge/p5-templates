@@ -4,10 +4,6 @@
    Simple job persistence using Prisma (SQLite, PostgreSQL, etc.)
    -------------------------------------------------------------------------- */
 
-// import {
-//   PrismaClient
-// } from "@prisma/client";
-
 import {
   PrismaClient
 } from "@/generated/prisma";

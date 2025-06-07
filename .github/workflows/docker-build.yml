@@ -9,6 +9,10 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    env:
+      REDIS_URL: redis://localhost:6379
+      DATABASE_URL: "file:./prisma/dev.db"
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
