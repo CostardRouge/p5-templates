@@ -5,6 +5,7 @@ services:
   app:
     build: .
     env_file: .env
+    platform: linux/amd64
     ports:
       - "${APP_PORT:-3000}:3000"
     depends_on:
