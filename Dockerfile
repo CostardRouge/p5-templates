@@ -1,6 +1,3 @@
-ARG REDIS_URL=redis://localhost:6379
-ENV REDIS_URL=${REDIS_URL}
-
 # ─── Stage 1: dependencies & build ──────────────────────────────────────────
 FROM mcr.microsoft.com/playwright:v1.50.1-jammy AS builder
 

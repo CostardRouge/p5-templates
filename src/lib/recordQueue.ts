@@ -15,22 +15,17 @@ import {
 } from "@/lib/progressStore";
 
 /* ---------- Redis connection ---------- */
-
-const redisUrl: string | undefined = process.env.REDIS_URL;
-
-if ( !redisUrl ) {
-  throw new Error( "REDIS_URL env var is missing" );
-}
+const redisUrl: string = process.env.REDIS_URL!;
 
 const redisConnection = new IORedis(
   redisUrl,
   {
     maxRetriesPerRequest: null,
+    lazyConnect: true
   }
 );
 
 /* ---------- Queue ---------- */
-
 export interface RecordingJobData {
   template: string;
   /** formData should be serializable (e.g. JSON fields + base64 assets) */
@@ -45,7 +40,6 @@ export const recordQueue = new Queue<RecordingJobData>(
 );
 
 /* ---------- Enqueue helper ---------- */
-
 export async function enqueueRecording(
   template: string,
   serialisedFormData: Record<string, unknown>
@@ -80,7 +74,6 @@ export async function enqueueRecording(
 }
 
 /* ---------- Worker ---------- */
-
 export const recordWorker = new Worker<RecordingJobData>(
   "record",
   async( job: Job<RecordingJobData> ) => {
@@ -113,7 +106,6 @@ export const recordWorker = new Worker<RecordingJobData>(
 );
 
 /* ---------- Worker event hooks ---------- */
-
 recordWorker.on(
   "completed",
   async( job: Job ) => {
@@ -145,7 +137,6 @@ recordWorker.on(
 );
 
 /* ---------- Graceful shutdown ---------- */
-
 process.on(
   "SIGTERM",
   async() => {

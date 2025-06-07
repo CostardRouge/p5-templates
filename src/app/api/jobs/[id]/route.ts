@@ -11,13 +11,16 @@ import {
 } from "@/lib/recordQueue";
 import IORedis from "ioredis";
 
-const redisUrl = process.env.REDIS_URL;
+/* ---------- Redis connection ---------- */
+const redisUrl: string = process.env.REDIS_URL!;
 
-if ( !redisUrl ) {
-  throw new Error( "REDIS_URL env var is missing" );
-}
-
-const redisClient = new IORedis( redisUrl );
+const redisConnection = new IORedis(
+  redisUrl,
+  {
+    maxRetriesPerRequest: null,
+    lazyConnect: true
+  }
+);
 
 /**
  * GET /api/jobs/[id]
@@ -186,7 +189,7 @@ export async function POST(
   if ( command === "stop" ) {
     try {
       // 1) Set a Redis key that runRecording() or the worker logic can check
-      await redisClient.set(
+      await redisConnection.set(
         `cancel:${ jobId }`,
         "1"
       );
