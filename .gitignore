@@ -39,8 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-*.jpeg
-*.jpg
-*.png
+
+
+/public/assets/images/samples
 
 /src/generated/prisma
