@@ -1,5 +1,6 @@
 {
   "colors": {
     "background": [230]
-  }
+  },
+  "consumeTestImages": true
 }

@@ -29,8 +29,7 @@ async function recordSketchSlides(
   jobId: string,
   template: string,
   captureOptions: any,
-  temporaryDirectory: string,
-  temporaryAssetsDirectoryPath: string,
+  temporaryDirectoryPath: string,
 ) {
   const recordingState: {
     page?: Page
@@ -104,7 +103,7 @@ async function recordSketchSlides(
         }
       );
       const slideTarPath = path.join(
-        temporaryDirectory,
+        temporaryDirectoryPath,
         `slide_${ slideIndex }.tar`
       );
 
@@ -119,7 +118,7 @@ async function recordSketchSlides(
       );
 
       const slideFramesDirectory = path.join(
-        temporaryDirectory,
+        temporaryDirectoryPath,
         `frames_slide_${ slideIndex }`
       );
 
@@ -135,7 +134,7 @@ async function recordSketchSlides(
       } );
 
       const slideVideoPath = path.join(
-        temporaryDirectory,
+        temporaryDirectoryPath,
         `${ template }_${ slideIndex }.mp4`
       );
 
@@ -165,14 +164,6 @@ async function recordSketchSlides(
       await fs.unlink( slideTarPath ).catch( () => {} );
     }
 
-    await fs.rm(
-      temporaryAssetsDirectoryPath,
-      {
-        recursive: true,
-        force: true
-      }
-    ).catch( () => {} );
-
     // ─── 7. Bundle all .mp4s into ZIP ───────────────────────────────────────────
     await setProgress(
       jobId,
@@ -181,8 +172,8 @@ async function recordSketchSlides(
     );
 
     const zipOutputPath = path.join(
-      temporaryDirectory,
-      `${ template }_${ jobId }.zip`
+      temporaryDirectoryPath,
+      `${ template }-${ jobId }.zip`
     );
 
     await zipFiles(
@@ -214,6 +205,14 @@ async function recordSketchSlides(
         resultUrl: zipS3Url
       }
     );
+
+    await fs.rm(
+      temporaryDirectoryPath,
+      {
+        recursive: true,
+        force: true
+      }
+    ).catch( () => {} );
   }
   catch ( error ) {
     await setProgress(
@@ -224,7 +223,7 @@ async function recordSketchSlides(
 
     await recordingState?.page?.close();
     await fs.rm(
-      temporaryDirectory,
+      temporaryDirectoryPath,
       {
         recursive: true,
         force: true

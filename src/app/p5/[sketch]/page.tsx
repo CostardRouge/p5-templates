@@ -12,16 +12,6 @@ const acceptedImageTypes = [
   "jpeg",
   "webp"
 ];
-const defaultSketchOptions = {
-  size: {
-    width: 1080,
-    height: 1350
-  },
-  animation: {
-    duration: 12,
-    framerate: 60
-  }
-};
 
 export const revalidate = 0;
 
@@ -33,10 +23,10 @@ function decodeBase64Json( base64: string ): any {
     ).toString( "utf-8" );
 
     return JSON.parse( jsonString );
-  } catch ( e ) {
+  } catch ( error ) {
     console.error(
       "Failed to decode captureOptions:",
-      e
+      error
     );
     return {
     };
@@ -69,7 +59,7 @@ async function ProcessingSketch( {
     sketchOptions.capturing = true;
   }
 
-  if ( !sketchOptions?.assets ) {
+  if ( sketchOptions.consumeTestImages ) {
     sketchOptions.assets = testImageFileNames
       .filter( testImageFileName => acceptedImageTypes.includes( testImageFileName.split( "." )[ 1 ] ) )
       .map( testImageFileName => `/assets/images/test/${ testImageFileName }` );

@@ -7,7 +7,7 @@ import {
   getJobById, updateJob, deleteJob
 } from "@/lib/jobStore";
 import {
-  recordQueue
+  recordingQueue as recordQueue
 } from "@/lib/recordQueue";
 import IORedis from "ioredis";
 
@@ -85,8 +85,13 @@ export async function DELETE(
   try {
     // 1) Try to remove from BullMQ queue
     const bullJob = await recordQueue.getJob( jobId );
+    const token = bullJob?.token;
 
-    if ( bullJob ) {
+    if ( bullJob && token ) {
+      await bullJob.moveToFailed(
+        new Error( "removed by user" ),
+        token
+      );
       await bullJob.remove();
     }
 
@@ -100,7 +105,7 @@ export async function DELETE(
     );
 
     // 3) Also delete the Prisma record if you prefer (optional)
-    // await deleteJob(jobId)
+    await deleteJob( jobId );
 
     return new NextResponse(
       null,
@@ -138,13 +143,23 @@ export async function POST(
     }>
   }
 ) {
-  const jobId = ( await params ).id;
   const url = new URL( req.url );
+  const jobId = ( await params ).id;
   const command = url.searchParams.get( "cmd" );
 
+  console.log( {
+    jobId,
+    command
+  } );
+
   if ( command === "retry" ) {
+    console.log( "retry" );
     try {
       const bullJob = await recordQueue.getJob( jobId );
+
+      console.log( {
+        bullJob
+      } );
 
       if ( !bullJob ) {
         return new NextResponse(

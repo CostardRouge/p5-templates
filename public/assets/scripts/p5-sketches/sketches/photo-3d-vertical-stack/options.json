@@ -16,5 +16,6 @@
   },
   "count": 200,
   "lines": false,
-  "rotate": true
+  "rotate": true,
+  "consumeTestImages": true
 }

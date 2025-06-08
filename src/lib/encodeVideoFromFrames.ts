@@ -6,7 +6,7 @@ async function encodeVideoFromFrames(
   framesDirectory: string,
   outputVideo: string,
   animationOptions: any,
-  onProgress: ( pct: number ) => void
+  onProgress: ( percentage: number ) => void
 ) {
   const fps = animationOptions?.framerate ?? 60;
   const duration = animationOptions?.duration ?? 5;

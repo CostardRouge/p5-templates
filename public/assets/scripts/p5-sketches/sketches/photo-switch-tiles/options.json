@@ -8,5 +8,6 @@
   "animation": {
     "duration": 12,
     "framerate": 60
-  }
+  },
+  "consumeTestImages": true
 }

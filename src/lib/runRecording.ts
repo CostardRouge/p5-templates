@@ -26,11 +26,6 @@ async function runRecording(
     jobId
   );
 
-  const temporaryAssetsDirectoryPath = path.join(
-    temporaryDirectoryPath,
-    "assets"
-  );
-
   await fs.mkdir(
     temporaryDirectoryPath,
     {
@@ -50,7 +45,6 @@ async function runRecording(
 
     captureOptions.assets = [
     ];
-    captureOptions.id = jobId;
 
     // Write the raw options JSON to disk
     const optionsPath = path.join(
@@ -80,9 +74,12 @@ async function runRecording(
     );
 
     // ─── 3. Save any new files[] passed in the initial payload ────────────────
-    const incomingFiles = ( formData.files as Array<{
- name: string; base64Content: string
-}> ) || [
+    const incomingFiles = (
+      formData.files as Array<{
+        name: string;
+        base64Content: string
+      }>
+    ) || [
     ];
 
     for ( let assetFileIndex = 0; assetFileIndex < incomingFiles.length; assetFileIndex++ ) {
@@ -94,13 +91,16 @@ async function runRecording(
 
       await fs.writeFile(
         path.join(
-          temporaryAssetsDirectoryPath,
+          temporaryDirectoryPath,
           incomingFile.name
         ),
         fileBuffer
       );
 
-      captureOptions.assets.push( incomingFile.name );
+      captureOptions.assets.push( path.join(
+        jobId,
+        incomingFile.name
+      ) );
 
       await setProgress(
         jobId,
@@ -117,8 +117,7 @@ async function runRecording(
       jobId,
       template,
       captureOptions,
-      temporaryDirectoryPath,
-      temporaryAssetsDirectoryPath
+      temporaryDirectoryPath
     );
   }
   catch ( error ) {

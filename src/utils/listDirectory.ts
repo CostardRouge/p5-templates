@@ -4,9 +4,7 @@ import {
 
 async function listDirectory( directoryPath: string ) {
   try {
-    const files = await readdir( directoryPath );
-
-    return files;
+    return await readdir( directoryPath );
   } catch ( error ) {
     console.error(
       `Error reading directory "${ directoryPath }":`,

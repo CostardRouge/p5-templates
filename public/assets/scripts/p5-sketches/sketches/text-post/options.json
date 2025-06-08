@@ -1,7 +1,7 @@
 {
   "animation": {
-    "framerate": 10,
-    "duration": 3
+    "framerate": 60,
+    "duration": 6
   },
   "colors": {
     "background": [246, 235, 225],

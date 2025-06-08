@@ -2,7 +2,7 @@ import {
   NextRequest, NextResponse
 } from "next/server";
 import {
-  enqueueRecording
+  enqueueRecordingJob
 } from "@/lib/recordQueue";
 
 /**
@@ -111,7 +111,7 @@ export async function POST(
 
   try {
     // Enqueue the job
-    recordingJobPayload.jobId = await enqueueRecording(
+    recordingJobPayload.jobId = await enqueueRecordingJob(
       template,
       recordingJobPayload.serializeFormData
     );

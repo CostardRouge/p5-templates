@@ -7,7 +7,7 @@
    -------------------------------------------------------------------------- */
 
 import {
-  recordQueue
+  recordingQueue as recordQueue
 } from "@/lib/recordQueue";
 import {
   updateJob

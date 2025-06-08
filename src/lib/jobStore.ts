@@ -1,14 +1,6 @@
-/* --------------------------------------------------------------------------
-   lib/jobStore.ts
-   --------------------------------------------------------------------------
-   Simple job persistence using Prisma (SQLite, PostgreSQL, etc.)
-   -------------------------------------------------------------------------- */
-
 import {
-  PrismaClient
-} from "@/generated/prisma";
-
-const prisma = new PrismaClient();
+  prisma
+} from "@/lib/prisma";
 
 /**
  * TypeScript type matching the Prisma Job model.
@@ -47,6 +39,7 @@ export async function createJob(
 export async function updateJob(
   jobId: string,
   data: Partial<{
+    error: string;
     status: string;
     progress: number;
     resultUrl: string;

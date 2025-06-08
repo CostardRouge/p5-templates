@@ -17,5 +17,6 @@
     "font": "martian",
     "content": "photo-3d-sphere",
     "size": 450
-  }
+  },
+  "consumeTestImages": true
 }

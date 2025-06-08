@@ -11,5 +11,6 @@
   "animation": {
     "duration": 6,
     "framerate": 60
-  }
+  },
+  "consumeTestImages": true
 }

@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
 
-const SKETCHES_DIRECTORY: string = process.env.SKETCHES_DIRECTORY!;
+import {
+  SKETCHES_DIRECTORY
+} from "@/constants";
 
 function getSketchOptions( sketchName: string ): Record<string, any> | undefined {
   try {

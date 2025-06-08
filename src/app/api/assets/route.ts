@@ -18,17 +18,6 @@ export async function GET( request: Request ) {
     );
   }
 
-  const folder = searchParams.get( "folder" );
-
-  if ( folder ) {
-    return downloadFileResponse( path.join(
-      os.tmpdir(),
-      folder,
-      "assets",
-      name
-    ) );
-  }
-
   return downloadFileResponse( path.join(
     os.tmpdir(),
     name

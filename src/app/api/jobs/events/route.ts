@@ -1,6 +1,6 @@
 // app/api/jobs/events/route.ts
 import {
-  recordQueue
+  recordingQueue as recordQueue
 } from "@/lib/recordQueue";
 import {
   NextResponse
@@ -12,6 +12,10 @@ export async function GET() {
       const onProgress = (
         jobId: any, progress: number | object
       ) => {
+        console.log( {
+          jobId,
+          progress
+        } );
         // The first argument is jobId, second is progress
         controller.enqueue( `data: ${ JSON.stringify( {
           jobId,

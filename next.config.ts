@@ -1,16 +1,18 @@
-import type { NextConfig } from "next";
+import type {
+  NextConfig
+} from "next";
 
 const nextConfig: NextConfig = {
-    devIndicators: false,
-    crossOrigin: 'anonymous',
-    experimental: {
-        serverActions: {
-            bodySizeLimit: '50mb',
-        },
+  devIndicators: false,
+  crossOrigin: "anonymous",
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "50mb",
     },
-    eslint: {
-        ignoreDuringBuilds: false,
-    },
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
 };
 
 export default nextConfig;

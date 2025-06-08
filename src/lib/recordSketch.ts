@@ -27,8 +27,7 @@ async function recordSketch(
   jobId: string,
   template: string,
   captureOptions: any,
-  temporaryDirectory: string,
-  temporaryAssetsDirectoryPath: string,
+  temporaryDirectoryPath: string
 ) {
   const recordingState: {
     page?: Page
@@ -52,6 +51,11 @@ async function recordSketch(
     } );
 
     recordingState.page = await createPage();
+
+    recordingState.page.on(
+      "console",
+      message => {console.log( message );}
+    );
 
     await recordingState.page.goto(
       `http://localhost:3000/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
@@ -90,7 +94,7 @@ async function recordSketch(
       }
     );
     const tarPath = path.join(
-      temporaryDirectory,
+      temporaryDirectoryPath,
       downloadEvent.suggestedFilename()
     );
 
@@ -103,14 +107,6 @@ async function recordSketch(
     await downloadEvent.saveAs( tarPath );
     await recordingState.page.close();
 
-    await fs.rm(
-      temporaryAssetsDirectoryPath,
-      {
-        recursive: true,
-        force: true
-      }
-    ).catch( () => {} );
-
     // ─── 7. Extract frames ───────────────────────────────────────────────────────
     await setProgress(
       jobId,
@@ -119,7 +115,7 @@ async function recordSketch(
     );
 
     const tarExtractionPath = path.join(
-      temporaryDirectory,
+      temporaryDirectoryPath,
       "frames"
     );
 
@@ -137,8 +133,8 @@ async function recordSketch(
 
     // ─── 8. Encode .mp4 ──────────────────────────────────────────────────────────
     const outputVideoPath = path.join(
-      temporaryDirectory,
-      `${ template }_${ jobId }.mp4`
+      temporaryDirectoryPath,
+      `${ template }-${ jobId }.mp4`
     );
 
     await encodeVideoFromFrames(
@@ -185,6 +181,14 @@ async function recordSketch(
         resultUrl: videoS3Url
       }
     );
+
+    await fs.rm(
+      temporaryDirectoryPath,
+      {
+        recursive: true,
+        force: true
+      }
+    ).catch( () => {} );
   }
   catch ( error ) {
     await setProgress(
@@ -195,7 +199,7 @@ async function recordSketch(
 
     await recordingState?.page?.close();
     await fs.rm(
-      temporaryDirectory,
+      temporaryDirectoryPath,
       {
         recursive: true,
         force: true

@@ -1,0 +1,1 @@
+export const SKETCHES_DIRECTORY = "public/assets/scripts/p5-sketches/sketches";

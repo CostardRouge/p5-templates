@@ -11,10 +11,11 @@ datasource db {
 model Job {
   id         String   @id
   template   String
-  status     String   // queued|active|completed|failed|cancelled
+  status     String // queued|active|completed|failed|cancelled
   progress   Int
   resultUrl  String?
   optionsKey String?
+  error      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
