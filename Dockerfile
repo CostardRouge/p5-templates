@@ -29,10 +29,11 @@ RUN npm ci
 # 3. Build the nextjs project
 ENV NODE_ENV=production
 ENV REDIS_URL=redis://redis:6379
+ENV DATABASE_URL="file:./prisma/database.db"
 RUN npm run build
 
 # 4. Migrate/Create the database
-RUN #npx prisma migrate deploy
+RUN npx prisma migrate deploy
 
 # 5. Expose port for the app
 EXPOSE 3000

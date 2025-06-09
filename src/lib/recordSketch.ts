@@ -52,11 +52,6 @@ async function recordSketch(
 
     recordingState.page = await createPage();
 
-    recordingState.page.on(
-      "console",
-      message => {console.log( message );}
-    );
-
     await recordingState.page.goto(
       `http://localhost:3000/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
       {

@@ -1,10 +1,3 @@
-import {
-  NextRequest, NextResponse
-} from "next/server";
-import {
-  enqueueRecordingJob
-} from "@/lib/recordQueue";
-
 /**
  * Helper to convert a File object to a Base64‐encoded string
  */
@@ -59,78 +52,4 @@ async function serializeFormData( formData: FormData ): Promise<Record<string, u
   }
 
   return result;
-}
-
-export async function POST(
-  request: NextRequest,
-  {
-    params
-  }: {
-       params: Promise<{
-         template: string
-       }>
-  },
-) {
-  const template = ( await params ).template;
-
-  if ( !template ) {
-    return new NextResponse(
-      "Missing template",
-      {
-        status: 400
-      }
-    );
-  }
-
-  const recordingJobPayload: {
-    template: string,
-    jobId?: string,
-    serializeFormData?: Record<string, unknown>
-  } = {
-    template,
-    jobId: undefined,
-    serializeFormData: undefined
-  };
-
-  try {
-    const formData = await request.formData();
-
-    recordingJobPayload.serializeFormData = await serializeFormData( formData );
-  } catch ( error ) {
-    console.error(
-      "[server-record] error serializing form data",
-      error
-    );
-    return new NextResponse(
-      "Failed to parse payload",
-      {
-        status: 500
-      }
-    );
-  }
-
-  try {
-    // Enqueue the job
-    recordingJobPayload.jobId = await enqueueRecordingJob(
-      template,
-      recordingJobPayload.serializeFormData
-    );
-  } catch ( error ) {
-    console.error(
-      "[server-record] enqueue failed",
-      error
-    );
-    return new NextResponse(
-      "Failed to enqueue job",
-      {
-        status: 500
-      }
-    );
-  }
-
-  return (
-    NextResponse.json( {
-      jobId: recordingJobPayload.jobId,
-    } )
-  );
 }

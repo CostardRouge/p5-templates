@@ -1,14 +1,3 @@
-/* --------------------------------------------------------------------------
-   lib/progressStore.ts
-   --------------------------------------------------------------------------
-   Centralized progress updater:
-   • updates BullMQ job progress
-   • persists status & progress into Prisma
-   -------------------------------------------------------------------------- */
-
-import {
-  recordingQueue as recordQueue
-} from "@/lib/recordQueue";
 import {
   updateJob
 } from "@/lib/jobStore";
@@ -23,21 +12,6 @@ export async function setProgress(
   status: string,
   progressPercent: number
 ): Promise<void> {
-  // 1) Update BullMQ job progress (if the job still exists in Redis)
-  try {
-    const bullJob = await recordQueue.getJob( jobId );
-
-    if ( bullJob ) {
-      await bullJob.updateProgress( progressPercent );
-    }
-  } catch ( error ) {
-    console.warn(
-      `[setProgress] could not update BullMQ job ${ jobId }`,
-      error
-    );
-  }
-
-  // 2) Persist into Prisma
   try {
     await updateJob(
       jobId,

@@ -1,5 +1,3 @@
-// app/api/jobs/[id]/route.ts
-
 import {
   NextRequest, NextResponse
 } from "next/server";
@@ -7,20 +5,8 @@ import {
   getJobById, updateJob, deleteJob
 } from "@/lib/jobStore";
 import {
-  recordingQueue as recordQueue
-} from "@/lib/recordQueue";
-import IORedis from "ioredis";
-
-/* ---------- Redis connection ---------- */
-const redisUrl: string = process.env.REDIS_URL!;
-
-const redisConnection = new IORedis(
-  redisUrl,
-  {
-    maxRetriesPerRequest: null,
-    lazyConnect: true
-  }
-);
+  RecordingQueueService
+} from "@/lib/services/recording-queue.service";
 
 /**
  * GET /api/jobs/[id]
@@ -84,7 +70,11 @@ export async function DELETE(
 
   try {
     // 1) Try to remove from BullMQ queue
-    const bullJob = await recordQueue.getJob( jobId );
+    const bullJob = await RecordingQueueService
+      .getInstance()
+      .getQueue()
+      .getJob( jobId );
+
     const token = bullJob?.token;
 
     if ( bullJob && token ) {
@@ -147,19 +137,12 @@ export async function POST(
   const jobId = ( await params ).id;
   const command = url.searchParams.get( "cmd" );
 
-  console.log( {
-    jobId,
-    command
-  } );
-
   if ( command === "retry" ) {
-    console.log( "retry" );
     try {
-      const bullJob = await recordQueue.getJob( jobId );
-
-      console.log( {
-        bullJob
-      } );
+      const bullJob = await RecordingQueueService
+        .getInstance()
+        .getQueue()
+        .getJob( jobId );
 
       if ( !bullJob ) {
         return new NextResponse(
@@ -204,10 +187,10 @@ export async function POST(
   if ( command === "stop" ) {
     try {
       // 1) Set a Redis key that runRecording() or the worker logic can check
-      await redisConnection.set(
-        `cancel:${ jobId }`,
-        "1"
-      );
+      // await redisConnection.set(
+      //   `cancel:${ jobId }`,
+      //   "1"
+      // );
 
       // 2) Mark status in DB so UI updates
       await updateJob(

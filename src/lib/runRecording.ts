@@ -41,8 +41,13 @@ async function runRecording(
       5
     );
 
-    const captureOptions = JSON.parse( formData.options as string );
+    const captureOptions = formData.options;// JSON.parse( formData.options as string );
 
+    console.log( {
+      captureOptions
+    } );
+
+    // @ts-ignore
     captureOptions.assets = [
     ];
 
@@ -97,6 +102,7 @@ async function runRecording(
         fileBuffer
       );
 
+      // @ts-ignore
       captureOptions.assets.push( path.join(
         jobId,
         incomingFile.name
@@ -110,6 +116,7 @@ async function runRecording(
     }
 
     // ─── 4. Decide single vs multiple slides ──────────────────────────────────
+    // @ts-ignore
     const slides = captureOptions.slides ?? null;
     const recordFunction = slides && Array.isArray( slides ) && slides.length > 0 ? recordSketchSlides : recordSketch;
 
