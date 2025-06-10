@@ -2,10 +2,6 @@ body {
   position: relative !important;
 }
 
-body, html {
-  background: #2a2a2a;
-}
-
 body.preview fps-counter,
 body.preview #sketch-ui-drawer {
   display: none;

@@ -79,6 +79,7 @@ export default function CaptureBanner( {
       {!recordingProgress && (
         <button
           className="rounded-sm px-4 border border-black disabled:opacity-50"
+          className="rounded-sm px-4 border border-black disabled:opacity-50 text-black"
           onClick={handleSubmit}
           disabled={isLoading}
         >
