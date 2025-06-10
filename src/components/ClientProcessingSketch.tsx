@@ -43,6 +43,9 @@ function ClientProcessingSketch( {
 
   return (
     <Fragment>
+      <div id="sketch-ui-drawer"></div>
+      <span id="sketch-ui-icon"></span>
+
       <script
         dangerouslySetInnerHTML={{
           __html: `window.sketchOptions = ${ JSON.stringify( clientOptions ) };`,
@@ -55,13 +58,13 @@ function ClientProcessingSketch( {
         src={`/assets/scripts/p5-sketches/sketches/${ name }/index.js`}
       />
 
-      { options.capturing !== true && (
+      {options.capturing !== true && (
         <CaptureBanner
           name={name}
           options={clientOptions}
-          setOptions={options => setClientOptions( options as Record<string, unknown> ) }
+          setOptions={options => setClientOptions( options as Record<string, unknown> )}
         />
-      ) }
+      )}
     </Fragment>
   );
 }

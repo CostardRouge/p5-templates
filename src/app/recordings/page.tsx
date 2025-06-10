@@ -226,8 +226,8 @@ export default function JobsPage() {
   );
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Recording Jobs</h1>
+    <>
+      <h1 className="text-2xl font-semibold mb-4">Recordings</h1>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -260,6 +260,6 @@ export default function JobsPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   );
 }

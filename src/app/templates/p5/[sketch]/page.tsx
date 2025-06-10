@@ -1,4 +1,14 @@
 import React from "react";
+import "./p5.css";
+
+import type {
+  Metadata
+} from "next";
+
+export const metadata: Metadata = {
+  title: "Social-templates-renderer | p5js",
+  description: "Generate social-templates with 5js",
+};
 
 import listDirectory from "@/utils/listDirectory";
 import getSketchOptions from "@/utils/getSketchOptions";

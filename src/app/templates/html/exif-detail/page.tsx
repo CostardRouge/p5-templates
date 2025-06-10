@@ -197,7 +197,7 @@ const ImageInfoHelper = () => {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center h-[100svh]">
+      <div className="flex flex-col items-center justify-center h-[100svh] text-black">
         <div
           id="div-to-capture"
           className={`p-8 bg-white max-h-[1350px] w-[1080px] max-w-[1080px] ${ scaleRender ? scalingStyle : "" }`}
@@ -223,7 +223,7 @@ const ImageInfoHelper = () => {
 
       { !capturing && (
         <div
-          className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black sm:h-20"
+          className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black sm:h-20  text-black"
         >
           {image && (
             <button
