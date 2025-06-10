@@ -14,7 +14,7 @@ import {
   useRecordingQueue
 } from "@/lib/hooks/use-recording-queue";
 
-import fetchDownload from "@/components/utils/fetchDownload";
+// import fetchDownload from "@/components/utils/fetchDownload";
 
 type ProgressData = {
  stepName: string; percentage: number
@@ -31,17 +31,12 @@ export default function CaptureBanner( {
 } ) {
   const [
     recordingProgress,
-    setRecordingProgress
+    // setRecordingProgress
   ] = useState<ProgressData>( null );
 
   const {
     enqueueRecording, isLoading, error
   } = useRecordingQueue();
-
-  console.log( {
-    isLoading,
-    error
-  } );
 
   const handleSubmit = async() => {
     const jobId = await enqueueRecording( {
@@ -78,7 +73,6 @@ export default function CaptureBanner( {
 
       {!recordingProgress && (
         <button
-          className="rounded-sm px-4 border border-black disabled:opacity-50"
           className="rounded-sm px-4 border border-black disabled:opacity-50 text-black"
           onClick={handleSubmit}
           disabled={isLoading}

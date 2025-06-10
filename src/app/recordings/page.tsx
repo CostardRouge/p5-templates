@@ -166,38 +166,6 @@ export default function JobsPage() {
     ]
   );
 
-  // SSE subscription for live updates
-  useEffect(
-    () => {
-      const source = new EventSource( "/api/jobs/events" );
-
-      source.onmessage = ( {
-        data
-      } ) => {
-        try {
-          const {
-            jobId, progress
-          } = JSON.parse( data );
-
-          setJobs( prev =>
-            prev.map( job =>
-              job.id === jobId
-                ? {
-                  ...job,
-                  progress: Math.floor( progress )
-                }
-                : job ) );
-        } catch {
-        // ignore
-        }
-      };
-
-      return () => source.close();
-    },
-    [
-    ]
-  );
-
   const handleCancel = useCallback(
     async( jobId: Job["id"] ) => {
       try {
