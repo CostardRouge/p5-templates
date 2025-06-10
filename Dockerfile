@@ -29,7 +29,15 @@ RUN npm ci
 # 3. Build the nextjs project
 ENV NODE_ENV=production
 ENV REDIS_URL=redis://redis:6379
-ENV DATABASE_URL="file:./prisma/database.db"
+
+# ─── Postgres ──────────────────────────────────────────────────────────────
+ENV POSTGRES_DB=social-pipeline
+ENV POSTGRES_USER=social-pipeline-user
+ENV POSTGRES_PASSWORD=social-pipeline-pass
+
+# ─── Database (Prisma) ─────────────────────────────────────────────────────
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
 RUN npm run build
 
 # 4. Migrate/Create the database
