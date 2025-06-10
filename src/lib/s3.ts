@@ -1,6 +1,13 @@
 import {
-  GetObjectCommand, ObjectCannedACL, PutObjectCommand, S3Client
+  GetObjectCommand,
+  ObjectCannedACL,
+  PutObjectCommand,
+  S3Client,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
 } from "@aws-sdk/client-s3";
+
 import {
   getSignedUrl
 } from "@aws-sdk/s3-request-presigner";
@@ -55,4 +62,38 @@ export async function getDownloadUrlFromS3Url(
       expiresIn: expiresInSeconds,
     }
   );
+}
+
+export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void> {
+  const bucketName = process.env.S3_BUCKET!;
+
+  // 1. Check if it's a folder (ends with slash or acts as prefix)
+  const listCommand = new ListObjectsV2Command( {
+    Bucket: bucketName,
+    Prefix: objectKeyOrPrefix,
+  } );
+
+  const listedObjects = await s3.send( listCommand );
+
+  if ( listedObjects.Contents && listedObjects.Contents.length > 1 ) {
+    // Multiple objects = treat as folder (prefix)
+    const deleteCommand = new DeleteObjectsCommand( {
+      Bucket: bucketName,
+      Delete: {
+        Objects: listedObjects.Contents.map( ( item ) => ( {
+          Key: item.Key!,
+        } ) ),
+      },
+    } );
+
+    await s3.send( deleteCommand );
+  } else {
+    // Single object = delete directly
+    const deleteCommand = new DeleteObjectCommand( {
+      Bucket: bucketName,
+      Key: objectKeyOrPrefix,
+    } );
+
+    await s3.send( deleteCommand );
+  }
 }
