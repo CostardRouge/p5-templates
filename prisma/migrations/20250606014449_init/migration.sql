@@ -5,6 +5,7 @@ CREATE TABLE "Job" (
     "status" TEXT NOT NULL,
     "progress" INTEGER NOT NULL,
     "resultUrl" TEXT,
+    "error" TEXT,
     "optionsKey" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
