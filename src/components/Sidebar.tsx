@@ -1,6 +1,9 @@
 "use client";
 
-import React from "react";
+import React, {
+  useEffect,
+  useState
+} from "react";
 import Link from "next/link";
 import {
   usePathname, useSearchParams
@@ -40,9 +43,21 @@ const items: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  if ( searchParams.has( "capturing" ) ) {
+  const [
+    isCapturing,
+    setIsCapturing
+  ] = useState<boolean>( false );
+
+  useEffect(
+    () => {
+      setIsCapturing( window.location.search.includes( "capturing" ) );
+    },
+    [
+    ]
+  );
+
+  if ( isCapturing ) {
     return null;
   }
 

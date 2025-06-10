@@ -41,6 +41,33 @@ function ClientProcessingSketch( {
     ]
   );
 
+  useEffect(
+    () => {
+      const script = document.createElement( "script" );
+
+      script.type = "module";
+      script.src = `/assets/scripts/p5-sketches/sketches/${ name }/index.js`;
+      script.crossOrigin = "anonymous";
+      document.body.appendChild( script );
+
+      return () => {
+        document.body.removeChild( script );
+        document.querySelector( "canvas#defaultCanvas0.p5Canvas" )?.remove();
+
+        try {
+          // @ts-ignore
+          window?.removeLoadedScripts();
+        }
+        catch ( e ) {
+
+        }
+      };
+    },
+    [
+      name
+    ]
+  );
+
   return (
     <Fragment>
       <div id="sketch-ui-drawer"></div>
@@ -52,11 +79,11 @@ function ClientProcessingSketch( {
         }}
       />
 
-      <Script
-        type="module"
-        crossOrigin="anonymous"
-        src={`/assets/scripts/p5-sketches/sketches/${ name }/index.js`}
-      />
+      {/* <Script*/}
+      {/*  type="module"*/}
+      {/*  crossOrigin="anonymous"*/}
+      {/*  src={`/assets/scripts/p5-sketches/sketches/${ name }/index.js`}*/}
+      {/* />*/}
 
       {options.capturing !== true && (
         <CaptureBanner

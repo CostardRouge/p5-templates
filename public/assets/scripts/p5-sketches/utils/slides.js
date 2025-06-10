@@ -17,11 +17,6 @@ function registerEvents() {
         }, index
       ) => `${ index + 1 } · ${ title ?? template }` );
 
-      console.log( {
-        slideNames,
-        options
-      } );
-
       slides.select = createSelect();
 
       slideNames.forEach( (

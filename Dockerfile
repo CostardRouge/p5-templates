@@ -36,15 +36,12 @@ ENV POSTGRES_USER=social-pipeline-user
 ENV POSTGRES_PASSWORD=social-pipeline-pass
 
 # ─── Database (Prisma) ─────────────────────────────────────────────────────
-DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+ENV DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
 
 RUN npm run build
 
-# 4. Migrate/Create the database
-RUN npx prisma migrate deploy
-
-# 5. Expose port for the app
+# 4. Expose port for the app
 EXPOSE 3000
 
-# 6. Default command
+# 5. Default command
 CMD ["npm", "run", "start"]
