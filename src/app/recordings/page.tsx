@@ -3,6 +3,7 @@
 import {
   useEffect, useState, useCallback
 } from "react";
+import HardLink from "@/components/HardLink";
 
 type Job = {
   id: string;
@@ -113,13 +114,21 @@ function JobRow( {
   return (
     <tr>
       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
-        {job.id.slice(
-          0,
-          8
-        )}
+        <HardLink
+          href={`/templates/${ job.template }?id=${ job.id }`}
+        >
+          {job.id.slice(
+            0,
+            8
+          )}
+        </HardLink>
       </td>
       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
-        {job.template}
+        <HardLink
+          href={`/templates/${ job.template }`}
+        >
+          {job.template}
+        </HardLink>
       </td>
       <td className="px-4 py-2 whitespace-nowrap text-sm">
         <StatusBadge status={job.status} />

@@ -13,6 +13,7 @@ export async function setProgress(
   progressPercent: number
 ): Promise<void> {
   try {
+    return;
     await updateJob(
       jobId,
       {

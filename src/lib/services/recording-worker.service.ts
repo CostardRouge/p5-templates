@@ -72,18 +72,16 @@ export class RecordingWorkerService {
   }
 
   private async processRecordingJob( job: Job<RecordingJobData> ): Promise<void> {
-    const jobId = job.id as string;
-
-    if ( !jobId ) {
+    if ( !job.id ) {
       throw new Error( "Job ID is required" );
     }
 
     try {
-      console.log( `[Worker] Processing job: ${ jobId }` );
+      console.log( `[Worker] Processing job: ${ job.id }` );
 
       // Update job status to active
       await updateJob(
-        jobId,
+        job.id,
         {
           status: "active",
           progress: 0,
@@ -92,21 +90,20 @@ export class RecordingWorkerService {
 
       // Process the recording
       await runRecording(
-        jobId,
-        job.data.template,
-        job.data.formData
+        job.id,
+        job.data.template
       );
 
-      console.log( `[Worker] Job completed successfully: ${ jobId }` );
+      console.log( `[Worker] Job completed successfully: ${ job.id }` );
     } catch ( error ) {
       console.error(
-        `[Worker] Job processing failed: ${ jobId }`,
+        `[Worker] Job processing failed: ${ job.id }`,
         error
       );
 
       // Update job status to failed
       await updateJob(
-        jobId,
+        job.id,
         {
           status: "failed",
           progress: 0,

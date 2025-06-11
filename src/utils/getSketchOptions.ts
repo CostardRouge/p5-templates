@@ -5,7 +5,7 @@ import {
   SKETCHES_DIRECTORY
 } from "@/constants";
 
-function getSketchOptions( sketchName: string ): Record<string, any> | undefined {
+function getSketchOptions( sketchName: string ): Record<string, any> {
   try {
     return JSON.parse( fs.readFileSync(
       path.join(
@@ -17,7 +17,8 @@ function getSketchOptions( sketchName: string ): Record<string, any> | undefined
     ) );
   }
   catch ( error ) {
-    return undefined;
+    return {
+    };
   }
 }
 

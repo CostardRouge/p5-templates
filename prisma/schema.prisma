@@ -12,10 +12,11 @@ model Job {
   id         String   @id
   template   String
   status     String // queued|active|completed|failed|cancelled
-  progress   Int
   resultUrl  String?
-  optionsKey String?
+  progress   Int
   error      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  optionsKey String?
+  fileKeys   String[]
 }

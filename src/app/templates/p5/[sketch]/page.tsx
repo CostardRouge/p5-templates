@@ -3,16 +3,22 @@ import React from "react";
 import type {
   Metadata
 } from "next";
+import listDirectory from "@/utils/listDirectory";
+import getSketchOptions from "@/utils/getSketchOptions";
+
+import ClientProcessingSketch from "@/components/ClientProcessingSketch";
+import getCaptureOptions from "@/utils/getCaptureOptions";
+import {
+  getJobById
+} from "@/lib/jobStore";
+import {
+  notFound
+} from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Social-templates-renderer | p5js",
   description: "Generate social-templates with 5js",
 };
-
-import listDirectory from "@/utils/listDirectory";
-import getSketchOptions from "@/utils/getSketchOptions";
-
-import ClientProcessingSketch from "@/components/ClientProcessingSketch";
 
 const acceptedImageTypes = [
   "png",
@@ -24,24 +30,6 @@ const acceptedImageTypes = [
 
 export const revalidate = 0;
 
-function decodeBase64Json( base64: string ): any {
-  try {
-    const jsonString = Buffer.from(
-      base64,
-      "base64"
-    ).toString( "utf-8" );
-
-    return JSON.parse( jsonString );
-  } catch ( error ) {
-    console.error(
-      "Failed to decode captureOptions:",
-      error
-    );
-    return {
-    };
-  }
-}
-
 async function ProcessingSketch( {
   params, searchParams
 }: {
@@ -49,27 +37,39 @@ async function ProcessingSketch( {
     sketch: string
   }>,
   searchParams: Promise<{
-    captureOptions?: string
+    id?: string
+    capturing?: string
   }>
 } ) {
   const testImageFileNames = await listDirectory( "public/assets/images/test" );
 
   const sketchName = ( await params ).sketch;
-  const captureOptionsBase64 = ( await searchParams ).captureOptions;
-  const sketchOptions = getSketchOptions( sketchName ) || {
-  };
+  const jobIdSearchParams = ( await searchParams ).id;
+  const capturingSearchParams = ( await searchParams ).capturing;
+  const sketchOptions = getSketchOptions( sketchName );
 
-  if ( captureOptionsBase64 ) {
-    const captureOptions = decodeBase64Json( captureOptionsBase64 );
+  if ( jobIdSearchParams ) {
+    const persistedJob = await getJobById( jobIdSearchParams );
+
+    if ( !persistedJob || !persistedJob?.optionsKey ) {
+      return notFound();
+    }
 
     Object.assign(
       sketchOptions,
-      captureOptions
+      await getCaptureOptions( persistedJob.optionsKey )
     );
+
+    sketchOptions.id = jobIdSearchParams;
+  }
+
+  if ( capturingSearchParams ) {
     sketchOptions.capturing = true;
   }
 
-  if ( sketchOptions.consumeTestImages ) {
+  if ( sketchOptions.consumeTestImages && !jobIdSearchParams ) {
+    delete sketchOptions.consumeTestImages;
+
     sketchOptions.assets = testImageFileNames
       .filter( testImageFileName => acceptedImageTypes.includes( testImageFileName.split( "." )[ 1 ] ) )
       .map( testImageFileName => `/assets/images/test/${ testImageFileName }` );

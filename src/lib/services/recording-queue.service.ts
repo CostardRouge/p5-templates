@@ -6,13 +6,16 @@ import {
 } from "uuid";
 import RedisConnection from "@/lib/redis-connection";
 import {
-  createJob
+  createJob, updateJob
 } from "@/lib/jobStore";
 import {
   RecordingJobData,
   JobConfiguration,
   QueueHealthResponse
 } from "@/types/recording.types";
+import {
+  uploadArtifact
+} from "@/lib/s3";
 
 export class RecordingQueueService {
   private static instance: RecordingQueueService | null = null;
@@ -20,7 +23,7 @@ export class RecordingQueueService {
 
   private readonly DEFAULT_JOB_OPTIONS: Omit<JobConfiguration, "jobId"> = {
     removeOnComplete: 100,
-    attempts: 3,
+    attempts: 1,
     backoff: {
       type: "exponential",
       delay: 30_000,
@@ -57,12 +60,14 @@ export class RecordingQueueService {
     if ( !RecordingQueueService.instance ) {
       RecordingQueueService.instance = new RecordingQueueService();
     }
+
     return RecordingQueueService.instance;
   }
 
   public async enqueueRecording(
     template: string,
-    serializedFormData: Record<string, unknown>
+    options :string,
+    files: File[]
   ): Promise<string> {
     const jobId = generateUuid();
 
@@ -73,17 +78,47 @@ export class RecordingQueueService {
         template
       );
 
-      // 2. Add job to BullMQ queue
+      // 2. Persisting files in s3
+      for ( const file of files ) {
+        await uploadArtifact(
+          `${ jobId }/files/${ file.name }`,
+          Buffer.from( new Uint8Array( await file.arrayBuffer() ) )
+        );
+      }
+
+      // 3. Persisting options in s3
+      const optionsWithUploadedFileKeys = {
+        ...JSON.parse( options ),
+        assets: files.map( file => (
+          `${ jobId }/files/${ file.name }`
+        ) )
+      };
+      const optionsS3Url = await uploadArtifact(
+        `${ jobId }/options.json`,
+        Buffer.from( JSON.stringify( optionsWithUploadedFileKeys ) )
+      );
+
+      await updateJob(
+        jobId,
+        {
+          optionsKey: optionsS3Url,
+          fileKeys: optionsWithUploadedFileKeys.assets,
+        }
+      );
+
+      // 3. Add job to BullMQ queue
       await this.queue.add(
         "process-recording",
         {
-          template,
-          formData: serializedFormData,
+          jobId,
+          template
         },
         {
           jobId,
           priority: 1,
           delay: 0,
+          removeOnFail: true,
+          removeOnComplete: true
         }
       );
 

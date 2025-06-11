@@ -11,10 +11,15 @@ import {
 
 export async function POST( request: NextRequest ): Promise<NextResponse<EnqueueRecordingResponse>> {
   try {
-    const body: EnqueueRecordingRequest = await request.json();
+    const formData = await request.formData();
+    const template = formData.get( "template" );
+
+    console.log( {
+      template
+    } );
 
     // Validate request body
-    if ( !body.template || typeof body.template !== "string" ) {
+    if ( !template || typeof template !== "string" ) {
       return NextResponse.json(
         {
           success: false,
@@ -26,11 +31,14 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       );
     }
 
-    if ( !body.formData || typeof body.formData !== "object" ) {
+    const options = formData.get( "options" );
+
+    // Validate request body
+    if ( !options || typeof options !== "string" ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Form data is required and must be an object"
+          error: "Options is required and must be a string"
         },
         {
           status: 400
@@ -38,10 +46,17 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       );
     }
 
+    const files = <File[]>formData
+      .getAll( "files[]" )
+      .filter( file => (
+        ( file as File )?.size && ( file as File )?.name
+      ) );
+
     const recordingService = RecordingService.getInstance();
     const jobId = await recordingService.enqueueRecording(
-      body.template,
-      body.formData
+      template,
+      <string>options,
+      files
     );
 
     return NextResponse.json( {

@@ -20,7 +20,7 @@ export function useRecordingQueue() {
   ] = useState<string | null>( null );
 
   const enqueueRecording = useCallback(
-    async( request: EnqueueRecordingRequest ): Promise<string | null> => {
+    async( formData: FormData ): Promise<string | null> => {
       setIsLoading( true );
       setError( null );
 
@@ -29,10 +29,7 @@ export function useRecordingQueue() {
           "/api/recordings/enqueue",
           {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify( request ),
+            body: formData,
           }
         );
 
@@ -110,8 +107,8 @@ export function useRecordingQueue() {
         }
 
         return true;
-      } catch ( err ) {
-        const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      } catch ( error ) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
         setError( errorMessage );
         return false;
@@ -129,6 +126,5 @@ export function useRecordingQueue() {
     controlQueue,
     isLoading,
     error,
-    clearError: () => setError( null ),
   };
 }

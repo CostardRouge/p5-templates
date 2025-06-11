@@ -30,11 +30,13 @@ export class RecordingService {
 
   public async enqueueRecording(
     template: string,
-    formData: Record<string, unknown>
+    options: string,
+    files: File[]
   ): Promise<string> {
     return this.queueService.enqueueRecording(
       template,
-      formData
+      options,
+      files
     );
   }
 

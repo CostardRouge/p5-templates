@@ -2,7 +2,6 @@ import {
   setProgress
 } from "@/lib/progressStore";
 
-import minifyAndEncode from "@/utils/minifyAndEncodeCaptureOptions";
 import encodeVideoFromFrames from "@/lib/encodeVideoFromFrames";
 import createBrowserPage from "@/utils/createBrowserPage";
 
@@ -27,7 +26,7 @@ import {
 async function recordSketch(
   jobId: string,
   template: string,
-  captureOptions: any,
+  options: Record<string, any>,
   temporaryDirectoryPath: string
 ) {
   const recordingState: {
@@ -57,7 +56,7 @@ async function recordSketch(
     recordingState.page = await createPage();
 
     await recordingState.page.goto(
-      `http://localhost:3000/templates/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
+      `http://localhost:3000/templates/${ template }?id=${ jobId }`,
       {
         waitUntil: "networkidle"
       },
@@ -131,15 +130,16 @@ async function recordSketch(
     } );
 
     // ─── 8. Encode .mp4 ──────────────────────────────────────────────────────────
+
     const outputVideoPath = path.join(
       temporaryDirectoryPath,
-      `${ template }-${ jobId }.mp4`
+      `${ path.basename( template ) }-${ jobId }.mp4`
     );
 
     await encodeVideoFromFrames(
       tarExtractionPath,
       outputVideoPath,
-      captureOptions.animation,
+      options.animation,
       async( percentage ) => {
         await setProgress(
           jobId,
@@ -180,14 +180,6 @@ async function recordSketch(
         resultUrl: videoS3Url
       }
     );
-
-    await fs.rm(
-      temporaryDirectoryPath,
-      {
-        recursive: true,
-        force: true
-      }
-    ).catch( () => {} );
   }
   catch ( error ) {
     await setProgress(
@@ -196,6 +188,9 @@ async function recordSketch(
       100
     );
 
+    throw error;
+  }
+  finally {
     await fs.rm(
       temporaryDirectoryPath,
       {
@@ -204,9 +199,6 @@ async function recordSketch(
       }
     ).catch( () => {} );
 
-    throw error;
-  }
-  finally {
     await recordingState?.browser?.close();
   }
 }

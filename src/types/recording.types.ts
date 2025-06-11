@@ -1,12 +1,6 @@
 export interface RecordingJobData {
+  jobId: string;
   template: string;
-  formData: Record<string, unknown>;
-  userId?: string;
-  metadata?: {
-    name?: string;
-    description?: string;
-    createdAt: Date;
-  };
 }
 
 export interface JobConfiguration {
@@ -28,7 +22,7 @@ export interface QueueHealthResponse {
 
 export interface EnqueueRecordingRequest {
   template: string;
-  formData: Record<string, unknown>;
+  formData: FormData;
 }
 
 export interface EnqueueRecordingResponse {

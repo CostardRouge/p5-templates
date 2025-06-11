@@ -39,12 +39,45 @@ export default function CaptureBanner( {
   } = useRecordingQueue();
 
   const handleSubmit = async() => {
-    const jobId = await enqueueRecording( {
-      template: name,
-      formData: {
-        options
-      }
-    } );
+    const formData = new FormData();
+
+    formData.append(
+      "template",
+      `p5/${ name }`
+    );
+
+    formData.append(
+      "options",
+      JSON.stringify( options )
+    );
+
+    if ( Array.isArray( options.assets ) ) {
+      await Promise
+        .all( options.assets
+          .map( async(
+            assetUrl: string, index: number
+          ) => {
+            const assetResponse = await fetch( assetUrl );
+            const assetBlob = await assetResponse.blob();
+            const assetName = assetUrl.split( "/" ).pop() ?? `asset-${ index }`;
+
+            formData
+              .append(
+                "files[]",
+                new File(
+                  [
+                    assetBlob
+                  ],
+                  assetName,
+                  {
+                    type: assetBlob.type
+                  }
+                )
+              );
+          } ), );
+    }
+
+    const jobId = await enqueueRecording( formData );
 
     console.log(
       "Job created:",
@@ -100,6 +133,5 @@ export default function CaptureBanner( {
         </div>
       ) }
     </div>
-  )
-  ;
+  );
 }

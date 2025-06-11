@@ -29,7 +29,7 @@ import {
 async function recordSketchSlides(
   jobId: string,
   template: string,
-  captureOptions: any,
+  options: Record<string, any>,
   temporaryDirectoryPath: string,
 ) {
   const recordingState: {
@@ -44,13 +44,13 @@ async function recordSketchSlides(
       createPage,
       browser
     } = await createBrowserPage( {
-      headless: false,
+      headless: true,
       deviceScaleFactor: 1
     } );
 
     recordingState.browser = browser;
 
-    const slides = captureOptions.slides;
+    const slides = options.slides;
     const slideVideoPaths: string[] = [
     ];
 
@@ -67,7 +67,7 @@ async function recordSketchSlides(
       recordingState.page = await createPage();
 
       await recordingState.page.goto(
-        `http://localhost:3000/templates/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
+        `http://localhost:3000/templates/${ template }?id=${ jobId }`,
         {
           waitUntil: "networkidle"
         },
@@ -140,13 +140,13 @@ async function recordSketchSlides(
 
       const slideVideoPath = path.join(
         temporaryDirectoryPath,
-        `${ template }_${ slideIndex }.mp4`
+        `${ path.basename( template ) }_${ slideIndex }.mp4`
       );
 
       await encodeVideoFromFrames(
         slideFramesDirectory,
         slideVideoPath,
-        captureOptions.animation,
+        options.animation,
         async( percentage: number ) => {
           await setProgress(
             jobId,
@@ -178,7 +178,7 @@ async function recordSketchSlides(
 
     const zipOutputPath = path.join(
       temporaryDirectoryPath,
-      `${ template }-${ jobId }.zip`
+      `${ path.basename( template ) }-${ jobId }.zip`
     );
 
     await zipFiles(
@@ -210,14 +210,6 @@ async function recordSketchSlides(
         resultUrl: zipS3Url
       }
     );
-
-    await fs.rm(
-      temporaryDirectoryPath,
-      {
-        recursive: true,
-        force: true
-      }
-    ).catch( () => {} );
   }
   catch ( error ) {
     await setProgress(
@@ -226,6 +218,9 @@ async function recordSketchSlides(
       100
     );
 
+    throw error;
+  }
+  finally {
     await fs.rm(
       temporaryDirectoryPath,
       {
@@ -234,9 +229,6 @@ async function recordSketchSlides(
       }
     ).catch( () => {} );
 
-    throw error;
-  }
-  finally {
     await recordingState?.browser?.close();
   }
 }

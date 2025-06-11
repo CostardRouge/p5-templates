@@ -41,8 +41,8 @@ const sketchOptions = {
 };
 
 const getImagePath = path =>
-  sketchOptions.capturing
-    ? `${ location.origin }/api/assets?name=${ encodeURIComponent( path ) }`
+  sketchOptions.id
+    ? `${ location.origin }/api/files/${ path }`
     : `${ location.origin }/${ path }`;
 
 function refreshAssets() {

@@ -51,6 +51,33 @@ export async function getDownloadUrlFromS3Url(
   );
 }
 
+/**
+ * Download an object from S3 and return its contents as a Node.js Buffer.
+ *
+ * @param objectKey  the key of the object in your bucket
+ * @returns          a Buffer containing the object’s bytes
+ */
+export async function getBufferFromS3Url( objectKey: string ): Promise<Buffer> {
+  // 1) Fetch the object
+  const response = await s3client.send( new GetObjectCommand( {
+    Bucket: process.env.S3_BUCKET!,
+    Key: objectKey,
+  } ) );
+
+  // 2) response.Body is a Readable stream—accumulate into chunks
+  const stream = response.Body as NodeJS.ReadableStream;
+  const chunks: Buffer[] = [
+  ];
+
+  for await ( const chunk of stream ) {
+    // chunk can be string or Buffer; normalize to Buffer
+    chunks.push( typeof chunk === "string" ? Buffer.from( chunk ) : chunk );
+  }
+
+  // 3) concatenate and return
+  return Buffer.concat( chunks );
+}
+
 export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void> {
   const bucketName = process.env.S3_BUCKET!;
 

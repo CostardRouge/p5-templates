@@ -4,7 +4,7 @@ import {
 
 async function encodeVideoFromFrames(
   framesDirectory: string,
-  outputVideo: string,
+  outputVideoPath: string,
   animationOptions: any,
   onProgress: ( percentage: number ) => void
 ) {
@@ -32,7 +32,7 @@ async function encodeVideoFromFrames(
         "-crf",
         "23",
         "-y",
-        outputVideo,
+        outputVideoPath,
         "-progress",
         "pipe:1",
         "-loglevel",

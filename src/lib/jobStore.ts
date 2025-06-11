@@ -12,6 +12,7 @@ export type JobModel = {
   progress: number; // 0–100
   resultUrl: string | null;
   optionsKey: string | null;
+  fileKeys: string[] | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -20,12 +21,12 @@ export type JobModel = {
  * Create a new Job record with status = 'queued' and progress = 0
  */
 export async function createJob(
-  jobId: string, templateName: string
+  id: string, template: string
 ): Promise<void> {
   await prisma.job.create( {
     data: {
-      id: jobId,
-      template: templateName,
+      id,
+      template,
       status: "queued",
       progress: 0,
     },
@@ -44,6 +45,7 @@ export async function updateJob(
     progress: number;
     resultUrl: string;
     optionsKey: string;
+    fileKeys: string[];
   }>
 ): Promise<void> {
   await prisma.job.update( {

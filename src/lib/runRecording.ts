@@ -3,22 +3,18 @@ import {
   setProgress
 } from "@/lib/progressStore";
 import {
-  updateJob
+  updateJob, getJobById
 } from "@/lib/jobStore";
 
 import fs from "node:fs/promises";
 import path from "path";
 import os from "node:os";
 
-import {
-  uploadArtifact
-} from "@/lib/s3";
 import recordSketchSlides from "@/lib/recordSketchSlides";
+import getCaptureOptions from "@/utils/getCaptureOptions";
 
 async function runRecording(
-  jobId: string,
-  template: string,
-  formData: Record<string, unknown>,
+  jobId: string, template: string
 ) {
   // ─── 1. Create workspace ───────────────────────────────────────────────────
   const temporaryDirectoryPath = path.join(
@@ -41,90 +37,23 @@ async function runRecording(
       5
     );
 
-    const captureOptions = formData.options;// JSON.parse( formData.options as string );
+    const persistedJob = await getJobById( jobId );
 
-    // @ts-ignore
-    captureOptions.assets = [
-    ];
-
-    // Write the raw options JSON to disk
-    // const optionsPath = path.join(
-    //   temporaryDirectoryPath,
-    //   "options.json"
-    // );
-    //
-    // await fs.writeFile(
-    //   optionsPath,
-    //   JSON.stringify(
-    //     captureOptions,
-    //     null,
-    //     2
-    //   )
-    // );
-
-    // Write the raw options JSON to S3
-    const optionsS3Url = await uploadArtifact(
-      `${ jobId }/options.json`,
-      Buffer.from( JSON.stringify(
-        captureOptions,
-        null,
-        2
-      ) )
-    );
-
-    await updateJob(
-      jobId,
-      {
-        optionsKey: optionsS3Url
-      }
-    );
-
-    // ─── 3. Save any new files[] passed in the initial payload ────────────────
-    const incomingFiles = (
-      formData.files as Array<{
-        name: string;
-        base64Content: string
-      }>
-    ) || [
-    ];
-
-    for ( let assetFileIndex = 0; assetFileIndex < incomingFiles.length; assetFileIndex++ ) {
-      const incomingFile = incomingFiles[ assetFileIndex ];
-      const fileBuffer = Buffer.from(
-        incomingFile.base64Content.split( "," )[ 1 ],
-        "base64"
-      );
-
-      await fs.writeFile(
-        path.join(
-          temporaryDirectoryPath,
-          incomingFile.name
-        ),
-        fileBuffer
-      );
-
-      // @ts-ignore
-      captureOptions.assets.push( path.join(
-        jobId,
-        incomingFile.name
-      ) );
-
-      await setProgress(
-        jobId,
-        "save-assets",
-        5 + Math.round( ( assetFileIndex / incomingFiles.length ) * 10 )
-      );
+    if ( !persistedJob || !persistedJob?.optionsKey ) {
+      throw new Error( `[runRecording.ts] Job ${ jobId } not found` );
     }
+
+    const options = await getCaptureOptions( persistedJob.optionsKey );
 
     // ─── 4. Decide single vs multiple slides ──────────────────────────────────
     // @ts-ignore
-    const slides = captureOptions.slides ?? null;
+    const slides = options.slides ?? null;
     const recordFunction = slides && Array.isArray( slides ) && slides.length > 0 ? recordSketchSlides : recordSketch;
 
     await recordFunction(
       jobId,
       template,
-      captureOptions,
+      options,
       temporaryDirectoryPath
     );
   }

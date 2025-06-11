@@ -58,6 +58,7 @@ async function createSketchThumbnails() {
 
       if ( await exists( thumbnailPath ) ) {
         console.log( `✅ ${ name }/thumbnail.jpeg already exists!` );
+        continue;
       }
 
       await recordingState.page.goto(
@@ -78,8 +79,7 @@ async function createSketchThumbnails() {
       await recordingState.page
         .locator( canvasSelectorToScreenShot )
         .screenshot( {
-          path: thumbnailPath,
-          // scale: "css"
+          path: thumbnailPath
         } );
       console.log( `💾 ${ name }/thumbnail.jpeg has been generated` );
     }

@@ -16,7 +16,6 @@ class RedisConnection {
         {
           maxRetriesPerRequest: null,
           lazyConnect: true,
-          // retryDelayOnFailover: 100,
           enableReadyCheck: false,
           family: 4, // Force IPv4
         }
