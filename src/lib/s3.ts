@@ -12,10 +12,7 @@ import {
   getSignedUrl
 } from "@aws-sdk/s3-request-presigner";
 
-import fs from "node:fs";
-import path from "path";
-
-const s3 = new S3Client( {
+const s3client = new S3Client( {
   endpoint: process.env.S3_ENDPOINT,
   region: process.env.S3_REGION,
   credentials: {
@@ -26,38 +23,28 @@ const s3 = new S3Client( {
 } );
 
 export async function uploadArtifact(
-  jobId: string,
-  localPath: string
+  objectKey: string,
+  fileStream: Buffer
 ): Promise<string> {
-  const bucketName = process.env.S3_BUCKET!;
-  const baseName = path.basename( localPath );
-  const s3Key = `${ jobId }/${ baseName }`;
-
-  const fileStream = fs.createReadStream( localPath );
-
-  const putParams = {
-    Bucket: bucketName,
-    Key: s3Key,
+  await s3client.send( new PutObjectCommand( {
+    Bucket: process.env.S3_BUCKET!,
+    Key: objectKey,
     Body: fileStream,
     ACL: ObjectCannedACL.public_read,
-  };
+  } ) );
 
-  await s3.send( new PutObjectCommand( putParams ) );
-
-  return s3Key;
+  return objectKey;
 }
 
 export async function getDownloadUrlFromS3Url(
   objectKey: string, expiresInSeconds = 3600
 ): Promise<string> {
-  const command = new GetObjectCommand( {
-    Bucket: process.env.S3_BUCKET!,
-    Key: objectKey,
-  } );
-
   return await getSignedUrl(
-    s3,
-    command,
+    s3client,
+    new GetObjectCommand( {
+      Bucket: process.env.S3_BUCKET!,
+      Key: objectKey,
+    } ),
     {
       expiresIn: expiresInSeconds,
     }
@@ -68,12 +55,10 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
   const bucketName = process.env.S3_BUCKET!;
 
   // 1. Check if it's a folder (ends with slash or acts as prefix)
-  const listCommand = new ListObjectsV2Command( {
+  const listedObjects = await s3client.send( new ListObjectsV2Command( {
     Bucket: bucketName,
     Prefix: objectKeyOrPrefix,
-  } );
-
-  const listedObjects = await s3.send( listCommand );
+  } ) );
 
   if ( listedObjects.Contents && listedObjects.Contents.length > 1 ) {
     // Multiple objects = treat as folder (prefix)
@@ -86,7 +71,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
       },
     } );
 
-    await s3.send( deleteCommand );
+    await s3client.send( deleteCommand );
   } else {
     // Single object = delete directly
     const deleteCommand = new DeleteObjectCommand( {
@@ -94,6 +79,6 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
       Key: objectKeyOrPrefix,
     } );
 
-    await s3.send( deleteCommand );
+    await s3client.send( deleteCommand );
   }
 }

@@ -43,32 +43,33 @@ async function runRecording(
 
     const captureOptions = formData.options;// JSON.parse( formData.options as string );
 
-    console.log( {
-      captureOptions
-    } );
-
     // @ts-ignore
     captureOptions.assets = [
     ];
 
     // Write the raw options JSON to disk
-    const optionsPath = path.join(
-      temporaryDirectoryPath,
-      "options.json"
-    );
+    // const optionsPath = path.join(
+    //   temporaryDirectoryPath,
+    //   "options.json"
+    // );
+    //
+    // await fs.writeFile(
+    //   optionsPath,
+    //   JSON.stringify(
+    //     captureOptions,
+    //     null,
+    //     2
+    //   )
+    // );
 
-    await fs.writeFile(
-      optionsPath,
+    // Write the raw options JSON to S3
+    const optionsS3Url = await uploadArtifact(
+      `${ jobId }/options.json`,
       JSON.stringify(
         captureOptions,
         null,
         2
       )
-    );
-
-    const optionsS3Url = await uploadArtifact(
-      jobId,
-      optionsPath
     );
 
     await updateJob(

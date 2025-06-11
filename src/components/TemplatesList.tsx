@@ -3,7 +3,7 @@
 import React, {
   useState
 } from "react";
-import Link from "next/link";
+// import Link from "next/link";
 import {
   Grid, List
 } from "lucide-react";
@@ -11,25 +11,10 @@ import {
   TemplateCategory
 } from "@/app/templates/page";
 
+import HardLink from "@/components/HardLink";
+
 interface TemplatesListProps {
   templates: Record<string, TemplateCategory>;
-}
-
-// HardLink forces a full page reload (no client routing)
-function HardLink( {
-  href, className, children
-}: {
- href: string; className?: string; children: React.ReactNode
-} ) {
-  return (
-    <a
-      href={href}
-      className={className}
-      rel="noopener noreferrer"
-    >
-      {children}
-    </a>
-  );
 }
 
 export default function TemplatesList( {
@@ -48,7 +33,7 @@ export default function TemplatesList( {
           <h1 className="text-2xl font-semibold mb-4">Templates</h1>
         </div>
 
-        <div className="flex items-center  mb-2 space-x-2">
+        <div className="flex items-center mb-2 space-x-2">
           <button
             aria-label="Grid view"
             onClick={() => setView( "grid" )}
@@ -80,7 +65,7 @@ export default function TemplatesList( {
           <div
             className={
               view === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
                 : "space-y-2"
             }
           >

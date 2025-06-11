@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "Generate social-templates with HTML and JavaScript",
 };
 
-export default async function RootLayout( {
+export default function RootLayout( {
   children
 }: {
  children: React.ReactNode

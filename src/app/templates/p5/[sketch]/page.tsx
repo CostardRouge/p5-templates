@@ -1,5 +1,4 @@
 import React from "react";
-import "./p5.css";
 
 import type {
   Metadata
@@ -46,11 +45,12 @@ function decodeBase64Json( base64: string ): any {
 async function ProcessingSketch( {
   params, searchParams
 }: {
- params: Promise<{
- sketch: string
-}>, searchParams: Promise<{
- captureOptions?: string
-}>
+  params: Promise<{
+    sketch: string
+  }>,
+  searchParams: Promise<{
+    captureOptions?: string
+  }>
 } ) {
   const testImageFileNames = await listDirectory( "public/assets/images/test" );
 

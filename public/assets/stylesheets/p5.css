@@ -1,7 +1,3 @@
-body {
-  position: relative !important;
-}
-
 body.preview fps-counter,
 body.preview #sketch-ui-drawer {
   display: none;
@@ -91,15 +87,16 @@ main {
     justify-content: center;
     gap: 14px;
     margin: 0 auto;
+}
 
-    select {
-        width: calc(1080px * 0.7);
-        flex-grow: 0;
-        height: 30px;
-    }
+main select {
+    width: calc(1080px * 0.7);
+    flex-grow: 0;
+    height: 30px;
+    color: black;
+}
 
-    canvas#defaultCanvas0 {
-        max-height: calc(1350px * 0.7);
-        max-width: calc(1080px * 0.7);
-    }
+main canvas#defaultCanvas0 {
+    max-height: calc(1350px * 0.7);
+    max-width: calc(1080px * 0.7);
 }

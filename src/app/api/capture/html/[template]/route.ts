@@ -7,7 +7,7 @@ import path from "path";
 import os from "node:os";
 
 const {
-  createPage
+  createPage, browser
 } = await createBrowserPage( {
   headless: true,
   deviceScaleFactor: 2
@@ -73,7 +73,7 @@ export async function POST(
     tmpDir,
     uploadFilename
   );
-  const outputFilename = `${ timestamp }_${ path.basename(
+  const outputFilename = `${ path.basename(
     uploadFilename,
     path.extname( uploadFilename )
   ) }_result.png`;
@@ -128,6 +128,7 @@ export async function POST(
     async() => {
       await fs.unlink( uploadPath ).catch( () => {} );
       await fs.unlink( outputPath ).catch( () => {} );
+      await browser.close();
     }
   );
 }

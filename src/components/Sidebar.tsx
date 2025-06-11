@@ -4,18 +4,21 @@ import React, {
   useEffect,
   useState
 } from "react";
-import Link from "next/link";
+// import Link from "next/link";
 import {
-  usePathname, useSearchParams
+  usePathname
 } from "next/navigation";
 import {
-  Home, Video,
-  Clock, Settings
+  Video,
+  Paintbrush,
+  // Home, Clock, Settings
 } from "lucide-react";
 
-import {
-  ThemeToggle
-} from "@/components/ThemeToggle";
+import HardLink from "@/components/HardLink";
+
+// import {
+//   ThemeToggle
+// } from "@/components/ThemeToggle";
 
 type NavItem = {
  href: string;
@@ -23,22 +26,26 @@ type NavItem = {
 };
 
 const items: NavItem[] = [
+  // {
+  //   href: "/",
+  //   Icon: Home
+  // },
   {
     href: "/templates",
-    Icon: Home
+    Icon: Paintbrush
   },
   {
     href: "/recordings",
     Icon: Video
   },
-  {
-    href: "/automations",
-    Icon: Clock
-  },
-  {
-    href: "/settings",
-    Icon: Settings
-  },
+  // {
+  //   href: "/automations",
+  //   Icon: Clock
+  // },
+  // {
+  //   href: "/settings",
+  //   Icon: Settings
+  // },
 ];
 
 export function Sidebar() {
@@ -71,10 +78,10 @@ export function Sidebar() {
         {items.map( ( {
           href, Icon
         } ) => {
-          const active = pathname?.startsWith( href );
+          const active = pathname.startsWith( href );
 
           return (
-            <Link
+            <HardLink
               key={href}
               href={href}
               className={`p-2 rounded transition-colors ${
@@ -84,11 +91,11 @@ export function Sidebar() {
               }`}
             >
               <Icon className={`w-6 h-6 ${ active ? "text-blue-600 dark:text-blue-400" : "" }`} />
-            </Link>
+            </HardLink>
           );
         } )}
 
-        <ThemeToggle />
+        {/* <ThemeToggle />*/}
       </nav>
     </aside>
   );

@@ -4,6 +4,7 @@ import path from "path";
 import fs from "node:fs/promises";
 
 import {
+  Browser,
   Page
 } from "playwright";
 
@@ -32,18 +33,22 @@ async function recordSketchSlides(
   temporaryDirectoryPath: string,
 ) {
   const recordingState: {
-    page?: Page
+    page?: Page,
+    browser?: Browser
   } = {
     page: undefined
   };
 
   try {
     const {
-      createPage
+      createPage,
+      browser
     } = await createBrowserPage( {
-      headless: true,
+      headless: false,
       deviceScaleFactor: 1
     } );
+
+    recordingState.browser = browser;
 
     const slides = captureOptions.slides;
     const slideVideoPaths: string[] = [
@@ -62,7 +67,7 @@ async function recordSketchSlides(
       recordingState.page = await createPage();
 
       await recordingState.page.goto(
-        `http://localhost:3000/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
+        `http://localhost:3000/templates/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
         {
           waitUntil: "networkidle"
         },
@@ -193,8 +198,8 @@ async function recordSketchSlides(
     );
 
     const zipS3Url = await uploadArtifact(
-      jobId,
-      zipOutputPath
+      `${ jobId }/${ path.basename( zipOutputPath ) }`,
+      await fs.readFile( zipOutputPath )
     );
 
     await updateJob(
@@ -221,7 +226,6 @@ async function recordSketchSlides(
       100
     );
 
-    await recordingState?.page?.close();
     await fs.rm(
       temporaryDirectoryPath,
       {
@@ -231,6 +235,9 @@ async function recordSketchSlides(
     ).catch( () => {} );
 
     throw error;
+  }
+  finally {
+    await recordingState?.browser?.close();
   }
 }
 

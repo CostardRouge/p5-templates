@@ -20,6 +20,7 @@ import path from "path";
 import fs from "node:fs/promises";
 
 import {
+  Browser,
   Page
 } from "playwright";
 
@@ -30,7 +31,8 @@ async function recordSketch(
   temporaryDirectoryPath: string
 ) {
   const recordingState: {
-    page?: Page
+    page?: Page,
+    browser?: Browser,
   } = {
     page: undefined
   };
@@ -44,16 +46,18 @@ async function recordSketch(
     );
 
     const {
-      createPage
+      createPage,
+      browser
     } = await createBrowserPage( {
       headless: true,
       deviceScaleFactor: 1
     } );
 
+    recordingState.browser = browser;
     recordingState.page = await createPage();
 
     await recordingState.page.goto(
-      `http://localhost:3000/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
+      `http://localhost:3000/templates/p5/${ template }?captureOptions=${ minifyAndEncode( captureOptions ) }`,
       {
         waitUntil: "networkidle"
       },
@@ -163,8 +167,8 @@ async function recordSketch(
     );
 
     const videoS3Url = await uploadArtifact(
-      jobId,
-      outputVideoPath
+      `${ jobId }/${ path.basename( outputVideoPath ) }`,
+      await fs.readFile( outputVideoPath )
     );
 
     // ─── 10. Mark job done in DB ─────────────────────────────────────────────────
@@ -192,7 +196,6 @@ async function recordSketch(
       100
     );
 
-    await recordingState?.page?.close();
     await fs.rm(
       temporaryDirectoryPath,
       {
@@ -202,6 +205,9 @@ async function recordSketch(
     ).catch( () => {} );
 
     throw error;
+  }
+  finally {
+    await recordingState?.browser?.close();
   }
 }
 
