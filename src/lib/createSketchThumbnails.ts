@@ -4,14 +4,27 @@ import {
   Browser,
   Page
 } from "playwright";
+
 import getSketchList from "@/utils/getSketchList";
 
-const canvasSelectorToScreenShoot = "canvas#defaultCanvas0.loaded";
+import {
+  SKETCHES_DIRECTORY
+} from "@/constants";
 
-async function recordSketch(
-  template: string,
-  captureOptions: any,
-) {
+import fs from "node:fs/promises";
+
+const canvasSelectorToScreenShot = "canvas#defaultCanvas0.loaded";
+
+async function exists( filePath: string ) {
+  try {
+    await fs.stat( filePath );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function createSketchThumbnails() {
   const recordingState: {
     page?: Page,
     browser?: Browser,
@@ -41,7 +54,11 @@ async function recordSketch(
     for ( const {
       href, name
     } of p5sketchNames ) {
-      console.log( href );
+      const thumbnailPath = `${ SKETCHES_DIRECTORY }/${ name }/thumbnail.jpeg`;
+
+      if ( await exists( thumbnailPath ) ) {
+        console.log( `✅ ${ name }/thumbnail.jpeg already exists!` );
+      }
 
       await recordingState.page.goto(
         `http://localhost:3000/${ href }`,
@@ -50,12 +67,21 @@ async function recordSketch(
         },
       );
 
-      await recordingState.page.waitForSelector( canvasSelectorToScreenShoot );
-      await recordingState.page
-        .locator( canvasSelectorToScreenShoot )
-        .screenshot( {
-          path: ""
+      await recordingState.page.waitForSelector( canvasSelectorToScreenShot );
+
+      await recordingState.page.locator( canvasSelectorToScreenShot )
+        .evaluate( ( element ) => {
+          element.style.width = "360px";
+          element.style.height = "450px";
         } );
+
+      await recordingState.page
+        .locator( canvasSelectorToScreenShot )
+        .screenshot( {
+          path: thumbnailPath,
+          // scale: "css"
+        } );
+      console.log( `💾 ${ name }/thumbnail.jpeg has been generated` );
     }
   }
   catch ( error ) {
@@ -66,4 +92,4 @@ async function recordSketch(
   }
 }
 
-export default recordSketch;
+export default createSketchThumbnails;
