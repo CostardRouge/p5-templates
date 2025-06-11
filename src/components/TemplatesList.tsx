@@ -17,6 +17,10 @@ interface TemplatesListProps {
   templates: Record<string, TemplateCategory>;
 }
 
+function getThumbnailURL( name: string ) {
+  return `assets/scripts/p5-sketches/sketches/${ name }/thumbnail.jpeg`;
+}
+
 export default function TemplatesList( {
   templates
 }: TemplatesListProps ) {
@@ -71,22 +75,55 @@ export default function TemplatesList( {
           >
             {items.map( ( {
               href, name
-            } ) => (
-              <HardLink
-                key={name}
-                href={href}
-                className={
-                  view === "grid"
-                    ? "block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow hover:shadow-md transition"
-                    : "flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                }
-              >
-                <span className="block text-ellipsis text-nowrap overflow-hidden font-medium">
-                  {name}
-                </span>
-                {view === "list" && <span className="text-gray-500 dark:text-gray-400">➔</span>}
-              </HardLink>
-            ) )}
+            } ) => {
+              if ( view === "grid" ) {
+                return (
+                  <HardLink
+                    key={name}
+                    href={href}
+                    className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shadow hover:shadow-md transition"
+                  >
+                    {/* Aspect ratio box for 4:5 (360x450) */}
+                    <div className="w-full" style={{
+                      paddingTop: "125%"
+                    }}>
+                      <img
+                        alt={name}
+                        loading="lazy"
+                        src={getThumbnailURL( name )}
+                        className="absolute top-0 left-0 w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/60 to-transparent">
+                      <span className="text-white font-medium drop-shadow">
+                        {name}
+                      </span>
+                    </div>
+                  </HardLink>
+                );
+              }
+              // list view
+              return (
+                <HardLink
+                  key={name}
+                  href={href}
+                  className="flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                >
+                  <div className="w-12 flex-shrink-0" style={{
+                    aspectRatio: "4 / 5"
+                  }}>
+                    <img
+                      alt={name}
+                      loading="lazy"
+                      src={getThumbnailURL( name )}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <span className="flex-1 ml-3 truncate font-medium">{name}</span>
+                  <span className="text-gray-500 dark:text-gray-400 ml-2">➔</span>
+                </HardLink>
+              );
+            } )}
           </div>
         </div>
       ) )}

@@ -65,11 +65,11 @@ async function runRecording(
     // Write the raw options JSON to S3
     const optionsS3Url = await uploadArtifact(
       `${ jobId }/options.json`,
-      JSON.stringify(
+      Buffer.from( JSON.stringify(
         captureOptions,
         null,
         2
-      )
+      ) )
     );
 
     await updateJob(
