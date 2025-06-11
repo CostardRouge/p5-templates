@@ -11,6 +11,10 @@ async function getSketchList( folderPath = SKETCHES_DIRECTORY ) {
 
   return p5sketchesFolderContent
     .filter( name => {
+      if ( name.startsWith( "_" ) ) {
+        return false;
+      }
+
       const sketchPath = path.join(
         folderPath,
         name
