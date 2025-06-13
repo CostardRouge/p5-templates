@@ -4,7 +4,10 @@
     "framerate": 60
   },
   "size": {
-    "width": 1280,
-    "height": 960
+    "width": 800,
+    "height": 600
+  },
+  "colors": {
+    "background": [0]
   }
 }

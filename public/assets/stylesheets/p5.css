@@ -96,7 +96,7 @@ main select {
     color: black;
 }
 
-main canvas#defaultCanvas0 {
-    max-height: calc(1350px * 0.7);
-    max-width: calc(1080px * 0.7);
-}
+/*main canvas#defaultCanvas0 {*/
+/*    max-height: calc(1350px * 0.7);*/
+/*    max-width: calc(1080px * 0.7);*/
+/*}*/
