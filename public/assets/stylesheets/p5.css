@@ -82,10 +82,10 @@ canvas-overlay {
 main {
     display: flex;
     align-items: center;
-    height: calc(100svh - 72px);
+    /*height: calc(100svh - 72px);*/
     flex-direction: column;
     justify-content: center;
-    gap: 14px;
+    /*gap: 14px;*/
     margin: 0 auto;
 }
 

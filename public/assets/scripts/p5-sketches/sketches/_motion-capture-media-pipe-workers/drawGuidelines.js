@@ -1,14 +1,16 @@
 import {
-  mappers, animation, colors, grid, easing, string, captureOptions as options, shapes, events
+  mappers, animation, events, colors, grid, easing, string
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
+import drawHands from "./drawHands.js";
+
 let mask = undefined;
-let handImage = undefined;
+let hands = undefined;
 
 events.register(
   "engine-window-preload",
   () => {
-    handImage = loadImage( "./hand.svg" );
+    hands = loadJSON( "/assets/scripts/p5-sketches/sketches/_motion-capture-media-pipe-workers/hands.json" );
   }
 );
 
@@ -22,6 +24,8 @@ export default function drawGuidelines(
       width,
       height,
     );
+
+    // hands = Object.values( hands );
   }
 
   if ( backgroundColor ) {
@@ -35,7 +39,7 @@ export default function drawGuidelines(
     0,
     height / 2,
     {
-      size: 128,
+      size: 144,
       font: string.fonts?.martian,
       textWidth: width,
       textAlign: [
@@ -47,34 +51,35 @@ export default function drawGuidelines(
     }
   );
 
-  const weight = 30;
+  const W = width / 2;
+
+  const weight = 50;
   const rows = weight * 4;
-  const columns = ( width / weight );
+  const columns = ( W / weight );
   const gridOptions = {
     topLeft: createVector(
-      0,
-      0
+      width * 0.3,
+      height * 0.2
     ),
     topRight: createVector(
-      width,
-      0
+      width * 0.7,
+      height * 0.2
     ),
     bottomLeft: createVector(
-      0,
-      height
+      width * 0.3,
+      height * 0.8
     ),
     bottomRight: createVector(
-      width,
-      height
+      width * 0.7,
+      height * 0.8
     ),
     rows,
     columns,
-    // centered: true
   };
 
   noiseDetail(
-    8,
-    0.45,
+    3,
+    .7,
   );
 
   grid.draw(
@@ -108,7 +113,7 @@ export default function drawGuidelines(
 
       graphics.stroke( colorFunction( {
         hueOffset: 0,
-        hueIndex: angle, // map(angle, -10, 10, -PI, TAU),
+        hueIndex: angle,
         // opacityFactor: map(sin(animation.progression+xOff+yOff), -1, 1, 2.5, 1),
         opacityFactor: mappers.fn(
           noise(
@@ -169,4 +174,27 @@ export default function drawGuidelines(
     0,
     0
   );
+
+  for ( const handKey in hands ) {
+    const hand = hands[ handKey ];
+
+    push();
+    translate(
+      0,
+      map(
+        animation.circularProgression,
+        0,
+        1,
+        -500,
+        50
+      )
+    );
+    drawHands(
+      [
+        hand
+      ],
+      graphics
+    );
+    pop();
+  }
 }

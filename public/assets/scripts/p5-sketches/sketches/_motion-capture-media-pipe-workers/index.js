@@ -1,18 +1,21 @@
 import {
   sketch,
-  events,
   easing,
   colors,
   mappers,
   animation,
-  imageUtils,
-  string,
-  iterators,
   captureOptions as options,
-  shapes
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
-import drawGuidelines from "./guidelines.js";
+import drawSocialMediaOverlay from "./drawSocialMediaOverlay.js";
+import drawGuidelines from "./drawGuidelines.js";
+import chewingGum from "./chewingGum.js";
+import drawHands from "./drawHands.js";
+
+const RUNNING_INFERENCE = 30;
+const IDLE_INFERENCE = 500;
+const IDLE_FRAMERATE = 10;
+const GUIDELINE_DELAY = 10_000;
 
 const mediapipe = {
   capture: {
@@ -20,10 +23,10 @@ const mediapipe = {
     size: {
       // width: 640 / 4,
       // height: 480 / 4,
-      width: 256,
-      height: 256,
-      // width: options.size.width,
-      // height: options.size.height
+      // width: 256,
+      // height: 256,
+      width: options.size.width,
+      height: options.size.height
     }
   },
   feedback: {
@@ -37,7 +40,7 @@ const mediapipe = {
   workerReady: false,
   latestResult: null,
   previousFrameSentTime: 0,
-  inferenceIntervalMilliseconds: 20
+  inferenceIntervalMilliseconds: IDLE_INFERENCE,
 };
 
 const layers = {
@@ -45,9 +48,9 @@ const layers = {
     graphics: undefined,
     size: options.size,
     background: [
-      16
+      0
     ],
-    erase: 30
+    erase: 32
   },
   hands: {
     graphics: undefined,
@@ -61,54 +64,22 @@ const layers = {
     background: undefined,
     erase: 255,
   },
+  socialMediaOverlay: {
+    graphics: undefined,
+    size: options.size,
+    background: undefined,
+    erase: 255,
+  },
 };
-
-const GUIDELINE_DELAY = 2500;
 
 const handDetectionState = {
   handsAreVisible: 0,
   lastDetectedHandTime: -GUIDELINE_DELAY
 };
 
-const indexFingerJointIndices = [
-  5,
-  6,
-  7,
-  8
-];
-
-const extendedThumbJointIndices = [
-  0,
-  1,
-  2,
-  3,
-  4
-];
-
-const middleFingerJointIndices = [
-  9,
-  10,
-  11,
-  12
-];
-
-const ringFingerJointIndices = [
-  13,
-  14,
-  15,
-  16
-];
-
-const pinkyFingerJointIndices = [
-  17,
-  18,
-  19,
-  20
-];
-
 sketch.setup(
   () => {
-    background( 0 );
+    background( ...options.colors.background );
 
     for ( const layerName in layers ) {
       const {
@@ -120,12 +91,13 @@ sketch.setup(
         size.height
       );
 
-      // if ( background ) {
-      //   layers[ layerName ].graphics.background( ...background );
-      // }
+      if ( background ) {
+        layers[ layerName ].graphics.background( ...background );
+      }
     }
 
     createNeonDots( 10 );
+    createChewingGums( 10 );
 
     // --- capture feed (used for inference only) ---
     mediapipe.capture.element = createCapture(
@@ -227,8 +199,44 @@ const sendFrameToWorkerIfDue = ( ) => {
     .catch( console.error );
 };
 
-const neonDots = [
+const chewingGums = [
 ];
+
+function createChewingGums( count ) {
+  for ( let i = 0; i < count; i++ ) {
+    const size = random(
+      70,
+      100
+    );
+
+    chewingGums.push( {
+      size,
+      position: createVector(
+        random(
+          size * 2,
+          width - size * 2
+        ),
+        random(
+          size * 2,
+          height - size * 2
+        )
+      ),
+      index: i / count
+    } );
+  }
+}
+
+function drawChewingGums( ) {
+  chewingGums.forEach( (
+    chewingGumData, index
+  ) => {
+    chewingGum( {
+      ...chewingGumData,
+      graphics: layers.dots.graphics,
+      index: index / chewingGums.length,
+    } );
+  } );
+}
 
 function createNeonDots( count ) {
   for ( let i = 0; i < count; i++ ) {
@@ -266,7 +274,7 @@ function createNeonDots( count ) {
   }
 }
 
-function drawNeonDots( count ) {
+function drawNeonDots( ) {
   neonDots.forEach( (
     neonDotData, index
   ) => {
@@ -277,6 +285,9 @@ function drawNeonDots( count ) {
     } );
   } );
 }
+
+const neonDots = [
+];
 
 function neonDot( {
   sizeRange = [
@@ -328,67 +339,6 @@ function neonDot( {
   }
 }
 
-function neonLine( {
-  innerCircleSize = 10,
-  shadowsCount = 3,
-  graphics = window,
-  vectors,
-  index
-} = {
-} ) {
-  graphics.noStroke();
-
-  for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
-    const shadowProgression = shadowsCount / shadowsCount;
-
-    iterators.vectors(
-      vectors,
-      (
-        position, _to, innerProgression, totalStep
-      ) => {
-        const totalProgression = totalStep / vectors.length;
-
-        const circleSize = mappers.fn(
-          shadowIndex,
-          0,
-          shadowsCount,
-          innerCircleSize * shadowsCount,
-          innerCircleSize,
-          easing.easeOutSine
-        );
-
-        graphics.fill( colors.rainbow( {
-          opacityFactor: map(
-            shadowIndex,
-            0,
-            shadowsCount,
-            1,
-            3
-          ),
-          hueOffset: easing.easeOutSine( shadowProgression * shadowIndex ),
-          hueIndex: map(
-            Math.sin( animation.angle
-              // + easing.easeInOutBack( totalProgression ) * 2
-              + shadowProgression
-              + totalProgression ),
-            -1,
-            1,
-            -PI,
-            PI
-          ) * 4,
-        } ) );
-
-        graphics.circle(
-          position.x,
-          position.y,
-          circleSize
-        );
-      },
-      0.05
-    );
-  }
-}
-
 const drawSegmentationMask = () => {
   const startTimeMs = performance.now();
 
@@ -404,88 +354,6 @@ const drawSegmentationMask = () => {
   if ( segmentationResult === null ) {
     return;
   }
-};
-
-const drawHandLandmarks = () => {
-  const handLandmarksArray = mediapipe.latestResult?.handLandmarksArray;
-
-  if ( !handLandmarksArray ) {
-    return;
-  }
-
-  const fingersToTrace = [
-    extendedThumbJointIndices,
-    indexFingerJointIndices,
-    middleFingerJointIndices,
-    ringFingerJointIndices,
-    pinkyFingerJointIndices
-  ];
-
-  handLandmarksArray.forEach( ( handLandmarkArray ) => {
-    const fingers = [
-    ];
-
-    for ( let fingerToTraceIndex = 0; fingerToTraceIndex < fingersToTrace.length; fingerToTraceIndex++ ) {
-      const jointIndices = fingersToTrace[ fingerToTraceIndex ];
-
-      const fingerJointVectors = jointIndices.map( fingerJointIndex => {
-        const joint = handLandmarkArray[ fingerJointIndex ];
-
-        return createVector(
-          inverseX( joint.x ) * width,
-          joint.y * height,
-          map(
-            joint.z,
-            0,
-            -1,
-            0,
-            1
-          )
-        );
-      } );
-
-      const averageFingerZ = fingerJointVectors.reduce(
-        (
-          sum, {
-            z
-          }
-        ) => (
-          sum + z
-        ),
-        0
-      ) / fingerJointVectors.length;
-
-      fingers.push( [
-        averageFingerZ,
-        fingerJointVectors
-      ] );
-    }
-
-    // fingers
-    //   .sort( (
-    //     b, a
-    //   ) => a[ 0 ] - b[ 0 ] );
-
-    for ( let fingerIndex = 0; fingerIndex < fingers.length; fingerIndex++ ) {
-      const [
-        z,
-        vectors
-      ] = fingers[ fingerIndex ];
-
-      neonLine( {
-        innerCircleSize: map(
-          z,
-          0,
-          1,
-          10,
-          100
-        ),
-        vectors,
-        index: fingerIndex / ( fingersToTrace.length - 1 ),
-        graphics: layers.hands.graphics
-      } );
-    }
-  } );
 };
 
 const rightEye = 0;
@@ -623,18 +491,71 @@ sketch.draw( (
     return;
   }
 
-  image(
-    mediapipe.feedback.element,
-    0,
-    0,
-    width,
-    height
+  const now = performance.now();
+
+  handDetectionState.handsAreCurrentlyVisible = ( mediapipe.latestResult?.handLandmarksArray?.length ?? 0 ) > 0;
+
+  if ( handDetectionState.handsAreCurrentlyVisible ) {
+    handDetectionState.lastDetectedHandTime = now;
+  }
+
+  if ( !handDetectionState.handsAreCurrentlyVisible && handDetectionState.lastDetectedHandTime !== -1 ) {
+    const timeSinceLastHand = now - handDetectionState.lastDetectedHandTime;
+
+    if ( timeSinceLastHand > GUIDELINE_DELAY ) {
+      frameRate( IDLE_FRAMERATE );
+      mediapipe.inferenceIntervalMilliseconds = IDLE_INFERENCE;
+
+      clearGraphics(
+        layers.hands,
+        255
+      );
+
+      drawGuidelines(
+        "Show me\nyour\nhands!",
+        layers.guidelines
+      );
+    }
+  }
+  else {
+    mediapipe.inferenceIntervalMilliseconds = RUNNING_INFERENCE;
+    frameRate( options.animation.framerate );
+  }
+
+  drawSocialMediaOverlay(
+    "@costardrouge.jpg",
+    layers.socialMediaOverlay
   );
 
+  const motionCaptureExperienceIsRunning = ( now - handDetectionState.lastDetectedHandTime ) < GUIDELINE_DELAY;
+
+  if ( motionCaptureExperienceIsRunning ) {
+    image(
+      mediapipe.feedback.element,
+      0,
+      0,
+      width,
+      height
+    );
+
+    if ( mediapipe.latestResult !== null ) {
+      drawHands(
+        mediapipe.latestResult.handLandmarksArray,
+        layers.hands.graphics
+      );
+      // drawFaceDetections();
+      // drawSegmentationOverlay();
+    }
+
+    // drawNeonDots();
+    drawChewingGums();
+  }
+
   for ( const layerName in layers ) {
+    const layer = layers[ layerName ];
     const {
       graphics, background, erase, size
-    } = layers[ layerName ];
+    } = layer;
 
     image(
       graphics,
@@ -649,55 +570,37 @@ sketch.draw( (
     }
 
     if ( erase ) {
-      graphics.erase();
-      graphics.noStroke();
-      graphics.fill(
-        0,
-        0,
-        0,
+      clearGraphics(
+        layer,
         erase
-      );
-      graphics.rect(
-        0,
-        0,
-        size.width,
-        size.height
-      );
-      graphics.noErase();
-    }
-  }
-
-  // drawNeonDots();
-
-  // draw overlays from latest worker result (mask, hands, faces)
-  if ( mediapipe.latestResult !== null ) {
-    drawHandLandmarks();
-    // drawFaceDetections();
-
-    // drawSegmentationOverlay();
-  }
-
-  const now = performance.now();
-
-  handDetectionState.handsAreCurrentlyVisible = ( mediapipe.latestResult?.handLandmarksArray?.length ?? 0 ) > 0;
-
-  if ( handDetectionState.handsAreCurrentlyVisible ) {
-    handDetectionState.lastDetectedHandTime = now;
-  }
-
-  if ( !handDetectionState.handsAreCurrentlyVisible && handDetectionState.lastDetectedHandTime !== -1 ) {
-    const timeSinceLastHand = now - handDetectionState.lastDetectedHandTime;
-
-    if ( timeSinceLastHand > GUIDELINE_DELAY ) {
-      drawGuidelines(
-        "Show me\nyour hands!",
-        layers.guidelines
       );
     }
   }
 
   sendFrameToWorkerIfDue();
 } );
+
+function clearGraphics(
+  {
+    graphics, size
+  }, eraseValue
+) {
+  graphics.erase();
+  graphics.noStroke();
+  graphics.fill(
+    0,
+    0,
+    0,
+    eraseValue
+  );
+  graphics.rect(
+    0,
+    0,
+    size.width,
+    size.height
+  );
+  graphics.noErase();
+}
 
 function inverseX(
   x, limit = 1
@@ -708,25 +611,5 @@ function inverseX(
     limit,
     limit,
     0
-  );
-}
-
-function scaleY( y ) {
-  return map(
-    y,
-    0,
-    mediapipe.capture.size.height,
-    0,
-    mediapipe.feedback.size.height
-  );
-}
-
-function scaleX( x ) {
-  return map(
-    x,
-    0,
-    mediapipe.capture.size.width,
-    0,
-    mediapipe.feedback.size.width
   );
 }
