@@ -1,5 +1,5 @@
 import {
-  mappers, animation, colors, events, grid, easing, string
+  events, string
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 let qrCode = undefined;
@@ -16,9 +16,9 @@ export default function drawSocialMediaOverlay(
     graphics
   },
 ) {
-  const qrCodeMargin = 20;
-  const qrCodeWidth = qrCode.width * 0.4;
-  const qrCodeHeight = qrCode.height * 0.4;
+  const qrCodeMargin = 10;
+  const qrCodeWidth = qrCode.width * 0.5;
+  const qrCodeHeight = qrCode.height * 0.5;
 
   const bottomLinePosition = height - ( qrCodeHeight + qrCodeMargin );
 

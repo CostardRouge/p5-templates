@@ -190,9 +190,11 @@ export default function drawGuidelines(
       )
     );
     drawHands(
-      [
-        hand
-      ],
+      {
+        landmarks: [
+          hand
+        ]
+      },
       graphics
     );
     pop();

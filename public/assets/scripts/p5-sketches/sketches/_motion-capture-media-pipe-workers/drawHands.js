@@ -1,4 +1,4 @@
-import neonLine from "./neonLine.js";
+import drawNeonLine from "./drawNeonLine.js";
 
 const indexFingerJointIndices = [
   5,
@@ -37,9 +37,11 @@ const pinkyFingerJointIndices = [
 ];
 
 export default function drawHands(
-  handLandmarksArray, graphics
+  result, graphics, addObstacle
 ) {
-  if ( !handLandmarksArray ) {
+  const handLandmarks = result?.landmarks;
+
+  if ( !handLandmarks?.length > 0 ?? false ) {
     return;
   }
 
@@ -51,7 +53,7 @@ export default function drawHands(
     pinkyFingerJointIndices
   ];
 
-  handLandmarksArray.forEach( ( handLandmarkArray ) => {
+  handLandmarks.forEach( ( hand ) => {
     const fingers = [
     ];
 
@@ -59,9 +61,8 @@ export default function drawHands(
       const jointIndices = fingersToTrace[ fingerToTraceIndex ];
 
       const fingerJointVectors = jointIndices.map( fingerJointIndex => {
-        const joint = handLandmarkArray[ fingerJointIndex ];
-
-        return createVector(
+        const joint = hand[ fingerJointIndex ];
+        const fingerJointVector = createVector(
           inverseX( joint.x ) * width,
           joint.y * height,
           map(
@@ -72,6 +73,17 @@ export default function drawHands(
             1
           )
         );
+
+        if ( fingerJointIndex === 8 ) {
+          if ( addObstacle ) {
+            addObstacle(
+              createVector.x,
+              createVector.y
+            );
+          }
+        }
+
+        return fingerJointVector;
       } );
 
       const averageFingerZ = fingerJointVectors.reduce(
@@ -102,7 +114,7 @@ export default function drawHands(
         vectors
       ] = fingers[ fingerIndex ];
 
-      neonLine( {
+      drawNeonLine( {
         innerCircleSize: map(
           z,
           0,
@@ -111,7 +123,7 @@ export default function drawHands(
           100
         ),
         vectors,
-        index: fingerIndex / ( fingersToTrace.length - 1 ),
+        index: fingerIndex / ( fingers.length - 1 ),
         graphics
       } );
     }

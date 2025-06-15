@@ -1,62 +1,86 @@
 import {
   sketch,
   easing,
-  colors,
+  scripts,
   mappers,
   animation,
+  imageUtils,
   captureOptions as options,
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 import drawSocialMediaOverlay from "./drawSocialMediaOverlay.js";
 import drawGuidelines from "./drawGuidelines.js";
-import chewingGum from "./chewingGum.js";
+
+import {
+  drawChewingGums,
+  createChewingGums
+} from "./drawChewingGum.js";
+import drawNeonDot, {
+  drawNeonDots,
+  createNeonDots
+} from "./drawNeonDot.js";
+
 import drawHands from "./drawHands.js";
+import drawPoses from "./drawPoses.js";
+
+await scripts.load( "/assets/libraries/decomp.min.js" );
+await scripts.load( "/assets/libraries/matter.min.js" );
+
+const {
+  Engine, Body, Bodies, Vector, Composite
+} = Matter;
 
 const RUNNING_INFERENCE = 30;
 const IDLE_INFERENCE = 500;
-const IDLE_FRAMERATE = 10;
-const GUIDELINE_DELAY = 10_000;
+const IDLE_FRAMERATE = 20;
+const GUIDELINE_DELAY = 7_500;
 
 const mediapipe = {
   capture: {
     element: null,
     size: {
-      // width: 640 / 4,
-      // height: 480 / 4,
+      width: 640,
+      height: 480,
       // width: 256,
       // height: 256,
-      width: options.size.width,
-      height: options.size.height
+      // width: options.size.width,
+      // height: options.size.height
     }
   },
   feedback: {
     element: null,
     size: {
+      // width: 640,
+      // height: 480,
       width: options.size.width,
       height: options.size.height
     }
   },
   worker: null,
   workerReady: false,
-  latestResult: null,
+  workerResult: {
+  },
   previousFrameSentTime: 0,
   inferenceIntervalMilliseconds: IDLE_INFERENCE,
 };
 
 const layers = {
-  dots: {
+  visuals: {
     graphics: undefined,
     size: options.size,
     background: [
-      0
+      0,
+      0,
+      0,
+      10
     ],
-    erase: 32
+    erase: 20
   },
   hands: {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 25
+    erase: 255
   },
   guidelines: {
     graphics: undefined,
@@ -77,6 +101,17 @@ const handDetectionState = {
   lastDetectedHandTime: -GUIDELINE_DELAY
 };
 
+const matter = {
+  engine: Engine.create(),
+  bottom: undefined,
+  balls: [
+  ],
+  handBodies: [
+  ],
+  boundaries: [
+  ]
+};
+
 sketch.setup(
   () => {
     background( ...options.colors.background );
@@ -95,9 +130,6 @@ sketch.setup(
         layers[ layerName ].graphics.background( ...background );
       }
     }
-
-    createNeonDots( 10 );
-    createChewingGums( 10 );
 
     // --- capture feed (used for inference only) ---
     mediapipe.capture.element = createCapture(
@@ -141,7 +173,6 @@ sketch.setup(
     mediapipe.worker.postMessage( {
       type: "INIT",
       wasmPath: "/assets/scripts/mediapipe/wasm"
-      // wasmPath: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
     } );
 
     mediapipe.worker.onmessage = ( event ) => {
@@ -151,15 +182,62 @@ sketch.setup(
         mediapipe.workerReady = true;
       }
 
-      if ( message.type === "RESULT" ) {
-        mediapipe.latestResult = message.payload;
+      // if ( message.type === "RESULT" ) {
+      //   mediapipe.workerResult = message.payload;
+      // }
+
+      if ( message.type === "LIB_RESULT" ) {
+        mediapipe.workerResult[ message.payload.lib ] = message.payload.result;
       }
     };
+
+    // / MATTER
+    const margin = 50;
+    const thickness = 50;
+
+    addBoundary(
+      width / 2,
+      height + thickness / 2 - margin,
+      width,
+      thickness
+    );
+    addBoundary(
+      width / 2,
+      -thickness / 2 + margin,
+      width,
+      thickness
+    );
+    addBoundary(
+      -thickness / 2 + margin,
+      height / 2,
+      thickness,
+      height
+    );
+    addBoundary(
+      width + thickness / 2 - margin,
+      height / 2,
+      thickness,
+      height
+    );
+
+    for ( let i = 0; i <= 20; i++ ) {
+      addImageBall(
+        mediapipe.feedback.element,
+        random( width ),
+        random( height ),
+        random(
+          20,
+          50
+        )
+      );
+    }
   },
   {
     size: {
       width: options.size.width,
       height: options.size.height,
+      // width: 640,
+      // height: 480,
     },
     animation: {
       framerate: options.animation.framerate,
@@ -199,289 +277,6 @@ const sendFrameToWorkerIfDue = ( ) => {
     .catch( console.error );
 };
 
-const chewingGums = [
-];
-
-function createChewingGums( count ) {
-  for ( let i = 0; i < count; i++ ) {
-    const size = random(
-      70,
-      100
-    );
-
-    chewingGums.push( {
-      size,
-      position: createVector(
-        random(
-          size * 2,
-          width - size * 2
-        ),
-        random(
-          size * 2,
-          height - size * 2
-        )
-      ),
-      index: i / count
-    } );
-  }
-}
-
-function drawChewingGums( ) {
-  chewingGums.forEach( (
-    chewingGumData, index
-  ) => {
-    chewingGum( {
-      ...chewingGumData,
-      graphics: layers.dots.graphics,
-      index: index / chewingGums.length,
-    } );
-  } );
-}
-
-function createNeonDots( count ) {
-  for ( let i = 0; i < count; i++ ) {
-    const [
-      minSize,
-      maxSize
-    ] = [
-      random(
-        70,
-        100
-      ),
-      random(
-        10,
-        20
-      )
-    ];
-
-    neonDots.push( {
-      sizeRange: [
-        minSize,
-        maxSize
-      ],
-      position: createVector(
-        random(
-          maxSize * 2,
-          width - maxSize * 2
-        ),
-        random(
-          maxSize * 2,
-          height - maxSize * 2
-        )
-      ),
-      index: i / count
-    } );
-  }
-}
-
-function drawNeonDots( ) {
-  neonDots.forEach( (
-    neonDotData, index
-  ) => {
-    neonDot( {
-      ...neonDotData,
-      graphics: layers.dots.graphics,
-      index: index / neonDots.length,
-    } );
-  } );
-}
-
-const neonDots = [
-];
-
-function neonDot( {
-  sizeRange = [
-    300,
-    75
-  ],
-  shadowsCount = 3,
-  graphics = window,
-  position,
-  index
-} = {
-} ) {
-  for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
-    const shadowProgression = shadowsCount / shadowsCount;
-
-    const circleSize = mappers.fn(
-      shadowIndex,
-      0,
-      shadowsCount,
-      sizeRange[ 0 ],
-      sizeRange[ 1 ],
-      // easing.easeInExpo
-    );
-
-    graphics.stroke( colors.rainbow( {
-      opacityFactor: map(
-        shadowIndex,
-        0,
-        shadowsCount,
-        2,
-        0.75
-      ),
-      hueOffset: ( animation.circularProgression + shadowProgression ),
-      hueIndex: map(
-        index,
-        0,
-        1,
-        -PI,
-        PI
-      ),
-    } ) );
-
-    graphics.strokeWeight( circleSize );
-
-    graphics.point(
-      position.x,
-      position.y
-    );
-  }
-}
-
-const drawSegmentationMask = () => {
-  const startTimeMs = performance.now();
-
-  if ( mediapipe.lastPredictTime === startTimeMs ) {
-    return;
-  }
-
-  const segmentationResult = mediapipe.tasks.segmenter.segmentForVideo(
-    mediapipe.capture.element.elt,
-    startTimeMs
-  );
-
-  if ( segmentationResult === null ) {
-    return;
-  }
-};
-
-const rightEye = 0;
-const leftEye = 1;
-const nose = 2;
-const mouth = 3;
-const rightEar = 4;
-const leftEar = 5;
-
-const drawCircleEchoes = ( {
-  position,
-  echoColor = color(
-    128,
-    128,
-    255
-  ),
-  count,
-  size
-} ) => {
-  noFill();
-
-  for ( let circleEchoIndex = 0; circleEchoIndex < count; circleEchoIndex++ ) {
-    const circleEchoProgression = easing.easeInExpo( circleEchoIndex / count );
-
-    strokeWeight( 1 );
-    stroke( echoColor );
-
-    circle(
-      position.x,
-      position.y,
-      size * circleEchoProgression
-    );
-  }
-};
-
-const getZoomFromFace = ( face ) => {
-  if ( !face || face.length < 6 ) return 0;
-
-  const dEyes = p5.Vector.dist(
-    face[ 0 ],
-    face[ 1 ]
-  ); // right eye to left eye
-  const dEars = p5.Vector.dist(
-    face[ 4 ],
-    face[ 5 ]
-  ); // right ear to left ear
-  const dNoseMouth = p5.Vector.dist(
-    face[ 2 ],
-    face[ 3 ]
-  ); // nose to mouth
-
-  const avgDist = ( dEyes + dEars + dNoseMouth ) / 3;
-
-  const minDist = 20;
-  const maxDist = 120;
-
-  return constrain(
-    map(
-      avgDist,
-      minDist,
-      maxDist,
-      0,
-      1
-    ),
-    0,
-    1
-  );
-};
-
-const drawFace = ( faceKeyPoints ) => {
-  const keyPointVectors = faceKeyPoints.map( faceKeyPoint => {
-    return createVector(
-      inverseX( faceKeyPoint.x ) * width,
-      faceKeyPoint.y * height,
-      faceKeyPoint.z,
-    );
-  } );
-
-  const faceZoom = getZoomFromFace( keyPointVectors );
-  const size = mappers.fn(
-    faceZoom,
-    0,
-    1,
-    10,
-    750,
-    easing.easeInExpo
-  );
-
-  drawCircleEchoes( {
-    size,
-    count: 30,
-    position: keyPointVectors[ nose ],
-  } );
-};
-
-const drawFaceDetections = ( ) => {
-  const faceDetectionsArray = mediapipe.latestResult?.faceDetectionsArray;
-
-  if ( !faceDetectionsArray ) {
-    return;
-  }
-
-  noFill();
-  stroke(
-    0,
-    0,
-    255
-  );
-  strokeWeight( 5 );
-
-  faceDetectionsArray.forEach( ( detection ) => {
-    // const boundingBox = detection.boundingBox;
-    const keypoints = detection.keypoints;
-
-    drawFace( keypoints );
-
-    // beginShape( POINTS );
-    // keypoints.forEach( ( keypoint ) => {
-    //   vertex(
-    //     inverseX( keypoint.x ) * width,
-    //     keypoint.y * height
-    //   );
-    // } );
-    // strokeWeight( 10 );
-    // endShape();
-  } );
-};
-
 sketch.draw( (
   time, center, favouriteColour
 ) => {
@@ -493,7 +288,11 @@ sketch.draw( (
 
   const now = performance.now();
 
-  handDetectionState.handsAreCurrentlyVisible = ( mediapipe.latestResult?.handLandmarksArray?.length ?? 0 ) > 0;
+  // handDetectionState.handsAreCurrentlyVisible = Object.values( mediapipe.workerResult ).some( libResult => libResult?.length > 0 ?? false );
+  handDetectionState.handsAreCurrentlyVisible = (
+    ( mediapipe.workerResult?.hands?.landmarks?.length > 0 ?? false ) ||
+    ( mediapipe.workerResult?.poses?.landmarks?.length > 0 ?? false )
+  );
 
   if ( handDetectionState.handsAreCurrentlyVisible ) {
     handDetectionState.lastDetectedHandTime = now;
@@ -538,17 +337,81 @@ sketch.draw( (
       height
     );
 
-    if ( mediapipe.latestResult !== null ) {
-      drawHands(
-        mediapipe.latestResult.handLandmarksArray,
-        layers.hands.graphics
-      );
-      // drawFaceDetections();
-      // drawSegmentationOverlay();
-    }
+    drawHands(
+      mediapipe.workerResult.hands,
+      layers.hands.graphics
+    );
+
+    // drawPoses(
+    //   mediapipe.workerResult.poses,
+    //   layers.hands.graphics
+    // );
 
     // drawNeonDots();
-    drawChewingGums();
+    // drawChewingGums();
+
+    // Update hand physics bodies
+    updateHandBodies();
+
+    Engine.update( matter.engine );
+
+    matter.engine.gravity = Vector.create(
+      mappers.fn(
+        Math.sin( animation.angle ),
+        -1,
+        1,
+        -1,
+        1,
+        // easing.easeInOutExpo
+      ),
+      mappers.fn(
+        Math.cos( animation.angle * 1.5 ),
+        -1,
+        1,
+        -1,
+        1,
+        // easing.easeInOutExpo
+      ),
+    );
+
+    matter.balls.forEach( (
+      ball, index
+    ) => {
+      const {
+        position, circleRadius
+      } = ball;
+
+      // layers.visuals.graphics.circle(
+      //   position.x,
+      //   position.y,
+      //   circleRadius * 2
+      // );
+
+      drawNeonDot( {
+        sizeRange: [
+          circleRadius * 2,
+          circleRadius * 2 / 3
+        ],
+        shadowsCount: 3,
+        graphics: layers.visuals.graphics,
+        position,
+        index: index / ( matter.balls.length )
+      } );
+
+      // drawImageWithMask( {
+      //   img,
+      //   maskDrawer: graphics => {
+      //     graphics.fill( 255 );
+      //     graphics.noStroke();
+      //     graphics.ellipse(
+      //       x,
+      //       y,
+      //       circleRadius * 2,
+      //       circleRadius * 2
+      //     );
+      //   }
+      // } );
+    } );
   }
 
   for ( const layerName in layers ) {
@@ -600,6 +463,95 @@ function clearGraphics(
     size.height
   );
   graphics.noErase();
+}
+
+function updateHandBodies() {
+  // Remove old hand bodies
+  for ( let handBody of matter.handBodies ) {
+    Composite.remove(
+      matter.engine.world,
+      handBody
+    );
+  }
+  matter.handBodies = [
+  ];
+
+  mediapipe.workerResult?.hands?.landmarks?.forEach?.( createHandInteractionBodies );
+}
+
+function createHandInteractionBodies( hand ) {
+  // Key landmarks for interaction (palm, fingertips)
+  const interactionPoints = [
+    hand[ 0 ], // Wrist
+    hand[ 4 ], // Thumb tip
+    hand[ 8 ], // Index tip
+    hand[ 12 ], // Middle tip
+    hand[ 16 ], // Ring tip
+    hand[ 20 ], // Pinky tip
+    hand[ 9 ], // Middle finger base (palm center)
+  ];
+
+  interactionPoints.forEach( point => {
+    if ( point ) {
+      const x = inverseX( point.x ) * width;
+      const y = point.y * height;
+
+      // Create invisible circular body
+      const handBody = Matter.Bodies.circle(
+        x,
+        y,
+        75,
+        {
+          isStatic: true, // Static so it doesn't fall
+          isSensor: false, // Can interact with other bodies
+        }
+      );
+
+      matter.handBodies.push( handBody );
+
+      Composite.add(
+        matter.engine.world,
+        handBody
+      );
+    }
+  } );
+}
+
+function addImageBall(
+  img, x, y, radius
+) {
+  const newBall = Bodies.circle(
+    x,
+    y,
+    radius,
+    radius
+  );
+
+  matter.balls.unshift( newBall );
+  Composite.add(
+    matter.engine.world,
+    newBall
+  );
+}
+
+function addBoundary(
+  x, y, w, h
+) {
+  const newBoundary = Bodies.rectangle(
+    x,
+    y,
+    w,
+    h,
+    {
+      isStatic: true,
+    }
+  );
+
+  matter.boundaries.unshift( newBoundary );
+  Composite.add(
+    matter.engine.world,
+    newBoundary
+  );
 }
 
 function inverseX(
