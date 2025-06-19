@@ -21,7 +21,8 @@ import {
   ImageSegmenter,
   HandLandmarker,
   FaceDetector
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+} from "/assets/scripts/mediapipe/vision_bundle.js";
+// } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
 
 // ---------------------------------------------------------------------------
 // Global MediaPipe container (all mutable task‑related state lives here)
@@ -58,16 +59,18 @@ const mediapipe = {
 
 events.register(
   "engine-window-preload",
+
   async() => {
-    const filesetResolver = await FilesetResolver.forVisionTasks( "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm" );
+    // const filesetResolver = await FilesetResolver.forVisionTasks( "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm" );
+    const filesetResolver = await FilesetResolver.forVisionTasks( "/assets/scripts/mediapipe/wasm" );
 
     mediapipe.tasks.segmenter = await ImageSegmenter.createFromOptions(
       filesetResolver,
       {
         baseOptions: {
           delegate: "GPU",
-          modelAssetPath:
-            "https://storage.googleapis.com/mediapipe-assets/deeplabv3.tflite?generation=1661875711618421"
+          // modelAssetPath: "https://storage.googleapis.com/mediapipe-assets/deeplabv3.tflite?generation=1661875711618421"
+          modelAssetPath: "/assets/scripts/mediapipe/deeplabv3.tflite"
         },
         outputCategoryMask: true,
         outputConfidenceMasks: true,
@@ -82,7 +85,8 @@ events.register(
         runningMode: mediapipe.runningMode,
         baseOptions: {
           delegate: "GPU",
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+          // modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+          modelAssetPath: "/assets/scripts/mediapipe/hand_landmarker.task"
         }
       }
     );
@@ -93,7 +97,8 @@ events.register(
         runningMode: mediapipe.runningMode,
         baseOptions: {
           delegate: "GPU",
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+          // modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+          modelAssetPath: "/assets/scripts/mediapipe/blaze_face_short_range.tflite"
         }
       }
     );
@@ -137,7 +142,9 @@ sketch.setup(
   {
     size: {
       width: options.size.width,
-      height: options.size.height
+      height: options.size.height,
+      // width: 1920,
+      // height: 1080
     },
     animation: {
       framerate: options.animation.framerate,

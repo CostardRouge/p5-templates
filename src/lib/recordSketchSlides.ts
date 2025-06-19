@@ -8,14 +8,9 @@ import {
   Page
 } from "playwright";
 
-import {
-  setProgress
-} from "@/lib/progressStore";
+import zipFiles from "@/utils/zipFiles";
 
-import zipFiles from "@/lib/zipFiles";
-
-import minifyAndEncode from "@/utils/minifyAndEncodeCaptureOptions";
-import encodeVideoFromFrames from "@/lib/encodeVideoFromFrames";
+import encodeVideoFromFrames from "@/utils/encodeVideoFromFrames";
 import createBrowserPage from "@/utils/createBrowserPage";
 
 import {
@@ -24,7 +19,10 @@ import {
 
 import {
   uploadArtifact
-} from "@/lib/s3";
+} from "@/lib/connections/s3";
+import {
+  updateRecordingStepPercentage
+} from "@/lib/progression";
 
 async function recordSketchSlides(
   jobId: string,
@@ -58,10 +56,10 @@ async function recordSketchSlides(
       const slideProgressBase = ( slideIndex / slides.length ) * 90;
 
       // ─── 6.1 Launch browser for this slide ───────────────────────────────────
-      await setProgress(
+      await updateRecordingStepPercentage(
         jobId,
-        `slide-${ slideIndex }-browser`,
-        15 + slideProgressBase
+        `recording.slide-${ slideIndex }.launching-browser`,
+        0
       );
 
       recordingState.page = await createPage();
@@ -80,26 +78,32 @@ async function recordSketchSlides(
         slideIndex
       );
 
-      await setProgress(
+      await updateRecordingStepPercentage(
         jobId,
-        `slide-${ slideIndex }-capturing`,
-        slideProgressBase + 15
+        `recording.slide-${ slideIndex }.launching-browser`,
+        100
       );
 
       // ─── 6.2 Capture frames for this slide ──────────────────────────────────
       await recordingState.page.exposeFunction(
         "reportCaptureProgress",
         async( percentage: number ) => {
-          await setProgress(
+          await updateRecordingStepPercentage(
             jobId,
-            `slide-${ slideIndex }-capturing`,
-            slideProgressBase + 15 + percentage * 40
+            `recording.slide-${ slideIndex }.saving-frames`,
+            percentage
           );
         }
       );
 
       // @ts-ignore
       await recordingState.page.evaluate( () => window.startLoopRecording() );
+
+      await updateRecordingStepPercentage(
+        jobId,
+        `recording.slide-${ slideIndex }.saving-frames`,
+        0
+      );
 
       const downloadEvent = await recordingState.page.waitForEvent(
         "download",
@@ -112,14 +116,27 @@ async function recordSketchSlides(
         `slide_${ slideIndex }.tar`
       );
 
+      await updateRecordingStepPercentage(
+        jobId,
+        `recording.slide-${ slideIndex }.downloading-frames-archive`,
+        0
+      );
+
       await downloadEvent.saveAs( slideTarPath );
+
+      await updateRecordingStepPercentage(
+        jobId,
+        `recording.slide-${ slideIndex }.downloading-frames-archive`,
+        100
+      );
+
       await recordingState.page.close();
 
       // ─── 6.3 Extract and encode this slide ─────────────────────────────────
-      await setProgress(
+      await updateRecordingStepPercentage(
         jobId,
-        `slide-${ slideIndex }-extracting`,
-        slideProgressBase + 60
+        `recording.slide-${ slideIndex }.extracting-frames-archive`,
+        50
       );
 
       const slideFramesDirectory = path.join(
@@ -138,6 +155,12 @@ async function recordSketchSlides(
         cwd: slideFramesDirectory
       } );
 
+      await updateRecordingStepPercentage(
+        jobId,
+        `recording.slide-${ slideIndex }.extracting-frames-archive`,
+        100
+      );
+
       const slideVideoPath = path.join(
         temporaryDirectoryPath,
         `${ path.basename( template ) }_${ slideIndex }.mp4`
@@ -148,10 +171,10 @@ async function recordSketchSlides(
         slideVideoPath,
         options.animation,
         async( percentage: number ) => {
-          await setProgress(
+          await updateRecordingStepPercentage(
             jobId,
-            `slide-${ slideIndex }-encoding`,
-            slideProgressBase + 60 + percentage * 20
+            `recording.slide-${ slideIndex }.encoding-frames`,
+            percentage
           );
         }
       );
@@ -170,10 +193,10 @@ async function recordSketchSlides(
     }
 
     // ─── 7. Bundle all .mp4s into ZIP ───────────────────────────────────────────
-    await setProgress(
+    await updateRecordingStepPercentage(
       jobId,
-      "zipping-slides",
-      95
+      "uploading.archiving",
+      0
     );
 
     const zipOutputPath = path.join(
@@ -186,20 +209,32 @@ async function recordSketchSlides(
       zipOutputPath
     );
 
+    await updateRecordingStepPercentage(
+      jobId,
+      "uploading.archiving",
+      100
+    );
+
     for ( const slideVideoPath of slideVideoPaths ) {
       await fs.unlink( slideVideoPath ).catch( () => {} );
     }
 
     // ─── 8. Upload ZIP to S3 ───────────────────────────────────────────────────
-    await setProgress(
+    await updateRecordingStepPercentage(
       jobId,
-      "upload-zip",
-      95
+      "uploading.s3",
+      0
     );
 
     const zipS3Url = await uploadArtifact(
       `${ jobId }/${ path.basename( zipOutputPath ) }`,
       await fs.readFile( zipOutputPath )
+    );
+
+    await updateRecordingStepPercentage(
+      jobId,
+      "uploading.s3",
+      100
     );
 
     await updateJob(
@@ -212,10 +247,12 @@ async function recordSketchSlides(
     );
   }
   catch ( error ) {
-    await setProgress(
+    await updateJob(
       jobId,
-      "error",
-      100
+      {
+        status: "failed",
+        progress: 100,
+      }
     );
 
     throw error;

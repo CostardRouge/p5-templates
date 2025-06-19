@@ -3,7 +3,9 @@ import sketch from "./sketch.js";
 import time from "./time.js";
 
 const animation = {
-  animate: ( fn, duration, onProgress, onComplete ) => {
+  animate: (
+    fn, duration, onProgress, onComplete
+  ) => {
     const start = performance.now();
 
     const animate = time => {
@@ -31,9 +33,11 @@ const animation = {
     return time.seconds() % sketch.sketchOptions?.animation?.duration / sketch.sketchOptions?.animation?.duration;
   },
   get circularProgression() {
-    return mappers.circular( animation.progression,
+    return mappers.circular(
+      animation.progression,
       0,
-      1 );
+      1
+    );
   },
   triangleProgression: ( speedFactor = 1 ) => {
     const progress = ( animation.progression * speedFactor ) % 1;
@@ -55,18 +59,22 @@ const animation = {
   },
 
   get sinAngle() {
-    return map( animation.progression,
+    return map(
+      animation.progression,
       0,
       1,
       -PI / 2,
-      PI / 2 );
+      PI / 2
+    );
   },
   get cosAngle() {
-    return map( animation.progression,
+    return map(
+      animation.progression,
       0,
       1,
       PI,
-      TAU );
+      TAU
+    );
   },
 
   sinOscillation( speedFactor = 1 ) {
@@ -79,18 +87,22 @@ const animation = {
     const progression = animation.progression;
 
     if ( progression < 0.5 ) {
-      return map( progression,
+      return map(
+        progression,
         0,
         0.5,
         -1,
-        1 ); // Forward phase
+        1
+      ); // Forward phase
     }
 
-    return map( progression,
+    return map(
+      progression,
       0.5,
       1,
       1,
-      -1 ); // Backward phase
+      -1
+    ); // Backward phase
   },
 
   ease: ( {
@@ -103,30 +115,42 @@ const animation = {
     endIndex = currentTime + 1
   } ) => (
     lerpFn(
-      mappers.circularIndex( startIndex,
-        values ),
-      mappers.circularIndex( endIndex,
-        values ),
+      mappers.circularIndex(
+        startIndex,
+        values
+      ),
+      mappers.circularIndex(
+        endIndex,
+        values
+      ),
       easingFn( ( currentTime * duration ) % duration )
     )
   ),
-  makeEaseInOut: ( inFn, outFn = inFn ) => ( timeFraction => {
+  makeEaseInOut: (
+    inFn, outFn = inFn
+  ) => ( timeFraction => {
     if ( timeFraction < .5 )
       return inFn( 2 * timeFraction ) / 2;
     else
       return ( 2 - outFn( 2 * ( 1 - timeFraction ) ) ) / 2;
   } ),
-  sequence: function( key, speed, values, amount = 0.07, lerpFn = lerp ) {
+  sequence: function(
+    key, speed, values, amount = 0.07, lerpFn = lerp
+  ) {
     this.values = this.values ?? {
     };
 
-    const newValue = mappers.circularIndex( speed,
-      values );
+    const newValue = mappers.circularIndex(
+      speed,
+      values
+    );
     const currentSavedValue = this.values[ key ] ? this.values[ key ] : newValue;
 
-    return this.values[ key ] = lerpFn( currentSavedValue,
+    return this.values[ key ] = lerpFn(
+      currentSavedValue,
       newValue,
-      amount );
+      amount
+    );
   }
 };
 

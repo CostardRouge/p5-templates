@@ -26,7 +26,9 @@ const recorder = {
       workersPath: "libraries/",
     } );
   },
-  start: async( maximumFrames, saveCallback ) => {
+  start: async(
+    maximumFrames, saveCallback
+  ) => {
     if ( true === recorder.recording ) {
       return;
     }
@@ -72,7 +74,8 @@ const recorder = {
       return;
     }
 
-    debug.createElement( "body",
+    debug.createElement(
+      "body",
       "recorder-saved-frames",
       () => {
         if ( recorder.maximumFrames ) {
@@ -81,7 +84,8 @@ const recorder = {
 
         return recorder.savedFramesCount;
       },
-      !recorder.recording );
+      !recorder.recording
+    );
 
     if ( recorder.maximumFrames && document.getElementById( "recording-progression" ) ) {
       document.getElementById( "recording-progression" ).style.width = ( recorder.savedFramesCount / recorder.maximumFrames ) * 100 + "%";
@@ -112,7 +116,7 @@ const recorder = {
     if ( typeof window.reportCaptureProgress === "function" ) {
       const progression = ( recorder.savedFramesCount / animation.maximumFramesCount );
 
-      window.reportCaptureProgress( progression );
+      window.reportCaptureProgress( progression * 100 );
     }
   }
 };
