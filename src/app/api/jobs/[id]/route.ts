@@ -6,7 +6,7 @@ import {
 } from "@/lib/jobStore";
 import {
   RecordingQueueService
-} from "@/lib/services/recording-queue.service";
+} from "@/lib/services/RecordingQueueService";
 
 /**
  * GET /api/jobs/[id]

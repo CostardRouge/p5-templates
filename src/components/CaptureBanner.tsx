@@ -14,11 +14,12 @@ import {
   useRecordingQueue
 } from "@/lib/hooks/useRecordingQueue";
 
-// import fetchDownload from "@/components/utils/fetchDownload";
+import useRecordingStatusStream from "@/lib/hooks/useRecordingStatusStream";
+import {
+  JobId
+} from "@/types/recording.types";
 
-type ProgressData = {
- stepName: string; percentage: number
-} | null;
+import fetchDownload from "@/components/utils/fetchDownload";
 
 export default function CaptureBanner( {
   name,
@@ -29,14 +30,18 @@ export default function CaptureBanner( {
     options: Record<string, unknown>;
     setOptions: ( nextOptions: JsonData ) => void;
 } ) {
+  const {
+    enqueueRecording, isLoading
+  } = useRecordingQueue();
+
   const [
-    recordingProgress,
-    // setRecordingProgress
-  ] = useState<ProgressData>( null );
+    jobId,
+    setJobId
+  ] = useState<JobId | undefined>( );
 
   const {
-    enqueueRecording, isLoading, error
-  } = useRecordingQueue();
+    subscribeToRecordingStatus, recordingProgress
+  } = useRecordingStatusStream();
 
   const handleSubmit = async() => {
     const formData = new FormData();
@@ -79,10 +84,11 @@ export default function CaptureBanner( {
 
     const jobId = await enqueueRecording( formData );
 
-    console.log(
-      "Job created:",
-      jobId
-    );
+    if ( jobId !== null ) {
+      setJobId( jobId );
+
+      subscribeToRecordingStatus( jobId );
+    }
   };
 
   return (
@@ -116,21 +122,29 @@ export default function CaptureBanner( {
         </button>
       )}
 
-      {isLoading && recordingProgress && (
-        <div className="flex flex-col justify-start">
-          <div className="w-64 h-full bg-gray-200 rounded">
-            <div
-              className="h-full bg-black rounded"
-              style={{
-                width: `${ recordingProgress.percentage }%`
-              }}
-            />
-          </div>
-
-          <span className="text-sm">
-            {recordingProgress.stepName} – {Math.round( recordingProgress.percentage )}%
-          </span>
+      {recordingProgress && recordingProgress.percentage !== 100 && ( <div className="flex flex-col justify-start">
+        <div className="w-64 h-full bg-gray-200 rounded">
+          <div
+            className="h-full bg-black rounded"
+            style={{
+              width: `${ recordingProgress.percentage }%`
+            }}
+          />
         </div>
+
+        <span className="text-sm text-black">
+          {recordingProgress.status}: {recordingProgress?.currentStep?.name} – {Math.round( recordingProgress?.percentage )}%
+        </span>
+      </div> ) }
+
+      { recordingProgress?.percentage === 100 && jobId && (
+        <button
+          className="rounded-sm px-4 border border-black text-black inline-block"
+          onClick={async() => await fetchDownload( `/api/download/${ jobId }` )}
+        >
+          <Download className="inline mr-1"/>
+          Download
+        </button>
       ) }
     </div>
   );

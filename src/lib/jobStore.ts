@@ -1,6 +1,6 @@
 import {
   prisma
-} from "@/lib/prisma";
+} from "@/lib/connections/prisma";
 
 /**
  * TypeScript type matching the Prisma Job model.
@@ -21,13 +21,13 @@ export type JobModel = {
  * Create a new Job record with status = 'queued' and progress = 0
  */
 export async function createJob(
-  id: string, template: string
-): Promise<void> {
-  await prisma.job.create( {
+  id: string, template: string, status: string
+): Promise<JobModel> {
+  return prisma.job.create( {
     data: {
       id,
+      status,
       template,
-      status: "queued",
       progress: 0,
     },
   } );

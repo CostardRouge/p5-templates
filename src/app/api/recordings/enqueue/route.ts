@@ -3,7 +3,7 @@ import {
 } from "next/server";
 import {
   RecordingService
-} from "@/lib/services/recording.service";
+} from "@/lib/services/RecordingService";
 import {
   EnqueueRecordingRequest,
   EnqueueRecordingResponse
@@ -13,10 +13,6 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
   try {
     const formData = await request.formData();
     const template = formData.get( "template" );
-
-    console.log( {
-      template
-    } );
 
     // Validate request body
     if ( !template || typeof template !== "string" ) {

@@ -1,8 +1,4 @@
-import {
-  setProgress
-} from "@/lib/progressStore";
-
-import encodeVideoFromFrames from "@/lib/encodeVideoFromFrames";
+import encodeVideoFromFrames from "@/utils/encodeVideoFromFrames";
 import createBrowserPage from "@/utils/createBrowserPage";
 
 import {
@@ -11,7 +7,7 @@ import {
 
 import {
   uploadArtifact
-} from "@/lib/s3";
+} from "@/lib/connections/s3";
 
 import * as tar from "tar";
 
@@ -22,6 +18,9 @@ import {
   Browser,
   Page
 } from "playwright";
+import {
+  updateRecordingStepPercentage
+} from "@/lib/progression";
 
 async function recordSketch(
   jobId: string,
@@ -38,10 +37,10 @@ async function recordSketch(
 
   try {
     // ─── 5. Launch browser & load sketch ───────────────────────────────────────
-    await setProgress(
+    await updateRecordingStepPercentage(
       jobId,
-      "launch-browser",
-      15
+      "recording.launching-browser",
+      0
     );
 
     const {
@@ -55,6 +54,12 @@ async function recordSketch(
     recordingState.browser = browser;
     recordingState.page = await createPage();
 
+    await updateRecordingStepPercentage(
+      jobId,
+      "recording.launching-browser",
+      50
+    );
+
     await recordingState.page.goto(
       `http://localhost:3000/templates/${ template }?id=${ jobId }`,
       {
@@ -64,26 +69,32 @@ async function recordSketch(
 
     await recordingState.page.waitForSelector( "canvas#defaultCanvas0.loaded" );
 
+    await updateRecordingStepPercentage(
+      jobId,
+      "recording.launching-browser",
+      100
+    );
+
     // ─── 6. Capture frames ─────────────────────────────────────────────────────
     await recordingState.page.exposeFunction(
       "reportCaptureProgress",
       async( percentage: number ) => {
-        await setProgress(
+        await updateRecordingStepPercentage(
           jobId,
-          "capturing-frames",
-          15 + percentage * 50
+          "recording.saving-frames",
+          percentage
         );
       }
     );
 
-    await setProgress(
-      jobId,
-      "starting-capture",
-      65
-    );
-
     // @ts-ignore
     await recordingState.page.evaluate( () => window.startLoopRecording() );
+
+    await updateRecordingStepPercentage(
+      jobId,
+      "recording.saving-frames",
+      0
+    );
 
     const downloadEvent = await recordingState.page.waitForEvent(
       "download",
@@ -96,20 +107,26 @@ async function recordSketch(
       downloadEvent.suggestedFilename()
     );
 
-    await setProgress(
-      jobId,
-      "download-frames",
-      70
-    );
+    // await updateRecordingStepPercentage(
+    //   jobId,
+    //   "recording.downloading-frames-archive",
+    //   0
+    // );
 
     await downloadEvent.saveAs( tarPath );
+
+    await updateRecordingStepPercentage(
+      jobId,
+      "recording.downloading-frames-archive",
+      100
+    );
     await recordingState.page.close();
 
     // ─── 7. Extract frames ───────────────────────────────────────────────────────
-    await setProgress(
+    await updateRecordingStepPercentage(
       jobId,
-      "extract-frames",
-      75
+      "recording.extracting-frames-archive",
+      50
     );
 
     const tarExtractionPath = path.join(
@@ -129,8 +146,13 @@ async function recordSketch(
       cwd: tarExtractionPath
     } );
 
-    // ─── 8. Encode .mp4 ──────────────────────────────────────────────────────────
+    await updateRecordingStepPercentage(
+      jobId,
+      "recording.extracting-frames-archive",
+      100
+    );
 
+    // ─── 8. Encode .mp4 ──────────────────────────────────────────────────────────
     const outputVideoPath = path.join(
       temporaryDirectoryPath,
       `${ path.basename( template ) }-${ jobId }.mp4`
@@ -141,10 +163,10 @@ async function recordSketch(
       outputVideoPath,
       options.animation,
       async( percentage ) => {
-        await setProgress(
+        await updateRecordingStepPercentage(
           jobId,
-          "encoding",
-          75 + percentage * 20
+          "recording.encoding-frames",
+          percentage
         );
       }
     );
@@ -160,10 +182,10 @@ async function recordSketch(
     await fs.unlink( tarPath ).catch( () => {} );
 
     // ─── 9. Upload final .mp4 to S3 ──────────────────────────────────────────────
-    await setProgress(
+    await updateRecordingStepPercentage(
       jobId,
-      "saving-result",
-      99
+      "uploading",
+      0
     );
 
     const videoS3Url = await uploadArtifact(
@@ -172,6 +194,11 @@ async function recordSketch(
     );
 
     // ─── 10. Mark job done in DB ─────────────────────────────────────────────────
+    await updateRecordingStepPercentage(
+      jobId,
+      "uploading",
+      100
+    );
     await updateJob(
       jobId,
       {
@@ -182,10 +209,12 @@ async function recordSketch(
     );
   }
   catch ( error ) {
-    await setProgress(
+    await updateJob(
       jobId,
-      "error",
-      100
+      {
+        status: "failed",
+        progress: 100
+      }
     );
 
     throw error;

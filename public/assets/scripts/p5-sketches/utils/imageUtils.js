@@ -13,7 +13,10 @@ const imageUtils = {
     center = false,
     clip = false,
     fill = false,
-    position = createVector(),
+    position = createVector(
+      width / 2,
+      height / 2
+    ),
   } ) => {
     const scaledBoundary = createVector(
       boundary.width * scale,
@@ -24,9 +27,13 @@ const imageUtils = {
     const availableHeight = fill ? boundary.height - margin : scaledBoundary.y - 2 * margin;
     const screenHeightScale = ( availableHeight / img.height );
     const screenWidthScale = ( availableWidth / img.width );
-    const screenScale = fill ? Math.max( screenWidthScale,
-      screenHeightScale ) : Math.min( screenWidthScale,
-      screenHeightScale );
+    const screenScale = fill ? Math.max(
+      screenWidthScale,
+      screenHeightScale
+    ) : Math.min(
+      screenWidthScale,
+      screenHeightScale
+    );
 
     const h = img.height * screenScale * scale;
     const w = img.width * screenScale * scale;
@@ -34,17 +41,19 @@ const imageUtils = {
     graphics.push();
 
     if ( clip ) {
-      graphics.clip( () => {
-        graphics.rect(
-          position.x - scaledBoundary.x / 2,
-          position.y - scaledBoundary.y / 2,
-          scaledBoundary.x,
-          scaledBoundary.y
-        );
-      },
-      {
-        invert: false
-      } );
+      graphics.clip(
+        () => {
+          graphics.rect(
+            position.x - scaledBoundary.x / 2,
+            position.y - scaledBoundary.y / 2,
+            scaledBoundary.x,
+            scaledBoundary.y
+          );
+        },
+        {
+          invert: false
+        }
+      );
     }
 
     // graphics.noFill();
@@ -79,15 +88,19 @@ const imageUtils = {
 
     graphics.pop();
 
-    callback?.( position.x,
+    callback?.(
+      position.x,
       position.y,
       w,
-      h );
+      h
+    );
 
     if ( options.lines ) {
-      stroke( options?.colors?.accent || color( 128,
+      stroke( options?.colors?.accent || color(
         128,
-        255 ) );
+        128,
+        255
+      ) );
 
       shapes.hl( position.y );
       shapes.hl( position.y + h );
@@ -96,9 +109,13 @@ const imageUtils = {
       shapes.vl( position.x + w );
     }
   },
-  clearColor: ( img, clr = color( 255,
-    255,
-    255 ) ) => {
+  clearColor: (
+    img, clr = color(
+      255,
+      255,
+      255
+    )
+  ) => {
     img.loadPixels();
 
     const {

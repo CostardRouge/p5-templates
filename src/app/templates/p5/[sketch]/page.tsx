@@ -63,7 +63,7 @@ async function ProcessingSketch( {
     sketchOptions.id = jobIdSearchParams;
   }
 
-  if ( capturingSearchParams ) {
+  if ( capturingSearchParams !== undefined ) {
     sketchOptions.capturing = true;
   }
 

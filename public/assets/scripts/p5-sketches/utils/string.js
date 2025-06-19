@@ -4,7 +4,9 @@ const string = {
   fonts: {
     loaded: {
     },
-    loadFont: ( key, path ) => {
+    loadFont: (
+      key, path
+    ) => {
       return string.fonts.loaded[ key ] ?? ( string.fonts.loaded[ key ] = loadFont( path ) );
     },
     get serif() {
@@ -83,6 +85,7 @@ const string = {
       font = string.fonts.serif,
       graphics = window,
       textWidth = graphics.width,
+      textHeight = -1,
       showBox = false,
       showLines = false,
       textAlign = [
@@ -164,12 +167,21 @@ const string = {
       graphics.pop();
     }
 
-    graphics.text(
+    const textParams = [
       str,
       position.x,
-      position.y,
-      textWidth
-    );
+      position.y
+    ];
+
+    if ( textWidth !== -1 ) {
+      textParams.push( textWidth );
+    }
+
+    if ( textHeight !== -1 ) {
+      textParams.push( textHeight );
+    }
+
+    graphics.text( ...textParams );
 
     if ( popPush ) {
       graphics.pop();
@@ -209,18 +221,22 @@ const string = {
         );
 
         const xMin = textPoints.reduce(
-          ( a, {
-            x
-          } ) => Math.min(
+          (
+            a, {
+              x
+            }
+          ) => Math.min(
             a,
             x
           ),
           Infinity
         );
         const xMax = textPoints.reduce(
-          ( a, {
-            x
-          } ) => Math.max(
+          (
+            a, {
+              x
+            }
+          ) => Math.max(
             a,
             x
           ),
@@ -229,18 +245,22 @@ const string = {
         const xCenter = ( xMax / 2 ) + ( xMin / 2 );
 
         const yMin = textPoints.reduce(
-          ( a, {
-            y
-          } ) => Math.min(
+          (
+            a, {
+              y
+            }
+          ) => Math.min(
             a,
             y
           ),
           Infinity
         );
         const yMax = textPoints.reduce(
-          ( a, {
-            y
-          } ) => Math.max(
+          (
+            a, {
+              y
+            }
+          ) => Math.max(
             a,
             y
           ),

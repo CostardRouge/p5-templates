@@ -1,7 +1,5 @@
 import recordSketch from "@/lib/recordSketch";
-import {
-  setProgress
-} from "@/lib/progressStore";
+
 import {
   updateJob, getJobById
 } from "@/lib/jobStore";
@@ -12,6 +10,12 @@ import os from "node:os";
 
 import recordSketchSlides from "@/lib/recordSketchSlides";
 import getCaptureOptions from "@/utils/getCaptureOptions";
+import {
+  addRecordingSteps
+} from "@/lib/progression";
+import {
+  getRecordingSketchStepsByOptions
+} from "@/lib/progression/steps";
 
 async function runRecording(
   jobId: string, template: string
@@ -30,13 +34,6 @@ async function runRecording(
   );
 
   try {
-    // ─── 2. Parse and write options.json ──────────────────────────────────────
-    await setProgress(
-      jobId,
-      "parse-options",
-      5
-    );
-
     const persistedJob = await getJobById( jobId );
 
     if ( !persistedJob || !persistedJob?.optionsKey ) {
@@ -49,6 +46,13 @@ async function runRecording(
     // @ts-ignore
     const slides = options.slides ?? null;
     const recordFunction = slides && Array.isArray( slides ) && slides.length > 0 ? recordSketchSlides : recordSketch;
+
+    // ─── 5. Update progression ──────────────────────────────────
+    await addRecordingSteps(
+      jobId,
+      getRecordingSketchStepsByOptions( options ),
+      persistedJob.status
+    );
 
     await recordFunction(
       jobId,

@@ -3,6 +3,7 @@ DEV_NODE_MODULES := $(HOST_APP_DIR)/node_modules
 
 APPLICATION_CODE_NAME=app
 DOCKER_COMPOSE=docker-compose
+DOCKER_COMPOSE_UP=$(DOCKER_COMPOSE) up
 DOCKER_COMPOSE_RUN=$(DOCKER_COMPOSE) run
 DOCKER_COMPOSE_RUN_ENTRYPOINT=$(DOCKER_COMPOSE_RUN) --service-ports --remove-orphans --entrypoint
 EXEC=$(DOCKER_COMPOSE_RUN) $(APPLICATION_CODE_NAME)
@@ -15,7 +16,7 @@ build: dc-build
 init: build all
 
 dc-up:
-	$(DOCKER_COMPOSE) up -d
+	$(DOCKER_COMPOSE_UP) -d
 
 dc-build:
 	$(DOCKER_COMPOSE) build
@@ -38,6 +39,16 @@ d-net-purge:
 
 d-prune:
 	docker system prune -a
+
+redis:
+	$(DOCKER_COMPOSE_UP) redis
+
+minio:
+	$(DOCKER_COMPOSE_UP) minio
+
+postgres:
+	$(DOCKER_COMPOSE_UP) postgres
+
 
 # APP RELATED COMMANDS
 app-install:

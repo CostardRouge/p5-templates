@@ -3,7 +3,7 @@ import {
 } from "next/server";
 import {
   getDownloadUrlFromS3Url
-} from "@/lib/s3";
+} from "@/lib/connections/s3";
 
 export async function GET(
   _request: Request,

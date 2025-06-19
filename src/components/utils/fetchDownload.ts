@@ -4,7 +4,7 @@ async function fetchDownload(
 }
 ) {
   const {
-    method = "POST", body
+    method = "GET", body
   } = options || {
   };
   const response = await fetch(
@@ -16,7 +16,7 @@ async function fetchDownload(
   );
 
   if ( !response.ok ) {
-    throw new Error( "recording failed" );
+    throw new Error( "download failed" );
   }
 
   const blob = await response.blob();
