@@ -12,7 +12,7 @@ import {
 
 import {
   useRecordingQueue
-} from "@/lib/hooks/use-recording-queue";
+} from "@/lib/hooks/useRecordingQueue";
 
 // import fetchDownload from "@/components/utils/fetchDownload";
 

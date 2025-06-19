@@ -5,7 +5,7 @@ import {
 } from "react";
 import {
   useRecordingQueue
-} from "@/lib/hooks/use-recording-queue";
+} from "@/lib/hooks/useRecordingQueue";
 import {
   QueueHealthResponse
 } from "@/types/recording.types";
@@ -74,7 +74,6 @@ export function RecordingDashboard() {
   return (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Recording Queue Dashboard</h2>
 
         {health && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -103,14 +102,14 @@ export function RecordingDashboard() {
             disabled={isLoading}
             className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
           >
-            Pause Queue
+            Pause
           </button>
           <button
             onClick={handleResumeQueue}
             disabled={isLoading}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
           >
-            Resume Queue
+            Resume
           </button>
         </div>
       </div>

@@ -4,6 +4,9 @@ import {
   useEffect, useState, useCallback
 } from "react";
 import HardLink from "@/components/HardLink";
+import {
+  RecordingDashboard
+} from "@/components/recording-dashboard";
 
 type Job = {
   id: string;
@@ -64,52 +67,12 @@ function ProgressBar( {
 }
 
 /**
- * Action buttons for each job row: Cancel, Retry, Download.
- */
-function JobActions( {
-  job, onCancel, onRetry
-}: {
-  job: Job, onCancel: ( id: Job["id"] ) => void, onRetry: ( id: Job["id"] ) => void
-} ) {
-  return (
-    <div className="space-x-2">
-      {/* {( job.status === "queued" || job.status === "active" ) && (*/}
-      <button
-        onClick={() => onCancel( job.id )}
-        className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
-      >
-        Cancel
-      </button>
-      {/* )}*/}
-      {job.status === "failed" && (
-        <button
-          onClick={() => onRetry( job.id )}
-          className="px-2 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-xs"
-        >
-          Retry
-        </button>
-      )}
-      {job.resultUrl && (
-        <a
-          href={`/api/download/${ job.id }`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
-        >
-          Download
-        </a>
-      )}
-    </div>
-  );
-}
-
-/**
  * Single row representing a job.
  */
 function JobRow( {
-  job, onCancel, onRetry
+  job
 }:{
-  job: Job, onCancel: ( id: Job["id"] ) => void, onRetry: ( id: Job["id"] ) => void
+  job: Job
 } ) {
   return (
     <tr>
@@ -137,7 +100,16 @@ function JobRow( {
         <ProgressBar progress={job.progress} />
       </td>
       <td className="px-4 py-2 whitespace-nowrap text-sm">
-        <JobActions job={job} onCancel={onCancel} onRetry={onRetry} />
+        {job.resultUrl && (
+          <a
+            href={`/api/download/${ job.id }`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
+          >
+            Download
+          </a>
+        )}
       </td>
     </tr>
   );
@@ -175,68 +147,12 @@ export default function JobsPage() {
     ]
   );
 
-  const handleCancel = useCallback(
-    async( jobId: Job["id"] ) => {
-      try {
-        const response = await fetch(
-          `/api/jobs/${ jobId }`,
-          {
-            method: "DELETE"
-          }
-        );
-
-        if ( response.ok ) {
-          setJobs( prev =>
-            prev.map( job =>
-              job.id === jobId
-                ? {
-                  ...job,
-                  status: "cancelled",
-                  progress: 100
-                }
-                : job ) );
-        }
-      } catch ( error ) {
-        console.error( error );
-      }
-    },
-    [
-    ]
-  );
-
-  const handleRetry = useCallback(
-    async( jobId: Job["id"] ) => {
-      try {
-        const response = await fetch(
-          `/api/jobs/${ jobId }?cmd=retry`,
-          {
-            method: "POST"
-          }
-        );
-
-        if ( response.ok ) {
-          await response.json();
-          setJobs( prev =>
-            prev.map( job =>
-              job.id === jobId
-                ? {
-                  ...job,
-                  status: "queued",
-                  progress: 0
-                }
-                : job ) );
-        }
-      } catch ( error ) {
-        console.error( error );
-      }
-    },
-    [
-    ]
-  );
-
   return (
     <>
       <h1 className="text-2xl font-semibold mb-4">Recordings</h1>
+
+      <RecordingDashboard />
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -262,8 +178,6 @@ export default function JobsPage() {
               <JobRow
                 key={job.id}
                 job={job}
-                onCancel={handleCancel}
-                onRetry={handleRetry}
               />
             ) )}
           </tbody>
