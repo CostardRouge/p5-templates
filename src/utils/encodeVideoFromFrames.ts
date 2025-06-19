@@ -56,8 +56,8 @@ async function encodeVideoFromFrames(
           const totalFrames = fps * duration;
 
           onProgress( Math.min(
-            framesRendered / totalFrames,
-            1
+            ( framesRendered / totalFrames ) * 100,
+            100
           ) );
         }
       }

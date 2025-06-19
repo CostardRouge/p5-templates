@@ -5,7 +5,7 @@ import {
 } from "react";
 import {
   useRecordingQueue
-} from "@/lib/hooks/use-recording-queue";
+} from "@/lib/hooks/useRecordingQueue";
 import {
   QueueHealthResponse
 } from "@/types/recording.types";

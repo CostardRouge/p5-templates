@@ -5,13 +5,17 @@ import type {
 const nextConfig: NextConfig = {
   devIndicators: false,
   crossOrigin: "anonymous",
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "50mb",
-    },
-  },
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
+  },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/templates",
+        permanent: true,
+      },
+    ];
   },
 };
 

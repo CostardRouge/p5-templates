@@ -4,7 +4,7 @@ import {
 import {
   v4 as generateUuid
 } from "uuid";
-import RedisConnection from "@/lib/redis-connection";
+import Redis from "@/lib/connections/redis";
 import {
   createJob, updateJob
 } from "@/lib/jobStore";
@@ -15,7 +15,10 @@ import {
 } from "@/types/recording.types";
 import {
   uploadArtifact
-} from "@/lib/s3";
+} from "@/lib/connections/s3";
+import {
+  addRecordingStatus
+} from "@/lib/progression";
 
 export class RecordingQueueService {
   private static instance: RecordingQueueService | null = null;
@@ -23,6 +26,7 @@ export class RecordingQueueService {
 
   private readonly DEFAULT_JOB_OPTIONS: Omit<JobConfiguration, "jobId"> = {
     removeOnComplete: 100,
+    removeOnFail: 50,
     attempts: 1,
     backoff: {
       type: "exponential",
@@ -34,10 +38,10 @@ export class RecordingQueueService {
     this.queue = new Queue<RecordingJobData>(
       "recording-queue",
       {
-        connection: RedisConnection.getInstance(),
+        connection: Redis.getInstance(),
         defaultJobOptions: {
           removeOnComplete: this.DEFAULT_JOB_OPTIONS.removeOnComplete,
-          removeOnFail: 50,
+          removeOnFail: this.DEFAULT_JOB_OPTIONS.removeOnFail,
           attempts: this.DEFAULT_JOB_OPTIONS.attempts,
           backoff: this.DEFAULT_JOB_OPTIONS.backoff,
         },
@@ -73,9 +77,15 @@ export class RecordingQueueService {
 
     try {
       // 1. Create job record in database first
-      await createJob(
+      const persistedJob = await createJob(
         jobId,
-        template
+        template,
+        "queued"
+      );
+
+      await addRecordingStatus(
+        jobId,
+        persistedJob.status
       );
 
       // 2. Persisting files in s3

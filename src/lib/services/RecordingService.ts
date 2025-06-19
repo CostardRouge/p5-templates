@@ -1,10 +1,10 @@
 import {
   RecordingQueueService
-} from "./recording-queue.service";
+} from "./RecordingQueueService";
 import {
   RecordingWorkerService
-} from "./recording-worker.service";
-import RedisConnection from "@/lib/redis-connection";
+} from "./RecordingWorkerService";
+import Redis from "@/lib/connections/redis";
 import {
   QueueHealthResponse
 } from "@/types/recording.types";
@@ -67,7 +67,7 @@ export class RecordingService {
         this.queueService.closeQueue(),
       ] );
 
-      await RedisConnection.disconnect();
+      await Redis.disconnect();
 
       console.log( "[Service] Graceful shutdown completed" );
     } catch ( error ) {

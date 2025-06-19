@@ -6,7 +6,7 @@ import {
 } from "@/lib/jobStore";
 import {
   getDownloadUrlFromS3Url
-} from "@/lib/s3";
+} from "@/lib/connections/s3";
 import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
 
 /**

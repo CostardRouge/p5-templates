@@ -1,17 +1,17 @@
 import IORedis from "ioredis";
 
-class RedisConnection {
+class Redis {
   private static instance: IORedis | null = null;
 
   public static getInstance(): IORedis {
-    if ( !RedisConnection.instance ) {
+    if ( !Redis.instance ) {
       const redisUrl = process.env.REDIS_URL;
 
       if ( !redisUrl ) {
         throw new Error( "REDIS_URL environment variable is required" );
       }
 
-      RedisConnection.instance = new IORedis(
+      Redis.instance = new IORedis(
         redisUrl,
         {
           maxRetriesPerRequest: null,
@@ -22,7 +22,7 @@ class RedisConnection {
       );
 
       // Handle connection events
-      RedisConnection.instance.on(
+      Redis.instance.on(
         "error",
         ( error ) => {
           console.error(
@@ -32,21 +32,21 @@ class RedisConnection {
         }
       );
 
-      RedisConnection.instance.on(
+      Redis.instance.on(
         "connect",
         () => {
           console.log( "[Redis] Connected successfully" );
         }
       );
 
-      RedisConnection.instance.on(
+      Redis.instance.on(
         "ready",
         () => {
           console.log( "[Redis] Ready to accept commands" );
         }
       );
 
-      RedisConnection.instance.on(
+      Redis.instance.on(
         "close",
         () => {
           console.log( "[Redis] Connection closed" );
@@ -54,16 +54,16 @@ class RedisConnection {
       );
     }
 
-    return RedisConnection.instance;
+    return Redis.instance;
   }
 
   public static async disconnect(): Promise<void> {
-    if ( RedisConnection.instance ) {
-      await RedisConnection.instance.quit();
-      RedisConnection.instance = null;
+    if ( Redis.instance ) {
+      await Redis.instance.quit();
+      Redis.instance = null;
       console.log( "[Redis] Connection closed gracefully" );
     }
   }
 }
 
-export default RedisConnection;
+export default Redis;

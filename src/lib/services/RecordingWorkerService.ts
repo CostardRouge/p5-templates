@@ -1,13 +1,11 @@
 import {
   Worker, Job
 } from "bullmq";
-import RedisConnection from "@/lib/redis-connection";
+import Redis from "@/lib/connections/redis";
 import {
   updateJob
 } from "@/lib/jobStore";
-import {
-  setProgress
-} from "@/lib/progressStore";
+
 import runRecording from "@/lib/runRecording";
 import {
   RecordingJobData
@@ -57,7 +55,7 @@ export class RecordingWorkerService {
       "recording-queue",
       this.processRecordingJob.bind( this ),
       {
-        connection: RedisConnection.getInstance(),
+        connection: Redis.getInstance(),
         concurrency: this.concurrency,
         stalledInterval: 30_000, // Check for stalled jobs every 30 seconds
         maxStalledCount: 1,
@@ -137,11 +135,11 @@ export class RecordingWorkerService {
     const jobId = job.id as string;
 
     try {
-      await setProgress(
-        jobId,
-        "completed",
-        100
-      );
+      // await setProgress(
+      //   jobId,
+      //   "completed",
+      //   100
+      // );
       console.log( `[Worker] Job completed: ${ jobId }` );
     } catch ( error ) {
       console.error(
@@ -165,11 +163,6 @@ export class RecordingWorkerService {
     }
 
     try {
-      await setProgress(
-        jobId,
-        "failed",
-        0
-      );
       console.error( `[Worker] Job failed: ${ jobId } - ${ error?.message }` );
     } catch ( updateError ) {
       console.error(
@@ -211,9 +204,5 @@ export class RecordingWorkerService {
       );
       throw error;
     }
-  }
-
-  public getWorker(): Worker<RecordingJobData> {
-    return this.worker;
   }
 }
