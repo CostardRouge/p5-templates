@@ -1,30 +1,43 @@
 "use client";
 
-import {
-  useEffect, useState, useCallback
+import React, {
+  useState, useEffect
 } from "react";
-import HardLink from "@/components/HardLink";
 import {
-  RecordingDashboard
-} from "@/components/recording-dashboard";
+  Grid, List, MoreVertical, Download, Trash2, RotateCcw, X
+} from "lucide-react";
 
+import {
+  Menu, MenuButton, MenuItem, MenuItems
+} from "@headlessui/react";
+
+import HardLink from "@/components/HardLink";
+import fetchDownload from "@/components/utils/fetchDownload";
+
+// Job type with timestamp
 type Job = {
   id: string;
   template: string;
   status: string;
   progress: number;
   resultUrl: string | null;
+  createdAt: string;
 };
 
-/**
- * Badge that represents job status with corresponding styles.
- */
+function getThumbnailURL( template: string ) {
+  return `/assets/scripts/p5-sketches/sketches/${ template.replaceAll(
+    "p5/",
+    ""
+  ) }/thumbnail.jpeg`;
+}
+
+// Badge component
 function StatusBadge( {
   status
 }: {
  status: Job["status"]
 } ) {
-  const statusClasses: Record<string, string> = {
+  const classes: Record<string, string> = {
     completed: "bg-green-100 text-green-800",
     failed: "bg-red-100 text-red-800",
     cancelled: "bg-yellow-100 text-yellow-800",
@@ -32,157 +45,298 @@ function StatusBadge( {
     queued: "bg-gray-100 text-gray-800",
   };
 
-  return (
-    <span
-      className={`px-2 inline-flex text-xs font-semibold leading-5 rounded-full ${
-        statusClasses[ status ] || statusClasses.queued
-      }`}
-    >
-      {status}
-    </span>
-  );
+  return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ classes[ status ] || classes.queued }`}>{status}</span>;
 }
 
-/**
- * Visual progress bar and percentage text.
- */
+// Progress bar component
 function ProgressBar( {
   progress
 }: {
  progress: number
 } ) {
   return (
-    <div className="w-40">
-      <div className="w-full bg-gray-200 rounded h-2">
+    <div className="w-full">
+      <div className="w-full bg-gray-200 rounded h-2 overflow-hidden">
         <div
-          className="h-2 bg-blue-500 rounded"
+          className="h-2 bg-blue-500"
           style={{
             width: `${ progress }%`
-          }}
-        />
+          }} />
       </div>
+
       <div className="text-xs text-gray-500 mt-1">{progress}%</div>
     </div>
   );
 }
 
-/**
- * Single row representing a job.
- */
-function JobRow( {
+// Actions dropdown
+function ActionsMenu( {
   job
-}:{
-  job: Job
+}: {
+ job: Job
 } ) {
   return (
-    <tr>
-      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
-        <HardLink
-          href={`/templates/${ job.template }?id=${ job.id }`}
-        >
-          {job.id.slice(
-            0,
-            8
+    <Menu as="div" className="relative inline-block text-left">
+      <MenuButton className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full inline-flex items-center">
+        <MoreVertical />
+      </MenuButton>
+
+      <MenuItems className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              onClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
+              className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+            >
+              <Download />
+              Download
+            </button>
           )}
-        </HardLink>
-      </td>
-      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
-        <HardLink
-          href={`/templates/${ job.template }`}
-        >
-          {job.template}
-        </HardLink>
-      </td>
-      <td className="px-4 py-2 whitespace-nowrap text-sm">
-        <StatusBadge status={job.status} />
-      </td>
-      <td className="px-4 py-2 whitespace-nowrap">
-        <ProgressBar progress={job.progress} />
-      </td>
-      <td className="px-4 py-2 whitespace-nowrap text-sm">
-        {job.resultUrl && (
-          <a
-            href={`/api/download/${ job.id }`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
-          >
-            Download
-          </a>
+        </MenuItem>
+
+        {![
+          "cancelled",
+          "failed"
+        ].includes( job.status ) && (
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              >
+                <X />
+                Cancel
+              </button>
+            )}
+          </MenuItem>
         )}
-      </td>
-    </tr>
+        {![
+          "failed",
+          "cancelled"
+        ].includes( job.status ) && (
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              >
+                <RotateCcw />
+                Retry
+              </button>
+            )}
+          </MenuItem>
+        )}
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+            >
+              <Trash2 />
+              Delete
+            </button>
+          )}
+        </MenuItem>
+      </MenuItems>
+    </Menu>
   );
 }
 
-/**
- * Main page displaying list of recording jobs.
- */
-export default function JobsPage() {
+export default function RecordingsPage() {
   const [
     jobs,
     setJobs
-  ] = useState<Job[]>( ( [
-  ] ) );
+  ] = useState<Job[]>( [
+  ] );
+  const [
+    view,
+    setView
+  ] = useState<"table" | "cards">( "table" );
+  const [
+    search,
+    setSearch
+  ] = useState<string>( "" );
+  const [
+    statusFilter,
+    setStatusFilter
+  ] = useState<string>( "all" );
 
-  // Fetch jobs once on mount
+  // fetch jobs
   useEffect(
     () => {
-      async function loadJobs() {
-        try {
-          const response = await fetch( "/api/jobs" );
-
-          if ( !response.ok ) throw new Error( "Failed to fetch jobs" );
-          const data = /** @type {Job[]} */ ( await response.json() );
-
-          setJobs( data );
-        } catch ( error ) {
-          console.error( error );
-        }
-      }
-
-      loadJobs();
+      fetch( "/api/jobs" )
+        .then( ( res ) => res.ok ? res.json() : Promise.reject( "Fetch error" ) )
+        .then( ( data: Job[] ) => setJobs( data ) )
+        .catch( console.error );
     },
     [
     ]
   );
 
+  // filter/search
+  const filtered = jobs.filter( ( job ) => {
+    const matchSearch = job.id.includes( search ) || job.template.includes( search );
+    const matchStatus = statusFilter === "all" || job.status === statusFilter;
+
+    return matchSearch && matchStatus;
+  } );
+
   return (
-    <>
-      <h1 className="text-2xl font-semibold mb-4">Recordings</h1>
+    <div className="space-y-6">
+      {/* Top Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Recordings</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            placeholder="Search…"
+            value={search}
+            onChange={( e ) => setSearch( e.target.value )}
+            className="px-3 rounded w-full sm:w-48 bg-gray-50 dark:bg-gray-800 h-9"
+          />
 
-      <RecordingDashboard />
+          <select
+            value={statusFilter}
+            onChange={( e ) => setStatusFilter( e.target.value )}
+            className="px-2 rounded bg-gray-50 dark:bg-gray-800 h-9"
+          >
+            <option value="all">All Status</option>
+            <option value="queued">Queued</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {[
-                "Job",
-                "Template",
-                "Status",
-                "Progress",
-                "Actions"
-              ].map( header => (
-                <th
-                  key={header}
-                  className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
-                >
-                  {header}
-                </th>
-              ) )}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {jobs.map( job => (
-              <JobRow
-                key={job.id}
-                job={job}
-              />
-            ) )}
-          </tbody>
-        </table>
+          <button onClick={() => setView( "table" )} className={`p-2 rounded ${ view === "table" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}>
+            <List className="w-5 h-5" />
+          </button>
+
+          <button onClick={() => setView( "cards" )} className={`p-2 rounded ${ view === "cards" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}>
+            <Grid className="w-5 h-5" />
+          </button>
+        </div>
       </div>
-    </>
+
+      {/* Table View */}
+      {view === "table" && (
+        <div className="overflow-x-auto rounded border border-gray-700">
+          <table className="min-w-full">
+            <thead className="bg-gray-300 dark:bg-gray-200">
+              <tr>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Thumb</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Template</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-700">
+              {filtered.map( ( job ) => (
+                <tr
+                  key={job.id}
+                  className="hover:bg-gray-700"
+                  onDoubleClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
+                >
+                  <td className="px-4 py-2 whitespace-nowrap hidden sm:table-cell">
+                    <img
+                      src={getThumbnailURL( job.template )}
+                      alt={job.template}
+                      loading="lazy"
+                      className="w-12 h-15 object-contain"
+                    />
+                  </td>
+
+                  <td className="px-4 py-2 whitespace-nowrap text-sm">
+                    <HardLink href={`templates/${ job.template }?id=${ job.id }`}>
+                      {job.id.slice(
+                        0,
+                        8
+                      )}
+                    </HardLink>
+                  </td>
+
+                  <td className="px-4 py-2 whitespace-nowrap text-sm">
+                    <HardLink href={`templates/${ job.template }`}>
+                      {job.template}
+                    </HardLink>
+                  </td>
+
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-white">
+                    {new Date( job.createdAt ).toLocaleString()}
+                  </td>
+
+                  <td className="px-2 py-1 whitespace-nowrap text-sm">
+                    <StatusBadge status={job.status} />
+                  </td>
+
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <ProgressBar progress={job.progress} />
+                  </td>
+
+                  <td className="px-4 py-2 whitespace-nowrap text-sm">
+                    <ActionsMenu job={job} />
+                  </td>
+                </tr>
+              ) )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Card View */}
+      {view === "cards" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filtered.map( ( job ) => (
+            <div key={job.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow hover:shadow-md transition relative">
+              <div className="w-full" style={{
+                paddingTop: "125%"
+              }}>
+                <img
+                  src={getThumbnailURL( job.template )}
+                  alt={job.template}
+                  loading="lazy"
+                  className="absolute top-0 left-0 w-full h-full object-contain"
+                />
+              </div>
+
+              <div className="p-4 space-y-1">
+                <div className="flex justify-between items-center">
+                  <HardLink href={`templates/${ job.template }?id=${ job.id }`} className="text-sm font-medium truncate">
+                    {job.id.slice(
+                      0,
+                      8
+                    )}
+                  </HardLink>
+                  <StatusBadge status={job.status} />
+                </div>
+
+                <HardLink href={`templates/${ job.template }`} className="block text-xs text-blue-600 hover:underline truncate">
+                  {job.template}
+                </HardLink>
+
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {new Date( job.createdAt ).toLocaleString()}
+                </div>
+
+                <ProgressBar progress={job.progress} />
+
+                <div className="flex justify-end">
+                  <ActionsMenu job={job} />
+                </div>
+              </div>
+            </div>
+          ) )}
+        </div>
+      )}
+    </div>
   );
 }

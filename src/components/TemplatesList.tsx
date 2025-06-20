@@ -17,10 +17,6 @@ interface TemplatesListProps {
   templates: Record<string, TemplateCategory>;
 }
 
-function getThumbnailURL( name: string ) {
-  return `assets/scripts/p5-sketches/sketches/${ name }/thumbnail.jpeg`;
-}
-
 export default function TemplatesList( {
   templates
 }: TemplatesListProps ) {
@@ -74,7 +70,7 @@ export default function TemplatesList( {
             }
           >
             {items.map( ( {
-              href, name
+              href, name, thumbnail
             } ) => {
               if ( view === "grid" ) {
                 return (
@@ -90,7 +86,7 @@ export default function TemplatesList( {
                       <img
                         alt={name}
                         loading="lazy"
-                        src={getThumbnailURL( name )}
+                        src={thumbnail}
                         className="absolute top-0 left-0 w-full h-full object-contain"
                       />
                     </div>
@@ -115,7 +111,7 @@ export default function TemplatesList( {
                     <img
                       alt={name}
                       loading="lazy"
-                      src={getThumbnailURL( name )}
+                      src={thumbnail}
                       className="w-full h-full object-contain"
                     />
                   </div>
