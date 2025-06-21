@@ -9,13 +9,14 @@ async function downloadFileResponse(
   const fileBuffer = await fs.readFile( filePath );
   const fileName = path.basename( filePath );
 
-  await onFileRead?.( fileBuffer );
-
   // Create stream from buffer
   const stream = new ReadableStream( {
     start( controller ) {
       controller.enqueue( fileBuffer );
       controller.close();
+    },
+    async cancel() {
+      await onFileRead?.( fileBuffer );
     }
   } );
 

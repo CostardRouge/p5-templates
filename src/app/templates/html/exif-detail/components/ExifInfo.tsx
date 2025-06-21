@@ -16,7 +16,8 @@ interface ExifInfoProps {
 }
 
 const friendlyCameraModelNames: Record<string, string> = {
-  "ILCE-7CM2": "ALPHA 7CII"
+  "ILCE-7CM2": "ALPHA 7CII",
+  "ILCE-6700": "ALPHA A6700",
 };
 
 async function formatGPSCoordinates( coordinates?: ExifData["gps"] ) {

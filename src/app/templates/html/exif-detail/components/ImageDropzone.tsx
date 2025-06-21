@@ -1,4 +1,5 @@
 import React, {
+  useRef,
   useState
 } from "react";
 
@@ -6,12 +7,13 @@ interface ImageDropzoneProps {
   onImageDrop: ( data: File ) => void;
   image: string | null,
   children: React.ReactNode;
-  onClick: () => void;
 }
 
 const ImageDropzone = ( {
-  image, onImageDrop, children, onClick
+  image, onImageDrop, children
 }: ImageDropzoneProps ) => {
+  const fileInputRef = useRef<HTMLInputElement>( null );
+
   const [
     isDragging,
     setIsDragging
@@ -66,27 +68,24 @@ const ImageDropzone = ( {
       onDragLeave={handleDragOut}
       onDragOver={handleDrag}
       onDrop={handleDrop}
-      onClick={onClick}
+      onClick={() => fileInputRef.current?.click()}
+      className="flex flex-col items-center justify-center w-full h-full"
     >
       {image !== null ? children : (
-        <label
-          htmlFor="file-input"
-          className="cursor-pointer"
+        <div
+          className={`flex flex-col items-center justify-center w-full h-full border-2 border-dashed transition-colors cursor-pointer ${ isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400" }`}
         >
-          <div
-            className={
-              `w-full aspect-video border-2 border-dashed transition-colors duration-200 flex flex-col items-center justify-center cursor-pointer ${ isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400" }`
-            }
+          <label
+            htmlFor="file-input"
+            className="cursor-pointer"
           >
-
-            <div className="flex flex-col items-center gap-4">
-              Upload
-            </div>
-          </div>
-        </label>
+            Upload
+          </label>
+        </div>
       )}
 
       <input
+        ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileInput}

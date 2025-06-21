@@ -1,18 +1,11 @@
-body {
-  /*font-size: x-large;*/
-}
-
-body, html {
-  background-color: black;
-}
-
 html:has(body.bg-white) {
   background: white;
 }
+
 div:has(#exif-info) #image {
-  max-height: calc(1350px - 12rem)
+  max-height: calc(1350px - 16rem)
 }
 
 #image {
-  max-height: calc(1350px - 4rem)
+  max-height: calc(1350px - 8rem)
 }

@@ -17,9 +17,9 @@ import fetchDownload from "@/components/utils/fetchDownload";
 
 const scalingStyle = "scale-[0.375] md:scale-[0.6] lg:scale-[0.7] xl:scale-9";
 const supportedObjectStyles = [
-  "object-fit",
   "object-cover",
-  "object-contain"
+  "object-contain",
+  "object-fit"
 ];
 const supportedImageTypes = [
   "image/jpeg",
@@ -200,12 +200,11 @@ const ImageInfoHelper = () => {
       <div className="flex flex-col items-center justify-center h-[100svh] text-black">
         <div
           id="div-to-capture"
-          className={`p-8 bg-white max-h-[1350px] w-[1080px] max-w-[1080px] ${ scaleRender ? scalingStyle : "" }`}
+          className={`p-16 bg-white h-[1350px] w-[1080px] ${ scaleRender ? scalingStyle : "" }`}
         >
           <ImageDropzone
             image={image}
             onImageDrop={handleImageFile}
-            onClick={() => setShowExif( !showExif )}
           >
             <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col">
               {image && (
@@ -223,7 +222,7 @@ const ImageInfoHelper = () => {
 
       { !capturing && (
         <div
-          className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black sm:h-20  text-black"
+          className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black sm:h-20 text-black"
         >
           {image && (
             <button
