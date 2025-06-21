@@ -14,7 +14,8 @@ export default async function TemplatesPage() {
       thumbnail: `assets/scripts/p5-sketches/sketches/${ name }/thumbnail.jpeg`,
       href: `templates/p5/${ name }`,
       name
-    } ) );
+    } ) )
+    .reverse();
 
   const templates: Record<string, TemplateCategory> = {
     p5: p5sketchNames,

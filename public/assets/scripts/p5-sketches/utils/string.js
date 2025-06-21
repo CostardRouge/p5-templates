@@ -90,7 +90,7 @@ const string = {
       showLines = false,
       textAlign = [
       ],
-      blendMode = BLEND,
+      blendMode = undefined,
       popPush = true,
     } = options;
 
@@ -107,10 +107,18 @@ const string = {
       graphics.push();
     }
 
-    graphics.blendMode( blendMode );
+    if ( blendMode ) {
+      graphics.blendMode( blendMode );
+    }
 
-    graphics.fill( fill );
-    graphics.stroke( stroke );
+    if ( stroke ) {
+      graphics.stroke( stroke );
+    }
+
+    if ( fill ) {
+      graphics.fill( fill );
+    }
+
     graphics.strokeWeight( strokeWeight );
     graphics.textSize( size );
     graphics.textFont?.( font );

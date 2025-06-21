@@ -74,7 +74,7 @@ export async function getAllJobs(): Promise<JobModel[]> {
   return prisma.job.findMany( {
     orderBy: {
       createdAt: "desc"
-    },
+    }
   } ) as Promise<JobModel[]>;
 }
 

@@ -213,19 +213,25 @@ export default function RecordingsPage() {
             <option value="cancelled">Cancelled</option>
           </select>
 
-          <button onClick={() => setView( "table" )} className={`p-2 rounded ${ view === "table" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}>
-            <List className="w-5 h-5" />
+          <button
+            onClick={() => setView( "cards" )}
+            className={`p-2 rounded ${ view === "cards" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
+          >
+            <Grid className="w-5 h-5"/>
           </button>
 
-          <button onClick={() => setView( "cards" )} className={`p-2 rounded ${ view === "cards" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}>
-            <Grid className="w-5 h-5" />
+          <button
+            onClick={() => setView( "table" )}
+            className={`p-2 rounded ${ view === "table" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
+          >
+            <List className="w-5 h-5"/>
           </button>
         </div>
       </div>
 
       {/* Table View */}
       {view === "table" && (
-        <div className="overflow-x-auto rounded border border-gray-700">
+        <div className="overflow-x-auto rounded border border-gray-700 dark:bg-gray-800">
           <table className="min-w-full">
             <thead className="bg-gray-300 dark:bg-gray-200">
               <tr>
@@ -261,12 +267,14 @@ export default function RecordingsPage() {
                         0,
                         8
                       )}
+                      <span className="text-gray-500 dark:text-gray-400 ml-2">➔</span>
                     </HardLink>
                   </td>
 
                   <td className="px-4 py-2 whitespace-nowrap text-sm">
                     <HardLink href={`templates/${ job.template }`}>
                       {job.template}
+                      <span className="text-gray-500 dark:text-gray-400 ml-2">➔</span>
                     </HardLink>
                   </td>
 

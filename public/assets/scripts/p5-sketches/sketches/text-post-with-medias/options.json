@@ -1,0 +1,136 @@
+{
+  "animation": {
+    "framerate": 60,
+    "duration": 6
+  },
+  "colors": {
+    "background": [246, 235, 225],
+    "stroke": [226, 215, 205],
+    "text": [18, 18, 18]
+  },
+  "columns": 8,
+
+  "topRight": "",
+  "topLeft": "@costardrouge.jpg",
+  "bottomLeft": "JUNE 2025 · text-post #002",
+
+  "slides": [
+    {
+      "template": "intro",
+      "title": "Behind the scenes",
+      "body": "Coding, expo and buying a car. Here’s what’s been going on →",
+
+      "bottomLeft": "LATE JUNE UPDATES 2025",
+
+      "neonGraffiti": {
+        "startHeight": 0.4,
+        "endHeight": 0.4,
+        "amplitude": 150
+      }
+    },
+    {
+      "template": "text",
+      "title": "Cleaned the whole project.",
+      "body": "\nThe recording pipeline is now portable and ready to deploy outside my machine #docker\n\nNo more http://localhost only magic.\n\nIt’s structured, modular and of course overkill :p",
+
+      "neonGraffiti": {
+        "startHeight": 0.9,
+        "endHeight": 0.8,
+        "amplitude": 100,
+        "innerCircleSize": 40,
+        "shadowsCount": 2,
+        "stepAngleAmplitude": -1,
+        "sinAmplitudeMultiplier": 2,
+        "cosAmplitudeMultiplier": 1,
+        "sinAngleMultiplier": 1,
+        "cosAngleMultiplier": 1
+      }
+    },
+    {
+      "template": "text",
+      "title": "I may have overengineered it ^^'",
+      "body": "\n\n\nNow I can enqueue my recordings and generate the videos of different sketches at the same time :p\n\n[x] Postgres for the database\n[x] Redis to async recording \n[x] Minio for storage\n\nWhy? So I can scale, learn new stuff and become a full stack developer XD",
+
+      "neonGraffiti": {
+        "startHeight": 0.9,
+        "endHeight": 0.8,
+        "amplitude": 40,
+        "innerCircleSize": 30,
+        "shadowsCount": 3,
+        "stepAngleAmplitude": 1,
+        "sinAmplitudeMultiplier": 2,
+        "cosAmplitudeMultiplier": 6,
+        "sinAngleMultiplier": 0,
+        "cosAngleMultiplier": 0
+      }
+    },
+    {
+      "template": "text",
+      "title": "Also… I was in an art expo!",
+      "body": "\n\n\n\nI built a motion capture sketch using p5.js + Mediapipe for the 'Colour My World' exhibition.\n\nFace and hand tracking = live visuals.\n\nI'll show the result in the next post!",
+
+      "neonGraffiti": {
+        "startHeight": 0.85,
+        "endHeight": 0.85,
+        "amplitude": 100,
+        "innerCircleSize": 50,
+        "shadowsCount": 2,
+        "stepAngleAmplitude": -1,
+        "sinAngleMultiplier": 1,
+        "cosAngleMultiplier": 2
+      }
+    },
+    {
+      "template": "text",
+      "title": "IRL: Bought my first car!",
+      "body": "Finally found the right fit for the road trip.\n\nIt took a lot of searching and messaging; patience was key.\n\nNext week, we hit the road towards Mooloolaba!",
+
+      "neonGraffiti": {
+        "startHeight": 0.8,
+        "endHeight": 0.8,
+        "amplitude": 100,
+        "innerCircleSize": 40,
+        "shadowsCount": 3,
+        "stepAngleAmplitude": -1.5
+      }
+    },
+    {
+      "template": "text",
+      "title": "What’s Next?",
+      "body": "→ share more about the motion capture sketch I created for the art expo\n\n→ break down how my recording pipeline works with real examples and behind-the-scenes visuals\n\n→ more code, tools, and outputs\n\n\n\n\n\n",
+
+      "neonGraffiti": {
+        "startHeight": 0.8,
+        "endHeight": 0.8,
+        "amplitude": -140,
+        "innerCircleSize": 30,
+        "shadowsCount": 3,
+        "stepAngleAmplitude": 1,
+        "sinAmplitudeMultiplier": -2,
+        "cosAmplitudeMultiplier": -2,
+        "sinAngleMultiplier": 1,
+        "cosAngleMultiplier": 0,
+        "hueIndexMultiplier": 1
+      }
+    },
+    {
+      "template": "outro",
+      "title": "see you around!",
+      "body": "\n\n\n\n\nfollow for more wiggly worms and overengineered motion design",
+
+      "neonGraffiti": {
+        "startHeight": 0.9,
+        "endHeight": 0.1,
+        "amplitude": 190,
+        "innerCircleSize": 50,
+        "shadowsCount": 3,
+        "stepAngleAmplitude": 1,
+        "sinAmplitudeMultiplier": 2,
+        "cosAmplitudeMultiplier": -6,
+        "sinAngleMultiplier": 1,
+        "cosAngleMultiplier": -3,
+        "hueIndexMultiplier": 4
+      }
+    }
+  ]
+}

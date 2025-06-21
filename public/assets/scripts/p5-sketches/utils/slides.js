@@ -31,7 +31,7 @@ function registerEvents() {
   );
 
   events.register(
-    "pre-draw",
+    "post-draw",
     () => {
       const selectedSlideIndex = Number( slides.select.value() );
 
@@ -45,7 +45,7 @@ function registerEvents() {
 }
 
 const slides = {
-  index: 0,
+  index: 1,
   select: undefined,
 
   get count() {
