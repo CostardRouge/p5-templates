@@ -1,5 +1,22 @@
 export type JobId = string;
 
+export type JobStatusEnum = "queued" | "active" | "completed" | "failed" | "cancelled"
+
+/**
+ * TypeScript type matching the Prisma Job model.
+ */
+export type JobModel = {
+  id: JobId;
+  template: string;
+  status: JobStatusEnum,
+  progress: number; // 0–100
+  resultUrl: string | null;
+  optionsKey: string | null;
+  fileKeys: string[] | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type RecordingSketchSlideOption = {
   template: string
 }
@@ -22,8 +39,6 @@ export type RecordingStatus = {
   status: string,
   steps?: RecordingProgressionSteps,
 }
-
-export type RecordingStatusStorage = Record<JobId, RecordingStatus>
 
 export interface RecordingJobData {
   jobId: string;

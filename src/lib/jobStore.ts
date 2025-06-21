@@ -1,27 +1,18 @@
 import {
   prisma
 } from "@/lib/connections/prisma";
-
-/**
- * TypeScript type matching the Prisma Job model.
- */
-export type JobModel = {
-  id: string;
-  template: string;
-  status: string; // queued | active | completed | failed | cancelled
-  progress: number; // 0–100
-  resultUrl: string | null;
-  optionsKey: string | null;
-  fileKeys: string[] | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import {
+  updateRecordingStatus
+} from "@/lib/progression";
+import {
+  JobModel, JobStatusEnum
+} from "@/types/recording.types";
 
 /**
  * Create a new Job record with status = 'queued' and progress = 0
  */
 export async function createJob(
-  id: string, template: string, status: string
+  id: string, template: string, status: JobStatusEnum
 ): Promise<JobModel> {
   return prisma.job.create( {
     data: {
@@ -39,13 +30,8 @@ export async function createJob(
  */
 export async function updateJob(
   jobId: string,
-  data: Partial<{
-    error: string;
-    status: string;
-    progress: number;
-    resultUrl: string;
-    optionsKey: string;
-    fileKeys: string[];
+  data: Partial<JobModel & {
+    fileKeys: string[]
   }>
 ): Promise<void> {
   await prisma.job.update( {
@@ -54,6 +40,13 @@ export async function updateJob(
     },
     data,
   } );
+
+  if ( data.status ) {
+    await updateRecordingStatus(
+      jobId,
+      data.status
+    );
+  }
 }
 
 /**

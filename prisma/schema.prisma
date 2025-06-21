@@ -8,15 +8,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum JobStatus {
+  queued
+  active
+  completed
+  failed
+  cancelled
+}
+
 model Job {
-  id         String   @id
+  id         String    @id
   template   String
-  status     String // queued|active|completed|failed|cancelled
+  status     JobStatus
   resultUrl  String?
   progress   Int
   error      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   optionsKey String?
   fileKeys   String[]
 }

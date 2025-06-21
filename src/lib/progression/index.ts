@@ -114,6 +114,35 @@ export const updateRecordingStepPercentage = async(
   }
 };
 
+export const updateRecordingStatus = async(
+  jobId: string,
+  status: string,
+): Promise<void> => {
+  try {
+    const jobRecordingSteps = await getRecordingSteps( jobId );
+
+    if ( !jobRecordingSteps ) {
+      return;
+    }
+
+    await Redis.getInstance().set(
+      getKey( jobId ),
+      JSON.stringify( {
+        ...jobRecordingSteps,
+        status: status
+      } )
+    );
+  }
+  catch ( error ) {
+    console.error(
+      "updateRecordingStatus failed:",
+      {
+        error
+      }
+    );
+  }
+};
+
 export const getRecordingStatusAndTotalPercentage = async( jobId: string ): Promise<RecordingProgressionStream | null> => {
   const jobRecordingStatus = await getRecordingStatus( jobId );
 
