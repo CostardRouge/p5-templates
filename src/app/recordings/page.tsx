@@ -66,9 +66,15 @@ function ProgressBar( {
 
 // Actions dropdown
 function ActionsMenu( {
-  job
+  job,
+  onCancel,
+  onDelete,
+  onRetry
 }: {
- job: JobModel
+  job: JobModel;
+  onCancel?: ( job: JobModel ) => void;
+  onDelete?: ( job: JobModel ) => void;
+  onRetry?: () => void;
 } ) {
   return (
     <Menu as="div" className=" inline-block text-left">
@@ -94,14 +100,53 @@ function ActionsMenu( {
         }
 
         {![
+          "completed",
           "cancelled",
-          "failed"
+          "failed",
+          "active",
         ].includes( job.status ) && (
           <MenuItem>
             {( {
               focus
             } ) => (
               <button
+                onClick={async() => {
+                  try {
+                    const response = await fetch(
+                      "/api/jobs/cancel",
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify( {
+                          ids: [
+                            job.id
+                          ]
+                        } ),
+                      }
+                    );
+
+                    if ( !response.ok ) {
+                      throw new Error( "Cancel failed" );
+                    }
+
+                    const {
+                      cancelled
+                    } = await response.json();
+
+                    if ( cancelled.includes( job.id ) ) {
+                      return onCancel?.( job );
+                    }
+
+                    alert( `could not cancel job: ${ job.id }` );
+                  } catch ( error ) {
+                    console.error(
+                      "Cancel failed:",
+                      error
+                    );
+                  }
+                }}
                 className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <X />
@@ -110,15 +155,53 @@ function ActionsMenu( {
             )}
           </MenuItem>
         )}
-        {![
+
+        {[
+          "cancelled",
           "failed",
-          "cancelled"
         ].includes( job.status ) && (
           <MenuItem>
             {( {
               focus
             } ) => (
               <button
+                onClick={async() => {
+                  try {
+                    const response = await fetch(
+                      "/api/jobs/retry",
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify( {
+                          ids: [
+                            job.id
+                          ]
+                        } ),
+                      }
+                    );
+
+                    if ( !response.ok ) {
+                      throw new Error( "Retry failed" );
+                    }
+
+                    const {
+                      retried
+                    } = await response.json();
+
+                    if ( retried.includes( job.id ) ) {
+                      return onRetry?.();
+                    }
+
+                    alert( `could not retry job: ${ job.id }` );
+                  } catch ( error ) {
+                    console.error(
+                      "Retry failed:",
+                      error
+                    );
+                  }
+                }}
                 className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <RotateCcw />
@@ -127,18 +210,62 @@ function ActionsMenu( {
             )}
           </MenuItem>
         )}
-        <MenuItem>
-          {( {
-            focus
-          } ) => (
-            <button
-              className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
-            >
-              <Trash2 />
-              Delete
-            </button>
-          )}
-        </MenuItem>
+
+        {[
+          "completed",
+          "cancelled",
+          "failed",
+        ].includes( job.status ) && (
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                onClick={async() => {
+                  try {
+                    const response = await fetch(
+                      "/api/jobs/delete",
+                      {
+                        method: "DELETE",
+                        headers: {
+                          "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify( {
+                          ids: [
+                            job.id
+                          ]
+                        } ),
+                      }
+                    );
+
+                    if ( !response.ok ) {
+                      throw new Error( "Delete failed" );
+                    }
+
+                    const {
+                      deleted
+                    } = await response.json();
+
+                    if ( deleted.includes( job.id ) ) {
+                      return onDelete?.( job );
+                    }
+
+                    alert( `could not delete job: ${ job.id }` );
+                  } catch ( error ) {
+                    console.error(
+                      "Delete failed:",
+                      error
+                    );
+                  }
+                }}
+                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              >
+                <Trash2 />
+                Delete
+              </button>
+            )}
+          </MenuItem>
+        )}
       </MenuItems>
     </Menu>
   );
@@ -298,8 +425,8 @@ export default function RecordingsPage() {
 
   // filter/search
   const allJobs = [
+    ...inFlightJobs,
     ...staticJobs,
-    ...inFlightJobs
   ];
 
   const filtered = allJobs.filter( ( job ) => {
@@ -308,6 +435,27 @@ export default function RecordingsPage() {
 
     return matchSearch && matchStatus;
   } );
+
+  const handleCancel = ( job: JobModel ) => {
+    setInFlightJobs( ( prev ) => prev.filter( ( j ) => j.id !== job.id ) );
+    setStaticJobs( ( prev ) => [
+      ...prev,
+      {
+        ...job,
+        status: "cancelled",
+        progress: 100
+      },
+    ] );
+  };
+
+  const handleDelete = ( job: JobModel ) => {
+    setInFlightJobs( prev => prev.filter( j => j.id !== job.id ) );
+    setStaticJobs( prev => prev.filter( j => j.id !== job.id ) );
+  };
+
+  const handleRetry = () => {
+
+  };
 
   return (
     <div className="space-y-6">
@@ -417,7 +565,12 @@ export default function RecordingsPage() {
                   </td>
 
                   <td className="px-4 py-2 whitespace-nowrap text-sm">
-                    <ActionsMenu job={job} />
+                    <ActionsMenu
+                      job={job}
+                      onCancel={handleCancel}
+                      onDelete={handleDelete}
+                      onRetry={handleRetry}
+                    />
                   </td>
                 </tr>
               ) )}
@@ -464,7 +617,12 @@ export default function RecordingsPage() {
                 <ProgressBar progress={job.progress} />
 
                 <div className="flex justify-end">
-                  <ActionsMenu job={job} />
+                  <ActionsMenu
+                    job={job}
+                    onCancel={handleCancel}
+                    onDelete={handleDelete}
+                    onRetry={handleRetry}
+                  />
                 </div>
               </div>
             </div>
