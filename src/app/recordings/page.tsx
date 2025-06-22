@@ -14,15 +14,10 @@ import {
 import HardLink from "@/components/HardLink";
 import fetchDownload from "@/components/utils/fetchDownload";
 
-// Job type with timestamp
-type Job = {
-  id: string;
-  template: string;
-  status: string;
-  progress: number;
-  resultUrl: string | null;
-  createdAt: string;
-};
+import useMultiRecordingStatusStream from "@/lib/hooks/useMultiRecordingStatusStream";
+import {
+  JobModel, JobStatusEnum
+} from "@/types/recording.types";
 
 function getThumbnailURL( template: string ) {
   return `/assets/scripts/p5-sketches/sketches/${ template.replaceAll(
@@ -35,7 +30,7 @@ function getThumbnailURL( template: string ) {
 function StatusBadge( {
   status
 }: {
- status: Job["status"]
+ status: JobModel["status"]
 } ) {
   const classes: Record<string, string> = {
     completed: "bg-green-100 text-green-800",
@@ -73,28 +68,30 @@ function ProgressBar( {
 function ActionsMenu( {
   job
 }: {
- job: Job
+ job: JobModel
 } ) {
   return (
-    <Menu as="div" className="relative inline-block text-left">
+    <Menu as="div" className=" inline-block text-left">
       <MenuButton className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full inline-flex items-center">
         <MoreVertical />
       </MenuButton>
 
       <MenuItems className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-        <MenuItem>
-          {( {
-            focus
-          } ) => (
-            <button
-              onClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
-              className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
-            >
-              <Download />
-              Download
-            </button>
-          )}
-        </MenuItem>
+        {job.status === "completed" &&
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                onClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
+                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              >
+                <Download />
+                Download
+              </button>
+            )}
+          </MenuItem>
+        }
 
         {![
           "cancelled",
@@ -149,10 +146,16 @@ function ActionsMenu( {
 
 export default function RecordingsPage() {
   const [
-    jobs,
-    setJobs
-  ] = useState<Job[]>( [
+    staticJobs,
+    setStaticJobs
+  ] = useState<JobModel[]>( [
   ] );
+  const [
+    inFlightJobs,
+    setInFlightJobs
+  ] = useState<JobModel[]>( [
+  ] );
+
   const [
     view,
     setView
@@ -171,15 +174,135 @@ export default function RecordingsPage() {
     () => {
       fetch( "/api/jobs" )
         .then( ( res ) => res.ok ? res.json() : Promise.reject( "Fetch error" ) )
-        .then( ( data: Job[] ) => setJobs( data ) )
+        .then( ( data: JobModel[] ) => {
+          const staticJobs = data.filter( j => [
+            "completed",
+            "failed",
+            "cancelled"
+          ].includes( j.status ) );
+          const inFlightJobs = data.filter( j => [
+            "queued",
+            "active"
+          ].includes( j.status ) );
+
+          setStaticJobs( staticJobs );
+          setInFlightJobs( inFlightJobs );
+        } )
         .catch( console.error );
     },
     [
     ]
   );
 
+  const {
+    subscribe, unsubscribe
+  } = useMultiRecordingStatusStream();
+
+  useEffect(
+    () => {
+      if ( inFlightJobs.length === 0 ) return;
+
+      const jobIds = inFlightJobs.map( j => j.id );
+
+      subscribe(
+        jobIds,
+        ( {
+          jobId, data
+        } ) => {
+          setInFlightJobs( ( prev ) =>
+            prev.map( j => j.id === jobId ? {
+              ...j,
+              progress: data.percentage,
+              status: data.status as JobStatusEnum
+            } : j ) );
+
+          // If job is completed/failed/cancelled, move it to static
+          if ( [
+            "completed",
+            "failed",
+            "cancelled"
+          ].includes( data.status ) ) {
+            setInFlightJobs( prev => prev.filter( j => j.id !== jobId ) );
+
+            const completedJob = inFlightJobs.find( j => j.id === jobId );
+
+            if ( completedJob ) {
+              // TODO: fetch the job individually
+
+              setStaticJobs( prev => [
+                ...prev,
+                {
+                  ...completedJob,
+                  progress: 100, // data.percentage,
+                  status: data.status as JobStatusEnum
+                }
+              ] );
+            }
+
+            unsubscribe( jobId );
+          }
+        }
+      );
+
+      return () => {
+        jobIds.forEach( unsubscribe );
+      };
+    },
+    [
+      inFlightJobs,
+      subscribe,
+      unsubscribe
+    ]
+  );
+
+  useEffect(
+    () => {
+      const interval = setInterval(
+        async() => {
+          try {
+            const res = await fetch( "/api/jobs?status=queued,active" );
+
+            if ( !res.ok ) throw new Error( "Polling failed" );
+
+            const newLiveJobs: JobModel[] = await res.json();
+
+            setInFlightJobs( ( prev ) => {
+              const prevIds = new Set( prev.map( j => j.id ) );
+              const merged = [
+                ...prev
+              ];
+
+              for ( const job of newLiveJobs ) {
+                if ( !prevIds.has( job.id ) ) {
+                  merged.push( job );
+                }
+              }
+
+              return merged;
+            } );
+          } catch ( err ) {
+            console.warn(
+              "Polling error:",
+              err
+            );
+          }
+        },
+        5000
+      ); // 5 seconds
+
+      return () => clearInterval( interval );
+    },
+    [
+    ]
+  );
+
   // filter/search
-  const filtered = jobs.filter( ( job ) => {
+  const allJobs = [
+    ...staticJobs,
+    ...inFlightJobs
+  ];
+
+  const filtered = allJobs.filter( ( job ) => {
     const matchSearch = job.id.includes( search ) || job.template.includes( search );
     const matchStatus = statusFilter === "all" || job.status === statusFilter;
 
@@ -191,6 +314,7 @@ export default function RecordingsPage() {
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Recordings</h1>
+
         <div className="flex flex-wrap items-center gap-2">
           <input
             type="text"
@@ -228,6 +352,8 @@ export default function RecordingsPage() {
           </button>
         </div>
       </div>
+
+      {/* <RecordingDashboard />*/}
 
       {/* Table View */}
       {view === "table" && (

@@ -63,12 +63,19 @@ export async function getJobById( jobId: string ): Promise<JobModel | null> {
 /**
  * Retrieve all Jobs, ordered by creation date descending
  */
-export async function getAllJobs(): Promise<JobModel[]> {
+export async function getAllJobs( status?: JobStatusEnum[] ): Promise<JobModel[]> {
   return prisma.job.findMany( {
+    where: status
+      ? {
+        status: {
+          in: status
+        }
+      }
+      : undefined,
     orderBy: {
       createdAt: "desc"
-    }
-  } ) as Promise<JobModel[]>;
+    },
+  } );
 }
 
 /**
