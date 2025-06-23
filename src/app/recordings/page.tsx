@@ -28,9 +28,10 @@ function getThumbnailURL( template: string ) {
 
 // Badge component
 function StatusBadge( {
-  status
+  status, className
 }: {
- status: JobModel["status"]
+ status: JobModel["status"],
+  className?: string
 } ) {
   const classes: Record<string, string> = {
     completed: "bg-green-100 text-green-800",
@@ -40,7 +41,7 @@ function StatusBadge( {
     queued: "bg-gray-100 text-gray-800",
   };
 
-  return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ classes[ status ] || classes.queued }`}>{status}</span>;
+  return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ classes[ status ] || classes.queued } ${ className }`}>{status}</span>;
 }
 
 // Progress bar component
@@ -583,47 +584,58 @@ export default function RecordingsPage() {
       {view === "cards" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map( ( job ) => (
-            <div key={job.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow hover:shadow-md transition relative">
-              <div className="w-full" style={{
-                paddingTop: "125%"
-              }}>
-                <img
-                  src={getThumbnailURL( job.template )}
-                  alt={job.template}
-                  loading="lazy"
-                  className="absolute top-0 left-0 w-full h-full object-contain"
-                />
-              </div>
+            <div key={job.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow hover:shadow-md transition relative">
+              <StatusBadge
+                status={job.status}
+                className="absolute top-2 left-2 rounded-sm"
+              />
+
+              <img
+                src={getThumbnailURL( job.template )}
+                alt={job.template}
+                loading="lazy"
+                className="object-contain w-full rounded-t-lg"
+              />
 
               <div className="p-4 space-y-1">
-                <div className="flex justify-between items-center">
-                  <HardLink href={`templates/${ job.template }?id=${ job.id }`} className="text-sm font-medium truncate">
+                <HardLink
+                  href={`templates/${ job.template }`}
+                  className="block text-center text-xs text-blue-600 hover:underline truncate mb-4"
+                >
+                  {job.template} →
+                </HardLink>
+
+                <div className="mb-1">
+                  <HardLink
+                    href={`templates/${ job.template }?id=${ job.id }`}
+                    className="text-sm font-medium truncate"
+                  >
                     {job.id.slice(
                       0,
                       8
-                    )}
+                    )} →
                   </HardLink>
-                  <StatusBadge status={job.status} />
                 </div>
 
-                <HardLink href={`templates/${ job.template }`} className="block text-xs text-blue-600 hover:underline truncate">
-                  {job.template}
-                </HardLink>
+                <div className="flex justify-between">
+                  <div className="flex-grow">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      { new Date( job.createdAt ).toLocaleString() }
+                    </div>
 
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {new Date( job.createdAt ).toLocaleString()}
+                    <ProgressBar progress={ job.progress } />
+                  </div>
+
+                  <div className="self-center">
+                    <ActionsMenu
+                      job={job}
+                      onCancel={handleCancel}
+                      onDelete={handleDelete}
+                      onRetry={handleRetry}
+                    />
+                  </div>
                 </div>
 
-                <ProgressBar progress={job.progress} />
-
-                <div className="flex justify-end">
-                  <ActionsMenu
-                    job={job}
-                    onCancel={handleCancel}
-                    onDelete={handleDelete}
-                    onRetry={handleRetry}
-                  />
-                </div>
               </div>
             </div>
           ) )}
