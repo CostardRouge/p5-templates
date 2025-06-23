@@ -36,11 +36,11 @@ async function runRecording(
   try {
     const persistedJob = await getJobById( jobId );
 
-    if ( !persistedJob || !persistedJob?.optionsKey ) {
+    if ( !persistedJob ) {
       throw new Error( `[runRecording.ts] Job ${ jobId } not found` );
     }
 
-    const options = await getCaptureOptions( persistedJob.optionsKey );
+    const options = await getCaptureOptions( `${ jobId }/options.json` );
 
     // ─── 4. Decide single vs multiple slides ──────────────────────────────────
     // @ts-ignore

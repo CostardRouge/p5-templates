@@ -28,31 +28,31 @@ export async function GET(
 ) {
   const id = ( await params ).id;
 
-  await addRecordingStatus(
-    id,
-    "lol"
-  );
+  // await addRecordingStatus(
+  //   id,
+  //   "lol"
+  // );
 
-  await addRecordingSteps(
-    id,
-    getRecordingSketchStepsByOptions( {
-      slides: [
-        {
-          template: "1"
-        },
-        {
-          template: "2"
-        }
-      ]
-    } ),
-    "active"
-  );
+  // await addRecordingSteps(
+  //   id,
+  //   getRecordingSketchStepsByOptions( {
+  //     slides: [
+  //       {
+  //         template: "1"
+  //       },
+  //       {
+  //         template: "2"
+  //       }
+  //     ]
+  //   } ),
+  //   "active"
+  // );
 
-  await updateRecordingStepPercentage(
-    id,
-    "recording.slide-0.saving-frames",
-    55
-  );
+  // await updateRecordingStepPercentage(
+  //   id,
+  //   "recording.slide-0.saving-frames",
+  //   55
+  // );
 
   const recordingStatusAndTotalPercentage = await getRecordingStatusAndTotalPercentage( id );
 

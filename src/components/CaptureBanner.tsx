@@ -16,7 +16,7 @@ import {
 
 import useRecordingStatusStream from "@/lib/hooks/useRecordingStatusStream";
 import {
-  JobId
+  JobId, RecordingSketchOptions, RecordingSketchSlideOption
 } from "@/types/recording.types";
 
 import fetchDownload from "@/components/utils/fetchDownload";
@@ -27,7 +27,7 @@ export default function CaptureBanner( {
   setOptions
 }: {
     name: string;
-    options: Record<string, unknown>;
+    options: RecordingSketchOptions;
     setOptions: ( nextOptions: JsonData ) => void;
 } ) {
   const {
@@ -50,36 +50,78 @@ export default function CaptureBanner( {
       "template",
       `p5/${ name }`
     );
-
     formData.append(
       "options",
       JSON.stringify( options )
     );
 
-    if ( Array.isArray( options.assets ) ) {
-      await Promise
-        .all( options.assets
-          .map( async(
-            assetUrl: string, index: number
-          ) => {
-            const assetResponse = await fetch( assetUrl );
-            const assetBlob = await assetResponse.blob();
-            const assetName = assetUrl.split( "/" ).pop() ?? `asset-${ index }`;
+    // Handle GLOBAL assets
+    const globalAssets = options.assets || {
+    };
 
-            formData
-              .append(
-                "files[]",
-                new File(
-                  [
-                    assetBlob
-                  ],
-                  assetName,
-                  {
-                    type: assetBlob.type
-                  }
-                )
-              );
-          } ), );
+    console.log( {
+      ass: options.assets
+    } );
+
+    for ( const type of Object.keys( globalAssets ) ) {
+      const fileList = globalAssets[ type as keyof typeof globalAssets ] || [
+      ];
+
+      await Promise.all( fileList.map( async(
+        assetUrl: string, index: number
+      ) => {
+        const blob = await fetch( assetUrl ).then( r => r.blob() );
+        const name = assetUrl.split( "/" ).pop() ?? `${ type }-${ index }`;
+
+        formData.append(
+          `file[global][${ type }]`,
+          new File(
+            [
+              blob
+            ],
+            `global/${ type }/${ name }`,
+            {
+              type: blob.type
+            }
+          )
+        );
+      } ) );
+    }
+
+    // Handle SLIDE assets
+    const slides: RecordingSketchSlideOption[] = options.slides || [
+    ];
+
+    for ( let i = 0; i < slides.length; i++ ) {
+      const slide = slides[ i ];
+      const assets = slide.assets || {
+      };
+
+      for ( const type of Object.keys( assets ) ) {
+        const fileList = assets[ type as keyof typeof assets ] || [
+        ];
+
+        await Promise.all( fileList.map( async(
+          assetUrl: string, index: number
+        ) => {
+          const blob = await fetch( assetUrl ).then( r => r.blob() );
+          const prefix = `slide-${ i }-${ type }-${ index }`;
+          const name = assetUrl.split( "/" ).pop() ?? prefix;
+
+          formData.append(
+            `file[slide-${ i }][${ type }]`,
+            new File(
+              [
+                blob
+              ],
+              `slide-${ i }/${ type }/${ name }`,
+              {
+                type: blob.type
+              }
+            )
+          );
+        } ) );
+      }
     }
 
     const jobId = await enqueueRecording( formData );
@@ -122,7 +164,7 @@ export default function CaptureBanner( {
         </button>
       )}
 
-      {recordingProgress && recordingProgress.percentage !== 100 && ( <div className="flex flex-col justify-start">
+      {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && ( <div className="flex flex-col justify-start">
         <div className="w-64 h-full bg-gray-200 rounded">
           <div
             className="h-full bg-black rounded"
@@ -137,7 +179,7 @@ export default function CaptureBanner( {
         </span>
       </div> ) }
 
-      { recordingProgress?.percentage === 100 && jobId && (
+      { ( recordingProgress?.percentage === 100 || recordingProgress?.status === "completed" ) && jobId && (
         <button
           className="rounded-sm px-4 border border-black text-black inline-block"
           onClick={async() => await fetchDownload( `/api/download/${ jobId }` )}

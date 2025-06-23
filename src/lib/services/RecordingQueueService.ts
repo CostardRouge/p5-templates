@@ -91,28 +91,21 @@ export class RecordingQueueService {
       // 2. Persisting files in s3
       for ( const file of files ) {
         await uploadArtifact(
-          `${ jobId }/files/${ file.name }`,
+          `${ jobId }/assets/${ file.name }`,
           Buffer.from( new Uint8Array( await file.arrayBuffer() ) )
         );
       }
 
       // 3. Persisting options in s3
-      const optionsWithUploadedFileKeys = {
-        ...JSON.parse( options ),
-        assets: files.map( file => (
-          `${ jobId }/files/${ file.name }`
-        ) )
-      };
-      const optionsS3Url = await uploadArtifact(
+      await uploadArtifact(
         `${ jobId }/options.json`,
-        Buffer.from( JSON.stringify( optionsWithUploadedFileKeys ) )
+        Buffer.from( options )
       );
 
       await updateJob(
         jobId,
         {
-          optionsKey: optionsS3Url,
-          fileKeys: optionsWithUploadedFileKeys.assets,
+          options: JSON.parse( options )
         }
       );
 

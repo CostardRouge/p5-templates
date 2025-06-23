@@ -51,13 +51,13 @@ async function ProcessingSketch( {
   if ( jobIdSearchParams ) {
     const persistedJob = await getJobById( jobIdSearchParams );
 
-    if ( !persistedJob || !persistedJob?.optionsKey ) {
+    if ( !persistedJob ) {
       return notFound();
     }
 
     Object.assign(
       sketchOptions,
-      await getCaptureOptions( persistedJob.optionsKey )
+      await getCaptureOptions( `${ persistedJob.id }/options.json` )
     );
 
     sketchOptions.id = jobIdSearchParams;
@@ -70,7 +70,10 @@ async function ProcessingSketch( {
   if ( sketchOptions.consumeTestImages && !jobIdSearchParams ) {
     delete sketchOptions.consumeTestImages;
 
-    sketchOptions.assets = testImageFileNames
+    sketchOptions.assets = sketchOptions.assets || {
+    };
+
+    sketchOptions.assets.images = testImageFileNames
       .filter( testImageFileName => acceptedImageTypes.includes( testImageFileName.split( "." )[ 1 ] ) )
       .map( testImageFileName => `/assets/images/test/${ testImageFileName }` );
   }

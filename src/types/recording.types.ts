@@ -1,3 +1,14 @@
+import {
+  JsonValue
+} from "@prisma/client/runtime/library";
+
+import {
+  PrismaClient, Job
+} from "@/generated/prisma";
+import {
+  InputJsonValue
+} from "@prisma/client/runtime/edge";
+
 export type JobId = string;
 
 export type JobStatusEnum = "queued" | "active" | "completed" | "failed" | "cancelled"
@@ -11,17 +22,25 @@ export type JobModel = {
   status: JobStatusEnum,
   progress: number; // 0–100
   resultUrl: string | null;
-  optionsKey: string | null;
-  fileKeys: string[] | null;
+  options: InputJsonValue | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
+export type SketchAssets = {
+  images: [],
+  videos: [],
+  audios: [],
+  json: []
+}
+
 export type RecordingSketchSlideOption = {
-  template: string
+  template: string,
+  assets: SketchAssets
 }
 
 export type RecordingSketchOptions = {
+  assets: SketchAssets,
   slides?: Array<RecordingSketchSlideOption>
 }
 

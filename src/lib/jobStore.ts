@@ -30,14 +30,13 @@ export async function createJob(
  */
 export async function updateJob(
   jobId: string,
-  data: Partial<JobModel & {
-    fileKeys: string[]
-  }>
+  data: Partial<JobModel>
 ): Promise<void> {
   await prisma.job.update( {
     where: {
       id: jobId
     },
+    // @ts-ignore
     data,
   } );
 

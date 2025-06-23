@@ -5,21 +5,20 @@ import {
   RecordingService
 } from "@/lib/services/RecordingService";
 import {
-  EnqueueRecordingRequest,
   EnqueueRecordingResponse
 } from "@/types/recording.types";
 
 export async function POST( request: NextRequest ): Promise<NextResponse<EnqueueRecordingResponse>> {
   try {
     const formData = await request.formData();
+
     const template = formData.get( "template" );
 
-    // Validate request body
     if ( !template || typeof template !== "string" ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Template is required and must be a string"
+          error: "Template is required"
         },
         {
           status: 400
@@ -27,14 +26,13 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       );
     }
 
-    const options = formData.get( "options" );
+    const optionsRaw = formData.get( "options" );
 
-    // Validate request body
-    if ( !options || typeof options !== "string" ) {
+    if ( !optionsRaw || typeof optionsRaw !== "string" ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Options is required and must be a string"
+          error: "Options is required"
         },
         {
           status: 400
@@ -42,29 +40,91 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       );
     }
 
-    const files = <File[]>formData
-      .getAll( "files[]" )
-      .filter( file => (
-        ( file as File )?.size && ( file as File )?.name
-      ) );
+    const options = JSON.parse( optionsRaw );
+    const slides = options.slides ?? [
+    ];
+
+    options.assets = {
+    };
+
+    if ( options.assets?.images ) {
+      options.assets.images = [
+      ];
+    }
+
+    for ( const slide of slides ) {
+      slide.assets = {
+      };
+    }
+
+    const collectedFiles: File[] = [
+    ];
+
+    for ( const [
+      key,
+      value
+    ] of formData.entries() ) {
+      if ( !key.startsWith( "file[" ) ) continue;
+      if ( !( value instanceof File ) ) continue;
+
+      // Match keys like file[slide-1][images]
+      const match = key.match( /^file\[(global|slide-(\d+))]\[(\w+)]$/ );
+
+      if ( !match ) continue;
+
+      const [
+        , scope,
+        slideIndexRaw,
+        type
+      ] = match;
+      const slideIndex = slideIndexRaw ? parseInt(
+        slideIndexRaw,
+        10
+      ) : null;
+      const filename = value.name;
+
+      // Update options object
+      if ( scope === "global" ) {
+        options.assets[ type ] = options.assets[ type ] || [
+        ];
+        options.assets[ type ].push( filename );
+      } else if ( slideIndex !== null ) {
+        slides[ slideIndex ] = slides[ slideIndex ] || {
+        };
+        slides[ slideIndex ].assets = slides[ slideIndex ].assets || {
+        };
+        slides[ slideIndex ].assets[ type ] = slides[ slideIndex ].assets[ type ] || [
+        ];
+        slides[ slideIndex ].assets[ type ].push( filename );
+      }
+
+      collectedFiles.push( value );
+    }
+
+    options.slides = slides;
+
+    // console.log( {
+    //   collectedFiles,
+    //   opt: options.assets
+    // } );
+    // return collectedFiles;
 
     const recordingService = RecordingService.getInstance();
     const jobId = await recordingService.enqueueRecording(
       template,
-      <string>options,
-      files
+      JSON.stringify( options ),
+      collectedFiles
     );
 
     return NextResponse.json( {
       success: true,
-      jobId,
+      jobId
     } );
   } catch ( error ) {
     console.error(
       "[API] Error enqueuing recording:",
       error
     );
-
     return NextResponse.json(
       {
         success: false,

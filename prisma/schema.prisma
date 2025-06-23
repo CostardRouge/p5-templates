@@ -17,14 +17,12 @@ enum JobStatus {
 }
 
 model Job {
-  id         String    @id
-  template   String
-  status     JobStatus
-  resultUrl  String?
-  progress   Int
-  error      String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  optionsKey String?
-  fileKeys   String[]
+  id        String    @id
+  template  String
+  status    JobStatus
+  resultUrl String?
+  progress  Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  options   Json?
 }

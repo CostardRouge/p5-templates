@@ -42,11 +42,11 @@ const sketchOptions = {
 
 const getImagePath = path =>
   sketchOptions.id
-    ? `${ location.origin }/api/files/${ path }`
+    ? `${ location.origin }/api/s3/${ sketchOptions.id }/assets/${ path }`
     : `${ location.origin }/${ path }`;
 
 function refreshAssets() {
-  if ( !sketchOptions.assets?.length ) {
+  if ( !sketchOptions.assets?.images?.length ) {
     document.querySelector( "canvas#defaultCanvas0" )?.classList.add( "loaded" );
     return;
   }
@@ -54,7 +54,7 @@ function refreshAssets() {
   cache.store(
     "images",
     () =>
-      sketchOptions.assets.map( path => ( {
+      sketchOptions.assets.images.map( path => ( {
         path,
         exif: undefined,
         img: loadImage( getImagePath( path ) ),

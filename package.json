@@ -14,7 +14,7 @@
     "@aws-sdk/client-s3": "^3.825.0",
     "@aws-sdk/s3-request-presigner": "^3.826.0",
     "@headlessui/react": "^2.2.4",
-    "@prisma/client": "^6.9.0",
+    "@prisma/client": "^6.10.1",
     "@types/tar": "^6.1.13",
     "bullmq": "^5.53.2",
     "exifreader": "^4.26.1",
