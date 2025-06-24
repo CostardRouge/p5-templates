@@ -182,7 +182,7 @@ export default function CaptureBanner( {
       { ( recordingProgress?.percentage === 100 || recordingProgress?.status === "completed" ) && jobId && (
         <button
           className="rounded-sm px-4 border border-black text-black inline-block"
-          onClick={async() => await fetchDownload( `/api/download/${ jobId }` )}
+          onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
         >
           <Download className="inline mr-1"/>
           Download

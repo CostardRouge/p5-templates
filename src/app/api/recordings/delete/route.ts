@@ -89,7 +89,7 @@ export async function DELETE( req: NextRequest ) {
     } );
   } catch ( err ) {
     console.error(
-      "[DELETE /api/jobs] error:",
+      "[DELETE /api/recordings] error:",
       err
     );
     return new NextResponse(

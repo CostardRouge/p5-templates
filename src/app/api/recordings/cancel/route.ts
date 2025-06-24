@@ -85,7 +85,7 @@ export async function POST( req: NextRequest ) {
     } );
   } catch ( error ) {
     console.error(
-      "[POST /api/jobs/cancel] error:",
+      "[POST /api/recordings/cancel] error:",
       error
     );
     return new NextResponse(

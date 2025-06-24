@@ -32,7 +32,7 @@ export async function GET( req: NextRequest ) {
     return NextResponse.json( jobs );
   } catch ( error ) {
     console.error(
-      "[GET /api/jobs] error fetching jobs",
+      "[GET /api/recordings] error fetching jobs",
       error
     );
     return new NextResponse(

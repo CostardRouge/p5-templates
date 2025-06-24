@@ -90,7 +90,7 @@ function ActionsMenu( {
               focus
             } ) => (
               <button
-                onClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
+                onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
                 className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <Download />
@@ -99,6 +99,22 @@ function ActionsMenu( {
             )}
           </MenuItem>
         }
+
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              onClick={async() => await fetchDownload( `/api/options/download/${ job.id }` )}
+              className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+            >
+              <Download />
+              <span>Download .json</span>
+            </button>
+          )}
+        </MenuItem>
+
+        <div className="my-1 h-px bg-white/5"/>
 
         {![
           "completed",
@@ -114,7 +130,7 @@ function ActionsMenu( {
                 onClick={async() => {
                   try {
                     const response = await fetch(
-                      "/api/jobs/cancel",
+                      "/api/recordings/cancel",
                       {
                         method: "POST",
                         headers: {
@@ -169,7 +185,7 @@ function ActionsMenu( {
                 onClick={async() => {
                   try {
                     const response = await fetch(
-                      "/api/jobs/retry",
+                      "/api/recordings/retry",
                       {
                         method: "POST",
                         headers: {
@@ -225,7 +241,7 @@ function ActionsMenu( {
                 onClick={async() => {
                   try {
                     const response = await fetch(
-                      "/api/jobs/delete",
+                      "/api/recordings/delete",
                       {
                         method: "DELETE",
                         headers: {
@@ -300,7 +316,7 @@ export default function RecordingsPage() {
   // fetch jobs
   useEffect(
     () => {
-      fetch( "/api/jobs" )
+      fetch( "/api/recordings" )
         .then( ( res ) => res.ok ? res.json() : Promise.reject( "Fetch error" ) )
         .then( ( data: JobModel[] ) => {
           const staticJobs = data.filter( j => [
@@ -388,7 +404,7 @@ export default function RecordingsPage() {
       const interval = setInterval(
         async() => {
           try {
-            const res = await fetch( "/api/jobs?status=queued,active" );
+            const res = await fetch( "/api/recordings?status=queued,active" );
 
             if ( !res.ok ) throw new Error( "Polling failed" );
 

@@ -2,15 +2,15 @@ import {
   NextRequest, NextResponse
 } from "next/server";
 import {
-  getJobById
+  getJobById, updateJob, deleteJob
 } from "@/lib/jobStore";
 import {
-  getDownloadUrlFromS3Url
-} from "@/lib/connections/s3";
-import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
+  RecordingQueueService
+} from "@/lib/services/RecordingQueueService";
 
 /**
- * GET /api/download/[id]
+ * GET /api/recordings/[id]
+ *   → return the Job record from database
  */
 export async function GET(
   _req: NextRequest,
@@ -36,23 +36,10 @@ export async function GET(
       );
     }
 
-    const s3Url = job.resultUrl;
-
-    if ( !s3Url ) {
-      return new NextResponse(
-        "resultUrl not found",
-        {
-          status: 404
-        }
-      );
-    }
-
-    const s3DownloadUrl = await getDownloadUrlFromS3Url( s3Url );
-
-    return downloadFromUrlResponse( s3DownloadUrl );
+    return NextResponse.json( job );
   } catch ( error ) {
     console.error(
-      `[GET /api/download/${ jobId }]`,
+      `[GET /api/recordings/${ jobId }]`,
       error
     );
 

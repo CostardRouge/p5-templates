@@ -62,7 +62,7 @@ export async function POST( req: NextRequest ) {
     } );
   } catch ( err ) {
     console.error(
-      "[POST /api/jobs/retry] error:",
+      "[POST /api/recordings/retry] error:",
       err
     );
     return new NextResponse(
