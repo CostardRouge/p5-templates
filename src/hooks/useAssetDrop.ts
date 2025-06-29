@@ -6,77 +6,119 @@ import {
   setSketchOptions
 } from "@/shared/syncSketchOptions";
 
-function useAssetDrop() {
-  return async function handleFiles( {
+const ensureArray = (
+  obj: any, key: string
+) => {
+  obj[ key ] ??= [
+  ];
+  return obj[ key ];
+};
+
+type Scope =
+  | "global"
+  | {
+ slide: number
+};
+
+type AssetType = "images" | "videos" | "audios" | "json";
+
+export default function useAssetDrop() {
+  async function addAssets( {
     files,
     type,
-    scope
-  } : {
-    files: FileList,
-    type: "images"|"videos"|"audios"|"json",
-    scope: "global" | {
-      slide: number
-    }
+    scope,
+  }: {
+    files: FileList;
+    type: AssetType;
+    scope: Scope;
   } ) {
-    const clonedOptions = structuredClone( getSketchOptions() );
+    const opts = structuredClone( getSketchOptions() );
 
-    /* ensure path arrays exist ----------------------------------- */
-    const ensureArray = (
-      object: any, key: string
-    ) => {
-      object[ key ] ??= [
-      ];
-      return object[ key ];
-    };
+    const targetArray = resolveArray(
+      opts,
+      scope,
+      type
+    );
 
-    if ( scope === "global" ) {
-      const array = ensureArray(
-        ensureArray(
-          clonedOptions,
-          "assets"
-        ),
-        type
+    for ( const file of Array.from( files ) ) {
+      registerBlob(
+        file.name,
+        file
       );
-
-      for ( const file of Array.from( files ) ) {
-        registerBlob(
-          file.name,
-          file
-        );
-        array.push( file.name );
-      }
-    } else {
-      const {
-        slide
-      } = scope;
-
-      clonedOptions.slides ??= [
-      ];
-      clonedOptions.slides[ slide ] ??= {
-      };
-      const array = ensureArray(
-        ensureArray(
-          clonedOptions.slides[ slide ],
-          "assets"
-        ),
-        type
-      );
-
-      for ( const file of Array.from( files ) ) {
-        registerBlob(
-          file.name,
-          file
-        );
-        array.push( file.name );
-      }
+      targetArray.push( file.name );
     }
 
-    /* broadcast to both React & p5 ------------------------------- */
     setSketchOptions(
-      clonedOptions,
+      opts,
       "react"
     );
+  }
+
+  function removeAsset( {
+    index,
+    type,
+    scope,
+  }: {
+    index: number;
+    type: AssetType;
+    scope: Scope;
+  } ) {
+    const opts = structuredClone( getSketchOptions() );
+
+    const targetArray = resolveArray(
+      opts,
+      scope,
+      type
+    );
+    const [
+      removed
+    ] = targetArray.splice(
+      index,
+      1
+    );
+
+    if ( removed && window.__blobAssetMap?.[ removed ] ) {
+      URL.revokeObjectURL( window.__blobAssetMap[ removed ] );
+      delete window.__blobAssetMap[ removed ];
+    }
+
+    setSketchOptions(
+      opts,
+      "react"
+    );
+  }
+
+  function resolveArray(
+    base: any, scope: Scope, type: AssetType
+  ): string[] {
+    if ( scope === "global" ) {
+      return ensureArray(
+        ensureArray(
+          base,
+          "assets"
+        ),
+        type
+      );
+    }
+    const {
+      slide
+    } = scope;
+
+    base.slides ??= [
+    ];
+    base.slides[ slide ] ??= {
+    };
+    return ensureArray(
+      ensureArray(
+        base.slides[ slide ],
+        "assets"
+      ),
+      type
+    );
+  }
+
+  return {
+    addAssets,
+    removeAsset
   };
 }
-
-export default useAssetDrop;
