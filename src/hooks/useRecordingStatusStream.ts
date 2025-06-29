@@ -26,6 +26,10 @@ function useRecordingStatusStream() {
           if ( parsedRecordingProgress?.percentage === 100 ) {
             source.close();
           }
+
+          if ( parsedRecordingProgress?.status === "failed" ) {
+            source.close();
+          }
         }
         catch ( error ) {
           console.error( error );

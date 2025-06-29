@@ -3,7 +3,7 @@ import {
 } from "next/server";
 import {
   RecordingService
-} from "@/lib/services/RecordingService";
+} from "@/services/RecordingService";
 import {
   EnqueueRecordingResponse
 } from "@/types/recording.types";

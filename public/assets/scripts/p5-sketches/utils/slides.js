@@ -71,5 +71,10 @@ const slides = {
 registerEvents();
 
 window.setSlide = index => slides.select.selected( index );
+window.getSlide = index => slides.getSlide( index );
+window.getCurrentSlide = () => ( {
+  slide: slides.current,
+  index: slides.index
+} );
 
 export default slides;

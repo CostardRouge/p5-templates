@@ -1,15 +1,19 @@
-import { sketch } from './index.js';
+import {
+  sketch
+} from "./index.js";
 
 const time = {
   elapsed: 0,
   lastUpdate: 0,
-  seconds: function () {
+  seconds: function() {
     return time.milliSeconds() / 1000;
   },
-  milliSeconds: function () {
+  milliSeconds: function() {
     return time.elapsed;
   },
-  every: function (second, callback) {
+  every: function(
+    second, callback
+  ) {
     return sketch?.engine?.getFrameCount() % second === 0 && callback();
   },
   reset() {
@@ -18,7 +22,7 @@ const time = {
   incrementElapsedTime() {
     const now = sketch?.engine?.getElapsedTime();
 
-    if (typeof now === 'number') {
+    if ( typeof now === "number" ) {
       const delta = now - time.lastUpdate;
 
       time.elapsed += delta;

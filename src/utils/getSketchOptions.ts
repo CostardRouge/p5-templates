@@ -4,8 +4,11 @@ import path from "path";
 import {
   SKETCHES_DIRECTORY
 } from "@/constants";
+import {
+  RecordingSketchOptions
+} from "@/types/recording.types";
 
-function getSketchOptions( sketchName: string ): Record<string, any> {
+function getSketchOptions( sketchName: string ): RecordingSketchOptions | null {
   try {
     return JSON.parse( fs.readFileSync(
       path.join(
@@ -17,8 +20,7 @@ function getSketchOptions( sketchName: string ): Record<string, any> {
     ) );
   }
   catch ( error ) {
-    return {
-    };
+    return null;
   }
 }
 

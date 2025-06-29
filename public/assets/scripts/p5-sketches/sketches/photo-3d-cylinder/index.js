@@ -228,8 +228,8 @@ sketch.draw( (
     //   easing.easeInOutQuint
     // );
 
-    const circonference = ( options.vertical ? cellHeight : cellWidth ) * images.length;
-    // const circonference = cellWidth * images.length;
+    const circonference = ( options.vertical ? cellHeight : cellWidth ) * images?.length;
+    // const circonference = cellWidth * images?.length;
 
     push();
     translate(
@@ -255,7 +255,7 @@ sketch.draw( (
     //   0
     // );
 
-    for ( let imageIndex = 0; imageIndex < images.length; imageIndex++ ) {
+    for ( let imageIndex = 0; imageIndex < images?.length; imageIndex++ ) {
       const imageAtIndex = imageParts?.[ ~~imageIndex ];
       const imagePart = imageAtIndex?.[ ~~cellIndex ]?.imagePart;
 

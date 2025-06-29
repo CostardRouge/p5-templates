@@ -14,7 +14,7 @@ import {
 import HardLink from "@/components/HardLink";
 import fetchDownload from "@/components/utils/fetchDownload";
 
-import useMultiRecordingStatusStream from "@/lib/hooks/useMultiRecordingStatusStream";
+import useMultiRecordingStatusStream from "@/hooks/useMultiRecordingStatusStream";
 import {
   JobModel, JobStatusEnum
 } from "@/types/recording.types";

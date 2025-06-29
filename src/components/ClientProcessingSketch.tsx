@@ -4,24 +4,33 @@ import React, {
   useState, useEffect, Fragment
 } from "react";
 
-import CaptureBanner from "@/components/CaptureBanner";
+import dynamic from "next/dynamic";
 
 import {
   setSketchOptions, subscribeSketchOptions, getSketchOptions
 } from "@/shared/syncSketchOptions.js";
+
+import useP5Template from "@/hooks/useP5Template";
 import {
-  usePathname
-} from "next/navigation";
+  RecordingSketchOptions
+} from "@/types/recording.types";
+
+const CaptureBanner = dynamic(
+  () => import( "@/components/CaptureBanner" ),
+  {
+    ssr: false,
+  }
+);
 
 function ClientProcessingSketch( {
   name, options
 }: {
- name: string, options: Record<string, unknown>
+ name: string, options: RecordingSketchOptions
 } ) {
   const [
     clientOptions,
     setClientOptions
-  ] = useState( () => ( {
+  ] = useState<RecordingSketchOptions>( () => ( {
     ...getSketchOptions(),
     ...options
   } ) );
@@ -44,56 +53,7 @@ function ClientProcessingSketch( {
     ]
   );
 
-  const pathname = usePathname();
-
-  useEffect(
-    () => {
-    // — CLEANUP any prior sketch, css, canvas
-      document.querySelectorAll( "link[data-sketch]" ).forEach( el => el.remove() );
-      document.querySelectorAll( "script[data-sketch]" ).forEach( el => el.remove() );
-      document.querySelectorAll( "canvas" ).forEach( el => el.remove() );
-
-      // — INJECT new sketch CSS
-      const css = document.createElement( "link" );
-
-      css.rel = "stylesheet";
-      css.href = "/assets/stylesheets/p5.css";
-      css.setAttribute(
-        "data-sketch",
-        name
-      );
-      document.head.append( css );
-
-      // — INJECT new sketch script
-      const script = document.createElement( "script" );
-
-      script.type = "module";
-      script.src = `/assets/scripts/p5-sketches/sketches/${ name }/index.js`;
-      script.crossOrigin = "anonymous";
-      script.setAttribute(
-        "data-sketch",
-        name
-      );
-      document.body.append( script );
-
-      // — ON UNMOUNT/CLEANUP
-      return () => {
-        document.querySelectorAll( `link[data-sketch="${ name }"]` ).forEach( el => el.remove() );
-        document.querySelectorAll( `script[data-sketch="${ name }"]` ).forEach( el => el.remove() );
-        // remove p5 canvas
-        document.querySelectorAll( "canvas" ).forEach( el => el.remove() );
-
-        document.querySelector( "canvas#defaultCanvas0.p5Canvas" )?.remove();
-        // your custom teardown
-        try { // @ts-ignore
-          window.removeLoadedScripts(); } catch {}
-      };
-    },
-    [
-      pathname,
-      name
-    ]
-  );
+  useP5Template( name );
 
   return (
     <Fragment>
@@ -106,17 +66,11 @@ function ClientProcessingSketch( {
       <div id="sketch-ui-drawer"></div>
       <span id="sketch-ui-icon"></span>
 
-      {/* <Script*/}
-      {/*  type="module"*/}
-      {/*  crossOrigin="anonymous"*/}
-      {/*  src={`/assets/scripts/p5-sketches/sketches/${ name }/index.js`}*/}
-      {/* />*/}
-
       {options.capturing !== true && (
         <CaptureBanner
           name={name}
           options={clientOptions}
-          setOptions={options => setClientOptions( options as Record<string, unknown> )}
+          setOptions={options => setClientOptions( options as RecordingSketchOptions )}
         />
       )}
     </Fragment>

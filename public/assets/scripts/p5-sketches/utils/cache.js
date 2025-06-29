@@ -1,27 +1,36 @@
 const cache = {
-  values: {},
-  store: function(key, compute, enabled = true) {
+  values: {
+  },
+  store: function(
+    key, compute, enabled = true
+  ) {
     const currentValue = cache.values[ key ];
 
     if ( enabled !== true ) {
-      return compute(currentValue);
+      return compute( currentValue );
     }
 
     if ( undefined === cache.values[ key ] ) {
-      return cache.set( key, compute(currentValue) );
+      return cache.set(
+        key,
+        compute( currentValue )
+      );
     }
-  
-    return cache.get(key);
+
+    return cache.get( key );
   },
-  key: function () {
-    return [].slice.apply(arguments).join("-")
+  key: function() {
+    return [
+    ].slice.apply( arguments ).join( "-" );
   },
-  get: function(key) {
+  get: function( key ) {
     return cache.values?.[ key ];
   },
-  set: (key, value) => {
+  set: (
+    key, value
+  ) => {
     return cache.values[ key ] = value;
   }
-}
+};
 
 export default cache;

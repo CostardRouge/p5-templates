@@ -3,7 +3,7 @@ import {
 } from "next/server";
 import {
   RecordingService
-} from "@/lib/services/RecordingService";
+} from "@/services/RecordingService";
 
 interface ControlRequest {
   action: "pause" | "resume";

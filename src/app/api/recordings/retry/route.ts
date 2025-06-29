@@ -4,7 +4,7 @@ import {
 
 import {
   RecordingQueueService
-} from "@/lib/services/RecordingQueueService";
+} from "@/services/RecordingQueueService";
 import {
   getJobById
 } from "@/lib/jobStore";

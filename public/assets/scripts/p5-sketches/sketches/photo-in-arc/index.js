@@ -31,7 +31,7 @@ sketch.draw( (
     height - height / 4
   );
 
-  for ( let imageObjectIndex = 0; imageObjectIndex < images.length; imageObjectIndex++ ) {
+  for ( let imageObjectIndex = 0; imageObjectIndex < images?.length; imageObjectIndex++ ) {
     const imageObjectIndexProgression = imageObjectIndex / ( images.length - 1 );
     // const angle = map(imageObjectIndexProgression, 0, 1, 4*PI/3, 2*PI/3)
     const angle = map(

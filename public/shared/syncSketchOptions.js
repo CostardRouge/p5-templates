@@ -1,34 +1,57 @@
-export const EVENT = 'sketch-options';
+import {
+  deepMerge, structuredClone
+} from "./utils.js";
 
-let current = globalThis.sketchOptions ?? {};
+export const EVENT = "sketch-options";
 
-/* shallow‑object deep‑merge (1 level) */
-function merge(a, b) {
-  for (const k in b) {
-    const v = b[k];
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
-      a[k] = merge({ ...(a[k] || {}) }, v);
-    } else {
-      a[k] = v;
-    }
+let current = globalThis.sketchOptions ?? {
+};
+
+export function setSketchOptions(
+  update, origin = "react"
+) {
+  const sourceClone = structuredClone( update );
+
+  const merged = deepMerge(
+    structuredClone( current ),
+    sourceClone
+  );
+
+  if ( JSON.stringify( merged ) === JSON.stringify( current ) ) {
+    return;
   }
-  return a;
-}
-
-export function setSketchOptions(update, origin = 'react') {
-  const merged = merge({ ...current }, update);
-  // const merged = Object.assign(current, update);
-  if (JSON.stringify(merged) === JSON.stringify(current)) return;
 
   current = merged;
-  globalThis.sketchOptions = current; // keep legacy global
-  window.dispatchEvent(new CustomEvent(EVENT, { detail: { opts: current, origin } }));
+  globalThis.sketchOptions = current;
+
+  window.dispatchEvent( new CustomEvent(
+    EVENT,
+    {
+      detail: {
+        opts: current,
+        origin
+      }
+    }
+  ) );
 }
 
-export function subscribeSketchOptions(cb) {
-  const handler = e => cb(e.detail.opts, e.detail.origin);
-  window.addEventListener(EVENT, handler);
-  return () => window.removeEventListener(EVENT, handler);
+export function subscribeSketchOptions( cb ) {
+  const handler = e => {
+    cb(
+      e.detail.opts,
+      e.detail.origin
+    );
+  };
+
+  window.addEventListener(
+    EVENT,
+    handler
+  );
+
+  return () => window.removeEventListener(
+    EVENT,
+    handler
+  );
 }
 
 export const getSketchOptions = () => current;

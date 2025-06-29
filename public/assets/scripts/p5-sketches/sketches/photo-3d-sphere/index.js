@@ -159,8 +159,8 @@ sketch.draw( (
 
       return (
         [
-          ...cache.get( "images" ),
-          // ...cache.get( "images" ),
+          ...cache.get( "images" ) || [
+          ],
         ].map( ( {
           img
         } ) => {

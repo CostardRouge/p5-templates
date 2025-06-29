@@ -8,6 +8,7 @@ import {
 import {
   InputJsonValue
 } from "@prisma/client/runtime/edge";
+import slides from "../../public/assets/scripts/p5-sketches/utils/slides";
 
 export type JobId = string;
 
@@ -28,20 +29,25 @@ export type JobModel = {
 };
 
 export type SketchAssets = {
-  images: [],
-  videos: [],
-  audios: [],
-  json: []
+  images: string[],
+  videos: string[],
+  audios: string[],
+  json: string[]
 }
 
 export type RecordingSketchSlideOption = {
+  title: string;
   template: string,
   assets: SketchAssets
 }
 
 export type RecordingSketchOptions = {
-  assets: SketchAssets,
-  slides?: Array<RecordingSketchSlideOption>
+  id: string;
+  name: string;
+  assets: SketchAssets;
+  capturing: true | undefined;
+  slides?: Array<RecordingSketchSlideOption>;
+  consumeTestImages?: boolean;
 }
 
 export type RecordingProgressionSteps = Record<string, {
@@ -100,3 +106,23 @@ export type RecordingProgressionStream = {
   } | null;
   percentage: number;
 } & RecordingStatus;
+
+/* Map filename → object-URL   (lives only for the browser session) */
+type BlobMap = Record<string, string>;
+
+declare global { interface Window {
+  // Assets
+ __blobAssetMap?: BlobMap
+  // Recorder
+  startLoopRecording: () => void
+  stopRecording: () => void
+  // Slides
+  setSlide: ( index: number ) => void
+  getSlide: ( index: number ) => RecordingSketchSlideOption
+  getCurrentSlide: () => {
+    slide: RecordingSketchSlideOption
+    index: number
+  };
+  // Script loader
+  removeLoadedScripts: () => void
+} }

@@ -6,7 +6,7 @@ import {
 } from "@/lib/connections/prisma";
 import {
   RecordingQueueService
-} from "@/lib/services/RecordingQueueService";
+} from "@/services/RecordingQueueService";
 import {
   Job
 } from "bullmq";
@@ -46,6 +46,7 @@ export async function DELETE( req: NextRequest ) {
       }
 
       if ( ![
+        "failed",
         "completed",
         "cancelled",
       ].includes( dbJob.status ) ) {
@@ -61,10 +62,6 @@ export async function DELETE( req: NextRequest ) {
 
         if ( bullJob ) {
           const state = await bullJob.getState();
-
-          console.log( {
-            state
-          } );
 
           if ( [
             "waiting",

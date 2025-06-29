@@ -5,8 +5,8 @@ import type {
 } from "next";
 import listDirectory from "@/utils/listDirectory";
 import getSketchOptions from "@/utils/getSketchOptions";
-
 import ClientProcessingSketch from "@/components/ClientProcessingSketch";
+
 import getCaptureOptions from "@/utils/getCaptureOptions";
 import {
   getJobById
@@ -14,6 +14,9 @@ import {
 import {
   notFound
 } from "next/navigation";
+import {
+  RecordingSketchOptions
+} from "@/types/recording.types";
 
 export const metadata: Metadata = {
   title: "Social-templates-renderer | p5js",
@@ -46,7 +49,8 @@ async function ProcessingSketch( {
   const sketchName = ( await params ).sketch;
   const jobIdSearchParams = ( await searchParams ).id;
   const capturingSearchParams = ( await searchParams ).capturing;
-  const sketchOptions = getSketchOptions( sketchName );
+  const sketchOptions = getSketchOptions( sketchName ) ?? ( {
+  } as RecordingSketchOptions );
 
   if ( jobIdSearchParams ) {
     const persistedJob = await getJobById( jobIdSearchParams );
@@ -71,6 +75,8 @@ async function ProcessingSketch( {
     delete sketchOptions.consumeTestImages;
 
     sketchOptions.assets = sketchOptions.assets || {
+      images: [
+      ]
     };
 
     sketchOptions.assets.images = testImageFileNames

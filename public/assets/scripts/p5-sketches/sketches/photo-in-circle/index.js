@@ -26,7 +26,7 @@ sketch.draw( (
 
   const images = cache.get( "images" );
 
-  for ( let imageObjectIndex = 0; imageObjectIndex < images.length; imageObjectIndex++ ) {
+  for ( let imageObjectIndex = 0; imageObjectIndex < images?.length; imageObjectIndex++ ) {
     const imageObjectIndexProgression = imageObjectIndex / images.length;
     const angle = imageObjectIndexProgression * TAU + (
       map(
