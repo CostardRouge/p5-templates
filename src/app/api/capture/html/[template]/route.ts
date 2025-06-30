@@ -46,6 +46,7 @@ export async function POST(
   const imageFile = data.get( "image" ) as unknown as File;
   const hideExif = data.get( "showExif" ) === "false";
   const objectStyle = data.get( "objectStyle" ) as string;
+  const contentDisposition = data.get( "contentDisposition" ) as string ?? "attachment";
 
   if ( !imageFile ) {
     return new Response(
@@ -123,12 +124,13 @@ export async function POST(
 
   await page.close();
 
-  return downloadFileResponse(
-    outputPath,
-    async() => {
+  return downloadFileResponse( {
+    filePath: outputPath,
+    contentDisposition,
+    onFileRead: async() => {
       await fs.unlink( uploadPath ).catch( () => {} );
       await fs.unlink( outputPath ).catch( () => {} );
       await browser.close();
     }
-  );
+  } );
 }

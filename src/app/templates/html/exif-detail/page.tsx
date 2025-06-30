@@ -14,6 +14,9 @@ import {
 import "./exif-detail.css";
 
 import fetchDownload from "@/components/utils/fetchDownload";
+import {
+  ExternalLink, ExternalLinkIcon, Loader, SaveIcon
+} from "lucide-react";
 
 const scalingStyle = "scale-[0.375] md:scale-[0.6] lg:scale-[0.7] xl:scale-9";
 const supportedObjectStyles = [
@@ -29,6 +32,11 @@ const supportedImageTypes = [
 ];
 
 const ImageInfoHelper = () => {
+  const [
+    rendering,
+    setRendering
+  ] = useState( false );
+
   const [
     showExif,
     setShowExif
@@ -132,31 +140,67 @@ const ImageInfoHelper = () => {
     }
   };
 
-  const handleDownload = async() => {
+  const submitDownloadForm = async( target: "_self" | "_blank" = "_self" ) => {
     if ( !rawFile ) return;
 
-    const formData = new FormData();
+    setRendering( true );
 
-    formData.append(
-      "image",
-      rawFile
-    );
-    formData.append(
-      "showExif",
-      String( showExif )
-    );
-    formData.append(
-      "objectStyle",
-      objectStyle
-    );
+    try {
+      if ( !rawFile ) return;
 
-    await fetchDownload(
-      "/api/capture/html/exif-detail",
-      {
-        method: "POST",
-        body: formData,
+      const form = document.createElement( "form" );
+
+      form.action = "/api/capture/html/exif-detail";
+      form.method = "POST";
+      form.enctype = "multipart/form-data";
+      form.target = target;
+
+      // image file input
+      const fileInput = document.createElement( "input" );
+
+      fileInput.type = "file";
+      fileInput.name = "image";
+      // convert File to FileList to assign
+      const dataTransfer = new DataTransfer();
+
+      dataTransfer.items.add( rawFile );
+      fileInput.files = dataTransfer.files;
+      form.appendChild( fileInput );
+
+      // other hidden inputs
+      const inputs = [
+        [
+          "showExif",
+          String( showExif )
+        ],
+        [
+          "objectStyle",
+          objectStyle
+        ],
+        [
+          "contentDisposition",
+          target === "_self" ? "attachment" : "inline",
+        ],
+      ];
+
+      for ( const [
+        name,
+        value
+      ] of inputs ) {
+        const input = document.createElement( "input" );
+
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.appendChild( input );
       }
-    );
+
+      document.body.appendChild( form );
+      form.submit();
+      document.body.removeChild( form );
+    } finally {
+      setRendering( false );
+    }
   };
 
   useEffect(
@@ -222,7 +266,7 @@ const ImageInfoHelper = () => {
 
       { !capturing && (
         <div
-          className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black sm:h-20 text-black"
+          className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black sm:h-10 text-black"
         >
           {image && (
             <button
@@ -265,12 +309,22 @@ const ImageInfoHelper = () => {
           {image && (
             <button
               className="rounded-sm px-4 border border-black"
-              onClick={( e ) => {
-                e.preventDefault();
-                handleDownload().then();
-              }}
+              onClick={ async( ) => await submitDownloadForm( "_self" ) }
             >
-              Download the image
+              {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+                <SaveIcon className="inline mr-1 h-4"/>}
+              <span className="align-middle">Download</span>
+            </button>
+          )}
+
+          {image && (
+            <button
+              className="rounded-sm px-4 border border-black"
+              onClick={ async( ) => await submitDownloadForm( "_blank" ) }
+            >
+              {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+                <ExternalLink className="inline mr-1 h-4"/>}
+              <span className="align-middle">Open</span>
             </button>
           )}
         </div>

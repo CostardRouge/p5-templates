@@ -3,9 +3,15 @@ import path from "path";
 
 import mime from "mime-types";
 
-async function downloadFileResponse(
-  filePath: string, onFileRead?: ( fileBuffer: Buffer<ArrayBufferLike> ) => void
-) {
+async function downloadFileResponse( {
+  filePath,
+  contentDisposition = "attachment",
+  onFileRead
+} : {
+  filePath: string,
+  contentDisposition?: string,
+  onFileRead?: ( fileBuffer: Buffer<ArrayBufferLike> ) => void
+                                     } ) {
   const fileBuffer = await fs.readFile( filePath );
   const fileName = path.basename( filePath );
 
@@ -31,7 +37,7 @@ async function downloadFileResponse(
           "Content-Type": mimeType
         } : {
         } ),
-        "Content-Disposition": `attachment; filename="${ fileName }"`,
+        "Content-Disposition": `${ contentDisposition }; filename="${ fileName }"`,
       },
     }
   );

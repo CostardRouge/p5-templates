@@ -37,6 +37,7 @@ async function fetchDownload(
 
   a.href = objectURL;
   a.download = filename;
+  a.target = "_blank";
   document.body.appendChild( a );
   a.click();
   a.remove();
