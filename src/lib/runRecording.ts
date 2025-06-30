@@ -17,9 +17,7 @@ import {
   getRecordingSketchStepsByOptions
 } from "@/lib/progression/steps";
 
-async function runRecording(
-  jobId: string, template: string
-) {
+async function runRecording( jobId: string ) {
   // ─── 1. Create workspace ───────────────────────────────────────────────────
   const temporaryDirectoryPath = path.join(
     os.tmpdir(),
@@ -56,7 +54,7 @@ async function runRecording(
 
     await recordFunction(
       jobId,
-      template,
+      persistedJob.template,
       options,
       temporaryDirectoryPath
     );

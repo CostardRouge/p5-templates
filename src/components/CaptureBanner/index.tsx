@@ -22,6 +22,9 @@ import {
 
 import fetchDownload from "@/components/utils/fetchDownload";
 import ImageAssets from "@/components/CaptureBanner/components/ImageAssets";
+import {
+  resolveAssetURL
+} from "@/shared/utils";
 
 export default function Index( {
   name,
@@ -76,8 +79,19 @@ export default function Index( {
       await Promise.all( fileList.map( async(
         assetUrl: string, index: number
       ) => {
-        const blob = await fetch( assetUrl ).then( r => r.blob() );
+        const blob = await fetch( resolveAssetURL(
+          assetUrl,
+          options
+        ) ).then( r => r.blob() );
         const name = assetUrl.split( "/" ).pop() ?? `${ type }-${ index }`;
+
+        console.log( {
+          blob,
+          assetUrl: resolveAssetURL(
+            assetUrl,
+            options
+          )
+        } );
 
         formData.append(
           `file[global][${ type }]`,
@@ -110,7 +124,10 @@ export default function Index( {
         await Promise.all( fileList.map( async(
           assetUrl: string, index: number
         ) => {
-          const blob = await fetch( assetUrl ).then( r => r.blob() );
+          const blob = await fetch( resolveAssetURL(
+            assetUrl,
+            options
+          ) ).then( r => r.blob() );
           const prefix = `slide-${ i }-${ type }-${ index }`;
           const name = assetUrl.split( "/" ).pop() ?? prefix;
 
@@ -202,17 +219,18 @@ export default function Index( {
 
       {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
         <div className="flex flex-col justify-start bg-white">
-          <div className={`w-full h-8 ${ recordingProgress.status !== "failed" ? "bg-gray-200" : "bg-red-300" } rounded`}>
+          <div className={`w-full h-8 ${ recordingProgress.status !== "failed" ? "bg-gray-200" : "bg-red-300" } rounded relative`}>
             <div
               className="h-full bg-black rounded"
               style={{
                 width: `${ recordingProgress.percentage }%`
               }}
             />
+            <span className="absolute text-black"> ff{Math.round( recordingProgress?.percentage )}%</span>
           </div>
 
           <span className="text-sm text-black">
-            {recordingProgress.status}: {recordingProgress?.currentStep?.name} – {Math.round( recordingProgress?.percentage )}%
+            {recordingProgress.status}: {recordingProgress?.currentStep?.name}
           </span>
         </div> )}
 

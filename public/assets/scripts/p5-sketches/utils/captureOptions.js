@@ -97,27 +97,32 @@ async function _refreshAssets() {
     let obj = cached.get( path );
 
     if ( !obj ) {
+      const url = resolveAssetURL(
+        path,
+        sketchOptions
+      );
+
       obj = {
         path,
         exif: undefined,
-        img: loadImage( resolveAssetURL(
-          path,
-          sketchOptions
-        ) ),
+        img: loadImage( url ),
         filename: path.split( "/" ).pop(),
       };
 
-      readExifInfo( obj );
+      readExifInfo(
+        obj,
+        url
+      );
     }
 
     finalList.push( obj );
-    cached.delete( path ); // supprime de « reste à supprimer »
+    cached.delete( path );
   }
 
-  /* --- Suppression ---------------------------------------------- */
-  /* Tout ce qui reste dans cached Map n'est plus présent dans options.
-     On peut appeler .img.remove() si besoin, ou laisser GC faire.   */
-  cached.forEach( o => o.img?.remove?.() );
+  cached.forEach( object => {
+    object.img?.remove?.();
+    delete object.exif;
+  } );
 
   /* --- Commit ---------------------------------------------------- */
   cache.set(
@@ -126,12 +131,10 @@ async function _refreshAssets() {
   );
 }
 
-async function readExifInfo( o ) {
+async function readExifInfo(
+  object, url
+) {
   try {
-    const url = resolveAssetURL(
-      o.path,
-      sketchOptions
-    );
     let tags;
 
     if ( url.startsWith( "blob:" ) ) {
@@ -146,14 +149,14 @@ async function readExifInfo( o ) {
       tags
     } );
 
-    o.exif = tags;
+    object.exif = tags;
   } catch ( e ) {
     console.warn(
       "[EXIF] fail",
-      o.path,
+      object.path,
       e
     );
-    o.exif = null;
+    object.exif = null;
   }
 }
 

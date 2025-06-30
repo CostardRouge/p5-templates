@@ -10,6 +10,9 @@ import runRecording from "@/lib/runRecording";
 import {
   RecordingJobData
 } from "@/types/recording.types";
+import {
+  updateRecordingStatus
+} from "@/lib/progression";
 
 export class RecordingWorkerService {
   private static instance: RecordingWorkerService | null = null;
@@ -87,10 +90,7 @@ export class RecordingWorkerService {
       );
 
       // Process the recording
-      await runRecording(
-        job.id,
-        job.data.template
-      );
+      await runRecording( job.id );
 
       console.log( `[Worker] Job completed successfully: ${ job.id }` );
     } catch ( error ) {
@@ -135,11 +135,10 @@ export class RecordingWorkerService {
     const jobId = job.id as string;
 
     try {
-      // await setProgress(
-      //   jobId,
-      //   "completed",
-      //   100
-      // );
+      await updateRecordingStatus(
+        jobId,
+        "completed"
+      );
       console.log( `[Worker] Job completed: ${ jobId }` );
     } catch ( error ) {
       console.error(
