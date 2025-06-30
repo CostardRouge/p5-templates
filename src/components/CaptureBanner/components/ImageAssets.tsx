@@ -31,14 +31,14 @@ import {
 } from "@/shared/syncSketchOptions";
 import useAssetDrop from "@/hooks/useAssetDrop";
 import {
-  RecordingSketchOptions
+  RecordingSketchOptions, RecordingSketchSlideOption
 } from "@/types/recording.types";
 
 export default function ImageAssets( {
   options,
   scope,
 }: {
-  options: RecordingSketchOptions;
+  options: RecordingSketchOptions | RecordingSketchSlideOption;
   scope: "global" | {
  slide: number
 };
@@ -156,7 +156,7 @@ export default function ImageAssets( {
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
-          className="flex items-center justify-center h-20 border border-dashed border-gray-800 rounded text-gray-400 hover:bg-gray-100"
+          className="flex items-center justify-center h-6 w-6 border border-dashed border-gray-800 rounded-sm text-gray-400 hover:bg-gray-100"
         >
           <Plus className="h-6 w-6" />
         </button>

@@ -70,7 +70,7 @@ export class RecordingQueueService {
 
   public async enqueueRecording(
     template: string,
-    options :string,
+    options: string,
     files: File[]
   ): Promise<string> {
     const jobId = generateUuid();

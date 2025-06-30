@@ -85,14 +85,6 @@ export default function Index( {
         ) ).then( r => r.blob() );
         const name = assetUrl.split( "/" ).pop() ?? `${ type }-${ index }`;
 
-        console.log( {
-          blob,
-          assetUrl: resolveAssetURL(
-            assetUrl,
-            options
-          )
-        } );
-
         formData.append(
           `file[global][${ type }]`,
           new File(
@@ -166,7 +158,8 @@ export default function Index( {
 
   return (
     <div
-      className="max-w-64 flex flex-col gap-1 fixed right-0 bottom-0 bg-white p-2 text-center border border-t-1 border-black z-50">
+      className="max-w-64 flex flex-col gap-1 fixed right-0 bottom-0 bg-white p-2 text-center border border-t-1 border-black z-50 rounded-t-sm drop-shadow-sm"
+    >
       <div className="rounded-sm border border-black overflow-hidden">
         <JsonEditor
           collapse
@@ -185,7 +178,7 @@ export default function Index( {
       </div>
 
       <div className="rounded-sm border border-black text-black text-left bg-white">
-        <span className="px-1">root.assets.images</span>
+        <span className="px-1 text-sm">root.assets.images</span>
         <ImageAssets
           options={options}
           scope="global"
@@ -198,48 +191,59 @@ export default function Index( {
         return (
           <div
             key={`slide-${ slideIndex }`}
-            className="rounded-sm border border-black text-black text-left p-2 truncate overflow-ellipsis overflow-hidden whitespace-nowrap"
+            className="rounded-sm border border-black text-black text-left bg-white"
           >
-            <span className="">assets for slide #{slideIndex}: {slideOption?.title}</span>
+            <span className="px-1 text-sm">root.slides[{slideIndex}].assets.images</span>
+            <ImageAssets
+              options={slideOption}
+              scope={{
+                slide: slideIndex
+              }}
+            />
           </div>
-        );
+
+        )
+        ;
       } )}
 
       {!recordingProgress && (
         <button
-          className="rounded-sm p-2 border border-black disabled:opacity-50 text-black bg-white"
+          className="rounded-sm p-2 border border-black disabled:opacity-50 text-black bg-white text-sm"
           onClick={handleSubmit}
           disabled={isLoading}
         >
-          { isLoading ? <Loader className="inline mr-1 h-5 animate-spin"/> :
-            <Film className="inline h-5 mr-1"/> }
+          {isLoading ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+            <Film className="inline h-4 mr-1"/>}
           <span className="align-middle">Start backend recording</span>
         </button>
       )}
 
       {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
         <div className="flex flex-col justify-start bg-white">
-          <div className={`w-full h-8 ${ recordingProgress.status !== "failed" ? "bg-gray-200" : "bg-red-300" } rounded relative`}>
+          <div
+            className={`w-full h-8 ${ recordingProgress.status !== "failed" ? "bg-gray-200" : "bg-red-300" } rounded relative`}>
             <div
               className="h-full bg-black rounded"
               style={{
                 width: `${ recordingProgress.percentage }%`
               }}
             />
-            <span className="absolute text-black"> ff{Math.round( recordingProgress?.percentage )}%</span>
+            <span
+              className="absolute top-0 left-0 h-full w-full p-1.5 mix-blend-difference text-white text-sm">{Math.round( recordingProgress?.percentage )}%</span>
           </div>
 
           <span className="text-sm text-black">
             {recordingProgress.status}: {recordingProgress?.currentStep?.name}
           </span>
-        </div> )}
+        </div>
+      )}
 
       {( recordingProgress?.percentage === 100 || recordingProgress?.status === "completed" ) && jobId && (
         <button
-          className="rounded-sm p-2 border border-black text-black inline-block bg-white"
+          className="rounded-sm p-2 border border-black text-black inline-block bg-white text-sm"
           onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
         >
-          <SaveIcon className="inline align-middle mr-1 h-5"/>
+          <SaveIcon className="inline align-middle mr-1 h-4"/>
           <span className="align-middle">Download</span>
         </button>
       )}

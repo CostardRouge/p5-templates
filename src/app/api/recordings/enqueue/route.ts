@@ -112,7 +112,11 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
     const recordingService = RecordingService.getInstance();
     const jobId = await recordingService.enqueueRecording(
       template,
-      JSON.stringify( options ),
+      JSON.stringify(
+        options,
+        null,
+        2
+      ),
       collectedFiles
     );
 
