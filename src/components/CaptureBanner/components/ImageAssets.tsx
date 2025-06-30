@@ -31,17 +31,20 @@ import {
 } from "@/shared/syncSketchOptions";
 import useAssetDrop from "@/hooks/useAssetDrop";
 import {
+  JobId,
   RecordingSketchOptions, RecordingSketchSlideOption
 } from "@/types/recording.types";
 
 export default function ImageAssets( {
   options,
   scope,
+  id
 }: {
   options: RecordingSketchOptions | RecordingSketchSlideOption;
   scope: "global" | {
- slide: number
-};
+   slide: number
+  },
+  id: JobId
 } ) {
   const {
     addAssets, removeAsset
@@ -137,7 +140,7 @@ export default function ImageAssets( {
               id={path}
               url={resolveAssetURL(
                 path,
-                options
+                id
               )}
               onDelete={() =>
                 removeAsset( {

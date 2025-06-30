@@ -81,7 +81,7 @@ export default function Index( {
       ) => {
         const blob = await fetch( resolveAssetURL(
           assetUrl,
-          options
+          options.id
         ) ).then( r => r.blob() );
         const name = assetUrl.split( "/" ).pop() ?? `${ type }-${ index }`;
 
@@ -118,7 +118,7 @@ export default function Index( {
         ) => {
           const blob = await fetch( resolveAssetURL(
             assetUrl,
-            options
+            options.id
           ) ).then( r => r.blob() );
           const prefix = `slide-${ i }-${ type }-${ index }`;
           const name = assetUrl.split( "/" ).pop() ?? prefix;
@@ -182,6 +182,7 @@ export default function Index( {
         <ImageAssets
           options={options}
           scope="global"
+          id={options.id}
         />
       </div>
 
@@ -195,6 +196,7 @@ export default function Index( {
           >
             <span className="px-1 text-sm">root.slides[{slideIndex}].assets.images</span>
             <ImageAssets
+              id={options.id}
               options={slideOption}
               scope={{
                 slide: slideIndex

@@ -99,7 +99,7 @@ async function _refreshAssets() {
     if ( !obj ) {
       const url = resolveAssetURL(
         path,
-        sketchOptions
+        sketchOptions.id
       );
 
       obj = {

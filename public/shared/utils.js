@@ -2,12 +2,13 @@
 /*  Helper: resolve a path → URL (prefers local blob URL)             */
 /* ------------------------------------------------------------------ */
 export const resolveAssetURL = (
-  path, options
-) =>
+  path, id
+) => (
   window.__blobAssetMap?.[ path ] ??
-  ( options.id
-    ? `${ location.origin }/api/s3/${ options.id }/assets/${ path }`
-    : `${ location.origin }/${ path }` );
+  ( id
+    ? `${ location.origin }/api/s3/${ id }/assets/${ path }`
+    : `${ location.origin }/${ path }` )
+);
 
 export function deepMerge(
   targetObject, sourceObject
