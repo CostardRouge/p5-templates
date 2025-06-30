@@ -145,10 +145,6 @@ async function readExifInfo(
       tags = await exif.load( url );
     }
 
-    console.log( {
-      tags
-    } );
-
     object.exif = tags;
   } catch ( e ) {
     console.warn(
