@@ -168,7 +168,7 @@ export default function Index( {
           theme={{
             styles: {
               container: {
-                backgroundColor: "#f6f6f6",
+                backgroundColor: "#fffff",
                 fontFamily: "monospace",
                 fontSize: "small"
               },

@@ -13,9 +13,9 @@ function registerEvents() {
     () => {
       const slideNames = options?.slides?.map( (
         {
-          template, title
+          template, layout, title
         }, index
-      ) => `${ index + 1 } · ${ title ?? template }` );
+      ) => `${ index + 1 } · ${ title ?? layout ?? template }` );
 
       slides.select = createSelect();
 

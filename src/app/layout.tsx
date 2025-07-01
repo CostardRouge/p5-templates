@@ -7,8 +7,8 @@ import {
 } from "@/components/Sidebar";
 
 export const metadata: Metadata = {
-  title: "Social-templates-renderer",
-  description: "Generate social-templates with HTML and JavaScript",
+  title: "Social-pipeline",
+  description: "Generate social-templates with HTML and JavaScript (p5*js)",
 };
 
 export default function RootLayout( {

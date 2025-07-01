@@ -72,6 +72,34 @@ const shapes = {
       sketchDurationBarCurrentPosition.x,
       sketchDurationBarCurrentPosition.y
     );
+  },
+  grid( {
+    columns,
+    rows
+  } ) {
+    for ( let column = 0; column < columns; column++ ) {
+      const x = map(
+        column,
+        0,
+        columns,
+        0,
+        width
+      );
+
+      shapes.vl( x );
+
+      for ( let row = 0; row < rows; row++ ) {
+        const y = map(
+          row,
+          0,
+          rows,
+          0,
+          height
+        );
+
+        shapes.hl( y );
+      }
+    }
   }
 };
 

@@ -9,7 +9,8 @@ import {
   sketch,
   slides,
   string,
-  common
+  common,
+  cache
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 sketch.setup(
@@ -261,6 +262,37 @@ function drawSlideMeta( options ) {
   );
 }
 
+function drawSlideTexts( options ) {
+  if ( !options?.texts || !options?.texts.length ) {
+    return;
+  }
+
+  const textStyle = {
+    stroke: color(
+      0,
+      0,
+      0,
+      0
+    ),
+    fill: color( ...options.colors.text, ),
+    font: string.fonts.martian,
+    textWidth: width - ( 2 * ( width * horizontalMargin ) ),
+  };
+
+  for ( const textOption of options.texts ) {
+    string.write(
+      textOption.content,
+      ( width * horizontalMargin ) + width * textOption.position.x,
+      height * textOption.position.y,
+      {
+        ...textStyle,
+        size: textOption.size,
+        textAlign: textOption.align,
+      }
+    );
+  }
+}
+
 function drawIntroSlide( options ) {
   drawSlideBackground( options );
   neonGraffiti( {
@@ -278,120 +310,169 @@ function drawIntroSlide( options ) {
     stepAngleAmplitude: options.neonGraffiti.stepAngleAmplitude
   } );
 
-  const textStyle = {
-    stroke: color(
-      0,
-      0,
-      0,
-      0
-    ),
-    fill: color( ...options.colors.text, ),
-    font: string.fonts.martian,
-    textWidth: width - ( 2 * ( width * horizontalMargin ) ),
-    textAlign: [
-      CENTER,
-      CENTER,
-    ],
-  };
-
-  string.write(
-    options.title,
-    ( width * horizontalMargin ),
-    height / 2 - height / 8,
-    {
-      size: 196,
-      ...textStyle
-    }
-  );
-
-  string.write(
-    options.body,
-    ( width * horizontalMargin ),
-    height / 2 + height / 5,
-    {
-      ...textStyle,
-      size: 36,
-    }
-  );
-
+  drawSlideTexts( options );
   drawSlideMeta( options );
 }
 
-function drawTextSlide( options ) {
-  drawSlideBackground( options );
-  const {
-    startHeight, endHeight, ...neonGraffitiOptions
-  } = options.neonGraffiti;
+export const renderers = {
+  intro: drawIntroSlide,
 
-  neonGraffiti( {
-    start: createVector(
+  full: layoutFull,
+  split: layoutSplit,
+  grid2x2: layoutGrid,
+  strip: layoutStrip,
+  polaroid: layoutPolaroid
+};
+
+// helpers
+function getAssets(
+  options, type = "images"
+) {
+  return options.assets?.[ type ]?.map( p =>
+    cache.get( `${ type }Map` ).get( p ) ).filter( Boolean ) || [
+  ];
+}
+
+// layouts
+function layoutFull( opts ) {
+  const img = getAssets( opts )[ 0 ];
+
+  if ( img ) {
+    image(
+      img.img,
       0,
-      height * startHeight
-    ),
-    end: createVector(
+      0,
       width,
-      height * endHeight
-    ),
-    ...neonGraffitiOptions
-  } );
-
-  const textStyle = {
-    stroke: color(
-      0,
-      0,
-      0,
-      0
-    ),
-    textWidth: width - ( 1 * ( width * horizontalMargin ) ),
-    fill: color( ...options.colors.text, ),
-    font: string.fonts.martian,
-    textAlign: [
-      LEFT,
-      CENTER,
-    ],
-  };
-
-  string.write(
-    options.title,
-    width * horizontalMargin,
-    height * 0.2,
-    {
-      ...textStyle,
-      textWidth: width - ( 2 * horizontalMargin ),
-      textAlign: [
-        LEFT,
-      ],
-      size: 96
-    }
-  );
-
-  string.write(
-    options.body,
-    width * horizontalMargin,
-    height * .55,
-    {
-      ...textStyle,
-      size: 36
-    }
-  );
-
-  drawSlideMeta( options );
+      height
+    );
+  }
 }
 
-sketch.draw( (
-  time, center, favoriteColor
-) => {
-  const {
-    template, ...slideOptions
-  } = slides.current;
+function layoutSplit( opts ) {
+  const [
+    a,
+    b
+  ] = getAssets( opts );
 
-  ( {
-    intro: drawIntroSlide,
-    text: drawTextSlide,
-    outro: drawIntroSlide,
-  } )?.[ template ]( common.deepMerge(
-    slideOptions,
-    options
+  if ( a ) image(
+    a.img,
+    0,
+    0,
+    width / 2,
+    height
+  );
+  if ( b ) image(
+    b.img,
+    width / 2,
+    0,
+    width / 2,
+    height
+  );
+}
+
+function layoutGrid( opts ) {
+  const imgs = getAssets( opts ).slice(
+    0,
+    4
+  );
+
+  imgs.forEach( (
+    o, i
+  ) => {
+    const x = ( i % 2 ) * width / 2;
+    const y = Math.floor( i / 2 ) * height / 2;
+
+    image(
+      o.img,
+      x,
+      y,
+      width / 2,
+      height / 2
+    );
+  } );
+}
+
+function layoutStrip( opts ) {
+  const imgs = getAssets( opts );
+  const h = height / imgs.length;
+
+  imgs.forEach( (
+    o, i
+  ) => image(
+    o.img,
+    0,
+    i * h,
+    width,
+    h
   ) );
-} );
+}
+
+function layoutPolaroid( opts ) {
+  background( 255 );
+  const imgs = getAssets( opts );
+  const w = width / 2;
+  const h = w * 4 / 3;
+
+  imgs.forEach( (
+    o, i
+  ) => {
+    const x = 40 + i * ( w + 40 );
+    const y = height / 2 - h / 2;
+
+    push();
+    translate(
+      x + w / 2,
+      y + h / 2
+    );
+    rotate( radians( -5 + 10 * i ) );
+    translate(
+      -w / 2,
+      -h / 2
+    );
+    fill( 255 ); noStroke(); rect(
+      0,
+      0,
+      w,
+      h + 20,
+      10
+    );
+    image(
+      o.img,
+      10,
+      10,
+      w - 20,
+      h - 30
+    );
+    pop();
+  } );
+}
+
+function autoLayout( images ) {
+  const n = images?.length ?? 0;
+
+  if ( n === 1 ) return "full";
+  if ( n === 2 ) return "split";
+  if ( n <= 4 ) return "grid2x2";
+
+  return "strip";
+}
+
+function renderCurrentSlide() {
+  const slide = slides.current;
+
+  if ( !slide ) {
+    return;
+  }
+
+  const {
+    layout, ...slideOptions
+  } = slide;
+
+  const layoutKey = layout ?? autoLayout( slideOptions?.assets?.images );
+  const renderer = renderers[ layoutKey ] ?? renderers.full;
+
+  renderer( slideOptions );
+}
+
+sketch.draw( renderCurrentSlide );
 

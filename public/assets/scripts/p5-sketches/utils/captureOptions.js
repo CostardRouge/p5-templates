@@ -70,31 +70,40 @@ function refreshAssets() {
 }
 
 async function _refreshAssets() {
-  const imgPaths = sketchOptions.assets?.images ?? [
+  /* ------------------------ 1. collecter tous les chemins ------------------ */
+  const globalImages = sketchOptions.assets?.images ?? [
+  ];
+  const slideImages = ( sketchOptions.slides ?? [
+  ] )
+    .flatMap( s => s?.assets?.images ?? [
+    ] );
+
+  const allPaths = [
+    ...new Set( [
+      ...globalImages,
+      ...slideImages
+    ] )
   ];
 
-  if ( imgPaths.length === 0 ) {
+  if ( allPaths.length === 0 ) {
+    cache.set(
+      "imagesMap",
+      new Map()
+    );
     cache.set(
       "images",
       [
       ]
     );
-    document.querySelector( "canvas#defaultCanvas0" )
-      ?.classList.add( "loaded" );
+    document.querySelector( "canvas#defaultCanvas0" )?.classList.add( "loaded" );
     return;
   }
 
-  const cached = new Map( ( cache.get( "images" ) ?? [
-  ] ).map( o => [
-    o.path,
-    o
-  ] ) );
+  const prevMap = cache.get( "imagesMap" ) ?? new Map();
+  const newMap = new Map();
 
-  const finalList = [
-  ];
-
-  for ( const path of imgPaths ) {
-    let obj = cached.get( path );
+  for ( const path of allPaths ) {
+    let obj = prevMap.get( path );
 
     if ( !obj ) {
       const url = resolveAssetURL(
@@ -104,9 +113,9 @@ async function _refreshAssets() {
 
       obj = {
         path,
-        exif: undefined,
-        img: loadImage( url ),
         filename: path.split( "/" ).pop(),
+        img: loadImage( url ),
+        exif: undefined,
       };
 
       readExifInfo(
@@ -115,19 +124,27 @@ async function _refreshAssets() {
       );
     }
 
-    finalList.push( obj );
-    cached.delete( path );
+    newMap.set(
+      path,
+      obj
+    );
+    prevMap.delete( path );
   }
 
-  cached.forEach( object => {
-    object.img?.remove?.();
-    delete object.exif;
+  prevMap.forEach( o => {
+    o.img?.remove?.();
+    delete o.exif;
   } );
 
-  /* --- Commit ---------------------------------------------------- */
+  cache.set(
+    "imagesMap",
+    newMap
+  );
   cache.set(
     "images",
-    finalList
+    [
+      ...newMap.values()
+    ]
   );
 }
 
@@ -212,10 +229,9 @@ events.register(
         newOptions
       );
 
-      refreshAssets(); // will debounce and load only the deltas
+      refreshAssets();
     } );
 
-    /* make initial opts available to React (legacy behaviour) ------- */
     setSketchOptions(
       sketchOptions,
       sketch.sketchOptions?.engine

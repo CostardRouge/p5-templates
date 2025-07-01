@@ -1,0 +1,56 @@
+{
+  "animation": {
+    "framerate": 60,
+    "duration": 6
+  },
+  "colors": {
+    "background": [246, 235, 225],
+    "stroke": [226, 215, 205],
+    "text": [18, 18, 18]
+  },
+  "columns": 8,
+
+  "topRight": "",
+  "topLeft": "@costardrouge.jpg",
+  "bottomLeft": "JUNE 2025 · my first expo in Australia",
+
+  "slides": [
+    {
+//      "layout": "full",
+      "texts": [
+        {
+          "content": "motion capture expo",
+          "size": 128,
+          "color": [0, 0, 0],
+          "position": {
+            "x": 0,
+            "y": 0.25
+          },
+          "align": [
+            "center",
+            "center"
+          ]
+        },
+        {
+          "content": "p5*js + MediaPipe",
+          "size": 36,
+          "color": [0, 0, 0],
+          "position": {
+            "x": 0,
+            "y": 0.5
+          },
+          "align": [
+            "center",
+            "center"
+          ]
+        }
+      ],
+
+      "neonGraffiti": {
+        "startHeight": 0.4,
+        "endHeight": 0.4,
+        "amplitude": 150
+      }
+    }
+  ]
+}
