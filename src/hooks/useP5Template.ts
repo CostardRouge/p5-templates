@@ -5,63 +5,92 @@ import {
   useEffect
 } from "react";
 
-function useP5Template(
-  name: string, onSketchReady?: () => void
+type CanvasReadyCb = ( canvas: HTMLCanvasElement ) => void;
+
+/**
+ * Dynamically inject a p5 sketch (CSS + JS) and notify when
+ * the canvas is created.  Cleans itself on unmount / template change.
+ */
+export default function useP5Template(
+  templateName: string,
+  onCanvasReady?: CanvasReadyCb,
 ) {
   const pathname = usePathname();
 
   useEffect(
     () => {
-      // — CLEANUP any prior sketch, css, canvas
-      document.querySelectorAll( "link[data-sketch]" ).forEach( el => el.remove() );
-      document.querySelectorAll( "script[data-sketch]" ).forEach( el => el.remove() );
-      document.querySelectorAll( "canvas" ).forEach( el => el.remove() );
+      /* 1. remove any previous sketch assets ----------------------- */
+      document
+        .querySelectorAll( "link[data-sketch]" )
+        .forEach( ( el ) => el.remove() );
+      document
+        .querySelectorAll( "script[data-sketch]" )
+        .forEach( ( el ) => el.remove() );
+      document.querySelectorAll( "canvas" ).forEach( ( el ) => el.remove() );
 
-      // — INJECT new sketch CSS
+      /* 2. inject CSS --------------------------------------------- */
       const css = document.createElement( "link" );
 
       css.rel = "stylesheet";
       css.href = "/assets/stylesheets/p5.css";
-      css.setAttribute(
-        "data-sketch",
-        name
-      );
-      document.head.append( css );
+      css.dataset.sketch = templateName;
+      document.head.appendChild( css );
 
-      // — INJECT new sketch script
+      /* 3. observe for canvas creation ----------------------------- */
+      const observer = new MutationObserver( (
+        recs, obs
+      ) => {
+        const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0", ) as HTMLCanvasElement | null;
+
+        if ( canvas ) {
+          onCanvasReady?.( canvas );
+          obs.disconnect(); // stop observing
+        }
+      } );
+
+      observer.observe(
+        document.body,
+        {
+          childList: true,
+          subtree: true
+        }
+      );
+
+      /* 4. inject sketch script ----------------------------------- */
       const script = document.createElement( "script" );
 
       script.type = "module";
-      script.src = `/assets/scripts/p5-sketches/sketches/${ name }/index.js`;
+      script.src = `/assets/scripts/p5-sketches/sketches/${ templateName }/index.js`;
       script.crossOrigin = "anonymous";
-      script.setAttribute(
-        "data-sketch",
-        name
-      );
-      document.body.append( script );
+      script.dataset.sketch = templateName;
+      document.body.appendChild( script );
 
-      // — ON UNMOUNT/CLEANUP
+      /* 5. cleanup ------------------------------------------------- */
       return () => {
-        document.querySelectorAll( `link[data-sketch="${ name }"]` ).forEach( el => el.remove() );
-        document.querySelectorAll( `script[data-sketch="${ name }"]` ).forEach( el => el.remove() );
-        // remove p5 canvas
-        document.querySelectorAll( "canvas" ).forEach( el => el.remove() );
+        observer.disconnect();
 
-        document.querySelector( "canvas#defaultCanvas0.p5Canvas" )?.remove();
-        // your custom teardown
+        document
+          .querySelectorAll( `link[data-sketch="${ templateName }"]` )
+          .forEach( ( el ) => el.remove() );
+        document
+          .querySelectorAll( `script[data-sketch="${ templateName }"]` )
+          .forEach( ( el ) => el.remove() );
+
+        document.querySelectorAll( "canvas" ).forEach( ( el ) => el.remove() );
+
         try {
-          window.removeLoadedScripts();
-        }
-        catch {
-
+          // optional teardown helper if you defined one in the sketch
+          // @ts-ignore
+          window.removeLoadedScripts?.();
+        } catch {
+          /* ignore */
         }
       };
     },
     [
+      // onCanvasReady,
       pathname,
-      name
+      templateName
     ]
   );
 }
-
-export default useP5Template;

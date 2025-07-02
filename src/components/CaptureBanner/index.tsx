@@ -158,9 +158,9 @@ export default function Index( {
 
   return (
     <div
-      className="max-w-64 flex flex-col gap-1 fixed right-0 bottom-0 bg-white p-2 text-center border border-t-1 border-black z-50 rounded-t-sm drop-shadow-sm"
+      className="max-w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-white p-2 text-center border border-gray-400 shadow shadow-black-300 drop-shadow-sm border-r-0 z-50 rounded-tl-sm"
     >
-      <div className="rounded-sm border border-black overflow-hidden">
+      <div className="rounded-sm border border-gray-400 overflow-hidden">
         <JsonEditor
           collapse
           data={options}
@@ -177,8 +177,8 @@ export default function Index( {
         />
       </div>
 
-      <div className="rounded-sm border border-black text-black text-left bg-white">
-        <span className="px-1 text-sm">root.assets.images</span>
+      <div className="rounded-sm border border-gray-400 text-black text-left bg-white">
+        <span className="px-1 text-xs text-gray-500">root.assets.images</span>
         <ImageAssets
           options={options}
           scope="global"
@@ -192,9 +192,9 @@ export default function Index( {
         return (
           <div
             key={`slide-${ slideIndex }`}
-            className="rounded-sm border border-black text-black text-left bg-white"
+            className="rounded-sm border border-gray-400 text-black text-left bg-white"
           >
-            <span className="px-1 text-sm">root.slides[{slideIndex}].assets.images</span>
+            <span className="px-1 text-xs text-gray-500">root.slides[{slideIndex}].assets.images</span>
             <ImageAssets
               id={options.id}
               options={slideOption}
@@ -210,7 +210,7 @@ export default function Index( {
 
       {!recordingProgress && (
         <button
-          className="rounded-sm p-2 border border-black disabled:opacity-50 text-black bg-white text-sm"
+          className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-300 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
           onClick={handleSubmit}
           disabled={isLoading}
         >
@@ -242,7 +242,7 @@ export default function Index( {
 
       {( recordingProgress?.percentage === 100 || recordingProgress?.status === "completed" ) && jobId && (
         <button
-          className="rounded-sm p-2 border border-black text-black inline-block bg-white text-sm"
+          className="rounded-sm p-2 border border-gray-400 text-black inline-block bg-white text-sm shadow-gray-300"
           onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
         >
           <SaveIcon className="inline align-middle mr-1 h-4"/>
