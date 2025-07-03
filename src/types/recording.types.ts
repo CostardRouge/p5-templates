@@ -8,7 +8,7 @@ import {
 import {
   InputJsonValue
 } from "@prisma/client/runtime/edge";
-import slides from "../../public/assets/scripts/p5-sketches/utils/slides";
+import slides from "../../public/assets/scripts/p5-sketches/utils/slides/slides";
 
 export type JobId = string;
 

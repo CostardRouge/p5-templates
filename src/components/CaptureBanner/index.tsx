@@ -23,10 +23,10 @@ import {
 import fetchDownload from "@/components/utils/fetchDownload";
 import ImageAssets from "@/components/CaptureBanner/components/ImageAssets";
 import {
-  resolveAssetURL
+  resolveAssetURL, getScopeAssetPath
 } from "@/shared/utils";
 
-export default function Index( {
+export default function CaptureBanner( {
   name,
   options,
   setOptions
@@ -129,7 +129,13 @@ export default function Index( {
               [
                 blob
               ],
-              `slide-${ i }/${ type }/${ name }`,
+              getScopeAssetPath(
+                name,
+                type,
+                {
+                  slide: i
+                }
+              ),
               {
                 type: blob.type
               }
@@ -158,6 +164,7 @@ export default function Index( {
 
   return (
     <div
+      data-no-zoom=""
       className="max-w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-white p-2 text-center border border-gray-400 shadow shadow-black-300 drop-shadow-sm border-r-0 z-50 rounded-tl-sm"
     >
       <div className="rounded-sm border border-gray-400 overflow-hidden">
@@ -180,7 +187,7 @@ export default function Index( {
       <div className="rounded-sm border border-gray-400 text-black text-left bg-white">
         <span className="px-1 text-xs text-gray-500">root.assets.images</span>
         <ImageAssets
-          options={options}
+          assets={options?.assets}
           scope="global"
           id={options.id}
         />
@@ -188,25 +195,21 @@ export default function Index( {
 
       {options?.slides?.map( (
         slideOption, slideIndex
-      ) => {
-        return (
-          <div
-            key={`slide-${ slideIndex }`}
-            className="rounded-sm border border-gray-400 text-black text-left bg-white"
-          >
-            <span className="px-1 text-xs text-gray-500">root.slides[{slideIndex}].assets.images</span>
-            <ImageAssets
-              id={options.id}
-              options={slideOption}
-              scope={{
-                slide: slideIndex
-              }}
-            />
-          </div>
-
-        )
-        ;
-      } )}
+      ) => (
+        <div
+          key={`slide-${ slideIndex }`}
+          className="rounded-sm border border-gray-400 text-black text-left bg-white"
+        >
+          <span className="px-1 text-xs text-gray-500">root.slides[{slideIndex}].assets.images</span>
+          <ImageAssets
+            id={ options.id }
+            assets={ slideOption?.assets }
+            scope={ {
+              slide: slideIndex
+            } }
+          />
+        </div>
+      ) ) }
 
       {!recordingProgress && (
         <button

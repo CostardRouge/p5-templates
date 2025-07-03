@@ -32,15 +32,15 @@ import {
 import useAssetDrop from "@/hooks/useAssetDrop";
 import {
   JobId,
-  RecordingSketchOptions, RecordingSketchSlideOption
+  SketchAssets
 } from "@/types/recording.types";
 
 export default function ImageAssets( {
-  options,
+  assets,
   scope,
   id
 }: {
-  options: RecordingSketchOptions | RecordingSketchSlideOption;
+  assets: SketchAssets;
   scope: "global" | {
    slide: number
   },
@@ -68,7 +68,7 @@ export default function ImageAssets( {
     if ( !over || active.id === over.id ) return;
 
     const list = [
-      ...( options.assets?.images ?? [
+      ...( assets?.images ?? [
       ] )
     ];
     const oldIdx = list.indexOf( active.id as string );
@@ -117,14 +117,14 @@ export default function ImageAssets( {
     }
   }
 
-  const imgPaths: string[] = options.assets?.images ?? [
+  const imgPaths: string[] = assets?.images ?? [
   ];
 
   return (
     <DndContext
-      sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
+      sensors={sensors}
     >
       <div
         onDragOver={( e ) => e.preventDefault()}
@@ -171,6 +171,11 @@ export default function ImageAssets( {
           multiple
           onChange={async( e ) => {
             if ( e.target.files?.length ) {
+              console.log(
+                "e.target.files",
+                e.target.files,
+                scope
+              );
               await addAssets( {
                 files: e.target.files,
                 type: "images",

@@ -1,23 +1,26 @@
 import {
   registerBlob
 } from "@/shared/blobMap";
+
+import {
+  getScopeAssetPath
+} from "@/shared/utils";
+
 import {
   getSketchOptions,
   setSketchOptions
 } from "@/shared/syncSketchOptions";
 
-const ensureArray = (
-  obj: any, key: string
+const ensurePath = (
+  obj: any, key: string, value: any = [
+  ]
 ) => {
-  obj[ key ] ??= [
-  ];
+  obj[ key ] ??= value;
   return obj[ key ];
 };
 
-type Scope =
-  | "global"
-  | {
- slide: number
+type Scope = "global" | {
+  slide: number
 };
 
 type AssetType = "images" | "videos" | "audios" | "json";
@@ -41,11 +44,17 @@ export default function useAssetDrop() {
     );
 
     for ( const file of Array.from( files ) ) {
-      registerBlob(
+      const registeredBlobName = getScopeAssetPath(
         file.name,
+        type,
+        scope
+      );
+
+      registerBlob(
+        registeredBlobName,
         file
       );
-      targetArray.push( file.name );
+      targetArray.push( registeredBlobName );
     }
 
     setSketchOptions(
@@ -92,14 +101,19 @@ export default function useAssetDrop() {
     base: any, scope: Scope, type: AssetType
   ): string[] {
     if ( scope === "global" ) {
-      return ensureArray(
-        ensureArray(
+      return ensurePath(
+        ensurePath(
           base,
-          "assets"
+          "assets",
+          {
+          }
         ),
-        type
+        type,
+        [
+        ]
       );
     }
+
     const {
       slide
     } = scope;
@@ -108,12 +122,17 @@ export default function useAssetDrop() {
     ];
     base.slides[ slide ] ??= {
     };
-    return ensureArray(
-      ensureArray(
+
+    return ensurePath(
+      ensurePath(
         base.slides[ slide ],
-        "assets"
+        "assets",
+        {
+        }
       ),
-      type
+      type,
+      [
+      ]
     );
   }
 

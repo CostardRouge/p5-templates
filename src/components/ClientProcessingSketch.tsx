@@ -28,9 +28,6 @@ const CaptureBanner = dynamic(
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */
-const CANVAS_WIDTH = 1080;
-const CANVAS_HEIGHT = 1350;
-
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 4;
 
@@ -120,8 +117,14 @@ export default function ClientProcessingSketch( {
       return;
     }
 
-    const widthRatio = viewport.clientWidth / CANVAS_WIDTH;
-    const heightRatio = viewport.clientHeight / CANVAS_HEIGHT;
+    const canvas = canvasRef.current;
+
+    if ( !canvas ) {
+      return;
+    }
+
+    const widthRatio = viewport.clientWidth / canvas.clientWidth;
+    const heightRatio = viewport.clientHeight / canvas.clientHeight;
 
     const bestFitScale = Math.min(
       widthRatio,
@@ -151,9 +154,13 @@ export default function ClientProcessingSketch( {
       }
 
       const handleWheel = ( event: WheelEvent ) => {
-        if ( !event.ctrlKey ) {
+        if ( ( event.target as HTMLElement ).closest( "[data-no-zoom]" ) ) {
           return;
-        } // require Ctrl / Cmd like design tools
+        }
+
+        // if ( !event.ctrlKey ) {
+        //   return;
+        // } // require Ctrl / Cmd like design tools
 
         event.preventDefault();
 
@@ -346,6 +353,7 @@ export default function ClientProcessingSketch( {
       >
         {/* Zoom controls */}
         <div
+          data-no-zoom=""
           className="absolute p-2 bg-white border border-gray-400 shadow shadow-black-300 drop-shadow-sm rounded-br-sm border-t-0 top-0 left-0 z-50 flex gap-1"
         >
           <button

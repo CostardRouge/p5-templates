@@ -1,7 +1,13 @@
 import {
-  captureOptions as options,
-  events
-} from "./index.js";
+  captureOptions as options, events
+} from "../index.js";
+import {
+  _layouts
+} from "./layouts/_layouts.js";
+
+import {
+  common
+} from "/assets/scripts/p5-sketches/utils/index.js";
 
 function registerEvents() {
   if ( !options?.slides || options?.slides?.length === 0 ) {
@@ -65,6 +71,19 @@ const slides = {
   },
   setSlide( index ) {
     slides.index = index;
+  },
+  renderCurrentSlide() {
+    const slide = slides.current;
+
+    if ( !slide ) {
+      return;
+    }
+
+    const {
+      layout, ...slideOptions
+    } = slide;
+
+    ( _layouts[ layout ] ?? _layouts.full )( slideOptions );
   }
 };
 

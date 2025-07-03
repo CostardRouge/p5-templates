@@ -1,7 +1,7 @@
 import options from "./options.js";
 import events from "./events.js";
 import captureOptions from "./captureOptions.js";
-import slides from "./slides.js";
+import slides from "./slides/slides.js";
 
 import grid from "./grid.js";
 import time from "./time.js";

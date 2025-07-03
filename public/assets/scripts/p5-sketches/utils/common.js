@@ -1,3 +1,7 @@
+import {
+  cache, common
+} from "/assets/scripts/p5-sketches/utils/index.js";
+
 export function deepMerge(
   target = {
   }, source = {
@@ -32,4 +36,18 @@ export function deepMerge(
   }
 
   return target;
+}
+
+export function getAssets(
+  options, type = "images"
+) {
+  return options.assets?.[ type ]?.map( p =>
+    cache.get( `${ type }Map` ).get( p ) ).filter( Boolean ) || [
+  ];
+}
+
+export function getAsset(
+  path, type = "images"
+) {
+  return cache.get( `${ type }Map` ).get( path );
 }

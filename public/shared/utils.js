@@ -88,3 +88,24 @@ export function structuredClone( value ) {
 
   return JSON.parse( JSON.stringify( value ) );
 }
+
+/**
+ * @typedef {Object} SlideScope
+ * @property {number} slide
+ */
+
+/**
+ * @param {string} name
+ * @param {string} type
+ * @param {"global" | SlideScope} [scope="global"]
+ * @returns {string}
+ */
+export function getScopeAssetPath(
+  name, type, scope = "global"
+) {
+  if ( scope !== "global" && scope?.slide !== undefined ) {
+    return `slide-${ scope.slide }/${ type }/${ name }`;
+  }
+
+  return `global/${ type }/${ name }`;
+}
