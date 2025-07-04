@@ -38,7 +38,7 @@ export async function GET(
 
   const stream = new ReadableStream( {
     async start( controller ) {
-      controller.enqueue( "retry: 100\n\n" );
+      controller.enqueue( "retry: 250\n\n" );
 
       const sendUpdate = async() => {
         const jobCurrentStepAndPercentage = await getRecordingStatusAndTotalPercentage( id );
@@ -74,7 +74,7 @@ export async function GET(
         async() => {
           await sendUpdate();
         },
-        100
+        250
       );
 
       await sendUpdate();

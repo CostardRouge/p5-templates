@@ -35,7 +35,7 @@ export async function GET( req: NextRequest ) {
 
   const stream = new ReadableStream( {
     async start( controller ) {
-      controller.enqueue( "retry: 100\n\n" );
+      controller.enqueue( "retry: 500\n\n" );
 
       intervalId = setInterval(
         async() => {
@@ -51,7 +51,7 @@ export async function GET( req: NextRequest ) {
             }
           }
         },
-        300
+        500
       );
     },
     cancel() {
