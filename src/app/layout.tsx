@@ -2,9 +2,7 @@ import "./globals.css";
 import type {
   Metadata
 } from "next";
-import {
-  Sidebar
-} from "@/components/Sidebar";
+import MenuBar from "@/components/MenuBar";
 
 export const metadata: Metadata = {
   title: "Social-pipeline",
@@ -20,16 +18,16 @@ export default function RootLayout( {
     <html lang="en">
       <body>
         <div
-          className="flex bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+          className="flex flex-col dark:bg-gray-900 text-gray-800 dark:text-gray-100"
           style={ {
             height: "100svh",
           } }
         >
-          <Sidebar />
-
-          <main className="flex-1 overflow-auto p-6 relative">
+          <main className="flex-1 overflow-auto p-6 relative w-full">
             {children}
           </main>
+
+          <MenuBar />
         </div>
       </body>
     </html>

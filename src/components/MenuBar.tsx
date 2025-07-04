@@ -11,7 +11,9 @@ import {
 import {
   Video,
   Paintbrush,
-  // Home, Clock, Settings
+  Clock,
+  Settings
+  // Home
 } from "lucide-react";
 
 import HardLink from "@/components/HardLink";
@@ -48,7 +50,7 @@ const items: NavItem[] = [
   // },
 ];
 
-export function Sidebar() {
+export default function MenuBar() {
   const pathname = usePathname();
 
   const [
@@ -69,34 +71,24 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex flex-col items-center w-16 bg-gray-50 dark:bg-gray-800">
-      {/* <div className="my-4">*/}
-      {/*  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg" />*/}
-      {/* </div>*/}
+    <nav className="h-14 bg-white px-2 shadow shadow-gray-300 flex gap-1 items-center justify-center w-full">
+      {items.map( ( {
+        href, Icon
+      } ) => {
+        const active = pathname.startsWith( href );
 
-      <nav className="flex-1 flex flex-col space-y-4 my-4">
-        {items.map( ( {
-          href, Icon
-        } ) => {
-          const active = pathname.startsWith( href );
-
-          return (
-            <HardLink
-              key={href}
-              href={href}
-              className={`p-2 rounded transition-colors ${
-                active
-                  ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <Icon className={`w-6 h-6 ${ active ? "text-blue-600 dark:text-blue-400" : "" }`} />
-            </HardLink>
-          );
-        } )}
-
-        {/* <ThemeToggle />*/}
-      </nav>
-    </aside>
+        return (
+          <HardLink
+            key={href}
+            href={href}
+            active={active}
+            className={"rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 bg-white text-sm hover:bg-gray-500 hover:text-white active:text-white"}
+          >
+            <Icon className={"inline w-4 h-4"} />
+            <span>&nbsp;{href}</span>
+          </HardLink>
+        );
+      } )}
+    </nav>
   );
 }
