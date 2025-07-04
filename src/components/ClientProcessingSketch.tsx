@@ -14,9 +14,15 @@ import {
 } from "@/shared/syncSketchOptions";
 
 import {
+  ArrowDownFromLineIcon,
+  ArrowDownFromLine
+} from "lucide-react";
+
+import {
   RecordingSketchOptions
 } from "@/types/recording.types";
 import clamp from "@/utils/clamp";
+import ZoomControls from "@/components/ZoomControls";
 
 const CaptureBanner = dynamic(
   () => import( "@/components/CaptureBanner" ),
@@ -352,46 +358,69 @@ export default function ClientProcessingSketch( {
         }}
       >
         {/* Zoom controls */}
-        <div
-          data-no-zoom=""
-          className="absolute p-2 bg-white border border-gray-400 shadow shadow-black-300 drop-shadow-sm rounded-br-sm border-t-0 top-0 left-0 z-50 flex gap-1"
-        >
-          <button
-            onClick={() => applyScale( clamp(
-              scale - 0.1,
-              MIN_SCALE,
-              MAX_SCALE
-            ) )}
-            className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-300 text-sm text-gray-500 hover:text-black active:text-black "
-          >
-            −
-          </button>
-
-          <button
-            onClick={fitToViewport}
-            className="rounded-sm bg-white border border-gray-400 px-3 py-1 shadow shadow-gray-300 text-sm text-gray-500 hover:text-black active:text-black "
-          >
-            Fit
-          </button>
-
-          <button
-            onClick={resetToActualPixels}
-            className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-300 text-sm text-gray-500 hover:text-black active:text-black "
-          >
-            100%
-          </button>
-
-          <button
-            onClick={() => applyScale( clamp(
+        <ZoomControls
+          onPlus={() =>
+            applyScale( clamp(
               scale + 0.1,
               MIN_SCALE,
               MAX_SCALE
-            ) )}
-            className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-300 text-sm text-gray-500 hover:text-black active:text-black "
-          >
-            +
-          </button>
-        </div>
+            ) )
+          }
+          onMinus={() =>
+            applyScale( clamp(
+              scale - 0.1,
+              MIN_SCALE,
+              MAX_SCALE
+            ) )
+          }
+          onFit={fitToViewport}
+          onReset={resetToActualPixels}
+        />
+
+        {/* <div*/}
+        {/*  data-no-zoom=""*/}
+        {/*  className="text-center absolute p-2 bg-white border border-gray-400 shadow shadow-black-300 drop-shadow-sm rounded-br-sm border-t-0 bottom-0 left-0 z-50 flex flex-col gap-1"*/}
+        {/* >*/}
+        {/*  <ArrowDownFromLine className="text-gray-500 h-4 mb-2 w-full" />*/}
+
+        {/*  <button*/}
+        {/*    onClick={() => applyScale( clamp(*/}
+        {/*      scale + 0.1,*/}
+        {/*      MIN_SCALE,*/}
+        {/*      MAX_SCALE*/}
+        {/*    ) )}*/}
+        {/*    className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-300 text-sm text-gray-500 hover:text-black active:text-black self-stretch"*/}
+        {/*  >*/}
+        {/*    +*/}
+        {/*  </button>*/}
+
+        {/*  <button*/}
+        {/*    onClick={() => applyScale( clamp(*/}
+        {/*      scale - 0.1,*/}
+        {/*      MIN_SCALE,*/}
+        {/*      MAX_SCALE*/}
+        {/*    ) )}*/}
+        {/*    className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-300 text-sm text-gray-500 hover:text-black active:text-black "*/}
+        {/*  >*/}
+        {/*    −*/}
+        {/*  </button>*/}
+
+        {/*  <span className="h-2">-</span>*/}
+
+        {/*  <button*/}
+        {/*    onClick={fitToViewport}*/}
+        {/*    className="rounded-sm bg-white border border-gray-400 px-3 py-1 shadow shadow-gray-300 text-sm text-gray-500 hover:text-black active:text-black "*/}
+        {/*  >*/}
+        {/*    Fit*/}
+        {/*  </button>*/}
+
+        {/*  <button*/}
+        {/*    onClick={resetToActualPixels}*/}
+        {/*    className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-300 text-sm text-gray-500 hover:text-black active:text-black "*/}
+        {/*  >*/}
+        {/*    100%*/}
+        {/*  </button>*/}
+        {/* </div>*/}
 
         {/* Optional banner */}
         {options.capturing !== true && (
