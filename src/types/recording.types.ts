@@ -12,7 +12,18 @@ import slides from "../../public/assets/scripts/p5-sketches/utils/slides/slides"
 
 export type JobId = string;
 
-export type JobStatusEnum = "queued" | "active" | "completed" | "failed" | "cancelled"
+export const validStatuses = [
+  "queued",
+  "active",
+  "completed",
+  "failed",
+  "cancelled",
+  "draft"
+] as const;
+
+export type JobStatusEnum = typeof validStatuses[number];
+
+// export type JobStatusEnum = "queued" | "active" | "completed" | "failed" | "cancelled" | "draft"
 
 /**
  * TypeScript type matching the Prisma Job model.
@@ -45,7 +56,6 @@ export type RecordingSketchOptions = {
   id: string;
   name: string;
   assets: SketchAssets;
-  capturing: true | undefined;
   slides?: Array<RecordingSketchSlideOption>;
   consumeTestImages?: boolean;
 }

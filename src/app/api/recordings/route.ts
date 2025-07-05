@@ -4,16 +4,9 @@ import {
 import {
   getAllJobs
 } from "@/lib/jobStore";
-
-const validStatuses = [
-  "queued",
-  "active",
-  "completed",
-  "failed",
-  "cancelled"
-] as const;
-
-type JobStatusEnum = typeof validStatuses[number];
+import {
+  JobStatusEnum, validStatuses
+} from "@/types/recording.types";
 
 function isValidStatus( value: string ): value is JobStatusEnum {
   return validStatuses.includes( value as JobStatusEnum );

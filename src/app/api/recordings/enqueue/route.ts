@@ -5,14 +5,14 @@ import {
   RecordingService
 } from "@/services/RecordingService";
 import {
-  EnqueueRecordingResponse
+  EnqueueRecordingResponse, JobStatusEnum
 } from "@/types/recording.types";
 
 export async function POST( request: NextRequest ): Promise<NextResponse<EnqueueRecordingResponse>> {
   try {
     const formData = await request.formData();
-
     const template = formData.get( "template" );
+    const status = formData.get( "status" ) ?? "queued";
 
     if ( !template || typeof template !== "string" ) {
       return NextResponse.json(
@@ -73,7 +73,8 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       if ( !match ) continue;
 
       const [
-        , scope,
+        ,
+        scope,
         slideIndexRaw,
         type
       ] = match;
@@ -103,22 +104,17 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
 
     options.slides = slides;
 
-    // console.log( {
-    //   collectedFiles,
-    //   opt: options.assets
-    // } );
-    // return collectedFiles;
-
     const recordingService = RecordingService.getInstance();
-    const jobId = await recordingService.enqueueRecording(
+    const jobId = await recordingService.enqueueRecording( {
       template,
-      JSON.stringify(
+      files: collectedFiles,
+      status: status as JobStatusEnum,
+      options: JSON.stringify(
         options,
         null,
         2
       ),
-      collectedFiles
-    );
+    } );
 
     return NextResponse.json( {
       success: true,

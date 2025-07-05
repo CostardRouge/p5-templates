@@ -47,6 +47,7 @@ export async function DELETE( req: NextRequest ) {
 
       if ( ![
         "failed",
+        "draft",
         "completed",
         "cancelled",
       ].includes( dbJob.status ) ) {

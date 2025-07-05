@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import {
-  Grid, List, MoreVertical, Download, Trash2, RotateCcw, X
+  Grid, List, MoreVertical, Download, Trash2, RotateCcw, X, Clapperboard
 } from "lucide-react";
 
 import {
@@ -71,11 +71,13 @@ function ActionsMenu( {
   job,
   onCancel,
   onDelete,
-  onRetry
+  onRetry,
+  onStart
 }: {
   job: JobModel;
   onCancel?: ( job: JobModel ) => void;
   onDelete?: ( job: JobModel ) => void;
+  onStart?: ( job: JobModel ) => void;
   onRetry?: () => void;
 } ) {
   return (
@@ -94,8 +96,24 @@ function ActionsMenu( {
                 onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
                 className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
-                <Download />
+                <Download className="h-5" />
                 Download
+              </button>
+            )}
+          </MenuItem>
+        }
+
+        {job.status === "draft" &&
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
+                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              >
+                <Clapperboard className="h-5" />
+                Start recording
               </button>
             )}
           </MenuItem>
@@ -109,7 +127,7 @@ function ActionsMenu( {
               onClick={async() => await fetchDownload( `/api/options/download/${ job.id }` )}
               className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
             >
-              <Download />
+              <Download className="h-5" />
               <span>Download .json</span>
             </button>
           )}
@@ -120,6 +138,7 @@ function ActionsMenu( {
         {![
           "completed",
           "cancelled",
+          "draft",
           "failed",
           "active",
         ].includes( job.status ) && (
@@ -167,7 +186,7 @@ function ActionsMenu( {
                 }}
                 className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
-                <X />
+                <X className="h-5" />
                 Cancel
               </button>
             )}
@@ -222,7 +241,7 @@ function ActionsMenu( {
                 }}
                 className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
-                <RotateCcw />
+                <RotateCcw className="h-5" />
                 Retry
               </button>
             )}
@@ -232,6 +251,7 @@ function ActionsMenu( {
         {[
           "completed",
           "cancelled",
+          "draft",
           "failed",
         ].includes( job.status ) && (
           <MenuItem>
@@ -321,6 +341,7 @@ export default function RecordingsPage() {
         .then( ( res ) => res.ok ? res.json() : Promise.reject( "Fetch error" ) )
         .then( ( data: JobModel[] ) => {
           const staticJobs = data.filter( j => [
+            "draft",
             "completed",
             "failed",
             "cancelled"
@@ -496,6 +517,7 @@ export default function RecordingsPage() {
             className="px-2 rounded bg-gray-50 dark:bg-gray-800 h-9"
           >
             <option value="all">All Status</option>
+            <option value="draft">Drafted</option>
             <option value="queued">Queued</option>
             <option value="active">Active</option>
             <option value="completed">Completed</option>
@@ -588,6 +610,7 @@ export default function RecordingsPage() {
                       onCancel={handleCancel}
                       onDelete={handleDelete}
                       onRetry={handleRetry}
+                      onStart={handleRetry}
                     />
                   </td>
                 </tr>

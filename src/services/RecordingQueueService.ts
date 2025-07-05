@@ -11,7 +11,7 @@ import {
 import {
   RecordingJobData,
   JobConfiguration,
-  QueueHealthResponse
+  QueueHealthResponse, JobStatusEnum
 } from "@/types/recording.types";
 import {
   uploadArtifact
@@ -68,11 +68,17 @@ export class RecordingQueueService {
     return RecordingQueueService.instance;
   }
 
-  public async enqueueRecording(
+  public async enqueueRecording( {
+    template,
+    options,
+    status,
+    files
+  }:{
+    status: JobStatusEnum,
     template: string,
     options: string,
     files: File[]
-  ): Promise<string> {
+  } ): Promise<string> {
     const jobId = generateUuid();
 
     try {
@@ -80,13 +86,15 @@ export class RecordingQueueService {
       const persistedJob = await createJob(
         jobId,
         template,
-        "queued"
+        status
       );
 
-      await addRecordingStatus(
-        jobId,
-        persistedJob.status
-      );
+      if ( persistedJob.status !== "draft" ) {
+        await addRecordingStatus(
+          jobId,
+          persistedJob.status
+        );
+      }
 
       // 2. Persisting files in s3
       for ( const file of files ) {
@@ -109,21 +117,23 @@ export class RecordingQueueService {
         }
       );
 
-      // 3. Add job to BullMQ queue
-      await this.queue.add(
-        "process-recording",
-        {
-          jobId,
-          template
-        },
-        {
-          jobId,
-          priority: 1,
-          delay: 0,
-          removeOnFail: true,
-          removeOnComplete: true
-        }
-      );
+      if ( persistedJob.status !== "draft" ) {
+        // 3. Add job to BullMQ queue
+        await this.queue.add(
+          "process-recording",
+          {
+            jobId,
+            template
+          },
+          {
+            jobId,
+            priority: 1,
+            delay: 0,
+            removeOnFail: true,
+            removeOnComplete: true
+          }
+        );
+      }
 
       console.log( `[Queue] Recording job enqueued: ${ jobId }` );
       return jobId;
