@@ -3,8 +3,8 @@ import {
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 export default function drawSlideText( textOption ) {
-  const horizontalMargin = textOption.horizontalMargin ?? .05;
-  const verticalMargin = textOption.verticalMargin ?? .05;
+  const horizontalMargin = textOption.horizontalMargin ?? .015;
+  const verticalMargin = textOption.verticalMargin ?? .015;
 
   string.write(
     textOption.content,
@@ -12,9 +12,10 @@ export default function drawSlideText( textOption ) {
     ( height * verticalMargin ) + height * textOption.position.y,
     {
       size: textOption.size,
-      font: string.fonts.martian,
+      font: string.fonts?.[ textOption.font ] ?? string.fonts.martian,
       textAlign: textOption.align,
-      fill: color( ...textOption.color ),
+      blendMode: textOption.blend,
+      fill: color( ...textOption.fill ),
       stroke: color( ...textOption.stroke ),
       textWidth: width - ( 2 * ( width * horizontalMargin ) ),
       textHeight: height - ( 2 * ( height * verticalMargin ) )

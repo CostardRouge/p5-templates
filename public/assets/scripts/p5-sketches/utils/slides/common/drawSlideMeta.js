@@ -2,9 +2,9 @@ import {
   string, slides
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
-export default function drawSlideMeta( options ) {
-  const horizontalMargin = options.horizontalMargin || .05;
-  const verticalMargin = options.verticalMargin || .05;
+export default function drawSlideMeta( metaOption ) {
+  const horizontalMargin = metaOption.horizontalMargin || .05;
+  const verticalMargin = metaOption.verticalMargin || .05;
 
   const textStyle = {
     size: 24,
@@ -14,7 +14,7 @@ export default function drawSlideMeta( options ) {
       0,
       0
     ),
-    fill: color( ...options.colors.text, ),
+    fill: color( ...metaOption.fill ),
     font: string.fonts.martian,
     textAlign: [
       LEFT,
@@ -24,7 +24,7 @@ export default function drawSlideMeta( options ) {
 
   // top - left;
   string.write(
-    options.topLeft,
+    metaOption.topLeft,
     width * horizontalMargin,
     height * verticalMargin,
     {
@@ -34,7 +34,7 @@ export default function drawSlideMeta( options ) {
 
   // top-right
   string.write(
-    options.topRight,
+    metaOption.topRight,
     -width * horizontalMargin,
     height * verticalMargin,
     {
@@ -47,7 +47,7 @@ export default function drawSlideMeta( options ) {
 
   // bottom-left
   string.write(
-    options.bottomLeft,
+    metaOption.bottomLeft,
     width * horizontalMargin,
     height * ( 1 - verticalMargin ),
     textStyle

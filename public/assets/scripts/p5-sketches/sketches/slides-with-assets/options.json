@@ -1,12 +1,8 @@
 {
   "animation": {
     "framerate": 60,
-    "duration": 6
+    "duration": 20
   },
-
-  "topRight": "",
-  "topLeft": "@costardrouge.jpg",
-  "bottomLeft": "JULY 2025 · my first expo in Australia",
 
   "slides": [
     {
@@ -23,11 +19,31 @@
           }
         },
         {
-          "type": "text",
-          "content": "motion capture expo",
-          "size": 128,
+          "type": "images-stack",
+          "margin": 165,
+          "center": true,
+          "position": {
+            "x": 0.5,
+            "y": 0.5625
+          },
+          "animation": "random",
+          "shift": 80
+        },
+        {
+          "type": "meta",
+          "topRight": "",
+          "topLeft": "@costardrouge.jpg",
+          "bottomLeft": "JULY 2025 · p5*js + MediaPipe + Matter.js",
           "stroke": [226, 215, 205],
-          "color": [18, 18, 18],
+          "fill": [18, 18, 18]
+        },
+        {
+          "type": "text",
+          "content": "my first exhibit",
+          "size": 128,
+          "stroke": [0],
+          "fill": [230],
+          "blend": "exclusion",
           "position": {
             "x": 0,
             "y": 0.15
@@ -38,22 +54,114 @@
         },
         {
           "type": "text",
-          "content": "p5*js + MediaPipe",
-          "size": 36,
-          "stroke": [226, 215, 205],
-          "color": [18, 18, 18],
+          "content": "in Australia",
+          "size": 48,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
           "position": {
             "x": 0,
-            "y": 0.465
+            "y": 0.35
           },
           "align": [
             "center"
           ]
+        }
+      ]
+    },
+    {
+      "layout": "free",
+      "content": [
+        {
+          "type": "background",
+          "background": [246, 235, 225],
+          "pattern": {
+            "type": "grid",
+            "columns": 12,
+            "strokeWeight": 1,
+            "stroke": [226, 215, 205]
+          }
         },
         {
-          "type": "images",
-          "margin": 300,
-          "center": false
+          "type": "meta",
+          "topRight": "",
+          "topLeft": "@costardrouge.jpg",
+          "bottomLeft": "JULY 2025 · p5*js + MediaPipe + Matter.js",
+          "stroke": [226, 215, 205],
+          "fill": [18, 18, 18]
+        },
+        {
+          "type": "text",
+          "content": "Real time hand tracking",
+          "size": 88,
+          "stroke": [0],
+          "fill": [230],
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.125
+          },
+          "align": [
+            "left"
+          ]
+        },
+        {
+          "type": "image",
+          "index": 0,
+          "margin": 0,
+          "center": true,
+          "scale": 0.675,
+          "position": {
+            "x": 0.5,
+            "y": 0.465
+          }
+        },
+        {
+          "type": "image",
+          "index": 1,
+          "margin": 0,
+          "center": true,
+          "scale": 0.675,
+          "position": {
+            "x": 0.5,
+            "y": 0.8
+          }
+        },
+        {
+          "type": "text",
+          "content": "The sketch colored the hands and let people interact with floating balls :p",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.62
+          },
+          "align": [
+            "left"
+          ]
+        },
+        {
+          "type": "text",
+          "content": "I used MediaPipe to detect hands in the video feed.",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.265
+          },
+          "align": [
+            "left"
+          ]
         }
       ]
     }
