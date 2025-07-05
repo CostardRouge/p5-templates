@@ -6,6 +6,7 @@ import {
 } from "./RecordingWorkerService";
 import Redis from "@/lib/connections/redis";
 import {
+  JobStatusEnum,
   QueueHealthResponse
 } from "@/types/recording.types";
 
@@ -28,16 +29,23 @@ export class RecordingService {
     return RecordingService.instance;
   }
 
-  public async enqueueRecording(
+  public async enqueueRecording( {
+    template,
+    options,
+    status,
+    files
+  }:{
+    status: JobStatusEnum,
     template: string,
     options: string,
     files: File[]
-  ): Promise<string> {
-    return this.queueService.enqueueRecording(
+  } ): Promise<string> {
+    return this.queueService.enqueueRecording( {
       template,
       options,
+      status,
       files
-    );
+    } );
   }
 
   public async getQueueHealth(): Promise<QueueHealthResponse> {

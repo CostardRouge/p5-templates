@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import {
   ArrowDownFromLine,
-  Film, Loader, SaveIcon
+  Loader, SaveIcon, Archive, Clapperboard
 } from "lucide-react";
 
 import {
@@ -18,7 +18,7 @@ import {
 
 import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import {
-  JobId, RecordingSketchOptions, RecordingSketchSlideOption
+  JobId, JobStatusEnum, RecordingSketchOptions, RecordingSketchSlideOption
 } from "@/types/recording.types";
 
 import fetchDownload from "@/components/utils/fetchDownload";
@@ -46,6 +46,11 @@ export default function CaptureBanner( {
   ] = useState<JobId | undefined>( );
 
   const [
+    saving,
+    setSaving
+  ] = useState<boolean>( false );
+
+  const [
     templateCurrentSlide,
     setTemplateCurrentSlide
   ] = useState<{
@@ -57,9 +62,17 @@ export default function CaptureBanner( {
     subscribeToRecordingStatus, recordingProgress
   } = useRecordingStatusStream();
 
-  const handleSubmit = async() => {
+  const handleSubmit = async( status: JobStatusEnum = "active" ) => {
+    if ( status === "draft" ) {
+      setSaving( true );
+    }
+
     const formData = new FormData();
 
+    formData.append(
+      "status",
+      status
+    );
     formData.append(
       "template",
       `p5/${ name }`
@@ -149,9 +162,18 @@ export default function CaptureBanner( {
     const jobId = await enqueueRecording( formData );
 
     if ( jobId !== null ) {
-      setJobId( jobId );
+      if ( status === "active" ) {
+        setJobId( jobId );
 
-      subscribeToRecordingStatus( jobId );
+        subscribeToRecordingStatus( jobId );
+      }
+
+      if ( status === "draft" ) {
+        window.location.href = `${ name }?id=${ jobId }`;
+      }
+    }
+    else if ( status === "draft" ) {
+      setSaving( false );
     }
   };
 
@@ -235,15 +257,27 @@ export default function CaptureBanner( {
           ) )}
 
           {!recordingProgress && (
-            <button
-              className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
-              onClick={handleSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-                <Film className="inline h-4 mr-1"/>}
-              <span className="align-middle">Start backend recording</span>
-            </button>
+            <div className="flex gap-1 h-auto ">
+              <button
+                className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                onClick={() => handleSubmit( "draft" )}
+                disabled={isLoading}
+              >
+                {saving ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+                  <Archive className="inline h-4 mr-1"/>}
+                <span className="align-middle">Draft</span>
+              </button>
+
+              <button
+                className="flex-1 rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 text-gray-500 hover:text-black active:text-black bg-white text-sm disabled:opacity-50 disabled:text-gray-500"
+                onClick={() => handleSubmit()}
+                disabled={isLoading || saving}
+              >
+                {isLoading && !saving ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+                  <Clapperboard className="inline h-4 mr-1"/>}
+                <span className="align-middle">Export in .mp4</span>
+              </button>
+            </div>
           )}
 
           {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
