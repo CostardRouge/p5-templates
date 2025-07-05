@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import {
   ArrowDownFromLine,
-  Loader, SaveIcon, Archive, Clapperboard
+  Loader, SaveIcon, Archive, Clapperboard, Save
 } from "lucide-react";
 
 import {
@@ -18,7 +18,7 @@ import {
 
 import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import {
-  JobId, JobStatusEnum, RecordingSketchOptions, RecordingSketchSlideOption
+  JobId, JobModel, JobStatusEnum, RecordingSketchOptions, RecordingSketchSlideOption
 } from "@/types/recording.types";
 
 import fetchDownload from "@/components/utils/fetchDownload";
@@ -30,11 +30,13 @@ import {
 export default function CaptureBanner( {
   name,
   options,
-  setOptions
+  setOptions,
+  persistedJob
 }: {
     name: string;
     options: RecordingSketchOptions;
     setOptions: ( nextOptions: JsonData ) => void;
+    persistedJob?: JobModel
 } ) {
   const {
     enqueueRecording, isLoading
@@ -62,12 +64,21 @@ export default function CaptureBanner( {
     subscribeToRecordingStatus, recordingProgress
   } = useRecordingStatusStream();
 
-  const handleSubmit = async( status: JobStatusEnum = "active" ) => {
+  const handleSubmit = async(
+    status: JobStatusEnum = "active", persistedJobId?: JobId
+  ) => {
     if ( status === "draft" ) {
       setSaving( true );
     }
 
     const formData = new FormData();
+
+    if ( persistedJobId ) {
+      formData.append(
+        "jobId",
+        persistedJobId
+      );
+    }
 
     formData.append(
       "status",
@@ -159,17 +170,17 @@ export default function CaptureBanner( {
       }
     }
 
-    const jobId = await enqueueRecording( formData );
+    const newJobId = await enqueueRecording( formData );
 
-    if ( jobId !== null ) {
+    if ( newJobId !== null ) {
       if ( status === "active" ) {
-        setJobId( jobId );
+        setJobId( newJobId );
 
-        subscribeToRecordingStatus( jobId );
+        subscribeToRecordingStatus( newJobId );
       }
 
       if ( status === "draft" ) {
-        window.location.href = `${ name }?id=${ jobId }`;
+        window.location.href = `${ name }?id=${ newJobId }`;
       }
     }
     else if ( status === "draft" ) {
@@ -258,15 +269,34 @@ export default function CaptureBanner( {
 
           {!recordingProgress && (
             <div className="flex gap-1 h-auto ">
-              <button
-                className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
-                onClick={() => handleSubmit( "draft" )}
-                disabled={isLoading}
-              >
-                {saving ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-                  <Archive className="inline h-4 mr-1"/>}
-                <span className="align-middle">Draft</span>
-              </button>
+              {
+                persistedJob?.status === "draft" && (
+                  <button
+                    className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                    onClick={() => handleSubmit(
+                      "draft",
+                      persistedJob.id
+                    )}
+                    disabled={isLoading}
+                  >
+                    {saving ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+                      <Save className="inline h-4 mr-1"/>}
+                    <span className="align-middle">Save</span>
+                  </button>
+                )
+              }
+
+              {
+                persistedJob?.status !== "draft" && ( <button
+                  className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                  onClick={() => handleSubmit( "draft" )}
+                  disabled={isLoading}
+                >
+                  {saving ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+                    <Archive className="inline h-4 mr-1"/>}
+                  <span className="align-middle">Draft</span>
+                </button>
+                ) }
 
               <button
                 className="flex-1 rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 text-gray-500 hover:text-black active:text-black bg-white text-sm disabled:opacity-50 disabled:text-gray-500"

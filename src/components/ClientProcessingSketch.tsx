@@ -382,6 +382,7 @@ export default function ClientProcessingSketch( {
         {!capturing && (
           <CaptureBanner
             name={name}
+            persistedJob={persistedJob}
             options={currentOptions}
             setOptions={( updated ) =>
               setCurrentOptions( updated as RecordingSketchOptions )
