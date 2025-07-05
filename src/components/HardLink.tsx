@@ -3,9 +3,9 @@ import React, {
 
 // HardLink forces a full page reload (no client routing)
 function HardLink( {
-  href, className, children, active
+  href, className, children
 }: {
- href: string; className?: string; children: React.ReactNode, active: boolean
+ href: string; className?: string; children: React.ReactNode
 } ) {
   return (
     <a

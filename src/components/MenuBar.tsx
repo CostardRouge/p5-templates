@@ -51,7 +51,7 @@ const items: NavItem[] = [
 ];
 
 export default function MenuBar() {
-  const pathname = usePathname();
+  // const pathname = usePathname();
 
   const [
     isCapturing,
@@ -75,13 +75,12 @@ export default function MenuBar() {
       {items.map( ( {
         href, Icon
       } ) => {
-        const active = pathname.startsWith( href );
+        // const active = pathname.startsWith( href );
 
         return (
           <HardLink
             key={href}
             href={href}
-            active={active}
             className={"rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 bg-white text-sm hover:bg-gray-500 hover:text-white active:text-white"}
           >
             <Icon className={"inline w-4 h-4"} />
