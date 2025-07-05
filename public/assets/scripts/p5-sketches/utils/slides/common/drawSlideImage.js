@@ -1,5 +1,5 @@
 import {
-  common, imageUtils
+  common, imageUtils, mappers, animation
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 export default function drawSlideImage(
@@ -21,6 +21,34 @@ export default function drawSlideImage(
     width * imageOption.position.x,
     height * imageOption.position.y
   );
+
+  if ( imageOption.animation ) {
+    if ( imageOption.animation.name === "noise-floating" ) {
+      noiseDetail( ...imageOption.animation.noiseDetail );
+
+      const imageAngle = noise(
+        animation.angle,
+        imageOption.index
+      ) * TAU;
+
+      imagePosition.add(
+        mappers.fn(
+          Math.sin( imageAngle ),
+          0,
+          TAU,
+          0,
+          imageOption.animation.amplitude
+        ),
+        mappers.fn(
+          Math.cos( imageAngle ),
+          0,
+          TAU,
+          0,
+          imageOption.animation.amplitude
+        )
+      );
+    }
+  }
 
   imageUtils.marginImage( {
     position: imagePosition,

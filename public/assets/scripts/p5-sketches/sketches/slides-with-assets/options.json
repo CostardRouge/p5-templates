@@ -164,6 +164,136 @@
           ]
         }
       ]
+    },
+    {
+      "layout": "free",
+      "content": [
+        {
+          "type": "background",
+          "background": [246, 235, 225],
+          "pattern": {
+            "type": "grid",
+            "columns": 14,
+            "strokeWeight": 1,
+            "stroke": [226, 215, 205]
+          }
+        },
+        {
+          "type": "meta",
+          "topRight": "",
+          "topLeft": "@costardrouge.jpg",
+          "bottomLeft": "JULY 2025 · p5*js + MediaPipe + Matter.js",
+          "stroke": [226, 215, 205],
+          "fill": [18, 18, 18]
+        },
+        {
+          "type": "text",
+          "content": "Kids loved it!",
+          "size": 86,
+          "stroke": [0],
+          "fill": [230],
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.125
+          },
+          "align": [
+            "center"
+          ]
+        },
+        {
+          "type": "image",
+          "index": 0,
+          "margin": 0,
+          "center": true,
+          "scale": 0.7,
+          "position": {
+            "x": 0.275,
+            "y": 0.4
+          },
+          "animation": {
+            "name": "noise-floating",
+            "amplitude": 50,
+            "noiseDetail": [
+              1.5,
+              0.7
+            ]
+          }
+        },
+        {
+          "type": "image",
+          "index": 1,
+          "margin": 0,
+          "center": true,
+          "scale": 0.67,
+          "animation": {
+            "name": "noise-floating",
+            "amplitude": 50,
+            "noiseDetail": [
+              1,
+              0.8
+            ]
+          },
+          "position": {
+            "x": 0.75,
+            "y": 0.4
+          }
+        },
+        {
+          "type": "image",
+          "index": 2,
+          "margin": 0,
+          "center": true,
+          "scale": 0.67,
+          "position": {
+            "x": 0.5,
+            "y": 0.75
+          },
+          "animation": {
+            "name": "noise-floating",
+            "amplitude": 50,
+            "noiseDetail": [
+              2,
+              0.7
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "content": "They instantly understood how to play with it (:",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.55
+          },
+          "align": [
+            "center"
+          ]
+        },
+        {
+          "type": "text",
+          "content": "It made the whole experience super rewarding to watch :p",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.2
+          },
+          "align": [
+            "center"
+          ]
+        }
+      ]
     }
   ]
 }
