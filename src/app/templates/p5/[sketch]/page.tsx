@@ -5,7 +5,9 @@ import type {
 } from "next";
 import listDirectory from "@/utils/listDirectory";
 import getSketchOptions from "@/utils/getSketchOptions";
-import ClientProcessingSketch from "@/components/ClientProcessingSketch";
+import ClientProcessingSketch, {
+  ClientProcessingSketchProps
+} from "@/components/ClientProcessingSketch";
 
 import getCaptureOptions from "@/utils/getCaptureOptions";
 import {
@@ -52,6 +54,13 @@ async function ProcessingSketch( {
   const sketchOptions = getSketchOptions( sketchName ) ?? ( {
   } as RecordingSketchOptions );
 
+  const processingSketchProps: ClientProcessingSketchProps = {
+    capturing: capturingSearchParams !== undefined,
+    persistedJob: undefined,
+    options: sketchOptions,
+    name: sketchName,
+  };
+
   if ( jobIdSearchParams ) {
     const persistedJob = await getJobById( jobIdSearchParams );
 
@@ -59,16 +68,14 @@ async function ProcessingSketch( {
       return notFound();
     }
 
+    processingSketchProps.persistedJob = persistedJob;
+
     Object.assign(
       sketchOptions,
       await getCaptureOptions( `${ persistedJob.id }/options.json` )
     );
 
-    sketchOptions.id = jobIdSearchParams;
-  }
-
-  if ( capturingSearchParams !== undefined ) {
-    sketchOptions.capturing = true;
+    sketchOptions.id = persistedJob.id;
   }
 
   if ( sketchOptions.consumeTestImages && !jobIdSearchParams ) {
@@ -88,8 +95,7 @@ async function ProcessingSketch( {
 
   return (
     <ClientProcessingSketch
-      name={sketchName}
-      options={sketchOptions}
+      {...processingSketchProps}
     />
   );
 }
