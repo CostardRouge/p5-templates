@@ -27,7 +27,7 @@ await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );
 
 const {
-  Engine, Body, Bodies, Vector, Composite
+  Engine, Bodies, Vector, Composite
 } = Matter;
 
 const RUNNING_INFERENCE = 30;
@@ -165,6 +165,7 @@ sketch.setup(
     mediapipe.feedback.element.hide();
 
     // --- spin up the vision worker ---
+
     mediapipe.worker = new Worker( new URL(
       "./vision-worker.js",
       import.meta.url
@@ -181,10 +182,6 @@ sketch.setup(
       if ( message.type === "READY" ) {
         mediapipe.workerReady = true;
       }
-
-      // if ( message.type === "RESULT" ) {
-      //   mediapipe.workerResult = message.payload;
-      // }
 
       if ( message.type === "LIB_RESULT" ) {
         mediapipe.workerResult[ message.payload.lib ] = message.payload.result;
@@ -355,24 +352,24 @@ sketch.draw( (
 
     Engine.update( matter.engine );
 
-    matter.engine.gravity = Vector.create(
-      mappers.fn(
-        Math.sin( animation.angle ),
-        -1,
-        1,
-        -1,
-        1,
-        // easing.easeInOutExpo
-      ),
-      mappers.fn(
-        Math.cos( animation.angle * 1.5 ),
-        -1,
-        1,
-        -1,
-        1,
-        // easing.easeInOutExpo
-      ),
-    );
+    // matter.engine.gravity = Vector.create(
+    //   mappers.fn(
+    //     Math.sin( animation.angle ),
+    //     -1,
+    //     1,
+    //     -1,
+    //     1,
+    //     // easing.easeInOutExpo
+    //   ),
+    //   mappers.fn(
+    //     Math.cos( animation.angle * 1.5 ),
+    //     -1,
+    //     1,
+    //     -1,
+    //     1,
+    //     // easing.easeInOutExpo
+    //   ),
+    // );
 
     matter.balls.forEach( (
       ball, index

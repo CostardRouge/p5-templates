@@ -78,7 +78,7 @@
           "background": [246, 235, 225],
           "pattern": {
             "type": "grid",
-            "columns": 12,
+            "columns": 8,
             "strokeWeight": 1,
             "stroke": [226, 215, 205]
           }
@@ -116,6 +116,14 @@
           "position": {
             "x": 0.5,
             "y": 0.465
+          },
+          "animation": {
+            "name": "noise-floating",
+            "amplitude": 50,
+            "noiseDetail": [
+              2,
+              0.7
+            ]
           }
         },
         {
@@ -127,6 +135,14 @@
           "position": {
             "x": 0.5,
             "y": 0.8
+          },
+          "animation": {
+            "name": "noise-floating",
+            "amplitude": 50,
+            "noiseDetail": [
+              1.8,
+              0.6
+            ]
           }
         },
         {
@@ -173,7 +189,7 @@
           "background": [246, 235, 225],
           "pattern": {
             "type": "grid",
-            "columns": 14,
+            "columns": 8,
             "strokeWeight": 1,
             "stroke": [226, 215, 205]
           }
@@ -292,6 +308,226 @@
           "align": [
             "center"
           ]
+        }
+      ]
+    },
+    {
+      "layout": "free",
+      "content": [
+        {
+          "type": "background",
+          "background": [246, 235, 225],
+          "pattern": {
+            "type": "grid",
+            "columns": 8,
+            "strokeWeight": 1,
+            "stroke": [226, 215, 205]
+          }
+        },
+        {
+          "type": "meta",
+          "topRight": "",
+          "topLeft": "@costardrouge.jpg",
+          "bottomLeft": "JULY 2025 · p5*js + MediaPipe + Matter.js",
+          "stroke": [226, 215, 205],
+          "fill": [18, 18, 18]
+        },
+        {
+          "type": "text",
+          "content": "Not crashing in public = big win!",
+          "size": 86,
+          "stroke": [0],
+          "fill": [230],
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.125
+          },
+          "align": [
+            "left"
+          ]
+        },
+        {
+          "type": "text",
+          "content": "since the sketch had to run all day in the browser without lag or overheating, performance was key.",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.37
+          },
+          "align": [
+            "left"
+          ]
+        },
+
+        {
+          "type": "text",
+          "content": "→ ran the sketch fully offline (no internet needed)",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.495
+          },
+          "align": [
+            "left"
+          ]
+        },
+
+        {
+          "type": "text",
+          "content": "→ added an idle mode with lower framerate + slowed down the hand tracking when nothing was happening",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.595
+          },
+          "align": [
+            "left"
+          ]
+        },
+
+        {
+          "type": "text",
+          "content": "→ moved MediaPipe hand tracking to a web worker",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.72
+          },
+          "align": [
+            "left"
+          ]
+        },
+
+        {
+          "type": "text",
+          "content": "→ dropped webcam resolution to save power",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.82
+          },
+          "align": [
+            "left"
+          ]
+        }
+      ]
+    },
+    {
+      "layout": "free",
+      "content": [
+        {
+          "type": "background",
+          "background": [246, 235, 225],
+          "pattern": {
+            "type": "grid",
+            "columns": 8,
+            "strokeWeight": 1,
+            "stroke": [226, 215, 205]
+          }
+        },
+        {
+          "type": "meta",
+          "topRight": "",
+          "topLeft": "@costardrouge.jpg",
+          "bottomLeft": "JULY 2025 · p5*js + MediaPipe + Matter.js",
+          "stroke": [226, 215, 205],
+          "fill": [18, 18, 18]
+        },
+        {
+          "type": "text",
+          "content": "Exhibit conclusion",
+          "size": 86,
+          "stroke": [0],
+          "fill": [230],
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.125
+          },
+          "align": [
+            "left"
+          ]
+        },
+        {
+          "type": "text",
+          "content": "This gave me a bunch of ideas for new sketches:\n\n· using hand tracking in my posts\n· do more interactive experiments\n· use face and body tracking",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.275
+          },
+          "align": [
+            "left"
+          ]
+        },
+        {
+          "type": "text",
+          "content": "I might post a full breakdown, if you’re into that sort of thing, stay tuned!",
+          "size": 32,
+          "stroke": [18],
+          "fill": [230],
+          "font": "martian",
+          "blend": "exclusion",
+          "horizontalMargin": 0.05,
+          "position": {
+            "x": 0,
+            "y": 0.5
+          },
+          "align": [
+            "left"
+          ]
+        },
+        {
+          "type": "image",
+          "index": 0,
+          "margin": 0,
+          "center": true,
+          "scale": 0.8,
+          "position": {
+            "x": 0.5,
+            "y": 0.75
+          },
+          "animation": {
+            "name": "noise-floating",
+            "amplitude": 80,
+            "noiseDetail": [
+              3,
+              0.7
+            ]
+          }
         }
       ]
     }
