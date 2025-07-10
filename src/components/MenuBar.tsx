@@ -71,7 +71,7 @@ export default function MenuBar() {
   }
 
   return (
-    <nav className="h-14 bg-white px-2 shadow shadow-gray-300 flex gap-1 items-center justify-center w-full">
+    <nav className="h-14 bg-white px-2 shadow shadow-gray-300 flex gap-1 items-center justify-center w-full border-t border-gray-400 z-40">
       {items.map( ( {
         href, Icon
       } ) => {

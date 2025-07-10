@@ -31,7 +31,7 @@ const CaptureBanner = dynamic(
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */
 const MIN_SCALE = 0.1;
-const MAX_SCALE = 4;
+const MAX_SCALE = 6;
 
 /* ------------------------------------------------------------------ */
 /*  Main Component                                                    */

@@ -29,10 +29,10 @@ export default function TemplatesList( {
       {/* View Toggle */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold mb-4">Templates</h1>
+          <h1 className="text-2xl font-semibold">Templates</h1>
         </div>
 
-        <div className="flex items-center mb-2 space-x-2">
+        <div className="flex items-center space-x-2">
           <button
             aria-label="Grid view"
             onClick={() => setView( "grid" )}
@@ -64,7 +64,7 @@ export default function TemplatesList( {
           <div
             className={
               view === "grid"
-                ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2"
                 : "space-y-2"
             }
           >
@@ -89,8 +89,8 @@ export default function TemplatesList( {
                         className="absolute top-0 left-0 w-full h-full object-contain"
                       />
                     </div>
-                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/60 to-transparent">
-                      <span className="text-white font-medium drop-shadow">
+                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-gray-700/60 to-transparent">
+                      <span className="text-white drop-shadow">
                         {name}
                       </span>
                     </div>
@@ -114,7 +114,7 @@ export default function TemplatesList( {
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <span className="flex-1 ml-3 truncate font-medium">{name}</span>
+                  <span className="flex-1 ml-3 truncate">{name}</span>
                   <span className="text-gray-500 dark:text-gray-400 ml-2">➔</span>
                 </HardLink>
               );

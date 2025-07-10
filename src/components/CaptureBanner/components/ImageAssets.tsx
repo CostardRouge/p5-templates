@@ -159,7 +159,7 @@ export default function ImageAssets( {
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
-          className="flex items-center justify-center h-6 w-6 border border-dashed border-gray-800 rounded-sm text-gray-400 hover:bg-gray-100"
+          className="flex items-center justify-center h-20 border border-dashed border-gray-800 text-gray-400 hover:bg-gray-100"
         >
           <Plus className="h-6 w-6" />
         </button>
@@ -213,7 +213,7 @@ function SortableThumb( {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative h-20  bg-white">
+    <div ref={setNodeRef} style={style} className="relative h-20 bg-white">
       <GripVertical
         className="absolute right-1 top-1 h-4 w-4 text-white cursor-grab active:cursor-grabbing"
         {...attributes}

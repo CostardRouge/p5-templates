@@ -23,7 +23,7 @@ export default function RootLayout( {
             height: "100svh",
           } }
         >
-          <main className="flex-1 overflow-auto p-6 relative w-full">
+          <main className="flex-1 overflow-auto p-2 relative w-full">
             {children}
           </main>
 
