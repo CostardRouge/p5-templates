@@ -70,12 +70,11 @@ function refreshAssets() {
 }
 
 async function _refreshAssets() {
-  /* ------------------------ 1. collecter tous les chemins ------------------ */
   const globalImages = sketchOptions.assets?.images ?? [
   ];
   const slideImages = ( sketchOptions.slides ?? [
   ] )
-    .flatMap( s => s?.assets?.images ?? [
+    .flatMap( slide => slide?.assets?.images ?? [
     ] );
 
   const allPaths = [

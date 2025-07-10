@@ -23,6 +23,7 @@ import {
 import {
   updateRecordingStepPercentage
 } from "@/lib/progression";
+import sleep from "@/utils/sleep";
 
 async function recordSketchSlides(
   jobId: string,
@@ -53,8 +54,6 @@ async function recordSketchSlides(
     ];
 
     for ( let slideIndex = 0; slideIndex < slides.length; slideIndex++ ) {
-      const slideProgressBase = ( slideIndex / slides.length ) * 90;
-
       // ─── 6.1 Launch browser for this slide ───────────────────────────────────
       await updateRecordingStepPercentage(
         jobId,
@@ -62,7 +61,9 @@ async function recordSketchSlides(
         0
       );
 
-      recordingState.page = await createPage();
+      if ( !recordingState.page ) {
+        recordingState.page = await createPage();
+      }
 
       await recordingState.page.goto(
         `http://localhost:3000/templates/${ template }?id=${ jobId }`,
@@ -73,10 +74,11 @@ async function recordSketchSlides(
 
       await recordingState.page.waitForSelector( "canvas#defaultCanvas0.loaded" );
       await recordingState.page.evaluate(
-        // @ts-ignore
         ( index ) => window.setSlide( index ),
         slideIndex
       );
+
+      await sleep( 1000 );
 
       await updateRecordingStepPercentage(
         jobId,
@@ -130,7 +132,7 @@ async function recordSketchSlides(
         100
       );
 
-      await recordingState.page.close();
+      // await recordingState.page.close();
 
       // ─── 6.3 Extract and encode this slide ─────────────────────────────────
       await updateRecordingStepPercentage(
