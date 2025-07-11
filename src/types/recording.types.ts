@@ -1,14 +1,6 @@
 import {
-  JsonValue
-} from "@prisma/client/runtime/library";
-
-import {
-  PrismaClient, Job
-} from "@/generated/prisma";
-import {
   InputJsonValue
 } from "@prisma/client/runtime/edge";
-import slides from "../../public/assets/scripts/p5-sketches/utils/slides/slides";
 
 export type JobId = string;
 
@@ -22,8 +14,6 @@ export const validStatuses = [
 ] as const;
 
 export type JobStatusEnum = typeof validStatuses[number];
-
-// export type JobStatusEnum = "queued" | "active" | "completed" | "failed" | "cancelled" | "draft"
 
 /**
  * TypeScript type matching the Prisma Job model.
