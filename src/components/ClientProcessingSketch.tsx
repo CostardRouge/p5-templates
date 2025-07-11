@@ -349,7 +349,6 @@ export default function ClientProcessingSketch( {
       <div id="sketch-ui-drawer"></div>
       <span id="sketch-ui-icon"></span>
 
-      {/* Zoomable viewport */}
       <div
         ref={viewportRef}
         className="w-full h-full overflow-hidden touch-none flex justify-center items-center"
@@ -358,7 +357,6 @@ export default function ClientProcessingSketch( {
           overscrollBehavior: "contain"
         }}
       >
-        {/* Zoom controls */}
         <ZoomControls
           onPlus={() =>
             applyScale( clamp(
@@ -378,7 +376,6 @@ export default function ClientProcessingSketch( {
           onReset={resetToActualPixels}
         />
 
-        {/* Optional banner */}
         {!capturing && (
           <CaptureBanner
             name={name}

@@ -96,4 +96,6 @@ window.getCurrentSlide = () => ( {
   index: slides.index
 } );
 
+window.slides = slides;
+
 export default slides;
