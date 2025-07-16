@@ -14,9 +14,13 @@ import {
 } from "@/shared/syncSketchOptions";
 
 import {
-  JobModel,
-  RecordingSketchOptions
+  JobModel
 } from "@/types/recording.types";
+
+import type {
+  SketchOption
+} from "@/types/sketch.types";
+
 import clamp from "@/utils/clamp";
 import ZoomControls from "@/components/ZoomControls";
 
@@ -38,10 +42,11 @@ const MAX_SCALE = 6;
 /* ------------------------------------------------------------------ */
 export type ClientProcessingSketchProps = {
   name: string;
-  options: RecordingSketchOptions;
+  capturing: boolean,
+  options: SketchOption;
   persistedJob?: JobModel
-  capturing: boolean
 }
+
 export default function ClientProcessingSketch( {
   name,
   options,
@@ -54,7 +59,7 @@ export default function ClientProcessingSketch( {
   const [
     currentOptions,
     setCurrentOptions
-  ] = useState<RecordingSketchOptions>( () => ( {
+  ] = useState<SketchOption>( () => ( {
     ...getSketchOptions(),
     ...options,
   } ), );
@@ -382,7 +387,7 @@ export default function ClientProcessingSketch( {
             persistedJob={persistedJob}
             options={currentOptions}
             setOptions={( updated ) =>
-              setCurrentOptions( updated as RecordingSketchOptions )
+              setCurrentOptions( updated as SketchOption )
             }
           />
         )}

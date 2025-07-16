@@ -13,7 +13,7 @@ import {
 import {
   SortableContext,
   useSortable,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
 import {
@@ -30,17 +30,20 @@ import {
   setSketchOptions
 } from "@/shared/syncSketchOptions";
 import useAssetDrop from "@/hooks/useAssetDrop";
+
 import {
-  JobId,
-  SketchAssets
+  JobId
 } from "@/types/recording.types";
+import {
+  AssetsOption
+} from "@/types/sketch.types";
 
 export default function ImageAssets( {
   assets,
   scope,
   id
 }: {
-  assets: SketchAssets;
+  assets: AssetsOption;
   scope: "global" | {
    slide: number
   },
@@ -65,7 +68,9 @@ export default function ImageAssets( {
       active, over
     } = evt;
 
-    if ( !over || active.id === over.id ) return;
+    if ( !over || active.id === over.id ) {
+      return;
+    }
 
     const list = [
       ...( assets?.images ?? [
@@ -74,7 +79,9 @@ export default function ImageAssets( {
     const oldIdx = list.indexOf( active.id as string );
     const newIdx = list.indexOf( over.id as string );
 
-    if ( oldIdx < 0 || newIdx < 0 ) return;
+    if ( oldIdx < 0 || newIdx < 0 ) {
+      return;
+    }
 
     const reordered = arrayMove(
       list,
@@ -131,7 +138,10 @@ export default function ImageAssets( {
         onDrop={handleExternalDrop}
         className="p-1 grid grid-cols-3 gap-1 min-h-8"
       >
-        <SortableContext items={imgPaths} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={imgPaths}
+          strategy={rectSortingStrategy}
+        >
           {imgPaths.map( (
             path, i
           ) => (
@@ -159,7 +169,7 @@ export default function ImageAssets( {
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
-          className="flex items-center justify-center h-20 border border-dashed border-gray-800 text-gray-400 hover:bg-gray-100"
+          className="flex items-center justify-center h-20 border border-dashed border-gray-300 text-gray-400 hover:bg-gray-100"
         >
           <Plus className="h-6 w-6" />
         </button>
@@ -169,22 +179,19 @@ export default function ImageAssets( {
           type="file"
           accept="image/*"
           multiple
-          onChange={async( e ) => {
-            if ( e.target.files?.length ) {
-              console.log(
-                "e.target.files",
-                e.target.files,
-                scope
-              );
-              await addAssets( {
-                files: e.target.files,
-                type: "images",
-                scope,
-              } );
-
-              e.target.value = "";
+          onChange={ async( e ) => {
+            if ( null === e.target.files ) {
+              return;
             }
-          }}
+
+            await addAssets( {
+              files: e.target.files,
+              type: "images",
+              scope,
+            } );
+
+            e.target.value = "";
+          } }
           className="hidden"
         />
       </div>
@@ -203,17 +210,21 @@ function SortableThumb( {
 } ) {
   const {
     attributes, listeners, setNodeRef, transform, transition
-  } =
-    useSortable( {
-      id
-    } );
+  } = useSortable( {
+    id
+  } );
+
   const style = {
     transform: CSS.Transform.toString( transform ),
     transition,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative h-20 bg-white">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative h-20 bg-white"
+    >
       <GripVertical
         className="absolute right-1 top-1 h-4 w-4 text-white cursor-grab active:cursor-grabbing"
         {...attributes}

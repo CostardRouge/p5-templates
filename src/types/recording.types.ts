@@ -2,6 +2,10 @@ import {
   InputJsonValue
 } from "@prisma/client/runtime/edge";
 
+import type {
+  SlideOption
+} from "@/types/sketch.types";
+
 export type JobId = string;
 
 export const validStatuses = [
@@ -28,27 +32,6 @@ export type JobModel = {
   createdAt: Date;
   updatedAt: Date;
 };
-
-export type SketchAssets = {
-  images: string[],
-  videos: string[],
-  audios: string[],
-  json: string[]
-}
-
-export type RecordingSketchSlideOption = {
-  title: string;
-  template: string,
-  assets: SketchAssets
-}
-
-export type RecordingSketchOptions = {
-  id: string;
-  name: string;
-  assets: SketchAssets;
-  slides?: Array<RecordingSketchSlideOption>;
-  consumeTestImages?: boolean;
-}
 
 export type RecordingProgressionSteps = Record<string, {
   percentage: number,
@@ -117,10 +100,14 @@ declare global { interface Window {
   startLoopRecording: () => void
   stopRecording: () => void
   // Slides
+  slides: {
+    index: number;
+    current: SlideOption;
+  }
   setSlide: ( index: number ) => void
-  getSlide: ( index: number ) => RecordingSketchSlideOption
+  getSlide: ( index: number ) => SlideOption
   getCurrentSlide: () => {
-    slide: RecordingSketchSlideOption
+    slide: SlideOption
     index: number
   };
   // Script loader

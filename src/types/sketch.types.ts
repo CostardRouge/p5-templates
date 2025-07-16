@@ -139,25 +139,29 @@ export const ContentItem = z.discriminatedUnion(
   ]
 );
 
+export const Assets = z
+  .object( {
+    images: z.array( z.string() ).default( [
+    ] ),
+    videos: z.array( z.string() ).default( [
+    ] ),
+  } )
+  .default( {
+  } );
+
 /* ---------------- slide schema (with name) ---------------------- */
 export const Slide = z.object( {
   name: z.string().optional(),
-  layout: z.string(), // "free", "grid2x2", …
+  layout: z.string(),
   content: z.array( ContentItem ),
-  assets: z
-    .object( {
-      images: z.array( z.string() ).default( [
-      ] ),
-      videos: z.array( z.string() ).default( [
-      ] ),
-    } )
-    .default( {
-    } ),
+  assets: Assets
 } );
 
 /* ---------------- root options.json ----------------------------- */
 export const OptionsSchema = z.object( {
+  id: z.string(),
   name: z.string(),
+  consumeTestImages: z.boolean().optional(),
   size: z.object( {
     width: z.number().int()
       .positive(),
@@ -169,16 +173,12 @@ export const OptionsSchema = z.object( {
       .positive(),
     duration: z.number().positive(),
   } ),
-  // no global colors / lines / durationBar anymore
-  layout: z.string().optional(), // root-level layout if you want one
-  content: z.array( ContentItem ).optional(), // root-level free content
-  assets: z.object( {
-    images: z.array( z.string() ).default( [
-    ] ),
-  } ),
-  slides: z.array( Slide ).default( [
-  ] ),
+  layout: z.string().optional(),
+  content: z.array( ContentItem ).optional(),
+  assets: Assets,
+  slides: z.array( Slide ).optional(),
 } );
 
-export type RecordingSketchOptions = z.infer<typeof OptionsSchema>;
-export type SlideOptions = z.infer<typeof Slide>;
+export type SketchOption = z.infer<typeof OptionsSchema>;
+export type SlideOption = z.infer<typeof Slide>;
+export type AssetsOption = z.infer<typeof Assets>;

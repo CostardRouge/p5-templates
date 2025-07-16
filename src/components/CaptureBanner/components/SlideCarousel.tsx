@@ -9,20 +9,23 @@ import {
 } from "@dnd-kit/core";
 
 import type {
-  SlideOptions
+  SlideOption
 } from "@/types/sketch.types";
+import {
+  CSS
+} from "@dnd-kit/utilities";
 
-export function SlideCarousel( {
+export default function SlideCarousel( {
   slides,
   activeIndex,
   onSelect,
   onReorder,
   onAdd,
 }: {
-  slides: SlideOptions[];
+  slides: SlideOption[];
   activeIndex: number;
   onSelect: ( i: number ) => void;
-  onReorder: ( list: SlideOptions[] ) => void;
+  onReorder: ( list: SlideOption[] ) => void;
   onAdd: () => void;
 } ) {
   const sensors = useSensors( useSensor( PointerSensor ) );
@@ -32,11 +35,21 @@ export function SlideCarousel( {
       active, over
     } = evt;
 
-    if ( !over ) return;
+    if ( !over || active.id === over.id ) {
+      return;
+    }
+
     const oldIdx = slides.findIndex( ( s ) => s.name === active.id );
     const newIdx = slides.findIndex( ( s ) => s.name === over.id );
 
-    if ( oldIdx === newIdx ) return;
+    if ( oldIdx === newIdx ) {
+      return;
+    }
+
+    // if ( oldIdx < 0 || newIdx < 0 ) {
+    //   return;
+    // }
+
     onReorder( arrayMove(
       slides,
       oldIdx,
@@ -45,29 +58,35 @@ export function SlideCarousel( {
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="flex gap-2 overflow-x-auto p-2">
-        <SortableContext items={slides.map( ( s ) => s.name ?? String( Math.random() ) )} strategy={verticalListSortingStrategy}>
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+      sensors={sensors}
+    >
+      <div className="p-1 flex flex-col gap-1 min-h-8">
+        <SortableContext
+          items={slides.map( ( s ) => s.name ?? String( Math.random() ) )}
+          strategy={verticalListSortingStrategy}
+        >
           {slides.map( (
-            slide, i
+            slide, slideIndex
           ) => (
             <SlideThumb
-              key={slide.name ?? i}
-              id={slide.name ?? i.toString()}
-              index={i}
-              active={i === activeIndex}
-              onClick={() => onSelect( i )}
+              key={slide.name ?? slideIndex}
+              id={slide.name ?? slideIndex.toString()}
+              index={slideIndex}
+              active={slideIndex === activeIndex}
+              onClick={() => onSelect( slideIndex )}
             />
           ) )}
         </SortableContext>
 
-        {/* Add button */}
         <button
           onClick={onAdd}
-          className="flex h-24 w-20 flex-col items-center justify-center rounded border border-dashed text-gray-500 hover:bg-gray-100"
+          className="flex items-center justify-center w-full h-8 text-gray-500 border border-dashed border-gray-300 rounded-b-sm hover:bg-gray-100 hover:text-black"
         >
-          <Plus className="h-6 w-6" />
-          <span className="text-xs">Add</span>
+          <Plus className="h-4 w-4 mr-1" />
+          <span className="text-xs">new slide</span>
         </button>
       </div>
     </DndContext>
@@ -85,21 +104,24 @@ function SlideThumb( {
     id
   } );
 
+  const style = {
+    transform: CSS.Transform.toString( transform ),
+    transition
+  };
+
   return (
     <div
+      style={style}
       ref={setNodeRef}
-      style={{
-        transform: `translateY(${ transform?.y ?? 0 }px)`,
-        transition
-      }}
-      {...attributes}
-      {...listeners}
       onClick={onClick}
-      className={`relative h-24 w-20 shrink-0 cursor-pointer overflow-hidden rounded border 
-                  ${ active ? "border-blue-500" : "border-gray-300" }`}
+      className="relative h-8 bg-white border flex items-center px-1"
     >
-      <GripVertical className="absolute left-1 top-1 h-4 w-4 text-gray-400" />
-      <span className="absolute bottom-1 right-1 text-xs text-white">{index + 1}</span>
+      <GripVertical
+        className="h-4 w-4 text-gray-400 mr-1 cursor-grab active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      />
+      <span className="text-xs">Slide #{index + 1}</span>
     </div>
   );
 }
