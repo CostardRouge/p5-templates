@@ -9,6 +9,30 @@ const string = {
     ) => {
       return string.fonts.loaded[ key ] ?? ( string.fonts.loaded[ key ] = loadFont( path ) );
     },
+    get loraItalic() {
+      return string.fonts.loadFont(
+        "serif",
+        "/assets/fonts/lora-italic.ttf"
+      );
+    },
+    get loraRegular() {
+      return string.fonts.loadFont(
+        "serif",
+        "/assets/fonts/lora-italic.ttf"
+      );
+    },
+    get spaceMonoItalic() {
+      return string.fonts.loadFont(
+        "serif",
+        "/assets/fonts/spacemono-italic.ttf"
+      );
+    },
+    get spaceMonoRegular() {
+      return string.fonts.loadFont(
+        "serif",
+        "/assets/fonts/spacemono-regular.ttf"
+      );
+    },
     get serif() {
       return string.fonts.loadFont(
         "serif",
