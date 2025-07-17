@@ -17,8 +17,8 @@ import {
   notFound
 } from "next/navigation";
 import {
-  RecordingSketchOptions
-} from "@/types/recording.types";
+  SketchOption
+} from "@/types/sketch.types";
 
 export const metadata: Metadata = {
   title: "Social-templates-renderer | p5js",
@@ -52,7 +52,7 @@ async function ProcessingSketch( {
   const jobIdSearchParams = ( await searchParams ).id;
   const capturingSearchParams = ( await searchParams ).capturing;
   const sketchOptions = getSketchOptions( sketchName ) ?? ( {
-  } as RecordingSketchOptions );
+  } as SketchOption );
 
   const processingSketchProps: ClientProcessingSketchProps = {
     capturing: capturingSearchParams !== undefined,

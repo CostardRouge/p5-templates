@@ -1,8 +1,10 @@
 import {
-  RecordingSketchOptions,
-  RecordingProgressionSteps,
-  RecordingSketchSlideOption
+  RecordingProgressionSteps
 } from "@/types/recording.types";
+import {
+  SketchOption,
+  SlideOption
+} from "@/types/sketch.types";
 
 export const recordingSketchSteps: RecordingProgressionSteps = {
   recording: {
@@ -29,7 +31,7 @@ export const recordingSketchSteps: RecordingProgressionSteps = {
   },
 };
 
-function createRecordingSketchStepsForSketchSlides( slides: RecordingSketchSlideOption[] ) {
+function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
   const recordingSketchStepsForSketchSlides = {
     ...recordingSketchSteps
   };
@@ -38,13 +40,13 @@ function createRecordingSketchStepsForSketchSlides( slides: RecordingSketchSlide
     steps: slides.reduce(
       (
         accumulator,
-        slide: RecordingSketchSlideOption,
+        slide: SlideOption,
         slideIndex
       ) => {
         const clonedSlideRecordingStep: any = JSON.parse( JSON.stringify( recordingSketchSteps.recording ) );
 
-        if ( slide?.template ) {
-          clonedSlideRecordingStep.description = slide?.template;
+        if ( slide?.layout ) {
+          clonedSlideRecordingStep.description = slide?.layout;
         }
 
         return {
@@ -73,7 +75,7 @@ function createRecordingSketchStepsForSketchSlides( slides: RecordingSketchSlide
   return recordingSketchStepsForSketchSlides;
 }
 
-export function getRecordingSketchStepsByOptions( sketchOptions: RecordingSketchOptions ) {
+export function getRecordingSketchStepsByOptions( sketchOptions: SketchOption ) {
   const slides = sketchOptions.slides ?? null;
 
   if ( slides && Array.isArray( slides ) && slides.length > 0 ) {

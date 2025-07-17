@@ -13,13 +13,16 @@ import {
 
 import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import {
-  JobId, JobModel, JobStatusEnum, RecordingSketchOptions, RecordingSketchSlideOption
+  JobId, JobModel, JobStatusEnum
 } from "@/types/recording.types";
 
 import fetchDownload from "@/components/utils/fetchDownload";
 import {
   resolveAssetURL, getScopeAssetPath
 } from "@/shared/utils";
+import {
+  SketchOption, SlideOption
+} from "@/types/sketch.types";
 
 export default function CaptureActions( {
   name,
@@ -27,7 +30,7 @@ export default function CaptureActions( {
   persistedJob
 }: {
     name: string;
-    options: RecordingSketchOptions;
+    options: SketchOption;
     persistedJob?: JobModel
 } ) {
   const {
@@ -111,7 +114,7 @@ export default function CaptureActions( {
     }
 
     // Handle SLIDE assets
-    const slides: RecordingSketchSlideOption[] = options.slides || [
+    const slides: SlideOption[] = options.slides || [
     ];
 
     for ( let i = 0; i < slides.length; i++ ) {

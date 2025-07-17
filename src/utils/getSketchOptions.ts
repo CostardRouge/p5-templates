@@ -5,10 +5,10 @@ import {
   SKETCHES_DIRECTORY
 } from "@/constants";
 import {
-  RecordingSketchOptions
-} from "@/types/recording.types";
+  SketchOption
+} from "@/types/sketch.types";
 
-function getSketchOptions( sketchName: string ): RecordingSketchOptions | null {
+function getSketchOptions( sketchName: string ): SketchOption | null {
   try {
     return JSON.parse( fs.readFileSync(
       path.join(

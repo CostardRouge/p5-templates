@@ -77,7 +77,7 @@ export default function ClientProcessingSketch( {
   );
 
   useEffect(
-    // ( options: RecordingSketchOptions, origin: "react" | "p5" ) => void
+    // ( options: SketchOption, origin: "react" | "p5" ) => void
     () => subscribeSketchOptions( ( updatedOptions: any ) => {
       setCurrentOptions( updatedOptions );
     } ),
