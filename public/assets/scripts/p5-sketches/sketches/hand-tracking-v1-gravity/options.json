@@ -1,0 +1,13 @@
+{
+  "animation": {
+    "duration": 10,
+    "framerate": 60
+  },
+  "size": {
+    "width": 1080,
+    "height": 1350
+  },
+  "colors": {
+    "background": [230]
+  }
+}
