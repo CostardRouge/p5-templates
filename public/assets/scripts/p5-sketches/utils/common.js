@@ -1,5 +1,5 @@
 import {
-  cache, common
+  cache
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 export function deepMerge(
@@ -50,4 +50,16 @@ export function getAsset(
   path, type = "images"
 ) {
   return cache.get( `${ type }Map` ).get( path );
+}
+
+export function inverseX(
+  x, limit = 1
+) {
+  return map(
+    x,
+    0,
+    limit,
+    limit,
+    0
+  );
 }

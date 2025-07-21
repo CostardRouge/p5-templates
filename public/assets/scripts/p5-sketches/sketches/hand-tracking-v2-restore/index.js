@@ -2,6 +2,8 @@ import {
   sketch,
   string,
   scripts,
+  common,
+  mappers,
   animation,
   captureOptions as options,
 } from "/assets/scripts/p5-sketches/utils/index.js";
@@ -13,13 +15,20 @@ await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );
 
 const {
-  Engine, Bodies, Composite
+  Engine, Bodies, Composite, Vector
 } = Matter;
 
+const BALLS_COUNT = 50;
+const BALLS_SIZE = [
+  40,
+  60
+];
+const BOUNDARY_THICKNESS = 50;
+const BOUNDARY_MARGIN = 50;
 const RUNNING_INFERENCE = 30;
 const IDLE_INFERENCE = 500;
 const IDLE_FRAMERATE = 20;
-const GUIDELINE_DELAY = 2_500;
+const GUIDELINE_DELAY = 15_000;
 
 const mediapipe = {
   capture: {
@@ -49,19 +58,14 @@ const layers = {
     graphics: undefined,
     size: options.size,
     background: [
-      0,
-      0,
-      0,
-      10
+      80
     ],
     erase: 255
   },
   hands: {
     graphics: undefined,
     size: options.size,
-    background: [
-      230
-    ],
+    background: undefined,
     erase: 255
   },
 };
@@ -159,8 +163,8 @@ sketch.setup(
     };
 
     // / MATTER
-    const margin = 50;
-    const thickness = 50;
+    const margin = BOUNDARY_MARGIN;
+    const thickness = BOUNDARY_THICKNESS;
 
     addBoundary(
       width / 2,
@@ -187,8 +191,8 @@ sketch.setup(
       height
     );
 
-    for ( let i = 0; i <= 25; i++ ) {
-      addImageBall(
+    for ( let i = 0; i < BALLS_COUNT; i++ ) {
+      addBall(
         random(
           thickness,
           width - thickness
@@ -197,10 +201,7 @@ sketch.setup(
           thickness,
           height - thickness
         ),
-        random(
-          50,
-          80
-        )
+        random( ...BALLS_SIZE )
       );
     }
   },
@@ -274,11 +275,6 @@ sketch.draw( (
     if ( timeSinceLastHand > GUIDELINE_DELAY ) {
       frameRate( IDLE_FRAMERATE );
       mediapipe.inferenceIntervalMilliseconds = IDLE_INFERENCE;
-
-      clearGraphics(
-        layers.hands,
-        255
-      );
     }
   }
   else {
@@ -304,6 +300,7 @@ sketch.draw( (
 
     // Update hand physics bodies
     updateHandBodies();
+    applyRestoringForces( 0.01 );
 
     Engine.update( matter.engine );
 
@@ -312,37 +309,24 @@ sketch.draw( (
       y: 0,
     };
 
-    // matter.engine.gravity = Vector.create(
-    //   mappers.fn(
-    //     Math.sin( animation.angle ),
-    //     -1,
-    //     1,
-    //     -1,
-    //     1,
-    //     // easing.easeInOutExpo
-    //   ),
-    //   mappers.fn(
-    //     Math.cos( animation.angle * 1.5 ),
-    //     -1,
-    //     1,
-    //     -1,
-    //     1,
-    //     // easing.easeInOutExpo
-    //   ),
-    // );
-
     matter.balls.forEach( (
       ball, index
     ) => {
       const {
-        position, circleRadius
+        position, initialPosition, circleRadius
       } = ball;
 
-      // layers.visuals.graphics.circle(
-      //   position.x,
-      //   position.y,
-      //   circleRadius * 2
-      // );
+      stroke(
+        230,
+        230,
+        230
+      );
+      line(
+        position.x,
+        position.y,
+        initialPosition.x,
+        initialPosition.y
+      );
 
       drawNeonDot( {
         sizeRange: [
@@ -376,15 +360,16 @@ sketch.draw( (
     }
 
     if ( erase ) {
-      clearGraphics(
-        layer,
-        erase
-      );
+      layer.graphics.clear();
+      // clearGraphics(
+      //   layer,
+      //   erase
+      // );
     }
   }
 
   string.write(
-    "move",
+    "restore",
     0,
     height / 2,
     {
@@ -402,7 +387,7 @@ sketch.draw( (
   );
 
   string.write(
-    "hand tracking v0",
+    "hand tracking v2",
     0,
     height * 6 / 10,
     {
@@ -422,28 +407,6 @@ sketch.draw( (
   sendFrameToWorkerIfDue();
 } );
 
-function clearGraphics(
-  {
-    graphics, size
-  }, eraseValue
-) {
-  graphics.erase();
-  graphics.noStroke();
-  graphics.fill(
-    0,
-    0,
-    0,
-    eraseValue
-  );
-  graphics.rect(
-    0,
-    0,
-    size.width,
-    size.height
-  );
-  graphics.noErase();
-}
-
 function updateHandBodies() {
   // Remove old hand bodies
   for ( let handBody of matter.handBodies ) {
@@ -458,21 +421,23 @@ function updateHandBodies() {
   mediapipe.workerResult?.hands?.landmarks?.forEach?.( createHandInteractionBodies );
 }
 
+// Key landmarks for interaction (palm, fingertips)
+const interactionIndices = [
+  0,
+  4,
+  8,
+  12,
+  16,
+  20,
+  9
+];
+
 function createHandInteractionBodies( hand ) {
-  // Key landmarks for interaction (palm, fingertips)
-  const interactionPoints = [
-    hand[ 0 ], // Wrist
-    hand[ 4 ], // Thumb tip
-    hand[ 8 ], // Index tip
-    hand[ 12 ], // Middle tip
-    hand[ 16 ], // Ring tip
-    hand[ 20 ], // Pinky tip
-    hand[ 9 ], // Middle finger base (palm center)
-  ];
+  const interactionPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
 
   interactionPoints.forEach( point => {
     if ( point ) {
-      const x = inverseX( point.x ) * width;
+      const x = common.inverseX( point.x ) * width;
       const y = point.y * height;
 
       // Create invisible circular body
@@ -496,19 +461,19 @@ function createHandInteractionBodies( hand ) {
   } );
 }
 
-function addImageBall(
+function addBall(
   x, y, radius
 ) {
   const newBall = Bodies.circle(
     x,
     y,
-    radius,
-    // {
-    //   friction: .001,
-    //   frictionAir: 0.9,
-    //   restitution: 9,
-    // }
+    radius
   );
+
+  newBall.initialPosition = {
+    x,
+    y
+  };
 
   matter.balls.unshift( newBall );
   Composite.add(
@@ -537,14 +502,32 @@ function addBoundary(
   );
 }
 
-function inverseX(
-  x, limit = 1
+function applyRestoringForces(
+  strength = 0.0001, maxForce = 0.003
 ) {
-  return map(
-    x,
-    0,
-    limit,
-    limit,
-    0
-  );
+  for ( const ball of matter.balls ) {
+    const pos = ball.position;
+    const target = ball.initialPosition;
+
+    let fx = ( target.x - pos.x ) * strength;
+    let fy = ( target.y - pos.y ) * strength;
+
+    // Clamp force magnitude
+    const mag = Math.sqrt( fx ** 2 + fy ** 2 );
+
+    if ( mag > maxForce ) {
+      fx = ( fx / mag ) * maxForce;
+      fy = ( fy / mag ) * maxForce;
+    }
+
+    Matter.Body.applyForce(
+      ball,
+      pos,
+      {
+        x: fx,
+        y: fy
+      }
+    );
+  }
 }
+

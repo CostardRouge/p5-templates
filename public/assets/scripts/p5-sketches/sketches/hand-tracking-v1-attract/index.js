@@ -2,7 +2,7 @@ import {
   sketch,
   string,
   scripts,
-  mappers,
+  common,
   animation,
   captureOptions as options,
 } from "/assets/scripts/p5-sketches/utils/index.js";
@@ -479,7 +479,7 @@ function createHandInteractionBodies( hand ) {
 
   interactionPoints.forEach( point => {
     if ( point ) {
-      const x = inverseX( point.x ) * width;
+      const x = common.inverseX( point.x ) * width;
       const y = point.y * height;
 
       // Create invisible circular body
@@ -544,18 +544,6 @@ function addBoundary(
   );
 }
 
-function inverseX(
-  x, limit = 1
-) {
-  return map(
-    x,
-    0,
-    limit,
-    limit,
-    0
-  );
-}
-
 function applyAttractionFromHands(
   strength = 0.0005, maxForce = 0.002
 ) {
@@ -571,7 +559,7 @@ function applyAttractionFromHands(
 
     for ( const point of attractPoints ) {
       const target = {
-        x: inverseX( point.x ) * width,
+        x: common.inverseX( point.x ) * width,
         y: point.y * height
       };
 
