@@ -3,13 +3,13 @@ import {
   string,
   scripts,
   common,
-  mappers,
-  animation,
   captureOptions as options,
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
+import mediapipe from "/assets/scripts/p5-sketches/utils/mediapipe/mediapipe.js";
+
 import drawHands from "./drawHands.js";
-import drawNeonDot from "./drawNeonDot.js";
+import neonDot from "../../utils/visuals/neonDot.js";
 
 await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );
@@ -25,33 +25,6 @@ const BALLS_SIZE = [
 ];
 const BOUNDARY_THICKNESS = 50;
 const BOUNDARY_MARGIN = 50;
-const RUNNING_INFERENCE = 30;
-const IDLE_INFERENCE = 500;
-const IDLE_FRAMERATE = 20;
-const GUIDELINE_DELAY = 15_000;
-
-const mediapipe = {
-  capture: {
-    element: null,
-    size: {
-      width: 640,
-      height: 480,
-    }
-  },
-  feedback: {
-    element: null,
-    size: {
-      width: options.size.width,
-      height: options.size.height
-    }
-  },
-  worker: null,
-  workerReady: false,
-  workerResult: {
-  },
-  previousFrameSentTime: 0,
-  inferenceIntervalMilliseconds: IDLE_INFERENCE,
-};
 
 const layers = {
   visuals: {
@@ -68,11 +41,6 @@ const layers = {
     background: undefined,
     erase: 255
   },
-};
-
-const handDetectionState = {
-  handsAreVisible: 0,
-  lastDetectedHandTime: 0
 };
 
 const matter = {
@@ -104,63 +72,6 @@ sketch.setup(
         layers[ layerName ].graphics.background( ...background );
       }
     }
-
-    // --- capture feed (used for inference only) ---
-    mediapipe.capture.element = createCapture(
-      VIDEO,
-      {
-        flipped: true
-      }
-    );
-    mediapipe.capture.element.size(
-      mediapipe.capture.size.width,
-      mediapipe.capture.size.height
-    );
-    mediapipe.capture.element.hide();
-
-    mediapipe.capture.element.elt.addEventListener(
-      "loadeddata",
-      () => {
-        mediapipe.videoReady = true;
-      }
-    );
-
-    // --- feedback feed (drawn to canvas) ---
-    mediapipe.feedback.element = createCapture(
-      VIDEO,
-      {
-        flipped: true
-      }
-    );
-    mediapipe.feedback.element.size(
-      mediapipe.feedback.size.width,
-      mediapipe.feedback.size.height
-    );
-    mediapipe.feedback.element.hide();
-
-    // --- spin up the vision worker ---
-
-    mediapipe.worker = new Worker( new URL(
-      "./vision-worker.js",
-      import.meta.url
-    ) );
-
-    mediapipe.worker.postMessage( {
-      type: "INIT",
-      wasmPath: "/assets/scripts/mediapipe/wasm"
-    } );
-
-    mediapipe.worker.onmessage = ( event ) => {
-      const message = event.data;
-
-      if ( message.type === "READY" ) {
-        mediapipe.workerReady = true;
-      }
-
-      if ( message.type === "LIB_RESULT" ) {
-        mediapipe.workerResult[ message.payload.lib ] = message.payload.result;
-      }
-    };
 
     // / MATTER
     const margin = BOUNDARY_MARGIN;
@@ -217,35 +128,9 @@ sketch.setup(
   }
 );
 
-const sendFrameToWorkerIfDue = ( ) => {
-  const now = performance.now();
-
-  if ( now - mediapipe.previousFrameSentTime < mediapipe.inferenceIntervalMilliseconds ) {
-    return;
-  }
-
-  const videoElement = mediapipe.capture.element.elt;
-
-  if ( !videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0 ) {
-    return; // video not yet delivering frames
-  }
-
-  createImageBitmap( videoElement )
-    .then( ( bitmap ) => {
-      mediapipe.worker.postMessage(
-        {
-          type: "FRAME",
-          bitmap,
-          timestamp: now
-        },
-        [
-          bitmap
-        ]
-      );
-
-      mediapipe.previousFrameSentTime = now;
-    } )
-    .catch( console.error );
+matter.engine.gravity = {
+  x: 0,
+  y: 0,
 };
 
 sketch.draw( (
@@ -253,46 +138,7 @@ sketch.draw( (
 ) => {
   background( ...options.colors.background );
 
-  if ( !mediapipe.videoReady || !mediapipe.workerReady ) {
-    return;
-  }
-
-  const now = performance.now();
-
-  // handDetectionState.handsAreCurrentlyVisible = Object.values( mediapipe.workerResult ).some( libResult => libResult?.length > 0 ?? false );
-  handDetectionState.handsAreCurrentlyVisible = (
-    ( mediapipe.workerResult?.hands?.landmarks?.length > 0 ?? false ) ||
-    ( mediapipe.workerResult?.poses?.landmarks?.length > 0 ?? false )
-  );
-
-  if ( handDetectionState.handsAreCurrentlyVisible ) {
-    handDetectionState.lastDetectedHandTime = now;
-  }
-
-  if ( !handDetectionState.handsAreCurrentlyVisible && handDetectionState.lastDetectedHandTime !== -1 ) {
-    const timeSinceLastHand = now - handDetectionState.lastDetectedHandTime;
-
-    if ( timeSinceLastHand > GUIDELINE_DELAY ) {
-      frameRate( IDLE_FRAMERATE );
-      mediapipe.inferenceIntervalMilliseconds = IDLE_INFERENCE;
-    }
-  }
-  else {
-    mediapipe.inferenceIntervalMilliseconds = RUNNING_INFERENCE;
-    frameRate( options.animation.framerate );
-  }
-
-  const motionCaptureExperienceIsRunning = true;// ( now - handDetectionState.lastDetectedHandTime ) < GUIDELINE_DELAY;
-
-  if ( motionCaptureExperienceIsRunning ) {
-    // image(
-    //   mediapipe.feedback.element,
-    //   0,
-    //   0,
-    //   width,
-    //   height
-    // );
-
+  if ( !mediapipe.idle ) {
     drawHands(
       mediapipe.workerResult.hands,
       layers.hands.graphics
@@ -304,11 +150,6 @@ sketch.draw( (
 
     Engine.update( matter.engine );
 
-    matter.engine.gravity = {
-      x: 0,
-      y: 0,
-    };
-
     matter.balls.forEach( (
       ball, index
     ) => {
@@ -316,19 +157,15 @@ sketch.draw( (
         position, initialPosition, circleRadius
       } = ball;
 
-      stroke(
-        230,
-        230,
-        230
-      );
-      line(
-        position.x,
-        position.y,
-        initialPosition.x,
-        initialPosition.y
-      );
+      // stroke( 0 );
+      // line(
+      //   position.x,
+      //   position.y,
+      //   initialPosition.x,
+      //   initialPosition.y
+      // );
 
-      drawNeonDot( {
+      neonDot( {
         sizeRange: [
           circleRadius * 2,
           circleRadius * 2 / 3
@@ -361,10 +198,6 @@ sketch.draw( (
 
     if ( erase ) {
       layer.graphics.clear();
-      // clearGraphics(
-      //   layer,
-      //   erase
-      // );
     }
   }
 
@@ -403,8 +236,6 @@ sketch.draw( (
       blendMode: EXCLUSION
     }
   );
-
-  sendFrameToWorkerIfDue();
 } );
 
 function updateHandBodies() {

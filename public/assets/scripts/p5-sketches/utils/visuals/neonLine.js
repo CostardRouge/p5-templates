@@ -6,7 +6,7 @@ import {
   iterators,
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
-export default function drawNeonLine( {
+export default function neonLine( {
   innerCircleSize = 10,
   shadowsCount = 3,
   graphics = window,

@@ -2,8 +2,8 @@ import options from "./options.js";
 import events from "./events.js";
 import captureOptions from "./captureOptions.js";
 import slides from "./slides/slides.js";
-
 import grid from "./grid.js";
+
 import time from "./time.js";
 import exif from "./exif.js";
 import cache from "./cache.js";

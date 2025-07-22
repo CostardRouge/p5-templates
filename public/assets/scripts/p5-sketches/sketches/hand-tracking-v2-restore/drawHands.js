@@ -1,4 +1,8 @@
-import drawNeonLine from "./drawNeonLine.js";
+import {
+  common
+} from "/assets/scripts/p5-sketches/utils/index.js";
+
+import neonLine from "../../utils/visuals/neonLine.js";
 
 const indexFingerJointIndices = [
   5,
@@ -63,7 +67,7 @@ export default function drawHands(
       const fingerJointVectors = jointIndices.map( fingerJointIndex => {
         const joint = hand[ fingerJointIndex ];
         const fingerJointVector = createVector(
-          inverseX( joint.x ) * width,
+          common.inverseX( joint.x ) * width,
           joint.y * height,
           map(
             joint.z,
@@ -114,7 +118,7 @@ export default function drawHands(
         vectors
       ] = fingers[ fingerIndex ];
 
-      drawNeonLine( {
+      neonLine( {
         innerCircleSize: map(
           z,
           0,
@@ -128,16 +132,4 @@ export default function drawHands(
       } );
     }
   } );
-}
-
-function inverseX(
-  x, limit = 1
-) {
-  return map(
-    x,
-    0,
-    limit,
-    limit,
-    0
-  );
 }

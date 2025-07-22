@@ -23,7 +23,7 @@ const ZoomControls = ( {
   return (
     <div
       data-no-zoom=""
-      className="w-20 text-center absolute p-2 bg-white border-b-0 border border-gray-400 shadow shadow-black-300 drop-shadow-sm rounded-tr-sm border-l-0 bottom-0 left-0 flex flex-col gap-1"
+      className="w-20 text-center absolute p-2 bg-white border-b-0 border border-gray-400 shadow shadow-black-300 drop-shadow-sm rounded-tr-sm border-l-0 bottom-0 left-0 flex flex-col gap-1 z-50"
     >
       <button
         onClick={() => setExpanded( e => !e )}

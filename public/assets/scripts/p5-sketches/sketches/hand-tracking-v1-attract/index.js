@@ -3,12 +3,13 @@ import {
   string,
   scripts,
   common,
-  animation,
   captureOptions as options,
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
+import mediapipe from "/assets/scripts/p5-sketches/utils/mediapipe/mediapipe.js";
+
 import drawHands from "./drawHands.js";
-import drawNeonDot from "./drawNeonDot.js";
+import neonDot from "../../utils/visuals/neonDot.js";
 
 await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );
@@ -16,34 +17,6 @@ await scripts.load( "/assets/libraries/matter.min.js" );
 const {
   Engine, Bodies, Composite, Vector
 } = Matter;
-
-const RUNNING_INFERENCE = 30;
-const IDLE_INFERENCE = 500;
-const IDLE_FRAMERATE = 20;
-const GUIDELINE_DELAY = 2_500;
-
-const mediapipe = {
-  capture: {
-    element: null,
-    size: {
-      width: 640,
-      height: 480,
-    }
-  },
-  feedback: {
-    element: null,
-    size: {
-      width: options.size.width,
-      height: options.size.height
-    }
-  },
-  worker: null,
-  workerReady: false,
-  workerResult: {
-  },
-  previousFrameSentTime: 0,
-  inferenceIntervalMilliseconds: IDLE_INFERENCE,
-};
 
 const layers = {
   visuals: {
@@ -65,11 +38,6 @@ const layers = {
     ],
     erase: 255
   },
-};
-
-const handDetectionState = {
-  handsAreVisible: 0,
-  lastDetectedHandTime: 0
 };
 
 const matter = {
@@ -102,63 +70,6 @@ sketch.setup(
       }
     }
 
-    // --- capture feed (used for inference only) ---
-    mediapipe.capture.element = createCapture(
-      VIDEO,
-      {
-        flipped: true
-      }
-    );
-    mediapipe.capture.element.size(
-      mediapipe.capture.size.width,
-      mediapipe.capture.size.height
-    );
-    mediapipe.capture.element.hide();
-
-    mediapipe.capture.element.elt.addEventListener(
-      "loadeddata",
-      () => {
-        mediapipe.videoReady = true;
-      }
-    );
-
-    // --- feedback feed (drawn to canvas) ---
-    mediapipe.feedback.element = createCapture(
-      VIDEO,
-      {
-        flipped: true
-      }
-    );
-    mediapipe.feedback.element.size(
-      mediapipe.feedback.size.width,
-      mediapipe.feedback.size.height
-    );
-    mediapipe.feedback.element.hide();
-
-    // --- spin up the vision worker ---
-
-    mediapipe.worker = new Worker( new URL(
-      "./vision-worker.js",
-      import.meta.url
-    ) );
-
-    mediapipe.worker.postMessage( {
-      type: "INIT",
-      wasmPath: "/assets/scripts/mediapipe/wasm"
-    } );
-
-    mediapipe.worker.onmessage = ( event ) => {
-      const message = event.data;
-
-      if ( message.type === "READY" ) {
-        mediapipe.workerReady = true;
-      }
-
-      if ( message.type === "LIB_RESULT" ) {
-        mediapipe.workerResult[ message.payload.lib ] = message.payload.result;
-      }
-    };
-
     // / MATTER
     const margin = 50;
     const thickness = 50;
@@ -189,7 +100,7 @@ sketch.setup(
     );
 
     for ( let i = 0; i <= 50; i++ ) {
-      addImageBall(
+      addBall(
         random(
           thickness,
           width - thickness
@@ -217,35 +128,9 @@ sketch.setup(
   }
 );
 
-const sendFrameToWorkerIfDue = ( ) => {
-  const now = performance.now();
-
-  if ( now - mediapipe.previousFrameSentTime < mediapipe.inferenceIntervalMilliseconds ) {
-    return;
-  }
-
-  const videoElement = mediapipe.capture.element.elt;
-
-  if ( !videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0 ) {
-    return; // video not yet delivering frames
-  }
-
-  createImageBitmap( videoElement )
-    .then( ( bitmap ) => {
-      mediapipe.worker.postMessage(
-        {
-          type: "FRAME",
-          bitmap,
-          timestamp: now
-        },
-        [
-          bitmap
-        ]
-      );
-
-      mediapipe.previousFrameSentTime = now;
-    } )
-    .catch( console.error );
+matter.engine.gravity = {
+  x: 0,
+  y: 0,
 };
 
 sketch.draw( (
@@ -253,51 +138,7 @@ sketch.draw( (
 ) => {
   background( ...options.colors.background );
 
-  if ( !mediapipe.videoReady || !mediapipe.workerReady ) {
-    return;
-  }
-
-  const now = performance.now();
-
-  // handDetectionState.handsAreCurrentlyVisible = Object.values( mediapipe.workerResult ).some( libResult => libResult?.length > 0 ?? false );
-  handDetectionState.handsAreCurrentlyVisible = (
-    ( mediapipe.workerResult?.hands?.landmarks?.length > 0 ?? false ) ||
-    ( mediapipe.workerResult?.poses?.landmarks?.length > 0 ?? false )
-  );
-
-  if ( handDetectionState.handsAreCurrentlyVisible ) {
-    handDetectionState.lastDetectedHandTime = now;
-  }
-
-  if ( !handDetectionState.handsAreCurrentlyVisible && handDetectionState.lastDetectedHandTime !== -1 ) {
-    const timeSinceLastHand = now - handDetectionState.lastDetectedHandTime;
-
-    if ( timeSinceLastHand > GUIDELINE_DELAY ) {
-      frameRate( IDLE_FRAMERATE );
-      mediapipe.inferenceIntervalMilliseconds = IDLE_INFERENCE;
-
-      clearGraphics(
-        layers.hands,
-        255
-      );
-    }
-  }
-  else {
-    mediapipe.inferenceIntervalMilliseconds = RUNNING_INFERENCE;
-    frameRate( options.animation.framerate );
-  }
-
-  const motionCaptureExperienceIsRunning = true;// ( now - handDetectionState.lastDetectedHandTime ) < GUIDELINE_DELAY;
-
-  if ( motionCaptureExperienceIsRunning ) {
-    // image(
-    //   mediapipe.feedback.element,
-    //   0,
-    //   0,
-    //   width,
-    //   height
-    // );
-
+  if ( !mediapipe.idle ) {
     drawHands(
       mediapipe.workerResult.hands,
       layers.hands.graphics
@@ -312,30 +153,6 @@ sketch.draw( (
 
     Engine.update( matter.engine );
 
-    matter.engine.gravity = {
-      x: 0,
-      y: 0,
-    };
-
-    // matter.engine.gravity = Vector.create(
-    //   mappers.fn(
-    //     Math.sin( animation.angle ),
-    //     -1,
-    //     1,
-    //     -1,
-    //     1,
-    //     // easing.easeInOutExpo
-    //   ),
-    //   mappers.fn(
-    //     Math.cos( animation.angle * 1.5 ),
-    //     -1,
-    //     1,
-    //     -1,
-    //     1,
-    //     // easing.easeInOutExpo
-    //   ),
-    // );
-
     matter.balls.forEach( (
       ball, index
     ) => {
@@ -343,13 +160,7 @@ sketch.draw( (
         position, circleRadius
       } = ball;
 
-      // layers.visuals.graphics.circle(
-      //   position.x,
-      //   position.y,
-      //   circleRadius * 2
-      // );
-
-      drawNeonDot( {
+      neonDot( {
         sizeRange: [
           circleRadius * 2,
           circleRadius * 2 / 3
@@ -381,10 +192,7 @@ sketch.draw( (
     }
 
     if ( erase ) {
-      clearGraphics(
-        layer,
-        erase
-      );
+      layer.graphics.clear();
     }
   }
 
@@ -423,31 +231,7 @@ sketch.draw( (
       blendMode: EXCLUSION
     }
   );
-
-  sendFrameToWorkerIfDue();
 } );
-
-function clearGraphics(
-  {
-    graphics, size
-  }, eraseValue
-) {
-  graphics.erase();
-  graphics.noStroke();
-  graphics.fill(
-    0,
-    0,
-    0,
-    eraseValue
-  );
-  graphics.rect(
-    0,
-    0,
-    size.width,
-    size.height
-  );
-  graphics.noErase();
-}
 
 function updateHandBodies() {
   // Remove old hand bodies
@@ -503,7 +287,7 @@ function createHandInteractionBodies( hand ) {
   } );
 }
 
-function addImageBall(
+function addBall(
   x, y, radius
 ) {
   const newBall = Bodies.circle(
