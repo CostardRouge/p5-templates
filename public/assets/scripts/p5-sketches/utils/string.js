@@ -218,6 +218,8 @@ const string = {
     if ( popPush ) {
       graphics.pop();
     }
+
+    return box;
   },
   getTextPoints: ( {
     text, size, font, position = createVector(

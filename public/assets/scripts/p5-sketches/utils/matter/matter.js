@@ -1,15 +1,6 @@
 import {
-  sketch,
-  string,
-  scripts,
-  common,
-  captureOptions as options,
+  events
 } from "/assets/scripts/p5-sketches/utils/index.js";
-
-import mediapipe from "/assets/scripts/p5-sketches/utils/mediapipe/mediapipe.js";
-
-import drawHands from "./drawHands.js";
-import neonDot from "../../utils/visuals/neonDot.js";
 
 await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );
@@ -26,23 +17,6 @@ const BALLS_SIZE = [
 const BOUNDARY_THICKNESS = 50;
 const BOUNDARY_MARGIN = 50;
 
-const layers = {
-  visuals: {
-    graphics: undefined,
-    size: options.size,
-    background: [
-      80
-    ],
-    erase: 255
-  },
-  hands: {
-    graphics: undefined,
-    size: options.size,
-    background: undefined,
-    erase: 255
-  },
-};
-
 const matter = {
   engine: Engine.create(),
   bottom: undefined,
@@ -56,26 +30,9 @@ const matter = {
   ]
 };
 
-sketch.setup(
+events.register(
+  "pre-setup",
   () => {
-    background( ...options.colors.background );
-
-    for ( const layerName in layers ) {
-      const {
-        background, size
-      } = layers[ layerName ];
-
-      layers[ layerName ].graphics = createGraphics(
-        size.width,
-        size.height
-      );
-
-      if ( background ) {
-        layers[ layerName ].graphics.background( ...background );
-      }
-    }
-
-    // / MATTER
     const margin = BOUNDARY_MARGIN;
     const thickness = BOUNDARY_THICKNESS;
 
@@ -123,16 +80,6 @@ sketch.setup(
       width / 2 - 300,
       height / 2
     );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration
-    }
   }
 );
 

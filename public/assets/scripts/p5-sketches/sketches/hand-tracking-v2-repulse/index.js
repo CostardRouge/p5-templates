@@ -146,11 +146,7 @@ sketch.draw( (
 
     // Update hand physics bodies
     updateHandBodies();
-
-    applyAttractionFromHands(
-      // 0.5,
-      // 0.01
-    );
+    applyRepulsionFromHands();
 
     Engine.update( matter.engine );
 
@@ -198,7 +194,7 @@ sketch.draw( (
   }
 
   string.write(
-    "attract",
+    "repulse",
     0,
     height / 2,
     {
@@ -216,7 +212,7 @@ sketch.draw( (
   );
 
   string.write(
-    "hand tracking v1",
+    "hand tracking v2",
     0,
     height * 6 / 10,
     {
@@ -329,8 +325,10 @@ function addBoundary(
   );
 }
 
-function applyAttractionFromHands(
-  strength = 0.0005, maxForce = 0.002
+function applyRepulsionFromHands(
+  strength = 0.5,
+  maxForce = 0.02,
+  repulseDistance = 600
 ) {
   const hands = mediapipe.workerResult?.hands?.landmarks ?? [
   ];
@@ -340,33 +338,45 @@ function applyAttractionFromHands(
   }
 
   for ( const hand of hands ) {
-    const attractPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+    const repulsePoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
 
-    for ( const point of attractPoints ) {
+    for ( const point of repulsePoints ) {
       const target = {
         x: common.inverseX( point.x ) * width,
         y: point.y * height
       };
 
       for ( const ball of matter.balls ) {
-        attractBallToPoint(
-          ball,
+        const dist = distance(
           target,
-          strength,
-          maxForce
+          ball.position
         );
+
+        // Apply repulsive force if the ball is within the repulseDistance
+        if ( dist < repulseDistance ) {
+          repulseBallFromPoint(
+            ball,
+            target,
+            strength,
+            maxForce
+          );
+        }
       }
     }
   }
 }
 
-function attractBallToPoint(
-  ballBody, target, strength = 0.0005, maxForce = 0.002
+function repulseBallFromPoint(
+  ballBody,
+  target,
+  strength = 0.0005,
+  maxForce = 0.002
 ) {
   const pos = ballBody.position;
+  // Calculate force in the opposite direction of the target
   let force = {
-    x: ( target.x - pos.x ) * strength,
-    y: ( target.y - pos.y ) * strength
+    x: ( pos.x - target.x ) * strength,
+    y: ( pos.y - target.y ) * strength
   };
 
   // Clamp force magnitude
@@ -382,4 +392,16 @@ function attractBallToPoint(
     pos,
     force
   );
+}
+
+function distance(
+  p1, p2
+) {
+  return Math.sqrt( Math.pow(
+    p2.x - p1.x,
+    2
+  ) + Math.pow(
+    p2.y - p1.y,
+    2
+  ) );
 }

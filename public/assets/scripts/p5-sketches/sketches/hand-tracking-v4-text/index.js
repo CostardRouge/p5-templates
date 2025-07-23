@@ -18,24 +18,27 @@ const {
   Engine, Bodies, Composite, Vector
 } = Matter;
 
+const BALLS_COUNT = 50;
+const BALLS_SIZE = [
+  40,
+  60
+];
+const BOUNDARY_THICKNESS = 50;
+const BOUNDARY_MARGIN = 50;
+
 const layers = {
   visuals: {
     graphics: undefined,
     size: options.size,
     background: [
-      0,
-      0,
-      0,
-      10
+      80
     ],
     erase: 255
   },
   hands: {
     graphics: undefined,
     size: options.size,
-    background: [
-      230
-    ],
+    background: undefined,
     erase: 255
   },
 };
@@ -44,6 +47,8 @@ const matter = {
   engine: Engine.create(),
   bottom: undefined,
   balls: [
+  ],
+  letterBodies: [
   ],
   handBodies: [
   ],
@@ -71,8 +76,8 @@ sketch.setup(
     }
 
     // / MATTER
-    const margin = 50;
-    const thickness = 50;
+    const margin = BOUNDARY_MARGIN;
+    const thickness = BOUNDARY_THICKNESS;
 
     addBoundary(
       width / 2,
@@ -99,22 +104,21 @@ sketch.setup(
       height
     );
 
-    for ( let i = 0; i <= 50; i++ ) {
-      addBall(
-        random(
-          thickness,
-          width - thickness
-        ),
-        random(
-          thickness,
-          height - thickness
-        ),
-        random(
-          20,
-          50
-        )
-      );
-    }
+    // for ( let i = 0; i < BALLS_COUNT; i++ ) {
+    //   addBall(
+    //     random(
+    //       thickness,
+    //       width - thickness
+    //     ),
+    //     random(
+    //       thickness,
+    //       height - thickness
+    //     ),
+    //     random( ...BALLS_SIZE )
+    //   );
+    // }
+
+    matter.letterBodies = addLetterBoxes( "abcdefghijklmnopqrstuvwxyz" );
   },
   {
     size: {
@@ -144,13 +148,15 @@ sketch.draw( (
       layers.hands.graphics
     );
 
+    drawLetterBodies(
+      layers.visuals.graphics,
+      matter.letterBodies
+    );
+
     // Update hand physics bodies
     updateHandBodies();
-
-    applyAttractionFromHands(
-      // 0.5,
-      // 0.01
-    );
+    applyRestoringForcesTo( matter.balls );
+    applyRestoringForcesTo( matter.letterBodies );
 
     Engine.update( matter.engine );
 
@@ -158,8 +164,16 @@ sketch.draw( (
       ball, index
     ) => {
       const {
-        position, circleRadius
+        position, initialPosition, circleRadius
       } = ball;
+
+      // stroke( 0 );
+      // line(
+      //   position.x,
+      //   position.y,
+      //   initialPosition.x,
+      //   initialPosition.y
+      // );
 
       neonDot( {
         sizeRange: [
@@ -197,41 +211,41 @@ sketch.draw( (
     }
   }
 
-  string.write(
-    "attract",
-    0,
-    height / 2,
-    {
-      size: 172,
-      strokeWeight: 0,
-      stroke: color( ...options.colors.background ),
-      fill: color( ...options.colors.background ),
-      font: string.fonts.martian,
-      textAlign: [
-        CENTER,
-        CENTER
-      ],
-      blendMode: EXCLUSION
-    }
-  );
+  // string.write(
+  //   "restore",
+  //   0,
+  //   height / 2,
+  //   {
+  //     size: 172,
+  //     strokeWeight: 0,
+  //     stroke: color( ...options.colors.background ),
+  //     fill: color( ...options.colors.background ),
+  //     font: string.fonts.martian,
+  //     textAlign: [
+  //       CENTER,
+  //       CENTER
+  //     ],
+  //     blendMode: EXCLUSION
+  //   }
+  // );
 
-  string.write(
-    "hand tracking v1",
-    0,
-    height * 6 / 10,
-    {
-      size: 32,
-      strokeWeight: 0,
-      stroke: color( ...options.colors.background ),
-      fill: color( ...options.colors.background ),
-      font: string.fonts.loraItalic,
-      textAlign: [
-        CENTER,
-        CENTER
-      ],
-      blendMode: EXCLUSION
-    }
-  );
+  // string.write(
+  //   "hand tracking v2",
+  //   0,
+  //   height * 6 / 10,
+  //   {
+  //     size: 32,
+  //     strokeWeight: 0,
+  //     stroke: color( ...options.colors.background ),
+  //     fill: color( ...options.colors.background ),
+  //     font: string.fonts.loraItalic,
+  //     textAlign: [
+  //       CENTER,
+  //       CENTER
+  //     ],
+  //     blendMode: EXCLUSION
+  //   }
+  // );
 } );
 
 function updateHandBodies() {
@@ -294,13 +308,13 @@ function addBall(
   const newBall = Bodies.circle(
     x,
     y,
-    radius,
-    // {
-    //   friction: .001,
-    //   frictionAir: 0.9,
-    //   restitution: 9,
-    // }
+    radius
   );
+
+  newBall.initialPosition = {
+    x,
+    y
+  };
 
   matter.balls.unshift( newBall );
   Composite.add(
@@ -329,57 +343,115 @@ function addBoundary(
   );
 }
 
-function applyAttractionFromHands(
-  strength = 0.0005, maxForce = 0.002
+function applyRestoringForcesTo(
+  bodies, strength = 0.0001, maxForce = 0.003
 ) {
-  const hands = mediapipe.workerResult?.hands?.landmarks ?? [
+  for ( const body of bodies ) {
+    const pos = body.position;
+    const angle = body.angle;
+    const target = body.initialPosition;
+
+    let fx = ( target.x - pos.x ) * strength;
+    let fy = ( target.y - pos.y ) * strength;
+
+    const mag = Math.sqrt( fx ** 2 + fy ** 2 );
+
+    if ( mag > maxForce ) {
+      fx = ( fx / mag ) * maxForce;
+      fy = ( fy / mag ) * maxForce;
+    }
+
+    Matter.Body.applyForce(
+      body,
+      pos,
+      {
+        x: fx,
+        y: fy
+      }
+    );
+  }
+}
+
+function addLetterBoxes( text ) {
+  const letterBodies = [
   ];
 
-  if ( hands.length === 0 || matter.balls.length === 0 ) {
-    return;
-  }
+  for ( let i = 0; i < text.length; i++ ) {
+    const char = text[ i ];
 
-  for ( const hand of hands ) {
-    const attractPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+    const w = 100;
+    const h = 100;
 
-    for ( const point of attractPoints ) {
-      const target = {
-        x: common.inverseX( point.x ) * width,
-        y: point.y * height
-      };
+    const x = random(
+      BOUNDARY_MARGIN,
+      width - BOUNDARY_MARGIN
+    );
 
-      for ( const ball of matter.balls ) {
-        attractBallToPoint(
-          ball,
-          target,
-          strength,
-          maxForce
-        );
+    const y = random(
+      BOUNDARY_MARGIN,
+      height - BOUNDARY_MARGIN
+    );
+
+    const body = Bodies.rectangle(
+      x,
+      y,
+      w,
+      h,
+      {
+        restitution: 0.4,
+        friction: 0.1,
+        // isStatic: true, // Static so it doesn't fall
+        // isSensor: false, // Can interact with other bodies
       }
-    }
+    );
+
+    body.label = char;
+    body.initialPosition = {
+      x,
+      y
+    };
+
+    Composite.add(
+      matter.engine.world,
+      body
+    );
+    letterBodies.push( body );
+
+    // startX += spacing;
   }
+
+  return letterBodies;
 }
 
-function attractBallToPoint(
-  ballBody, target, strength = 0.0005, maxForce = 0.002
+function drawLetterBodies(
+  graphics, bodies
 ) {
-  const pos = ballBody.position;
-  let force = {
-    x: ( target.x - pos.x ) * strength,
-    y: ( target.y - pos.y ) * strength
-  };
+  for ( const body of bodies ) {
+    const {
+      x, y
+    } = body.position;
+    const angle = body.angle;
 
-  // Clamp force magnitude
-  const mag = Math.sqrt( force.x ** 2 + force.y ** 2 );
-
-  if ( mag > maxForce ) {
-    force.x = ( force.x / mag ) * maxForce;
-    force.y = ( force.y / mag ) * maxForce;
+    graphics.push();
+    graphics.translate(
+      x,
+      y
+    );
+    graphics.rotate( angle );
+    graphics.fill( 0 );
+    graphics.noStroke();
+    graphics.textFont( string.fonts.martian );
+    graphics.textSize( 144 );
+    graphics.textAlign(
+      CENTER,
+      CENTER
+    );
+    graphics.text(
+      body.label,
+      0,
+      0
+    );
+    graphics.pop();
   }
-
-  Matter.Body.applyForce(
-    ballBody,
-    pos,
-    force
-  );
 }
+
