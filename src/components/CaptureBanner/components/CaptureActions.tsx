@@ -178,7 +178,7 @@ export default function CaptureActions( {
   return (
     <>
       {!recordingProgress && (
-        <div className="flex gap-1 h-auto ">
+        <div className="flex gap-1 h-auto">
           {
             persistedJob?.status === "draft" && (
               <button

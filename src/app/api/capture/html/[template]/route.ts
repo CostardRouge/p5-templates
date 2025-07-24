@@ -96,10 +96,6 @@ export async function POST(
     uploadFilename
   );
   url.searchParams.set(
-    "zoom-to-fit",
-    ""
-  );
-  url.searchParams.set(
     "capturing",
     ""
   );

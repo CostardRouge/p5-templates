@@ -13,12 +13,11 @@ import {
 
 import "./exif-detail.css";
 
-import fetchDownload from "@/components/utils/fetchDownload";
 import {
-  ExternalLink, ExternalLinkIcon, Loader, SaveIcon
+  ExternalLink, Loader, SaveIcon
 } from "lucide-react";
+import ScalableViewport from "@/components/ScalableViewport";
 
-const scalingStyle = "scale-[0.375] md:scale-[0.6] lg:scale-[0.7] xl:scale-9";
 const supportedObjectStyles = [
   "object-cover",
   "object-contain",
@@ -45,10 +44,6 @@ const ImageInfoHelper = () => {
     capturing,
     setCapturing
   ] = useState( false );
-  const [
-    scaleRender,
-    setScaleRender
-  ] = useState( true );
   const [
     image,
     setImage
@@ -210,7 +205,6 @@ const ImageInfoHelper = () => {
 
       setShowExif( !searchParams.has( "hide-exif" ) );
       setCapturing( searchParams.has( "capturing" ) );
-      setScaleRender( !searchParams.has( "zoom-to-fit" ) );
 
       const objectStyle = searchParams.get( "object-style" );
 
@@ -241,36 +235,42 @@ const ImageInfoHelper = () => {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center h-[100svh] text-black">
-        <div
-          id="div-to-capture"
-          className={`p-16 bg-white h-[1350px] w-[1080px] ${ scaleRender ? scalingStyle : "" }`}
-        >
-          <ImageDropzone
-            image={image}
-            onImageDrop={handleImageFile}
+      <ScalableViewport>
+        <div className="flex flex-col items-center justify-center h-[100svh] text-black">
+          <div
+            id="div-to-capture"
+            className={"p-16 bg-white h-[1350px] w-[1080px]"}
           >
-            <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col">
-              {image && (
-                <img
-                  id="image"
-                  src={image}
-                  alt="Uploaded"
-                  className={`max-w-full ${ objectStyle }`}
-                />
-              )}
-            </ExifInfo>
-          </ImageDropzone>
+            <ImageDropzone
+              image={image}
+              onImageDrop={handleImageFile}
+            >
+              <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col">
+                {image && (
+                  <img
+                    id="image"
+                    src={image}
+                    alt="Uploaded"
+                    className={`max-w-full ${ objectStyle }`}
+                  />
+                )}
+              </ExifInfo>
+            </ImageDropzone>
+          </div>
         </div>
-      </div>
+      </ScalableViewport>
 
-      { !capturing && (
+      {!capturing && image && (
         <div
-          className="flex justify-center gap-1 fixed left-0 bottom-0 w-full bg-white p-1 text-center border border-t-1 border-black sm:h-10 text-black"
+          data-no-zoom=""
+          className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-white p-2 border border-b-0 border-gray-400 shadow shadow-black-300 drop-shadow-sm border-r-0 z-50 rounded-tl-sm"
+          style={{
+            maxHeight: "calc(60svh)",
+          }}
         >
           {image && (
             <button
-              className="rounded-sm px-4 border border-t-1 border-black capitalize"
+              className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
               onClick={( e ) => {
                 e.preventDefault();
                 setObjectStyle( current => {
@@ -284,19 +284,9 @@ const ImageInfoHelper = () => {
             </button>
           )}
 
-          <button
-            className="rounded-sm px-4 border border-black"
-            onClick={( e ) => {
-              e.preventDefault();
-              setScaleRender( !scaleRender );
-            }}
-          >
-            {scaleRender ? "Zoom to 100%" : "Scale to fit"}
-          </button>
-
-          {exifData && (
+          {exifData && !Number.isNaN( exifData?.iso ) && (
             <button
-              className="rounded-sm px-4 border border-black"
+              className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
               onClick={( e ) => {
                 e.preventDefault();
                 setShowExif( !showExif );
@@ -307,25 +297,26 @@ const ImageInfoHelper = () => {
           )}
 
           {image && (
-            <button
-              className="rounded-sm px-4 border border-black"
-              onClick={ async( ) => await submitDownloadForm( "_self" ) }
-            >
-              {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-                <SaveIcon className="inline mr-1 h-4"/>}
-              <span className="align-middle">Download</span>
-            </button>
-          )}
 
-          {image && (
-            <button
-              className="rounded-sm px-4 border border-black"
-              onClick={ async( ) => await submitDownloadForm( "_blank" ) }
-            >
-              {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-                <ExternalLink className="inline mr-1 h-4"/>}
-              <span className="align-middle">Open</span>
-            </button>
+            <div className="flex gap-1 h-auto">
+              <button
+                className=" flex-grow rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                onClick={async() => await submitDownloadForm( "_self" )}
+              >
+                {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+                  <SaveIcon className="inline mr-1 h-4"/>}
+                <span className="align-middle">Download</span>
+              </button>
+
+              <button
+                className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                onClick={async() => await submitDownloadForm( "_blank" )}
+              >
+                {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
+                  <ExternalLink className="inline mr-1 h-4"/>}
+                <span className="align-middle">Open</span>
+              </button>
+            </div>
           )}
         </div>
       )}

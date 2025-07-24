@@ -255,9 +255,39 @@ export default function ScalableViewport( {
       if ( !viewportRef.current ) {
         return;
       }
+
       const observer = new ResizeObserver( fitToViewport );
 
       observer.observe( viewportRef.current );
+
+      return () => observer.disconnect();
+    },
+    [
+      fitToViewport
+    ]
+  );
+
+  useEffect(
+    () => {
+      if ( !viewportRef.current ) {
+        return;
+      }
+
+      const observer = new MutationObserver( (
+        recs, obs
+      ) => {
+        if ( canvasRef.current ) {
+          fitToViewport();
+          // observer.disconnect();
+        }
+      } );
+
+      observer.observe(
+        document.body,
+        {
+          childList: true,
+        }
+      );
 
       return () => observer.disconnect();
     },
