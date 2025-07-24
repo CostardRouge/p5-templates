@@ -6,7 +6,7 @@ import {
 const RUNNING_INFERENCE = 30;
 const IDLE_INFERENCE = 500;
 const IDLE_FRAMERATE = 20;
-const IDLE_DELAY = 10_000;
+const IDLE_DELAY = 5_000;
 
 const mediapipe = {
   capture: {

@@ -142,51 +142,53 @@ sketch.draw( (
 ) => {
   background( ...options.colors.background );
 
-  if ( !mediapipe.idle ) {
-    drawHands(
-      mediapipe.workerResult.hands,
-      layers.hands.graphics
-    );
-
-    drawLetterBodies(
-      layers.visuals.graphics,
-      matter.letterBodies
-    );
-
-    // Update hand physics bodies
-    updateHandBodies();
-    applyRestoringForcesTo( matter.balls );
-    applyRestoringForcesTo( matter.letterBodies );
-
-    Engine.update( matter.engine );
-
-    matter.balls.forEach( (
-      ball, index
-    ) => {
-      const {
-        position, initialPosition, circleRadius
-      } = ball;
-
-      // stroke( 0 );
-      // line(
-      //   position.x,
-      //   position.y,
-      //   initialPosition.x,
-      //   initialPosition.y
-      // );
-
-      neonDot( {
-        sizeRange: [
-          circleRadius * 2,
-          circleRadius * 2 / 3
-        ],
-        shadowsCount: 3,
-        graphics: layers.visuals.graphics,
-        position,
-        index: index / ( matter.balls.length )
-      } );
-    } );
+  if ( mediapipe.idle ) {
+    background( 90 );
   }
+
+  drawHands(
+    mediapipe.workerResult.hands,
+    layers.hands.graphics
+  );
+
+  drawLetterBodies(
+    layers.visuals.graphics,
+    matter.letterBodies
+  );
+
+  // Update hand physics bodies
+  updateHandBodies();
+  applyRestoringForcesTo( matter.balls );
+  applyRestoringForcesTo( matter.letterBodies );
+
+  Engine.update( matter.engine );
+
+  matter.balls.forEach( (
+    ball, index
+  ) => {
+    const {
+      position, initialPosition, circleRadius
+    } = ball;
+
+    // stroke( 0 );
+    // line(
+    //   position.x,
+    //   position.y,
+    //   initialPosition.x,
+    //   initialPosition.y
+    // );
+
+    neonDot( {
+      sizeRange: [
+        circleRadius * 2,
+        circleRadius * 2 / 3
+      ],
+      shadowsCount: 3,
+      graphics: layers.visuals.graphics,
+      position,
+      index: index / ( matter.balls.length )
+    } );
+  } );
 
   for ( const layerName in layers ) {
     const layer = layers[ layerName ];

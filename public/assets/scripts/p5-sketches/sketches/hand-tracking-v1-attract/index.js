@@ -138,41 +138,43 @@ sketch.draw( (
 ) => {
   background( ...options.colors.background );
 
-  if ( !mediapipe.idle ) {
-    drawHands(
-      mediapipe.workerResult.hands,
-      layers.hands.graphics
-    );
-
-    // Update hand physics bodies
-    updateHandBodies();
-
-    applyAttractionFromHands(
-      // 0.5,
-      // 0.01
-    );
-
-    Engine.update( matter.engine );
-
-    matter.balls.forEach( (
-      ball, index
-    ) => {
-      const {
-        position, circleRadius
-      } = ball;
-
-      neonDot( {
-        sizeRange: [
-          circleRadius * 2,
-          circleRadius * 2 / 3
-        ],
-        shadowsCount: 3,
-        graphics: layers.visuals.graphics,
-        position,
-        index: index / ( matter.balls.length )
-      } );
-    } );
+  if ( mediapipe.idle ) {
+    background( 90 );
   }
+
+  drawHands(
+    mediapipe.workerResult.hands,
+    layers.hands.graphics
+  );
+
+  // Update hand physics bodies
+  updateHandBodies();
+
+  applyAttractionFromHands(
+    // 0.5,
+    // 0.01
+  );
+
+  Engine.update( matter.engine );
+
+  matter.balls.forEach( (
+    ball, index
+  ) => {
+    const {
+      position, circleRadius
+    } = ball;
+
+    neonDot( {
+      sizeRange: [
+        circleRadius * 2,
+        circleRadius * 2 / 3
+      ],
+      shadowsCount: 3,
+      graphics: layers.visuals.graphics,
+      position,
+      index: index / ( matter.balls.length )
+    } );
+  } );
 
   for ( const layerName in layers ) {
     const layer = layers[ layerName ];

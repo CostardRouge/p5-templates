@@ -138,61 +138,63 @@ sketch.draw( (
 ) => {
   background( ...options.colors.background );
 
-  if ( !mediapipe.idle ) {
-    drawHands(
-      mediapipe.workerResult.hands,
-      layers.hands.graphics
-    );
+  if ( mediapipe.idle ) {
+    background( 90 );
+  }
 
-    // Update hand physics bodies
-    updateHandBodies();
+  drawHands(
+    mediapipe.workerResult.hands,
+    layers.hands.graphics
+  );
 
-    Engine.update( matter.engine );
+  // Update hand physics bodies
+  updateHandBodies();
 
-    // matter.engine.gravity = Vector.create(
-    //   mappers.fn(
-    //     Math.sin( animation.angle ),
-    //     -1,
-    //     1,
-    //     -1,
-    //     1,
-    //     // easing.easeInOutExpo
-    //   ),
-    //   mappers.fn(
-    //     Math.cos( animation.angle * 1.5 ),
-    //     -1,
-    //     1,
-    //     -1,
-    //     1,
-    //     // easing.easeInOutExpo
-    //   ),
+  Engine.update( matter.engine );
+
+  // matter.engine.gravity = Vector.create(
+  //   mappers.fn(
+  //     Math.sin( animation.angle ),
+  //     -1,
+  //     1,
+  //     -1,
+  //     1,
+  //     // easing.easeInOutExpo
+  //   ),
+  //   mappers.fn(
+  //     Math.cos( animation.angle * 1.5 ),
+  //     -1,
+  //     1,
+  //     -1,
+  //     1,
+  //     // easing.easeInOutExpo
+  //   ),
+  // );
+
+  matter.balls.forEach( (
+    ball, index
+  ) => {
+    const {
+      position, circleRadius
+    } = ball;
+
+    // layers.visuals.graphics.circle(
+    //   position.x,
+    //   position.y,
+    //   circleRadius * 2
     // );
 
-    matter.balls.forEach( (
-      ball, index
-    ) => {
-      const {
-        position, circleRadius
-      } = ball;
-
-      // layers.visuals.graphics.circle(
-      //   position.x,
-      //   position.y,
-      //   circleRadius * 2
-      // );
-
-      neonDot( {
-        sizeRange: [
-          circleRadius * 2,
-          circleRadius * 2 / 3
-        ],
-        shadowsCount: 3,
-        graphics: layers.visuals.graphics,
-        position,
-        index: index / ( matter.balls.length )
-      } );
+    neonDot( {
+      sizeRange: [
+        circleRadius * 2,
+        circleRadius * 2 / 3
+      ],
+      shadowsCount: 3,
+      graphics: layers.visuals.graphics,
+      position,
+      index: index / ( matter.balls.length )
     } );
-  }
+  } );
 
   for ( const layerName in layers ) {
     const layer = layers[ layerName ];
