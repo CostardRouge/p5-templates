@@ -1,21 +1,18 @@
-import {
-  usePathname
-} from "next/navigation";
-import {
-  useEffect
+import React, {
+  Fragment,
+  useEffect, useRef
 } from "react";
-
-type CanvasReadyCb = ( canvas: HTMLCanvasElement ) => void;
 
 /**
  * Dynamically inject a p5 sketch (CSS + JS) and notify when
  * the canvas is created.  Cleans itself on unmount / template change.
  */
-export default function useP5Template(
-  templateName: string,
-  onCanvasReady?: CanvasReadyCb,
-) {
-  const pathname = usePathname();
+export default function P5Sketch( {
+  name
+}: {
+  name: string,
+} ) {
+  const p5templateContainerRef = useRef<HTMLDivElement | null>( null );
 
   useEffect(
     () => {
@@ -33,7 +30,7 @@ export default function useP5Template(
 
       css.rel = "stylesheet";
       css.href = "/assets/stylesheets/p5.css";
-      css.dataset.sketch = templateName;
+      css.dataset.sketch = name;
       document.head.appendChild( css );
 
       /* 3. observe for canvas creation ----------------------------- */
@@ -43,7 +40,8 @@ export default function useP5Template(
         const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0", ) as HTMLCanvasElement | null;
 
         if ( canvas ) {
-          onCanvasReady?.( canvas );
+          // onCanvasReady?.( canvas );
+          p5templateContainerRef.current?.appendChild( canvas );
           obs.disconnect(); // stop observing
         }
       } );
@@ -60,9 +58,9 @@ export default function useP5Template(
       const script = document.createElement( "script" );
 
       script.type = "module";
-      script.src = `/assets/scripts/p5-sketches/sketches/${ templateName }/index.js`;
+      script.src = `/assets/scripts/p5-sketches/sketches/${ name }/index.js`;
       script.crossOrigin = "anonymous";
-      script.dataset.sketch = templateName;
+      script.dataset.sketch = name;
       document.body.appendChild( script );
 
       /* 5. cleanup ------------------------------------------------- */
@@ -70,10 +68,10 @@ export default function useP5Template(
         observer.disconnect();
 
         document
-          .querySelectorAll( `link[data-sketch="${ templateName }"]` )
+          .querySelectorAll( `link[data-sketch="${ name }"]` )
           .forEach( ( el ) => el.remove() );
         document
-          .querySelectorAll( `script[data-sketch="${ templateName }"]` )
+          .querySelectorAll( `script[data-sketch="${ name }"]` )
           .forEach( ( el ) => el.remove() );
 
         document.querySelectorAll( "canvas" ).forEach( ( el ) => el.remove() );
@@ -88,9 +86,17 @@ export default function useP5Template(
       };
     },
     [
-      // onCanvasReady,
-      pathname,
-      templateName
+      name,
+      p5templateContainerRef
     ]
+  );
+
+  return (
+    <Fragment>
+      <div id="sketch-ui-drawer"></div>
+      <span id="sketch-ui-icon"></span>
+
+      <div ref={p5templateContainerRef} />
+    </Fragment>
   );
 }

@@ -1,8 +1,5 @@
 "use client";
 
-import {
-  JsonData
-} from "json-edit-react";
 import React, {
   Fragment,
   useState
@@ -10,19 +7,21 @@ import React, {
 import {
   ArrowDownFromLine,
 } from "lucide-react";
+import clsx from "clsx";
+
+import {
+  JsonData
+} from "json-edit-react";
+
 import {
   JobModel
 } from "@/types/recording.types";
-
 import type {
   SketchOption
 } from "@/types/sketch.types";
 
 import ImageAssets from "@/components/CaptureBanner/components/ImageAssets";
-
-import clsx from "clsx";
 import CaptureActions from "@/components/CaptureBanner/components/CaptureActions";
-
 import SlideCarousel from "./components/SlideCarousel";
 
 export default function CaptureBanner( {
@@ -65,16 +64,6 @@ export default function CaptureBanner( {
 
       {expanded && (
         <>
-
-          <div className="rounded-sm border border-gray-400 text-black text-left bg-white">
-            <span className="px-1 text-xs text-gray-500">root.assets.images</span>
-            <ImageAssets
-              assets={options?.assets}
-              scope="global"
-              id={options.id}
-            />
-          </div>
-
           { options.slides && Array.isArray( options.slides ) && (
             <Fragment>
               <div className="rounded-sm border border-gray-400 text-black text-left bg-white">
@@ -89,6 +78,15 @@ export default function CaptureBanner( {
                   onReorder={( slides ) => setOptions( {
                     slides
                   } )}
+                />
+              </div>
+
+              <div className="rounded-sm border border-gray-400 text-black text-left bg-white">
+                <span className="px-1 text-xs text-gray-500">root.assets.images</span>
+                <ImageAssets
+                  assets={options?.assets}
+                  scope="global"
+                  id={options.id}
                 />
               </div>
 

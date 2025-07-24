@@ -72,6 +72,11 @@ const slides = {
   setSlide( index ) {
     slides.index = index;
   },
+  render( {
+    layout, ...options
+  } ) {
+    ( _layouts[ layout ] ?? _layouts.auto )( options );
+  },
   renderCurrentSlide() {
     const slide = slides.current;
 
@@ -79,11 +84,7 @@ const slides = {
       return;
     }
 
-    const {
-      layout, ...slideOptions
-    } = slide;
-
-    ( _layouts[ layout ] ?? _layouts.full )( slideOptions );
+    slides.render( slide );
   }
 };
 
