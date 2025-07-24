@@ -61,6 +61,8 @@ body.recording #recording-progression {
   position: absolute;
   left: 0px;
   top: 0px;
+
+    display: none;
 }
 
 @keyframes pulse {
