@@ -179,6 +179,7 @@ export const OptionsSchema = z.object( {
   slides: z.array( Slide ).optional(),
 } );
 
+export type ContentItem = z.infer<typeof ContentItem>;
 export type SketchOption = z.infer<typeof OptionsSchema>;
 export type SlideOption = z.infer<typeof Slide>;
 export type AssetsOption = z.infer<typeof Assets>;

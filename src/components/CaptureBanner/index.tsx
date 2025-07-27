@@ -16,7 +16,8 @@ import {
 import {
   JobModel
 } from "@/types/recording.types";
-import type {
+import {
+  ContentItem,
   SketchOption
 } from "@/types/sketch.types";
 
@@ -64,7 +65,21 @@ export default function CaptureBanner( {
 
       {expanded && (
         <>
-          { options.slides && Array.isArray( options.slides ) && (
+          <div className="rounded-sm border border-gray-400 text-black text-left bg-white">
+            <span className="px-1 text-xs text-gray-500">root.content</span>
+            <ContentLayerList
+              layout={options.layout}
+              content={options.content}
+            />
+            <span className="px-1 text-xs text-gray-500">root.assets.images</span>
+            <ImageAssets
+              assets={options?.assets}
+              scope="global"
+              id={options.id}
+            />
+          </div>
+
+          {options.slides && Array.isArray( options.slides ) && (
             <Fragment>
               <div className="rounded-sm border border-gray-400 text-black text-left bg-white">
                 <SlideCarousel
@@ -78,15 +93,6 @@ export default function CaptureBanner( {
                   onReorder={( slides ) => setOptions( {
                     slides
                   } )}
-                />
-              </div>
-
-              <div className="rounded-sm border border-gray-400 text-black text-left bg-white">
-                <span className="px-1 text-xs text-gray-500">root.assets.images</span>
-                <ImageAssets
-                  assets={options?.assets}
-                  scope="global"
-                  id={options.id}
                 />
               </div>
 
@@ -104,18 +110,17 @@ export default function CaptureBanner( {
                   >
                     <span className="px-1 text-xs text-gray-500">root.slides[{slideIndex}].assets.images</span>
                     <ImageAssets
-                      id={options.id}
-                      assets={slideOption?.assets}
-                      scope={{
+                      id={ options.id }
+                      assets={ slideOption?.assets }
+                      scope={ {
                         slide: slideIndex
-                      }}
+                      } }
                     />
                   </div>
                 ) )}
               </div>
             </Fragment>
-          )
-          }
+          ) }
 
           <CaptureActions
             name={name}
@@ -123,9 +128,34 @@ export default function CaptureBanner( {
             persistedJob={persistedJob}
           />
         </>
-      )
+      ) }
+    </div>
+  );
+}
+
+function ContentLayerList( {
+  layout, content
+}: {
+  layout?: string,
+  content?: ContentItem[]
+} ) {
+  return (
+    <div className="px-1 text-xs">
+      {layout && <p>layout: {layout}</p>}
+
+      {
+        content?.map( (
+          contentItem, contentItemIndex
+        ) => {
+          return (
+            <div
+              key={contentItemIndex}
+            >
+              <p>type: {contentItem.type}</p>
+            </div>
+          );
+        } )
       }
     </div>
-  )
-  ;
+  );
 }

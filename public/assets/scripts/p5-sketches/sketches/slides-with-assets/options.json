@@ -4,6 +4,18 @@
     "duration": 20
   },
 
+  "layout": "free",
+  "content": [
+    {
+      "type": "meta",
+      "topRight": "",
+      "topLeft": "@costardrouge.jpg",
+      "bottomLeft": "JULY 2025 · p5*js + MediaPipe + Matter.js",
+      "stroke": [226, 215, 205],
+      "fill": [18, 18, 18]
+    }
+  ],
+
   "slides": [
     {
       "layout": "free",
@@ -28,14 +40,6 @@
           },
           "animation": "random",
           "shift": 80
-        },
-        {
-          "type": "meta",
-          "topRight": "",
-          "topLeft": "@costardrouge.jpg",
-          "bottomLeft": "JULY 2025 · p5*js + MediaPipe + Matter.js",
-          "stroke": [226, 215, 205],
-          "fill": [18, 18, 18]
         },
         {
           "type": "text",

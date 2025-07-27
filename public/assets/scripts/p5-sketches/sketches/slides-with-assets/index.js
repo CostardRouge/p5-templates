@@ -17,7 +17,7 @@ sketch.setup(
 );
 
 sketch.draw( () => {
-  slides.render( options );
   slides.renderCurrentSlide();
+  slides.render( options );
 } );
 

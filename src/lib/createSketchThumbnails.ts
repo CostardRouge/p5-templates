@@ -12,7 +12,6 @@ import {
 } from "@/constants";
 
 import fs from "node:fs/promises";
-import sleep from "@/utils/sleep";
 
 const canvasSelectorToScreenShot = "canvas#defaultCanvas0.loaded";
 
