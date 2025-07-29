@@ -15,8 +15,12 @@ const MAX_SCALE = 6;
 
 export default function ScalableViewport( {
   children,
+  initialScale,
+  showZoomControls = true
 }: {
   children: ReactNode;
+  initialScale?: number;
+  showZoomControls?: boolean;
 } ) {
   /* ---------------------------------------------------------------- */
   /*  Zoom / viewport state                                           */
@@ -64,14 +68,14 @@ export default function ScalableViewport( {
         heightRatio
       );
 
-      applyScale( clamp(
+      applyScale( initialScale ?? clamp(
         bestFitScale,
         MIN_SCALE,
         MAX_SCALE
       ) / 1.2 );
     },
     [
-
+      initialScale
     ]
   );
 
@@ -277,8 +281,7 @@ export default function ScalableViewport( {
         recs, obs
       ) => {
         if ( canvasRef.current ) {
-          fitToViewport();
-          // observer.disconnect();
+          fitToViewport( );
         }
       } );
 
@@ -308,24 +311,26 @@ export default function ScalableViewport( {
         overscrollBehavior: "contain"
       }}
     >
-      <ZoomControls
-        onPlus={() =>
-          applyScale( clamp(
-            scale + 0.1,
-            MIN_SCALE,
-            MAX_SCALE
-          ) )
-        }
-        onMinus={() =>
-          applyScale( clamp(
-            scale - 0.1,
-            MIN_SCALE,
-            MAX_SCALE
-          ) )
-        }
-        onFit={fitToViewport}
-        onReset={resetToActualPixels}
-      />
+      { showZoomControls && (
+        <ZoomControls
+          onPlus={() =>
+            applyScale( clamp(
+              scale + 0.1,
+              MIN_SCALE,
+              MAX_SCALE
+            ) )
+          }
+          onMinus={() =>
+            applyScale( clamp(
+              scale - 0.1,
+              MIN_SCALE,
+              MAX_SCALE
+            ) )
+          }
+          onFit={fitToViewport}
+          onReset={resetToActualPixels}
+        />
+      ) }
 
       <div ref={canvasRef}>
         {children}
