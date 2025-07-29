@@ -23,7 +23,7 @@ import P5Sketch from "@/components/P5Sketch";
 import ScalableViewport from "@/components/ScalableViewport";
 
 const CaptureBanner = dynamic(
-  () => import( "@/components/CaptureBanner" ),
+  () => import( "@/components/CaptureBanner/CaptureBanner" ),
   {
     ssr: false,
   }
