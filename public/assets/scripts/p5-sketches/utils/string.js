@@ -11,31 +11,31 @@ const string = {
     },
     get loraItalic() {
       return string.fonts.loadFont(
-        "serif",
+        "lora-italic",
         "/assets/fonts/lora-italic.ttf"
       );
     },
     get loraRegular() {
       return string.fonts.loadFont(
-        "serif",
-        "/assets/fonts/lora-italic.ttf"
+        "lora-regular",
+        "/assets/fonts/lora-regular.ttf"
       );
     },
     get spaceMonoItalic() {
       return string.fonts.loadFont(
-        "serif",
+        "spacemono-italic",
         "/assets/fonts/spacemono-italic.ttf"
       );
     },
     get spaceMonoRegular() {
       return string.fonts.loadFont(
-        "serif",
+        "spacemono-regular",
         "/assets/fonts/spacemono-regular.ttf"
       );
     },
     get serif() {
       return string.fonts.loadFont(
-        "serif",
+        "libre-baskerville",
         "/assets/fonts/libre-baskerville.ttf"
       );
     },
