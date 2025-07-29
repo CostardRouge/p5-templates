@@ -100,20 +100,36 @@ export async function POST(
     ""
   );
 
-  if ( hideExif ) url.searchParams.set(
-    "hide-exif",
-    ""
-  );
-  if ( objectStyle ) url.searchParams.set(
-    "object-style",
-    objectStyle
-  );
+  if ( hideExif ) {
+    url.searchParams.set(
+      "hide-exif",
+      ""
+    );
+  }
+
+  if ( objectStyle ) {
+    url.searchParams.set(
+      "object-style",
+      objectStyle
+    );
+  }
 
   const page = await createPage();
 
   await takeScreenshot( {
     url: url.toString(),
     selectorToWaitFor: "div#loaded",
+    callbefore: ( page ) => {
+      page.evaluate( ( ) => {
+        try {
+          document.body.style.backgroundColor = "white";
+          document.querySelector( "nextjs-portal" )?.remove();
+        }
+        catch ( e ) {
+
+        }
+      } );
+    },
     outputPath,
     page
   } );

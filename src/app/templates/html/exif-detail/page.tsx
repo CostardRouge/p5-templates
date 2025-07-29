@@ -235,7 +235,10 @@ const ImageInfoHelper = () => {
 
   return (
     <>
-      <ScalableViewport>
+      <ScalableViewport
+        initialScale={ capturing ? 1 : undefined }
+        showZoomControls={ !capturing }
+      >
         <div className="flex flex-col items-center justify-center h-[100svh] text-black">
           <div
             id="div-to-capture"

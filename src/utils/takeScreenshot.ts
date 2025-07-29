@@ -6,6 +6,7 @@ async function takeScreenshot( {
   page,
   url,
   outputPath,
+  callbefore,
   selectorToWaitFor = "#image",
   selectorToCapture = "#div-to-capture",
   selectorWaitForTimeout = 10_000_000,
@@ -20,6 +21,7 @@ async function takeScreenshot( {
     selectorToWaitFor?: string,
     selectorToCapture?: string,
     selectorWaitForTimeout?: number,
+    callbefore?: ( page: Page ) => void,
     viewportSize?: {
         width: number,
         height: number
@@ -41,6 +43,7 @@ async function takeScreenshot( {
       timeout: selectorWaitForTimeout
     }
   );
+  callbefore?.( page );
   await page.locator( selectorToCapture ).screenshot( {
     path: outputPath
   } );
