@@ -22,8 +22,8 @@ import type {
 import P5Sketch from "@/components/P5Sketch";
 import ScalableViewport from "@/components/ScalableViewport";
 
-const CaptureBanner = dynamic(
-  () => import( "@/components/CaptureBanner/CaptureBanner" ),
+const TemplateOptions = dynamic(
+  () => import( "@/components/TemplateOptions/TemplateOptions" ),
   {
     ssr: false,
   }
@@ -83,7 +83,7 @@ export default function ClientProcessingSketch( {
       </ScalableViewport>
 
       {!capturing && (
-        <CaptureBanner
+        <TemplateOptions
           name={name}
           persistedJob={persistedJob}
           options={currentOptions}

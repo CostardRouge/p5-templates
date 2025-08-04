@@ -16,6 +16,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@headlessui/react": "^2.2.4",
+    "@hookform/resolvers": "^5.2.1",
     "@prisma/client": "^6.10.1",
     "@types/tar": "^6.1.13",
     "bullmq": "^5.53.2",
@@ -29,6 +30,7 @@
     "playwright": "^1.50.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.61.1",
     "tar": "^7.4.3",
     "uuid": "^11.1.0",
     "zod": "^3.25.76"

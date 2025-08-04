@@ -1,6 +1,12 @@
 /* ------------------------------------------------------------------ */
 /*  Helper: resolve a path → URL (prefers local blob URL)             */
 /* ------------------------------------------------------------------ */
+
+/**
+ * @param {string} path
+ * @param {string} [id]
+ * @returns {string}
+ */
 export const resolveAssetURL = (
   path, id
 ) => (

@@ -126,7 +126,7 @@ const VisualItem = z.object( {
   type: z.literal( "visual" )
 } ).passthrough();
 
-export const ContentItem = z.discriminatedUnion(
+export const ContentItemSchema = z.discriminatedUnion(
   "type",
   [
     BackgroundItem,
@@ -141,45 +141,53 @@ export const ContentItem = z.discriminatedUnion(
 
 export const Assets = z
   .object( {
-    images: z.array( z.string() ).default( [
-    ] ),
-    videos: z.array( z.string() ).default( [
-    ] ),
+    images: z
+      .array( z.string() )
+      .default( [
+      ] )
+      .optional(),
+    videos: z.
+      array( z.string() )
+      .default( [
+      ] )
+      .optional(),
   } )
   .default( {
-  } );
+  } )
+  .optional();
 
 /* ---------------- slide schema (with name) ---------------------- */
 export const Slide = z.object( {
   name: z.string().optional(),
   layout: z.string(),
-  content: z.array( ContentItem ),
+  content: z.array( ContentItemSchema ),
   assets: Assets
 } );
 
 /* ---------------- root options.json ----------------------------- */
 export const OptionsSchema = z.object( {
-  id: z.string(),
-  name: z.string(),
+  id: z.string().optional(),
+  name: z.string().optional(),
   consumeTestImages: z.boolean().optional(),
   size: z.object( {
     width: z.number().int()
       .positive(),
     height: z.number().int()
       .positive(),
-  } ),
+  } ).optional(),
   animation: z.object( {
     framerate: z.number().int()
       .positive(),
     duration: z.number().positive(),
-  } ),
+  } ).optional(),
   layout: z.string().optional(),
-  content: z.array( ContentItem ).optional(),
+  content: z.array( ContentItemSchema ).optional(),
   assets: Assets,
   slides: z.array( Slide ).optional(),
 } );
 
-export type ContentItem = z.infer<typeof ContentItem>;
+export type MetaItem = z.infer<typeof MetaItem>;
+export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type SketchOption = z.infer<typeof OptionsSchema>;
 export type SlideOption = z.infer<typeof Slide>;
 export type AssetsOption = z.infer<typeof Assets>;

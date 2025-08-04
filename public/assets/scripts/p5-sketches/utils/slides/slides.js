@@ -5,10 +5,6 @@ import {
   _layouts
 } from "./layouts/_layouts.js";
 
-import {
-  common
-} from "/assets/scripts/p5-sketches/utils/index.js";
-
 function registerEvents() {
   if ( !options?.slides || options?.slides?.length === 0 ) {
     return;

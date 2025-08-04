@@ -9,7 +9,7 @@ import drawSlideImagesStack from "../common/drawSlideImagesStack.js";
 
 export default function freeLayout( options ) {
   options.content.forEach( ( item ) => {
-    switch ( item.type ) {
+    switch ( item?.type ) {
       case "background":
         drawSlideBackground( item );
         break;

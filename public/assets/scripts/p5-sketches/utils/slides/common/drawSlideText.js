@@ -11,7 +11,7 @@ export default function drawSlideText( textOption ) {
     ( width * horizontalMargin ) + width * textOption.position.x,
     ( height * verticalMargin ) + height * textOption.position.y,
     {
-      size: textOption.size,
+      size: Number( textOption.size ),
       font: string.fonts?.[ textOption.font ] ?? string.fonts.martian,
       textAlign: textOption.align,
       blendMode: textOption.blend,

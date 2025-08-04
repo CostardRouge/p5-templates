@@ -2,7 +2,7 @@ import {
   GripVertical, Plus
 } from "lucide-react";
 import {
-  arrayMove, SortableContext, useSortable, verticalListSortingStrategy
+  arrayMove, SortableContext, useSortable, rectSwappingStrategy
 } from "@dnd-kit/sortable";
 import {
   closestCenter, DndContext, PointerSensor, useSensor, useSensors
@@ -63,10 +63,13 @@ export default function SlideCarousel( {
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-      <div className="p-1 flex flex-col gap-1 min-h-8">
+      <div
+        onDragOver={( e ) => e.preventDefault()}
+        className="p-1 grid grid-cols-2 gap-1 min-h-8"
+      >
         <SortableContext
           items={slides.map( ( s ) => s.name ?? String( Math.random() ) )}
-          strategy={verticalListSortingStrategy}
+          strategy={rectSwappingStrategy}
         >
           {slides.map( (
             slide, slideIndex
@@ -83,7 +86,7 @@ export default function SlideCarousel( {
 
         <button
           onClick={onAdd}
-          className="flex items-center justify-center w-full h-8 text-gray-500 border border-dashed border-gray-300 rounded-b-sm hover:bg-gray-100 hover:text-black"
+          className="flex items-center justify-center h-8 text-gray-500 border border-dashed border-gray-300 hover:bg-gray-100 hover:text-black"
         >
           <Plus className="h-4 w-4 mr-1" />
           <span className="text-xs">new slide</span>
@@ -114,14 +117,14 @@ function SlideThumb( {
       style={style}
       ref={setNodeRef}
       onClick={onClick}
-      className="relative h-8 bg-white border flex items-center px-1"
+      className="relative bg-white border flex items-center px-1 h-8"
     >
       <GripVertical
         className="h-4 w-4 text-gray-400 mr-1 cursor-grab active:cursor-grabbing"
         {...attributes}
         {...listeners}
       />
-      <span className="text-xs">Slide #{index + 1}</span>
+      <span className="text-xs">Slide #{index}</span>
     </div>
   );
 }

@@ -222,7 +222,7 @@ sketch.draw( (
   );
 
   string.write(
-    "hand tracking v2",
+    "hand tracking v3",
     0,
     height * 6 / 10,
     {

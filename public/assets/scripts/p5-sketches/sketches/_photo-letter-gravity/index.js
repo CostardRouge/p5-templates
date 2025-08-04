@@ -53,7 +53,6 @@ events.register(
 
     if ( !bodyObject.body ) {
       shape.length = 0;
-      console.log( "early return" );
       return;
     }
 

@@ -47,7 +47,7 @@ export default function ImageAssets( {
   scope: "global" | {
    slide: number
   },
-  id: JobId
+  id?: JobId
 } ) {
   const {
     addAssets, removeAsset
