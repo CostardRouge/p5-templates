@@ -9,10 +9,20 @@ import {
   FieldConfig
 } from "../constants/field-config";
 
+import ControlledColorInput
+  from "@/components/TemplateOptions/components/ContentLayerListForm/components/ControlledColorInput/ControlledColorInput";
+
 type FieldRendererProps = {
   fieldBasePath: `content.${ number }` | `slides.${ number }.content.${ number }`;
   fieldName: string;
   config: FieldConfig;
+};
+
+// Helper to construct the full name for the select input
+const getConditionalFieldName = (
+  baseFieldName: string, conditionalOn: string
+) => {
+  return baseFieldName ? `${ baseFieldName }.${ conditionalOn }` : conditionalOn;
 };
 
 export default function FieldRenderer( {
@@ -37,10 +47,23 @@ export default function FieldRenderer( {
       case "number":
         return <input type="number" {...commonInputProps} step={config.step} />;
       case "color":
-        // Color inputs don't look good with padding
-        return <input type="color" {...commonInputProps} />;
+        return <ControlledColorInput name={registeredName} />;
       case "textarea":
         return <textarea {...commonInputProps} rows={2} />;
+      case "select":
+        if ( !config.options ) {
+          return <div className="text-red-500 text-xs">No options configured for this select field.</div>;
+        }
+
+        return (
+          <select {...commonInputProps}>
+            {config.options.map( ( option ) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ) )}
+          </select>
+        );
       case "text":
       default:
         return <input type="text" {...commonInputProps} />;

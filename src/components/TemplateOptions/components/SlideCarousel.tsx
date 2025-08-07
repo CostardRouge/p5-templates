@@ -14,6 +14,7 @@ import type {
 import {
   CSS
 } from "@dnd-kit/utilities";
+import clsx from "clsx";
 
 export default function SlideCarousel( {
   slides,
@@ -117,7 +118,12 @@ function SlideThumb( {
       style={style}
       ref={setNodeRef}
       onClick={onClick}
-      className="relative bg-white border flex items-center px-1 h-8"
+      className={clsx(
+        "relative bg-white border border-gray-300 flex items-center px-1 h-8 cursor-pointer rounded-sm",
+        {
+          "bg-neutral-950 border-black text-white": active
+        }
+      )}
     >
       <GripVertical
         className="h-4 w-4 text-gray-400 mr-1 cursor-grab active:cursor-grabbing"

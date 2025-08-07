@@ -8,12 +8,7 @@ export default function drawSlideMeta( metaOption ) {
 
   const textStyle = {
     size: 24,
-    stroke: color(
-      0,
-      0,
-      0,
-      0
-    ),
+    stroke: color( ...metaOption.stroke ),
     fill: color( ...metaOption.fill ),
     font: string.fonts.martian,
     textAlign: [
@@ -53,6 +48,32 @@ export default function drawSlideMeta( metaOption ) {
     textStyle
   );
 
+  if ( metaOption.slideProgression !== undefined ) {
+    const slideProgressionLineStartPosition = createVector(
+      width * horizontalMargin,
+      height - ( height * horizontalMargin ) + 14
+    );
+
+    const slideProgressionLineEndPosition = createVector(
+      width - ( width * horizontalMargin ),
+      height - ( height * horizontalMargin ) + 14
+    );
+
+    const slideProgressionLineCurrentPosition = p5.Vector.lerp(
+      slideProgressionLineStartPosition,
+      slideProgressionLineEndPosition,
+      ( slides.index + 1 ) / slides.count
+    );
+
+    stroke( 0 );
+    line(
+      slideProgressionLineStartPosition.x,
+      slideProgressionLineStartPosition.y,
+      slideProgressionLineCurrentPosition.x,
+      slideProgressionLineCurrentPosition.y
+    );
+  }
+
   // bottom-right
   // string.write(
   //   `${ slides.index + 1 } / ${ slides.count }`,
@@ -66,28 +87,4 @@ export default function drawSlideMeta( metaOption ) {
   //     ]
   //   }
   // );
-
-  const slideProgressionLineStartPosition = createVector(
-    width * horizontalMargin,
-    height - ( height * horizontalMargin ) + 14
-  );
-
-  const slideProgressionLineEndPosition = createVector(
-    width - ( width * horizontalMargin ),
-    height - ( height * horizontalMargin ) + 14
-  );
-
-  const slideProgressionLineCurrentPosition = p5.Vector.lerp(
-    slideProgressionLineStartPosition,
-    slideProgressionLineEndPosition,
-    ( slides.index + 1 ) / slides.count
-  );
-
-  stroke( 0 );
-  line(
-    slideProgressionLineStartPosition.x,
-    slideProgressionLineStartPosition.y,
-    slideProgressionLineCurrentPosition.x,
-    slideProgressionLineCurrentPosition.y
-  );
 }

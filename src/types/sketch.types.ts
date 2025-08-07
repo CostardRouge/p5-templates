@@ -6,7 +6,7 @@ import {
 const RGB = z.tuple( [
   z.number(),
   z.number(),
-  z.number()
+  z.number(),
 ] );
 const RGBA = z.union( [
   RGB,
@@ -48,18 +48,33 @@ const Blend = z.enum( [
 ] );
 
 /* ---------------- content discriminated union ------------------- */
+const GridPatternSchema = z.object( {
+  type: z.literal( "grid" ),
+  columns: z.number().positive(),
+  strokeWeight: z.number().min( 0 ),
+  stroke: RGBA, // Assuming RGBA
+} );
+
+const DotsPatternSchema = z.object( {
+  type: z.literal( "dots" ),
+  size: z.number().positive(),
+  padding: z.number().min( 0 ),
+  fill: RGBA,
+} );
+
+// Create a discriminated union for the pattern
+export const PatternSchema = z.discriminatedUnion(
+  "type",
+  [
+    GridPatternSchema,
+    DotsPatternSchema,
+  ]
+);
+
 const BackgroundItem = z.object( {
   type: z.literal( "background" ),
   background: RGBA,
-  pattern: z
-    .object( {
-      type: z.literal( "grid" ),
-      columns: z.number().int()
-        .positive(),
-      strokeWeight: z.number().positive(),
-      stroke: RGBA,
-    } )
-    .optional(),
+  pattern: PatternSchema,
 } );
 
 const ImagesStackItem = z.object( {
@@ -79,6 +94,11 @@ const MetaItem = z.object( {
   bottomLeft: z.string(),
   stroke: RGBA,
   fill: RGBA,
+  slideProgression: z.object( {
+    hidden: z.boolean().optional(),
+    stroke: RGBA,
+    fill: RGBA,
+  } )
 } );
 
 const TextItem = z.object( {
