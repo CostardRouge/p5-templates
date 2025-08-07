@@ -57,12 +57,7 @@ export default function FieldRenderer( {
             type="checkbox"
             {...commonInputProps}
             className={`${ commonInputProps.className } block w-auto`}
-            {...register(
-              registeredName,
-              {
-                valueAsNumber: true
-              }
-            )}
+            {...register( registeredName )}
           />
         );
 
@@ -78,6 +73,25 @@ export default function FieldRenderer( {
               }
             )}
             step={config.step}
+            min={config.min}
+            max={config.max}
+          />
+        );
+
+      case "slider":
+        return (
+          <input
+            type="range"
+            {...commonInputProps}
+            {...register(
+              registeredName,
+              {
+                valueAsNumber: true
+              }
+            )}
+            step={config.step}
+            min={config.min}
+            max={config.max}
           />
         );
 

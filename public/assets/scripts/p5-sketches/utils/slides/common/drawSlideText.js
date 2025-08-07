@@ -2,9 +2,21 @@ import {
   string
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
+const parseFloatDefault = (
+  value, _default = .015
+) => {
+  const float = Number.parseFloat( value );
+
+  if ( Number.isFinite( float ) ) {
+    return float;
+  }
+
+  return _default;
+};
+
 export default function drawSlideText( textOption ) {
-  const horizontalMargin = textOption.horizontalMargin ?? .015;
-  const verticalMargin = textOption.verticalMargin ?? .015;
+  const horizontalMargin = parseFloatDefault( textOption.horizontalMargin );
+  const verticalMargin = parseFloatDefault( textOption.verticalMargin );
 
   string.write(
     textOption.content,
@@ -13,7 +25,10 @@ export default function drawSlideText( textOption ) {
     {
       size: Number( textOption.size ),
       font: string.fonts?.[ textOption.font ] ?? string.fonts.martian,
-      textAlign: textOption.align,
+      textAlign: [
+        textOption?.align?.[ 0 ] ?? "center",
+        textOption?.align?.[ 1 ] ?? "baseline",
+      ],
       blendMode: textOption.blend,
       fill: color( ...textOption.fill ),
       stroke: color( ...textOption.stroke ),

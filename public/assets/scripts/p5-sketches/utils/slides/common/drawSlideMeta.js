@@ -49,7 +49,7 @@ export default function drawSlideMeta( metaOption ) {
   );
 
   if ( metaOption.slideProgression !== undefined ) {
-    if ( metaOption.slideProgression?.hidden !== true ) {
+    if ( metaOption.slideProgression?.hidden === true ) {
       return;
     }
 

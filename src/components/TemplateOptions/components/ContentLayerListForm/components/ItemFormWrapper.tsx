@@ -15,7 +15,7 @@ export default function ItemFormWrapper( {
   return (
     <div className="p-1 border rounded-sm bg-white hover:shadow-md">
       <div className="flex justify-between items-center mb-2">
-        <h4 className="border border-gray-500 text-gray-500  px-1 rounded-sm">{itemType}</h4>
+        <h4 className="text-white bg-gray-800 px-1 rounded-sm">{itemType}</h4>
 
         <button
           type="button"

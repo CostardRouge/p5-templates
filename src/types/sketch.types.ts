@@ -26,25 +26,33 @@ const Vec2 = z.object( {
     .min( 0 )
     .max( 1 )
 } );
-const HorizontalAlign = z.enum( [
+
+export const HorizontalAlign = z.enum( [
   "left",
   "center",
   "right"
 ] );
-const VerticalAlign = z.enum( [
+export const VerticalAlign = z.enum( [
+  "baseline",
   "top",
   "center",
-  "baseline",
   "bottom"
 ] );
-const Blend = z.enum( [
-  "normal",
-  "multiply",
-  "screen",
-  "overlay",
+export const Blend = z.enum( [
+  "source-over",
   "darken",
   "lighten",
+  "difference",
+  "multiply",
   "exclusion",
+  "screen",
+  "copy",
+  "overlay",
+  "hard-light",
+  "soft-light",
+  "color-dodge",
+  "color-burn",
+  "lighter"
 ] );
 
 /* ---------------- content discriminated union ------------------- */
@@ -52,7 +60,12 @@ const GridPatternSchema = z.object( {
   type: z.literal( "grid" ),
   columns: z.number().positive(),
   strokeWeight: z.number().min( 0 ),
-  stroke: RGBA, // Assuming RGBA
+  stroke: RGBA.default( [
+    255,
+    255,
+    255,
+    255
+  ] ), // Assuming RGBA
   borders: z.boolean().default( false ), // Assuming RGBA
 } );
 
@@ -60,7 +73,12 @@ const DotsPatternSchema = z.object( {
   type: z.literal( "dots" ),
   size: z.number().positive(),
   padding: z.number().min( 0 ),
-  fill: RGBA,
+  fill: RGBA.default( [
+    0,
+    0,
+    0,
+    255
+  ] ),
 } );
 
 // Create a discriminated union for the pattern
@@ -74,7 +92,12 @@ export const PatternSchema = z.discriminatedUnion(
 
 const BackgroundItem = z.object( {
   type: z.literal( "background" ),
-  background: RGBA,
+  background: RGBA.default( [
+    246,
+    235,
+    225,
+    255
+  ] ),
   pattern: PatternSchema,
 } );
 
@@ -90,14 +113,29 @@ const ImagesStackItem = z.object( {
 
 const MetaItem = z.object( {
   type: z.literal( "meta" ),
-  topRight: z.string(),
-  topLeft: z.string(),
-  bottomLeft: z.string(),
-  stroke: RGBA,
-  fill: RGBA,
+  topRight: z.string().default( "" ),
+  topLeft: z.string().default( "" ),
+  bottomLeft: z.string().default( "" ),
+  stroke: RGBA.default( [
+    255,
+    255,
+    255,
+    255
+  ] ),
+  fill: RGBA.default( [
+    0,
+    0,
+    0,
+    255
+  ] ),
   slideProgression: z.object( {
     hidden: z.boolean().default( false ),
-    stroke: RGBA
+    stroke: RGBA.default( [
+      255,
+      255,
+      255,
+      255
+    ] )
   } )
 } );
 
@@ -105,21 +143,36 @@ const TextItem = z.object( {
   type: z.literal( "text" ),
   content: z.string(),
   size: z.number().positive(),
-  stroke: RGBA,
-  fill: RGBA,
+  stroke: RGBA.default( [
+    255,
+    255,
+    255,
+    255
+  ] ),
+  fill: RGBA.default( [
+    0,
+    0,
+    0,
+    255
+  ] ),
   font: z.string().optional(),
   blend: Blend.optional(),
   position: Vec2.optional(),
-  horizontalMargin: z.number().min( 0 )
+  horizontalMargin: z.number()
+    .min( 0 )
     .max( 1 )
-    .default( 0.05 ),
-  verticalMargin: z.number().min( 0 )
+    .default( 0.015 ),
+  verticalMargin: z.number()
+    .min( 0 )
     .max( 1 )
-    .default( 0.05 ),
-  align: z.array(
+    .default( 0.015 ),
+  align: z.tuple( [
     HorizontalAlign,
     VerticalAlign
-  ).optional(),
+  ] ).default( [
+    "center",
+    "baseline"
+  ] ),
 } );
 
 const ImageItem = z.object( {

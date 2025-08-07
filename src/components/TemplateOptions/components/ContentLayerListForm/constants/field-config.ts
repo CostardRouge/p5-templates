@@ -1,5 +1,5 @@
 import {
-  ContentItem, PatternSchema
+  ContentItem, PatternSchema, Blend, HorizontalAlign, VerticalAlign
 } from "@/types/sketch.types";
 
 import {
@@ -105,24 +105,6 @@ const fontNames = [
   "cloitre",
   "agiro",
   "peix"
-];
-
-const blendOptions = [
-  "source-over",
-  "darken",
-  "lighten",
-  "difference",
-  "multiply",
-  "exclusion",
-  "screen",
-  "copy",
-  "overlay",
-  "hard-light",
-  "soft-light",
-  "color-dodge",
-  "color-burn",
-  "lighter",
-  "normal"
 ];
 
 const gridPatternFields: ItemFormConfig = {
@@ -252,6 +234,28 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         }
       }
     },
+    align: {
+      label: "Alignment",
+      component: "nested-object",
+      fields: {
+        0: {
+          label: "Horizontal alignment",
+          component: "select",
+          options: HorizontalAlign.options.map( horizontalAlignOption => ( {
+            value: horizontalAlignOption,
+            label: horizontalAlignOption
+          } ) )
+        },
+        1: {
+          label: "Vertical alignment",
+          component: "select",
+          options: VerticalAlign.options.map( verticalAlignOption => ( {
+            value: verticalAlignOption,
+            label: verticalAlignOption
+          } ) )
+        }
+      }
+    },
     horizontalMargin: {
       label: "Horizontal margin",
       component: "number",
@@ -269,7 +273,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     blend: {
       label: "Blend",
       component: "select",
-      options: blendOptions.map( blendOption => ( {
+      options: Blend.options.map( blendOption => ( {
         value: blendOption,
         label: blendOption
       } ) )
