@@ -122,6 +122,10 @@ const gridPatternFields: ItemFormConfig = {
     label: "Stroke Color",
     component: "color"
   },
+  borders: {
+    label: "Borders",
+    component: "checkbox"
+  },
 };
 
 const dotsPatternFields: ItemFormConfig = {

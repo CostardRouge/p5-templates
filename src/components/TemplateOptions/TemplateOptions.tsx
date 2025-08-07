@@ -12,7 +12,6 @@ import {
   JobModel
 } from "@/types/recording.types";
 import {
-  ContentItem,
   OptionsSchema,
   SketchOption
 } from "@/types/sketch.types";
@@ -32,6 +31,7 @@ import {
 import {
   zodResolver
 } from "@hookform/resolvers/zod";
+import CollapsibleItem from "@/components/CollapsibleItem";
 
 export default function TemplateOptions( {
   name,
@@ -44,11 +44,6 @@ export default function TemplateOptions( {
     persistedJob?: JobModel
     setOptions: ( nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => void;
 } ) {
-  const [
-    expanded,
-    setExpanded
-  ] = useState( true );
-
   const [
     activeSlideIndex,
     setActiveSlideIndex
@@ -128,79 +123,77 @@ export default function TemplateOptions( {
   );
 
   return (
-    <div
+    <CollapsibleItem
       data-no-zoom=""
       className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-white p-2 border border-b-0 border-gray-400 shadow shadow-black-300 drop-shadow-sm border-r-0 z-50 rounded-tl-sm"
       style={ {
         maxHeight: "calc(80svh)",
       } }
-    >
-      <button
-        className="text-gray-500 text-sm"
-        onClick={() => setExpanded( e => !e )}
-        aria-label={expanded ? "Collapse controls" : "Expand controls"}
-      >
-        <ArrowDownFromLine
-          className="inline text-gray-500 h-4"
-          style={{
-            rotate: expanded ? "0deg" : "180deg"
-          }}
-        />
-        <span>{expanded ? "hide" : "show"} options</span>
-      </button>
-
-      {expanded && (
-        <FormProvider {...methods}>
-          <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
-            <span className="px-1 text-xs text-gray-500">root.content</span>
-            <ContentLayerListForm baseFieldName="content" />
-
-            <span className="px-1 text-xs text-gray-500">root.assets.images</span>
-            <ImageAssets
-              assets={options?.assets}
-              scope="global"
-              id={options.id}
-            />
-          </div>
-
-          { slideFields && (
-            <Fragment>
-              <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
-                <SlideCarousel
-                  slides={slideFields}
-                  activeIndex={activeSlideIndex}
-                  onSelect={handleSlideSelect}
-                  onAdd={() => {
-                    // addSlide( setOptions )
-                  }}
-                  onReorder={(
-                    from, to
-                  ) => {
-                    // 4. Use the 'move' function from the hook
-                    moveSlide(
-                      from,
-                      to
-                    );
-                  }}
-                />
-              </div>
-
-              <div className="overflow-y-scroll rounded-sm border-t border-b border-gray-300">
-                <SlideEditor
-                  activeIndex={activeSlideIndex}
-                  options={watch()} // Pass the whole form value to get slide assets
-                />
-              </div>
-            </Fragment>
-          ) }
-
-          <CaptureActions
-            name={name}
-            options={options}
-            persistedJob={persistedJob}
+      header={ expanded => (
+        <button
+          className="text-gray-500 text-sm w-full"
+          aria-label={expanded ? "Collapse controls" : "Expand controls"}
+        >
+          <ArrowDownFromLine
+            className="inline text-gray-500 h-4"
+            style={{
+              rotate: expanded ? "0deg" : "180deg"
+            }}
           />
-        </FormProvider>
-      ) }
-    </div>
+          <span>{expanded ? "hide" : "show"} options</span>
+        </button>
+      )}
+    >
+      <FormProvider {...methods}>
+        <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
+          <span className="px-1 text-xs text-gray-500">root.content</span>
+          <ContentLayerListForm baseFieldName="content"/>
+
+          <span className="px-1 text-xs text-gray-500">root.assets.images</span>
+          <ImageAssets
+            assets={options?.assets}
+            scope="global"
+            id={options.id}
+          />
+        </div>
+
+        { slideFields && (
+          <Fragment>
+            <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
+              <SlideCarousel
+                slides={slideFields}
+                activeIndex={activeSlideIndex}
+                onSelect={handleSlideSelect}
+                onAdd={() => {
+                  // addSlide( setOptions )
+                }}
+                onReorder={(
+                  from, to
+                ) => {
+                  // 4. Use the 'move' function from the hook
+                  moveSlide(
+                    from,
+                    to
+                  );
+                }}
+              />
+            </div>
+
+            <div className="overflow-y-scroll rounded-sm border-t border-b border-gray-300">
+              <SlideEditor
+                activeIndex={activeSlideIndex}
+                options={watch()} // Pass the whole form value to get slide assets
+              />
+            </div>
+          </Fragment>
+        ) }
+
+        <CaptureActions
+          name={name}
+          options={options}
+          persistedJob={persistedJob}
+        />
+      </FormProvider>
+    </CollapsibleItem>
   );
 }

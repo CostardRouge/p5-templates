@@ -16,13 +16,10 @@ export default function drawSlideBackground( backgroundOption ) {
       strokeWeight( backgroundPattern.strokeWeight || 1 );
 
       shapes.grid( {
+        borders: backgroundPattern.borders,
         columns,
         rows,
-        border: true
       } );
-
-      // shapes.vl( width );
-      // shapes.hl( height );
     }
   }
 }

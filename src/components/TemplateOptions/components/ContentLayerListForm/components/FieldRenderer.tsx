@@ -56,8 +56,8 @@ export default function FieldRenderer( {
           <input
             type="checkbox"
             {...commonInputProps}
-            className={`${ commonInputProps.className } block w-auto`}
             {...register( registeredName )}
+            className={`${ commonInputProps.className } block w-fit`}
           />
         );
 
