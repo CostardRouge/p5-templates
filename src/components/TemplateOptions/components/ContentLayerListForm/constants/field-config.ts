@@ -49,7 +49,7 @@ interface NestedObjectConfig extends BaseConfig {
 }
 
 // For polymorphic/conditional field groups (the most complex one)
-interface ConditionalGroupConfig extends BaseConfig {
+export interface ConditionalGroupConfig extends BaseConfig {
   component: "conditional-group";
   // The property name within the object to watch for changes
   conditionalOn: string;
@@ -212,7 +212,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       } ) )
     },
     position: {
-      label: "position",
+      label: "Position",
       component: "nested-object",
       fields: {
         x: {
@@ -251,7 +251,10 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
             value: "grid",
             label: "Grid"
           },
-          // { value: "dots", label: "Dots" }, // Future-proof
+          {
+            value: "dots",
+            label: "Dots"
+          },
         ],
       },
 

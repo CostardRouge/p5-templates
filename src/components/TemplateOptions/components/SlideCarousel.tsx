@@ -87,7 +87,7 @@ export default function SlideCarousel( {
 
         <button
           onClick={onAdd}
-          className="flex items-center justify-center h-8 text-gray-500 border border-dashed border-gray-300 hover:bg-gray-100 hover:text-black"
+          className="flex items-center justify-center h-8 text-gray-500 border border-dashed border-gray-300 hover:bg-gray-100 hover:text-black rounded-sm"
         >
           <Plus className="h-4 w-4 mr-1" />
           <span className="text-xs">new slide</span>
@@ -121,7 +121,7 @@ function SlideThumb( {
       className={clsx(
         "relative bg-white border border-gray-300 flex items-center px-1 h-8 cursor-pointer rounded-sm",
         {
-          "bg-neutral-950 border-black text-white": active
+          "border-gray-400": active
         }
       )}
     >
