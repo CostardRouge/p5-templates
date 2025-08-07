@@ -74,31 +74,58 @@ const shapes = {
     );
   },
   grid( {
-    columns,
-    rows
+    columns, rows, border = false
   } ) {
-    for ( let column = 0; column < columns; column++ ) {
-      const x = map(
-        column,
-        0,
-        columns,
-        0,
-        width
-      );
+    // Calculate the spacing between lines
+    const columnSpacing = width / columns;
+    const rowSpacing = height / rows;
+
+    // Draw vertical lines
+    for ( let column = 0; column <= columns; column++ ) {
+      // Calculate x position
+      let x = column * columnSpacing;
+
+      // Adjust position based on border setting
+      if ( border ) {
+        // For borders, we want lines at exact edges (0 and width)
+        // and inner lines offset by 1 unit from edges
+        if ( column === 0 ) {
+          x = 1; // Left border
+        } else if ( column === columns ) {
+          x = width - 1; // Right border
+        }
+      } else {
+        // Without borders, skip first vertical line
+        if ( column === 0 ) {
+          continue;
+        }
+      }
 
       shapes.vl( x );
+    }
 
-      for ( let row = 0; row < rows; row++ ) {
-        const y = map(
-          row,
-          0,
-          rows,
-          0,
-          height
-        );
+    // Draw horizontal lines
+    for ( let row = 0; row <= rows; row++ ) {
+      // Calculate y position
+      let y = row * rowSpacing;
 
-        shapes.hl( y );
+      // Adjust position based on border setting
+      if ( border ) {
+        // For borders, we want lines at exact edges (0 and height)
+        // and inner lines offset by 1 unit from edges
+        if ( row === 0 ) {
+          y = 1; // Top border
+        } else if ( row === rows ) {
+          y = height - 1; // Bottom border
+        }
+      } else {
+        // Without borders, skip first horizontal line
+        if ( row === 0 ) {
+          continue;
+        }
       }
+
+      shapes.hl( y );
     }
   }
 };

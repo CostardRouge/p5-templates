@@ -17,11 +17,12 @@ export default function drawSlideBackground( backgroundOption ) {
 
       shapes.grid( {
         columns,
-        rows
+        rows,
+        border: true
       } );
 
-      shapes.vl( width );
-      shapes.hl( height );
+      // shapes.vl( width );
+      // shapes.hl( height );
     }
   }
 }

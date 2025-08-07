@@ -47,11 +47,25 @@ export default function FieldRenderer( {
       id: registeredName,
       placeholder: config.placeholder,
       className: "w-full p-1 border border-gray-300 rounded-sm",
-      // Use the new error object
       "aria-invalid": !!error
     };
 
     switch ( config.component ) {
+      case "checkbox":
+        return (
+          <input
+            type="checkbox"
+            {...commonInputProps}
+            className={`${ commonInputProps.className } block w-auto`}
+            {...register(
+              registeredName,
+              {
+                valueAsNumber: true
+              }
+            )}
+          />
+        );
+
       case "number":
         return (
           <input
@@ -62,7 +76,8 @@ export default function FieldRenderer( {
               {
                 valueAsNumber: true
               }
-            )} step={config.step}
+            )}
+            step={config.step}
           />
         );
 

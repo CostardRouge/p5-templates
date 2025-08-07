@@ -53,6 +53,7 @@ const GridPatternSchema = z.object( {
   columns: z.number().positive(),
   strokeWeight: z.number().min( 0 ),
   stroke: RGBA, // Assuming RGBA
+  borders: z.boolean().default( false ), // Assuming RGBA
 } );
 
 const DotsPatternSchema = z.object( {
@@ -81,10 +82,10 @@ const ImagesStackItem = z.object( {
   type: z.literal( "images-stack" ),
   margin: z.number().nonnegative()
     .optional(),
-  center: z.boolean().optional(),
+  center: z.boolean().default( false ),
   position: Vec2.optional(),
   animation: z.string().optional(),
-  shift: z.number().optional(),
+  shift: z.number().default( 30 ),
 } );
 
 const MetaItem = z.object( {
@@ -95,9 +96,8 @@ const MetaItem = z.object( {
   stroke: RGBA,
   fill: RGBA,
   slideProgression: z.object( {
-    hidden: z.boolean().optional(),
-    stroke: RGBA,
-    fill: RGBA,
+    hidden: z.boolean().default( false ),
+    stroke: RGBA
   } )
 } );
 
@@ -112,10 +112,10 @@ const TextItem = z.object( {
   position: Vec2.optional(),
   horizontalMargin: z.number().min( 0 )
     .max( 1 )
-    .optional(),
+    .default( 0.05 ),
   verticalMargin: z.number().min( 0 )
     .max( 1 )
-    .optional(),
+    .default( 0.05 ),
   align: z.array(
     HorizontalAlign,
     VerticalAlign

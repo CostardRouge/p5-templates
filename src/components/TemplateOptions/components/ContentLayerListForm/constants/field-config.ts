@@ -27,6 +27,19 @@ interface NumberInputConfig extends BaseConfig {
   max?: number;
 }
 
+// For 'checkbox' inputs
+interface CheckboxInputConfig extends BaseConfig {
+  component: "checkbox";
+}
+
+// For 'range' inputs
+interface RangeInputConfig extends BaseConfig {
+  component: "slider";
+  step?: number;
+  min?: number;
+  max?: number;
+}
+
 // For 'color' inputs
 interface ColorInputConfig extends BaseConfig {
   component: "color";
@@ -65,6 +78,8 @@ export interface ConditionalGroupConfig extends BaseConfig {
 // This tells TypeScript: "If component is 'select', then it MUST have an 'options' property."
 export type FieldConfig =
   | SimpleInputConfig
+  | CheckboxInputConfig
+  | RangeInputConfig
   | NumberInputConfig
   | ColorInputConfig
   | SelectConfig
@@ -176,6 +191,20 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       component: "text",
       placeholder: "#42"
     },
+    slideProgression: {
+      label: "Slide progression",
+      component: "nested-object",
+      fields: {
+        hidden: {
+          label: "Hidden",
+          component: "checkbox",
+        },
+        stroke: {
+          label: "Stroke",
+          component: "color"
+        },
+      }
+    }
   },
   text: {
     content: {
@@ -203,6 +232,40 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         label: fontName
       } ) ),
     },
+    position: {
+      label: "Position",
+      component: "nested-object",
+      fields: {
+        x: {
+          label: "x",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        },
+        y: {
+          label: "y",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        }
+      }
+    },
+    horizontalMargin: {
+      label: "Horizontal margin",
+      component: "number",
+      step: 0.01,
+      min: 0,
+      max: 1
+    },
+    verticalMargin: {
+      label: "Vertical margin",
+      component: "number",
+      step: 0.01,
+      min: 0,
+      max: 1
+    },
     blend: {
       label: "Blend",
       component: "select",
@@ -210,26 +273,6 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         value: blendOption,
         label: blendOption
       } ) )
-    },
-    position: {
-      label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "number",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "number",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
     }
     // We can add more fields here and they will auto-generate
   },

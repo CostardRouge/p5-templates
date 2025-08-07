@@ -49,6 +49,10 @@ export default function drawSlideMeta( metaOption ) {
   );
 
   if ( metaOption.slideProgression !== undefined ) {
+    if ( metaOption.slideProgression?.hidden !== true ) {
+      return;
+    }
+
     const slideProgressionLineStartPosition = createVector(
       width * horizontalMargin,
       height - ( height * horizontalMargin ) + 14
@@ -65,7 +69,9 @@ export default function drawSlideMeta( metaOption ) {
       ( slides.index + 1 ) / slides.count
     );
 
-    stroke( 0 );
+    stroke( ...( metaOption?.slideProgression?.stroke || [
+      0
+    ] ) );
     line(
       slideProgressionLineStartPosition.x,
       slideProgressionLineStartPosition.y,
