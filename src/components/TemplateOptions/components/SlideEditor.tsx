@@ -24,7 +24,7 @@ export default function SlideEditor( {
     <div className="border-r border-l border-gray-300 text-black text-left bg-white rounded-sm">
       <span className="px-1 text-xs text-gray-500">root.slides[{activeIndex}].content</span>
 
-      <ContentLayerListForm baseFieldName={baseContentFieldName} />
+      <ContentLayerListForm baseFieldName={baseContentFieldName}/>
 
       <span className="px-1 mt-2 text-xs text-gray-500">root.slides[{activeIndex}].assets.images</span>
       <ImageAssets

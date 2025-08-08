@@ -318,6 +318,47 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       // The schema is needed to create default objects when the type changes
       schema: PatternSchema,
     },
+  },
+  image: {
+    index: {
+      label: "Image index",
+      component: "number",
+    },
+    margin: {
+      label: "Margin",
+      component: "number",
+    },
+    center: {
+      label: "Center",
+      component: "checkbox",
+    },
+    scale: {
+      label: "Scale",
+      component: "number",
+      step: 0.1,
+      min: 0.1,
+      max: 6
+    },
+    position: {
+      label: "Position",
+      component: "nested-object",
+      fields: {
+        x: {
+          label: "x",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        },
+        y: {
+          label: "y",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        }
+      }
+    },
   }
   // Add other types like 'image', 'video' here
 };

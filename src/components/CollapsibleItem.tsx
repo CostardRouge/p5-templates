@@ -1,7 +1,12 @@
 import {
+  DetailedHTMLProps,
+  HTMLAttributes,
   JSX,
   useState
 } from "react";
+import {
+  Property
+} from "csstype";
 
 const CollapsibleItem = ( {
   header, children, className, initialExpandedValue = true, ...props
@@ -10,7 +15,7 @@ const CollapsibleItem = ( {
   initialExpandedValue?: boolean,
   children: React.ReactNode;
   className?: string;
-} ) => {
+} & DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> ) => {
   const [
     expanded,
     setExpanded

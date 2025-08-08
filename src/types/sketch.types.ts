@@ -32,12 +32,14 @@ export const HorizontalAlign = z.enum( [
   "center",
   "right"
 ] );
+
 export const VerticalAlign = z.enum( [
   "baseline",
   "top",
   "center",
   "bottom"
 ] );
+
 export const Blend = z.enum( [
   "source-over",
   "darken",
@@ -65,7 +67,7 @@ const GridPatternSchema = z.object( {
     255,
     255,
     255
-  ] ), // Assuming RGBA
+  ] ),
   borders: z.boolean().default( false ), // Assuming RGBA
 } );
 
@@ -180,14 +182,17 @@ const ImageItem = z.object( {
   index: z.number().int()
     .nonnegative(),
   margin: z.number().nonnegative()
-    .optional(),
-  center: z.boolean().optional(),
+    .default( 0 ),
+  center: z.boolean().optional()
+    .default( true ),
   scale: z.number().positive()
     .optional(),
   position: Vec2.optional(),
   animation: z
     .object( {
       name: z.string(),
+      amplitude: z.number().optional(),
+      noiseDetail: z.number().optional(),
     } )
     .optional(),
 } );
@@ -203,9 +208,10 @@ export const ContentItemSchema = z.discriminatedUnion(
   "type",
   [
     BackgroundItem,
-    ImagesStackItem,
     MetaItem,
     TextItem,
+
+    ImagesStackItem,
     ImageItem,
     VideoItem,
     VisualItem,
@@ -241,22 +247,38 @@ export const Slide = z.object( {
 export const OptionsSchema = z.object( {
   id: z.string().optional(),
   name: z.string().optional(),
-  consumeTestImages: z.boolean().optional(),
+  consumeTestImages: z.boolean().optional( ),
   size: z.object( {
-    width: z.number().int()
-      .positive(),
-    height: z.number().int()
-      .positive(),
+    width: z
+      .number()
+      .int()
+      .positive()
+      .default( 1080 ),
+    height: z
+      .number()
+      .int()
+      .positive()
+      .default( 1350 ),
   } ).optional(),
   animation: z.object( {
-    framerate: z.number().int()
-      .positive(),
-    duration: z.number().positive(),
+    framerate: z
+      .number()
+      .int()
+      .positive()
+      .default( 60 ),
+    duration: z
+      .number()
+      .positive()
+      .default( 12 ),
   } ).optional(),
-  layout: z.string().optional(),
-  content: z.array( ContentItemSchema ).optional(),
+  layout: z.string().default( "free" ),
+  content: z.array( ContentItemSchema ).optional()
+    .default( [
+    ] ),
   assets: Assets,
-  slides: z.array( Slide ).optional(),
+  slides: z.array( Slide ).optional()
+    .default( [
+    ] ),
 } );
 
 export type MetaItem = z.infer<typeof MetaItem>;

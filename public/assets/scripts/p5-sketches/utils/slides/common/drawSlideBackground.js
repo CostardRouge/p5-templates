@@ -21,5 +21,19 @@ export default function drawSlideBackground( backgroundOption ) {
         rows,
       } );
     }
+
+    if ( backgroundPattern.type === "dots" ) {
+      const columns = backgroundPattern.columns || 9;
+      const rows = columns * height / width;
+
+      stroke( ...backgroundPattern.stroke );
+      strokeWeight( backgroundPattern.strokeWeight || 1 );
+
+      shapes.dots( {
+        border: backgroundPattern.borders,
+        columns,
+        rows,
+      } );
+    }
   }
 }

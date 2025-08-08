@@ -26,7 +26,7 @@ export default function SlideCarousel( {
   slides: SlideOption[];
   activeIndex: number;
   onSelect: ( i: number ) => void;
-  onReorder: ( list: SlideOption[] ) => void;
+  onReorder: ( newIndex: number, oldIndex: number ) => void;
   onAdd: () => void;
 } ) {
   const sensors = useSensors( useSensor( PointerSensor ) );
@@ -51,11 +51,16 @@ export default function SlideCarousel( {
     //   return;
     // }
 
-    onReorder( arrayMove(
-      slides,
+    // onReorder( arrayMove(
+    //   slides,
+    //   oldIdx,
+    //   newIdx
+    // ) );
+
+    onReorder(
       oldIdx,
       newIdx
-    ) );
+    );
   };
 
   return (

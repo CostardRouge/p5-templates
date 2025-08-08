@@ -68,7 +68,7 @@ export default function TemplateOptions( {
     }
   };
 
-  const methods = useForm<Partial<SketchOption>>( {
+  const methods = useForm<SketchOption>( {
     resolver: zodResolver( OptionsSchema ),
     defaultValues: options,
   } );
@@ -168,7 +168,7 @@ export default function TemplateOptions( {
                   // addSlide( setOptions )
                 }}
                 onReorder={(
-                  from, to
+                  from: number, to: number
                 ) => {
                   // 4. Use the 'move' function from the hook
                   moveSlide(
@@ -181,6 +181,7 @@ export default function TemplateOptions( {
 
             <div className="overflow-y-scroll rounded-sm border-t border-b border-gray-300">
               <SlideEditor
+                key={activeSlideIndex}
                 activeIndex={activeSlideIndex}
                 options={watch()} // Pass the whole form value to get slide assets
               />

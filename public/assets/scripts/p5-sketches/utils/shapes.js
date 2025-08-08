@@ -127,6 +127,58 @@ const shapes = {
 
       shapes.hl( y );
     }
+  },
+  dots( {
+    columns,
+    rows,
+    border = false,
+    inset = 1,
+  } ) {
+    /* 1. Validation – same rules as in grid( … ) */
+    if ( ![
+      width,
+      height,
+      columns,
+      rows
+    ].every( Number.isFinite ) ) {
+      throw new TypeError( "width, height, columns and rows must be numbers" );
+    }
+    if ( columns < 1 || rows < 1 ) return;
+
+    /* 2. Pre-compute the spacing */
+    const colStep = width / columns;
+    const rowStep = height / rows;
+
+    /* 3. Decide where to start/stop depending on the border flag       *
+     *    - With border=false we skip the first row/col (0) so that the *
+     *      dots appear only inside the canvas.                         */
+    const colStart = border ? 0 : 1;
+    const colEnd = border ? columns : columns - 1;
+    const rowStart = border ? 0 : 1;
+    const rowEnd = border ? rows : rows - 1;
+
+    /* 4. Iterate through every logical grid vertex and place a dot */
+    for ( let c = colStart; c <= colEnd; ++c ) {
+      // exact X coordinate
+      const x =
+        ( border && ( c === 0 || c === columns ) )
+          ? ( c === 0 ? 0 : width ) // hard border
+          : Math.round( c * colStep ) + ( border ? inset : 0 );
+
+      for ( let r = rowStart; r <= rowEnd; ++r ) {
+        // exact Y coordinate
+        const y =
+          ( border && ( r === 0 || r === rows ) )
+            ? ( r === 0 ? 0 : height )
+            : Math.round( r * rowStep ) + ( border ? inset : 0 );
+
+        // draw it
+        point(
+          x,
+          y
+        ); // ← adapt this primitive if necessary
+      }
+    }
   }
 };
 
