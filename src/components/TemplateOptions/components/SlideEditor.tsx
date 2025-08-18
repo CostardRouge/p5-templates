@@ -4,6 +4,9 @@ import {
 } from "@/types/sketch.types";
 import ContentLayerListForm from "./ContentLayerListForm/ContentLayerListForm";
 import ImageAssets from "@/components/TemplateOptions/components/ImageAssets";
+import {
+  TemplateAssetsProvider
+} from "@/components/TemplateAssetsContext";
 
 type SlideEditorProps = {
   activeIndex: number;
@@ -13,7 +16,7 @@ type SlideEditorProps = {
 export default function SlideEditor( {
   activeIndex, options
 }: SlideEditorProps ) {
-  const baseContentFieldName = `slides.${ activeIndex }.content` as const;
+  const baseContentFieldName = `slides.${ activeIndex }` as const;
   const slide = options.slides?.[ activeIndex ];
 
   if ( !slide ) {
@@ -24,7 +27,15 @@ export default function SlideEditor( {
     <div className="border-r border-l border-gray-300 text-black text-left bg-white rounded-sm">
       <span className="px-1 text-xs text-gray-500">root.slides[{activeIndex}].content</span>
 
-      <ContentLayerListForm baseFieldName={baseContentFieldName}/>
+      <TemplateAssetsProvider
+        scope={{
+          slide: activeIndex
+        }}
+        assetsName={`${ baseContentFieldName }.assets.images`}
+        jobId={options.id}
+      >
+        <ContentLayerListForm baseFieldName={`${ baseContentFieldName }.content`} />
+      </TemplateAssetsProvider>
 
       <span className="px-1 mt-2 text-xs text-gray-500">root.slides[{activeIndex}].assets.images</span>
       <ImageAssets

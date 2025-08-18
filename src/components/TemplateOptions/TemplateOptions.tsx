@@ -24,6 +24,10 @@ import ContentLayerListForm from "./components/ContentLayerListForm/ContentLayer
 import SlideEditor from "./components/SlideEditor";
 
 import {
+  TemplateAssetsProvider
+} from "@/components/TemplateAssetsContext";
+
+import {
   FormProvider,
   useFieldArray,
   useForm
@@ -147,7 +151,9 @@ export default function TemplateOptions( {
       <FormProvider {...methods}>
         <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
           <span className="px-1 text-xs text-gray-500">root.content</span>
-          <ContentLayerListForm baseFieldName="content"/>
+          <TemplateAssetsProvider scope="global" assetsName="assets" jobId={options.id}>
+            <ContentLayerListForm baseFieldName="content" />
+          </TemplateAssetsProvider>
 
           <span className="px-1 text-xs text-gray-500">root.assets.images</span>
           <ImageAssets

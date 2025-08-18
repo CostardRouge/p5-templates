@@ -118,7 +118,23 @@ sketch.setup(
     //   );
     // }
 
-    matter.letterBodies = addLetterBoxes( "abcdefghijklmnopqrstuvwxyz" );
+    matter.letterBodies = addLetterBoxes( "abcdefghijklmnopqrstuvwxyz0123456789" );
+    // matter.letterBodies = addLetterBoxes( Array.from(
+    //   {
+    //     length: 128
+    //   },
+    //   (
+    //     _, i
+    //   ) => String.fromCharCode( i )
+    // ) );
+    // matter.letterBodies = addLetterBoxes( Array.from(
+    //   {
+    //     length: 95
+    //   },
+    //   (
+    //     _, i
+    //   ) => String.fromCharCode( i + 32 )
+    // ) );
   },
   {
     size: {

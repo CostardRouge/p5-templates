@@ -113,7 +113,6 @@
         },
         {
           "type": "image",
-          "index": 0,
           "margin": 0,
           "center": true,
           "scale": 0.675,

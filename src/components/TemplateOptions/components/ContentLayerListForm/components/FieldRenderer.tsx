@@ -8,6 +8,8 @@ import {
   FieldConfig
 } from "../constants/field-config"; // Import the specific type
 
+import ControlledImagesStackInput from "@/components/TemplateOptions/components/ContentLayerListForm/components/ControlledImagesStackInput/ControlledImagesStackInput";
+import ControlledImageInput from "@/components/TemplateOptions/components/ContentLayerListForm/components/ControlledImageInput/ControlledImageInput";
 import ControlledColorInput from "@/components/TemplateOptions/components/ContentLayerListForm/components/ControlledColorInput/ControlledColorInput";
 import ConditionalGroup from "@/components/TemplateOptions/components/ContentLayerListForm/components/ConditionalGroup";
 
@@ -95,9 +97,6 @@ export default function FieldRenderer( {
           />
         );
 
-      case "color":
-        return <ControlledColorInput name={registeredName} />;
-
       case "textarea":
         return (
           <textarea
@@ -152,6 +151,15 @@ export default function FieldRenderer( {
           />
         );
       }
+
+      case "color":
+        return <ControlledColorInput name={registeredName} />;
+
+      case "image":
+        return <ControlledImageInput name={registeredName} />;
+
+      case "images-stack":
+        return <ControlledImagesStackInput name={registeredName} />;
 
       case "text":
       default:

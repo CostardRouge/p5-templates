@@ -1,5 +1,5 @@
 import {
-  ContentItem, PatternSchema, Blend, HorizontalAlign, VerticalAlign
+  ContentItem, PatternSchema, Blend, HorizontalAlign, VerticalAlign, ImageItemAnimations
 } from "@/types/sketch.types";
 
 import {
@@ -49,8 +49,8 @@ interface ColorInputConfig extends BaseConfig {
 interface SelectConfig extends BaseConfig {
   component: "select";
   options: Array<{
- label: string; value: string | number
-}>;
+    label: string; value: string | number
+  }>;
 }
 
 // For static, non-conditional nested objects
@@ -74,6 +74,26 @@ export interface ConditionalGroupConfig extends BaseConfig {
   schema: ZodDiscriminatedUnion<any, any> | ZodObject<any>;
 }
 
+type Scope = "global" | {
+ slide: number
+};
+
+interface ImageConfig extends BaseConfig {
+  component: "image";
+  assetsName?: string;
+  scope?: Scope;
+  jobId?: string;
+  label?: string;
+}
+
+interface ImagesStackConfig extends BaseConfig {
+  component: "images-stack";
+  assetsName?: string;
+  scope?: Scope;
+  jobId?: string;
+  label?: string;
+}
+
 // Step 3: Create the master Discriminated Union
 // This tells TypeScript: "If component is 'select', then it MUST have an 'options' property."
 export type FieldConfig =
@@ -84,7 +104,9 @@ export type FieldConfig =
   | ColorInputConfig
   | SelectConfig
   | NestedObjectConfig
-  | ConditionalGroupConfig;
+  | ConditionalGroupConfig
+  | ImagesStackConfig
+  | ImageConfig;
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema
@@ -320,9 +342,9 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     },
   },
   image: {
-    index: {
-      label: "Image index",
-      component: "number",
+    source: {
+      label: "Source",
+      component: "image"
     },
     margin: {
       label: "Margin",
@@ -358,6 +380,60 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
           max: 1
         }
       }
+    },
+    animation: {
+      label: "Animation",
+      component: "conditional-group",
+      conditionalOn: "name",
+      typeSelector: {
+        options: [
+          {
+            label: "Noise floating",
+            value: "noise-floating"
+          },
+        ],
+      },
+      configs: {
+        "noise-floating": {
+          amplitude: {
+            label: "Amplitude",
+            component: "number",
+            step: 1
+          },
+          noiseDetail: {
+            label: "Noise detail",
+            component: "nested-object",
+            fields: {
+              0: {
+                label: "lod",
+                component: "number",
+                step: 0.5
+              },
+              1: {
+                label: "falloff",
+                component: "number",
+                step: 0.5
+              }
+            }
+          },
+        }
+      },
+
+      schema: ImageItemAnimations,
+    },
+  },
+  "images-stack": {
+    sources: {
+      label: "Sources",
+      component: "images-stack"
+    },
+    margin: {
+      label: "Margin",
+      component: "number",
+    },
+    shift: {
+      label: "Shift",
+      component: "number",
     },
   }
   // Add other types like 'image', 'video' here

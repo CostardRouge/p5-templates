@@ -103,16 +103,6 @@ const BackgroundItem = z.object( {
   pattern: PatternSchema,
 } );
 
-const ImagesStackItem = z.object( {
-  type: z.literal( "images-stack" ),
-  margin: z.number().nonnegative()
-    .optional(),
-  center: z.boolean().default( false ),
-  position: Vec2.optional(),
-  animation: z.string().optional(),
-  shift: z.number().default( 30 ),
-} );
-
 const MetaItem = z.object( {
   type: z.literal( "meta" ),
   topRight: z.string().default( "" ),
@@ -177,10 +167,27 @@ const TextItem = z.object( {
   ] ),
 } );
 
-const ImageItem = z.object( {
+export const ImageItemAnimations = z.discriminatedUnion(
+  "name",
+  [
+    z
+      .object( {
+        name: z.literal( "noise-floating" ),
+        amplitude: z.number().default( 50 ),
+        noiseDetail: z.array( z.number().min( 2 ) ).default( [
+          2,
+          0.7
+        ] )
+      } )
+  ]
+);
+
+const ImageItemSchema = z.object( {
   type: z.literal( "image" ),
-  index: z.number().int()
-    .nonnegative(),
+  source: z.string().min(
+    1,
+    "Image is required"
+  ),
   margin: z.number().nonnegative()
     .default( 0 ),
   center: z.boolean().optional()
@@ -188,13 +195,18 @@ const ImageItem = z.object( {
   scale: z.number().positive()
     .optional(),
   position: Vec2.optional(),
-  animation: z
-    .object( {
-      name: z.string(),
-      amplitude: z.number().optional(),
-      noiseDetail: z.number().optional(),
-    } )
+  animation: ImageItemAnimations
+} );
+
+const ImagesStackItem = z.object( {
+  type: z.literal( "images-stack" ),
+  margin: z.number().nonnegative()
     .optional(),
+  center: z.boolean().default( false ),
+  position: Vec2.optional(),
+  animation: z.string().optional(),
+  shift: z.number().default( 30 ),
+  sources: z.array( z.string().min( 1 ) ).min( 1 ),
 } );
 
 const VideoItem = z.object( {
@@ -212,9 +224,10 @@ export const ContentItemSchema = z.discriminatedUnion(
     TextItem,
 
     ImagesStackItem,
-    ImageItem,
-    VideoItem,
-    VisualItem,
+    ImageItemSchema,
+
+    // VideoItem,
+    // VisualItem,
   ]
 );
 
