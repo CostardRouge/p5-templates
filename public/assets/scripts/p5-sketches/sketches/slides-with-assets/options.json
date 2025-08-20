@@ -38,8 +38,10 @@
             "x": 0.5,
             "y": 0.5625
           },
-          "animation": "random",
-          "shift": 80
+          "animation": {
+            "name": "random",
+            "shift": 80
+          }
         },
         {
           "type": "text",

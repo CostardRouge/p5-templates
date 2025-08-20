@@ -118,7 +118,7 @@ export default function ControlledImagesStackInput( {
               />
             ) )}
           </SortableContext>
-          <DropZoneButton onFiles={onFiles} multiple label="Add images" className="h-20 items-center justify-center" />
+          <DropZoneButton onFiles={onFiles} multiple className="h-20" />
         </div>
       </DndContext>
       {fieldState.error && <p className="text-xs text-red-500">{fieldState.error.message?.toString()}</p>}

@@ -78,7 +78,7 @@ export default function ControlledImageInput( {
   return (
     <div className="flex flex-col gap-2">
       {!field.value ? (
-        <DropZoneButton onFiles={onFiles} label="Tap to add or drop an image" />
+        <DropZoneButton onFiles={onFiles} />
       ) : (
         <div className="relative">
           {resolved ? (

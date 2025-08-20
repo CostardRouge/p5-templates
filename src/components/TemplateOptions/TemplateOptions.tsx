@@ -16,7 +16,7 @@ import {
   SketchOption
 } from "@/types/sketch.types";
 
-import ImageAssets from "@/components/TemplateOptions/components/ImageAssets";
+// import ImageAssets from "@/components/TemplateOptions/components/ImageAssets";
 import CaptureActions from "@/components/TemplateOptions/components/CaptureActions";
 import SlideCarousel from "./components/SlideCarousel";
 
@@ -73,8 +73,9 @@ export default function TemplateOptions( {
   };
 
   const methods = useForm<SketchOption>( {
+    mode: "onChange",
     resolver: zodResolver( OptionsSchema ),
-    defaultValues: options,
+    defaultValues: options
   } );
 
   const {
@@ -155,12 +156,12 @@ export default function TemplateOptions( {
             <ContentLayerListForm baseFieldName="content" />
           </TemplateAssetsProvider>
 
-          <span className="px-1 text-xs text-gray-500">root.assets.images</span>
-          <ImageAssets
-            assets={options?.assets}
-            scope="global"
-            id={options.id}
-          />
+          {/* <span className="px-1 text-xs text-gray-500">root.assets.images</span>*/}
+          {/* <ImageAssets*/}
+          {/*  assets={options?.assets}*/}
+          {/*  scope="global"*/}
+          {/*  id={options.id}*/}
+          {/* />*/}
         </div>
 
         { slideFields && (

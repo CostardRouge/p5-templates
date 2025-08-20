@@ -20,8 +20,6 @@ export default function drawSlideImagesStack(
     easing.easeInOutBack
   );
 
-  const shiftMargin = imagesStackOption.shift || 80;
-
   for ( let i = 0; i < images.length; i++ ) {
     if ( imageIndexDisplay < i ) {
       return;
@@ -32,24 +30,28 @@ export default function drawSlideImagesStack(
       height * imagesStackOption.position.y
     );
 
-    if ( imagesStackOption.animation === "random" ) {
-      imagePosition
-        .add(
-          map(
-            noise( i ),
-            0,
-            1,
-            -shiftMargin,
-            shiftMargin
-          ),
-          map(
-            noise( i ),
-            0,
-            1,
-            -shiftMargin,
-            shiftMargin
-          ),
-        );
+    if ( imagesStackOption.animation ) {
+      if ( imagesStackOption.animation.name === "random" ) {
+        const randomShiftMargin = imagesStackOption.animation.shift || 80;
+
+        imagePosition
+          .add(
+            map(
+              noise( i ),
+              0,
+              1,
+              -randomShiftMargin,
+              randomShiftMargin
+            ),
+            map(
+              noise( i ),
+              0,
+              1,
+              -randomShiftMargin,
+              randomShiftMargin
+            ),
+          );
+      }
     }
 
     imageUtils.marginImage( {

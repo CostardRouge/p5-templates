@@ -3,7 +3,7 @@ import {
   SketchOption
 } from "@/types/sketch.types";
 import ContentLayerListForm from "./ContentLayerListForm/ContentLayerListForm";
-import ImageAssets from "@/components/TemplateOptions/components/ImageAssets";
+// import ImageAssets from "@/components/TemplateOptions/components/ImageAssets";
 import {
   TemplateAssetsProvider
 } from "@/components/TemplateAssetsContext";
@@ -31,20 +31,20 @@ export default function SlideEditor( {
         scope={{
           slide: activeIndex
         }}
-        assetsName={`${ baseContentFieldName }.assets.images`}
+        assetsName={`${ baseContentFieldName }.assets`}
         jobId={options.id}
       >
         <ContentLayerListForm baseFieldName={`${ baseContentFieldName }.content`} />
       </TemplateAssetsProvider>
 
-      <span className="px-1 mt-2 text-xs text-gray-500">root.slides[{activeIndex}].assets.images</span>
-      <ImageAssets
-        id={options.id}
-        assets={slide.assets}
-        scope={{
-          slide: activeIndex
-        }}
-      />
+      {/* <span className="px-1 mt-2 text-xs text-gray-500">root.slides[{activeIndex}].assets.images</span>*/}
+      {/* <ImageAssets*/}
+      {/*  id={options.id}*/}
+      {/*  assets={slide.assets}*/}
+      {/*  scope={{*/}
+      {/*    slide: activeIndex*/}
+      {/*  }}*/}
+      {/* />*/}
     </div>
   );
 }

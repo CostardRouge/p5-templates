@@ -17,7 +17,7 @@ export default function ItemFormWrapper( {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
-      className="p-1 border rounded-sm bg-white hover:shadow-md"
+      className="p-1 border rounded-sm bg-white hover:shadow"
       header={expanded => (
         <div className={
           clsx(

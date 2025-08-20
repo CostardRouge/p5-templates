@@ -1,4 +1,3 @@
-// TemplateAssetsContext.tsx
 "use client";
 import React, {
   createContext, useContext
@@ -47,5 +46,6 @@ export function useTemplateAssets() {
       jobId: undefined
     };
   }
+
   return ctx;
 }

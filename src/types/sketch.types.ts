@@ -147,9 +147,12 @@ const TextItem = z.object( {
     0,
     255
   ] ),
-  font: z.string().optional(),
+  font: z.string().default( "martian" ),
   blend: Blend.optional(),
-  position: Vec2.optional(),
+  position: Vec2.default( {
+    x: 0.5,
+    y: 0.5
+  } ),
   horizontalMargin: z.number()
     .min( 0 )
     .max( 1 )
@@ -182,6 +185,17 @@ export const ImageItemAnimations = z.discriminatedUnion(
   ]
 );
 
+export const ImagesStackAnimations = z.discriminatedUnion(
+  "name",
+  [
+    z
+      .object( {
+        name: z.literal( "random" ),
+        shift: z.number().default( 80 ),
+      } )
+  ]
+);
+
 const ImageItemSchema = z.object( {
   type: z.literal( "image" ),
   source: z.string().min(
@@ -190,11 +204,13 @@ const ImageItemSchema = z.object( {
   ),
   margin: z.number().nonnegative()
     .default( 0 ),
-  center: z.boolean().optional()
-    .default( true ),
+  center: z.boolean().default( true ),
   scale: z.number().positive()
-    .optional(),
-  position: Vec2.optional(),
+    .default( 1 ),
+  position: Vec2.default( {
+    x: 0.5,
+    y: 0.5
+  } ),
   animation: ImageItemAnimations
 } );
 
@@ -203,8 +219,11 @@ const ImagesStackItem = z.object( {
   margin: z.number().nonnegative()
     .optional(),
   center: z.boolean().default( false ),
-  position: Vec2.optional(),
-  animation: z.string().optional(),
+  position: Vec2.default( {
+    x: 0.5,
+    y: 0.5
+  } ),
+  animation: ImagesStackAnimations,
   shift: z.number().default( 30 ),
   sources: z.array( z.string().min( 1 ) ).min( 1 ),
 } );
@@ -236,21 +255,18 @@ export const Assets = z
     images: z
       .array( z.string() )
       .default( [
-      ] )
-      .optional(),
+      ] ),
     videos: z.
       array( z.string() )
       .default( [
-      ] )
-      .optional(),
+      ] ),
   } )
   .default( {
-  } )
-  .optional();
+  } );
 
 /* ---------------- slide schema (with name) ---------------------- */
 export const Slide = z.object( {
-  name: z.string().optional(),
+  name: z.string().default( "new slide" ),
   layout: z.string(),
   content: z.array( ContentItemSchema ),
   assets: Assets
@@ -260,7 +276,7 @@ export const Slide = z.object( {
 export const OptionsSchema = z.object( {
   id: z.string().optional(),
   name: z.string().optional(),
-  consumeTestImages: z.boolean().optional( ),
+  consumeTestImages: z.boolean().default( false ),
   size: z.object( {
     width: z
       .number()
@@ -272,7 +288,7 @@ export const OptionsSchema = z.object( {
       .int()
       .positive()
       .default( 1350 ),
-  } ).optional(),
+  } ),
   animation: z.object( {
     framerate: z
       .number()
@@ -283,13 +299,13 @@ export const OptionsSchema = z.object( {
       .number()
       .positive()
       .default( 12 ),
-  } ).optional(),
+  } ),
   layout: z.string().default( "free" ),
-  content: z.array( ContentItemSchema ).optional()
+  content: z.array( ContentItemSchema )
     .default( [
     ] ),
   assets: Assets,
-  slides: z.array( Slide ).optional()
+  slides: z.array( Slide )
     .default( [
     ] ),
 } );

@@ -19,6 +19,7 @@ import {
 import {
   SketchOption
 } from "@/types/sketch.types";
+import initOptions from "@/components/utils/initOptions";
 
 export const metadata: Metadata = {
   title: "Social-templates-renderer | p5js",
@@ -92,6 +93,7 @@ async function ProcessingSketch( {
   }
 
   sketchOptions.name = sketchName;
+  // processingSketchProps.options = initOptions( sketchOptions );
 
   return (
     <ClientProcessingSketch

@@ -1,10 +1,12 @@
 import React, {
   useRef
 } from "react";
+import {
+  Plus
+} from "lucide-react";
 
 type DropZoneButtonProps = {
   onFiles: ( files: FileList ) => void | Promise<void>;
-  label?: string;
   multiple?: boolean;
   className?: string;
   capture?: "environment" | "user";
@@ -13,7 +15,6 @@ type DropZoneButtonProps = {
 
 export default function DropZoneButton( {
   onFiles,
-  label = "Add image(s)",
   multiple = false,
   className = "",
   capture = "environment",
@@ -23,7 +24,7 @@ export default function DropZoneButton( {
 
   return (
     <div
-      className={`border border-dashed border-gray-300 rounded-md p-3 flex flex-col items-center justify-center gap-2 text-gray-500 bg-white ${ className }`}
+      className={`border border-dashed border-gray-300 rounded-sm p-3 flex flex-col items-center justify-center gap-2 text-gray-500 bg-white ${ className }`}
       onClick={() => inputRef.current?.click()}
       onDragOver={( e ) => e.preventDefault()}
       onDrop={async( e ) => {
@@ -33,17 +34,7 @@ export default function DropZoneButton( {
       role="button"
       tabIndex={0}
     >
-      <span className="text-xs">{label}</span>
-      <button
-        type="button"
-        onClick={( e ) => {
-          e.stopPropagation();
-          inputRef.current?.click();
-        }}
-        className="inline-flex items-center gap-1 text-sm p-1 border rounded-sm bg-gray-100 hover:bg-gray-200"
-      >
-        Upload
-      </button>
+      <Plus className="h-6 w-6 text-gray-400 " />
 
       <input
         ref={inputRef}

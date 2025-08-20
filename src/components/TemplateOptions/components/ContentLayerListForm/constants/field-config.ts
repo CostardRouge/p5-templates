@@ -1,5 +1,5 @@
 import {
-  ContentItem, PatternSchema, Blend, HorizontalAlign, VerticalAlign, ImageItemAnimations
+  ContentItem, PatternSchema, Blend, HorizontalAlign, VerticalAlign, ImageItemAnimations, ImagesStackAnimations
 } from "@/types/sketch.types";
 
 import {
@@ -431,9 +431,53 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       label: "Margin",
       component: "number",
     },
-    shift: {
-      label: "Shift",
-      component: "number",
+    center: {
+      label: "Center",
+      component: "checkbox",
+    },
+    position: {
+      label: "Position",
+      component: "nested-object",
+      fields: {
+        x: {
+          label: "x",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        },
+        y: {
+          label: "y",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        }
+      }
+    },
+    animation: {
+      label: "Animation",
+      component: "conditional-group",
+      conditionalOn: "name",
+      typeSelector: {
+        options: [
+          {
+            label: "Random",
+            value: "random"
+          },
+        ],
+      },
+      configs: {
+        random: {
+          shift: {
+            label: "Shift",
+            component: "number",
+            step: 1
+          },
+        }
+      },
+
+      schema: ImagesStackAnimations,
     },
   }
   // Add other types like 'image', 'video' here

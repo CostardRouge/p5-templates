@@ -30,21 +30,21 @@ export default function ContentLayerListForm( {
   ) as "layout" | `slides.${ number }.layout`;
 
   return (
-    <div className="px-1 text-xs flex flex-col gap-1">
+    <div className="text-xs flex flex-col gap-1">
       {/* --- Layout Selector --- */}
-      <label htmlFor={`${ layoutFieldName }-select`} className="mr-1 ">layout</label>
-      <select
-        id={`${ layoutFieldName }-select`}
-        {...register( layoutFieldName )}
-        className="px-1 border rounded-sm w-full h-8"
-      >
-        <option value="free">free</option>
-        <option value="grid">stack</option>
-        <option value="grid">grid</option>
-      </select>
+      {/* <label htmlFor={`${ layoutFieldName }-select`} className="mr-1 ">layout</label>*/}
+      {/* <select*/}
+      {/*  id={`${ layoutFieldName }-select`}*/}
+      {/*  {...register( layoutFieldName )}*/}
+      {/*  className="px-1 border rounded-sm w-full h-8"*/}
+      {/* >*/}
+      {/*  <option value="free">free</option>*/}
+      {/*  <option value="grid">stack</option>*/}
+      {/*  <option value="grid">grid</option>*/}
+      {/* </select>*/}
 
       {/* --- Dynamic Content Items --- */}
-      <div className="flex flex-col gap-1 p">
+      <div className="flex flex-col gap-1 p-1">
         {fields.map( (
           field, index
         ) => (
