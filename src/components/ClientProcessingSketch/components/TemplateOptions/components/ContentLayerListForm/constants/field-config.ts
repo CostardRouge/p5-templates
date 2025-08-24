@@ -349,6 +349,9 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     margin: {
       label: "Margin",
       component: "number",
+      step: 1,
+      min: 0,
+      max: 1000
     },
     center: {
       label: "Center",

@@ -1,0 +1,67 @@
+{
+  "animation": {
+    "framerate": 60,
+    "duration": 20
+  },
+
+  "layout": "free",
+  "content": [
+    {
+      "type": "meta",
+      "topRight": "",
+      "topLeft": "@costardrouge.jpg",
+      "bottomLeft": "AUGUST 2025 · p5*js + video generation stack",
+      "stroke": [226, 215, 205],
+      "fill": [18, 18, 18]
+    }
+  ],
+
+  "slides": [
+    {
+      "layout": "free",
+      "content": [
+        {
+          "type": "background",
+          "background": [246, 235, 225],
+          "pattern": {
+            "type": "grid",
+            "columns": 8,
+            "strokeWeight": 1,
+            "stroke": [226, 215, 205]
+          }
+        },
+        {
+          "type": "image"
+        },
+        {
+          "type": "images-stack",
+          "margin": 165,
+          "center": true,
+          "position": {
+            "x": 0.5,
+            "y": 0.5625
+          },
+          "animation": {
+            "name": "random",
+            "shift": 80
+          }
+        },
+        {
+          "type": "text",
+          "content": "slide #1",
+          "size": 128,
+          "stroke": [0],
+          "fill": [230],
+          "blend": "exclusion",
+          "position": {
+            "x": 0,
+            "y": 0.15
+          },
+          "align": [
+            "center"
+          ]
+        }
+      ]
+    }
+  ]
+}

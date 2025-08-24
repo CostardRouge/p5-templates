@@ -81,6 +81,7 @@ export default function P5Sketch( {
           // @ts-ignore
           window.removeLoadedScripts?.();
         } catch {
+          console.log( "error" );
           /* ignore */
         }
       };

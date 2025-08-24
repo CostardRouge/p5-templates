@@ -6,6 +6,9 @@
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
       <excludeFolder url="file://$MODULE_DIR$/src/generated" />
+      <excludeFolder url="file://$MODULE_DIR$/public/assets/libraries" />
+      <excludeFolder url="file://$MODULE_DIR$/public/assets/scripts/mediapipe" />
+      <excludeFolder url="file://$MODULE_DIR$/public/assets/scripts/p5-sketches/libraries" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

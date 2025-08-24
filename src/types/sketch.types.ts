@@ -191,21 +191,26 @@ export const ImagesStackAnimations = z.discriminatedUnion(
     z
       .object( {
         name: z.literal( "random" ),
-        shift: z.number().default( 80 ),
+        shift: z.number().default( 30 ),
       } )
   ]
 );
 
 const ImageItemSchema = z.object( {
   type: z.literal( "image" ),
-  source: z.string().min(
-    1,
-    "Image is required"
-  ),
-  margin: z.number().nonnegative()
+  source: z.string()
+    .min(
+      1,
+      "Image is required"
+    ),
+  margin: z.number()
+    .min( 0 )
+    .max( 1000 )
     .default( 0 ),
   center: z.boolean().default( true ),
-  scale: z.number().positive()
+  scale: z.number()
+    .min( 0 )
+    .max( 1 )
     .default( 1 ),
   position: Vec2.default( {
     x: 0.5,
@@ -224,7 +229,6 @@ const ImagesStackItem = z.object( {
     y: 0.5
   } ),
   animation: ImagesStackAnimations,
-  shift: z.number().default( 30 ),
   sources: z.array( z.string().min( 1 ) ).min( 1 ),
 } );
 

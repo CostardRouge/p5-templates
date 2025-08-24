@@ -9,14 +9,14 @@ import ExifInfo from "./components/ExifInfo";
 import ExifReader from "exifreader";
 import {
   ExifData
-} from "@/types/types";
+} from "./types/ExifData";
 
 import "./exif-detail.css";
 
 import {
   ExternalLink, Loader, SaveIcon
 } from "lucide-react";
-import ScalableViewport from "@/components/ScalableViewport";
+import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 
 const supportedObjectStyles = [
   "object-cover",

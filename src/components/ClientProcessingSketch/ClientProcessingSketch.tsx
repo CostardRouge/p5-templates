@@ -19,11 +19,11 @@ import type {
   SketchOption
 } from "@/types/sketch.types";
 
-import P5Sketch from "@/components/P5Sketch";
-import ScalableViewport from "@/components/ScalableViewport";
+import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
+import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 
 const TemplateOptions = dynamic(
-  () => import( "@/components/TemplateOptions/TemplateOptions" ),
+  () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ),
   {
     ssr: false,
   }

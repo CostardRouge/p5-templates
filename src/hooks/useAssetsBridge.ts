@@ -2,10 +2,10 @@
 import {
   useFormContext
 } from "react-hook-form";
-import useAssetDrop from "@/hooks/useAssetDrop";
-import {
-  useTemplateAssets
-} from "@/components/TemplateAssetsContext";
+import useAssetDrop, {
+  AssetType
+} from "@/hooks/useAssetDrop";
+import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
 
 function countImageRefs(
   slides: any[], target: string
@@ -84,18 +84,26 @@ export default function useAssetsBridge() {
     }
   }
 
-  async function uploadFiles( files: FileList ): Promise<string[]> {
-    if ( !files || files.length === 0 ) return [
-    ];
+  async function uploadFiles(
+    files: FileList, type: AssetType = "images"
+  ): Promise<string[]> {
+    if ( !files || files.length === 0 ) {
+      return [
+      ];
+    }
+
     const newPaths = ( await addAssets( {
+      type,
       files,
-      type: "images",
       scope
     } ) ) as unknown as string[] | undefined;
+
     const paths = newPaths ?? [
     ];
 
-    if ( paths.length ) ensureInAssets( paths );
+    if ( paths.length ) {
+      ensureInAssets( paths );
+    }
     return paths;
   }
 

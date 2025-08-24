@@ -1,10 +1,7 @@
 "use client";
 
 import {
-  useState
-} from "react";
-import {
-  ArrowDownFromLine, ArrowUpFromLine
+  ArrowDownFromLine
 } from "lucide-react";
 
 import CollapsibleItem from "@/components/CollapsibleItem";

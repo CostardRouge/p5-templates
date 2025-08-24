@@ -4,9 +4,7 @@ import {
 } from "@/types/sketch.types";
 import ContentLayerListForm from "./ContentLayerListForm/ContentLayerListForm";
 // import ImageAssets from "@/components/TemplateOptions/components/ImageAssets";
-import {
-  TemplateAssetsProvider
-} from "@/components/TemplateAssetsContext";
+import TemplateAssetsProvider from "../components/TemplateAssetsProvider/TemplateAssetsProvider";
 
 type SlideEditorProps = {
   activeIndex: number;

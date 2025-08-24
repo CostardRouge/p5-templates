@@ -6,7 +6,7 @@ import React, {
 } from "react";
 
 import clamp from "@/utils/clamp";
-import ZoomControls from "@/components/ZoomControls";
+import ZoomControls from "@/components/ScalableViewport/components/ZoomControls";
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */

@@ -5,7 +5,17 @@ import {
 export default function drawSlideImagesStack(
   imagesStackOption, slideOptions
 ) {
+  const sources = imagesStackOption?.sources;
+
+  if ( !sources ) {
+    return;
+  }
+
   const images = common.getAssets( slideOptions );
+
+  console.log( {
+    images
+  } );
 
   if ( !images || !images.length ) {
     return;

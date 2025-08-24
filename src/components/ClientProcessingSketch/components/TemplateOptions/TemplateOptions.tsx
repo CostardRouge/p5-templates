@@ -16,16 +16,12 @@ import {
   SketchOption
 } from "@/types/sketch.types";
 
-// import ImageAssets from "@/components/TemplateOptions/components/ImageAssets";
-import CaptureActions from "@/components/TemplateOptions/components/CaptureActions";
-import SlideCarousel from "./components/SlideCarousel";
-
 import ContentLayerListForm from "./components/ContentLayerListForm/ContentLayerListForm";
+import CaptureActions from "./components/CaptureActions";
+import SlideCarousel from "./components/SlideCarousel";
 import SlideEditor from "./components/SlideEditor";
 
-import {
-  TemplateAssetsProvider
-} from "@/components/TemplateAssetsContext";
+import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
 
 import {
   FormProvider,
@@ -74,8 +70,8 @@ export default function TemplateOptions( {
 
   const methods = useForm<SketchOption>( {
     mode: "onChange",
-    resolver: zodResolver( OptionsSchema ),
-    defaultValues: options
+    defaultValues: options,
+    resolver: zodResolver( OptionsSchema )
   } );
 
   const {

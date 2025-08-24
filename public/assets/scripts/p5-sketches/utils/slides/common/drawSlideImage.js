@@ -5,13 +5,7 @@ import {
 export default function drawSlideImage(
   imageOption, slideOptions
 ) {
-  const images = common.getAssets( slideOptions );
-
-  if ( !images || !images.length ) {
-    return;
-  }
-
-  const image = images[ imageOption.index ];
+  const image = common.getAsset( imageOption.source );
 
   if ( !image ) {
     return;
@@ -24,11 +18,13 @@ export default function drawSlideImage(
 
   if ( imageOption.animation ) {
     if ( imageOption.animation.name === "noise-floating" ) {
-      noiseDetail( ...imageOption.animation.noiseDetail );
+      noiseDetail( ...imageOption?.animation?.noiseDetail ?? [
+        2,
+        0.7
+      ] );
 
-      const imageAngle = noise(
-        animation.angle,
-        imageOption.index
+      const imageAngle = noise( animation.angle,
+        // imageOption.index
       ) * TAU;
 
       imagePosition.add(

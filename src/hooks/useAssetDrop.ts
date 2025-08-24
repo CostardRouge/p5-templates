@@ -23,7 +23,7 @@ type Scope = "global" | {
   slide: number
 };
 
-type AssetType = "images" | "videos" | "audios" | "json";
+export type AssetType = "images" | "videos" | "audios" | "json";
 
 export default function useAssetDrop() {
   async function addAssets( {
@@ -35,6 +35,8 @@ export default function useAssetDrop() {
     type: AssetType;
     scope: Scope;
   } ) {
+    const registeredBlobNames = [
+    ];
     const opts = structuredClone( getSketchOptions() );
 
     const targetArray = resolveArray(
@@ -54,6 +56,7 @@ export default function useAssetDrop() {
         registeredBlobName,
         file
       );
+      registeredBlobNames.push( registeredBlobName );
       targetArray.push( registeredBlobName );
     }
 
@@ -61,6 +64,8 @@ export default function useAssetDrop() {
       opts,
       "react"
     );
+
+    return registeredBlobNames;
   }
 
   function removeAsset( {

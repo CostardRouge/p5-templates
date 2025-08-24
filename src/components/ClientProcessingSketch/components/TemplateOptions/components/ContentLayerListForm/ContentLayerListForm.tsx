@@ -3,7 +3,7 @@ import {
   useFieldArray, useFormContext
 } from "react-hook-form";
 
-import GenericItemForm from "@/components/TemplateOptions/components/ContentLayerListForm/components/GenericItemForm";
+import GenericItemForm from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentLayerListForm/components/GenericItemForm";
 
 type ContentLayerListFormProps = {
   baseFieldName: "content" | `slides.${ number }.content`;

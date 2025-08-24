@@ -7,7 +7,7 @@ import listDirectory from "@/utils/listDirectory";
 import getSketchOptions from "@/utils/getSketchOptions";
 import ClientProcessingSketch, {
   ClientProcessingSketchProps
-} from "@/components/ClientProcessingSketch";
+} from "@/components/ClientProcessingSketch/ClientProcessingSketch";
 
 import getCaptureOptions from "@/utils/getCaptureOptions";
 import {

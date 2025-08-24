@@ -17,9 +17,8 @@ import {
   Trash2, GripVertical
 } from "lucide-react";
 import useAssetsBridge from "@/hooks/useAssetsBridge";
-import {
-  useTemplateAssets
-} from "@/components/TemplateAssetsContext";
+import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
+
 import DropZoneButton from "@/components/DropZoneButton";
 import {
   resolveAssetURL
