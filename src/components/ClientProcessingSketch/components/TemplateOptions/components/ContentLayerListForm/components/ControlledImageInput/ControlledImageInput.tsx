@@ -41,12 +41,6 @@ export default function ControlledImageInput( {
     jobId
   } = useTemplateAssets();
 
-  console.log( {
-    name,
-    field,
-    fieldState
-  } );
-
   const [
     preview,
     setPreview
@@ -74,17 +68,12 @@ export default function ControlledImageInput( {
     const paths = await uploadFiles( files );
 
     if ( paths.length ) {
-      console.log(
-        "onFiles",
-        paths
-      );
       field.onChange( paths[ 0 ] );
     }
     setPreview( null );
   }
 
   function clear() {
-    console.log( "clear" );
     const prev = field.value;
 
     field.onChange( undefined );
@@ -98,14 +87,16 @@ export default function ControlledImageInput( {
   return (
     <div className="flex flex-col gap-2">
       {!field.value ? (
-        <DropZoneButton onFiles={onFiles} />
+        <div className="grid grid-cols-3 gap-1 h-20">
+          <DropZoneButton onFiles={onFiles}/>
+        </div>
       ) : (
         <div className="relative">
           {resolved ? (
             <img src={resolved} alt={field.value}
-              className="w-full h-20  object-cover rounded-sm border border-gray-300"/>
+              className="aspect-square w-20 object-cover rounded-sm border border-gray-300"/>
           ) : (
-            <div className="w-full h-20 rounded-sm border border-gray-200 bg-gray-100 animate-pulse"/>
+            <div className="aspect-square w-20 h-20 rounded-sm border border-gray-200 bg-gray-100 animate-pulse"/>
           )}
 
           <div
@@ -123,13 +114,12 @@ export default function ControlledImageInput( {
           <button
             type="button"
             onClick={clear}
-            className="pointer absolute z-100 top-2 right-2 inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-white/90 hover:bg-white border border-gray-200 text-red-600"
+            className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-white/90 hover:bg-white rounded border border-gray-200 p-0.5"
           >
             <Trash2 className="w-3.5 h-3.5"/>
           </button>
         </div>
       )}
-      {fieldState.error && <p className="text-xs text-red-500">{fieldState.error.message?.toString()}</p>}
     </div>
   );
 }

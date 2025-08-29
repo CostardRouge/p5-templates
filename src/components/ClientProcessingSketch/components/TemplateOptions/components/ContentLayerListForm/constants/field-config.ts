@@ -182,22 +182,22 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     topLeft: {
       label: "Top left",
       component: "text",
-      placeholder: "@costardrouge.jpg"
+      placeholder: "Text on the top left corner"
     },
     topRight: {
       label: "Top right",
       component: "text",
-      placeholder: "AUGUST 2025"
+      placeholder: "Text on the top right corner"
     },
     bottomLeft: {
       label: "Bottom left",
       component: "text",
-      placeholder: "Social pipeline"
+      placeholder: "Text on the bottom left corner"
     },
     bottomRight: {
       label: "Bottom right",
       component: "text",
-      placeholder: "#42"
+      placeholder: "Text on the bottom right corner"
     },
     slideProgression: {
       label: "Slide progression",
@@ -409,13 +409,17 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
             fields: {
               0: {
                 label: "lod",
-                component: "number",
-                step: 0.5
+                component: "slider",
+                step: 0.1,
+                min: 0,
+                max: 8
               },
               1: {
                 label: "falloff",
-                component: "number",
-                step: 0.5
+                component: "slider",
+                step: 0.1,
+                min: 0,
+                max: 1
               }
             }
           },
@@ -465,7 +469,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       typeSelector: {
         options: [
           {
-            label: "Random",
+            label: "Random move",
             value: "random"
           },
         ],
@@ -475,7 +479,9 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
           shift: {
             label: "Shift",
             component: "number",
-            step: 1
+            step: 1,
+            min: 1,
+            max: 30
           },
         }
       },

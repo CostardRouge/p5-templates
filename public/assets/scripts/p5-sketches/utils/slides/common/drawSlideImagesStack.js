@@ -11,11 +11,11 @@ export default function drawSlideImagesStack(
     return;
   }
 
-  const images = common.getAssets( slideOptions );
-
-  console.log( {
-    images
-  } );
+  const images = common.getAssets(
+    slideOptions,
+    "images",
+    sources
+  );
 
   if ( !images || !images.length ) {
     return;

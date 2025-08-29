@@ -59,7 +59,7 @@ export default function FieldRenderer( {
             type="checkbox"
             {...commonInputProps}
             {...register( registeredName )}
-            className={`${ commonInputProps.className } block w-auto`}
+            className={`${ commonInputProps.className } block w-fit`}
           />
         );
 
@@ -117,7 +117,6 @@ export default function FieldRenderer( {
           </select>
         );
 
-      // --- NEW: Static Nested Object ---
       case "nested-object":
         return (
           <Fragment>
@@ -141,11 +140,10 @@ export default function FieldRenderer( {
           </Fragment>
         );
 
-      // --- NEW: Conditional Group ---
       case "conditional-group": {
         return (
           <ConditionalGroup
-            basePath={registeredName} // Pass its own full name as the base path for its children
+            basePath={registeredName}
             selectClassName={commonInputProps.className}
             config={config}
           />

@@ -23,9 +23,7 @@ export default function drawSlideImage(
         0.7
       ] );
 
-      const imageAngle = noise( animation.angle,
-        // imageOption.index
-      ) * TAU;
+      const imageAngle = noise( animation.angle ) * TAU;
 
       imagePosition.add(
         mappers.fn(

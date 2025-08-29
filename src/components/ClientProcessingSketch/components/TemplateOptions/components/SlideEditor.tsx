@@ -18,7 +18,7 @@ export default function SlideEditor( {
   const slide = options.slides?.[ activeIndex ];
 
   if ( !slide ) {
-    return <div className="p-2 text-gray-500">Select a slide to edit.</div>;
+    return <div className="p-1 text-gray-500 text-center text-xs border-r border-l border-gray-300">Select a slide to edit.</div>;
   }
 
   return (

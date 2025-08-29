@@ -39,10 +39,12 @@ export function deepMerge(
 }
 
 export function getAssets(
-  options, type = "images"
+  options, type = "images", paths = undefined
 ) {
-  return options.assets?.[ type ]?.map( p =>
-    cache.get( `${ type }Map` ).get( p ) ).filter( Boolean ) || [
+  return ( paths || options.assets?.[ type ] )
+    ?.map( path =>
+      cache.get( `${ type }Map` ).get( path ) )
+    .filter( Boolean ) || [
   ];
 }
 

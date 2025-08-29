@@ -29,7 +29,10 @@ export default function DropZoneButton( {
       onDragOver={( e ) => e.preventDefault()}
       onDrop={async( e ) => {
         e.preventDefault();
-        if ( e.dataTransfer.files?.length ) await onFiles( e.dataTransfer.files );
+
+        if ( e.dataTransfer.files?.length ) {
+          await onFiles( e.dataTransfer.files );
+        }
       }}
       role="button"
       tabIndex={0}

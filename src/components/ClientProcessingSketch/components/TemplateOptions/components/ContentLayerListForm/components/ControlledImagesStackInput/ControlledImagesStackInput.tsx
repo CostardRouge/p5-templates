@@ -117,10 +117,10 @@ export default function ControlledImagesStackInput( {
               />
             ) )}
           </SortableContext>
-          <DropZoneButton onFiles={onFiles} multiple className="h-20" />
+
+          <DropZoneButton onFiles={onFiles} multiple className="h-20"/>
         </div>
       </DndContext>
-      {fieldState.error && <p className="text-xs text-red-500">{fieldState.error.message?.toString()}</p>}
     </div>
   );
 }
@@ -141,15 +141,18 @@ function SortableThumb( {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative h-20 bg-white rounded border border-gray-200">
-      <GripVertical className="absolute right-1 top-1 h-4 w-4 text-gray-600 cursor-grab active:cursor-grabbing" {...attributes} {...listeners} />
+    <div ref={setNodeRef} style={style} className="relative h-20 bg-white rounded-sm border border-gray-200">
+      <GripVertical
+        className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-white/90 hover:bg-white rounded-sm border border-gray-200"
+        {...attributes} {...listeners}
+      />
       <button
         type="button"
         onClick={( e ) => { e.stopPropagation(); onDelete(); }}
-        className="absolute left-1 top-1 h-5 w-5 text-red-600 bg-white/90 hover:bg-white rounded p-0.5"
+        className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-white/90 hover:bg-white rounded border border-gray-200 p-0.5"
         aria-label="Remove image"
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-3.5 w-3.5" />
       </button>
       <img src={url} className="object-cover h-full w-full rounded" alt={id} />
     </div>

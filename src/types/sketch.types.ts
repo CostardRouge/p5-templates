@@ -13,19 +13,28 @@ const RGBA = z.union( [
   z.tuple( [
     ...RGB.items,
     z.number()
+      .optional()
+      .default( 255 )
   ] )
 ] );
 
-const Vec2 = z.object( {
-  x: z
-    .number()
-    .min( 0 )
-    .max( 1 ),
-  y: z
-    .number()
-    .min( 0 )
-    .max( 1 )
-} );
+const Vec2 = z
+  .object( {
+    x: z
+      .number()
+      .min( 0 )
+      .max( 1 )
+      .default( 0.5 ),
+    y: z
+      .number()
+      .min( 0 )
+      .max( 1 )
+      .default( 0.5 )
+  } )
+  .default( {
+    x: 0.5,
+    y: 0.5
+  } );
 
 export const HorizontalAlign = z.enum( [
   "left",
@@ -65,7 +74,6 @@ const GridPatternSchema = z.object( {
   stroke: RGBA.default( [
     255,
     255,
-    255,
     255
   ] ),
   borders: z.boolean().default( false ), // Assuming RGBA
@@ -78,8 +86,7 @@ const DotsPatternSchema = z.object( {
   fill: RGBA.default( [
     0,
     0,
-    0,
-    255
+    0
   ] ),
 } );
 
@@ -97,8 +104,7 @@ const BackgroundItem = z.object( {
   background: RGBA.default( [
     246,
     235,
-    225,
-    255
+    225
   ] ),
   pattern: PatternSchema,
 } );
@@ -111,24 +117,29 @@ const MetaItem = z.object( {
   stroke: RGBA.default( [
     255,
     255,
-    255,
     255
   ] ),
   fill: RGBA.default( [
     0,
     0,
-    0,
-    255
+    0
   ] ),
   slideProgression: z.object( {
     hidden: z.boolean().default( false ),
     stroke: RGBA.default( [
-      255,
-      255,
-      255,
-      255
+      0,
+      0,
+      0
     ] )
   } )
+    .default( {
+      hidden: false,
+      stroke: [
+        0,
+        0,
+        0
+      ]
+    } )
 } );
 
 const TextItem = z.object( {
@@ -138,17 +149,15 @@ const TextItem = z.object( {
   stroke: RGBA.default( [
     255,
     255,
-    255,
     255
   ] ),
   fill: RGBA.default( [
     0,
     0,
-    0,
-    255
+    0
   ] ),
   font: z.string().default( "martian" ),
-  blend: Blend.optional(),
+  blend: Blend.default( "source-over" ),
   position: Vec2.default( {
     x: 0.5,
     y: 0.5
@@ -177,10 +186,20 @@ export const ImageItemAnimations = z.discriminatedUnion(
       .object( {
         name: z.literal( "noise-floating" ),
         amplitude: z.number().default( 50 ),
-        noiseDetail: z.array( z.number().min( 2 ) ).default( [
-          2,
-          0.7
-        ] )
+        noiseDetail: z
+          .array(
+            z
+              .number()
+              .min( 0 )
+              .max( 8 ),
+            z.number()
+              .min( 0 )
+              .max( 1 )
+          )
+          .default( [
+            2,
+            0.7
+          ] )
       } )
   ]
 );
@@ -198,11 +217,11 @@ export const ImagesStackAnimations = z.discriminatedUnion(
 
 const ImageItemSchema = z.object( {
   type: z.literal( "image" ),
-  source: z.string()
-    .min(
-      1,
-      "Image is required"
-    ),
+  source: z.string().default( "" ),
+  // .min(
+  //   1,
+  //   "Image is required"
+  // ),
   margin: z.number()
     .min( 0 )
     .max( 1000 )
@@ -210,26 +229,27 @@ const ImageItemSchema = z.object( {
   center: z.boolean().default( true ),
   scale: z.number()
     .min( 0 )
-    .max( 1 )
+    .max( 6 )
     .default( 1 ),
-  position: Vec2.default( {
-    x: 0.5,
-    y: 0.5
-  } ),
+  position: Vec2,
   animation: ImageItemAnimations
 } );
 
 const ImagesStackItem = z.object( {
   type: z.literal( "images-stack" ),
   margin: z.number().nonnegative()
-    .optional(),
+    .default( 0 ),
   center: z.boolean().default( false ),
-  position: Vec2.default( {
-    x: 0.5,
-    y: 0.5
-  } ),
+  position: Vec2,
   animation: ImagesStackAnimations,
-  sources: z.array( z.string().min( 1 ) ).min( 1 ),
+  sources: z
+    .array( z
+      .string()
+      .default( "" ) )
+    .min( 1 )
+    .default( [
+      ""
+    ] ),
 } );
 
 const VideoItem = z.object( {
@@ -278,9 +298,18 @@ export const Slide = z.object( {
 
 /* ---------------- root options.json ----------------------------- */
 export const OptionsSchema = z.object( {
-  id: z.string().optional(),
-  name: z.string().optional(),
-  consumeTestImages: z.boolean().default( false ),
+  id: z
+    .string()
+    .default( "" )
+    .optional(),
+  name: z
+    .string()
+    .default( "" )
+    .optional(),
+  consumeTestImages: z
+    .boolean()
+    .default( false )
+    .optional(),
   size: z.object( {
     width: z
       .number()
@@ -292,7 +321,12 @@ export const OptionsSchema = z.object( {
       .int()
       .positive()
       .default( 1350 ),
-  } ),
+  } )
+    .default( {
+      width: 1080,
+      height: 1350
+    } )
+    .optional(),
   animation: z.object( {
     framerate: z
       .number()
@@ -304,12 +338,16 @@ export const OptionsSchema = z.object( {
       .positive()
       .default( 12 ),
   } ),
-  layout: z.string().default( "free" ),
-  content: z.array( ContentItemSchema )
+  layout: z
+    .string()
+    .default( "free" ),
+  content: z
+    .array( ContentItemSchema )
     .default( [
     ] ),
   assets: Assets,
-  slides: z.array( Slide )
+  slides: z
+    .array( Slide )
     .default( [
     ] ),
 } );

@@ -32,6 +32,7 @@ import {
   zodResolver
 } from "@hookform/resolvers/zod";
 import CollapsibleItem from "@/components/CollapsibleItem";
+import initOptions from "@/components/utils/initOptions";
 
 export default function TemplateOptions( {
   name,
@@ -70,7 +71,7 @@ export default function TemplateOptions( {
 
   const methods = useForm<SketchOption>( {
     mode: "onChange",
-    defaultValues: options,
+    defaultValues: initOptions( options ),
     resolver: zodResolver( OptionsSchema )
   } );
 
