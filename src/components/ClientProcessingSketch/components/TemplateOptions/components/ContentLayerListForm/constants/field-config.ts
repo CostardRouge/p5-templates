@@ -133,12 +133,16 @@ const gridPatternFields: ItemFormConfig = {
   columns: {
     label: "Columns",
     component: "number",
-    step: 1
+    step: 1,
+    min: 0,
+    max: 100
   },
   strokeWeight: {
     label: "Stroke Weight",
     component: "number",
-    step: 0.5
+    step: 0.5,
+    min: 0,
+    max: 100
   },
   stroke: {
     label: "Stroke Color",
@@ -222,7 +226,9 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     size: {
       label: "Size",
       component: "number",
-      step: 1
+      step: 1,
+      min: 1,
+      max: 1024
     },
     fill: {
       label: "Fill",

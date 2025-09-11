@@ -69,8 +69,16 @@ export const Blend = z.enum( [
 /* ---------------- content discriminated union ------------------- */
 const GridPatternSchema = z.object( {
   type: z.literal( "grid" ),
-  columns: z.number().positive(),
-  strokeWeight: z.number().min( 0 ),
+  columns: z
+    .number()
+    .positive()
+    .min( 0 )
+    .max( 100 ),
+  strokeWeight: z
+    .number()
+    .positive()
+    .min( 0 )
+    .max( 100 ),
   stroke: RGBA.default( [
     255,
     255,
@@ -99,7 +107,7 @@ export const PatternSchema = z.discriminatedUnion(
   ]
 );
 
-const BackgroundItem = z.object( {
+export const BackgroundItemSchema = z.object( {
   type: z.literal( "background" ),
   background: RGBA.default( [
     246,
@@ -109,7 +117,7 @@ const BackgroundItem = z.object( {
   pattern: PatternSchema,
 } );
 
-const MetaItem = z.object( {
+export const MetaItemSchema = z.object( {
   type: z.literal( "meta" ),
   topRight: z.string().default( "" ),
   topLeft: z.string().default( "" ),
@@ -142,10 +150,12 @@ const MetaItem = z.object( {
     } )
 } );
 
-const TextItem = z.object( {
+export const TextItemSchema = z.object( {
   type: z.literal( "text" ),
-  content: z.string(),
-  size: z.number().positive(),
+  content: z.string().default( "" ),
+  size: z.number()
+    .positive()
+    .default( 24 ),
   stroke: RGBA.default( [
     255,
     255,
@@ -174,7 +184,7 @@ const TextItem = z.object( {
     HorizontalAlign,
     VerticalAlign
   ] ).default( [
-    "center",
+    "left",
     "baseline"
   ] ),
 } );
@@ -215,7 +225,7 @@ export const ImagesStackAnimations = z.discriminatedUnion(
   ]
 );
 
-const ImageItemSchema = z.object( {
+export const ImageItemSchema = z.object( {
   type: z.literal( "image" ),
   source: z.string().default( "" ),
   // .min(
@@ -232,16 +242,16 @@ const ImageItemSchema = z.object( {
     .max( 6 )
     .default( 1 ),
   position: Vec2,
-  animation: ImageItemAnimations
+  animation: ImageItemAnimations.optional()
 } );
 
-const ImagesStackItem = z.object( {
+export const ImagesStackItemSchema = z.object( {
   type: z.literal( "images-stack" ),
   margin: z.number().nonnegative()
     .default( 0 ),
   center: z.boolean().default( false ),
   position: Vec2,
-  animation: ImagesStackAnimations,
+  animation: ImagesStackAnimations.optional(),
   sources: z
     .array( z
       .string()
@@ -252,21 +262,21 @@ const ImagesStackItem = z.object( {
     ] ),
 } );
 
-const VideoItem = z.object( {
-  type: z.literal( "video" )
-} ).passthrough();
-const VisualItem = z.object( {
-  type: z.literal( "visual" )
-} ).passthrough();
+// const VideoItem = z.object( {
+//   type: z.literal( "video" )
+// } ).passthrough();
+// const VisualItem = z.object( {
+//   type: z.literal( "visual" )
+// } ).passthrough();
 
 export const ContentItemSchema = z.discriminatedUnion(
   "type",
   [
-    BackgroundItem,
-    MetaItem,
-    TextItem,
+    BackgroundItemSchema,
+    MetaItemSchema,
+    TextItemSchema,
 
-    ImagesStackItem,
+    ImagesStackItemSchema,
     ImageItemSchema,
 
     // VideoItem,
@@ -325,8 +335,7 @@ export const OptionsSchema = z.object( {
     .default( {
       width: 1080,
       height: 1350
-    } )
-    .optional(),
+    } ),
   animation: z.object( {
     framerate: z
       .number()
@@ -337,6 +346,9 @@ export const OptionsSchema = z.object( {
       .number()
       .positive()
       .default( 12 ),
+  } ).default( {
+    framerate: 60,
+    duration: 12
   } ),
   layout: z
     .string()
@@ -352,7 +364,6 @@ export const OptionsSchema = z.object( {
     ] ),
 } );
 
-export type MetaItem = z.infer<typeof MetaItem>;
 export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type SketchOption = z.infer<typeof OptionsSchema>;
 export type SlideOption = z.infer<typeof Slide>;

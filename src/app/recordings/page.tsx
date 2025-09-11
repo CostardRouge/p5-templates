@@ -103,21 +103,21 @@ function ActionsMenu( {
           </MenuItem>
         }
 
-        {job.status === "draft" &&
-          <MenuItem>
-            {( {
-              focus
-            } ) => (
-              <button
-                onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
-                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
-              >
-                <Clapperboard className="h-5" />
-                Start recording
-              </button>
-            )}
-          </MenuItem>
-        }
+        {/* {job.status === "draft" &&*/}
+        {/*  <MenuItem>*/}
+        {/*    {( {*/}
+        {/*      focus*/}
+        {/*    } ) => (*/}
+        {/*      <button*/}
+        {/*        onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}*/}
+        {/*        className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}*/}
+        {/*      >*/}
+        {/*        <Clapperboard className="h-5" />*/}
+        {/*        Start recording*/}
+        {/*      </button>*/}
+        {/*    )}*/}
+        {/*  </MenuItem>*/}
+        {/* }*/}
 
         <MenuItem>
           {( {

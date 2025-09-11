@@ -31,8 +31,12 @@ import {
 import {
   zodResolver
 } from "@hookform/resolvers/zod";
+
 import CollapsibleItem from "@/components/CollapsibleItem";
 import initOptions from "@/components/utils/initOptions";
+
+import ContentArrayProvider
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/ContentArrayProvider";
 
 export default function TemplateOptions( {
   name,
@@ -50,11 +54,10 @@ export default function TemplateOptions( {
     setActiveSlideIndex
   ] = useState( 0 );
 
-  // 2. Sync with p5.js on initial component mount
   useEffect(
     () => {
       if ( typeof window?.slides?.index === "number" ) {
-        setActiveSlideIndex( window.slides.index );
+        setActiveSlideIndex( window.slides.index ?? 0 );
       }
     },
     [
@@ -83,7 +86,6 @@ export default function TemplateOptions( {
     },
   } = methods;
 
-  // 1. Set up useFieldArray for the 'slides' property
   const {
     fields: slideFields, append: appendSlide, move: moveSlide
   } = useFieldArray( {
@@ -109,7 +111,6 @@ export default function TemplateOptions( {
     ]
   );
 
-  // For debugging Zod errors
   useEffect(
     () => {
       if ( Object.keys( errors ).length > 0 ) {
@@ -149,16 +150,12 @@ export default function TemplateOptions( {
       <FormProvider {...methods}>
         <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
           <span className="px-1 text-xs text-gray-500">root.content</span>
-          <TemplateAssetsProvider scope="global" assetsName="assets" jobId={options.id}>
-            <ContentLayerListForm baseFieldName="content" />
-          </TemplateAssetsProvider>
 
-          {/* <span className="px-1 text-xs text-gray-500">root.assets.images</span>*/}
-          {/* <ImageAssets*/}
-          {/*  assets={options?.assets}*/}
-          {/*  scope="global"*/}
-          {/*  id={options.id}*/}
-          {/* />*/}
+          <TemplateAssetsProvider scope="global" assetsName="assets" jobId={options.id}>
+            <ContentArrayProvider name="content" scopeKey="content">
+              <ContentLayerListForm baseFieldName="content" />
+            </ContentArrayProvider>
+          </TemplateAssetsProvider>
         </div>
 
         { slideFields && (
@@ -174,7 +171,6 @@ export default function TemplateOptions( {
                 onReorder={(
                   from: number, to: number
                 ) => {
-                  // 4. Use the 'move' function from the hook
                   moveSlide(
                     from,
                     to
@@ -187,7 +183,7 @@ export default function TemplateOptions( {
               <SlideEditor
                 key={activeSlideIndex}
                 activeIndex={activeSlideIndex}
-                options={watch()} // Pass the whole form value to get slide assets
+                options={watch()}
               />
             </div>
           </Fragment>

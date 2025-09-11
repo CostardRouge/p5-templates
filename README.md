@@ -159,7 +159,7 @@ Adding items with icons
 Use the included palette and default item factory:
 import { AddItemControls } from "@/components/AddItemControls";
 
-<AddItemControls baseFieldName="slides.0.content" compact />
+<AddItemControls />
 
 Icons provided by lucide-react
 Valid, defaulted items created via Zod (makeDefaultItem(kind))

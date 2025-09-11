@@ -24,6 +24,7 @@ const CollapsibleItem = ( {
   return (
     <div
       className={className}
+      title={expanded ? "click to collapse" : "click to expand"}
       {...props}
     >
       <div

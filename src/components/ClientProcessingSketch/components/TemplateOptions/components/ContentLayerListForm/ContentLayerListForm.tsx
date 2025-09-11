@@ -1,50 +1,43 @@
 import React from "react";
-import {
-  useFieldArray, useFormContext
-} from "react-hook-form";
 
+import AddItemControls from "./components/AddItemControls/AddItemControls";
 import GenericItemForm from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentLayerListForm/components/GenericItemForm";
+import useContentArray from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/hooks/useContentArray";
 
-type ContentLayerListFormProps = {
+type ContentItemsProps = {
   baseFieldName: "content" | `slides.${ number }.content`;
 };
 
-export default function ContentLayerListForm( {
+export default function ContentItems( {
   baseFieldName
-}: ContentLayerListFormProps ) {
+}: ContentItemsProps ) {
   const {
-    register, control
-  } = useFormContext();
+    fields, remove
+  } = useContentArray();
 
-  const {
-    fields, append, remove
-  } = useFieldArray( {
-    control,
-    name: baseFieldName,
-  } );
-
-  // The layout path is also now dynamic
-  const layoutFieldName = baseFieldName === "content" ? "layout" : baseFieldName.replace(
-    ".content",
-    ".layout"
-  ) as "layout" | `slides.${ number }.layout`;
+  // // The layout path is also now dynamic
+  // const layoutFieldName = baseFieldName === "content" ? "layout" : baseFieldName.replace(
+  //   ".content",
+  //   ".layout"
+  // ) as "layout" | `slides.${ number }.layout`;
 
   return (
     <div className="text-xs flex flex-col gap-1">
-      {/* --- Layout Selector --- */}
-      {/* <label htmlFor={`${ layoutFieldName }-select`} className="mr-1 ">layout</label>*/}
-      {/* <select*/}
-      {/*  id={`${ layoutFieldName }-select`}*/}
-      {/*  {...register( layoutFieldName )}*/}
-      {/*  className="px-1 border rounded-sm w-full h-8"*/}
-      {/* >*/}
-      {/*  <option value="free">free</option>*/}
-      {/*  <option value="grid">stack</option>*/}
-      {/*  <option value="grid">grid</option>*/}
-      {/* </select>*/}
+      <div className="flex flex-col gap-1 p-1 pt-0.5">
+        <AddItemControls />
 
-      {/* --- Dynamic Content Items --- */}
-      <div className="flex flex-col gap-1 p-1">
+        {/* /!* --- Layout Selector ---*!/*/}
+        {/* <label htmlFor={`${ layoutFieldName }-select`} className="mr-1 ">layout</label>*/}
+        {/* <select*/}
+        {/*  id={`${ layoutFieldName }-select`}*/}
+        {/*  {...register( layoutFieldName )}*/}
+        {/*  className="px-1 border rounded-sm w-full h-6"*/}
+        {/* >*/}
+        {/*  <option value="free">free</option>*/}
+        {/*  <option value="grid">stack</option>*/}
+        {/*  <option value="grid">grid</option>*/}
+        {/* </select>*/}
+
         {fields.map( (
           field, index
         ) => (
@@ -56,9 +49,6 @@ export default function ContentLayerListForm( {
           />
         ) )}
       </div>
-
-      {/* --- Add New Item --- */}
-      {/* <AddItem onAdd={( item ) => append( item )} />*/}
     </div>
   );
 }

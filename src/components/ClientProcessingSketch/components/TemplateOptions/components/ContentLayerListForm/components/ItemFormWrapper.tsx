@@ -21,12 +21,14 @@ export default function ItemFormWrapper( {
       header={expanded => (
         <div className={
           clsx(
+            "hover:bg-gray-50 rounded-sm",
             "flex justify-between items-center",
             {
               "mb-2": expanded
             }
           )
-        }>
+        }
+        >
           <h4 className="text-white bg-gray-800 px-1 rounded-sm">{itemType}</h4>
 
           <button
