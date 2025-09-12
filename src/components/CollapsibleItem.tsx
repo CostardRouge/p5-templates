@@ -28,7 +28,6 @@ const CollapsibleItem = ( {
       {...props}
     >
       <div
-        className="cursor-pointer"
         onClick={() => setExpanded( e => !e )}
       >
         {header( expanded )}

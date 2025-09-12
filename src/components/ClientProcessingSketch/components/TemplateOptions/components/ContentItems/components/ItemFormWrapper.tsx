@@ -4,30 +4,41 @@ import {
 } from "lucide-react";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import clsx from "clsx";
+import {
+  DragBinder
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/ContentItems";
 
 export type ItemFormWrapperProps = {
   itemType: string;
   onRemove: () => void;
   children: React.ReactNode;
+  dragBinder?: DragBinder;
 };
 
 export default function ItemFormWrapper( {
-  onRemove, children, itemType
+  onRemove, children, itemType, dragBinder
 }: ItemFormWrapperProps ) {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
       className="p-1 border rounded-sm bg-white hover:shadow hover:border-gray-300"
       header={expanded => (
-        <div className={
-          clsx(
-            "rounded-sm",
-            "flex justify-between items-center",
-            {
-              "mb-2": expanded
-            }
-          )
-        }
+        <div
+          ref={dragBinder?.setHandleRef}
+          {
+            ...( dragBinder?.handleProps ?? {
+            } )
+          }
+          className={
+            clsx(
+              "rounded-sm",
+              "flex justify-between items-center",
+              {
+                "mb-2": expanded,
+                "cursor-grab active:cursor-grabbing": dragBinder?.isDragging
+              }
+            )
+          }
         >
           <h4 className="text-white bg-gray-800 px-1 rounded-sm">{itemType}</h4>
 

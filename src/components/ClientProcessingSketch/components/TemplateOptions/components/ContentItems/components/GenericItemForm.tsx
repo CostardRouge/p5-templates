@@ -12,15 +12,19 @@ import {
 import FieldRenderer from "./FieldRenderer";
 
 import ItemFormWrapper from "./ItemFormWrapper";
+import {
+  DragBinder
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/ContentItems";
 
 type GenericItemFormProps = {
   baseFieldName: "content" | `slides.${ number }.content`;
   index: number;
   onRemove: () => void;
+  dragBinder?: DragBinder;
 };
 
 export default function GenericItemForm( {
-  baseFieldName, index, onRemove
+  baseFieldName, index, onRemove, dragBinder
 }: GenericItemFormProps ) {
   const {
     watch
@@ -43,7 +47,11 @@ export default function GenericItemForm( {
   const fieldNames = Object.keys( itemSchema.shape );
 
   return (
-    <ItemFormWrapper onRemove={onRemove} itemType={itemType}>
+    <ItemFormWrapper
+      dragBinder={dragBinder}
+      onRemove={onRemove}
+      itemType={itemType}
+    >
       <div className="flex flex-col gap-2">
         {fieldNames.map( ( fieldName ) => {
           // Don't render a field for the 'type' discriminator itself
