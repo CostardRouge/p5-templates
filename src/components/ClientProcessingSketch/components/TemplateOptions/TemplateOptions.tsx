@@ -13,7 +13,8 @@ import {
 } from "@/types/recording.types";
 import {
   OptionsSchema,
-  SketchOption
+  SketchOption,
+  SketchOptionInput, SlideOption
 } from "@/types/sketch.types";
 
 import ContentItems from "./components/ContentItems/ContentItems";
@@ -64,7 +65,7 @@ export default function TemplateOptions( {
     }
   };
 
-  const methods = useForm<SketchOption>( {
+  const methods = useForm<SketchOptionInput>( {
     mode: "onChange",
     defaultValues: initOptions( initialOptions ),
     resolver: zodResolver( OptionsSchema )
@@ -261,7 +262,7 @@ export default function TemplateOptions( {
               <span className="px-1 text-xs text-gray-500">slides</span>
 
               <SlideCarousel
-                slides={slides}
+                slides={slides as SlideOption[]}
                 slideIds={slideIds}
                 activeIndex={activeSlideIndex}
                 onAdd={handleAddSlide}
@@ -276,7 +277,7 @@ export default function TemplateOptions( {
               <SlideEditor
                 key={activeSlideIndex}
                 activeIndex={activeSlideIndex}
-                options={options}
+                options={options as SketchOption}
               />
             </div>
           </Fragment>
@@ -284,7 +285,7 @@ export default function TemplateOptions( {
 
         <CaptureActions
           name={name}
-          options={options}
+          options={options as SketchOption}
           persistedJob={persistedJob}
         />
       </FormProvider>

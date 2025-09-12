@@ -369,3 +369,4 @@ export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type SketchOption = z.infer<typeof OptionsSchema>;
 export type SlideOption = z.infer<typeof SlideSchema>;
 export type AssetsOption = z.infer<typeof Assets>;
+export type SketchOptionInput = z.input<typeof OptionsSchema>;
