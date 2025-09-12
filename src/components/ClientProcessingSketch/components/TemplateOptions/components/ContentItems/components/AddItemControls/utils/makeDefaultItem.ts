@@ -1,4 +1,3 @@
-// form/default-item-factory.ts
 import {
   BackgroundItemSchema,
   ImageItemSchema,

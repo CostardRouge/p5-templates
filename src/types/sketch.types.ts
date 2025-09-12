@@ -299,10 +299,11 @@ export const Assets = z
   } );
 
 /* ---------------- slide schema (with name) ---------------------- */
-export const Slide = z.object( {
+export const SlideSchema = z.object( {
   name: z.string().default( "new slide" ),
-  layout: z.string(),
-  content: z.array( ContentItemSchema ),
+  layout: z.string().default( "free" ),
+  content: z.array( ContentItemSchema ).default( [
+  ] ),
   assets: Assets
 } );
 
@@ -359,12 +360,12 @@ export const OptionsSchema = z.object( {
     ] ),
   assets: Assets,
   slides: z
-    .array( Slide )
+    .array( SlideSchema )
     .default( [
     ] ),
 } );
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type SketchOption = z.infer<typeof OptionsSchema>;
-export type SlideOption = z.infer<typeof Slide>;
+export type SlideOption = z.infer<typeof SlideSchema>;
 export type AssetsOption = z.infer<typeof Assets>;

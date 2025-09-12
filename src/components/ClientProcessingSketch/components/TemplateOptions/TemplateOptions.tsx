@@ -37,6 +37,8 @@ import initOptions from "@/components/utils/initOptions";
 
 import ContentArrayProvider
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/ContentArrayProvider";
+import deepClone from "@/utils/deepClone";
+import makeDefaultSlide from "@/components/ClientProcessingSketch/components/TemplateOptions/utils/makeDefaultSlide";
 
 export default function TemplateOptions( {
   name,
@@ -44,25 +46,15 @@ export default function TemplateOptions( {
   persistedJob,
   options: initialOptions,
 }: {
-    name: string;
-    options: SketchOption;
-    persistedJob?: JobModel
-    setOptions: ( nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => void;
+  name: string;
+  options: SketchOption;
+  persistedJob?: JobModel
+  setOptions: ( nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => void;
 } ) {
   const [
     activeSlideIndex,
     setActiveSlideIndex
   ] = useState( 0 );
-
-  useEffect(
-    () => {
-      if ( typeof window?.slides?.index === "number" ) {
-        setActiveSlideIndex( window.slides.index ?? 0 );
-      }
-    },
-    [
-    ]
-  );
 
   const handleSlideSelect = ( index: number ) => {
     setActiveSlideIndex( index );
@@ -81,13 +73,18 @@ export default function TemplateOptions( {
   const {
     control,
     watch,
+    getValues,
     formState: {
       errors
     },
   } = methods;
 
   const {
-    fields: slideFields, append: appendSlide, move: moveSlide
+    fields: slideFields,
+    append: appendSlide,
+    insert: insertSlide,
+    move: moveSlide,
+    remove: removeSlide
   } = useFieldArray( {
     control,
     name: "slides",
@@ -96,10 +93,6 @@ export default function TemplateOptions( {
   useEffect(
     () => {
       const subscription = watch( ( value ) => {
-        console.log( {
-          value
-        } );
-
         setOptions( value as SketchOption );
       } );
 
@@ -124,7 +117,109 @@ export default function TemplateOptions( {
       errors
     ]
   );
+
+  useEffect(
+    () => {
+      const length = slideFields.length;
+
+      if ( length === 0 ) {
+        setActiveSlideIndex( 0 );
+        return;
+      }
+      setActiveSlideIndex( ( current ) => {
+        if ( current < 0 ) {
+          return 0;
+        }
+        if ( current > length - 1 ) {
+          return length - 1;
+        }
+        return current;
+      } );
+    },
+    [
+      slideFields.length
+    ]
+  );
+
+  const handleAddSlide = () => {
+    const nextIndex = slideFields.length;
+
+    appendSlide( makeDefaultSlide( {
+      indexForLabel: nextIndex
+    } ) );
+    setActiveSlideIndex( nextIndex );
+  };
+
+  const handleDuplicateSlide = ( indexToDuplicate: number ) => {
+    const allSlides = getValues( "slides" ) ?? [
+    ];
+    const original = allSlides[ indexToDuplicate ];
+
+    if ( !original ) {
+      return;
+    }
+    const duplicated = deepClone( original );
+
+    if ( duplicated?.name ) {
+      duplicated.name = `${ duplicated.name } (copy)`;
+    }
+    const insertIndex = indexToDuplicate + 1;
+
+    insertSlide(
+      insertIndex,
+      duplicated
+    );
+    setActiveSlideIndex( insertIndex );
+  };
+
+  const handleDeleteSlide = ( indexToDelete: number ) => {
+    const lengthBefore = slideFields.length;
+
+    if ( lengthBefore <= 0 ) {
+      return;
+    }
+
+    removeSlide( indexToDelete );
+    const lengthAfter = lengthBefore - 1;
+
+    if ( lengthAfter <= 0 ) {
+      setActiveSlideIndex( 0 );
+      return;
+    }
+
+    if ( indexToDelete < activeSlideIndex ) {
+      setActiveSlideIndex( activeSlideIndex - 1 );
+      return;
+    }
+
+    if ( indexToDelete === activeSlideIndex ) {
+      const nextIndex = Math.min(
+        activeSlideIndex,
+        lengthAfter - 1
+      );
+
+      setActiveSlideIndex( nextIndex );
+      return;
+    }
+  };
+
+  const handleReorderSlides = (
+    oldIndex: number, newIndex: number
+  ) => {
+    if ( oldIndex === newIndex ) {
+      return;
+    }
+
+    moveSlide(
+      oldIndex,
+      newIndex
+    );
+    setActiveSlideIndex( newIndex );
+  };
+
   const options = watch();
+  const slides = getValues( "slides" );
+  const slideIds = slideFields.map( ( field ) => field.id );
   const rootContentLength = options?.content?.length;
 
   return (
@@ -160,24 +255,20 @@ export default function TemplateOptions( {
           </TemplateAssetsProvider>
         </div>
 
-        { slideFields && (
+        { slides && (
           <Fragment>
             <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
+              <span className="px-1 text-xs text-gray-500">slides</span>
+
               <SlideCarousel
-                slides={slideFields}
+                slides={slides}
+                slideIds={slideIds}
                 activeIndex={activeSlideIndex}
+                onAdd={handleAddSlide}
                 onSelect={handleSlideSelect}
-                onAdd={() => {
-                  // addSlide( setOptions )
-                }}
-                onReorder={(
-                  from: number, to: number
-                ) => {
-                  moveSlide(
-                    from,
-                    to
-                  );
-                }}
+                onReorder={handleReorderSlides}
+                onDuplicate={handleDuplicateSlide}
+                onDelete={handleDeleteSlide}
               />
             </div>
 
