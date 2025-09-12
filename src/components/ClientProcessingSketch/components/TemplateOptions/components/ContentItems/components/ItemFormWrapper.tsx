@@ -17,11 +17,11 @@ export default function ItemFormWrapper( {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
-      className="p-1 border rounded-sm bg-white hover:shadow"
+      className="p-1 border rounded-sm bg-white hover:shadow hover:border-gray-300"
       header={expanded => (
         <div className={
           clsx(
-            "hover:bg-gray-50 rounded-sm",
+            "rounded-sm",
             "flex justify-between items-center",
             {
               "mb-2": expanded

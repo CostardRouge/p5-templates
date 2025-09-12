@@ -47,7 +47,7 @@ export default function ItemPalette( {
             className={clsx(
               "flex items-center justify-center",
               "rounded-sm border border-transparent p-1 transition",
-              "hover:border-gray-300 hover:bg-gray-50 active:scale-[0.98]"
+              "hover:border-gray-300 hover:bg-gray-50 hover:shadow active:scale-[0.98]"
             )}
             role="listitem"
             aria-label={meta.label}

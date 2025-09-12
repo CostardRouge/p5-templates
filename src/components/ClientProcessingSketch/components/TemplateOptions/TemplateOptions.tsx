@@ -16,7 +16,7 @@ import {
   SketchOption
 } from "@/types/sketch.types";
 
-import ContentLayerListForm from "./components/ContentLayerListForm/ContentLayerListForm";
+import ContentItems from "./components/ContentItems/ContentItems";
 import CaptureActions from "./components/CaptureActions";
 import SlideCarousel from "./components/SlideCarousel";
 import SlideEditor from "./components/SlideEditor";
@@ -40,9 +40,9 @@ import ContentArrayProvider
 
 export default function TemplateOptions( {
   name,
-  options,
   setOptions,
-  persistedJob
+  persistedJob,
+  options: initialOptions,
 }: {
     name: string;
     options: SketchOption;
@@ -74,7 +74,7 @@ export default function TemplateOptions( {
 
   const methods = useForm<SketchOption>( {
     mode: "onChange",
-    defaultValues: initOptions( options ),
+    defaultValues: initOptions( initialOptions ),
     resolver: zodResolver( OptionsSchema )
   } );
 
@@ -124,6 +124,8 @@ export default function TemplateOptions( {
       errors
     ]
   );
+  const options = watch();
+  const rootContentLength = options?.content?.length;
 
   return (
     <CollapsibleItem
@@ -148,12 +150,12 @@ export default function TemplateOptions( {
       )}
     >
       <FormProvider {...methods}>
-        <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
-          <span className="px-1 text-xs text-gray-500">root.content</span>
+        <div className="rounded-sm border border-gray-300 text-black text-left bg-white overflow-y-scroll">
+          <span className="px-1 text-xs text-gray-500">root.content {rootContentLength ? `(${ rootContentLength })` : null}</span>
 
           <TemplateAssetsProvider scope="global" assetsName="assets" jobId={options.id}>
-            <ContentArrayProvider name="content" scopeKey="content">
-              <ContentLayerListForm baseFieldName="content" />
+            <ContentArrayProvider name="content">
+              <ContentItems baseFieldName="content" />
             </ContentArrayProvider>
           </TemplateAssetsProvider>
         </div>
@@ -183,7 +185,7 @@ export default function TemplateOptions( {
               <SlideEditor
                 key={activeSlideIndex}
                 activeIndex={activeSlideIndex}
-                options={watch()}
+                options={options}
               />
             </div>
           </Fragment>

@@ -10,12 +10,10 @@ import {
 
 type ContentArrayProviderProps = {
   name: string;
-  scopeKey?: string;
 }
 
 export default function ContentArrayProvider( {
   children,
-  scopeKey,
   name
 }: React.PropsWithChildren<ContentArrayProviderProps> ) {
   const {
@@ -28,7 +26,7 @@ export default function ContentArrayProvider( {
 
   return (
     <ArrayContentContext.Provider
-      key={scopeKey ?? name}
+      key={name}
       value={{
         name,
         fields: fieldArray.fields,

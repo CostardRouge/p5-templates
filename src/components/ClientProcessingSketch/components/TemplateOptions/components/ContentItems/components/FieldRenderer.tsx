@@ -8,10 +8,10 @@ import {
   FieldConfig
 } from "../constants/field-config"; // Import the specific type
 
-import ControlledImagesStackInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentLayerListForm/components/ControlledImagesStackInput/ControlledImagesStackInput";
-import ControlledImageInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentLayerListForm/components/ControlledImageInput/ControlledImageInput";
-import ControlledColorInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentLayerListForm/components/ControlledColorInput/ControlledColorInput";
-import ConditionalGroup from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentLayerListForm/components/ConditionalGroup";
+import ControlledImagesStackInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImagesStackInput/ControlledImagesStackInput";
+import ControlledImageInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImageInput/ControlledImageInput";
+import ControlledColorInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledColorInput/ControlledColorInput";
+import ConditionalGroup from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ConditionalGroup";
 
 // Define the shape of our props
 type FieldRendererProps = {

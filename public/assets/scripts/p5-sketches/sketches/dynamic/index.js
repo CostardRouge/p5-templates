@@ -17,13 +17,8 @@ sketch.setup(
 );
 
 sketch.draw( () => {
+  clear();
   slides.renderCurrentSlide();
   slides.render( options );
-  // background( 0 );
-  // circle(
-  //   frameCount % width,
-  //   height / 2,
-  //   50
-  // );
 } );
 

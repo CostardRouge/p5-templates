@@ -122,7 +122,7 @@ Folder structure (example)
 │  ├─ web/                     # Next.js app
 │  │  ├─ components/
 │  │  │  ├─ TemplateOptions/
-│  │  │  │  ├─ ContentLayerListForm/
+│  │  │  │  ├─ ContentItems/
 │  │  │  │  │  ├─ FieldRenderer.tsx
 │  │  │  │  │  ├─ ControlledImageInput/
 │  │  │  │  │  ├─ ControlledImagesStackInput/
@@ -176,7 +176,7 @@ scope={{ slide: activeIndex }}
 assetsName={`slides.${activeIndex}.assets`}
 jobId={options.id}
 >
-<ContentLayerListForm baseFieldName={`slides.${activeIndex}.content`} />
+<ContentItems baseFieldName={`slides.${activeIndex}.content`} />
 </TemplateAssetsProvider>
 
 

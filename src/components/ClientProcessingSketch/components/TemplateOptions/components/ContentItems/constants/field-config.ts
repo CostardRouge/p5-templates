@@ -354,7 +354,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     },
     margin: {
       label: "Margin",
-      component: "number",
+      component: "slider",
       step: 1,
       min: 0,
       max: 1000
@@ -365,7 +365,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     },
     scale: {
       label: "Scale",
-      component: "number",
+      component: "slider",
       step: 0.1,
       min: 0.1,
       max: 6
@@ -406,8 +406,10 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         "noise-floating": {
           amplitude: {
             label: "Amplitude",
-            component: "number",
-            step: 1
+            component: "slider",
+            step: 1,
+            min: 0,
+            max: 512
           },
           noiseDetail: {
             label: "Noise detail",

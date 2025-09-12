@@ -3,7 +3,7 @@ import {
 } from "lucide-react";
 import {
   ItemKind, ItemKindMeta
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentLayerListForm/components/AddItemControls/components/ItemPalette/types/item-kinds";
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
 
 export const ITEM_ORDER: ItemKind[] = [
   "text",

@@ -68,9 +68,6 @@ export default function ConditionalGroup( {
           onChange={handleTypeChange}
           className={selectClassName}
         >
-          <option key="null" value="">
-            --
-          </option>
           {config.typeSelector.options.map( ( option ) => (
             <option key={option.value} value={option.value}>
               {option.label}

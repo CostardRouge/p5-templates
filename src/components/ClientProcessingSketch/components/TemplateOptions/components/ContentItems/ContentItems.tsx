@@ -1,7 +1,7 @@
 import React from "react";
 
 import AddItemControls from "./components/AddItemControls/AddItemControls";
-import GenericItemForm from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentLayerListForm/components/GenericItemForm";
+import GenericItemForm from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/GenericItemForm";
 import useContentArray from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/hooks/useContentArray";
 
 type ContentItemsProps = {
