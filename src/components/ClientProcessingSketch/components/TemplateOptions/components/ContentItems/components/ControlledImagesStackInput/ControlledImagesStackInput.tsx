@@ -1,8 +1,7 @@
-// ControlledImagesStackInput.tsx
 "use client";
 import React from "react";
 import {
-  useController, useFormContext
+  useController, useFormContext, FieldPathByValue
 } from "react-hook-form";
 import {
   DndContext, PointerSensor, useSensor, useSensors, DragEndEvent
@@ -23,9 +22,12 @@ import DropZoneButton from "@/components/DropZoneButton";
 import {
   resolveAssetURL
 } from "@/shared/utils";
+import type {
+  SketchOptionInput
+} from "@/types/sketch.types";
 
 type Props = {
- name: string
+  name: string
 };
 
 export default function ControlledImagesStackInput( {
@@ -33,11 +35,11 @@ export default function ControlledImagesStackInput( {
 }: Props ) {
   const {
     control
-  } = useFormContext();
+  } = useFormContext<SketchOptionInput>();
   const {
     field, fieldState
-  } = useController<string[]>( {
-    name,
+  } = useController<SketchOptionInput, FieldPathByValue<SketchOptionInput, string[]>>( {
+    name: name as FieldPathByValue<SketchOptionInput, string[]>,
     control
   } );
   const {
@@ -58,31 +60,34 @@ export default function ControlledImagesStackInput( {
 
   async function onFiles( files: FileList ) {
     const paths = await uploadFiles( files );
+    const previousPaths: string[] = Array.isArray( field.value ) ? field.value as string[] : [
+    ];
 
     if ( paths.length ) field.onChange( [
-      ...( field.value ?? [
-      ] ),
+      ...previousPaths,
       ...paths
     ] );
   }
+
   function onDelete( idx: number ) {
-    const prev = field.value ?? [
+    const previousPaths: string[] = Array.isArray( field.value ) ? field.value as string[] : [
     ];
-    const removed = prev[ idx ];
-    const next = prev.filter( (
+    const removed = previousPaths[ idx ];
+    const next: string[] = previousPaths.filter( (
       _, i
     ) => i !== idx );
 
     field.onChange( next );
     if ( removed ) maybeRemoveFromAssets( removed );
   }
+
   function onDragEnd( evt: DragEndEvent ) {
     const {
       active, over
     } = evt;
 
     if ( !over || active.id === over.id ) return;
-    const list = field.value ?? [
+    const list: string[] = Array.isArray( field.value ) ? field.value as string[] : [
     ];
     const oldIdx = list.findIndex( ( p ) => p === active.id );
     const newIdx = list.findIndex( ( p ) => p === over.id );
@@ -95,7 +100,7 @@ export default function ControlledImagesStackInput( {
     ) );
   }
 
-  const items = field.value ?? [
+  const items: string[] = Array.isArray( field.value ) ? field.value as string[] : [
   ];
 
   return (
@@ -107,7 +112,7 @@ export default function ControlledImagesStackInput( {
               path, i
             ) => (
               <SortableThumb
-                key={path}
+                key={`${ path }-${ i }`}
                 id={path}
                 url={resolveAssetURL(
                   path,
@@ -128,7 +133,7 @@ export default function ControlledImagesStackInput( {
 function SortableThumb( {
   id, url, onDelete,
 }: {
- id: string; url: string; onDelete: () => void
+  id: string; url: string; onDelete: () => void
 } ) {
   const {
     attributes, listeners, setNodeRef, transform, transition
@@ -146,6 +151,7 @@ function SortableThumb( {
         className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-white/90 hover:bg-white rounded-sm border border-gray-200"
         {...attributes} {...listeners}
       />
+
       <button
         type="button"
         onClick={( e ) => { e.stopPropagation(); onDelete(); }}
@@ -154,7 +160,8 @@ function SortableThumb( {
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
-      <img src={url} className="object-cover h-full w-full rounded" alt={id} />
+
+      <img src={url} className="object-cover h-full w-full" alt={id} />
     </div>
   );
 }
