@@ -48,6 +48,7 @@ interface ColorInputConfig extends BaseConfig {
 // For 'select' inputs
 interface SelectConfig extends BaseConfig {
   component: "select";
+  noneLabel?: string;
   options: Array<{
     label: string; value: string | number
   }>;
@@ -155,19 +156,27 @@ const gridPatternFields: ItemFormConfig = {
 };
 
 const dotsPatternFields: ItemFormConfig = {
-  size: {
-    label: "Dot Size",
+  columns: {
+    label: "Columns",
     component: "number",
-    step: 1
+    step: 1,
+    min: 0,
+    max: 100
   },
-  padding: {
-    label: "Padding",
+  strokeWeight: {
+    label: "Dot weight",
     component: "number",
-    step: 1
+    step: 0.5,
+    min: 0,
+    max: 100
   },
-  fill: {
-    label: "Fill Color",
+  stroke: {
+    label: "Stroke Color",
     component: "color"
+  },
+  borders: {
+    label: "Borders",
+    component: "checkbox"
   },
 };
 

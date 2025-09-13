@@ -3,6 +3,7 @@ import {
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 export default function drawSlideBackground( backgroundOption ) {
+  push();
   background( ...backgroundOption.background );
 
   const backgroundPattern = backgroundOption.pattern;
@@ -23,11 +24,11 @@ export default function drawSlideBackground( backgroundOption ) {
     }
 
     if ( backgroundPattern.type === "dots" ) {
-      const columns = backgroundPattern.columns || 9;
+      const columns = backgroundPattern.columns || 50;
       const rows = columns * height / width;
 
       stroke( ...backgroundPattern.stroke );
-      strokeWeight( backgroundPattern.strokeWeight || 1 );
+      strokeWeight( backgroundPattern.strokeWeight || 4 );
 
       shapes.dots( {
         border: backgroundPattern.borders,
@@ -36,4 +37,5 @@ export default function drawSlideBackground( backgroundOption ) {
       } );
     }
   }
+  pop();
 }

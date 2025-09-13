@@ -11,30 +11,30 @@ import {
   ItemKind
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
 
-export default function makeDefaultItem( kind: ItemKind ): ContentItem {
-  switch ( kind ) {
+export default function makeDefaultItem( type: ItemKind ): ContentItem {
+  switch ( type ) {
     case "text":
       return TextItemSchema.parse( {
-        type: "text",
+        type,
         content: "new text"
       } );
     case "image":
       return ImageItemSchema.parse( {
-        type: "image"
+        type
       } );
     case "images-stack":
       return ImagesStackItemSchema.parse( {
-        type: "images-stack"
+        type
       } );
     case "meta":
       return MetaItemSchema.parse( {
-        type: "meta"
+        type
       } );
     case "background":
       return BackgroundItemSchema.parse( {
-        type: "background"
+        type
       } );
     default:
-      throw new Error( `Unsupported kind: ${ kind }` );
+      throw new Error( `Unsupported kind: ${ type }` );
   }
 }

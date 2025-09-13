@@ -48,6 +48,19 @@ export default function drawSlideMeta( metaOption ) {
     textStyle
   );
 
+  // bottom-right
+  string.write(
+    metaOption.bottomRight,
+    -width * horizontalMargin,
+    height * ( 1 - verticalMargin ),
+    {
+      ...textStyle,
+      textAlign: [
+        RIGHT,
+      ]
+    }
+  );
+
   if ( metaOption.slideProgression !== undefined ) {
     if ( metaOption.slideProgression?.hidden === true ) {
       return;

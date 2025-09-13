@@ -8,6 +8,7 @@ const RGB = z.tuple( [
   z.number(),
   z.number(),
 ] );
+
 const RGBA = z.union( [
   RGB,
   z.tuple( [
@@ -71,31 +72,46 @@ const GridPatternSchema = z.object( {
   type: z.literal( "grid" ),
   columns: z
     .number()
-    .positive()
     .min( 0 )
-    .max( 100 ),
+    .max( 100 )
+    .default( 9 ),
   strokeWeight: z
     .number()
-    .positive()
     .min( 0 )
-    .max( 100 ),
-  stroke: RGBA.default( [
-    255,
-    255,
-    255
-  ] ),
-  borders: z.boolean().default( false ), // Assuming RGBA
+    .max( 100 )
+    .default( 1 ),
+  stroke: RGBA
+    .default( [
+      226,
+      215,
+      205
+    ] ),
+  borders: z
+    .boolean()
+    .default( false ),
 } );
 
 const DotsPatternSchema = z.object( {
   type: z.literal( "dots" ),
-  size: z.number().positive(),
-  padding: z.number().min( 0 ),
-  fill: RGBA.default( [
-    0,
-    0,
-    0
-  ] ),
+  columns: z
+    .number()
+    .min( 0 )
+    .max( 100 )
+    .default( 50 ),
+  strokeWeight: z
+    .number()
+    .min( 0 )
+    .max( 100 )
+    .default( 4 ),
+  stroke: RGBA
+    .default( [
+      226,
+      215,
+      205
+    ] ),
+  borders: z
+    .boolean()
+    .default( false ),
 } );
 
 // Create a discriminated union for the pattern
@@ -105,7 +121,17 @@ export const PatternSchema = z.discriminatedUnion(
     GridPatternSchema,
     DotsPatternSchema,
   ]
-);
+).default( {
+  type: "grid",
+  columns: 8,
+  strokeWeight: 1,
+  stroke: [
+    226,
+    215,
+    205
+  ],
+  borders: false
+} );
 
 export const BackgroundItemSchema = z.object( {
   type: z.literal( "background" ),
@@ -119,9 +145,10 @@ export const BackgroundItemSchema = z.object( {
 
 export const MetaItemSchema = z.object( {
   type: z.literal( "meta" ),
-  topRight: z.string().default( "" ),
   topLeft: z.string().default( "" ),
+  topRight: z.string().default( "" ),
   bottomLeft: z.string().default( "" ),
+  bottomRight: z.string().default( "" ),
   stroke: RGBA.default( [
     255,
     255,
@@ -169,7 +196,7 @@ export const TextItemSchema = z.object( {
   font: z.string().default( "martian" ),
   blend: Blend.default( "source-over" ),
   position: Vec2.default( {
-    x: 0.5,
+    x: 0,
     y: 0.5
   } ),
   horizontalMargin: z.number()
@@ -228,10 +255,6 @@ export const ImagesStackAnimations = z.discriminatedUnion(
 export const ImageItemSchema = z.object( {
   type: z.literal( "image" ),
   source: z.string().default( "" ),
-  // .min(
-  //   1,
-  //   "Image is required"
-  // ),
   margin: z.number()
     .min( 0 )
     .max( 1000 )
@@ -242,24 +265,39 @@ export const ImageItemSchema = z.object( {
     .max( 6 )
     .default( 1 ),
   position: Vec2,
-  animation: ImageItemAnimations.optional()
+  animation: z.preprocess(
+    ( v ) => {
+      if ( v == null ) return undefined;
+      if ( typeof v === "object" && "name" in ( v as any ) && ( v as any ).name === "" ) {
+        return undefined; // treat empty discriminator as “no animation”
+      }
+      return v;
+    },
+    ImageItemAnimations.optional()
+  ),
 } );
+
+const NonEmptyPath = z.string().trim()
+  .min( 1 );
 
 export const ImagesStackItemSchema = z.object( {
   type: z.literal( "images-stack" ),
+
+  // Accept anything, coerce to [] if not an array, and drop empty strings.
+  sources: z.preprocess(
+    ( v ) => Array.isArray( v )
+      ? v.filter( ( s ) => typeof s === "string" && s.trim().length > 0 )
+      : [
+      ],
+    z.array( NonEmptyPath ).default( [
+    ] ) // no min(1) here
+  ),
+
   margin: z.number().nonnegative()
     .default( 0 ),
   center: z.boolean().default( false ),
   position: Vec2,
   animation: ImagesStackAnimations.optional(),
-  sources: z
-    .array( z
-      .string()
-      .default( "" ) )
-    .min( 1 )
-    .default( [
-      ""
-    ] ),
 } );
 
 // const VideoItem = z.object( {

@@ -101,6 +101,10 @@ const string = {
     options = {
     }
   ) {
+    if ( !str ) {
+      return;
+    }
+
     const {
       size = 18,
       fill = 0,

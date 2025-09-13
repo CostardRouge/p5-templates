@@ -222,6 +222,7 @@ export default function TemplateOptions( {
   const slides = getValues( "slides" );
   const slideIds = slideFields.map( ( field ) => field.id );
   const rootContentLength = options?.content?.length;
+  const slidesLength = slides?.length;
 
   return (
     <CollapsibleItem
@@ -259,7 +260,7 @@ export default function TemplateOptions( {
         { slides && (
           <Fragment>
             <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
-              <span className="px-1 text-xs text-gray-500">slides</span>
+              <span className="px-1 text-xs text-gray-500">slides {slidesLength ? `(${ slidesLength })` : null}</span>
 
               <SlideCarousel
                 slides={slides as SlideOption[]}

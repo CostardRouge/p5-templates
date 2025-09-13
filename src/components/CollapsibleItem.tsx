@@ -4,9 +4,6 @@ import {
   JSX,
   useState
 } from "react";
-import {
-  Property
-} from "csstype";
 
 const CollapsibleItem = ( {
   header, children, className, initialExpandedValue = true, ...props
@@ -24,11 +21,11 @@ const CollapsibleItem = ( {
   return (
     <div
       className={className}
-      title={expanded ? "click to collapse" : "click to expand"}
       {...props}
     >
       <div
         onClick={() => setExpanded( e => !e )}
+        title={expanded ? "click to collapse" : "click to expand"}
       >
         {header( expanded )}
       </div>
