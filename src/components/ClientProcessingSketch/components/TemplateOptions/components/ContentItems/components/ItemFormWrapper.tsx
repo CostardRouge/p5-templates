@@ -35,7 +35,7 @@ export default function ItemFormWrapper( {
               "flex justify-between items-center",
               {
                 "mb-2": expanded,
-                "cursor-grab active:cursor-grabbing": dragBinder?.isDragging
+                "active:cursor-grabbing": dragBinder?.isDragging
               }
             )
           }

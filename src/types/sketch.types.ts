@@ -140,7 +140,7 @@ export const BackgroundItemSchema = z.object( {
     235,
     225
   ] ),
-  pattern: PatternSchema,
+  pattern: PatternSchema.optional()
 } );
 
 export const MetaItemSchema = z.object( {

@@ -66,10 +66,6 @@ export default function SlideCarousel( {
     );
   };
 
-  const alignedIds = slides.map( (
-    _slide, index
-  ) => slideIds[ index ] ?? String( index ) );
-
   return (
     <DndContext
       collisionDetection={closestCenter}
@@ -80,21 +76,24 @@ export default function SlideCarousel( {
         onDragOver={( event ) => event.preventDefault()}
         className="p-1 grid grid-cols-2 gap-1 min-h-8"
       >
-        <SortableContext items={alignedIds} strategy={rectSwappingStrategy}>
+        <SortableContext items={slideIds} strategy={rectSwappingStrategy}>
           {slides.map( (
-            slide, slideIndex
-          ) => (
-            <SlideThumbnail
-              key={alignedIds[ slideIndex ]}
-              id={alignedIds[ slideIndex ]}
-              index={slideIndex}
-              isActive={slideIndex === activeIndex}
-              label={slide.name || `Slide ${ slideIndex }`}
-              onClick={() => onSelect( slideIndex )}
-              onDuplicate={() => onDuplicate( slideIndex )}
-              onDelete={() => onDelete( slideIndex )}
-            />
-          ) )}
+            slide, index
+          ) => {
+            const id = slideIds[ index ];
+
+            return (
+              <SlideThumbnail
+                key={id}
+                id={id}
+                isActive={index === activeIndex}
+                label={slide?.name || `Slide ${ index }`}
+                onClick={() => onSelect( index )}
+                onDelete={() => onDelete( index )}
+                onDuplicate={() => onDuplicate( index )}
+              />
+            );
+          } )}
         </SortableContext>
 
         <button
@@ -114,7 +113,6 @@ export default function SlideCarousel( {
 
 function SlideThumbnail( {
   id,
-  index,
   isActive,
   label,
   onClick,
@@ -122,7 +120,6 @@ function SlideThumbnail( {
   onDelete
 }: {
   id: string;
-  index: number;
   isActive: boolean;
   label: string;
   onClick: () => void;
@@ -130,7 +127,7 @@ function SlideThumbnail( {
   onDelete: () => void;
 } ) {
   const {
-    attributes, listeners, setNodeRef, transform, transition
+    attributes, listeners, setNodeRef, transform, transition, isDragging
   } = useSortable( {
     id
   } );
@@ -148,12 +145,18 @@ function SlideThumbnail( {
       className={clsx(
         "relative bg-white border border-gray-300 flex items-center px-1 h-8 cursor-pointer rounded-sm",
         {
-          "border-gray-400": isActive
+          "border-gray-400": isActive,
+          "opacity-70": isDragging
         }
       )}
     >
       <GripVertical
-        className="h-4 w-4 text-gray-400 mr-1 cursor-grab active:cursor-grabbing"
+        className={clsx(
+          "h-4 w-4 text-gray-400 mr-1 cursor-grab active:cursor-grabbing",
+          {
+            "active:cursor-grabbing": isDragging
+          }
+        )}
         {...attributes}
         {...listeners}
       />

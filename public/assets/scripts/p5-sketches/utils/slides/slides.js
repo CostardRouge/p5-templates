@@ -41,6 +41,7 @@ function registerEvents() {
         return;
       }
 
+      console.log( "change " );
       slides.setSlide( selectedSlideIndex );
     }
   );
@@ -84,9 +85,19 @@ const slides = {
   }
 };
 
-registerEvents();
+// registerEvents();
 
-window.setSlide = index => slides.select.selected( index );
+window.setSlide = index => {
+  // console.log(
+  //   "setSlide",
+  //   {
+  //     index
+  //   }
+  // );
+  // slides.select.selected( index );
+
+  slides.setSlide( index );
+};
 window.getSlide = index => slides.getSlide( index );
 window.getCurrentSlide = () => ( {
   slide: slides.current,

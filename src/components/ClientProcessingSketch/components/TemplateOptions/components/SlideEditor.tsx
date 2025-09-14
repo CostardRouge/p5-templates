@@ -1,40 +1,60 @@
+// SlideEditor.tsx
 import React from "react";
 import {
-  SketchOption
+  useWatch, useFormContext
+} from "react-hook-form";
+import {
+  SketchOptionInput
 } from "@/types/sketch.types";
+import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvider";
+import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
 import ContentItems from "./ContentItems/ContentItems";
-import TemplateAssetsProvider from "../components/TemplateAssetsProvider/TemplateAssetsProvider";
-import ContentArrayProvider
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/ContentArrayProvider";
 
 type SlideEditorProps = {
   activeIndex: number;
-  options: SketchOption;
 };
 
 export default function SlideEditor( {
-  activeIndex, options
+  activeIndex
 }: SlideEditorProps ) {
+  const {
+    control
+  } = useFormContext<SketchOptionInput>();
+
+  const slide = useWatch( {
+    control,
+    name: `slides.${ activeIndex }`
+  } );
+  const jobId = useWatch( {
+    control,
+    name: "id"
+  } );
+
   const slideFieldPath = `slides.${ activeIndex }` as const;
   const slideContentFieldPath = `${ slideFieldPath }.content` as const;
-  const slide = options.slides?.[ activeIndex ];
 
   if ( !slide ) {
-    return <div className="p-1 text-gray-500 text-center text-xs border-r border-l border-gray-300">Select a slide to edit.</div>;
+    return (
+      <div className="p-1 text-gray-500 text-center text-xs border-r border-l border-gray-300">
+        Select a slide to edit.
+      </div>
+    );
   }
 
-  const slideContentLength = slide?.content?.length;
+  const slideContentLength = slide?.content?.length ?? 0;
 
   return (
     <div className="border-r border-l border-gray-300 text-black text-left bg-white rounded-sm">
-      <span className="px-1 text-xs text-gray-500">root.slides[{activeIndex}].content {slideContentLength ? `(${ slideContentLength })` : null}</span>
+      <span className="px-1 text-xs text-gray-500">
+        root.slides[{activeIndex}].content {slideContentLength ? `(${ slideContentLength })` : null}
+      </span>
 
       <TemplateAssetsProvider
         scope={{
           slide: activeIndex
         }}
         assetsName={`${ slideFieldPath }.assets`}
-        jobId={options.id}
+        jobId={jobId}
       >
         <ContentArrayProvider name={slideContentFieldPath}>
           <ContentItems baseFieldName={slideContentFieldPath} />
