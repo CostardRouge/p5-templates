@@ -87,16 +87,21 @@ async function recordSketchSlides(
       );
 
       // ─── 6.2 Capture frames for this slide ──────────────────────────────────
-      await recordingState.page.exposeFunction(
-        "reportCaptureProgress",
-        async( percentage: number ) => {
-          await updateRecordingStepPercentage(
-            jobId,
-            `recording.slide-${ slideIndex }.saving-frames`,
-            percentage
-          );
-        }
-      );
+      try {
+        await recordingState.page.exposeFunction(
+          "reportCaptureProgress",
+          async( percentage: number ) => {
+            await updateRecordingStepPercentage(
+              jobId,
+              `recording.slide-${ slideIndex }.saving-frames`,
+              percentage
+            );
+          }
+        );
+      }
+      catch ( e ) {
+
+      }
 
       // @ts-ignore
       await recordingState.page.evaluate( () => window.startLoopRecording() );
@@ -132,7 +137,7 @@ async function recordSketchSlides(
         100
       );
 
-      // await recordingState.page.close();
+      await recordingState.page.close();
 
       // ─── 6.3 Extract and encode this slide ─────────────────────────────────
       await updateRecordingStepPercentage(
