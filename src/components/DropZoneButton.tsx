@@ -18,7 +18,7 @@ export default function DropZoneButton( {
   multiple = false,
   className = "",
   capture = "environment",
-  accept = "image/*",
+  // accept = "image/*",
 }: DropZoneButtonProps ) {
   const inputRef = useRef<HTMLInputElement>( null );
 
@@ -37,12 +37,12 @@ export default function DropZoneButton( {
       role="button"
       tabIndex={0}
     >
-      <Plus className="h-6 w-6 text-gray-400 " />
+      <Plus className="h-6 w-6 text-gray-400" />
 
       <input
         ref={inputRef}
         type="file"
-        accept={accept}
+        // accept={accept}
         capture={capture}
         multiple={multiple}
         className="hidden"

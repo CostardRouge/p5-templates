@@ -182,7 +182,6 @@ const dotsPatternFields: ItemFormConfig = {
 
 // Main configuration object
 // The top-level keys MUST match the 'type' in your Zod discriminated union
-// @ts-ignore
 export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
   meta: {
     fill: {
@@ -354,7 +353,6 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       },
 
       // The schema is needed to create default objects when the type changes
-
       // @ts-ignore
       schema: PatternSchema,
     },
