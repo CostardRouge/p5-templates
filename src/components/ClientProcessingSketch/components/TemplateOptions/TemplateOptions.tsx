@@ -1,7 +1,10 @@
 "use client";
 
 import React, {
-  Fragment, useEffect, useState
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 import {
   ArrowDownFromLine
@@ -25,10 +28,7 @@ import SlideEditor from "./components/SlideEditor";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
 
 import {
-  FormProvider,
-  useFieldArray,
-  useForm,
-  useWatch,
+  FormProvider, useFieldArray, useForm, useWatch
 } from "react-hook-form";
 import {
   zodResolver
@@ -85,7 +85,7 @@ export default function TemplateOptions( {
     name: "slides",
   } );
 
-  // Reactively subscribe to form slices we need
+  // Reactively subscribe to slices we need
   const slides = useWatch( {
     control,
     name: "slides",
@@ -126,6 +126,27 @@ export default function TemplateOptions( {
     ]
   );
 
+  // One-time initial selection: choose slide 0 when slides first become available.
+  // This prevents any downstream component from showing slide 1 by default.
+  const didInitSelection = useRef( false );
+
+  useEffect(
+    () => {
+      const len = slideFields.length;
+
+      if ( !didInitSelection.current && len > 0 ) {
+        didInitSelection.current = true;
+        setActiveSlideIndex( 0 );
+        if ( typeof window.setSlide === "function" ) {
+          window.setSlide( 0 );
+        }
+      }
+    },
+    [
+      slideFields.length
+    ]
+  );
+
   // Keep activeSlideIndex within bounds when slides length changes
   useEffect(
     () => {
@@ -157,7 +178,7 @@ export default function TemplateOptions( {
   };
 
   const handleAddSlide = () => {
-    const nextIndex = slideFields.length;
+    const nextIndex = slideFields.length; // append to end
 
     appendSlide( makeDefaultSlide( {
       indexForLabel: nextIndex,
@@ -182,7 +203,7 @@ export default function TemplateOptions( {
     insertSlide(
       insertIndex,
       duplicated
-    ); // a new field-array id will be created
+    ); // new field-array id will be created
     handleSlideSelect( insertIndex );
   };
 
@@ -235,12 +256,17 @@ export default function TemplateOptions( {
 
   const options = watch(); // needed for CaptureActions; keeps it reactive
 
+  // Build a stable key for SlideEditor to avoid showing the wrong slide during initial id hydration.
+  const editorKey = slideIds[ activeSlideIndex ] ?? `idx-${ activeSlideIndex }`;
+  // slideIds[ activeSlideIndex ] ??
+  // `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.[ "id" ] }`;
+
   return (
     <CollapsibleItem
       data-no-zoom=""
       className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-white p-2 border border-b-0 border-gray-400 shadow shadow-black-300 drop-shadow-sm border-r-0 z-50 rounded-tl-sm"
       style={{
-        maxHeight: "calc(80svh)",
+        maxHeight: "calc(80svh)"
       }}
       header={( expanded ) => (
         <button
@@ -250,7 +276,7 @@ export default function TemplateOptions( {
           <ArrowDownFromLine
             className="inline text-gray-500 h-4"
             style={{
-              rotate: expanded ? "0deg" : "180deg",
+              rotate: expanded ? "0deg" : "180deg"
             }}
           />
           <span>{expanded ? "hide" : "show"} options</span>
@@ -294,7 +320,7 @@ export default function TemplateOptions( {
             <div className="overflow-y-scroll rounded-sm border-t border-b border-gray-300">
               <SlideEditor
                 // Key by the RHF field-array id to ensure correct remount when selection or order changes
-                key={slideIds[ activeSlideIndex ] ?? `idx-${ activeSlideIndex }`}
+                key={editorKey}
                 activeIndex={activeSlideIndex}
               />
             </div>

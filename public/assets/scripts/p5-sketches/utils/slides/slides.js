@@ -1,104 +1,87 @@
+// slides.js (p5 side)
 import {
-  captureOptions as options, events
+  captureOptions as options
 } from "../index.js";
 import {
   _layouts
 } from "./layouts/_layouts.js";
 
-function registerEvents() {
-  if ( !options?.slides || options?.slides?.length === 0 ) {
-    return;
-  }
-
-  events.register(
-    "pre-setup",
-    () => {
-      const slideNames = options?.slides?.map( (
-        {
-          template, layout, title
-        }, index
-      ) => `${ index + 1 } · ${ title ?? layout ?? template }` );
-
-      slides.select = createSelect();
-
-      slideNames.forEach( (
-        slideName, slideIndex
-      ) => slides.select.option(
-        slideName,
-        slideIndex
-      ) );
-      slides.select.selected( slideNames[ slides.index ] );
-      slides.select.parent( document.querySelector( "main" ) );
-    }
-  );
-
-  events.register(
-    "post-draw",
-    () => {
-      const selectedSlideIndex = Number( slides.select.value() );
-
-      if ( slides.index === selectedSlideIndex ) {
-        return;
-      }
-
-      console.log( "change " );
-      slides.setSlide( selectedSlideIndex );
-    }
-  );
-}
+// Safe modulo that wraps negatives too
+const wrap = (
+  i, n
+) => ( ( i % n ) + n ) % n;
 
 const slides = {
-  index: 1,
-  select: undefined,
+  // 0-based index to match React
+  index: 0,
 
   get count() {
-    return options?.slides?.length;
+    return Array.isArray( options?.slides ) ? options.slides.length : 0;
   },
-  get previous() {
-    return slides.getSlide( slides.index - 1 );
-  },
-  get current() {
-    return slides.getSlide( slides.index );
-  },
-  get next() {
-    return slides.getSlide( slides.index + 1 );
-  },
-  getSlide( index = slides.index ) {
-    return options?.slides?.[ index % slides.count ];
-  },
-  setSlide( index ) {
-    slides.index = index;
-  },
-  render( {
-    layout, ...options
-  } ) {
-    ( _layouts[ layout ] ?? _layouts.auto )( options );
-  },
-  renderCurrentSlide() {
-    const slide = slides.current;
 
-    if ( !slide ) {
+  get hasSlides() {
+    return this.count > 0;
+  },
+
+  get previous() {
+    if ( !this.hasSlides ) return undefined;
+    return this.getSlide( this.index - 1 );
+  },
+
+  get current() {
+    if ( !this.hasSlides ) return undefined;
+    return this.getSlide( this.index );
+  },
+
+  get next() {
+    if ( !this.hasSlides ) return undefined;
+    return this.getSlide( this.index + 1 );
+  },
+
+  getSlide( index = this.index ) {
+    const n = this.count;
+
+    if ( !n ) return undefined;
+    const idx = wrap(
+      Number( index ) || 0,
+      n
+    ); // ensure number + wrap
+
+    return options.slides[ idx ];
+  },
+
+  setSlide( index ) {
+    const n = this.count;
+
+    if ( !n ) {
+      this.index = 0;
       return;
     }
+    this.index = wrap(
+      Number( index ) || 0,
+      n
+    );
+  },
 
-    slides.render( slide );
-  }
+  render( {
+    layout, ...opts
+  } ) {
+    ( _layouts[ layout ] ?? _layouts.auto )( opts );
+  },
+
+  renderCurrentSlide() {
+    const slide = this.current;
+
+    if ( !slide ) return;
+    this.render( slide );
+  },
 };
 
-// registerEvents();
-
-window.setSlide = index => {
-  // console.log(
-  //   "setSlide",
-  //   {
-  //     index
-  //   }
-  // );
-  // slides.select.selected( index );
-
+// Public helpers used by React
+window.setSlide = ( index ) => {
   slides.setSlide( index );
 };
-window.getSlide = index => slides.getSlide( index );
+window.getSlide = ( index ) => slides.getSlide( index );
 window.getCurrentSlide = () => ( {
   slide: slides.current,
   index: slides.index

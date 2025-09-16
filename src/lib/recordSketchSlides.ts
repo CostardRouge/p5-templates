@@ -43,7 +43,7 @@ async function recordSketchSlides(
       createPage,
       browser
     } = await createBrowserPage( {
-      headless: true,
+      headless: false,
       deviceScaleFactor: 1
     } );
 
@@ -54,7 +54,6 @@ async function recordSketchSlides(
     ];
 
     for ( let slideIndex = 0; slideIndex < slides.length; slideIndex++ ) {
-      // ─── 6.1 Launch browser for this slide ───────────────────────────────────
       await updateRecordingStepPercentage(
         jobId,
         `recording.slide-${ slideIndex }.launching-browser`,
@@ -63,6 +62,17 @@ async function recordSketchSlides(
 
       if ( !recordingState.page ) {
         recordingState.page = await createPage();
+
+        await recordingState.page.exposeFunction(
+          "reportCaptureProgress",
+          async( percentage: number ) => {
+            await updateRecordingStepPercentage(
+              jobId,
+              `recording.slide-${ slideIndex }.saving-frames`,
+              percentage
+            );
+          }
+        );
       }
 
       await recordingState.page.goto(
@@ -84,18 +94,6 @@ async function recordSketchSlides(
         jobId,
         `recording.slide-${ slideIndex }.launching-browser`,
         100
-      );
-
-      // ─── 6.2 Capture frames for this slide ──────────────────────────────────
-      await recordingState.page.exposeFunction(
-        "reportCaptureProgress",
-        async( percentage: number ) => {
-          await updateRecordingStepPercentage(
-            jobId,
-            `recording.slide-${ slideIndex }.saving-frames`,
-            percentage
-          );
-        }
       );
 
       // @ts-ignore
@@ -134,7 +132,6 @@ async function recordSketchSlides(
 
       // await recordingState.page.close();
 
-      // ─── 6.3 Extract and encode this slide ─────────────────────────────────
       await updateRecordingStepPercentage(
         jobId,
         `recording.slide-${ slideIndex }.extracting-frames-archive`,
@@ -194,7 +191,6 @@ async function recordSketchSlides(
       await fs.unlink( slideTarPath ).catch( () => {} );
     }
 
-    // ─── 7. Bundle all .mp4s into ZIP ───────────────────────────────────────────
     await updateRecordingStepPercentage(
       jobId,
       "uploading.archiving",
@@ -221,7 +217,6 @@ async function recordSketchSlides(
       await fs.unlink( slideVideoPath ).catch( () => {} );
     }
 
-    // ─── 8. Upload ZIP to S3 ───────────────────────────────────────────────────
     await updateRecordingStepPercentage(
       jobId,
       "uploading.s3",

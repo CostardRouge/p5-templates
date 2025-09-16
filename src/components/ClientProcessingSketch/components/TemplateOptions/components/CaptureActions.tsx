@@ -221,9 +221,13 @@ export default function CaptureActions( {
       )}
 
       {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
-        <div className="flex flex-col justify-start bg-white text-center">
+        <div className="flex justify-start bg-white text-center items-center">
+          <span className="text-xs text-black">
+            {Math.round( recordingProgress?.percentage )}%&nbsp;
+          </span>
+
           <div
-            className={`w-full h-8 ${ recordingProgress.status !== "failed" ? "bg-gray-200" : "bg-red-300" } rounded relative`}>
+            className={`w-full h-6 ${ recordingProgress.status !== "failed" ? "bg-gray-200" : "bg-red-300" } rounded relative`}>
             <div
               className="h-full bg-black rounded"
               style={{
@@ -231,12 +235,12 @@ export default function CaptureActions( {
               }}
             />
             <span
-              className="absolute top-0 left-0 h-full w-full p-1.5 mix-blend-difference text-white text-sm">{Math.round( recordingProgress?.percentage )}%</span>
+              className="absolute top-0 left-0 h-full w-full p-1 text-xs text-black truncate break-words"
+            >
+              {recordingProgress.status}{recordingProgress?.currentStep?.name ? `: ${ recordingProgress?.currentStep.name }` : null}
+            </span>
           </div>
 
-          <span className="text-sm text-black">
-            {recordingProgress.status}: {recordingProgress?.currentStep?.name}
-          </span>
         </div>
       )}
 
