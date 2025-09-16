@@ -49,12 +49,12 @@ const sketch = {
     );
 
     // sketch events
-    events.toggleNoLoopOnSingleClick();
-    events.toggleCanvasRecordingOnKey();
-    events.pauseOnSpaceKeyPressed();
-    events.toggleFPSCounterOnKeyPressed();
-    events.toggleFullScreenOnDoubleClick();
-    events.extendCanvasOnResize();
+    // events.toggleNoLoopOnSingleClick();
+    // events.toggleCanvasRecordingOnKey();
+    // events.pauseOnSpaceKeyPressed();
+    // events.toggleFPSCounterOnKeyPressed();
+    // events.toggleFullScreenOnDoubleClick();
+    // events.extendCanvasOnResize();
   },
   getDefaultCanvasSize: ( value ) => {
     const canvasSize = (

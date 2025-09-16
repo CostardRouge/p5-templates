@@ -566,7 +566,7 @@ export default function RecordingsPage() {
                   className="hover:bg-gray-700"
                   onDoubleClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
                 >
-                  <td className="px-4 py-2 whitespace-nowrap hidden sm:table-cell">
+                  <td className="px-4 py-2 whitespace-nowrap sm:table-cell">
                     <img
                       src={getThumbnailURL( job.template )}
                       alt={job.template}
