@@ -112,4 +112,9 @@ declare global { interface Window {
   };
   // Script loader
   removeLoadedScripts: () => void
+
+  // P5 sketch controls
+  toggleLoop: () => void,
+  toggleFPS: () => void,
+  saveCanvas: () => void,
 } }

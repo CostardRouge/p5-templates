@@ -55,6 +55,18 @@ const sketch = {
     // events.toggleFPSCounterOnKeyPressed();
     // events.toggleFullScreenOnDoubleClick();
     // events.extendCanvasOnResize();
+
+    window.toggleLoop = () => {
+      events.handle( "engine-toggle-loop" );
+    };
+
+    window.saveCanvas = () => {
+      events.handle( "engine-canvas-save" );
+    };
+
+    window.toggleFPS = () => {
+      debug.toggleFPSCounter();
+    };
   },
   getDefaultCanvasSize: ( value ) => {
     const canvasSize = (
