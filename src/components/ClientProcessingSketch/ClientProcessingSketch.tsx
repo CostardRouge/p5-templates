@@ -6,9 +6,7 @@ import React, {
 import dynamic from "next/dynamic";
 
 import {
-  getSketchOptions,
-  setSketchOptions,
-  subscribeSketchOptions,
+  getSketchOptions, setSketchOptions, subscribeSketchOptions,
 } from "@/shared/syncSketchOptions";
 
 import {
@@ -21,6 +19,9 @@ import type {
 
 import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
+import {
+  P5Controls
+} from "@/components/ClientProcessingSketch/components/P5Controls";
 
 const TemplateOptions = dynamic(
   () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ),
@@ -81,6 +82,8 @@ export default function ClientProcessingSketch( {
       <ScalableViewport>
         <P5Sketch name={name} />
       </ScalableViewport>
+
+      <P5Controls />
 
       {!capturing && (
         <TemplateOptions

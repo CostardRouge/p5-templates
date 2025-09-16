@@ -24,8 +24,8 @@ body.recording::before {
 
 fps-counter {
   position: absolute;
-  right: 0px;
-  top: 0px;
+  left: 0;
+  bottom: 3.5em;
   color: #ffffff;
   padding: 4px 6px;
   font-family: system-ui;
@@ -84,10 +84,8 @@ canvas-overlay {
 main {
     display: flex;
     align-items: center;
-    /*height: calc(100svh - 72px);*/
     flex-direction: column;
     justify-content: center;
-    /*gap: 14px;*/
     margin: 0 auto;
 }
 
@@ -97,8 +95,3 @@ main select {
     height: 30px;
     color: black;
 }
-
-/*main canvas#defaultCanvas0 {*/
-/*    max-height: calc(1350px * 0.7);*/
-/*    max-width: calc(1080px * 0.7);*/
-/*}*/

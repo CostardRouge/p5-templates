@@ -5,8 +5,7 @@ import type {
 const nextConfig: NextConfig = {
   devIndicators: false,
   allowedDevOrigins: [
-    "192.168.1.155",
-    "192.168.0.120",
+    "192.168.1.161"
   ],
   crossOrigin: "anonymous",
   eslint: {
