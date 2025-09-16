@@ -18,54 +18,35 @@ const ZoomControls = ( {
   onFit: () => void;
 } ) => {
   return (
-    <CollapsibleItem
-      data-no-zoom=""
-      header={expanded => (
-        <button
-          className="text-gray-500 text-sm"
-          aria-label={expanded ? "Collapse controls" : "Expand controls"}
-        >
-          <ArrowDownFromLine
-            className="inline text-gray-500 h-4"
-            style={{
-              rotate: expanded ? "270deg" : "90deg"
-            }}
-          />
-          <span>zoom</span>
-        </button>
-      )}
-      className={alternativeStyle}
-    >
-      <>
-        <button
-          onClick={onFit}
-          className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-xs text-gray-500 hover:text-black"
-        >
-          Fit
-        </button>
+    <div className={alternativeStyle}>
+      <button
+        onClick={onReset}
+        className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-xs text-gray-500 hover:text-black"
+      >
+        100%
+      </button>
 
-        <button
-          onClick={onMinus}
-          className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-xs text-gray-500 hover:text-black"
-        >
-          −
-        </button>
+      <button
+        onClick={onPlus}
+        className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-xs text-gray-500 hover:text-black"
+      >
+        +
+      </button>
 
-        <button
-          onClick={onPlus}
-          className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-xs text-gray-500 hover:text-black"
-        >
-          +
-        </button>
+      <button
+        onClick={onMinus}
+        className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-xs text-gray-500 hover:text-black"
+      >
+        −
+      </button>
 
-        <button
-          onClick={onReset}
-          className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-xs text-gray-500 hover:text-black"
-        >
-          100%
-        </button>
-      </>
-    </CollapsibleItem>
+      <button
+        onClick={onFit}
+        className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-xs text-gray-500 hover:text-black"
+      >
+        Fit
+      </button>
+    </div>
   );
 };
 
