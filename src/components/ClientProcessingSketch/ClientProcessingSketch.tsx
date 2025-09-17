@@ -85,7 +85,7 @@ export default function ClientProcessingSketch( {
 
       {!capturing && (
         <>
-          <P5Controls />
+          <P5Controls name={name} />
 
           <TemplateOptions
             name={name}

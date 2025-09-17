@@ -116,5 +116,5 @@ declare global { interface Window {
   // P5 sketch controls
   toggleLoop: () => void,
   toggleFPS: () => void,
-  saveCanvas: () => void,
+  saveCanvas: ( name: string ) => void,
 } }

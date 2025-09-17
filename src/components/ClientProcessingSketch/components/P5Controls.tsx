@@ -3,8 +3,13 @@ import {
   Camera, Play, Pause, ToggleLeft, ToggleRight
 } from "lucide-react";
 
+type P5ControlsProps = {
+  name: string;
+}
+
 export function P5Controls( {
-} ) {
+  name
+}: P5ControlsProps ) {
   const [
     looping,
     setLooping
@@ -45,7 +50,7 @@ export function P5Controls( {
         <button
           title="Save canvas"
           onClick={() => {
-            window?.saveCanvas();
+            window?.saveCanvas( name );
           }}
           className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-sm text-gray-500 hover:text-black"
         >

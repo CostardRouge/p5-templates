@@ -60,8 +60,11 @@ const sketch = {
       events.handle( "engine-toggle-loop" );
     };
 
-    window.saveCanvas = () => {
-      events.handle( "engine-canvas-save" );
+    window.saveCanvas = ( name ) => {
+      events.handle(
+        "engine-canvas-save",
+        name
+      );
     };
 
     window.toggleFPS = () => {

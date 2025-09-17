@@ -66,7 +66,8 @@ const slides = {
   render( {
     layout, ...opts
   } ) {
-    ( _layouts[ layout ] ?? _layouts.auto )( opts );
+    // ( _layouts[ layout ] ?? _layouts.auto )( opts );
+    ( _layouts.free )( opts );
   },
 
   renderCurrentSlide() {

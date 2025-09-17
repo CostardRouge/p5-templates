@@ -267,30 +267,35 @@ export const ImageItemSchema = z.object( {
   position: Vec2,
   animation: z.preprocess(
     ( v ) => {
-      if ( v == null ) return undefined;
-      if ( typeof v === "object" && "name" in ( v as any ) && ( v as any ).name === "" ) {
-        return undefined; // treat empty discriminator as “no animation”
+      if ( v == null ) {
+        return undefined;
       }
+
+      if ( typeof v === "object" && "name" in ( v as any ) && ( v as any ).name === "" ) {
+        return undefined;
+      }
+
       return v;
     },
     ImageItemAnimations.optional()
   ),
 } );
 
-const NonEmptyPath = z.string().trim()
+const NonEmptyPath = z
+  .string()
+  .trim()
   .min( 1 );
 
 export const ImagesStackItemSchema = z.object( {
   type: z.literal( "images-stack" ),
 
-  // Accept anything, coerce to [] if not an array, and drop empty strings.
   sources: z.preprocess(
     ( v ) => Array.isArray( v )
       ? v.filter( ( s ) => typeof s === "string" && s.trim().length > 0 )
       : [
       ],
     z.array( NonEmptyPath ).default( [
-    ] ) // no min(1) here
+    ] )
   ),
 
   margin: z.number().nonnegative()
@@ -300,25 +305,14 @@ export const ImagesStackItemSchema = z.object( {
   animation: ImagesStackAnimations.optional(),
 } );
 
-// const VideoItem = z.object( {
-//   type: z.literal( "video" )
-// } ).passthrough();
-// const VisualItem = z.object( {
-//   type: z.literal( "visual" )
-// } ).passthrough();
-
 export const ContentItemSchema = z.discriminatedUnion(
   "type",
   [
     BackgroundItemSchema,
     MetaItemSchema,
     TextItemSchema,
-
     ImagesStackItemSchema,
     ImageItemSchema,
-
-    // VideoItem,
-    // VisualItem,
   ]
 );
 
@@ -339,13 +333,38 @@ export const Assets = z
 /* ---------------- slide schema (with name) ---------------------- */
 export const SlideSchema = z.object( {
   name: z.string().default( "new slide" ),
-  layout: z.string().default( "free" ),
   content: z.array( ContentItemSchema ).default( [
   ] ),
   assets: Assets
 } );
 
 /* ---------------- root options.json ----------------------------- */
+const SketchSizeSchema = z.object( {
+  width: z
+    .number()
+    .min( 50 )
+    .max( 8192 )
+    .default( 1080 ),
+  height: z
+    .number()
+    .min( 50 )
+    .max( 8192 )
+    .default( 1350 ),
+} );
+
+const SketchAnimationSchema = z.object( {
+  framerate: z
+    .number()
+    .min( 1 )
+    .max( 240 )
+    .default( 60 ),
+  duration: z
+    .number()
+    .min( 1 )
+    .max( 60 )
+    .default( 12 ),
+} );
+
 export const OptionsSchema = z.object( {
   id: z
     .string()
@@ -359,39 +378,16 @@ export const OptionsSchema = z.object( {
     .boolean()
     .default( false )
     .optional(),
-  size: z.object( {
-    width: z
-      .number()
-      .int()
-      .positive()
-      .default( 1080 ),
-    height: z
-      .number()
-      .int()
-      .positive()
-      .default( 1350 ),
-  } )
+  size: SketchSizeSchema
     .default( {
       width: 1080,
       height: 1350
     } ),
-  animation: z.object( {
-    framerate: z
-      .number()
-      .int()
-      .positive()
-      .default( 60 ),
-    duration: z
-      .number()
-      .positive()
-      .default( 12 ),
-  } ).default( {
-    framerate: 60,
-    duration: 12
-  } ),
-  layout: z
-    .string()
-    .default( "free" ),
+  animation: SketchAnimationSchema
+    .default( {
+      framerate: 60,
+      duration: 12
+    } ),
   content: z
     .array( ContentItemSchema )
     .default( [
@@ -404,7 +400,8 @@ export const OptionsSchema = z.object( {
 } );
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;
-export type SketchOption = z.infer<typeof OptionsSchema>;
 export type SlideOption = z.infer<typeof SlideSchema>;
 export type AssetsOption = z.infer<typeof Assets>;
+
+export type SketchOption = z.infer<typeof OptionsSchema>;
 export type SketchOptionInput = z.input<typeof OptionsSchema>;

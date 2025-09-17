@@ -108,7 +108,13 @@ export default function FieldRenderer( {
 
       case "select":
         return (
-          <select {...commonInputProps} {...register( registeredName )}>
+          <select
+            {...{
+              ...commonInputProps,
+              className: `${ commonInputProps.className } p-0`
+            }}
+            {...register( registeredName )}
+          >
             {config.options.map( ( option ) => (
               <option key={option.value} value={option.value}>
                 {option.label}
