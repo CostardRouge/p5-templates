@@ -43,7 +43,7 @@ async function recordSketchSlides(
       createPage,
       browser
     } = await createBrowserPage( {
-      headless: false,
+      headless: true,
       deviceScaleFactor: 1
     } );
 
