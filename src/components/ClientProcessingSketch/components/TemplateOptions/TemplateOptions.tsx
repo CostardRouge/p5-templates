@@ -85,7 +85,6 @@ export default function TemplateOptions( {
     name: "slides",
   } );
 
-  // Reactively subscribe to slices we need
   const slides = useWatch( {
     control,
     name: "slides",
@@ -96,7 +95,6 @@ export default function TemplateOptions( {
     name: "id",
   } ) as string | undefined;
 
-  // Broadcast full form changes to parent
   useEffect(
     () => {
       const subscription = watch( ( value ) => {
@@ -111,7 +109,6 @@ export default function TemplateOptions( {
     ]
   );
 
-  // Log validation errors (dev aid)
   useEffect(
     () => {
       if ( Object.keys( errors ).length > 0 ) {
@@ -126,17 +123,17 @@ export default function TemplateOptions( {
     ]
   );
 
-  // One-time initial selection: choose slide 0 when slides first become available.
-  // This prevents any downstream component from showing slide 1 by default.
   const didInitSelection = useRef( false );
 
   useEffect(
     () => {
-      const len = slideFields.length;
+      const length = slideFields.length;
 
-      if ( !didInitSelection.current && len > 0 ) {
+      if ( !didInitSelection.current && length > 0 ) {
         didInitSelection.current = true;
+
         setActiveSlideIndex( 0 );
+
         if ( typeof window.setSlide === "function" ) {
           window.setSlide( 0 );
         }
@@ -147,7 +144,6 @@ export default function TemplateOptions( {
     ]
   );
 
-  // Keep activeSlideIndex within bounds when slides length changes
   useEffect(
     () => {
       const length = slideFields.length;
@@ -155,13 +151,20 @@ export default function TemplateOptions( {
       setActiveSlideIndex( ( current ) => {
         let next = current;
 
-        if ( length === 0 ) next = 0;
-        else if ( current < 0 ) next = 0;
-        else if ( current > length - 1 ) next = length - 1;
+        if ( length === 0 ) {
+          next = 0;
+        }
+        else if ( current < 0 ) {
+          next = 0;
+        }
+        else if ( current > length - 1 ) {
+          next = length - 1;
+        }
 
         if ( typeof window.setSlide === "function" ) {
           window.setSlide( next );
         }
+
         return next;
       } );
     },
@@ -172,18 +175,19 @@ export default function TemplateOptions( {
 
   const handleSlideSelect = ( index: number ) => {
     setActiveSlideIndex( index );
+
     if ( typeof window.setSlide === "function" ) {
       window.setSlide( index );
     }
   };
 
   const handleAddSlide = () => {
-    const nextIndex = slideFields.length; // append to end
+    const nextIndex = slideFields.length;
 
     appendSlide( makeDefaultSlide( {
       indexForLabel: nextIndex,
     } ) );
-    // Select the newly added slide
+
     handleSlideSelect( nextIndex );
   };
 
@@ -192,25 +196,32 @@ export default function TemplateOptions( {
     ];
     const original = allSlides[ indexToDuplicate ];
 
-    if ( !original ) return;
+    if ( !original ) {
+      return;
+    }
 
     const duplicated = deepClone( original );
 
-    if ( duplicated?.name ) duplicated.name = `${ duplicated.name } (copy)`;
+    if ( duplicated?.name ) {
+      duplicated.name = `${ duplicated.name } (copy)`;
+    }
 
     const insertIndex = indexToDuplicate + 1;
 
     insertSlide(
       insertIndex,
       duplicated
-    ); // new field-array id will be created
+    );
+
     handleSlideSelect( insertIndex );
   };
 
   const handleDeleteSlide = ( indexToDelete: number ) => {
     const lengthBefore = slideFields.length;
 
-    if ( lengthBefore <= 0 ) return;
+    if ( lengthBefore <= 0 ) {
+      return;
+    }
 
     removeSlide( indexToDelete );
     const lengthAfter = lengthBefore - 1;
@@ -219,10 +230,12 @@ export default function TemplateOptions( {
       handleSlideSelect( 0 );
       return;
     }
+
     if ( indexToDelete < activeSlideIndex ) {
       handleSlideSelect( activeSlideIndex - 1 );
       return;
     }
+
     if ( indexToDelete === activeSlideIndex ) {
       const nextIndex = Math.min(
         activeSlideIndex,
@@ -232,34 +245,35 @@ export default function TemplateOptions( {
       handleSlideSelect( nextIndex );
       return;
     }
-    // If deleting a slide after the active one, keep the same active index
     handleSlideSelect( activeSlideIndex );
   };
 
   const handleReorderSlides = (
     oldIndex: number, newIndex: number
   ) => {
-    if ( oldIndex === newIndex ) return;
+    if ( oldIndex === newIndex ) {
+      return;
+    }
+
     moveSlide(
       oldIndex,
       newIndex
     );
+
     handleSlideSelect( newIndex );
   };
 
-  const slideIds = slideFields.map( ( f ) => f.id );
+  const slideIds = slideFields.map( ( field ) => field.id );
   const slidesLength = slides?.length;
   const rootContentLength = useWatch( {
     control,
     name: "content",
   } )?.length;
 
-  const options = watch(); // needed for CaptureActions; keeps it reactive
+  const options = watch();
+  const editorKey = slideIds[ activeSlideIndex ] ?? `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.name ?? "unnamed-slide" }`;
 
-  // Build a stable key for SlideEditor to avoid showing the wrong slide during initial id hydration.
-  const editorKey = slideIds[ activeSlideIndex ] ?? `idx-${ activeSlideIndex }`;
-  // slideIds[ activeSlideIndex ] ??
-  // `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.[ "id" ] }`;
+  // slideIds[ activeSlideIndex ] ?? `idx-${ activeSlideIndex }`;
 
   return (
     <CollapsibleItem
@@ -284,7 +298,6 @@ export default function TemplateOptions( {
       )}
     >
       <FormProvider {...methods}>
-        {/* Global content */}
         <div className="rounded-sm border border-gray-300 text-black text-left bg-white overflow-y-scroll">
           <span className="px-1 text-xs text-gray-500">
             root.content {rootContentLength ? `(${ rootContentLength })` : null}
@@ -297,7 +310,6 @@ export default function TemplateOptions( {
           </TemplateAssetsProvider>
         </div>
 
-        {/* Slides carousel + editor */}
         {slides && (
           <Fragment>
             <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
@@ -319,7 +331,6 @@ export default function TemplateOptions( {
 
             <div className="overflow-y-scroll rounded-sm border-t border-b border-gray-300">
               <SlideEditor
-                // Key by the RHF field-array id to ensure correct remount when selection or order changes
                 key={editorKey}
                 activeIndex={activeSlideIndex}
               />

@@ -61,7 +61,7 @@ async function recordSketch(
     );
 
     await recordingState.page.goto(
-      `http://localhost:3000/templates/${ template }?id=${ jobId }`,
+      `http://localhost:3000/templates/${ template }?id=${ jobId }&amp;capturing`,
       {
         waitUntil: "networkidle"
       },

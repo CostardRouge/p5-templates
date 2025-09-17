@@ -43,7 +43,7 @@ async function recordSketchSlides(
       createPage,
       browser
     } = await createBrowserPage( {
-      headless: false,
+      headless: true,
       deviceScaleFactor: 1
     } );
 
@@ -76,7 +76,7 @@ async function recordSketchSlides(
       }
 
       await recordingState.page.goto(
-        `http://localhost:3000/templates/${ template }?id=${ jobId }`,
+        `http://localhost:3000/templates/${ template }?id=${ jobId }&capturing`,
         {
           waitUntil: "networkidle"
         },
@@ -130,7 +130,7 @@ async function recordSketchSlides(
         100
       );
 
-      // await recordingState.page.close();
+      await recordingState.page.close();
 
       await updateRecordingStepPercentage(
         jobId,

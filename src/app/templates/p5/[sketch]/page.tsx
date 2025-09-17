@@ -19,7 +19,6 @@ import {
 import {
   SketchOption
 } from "@/types/sketch.types";
-import initOptions from "@/components/utils/initOptions";
 
 export const metadata: Metadata = {
   title: "Social-templates-renderer | p5js",
@@ -51,12 +50,11 @@ async function ProcessingSketch( {
 
   const sketchName = ( await params ).sketch;
   const jobIdSearchParams = ( await searchParams ).id;
-  const capturingSearchParams = ( await searchParams ).capturing;
   const sketchOptions = getSketchOptions( sketchName ) ?? ( {
   } as SketchOption );
 
   const processingSketchProps: ClientProcessingSketchProps = {
-    capturing: capturingSearchParams !== undefined,
+    capturing: ( await searchParams ).capturing === "",
     persistedJob: undefined,
     options: sketchOptions,
     name: sketchName,
@@ -93,7 +91,6 @@ async function ProcessingSketch( {
   }
 
   sketchOptions.name = sketchName;
-  // processingSketchProps.options = initOptions( sketchOptions );
 
   return (
     <ClientProcessingSketch

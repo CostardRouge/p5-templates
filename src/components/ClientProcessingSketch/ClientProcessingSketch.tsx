@@ -79,21 +79,23 @@ export default function ClientProcessingSketch( {
         }}
       />
 
-      <ScalableViewport>
+      <ScalableViewport showZoomControls={!capturing}>
         <P5Sketch name={name} />
       </ScalableViewport>
 
-      <P5Controls />
-
       {!capturing && (
-        <TemplateOptions
-          name={name}
-          persistedJob={persistedJob}
-          options={currentOptions}
-          setOptions={( updated ) =>
-            setCurrentOptions( updated as SketchOption )
-          }
-        />
+        <>
+          <P5Controls />
+
+          <TemplateOptions
+            name={name}
+            persistedJob={persistedJob}
+            options={currentOptions}
+            setOptions={( updated ) =>
+              setCurrentOptions( updated as SketchOption )
+            }
+          />
+        </>
       )}
     </Fragment>
   );
