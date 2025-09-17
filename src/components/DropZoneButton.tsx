@@ -1,4 +1,5 @@
 import React, {
+  forwardRef,
   useRef
 } from "react";
 import {
@@ -13,19 +14,25 @@ type DropZoneButtonProps = {
   accept?: string;
 };
 
-export default function DropZoneButton( {
-  onFiles,
-  multiple = false,
-  className = "",
-  capture = "environment",
-  accept = "image/*",
-}: DropZoneButtonProps ) {
+export default forwardRef( function DropZoneButton(
+  {
+    onFiles,
+    multiple = false,
+    className = "",
+    capture = "environment",
+    accept = "image/*",
+  }: DropZoneButtonProps, ref: React.Ref<HTMLDivElement>
+) {
   const inputRef = useRef<HTMLInputElement>( null );
 
   return (
     <div
+      ref={ref}
       className={`border border-dashed border-gray-300 rounded-sm p-3 flex flex-col items-center justify-center gap-2 text-gray-500 bg-white ${ className }`}
-      onClick={() => inputRef.current?.click()}
+      onClick={( e ) => {
+        e.stopPropagation();
+        inputRef.current?.click();
+      }}
       onDragOver={( e ) => e.preventDefault()}
       onDrop={async( e ) => {
         e.preventDefault();
@@ -55,4 +62,4 @@ export default function DropZoneButton( {
       />
     </div>
   );
-}
+} );
