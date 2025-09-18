@@ -9,7 +9,7 @@ import {
 import {
   formConfig
 } from "../constants/field-config";
-import FieldRenderer from "./FieldRenderer";
+import FieldRenderer from "../../FieldRenderer";
 
 import ItemFormWrapper from "./ItemFormWrapper";
 import {

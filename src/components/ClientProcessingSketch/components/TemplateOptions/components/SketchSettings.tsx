@@ -192,11 +192,12 @@ export default function SketchSettings() {
             Animation
           </label>
 
-          <div className="p-1 border border-gray-300 rounded-sm text-black flex gap-1">
+          <div className="flex gap-1 p-1 mt-0.5 border border-gray-300 rounded-sm text-black">
             <div className="flex-1">
               <label className="text-gray-400" htmlFor="animation.duration">
                 Duration
               </label>
+
               <input
                 id="animation.duration"
                 className="w-full p-1 border border-gray-300 rounded-sm h-7"

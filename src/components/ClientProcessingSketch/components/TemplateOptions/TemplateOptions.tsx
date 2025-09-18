@@ -40,7 +40,9 @@ import initOptions from "@/components/utils/initOptions";
 import ContentArrayProvider from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/ContentArrayProvider";
 import deepClone from "@/utils/deepClone";
 import makeDefaultSlide from "@/components/ClientProcessingSketch/components/TemplateOptions/utils/makeDefaultSlide";
+
 import SketchSettings from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings";
+import RootSettings from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/RootSettings";
 
 export default function TemplateOptions( {
   name,
@@ -297,7 +299,9 @@ export default function TemplateOptions( {
       )}
     >
       <FormProvider {...methods}>
-        <SketchSettings />
+        {/* <SketchSettings />*/}
+
+        <RootSettings />
 
         <div className="rounded-sm border border-gray-300 text-black text-left bg-white overflow-y-scroll">
           <span className="px-1 text-xs text-gray-500">

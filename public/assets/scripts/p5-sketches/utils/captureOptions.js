@@ -23,32 +23,12 @@ const sketchOptions = {
     width: 1080,
     height: 1350
   },
-  // colors: {
-  //   text: [
-  //     0,
-  //     0,
-  //     0
-  //   ],
-  //   accent: [
-  //     128,
-  //     128,
-  //     255
-  //   ],
-  //   background: [
-  //     230,
-  //     230,
-  //     230
-  //   ],
-  // },
   animation: {
     duration: 10,
     framerate: 60
   },
   assets: {
-  }, // 👉 now an object { images:[], videos:[], … }
-  // lines: false,
-  // durationBar: true,
-  /* merge options injected from React / server --------------------- */
+  },
   ...getSketchOptions(),
 };
 

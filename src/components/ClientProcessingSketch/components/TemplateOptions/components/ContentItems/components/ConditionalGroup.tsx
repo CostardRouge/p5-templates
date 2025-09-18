@@ -7,7 +7,7 @@ import {
 import {
   ConditionalGroupConfig
 } from "../constants/field-config";
-import FieldRenderer from "./FieldRenderer";
+import FieldRenderer from "../../FieldRenderer";
 
 type ConditionalGroupProps = {
   basePath: string;
@@ -34,7 +34,6 @@ export default function ConditionalGroup( {
     const newType = e.target.value;
 
     if ( newType === "" ) {
-      // None selected -> remove whole object
       setValue(
         basePath,
         undefined,
@@ -67,23 +66,27 @@ export default function ConditionalGroup( {
 
   return (
     <Fragment>
-      <div className="p-1 mt-1 border border-gray-300 space-y-1 rounded-sm">
-        <label htmlFor={conditionalFieldName} className="text-xs text-gray-400">
-          {config.typeSelector.label || "Type"}
-        </label>
-        <select
-          id={conditionalFieldName}
-          value={watchedValue ?? ""} // "" shows None when undefined
-          onChange={handleTypeChange}
-          className={selectClassName}
-        >
-          <option value="">{config.typeSelector.noneLabel || "None"}</option>
-          {config.typeSelector.options.map( ( option ) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ) )}
-        </select>
+      <div className="p-1 border border-gray-300 space-y-2 rounded-sm">
+        <div>
+          <label htmlFor={conditionalFieldName} className="text-xs text-gray-400">
+            {config.typeSelector.label || "Type"}
+          </label>
+
+          <select
+            id={conditionalFieldName}
+            value={watchedValue ?? ""} // "" shows None when undefined
+            onChange={handleTypeChange}
+            className={selectClassName}
+          >
+            <option value="">{config.typeSelector.noneLabel || "--"}</option>
+
+            {config.typeSelector.options.map( ( option ) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ) )}
+          </select>
+        </div>
 
         {activeConfig &&
           Object.entries( activeConfig ).map( ( [

@@ -52,6 +52,7 @@ interface SelectConfig extends BaseConfig {
   options: Array<{
     label: string; value: string | number
   }>;
+  asNumber?: boolean;
 }
 
 // For static, non-conditional nested objects

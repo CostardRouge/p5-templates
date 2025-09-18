@@ -198,7 +198,9 @@ const p5js = {
     ),
     "engine-smooth-pixel-change": ( checked ) =>
       checked ? smooth() : noSmooth(),
-    "engine-framerate-change": ( value ) => frameRate( value ),
+    "engine-framerate-change": ( value ) => {
+      frameRate( value );
+    },
   },
 };
 
