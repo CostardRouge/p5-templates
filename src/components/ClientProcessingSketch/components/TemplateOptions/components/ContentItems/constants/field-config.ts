@@ -45,14 +45,23 @@ interface ColorInputConfig extends BaseConfig {
   component: "color";
 }
 
+export interface SizePresetConfig extends BaseConfig {
+  component: "size-preset";
+  options: SelectOption[];
+}
+
 // For 'select' inputs
+export type SelectOption = {
+  label: string;
+  value: string | number
+  group?: string
+}
+
 interface SelectConfig extends BaseConfig {
   component: "select";
   noneLabel?: string;
-  options: Array<{
-    label: string; value: string | number
-  }>;
   asNumber?: boolean;
+  options: SelectOption[];
 }
 
 // For static, non-conditional nested objects
@@ -108,7 +117,8 @@ export type FieldConfig =
   | NestedObjectConfig
   | ConditionalGroupConfig
   | ImagesStackConfig
-  | ImageConfig;
+  | ImageConfig
+  | SizePresetConfig
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema

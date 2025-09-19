@@ -9,6 +9,7 @@ import {
 } from "./ContentItems/constants/field-config";
 
 import ControlledImagesStackInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImagesStackInput/ControlledImagesStackInput";
+import ControlledSizePresetSelect from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSizePresetSelect/ControlledSizePresetSelect";
 import ControlledImageInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImageInput/ControlledImageInput";
 import ControlledColorInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledColorInput/ControlledColorInput";
 import ConditionalGroup from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ConditionalGroup";
@@ -127,6 +128,15 @@ export default function FieldRenderer( {
               </option>
             ) )}
           </select>
+        );
+
+      case "size-preset":
+        return (
+          <ControlledSizePresetSelect
+            id={registeredName}
+            className="p-1"
+            options={config.options}
+          />
         );
 
       case "nested-object":

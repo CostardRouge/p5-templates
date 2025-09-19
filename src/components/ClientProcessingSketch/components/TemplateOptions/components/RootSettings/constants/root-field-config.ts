@@ -1,59 +1,87 @@
 import {
-  FieldConfig
+  FieldConfig, SelectOption
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
-export const sizePresetOptions: Array<{
- label: string; value: string
-}> = [
-  // Square
-  {
-    label: "[Square] 768 × 768",
-    value: "768x768"
-  },
-  {
-    label: "[Square] 1024 × 1024",
-    value: "1024x1024"
-  },
-  {
-    label: "[Square] 1080 × 1080 (Instagram)",
-    value: "1080x1080"
-  },
-  {
-    label: "[Square] 1280 × 1280",
-    value: "1280x1280"
-  },
-  {
-    label: "[Square] 2048 × 2048",
-    value: "2048x2048"
-  },
+const createSizePresetOption = (
+  width: number, height: number, name?: string, group?: string
+): SelectOption => ( {
+  label: `${ width } × ${ height }${ name ? ` (${ name })` : "" }`,
+  value: `${ width }x${ height }`,
+  group
+} );
 
-  // Portrait
-  {
-    label: "[Portrait] 768 × 1366 (default)",
-    value: "768x1366"
-  },
-  {
-    label: "[Portrait] 1080 × 1350 (Instagram post)",
-    value: "1080x1350"
-  },
-  {
-    label: "[Portrait] 1080 × 1920 (Instagram reel/story)",
-    value: "1080x1920"
-  },
+export const sizePresetOptions: SelectOption[] = [
+  // square
+  createSizePresetOption(
+    768,
+    768,
+    undefined,
+    "Square"
+  ),
+  createSizePresetOption(
+    1024,
+    1024,
+    undefined,
+    "Square"
+  ),
+  createSizePresetOption(
+    1080,
+    1080,
+    undefined,
+    "Square"
+  ),
+  createSizePresetOption(
+    1280,
+    1280,
+    undefined,
+    "Square"
+  ),
 
-  // Landscape
-  {
-    label: "[Landscape] 1366 × 768 (default)",
-    value: "1366x768"
-  },
-  {
-    label: "[Landscape] 1080 × 608 (Instagram landscape)",
-    value: "1080x608"
-  },
-  {
-    label: "[Landscape] 1920 × 1080",
-    value: "1920x1080"
-  }
+  // portrait
+  createSizePresetOption(
+    768,
+    1366,
+    undefined,
+    "Portrait"
+  ),
+  createSizePresetOption(
+    1080,
+    1350,
+    "Instagram post",
+    "Portrait"
+  ),
+  createSizePresetOption(
+    1080,
+    1920,
+    "Instagram reel/story",
+    "Portrait"
+  ),
+
+  // landscape
+  createSizePresetOption(
+    1080,
+    608,
+    "Instagram landscape",
+    "Landscape"
+  ),
+  createSizePresetOption(
+    1366,
+    768,
+    undefined,
+    "Landscape"
+  ),
+  createSizePresetOption(
+    1920,
+    1080,
+    "Full HD",
+    "Landscape"
+  ),
+  createSizePresetOption(
+    1920 * 4,
+    1080 * 4,
+    "Ultra HD",
+    "Landscape"
+  ),
 ];
 
 export const framerateOptions = [
@@ -71,12 +99,11 @@ export const framerateOptions = [
   value: fps,
 } ) );
 
-export const rootFormConfig: Record<string, FieldConfig> = {
+const rootFormConfig: Record<string, FieldConfig> = {
   sizePreset: {
-    label: "Size",
-    component: "select",
+    label: "Canvas size",
+    component: "size-preset",
     options: sizePresetOptions,
-    noneLabel: undefined,
   },
 
   animation: {
@@ -89,7 +116,7 @@ export const rootFormConfig: Record<string, FieldConfig> = {
         step: 1,
         min: 0,
         max: 60,
-        placeholder: "seconds",
+        placeholder: "x seconds",
       },
       framerate: {
         label: "Framerate",
@@ -100,3 +127,5 @@ export const rootFormConfig: Record<string, FieldConfig> = {
     },
   },
 };
+
+export default rootFormConfig;
