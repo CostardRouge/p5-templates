@@ -527,14 +527,14 @@ export default function RecordingsPage() {
 
           <button
             onClick={() => setView( "cards" )}
-            className={`border dark:border-gray-700 p-2 rounded ${ view === "cards" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
+            className={`p-2 rounded ${ view === "cards" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
           >
             <Grid className="w-5 h-5"/>
           </button>
 
           <button
             onClick={() => setView( "table" )}
-            className={`border dark:border-gray-700 p-2 rounded ${ view === "table" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
+            className={`p-2 rounded ${ view === "table" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
           >
             <List className="w-5 h-5"/>
           </button>
