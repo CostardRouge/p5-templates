@@ -36,16 +36,17 @@ export default function TemplatesList( {
           <button
             aria-label="Grid view"
             onClick={() => setView( "grid" )}
-            className={`p-2 rounded ${
+            className={`border dark:border-gray-600 p-2 rounded ${
               view === "grid" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600"
             }`}
           >
             <Grid className="w-5 h-5"/>
           </button>
+
           <button
             aria-label="List view"
             onClick={() => setView( "list" )}
-            className={`p-2 rounded ${
+            className={`border dark:border-gray-600 p-2 rounded ${
               view === "list" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600"
             }`}
           >
@@ -59,7 +60,7 @@ export default function TemplatesList( {
         category,
         items
       ] ) => (
-        <div key={category} className="">
+        <div key={category}>
           <h2 className="text-lg font-medium mb-3">{category}</h2>
           <div
             className={

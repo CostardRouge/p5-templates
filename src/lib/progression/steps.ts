@@ -45,10 +45,6 @@ function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
       ) => {
         const clonedSlideRecordingStep: any = JSON.parse( JSON.stringify( recordingSketchSteps.recording ) );
 
-        if ( slide?.layout ) {
-          clonedSlideRecordingStep.description = slide?.layout;
-        }
-
         return {
           ...accumulator,
           [ `slide-${ slideIndex }` ]: {

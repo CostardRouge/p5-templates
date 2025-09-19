@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import {
-  Grid, List, MoreVertical, Download, Trash2, RotateCcw, X, Clapperboard
+  Grid, List, MoreVertical, Download, Trash2, RotateCcw, X
 } from "lucide-react";
 
 import {
@@ -527,14 +527,14 @@ export default function RecordingsPage() {
 
           <button
             onClick={() => setView( "cards" )}
-            className={`p-2 rounded ${ view === "cards" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
+            className={`border dark:border-gray-700 p-2 rounded ${ view === "cards" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
           >
             <Grid className="w-5 h-5"/>
           </button>
 
           <button
             onClick={() => setView( "table" )}
-            className={`p-2 rounded ${ view === "table" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
+            className={`border dark:border-gray-700 p-2 rounded ${ view === "table" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
           >
             <List className="w-5 h-5"/>
           </button>
