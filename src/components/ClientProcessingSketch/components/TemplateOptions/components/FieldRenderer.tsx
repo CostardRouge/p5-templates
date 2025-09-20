@@ -79,7 +79,7 @@ export default function FieldRenderer( {
             type="range"
             {...{
               ...commonInputProps,
-              className: `${ commonInputProps.className } !p-0`
+              className: `${ commonInputProps.className } md:!p-0`
             }}
             {...register(
               registeredName,
@@ -107,7 +107,7 @@ export default function FieldRenderer( {
           <select
             {...{
               ...commonInputProps,
-              className: `${ commonInputProps.className } !p-0`
+              className: `${ commonInputProps.className } md:!p-0`
             }}
             {...register(
               registeredName,
@@ -134,6 +134,7 @@ export default function FieldRenderer( {
         return (
           <ControlledSizePresetSelect
             id={registeredName}
+            className="p-1 md:!p-0"
             options={config.options}
           />
         );
@@ -165,7 +166,7 @@ export default function FieldRenderer( {
         return (
           <ConditionalGroup
             basePath={registeredName}
-            selectClassName={`${ commonInputProps.className } !p-0`}
+            selectClassName={`${ commonInputProps.className } md:!p-0`}
             config={config}
           />
         );
