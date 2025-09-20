@@ -18,6 +18,10 @@ import {
 } from "@/lib/progression/steps";
 
 async function runRecording( jobId: string ) {
+  if ( process.env.NODE_ENV === "production" && process.env.ENABLE_VIDEO_GENERATION === "false" ) {
+    return;
+  }
+
   // ─── 1. Create workspace ───────────────────────────────────────────────────
   const temporaryDirectoryPath = path.join(
     os.tmpdir(),

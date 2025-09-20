@@ -116,6 +116,10 @@ export async function POST(
 
   const page = await createPage();
 
+  if ( process.env.NODE_ENV === "production" && process.env.ENABLE_VIDEO_GENERATION === "false" ) {
+    return;
+  }
+
   await takeScreenshot( {
     url: url.toString(),
     selectorToWaitFor: "div#loaded",
