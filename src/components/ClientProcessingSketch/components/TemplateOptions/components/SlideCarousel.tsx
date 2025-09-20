@@ -84,7 +84,7 @@ export default function SlideCarousel( {
 
             return (
               <SlideThumbnail
-                key={id}
+                key={`${ id }-${ index }`}
                 id={id}
                 isActive={index === activeIndex}
                 label={slide?.name || `Slide ${ index }`}
