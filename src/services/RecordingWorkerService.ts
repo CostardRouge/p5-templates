@@ -90,6 +90,7 @@ export class RecordingWorkerService {
       );
 
       // Process the recording
+      console.log( "dd" );
       await runRecording( job.id );
 
       console.log( `[Worker] Job completed successfully: ${ job.id }` );

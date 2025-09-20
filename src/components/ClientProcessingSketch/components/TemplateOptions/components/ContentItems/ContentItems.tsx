@@ -150,7 +150,7 @@ export default function ContentItems( {
 
   return (
     <div className="text-xs flex flex-col gap-1">
-      <div className="flex flex-col gap-1 p-1 pt-0.5">
+      <div className="flex flex-col gap-1">
         <AddItemControls />
 
         <DndContext

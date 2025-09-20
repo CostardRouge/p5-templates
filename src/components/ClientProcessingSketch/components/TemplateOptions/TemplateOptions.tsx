@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import {
-  ArrowDownFromLine
+  ArrowDownFromLine, ListCollapse
 } from "lucide-react";
 
 import {
@@ -42,6 +42,7 @@ import deepClone from "@/utils/deepClone";
 import makeDefaultSlide from "@/components/ClientProcessingSketch/components/TemplateOptions/utils/makeDefaultSlide";
 
 import RootSettings from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/RootSettings";
+import clsx from "clsx";
 
 export default function TemplateOptions( {
   name,
@@ -300,25 +301,65 @@ export default function TemplateOptions( {
       <FormProvider {...methods}>
         <RootSettings />
 
-        <div className="rounded-sm border border-gray-300 text-black text-left bg-white overflow-y-scroll">
-          <span className="px-1 text-xs text-gray-500">
-            root.content {rootContentLength ? `(${ rootContentLength })` : null}
-          </span>
-
+        <CollapsibleItem
+          className="p-1 border border-gray-300 rounded-sm text-left text-black bg-white overflow-y-scroll"
+          headerContainerClassName="leading-none"
+          header={( expanded ) => (
+            <button
+              className={
+                clsx(
+                  "text-gray-500 text-xs w-full text-left -ml-1 align-text-top",
+                  {
+                    "mb-1": expanded
+                  }
+                )
+              }
+              aria-label={expanded ? "Collapse" : "Expand"}
+            >
+              <ListCollapse
+                className="inline text-gray-500 h-3 "
+                style={{
+                  rotate: expanded ? "180deg" : "0deg"
+                }}
+              />
+              <span>global content {rootContentLength ? `(${ rootContentLength })` : null}</span>
+            </button>
+          )}
+        >
           <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
             <ContentArrayProvider name="content">
-              <ContentItems baseFieldName="content" />
+              <ContentItems baseFieldName="content"/>
             </ContentArrayProvider>
           </TemplateAssetsProvider>
-        </div>
+        </CollapsibleItem>
 
         {slides && (
           <Fragment>
-            <div className="rounded-sm border border-gray-300 text-black text-left bg-white">
-              <span className="px-1 text-xs text-gray-500">
-                slides {slidesLength ? `(${ slidesLength })` : null}
-              </span>
-
+            <CollapsibleItem
+              className="p-1 border border-gray-300 rounded-sm bg-white overflow-y-scroll"
+              headerContainerClassName="leading-none"
+              header={( expanded ) => (
+                <button
+                  className={
+                    clsx(
+                      "text-gray-500 text-xs w-full text-left -ml-1 align-text-top",
+                      {
+                        "mb-1": expanded
+                      }
+                    )
+                  }
+                  aria-label={expanded ? "Collapse" : "Expand"}
+                >
+                  <ListCollapse
+                    className="inline text-gray-500 h-3"
+                    style={{
+                      rotate: expanded ? "180deg" : "0deg"
+                    }}
+                  />
+                  <span>slides {slidesLength ? `(${ slidesLength })` : null}</span>
+                </button>
+              )}
+            >
               <SlideCarousel
                 slides={slides as SlideOption[]}
                 slideIds={slideIds}
@@ -329,14 +370,14 @@ export default function TemplateOptions( {
                 onDuplicate={handleDuplicateSlide}
                 onDelete={handleDeleteSlide}
               />
-            </div>
 
-            <div className="overflow-y-scroll rounded-sm border-t border-b border-gray-300">
-              <SlideEditor
-                key={editorKey}
-                activeIndex={activeSlideIndex}
-              />
-            </div>
+              <div className="">
+                <SlideEditor
+                  key={editorKey}
+                  activeIndex={activeSlideIndex}
+                />
+              </div>
+            </CollapsibleItem>
           </Fragment>
         )}
 

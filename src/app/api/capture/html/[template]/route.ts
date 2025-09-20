@@ -1,6 +1,5 @@
 import downloadFileResponse from "@/utils/downloadFileResponse";
 import createBrowserPage from "@/utils/createBrowserPage";
-import takeScreenshot from "@/utils/takeScreenshot";
 
 import fs from "node:fs/promises";
 import path from "path";
@@ -120,10 +119,15 @@ export async function POST(
     return;
   }
 
+  const takeScreenshot = await import( "@/utils/takeScreenshot" );
+
+  // @ts-ignore
   await takeScreenshot( {
     url: url.toString(),
     selectorToWaitFor: "div#loaded",
-    callbefore: ( page ) => {
+    callbefore: ( page: {
+      evaluate: ( arg0: () => void ) => void;
+    } ) => {
       page.evaluate( ( ) => {
         try {
           document.body.style.backgroundColor = "white";

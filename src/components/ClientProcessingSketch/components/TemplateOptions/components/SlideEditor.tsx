@@ -44,8 +44,8 @@ export default function SlideEditor( {
   const slideContentLength = slide?.content?.length ?? 0;
 
   return (
-    <div className="border-r border-l border-gray-300 text-black text-left bg-white rounded-sm">
-      <span className="px-1 text-xs text-gray-500">
+    <div className="text-black text-left bg-white rounded-sm">
+      <span className="p-1 text-xs text-gray-500">
         root.slides[{activeIndex}].content {slideContentLength ? `(${ slideContentLength })` : null}
       </span>
 

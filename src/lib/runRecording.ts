@@ -1,4 +1,5 @@
-import recordSketch from "@/lib/recordSketch";
+// import recordSketch from "@/lib/recordSketch";
+// import recordSketchSlides from "@/lib/recordSketchSlides";
 
 import {
   updateJob, getJobById
@@ -8,7 +9,6 @@ import fs from "node:fs/promises";
 import path from "path";
 import os from "node:os";
 
-import recordSketchSlides from "@/lib/recordSketchSlides";
 import getCaptureOptions from "@/utils/getCaptureOptions";
 import {
   addRecordingSteps
@@ -21,6 +21,14 @@ async function runRecording( jobId: string ) {
   if ( process.env.NODE_ENV === "production" && process.env.ENABLE_VIDEO_GENERATION === "false" ) {
     return;
   }
+
+  const recordSketch = await import( "@/lib/recordSketch" );
+  const recordSketchSlides = await import( "@/lib/recordSketchSlides" );
+
+  console.log(
+    recordSketch,
+    recordSketchSlides
+  );
 
   // ─── 1. Create workspace ───────────────────────────────────────────────────
   const temporaryDirectoryPath = path.join(
@@ -56,6 +64,12 @@ async function runRecording( jobId: string ) {
       persistedJob.status
     );
 
+    console.log(
+      "recordFunction",
+      recordFunction
+    );
+
+    // @ts-ignore
     await recordFunction(
       jobId,
       persistedJob.template,

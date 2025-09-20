@@ -74,7 +74,7 @@ export default function SlideCarousel( {
     >
       <div
         onDragOver={( event ) => event.preventDefault()}
-        className="p-1 grid grid-cols-2 gap-1 min-h-8"
+        className="grid grid-cols-1 gap-1 min-h-8"
       >
         <SortableContext items={slideIds} strategy={rectSwappingStrategy}>
           {slides.map( (
@@ -143,9 +143,9 @@ function SlideThumbnail( {
       ref={setNodeRef}
       onClick={onClick}
       className={clsx(
-        "relative bg-white border border-gray-300 flex items-center px-1 h-8 cursor-pointer rounded-sm",
+        "relative bg-white border border-gray-200 hover:border-gray-300 flex items-center px-1 h-8 cursor-pointer rounded-sm",
         {
-          "border-gray-400": isActive,
+          "border-gray-400 hover:border-gray-400": isActive,
           "opacity-70": isDragging
         }
       )}
@@ -161,7 +161,7 @@ function SlideThumbnail( {
         {...listeners}
       />
 
-      <span className="text-xs truncate">{label}</span>
+      <span className="text-xs text-black truncate">{label}</span>
 
       <button
         type="button"
