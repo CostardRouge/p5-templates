@@ -359,7 +359,7 @@ const SketchAnimationSchema = z.object( {
     .min( 1 )
     .max( 240 )
     .default( 60 ),
-  duration: z
+  duration: z.coerce
     .number()
     .min( 1 )
     .max( 60 )

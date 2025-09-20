@@ -108,7 +108,7 @@ export default function ControlledSizePresetSelect( {
   return (
     <select
       id={id}
-      className={`w-full p-1 border border-gray-300 rounded-sm ${ className }`}
+      className={`w-full border border-gray-300 rounded-sm ${ className }`}
       value={currentValue}
       onChange={handleChange}
     >

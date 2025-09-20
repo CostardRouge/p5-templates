@@ -51,6 +51,11 @@ export default function ClientProcessingSketch( {
     ...options,
   } ), );
 
+  const [
+    sketchLoaded,
+    setSketchLoaded
+  ] = useState<boolean>( false );
+
   useEffect(
     () => {
       setSketchOptions(
@@ -79,13 +84,24 @@ export default function ClientProcessingSketch( {
         }}
       />
 
-      <ScalableViewport showZoomControls={!capturing}>
-        <P5Sketch name={name} />
+      {!sketchLoaded && (
+        <div className="flex items-center justify-center">
+          <p>⏳ loading p5.js</p>
+        </div>
+      )}
+
+      <ScalableViewport showZoomControls={!capturing && sketchLoaded}>
+        <P5Sketch
+          name={name}
+          onLoaded={() => {
+            setSketchLoaded( true );
+          }}
+        />
       </ScalableViewport>
 
       {!capturing && (
         <>
-          <P5Controls name={name} />
+          {sketchLoaded ? <P5Controls name={name}/> : null}
 
           <TemplateOptions
             name={name}

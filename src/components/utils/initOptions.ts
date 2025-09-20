@@ -2,7 +2,10 @@ import {
   SketchOption, OptionsSchema
 } from "@/types/sketch.types";
 
+const OptionsSchemaWithCatch = OptionsSchema.catch( OptionsSchema.parse( {
+} ) );
+
 export default function initOptions( initialOptions: unknown ): SketchOption {
-  return OptionsSchema.parse( initialOptions ?? {
+  return OptionsSchemaWithCatch.parse( initialOptions ?? {
   } );
 }

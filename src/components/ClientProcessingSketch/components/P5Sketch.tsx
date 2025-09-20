@@ -8,11 +8,12 @@ import React, {
  * the canvas is created.  Cleans itself on unmount / template change.
  */
 export default function P5Sketch( {
-  name
+  name, onLoaded
 }: {
-  name: string,
+  name: string, onLoaded: ( canvasElement: HTMLCanvasElement ) => void
 } ) {
   const p5templateContainerRef = useRef<HTMLDivElement | null>( null );
+  const canvasRef = useRef<HTMLCanvasElement | null>( null );
 
   useEffect(
     () => {
@@ -40,7 +41,8 @@ export default function P5Sketch( {
         const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0", ) as HTMLCanvasElement | null;
 
         if ( canvas ) {
-          // onCanvasReady?.( canvas );
+          onLoaded( canvas );
+          canvasRef.current = canvas;
           p5templateContainerRef.current?.appendChild( canvas );
           obs.disconnect(); // stop observing
         }
