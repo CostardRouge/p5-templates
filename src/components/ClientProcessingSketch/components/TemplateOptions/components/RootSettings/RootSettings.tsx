@@ -5,7 +5,7 @@ import rootFormConfig from "./constants/root-field-config";
 
 import GenericObjectForm from "./components/GenericObjectForm/GenericObjectForm";
 import {
-  ArrowDownFromLine, ListCollapse
+  ListCollapse
 } from "lucide-react";
 import CollapsibleItem from "@/components/CollapsibleItem";
 

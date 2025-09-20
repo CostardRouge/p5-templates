@@ -1,6 +1,3 @@
-// import recordSketch from "@/lib/recordSketch";
-// import recordSketchSlides from "@/lib/recordSketchSlides";
-
 import {
   updateJob, getJobById
 } from "@/lib/jobStore";
@@ -17,19 +14,10 @@ import {
   getRecordingSketchStepsByOptions
 } from "@/lib/progression/steps";
 
+import recordSketch from "@/lib/recordSketch";
+import recordSketchSlides from "@/lib/recordSketchSlides";
+
 async function runRecording( jobId: string ) {
-  if ( process.env.NODE_ENV === "production" && process.env.ENABLE_VIDEO_GENERATION === "false" ) {
-    return;
-  }
-
-  const recordSketch = await import( "@/lib/recordSketch" );
-  const recordSketchSlides = await import( "@/lib/recordSketchSlides" );
-
-  console.log(
-    recordSketch,
-    recordSketchSlides
-  );
-
   // ─── 1. Create workspace ───────────────────────────────────────────────────
   const temporaryDirectoryPath = path.join(
     os.tmpdir(),
@@ -53,7 +41,6 @@ async function runRecording( jobId: string ) {
     const options = await getCaptureOptions( `${ jobId }/options.json` );
 
     // ─── 4. Decide single vs multiple slides ──────────────────────────────────
-    // @ts-ignore
     const slides = options.slides ?? null;
     const recordFunction = slides && Array.isArray( slides ) && slides.length > 0 ? recordSketchSlides : recordSketch;
 
@@ -62,11 +49,6 @@ async function runRecording( jobId: string ) {
       jobId,
       getRecordingSketchStepsByOptions( options ),
       persistedJob.status
-    );
-
-    console.log(
-      "recordFunction",
-      recordFunction
     );
 
     // @ts-ignore

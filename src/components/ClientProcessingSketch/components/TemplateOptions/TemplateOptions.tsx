@@ -302,6 +302,7 @@ export default function TemplateOptions( {
         <RootSettings />
 
         <CollapsibleItem
+          initialExpandedValue={false}
           className="p-1 border border-gray-300 rounded-sm text-left text-black bg-white overflow-y-scroll"
           headerContainerClassName="leading-none"
           header={( expanded ) => (
@@ -317,7 +318,7 @@ export default function TemplateOptions( {
               aria-label={expanded ? "Collapse" : "Expand"}
             >
               <ListCollapse
-                className="inline text-gray-500 h-3 "
+                className="inline text-gray-500 h-3"
                 style={{
                   rotate: expanded ? "180deg" : "0deg"
                 }}

@@ -65,7 +65,7 @@ export default function TemplatesList( {
           <div
             className={
               view === "grid"
-                ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2"
+                ? "grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2"
                 : "space-y-2"
             }
           >
@@ -91,7 +91,7 @@ export default function TemplatesList( {
                       />
                     </div>
                     <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-gray-700/60 to-transparent">
-                      <span className="text-white drop-shadow">
+                      <span className="text-white text-sm drop-shadow">
                         {name}
                       </span>
                     </div>

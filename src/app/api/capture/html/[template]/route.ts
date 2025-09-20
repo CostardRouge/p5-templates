@@ -1,16 +1,10 @@
 import downloadFileResponse from "@/utils/downloadFileResponse";
 import createBrowserPage from "@/utils/createBrowserPage";
+import takeScreenshot from "@/utils/takeScreenshot";
 
 import fs from "node:fs/promises";
 import path from "path";
 import os from "node:os";
-
-const {
-  createPage, browser
-} = await createBrowserPage( {
-  headless: true,
-  deviceScaleFactor: 2
-} );
 
 export async function POST(
   request: Request,
@@ -113,15 +107,15 @@ export async function POST(
     );
   }
 
+  const {
+    createPage, browser
+  } = await createBrowserPage( {
+    headless: true,
+    deviceScaleFactor: 2
+  } );
+
   const page = await createPage();
 
-  if ( process.env.NODE_ENV === "production" && process.env.ENABLE_VIDEO_GENERATION === "false" ) {
-    return;
-  }
-
-  const takeScreenshot = await import( "@/utils/takeScreenshot" );
-
-  // @ts-ignore
   await takeScreenshot( {
     url: url.toString(),
     selectorToWaitFor: "div#loaded",

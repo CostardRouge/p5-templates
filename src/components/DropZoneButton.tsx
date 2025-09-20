@@ -10,7 +10,6 @@ type DropZoneButtonProps = {
   onFiles: ( files: FileList ) => void | Promise<void>;
   multiple?: boolean;
   className?: string;
-  capture?: "environment" | "user";
   accept?: string;
 };
 
@@ -19,7 +18,6 @@ export default forwardRef( function DropZoneButton(
     onFiles,
     multiple = false,
     className = "",
-    capture = "environment",
     accept = "image/*",
   }: DropZoneButtonProps, ref: React.Ref<HTMLDivElement>
 ) {
@@ -50,9 +48,9 @@ export default forwardRef( function DropZoneButton(
         ref={inputRef}
         type="file"
         accept={accept}
-        capture={capture}
         multiple={multiple}
         className="hidden"
+        name="image"
         onChange={async( e ) => {
           if ( e.target.files ) {
             await onFiles( e.target.files );
