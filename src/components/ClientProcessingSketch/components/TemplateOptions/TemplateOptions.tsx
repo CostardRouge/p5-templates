@@ -41,7 +41,6 @@ import ContentArrayProvider from "@/components/ClientProcessingSketch/components
 import deepClone from "@/utils/deepClone";
 import makeDefaultSlide from "@/components/ClientProcessingSketch/components/TemplateOptions/utils/makeDefaultSlide";
 
-import SketchSettings from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings";
 import RootSettings from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/RootSettings";
 
 export default function TemplateOptions( {
