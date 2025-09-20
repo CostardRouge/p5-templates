@@ -17,8 +17,6 @@ sketch.setup(
 );
 
 sketch.draw( () => {
-  clear();
-  slides.renderCurrentSlide();
-  slides.render( options );
+
 } );
 

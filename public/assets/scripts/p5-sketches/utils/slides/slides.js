@@ -1,6 +1,6 @@
 // slides.js (p5 side)
 import {
-  captureOptions as options
+  captureOptions as options, events
 } from "../index.js";
 import {
   _layouts
@@ -84,10 +84,6 @@ const slides = {
 
 // Public helpers used by React
 window.setSlide = ( index ) => {
-  console.log(
-    "setSlide",
-    index
-  );
   slides.setSlide( index );
 };
 window.getSlide = ( index ) => slides.getSlide( index );
@@ -97,5 +93,20 @@ window.getCurrentSlide = () => ( {
 } );
 
 window.slides = slides;
+
+events.register(
+  "pre-draw",
+  () => {
+    clear();
+  }
+);
+
+events.register(
+  "post-draw",
+  () => {
+    slides.renderCurrentSlide();
+    slides.render( options );
+  }
+);
 
 export default slides;

@@ -34,11 +34,7 @@ export default function SlideEditor( {
   const slideContentFieldPath = `${ slideFieldPath }.content` as const;
 
   if ( !slide ) {
-    return (
-      <div className="p-1 text-gray-500 text-center text-xs border-r border-l border-gray-300">
-        Select a slide to edit.
-      </div>
-    );
+    return null;
   }
 
   const slideContentLength = slide?.content?.length ?? 0;

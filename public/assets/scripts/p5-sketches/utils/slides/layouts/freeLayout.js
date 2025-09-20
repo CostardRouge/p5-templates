@@ -8,7 +8,7 @@ import drawSlideBackground from "../common/drawSlideBackground.js";
 import drawSlideImagesStack from "../common/drawSlideImagesStack.js";
 
 export default function freeLayout( options ) {
-  options.content.forEach( ( item ) => {
+  options?.content?.forEach( ( item ) => {
     switch ( item?.type ) {
       case "background":
         drawSlideBackground( item );
