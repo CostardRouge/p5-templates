@@ -332,7 +332,7 @@ export const Assets = z
 
 /* ---------------- slide schema (with name) ---------------------- */
 export const SlideSchema = z.object( {
-  name: z.string().default( "new slide" ),
+  name: z.string().default( "Slide 1" ),
   content: z.array( ContentItemSchema ).default( [
   ] ),
   assets: Assets

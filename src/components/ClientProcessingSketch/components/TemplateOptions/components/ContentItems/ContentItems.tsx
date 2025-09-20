@@ -149,42 +149,38 @@ export default function ContentItems( {
   );
 
   return (
-    <div className="text-xs flex flex-col gap-1">
-      <div className="flex flex-col gap-1">
-        <AddItemControls />
+    <div className="flex flex-col gap-1 text-xs">
+      <AddItemControls />
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onDragEnd}
-          modifiers={[
-            restrictToVerticalAxis,
-            restrictToParentElement
-          ]}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+        modifiers={[
+          restrictToVerticalAxis,
+          restrictToParentElement
+        ]}
+      >
+        <SortableContext
+          items={ids}
+          strategy={verticalListSortingStrategy}
         >
-          <SortableContext
-            items={ids}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="flex flex-col gap-1">
-              {fields.map( (
-                field, index
-              ) => (
-                <SortableRow key={field.id} id={field.id}>
-                  {( dragBinder ) => (
-                    <GenericItemForm
-                      index={index}
-                      dragBinder={dragBinder}
-                      baseFieldName={baseFieldName}
-                      onRemove={() => remove( index )}
-                    />
-                  )}
-                </SortableRow>
-              ) )}
-            </div>
-          </SortableContext>
-        </DndContext>
-      </div>
+          {fields.map( (
+            field, index
+          ) => (
+            <SortableRow key={field.id} id={field.id}>
+              {( dragBinder ) => (
+                <GenericItemForm
+                  index={index}
+                  dragBinder={dragBinder}
+                  baseFieldName={baseFieldName}
+                  onRemove={() => remove( index )}
+                />
+              )}
+            </SortableRow>
+          ) )}
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
