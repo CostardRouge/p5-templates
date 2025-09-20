@@ -1,5 +1,5 @@
 import {
-  captureOptions as options, sketch, slides
+  captureOptions as options, sketch
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 sketch.setup(
@@ -17,7 +17,6 @@ sketch.setup(
 );
 
 sketch.draw( () => {
-  slides.renderCurrentSlide();
-  slides.render( options );
+
 } );
 

@@ -4,7 +4,6 @@
     "duration": 20
   },
 
-  "layout": "free",
   "content": [
     {
       "type": "meta",
@@ -18,7 +17,6 @@
 
   "slides": [
     {
-      "layout": "free",
       "content": [
         {
           "type": "background",

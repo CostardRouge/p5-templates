@@ -71,7 +71,7 @@ export default function MenuBar() {
   }
 
   return (
-    <nav className="h-14 bg-white px-2 shadow shadow-gray-300 flex gap-1 items-center justify-center w-full border-t border-gray-400 z-40">
+    <nav className="h-14 bg-gray-800 px-2 flex gap-1 items-center justify-center w-full border-t border-gray-700 z-40">
       {items.map( ( {
         href, Icon
       } ) => {
@@ -81,7 +81,7 @@ export default function MenuBar() {
           <HardLink
             key={href}
             href={href}
-            className={"rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 bg-white text-sm hover:bg-gray-500 hover:text-white active:text-white"}
+            className={"rounded-sm p-2 border border-gray-700 disabled:opacity-50 text-gray-200 bg-gray-900 text-sm hover:bg-gray-600 active:text-white"}
           >
             <Icon className={"inline w-4 h-4"} />
             <span>&nbsp;{href}</span>

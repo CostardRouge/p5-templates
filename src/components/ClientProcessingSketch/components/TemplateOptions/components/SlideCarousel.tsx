@@ -87,7 +87,7 @@ export default function SlideCarousel( {
                 key={`${ id }-${ index }`}
                 id={id}
                 isActive={index === activeIndex}
-                label={slide?.name || `Slide ${ index }`}
+                label={`Slide ${ index + 1 }`}
                 onClick={() => onSelect( index )}
                 onDelete={() => onDelete( index )}
                 onDuplicate={() => onDuplicate( index )}

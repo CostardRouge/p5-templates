@@ -65,7 +65,7 @@ export default function TemplatesList( {
           <div
             className={
               view === "grid"
-                ? "grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2"
+                ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2"
                 : "space-y-2"
             }
           >
@@ -77,7 +77,7 @@ export default function TemplatesList( {
                   <HardLink
                     key={name}
                     href={href}
-                    className="relative w-full bg-gray-800 rounded-lg overflow-hidden shadow hover:shadow-md transition"
+                    className="relative w-full bg-gray-800 rounded-sm overflow-hidden shadow hover:shadow-md transition"
                   >
                     {/* Aspect ratio box for 4:5 (360x450) */}
                     <div className="w-full" style={{

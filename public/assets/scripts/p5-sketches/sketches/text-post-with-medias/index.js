@@ -385,6 +385,10 @@ sketch.draw( (
     template, ...slideOptions
   } = slides.current;
 
+  if ( !template ) {
+    return;
+  }
+
   ( {
     intro: drawIntroSlide,
     text: drawTextSlide,

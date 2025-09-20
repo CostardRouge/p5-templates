@@ -622,9 +622,9 @@ export default function RecordingsPage() {
 
       {/* Card View */}
       {view === "cards" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
           {filtered.map( ( job ) => (
-            <div key={job.id} className="bg-gray-800 border border-gray-700 rounded-lg shadow hover:shadow-md transition relative">
+            <div key={job.id} className="bg-gray-800 border border-gray-700 rounded-sm shadow hover:shadow-md transition relative">
               <StatusBadge
                 status={job.status}
                 className="absolute top-2 left-2 rounded-sm"
@@ -634,13 +634,13 @@ export default function RecordingsPage() {
                 src={getThumbnailURL( job.template )}
                 alt={job.template}
                 loading="lazy"
-                className="object-contain w-full rounded-t-lg"
+                className="object-contain rounded-t-sm"
               />
 
-              <div className="p-4 space-y-1">
+              <div className="p-2 space-y-1">
                 <HardLink
                   href={`templates/${ job.template }`}
-                  className="block text-center text-xs text-blue-600 hover:underline truncate mb-4"
+                  className="block text-sm text-blue-600 hover:underline truncate"
                 >
                   {job.template} →
                 </HardLink>
@@ -648,7 +648,7 @@ export default function RecordingsPage() {
                 <div className="mb-1">
                   <HardLink
                     href={`templates/${ job.template }?id=${ job.id }`}
-                    className="text-sm font-medium truncate"
+                    className="text-xs font-medium truncate"
                   >
                     {job.id.slice(
                       0,

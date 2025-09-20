@@ -86,7 +86,7 @@ export default function ClientProcessingSketch( {
 
       {!sketchLoaded && (
         <div className="flex items-center justify-center">
-          <p>⏳ loading p5.js</p>
+          <p>loading p5js sketch...</p>
         </div>
       )}
 
@@ -102,15 +102,16 @@ export default function ClientProcessingSketch( {
       {!capturing && (
         <>
           {sketchLoaded ? <P5Controls name={name}/> : null}
+          {sketchLoaded ? (
+            <TemplateOptions
+              name={name}
+              persistedJob={persistedJob}
+              options={currentOptions}
+              setOptions={( updated ) =>
+                setCurrentOptions( updated as SketchOption )
+              }
+            /> ) : null}
 
-          <TemplateOptions
-            name={name}
-            persistedJob={persistedJob}
-            options={currentOptions}
-            setOptions={( updated ) =>
-              setCurrentOptions( updated as SketchOption )
-            }
-          />
         </>
       )}
     </Fragment>
