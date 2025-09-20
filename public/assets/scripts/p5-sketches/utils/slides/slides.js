@@ -12,7 +12,6 @@ const wrap = (
 ) => ( ( i % n ) + n ) % n;
 
 const slides = {
-  // 0-based index to match React
   index: 0,
 
   get count() {
@@ -24,24 +23,36 @@ const slides = {
   },
 
   get previous() {
-    if ( !this.hasSlides ) return undefined;
+    if ( !this.hasSlides ) {
+      return undefined;
+    }
+
     return this.getSlide( this.index - 1 );
   },
 
   get current() {
-    if ( !this.hasSlides ) return undefined;
+    if ( !this.hasSlides ) {
+      return undefined;
+    }
+
     return this.getSlide( this.index );
   },
 
   get next() {
-    if ( !this.hasSlides ) return undefined;
+    if ( !this.hasSlides ) {
+      return undefined;
+    }
+
     return this.getSlide( this.index + 1 );
   },
 
   getSlide( index = this.index ) {
     const n = this.count;
 
-    if ( !n ) return undefined;
+    if ( !n ) {
+      return undefined;
+    }
+
     const idx = wrap(
       Number( index ) || 0,
       n
@@ -51,16 +62,7 @@ const slides = {
   },
 
   setSlide( index ) {
-    const n = this.count;
-
-    if ( !n ) {
-      this.index = 0;
-      return;
-    }
-    this.index = wrap(
-      Number( index ) || 0,
-      n
-    );
+    this.index = index;
   },
 
   render( {
@@ -73,13 +75,19 @@ const slides = {
   renderCurrentSlide() {
     const slide = this.current;
 
-    if ( !slide ) return;
+    if ( !slide ) {
+      return;
+    }
     this.render( slide );
   },
 };
 
 // Public helpers used by React
 window.setSlide = ( index ) => {
+  console.log(
+    "setSlide",
+    index
+  );
   slides.setSlide( index );
 };
 window.getSlide = ( index ) => slides.getSlide( index );

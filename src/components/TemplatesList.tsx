@@ -37,7 +37,7 @@ export default function TemplatesList( {
             aria-label="Grid view"
             onClick={() => setView( "grid" )}
             className={`p-2 rounded ${
-              view === "grid" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600"
+              view === "grid" ? "bg-gray-700" : "hover:bg-gray-600"
             }`}
           >
             <Grid className="w-5 h-5"/>
@@ -47,7 +47,7 @@ export default function TemplatesList( {
             aria-label="List view"
             onClick={() => setView( "list" )}
             className={`p-2 rounded ${
-              view === "list" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600"
+              view === "list" ? "bg-gray-700" : "hover:bg-gray-600"
             }`}
           >
             <List className="w-5 h-5"/>
@@ -77,7 +77,7 @@ export default function TemplatesList( {
                   <HardLink
                     key={name}
                     href={href}
-                    className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shadow hover:shadow-md transition"
+                    className="relative w-full bg-gray-800 rounded-lg overflow-hidden shadow hover:shadow-md transition"
                   >
                     {/* Aspect ratio box for 4:5 (360x450) */}
                     <div className="w-full" style={{
@@ -103,7 +103,7 @@ export default function TemplatesList( {
                 <HardLink
                   key={name}
                   href={href}
-                  className="flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  className="flex items-center bg-gray-800 border border-gray-700 rounded-lg p-3 hover:bg-gray-700 transition"
                 >
                   <div className="w-12 flex-shrink-0" style={{
                     aspectRatio: "4 / 5"
@@ -116,7 +116,7 @@ export default function TemplatesList( {
                     />
                   </div>
                   <span className="flex-1 ml-3 truncate">{name}</span>
-                  <span className="text-gray-500 dark:text-gray-400 ml-2">➔</span>
+                  <span className="text-gray-400 ml-2">➔</span>
                 </HardLink>
               );
             } )}

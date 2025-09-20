@@ -303,7 +303,7 @@ const ImageInfoHelper = () => {
 
             <div className="flex gap-1 h-auto">
               <button
-                className=" flex-grow rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                className="flex-grow rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
                 onClick={async() => await submitDownloadForm( "_self" )}
               >
                 {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :

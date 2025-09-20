@@ -81,12 +81,12 @@ function ActionsMenu( {
   onRetry?: () => void;
 } ) {
   return (
-    <Menu as="div" className=" inline-block text-left">
-      <MenuButton className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full inline-flex items-center">
+    <Menu as="div" className="inline-block text-left">
+      <MenuButton className="p-1 hover:bg-gray-700 rounded-full inline-flex items-center">
         <MoreVertical />
       </MenuButton>
 
-      <MenuItems className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+      <MenuItems className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
         {job.status === "completed" &&
           <MenuItem>
             {( {
@@ -94,7 +94,7 @@ function ActionsMenu( {
             } ) => (
               <button
                 onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
-                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <Download className="h-5" />
                 Download
@@ -125,7 +125,7 @@ function ActionsMenu( {
           } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/options/download/${ job.id }` )}
-              className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
             >
               <Download className="h-5" />
               <span>Download .json</span>
@@ -184,7 +184,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <X className="h-5" />
                 Cancel
@@ -239,7 +239,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <RotateCcw className="h-5" />
                 Retry
@@ -296,7 +296,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <Trash2 />
                 Delete
@@ -508,13 +508,13 @@ export default function RecordingsPage() {
             placeholder="Search…"
             value={search}
             onChange={( e ) => setSearch( e.target.value )}
-            className="px-3 rounded w-full sm:w-48 bg-gray-50 dark:bg-gray-800 h-9"
+            className="px-3 rounded w-full sm:w-48 bg-gray-800 h-9"
           />
 
           <select
             value={statusFilter}
             onChange={( e ) => setStatusFilter( e.target.value )}
-            className="px-2 rounded bg-gray-50 dark:bg-gray-800 h-9"
+            className="px-2 rounded bg-gray-800 h-9"
           >
             <option value="all">All Status</option>
             <option value="draft">Drafted</option>
@@ -527,14 +527,14 @@ export default function RecordingsPage() {
 
           <button
             onClick={() => setView( "cards" )}
-            className={`p-2 rounded ${ view === "cards" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
+            className={`p-2 rounded ${ view === "cards" ? "bg-gray-700" : "hover:bg-gray-600" }`}
           >
             <Grid className="w-5 h-5"/>
           </button>
 
           <button
             onClick={() => setView( "table" )}
-            className={`p-2 rounded ${ view === "table" ? "bg-gray-200 dark:bg-gray-700" : "hover:bg-gray-100 dark:hover:bg-gray-600" }`}
+            className={`p-2 rounded ${ view === "table" ? "bg-gray-700" : "hover:bg-gray-600" }`}
           >
             <List className="w-5 h-5"/>
           </button>
@@ -545,9 +545,9 @@ export default function RecordingsPage() {
 
       {/* Table View */}
       {view === "table" && (
-        <div className="overflow-x-auto rounded border border-gray-700 dark:bg-gray-800">
+        <div className="overflow-x-auto rounded border border-gray-700 bg-gray-800">
           <table className="min-w-full">
-            <thead className="bg-gray-300 dark:bg-gray-200">
+            <thead className="bg-gray-200">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Thumb</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
@@ -581,14 +581,14 @@ export default function RecordingsPage() {
                         0,
                         8
                       )}
-                      <span className="text-gray-500 dark:text-gray-400 ml-2">➔</span>
+                      <span className="text-gray-400 ml-2">➔</span>
                     </HardLink>
                   </td>
 
                   <td className="px-4 py-2 whitespace-nowrap text-sm">
                     <HardLink href={`templates/${ job.template }`}>
                       {job.template}
-                      <span className="text-gray-500 dark:text-gray-400 ml-2">➔</span>
+                      <span className="text-gray-400 ml-2">➔</span>
                     </HardLink>
                   </td>
 
@@ -624,7 +624,7 @@ export default function RecordingsPage() {
       {view === "cards" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map( ( job ) => (
-            <div key={job.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow hover:shadow-md transition relative">
+            <div key={job.id} className="bg-gray-800 border border-gray-700 rounded-lg shadow hover:shadow-md transition relative">
               <StatusBadge
                 status={job.status}
                 className="absolute top-2 left-2 rounded-sm"
@@ -659,7 +659,7 @@ export default function RecordingsPage() {
 
                 <div className="flex justify-between">
                   <div className="flex-grow">
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    <div className="text-xs text-gray-400 mb-2">
                       { new Date( job.createdAt ).toLocaleString() }
                     </div>
 

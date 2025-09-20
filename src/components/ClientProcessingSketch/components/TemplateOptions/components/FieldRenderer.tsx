@@ -197,7 +197,7 @@ export default function FieldRenderer( {
     <div className="text-xs">
       {/* Don't show a label for groups, as they have their own internal labels */}
       {( config.component !== "nested-object" && config.component !== "conditional-group" ) && config.label && (
-        <label htmlFor={registeredName} className=" text-gray-400">
+        <label htmlFor={registeredName} className="text-gray-400">
           {config.label}
         </label>
       )}

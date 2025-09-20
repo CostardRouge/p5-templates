@@ -73,27 +73,27 @@ export function RecordingDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+      <div className="bg-gray-800 p-6 rounded-lg shadow">
 
         {health && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 dark:bg-blue-500 p-4 rounded">
-              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-100">Waiting</h3>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-600">{health.waiting}</p>
+            <div className="bg-blue-500 p-4 rounded">
+              <h3 className="text-sm font-medium text-blue-100">Waiting</h3>
+              <p className="text-2xl font-bold text-blue-600">{health.waiting}</p>
             </div>
 
-            <div className="bg-yellow-50 dark:bg-yellow-500 p-4 rounded">
-              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-100">Active</h3>
-              <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-600">{health.active}</p>
+            <div className="bg-yellow-500 p-4 rounded">
+              <h3 className="text-sm font-medium text-yellow-100">Active</h3>
+              <p className="text-2xl font-bold text-yellow-600">{health.active}</p>
             </div>
 
-            <div className="bg-green-50 p-4 rounded dark:bg-green-700">
-              <h3 className="text-sm font-medium text-green-800 dark:text-green-100">Completed</h3>
+            <div className="p-4 rounded bg-green-700">
+              <h3 className="text-sm font-medium text-green-100">Completed</h3>
               <p className="text-2xl font-bold text-green-900">{health.completed}</p>
             </div>
 
-            <div className="bg-red-50 dark:bg-red-700 p-4 rounded">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-100">Failed</h3>
+            <div className="bg-red-700 p-4 rounded">
+              <h3 className="text-sm font-medium text-red-100">Failed</h3>
               <p className="text-2xl font-bold text-red-900">{health.failed}</p>
             </div>
           </div>

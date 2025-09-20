@@ -18,7 +18,7 @@ export default function RootLayout( {
     <html lang="en">
       <body>
         <div
-          className="flex flex-col dark:bg-gray-900 text-gray-800 dark:text-gray-100"
+          className="flex flex-col bg-gray-900 text-gray-100"
           style={ {
             height: "100svh",
           } }
