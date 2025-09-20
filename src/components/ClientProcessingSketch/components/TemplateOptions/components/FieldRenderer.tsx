@@ -41,7 +41,7 @@ export default function FieldRenderer( {
     const commonInputProps = {
       id: registeredName,
       placeholder: config.placeholder,
-      className: "w-full p-1 border border-gray-300 rounded-sm",
+      className: "w-full p-1 border border-gray-300 rounded-sm bg-white",
       "aria-invalid": !!error
     };
 

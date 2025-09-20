@@ -299,8 +299,6 @@ export default function TemplateOptions( {
       )}
     >
       <FormProvider {...methods}>
-        {/* <SketchSettings />*/}
-
         <RootSettings />
 
         <div className="rounded-sm border border-gray-300 text-black text-left bg-white overflow-y-scroll">
