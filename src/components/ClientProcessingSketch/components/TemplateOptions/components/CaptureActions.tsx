@@ -240,7 +240,7 @@ export default function CaptureActions( {
 
             {/* blend-inverting label */}
             <span
-              className="absolute inset-0 p-1 text-xs font-medium select-none
+              className="absolute inset-0 p-1 text-xs select-none
                mix-blend-difference text-white truncate"
             >
               {recordingProgress.status}

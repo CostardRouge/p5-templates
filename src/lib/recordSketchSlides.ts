@@ -55,10 +55,6 @@ async function recordSketchSlides(
     ];
 
     for ( let slideIndex = 0; slideIndex < slides.length; slideIndex++ ) {
-      if ( !recordingState.page ) {
-        return;
-      }
-
       await updateRecordingStepPercentage(
         jobId,
         `recording.slide-${ slideIndex }.launching-browser`,
@@ -137,9 +133,6 @@ async function recordSketchSlides(
         `recording.slide-${ slideIndex }.downloading-frames-archive`,
         100
       );
-
-      await recordingState.page.close();
-      recordingState.page = undefined;
 
       await updateRecordingStepPercentage(
         jobId,
