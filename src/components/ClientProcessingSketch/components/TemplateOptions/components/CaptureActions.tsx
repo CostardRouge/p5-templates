@@ -221,26 +221,36 @@ export default function CaptureActions( {
       )}
 
       {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
-        <div className="flex justify-start bg-white text-center items-center">
-          <span className="text-xs text-black">
-            {Math.round( recordingProgress?.percentage )}%&nbsp;
-          </span>
-
+        <div className="flex flex-col justify-start bg-white text-center items-center">
           <div
-            className={`w-full h-6 ${ recordingProgress.status !== "failed" ? "bg-gray-200" : "bg-red-300" } rounded relative`}>
+            className={`w-full h-6 rounded-sm relative ring-1 ${
+              recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
+            }`}
+          >
+            {/* white track for clean difference blending */}
+            <div className="absolute inset-0 rounded-sm bg-white" />
+
+            {/* black progress */}
             <div
-              className="h-full bg-black rounded"
+              className="absolute inset-y-0 left-0 bg-black rounded-sm"
               style={{
                 width: `${ recordingProgress.percentage }%`
               }}
             />
+
+            {/* blend-inverting label */}
             <span
-              className="absolute top-0 left-0 h-full w-full p-1 text-xs text-black truncate break-words"
+              className="absolute inset-0 p-1 text-xs font-medium select-none
+               mix-blend-difference text-white truncate"
             >
-              {recordingProgress.status}{recordingProgress?.currentStep?.name ? `: ${ recordingProgress?.currentStep.name }` : null}
+              {recordingProgress.status}
+              {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}
             </span>
           </div>
 
+          <span className="text-xs text-black">
+            {Math.round( recordingProgress?.percentage )}%&nbsp;
+          </span>
         </div>
       )}
 
