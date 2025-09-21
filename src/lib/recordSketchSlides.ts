@@ -34,7 +34,8 @@ async function recordSketchSlides(
     page?: Page,
     browser?: Browser
   } = {
-    page: undefined
+    page: undefined,
+    browser: undefined
   };
 
   try {
@@ -47,21 +48,24 @@ async function recordSketchSlides(
     } );
 
     recordingState.browser = browser;
+    recordingState.page = await createPage();
 
     const slides = options.slides;
     const slideVideoPaths: string[] = [
     ];
 
     for ( let slideIndex = 0; slideIndex < slides.length; slideIndex++ ) {
+      if ( !recordingState.page ) {
+        return;
+      }
+
       await updateRecordingStepPercentage(
         jobId,
         `recording.slide-${ slideIndex }.launching-browser`,
         0
       );
 
-      if ( !recordingState.page ) {
-        recordingState.page = await createPage();
-
+      if ( slideIndex === 0 ) {
         await recordingState.page.exposeFunction(
           "reportCaptureProgress",
           async( percentage: number ) => {
@@ -135,6 +139,7 @@ async function recordSketchSlides(
       );
 
       await recordingState.page.close();
+      recordingState.page = undefined;
 
       await updateRecordingStepPercentage(
         jobId,

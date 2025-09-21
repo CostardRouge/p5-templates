@@ -3,7 +3,6 @@ import {
 } from "playwright";
 
 async function createBrowserPage( {
-  initialPage = false,
   headless = true,
   deviceScaleFactor = 2,
   timeout = 3000000
@@ -28,7 +27,8 @@ async function createBrowserPage( {
 
     return page;
   };
-  const page = initialPage ? await createPage() : undefined;
+
+  const page = await createPage();
 
   return {
     createPage,
