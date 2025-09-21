@@ -23,7 +23,6 @@ import {
 import {
   updateRecordingStepPercentage
 } from "@/lib/progression";
-import sleep from "@/utils/sleep";
 
 async function recordSketchSlides(
   jobId: string,
@@ -88,7 +87,12 @@ async function recordSketchSlides(
         slideIndex
       );
 
-      await sleep( 1000 );
+      await recordingState.page.waitForSelector(
+        `canvas[data-slide="${ slideIndex }"]`,
+        {
+          timeout: 0
+        }
+      );
 
       await updateRecordingStepPercentage(
         jobId,

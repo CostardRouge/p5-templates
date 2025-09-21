@@ -107,11 +107,11 @@ async function recordSketch(
       downloadEvent.suggestedFilename()
     );
 
-    // await updateRecordingStepPercentage(
-    //   jobId,
-    //   "recording.downloading-frames-archive",
-    //   0
-    // );
+    await updateRecordingStepPercentage(
+      jobId,
+      "recording.downloading-frames-archive",
+      0
+    );
 
     await downloadEvent.saveAs( tarPath );
 

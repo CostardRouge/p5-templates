@@ -1,4 +1,3 @@
-// slides.js (p5 side)
 import {
   captureOptions as options, events
 } from "../index.js";
@@ -106,6 +105,25 @@ events.register(
   () => {
     slides.renderCurrentSlide();
     slides.render( options );
+  }
+);
+
+events.register(
+  "post-draw",
+  () => {
+    const canvas = document.querySelector( "canvas#defaultCanvas0.loaded" );
+
+    if ( !canvas ) {
+      return;
+    }
+
+    if ( !slides.hasSlides ) {
+      slides.index = null;
+    }
+
+    if ( canvas.dataset.slide !== slides.index ) {
+      canvas.dataset.slide = slides.index;
+    }
   }
 );
 
