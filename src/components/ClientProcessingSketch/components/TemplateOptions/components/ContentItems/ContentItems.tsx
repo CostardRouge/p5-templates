@@ -2,9 +2,6 @@
 
 import React from "react";
 import {
-  GripVertical
-} from "lucide-react";
-import {
   DndContext,
   closestCenter,
   useSensor,
@@ -42,7 +39,7 @@ export type DragBinder = {
   isDragging: boolean;
 };
 
-function SortableRow( props: {
+export function SortableRow( props: {
   id: string;
   children: ( drag: DragBinder ) => React.ReactNode;
 } ) {
@@ -95,7 +92,6 @@ export default function ContentItems( {
     fields, remove, move
   } = useContentArray();
 
-  // Sensors for mouse/touch/keyboard
   const sensors = useSensors(
     useSensor(
       MouseSensor,
@@ -118,29 +114,33 @@ export default function ContentItems( {
   );
 
   const ids = React.useMemo(
-    () => fields.map( ( f ) => f.id ),
+    () => fields.map( ( field ) => field.id ),
     [
       fields
     ]
   );
 
-  const onDragEnd = React.useCallback(
-    ( evt: DragEndEvent ) => {
+  const handleDragEnd = React.useCallback(
+    ( event: DragEndEvent ) => {
       const {
         active, over
-      } = evt;
+      } = event;
 
-      if ( !over || active.id === over.id ) return;
-
-      const from = fields.findIndex( ( f ) => f.id === active.id );
-      const to = fields.findIndex( ( f ) => f.id === over.id );
-
-      if ( from !== -1 && to !== -1 && from !== to ) {
-        move(
-          from,
-          to
-        );
+      if ( !over || active.id === over.id ) {
+        return;
       }
+
+      const from = fields.findIndex( ( field ) => field.id === active.id );
+      const to = fields.findIndex( ( field ) => field.id === over.id );
+
+      if ( from < 0 || to < 0 || from === to ) {
+        return;
+      }
+
+      move(
+        from,
+        to
+      );
     },
     [
       fields,
@@ -153,9 +153,9 @@ export default function ContentItems( {
       <AddItemControls />
 
       <DndContext
-        sensors={sensors}
         collisionDetection={closestCenter}
-        onDragEnd={onDragEnd}
+        onDragEnd={handleDragEnd}
+        sensors={sensors}
         modifiers={[
           restrictToVerticalAxis,
           restrictToParentElement

@@ -1,11 +1,18 @@
 import {
-  GripVertical, Plus, Copy, Trash2
+  Plus, Copy, Trash2
 } from "lucide-react";
 import {
   SortableContext, useSortable, rectSwappingStrategy
 } from "@dnd-kit/sortable";
 import {
-  closestCenter, DndContext, DragEndEvent, PointerSensor, useSensor, useSensors
+  DndContext,
+  closestCenter,
+  useSensor,
+  useSensors,
+  MouseSensor,
+  TouchSensor,
+  KeyboardSensor,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 
 import type {
@@ -15,6 +22,13 @@ import {
   CSS
 } from "@dnd-kit/utilities";
 import clsx from "clsx";
+import {
+  restrictToParentElement, restrictToVerticalAxis
+} from "@dnd-kit/modifiers";
+import React from "react";
+import {
+  DragBinder, SortableRow
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/ContentItems";
 
 export default function SlideCarousel( {
   slideIds,
@@ -35,14 +49,26 @@ export default function SlideCarousel( {
   onDuplicate: ( index: number ) => void;
   onDelete: ( index: number ) => void;
 } ) {
-  const sensors = useSensors( useSensor(
-    PointerSensor,
-    {
-      activationConstraint: {
-        distance: 6
+  const sensors = useSensors(
+    useSensor(
+      MouseSensor,
+      {
+        activationConstraint: {
+          distance: 6
+        }
       }
-    }
-  ) );
+    ),
+    useSensor(
+      TouchSensor,
+      {
+        activationConstraint: {
+          delay: 120,
+          tolerance: 8
+        }
+      }
+    ),
+    useSensor( KeyboardSensor )
+  );
 
   const handleDragEnd = ( event: DragEndEvent ) => {
     const {
@@ -71,27 +97,37 @@ export default function SlideCarousel( {
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
       sensors={sensors}
+      modifiers={[
+        restrictToVerticalAxis,
+        restrictToParentElement
+      ]}
     >
       <div
         onDragOver={( event ) => event.preventDefault()}
         className="grid grid-cols-1 gap-1 min-h-8"
       >
-        <SortableContext items={slideIds} strategy={rectSwappingStrategy}>
+        <SortableContext
+          items={slideIds} strategy={rectSwappingStrategy}
+        >
           {slides.map( (
             slide, index
           ) => {
             const id = slideIds[ index ];
 
             return (
-              <SlideThumbnail
-                key={`${ id }-${ index }`}
-                id={id}
-                isActive={index === activeIndex}
-                label={`Slide ${ index + 1 }`}
-                onClick={() => onSelect( index )}
-                onDelete={() => onDelete( index )}
-                onDuplicate={() => onDuplicate( index )}
-              />
+              <SortableRow key={`${ id }-${ index }`} id={id}>
+                {( dragBinder ) => (
+                  <SlideThumbnail
+                    id={id}
+                    dragBinder={dragBinder}
+                    isActive={index === activeIndex}
+                    label={`Slide ${ index + 1 }`}
+                    onClick={() => onSelect( index )}
+                    onDelete={() => onDelete( index )}
+                    onDuplicate={() => onDuplicate( index )}
+                  />
+                )}
+              </SortableRow>
             );
           } )}
         </SortableContext>
@@ -117,7 +153,8 @@ function SlideThumbnail( {
   label,
   onClick,
   onDuplicate,
-  onDelete
+  onDelete,
+  dragBinder
 }: {
   id: string;
   isActive: boolean;
@@ -125,42 +162,24 @@ function SlideThumbnail( {
   onClick: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  dragBinder?: DragBinder;
 } ) {
-  const {
-    attributes, listeners, setNodeRef, transform, transition, isDragging
-  } = useSortable( {
-    id
-  } );
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString( transform ),
-    transition,
-  };
-
   return (
     <div
-      style={style}
-      ref={setNodeRef}
+      ref={dragBinder?.setHandleRef}
+      {
+        ...( dragBinder?.handleProps ?? {
+        } )
+      }
       onClick={onClick}
       className={clsx(
         "relative bg-white border border-gray-200 hover:border-gray-300 flex items-center px-1 h-8 cursor-pointer rounded-sm",
         {
           "border-gray-400 hover:border-gray-400": isActive,
-          "opacity-70": isDragging
+          "opacity-70": dragBinder?.isDragging
         }
       )}
     >
-      <GripVertical
-        className={clsx(
-          "h-4 w-4 text-gray-400 mr-1 cursor-grab active:cursor-grabbing",
-          {
-            "active:cursor-grabbing": isDragging
-          }
-        )}
-        {...attributes}
-        {...listeners}
-      />
-
       <span className="text-xs text-black truncate">{label}</span>
 
       <button
