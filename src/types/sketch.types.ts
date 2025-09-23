@@ -2,6 +2,9 @@
 import {
   z
 } from "zod";
+import neonGraffiti from "../../public/assets/scripts/p5-sketches/utils/visuals/neonGraffiti";
+import neonLine from "../../public/assets/scripts/p5-sketches/utils/visuals/neonLine";
+import neonDot from "../../public/assets/scripts/p5-sketches/utils/visuals/neonDot";
 
 const RGB = z.tuple( [
   z.number(),
@@ -305,6 +308,59 @@ export const ImagesStackItemSchema = z.object( {
   animation: ImagesStackAnimations.optional(),
 } );
 
+// Visual items
+export const neonGraffitiSchema = z
+  .object( {
+    name: z.literal( "neon-graffiti" ),
+  } );
+
+export const neonLineSchema = z
+  .object( {
+    name: z.literal( "neon-line" ),
+  } );
+
+export const neonDotSchema = z
+  .object( {
+    name: z.literal( "neon-dot" ),
+  } );
+
+export const churrosSnakeSchema = z
+  .object( {
+    name: z.literal( "churros-snake" ),
+  } );
+
+export const VisualOptions = z.discriminatedUnion(
+  "name",
+  [
+    neonGraffitiSchema,
+    neonLineSchema,
+    neonDotSchema,
+    churrosSnakeSchema
+  ]
+)
+  .default( {
+    name: "neon-graffiti",
+  } );
+
+export const VisualItemSchema = z.object( {
+  type: z.literal( "visual" ),
+  position: Vec2.default( {
+    x: 0,
+    y: 0
+  } ),
+  stroke: RGBA.default( [
+    255,
+    255,
+    255
+  ] ),
+  fill: RGBA.default( [
+    0,
+    0,
+    0
+  ] ),
+  visual: VisualOptions.optional(),
+} );
+
 export const ContentItemSchema = z.discriminatedUnion(
   "type",
   [
@@ -313,6 +369,7 @@ export const ContentItemSchema = z.discriminatedUnion(
     TextItemSchema,
     ImagesStackItemSchema,
     ImageItemSchema,
+    VisualItemSchema,
   ]
 );
 

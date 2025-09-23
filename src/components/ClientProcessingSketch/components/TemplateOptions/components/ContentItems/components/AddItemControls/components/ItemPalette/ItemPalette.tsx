@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 
 import {
@@ -28,7 +26,7 @@ export default function ItemPalette( {
   return (
     <div
       className={clsx(
-        "grid grid-cols-5",
+        "grid grid-cols-6",
         gap,
         "rounded-sm border border-gray-200 hover:border-gray-300 bg-white p-0.5",
         className

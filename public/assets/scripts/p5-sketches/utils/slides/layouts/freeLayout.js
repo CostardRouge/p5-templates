@@ -1,5 +1,5 @@
-import neonGraffiti from "../../visuals/neonGraffiti.js";
 
+import drawSlideVisual from "../common/drawSlideVisual.js";
 import drawSlideMeta from "../common/drawSlideMeta.js";
 import drawSlideText from "../common/drawSlideText.js";
 import drawSlideImage from "../common/drawSlideImage.js";
@@ -37,20 +37,12 @@ export default function freeLayout( options ) {
           options
         );
         break;
+      case "visual":
+        drawSlideVisual(
+          item,
+          options
+        );
+        break;
     }
   } );
-  // neonGraffiti( {
-  //   start: createVector(
-  //     0,
-  //     height * options.neonGraffiti.startHeight
-  //   ),
-  //   end: createVector(
-  //     width,
-  //     height * options.neonGraffiti.endHeight
-  //   ),
-  //   amplitude: options.neonGraffiti.amplitude,
-  //   innerCircleSize: options.neonGraffiti.innerCircleSize,
-  //   shadowsCount: options.neonGraffiti.shadowsCount,
-  //   stepAngleAmplitude: options.neonGraffiti.stepAngleAmplitude
-  // } );
 }
