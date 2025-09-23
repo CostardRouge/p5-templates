@@ -20,11 +20,12 @@ type GenericItemFormProps = {
   baseFieldName: "content" | `slides.${ number }.content`;
   index: number;
   onRemove: () => void;
+  onDuplicate: () => void;
   dragBinder?: DragBinder;
 };
 
 export default function GenericItemForm( {
-  baseFieldName, index, onRemove, dragBinder
+  baseFieldName, index, onRemove, onDuplicate, dragBinder
 }: GenericItemFormProps ) {
   const {
     watch
@@ -49,6 +50,7 @@ export default function GenericItemForm( {
   return (
     <ItemFormWrapper
       dragBinder={dragBinder}
+      onDuplicate={onDuplicate}
       onRemove={onRemove}
       itemType={itemType}
     >

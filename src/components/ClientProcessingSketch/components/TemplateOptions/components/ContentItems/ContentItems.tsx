@@ -89,7 +89,7 @@ export default function ContentItems( {
   baseFieldName
 }: ContentItemsProps ) {
   const {
-    fields, remove, move
+    fields, remove, move, insert
   } = useContentArray();
 
   const sensors = useSensors(
@@ -175,6 +175,9 @@ export default function ContentItems( {
                   dragBinder={dragBinder}
                   baseFieldName={baseFieldName}
                   onRemove={() => remove( index )}
+                  onDuplicate={() => {
+                    // insert( index );
+                  }}
                 />
               )}
             </SortableRow>

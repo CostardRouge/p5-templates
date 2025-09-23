@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  X
+  X, Copy
 } from "lucide-react";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import clsx from "clsx";
@@ -11,12 +11,13 @@ import {
 export type ItemFormWrapperProps = {
   itemType: string;
   onRemove: () => void;
+  onDuplicate: () => void;
   children: React.ReactNode;
   dragBinder?: DragBinder;
 };
 
 export default function ItemFormWrapper( {
-  onRemove, children, itemType, dragBinder
+  onRemove, onDuplicate, children, itemType, dragBinder
 }: ItemFormWrapperProps ) {
   return (
     <CollapsibleItem
@@ -42,14 +43,28 @@ export default function ItemFormWrapper( {
         >
           <h4 className="text-white bg-gray-800 px-1 rounded-sm">{itemType}</h4>
 
-          <button
-            type="button"
-            onClick={onRemove}
-            aria-label="Remove layer"
-            className="text-red-500 hover:text-red-700"
-          >
-            <X size={16}/>
-          </button>
+          <div className="">
+            <button
+              type="button"
+              disabled
+              onClick={event => {
+                event.stopPropagation();
+                onDuplicate();
+              }}
+              aria-label="Duplicate item"
+            >
+              <Copy className="mr-2 h-3.5 w-3.5 text-gray-500" />
+            </button>
+
+            <button
+              type="button"
+              onClick={onRemove}
+              aria-label="Remove layer"
+              className="text-red-500 hover:text-red-700"
+            >
+              <X size={16}/>
+            </button>
+          </div>
         </div>
       )}
     >

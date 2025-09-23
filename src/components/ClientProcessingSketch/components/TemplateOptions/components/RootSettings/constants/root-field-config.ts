@@ -65,6 +65,12 @@ export const sizePresetOptions: SelectOption[] = [
     "Landscape"
   ),
   createSizePresetOption(
+    5120,
+    1080,
+    "Instagram ultra wide",
+    "Landscape"
+  ),
+  createSizePresetOption(
     1366,
     768,
     undefined,
@@ -81,7 +87,7 @@ export const sizePresetOptions: SelectOption[] = [
     1080 * 4,
     "Ultra HD",
     "Landscape"
-  ),
+  )
 ];
 
 export const framerateOptions = [

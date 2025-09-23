@@ -32,6 +32,7 @@ export default function ContentArrayProvider( {
         fields: fieldArray.fields,
         append: fieldArray.append,
         remove: fieldArray.remove,
+        insert: fieldArray.insert,
         move: fieldArray.move
       }}
     >
