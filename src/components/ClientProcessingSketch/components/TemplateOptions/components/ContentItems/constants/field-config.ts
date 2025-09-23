@@ -1,5 +1,13 @@
 import {
-  ContentItem, PatternSchema, Blend, HorizontalAlign, VerticalAlign, ImageItemAnimations, ImagesStackAnimations
+  ContentItem,
+  PatternSchema,
+  Blend,
+  HorizontalAlign,
+  VerticalAlign,
+  ImageItemAnimations,
+  ImagesStackAnimations,
+  VisualOptions,
+  // neonGraffitiSchema, neonLineSchema, neonDotSchema, churrosSnakeSchema
 } from "@/types/sketch.types";
 
 import {
@@ -139,6 +147,36 @@ const fontNames = [
   "cloitre",
   "agiro",
   "peix"
+];
+
+const visualSelectOptions = [
+  {
+    label: "Neon graffiti",
+    value: "neon-graffiti",
+    config: {
+
+    }
+  },
+  {
+    label: "Neon line",
+    value: "neon-line",
+    config: {
+    }
+  },
+  {
+    label: "Neon dot",
+    value: "neon-dot",
+    config: {
+
+    }
+  },
+  {
+    label: "Churros snake",
+    value: "churros-snake",
+    config: {
+
+    }
+  }
 ];
 
 const gridPatternFields: ItemFormConfig = {
@@ -517,6 +555,62 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
 
       schema: ImagesStackAnimations,
     },
+  },
+  visual: {
+    position: {
+      label: "Position",
+      component: "nested-object",
+      fields: {
+        x: {
+          label: "x",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        },
+        y: {
+          label: "y",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        }
+      }
+    },
+    fill: {
+      label: "Fill",
+      component: "color"
+    },
+    stroke: {
+      label: "Stroke",
+      component: "color"
+    },
+    visual: {
+      label: "Visual option",
+      component: "conditional-group",
+      conditionalOn: "name",
+      typeSelector: {
+        options: visualSelectOptions.map( ( {
+          value, label
+        } ) => ( {
+          value,
+          label
+        } ) ),
+      },
+      configs: visualSelectOptions.reduce(
+        (
+          finalConfigs, visualSelectOption
+        ) => {
+          finalConfigs[ visualSelectOption.value ] = visualSelectOption.config;
+
+          return finalConfigs;
+        },
+        {
+        } as ConditionalGroupConfig["configs"]
+      ),
+
+      // @ts-ignore
+      schema: VisualOptions
+    },
   }
-  // Add other types like 'image', 'video' here
 };

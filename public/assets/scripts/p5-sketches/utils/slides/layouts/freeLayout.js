@@ -1,5 +1,5 @@
-import neonGraffiti from "../../visuals/neonGraffiti.js";
 
+import drawSlideVisual from "../common/drawSlideVisual.js";
 import drawSlideMeta from "../common/drawSlideMeta.js";
 import drawSlideText from "../common/drawSlideText.js";
 import drawSlideImage from "../common/drawSlideImage.js";
@@ -33,6 +33,12 @@ export default function freeLayout( options ) {
         break;
       case "images-stack":
         drawSlideImagesStack(
+          item,
+          options
+        );
+        break;
+      case "visual":
+        drawSlideVisual(
           item,
           options
         );

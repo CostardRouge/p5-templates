@@ -1,16 +1,17 @@
 import {
-  Type as TextIcon, Info as MetaIcon, Image as ImageIcon, Layers as StackIcon, PaintBucket as BgIcon
+  Type as TextIcon, Info as MetaIcon, Image as ImageIcon, Layers as StackIcon, PaintBucket as BgIcon, Sparkles as VisualIcon
 } from "lucide-react";
 import {
   ItemKind, ItemKindMeta
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
 
 export const ITEM_ORDER: ItemKind[] = [
+  "visual",
   "text",
   "image",
   "images-stack",
   "meta",
-  "background"
+  "background",
 ];
 
 export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
@@ -38,5 +39,10 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Background",
     Icon: BgIcon,
     description: "Backdrop / fill"
+  },
+  visual: {
+    label: "Visual",
+    Icon: VisualIcon,
+    description: "2D/3D visual"
   },
 };

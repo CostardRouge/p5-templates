@@ -5,6 +5,7 @@ import {
   MetaItemSchema,
   TextItemSchema,
   ContentItem,
+  VisualItemSchema
 } from "@/types/sketch.types";
 
 import {
@@ -32,6 +33,10 @@ export default function makeDefaultItem( type: ItemKind ): ContentItem {
       } );
     case "background":
       return BackgroundItemSchema.parse( {
+        type
+      } );
+    case "visual":
+      return VisualItemSchema.parse( {
         type
       } );
     default:

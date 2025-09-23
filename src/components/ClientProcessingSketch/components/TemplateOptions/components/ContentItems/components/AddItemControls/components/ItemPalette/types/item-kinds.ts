@@ -1,4 +1,4 @@
-export type ItemKind = "text" | "meta" | "image" | "images-stack" | "background";
+export type ItemKind = "visual" | "text" | "meta" | "image" | "images-stack" | "background";
 
 export type ItemKindMeta = {
   label: string;
