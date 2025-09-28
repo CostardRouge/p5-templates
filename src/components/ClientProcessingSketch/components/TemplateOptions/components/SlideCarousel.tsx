@@ -2,7 +2,7 @@ import {
   Plus, Copy, Trash2
 } from "lucide-react";
 import {
-  SortableContext, useSortable, rectSwappingStrategy
+  SortableContext, rectSwappingStrategy
 } from "@dnd-kit/sortable";
 import {
   DndContext,
@@ -18,9 +18,6 @@ import {
 import type {
   SlideOption
 } from "@/types/sketch.types";
-import {
-  CSS
-} from "@dnd-kit/utilities";
 import clsx from "clsx";
 import {
   restrictToParentElement, restrictToVerticalAxis
@@ -173,7 +170,8 @@ function SlideThumbnail( {
       }
       onClick={onClick}
       className={clsx(
-        "relative bg-white border border-gray-200 hover:border-gray-300 flex items-center px-1 h-8 cursor-pointer rounded-sm",
+        "relative bg-white border border-gray-200 hover:border-gray-300 flex items-center p-1 h-8 rounded-sm",
+        "cursor-grab",
         {
           "border-gray-400 hover:border-gray-400": isActive,
           "opacity-70": dragBinder?.isDragging
@@ -182,31 +180,34 @@ function SlideThumbnail( {
     >
       <span className="text-xs text-black truncate">{label}</span>
 
-      <button
-        type="button"
-        onClick={( event ) => {
-          event.stopPropagation();
-          onDuplicate();
-        }}
-        className="ml-auto inline-flex items-center justify-center h-6 w-6 rounded hover:bg-gray-100"
-        aria-label="Duplicate slide"
-        title="Duplicate slide"
-      >
-        <Copy className="h-3.5 w-3.5 text-gray-500" />
-      </button>
+      <div className="ml-auto flex items-center gap-1">
+        <button
+          type="button"
+          onClick={( event ) => {
+            event.stopPropagation();
+            onDuplicate();
+          }}
+          className="cursor-copy inline-flex items-center justify-center"
+          aria-label="Duplicate slide"
+          title="Duplicate slide"
+        >
+          <Copy className="h-3.5 w-3.5 text-gray-500" />
+        </button>
 
-      <button
-        type="button"
-        onClick={( event ) => {
-          event.stopPropagation();
-          onDelete();
-        }}
-        className="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-gray-100"
-        aria-label="Delete slide"
-        title="Delete slide"
-      >
-        <Trash2 className="h-3.5 w-3.5 text-gray-500" />
-      </button>
+        <button
+          type="button"
+          onClick={( event ) => {
+            event.stopPropagation();
+            onDelete();
+          }}
+          className="inline-flex items-center justify-center"
+          aria-label="Delete slide"
+          title="Delete slide"
+        >
+          <Trash2 className="h-3.5 w-3.5 text-red-500"/>
+        </button>
+      </div>
+
     </div>
   );
 }

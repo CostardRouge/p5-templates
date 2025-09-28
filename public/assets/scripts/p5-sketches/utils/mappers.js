@@ -133,7 +133,7 @@ const mappers = {
     }
 
     return result;
-    return Object.values( result );
+    // return Object.values( result );
   },
   fastLerpPoints: (
     from, to, amount, fn = p5.Vector?.lerp

@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  X, Copy
+  Trash2, Copy
 } from "lucide-react";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import clsx from "clsx";
@@ -22,7 +22,7 @@ export default function ItemFormWrapper( {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
-      className="p-1 border rounded-sm bg-white hover:shadow hover:border-gray-300"
+      className="p-1 border rounded-sm bg-white hover:shadow-sm hover:border-gray-300"
       header={expanded => (
         <div
           ref={dragBinder?.setHandleRef}
@@ -32,8 +32,7 @@ export default function ItemFormWrapper( {
           }
           className={
             clsx(
-              "rounded-sm",
-              "flex justify-between items-center",
+              "flex items-center",
               {
                 "mb-2": expanded,
                 "active:cursor-grabbing": dragBinder?.isDragging
@@ -43,7 +42,7 @@ export default function ItemFormWrapper( {
         >
           <h4 className="text-white bg-gray-800 px-1 rounded-sm">{itemType}</h4>
 
-          <div className="">
+          <div className="ml-auto flex items-center gap-1">
             <button
               type="button"
               disabled
@@ -52,17 +51,19 @@ export default function ItemFormWrapper( {
                 onDuplicate();
               }}
               aria-label="Duplicate item"
+              className="cursor-copy"
             >
-              <Copy className="mr-2 h-3.5 w-3.5 text-gray-500" />
+              <Copy className="h-3.5 w-3.5 text-gray-500" />
             </button>
 
             <button
               type="button"
               onClick={onRemove}
               aria-label="Remove layer"
-              className="text-red-500 hover:text-red-700"
+              className="inline-flex items-center justify-center rounded hover:bg-gray-100"
+
             >
-              <X size={16}/>
+              <Trash2 className="h-3.5 w-3.5 text-red-500" />
             </button>
           </div>
         </div>
