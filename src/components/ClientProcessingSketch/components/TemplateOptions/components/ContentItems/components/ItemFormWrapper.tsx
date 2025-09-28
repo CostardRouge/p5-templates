@@ -60,8 +60,6 @@ export default function ItemFormWrapper( {
               type="button"
               onClick={onRemove}
               aria-label="Remove layer"
-              className="inline-flex items-center justify-center rounded hover:bg-gray-100"
-
             >
               <Trash2 className="h-3.5 w-3.5 text-red-500" />
             </button>

@@ -1,12 +1,19 @@
 import "./globals.css";
 import type {
-  Metadata
+  Metadata, Viewport
 } from "next";
 import MenuBar from "@/components/MenuBar";
 
 export const metadata: Metadata = {
   title: "Social-pipeline",
   description: "Generate social-templates with HTML and JavaScript (p5*js)",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout( {

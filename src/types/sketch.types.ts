@@ -183,6 +183,7 @@ export const MetaItemSchema = z.object( {
 export const TextItemSchema = z.object( {
   type: z.literal( "text" ),
   content: z.string().default( "" ),
+
   size: z.number()
     .positive()
     .default( 24 ),
@@ -202,6 +203,13 @@ export const TextItemSchema = z.object( {
     x: 0,
     y: 0.5
   } ),
+  align: z.tuple( [
+    HorizontalAlign,
+    VerticalAlign
+  ] ).default( [
+    "left",
+    "baseline"
+  ] ),
   horizontalMargin: z.number()
     .min( 0 )
     .max( 1 )
@@ -210,13 +218,6 @@ export const TextItemSchema = z.object( {
     .min( 0 )
     .max( 1 )
     .default( 0.015 ),
-  align: z.tuple( [
-    HorizontalAlign,
-    VerticalAlign
-  ] ).default( [
-    "left",
-    "baseline"
-  ] ),
 } );
 
 export const ImageItemAnimations = z.discriminatedUnion(
@@ -348,16 +349,6 @@ export const VisualItemSchema = z.object( {
     x: 0,
     y: 0
   } ),
-  stroke: RGBA.default( [
-    255,
-    255,
-    255
-  ] ),
-  fill: RGBA.default( [
-    0,
-    0,
-    0
-  ] ),
   visual: VisualOptions.optional(),
 } );
 
