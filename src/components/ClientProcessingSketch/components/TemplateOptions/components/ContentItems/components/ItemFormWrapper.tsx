@@ -45,7 +45,6 @@ export default function ItemFormWrapper( {
           <div className="ml-auto flex items-center gap-1">
             <button
               type="button"
-              disabled
               onClick={event => {
                 event.stopPropagation();
                 onDuplicate();

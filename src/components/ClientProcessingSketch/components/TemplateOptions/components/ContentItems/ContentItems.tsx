@@ -27,6 +27,9 @@ import AddItemControls from "./components/AddItemControls/AddItemControls";
 import GenericItemForm from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/GenericItemForm";
 import useContentArray from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/hooks/useContentArray";
 import clsx from "clsx";
+import {
+  useFormContext
+} from "react-hook-form";
 
 type ContentItemsProps = {
   baseFieldName: "content" | `slides.${ number }.content`;
@@ -92,6 +95,10 @@ export default function ContentItems( {
     fields, remove, move, insert
   } = useContentArray();
 
+  const {
+    getValues
+  } = useFormContext();
+
   const sensors = useSensors(
     useSensor(
       MouseSensor,
@@ -148,6 +155,31 @@ export default function ContentItems( {
     ]
   );
 
+  const duplicateItem = React.useCallback(
+    ( index: number ) => {
+      const path = `${ baseFieldName }.${ index }` as const;
+
+      const current = getValues( path );
+
+      const clone = current ? JSON.parse( JSON.stringify( current ) ) : {
+      };
+
+      if ( clone && typeof clone === "object" && "id" in clone ) {
+        delete ( clone as Record<string, unknown> ).id;
+      }
+
+      insert(
+        index + 1,
+        clone
+      );
+    },
+    [
+      getValues,
+      baseFieldName,
+      insert
+    ]
+  );
+
   return (
     <div className="flex flex-col gap-1 text-xs">
       <AddItemControls />
@@ -176,7 +208,7 @@ export default function ContentItems( {
                   baseFieldName={baseFieldName}
                   onRemove={() => remove( index )}
                   onDuplicate={() => {
-                    // insert( index );
+                    duplicateItem( index );
                   }}
                 />
               )}
