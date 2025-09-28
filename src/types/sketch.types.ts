@@ -292,7 +292,6 @@ const NonEmptyPath = z
 
 export const ImagesStackItemSchema = z.object( {
   type: z.literal( "images-stack" ),
-
   sources: z.preprocess(
     ( v ) => Array.isArray( v )
       ? v.filter( ( s ) => typeof s === "string" && s.trim().length > 0 )
@@ -301,8 +300,9 @@ export const ImagesStackItemSchema = z.object( {
     z.array( NonEmptyPath ).default( [
     ] )
   ),
-
-  margin: z.number().nonnegative()
+  margin: z
+    .number()
+    .nonnegative()
     .default( 0 ),
   center: z.boolean().default( false ),
   position: Vec2,
@@ -345,11 +345,18 @@ export const VisualOptions = z.discriminatedUnion(
 
 export const VisualItemSchema = z.object( {
   type: z.literal( "visual" ),
+  visual: VisualOptions.optional(),
+
   position: Vec2.default( {
     x: 0,
     y: 0
   } ),
-  visual: VisualOptions.optional(),
+  scale: z
+    .number()
+    .default( 1 ),
+  rotation: z
+    .number()
+    .default( 0 ),
 } );
 
 export const ContentItemSchema = z.discriminatedUnion(

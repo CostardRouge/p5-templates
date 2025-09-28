@@ -577,16 +577,21 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         }
       }
     },
-    fill: {
-      label: "Fill",
-      component: "color"
+    scale: {
+      label: "Scale",
+      component: "slider",
+      min: -10,
+      max: 10,
+      step: 0.01
     },
-    stroke: {
-      label: "Stroke",
-      component: "color"
+    rotation: {
+      label: "Rotation",
+      component: "slider",
+      min: 0,
+      max: Math.PI * 2,
+      step: 0.001
     },
     visual: {
-      label: "Visual option",
       component: "conditional-group",
       conditionalOn: "name",
       typeSelector: {

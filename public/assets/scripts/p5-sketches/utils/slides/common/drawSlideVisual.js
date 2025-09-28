@@ -4,7 +4,7 @@ export default function drawSlideVisual(
   visualItemOptions, _slideOptions
 ) {
   const {
-    visual, position
+    visual, position, scale: scaleValue, rotation: rotationValue,
   } = visualItemOptions;
 
   if ( !visual ) {
@@ -17,6 +17,9 @@ export default function drawSlideVisual(
     position.x * width,
     position.y * height
   );
+  scale( scaleValue );
+  rotate( rotationValue );
+
   visualMaps?.[ visual.name ]?.( visual );
 
   pop();
