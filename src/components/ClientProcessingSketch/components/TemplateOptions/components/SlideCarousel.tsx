@@ -174,7 +174,7 @@ function SlideThumbnail( {
         "cursor-grab",
         {
           "border-gray-400 hover:border-gray-400": isActive,
-          "opacity-70": dragBinder?.isDragging
+          "opacity-70 cursor-grabbing z-20": dragBinder?.isDragging
         }
       )}
     >

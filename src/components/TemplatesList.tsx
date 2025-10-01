@@ -103,7 +103,7 @@ export default function TemplatesList( {
                 <HardLink
                   key={name}
                   href={href}
-                  className="flex items-center bg-gray-800 border border-gray-700 rounded-lg p-3 hover:bg-gray-700 transition"
+                  className="flex items-center bg-gray-800 border border-gray-700 rounded-sm p-1 hover:bg-gray-700 transition"
                 >
                   <div className="w-12 flex-shrink-0" style={{
                     aspectRatio: "4 / 5"
@@ -112,11 +112,11 @@ export default function TemplatesList( {
                       alt={name}
                       loading="lazy"
                       src={thumbnail}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain rounded-sm"
                     />
                   </div>
                   <span className="flex-1 ml-3 truncate">{name}</span>
-                  <span className="text-gray-400 ml-2">➔</span>
+                  <span className="text-gray-400">➔</span>
                 </HardLink>
               );
             } )}
