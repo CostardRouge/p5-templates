@@ -1,39 +1,65 @@
 import fs from "fs";
 import path from "path";
 
-import listDirectory from "@/utils/listDirectory";
 import {
   SKETCHES_DIRECTORY
 } from "@/constants";
 
-async function getSketchList( folderPath = SKETCHES_DIRECTORY ) {
-  const p5sketchesFolderContent = await listDirectory( folderPath );
+const META_PATH = path.join(
+  SKETCHES_DIRECTORY,
+  "metadata.json"
+);
 
-  return p5sketchesFolderContent
-    .sort( (
-      aPath, bPath
-    ) => {
-      const {
-        mtime: aMtime
-      } = fs.statSync( `${ folderPath }/${ aPath }` );
+type SketchMeta = {
+  name: string;
+  mtime: string;
+  ctime: string;
+};
 
-      const {
-        mtime: bMtime
-      } = fs.statSync( `${ folderPath }/${ bPath }` );
+async function getSketchList(): Promise<string[]> {
+  if ( fs.existsSync( META_PATH ) ) {
+    try {
+      const meta: SketchMeta[] = JSON.parse( fs.readFileSync(
+        META_PATH,
+        "utf-8"
+      ) );
 
-      return aMtime.getTime() - bMtime.getTime();
-    } )
-    .filter( sketchFolderName => {
-      if ( sketchFolderName.startsWith( "_" ) ) {
-        return false;
-      }
+      return meta.map( ( m ) => m.name );
+    } catch ( err ) {
+      console.error(
+        "Failed to read sketch-meta.json:",
+        err
+      );
+    }
+  }
 
-      const sketchPath = path.join(
-        folderPath,
-        sketchFolderName
+  // Emergency fallback (should rarely happen)
+  console.warn( "⚠️  sketch-meta.json not found, falling back to filesystem scan" );
+  const entries = await fs.promises.readdir( SKETCHES_DIRECTORY );
+
+  return entries
+    .filter( ( name ) => {
+      if ( name.startsWith( "_" ) ) return false;
+      const fullPath = path.join(
+        SKETCHES_DIRECTORY,
+        name
       );
 
-      return fs.statSync( sketchPath ).isDirectory();
+      return fs.statSync( fullPath ).isDirectory();
+    } )
+    .sort( (
+      a, b
+    ) => {
+      const aStat = fs.statSync( path.join(
+        SKETCHES_DIRECTORY,
+        a
+      ) );
+      const bStat = fs.statSync( path.join(
+        SKETCHES_DIRECTORY,
+        b
+      ) );
+
+      return aStat.mtime.getTime() - bStat.mtime.getTime();
     } );
 }
 

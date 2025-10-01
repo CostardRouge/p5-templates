@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "sketch:meta": "node scripts/watch-sketches.mjs",
+    "dev": "concurrently \"npm run sketch:meta\" \"next dev --turbopack\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -44,6 +45,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "chokidar": "^4.0.3",
+    "concurrently": "^9.2.1",
     "eslint": "^9.26.0",
     "eslint-config-next": "15.1.7",
     "eslint-plugin-next": "^0.0.0",
