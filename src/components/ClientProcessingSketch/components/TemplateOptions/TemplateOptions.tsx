@@ -20,6 +20,7 @@ import {
   SlideOption,
 } from "@/types/sketch.types";
 
+import FormUndoRedo from "./components/FormUndoRedo/FormUndoRedo";
 import ContentItems from "./components/ContentItems/ContentItems";
 import CaptureActions from "./components/CaptureActions";
 import SlideCarousel from "./components/SlideCarousel";
@@ -43,6 +44,7 @@ import makeDefaultSlide from "@/components/ClientProcessingSketch/components/Tem
 
 import RootSettings from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/RootSettings";
 import clsx from "clsx";
+import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOptions/components/UndoRedo";
 
 export default function TemplateOptions( {
   name,
@@ -299,11 +301,25 @@ export default function TemplateOptions( {
       )}
     >
       <FormProvider {...methods}>
+        <FormUndoRedo
+          maxHistory={50}
+          hotkeys
+          autoCapture="debounced"
+          debounceMs={400}
+          watchPaths={[
+            "slides",
+            "content"
+          ]}
+          captureInitial
+        >
+          <UndoRedo />
+        </FormUndoRedo>
+
         <RootSettings />
 
         <CollapsibleItem
           initialExpandedValue={false}
-          className="p-1 border border-gray-300 rounded-sm text-left text-black bg-white overflow-y-scroll"
+          className="p-1 border border-gray-300 rounded-sm text-left text-black bg-white overflow-y-auto"
           headerContainerClassName="leading-none"
           header={( expanded ) => (
             <button
@@ -337,7 +353,7 @@ export default function TemplateOptions( {
         {slides && (
           <Fragment>
             <CollapsibleItem
-              className="p-1 border border-gray-300 rounded-sm bg-white overflow-y-scroll"
+              className="p-1 border border-gray-300 rounded-sm bg-white overflow-y-auto"
               headerContainerClassName="leading-none"
               header={( expanded ) => (
                 <button
@@ -372,12 +388,10 @@ export default function TemplateOptions( {
                 onDelete={handleDeleteSlide}
               />
 
-              <div className="">
-                <SlideEditor
-                  key={editorKey}
-                  activeIndex={activeSlideIndex}
-                />
-              </div>
+              <SlideEditor
+                key={editorKey}
+                activeIndex={activeSlideIndex}
+              />
             </CollapsibleItem>
           </Fragment>
         )}
