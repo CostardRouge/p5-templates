@@ -12,21 +12,21 @@ export default function UndoRedo( {
   } = useFormUndoRedo();
 
   return (
-    <div className="text-xs text-gray-500 flex gap-1">
+    <div className="flex gap-1">
       <button
         onClick={undo}
         // disabled={!canUndo}
-        className="rounded-sm bg-white border border-gray-400 p-1 hover:text-black"
+        className="p-0.5 rounded-sm bg-white border border-gray-300 hover:border-gray-400 hover:text-black text-gray-500"
       >
-        <Undo className="h-4" />
+        <Undo className="h-3.5" />
       </button>
 
       <button
         onClick={redo}
         // disabled={!canRedo}
-        className="rounded-sm bg-white border border-gray-400 p-1 hover:text-black"
+        className="p-0.5 rounded-sm bg-white border border-gray-300 hover:border-gray-400 hover:text-black text-gray-500"
       >
-        <Redo className="h-4" />
+        <Redo className="h-3.5" />
       </button>
     </div>
   );

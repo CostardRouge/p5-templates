@@ -11,6 +11,7 @@ import {
 import {
   Video,
   Paintbrush,
+  Github,
   Clock,
   Settings
   // Home
@@ -24,6 +25,7 @@ import HardLink from "@/components/HardLink";
 
 type NavItem = {
  href: string;
+ name?: string;
  Icon: React.FC<React.SVGProps<SVGSVGElement>>
 };
 
@@ -32,6 +34,11 @@ const items: NavItem[] = [
   //   href: "/",
   //   Icon: Home
   // },
+  {
+    href: "https://github.com/CostardRouge/p5-templates",
+    name: "github",
+    Icon: Github
+  },
   {
     href: "/templates",
     Icon: Paintbrush
@@ -73,7 +80,7 @@ export default function MenuBar() {
   return (
     <nav className="h-14 bg-gray-800 px-2 flex gap-1 items-center justify-center w-full border-t border-gray-700 z-40">
       {items.map( ( {
-        href, Icon
+        href, name, Icon
       } ) => {
         // const active = pathname.startsWith( href );
 
@@ -83,8 +90,8 @@ export default function MenuBar() {
             href={href}
             className={"rounded-sm p-2 border border-gray-700 disabled:opacity-50 text-gray-200 bg-gray-900 text-sm hover:bg-gray-600 active:text-white"}
           >
-            <Icon className={"inline w-4 h-4"} />
-            <span>&nbsp;{href}</span>
+            <Icon className="inline w-4 mr-1" />
+            {name ?? href}
           </HardLink>
         );
       } )}

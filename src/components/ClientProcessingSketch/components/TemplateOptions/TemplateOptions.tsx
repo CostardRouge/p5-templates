@@ -287,16 +287,24 @@ export default function TemplateOptions( {
       }}
       header={( expanded ) => (
         <button
-          className="text-gray-500 text-sm w-full"
+          className={
+            clsx(
+              "text-gray-500 text-sm text-right",
+              {
+                " w-full": !expanded,
+                "absolute top-2 right-2": expanded
+              }
+            )
+          }
           aria-label={expanded ? "Collapse controls" : "Expand controls"}
         >
+          <span>{expanded ? "hide" : "show"} options</span>
           <ArrowDownFromLine
             className="inline text-gray-500 h-4"
             style={{
               rotate: expanded ? "0deg" : "180deg"
             }}
           />
-          <span>{expanded ? "hide" : "show"} options</span>
         </button>
       )}
     >
@@ -318,7 +326,7 @@ export default function TemplateOptions( {
         <RootSettings />
 
         <CollapsibleItem
-          initialExpandedValue={false}
+          initialExpandedValue={!!rootContentLength}
           className="p-1 border border-gray-300 rounded-sm text-left text-black bg-white overflow-y-auto"
           headerContainerClassName="leading-none"
           header={( expanded ) => (
@@ -353,6 +361,7 @@ export default function TemplateOptions( {
         {slides && (
           <Fragment>
             <CollapsibleItem
+              initialExpandedValue={!!slidesLength}
               className="p-1 border border-gray-300 rounded-sm bg-white overflow-y-auto"
               headerContainerClassName="leading-none"
               header={( expanded ) => (
