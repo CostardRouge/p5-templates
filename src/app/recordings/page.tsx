@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import {
-  Grid, List, MoreVertical, Download, Trash2, RotateCcw, X
+  Grid, List, Download, Trash2, RotateCcw, X, RectangleEllipsis
 } from "lucide-react";
 
 import {
@@ -81,9 +81,9 @@ function ActionsMenu( {
   onRetry?: () => void;
 } ) {
   return (
-    <Menu as="div" className="inline-block text-left">
+    <Menu as="div">
       <MenuButton className="p-1 hover:bg-gray-700 rounded-full inline-flex items-center">
-        <MoreVertical />
+        <RectangleEllipsis />
       </MenuButton>
 
       <MenuItems className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
@@ -545,17 +545,17 @@ export default function RecordingsPage() {
 
       {/* Table View */}
       {view === "table" && (
-        <div className="overflow-x-auto rounded border border-gray-700 bg-gray-800">
+        <div className="overflow-x-auto  rounded border border-gray-700">
           <table className="min-w-full">
             <thead className="bg-gray-200">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Thumb</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Template</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <tr className="text-left text-xs text-gray-500 uppercase">
+                <th className="font-medium p-1 w-14">Thumb</th>
+                <th className="font-medium p-1 w-4">ID</th>
+                <th className="font-medium p-1 w-4">Template</th>
+                <th className="font-medium p-1 w-2">Date</th>
+                <th className="font-medium p-1 w-6">Status</th>
+                <th className="font-medium p-1 w-2">Progress</th>
+                <th className="font-medium p-1 w-1 text-right">Actions</th>
               </tr>
             </thead>
 
@@ -566,16 +566,16 @@ export default function RecordingsPage() {
                   className="hover:bg-gray-700"
                   onDoubleClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
                 >
-                  <td className="px-4 py-2 whitespace-nowrap sm:table-cell">
+                  <td className="p-0 whitespace-nowrap sm:table-cell">
                     <img
                       src={getThumbnailURL( job.template )}
                       alt={job.template}
                       loading="lazy"
-                      className="w-12 h-15 object-contain"
+                      className="w-16 object-contain "
                     />
                   </td>
 
-                  <td className="px-4 py-2 whitespace-nowrap text-sm">
+                  <td className="p-1 whitespace-nowrap text-sm">
                     <HardLink href={`templates/${ job.template }?id=${ job.id }`}>
                       {job.id.slice(
                         0,
@@ -585,26 +585,26 @@ export default function RecordingsPage() {
                     </HardLink>
                   </td>
 
-                  <td className="px-4 py-2 whitespace-nowrap text-sm">
+                  <td className="p-1 whitespace-nowrap text-sm">
                     <HardLink href={`templates/${ job.template }`}>
                       {job.template}
                       <span className="text-gray-400 ml-2">➔</span>
                     </HardLink>
                   </td>
 
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-white">
+                  <td className="p-1 whitespace-nowrap text-sm text-white">
                     {new Date( job.createdAt ).toLocaleString()}
                   </td>
 
-                  <td className="px-2 py-1 whitespace-nowrap text-sm">
+                  <td className="p-1 whitespace-nowrap text-sm">
                     <StatusBadge status={job.status} />
                   </td>
 
-                  <td className="px-4 py-2 whitespace-nowrap">
+                  <td className="p-1 whitespace-nowrap">
                     <ProgressBar progress={job.progress} />
                   </td>
 
-                  <td className="px-4 py-2 whitespace-nowrap text-sm">
+                  <td className="p-1 whitespace-nowrap text-sm text-right">
                     <ActionsMenu
                       job={job}
                       onCancel={handleCancel}
