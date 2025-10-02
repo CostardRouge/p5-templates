@@ -14,14 +14,9 @@ import {
   Github,
   Clock,
   Settings
-  // Home
 } from "lucide-react";
 
 import HardLink from "@/components/HardLink";
-
-// import {
-//   ThemeToggle
-// } from "@/components/ThemeToggle";
 
 type NavItem = {
  href: string;
