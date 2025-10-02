@@ -326,7 +326,7 @@ export default function TemplateOptions( {
         <RootSettings />
 
         <CollapsibleItem
-          initialExpandedValue={!!rootContentLength}
+          initialExpandedValue={false}
           className="p-1 border border-gray-300 rounded-sm text-left text-black bg-white overflow-y-auto"
           headerContainerClassName="leading-none"
           header={( expanded ) => (
@@ -361,7 +361,6 @@ export default function TemplateOptions( {
         {slides && (
           <Fragment>
             <CollapsibleItem
-              initialExpandedValue={!!slidesLength}
               className="p-1 border border-gray-300 rounded-sm bg-white overflow-y-auto"
               headerContainerClassName="leading-none"
               header={( expanded ) => (

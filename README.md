@@ -4,6 +4,9 @@ Reusable, dynamic p5.js sketches you can parameterize in the browser and render 
 I design a sketch once, give it a typed options schema, preview and tweak on a web page, then hit “Export.” A background recorder renders the final video and makes it easy to download straight to my phone. The long‑term vision includes automations that trigger renders from real‑life events (calendar, GitHub, weather, personal notes, etc.).
 
 
+Demo: https://social-pipeline-pi.vercel.app/templates
+Docker: https://hub.docker.com/repository/docker/containeurrouge/social-templates-renderer/general
+
 ## Demo (concept)
 
 Edit options live (size, framerate, duration, colors, per‑item parameters)
