@@ -33,9 +33,11 @@ async function recordSketchSlides(
   const recordingState: {
     page?: Page,
     browser?: Browser
+    currentSlideIndex: number
   } = {
     page: undefined,
-    browser: undefined
+    browser: undefined,
+    currentSlideIndex: -1
   };
 
   try {
@@ -50,29 +52,33 @@ async function recordSketchSlides(
     recordingState.browser = browser;
     recordingState.page = await createPage();
 
+    await recordingState.page.exposeFunction(
+      "reportCaptureProgress",
+      async( percentage: number ) => {
+        if ( recordingState.currentSlideIndex < 0 ) {
+          return;
+        }
+
+        await updateRecordingStepPercentage(
+          jobId,
+          `recording.slide-${ recordingState.currentSlideIndex }.saving-frames`,
+          percentage
+        );
+      }
+    );
+
     const slides = options.slides;
     const slideVideoPaths: string[] = [
     ];
 
     for ( let slideIndex = 0; slideIndex < slides.length; slideIndex++ ) {
+      recordingState.currentSlideIndex = slideIndex;
+
       await updateRecordingStepPercentage(
         jobId,
         `recording.slide-${ slideIndex }.launching-browser`,
         0
       );
-
-      if ( slideIndex === 0 ) {
-        await recordingState.page.exposeFunction(
-          "reportCaptureProgress",
-          async( percentage: number ) => {
-            await updateRecordingStepPercentage(
-              jobId,
-              `recording.slide-${ slideIndex }.saving-frames`,
-              percentage
-            );
-          }
-        );
-      }
 
       await recordingState.page.goto(
         `http://localhost:3000/templates/${ template }?id=${ jobId }&capturing`,
@@ -100,7 +106,6 @@ async function recordSketchSlides(
         100
       );
 
-      // @ts-ignore
       await recordingState.page.evaluate( () => window.startLoopRecording() );
 
       await updateRecordingStepPercentage(
