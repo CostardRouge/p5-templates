@@ -1,84 +1,159 @@
 import {
-  spawn
+  spawn, ChildProcessWithoutNullStreams
 } from "child_process";
+import fs from "node:fs/promises";
 
-async function encodeVideoFromFrames(
-  framesDirectory: string,
-  outputVideoPath: string,
-  animationOptions: any,
+type AnimationOptions = {
+  framerate?: number;
+  duration?: number; // not required for encoding; used only if you want to display ETA elsewhere
+};
+
+async function countPngFrameFiles( framesDirectoryPath: string ): Promise<number> {
+  const directoryEntries = await fs.readdir(
+    framesDirectoryPath,
+    {
+      withFileTypes: true
+    }
+  );
+  const frameFiles = directoryEntries.filter( ( entry ) => {
+    if ( !entry.isFile() ) {
+      return false;
+    }
+    const lowerCaseName = entry.name.toLowerCase();
+
+    return lowerCaseName.endsWith( ".png" );
+  } );
+
+  return frameFiles.length;
+}
+
+/**
+ * Encodes a sequence of PNG frames into an MP4 video at a constant frame rate.
+ * - Uses `-framerate` for the input (correct for image sequences).
+ * - Uses `-r` for the output (enforces constant frame rate in the encoded stream).
+ * - Reads ffmpeg `-progress pipe:1` to report progress by counting frames.
+ */
+export default async function encodeVideoFromFrames(
+  framesDirectoryPath: string,
+  outputVideoFilePath: string,
+  animationOptions: AnimationOptions,
   onProgress: ( percentage: number ) => void
-) {
-  const fps = animationOptions?.framerate ?? 60;
-  const duration = animationOptions?.duration ?? 5;
+): Promise<void> {
+  const framesPerSecond = Math.max(
+    1,
+    Math.floor( animationOptions?.framerate ?? 60 )
+  );
+  const totalFrameCount = Math.max(
+    1,
+    await countPngFrameFiles( framesDirectoryPath )
+  );
 
   return new Promise<void>( (
     resolve, reject
   ) => {
-    const ffmpegProcess = spawn(
+    const ffmpegArguments: string[] = [
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-y",
+
+      // Emit machine-readable progress to stdout BEFORE the output file path
+      "-progress",
+      "pipe:1",
+
+      // INPUT (image sequence)
+      // Important: -framerate is an INPUT option
+      "-framerate",
+      String( framesPerSecond ),
+      "-pattern_type",
+      "glob",
+      "-i",
+      "*.png",
+
+      // OUTPUT
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-preset",
+      "fast",
+      "-crf",
+      "23",
+      "-movflags",
+      "+faststart",
+      "-vsync",
+      "cfr", // enforce constant frame rate
+      "-r",
+      String( framesPerSecond ), // OUTPUT frame rate
+
+      outputVideoFilePath,
+    ];
+
+    const ffmpegProcess: ChildProcessWithoutNullStreams = spawn(
       "ffmpeg",
-      [
-        "-r",
-        String( fps ),
-        "-pattern_type",
-        "glob",
-        "-i",
-        "*.png",
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "-preset",
-        "fast",
-        "-crf",
-        "23",
-        "-y",
-        outputVideoPath,
-        "-progress",
-        "pipe:1",
-        "-loglevel",
-        "error",
-      ],
+      ffmpegArguments,
       {
-        cwd: framesDirectory
+        cwd: framesDirectoryPath,
       }
     );
 
+    let lastReportedPercentage = -1;
+    let collectedStderr = "";
+
+    // ffmpeg -progress prints key=value lines; one of them is frame=NUMBER
     ffmpegProcess.stdout.on(
       "data",
-      buffer => {
-        const match = /frame=\s*(\d+)/.exec( buffer.toString() );
+      ( chunk: Buffer ) => {
+        const text = chunk.toString();
+        const match = /frame=(\d+)/.exec( text );
 
-        if ( match ) {
-          const framesRendered = parseInt(
-            match[ 1 ],
-            10
+        if ( match != null ) {
+          const renderedFrameCount = Math.min(
+            parseInt(
+              match[ 1 ],
+              10
+            ) || 0,
+            totalFrameCount
           );
-          const totalFrames = fps * duration;
+          const percentage = Math.min(
+            100,
+            Math.round( ( renderedFrameCount / totalFrameCount ) * 100 )
+          );
 
-          onProgress( Math.min(
-            ( framesRendered / totalFrames ) * 100,
-            100
-          ) );
+          if ( percentage !== lastReportedPercentage ) {
+            lastReportedPercentage = percentage;
+            onProgress( percentage );
+          }
         }
+      }
+    );
+
+    ffmpegProcess.stderr.on(
+      "data",
+      ( chunk: Buffer ) => {
+        collectedStderr += chunk.toString();
       }
     );
 
     ffmpegProcess.on(
       "close",
-      ( code ) => {
-        if ( code === 0 ) {
-          return resolve();
+      ( exitCode: number ) => {
+        if ( exitCode === 0 ) {
+          resolve();
+          return;
         }
 
-        return reject( new Error( `ffmpeg failed: ${ code }` ) );
+        const error = new Error( `ffmpeg process exited with code ${ exitCode }\n${ collectedStderr }` );
+
+        reject( error );
       }
     );
 
     ffmpegProcess.on(
       "error",
-      reject
+      ( error: Error ) => {
+        reject( error );
+      }
     );
   } );
 }
-
-export default encodeVideoFromFrames;
