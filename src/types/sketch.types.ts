@@ -2,9 +2,6 @@
 import {
   z
 } from "zod";
-import neonGraffiti from "../../public/assets/scripts/p5-sketches/utils/visuals/neonGraffiti";
-import neonLine from "../../public/assets/scripts/p5-sketches/utils/visuals/neonLine";
-import neonDot from "../../public/assets/scripts/p5-sketches/utils/visuals/neonDot";
 
 const RGB = z.tuple( [
   z.number(),
@@ -303,6 +300,16 @@ export const ImagesStackItemSchema = z.object( {
   margin: z
     .number()
     .nonnegative()
+    .default( 0 ),
+  scale: z.number()
+    .min( 0 )
+    .max( 6 )
+    .default( 1 ),
+  rotation: z
+    .number()
+    .default( 0 ),
+  progressiveRotation: z
+    .number()
     .default( 0 ),
   center: z.boolean().default( false ),
   position: Vec2,

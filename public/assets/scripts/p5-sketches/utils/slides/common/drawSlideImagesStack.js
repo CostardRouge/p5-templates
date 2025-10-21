@@ -1,11 +1,13 @@
 import {
-  common, imageUtils, animation, easing
+  animation, common, easing, imageUtils
 } from "/assets/scripts/p5-sketches/utils/index.js";
 
 export default function drawSlideImagesStack(
   imagesStackOption, slideOptions
 ) {
-  const sources = imagesStackOption?.sources;
+  const {
+    sources, position, scale: scaleValue, rotation: rotationValue, progressiveRotation
+  } = imagesStackOption;
 
   if ( !sources ) {
     return;
@@ -30,15 +32,30 @@ export default function drawSlideImagesStack(
     easing.easeInOutBack
   );
 
+  push();
+
+  translate(
+    position.x * width,
+    position.y * height
+  );
+  rotate( rotationValue );
+
   for ( let i = 0; i < images.length; i++ ) {
     if ( imageIndexDisplay < i ) {
-      return;
+      continue;
     }
 
-    const imagePosition = createVector(
-      width * imagesStackOption.position.x,
-      height * imagesStackOption.position.y
-    );
+    if ( progressiveRotation !== 0 ) {
+      rotate( map(
+        i,
+        0,
+        images.length - 1,
+        -progressiveRotation,
+        progressiveRotation
+      ) );
+    }
+
+    const imagePosition = createVector();
 
     if ( imagesStackOption.animation ) {
       if ( imagesStackOption.animation.name === "random" ) {
@@ -68,7 +85,10 @@ export default function drawSlideImagesStack(
       center: imagesStackOption.center ?? true,
       margin: imagesStackOption.margin ?? 80,
       position: imagePosition,
+      scale: scaleValue,
       img: images[ i ].img,
     } );
   }
+
+  pop();
 }

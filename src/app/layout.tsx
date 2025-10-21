@@ -2,7 +2,6 @@ import "./globals.css";
 import type {
   Metadata, Viewport
 } from "next";
-import MenuBar from "@/components/MenuBar";
 
 export const metadata: Metadata = {
   title: "Social-pipeline",
@@ -30,11 +29,11 @@ export default function RootLayout( {
             height: "100svh",
           } }
         >
+          {/* <MenuBar />*/}
+
           <main className="flex-1 overflow-auto p-2 relative w-full">
             {children}
           </main>
-
-          <MenuBar />
         </div>
       </body>
     </html>

@@ -9,6 +9,7 @@ const imageUtils = {
     boundary = graphics,
     margin = 0,
     scale = 1,
+    angle = 1,
     callback,
     center = false,
     clip = false,

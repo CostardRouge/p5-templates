@@ -25,7 +25,7 @@ body.recording::before {
 fps-counter {
   position: absolute;
   left: 0;
-  bottom: 3.5em;
+  bottom: 0em;
   color: #ffffff;
   padding: 4px 6px;
   font-family: system-ui;

@@ -1,17 +1,16 @@
 import {
-  ContentItem,
-  PatternSchema,
   Blend,
+  ContentItem,
   HorizontalAlign,
-  VerticalAlign,
   ImageItemAnimations,
   ImagesStackAnimations,
+  PatternSchema,
+  VerticalAlign,
   VisualOptions,
-  // neonGraffitiSchema, neonLineSchema, neonDotSchema, churrosSnakeSchema
 } from "@/types/sketch.types";
 
 import {
-  ZodObject, ZodDiscriminatedUnion, ZodTypeAny
+  ZodDiscriminatedUnion, ZodObject
 } from "zod";
 
 // Step 1: Define a common base for all config types
@@ -505,9 +504,12 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       label: "Margin",
       component: "number",
     },
-    center: {
-      label: "Center",
-      component: "checkbox",
+    scale: {
+      label: "Scale",
+      component: "slider",
+      step: 0.1,
+      min: 0.1,
+      max: 6
     },
     position: {
       label: "Position",
@@ -529,6 +531,24 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         }
       }
     },
+    rotation: {
+      label: "Rotation",
+      component: "slider",
+      min: 0,
+      max: Math.PI * 2,
+      step: 0.001
+    },
+    center: {
+      label: "Center",
+      component: "checkbox",
+    },
+    progressiveRotation: {
+      label: "Progressive rotation",
+      component: "slider",
+      min: 0,
+      max: Math.PI * 2,
+      step: 0.001
+    },
     animation: {
       label: "Animation",
       component: "conditional-group",
@@ -536,7 +556,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       typeSelector: {
         options: [
           {
-            label: "Random move",
+            label: "Display on/off",
             value: "random"
           },
         ],

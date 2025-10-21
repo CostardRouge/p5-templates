@@ -1,19 +1,11 @@
 "use client";
 
 import React, {
-  useEffect,
-  useState
+  useEffect, useState
 } from "react";
 // import Link from "next/link";
 import {
-  usePathname
-} from "next/navigation";
-import {
-  Video,
-  Paintbrush,
-  Github,
-  Clock,
-  Settings
+  Github, Paintbrush, Video
 } from "lucide-react";
 
 import HardLink from "@/components/HardLink";
@@ -73,7 +65,7 @@ export default function MenuBar() {
   }
 
   return (
-    <nav className="h-14 bg-gray-800 px-2 flex gap-1 items-center justify-center w-full border-t border-gray-700 z-40">
+    <nav className="h-14 bg-gray-800 px-2 flex gap-1 items-center justify-center w-full border-b border-gray-700 z-40">
       {items.map( ( {
         href, name, Icon
       } ) => {
