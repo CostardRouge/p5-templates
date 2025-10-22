@@ -9,6 +9,10 @@ import {
 } from "lucide-react";
 
 import HardLink from "@/components/HardLink";
+import clsx from "clsx";
+import {
+  usePathname
+} from "next/navigation";
 
 type NavItem = {
  href: string;
@@ -45,7 +49,7 @@ const items: NavItem[] = [
 ];
 
 export default function MenuBar() {
-  // const pathname = usePathname();
+  const pathname = usePathname();
 
   const [
     isCapturing,
@@ -65,17 +69,24 @@ export default function MenuBar() {
   }
 
   return (
-    <nav className="h-14 bg-gray-800 px-2 flex gap-1 items-center justify-center w-full border-b border-gray-700 z-40">
+    <nav className="h-14 w-full bg-gray-800 p-1 flex justify-center items-center gap-1 border-b border-gray-700 z-40">
       {items.map( ( {
         href, name, Icon
       } ) => {
-        // const active = pathname.startsWith( href );
+        const active = pathname.startsWith( href );
 
         return (
           <HardLink
             key={href}
             href={href}
-            className={"rounded-sm p-2 border border-gray-700 disabled:opacity-50 text-gray-200 bg-gray-900 text-sm hover:bg-gray-600 active:text-white"}
+            className={
+              clsx(
+                "rounded-sm p-2 border border-gray-700 disabled:opacity-50 text-gray-200 bg-gray-900 text-xs hover:bg-gray-600",
+                {
+                  "text-white bg-black": active
+                }
+              )
+            }
           >
             <Icon className="inline w-4 mr-1" />
             {name ?? href}
