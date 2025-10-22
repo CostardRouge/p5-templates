@@ -1,10 +1,7 @@
 "use client";
 
 import React, {
-  Fragment,
-  useEffect,
-  useRef,
-  useState,
+  Fragment, useEffect, useRef, useState,
 } from "react";
 import {
   ArrowDownFromLine, ListCollapse
@@ -14,10 +11,7 @@ import {
   JobModel
 } from "@/types/recording.types";
 import {
-  OptionsSchema,
-  SketchOption,
-  SketchOptionInput,
-  SlideOption,
+  OptionsSchema, SketchOption, SketchOptionInput, SlideOption,
 } from "@/types/sketch.types";
 
 import FormUndoRedo from "./components/FormUndoRedo/FormUndoRedo";
@@ -38,11 +32,13 @@ import {
 import CollapsibleItem from "@/components/CollapsibleItem";
 import initOptions from "@/components/utils/initOptions";
 
-import ContentArrayProvider from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/ContentArrayProvider";
+import ContentArrayProvider
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/ContentArrayProvider";
 import deepClone from "@/utils/deepClone";
 import makeDefaultSlide from "@/components/ClientProcessingSketch/components/TemplateOptions/utils/makeDefaultSlide";
 
-import RootSettings from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/RootSettings";
+import RootSettings
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/RootSettings";
 import clsx from "clsx";
 import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOptions/components/UndoRedo";
 
@@ -316,7 +312,8 @@ export default function TemplateOptions( {
           debounceMs={400}
           watchPaths={[
             "slides",
-            "content"
+            "slides",
+            "animation"
           ]}
           captureInitial
         >
