@@ -1,5 +1,5 @@
 import {
-  sketch, events, debug, animation, time, scripts, captureOptions as options
+  animation, captureOptions as options, debug, scripts, sketch, time
 } from "./index.js";
 
 const recorder = {
@@ -19,7 +19,7 @@ const recorder = {
       // format: options.get('recording-format'),
       format: "png",
       quality: "best",
-      framerate: sketch.engine.getFrameRate(),
+      framerate: 60, // sketch.engine.getFrameRate(),
       verbose: false,
       name: options.name || sketch.name,
       manualStart: true,
