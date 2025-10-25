@@ -4,7 +4,7 @@ import React, {
   useState
 } from "react";
 import {
-  Loader, SaveIcon, Archive, Clapperboard, Save
+  Archive, Clapperboard, Loader, Save, SaveIcon
 } from "lucide-react";
 
 import {
@@ -18,7 +18,7 @@ import {
 
 import fetchDownload from "@/components/utils/fetchDownload";
 import {
-  resolveAssetURL, getScopeAssetPath
+  getScopeAssetPath, resolveAssetURL
 } from "@/shared/utils";
 import {
   SketchOption, SlideOption
@@ -163,7 +163,6 @@ export default function CaptureActions( {
     if ( newJobId !== null ) {
       if ( status === "active" ) {
         setJobId( newJobId );
-
         subscribeToRecordingStatus( newJobId );
       }
 
