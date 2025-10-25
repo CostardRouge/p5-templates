@@ -2,10 +2,10 @@ import {
   ExifData
 } from "@/app/templates/html/exif-detail/types/ExifData";
 import React, {
-  useState, useEffect
+  useEffect, useState
 } from "react";
 import {
-  MapPin, CalendarClock
+  CalendarClock, MapPin
 } from "lucide-react";
 
 interface ExifInfoProps {
@@ -16,6 +16,7 @@ interface ExifInfoProps {
 }
 
 const friendlyCameraModelNames: Record<string, string> = {
+  FC8482: "MINI 4 PRO",
   "ILCE-7CM2": "ALPHA 7CII",
   "ILCE-6700": "ALPHA A6700",
 };

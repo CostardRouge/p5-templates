@@ -3,7 +3,9 @@ import {
 } from "./index.js";
 
 const friendlyCameraModelNames = {
-  "ILCE-7CM2": "ALPHA 7CII"
+  FC8482: "MINI 4 PRO",
+  "ILCE-7CM2": "ALPHA 7CII",
+  "DJI FC8482": "DJI MINI 4 PRO"
 };
 
 const friendlyLensModelNames = {
