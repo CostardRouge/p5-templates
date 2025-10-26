@@ -24,7 +24,7 @@ async function handleImage( file ) {
     sketchState.image.hide();
     sketchState.exifData = await exif.load( file.data );
 
-    console.log( sketchState.exifData );
+    // console.log( sketchState.exifData );
 
     document
       .querySelector( "canvas#defaultCanvas0" )
@@ -36,7 +36,7 @@ async function handleImage( file ) {
 }
 
 events.register(
-  "engine-canvas-mouse-pressed",
+  "engine-canvas-double-clicked",
   () => {
     sketchState.input.elt.click();
   }
@@ -84,7 +84,7 @@ sketch.draw( (
 
   if ( !sketchState.image ) {
     string.write(
-      "click to add an image",
+      "double click to add an image",
       0,
       0,
       {
@@ -179,26 +179,4 @@ sketch.draw( (
       }
     } );
   }
-
-  // string.write(
-  //   String( Number( animation.progression )
-  //     .toPrecision( 3 ) )
-  //     .slice(
-  //       0,
-  //       4
-  //     ),
-  //   0,
-  //   0,
-  //   {
-  //     size: 240,
-  //     stroke: color( 255 ),
-  //     fill: color( 0 ),
-  //     font: string.fonts.martian,
-  //     textHeight: height,
-  //     textAlign: [
-  //       CENTER,
-  //       CENTER
-  //     ],
-  //   }
-  // );
 } );

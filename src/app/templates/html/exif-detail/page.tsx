@@ -239,10 +239,10 @@ const ImageInfoHelper = () => {
         initialScale={ capturing ? 1 : undefined }
         showZoomControls={ !capturing }
       >
-        <div className="flex flex-col items-center justify-center h-[100svh] text-black">
+        <div className="flex flex-col items-center justify-center h-[100svh] text-foreground">
           <div
             id="div-to-capture"
-            className={"p-16 bg-white h-[1350px] w-[1080px]"}
+            className={"p-16 bg-background h-[1350px] w-[1080px]"}
           >
             <ImageDropzone
               image={image}
@@ -266,14 +266,14 @@ const ImageInfoHelper = () => {
       {!capturing && image && (
         <div
           data-no-zoom=""
-          className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-white p-2 border border-b-0 border-gray-400 shadow shadow-black-300 drop-shadow-sm border-r-0 z-50 rounded-tl-sm"
+          className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-background p-2 border border-b-0 border-theme  border-r-0 z-50 rounded-tl"
           style={{
             maxHeight: "calc(60svh)",
           }}
         >
           {image && (
             <button
-              className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+              className="rounded p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
               onClick={( e ) => {
                 e.preventDefault();
                 setObjectStyle( current => {
@@ -289,7 +289,7 @@ const ImageInfoHelper = () => {
 
           {exifData && !Number.isNaN( exifData?.iso ) && (
             <button
-              className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+              className="rounded p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
               onClick={( e ) => {
                 e.preventDefault();
                 setShowExif( !showExif );
@@ -303,7 +303,7 @@ const ImageInfoHelper = () => {
 
             <div className="flex gap-1 h-auto">
               <button
-                className="flex-grow rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                className="flex-grow rounded p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
                 onClick={async() => await submitDownloadForm( "_self" )}
               >
                 {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
@@ -312,7 +312,7 @@ const ImageInfoHelper = () => {
               </button>
 
               <button
-                className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                className="rounded p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
                 onClick={async() => await submitDownloadForm( "_blank" )}
               >
                 {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :

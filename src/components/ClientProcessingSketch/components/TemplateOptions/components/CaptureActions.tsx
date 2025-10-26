@@ -181,7 +181,7 @@ export default function CaptureActions( {
           {
             persistedJob?.status === "draft" && (
               <button
-                className="rounded-sm p-1 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-xs"
+                className="rounded p-1 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-xs"
                 onClick={() => handleSubmit(
                   "draft",
                   persistedJob.id
@@ -197,7 +197,7 @@ export default function CaptureActions( {
 
           {
             persistedJob?.status !== "draft" && ( <button
-              className="flex-2 rounded p-1 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-xs"
+              className="flex-2 rounded p-1 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-xs"
               onClick={() => handleSubmit( "draft" )}
               disabled={isLoading}
             >
@@ -208,7 +208,7 @@ export default function CaptureActions( {
             )}
 
           <button
-            className="flex-1 rounded p-1 border border-gray-400 shadow shadow-gray-200 text-gray-500 hover:text-black active:text-black bg-white text-xs disabled:opacity-50 disabled:text-gray-500"
+            className="flex-1 rounded p-1 border border-theme  text-foreground  active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
             onClick={() => handleSubmit()}
             disabled={isLoading || saving}
           >
@@ -218,7 +218,7 @@ export default function CaptureActions( {
           </button>
 
           <button
-            className="flex-1 rounded p-1 border border-gray-400 shadow shadow-gray-200 text-gray-500 hover:text-black active:text-black bg-white text-xs disabled:opacity-50 disabled:text-gray-500"
+            className="flex-1 rounded p-1 border border-theme  text-foreground  active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
             onClick={() => handleSubmit()}
             disabled={isLoading || saving}
           >
@@ -230,18 +230,18 @@ export default function CaptureActions( {
       )}
 
       {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
-        <div className="flex flex-col justify-start bg-white text-center items-center">
+        <div className="flex flex-col justify-start bg-background text-center items-center">
           <div
-            className={`w-full h-6 rounded-sm relative ring-1 ${
+            className={`w-full h-6 rounded relative ring-1 ${
               recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
             }`}
           >
             {/* white track for clean difference blending */}
-            <div className="absolute inset-0 rounded-sm bg-white" />
+            <div className="absolute inset-0 rounded bg-background" />
 
             {/* black progress */}
             <div
-              className="absolute inset-y-0 left-0 bg-black rounded-sm"
+              className="absolute inset-y-0 left-0 bg-background rounded"
               style={{
                 width: `${ recordingProgress.percentage }%`
               }}
@@ -250,14 +250,14 @@ export default function CaptureActions( {
             {/* blend-inverting label */}
             <span
               className="absolute inset-0 p-1 text-xs select-none
-               mix-blend-difference text-white truncate"
+               mix-blend-difference text-foreground truncate"
             >
               {recordingProgress.status}
               {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}
             </span>
           </div>
 
-          <span className="text-xs text-black">
+          <span className="text-xs text-foreground">
             {Math.round( recordingProgress?.percentage )}%&nbsp;
           </span>
         </div>
@@ -265,7 +265,7 @@ export default function CaptureActions( {
 
       {( recordingProgress?.percentage === 100 || recordingProgress?.status === "completed" ) && jobId && (
         <button
-          className="rounded-sm p-2 border border-gray-400 text-black inline-block bg-white text-sm shadow-gray-200"
+          className="rounded p-2 border border-theme text-foreground inline-block bg-background text-sm "
           onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
         >
           <SaveIcon className="inline align-middle mr-1 h-4"/>

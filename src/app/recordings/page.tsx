@@ -1,11 +1,11 @@
 "use client";
 
 import React, {
-  useState, useEffect
+  useEffect, useState
 } from "react";
 
 import {
-  Grid, List, Download, Trash2, RotateCcw, X, RectangleEllipsis
+  Download, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X
 } from "lucide-react";
 
 import {
@@ -53,7 +53,7 @@ function ProgressBar( {
 } ) {
   return (
     <div className="w-full">
-      <div className="w-full bg-gray-200 rounded h-2 overflow-hidden">
+      <div className="w-full bg-hover rounded border border-theme h-2 overflow-hidden">
         <div
           className="h-2 bg-blue-500"
           style={{
@@ -61,7 +61,7 @@ function ProgressBar( {
           }} />
       </div>
 
-      <div className="text-xs text-gray-500 mt-1">{progress}%</div>
+      <div className="text-xs text-foreground mt-1">{progress}%</div>
     </div>
   );
 }
@@ -81,12 +81,12 @@ function ActionsMenu( {
   onRetry?: () => void;
 } ) {
   return (
-    <Menu as="div">
-      <MenuButton className="p-1 hover:bg-gray-700 rounded-full inline-flex items-center">
-        <RectangleEllipsis />
+    <Menu as="div" className="relative">
+      <MenuButton>
+        <MenuIcon className="h-4"/>
       </MenuButton>
 
-      <MenuItems className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+      <MenuItems className="absolute right-0 w-48 border border-theme rounded z-50 bg-background">
         {job.status === "completed" &&
           <MenuItem>
             {( {
@@ -94,7 +94,7 @@ function ActionsMenu( {
             } ) => (
               <button
                 onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
-                className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "opacity-80" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <Download className="h-5" />
                 Download
@@ -125,7 +125,7 @@ function ActionsMenu( {
           } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/options/download/${ job.id }` )}
-              className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
             >
               <Download className="h-5" />
               <span>Download .json</span>
@@ -133,7 +133,7 @@ function ActionsMenu( {
           )}
         </MenuItem>
 
-        <div className="my-1 h-px bg-white/5"/>
+        <div className="my-1 h-px bg-border" />
 
         {![
           "completed",
@@ -508,13 +508,13 @@ export default function RecordingsPage() {
             placeholder="Search…"
             value={search}
             onChange={( e ) => setSearch( e.target.value )}
-            className="px-3 rounded w-full sm:w-48 bg-gray-800 h-9"
+            className="px-3 rounded w-full sm:w-48 bg-background h-9"
           />
 
           <select
             value={statusFilter}
             onChange={( e ) => setStatusFilter( e.target.value )}
-            className="px-2 rounded bg-gray-800 h-9"
+            className="px-2 rounded bg-background h-9"
           >
             <option value="all">All Status</option>
             <option value="draft">Drafted</option>
@@ -527,14 +527,14 @@ export default function RecordingsPage() {
 
           <button
             onClick={() => setView( "cards" )}
-            className={`p-2 rounded ${ view === "cards" ? "bg-gray-700" : "hover:bg-gray-600" }`}
+            className={`p-2 rounded border border-theme ${ view === "cards" ? "bg-active" : "hover:bg-hover" }`}
           >
             <Grid className="w-5 h-5"/>
           </button>
 
           <button
             onClick={() => setView( "table" )}
-            className={`p-2 rounded ${ view === "table" ? "bg-gray-700" : "hover:bg-gray-600" }`}
+            className={`p-2 rounded border border-theme ${ view === "table" ? "bg-active" : "hover:bg-hover" }`}
           >
             <List className="w-5 h-5"/>
           </button>
@@ -545,10 +545,10 @@ export default function RecordingsPage() {
 
       {/* Table View */}
       {view === "table" && (
-        <div className="overflow-x-auto  rounded border border-gray-700">
+        <div className="overflow-x-auto rounded border border-theme">
           <table className="min-w-full">
-            <thead className="bg-gray-200">
-              <tr className="text-left text-xs text-gray-500 uppercase">
+            <thead className="bg-background">
+              <tr className="text-left text-xs text-foreground uppercase border-b ">
                 <th className="font-medium p-1 w-14">Thumb</th>
                 <th className="font-medium p-1 w-4">ID</th>
                 <th className="font-medium p-1 w-4">Template</th>
@@ -559,11 +559,11 @@ export default function RecordingsPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-700">
+            <tbody className="divide-y divide-theme">
               {filtered.map( ( job ) => (
                 <tr
                   key={job.id}
-                  className="hover:bg-gray-700"
+                  className="hover:bg-hover"
                   onDoubleClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
                 >
                   <td className="p-0 whitespace-nowrap sm:table-cell">
@@ -571,7 +571,7 @@ export default function RecordingsPage() {
                       src={getThumbnailURL( job.template )}
                       alt={job.template}
                       loading="lazy"
-                      className="w-16 object-contain "
+                      className="w-16 object-contain"
                     />
                   </td>
 
@@ -592,7 +592,7 @@ export default function RecordingsPage() {
                     </HardLink>
                   </td>
 
-                  <td className="p-1 whitespace-nowrap text-sm text-white">
+                  <td className="p-1 whitespace-nowrap text-sm text-foreground">
                     {new Date( job.createdAt ).toLocaleString()}
                   </td>
 
@@ -624,17 +624,17 @@ export default function RecordingsPage() {
       {view === "cards" && (
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
           {filtered.map( ( job ) => (
-            <div key={job.id} className="bg-gray-800 border border-gray-700 rounded-sm shadow hover:shadow-md transition relative">
+            <div key={job.id} className="bg-background border border-theme rounded  transition relative">
               <StatusBadge
                 status={job.status}
-                className="absolute top-2 left-2 rounded-sm"
+                className="absolute top-2 left-2 rounded"
               />
 
               <img
                 src={getThumbnailURL( job.template )}
                 alt={job.template}
                 loading="lazy"
-                className="object-contain rounded-t-sm"
+                className="object-contain rounded-t"
               />
 
               <div className="p-2 space-y-1">

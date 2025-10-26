@@ -1,6 +1,5 @@
 import React, {
-  useRef,
-  useState
+  useRef, useState
 } from "react";
 
 interface ImageDropzoneProps {
@@ -73,7 +72,7 @@ const ImageDropzone = ( {
     >
       {image !== null ? children : (
         <div
-          className={`flex flex-col items-center justify-center w-full h-full border-2 border-dashed transition-colors cursor-pointer ${ isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400" }`}
+          className={`flex flex-col items-center justify-center w-full h-full border-2 border-dashed transition-colors cursor-pointer ${ isDragging ? "border-blue-500 bg-blue-50" : "border-theme hover:border-theme" }`}
         >
           <label
             htmlFor="file-input"

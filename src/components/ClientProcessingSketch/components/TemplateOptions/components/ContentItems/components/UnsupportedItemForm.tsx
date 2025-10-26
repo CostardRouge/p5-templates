@@ -25,10 +25,10 @@ export default function UnsupportedItemForm( {
   const data = getValues( fieldName );
 
   return (
-    <div className="p-1 border  rounded-sm bg-white hover:shadow-md">
+    <div className="p-1 border rounded bg-background">
       <div className="flex justify-between items-center">
         <h4
-          className="bg-red-200 px-1 rounded-sm"
+          className="bg-red-200 px-1 rounded"
           onClick={() => console.log( data )}
         >
           {data?.type}
@@ -38,7 +38,7 @@ export default function UnsupportedItemForm( {
           type="button"
           onClick={onRemove}
           aria-label="Remove layer"
-          className="text-red-500 hover:text-red-700"
+          className="text-red-500"
         >
           <X size={16}/>
         </button>

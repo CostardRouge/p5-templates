@@ -9,18 +9,21 @@ import clsx from "clsx";
 import {
   usePathname, useSearchParams
 } from "next/navigation";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type NavItem = {
   href: string;
   name?: string;
+  target?: string;
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 };
 
 const items: NavItem[] = [
   {
     href: "https://github.com/CostardRouge/p5-templates",
-    name: "github",
-    Icon: Github
+    name: "//github",
+    Icon: Github,
+    target: "_blank",
   },
   {
     href: "/templates",
@@ -32,6 +35,8 @@ const items: NavItem[] = [
   },
 ];
 
+const menuLinkClassName = "rounded p-2 bg-background text-foreground";
+
 export default function MenuBar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -40,29 +45,47 @@ export default function MenuBar() {
   if ( isCapturing ) return null;
 
   return (
-    <nav className="h-14 w-full bg-gray-800 p-1 flex justify-center items-center gap-1 border-b border-gray-700 z-40">
-      {items.map( ( {
-        href, name, Icon
-      } ) => {
-        const isInternal = href.startsWith( "/" );
-        const active = isInternal && pathname.startsWith( href );
+    <nav className="h-14 w-full bg-background p-1 flex justify-between items-center gap-1 border-b border-theme z-40">
+      <p className={
+        clsx(
+          "font-medium select-none",
+          menuLinkClassName
+        )
+      }>
+        p5 templates
+      </p>
 
-        return (
-          <HardLink
-            key={href}
-            href={href}
-            className={clsx(
-              "rounded-sm p-2 border border-gray-700 disabled:opacity-50 text-gray-200 bg-gray-900 text-xs hover:bg-gray-600",
-              {
-                "text-white bg-black": active
-              }
-            )}
-          >
-            <Icon className="inline w-4 mr-1" />
-            {name ?? href}
-          </HardLink>
-        );
-      } )}
+      <div>
+        {items.map( ( {
+          href, name, Icon, target
+        } ) => {
+          const isInternal = href.startsWith( "/" );
+          const active = isInternal && pathname.startsWith( href );
+
+          return (
+            <HardLink
+              key={href}
+              href={href}
+              target={target}
+              className={clsx(
+                menuLinkClassName,
+                "hover:opacity-80",
+                {
+                  "font-bold": active
+                }
+              )}
+            >
+              <Icon className="inline w-4 mr-1" />
+              {name ?? href}
+            </HardLink>
+          );
+        } )}
+      </div>
+
+      <ThemeToggle
+        iconClassName={"h-5"}
+        className={menuLinkClassName}
+      />
     </nav>
   );
 }

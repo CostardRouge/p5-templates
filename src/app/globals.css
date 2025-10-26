@@ -2,7 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    background-color: #3a3a3a;
-    color: #000;
+/* Tokens (HSL triplets) */
+:root {
+    /* Pure light: white bg, black text */
+    --background: 0 0% 100%;  /* white */
+    --foreground: 0 0% 0%;    /* black */
+
+    --border: 0 0% 85%;
+
+    --hover: 0 0% 95%;          /* use with alpha for subtle hover on light */
+    --active: 0 0% 0%;         /* same hue; different alpha in utilities */
+    --focus: 0 0% 0%;          /* ring/outline color */
+    --label: 0 0% 30%;         /* dimmer than body text */
+}
+
+/* Dark theme: invert to black bg, white text */
+.dark,
+[data-theme="dark"] {
+    --background: 0 0% 0%;     /* black */
+    --foreground: 0 0% 100%;   /* white */
+
+    --border: 0 0% 20%;
+
+    /* Invert for dark */
+    --hover: 0 0% 5%;
+    --active: 0 0% 10%;
+    --focus: 0 0% 100%;
+    --label: 0 0% 70%;
+}
+
+/* Respect system dark when no explicit "light" is set */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light):not([data-theme="light"]) {
+        color-scheme: dark;
+    }
+}
+
+/* Base element styles */
+@layer base {
+    html {
+        /* Make native UI controls match the theme */
+        color-scheme: light;
+    }
+    .dark, [data-theme="dark"] {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply bg-background text-foreground antialiased;
+    }
+
+    /* Optional: shared form control baseline */
+    input, select, textarea, button {
+        @apply bg-background text-foreground;
+    }
+
+    /* Optional: make plain `border` pick your token */
+    *, ::before, ::after {
+        border-color: hsl(var(--border));
+    }
+}
+
+@layer components {
+    .bordered {
+        @apply border;
+        border-color: hsl(var(--border));
+    }
+}
+
+canvas#defaultCanvas0 {
+    @apply border;
+    @apply border-theme;
 }

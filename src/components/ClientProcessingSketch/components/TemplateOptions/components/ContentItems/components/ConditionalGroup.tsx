@@ -66,7 +66,7 @@ export default function ConditionalGroup( {
 
   return (
     <Fragment>
-      <div className="p-1 border border-gray-300 space-y-2 rounded-sm">
+      <div className="p-1 border border-theme space-y-2 rounded">
         <div>
           <label htmlFor={conditionalFieldName} className="text-xs text-gray-400">
             {config.typeSelector.label || "Type"}

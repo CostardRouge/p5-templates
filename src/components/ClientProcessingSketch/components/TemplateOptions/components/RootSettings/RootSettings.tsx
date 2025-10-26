@@ -13,15 +13,15 @@ export default function RootSettings() {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
-      className="p-1 border rounded-sm bg-white border-gray-300 text-black"
+      className="p-1 border rounded bg-background border-theme text-foreground"
       headerContainerClassName="leading-none"
       header={( expanded ) => (
         <button
-          className="text-gray-500 text-xs w-full text-left -ml-1 align-text-top"
+          className="text-foreground text-xs w-full text-left -ml-1 align-text-top"
           aria-label={expanded ? "Collapse controls" : "Expand controls"}
         >
           <ListCollapse
-            className="inline text-gray-500 h-3 "
+            className="inline text-foreground h-3 "
             style={{
               rotate: expanded ? "180deg" : "0deg"
             }}

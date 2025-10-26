@@ -4,23 +4,16 @@ import React, {
   useRef
 } from "react";
 import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors, DragEndEvent,
+  closestCenter, DndContext, DragEndEvent, PointerSensor, useSensor, useSensors,
 } from "@dnd-kit/core";
 import {
-  SortableContext,
-  useSortable,
-  rectSortingStrategy,
-  arrayMove,
+  arrayMove, rectSortingStrategy, SortableContext, useSortable,
 } from "@dnd-kit/sortable";
 import {
   CSS
 } from "@dnd-kit/utilities";
 import {
-  GripVertical, TrashIcon, Plus
+  GripVertical, Plus, TrashIcon
 } from "lucide-react";
 
 import {
@@ -169,7 +162,7 @@ export default function ImageAssets( {
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
-          className="flex items-center justify-center h-20 border border-dashed border-gray-300 text-gray-400 hover:bg-gray-100"
+          className="flex items-center justify-center h-20 border border-dashed border-theme text-gray-400 "
         >
           <Plus className="h-6 w-6" />
         </button>
@@ -223,10 +216,10 @@ function SortableThumb( {
     <div
       ref={setNodeRef}
       style={style}
-      className="relative h-20 bg-white"
+      className="relative h-20 bg-background"
     >
       <GripVertical
-        className="absolute right-1 top-1 h-4 w-4 text-white cursor-grab active:cursor-grabbing"
+        className="absolute right-1 top-1 h-4 w-4 text-foreground cursor-grab active:cursor-grabbing"
         {...attributes}
         {...listeners}
       />
@@ -236,7 +229,7 @@ function SortableThumb( {
           e.stopPropagation();
           onDelete();
         }}
-        className="absolute left-1 top-1 h-5 w-5 text-red-500 cursor-pointer bg-white opacity-50 active:opacity-100 hover:opacity-100 rounded p-0.5"
+        className="absolute left-1 top-1 h-5 w-5 text-red-500 cursor-pointer bg-background opacity-50 active:opacity-100 hover:opacity-100 rounded p-0.5"
       />
 
       <img src={url} className="object-cover h-full w-full" alt={id} />

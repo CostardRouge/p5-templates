@@ -1,50 +1,55 @@
 "use client";
+
 import {
-  useState, useEffect
+  useEffect, useState
 } from "react";
 import {
-  Sun, Moon
+  useTheme
+} from "next-themes";
+import {
+  Moon, Sun
 } from "lucide-react";
 
-export function ThemeToggle() {
+type Props = {
+  className?: string
+  iconClassName?: string
+}
+
+function ThemeToggle( {
+  className = "", iconClassName = "h-5"
+}: Props ) {
+  const {
+    resolvedTheme, setTheme
+  } = useTheme();
   const [
-    theme,
-    setTheme
-  ] = useState<"light" | "dark">( "light" );
+    mounted,
+    setMounted
+  ] = useState( false );
 
   useEffect(
-    () => {
-      const stored = localStorage.getItem( "theme" );
-
-      if ( stored === "light" || stored === "dark" ) setTheme( stored );
-      else setTheme( window.matchMedia( "(prefers-color-scheme: dark)" ).matches ? "dark" : "light" );
-    },
+    () => setMounted( true ),
     [
     ]
   );
 
-  useEffect(
-    () => {
-      document.documentElement.classList.toggle(
-        "dark",
-        theme === "dark"
-      );
-      localStorage.setItem(
-        "theme",
-        theme
-      );
-    },
-    [
-      theme
-    ]
-  );
+  const isDark = mounted && resolvedTheme === "dark";
+
   return (
     <button
       aria-label="Toggle theme"
-      onClick={() => setTheme( theme === "dark" ? "light" : "dark" )}
-      className="mb-4 p-2 rounded hover:bg-gray-700 self-end"
+      title="Toggle theme"
+      onClick={() => setTheme( isDark ? "light" : "dark" )}
+      className={ className }
     >
-      {theme === "dark" ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+      {!mounted ? (
+        <span aria-hidden className="inline-block h-5 w-5" />
+      ) : isDark ? (
+        <Sun className={iconClassName} />
+      ) : (
+        <Moon className={iconClassName} />
+      )}
     </button>
   );
 }
+
+export default ThemeToggle;

@@ -1,7 +1,7 @@
 // SlideEditor.tsx
 import React from "react";
 import {
-  useWatch, useFormContext
+  useFormContext, useWatch
 } from "react-hook-form";
 import {
   SketchOptionInput
@@ -40,8 +40,8 @@ export default function SlideEditor( {
   const slideContentLength = slide?.content?.length ?? 0;
 
   return (
-    <div className="text-black text-left bg-white rounded-sm">
-      <span className="p-1 text-xs text-gray-500">
+    <div className="text-foreground text-left bg-background rounded">
+      <span className="p-1 text-xs text-foreground">
         root.slides[{activeIndex}].content {slideContentLength ? `(${ slideContentLength })` : null}
       </span>
 

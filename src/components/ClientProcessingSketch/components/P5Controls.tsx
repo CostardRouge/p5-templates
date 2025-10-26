@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  Camera, Play, Pause, ToggleLeft, ToggleRight
+  Camera, Pause, Play, ToggleLeft, ToggleRight
 } from "lucide-react";
 
 type P5ControlsProps = {
@@ -22,7 +22,7 @@ export function P5Controls( {
 
   return (
     <div
-      className="text-center absolute p-2 bg-white border-t-0 border border-gray-400 shadow shadow-black-300 drop-shadow-sm rounded-br-sm border-l-0 top-0 left-0 flex gap-1 z-50"
+      className="text-center absolute p-2 bg-background border-t-0 border border-theme  rounded-br border-l-0 top-0 left-0 flex gap-1 z-50"
     >
       <>
         <button
@@ -31,7 +31,7 @@ export function P5Controls( {
             window?.toggleFPS();
             setFps( fps => !fps );
           }}
-          className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-sm text-gray-500 hover:text-black"
+          className="rounded bg-background border border-theme px-2 py-1 text-sm text-foreground "
         >
           {fps ? <ToggleLeft className="h-4"/> : <ToggleRight className="h-4"/>}
         </button>
@@ -42,7 +42,7 @@ export function P5Controls( {
           }}
           title="Toogle drawing loop"
 
-          className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-sm text-gray-500 hover:text-black"
+          className="rounded bg-background border border-theme px-2 py-1 text-sm text-foreground "
         >
           {looping ? <Pause className="h-4"/> : <Play className="h-4"/>}
         </button>
@@ -52,7 +52,7 @@ export function P5Controls( {
           onClick={() => {
             window?.saveCanvas( name );
           }}
-          className="rounded-sm bg-white border border-gray-400 px-2 py-1 shadow shadow-gray-200 text-sm text-gray-500 hover:text-black"
+          className="rounded bg-background border border-theme px-2 py-1  text-sm text-foreground "
         >
           <Camera className="h-4"/>
         </button>

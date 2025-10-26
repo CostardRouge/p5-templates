@@ -1,32 +1,24 @@
 "use client";
 import React from "react";
 import {
-  useController,
-  useFormContext,
-  FieldPathByValue,
+  FieldPathByValue, useController, useFormContext,
 } from "react-hook-form";
 import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
+  DndContext, DragEndEvent, PointerSensor, useSensor, useSensors,
 } from "@dnd-kit/core";
 import {
-  SortableContext,
-  rectSortingStrategy,
-  arrayMove,
-  useSortable,
+  arrayMove, rectSortingStrategy, SortableContext, useSortable,
 } from "@dnd-kit/sortable";
 import {
   CSS
 } from "@dnd-kit/utilities";
 import {
-  Trash2, GripVertical
+  GripVertical, Trash2
 } from "lucide-react";
 
 import useAssetsBridge from "@/hooks/useAssetsBridge";
-import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
+import useTemplateAssets
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
 import DropZoneButton from "@/components/DropZoneButton";
 import {
   resolveAssetURL
@@ -249,10 +241,10 @@ function SortableThumb( {
     <div
       ref={setNodeRef}
       style={style}
-      className="relative h-20 bg-white rounded-sm border border-gray-200 overflow-hidden"
+      className="relative h-20 bg-background rounded border border-theme overflow-hidden"
     >
       <GripVertical
-        className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-white/90 hover:bg-white rounded-sm border border-gray-200"
+        className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded border border-theme"
         {...attributes}
         {...listeners}
         aria-label="Drag handle"
@@ -266,7 +258,7 @@ function SortableThumb( {
           e.stopPropagation();
           onDelete();
         }}
-        className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-white/90 hover:bg-white rounded border border-gray-200 p-0.5"
+        className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded border border-theme p-0.5"
         aria-label="Remove image"
       >
         <Trash2 className="h-3.5 w-3.5" />

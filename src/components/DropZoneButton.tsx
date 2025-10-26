@@ -1,6 +1,5 @@
 import React, {
-  forwardRef,
-  useRef
+  forwardRef, useRef
 } from "react";
 import {
   Plus
@@ -26,7 +25,7 @@ export default forwardRef( function DropZoneButton(
   return (
     <div
       ref={ref}
-      className={`border border-dashed border-gray-300 rounded-sm p-3 flex flex-col items-center justify-center gap-2 text-gray-500 bg-white ${ className }`}
+      className={`border border-dashed border-theme rounded p-3 flex flex-col items-center justify-center gap-2 text-foreground bg-background ${ className }`}
       onClick={( e ) => {
         e.stopPropagation();
         inputRef.current?.click();
@@ -42,7 +41,7 @@ export default forwardRef( function DropZoneButton(
       role="button"
       tabIndex={0}
     >
-      <Plus className="h-6 w-6 text-gray-400" />
+      <Plus className="h-6 w-6 text-foreground" />
 
       <input
         ref={inputRef}

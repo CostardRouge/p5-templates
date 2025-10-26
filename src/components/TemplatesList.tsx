@@ -40,7 +40,7 @@ export default function TemplatesList( {
               view === "grid" ? "bg-gray-700" : "hover:bg-gray-600"
             }`}
           >
-            <Grid className="w-5 h-5"/>
+            <Grid className="w-5 h-5" />
           </button>
 
           <button
@@ -50,7 +50,7 @@ export default function TemplatesList( {
               view === "list" ? "bg-gray-700" : "hover:bg-gray-600"
             }`}
           >
-            <List className="w-5 h-5"/>
+            <List className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function TemplatesList( {
                   <HardLink
                     key={name}
                     href={href}
-                    className="relative w-full bg-gray-800 rounded-sm overflow-hidden shadow hover:shadow-md transition"
+                    className="relative w-full bg-background rounded overflow-hidden  transition"
                   >
                     {/* Aspect ratio box for 4:5 (360x450) */}
                     <div className="w-full" style={{
@@ -91,7 +91,7 @@ export default function TemplatesList( {
                       />
                     </div>
                     <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-gray-700/60 to-transparent">
-                      <span className="text-white text-sm drop-shadow">
+                      <span className="text-foreground text-sm ">
                         {name}
                       </span>
                     </div>
@@ -103,7 +103,7 @@ export default function TemplatesList( {
                 <HardLink
                   key={name}
                   href={href}
-                  className="flex items-center bg-gray-800 border border-gray-700 rounded-sm p-1 hover:bg-gray-700 transition"
+                  className="flex items-center bg-background border border-theme rounded p-1 hover:bg-gray-700 transition"
                 >
                   <div className="w-12 flex-shrink-0" style={{
                     aspectRatio: "4 / 5"
@@ -112,7 +112,7 @@ export default function TemplatesList( {
                       alt={name}
                       loading="lazy"
                       src={thumbnail}
-                      className="w-full h-full object-contain rounded-sm"
+                      className="w-full h-full object-contain rounded"
                     />
                   </div>
                   <span className="flex-1 ml-3 truncate">{name}</span>

@@ -1,4 +1,4 @@
-html:has(body.bg-white) {
+html:has(body.bg-background) {
   background: white;
 }
 

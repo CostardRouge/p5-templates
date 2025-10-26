@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  useState, useEffect
+  useEffect, useState
 } from "react";
 import {
   useRecordingQueue
@@ -73,7 +73,7 @@ export function RecordingDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gray-800 p-6 rounded-lg shadow">
+      <div className="bg-background p-6 rounded">
 
         {health && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -103,14 +103,14 @@ export function RecordingDashboard() {
           <button
             onClick={handlePauseQueue}
             disabled={isLoading}
-            className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
+            className="px-4 py-2 bg-yellow-500 text-foreground rounded hover:bg-yellow-600 disabled:opacity-50"
           >
             Pause
           </button>
           <button
             onClick={handleResumeQueue}
             disabled={isLoading}
-            className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-600 disabled:opacity-50"
+            className="px-4 py-2 bg-green-700 text-foreground rounded hover:bg-green-600 disabled:opacity-50"
           >
             Resume
           </button>

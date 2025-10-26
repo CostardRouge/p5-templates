@@ -2,17 +2,22 @@ import React, {
   Fragment
 } from "react";
 import {
-  useFormContext, get
+  get, useFormContext
 } from "react-hook-form";
 import {
   FieldConfig
 } from "./ContentItems/constants/field-config";
 
-import ControlledImagesStackInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImagesStackInput/ControlledImagesStackInput";
-import ControlledSizePresetSelect from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSizePresetSelect/ControlledSizePresetSelect";
-import ControlledImageInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImageInput/ControlledImageInput";
-import ControlledColorInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledColorInput/ControlledColorInput";
-import ConditionalGroup from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ConditionalGroup";
+import ControlledImagesStackInput
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImagesStackInput/ControlledImagesStackInput";
+import ControlledSizePresetSelect
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSizePresetSelect/ControlledSizePresetSelect";
+import ControlledImageInput
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImageInput/ControlledImageInput";
+import ControlledColorInput
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledColorInput/ControlledColorInput";
+import ConditionalGroup
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ConditionalGroup";
 
 type FieldRendererProps = {
   fieldBasePath: string;
@@ -41,7 +46,7 @@ export default function FieldRenderer( {
     const commonInputProps = {
       id: registeredName,
       placeholder: config.placeholder,
-      className: "w-full p-1 border border-gray-300 rounded-sm bg-white",
+      className: "w-full p-1 border border-theme rounded bg-background text-foreground",
       "aria-invalid": !!error
     };
 
@@ -146,7 +151,7 @@ export default function FieldRenderer( {
               {config.label}
             </label>
 
-            <div className="p-1 border border-gray-300 rounded-sm space-y-1">
+            <div className="p-1 border border-theme rounded space-y-1">
               {Object.entries( config.fields ).map( ( [
                 subFieldName,
                 subConfig

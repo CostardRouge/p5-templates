@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  Trash2, Copy
+  Copy, Trash2
 } from "lucide-react";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import clsx from "clsx";
@@ -22,7 +22,7 @@ export default function ItemFormWrapper( {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
-      className="p-1 border rounded-sm bg-white hover:shadow-sm hover:border-gray-300"
+      className="p-1 border border-theme rounded bg-background "
       header={expanded => (
         <div
           ref={dragBinder?.setHandleRef}
@@ -40,7 +40,7 @@ export default function ItemFormWrapper( {
             )
           }
         >
-          <h4 className="text-white bg-gray-800 px-1 rounded-sm">{itemType}</h4>
+          <h4 className="text-foreground bg-background px-1 rounded">{itemType}</h4>
 
           <div className="ml-auto flex items-center gap-1">
             <button
@@ -52,7 +52,7 @@ export default function ItemFormWrapper( {
               aria-label="Duplicate item"
               className="cursor-copy"
             >
-              <Copy className="h-3.5 w-3.5 text-gray-500" />
+              <Copy className="h-3.5 w-3.5 text-foreground" />
             </button>
 
             <button

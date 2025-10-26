@@ -1,18 +1,18 @@
 import {
-  Plus, Copy, Trash2
+  Copy, Plus, Trash2
 } from "lucide-react";
 import {
-  SortableContext, rectSwappingStrategy
+  rectSwappingStrategy, SortableContext
 } from "@dnd-kit/sortable";
 import {
-  DndContext,
   closestCenter,
-  useSensor,
-  useSensors,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
   MouseSensor,
   TouchSensor,
-  KeyboardSensor,
-  type DragEndEvent,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 
 import type {
@@ -24,7 +24,8 @@ import {
 } from "@dnd-kit/modifiers";
 import React from "react";
 import {
-  DragBinder, SortableRow
+  DragBinder,
+  SortableRow
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/ContentItems";
 
 export default function SlideCarousel( {
@@ -132,7 +133,7 @@ export default function SlideCarousel( {
         <button
           type="button"
           onClick={onAdd}
-          className="flex items-center justify-center h-8 text-gray-500 border border-dashed border-gray-300 hover:bg-gray-100 hover:text-black rounded-sm"
+          className="flex items-center justify-center h-8 text-foreground border border-dashed border-theme   rounded"
           aria-label="Add new slide"
           title="Add new slide"
         >
@@ -170,15 +171,15 @@ function SlideThumbnail( {
       }
       onClick={onClick}
       className={clsx(
-        "relative bg-white border border-gray-200 hover:border-gray-300 flex items-center p-1 h-8 rounded-sm",
+        "relative bg-background border border-theme flex items-center p-1 h-8 rounded",
         "cursor-grab",
         {
-          "border-gray-400 hover:border-gray-400": isActive,
+          "border-theme hover:border-theme": isActive,
           "opacity-70 cursor-grabbing z-20": dragBinder?.isDragging
         }
       )}
     >
-      <span className="text-xs text-black truncate">{label}</span>
+      <span className="text-xs text-foreground truncate">{label}</span>
 
       <div className="ml-auto flex items-center gap-1">
         <button
@@ -191,7 +192,7 @@ function SlideThumbnail( {
           aria-label="Duplicate slide"
           title="Duplicate slide"
         >
-          <Copy className="h-3.5 w-3.5 text-gray-500" />
+          <Copy className="h-3.5 w-3.5 text-foreground" />
         </button>
 
         <button

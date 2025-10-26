@@ -11,7 +11,8 @@ import {
 } from "@/shared/utils";
 import useAssetsBridge from "@/hooks/useAssetsBridge";
 
-import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
+import useTemplateAssets
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
 
 import DropZoneButton from "@/components/DropZoneButton";
 import {
@@ -110,16 +111,16 @@ export default function ControlledImageInput( {
             <img
               src={resolved}
               alt={field.value}
-              className="aspect-square w-20 object-cover rounded-sm border border-gray-300"
+              className="aspect-square w-20 object-cover rounded border border-theme"
             />
           ) : (
-            <div className="aspect-square w-20 h-20 rounded-sm border border-gray-200 bg-gray-100 animate-pulse"/>
+            <div className="aspect-square w-20 h-20 rounded border border-theme bg-gray-100 animate-pulse"/>
           )}
 
           <button
             type="button"
             onClick={clear}
-            className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-white/90 hover:bg-white rounded border border-gray-200 p-0.5"
+            className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded border border-theme p-0.5"
           >
             <Trash2 className="w-3.5 h-3.5"/>
           </button>

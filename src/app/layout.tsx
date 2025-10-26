@@ -2,7 +2,14 @@ import "./globals.css";
 import type {
   Metadata, Viewport
 } from "next";
+import {
+  ThemeProvider
+} from "next-themes";
+
 import MenuBar from "@/components/MenuBar";
+import {
+  Suspense
+} from "react";
 
 export const metadata: Metadata = {
   title: "Social-pipeline",
@@ -22,20 +29,30 @@ export default function RootLayout( {
  children: React.ReactNode
 } ) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <div
-          className="flex flex-col bg-gray-900 text-gray-100"
-          style={ {
-            height: "100svh",
-          } }
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
         >
-          <MenuBar />
+          <div
+            className="flex flex-col"
+            style={ {
+              height: "100svh",
+            } }
+          >
+            <Suspense>
+              <MenuBar />
+            </Suspense>
 
-          <main className="flex-1 overflow-auto p-2 relative w-full">
-            {children}
-          </main>
-        </div>
+            <main className="flex-1 overflow-auto p-2 relative w-full bg-background-100">
+              {children}
+            </main>
+          </div>
+        </ThemeProvider>
+
       </body>
     </html>
   );

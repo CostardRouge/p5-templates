@@ -277,7 +277,7 @@ export default function TemplateOptions( {
   return (
     <CollapsibleItem
       data-no-zoom=""
-      className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-white p-2 border border-b-0 border-gray-400 shadow shadow-black-300 drop-shadow-sm border-r-0 z-50 rounded-tl-sm"
+      className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-background p-2 border border-b-0 border-theme  border-r-0 z-50 rounded-tl"
       style={{
         maxHeight: "calc(80svh)"
       }}
@@ -285,7 +285,7 @@ export default function TemplateOptions( {
         <button
           className={
             clsx(
-              "text-gray-500 text-sm text-right",
+              "text-foreground text-sm text-right",
               {
                 " w-full": !expanded,
                 "absolute top-2 right-2": expanded
@@ -296,7 +296,7 @@ export default function TemplateOptions( {
         >
           <span>{expanded ? "hide" : "show"} options</span>
           <ArrowDownFromLine
-            className="inline text-gray-500 h-4"
+            className="inline text-foreground h-4"
             style={{
               rotate: expanded ? "0deg" : "180deg"
             }}
@@ -324,13 +324,13 @@ export default function TemplateOptions( {
 
         <CollapsibleItem
           initialExpandedValue={false}
-          className="p-1 border border-gray-300 rounded-sm text-left text-black bg-white overflow-y-auto"
+          className="p-1 border border-theme rounded text-left text-foreground bg-background overflow-y-auto"
           headerContainerClassName="leading-none"
           header={( expanded ) => (
             <button
               className={
                 clsx(
-                  "text-gray-500 text-xs w-full text-left -ml-1 align-text-top",
+                  "text-foreground text-xs w-full text-left -ml-1 align-text-top",
                   {
                     "mb-1": expanded
                   }
@@ -339,7 +339,7 @@ export default function TemplateOptions( {
               aria-label={expanded ? "Collapse" : "Expand"}
             >
               <ListCollapse
-                className="inline text-gray-500 h-3"
+                className="inline text-foreground h-3"
                 style={{
                   rotate: expanded ? "180deg" : "0deg"
                 }}
@@ -359,13 +359,13 @@ export default function TemplateOptions( {
           <Fragment>
             <CollapsibleItem
               initialExpandedValue={!!slidesLength}
-              className="p-1 border border-gray-300 rounded-sm bg-white overflow-y-auto"
+              className="p-1 border border-theme rounded bg-background overflow-y-auto"
               headerContainerClassName="leading-none"
               header={( expanded ) => (
                 <button
                   className={
                     clsx(
-                      "text-gray-500 text-xs w-full text-left -ml-1 align-text-top",
+                      "text-foreground text-xs w-full text-left -ml-1 align-text-top",
                       {
                         "mb-1": expanded
                       }
@@ -374,7 +374,7 @@ export default function TemplateOptions( {
                   aria-label={expanded ? "Collapse" : "Expand"}
                 >
                   <ListCollapse
-                    className="inline text-gray-500 h-3"
+                    className="inline text-foreground h-3"
                     style={{
                       rotate: expanded ? "180deg" : "0deg"
                     }}
