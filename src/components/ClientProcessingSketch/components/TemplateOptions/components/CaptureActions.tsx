@@ -4,7 +4,7 @@ import React, {
   useState
 } from "react";
 import {
-  Archive, Clapperboard, Loader, Save, SaveIcon
+  Archive, CassetteTapeIcon, Clapperboard, Loader, Save, SaveIcon
 } from "lucide-react";
 
 import {
@@ -181,15 +181,15 @@ export default function CaptureActions( {
           {
             persistedJob?.status === "draft" && (
               <button
-                className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+                className="rounded-sm p-1 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-xs"
                 onClick={() => handleSubmit(
                   "draft",
                   persistedJob.id
                 )}
                 disabled={isLoading}
               >
-                {saving ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-                  <Save className="inline h-4 mr-1"/>}
+                {saving ? <Loader className="inline h-3 animate-spin"/> :
+                  <Save className="inline h-3"/>}
                 <span className="align-middle">Save</span>
               </button>
             )
@@ -197,23 +197,33 @@ export default function CaptureActions( {
 
           {
             persistedJob?.status !== "draft" && ( <button
-              className="rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-sm"
+              className="flex-2 rounded p-1 border border-gray-400 shadow shadow-gray-200 disabled:opacity-50 text-gray-500 hover:text-black active:text-black bg-white text-xs"
               onClick={() => handleSubmit( "draft" )}
               disabled={isLoading}
             >
-              {saving ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-                <Archive className="inline h-4 mr-1"/>}
+              {saving ? <Loader className="inline h-3 animate-spin"/> :
+                <Archive className="inline h-3" />}
               <span className="align-middle">Draft</span>
             </button>
             )}
 
           <button
-            className="flex-1 rounded-sm p-2 border border-gray-400 shadow shadow-gray-200 text-gray-500 hover:text-black active:text-black bg-white text-sm disabled:opacity-50 disabled:text-gray-500"
+            className="flex-1 rounded p-1 border border-gray-400 shadow shadow-gray-200 text-gray-500 hover:text-black active:text-black bg-white text-xs disabled:opacity-50 disabled:text-gray-500"
             onClick={() => handleSubmit()}
             disabled={isLoading || saving}
           >
-            {isLoading && !saving ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-              <Clapperboard className="inline h-4 mr-1"/>}
+            {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
+              <CassetteTapeIcon className="inline h-3" />}
+            <span className="align-middle">Record in .webm</span>
+          </button>
+
+          <button
+            className="flex-1 rounded p-1 border border-gray-400 shadow shadow-gray-200 text-gray-500 hover:text-black active:text-black bg-white text-xs disabled:opacity-50 disabled:text-gray-500"
+            onClick={() => handleSubmit()}
+            disabled={isLoading || saving}
+          >
+            {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
+              <Clapperboard className="inline h-3" />}
             <span className="align-middle">Export in .mp4</span>
           </button>
         </div>
