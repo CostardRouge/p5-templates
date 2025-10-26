@@ -5,7 +5,7 @@ import {
 const friendlyCameraModelNames = {
   FC8482: "MINI 4 PRO",
   "ILCE-7CM2": "ALPHA 7CII",
-  "DJI FC8482": "DJI MINI 4 PRO"
+  "ILCE-6700": "ALPHA A6700",
 };
 
 const friendlyLensModelNames = {
