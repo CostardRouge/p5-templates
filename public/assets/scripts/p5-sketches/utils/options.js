@@ -1,7 +1,7 @@
 import SketchUI from "../libraries/sketch-ui.es.js";
 
 import {
-  recorder, debug, sketch, events, animation
+  animation, debug, events, recorder, sketch
 } from "./index.js";
 
 const getDefaultOptions = () => {
@@ -220,6 +220,11 @@ const getDefaultOptions = () => {
       {
         label: "1080 x 1350 (instagram post)",
         value: "1080x1350",
+        group: "Portrait"
+      },
+      {
+        label: "1080 x 1440 (instagram tall post)",
+        value: "1080x1440",
         group: "Portrait"
       },
       {

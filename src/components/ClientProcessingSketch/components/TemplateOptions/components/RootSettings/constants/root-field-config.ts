@@ -1,5 +1,6 @@
 import {
-  FieldConfig, SelectOption
+  FieldConfig,
+  SelectOption
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 const createSizePresetOption = (
@@ -48,6 +49,12 @@ export const sizePresetOptions: SelectOption[] = [
     1080,
     1350,
     "Instagram post",
+    "Portrait"
+  ),
+  createSizePresetOption(
+    1080,
+    1440,
+    "Instagram tall post",
     "Portrait"
   ),
   createSizePresetOption(

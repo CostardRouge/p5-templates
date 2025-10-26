@@ -9,9 +9,14 @@ const friendlyCameraModelNames = {
 };
 
 const friendlyLensModelNames = {
-  "Sony FE 50mm F1.4 GM (SEL50F14GM)": "Sony FE 50mm F1.4 GM",
+  "Sony FE 16mm F1.8 G (SEL16F18G)": "Sony FE 16mm F1.8 G",
   "Sony FE PZ 16-35mm F4 G (SELP1635G)": "Sony FE PZ 16-35mm F4 G",
+  "Sony FE 24mm F2.8 G (SEL24F28G)": "Sony FE 24mm F2.8 G",
+  "Sony FE 50mm F1.4 GM (SEL50F14GM)": "Sony FE 50mm F1.4 GM",
   "Sony FE 24-105mm F4 G OSS (SEL24105G)": "Sony FE 24-105mm F4 G OSS",
+  "Sony FE 70-200mm F2.8 GM OSS II (SEL70200GM2)": "Sony FE 70-200mm F2.8 GM II",
+
+  "iPhone 15 Pro Max back triple camera 6.765mm f/1.78": "iPhone 15 Pro Max",
 };
 
 const exif = {
@@ -27,25 +32,27 @@ const exif = {
   load: async( file ) => {
     await exif.loadScripts();
 
-    /* 1.  Appel ExifReader.load — peut renvoyer Promesse ou Objet */
     const result = ExifReader.load( file );
 
-    /* 2.  Normaliser en attente asynchrone si besoin ------------- */
     const tags =
       typeof result?.then === "function"
-        ? await result // Promise → on attend
-        : result; // Objet → déjà prêt
+        ? await result
+        : result;
 
-    /* 3.  Mapping de tes champs ---------------------------------- */
+    console.log(
+      "date",
+      tags?.DateCreated
+    );
+
     return {
       iso: Number( tags?.ISOSpeedRatings?.description ),
       shutterSpeed: {
         description: tags?.ExposureTime?.description || "",
-        value: tags?.ExposureTime?.value,
+        value: tags?.ExposureTime?.value || -1,
       },
       focalLength: {
         description: tags?.FocalLength?.description || "",
-        value: tags?.FocalLength?.value,
+        value: tags?.FocalLength?.value || -1,
       },
       lens: tags?.Lens?.description, // ou LensModel
       camera: {
@@ -54,10 +61,10 @@ const exif = {
       },
       aperture: {
         description: tags?.FNumber?.description || "",
-        value: tags?.FNumber?.value,
+        value: tags?.FNumber?.value || -1,
       },
       type: tags?.FileType?.description,
-      date: new Date( tags?.DateCreated?.description ),
+      date: tags?.DateCreated ? new Date( tags?.DateCreated?.description ) : null,
       gps: {
         latitude: Number( tags?.GPSLatitude?.description ) || -1,
         longitude: Number( tags?.GPSLongitude?.description ) || -1,
@@ -66,6 +73,10 @@ const exif = {
   },
   formatFocalLength: ( focalLength ) => {
     if ( !focalLength ) {
+      return;
+    }
+
+    if ( -1 === focalLength.value ) {
       return;
     }
 
@@ -86,6 +97,10 @@ const exif = {
       return;
     }
 
+    if ( -1 === speed.value ) {
+      return;
+    }
+
     const [
       numerator,
       denominator
@@ -103,6 +118,10 @@ const exif = {
   },
   formatAperture: ( aperture ) => {
     if ( !aperture ) {
+      return;
+    }
+
+    if ( -1 === aperture.value ) {
       return;
     }
 
@@ -155,6 +174,18 @@ const exif = {
     );
 
     return formatter.format( date );
+  },
+  formatGPSCoordinates: (
+    latitude, longitude, precision = 2
+  ) => {
+    if ( -1 === latitude || -1 === longitude ) {
+      return;
+    }
+
+    const latDir = latitude >= 0 ? "N" : "S";
+    const lonDir = longitude >= 0 ? "E" : "W";
+
+    return `${ Math.abs( latitude ).toFixed( precision ) }° ${ latDir }, ${ Math.abs( longitude ).toFixed( precision ) }° ${ lonDir }`;
   }
 };
 

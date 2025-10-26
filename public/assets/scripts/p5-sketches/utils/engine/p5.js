@@ -1,5 +1,5 @@
 import {
-  events, options, time, scripts
+  events, options, scripts, time
 } from "../index.js";
 
 const p5js = {
@@ -134,6 +134,21 @@ const p5js = {
         p5js.canvas.mousePressed( () => {
           events.handle( "engine-canvas-mouse-pressed" );
         } );
+
+        p5js.canvas.drop(
+          file => {
+            events.handle(
+              "engine-canvas-handle-file",
+              file
+            );
+          },
+          event => {
+            events.handle(
+              "engine-canvas-handle-drop",
+              event
+            );
+          }
+        );
       }
     );
 
