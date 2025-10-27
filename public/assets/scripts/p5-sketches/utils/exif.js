@@ -39,11 +39,6 @@ const exif = {
         ? await result
         : result;
 
-    console.log(
-      "date",
-      tags?.DateCreated
-    );
-
     return {
       iso: Number( tags?.ISOSpeedRatings?.description ),
       shutterSpeed: {

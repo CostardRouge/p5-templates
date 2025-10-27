@@ -6,29 +6,37 @@ const recorder = {
   savedFramesCount: 0,
   recording: false,
   lib: undefined,
+  libScriptRemover: undefined,
   saveCallback: undefined,
   maximumFrames: undefined,
-  load: async() => {
+  load: async( format ) => {
     if ( recorder.lib ) {
       return;
     }
 
     await scripts.load( "/assets/libraries/CCapture.all.min.js" );
-
+    recorder.createRecorder( format );
+  },
+  createRecorder(
+    format = "png", framerate = 60
+  ) {
+    console.log( {
+      format
+    } );
     recorder.lib = new CCapture( {
       // format: options.get('recording-format'),
-      format: "png",
+      format,
       quality: "best",
-      framerate: 60, // sketch.engine.getFrameRate(),
+      framerate, // sketch.engine.getFrameRate(),
       verbose: false,
       name: options.name || sketch.name,
       manualStart: true,
       workersPath: "libraries/",
     } );
   },
-  start: async(
-    maximumFrames, saveCallback
-  ) => {
+  start: async( {
+    maximumFrames, saveCallback, format = "png"
+  } ) => {
     if ( true === recorder.recording ) {
       return;
     }
@@ -43,8 +51,8 @@ const recorder = {
       }
     }
 
-    await recorder.load();
-    recorder.lib.start();
+    await recorder.load( format );
+    recorder.lib.start( );
 
     recorder.recording = true;
     recorder.savedFramesCount = 0;
@@ -127,10 +135,16 @@ const recorder = {
 requestAnimationFrame( recorder.onDraw );
 
 window.recorder = recorder;
-window.startLoopRecording = async() => recorder.start( animation.maximumFramesCount );
-window.startLoopRecordingWithSaveCallback = async saveCallback => recorder.start(
-  animation.maximumFramesCount,
-  saveCallback
-);
+window.startLoopRecording = async( {
+  format
+} = {
+} ) => recorder.start( {
+  maximumFrames: animation.maximumFramesCount,
+  format,
+} );
+window.startLoopRecordingWithSaveCallback = async saveCallback => recorder.start( {
+  maximumFrames: animation.maximumFramesCount,
+  saveCallback,
+} );
 
 export default recorder;
