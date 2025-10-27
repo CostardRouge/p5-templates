@@ -43,13 +43,13 @@ export default function RootLayout( {
               height: "100svh",
             } }
           >
-            <Suspense>
-              <MenuBar />
-            </Suspense>
-
             <main className="flex-1 overflow-auto relative w-full bg-background-100">
               {children}
             </main>
+
+            <Suspense>
+              <MenuBar />
+            </Suspense>
           </div>
         </ThemeProvider>
 

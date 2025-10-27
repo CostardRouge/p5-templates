@@ -296,7 +296,7 @@ export default function TemplateOptions( {
         >
           <span>{expanded ? "hide" : "show"} options</span>
           <ArrowDownFromLine
-            className="inline text-foreground h-4"
+            className="inline text-foreground h-3"
             style={{
               rotate: expanded ? "0deg" : "180deg"
             }}
