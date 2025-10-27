@@ -97,7 +97,7 @@ declare global { interface Window {
   // Assets
  __blobAssetMap?: BlobMap
   // Recorder
-  startLoopRecording: ( arg: {
+  startLoopRecording: ( arg?: {
  format: "png" | "webm"
 } ) => Promise<void>
   stopRecording: () => void
