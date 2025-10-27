@@ -24,6 +24,28 @@ export default {
         focus: "hsl(var(--focus) / <alpha-value>)",
         label: "hsl(var(--label))",
       },
+      keyframes: {
+        "cycle-align": {
+          "0%": {
+            "text-align": "left"
+          },
+          "25%": {
+            "text-align": "center"
+          },
+          "50%": {
+            "text-align": "right"
+          },
+          "75%": {
+            "text-align": "center"
+          },
+          "100%": {
+            "text-align": "left"
+          },
+        },
+      },
+      animation: {
+        "text-cycle": "cycle-align 2.0s infinite linear",
+      },
     },
   },
   plugins: [

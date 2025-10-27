@@ -4,11 +4,11 @@ import React from "react";
 import {
   Github, Paintbrush, Video
 } from "lucide-react";
-import HardLink from "@/components/HardLink";
 import clsx from "clsx";
 import {
   usePathname, useSearchParams
 } from "next/navigation";
+import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 
 type NavItem = {
@@ -35,8 +35,6 @@ const items: NavItem[] = [
   },
 ];
 
-const menuLinkClassName = "rounded p-2 bg-background text-foreground";
-
 export default function MenuBar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -45,17 +43,14 @@ export default function MenuBar() {
   if ( isCapturing ) return null;
 
   return (
-    <nav className="h-14 w-full bg-background p-1 flex justify-between items-center gap-1 border-b border-theme z-40">
-      <p className={
-        clsx(
-          "font-medium select-none",
-          menuLinkClassName
-        )
-      }>
-        p5 templates
+    <nav className="h-14 w-full bg-background p-1 flex justify-between items-center gap-1 border-b border-theme z-40 text-xs sm:text-sm">
+      <p className="font-medium select-none w-20 text-foreground pl-1"
+      >
+        <span className="hover:animate-text-cycle w-full inline-block">my p5*js</span><br/>
+        <span>templates</span>
       </p>
 
-      <div>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
         {items.map( ( {
           href, name, Icon, target
         } ) => {
@@ -63,28 +58,27 @@ export default function MenuBar() {
           const active = isInternal && pathname.startsWith( href );
 
           return (
-            <HardLink
+            <Link
               key={href}
               href={href}
               target={target}
               className={clsx(
-                menuLinkClassName,
-                "hover:opacity-80",
+                "hover:opacity-80 flex flex-col items-center justify-center",
                 {
                   "font-bold": active
                 }
               )}
             >
               <Icon className="inline w-4 mr-1" />
-              {name ?? href}
-            </HardLink>
+              <span className="">{name ?? href}</span>
+            </Link>
           );
         } )}
       </div>
 
       <ThemeToggle
-        iconClassName={"h-5"}
-        className={menuLinkClassName}
+        iconClassName="h-5"
+        className="pr-1"
       />
     </nav>
   );
