@@ -525,17 +525,17 @@ export default function RecordingsPage() {
             <option value="cancelled">Cancelled</option>
           </select>
 
-          <div className="h-8">
+          <div className="">
             <button
               onClick={() => setView( "cards" )}
-              className={`rounded-l border border-theme border-b-2 border-r-0 h-full p-2 ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+              className={`rounded-l border border-theme border-b-2 border-r-0 p-2 h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
             >
               <Grid className="w-4 h-4" />
             </button>
 
             <button
               onClick={() => setView( "table" )}
-              className={`rounded-r border border-theme border-b-2 border-l-0 h-full p-2 ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
+              className={`rounded-r border border-theme border-b-2 border-l-0 p-2 ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
             >
               <List className="w-4 h-4" />
             </button>

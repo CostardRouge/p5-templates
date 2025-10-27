@@ -1,5 +1,5 @@
 import {
-  events, debug, options, time
+  debug, events, time
 } from "./index.js";
 import engines from "./engine/index.js";
 
@@ -23,28 +23,13 @@ const sketch = {
     // persist sketchOptions
     sketch.sketchOptions = sketchOptions;
 
-    // options system
-    options.init( );
-
-    // canvas size
-    const [
-      canvasWidth,
-      canvasHeight
-    ] = sketch.getDefaultCanvasSize();
-
     // engine system
     const {
       engine = "p5js", ...engineOptions
     } = sketchOptions;
 
     sketch.engine = engines[ engine ].init(
-      {
-        size: {
-          width: canvasWidth,
-          height: canvasHeight
-        },
-        ...engineOptions
-      },
+      engineOptions,
       setupEngineFunction
     );
 
@@ -70,22 +55,6 @@ const sketch = {
     window.toggleFPS = () => {
       debug.toggleFPSCounter();
     };
-  },
-  getDefaultCanvasSize: ( value ) => {
-    const canvasSize = (
-      value ??
-      ( new URLSearchParams( document.location.search ) ).get( "size" ) ??
-      options.get( "canvas-size" )
-    );
-
-    if ( "fill" === canvasSize ) {
-      return [
-        window.innerWidth,
-        window.innerHeight
-      ];
-    }
-
-    return canvasSize.split( "x" ).map( Number );
   },
   draw: ( drawFunction ) => {
     events.register(

@@ -1,7 +1,6 @@
 import {
-  time, string, sketch
+  sketch, time
 } from "./index.js";
-import options from "./options.js";
 
 const debug = {
   frameRate: 0,
@@ -25,10 +24,6 @@ const debug = {
   // },
   toggleFPSCounter: () => {
     debug.options.fps.display = !debug.options.fps.display;
-    options.set(
-      "show-fps",
-      debug.options.fps.display
-    );
   },
   createElement: (
     targetQuerySelector, tagName, contentCreator, remove
@@ -54,7 +49,7 @@ const debug = {
     debug.DOMElements[ tagName ].innerHTML = contentCreator();
   },
   fps: () => {
-    debug.options.fps.display = options.get( "show-fps" );
+    // debug.options.fps.display = options.get( "show-fps" );
 
     const {
       fps: {

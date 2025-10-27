@@ -1,5 +1,5 @@
 import {
-  events, options, scripts, time
+  events, scripts, time
 } from "../index.js";
 
 const p5js = {
@@ -107,14 +107,9 @@ const p5js = {
         }
 
         // applying options
-        frameRate( sketchOptions?.animation?.framerate ?? options.get( "framerate" ) );
+        frameRate( sketchOptions?.animation?.framerate );
 
-        if ( options.get( "smooth-pixel" ) ) {
-          smooth();
-        }
-        else {
-          noSmooth();
-        }
+        noSmooth();
 
         // registering events
         Object.entries( p5js.eventHandlers ).forEach( ( [

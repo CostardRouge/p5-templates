@@ -1,5 +1,5 @@
 import {
-  debug, recorder, options, animation
+  animation, debug, recorder
 } from "./index.js";
 
 const events = {

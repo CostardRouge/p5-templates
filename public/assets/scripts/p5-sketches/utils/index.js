@@ -1,4 +1,3 @@
-import options from "./options.js";
 import events from "./events.js";
 import captureOptions from "./captureOptions.js";
 import slides from "./slides/slides.js";
@@ -42,7 +41,6 @@ export {
   slides,
   scripts,
   mappers,
-  options,
   recorder,
   animation,
   iterators,
