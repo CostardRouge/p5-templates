@@ -16,7 +16,7 @@ export default function UndoRedo( {
       <button
         onClick={undo}
         // disabled={!canUndo}
-        className="p-0.5 rounded bg-background border border-theme text-foreground"
+        className="p-0.5 rounded bg-background border border-theme border-b-2 text-foreground"
       >
         <Undo className="h-3.5" />
       </button>
@@ -24,7 +24,7 @@ export default function UndoRedo( {
       <button
         onClick={redo}
         // disabled={!canRedo}
-        className="p-0.5 rounded bg-background border border-theme text-foreground"
+        className="p-0.5 rounded bg-background border border-theme border-b-2 text-foreground"
       >
         <Redo className="h-3.5" />
       </button>

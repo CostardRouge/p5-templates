@@ -1,8 +1,7 @@
 "use client";
 
 import React, {
-  ReactNode, useCallback,
-  useEffect, useRef, useState
+  ReactNode, useCallback, useEffect, useRef, useState
 } from "react";
 
 import clamp from "@/utils/clamp";

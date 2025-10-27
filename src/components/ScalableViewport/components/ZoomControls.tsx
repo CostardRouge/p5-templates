@@ -1,6 +1,6 @@
 "use client";
 
-const defaultStyle = "text-center absolute top-0 right-0 p-2 bg-background border-t-0 border border-theme  rounded-bl border-r-0 flex gap-1 z-50";
+const defaultStyle = "absolute top-0 right-0 p-2 flex gap-1 z-50 text-xs";
 
 const ZoomControls = ( {
   onPlus, onMinus, onFit, onReset
@@ -14,28 +14,28 @@ const ZoomControls = ( {
     <div className={defaultStyle}>
       <button
         onClick={onReset}
-        className="rounded bg-background border border-theme px-2 py-1 text-xs text-foreground"
+        className="rounded bg-background border border-theme border-b-2 px-2 py-1 text-foreground"
       >
         100%
       </button>
 
       <button
         onClick={onPlus}
-        className="rounded bg-background border border-theme px-2 py-1  text-xs text-foreground "
+        className="rounded bg-background border border-theme border-b-2 px-2 py-1 text-foreground"
       >
         +
       </button>
 
       <button
         onClick={onMinus}
-        className="rounded bg-background border border-theme px-2 py-1  text-xs text-foreground "
+        className="rounded bg-background border border-theme border-b-2 px-2 py-1  text-xs text-foreground "
       >
         −
       </button>
 
       <button
         onClick={onFit}
-        className="rounded bg-background border border-theme px-2 py-1  text-xs text-foreground "
+        className="rounded bg-background border border-theme border-b-2 px-2 py-1  text-xs text-foreground "
       >
         Fit
       </button>

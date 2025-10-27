@@ -47,7 +47,7 @@ export default function RootLayout( {
               <MenuBar />
             </Suspense>
 
-            <main className="flex-1 overflow-auto p-2 relative w-full bg-background-100">
+            <main className="flex-1 overflow-auto relative w-full bg-background-100">
               {children}
             </main>
           </div>

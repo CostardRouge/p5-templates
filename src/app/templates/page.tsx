@@ -28,5 +28,9 @@ export default async function TemplatesPage() {
     ],
   };
 
-  return <TemplatesList templates={templates} />;
+  return (
+    <div className="p-2">
+      <TemplatesList templates={templates} />
+    </div>
+  );
 }

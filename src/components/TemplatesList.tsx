@@ -28,21 +28,19 @@ export default function TemplatesList( {
     <div className="space-y-6">
       {/* View Toggle */}
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Templates</h1>
-        </div>
+        <h1 className="text-2xl font-semibold">Templates</h1>
 
         <div className="h-8">
           <button
             onClick={() => setView( "grid" )}
-            className={`rounded-l border border-theme border-r-0 h-full p-2 ${ view === "grid" ? "bg-hover" : "hover:bg-hover" }`}
+            className={`rounded-l border border-theme border-b-2 border-r-0 h-full p-2 ${ view === "grid" ? "bg-hover" : "hover:bg-hover" }`}
           >
             <Grid className="w-4 h-4" />
           </button>
 
           <button
             onClick={() => setView( "list" )}
-            className={`rounded-r border border-theme border-l-0 h-full p-2 ${ view === "list" ? "bg-hover" : "hover:bg-hover" }`}
+            className={`rounded-r border border-theme border-b-2 border-l-0 h-full p-2 ${ view === "list" ? "bg-hover" : "hover:bg-hover" }`}
           >
             <List className="w-4 h-4" />
           </button>
@@ -55,7 +53,7 @@ export default function TemplatesList( {
         items
       ] ) => (
         <div key={category}>
-          <h2 className="text-lg font-medium mb-3">{category}</h2>
+          <h2 className="text-lg font-medium mb-3">{category} ({items.length})</h2>
           <div
             className={
               view === "grid"

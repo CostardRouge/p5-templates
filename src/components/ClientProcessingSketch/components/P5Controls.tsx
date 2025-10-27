@@ -22,7 +22,7 @@ export function P5Controls( {
 
   return (
     <div
-      className="text-center absolute p-2 bg-background border-t-0 border border-theme  rounded-br border-l-0 top-0 left-0 flex gap-1 z-50"
+      className="absolute p-2 top-0 left-0 flex gap-1 z-50"
     >
       <>
         <button
@@ -31,10 +31,11 @@ export function P5Controls( {
             window?.toggleFPS();
             setFps( fps => !fps );
           }}
-          className="rounded bg-background border border-theme px-2 py-1 text-sm text-foreground "
+          className="rounded bg-background border border-theme border-b-2 px-2 py-1 text-sm text-foreground"
         >
           {fps ? <ToggleLeft className="h-4"/> : <ToggleRight className="h-4"/>}
         </button>
+
         <button
           onClick={() => {
             window?.toggleLoop();
@@ -42,7 +43,7 @@ export function P5Controls( {
           }}
           title="Toogle drawing loop"
 
-          className="rounded bg-background border border-theme px-2 py-1 text-sm text-foreground "
+          className="rounded bg-background border border-theme border-b-2 px-2 py-1 text-sm text-foreground "
         >
           {looping ? <Pause className="h-4"/> : <Play className="h-4"/>}
         </button>
@@ -52,7 +53,7 @@ export function P5Controls( {
           onClick={() => {
             window?.saveCanvas( name );
           }}
-          className="rounded bg-background border border-theme px-2 py-1  text-sm text-foreground "
+          className="rounded bg-background border border-theme border-b-2 px-2 py-1 text-sm text-foreground "
         >
           <Camera className="h-4"/>
         </button>

@@ -497,7 +497,7 @@ export default function RecordingsPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-2">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Recordings</h1>
@@ -508,13 +508,13 @@ export default function RecordingsPage() {
             placeholder="Search…"
             value={search}
             onChange={( e ) => setSearch( e.target.value )}
-            className="px-2 rounded w-full sm:w-40 bg-background h-8 border border-theme"
+            className="px-2 rounded w-full sm:w-40 bg-background h-8 border border-theme border-b-2"
           />
 
           <select
             value={statusFilter}
             onChange={( e ) => setStatusFilter( e.target.value )}
-            className="px-2 rounded bg-background h-8 border border-theme"
+            className="px-2 rounded bg-background h-8 border border-theme border-b-2"
           >
             <option value="all">All Status</option>
             <option value="draft">Drafted</option>
@@ -528,14 +528,14 @@ export default function RecordingsPage() {
           <div className="h-8">
             <button
               onClick={() => setView( "cards" )}
-              className={`rounded-l border border-theme border-r-0 h-full p-2 ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+              className={`rounded-l border border-theme border-b-2 border-r-0 h-full p-2 ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
             >
               <Grid className="w-4 h-4" />
             </button>
 
             <button
               onClick={() => setView( "table" )}
-              className={`rounded-r border border-theme border-l-0 h-full p-2 ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
+              className={`rounded-r border border-theme border-b-2 border-l-0 h-full p-2 ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
             >
               <List className="w-4 h-4" />
             </button>
@@ -547,7 +547,7 @@ export default function RecordingsPage() {
 
       {/* Table View */}
       {view === "table" && (
-        <div className="overflow-x-auto rounded border border-theme">
+        <div className="overflow-x-auto rounded border border-theme border-b-2">
           <table className="min-w-full">
             <thead className="bg-background">
               <tr className="text-left text-xs text-foreground uppercase border-b ">

@@ -43,14 +43,14 @@ export default function MenuBar() {
   if ( isCapturing ) return null;
 
   return (
-    <nav className="h-14 w-full bg-background p-1 flex justify-between items-center gap-1 border-b border-theme z-40 text-xs sm:text-sm">
-      <p className="font-medium select-none w-20 text-foreground pl-1"
+    <nav className="w-full bg-background p-1.5 flex justify-between items-center gap-1 border-b border-theme z-40 text-xs sm:text-sm">
+      <p className="font-medium select-none text-foreground pl-1"
       >
         <span className="hover:animate-text-cycle w-full inline-block">my p5*js</span><br/>
         <span>templates</span>
       </p>
 
-      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+      <div className="flex flex-wrap items-center gap-2">
         {items.map( ( {
           href, name, Icon, target
         } ) => {
@@ -63,9 +63,9 @@ export default function MenuBar() {
               href={href}
               target={target}
               className={clsx(
-                "hover:opacity-80 flex flex-col items-center justify-center",
+                "hover:opacity-80 flex flex-col items-center justify-center rounded-md shadow-sm sm:rounded-md px-2 py-1 border border-theme border-b-2",
                 {
-                  "font-bold": active
+                  " bg-hover": active
                 }
               )}
             >

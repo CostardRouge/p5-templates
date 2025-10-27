@@ -16,12 +16,11 @@ import {
 import type {
   SketchOption
 } from "@/types/sketch.types";
-
-import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
-import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import {
   P5Controls
 } from "@/components/ClientProcessingSketch/components/P5Controls";
+import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
+import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
 
 const TemplateOptions = dynamic(
   () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ),
@@ -85,12 +84,14 @@ export default function ClientProcessingSketch( {
       />
 
       {!sketchLoaded && (
-        <div className="flex items-center justify-center">
-          <p>loading p5js sketch...</p>
+        <div className="flex items-center justify-center absolute h-full w-full">
+          <p className="text-foreground">loading p5js sketch...</p>
         </div>
       )}
 
-      <ScalableViewport showZoomControls={!capturing && sketchLoaded}>
+      <ScalableViewport
+        showZoomControls={!capturing && sketchLoaded}
+      >
         <P5Sketch
           name={name}
           onLoaded={() => {

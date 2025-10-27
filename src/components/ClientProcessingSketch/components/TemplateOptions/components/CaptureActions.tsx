@@ -181,7 +181,7 @@ export default function CaptureActions( {
           {
             persistedJob?.status === "draft" && (
               <button
-                className="rounded p-1 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-xs"
+                className="rounded p-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs"
                 onClick={() => handleSubmit(
                   "draft",
                   persistedJob.id
@@ -197,7 +197,7 @@ export default function CaptureActions( {
 
           {
             persistedJob?.status !== "draft" && ( <button
-              className="flex-2 rounded p-1 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-xs"
+              className="flex-2 rounded p-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
               onClick={() => handleSubmit( "draft" )}
               disabled={isLoading}
             >
@@ -208,17 +208,19 @@ export default function CaptureActions( {
             )}
 
           <button
-            className="flex-1 rounded p-1 border border-theme  text-foreground  active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
-            onClick={() => handleSubmit()}
-            disabled={isLoading || saving}
+            className="flex-1 rounded p-1 border border-theme border-b-2 text-foreground bg-background text-xs"
+            onClick={async() => {
+              await window?.startLoopRecording( {
+                format: "webm"
+              } );
+            }}
           >
-            {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
-              <CassetteTapeIcon className="inline h-3" />}
+            <CassetteTapeIcon className="inline h-3" />
             <span className="align-middle">Record in .webm</span>
           </button>
 
           <button
-            className="flex-1 rounded p-1 border border-theme  text-foreground  active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
+            className="flex-1 rounded p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
             onClick={() => handleSubmit()}
             disabled={isLoading || saving}
           >
@@ -236,12 +238,10 @@ export default function CaptureActions( {
               recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
             }`}
           >
-            {/* white track for clean difference blending */}
             <div className="absolute inset-0 rounded bg-background" />
 
-            {/* black progress */}
             <div
-              className="absolute inset-y-0 left-0 bg-background rounded"
+              className="absolute inset-y-0 left-0 bg-hover rounded"
               style={{
                 width: `${ recordingProgress.percentage }%`
               }}
@@ -250,7 +250,7 @@ export default function CaptureActions( {
             {/* blend-inverting label */}
             <span
               className="absolute inset-0 p-1 text-xs select-none
-               mix-blend-difference text-foreground truncate"
+               mix-blend-difference text-hover truncate"
             >
               {recordingProgress.status}
               {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}

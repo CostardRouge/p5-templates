@@ -61,6 +61,10 @@
     *, ::before, ::after {
         border-color: hsl(var(--border));
     }
+
+    .border-b-2:active {
+        border-width: 1px;
+    }
 }
 
 @layer components {
@@ -73,4 +77,19 @@
 canvas#defaultCanvas0 {
     @apply border;
     @apply border-theme;
+}
+
+@keyframes pulse-border {
+    0%, 100% {
+        border-width: 3px;
+    }
+
+    50% {
+        border-color: red;
+    }
+}
+
+body.recording canvas#defaultCanvas0 {
+    border-width: 3px;
+    animation: pulse-border 1.5s infinite alternate ease-in-out;
 }
