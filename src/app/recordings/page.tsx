@@ -94,7 +94,7 @@ function ActionsMenu( {
             } ) => (
               <button
                 onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
-                className={`${ focus ? "opacity-80" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-hover" : "" } rounded group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <Download className="h-5" />
                 Download
@@ -125,7 +125,7 @@ function ActionsMenu( {
           } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/options/download/${ job.id }` )}
-              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm rounded`}
             >
               <Download className="h-5" />
               <span>Download .json</span>
@@ -184,7 +184,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm rounded`}
               >
                 <X className="h-5" />
                 Cancel
@@ -239,7 +239,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm rounded`}
               >
                 <RotateCcw className="h-5" />
                 Retry
@@ -296,7 +296,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm rounded`}
               >
                 <Trash2 />
                 Delete
@@ -502,19 +502,19 @@ export default function RecordingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Recordings</h1>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1 text-xs">
           <input
             type="text"
             placeholder="Search…"
             value={search}
             onChange={( e ) => setSearch( e.target.value )}
-            className="px-3 rounded w-full sm:w-48 bg-background h-9"
+            className="px-2 rounded w-full sm:w-40 bg-background h-8 border border-theme"
           />
 
           <select
             value={statusFilter}
             onChange={( e ) => setStatusFilter( e.target.value )}
-            className="px-2 rounded bg-background h-9"
+            className="px-2 rounded bg-background h-8 border border-theme"
           >
             <option value="all">All Status</option>
             <option value="draft">Drafted</option>
@@ -525,19 +525,21 @@ export default function RecordingsPage() {
             <option value="cancelled">Cancelled</option>
           </select>
 
-          <button
-            onClick={() => setView( "cards" )}
-            className={`p-2 rounded border border-theme ${ view === "cards" ? "bg-active" : "hover:bg-hover" }`}
-          >
-            <Grid className="w-5 h-5"/>
-          </button>
+          <div className="h-8">
+            <button
+              onClick={() => setView( "cards" )}
+              className={`rounded-l border border-theme border-r-0 h-full p-2 ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+            >
+              <Grid className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={() => setView( "table" )}
-            className={`p-2 rounded border border-theme ${ view === "table" ? "bg-active" : "hover:bg-hover" }`}
-          >
-            <List className="w-5 h-5"/>
-          </button>
+            <button
+              onClick={() => setView( "table" )}
+              className={`rounded-r border border-theme border-l-0 h-full p-2 ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -624,7 +626,7 @@ export default function RecordingsPage() {
       {view === "cards" && (
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
           {filtered.map( ( job ) => (
-            <div key={job.id} className="bg-background border border-theme rounded  transition relative">
+            <div key={job.id} className="bg-background border border-theme rounded transition relative">
               <StatusBadge
                 status={job.status}
                 className="absolute top-2 left-2 rounded"
@@ -659,7 +661,7 @@ export default function RecordingsPage() {
 
                 <div className="flex justify-between">
                   <div className="flex-grow">
-                    <div className="text-xs text-gray-400 mb-2">
+                    <div className="text-xs text-label mb-2">
                       { new Date( job.createdAt ).toLocaleString() }
                     </div>
 

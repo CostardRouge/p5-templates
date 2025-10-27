@@ -32,25 +32,19 @@ export default function TemplatesList( {
           <h1 className="text-2xl font-semibold">Templates</h1>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="h-8">
           <button
-            aria-label="Grid view"
             onClick={() => setView( "grid" )}
-            className={`p-2 rounded ${
-              view === "grid" ? "bg-gray-700" : "hover:bg-gray-600"
-            }`}
+            className={`rounded-l border border-theme border-r-0 h-full p-2 ${ view === "grid" ? "bg-hover" : "hover:bg-hover" }`}
           >
-            <Grid className="w-5 h-5" />
+            <Grid className="w-4 h-4" />
           </button>
 
           <button
-            aria-label="List view"
             onClick={() => setView( "list" )}
-            className={`p-2 rounded ${
-              view === "list" ? "bg-gray-700" : "hover:bg-gray-600"
-            }`}
+            className={`rounded-r border border-theme border-l-0 h-full p-2 ${ view === "list" ? "bg-hover" : "hover:bg-hover" }`}
           >
-            <List className="w-5 h-5" />
+            <List className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -77,7 +71,7 @@ export default function TemplatesList( {
                   <HardLink
                     key={name}
                     href={href}
-                    className="relative w-full bg-background rounded overflow-hidden  transition"
+                    className="relative w-full bg-background rounded overflow-hidden border border-theme transition"
                   >
                     {/* Aspect ratio box for 4:5 (360x450) */}
                     <div className="w-full" style={{
@@ -90,7 +84,7 @@ export default function TemplatesList( {
                         className="absolute top-0 left-0 w-full h-full object-contain"
                       />
                     </div>
-                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-gray-700/60 to-transparent">
+                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-hover/60 to-transparent">
                       <span className="text-foreground text-sm ">
                         {name}
                       </span>
@@ -103,7 +97,7 @@ export default function TemplatesList( {
                 <HardLink
                   key={name}
                   href={href}
-                  className="flex items-center bg-background border border-theme rounded p-1 hover:bg-gray-700 transition"
+                  className="flex items-center bg-background border border-theme rounded p-1 hover:bg-hover transition"
                 >
                   <div className="w-12 flex-shrink-0" style={{
                     aspectRatio: "4 / 5"
@@ -112,11 +106,11 @@ export default function TemplatesList( {
                       alt={name}
                       loading="lazy"
                       src={thumbnail}
-                      className="w-full h-full object-contain rounded"
+                      className="w-full h-full object-contain rounded border border-theme"
                     />
                   </div>
                   <span className="flex-1 ml-3 truncate">{name}</span>
-                  <span className="text-gray-400">➔</span>
+                  <span className="text-foreground text-xs">➔</span>
                 </HardLink>
               );
             } )}

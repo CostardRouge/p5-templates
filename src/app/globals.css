@@ -10,7 +10,7 @@
 
     --border: 0 0% 85%;
 
-    --hover: 0 0% 95%;          /* use with alpha for subtle hover on light */
+    --hover: 0 0% 90%;          /* use with alpha for subtle hover on light */
     --active: 0 0% 0%;         /* same hue; different alpha in utilities */
     --focus: 0 0% 0%;          /* ring/outline color */
     --label: 0 0% 30%;         /* dimmer than body text */
@@ -25,7 +25,7 @@
     --border: 0 0% 20%;
 
     /* Invert for dark */
-    --hover: 0 0% 5%;
+    --hover: 0 0% 15%;
     --active: 0 0% 10%;
     --focus: 0 0% 100%;
     --label: 0 0% 70%;
