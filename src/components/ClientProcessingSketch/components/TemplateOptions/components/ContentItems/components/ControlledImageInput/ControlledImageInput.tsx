@@ -8,7 +8,7 @@ import {
 } from "react-hook-form";
 import {
   resolveAssetURL
-} from "@/shared/utils";
+} from "@/p5-sketches/shared/utils";
 import useAssetsBridge from "@/hooks/useAssetsBridge";
 
 import useTemplateAssets

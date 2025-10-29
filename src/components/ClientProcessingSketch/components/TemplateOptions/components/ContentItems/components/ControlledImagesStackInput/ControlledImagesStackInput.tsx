@@ -22,7 +22,7 @@ import useTemplateAssets
 import DropZoneButton from "@/components/DropZoneButton";
 import {
   resolveAssetURL
-} from "@/shared/utils";
+} from "@/p5-sketches/shared/utils";
 import type {
   SketchOptionInput
 } from "@/types/sketch.types";

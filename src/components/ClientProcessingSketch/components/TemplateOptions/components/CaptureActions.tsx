@@ -19,7 +19,7 @@ import {
 import fetchDownload from "@/components/utils/fetchDownload";
 import {
   getScopeAssetPath, resolveAssetURL
-} from "@/shared/utils";
+} from "@/p5-sketches/shared/utils";
 import {
   SketchOption, SlideOption
 } from "@/types/sketch.types";

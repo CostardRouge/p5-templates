@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 
 import {
   getSketchOptions, setSketchOptions, subscribeSketchOptions,
-} from "@/shared/syncSketchOptions";
+} from "@/p5-sketches/shared/syncSketchOptions";
 
 import {
   JobModel
@@ -89,16 +89,18 @@ export default function ClientProcessingSketch( {
         </div>
       )}
 
-      <ScalableViewport
-        showZoomControls={!capturing && sketchLoaded}
-      >
-        <P5Sketch
-          name={name}
-          onLoaded={() => {
-            setSketchLoaded( true );
-          }}
-        />
-      </ScalableViewport>
+      <div className="h-full w-full bg-hover/50">
+        <ScalableViewport
+          showZoomControls={!capturing && sketchLoaded}
+        >
+          <P5Sketch
+            name={name}
+            onLoaded={() => {
+              setSketchLoaded( true );
+            }}
+          />
+        </ScalableViewport>
+      </div>
 
       {!capturing && (
         <>

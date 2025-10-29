@@ -19,13 +19,7 @@ import useMultiRecordingStatusStream from "@/hooks/useMultiRecordingStatusStream
 import {
   JobModel, JobStatusEnum
 } from "@/types/recording.types";
-
-function getThumbnailURL( template: string ) {
-  return `/assets/scripts/p5-sketches/sketches/${ template.replaceAll(
-    "p5/",
-    ""
-  ) }/thumbnail.jpeg`;
-}
+import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
 
 // Badge component
 function StatusBadge( {
@@ -528,14 +522,14 @@ export default function RecordingsPage() {
           <div className="">
             <button
               onClick={() => setView( "cards" )}
-              className={`rounded-l border border-theme border-b-2 border-r-0 p-2 h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+              className={`rounded-l border border-theme border-b-2 border-r-0 px-2 py-[6.5] h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
             >
               <Grid className="w-4 h-4" />
             </button>
 
             <button
               onClick={() => setView( "table" )}
-              className={`rounded-r border border-theme border-b-2 border-l-0 p-2 ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
+              className={`rounded-r border border-theme border-b-2 border-l-0 px-2 py-[6.5] ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
             >
               <List className="w-4 h-4" />
             </button>
@@ -570,7 +564,10 @@ export default function RecordingsPage() {
                 >
                   <td className="p-0 whitespace-nowrap sm:table-cell">
                     <img
-                      src={getThumbnailURL( job.template )}
+                      src={getP5SketchThumbnailURL( job.template.replace(
+                        "p5",
+                        ""
+                      ) )}
                       alt={job.template}
                       loading="lazy"
                       className="w-16 object-contain"
@@ -633,7 +630,10 @@ export default function RecordingsPage() {
               />
 
               <img
-                src={getThumbnailURL( job.template )}
+                src={getP5SketchThumbnailURL( job.template.replace(
+                  "p5",
+                  ""
+                ) )}
                 alt={job.template}
                 loading="lazy"
                 className="object-contain rounded-t"

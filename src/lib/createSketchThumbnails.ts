@@ -1,14 +1,13 @@
 import createBrowserPage from "@/utils/createBrowserPage";
 
 import {
-  Browser,
-  Page
+  Browser, Page
 } from "playwright";
 
 import getSketchList from "@/utils/getSketchList";
 
 import {
-  SKETCHES_DIRECTORY
+  ASSETS_DIRECTORY
 } from "@/constants";
 
 import fs from "node:fs/promises";
@@ -54,7 +53,7 @@ async function createSketchThumbnails() {
     for ( const {
       href, name
     } of p5sketchNames ) {
-      const thumbnailPath = `${ SKETCHES_DIRECTORY }/${ name }/thumbnail.jpeg`;
+      const thumbnailPath = `${ ASSETS_DIRECTORY }/images/templates/p5/${ name }/thumbnail.jpeg`;
 
       if ( await exists( thumbnailPath ) ) {
         console.log( `✅ ${ name }/thumbnail.jpeg already exists!` );

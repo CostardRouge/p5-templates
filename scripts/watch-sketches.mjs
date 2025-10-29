@@ -9,7 +9,7 @@ import chokidar from "chokidar";
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 const SKETCHES_DIR = path.join(
   __dirname,
-  "../public/assets/scripts/p5-sketches/sketches"
+  "../src/p5-sketches/sketches"
 );
 const META_OUTPUT = path.join(
   SKETCHES_DIR,

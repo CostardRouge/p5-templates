@@ -63,7 +63,7 @@ export default function MenuBar() {
               href={href}
               target={target}
               className={clsx(
-                "hover:opacity-80 flex flex-col items-center justify-center rounded-md shadow-sm sm:rounded-md px-2 py-1 border border-theme border-b-2",
+                "hover:opacity-80 flex flex-col items-center justify-center rounded shadow-sm px-2 py-1 border border-theme border-b-2",
                 {
                   " bg-hover": active
                 }

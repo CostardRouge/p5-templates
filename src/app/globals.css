@@ -67,11 +67,20 @@
     }
 }
 
-@layer components {
-    .bordered {
-        @apply border;
-        border-color: hsl(var(--border));
-    }
+.rounded {
+    @apply rounded-xl;
+}
+
+.rounded-tl {
+    @apply rounded-tl-xl;
+}
+
+.rounded-r {
+    @apply rounded-r-xl;
+}
+
+.rounded-l {
+    @apply rounded-l-xl;
 }
 
 canvas#defaultCanvas0 {

@@ -82,8 +82,8 @@ export default function TemplatesList( {
                         className="absolute top-0 left-0 w-full h-full object-contain"
                       />
                     </div>
-                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-hover/60 to-transparent">
-                      <span className="text-foreground text-sm ">
+                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-hover/80 to-transparent">
+                      <span className="text-foreground text-sm text-center inline-block w-full">
                         {name}
                       </span>
                     </div>

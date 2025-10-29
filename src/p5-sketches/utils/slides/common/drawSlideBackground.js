@@ -1,0 +1,39 @@
+import shapes from "../../shapes.js";
+
+export default function drawSlideBackground( backgroundOption ) {
+  push();
+  background( ...backgroundOption.background );
+
+  const backgroundPattern = backgroundOption.pattern;
+
+  if ( backgroundPattern !== undefined ) {
+    if ( backgroundPattern.type === "grid" ) {
+      const columns = backgroundPattern.columns || 9;
+      const rows = columns * height / width;
+
+      stroke( ...backgroundPattern.stroke );
+      strokeWeight( backgroundPattern.strokeWeight || 1 );
+
+      shapes.grid( {
+        borders: backgroundPattern.borders,
+        columns,
+        rows,
+      } );
+    }
+
+    if ( backgroundPattern.type === "dots" ) {
+      const columns = backgroundPattern.columns || 50;
+      const rows = columns * height / width;
+
+      stroke( ...backgroundPattern.stroke );
+      strokeWeight( backgroundPattern.strokeWeight || 4 );
+
+      shapes.dots( {
+        border: backgroundPattern.borders,
+        columns,
+        rows,
+      } );
+    }
+  }
+  pop();
+}

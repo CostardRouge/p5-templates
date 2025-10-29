@@ -18,10 +18,10 @@ import {
 
 import {
   resolveAssetURL
-} from "@/shared/utils";
+} from "@/p5-sketches/shared/utils";
 import {
   setSketchOptions
-} from "@/shared/syncSketchOptions";
+} from "@/p5-sketches/shared/syncSketchOptions";
 import useAssetDrop from "@/hooks/useAssetDrop";
 
 import {

@@ -1,15 +1,14 @@
 import {
   registerBlob
-} from "@/shared/blobMap";
+} from "@/p5-sketches/shared/blobMap";
 
 import {
   getScopeAssetPath
-} from "@/shared/utils";
+} from "@/p5-sketches/shared/utils";
 
 import {
-  getSketchOptions,
-  setSketchOptions
-} from "@/shared/syncSketchOptions";
+  getSketchOptions, setSketchOptions
+} from "@/p5-sketches/shared/syncSketchOptions";
 
 const ensurePath = (
   obj: any, key: string, value: any = [
