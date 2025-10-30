@@ -35,14 +35,6 @@ export default function P5Sketch( {
         .querySelectorAll( "canvas.p5Canvas, canvas#defaultCanvas0" )
         .forEach( ( el ) => el.remove() );
 
-      // // 1) Inject CSS
-      // const css = document.createElement( "link" );
-      //
-      // css.rel = "stylesheet";
-      // css.href = "/assets/stylesheets/p5.css";
-      // css.dataset.sketch = name;
-      // document.head.appendChild( css );
-
       // 2) Observe for canvases if the sketch self-bootstraps on import
       const observer = new MutationObserver( () => {
         const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0" ) as HTMLCanvasElement | null;

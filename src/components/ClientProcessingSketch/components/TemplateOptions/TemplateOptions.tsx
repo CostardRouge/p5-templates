@@ -46,6 +46,7 @@ export default function TemplateOptions( {
   name,
   setOptions,
   persistedJob,
+  onActiveSlideChange,
   options: initialOptions,
 }: {
   name: string;
@@ -54,6 +55,7 @@ export default function TemplateOptions( {
   setOptions: (
     nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
   ) => void;
+  onActiveSlideChange?: ( index: number ) => void;
 } ) {
   const [
     activeSlideIndex,
@@ -133,7 +135,7 @@ export default function TemplateOptions( {
       if ( !didInitSelection.current && length > 0 ) {
         didInitSelection.current = true;
 
-        setActiveSlideIndex( 0 );
+        handleSlideSelect( 0 );
 
         if ( typeof window.setSlide === "function" ) {
           window.setSlide( 0 );
@@ -162,10 +164,14 @@ export default function TemplateOptions( {
           next = length - 1;
         }
 
+        if ( next !== current ) {
+          handleSlideSelect( next );
+          return next;
+        }
+
         if ( typeof window.setSlide === "function" ) {
           window.setSlide( next );
         }
-
         return next;
       } );
     },
@@ -176,6 +182,7 @@ export default function TemplateOptions( {
 
   const handleSlideSelect = ( index: number ) => {
     setActiveSlideIndex( index );
+    onActiveSlideChange?.( index );
 
     if ( typeof window.setSlide === "function" ) {
       window.setSlide( index );

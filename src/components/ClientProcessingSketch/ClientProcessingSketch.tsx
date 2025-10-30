@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  Fragment, useEffect, useState
+  useCallback, useEffect, useState,
 } from "react";
 import dynamic from "next/dynamic";
 
@@ -25,7 +25,7 @@ import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
 const TemplateOptions = dynamic(
   () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ),
   {
-    ssr: false,
+    ssr: true,
   }
 );
 
@@ -75,17 +75,24 @@ export default function ClientProcessingSketch( {
     ]
   );
 
-  return (
-    <Fragment>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.sketchOptions = ${ JSON.stringify( currentOptions ) };`,
-        }}
-      />
+  const [
+    activeSlideIndex,
+    setActiveSlideIndex
+  ] = useState<number | null>( null );
 
+  const handleActiveSlideChange = useCallback(
+    ( index: number ) => {
+      setActiveSlideIndex( index );
+    },
+    [
+    ]
+  );
+
+  return (
+    <>
       {!sketchLoaded && (
         <div className="flex items-center justify-center absolute h-full w-full">
-          <p className="text-foreground">loading p5js sketch...</p>
+          <p className="text-foreground">→ loading <strong>{name}</strong>...</p>
         </div>
       )}
 
@@ -93,30 +100,43 @@ export default function ClientProcessingSketch( {
         <ScalableViewport
           showZoomControls={!capturing && sketchLoaded}
         >
-          <P5Sketch
-            name={name}
-            onLoaded={() => {
-              setSketchLoaded( true );
-            }}
-          />
+          <div>
+            {sketchLoaded && (
+              <div className="flex justify-between font-mono">
+                <p>{name} {activeSlideIndex !== null && `· slide ${ activeSlideIndex + 1 }`}</p>
+                <p id="p5-sketch-fps-counter"></p>
+              </div>
+            )}
+
+            <P5Sketch
+              name={name}
+              onLoaded={() => {
+                setSketchLoaded( true );
+              }}
+            />
+          </div>
         </ScalableViewport>
       </div>
 
       {!capturing && (
         <>
-          {sketchLoaded ? <P5Controls name={name}/> : null}
-          {sketchLoaded ? (
-            <TemplateOptions
-              name={name}
-              persistedJob={persistedJob}
-              options={currentOptions}
-              setOptions={( updated ) =>
-                setCurrentOptions( updated as SketchOption )
-              }
-            /> ) : null}
+          {sketchLoaded && (
+            <>
+              <P5Controls name={name} />
+              <TemplateOptions
+                name={name}
+                persistedJob={persistedJob}
+                options={currentOptions}
+                setOptions={( updated ) =>
+                  setCurrentOptions( updated as SketchOption )
+                }
+                onActiveSlideChange={handleActiveSlideChange}
 
+              />
+            </>
+          )}
         </>
       )}
-    </Fragment>
+    </>
   );
 }

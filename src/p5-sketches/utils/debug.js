@@ -56,12 +56,11 @@ const debug = {
       }
     } = debug.options;
 
-    debug.createElement(
-      "body",
-      "fps-counter",
-      () => Math.ceil( debug.frameRate ),
-      !display
-    );
+    const fpsCounterParagraph = document.querySelector( "p#p5-sketch-fps-counter" );
+
+    if ( fpsCounterParagraph ) {
+      fpsCounterParagraph.innerHTML = sketch.engine.paused ? "paused" : Math.ceil( debug.frameRate );
+    }
 
     if ( !display ) {
       return;

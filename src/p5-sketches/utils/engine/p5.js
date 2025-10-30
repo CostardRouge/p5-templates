@@ -5,6 +5,7 @@ import scripts from "../../utils/scripts.js";
 const p5js = {
   camera: undefined,
   canvas: undefined,
+  paused: false,
   favoriteColors: {
     purple: undefined
   },
@@ -171,10 +172,10 @@ const p5js = {
   },
   eventHandlers: {
     "engine-toggle-loop": function() {
-      this.stop = this.stop ?? false;
-      this.stop = !this.stop;
+      p5js.paused = p5js.paused ?? false;
+      p5js.paused = !p5js.paused;
 
-      if ( this.stop ) {
+      if ( p5js.paused ) {
         noLoop();
       } else {
         loop();
