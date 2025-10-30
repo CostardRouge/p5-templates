@@ -1,3 +1,5 @@
+"use client";
+
 import options from "../../utils/options.js";
 
 import string from "../../utils/string.js";

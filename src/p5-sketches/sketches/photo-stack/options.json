@@ -1,6 +1,7 @@
 {
   "consumeTestImages": true,
   "colors": {
-    "background": [246, 235, 225]
+    "background": [246, 235, 225],
+    "text": [0]
   }
 }

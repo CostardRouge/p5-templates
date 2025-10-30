@@ -1,5 +1,6 @@
 import options from "../../utils/options.js";
 
+import grid from "../../utils/grid.js";
 import cache from "../../utils/cache.js";
 import string from "../../utils/string.js";
 import sketch from "../../utils/sketch.js";
@@ -20,7 +21,6 @@ sketch.setup(
     // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
 
     background( ...options.colors.background );
-    options.noSmooth && noSmooth();
   },
   {
     size: {

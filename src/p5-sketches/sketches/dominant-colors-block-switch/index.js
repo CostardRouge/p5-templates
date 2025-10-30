@@ -1,5 +1,6 @@
 import options from "../../utils/options.js";
 
+import grid from "../../utils/grid.js";
 import cache from "../../utils/cache.js";
 import string from "../../utils/string.js";
 import sketch from "../../utils/sketch.js";

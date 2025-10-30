@@ -109,7 +109,7 @@ const p5js = {
         // applying options
         frameRate( sketchOptions?.animation?.framerate );
 
-        noSmooth();
+        smooth();
 
         // registering events
         Object.entries( p5js.eventHandlers ).forEach( ( [
