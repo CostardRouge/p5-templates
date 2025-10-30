@@ -80,7 +80,7 @@ function ActionsMenu( {
         <MenuIcon className="h-4"/>
       </MenuButton>
 
-      <MenuItems className="absolute right-0 w-48 border border-theme rounded z-50 bg-background">
+      <MenuItems className="absolute right-0 w-48 border border-theme rounded z-50 bg-background overflow-hidden">
         {job.status === "completed" &&
           <MenuItem>
             {( {
@@ -88,7 +88,7 @@ function ActionsMenu( {
             } ) => (
               <button
                 onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
-                className={`${ focus ? "bg-hover" : "" } rounded group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <Download className="h-5" />
                 Download
@@ -119,7 +119,7 @@ function ActionsMenu( {
           } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/options/download/${ job.id }` )}
-              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm rounded`}
+              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
             >
               <Download className="h-5" />
               <span>Download .json</span>
@@ -178,7 +178,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm rounded`}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <X className="h-5" />
                 Cancel
@@ -233,7 +233,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm rounded`}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <RotateCcw className="h-5" />
                 Retry
@@ -290,7 +290,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm rounded`}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
               >
                 <Trash2 />
                 Delete

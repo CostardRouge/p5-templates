@@ -1,6 +1,6 @@
 "use client";
 
-const defaultStyle = "absolute top-0 right-0 p-2 flex gap-1 z-50 text-xs";
+const defaultStyle = "absolute top-2 right-2 flex gap-1 z-50 text-xs";
 
 const ZoomControls = ( {
   onPlus, onMinus, onFit, onReset

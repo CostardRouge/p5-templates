@@ -277,7 +277,7 @@ export default function TemplateOptions( {
   return (
     <CollapsibleItem
       data-no-zoom=""
-      className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-background p-2 border border-b-0 border-theme border-r-0 z-50 rounded-tl"
+      className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 bg-background p-2 border border-theme z-50 rounded"
       style={{
         maxHeight: "calc(80svh)"
       }}

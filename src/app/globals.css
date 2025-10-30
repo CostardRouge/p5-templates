@@ -71,18 +71,6 @@
     @apply rounded-xl;
 }
 
-.rounded-tl {
-    @apply rounded-tl-xl;
-}
-
-.rounded-r {
-    @apply rounded-r-xl;
-}
-
-.rounded-l {
-    @apply rounded-l-xl;
-}
-
 canvas#defaultCanvas0 {
     @apply border;
     @apply border-theme;
