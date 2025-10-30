@@ -4,7 +4,7 @@ import React, {
   useState
 } from "react";
 import {
-  Archive, CassetteTapeIcon, Clapperboard, Loader, Save, SaveIcon
+  Archive, Clapperboard, Loader, Save, SaveIcon
 } from "lucide-react";
 
 import {
@@ -197,7 +197,7 @@ export default function CaptureActions( {
 
           {
             persistedJob?.status !== "draft" && ( <button
-              className="flex-2 rounded p-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
+              className="flex-2 rounded px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
               onClick={() => handleSubmit( "draft" )}
               disabled={isLoading}
             >
@@ -207,16 +207,28 @@ export default function CaptureActions( {
             </button>
             )}
 
+          {/* <button*/}
+          {/*  className="flex-1 rounded p-1 border border-theme border-b-2 text-foreground bg-background text-xs"*/}
+          {/*  onClick={async() => {*/}
+          {/*    await window?.startLoopRecording( {*/}
+          {/*      format: "webm"*/}
+          {/*    } );*/}
+          {/*  }}*/}
+          {/* >*/}
+          {/*  <CassetteTapeIcon className="inline h-3" />*/}
+          {/*  <span className="align-middle">Record in .webm</span>*/}
+          {/* </button>*/}
+
           <button
-            className="flex-1 rounded p-1 border border-theme border-b-2 text-foreground bg-background text-xs"
+            className="leading- flex-1 rounded p-1 border border-theme border-b-2 text-foreground bg-background text-xs"
             onClick={async() => {
               await window?.startLoopRecording( {
                 format: "webm"
               } );
             }}
           >
-            <CassetteTapeIcon className="inline h-3" />
-            <span className="align-middle">Record in .webm</span>
+            <Save className="inline h-3" />
+            <span className="align-middle">.json</span>
           </button>
 
           <button
@@ -226,7 +238,7 @@ export default function CaptureActions( {
           >
             {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
               <Clapperboard className="inline h-3" />}
-            <span className="align-middle">Export in .mp4</span>
+            <span className="align-middle">.mp4</span>
           </button>
         </div>
       )}
@@ -265,7 +277,7 @@ export default function CaptureActions( {
 
       {( recordingProgress?.percentage === 100 || recordingProgress?.status === "completed" ) && jobId && (
         <button
-          className="rounded p-2 border border-theme text-foreground inline-block bg-background text-sm "
+          className="rounded px-2 py-1 border border-theme text-foreground inline-block bg-background text-sm "
           onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
         >
           <SaveIcon className="inline align-middle mr-1 h-4"/>
