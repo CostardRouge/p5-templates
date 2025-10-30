@@ -12,12 +12,9 @@ const sketchState = {
   image: null,
   input: null,
   exifData: null,
-  loading: false
 };
 
 async function handleImage( file ) {
-  sketchState.loading = true;
-
   if ( file.type === "image" ) {
     sketchState.image = createImg(
       file.data,
@@ -31,12 +28,9 @@ async function handleImage( file ) {
     document
       .querySelector( "canvas#defaultCanvas0" )
       .classList.add( "loaded" );
-
-    sketchState.loading = null;
   } else {
     sketchState.image = null;
     sketchState.exifData = null;
-    sketchState.loading = false;
   }
 }
 
@@ -87,22 +81,24 @@ sketch.draw( (
 ) => {
   background( 255 );
 
-  string.write(
-    sketchState.loading ? "loading..." : "double click to add an image",
-    0,
-    0,
-    {
-      size: 72,
-      stroke: color( 255 ),
-      fill: color( 0 ),
-      textHeight: height,
-      font: string.fonts.martian,
-      textAlign: [
-        CENTER,
-        CENTER
-      ]
-    }
-  );
+  if ( !sketchState.image ) {
+    string.write(
+      "double click to add an image",
+      0,
+      0,
+      {
+        size: 72,
+        stroke: color( 255 ),
+        fill: color( 0 ),
+        textHeight: height,
+        font: string.fonts.martian,
+        textAlign: [
+          CENTER,
+          CENTER
+        ]
+      }
+    );
+  }
 
   if ( sketchState.image ) {
     imageUtils.marginImage( {

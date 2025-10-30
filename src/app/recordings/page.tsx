@@ -491,7 +491,7 @@ export default function RecordingsPage() {
   };
 
   return (
-    <div className="space-y-4 p-2">
+    <div className="space-y-4 p-2 bg-hover/50 h-full">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Recordings</h1>
@@ -541,9 +541,9 @@ export default function RecordingsPage() {
 
       {/* Table View */}
       {view === "table" && (
-        <div className="overflow-x-auto rounded border border-theme border-b-2">
+        <div className="overflow-x-auto rounded border border-theme border-b-2 bg-background">
           <table className="min-w-full">
-            <thead className="bg-background">
+            <thead className="bg-hover/30">
               <tr className="text-left text-xs text-foreground uppercase border-b ">
                 <th className="font-medium p-1 w-14">Thumb</th>
                 <th className="font-medium p-1 w-4">ID</th>

@@ -2,5 +2,9 @@
   "texts": {
     "top": "hello",
     "bottom": "world"
+  },
+  "colors": {
+    "background": [246, 235, 225],
+    "text": [0]
   }
 }

@@ -30,7 +30,7 @@ export default async function TemplatesPage() {
   };
 
   return (
-    <div className="p-2">
+    <div className="p-2 bg-hover/50">
       <TemplatesList templates={templates} />
     </div>
   );

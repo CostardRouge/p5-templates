@@ -171,7 +171,7 @@ const exif = {
   formatGPSCoordinates: (
     latitude, longitude, precision = 2
   ) => {
-    if ( -1 === latitude || -1 === longitude ) {
+    if ( -1 === latitude || -1 === longitude || isNaN( latitude ) || isNaN( longitude ) ) {
       return;
     }
 
