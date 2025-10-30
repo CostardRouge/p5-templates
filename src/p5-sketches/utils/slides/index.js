@@ -13,6 +13,42 @@ const wrap = (
 const slides = {
   index: 0,
 
+  registerEvents() {
+    events.register(
+      "pre-draw",
+      () => {
+        clear();
+      }
+    );
+
+    events.register(
+      "post-draw",
+      () => {
+        slides.renderCurrentSlide();
+        slides.render( options );
+      }
+    );
+
+    events.register(
+      "post-draw",
+      () => {
+        const canvas = document.querySelector( "canvas#defaultCanvas0.loaded" );
+
+        if ( !canvas ) {
+          return;
+        }
+
+        if ( !slides.hasSlides ) {
+          slides.index = null;
+        }
+
+        if ( canvas.dataset.slide !== slides.index ) {
+          canvas.dataset.slide = slides.index;
+        }
+      }
+    );
+  },
+
   get count() {
     return Array.isArray( options?.slides ) ? options.slides.length : 0;
   },
@@ -92,39 +128,5 @@ window.getCurrentSlide = () => ( {
 } );
 
 window.slides = slides;
-
-events.register(
-  "pre-draw",
-  () => {
-    clear();
-  }
-);
-
-events.register(
-  "post-draw",
-  () => {
-    slides.renderCurrentSlide();
-    slides.render( options );
-  }
-);
-
-events.register(
-  "post-draw",
-  () => {
-    const canvas = document.querySelector( "canvas#defaultCanvas0.loaded" );
-
-    if ( !canvas ) {
-      return;
-    }
-
-    if ( !slides.hasSlides ) {
-      slides.index = null;
-    }
-
-    if ( canvas.dataset.slide !== slides.index ) {
-      canvas.dataset.slide = slides.index;
-    }
-  }
-);
 
 export default slides;

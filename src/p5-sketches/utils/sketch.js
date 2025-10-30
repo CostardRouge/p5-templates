@@ -3,6 +3,8 @@ import engines from "./engine/index.js";
 import time from "./time.js";
 import debug from "./debug.js";
 import events from "./events.js";
+import slides from "./slides/index";
+import options from "./options";
 
 const sketch = {
   name: location.pathname.split( "/" ).slice(
@@ -15,16 +17,18 @@ const sketch = {
     setupEngineFunction,
     sketchOptions = {
       engine: "p5js",
+      size: {
+        width: options.size.width,
+        height: options.size.height,
+      },
       animation: {
-        framerate: 60,
-        duration: 12
+        framerate: options.animation.framerate ?? 60,
+        duration: options.animation.duration ?? 12,
       }
     }
   ) => {
-    // persist sketchOptions
     sketch.sketchOptions = sketchOptions;
 
-    // engine system
     const {
       engine = "p5js", ...engineOptions
     } = sketchOptions;
@@ -56,6 +60,8 @@ const sketch = {
     window.toggleFPS = () => {
       debug.toggleFPSCounter();
     };
+
+    slides.registerEvents();
   },
   draw: ( drawFunction ) => {
     events.register(

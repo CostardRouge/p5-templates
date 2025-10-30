@@ -1,5 +1,6 @@
 import imageUtils from "../../imageUtils.js";
 import animation from "../../animation.js";
+import * as common from "../../common.js";
 
 export default function drawSlideImagesStack(
   imagesStackOption, slideOptions
