@@ -25,10 +25,10 @@ export default function UnsupportedItemForm( {
   const data = getValues( fieldName );
 
   return (
-    <div className="p-1 border rounded bg-background">
+    <div className="p-1 border rounded-xl bg-background">
       <div className="flex justify-between items-center">
         <h4
-          className="bg-red-200 px-1 rounded"
+          className="bg-red-200 px-1 rounded-xl"
           onClick={() => console.log( data )}
         >
           {data?.type}

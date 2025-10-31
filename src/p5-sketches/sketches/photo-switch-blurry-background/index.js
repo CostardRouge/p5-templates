@@ -22,7 +22,6 @@ sketch.setup(
     canvases.background.drawingContext.filter = "blur(2px)";
 
     background( ...options.colors.background );
-    options.noSmooth && noSmooth();
   },
   {
     size: {

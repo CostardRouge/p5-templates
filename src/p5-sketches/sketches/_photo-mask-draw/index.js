@@ -53,7 +53,6 @@ sketch.setup(
     );
 
     // resetBallPositions();
-    options.noSmooth && noSmooth();
   },
   {
     size: {

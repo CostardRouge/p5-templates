@@ -9,7 +9,6 @@ import imageUtils from "../../utils/imageUtils.js";
 sketch.setup(
   () => {
     background( ...options.colors.background );
-    options.noSmooth && noSmooth();
   },
   {
     size: {

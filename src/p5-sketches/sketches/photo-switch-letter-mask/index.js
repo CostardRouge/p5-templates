@@ -19,7 +19,6 @@ sketch.setup(
     );
 
     background( ...options.colors.background );
-    options.noSmooth && noSmooth();
   },
   {
     size: {

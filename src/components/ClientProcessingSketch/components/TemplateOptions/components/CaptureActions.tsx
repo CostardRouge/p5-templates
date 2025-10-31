@@ -181,7 +181,7 @@ export default function CaptureActions( {
           {
             persistedJob?.status === "draft" && (
               <button
-                className="rounded p-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs"
+                className="rounded-lg p-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs"
                 onClick={() => handleSubmit(
                   "draft",
                   persistedJob.id
@@ -197,7 +197,7 @@ export default function CaptureActions( {
 
           {
             persistedJob?.status !== "draft" && ( <button
-              className="flex-2 rounded px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
+              className="flex-2 rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
               onClick={() => handleSubmit( "draft" )}
               disabled={isLoading}
             >
@@ -208,7 +208,7 @@ export default function CaptureActions( {
             )}
 
           {/* <button*/}
-          {/*  className="flex-1 rounded p-1 border border-theme border-b-2 text-foreground bg-background text-xs"*/}
+          {/*  className="flex-1 rounded-xl p-1 border border-theme border-b-2 text-foreground bg-background text-xs"*/}
           {/*  onClick={async() => {*/}
           {/*    await window?.startLoopRecording( {*/}
           {/*      format: "webm"*/}
@@ -220,7 +220,7 @@ export default function CaptureActions( {
           {/* </button>*/}
 
           <button
-            className="leading- flex-1 rounded p-1 border border-theme border-b-2 text-foreground bg-background text-xs"
+            className="flex-1 rounded-lg p-1 border border-theme border-b-2 text-foreground bg-background text-xs"
             onClick={async() => {
               await window?.startLoopRecording( {
                 format: "webm"
@@ -228,11 +228,11 @@ export default function CaptureActions( {
             }}
           >
             <Save className="inline h-3" />
-            <span className="align-middle">.json</span>
+            <span className="align-middle">.webm</span>
           </button>
 
           <button
-            className="flex-1 rounded p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
+            className="flex-1 rounded-lg p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
             onClick={() => handleSubmit()}
             disabled={isLoading || saving}
           >
@@ -246,14 +246,14 @@ export default function CaptureActions( {
       {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
         <div className="flex flex-col justify-start bg-background text-center items-center">
           <div
-            className={`w-full h-6 rounded relative ring-1 ${
+            className={`w-full h-6 rounded-lg relative ring-1 ${
               recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
             }`}
           >
-            <div className="absolute inset-0 rounded bg-background" />
+            <div className="absolute inset-0 rounded-xl bg-background" />
 
             <div
-              className="absolute inset-y-0 left-0 bg-hover rounded"
+              className="absolute inset-y-0 left-0 bg-hover rounded-xl"
               style={{
                 width: `${ recordingProgress.percentage }%`
               }}
@@ -277,7 +277,7 @@ export default function CaptureActions( {
 
       {( recordingProgress?.percentage === 100 || recordingProgress?.status === "completed" ) && jobId && (
         <button
-          className="rounded px-2 py-1 border border-theme text-foreground inline-block bg-background text-sm "
+          className="rounded-lg px-2 py-1 border border-theme text-foreground inline-block bg-background text-sm "
           onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
         >
           <SaveIcon className="inline align-middle mr-1 h-4"/>

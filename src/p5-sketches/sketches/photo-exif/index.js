@@ -8,6 +8,12 @@ import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
 
+export const defaults = {
+  margin: 0.1,
+  center: true,
+  fontSize: 20
+};
+
 const sketchState = {
   image: null,
   input: null,
@@ -100,17 +106,19 @@ sketch.draw( (
     );
   }
 
+  // console.log( options.sketch );
+
   if ( sketchState.image ) {
     imageUtils.marginImage( {
       img: sketchState.image,
-      margin: width * .1,
-      center: true,
+      margin: width * options.sketch?.margin,
+      center: options.sketch?.center,
       position: center,
       // scale: .5,
       callback: (
         x, y, w, h
       ) => {
-        const fontSize = 20;
+        const fontSize = options.sketch?.fontSize || 20;
         const yTopPosition = y - fontSize / 2;
         const yBottomPosition = y + h + fontSize / 2;
         const textStyle = {

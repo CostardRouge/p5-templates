@@ -1,36 +1,28 @@
-"use client";
-
 import React, {
   useEffect, useRef
 } from "react";
 import "@/public/assets/stylesheets/p5.css";
+import {
+  declareSketchDefaults
+} from "@/p5-sketches/shared/syncSketchOptions";
 
 type Props = {
   name: string;
   onLoaded: ( canvas: HTMLCanvasElement ) => void;
-  onOptions?: ( options: any ) => void; // { defaults, fields, perSlide? }
+  onImportSketchDefaults: ( defaults: Record<string, any> ) => void;
 };
 
 // Webpack will create a context covering all .../sketches/*/index.js files
 const importSketch = ( name: string ) =>
-  import(
-    /* webpackMode: "lazy", webpackChunkName: "sketch-[request]" */
-    /* webpackInclude: /\/[^/]+\/index\.js$/ */
-    `@/p5-sketches/sketches/${ name }/index.js` );
+  import( `@/p5-sketches/sketches/${ name }/index.js` );
 
 export default function P5Sketch( {
-  name, onLoaded, onOptions
+  name, onLoaded, onImportSketchDefaults
 }: Props ) {
   const containerRef = useRef<HTMLDivElement | null>( null );
-  const teardownRef = useRef<null |( () => void )>( null );
 
   useEffect(
     () => {
-      let cancelled = false;
-
-      // 0) Cleanup any previous sketch
-      teardownRef.current?.();
-      teardownRef.current = null;
       document
         .querySelectorAll( "canvas.p5Canvas, canvas#defaultCanvas0" )
         .forEach( ( el ) => el.remove() );
@@ -39,11 +31,16 @@ export default function P5Sketch( {
       const observer = new MutationObserver( () => {
         const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0" ) as HTMLCanvasElement | null;
 
-        if ( !canvas ) return;
+        if ( !canvas ) {
+          return;
+        }
+
         onLoaded?.( canvas );
+
         if ( containerRef.current && !containerRef.current.contains( canvas ) ) {
           containerRef.current.appendChild( canvas );
         }
+
         observer.disconnect();
       } );
 
@@ -58,37 +55,12 @@ export default function P5Sketch( {
       // 3) Import the sketch module by name
       importSketch( name )
         .then( ( sketchModule: any ) => {
-          if ( cancelled ) return;
+          const sketchDefaults = sketchModule.defaults;
 
-          // 3a) If the sketch exports options, register them and notify UI
-          // if ( mod?.options ) {
-          //   try {
-          //     declareSketchOptions( mod.options ); // fills defaults + sets up fields
-          //   } catch ( e ) {
-          //     console.warn(
-          //       "[P5Sketch] declareSketchOptions failed:",
-          //       e
-          //     );
-          //   }
-          //   onOptions?.( mod.options );
-          // }
-
-          // 3b) Prefer an explicit mount(container) API if provided
-          if ( typeof sketchModule?.mount === "function" ) {
-            const api = {
-              container: containerRef.current ?? undefined,
-              onCanvas: ( c: HTMLCanvasElement ) => {
-                onLoaded?.( c );
-                if ( containerRef.current && !containerRef.current.contains( c ) ) {
-                  containerRef.current.appendChild( c );
-                }
-              },
-            };
-            const teardown = sketchModule.mount( api );
-
-            if ( typeof teardown === "function" ) teardownRef.current = teardown;
+          if ( sketchDefaults ) {
+            declareSketchDefaults( sketchDefaults );
+            onImportSketchDefaults( sketchDefaults );
           }
-        // else: legacy self-bootstrap path → MutationObserver will catch the canvas
         } )
         .catch( ( e ) => {
           console.error(
@@ -97,28 +69,14 @@ export default function P5Sketch( {
           );
         } );
 
-      // 4) Cleanup on unmount / name change
       return () => {
-        cancelled = true;
         observer.disconnect();
-        teardownRef.current?.();
-        teardownRef.current = null;
 
-        // remove canvases and CSS added for this sketch
         document
           .querySelectorAll( "canvas.p5Canvas, canvas#defaultCanvas0" )
-          .forEach( ( el ) => el.remove() );
-        // document
-        //   .querySelectorAll( `link[data-sketch="${ name }"]` )
-        //   .forEach( ( el ) => el.remove() );
+          .forEach( ( element ) => element.remove() );
 
-        try {
-        // Optional legacy teardown if a sketch added it to window
-        // @ts-ignore
-          window.removeLoadedScripts?.();
-        } catch {
-        /* ignore */
-        }
+        window.removeLoadedScripts?.();
       };
     },
     [

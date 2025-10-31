@@ -33,14 +33,14 @@ export default function TemplatesList( {
         <div className="h-8">
           <button
             onClick={() => setView( "grid" )}
-            className={`rounded-l border border-theme border-b-2 border-r-0 h-full p-2 ${ view === "grid" ? "bg-hover" : "hover:bg-hover" }`}
+            className={`rounded-l-xl border border-theme border-b-2 border-r-0 h-full p-2 ${ view === "grid" ? "bg-hover" : "hover:bg-hover" }`}
           >
             <Grid className="w-4 h-4" />
           </button>
 
           <button
             onClick={() => setView( "list" )}
-            className={`rounded-r border border-theme border-b-2 border-l-0 h-full p-2 ${ view === "list" ? "bg-hover" : "hover:bg-hover" }`}
+            className={`rounded-r-xl border border-theme border-b-2 border-l-0 h-full p-2 ${ view === "list" ? "bg-hover" : "hover:bg-hover" }`}
           >
             <List className="w-4 h-4" />
           </button>
@@ -69,7 +69,7 @@ export default function TemplatesList( {
                   <HardLink
                     key={name}
                     href={href}
-                    className="relative w-full bg-background rounded overflow-hidden border border-theme transition"
+                    className="relative w-full bg-background rounded-xl overflow-hidden border border-theme transition"
                   >
                     {/* Aspect ratio box for 4:5 (360x450) */}
                     <div className="w-full" style={{
@@ -95,7 +95,7 @@ export default function TemplatesList( {
                 <HardLink
                   key={name}
                   href={href}
-                  className="flex items-center bg-background border border-theme rounded p-1 hover:bg-hover transition"
+                  className="flex items-center bg-background border border-theme rounded-xl p-1 hover:bg-hover transition"
                 >
                   <div className="w-12 flex-shrink-0" style={{
                     aspectRatio: "4 / 5"
@@ -104,7 +104,7 @@ export default function TemplatesList( {
                       alt={name}
                       loading="lazy"
                       src={thumbnail}
-                      className="w-full h-full object-contain rounded border border-theme"
+                      className="w-full h-full object-contain rounded-lg border border-theme"
                     />
                   </div>
                   <span className="flex-1 ml-3 truncate">{name}</span>

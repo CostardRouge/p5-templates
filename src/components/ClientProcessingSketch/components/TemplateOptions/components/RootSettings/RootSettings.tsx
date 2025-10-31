@@ -13,7 +13,7 @@ export default function RootSettings() {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
-      className="p-1 border border-theme rounded text-foreground bg-background overflow-y-auto"
+      className="p-1 border border-theme rounded-xl text-foreground bg-background overflow-y-auto"
       headerContainerClassName="leading-none"
       header={( expanded ) => (
         <button

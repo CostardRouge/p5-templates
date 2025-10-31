@@ -64,7 +64,7 @@ export function RecordingDashboard() {
 
   if ( error ) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded">
+      <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
         <h3 className="text-red-800 font-semibold">Error</h3>
         <p className="text-red-600">{error}</p>
       </div>
@@ -73,26 +73,26 @@ export function RecordingDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-background p-6 rounded">
+      <div className="bg-background p-6 rounded-xl">
 
         {health && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-500 p-4 rounded">
+            <div className="bg-blue-500 p-4 rounded-xl">
               <h3 className="text-sm font-medium text-blue-100">Waiting</h3>
               <p className="text-2xl font-bold text-blue-600">{health.waiting}</p>
             </div>
 
-            <div className="bg-yellow-500 p-4 rounded">
+            <div className="bg-yellow-500 p-4 rounded-xl">
               <h3 className="text-sm font-medium text-yellow-100">Active</h3>
               <p className="text-2xl font-bold text-yellow-600">{health.active}</p>
             </div>
 
-            <div className="p-4 rounded bg-green-700">
+            <div className="p-4 rounded-xl bg-green-700">
               <h3 className="text-sm font-medium text-green-100">Completed</h3>
               <p className="text-2xl font-bold text-green-900">{health.completed}</p>
             </div>
 
-            <div className="bg-red-700 p-4 rounded">
+            <div className="bg-red-700 p-4 rounded-xl">
               <h3 className="text-sm font-medium text-red-100">Failed</h3>
               <p className="text-2xl font-bold text-red-900">{health.failed}</p>
             </div>
@@ -103,14 +103,14 @@ export function RecordingDashboard() {
           <button
             onClick={handlePauseQueue}
             disabled={isLoading}
-            className="px-4 py-2 bg-yellow-500 text-foreground rounded hover:bg-yellow-600 disabled:opacity-50"
+            className="px-4 py-2 bg-yellow-500 text-foreground rounded-xl hover:bg-yellow-600 disabled:opacity-50"
           >
             Pause
           </button>
           <button
             onClick={handleResumeQueue}
             disabled={isLoading}
-            className="px-4 py-2 bg-green-700 text-foreground rounded hover:bg-green-600 disabled:opacity-50"
+            className="px-4 py-2 bg-green-700 text-foreground rounded-xl hover:bg-green-600 disabled:opacity-50"
           >
             Resume
           </button>

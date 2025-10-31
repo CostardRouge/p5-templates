@@ -81,8 +81,6 @@ sketch.setup(
 
     // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
     background( ...options.colors.background );
-
-    options.noSmooth && noSmooth();
   },
   {
     size: {

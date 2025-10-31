@@ -266,14 +266,14 @@ const ImageInfoHelper = () => {
       {!capturing && image && (
         <div
           data-no-zoom=""
-          className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-background p-2 border border-b-0 border-theme  border-r-0 z-50 rounded-tl"
+          className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-background p-2 border border-b-0 border-theme  border-r-0 z-50 rounded-xl-tl"
           style={{
             maxHeight: "calc(60svh)",
           }}
         >
           {image && (
             <button
-              className="rounded p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
+              className="rounded-xl p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
               onClick={( e ) => {
                 e.preventDefault();
                 setObjectStyle( current => {
@@ -289,7 +289,7 @@ const ImageInfoHelper = () => {
 
           {exifData && !Number.isNaN( exifData?.iso ) && (
             <button
-              className="rounded p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
+              className="rounded-xl p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
               onClick={( e ) => {
                 e.preventDefault();
                 setShowExif( !showExif );
@@ -303,7 +303,7 @@ const ImageInfoHelper = () => {
 
             <div className="flex gap-1 h-auto">
               <button
-                className="flex-grow rounded p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
+                className="flex-grow rounded-xl p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
                 onClick={async() => await submitDownloadForm( "_self" )}
               >
                 {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
@@ -312,7 +312,7 @@ const ImageInfoHelper = () => {
               </button>
 
               <button
-                className="rounded p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
+                className="rounded-xl p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
                 onClick={async() => await submitDownloadForm( "_blank" )}
               >
                 {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :

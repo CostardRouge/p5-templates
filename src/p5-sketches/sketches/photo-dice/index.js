@@ -19,7 +19,6 @@ sketch.setup(
     );
 
     background( ...options.colors.background );
-    options.noSmooth && noSmooth();
   },
   {
     size: {
@@ -109,7 +108,7 @@ sketch.draw( (
       ), // back
       canvases.dice.createVector( HALF_PI ), // bot
     ],
-    currentTime: animation.progression * images.length,
+    currentTime: animation.progression * 6,
     lerpFn: p5.Vector.lerp,
     easingFn: easing.easeInOutExpo,
     // easingFn: easing.easeInOutElastic,

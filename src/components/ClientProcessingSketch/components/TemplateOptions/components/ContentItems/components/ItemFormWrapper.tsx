@@ -22,7 +22,7 @@ export default function ItemFormWrapper( {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
-      className="p-1 border border-theme rounded bg-background "
+      className="p-1 border border-theme rounded-lg bg-background "
       header={expanded => (
         <div
           ref={dragBinder?.setHandleRef}
@@ -40,7 +40,7 @@ export default function ItemFormWrapper( {
             )
           }
         >
-          <h4 className="text-foreground bg-background px-1 rounded">{itemType}</h4>
+          <h4 className="text-foreground bg-background px-1 rounded-xl">{itemType}</h4>
 
           <div className="ml-auto flex items-center gap-1">
             <button

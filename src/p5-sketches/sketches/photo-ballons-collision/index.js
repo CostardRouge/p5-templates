@@ -205,8 +205,6 @@ sketch.setup(
         // random(100)
       );
     }
-
-    options.noSmooth && noSmooth();
   },
   {
     size: {

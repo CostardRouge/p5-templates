@@ -26,7 +26,7 @@ export default function ControlledColorInput( {
       } ) => (
         <input
           type="color"
-          className="w-full rounded border border-theme p-0.5 cursor-pointer"
+          className="w-full rounded-xl border border-theme p-0.5 cursor-pointer"
           // When the input changes, it gives a hex string.
           // We convert it to RGBA before calling field.onChange to update the form state.
           onChange={( e ) => field.onChange( hexToRgba( e.target.value ) )}

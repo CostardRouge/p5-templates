@@ -72,7 +72,7 @@ interface SelectConfig extends BaseConfig {
 }
 
 // For static, non-conditional nested objects
-interface NestedObjectConfig extends BaseConfig {
+export interface NestedObjectConfig extends BaseConfig {
   component: "nested-object";
   // The 'fields' property contains a map where keys are field names
   // and values are any valid FieldConfig. This enables recursion.

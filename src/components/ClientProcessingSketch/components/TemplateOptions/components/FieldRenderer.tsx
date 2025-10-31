@@ -46,7 +46,7 @@ export default function FieldRenderer( {
     const commonInputProps = {
       id: registeredName,
       placeholder: config.placeholder,
-      className: "w-full p-1 border border-theme rounded bg-background text-foreground",
+      className: "w-full p-1 border border-theme rounded-lg bg-background text-foreground",
       "aria-invalid": !!error
     };
 
@@ -151,7 +151,7 @@ export default function FieldRenderer( {
               {config.label}
             </label>
 
-            <div className="p-1 border border-theme rounded space-y-1">
+            <div className="p-1 border border-theme rounded-xl space-y-1">
               {Object.entries( config.fields ).map( ( [
                 subFieldName,
                 subConfig

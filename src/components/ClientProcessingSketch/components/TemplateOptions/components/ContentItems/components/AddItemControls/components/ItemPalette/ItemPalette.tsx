@@ -28,7 +28,7 @@ export default function ItemPalette( {
       className={clsx(
         "grid grid-cols-6",
         gap,
-        "rounded border border-theme bg-background p-0.5",
+        "rounded-lg border border-theme bg-background p-0.5 overflow-hidden",
         className
       )}
       role="list"
@@ -44,7 +44,7 @@ export default function ItemPalette( {
             onClick={() => onAdd( kind )}
             className={clsx(
               "flex items-center justify-center",
-              "rounded border border-transparent p-1 transition",
+              "p-1 transition",
               "active:scale-[0.98]"
             )}
             role="listitem"

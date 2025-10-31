@@ -47,7 +47,7 @@ function ProgressBar( {
 } ) {
   return (
     <div className="w-full">
-      <div className="w-full bg-hover rounded border border-theme h-2 overflow-hidden">
+      <div className="w-full bg-hover rounded-xl border border-theme h-2 overflow-hidden">
         <div
           className="h-2 bg-blue-500"
           style={{
@@ -80,7 +80,7 @@ function ActionsMenu( {
         <MenuIcon className="h-4"/>
       </MenuButton>
 
-      <MenuItems className="absolute right-0 w-48 border border-theme rounded z-50 bg-background overflow-hidden">
+      <MenuItems className="absolute right-0 w-48 border border-theme rounded-xl z-50 bg-background overflow-hidden">
         {job.status === "completed" &&
           <MenuItem>
             {( {
@@ -502,13 +502,13 @@ export default function RecordingsPage() {
             placeholder="Search…"
             value={search}
             onChange={( e ) => setSearch( e.target.value )}
-            className="px-2 rounded w-full sm:w-40 bg-background h-8 border border-theme border-b-2"
+            className="px-2 rounded-xl w-full sm:w-40 bg-background h-8 border border-theme border-b-2"
           />
 
           <select
             value={statusFilter}
             onChange={( e ) => setStatusFilter( e.target.value )}
-            className="px-2 rounded bg-background h-8 border border-theme border-b-2"
+            className="px-2 rounded-xl bg-background h-8 border border-theme border-b-2"
           >
             <option value="all">All Status</option>
             <option value="draft">Drafted</option>
@@ -522,14 +522,14 @@ export default function RecordingsPage() {
           <div className="">
             <button
               onClick={() => setView( "cards" )}
-              className={`rounded-l border border-theme border-b-2 border-r-0 px-2 py-[6.5] h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+              className={`rounded-l-xl border border-theme border-b-2 border-r-0 px-2 py-[6.5] h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
             >
               <Grid className="w-4 h-4" />
             </button>
 
             <button
               onClick={() => setView( "table" )}
-              className={`rounded-r border border-theme border-b-2 border-l-0 px-2 py-[6.5] ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
+              className={`rounded-r-xl border border-theme border-b-2 border-l-0 px-2 py-[6.5] ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
             >
               <List className="w-4 h-4" />
             </button>
@@ -541,7 +541,7 @@ export default function RecordingsPage() {
 
       {/* Table View */}
       {view === "table" && (
-        <div className="overflow-x-auto rounded border border-theme border-b-2 bg-background">
+        <div className="overflow-x-auto rounded-xl border border-theme border-b-2 bg-background">
           <table className="min-w-full">
             <thead className="bg-hover/30">
               <tr className="text-left text-xs text-foreground uppercase border-b ">
@@ -623,10 +623,10 @@ export default function RecordingsPage() {
       {view === "cards" && (
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
           {filtered.map( ( job ) => (
-            <div key={job.id} className="bg-background border border-theme rounded transition relative">
+            <div key={job.id} className="bg-background border border-theme rounded-xl transition relative overflow-hidden">
               <StatusBadge
                 status={job.status}
-                className="absolute top-2 left-2 rounded"
+                className="absolute top-2 left-2 rounded-xl"
               />
 
               <img
@@ -636,7 +636,7 @@ export default function RecordingsPage() {
                 ) )}
                 alt={job.template}
                 loading="lazy"
-                className="object-contain rounded-t"
+                className="object-contain"
               />
 
               <div className="p-2 space-y-1">

@@ -133,7 +133,7 @@ export default function SlideCarousel( {
         <button
           type="button"
           onClick={onAdd}
-          className="flex items-center justify-center h-8 text-foreground border border-dashed border-theme   rounded"
+          className="flex items-center justify-center h-8 text-foreground border border-dashed border-theme rounded-lg"
           aria-label="Add new slide"
           title="Add new slide"
         >
@@ -171,7 +171,7 @@ function SlideThumbnail( {
       }
       onClick={onClick}
       className={clsx(
-        "relative bg-background border border-theme flex items-center p-1 h-8 rounded",
+        "relative bg-background border border-theme flex items-center p-1 h-8 rounded-lg",
         "cursor-grab",
         {
           "border-active": isActive,
@@ -208,7 +208,6 @@ function SlideThumbnail( {
           <Trash2 className="h-3.5 w-3.5 text-red-500"/>
         </button>
       </div>
-
     </div>
   );
 }

@@ -35,6 +35,13 @@ export function setSketchOptions(
   ) );
 }
 
+export function declareSketchDefaults( defaults ) {
+  setSketchOptions( {
+    ...current,
+    sketch: defaults,
+  } );
+}
+
 export function subscribeSketchOptions( cb ) {
   const handler = e => {
     cb(

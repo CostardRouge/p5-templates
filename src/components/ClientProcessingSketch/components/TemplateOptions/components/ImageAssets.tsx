@@ -229,7 +229,7 @@ function SortableThumb( {
           e.stopPropagation();
           onDelete();
         }}
-        className="absolute left-1 top-1 h-5 w-5 text-red-500 cursor-pointer bg-background opacity-50 active:opacity-100 hover:opacity-100 rounded p-0.5"
+        className="absolute left-1 top-1 h-5 w-5 text-red-500 cursor-pointer bg-background opacity-50 active:opacity-100 hover:opacity-100 rounded-xl p-0.5"
       />
 
       <img src={url} className="object-cover h-full w-full" alt={id} />

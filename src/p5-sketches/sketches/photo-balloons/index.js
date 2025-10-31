@@ -99,7 +99,6 @@ sketch.setup(
     background( ...options.colors.background );
 
     resetBallPositions();
-    options.noSmooth && noSmooth();
   },
   {
     size: {

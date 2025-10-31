@@ -241,10 +241,10 @@ function SortableThumb( {
     <div
       ref={setNodeRef}
       style={style}
-      className="relative h-20 bg-background rounded border border-theme overflow-hidden"
+      className="relative h-20 bg-background rounded-xl border border-theme overflow-hidden"
     >
       <GripVertical
-        className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded border border-theme"
+        className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded-xl border border-theme"
         {...attributes}
         {...listeners}
         aria-label="Drag handle"
@@ -258,7 +258,7 @@ function SortableThumb( {
           e.stopPropagation();
           onDelete();
         }}
-        className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded border border-theme p-0.5"
+        className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-xl border border-theme p-0.5"
         aria-label="Remove image"
       >
         <Trash2 className="h-3.5 w-3.5" />

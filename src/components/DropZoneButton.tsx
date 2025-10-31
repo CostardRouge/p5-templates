@@ -25,7 +25,7 @@ export default forwardRef( function DropZoneButton(
   return (
     <div
       ref={ref}
-      className={`border border-dashed border-theme rounded p-3 flex flex-col items-center justify-center gap-2 text-foreground bg-background ${ className }`}
+      className={`border border-dashed border-theme rounded-xl p-3 flex flex-col items-center justify-center gap-2 text-foreground bg-background ${ className }`}
       onClick={( e ) => {
         e.stopPropagation();
         inputRef.current?.click();

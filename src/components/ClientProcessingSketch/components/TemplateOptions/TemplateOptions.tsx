@@ -1,5 +1,3 @@
-"use client";
-
 import React, {
   Fragment, useEffect, useRef, useState,
 } from "react";
@@ -19,7 +17,7 @@ import ContentItems from "./components/ContentItems/ContentItems";
 import CaptureActions from "./components/CaptureActions";
 import SlideCarousel from "./components/SlideCarousel";
 import SlideEditor from "./components/SlideEditor";
-
+import DeclaredSketchDefaults from "./components/DeclaredSketchDefaults/DeclaredSketchDefaults";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
 
 import {
@@ -42,21 +40,25 @@ import RootSettings
 import clsx from "clsx";
 import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOptions/components/UndoRedo";
 
-export default function TemplateOptions( {
-  name,
-  setOptions,
-  persistedJob,
-  onActiveSlideChange,
-  options: initialOptions,
-}: {
+type TemplateOptionsProps = {
   name: string;
   options: SketchOption;
+  sketchDefaults: Record<string, any> | null;
   persistedJob?: JobModel;
-  setOptions: (
+  onOptionsChange: (
     nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
   ) => void;
   onActiveSlideChange?: ( index: number ) => void;
-} ) {
+}
+
+export default function TemplateOptions( {
+  name,
+  persistedJob,
+  sketchDefaults,
+  onOptionsChange,
+  onActiveSlideChange,
+  options: initialOptions,
+}: TemplateOptionsProps ) {
   const [
     activeSlideIndex,
     setActiveSlideIndex
@@ -101,14 +103,14 @@ export default function TemplateOptions( {
   useEffect(
     () => {
       const subscription = watch( ( value ) => {
-        setOptions( value as SketchOption );
+        onOptionsChange( value as SketchOption );
       } );
 
       return () => subscription.unsubscribe();
     },
     [
       watch,
-      setOptions
+      onOptionsChange
     ]
   );
 
@@ -282,36 +284,41 @@ export default function TemplateOptions( {
   const editorKey = slideIds[ activeSlideIndex ] ?? `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.name ?? "unnamed-slide" }`;
 
   return (
-    <CollapsibleItem
-      data-no-zoom=""
-      className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 bg-background p-2 border border-theme z-50 rounded"
-      style={{
-        maxHeight: "calc(80svh)"
-      }}
-      header={( expanded ) => (
-        <button
-          className={
-            clsx(
-              "text-foreground text-sm text-right",
-              {
-                " w-full": !expanded,
-                "absolute top-2 right-2": expanded
-              }
-            )
-          }
-          aria-label={expanded ? "Collapse controls" : "Expand controls"}
-        >
-          <span>{expanded ? "hide" : "show"} options</span>
-          <ArrowDownFromLine
-            className="inline text-foreground h-3"
-            style={{
-              rotate: expanded ? "0deg" : "180deg"
-            }}
-          />
-        </button>
-      )}
-    >
-      <FormProvider {...methods}>
+    <FormProvider {...methods}>
+      <DeclaredSketchDefaults
+        defaults={sketchDefaults}
+      />
+
+      <CollapsibleItem
+        data-no-zoom=""
+        className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 bg-background p-2 border border-theme z-50 rounded-xl"
+        style={{
+          maxHeight: "calc(80svh)",
+          maxWidth: "calc(50% - 0.75rem)"
+        }}
+        header={( expanded ) => (
+          <button
+            className={
+              clsx(
+                "text-foreground text-sm text-right",
+                {
+                  "w-full": !expanded,
+                  "absolute top-2 right-2": expanded
+                }
+              )
+            }
+            aria-label={expanded ? "Collapse controls" : "Expand controls"}
+          >
+            <span>render options</span>
+            <ArrowDownFromLine
+              className="inline text-foreground h-3 w-3 ml-1"
+              style={{
+                rotate: expanded ? "0deg" : "180deg"
+              }}
+            />
+          </button>
+        )}
+      >
         <FormUndoRedo
           maxHistory={50}
           hotkeys
@@ -331,7 +338,7 @@ export default function TemplateOptions( {
 
         <CollapsibleItem
           initialExpandedValue={false}
-          className="p-1 border border-theme rounded text-foreground bg-background overflow-y-auto"
+          className="p-1 border border-theme rounded-xl text-foreground bg-background overflow-y-auto"
           headerContainerClassName="leading-none"
           header={( expanded ) => (
             <button
@@ -366,7 +373,7 @@ export default function TemplateOptions( {
           <Fragment>
             <CollapsibleItem
               initialExpandedValue={!!slidesLength}
-              className="p-1 border border-theme rounded bg-background overflow-y-auto"
+              className="p-1 border border-theme rounded-xl bg-background overflow-y-auto"
               headerContainerClassName="leading-none"
               header={( expanded ) => (
                 <button
@@ -414,7 +421,8 @@ export default function TemplateOptions( {
           options={options as SketchOption}
           persistedJob={persistedJob}
         />
-      </FormProvider>
-    </CollapsibleItem>
+      </CollapsibleItem>
+    </FormProvider>
+
   );
 }

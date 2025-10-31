@@ -22,12 +22,7 @@ import {
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
 
-const TemplateOptions = dynamic(
-  () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ),
-  {
-    ssr: true,
-  }
-);
+const TemplateOptions = dynamic( () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
 
 export type ClientProcessingSketchProps = {
   name: string;
@@ -54,6 +49,11 @@ export default function ClientProcessingSketch( {
     sketchLoaded,
     setSketchLoaded
   ] = useState<boolean>( false );
+
+  const [
+    sketchDefaults,
+    setSketchDefaults
+  ] = useState<Record<string, any> | null>( null );
 
   useEffect(
     () => {
@@ -100,41 +100,36 @@ export default function ClientProcessingSketch( {
         <ScalableViewport
           showZoomControls={!capturing && sketchLoaded}
         >
-          <div>
-            {sketchLoaded && (
-              <div className="flex justify-between font-mono">
-                <p>{name} {activeSlideIndex !== null && `· slide ${ activeSlideIndex + 1 }`}</p>
-                <p id="p5-sketch-fps-counter"></p>
-              </div>
-            )}
+          {sketchLoaded && (
+            <div className="flex justify-between font-mono">
+              <p>{name} {activeSlideIndex !== null && `· slide ${ activeSlideIndex + 1 }`}</p>
+              <p id="p5-sketch-fps-counter"></p>
+            </div>
+          )}
 
-            <P5Sketch
-              name={name}
-              onLoaded={() => {
-                setSketchLoaded( true );
-              }}
-            />
-          </div>
+          <P5Sketch
+            name={name}
+            onImportSketchDefaults={ setSketchDefaults }
+            onLoaded={() => {
+              setSketchLoaded( true );
+            }}
+          />
         </ScalableViewport>
       </div>
 
-      {!capturing && (
+      {!capturing && sketchLoaded && (
         <>
-          {sketchLoaded && (
-            <>
-              <P5Controls name={name} />
-              <TemplateOptions
-                name={name}
-                persistedJob={persistedJob}
-                options={currentOptions}
-                setOptions={( updated ) =>
-                  setCurrentOptions( updated as SketchOption )
-                }
-                onActiveSlideChange={handleActiveSlideChange}
-
-              />
-            </>
-          )}
+          <P5Controls name={name} />
+          <TemplateOptions
+            name={name}
+            persistedJob={persistedJob}
+            options={currentOptions}
+            onOptionsChange={( updatedOptions ) =>
+              setCurrentOptions( updatedOptions as SketchOption )
+            }
+            onActiveSlideChange={handleActiveSlideChange}
+            sketchDefaults={sketchDefaults}
+          />
         </>
       )}
     </>

@@ -219,8 +219,6 @@ sketch.setup(
     // 		288
     // 	)
     // })
-
-    options.noSmooth && noSmooth();
   },
   {
     size: {
