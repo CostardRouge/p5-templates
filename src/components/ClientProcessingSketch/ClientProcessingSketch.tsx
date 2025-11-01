@@ -50,11 +50,6 @@ export default function ClientProcessingSketch( {
     setSketchLoaded
   ] = useState<boolean>( false );
 
-  const [
-    sketchDefaults,
-    setSketchDefaults
-  ] = useState<Record<string, any> | null>( null );
-
   useEffect(
     () => {
       setSketchOptions(
@@ -109,7 +104,6 @@ export default function ClientProcessingSketch( {
 
           <P5Sketch
             name={name}
-            onImportSketchDefaults={ setSketchDefaults }
             onLoaded={() => {
               setSketchLoaded( true );
             }}
@@ -128,7 +122,6 @@ export default function ClientProcessingSketch( {
               setCurrentOptions( updatedOptions as SketchOption )
             }
             onActiveSlideChange={handleActiveSlideChange}
-            sketchDefaults={sketchDefaults}
           />
         </>
       )}

@@ -50,27 +50,6 @@ export function deepMerge(
   return mergedObject;
 }
 
-export function merge(
-  a, b
-) {
-  for ( const k in b ) {
-    const v = b[ k ];
-
-    if ( v && typeof v === "object" && !Array.isArray( v ) ) {
-      a[ k ] = merge(
-        {
-          ...( a[ k ] || {
-          } )
-        },
-        v
-      );
-    } else {
-      a[ k ] = v;
-    }
-  }
-  return a;
-}
-
 export function structuredClone( value ) {
   if ( typeof globalThis.structuredClone === "function" ) {
     return globalThis.structuredClone( value );

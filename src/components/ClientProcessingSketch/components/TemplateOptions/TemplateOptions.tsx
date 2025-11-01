@@ -17,7 +17,8 @@ import ContentItems from "./components/ContentItems/ContentItems";
 import CaptureActions from "./components/CaptureActions";
 import SlideCarousel from "./components/SlideCarousel";
 import SlideEditor from "./components/SlideEditor";
-import DeclaredSketchDefaults from "./components/DeclaredSketchDefaults/DeclaredSketchDefaults";
+import SketchSettings
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/SketchSettings";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
 
 import {
@@ -43,7 +44,6 @@ import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOpt
 type TemplateOptionsProps = {
   name: string;
   options: SketchOption;
-  sketchDefaults: Record<string, any> | null;
   persistedJob?: JobModel;
   onOptionsChange: (
     nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
@@ -54,7 +54,6 @@ type TemplateOptionsProps = {
 export default function TemplateOptions( {
   name,
   persistedJob,
-  sketchDefaults,
   onOptionsChange,
   onActiveSlideChange,
   options: initialOptions,
@@ -285,9 +284,7 @@ export default function TemplateOptions( {
 
   return (
     <FormProvider {...methods}>
-      <DeclaredSketchDefaults
-        defaults={sketchDefaults}
-      />
+      <SketchSettings sketchName={name} />
 
       <CollapsibleItem
         data-no-zoom=""

@@ -75,7 +75,8 @@ export default function ControlledImageInput( {
     }
   }
 
-  function clear() {
+  function clear( event: React.MouseEvent<HTMLButtonElement, MouseEvent> ) {
+    event.stopPropagation();
     const prev = field.value;
 
     field.onChange( undefined );
@@ -106,21 +107,21 @@ export default function ControlledImageInput( {
       <DropZoneButton onFiles={onFiles} ref={inputRef} />
 
       {field.value && (
-        <div className="absolute" onClick={handleImageClick}>
+        <div className="absolute overflow-hidden" onClick={handleImageClick}>
           {resolved ? (
             <img
               src={resolved}
               alt={field.value}
-              className="aspect-square w-20 object-cover rounded-xl border border-theme"
+              className="aspect-square w-20 object-cover rounded-lg border border-theme"
             />
           ) : (
-            <div className="aspect-square w-20 h-20 rounded-xl border border-theme bg-gray-100 animate-pulse"/>
+            <div className="aspect-square w-20 h-20 rounded-xl border border-theme bg-gray-100 animate-pulse" />
           )}
 
           <button
             type="button"
             onClick={clear}
-            className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-xl border border-theme p-0.5"
+            className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-md border border-theme p-0.5"
           >
             <Trash2 className="w-3.5 h-3.5"/>
           </button>

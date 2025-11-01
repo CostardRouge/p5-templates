@@ -31,12 +31,14 @@ export default function createSketchFormConfigFromDefaults(
   hints: FieldHints = {
   }
 ): Record<string, FieldConfig> {
-  if ( !isPlainObject( defaults ) ) return {
-  };
+  if ( !isPlainObject( defaults ) )
+    return {
+    };
+
   return objectToConfig(
- defaults as Record<string, any>,
- "",
- hints
+     defaults as Record<string, any>,
+     "",
+     hints
   );
 }
 

@@ -3,72 +3,15 @@ import options from "../../utils/options.js";
 import exif from "../../utils/exif.js";
 import string from "../../utils/string.js";
 import sketch from "../../utils/sketch.js";
-import events from "../../utils/events.js";
 import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
 
-export const defaults = {
-  margin: 0.1,
-  center: true,
-  fontSize: 20
-};
-
-const sketchState = {
-  image: null,
-  input: null,
-  exifData: null,
-};
-
-async function handleImage( file ) {
-  if ( file.type === "image" ) {
-    sketchState.image = createImg(
-      file.data,
-      ""
-    );
-    sketchState.image.hide();
-    sketchState.exifData = await exif.load( file.data );
-
-    // console.log( sketchState.exifData );
-
-    document
-      .querySelector( "canvas#defaultCanvas0" )
-      .classList.add( "loaded" );
-  } else {
-    sketchState.image = null;
-    sketchState.exifData = null;
-  }
-}
-
-events.register(
-  "engine-canvas-double-clicked",
-  () => {
-    sketchState.input.elt.click();
-  }
-);
-
-events.register(
-  "engine-canvas-handle-drop",
-  event => {
-    console.log(
-      "Engine canvas handle drop",
-      event
-    );
-  }
-);
-
-events.register(
-  "engine-canvas-handle-file",
-  async file => {
-    console.log( "Engine file handle file" );
-    await handleImage( file );
-  }
-);
+import * as common from "../../utils/common.js";
 
 sketch.setup(
   () => {
-    sketchState.input = createFileInput( handleImage );
-    sketchState.input.hide();
+
   },
   {
     size: {
@@ -87,9 +30,11 @@ sketch.draw( (
 ) => {
   background( 255 );
 
-  if ( !sketchState.image ) {
+  const photo = common.getAsset( options.sketch?.photo );
+
+  if ( !photo ) {
     string.write(
-      "double click to add an image",
+      "add a photo :)",
       0,
       0,
       {
@@ -108,9 +53,9 @@ sketch.draw( (
 
   // console.log( options.sketch );
 
-  if ( sketchState.image ) {
+  if ( photo ) {
     imageUtils.marginImage( {
-      img: sketchState.image,
+      img: photo.img,
       margin: width * options.sketch?.margin,
       center: options.sketch?.center,
       position: center,
@@ -124,7 +69,9 @@ sketch.draw( (
         const textStyle = {
           size: fontSize,
           stroke: color( 255 ),
-          fill: color( 0 ),
+          fill: color( ...( options.sketch?.fontColor ?? [
+            0
+          ] ) ),
           // fill: color(0, 0, 0, 255),
           // stroke: color(...options.colors.background),
           font: string.fonts.martian,
@@ -133,7 +80,7 @@ sketch.draw( (
 
         // TOP LEFT
         string.write(
-          exif.formatPhotoDate( sketchState.exifData?.date ),
+          exif.formatPhotoDate( photo.exif?.date ),
           x,
           yTopPosition,
           textStyle
@@ -142,8 +89,8 @@ sketch.draw( (
         // TOP RIGHT
         string.write(
           exif.formatGPSCoordinates(
-            sketchState.exifData?.gps?.latitude,
-            sketchState.exifData?.gps?.longitude
+            photo.exif?.gps?.latitude,
+            photo.exif?.gps?.longitude
           ),
           x,
           yTopPosition,
@@ -157,11 +104,11 @@ sketch.draw( (
         );
 
         const bottomRightTexts = [
-          exif.formatCameraModel( sketchState.exifData?.camera ),
-          exif.formatLensModel( sketchState.exifData?.lens ),
-          exif.formatFocalLength( sketchState.exifData?.focalLength ),
-          exif.formatAperture( sketchState.exifData?.aperture ),
-          exif.formatShutterSpeed( sketchState.exifData?.shutterSpeed ),
+          exif.formatCameraModel( photo.exif?.camera ),
+          exif.formatLensModel( photo.exif?.lens ),
+          exif.formatFocalLength( photo.exif?.focalLength ),
+          exif.formatAperture( photo.exif?.aperture ),
+          exif.formatShutterSpeed( photo.exif?.shutterSpeed ),
         ].filter( Boolean );
 
         const bottomRightText = mappers.circularIndex(

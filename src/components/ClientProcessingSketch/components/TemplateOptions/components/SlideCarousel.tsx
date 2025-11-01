@@ -174,7 +174,7 @@ function SlideThumbnail( {
         "relative bg-background border border-theme flex items-center p-1 h-8 rounded-lg",
         "cursor-grab",
         {
-          "border-active": isActive,
+          "border-active bg-hover": isActive,
           "opacity-70 cursor-grabbing z-20": dragBinder?.isDragging
         }
       )}
