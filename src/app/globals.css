@@ -52,11 +52,6 @@
         @apply bg-background text-foreground antialiased;
     }
 
-    /* Optional: shared form control baseline */
-    input, select, textarea, button {
-        @apply bg-background text-foreground;
-    }
-
     /* Optional: make plain `border` pick your token */
     *, ::before, ::after {
         border-color: hsl(var(--border));

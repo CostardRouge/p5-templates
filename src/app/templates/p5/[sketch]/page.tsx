@@ -119,6 +119,7 @@ async function ProcessingSketch( {
     <SketchContextProvider
       name={ sketchName }
       options={ sketchOptions }
+      sketchFormValues={ formValues }
       sketchFormConfiguration={ formConfiguration }
       persistedJob={ processingSketchProps.persistedJob }
       activeSlideIndex={ sketchOptions.slides?.length > 0 ? 0 : undefined}

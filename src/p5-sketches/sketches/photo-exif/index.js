@@ -51,15 +51,13 @@ sketch.draw( (
     );
   }
 
-  // console.log( options.sketch );
-
   if ( photo ) {
     imageUtils.marginImage( {
       img: photo.img,
       margin: width * options.sketch?.margin,
-      center: options.sketch?.center,
+      center: true,
       position: center,
-      // scale: .5,
+      scale: options.sketch?.scale ?? .5,
       callback: (
         x, y, w, h
       ) => {
@@ -68,19 +66,18 @@ sketch.draw( (
         const yBottomPosition = y + h + fontSize / 2;
         const textStyle = {
           size: fontSize,
-          stroke: color( 255 ),
+          stroke: color( ...( options.sketch?.fontStroke ?? [
+            255
+          ] ) ),
           fill: color( ...( options.sketch?.fontColor ?? [
             0
           ] ) ),
-          // fill: color(0, 0, 0, 255),
-          // stroke: color(...options.colors.background),
           font: string.fonts.martian,
-          // blendMode: EXCLUSION
         };
 
         // TOP LEFT
         string.write(
-          exif.formatPhotoDate( photo.exif?.date ),
+          options.sketch.topLeft !== "" ? options.sketch.topLeft : exif.formatPhotoDate( photo.exif?.date ),
           x,
           yTopPosition,
           textStyle
@@ -88,7 +85,7 @@ sketch.draw( (
 
         // TOP RIGHT
         string.write(
-          exif.formatGPSCoordinates(
+          options.sketch.topRight !== "" ? options.sketch.topRight : exif.formatGPSCoordinates(
             photo.exif?.gps?.latitude,
             photo.exif?.gps?.longitude
           ),
@@ -99,6 +96,21 @@ sketch.draw( (
             textWidth: w,
             textAlign: [
               RIGHT
+            ]
+          }
+        );
+
+        // BOTTOM LEFT
+        string.write(
+          options.sketch.bottomLeft,
+          x,
+          yBottomPosition,
+          {
+            ...textStyle,
+            textWidth: w,
+            textAlign: [
+              LEFT,
+              TOP
             ]
           }
         );
@@ -118,7 +130,7 @@ sketch.draw( (
 
         // BOTTOM RIGHT
         string.write(
-          bottomRightText,
+          options.sketch.bottomRight !== "" ? options.sketch.bottomRight : bottomRightText,
           x,
           yBottomPosition,
           {

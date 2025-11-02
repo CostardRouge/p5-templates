@@ -13,5 +13,6 @@ export type SketchContextType = {
   options: SketchOption;
   persistedJob?: JobModel;
   activeSlideIndex?: number,
+  sketchFormValues?: Record<string, any>
   sketchFormConfiguration?: Record<string, FieldConfig>
 }

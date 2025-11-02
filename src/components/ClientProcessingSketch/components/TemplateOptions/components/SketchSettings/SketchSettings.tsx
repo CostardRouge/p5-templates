@@ -21,61 +21,8 @@ export default function SketchSettings( {
     sketchFormConfiguration
   } = useSketch();
 
-  // useEffect(
-  //   () => {
-  //     if ( !defaults ) {
-  //       return;
-  //     }
-  //
-  //     const existingValue = get(
-  //       getValues(),
-  //       basePath
-  //     );
-  //
-  //     console.log(
-  //       "existingValue",
-  //       existingValue
-  //     );
-  //     console.log(
-  //       "defaults",
-  //       defaults
-  //     );
-  //
-  //     setValue(
-  //       basePath,
-  //       defaults,
-  //       {
-  //         shouldValidate: false,
-  //         shouldDirty: false
-  //       }
-  //     );
-  //   },
-  //   [
-  //     defaults,
-  //     basePath,
-  //     setValue,
-  //     getValues
-  //   ]
-  // );
-
-  // const sketchSettingsFormConfig = useMemo(
-  //   () => ( defaults ? createSketchFormConfigFromDefaults(
-  //     defaults,
-  //     hints ?? {
-  //     }
-  //   ) : null ),
-  //   [
-  //     defaults,
-  //     hints
-  //   ]
-  // );
-  //
-  // if ( !defaults ) {
-  //   return null;
-  // }
-
   if ( !sketchFormConfiguration ) {
-    return <div className="text-xs text-muted-foreground">Loading options…</div>;
+    return null;
   }
 
   return (

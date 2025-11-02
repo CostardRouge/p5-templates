@@ -210,6 +210,7 @@ events.register(
       );
 
       refreshAssets();
+      console.log( "pass here" );
     } );
 
     setSketchOptions(

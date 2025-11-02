@@ -48,7 +48,7 @@ type TemplateOptionsProps = {
   onOptionsChange: (
     nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
   ) => void;
-  onActiveSlideChange?: ( index: number ) => void;
+  onActiveSlideChange?: ( index: number | undefined ) => void;
 }
 
 export default function TemplateOptions( {
@@ -130,13 +130,16 @@ export default function TemplateOptions( {
   const didInitSelection = useRef( false );
 
   const handleSlideSelect = useCallback(
-    ( index: number ) => {
-      setActiveSlideIndex( index );
-      onActiveSlideChange?.( index );
+    ( index: number | undefined ) => {
+      if ( index !== undefined ) {
+        setActiveSlideIndex( index );
 
-      if ( typeof window.setSlide === "function" ) {
-        window.setSlide( index );
+        if ( typeof window.setSlide === "function" ) {
+          window.setSlide( index );
+        }
       }
+
+      onActiveSlideChange?.( index );
     },
     [
       onActiveSlideChange
@@ -172,6 +175,7 @@ export default function TemplateOptions( {
 
         if ( length === 0 ) {
           next = 0;
+          handleSlideSelect( undefined );
         }
         else if ( current < 0 ) {
           next = 0;

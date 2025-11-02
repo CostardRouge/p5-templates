@@ -73,10 +73,10 @@ export default function ClientProcessingSketch( {
   const [
     activeSlideIndex,
     setActiveSlideIndex
-  ] = useState<number | null>( null );
+  ] = useState<number | undefined>( undefined );
 
   const handleActiveSlideChange = useCallback(
-    ( index: number ) => {
+    ( index: number | undefined ) => {
       setActiveSlideIndex( index );
     },
     [
@@ -96,8 +96,8 @@ export default function ClientProcessingSketch( {
           showZoomControls={!capturing && sketchLoaded}
         >
           {sketchLoaded && (
-            <div className="flex justify-between font-mono">
-              <p>{name} {activeSlideIndex !== null && `· slide ${ activeSlideIndex + 1 }`}</p>
+            <div className="flex justify-between font-mono text-[calc((5vh+5vw)/2)] md:text-[calc((2vh+2vw)/2)] ">
+              <p>{name} {activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}</p>
               <p id="p5-sketch-fps-counter"></p>
             </div>
           )}

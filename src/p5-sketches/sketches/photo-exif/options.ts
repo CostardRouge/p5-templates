@@ -1,13 +1,18 @@
 export const formValues = {
   margin: 0.1,
-  center: true,
   fontSize: 20,
+  fontStroke: 255,
   fontColor: [
     0,
     0,
     0
   ],
-  photo: null
+  photo: null,
+  topLeft: "",
+  topRight: "",
+  bottomLeft: "",
+  bottomRight: "",
+  scale: 0.5,
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -18,22 +23,45 @@ export const formConfiguration: Record<string, any> = {
     max: 0.45,
     step: 0.005
   },
-  center: {
-    label: "Image center",
-    component: "checkbox",
-  },
   fontSize: {
     component: "slider",
     label: "Font size",
     min: 1,
     max: 244
   },
+  scale: {
+    component: "slider",
+    label: "Scale",
+    min: 0,
+    step: 0.01,
+    max: 4
+  },
   fontColor: {
     component: "color",
     label: "Font color"
   },
+  fontStroke: {
+    component: "color",
+    label: "Font stroke"
+  },
   photo: {
     component: "image",
     label: "Image"
-  }
+  },
+  topLeft: {
+    component: "text",
+    label: "Top left",
+  },
+  topRight: {
+    component: "text",
+    label: "Top right",
+  },
+  bottomLeft: {
+    component: "text",
+    label: "Bottom left",
+  },
+  bottomRight: {
+    component: "text",
+    label: "Bottom right",
+  },
 };

@@ -44,10 +44,6 @@ export default function ControlledImageInput( {
     jobId
   } = useTemplateAssets();
 
-  console.log( {
-    jobId
-  } );
-
   const [
     preview,
     setPreview
