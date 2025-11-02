@@ -4,7 +4,6 @@ import type {
   Metadata
 } from "next";
 import listDirectory from "@/utils/listDirectory";
-import getSketchOptions from "@/utils/getSketchOptions";
 import ClientProcessingSketch, {
   ClientProcessingSketchProps
 } from "@/components/ClientProcessingSketch/ClientProcessingSketch";
@@ -16,13 +15,18 @@ import {
 import {
   notFound
 } from "next/navigation";
+
 import {
-  SketchOption
+  OptionsSchema
 } from "@/types/sketch.types";
+import SketchContextProvider from "@/components/ClientProcessingSketch/components/SketchProvider/SketchContextProvider";
+import {
+  getJSONSketchOptions, getSketchMeta
+} from "@/utils/getSketchOptions";
 
 export const metadata: Metadata = {
-  title: "Social-templates-renderer | p5js",
-  description: "Generate social-templates with 5js",
+  title: "My p5*js templates | @costardrouge.jpg",
+  description: "Generate p5js sketch videos",
 };
 
 const acceptedImageTypes = [
@@ -46,18 +50,37 @@ async function ProcessingSketch( {
     capturing?: string
   }>
 } ) {
-  const testImageFileNames = await listDirectory( "public/assets/images/test" );
-
   const sketchName = ( await params ).sketch;
   const jobIdSearchParams = ( await searchParams ).id;
-  const sketchOptions = getSketchOptions( sketchName ) ?? ( {
-  } as SketchOption );
+  const sketchOptions = OptionsSchema.parse( {
+  } );
+  const {
+    formValues, formConfiguration
+  } = await getSketchMeta( sketchName );
+
+  const jsonOptions = getJSONSketchOptions( sketchName );
+
+  if ( jsonOptions ) {
+    Object.assign(
+      sketchOptions,
+      jsonOptions
+    );
+  }
+
+  if ( formValues ) {
+    Object.assign(
+      sketchOptions,
+      {
+        sketch: formValues
+      }
+    );
+  }
 
   const processingSketchProps: ClientProcessingSketchProps = {
     capturing: ( await searchParams ).capturing === "",
     persistedJob: undefined,
     options: sketchOptions,
-    name: sketchName,
+    name: sketchName
   };
 
   if ( jobIdSearchParams ) {
@@ -85,17 +108,24 @@ async function ProcessingSketch( {
       ]
     };
 
+    const testImageFileNames = await listDirectory( "public/assets/images/test" );
+
     sketchOptions.assets.images = testImageFileNames
       .filter( testImageFileName => acceptedImageTypes.includes( testImageFileName.split( "." )[ 1 ] ) )
       .map( testImageFileName => `/assets/images/test/${ testImageFileName }` );
   }
 
-  sketchOptions.name = sketchName;
-
   return (
-    <ClientProcessingSketch
-      {...processingSketchProps}
-    />
+    <SketchContextProvider
+      name={ sketchName }
+      options={ sketchOptions }
+      sketchFormConfiguration={ formConfiguration }
+      persistedJob={ processingSketchProps.persistedJob }
+      activeSlideIndex={ sketchOptions.slides?.length > 0 ? 0 : undefined}
+    >
+      <ClientProcessingSketch {...processingSketchProps} />
+    </SketchContextProvider>
+
   );
 }
 

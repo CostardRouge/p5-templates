@@ -27,7 +27,7 @@ const TemplateOptions = dynamic( () => import( "@/components/ClientProcessingSke
 export type ClientProcessingSketchProps = {
   name: string;
   capturing: boolean,
-  options: SketchOption;
+  options?: SketchOption | Partial<SketchOption> | null;
   persistedJob?: JobModel
 }
 
@@ -111,13 +111,14 @@ export default function ClientProcessingSketch( {
         </ScalableViewport>
       </div>
 
-      {!capturing && sketchLoaded && (
+      {sketchLoaded && (
         <>
-          <P5Controls name={name} />
+          {!capturing && <P5Controls name={name} /> }
+
           <TemplateOptions
             name={name}
-            persistedJob={persistedJob}
             options={currentOptions}
+            persistedJob={persistedJob}
             onOptionsChange={( updatedOptions ) =>
               setCurrentOptions( updatedOptions as SketchOption )
             }

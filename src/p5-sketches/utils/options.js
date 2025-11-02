@@ -219,16 +219,4 @@ events.register(
   }
 );
 
-export function declareSketchOptions( defaults ) {
-  const optionsWithDefaults = {
-    ...sketchOptions,
-    sketch: defaults,
-  };
-
-  setSketchOptions(
-    optionsWithDefaults,
-    sketch.sketchOptions?.engine
-  );
-}
-
 export default sketchOptions;

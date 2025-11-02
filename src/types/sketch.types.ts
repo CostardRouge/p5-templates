@@ -460,6 +460,7 @@ export const OptionsSchema = z.object( {
     .array( SlideSchema )
     .default( [
     ] ),
+  sketch: z.any()
 } );
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;

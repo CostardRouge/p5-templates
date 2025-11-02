@@ -1,5 +1,5 @@
 import {
-  SketchOption, OptionsSchema
+  OptionsSchema, SketchOption
 } from "@/types/sketch.types";
 
 const OptionsSchemaWithCatch = OptionsSchema.catch( OptionsSchema.parse( {

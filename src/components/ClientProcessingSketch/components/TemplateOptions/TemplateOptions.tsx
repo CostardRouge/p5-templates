@@ -1,5 +1,5 @@
 import React, {
-  Fragment, useEffect, useRef, useState,
+  Fragment, useCallback, useEffect, useRef, useState,
 } from "react";
 import {
   ArrowDownFromLine, ListCollapse
@@ -17,8 +17,6 @@ import ContentItems from "./components/ContentItems/ContentItems";
 import CaptureActions from "./components/CaptureActions";
 import SlideCarousel from "./components/SlideCarousel";
 import SlideEditor from "./components/SlideEditor";
-import SketchSettings
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/SketchSettings";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
 
 import {
@@ -40,6 +38,8 @@ import RootSettings
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/RootSettings";
 import clsx from "clsx";
 import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOptions/components/UndoRedo";
+import SketchSettings
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/SketchSettings";
 
 type TemplateOptionsProps = {
   name: string;
@@ -129,6 +129,20 @@ export default function TemplateOptions( {
 
   const didInitSelection = useRef( false );
 
+  const handleSlideSelect = useCallback(
+    ( index: number ) => {
+      setActiveSlideIndex( index );
+      onActiveSlideChange?.( index );
+
+      if ( typeof window.setSlide === "function" ) {
+        window.setSlide( index );
+      }
+    },
+    [
+      onActiveSlideChange
+    ]
+  );
+
   useEffect(
     () => {
       const length = slideFields.length;
@@ -144,6 +158,7 @@ export default function TemplateOptions( {
       }
     },
     [
+      handleSlideSelect,
       slideFields.length
     ]
   );
@@ -177,18 +192,10 @@ export default function TemplateOptions( {
       } );
     },
     [
+      handleSlideSelect,
       slideFields.length
     ]
   );
-
-  const handleSlideSelect = ( index: number ) => {
-    setActiveSlideIndex( index );
-    onActiveSlideChange?.( index );
-
-    if ( typeof window.setSlide === "function" ) {
-      window.setSlide( index );
-    }
-  };
 
   const handleAddSlide = () => {
     const nextIndex = slideFields.length;
@@ -284,8 +291,6 @@ export default function TemplateOptions( {
 
   return (
     <FormProvider {...methods}>
-      <SketchSettings sketchName={name} />
-
       <CollapsibleItem
         data-no-zoom=""
         className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 bg-background p-2 border border-theme z-50 rounded-xl"
@@ -322,7 +327,8 @@ export default function TemplateOptions( {
           autoCapture="debounced"
           debounceMs={400}
           watchPaths={[
-            "slides",
+            "content",
+            "sketch",
             "slides",
             "animation"
           ]}
@@ -419,7 +425,10 @@ export default function TemplateOptions( {
           persistedJob={persistedJob}
         />
       </CollapsibleItem>
-    </FormProvider>
 
+      <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
+        <SketchSettings />
+      </TemplateAssetsProvider>
+    </FormProvider>
   );
 }

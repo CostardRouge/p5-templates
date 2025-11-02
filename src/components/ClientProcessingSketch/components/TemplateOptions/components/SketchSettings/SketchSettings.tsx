@@ -1,115 +1,80 @@
 "use client";
 
-import React, {
-  useEffect, useMemo, useState
-} from "react";
+import React from "react";
 import {
   ArrowDownFromLine
 } from "lucide-react";
-import {
-  get, useFormContext
-} from "react-hook-form";
 
 import CollapsibleItem from "@/components/CollapsibleItem";
-import createSketchFormConfigFromDefaults
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/utils/createSketchFormConfigFromDefaults";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 type SketchSettingsProps = {
-  sketchName: string;
   basePath?: string;
 };
 
 export default function SketchSettings( {
-  sketchName, basePath = "sketch"
+  basePath = "sketch"
 }: SketchSettingsProps ) {
   const {
-    setValue, getValues
-  } = useFormContext();
-  const [
-    defaults,
-    setDefaults
-  ] = useState<Record<string, any> | null>( null );
-  const [
-    hints,
-    setHints
-  ] = useState<Record<string, any> | null>( null );
+    sketchFormConfiguration
+  } = useSketch();
 
-  useEffect(
-    () => {
-      ( async() => {
-        try {
-          const sketchMeta = await import( `@/p5-sketches/sketches/${ sketchName }/meta.ts` );
+  // useEffect(
+  //   () => {
+  //     if ( !defaults ) {
+  //       return;
+  //     }
+  //
+  //     const existingValue = get(
+  //       getValues(),
+  //       basePath
+  //     );
+  //
+  //     console.log(
+  //       "existingValue",
+  //       existingValue
+  //     );
+  //     console.log(
+  //       "defaults",
+  //       defaults
+  //     );
+  //
+  //     setValue(
+  //       basePath,
+  //       defaults,
+  //       {
+  //         shouldValidate: false,
+  //         shouldDirty: false
+  //       }
+  //     );
+  //   },
+  //   [
+  //     defaults,
+  //     basePath,
+  //     setValue,
+  //     getValues
+  //   ]
+  // );
 
-          if ( sketchMeta?.defaults ) {
-            setDefaults( sketchMeta.defaults );
-            setHints( sketchMeta.hints );
-          }
-        } catch {
+  // const sketchSettingsFormConfig = useMemo(
+  //   () => ( defaults ? createSketchFormConfigFromDefaults(
+  //     defaults,
+  //     hints ?? {
+  //     }
+  //   ) : null ),
+  //   [
+  //     defaults,
+  //     hints
+  //   ]
+  // );
+  //
+  // if ( !defaults ) {
+  //   return null;
+  // }
 
-        }
-      } )();
-    },
-    [
-      sketchName
-    ]
-  );
-
-  useEffect(
-    () => {
-      if ( !defaults ) {
-        return;
-      }
-
-      const existingValue = get(
-        getValues(),
-        basePath
-      );
-
-      console.log(
-        "existingValue",
-        existingValue
-      );
-      console.log(
-        "defaults",
-        defaults
-      );
-
-      // setValue(
-      //   basePath,
-      //   defaults,
-      //   {
-      //     shouldValidate: false,
-      //     shouldDirty: false
-      //   }
-      // );
-    },
-    [
-      defaults,
-      basePath,
-      setValue,
-      getValues
-    ]
-  );
-
-  const sketchSettingsFormConfig = useMemo(
-    () => ( defaults ? createSketchFormConfigFromDefaults(
-      defaults,
-      hints ?? {
-      }
-    ) : null ),
-    [
-      defaults,
-      hints
-    ]
-  );
-
-  if ( !defaults ) {
-    return null;
-  }
-
-  if ( !sketchSettingsFormConfig ) {
+  if ( !sketchFormConfiguration ) {
     return <div className="text-xs text-muted-foreground">Loading options…</div>;
   }
 
@@ -136,7 +101,7 @@ export default function SketchSettings( {
         </button>
       )}
     >
-      <GenericObjectForm basePath={basePath} config={sketchSettingsFormConfig} />
+      <GenericObjectForm basePath={basePath} config={sketchFormConfiguration} />
     </CollapsibleItem>
   );
 }

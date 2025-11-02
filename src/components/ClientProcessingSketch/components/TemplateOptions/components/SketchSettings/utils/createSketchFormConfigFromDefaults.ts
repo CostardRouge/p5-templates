@@ -63,14 +63,14 @@ function objectToConfig(
       key
     );
 
-    // If the override forces a specific component, respect it (and shallow-merge props).
     if ( override?.component ) {
       config[ key ] = mergeConfig(
-        // build a reasonable default for the current value type
         defaultConfigForValue(
           key,
-          value
-        ),
+          value,
+          hints,
+          path
+        ), // ← Add hints and path
         override
       );
       continue;
@@ -84,7 +84,7 @@ function objectToConfig(
           value,
           path,
           hints
-        ),
+        ), // ← hints already passed, good
       };
 
       config[ key ] = mergeConfig(
@@ -95,8 +95,6 @@ function objectToConfig(
     }
 
     if ( Array.isArray( value ) ) {
-      // Fallback: show as a fixed "nested-object" with numeric keys.
-      // (You can replace this with a dedicated list component later.)
       const arrayFields: Record<string, FieldConfig> = {
       };
 
@@ -107,7 +105,7 @@ function objectToConfig(
           String( i ),
           v,
           hints,
-          path
+          `${ path }[${ i }]` // Better path for array items
         );
       } );
 
@@ -124,11 +122,13 @@ function objectToConfig(
       continue;
     }
 
-    // Primitives
+    // Primitives - ADD hints and path here
     config[ key ] = mergeConfig(
       defaultConfigForValue(
         key,
-        value
+        value,
+        hints,
+        path
       ),
       override
     );

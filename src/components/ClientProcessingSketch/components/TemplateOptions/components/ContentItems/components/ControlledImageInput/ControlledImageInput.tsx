@@ -44,6 +44,10 @@ export default function ControlledImageInput( {
     jobId
   } = useTemplateAssets();
 
+  console.log( {
+    jobId
+  } );
+
   const [
     preview,
     setPreview
@@ -79,7 +83,9 @@ export default function ControlledImageInput( {
     event.stopPropagation();
     const prev = field.value;
 
-    field.onChange( undefined );
+    console.log( "clear" );
+
+    field.onChange( "" );
     setPreview( null );
 
     if ( prev ) {
@@ -112,7 +118,7 @@ export default function ControlledImageInput( {
             <img
               src={resolved}
               alt={field.value}
-              className="aspect-square w-20 object-cover rounded-lg border border-theme"
+              className="aspect-square w-20 h-20 object-cover rounded-lg border border-theme"
             />
           ) : (
             <div className="aspect-square w-20 h-20 rounded-xl border border-theme bg-gray-100 animate-pulse" />

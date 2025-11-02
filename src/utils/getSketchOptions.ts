@@ -7,8 +7,11 @@ import {
 import {
   SketchOption
 } from "@/types/sketch.types";
+import {
+  FieldConfig
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
-function getSketchOptions( sketchName: string ): SketchOption | null {
+export function getJSONSketchOptions( sketchName: string ): Partial<SketchOption> {
   try {
     return JSON.parse( fs.readFileSync(
       path.join(
@@ -20,8 +23,21 @@ function getSketchOptions( sketchName: string ): SketchOption | null {
     ) );
   }
   catch ( error ) {
-    return null;
+    return {
+    };
   }
 }
 
-export default getSketchOptions;
+export type SketchMeta = {
+  formValues?: Record<string, any>,
+  formConfiguration?: Record<string, FieldConfig>
+}
+
+export async function getSketchMeta( sketchName: string ): Promise<SketchMeta> {
+  try {
+    return await import( `@/p5-sketches/sketches/${ sketchName }/options.ts` );
+  } catch ( error ) {
+    return {
+    };
+  }
+}

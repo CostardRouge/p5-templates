@@ -1,4 +1,4 @@
-export const defaults = {
+export const formValues = {
   margin: 0.1,
   center: true,
   fontSize: 20,
@@ -10,7 +10,7 @@ export const defaults = {
   photo: null
 };
 
-export const hints: Record<string, any> = {
+export const formConfiguration: Record<string, any> = {
   margin: {
     label: "Image margin",
     component: "slider",
@@ -18,15 +18,15 @@ export const hints: Record<string, any> = {
     max: 0.45,
     step: 0.005
   },
-  "position.x": {
-    step: 0.01,
-    min: 0,
-    max: 1
+  center: {
+    label: "Image center",
+    component: "checkbox",
   },
-  "position.y": {
-    step: 0.01,
-    min: 0,
-    max: 1
+  fontSize: {
+    component: "slider",
+    label: "Font size",
+    min: 1,
+    max: 244
   },
   fontColor: {
     component: "color",

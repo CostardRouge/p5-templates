@@ -181,7 +181,7 @@ export default function CaptureActions( {
           {
             persistedJob?.status === "draft" && (
               <button
-                className="rounded-lg p-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs"
+                className="rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs"
                 onClick={() => handleSubmit(
                   "draft",
                   persistedJob.id
@@ -246,14 +246,14 @@ export default function CaptureActions( {
       {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
         <div className="flex flex-col justify-start bg-background text-center items-center">
           <div
-            className={`w-full h-6 rounded-lg relative ring-1 ${
+            className={`w-full h-6 rounded-lg relative ring-1 overflow-hidden ${
               recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
             }`}
           >
             <div className="absolute inset-0 rounded-xl bg-background" />
 
             <div
-              className="absolute inset-y-0 left-0 bg-hover rounded-xl"
+              className="absolute inset-y-0 left-0 bg-hover"
               style={{
                 width: `${ recordingProgress.percentage }%`
               }}
