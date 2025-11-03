@@ -71,6 +71,11 @@ canvas#defaultCanvas0:hover {
     @apply border-foreground/10;
 }
 
+.glass {
+    @apply bg-background/80;
+    backdrop-filter: blur(0.9rem);
+}
+
 @keyframes pulse-border {
     0%, 100% {
         border-width: 3px;

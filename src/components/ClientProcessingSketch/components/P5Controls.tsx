@@ -26,7 +26,7 @@ export function P5Controls( {
         }}
         title="Toogle drawing loop"
 
-        className="rounded-xl bg-background border border-theme border-b-2 px-2 py-1 text-sm text-foreground "
+        className="rounded-xl glass border border-theme border-b-2 px-2 py-1 text-sm text-foreground "
       >
         {looping ? <Pause className="h-4"/> : <Play className="h-4"/>}
       </button>
@@ -36,7 +36,7 @@ export function P5Controls( {
         onClick={() => {
           window?.saveCanvas( name );
         }}
-        className="rounded-xl bg-background border border-theme border-b-2 px-2 py-1 text-sm text-foreground "
+        className="rounded-xl glass border border-theme border-b-2 px-2 py-1 text-sm text-foreground "
       >
         <Camera className="h-4"/>
       </button>
@@ -49,7 +49,7 @@ export function P5Controls( {
         }}
         title="Recording in .webm"
 
-        className="rounded-xl bg-background border border-theme border-b-2 px-2 py-1 text-sm text-foreground "
+        className="rounded-xl glass border border-theme border-b-2 px-2 py-1 text-sm text-foreground "
       >
         <CassetteTapeIcon className="h-4"/>
       </button>

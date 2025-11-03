@@ -38,12 +38,9 @@ export default function RootLayout( {
           disableTransitionOnChange
         >
           <div
-            className="flex flex-col"
-            style={ {
-              height: "100svh",
-            } }
+            className="flex flex-col h-[100svh]"
           >
-            <main className="flex-1 overflow-auto relative w-full bg-background-100">
+            <main className="flex-1 overflow-auto relative w-full">
               {children}
             </main>
 
