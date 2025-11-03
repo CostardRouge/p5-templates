@@ -1,7 +1,11 @@
 export const formValues = {
   margin: 0.1,
   fontSize: 20,
-  fontStroke: 255,
+  fontStroke: [
+    255,
+    255,
+    255
+  ],
   fontColor: [
     0,
     0,

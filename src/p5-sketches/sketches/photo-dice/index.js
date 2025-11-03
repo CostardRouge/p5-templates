@@ -13,16 +13,16 @@ const canvases = {
 };
 
 const getBg = () =>
-  ( options.sketch?.background ??
-    options.colors?.background ??
+  ( options.sketch?.backgroundColor ??
     [
       0
     ] );
 
 const getTextColor = () =>
-  ( options.sketch?.text ??
-    options.colors?.text ??
+  ( options.sketch?.textColor ??
     [
+      255,
+      255,
       255
     ] );
 

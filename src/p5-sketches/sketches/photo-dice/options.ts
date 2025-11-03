@@ -9,12 +9,12 @@ export const formValues = {
   ], // supplied by "images-stack"
 
   // Colors
-  background: [
+  backgroundColor: [
     246,
     235,
     225
   ],
-  text: [
+  textColor: [
     0
   ],
 
@@ -44,17 +44,21 @@ export const formConfiguration: Record<string, any> = {
     component: "checkbox",
     label: "Use test images when empty"
   },
+  repeatImages: {
+    component: "checkbox",
+    label: "Repeat images if fewer than 6"
+  },
   images: {
     component: "images-stack",
     label: "Images (up to 6 faces)"
   },
 
   // Colors
-  background: {
+  backgroundColor: {
     component: "color",
     label: "Background color"
   },
-  text: {
+  textColor: {
     component: "color",
     label: "Text color"
   },
@@ -156,9 +160,5 @@ export const formConfiguration: Record<string, any> = {
         value: "easeInOutQuad"
       }
     ]
-  },
-  repeatImages: {
-    component: "checkbox",
-    label: "Repeat images if fewer than 6"
   }
 };
