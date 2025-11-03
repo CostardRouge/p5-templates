@@ -115,6 +115,8 @@ async function ProcessingSketch( {
       .map( testImageFileName => `/assets/images/test/${ testImageFileName }` );
   }
 
+  sketchOptions.name = sketchName;
+
   return (
     <SketchContextProvider
       name={ sketchName }

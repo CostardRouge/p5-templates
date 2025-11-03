@@ -57,7 +57,7 @@ export default function TemplatesList( {
           <div
             className={
               view === "grid"
-                ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2"
+                ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2"
                 : "space-y-2"
             }
           >
@@ -77,7 +77,7 @@ export default function TemplatesList( {
                     }}>
                       { hasSketchForm && (
                         <FileSliders
-                          className="w-6 absolute top-1 left-1 text-foreground bg-background rounded-md py-1 px-1 z-10 border border-theme"
+                          className="w-6 absolute top-1 left-1 text-foreground bg-background rounded-lg py-1 px-1 z-10 border border-theme"
                         />
                       )}
                       <img
@@ -87,8 +87,8 @@ export default function TemplatesList( {
                         className="absolute top-0 left-0 w-full h-full object-contain"
                       />
                     </div>
-                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-hover/80 to-transparent">
-                      <span className="text-foreground text-sm text-center inline-block w-full">
+                    <div className="absolute bottom-0 left-0 w-full p-1">
+                      <span className="text-foreground bg-background border border-theme rounded-lg text-sm px-2 text-center inline-block w-full">
                         {name}
                       </span>
                     </div>
@@ -112,8 +112,17 @@ export default function TemplatesList( {
                       className="w-full h-full object-contain rounded-lg border border-theme"
                     />
                   </div>
-                  <span className="flex-1 ml-3 truncate">{name}</span>
-                  <span className="text-foreground text-xs">➔</span>
+
+                  <span className="ml-3 truncate flex-grow">
+                    <span>{name}</span>
+                    <span className="text-foreground text-xs float-right">
+                      { hasSketchForm && (
+                        <FileSliders
+                          className="w-6 text-foreground inline mr-1 bg-background rounded-lg py-1 px-1 border border-theme"
+                        />
+                      )}
+                    </span>
+                  </span>
                 </HardLink>
               );
             } )}
