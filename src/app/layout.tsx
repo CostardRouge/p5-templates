@@ -40,7 +40,7 @@ export default function RootLayout( {
           <div
             className="flex flex-col h-[100svh]"
           >
-            <main className="flex-1 overflow-auto relative w-full">
+            <main className="flex-1 overflow-auto relative">
               {children}
             </main>
 
