@@ -14,9 +14,10 @@ type SketchMeta = {
   name: string;
   mtime: string;
   ctime: string;
+  hasSketchForm: boolean;
 };
 
-async function getSketchList(): Promise<string[]> {
+async function getSketchList() {
   if ( fs.existsSync( META_PATH ) ) {
     try {
       const meta: SketchMeta[] = JSON.parse( fs.readFileSync(
@@ -24,7 +25,12 @@ async function getSketchList(): Promise<string[]> {
         "utf-8"
       ) );
 
-      return meta.map( ( m ) => m.name );
+      return meta.map( ( {
+        name, hasSketchForm
+      } ) => ( {
+        name,
+        hasSketchForm
+      } ) );
     } catch ( err ) {
       console.error(
         "Failed to read sketch-meta.json:",
@@ -32,35 +38,6 @@ async function getSketchList(): Promise<string[]> {
       );
     }
   }
-
-  // Emergency fallback (should rarely happen)
-  console.warn( "⚠️  sketch-meta.json not found, falling back to filesystem scan" );
-  const entries = await fs.promises.readdir( SKETCHES_DIRECTORY );
-
-  return entries
-    .filter( ( name ) => {
-      if ( name.startsWith( "_" ) ) return false;
-      const fullPath = path.join(
-        SKETCHES_DIRECTORY,
-        name
-      );
-
-      return fs.statSync( fullPath ).isDirectory();
-    } )
-    .sort( (
-      a, b
-    ) => {
-      const aStat = fs.statSync( path.join(
-        SKETCHES_DIRECTORY,
-        a
-      ) );
-      const bStat = fs.statSync( path.join(
-        SKETCHES_DIRECTORY,
-        b
-      ) );
-
-      return aStat.mtime.getTime() - bStat.mtime.getTime();
-    } );
 }
 
 export default getSketchList;

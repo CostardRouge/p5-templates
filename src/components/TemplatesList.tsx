@@ -4,7 +4,7 @@ import React, {
   useState
 } from "react";
 import {
-  Grid, List
+  FileSliders, Grid, List
 } from "lucide-react";
 import {
   TemplateCategory
@@ -62,7 +62,7 @@ export default function TemplatesList( {
             }
           >
             {items.map( ( {
-              href, name, thumbnail
+              href, name, thumbnail, hasSketchForm
             } ) => {
               if ( view === "grid" ) {
                 return (
@@ -75,6 +75,11 @@ export default function TemplatesList( {
                     <div className="w-full" style={{
                       paddingTop: "125%"
                     }}>
+                      { hasSketchForm && (
+                        <FileSliders
+                          className="w-6 absolute top-1 left-1 text-foreground bg-background rounded-md py-1 px-1 z-10 border border-theme"
+                        />
+                      )}
                       <img
                         alt={name}
                         loading="lazy"

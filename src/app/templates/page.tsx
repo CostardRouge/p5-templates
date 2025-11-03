@@ -6,14 +6,19 @@ export type TemplateCategory = Array<{
   href: string,
   name: string,
   thumbnail: string,
+  hasSketchForm: boolean
 }>
 
 export default async function TemplatesPage() {
-  const p5sketches = await getSketchList();
+  const p5sketches = await getSketchList() ?? [
+  ];
   const p5sketchNames = p5sketches
-    .map( ( name ) => ( {
+    .map( ( {
+      name, hasSketchForm
+    } ) => ( {
       thumbnail: getP5SketchThumbnailURL( name ),
       href: `templates/p5/${ name }`,
+      hasSketchForm,
       name
     } ) )
     .reverse();
@@ -24,6 +29,7 @@ export default async function TemplatesPage() {
       {
         thumbnail: "assets/images/templates/html/exif-detail/thumbnail.jpg",
         href: "templates/html/exif-detail",
+        hasSketchForm: false,
         name: "exif-detail"
       }
     ],

@@ -43,10 +43,17 @@ function generateMetadata() {
         SKETCHES_DIR,
         name
       );
+
+      const optionsTypescriptFilePath = path.join(
+        fullPath,
+        "options.ts"
+      );
+
       const stats = fs.statSync( fullPath );
 
       return {
         name,
+        hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
         mtime: stats.mtime.toISOString(),
         ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
       };
