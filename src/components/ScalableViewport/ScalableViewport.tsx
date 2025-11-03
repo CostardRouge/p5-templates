@@ -107,7 +107,7 @@ export default function ScalableViewport( {
         const deltaScale = event.deltaY < 0 ? 0.1 : -0.1;
 
         applyScale( clamp(
-          scale + deltaScale,
+          scale + deltaScale / 6,
           MIN_SCALE,
           MAX_SCALE
         ) );
