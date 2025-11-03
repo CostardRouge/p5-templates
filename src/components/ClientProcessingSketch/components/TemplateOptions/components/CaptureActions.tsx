@@ -262,14 +262,14 @@ export default function CaptureActions( {
             {/* blend-inverting label */}
             <span
               className="absolute inset-0 p-1 text-xs select-none
-               mix-blend-difference text-hover truncate"
+               mix-blend-difference text-foreground truncate"
             >
               {recordingProgress.status}
               {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}
             </span>
           </div>
 
-          <span className="text-xs text-foreground">
+          <span className="text-xs text-foreground mt-1">
             {Math.round( recordingProgress?.percentage )}%&nbsp;
           </span>
         </div>

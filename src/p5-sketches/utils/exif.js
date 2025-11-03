@@ -1,12 +1,12 @@
 import scripts from "./scripts.js";
 
-const friendlyCameraModelNames = {
+export const friendlyCameraModelNames = {
   FC8482: "MINI 4 PRO",
   "ILCE-7CM2": "ALPHA 7CII",
   "ILCE-6700": "ALPHA A6700",
 };
 
-const friendlyLensModelNames = {
+export const friendlyLensModelNames = {
   "Sony FE 16mm F1.8 G (SEL16F18G)": "Sony FE 16mm F1.8 G",
   "Sony FE PZ 16-35mm F4 G (SELP1635G)": "Sony FE PZ 16-35mm F4 G",
   "Sony FE 24mm F2.8 G (SEL24F28G)": "Sony FE 24mm F2.8 G",
@@ -14,7 +14,7 @@ const friendlyLensModelNames = {
   "Sony FE 24-105mm F4 G OSS (SEL24105G)": "Sony FE 24-105mm F4 G OSS",
   "Sony FE 70-200mm F2.8 GM OSS II (SEL70200GM2)": "Sony FE 70-200mm F2.8 GM II",
 
-  "iPhone 15 Pro Max back triple camera 6.765mm f/1.78": "iPhone 15 Pro Max",
+  "iPhone 15 Pro Max back triple camera 6.765mm f/1.78": "iPhone 15 Pro Max 24mm equiv.",
 };
 
 const exif = {

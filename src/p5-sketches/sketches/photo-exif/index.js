@@ -57,7 +57,6 @@ sketch.draw( (
       margin: width * options.sketch?.margin,
       center: true,
       position: center,
-      scale: options.sketch?.scale ?? .5,
       callback: (
         x, y, w, h
       ) => {

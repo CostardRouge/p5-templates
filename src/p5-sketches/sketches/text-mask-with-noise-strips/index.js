@@ -11,13 +11,25 @@ import animation from "../../utils/animation.js";
 const canvases = {
 };
 
+const getBg = () =>
+  ( options.sketch?.background ??
+    [
+      0
+    ] );
+
+const getFont = () => {
+  const key = options.sketch?.font ?? options.font ?? "martian";
+
+  return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
+};
+
 sketch.setup(
   () => {
     canvases.mask = createGraphics(
       sketch?.engine?.canvas?.width,
       sketch?.engine?.canvas?.height,
     );
-    background( ...options.colors.background );
+    background( ...getBg() );
   },
   {
     size: {
@@ -32,31 +44,58 @@ sketch.setup(
 );
 
 sketch.draw( ( time ) => {
-  background( ...options.colors.background );
-  const textFontSize = ( height + width ) / 2.3;
+  background( ...getBg() );
+
+  // Controls
+  const rows = options.sketch?.rows ?? 25;
+  const columns = options.sketch?.columns ?? 300;
+  const centered = options.sketch?.centered ?? true;
+
+  const noiseOctaves = options.sketch?.noiseOctaves ?? 3;
+  const noiseFalloff = options.sketch?.noiseFalloff ?? 0.45;
+
+  const timeSpeed = options.sketch?.timeSpeed ?? 1;
+  const t = time * timeSpeed;
+
+  const xOffScale = options.sketch?.xOffScale ?? 1.5;
+  const yOffScale = options.sketch?.yOffScale ?? 1.5;
+
+  const angleRange = options.sketch?.angleRange ?? 1; // multiplies TAU
+  const scale = options.sketch?.scale ?? 1;
+
+  const weightMin = options.sketch?.weightMin ?? 150;
+  const weightMax = options.sketch?.weightMax ?? 200;
+
+  const paletteName = options.sketch?.palette ?? "rainbow";
+  const paletteFn = typeof colors?.[ paletteName ] === "function" ? colors[ paletteName ] : colors.rainbow;
+  const hueOffset = options.sketch?.hueOffset ?? 0;
+
+  const opacityFrom = options.sketch?.opacityFactorFrom ?? 2;
+  const opacityTo = options.sketch?.opacityFactorTo ?? 1;
+
+  const title = options.sketch?.title ?? options.title ?? "";
+  const textSizeDivisor = options.sketch?.textSizeDivisor ?? 2.3;
+
+  const textFontSize = ( height + width ) / textSizeDivisor;
 
   canvases.mask.clear();
 
   string.write(
-    options.title,
+    title,
     0,
     height / 2 - textFontSize / 8,
     {
       size: textFontSize,
-      // fill: color(...options.colors.background),
-      font: string.fonts?.[ options.font ],
+      font: getFont(),
       textAlign: [
         CENTER,
         CENTER
       ],
-      // blendMode: EXCLUSION,
       popPush: false,
       graphics: canvases.mask
     }
   );
 
-  const rows = 25;
-  const columns = 300;
   const gridOptions = {
     topLeft: createVector(
       0,
@@ -76,13 +115,12 @@ sketch.draw( ( time ) => {
     ),
     rows,
     columns,
-    centered: true
+    centered
   };
-  const scale = 1;// ((width / columns) + (height / rows) ) / 2;
 
   noiseDetail(
-    3,
-    0.45,
+    noiseOctaves,
+    noiseFalloff
   );
 
   grid.draw(
@@ -92,19 +130,21 @@ sketch.draw( ( time ) => {
         x, y
       }
     ) => {
-      const xOff = x / width * 1.5;
-      const yOff = y / height * 1.5;
+      const xOff = ( x / width ) * xOffScale;
+      const yOff = ( y / height ) * yOffScale;
+
       const angle = mappers.fn(
         noise(
-          xOff + time / 2,
-          yOff / 2 - time / 4
+          xOff + t / 2,
+          yOff / 2 - t / 4
         ),
         0,
         1,
-        -TAU,
-        TAU,
+        -TAU * angleRange,
+        TAU * angleRange,
         easing.easeInOutSine
       );
+
       const weight = mappers.fn(
         noise(
           xOff,
@@ -113,23 +153,14 @@ sketch.draw( ( time ) => {
         ),
         0,
         1,
-        150,
-        200,
+        weightMin,
+        weightMax,
         easing.easeInOutBack
       );
 
-      const colorFunction = mappers.circularIndex(
-        0,
-        [
-          colors.rainbow,
-          colors.purple
-        ]
-      );
-
-      stroke( colorFunction( {
-        hueOffset: 0,
-        hueIndex: angle, // map(angle, -10, 10, -PI, TAU),
-        // opacityFactor: map(sin(animation.progression+xOff+yOff), -1, 1, 2.5, 1),
+      stroke( paletteFn( {
+        hueOffset,
+        hueIndex: angle,
         opacityFactor: mappers.fn(
           noise(
             xOff,
@@ -138,8 +169,8 @@ sketch.draw( ( time ) => {
           ),
           0,
           1,
-          2,
-          1,
+          opacityFrom,
+          opacityTo,
           easing.easeInOutSine
         )
       } ) );
@@ -149,15 +180,11 @@ sketch.draw( ( time ) => {
         cellVector.x,
         cellVector.y
       );
-
       strokeWeight( weight );
-      // strokeWeight(50);
       point(
         scale * sin( angle ),
         angle * scale * cos( angle + y )
       );
-      // point( 0, 0);
-
       pop();
     }
   );
@@ -166,8 +193,7 @@ sketch.draw( ( time ) => {
 
   maskedImage.mask( canvases.mask );
 
-  background( ...options.colors.background );
-
+  background( ...getBg() );
   image(
     maskedImage,
     0,

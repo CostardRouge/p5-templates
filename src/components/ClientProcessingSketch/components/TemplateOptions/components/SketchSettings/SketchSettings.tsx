@@ -9,6 +9,8 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import createSketchFormConfigFromDefaults
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/utils/createSketchFormConfigFromDefaults";
 
 type SketchSettingsProps = {
   basePath?: string;
@@ -18,12 +20,14 @@ export default function SketchSettings( {
   basePath = "sketch"
 }: SketchSettingsProps ) {
   const {
-    sketchFormConfiguration
+    sketchFormConfiguration, sketchFormValues
   } = useSketch();
 
   if ( !sketchFormConfiguration ) {
     return null;
   }
+
+  const config = createSketchFormConfigFromDefaults( sketchFormValues );
 
   return (
     <CollapsibleItem

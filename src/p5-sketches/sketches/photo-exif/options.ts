@@ -11,8 +11,7 @@ export const formValues = {
   topLeft: "",
   topRight: "",
   bottomLeft: "",
-  bottomRight: "",
-  scale: 0.5,
+  bottomRight: ""
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -28,13 +27,6 @@ export const formConfiguration: Record<string, any> = {
     label: "Font size",
     min: 1,
     max: 244
-  },
-  scale: {
-    component: "slider",
-    label: "Scale",
-    min: 0,
-    step: 0.01,
-    max: 4
   },
   fontColor: {
     component: "color",
