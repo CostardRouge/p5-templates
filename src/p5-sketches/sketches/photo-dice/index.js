@@ -7,6 +7,8 @@ import sketch from "../../utils/sketch.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
 
+import * as common from "../../utils/common";
+
 const canvases = {
 };
 
@@ -109,15 +111,12 @@ sketch.draw( (
 ) => {
   background( ...getBg() );
 
-  console.log(
-    "img",
-    options.sketch?.images
-  );
-
   // Images from UI or cache
   const imagesFromOptions = options.sketch?.images && options.sketch.images.length ? options.sketch.images : null;
   const imagesFromCache = cache.get( "images" );
-  const images = imagesFromOptions || imagesFromCache || [
+  const images = imagesFromOptions?.map( imagePath => (
+    common.getAsset( imagePath )
+  ) ) || imagesFromCache || [
   ];
 
   const repeatImages = options.sketch?.repeatImages ?? true;

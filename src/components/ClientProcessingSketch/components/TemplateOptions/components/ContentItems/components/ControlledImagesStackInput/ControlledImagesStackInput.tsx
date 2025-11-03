@@ -192,7 +192,7 @@ export default function ControlledImagesStackInput( {
   );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
         <div className="grid grid-cols-3 gap-1">
           <SortableContext items={rows.map( ( r ) => r.id )} strategy={rectSortingStrategy}>

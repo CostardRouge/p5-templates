@@ -9,8 +9,6 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
-import createSketchFormConfigFromDefaults
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/utils/createSketchFormConfigFromDefaults";
 
 type SketchSettingsProps = {
   basePath?: string;
@@ -20,19 +18,17 @@ export default function SketchSettings( {
   basePath = "sketch"
 }: SketchSettingsProps ) {
   const {
-    sketchFormConfiguration, sketchFormValues
+    sketchFormConfiguration
   } = useSketch();
 
   if ( !sketchFormConfiguration ) {
     return null;
   }
 
-  const config = createSketchFormConfigFromDefaults( sketchFormValues );
-
   return (
     <CollapsibleItem
       data-no-zoom=""
-      className="w-64 flex flex-col gap-1 absolute left-2 bottom-2 bg-background px-2 py-2 border border-theme z-50 rounded-xl"
+      className="w-64 flex flex-col gap-1 absolute left-2 bottom-2 bg-background px-2 py-2 border border-theme z-50 rounded-xl overflow-y-auto"
       style={{
         maxHeight: "calc(80svh)",
         maxWidth: "calc(50% - 0.75rem)"
