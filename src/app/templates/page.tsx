@@ -12,6 +12,7 @@ export type TemplateCategory = Array<{
 export default async function TemplatesPage() {
   const p5sketches = await getSketchList() ?? [
   ];
+
   const p5sketchNames = p5sketches
     .map( ( {
       name, hasSketchForm
@@ -36,7 +37,7 @@ export default async function TemplatesPage() {
   };
 
   return (
-    <div className="p-2 bg-hover/50">
+    <div className="p-2">
       <TemplatesList templates={templates} />
     </div>
   );

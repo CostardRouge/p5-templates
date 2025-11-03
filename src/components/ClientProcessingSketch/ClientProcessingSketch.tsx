@@ -91,7 +91,7 @@ export default function ClientProcessingSketch( {
         </div>
       )}
 
-      <div className="h-full w-full bg-hover/50">
+      <div className="h-full w-full">
         <ScalableViewport
           showZoomControls={!capturing && sketchLoaded}
         >

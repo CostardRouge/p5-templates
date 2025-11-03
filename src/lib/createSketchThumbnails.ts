@@ -32,7 +32,8 @@ async function createSketchThumbnails() {
   };
 
   try {
-    const p5sketches = await getSketchList();
+    const p5sketches = await getSketchList() ?? [
+    ];
     const p5sketchNames = p5sketches
       .map( ( file ) => ( {
         href: `templates/p5/${ file }`,
