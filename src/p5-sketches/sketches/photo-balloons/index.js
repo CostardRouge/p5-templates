@@ -8,44 +8,85 @@ import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
 
-function resetBallPositions() {
-  cache.get( "images" ).forEach( image => {
-    image.ball = {
-      position: createVector(
-        width / 2,
-        height / 2
-      ),
-      size: random(
-        200,
-        300,
-        400
-      ),
-      vx: random(
-        -1,
-        1
-      ),
-      vy: random(
-        -1,
-        1
-      ),
-    };
-  } );
-}
+import * as common from "../../utils/common";
 
 const canvases = {
   mask: undefined,
   imageBuffer: undefined,
 };
 
+/* ---------- helpers ---------- */
+
+const getBg = () =>
+  ( options.sketch?.background ??
+    [
+      255
+    ] );
+
+const getTextColor = () =>
+  ( options.sketch?.text ??
+    [
+      0
+    ] );
+
+const getFont = () => {
+  const key = options.sketch?.font ?? "martian";
+
+  return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
+};
+
+const getImages = () => {
+  const fromUI = options.sketch?.images && options.sketch.images.length ? options.sketch.images : null;
+  const fromCache = cache.get( "images" );
+
+  return fromUI?.map( imagePath => (
+    common.getAsset( imagePath )
+  ) ) || fromCache || [
+  ];
+};
+
+function initBall() {
+  const minBallSize = options.sketch?.minBallSize ?? 200;
+  const maxBallSize = options.sketch?.maxBallSize ?? 400;
+  const phaseJitter = options.sketch?.phaseJitter ?? 1;
+
+  return {
+    position: createVector(
+      width / 2,
+      height / 2
+    ),
+    size: random(
+      minBallSize,
+      maxBallSize
+    ),
+    vx: random(
+      -1,
+      1
+    ) * phaseJitter,
+    vy: random(
+      -1,
+      1
+    ) * phaseJitter
+  };
+}
+
+function ensureBalls( images ) {
+  images.forEach( imgObj => {
+    if ( imgObj && !imgObj.ball ) {
+      imgObj.ball = initBall();
+    }
+  } );
+}
+
+/* ---------- mask draw helper ---------- */
+
 function drawImageWithMask( {
-  img,
-  maskDrawer,
-  graphics = window
+  img, maskDrawer, graphics = window
 } ) {
   imageUtils.marginImage( {
     img,
-    fill: true,
-    center: true,
+    fill: options.sketch?.imageFill ?? true,
+    center: options.sketch?.centerImage ?? true,
     graphics: canvases.imageBuffer,
     position: createVector(
       width / 2,
@@ -53,7 +94,7 @@ function drawImageWithMask( {
     ),
   } );
 
-  // Clean mask
+  // Reset mask to transparent
   canvases.mask.erase();
   canvases.mask.rect(
     0,
@@ -63,8 +104,11 @@ function drawImageWithMask( {
   );
   canvases.mask.noErase();
 
+  // Fill mask background with near-transparent (keep alpha param)
+  const bg = getBg();
+
   canvases.mask.background(
-    ...options.colors.background,
+    ...bg,
     1
   );
 
@@ -83,6 +127,8 @@ function drawImageWithMask( {
   );
 }
 
+/* ---------- setup ---------- */
+
 sketch.setup(
   () => {
     canvases.mask = createGraphics(
@@ -95,10 +141,9 @@ sketch.setup(
       sketch?.engine?.canvas?.height,
     );
 
-    // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
-    background( ...options.colors.background );
+    background( ...getBg() );
 
-    resetBallPositions();
+    ensureBalls( getImages() );
   },
   {
     size: {
@@ -112,56 +157,85 @@ sketch.setup(
   }
 );
 
+/* ---------- draw ---------- */
+
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...options.colors.background );
-  background( ...options.colors.background );
+  background( ...getBg() );
 
-  const imageObjects = cache.get( "images" );
+  const images = getImages();
+
+  ensureBalls( images );
+
+  // Travel area configuration
+  const m = options.sketch?.travelMargin ?? 100;
+  const minWAmp = options.sketch?.minWidthAmplitude ?? 200;
+  const minHAmp = options.sketch?.minHeightAmplitude ?? 6;
+
+  const w = width / 2;
+  const h = height / 2;
+
+  const angleSpeed = options.sketch?.angleSpeed ?? 1;
+
+  const showLines = options.sketch?.showLines ?? true;
+  const lineColor = options.sketch?.lineColor ?? [
+    0,
+    0,
+    0
+  ];
+  const lineWeight = options.sketch?.lineWeight ?? 1;
+  const lineMaxDist = options.sketch?.lineMaxDistance ?? 1000;
+  const lineAlphaScale = options.sketch?.lineAlphaScale ?? 100;
 
   const links = [
   ];
 
-  imageObjects.forEach( (
-    {
-      ball
-    }, index
+  // Precompute easing-based amplitudes
+  const vw = mappers.fn(
+    animation.circularProgression,
+    0,
+    1,
+    minWAmp,
+    w,
+    easing.easeInOutBack
+  );
+  const vh = mappers.fn(
+    animation.circularProgression,
+    0,
+    1,
+    minHAmp,
+    h,
+    easing.easeInOutBack
+  );
+
+  // Update positions and optionally draw links
+  images.forEach( (
+    image, index
   ) => {
+    if ( !image ) {
+      return;
+    }
+
+    const ball = image.ball;
+
+    if ( !ball ) {
+      return;
+    }
+
     const {
       position, vx, vy
     } = ball;
-    const m = 100;
-
-    const w = width / 2;
-    const h = height / 2;
-
-    const vw = mappers.fn(
-      animation.circularProgression,
-      0,
-      1,
-      m * 2,
-      w,
-      easing.easeInOutBack
-    );
-    const vh = mappers.fn(
-      animation.circularProgression,
-      0,
-      1,
-      2 * 3,
-      h,
-      easing.easeInOutBack
-    );
 
     position.x = mappers.fn(
-      sin( animation.angle + index + vx ),
+      sin( animation.angle * angleSpeed + index + vx ),
       -1,
       1,
       -vw + m,
       vw - m
     );
     position.y = mappers.fn(
-      cos( animation.angle - index + vy ),
+      cos( animation.angle * angleSpeed - index + vy ),
       -1,
       1,
       -vh + m,
@@ -171,65 +245,63 @@ sketch.draw( (
     position.x += w;
     position.y += h;
 
-    stroke(
-      0,
-      0,
-      0,
-      230
-    );
+    if ( !showLines ) return;
 
-    imageObjects.forEach( (
+    strokeWeight( lineWeight );
+
+    images.forEach( (
       {
-        img, ball
+        ball: other
       }, _index
     ) => {
-      if ( index == _index ) {
-        return;
-      }
+      if ( index === _index ) return;
+      if ( links.includes( `${ _index }-${ index }` ) ) return;
 
-      if ( links.includes( `${ _index }-${ index }` ) ) {
-        return;
-      }
-
-      const {
-        position: _position
-      } = ball;
       const {
         x: _x, y: _y
-      } = _position;
-
+      } = other.position;
       const d = map(
-        position.dist( _position ),
+        position.dist( other.position ),
         0,
-        1000,
+        lineMaxDist,
+        0,
+        1
+      );
+      const fade = constrain(
+        d,
         0,
         1
       );
 
       stroke(
-        0,
-        0,
-        0,
-        d * 100
+        ...lineColor,
+        fade * lineAlphaScale
       );
-
       line(
         position.x,
         position.y,
         _x,
         _y
       );
+
       links.push( `${ index }-${ _index }` );
     } );
   } );
 
-  imageObjects.forEach( ( {
-    img, ball
-  } ) => {
+  // Draw masked images
+  images.forEach( ( image ) => {
+    if ( !image ) {
+      return;
+    }
+
+    const {
+      img, ball
+    } = image;
+
     const {
       size, position: {
         x, y
-      }, vx, vy
+      }
     } = ball;
 
     drawImageWithMask( {
@@ -246,27 +318,37 @@ sketch.draw( (
     } );
   } );
 
-  const defaultTitle = "photo-balloons".toUpperCase().replaceAll(
-    "-",
-    "\n"
-  );
+  // Title overlay
+  const titleVisibleFrom = options.sketch?.titleProgressStart ?? 0.0;
+  const titleVisibleTo = options.sketch?.titleProgressEnd ?? 0.2;
+  const withinWindow =
+    animation.progression >= titleVisibleFrom &&
+    animation.progression <= titleVisibleTo;
 
-  if ( animation.progression < 0.2 ) {
+  if ( ( options.sketch?.showTitle ?? true ) && withinWindow ) {
+    const customTitle = options.sketch?.title?.trim?.() || "";
+    const defaultTitle = "photo-balloons".toUpperCase().replaceAll(
+      "-",
+      "\n"
+    );
+    const title = customTitle !== "" ? customTitle : defaultTitle;
+
+    const blendModeValue = options.sketch?.titleBlendMode;
+
     string.write(
-      defaultTitle,
-      // options.texts.title || defaultTitle,
+      title,
       0,
       height / 2,
       {
-        size: 128,
-        stroke: color( ...options.colors.text ),
-        fill: color( ...options.colors.background ),
-        font: string.fonts.martian,
+        size: options.sketch?.titleSize ?? 128,
+        stroke: color( ...getTextColor() ),
+        fill: color( ...getBg() ),
+        font: getFont(),
         textAlign: [
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: blendModeValue
       }
     );
   }

@@ -4,7 +4,6 @@ import {
 
 export const formValues = {
   // Data
-  consumeTestImages: true,
   images: [
   ], // supplied by "images-stack"
 
@@ -40,10 +39,6 @@ export const formValues = {
 
 export const formConfiguration: Record<string, any> = {
   // Data
-  consumeTestImages: {
-    component: "checkbox",
-    label: "Use test images when empty"
-  },
   repeatImages: {
     component: "checkbox",
     label: "Repeat images if fewer than 6"
