@@ -131,7 +131,7 @@ export type FieldConfig =
 // The keys of this record must match the field names in the Zod schema
 type ItemFormConfig = Record<string, FieldConfig>;
 
-const fontNames = [
+export const fontNames = [
   "martian",
   "loraItalic",
   "loraRegular",

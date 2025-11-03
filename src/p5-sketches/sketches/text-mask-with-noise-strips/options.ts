@@ -1,3 +1,7 @@
+import {
+  fontNames
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+
 export const formValues = {
   // Text
   title: "500",
@@ -47,9 +51,12 @@ export const formConfiguration: Record<string, any> = {
     label: "Title"
   },
   font: {
-    component: "text", // switch to "select" if you enumerate string.fonts keys
-    label: "Font (string.fonts key)",
-    placeholder: "martian"
+    component: "select",
+    label: "Font name",
+    options: fontNames.map( fontName => ( {
+      value: fontName,
+      label: fontName
+    } ) ),
   },
 
   // Colors

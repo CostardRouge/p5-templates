@@ -1,6 +1,9 @@
 import {
   Blend
 } from "@/types/sketch.types";
+import {
+  fontNames
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 export const formValues = {
   // Data
@@ -72,9 +75,12 @@ export const formConfiguration: Record<string, any> = {
 
   // Typography / Title
   font: {
-    component: "text", // switch to "select" if you enumerate string.fonts keys
-    label: "Font (string.fonts key)",
-    placeholder: "martian"
+    component: "select",
+    label: "Font name",
+    options: fontNames.map( fontName => ( {
+      value: fontName,
+      label: fontName
+    } ) ),
   },
   title: {
     component: "text",

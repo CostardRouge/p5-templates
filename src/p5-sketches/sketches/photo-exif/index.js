@@ -25,6 +25,12 @@ sketch.setup(
   }
 );
 
+const getFont = () => {
+  const key = options.sketch?.font ?? "martian";
+
+  return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
+};
+
 sketch.draw( (
   _time, center
 ) => {
@@ -42,7 +48,7 @@ sketch.draw( (
         stroke: color( 255 ),
         fill: color( 0 ),
         textHeight: height,
-        font: string.fonts.martian,
+        font: getFont(),
         textAlign: [
           CENTER,
           CENTER
@@ -71,7 +77,7 @@ sketch.draw( (
           fill: color( ...( options.sketch?.fontColor ?? [
             0
           ] ) ),
-          font: string.fonts.martian,
+          font: getFont(),
         };
 
         // TOP LEFT
