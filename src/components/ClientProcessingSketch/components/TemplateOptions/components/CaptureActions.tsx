@@ -196,28 +196,17 @@ export default function CaptureActions( {
           }
 
           {
-            persistedJob?.status !== "draft" && ( <button
-              className="flex-2 rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
-              onClick={() => handleSubmit( "draft" )}
-              disabled={isLoading}
-            >
-              {saving ? <Loader className="inline h-3 animate-spin"/> :
-                <Archive className="inline h-3" />}
-              <span className="align-middle">Draft</span>
-            </button>
-            )}
-
-          {/* <button*/}
-          {/*  className="flex-1 rounded-xl p-1 border border-theme border-b-2 text-foreground bg-background text-xs"*/}
-          {/*  onClick={async() => {*/}
-          {/*    await window?.startLoopRecording( {*/}
-          {/*      format: "webm"*/}
-          {/*    } );*/}
-          {/*  }}*/}
-          {/* >*/}
-          {/*  <CassetteTapeIcon className="inline h-3" />*/}
-          {/*  <span className="align-middle">Record in .webm</span>*/}
-          {/* </button>*/}
+            persistedJob?.status !== "draft" && (
+              <button
+                className="flex-2 rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
+                onClick={() => handleSubmit( "draft" )}
+                disabled={isLoading}
+              >
+                {saving ? <Loader className="inline h-3 animate-spin"/> :
+                  <Archive className="inline h-3" />}
+                <span className="align-middle">Draft</span>
+              </button>
+            ) }
 
           <button
             className="flex-1 rounded-lg p-1 border border-theme border-b-2 text-foreground bg-background text-xs"

@@ -32,7 +32,7 @@ self.onmessage = async( event ) => {
       ImageSegmenter,
       HandLandmarker,
       FaceDetector
-    } = await import( "assets/libraries/mediapipe/vision_bundle.js" );
+    } = await import( "@/public/assets/libraries/mediapipe/vision_bundle.js" );
 
     const resolver = await FilesetResolver.forVisionTasks( message.wasmPath );
 

@@ -40,12 +40,14 @@ const imageUtils = {
 
     graphics.push();
 
+    const clonedPosition = position.copy();
+
     if ( clip ) {
       graphics.clip(
         () => {
           graphics.rect(
-            position.x - scaledBoundary.x / 2,
-            position.y - scaledBoundary.y / 2,
+            clonedPosition.x - scaledBoundary.x / 2,
+            clonedPosition.y - scaledBoundary.y / 2,
             scaledBoundary.x,
             scaledBoundary.y
           );
@@ -74,14 +76,14 @@ const imageUtils = {
     // );
 
     if ( center ) {
-      position.x -= w / 2;
-      position.y -= h / 2;
+      clonedPosition.x -= w / 2;
+      clonedPosition.y -= h / 2;
     }
 
     graphics.image(
       img,
-      position.x,
-      position.y,
+      clonedPosition.x,
+      clonedPosition.y,
       w,
       h
     );
@@ -89,8 +91,8 @@ const imageUtils = {
     graphics.pop();
 
     callback?.(
-      position.x,
-      position.y,
+      clonedPosition.x,
+      clonedPosition.y,
       w,
       h
     );
@@ -102,11 +104,11 @@ const imageUtils = {
         255
       ) );
 
-      shapes.hl( position.y );
-      shapes.hl( position.y + h );
+      shapes.hl( clonedPosition.y );
+      shapes.hl( clonedPosition.y + h );
 
-      shapes.vl( position.x );
-      shapes.vl( position.x + w );
+      shapes.vl( clonedPosition.x );
+      shapes.vl( clonedPosition.x + w );
     }
   },
   clearColor: (

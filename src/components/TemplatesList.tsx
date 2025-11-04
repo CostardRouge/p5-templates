@@ -76,9 +76,11 @@ export default function TemplatesList( {
                       paddingTop: "125%"
                     }}>
                       { hasSketchForm && (
-                        <FileSliders
-                          className="w-6 absolute top-1 left-1 text-foreground bg-background rounded-lg py-1 px-1 z-10 border border-theme"
-                        />
+                        <span title="Has a magic form">
+                          <FileSliders
+                            className="w-6 absolute top-1 left-1 text-foreground bg-background rounded-lg py-1 px-1 z-10 border border-theme"
+                          />
+                        </span>
                       )}
                       <img
                         alt={name}
@@ -117,9 +119,11 @@ export default function TemplatesList( {
                     <span>{name}</span>
                     <span className="text-foreground text-xs float-right">
                       { hasSketchForm && (
-                        <FileSliders
-                          className="w-6 text-foreground inline mr-1 bg-background rounded-lg py-1 px-1 border border-theme"
-                        />
+                        <span title="Has a magic form">
+                          <FileSliders
+                            className="w-6 text-foreground inline mr-1 bg-background rounded-lg py-1 px-1 border border-theme"
+                          />
+                        </span>
                       )}
                     </span>
                   </span>

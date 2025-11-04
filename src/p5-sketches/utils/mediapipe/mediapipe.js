@@ -72,7 +72,7 @@ events.register(
 
     // --- spin up the vision worker ---
     mediapipe.worker = new Worker( new URL(
-      "./vision-worker.js",
+      "@/public/assets/scripts/vision-worker.js",
       import.meta.url
     ) );
 

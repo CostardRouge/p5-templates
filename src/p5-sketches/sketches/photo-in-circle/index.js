@@ -7,10 +7,49 @@ import sketch from "../../utils/sketch.js";
 import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
+import * as common from "../../utils/common.js";
 
+// ---------- helpers ----------
+const getImages = () => {
+  const imagesFromOptions =
+    options.sketch?.images && options.sketch.images.length
+      ? options.sketch.images
+      : null;
+
+  const fromCache = cache.get( "images" );
+
+  return imagesFromOptions
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
+};
+
+const getFont = () => {
+  const key = options.sketch?.font ?? "martian";
+
+  return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
+};
+
+const getBg = () => options.sketch?.backgroundColor ?? [
+  246,
+  235,
+  225
+];
+const getTextColor = () => options.sketch?.textColor ?? [
+  0
+];
+
+const getEasing = (
+  name, fallback = easing.easeInOutExpo
+) =>
+  easing?.[ name ] || fallback;
+
+const rad = ( deg ) => ( deg * Math.PI ) / 180;
+
+// ---------- setup/draw ----------
 sketch.setup(
   () => {
-    background( ...options.colors.background );
+    background( ...getBg() );
   },
   {
     size: {
@@ -20,123 +59,174 @@ sketch.setup(
     animation: {
       framerate: options.animation.framerate,
       duration: options.animation.duration,
-    }
+    },
   }
 );
 
 sketch.draw( (
-  time, center, favoriteColor
+  time, center
 ) => {
-  background( ...options.colors.background );
+  background( ...getBg() );
 
-  const images = cache.get( "images" );
+  const imgs = getImages();
 
-  for ( let imageObjectIndex = 0; imageObjectIndex < images?.length; imageObjectIndex++ ) {
-    const imageObjectIndexProgression = imageObjectIndex / images.length;
-    const angle = imageObjectIndexProgression * TAU + (
-      map(
-        animation.progression,
-        0,
-        1,
-        TAU,
-        0
-      )
+  console.log( {
+    imgs
+  } );
+
+  if ( !imgs?.length ) {
+    return;
+  }
+
+  // Controls from options.ts
+  const orbitSpeed = options.sketch?.orbitSpeed ?? 1;
+  const outerRadiusFactor = options.sketch?.outerRadiusFactor ?? 0.8; // away
+  const innerRadiusFactor = options.sketch?.innerRadiusFactor ?? 0.25; // near
+
+  const scaleStart = options.sketch?.scaleStart ?? 1.0;
+  const scaleEnd = options.sketch?.scaleEnd ?? 0.65;
+  const scaleEasingName = options.sketch?.scaleEasing ?? "easeInOutQuint";
+
+  const indexRotDeg = options.sketch?.indexRotationDegrees ?? 180;
+  const indexRotEasingName = options.sketch?.indexRotationEasing ?? "easeInExpo_";
+
+  const noiseXDiv = options.sketch?.noiseXDiv ?? 2; // position.x / (width * divisor)
+  const noiseRotFromDeg = options.sketch?.noiseRotationFromDeg ?? 360;
+  const noiseRotToDeg = options.sketch?.noiseRotationToDeg ?? 0;
+  const noiseRotEasingName = options.sketch?.noiseRotationEasing ?? "easeInOutQuint";
+
+  const centerX = center.x;
+  const centerY = center.y;
+
+  for ( let i = 0; i < imgs.length; i++ ) {
+    const imgObj = imgs[ i ];
+    const imageAtIndex = imgObj?.img || imgObj; // be tolerant
+
+    const progression = i / imgs.length;
+
+    const base = map(
+      animation.progression * orbitSpeed,
+      0,
+      1,
+      TAU,
+      0
+    );
+    const angle = progression * TAU + base;
+
+    const away = createVector(
+      centerX + sin( angle ) * width * outerRadiusFactor,
+      centerY + cos( angle ) * height * outerRadiusFactor
     );
 
-    const imageObjectAtIndex = images[ imageObjectIndex ];
-    const imageAtIndex = imageObjectAtIndex.img;
+    const near = createVector(
+      centerX + sin( angle ) * width * innerRadiusFactor,
+      centerY + cos( angle ) * height * innerRadiusFactor
+    );
 
-    const imageAwayPosition = center
-      .copy()
-      .add(
-        sin( angle ) * width * 0.8,
-        cos( angle ) * height * .8,
-      );
-
-    const imageCenterPosition = center
-      .copy()
-      .add(
-        sin( angle ) * width / 4,
-        cos( angle ) * height / 4,
-      );
-
-    const imagePosition = animation.ease( {
+    const pos = animation.ease( {
       values: [
-        imageAwayPosition,
-        imageCenterPosition
+        away,
+        near
       ],
-      currentTime: (
-        animation.circularProgression
-          + imageObjectIndexProgression / images.length
-      ),
+      currentTime: animation.circularProgression + progression / imgs.length,
       lerpFn: p5.Vector.lerp,
-      easingFn: easing.easeInOutExpo
+      easingFn: easing.easeInOutExpo,
     } );
 
     push();
     translate(
-      imagePosition.x,
-      imagePosition.y,
-      imageObjectIndex
+      pos.x,
+      pos.y
     );
-    rotate( mappers.fn(
+
+    const rotNoise = mappers.fn(
       noise(
-        imagePosition.x / width / 2,
-        imageObjectIndex
+        pos.x / ( width * noiseXDiv ),
+        i
       ),
       0,
       1,
-      -TAU,
+      rad( noiseRotFromDeg ),
+      rad( noiseRotToDeg ),
+      getEasing(
+        noiseRotEasingName,
+        easing.easeInOutQuint
+      )
+    );
+
+    const rotIndex = mappers.fn(
+      progression,
       0,
-      easing.easeInOutQuint
-    ) );
-    rotate( mappers.fn(
-      animation.triangleProgression( imageObjectIndex ),
+      1,
+      -rad( indexRotDeg ),
+      rad( indexRotDeg ),
+      getEasing(
+        indexRotEasingName,
+        easing.easeInExpo_
+      )
+    );
+
+    rotate( rotNoise );
+    rotate( rotIndex );
+
+    const imgScale = mappers.fn(
+      animation.circularProgression,
       0,
-      0,
-      -PI,
-      PI / 6,
-      easing.easeInExpo_
-    ) );
+      1,
+      scaleStart,
+      scaleEnd,
+      getEasing(
+        scaleEasingName,
+        easing.easeInOutQuint
+      )
+    );
+
     imageUtils.marginImage( {
       img: imageAtIndex,
-      scale: mappers.fn(
-        animation.circularProgression,
+      position: createVector(
         0,
-        1,
-        1,
-        .65,
-        easing.easeInOutQuint
+        0
       ),
+      scale: imgScale,
       center: true,
-      // clip: true,
-      margin: 80
+      clip: !!options.sketch?.clipImage,
+      margin: options.sketch?.imageMargin ?? 0,
     } );
+
     pop();
   }
 
-  const defaultTitle = options.name.toUpperCase().replaceAll(
-    "-",
-    "\n"
-  );
+  // Title overlay
+  const titleVisibleFrom = options.sketch?.titleProgressStart ?? 0.0;
+  const titleVisibleTo = options.sketch?.titleProgressEnd ?? 0.6;
+  const within =
+    animation.progression >= titleVisibleFrom &&
+    animation.progression <= titleVisibleTo;
 
-  if ( animation.progression < 0.6 ) {
+  if ( ( options.sketch?.showTitle ?? true ) && within ) {
+    const customTitle = options.sketch?.title?.trim?.() || "";
+    const fallback = ( options.name || "orbit-images" ).toUpperCase().replaceAll(
+      "-",
+      "\n"
+    );
+    const title = customTitle !== "" ? customTitle : fallback;
+
+    const blendValue = options.sketch?.titleBlendMode ?? "exclusion";
+
     string.write(
-      defaultTitle,
-      // options.texts.title || defaultTitle,
+      title,
       0,
       height / 2,
       {
-        size: 128,
-        stroke: color( ...options.colors.text ),
-        fill: color( ...options.colors.background ),
-        font: string.fonts.martian,
-
+        size: options.sketch?.titleSize ?? 128,
+        stroke: color( ...getTextColor() ),
+        fill: color( ...getBg() ),
+        font: getFont(),
         textAlign: [
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: blendValue,
       }
     );
   }
