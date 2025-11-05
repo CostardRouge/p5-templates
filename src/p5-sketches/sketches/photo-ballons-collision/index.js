@@ -9,6 +9,40 @@ import scripts from "../../utils/scripts.js";
 import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
+import * as common from "../../utils/common.js";
+// helpers
+const getBg = () => (
+  options.sketch?.backgroundColor ?? options.colors?.background ?? [
+    246,
+    235,
+    225
+  ]
+);
+
+const getTextColor = () => (
+  options.sketch?.textColor ?? options.colors?.text ?? [
+    0
+  ]
+);
+
+const getFont = () => (
+  string.fonts?.[ options.sketch?.font ] || string.fonts.martian
+);
+
+const getImages = () => {
+  const imagesFromOptions =
+    options.sketch?.images && options.sketch.images.length
+      ? options.sketch.images
+      : null;
+
+  const fromCache = cache.get( "images" );
+
+  return imagesFromOptions
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
+};
+
 
 await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );
@@ -165,7 +199,7 @@ sketch.setup(
     );
 
     // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
-    background( ...options.colors.background );
+    background( ...getBg() );
 
     const margin = 50;
     const thickness = 50;
@@ -195,10 +229,10 @@ sketch.setup(
       height
     );
 
+    const images = getImages();
     for ( let i = 0; i <= 10; i++ ) {
       addImageBall(
-        // random(cache.get("images")).img,
-        cache.get( "images" )[ 0 ].img,
+        ( images?.[ 0 ]?.img ),
         random( width ),
         random( height ),
         ( width / 6 - 2 * margin )
@@ -221,7 +255,7 @@ sketch.setup(
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...options.colors.background );
+  background( ...getBg() );
 
   // if (frameCount === 1) {
   // 	for (let i = 0; i < 120; i++) {
@@ -322,15 +356,15 @@ sketch.draw( (
 
   if ( animation.progression < 0.2 ) {
     string.write(
-      defaultTitle,
+      ( options.sketch?.title || defaultTitle ),
       // options.texts.title || defaultTitle,
       0,
       height / 2,
       {
-        size: 172,
-        stroke: color( ...options.colors.text ),
-        fill: color( ...options.colors.background ),
-        font: string.fonts.martian,
+        size: options.sketch?.titleSize ?? 172,
+        stroke: color( ...getTextColor() ),
+        fill: color( ...getBg() ),
+        font: getFont(),
         textAlign: [
           CENTER,
           CENTER

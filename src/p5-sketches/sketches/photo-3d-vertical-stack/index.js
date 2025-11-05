@@ -7,6 +7,7 @@ import easing from "../../utils/easing.js";
 import sketch from "../../utils/sketch.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
+import * as common from "../../utils/common.js";
 
 class Card {
   constructor( {
@@ -14,10 +15,11 @@ class Card {
   } ) {
     this.index = index;
     this.position = position;
-    this.img = cache.get( "images" )?.[ this.index ]?.img;
-    this.path = cache.get( "images" )?.[ this.index ]?.path;
-    this.filename = cache.get( "images" )?.[ this.index ]?.filename;
-    this.exif = cache.get( "images" )?.[ this.index ]?.exif;
+    const images = getImages();
+    this.img = images?.[ this.index ]?.img;
+    this.path = images?.[ this.index ]?.path;
+    this.filename = images?.[ this.index ]?.filename;
+    this.exif = images?.[ this.index ]?.exif;
   }
 
   update() {
@@ -94,7 +96,7 @@ class Card {
       return;
     }
 
-    if ( this.currentIndex === options.assets.length - 2 ) {
+    if ( this.currentIndex === ( options.sketch?.count ?? 200 ) - 2 ) {
       const exifInfoText = [
         exif.formatFocalLength( this?.exif?.focalLength ),
         exif.formatAperture( this?.exif?.aperture ),
@@ -118,10 +120,10 @@ class Card {
           // fill: color(...options.colors.text),
           // stroke: color(...options.colors.background),
 
-          stroke: color( ...options.colors.text ),
-          fill: color( ...options.colors.background ),
+          stroke: color( ...( options.sketch?.textColor ?? options.colors.text ) ),
+          fill: color( ...( options.sketch?.backgroundColor ?? options.colors.background ) ),
 
-          font: string.fonts.martian,
+          font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
           textWidth: height,
           popPush: false,
           textAlign: [
@@ -140,7 +142,36 @@ const cards = [
 ];
 const canvases = {
 };
-const cardsLength = options.assets.length;
+const cardsLength = options.sketch?.count ?? 200;
+
+// helpers
+const getBg = () => (
+  options.sketch?.backgroundColor ?? options.colors?.background ?? [
+    230,
+    230,
+    230
+  ]
+);
+
+const getTextColor = () => (
+  options.sketch?.textColor ?? options.colors?.text ?? [
+    0
+  ]
+);
+
+const getImages = () => {
+  const imagesFromOptions =
+    options.sketch?.images && options.sketch.images.length
+      ? options.sketch.images
+      : null;
+
+  const fromCache = cache.get( "images" );
+
+  return imagesFromOptions
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
+};
 
 sketch.setup(
   () => {
@@ -150,7 +181,7 @@ sketch.setup(
       "webgl"
     );
 
-    background( ...options.colors.background );
+    background( ...getBg() );
 
     const start = createVector(
       0,
@@ -213,7 +244,7 @@ sketch.draw( (
     height
   );
 
-  canvases._3d.background( ...options.colors.background );
+  canvases._3d.background( ...getBg() );
   for ( const card of cards ) {
     card.update();
     card.draw( canvases._3d );
@@ -234,9 +265,9 @@ sketch.draw( (
     0,
     {
       size: 24,
-      fill: color( ...options.colors.text ),
-      stroke: color( ...options.colors.background ),
-      font: string.fonts.martian,
+      fill: color( ...getTextColor() ),
+      stroke: color( ...getBg() ),
+      font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
       textWidth: height,
       popPush: false,
       textAlign: [
@@ -250,12 +281,12 @@ sketch.draw( (
   // TEXTS OVER
   const textWriteOptions = {
     size: 172,
-    stroke: color( ...options.colors.text ),
-    fill: color( ...options.colors.background ),
+    stroke: color( ...getTextColor() ),
+    fill: color( ...getBg() ),
 
     // stroke: color(0),
     // fill: color(255),
-    font: string.fonts.martian,
+    font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
     textAlign: [
       CENTER,
       CENTER
@@ -263,7 +294,7 @@ sketch.draw( (
   };
 
   string.write(
-    options.texts.top || "top",
+    options.sketch?.topText || "top",
     0,
     animation.ease( {
       values: [
@@ -280,7 +311,7 @@ sketch.draw( (
   );
 
   string.write(
-    options.texts.bottom || "bottom",
+    options.sketch?.bottomText || "bottom",
     0,
     animation.ease( {
       values: [

@@ -7,6 +7,44 @@ import easing from "../../utils/easing.js";
 import sketch from "../../utils/sketch.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
+import * as common from "../../utils/common.js";
+
+// helpers
+const getBg = () => (
+  options.sketch?.backgroundColor ??
+  options.colors?.background ??
+  [
+    0,
+    0,
+    0
+  ]
+);
+
+const getTextColor = () => (
+  options.sketch?.textColor ??
+  options.colors?.text ??
+  [
+    0
+  ]
+);
+
+const getFont = () => (
+  string.fonts?.[ options.sketch?.font ] || string.fonts.martian
+);
+
+const getImages = () => {
+  const imagesFromOptions =
+    options.sketch?.images && options.sketch.images.length
+      ? options.sketch.images
+      : null;
+
+  const fromCache = cache.get( "images" );
+
+  return imagesFromOptions
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
+};
 
 sketch.setup(
   undefined,
@@ -28,9 +66,9 @@ const borderSize = 0;
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  if ( options.variableBackgroundColor ) {
+  if ( options.sketch?.variableBackgroundColor ) {
     const backgroundColor = lerpColor(
-      color( ...options.colors.background ),
+      color( ...getBg() ),
       favoriteColor,
       animation.triangleProgression( )
     );
@@ -38,10 +76,10 @@ sketch.draw( (
     background( backgroundColor );
   }
   else {
-    background( ...options.colors.background );
+    background( ...getBg() );
   }
 
-  if ( options.variableZoom ) {
+  if ( options.sketch?.variableZoom ) {
     const zoomValues = [
       -2000,
       -3000,
@@ -65,11 +103,11 @@ sketch.draw( (
     translate(
       0,
       0,
-      options.zoom ?? -2000
+      options.sketch?.zoom ?? -2000
     );
   }
 
-  if ( options.rotateX ) {
+  if ( options.sketch?.rotateX ) {
     const xRotationValues = [
       0,
       PI / 6,
@@ -84,7 +122,7 @@ sketch.draw( (
     } ) );
   }
 
-  if ( options.rotateZ ) {
+  if ( options.sketch?.rotateZ ) {
     rotateZ( animation.ease( {
       values: [
         0,
@@ -155,8 +193,12 @@ sketch.draw( (
     cells
   } = grid.create( gridOptions );
 
+  const images = getImages();
+
+  const imagePaths = images.map( ( { path } ) => path ).join( "-" );
+
   const imageParts = cache.store(
-    `image-parts-${ columns }-${ rows }`,
+    `image-parts-${ columns }-${ rows }-${ imagePaths }`,
     () => {
       const buffer = createGraphics(
         sketch?.engine?.canvas?.width,
@@ -164,9 +206,7 @@ sketch.draw( (
       );
 
       return (
-        cache.get( "images" ).map( ( {
-          img
-        } ) => {
+        images.map( ( { img } ) => {
           imageUtils.marginImage( {
             img,
             position: createVector(
@@ -181,9 +221,7 @@ sketch.draw( (
           return (
             cells.reduce(
               (
-                imageCells, {
-                  x, y
-                }
+                imageCells, { x, y }
               ) => {
                 const imagePart = buffer.get(
                   x,
@@ -194,7 +232,6 @@ sketch.draw( (
 
                 imageCells.push( {
                   imagePart,
-                  // dominantColor: colors.getDominantColor( imagePart, 500 )
                 } );
 
                 return imageCells;
@@ -207,8 +244,6 @@ sketch.draw( (
       );
     }
   );
-
-  const images = cache.get( "images" );
 
   // background( ...options.colors.background );
 
@@ -234,7 +269,7 @@ sketch.draw( (
     //   easing.easeInOutQuint
     // );
 
-    const circonference = ( options.vertical ? cellHeight : cellWidth ) * images?.length;
+    const circonference = ( options.sketch?.vertical ? cellHeight : cellWidth ) * images?.length;
     // const circonference = cellWidth * images?.length;
 
     push();
@@ -275,7 +310,7 @@ sketch.draw( (
 
       push();
 
-      const rotateFunction = options.vertical ? rotateX : rotateY;
+      const rotateFunction = options.sketch?.vertical ? rotateX : rotateY;
 
       rotateFunction( angle );
 
@@ -341,19 +376,20 @@ sketch.draw( (
   } );
 
   // if ( animation.progression < 0.2 ) {
-  string.write(
-    ( options?.title?.content ?? options.name ).replaceAll(
+  if ( options.sketch?.showTitle ?? true ) {
+    string.write(
+    ( options.sketch?.title || options.name ).replaceAll(
       "-",
       "\n"
     ),
     0,
     height / 2,
     {
-      size: options?.title?.size ?? 450,
+      size: options.sketch?.titleSize ?? 450,
       strokeWeight: 0,
-      stroke: color( ...options.colors.text ),
-      fill: color( ...options.colors.text ),
-      font: string.fonts?.[ options?.title?.font ] ?? string.fonts.martian,
+      stroke: color( ...getTextColor() ),
+      fill: color( ...getTextColor() ),
+      font: getFont(),
       textAlign: [
         CENTER,
         CENTER
@@ -362,6 +398,7 @@ sketch.draw( (
       // graphics: canvases.text
     }
   );
+  }
   // }
 
   return orbitControl();

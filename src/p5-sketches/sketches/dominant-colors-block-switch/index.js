@@ -324,7 +324,7 @@ sketch.draw( (
 
   if ( animation.progression < 0.2 ) {
     string.write(
-      options.sketch?.title || "dominant\ncolors\nblock\nswitch",
+      options.sketch?.title || options?.name,
       0,
       height / 2,
       {

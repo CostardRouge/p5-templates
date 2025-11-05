@@ -7,6 +7,7 @@ import sketch from "../../utils/sketch.js";
 import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
+import * as common from "../../utils/common.js";
 
 const canvases = {
 };
@@ -20,7 +21,7 @@ sketch.setup(
 
     // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
 
-    background( ...options.colors.background );
+    background( ...( options.sketch?.backgroundColor ?? options.colors.background ) );
   },
   {
     size: {
@@ -37,14 +38,21 @@ sketch.setup(
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...options.colors.background );
-  canvases.background.background( ...options.colors.background );
+  const bg = options.sketch?.backgroundColor ?? options.colors.background;
+  const textColor = options.sketch?.textColor ?? options.colors.text;
+  background( ...bg );
+  canvases.background.background( ...bg );
 
-  const images = cache.get( "images" );
+  const imagesFromOptions = options.sketch?.images && options.sketch.images.length
+    ? options.sketch.images
+    : null;
+  const images = imagesFromOptions
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : cache.get( "images" );
 
   const borderSize = 0;
-  const rows = options.rows || 4;// columns*height/width;
-  const columns = options.columns || 3;// rows*width/height;
+  const rows = options.sketch?.rows ?? 4;// columns*height/width;
+  const columns = options.sketch?.columns ?? 3;// rows*width/height;
   const gridOptions = {
     topLeft: createVector(
       borderSize,
@@ -70,7 +78,7 @@ sketch.draw( (
     cells: gridCells
   } = grid.create( gridOptions );
 
-  canvases.background.background( ...options.colors.background );
+  canvases.background.background( ...bg );
   canvases.background.background(
     0,
     0,
@@ -108,7 +116,11 @@ sketch.draw( (
     animation.progression * images.length,
     images
   );
-  const imageAtIndex = imageObjectAtIndex.img;
+  const imageAtIndex = imageObjectAtIndex?.img;
+
+  if (!imageAtIndex) {
+    return;
+  }
 
   imageUtils.marginImage( {
     img: imageAtIndex,
@@ -128,11 +140,7 @@ sketch.draw( (
     width,
     height
   );
-  filter(
-    BLUR,
-    options.blur || 9,
-    true
-  );
+  // filter( BLUR, options.sketch?.blur ?? 9, true );
   // filter(POSTERIZE, options.blur || 9, true);
 
   gridCells.forEach( (
@@ -182,14 +190,14 @@ sketch.draw( (
 
   if ( animation.progression < 0.2 ) {
     string.write(
-      defaultTitle,
+      ( options.sketch?.title || defaultTitle ),
       0,
       height / 2,
       {
-        size: 128,
-        stroke: color( ...options.colors.text ),
-        fill: color( ...options.colors.background ),
-        font: string.fonts.martian,
+        size: options.sketch?.titleSize ?? 128,
+        stroke: color( ...textColor ),
+        fill: color( ...bg ),
+        font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
         textAlign: [
           CENTER,
           CENTER
