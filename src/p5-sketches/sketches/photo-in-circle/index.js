@@ -70,10 +70,6 @@ sketch.draw( (
 
   const imgs = getImages();
 
-  console.log( {
-    imgs
-  } );
-
   if ( !imgs?.length ) {
     return;
   }
