@@ -176,40 +176,54 @@ export default function CaptureActions( {
 
   return (
     <>
-      {!recordingProgress && (
-        <div className="flex gap-1 h-auto">
-          {
-            persistedJob?.status === "draft" && (
-              <button
-                className="rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs"
-                onClick={() => handleSubmit(
-                  "draft",
-                  persistedJob.id
-                )}
-                disabled={isLoading}
-              >
-                {saving ? <Loader className="inline h-3 animate-spin"/> :
-                  <Save className="inline h-3"/>}
-                <span className="align-middle">Save</span>
-              </button>
-            )
-          }
+      { !recordingProgress && (
+        <div className="flex flex-col gap-1 h-auto w-full">
 
-          {
-            persistedJob?.status !== "draft" && (
+          {process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true" && (
+            <div className="flex gap-1">
+              {
+                persistedJob?.status === "draft" && ( <button
+                  className="rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs"
+                  onClick={() => handleSubmit(
+                    "draft",
+                    persistedJob.id
+                  )}
+                  disabled={isLoading}
+                >
+                  {saving ? <Loader className="inline h-3 animate-spin"/> :
+                    <Save className="inline h-3"/>}
+                  <span className="align-middle">Save</span>
+                </button> )
+              }
+
+              {
+                persistedJob?.status !== "draft" && (
+                  <button
+                    className="rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
+                    onClick={() => handleSubmit( "draft" )}
+                    disabled={isLoading}
+                  >
+                    {saving ? <Loader className="inline h-3 animate-spin"/> :
+                      <Archive className="inline h-3" />}
+                    <span className="align-middle">Save as draft</span>
+                  </button>
+                ) }
+
               <button
-                className="flex-2 rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
-                onClick={() => handleSubmit( "draft" )}
-                disabled={isLoading}
+                className=" rounded-lg p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
+                onClick={() => handleSubmit()}
+                disabled={isLoading || saving}
               >
-                {saving ? <Loader className="inline h-3 animate-spin"/> :
-                  <Archive className="inline h-3" />}
-                <span className="align-middle">Draft</span>
+                {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
+                  <Clapperboard className="inline h-3" />}
+                <span className="align-middle">Server recording in .mp4</span>
               </button>
-            ) }
+
+            </div>
+          )}
 
           <button
-            className="flex-1 rounded-lg p-1 border border-theme border-b-2 text-foreground bg-background text-xs"
+            className="rounded-lg p-1 border border-theme border-b-2 text-foreground bg-background text-xs w-full"
             onClick={async() => {
               await window?.startLoopRecording( {
                 format: "webm"
@@ -217,17 +231,7 @@ export default function CaptureActions( {
             }}
           >
             <Save className="inline h-3" />
-            <span className="align-middle">.webm</span>
-          </button>
-
-          <button
-            className="flex-1 rounded-lg p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
-            onClick={() => handleSubmit()}
-            disabled={isLoading || saving}
-          >
-            {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
-              <Clapperboard className="inline h-3" />}
-            <span className="align-middle">.mp4</span>
+            <span className="align-middle">Browser recording in .webm</span>
           </button>
         </div>
       )}

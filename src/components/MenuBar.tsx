@@ -18,29 +18,32 @@ type NavItem = {
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 };
 
-const items: NavItem[] = [
-  {
-    href: "https://github.com/CostardRouge/p5-templates",
-    name: "//github",
-    Icon: Github,
-    target: "_blank",
-  },
-  {
-    href: "/templates",
-    Icon: Paintbrush
-  },
-  {
-    href: "/recordings",
-    Icon: Video
-  },
-];
-
 export default function MenuBar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isCapturing = searchParams?.has( "capturing" ) ?? false;
 
   if ( isCapturing ) return null;
+
+  const items: NavItem[] = [
+    {
+      href: "https://github.com/CostardRouge/p5-templates",
+      name: "//github",
+      Icon: Github,
+      target: "_blank",
+    },
+    {
+      href: "/templates",
+      Icon: Paintbrush
+    },
+  ];
+
+  if ( process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true" ) {
+    items.push( {
+      href: "/recordings",
+      Icon: Video
+    }, );
+  }
 
   return (
     <nav className="w-full glass px-2 py-1.5 flex justify-between items-center gap-1 z-50 border-t border-theme text-xs sm:text-sm">
