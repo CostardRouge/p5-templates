@@ -1,16 +1,3 @@
 {
-  "title": "500",
-  "font": "cloitre",
-  "colors": {
-    "background": [0, 0, 0],
-    "text": [128, 128, 255]
-  },
-  "texts": {
-    "title": "dominant\ncolors"
-  },
-  "animation": {
-    "duration": 6,
-    "framerate": 60
-  },
   "consumeTestImages": true
 }

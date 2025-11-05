@@ -36,13 +36,17 @@ const getFont = () => {
 };
 
 const getImages = () => {
-  const fromUI = options.sketch?.images && options.sketch.images.length ? options.sketch.images : null;
+  const imagesFromOptions =
+    options.sketch?.images && options.sketch.images.length
+      ? options.sketch.images
+      : null;
+
   const fromCache = cache.get( "images" );
 
-  return fromUI?.map( imagePath => (
-    common.getAsset( imagePath )
-  ) ) || fromCache || [
-  ];
+  return imagesFromOptions
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
 };
 
 function initBall() {

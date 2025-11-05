@@ -1,0 +1,100 @@
+// Default values only
+import {
+  fontNames
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+
+export const formValues = {
+  // Assets
+  images: [
+  ],
+
+  // Colors (sketch-level overrides; falls back to global options.colors if unset)
+  backgroundColor: [
+    0,
+    0,
+    0
+  ] as [number, number, number],
+  textColor: [
+    128,
+    128,
+    255
+  ] as [number, number, number],
+
+  // Typography / Title
+  font: "cloitre",
+  title: "dominant\ncolors",
+
+  // Grid
+  rows: 16,
+  columns: 9,
+  borderSize: 0,
+
+  // Image processing
+  dominantColorSample: 50,
+};
+
+// UI configuration only
+export const formConfiguration: Record<string, any> = {
+  // Assets
+  images: {
+    component: "images-stack",
+    label: "Images"
+  },
+
+  // Colors
+  backgroundColor: {
+    component: "color",
+    label: "Background color"
+  },
+  textColor: {
+    component: "color",
+    label: "Text color"
+  },
+
+  // Typography / Title
+  font: {
+    component: "select",
+    label: "Font name",
+    options: fontNames.map( fontName => ( {
+      value: fontName,
+      label: fontName
+    } ) ),
+  },
+  title: {
+    component: "text",
+    label: "Custom title (empty → default)"
+  },
+
+  // Grid
+  rows: {
+    component: "slider",
+    label: "Grid rows",
+    min: 1,
+    max: 64,
+    step: 1,
+  },
+  columns: {
+    component: "slider",
+    label: "Grid columns",
+    min: 1,
+    max: 64,
+    step: 1,
+  },
+  borderSize: {
+    component: "slider",
+    label: "Border size",
+    min: 0,
+    max: 200,
+    step: 1,
+  },
+
+  // Image processing
+  dominantColorSample: {
+    component: "slider",
+    label: "Dominant color sample size",
+    min: 2,
+    max: 200,
+    step: 1,
+  },
+};
+

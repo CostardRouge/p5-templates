@@ -7,10 +7,48 @@ import sketch from "../../utils/sketch.js";
 import colors from "../../utils/colors.js";
 import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
+import * as common from "../../utils/common";
+
+// helpers
+const getBg = () => (
+  options.sketch?.backgroundColor ??
+  options.colors?.background ??
+  [
+    0,
+    0,
+    0
+  ]
+);
+
+const getTextColor = () => (
+  options.sketch?.textColor ??
+  options.colors?.text ??
+  [
+    0
+  ]
+);
+
+const getFont = () => (
+  string.fonts?.[ options.sketch?.font ] || string.fonts.martian
+);
+
+const getImages = () => {
+  const imagesFromOptions =
+    options.sketch?.images && options.sketch.images.length
+      ? options.sketch.images
+      : null;
+
+  const fromCache = cache.get( "images" );
+
+  return imagesFromOptions
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
+};
 
 sketch.setup(
   () => {
-    background( ...options.colors.background );
+    background( ...getBg() );
   },
   {
     size: {
@@ -23,8 +61,6 @@ sketch.setup(
     }
   }
 );
-
-const borderSize = 0;
 
 function getImagePart(
   img, x, y, w, h
@@ -59,15 +95,17 @@ sketch.draw( (
   time, center, favoriteColor
 ) => {
   background(
-    ...options.colors.background,
+    ...getBg(),
     20
   );
 
   // const sizes = [8, 16, 2, 9, 3, 4];
   // const columns = mappers.circularIndex(time/2, sizes);
   // const rows = mappers.circularIndex(time/2, sizes.reverse());
-  const rows = options.rows || 16;// columns*height/width;
-  const columns = options.columns || 9;// rows*width/height;
+  const rows = options.sketch?.rows ?? 16;// columns*height/width;
+  const columns = options.sketch?.columns ?? 9;// rows*width/height;
+  const borderSize = options.sketch?.borderSize ?? 0;
+  const images = getImages();
 
   const gridOptions = {
     topLeft: createVector(
@@ -98,10 +136,14 @@ sketch.draw( (
     cells: gridCells
   } = grid.create( gridOptions );
 
+  const imagePaths = images.map( ( {
+    path
+  } ) => path ).join( "-" );
+
   const imageParts = cache.store(
-    `image-parts-${ columns }-${ rows }`,
+    `image-parts-${ columns }-${ rows }-${ imagePaths }`,
     () => (
-      cache.get( "images" ).map( ( {
+      images.map( ( {
         img
       } ) => (
         gridCells.reduce(
@@ -122,7 +164,7 @@ sketch.draw( (
               imagePart,
               dominantColor: colors.getDominantColor(
                 imagePart,
-                50
+                options.sketch?.dominantColorSample ?? 50
               )
             } );
 
@@ -175,6 +217,11 @@ sketch.draw( (
     );
 
     const imageAtIndex = imageParts?.[ ~~imageIndex ];
+
+    if ( !imageAtIndex ) {
+      return;
+    }
+
     const {
       imagePart, dominantColor
     } = imageAtIndex?.[ ~~cellIndex ];
@@ -277,14 +324,14 @@ sketch.draw( (
 
   if ( animation.progression < 0.2 ) {
     string.write(
-      options.texts.title || "dominant\ncolors\nblock\nswitch",
+      options.sketch?.title || "dominant\ncolors\nblock\nswitch",
       0,
       height / 2,
       {
         size: 172,
-        stroke: color( ...options.colors.text ),
-        fill: color( ...options.colors.background ),
-        font: string.fonts.martian,
+        stroke: color( ...getTextColor() ),
+        fill: color( ...getBg() ),
+        font: getFont(),
         textAlign: [
           CENTER,
           CENTER

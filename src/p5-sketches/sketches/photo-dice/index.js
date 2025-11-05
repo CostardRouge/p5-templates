@@ -32,12 +32,18 @@ const getFont = () => {
   return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
 };
 
-const easingMap = {
-  easeInOutExpo: easing.easeInOutExpo,
-  easeInOutElastic: easing.easeInOutElastic,
-  easeInOutCirc: easing.easeInOutCirc,
-  easeInOutSine: easing.easeInOutSine,
-  easeInOutQuad: easing.easeInOutQuad
+const getImages = () => {
+  const imagesFromOptions =
+    options.sketch?.images && options.sketch.images.length
+      ? options.sketch.images
+      : null;
+
+  const fromCache = cache.get( "images" );
+
+  return imagesFromOptions
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
 };
 
 sketch.setup(
@@ -112,18 +118,13 @@ sketch.draw( (
   background( ...getBg() );
 
   // Images from UI or cache
-  const imagesFromOptions = options.sketch?.images && options.sketch.images.length ? options.sketch.images : null;
-  const imagesFromCache = cache.get( "images" );
-  const images = imagesFromOptions?.map( imagePath => (
-    common.getAsset( imagePath )
-  ) ) || imagesFromCache || [
-  ];
+  const images = getImages();
 
   const repeatImages = options.sketch?.repeatImages ?? true;
 
   // Motion controls
   const rotateSpeed = options.sketch?.rotateSpeed ?? 1;
-  const easeFn = easingMap[ options.sketch?.easing ] || easing.easeInOutExpo;
+  const easeFn = easing?.[ options.sketch?.easing ] || easing.easeInOutExpo;
 
   // Calculate current rotation target (6 faces in cycle)
   const {
