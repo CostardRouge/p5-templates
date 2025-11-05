@@ -4,6 +4,7 @@ import {
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import easing from "@/p5-sketches/utils/easing";
 
 export const formValues = {
   // Data
@@ -139,27 +140,9 @@ export const formConfiguration: Record<string, any> = {
   easing: {
     component: "select",
     label: "Rotation easing",
-    options: [
-      {
-        label: "Ease InOut Expo",
-        value: "easeInOutExpo"
-      },
-      {
-        label: "Ease InOut Elastic",
-        value: "easeInOutElastic"
-      },
-      {
-        label: "Ease InOut Circ",
-        value: "easeInOutCirc"
-      },
-      {
-        label: "Ease InOut Sine",
-        value: "easeInOutSine"
-      },
-      {
-        label: "Ease InOut Quad",
-        value: "easeInOutQuad"
-      }
-    ]
+    options: Object.keys( easing ).map( easingFunctionName => ( {
+      label: easingFunctionName,
+      value: easingFunctionName,
+    } ) )
   }
 };
