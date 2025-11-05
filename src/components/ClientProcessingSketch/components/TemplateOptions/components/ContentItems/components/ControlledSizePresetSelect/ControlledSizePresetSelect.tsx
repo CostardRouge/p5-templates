@@ -28,7 +28,7 @@ export default function ControlledSizePresetSelect( {
     control, setValue
   } = useFormContext();
 
-  // Keep the select in sync with current size in the form
+  // Keep the select in sync with the current size in the form
   const width = useWatch( {
     control,
     name: "size.width"
@@ -108,7 +108,7 @@ export default function ControlledSizePresetSelect( {
   return (
     <select
       id={id}
-      className={`w-full border border-theme rounded-xl bg-background text-foreground ${ className }`}
+      className={`w-full border border-theme rounded-lg bg-background text-foreground ${ className }`}
       value={currentValue}
       onChange={handleChange}
     >

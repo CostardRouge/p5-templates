@@ -297,7 +297,7 @@ export default function TemplateOptions( {
     <FormProvider {...methods}>
       <CollapsibleItem
         data-no-zoom=""
-        className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 glass p-2 border border-theme z-50 rounded-xl"
+        className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 glass p-2 border border-theme z-50 rounded-lg"
         style={{
           maxHeight: "calc(80svh)",
           maxWidth: "calc(50% - 0.75rem)"
@@ -345,7 +345,7 @@ export default function TemplateOptions( {
 
         <CollapsibleItem
           initialExpandedValue={false}
-          className="p-1 border border-theme rounded-xl text-foreground bg-background overflow-y-auto"
+          className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
           headerContainerClassName="leading-none"
           header={( expanded ) => (
             <button
@@ -380,7 +380,7 @@ export default function TemplateOptions( {
           <Fragment>
             <CollapsibleItem
               initialExpandedValue={!!slidesLength}
-              className="p-1 border border-theme rounded-xl bg-background overflow-y-auto"
+              className="p-1 border border-theme rounded-lg bg-background overflow-y-auto"
               headerContainerClassName="leading-none"
               header={( expanded ) => (
                 <button
