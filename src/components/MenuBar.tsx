@@ -1,14 +1,12 @@
-"use client";
-
 import React from "react";
 import {
   Github, Paintbrush, Video
 } from "lucide-react";
 import clsx from "clsx";
-import {
-  usePathname, useSearchParams
-} from "next/navigation";
 import Link from "next/link";
+import {
+  headers
+} from "next/headers";
 import ThemeToggle from "@/components/ThemeToggle";
 
 type NavItem = {
@@ -18,17 +16,20 @@ type NavItem = {
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 };
 type MenuBarProps = {
-  backendRecording: boolean
+  searchParams?: Promise<{
+    capturing?: string
+  }>
 }
 
-export default function MenuBar( {
-  backendRecording
+async function MenuBar( {
+  searchParams
 }: MenuBarProps ) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const isCapturing = searchParams?.has( "capturing" ) ?? false;
+  const referer = ( await headers() ).get( "referer" );
+  const pathname = referer ? ( new URL( referer ) ).pathname : "";
 
-  if ( isCapturing ) return null;
+  if ( ( await searchParams )?.capturing === "" ) {
+    return null;
+  }
 
   const items: NavItem[] = [
     {
@@ -43,7 +44,7 @@ export default function MenuBar( {
     },
   ];
 
-  if ( backendRecording ) {
+  if ( process.env.BACKEND_RECORDING === "true" ) {
     items.push( {
       href: "/recordings",
       Icon: Video
@@ -89,3 +90,5 @@ export default function MenuBar( {
     </nav>
   );
 }
+
+export default MenuBar;
