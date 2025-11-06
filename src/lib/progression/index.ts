@@ -119,17 +119,17 @@ export const updateRecordingStatus = async(
   status: string,
 ): Promise<void> => {
   try {
-    const jobRecordingSteps = await getRecordingSteps( jobId );
+    const currentStatus = await getRecordingStatus( jobId );
 
-    if ( !jobRecordingSteps ) {
+    if ( !currentStatus ) {
       return;
     }
 
     await Redis.getInstance().set(
       getKey( jobId ),
       JSON.stringify( {
-        ...jobRecordingSteps,
-        status: status
+        ...currentStatus,
+        status
       } )
     );
   }

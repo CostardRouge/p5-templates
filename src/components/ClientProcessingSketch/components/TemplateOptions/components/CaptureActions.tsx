@@ -57,7 +57,7 @@ export default function CaptureActions( {
   } = useRecordingStatusStream();
 
   const handleSubmit = async(
-    status: JobStatusEnum = "active",
+    status: JobStatusEnum = "queued",
     persistedJobId?: JobId
   ) => {
     if ( status === "draft" ) {
@@ -166,7 +166,7 @@ export default function CaptureActions( {
     const newJobId = await enqueueRecording( formData );
 
     if ( newJobId !== null ) {
-      if ( status === "active" ) {
+      if ( status !== "draft" ) {
         setJobId( newJobId );
         subscribeToRecordingStatus( newJobId );
       }

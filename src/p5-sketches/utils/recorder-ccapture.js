@@ -30,7 +30,7 @@ const recorder = {
       // format: options.get('recording-format'),
       format,
       quality: "best",
-      framerate, // sketch.engine.getFrameRate(),
+      framerate: options.animation.framerate ?? framerate,
       verbose: false,
       name: options.name || sketch.name,
       manualStart: true,

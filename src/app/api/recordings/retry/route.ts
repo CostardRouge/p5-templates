@@ -6,8 +6,9 @@ import {
   RecordingQueueService
 } from "@/services/RecordingQueueService";
 import {
-  getJobById
+  getJobById, updateJob
 } from "@/lib/jobStore";
+import { addRecordingStatus } from "@/lib/progression";
 
 export async function POST( req: NextRequest ) {
   try {
@@ -35,6 +36,10 @@ export async function POST( req: NextRequest ) {
       if ( !existing ) {
         continue;
       }
+
+      // Reflect queued state in DB & SSE before worker picks it up
+      await updateJob( jobId, { status: "queued", progress: 0 } );
+      await addRecordingStatus( jobId, "queued" );
 
       await RecordingQueueService
         .getInstance()

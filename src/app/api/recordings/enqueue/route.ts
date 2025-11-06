@@ -11,6 +11,7 @@ import {
 export async function POST( request: NextRequest ): Promise<NextResponse<EnqueueRecordingResponse>> {
   try {
     const formData = await request.formData();
+    const jobIdRaw = formData.get( "jobId" );
     const template = formData.get( "template" );
     const status = formData.get( "status" ) ?? "queued";
 
@@ -114,6 +115,7 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
         null,
         2
       ),
+      jobId: typeof jobIdRaw === "string" ? jobIdRaw : undefined,
     } );
 
     return NextResponse.json( {

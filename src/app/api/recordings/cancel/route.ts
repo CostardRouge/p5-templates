@@ -2,8 +2,8 @@ import {
   NextRequest, NextResponse
 } from "next/server";
 import {
-  prisma
-} from "@/lib/connections/prisma";
+  updateJob
+} from "@/lib/jobStore";
 import {
   Job
 } from "bullmq";
@@ -64,14 +64,7 @@ export async function POST( req: NextRequest ) {
         ].includes( state ) ) {
           await bullJob.remove();
 
-          await prisma.job.update( {
-            where: {
-              id: jobId
-            },
-            data: {
-              status: "cancelled"
-            },
-          } );
+          await updateJob( jobId, { status: "cancelled", progress: 100 } );
 
           cancelled.push( jobId );
         } else if ( state === "active" ) {

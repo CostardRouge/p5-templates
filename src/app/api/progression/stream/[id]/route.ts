@@ -53,9 +53,9 @@ export async function GET(
         }
 
         if ( jobCurrentStepAndPercentage.percentage === 100 || [
-          "complete",
+          "completed",
           "failed",
-          "error"
+          "cancelled"
         ].includes( jobCurrentStepAndPercentage.status ) ) {
           controller.enqueue( `data: ${ JSON.stringify( jobCurrentStepAndPercentage ) }\n\n` );
 

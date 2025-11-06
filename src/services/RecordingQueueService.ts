@@ -6,7 +6,7 @@ import {
 } from "uuid";
 import Redis from "@/lib/connections/redis";
 import {
-  createJob, updateJob
+  createJob, updateJob, getJobById
 } from "@/lib/jobStore";
 import {
   RecordingJobData,
@@ -72,22 +72,28 @@ export class RecordingQueueService {
     template,
     options,
     status,
-    files
+    files,
+    jobId: providedJobId
   }:{
     status: JobStatusEnum,
     template: string,
     options: string,
-    files: File[]
+    files: File[],
+    jobId?: string
   } ): Promise<string> {
-    const jobId = generateUuid();
+    const jobId = providedJobId ?? generateUuid();
 
     try {
-      // 1. Create job record in database first
-      const persistedJob = await createJob(
-        jobId,
-        template,
-        status
-      );
+      let persistedJob = await getJobById( jobId );
+
+      // 1. Create job record in database first (if not existing)
+      if ( !persistedJob ) {
+        persistedJob = await createJob(
+          jobId,
+          template,
+          status
+        );
+      }
 
       if ( persistedJob.status !== "draft" ) {
         await addRecordingStatus(
@@ -96,7 +102,7 @@ export class RecordingQueueService {
         );
       }
 
-      // 2. Persisting files in s3
+      // 2. Persist assets in S3 (overwrite on upsert)
       for ( const file of files ) {
         await uploadArtifact(
           `${ jobId }/assets/${ file.name }`,
@@ -104,7 +110,7 @@ export class RecordingQueueService {
         );
       }
 
-      // 3. Persisting options in s3
+      // 3. Persist options in S3 (overwrite)
       await uploadArtifact(
         `${ jobId }/options.json`,
         Buffer.from( options )
@@ -117,8 +123,12 @@ export class RecordingQueueService {
         }
       );
 
-      if ( persistedJob.status !== "draft" ) {
-        // 3. Add job to BullMQ queue
+      // 4. Enqueue if not draft
+      if ( status !== "draft" ) {
+        // ensure DB and SSE reflect queued state before worker picks it
+        await updateJob( jobId, { status: "queued", progress: 0 } );
+        await addRecordingStatus( jobId, "queued" );
+
         await this.queue.add(
           "process-recording",
           {
