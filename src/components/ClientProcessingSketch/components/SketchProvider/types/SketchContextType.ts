@@ -12,6 +12,7 @@ export type SketchContextType = {
   name: string;
   options: SketchOption;
   persistedJob?: JobModel;
+  backendRecording: boolean
   activeSlideIndex?: number,
   sketchFormValues?: Record<string, any>
   sketchFormConfiguration?: Record<string, FieldConfig>

@@ -17,8 +17,13 @@ type NavItem = {
   target?: string;
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 };
+type MenuBarProps = {
+  backendRecording: boolean
+}
 
-export default function MenuBar() {
+export default function MenuBar( {
+  backendRecording
+}: MenuBarProps ) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isCapturing = searchParams?.has( "capturing" ) ?? false;
@@ -38,7 +43,7 @@ export default function MenuBar() {
     },
   ];
 
-  if ( process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true" ) {
+  if ( backendRecording ) {
     items.push( {
       href: "/recordings",
       Icon: Video

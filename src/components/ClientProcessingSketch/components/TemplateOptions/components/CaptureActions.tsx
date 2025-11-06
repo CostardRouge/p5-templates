@@ -23,6 +23,7 @@ import {
 import {
   SketchOption, SlideOption
 } from "@/types/sketch.types";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 export default function CaptureActions( {
   name,
@@ -46,6 +47,10 @@ export default function CaptureActions( {
     saving,
     setSaving
   ] = useState<boolean>( false );
+
+  const {
+    backendRecording
+  } = useSketch();
 
   const {
     subscribeToRecordingStatus, recordingProgress
@@ -179,7 +184,7 @@ export default function CaptureActions( {
       { !recordingProgress && (
         <div className="flex flex-col gap-1 h-auto w-full">
 
-          {process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true" && (
+          {backendRecording && (
             <div className="flex gap-1">
               {
                 persistedJob?.status === "draft" && ( <button

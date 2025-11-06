@@ -124,6 +124,7 @@ async function ProcessingSketch( {
       sketchFormValues={ formValues }
       sketchFormConfiguration={ formConfiguration }
       persistedJob={ processingSketchProps.persistedJob }
+      backendRecording={process.env.BACKEND_RECORDING === "true"}
       activeSlideIndex={ sketchOptions.slides?.length > 0 ? 0 : undefined}
     >
       <ClientProcessingSketch {...processingSketchProps} />

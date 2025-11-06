@@ -45,7 +45,7 @@ export default function RootLayout( {
             </main>
 
             <Suspense>
-              <MenuBar />
+              <MenuBar backendRecording={process.env.BACKEND_RECORDING === "true"} />
             </Suspense>
           </div>
         </ThemeProvider>
