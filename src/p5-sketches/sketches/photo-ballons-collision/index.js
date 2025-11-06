@@ -43,7 +43,6 @@ const getImages = () => {
     ];
 };
 
-
 await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );
 
@@ -55,7 +54,7 @@ events.register(
   "engine-mouse-dragged",
   () => {
     addImageBall(
-      random( cache.get( "images" ) ).img,
+      random( getImages() ).img,
       mouseX,
       mouseY,
       random(
@@ -230,6 +229,7 @@ sketch.setup(
     );
 
     const images = getImages();
+
     for ( let i = 0; i <= 10; i++ ) {
       addImageBall(
         ( images?.[ 0 ]?.img ),
