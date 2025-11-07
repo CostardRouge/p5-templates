@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import {
-  Clapperboard, Download, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X
+  AlertTriangle, Clapperboard, Download, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X
 } from "lucide-react";
 
 import {
@@ -43,21 +43,32 @@ function StatusBadge( {
 
 // Progress bar component
 function ProgressBar( {
-  progress
+  progress,
+  status
 }: {
- progress: number
+ progress: number,
+  status?: JobModel["status"]
 } ) {
+  // Show indeterminate state for active/queued jobs with 0 progress
+  const isIndeterminate = ( status === "active" || status === "queued" ) && progress === 0;
+
   return (
     <div className="w-full">
       <div className="w-full bg-hover rounded-xl border border-theme h-2 overflow-hidden">
-        <div
-          className="h-2 bg-blue-500"
-          style={{
-            width: `${ progress }%`
-          }} />
+        {isIndeterminate ? (
+          <div className="h-2 bg-blue-500 animate-pulse w-full opacity-50" />
+        ) : (
+          <div
+            className="h-2 bg-blue-500"
+            style={{
+              width: `${ progress }%`
+            }} />
+        )}
       </div>
 
-      <div className="text-xs text-foreground mt-1">{progress}%</div>
+      <div className="text-xs text-foreground mt-1">
+        {isIndeterminate ? "Starting..." : `${ progress }%`}
+      </div>
     </div>
   );
 }
@@ -68,14 +79,23 @@ function ActionsMenu( {
   onCancel,
   onDelete,
   onRetry,
-  onStart
+  onStart,
+  onForceCancel
 }: {
   job: JobModel;
   onCancel?: ( job: JobModel ) => void;
   onDelete?: ( job: JobModel ) => void;
   onStart?: ( job: JobModel ) => void;
   onRetry?: ( job: JobModel ) => void;
+  onForceCancel?: ( job: JobModel ) => void;
 } ) {
+  // Check if job is stale (active/queued for more than 1 hour)
+  const isStale = [
+    "active",
+    "queued"
+  ].includes( job.status ) &&
+    ( Date.now() - new Date( job.updatedAt ).getTime() ) > 60 * 60 * 1000;
+
   return (
     <Menu as="div" className="relative">
       <MenuButton>
@@ -217,6 +237,52 @@ function ActionsMenu( {
               >
                 <X className="h-5" />
                 Cancel
+              </button>
+            )}
+          </MenuItem>
+        )}
+
+        {isStale && (
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                onClick={async() => {
+                  if ( !confirm( `Force cancel stale job ${ job.id.slice(
+                    0,
+                    8
+                  ) }? This will mark it as cancelled.` ) ) {
+                    return;
+                  }
+                  try {
+                    const response = await fetch(
+                      `/api/recordings/${ job.id }/force-cancel`,
+                      {
+                        method: "POST"
+                      }
+                    );
+
+                    if ( !response.ok ) throw new Error( "Force cancel failed" );
+
+                    const {
+                      cancelled
+                    } = await response.json();
+
+                    if ( cancelled ) return onForceCancel?.( job );
+
+                    alert( `could not force cancel job: ${ job.id }` );
+                  } catch ( error ) {
+                    console.error(
+                      "Force cancel failed:",
+                      error
+                    );
+                  }
+                }}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm text-orange-600`}
+              >
+                <AlertTriangle className="h-5" />
+                Force Cancel (Stale)
               </button>
             )}
           </MenuItem>
@@ -656,7 +722,7 @@ export default function RecordingsPage() {
                     </td>
 
                     <td className="p-1 whitespace-nowrap">
-                      <ProgressBar progress={job.progress} />
+                      <ProgressBar progress={job.progress} status={job.status} />
                     </td>
 
                     <td className="p-1 whitespace-nowrap text-sm text-right">
@@ -666,6 +732,7 @@ export default function RecordingsPage() {
                         onDelete={handleDelete}
                         onRetry={handleRetry}
                         onStart={handleStart}
+                        onForceCancel={handleCancel}
                       />
                     </td>
                   </tr>
@@ -724,7 +791,7 @@ export default function RecordingsPage() {
                         { new Date( job.createdAt ).toLocaleString() }
                       </div>
 
-                      <ProgressBar progress={ job.progress } />
+                      <ProgressBar progress={ job.progress } status={job.status} />
                     </div>
 
                     <div className="self-center">
@@ -734,6 +801,7 @@ export default function RecordingsPage() {
                         onDelete={handleDelete}
                         onRetry={handleRetry}
                         onStart={handleStart}
+                        onForceCancel={handleCancel}
                       />
                     </div>
                   </div>
@@ -837,6 +905,7 @@ function RecordingThumbnail( {
         className,
         {
           grayscale: job.status !== "completed",
+          "animate-pulse": job.status === "active"
         }
       )}
       onClick={onClick}
