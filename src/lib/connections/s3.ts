@@ -1,5 +1,6 @@
 import {
   GetObjectCommand,
+  HeadObjectCommand,
   ObjectCannedACL,
   PutObjectCommand,
   S3Client,
@@ -76,6 +77,24 @@ export async function getBufferFromS3Url( objectKey: string ): Promise<Buffer> {
 
   // 3) concatenate and return
   return Buffer.concat( chunks );
+}
+
+/**
+ * Get the size of an object in S3 in bytes
+ * @param objectKey the key of the object in your bucket
+ * @returns the size in bytes, or null if not found
+ */
+export async function getObjectSize( objectKey: string ): Promise<number | null> {
+  try {
+    const response = await s3client.send( new HeadObjectCommand( {
+      Bucket: process.env.S3_BUCKET!,
+      Key: objectKey,
+    } ) );
+    return response.ContentLength ?? null;
+  } catch ( error ) {
+    console.error( `Failed to get object size for ${objectKey}:`, error );
+    return null;
+  }
 }
 
 export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void> {

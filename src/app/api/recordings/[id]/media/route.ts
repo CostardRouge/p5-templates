@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJobById } from "@/lib/jobStore";
-import { getDownloadUrlFromS3Url } from "@/lib/connections/s3";
+import { getDownloadUrlFromS3Url, getObjectSize } from "@/lib/connections/s3";
 
 /**
  * GET /api/recordings/[id]/media
@@ -48,11 +48,18 @@ export async function GET(
       })
     );
 
-    // Generate signed URLs for videos
-    const videoSignedUrls = await Promise.all(
-      videoUrls.map(async (key) => {
+    // Generate signed URLs for videos and get their sizes
+    const videoData = await Promise.all(
+      videoUrls.map(async (key, index) => {
         try {
-          return await getDownloadUrlFromS3Url(key, 3600);
+          const url = await getDownloadUrlFromS3Url(key, 3600);
+          const size = await getObjectSize(key);
+          return {
+            url,
+            size,
+            index,
+            key
+          };
         } catch (error) {
           console.error(`Failed to generate signed URL for video ${key}:`, error);
           return null;
@@ -60,9 +67,16 @@ export async function GET(
       })
     );
 
+    // Get size for resultUrl (zip file) if it exists
+    let zipSize: number | null = null;
+    if (job.resultUrl) {
+      zipSize = await getObjectSize(job.resultUrl);
+    }
+
     return NextResponse.json({
       thumbnails: thumbnailSignedUrls.filter(Boolean),
-      videos: videoSignedUrls.filter(Boolean),
+      videos: videoData.filter(Boolean),
+      zipSize,
       isZipArchive: false
     });
   } catch (error) {

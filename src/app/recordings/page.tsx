@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import {
-  AlertTriangle, Clapperboard, Download, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X
+  AlertTriangle, Clapperboard, Download, FileArchive, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X
 } from "lucide-react";
 
 import {
@@ -39,6 +39,167 @@ function StatusBadge( {
   };
 
   return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ classes[ status ] || classes.queued } ${ className }`}>{status}</span>;
+}
+
+// Helper function to format file size
+function formatFileSize( bytes: number | null ): string {
+  if ( bytes === null ) return "";
+  if ( bytes === 0 ) return "0 B";
+  const k = 1024;
+  const sizes = [
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
+  const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
+  return `${ parseFloat( ( bytes / Math.pow( k, i ) ).toFixed( 1 ) ) } ${ sizes[ i ] }`;
+}
+
+// Download menu items component
+function DownloadMenuItems( {
+  job
+}: {
+  job: JobModel
+} ) {
+  const [
+    mediaData,
+    setMediaData
+  ] = useState<{
+    videos: Array<{
+      url: string;
+      size: number | null;
+      index: number;
+      key: string;
+    }>;
+    zipSize: number | null;
+  } | null>( null );
+  const [
+    loading,
+    setLoading
+  ] = useState( true );
+
+  useEffect(
+    () => {
+      if ( job.status !== "completed" ) {
+        setLoading( false );
+        return;
+      }
+
+      const fetchMediaData = async() => {
+        try {
+          const response = await fetch( `/api/recordings/${ job.id }/media` );
+
+          if ( response.ok ) {
+            const data = await response.json();
+            setMediaData( data );
+          }
+        } catch ( error ) {
+          console.error(
+            "Failed to fetch media data:",
+            error
+          );
+        } finally {
+          setLoading( false );
+        }
+      };
+
+      fetchMediaData();
+    },
+    [
+      job.id,
+      job.status
+    ]
+  );
+
+  if ( job.status !== "completed" ) return null;
+  if ( loading ) {
+    return (
+      <MenuItem>
+        {( {
+          focus
+        } ) => (
+          <div className={`${ focus ? "bg-hover" : "" } px-4 py-2 text-sm text-gray-400`}>
+            Loading...
+          </div>
+        )}
+      </MenuItem>
+    );
+  }
+
+  const videos = mediaData?.videos || [
+  ];
+  const zipSize = mediaData?.zipSize;
+
+  return (
+    <>
+      {videos.length > 1 && videos.map( ( video, idx ) => (
+        <MenuItem key={video.index}>
+          {( {
+            focus
+          } ) => (
+            <button
+              onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/slide/${ video.index }` )}
+              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+            >
+              <Download className="h-5" />
+              <span>
+                Download slide { video.index + 1 }
+                {video.size && (
+                  <span className="text-xs text-gray-400 ml-1">({ formatFileSize( video.size ) })</span>
+                )}
+              </span>
+            </button>
+          )}
+        </MenuItem>
+      ) )}
+
+      {videos.length === 1 && (
+        <MenuItem>
+          {( {
+            focus
+          } ) => (
+            <button
+              onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/slide/0` )}
+              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+            >
+              <Download className="h-5" />
+              <span>
+                Download
+                {videos[ 0 ].size && (
+                  <span className="text-xs text-gray-400 ml-1">({ formatFileSize( videos[ 0 ].size ) })</span>
+                )}
+              </span>
+            </button>
+          )}
+        </MenuItem>
+      )}
+
+      {videos.length > 1 && (
+        <>
+          <div className="my-1 h-px bg-border" />
+          <MenuItem>
+            {( {
+              focus
+            } ) => (
+              <button
+                onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/zip` )}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              >
+                <FileArchive className="h-5" />
+                <span>
+                  Download all (.zip)
+                  {zipSize && (
+                    <span className="text-xs text-gray-400 ml-1">({ formatFileSize( zipSize ) })</span>
+                  )}
+                </span>
+              </button>
+            )}
+          </MenuItem>
+        </>
+      )}
+    </>
+  );
 }
 
 // Progress bar component
@@ -102,22 +263,8 @@ function ActionsMenu( {
         <MenuIcon className="h-4"/>
       </MenuButton>
 
-      <MenuItems className="absolute right-0 w-48 border border-theme rounded-xl z-50 bg-background overflow-hidden">
-        {job.status === "completed" &&
-          <MenuItem>
-            {( {
-              focus
-            } ) => (
-              <button
-                onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
-              >
-                <Download className="h-5" />
-                Download
-              </button>
-            )}
-          </MenuItem>
-        }
+      <MenuItems className="absolute right-0 w-64 border border-theme rounded-xl z-50 bg-background overflow-hidden">
+        <DownloadMenuItems job={job} />
 
         {/* {job.status === "draft" &&*/}
         {/*  <MenuItem>*/}
