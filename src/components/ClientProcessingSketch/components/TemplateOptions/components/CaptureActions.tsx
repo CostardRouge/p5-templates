@@ -272,7 +272,7 @@ export default function CaptureActions( {
             {/* blend-inverting label */}
             <span
               className="absolute inset-0 p-1 text-xs select-none
-               mix-blend-difference text-foreground truncate"
+              text-foreground truncate"
             >
               {recordingProgress.status}
               {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}

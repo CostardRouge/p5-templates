@@ -17,13 +17,43 @@ enum JobStatus {
   draft
 }
 
+model Template {
+  id          String             @id @default(uuid())
+  name        String             // e.g., "p5/mySketch"
+  description String?
+  options     Json               // Current mutable configuration
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  snapshots   TemplateSnapshot[]
+
+  @@unique([name])
+}
+
+model TemplateSnapshot {
+  id         String   @id @default(uuid())
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name       String   // Snapshot of template name at creation time
+  options    Json     // Immutable snapshot of options
+  createdAt  DateTime @default(now())
+  jobs       Job[]
+
+  @@index([templateId])
+}
+
 model Job {
-  id        String    @id
-  template  String
-  status    JobStatus
-  resultUrl String?
-  progress  Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  options   Json?
+  id           String            @id
+  snapshotId   String?
+  snapshot     TemplateSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+  template     String            // Legacy: p5 sketch name for backward compatibility
+  status       JobStatus
+  resultUrl    String?
+  thumbnails   Json?             // Array of thumbnail URLs for each slide/video
+  videoUrls    Json?             // Array of video URLs for multi-slide recordings
+  progress     Int
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  options      Json?             // Legacy: inline options for backward compatibility
+
+  @@index([snapshotId])
 }

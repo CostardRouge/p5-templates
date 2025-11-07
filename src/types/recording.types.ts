@@ -28,6 +28,8 @@ export type JobModel = {
   status: JobStatusEnum,
   progress: number; // 0–100
   resultUrl: string | null;
+  thumbnails: string[] | null; // Array of thumbnail URLs
+  videoUrls: string[] | null; // Array of video URLs for multi-slide recordings
   options: InputJsonValue | null;
   createdAt: Date;
   updatedAt: Date;

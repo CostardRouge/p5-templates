@@ -1,5 +1,6 @@
 import encodeVideoFromFrames from "@/utils/encodeVideoFromFrames";
 import createBrowserPage from "@/utils/createBrowserPage";
+import captureFirstFrame from "@/utils/captureFirstFrame";
 
 import {
   updateJob
@@ -152,6 +153,14 @@ async function recordSketch(
       100
     );
 
+    // ─── 7.5. Capture first frame as thumbnail ──────────────────────────────────
+    const thumbnailPath = path.join(
+      temporaryDirectoryPath,
+      `thumbnail-${ jobId }.jpg`
+    );
+
+    await captureFirstFrame(tarExtractionPath, thumbnailPath);
+
     // ─── 8. Encode .mp4 ──────────────────────────────────────────────────────────
     const outputVideoPath = path.join(
       temporaryDirectoryPath,
@@ -181,7 +190,7 @@ async function recordSketch(
 
     await fs.unlink( tarPath ).catch( () => {} );
 
-    // ─── 9. Upload final .mp4 to S3 ──────────────────────────────────────────────
+    // ─── 9. Upload final .mp4 and thumbnail to S3 ────────────────────────────────
     await updateRecordingStepPercentage(
       jobId,
       "uploading",
@@ -191,6 +200,11 @@ async function recordSketch(
     const videoS3Url = await uploadArtifact(
       `${ jobId }/${ path.basename( outputVideoPath ) }`,
       await fs.readFile( outputVideoPath )
+    );
+
+    const thumbnailS3Url = await uploadArtifact(
+      `${ jobId }/${ path.basename( thumbnailPath ) }`,
+      await fs.readFile( thumbnailPath )
     );
 
     // ─── 10. Mark job done in DB ─────────────────────────────────────────────────
@@ -204,7 +218,9 @@ async function recordSketch(
       {
         status: "completed",
         progress: 100,
-        resultUrl: videoS3Url
+        resultUrl: videoS3Url,
+        thumbnails: [thumbnailS3Url],
+        videoUrls: [videoS3Url]
       }
     );
   }

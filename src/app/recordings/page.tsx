@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import {
-  Download, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X, Clapperboard
+  Clapperboard, Download, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X
 } from "lucide-react";
 
 import {
@@ -14,6 +14,7 @@ import {
 
 import HardLink from "@/components/HardLink";
 import fetchDownload from "@/components/utils/fetchDownload";
+import VideoPreviewModal from "@/components/VideoPreviewModal";
 
 import useMultiRecordingStatusStream from "@/hooks/useMultiRecordingStatusStream";
 import {
@@ -129,16 +130,30 @@ function ActionsMenu( {
 
         {job.status === "draft" && (
           <MenuItem>
-            {( { focus } ) => (
+            {( {
+              focus
+            } ) => (
               <button
                 onClick={async() => {
                   try {
-                    const res = await fetch( `/api/recordings/${ job.id }/start`, { method: "POST" } );
+                    const res = await fetch(
+                      `/api/recordings/${ job.id }/start`,
+                      {
+                        method: "POST"
+                      }
+                    );
+
                     if ( !res.ok ) throw new Error( "Start failed" );
-                    const { started } = await res.json();
+                    const {
+                      started
+                    } = await res.json();
+
                     if ( started ) onStart?.( job );
                   } catch ( error ) {
-                    console.error( "Start failed:", error );
+                    console.error(
+                      "Start failed:",
+                      error
+                    );
                   }
                 }}
                 className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -151,7 +166,12 @@ function ActionsMenu( {
         )}
 
         {/* Divider: only show if there are actions below */}
-        {( job.status === "queued" || ["cancelled", "failed", "completed", "draft"].includes( job.status ) ) && (
+        {( job.status === "queued" || [
+          "cancelled",
+          "failed",
+          "completed",
+          "draft"
+        ].includes( job.status ) ) && (
           <div className="my-1 h-px bg-border" />
         )}
 
@@ -169,16 +189,27 @@ function ActionsMenu( {
               <button
                 onClick={async() => {
                   try {
-                    const response = await fetch( `/api/recordings/${ job.id }/cancel`, { method: "POST" } );
+                    const response = await fetch(
+                      `/api/recordings/${ job.id }/cancel`,
+                      {
+                        method: "POST"
+                      }
+                    );
 
                     if ( !response.ok ) throw new Error( "Cancel failed" );
 
-                    const { cancelled } = await response.json();
+                    const {
+                      cancelled
+                    } = await response.json();
+
                     if ( cancelled ) return onCancel?.( job );
 
                     alert( `could not cancel job: ${ job.id }` );
                   } catch ( error ) {
-                    console.error( "Cancel failed:", error );
+                    console.error(
+                      "Cancel failed:",
+                      error
+                    );
                   }
                 }}
                 className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -201,16 +232,27 @@ function ActionsMenu( {
               <button
                 onClick={async() => {
                   try {
-                    const response = await fetch( `/api/recordings/${ job.id }/retry`, { method: "POST" } );
+                    const response = await fetch(
+                      `/api/recordings/${ job.id }/retry`,
+                      {
+                        method: "POST"
+                      }
+                    );
 
                     if ( !response.ok ) throw new Error( "Retry failed" );
 
-                    const { retried } = await response.json();
+                    const {
+                      retried
+                    } = await response.json();
+
                     if ( retried ) return onRetry?.( job );
 
                     alert( `could not retry job: ${ job.id }` );
                   } catch ( error ) {
-                    console.error( "Retry failed:", error );
+                    console.error(
+                      "Retry failed:",
+                      error
+                    );
                   }
                 }}
                 className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -235,16 +277,27 @@ function ActionsMenu( {
               <button
                 onClick={async() => {
                   try {
-                    const response = await fetch( `/api/recordings/${ job.id }`, { method: "DELETE" } );
+                    const response = await fetch(
+                      `/api/recordings/${ job.id }`,
+                      {
+                        method: "DELETE"
+                      }
+                    );
 
                     if ( !response.ok ) throw new Error( "Delete failed" );
 
-                    const { deleted } = await response.json();
+                    const {
+                      deleted
+                    } = await response.json();
+
                     if ( deleted ) return onDelete?.( job );
 
                     alert( `could not delete job: ${ job.id }` );
                   } catch ( error ) {
-                    console.error( "Delete failed:", error );
+                    console.error(
+                      "Delete failed:",
+                      error
+                    );
                   }
                 }}
                 className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -284,6 +337,10 @@ export default function RecordingsPage() {
     statusFilter,
     setStatusFilter
   ] = useState<string>( "all" );
+  const [
+    previewJobId,
+    setPreviewJobId
+  ] = useState<string | null>( null );
 
   // fetch jobs
   useEffect(
@@ -469,199 +526,298 @@ export default function RecordingsPage() {
   };
 
   return (
-    <div className="space-y-6 p-2">
-      {/* Top Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Recordings</h1>
+    <div>
+      <div className="space-y-6 p-2">
+        {/* Top Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold">Recordings</h1>
 
-        <div className="flex flex-wrap items-center gap-1 text-xs">
-          <input
-            type="text"
-            placeholder="Search…"
-            value={search}
-            onChange={( e ) => setSearch( e.target.value )}
-            className="px-2 rounded-xl w-full sm:w-40 bg-background h-8 border border-theme border-b-2"
-          />
+          <div className="flex flex-wrap items-center gap-1 text-xs">
+            <input
+              type="text"
+              placeholder="Search…"
+              value={search}
+              onChange={( e ) => setSearch( e.target.value )}
+              className="px-2 rounded-xl w-full sm:w-40 bg-background h-8 border border-theme border-b-2"
+            />
 
-          <select
-            value={statusFilter}
-            onChange={( e ) => setStatusFilter( e.target.value )}
-            className="px-2 rounded-xl bg-background h-8 border border-theme border-b-2"
-          >
-            <option value="all">All Status</option>
-            <option value="draft">Drafted</option>
-            <option value="queued">Queued</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-            <option value="failed">Failed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-
-          <div className="">
-            <button
-              onClick={() => setView( "cards" )}
-              className={`rounded-l-xl border border-theme border-b-2 border-r-0 px-2 py-[6.5] h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+            <select
+              value={statusFilter}
+              onChange={( e ) => setStatusFilter( e.target.value )}
+              className="px-2 rounded-xl bg-background h-8 border border-theme border-b-2"
             >
-              <Grid className="w-4 h-4" />
-            </button>
+              <option value="all">All Status</option>
+              <option value="draft">Drafted</option>
+              <option value="queued">Queued</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
 
-            <button
-              onClick={() => setView( "table" )}
-              className={`rounded-r-xl border border-theme border-b-2 border-l-0 px-2 py-[6.5] ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
-            >
-              <List className="w-4 h-4" />
-            </button>
+            <div className="">
+              <button
+                onClick={() => setView( "cards" )}
+                className={`rounded-l-xl border border-theme border-b-2 border-r-0 px-2 py-[6.5] h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+              >
+                <Grid className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => setView( "table" )}
+                className={`rounded-r-xl border border-theme border-b-2 border-l-0 px-2 py-[6.5] ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* <RecordingDashboard />*/}
+        {/* <RecordingDashboard />*/}
 
-      {/* Table View */}
-      {view === "table" && (
-        <div className="overflow-x-auto rounded-xl border border-theme border-b-2 bg-background">
-          <table className="min-w-full">
-            <thead className="bg-hover/70">
-              <tr className="text-left text-xs text-foreground uppercase border-b ">
-                <th className="font-medium p-1 w-14">Thumb</th>
-                <th className="font-medium p-1 w-4">ID</th>
-                <th className="font-medium p-1 w-4">Template</th>
-                <th className="font-medium p-1 w-2">Date</th>
-                <th className="font-medium p-1 w-6">Status</th>
-                <th className="font-medium p-1 w-2">Progress</th>
-                <th className="font-medium p-1 w-1 text-right">Actions</th>
-              </tr>
-            </thead>
+        {/* Table View */}
+        {view === "table" && (
+          <div className="overflow-x-auto rounded-xl border border-theme border-b-2 bg-background">
+            <table className="min-w-full">
+              <thead className="bg-hover/70">
+                <tr className="text-left text-xs text-foreground uppercase border-b ">
+                  <th className="font-medium p-1 w-14">Thumb</th>
+                  <th className="font-medium p-1 w-4">ID</th>
+                  <th className="font-medium p-1 w-4">Template</th>
+                  <th className="font-medium p-1 w-2">Date</th>
+                  <th className="font-medium p-1 w-6">Status</th>
+                  <th className="font-medium p-1 w-2">Progress</th>
+                  <th className="font-medium p-1 w-1 text-right">Actions</th>
+                </tr>
+              </thead>
 
-            <tbody className="divide-y divide-theme">
-              {filtered.map( ( job ) => (
-                <tr
-                  key={job.id}
-                  className="hover:bg-hover"
-                  onDoubleClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
-                >
-                  <td className="p-0 whitespace-nowrap sm:table-cell">
-                    <img
-                      src={getP5SketchThumbnailURL( job.template.replace(
-                        "p5",
-                        ""
-                      ) )}
-                      alt={job.template}
-                      loading="lazy"
-                      className="w-16 object-contain"
-                    />
-                  </td>
+              <tbody className="divide-y divide-theme">
+                {filtered.map( ( job ) => (
+                  <tr
+                    key={job.id}
+                    className="hover:bg-hover"
+                    onDoubleClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
+                  >
+                    <td className="p-0 whitespace-nowrap sm:table-cell">
+                      <RecordingThumbnail
+                        job={job}
+                        onClick={() => {
+                        // Only open preview if job has videoUrls (new recordings)
+                          if ( job.status === "completed" && job.videoUrls ) {
+                            setPreviewJobId( job.id );
+                          }
+                        }}
+                        className={`w-16 h-16 object-cover transition ${
+                          job.videoUrls ? "cursor-pointer hover:opacity-80" : "cursor-default"
+                        }`}
+                      />
+                    </td>
 
-                  <td className="p-1 whitespace-nowrap text-sm">
-                    <HardLink href={`templates/${ job.template }?id=${ job.id }`}>
+                    <td className="p-1 whitespace-nowrap text-sm">
+                      <HardLink href={`templates/${ job.template }?id=${ job.id }`}>
+                        {job.id.slice(
+                          0,
+                          8
+                        )}
+                        <span className="text-gray-400 ml-2">➔</span>
+                      </HardLink>
+                    </td>
+
+                    <td className="p-1 whitespace-nowrap text-sm">
+                      <HardLink href={`templates/${ job.template }`}>
+                        {job.template}
+                        <span className="text-gray-400 ml-2">➔</span>
+                      </HardLink>
+                    </td>
+
+                    <td className="p-1 whitespace-nowrap text-sm text-foreground">
+                      {new Date( job.createdAt ).toLocaleString()}
+                    </td>
+
+                    <td className="p-1 whitespace-nowrap text-sm">
+                      <StatusBadge status={job.status} />
+                    </td>
+
+                    <td className="p-1 whitespace-nowrap">
+                      <ProgressBar progress={job.progress} />
+                    </td>
+
+                    <td className="p-1 whitespace-nowrap text-sm text-right">
+                      <ActionsMenu
+                        job={job}
+                        onCancel={handleCancel}
+                        onDelete={handleDelete}
+                        onRetry={handleRetry}
+                        onStart={handleStart}
+                      />
+                    </td>
+                  </tr>
+                ) )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Card View */}
+        {view === "cards" && (
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
+            {filtered.map( ( job ) => (
+              <div key={job.id} className="bg-background border border-theme rounded-xl transition relative overflow-hidden">
+                <StatusBadge
+                  status={job.status}
+                  className="absolute top-2 left-2 rounded-xl"
+                />
+
+                <RecordingThumbnail
+                  job={job}
+                  onClick={() => {
+                  // Only open preview if job has videoUrls (new recordings)
+                    if ( job.status === "completed" && job.videoUrls ) {
+                      setPreviewJobId( job.id );
+                    }
+                  }}
+                  className={`w-full aspect-square object-cover transition ${
+                    job.videoUrls ? "cursor-pointer hover:opacity-80" : "cursor-default"
+                  }`}
+                />
+
+                <div className="p-2 space-y-1">
+                  <HardLink
+                    href={`templates/${ job.template }`}
+                    className="block text-sm text-blue-600 hover:underline truncate"
+                  >
+                    {job.template} →
+                  </HardLink>
+
+                  <div className="mb-1">
+                    <HardLink
+                      href={`templates/${ job.template }?id=${ job.id }`}
+                      className="text-xs font-medium truncate"
+                    >
                       {job.id.slice(
                         0,
                         8
-                      )}
-                      <span className="text-gray-400 ml-2">➔</span>
+                      )} →
                     </HardLink>
-                  </td>
+                  </div>
 
-                  <td className="p-1 whitespace-nowrap text-sm">
-                    <HardLink href={`templates/${ job.template }`}>
-                      {job.template}
-                      <span className="text-gray-400 ml-2">➔</span>
-                    </HardLink>
-                  </td>
+                  <div className="flex justify-between">
+                    <div className="flex-grow">
+                      <div className="text-xs text-label mb-2">
+                        { new Date( job.createdAt ).toLocaleString() }
+                      </div>
 
-                  <td className="p-1 whitespace-nowrap text-sm text-foreground">
-                    {new Date( job.createdAt ).toLocaleString()}
-                  </td>
-
-                  <td className="p-1 whitespace-nowrap text-sm">
-                    <StatusBadge status={job.status} />
-                  </td>
-
-                  <td className="p-1 whitespace-nowrap">
-                    <ProgressBar progress={job.progress} />
-                  </td>
-
-                  <td className="p-1 whitespace-nowrap text-sm text-right">
-                    <ActionsMenu
-                      job={job}
-                      onCancel={handleCancel}
-                      onDelete={handleDelete}
-                      onRetry={handleRetry}
-                      onStart={handleStart}
-                    />
-                  </td>
-                </tr>
-              ) )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Card View */}
-      {view === "cards" && (
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
-          {filtered.map( ( job ) => (
-            <div key={job.id} className="bg-background border border-theme rounded-xl transition relative overflow-hidden">
-              <StatusBadge
-                status={job.status}
-                className="absolute top-2 left-2 rounded-xl"
-              />
-
-              <img
-                src={getP5SketchThumbnailURL( job.template.replace(
-                  "p5",
-                  ""
-                ) )}
-                alt={job.template}
-                loading="lazy"
-                className="object-contain"
-              />
-
-              <div className="p-2 space-y-1">
-                <HardLink
-                  href={`templates/${ job.template }`}
-                  className="block text-sm text-blue-600 hover:underline truncate"
-                >
-                  {job.template} →
-                </HardLink>
-
-                <div className="mb-1">
-                  <HardLink
-                    href={`templates/${ job.template }?id=${ job.id }`}
-                    className="text-xs font-medium truncate"
-                  >
-                    {job.id.slice(
-                      0,
-                      8
-                    )} →
-                  </HardLink>
-                </div>
-
-                <div className="flex justify-between">
-                  <div className="flex-grow">
-                    <div className="text-xs text-label mb-2">
-                      { new Date( job.createdAt ).toLocaleString() }
+                      <ProgressBar progress={ job.progress } />
                     </div>
 
-                    <ProgressBar progress={ job.progress } />
+                    <div className="self-center">
+                      <ActionsMenu
+                        job={job}
+                        onCancel={handleCancel}
+                        onDelete={handleDelete}
+                        onRetry={handleRetry}
+                        onStart={handleStart}
+                      />
+                    </div>
                   </div>
 
-                  <div className="self-center">
-                    <ActionsMenu
-                      job={job}
-                      onCancel={handleCancel}
-                      onDelete={handleDelete}
-                      onRetry={handleRetry}
-                      onStart={handleStart}
-                    />
-                  </div>
                 </div>
-
               </div>
-            </div>
-          ) )}
-        </div>
+            ) )}
+          </div>
+        )}
+      </div>
+
+      {/* Video Preview Modal */}
+      {previewJobId && (
+        <VideoPreviewModal
+          jobId={previewJobId}
+          isOpen={!!previewJobId}
+          onClose={() => setPreviewJobId( null )}
+        />
       )}
     </div>
+  );
+}
+
+// Thumbnail component that fetches and displays recording thumbnail
+function RecordingThumbnail( {
+  job,
+  onClick,
+  className
+}: {
+  job: JobModel;
+  onClick?: () => void;
+  className?: string;
+} ) {
+  const [
+    thumbnailUrl,
+    setThumbnailUrl
+  ] = useState<string | null>( null );
+  const [
+    loading,
+    setLoading
+  ] = useState( true );
+
+  useEffect(
+    () => {
+    // Only fetch thumbnails for completed jobs that have the thumbnails field
+      if ( job.status !== "completed" || !job.thumbnails ) {
+        setLoading( false );
+        return;
+      }
+
+      const fetchThumbnail = async() => {
+        try {
+          const response = await fetch( `/api/recordings/${ job.id }/media` );
+
+          if ( response.ok ) {
+            const data = await response.json();
+
+            // Only set thumbnail if we have actual thumbnail URLs (not zip archives)
+            if ( !data.isZipArchive && data.thumbnails && data.thumbnails.length > 0 ) {
+              setThumbnailUrl( data.thumbnails[ 0 ] );
+            }
+          }
+        } catch ( error ) {
+          console.error(
+            "Failed to fetch thumbnail:",
+            error
+          );
+        } finally {
+          setLoading( false );
+        }
+      };
+
+      fetchThumbnail();
+    },
+    [
+      job.id,
+      job.status,
+      job.thumbnails
+    ]
+  );
+
+  // Show loading state
+  if ( loading ) {
+    return (
+      <div className={`bg-hover animate-pulse ${ className }`} />
+    );
+  }
+
+  // Use recording thumbnail if available, otherwise fall back to sketch thumbnail
+  const src = thumbnailUrl || getP5SketchThumbnailURL( job.template.replace(
+    "p5",
+    ""
+  ) );
+
+  return (
+    <img
+      src={src}
+      alt={job.template}
+      loading="lazy"
+      className={className}
+      onClick={onClick}
+    />
   );
 }
