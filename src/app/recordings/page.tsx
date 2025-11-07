@@ -21,6 +21,7 @@ import {
   JobModel, JobStatusEnum
 } from "@/types/recording.types";
 import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
+import clsx from "clsx";
 
 // Badge component
 function StatusBadge( {
@@ -398,19 +399,35 @@ export default function RecordingsPage() {
           ].includes( data.status ) ) {
             setInFlightJobs( prev => prev.filter( j => j.id !== jobId ) );
 
-            const completedJob = inFlightJobs.find( j => j.id === jobId );
+            // Fetch the complete job data from the server to get thumbnails and videoUrls
+            fetch( `/api/recordings/${ jobId }` )
+              .then( res => res.ok ? res.json() : Promise.reject( "Fetch error" ) )
+              .then( ( updatedJob: JobModel ) => {
+                // Insert at the beginning to maintain newest-first order
+                setStaticJobs( prev => [
+                  updatedJob,
+                  ...prev
+                ] );
+              } )
+              .catch( err => {
+                console.error(
+                  "Failed to fetch updated job:",
+                  err
+                );
+                // Fallback to using the data we have
+                const completedJob = inFlightJobs.find( j => j.id === jobId );
 
-            if ( completedJob ) {
-              // Insert at the beginning to maintain newest-first order
-              setStaticJobs( prev => [
-                {
-                  ...completedJob,
-                  progress: 100, // data.percentage,
-                  status: data.status as JobStatusEnum
-                },
-                ...prev
-              ] );
-            }
+                if ( completedJob ) {
+                  setStaticJobs( prev => [
+                    {
+                      ...completedJob,
+                      progress: 100,
+                      status: data.status as JobStatusEnum
+                    },
+                    ...prev
+                  ] );
+                }
+              } );
 
             unsubscribe( jobId );
           }
@@ -816,7 +833,12 @@ function RecordingThumbnail( {
       src={src}
       alt={job.template}
       loading="lazy"
-      className={className}
+      className={clsx(
+        className,
+        {
+          grayscale: job.status !== "completed",
+        }
+      )}
       onClick={onClick}
     />
   );
