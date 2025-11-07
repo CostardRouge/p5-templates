@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import {
-  AlertTriangle, Clapperboard, Download, FileArchive, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X
+  AlertTriangle, Clapperboard, Download, FileArchive, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X, Link, Eye
 } from "lucide-react";
 
 import {
@@ -241,6 +241,7 @@ function ActionsMenu( {
   onDelete,
   onRetry,
   onStart,
+  onPreviewModal,
   onForceCancel
 }: {
   job: JobModel;
@@ -248,6 +249,7 @@ function ActionsMenu( {
   onDelete?: ( job: JobModel ) => void;
   onStart?: ( job: JobModel ) => void;
   onRetry?: ( job: JobModel ) => void;
+  onPreviewModal?: ( ) => void;
   onForceCancel?: ( job: JobModel ) => void;
 } ) {
   // Check if job is stale (active/queued for more than 1 hour)
@@ -264,23 +266,64 @@ function ActionsMenu( {
       </MenuButton>
 
       <MenuItems className="absolute right-0 w-64 border border-theme rounded-xl z-50 bg-background overflow-hidden">
-        <DownloadMenuItems job={job} />
+       {( job.status === "completed" && job.videoUrls ) && (
+        <>
+        <MenuItem>
+          {( {
+              focus
+            } ) => (       
+              <button
+                onClick={onPreviewModal}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              >
+                <Eye className="h-5" />
+                Open preview modal
+              </button>
+            )}
+          </MenuItem>
+                
+          <div className="my-1 h-px bg-border" />
+        </>
+      )}
 
-        {/* {job.status === "draft" &&*/}
-        {/*  <MenuItem>*/}
-        {/*    {( {*/}
-        {/*      focus*/}
-        {/*    } ) => (*/}
-        {/*      <button*/}
-        {/*        onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }` )}*/}
-        {/*        className={`${ focus ? "bg-gray-100 dark:bg-gray-700" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}*/}
-        {/*      >*/}
-        {/*        <Clapperboard className="h-5" />*/}
-        {/*        Start recording*/}
-        {/*      </button>*/}
-        {/*    )}*/}
-        {/*  </MenuItem>*/}
-        {/* }*/}
+       <MenuItem>
+        {( {
+            focus
+          } ) => (       
+            <HardLink
+              href={`templates/${ job.template }?id=${ job.id }`}
+              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+            >
+              <Link className="h-5" />
+              <span>Open recording&nbsp;
+                <u>{
+                job.id.slice(
+                0,
+                8
+              )}
+              </u>
+              </span>
+            </HardLink>
+          )}
+        </MenuItem>
+
+       <MenuItem>
+        {( {
+            focus
+          } ) => (       
+            <HardLink
+              href={`templates/${ job.template }`}
+              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+            >
+              <Link className="h-5" />
+              <span>Open template <u>{job.template}</u></span>
+            </HardLink>
+          )}
+        </MenuItem>
+
+        <div className="my-1 h-px bg-border" />
+        
+        <DownloadMenuItems job={job} />
 
         <MenuItem>
           {( {
@@ -514,7 +557,7 @@ function ActionsMenu( {
                     );
                   }
                 }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600`}
               >
                 <Trash2 />
                 Delete
@@ -760,7 +803,7 @@ export default function RecordingsPage() {
       <div className="space-y-6 p-2">
         {/* Top Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold">Recordings</h1>
+          <h1 className="text-2xl font-semibold">Recordings ({filtered.length})</h1>
 
           <div className="flex flex-wrap items-center gap-1 text-xs">
             <input
@@ -826,7 +869,6 @@ export default function RecordingsPage() {
                   <tr
                     key={job.id}
                     className="hover:bg-hover"
-                    onDoubleClick={async() => await fetchDownload( `/api/download/${ job.id }` )}
                   >
                     <td className="p-0 whitespace-nowrap sm:table-cell">
                       <RecordingThumbnail
@@ -880,6 +922,7 @@ export default function RecordingsPage() {
                         onRetry={handleRetry}
                         onStart={handleStart}
                         onForceCancel={handleCancel}
+                        onPreviewModal={() => setPreviewJobId( job.id )}
                       />
                     </td>
                   </tr>
@@ -1044,18 +1087,27 @@ function RecordingThumbnail( {
   ) );
 
   return (
-    <img
-      src={src}
-      alt={job.template}
-      loading="lazy"
+    <div
+      onClick={onClick}
       className={clsx(
         className,
+        "relative",
         {
           grayscale: job.status !== "completed",
           "animate-pulse": job.status === "active"
         }
       )}
-      onClick={onClick}
-    />
+    >
+     { thumbnailUrl && (
+      <Eye
+        className="w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground bg-background rounded-lg py-1 px-1 border border-theme"
+      />
+     ) }
+      <img
+        src={src}
+        alt={job.template}
+        loading="lazy"
+      />
+    </div>
   );
 }
