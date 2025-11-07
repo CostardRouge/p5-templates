@@ -81,6 +81,8 @@ function generateMetadata() {
       "utf-8"
     );
     console.log( `✅  Updated metadata.json (${ sketchMeta.length } sketches)` );
+  } else {
+    console.log( `✅  metadata.json is up to date (${ sketchMeta.length } sketches)` );
   }
 }
 

@@ -1,14 +1,5 @@
-import fs from "fs";
-import path from "path";
-
-import {
-  SKETCHES_DIRECTORY
-} from "@/constants";
-
-const META_PATH = path.join(
-  SKETCHES_DIRECTORY,
-  "metadata.json"
-);
+// Import metadata.json directly as a module so it's bundled in production
+import metadata from "@/p5-sketches/sketches/metadata.json";
 
 type SketchMeta = {
   name: string;
@@ -18,25 +9,21 @@ type SketchMeta = {
 };
 
 async function getSketchList() {
-  if ( fs.existsSync( META_PATH ) ) {
-    try {
-      const meta: SketchMeta[] = JSON.parse( fs.readFileSync(
-        META_PATH,
-        "utf-8"
-      ) );
+  try {
+    const meta = metadata as SketchMeta[];
 
-      return meta.map( ( {
-        name, hasSketchForm
-      } ) => ( {
-        name,
-        hasSketchForm
-      } ) );
-    } catch ( err ) {
-      console.error(
-        "Failed to read sketch-meta.json:",
-        err
-      );
-    }
+    return meta.map( ( {
+      name, hasSketchForm
+    } ) => ( {
+      name,
+      hasSketchForm
+    } ) );
+  } catch ( err ) {
+    console.error(
+      "Failed to read sketch metadata:",
+      err
+    );
+    return [];
   }
 }
 
