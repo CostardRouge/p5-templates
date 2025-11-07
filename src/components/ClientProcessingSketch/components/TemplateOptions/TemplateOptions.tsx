@@ -431,7 +431,9 @@ export default function TemplateOptions( {
       </CollapsibleItem>
 
       <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
-        <SketchSettings />
+        <SketchSettings 
+          activeSlideIndex={slides && slides.length > 0 ? activeSlideIndex : undefined}
+        />
       </TemplateAssetsProvider>
     </FormProvider>
   );

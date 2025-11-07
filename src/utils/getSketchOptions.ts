@@ -1,9 +1,3 @@
-import fs from "fs";
-import path from "path";
-
-import {
-  SKETCHES_DIRECTORY
-} from "@/constants";
 import {
   SketchOption
 } from "@/types/sketch.types";
@@ -11,16 +5,11 @@ import {
   FieldConfig
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
-export function getJSONSketchOptions( sketchName: string ): Partial<SketchOption> {
+export async function getJSONSketchOptions( sketchName: string ): Promise<Partial<SketchOption>> {
   try {
-    return JSON.parse( fs.readFileSync(
-      path.join(
-        SKETCHES_DIRECTORY,
-        sketchName,
-        "options.json"
-      ),
-      "utf8"
-    ) );
+    // Use dynamic import so it works in production builds
+    const options = await import( `@/p5-sketches/sketches/${ sketchName }/options.json` );
+    return options.default || options;
   }
   catch ( error ) {
     return {

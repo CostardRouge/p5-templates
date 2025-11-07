@@ -397,7 +397,8 @@ export const SlideSchema = z.object( {
   name: z.string().optional( ),
   content: z.array( ContentItemSchema ).default( [
   ] ),
-  assets: Assets
+  assets: Assets,
+  sketch: z.any().optional()
 } );
 
 /* ---------------- root options.json ----------------------------- */

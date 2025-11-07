@@ -58,7 +58,7 @@ async function ProcessingSketch( {
     formValues, formConfiguration
   } = await getSketchMeta( sketchName );
 
-  const jsonOptions = getJSONSketchOptions( sketchName );
+  const jsonOptions = await getJSONSketchOptions( sketchName );
 
   if ( jsonOptions ) {
     Object.assign(

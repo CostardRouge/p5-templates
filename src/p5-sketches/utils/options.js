@@ -219,4 +219,17 @@ events.register(
   }
 );
 
-export default sketchOptions;
+/* ------------------------------------------------------------------ */
+/*  Proxy to support sketch settings from current slide              */
+/* ------------------------------------------------------------------ */
+const optionsProxy = new Proxy(sketchOptions, {
+  get(target, prop) {
+    // If accessing 'sketch' property and slides exist, merge with current slide
+    if (prop === 'sketch' && typeof window !== 'undefined' && window.getSketchSettings) {
+      return window.getSketchSettings(target);
+    }
+    return target[prop];
+  }
+});
+
+export default optionsProxy;

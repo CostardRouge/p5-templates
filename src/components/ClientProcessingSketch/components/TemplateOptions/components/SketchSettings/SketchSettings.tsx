@@ -12,10 +12,12 @@ import useSketch from "@/components/ClientProcessingSketch/components/SketchProv
 
 type SketchSettingsProps = {
   basePath?: string;
+  activeSlideIndex?: number;
 };
 
 export default function SketchSettings( {
-  basePath = "sketch"
+  basePath,
+  activeSlideIndex
 }: SketchSettingsProps ) {
   const {
     sketchFormConfiguration
@@ -24,6 +26,11 @@ export default function SketchSettings( {
   if ( !sketchFormConfiguration ) {
     return null;
   }
+
+  // Use slide-specific basePath if a slide is active, otherwise use global sketch settings
+  const effectiveBasePath = activeSlideIndex !== undefined 
+    ? `slides.${activeSlideIndex}.sketch`
+    : basePath ?? "sketch";
 
   return (
     <CollapsibleItem
@@ -44,12 +51,15 @@ export default function SketchSettings( {
               rotate: expanded ? "0deg" : "180deg"
             }}
           />
-          <span>sketch options</span>
+          <span>
+            sketch options
+            {activeSlideIndex !== undefined && ` (slide ${activeSlideIndex + 1})`}
+          </span>
         </button>
       )}
     >
       <div className="overflow-y-auto">
-        <GenericObjectForm basePath={basePath} config={sketchFormConfiguration} />
+        <GenericObjectForm basePath={effectiveBasePath} config={sketchFormConfiguration} />
       </div>
     </CollapsibleItem>
   );

@@ -115,6 +115,23 @@ const slides = {
     }
     this.render( slide );
   },
+
+  /**
+   * Get merged sketch settings for the current slide
+   * Merges global sketch settings with slide-specific settings
+   * Slide settings override global settings
+   * @param {object} optionsTarget - The raw options object (to avoid proxy recursion)
+   */
+  getSketchSettings(optionsTarget) {
+    const globalSketch = optionsTarget?.sketch || {};
+    const currentSlide = this.current;
+    const slideSketch = currentSlide?.sketch || {};
+    
+    return {
+      ...globalSketch,
+      ...slideSketch
+    };
+  },
 };
 
 // Public helpers used by React
@@ -126,6 +143,7 @@ window.getCurrentSlide = () => ( {
   slide: slides.current,
   index: slides.index
 } );
+window.getSketchSettings = (optionsTarget) => slides.getSketchSettings(optionsTarget);
 
 window.slides = slides;
 
