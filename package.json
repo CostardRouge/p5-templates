@@ -5,7 +5,7 @@
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",
     "dev": "concurrently \"npm run sketch:meta\" \"next dev --turbopack\"",
-    "build": "next build",
+    "build": "NODE_ENV=production node scripts/watch-sketches.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
