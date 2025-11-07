@@ -214,6 +214,18 @@ export default function CaptureActions( {
                   </button>
                 ) }
 
+              { persistedJob?.status === "draft" && (
+                <button
+                  className=" rounded-lg p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
+                  onClick={() => handleSubmit( "queued", persistedJob.id )}
+                  disabled={isLoading || saving}
+                >
+                  {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
+                    <Clapperboard className="inline h-3" />}
+                  <span className="align-middle">Record this draft</span>
+                </button>
+              ) }
+
               <button
                 className=" rounded-lg p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
                 onClick={() => handleSubmit()}
@@ -221,7 +233,7 @@ export default function CaptureActions( {
               >
                 {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
                   <Clapperboard className="inline h-3" />}
-                <span className="align-middle">Server recording in .mp4</span>
+                <span className="align-middle">Record new video</span>
               </button>
 
             </div>

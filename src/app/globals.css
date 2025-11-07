@@ -56,10 +56,6 @@
     *, ::before, ::after {
         border-color: hsl(var(--border));
     }
-
-    .border-b-2:active:not(input, textarea, select) {
-        border-bottom-width: 1px;
-    }
 }
 
 canvas#defaultCanvas0 {

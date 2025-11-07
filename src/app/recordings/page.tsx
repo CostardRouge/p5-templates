@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import {
-  Download, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X
+  Download, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X, Clapperboard
 } from "lucide-react";
 
 import {
@@ -72,7 +72,7 @@ function ActionsMenu( {
   onCancel?: ( job: JobModel ) => void;
   onDelete?: ( job: JobModel ) => void;
   onStart?: ( job: JobModel ) => void;
-  onRetry?: () => void;
+  onRetry?: ( job: JobModel ) => void;
 } ) {
   return (
     <Menu as="div" className="relative">
@@ -127,7 +127,33 @@ function ActionsMenu( {
           )}
         </MenuItem>
 
-        <div className="my-1 h-px bg-border" />
+        {job.status === "draft" && (
+          <MenuItem>
+            {( { focus } ) => (
+              <button
+                onClick={async() => {
+                  try {
+                    const res = await fetch( `/api/recordings/${ job.id }/start`, { method: "POST" } );
+                    if ( !res.ok ) throw new Error( "Start failed" );
+                    const { started } = await res.json();
+                    if ( started ) onStart?.( job );
+                  } catch ( error ) {
+                    console.error( "Start failed:", error );
+                  }
+                }}
+                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              >
+                <Clapperboard className="h-5" />
+                Start recording
+              </button>
+            )}
+          </MenuItem>
+        )}
+
+        {/* Divider: only show if there are actions below */}
+        {( job.status === "queued" || ["cancelled", "failed", "completed", "draft"].includes( job.status ) ) && (
+          <div className="my-1 h-px bg-border" />
+        )}
 
         {![
           "completed",
@@ -143,39 +169,16 @@ function ActionsMenu( {
               <button
                 onClick={async() => {
                   try {
-                    const response = await fetch(
-                      "/api/recordings/cancel",
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify( {
-                          ids: [
-                            job.id
-                          ]
-                        } ),
-                      }
-                    );
+                    const response = await fetch( `/api/recordings/${ job.id }/cancel`, { method: "POST" } );
 
-                    if ( !response.ok ) {
-                      throw new Error( "Cancel failed" );
-                    }
+                    if ( !response.ok ) throw new Error( "Cancel failed" );
 
-                    const {
-                      cancelled
-                    } = await response.json();
-
-                    if ( cancelled.includes( job.id ) ) {
-                      return onCancel?.( job );
-                    }
+                    const { cancelled } = await response.json();
+                    if ( cancelled ) return onCancel?.( job );
 
                     alert( `could not cancel job: ${ job.id }` );
                   } catch ( error ) {
-                    console.error(
-                      "Cancel failed:",
-                      error
-                    );
+                    console.error( "Cancel failed:", error );
                   }
                 }}
                 className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -198,39 +201,16 @@ function ActionsMenu( {
               <button
                 onClick={async() => {
                   try {
-                    const response = await fetch(
-                      "/api/recordings/retry",
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify( {
-                          ids: [
-                            job.id
-                          ]
-                        } ),
-                      }
-                    );
+                    const response = await fetch( `/api/recordings/${ job.id }/retry`, { method: "POST" } );
 
-                    if ( !response.ok ) {
-                      throw new Error( "Retry failed" );
-                    }
+                    if ( !response.ok ) throw new Error( "Retry failed" );
 
-                    const {
-                      retried
-                    } = await response.json();
-
-                    if ( retried.includes( job.id ) ) {
-                      return onRetry?.();
-                    }
+                    const { retried } = await response.json();
+                    if ( retried ) return onRetry?.( job );
 
                     alert( `could not retry job: ${ job.id }` );
                   } catch ( error ) {
-                    console.error(
-                      "Retry failed:",
-                      error
-                    );
+                    console.error( "Retry failed:", error );
                   }
                 }}
                 className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -255,39 +235,16 @@ function ActionsMenu( {
               <button
                 onClick={async() => {
                   try {
-                    const response = await fetch(
-                      "/api/recordings/delete",
-                      {
-                        method: "DELETE",
-                        headers: {
-                          "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify( {
-                          ids: [
-                            job.id
-                          ]
-                        } ),
-                      }
-                    );
+                    const response = await fetch( `/api/recordings/${ job.id }`, { method: "DELETE" } );
 
-                    if ( !response.ok ) {
-                      throw new Error( "Delete failed" );
-                    }
+                    if ( !response.ok ) throw new Error( "Delete failed" );
 
-                    const {
-                      deleted
-                    } = await response.json();
-
-                    if ( deleted.includes( job.id ) ) {
-                      return onDelete?.( job );
-                    }
+                    const { deleted } = await response.json();
+                    if ( deleted ) return onDelete?.( job );
 
                     alert( `could not delete job: ${ job.id }` );
                   } catch ( error ) {
-                    console.error(
-                      "Delete failed:",
-                      error
-                    );
+                    console.error( "Delete failed:", error );
                   }
                 }}
                 className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -387,15 +344,14 @@ export default function RecordingsPage() {
             const completedJob = inFlightJobs.find( j => j.id === jobId );
 
             if ( completedJob ) {
-              // TODO: fetch the job individually
-
+              // Insert at the beginning to maintain newest-first order
               setStaticJobs( prev => [
-                ...prev,
                 {
                   ...completedJob,
                   progress: 100, // data.percentage,
                   status: data.status as JobStatusEnum
-                }
+                },
+                ...prev
               ] );
             }
 
@@ -472,12 +428,12 @@ export default function RecordingsPage() {
   const handleCancel = ( job: JobModel ) => {
     setInFlightJobs( ( prev ) => prev.filter( ( j ) => j.id !== job.id ) );
     setStaticJobs( ( prev ) => [
-      ...prev,
       {
         ...job,
         status: "cancelled",
         progress: 100
       },
+      ...prev,
     ] );
   };
 
@@ -486,8 +442,30 @@ export default function RecordingsPage() {
     setStaticJobs( prev => prev.filter( j => j.id !== job.id ) );
   };
 
-  const handleRetry = () => {
+  const handleStart = ( job: JobModel ) => {
+    // Move draft job into in-flight as queued
+    setStaticJobs( ( prev ) => prev.filter( j => j.id !== job.id ) );
+    setInFlightJobs( ( prev ) => [
+      {
+        ...job,
+        status: "queued",
+        progress: 0,
+      },
+      ...prev,
+    ] );
+  };
 
+  const handleRetry = ( job: JobModel ) => {
+    // Move cancelled/failed job back to in-flight as queued
+    setStaticJobs( ( prev ) => prev.filter( j => j.id !== job.id ) );
+    setInFlightJobs( ( prev ) => [
+      {
+        ...job,
+        status: "queued",
+        progress: 0,
+      },
+      ...prev,
+    ] );
   };
 
   return (
@@ -609,7 +587,7 @@ export default function RecordingsPage() {
                       onCancel={handleCancel}
                       onDelete={handleDelete}
                       onRetry={handleRetry}
-                      onStart={handleRetry}
+                      onStart={handleStart}
                     />
                   </td>
                 </tr>
@@ -674,6 +652,7 @@ export default function RecordingsPage() {
                       onCancel={handleCancel}
                       onDelete={handleDelete}
                       onRetry={handleRetry}
+                      onStart={handleStart}
                     />
                   </div>
                 </div>
