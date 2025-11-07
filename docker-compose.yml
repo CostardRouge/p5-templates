@@ -19,6 +19,7 @@ services:
       - S3_REGION=${S3_REGION}
       - S3_ENDPOINT=${S3_ENDPOINT}
       - APP_PORT=${APP_PORT}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
 
   # ─── Redis for BullMQ queue ────────────────────────────────────────────────
   redis:

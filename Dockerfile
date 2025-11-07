@@ -40,8 +40,12 @@ ENV DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:543
 
 RUN npm run build
 
-# 4. Expose port for the app
+# 4. Copy entrypoint script
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# 5. Expose port for the app
 EXPOSE 3000
 
-# 5. Default command
-CMD ["npm", "run", "start"]
+# 6. Run migrations and start the app
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
