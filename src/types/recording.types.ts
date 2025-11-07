@@ -1,5 +1,6 @@
 import {
-  InputJsonValue
+  InputJsonValue,
+  JsonValue
 } from "@prisma/client/runtime/edge";
 
 import type {
@@ -24,13 +25,14 @@ export type JobStatusEnum = typeof validStatuses[number];
  */
 export type JobModel = {
   id: JobId;
+  snapshotId: string | null;
   template: string;
   status: JobStatusEnum,
   progress: number; // 0–100
   resultUrl: string | null;
-  thumbnails: string[] | null; // Array of thumbnail URLs
-  videoUrls: string[] | null; // Array of video URLs for multi-slide recordings
-  options: InputJsonValue | null;
+  thumbnails: JsonValue; // Array of thumbnail URLs stored as JSON
+  videoUrls: JsonValue; // Array of video URLs for multi-slide recordings stored as JSON
+  options: JsonValue;
   createdAt: Date;
   updatedAt: Date;
 };
