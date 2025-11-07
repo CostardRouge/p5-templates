@@ -67,10 +67,14 @@ export async function GET(
       })
     );
 
-    // Get size for resultUrl (zip file) if it exists
+    // Calculate estimated zip size by summing all video sizes
+    // Zip with no compression (store only) has minimal overhead (~22 bytes per file + central directory)
     let zipSize: number | null = null;
-    if (job.resultUrl) {
-      zipSize = await getObjectSize(job.resultUrl);
+    const validVideos = videoData.filter((v): v is NonNullable<typeof v> => v !== null);
+    if (validVideos.length > 0) {
+      const totalVideoSize = validVideos.reduce((sum, video) => sum + (video.size || 0), 0);
+      // Add small overhead for zip structure (roughly 100 bytes per file + 1KB for headers)
+      zipSize = totalVideoSize + (validVideos.length * 100) + 1024;
     }
 
     return NextResponse.json({
