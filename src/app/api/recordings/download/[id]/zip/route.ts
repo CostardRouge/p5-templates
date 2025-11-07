@@ -92,7 +92,9 @@ export async function GET(
       async( s3Key, index ) => {
         try {
           const buffer = await getBufferFromS3Url( s3Key );
-          const filename = `slide-${ index + 1 }.webm`;
+          // Extract file extension from S3 key (e.g., "path/to/video.webm" -> ".webm")
+          const extension = s3Key.substring( s3Key.lastIndexOf( "." ) );
+          const filename = `slide-${ index + 1 }${ extension }`;
           archive.append(
             buffer,
             {
