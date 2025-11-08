@@ -215,7 +215,7 @@ function ProgressBar( {
 
   return (
     <div className="w-full">
-      <div className="w-full bg-hover rounded-xl border border-theme h-2 overflow-hidden">
+      <div className="w-full bg-hover rounded-xl h-2 overflow-hidden">
         {isIndeterminate ? (
           <div className="h-2 bg-blue-500 animate-pulse w-full opacity-50" />
         ) : (

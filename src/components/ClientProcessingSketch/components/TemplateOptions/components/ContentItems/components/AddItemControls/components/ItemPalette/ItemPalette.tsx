@@ -28,7 +28,7 @@ export default function ItemPalette( {
       className={clsx(
         "grid grid-cols-6",
         gap,
-        "rounded-lg border border-theme bg-background p-0.5 overflow-hidden",
+        "rounded-md border border-theme bg-background p-0.5 overflow-hidden",
         className
       )}
       role="list"
