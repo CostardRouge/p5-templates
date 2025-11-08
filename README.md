@@ -1,340 +1,272 @@
-# Social pipeline
+# Social Templates Renderer
 
-Reusable, dynamic p5.js sketches you can parameterize in the browser and render to video on demand. Built so I can keep creating and publishing motion pieces while on a working holiday in Australia—without living on social media or a laptop.
-I design a sketch once, give it a typed options schema, preview and tweak on a web page, then hit “Export.” A background recorder renders the final video and makes it easy to download straight to my phone. The long‑term vision includes automations that trigger renders from real‑life events (calendar, GitHub, weather, personal notes, etc.).
+> Transform your p5.js sketches into parameterized video templates with a web-based editor and automated rendering pipeline.
+
+Reusable, dynamic p5.js sketches you can parameterize in the browser and render to video on demand. Built to enable continuous creative output while traveling—design a sketch once, give it a typed options schema, preview and tweak parameters in real-time, then hit "Record." A background worker renders the final video and makes it available for download on any device.
+
+**Live Demo:** https://social-pipeline-pi.vercel.app/templates  
+**Docker Hub:** https://hub.docker.com/repository/docker/containeurrouge/social-templates-renderer/general
+
+## 📚 Documentation
+
+- **[Architecture Guide](./docs/ARCHITECTURE.md)** - System design, data flow, and technical architecture
+- **[API Reference](./docs/API_REFERENCE.md)** - Complete API endpoint documentation
+- **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - Setup, project structure, and development workflow
+- **[Sketch Creation Guide](./docs/SKETCH_CREATION_GUIDE.md)** - How to create and customize p5.js sketches
+- **[Deployment Guide](./DEPLOYMENT.md)** - Docker deployment and database migrations
+
+## ✨ Features
+
+- **🎨 Dynamic Form Generation** - Forms automatically generated from Zod schemas
+- **👁️ Live Preview** - Real-time sketch rendering with instant parameter updates
+- **📦 Asset Management** - Drag-and-drop image/video uploads with S3 storage
+- **🎬 Multi-Slide Support** - Create videos with multiple scenes/slides
+- **⚙️ Background Rendering** - Queue-based video rendering with Playwright + FFmpeg
+- **📊 Progress Tracking** - Real-time rendering progress with detailed steps
+- **🔄 Modular Content System** - Reusable components (background, text, images, visuals)
+- **💾 Template Snapshots** - Version control for sketch configurations
+- **🐳 Docker Ready** - Full stack deployment with Docker Compose
+- **🔒 Type-Safe** - End-to-end TypeScript with Zod validation
+
+## 🎯 Use Cases
+
+- **Content Creation on the Go** - Design once, render anywhere, download on mobile
+- **Reusable Templates** - Turn sketches into parameterized templates
+- **Batch Rendering** - Queue multiple videos with different parameters
+- **Automated Workflows** - Future: trigger renders from external events (calendar, GitHub, weather)
+
+## 🛠️ Tech Stack
+
+**Frontend**
+- React 19 + Next.js 15 (App Router)
+- TypeScript (strict mode)
+- Tailwind CSS + Lucide React icons
+- React Hook Form + Zod (type-safe forms)
+
+**Backend**
+- Next.js API Routes
+- Prisma ORM + PostgreSQL
+- BullMQ + Redis (job queue)
+- MinIO/S3 (asset storage)
+
+**Rendering Pipeline**
+- p5.js (creative coding framework)
+- Playwright (headless browser)
+- FFmpeg (video encoding)
+
+**Infrastructure**
+- Docker + Docker Compose
+- Nginx (optional reverse proxy)
+- Vercel (demo deployment)
+
+## 🏗️ Architecture Overview
+
+```
+Browser → Next.js App → API Routes → BullMQ Queue → Worker
+                ↓                                      ↓
+           PostgreSQL ← ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
+                ↓
+              MinIO/S3 (Assets & Videos)
+```
+
+**Key Components:**
+
+1. **Web App** - Template gallery, sketch editor with live preview, recording dashboard
+2. **API Layer** - Recording management, asset uploads, progress tracking
+3. **Job Queue** - BullMQ with Redis for async video rendering
+4. **Worker** - Playwright (headless browser) + FFmpeg (video encoding)
+5. **Database** - PostgreSQL with Prisma for jobs, templates, and snapshots
+6. **Storage** - S3-compatible storage for assets and rendered videos
+
+For detailed architecture documentation, see [Architecture Guide](./docs/ARCHITECTURE.md).
+
+## 🎨 How It Works
+
+1. **Create a Sketch** - Write p5.js code with parameterized options
+2. **Define Schema** - Use Zod to define typed options (colors, sizes, text, etc.)
+3. **Edit in Browser** - Auto-generated form with live preview
+4. **Upload Assets** - Drag-and-drop images/videos directly to S3
+5. **Hit Record** - Job queued and processed in background
+6. **Download Video** - Get MP4 output on any device
+
+See [Sketch Creation Guide](./docs/SKETCH_CREATION_GUIDE.md) for detailed tutorials.
 
 
-Demo: https://social-pipeline-pi.vercel.app/templates
-Docker: https://hub.docker.com/repository/docker/containeurrouge/social-templates-renderer/general
+## 🚀 Quick Start
 
-## Demo (concept)
-
-Edit options live (size, framerate, duration, colors, per‑item parameters)
-Drop images and re-use them across items (single image or image stacks)
-Export → render runs in the background → download when ready
-
-## Why
-
-Timeboxed life on the road: keep making without high overhead.
-Reusability: sketches become templates with typed, documented options.
-Automation: unlock “render on events” workflows later.
-
-## Tech stack
-
-- Frontend: React + Next.js + TypeScript
-- Forms: react-hook-form + Zod (schema = validation + defaults + docs)
-- Styling/UI: Tailwind CSS + lucide-react icons
-- Sketch runtime: p5.js (in browser; headless capture for renders)
-- Assets: S3 (images/videos/sounds), drag‑and‑drop uploads with legacy compatibility
-- Rendering: Headless browser + FFmpeg pipeline (API/worker)
-- State glue: Context to provide “assets scope” (global/slide) and jobId to form fields
-- Queuing (planned/optional): BullMQ/Redis or equivalent
-
-## Architecture overview
-
-- Web app (Next.js)
-  - Template editor: preview a p5.js sketch, typed controls from Zod schemas
-  - Dynamic content items: text, image, images-stack, background, meta…
-  - Legacy assets bridge: keeps a legacy assets.images array in sync while RHF controls single/multi image fields
-  - Export button: POST to the render API; shows progress and download link
-
-
-- Render API + Worker
-  - Spins up a headless runtime for the sketch with the given parameters (size, fps, duration…)
-  - Captures frames, muxes to a video via FFmpeg, stores artifact, returns URL
-  - Designed to move to a queue for scale
-
-## Key form patterns (already implemented)
-
-- ControlledImageInput and ControlledImagesStackInput (array) with:
-  - Drag‑and‑drop upload → S3
-  - Thumbnail preview
-  - Reorder (for stacks)
-  - Sync to legacy assets.images so older sketches still work
-
-- TemplateAssetsProvider context:
-Provides scope (global or a specific slide), assetsName, and jobId to controlled fields
-Avoids prop drilling through FieldRenderer
-
-
-- Zod-first schemas:
-  - One source of truth for defaults, validation, and migration (legacy index → path)
-
-
-## Getting started
 ### Prerequisites
 
-- Node.js 18+
-- pnpm (recommended) or npm/yarn
-- FFmpeg installed and on PATH (for render muxing)
-- AWS S3 bucket and credentials (or compatible S3 provider)
-- Optional: Redis (if you enable background queueing)
+- **Node.js** 18+ (20+ recommended)
+- **pnpm** (or npm/yarn)
+- **FFmpeg** installed and on PATH
+- **Docker** and **Docker Compose** (for full stack)
 
-1) Clone and install
-   git clone <your-repo-url>
-   cd social-templates-renderer
-   pnpm install
-2) Environment variables
-   Create a .env.local at the project root. Adjust to your setup.
+### Installation
 
+1. **Clone the repository**
 
-### App
-`NEXT_PUBLIC_BASE_URL=http://localhost:3000`
+```bash
+git clone https://github.com/yourusername/social-templates-renderer.git
+cd social-templates-renderer
+```
 
-# Rendering
-RENDERER_BASE_URL=http://localhost:3000 # or separate API host
-RENDER_OUTPUT_BUCKET=your-render-bucket
-RENDER_OUTPUT_PREFIX=renders/
+2. **Install dependencies**
 
-# S3 (for uploads and outputs)
-AWS_REGION=ap-southeast-2
-AWS_S3_BUCKET=your-assets-bucket
-AWS_ACCESS_KEY_ID=xxxxxxxx
-AWS_SECRET_ACCESS_KEY=xxxxxxxx
-
-# Optional queueing
-REDIS_URL=redis://localhost:6379
-If you split API/worker from the Next.js app, mirror these in each service as needed.
-3) Run in development
-   Single app (Next.js with API routes):
-   pnpm dev
-   Split services (example):
-# web
-pnpm --filter @app/web dev
-
-# api
-pnpm --filter @app/api dev
-
-# worker (render jobs)
-pnpm --filter @app/worker dev
-Check package.json scripts and use the ones defined in this repo.
-Project conventions
-
-Type‑safe everywhere (TS + Zod)
-One schema, many uses:
-Form defaults
-Validation
-Migration of legacy fields
-
-No prop drilling for cross‑cutting context (assets scope, jobId)
-Keep “legacy assets library” hydrated for old sketches while new fields are RHF‑controlled
-
-Folder structure (example)
-.
-├─ apps/
-│  ├─ web/                     # Next.js app
-│  │  ├─ components/
-│  │  │  ├─ TemplateOptions/
-│  │  │  │  ├─ ContentItems/
-│  │  │  │  │  ├─ FieldRenderer.tsx
-│  │  │  │  │  ├─ ControlledImageInput/
-│  │  │  │  │  ├─ ControlledImagesStackInput/
-│  │  │  │  ├─ ConditionalGroup/
-│  │  │  ├─ AddItemControls.tsx
-│  │  ├─ ui/items/
-│  │  │  ├─ ItemPalette.tsx
-│  │  │  └─ item-kinds.ts
-│  │  ├─ context/TemplateAssetsContext.tsx
-│  │  ├─ hooks/useAssetsBridge.ts
-│  │  ├─ pages/ or app/
-│  ├─ api/                     # Optional: dedicated API
-│  └─ worker/                  # Optional: render worker
-├─ packages/
-│  ├─ schemas/
-│  │  ├─ items.ts              # Zod item schemas
-│  │  ├─ options.ts            # Zod options/slides/assets
-│  │  ├─ migrate.ts            # legacy migration (index → path)
-│  │  └─ init.ts               # hydrate defaults: initOptions()
-└─ ...
-
-Adapt to your actual layout.
-Setup details
-Initialize options.json safely
-Use Zod defaults + a legacy migration to ensure partially‑filled options load without errors.
-import { initOptions } from "@/schema/init";
-
-const defaults = initOptions(initialOptionsJson);
-// pass defaults to react-hook-form defaultValues
-
-OptionsSchema.parse() fills any missing fields per .default(...).
-
-Adding items with icons
-Use the included palette and default item factory:
-import { AddItemControls } from "@/components/AddItemControls";
-
-<AddItemControls />
-
-Icons provided by lucide-react
-Valid, defaulted items created via Zod (makeDefaultItem(kind))
-
-Image inputs and stacks
-
-Use ControlledImageInput for a single image path (src)
-Use ControlledImagesStackInput for multiple paths (items)
-Both use useAssetsBridge() to upload via legacy pipeline and sync assets.images
-Wrap your editor in TemplateAssetsProvider:
-
-<TemplateAssetsProvider
-scope={{ slide: activeIndex }}
-assetsName={`slides.${activeIndex}.assets`}
-jobId={options.id}
->
-<ContentItems baseFieldName={`slides.${activeIndex}.content`} />
-</TemplateAssetsProvider>
-
-
-Roadmap
-Short term (v0.3 – v0.5)
-
-Stabilize form generator
-Full coverage for text, image, images‑stack, background, meta
-Drag‑reorder for stacks, keyboard access
-
-
-Asset pipeline
-Progress UI for uploads
-Dedupe + reference counting across items
-Safe delete (no in‑use removal)
-
-
-Rendering
-FFmpeg+headless capture solidified
-Export status + retry
-Download on mobile with iOS/Android friendly headers
-
-
-DX
-Example sketches and templates
-Schema‑driven docs panel (autogenerated from Zod)
-
-
-
-Mid term (v0.6 – v0.9)
-
-Job system
-Move to queue (BullMQ/Redis) with concurrency + backoff
-Webhooks for job completion
-Signed URLs for outputs
-
-
-Templates
-“Save as template” and gallery
-Batch renders (playlists) with parameter sets
-
-
-Assets
-S3 multipart uploads and resume
-Image transforms/thumbnails via CDN or Lambda@Edge
-
-
-Editor UX
-Per‑item visibility toggles and quick duplication
-Undo/redo, versioned options.json snapshots
-
-
-
-v1.0
-
-Automations
-Triggers: calendar, GitHub events, weather, personal notes
-Rules engine + scheduler
-Audit log of renders
-
-
-Distribution
-One‑tap publish to socials/cloud drives (optional)
-RSS/JSON feed of rendered outputs
-
-
-Multi‑tenant & auth (optional)
-User accounts, tokens for API
-Team spaces and shared assets
-
-
-Performance
-Headless render pool, GPU‑backed runners where available
-Cost guardrails (budgets/quotas)
-
-
-
-Nice‑to‑haves
-
-PWA for offline editing on mobile (download later when online)
-CLI for local/batch rendering
-Plugin API for custom form widgets and render backends
-AI assist to propose parameter sets or colorways
-
-Contributing
-Thanks for your interest—PRs and issues welcome!
-
-Fork and clone
-
-git clone <your-fork-url>
+```bash
 pnpm install
+```
 
-Run checks locally
+3. **Set up environment variables**
 
-pnpm typecheck
-pnpm lint
-pnpm test       # if tests are present
+Create `.env.local` in the project root:
+
+```bash
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/social-pipeline
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# S3 Storage
+S3_ENDPOINT=http://localhost:9000
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin
+S3_BUCKET=social-pipeline
+S3_REGION=us-east-1
+
+# Application
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+WORKER_CONCURRENCY=2
+```
+
+4. **Start infrastructure services**
+
+```bash
+docker-compose up -d postgres redis minio
+```
+
+5. **Run database migrations**
+
+```bash
+npx prisma migrate dev
+```
+
+6. **Start development server**
+
+```bash
 pnpm dev
+```
 
-Branch and commit
+The app will be available at `http://localhost:3000`.
 
+For detailed setup instructions, see the [Developer Guide](./docs/DEVELOPER_GUIDE.md).
 
-Create a feature branch: feat/<short-name> or fix/<short-name>
-Use Conventional Commits:
-feat: add images stack reorder
-fix: handle empty options defaults
-chore: bump deps
+## 🗺️ Roadmap
 
+### Current (v0.2)
+- ✅ Dynamic form generation from Zod schemas
+- ✅ Multi-slide support with transitions
+- ✅ Background rendering with BullMQ
+- ✅ S3 asset management
+- ✅ Real-time progress tracking
+- ✅ Docker deployment
 
+### Short Term (v0.3 - v0.5)
+- [ ] Enhanced asset pipeline with progress UI
+- [ ] Drag-reorder for content items
+- [ ] Mobile-optimized download experience
+- [ ] Template gallery with search/filter
+- [ ] Batch rendering with parameter sets
 
+### Mid Term (v0.6 - v0.9)
+- [ ] Webhook notifications for job completion
+- [ ] Template versioning and rollback
+- [ ] Video preview before full render
+- [ ] Custom visual effects library
+- [ ] CLI for local/batch rendering
 
-Coding style
+### Long Term (v1.0+)
+- [ ] Event-driven automation (calendar, GitHub, weather)
+- [ ] Multi-tenant support with authentication
+- [ ] Plugin system for custom components
+- [ ] AI-assisted parameter suggestions
+- [ ] GPU-accelerated rendering
 
+## 🤝 Contributing
 
-TypeScript strict mode where possible
-Prefer Zod for any runtime validation
-Keep components small; use contexts for cross‑cutting concerns (no prop drilling)
-Co-locate tests next to code when applicable
+Contributions are welcome! Please follow these guidelines:
 
+1. **Fork and clone**
+   ```bash
+   git clone <your-fork-url>
+   pnpm install
+   ```
 
-Open a PR
+2. **Create a feature branch**
+   ```bash
+   git checkout -b feat/your-feature
+   # or
+   git checkout -b fix/your-bugfix
+   ```
 
+3. **Follow coding standards**
+   - TypeScript strict mode
+   - Use Zod for validation
+   - Keep components small and focused
+   - Add tests when applicable
 
-Describe the change, screenshots for UI tweaks
-Note any migration required (schema changes)
-Link issue if applicable
+4. **Use Conventional Commits**
+   ```
+   feat: add images stack reorder
+   fix: handle empty options defaults
+   chore: bump dependencies
+   docs: update API reference
+   ```
 
+5. **Run checks before committing**
+   ```bash
+   pnpm lint
+   pnpm typecheck
+   pnpm test  # if tests exist
+   ```
 
-Code review
+6. **Open a Pull Request**
+   - Describe your changes clearly
+   - Include screenshots for UI changes
+   - Link related issues
+   - Note any breaking changes or migrations
 
+## ❓ FAQ
 
-Be open to feedback; we optimize for clarity, accessibility, and resilience
+**Why keep a legacy assets.images array?**  
+Older sketches reference images by path from a central array. The bridge keeps this list updated while modern fields (single/multi) stay React Hook Form-controlled, ensuring backward compatibility.
 
-FAQ
+**Do I need Redis for local development?**  
+No. Redis is optional for local dev. For production and scale, a queue is recommended so renders don't block requests and can be processed concurrently.
 
-Why keep a legacy assets.images?
+**Can I use storage other than S3?**  
+Yes. Any S3-compatible provider (MinIO, DigitalOcean Spaces, Backblaze B2) should work. Just adjust the SDK endpoint and credentials in your environment variables.
 
-Older sketches reference images by path from a central array. The bridge keeps this list updated while modern fields (single/multi) stay RHF-controlled.
+**How do I add custom sketch options?**  
+Extend the Zod schema in `src/types/sketch.types.ts` and add fields to the `sketch` object. See the [Sketch Creation Guide](./docs/SKETCH_CREATION_GUIDE.md) for details.
 
+**Can I deploy this to production?**  
+Yes! Use the provided Dockerfile and docker-compose.yml. See [Deployment Guide](./DEPLOYMENT.md) for instructions.
 
-Do I need Redis?
+## 📄 License
 
-Not for local dev. For scale and reliability, a queue is recommended so renders don’t block requests.
+MIT License - see [LICENSE](./LICENSE) file for details.
 
+## 🙏 Acknowledgements
 
-Can I use another storage than S3?
+- **[p5.js](https://p5js.org/)** - Joyful creative coding framework
+- **[FFmpeg](https://ffmpeg.org/)** - Powerful video encoding
+- **[React Hook Form](https://react-hook-form.com/)** + **[Zod](https://zod.dev/)** - Type-safe form validation
+- **[Playwright](https://playwright.dev/)** - Reliable browser automation
+- **[BullMQ](https://docs.bullmq.io/)** - Robust job queue system
 
-Any S3‑compatible provider should work; adjust the SDK endpoint/credentials.
+---
 
+**Built with ❤️ by [@CostardRouge](https://github.com/CostardRouge)**
 
-
-License
-MIT. See LICENSE file.
-Acknowledgements
-
-- p5.js for a joyful creative coding API
-- FFmpeg for the heavy lifting
-- react-hook-form + Zod for ergonomic, robust forms
+Made for creators who want to keep making while on the move. 🌏✨
