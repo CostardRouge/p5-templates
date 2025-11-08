@@ -16,7 +16,12 @@ interface VideoPreviewModalProps {
 
 interface MediaData {
   thumbnails: string[];
-  videos: string[];
+  videos: Array<{
+    index: number,
+    url: string,
+    key: string,
+    size: number
+  }>;
   isZipArchive?: boolean;
   resultUrl?: string;
 }
@@ -135,9 +140,7 @@ export default function VideoPreviewModal( {
                 <p className="text-center text-foreground">No videos available</p>
               )}
 
-              {!media.isZipArchive && media.videos.map( (
-                videoUrl, index
-              ) => (
+              {!media.isZipArchive && media.videos.map( ({url}, index ) => (
                 <div key={index} className="flex flex-col justify-center items-center gap-2">
                   {media.videos.length > 1 && (
                     <h3 className="text-sm font-medium text-foreground">
@@ -151,7 +154,7 @@ export default function VideoPreviewModal( {
                       preload="metadata"
                       poster={media.thumbnails[ index ]}
                     >
-                      <source src={videoUrl} type="video/mp4" />
+                      <source src={url} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   </div>
