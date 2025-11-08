@@ -59,7 +59,11 @@ export default function SketchSettings( {
       )}
     >
       <div className="overflow-y-auto">
-        <GenericObjectForm basePath={effectiveBasePath} config={sketchFormConfiguration} />
+        <GenericObjectForm 
+          key={effectiveBasePath}
+          basePath={effectiveBasePath} 
+          config={sketchFormConfiguration} 
+        />
       </div>
     </CollapsibleItem>
   );
