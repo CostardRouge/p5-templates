@@ -1,6 +1,7 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import { Label } from "@headlessui/react";
 
 export const formValues = {
   margin: 0.1,
@@ -20,57 +21,81 @@ export const formValues = {
   topLeft: "",
   topRight: "",
   bottomLeft: "",
-  bottomRight: ""
+  bottomRight: "",
+  font: {
+    face: "martian",
+    size: 20,
+    color: [0,0,0],
+    stroke: [255, 255, 255]
+  }
 };
 
 export const formConfiguration: Record<string, any> = {
-  margin: {
-    label: "Image margin",
-    component: "slider",
-    min: 0,
-    max: 0.45,
-    step: 0.005
-  },
-  fontSize: {
-    component: "slider",
-    label: "Font size",
-    min: 1,
-    max: 244
+  photo: {
+    label: "Photo",
+    component: "nested-object",
+    fields: {
+      image: {
+        component: "image",
+        label: "Image"
+      },
+      margin: {
+        label: "Image margin",
+        component: "slider",
+        min: 0,
+        max: 0.45,
+        step: 0.005
+      },
+    }
   },
   font: {
-    component: "select",
-    label: "Font name",
-    options: fontNames.map( fontName => ( {
-      value: fontName,
-      label: fontName
-    } ) ),
+    label: "Font style",
+    component: "nested-object",
+    fields: {
+        size: {
+          component: "slider",
+          label: "Font size",
+          min: 1,
+          max: 244
+        },
+        face: {
+          component: "select",
+          label: "Font name",
+          options: fontNames.map( fontName => ( {
+            value: fontName,
+            label: fontName
+          } ) ),
+        },
+        color: {
+          component: "color",
+          label: "Font color"
+        },
+        stroke: {
+          component: "color",
+          label: "Font stroke"
+        },
+      }
   },
-  fontColor: {
-    component: "color",
-    label: "Font color"
-  },
-  fontStroke: {
-    component: "color",
-    label: "Font stroke"
-  },
-  photo: {
-    component: "image",
-    label: "Image"
-  },
-  topLeft: {
-    component: "text",
-    label: "Top left",
-  },
-  topRight: {
-    component: "text",
-    label: "Top right",
-  },
-  bottomLeft: {
-    component: "text",
-    label: "Bottom left",
-  },
-  bottomRight: {
-    component: "text",
-    label: "Bottom right",
-  },
+  textOverrides: {
+    label: "Text overrides",
+    component: "nested-object",
+    fields: {
+      topLeft: {
+        component: "text",
+        label: "Top left",
+      },
+      topRight: {
+        component: "text",
+        label: "Top right",
+      },
+      bottomLeft: {
+        component: "text",
+        label: "Bottom left",
+      },
+      bottomRight: {
+        component: "text",
+        label: "Bottom right",
+      },
+    }
+  }
 };

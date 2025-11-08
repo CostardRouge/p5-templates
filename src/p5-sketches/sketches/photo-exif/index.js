@@ -26,7 +26,7 @@ sketch.setup(
 );
 
 const getFont = () => {
-  const key = options.sketch?.font ?? "martian";
+  const key = options.sketch?.font?.face ?? "martian";
 
   return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
 };
@@ -36,7 +36,7 @@ sketch.draw( (
 ) => {
   background( 255 );
 
-  const photo = common.getAsset( options.sketch?.photo );
+  const photo = common.getAsset( options.sketch?.photo?.image );
 
   if ( !photo ) {
     string.write(
@@ -60,21 +60,21 @@ sketch.draw( (
   if ( photo ) {
     imageUtils.marginImage( {
       img: photo.img,
-      margin: width * options.sketch?.margin,
+      margin: width * options.sketch?.photo?.margin,
       center: true,
       position: center,
       callback: (
         x, y, w, h
       ) => {
-        const fontSize = options.sketch?.fontSize || 20;
+        const fontSize = options.sketch?.font?.size || 20;
         const yTopPosition = y - fontSize / 2;
         const yBottomPosition = y + h + fontSize / 2;
         const textStyle = {
           size: fontSize,
-          stroke: color( ...( options.sketch?.fontStroke ?? [
+          stroke: color( ...( options.sketch?.font?.stroke ?? [
             255
           ] ) ),
-          fill: color( ...( options.sketch?.fontColor ?? [
+          fill: color( ...( options.sketch?.font?.color ?? [
             0
           ] ) ),
           font: getFont(),
@@ -82,7 +82,7 @@ sketch.draw( (
 
         // TOP LEFT
         string.write(
-          options.sketch.topLeft !== "" ? options.sketch.topLeft : exif.formatPhotoDate( photo.exif?.date ),
+          options.sketch.textOverrides?.topLeft !== "" ? options.sketch?.textOverrides?.topLeft : exif.formatPhotoDate( photo.exif?.date ),
           x,
           yTopPosition,
           textStyle
@@ -90,7 +90,7 @@ sketch.draw( (
 
         // TOP RIGHT
         string.write(
-          options.sketch.topRight !== "" ? options.sketch.topRight : exif.formatGPSCoordinates(
+          options.sketch.textOverrides?.topRight !== "" ? options.sketch.textOverrides?.topRight : exif.formatGPSCoordinates(
             photo.exif?.gps?.latitude,
             photo.exif?.gps?.longitude
           ),
@@ -107,7 +107,7 @@ sketch.draw( (
 
         // BOTTOM LEFT
         string.write(
-          options.sketch.bottomLeft,
+          options.sketch.textOverrides?.bottomLeft,
           x,
           yBottomPosition,
           {
@@ -135,7 +135,7 @@ sketch.draw( (
 
         // BOTTOM RIGHT
         string.write(
-          options.sketch.bottomRight !== "" ? options.sketch.bottomRight : bottomRightText,
+          options.sketch.textOverrides?.bottomRight !== "" ? options.sketch.textOverrides?.bottomRight : bottomRightText,
           x,
           yBottomPosition,
           {
