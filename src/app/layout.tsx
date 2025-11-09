@@ -7,6 +7,7 @@ import {
 } from "next-themes";
 
 import MenuBar from "@/components/MenuBar";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import {
   Suspense
 } from "react";
@@ -31,6 +32,7 @@ export default function RootLayout( {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <GoogleAnalytics />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
