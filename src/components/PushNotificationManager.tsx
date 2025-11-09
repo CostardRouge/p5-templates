@@ -19,12 +19,14 @@ export default function PushNotificationManager() {
   const [isSupported, setIsSupported] = useState(false)
   const [subscription, setSubscription] = useState<PushSubscription | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isDevelopment, setIsDevelopment] = useState(false)
 
   useEffect(() => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       setIsSupported(true)
       registerServiceWorker()
     }
+    setIsDevelopment(process.env.NODE_ENV === 'development')
   }, [])
 
   async function registerServiceWorker() {
@@ -119,33 +121,33 @@ export default function PushNotificationManager() {
     <div className="flex items-center gap-2">
       {subscription ? (
         <>
+        {isDevelopment && (
+            <button
+              onClick={sendTest}
+              disabled={isLoading}
+              className="disabled:opacity-50"
+              title="Send test notification"
+            >
+              Test
+            </button>
+          )}
           <button
             onClick={unsubscribeFromPush}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-green-500/10 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-500/20 transition-colors disabled:opacity-50"
+            className="disabled:opacity-50"
             title="Notifications enabled"
           >
-            <Bell className="w-4 h-4" />
-            <span className="hidden sm:inline">Notifications On</span>
-          </button>
-          <button
-            onClick={sendTest}
-            disabled={isLoading}
-            className="px-3 py-2 text-sm bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors disabled:opacity-50"
-            title="Send test notification"
-          >
-            Test
+            <Bell className="h-5" />
           </button>
         </>
       ) : (
         <button
           onClick={subscribeToPush}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-500/10 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-500/20 transition-colors disabled:opacity-50"
+          className="disabled:opacity-50"
           title="Enable notifications"
         >
-          <BellOff className="w-4 h-4" />
-          <span className="hidden sm:inline">Enable Notifications</span>
+          <BellOff className="h-5" />
         </button>
       )}
     </div>

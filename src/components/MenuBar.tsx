@@ -1,12 +1,12 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import {
   Github, Paintbrush, Video
 } from "lucide-react";
 import clsx from "clsx";
 import Link from "next/link";
-import {
-  headers
-} from "next/headers";
+import { usePathname, useSearchParams } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import PushNotificationManager from "@/components/PushNotificationManager";
 
@@ -16,19 +16,22 @@ type NavItem = {
   target?: string;
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 };
+
 type MenuBarProps = {
-  searchParams?: Promise<{
-    capturing?: string
-  }>
-}
+  showRecordings?: boolean;
+};
 
-async function MenuBar( {
-  searchParams
-}: MenuBarProps ) {
-  const referer = ( await headers() ).get( "referer" );
-  const pathname = referer ? ( new URL( referer ) ).pathname : "";
+function MenuBar({ showRecordings = false }: MenuBarProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const capturing = searchParams.get("capturing");
+  const [mounted, setMounted] = useState(false);
 
-  if ( ( await searchParams )?.capturing === "" ) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if ( capturing === "" ) {
     return null;
   }
 
@@ -45,7 +48,8 @@ async function MenuBar( {
     },
   ];
 
-  if ( process.env.BACKEND_RECORDING === "true" ) {
+  // Only add recordings link after mount to avoid hydration mismatch
+  if ( mounted && showRecordings ) {
     items.push( {
       href: "/recordings",
       Icon: Video
@@ -72,10 +76,10 @@ async function MenuBar( {
                href={href}
               target={target}
               className={clsx(
-                "hover:opacity-80 flex flex-col items-center justify-center rounded-xl shadow-sm px-2 py-1 border border-theme border-b-2",
-                {
-                  "bg-hover": active
-                }
+                "transition-all duration-200 flex flex-col items-center justify-center rounded-xl shadow-sm px-2 py-1 border border-theme border-b-2",
+                active
+                  ? "bg-hover border-active"
+                  : "hover:bg-hover/50 hover:opacity-80"
               )}
             >
               <Icon className="inline w-4 mr-1" />
