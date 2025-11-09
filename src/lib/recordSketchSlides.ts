@@ -1,5 +1,3 @@
-import * as tar from "tar";
-
 import path from "path";
 import fs from "node:fs/promises";
 
@@ -8,11 +6,10 @@ import {
   Page
 } from "playwright";
 
-import zipFiles from "@/utils/zipFiles";
-
 import encodeVideoFromFrames from "@/utils/encodeVideoFromFrames";
 import createBrowserPage from "@/utils/createBrowserPage";
 import captureFirstFrame from "@/utils/captureFirstFrame";
+import { captureFramesServerSide } from "@/utils/captureFramesServerSide";
 
 import {
   updateJob
@@ -107,43 +104,11 @@ async function recordSketchSlides(
         100
       );
 
-      await recordingState.page.evaluate( () => window.startLoopRecording() );
-
+      // ─── Capture frames server-side ─────────────────────────────────────────
       await updateRecordingStepPercentage(
         jobId,
         `recording.slide-${ slideIndex }.saving-frames`,
         0
-      );
-
-      const downloadEvent = await recordingState.page.waitForEvent(
-        "download",
-        {
-          timeout: 30_000_000
-        }
-      );
-      const slideTarPath = path.join(
-        temporaryDirectoryPath,
-        `slide_${ slideIndex }.tar`
-      );
-
-      await updateRecordingStepPercentage(
-        jobId,
-        `recording.slide-${ slideIndex }.downloading-frames-archive`,
-        0
-      );
-
-      await downloadEvent.saveAs( slideTarPath );
-
-      await updateRecordingStepPercentage(
-        jobId,
-        `recording.slide-${ slideIndex }.downloading-frames-archive`,
-        100
-      );
-
-      await updateRecordingStepPercentage(
-        jobId,
-        `recording.slide-${ slideIndex }.extracting-frames-archive`,
-        50
       );
 
       const slideFramesDirectory = path.join(
@@ -151,22 +116,25 @@ async function recordSketchSlides(
         `frames_slide_${ slideIndex }`
       );
 
-      await fs.mkdir(
-        slideFramesDirectory,
-        {
-          recursive: true
-        }
-      );
-      await tar.x( {
-        file: slideTarPath,
-        cwd: slideFramesDirectory
-      } );
+      // Get total frames count from slide animation options
+      const slideOptions = slides[slideIndex];
+      const totalFrames = slideOptions?.animation?.maximumFramesCount || 
+                         (slideOptions?.animation?.duration || options.animation?.duration || 5) * 
+                         (slideOptions?.animation?.framerate || options.animation?.framerate || 60);
 
-      await updateRecordingStepPercentage(
-        jobId,
-        `recording.slide-${ slideIndex }.extracting-frames-archive`,
-        100
-      );
+      // Capture frames directly on the server
+      await captureFramesServerSide({
+        page: recordingState.page,
+        framesDirectory: slideFramesDirectory,
+        totalFrames,
+        onProgress: async (percentage: number) => {
+          await updateRecordingStepPercentage(
+            jobId,
+            `recording.slide-${ slideIndex }.saving-frames`,
+            percentage
+          );
+        },
+      });
 
       // Capture thumbnail for this slide
       const slideThumbnailPath = path.join(
@@ -204,8 +172,6 @@ async function recordSketchSlides(
           force: true
         }
       ).catch( () => {} );
-
-      await fs.unlink( slideTarPath ).catch( () => {} );
     }
 
     // Upload individual videos and thumbnails
@@ -240,22 +206,6 @@ async function recordSketchSlides(
       await fs.unlink( thumbnailPath ).catch( () => {} );
     }
 
-    // Also create a zip for backward compatibility (download all)
-    await updateRecordingStepPercentage(
-      jobId,
-      "uploading.archiving",
-      0
-    );
-
-    const zipOutputPath = path.join(
-      temporaryDirectoryPath,
-      `${ path.basename( template ) }-${ jobId }.zip`
-    );
-
-    // Re-download videos from S3 to zip them (or we could keep local copies)
-    // For now, let's just create the zip from the already uploaded files
-    // We'll skip this for now and just use the first video as resultUrl
-    
     await updateRecordingStepPercentage(
       jobId,
       "uploading.s3",

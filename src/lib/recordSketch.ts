@@ -1,6 +1,7 @@
 import encodeVideoFromFrames from "@/utils/encodeVideoFromFrames";
 import createBrowserPage from "@/utils/createBrowserPage";
 import captureFirstFrame from "@/utils/captureFirstFrame";
+import { captureFramesServerSide } from "@/utils/captureFramesServerSide";
 
 import {
   updateJob
@@ -9,8 +10,6 @@ import {
 import {
   uploadArtifact
 } from "@/lib/connections/s3";
-
-import * as tar from "tar";
 
 import path from "path";
 import fs from "node:fs/promises";
@@ -76,90 +75,45 @@ async function recordSketch(
       100
     );
 
-    // ─── 6. Capture frames ─────────────────────────────────────────────────────
-    await recordingState.page.exposeFunction(
-      "reportCaptureProgress",
-      async( percentage: number ) => {
-        await updateRecordingStepPercentage(
-          jobId,
-          "recording.saving-frames",
-          percentage
-        );
-      }
-    );
-
-    // @ts-ignore
-    await recordingState.page.evaluate( () => window.startLoopRecording() );
-
+    // ─── 6. Capture frames server-side ─────────────────────────────────────────
     await updateRecordingStepPercentage(
       jobId,
       "recording.saving-frames",
       0
     );
 
-    const downloadEvent = await recordingState.page.waitForEvent(
-      "download",
-      {
-        timeout: 30_000_000
-      }
-    );
-    const tarPath = path.join(
-      temporaryDirectoryPath,
-      downloadEvent.suggestedFilename()
-    );
-
-    await updateRecordingStepPercentage(
-      jobId,
-      "recording.downloading-frames-archive",
-      0
-    );
-
-    await downloadEvent.saveAs( tarPath );
-
-    await updateRecordingStepPercentage(
-      jobId,
-      "recording.downloading-frames-archive",
-      100
-    );
-    await recordingState.page.close();
-
-    // ─── 7. Extract frames ───────────────────────────────────────────────────────
-    await updateRecordingStepPercentage(
-      jobId,
-      "recording.extracting-frames-archive",
-      50
-    );
-
-    const tarExtractionPath = path.join(
+    const framesDirectory = path.join(
       temporaryDirectoryPath,
       "frames"
     );
 
-    await fs.mkdir(
-      tarExtractionPath,
-      {
-        recursive: true
-      }
-    );
+    // Get total frames count from animation options
+    const totalFrames = options.animation?.maximumFramesCount || 
+                       (options.animation?.duration || 5) * (options.animation?.framerate || 60);
 
-    await tar.x( {
-      file: tarPath,
-      cwd: tarExtractionPath
-    } );
+    // Capture frames directly on the server
+    await captureFramesServerSide({
+      page: recordingState.page,
+      framesDirectory,
+      totalFrames,
+      onProgress: async (percentage: number) => {
+        await updateRecordingStepPercentage(
+          jobId,
+          "recording.saving-frames",
+          percentage
+        );
+      },
+    });
 
-    await updateRecordingStepPercentage(
-      jobId,
-      "recording.extracting-frames-archive",
-      100
-    );
+    await recordingState.page.close();
 
-    // ─── 7.5. Capture first frame as thumbnail ──────────────────────────────────
+    // ─── 7. Capture first frame as thumbnail ──────────────────────────────────
     const thumbnailPath = path.join(
       temporaryDirectoryPath,
       `thumbnail-${ jobId }.jpg`
     );
 
-    await captureFirstFrame(tarExtractionPath, thumbnailPath);
+    await captureFirstFrame(framesDirectory, thumbnailPath);
 
     // ─── 8. Encode .mp4 ──────────────────────────────────────────────────────────
     const outputVideoPath = path.join(
@@ -168,7 +122,7 @@ async function recordSketch(
     );
 
     await encodeVideoFromFrames(
-      tarExtractionPath,
+      framesDirectory,
       outputVideoPath,
       options.animation,
       async( percentage ) => {
@@ -181,14 +135,12 @@ async function recordSketch(
     );
 
     await fs.rm(
-      tarExtractionPath,
+      framesDirectory,
       {
         recursive: true,
         force: true
       }
     ).catch( () => {} );
-
-    await fs.unlink( tarPath ).catch( () => {} );
 
     // ─── 9. Upload final .mp4 and thumbnail to S3 ────────────────────────────────
     await updateRecordingStepPercentage(
