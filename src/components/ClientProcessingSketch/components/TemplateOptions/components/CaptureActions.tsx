@@ -1,11 +1,13 @@
 "use client";
 
 import React, {
-  useState
+  useState, useImperativeHandle, forwardRef
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   Archive, Clapperboard, Loader, Save, SaveIcon
 } from "lucide-react";
+import clsx from "clsx";
 
 import {
   useRecordingQueue
@@ -25,15 +27,21 @@ import {
 } from "@/types/sketch.types";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
-export default function CaptureActions( {
+export type CaptureActionsRef = {
+  saveAsDraft: () => Promise<void>;
+  isSaving: boolean;
+};
+
+const CaptureActions = forwardRef<CaptureActionsRef, {
+  name: string;
+  options: SketchOption;
+  persistedJob?: JobModel
+}>( ( {
   name,
   options,
   persistedJob
-}: {
-    name: string;
-    options: SketchOption;
-    persistedJob?: JobModel
-} ) {
+}, ref ) => {
+  const router = useRouter();
   const {
     enqueueRecording, isLoading
   } = useRecordingQueue();
@@ -58,7 +66,8 @@ export default function CaptureActions( {
 
   const handleSubmit = async(
     status: JobStatusEnum = "queued",
-    persistedJobId?: JobId
+    persistedJobId?: JobId,
+    skipRedirect = false
   ) => {
     if ( status === "draft" ) {
       setSaving( true );
@@ -171,13 +180,29 @@ export default function CaptureActions( {
         subscribeToRecordingStatus( newJobId );
       }
 
-      if ( status === "draft" ) {
-        window.location.href = `${ name }?id=${ newJobId }`;
+      if ( status === "draft" && !skipRedirect ) {
+        router.replace( `${ name }?id=${ newJobId }` );
+        setSaving( false );
+      } else if ( status === "draft" ) {
+        // Reset saving state after successful auto-save
+        setSaving( false );
       }
     } else if ( status === "draft" ) {
       setSaving( false );
     }
   };
+
+  // Expose save function to parent via ref
+  useImperativeHandle( ref, () => ( {
+    saveAsDraft: async() => {
+      await handleSubmit(
+        "draft",
+        persistedJob?.id,
+        true // skip redirect for auto-save
+      );
+    },
+    isSaving: saving,
+  } ) );
 
   return (
     <>
@@ -188,7 +213,12 @@ export default function CaptureActions( {
             <div className="flex gap-1">
               {
                 persistedJob?.status === "draft" && ( <button
-                  className="rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs"
+                  className={clsx(
+                    "rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs",
+                    {
+                      "animate-pulse-soft": saving
+                    }
+                  )}
                   onClick={() => handleSubmit(
                     "draft",
                     persistedJob.id
@@ -296,4 +326,8 @@ export default function CaptureActions( {
       )}
     </>
   );
-}
+} );
+
+CaptureActions.displayName = "CaptureActions";
+
+export default CaptureActions;

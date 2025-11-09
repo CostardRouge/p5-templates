@@ -1,6 +1,9 @@
 import React, {
   Fragment, useCallback, useEffect, useRef, useState,
 } from "react";
+import { useInterval } from "@/hooks/useInterval";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import UnsavedChangesModal from "@/components/UnsavedChangesModal";
 import {
   ArrowDownFromLine, ListCollapse
 } from "lucide-react";
@@ -14,7 +17,7 @@ import {
 
 import FormUndoRedo from "./components/FormUndoRedo/FormUndoRedo";
 import ContentItems from "./components/ContentItems/ContentItems";
-import CaptureActions from "./components/CaptureActions";
+import CaptureActions, { CaptureActionsRef } from "./components/CaptureActions";
 import SlideCarousel from "./components/SlideCarousel";
 import SlideEditor from "./components/SlideEditor";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
@@ -63,6 +66,10 @@ export default function TemplateOptions( {
     setActiveSlideIndex
   ] = useState( 0 );
 
+  const captureActionsRef = useRef<CaptureActionsRef>( null );
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState( false );
+  const initialOptionsRef = useRef( initialOptions );
+
   const methods = useForm<SketchOptionInput>( {
     mode: "onChange",
     defaultValues: initOptions( initialOptions ),
@@ -103,15 +110,45 @@ export default function TemplateOptions( {
     () => {
       const subscription = watch( ( value ) => {
         onOptionsChange( value as SketchOption );
+        
+        // Track unsaved changes (only if job exists as draft with jobId)
+        if ( jobId && persistedJob?.status === "draft" ) {
+          setHasUnsavedChanges( true );
+        }
       } );
 
       return () => subscription.unsubscribe();
     },
     [
       watch,
-      onOptionsChange
+      onOptionsChange,
+      jobId,
+      persistedJob?.status
     ]
   );
+
+  // Auto-save every 10 seconds when jobId exists and status is draft
+  useInterval( {
+    callback: async() => {
+      if ( captureActionsRef.current && !captureActionsRef.current.isSaving ) {
+        await captureActionsRef.current.saveAsDraft();
+        setHasUnsavedChanges( false );
+      }
+    },
+    enabled: !!jobId && persistedJob?.status === "draft",
+    intervalMs: 10000, // 10 seconds
+  } );
+
+  // Unsaved changes detection - triggers modal on navigation attempts
+  const { showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving } = useUnsavedChanges( {
+    hasUnsavedChanges: hasUnsavedChanges,
+    onSaveAsDraft: async() => {
+      if ( captureActionsRef.current ) {
+        await captureActionsRef.current.saveAsDraft();
+        setHasUnsavedChanges( false );
+      }
+    },
+  } );
 
   useEffect(
     () => {
@@ -295,6 +332,14 @@ export default function TemplateOptions( {
 
   return (
     <FormProvider {...methods}>
+      <UnsavedChangesModal
+        isOpen={showModal}
+        onStay={handleStay}
+        onSaveAsDraft={handleSaveAsDraft}
+        onLeaveWithoutSaving={handleLeaveWithoutSaving}
+        isSaving={captureActionsRef.current?.isSaving}
+      />
+      
       <CollapsibleItem
         data-no-zoom=""
         className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 glass p-2 border border-theme z-50 rounded-lg"
@@ -424,6 +469,7 @@ export default function TemplateOptions( {
         )}
 
         <CaptureActions
+          ref={captureActionsRef}
           name={name}
           options={options as SketchOption}
           persistedJob={persistedJob}

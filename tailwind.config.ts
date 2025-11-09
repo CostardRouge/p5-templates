@@ -42,9 +42,18 @@ export default {
             "text-align": "left"
           },
         },
+        "pulse-soft": {
+          "0%, 100%": {
+            opacity: "1",
+          },
+          "50%": {
+            opacity: "0.6",
+          },
+        },
       },
       animation: {
         "text-cycle": "cycle-align 2.0s infinite linear",
+        "pulse-soft": "pulse-soft 1.5s ease-in-out infinite",
       },
     },
   },
