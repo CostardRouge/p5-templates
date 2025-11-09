@@ -108,8 +108,8 @@ self.addEventListener('fetch', function (event) {
   event.respondWith(
     fetch(event.request)
       .then(function (response) {
-        // Optionally cache successful responses
-        if (response && response.status === 200) {
+        // Only cache GET requests (Cache API doesn't support POST, PUT, etc.)
+        if (response && response.status === 200 && event.request.method === 'GET') {
           const responseToCache = response.clone()
           caches.open(CACHE_NAME).then(function (cache) {
             cache.put(event.request, responseToCache)
@@ -118,7 +118,7 @@ self.addEventListener('fetch', function (event) {
         return response
       })
       .catch(function () {
-        // Fallback to cache if network fails
+        // Fallback to cache if network fails (only works for GET requests)
         return caches.match(event.request)
       })
   )
