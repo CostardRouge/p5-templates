@@ -137,7 +137,7 @@ async function readExifInfo(
     if ( url.startsWith( "blob:" ) ) {
       const buffer = await ( await fetch( url ) ).arrayBuffer();
 
-      tags = exif.load( buffer );
+      tags = await exif.load( buffer );
     } else {
       tags = await exif.load( url );
     }
