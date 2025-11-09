@@ -1,23 +1,13 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-import { Label } from "@headlessui/react";
 
 export const formValues = {
-  margin: 0.1,
-  font: "martian",
-  fontSize: 20,
-  fontStroke: [
-    255,
-    255,
-    255
-  ],
-  fontColor: [
-    0,
-    0,
-    0
-  ],
-  photo: null,
+  photo: {
+    image: null,
+    margin: 0.1,
+    backgroundColor: [255, 255, 255]
+  },
   topLeft: "",
   topRight: "",
   bottomLeft: "",
@@ -45,6 +35,10 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 0.45,
         step: 0.005
+      },
+      backgroundColor: {
+        component: "color",
+        label: "Background color"
       },
     }
   },

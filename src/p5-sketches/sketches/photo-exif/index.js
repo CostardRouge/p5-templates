@@ -34,7 +34,11 @@ const getFont = () => {
 sketch.draw( (
   _time, center
 ) => {
-  background( 255 );
+  background( ...( options.sketch?.photo?.backgroundColor ?? [
+    255,
+    255,
+    255
+  ] ) );
 
   const photo = common.getAsset( options.sketch?.photo?.image );
 
