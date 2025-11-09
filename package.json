@@ -5,6 +5,7 @@
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",
     "dev": "concurrently \"npm run sketch:meta\" \"next dev --turbopack\"",
+    "prebuild": "node scripts/inject-sw-version.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
