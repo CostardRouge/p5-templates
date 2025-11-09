@@ -24,14 +24,14 @@ type MenuBarProps = {
 function MenuBar({ showRecordings = false }: MenuBarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const capturing = searchParams.get("capturing");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if ( capturing === "" ) {
+  // Hide menu bar when in capturing mode
+  if ( searchParams.get("capturing") === "" ) {
     return null;
   }
 
