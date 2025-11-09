@@ -80,21 +80,46 @@ export default function VideoPreviewModal( {
     ]
   );
 
+  // Prevent scroll when modal is open
+  useEffect(
+    () => {
+      if ( isOpen ) {
+        const mainElement = document.querySelector( "main" );
+        if ( mainElement ) {
+          mainElement.style.overflow = "hidden";
+        }
+      } else {
+        const mainElement = document.querySelector( "main" );
+        if ( mainElement ) {
+          mainElement.style.overflow = "";
+        }
+      }
+
+      return () => {
+        const mainElement = document.querySelector( "main" );
+        if ( mainElement ) {
+          mainElement.style.overflow = "";
+        }
+      };
+    },
+    [ isOpen ]
+  );
+
   if ( !isOpen ) {
     return null;
   }
 
   return (
     <div
-      className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-sm p-12"
+      className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-12"
       onClick={onClose}
     >
       <div
-        className="relative w-[80vw] md:w-[70vw] max-h-[80vh] overflow-y-auto bg-background rounded-lg border border-theme shadow-2xl"
+        className="overflow-hidden relative w-full md:w-[85vw] lg:w-[80vw] max-h-[90vh] bg-background rounded-lg border border-theme shadow-2xl flex flex-col"
         onClick={( e ) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-background border-b border-theme">
+        <div className="flex items-center justify-between p-4 bg-background border-b border-theme flex-shrink-0">
           <h2 className="font-semibold">Recording preview</h2>
           <button
             onClick={onClose}
@@ -105,7 +130,7 @@ export default function VideoPreviewModal( {
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-4 overflow-hidden flex-1">
           {loading && (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
@@ -124,7 +149,7 @@ export default function VideoPreviewModal( {
           )}
 
           {!loading && !error && media && (
-            <div className="space-y-6">
+            <>
               {media.isZipArchive && (
                 <div className="text-center py-8">
                   <p className="text-foreground mb-4">
@@ -140,35 +165,55 @@ export default function VideoPreviewModal( {
                 <p className="text-center text-foreground">No videos available</p>
               )}
 
-              {!media.isZipArchive && media.videos.map( ({url}, index ) => (
-                <div key={index} className="flex flex-col justify-center items-center gap-2">
-                  {media.videos.length > 1 && (
-                    <h3 className="text-sm font-medium text-foreground">
-                      Slide {index + 1}
-                    </h3>
-                  )}
-                  <div className="border border-theme rounded-lg overflow-hidden w-full">
-                    <video
-                      controls
-                      className="w-full"
-                      preload="metadata"
-                      poster={media.thumbnails[ index ]}
-                    >
-                      <source src={url} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
+              {!media.isZipArchive && media.videos.length > 0 && (
+                <div className="h-full flex flex-col gap-4">
+                  {/* Horizontal scroll container for videos */}
+                  <div className="flex-1 overflow-x-auto overflow-y-hidden">
+                    <div className={`flex gap-6 h-full ${media.videos.length === 1 ? 'justify-center' : ''}`}>
+                      {media.videos.map( ({url}, index ) => (
+                        <div 
+                          key={index} 
+                          className={`flex flex-col gap-3 ${media.videos.length === 1 ? 'w-full max-w-4xl' : 'flex-shrink-0 w-[85vw] md:w-[600px] lg:w-[700px]'}`}
+                        >
+                          {media.videos.length > 1 && (
+                            <h3 className="text-sm font-medium text-foreground text-center">
+                              Slide {index + 1}
+                            </h3>
+                          )}
+                          <div className="border border-theme rounded-lg overflow-hidden flex-1 flex items-center justify-center bg-black">
+                            <video
+                              controls
+                              className="max-h-[60vh] w-auto max-w-full"
+                              preload="metadata"
+                              poster={media.thumbnails[ index ]}
+                            >
+                              <source src={url} type="video/mp4" />
+                              Your browser does not support the video tag.
+                            </video>
+                          </div>
+                          <div className="flex justify-center">
+                            <button
+                              onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
+                              className="items-center gap-2 px-4 py-2 text-sm flex border border-theme border-b-2 rounded-lg hover:bg-theme/10 transition-colors"
+                            >
+                              <Download className="h-5" />
+                              Download
+                            </button>
+                          </div>
+                        </div>
+                      ) )}
+                    </div>
                   </div>
-
-                  <button
-                    onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
-                    className={"items-center gap-2 px-4 py-2 text-sm flex border border-theme border-b-2 rounded-lg"}
-                  >
-                    <Download className="h-5" />
-                    Download
-                  </button>
+                  
+                  {/* Scroll indicator for multiple videos */}
+                  {media.videos.length > 1 && (
+                    <div className="text-center text-sm text-foreground/60 pb-2">
+                      ← Scroll to view all {media.videos.length} slides →
+                    </div>
+                  )}
                 </div>
-              ) )}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
