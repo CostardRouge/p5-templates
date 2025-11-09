@@ -12,6 +12,7 @@ RUN apt-get update \
 COPY src ./src
 COPY public ./public
 COPY prisma ./prisma
+COPY scripts ./scripts
 
 # 1.2. bundler config
 COPY next.config.ts ./next.config.ts
