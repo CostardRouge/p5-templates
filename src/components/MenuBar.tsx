@@ -8,6 +8,7 @@ import {
   headers
 } from "next/headers";
 import ThemeToggle from "@/components/ThemeToggle";
+import PushNotificationManager from "@/components/PushNotificationManager";
 
 type NavItem = {
   href: string;
@@ -68,7 +69,7 @@ async function MenuBar( {
           return (
             <Link
               key={href}
-              href={href}
+               href={href}
               target={target}
               className={clsx(
                 "hover:opacity-80 flex flex-col items-center justify-center rounded-xl shadow-sm px-2 py-1 border border-theme border-b-2",
@@ -84,9 +85,12 @@ async function MenuBar( {
         } )}
       </div>
 
-      <ThemeToggle
-        iconClassName="h-5"
-      />
+      <div className="flex items-center gap-2">
+        <PushNotificationManager />
+        <ThemeToggle
+          iconClassName="h-5"
+        />
+      </div>
     </nav>
   );
 }

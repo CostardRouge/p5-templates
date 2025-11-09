@@ -13,6 +13,7 @@ import {
 import {
   updateRecordingStatus
 } from "@/lib/progression";
+import { NotificationService } from "@/services/NotificationService";
 
 export class RecordingWorkerService {
   private static instance: RecordingWorkerService | null = null;
@@ -140,6 +141,18 @@ export class RecordingWorkerService {
         "completed"
       );
       console.log( `[Worker] Job completed: ${ jobId }` );
+
+      // Send push notification for job completion
+      try {
+        const notificationService = NotificationService.getInstance();
+        await notificationService.sendJobCompletionNotification( jobId );
+      } catch ( notificationError ) {
+        console.error(
+          `[Worker] Error sending completion notification: ${ jobId }`,
+          notificationError
+        );
+        // Don't fail the job if notification fails
+      }
     } catch ( error ) {
       console.error(
         `[Worker] Error updating completed job: ${ jobId }`,
@@ -163,6 +176,18 @@ export class RecordingWorkerService {
 
     try {
       console.error( `[Worker] Job failed: ${ jobId } - ${ error?.message }` );
+
+      // Send push notification for job failure
+      try {
+        const notificationService = NotificationService.getInstance();
+        await notificationService.sendJobFailureNotification( jobId );
+      } catch ( notificationError ) {
+        console.error(
+          `[Worker] Error sending failure notification: ${ jobId }`,
+          notificationError
+        );
+        // Don't fail the job if notification fails
+      }
     } catch ( updateError ) {
       console.error(
         `[Worker] Error updating failed job: ${ jobId }`,

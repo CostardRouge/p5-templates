@@ -1,0 +1,13 @@
+// Add this model to your schema.prisma file for production use
+// This will store push notification subscriptions in the database
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([endpoint])
+}
