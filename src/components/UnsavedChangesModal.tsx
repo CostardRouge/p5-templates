@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, Save, X } from "lucide-react";
+import {
+  AlertCircle, Save, X
+} from "lucide-react";
 
 type UnsavedChangesModalProps = {
   isOpen: boolean;
@@ -11,27 +13,27 @@ type UnsavedChangesModalProps = {
   isSaving?: boolean;
 };
 
-export default function UnsavedChangesModal({
+export default function UnsavedChangesModal( {
   isOpen,
   onStay,
   onSaveAsDraft,
   onLeaveWithoutSaving,
   isSaving = false,
-}: UnsavedChangesModalProps) {
-  if (!isOpen) return null;
+}: UnsavedChangesModalProps ) {
+  if ( !isOpen ) return null;
 
   return (
     <div
       className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 z-[100]"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
+      onClick={( e ) => {
+        if ( e.target === e.currentTarget ) {
           onStay();
         }
       }}
     >
       <div
         className="relative w-full max-w-md bg-background rounded-lg border border-theme shadow-2xl flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        onClick={( e ) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-background border-b border-theme flex-shrink-0">
@@ -59,7 +61,7 @@ export default function UnsavedChangesModal({
             <button
               onClick={onSaveAsDraft}
               disabled={isSaving}
-              className="w-full rounded-lg px-4 py-2.5 border border-theme border-b-2 bg-background text-foreground hover:bg-theme/10 disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
+              className="w-full rounded-lg px-4 py-2.5 border border-theme  bg-background text-foreground hover:bg-theme/10 disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
             >
               <Save className="h-4 w-4" />
               <span>{isSaving ? "Saving..." : "Save as draft"}</span>

@@ -14,7 +14,7 @@ import {
 } from "react";
 
 // Force dynamic rendering to read env vars at runtime
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Social-pipeline",
@@ -54,10 +54,9 @@ export default function RootLayout( {
               <MenuBar showRecordings={process.env.BACKEND_RECORDING === "true"} />
             </Suspense>
           </div>
-          
+
           <ServiceWorkerUpdateNotifier />
         </ThemeProvider>
-
       </body>
     </html>
   );

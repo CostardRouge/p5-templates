@@ -14,28 +14,28 @@ const ZoomControls = ( {
     <div className={defaultStyle}>
       <button
         onClick={onReset}
-        className="rounded-xl glass border border-theme border-b-2 px-2 py-1"
+        className="rounded-xl glass border border-theme  px-2 py-1"
       >
         100%
       </button>
 
       <button
         onClick={onPlus}
-        className="rounded-xl glass border border-theme border-b-2 px-2 py-1"
+        className="rounded-xl glass border border-theme  px-2 py-1"
       >
         +
       </button>
 
       <button
         onClick={onMinus}
-        className="rounded-xl glass border border-theme border-b-2 px-2 py-1"
+        className="rounded-xl glass border border-theme  px-2 py-1"
       >
         −
       </button>
 
       <button
         onClick={onFit}
-        className="rounded-xl glass border border-theme border-b-2 px-2 py-1"
+        className="rounded-xl glass border border-theme  px-2 py-1"
       >
         Fit
       </button>

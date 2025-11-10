@@ -1,9 +1,11 @@
 "use client";
 
 import React, {
-  useState, useImperativeHandle, forwardRef
+  forwardRef, useImperativeHandle, useState
 } from "react";
-import { useRouter } from "next/navigation";
+import {
+  useRouter
+} from "next/navigation";
 import {
   Archive, Clapperboard, Loader, Save, SaveIcon
 } from "lucide-react";
@@ -36,11 +38,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   name: string;
   options: SketchOption;
   persistedJob?: JobModel
-}>( ( {
-  name,
-  options,
-  persistedJob
-}, ref ) => {
+}>( (
+  {
+    name,
+    options,
+    persistedJob
+  }, ref
+) => {
   const router = useRouter();
   const {
     enqueueRecording, isLoading
@@ -193,16 +197,19 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   };
 
   // Expose save function to parent via ref
-  useImperativeHandle( ref, () => ( {
-    saveAsDraft: async() => {
-      await handleSubmit(
-        "draft",
-        persistedJob?.id,
-        true // skip redirect for auto-save
-      );
-    },
-    isSaving: saving,
-  } ) );
+  useImperativeHandle(
+    ref,
+    () => ( {
+      saveAsDraft: async() => {
+        await handleSubmit(
+          "draft",
+          persistedJob?.id,
+          true // skip redirect for auto-save
+        );
+      },
+      isSaving: saving,
+    } )
+  );
 
   return (
     <>
@@ -214,7 +221,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
               {
                 persistedJob?.status === "draft" && ( <button
                   className={clsx(
-                    "rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs",
+                    "rounded-lg px-2 py-1 border border-theme  disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs",
                     {
                       "animate-pulse-soft": saving
                     }
@@ -234,7 +241,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
               {
                 persistedJob?.status !== "draft" && (
                   <button
-                    className="rounded-lg px-2 py-1 border border-theme border-b-2 disabled:opacity-50 text-foreground bg-background text-xs"
+                    className="rounded-lg px-2 py-1 border border-theme  disabled:opacity-50 text-foreground bg-background text-xs"
                     onClick={() => handleSubmit( "draft" )}
                     disabled={isLoading}
                   >
@@ -246,8 +253,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
               { persistedJob?.status === "draft" && (
                 <button
-                  className=" rounded-lg p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
-                  onClick={() => handleSubmit( "queued", persistedJob.id )}
+                  className=" rounded-lg p-1 border border-theme  text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
+                  onClick={() => handleSubmit(
+                    "queued",
+                    persistedJob.id
+                  )}
                   disabled={isLoading || saving}
                 >
                   {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
@@ -257,7 +267,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
               ) }
 
               <button
-                className=" rounded-lg p-1 border border-theme border-b-2 text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
+                className=" rounded-lg p-1 border border-theme  text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
                 onClick={() => handleSubmit()}
                 disabled={isLoading || saving}
               >
@@ -270,7 +280,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
           )}
 
           <button
-            className="rounded-lg p-1 border border-theme border-b-2 text-foreground bg-background text-xs w-full"
+            className="rounded-lg p-1 border border-theme  text-foreground bg-background text-xs w-full"
             onClick={async() => {
               await window?.startLoopRecording( {
                 format: "webm"

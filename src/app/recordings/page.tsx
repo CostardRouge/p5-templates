@@ -5,7 +5,18 @@ import React, {
 } from "react";
 
 import {
-  AlertTriangle, Clapperboard, Download, FileArchive, Grid, List, Menu as MenuIcon, RotateCcw, Trash2, X, Link, Eye
+  AlertTriangle,
+  Clapperboard,
+  Download,
+  Eye,
+  FileArchive,
+  Grid,
+  Link,
+  List,
+  Menu as MenuIcon,
+  RotateCcw,
+  Trash2,
+  X
 } from "lucide-react";
 
 import {
@@ -53,7 +64,11 @@ function formatFileSize( bytes: number | null ): string {
     "GB"
   ];
   const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
-  return `${ parseFloat( ( bytes / Math.pow( k, i ) ).toFixed( 1 ) ) } ${ sizes[ i ] }`;
+
+  return `${ parseFloat( ( bytes / Math.pow(
+    k,
+    i
+  ) ).toFixed( 1 ) ) } ${ sizes[ i ] }`;
 }
 
 // Download menu items component
@@ -92,6 +107,7 @@ function DownloadMenuItems( {
 
           if ( response.ok ) {
             const data = await response.json();
+
             setMediaData( data );
           }
         } catch ( error ) {
@@ -133,7 +149,9 @@ function DownloadMenuItems( {
 
   return (
     <>
-      {videos.length > 1 && videos.map( ( video, idx ) => (
+      {videos.length > 1 && videos.map( (
+        video, idx
+      ) => (
         <MenuItem key={video.index}>
           {( {
             focus
@@ -266,30 +284,30 @@ function ActionsMenu( {
       </MenuButton>
 
       <MenuItems className="absolute right-0 w-64 border border-theme rounded-xl z-50 bg-background overflow-hidden">
-       {( job.status === "completed" && job.videoUrls ) && (
-        <>
+        {( job.status === "completed" && job.videoUrls ) && (
+          <>
+            <MenuItem>
+              {( {
+                focus
+              } ) => (
+                <button
+                  onClick={onPreviewModal}
+                  className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                >
+                  <Eye className="h-5" />
+                  Open preview modal
+                </button>
+              )}
+            </MenuItem>
+
+            <div className="my-1 h-px bg-border" />
+          </>
+        )}
+
         <MenuItem>
           {( {
-              focus
-            } ) => (       
-              <button
-                onClick={onPreviewModal}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
-              >
-                <Eye className="h-5" />
-                Open preview modal
-              </button>
-            )}
-          </MenuItem>
-                
-          <div className="my-1 h-px bg-border" />
-        </>
-      )}
-
-       <MenuItem>
-        {( {
             focus
-          } ) => (       
+          } ) => (
             <HardLink
               href={`templates/${ job.template }?id=${ job.id }`}
               className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -297,20 +315,20 @@ function ActionsMenu( {
               <Link className="h-5" />
               <span>Open recording&nbsp;
                 <u>{
-                job.id.slice(
-                0,
-                8
-              )}
-              </u>
+                  job.id.slice(
+                    0,
+                    8
+                  )}
+                </u>
               </span>
             </HardLink>
           )}
         </MenuItem>
 
-       <MenuItem>
-        {( {
+        <MenuItem>
+          {( {
             focus
-          } ) => (       
+          } ) => (
             <HardLink
               href={`templates/${ job.template }`}
               className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
@@ -322,7 +340,7 @@ function ActionsMenu( {
         </MenuItem>
 
         <div className="my-1 h-px bg-border" />
-        
+
         <DownloadMenuItems job={job} />
 
         <MenuItem>
@@ -811,13 +829,13 @@ export default function RecordingsPage() {
               placeholder="Search…"
               value={search}
               onChange={( e ) => setSearch( e.target.value )}
-              className="px-2 rounded-xl w-full sm:w-40 bg-background h-8 border border-theme border-b-2"
+              className="px-2 rounded-xl w-full sm:w-40 bg-background h-8 border border-theme "
             />
 
             <select
               value={statusFilter}
               onChange={( e ) => setStatusFilter( e.target.value )}
-              className="px-2 rounded-xl bg-background h-8 border border-theme border-b-2"
+              className="px-2 rounded-xl bg-background h-8 border border-theme "
             >
               <option value="all">All Status</option>
               <option value="draft">Drafted</option>
@@ -831,14 +849,14 @@ export default function RecordingsPage() {
             <div className="">
               <button
                 onClick={() => setView( "cards" )}
-                className={`rounded-l-xl border border-theme border-b-2 border-r-0 px-2 py-[6.5] h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+                className={`rounded-l-xl border border-theme  border-r-0 px-2 py-[6.5] h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
               >
                 <Grid className="w-4 h-4" />
               </button>
 
               <button
                 onClick={() => setView( "table" )}
-                className={`rounded-r-xl border border-theme border-b-2 border-l-0 px-2 py-[6.5] ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
+                className={`rounded-r-xl border border-theme  border-l-0 px-2 py-[6.5] ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -850,7 +868,7 @@ export default function RecordingsPage() {
 
         {/* Table View */}
         {view === "table" && (
-          <div className="overflow-x-auto rounded-xl border border-theme border-b-2 bg-background">
+          <div className="overflow-x-auto rounded-xl border border-theme  bg-background">
             <table className="min-w-full">
               <thead className="bg-hover/70">
                 <tr className="text-left text-xs text-foreground uppercase border-b ">
@@ -1098,11 +1116,11 @@ function RecordingThumbnail( {
         }
       )}
     >
-     { thumbnailUrl && (
-      <Eye
-        className="w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground bg-background rounded-lg py-1 px-1 border border-theme"
-      />
-     ) }
+      { thumbnailUrl && (
+        <Eye
+          className="w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground bg-background rounded-lg py-1 px-1 border border-theme"
+        />
+      ) }
       <img
         src={src}
         alt={job.template}

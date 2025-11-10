@@ -85,11 +85,13 @@ export default function VideoPreviewModal( {
     () => {
       if ( isOpen ) {
         const mainElement = document.querySelector( "main" );
+
         if ( mainElement ) {
           mainElement.style.overflow = "hidden";
         }
       } else {
         const mainElement = document.querySelector( "main" );
+
         if ( mainElement ) {
           mainElement.style.overflow = "";
         }
@@ -97,12 +99,15 @@ export default function VideoPreviewModal( {
 
       return () => {
         const mainElement = document.querySelector( "main" );
+
         if ( mainElement ) {
           mainElement.style.overflow = "";
         }
       };
     },
-    [ isOpen ]
+    [
+      isOpen
+    ]
   );
 
   if ( !isOpen ) {
@@ -111,7 +116,7 @@ export default function VideoPreviewModal( {
 
   return (
     <div
-      className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-12"
+      className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-12"
       onClick={onClose}
     >
       <div
@@ -169,11 +174,15 @@ export default function VideoPreviewModal( {
                 <div className="h-full flex flex-col gap-4">
                   {/* Horizontal scroll container for videos */}
                   <div className="flex-1 overflow-x-auto overflow-y-hidden">
-                    <div className={`flex gap-6 h-full ${media.videos.length === 1 ? 'justify-center' : ''}`}>
-                      {media.videos.map( ({url}, index ) => (
-                        <div 
-                          key={index} 
-                          className={`flex flex-col gap-3 ${media.videos.length === 1 ? 'w-full max-w-4xl' : 'flex-shrink-0 w-[85vw] md:w-[600px] lg:w-[700px]'}`}
+                    <div className={`flex gap-6 h-full ${ media.videos.length === 1 ? "justify-center" : "" }`}>
+                      {media.videos.map( (
+                        {
+                          url
+                        }, index
+                      ) => (
+                        <div
+                          key={index}
+                          className={`flex flex-col gap-3 ${ media.videos.length === 1 ? "w-full max-w-4xl" : "flex-shrink-0 w-[85vw] md:w-[600px] lg:w-[700px]" }`}
                         >
                           {media.videos.length > 1 && (
                             <h3 className="text-sm font-medium text-foreground text-center">
@@ -194,7 +203,7 @@ export default function VideoPreviewModal( {
                           <div className="flex justify-center">
                             <button
                               onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
-                              className="items-center gap-2 px-4 py-2 text-sm flex border border-theme border-b-2 rounded-lg hover:bg-theme/10 transition-colors"
+                              className="items-center gap-2 px-4 py-2 text-sm flex border border-theme  rounded-lg hover:bg-theme/10 transition-colors"
                             >
                               <Download className="h-5" />
                               Download
@@ -204,7 +213,7 @@ export default function VideoPreviewModal( {
                       ) )}
                     </div>
                   </div>
-                  
+
                   {/* Scroll indicator for multiple videos */}
                   {media.videos.length > 1 && (
                     <div className="text-center text-sm text-foreground/60 pb-2">
