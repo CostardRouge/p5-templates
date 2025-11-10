@@ -1,12 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, {
+  useEffect, useState
+} from "react";
 import {
   Github, Paintbrush, Video
 } from "lucide-react";
 import clsx from "clsx";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import {
+  usePathname, useSearchParams
+} from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import PushNotificationManager from "@/components/PushNotificationManager";
 
@@ -21,17 +26,26 @@ type MenuBarProps = {
   showRecordings?: boolean;
 };
 
-function MenuBar({ showRecordings = false }: MenuBarProps) {
+function MenuBar( {
+  showRecordings = false
+}: MenuBarProps ) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [mounted, setMounted] = useState(false);
+  const [
+    mounted,
+    setMounted
+  ] = useState( false );
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(
+    () => {
+      setMounted( true );
+    },
+    [
+    ]
+  );
 
   // Hide menu bar when in capturing mode
-  if ( searchParams.get("capturing") === "" ) {
+  if ( searchParams.get( "capturing" ) === "" ) {
     return null;
   }
 
@@ -58,10 +72,13 @@ function MenuBar({ showRecordings = false }: MenuBarProps) {
 
   return (
     <nav className="w-full glass px-2 py-1.5 flex justify-between items-center gap-1 z-50 border-t border-theme text-xs sm:text-sm">
-      <p className="font-medium select-none text-foreground">
-        <span className="hover:animate-text-cycle w-full inline-block">my p5*js</span><br/>
-        <span>templates</span>
-      </p>
+      <Image
+        alt="my p5*js templates"
+        src="/assets/images/icon-512x512.png"
+        className="px-2 py-1.5 hover:animate-spin"
+        width={64}
+        height={64}
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         {items.map( ( {
@@ -73,10 +90,10 @@ function MenuBar({ showRecordings = false }: MenuBarProps) {
           return (
             <Link
               key={href}
-               href={href}
+              href={href}
               target={target}
               className={clsx(
-                "transition-all duration-200 flex flex-col items-center justify-center rounded-xl shadow-sm px-2 py-1 border border-theme border-b-2",
+                "transition-all duration-200 flex flex-col items-center justify-center rounded-xl shadow-sm px-2 py-1 border border-theme ",
                 active
                   ? "bg-hover border-active"
                   : "hover:bg-hover/50 hover:opacity-80"

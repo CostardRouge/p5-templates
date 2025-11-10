@@ -52,7 +52,6 @@ export default {
         },
       },
       animation: {
-        "text-cycle": "cycle-align 2.0s infinite linear",
         "pulse-soft": "pulse-soft 1.5s ease-in-out infinite",
       },
     },
