@@ -15,12 +15,6 @@ export const recordingSketchSteps: RecordingProgressionSteps = {
       "saving-frames": {
         percentage: 0,
       },
-      "downloading-frames-archive": {
-        percentage: 0,
-      },
-      "extracting-frames-archive": {
-        percentage: 0,
-      },
       "encoding-frames": {
         percentage: 0,
       },

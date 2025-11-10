@@ -10,6 +10,7 @@ import {
 
 export type SketchContextType = {
   name: string;
+  capturing: boolean,
   options: SketchOption;
   persistedJob?: JobModel;
   backendRecording: boolean

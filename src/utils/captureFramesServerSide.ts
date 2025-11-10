@@ -33,17 +33,17 @@ export async function captureFramesServerSide({
       // @ts-ignore
       window.noLoop();
     }
-    // Reset time to start
-    // @ts-ignore - custom time utility
-    if (typeof window.time?.reset === "function") {
+    // Enable recording mode (resets time and enables frame-based timing)
+    // @ts-ignore - global function exposed by time utility
+    if (typeof window.enableRecordingMode === "function") {
       // @ts-ignore
-      window.time.reset();
+      window.enableRecordingMode();
     }
   });
 
   // Capture frames one by one
   for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-    // Trigger a single frame draw
+    // Trigger a single frame draw (time advances automatically via incrementElapsedTime)
     await page.evaluate(() => {
       // @ts-ignore - p5.js global function
       if (typeof window.redraw === "function") {

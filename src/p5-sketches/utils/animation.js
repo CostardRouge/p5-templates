@@ -30,7 +30,17 @@ const animation = {
   },
 
   get progression() {
-    return time.seconds() % sketch.sketchOptions?.animation?.duration / sketch.sketchOptions?.animation?.duration;
+    const duration = sketch.sketchOptions?.animation?.duration || 10;
+    const seconds = time.seconds();
+    
+    // During recording, don't wrap - let it go beyond 1.0
+    // The recording will stop at the right frame count
+    if (time.isRecording) {
+      return Math.min(seconds / duration, 1.0);
+    }
+    
+    // Normal playback: wrap around for continuous loop
+    return (seconds % duration) / duration;
   },
   get circularProgression() {
     return mappers.circular(

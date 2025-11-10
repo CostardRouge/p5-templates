@@ -9,10 +9,6 @@ import {
   getSketchOptions, setSketchOptions, subscribeSketchOptions,
 } from "@/p5-sketches/shared/syncSketchOptions";
 
-import {
-  JobModel
-} from "@/types/recording.types";
-
 import type {
   SketchOption
 } from "@/types/sketch.types";
@@ -21,22 +17,13 @@ import {
 } from "@/components/ClientProcessingSketch/components/P5Controls";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
+import useSketch from "./components/SketchProvider/hooks/useSketch";
 
 const TemplateOptions = dynamic( () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
 
-export type ClientProcessingSketchProps = {
-  name: string;
-  capturing: boolean,
-  options?: SketchOption | Partial<SketchOption> | null;
-  persistedJob?: JobModel
-}
 
-export default function ClientProcessingSketch( {
-  name,
-  options,
-  capturing,
-  persistedJob
-}: ClientProcessingSketchProps ) {
+export default function ClientProcessingSketch( ) {
+  const { name, capturing, options, persistedJob } = useSketch();
   const [
     currentOptions,
     setCurrentOptions

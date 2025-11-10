@@ -76,21 +76,14 @@ async function ProcessingSketch( {
     );
   }
 
-  const processingSketchProps: ClientProcessingSketchProps = {
-    capturing: ( await searchParams ).capturing === "",
-    persistedJob: undefined,
-    options: sketchOptions,
-    name: sketchName
-  };
+  let persistedJob = undefined;
 
   if ( jobIdSearchParams ) {
-    const persistedJob = await getJobById( jobIdSearchParams );
+    persistedJob = await getJobById( jobIdSearchParams );
 
     if ( !persistedJob ) {
       return notFound();
     }
-
-    processingSketchProps.persistedJob = persistedJob;
 
     Object.assign(
       sketchOptions,
@@ -121,13 +114,14 @@ async function ProcessingSketch( {
     <SketchContextProvider
       name={ sketchName }
       options={ sketchOptions }
+      persistedJob={ persistedJob }
       sketchFormValues={ formValues }
       sketchFormConfiguration={ formConfiguration }
-      persistedJob={ processingSketchProps.persistedJob }
+      capturing={ ( await searchParams ).capturing === ""}
       backendRecording={process.env.BACKEND_RECORDING === "true"}
       activeSlideIndex={ sketchOptions.slides?.length > 0 ? 0 : undefined}
     >
-      <ClientProcessingSketch {...processingSketchProps} />
+      <ClientProcessingSketch/>
     </SketchContextProvider>
 
   );

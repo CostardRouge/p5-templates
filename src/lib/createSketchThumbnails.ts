@@ -11,6 +11,7 @@ import {
 } from "@/constants";
 
 import fs from "node:fs/promises";
+import { log } from "node:console";
 
 const canvasSelectorToScreenShot = "canvas#defaultCanvas0.loaded";
 
@@ -34,11 +35,14 @@ async function createSketchThumbnails() {
   try {
     const p5sketches = await getSketchList() ?? [
     ];
+
     const p5sketchNames = p5sketches
-      .map( ( file ) => ( {
-        href: `templates/p5/${ file }`,
-        name: file
-      } ) );
+      .map( ( {
+        name
+      } ) => ( {
+        href: `templates/p5/${ name }`,
+        name
+      } ) )
 
     const {
       createPage,

@@ -72,8 +72,8 @@ export default function ServiceWorkerUpdateNotifier() {
   }
 
   return (
-    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 animate-pulse-soft">
-      <div className="glass border border-border rounded-lg shadow-lg flex items-center gap-3 max-w-md px-4 py-3">
+    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+      <div className="glass border border-border rounded-lg shadow-md flex items-center gap-3 max-w-md px-4 py-3">
         <RefreshCw className="w-5 h-5 flex-shrink-0 text-foreground" />
         <div className="flex-1">
           <p className="font-medium text-sm text-foreground">Update Available</p>

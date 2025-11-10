@@ -43,6 +43,7 @@ import clsx from "clsx";
 import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOptions/components/UndoRedo";
 import SketchSettings
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/SketchSettings";
+import useSketch from "../SketchProvider/hooks/useSketch";
 
 type TemplateOptionsProps = {
   name: string;
@@ -61,6 +62,12 @@ export default function TemplateOptions( {
   onActiveSlideChange,
   options: initialOptions,
 }: TemplateOptionsProps ) {
+  const { capturing } = useSketch();
+
+  if (capturing) {
+    return null;
+  }
+
   const [
     activeSlideIndex,
     setActiveSlideIndex

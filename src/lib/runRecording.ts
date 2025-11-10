@@ -15,7 +15,6 @@ import {
 } from "@/lib/progression/steps";
 
 import recordSketch from "@/lib/recordSketch";
-import recordSketchSlides from "@/lib/recordSketchSlides";
 
 async function runRecording( jobId: string ) {
   // ─── 1. Create workspace ───────────────────────────────────────────────────
@@ -40,19 +39,15 @@ async function runRecording( jobId: string ) {
 
     const options = await getCaptureOptions( `${ jobId }/options.json` );
 
-    // ─── 4. Decide single vs multiple slides ──────────────────────────────────
-    const slides = options.slides ?? null;
-    const recordFunction = slides && Array.isArray( slides ) && slides.length > 0 ? recordSketchSlides : recordSketch;
-
-    // ─── 5. Update progression ──────────────────────────────────
+    // ─── 2. Update progression steps ──────────────────────────────────────────
     await addRecordingSteps(
       jobId,
       getRecordingSketchStepsByOptions( options ),
       persistedJob.status
     );
 
-    // @ts-ignore
-    await recordFunction(
+    // ─── 3. Record sketch (handles both single and multi-slide) ───────────────
+    await recordSketch(
       jobId,
       persistedJob.template,
       options,

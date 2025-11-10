@@ -111,7 +111,7 @@ export default function VideoPreviewModal( {
 
   return (
     <div
-      className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-12"
+      className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-12"
       onClick={onClose}
     >
       <div
