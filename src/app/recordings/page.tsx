@@ -31,7 +31,6 @@ import useMultiRecordingStatusStream from "@/hooks/useMultiRecordingStatusStream
 import {
   JobModel, JobStatusEnum
 } from "@/types/recording.types";
-import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
 import clsx from "clsx";
 
 // Badge component
@@ -1033,7 +1032,7 @@ export default function RecordingsPage() {
   );
 }
 
-// Thumbnail component that fetches and displays recording thumbnail
+// Thumbnail component that displays recording thumbnail via redirect route
 function RecordingThumbnail( {
   job,
   onClick,
@@ -1043,80 +1042,25 @@ function RecordingThumbnail( {
   onClick?: () => void;
   className?: string;
 } ) {
-  const [
-    thumbnailUrl,
-    setThumbnailUrl
-  ] = useState<string | null>( null );
-  const [
-    loading,
-    setLoading
-  ] = useState( true );
-
-  useEffect(
-    () => {
-    // Only fetch thumbnails for completed jobs that have the thumbnails field
-      if ( job.status !== "completed" || !job.thumbnails ) {
-        setLoading( false );
-        return;
-      }
-
-      const fetchThumbnail = async() => {
-        try {
-          const response = await fetch( `/api/recordings/${ job.id }/media` );
-
-          if ( response.ok ) {
-            const data = await response.json();
-
-            // Only set thumbnail if we have actual thumbnail URLs (not zip archives)
-            if ( !data.isZipArchive && data.thumbnails && data.thumbnails.length > 0 ) {
-              setThumbnailUrl( data.thumbnails[ 0 ] );
-            }
-          }
-        } catch ( error ) {
-          console.error(
-            "Failed to fetch thumbnail:",
-            error
-          );
-        } finally {
-          setLoading( false );
-        }
-      };
-
-      fetchThumbnail();
-    },
-    [
-      job.id,
-      job.status,
-      job.thumbnails
-    ]
-  );
-
-  // Show loading state
-  if ( loading ) {
-    return (
-      <div className={`bg-hover animate-pulse ${ className }`} />
-    );
-  }
-
-  // Use recording thumbnail if available, otherwise fall back to sketch thumbnail
-  const src = thumbnailUrl || getP5SketchThumbnailURL( job.template.replace(
-    "p5",
-    ""
-  ) );
+  // Use the thumbnail redirect route - it handles all the logic server-side
+  const src = `/api/recordings/${ job.id }/thumbnail`;
+  
+  // Show Eye icon for completed recordings with videoUrls (new recordings)
+  const showEyeIcon = job.status === "completed" && job.videoUrls && job.thumbnails;
 
   return (
     <div
       onClick={onClick}
       className={clsx(
         className,
-        "relative",
+        "relative overflow-hidden",
         {
           grayscale: job.status !== "completed",
           "animate-pulse": job.status === "active"
         }
       )}
     >
-      { thumbnailUrl && (
+      { showEyeIcon && (
         <Eye
           className="w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground bg-background rounded-lg py-1 px-1 border border-theme"
         />
