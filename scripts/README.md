@@ -77,7 +77,36 @@ Creates placeholder icons for PWA.
 
 ### `generate-vapid-keys.mjs`
 
-Generates VAPID keys for web push notifications.
+Auto-generates VAPID keys for web push notifications if not already configured.
+
+**Usage:**
+```bash
+# Generate keys and update .env file
+npm run setup:notifications
+
+# Or run directly
+node scripts/generate-vapid-keys.mjs
+
+# Or use the bash wrapper
+./scripts/setup-notifications.sh
+```
+
+**What it does:**
+- Checks if VAPID keys already exist in .env
+- Generates new public/private key pair if needed
+- Updates .env file with the new keys
+- Provides keys for docker-compose.yml configuration
+
+**For NAS/Docker deployment:**
+The keys are auto-generated on first container startup if not provided. To persist keys across restarts, add them to your docker-compose.yml:
+
+```yaml
+environment:
+  - NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_public_key_here
+  - VAPID_PRIVATE_KEY=your_private_key_here
+```
+
+Or mount a persistent .env file as a volume.
 
 ### `inject-sw-version.mjs`
 

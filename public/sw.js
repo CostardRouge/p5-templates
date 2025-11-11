@@ -1,6 +1,6 @@
 // Cache version - updated on each deployment
 // This will be automatically replaced during build
-const CACHE_VERSION = "__CACHE_VERSION__";
+const CACHE_VERSION = "0.1.0-f167b665";
 const CACHE_NAME = `social-templates-v${ CACHE_VERSION }`;
 
 // Assets to cache (optional - for offline support)

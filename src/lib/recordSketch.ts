@@ -25,6 +25,9 @@ import {
 import {
   updateRecordingStepPercentage
 } from "@/lib/progression";
+import {
+  NotificationService
+} from "@/services/NotificationService";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION: Toggle between capture methods
@@ -121,6 +124,10 @@ async function recordSketch(
         progress: 100
       }
     );
+
+    // Send failure notification
+    const notificationService = NotificationService.getInstance();
+    await notificationService.sendJobFailureNotification( jobId, template );
 
     throw error;
   }
@@ -319,6 +326,10 @@ async function recordSingleSketch(
       ]
     }
   );
+
+  // Send completion notification
+  const notificationService = NotificationService.getInstance();
+  await notificationService.sendJobCompletionNotification( jobId, template );
 }
 
 /**
@@ -522,6 +533,10 @@ async function recordMultipleSlides(
       videoUrls: videoS3Urls
     }
   );
+
+  // Send completion notification
+  const notificationService = NotificationService.getInstance();
+  await notificationService.sendJobCompletionNotification( jobId, template );
 }
 
 export default recordSketch;

@@ -2,51 +2,38 @@ FROM mcr.microsoft.com/playwright:v1.56.1-jammy
 
 WORKDIR /app
 
-# 0. Install FFmpeg for video encoding
+# Install system dependencies
 RUN apt-get update \
- && apt-get install -y ffmpeg \
+ && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    curl \
  && rm -rf /var/lib/apt/lists/*
 
-# 1. Copy package files + Prisma schema so postinstall’s `prisma generate` works
-# 1.1. source code
+# Copy dependency files first for better layer caching
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+
+# Install dependencies (runs postinstall → prisma generate)
+RUN npm ci && npm cache clean --force
+
+# Copy configuration files
+COPY next.config.ts tsconfig.json tailwind.config.ts postcss.config.mjs ./
+
+# Copy application code
 COPY src ./src
 COPY public ./public
-COPY prisma ./prisma
 COPY scripts ./scripts
 
-# 1.2. bundler config
-COPY next.config.ts ./next.config.ts
-COPY tsconfig.json ./tsconfig.json
-COPY tailwind.config.ts ./tailwind.config.ts
-COPY postcss.config.mjs ./postcss.config.mjs
-
-# 1.3. deps config
-COPY package.json ./package.json
-COPY package-lock.json ./package-lock.json
-
-# 2. Install dependencies (runs postinstall → prisma generate)
-RUN npm ci
-
-# 3. Build the nextjs project
+# Build the Next.js project
 ENV NODE_ENV=production
-ENV REDIS_URL=redis://redis:6379
-
-# ─── Postgres ──────────────────────────────────────────────────────────────
-ENV POSTGRES_DB=social-pipeline
-ENV POSTGRES_USER=social-pipeline-user
-ENV POSTGRES_PASSWORD=social-pipeline-pass
-
-# ─── Database (Prisma) ─────────────────────────────────────────────────────
-ENV DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-
 RUN npm run build
 
-# 4. Copy entrypoint script
+# Copy and setup entrypoint
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
-# 5. Expose port for the app
+# Expose port
 EXPOSE 3000
 
-# 6. Run migrations and start the app
+# Run migrations and start the app
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

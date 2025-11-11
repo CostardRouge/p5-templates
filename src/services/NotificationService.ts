@@ -37,16 +37,19 @@ export class NotificationService {
    */
   async storeSubscription(subscription: PushSubscriptionData): Promise<void> {
     try {
-      // Store in database - you'll need to create a PushSubscription model in Prisma
-      // For now, we'll just log it
+      await prisma.pushSubscription.upsert({
+        where: { endpoint: subscription.endpoint },
+        update: {
+          p256dh: subscription.keys.p256dh,
+          auth: subscription.keys.auth,
+        },
+        create: {
+          endpoint: subscription.endpoint,
+          p256dh: subscription.keys.p256dh,
+          auth: subscription.keys.auth,
+        },
+      });
       console.log('[Notification] Subscription stored:', subscription.endpoint);
-      
-      // TODO: Implement database storage
-      // await prisma.pushSubscription.upsert({
-      //   where: { endpoint: subscription.endpoint },
-      //   update: subscription,
-      //   create: subscription,
-      // });
     } catch (error) {
       console.error('[Notification] Error storing subscription:', error);
       throw error;
@@ -58,12 +61,10 @@ export class NotificationService {
    */
   async removeSubscription(endpoint: string): Promise<void> {
     try {
+      await prisma.pushSubscription.deleteMany({
+        where: { endpoint },
+      });
       console.log('[Notification] Subscription removed:', endpoint);
-      
-      // TODO: Implement database removal
-      // await prisma.pushSubscription.delete({
-      //   where: { endpoint },
-      // });
     } catch (error) {
       console.error('[Notification] Error removing subscription:', error);
       throw error;
@@ -106,16 +107,51 @@ export class NotificationService {
     url?: string;
     jobId?: string;
   }): Promise<void> {
+    // Only send notifications if backend recording is enabled
+    if (process.env.BACKEND_RECORDING !== 'true') {
+      console.log('[Notification] Notifications disabled (BACKEND_RECORDING=false)');
+      return;
+    }
+
     try {
-      // TODO: Fetch all subscriptions from database
-      // const subscriptions = await prisma.pushSubscription.findMany();
+      const subscriptions = await prisma.pushSubscription.findMany();
       
-      // For now, we'll just log
-      console.log('[Notification] Would send to all subscriptions:', payload);
+      if (subscriptions.length === 0) {
+        console.log('[Notification] No subscriptions found');
+        return;
+      }
+
+      console.log(`[Notification] Sending to ${subscriptions.length} subscriptions:`, payload);
       
-      // await Promise.all(
-      //   subscriptions.map(sub => this.sendNotification(sub, payload))
-      // );
+      const results = await Promise.allSettled(
+        subscriptions.map(async (sub) => {
+          try {
+            await this.sendNotification(
+              {
+                endpoint: sub.endpoint,
+                keys: {
+                  p256dh: sub.p256dh,
+                  auth: sub.auth,
+                },
+              },
+              payload
+            );
+          } catch (error: any) {
+            // If subscription is invalid (410 Gone), remove it
+            if (error.statusCode === 410) {
+              console.log(`[Notification] Removing invalid subscription ${sub.id}`);
+              await prisma.pushSubscription.delete({
+                where: { id: sub.id },
+              });
+            } else {
+              throw error;
+            }
+          }
+        })
+      );
+
+      const successful = results.filter((r) => r.status === 'fulfilled').length;
+      console.log(`[Notification] Sent ${successful}/${subscriptions.length} notifications`);
     } catch (error) {
       console.error('[Notification] Error sending notifications to all:', error);
       throw error;
