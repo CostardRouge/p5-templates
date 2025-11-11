@@ -52,28 +52,32 @@ make app-dev
 
 ### Available Commands
 
+Run `make help` to see all available commands.
+
 #### Development
-- `npm run dev` - Start development server (native)
-- `make app-dev` - Start development server (Docker)
+- `npm run dev` - Start development server (native, recommended)
+- `make app-dev` - Start development server in Docker with hot reload
+- `make services-up` - Start only infrastructure services
+- `make app-bash-dev` - Open bash in dev container with mounted code
+
+#### Production
+- `make app-prod` - Rebuild and start production server
+- `make dc-build` - Build Docker images
+- `make dc-rebuild` - Rebuild without cache
+- `make dc-up` - Start all services
 
 #### Docker Services
-- `make dc-up` - Start all services
-- `make dc-down` - Stop all services
-- `make dc-build` - Build Docker images
 - `make redis` - Start only Redis
 - `make minio` - Start only MinIO
 - `make postgres` - Start only PostgreSQL
+- `make dc-down` - Stop all services
+- `make clean` - Stop services and remove volumes
 
 #### Database
 - `npx prisma migrate dev` - Create and apply migrations
 - `npx prisma migrate deploy` - Apply migrations (production)
 - `npx prisma studio` - Open Prisma Studio
 - `npx prisma generate` - Generate Prisma client
-
-#### Application
-- `make app-bash` - Open shell in app container
-- `make app-build` - Build app in Docker
-- `make app-start` - Start production server in Docker
 
 ## Service URLs
 
@@ -121,6 +125,44 @@ REDIS_URL=redis://localhost:6379
 - **Playwright**: Headless browser for recording
 - **MinIO**: S3-compatible object storage
 - **Redis**: Queue and caching
+
+## Development vs Production
+
+### Development Mode
+
+**Native (Recommended for M1/M2 Macs):**
+```bash
+# Start infrastructure
+docker-compose up -d redis minio postgres
+
+# Run app natively
+npm run dev
+```
+- Uses your local Node.js and npm
+- Hot reload works instantly
+- Prisma client matches your machine architecture
+- Faster iteration
+
+**Docker:**
+```bash
+make app-dev
+```
+- Mounts your local code into the container
+- Automatically generates Prisma client for Linux
+- Hot reload works (may be slightly slower)
+- Consistent environment across team
+
+### Production Mode
+
+```bash
+make app-prod
+```
+- Rebuilds Docker image with latest code
+- Runs optimized production build
+- No code mounting, everything is in the image
+- Use this to test production builds
+
+**Important:** `make app-dev` mounts your local code, so changes are reflected immediately. `make dc-up` runs the production image built with `make dc-build`, which contains a snapshot of your code at build time.
 
 ## Troubleshooting
 
