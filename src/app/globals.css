@@ -82,6 +82,19 @@ canvas#defaultCanvas0:hover {
     }
 }
 
+@keyframes pulse-soft {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+}
+
 body.recording canvas#defaultCanvas0 {
     border-width: 3px;
     animation: pulse-border 1.5s infinite alternate ease-in-out;

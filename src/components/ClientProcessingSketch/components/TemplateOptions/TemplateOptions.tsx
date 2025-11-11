@@ -120,6 +120,7 @@ export default function TemplateOptions( {
         
         // Track unsaved changes (only if job exists as draft with jobId)
         if ( jobId && persistedJob?.status === "draft" ) {
+          console.log("[TemplateOptions] Setting hasUnsavedChanges to true");
           setHasUnsavedChanges( true );
         }
       } );
@@ -150,12 +151,18 @@ export default function TemplateOptions( {
   const { showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving } = useUnsavedChanges( {
     hasUnsavedChanges: hasUnsavedChanges,
     onSaveAsDraft: async() => {
+      console.log("[TemplateOptions] Saving draft from modal");
       if ( captureActionsRef.current ) {
         await captureActionsRef.current.saveAsDraft();
         setHasUnsavedChanges( false );
       }
     },
   } );
+
+  // Debug logging for modal state
+  useEffect(() => {
+    console.log("[TemplateOptions] Modal state:", { showModal, hasUnsavedChanges, jobId, status: persistedJob?.status });
+  }, [showModal, hasUnsavedChanges, jobId, persistedJob?.status]);
 
   useEffect(
     () => {

@@ -188,11 +188,6 @@ async function recordSingleSketch(
     `thumbnail-${ jobId }.jpg`
   );
 
-  console.log( {
-    totalFrames,
-    framerate
-  } );
-
   if ( USE_STREAMING_MODE ) {
     // ─── Streaming mode: Direct to FFmpeg (no disk I/O) ───────────────────
     await captureFramesWithStreaming( {

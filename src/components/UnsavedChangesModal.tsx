@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
-import {
-  AlertCircle, Save, X
-} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Save, X } from "lucide-react";
 
 type UnsavedChangesModalProps = {
   isOpen: boolean;
@@ -20,32 +19,38 @@ export default function UnsavedChangesModal( {
   onLeaveWithoutSaving,
   isSaving = false,
 }: UnsavedChangesModalProps ) {
-  if ( !isOpen ) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      console.log("[UnsavedChangesModal] Modal is now open");
+    }
+  }, [isOpen]);
+
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
     <div
-      className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 z-[100]"
-      onClick={( e ) => {
-        if ( e.target === e.currentTarget ) {
-          onStay();
-        }
-      }}
+      className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 z-[9999]"
+      onClick={onStay}
     >
       <div
         className="relative w-full max-w-md bg-background rounded-lg border border-theme shadow-2xl flex flex-col"
         onClick={( e ) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-background border-b border-theme flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-yellow-500" />
-            <h2 className="font-semibold">Unsaved Changes</h2>
-          </div>
+        <div className="flex items-center justify-between p-4 border-b border-theme">
+          <h2 className="font-semibold">Unsaved changes</h2>
           <button
             onClick={onStay}
             aria-label="Close"
             disabled={isSaving}
-            className="disabled:opacity-50"
+            className="disabled:opacity-50 hover:opacity-70 transition-opacity"
           >
             <X className="w-5 h-5" />
           </button>
@@ -53,15 +58,15 @@ export default function UnsavedChangesModal( {
 
         {/* Content */}
         <div className="p-4">
-          <p className="text-sm text-foreground/80 mb-6">
-            You have unsaved changes. Would you like to save them as a draft before leaving?
+          <p className="text-sm text-foreground/70 mb-4">
+            You have unsaved changes. Save as draft before leaving?
           </p>
 
           <div className="flex flex-col gap-2">
             <button
               onClick={onSaveAsDraft}
               disabled={isSaving}
-              className="w-full rounded-lg px-4 py-2.5 border border-theme  bg-background text-foreground hover:bg-theme/10 disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
+              className="w-full rounded-lg px-4 py-2 border border-theme bg-background text-foreground hover:bg-hover disabled:opacity-50 flex items-center justify-center gap-2 text-sm transition-colors"
             >
               <Save className="h-4 w-4" />
               <span>{isSaving ? "Saving..." : "Save as draft"}</span>
@@ -71,22 +76,24 @@ export default function UnsavedChangesModal( {
               <button
                 onClick={onLeaveWithoutSaving}
                 disabled={isSaving}
-                className="w-full rounded-lg px-4 py-2.5 border border-theme bg-background text-foreground/70 hover:bg-theme/10 hover:text-foreground disabled:opacity-50 flex items-center justify-center gap-2 text-sm transition-colors"
+                className="w-full rounded-lg px-4 py-2 text-foreground/70 hover:text-foreground hover:bg-hover/50 disabled:opacity-50 text-sm transition-colors"
               >
-                <span>Leave without saving</span>
+                Leave without saving
               </button>
             )}
 
             <button
               onClick={onStay}
               disabled={isSaving}
-              className="w-full rounded-lg px-4 py-2.5 bg-background text-foreground hover:bg-theme/5 disabled:opacity-50 flex items-center justify-center gap-2 text-sm transition-colors"
+              className="w-full rounded-lg px-4 py-2 text-foreground/70 hover:text-foreground hover:bg-hover/50 disabled:opacity-50 text-sm transition-colors"
             >
-              <span>Stay on this page</span>
+              Stay on page
             </button>
           </div>
         </div>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

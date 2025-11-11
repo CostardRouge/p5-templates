@@ -7,7 +7,7 @@ import {
   useRouter
 } from "next/navigation";
 import {
-  Archive, Clapperboard, Loader, Save, SaveIcon
+  Archive, Clapperboard, Download, Eye, Loader, RotateCcw, Save, Trash2, X
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -28,6 +28,7 @@ import {
   SketchOption, SlideOption
 } from "@/types/sketch.types";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import VideoPreviewModal from "@/components/VideoPreviewModal";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
@@ -60,6 +61,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     setSaving
   ] = useState<boolean>( false );
 
+  const [
+    showPreviewModal,
+    setShowPreviewModal
+  ] = useState<boolean>( false );
+
   const {
     backendRecording
   } = useSketch();
@@ -67,6 +73,31 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const {
     subscribeToRecordingStatus, recordingProgress
   } = useRecordingStatusStream();
+
+  // Pause P5 sketch during recording
+  React.useEffect(
+    () => {
+      const isRecording = recordingProgress && [
+        "queued",
+        "active"
+      ].includes( recordingProgress.status );
+
+      if ( isRecording ) {
+        // Pause the sketch
+        if ( typeof ( window as any ).noLoop === "function" ) {
+          ( window as any ).noLoop();
+        }
+      } else {
+        // Resume when not recording
+        if ( typeof ( window as any ).loop === "function" ) {
+          ( window as any ).loop();
+        }
+      }
+    },
+    [
+      recordingProgress
+    ]
+  );
 
   const handleSubmit = async(
     status: JobStatusEnum = "queued",
@@ -211,76 +242,316 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     } )
   );
 
+  const handleDelete = async() => {
+    if ( !persistedJob?.id ) return;
+
+    if ( !confirm( `Delete this ${ persistedJob.status }? This action cannot be undone.` ) ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/recordings/${ persistedJob.id }`,
+        {
+          method: "DELETE"
+        }
+      );
+
+      if ( !response.ok ) throw new Error( "Delete failed" );
+
+      const {
+        deleted
+      } = await response.json();
+
+      if ( deleted ) {
+        router.push( `/templates/p5/${ name }` );
+      } else {
+        alert( `Could not delete job: ${ persistedJob.id }` );
+      }
+    } catch ( error ) {
+      console.error(
+        "Delete failed:",
+        error
+      );
+      alert( "Failed to delete. Please try again." );
+    }
+  };
+
+  const handleCancel = async() => {
+    if ( !jobId ) return;
+
+    try {
+      const response = await fetch(
+        `/api/recordings/${ jobId }/cancel`,
+        {
+          method: "POST"
+        }
+      );
+
+      if ( !response.ok ) throw new Error( "Cancel failed" );
+
+      const {
+        cancelled
+      } = await response.json();
+
+      if ( !cancelled ) {
+        alert( `Could not cancel job: ${ jobId }` );
+      }
+    } catch ( error ) {
+      console.error(
+        "Cancel failed:",
+        error
+      );
+      alert( "Failed to cancel. Please try again." );
+    }
+  };
+
+  const handleRetry = async() => {
+    if ( !persistedJob?.id ) return;
+
+    try {
+      const response = await fetch(
+        `/api/recordings/${ persistedJob.id }/retry`,
+        {
+          method: "POST"
+        }
+      );
+
+      if ( !response.ok ) throw new Error( "Retry failed" );
+
+      const {
+        retried
+      } = await response.json();
+
+      if ( retried ) {
+        setJobId( persistedJob.id );
+        subscribeToRecordingStatus( persistedJob.id );
+      } else {
+        alert( `Could not retry job: ${ persistedJob.id }` );
+      }
+    } catch ( error ) {
+      console.error(
+        "Retry failed:",
+        error
+      );
+      alert( "Failed to retry. Please try again." );
+    }
+  };
+
+  const handleRecordAgain = async() => {
+    // Create a new draft from current options
+    await handleSubmit( "draft" );
+  };
+
+  // Determine current status
+  const currentStatus = recordingProgress?.status || persistedJob?.status;
+  const isRecording = recordingProgress && [
+    "queued",
+    "active"
+  ].includes( recordingProgress.status );
+  const isCompleted = currentStatus === "completed";
+  const isFailed = [
+    "failed",
+    "cancelled"
+  ].includes( currentStatus || "" );
+  const isDraft = currentStatus === "draft";
+  const hasNoJob = !persistedJob && !recordingProgress;
+
   return (
     <>
-      { !recordingProgress && (
-        <div className="flex flex-col gap-1 h-auto w-full">
-
-          {backendRecording && (
-            <div className="flex gap-1">
-              {
-                persistedJob?.status === "draft" && ( <button
-                  className={clsx(
-                    "rounded-lg px-2 py-1 border border-theme  disabled:opacity-50 text-foreground active:text-foreground bg-background text-xs",
-                    {
-                      "animate-pulse-soft": saving
-                    }
-                  )}
-                  onClick={() => handleSubmit(
-                    "draft",
-                    persistedJob.id
-                  )}
-                  disabled={isLoading}
-                >
-                  {saving ? <Loader className="inline h-3 animate-spin"/> :
-                    <Save className="inline h-3"/>}
-                  <span className="align-middle">Save</span>
-                </button> )
-              }
-
-              {
-                persistedJob?.status !== "draft" && (
-                  <button
-                    className="rounded-lg px-2 py-1 border border-theme  disabled:opacity-50 text-foreground bg-background text-xs"
-                    onClick={() => handleSubmit( "draft" )}
-                    disabled={isLoading}
-                  >
-                    {saving ? <Loader className="inline h-3 animate-spin"/> :
-                      <Archive className="inline h-3" />}
-                    <span className="align-middle">Save as draft</span>
-                  </button>
-                ) }
-
-              { persistedJob?.status === "draft" && (
+      <div className="flex flex-col gap-1 h-auto w-full">
+        {backendRecording && (
+          <>
+            {/* NO JOB - Fresh Start */}
+            {hasNoJob && (
+              <div className="flex gap-1">
                 <button
-                  className=" rounded-lg p-1 border border-theme  text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
-                  onClick={() => handleSubmit(
-                    "queued",
-                    persistedJob.id
-                  )}
+                  className="rounded-lg px-2 py-1 border border-theme bg-active text-white hover:bg-hover disabled:opacity-50 text-xs font-medium"
+                  onClick={() => handleSubmit( "queued" )}
                   disabled={isLoading || saving}
                 >
-                  {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
+                  {isLoading ? <Loader className="inline h-3 animate-spin"/> :
                     <Clapperboard className="inline h-3" />}
-                  <span className="align-middle">Record this draft</span>
+                  <span className="align-middle">Start Recording</span>
                 </button>
-              ) }
 
-              <button
-                className=" rounded-lg p-1 border border-theme  text-foreground active:text-foreground bg-background text-xs disabled:opacity-50 disabled:text-foreground"
-                onClick={() => handleSubmit()}
-                disabled={isLoading || saving}
-              >
-                {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
-                  <Clapperboard className="inline h-3" />}
-                <span className="align-middle">Record new video</span>
-              </button>
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover disabled:opacity-50 text-xs"
+                  onClick={() => handleSubmit( "draft" )}
+                  disabled={isLoading || saving}
+                >
+                  {saving ? <Loader className="inline h-3 animate-spin"/> :
+                    <Archive className="inline h-3" />}
+                  <span className="align-middle">Save as Draft</span>
+                </button>
+              </div>
+            )}
 
-            </div>
-          )}
+            {/* DRAFT Status */}
+            {isDraft && !isRecording && persistedJob && (
+              <>
+                <div className="flex gap-1">
+                  <button
+                    className={clsx(
+                      "rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover disabled:opacity-50 text-xs flex-1",
+                      {
+                        "animate-pulse-soft": saving
+                      }
+                    )}
+                    onClick={() => handleSubmit(
+                      "draft",
+                      persistedJob.id
+                    )}
+                    disabled={isLoading || saving}
+                  >
+                    {saving ? <Loader className="inline h-3 animate-spin"/> :
+                      <Save className="inline h-3"/>}
+                    <span className="align-middle">Save</span>
+                  </button>
 
+                  <button
+                    className="rounded-lg px-2 py-1 border border-theme bg-active text-white hover:bg-hover disabled:opacity-50 text-xs flex-1 font-medium"
+                    onClick={() => handleSubmit(
+                      "queued",
+                      persistedJob.id
+                    )}
+                    disabled={isLoading || saving}
+                  >
+                    {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
+                      <Clapperboard className="inline h-3" />}
+                    <span className="align-middle">Start Recording</span>
+                  </button>
+                </div>
+
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 disabled:opacity-50 text-xs"
+                  onClick={handleDelete}
+                  disabled={isLoading || saving}
+                >
+                  <Trash2 className="inline h-3" />
+                  <span className="align-middle">Delete Draft</span>
+                </button>
+              </>
+            )}
+
+            {/* RECORDING Status (Queued/Active) */}
+            {isRecording && (
+              <>
+                <div className="flex flex-col justify-start bg-background text-center items-center gap-1">
+                  <div
+                    className={`w-full h-6 rounded-lg relative ring-1 overflow-hidden ${
+                      recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
+                    }`}
+                  >
+                    <div className="absolute inset-0 rounded-xl bg-background" />
+
+                    <div
+                      className="absolute inset-y-0 left-0 bg-active"
+                      style={{
+                        width: `${ recordingProgress.percentage }%`
+                      }}
+                    />
+
+                    <span
+                      className="absolute inset-0 p-1 text-xs select-none text-foreground truncate"
+                    >
+                      {recordingProgress.status}
+                      {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}
+                    </span>
+                  </div>
+
+                  <span className="text-xs text-foreground">
+                    {Math.round( recordingProgress?.percentage )}%
+                  </span>
+                </div>
+
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
+                  onClick={handleCancel}
+                >
+                  <X className="inline h-3" />
+                  <span className="align-middle">Cancel Recording</span>
+                </button>
+              </>
+            )}
+
+            {/* COMPLETED Status */}
+            {isCompleted && persistedJob && (
+              <>
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme bg-active text-white hover:bg-hover text-xs font-medium"
+                  onClick={() => setShowPreviewModal( true )}
+                >
+                  <Eye className="inline h-3" />
+                  <span className="align-middle">Preview</span>
+                </button>
+
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
+                  onClick={async() => await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/0` )}
+                >
+                  <Download className="inline h-3" />
+                  <span className="align-middle">Download</span>
+                </button>
+
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
+                  onClick={handleRecordAgain}
+                >
+                  <RotateCcw className="inline h-3" />
+                  <span className="align-middle">Record Again</span>
+                </button>
+
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="inline h-3" />
+                  <span className="align-middle">Delete</span>
+                </button>
+              </>
+            )}
+
+            {/* FAILED/CANCELLED Status */}
+            {isFailed && persistedJob && (
+              <>
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme bg-active text-white hover:bg-hover text-xs font-medium"
+                  onClick={handleRetry}
+                >
+                  <RotateCcw className="inline h-3" />
+                  <span className="align-middle">Retry</span>
+                </button>
+
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
+                  onClick={async() => {
+                    await handleSubmit(
+                      "draft",
+                      persistedJob.id
+                    );
+                  }}
+                >
+                  <Archive className="inline h-3" />
+                  <span className="align-middle">Edit & Save as Draft</span>
+                </button>
+
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="inline h-3" />
+                  <span className="align-middle">Delete</span>
+                </button>
+              </>
+            )}
+          </>
+        )}
+
+        {/* Browser Recording - Always Available */}
+        {!isRecording && (
           <button
-            className="rounded-lg p-1 border border-theme  text-foreground bg-background text-xs w-full"
+            className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
             onClick={async() => {
               await window?.startLoopRecording( {
                 format: "webm"
@@ -288,51 +559,18 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
             }}
           >
             <Save className="inline h-3" />
-            <span className="align-middle">Browser recording in .webm</span>
+            <span className="align-middle">Browser Recording (.webm)</span>
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
-      {recordingProgress && ( recordingProgress?.percentage !== 100 && recordingProgress?.status !== "completed" ) && (
-        <div className="flex flex-col justify-start bg-background text-center items-center">
-          <div
-            className={`w-full h-6 rounded-lg relative ring-1 overflow-hidden ${
-              recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
-            }`}
-          >
-            <div className="absolute inset-0 rounded-xl bg-background" />
-
-            <div
-              className="absolute inset-y-0 left-0 bg-hover"
-              style={{
-                width: `${ recordingProgress.percentage }%`
-              }}
-            />
-
-            {/* blend-inverting label */}
-            <span
-              className="absolute inset-0 p-1 text-xs select-none
-              text-foreground truncate"
-            >
-              {recordingProgress.status}
-              {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}
-            </span>
-          </div>
-
-          <span className="text-xs text-foreground mt-1">
-            {Math.round( recordingProgress?.percentage )}%&nbsp;
-          </span>
-        </div>
-      )}
-
-      {( recordingProgress?.percentage === 100 || recordingProgress?.status === "completed" ) && jobId && (
-        <button
-          className="rounded-lg px-2 py-1 border border-theme text-foreground inline-block bg-background text-sm "
-          onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
-        >
-          <SaveIcon className="inline align-middle mr-1 h-4"/>
-          <span className="align-middle">Download</span>
-        </button>
+      {/* Preview Modal */}
+      {showPreviewModal && persistedJob && (
+        <VideoPreviewModal
+          jobId={persistedJob.id}
+          isOpen={showPreviewModal}
+          onClose={() => setShowPreviewModal( false )}
+        />
       )}
     </>
   );

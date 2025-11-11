@@ -70,6 +70,8 @@ export function useUnsavedChanges({
       // Prevent navigation and show modal
       e.preventDefault();
       e.stopPropagation();
+      
+      console.log("[UnsavedChanges] Navigation blocked, showing modal for:", href);
       setPendingNavigation(href);
       setShowModal(true);
     };
