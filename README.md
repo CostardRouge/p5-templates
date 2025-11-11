@@ -1,272 +1,185 @@
 # Social Templates Renderer
 
-> Transform your p5.js sketches into parameterized video templates with a web-based editor and automated rendering pipeline.
+A Next.js application for rendering and recording P5.js sketches with video export capabilities.
 
-Reusable, dynamic p5.js sketches you can parameterize in the browser and render to video on demand. Built to enable continuous creative output while traveling—design a sketch once, give it a typed options schema, preview and tweak parameters in real-time, then hit "Record." A background worker renders the final video and makes it available for download on any device.
-
-**Live Demo:** https://social-pipeline-pi.vercel.app/templates  
-**Docker Hub:** https://hub.docker.com/repository/docker/containeurrouge/social-templates-renderer/general
-
-## 📚 Documentation
-
-- **[Architecture Guide](./docs/ARCHITECTURE.md)** - System design, data flow, and technical architecture
-- **[API Reference](./docs/API_REFERENCE.md)** - Complete API endpoint documentation
-- **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - Setup, project structure, and development workflow
-- **[Sketch Creation Guide](./docs/SKETCH_CREATION_GUIDE.md)** - How to create and customize p5.js sketches
-- **[Deployment Guide](./DEPLOYMENT.md)** - Docker deployment and database migrations
-
-## ✨ Features
-
-- **🎨 Dynamic Form Generation** - Forms automatically generated from Zod schemas
-- **👁️ Live Preview** - Real-time sketch rendering with instant parameter updates
-- **📦 Asset Management** - Drag-and-drop image/video uploads with S3 storage
-- **🎬 Multi-Slide Support** - Create videos with multiple scenes/slides
-- **⚙️ Background Rendering** - Queue-based video rendering with Playwright + FFmpeg
-- **📊 Progress Tracking** - Real-time rendering progress with detailed steps
-- **🔄 Modular Content System** - Reusable components (background, text, images, visuals)
-- **💾 Template Snapshots** - Version control for sketch configurations
-- **🐳 Docker Ready** - Full stack deployment with Docker Compose
-- **🔒 Type-Safe** - End-to-end TypeScript with Zod validation
-
-## 🎯 Use Cases
-
-- **Content Creation on the Go** - Design once, render anywhere, download on mobile
-- **Reusable Templates** - Turn sketches into parameterized templates
-- **Batch Rendering** - Queue multiple videos with different parameters
-- **Automated Workflows** - Future: trigger renders from external events (calendar, GitHub, weather)
-
-## 🛠️ Tech Stack
-
-**Frontend**
-- React 19 + Next.js 15 (App Router)
-- TypeScript (strict mode)
-- Tailwind CSS + Lucide React icons
-- React Hook Form + Zod (type-safe forms)
-
-**Backend**
-- Next.js API Routes
-- Prisma ORM + PostgreSQL
-- BullMQ + Redis (job queue)
-- MinIO/S3 (asset storage)
-
-**Rendering Pipeline**
-- p5.js (creative coding framework)
-- Playwright (headless browser)
-- FFmpeg (video encoding)
-
-**Infrastructure**
-- Docker + Docker Compose
-- Nginx (optional reverse proxy)
-- Vercel (demo deployment)
-
-## 🏗️ Architecture Overview
-
-```
-Browser → Next.js App → API Routes → BullMQ Queue → Worker
-                ↓                                      ↓
-           PostgreSQL ← ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
-                ↓
-              MinIO/S3 (Assets & Videos)
-```
-
-**Key Components:**
-
-1. **Web App** - Template gallery, sketch editor with live preview, recording dashboard
-2. **API Layer** - Recording management, asset uploads, progress tracking
-3. **Job Queue** - BullMQ with Redis for async video rendering
-4. **Worker** - Playwright (headless browser) + FFmpeg (video encoding)
-5. **Database** - PostgreSQL with Prisma for jobs, templates, and snapshots
-6. **Storage** - S3-compatible storage for assets and rendered videos
-
-For detailed architecture documentation, see [Architecture Guide](./docs/ARCHITECTURE.md).
-
-## 🎨 How It Works
-
-1. **Create a Sketch** - Write p5.js code with parameterized options
-2. **Define Schema** - Use Zod to define typed options (colors, sizes, text, etc.)
-3. **Edit in Browser** - Auto-generated form with live preview
-4. **Upload Assets** - Drag-and-drop images/videos directly to S3
-5. **Hit Record** - Job queued and processed in background
-6. **Download Video** - Get MP4 output on any device
-
-See [Sketch Creation Guide](./docs/SKETCH_CREATION_GUIDE.md) for detailed tutorials.
-
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- **Node.js** 18+ (20+ recommended)
-- **pnpm** (or npm/yarn)
-- **FFmpeg** installed and on PATH
-- **Docker** and **Docker Compose** (for full stack)
+- Node.js 20+ and npm
+- Docker and Docker Compose
+- macOS, Linux, or Windows with WSL2
 
 ### Installation
 
-1. **Clone the repository**
+Run the setup script to install dependencies and start infrastructure services:
 
 ```bash
-git clone https://github.com/yourusername/social-templates-renderer.git
-cd social-templates-renderer
+chmod +x setup.sh
+./setup.sh
 ```
 
-2. **Install dependencies**
+This will:
+- Create `.env` from `.env.example` if it doesn't exist
+- Start Redis, MinIO, and PostgreSQL with Docker
+- Install npm dependencies
+- Generate Prisma client
+- Run database migrations
+
+### Development
+
+#### Option 1: Native Development (Recommended for M1/M2 Macs)
+
+Start infrastructure services with Docker, run the app natively:
 
 ```bash
-pnpm install
+# Start infrastructure services
+docker-compose up -d redis minio postgres
+
+# Start development server
+npm run dev
 ```
 
-3. **Set up environment variables**
+The app will be available at http://localhost:3000
 
-Create `.env.local` in the project root:
+#### Option 2: Full Docker Development
+
+Run everything in Docker (automatically generates Prisma client for Linux):
 
 ```bash
+make app-dev
+```
+
+### Available Commands
+
+#### Development
+- `npm run dev` - Start development server (native)
+- `make app-dev` - Start development server (Docker)
+
+#### Docker Services
+- `make dc-up` - Start all services
+- `make dc-down` - Stop all services
+- `make dc-build` - Build Docker images
+- `make redis` - Start only Redis
+- `make minio` - Start only MinIO
+- `make postgres` - Start only PostgreSQL
+
+#### Database
+- `npx prisma migrate dev` - Create and apply migrations
+- `npx prisma migrate deploy` - Apply migrations (production)
+- `npx prisma studio` - Open Prisma Studio
+- `npx prisma generate` - Generate Prisma client
+
+#### Application
+- `make app-bash` - Open shell in app container
+- `make app-build` - Build app in Docker
+- `make app-start` - Start production server in Docker
+
+## Service URLs
+
+- **App**: http://localhost:3000
+- **MinIO Console**: http://localhost:9001 (user: `minio`, pass: `minio123`)
+- **PostgreSQL**: localhost:5432
+- **Redis**: localhost:6379
+
+## Environment Variables
+
+Key environment variables (see `.env.example` for full list):
+
+```bash
+# App
+APP_PORT=3000
+BACKEND_RECORDING=true
+USE_STREAMING_MODE=true
+
+# S3/MinIO
+S3_ENDPOINT=http://localhost:9000          # Internal endpoint
+S3_PUBLIC_ENDPOINT=http://localhost:9000   # Public endpoint for browser
+S3_BUCKET=recordings
+S3_ACCESS_KEY=minio
+S3_SECRET_KEY=minio123
+
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/social-pipeline
+DATABASE_URL=postgresql://social-pipeline-user:social-pipeline-pass@localhost:5432/social-pipeline
 
 # Redis
 REDIS_URL=redis://localhost:6379
-
-# S3 Storage
-S3_ENDPOINT=http://localhost:9000
-S3_ACCESS_KEY=minioadmin
-S3_SECRET_KEY=minioadmin
-S3_BUCKET=social-pipeline
-S3_REGION=us-east-1
-
-# Application
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-WORKER_CONCURRENCY=2
 ```
 
-4. **Start infrastructure services**
+### Important: S3 Endpoint Configuration
 
+- `S3_ENDPOINT`: Used by the server for internal S3 operations
+- `S3_PUBLIC_ENDPOINT`: Used for generating signed URLs accessible from the browser
+- When running with Docker Compose, the app container uses `http://minio:9000` internally
+- For native development, both should be `http://localhost:9000`
+
+## Architecture
+
+- **Next.js 15**: React framework with App Router
+- **Prisma**: Database ORM with PostgreSQL
+- **BullMQ**: Job queue for background video processing
+- **Playwright**: Headless browser for recording
+- **MinIO**: S3-compatible object storage
+- **Redis**: Queue and caching
+
+## Troubleshooting
+
+### Prisma Client Platform Mismatch
+
+If you see "Prisma Client could not locate the Query Engine for runtime" errors:
+
+**For native development:**
 ```bash
-docker-compose up -d postgres redis minio
+npx prisma generate
 ```
 
-5. **Run database migrations**
+**For Docker development:**
+The Makefile automatically runs `npx prisma generate` before starting the dev server.
 
+### MinIO Signature Errors
+
+If you see "SignatureDoesNotMatch" errors when accessing thumbnails:
+
+1. Ensure `S3_PUBLIC_ENDPOINT` is set correctly in `.env`
+2. Restart the development server
+3. The signed URLs must use the same endpoint that the browser can access
+
+### Services Not Starting
+
+Check service health:
 ```bash
-npx prisma migrate dev
+docker-compose ps
 ```
 
-6. **Start development server**
-
+View logs:
 ```bash
-pnpm dev
+docker-compose logs -f
 ```
 
-The app will be available at `http://localhost:3000`.
+Restart services:
+```bash
+docker-compose restart
+```
 
-For detailed setup instructions, see the [Developer Guide](./docs/DEVELOPER_GUIDE.md).
+## Project Structure
 
-## 🗺️ Roadmap
+```
+.
+├── src/
+│   ├── app/              # Next.js App Router pages
+│   ├── components/       # React components
+│   ├── lib/              # Core business logic
+│   ├── p5-sketches/      # P5.js sketch templates
+│   └── utils/            # Utility functions
+├── prisma/
+│   └── schema.prisma     # Database schema
+├── public/               # Static assets
+├── scripts/              # Build and utility scripts
+├── docker-compose.yml    # Docker services configuration
+├── Dockerfile            # App container definition
+└── Makefile              # Development commands
+```
 
-### Current (v0.2)
-- ✅ Dynamic form generation from Zod schemas
-- ✅ Multi-slide support with transitions
-- ✅ Background rendering with BullMQ
-- ✅ S3 asset management
-- ✅ Real-time progress tracking
-- ✅ Docker deployment
+## License
 
-### Short Term (v0.3 - v0.5)
-- [ ] Enhanced asset pipeline with progress UI
-- [ ] Drag-reorder for content items
-- [ ] Mobile-optimized download experience
-- [ ] Template gallery with search/filter
-- [ ] Batch rendering with parameter sets
-
-### Mid Term (v0.6 - v0.9)
-- [ ] Webhook notifications for job completion
-- [ ] Template versioning and rollback
-- [ ] Video preview before full render
-- [ ] Custom visual effects library
-- [ ] CLI for local/batch rendering
-
-### Long Term (v1.0+)
-- [ ] Event-driven automation (calendar, GitHub, weather)
-- [ ] Multi-tenant support with authentication
-- [ ] Plugin system for custom components
-- [ ] AI-assisted parameter suggestions
-- [ ] GPU-accelerated rendering
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. **Fork and clone**
-   ```bash
-   git clone <your-fork-url>
-   pnpm install
-   ```
-
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feat/your-feature
-   # or
-   git checkout -b fix/your-bugfix
-   ```
-
-3. **Follow coding standards**
-   - TypeScript strict mode
-   - Use Zod for validation
-   - Keep components small and focused
-   - Add tests when applicable
-
-4. **Use Conventional Commits**
-   ```
-   feat: add images stack reorder
-   fix: handle empty options defaults
-   chore: bump dependencies
-   docs: update API reference
-   ```
-
-5. **Run checks before committing**
-   ```bash
-   pnpm lint
-   pnpm typecheck
-   pnpm test  # if tests exist
-   ```
-
-6. **Open a Pull Request**
-   - Describe your changes clearly
-   - Include screenshots for UI changes
-   - Link related issues
-   - Note any breaking changes or migrations
-
-## ❓ FAQ
-
-**Why keep a legacy assets.images array?**  
-Older sketches reference images by path from a central array. The bridge keeps this list updated while modern fields (single/multi) stay React Hook Form-controlled, ensuring backward compatibility.
-
-**Do I need Redis for local development?**  
-No. Redis is optional for local dev. For production and scale, a queue is recommended so renders don't block requests and can be processed concurrently.
-
-**Can I use storage other than S3?**  
-Yes. Any S3-compatible provider (MinIO, DigitalOcean Spaces, Backblaze B2) should work. Just adjust the SDK endpoint and credentials in your environment variables.
-
-**How do I add custom sketch options?**  
-Extend the Zod schema in `src/types/sketch.types.ts` and add fields to the `sketch` object. See the [Sketch Creation Guide](./docs/SKETCH_CREATION_GUIDE.md) for details.
-
-**Can I deploy this to production?**  
-Yes! Use the provided Dockerfile and docker-compose.yml. See [Deployment Guide](./DEPLOYMENT.md) for instructions.
-
-## 📄 License
-
-MIT License - see [LICENSE](./LICENSE) file for details.
-
-## 🙏 Acknowledgements
-
-- **[p5.js](https://p5js.org/)** - Joyful creative coding framework
-- **[FFmpeg](https://ffmpeg.org/)** - Powerful video encoding
-- **[React Hook Form](https://react-hook-form.com/)** + **[Zod](https://zod.dev/)** - Type-safe form validation
-- **[Playwright](https://playwright.dev/)** - Reliable browser automation
-- **[BullMQ](https://docs.bullmq.io/)** - Robust job queue system
-
----
-
-**Built with ❤️ by [@CostardRouge](https://github.com/CostardRouge)**
-
-Made for creators who want to keep making while on the move. 🌏✨
+Private project

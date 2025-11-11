@@ -13,8 +13,20 @@ import {
   getSignedUrl
 } from "@aws-sdk/s3-request-presigner";
 
+// Main S3 client for operations (uses internal endpoint for server-side operations)
 const s3client = new S3Client( {
   endpoint: process.env.S3_ENDPOINT,
+  region: process.env.S3_REGION,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY!,
+    secretAccessKey: process.env.S3_SECRET_KEY!,
+  },
+  forcePathStyle: true,
+} );
+
+// Public S3 client for generating signed URLs (uses public endpoint for browser access)
+const s3clientPublic = new S3Client( {
+  endpoint: process.env.S3_PUBLIC_ENDPOINT || process.env.S3_ENDPOINT,
   region: process.env.S3_REGION,
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY!,
@@ -40,8 +52,9 @@ export async function uploadArtifact(
 export async function getDownloadUrlFromS3Url(
   objectKey: string, expiresInSeconds = 3600
 ): Promise<string> {
-  return await getSignedUrl(
-    s3client,
+  // Use public client to generate signed URLs with the correct public endpoint
+  const signedUrl = await getSignedUrl(
+    s3clientPublic,
     new GetObjectCommand( {
       Bucket: process.env.S3_BUCKET!,
       Key: objectKey,
@@ -50,6 +63,8 @@ export async function getDownloadUrlFromS3Url(
       expiresIn: expiresInSeconds,
     }
   );
+
+  return signedUrl;
 }
 
 /**

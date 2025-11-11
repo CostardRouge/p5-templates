@@ -62,7 +62,7 @@ app-start:
 
 app-dev:
 	make dc-down
-	$(DOCKER_COMPOSE_RUN_ENTRYPOINT) "npm run dev" \
+	$(DOCKER_COMPOSE_RUN_ENTRYPOINT) "sh -c 'npx prisma generate && npm run dev'" \
 		-v $(HOST_APP_DIR):/app \
 		-v $(DEV_NODE_MODULES):/app/node_modules \
 		$(APPLICATION_CODE_NAME) \
