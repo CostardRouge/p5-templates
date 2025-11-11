@@ -12,7 +12,7 @@ Your app is now a fully functional Progressive Web App (PWA) with push notificat
 ### 2. Service Worker (`public/sw.js`)
 - Handles push notifications
 - Manages notification clicks
-- Enables offline capabilities foundation
+- **No caching** - always fetches from network for latest content
 
 ### 3. Notification System
 

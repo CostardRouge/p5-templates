@@ -76,6 +76,7 @@ When you click "Enable Notifications" in the app:
 - Located at `/public/sw.js`
 - Handles push notifications
 - Manages notification clicks
+- **No caching** - always uses network for fresh content
 
 ### ✅ Push Notifications
 - Automatic notifications when jobs complete

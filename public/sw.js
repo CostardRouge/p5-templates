@@ -1,14 +1,7 @@
-// Cache version - updated on each deployment
-// This will be automatically replaced during build
-const CACHE_VERSION = "0.1.0-f167b665";
-const CACHE_NAME = `social-templates-v${ CACHE_VERSION }`;
+// Minimal service worker for PWA installation and push notifications only
+// No caching - always fetch from network
 
-// Assets to cache (optional - for offline support)
-const STATIC_ASSETS = [
-  // Add critical assets here if you want offline support
-  // '/assets/images/icon-192x192.png',
-  // '/assets/images/icon-512x512.png',
-];
+const SW_VERSION = "0.1.0-minimal";
 
 // Push notification handler
 self.addEventListener(
@@ -71,94 +64,37 @@ self.addEventListener(
   }
 );
 
-// Install event - cache resources and skip waiting
+// Install event - just skip waiting, no caching
 self.addEventListener(
   "install",
   function( event ) {
-    console.log( `[SW] Installing version ${ CACHE_VERSION }` );
-
-    event.waitUntil( caches.open( CACHE_NAME ).then( function( cache ) {
-      console.log( "[SW] Caching static assets" );
-      return cache.addAll( STATIC_ASSETS );
-    } )
-      .then( function() {
-      // Force the waiting service worker to become the active service worker
-        return self.skipWaiting();
-      } ) );
+    console.log( `[SW] Installing version ${ SW_VERSION } (no caching)` );
+    // Immediately activate
+    event.waitUntil( self.skipWaiting() );
   }
 );
 
-// Activate event - clean up old caches
+// Activate event - clean up any old caches and take control
 self.addEventListener(
   "activate",
   function( event ) {
-    console.log( `[SW] Activating version ${ CACHE_VERSION }` );
+    console.log( `[SW] Activating version ${ SW_VERSION }` );
 
-    event.waitUntil( caches.keys().then( function( cacheNames ) {
-      return Promise.all( cacheNames.map( function( cacheName ) {
-        // Delete all caches that don't match the current version
-        if ( cacheName !== CACHE_NAME ) {
-          console.log(
-            "[SW] Deleting old cache:",
-            cacheName
-          );
+    event.waitUntil(
+      // Delete ALL caches (clean slate)
+      caches.keys().then( function( cacheNames ) {
+        return Promise.all( cacheNames.map( function( cacheName ) {
+          console.log( "[SW] Deleting cache:", cacheName );
           return caches.delete( cacheName );
-        }
-      } ) );
-    } )
-      .then( function() {
-      // Take control of all clients immediately
-        return self.clients.claim();
+        } ) );
       } )
-      .then( function() {
-      // Notify all clients that a new version is active
-        return self.clients.matchAll().then( function( clients ) {
-          clients.forEach( function( client ) {
-            client.postMessage( {
-              type: "SW_UPDATED",
-              version: CACHE_VERSION
-            } );
-          } );
-        } );
-      } ) );
+        .then( function() {
+          // Take control of all clients immediately
+          return self.clients.claim();
+        } )
+    );
   }
 );
 
-// Fetch event - network first, then cache fallback (optional)
-self.addEventListener(
-  "fetch",
-  function( event ) {
-  // For now, we'll use network-first strategy
-  // This ensures users always get the latest content
-    event.respondWith( fetch( event.request )
-      .then( function( response ) {
-        // Only cache GET requests (Cache API doesn't support POST, PUT, etc.)
-        if ( response && response.status === 200 && event.request.method === "GET" ) {
-          const responseToCache = response.clone();
-
-          caches.open( CACHE_NAME ).then( function( cache ) {
-            cache.put(
-              event.request,
-              responseToCache
-            );
-          } );
-        }
-        return response;
-      } )
-      .catch( function() {
-        // Fallback to cache if network fails (only works for GET requests)
-        return caches.match( event.request );
-      } ) );
-  }
-);
-
-// Listen for skip waiting message from client
-self.addEventListener(
-  "message",
-  function( event ) {
-    if ( event.data && event.data.type === "SKIP_WAITING" ) {
-      console.log( "[SW] Received SKIP_WAITING message" );
-      self.skipWaiting();
-    }
-  }
-);
+// No fetch event handler - let all requests go directly to network
+// This ensures no caching happens at all

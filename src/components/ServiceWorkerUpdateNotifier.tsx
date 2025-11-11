@@ -28,42 +28,16 @@ export default function ServiceWorkerUpdateNotifier() {
         return;
       }
 
-      // Check for service worker updates
+      // Get the service worker registration
       navigator.serviceWorker.ready.then( ( reg ) => {
         setRegistration( reg );
-
-        // Check for updates periodically (every 60 seconds)
-        const interval = setInterval(
-          () => {
-            reg.update();
-          },
-          60000
-        );
-
-        return () => clearInterval( interval );
       } );
 
-      // Listen for service worker updates
+      // Listen for service worker updates (less aggressive - only on natural updates)
       navigator.serviceWorker.addEventListener(
         "controllerchange",
         () => {
           console.log( "[SW] Controller changed - new version activated" );
-          // Optionally reload the page automatically
-          // window.location.reload()
-        }
-      );
-
-      // Listen for messages from service worker
-      navigator.serviceWorker.addEventListener(
-        "message",
-        ( event ) => {
-          if ( event.data && event.data.type === "SW_UPDATED" ) {
-            console.log(
-              "[SW] New version available:",
-              event.data.version
-            );
-            setShowUpdatePrompt( true );
-          }
         }
       );
 
