@@ -4,9 +4,7 @@ import type {
   Metadata
 } from "next";
 import listDirectory from "@/utils/listDirectory";
-import ClientProcessingSketch, {
-  ClientProcessingSketchProps
-} from "@/components/ClientProcessingSketch/ClientProcessingSketch";
+import ClientProcessingSketch from "@/components/ClientProcessingSketch/ClientProcessingSketch";
 
 import getCaptureOptions from "@/utils/getCaptureOptions";
 import {
