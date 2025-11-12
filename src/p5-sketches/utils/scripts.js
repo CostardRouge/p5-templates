@@ -51,7 +51,10 @@ window.removeLoadedScripts = () => {
   scripts.loaded.forEach( ( {
     container, scriptElement
   } ) => {
-    container?.removeChild( scriptElement );
+    try {
+      container?.removeChild( scriptElement );
+    }
+    catch (e) {}
   } );
 };
 

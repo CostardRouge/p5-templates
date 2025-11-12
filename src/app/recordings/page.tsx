@@ -272,12 +272,15 @@ function ActionsMenu( {
   };
 
   return (
-    <Menu as="div" className="relative">
-      <MenuButton className="p-2 hover:bg-hover rounded-lg transition-colors">
+    <Menu as="div" className="relative inline-block text-left">
+      <MenuButton className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center">
         <MenuIcon className="h-4 w-4 text-foreground"/>
       </MenuButton>
 
-      <MenuItems className="absolute right-0 w-64 border border-border rounded-xl z-50 bg-background shadow-xl overflow-hidden">
+      <MenuItems 
+        anchor="bottom end"
+        className="z-50 w-64 border border-border rounded-xl bg-background shadow-xl overflow-hidden mt-2 focus:outline-none [--anchor-gap:0.5rem] [--anchor-padding:0.5rem]"
+      >
         {/* Preview Section */}
         {job.status === "completed" && job.videoUrls && (
           <>
@@ -888,10 +891,10 @@ export default function RecordingsPage() {
             {filtered.map( ( job ) => (
               <div 
                 key={job.id} 
-                className="group bg-background border border-border hover:border-foreground/20 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden"
+                className="group bg-background border border-border hover:border-foreground/20 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative"
               >
                 {/* Thumbnail Section */}
-                <div className="relative overflow-hidden">
+                <div className="relative overflow-hidden rounded-t-2xl">
                   <RecordingThumbnail
                     job={job}
                     onClick={() => {
@@ -906,7 +909,7 @@ export default function RecordingsPage() {
                   />
                   
                   {/* Status Badge Overlay */}
-                  <div className="absolute top-3 left-3">
+                  <div className="absolute top-3 left-3 z-10">
                     <StatusBadge
                       status={job.status}
                       className="shadow-lg backdrop-blur-sm"
@@ -915,17 +918,15 @@ export default function RecordingsPage() {
 
                   {/* Actions Menu Overlay */}
                   <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg">
-                      <ActionsMenu
-                        job={job}
-                        onCancel={handleCancel}
-                        onDelete={handleDelete}
-                        onRetry={handleRetry}
-                        onStart={handleStart}
-                        onForceCancel={handleCancel}
-                        onPreviewModal={() => setPreviewJobId( job.id )}
-                      />
-                    </div>
+                    <ActionsMenu
+                      job={job}
+                      onCancel={handleCancel}
+                      onDelete={handleDelete}
+                      onRetry={handleRetry}
+                      onStart={handleStart}
+                      onForceCancel={handleCancel}
+                      onPreviewModal={() => setPreviewJobId( job.id )}
+                    />
                   </div>
                 </div>
 
