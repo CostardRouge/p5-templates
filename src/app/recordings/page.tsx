@@ -330,10 +330,12 @@ function ActionsMenu( {
           } ) => (
             <HardLink
               href={`templates/${ job.template }`}
-              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-hover" : "" } grup overflow-hidden flex w-full items-start justify-around gap-2 px-4 py-2 text-sm`}
             >
-              <Link className="h-5" />
-              <span>Open template <u>{job.template}</u></span>
+              <Link className="h-5 flex-1" />
+              <span className="text-ellipsis flex-1">Open template&nbsp;
+                <u>{job.template}</u>
+              </span>
             </HardLink>
           )}
         </MenuItem>

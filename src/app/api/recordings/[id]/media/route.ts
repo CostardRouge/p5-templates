@@ -22,6 +22,7 @@ export async function GET(
     // Parse thumbnails and videoUrls from JSON
     const thumbnails = job.thumbnails ? (job.thumbnails as unknown as string[]) : [];
     const videoUrls = job.videoUrls ? (job.videoUrls as unknown as string[]) : [];
+    const videoSizes = job.videoSizes ? (job.videoSizes as unknown as number[]) : [];
 
     // Check if this is an old recording (has resultUrl but no videoUrls)
     const isOldRecording = job.resultUrl && (!videoUrls || videoUrls.length === 0);
@@ -48,12 +49,16 @@ export async function GET(
       })
     );
 
-    // Generate signed URLs for videos and get their sizes
+    // Generate signed URLs for videos and use sizes from DB
     const videoData = await Promise.all(
       videoUrls.map(async (key, index) => {
         try {
           const url = await getDownloadUrlFromS3Url(key, 3600);
-          const size = await getObjectSize(key);
+          // Use size from DB if available, otherwise fetch from S3
+          let size = videoSizes[index];
+          if (!size) {
+            size = await getObjectSize(key);
+          }
           return {
             url,
             size,
@@ -81,6 +86,7 @@ export async function GET(
       thumbnails: thumbnailSignedUrls.filter(Boolean),
       videos: videoData.filter(Boolean),
       zipSize,
+      recordingDuration: job.recordingDuration,
       isZipArchive: false
     });
   } catch (error) {

@@ -80,6 +80,8 @@ async function recordSketch(
     page: undefined
   };
 
+  const recordingStartAt = new Date();
+
   try {
     const {
       createPage,
@@ -91,6 +93,14 @@ async function recordSketch(
 
     recordingState.browser = browser;
     recordingState.page = await createPage();
+
+    // Update recording start time
+    await updateJob(
+      jobId,
+      {
+        recordingStartAt
+      }
+    );
 
     const slides = options.slides ?? null;
     const hasSlides = slides && Array.isArray( slides ) && slides.length > 0;
@@ -115,6 +125,18 @@ async function recordSketch(
         temporaryDirectoryPath
       );
     }
+
+    // Update recording end time and duration
+    const recordingEndAt = new Date();
+    const recordingDuration = recordingEndAt.getTime() - recordingStartAt.getTime();
+
+    await updateJob(
+      jobId,
+      {
+        recordingEndAt,
+        recordingDuration
+      }
+    );
   }
   catch ( error ) {
     await updateJob(
@@ -290,9 +312,12 @@ async function recordSingleSketch(
     0
   );
 
+  const videoBuffer = await fs.readFile( outputVideoPath );
+  const videoSize = videoBuffer.length;
+
   const videoS3Url = await uploadArtifact(
     `${ jobId }/${ path.basename( outputVideoPath ) }`,
-    await fs.readFile( outputVideoPath )
+    videoBuffer
   );
 
   const thumbnailS3Url = await uploadArtifact(
@@ -318,6 +343,9 @@ async function recordSingleSketch(
       ],
       videoUrls: [
         videoS3Url
+      ],
+      videoSizes: [
+        videoSize
       ]
     }
   );
@@ -486,16 +514,22 @@ async function recordMultipleSlides(
   ];
   const thumbnailS3Urls: string[] = [
   ];
+  const videoSizes: number[] = [
+  ];
 
   // Upload all videos
   for ( let i = 0; i < slideVideoPaths.length; i++ ) {
     const videoPath = slideVideoPaths[ i ];
+    const videoBuffer = await fs.readFile( videoPath );
+    const videoSize = videoBuffer.length;
+
     const videoS3Url = await uploadArtifact(
       `${ jobId }/${ path.basename( videoPath ) }`,
-      await fs.readFile( videoPath )
+      videoBuffer
     );
 
     videoS3Urls.push( videoS3Url );
+    videoSizes.push( videoSize );
     await fs.unlink( videoPath ).catch( () => {} );
   }
 
@@ -525,7 +559,8 @@ async function recordMultipleSlides(
       progress: 100,
       resultUrl: videoS3Urls[ 0 ] || null,
       thumbnails: thumbnailS3Urls,
-      videoUrls: videoS3Urls
+      videoUrls: videoS3Urls,
+      videoSizes: videoSizes
     }
   );
 

@@ -25,6 +25,31 @@ interface MediaData {
   }>;
   isZipArchive?: boolean;
   resultUrl?: string;
+  recordingDuration?: number;
+}
+
+function formatFileSize( bytes: number ): string {
+  if ( bytes === 0 ) return "0 B";
+  const k = 1024;
+  const sizes = [
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
+  const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
+  return `${ ( bytes / Math.pow( k, i ) ).toFixed( 1 ) } ${ sizes[ i ] }`;
+}
+
+function formatDuration( ms: number ): string {
+  const seconds = Math.floor( ms / 1000 );
+  const minutes = Math.floor( seconds / 60 );
+  const remainingSeconds = seconds % 60;
+  
+  if ( minutes > 0 ) {
+    return `${ minutes }m ${ remainingSeconds }s`;
+  }
+  return `${ seconds }s`;
 }
 
 export default function VideoPreviewModal( {
@@ -173,12 +198,20 @@ export default function VideoPreviewModal( {
 
               {!media.isZipArchive && media.videos.length > 0 && (
                 <div className="h-full flex flex-col gap-4">
+                  {/* Recording metadata */}
+                  {media.recordingDuration && (
+                    <div className="text-center text-sm text-foreground/70">
+                      Recording took {formatDuration( media.recordingDuration )}
+                    </div>
+                  )}
+
                   {/* Horizontal scroll container for videos */}
                   <div className="flex-1 overflow-x-auto overflow-y-hidden">
                     <div className={`flex gap-6 h-full ${ media.videos.length === 1 ? "justify-center" : "" }`}>
                       {media.videos.map( (
                         {
-                          url
+                          url,
+                          size
                         }, index
                       ) => (
                         <div
@@ -201,13 +234,13 @@ export default function VideoPreviewModal( {
                               Your browser does not support the video tag.
                             </video>
                           </div>
-                          <div className="flex justify-center">
+                          <div className="flex justify-center items-center gap-4">
                             <button
-                              onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }` )}
+                              onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }/slide/${index}`)}
                               className="items-center gap-2 px-4 py-2 text-sm flex border border-theme  rounded-lg hover:bg-theme/10 transition-colors"
                             >
                               <Download className="h-5" />
-                              Download
+                              Download {size && `(${ formatFileSize( size ) })`}
                             </button>
                           </div>
                         </div>

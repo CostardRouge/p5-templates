@@ -43,18 +43,22 @@ model TemplateSnapshot {
 }
 
 model Job {
-  id           String            @id
-  snapshotId   String?
-  snapshot     TemplateSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
-  template     String            // Legacy: p5 sketch name for backward compatibility
-  status       JobStatus
-  resultUrl    String?
-  thumbnails   Json?             // Array of thumbnail URLs for each slide/video
-  videoUrls    Json?             // Array of video URLs for multi-slide recordings
-  progress     Int
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  options      Json?             // Legacy: inline options for backward compatibility
+  id                String            @id
+  snapshotId        String?
+  snapshot          TemplateSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+  template          String            // Legacy: p5 sketch name for backward compatibility
+  status            JobStatus
+  resultUrl         String?
+  thumbnails        Json?             // Array of thumbnail URLs for each slide/video
+  videoUrls         Json?             // Array of video URLs for multi-slide recordings
+  videoSizes        Json?             // Array of video file sizes in bytes
+  recordingStartAt  DateTime?         // When recording processing started
+  recordingEndAt    DateTime?         // When recording processing completed
+  recordingDuration Int?              // Recording duration in milliseconds
+  progress          Int
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  options           Json?             // Legacy: inline options for backward compatibility
 
   @@index([snapshotId])
 }
