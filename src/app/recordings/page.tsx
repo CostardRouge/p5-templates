@@ -41,14 +41,19 @@ function StatusBadge( {
   className?: string
 } ) {
   const classes: Record<string, string> = {
-    completed: "bg-green-100 text-green-800",
-    failed: "bg-red-100 text-red-800",
-    cancelled: "bg-yellow-100 text-yellow-800",
-    active: "bg-blue-100 text-blue-800",
-    queued: "bg-gray-100 text-gray-800",
+    completed: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+    failed: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+    cancelled: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20",
+    active: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    queued: "bg-foreground/5 text-foreground/70 border-foreground/10",
+    draft: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
   };
 
-  return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ classes[ status ] || classes.queued } ${ className }`}>{status}</span>;
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${ classes[ status ] || classes.queued } ${ className }`}>
+      {status}
+    </span>
+  );
 }
 
 // Helper function to format file size
@@ -68,6 +73,19 @@ function formatFileSize( bytes: number | null ): string {
     k,
     i
   ) ).toFixed( 1 ) ) } ${ sizes[ i ] }`;
+}
+
+// Helper function to format duration
+function formatDuration( ms: number | null ): string {
+  if ( ms === null ) return "";
+  const seconds = Math.floor( ms / 1000 );
+  const minutes = Math.floor( seconds / 60 );
+  const remainingSeconds = seconds % 60;
+  
+  if ( minutes > 0 ) {
+    return `${ minutes }m ${ remainingSeconds }s`;
+  }
+  return `${ seconds }s`;
 }
 
 // Download menu items component
@@ -184,21 +202,26 @@ function ProgressBar( {
   const isIndeterminate = ( status === "active" || status === "queued" ) && progress === 0;
 
   return (
-    <div className="w-full">
-      <div className="w-full bg-hover rounded-xl h-2 overflow-hidden">
+    <div className="w-full space-y-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-foreground/60 font-medium">
+          {isIndeterminate ? "Starting..." : "Progress"}
+        </span>
+        <span className="text-foreground/80 font-semibold tabular-nums">
+          {isIndeterminate ? "—" : `${ progress }%`}
+        </span>
+      </div>
+      
+      <div className="w-full bg-hover/50 rounded-full h-1.5 overflow-hidden">
         {isIndeterminate ? (
-          <div className="h-2 bg-blue-500 animate-pulse w-full opacity-50" />
+          <div className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500 animate-pulse w-full opacity-60" />
         ) : (
           <div
-            className="h-2 bg-blue-500"
+            className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out rounded-full"
             style={{
               width: `${ progress }%`
             }} />
         )}
-      </div>
-
-      <div className="text-xs text-foreground mt-1">
-        {isIndeterminate ? "Starting..." : `${ progress }%`}
       </div>
     </div>
   );
@@ -874,8 +897,16 @@ export default function RecordingsPage() {
                       </HardLink>
                     </td>
 
-                    <td className="p-1 whitespace-nowrap text-sm text-foreground">
+                    <td className="p-1 text-sm text-foreground">
+                      <div className="text-xs text-foreground/60 mt-0.5">
                       {new Date( job.createdAt ).toLocaleString()}
+                      </div>
+                      
+                      {job.recordingDuration && (
+                        <div className="text-xs text-foreground/60 mt-0.5">
+                          Elapsed: {formatDuration( job.recordingDuration )}
+                        </div>
+                      )}
                     </td>
 
                     <td className="p-1 whitespace-nowrap text-sm">
@@ -906,57 +937,38 @@ export default function RecordingsPage() {
 
         {/* Card View */}
         {view === "cards" && (
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
             {filtered.map( ( job ) => (
-              <div key={job.id} className="bg-background border border-theme rounded-xl transition relative overflow-hidden">
-                <StatusBadge
-                  status={job.status}
-                  className="absolute top-2 left-2 rounded-xl"
-                />
-
-                <RecordingThumbnail
-                  job={job}
-                  onClick={() => {
-                  // Only open preview if job has videoUrls (new recordings)
-                    if ( job.status === "completed" && job.videoUrls ) {
-                      setPreviewJobId( job.id );
-                    }
-                  }}
-                  className={`w-full aspect-square object-cover transition ${
-                    job.videoUrls ? "cursor-pointer hover:opacity-80" : "cursor-default"
-                  }`}
-                />
-
-                <div className="p-2 space-y-1">
-                  <HardLink
-                    href={`templates/${ job.template }`}
-                    className="block text-sm text-blue-600 hover:underline truncate"
-                  >
-                    {job.template} →
-                  </HardLink>
-
-                  <div className="mb-1">
-                    <HardLink
-                      href={`templates/${ job.template }?id=${ job.id }`}
-                      className="text-xs font-medium truncate"
-                    >
-                      {job.id.slice(
-                        0,
-                        8
-                      )} →
-                    </HardLink>
+              <div 
+                key={job.id} 
+                className="group bg-background border border-border hover:border-foreground/20 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden"
+              >
+                {/* Thumbnail Section */}
+                <div className="relative overflow-hidden">
+                  <RecordingThumbnail
+                    job={job}
+                    onClick={() => {
+                      // Only open preview if job has videoUrls (new recordings)
+                      if ( job.status === "completed" && job.videoUrls ) {
+                        setPreviewJobId( job.id );
+                      }
+                    }}
+                    className={`w-full aspect-video object-cover transition-all duration-300 ${
+                      job.videoUrls ? "cursor-pointer group-hover:scale-105" : "cursor-default"
+                    }`}
+                  />
+                  
+                  {/* Status Badge Overlay */}
+                  <div className="absolute top-3 left-3">
+                    <StatusBadge
+                      status={job.status}
+                      className="shadow-lg backdrop-blur-sm"
+                    />
                   </div>
 
-                  <div className="flex justify-between">
-                    <div className="flex-grow">
-                      <div className="text-xs text-label mb-2">
-                        { new Date( job.createdAt ).toLocaleString() }
-                      </div>
-
-                      <ProgressBar progress={ job.progress } status={job.status} />
-                    </div>
-
-                    <div className="self-center">
+                  {/* Actions Menu Overlay */}
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg">
                       <ActionsMenu
                         job={job}
                         onCancel={handleCancel}
@@ -964,10 +976,57 @@ export default function RecordingsPage() {
                         onRetry={handleRetry}
                         onStart={handleStart}
                         onForceCancel={handleCancel}
+                        onPreviewModal={() => setPreviewJobId( job.id )}
                       />
                     </div>
                   </div>
+                </div>
 
+                {/* Content Section */}
+                <div className="p-4 space-y-3">
+                  {/* Template & ID */}
+                  <div className="space-y-1.5">
+                    <HardLink
+                      href={`templates/${ job.template }`}
+                      className="block text-sm font-semibold text-foreground hover:text-foreground/70 transition-colors truncate group/link"
+                    >
+                      {job.template}
+                      <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">→</span>
+                    </HardLink>
+
+                    <HardLink
+                      href={`templates/${ job.template }?id=${ job.id }`}
+                      className="block text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors truncate group/link"
+                    >
+                      #{job.id.slice( 0, 8 )}
+                      <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">→</span>
+                    </HardLink>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="flex items-center gap-2 text-xs text-foreground/50">
+                    <span className="truncate">
+                      {new Date( job.createdAt ).toLocaleDateString( undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      } )}
+                    </span>
+                    {job.recordingDuration && (
+                      <>
+                        <span className="text-border">•</span>
+                        <span>{formatDuration( job.recordingDuration )}</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Progress Bar */}
+                  {( job.status === "active" || job.status === "queued" || job.progress < 100 ) && (
+                    <div className="pt-1">
+                      <ProgressBar progress={job.progress} status={job.status} />
+                    </div>
+                  )}
                 </div>
               </div>
             ) )}
