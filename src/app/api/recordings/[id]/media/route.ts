@@ -55,7 +55,7 @@ export async function GET(
         try {
           const url = await getDownloadUrlFromS3Url(key, 3600);
           // Use size from DB if available, otherwise fetch from S3
-          let size = videoSizes[index];
+          let size: number | null = videoSizes[index];
           if (!size) {
             size = await getObjectSize(key);
           }
