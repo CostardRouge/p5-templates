@@ -23,7 +23,7 @@ export default function SketchSettings( {
     sketchFormConfiguration
   } = useSketch();
 
-  if ( !sketchFormConfiguration ) {
+  if ( !sketchFormConfiguration || Object.keys( sketchFormConfiguration ).length === 0 ) {
     return null;
   }
 
