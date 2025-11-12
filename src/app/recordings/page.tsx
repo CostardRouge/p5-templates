@@ -29,6 +29,7 @@ import fetchDownload from "@/components/utils/fetchDownload";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
 
 import useMultiRecordingStatusStream from "@/hooks/useMultiRecordingStatusStream";
+import { usePersistedViewMode } from "@/hooks/usePersistedViewMode";
 import {
   JobModel, JobStatusEnum
 } from "@/types/recording.types";
@@ -120,24 +121,20 @@ function DownloadMenuItems( {
 
   return (
     <>
-      {videos.length > 1 && videos.map( (
-        video, idx
-      ) => (
+      {videos.length > 1 && videos.map( ( video ) => (
         <MenuItem key={video.index}>
-          {( {
-            focus
-          } ) => (
+          {( { focus } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/slide/${ video.index }` )}
-              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
             >
-              <Download className="h-5" />
-              <span>
-                Download slide { video.index + 1 }
+              <Video className="h-4 w-4 text-foreground/70" />
+              <div className="flex-1 flex items-center justify-between">
+                <span className="font-medium">Slide { video.index + 1 }</span>
                 {video.size && (
-                  <span className="text-xs text-gray-400 ml-1">({ formatFileSize( video.size ) })</span>
+                  <span className="text-xs text-foreground/50">{ formatFileSize( video.size ) }</span>
                 )}
-              </span>
+              </div>
             </button>
           )}
         </MenuItem>
@@ -145,47 +142,40 @@ function DownloadMenuItems( {
 
       {videos.length === 1 && (
         <MenuItem>
-          {( {
-            focus
-          } ) => (
+          {( { focus } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/slide/0` )}
-              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
             >
-              <Download className="h-5" />
-              <span>
-                Download
+              <Video className="h-4 w-4 text-foreground/70" />
+              <div className="flex-1 flex items-center justify-between">
+                <span className="font-medium">Video</span>
                 {videos[ 0 ].size && (
-                  <span className="text-xs text-gray-400 ml-1">({ formatFileSize( videos[ 0 ].size ) })</span>
+                  <span className="text-xs text-foreground/50">{ formatFileSize( videos[ 0 ].size ) }</span>
                 )}
-              </span>
+              </div>
             </button>
           )}
         </MenuItem>
       )}
 
       {videos.length > 1 && (
-        <>
-          <div className="my-1 h-px bg-border" />
-          <MenuItem>
-            {( {
-              focus
-            } ) => (
-              <button
-                onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/zip` )}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
-              >
-                <FileArchive className="h-5" />
-                <span>
-                  Download all (.zip)
-                  {zipSize && (
-                    <span className="text-xs text-gray-400 ml-1">({ formatFileSize( zipSize ) })</span>
-                  )}
-                </span>
-              </button>
-            )}
-          </MenuItem>
-        </>
+        <MenuItem>
+          {( { focus } ) => (
+            <button
+              onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/zip` )}
+              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+            >
+              <FileArchive className="h-4 w-4 text-foreground/70" />
+              <div className="flex-1 flex items-center justify-between">
+                <span className="font-medium">All Slides (ZIP)</span>
+                {zipSize && (
+                  <span className="text-xs text-foreground/50">{ formatFileSize( zipSize ) }</span>
+                )}
+              </div>
+            </button>
+          )}
+        </MenuItem>
       )}
     </>
   );
@@ -253,176 +243,146 @@ function ActionsMenu( {
   ].includes( job.status ) &&
     ( Date.now() - new Date( job.updatedAt ).getTime() ) > 60 * 60 * 1000;
 
+  const handleAction = async( 
+    action: string, 
+    endpoint: string, 
+    method: string = "POST",
+    confirmMessage?: string 
+  ) => {
+    if ( confirmMessage && !confirm( confirmMessage ) ) return;
+
+    try {
+      const response = await fetch( endpoint, { method } );
+      if ( !response.ok ) throw new Error( `${ action } failed` );
+      
+      const result = await response.json();
+      const success = result.cancelled || result.deleted || result.retried || result.started;
+      
+      if ( success ) {
+        if ( action === "cancel" || action === "force-cancel" ) onCancel?.( job );
+        else if ( action === "delete" ) onDelete?.( job );
+        else if ( action === "retry" ) onRetry?.( job );
+        else if ( action === "start" ) onStart?.( job );
+      } else {
+        alert( `Could not ${ action } job: ${ job.id.slice( 0, 8 ) }` );
+      }
+    } catch ( error ) {
+      alert( `Failed to ${ action }. Please try again.` );
+    }
+  };
+
   return (
     <Menu as="div" className="relative">
-      <MenuButton>
-        <MenuIcon className="h-4"/>
+      <MenuButton className="p-2 hover:bg-hover rounded-lg transition-colors">
+        <MenuIcon className="h-4 w-4 text-foreground"/>
       </MenuButton>
 
-      <MenuItems className="absolute right-0 w-64 border border-theme rounded-xl z-50 bg-background overflow-hidden">
-        {( job.status === "completed" && job.videoUrls ) && (
+      <MenuItems className="absolute right-0 w-64 border border-border rounded-xl z-50 bg-background shadow-xl overflow-hidden">
+        {/* Preview Section */}
+        {job.status === "completed" && job.videoUrls && (
           <>
+            <div className="px-3 py-2 bg-hover/30">
+              <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">View</p>
+            </div>
             <MenuItem>
-              {( {
-                focus
-              } ) => (
+              {( { focus } ) => (
                 <button
                   onClick={onPreviewModal}
-                  className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                  className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
                 >
-                  <Eye className="h-5" />
-                  Open preview modal
+                  <Eye className="h-4 w-4 text-foreground/70" />
+                  <span className="font-medium">Preview Video</span>
                 </button>
               )}
             </MenuItem>
-
-            <div className="my-1 h-px bg-border" />
+            <div className="h-px bg-border" />
           </>
         )}
 
+        {/* Navigation Section */}
+        <div className="px-3 py-2 bg-hover/30">
+          <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Navigate</p>
+        </div>
         <MenuItem>
-          {( {
-            focus
-          } ) => (
+          {( { focus } ) => (
             <HardLink
               href={`templates/${ job.template }?id=${ job.id }`}
-              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
             >
-              <Link className="h-5" />
-              <span>Open recording&nbsp;
-                <u>{
-                  job.id.slice(
-                    0,
-                    8
-                  )}
-                </u>
-              </span>
+              <Link className="h-4 w-4 text-foreground/70" />
+              <div className="flex-1 min-w-0">
+                <span className="font-medium">Open Recording</span>
+                <p className="text-xs text-foreground/50 font-mono truncate">#{job.id.slice( 0, 8 )}</p>
+              </div>
             </HardLink>
           )}
         </MenuItem>
-
         <MenuItem>
-          {( {
-            focus
-          } ) => (
+          {( { focus } ) => (
             <HardLink
               href={`templates/${ job.template }`}
-              className={`${ focus ? "bg-hover" : "" } grup overflow-hidden flex w-full items-start justify-around gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
             >
-              <Link className="h-5 flex-1" />
-              <span className="text-ellipsis flex-1">Open template&nbsp;
-                <u>{job.template}</u>
-              </span>
+              <Clapperboard className="h-4 w-4 text-foreground/70" />
+              <div className="flex-1 min-w-0">
+                <span className="font-medium">Open Template</span>
+                <p className="text-xs text-foreground/50 truncate">{job.template}</p>
+              </div>
             </HardLink>
           )}
         </MenuItem>
 
-        <div className="my-1 h-px bg-border" />
-
+        {/* Download Section */}
+        <div className="h-px bg-border" />
+        <div className="px-3 py-2 bg-hover/30">
+          <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Download</p>
+        </div>
         <DownloadMenuItems job={job} />
-
         <MenuItem>
-          {( {
-            focus
-          } ) => (
+          {( { focus } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/options/download/${ job.id }` )}
-              className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
             >
-              <Download className="h-5" />
-              <span>Download .json</span>
+              <Download className="h-4 w-4 text-foreground/70" />
+              <span className="font-medium">Options JSON</span>
             </button>
           )}
         </MenuItem>
 
+        {/* Action Section */}
+        {( job.status === "draft" || job.status === "queued" || isStale || ["cancelled", "failed"].includes( job.status ) ) && (
+          <>
+            <div className="h-px bg-border" />
+            <div className="px-3 py-2 bg-hover/30">
+              <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Actions</p>
+            </div>
+          </>
+        )}
+
         {job.status === "draft" && (
           <MenuItem>
-            {( {
-              focus
-            } ) => (
+            {( { focus } ) => (
               <button
-                onClick={async() => {
-                  try {
-                    const res = await fetch(
-                      `/api/recordings/${ job.id }/start`,
-                      {
-                        method: "POST"
-                      }
-                    );
-
-                    if ( !res.ok ) throw new Error( "Start failed" );
-                    const {
-                      started
-                    } = await res.json();
-
-                    if ( started ) onStart?.( job );
-                  } catch ( error ) {
-                    console.error(
-                      "Start failed:",
-                      error
-                    );
-                  }
-                }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                onClick={() => handleAction( "start", `/api/recordings/${ job.id }/start` )}
+                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
               >
-                <Clapperboard className="h-5" />
-                Start recording
+                <Clapperboard className="h-4 w-4 text-green-600" />
+                <span className="font-medium text-green-600">Start Recording</span>
               </button>
             )}
           </MenuItem>
         )}
 
-        {/* Divider: only show if there are actions below */}
-        {( job.status === "queued" || [
-          "cancelled",
-          "failed",
-          "completed",
-          "draft"
-        ].includes( job.status ) ) && (
-          <div className="my-1 h-px bg-border" />
-        )}
-
-        {![
-          "completed",
-          "cancelled",
-          "draft",
-          "failed",
-          "active",
-        ].includes( job.status ) && (
+        {job.status === "queued" && (
           <MenuItem>
-            {( {
-              focus
-            } ) => (
+            {( { focus } ) => (
               <button
-                onClick={async() => {
-                  try {
-                    const response = await fetch(
-                      `/api/recordings/${ job.id }/cancel`,
-                      {
-                        method: "POST"
-                      }
-                    );
-
-                    if ( !response.ok ) throw new Error( "Cancel failed" );
-
-                    const {
-                      cancelled
-                    } = await response.json();
-
-                    if ( cancelled ) return onCancel?.( job );
-
-                    alert( `could not cancel job: ${ job.id }` );
-                  } catch ( error ) {
-                    console.error(
-                      "Cancel failed:",
-                      error
-                    );
-                  }
-                }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                onClick={() => handleAction( "cancel", `/api/recordings/${ job.id }/cancel` )}
+                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
               >
-                <X className="h-5" />
-                Cancel
+                <X className="h-4 w-4 text-orange-600" />
+                <span className="font-medium text-orange-600">Cancel</span>
               </button>
             )}
           </MenuItem>
@@ -430,136 +390,58 @@ function ActionsMenu( {
 
         {isStale && (
           <MenuItem>
-            {( {
-              focus
-            } ) => (
+            {( { focus } ) => (
               <button
-                onClick={async() => {
-                  if ( !confirm( `Force cancel stale job ${ job.id.slice(
-                    0,
-                    8
-                  ) }? This will mark it as cancelled.` ) ) {
-                    return;
-                  }
-                  try {
-                    const response = await fetch(
-                      `/api/recordings/${ job.id }/force-cancel`,
-                      {
-                        method: "POST"
-                      }
-                    );
-
-                    if ( !response.ok ) throw new Error( "Force cancel failed" );
-
-                    const {
-                      cancelled
-                    } = await response.json();
-
-                    if ( cancelled ) return onForceCancel?.( job );
-
-                    alert( `could not force cancel job: ${ job.id }` );
-                  } catch ( error ) {
-                    console.error(
-                      "Force cancel failed:",
-                      error
-                    );
-                  }
-                }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm text-orange-600`}
+                onClick={() => handleAction( 
+                  "force-cancel", 
+                  `/api/recordings/${ job.id }/force-cancel`,
+                  "POST",
+                  `Force cancel stale job ${ job.id.slice( 0, 8 ) }? This will mark it as cancelled.`
+                )}
+                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
               >
-                <AlertTriangle className="h-5" />
-                Force Cancel (Stale)
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <span className="font-medium text-orange-600">Force Cancel (Stale)</span>
               </button>
             )}
           </MenuItem>
         )}
 
-        {[
-          "cancelled",
-          "failed",
-        ].includes( job.status ) && (
+        {["cancelled", "failed"].includes( job.status ) && (
           <MenuItem>
-            {( {
-              focus
-            } ) => (
+            {( { focus } ) => (
               <button
-                onClick={async() => {
-                  try {
-                    const response = await fetch(
-                      `/api/recordings/${ job.id }/retry`,
-                      {
-                        method: "POST"
-                      }
-                    );
-
-                    if ( !response.ok ) throw new Error( "Retry failed" );
-
-                    const {
-                      retried
-                    } = await response.json();
-
-                    if ( retried ) return onRetry?.( job );
-
-                    alert( `could not retry job: ${ job.id }` );
-                  } catch ( error ) {
-                    console.error(
-                      "Retry failed:",
-                      error
-                    );
-                  }
-                }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm`}
+                onClick={() => handleAction( "retry", `/api/recordings/${ job.id }/retry` )}
+                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
               >
-                <RotateCcw className="h-5" />
-                Retry
+                <RotateCcw className="h-4 w-4 text-blue-600" />
+                <span className="font-medium text-blue-600">Retry Recording</span>
               </button>
             )}
           </MenuItem>
         )}
 
-        {[
-          "completed",
-          "cancelled",
-          "draft",
-          "failed",
-        ].includes( job.status ) && (
-          <MenuItem>
-            {( {
-              focus
-            } ) => (
-              <button
-                onClick={async() => {
-                  try {
-                    const response = await fetch(
-                      `/api/recordings/${ job.id }`,
-                      {
-                        method: "DELETE"
-                      }
-                    );
-
-                    if ( !response.ok ) throw new Error( "Delete failed" );
-
-                    const {
-                      deleted
-                    } = await response.json();
-
-                    if ( deleted ) return onDelete?.( job );
-
-                    alert( `could not delete job: ${ job.id }` );
-                  } catch ( error ) {
-                    console.error(
-                      "Delete failed:",
-                      error
-                    );
-                  }
-                }}
-                className={`${ focus ? "bg-hover" : "" } group flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600`}
-              >
-                <Trash2 />
-                Delete
-              </button>
-            )}
-          </MenuItem>
+        {/* Delete Section */}
+        {["completed", "cancelled", "draft", "failed"].includes( job.status ) && (
+          <>
+            <div className="h-px bg-border" />
+            <MenuItem>
+              {( { focus } ) => (
+                <button
+                  onClick={() => handleAction( 
+                    "delete", 
+                    `/api/recordings/${ job.id }`,
+                    "DELETE",
+                    `Delete this ${ job.status } recording? This action cannot be undone.`
+                  )}
+                  className={`${ focus ? "bg-red-50 dark:bg-red-950/20" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                >
+                  <Trash2 className="h-4 w-4 text-red-600" />
+                  <span className="font-medium text-red-600">Delete Recording</span>
+                </button>
+              )}
+            </MenuItem>
+          </>
         )}
       </MenuItems>
     </Menu>
@@ -581,7 +463,7 @@ export default function RecordingsPage() {
   const [
     view,
     setView
-  ] = useState<"table" | "cards">( "table" );
+  ] = usePersistedViewMode<"table" | "cards">( "recordings-view-mode", "table" );
   const [
     search,
     setSearch

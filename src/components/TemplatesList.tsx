@@ -14,6 +14,7 @@ import {
 } from "next/navigation";
 
 import HardLink from "@/components/HardLink";
+import { usePersistedViewMode } from "@/hooks/usePersistedViewMode";
 
 interface TemplatesListProps {
   templates: Record<string, TemplateCategory>;
@@ -28,7 +29,7 @@ export default function TemplatesList( {
   const [
     view,
     setView
-  ] = useState<"grid" | "list">( "grid" );
+  ] = usePersistedViewMode<"grid" | "list">( "templates-view-mode", "grid" );
   const [
     search,
     setSearch
