@@ -1,14 +1,17 @@
 "use client";
 
 import React, {
-  useState
+  useEffect, useState
 } from "react";
 import {
-  FileSliders, Grid, List
+  FileSliders, Grid, List, Search
 } from "lucide-react";
 import {
   TemplateCategory
 } from "@/app/templates/page";
+import {
+  useRouter, useSearchParams
+} from "next/navigation";
 
 import HardLink from "@/components/HardLink";
 
@@ -19,36 +22,140 @@ interface TemplatesListProps {
 export default function TemplatesList( {
   templates
 }: TemplatesListProps ) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [
     view,
     setView
   ] = useState<"grid" | "list">( "grid" );
+  const [
+    search,
+    setSearch
+  ] = useState<string>( searchParams.get( "keyword" ) || "" );
+
+  // Update URL when search changes
+  useEffect(
+    () => {
+      const params = new URLSearchParams( searchParams.toString() );
+      
+      if ( search ) {
+        params.set(
+          "keyword",
+          search
+        );
+      } else {
+        params.delete( "keyword" );
+      }
+      
+      const newUrl = params.toString() ? `/templates?${ params.toString() }` : "/templates";
+      router.replace(
+        newUrl,
+        {
+          scroll: false
+        }
+      );
+    },
+    [
+      search,
+      router,
+      searchParams
+    ]
+  );
+
+  // Filter templates based on search
+  const filteredTemplates = Object.entries( templates ).reduce( (
+    acc, [
+      category,
+      items
+    ]
+  ) => {
+    const filtered = items.filter( item => 
+      item.name.toLowerCase().includes( search.toLowerCase() )
+    );
+    
+    if ( filtered.length > 0 ) {
+      acc[ category ] = filtered;
+    }
+    
+    return acc;
+  }, {} as Record<string, TemplateCategory> );
+
+  const totalCount = Object.values( filteredTemplates ).reduce( (
+    sum, items
+  ) => sum + items.length, 0 );
 
   return (
-    <div className="space-y-8">
-      {/* View Toggle */}
-      <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-semibold">Templates</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Templates</h1>
+          <p className="text-sm text-foreground/60 mt-1">
+            {totalCount} {totalCount === 1 ? "template" : "templates"}
+            {search && ` matching "${search}"`}
+          </p>
+        </div>
 
-        <div className="h-8">
-          <button
-            onClick={() => setView( "grid" )}
-            className={`rounded-l-xl border border-theme  border-r-0 h-full p-2 transition-colors ${ view === "grid" ? "bg-hover" : "hover:bg-hover" }`}
-          >
-            <Grid className="w-4 h-4" />
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={search}
+              onChange={( e ) => setSearch( e.target.value )}
+              className="pl-10 pr-4 py-2.5 rounded-xl w-full sm:w-56 bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40"
+            />
+          </div>
 
-          <button
-            onClick={() => setView( "list" )}
-            className={`rounded-r-xl border border-theme  border-l-0 h-full p-2 transition-colors ${ view === "list" ? "bg-hover" : "hover:bg-hover" }`}
-          >
-            <List className="w-4 h-4" />
-          </button>
+          {/* View Toggle */}
+          <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden">
+            <button
+              onClick={() => setView( "grid" )}
+              className={`px-3 py-2.5 transition-all duration-200 ${ 
+                view === "grid" 
+                  ? "bg-hover text-foreground" 
+                  : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+              }`}
+              title="Grid view"
+            >
+              <Grid className="w-4 h-4" />
+            </button>
+
+            <div className="w-px h-6 bg-border" />
+
+            <button
+              onClick={() => setView( "list" )}
+              className={`px-3 py-2.5 transition-all duration-200 ${ 
+                view === "list" 
+                  ? "bg-hover text-foreground" 
+                  : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+              }`}
+              title="List view"
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Empty State */}
+      {totalCount === 0 && (
+        <div className="text-center py-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-hover/50 mb-4">
+            <Search className="w-8 h-8 text-foreground/40" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-1">No templates found</h3>
+          <p className="text-sm text-foreground/60">
+            Try adjusting your search term
+          </p>
+        </div>
+      )}
+
       {/* Categories */}
-      {Object.entries( templates ).map( ( [
+      {Object.entries( filteredTemplates ).map( ( [
         category,
         items
       ] ) => (

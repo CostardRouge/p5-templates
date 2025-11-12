@@ -37,7 +37,7 @@ export default async function TemplatesPage() {
   };
 
   return (
-    <div className="p-2">
+    <div className="p-6">
       <TemplatesList templates={templates} />
     </div>
   );
