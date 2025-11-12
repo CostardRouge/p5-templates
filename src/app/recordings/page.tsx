@@ -16,6 +16,7 @@ import {
   Menu as MenuIcon,
   RotateCcw,
   Trash2,
+  Video,
   X
 } from "lucide-react";
 
@@ -202,17 +203,17 @@ function ProgressBar( {
   const isIndeterminate = ( status === "active" || status === "queued" ) && progress === 0;
 
   return (
-    <div className="w-full space-y-1.5">
+    <div className="w-full space-y-1">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-foreground/60 font-medium">
+        <span className="text-foreground/50">
           {isIndeterminate ? "Starting..." : "Progress"}
         </span>
-        <span className="text-foreground/80 font-semibold tabular-nums">
+        <span className="text-foreground font-semibold tabular-nums">
           {isIndeterminate ? "—" : `${ progress }%`}
         </span>
       </div>
       
-      <div className="w-full bg-hover/50 rounded-full h-1.5 overflow-hidden">
+      <div className="w-full bg-hover/50 rounded-full h-2 overflow-hidden">
         {isIndeterminate ? (
           <div className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500 animate-pulse w-full opacity-60" />
         ) : (
@@ -795,27 +796,37 @@ export default function RecordingsPage() {
 
   return (
     <div>
-      <div className="space-y-6 p-2">
+      <div className="space-y-6 p-6">
         {/* Top Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold">Recordings ({filtered.length})</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Recordings</h1>
+            <p className="text-sm text-foreground/60 mt-1">
+              {filtered.length} {filtered.length === 1 ? "recording" : "recordings"}
+              {statusFilter !== "all" && ` • ${statusFilter}`}
+            </p>
+          </div>
 
-          <div className="flex flex-wrap items-center gap-1 text-xs">
-            <input
-              type="text"
-              placeholder="Search…"
-              value={search}
-              onChange={( e ) => setSearch( e.target.value )}
-              className="px-2 rounded-xl w-full sm:w-40 bg-background h-8 border border-theme "
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search recordings..."
+                value={search}
+                onChange={( e ) => setSearch( e.target.value )}
+                className="pl-4 pr-4 py-2.5 rounded-xl w-full sm:w-56 bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40"
+              />
+            </div>
 
+            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={( e ) => setStatusFilter( e.target.value )}
-              className="px-2 rounded-xl bg-background h-8 border border-theme "
+              className="px-4 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm font-medium cursor-pointer"
             >
               <option value="all">All Status</option>
-              <option value="draft">Drafted</option>
+              <option value="draft">Draft</option>
               <option value="queued">Queued</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
@@ -823,17 +834,30 @@ export default function RecordingsPage() {
               <option value="cancelled">Cancelled</option>
             </select>
 
-            <div className="">
+            {/* View Toggle */}
+            <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden">
               <button
                 onClick={() => setView( "cards" )}
-                className={`rounded-l-xl border border-theme  border-r-0 px-2 py-[6.5] h-full ${ view === "cards" ? "bg-hover" : "hover:bg-hover" }`}
+                className={`px-3 py-2.5 transition-all duration-200 ${ 
+                  view === "cards" 
+                    ? "bg-hover text-foreground" 
+                    : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+                }`}
+                title="Card view"
               >
                 <Grid className="w-4 h-4" />
               </button>
 
+              <div className="w-px h-6 bg-border" />
+
               <button
                 onClick={() => setView( "table" )}
-                className={`rounded-r-xl border border-theme  border-l-0 px-2 py-[6.5] ${ view === "table" ? "bg-hover" : "hover:bg-hover" }`}
+                className={`px-3 py-2.5 transition-all duration-200 ${ 
+                  view === "table" 
+                    ? "bg-hover text-foreground" 
+                    : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+                }`}
+                title="Table view"
               >
                 <List className="w-4 h-4" />
               </button>
@@ -841,97 +865,138 @@ export default function RecordingsPage() {
           </div>
         </div>
 
-        {/* <RecordingDashboard />*/}
-
         {/* Table View */}
         {view === "table" && (
-          <div className="overflow-x-auto rounded-xl border border-theme  bg-background">
-            <table className="min-w-full">
-              <thead className="bg-hover/70">
-                <tr className="text-left text-xs text-foreground uppercase border-b ">
-                  <th className="font-medium p-1 w-14">Thumb</th>
-                  <th className="font-medium p-1 w-4">ID</th>
-                  <th className="font-medium p-1 w-4">Template</th>
-                  <th className="font-medium p-1 w-2">Date</th>
-                  <th className="font-medium p-1 w-6">Status</th>
-                  <th className="font-medium p-1 w-2">Progress</th>
-                  <th className="font-medium p-1 w-1 text-right">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-theme">
-                {filtered.map( ( job ) => (
-                  <tr
-                    key={job.id}
-                    className="hover:bg-hover"
-                  >
-                    <td className="p-0 whitespace-nowrap sm:table-cell">
-                      <RecordingThumbnail
-                        job={job}
-                        onClick={() => {
-                        // Only open preview if job has videoUrls (new recordings)
-                          if ( job.status === "completed" && job.videoUrls ) {
-                            setPreviewJobId( job.id );
-                          }
-                        }}
-                        className={`w-16 h-16 object-cover transition ${
-                          job.videoUrls ? "cursor-pointer hover:opacity-80" : "cursor-default"
-                        }`}
-                      />
-                    </td>
-
-                    <td className="p-1 whitespace-nowrap text-sm">
-                      <HardLink href={`templates/${ job.template }?id=${ job.id }`}>
-                        {job.id.slice(
-                          0,
-                          8
-                        )}
-                        <span className="text-gray-400 ml-2">➔</span>
-                      </HardLink>
-                    </td>
-
-                    <td className="p-1 whitespace-nowrap text-sm">
-                      <HardLink href={`templates/${ job.template }`}>
-                        {job.template}
-                        <span className="text-gray-400 ml-2">➔</span>
-                      </HardLink>
-                    </td>
-
-                    <td className="p-1 text-sm text-foreground">
-                      <div className="text-xs text-foreground/60 mt-0.5">
-                      {new Date( job.createdAt ).toLocaleString()}
-                      </div>
-                      
-                      {job.recordingDuration && (
-                        <div className="text-xs text-foreground/60 mt-0.5">
-                          Elapsed: {formatDuration( job.recordingDuration )}
-                        </div>
-                      )}
-                    </td>
-
-                    <td className="p-1 whitespace-nowrap text-sm">
-                      <StatusBadge status={job.status} />
-                    </td>
-
-                    <td className="p-1 whitespace-nowrap">
-                      <ProgressBar progress={job.progress} status={job.status} />
-                    </td>
-
-                    <td className="p-1 whitespace-nowrap text-sm text-right">
-                      <ActionsMenu
-                        job={job}
-                        onCancel={handleCancel}
-                        onDelete={handleDelete}
-                        onRetry={handleRetry}
-                        onStart={handleStart}
-                        onForceCancel={handleCancel}
-                        onPreviewModal={() => setPreviewJobId( job.id )}
-                      />
-                    </td>
+          <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-border bg-hover/30">
+                    <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+                      Preview
+                    </th>
+                    <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+                      ID
+                    </th>
+                    <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+                      Template
+                    </th>
+                    <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+                      Created
+                    </th>
+                    <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+                      Status
+                    </th>
+                    <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+                      Progress
+                    </th>
+                    <th className="text-right text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+                      Actions
+                    </th>
                   </tr>
-                ) )}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody className="divide-y divide-border">
+                  {filtered.map( ( job ) => (
+                    <tr
+                      key={job.id}
+                      className="group hover:bg-hover/50 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <RecordingThumbnail
+                          job={job}
+                          onClick={() => {
+                            // Only open preview if job has videoUrls (new recordings)
+                            if ( job.status === "completed" && job.videoUrls ) {
+                              setPreviewJobId( job.id );
+                            }
+                          }}
+                          className={`w-20 h-20 rounded-xl border border-border object-cover transition-all duration-300 ${
+                            job.videoUrls ? "cursor-pointer group-hover:scale-105 group-hover:shadow-md" : "cursor-default"
+                          }`}
+                        />
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <HardLink 
+                          href={`templates/${ job.template }?id=${ job.id }`}
+                          className="group/link inline-flex items-center gap-1.5 text-sm font-mono text-foreground hover:text-foreground/70 transition-colors"
+                        >
+                          #{job.id.slice( 0, 8 )}
+                          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-xs">→</span>
+                        </HardLink>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <HardLink 
+                          href={`templates/${ job.template }`}
+                          className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
+                        >
+                          {job.template}
+                          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-xs">→</span>
+                        </HardLink>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <div className="space-y-0.5">
+                          <div className="text-sm text-foreground">
+                            {new Date( job.createdAt ).toLocaleDateString( undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric"
+                            } )}
+                          </div>
+                          <div className="text-xs text-foreground/50">
+                            {new Date( job.createdAt ).toLocaleTimeString( undefined, {
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            } )}
+                            {job.recordingDuration && ` • ${formatDuration( job.recordingDuration )}`}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <StatusBadge status={job.status} />
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <div className="min-w-[120px]">
+                          <ProgressBar progress={job.progress} status={job.status} />
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3 text-right">
+                        <ActionsMenu
+                          job={job}
+                          onCancel={handleCancel}
+                          onDelete={handleDelete}
+                          onRetry={handleRetry}
+                          onStart={handleStart}
+                          onForceCancel={handleCancel}
+                          onPreviewModal={() => setPreviewJobId( job.id )}
+                        />
+                      </td>
+                    </tr>
+                  ) )}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Empty State */}
+            {filtered.length === 0 && (
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-hover/50 mb-4">
+                  <Video className="w-8 h-8 text-foreground/40" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">No recordings found</h3>
+                <p className="text-sm text-foreground/60">
+                  {search || statusFilter !== "all" 
+                    ? "Try adjusting your filters" 
+                    : "Create your first recording to get started"}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
