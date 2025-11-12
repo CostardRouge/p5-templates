@@ -26,11 +26,7 @@ export default function UnsavedChangesModal( {
     return () => setMounted(false);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      console.log("[UnsavedChangesModal] Modal is now open");
-    }
-  }, [isOpen]);
+
 
   if (!isOpen || !mounted) return null;
 

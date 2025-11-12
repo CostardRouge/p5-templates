@@ -342,10 +342,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         alert( `Could not delete job: ${ persistedJob.id }` );
       }
     } catch ( error ) {
-      console.error(
-        "Delete failed:",
-        error
-      );
       alert( "Failed to delete. Please try again." );
     }
   };
@@ -371,10 +367,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         alert( `Could not cancel job: ${ jobId }` );
       }
     } catch ( error ) {
-      console.error(
-        "Cancel failed:",
-        error
-      );
       alert( "Failed to cancel. Please try again." );
     }
   };
@@ -403,10 +395,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         alert( `Could not retry job: ${ persistedJob.id }` );
       }
     } catch ( error ) {
-      console.error(
-        "Retry failed:",
-        error
-      );
       alert( "Failed to retry. Please try again." );
     }
   };
@@ -415,8 +403,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     // Create a new draft from current options
     await handleSubmit( "draft" );
   };
-
-  console.log({activeSlideIndex})
 
   // Determine current status
   const currentStatus = recordingProgress?.status || persistedJob?.status;

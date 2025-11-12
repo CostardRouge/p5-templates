@@ -71,7 +71,6 @@ export function useUnsavedChanges({
       e.preventDefault();
       e.stopPropagation();
       
-      console.log("[UnsavedChanges] Navigation blocked, showing modal for:", href);
       setPendingNavigation(href);
       setShowModal(true);
     };
@@ -128,7 +127,7 @@ export function useUnsavedChanges({
           }
         }
       } catch (error) {
-        console.error("[UnsavedChanges] Failed to save as draft:", error);
+        // Failed to save
       }
     }
   }, [onSaveAsDraft, pendingNavigation, router]);
