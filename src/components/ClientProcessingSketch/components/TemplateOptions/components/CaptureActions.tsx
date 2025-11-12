@@ -7,7 +7,7 @@ import {
   useRouter
 } from "next/navigation";
 import {
-  Archive, Clapperboard, Download, Eye, Loader, RotateCcw, Save, Trash2, X
+  Archive, Clapperboard, Download, Eye, Loader, RotateCcw, Save, Trash2, X, Copy
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -82,7 +82,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         "active"
       ].includes( recordingProgress.status );
 
-      if ( isRecording ) {
+     if ( isRecording ) {
         // Pause the sketch
         if ( typeof ( window as any ).noLoop === "function" ) {
           ( window as any ).noLoop();
@@ -360,21 +360,32 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   return (
     <>
       <div className="flex flex-col gap-1 h-auto w-full">
+        {/* Browser Recording - Always Available */}
+        {!isRecording && (
+         <>
+          <span className="h-[1px] w-[50%] mx-auto border-t border-hover" />
+
+          <button
+            className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
+            onClick={async() => {
+              await window?.startLoopRecording( {
+                format: "webm"
+              } );
+            }}
+          >
+            <Save className="inline h-3" />
+            <span className="align-middle">Record in .webm</span>
+          </button>
+
+          <span className="h-[1px] w-[50%] mx-auto border-t border-hover" />
+         </>
+        )}
+
         {backendRecording && (
           <>
             {/* NO JOB - Fresh Start */}
             {hasNoJob && (
               <div className="flex gap-1">
-                <button
-                  className="rounded-lg px-2 py-1 border border-theme bg-active text-white hover:bg-hover disabled:opacity-50 text-xs font-medium"
-                  onClick={() => handleSubmit( "queued" )}
-                  disabled={isLoading || saving}
-                >
-                  {isLoading ? <Loader className="inline h-3 animate-spin"/> :
-                    <Clapperboard className="inline h-3" />}
-                  <span className="align-middle">Start Recording</span>
-                </button>
-
                 <button
                   className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover disabled:opacity-50 text-xs"
                   onClick={() => handleSubmit( "draft" )}
@@ -383,6 +394,16 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   {saving ? <Loader className="inline h-3 animate-spin"/> :
                     <Archive className="inline h-3" />}
                   <span className="align-middle">Save as Draft</span>
+                </button>
+
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover disabled:opacity-50 text-xs font-medium"
+                  onClick={() => handleSubmit( "queued" )}
+                  disabled={isLoading || saving}
+                >
+                  {isLoading ? <Loader className="inline h-3 animate-spin"/> :
+                    <Clapperboard className="inline h-3" />}
+                  <span className="align-middle">Start Recording</span>
                 </button>
               </div>
             )}
@@ -410,7 +431,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   </button>
 
                   <button
-                    className="rounded-lg px-2 py-1 border border-theme bg-active text-white hover:bg-hover disabled:opacity-50 text-xs flex-1 font-medium"
+                    className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover disabled:opacity-50 text-xs flex-1 font-medium"
                     onClick={() => handleSubmit(
                       "queued",
                       persistedJob.id
@@ -446,7 +467,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                     <div className="absolute inset-0 rounded-xl bg-background" />
 
                     <div
-                      className="absolute inset-y-0 left-0 bg-active"
+                      className="absolute inset-y-0 left-0 bg-hover border-active"
                       style={{
                         width: `${ recordingProgress.percentage }%`
                       }}
@@ -465,24 +486,24 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   </span>
                 </div>
 
-                <button
+                 <button
                   className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
                   onClick={handleCancel}
                 >
                   <X className="inline h-3" />
-                  <span className="align-middle">Cancel Recording</span>
+                  <span className="align-middle">Cancel recording</span>
                 </button>
               </>
             )}
 
             {/* COMPLETED Status */}
             {isCompleted && persistedJob && (
-              <>
+              <div className="grid grid-cols-2 gap-1">
                 <button
-                  className="rounded-lg px-2 py-1 border border-theme bg-active text-white hover:bg-hover text-xs font-medium"
+                  className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover text-xs font-medium"
                   onClick={() => setShowPreviewModal( true )}
                 >
-                  <Eye className="inline h-3" />
+                  <Eye className="mx-auto h-3" />
                   <span className="align-middle">Preview</span>
                 </button>
 
@@ -490,7 +511,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
                   onClick={async() => await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/0` )}
                 >
-                  <Download className="inline h-3" />
+                  <Download className="mx-auto h-3" />
                   <span className="align-middle">Download</span>
                 </button>
 
@@ -498,25 +519,25 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
                   onClick={handleRecordAgain}
                 >
-                  <RotateCcw className="inline h-3" />
-                  <span className="align-middle">Record Again</span>
+                  <Copy className="mx-auto h-3" />
+                  <span className="align-middle">Clone</span>
                 </button>
 
                 <button
                   className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
                   onClick={handleDelete}
                 >
-                  <Trash2 className="inline h-3" />
+                  <Trash2 className="mx-auto h-3" />
                   <span className="align-middle">Delete</span>
                 </button>
-              </>
+              </div>
             )}
 
             {/* FAILED/CANCELLED Status */}
             {isFailed && persistedJob && (
               <>
                 <button
-                  className="rounded-lg px-2 py-1 border border-theme bg-active text-white hover:bg-hover text-xs font-medium"
+                  className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover text-xs font-medium"
                   onClick={handleRetry}
                 >
                   <RotateCcw className="inline h-3" />
@@ -546,21 +567,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
               </>
             )}
           </>
-        )}
-
-        {/* Browser Recording - Always Available */}
-        {!isRecording && (
-          <button
-            className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
-            onClick={async() => {
-              await window?.startLoopRecording( {
-                format: "webm"
-              } );
-            }}
-          >
-            <Save className="inline h-3" />
-            <span className="align-middle">Browser Recording (.webm)</span>
-          </button>
         )}
       </div>
 

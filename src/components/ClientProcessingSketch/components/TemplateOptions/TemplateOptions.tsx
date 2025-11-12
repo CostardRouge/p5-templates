@@ -374,7 +374,7 @@ export default function TemplateOptions( {
             }
             aria-label={expanded ? "Collapse controls" : "Expand controls"}
           >
-            <span>render options</span>
+            <span>options</span>
             <ArrowDownFromLine
               className="inline text-foreground h-3 w-3 ml-1"
               style={{
