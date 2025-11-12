@@ -71,16 +71,25 @@ function MenuBar( {
   }
 
   return (
-    <nav className="w-full glass px-2 py-1.5 flex justify-between items-center gap-1 z-50 border-t border-theme text-xs sm:text-sm">
-      <Image
-        alt="my p5*js templates"
-        src="/assets/images/icon-512x512.png"
-        className="px-2 py-1.5 hover:animate-spin"
-        width={64}
-        height={64}
-      />
+    <nav className="w-full glass px-4 py-3 flex justify-between items-center gap-4 z-50 border-t border-border backdrop-blur-xl bg-background/80">
+      {/* Logo */}
+      <Link href="/templates" className="group flex items-center gap-3 flex-shrink-0">
+        <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-border group-hover:border-foreground/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-foreground/10">
+          <Image
+            alt="my p5*js templates"
+            src="/assets/images/icon-512x512.png"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
+            width={64}
+            height={64}
+          />
+        </div>
+        <span className="hidden sm:block text-sm font-semibold text-foreground group-hover:text-foreground/70 transition-colors">
+          Social Pipeline
+        </span>
+      </Link>
 
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Navigation Items */}
+      <div className="flex items-center gap-2 flex-1 justify-center">
         {items.map( ( {
           href, name, Icon, target
         } ) => {
@@ -93,21 +102,28 @@ function MenuBar( {
               href={href}
               target={target}
               className={clsx(
-                "transition-all duration-200 flex flex-col items-center justify-center rounded-xl shadow-sm px-2 py-1 border border-theme ",
+                "group relative flex items-center gap-2 rounded-xl px-4 py-2 transition-all duration-300 text-sm font-medium",
                 active
-                  ? "bg-hover border-active"
-                  : "hover:bg-hover/50 hover:opacity-80"
+                  ? "bg-hover text-foreground shadow-sm"
+                  : "text-foreground/70 hover:text-foreground hover:bg-hover/50"
               )}
             >
-              <Icon className="inline w-4 mr-1" />
-              <span className="">{name ?? href}</span>
+              <Icon className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+              <span className="hidden sm:inline">{name ?? href}</span>
+              
+              {/* Active indicator */}
+              {active && (
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-foreground rounded-full" />
+              )}
             </Link>
           );
         } )}
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Right Actions */}
+      <div className="flex items-center gap-2 flex-shrink-0">
         <PushNotificationManager />
+        <div className="w-px h-6 bg-border" />
         <ThemeToggle
           iconClassName="h-5"
         />
