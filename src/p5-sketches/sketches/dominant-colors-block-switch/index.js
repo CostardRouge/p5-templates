@@ -46,21 +46,9 @@ const getImages = () => {
     ];
 };
 
-sketch.setup(
-  () => {
-    background( ...getBg() );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+sketch.setup( () => {
+  background( ...getBg() );
+}, );
 
 function getImagePart(
   img, x, y, w, h

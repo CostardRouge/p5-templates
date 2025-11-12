@@ -11,29 +11,17 @@ import imageUtils from "../../utils/imageUtils.js";
 const canvases = {
 };
 
-sketch.setup(
-  () => {
-    canvases.background = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+sketch.setup( () => {
+  canvases.background = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    canvases.background.pixelDensity( options.backgroundPixelDensity || 0.055 );
-    canvases.background.drawingContext.filter = "blur(2px)";
+  canvases.background.pixelDensity( options.backgroundPixelDensity || 0.055 );
+  canvases.background.drawingContext.filter = "blur(2px)";
 
-    background( ...options.colors.background );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+  background( ...options.colors.background );
+}, );
 
 sketch.draw( (
   time, center, favoriteColor

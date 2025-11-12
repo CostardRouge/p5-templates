@@ -49,15 +49,7 @@ const getImages = () => {
 sketch.setup(
   undefined,
   {
-    type: "webgl",
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
+    type: "webgl"
   }
 );
 
@@ -195,7 +187,9 @@ sketch.draw( (
 
   const images = getImages();
 
-  const imagePaths = images.map( ( { path } ) => path ).join( "-" );
+  const imagePaths = images.map( ( {
+    path
+  } ) => path ).join( "-" );
 
   const imageParts = cache.store(
     `image-parts-${ columns }-${ rows }-${ imagePaths }`,
@@ -206,7 +200,9 @@ sketch.draw( (
       );
 
       return (
-        images.map( ( { img } ) => {
+        images.map( ( {
+          img
+        } ) => {
           imageUtils.marginImage( {
             img,
             position: createVector(
@@ -221,7 +217,9 @@ sketch.draw( (
           return (
             cells.reduce(
               (
-                imageCells, { x, y }
+                imageCells, {
+                  x, y
+                }
               ) => {
                 const imagePart = buffer.get(
                   x,
@@ -378,26 +376,26 @@ sketch.draw( (
   // if ( animation.progression < 0.2 ) {
   if ( options.sketch?.showTitle ?? true ) {
     string.write(
-    ( options.sketch?.title || options.name ).replaceAll(
-      "-",
-      "\n"
-    ),
-    0,
-    height / 2,
-    {
-      size: options.sketch?.titleSize ?? 450,
-      strokeWeight: 0,
-      stroke: color( ...getTextColor() ),
-      fill: color( ...getTextColor() ),
-      font: getFont(),
-      textAlign: [
-        CENTER,
-        CENTER
-      ],
+      ( options.sketch?.title || options.name ).replaceAll(
+        "-",
+        "\n"
+      ),
+      0,
+      height / 2,
+      {
+        size: options.sketch?.titleSize ?? 450,
+        strokeWeight: 0,
+        stroke: color( ...getTextColor() ),
+        fill: color( ...getTextColor() ),
+        font: getFont(),
+        textAlign: [
+          CENTER,
+          CENTER
+        ],
       // blendMode: EXCLUSION
       // graphics: canvases.text
-    }
-  );
+      }
+    );
   }
   // }
 

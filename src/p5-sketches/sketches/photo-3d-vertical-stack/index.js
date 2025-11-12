@@ -16,6 +16,7 @@ class Card {
     this.index = index;
     this.position = position;
     const images = getImages();
+
     this.img = images?.[ this.index ]?.img;
     this.path = images?.[ this.index ]?.path;
     this.filename = images?.[ this.index ]?.filename;
@@ -173,61 +174,49 @@ const getImages = () => {
     ];
 };
 
-sketch.setup(
-  () => {
-    canvases._3d = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-      "webgl"
-    );
+sketch.setup( () => {
+  canvases._3d = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+    "webgl"
+  );
 
-    background( ...getBg() );
+  background( ...getBg() );
 
-    const start = createVector(
-      0,
-      height * 1 / 8 - height / 2,
-      -500
-    );
-    const end = createVector(
-      0,
-      height * 2.75 / 4 - height / 2
-    );
+  const start = createVector(
+    0,
+    height * 1 / 8 - height / 2,
+    -500
+  );
+  const end = createVector(
+    0,
+    height * 2.75 / 4 - height / 2
+  );
 
-    cache.store(
-      "positions",
-      () => (
-        Array.from( {
-          length: cardsLength
-        } ).map( (
-          _, index
-        ) => {
-          const position = p5.Vector.lerp(
-            start,
-            end,
-            index / ( cardsLength )
-          );
+  cache.store(
+    "positions",
+    () => (
+      Array.from( {
+        length: cardsLength
+      } ).map( (
+        _, index
+      ) => {
+        const position = p5.Vector.lerp(
+          start,
+          end,
+          index / ( cardsLength )
+        );
 
-          cards.push( new Card( {
-            position,
-            index,
-          } ) );
+        cards.push( new Card( {
+          position,
+          index,
+        } ) );
 
-          return position;
-        } )
-      )
-    );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+        return position;
+      } )
+    )
+  );
+}, );
 
 sketch.draw( (
   _time, center, favoriteColor

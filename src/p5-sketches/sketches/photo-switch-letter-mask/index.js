@@ -11,26 +11,14 @@ import imageUtils from "../../utils/imageUtils.js";
 const canvases = {
 };
 
-sketch.setup(
-  () => {
-    canvases.mask = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+sketch.setup( () => {
+  canvases.mask = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    background( ...options.colors.background );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+  background( ...options.colors.background );
+}, );
 
 sketch.draw( (
   time, center, favoriteColor

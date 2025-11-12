@@ -68,61 +68,49 @@ events.register(
   }
 );
 
-sketch.setup(
-  () => {
-    background( ...options.colors.background );
+sketch.setup( () => {
+  background( ...options.colors.background );
 
-    _ml5.drawing = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height
-    );
+  _ml5.drawing = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height
+  );
 
-    _ml5.capture.element = createCapture(
-      VIDEO,
-      {
-        flipped: true
-      }
-    );
-    _ml5.capture.element.size(
-      _ml5.capture.size.width,
-      _ml5.capture.size.height
-    );
-    _ml5.capture.element.hide();
-
-    _ml5.webcam.element = createCapture(
-      VIDEO,
-      {
-        flipped: true
-      }
-    );
-    _ml5.webcam.element.size(
-      _ml5.webcam.size.width,
-      _ml5.webcam.size.height
-    );
-    _ml5.webcam.element.hide();
-
-    // _ml5.handPose.detectStart(_ml5.capture.element, results => {
-    // 	_ml5.hands = results;
-    // })
-
-    _ml5.bodySegmentation.detectStart(
-      _ml5.capture.element,
-      results => {
-        _ml5.segmentation = results;
-      }
-    );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
+  _ml5.capture.element = createCapture(
+    VIDEO,
+    {
+      flipped: true
     }
-  }
-);
+  );
+  _ml5.capture.element.size(
+    _ml5.capture.size.width,
+    _ml5.capture.size.height
+  );
+  _ml5.capture.element.hide();
+
+  _ml5.webcam.element = createCapture(
+    VIDEO,
+    {
+      flipped: true
+    }
+  );
+  _ml5.webcam.element.size(
+    _ml5.webcam.size.width,
+    _ml5.webcam.size.height
+  );
+  _ml5.webcam.element.hide();
+
+  // _ml5.handPose.detectStart(_ml5.capture.element, results => {
+  // 	_ml5.hands = results;
+  // })
+
+  _ml5.bodySegmentation.detectStart(
+    _ml5.capture.element,
+    results => {
+      _ml5.segmentation = results;
+    }
+  );
+}, );
 
 function drawHand(
   hand, color, graphics = window

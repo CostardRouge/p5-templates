@@ -60,7 +60,7 @@ export default function neonGraffiti( {
           Math.sin,
           amplitude * sinAmplitudeMultiplier,
           map(
-            Math.sin( animation.angle + stepAngle ),
+            Math.sin( animation.angle + stepAngle + slides.index ),
             // Math.cos( animation.angle + stepAngle + easing.easeInOutSine( stepProgression ) ),
             -1,
             1,
@@ -73,7 +73,7 @@ export default function neonGraffiti( {
           amplitude * cosAmplitudeMultiplier,
           map(
             // Math.cos( animation.angle + stepAngle * 2 + easing.easeInOutSine( shadowProgression ) ),
-            Math.cos( animation.angle + stepAngle ),
+            Math.cos( animation.angle + stepAngle + slides.index ),
             -1,
             1,
             -PI,

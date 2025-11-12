@@ -133,33 +133,21 @@ function drawImageWithMask( {
 
 /* ---------- setup ---------- */
 
-sketch.setup(
-  () => {
-    canvases.mask = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+sketch.setup( () => {
+  canvases.mask = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    canvases.imageBuffer = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+  canvases.imageBuffer = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    background( ...getBg() );
+  background( ...getBg() );
 
-    ensureBalls( getImages() );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+  ensureBalls( getImages() );
+}, );
 
 /* ---------- draw ---------- */
 

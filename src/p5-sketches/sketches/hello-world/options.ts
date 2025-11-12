@@ -3,16 +3,33 @@ import {
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 export const formValues = {
-  backgroundColor: [0,0,0],
+  text: "hello world",
+  backgroundColor: [
+    0,
+    0,
+    0
+  ],
   font: {
     face: "martian",
     size: 200,
-    color: [0,0,0],
-    stroke: [255, 255, 255]
+    color: [
+      0,
+      0,
+      0
+    ],
+    stroke: [
+      255,
+      255,
+      255
+    ]
   }
 };
 
 export const formConfiguration: Record<string, any> = {
+  text: {
+    component: "text",
+    label: "Text input"
+  },
   backgroundColor: {
     component: "color",
     label: "Background color"

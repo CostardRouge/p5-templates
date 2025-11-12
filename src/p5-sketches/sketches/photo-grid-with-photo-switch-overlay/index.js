@@ -8,21 +8,9 @@ import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
 
-sketch.setup(
-  () => {
-    background( ...options.colors.background );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+sketch.setup( () => {
+  background( ...options.colors.background );
+}, );
 
 sketch.draw( (
   time, center, favoriteColor

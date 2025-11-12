@@ -46,27 +46,15 @@ const getImages = () => {
     ];
 };
 
-sketch.setup(
-  () => {
-    canvases.dice = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-      WEBGL
-    );
+sketch.setup( () => {
+  canvases.dice = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+    WEBGL
+  );
 
-    background( ...getBg() );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+  background( ...getBg() );
+} );
 
 function dice(
   size = width, render

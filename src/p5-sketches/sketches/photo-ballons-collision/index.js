@@ -186,71 +186,59 @@ function addBoundary(
   );
 }
 
-sketch.setup(
-  () => {
-    canvases.mask = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
-    canvases.imageBuffer = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+sketch.setup( () => {
+  canvases.mask = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
+  canvases.imageBuffer = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
-    background( ...getBg() );
+  // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
+  background( ...getBg() );
 
-    const margin = 50;
-    const thickness = 50;
+  const margin = 50;
+  const thickness = 50;
 
-    addBoundary(
-      width / 2,
-      height + thickness / 2 - margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      width / 2,
-      -thickness / 2 + margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      -thickness / 2 + margin,
-      height / 2,
-      thickness,
-      height
-    );
-    addBoundary(
-      width + thickness / 2 - margin,
-      height / 2,
-      thickness,
-      height
-    );
+  addBoundary(
+    width / 2,
+    height + thickness / 2 - margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    width / 2,
+    -thickness / 2 + margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    -thickness / 2 + margin,
+    height / 2,
+    thickness,
+    height
+  );
+  addBoundary(
+    width + thickness / 2 - margin,
+    height / 2,
+    thickness,
+    height
+  );
 
-    const images = getImages();
+  const images = getImages();
 
-    for ( let i = 0; i <= 10; i++ ) {
-      addImageBall(
-        ( images?.[ 0 ]?.img ),
-        random( width ),
-        random( height ),
-        ( width / 6 - 2 * margin )
-        // random(100)
-      );
-    }
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
+  for ( let i = 0; i <= 10; i++ ) {
+    addImageBall(
+      ( images?.[ 0 ]?.img ),
+      random( width ),
+      random( height ),
+      ( width / 6 - 2 * margin )
+      // random(100)
+    );
   }
-);
+}, );
 
 sketch.draw( (
   time, center, favoriteColor

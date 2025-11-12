@@ -62,37 +62,25 @@ function drawImageWithMask( {
   );
 }
 
-sketch.setup(
-  () => {
-    canvases.maskBuffer = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+sketch.setup( () => {
+  canvases.maskBuffer = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    canvases.imageBuffer = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+  canvases.imageBuffer = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    canvases.sliderBuffer = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+  canvases.sliderBuffer = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
-    background( ...options.colors.background );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+  // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
+  background( ...options.colors.background );
+}, );
 
 let offset = 0;
 

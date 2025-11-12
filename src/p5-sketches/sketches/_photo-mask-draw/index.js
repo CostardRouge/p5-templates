@@ -35,36 +35,24 @@ function drawImageWithMask( {
   );
 }
 
-sketch.setup(
-  () => {
-    canvases.mask = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+sketch.setup( () => {
+  canvases.mask = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
-    background( ...options.colors.background );
+  // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
+  background( ...options.colors.background );
 
-    canvases.mask.rect(
-      0,
-      0,
-      width,
-      height
-    );
+  canvases.mask.rect(
+    0,
+    0,
+    width,
+    height
+  );
 
-    // resetBallPositions();
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+  // resetBallPositions();
+}, );
 
 events.register(
   "engine-window-preload",

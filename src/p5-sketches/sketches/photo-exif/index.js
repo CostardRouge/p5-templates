@@ -9,21 +9,7 @@ import imageUtils from "../../utils/imageUtils.js";
 
 import * as common from "../../utils/common.js";
 
-sketch.setup(
-  () => {
-
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+sketch.setup( );
 
 const getFont = () => {
   const key = options.sketch?.font?.face ?? "martian";

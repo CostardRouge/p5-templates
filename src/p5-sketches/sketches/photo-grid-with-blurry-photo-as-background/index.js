@@ -12,34 +12,23 @@ import * as common from "../../utils/common.js";
 const canvases = {
 };
 
-sketch.setup(
-  () => {
-    canvases.background = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+sketch.setup( () => {
+  canvases.background = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
+  // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
 
-    background( ...( options.sketch?.backgroundColor ?? options.colors.background ) );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+  background( ...( options.sketch?.backgroundColor ?? options.colors.background ) );
+}, );
 
 sketch.draw( (
   time, center, favoriteColor
 ) => {
   const bg = options.sketch?.backgroundColor ?? options.colors.background;
   const textColor = options.sketch?.textColor ?? options.colors.text;
+
   background( ...bg );
   canvases.background.background( ...bg );
 
@@ -118,7 +107,7 @@ sketch.draw( (
   );
   const imageAtIndex = imageObjectAtIndex?.img;
 
-  if (!imageAtIndex) {
+  if ( !imageAtIndex ) {
     return;
   }
 

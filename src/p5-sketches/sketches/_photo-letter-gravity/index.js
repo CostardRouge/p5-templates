@@ -167,70 +167,58 @@ function addBoundary(
   );
 }
 
-sketch.setup(
-  () => {
-    canvases.mask = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
-    canvases.imageBuffer = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
-    );
+sketch.setup( () => {
+  canvases.mask = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
+  canvases.imageBuffer = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height,
+  );
 
-    // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
-    background( ...options.colors.background );
+  // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
+  background( ...options.colors.background );
 
-    const margin = 50;
-    const thickness = 50;
+  const margin = 50;
+  const thickness = 50;
 
-    addBoundary(
-      width / 2,
-      height + thickness / 2 - margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      width / 2,
-      -thickness / 2 + margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      -thickness / 2 + margin,
-      height / 2,
-      thickness,
-      height
-    );
-    addBoundary(
-      width + thickness / 2 - margin,
-      height / 2,
-      thickness,
-      height
-    );
+  addBoundary(
+    width / 2,
+    height + thickness / 2 - margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    width / 2,
+    -thickness / 2 + margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    -thickness / 2 + margin,
+    height / 2,
+    thickness,
+    height
+  );
+  addBoundary(
+    width + thickness / 2 - margin,
+    height / 2,
+    thickness,
+    height
+  );
 
-    // "gravity".split("").forEach( letter => {
-    // 	addLetter(
-    // 		width/2,
-    // 		height/2,
-    // 		// random(width),
-    // 		// random(height),
-    // 		letter,
-    // 		288
-    // 	)
-    // })
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    }
-  }
-);
+  // "gravity".split("").forEach( letter => {
+  // 	addLetter(
+  // 		width/2,
+  // 		height/2,
+  // 		// random(width),
+  // 		// random(height),
+  // 		letter,
+  // 		288
+  // 	)
+  // })
+}, );
 
 sketch.draw( (
   time, center, favoriteColor
