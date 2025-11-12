@@ -38,12 +38,14 @@ export type CaptureActionsRef = {
 const CaptureActions = forwardRef<CaptureActionsRef, {
   name: string;
   options: SketchOption;
-  persistedJob?: JobModel
+  persistedJob?: JobModel;
+  activeSlideIndex: number;
 }>( (
   {
     name,
     options,
-    persistedJob
+    persistedJob,
+    activeSlideIndex
   }, ref
 ) => {
   const router = useRouter();
@@ -343,6 +345,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     await handleSubmit( "draft" );
   };
 
+  console.log({activeSlideIndex})
+
   // Determine current status
   const currentStatus = recordingProgress?.status || persistedJob?.status;
   const isRecording = recordingProgress && [
@@ -509,7 +513,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
                 <button
                   className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
-                  onClick={async() => await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/0` )}
+                  onClick={async() => await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/${activeSlideIndex}`)}
                 >
                   <Download className="mx-auto h-3" />
                   <span className="align-middle">Download</span>

@@ -44,6 +44,7 @@ import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOpt
 import SketchSettings
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/SketchSettings";
 import useSketch from "../SketchProvider/hooks/useSketch";
+import { log } from "console";
 
 type TemplateOptionsProps = {
   name: string;
@@ -487,6 +488,7 @@ export default function TemplateOptions( {
           name={name}
           options={options as SketchOption}
           persistedJob={persistedJob}
+          activeSlideIndex={activeSlideIndex}
         />
       </CollapsibleItem>
 
