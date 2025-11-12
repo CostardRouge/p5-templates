@@ -76,75 +76,28 @@ function DownloadMenuItems( {
 }: {
   job: JobModel
 } ) {
-  const [
-    mediaData,
-    setMediaData
-  ] = useState<{
-    videos: Array<{
-      url: string;
-      size: number | null;
-      index: number;
-      key: string;
-    }>;
-    zipSize: number | null;
-  } | null>( null );
-  const [
-    loading,
-    setLoading
-  ] = useState( true );
-
-  useEffect(
-    () => {
-      if ( job.status !== "completed" ) {
-        setLoading( false );
-        return;
-      }
-
-      const fetchMediaData = async() => {
-        try {
-          const response = await fetch( `/api/recordings/${ job.id }/media` );
-
-          if ( response.ok ) {
-            const data = await response.json();
-
-            setMediaData( data );
-          }
-        } catch ( error ) {
-          console.error(
-            "Failed to fetch media data:",
-            error
-          );
-        } finally {
-          setLoading( false );
-        }
-      };
-
-      fetchMediaData();
-    },
-    [
-      job.id,
-      job.status
-    ]
-  );
-
   if ( job.status !== "completed" ) return null;
-  if ( loading ) {
-    return (
-      <MenuItem>
-        {( {
-          focus
-        } ) => (
-          <div className={`${ focus ? "bg-hover" : "" } px-4 py-2 text-sm text-gray-400`}>
-            Loading...
-          </div>
-        )}
-      </MenuItem>
-    );
+
+  // Get video sizes directly from job data
+  const videoUrls = ( job.videoUrls as unknown as string[] ) || [];
+  const videoSizes = ( job.videoSizes as unknown as number[] ) || [];
+
+  // Calculate zip size from video sizes
+  let zipSize: number | null = null;
+  if ( videoSizes.length > 0 ) {
+    const totalVideoSize = videoSizes.reduce( ( sum, size ) => sum + ( size || 0 ), 0 );
+    // Add small overhead for zip structure (roughly 100 bytes per file + 1KB for headers)
+    zipSize = totalVideoSize + ( videoSizes.length * 100 ) + 1024;
   }
 
-  const videos = mediaData?.videos || [
-  ];
-  const zipSize = mediaData?.zipSize;
+  const videos = videoUrls.map( (
+    url, index
+  ) => ( {
+    url,
+    size: videoSizes[ index ] || null,
+    index,
+    key: url
+  } ) );
 
   return (
     <>

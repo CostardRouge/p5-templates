@@ -35,6 +35,77 @@ export type CaptureActionsRef = {
   isSaving: boolean;
 };
 
+// Helper function to format file size
+function formatFileSize( bytes: number ): string {
+  if ( bytes === 0 ) return "0 B";
+  const k = 1024;
+  const sizes = [
+    "B",
+    "KB",
+    "MB",
+    "GB"
+  ];
+  const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
+  return `${ ( bytes / Math.pow( k, i ) ).toFixed( 1 ) } ${ sizes[ i ] }`;
+}
+
+// Completed actions component with file size display
+function CompletedActions( {
+  persistedJob,
+  activeSlideIndex,
+  onPreview,
+  onRecordAgain,
+  onDelete
+}: {
+  persistedJob: JobModel;
+  activeSlideIndex: number;
+  onPreview: () => void;
+  onRecordAgain: () => void;
+  onDelete: () => void;
+} ) {
+  // Get video sizes directly from job data
+  const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [];
+  const currentVideoSize = videoSizes[ activeSlideIndex ];
+
+  return (
+    <div className="grid grid-cols-2 gap-1">
+      <button
+        className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover text-xs font-medium"
+        onClick={onPreview}
+      >
+        <Eye className="mx-auto h-3" />
+        <span className="align-middle">Preview</span>
+      </button>
+
+      <button
+        className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
+        onClick={async() => await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/${ activeSlideIndex }` )}
+      >
+        <Download className="mx-auto h-3" />
+        <span className="align-middle">
+          Download{currentVideoSize ? ` (${ formatFileSize( currentVideoSize ) })` : ""}
+        </span>
+      </button>
+
+      <button
+        className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
+        onClick={onRecordAgain}
+      >
+        <Copy className="mx-auto h-3" />
+        <span className="align-middle">Clone</span>
+      </button>
+
+      <button
+        className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
+        onClick={onDelete}
+      >
+        <Trash2 className="mx-auto h-3" />
+        <span className="align-middle">Delete</span>
+      </button>
+    </div>
+  );
+}
+
 const CaptureActions = forwardRef<CaptureActionsRef, {
   name: string;
   options: SketchOption;
@@ -378,7 +449,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
             }}
           >
             <Save className="inline h-3" />
-            <span className="align-middle">Record in .webm</span>
+            <span className="align-middle">Browser recording in .webm</span>
           </button>
 
           <span className="h-[1px] w-[50%] mx-auto border-t border-hover" />
@@ -462,7 +533,14 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
             {/* RECORDING Status (Queued/Active) */}
             {isRecording && (
               <>
-                <div className="flex flex-col justify-start bg-background text-center items-center gap-1">
+                <span className="h-[1px] w-[50%] mx-auto border-t border-hover" />
+
+                <div className="flex flex justify-start bg-background text-center items-center gap-1">
+                  
+                   <span className="text-xs text-foreground">
+                    {Math.round( recordingProgress?.percentage )}%
+                  </span>
+
                   <div
                     className={`w-full h-6 rounded-lg relative ring-1 overflow-hidden ${
                       recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
@@ -484,10 +562,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                       {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}
                     </span>
                   </div>
-
-                  <span className="text-xs text-foreground">
-                    {Math.round( recordingProgress?.percentage )}%
-                  </span>
                 </div>
 
                  <button
@@ -502,39 +576,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
             {/* COMPLETED Status */}
             {isCompleted && persistedJob && (
-              <div className="grid grid-cols-2 gap-1">
-                <button
-                  className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover text-xs font-medium"
-                  onClick={() => setShowPreviewModal( true )}
-                >
-                  <Eye className="mx-auto h-3" />
-                  <span className="align-middle">Preview</span>
-                </button>
-
-                <button
-                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
-                  onClick={async() => await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/${activeSlideIndex}`)}
-                >
-                  <Download className="mx-auto h-3" />
-                  <span className="align-middle">Download</span>
-                </button>
-
-                <button
-                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
-                  onClick={handleRecordAgain}
-                >
-                  <Copy className="mx-auto h-3" />
-                  <span className="align-middle">Clone</span>
-                </button>
-
-                <button
-                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="mx-auto h-3" />
-                  <span className="align-middle">Delete</span>
-                </button>
-              </div>
+              <CompletedActions
+                persistedJob={persistedJob}
+                activeSlideIndex={activeSlideIndex}
+                onPreview={() => setShowPreviewModal( true )}
+                onRecordAgain={handleRecordAgain}
+                onDelete={handleDelete}
+              />
             )}
 
             {/* FAILED/CANCELLED Status */}
