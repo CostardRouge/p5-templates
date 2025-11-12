@@ -99,3 +99,38 @@ body.recording canvas#defaultCanvas0 {
     border-width: 3px;
     animation: pulse-border 1.5s infinite alternate ease-in-out;
 }
+
+/* Respect prefers-reduced-motion accessibility setting */
+@media (prefers-reduced-motion: reduce) {
+    /* Disable all animations and transitions globally */
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Disable specific animations */
+    .animate-pulse,
+    .animate-pulse-soft,
+    body.recording canvas#defaultCanvas0 {
+        animation: none !important;
+    }
+
+    /* Keep essential visual feedback but remove motion */
+    body.recording canvas#defaultCanvas0 {
+        border-color: red;
+        border-width: 3px;
+    }
+
+    /* Disable transform animations */
+    .group:hover *[class*="group-hover:scale"],
+    .group:hover *[class*="group-hover:rotate"],
+    *[class*="hover:scale"],
+    *[class*="hover:rotate"],
+    *[class*="hover:-translate"] {
+        transform: none !important;
+    }
+}
