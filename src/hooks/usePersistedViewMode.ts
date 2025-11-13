@@ -4,7 +4,7 @@ type ViewMode = "grid" | "list" | "table" | "cards";
 
 /**
  * Custom hook to persist view mode preference in localStorage
- * Handles errors gracefully and prevents hydration mismatch by using useEffect
+ * Prevents hydration mismatch by deferring localStorage read until after mount
  * 
  * @param storageKey - The localStorage key to use for persistence
  * @param defaultValue - The default view mode if nothing is stored
@@ -14,13 +14,11 @@ export function usePersistedViewMode<T extends ViewMode>(
   storageKey: string,
   defaultValue: T
 ): [T, (value: T) => void] {
-  // Initialize with value from localStorage if available (client-side only)
-  const [viewMode, setViewModeState] = useState<T>(() => {
-    // Only access localStorage on client side
-    if (typeof window === "undefined") {
-      return defaultValue;
-    }
-    
+  // Always initialize with defaultValue to ensure SSR/client consistency
+  const [viewMode, setViewModeState] = useState<T>(defaultValue);
+
+  // Read from localStorage after mount (client-side only)
+  useEffect(() => {
     try {
       const stored = localStorage.getItem(storageKey);
       
@@ -31,16 +29,14 @@ export function usePersistedViewMode<T extends ViewMode>(
         // Type guard to ensure the value is valid
         if (typeof parsed === "string" && 
             (parsed === "grid" || parsed === "list" || parsed === "table" || parsed === "cards")) {
-          return parsed;
+          setViewModeState(parsed);
         }
       }
     } catch (error) {
       // Silently fail and use default if localStorage is unavailable or corrupted
       console.warn(`Failed to read ${storageKey} from localStorage:`, error);
     }
-    
-    return defaultValue;
-  });
+  }, [storageKey]);
 
   // Persist to localStorage whenever viewMode changes
   useEffect(() => {

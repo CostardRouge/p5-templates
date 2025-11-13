@@ -146,7 +146,7 @@ export default function VideoPreviewModal( {
       onClick={onClose}
     >
       <div
-        className="overflow-hidden relative w-full md:w-[90vw] lg:w-[85vw] xl:w-[80vw] max-h-[95vh] bg-background rounded-3xl border border-border shadow-2xl flex flex-col animate-in zoom-in-95 duration-300"
+        className="overflow-hidden relative w-full md:w-[90vw] lg:w-[85vw] xl:w-[80vw] h-[95vh] bg-background rounded-3xl border border-border shadow-2xl flex flex-col animate-in zoom-in-95 duration-300"
         onClick={( e ) => e.stopPropagation()}
       >
         {/* Header */}
@@ -257,10 +257,10 @@ export default function VideoPreviewModal( {
                           )}
                           
                           {/* Video container */}
-                          <div className="border border-border rounded-2xl overflow-hidden flex-1 flex items-center justify-center bg-black shadow-lg">
+                          <div className="border border-border rounded-2xl overflow-hidden flex-1 flex items-center justify-center bg-black shadow-lg aspect-video">
                             <video
                               controls
-                              className="max-h-[65vh] w-auto max-w-full"
+                              className="w-full h-full object-contain"
                               preload="metadata"
                               poster={media.thumbnails[ index ]}
                             >

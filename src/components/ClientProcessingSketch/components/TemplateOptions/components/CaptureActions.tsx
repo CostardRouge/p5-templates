@@ -21,6 +21,8 @@ import {
 } from "@/types/recording.types";
 
 import fetchDownload from "@/components/utils/fetchDownload";
+import CompactProgressBar from "@/components/CompactProgressBar";
+import { getRecordingSteps } from "@/utils/recordingSteps";
 import {
   getScopeAssetPath, resolveAssetURL
 } from "@/p5-sketches/shared/utils";
@@ -139,7 +141,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const [
     jobId,
     setJobId
-  ] = useState<JobId | undefined>( );
+  ] = useState<JobId | undefined>( persistedJob?.id );
 
   const [
     saving,
@@ -178,6 +180,16 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const {
     subscribeToRecordingStatus, recordingProgress
   } = useRecordingStatusStream();
+
+  // Auto-subscribe to recording status on mount if job is active/queued
+  React.useEffect(
+    () => {
+      if ( persistedJob && [ "active", "queued" ].includes( persistedJob.status ) ) {
+        subscribeToRecordingStatus( persistedJob.id );
+      }
+    },
+    [ persistedJob?.id, persistedJob?.status, subscribeToRecordingStatus ]
+  );
 
   // Pause P5 sketch during recording
   React.useEffect(
@@ -473,10 +485,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
   // Determine current status
   const currentStatus = recordingProgress?.status || persistedJob?.status;
-  const isRecording = recordingProgress && [
+  const isRecording = currentStatus && [
     "queued",
     "active"
-  ].includes( recordingProgress.status );
+  ].includes( currentStatus );
   const isCompleted = currentStatus === "completed";
   const isFailed = [
     "failed",
@@ -589,37 +601,25 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
               <>
                 <span className="h-[1px] w-[50%] mx-auto border-t border-hover" />
 
-                <div className="flex flex justify-start bg-background text-center items-center gap-1">
-                  
-                   <span className="text-xs text-foreground">
-                    {Math.round( recordingProgress?.percentage )}%
-                  </span>
-
-                  <div
-                    className={`w-full h-6 rounded-lg relative ring-1 overflow-hidden ${
-                      recordingProgress.status !== "failed" ? "ring-gray-300" : "ring-red-400"
-                    }`}
-                  >
-                    <div className="absolute inset-0 rounded-xl bg-background" />
-
-                    <div
-                      className="absolute inset-y-0 left-0 bg-hover border-active"
-                      style={{
-                        width: `${ recordingProgress.percentage }%`
-                      }}
-                    />
-
-                    <span
-                      className="absolute inset-0 p-1 text-xs select-none text-foreground truncate"
-                    >
-                      {recordingProgress.status}
-                      {recordingProgress?.currentStep?.name ? `: ${ recordingProgress.currentStep.name }` : null}
-                    </span>
-                  </div>
+                {/* Compact Progress Bar with Steps */}
+                <div className="px-2">
+                  <CompactProgressBar
+                    job={{
+                      ...persistedJob,
+                      progress: recordingProgress?.percentage || persistedJob?.progress || 0,
+                      status: recordingProgress?.status || persistedJob?.status || 'queued',
+                    } as JobModel}
+                    steps={( recordingProgress?.status || persistedJob?.status ) === 'active' ? getRecordingSteps({
+                      ...persistedJob,
+                      progress: recordingProgress?.percentage || persistedJob?.progress || 0,
+                      status: recordingProgress?.status || persistedJob?.status || 'active',
+                    } as JobModel) : []}
+                    startTime={jobId && recordingProgress?.recordingDuration ? Date.now() - recordingProgress.recordingDuration : undefined}
+                  />
                 </div>
 
-                 <button
-                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                <button
+                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleCancel}
                   disabled={cancelling}
                 >

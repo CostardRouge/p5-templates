@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  env: {
+    NEXT_PUBLIC_BACKEND_RECORDING: process.env.BACKEND_RECORDING,
+    NEXT_PUBLIC_NOTIFICATIONS: process.env.NOTIFICATIONS,
+  },
   async headers() {
     return [
       {

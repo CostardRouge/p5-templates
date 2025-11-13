@@ -26,6 +26,10 @@ type MenuBarProps = {
   showRecordings?: boolean;
 };
 
+const BACKEND_RECORDING = process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true";
+const NOTIFICATIONS_ENABLED = process.env.NEXT_PUBLIC_NOTIFICATIONS === "true";
+const SHOW_NOTIFICATIONS = BACKEND_RECORDING && NOTIFICATIONS_ENABLED;
+
 function MenuBar( {
   showRecordings = false
 }: MenuBarProps ) {
@@ -122,8 +126,12 @@ function MenuBar( {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        <PushNotificationManager />
-        <div className="w-px h-6 bg-border" />
+        {SHOW_NOTIFICATIONS && (
+          <>
+            <PushNotificationManager />
+            <div className="w-px h-6 bg-border" />
+          </>
+        )}
         <ThemeToggle
           iconClassName="h-5"
         />
