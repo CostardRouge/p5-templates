@@ -46,7 +46,8 @@ export async function GET( req: NextRequest ) {
               controller.enqueue( `data: ${ JSON.stringify( {
                 jobId: id,
                 percentage: update.percentage,
-                status: update.status
+                status: update.status,
+                recordingDuration: update.recordingDuration
               } ) }\n\n` );
             }
           }

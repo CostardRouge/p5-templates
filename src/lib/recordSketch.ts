@@ -23,7 +23,8 @@ import {
   Browser, Page
 } from "playwright";
 import {
-  updateRecordingStepPercentage
+  updateRecordingStepPercentage,
+  addRecordingDuration
 } from "@/lib/progression";
 import {
   NotificationService
@@ -137,6 +138,9 @@ async function recordSketch(
         recordingDuration
       }
     );
+
+    // Store recordingDuration in Redis cache for SSE streaming
+    await addRecordingDuration( jobId, recordingDuration );
   }
   catch ( error ) {
     await updateJob(

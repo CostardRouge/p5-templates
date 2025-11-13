@@ -55,13 +55,21 @@ function CompletedActions( {
   activeSlideIndex,
   onPreview,
   onRecordAgain,
-  onDelete
+  onDelete,
+  downloading,
+  onDownload,
+  deleting,
+  cloning
 }: {
   persistedJob: JobModel;
   activeSlideIndex: number;
   onPreview: () => void;
   onRecordAgain: () => void;
   onDelete: () => void;
+  downloading: boolean;
+  onDownload: () => Promise<void>;
+  deleting: boolean;
+  cloning: boolean;
 } ) {
   // Get video sizes directly from job data
   const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [];
@@ -70,37 +78,41 @@ function CompletedActions( {
   return (
     <div className="grid grid-cols-2 gap-1">
       <button
-        className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover text-xs font-medium"
+        className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={onPreview}
+        disabled={downloading || deleting || cloning}
       >
         <Eye className="mx-auto h-3" />
         <span className="align-middle">Preview</span>
       </button>
 
       <button
-        className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
-        onClick={async() => await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/${ activeSlideIndex }` )}
+        className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={onDownload}
+        disabled={downloading || deleting || cloning}
       >
-        <Download className="mx-auto h-3" />
+        {downloading ? <Loader className="mx-auto h-3 animate-spin" /> : <Download className="mx-auto h-3" />}
         <span className="align-middle">
-          Download{currentVideoSize ? ` (${ formatFileSize( currentVideoSize ) })` : ""}
+          {downloading ? "Downloading..." : `Download${currentVideoSize ? ` (${ formatFileSize( currentVideoSize ) })` : ""}`}
         </span>
       </button>
 
       <button
-        className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
+        className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={onRecordAgain}
+        disabled={downloading || deleting || cloning}
       >
-        <Copy className="mx-auto h-3" />
-        <span className="align-middle">Clone</span>
+        {cloning ? <Loader className="mx-auto h-3 animate-spin" /> : <Copy className="mx-auto h-3" />}
+        <span className="align-middle">{cloning ? "Cloning..." : "Clone"}</span>
       </button>
 
       <button
-        className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
+        className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={onDelete}
+        disabled={downloading || deleting || cloning}
       >
-        <Trash2 className="mx-auto h-3" />
-        <span className="align-middle">Delete</span>
+        {deleting ? <Loader className="mx-auto h-3 animate-spin" /> : <Trash2 className="mx-auto h-3" />}
+        <span className="align-middle">{deleting ? "Deleting..." : "Delete"}</span>
       </button>
     </div>
   );
@@ -137,6 +149,26 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const [
     showPreviewModal,
     setShowPreviewModal
+  ] = useState<boolean>( false );
+
+  const [
+    deleting,
+    setDeleting
+  ] = useState<boolean>( false );
+
+  const [
+    cancelling,
+    setCancelling
+  ] = useState<boolean>( false );
+
+  const [
+    retrying,
+    setRetrying
+  ] = useState<boolean>( false );
+
+  const [
+    downloading,
+    setDownloading
   ] = useState<boolean>( false );
 
   const {
@@ -322,6 +354,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
       return;
     }
 
+    setDeleting( true );
+
     try {
       const response = await fetch(
         `/api/recordings/${ persistedJob.id }`,
@@ -340,14 +374,18 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         router.push( `/templates/p5/${ name }` );
       } else {
         alert( `Could not delete job: ${ persistedJob.id }` );
+        setDeleting( false );
       }
     } catch ( error ) {
       alert( "Failed to delete. Please try again." );
+      setDeleting( false );
     }
   };
 
   const handleCancel = async() => {
     if ( !jobId ) return;
+
+    setCancelling( true );
 
     try {
       const response = await fetch(
@@ -368,11 +406,15 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
       }
     } catch ( error ) {
       alert( "Failed to cancel. Please try again." );
+    } finally {
+      setCancelling( false );
     }
   };
 
   const handleRetry = async() => {
     if ( !persistedJob?.id ) return;
+
+    setRetrying( true );
 
     try {
       const response = await fetch(
@@ -393,15 +435,40 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         subscribeToRecordingStatus( persistedJob.id );
       } else {
         alert( `Could not retry job: ${ persistedJob.id }` );
+        setRetrying( false );
       }
     } catch ( error ) {
       alert( "Failed to retry. Please try again." );
+      setRetrying( false );
     }
   };
 
+  const [
+    cloning,
+    setCloning
+  ] = useState<boolean>( false );
+
   const handleRecordAgain = async() => {
-    // Create a new draft from current options
-    await handleSubmit( "draft" );
+    setCloning( true );
+    try {
+      // Create a new draft from current options
+      await handleSubmit( "draft" );
+    } finally {
+      setCloning( false );
+    }
+  };
+
+  const handleDownload = async() => {
+    if ( !persistedJob?.id ) return;
+    
+    setDownloading( true );
+    try {
+      await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/${ activeSlideIndex }` );
+    } catch ( error ) {
+      alert( "Failed to download. Please try again." );
+    } finally {
+      setDownloading( false );
+    }
   };
 
   // Determine current status
@@ -417,6 +484,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   ].includes( currentStatus || "" );
   const isDraft = currentStatus === "draft";
   const hasNoJob = !persistedJob && !recordingProgress;
+  const isAnyActionLoading = isLoading || saving || deleting || cancelling || retrying || downloading || cloning;
 
   return (
     <>
@@ -448,23 +516,23 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
             {hasNoJob && (
               <div className="flex gap-1">
                 <button
-                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover disabled:opacity-50 text-xs"
+                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                   onClick={() => handleSubmit( "draft" )}
-                  disabled={isLoading || saving}
+                  disabled={isAnyActionLoading}
                 >
                   {saving ? <Loader className="inline h-3 animate-spin"/> :
                     <Archive className="inline h-3" />}
-                  <span className="align-middle">Save as Draft</span>
+                  <span className="align-middle">{saving ? "Saving..." : "Save as Draft"}</span>
                 </button>
 
                 <button
-                  className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover disabled:opacity-50 text-xs font-medium"
+                  className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
                   onClick={() => handleSubmit( "queued" )}
-                  disabled={isLoading || saving}
+                  disabled={isAnyActionLoading}
                 >
-                  {isLoading ? <Loader className="inline h-3 animate-spin"/> :
+                  {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
                     <Clapperboard className="inline h-3" />}
-                  <span className="align-middle">Start Recording</span>
+                  <span className="align-middle">{isLoading && !saving ? "Starting..." : "Start Recording"}</span>
                 </button>
               </div>
             )}
@@ -475,7 +543,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                 <div className="flex gap-1">
                   <button
                     className={clsx(
-                      "rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover disabled:opacity-50 text-xs flex-1",
+                      "rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-xs flex-1",
                       {
                         "animate-pulse-soft": saving
                       }
@@ -484,34 +552,34 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                       "draft",
                       persistedJob.id
                     )}
-                    disabled={isLoading || saving}
+                    disabled={isAnyActionLoading}
                   >
                     {saving ? <Loader className="inline h-3 animate-spin"/> :
                       <Save className="inline h-3"/>}
-                    <span className="align-middle">Save</span>
+                    <span className="align-middle">{saving ? "Saving..." : "Save"}</span>
                   </button>
 
                   <button
-                    className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover disabled:opacity-50 text-xs flex-1 font-medium"
+                    className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-xs flex-1 font-medium"
                     onClick={() => handleSubmit(
                       "queued",
                       persistedJob.id
                     )}
-                    disabled={isLoading || saving}
+                    disabled={isAnyActionLoading}
                   >
                     {isLoading && !saving ? <Loader className="inline h-3 animate-spin"/> :
                       <Clapperboard className="inline h-3" />}
-                    <span className="align-middle">Start Recording</span>
+                    <span className="align-middle">{isLoading && !saving ? "Starting..." : "Start Recording"}</span>
                   </button>
                 </div>
 
                 <button
-                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 disabled:opacity-50 text-xs"
+                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
                   onClick={handleDelete}
-                  disabled={isLoading || saving}
+                  disabled={isAnyActionLoading}
                 >
-                  <Trash2 className="inline h-3" />
-                  <span className="align-middle">Delete Draft</span>
+                  {deleting ? <Loader className="inline h-3 animate-spin" /> : <Trash2 className="inline h-3" />}
+                  <span className="align-middle">{deleting ? "Deleting..." : "Delete Draft"}</span>
                 </button>
               </>
             )}
@@ -551,11 +619,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                 </div>
 
                  <button
-                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
+                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleCancel}
+                  disabled={cancelling}
                 >
-                  <X className="inline h-3" />
-                  <span className="align-middle">Cancel recording</span>
+                  {cancelling ? <Loader className="inline h-3 animate-spin" /> : <X className="inline h-3" />}
+                  <span className="align-middle">{cancelling ? "Cancelling..." : "Cancel recording"}</span>
                 </button>
               </>
             )}
@@ -568,6 +637,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                 onPreview={() => setShowPreviewModal( true )}
                 onRecordAgain={handleRecordAgain}
                 onDelete={handleDelete}
+                downloading={downloading}
+                onDownload={handleDownload}
+                deleting={deleting}
+                cloning={cloning}
               />
             )}
 
@@ -575,32 +648,35 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
             {isFailed && persistedJob && (
               <>
                 <button
-                  className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover text-xs font-medium"
+                  className="rounded-lg px-2 py-1 border border-theme bg-hover/50 border-active text-foreground hover:bg-hover text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleRetry}
+                  disabled={isAnyActionLoading}
                 >
-                  <RotateCcw className="inline h-3" />
-                  <span className="align-middle">Retry</span>
+                  {retrying ? <Loader className="inline h-3 animate-spin" /> : <RotateCcw className="inline h-3" />}
+                  <span className="align-middle">{retrying ? "Retrying..." : "Retry"}</span>
                 </button>
 
                 <button
-                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs"
+                  className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={async() => {
                     await handleSubmit(
                       "draft",
                       persistedJob.id
                     );
                   }}
+                  disabled={isAnyActionLoading}
                 >
-                  <Archive className="inline h-3" />
-                  <span className="align-middle">Edit & Save as Draft</span>
+                  {saving ? <Loader className="inline h-3 animate-spin" /> : <Archive className="inline h-3" />}
+                  <span className="align-middle">{saving ? "Saving..." : "Edit & Save as Draft"}</span>
                 </button>
 
                 <button
-                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs"
+                  className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleDelete}
+                  disabled={isAnyActionLoading}
                 >
-                  <Trash2 className="inline h-3" />
-                  <span className="align-middle">Delete</span>
+                  {deleting ? <Loader className="inline h-3 animate-spin" /> : <Trash2 className="inline h-3" />}
+                  <span className="align-middle">{deleting ? "Deleting..." : "Delete"}</span>
                 </button>
               </>
             )}

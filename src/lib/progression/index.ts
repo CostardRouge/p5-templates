@@ -22,6 +22,22 @@ export const addRecordingStatus = async(
   );
 };
 
+export const addRecordingDuration = async(
+  jobId: JobId, recordingDuration: number
+) => {
+  const key = getKey( jobId );
+  const existing = await Redis.getInstance().get( key );
+  const parsed = existing ? JSON.parse( existing ) : {
+  };
+
+  parsed.recordingDuration = recordingDuration;
+
+  await Redis.getInstance().set(
+    key,
+    JSON.stringify( parsed )
+  );
+};
+
 export const addRecordingSteps = async(
   jobId: JobId, steps: RecordingProgressionSteps, status: string
 ) => {

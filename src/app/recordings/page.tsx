@@ -7,6 +7,7 @@ import React, {
 import {
   AlertTriangle,
   Clapperboard,
+  Copy,
   Download,
   Eye,
   FileArchive,
@@ -226,7 +227,8 @@ function ActionsMenu( {
   onRetry,
   onStart,
   onPreviewModal,
-  onForceCancel
+  onForceCancel,
+  onClone
 }: {
   job: JobModel;
   onCancel?: ( job: JobModel ) => void;
@@ -235,6 +237,7 @@ function ActionsMenu( {
   onRetry?: ( job: JobModel ) => void;
   onPreviewModal?: ( ) => void;
   onForceCancel?: ( job: JobModel ) => void;
+  onClone?: ( job: JobModel ) => void;
 } ) {
   // Check if job is stale (active/queued for more than 1 hour)
   const isStale = [
@@ -354,14 +357,10 @@ function ActionsMenu( {
         </MenuItem>
 
         {/* Action Section */}
-        {( job.status === "draft" || job.status === "queued" || isStale || ["cancelled", "failed"].includes( job.status ) ) && (
-          <>
-            <div className="h-px bg-border" />
-            <div className="px-3 py-2 bg-hover/30">
-              <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Actions</p>
-            </div>
-          </>
-        )}
+        <div className="h-px bg-border" />
+        <div className="px-3 py-2 bg-hover/30">
+          <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Actions</p>
+        </div>
 
         {job.status === "draft" && (
           <MenuItem>
@@ -424,6 +423,18 @@ function ActionsMenu( {
           </MenuItem>
         )}
 
+        <MenuItem>
+          {( { focus } ) => (
+            <button
+              onClick={() => onClone?.( job )}
+              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+            >
+              <Copy className="h-4 w-4 text-purple-600" />
+              <span className="font-medium text-purple-600">Clone as Draft</span>
+            </button>
+          )}
+        </MenuItem>
+
         {/* Delete Section */}
         {["completed", "cancelled", "draft", "failed"].includes( job.status ) && (
           <>
@@ -462,6 +473,10 @@ export default function RecordingsPage() {
     setInFlightJobs
   ] = useState<JobModel[]>( [
   ] );
+  const [
+    isLoading,
+    setIsLoading
+  ] = useState<boolean>( true );
 
   const [
     view,
@@ -483,6 +498,7 @@ export default function RecordingsPage() {
   // fetch jobs
   useEffect(
     () => {
+      setIsLoading( true );
       fetch( "/api/recordings" )
         .then( ( res ) => res.ok ? res.json() : Promise.reject( "Fetch error" ) )
         .then( ( data: JobModel[] ) => {
@@ -500,7 +516,8 @@ export default function RecordingsPage() {
           setStaticJobs( staticJobs );
           setInFlightJobs( inFlightJobs );
         } )
-        .catch( console.error );
+        .catch( console.error )
+        .finally( () => setIsLoading( false ) );
     },
     [
     ]
@@ -525,7 +542,8 @@ export default function RecordingsPage() {
             prev.map( j => j.id === jobId ? {
               ...j,
               progress: data.percentage,
-              status: data.status as JobStatusEnum
+              status: data.status as JobStatusEnum,
+              recordingDuration: data.recordingDuration ?? j.recordingDuration
             } : j ) );
 
           // If job is completed/failed/cancelled, move it to static
@@ -559,7 +577,8 @@ export default function RecordingsPage() {
                     {
                       ...completedJob,
                       progress: 100,
-                      status: data.status as JobStatusEnum
+                      status: data.status as JobStatusEnum,
+                      recordingDuration: data.recordingDuration ?? completedJob.recordingDuration
                     },
                     ...prev
                   ] );
@@ -679,6 +698,42 @@ export default function RecordingsPage() {
     ] );
   };
 
+  const handleClone = async( job: JobModel ) => {
+    try {
+      // Fetch the job options
+      const optionsResponse = await fetch( `/api/options/download/${ job.id }` );
+      if ( !optionsResponse.ok ) throw new Error( "Failed to fetch options" );
+      
+      const options = await optionsResponse.json();
+
+      // Create FormData for the new draft
+      const formData = new FormData();
+      formData.append( "status", "draft" );
+      formData.append( "template", job.template );
+      formData.append( "options", JSON.stringify( options ) );
+
+      // Enqueue as draft
+      const response = await fetch( "/api/recordings/enqueue", {
+        method: "POST",
+        body: formData
+      } );
+
+      if ( !response.ok ) throw new Error( "Failed to clone recording" );
+
+      const result = await response.json();
+
+      if ( result.success && result.jobId ) {
+        // Redirect to the template page with the new draft
+        window.location.href = `/templates/${ job.template }?id=${ result.jobId }`;
+      } else {
+        alert( "Could not clone recording" );
+      }
+    } catch ( error ) {
+      console.error( "Clone error:", error );
+      alert( "Failed to clone recording. Please try again." );
+    }
+  };
+
   return (
     <div>
       <div className="space-y-6 p-6">
@@ -692,9 +747,9 @@ export default function RecordingsPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             {/* Search Input */}
-            <div className="relative">
+            <div className="relative flex-shrink min-w-0">
               <input
                 type="text"
                 placeholder="Search recordings..."
@@ -708,7 +763,7 @@ export default function RecordingsPage() {
             <select
               value={statusFilter}
               onChange={( e ) => setStatusFilter( e.target.value )}
-              className="px-4 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm font-medium cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm font-medium cursor-pointer flex-shrink-0"
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -720,7 +775,7 @@ export default function RecordingsPage() {
             </select>
 
             {/* View Toggle */}
-            <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden flex-shrink-0">
               <button
                 onClick={() => setView( "cards" )}
                 className={`px-3 py-2.5 transition-all duration-200 ${ 
@@ -750,8 +805,21 @@ export default function RecordingsPage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-hover/50 mb-4 animate-pulse">
+                <Video className="w-8 h-8 text-foreground/40" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-1">Loading recordings...</h3>
+              <p className="text-sm text-foreground/60">Please wait while we fetch your recordings</p>
+            </div>
+          </div>
+        )}
+
         {/* Table View */}
-        {view === "table" && (
+        {!isLoading && view === "table" && (
           <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
             <div className="overflow-x-auto">
               <table className="min-w-full">
@@ -860,6 +928,7 @@ export default function RecordingsPage() {
                           onStart={handleStart}
                           onForceCancel={handleCancel}
                           onPreviewModal={() => setPreviewJobId( job.id )}
+                          onClone={handleClone}
                         />
                       </td>
                     </tr>
@@ -886,9 +955,25 @@ export default function RecordingsPage() {
         )}
 
         {/* Card View */}
-        {view === "cards" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-            {filtered.map( ( job ) => (
+        {!isLoading && view === "cards" && (
+          <>
+            {filtered.length === 0 ? (
+              <div className="col-span-full overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-hover/50 mb-4">
+                    <Video className="w-8 h-8 text-foreground/40" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">No recordings found</h3>
+                  <p className="text-sm text-foreground/60">
+                    {search || statusFilter !== "all" 
+                      ? "Try adjusting your filters" 
+                      : "Create your first recording to get started"}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                {filtered.map( ( job ) => (
               <div 
                 key={job.id} 
                 className="group bg-background border border-border hover:border-foreground/20 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative"
@@ -903,9 +988,10 @@ export default function RecordingsPage() {
                         setPreviewJobId( job.id );
                       }
                     }}
-                    className={`w-full aspect-video object-cover transition-all duration-300 ${
+                    className={`w-full aspect-square object-cover transition-all duration-300 ${
                       job.videoUrls ? "cursor-pointer group-hover:scale-105" : "cursor-default"
                     }`}
+                    showEyeInCorner={true}
                   />
                   
                   {/* Status Badge Overlay */}
@@ -917,7 +1003,7 @@ export default function RecordingsPage() {
                   </div>
 
                   {/* Actions Menu Overlay */}
-                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="absolute top-3 right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
                     <ActionsMenu
                       job={job}
                       onCancel={handleCancel}
@@ -926,6 +1012,7 @@ export default function RecordingsPage() {
                       onStart={handleStart}
                       onForceCancel={handleCancel}
                       onPreviewModal={() => setPreviewJobId( job.id )}
+                      onClone={handleClone}
                     />
                   </div>
                 </div>
@@ -978,7 +1065,9 @@ export default function RecordingsPage() {
                 </div>
               </div>
             ) )}
-          </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -998,17 +1087,22 @@ export default function RecordingsPage() {
 function RecordingThumbnail( {
   job,
   onClick,
-  className
+  className,
+  showEyeInCorner = false
 }: {
   job: JobModel;
   onClick?: () => void;
   className?: string;
+  showEyeInCorner?: boolean;
 } ) {
   // Use the thumbnail redirect route - it handles all the logic server-side
   const src = `/api/recordings/${ job.id }/thumbnail`;
   
   // Show Eye icon for completed recordings with videoUrls (new recordings)
   const showEyeIcon = job.status === "completed" && job.videoUrls && job.thumbnails;
+  
+  // Show recording indicator for active recordings
+  const isRecording = job.status === "active";
 
   return (
     <div
@@ -1017,20 +1111,39 @@ function RecordingThumbnail( {
         className,
         "relative overflow-hidden",
         {
-          grayscale: job.status !== "completed",
           "animate-pulse": job.status === "active"
         }
       )}
     >
-      { showEyeIcon && (
+      { showEyeIcon && !showEyeInCorner && (
         <Eye
-          className="w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground bg-background rounded-lg py-1 px-1 border border-theme"
+          className="w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground bg-background rounded-lg py-1 px-1 border border-theme z-10"
         />
+      ) }
+      { showEyeIcon && showEyeInCorner && (
+        <div className="absolute bottom-3 left-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-10">
+          <button className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center">
+            <Eye className="h-4 w-4 text-foreground"/>
+          </button>
+        </div>
+      ) }
+      { isRecording && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+          <div className="relative">
+            {/* Outer pulsing ring */}
+            <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" style={{ width: '24px', height: '24px' }} />
+            {/* Inner solid dot */}
+            <div className="relative rounded-full bg-red-600 shadow-lg" style={{ width: '24px', height: '24px' }} />
+          </div>
+        </div>
       ) }
       <img
         src={src}
         alt={job.template}
         loading="lazy"
+        className={clsx({
+          grayscale: job.status !== "completed"
+        })}
       />
     </div>
   );

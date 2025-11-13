@@ -14,13 +14,12 @@ export function usePersistedViewMode<T extends ViewMode>(
   storageKey: string,
   defaultValue: T
 ): [T, (value: T) => void] {
-  // Always start with default value for SSR/hydration
-  const [viewMode, setViewModeState] = useState<T>(defaultValue);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  // Load from localStorage after hydration to prevent mismatch
-  useEffect(() => {
-    setIsHydrated(true);
+  // Initialize with value from localStorage if available (client-side only)
+  const [viewMode, setViewModeState] = useState<T>(() => {
+    // Only access localStorage on client side
+    if (typeof window === "undefined") {
+      return defaultValue;
+    }
     
     try {
       const stored = localStorage.getItem(storageKey);
@@ -32,26 +31,26 @@ export function usePersistedViewMode<T extends ViewMode>(
         // Type guard to ensure the value is valid
         if (typeof parsed === "string" && 
             (parsed === "grid" || parsed === "list" || parsed === "table" || parsed === "cards")) {
-          setViewModeState(parsed);
+          return parsed;
         }
       }
     } catch (error) {
       // Silently fail and use default if localStorage is unavailable or corrupted
       console.warn(`Failed to read ${storageKey} from localStorage:`, error);
     }
-  }, [storageKey]);
+    
+    return defaultValue;
+  });
 
-  // Persist to localStorage whenever viewMode changes (but only after hydration)
+  // Persist to localStorage whenever viewMode changes
   useEffect(() => {
-    if (!isHydrated) return;
-
     try {
       localStorage.setItem(storageKey, JSON.stringify(viewMode));
     } catch (error) {
       // Handle quota exceeded or other localStorage errors
       console.warn(`Failed to save ${storageKey} to localStorage:`, error);
     }
-  }, [storageKey, viewMode, isHydrated]);
+  }, [storageKey, viewMode]);
 
   return [viewMode, setViewModeState];
 }

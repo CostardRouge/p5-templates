@@ -54,6 +54,7 @@ export type RecordingProgressionNestedSteps = {
 export type RecordingStatus = {
   status: string,
   steps?: RecordingProgressionSteps,
+  recordingDuration?: number,
 }
 
 export interface RecordingJobData {
