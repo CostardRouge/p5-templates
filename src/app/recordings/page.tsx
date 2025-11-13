@@ -679,22 +679,9 @@ export default function RecordingsPage() {
 
   const handleClone = async( job: JobModel ) => {
     try {
-      // Fetch the job options
-      const optionsResponse = await fetch( `/api/options/download/${ job.id }` );
-      if ( !optionsResponse.ok ) throw new Error( "Failed to fetch options" );
-      
-      const options = await optionsResponse.json();
-
-      // Create FormData for the new draft
-      const formData = new FormData();
-      formData.append( "status", "draft" );
-      formData.append( "template", job.template );
-      formData.append( "options", JSON.stringify( options ) );
-
-      // Enqueue as draft
-      const response = await fetch( "/api/recordings/enqueue", {
-        method: "POST",
-        body: formData
+      // Use the new clone API route that handles assets
+      const response = await fetch( `/api/recordings/${ job.id }/clone`, {
+        method: "POST"
       } );
 
       if ( !response.ok ) throw new Error( "Failed to clone recording" );
