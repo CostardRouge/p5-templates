@@ -1,276 +1,242 @@
-# Quick Reference - Sketch Actions
+# Progress Components - Quick Reference
 
-## 🎯 Status → Actions Map
+## Import Cheat Sheet
 
-```
-┌─────────────────┬──────────────────────────────────────┐
-│ Status          │ Available Actions                    │
-├─────────────────┼──────────────────────────────────────┤
-│ No Job          │ • Start Recording (primary)          │
-│                 │ • Save as Draft                      │
-│                 │ • Browser Recording                  │
-├─────────────────┼──────────────────────────────────────┤
-│ Draft           │ • Save + Start Recording (side by)   │
-│                 │ • Delete Draft                       │
-│                 │ • Browser Recording                  │
-├─────────────────┼──────────────────────────────────────┤
-│ Recording       │ • Progress Bar                       │
-│ (Queued/Active) │ • Cancel Recording                   │
-│                 │ • P5 Sketch Paused                   │
-├─────────────────┼──────────────────────────────────────┤
-│ Completed       │ • Preview (primary)                  │
-│                 │ • Download                           │
-│                 │ • Record Again                       │
-│                 │ • Delete                             │
-│                 │ • Browser Recording                  │
-├─────────────────┼──────────────────────────────────────┤
-│ Failed/         │ • Retry (primary)                    │
-│ Cancelled       │ • Edit & Save as Draft               │
-│                 │ • Delete                             │
-│                 │ • Browser Recording                  │
-└─────────────────┴──────────────────────────────────────┘
+```typescript
+// Components
+import ActiveRecordingBanner from '@/components/ActiveRecordingBanner';
+import CompactProgressBar from '@/components/CompactProgressBar';
+import ProgressBar from '@/components/ProgressBar';
+import SimpleProgressBar from '@/components/SimpleProgressBar';
+
+// Utilities
+import { 
+  getRecordingSteps, 
+  getCurrentStepIndex, 
+  getCompletedStepsCount 
+} from '@/utils/recordingSteps';
 ```
 
----
+## Quick Usage
 
-## 🎨 Button Styles Quick Reference
-
+### Active Recording Banner
 ```tsx
-// Primary Action (Blue)
-className="rounded-lg px-2 py-1 border border-theme bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 text-xs font-medium"
-
-// Secondary Action
-className="rounded-lg px-2 py-1 border border-theme text-foreground bg-background hover:bg-hover disabled:opacity-50 text-xs"
-
-// Destructive Action (Red)
-className="rounded-lg px-2 py-1 border border-theme text-red-600 hover:bg-red-50 disabled:opacity-50 text-xs"
-
-// Loading State
-className={clsx("...", { "animate-pulse-soft": saving })}
+<ActiveRecordingBanner jobs={inFlightJobs} />
 ```
 
----
-
-## 🔧 Key Functions
-
+### Compact Progress Bar (Table/Card)
 ```tsx
-// Submit recording/draft
-handleSubmit(status: "queued" | "draft", jobId?, skipRedirect?)
-
-// Delete recording/draft
-handleDelete() // Shows confirmation
-
-// Cancel active recording
-handleCancel()
-
-// Retry failed recording
-handleRetry()
-
-// Create new draft from completed
-handleRecordAgain()
+<CompactProgressBar
+  job={job}
+  steps={job.status === 'active' ? getRecordingSteps(job) : []}
+  startTime={startTime}
+/>
 ```
 
----
-
-## 🎬 P5 Pause Logic
-
+### Detailed Progress Bar
 ```tsx
-useEffect(() => {
-  const isRecording = recordingProgress && 
-    ["queued", "active"].includes(recordingProgress.status);
-  
-  if (isRecording) {
-    (window as any).noLoop(); // Pause
-  } else {
-    (window as any).loop();   // Resume
-  }
-}, [recordingProgress]);
+<ProgressBar
+  variant="detailed"
+  steps={getRecordingSteps(job)}
+  currentStepIndex={getCurrentStepIndex(steps)}
+  overallPercentage={job.progress}
+  showElapsedTime
+  startTime={startTime}
+/>
 ```
 
----
-
-## 📊 Status Detection
-
+### Simple Progress Bar
 ```tsx
-const currentStatus = recordingProgress?.status || persistedJob?.status;
-const isRecording = recordingProgress && ["queued", "active"].includes(recordingProgress.status);
-const isCompleted = currentStatus === "completed";
-const isFailed = ["failed", "cancelled"].includes(currentStatus || "");
-const isDraft = currentStatus === "draft";
-const hasNoJob = !persistedJob && !recordingProgress;
+<SimpleProgressBar
+  progress={job.progress}
+  status={job.status}
+/>
 ```
 
----
-
-## 🎯 Icons Used
-
-```tsx
-import {
-  Archive,      // Save as Draft
-  Clapperboard, // Start Recording
-  Download,     // Download
-  Eye,          // Preview
-  Loader,       // Loading spinner
-  RotateCcw,    // Retry / Record Again
-  Save,         // Save / Browser Recording
-  Trash2,       // Delete
-  X             // Cancel
-} from "lucide-react";
+### Get Recording Steps
+```typescript
+const steps = getRecordingSteps(job);
+const currentIndex = getCurrentStepIndex(steps);
+const completedCount = getCompletedStepsCount(steps);
 ```
 
----
+## When to Use What
 
-## 🔗 API Endpoints
+| Scenario | Component | Why |
+|----------|-----------|-----|
+| Top of page banner | ActiveRecordingBanner | Prominent, detailed |
+| Table row | CompactProgressBar | Space-efficient, expandable |
+| Card view | CompactProgressBar | Compact, detailed on click |
+| Simple indicator | SimpleProgressBar | Minimal, no steps |
+| Custom layout | ProgressBar + utility | Full control |
 
-```
-POST   /api/recordings/:id/cancel       → Cancel recording
-POST   /api/recordings/:id/retry        → Retry failed
-DELETE /api/recordings/:id              → Delete recording
-GET    /api/recordings/:id/media        → Get video URLs
-GET    /api/recordings/download/:id/... → Download video
-```
-
----
-
-## ⚡ Quick Test Commands
-
-```bash
-# Check TypeScript errors
-npm run type-check
-
-# Run dev server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run tests (if available)
-npm test
-```
-
----
-
-## 🐛 Debug Checklist
+## File Locations
 
 ```
-□ Check browser console for errors
-□ Check network tab for failed API calls
-□ Verify BACKEND_RECORDING=true
-□ Verify P5 sketch is loaded
-□ Check job status in database
-□ Verify videoUrls exist for preview
-□ Test in incognito mode
-□ Clear browser cache
-```
-
----
-
-## 📱 Responsive Breakpoints
-
-```css
-/* Mobile first */
-.button { /* base styles */ }
-
-/* Tablet */
-@media (min-width: 640px) { /* sm */ }
-
-/* Desktop */
-@media (min-width: 768px) { /* md */ }
-@media (min-width: 1024px) { /* lg */ }
-```
-
----
-
-## 🎨 Theme Variables
-
-```css
---background: /* white (light) / black (dark) */
---foreground: /* black (light) / white (dark) */
---border: /* gray-300 (light) / gray-800 (dark) */
---hover: /* gray-100 (light) / gray-900 (dark) */
-```
-
----
-
-## 🔄 State Flow Diagram
-
-```
-    ┌─────────┐
-    │ No Job  │
-    └────┬────┘
-         │
-    ┌────┴────┐
-    │         │
-    ▼         ▼
-┌───────┐ ┌──────────┐
-│ Draft │ │Recording │
-└───┬───┘ └────┬─────┘
-    │          │
-    │     ┌────┴────┐
-    │     │         │
-    │     ▼         ▼
-    │ ┌─────────┐ ┌────────┐
-    └─►Completed│ │ Failed │
-      └─────────┘ └────────┘
-```
-
----
-
-## 💡 Pro Tips
-
-1. **Auto-save**: Happens every 10s for drafts
-2. **P5 Pause**: Automatic during recording
-3. **Preview**: Only for recordings with videoUrls
-4. **Delete**: Always shows confirmation
-5. **Browser Recording**: Always available (except during server recording)
-
----
-
-## 🚨 Common Pitfalls
-
-❌ **Don't** call `handleSubmit()` without status
-✅ **Do** call `handleSubmit("queued")` or `handleSubmit("draft")`
-
-❌ **Don't** forget to check `persistedJob` exists
-✅ **Do** use `persistedJob?.id` with optional chaining
-
-❌ **Don't** show preview for old recordings without videoUrls
-✅ **Do** check `job.videoUrls` exists before showing preview
-
-❌ **Don't** forget loading/disabled states
-✅ **Do** disable buttons during operations
-
----
-
-## 📚 Related Files
-
-```
-src/components/ClientProcessingSketch/
-├── ClientProcessingSketch.tsx
+src/
 ├── components/
-│   ├── P5Controls.tsx
-│   ├── TemplateOptions/
-│   │   ├── TemplateOptions.tsx
-│   │   └── components/
-│   │       └── CaptureActions.tsx ← Main file
-│   └── SketchProvider/
-│       └── hooks/
-│           └── useSketch.ts
-└── ...
+│   ├── ActiveRecordingBanner.tsx
+│   ├── CompactProgressBar.tsx
+│   ├── ProgressBar.tsx
+│   └── SimpleProgressBar.tsx
+└── utils/
+    └── recordingSteps.ts
 
-src/components/
-└── VideoPreviewModal.tsx ← Preview modal
-
-src/app/
-└── globals.css ← Animations
+docs/
+├── ACTIVE_RECORDING_BANNER.md
+├── COMPACT_PROGRESS_BAR.md
+├── PROGRESS_BAR_COMPONENT.md
+├── RECORDING_STEPS_UTIL.md
+├── PROGRESS_COMPONENTS_GUIDE.md
+└── QUICK_REFERENCE.md (this file)
 ```
 
----
+## Common Patterns
 
-## 🎯 One-Liner Summary
+### Pattern 1: Recordings Page
+```tsx
+export default function RecordingsPage() {
+  const [inFlightJobs, setInFlightJobs] = useState([]);
+  const recordingStartTimesRef = useRef({});
 
-**Status-based action buttons with P5 pause, preview modal, and clear visual hierarchy.**
+  // Track start times
+  inFlightJobs.forEach(job => {
+    if (job.status === 'active' && !recordingStartTimesRef.current[job.id]) {
+      recordingStartTimesRef.current[job.id] = Date.now();
+    }
+  });
 
----
+  return (
+    <div>
+      {/* Banner */}
+      <ActiveRecordingBanner jobs={inFlightJobs} />
+      
+      {/* Table */}
+      <table>
+        {jobs.map(job => (
+          <tr key={job.id}>
+            <td>
+              <CompactProgressBar
+                job={job}
+                steps={job.status === 'active' ? getRecordingSteps(job) : []}
+                startTime={recordingStartTimesRef.current[job.id]}
+              />
+            </td>
+          </tr>
+        ))}
+      </table>
+    </div>
+  );
+}
+```
 
-**Last Updated:** November 11, 2025
+### Pattern 2: Custom Progress Display
+```tsx
+import { getRecordingSteps, getCurrentStepIndex } from '@/utils/recordingSteps';
+
+function CustomProgress({ job }) {
+  const steps = getRecordingSteps(job);
+  const currentIndex = getCurrentStepIndex(steps);
+  const currentStep = steps[currentIndex];
+
+  return (
+    <div>
+      <h3>{currentStep.name}</h3>
+      <p>{currentStep.percentage}%</p>
+    </div>
+  );
+}
+```
+
+### Pattern 3: Step List
+```tsx
+import { getRecordingSteps } from '@/utils/recordingSteps';
+
+function StepsList({ job }) {
+  const steps = getRecordingSteps(job);
+
+  return (
+    <ul>
+      {steps.map(step => (
+        <li key={step.id}>
+          {step.status === 'completed' && '✓'}
+          {step.status === 'active' && '🔄'}
+          {step.name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## Props Quick Reference
+
+### ActiveRecordingBanner
+| Prop | Type | Required |
+|------|------|----------|
+| jobs | JobModel[] | Yes |
+| className | string | No |
+
+### CompactProgressBar
+| Prop | Type | Required |
+|------|------|----------|
+| job | JobModel | Yes |
+| steps | ProgressStep[] | No |
+| startTime | number | No |
+| className | string | No |
+
+### ProgressBar
+| Prop | Type | Required |
+|------|------|----------|
+| variant | 'simple' \| 'detailed' | No |
+| steps | ProgressStep[] | No |
+| currentStepIndex | number | No |
+| overallPercentage | number | No |
+| showElapsedTime | boolean | No |
+| startTime | number | No |
+| className | string | No |
+
+### SimpleProgressBar
+| Prop | Type | Required |
+|------|------|----------|
+| progress | number | Yes |
+| status | JobStatus | No |
+
+## Recording Steps
+
+| Step | Progress Range | Duration |
+|------|----------------|----------|
+| Launching browser | 0-10% | 10% |
+| Capturing frames | 10-40% | 30% |
+| Saving frames | 40-60% | 20% |
+| Encoding video | 60-95% | 35% |
+| Finalizing | 95-100% | 5% |
+
+## Troubleshooting
+
+### Issue: Infinite loop
+**Solution:** Use `useRef` for start times, not `useState`
+
+### Issue: Progress not updating
+**Solution:** Check SSE connection and job updates
+
+### Issue: Popover not showing
+**Solution:** Ensure steps array is not empty
+
+### Issue: Elapsed time not showing
+**Solution:** Verify startTime is provided and valid
+
+## Best Practices
+
+1. ✅ Use `useRef` for start times
+2. ✅ Only pass steps for active recordings
+3. ✅ Clean up start times when recording completes
+4. ✅ Use appropriate component for context
+5. ✅ Provide adequate space (min-w-[200px] for compact)
+
+## Links
+
+- [Full Documentation](./PROGRESS_COMPONENTS_GUIDE.md)
+- [Active Recording Banner](./ACTIVE_RECORDING_BANNER.md)
+- [Compact Progress Bar](./COMPACT_PROGRESS_BAR.md)
+- [Recording Steps Utility](./RECORDING_STEPS_UTIL.md)

@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useEffect, useState
+  useEffect, useState, useRef
 } from "react";
 
 import {
@@ -28,9 +28,12 @@ import {
 import HardLink from "@/components/HardLink";
 import fetchDownload from "@/components/utils/fetchDownload";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
+import CompactProgressBar from "@/components/CompactProgressBar";
+import ActiveRecordingBanner from "@/components/ActiveRecordingBanner";
 
 import useMultiRecordingStatusStream from "@/hooks/useMultiRecordingStatusStream";
 import { usePersistedViewMode } from "@/hooks/usePersistedViewMode";
+import { getRecordingSteps } from "@/utils/recordingSteps";
 import {
   JobModel, JobStatusEnum
 } from "@/types/recording.types";
@@ -182,42 +185,7 @@ function DownloadMenuItems( {
   );
 }
 
-// Progress bar component
-function ProgressBar( {
-  progress,
-  status
-}: {
- progress: number,
-  status?: JobModel["status"]
-} ) {
-  // Show indeterminate state for active/queued jobs with 0 progress
-  const isIndeterminate = ( status === "active" || status === "queued" ) && progress === 0;
 
-  return (
-    <div className="w-full space-y-1">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-foreground/50">
-          {isIndeterminate ? "Starting..." : "Progress"}
-        </span>
-        <span className="text-foreground font-semibold tabular-nums">
-          {isIndeterminate ? "—" : `${ progress }%`}
-        </span>
-      </div>
-      
-      <div className="w-full bg-hover/50 rounded-full h-2 overflow-hidden">
-        {isIndeterminate ? (
-          <div className="h-full bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500 animate-pulse w-full opacity-60" />
-        ) : (
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out rounded-full"
-            style={{
-              width: `${ progress }%`
-            }} />
-        )}
-      </div>
-    </div>
-  );
-}
 
 // Actions dropdown
 function ActionsMenu( {
@@ -494,6 +462,14 @@ export default function RecordingsPage() {
     previewJobId,
     setPreviewJobId
   ] = useState<string | null>( null );
+  const recordingStartTimesRef = useRef<Record<string, number>>( {} );
+
+  // Track start times for active jobs (for CompactProgressBar in table/card views)
+  inFlightJobs.forEach( job => {
+    if ( job.status === 'active' && !recordingStartTimesRef.current[ job.id ] ) {
+      recordingStartTimesRef.current[ job.id ] = Date.now();
+    }
+  } );
 
   // fetch jobs
   useEffect(
@@ -553,6 +529,9 @@ export default function RecordingsPage() {
             "cancelled"
           ].includes( data.status ) ) {
             setInFlightJobs( prev => prev.filter( j => j.id !== jobId ) );
+
+            // Clean up start time
+            delete recordingStartTimesRef.current[ jobId ];
 
             // Fetch the complete job data from the server to get thumbnails and videoUrls
             fetch( `/api/recordings/${ jobId }` )
@@ -723,8 +702,16 @@ export default function RecordingsPage() {
       const result = await response.json();
 
       if ( result.success && result.jobId ) {
-        // Redirect to the template page with the new draft
-        window.location.href = `/templates/${ job.template }?id=${ result.jobId }`;
+        // Fetch the complete job data to add to the list
+        const jobResponse = await fetch( `/api/recordings/${ result.jobId }` );
+        if ( jobResponse.ok ) {
+          const newJob: JobModel = await jobResponse.json();
+          // Add the new draft to the beginning of the static jobs list
+          setStaticJobs( prev => [
+            newJob,
+            ...prev
+          ] );
+        }
       } else {
         alert( "Could not clone recording" );
       }
@@ -737,6 +724,9 @@ export default function RecordingsPage() {
   return (
     <div>
       <div className="space-y-6 p-6">
+        {/* Active Recording Progress Bars */}
+        <ActiveRecordingBanner jobs={inFlightJobs} />
+
         {/* Top Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
@@ -914,8 +904,12 @@ export default function RecordingsPage() {
                       </td>
 
                       <td className="px-4 py-3">
-                        <div className="min-w-[120px]">
-                          <ProgressBar progress={job.progress} status={job.status} />
+                        <div className="min-w-[200px]">
+                          <CompactProgressBar
+                            job={job}
+                            steps={job.status === 'active' ? getRecordingSteps(job) : []}
+                            startTime={recordingStartTimesRef.current[job.id]}
+                          />
                         </div>
                       </td>
 
@@ -1059,7 +1053,11 @@ export default function RecordingsPage() {
                   {/* Progress Bar */}
                   {( job.status === "active" || job.status === "queued" || job.progress < 100 ) && (
                     <div className="pt-1">
-                      <ProgressBar progress={job.progress} status={job.status} />
+                      <CompactProgressBar
+                        job={job}
+                        steps={job.status === 'active' ? getRecordingSteps(job) : []}
+                        startTime={recordingStartTimesRef.current[job.id]}
+                      />
                     </div>
                   )}
                 </div>
