@@ -134,12 +134,17 @@ async function readExifInfo(
   try {
     let tags;
 
-    if ( url.startsWith( "blob:" ) ) {
-      const buffer = await ( await fetch( url ) ).arrayBuffer();
+    try {
+      if ( url.startsWith( "blob:" ) ) {
+        const buffer = await ( await fetch( url ) ).arrayBuffer();
 
-      tags = await exif.load( buffer );
-    } else {
-      tags = await exif.load( url );
+        tags = await exif.load( buffer );
+      } else {
+        tags = await exif.load( url );
+      }
+    }
+    catch (e) {
+      console.error("readExifInfo", e)
     }
 
     object.exif = tags;

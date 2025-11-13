@@ -136,10 +136,10 @@ export default function CompactProgressBar({
           {steps.length > 0 && (
             <PopoverPanel
               anchor="bottom start"
-              className="z-50 w-80 max-w-[calc(100vw-1rem)] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl p-3 space-y-2 [--anchor-gap:0.5rem] [--anchor-padding:0.5rem]"
+              className="z-50 w-80 max-w-[calc(100vw-1rem)] bg-background rounded-lg border border-border shadow-xl p-3 space-y-2 [--anchor-gap:0.5rem] [--anchor-padding:0.5rem]"
             >
             {/* Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
               <div>
                 <div className="text-xs font-semibold text-foreground">Recording Progress</div>
                 <div className="text-[10px] text-foreground/50 font-mono">#{job.id.slice(0, 8)}</div>

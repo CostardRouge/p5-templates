@@ -463,8 +463,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const handleRecordAgain = async() => {
     setCloning( true );
     try {
-      // Create a new draft from current options
       await handleSubmit( "draft" );
+    } catch ( error ) {
+      console.error( "Failed to clone:", error );
+      alert( "Failed to clone. Please try again." );
     } finally {
       setCloning( false );
     }
