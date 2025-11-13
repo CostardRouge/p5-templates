@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check, Loader2, ChevronUp } from 'lucide-react';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { JobModel } from '@/types/recording.types';
 
 export interface ProgressStep {
@@ -24,7 +25,6 @@ export default function CompactProgressBar({
   startTime,
   className = '',
 }: CompactProgressBarProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
@@ -82,73 +82,62 @@ export default function CompactProgressBar({
   }
 
   return (
-    <div className={`relative w-full ${className}`}>
-      {/* Compact Progress Bar */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsExpanded(!isExpanded);
-        }}
-        className="w-full text-left hover:opacity-80 transition-opacity"
-      >
-        <div className="flex items-center justify-between text-xs mb-1">
-          <div className="flex items-center gap-2">
-            {currentStep && (
-              <Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
-            )}
-            <span className="text-foreground/70 truncate">
-              {currentStep?.name || 'Processing...'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {startTime && (
-              <span className="text-foreground/50 font-mono text-[10px]">
-                {formatTime(elapsedTime)}
-              </span>
-            )}
-            <span className="text-blue-600 dark:text-blue-400 font-semibold">
-              {progress}%
-            </span>
-            {steps.length > 0 && (
-              <ChevronUp
-                className={`w-3 h-3 text-foreground/40 transition-transform ${
-                  isExpanded ? 'rotate-180' : ''
-                }`}
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out relative"
-            style={{ width: `${progress}%` }}
-          >
-            <div className="absolute inset-0 bg-white/20 animate-pulse" />
-          </div>
-        </div>
-
-        {steps.length > 0 && (
-          <div className="text-[10px] text-foreground/40 mt-1">
-            Step {completedSteps + 1} of {steps.length} • {completedSteps} completed
-          </div>
-        )}
-      </button>
-
-      {/* Floating Details Popover */}
-      {isExpanded && steps.length > 0 && (
+    <Popover className={`relative w-full ${className}`}>
+      {({ open }) => (
         <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(false);
-            }}
-          />
+          <PopoverButton 
+            className="w-full text-left hover:opacity-80 transition-opacity focus:outline-none"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between text-xs mb-1">
+              <div className="flex items-center gap-2">
+                {currentStep && (
+                  <Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
+                )}
+                <span className="text-foreground/70 truncate">
+                  {currentStep?.name || 'Processing...'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {startTime && (
+                  <span className="text-foreground/50 font-mono text-[10px]">
+                    {formatTime(elapsedTime)}
+                  </span>
+                )}
+                <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                  {progress}%
+                </span>
+                {steps.length > 0 && (
+                  <ChevronUp
+                    className={`w-3 h-3 text-foreground/40 transition-transform ${
+                      open ? 'rotate-180' : ''
+                    }`}
+                  />
+                )}
+              </div>
+            </div>
 
-          {/* Popover */}
-          <div className="absolute left-0 right-0 top-full mt-2 z-50 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl p-3 space-y-2 max-w-md">
+            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out relative"
+                style={{ width: `${progress}%` }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-pulse" />
+              </div>
+            </div>
+
+            {steps.length > 0 && (
+              <div className="text-[10px] text-foreground/40 mt-1">
+                Step {completedSteps + 1} of {steps.length} • {completedSteps} completed
+              </div>
+            )}
+          </PopoverButton>
+
+          {steps.length > 0 && (
+            <PopoverPanel
+              anchor="bottom start"
+              className="z-50 w-80 max-w-[calc(100vw-1rem)] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl p-3 space-y-2 [--anchor-gap:0.5rem] [--anchor-padding:0.5rem]"
+            >
             {/* Header */}
             <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
               <div>
@@ -220,7 +209,7 @@ export default function CompactProgressBar({
                       </span>
                       {step.percentage !== undefined && step.status === 'active' && (
                         <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
-                          {step.percentage}%
+                          {step.percentage.toPrecision(3)}%
                         </span>
                       )}
                     </div>
@@ -238,9 +227,10 @@ export default function CompactProgressBar({
                 </div>
               ))}
             </div>
-          </div>
+            </PopoverPanel>
+          )}
         </>
       )}
-    </div>
+    </Popover>
   );
 }
