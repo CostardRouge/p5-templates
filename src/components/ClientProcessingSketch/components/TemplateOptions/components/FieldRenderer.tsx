@@ -2,7 +2,7 @@ import React, {
   Fragment
 } from "react";
 import {
-  get, useFormContext
+  get, useFormContext, useWatch
 } from "react-hook-form";
 import {
   FieldConfig
@@ -31,7 +31,7 @@ export default function FieldRenderer( {
   const {
     register, formState: {
       errors
-    }
+    }, control
   } = useFormContext();
 
   const registeredName = fieldName ? `${ fieldBasePath }.${ fieldName }` : fieldBasePath;
@@ -40,6 +40,13 @@ export default function FieldRenderer( {
     errors,
     registeredName
   );
+
+  // Watch slider value for display
+  const sliderValue = useWatch({
+    control,
+    name: registeredName,
+    defaultValue: config.component === "slider" ? (config.min ?? 0) : undefined
+  });
 
   const renderInput = () => {
     // A helper for common props to keep the JSX clean
@@ -80,22 +87,27 @@ export default function FieldRenderer( {
 
       case "slider":
         return (
-          <input
-            type="range"
-            {...{
-              ...commonInputProps,
-              className: `${ commonInputProps.className }`
-            }}
-            {...register(
-              registeredName,
-              {
-                valueAsNumber: true
-              }
-            )}
-            step={config.step}
-            min={config.min}
-            max={config.max}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              {...{
+                ...commonInputProps,
+                className: `${ commonInputProps.className } flex-1`
+              }}
+              {...register(
+                registeredName,
+                {
+                  valueAsNumber: true
+                }
+              )}
+              step={config.step}
+              min={config.min}
+              max={config.max}
+            />
+            <span className="text-xs font-mono bg-theme/20 px-2 py-0.5 rounded min-w-[3rem] text-center border border-theme/30">
+              {sliderValue !== undefined && sliderValue !== null ? Number(sliderValue).toFixed(config.step && config.step < 1 ? 2 : 0) : config.min ?? 0}
+            </span>
+          </div>
         );
 
       case "textarea":
@@ -103,7 +115,7 @@ export default function FieldRenderer( {
           <textarea
             {...commonInputProps}
             {...register( registeredName )}
-            rows={2}
+            rows={4}
           />
         );
 

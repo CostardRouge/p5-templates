@@ -181,6 +181,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     subscribeToRecordingStatus, recordingProgress
   } = useRecordingStatusStream();
 
+  // Determine current status (needed by handlers)
+  const currentStatus = recordingProgress?.status || persistedJob?.status;
+
   // Auto-subscribe to recording status on mount if job is active/queued
   React.useEffect(
     () => {
@@ -327,16 +330,18 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     const newJobId = await enqueueRecording( formData );
 
     if ( newJobId !== null ) {
+      setJobId( newJobId );
+      
       if ( status !== "draft" ) {
-        setJobId( newJobId );
         subscribeToRecordingStatus( newJobId );
       }
 
-      if ( status === "draft" && !skipRedirect ) {
+      // Redirect to URL with job ID for both drafts and recordings (unless skipRedirect is true)
+      if ( !skipRedirect ) {
         router.replace( `${ name }?id=${ newJobId }` );
-        setSaving( false );
-      } else if ( status === "draft" ) {
-        // Reset saving state after successful auto-save
+      }
+      
+      if ( status === "draft" ) {
         setSaving( false );
       }
     } else if ( status === "draft" ) {
@@ -360,9 +365,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   );
 
   const handleDelete = async() => {
-    if ( !persistedJob?.id ) return;
+    const jobToDelete = persistedJob?.id || jobId;
+    if ( !jobToDelete ) return;
 
-    if ( !confirm( `Delete this ${ persistedJob.status }? This action cannot be undone.` ) ) {
+    const statusText = persistedJob?.status || currentStatus || 'recording';
+    if ( !confirm( `Delete this ${ statusText }? This action cannot be undone.` ) ) {
       return;
     }
 
@@ -370,7 +377,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
     try {
       const response = await fetch(
-        `/api/recordings/${ persistedJob.id }`,
+        `/api/recordings/${ jobToDelete }`,
         {
           method: "DELETE"
         }
@@ -385,7 +392,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
       if ( deleted ) {
         router.push( `/templates/p5/${ name }` );
       } else {
-        alert( `Could not delete job: ${ persistedJob.id }` );
+        alert( `Could not delete job: ${ jobToDelete }` );
         setDeleting( false );
       }
     } catch ( error ) {
@@ -473,11 +480,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   };
 
   const handleDownload = async() => {
-    if ( !persistedJob?.id ) return;
+    const jobToDownload = persistedJob?.id || jobId;
+    if ( !jobToDownload ) return;
     
     setDownloading( true );
     try {
-      await fetchDownload( `/api/recordings/download/${ persistedJob.id }/slide/${ activeSlideIndex }` );
+      await fetchDownload( `/api/recordings/download/${ jobToDownload }/slide/${ activeSlideIndex }` );
     } catch ( error ) {
       alert( "Failed to download. Please try again." );
     } finally {
@@ -485,8 +493,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     }
   };
 
-  // Determine current status
-  const currentStatus = recordingProgress?.status || persistedJob?.status;
+  // Determine UI states
   const isRecording = currentStatus && [
     "queued",
     "active"
@@ -497,8 +504,15 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     "cancelled"
   ].includes( currentStatus || "" );
   const isDraft = currentStatus === "draft";
-  const hasNoJob = !persistedJob && !recordingProgress;
+  const hasNoJob = !persistedJob && !recordingProgress && !jobId;
   const isAnyActionLoading = isLoading || saving || deleting || cancelling || retrying || downloading || cloning;
+  
+  // Use persistedJob or construct a minimal job object from recordingProgress/jobId
+  const effectiveJob = persistedJob || (jobId ? {
+    id: jobId,
+    status: currentStatus || 'queued',
+    progress: recordingProgress?.percentage || 0,
+  } as JobModel : undefined);
 
   return (
     <>
@@ -508,10 +522,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
          <>
           <div className="relative my-1">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
+              <div className="w-full border-t border-theme"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-background px-2 text-foreground/50">render options</span>
+              <span className="bg-background rounded-md border border-theme px-2 text-foreground/50">render options</span>
             </div>
           </div>
 
@@ -617,11 +631,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   <CompactProgressBar
                     job={{
                       ...persistedJob,
+                      id: persistedJob?.id || jobId || '',
                       progress: recordingProgress?.percentage || persistedJob?.progress || 0,
                       status: recordingProgress?.status || persistedJob?.status || 'queued',
                     } as JobModel}
                     steps={( recordingProgress?.status || persistedJob?.status ) === 'active' ? getRecordingSteps({
                       ...persistedJob,
+                      id: persistedJob?.id || jobId || '',
                       progress: recordingProgress?.percentage || persistedJob?.progress || 0,
                       status: recordingProgress?.status || persistedJob?.status || 'active',
                     } as JobModel) : []}
@@ -641,9 +657,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
             )}
 
             {/* COMPLETED Status */}
-            {isCompleted && persistedJob && (
+            {isCompleted && effectiveJob && (
               <CompletedActions
-                persistedJob={persistedJob}
+                persistedJob={effectiveJob}
                 activeSlideIndex={activeSlideIndex}
                 onPreview={() => setShowPreviewModal( true )}
                 onRecordAgain={handleRecordAgain}
@@ -656,7 +672,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
             )}
 
             {/* FAILED/CANCELLED Status */}
-            {isFailed && persistedJob && (
+            {isFailed && effectiveJob && (
               <>
                 <button
                   className="rounded-xl px-3 py-2.5 border border-border bg-hover hover:bg-hover/70 text-foreground text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1"
@@ -672,7 +688,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   onClick={async() => {
                     await handleSubmit(
                       "draft",
-                      persistedJob.id
+                      effectiveJob.id
                     );
                   }}
                   disabled={isAnyActionLoading}
@@ -696,9 +712,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
       </div>
 
       {/* Preview Modal */}
-      {showPreviewModal && persistedJob && (
+      {showPreviewModal && effectiveJob && (
         <VideoPreviewModal
-          jobId={persistedJob.id}
+          jobId={effectiveJob.id}
           isOpen={showPreviewModal}
           onClose={() => setShowPreviewModal( false )}
         />

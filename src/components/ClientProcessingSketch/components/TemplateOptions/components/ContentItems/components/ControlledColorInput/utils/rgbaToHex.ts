@@ -5,7 +5,10 @@
 export default function rgbaToHex( rgba: number[] ): string {
   if ( !rgba || rgba.length < 3 ) return "#000000";
 
-  const toHex = ( c: number ) => `0${ c.toString( 16 ) }`.slice( -2 );
+  const toHex = ( c: number ) => {
+    const num = c ?? 0;
+    return `0${ num.toString( 16 ) }`.slice( -2 );
+  };
   const [
     r,
     g,

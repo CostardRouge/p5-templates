@@ -10,6 +10,8 @@ import type { JobModel } from "@/types/recording.types";
 interface RecordingCardProps {
   job: JobModel;
   startTime?: number;
+  isSelected: boolean;
+  onToggleSelection: () => void;
   onPreview: () => void;
   onCancel: ( job: JobModel ) => void;
   onDelete: ( job: JobModel ) => void;
@@ -21,6 +23,8 @@ interface RecordingCardProps {
 export default function RecordingCard( {
   job,
   startTime,
+  isSelected,
+  onToggleSelection,
   onPreview,
   onCancel,
   onDelete,
@@ -32,6 +36,16 @@ export default function RecordingCard( {
     <div className="group bg-background border border-border hover:border-foreground/20 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative">
       {/* Thumbnail Section */}
       <div className="relative overflow-hidden rounded-t-2xl">
+        {/* Checkbox Overlay */}
+        <div className="absolute top-3 left-3 z-20">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onToggleSelection}
+            className="w-5 h-5 rounded border-2 border-white shadow-lg text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer bg-white/90 backdrop-blur-sm"
+            onClick={( e ) => e.stopPropagation()}
+          />
+        </div>
         <RecordingThumbnail
           job={job}
           onClick={() => {
@@ -46,7 +60,7 @@ export default function RecordingCard( {
         />
         
         {/* Status Badge Overlay */}
-        <div className="absolute top-3 left-3 z-10">
+        <div className="absolute top-3 right-3 z-10">
           <StatusBadge
             status={job.status}
             className="shadow-lg backdrop-blur-sm"
@@ -54,7 +68,7 @@ export default function RecordingCard( {
         </div>
 
         {/* Actions Menu Overlay */}
-        <div className="absolute top-3 right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute bottom-3 right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
           <ActionsMenu
             job={job}
             onCancel={onCancel}

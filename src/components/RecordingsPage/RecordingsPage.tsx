@@ -4,11 +4,16 @@ import { useState } from "react";
 import { Video } from "lucide-react";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
 import { usePersistedViewMode } from "@/hooks/usePersistedViewMode";
+import { usePersistedSort } from "@/hooks/usePersistedSort";
 import useRecordings from "./hooks/useRecordings";
 import useRecordingActions from "./hooks/useRecordingActions";
+import useBulkActions from "./hooks/useBulkActions";
+import { useSorting } from "./hooks/useSorting";
+import type { SortConfig } from "./hooks/useSorting";
 import RecordingsToolbar from "./components/RecordingsToolbar";
 import RecordingsTable from "./components/RecordingsTable";
 import RecordingsCards from "./components/RecordingsCards";
+import BulkActionsToolbar from "./components/BulkActionsToolbar";
 
 export default function RecordingsPage() {
   const {
@@ -23,6 +28,17 @@ export default function RecordingsPage() {
   } = useRecordings();
 
   const { handleClone } = useRecordingActions();
+  
+  const {
+    selectedIds,
+    isProcessing,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    bulkDelete,
+    bulkCancel,
+    bulkRetry,
+  } = useBulkActions();
 
   const [
     view,
@@ -40,15 +56,87 @@ export default function RecordingsPage() {
     previewJobId,
     setPreviewJobId
   ] = useState<string | null>( null );
+  const [
+    sortConfig,
+    setSortConfig
+  ] = usePersistedSort<SortConfig>( "recordings-sort", { field: "createdAt", order: "desc" } );
 
-  // Filter jobs
+  // Filter and sort jobs
   const filtered = allJobs.filter( ( job ) => {
     const matchSearch = job.id.includes( search ) || job.template.includes( search );
     const matchStatus = statusFilter === "all" || job.status === statusFilter;
     return matchSearch && matchStatus;
   } );
 
+  const sorted = useSorting( filtered, sortConfig );
   const hasFilters = search !== "" || statusFilter !== "all";
+
+  // Get selected jobs for bulk actions
+  const selectedJobs = sorted.filter( j => selectedIds.has( j.id ) );
+
+  // Toggle select all handler
+  const handleToggleSelectAll = () => {
+    const allSelected = sorted.length > 0 && sorted.every( j => selectedIds.has( j.id ) );
+    if ( allSelected ) {
+      clearSelection();
+    } else {
+      selectAll( sorted );
+    }
+  };
+
+  // Bulk action handlers
+  const handleBulkDelete = async() => {
+    const ids = selectedJobs
+      .filter( j => [
+        "completed",
+        "cancelled",
+        "draft",
+        "failed"
+      ].includes( j.status ) )
+      .map( j => j.id );
+    
+    const result = await bulkDelete( ids );
+    if ( result.success ) {
+      result.deleted.forEach( id => {
+        const job = allJobs.find( j => j.id === id );
+        if ( job ) handleDelete( job );
+      } );
+      clearSelection();
+    }
+  };
+
+  const handleBulkCancel = async() => {
+    const ids = selectedJobs
+      .filter( j => j.status === "queued" )
+      .map( j => j.id );
+    
+    const result = await bulkCancel( ids );
+    if ( result.success ) {
+      result.cancelled.forEach( id => {
+        const job = allJobs.find( j => j.id === id );
+        if ( job ) handleCancel( job );
+      } );
+      clearSelection();
+    }
+  };
+
+  const handleBulkRetry = async() => {
+    const ids = selectedJobs
+      .filter( j => [
+        "cancelled",
+        "failed"
+      ].includes( j.status ) )
+      .map( j => j.id );
+    
+    const result = await bulkRetry( ids );
+    if ( result.success ) {
+      result.retried.forEach( id => {
+        const job = allJobs.find( j => j.id === id );
+        if ( job ) handleRetry( job );
+      } );
+      clearSelection();
+    }
+  };
 
   const onClone = async( job: Parameters<typeof handleClone>[0] ) => {
     const newJob = await handleClone( job );
@@ -68,7 +156,9 @@ export default function RecordingsPage() {
           onStatusFilterChange={setStatusFilter}
           view={view}
           onViewChange={setView}
-          recordingsCount={filtered.length}
+          recordingsCount={sorted.length}
+          sortConfig={sortConfig}
+          onSortChange={setSortConfig}
         />
 
         {/* Loading State */}
@@ -87,9 +177,12 @@ export default function RecordingsPage() {
         {/* Table View */}
         {!isLoading && view === "table" && (
           <RecordingsTable
-            jobs={filtered}
+            jobs={sorted}
             recordingStartTimes={recordingStartTimesRef.current}
             hasFilters={hasFilters}
+            selectedIds={selectedIds}
+            onToggleSelection={toggleSelection}
+            onSelectAll={handleToggleSelectAll}
             onPreview={setPreviewJobId}
             onCancel={handleCancel}
             onDelete={handleDelete}
@@ -102,9 +195,11 @@ export default function RecordingsPage() {
         {/* Card View */}
         {!isLoading && view === "cards" && (
           <RecordingsCards
-            jobs={filtered}
+            jobs={sorted}
             recordingStartTimes={recordingStartTimesRef.current}
             hasFilters={hasFilters}
+            selectedIds={selectedIds}
+            onToggleSelection={toggleSelection}
             onPreview={setPreviewJobId}
             onCancel={handleCancel}
             onDelete={handleDelete}
@@ -113,6 +208,16 @@ export default function RecordingsPage() {
             onClone={onClone}
           />
         )}
+
+        {/* Bulk Actions Toolbar */}
+        <BulkActionsToolbar
+          selectedJobs={selectedJobs}
+          isProcessing={isProcessing}
+          onClearSelection={clearSelection}
+          onBulkDelete={handleBulkDelete}
+          onBulkCancel={handleBulkCancel}
+          onBulkRetry={handleBulkRetry}
+        />
       </div>
 
       {/* Video Preview Modal */}

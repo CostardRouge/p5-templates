@@ -10,6 +10,8 @@ import type { JobModel } from "@/types/recording.types";
 interface RecordingRowProps {
   job: JobModel;
   startTime?: number;
+  isSelected: boolean;
+  onToggleSelection: () => void;
   onPreview: () => void;
   onCancel: ( job: JobModel ) => void;
   onDelete: ( job: JobModel ) => void;
@@ -21,6 +23,8 @@ interface RecordingRowProps {
 export default function RecordingRow( {
   job,
   startTime,
+  isSelected,
+  onToggleSelection,
   onPreview,
   onCancel,
   onDelete,
@@ -30,6 +34,15 @@ export default function RecordingRow( {
 }: RecordingRowProps ) {
   return (
     <tr className="group hover:bg-hover/50 transition-colors">
+      <td className="px-4 py-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onToggleSelection}
+          className="w-4 h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+          onClick={( e ) => e.stopPropagation()}
+        />
+      </td>
       <td className="px-4 py-3">
         <RecordingThumbnail
           job={job}

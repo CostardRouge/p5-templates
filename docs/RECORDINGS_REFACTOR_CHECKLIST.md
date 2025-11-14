@@ -134,20 +134,24 @@
 - [ ] Deploy to staging
 - [ ] Get user feedback
 
-### Short-term (Sorting & Bulk Actions)
-- [ ] Add sorting functionality
-  - [ ] Sort by date
-  - [ ] Sort by status
-  - [ ] Sort by template
-  - [ ] Sort by duration
-  - [ ] Persist sort preference
-- [ ] Add bulk actions
-  - [ ] Add selection state
-  - [ ] Add checkboxes
-  - [ ] Add bulk toolbar
-  - [ ] Implement bulk delete
-  - [ ] Implement bulk cancel
+### Short-term (Sorting & Bulk Actions) ✅ COMPLETED
+- [x] Add sorting functionality
+  - [x] Sort by date (created/updated)
+  - [x] Sort by status
+  - [x] Sort by template
+  - [x] Sort by duration
+  - [x] Sort by ID
+  - [x] Persist sort preference
+- [x] Add bulk actions
+  - [x] Add selection state (Set-based)
+  - [x] Add checkboxes (table & cards)
+  - [x] Add bulk toolbar (floating)
+  - [x] Implement bulk delete
+  - [x] Implement bulk cancel
+  - [x] Implement bulk retry
+- [ ] Future bulk actions
   - [ ] Implement bulk download
+  - [ ] Implement bulk export
 
 ### Long-term
 - [ ] Add pagination
