@@ -11,6 +11,7 @@ interface RecordingCardProps {
   job: JobModel;
   startTime?: number;
   isSelected: boolean;
+  isNewlyAdded?: boolean;
   onToggleSelection: () => void;
   onPreview: () => void;
   onCancel: ( job: JobModel ) => void;
@@ -24,6 +25,7 @@ export default function RecordingCard( {
   job,
   startTime,
   isSelected,
+  isNewlyAdded = false,
   onToggleSelection,
   onPreview,
   onCancel,
@@ -33,7 +35,9 @@ export default function RecordingCard( {
   onClone
 }: RecordingCardProps ) {
   return (
-    <div className="group bg-background border border-border hover:border-foreground/20 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative">
+    <div className={`group bg-background border border-border hover:border-foreground/20 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative ${
+      isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
+    }`}>
       {/* Thumbnail Section */}
       <div className="relative overflow-hidden rounded-t-2xl">
         {/* Checkbox Overlay */}

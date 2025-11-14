@@ -18,7 +18,7 @@ export const formValues = {
         x: 1,
         y: 0.5
     },
-    backgroundColor: [0]
+    backgroundColor: [0, 0, 0, 20]
 };
 
 export const formConfiguration: Record<string, any> = {

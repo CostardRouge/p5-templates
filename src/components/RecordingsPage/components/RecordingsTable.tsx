@@ -7,6 +7,7 @@ interface RecordingsTableProps {
   recordingStartTimes: Record<string, number>;
   hasFilters: boolean;
   selectedIds: Set<string>;
+  newlyAddedId: string | null;
   onToggleSelection: ( id: string ) => void;
   onSelectAll: () => void;
   onPreview: ( jobId: string ) => void;
@@ -22,6 +23,7 @@ export default function RecordingsTable( {
   recordingStartTimes,
   hasFilters,
   selectedIds,
+  newlyAddedId,
   onToggleSelection,
   onSelectAll,
   onPreview,
@@ -81,6 +83,7 @@ export default function RecordingsTable( {
                 job={job}
                 startTime={recordingStartTimes[job.id]}
                 isSelected={selectedIds.has( job.id )}
+                isNewlyAdded={newlyAddedId === job.id}
                 onToggleSelection={() => onToggleSelection( job.id )}
                 onPreview={() => onPreview( job.id )}
                 onCancel={onCancel}

@@ -44,46 +44,49 @@ export default function ControlledColorInput( {
         };
 
         return (
-          <div className="flex items-center gap-2">
-            {/* Color picker */}
-            <input
-              type="color"
-              className="h-8 w-14 rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
-              onChange={(e) => handleColorChange(e.target.value)}
-              value={rgbaToHex(currentValue)}
-            />
-            
-            {/* Color preview with alpha */}
-            <div 
-              className="h-8 w-14 rounded-lg border border-theme relative overflow-hidden flex-shrink-0"
-              style={{
-                background: `linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), 
-                             linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)`,
-                backgroundSize: '8px 8px',
-                backgroundPosition: '0 0, 4px 4px'
-              }}
-            >
-              <div 
-                className="absolute inset-0"
-                style={{ backgroundColor: `rgba(${r}, ${g}, ${b}, ${a / 255})` }}
+          <div className="space-y-1.5">
+            {/* RGB Color picker with preview */}
+            <div className="flex flex-col items-center gap-2">
+              <input
+                type="color"
+                className="h-8 w-full rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
+                onChange={(e) => handleColorChange(e.target.value)}
+                value={rgbaToHex(currentValue)}
               />
+              
+            {/* Alpha control */}
+            <div className="flex items-center gap-2 w-full">
+              <div 
+                className="w-8 h-8 rounded-lg border border-theme relative overflow-hidden"
+                style={{
+                  background: `linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), 
+                              linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)`,
+                  backgroundSize: '8px 8px',
+                  backgroundPosition: '0 0, 4px 4px'
+                }}
+              >
+                <div 
+                  className="absolute inset-0"
+                  style={{ backgroundColor: `rgba(${r}, ${g}, ${b}, ${a / 255})` }}
+                />
+              </div>
+
+              <input
+                type="range"
+                className="p-1 border border-theme rounded-lg bg-background"
+                min={0}
+                max={255}
+                step={1}
+                value={a}
+                onChange={(e) => handleAlphaChange(Number(e.target.value))}
+              />
+            
+              <span className="text-xs font-mono bg-theme/20 px-2 py-0.5 rounded min-w-[3rem] text-center border border-theme/30 flex-shrink-0">
+                {alphaPercent}%
+              </span>
             </div>
 
-            {/* Alpha slider */}
-            <input
-              type="range"
-              className="flex-1 p-1 border border-theme rounded-lg bg-background min-w-0"
-              min={0}
-              max={255}
-              step={1}
-              value={a}
-              onChange={(e) => handleAlphaChange(Number(e.target.value))}
-            />
-            
-            {/* Alpha percentage badge */}
-            <span className="text-xs font-mono bg-theme/20 px-2 py-0.5 rounded min-w-[3rem] text-center border border-theme/30 flex-shrink-0">
-              {alphaPercent}%
-            </span>
+            </div>
           </div>
         );
       }}

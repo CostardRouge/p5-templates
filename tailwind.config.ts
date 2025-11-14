@@ -50,9 +50,29 @@ export default {
             opacity: "0.6",
           },
         },
+        slideInFromTop: {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(-20px)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)",
+          },
+        },
+        highlightFade: {
+          "0%": {
+            backgroundColor: "hsl(var(--focus) / 0.2)",
+          },
+          "100%": {
+            backgroundColor: "transparent",
+          },
+        },
       },
       animation: {
         "pulse-soft": "pulse-soft 1.5s ease-in-out infinite",
+        slideInFromTop: "slideInFromTop 0.5s ease-out",
+        highlightFade: "highlightFade 1s ease-out",
       },
     },
   },

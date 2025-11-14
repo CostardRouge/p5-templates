@@ -11,6 +11,7 @@ interface RecordingRowProps {
   job: JobModel;
   startTime?: number;
   isSelected: boolean;
+  isNewlyAdded?: boolean;
   onToggleSelection: () => void;
   onPreview: () => void;
   onCancel: ( job: JobModel ) => void;
@@ -24,6 +25,7 @@ export default function RecordingRow( {
   job,
   startTime,
   isSelected,
+  isNewlyAdded = false,
   onToggleSelection,
   onPreview,
   onCancel,
@@ -33,7 +35,9 @@ export default function RecordingRow( {
   onClone
 }: RecordingRowProps ) {
   return (
-    <tr className="group hover:bg-hover/50 transition-colors">
+    <tr className={`group hover:bg-hover/50 transition-colors ${
+      isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
+    }`}>
       <td className="px-4 py-3">
         <input
           type="checkbox"

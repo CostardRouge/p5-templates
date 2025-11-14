@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Video } from "lucide-react";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
 import { usePersistedViewMode } from "@/hooks/usePersistedViewMode";
@@ -26,6 +26,12 @@ export default function RecordingsPage() {
     handleRetry,
     addJob
   } = useRecordings();
+
+  const contentRef = useRef<HTMLDivElement>( null );
+  const [
+    newlyAddedId,
+    setNewlyAddedId
+  ] = useState<string | null>( null );
 
   const { handleClone } = useRecordingActions();
   
@@ -142,12 +148,22 @@ export default function RecordingsPage() {
     const newJob = await handleClone( job );
     if ( newJob ) {
       addJob( newJob );
+      setNewlyAddedId( newJob.id );
+      
+      // Smooth scroll to top
+      contentRef.current?.scrollIntoView( { behavior: "smooth", block: "start" } );
+      
+      // Remove animation class after animation completes
+      setTimeout(
+        () => setNewlyAddedId( null ),
+        1000
+      );
     }
   };
 
   return (
     <div>
-      <div className="space-y-6 p-6">
+      <div ref={contentRef} className="space-y-6 p-6">
         {/* Toolbar */}
         <RecordingsToolbar
           search={search}
@@ -181,6 +197,7 @@ export default function RecordingsPage() {
             recordingStartTimes={recordingStartTimesRef.current}
             hasFilters={hasFilters}
             selectedIds={selectedIds}
+            newlyAddedId={newlyAddedId}
             onToggleSelection={toggleSelection}
             onSelectAll={handleToggleSelectAll}
             onPreview={setPreviewJobId}
@@ -199,6 +216,7 @@ export default function RecordingsPage() {
             recordingStartTimes={recordingStartTimesRef.current}
             hasFilters={hasFilters}
             selectedIds={selectedIds}
+            newlyAddedId={newlyAddedId}
             onToggleSelection={toggleSelection}
             onPreview={setPreviewJobId}
             onCancel={handleCancel}

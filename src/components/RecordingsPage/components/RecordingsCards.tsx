@@ -7,6 +7,7 @@ interface RecordingsCardsProps {
   recordingStartTimes: Record<string, number>;
   hasFilters: boolean;
   selectedIds: Set<string>;
+  newlyAddedId: string | null;
   onToggleSelection: ( id: string ) => void;
   onPreview: ( jobId: string ) => void;
   onCancel: ( job: JobModel ) => void;
@@ -21,6 +22,7 @@ export default function RecordingsCards( {
   recordingStartTimes,
   hasFilters,
   selectedIds,
+  newlyAddedId,
   onToggleSelection,
   onPreview,
   onCancel,
@@ -45,6 +47,7 @@ export default function RecordingsCards( {
           job={job}
           startTime={recordingStartTimes[job.id]}
           isSelected={selectedIds.has( job.id )}
+          isNewlyAdded={newlyAddedId === job.id}
           onToggleSelection={() => onToggleSelection( job.id )}
           onPreview={() => onPreview( job.id )}
           onCancel={onCancel}
