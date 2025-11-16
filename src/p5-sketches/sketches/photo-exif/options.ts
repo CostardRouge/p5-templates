@@ -6,7 +6,11 @@ export const formValues = {
   photo: {
     image: null,
     margin: 0.1,
-    backgroundColor: [255, 255, 255]
+    backgroundColor: [
+      255,
+      255,
+      255
+    ]
   },
   topLeft: "",
   topRight: "",
@@ -15,8 +19,16 @@ export const formValues = {
   font: {
     face: "martian",
     size: 20,
-    color: [0,0,0],
-    stroke: [255, 255, 255]
+    color: [
+      0,
+      0,
+      0
+    ],
+    stroke: [
+      255,
+      255,
+      255
+    ]
   }
 };
 
@@ -46,29 +58,29 @@ export const formConfiguration: Record<string, any> = {
     label: "Font style",
     component: "nested-object",
     fields: {
-        size: {
-          component: "slider",
-          label: "Font size",
-          min: 1,
-          max: 244
-        },
-        face: {
-          component: "select",
-          label: "Font name",
-          options: fontNames.map( fontName => ( {
-            value: fontName,
-            label: fontName
-          } ) ),
-        },
-        color: {
-          component: "color",
-          label: "Font color"
-        },
-        stroke: {
-          component: "color",
-          label: "Font stroke"
-        },
-      }
+      size: {
+        component: "slider",
+        label: "Font size",
+        min: 1,
+        max: 244
+      },
+      face: {
+        component: "select",
+        label: "Font name",
+        options: fontNames.map( fontName => ( {
+          value: fontName,
+          label: fontName
+        } ) ),
+      },
+      color: {
+        component: "color",
+        label: "Font color"
+      },
+      stroke: {
+        component: "color",
+        label: "Font stroke"
+      },
+    }
   },
   textOverrides: {
     label: "Text overrides",

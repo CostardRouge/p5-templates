@@ -80,13 +80,14 @@ sketch.draw( ( time ) => {
 
   canvases.mask.clear();
 
-  string.write(
+  const textBox = string.write(
     title,
     0,
     height / 2 - textFontSize / 8,
     {
       size: textFontSize,
       font: getFont(),
+      textWidth: width,
       textAlign: [
         CENTER,
         CENTER
@@ -95,6 +96,34 @@ sketch.draw( ( time ) => {
       graphics: canvases.mask
     }
   );
+
+  if ( !textBox ) {
+    return;
+  }
+
+  const boundaryMargin = 50;
+  const maskBoundary = [
+    constrain(
+      ( width - textBox.w ) / 2 - boundaryMargin,
+      0,
+      width
+    ),
+    constrain(
+      ( height - textBox.h ) / 2 - boundaryMargin,
+      0,
+      height
+    ),
+    constrain(
+      textBox.w + boundaryMargin * 2,
+      0,
+      width
+    ),
+    constrain(
+      textBox.h + boundaryMargin * 2,
+      0,
+      height
+    ),
+  ];
 
   const gridOptions = {
     topLeft: createVector(
@@ -123,6 +152,15 @@ sketch.draw( ( time ) => {
     noiseFalloff
   );
 
+  function inMaskingBoundary(
+    x, y
+  ) {
+    return (
+      x >= maskBoundary[ 0 ] && ( x - boundaryMargin ) <= maskBoundary[ 2 ] &&
+      y >= maskBoundary[ 1 ] && y <= maskBoundary[ 2 ]
+    );
+  }
+
   grid.draw(
     gridOptions,
     (
@@ -132,6 +170,13 @@ sketch.draw( ( time ) => {
     ) => {
       const xOff = ( x / width ) * xOffScale;
       const yOff = ( y / height ) * yOffScale;
+
+      if ( !inMaskingBoundary(
+        cellVector.x,
+        cellVector.y
+      ) ) {
+        return;
+      }
 
       const angle = mappers.fn(
         noise(
@@ -177,13 +222,13 @@ sketch.draw( ( time ) => {
 
       push();
       translate(
-        cellVector.x,
-        cellVector.y
+        cellVector.x + scale * sin( angle ),
+        cellVector.y + angle * scale * cos( angle + y )
       );
       strokeWeight( weight );
       point(
-        scale * sin( angle ),
-        angle * scale * cos( angle + y )
+        0,
+        0
       );
       pop();
     }
@@ -199,4 +244,15 @@ sketch.draw( ( time ) => {
     0,
     0
   );
+
+  // noFill();
+  // stroke( "red" );
+  // strokeWeight( 2 );
+  // rect( ...maskBoundary );
+  //
+  // image(
+  //   canvases.mask,
+  //   0,
+  //   0
+  // );
 } );

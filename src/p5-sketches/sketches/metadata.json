@@ -36,12 +36,6 @@
     "ctime": "2025-07-22T09:36:06.755Z"
   },
   {
-    "name": "text-mask-with-noise-strips",
-    "hasSketchForm": true,
-    "mtime": "2025-11-03T10:42:58.594Z",
-    "ctime": "2025-04-21T11:29:50.582Z"
-  },
-  {
     "name": "hand-tracking-v0-move",
     "hasSketchForm": false,
     "mtime": "2025-11-04T00:47:09.284Z",
@@ -144,18 +138,6 @@
     "ctime": "2025-04-21T11:29:50.520Z"
   },
   {
-    "name": "photo-switch-tiles",
-    "hasSketchForm": false,
-    "mtime": "2025-11-11T11:52:32.750Z",
-    "ctime": "2025-05-03T04:56:58.803Z"
-  },
-  {
-    "name": "dominant-colors-block-switch",
-    "hasSketchForm": true,
-    "mtime": "2025-11-11T11:52:32.835Z",
-    "ctime": "2025-04-21T11:29:50.492Z"
-  },
-  {
     "name": "slides-with-assets",
     "hasSketchForm": false,
     "mtime": "2025-11-11T11:52:32.856Z",
@@ -174,12 +156,6 @@
     "ctime": "2025-05-13T11:06:34.341Z"
   },
   {
-    "name": "photo-exif",
-    "hasSketchForm": true,
-    "mtime": "2025-11-11T11:52:36.709Z",
-    "ctime": "2025-10-25T22:30:06.986Z"
-  },
-  {
     "name": "empty-sketch",
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:58:02.735Z",
@@ -190,5 +166,29 @@
     "hasSketchForm": true,
     "mtime": "2025-11-13T23:03:17.179Z",
     "ctime": "2025-11-13T23:03:17.178Z"
+  },
+  {
+    "name": "photo-exif",
+    "hasSketchForm": true,
+    "mtime": "2025-11-15T03:00:11.097Z",
+    "ctime": "2025-10-25T22:30:06.986Z"
+  },
+  {
+    "name": "dominant-colors-block-switch",
+    "hasSketchForm": true,
+    "mtime": "2025-11-15T03:06:49.114Z",
+    "ctime": "2025-04-21T11:29:50.492Z"
+  },
+  {
+    "name": "photo-switch-tiles",
+    "hasSketchForm": true,
+    "mtime": "2025-11-15T03:07:29.548Z",
+    "ctime": "2025-05-03T04:56:58.803Z"
+  },
+  {
+    "name": "text-mask-with-noise-strips",
+    "hasSketchForm": true,
+    "mtime": "2025-11-15T03:56:09.666Z",
+    "ctime": "2025-04-21T11:29:50.582Z"
   }
 ]

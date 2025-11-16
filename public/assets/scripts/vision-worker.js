@@ -1,3 +1,6 @@
+"use client";
+import "@/public/assets/libraries/mediapipe/vision_bundle.js";
+
 const workerState = {
   segmenter: {
     task: null,
@@ -32,7 +35,7 @@ self.onmessage = async( event ) => {
       ImageSegmenter,
       HandLandmarker,
       FaceDetector
-    } = await import( "@/public/assets/libraries/mediapipe/vision_bundle.js" );
+    } = vision_bundle;
 
     const resolver = await FilesetResolver.forVisionTasks( message.wasmPath );
 

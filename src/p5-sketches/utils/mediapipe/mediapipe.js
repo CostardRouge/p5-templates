@@ -1,3 +1,5 @@
+"use client";
+
 import options from "../../utils/options.js";
 import events from "../../utils/events.js";
 

@@ -15,7 +15,9 @@ const sketch = {
   engine: undefined,
   setup: (
     setupEngineFunction,
-    sketchOptions = {
+    sketchOptions
+  ) => {
+    sketchOptions = Object.assign({
       engine: "p5js",
       size: {
         width: options.size.width,
@@ -25,8 +27,7 @@ const sketch = {
         framerate: options.animation.framerate ?? 60,
         duration: options.animation.duration ?? 12,
       }
-    }
-  ) => {
+    }, sketchOptions)
     sketch.sketchOptions = sketchOptions;
 
     const {

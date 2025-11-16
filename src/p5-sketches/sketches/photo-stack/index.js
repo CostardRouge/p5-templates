@@ -27,7 +27,7 @@ sketch.draw( (
 ) => {
   const images = cache.get( "images" );
 
-  background( ...options.colors.background );
+  background( ...options.sketch.colors.background );
 
   const imageIndexDisplay = map(
     animation.triangleProgression( 2 ),
@@ -38,7 +38,7 @@ sketch.draw( (
     easing.easeInOutBack
   );
 
-  const shiftMargin = options.shiftMargin || 80;
+  const shiftMargin = options.sketch.shiftMargin;
 
   for ( let i = 0; i < images.length; i++ ) {
     if ( imageIndexDisplay < i ) {
@@ -50,7 +50,7 @@ sketch.draw( (
       height / 2
     );
 
-    if ( options.randomPosition || true ) {
+    if ( options.sketch.randomPosition ) {
       imagePosition
         .add(
           map(
@@ -74,7 +74,7 @@ sketch.draw( (
       position: imagePosition,
       img: images[ i ].img,
       center: true,
-      margin: 80
+      margin: options.sketch.imageMargin
     } );
   }
 } );
