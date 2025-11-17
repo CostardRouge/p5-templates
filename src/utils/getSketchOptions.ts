@@ -26,6 +26,7 @@ export async function getSketchMeta( sketchName: string ): Promise<SketchMeta> {
   try {
     return await import( `@/p5-sketches/sketches/${ sketchName }/options.ts` );
   } catch ( error ) {
+    console.log("error", error)
     return {
     };
   }

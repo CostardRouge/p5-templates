@@ -282,7 +282,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     },
     size: {
       label: "Size",
-      component: "number",
+      component: "slider",
       step: 1,
       min: 1,
       max: 1024
@@ -302,6 +302,13 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         value: fontName,
         label: fontName
       } ) ),
+    },
+     strokeWeight: {
+      label: "Stroke weight",
+      component: "slider",
+      min: 0,
+      max: 20,
+      step: 0.5
     },
     position: {
       label: "Position",
@@ -323,11 +330,11 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         }
       }
     },
-    align: {
+    alignment: {
       label: "Alignment",
       component: "nested-object",
       fields: {
-        0: {
+        horizontal: {
           label: "Horizontal alignment",
           component: "select",
           options: HorizontalAlign.options.map( horizontalAlignOption => ( {
@@ -335,7 +342,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
             label: horizontalAlignOption
           } ) )
         },
-        1: {
+        vertical: {
           label: "Vertical alignment",
           component: "select",
           options: VerticalAlign.options.map( verticalAlignOption => ( {
@@ -345,19 +352,25 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         }
       }
     },
-    horizontalMargin: {
-      label: "Horizontal margin",
-      component: "number",
-      step: 0.01,
-      min: 0,
-      max: 1
-    },
-    verticalMargin: {
-      label: "Vertical margin",
-      component: "number",
-      step: 0.01,
-      min: 0,
-      max: 1
+    margin: {
+      label: "Margin",
+      component: "nested-object",
+      fields: {
+        horizonta: {
+          label: "Horizontal",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        },
+        vertical: {
+          label: "Vertical",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        },
+      }
     },
     blend: {
       label: "Blend",
