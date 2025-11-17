@@ -212,6 +212,10 @@ const string = {
     if ( textWidth !== -1 ) {
       textParams.push( textWidth );
     }
+    else {
+      textParams.push( undefined );
+    }
+
 
     if ( textHeight !== -1 ) {
       textParams.push( textHeight );
