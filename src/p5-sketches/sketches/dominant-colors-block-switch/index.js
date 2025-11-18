@@ -324,7 +324,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        // blendMode: EXCLUSION
       }
     );
   }

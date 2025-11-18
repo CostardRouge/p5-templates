@@ -4,12 +4,12 @@ import cache from "../../utils/cache.js";
 import sketch from "../../utils/sketch.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
+import renderTitle from "../../utils/title/renderTitle.js";
 import * as common from "../../utils/common.js";
 
 // helpers
-const getBg = () =>
+const getBackgroundColor = () =>
   ( options.sketch?.backgroundColor ??
-    options.colors?.background ??
     [
       246,
       235,
@@ -25,7 +25,7 @@ const getImages = () => {
   const fromCache = cache.get( "images" );
 
   return imagesFromOptions
-    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    ? imagesFromOptions.map( ( path ) => common.getAsset( path ) ).filter( Boolean )
     : fromCache || [
     ];
 };
@@ -34,7 +34,7 @@ const pickImg = ( entry ) => ( entry?.img ? entry.img : entry );
 
 sketch.setup(
   () => {
-    background( ...getBg() );
+    background( ...getBackgroundColor() );
   },
   {
     size: {
@@ -48,16 +48,18 @@ sketch.setup(
   }
 );
 
-sketch.draw( ( _time ) => {
-  background( ...getBg() );
+sketch.draw( ( ) => {
+  background( ...getBackgroundColor() );
 
-  const imgs = getImages();
+  const images = getImages();
 
-  if ( !imgs?.length ) return;
+  if ( !images?.length ) {
+    return;
+  }
 
   // Which image to show this frame
-  const idx = Math.floor( animation.progression * imgs.length ) % imgs.length;
-  const img = pickImg( imgs[ idx ] );
+  const imageIndex = Math.floor( animation.progression * images.length ) % images.length;
+  const imageAtIndex = pickImg( images[ imageIndex ] );
 
   const margin = options.sketch?.margin ?? 80;
   const centerImage = options.sketch?.centerImage ?? true;
@@ -71,6 +73,8 @@ sketch.draw( ( _time ) => {
     center: centerImage,
     margin,
     scale: imageScale,
-    img,
+    img: imageAtIndex,
   } );
+
+  renderTitle( );
 } );

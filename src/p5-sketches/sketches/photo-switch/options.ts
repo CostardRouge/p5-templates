@@ -1,3 +1,6 @@
+import titleDefaultValues from "@/p5-sketches/utils/title/titleDefaultValues.js";
+import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfiguration.js";
+
 // Default values only
 export const formValues = {
   // Assets
@@ -9,10 +12,12 @@ export const formValues = {
     246,
     235,
     225
-  ] as [number, number, number],
-  textColor: [
-    0
-  ] as [number],
+  ],
+
+  // Sketch titles
+  title: {
+    ...titleDefaultValues
+  },
 
   // Image display
   margin: 80,
@@ -22,39 +27,43 @@ export const formValues = {
 
 // UI configuration only
 export const formConfiguration: Record<string, any> = {
-  // Assets
-  images: {
-    component: "images-stack",
-    label: "Images"
-  },
-
   // Colors
   backgroundColor: {
     component: "color",
     label: "Background color"
   },
-  textColor: {
-    component: "color",
-    label: "Text color"
+  // Image display
+  image: {
+    label: "Images",
+    component: "nested-object",
+    fields: {
+      images: {
+        component: "images-stack",
+        label: "Images"
+      },
+      margin: {
+        component: "slider",
+        label: "Margin",
+        min: 0,
+        max: 200,
+        step: 1,
+      },
+      center: {
+        component: "checkbox",
+        label: "Center"
+      },
+      scale: {
+        component: "slider",
+        label: "Scale",
+        min: 0.05,
+        max: 3,
+        step: 0.01,
+      },
+    }
   },
 
-  // Image display
-  margin: {
-    component: "slider",
-    label: "Margin",
-    min: 0,
-    max: 200,
-    step: 1,
-  },
-  centerImage: {
-    component: "checkbox",
-    label: "Center image"
-  },
-  imageScale: {
-    component: "slider",
-    label: "Image scale",
-    min: 0.05,
-    max: 3,
-    step: 0.01,
-  },
+  // Sketch title
+  title: {
+    ...titleFormConfiguration
+  }
 };

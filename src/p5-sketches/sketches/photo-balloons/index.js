@@ -1,39 +1,18 @@
 import options from "../../utils/options.js";
-
 import cache from "../../utils/cache.js";
-import string from "../../utils/string.js";
 import easing from "../../utils/easing.js";
 import sketch from "../../utils/sketch.js";
 import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
-
 import * as common from "../../utils/common";
 
 const canvases = {
   mask: undefined,
-  imageBuffer: undefined,
+  imageBuffer: undefined
 };
 
-/* ---------- helpers ---------- */
-
-const getBg = () =>
-  ( options.sketch?.background ??
-    [
-      255
-    ] );
-
-const getTextColor = () =>
-  ( options.sketch?.text ??
-    [
-      0
-    ] );
-
-const getFont = () => {
-  const key = options.sketch?.font ?? "martian";
-
-  return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
-};
+const getBg = () => options.sketch?.colors?.background ?? [255];
 
 const getImages = () => {
   const imagesFromOptions =
@@ -41,36 +20,22 @@ const getImages = () => {
       ? options.sketch.images
       : null;
 
-  const fromCache = cache.get( "images" );
+  const fromCache = cache.get("images");
 
   return imagesFromOptions
-    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : fromCache || [
-    ];
+    ? imagesFromOptions.map((p) => common.getAsset(p)).filter(Boolean)
+    : fromCache || [];
 };
 
 function initBall() {
-  const minBallSize = options.sketch?.minBallSize ?? 200;
-  const maxBallSize = options.sketch?.maxBallSize ?? 400;
-  const phaseJitter = options.sketch?.phaseJitter ?? 1;
+  const ballsConfig = options.sketch?.balls ?? {};
+  const motionConfig = options.sketch?.motion ?? {};
 
   return {
-    position: createVector(
-      width / 2,
-      height / 2
-    ),
-    size: random(
-      minBallSize,
-      maxBallSize
-    ),
-    vx: random(
-      -1,
-      1
-    ) * phaseJitter,
-    vy: random(
-      -1,
-      1
-    ) * phaseJitter
+    position: createVector(width / 2, height / 2),
+    size: random(ballsConfig.minSize ?? 200, ballsConfig.maxSize ?? 400),
+    vx: random(-1, 1) * (motionConfig.phaseJitter ?? 1),
+    vy: random(-1, 1) * (motionConfig.phaseJitter ?? 1)
   };
 }
 
@@ -84,101 +49,75 @@ function ensureBalls( images ) {
 
 /* ---------- mask draw helper ---------- */
 
-function drawImageWithMask( {
-  img, maskDrawer, graphics = window
-} ) {
-  imageUtils.marginImage( {
-    img,
-    fill: options.sketch?.imageFill ?? true,
-    center: options.sketch?.centerImage ?? true,
-    graphics: canvases.imageBuffer,
-    position: createVector(
-      width / 2,
-      height / 2
-    ),
-  } );
+function drawImageWithMask({ img, maskDrawer, graphics = window }) {
+  const imageConfig = options.sketch?.image ?? {};
 
-  // Reset mask to transparent
+  imageUtils.marginImage({
+    img,
+    fill: imageConfig.fill ?? true,
+    center: imageConfig.center ?? true,
+    graphics: canvases.imageBuffer,
+    position: createVector(width / 2, height / 2)
+  });
+
   canvases.mask.erase();
-  canvases.mask.rect(
-    0,
-    0,
-    graphics.width,
-    graphics.height
-  );
+  canvases.mask.rect(0, 0, graphics.width, graphics.height);
   canvases.mask.noErase();
 
-  // Fill mask background with near-transparent (keep alpha param)
   const bg = getBg();
+  canvases.mask.background(...bg, 1);
 
-  canvases.mask.background(
-    ...bg,
-    1
-  );
-
-  maskDrawer?.( canvases.mask );
+  maskDrawer?.(canvases.mask);
 
   const maskedImage = canvases.imageBuffer.get();
+  maskedImage.mask(canvases.mask);
 
-  maskedImage.mask( canvases.mask );
-
-  graphics.image(
-    maskedImage,
-    0,
-    0,
-    graphics.width,
-    graphics.height
-  );
+  graphics.image(maskedImage, 0, 0, graphics.width, graphics.height);
 }
 
 /* ---------- setup ---------- */
 
-sketch.setup( () => {
+sketch.setup(() => {
   canvases.mask = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   canvases.imageBuffer = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
-  background( ...getBg() );
+  background(...getBg());
 
-  ensureBalls( getImages() );
-}, );
+  ensureBalls(getImages());
+});
 
 /* ---------- draw ---------- */
 
-sketch.draw( (
-  time, center, favoriteColor
-) => {
-  background( ...getBg() );
+sketch.draw((time, center, favoriteColor) => {
+  background(...getBg());
 
   const images = getImages();
+  ensureBalls(images);
 
-  ensureBalls( images );
+  const motionConfig = options.sketch?.motion ?? {};
+  const linesConfig = options.sketch?.lines ?? {};
 
-  // Travel area configuration
-  const m = options.sketch?.travelMargin ?? 100;
-  const minWAmp = options.sketch?.minWidthAmplitude ?? 200;
-  const minHAmp = options.sketch?.minHeightAmplitude ?? 6;
+  const m = motionConfig.travelMargin ?? 100;
+  const minWAmp = motionConfig.minWidthAmplitude ?? 200;
+  const minHAmp = motionConfig.minHeightAmplitude ?? 6;
 
   const w = width / 2;
   const h = height / 2;
 
-  const angleSpeed = options.sketch?.angleSpeed ?? 1;
+  const angleSpeed = motionConfig.angleSpeed ?? 1;
 
-  const showLines = options.sketch?.showLines ?? true;
-  const lineColor = options.sketch?.lineColor ?? [
-    0,
-    0,
-    0
-  ];
-  const lineWeight = options.sketch?.lineWeight ?? 1;
-  const lineMaxDist = options.sketch?.lineMaxDistance ?? 1000;
-  const lineAlphaScale = options.sketch?.lineAlphaScale ?? 100;
+  const showLines = linesConfig.show ?? true;
+  const lineColor = linesConfig.color ?? [0, 0, 0];
+  const lineWeight = linesConfig.weight ?? 1;
+  const lineMaxDist = linesConfig.maxDistance ?? 1000;
+  const lineAlphaScale = linesConfig.alphaScale ?? 100;
 
   const links = [
   ];
@@ -310,38 +249,5 @@ sketch.draw( (
     } );
   } );
 
-  // Title overlay
-  const titleVisibleFrom = options.sketch?.titleProgressStart ?? 0.0;
-  const titleVisibleTo = options.sketch?.titleProgressEnd ?? 0.2;
-  const withinWindow =
-    animation.progression >= titleVisibleFrom &&
-    animation.progression <= titleVisibleTo;
-
-  if ( ( options.sketch?.showTitle ?? true ) && withinWindow ) {
-    const customTitle = options.sketch?.title?.trim?.() || "";
-    const defaultTitle = "photo-balloons".toUpperCase().replaceAll(
-      "-",
-      "\n"
-    );
-    const title = customTitle !== "" ? customTitle : defaultTitle;
-
-    const blendModeValue = options.sketch?.titleBlendMode;
-
-    string.write(
-      title,
-      0,
-      height / 2,
-      {
-        size: options.sketch?.titleSize ?? 128,
-        stroke: color( ...getTextColor() ),
-        fill: color( ...getBg() ),
-        font: getFont(),
-        textAlign: [
-          CENTER,
-          CENTER
-        ],
-        blendMode: blendModeValue
-      }
-    );
-  }
-} );
+  title.renderTitle(options, "photo-balloons");
+});

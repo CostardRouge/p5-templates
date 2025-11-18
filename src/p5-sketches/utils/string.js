@@ -216,7 +216,6 @@ const string = {
       textParams.push( undefined );
     }
 
-
     if ( textHeight !== -1 ) {
       textParams.push( textHeight );
     }
@@ -235,26 +234,35 @@ const string = {
       0
     ), sampleFactor = 1, simplifyThreshold = 0
   } ) => {
+    // Guard clause: Return an empty array to prevent downstream errors
     if ( !font?.font ) {
-      return;
+      return [
+      ];
     }
 
-    const fontFamily = font.font?.names?.fontFamily?.en;
-    const textPointsCacheKey = cache.key(
+    const fontFamily = font.font?.names?.fontFamily?.en || "unknown";
+
+    // This cache key is for the RAW, (0,0)-based points.
+    // It now correctly includes *all* parameters that define the geometry.
+    // 'position' is intentionally EXCLUDED from this key.
+    const rawPointsCacheKey = cache.key(
       text,
       fontFamily,
-      "text-points",
+      "text-points-raw", // More specific key name
       sampleFactor,
-      size
+      size,
+      simplifyThreshold // BUG FIX: Added missing parameter
     );
 
-    return cache.store(
-      textPointsCacheKey,
+    // Get or create the raw points and their center.
+    // This is the computationally expensive part, so we cache it.
+    const data = cache.store(
+      rawPointsCacheKey,
       () => {
-        const textPoints = font.textToPoints(
+        const rawPoints = font.textToPoints(
           text,
-          position.x,
-          position.y,
+          0, // BUG FIX: Always get raw points at the (0, 0) origin
+          0, // BUG FIX: Always get raw points at the (0, 0) origin
           size,
           {
             sampleFactor,
@@ -262,7 +270,8 @@ const string = {
           }
         );
 
-        const xMin = textPoints.reduce(
+        // Find the bounds of the raw points
+        const xMin = rawPoints.reduce(
           (
             a, {
               x
@@ -273,7 +282,7 @@ const string = {
           ),
           Infinity
         );
-        const xMax = textPoints.reduce(
+        const xMax = rawPoints.reduce(
           (
             a, {
               x
@@ -284,9 +293,9 @@ const string = {
           ),
           -Infinity
         );
-        const xCenter = ( xMax / 2 ) + ( xMin / 2 );
+        const xCenter = ( xMax + xMin ) / 2; // Simpler calculation
 
-        const yMin = textPoints.reduce(
+        const yMin = rawPoints.reduce(
           (
             a, {
               y
@@ -297,7 +306,7 @@ const string = {
           ),
           Infinity
         );
-        const yMax = textPoints.reduce(
+        const yMax = rawPoints.reduce(
           (
             a, {
               y
@@ -308,25 +317,39 @@ const string = {
           ),
           -Infinity
         );
-        const yCenter = ( yMax / 2 ) + ( yMin / 2 );
+        const yCenter = ( yMax + yMin ) / 2; // Simpler calculation
 
-        return textPoints.map( ( {
-          x, y
-        } ) => {
-          const testPointVector = createVector(
-            x,
-            y
-          );
-
-          testPointVector.add(
-            ( position.x - xCenter ), (
-              position.y - yCenter )
-          );
-
-          return testPointVector;
-        } );
+        // Store the raw points AND their calculated center
+        return {
+          rawPoints,
+          center: {
+            x: xCenter,
+            y: yCenter
+          }
+        };
       }
     );
+
+    // --- This part is now fast and runs every time ---
+
+    // Calculate the offset needed to move the text's *true* center
+    // to the *desired* position.
+    const offsetX = position.x - data.center.x;
+    const offsetY = position.y - data.center.y;
+
+    // Map the raw points to their final, centered positions.
+    // This is a simple, fast operation.
+    return data.rawPoints.map( ( {
+      x, y, alpha
+    } ) => {
+      // Create a new vector at the final position
+      // Preserving the original's use of 'alpha' as the z-component
+      return createVector(
+        x + offsetX,
+        y + offsetY,
+        alpha
+      );
+    } );
   }
 };
 

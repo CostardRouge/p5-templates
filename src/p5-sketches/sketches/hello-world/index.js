@@ -1,43 +1,16 @@
 import options from "../../utils/options.js";
-import string from "../../utils/string.js";
 import sketch from "../../utils/sketch.js";
 import animation from "../../utils/animation.js";
+import renderTitle from "../../utils/title/renderTitle.js";
 
 sketch.setup( );
 
-const getFont = () => {
-  const key = options.sketch?.font?.face ?? "martian";
-
-  return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
-};
-
-sketch.draw( (
-  _time, center
-) => {
+sketch.draw( () => {
   background( ...( options.sketch?.backgroundColor ?? [
     0
   ] ) );
 
-  string.write(
-    options.sketch.text ?? "hello world",
-    0,
-    0,
-    {
-      size: options.sketch?.font?.size || 20,
-      stroke: color( ...( options.sketch?.font?.stroke ?? [
-        255
-      ] ) ),
-      fill: color( ...( options.sketch?.font?.color ?? [
-        0
-      ] ) ),
-      textHeight: height,
-      font: getFont(),
-      textAlign: [
-        CENTER,
-        CENTER
-      ]
-    }
-  );
+  renderTitle( options.sketch?.text );
 
   strokeWeight( 2 );
   stroke( color( ...( options.sketch?.font?.stroke ?? [
