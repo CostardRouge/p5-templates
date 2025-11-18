@@ -17,17 +17,20 @@ const sketch = {
     setupEngineFunction,
     sketchOptions
   ) => {
-    sketchOptions = Object.assign({
-      engine: "p5js",
-      size: {
-        width: options.size.width,
-        height: options.size.height,
+    sketchOptions = Object.assign(
+      {
+        engine: "p5js",
+        size: {
+          width: options.size.width,
+          height: options.size.height,
+        },
+        animation: {
+          framerate: options.animation.framerate ?? 60,
+          duration: options.animation.duration ?? 12,
+        }
       },
-      animation: {
-        framerate: options.animation.framerate ?? 60,
-        duration: options.animation.duration ?? 12,
-      }
-    }, sketchOptions)
+      sketchOptions
+    );
     sketch.sketchOptions = sketchOptions;
 
     const {
