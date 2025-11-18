@@ -28,16 +28,16 @@ export default function SketchSettings( {
   }
 
   // Use slide-specific basePath if a slide is active, otherwise use global sketch settings
-  const effectiveBasePath = activeSlideIndex !== undefined 
-    ? `slides.${activeSlideIndex}.sketch`
+  const effectiveBasePath = activeSlideIndex !== undefined
+    ? `slides.${ activeSlideIndex }.sketch`
     : basePath ?? "sketch";
 
   return (
     <CollapsibleItem
       data-no-zoom=""
-      className="w-64 flex flex-col gap-1 absolute left-2 bottom-2 glass px-2 py-2 border border-theme z-50 rounded-lg overflow-y-auto"
+      className="w-64 md:w-80 flex flex-col gap-1 absolute left-2 bottom-2 glass px-2 py-2 border border-theme z-50 rounded-lg overflow-y-auto"
       style={{
-        maxHeight: "calc(80svh)",
+        maxHeight: "calc(80svh - 5rem)",
         maxWidth: "calc(50% - 0.75rem)"
       }}
       header={( expanded ) => (
@@ -53,16 +53,16 @@ export default function SketchSettings( {
           />
           <span>
             sketch options
-            {activeSlideIndex !== undefined && ` (slide ${activeSlideIndex + 1})`}
+            {activeSlideIndex !== undefined && ` (slide ${ activeSlideIndex + 1 })`}
           </span>
         </button>
       )}
     >
       <div className="overflow-y-auto">
-        <GenericObjectForm 
+        <GenericObjectForm
           key={effectiveBasePath}
-          basePath={effectiveBasePath} 
-          config={sketchFormConfiguration} 
+          basePath={effectiveBasePath}
+          config={sketchFormConfiguration}
         />
       </div>
     </CollapsibleItem>

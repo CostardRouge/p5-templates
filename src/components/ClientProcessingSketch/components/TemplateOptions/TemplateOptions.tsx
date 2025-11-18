@@ -1,8 +1,12 @@
 import React, {
   Fragment, useCallback, useEffect, useRef, useState,
 } from "react";
-import { useInterval } from "@/hooks/useInterval";
-import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import {
+  useInterval
+} from "@/hooks/useInterval";
+import {
+  useUnsavedChanges
+} from "@/hooks/useUnsavedChanges";
 import UnsavedChangesModal from "@/components/UnsavedChangesModal";
 import {
   ArrowDownFromLine, ListCollapse
@@ -17,7 +21,9 @@ import {
 
 import FormUndoRedo from "./components/FormUndoRedo/FormUndoRedo";
 import ContentItems from "./components/ContentItems/ContentItems";
-import CaptureActions, { CaptureActionsRef } from "./components/CaptureActions";
+import CaptureActions, {
+  CaptureActionsRef
+} from "./components/CaptureActions";
 import SlideCarousel from "./components/SlideCarousel";
 import SlideEditor from "./components/SlideEditor";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
@@ -62,9 +68,11 @@ export default function TemplateOptions( {
   onActiveSlideChange,
   options: initialOptions,
 }: TemplateOptionsProps ) {
-  const { capturing } = useSketch();
+  const {
+    capturing
+  } = useSketch();
 
-  if (capturing) {
+  if ( capturing ) {
     return null;
   }
 
@@ -74,7 +82,10 @@ export default function TemplateOptions( {
   ] = useState( 0 );
 
   const captureActionsRef = useRef<CaptureActionsRef>( null );
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState( false );
+  const [
+    hasUnsavedChanges,
+    setHasUnsavedChanges
+  ] = useState( false );
 
   const methods = useForm<SketchOptionInput>( {
     mode: "onChange",
@@ -116,7 +127,7 @@ export default function TemplateOptions( {
     () => {
       const subscription = watch( ( value ) => {
         onOptionsChange( value as SketchOption );
-        
+
         // Track unsaved changes (only if job exists as draft with jobId)
         if ( jobId && persistedJob?.status === "draft" ) {
           setHasUnsavedChanges( true );
@@ -146,7 +157,9 @@ export default function TemplateOptions( {
   } );
 
   // Unsaved changes detection - triggers modal on navigation attempts
-  const { showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving } = useUnsavedChanges( {
+  const {
+    showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving
+  } = useUnsavedChanges( {
     hasUnsavedChanges: hasUnsavedChanges,
     onSaveAsDraft: async() => {
       if ( captureActionsRef.current ) {
@@ -155,8 +168,6 @@ export default function TemplateOptions( {
       }
     },
   } );
-
-
 
   const didInitSelection = useRef( false );
 
@@ -333,10 +344,10 @@ export default function TemplateOptions( {
         onLeaveWithoutSaving={handleLeaveWithoutSaving}
         isSaving={captureActionsRef.current?.isSaving}
       />
-      
+
       <CollapsibleItem
         data-no-zoom=""
-        className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 glass p-2 border border-theme z-50 rounded-lg"
+        className="w-64 md:w-80 flex flex-col gap-1 absolute right-2 bottom-2 glass p-2 border border-theme z-50 rounded-lg"
         style={{
           maxHeight: "calc(80svh)",
           maxWidth: "calc(50% - 0.75rem)"
@@ -472,7 +483,7 @@ export default function TemplateOptions( {
       </CollapsibleItem>
 
       <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
-        <SketchSettings 
+        <SketchSettings
           activeSlideIndex={slides && slides.length > 0 ? activeSlideIndex : undefined}
         />
       </TemplateAssetsProvider>

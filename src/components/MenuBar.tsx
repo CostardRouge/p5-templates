@@ -88,7 +88,7 @@ function MenuBar( {
           />
         </div>
         <span className="hidden sm:block text-sm font-semibold text-foreground group-hover:text-foreground/70 transition-colors">
-          Social Pipeline
+          p5 templates
         </span>
       </Link>
 
@@ -114,7 +114,7 @@ function MenuBar( {
             >
               <Icon className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
               <span className="hidden sm:inline">{name ?? href}</span>
-              
+
               {/* Active indicator */}
               {active && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-foreground rounded-full" />
