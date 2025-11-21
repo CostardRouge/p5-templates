@@ -64,7 +64,7 @@ export default function ControlledColorInput( {
         };
 
         return (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 w-ful">
             <input
               type="color"
               className="h-8 w-full rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
@@ -73,7 +73,7 @@ export default function ControlledColorInput( {
             />
 
             {/* Alpha control */}
-            <div className="flex items-center gap-2 w-ful">
+            <div className="flex items-center justify-between gap-2 w-ful">
               <div
                 className="flex-shrink-0 w-8 h-8 rounded-lg border border-theme relative overflow-hidden"
                 style={{
@@ -93,7 +93,7 @@ export default function ControlledColorInput( {
 
               <input
                 type="range"
-                className="p-1 border border-theme rounded-lg bg-background"
+                className="p-1 border border-theme rounded-lg bg-background w-full"
                 min={0}
                 max={255}
                 step={1}
