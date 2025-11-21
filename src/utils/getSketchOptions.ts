@@ -9,6 +9,7 @@ export async function getJSONSketchOptions( sketchName: string ): Promise<Partia
   try {
     // Use dynamic import so it works in production builds
     const options = await import( `@/p5-sketches/sketches/${ sketchName }/options.json` );
+
     return options.default || options;
   }
   catch ( error ) {
@@ -26,7 +27,10 @@ export async function getSketchMeta( sketchName: string ): Promise<SketchMeta> {
   try {
     return await import( `@/p5-sketches/sketches/${ sketchName }/options.ts` );
   } catch ( error ) {
-    console.log("error", error)
+    // console.error(
+    //   "error",
+    //   error
+    // );
     return {
     };
   }

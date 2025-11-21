@@ -86,7 +86,10 @@ self.addEventListener(
       caches.keys().then( function( cacheNames ) {
         return Promise.all( cacheNames.map( function( cacheName ) {
           if ( cacheName !== THUMBNAIL_CACHE ) {
-            console.log( "[SW] Deleting old cache:", cacheName );
+            console.log(
+              "[SW] Deleting old cache:",
+              cacheName
+            );
             return caches.delete( cacheName );
           }
         } ) );
@@ -94,8 +97,7 @@ self.addEventListener(
         .then( function() {
           // Take control of all clients immediately
           return self.clients.claim();
-        } )
-    );
+        } ) );
   }
 );
 
@@ -103,24 +105,24 @@ self.addEventListener(
 function isThumbnailImage( url ) {
   const urlObj = new URL( url );
   const pathname = urlObj.pathname;
-  
+
   // Template thumbnails: assets/images/templates/**/*.{jpeg,jpg}
-  if ( pathname.startsWith( "/assets/images/templates/" ) && 
+  if ( pathname.startsWith( "/assets/images/templates/" ) &&
        ( pathname.endsWith( ".jpeg" ) || pathname.endsWith( ".jpg" ) ) ) {
     return true;
   }
-  
+
   // Recording thumbnail API: /api/recordings/[id]/thumbnail
   if ( pathname.match( /^\/api\/recordings\/[^/]+\/thumbnail$/ ) ) {
     return true;
   }
-  
+
   // S3 signed URLs for thumbnails (from amazonaws.com)
-  if ( urlObj.hostname.includes( "amazonaws.com" ) && 
+  if ( urlObj.hostname.includes( "amazonaws.com" ) &&
        ( pathname.includes( "/thumbnails/" ) || pathname.includes( "thumbnail" ) ) ) {
     return true;
   }
-  
+
   return false;
 }
 
@@ -129,46 +131,62 @@ self.addEventListener(
   "fetch",
   function( event ) {
     const url = event.request.url;
-    
+
     // Only handle GET requests for thumbnail images
     if ( event.request.method !== "GET" || !isThumbnailImage( url ) ) {
       return; // Let the request go to network
     }
-    
-    event.respondWith(
-      caches.open( THUMBNAIL_CACHE ).then( function( cache ) {
-        return cache.match( event.request ).then( function( cachedResponse ) {
-          // Return cached response if available
-          if ( cachedResponse ) {
-            console.log( "[SW] Cache hit:", url );
-            
-            // Fetch in background to update cache (stale-while-revalidate)
-            fetch( event.request ).then( function( networkResponse ) {
-              if ( networkResponse && networkResponse.status === 200 ) {
-                cache.put( event.request, networkResponse.clone() );
-              }
-            } ).catch( function() {
+
+    event.respondWith( caches.open( THUMBNAIL_CACHE ).then( function( cache ) {
+      return cache.match( event.request ).then( function( cachedResponse ) {
+        // Return cached response if available
+        if ( cachedResponse ) {
+          console.log(
+            "[SW] Cache hit:",
+            url
+          );
+
+          // Fetch in background to update cache (stale-while-revalidate)
+          fetch( event.request ).then( function( networkResponse ) {
+            if ( networkResponse && networkResponse.status === 200 ) {
+              cache.put(
+                event.request,
+                networkResponse.clone()
+              );
+            }
+          } )
+            .catch( function() {
               // Ignore network errors during background update
             } );
-            
-            return cachedResponse;
+
+          return cachedResponse;
+        }
+
+        // Not in cache, fetch from network
+        console.log(
+          "[SW] Cache miss, fetching:",
+          url
+        );
+        return fetch( event.request ).then( function( networkResponse ) {
+          // Cache successful responses
+          if ( networkResponse && networkResponse.status === 200 ) {
+            // Clone the response before caching
+            cache.put(
+              event.request,
+              networkResponse.clone()
+            );
           }
-          
-          // Not in cache, fetch from network
-          console.log( "[SW] Cache miss, fetching:", url );
-          return fetch( event.request ).then( function( networkResponse ) {
-            // Cache successful responses
-            if ( networkResponse && networkResponse.status === 200 ) {
-              // Clone the response before caching
-              cache.put( event.request, networkResponse.clone() );
-            }
-            return networkResponse;
-          } ).catch( function( error ) {
-            console.error( "[SW] Fetch failed:", url, error );
+          return networkResponse;
+        } )
+          .catch( function( error ) {
+            console.error(
+              "[SW] Fetch failed:",
+              url,
+              error
+            );
             throw error;
           } );
-        } );
-      } )
-    );
+      } );
+    } ) );
   }
 );

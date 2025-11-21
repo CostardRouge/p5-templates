@@ -21,9 +21,10 @@ import useSketch from "./components/SketchProvider/hooks/useSketch";
 
 const TemplateOptions = dynamic( () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
 
-
 export default function ClientProcessingSketch( ) {
-  const { name, capturing, options, persistedJob } = useSketch();
+  const {
+    name, capturing, options, persistedJob
+  } = useSketch();
   const [
     currentOptions,
     setCurrentOptions
