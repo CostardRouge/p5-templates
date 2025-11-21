@@ -14,6 +14,10 @@ import neonDot from "../../utils/visuals/neonDot.js";
 await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );
 
+mediapipe.tasks = [
+  "hands"
+];
+
 const {
   Engine, Bodies, Composite, Vector
 } = Matter;

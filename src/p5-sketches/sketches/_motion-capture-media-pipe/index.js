@@ -2,12 +2,12 @@ import sketch from "../../utils/sketch.js";
 import options from "../../utils/options.js";
 import events from "../../utils/events.js";
 
-import {
-  FaceDetector,
-  FilesetResolver,
-  HandLandmarker,
-  ImageSegmenter
-} from "@/public/assets/libraries/mediapipe/vision_bundle.js";
+// import {
+//   FaceDetector,
+//   FilesetResolver,
+//   HandLandmarker,
+//   ImageSegmenter
+// } from "@/public/assets/libraries/mediapipe/vision_bundle.js";
 // } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
 
 // ---------------------------------------------------------------------------

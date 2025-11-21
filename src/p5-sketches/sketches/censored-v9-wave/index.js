@@ -92,10 +92,10 @@ function drawShape( {
         ),
         -1,
         1,
-        1.25,
+        1,
         1
       ) * Math.pow(
-        1.3,
+        1.175,
         z
       );
 

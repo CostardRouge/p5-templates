@@ -6,12 +6,6 @@
     "ctime": "2025-07-19T00:22:59.895Z"
   },
   {
-    "name": "hand-tracking-v2-repulse",
-    "hasSketchForm": false,
-    "mtime": "2025-10-29T09:51:08.382Z",
-    "ctime": "2025-07-23T08:58:19.417Z"
-  },
-  {
     "name": "hand-tracking-v3-restore",
     "hasSketchForm": false,
     "mtime": "2025-10-29T09:51:12.522Z",
@@ -22,12 +16,6 @@
     "hasSketchForm": false,
     "mtime": "2025-10-30T01:16:27.432Z",
     "ctime": "2025-07-22T09:36:06.755Z"
-  },
-  {
-    "name": "hand-tracking-v0-move",
-    "hasSketchForm": false,
-    "mtime": "2025-11-04T00:47:09.284Z",
-    "ctime": "2025-07-16T23:43:56.712Z"
   },
   {
     "name": "photo-in-arc",
@@ -194,13 +182,31 @@
   {
     "name": "mask-v1",
     "hasSketchForm": true,
-    "mtime": "2025-11-17T11:58:12.896Z",
+    "mtime": "2025-11-18T08:27:43.434Z",
     "ctime": "2025-11-17T11:37:47.254Z"
   },
   {
     "name": "censored-v9-wave",
     "hasSketchForm": true,
-    "mtime": "2025-11-17T23:12:20.726Z",
+    "mtime": "2025-11-18T12:48:46.171Z",
     "ctime": "2025-11-17T22:54:31.291Z"
+  },
+  {
+    "name": "hand-tracking-v0-move",
+    "hasSketchForm": false,
+    "mtime": "2025-11-19T06:18:21.185Z",
+    "ctime": "2025-07-16T23:43:56.712Z"
+  },
+  {
+    "name": "hand-tracking-v2-repulse",
+    "hasSketchForm": false,
+    "mtime": "2025-11-19T10:20:54.632Z",
+    "ctime": "2025-07-23T08:58:19.417Z"
+  },
+  {
+    "name": "photo-segmentation",
+    "hasSketchForm": false,
+    "mtime": "2025-11-20T00:43:31.965Z",
+    "ctime": "2025-11-19T09:47:56.327Z"
   }
 ]

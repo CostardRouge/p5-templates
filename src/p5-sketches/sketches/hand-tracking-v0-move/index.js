@@ -6,7 +6,9 @@ import scripts from "../../utils/scripts.js";
 
 import * as common from "../../utils/common.js";
 
-import mediapipe from "../../utils/mediapipe/mediapipe.js";
+import mediapipe, {
+  init as mediapipeInit
+} from "../../utils/mediapipe/mediapipe.js";
 
 import drawHands from "./drawHands.js";
 import neonDot from "../../utils/visuals/neonDot.js";
@@ -52,8 +54,15 @@ const matter = {
 };
 
 sketch.setup(
-  () => {
+  async() => {
     background( ...options.colors.background );
+
+    await mediapipeInit( {
+      worker: true,
+      tasks: [
+        "hands"
+      ]
+    } );
 
     for ( const layerName in layers ) {
       const {
@@ -143,7 +152,7 @@ sketch.draw( (
   }
 
   drawHands(
-    mediapipe.workerResult.hands,
+    mediapipe.tasks?.hands?.result,
     layers.hands.graphics
   );
 
@@ -201,6 +210,10 @@ sketch.draw( (
     const {
       graphics, background, erase, size
     } = layer;
+
+    if ( !graphics ) {
+      continue;
+    }
 
     image(
       graphics,
