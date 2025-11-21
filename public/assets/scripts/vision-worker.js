@@ -18,6 +18,10 @@ import( "./vision-manager.js" )
         transferables.push( result.data.buffer );
       }
 
+      if ( lib === "interactive" && result.data && result.data.buffer ) {
+        transferables.push( result.data.buffer );
+      }
+
       postMessage(
         {
           type: "LIB_RESULT",
@@ -40,13 +44,33 @@ import( "./vision-manager.js" )
         } );
       }
 
+      if ( message.type === "SET_MODE" ) {
+        await manager.setMode( message.mode );
+      }
+
       if ( message.type === "FRAME" ) {
         manager.detect(
           message.bitmap,
           message.timestamp
         );
+
         // Important: Close bitmap in worker to prevent memory leak
-        message.bitmap.close();
+        if ( message.bitmap.close ) {
+          message.bitmap.close();
+        }
+      }
+
+      if ( message.type === "INTERACT" ) {
+        // Run the interactive segmenter
+        manager.interact(
+          message.bitmap,
+          message.point
+        );
+
+        // Cleanup
+        if ( message.bitmap.close ) {
+          message.bitmap.close();
+        }
       }
     };
   } );

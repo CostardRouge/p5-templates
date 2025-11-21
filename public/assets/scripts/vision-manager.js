@@ -5,6 +5,10 @@ export class VisionManager {
         task: null,
         enabled: false
       },
+      interactive: {
+        task: null,
+        enabled: false
+      },
       poses: {
         task: null,
         enabled: false
@@ -35,9 +39,8 @@ export class VisionManager {
     tasks.forEach( task => { if( this.state[ task ] ) this.state[ task ].enabled = true; } );
 
     const {
-      FilesetResolver, PoseLandmarker, ImageSegmenter, HandLandmarker, FaceDetector
-    } =
-      await import( "../../assets/libraries/mediapipe/vision_bundle.js" );
+      FilesetResolver, InteractiveSegmenter, PoseLandmarker, ImageSegmenter, HandLandmarker, FaceDetector
+    } = await import( "../../assets/libraries/mediapipe/vision_bundle.js" );
 
     const resolver = await FilesetResolver.forVisionTasks( `${ mediapipeLibraryPath }/wasm` );
 
@@ -56,7 +59,47 @@ export class VisionManager {
       );
     }
 
-    // ... (Initialize other tasks similarly) ...
+    if ( this.state.interactive.enabled ) {
+      this.state.interactive.task = await InteractiveSegmenter.createFromOptions(
+        resolver,
+        {
+          baseOptions: {
+            delegate: "GPU",
+            modelAssetPath: `${ mediapipeLibraryPath }/magic_touch.tflite` // Needs specific model!
+          },
+          outputCategoryMask: true,
+          outputConfidenceMasks: false,
+        }
+      );
+    }
+
+    if ( this.state.hands.enabled ) {
+      this.state.hands.task = await HandLandmarker.createFromOptions(
+        resolver,
+        {
+          numHands: 2,
+          runningMode: "VIDEO",
+          baseOptions: {
+            delegate: "GPU",
+            modelAssetPath: `${ mediapipeLibraryPath }/hand_landmarker.task`
+          }
+        }
+      );
+    }
+
+    if ( this.state.poses.enabled ) {
+      this.state.poses.task = await PoseLandmarker.createFromOptions(
+        resolver,
+        {
+          numPoses: 2,
+          runningMode: "VIDEO",
+          baseOptions: {
+            delegate: "GPU",
+            modelAssetPath: `${ mediapipeLibraryPath }/pose_landmarker_heavy.task`
+          }
+        }
+      );
+    }
 
     this.state.ready = true;
     return true;
@@ -95,7 +138,49 @@ export class VisionManager {
       }
     }
 
-    // ... (Other detectors) ...
+    if ( this.state.hands.enabled ) {
+      const result = this.state.hands.task.detectForVideo(
+        input,
+        timestamp
+      );
+
+      this.emitResult(
+        "hands",
+        result
+      );
+    }
+
+    if ( this.state.poses.enabled ) {
+      const result = this.state.poses.task.detectForVideo(
+        input,
+        timestamp
+      );
+
+      this.emitResult(
+        "poses",
+        result
+      );
+    }
+  }
+
+  interact(
+    input, roi
+  ) {
+    if ( !this.state.interactive.enabled || !this.state.interactive.task ) return;
+
+    // ROI = Region of Interest (The click coordinates)
+    // { keypoint: { x: 0.5, y: 0.5 } }
+    this.state.interactive.task.segment(
+      input,
+      roi,
+      ( result ) => {
+      // We reuse the same processor because the result format is identical
+        this.processSegmenterResult(
+          result,
+          "interactive"
+        );
+      }
+    );
   }
 
   processSegmenterResult( result ) {

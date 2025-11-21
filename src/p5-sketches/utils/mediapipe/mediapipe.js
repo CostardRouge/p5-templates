@@ -1,4 +1,3 @@
-"use client";
 import events from "../../utils/events.js";
 
 // We dynamically import the manager if not using worker
@@ -123,6 +122,60 @@ export async function predictImage( imageSource ) {
     mediapipe.processor.instance.detect(
       imageSource,
       performance.now()
+    );
+  }
+}
+
+/**
+ * Triggers segmentation at a specific point.
+ * @param {number} x - Mouse X or Touch X
+ * @param {number} y - Mouse Y or Touch Y
+ * @param {HTMLElement} sourceElement - (Optional) The video/image to segment. Defaults to capture.
+ */
+export function interact(
+  x, y, sourceElement
+) {
+  if ( !mediapipe.processor.ready ) return;
+
+  const element = sourceElement || mediapipe.capture.element.elt;
+
+  // 1. Normalize Coordinates (0.0 to 1.0)
+  // We must use the actual element size, not the screen size
+  const rect = element.getBoundingClientRect ? element.getBoundingClientRect() : {
+    width: element.width,
+    height: element.height
+  };
+
+  // If using p5 video capture, it might not be in the DOM, so we rely on internal size
+  const elWidth = element.width || element.videoWidth;
+  const elHeight = element.height || element.videoHeight;
+
+  // Map screen click to video coordinates
+  // Note: This assumes the video is stretched to fill screen.
+  // If you have black bars, you need more complex mapping.
+  const normalizedPoint = {
+    x: x / width, // p5 global width
+    y: y / height // p5 global height
+  };
+
+  // 2. Send to Processor
+  if ( mediapipe.config.useWorker ) {
+    createImageBitmap( element ).then( bmp => {
+      mediapipe.processor.instance.postMessage(
+        {
+          type: "INTERACT", // New Message Type
+          bitmap: bmp,
+          point: normalizedPoint
+        },
+        [
+          bmp
+        ]
+      );
+    } );
+  } else {
+    mediapipe.processor.instance.interact(
+      element,
+      normalizedPoint
     );
   }
 }

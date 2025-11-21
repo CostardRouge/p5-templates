@@ -1,14 +1,14 @@
-"use client";
-
 import options from "../../utils/options.js";
-import string from "../../utils/string.js";
+import events from "../../utils/events.js";
 import sketch from "../../utils/sketch.js";
 import mediapipe, {
-  init as mediapipeInit
+  init as mediapipeInit, interact
 } from "../../utils/mediapipe/mediapipe.js";
 import {
   drawSegmentationMask
 } from "../../utils/segmentation.js";
+
+import renderTitle from "../../utils/title/renderTitle.js";
 
 const layers = {
   photo: {
@@ -32,7 +32,7 @@ const layers = {
 };
 
 sketch.setup( async() => {
-  background( ...options.colors.background );
+  background( ...options.sketch.backgroundColor );
 
   for ( const layerName in layers ) {
     const {
@@ -48,19 +48,54 @@ sketch.setup( async() => {
 
   await mediapipeInit( {
     enableIdle: false,
-    worker: false, // Switch to true to test your optimized worker!
+    worker: false,
     tasks: [
-      "segmenter"
+      // "segmenter",
+      "interactive"
     ]
   } );
 } );
 
+events.register(
+  "engine-mouse-pressed",
+  () => {
+    if ( mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height ) {
+      // Map Mouse (Screen) -> Video (Capture)
+      // If your canvas is full screen (windowWidth) but video is 320x240,
+      // the normalization in `interact()` handles the ratio,
+      // but we need to ensure we pass the "Video Relative" pixel or just pass raw
+      // and let `interact` normalize based on video size?
+
+      // Actually, `interact` expects pixel coordinates relative to the video element.
+      // If we draw the video using `image(video, 0, 0, width, height)`,
+      // The scale factor is:
+      const scaleX = mediapipe.capture.size.width / width;
+      const scaleY = mediapipe.capture.size.height / height;
+
+      const videoX = mouseX * scaleX;
+      const videoY = mouseY * scaleY;
+
+      console.log(
+        scaleX,
+        scaleY,
+        videoX,
+        videoY
+      );
+
+      interact(
+        videoX,
+        videoY
+      );
+    }
+  }
+);
+
 sketch.draw( (
   time, center, favouriteColour
 ) => {
-  background( ...options.colors.background );
+  background( ...options.sketch.backgroundColor );
 
-  if ( mediapipe.idle ) background( 90 );
+  // if ( mediapipe.idle ) background( 90 );
 
   // --- 1. Mask Logic ---
   const segmenterResult = mediapipe.tasks.segmenter?.result ?? null;
@@ -88,46 +123,69 @@ sketch.draw( (
         255,
         0,
         0,
+        255
+      ]
+    );
+  }
+
+  const interactiveResult = mediapipe.tasks.interactive?.result;
+
+  if ( interactiveResult ) {
+    console.log(
+      "interactive result",
+      interactiveResult
+    );
+
+    drawSegmentationMask(
+      layers.mask.graphics,
+      interactiveResult,
+      [
+        0,
+        255,
+        255,
         150
-      ] // Red
+      ]
     );
   }
 
   // --- 2. Draw Layers ---
-  for ( const layerName in layers ) {
-    const layer = layers[ layerName ];
+  // for ( const layerName in layers ) {
+  //   const layer = layers[ layerName ];
+  //
+  //   // Stretch whatever size the layer is to fill the screen
+  //   image(
+  //     layer.graphics,
+  //     0,
+  //     0,
+  //     width,
+  //     height
+  //   );
+  //
+  //   if ( layer.background ) {
+  //     layer.graphics.background( ...layer.background );
+  //   }
+  //
+  //   // Only clear photo layer, mask is self-clearing
+  //   if ( layer.erase ) {
+  //     layer.graphics.clear();
+  //   }
+  // }
 
-    // Stretch whatever size the layer is to fill the screen
-    image(
-      layer.graphics,
-      0,
-      0,
-      width,
-      height
-    );
-
-    if ( layer.background ) layer.graphics.background( ...layer.background );
-
-    // Only clear photo layer, mask is self-clearing
-    if ( layer.erase && layerName !== "mask" ) layer.graphics.clear();
-  }
-
-  // ... Text Logic ...
-  string.write(
-    "segmenter",
+  image(
+    mediapipe.capture.element,
     0,
-    height / 2,
-    {
-      size: 128,
-      strokeWeight: 0,
-      stroke: color( ...options.colors.background ),
-      fill: color( ...options.colors.background ),
-      font: string.fonts.martian,
-      textAlign: [
-        CENTER,
-        CENTER
-      ],
-      blendMode: EXCLUSION
-    }
+    0,
+    width,
+    height
+  );
+
+  renderTitle( options.sketch?.title );
+
+  image(
+    layers.mask.graphics,
+    0,
+    0,
+    width,
+    height
   );
 } );
