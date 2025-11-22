@@ -77,9 +77,8 @@ export default function ControlledImageInput( {
 
   function clear( event: React.MouseEvent<HTMLButtonElement, MouseEvent> ) {
     event.stopPropagation();
+    
     const prev = field.value;
-
-    console.log( "clear" );
 
     field.onChange( "" );
     setPreview( null );
@@ -89,14 +88,12 @@ export default function ControlledImageInput( {
     }
   }
 
-  function handleImageClick() {
-    setPreview( null );
-  }
-
   return (
     <div
-      className="grid grid-cols-3 gap-1 h-20 relative"
-      onClick={() => inputRef.current?.click()}
+      className="relative h-20"
+      onClick={() => {
+        inputRef.current?.click()
+      }}
       onDragOver={( e ) => e.preventDefault()}
       onDrop={async( e ) => {
         e.preventDefault();
@@ -109,15 +106,15 @@ export default function ControlledImageInput( {
       <DropZoneButton onFiles={onFiles} ref={inputRef} />
 
       {field.value && (
-        <div className="absolute overflow-hidden" onClick={handleImageClick}>
+        <div className="absolute inset-0 overflow-hidden">
           {resolved ? (
             <img
               src={resolved}
               alt={field.value}
-              className="aspect-square w-20 h-20 object-cover rounded-lg border border-theme"
+              className="w-full h-full object-cover rounded-lg border border-theme"
             />
           ) : (
-            <div className="aspect-square w-20 h-20 rounded-xl border border-theme bg-gray-100 animate-pulse" />
+            <div className="w-full h-full rounded-xl border border-theme bg-gray-100 animate-pulse" />
           )}
 
           <button

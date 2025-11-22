@@ -89,16 +89,16 @@ export default function CompactProgressBar({
             className="w-full text-left hover:opacity-80 transition-opacity focus:outline-none"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between text-xs mb-1">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between text-xs mb-1 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
                 {currentStep && (
-                  <Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
+                  <Loader2 className="w-3 h-3 text-blue-500 animate-spin flex-shrink-0" />
                 )}
                 <span className="text-foreground/70 truncate">
                   {currentStep?.name || 'Processing...'}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {startTime && (
                   <span className="text-foreground/50 font-mono text-[10px]">
                     {formatTime(elapsedTime)}
@@ -127,7 +127,7 @@ export default function CompactProgressBar({
             </div>
 
             {steps.length > 0 && (
-              <div className="text-[10px] text-foreground/40 mt-1">
+              <div className="text-[10px] text-foreground/40 mt-1 truncate">
                 Step {completedSteps + 1} of {steps.length} • {completedSteps} completed
               </div>
             )}

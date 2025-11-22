@@ -126,7 +126,7 @@ export default function RecordingCard( {
 
         {/* Progress Bar */}
         {( job.status === "active" || job.status === "queued" || job.progress < 100 ) && (
-          <div className="pt-1">
+          <div className="pt-1 min-w-0">
             <CompactProgressBar
               job={job}
               steps={job.status === 'active' ? getRecordingSteps(job) : []}

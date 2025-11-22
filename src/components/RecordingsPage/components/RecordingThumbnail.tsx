@@ -24,6 +24,15 @@ export default function RecordingThumbnail( {
   const src = `/api/recordings/${ job.id }/thumbnail`;
   const showEyeIcon = job.status === "completed" && job.videoUrls && job.thumbnails;
   const isRecording = job.status === "active";
+  
+  // Check if we should show thumbnail:
+  // - For completed: check if thumbnails exist
+  // - For draft/active: always try to show (API will fallback to template thumbnail)
+  // - For other statuses: check if thumbnails exist
+  const shouldShowThumbnail = 
+    job.status === "draft" || 
+    job.status === "active" || 
+    (job.thumbnails && (Array.isArray(job.thumbnails) ? job.thumbnails.length > 0 : true));
 
   const getStatusColor = () => {
     switch ( job.status ) {
@@ -47,7 +56,7 @@ export default function RecordingThumbnail( {
         }
       )}
     >
-      {imageError ? (
+      {!shouldShowThumbnail || imageError ? (
         <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${ getStatusColor() }`}>
           <Video className="w-8 h-8 opacity-50" />
           <div className="text-center px-2">

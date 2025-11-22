@@ -105,7 +105,7 @@ export default function RecordingRow( {
       </td>
 
       <td className="px-4 py-3">
-        <div className="min-w-[200px]">
+        <div className="min-w-[200px] max-w-xs">
           <CompactProgressBar
             job={job}
             steps={job.status === 'active' ? getRecordingSteps(job) : []}

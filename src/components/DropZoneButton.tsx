@@ -18,16 +18,15 @@ export default forwardRef( function DropZoneButton(
     multiple = false,
     className = "",
     accept = "image/*",
-  }: DropZoneButtonProps, ref: React.Ref<HTMLDivElement>
+  }: DropZoneButtonProps, ref: React.Ref<HTMLInputElement>
 ) {
   const inputRef = useRef<HTMLInputElement>( null );
 
   return (
     <div
-      ref={ref}
-      className={`border border-dashed border-theme rounded-lg w-auto h-20 p-3 flex flex-col items-center justify-center gap-2 text-foreground bg-background ${ className }`}
+      className={`border border-dashed border-theme rounded-lg w-full h-full p-3 flex flex-col items-center justify-center gap-2 text-foreground bg-background ${ className }`}
       onClick={( e ) => {
-        e.stopPropagation();
+        // e.stopPropagation();
         inputRef.current?.click();
       }}
       onDragOver={( e ) => e.preventDefault()}
@@ -44,7 +43,7 @@ export default forwardRef( function DropZoneButton(
       <Plus className="h-6 w-6 text-foreground" />
 
       <input
-        ref={inputRef}
+        ref={ref || inputRef}
         type="file"
         accept={accept}
         multiple={multiple}

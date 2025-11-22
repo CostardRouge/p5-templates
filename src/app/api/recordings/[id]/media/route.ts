@@ -87,6 +87,7 @@ export async function GET(
       videos: videoData.filter(Boolean),
       zipSize,
       recordingDuration: job.recordingDuration,
+      template: job.template,
       isZipArchive: false
     });
   } catch (error) {
