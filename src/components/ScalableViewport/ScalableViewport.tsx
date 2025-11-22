@@ -23,9 +23,11 @@ export default function ScalableViewport({
   children,
   initialScale,
   showZoomControls = true,
+  resolutionKey,
 }: {
   children: ReactNode;
   initialScale?: number;
+  resolutionKey?: string;
   showZoomControls?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -318,38 +320,22 @@ export default function ScalableViewport({
   /* ---------------------------------------------------------------- */
   /*  Lifecycle                                                       */
   /* ---------------------------------------------------------------- */
-  // Initial fit
+  // Initial fit and fit on resolution change
   useEffect(
     () => {
       // Small timeout to ensure layout is ready
       const timer = setTimeout(
         () => {
-          if (initialScale) {
-            // If initial scale provided, just center with that scale
-            const viewport = containerRef.current;
-            const canvas = contentRef.current;
-
-            if (viewport && canvas) {
-              const newX = (viewport.clientWidth - canvas.offsetWidth * initialScale) / 2;
-              const newY = (viewport.clientHeight - canvas.offsetHeight * initialScale) / 2;
-
-              setTransform({
-                x: newX,
-                y: newY,
-                scale: initialScale
-              });
-            }
-          } else {
-            fitToViewport();
-          }
+          // Always fit to viewport when resolution changes or on initial load
+          fitToViewport();
         },
-        0
+        100 // Increased timeout to ensure canvas is rendered with new dimensions
       );
 
       return () => clearTimeout(timer);
     },
     [
-      initialScale,
+      resolutionKey,
       fitToViewport,
       setTransform
     ]
