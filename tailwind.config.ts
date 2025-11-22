@@ -23,6 +23,7 @@ export default {
         active: "hsl(var(--active) / <alpha-value>)",
         focus: "hsl(var(--focus) / <alpha-value>)",
         label: "hsl(var(--label))",
+        "shadow-color": "hsl(var(--shadow-color) / <alpha-value>)",
       },
       keyframes: {
         "cycle-align": {
