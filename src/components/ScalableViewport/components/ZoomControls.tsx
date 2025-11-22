@@ -14,7 +14,7 @@ const ZoomControls = ( {
 } ) => {
   return (
     <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
-      <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-lg overflow-hidden">
+      <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md shadow-hover overflow-hidden">
         <button
           onClick={onMinus}
           className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center"
@@ -47,7 +47,7 @@ const ZoomControls = ( {
 
       <button
         onClick={onFit}
-        className="h-9 px-3 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-lg hover:bg-hover transition-colors group inline-flex items-center justify-center"
+        className="h-9 px-3 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md shadow-hover hover:bg-hover transition-colors group inline-flex items-center justify-center"
         title="Fit to viewport"
         aria-label="Fit to viewport"
       >

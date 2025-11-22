@@ -35,7 +35,7 @@ export default function SketchSettings( {
   return (
     <CollapsibleItem
       data-no-zoom=""
-      className="w-64 md:w-80 flex flex-col gap-1 absolute left-2 bottom-2 glass px-2 py-2 border border-theme z-50 rounded-2xl overflow-y-auto"
+      className="w-64 md:w-80 flex flex-col gap-1 absolute left-2 bottom-2 glass px-2 py-2 border border-theme z-50 rounded-2xl shadow-md shadow-hover overflow-y-auto"
       style={{
         maxHeight: "calc(80svh - 5rem)",
         maxWidth: "calc(50% - 0.75rem)"
