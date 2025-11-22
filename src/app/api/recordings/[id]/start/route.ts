@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJobById, updateJob } from "@/lib/jobStore";
-import { RecordingQueueService } from "@/services/RecordingQueueService";
+import { RecordingService } from "@/services/RecordingService";
 import { addRecordingStatus } from "@/lib/progression";
 
 export async function POST(
@@ -36,23 +36,7 @@ export async function POST(
     await updateJob(jobId, { status: "queued", progress: 0 });
     await addRecordingStatus(jobId, "queued");
 
-    await RecordingQueueService
-      .getInstance()
-      .getQueue()
-      .add(
-        "process-recording",
-        {
-          jobId: job.id,
-          template: job.template,
-        },
-        {
-          jobId,
-          priority: 1,
-          delay: 0,
-          removeOnFail: true,
-          removeOnComplete: true,
-        }
-      );
+    await RecordingService.getInstance().startRecording(job.id, job.template);
 
     return NextResponse.json({ started: true });
   } catch (error) {

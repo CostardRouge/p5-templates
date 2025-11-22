@@ -23,32 +23,49 @@ export class RecordingService {
   }
 
   public static getInstance(): RecordingService {
-    if ( !RecordingService.instance ) {
+    if (!RecordingService.instance) {
       RecordingService.instance = new RecordingService();
     }
     return RecordingService.instance;
   }
 
-  public async enqueueRecording( {
+  public async enqueueRecording({
     template,
     options,
     status,
     files,
     jobId
-  }:{
+  }: {
     status: JobStatusEnum,
     template: string,
     options: string,
     files: File[],
     jobId?: string
-  } ): Promise<string> {
-    return this.queueService.enqueueRecording( {
+  }): Promise<string> {
+    return this.queueService.enqueueRecording({
       template,
       options,
       status,
       files,
       jobId
-    } );
+    });
+  }
+
+  public async startRecording(jobId: string, template: string): Promise<void> {
+    await this.queueService.getQueue().add(
+      "process-recording",
+      {
+        jobId,
+        template
+      },
+      {
+        jobId,
+        priority: 1,
+        delay: 0,
+        removeOnFail: true,
+        removeOnComplete: true
+      }
+    );
   }
 
   public async getQueueHealth(): Promise<QueueHealthResponse> {
@@ -56,32 +73,32 @@ export class RecordingService {
   }
 
   public async pauseProcessing(): Promise<void> {
-    await Promise.all( [
+    await Promise.all([
       this.queueService.pauseQueue(),
       this.workerService.pauseWorker(),
-    ] );
+    ]);
   }
 
   public async resumeProcessing(): Promise<void> {
-    await Promise.all( [
+    await Promise.all([
       this.queueService.resumeQueue(),
       this.workerService.resumeWorker(),
-    ] );
+    ]);
   }
 
   public async shutdown(): Promise<void> {
-    console.log( "[Service] Initiating graceful shutdown..." );
+    console.log("[Service] Initiating graceful shutdown...");
 
     try {
-      await Promise.all( [
+      await Promise.all([
         this.workerService.closeWorker(),
         this.queueService.closeQueue(),
-      ] );
+      ]);
 
       await Redis.disconnect();
 
-      console.log( "[Service] Graceful shutdown completed" );
-    } catch ( error ) {
+      console.log("[Service] Graceful shutdown completed");
+    } catch (error) {
       console.error(
         "[Service] Error during shutdown:",
         error
@@ -93,11 +110,11 @@ export class RecordingService {
   private setupSignalHandlers(): void {
     process.on(
       "SIGTERM",
-      this.shutdown.bind( this )
+      this.shutdown.bind(this)
     );
     process.on(
       "SIGINT",
-      this.shutdown.bind( this )
+      this.shutdown.bind(this)
     );
 
     process.on(
@@ -116,7 +133,7 @@ export class RecordingService {
 
     process.on(
       "uncaughtException",
-      async( error ) => {
+      async (error) => {
         console.error(
           "Uncaught Exception:",
           error
