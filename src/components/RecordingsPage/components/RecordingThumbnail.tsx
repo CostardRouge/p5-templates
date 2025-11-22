@@ -10,32 +10,32 @@ interface RecordingThumbnailProps {
   showEyeInCorner?: boolean;
 }
 
-export default function RecordingThumbnail( {
+export default function RecordingThumbnail({
   job,
   onClick,
   className,
   showEyeInCorner = false
-}: RecordingThumbnailProps ) {
+}: RecordingThumbnailProps) {
   const [
     imageError,
     setImageError
-  ] = useState( false );
-  
-  const src = `/api/recordings/${ job.id }/thumbnail`;
+  ] = useState(false);
+
+  const src = `/api/recordings/${job.id}/thumbnail`;
   const showEyeIcon = job.status === "completed" && job.videoUrls && job.thumbnails;
   const isRecording = job.status === "active";
-  
+
   // Check if we should show thumbnail:
   // - For completed: check if thumbnails exist
   // - For draft/active: always try to show (API will fallback to template thumbnail)
   // - For other statuses: check if thumbnails exist
-  const shouldShowThumbnail = 
-    job.status === "draft" || 
-    job.status === "active" || 
+  const shouldShowThumbnail =
+    job.status === "draft" ||
+    job.status === "active" ||
     (job.thumbnails && (Array.isArray(job.thumbnails) ? job.thumbnails.length > 0 : true));
 
   const getStatusColor = () => {
-    switch ( job.status ) {
+    switch (job.status) {
       case "completed": return "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400";
       case "active": return "bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400";
       case "failed": return "bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400";
@@ -57,7 +57,7 @@ export default function RecordingThumbnail( {
       )}
     >
       {!shouldShowThumbnail || imageError ? (
-        <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${ getStatusColor() }`}>
+        <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${getStatusColor()}`}>
           <Video className="w-8 h-8 opacity-50" />
           <div className="text-center px-2">
             <div className="text-xs font-medium opacity-75">No Preview</div>
@@ -74,7 +74,7 @@ export default function RecordingThumbnail( {
           {showEyeIcon && showEyeInCorner && (
             <div className="absolute bottom-3 left-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-10">
               <button className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center">
-                <Eye className="h-4 w-4 text-foreground"/>
+                <Eye className="h-4 w-4 text-foreground" />
               </button>
             </div>
           )}
@@ -90,10 +90,10 @@ export default function RecordingThumbnail( {
             src={src}
             alt={job.template}
             loading="lazy"
-            onError={() => setImageError( true )}
-            className={clsx( "w-full h-full object-cover", {
+            onError={() => setImageError(true)}
+            className={clsx("w-full h-full object-cover", {
               grayscale: job.status !== "completed"
-            } )}
+            })}
           />
         </>
       )}
