@@ -1,27 +1,29 @@
-'use client';
+"use client";
 
-import { JobModel } from '@/types/recording.types';
+import {
+  JobModel
+} from "@/types/recording.types";
 
 interface SimpleProgressBarProps {
   progress: number;
-  status?: JobModel['status'];
+  status?: JobModel["status"];
 }
 
-export default function SimpleProgressBar({
+export default function SimpleProgressBar( {
   progress,
   status,
-}: SimpleProgressBarProps) {
+}: SimpleProgressBarProps ) {
   // Show indeterminate state for active/queued jobs with 0 progress
-  const isIndeterminate = (status === 'active' || status === 'queued') && progress === 0;
+  const isIndeterminate = ( status === "active" || status === "queued" ) && progress === 0;
 
   return (
     <div className="w-full space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="text-foreground/50">
-          {isIndeterminate ? 'Starting...' : 'Progress'}
+          {isIndeterminate ? "Starting..." : "Progress"}
         </span>
         <span className="text-foreground font-semibold tabular-nums">
-          {isIndeterminate ? '—' : `${progress}%`}
+          {isIndeterminate ? "—" : `${ progress }%`}
         </span>
       </div>
 
@@ -31,7 +33,9 @@ export default function SimpleProgressBar({
         ) : (
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out rounded-full"
-            style={{ width: `${progress}%` }}
+            style={{
+              width: `${ progress }%`
+            }}
           />
         )}
       </div>

@@ -1,11 +1,17 @@
 import HardLink from "@/components/HardLink";
 import CompactProgressBar from "@/components/CompactProgressBar";
-import { getRecordingSteps } from "@/utils/recordingSteps";
+import {
+  getRecordingSteps
+} from "@/utils/recordingSteps";
 import RecordingThumbnail from "./RecordingThumbnail";
 import StatusBadge from "./StatusBadge";
 import ActionsMenu from "./ActionsMenu";
-import { formatDuration } from "../utils/formatters";
-import type { JobModel } from "@/types/recording.types";
+import {
+  formatDuration
+} from "../utils/formatters";
+import type {
+  JobModel
+} from "@/types/recording.types";
 
 interface RecordingRowProps {
   job: JobModel;
@@ -62,17 +68,20 @@ export default function RecordingRow( {
       </td>
 
       <td className="px-4 py-3">
-        <HardLink 
+        <HardLink
           href={`templates/${ job.template }?id=${ job.id }`}
           className="group/link inline-flex items-center gap-1.5 text-sm font-mono text-foreground hover:text-foreground/70 transition-colors"
         >
-          #{job.id.slice( 0, 8 )}
+          #{job.id.slice(
+            0,
+            8
+          )}
           <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-xs">→</span>
         </HardLink>
       </td>
 
       <td className="px-4 py-3">
-        <HardLink 
+        <HardLink
           href={`templates/${ job.template }`}
           className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
         >
@@ -84,18 +93,24 @@ export default function RecordingRow( {
       <td className="px-4 py-3">
         <div className="space-y-0.5">
           <div className="text-sm text-foreground">
-            {new Date( job.createdAt ).toLocaleDateString( undefined, {
-              month: "short",
-              day: "numeric",
-              year: "numeric"
-            } )}
+            {new Date( job.createdAt ).toLocaleDateString(
+              undefined,
+              {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+              }
+            )}
           </div>
           <div className="text-xs text-foreground/50">
-            {new Date( job.createdAt ).toLocaleTimeString( undefined, {
-              hour: "2-digit",
-              minute: "2-digit"
-            } )}
-            {job.recordingDuration && ` • ${formatDuration( job.recordingDuration )}`}
+            {new Date( job.createdAt ).toLocaleTimeString(
+              undefined,
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )}
+            {job.recordingDuration && ` • ${ formatDuration( job.recordingDuration ) }`}
           </div>
         </div>
       </td>
@@ -108,7 +123,8 @@ export default function RecordingRow( {
         <div className="min-w-[200px] max-w-xs">
           <CompactProgressBar
             job={job}
-            steps={job.status === 'active' ? getRecordingSteps(job) : []}
+            steps={job.status === "active" ? getRecordingSteps( job ) : [
+            ]}
             startTime={startTime}
           />
         </div>

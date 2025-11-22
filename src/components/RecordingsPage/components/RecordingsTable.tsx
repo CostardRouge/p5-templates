@@ -1,6 +1,8 @@
 import RecordingRow from "./RecordingRow";
 import RecordingsEmptyState from "./RecordingsEmptyState";
-import type { JobModel } from "@/types/recording.types";
+import type {
+  JobModel
+} from "@/types/recording.types";
 
 interface RecordingsTableProps {
   jobs: JobModel[];
@@ -35,6 +37,7 @@ export default function RecordingsTable( {
 }: RecordingsTableProps ) {
   const allSelected = jobs.length > 0 && jobs.every( j => selectedIds.has( j.id ) );
   const someSelected = jobs.some( j => selectedIds.has( j.id ) ) && !allSelected;
+
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
       <div className="overflow-x-auto">
@@ -81,7 +84,7 @@ export default function RecordingsTable( {
               <RecordingRow
                 key={job.id}
                 job={job}
-                startTime={recordingStartTimes[job.id]}
+                startTime={recordingStartTimes[ job.id ]}
                 isSelected={selectedIds.has( job.id )}
                 isNewlyAdded={newlyAddedId === job.id}
                 onToggleSelection={() => onToggleSelection( job.id )}
@@ -96,7 +99,7 @@ export default function RecordingsTable( {
           </tbody>
         </table>
       </div>
-      
+
       {jobs.length === 0 && (
         <RecordingsEmptyState hasFilters={hasFilters} />
       )}

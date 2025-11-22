@@ -64,7 +64,13 @@ export async function POST( req: NextRequest ) {
         ].includes( state ) ) {
           await bullJob.remove();
 
-          await updateJob( jobId, { status: "cancelled", progress: 100 } );
+          await updateJob(
+            jobId,
+            {
+              status: "cancelled",
+              progress: 100
+            }
+          );
 
           cancelled.push( jobId );
         } else if ( state === "active" ) {

@@ -12,7 +12,9 @@ const canvases = {
   imageBuffer: undefined
 };
 
-const getBg = () => options.sketch?.colors?.background ?? [255];
+const getBg = () => options.sketch?.colors?.background ?? [
+  255
+];
 
 const getImages = () => {
   const imagesFromOptions =
@@ -20,22 +22,37 @@ const getImages = () => {
       ? options.sketch.images
       : null;
 
-  const fromCache = cache.get("images");
+  const fromCache = cache.get( "images" );
 
   return imagesFromOptions
-    ? imagesFromOptions.map((p) => common.getAsset(p)).filter(Boolean)
-    : fromCache || [];
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
 };
 
 function initBall() {
-  const ballsConfig = options.sketch?.balls ?? {};
-  const motionConfig = options.sketch?.motion ?? {};
+  const ballsConfig = options.sketch?.balls ?? {
+  };
+  const motionConfig = options.sketch?.motion ?? {
+  };
 
   return {
-    position: createVector(width / 2, height / 2),
-    size: random(ballsConfig.minSize ?? 200, ballsConfig.maxSize ?? 400),
-    vx: random(-1, 1) * (motionConfig.phaseJitter ?? 1),
-    vy: random(-1, 1) * (motionConfig.phaseJitter ?? 1)
+    position: createVector(
+      width / 2,
+      height / 2
+    ),
+    size: random(
+      ballsConfig.minSize ?? 200,
+      ballsConfig.maxSize ?? 400
+    ),
+    vx: random(
+      -1,
+      1
+    ) * ( motionConfig.phaseJitter ?? 1 ),
+    vy: random(
+      -1,
+      1
+    ) * ( motionConfig.phaseJitter ?? 1 )
   };
 }
 
@@ -49,35 +66,57 @@ function ensureBalls( images ) {
 
 /* ---------- mask draw helper ---------- */
 
-function drawImageWithMask({ img, maskDrawer, graphics = window }) {
-  const imageConfig = options.sketch?.image ?? {};
+function drawImageWithMask( {
+  img, maskDrawer, graphics = window
+} ) {
+  const imageConfig = options.sketch?.image ?? {
+  };
 
-  imageUtils.marginImage({
+  imageUtils.marginImage( {
     img,
     fill: imageConfig.fill ?? true,
     center: imageConfig.center ?? true,
     graphics: canvases.imageBuffer,
-    position: createVector(width / 2, height / 2)
-  });
+    position: createVector(
+      width / 2,
+      height / 2
+    )
+  } );
 
   canvases.mask.erase();
-  canvases.mask.rect(0, 0, graphics.width, graphics.height);
+  canvases.mask.rect(
+    0,
+    0,
+    graphics.width,
+    graphics.height
+  );
   canvases.mask.noErase();
 
   const bg = getBg();
-  canvases.mask.background(...bg, 1);
 
-  maskDrawer?.(canvases.mask);
+  canvases.mask.background(
+    ...bg,
+    1
+  );
+
+  maskDrawer?.( canvases.mask );
 
   const maskedImage = canvases.imageBuffer.get();
-  maskedImage.mask(canvases.mask);
 
-  graphics.image(maskedImage, 0, 0, graphics.width, graphics.height);
+  maskedImage.mask( canvases.mask );
+
+  graphics.image(
+    maskedImage,
+    0,
+    0,
+    graphics.width,
+    graphics.height
+  );
 }
 
 /* ---------- setup ---------- */
 
-sketch.setup(() => {
+sketch.setup( () => {
   canvases.mask = createGraphics(
     sketch?.engine?.canvas?.width,
     sketch?.engine?.canvas?.height
@@ -88,21 +127,26 @@ sketch.setup(() => {
     sketch?.engine?.canvas?.height
   );
 
-  background(...getBg());
+  background( ...getBg() );
 
-  ensureBalls(getImages());
-});
+  ensureBalls( getImages() );
+} );
 
 /* ---------- draw ---------- */
 
-sketch.draw((time, center, favoriteColor) => {
-  background(...getBg());
+sketch.draw( (
+  time, center, favoriteColor
+) => {
+  background( ...getBg() );
 
   const images = getImages();
-  ensureBalls(images);
 
-  const motionConfig = options.sketch?.motion ?? {};
-  const linesConfig = options.sketch?.lines ?? {};
+  ensureBalls( images );
+
+  const motionConfig = options.sketch?.motion ?? {
+  };
+  const linesConfig = options.sketch?.lines ?? {
+  };
 
   const m = motionConfig.travelMargin ?? 100;
   const minWAmp = motionConfig.minWidthAmplitude ?? 200;
@@ -114,7 +158,11 @@ sketch.draw((time, center, favoriteColor) => {
   const angleSpeed = motionConfig.angleSpeed ?? 1;
 
   const showLines = linesConfig.show ?? true;
-  const lineColor = linesConfig.color ?? [0, 0, 0];
+  const lineColor = linesConfig.color ?? [
+    0,
+    0,
+    0
+  ];
   const lineWeight = linesConfig.weight ?? 1;
   const lineMaxDist = linesConfig.maxDistance ?? 1000;
   const lineAlphaScale = linesConfig.alphaScale ?? 100;
@@ -249,5 +297,8 @@ sketch.draw((time, center, favoriteColor) => {
     } );
   } );
 
-  title.renderTitle(options, "photo-balloons");
-});
+  title.renderTitle(
+    options,
+    "photo-balloons"
+  );
+} );

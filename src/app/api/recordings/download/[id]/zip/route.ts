@@ -75,6 +75,7 @@ export async function GET(
 
     // Set up response headers
     const headers = new Headers();
+
     headers.set(
       "Content-Type",
       "application/zip"
@@ -88,27 +89,28 @@ export async function GET(
     const stream = Readable.toWeb( archive ) as ReadableStream;
 
     // Download each video from S3 and add to zip
-    const downloadPromises = videoUrls.map(
-      async( s3Key, index ) => {
-        try {
-          const buffer = await getBufferFromS3Url( s3Key );
-          // Extract file extension from S3 key (e.g., "path/to/video.webm" -> ".webm")
-          const extension = s3Key.substring( s3Key.lastIndexOf( "." ) );
-          const filename = `slide-${ index + 1 }${ extension }`;
-          archive.append(
-            buffer,
-            {
-              name: filename
-            }
-          );
-        } catch ( error ) {
-          console.error(
-            `Failed to download video ${ index }:`,
-            error
-          );
-        }
+    const downloadPromises = videoUrls.map( async(
+      s3Key, index
+    ) => {
+      try {
+        const buffer = await getBufferFromS3Url( s3Key );
+        // Extract file extension from S3 key (e.g., "path/to/video.webm" -> ".webm")
+        const extension = s3Key.substring( s3Key.lastIndexOf( "." ) );
+        const filename = `slide-${ index + 1 }${ extension }`;
+
+        archive.append(
+          buffer,
+          {
+            name: filename
+          }
+        );
+      } catch ( error ) {
+        console.error(
+          `Failed to download video ${ index }:`,
+          error
+        );
       }
-    );
+    } );
 
     // Wait for all downloads to complete
     await Promise.all( downloadPromises );

@@ -1,4 +1,6 @@
-import { fontNames } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import {
+  fontNames
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 export const formValues = {
   title: {
@@ -7,9 +9,21 @@ export const formValues = {
   },
 
   colors: {
-    text: [0, 0, 0] as [number, number, number],
-    background: [230, 230, 230] as [number, number, number],
-    accent: [128, 128, 255] as [number, number, number]
+    text: [
+      0,
+      0,
+      0
+    ] as [number, number, number],
+    background: [
+      230,
+      230,
+      230
+    ] as [number, number, number],
+    accent: [
+      128,
+      128,
+      255
+    ] as [number, number, number]
   },
 
   animation: {
@@ -34,10 +48,10 @@ export const formConfiguration: Record<string, any> = {
       font: {
         label: "Font",
         component: "select",
-        options: fontNames.map(fontName => ({
+        options: fontNames.map( fontName => ( {
           value: fontName,
           label: fontName
-        }))
+        } ) )
       }
     }
   },

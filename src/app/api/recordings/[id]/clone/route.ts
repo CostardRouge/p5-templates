@@ -64,10 +64,10 @@ export async function POST(
     const newJobId = generateUuid();
 
     // Parse options and update the ID
-    const options = typeof originalJob.options === "string" 
-      ? JSON.parse( originalJob.options ) 
+    const options = typeof originalJob.options === "string"
+      ? JSON.parse( originalJob.options )
       : originalJob.options;
-    
+
     options.id = newJobId;
 
     // Create new job record in database
@@ -88,25 +88,26 @@ export async function POST(
 
     if ( listedObjects.Contents && listedObjects.Contents.length > 0 ) {
       // Copy each object to the new job folder
-      await Promise.all(
-        listedObjects.Contents.map( async( object ) => {
-          if ( !object.Key ) return;
+      await Promise.all( listedObjects.Contents.map( async( object ) => {
+        if ( !object.Key ) return;
 
-          // Get the relative path within the job folder
-          const relativePath = object.Key.replace( `${ originalJobId }/`, "" );
-          const newKey = `${ newJobId }/${ relativePath }`;
+        // Get the relative path within the job folder
+        const relativePath = object.Key.replace(
+          `${ originalJobId }/`,
+          ""
+        );
+        const newKey = `${ newJobId }/${ relativePath }`;
 
-          // Copy the object
-          const copyCommand = new CopyObjectCommand( {
-            Bucket: bucketName,
-            CopySource: `${ bucketName }/${ object.Key }`,
-            Key: newKey,
-            ACL: ObjectCannedACL.public_read,
-          } );
+        // Copy the object
+        const copyCommand = new CopyObjectCommand( {
+          Bucket: bucketName,
+          CopySource: `${ bucketName }/${ object.Key }`,
+          Key: newKey,
+          ACL: ObjectCannedACL.public_read,
+        } );
 
-          await s3client.send( copyCommand );
-        } )
-      );
+        await s3client.send( copyCommand );
+      } ) );
     }
 
     // Update the options.json with the new job ID

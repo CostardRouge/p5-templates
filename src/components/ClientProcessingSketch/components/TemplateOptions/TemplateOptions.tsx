@@ -56,42 +56,42 @@ type TemplateOptionsProps = {
   options: SketchOption;
   persistedJob?: JobModel;
   onOptionsChange: (
-    nextOptions: SketchOption | ((existingOptions: SketchOption) => void)
+    nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
   ) => void;
-  onActiveSlideChange?: (index: number | undefined) => void;
+  onActiveSlideChange?: ( index: number | undefined ) => void;
 }
 
-export default function TemplateOptions({
+export default function TemplateOptions( {
   name,
   persistedJob,
   onOptionsChange,
   onActiveSlideChange,
   options: initialOptions,
-}: TemplateOptionsProps) {
+}: TemplateOptionsProps ) {
   const {
     capturing
   } = useSketch();
 
-  if (capturing) {
+  if ( capturing ) {
     return null;
   }
 
   const [
     activeSlideIndex,
     setActiveSlideIndex
-  ] = useState(0);
+  ] = useState( 0 );
 
-  const captureActionsRef = useRef<CaptureActionsRef>(null);
+  const captureActionsRef = useRef<CaptureActionsRef>( null );
   const [
     hasUnsavedChanges,
     setHasUnsavedChanges
-  ] = useState(false);
+  ] = useState( false );
 
-  const methods = useForm<SketchOptionInput>({
+  const methods = useForm<SketchOptionInput>( {
     mode: "onChange",
-    defaultValues: initOptions(initialOptions),
-    resolver: zodResolver(OptionsSchema),
-  });
+    defaultValues: initOptions( initialOptions ),
+    resolver: zodResolver( OptionsSchema ),
+  } );
 
   const {
     control,
@@ -108,29 +108,31 @@ export default function TemplateOptions({
     insert: insertSlide,
     move: moveSlide,
     remove: removeSlide,
-  } = useFieldArray({
+  } = useFieldArray( {
     control,
     name: "slides",
-  });
+  } );
 
-  const slides = useWatch({
+  const slides = useWatch( {
     control,
     name: "slides",
-  }) as SlideOption[] | undefined;
+  } ) as SlideOption[] | undefined;
 
-  const jobId = useWatch({
+  const jobId = useWatch( {
     control,
     name: "id",
-  }) as string | undefined;
+  } ) as string | undefined;
 
   useEffect(
     () => {
-      const subscription = watch((value) => {
-        onOptionsChange(value as SketchOption);
+      const subscription = watch( ( value ) => {
+        onOptionsChange( value as SketchOption );
 
         // Track unsaved changes
-        setHasUnsavedChanges(true);
-      });
+        if ( persistedJob?.status !== "completed" ) {
+          setHasUnsavedChanges( true );
+        }
+      } );
 
       return () => subscription.unsubscribe();
     },
@@ -143,43 +145,43 @@ export default function TemplateOptions({
   );
 
   // Auto-save every 10 seconds when jobId exists and status is draft
-  useInterval({
-    callback: async () => {
-      if (captureActionsRef.current && !captureActionsRef.current.isSaving) {
+  useInterval( {
+    callback: async() => {
+      if ( captureActionsRef.current && !captureActionsRef.current.isSaving ) {
         await captureActionsRef.current.saveAsDraft();
-        setHasUnsavedChanges(false);
+        setHasUnsavedChanges( false );
       }
     },
     enabled: !!jobId && persistedJob?.status === "draft",
     intervalMs: 10000, // 10 seconds
-  });
+  } );
 
   // Unsaved changes detection - triggers modal on navigation attempts
   const {
     showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving
-  } = useUnsavedChanges({
+  } = useUnsavedChanges( {
     hasUnsavedChanges: hasUnsavedChanges,
-    onSaveAsDraft: async () => {
-      if (captureActionsRef.current) {
+    onSaveAsDraft: async() => {
+      if ( captureActionsRef.current ) {
         await captureActionsRef.current.saveAsDraft();
-        setHasUnsavedChanges(false);
+        setHasUnsavedChanges( false );
       }
     },
-  });
+  } );
 
-  const didInitSelection = useRef(false);
+  const didInitSelection = useRef( false );
 
   const handleSlideSelect = useCallback(
-    (index: number | undefined) => {
-      if (index !== undefined) {
-        setActiveSlideIndex(index);
+    ( index: number | undefined ) => {
+      if ( index !== undefined ) {
+        setActiveSlideIndex( index );
 
-        if (typeof window.setSlide === "function") {
-          window.setSlide(index);
+        if ( typeof window.setSlide === "function" ) {
+          window.setSlide( index );
         }
       }
 
-      onActiveSlideChange?.(index);
+      onActiveSlideChange?.( index );
     },
     [
       onActiveSlideChange
@@ -190,13 +192,13 @@ export default function TemplateOptions({
     () => {
       const length = slideFields.length;
 
-      if (!didInitSelection.current && length > 0) {
+      if ( !didInitSelection.current && length > 0 ) {
         didInitSelection.current = true;
 
-        handleSlideSelect(0);
+        handleSlideSelect( 0 );
 
-        if (typeof window.setSlide === "function") {
-          window.setSlide(0);
+        if ( typeof window.setSlide === "function" ) {
+          window.setSlide( 0 );
         }
       }
     },
@@ -210,30 +212,30 @@ export default function TemplateOptions({
     () => {
       const length = slideFields.length;
 
-      setActiveSlideIndex((current) => {
+      setActiveSlideIndex( ( current ) => {
         let next = current;
 
-        if (length === 0) {
+        if ( length === 0 ) {
           next = 0;
-          handleSlideSelect(undefined);
+          handleSlideSelect( undefined );
         }
-        else if (current < 0) {
+        else if ( current < 0 ) {
           next = 0;
         }
-        else if (current > length - 1) {
+        else if ( current > length - 1 ) {
           next = length - 1;
         }
 
-        if (next !== current) {
-          handleSlideSelect(next);
+        if ( next !== current ) {
+          handleSlideSelect( next );
           return next;
         }
 
-        if (typeof window.setSlide === "function") {
-          window.setSlide(next);
+        if ( typeof window.setSlide === "function" ) {
+          window.setSlide( next );
         }
         return next;
-      });
+      } );
     },
     [
       handleSlideSelect,
@@ -244,26 +246,26 @@ export default function TemplateOptions({
   const handleAddSlide = () => {
     const nextIndex = slideFields.length;
 
-    appendSlide(makeDefaultSlide({
+    appendSlide( makeDefaultSlide( {
       indexForLabel: nextIndex,
-    }));
+    } ) );
 
-    handleSlideSelect(nextIndex);
+    handleSlideSelect( nextIndex );
   };
 
-  const handleDuplicateSlide = (indexToDuplicate: number) => {
-    const allSlides = getValues("slides") ?? [
+  const handleDuplicateSlide = ( indexToDuplicate: number ) => {
+    const allSlides = getValues( "slides" ) ?? [
     ];
-    const original = allSlides[indexToDuplicate];
+    const original = allSlides[ indexToDuplicate ];
 
-    if (!original) {
+    if ( !original ) {
       return;
     }
 
-    const duplicated = deepClone(original);
+    const duplicated = deepClone( original );
 
-    if (duplicated?.name) {
-      duplicated.name = `${duplicated.name} (copy)`;
+    if ( duplicated?.name ) {
+      duplicated.name = `${ duplicated.name } (copy)`;
     }
 
     const insertIndex = indexToDuplicate + 1;
@@ -273,45 +275,45 @@ export default function TemplateOptions({
       duplicated
     );
 
-    handleSlideSelect(insertIndex);
+    handleSlideSelect( insertIndex );
   };
 
-  const handleDeleteSlide = (indexToDelete: number) => {
+  const handleDeleteSlide = ( indexToDelete: number ) => {
     const lengthBefore = slideFields.length;
 
-    if (lengthBefore <= 0) {
+    if ( lengthBefore <= 0 ) {
       return;
     }
 
-    removeSlide(indexToDelete);
+    removeSlide( indexToDelete );
     const lengthAfter = lengthBefore - 1;
 
-    if (lengthAfter <= 0) {
-      handleSlideSelect(0);
+    if ( lengthAfter <= 0 ) {
+      handleSlideSelect( 0 );
       return;
     }
 
-    if (indexToDelete < activeSlideIndex) {
-      handleSlideSelect(activeSlideIndex - 1);
+    if ( indexToDelete < activeSlideIndex ) {
+      handleSlideSelect( activeSlideIndex - 1 );
       return;
     }
 
-    if (indexToDelete === activeSlideIndex) {
+    if ( indexToDelete === activeSlideIndex ) {
       const nextIndex = Math.min(
         activeSlideIndex,
         lengthAfter - 1
       );
 
-      handleSlideSelect(nextIndex);
+      handleSlideSelect( nextIndex );
       return;
     }
-    handleSlideSelect(activeSlideIndex);
+    handleSlideSelect( activeSlideIndex );
   };
 
   const handleReorderSlides = (
     oldIndex: number, newIndex: number
   ) => {
-    if (oldIndex === newIndex) {
+    if ( oldIndex === newIndex ) {
       return;
     }
 
@@ -320,18 +322,18 @@ export default function TemplateOptions({
       newIndex
     );
 
-    handleSlideSelect(newIndex);
+    handleSlideSelect( newIndex );
   };
 
-  const slideIds = slideFields.map((field) => field.id);
+  const slideIds = slideFields.map( ( field ) => field.id );
   const slidesLength = slides?.length;
-  const rootContentLength = useWatch({
+  const rootContentLength = useWatch( {
     control,
     name: "content",
-  })?.length;
+  } )?.length;
 
   const options = watch();
-  const editorKey = slideIds[activeSlideIndex] ?? `${activeSlideIndex}-${slides?.[activeSlideIndex]?.name ?? "unnamed-slide"}`;
+  const editorKey = slideIds[ activeSlideIndex ] ?? `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.name ?? "unnamed-slide" }`;
 
   return (
     <FormProvider {...methods}>
@@ -350,7 +352,7 @@ export default function TemplateOptions({
           maxHeight: "calc(80svh)",
           maxWidth: "calc(50% - 0.75rem)"
         }}
-        header={(expanded) => (
+        header={( expanded ) => (
           <button
             className={
               clsx(
@@ -395,7 +397,7 @@ export default function TemplateOptions({
           initialExpandedValue={false}
           className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
           headerContainerClassName="leading-none"
-          header={(expanded) => (
+          header={( expanded ) => (
             <button
               className={
                 clsx(
@@ -413,7 +415,7 @@ export default function TemplateOptions({
                   rotate: expanded ? "180deg" : "0deg"
                 }}
               />
-              <span>global content {rootContentLength ? `(${rootContentLength})` : null}</span>
+              <span>global content {rootContentLength ? `(${ rootContentLength })` : null}</span>
             </button>
           )}
         >
@@ -430,7 +432,7 @@ export default function TemplateOptions({
               initialExpandedValue={!!slidesLength}
               className="p-1 border border-theme rounded-lg bg-background overflow-y-auto"
               headerContainerClassName="leading-none"
-              header={(expanded) => (
+              header={( expanded ) => (
                 <button
                   className={
                     clsx(
@@ -448,7 +450,7 @@ export default function TemplateOptions({
                       rotate: expanded ? "180deg" : "0deg"
                     }}
                   />
-                  <span>slides {slidesLength ? `(${slidesLength})` : null}</span>
+                  <span>slides {slidesLength ? `(${ slidesLength })` : null}</span>
                 </button>
               )}
             >

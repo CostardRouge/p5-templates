@@ -303,7 +303,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         label: fontName
       } ) ),
     },
-     strokeWeight: {
+    strokeWeight: {
       label: "Stroke weight",
       component: "slider",
       min: 0,

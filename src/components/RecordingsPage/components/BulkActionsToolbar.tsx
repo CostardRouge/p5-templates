@@ -1,5 +1,9 @@
-import { Trash2, X, RotateCcw, CheckSquare } from "lucide-react";
-import type { JobModel } from "@/types/recording.types";
+import {
+  Trash2, X, RotateCcw, CheckSquare
+} from "lucide-react";
+import type {
+  JobModel
+} from "@/types/recording.types";
 
 interface BulkActionsToolbarProps {
   selectedJobs: JobModel[];

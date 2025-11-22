@@ -28,7 +28,10 @@ export async function GET(
     id: jobId,
     slideIndex
   } = await params;
-  const index = parseInt( slideIndex, 10 );
+  const index = parseInt(
+    slideIndex,
+    10
+  );
 
   try {
     const job = await getJobById( jobId );

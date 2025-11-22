@@ -1,15 +1,27 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Video } from "lucide-react";
+import {
+  useState, useRef
+} from "react";
+import {
+  Video
+} from "lucide-react";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
-import { usePersistedViewMode } from "@/hooks/usePersistedViewMode";
-import { usePersistedSort } from "@/hooks/usePersistedSort";
+import {
+  usePersistedViewMode
+} from "@/hooks/usePersistedViewMode";
+import {
+  usePersistedSort
+} from "@/hooks/usePersistedSort";
 import useRecordings from "./hooks/useRecordings";
 import useRecordingActions from "./hooks/useRecordingActions";
 import useBulkActions from "./hooks/useBulkActions";
-import { useSorting } from "./hooks/useSorting";
-import type { SortConfig } from "./hooks/useSorting";
+import {
+  useSorting
+} from "./hooks/useSorting";
+import type {
+  SortConfig
+} from "./hooks/useSorting";
 import RecordingsToolbar from "./components/RecordingsToolbar";
 import RecordingsTable from "./components/RecordingsTable";
 import RecordingsCards from "./components/RecordingsCards";
@@ -33,8 +45,10 @@ export default function RecordingsPage() {
     setNewlyAddedId
   ] = useState<string | null>( null );
 
-  const { handleClone } = useRecordingActions();
-  
+  const {
+    handleClone
+  } = useRecordingActions();
+
   const {
     selectedIds,
     isProcessing,
@@ -49,7 +63,10 @@ export default function RecordingsPage() {
   const [
     view,
     setView
-  ] = usePersistedViewMode<"table" | "cards">( "recordings-view-mode", "table" );
+  ] = usePersistedViewMode<"table" | "cards">(
+    "recordings-view-mode",
+    "table"
+  );
   const [
     search,
     setSearch
@@ -65,16 +82,26 @@ export default function RecordingsPage() {
   const [
     sortConfig,
     setSortConfig
-  ] = usePersistedSort<SortConfig>( "recordings-sort", { field: "createdAt", order: "desc" } );
+  ] = usePersistedSort<SortConfig>(
+    "recordings-sort",
+    {
+      field: "createdAt",
+      order: "desc"
+    }
+  );
 
   // Filter and sort jobs
   const filtered = allJobs.filter( ( job ) => {
     const matchSearch = job.id.includes( search ) || job.template.includes( search );
     const matchStatus = statusFilter === "all" || job.status === statusFilter;
+
     return matchSearch && matchStatus;
   } );
 
-  const sorted = useSorting( filtered, sortConfig );
+  const sorted = useSorting(
+    filtered,
+    sortConfig
+  );
   const hasFilters = search !== "" || statusFilter !== "all";
 
   // Get selected jobs for bulk actions
@@ -83,6 +110,7 @@ export default function RecordingsPage() {
   // Toggle select all handler
   const handleToggleSelectAll = () => {
     const allSelected = sorted.length > 0 && sorted.every( j => selectedIds.has( j.id ) );
+
     if ( allSelected ) {
       clearSelection();
     } else {
@@ -100,11 +128,13 @@ export default function RecordingsPage() {
         "failed"
       ].includes( j.status ) )
       .map( j => j.id );
-    
+
     const result = await bulkDelete( ids );
+
     if ( result.success ) {
       result.deleted.forEach( id => {
         const job = allJobs.find( j => j.id === id );
+
         if ( job ) handleDelete( job );
       } );
       clearSelection();
@@ -115,11 +145,13 @@ export default function RecordingsPage() {
     const ids = selectedJobs
       .filter( j => j.status === "queued" )
       .map( j => j.id );
-    
+
     const result = await bulkCancel( ids );
+
     if ( result.success ) {
       result.cancelled.forEach( id => {
         const job = allJobs.find( j => j.id === id );
+
         if ( job ) handleCancel( job );
       } );
       clearSelection();
@@ -133,11 +165,13 @@ export default function RecordingsPage() {
         "failed"
       ].includes( j.status ) )
       .map( j => j.id );
-    
+
     const result = await bulkRetry( ids );
+
     if ( result.success ) {
       result.retried.forEach( id => {
         const job = allJobs.find( j => j.id === id );
+
         if ( job ) handleRetry( job );
       } );
       clearSelection();
@@ -146,13 +180,17 @@ export default function RecordingsPage() {
 
   const onClone = async( job: Parameters<typeof handleClone>[0] ) => {
     const newJob = await handleClone( job );
+
     if ( newJob ) {
       addJob( newJob );
       setNewlyAddedId( newJob.id );
-      
+
       // Smooth scroll to top
-      contentRef.current?.scrollIntoView( { behavior: "smooth", block: "start" } );
-      
+      contentRef.current?.scrollIntoView( {
+        behavior: "smooth",
+        block: "start"
+      } );
+
       // Remove animation class after animation completes
       setTimeout(
         () => setNewlyAddedId( null ),

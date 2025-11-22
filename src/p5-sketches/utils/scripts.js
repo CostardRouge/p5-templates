@@ -54,7 +54,7 @@ window.removeLoadedScripts = () => {
     try {
       container?.removeChild( scriptElement );
     }
-    catch (e) {}
+    catch ( e ) {}
   } );
 };
 

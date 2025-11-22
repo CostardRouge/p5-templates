@@ -143,8 +143,11 @@ async function readExifInfo(
         tags = await exif.load( url );
       }
     }
-    catch (e) {
-      console.error("readExifInfo", e)
+    catch ( e ) {
+      console.error(
+        "readExifInfo",
+        e
+      );
     }
 
     object.exif = tags;
@@ -227,14 +230,19 @@ events.register(
 /* ------------------------------------------------------------------ */
 /*  Proxy to support sketch settings from current slide              */
 /* ------------------------------------------------------------------ */
-const optionsProxy = new Proxy(sketchOptions, {
-  get(target, prop) {
+const optionsProxy = new Proxy(
+  sketchOptions,
+  {
+    get(
+      target, prop
+    ) {
     // If accessing 'sketch' property and slides exist, merge with current slide
-    if (prop === 'sketch' && typeof window !== 'undefined' && window.getSketchSettings) {
-      return window.getSketchSettings(target);
+      if ( prop === "sketch" && typeof window !== "undefined" && window.getSketchSettings ) {
+        return window.getSketchSettings( target );
+      }
+      return target[ prop ];
     }
-    return target[prop];
   }
-});
+);
 
 export default optionsProxy;

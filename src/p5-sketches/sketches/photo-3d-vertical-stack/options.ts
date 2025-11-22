@@ -85,4 +85,3 @@ export const formConfiguration: Record<string, any> = {
   },
 };
 
-

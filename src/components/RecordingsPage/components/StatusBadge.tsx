@@ -1,4 +1,6 @@
-import type { JobModel } from "@/types/recording.types";
+import type {
+  JobModel
+} from "@/types/recording.types";
 
 interface StatusBadgeProps {
   status: JobModel["status"];

@@ -10,15 +10,20 @@ const getImages = () => {
       ? options.sketch.images
       : null;
 
-  const fromCache = cache.get("images");
+  const fromCache = cache.get( "images" );
 
   return imagesFromOptions
-    ? imagesFromOptions.map((p) => common.getAsset(p)).filter(Boolean)
-    : fromCache || [];
+    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
+    : fromCache || [
+    ];
 };
 
-const getBg = () => options.sketch?.colors?.background ?? [246, 235, 225];
-const degToRad = (d) => (d * Math.PI) / 180;
+const getBg = () => options.sketch?.colors?.background ?? [
+  246,
+  235,
+  225
+];
+const degToRad = ( d ) => ( d * Math.PI ) / 180;
 
 sketch.setup(
   () => {
@@ -36,53 +41,73 @@ sketch.setup(
   }
 );
 
-sketch.draw(() => {
-  background(...getBg());
+sketch.draw( () => {
+  background( ...getBg() );
 
   const imgs = getImages();
-  const arcConfig = options.sketch?.arc ?? {};
-  const imageConfig = options.sketch?.image ?? {};
-  const debugConfig = options.sketch?.debug ?? {};
+  const arcConfig = options.sketch?.arc ?? {
+  };
+  const imageConfig = options.sketch?.image ?? {
+  };
+  const debugConfig = options.sketch?.debug ?? {
+  };
 
   const circlePosition = createVector(
-    (arcConfig.anchorX ?? 0.5) * width,
-    (arcConfig.anchorY ?? 0.75) * height
+    ( arcConfig.anchorX ?? 0.5 ) * width,
+    ( arcConfig.anchorY ?? 0.75 ) * height
   );
 
-  const radiusX = (arcConfig.radiusX ?? 0.5) * height;
-  const radiusY = (arcConfig.radiusY ?? 0.5) * width;
+  const radiusX = ( arcConfig.radiusX ?? 0.5 ) * height;
+  const radiusY = ( arcConfig.radiusY ?? 0.5 ) * width;
 
-  const startAngle = degToRad(arcConfig.startAngle ?? 270);
-  const endAngle = degToRad(arcConfig.endAngle ?? 90);
+  const startAngle = degToRad( arcConfig.startAngle ?? 270 );
+  const endAngle = degToRad( arcConfig.endAngle ?? 90 );
 
-  if (imgs?.length) {
-    for (let i = 0; i < imgs.length; i++) {
-      const t = imgs.length > 1 ? i / (imgs.length - 1) : 0;
-      const angle = map(t, 0, 1, startAngle, endAngle);
+  if ( imgs?.length ) {
+    for ( let i = 0; i < imgs.length; i++ ) {
+      const t = imgs.length > 1 ? i / ( imgs.length - 1 ) : 0;
+      const angle = map(
+        t,
+        0,
+        1,
+        startAngle,
+        endAngle
+      );
 
-      const imageObjectAtIndex = imgs[i];
+      const imageObjectAtIndex = imgs[ i ];
       const imageAtIndex = imageObjectAtIndex.img ?? imageObjectAtIndex;
 
       const imagePosition = circlePosition.copy();
+
       imagePosition.add(
-        Math.sin(angle) * radiusX,
-        Math.cos(angle) * radiusY
+        Math.sin( angle ) * radiusX,
+        Math.cos( angle ) * radiusY
       );
 
-      imageUtils.marginImage({
+      imageUtils.marginImage( {
         img: imageAtIndex,
         position: imagePosition,
         scale: imageConfig.scale ?? 0.5,
         center: imageConfig.center ?? true
-      });
+      } );
 
-      if (debugConfig.showPoints) {
-        stroke(...(debugConfig.pointColor ?? [255, 0, 0]));
-        strokeWeight(debugConfig.pointWeight ?? 20);
-        point(imagePosition.x, imagePosition.y);
+      if ( debugConfig.showPoints ) {
+        stroke( ...( debugConfig.pointColor ?? [
+          255,
+          0,
+          0
+        ] ) );
+        strokeWeight( debugConfig.pointWeight ?? 20 );
+        point(
+          imagePosition.x,
+          imagePosition.y
+        );
       }
     }
   }
 
-  title.renderTitle(options, options.name);
-});
+  title.renderTitle(
+    options,
+    options.name
+  );
+} );

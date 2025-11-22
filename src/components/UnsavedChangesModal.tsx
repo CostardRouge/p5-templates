@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { Save, X } from "lucide-react";
+import React, {
+  useEffect, useState
+} from "react";
+import {
+  createPortal
+} from "react-dom";
+import {
+  Save, X
+} from "lucide-react";
 
 type UnsavedChangesModalProps = {
   isOpen: boolean;
@@ -19,16 +25,21 @@ export default function UnsavedChangesModal( {
   onLeaveWithoutSaving,
   isSaving = false,
 }: UnsavedChangesModalProps ) {
-  const [mounted, setMounted] = useState(false);
+  const [
+    mounted,
+    setMounted
+  ] = useState( false );
 
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
+  useEffect(
+    () => {
+      setMounted( true );
+      return () => setMounted( false );
+    },
+    [
+    ]
+  );
 
-
-
-  if (!isOpen || !mounted) return null;
+  if ( !isOpen || !mounted ) return null;
 
   const modalContent = (
     <div
@@ -91,5 +102,8 @@ export default function UnsavedChangesModal( {
     </div>
   );
 
-  return createPortal(modalContent, document.body);
+  return createPortal(
+    modalContent,
+    document.body
+  );
 }

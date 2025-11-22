@@ -1,9 +1,11 @@
-import { JobModel } from '@/types/recording.types';
+import {
+  JobModel
+} from "@/types/recording.types";
 
 export interface RecordingStep {
   id: string;
   name: string;
-  status: 'pending' | 'active' | 'completed' | 'error';
+  status: "pending" | "active" | "completed" | "error";
   percentage: number;
 }
 
@@ -22,17 +24,37 @@ interface StepConfig {
  * Weights must sum to 100
  */
 const DEFAULT_STEP_CONFIG: StepConfig[] = [
-  { id: 'launch', name: 'Launching browser', weight: 10 },
-  { id: 'capture', name: 'Capturing frames', weight: 30 },
-  { id: 'save', name: 'Saving frames', weight: 20 },
-  { id: 'encode', name: 'Encoding video', weight: 35 },
-  { id: 'finalize', name: 'Finalizing', weight: 5 },
+  {
+    id: "launch",
+    name: "Launching browser",
+    weight: 10
+  },
+  {
+    id: "capture",
+    name: "Capturing frames",
+    weight: 30
+  },
+  {
+    id: "save",
+    name: "Saving frames",
+    weight: 20
+  },
+  {
+    id: "encode",
+    name: "Encoding video",
+    weight: 35
+  },
+  {
+    id: "finalize",
+    name: "Finalizing",
+    weight: 5
+  },
 ];
 
 /**
  * Calculate recording steps based on overall progress
  * Dynamically distributes progress across configured steps
- * 
+ *
  * @param job - The recording job
  * @param stepConfig - Optional custom step configuration
  * @returns Array of recording steps with calculated status and percentage
@@ -42,46 +64,60 @@ export function getRecordingSteps(
   stepConfig: StepConfig[] = DEFAULT_STEP_CONFIG
 ): RecordingStep[] {
   const progress = job.progress || 0;
-  
+
   // Handle draft/queued recordings (no progress yet)
-  if (progress === 0 || job.status === 'draft' || job.status === 'queued') {
-    return stepConfig.map(config => ({
+  if ( progress === 0 || job.status === "draft" || job.status === "queued" ) {
+    return stepConfig.map( config => ( {
       id: config.id,
       name: config.name,
-      status: 'pending' as const,
+      status: "pending" as const,
       percentage: 0,
-    }));
+    } ) );
   }
 
   // Calculate cumulative progress ranges for each step
   let cumulativeProgress = 0;
-  const stepRanges = stepConfig.map(config => {
+  const stepRanges = stepConfig.map( config => {
     const start = cumulativeProgress;
     const end = cumulativeProgress + config.weight;
+
     cumulativeProgress = end;
-    return { ...config, start, end };
-  });
+    return {
+      ...config,
+      start,
+      end
+    };
+  } );
 
   // Calculate status and percentage for each step
-  return stepRanges.map((range, index) => {
-    let status: 'pending' | 'active' | 'completed' | 'error';
+  return stepRanges.map( (
+    range, index
+  ) => {
+    let status: "pending" | "active" | "completed" | "error";
     let percentage: number;
 
-    if (progress < range.start) {
+    if ( progress < range.start ) {
       // Step hasn't started yet
-      status = 'pending';
+      status = "pending";
       percentage = 0;
-    } else if (progress >= range.end) {
+    } else if ( progress >= range.end ) {
       // Step is completed
-      status = 'completed';
+      status = "completed";
       percentage = 100;
     } else {
       // Step is in progress
-      status = 'active';
+      status = "active";
       // Calculate percentage within this step's range
       const stepProgress = progress - range.start;
       const stepRange = range.end - range.start;
-      percentage = Math.min(100, Math.max(0, (stepProgress / stepRange) * 100));
+
+      percentage = Math.min(
+        100,
+        Math.max(
+          0,
+          ( stepProgress / stepRange ) * 100
+        )
+      );
     }
 
     return {
@@ -90,28 +126,29 @@ export function getRecordingSteps(
       status,
       percentage,
     };
-  });
+  } );
 }
 
 /**
  * Get the current step index from a list of steps
  */
-export function getCurrentStepIndex(steps: RecordingStep[]): number {
-  const index = steps.findIndex((s) => s.status === 'active');
+export function getCurrentStepIndex( steps: RecordingStep[] ): number {
+  const index = steps.findIndex( ( s ) => s.status === "active" );
+
   return index >= 0 ? index : 0;
 }
 
 /**
  * Get the number of completed steps
  */
-export function getCompletedStepsCount(steps: RecordingStep[]): number {
-  return steps.filter((s) => s.status === 'completed').length;
+export function getCompletedStepsCount( steps: RecordingStep[] ): number {
+  return steps.filter( ( s ) => s.status === "completed" ).length;
 }
 
 /**
  * Create custom step configuration
  * Useful for different recording types or templates
- * 
+ *
  * @example
  * const customSteps = createStepConfig([
  *   { id: 'init', name: 'Initializing', weight: 20 },
@@ -120,20 +157,23 @@ export function getCompletedStepsCount(steps: RecordingStep[]): number {
  * ]);
  * const steps = getRecordingSteps(job, customSteps);
  */
-export function createStepConfig(configs: StepConfig[]): StepConfig[] {
-  const totalWeight = configs.reduce((sum, config) => sum + config.weight, 0);
-  
-  if (Math.abs(totalWeight - 100) > 0.01) {
-    console.warn(
-      `Step weights sum to ${totalWeight}%, expected 100%. Normalizing...`
-    );
-    
+export function createStepConfig( configs: StepConfig[] ): StepConfig[] {
+  const totalWeight = configs.reduce(
+    (
+      sum, config
+    ) => sum + config.weight,
+    0
+  );
+
+  if ( Math.abs( totalWeight - 100 ) > 0.01 ) {
+    console.warn( `Step weights sum to ${ totalWeight }%, expected 100%. Normalizing...` );
+
     // Normalize weights to sum to 100
-    return configs.map(config => ({
+    return configs.map( config => ( {
       ...config,
-      weight: (config.weight / totalWeight) * 100,
-    }));
+      weight: ( config.weight / totalWeight ) * 100,
+    } ) );
   }
-  
+
   return configs;
 }

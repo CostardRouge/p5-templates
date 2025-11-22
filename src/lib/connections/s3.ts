@@ -105,9 +105,13 @@ export async function getObjectSize( objectKey: string ): Promise<number | null>
       Bucket: process.env.S3_BUCKET!,
       Key: objectKey,
     } ) );
+
     return response.ContentLength ?? null;
   } catch ( error ) {
-    console.error( `Failed to get object size for ${objectKey}:`, error );
+    console.error(
+      `Failed to get object size for ${ objectKey }:`,
+      error
+    );
     return null;
   }
 }

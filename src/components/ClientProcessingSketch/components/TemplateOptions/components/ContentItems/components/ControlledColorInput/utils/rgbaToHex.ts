@@ -7,6 +7,7 @@ export default function rgbaToHex( rgba: number[] ): string {
 
   const toHex = ( c: number ) => {
     const num = c ?? 0;
+
     return `0${ num.toString( 16 ) }`.slice( -2 );
   };
   const [

@@ -23,7 +23,8 @@ async function getSketchList() {
       "Failed to read sketch metadata:",
       err
     );
-    return [];
+    return [
+    ];
   }
 }
 

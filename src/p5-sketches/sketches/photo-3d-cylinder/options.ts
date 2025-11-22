@@ -3,11 +3,20 @@ import {
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 export const formValues = {
-  images: [],
-  
+  images: [
+  ],
+
   colors: {
-    background: [0, 0, 0] as [number, number, number],
-    text: [128, 128, 255] as [number, number, number]
+    background: [
+      0,
+      0,
+      0
+    ] as [number, number, number],
+    text: [
+      128,
+      128,
+      255
+    ] as [number, number, number]
   },
 
   title: {
@@ -15,8 +24,16 @@ export const formValues = {
     content: "",
     font: "martian",
     size: 450,
-    color: [128, 128, 255] as [number, number, number],
-    stroke: [0, 0, 0] as [number, number, number],
+    color: [
+      128,
+      128,
+      255
+    ] as [number, number, number],
+    stroke: [
+      0,
+      0,
+      0
+    ] as [number, number, number],
     strokeWeight: 0,
     blend: "exclusion",
     align: {
@@ -79,10 +96,10 @@ export const formConfiguration: Record<string, any> = {
       font: {
         label: "Font",
         component: "select",
-        options: fontNames.map(fontName => ({
+        options: fontNames.map( fontName => ( {
           value: fontName,
           label: fontName
-        }))
+        } ) )
       },
       size: {
         label: "Size",
@@ -110,20 +127,62 @@ export const formConfiguration: Record<string, any> = {
         label: "Blend mode",
         component: "select",
         options: [
-          { value: "blend", label: "Blend" },
-          { value: "darkest", label: "Darkest" },
-          { value: "lightest", label: "Lightest" },
-          { value: "difference", label: "Difference" },
-          { value: "multiply", label: "Multiply" },
-          { value: "exclusion", label: "Exclusion" },
-          { value: "screen", label: "Screen" },
-          { value: "overlay", label: "Overlay" },
-          { value: "hard-light", label: "Hard Light" },
-          { value: "soft-light", label: "Soft Light" },
-          { value: "dodge", label: "Dodge" },
-          { value: "burn", label: "Burn" },
-          { value: "add", label: "Add" },
-          { value: "subtract", label: "Subtract" }
+          {
+            value: "blend",
+            label: "Blend"
+          },
+          {
+            value: "darkest",
+            label: "Darkest"
+          },
+          {
+            value: "lightest",
+            label: "Lightest"
+          },
+          {
+            value: "difference",
+            label: "Difference"
+          },
+          {
+            value: "multiply",
+            label: "Multiply"
+          },
+          {
+            value: "exclusion",
+            label: "Exclusion"
+          },
+          {
+            value: "screen",
+            label: "Screen"
+          },
+          {
+            value: "overlay",
+            label: "Overlay"
+          },
+          {
+            value: "hard-light",
+            label: "Hard Light"
+          },
+          {
+            value: "soft-light",
+            label: "Soft Light"
+          },
+          {
+            value: "dodge",
+            label: "Dodge"
+          },
+          {
+            value: "burn",
+            label: "Burn"
+          },
+          {
+            value: "add",
+            label: "Add"
+          },
+          {
+            value: "subtract",
+            label: "Subtract"
+          }
         ]
       },
       align: {
@@ -134,19 +193,40 @@ export const formConfiguration: Record<string, any> = {
             label: "Horizontal",
             component: "select",
             options: [
-              { value: "left", label: "Left" },
-              { value: "center", label: "Center" },
-              { value: "right", label: "Right" }
+              {
+                value: "left",
+                label: "Left"
+              },
+              {
+                value: "center",
+                label: "Center"
+              },
+              {
+                value: "right",
+                label: "Right"
+              }
             ]
           },
           vertical: {
             label: "Vertical",
             component: "select",
             options: [
-              { value: "top", label: "Top" },
-              { value: "center", label: "Center" },
-              { value: "bottom", label: "Bottom" },
-              { value: "baseline", label: "Baseline" }
+              {
+                value: "top",
+                label: "Top"
+              },
+              {
+                value: "center",
+                label: "Center"
+              },
+              {
+                value: "bottom",
+                label: "Bottom"
+              },
+              {
+                value: "baseline",
+                label: "Baseline"
+              }
             ]
           }
         }
@@ -223,5 +303,4 @@ export const formConfiguration: Record<string, any> = {
     }
   }
 };
-
 

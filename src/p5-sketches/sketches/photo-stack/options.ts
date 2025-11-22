@@ -3,7 +3,11 @@ export const formValues = {
   randomPosition: true,
   imageMargin: 80,
   colors: {
-    background: [246, 235, 225]
+    background: [
+      246,
+      235,
+      225
+    ]
   }
 };
 

@@ -6,10 +6,10 @@ sketch.setup( () => {
 
 }, );
 
-sketch.draw( (
-  _time
-) => {
-  background( ...( options.sketch.backgroundColor ?? [0] ))
+sketch.draw( ( _time ) => {
+  background( ...( options.sketch.backgroundColor ?? [
+    0
+  ] ) );
   neonGraffiti( {
     amplitude: options.sketch.amplitude,
     shadowsCount: options.sketch.shadowsCount,

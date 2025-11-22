@@ -126,8 +126,17 @@ export class RecordingQueueService {
       // 4. Enqueue if not draft
       if ( status !== "draft" ) {
         // ensure DB and SSE reflect queued state before worker picks it
-        await updateJob( jobId, { status: "queued", progress: 0 } );
-        await addRecordingStatus( jobId, "queued" );
+        await updateJob(
+          jobId,
+          {
+            status: "queued",
+            progress: 0
+          }
+        );
+        await addRecordingStatus(
+          jobId,
+          "queued"
+        );
 
         await this.queue.add(
           "process-recording",

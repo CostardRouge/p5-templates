@@ -1,11 +1,17 @@
 import HardLink from "@/components/HardLink";
 import CompactProgressBar from "@/components/CompactProgressBar";
-import { getRecordingSteps } from "@/utils/recordingSteps";
+import {
+  getRecordingSteps
+} from "@/utils/recordingSteps";
 import RecordingThumbnail from "./RecordingThumbnail";
 import StatusBadge from "./StatusBadge";
 import ActionsMenu from "./ActionsMenu";
-import { formatDuration } from "../utils/formatters";
-import type { JobModel } from "@/types/recording.types";
+import {
+  formatDuration
+} from "../utils/formatters";
+import type {
+  JobModel
+} from "@/types/recording.types";
 
 interface RecordingCardProps {
   job: JobModel;
@@ -62,7 +68,7 @@ export default function RecordingCard( {
           }`}
           showEyeInCorner={true}
         />
-        
+
         {/* Status Badge Overlay */}
         <div className="absolute top-3 right-3 z-10">
           <StatusBadge
@@ -101,7 +107,10 @@ export default function RecordingCard( {
             href={`templates/${ job.template }?id=${ job.id }`}
             className="block text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors truncate group/link"
           >
-            #{job.id.slice( 0, 8 )}
+            #{job.id.slice(
+              0,
+              8
+            )}
             <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">→</span>
           </HardLink>
         </div>
@@ -109,12 +118,15 @@ export default function RecordingCard( {
         {/* Metadata */}
         <div className="flex items-center gap-2 text-xs text-foreground/50">
           <span className="truncate">
-            {new Date( job.createdAt ).toLocaleDateString( undefined, {
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit"
-            } )}
+            {new Date( job.createdAt ).toLocaleDateString(
+              undefined,
+              {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )}
           </span>
           {job.recordingDuration && (
             <>
@@ -129,7 +141,8 @@ export default function RecordingCard( {
           <div className="pt-1 min-w-0">
             <CompactProgressBar
               job={job}
-              steps={job.status === 'active' ? getRecordingSteps(job) : []}
+              steps={job.status === "active" ? getRecordingSteps( job ) : [
+              ]}
               startTime={startTime}
             />
           </div>

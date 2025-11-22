@@ -1,22 +1,41 @@
-import { MenuItem } from "@headlessui/react";
-import { FileArchive, Video } from "lucide-react";
+import {
+  MenuItem
+} from "@headlessui/react";
+import {
+  FileArchive, Video
+} from "lucide-react";
 import fetchDownload from "@/components/utils/fetchDownload";
-import { formatFileSize } from "../utils/formatters";
-import type { JobModel } from "@/types/recording.types";
+import {
+  formatFileSize
+} from "../utils/formatters";
+import type {
+  JobModel
+} from "@/types/recording.types";
 
 interface DownloadMenuItemsProps {
   job: JobModel;
 }
 
-export default function DownloadMenuItems( { job }: DownloadMenuItemsProps ) {
+export default function DownloadMenuItems( {
+  job
+}: DownloadMenuItemsProps ) {
   if ( job.status !== "completed" ) return null;
 
-  const videoUrls = ( job.videoUrls as unknown as string[] ) || [];
-  const videoSizes = ( job.videoSizes as unknown as number[] ) || [];
+  const videoUrls = ( job.videoUrls as unknown as string[] ) || [
+  ];
+  const videoSizes = ( job.videoSizes as unknown as number[] ) || [
+  ];
 
   let zipSize: number | null = null;
+
   if ( videoSizes.length > 0 ) {
-    const totalVideoSize = videoSizes.reduce( ( sum, size ) => sum + ( size || 0 ), 0 );
+    const totalVideoSize = videoSizes.reduce(
+      (
+        sum, size
+      ) => sum + ( size || 0 ),
+      0
+    );
+
     zipSize = totalVideoSize + ( videoSizes.length * 100 ) + 1024;
   }
 
@@ -33,7 +52,9 @@ export default function DownloadMenuItems( { job }: DownloadMenuItemsProps ) {
     <>
       {videos.length > 1 && videos.map( ( video ) => (
         <MenuItem key={video.index}>
-          {( { focus } ) => (
+          {( {
+            focus
+          } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/slide/${ video.index }` )}
               className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
@@ -52,7 +73,9 @@ export default function DownloadMenuItems( { job }: DownloadMenuItemsProps ) {
 
       {videos.length === 1 && (
         <MenuItem>
-          {( { focus } ) => (
+          {( {
+            focus
+          } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/slide/0` )}
               className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
@@ -71,7 +94,9 @@ export default function DownloadMenuItems( { job }: DownloadMenuItemsProps ) {
 
       {videos.length > 1 && (
         <MenuItem>
-          {( { focus } ) => (
+          {( {
+            focus
+          } ) => (
             <button
               onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/zip` )}
               className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}

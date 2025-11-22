@@ -13,25 +13,34 @@ export default async function captureFirstFrame(
   outputPath: string,
   maxWidth: number = 320
 ): Promise<void> {
-  const files = await fs.readdir(framesDirectory);
-  
+  const files = await fs.readdir( framesDirectory );
+
   // Sort to get the first frame (usually frame_0000.png or similar)
   const frameFiles = files
-    .filter(f => f.match(/\.(png|jpg|jpeg)$/i))
+    .filter( f => f.match( /\.(png|jpg|jpeg)$/i ) )
     .sort();
-  
-  if (frameFiles.length === 0) {
-    throw new Error(`No frames found in ${framesDirectory}`);
+
+  if ( frameFiles.length === 0 ) {
+    throw new Error( `No frames found in ${ framesDirectory }` );
   }
-  
-  const firstFramePath = path.join(framesDirectory, frameFiles[0]);
-  
+
+  const firstFramePath = path.join(
+    framesDirectory,
+    frameFiles[ 0 ]
+  );
+
   // Resize to thumbnail size and compress
-  await sharp(firstFramePath)
-    .resize(maxWidth, null, {
-      fit: 'inside',
-      withoutEnlargement: true
-    })
-    .jpeg({ quality: 80 })
-    .toFile(outputPath);
+  await sharp( firstFramePath )
+    .resize(
+      maxWidth,
+      null,
+      {
+        fit: "inside",
+        withoutEnlargement: true
+      }
+    )
+    .jpeg( {
+      quality: 80
+    } )
+    .toFile( outputPath );
 }

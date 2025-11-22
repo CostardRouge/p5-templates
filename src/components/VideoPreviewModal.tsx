@@ -3,7 +3,9 @@
 import React, {
   useEffect, useState, useRef
 } from "react";
-import { createPortal } from "react-dom";
+import {
+  createPortal
+} from "react-dom";
 import {
   Download, X, ExternalLink, FileVideo
 } from "lucide-react";
@@ -46,14 +48,18 @@ function formatFileSize( bytes: number ): string {
     "GB"
   ];
   const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
-  return `${ ( bytes / Math.pow( k, i ) ).toFixed( 1 ) } ${ sizes[ i ] }`;
+
+  return `${ ( bytes / Math.pow(
+    k,
+    i
+  ) ).toFixed( 1 ) } ${ sizes[ i ] }`;
 }
 
 function formatDuration( ms: number ): string {
   const seconds = Math.floor( ms / 1000 );
   const minutes = Math.floor( seconds / 60 );
   const remainingSeconds = seconds % 60;
-  
+
   if ( minutes > 0 ) {
     return `${ minutes }m ${ remainingSeconds }s`;
   }
@@ -149,9 +155,12 @@ export default function VideoPreviewModal( {
     ]
   );
 
-  const handleVideoLoadedMetadata = ( index: number, video: HTMLVideoElement ) => {
+  const handleVideoLoadedMetadata = (
+    index: number, video: HTMLVideoElement
+  ) => {
     setVideoMetadata( ( prev ) => {
       const newMap = new Map( prev );
+
       newMap.set(
         index,
         {
@@ -166,7 +175,7 @@ export default function VideoPreviewModal( {
 
   const handleDownloadAll = async() => {
     if ( !media || media.videos.length === 0 ) return;
-    
+
     if ( media.videos.length === 1 ) {
       // Single video - download directly
       await fetchDownload( `/api/recordings/download/${ jobId }/slide/0` );
@@ -196,11 +205,11 @@ export default function VideoPreviewModal( {
             {media && !loading && !media.isZipArchive && media.videos.length > 0 && (
               <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 truncate">
                 {media.videos.length} {media.videos.length === 1 ? "slide" : "slides"}
-                {media.recordingDuration && ` • ${formatDuration( media.recordingDuration )}`}
+                {media.recordingDuration && ` • ${ formatDuration( media.recordingDuration ) }`}
               </p>
             )}
           </div>
-          
+
           {/* Action buttons */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {media && !loading && !media.isZipArchive && media.videos.length > 0 && (
@@ -210,7 +219,7 @@ export default function VideoPreviewModal( {
                   <button
                     onClick={handleDownloadAll}
                     className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
-                    title={`Download all as .zip${media.zipSize ? ` (${formatFileSize( media.zipSize )})` : ""}`}
+                    title={`Download all as .zip${ media.zipSize ? ` (${ formatFileSize( media.zipSize ) })` : "" }`}
                   >
                     <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="hidden sm:inline">Download All</span>
@@ -219,7 +228,7 @@ export default function VideoPreviewModal( {
 
                 {/* Open Recording Link */}
                 <a
-                  href={`/recordings/${jobId}`}
+                  href={`/recordings/${ jobId }`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
@@ -232,7 +241,7 @@ export default function VideoPreviewModal( {
                 {/* Open Template Link */}
                 {media.template && (
                   <a
-                    href={`/templates/p5/${media.template}`}
+                    href={`/templates/p5/${ media.template }`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
@@ -244,7 +253,7 @@ export default function VideoPreviewModal( {
                 )}
               </>
             )}
-            
+
             <button
               onClick={onClose}
               aria-label="Close"
@@ -341,7 +350,7 @@ export default function VideoPreviewModal( {
                               </span>
                             </div>
                           )}
-                          
+
                           {/* Video container */}
                           <div className="border border-border rounded-xl sm:rounded-2xl overflow-hidden flex-1 flex items-center justify-center bg-black shadow-lg aspect-video min-h-0">
                             <video
@@ -366,7 +375,7 @@ export default function VideoPreviewModal( {
                               Your browser does not support the video tag.
                             </video>
                           </div>
-                          
+
                           {/* Video info and download */}
                           <div className="flex flex-col gap-2 flex-shrink-0">
                             {/* Video metadata */}
@@ -383,11 +392,11 @@ export default function VideoPreviewModal( {
                                 </span>
                               </div>
                             )}
-                            
+
                             {/* Download button */}
                             <div className="flex justify-center">
                               <button
-                                onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }/slide/${index}`)}
+                                onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }/slide/${ index }` )}
                                 className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-hover hover:bg-hover/70 border border-border rounded-xl transition-all font-medium text-xs sm:text-sm group"
                               >
                                 <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform" />
@@ -420,5 +429,8 @@ export default function VideoPreviewModal( {
     </div>
   );
 
-  return createPortal( modalContent, document.body );
+  return createPortal(
+    modalContent,
+    document.body
+  );
 }

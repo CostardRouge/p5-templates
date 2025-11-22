@@ -10,21 +10,24 @@ export default function useRecordings() {
   const [
     staticJobs,
     setStaticJobs
-  ] = useState<JobModel[]>( [] );
+  ] = useState<JobModel[]>( [
+  ] );
   const [
     inFlightJobs,
     setInFlightJobs
-  ] = useState<JobModel[]>( [] );
+  ] = useState<JobModel[]>( [
+  ] );
   const [
     isLoading,
     setIsLoading
   ] = useState<boolean>( true );
 
-  const recordingStartTimesRef = useRef<Record<string, number>>( {} );
+  const recordingStartTimesRef = useRef<Record<string, number>>( {
+  } );
 
   // Track start times for active jobs
   inFlightJobs.forEach( job => {
-    if ( job.status === 'active' && !recordingStartTimesRef.current[ job.id ] ) {
+    if ( job.status === "active" && !recordingStartTimesRef.current[ job.id ] ) {
       recordingStartTimesRef.current[ job.id ] = Date.now();
     }
   } );
@@ -53,7 +56,8 @@ export default function useRecordings() {
         .catch( console.error )
         .finally( () => setIsLoading( false ) );
     },
-    []
+    [
+    ]
   );
 
   const {
@@ -170,7 +174,8 @@ export default function useRecordings() {
 
       return () => clearInterval( interval );
     },
-    []
+    [
+    ]
   );
 
   const handleCancel = ( job: JobModel ) => {

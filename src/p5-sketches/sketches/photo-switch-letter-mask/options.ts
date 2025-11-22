@@ -1,6 +1,10 @@
 export const formValues = {
   colors: {
-    background: [246, 235, 225] as [number, number, number]
+    background: [
+      246,
+      235,
+      225
+    ] as [number, number, number]
   }
 };
 

@@ -13,7 +13,9 @@ import {
 import {
   updateRecordingStatus
 } from "@/lib/progression";
-import { NotificationService } from "@/services/NotificationService";
+import {
+  NotificationService
+} from "@/services/NotificationService";
 
 export class RecordingWorkerService {
   private static instance: RecordingWorkerService | null = null;
@@ -145,6 +147,7 @@ export class RecordingWorkerService {
       // Send push notification for job completion
       try {
         const notificationService = NotificationService.getInstance();
+
         await notificationService.sendJobCompletionNotification( jobId );
       } catch ( notificationError ) {
         console.error(
@@ -180,6 +183,7 @@ export class RecordingWorkerService {
       // Send push notification for job failure
       try {
         const notificationService = NotificationService.getInstance();
+
         await notificationService.sendJobFailureNotification( jobId );
       } catch ( notificationError ) {
         console.error(

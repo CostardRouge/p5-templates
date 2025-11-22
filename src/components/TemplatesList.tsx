@@ -14,7 +14,9 @@ import {
 } from "next/navigation";
 
 import HardLink from "@/components/HardLink";
-import { usePersistedViewMode } from "@/hooks/usePersistedViewMode";
+import {
+  usePersistedViewMode
+} from "@/hooks/usePersistedViewMode";
 
 interface TemplatesListProps {
   templates: Record<string, TemplateCategory>;
@@ -25,11 +27,14 @@ export default function TemplatesList( {
 }: TemplatesListProps ) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [
     view,
     setView
-  ] = usePersistedViewMode<"grid" | "list">( "templates-view-mode", "grid" );
+  ] = usePersistedViewMode<"grid" | "list">(
+    "templates-view-mode",
+    "grid"
+  );
   const [
     search,
     setSearch
@@ -39,7 +44,7 @@ export default function TemplatesList( {
   useEffect(
     () => {
       const params = new URLSearchParams( searchParams.toString() );
-      
+
       if ( search ) {
         params.set(
           "keyword",
@@ -48,8 +53,9 @@ export default function TemplatesList( {
       } else {
         params.delete( "keyword" );
       }
-      
+
       const newUrl = params.toString() ? `/templates?${ params.toString() }` : "/templates";
+
       router.replace(
         newUrl,
         {
@@ -65,26 +71,32 @@ export default function TemplatesList( {
   );
 
   // Filter templates based on search
-  const filteredTemplates = Object.entries( templates ).reduce( (
-    acc, [
-      category,
-      items
-    ]
-  ) => {
-    const filtered = items.filter( item => 
-      item.name.toLowerCase().includes( search.toLowerCase() )
-    );
-    
-    if ( filtered.length > 0 ) {
-      acc[ category ] = filtered;
-    }
-    
-    return acc;
-  }, {} as Record<string, TemplateCategory> );
+  const filteredTemplates = Object.entries( templates ).reduce(
+    (
+      acc, [
+        category,
+        items
+      ]
+    ) => {
+      const filtered = items.filter( item =>
+        item.name.toLowerCase().includes( search.toLowerCase() ) );
 
-  const totalCount = Object.values( filteredTemplates ).reduce( (
-    sum, items
-  ) => sum + items.length, 0 );
+      if ( filtered.length > 0 ) {
+        acc[ category ] = filtered;
+      }
+
+      return acc;
+    },
+{
+} as Record<string, TemplateCategory>
+  );
+
+  const totalCount = Object.values( filteredTemplates ).reduce(
+    (
+      sum, items
+    ) => sum + items.length,
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -94,7 +106,7 @@ export default function TemplatesList( {
           <h1 className="text-3xl font-bold text-foreground">Templates</h1>
           <p className="text-sm text-foreground/60 mt-1">
             {totalCount} {totalCount === 1 ? "template" : "templates"}
-            {search && ` matching "${search}"`}
+            {search && ` matching "${ search }"`}
           </p>
         </div>
 
@@ -115,10 +127,10 @@ export default function TemplatesList( {
           <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden flex-shrink-0">
             <button
               onClick={() => setView( "grid" )}
-              className={`px-3 py-2.5 transition-all duration-200 ${ 
-                view === "grid" 
-                  ? "bg-hover text-foreground" 
-                  : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+              className={`px-3 py-2.5 transition-all duration-200 ${
+                view === "grid"
+                  ? "bg-hover text-foreground"
+                  : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
               }`}
               title="Grid view"
             >
@@ -129,10 +141,10 @@ export default function TemplatesList( {
 
             <button
               onClick={() => setView( "list" )}
-              className={`px-3 py-2.5 transition-all duration-200 ${ 
-                view === "list" 
-                  ? "bg-hover text-foreground" 
-                  : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+              className={`px-3 py-2.5 transition-all duration-200 ${
+                view === "list"
+                  ? "bg-hover text-foreground"
+                  : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
               }`}
               title="List view"
             >
@@ -167,7 +179,7 @@ export default function TemplatesList( {
               {items.length} {items.length === 1 ? "template" : "templates"}
             </span>
           </div>
-          
+
           <div
             className={
               view === "grid"
@@ -202,11 +214,11 @@ export default function TemplatesList( {
                         src={thumbnail}
                         className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                       />
-                      
+
                       {/* Gradient overlay on hover */}
                       <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                    
+
                     {/* Template name */}
                     <div className="absolute bottom-0 left-0 right-0 p-3">
                       <div className="bg-background/95 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-lg">
@@ -218,7 +230,7 @@ export default function TemplatesList( {
                   </HardLink>
                 );
               }
-              
+
               // list view
               return (
                 <HardLink
@@ -242,7 +254,7 @@ export default function TemplatesList( {
                       {name}
                     </p>
                   </div>
-                  
+
                   { hasSketchForm && (
                     <div className="flex-shrink-0" title="Has a magic form">
                       <div className="bg-hover/50 rounded-lg border border-border p-1.5">
@@ -250,7 +262,7 @@ export default function TemplatesList( {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex-shrink-0 text-foreground/40 group-hover:text-foreground/60 transition-colors">
                     <span className="text-sm">→</span>
                   </div>

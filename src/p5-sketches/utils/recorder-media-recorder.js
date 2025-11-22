@@ -27,11 +27,13 @@ const recorder = {
     const mimeType = mimeTypes.find( type => MediaRecorder.isTypeSupported( type ) ) || "video/webm";
 
     // Create media recorder instance
-    recorder.mediaRecorder = new MediaRecorder( recorder.stream,
+    recorder.mediaRecorder = new MediaRecorder(
+      recorder.stream,
       {
         mimeType: mimeType,
         videoBitsPerSecond: 15000000 // 15 Mbps - adjust as needed
-      } );
+      }
+    );
 
     // Handle data available event
     recorder.mediaRecorder.ondataavailable = ( event ) => {
@@ -45,10 +47,12 @@ const recorder = {
       console.log( "Recording stopped, processing..." );
 
       // Create a Blob from the recorded chunks
-      const blob = new Blob( recorder.recordedChunks,
+      const blob = new Blob(
+        recorder.recordedChunks,
         {
           type: "video/webm"
-        } );
+        }
+      );
 
       // Generate download link
       recorder.downloadVideo( blob );
@@ -72,12 +76,14 @@ const recorder = {
     a.click();
 
     // Clean up
-    setTimeout( () => {
-      document.body.removeChild( a );
-      window.URL.revokeObjectURL( url );
-      console.log( `Recording saved as ${ fileName }` );
-    },
-    100 );
+    setTimeout(
+      () => {
+        document.body.removeChild( a );
+        window.URL.revokeObjectURL( url );
+        console.log( `Recording saved as ${ fileName }` );
+      },
+      100
+    );
   },
 
   start: ( maximumFrames ) => {
@@ -146,7 +152,8 @@ const recorder = {
       return;
     }
 
-    debug.createElement( "body",
+    debug.createElement(
+      "body",
       "recorder-saved-frames",
       () => {
         if ( recorder.maximumFrames ) {
@@ -154,7 +161,8 @@ const recorder = {
         }
         return recorder.savedFramesCount;
       },
-      !recorder.recording );
+      !recorder.recording
+    );
 
     if ( recorder.maximumFrames && document.getElementById( "recording-progression" ) ) {
       document.getElementById( "recording-progression" ).style.width =

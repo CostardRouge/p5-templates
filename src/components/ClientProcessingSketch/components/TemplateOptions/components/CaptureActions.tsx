@@ -22,7 +22,9 @@ import {
 
 import fetchDownload from "@/components/utils/fetchDownload";
 import CompactProgressBar from "@/components/CompactProgressBar";
-import { getRecordingSteps } from "@/utils/recordingSteps";
+import {
+  getRecordingSteps
+} from "@/utils/recordingSteps";
 import {
   getScopeAssetPath, resolveAssetURL
 } from "@/p5-sketches/shared/utils";
@@ -48,7 +50,11 @@ function formatFileSize( bytes: number ): string {
     "GB"
   ];
   const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
-  return `${ ( bytes / Math.pow( k, i ) ).toFixed( 1 ) } ${ sizes[ i ] }`;
+
+  return `${ ( bytes / Math.pow(
+    k,
+    i
+  ) ).toFixed( 1 ) } ${ sizes[ i ] }`;
 }
 
 // Completed actions component with file size display
@@ -74,7 +80,8 @@ function CompletedActions( {
   cloning: boolean;
 } ) {
   // Get video sizes directly from job data
-  const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [];
+  const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [
+  ];
   const currentVideoSize = videoSizes[ activeSlideIndex ];
 
   return (
@@ -95,7 +102,7 @@ function CompletedActions( {
       >
         {downloading ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> : <Download className="h-4 w-4 flex-shrink-0" />}
         <span className="truncate">
-          {downloading ? "Downloading..." : `Download${currentVideoSize ? ` (${ formatFileSize( currentVideoSize ) })` : ""}`}
+          {downloading ? "Downloading..." : `Download${ currentVideoSize ? ` (${ formatFileSize( currentVideoSize ) })` : "" }`}
         </span>
       </button>
 
@@ -186,17 +193,17 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   React.useEffect(
     () => {
       // Check if MediaRecorder is available, canvas.captureStream is supported, and WebM/VP8/VP9 is supported
-      const hasMediaRecorder = typeof MediaRecorder !== 'undefined';
-      const hasCaptureStream = typeof HTMLCanvasElement !== 'undefined' && 'captureStream' in HTMLCanvasElement.prototype;
-      
+      const hasMediaRecorder = typeof MediaRecorder !== "undefined";
+      const hasCaptureStream = typeof HTMLCanvasElement !== "undefined" && "captureStream" in HTMLCanvasElement.prototype;
+
       // Check if any WebM codec is supported (VP8, VP9, or H264 in WebM container)
       const webmCodecs = [
-        'video/webm;codecs=vp9',
-        'video/webm;codecs=vp8',
-        'video/webm;codecs=h264',
-        'video/webm'
+        "video/webm;codecs=vp9",
+        "video/webm;codecs=vp8",
+        "video/webm;codecs=h264",
+        "video/webm"
       ];
-      
+
       const hasWebMSupport = hasMediaRecorder && webmCodecs.some( codec => {
         try {
           return MediaRecorder.isTypeSupported( codec );
@@ -204,11 +211,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
           return false;
         }
       } );
-      
+
       const isSupported = hasMediaRecorder && hasCaptureStream && hasWebMSupport;
+
       setIsBrowserRecordingSupported( isSupported );
     },
-    []
+    [
+    ]
   );
 
   const {
@@ -221,11 +230,18 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   // Auto-subscribe to recording status on mount if job is active/queued
   React.useEffect(
     () => {
-      if ( persistedJob && [ "active", "queued" ].includes( persistedJob.status ) ) {
+      if ( persistedJob && [
+        "active",
+        "queued"
+      ].includes( persistedJob.status ) ) {
         subscribeToRecordingStatus( persistedJob.id );
       }
     },
-    [ persistedJob?.id, persistedJob?.status, subscribeToRecordingStatus ]
+    [
+      persistedJob?.id,
+      persistedJob?.status,
+      subscribeToRecordingStatus
+    ]
   );
 
   // Pause P5 sketch during recording
@@ -236,7 +252,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         "active"
       ].includes( recordingProgress.status );
 
-     if ( isRecording ) {
+      if ( isRecording ) {
         // Pause the sketch
         if ( typeof ( window as any ).noLoop === "function" ) {
           ( window as any ).noLoop();
@@ -365,7 +381,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
     if ( newJobId !== null ) {
       setJobId( newJobId );
-      
+
       if ( status !== "draft" ) {
         subscribeToRecordingStatus( newJobId );
       }
@@ -374,7 +390,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
       if ( !skipRedirect ) {
         router.replace( `${ name }?id=${ newJobId }` );
       }
-      
+
       if ( status === "draft" ) {
         setSaving( false );
       }
@@ -400,9 +416,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
   const handleDelete = async() => {
     const jobToDelete = persistedJob?.id || jobId;
+
     if ( !jobToDelete ) return;
 
-    const statusText = persistedJob?.status || currentStatus || 'recording';
+    const statusText = persistedJob?.status || currentStatus || "recording";
+
     if ( !confirm( `Delete this ${ statusText }? This action cannot be undone.` ) ) {
       return;
     }
@@ -506,7 +524,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     try {
       await handleSubmit( "draft" );
     } catch ( error ) {
-      console.error( "Failed to clone:", error );
+      console.error(
+        "Failed to clone:",
+        error
+      );
       alert( "Failed to clone. Please try again." );
     } finally {
       setCloning( false );
@@ -515,8 +536,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
   const handleDownload = async() => {
     const jobToDownload = persistedJob?.id || jobId;
+
     if ( !jobToDownload ) return;
-    
+
     setDownloading( true );
     try {
       await fetchDownload( `/api/recordings/download/${ jobToDownload }/slide/${ activeSlideIndex }` );
@@ -540,41 +562,42 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const isDraft = currentStatus === "draft";
   const hasNoJob = !persistedJob && !recordingProgress && !jobId;
   const isAnyActionLoading = isLoading || saving || deleting || cancelling || retrying || downloading || cloning;
-  
+  const isBlockingActionLoading = isLoading || deleting || cancelling || retrying || downloading || cloning;
+
   // Use persistedJob or construct a minimal job object from recordingProgress/jobId
-  const effectiveJob = persistedJob || (jobId ? {
+  const effectiveJob = persistedJob || ( jobId ? {
     id: jobId,
-    status: currentStatus || 'queued',
+    status: currentStatus || "queued",
     progress: recordingProgress?.percentage || 0,
-  } as JobModel : undefined);
+  } as JobModel : undefined );
 
   return (
     <>
       <div className="flex flex-col gap-1 h-auto w-full">
         {/* Browser Recording - Only on Compatible Devices */}
         {!isRecording && isBrowserRecordingSupported && (
-         <>
-          <div className="relative my-1">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-theme"></div>
+          <>
+            <div className="relative my-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-theme"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-background rounded-md border border-theme px-2 text-foreground/50">render options</span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-background rounded-md border border-theme px-2 text-foreground/50">render options</span>
-            </div>
-          </div>
 
-          <button
-            className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5"
-            onClick={async() => {
-              await window?.startLoopRecording( {
-                format: "webm"
-              } );
-            }}
-          >
-            <Save className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">Record in .webm</span>
-          </button>
-         </>
+            <button
+              className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5"
+              onClick={async() => {
+                await window?.startLoopRecording( {
+                  format: "webm"
+                } );
+              }}
+            >
+              <Save className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Record in .webm</span>
+            </button>
+          </>
         )}
 
         {backendRecording && (
@@ -587,7 +610,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   onClick={() => handleSubmit( "draft" )}
                   disabled={isAnyActionLoading}
                 >
-                  {saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0"/> :
+                  {saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> :
                     <Archive className="h-4 w-4 flex-shrink-0" />}
                   <span className="truncate">{saving ? "Saving..." : "Save Draft"}</span>
                 </button>
@@ -595,9 +618,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                 <button
                   className="rounded-xl px-3 py-2.5 border border-border bg-hover hover:bg-hover/70 text-foreground disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 flex-1"
                   onClick={() => handleSubmit( "queued" )}
-                  disabled={isAnyActionLoading || saving}
+                  disabled={isBlockingActionLoading}
                 >
-                  {isLoading && !saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0"/> :
+                  {isLoading && !saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> :
                     <Clapperboard className="h-4 w-4 flex-shrink-0" />}
                   <span className="truncate">{isLoading && !saving ? "Starting..." : "Start"}</span>
                 </button>
@@ -621,8 +644,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                     )}
                     disabled={isAnyActionLoading}
                   >
-                    {saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0"/> :
-                      <Save className="h-4 w-4 flex-shrink-0"/>}
+                    {saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> :
+                      <Save className="h-4 w-4 flex-shrink-0" />}
                     <span className="truncate">{saving ? "Saving..." : "Save"}</span>
                   </button>
 
@@ -632,9 +655,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                       "queued",
                       persistedJob.id
                     )}
-                    disabled={isAnyActionLoading || saving}
+                    disabled={isBlockingActionLoading}
                   >
-                    {isLoading && !saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0"/> :
+                    {isLoading && !saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> :
                       <Clapperboard className="h-4 w-4 flex-shrink-0" />}
                     <span className="truncate">{isLoading && !saving ? "Starting..." : "Start"}</span>
                   </button>
@@ -665,28 +688,40 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                   <CompactProgressBar
                     job={{
                       ...persistedJob,
-                      id: persistedJob?.id || jobId || '',
+                      id: persistedJob?.id || jobId || "",
                       progress: recordingProgress?.percentage || persistedJob?.progress || 0,
-                      status: recordingProgress?.status || persistedJob?.status || 'queued',
+                      status: recordingProgress?.status || persistedJob?.status || "queued",
                     } as JobModel}
-                    steps={( recordingProgress?.status || persistedJob?.status ) === 'active' ? getRecordingSteps({
+                    steps={( recordingProgress?.status || persistedJob?.status ) === "active" ? getRecordingSteps( {
                       ...persistedJob,
-                      id: persistedJob?.id || jobId || '',
+                      id: persistedJob?.id || jobId || "",
                       progress: recordingProgress?.percentage || persistedJob?.progress || 0,
-                      status: recordingProgress?.status || persistedJob?.status || 'active',
-                    } as JobModel) : []}
+                      status: recordingProgress?.status || persistedJob?.status || "active",
+                    } as JobModel ) : [
+                    ]}
                     startTime={jobId && recordingProgress?.recordingDuration ? Date.now() - recordingProgress.recordingDuration : undefined}
                   />
                 </div>
 
-                <button
-                  className="rounded-xl px-3 py-2.5 border border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/5 hover:bg-red-500/10 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5"
-                  onClick={handleCancel}
-                  disabled={cancelling}
-                >
-                  {cancelling ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> : <X className="h-4 w-4 flex-shrink-0" />}
-                  <span className="truncate">{cancelling ? "Cancelling..." : "Cancel Recording"}</span>
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5 flex-1"
+                    onClick={handleRecordAgain}
+                    disabled={cloning}
+                  >
+                    {cloning ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> : <Copy className="h-4 w-4 flex-shrink-0" />}
+                    <span className="truncate">{cloning ? "Cloning..." : "Clone as Draft"}</span>
+                  </button>
+
+                  <button
+                    className="rounded-xl px-3 py-2.5 border border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/5 hover:bg-red-500/10 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5 flex-1"
+                    onClick={handleCancel}
+                    disabled={cancelling}
+                  >
+                    {cancelling ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> : <X className="h-4 w-4 flex-shrink-0" />}
+                    <span className="truncate">{cancelling ? "Cancelling..." : "Cancel Recording"}</span>
+                  </button>
+                </div>
               </>
             )}
 

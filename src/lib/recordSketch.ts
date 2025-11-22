@@ -140,7 +140,10 @@ async function recordSketch(
     );
 
     // Store recordingDuration in Redis cache for SSE streaming
-    await addRecordingDuration( jobId, recordingDuration );
+    await addRecordingDuration(
+      jobId,
+      recordingDuration
+    );
   }
   catch ( error ) {
     await updateJob(
@@ -153,7 +156,11 @@ async function recordSketch(
 
     // Send failure notification
     const notificationService = NotificationService.getInstance();
-    await notificationService.sendJobFailureNotification( jobId, template );
+
+    await notificationService.sendJobFailureNotification(
+      jobId,
+      template
+    );
 
     throw error;
   }
@@ -356,7 +363,11 @@ async function recordSingleSketch(
 
   // Send completion notification
   const notificationService = NotificationService.getInstance();
-  await notificationService.sendJobCompletionNotification( jobId, template );
+
+  await notificationService.sendJobCompletionNotification(
+    jobId,
+    template
+  );
 }
 
 /**
@@ -570,7 +581,11 @@ async function recordMultipleSlides(
 
   // Send completion notification
   const notificationService = NotificationService.getInstance();
-  await notificationService.sendJobCompletionNotification( jobId, template );
+
+  await notificationService.sendJobCompletionNotification(
+    jobId,
+    template
+  );
 }
 
 export default recordSketch;

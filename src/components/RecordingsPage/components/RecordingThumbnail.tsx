@@ -1,7 +1,13 @@
-import { useState } from "react";
-import { Eye, Video } from "lucide-react";
+import {
+  useState
+} from "react";
+import {
+  Eye, Video
+} from "lucide-react";
 import clsx from "clsx";
-import type { JobModel } from "@/types/recording.types";
+import type {
+  JobModel
+} from "@/types/recording.types";
 
 interface RecordingThumbnailProps {
   job: JobModel;
@@ -10,18 +16,18 @@ interface RecordingThumbnailProps {
   showEyeInCorner?: boolean;
 }
 
-export default function RecordingThumbnail({
+export default function RecordingThumbnail( {
   job,
   onClick,
   className,
   showEyeInCorner = false
-}: RecordingThumbnailProps) {
+}: RecordingThumbnailProps ) {
   const [
     imageError,
     setImageError
-  ] = useState(false);
+  ] = useState( false );
 
-  const src = `/api/recordings/${job.id}/thumbnail`;
+  const src = `/api/recordings/${ job.id }/thumbnail`;
   const showEyeIcon = job.status === "completed" && job.videoUrls && job.thumbnails;
   const isRecording = job.status === "active";
 
@@ -32,10 +38,10 @@ export default function RecordingThumbnail({
   const shouldShowThumbnail =
     job.status === "draft" ||
     job.status === "active" ||
-    (job.thumbnails && (Array.isArray(job.thumbnails) ? job.thumbnails.length > 0 : true));
+    ( job.thumbnails && ( Array.isArray( job.thumbnails ) ? job.thumbnails.length > 0 : true ) );
 
   const getStatusColor = () => {
-    switch (job.status) {
+    switch ( job.status ) {
       case "completed": return "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400";
       case "active": return "bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400";
       case "failed": return "bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400";
@@ -57,7 +63,7 @@ export default function RecordingThumbnail({
       )}
     >
       {!shouldShowThumbnail || imageError ? (
-        <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${getStatusColor()}`}>
+        <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${ getStatusColor() }`}>
           <Video className="w-8 h-8 opacity-50" />
           <div className="text-center px-2">
             <div className="text-xs font-medium opacity-75">No Preview</div>
@@ -81,8 +87,14 @@ export default function RecordingThumbnail({
           {isRecording && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" style={{ width: '24px', height: '24px' }} />
-                <div className="relative rounded-full bg-red-600 shadow-lg" style={{ width: '24px', height: '24px' }} />
+                <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" style={{
+                  width: "24px",
+                  height: "24px"
+                }} />
+                <div className="relative rounded-full bg-red-600 shadow-lg" style={{
+                  width: "24px",
+                  height: "24px"
+                }} />
               </div>
             </div>
           )}
@@ -90,10 +102,13 @@ export default function RecordingThumbnail({
             src={src}
             alt={job.template}
             loading="lazy"
-            onError={() => setImageError(true)}
-            className={clsx("w-full h-full object-cover", {
-              grayscale: job.status !== "completed"
-            })}
+            onError={() => setImageError( true )}
+            className={clsx(
+              "w-full h-full object-cover",
+              {
+                grayscale: job.status !== "completed"
+              }
+            )}
           />
         </>
       )}

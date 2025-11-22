@@ -1,6 +1,8 @@
 import RecordingCard from "./RecordingCard";
 import RecordingsEmptyState from "./RecordingsEmptyState";
-import type { JobModel } from "@/types/recording.types";
+import type {
+  JobModel
+} from "@/types/recording.types";
 
 interface RecordingsCardsProps {
   jobs: JobModel[];
@@ -45,7 +47,7 @@ export default function RecordingsCards( {
         <RecordingCard
           key={job.id}
           job={job}
-          startTime={recordingStartTimes[job.id]}
+          startTime={recordingStartTimes[ job.id ]}
           isSelected={selectedIds.has( job.id )}
           isNewlyAdded={newlyAddedId === job.id}
           onToggleSelection={() => onToggleSelection( job.id )}

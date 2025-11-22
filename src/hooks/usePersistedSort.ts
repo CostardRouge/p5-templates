@@ -1,6 +1,10 @@
-import { useState, useEffect } from "react";
+import {
+  useState, useEffect
+} from "react";
 
-export function usePersistedSort<T>( key: string, defaultValue: T ): [
+export function usePersistedSort<T>(
+  key: string, defaultValue: T
+): [
   T,
   ( value: T ) => void
 ] {
@@ -12,6 +16,7 @@ export function usePersistedSort<T>( key: string, defaultValue: T ): [
 
     try {
       const stored = localStorage.getItem( key );
+
       return stored ? JSON.parse( stored ) : defaultValue;
     } catch {
       return defaultValue;
@@ -21,9 +26,15 @@ export function usePersistedSort<T>( key: string, defaultValue: T ): [
   useEffect(
     () => {
       try {
-        localStorage.setItem( key, JSON.stringify( value ) );
+        localStorage.setItem(
+          key,
+          JSON.stringify( value )
+        );
       } catch ( err ) {
-        console.warn( `Failed to persist ${key}:`, err );
+        console.warn(
+          `Failed to persist ${ key }:`,
+          err
+        );
       }
     },
     [

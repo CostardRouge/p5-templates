@@ -1,6 +1,10 @@
-import { Grid, List } from "lucide-react";
+import {
+  Grid, List
+} from "lucide-react";
 import SortControls from "./SortControls";
-import type { SortConfig } from "../hooks/useSorting";
+import type {
+  SortConfig
+} from "../hooks/useSorting";
 
 interface RecordingsToolbarProps {
   search: string;
@@ -32,7 +36,7 @@ export default function RecordingsToolbar( {
           <h1 className="text-3xl font-bold text-foreground">Recordings</h1>
           <p className="text-sm text-foreground/60 mt-1">
             {recordingsCount} {recordingsCount === 1 ? "recording" : "recordings"}
-            {statusFilter !== "all" && ` • ${statusFilter}`}
+            {statusFilter !== "all" && ` • ${ statusFilter }`}
           </p>
         </div>
 
@@ -40,10 +44,10 @@ export default function RecordingsToolbar( {
         <div className="hidden sm:flex items-center bg-background border border-border rounded-xl overflow-hidden flex-shrink-0">
           <button
             onClick={() => onViewChange( "cards" )}
-            className={`px-3 py-2.5 transition-all duration-200 ${ 
-              view === "cards" 
-                ? "bg-hover text-foreground" 
-                : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+            className={`px-3 py-2.5 transition-all duration-200 ${
+              view === "cards"
+                ? "bg-hover text-foreground"
+                : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
             }`}
             title="Card view"
           >
@@ -54,10 +58,10 @@ export default function RecordingsToolbar( {
 
           <button
             onClick={() => onViewChange( "table" )}
-            className={`px-3 py-2.5 transition-all duration-200 ${ 
-              view === "table" 
-                ? "bg-hover text-foreground" 
-                : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+            className={`px-3 py-2.5 transition-all duration-200 ${
+              view === "table"
+                ? "bg-hover text-foreground"
+                : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
             }`}
             title="Table view"
           >
@@ -101,10 +105,10 @@ export default function RecordingsToolbar( {
         <div className="flex sm:hidden items-center bg-background border border-border rounded-xl overflow-hidden flex-shrink-0 ml-auto">
           <button
             onClick={() => onViewChange( "cards" )}
-            className={`px-3 py-2.5 transition-all duration-200 ${ 
-              view === "cards" 
-                ? "bg-hover text-foreground" 
-                : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+            className={`px-3 py-2.5 transition-all duration-200 ${
+              view === "cards"
+                ? "bg-hover text-foreground"
+                : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
             }`}
             title="Card view"
           >
@@ -115,10 +119,10 @@ export default function RecordingsToolbar( {
 
           <button
             onClick={() => onViewChange( "table" )}
-            className={`px-3 py-2.5 transition-all duration-200 ${ 
-              view === "table" 
-                ? "bg-hover text-foreground" 
-                : "text-foreground/60 hover:text-foreground hover:bg-hover/50" 
+            className={`px-3 py-2.5 transition-all duration-200 ${
+              view === "table"
+                ? "bg-hover text-foreground"
+                : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
             }`}
             title="Table view"
           >
