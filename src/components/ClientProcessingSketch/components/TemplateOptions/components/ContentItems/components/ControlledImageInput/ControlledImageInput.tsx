@@ -20,23 +20,23 @@ import {
 } from "lucide-react";
 
 type Props = {
- name: string
+  name: string
 };
 
-export default function ControlledImageInput( {
+export default function ControlledImageInput({
   name
-}: Props ) {
-  const inputRef = useRef<HTMLInputElement>( null );
+}: Props) {
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     control
   } = useFormContext();
   const {
     field, fieldState
-  } = useController( {
+  } = useController({
     name,
     control
-  } );
+  });
   const {
     uploadFiles, maybeRemoveFromAssets
   } = useAssetsBridge();
@@ -47,13 +47,13 @@ export default function ControlledImageInput( {
   const [
     preview,
     setPreview
-  ] = useState<string | null>( null );
+  ] = useState<string | null>(null);
 
   const resolved = useMemo(
-    () => preview || ( field.value ? resolveAssetURL(
+    () => preview || (field.value ? resolveAssetURL(
       field.value,
       jobId
-    ) : null ),
+    ) : null),
     [
       preview,
       field.value,
@@ -61,45 +61,46 @@ export default function ControlledImageInput( {
     ]
   );
 
-  async function onFiles( files: FileList ) {
-    if ( !files?.length ) {
+  async function onFiles(files: FileList) {
+    if (!files?.length) {
       return;
     }
 
-    setPreview( URL.createObjectURL( files[ 0 ] ) );
+    setPreview(URL.createObjectURL(files[0]));
 
-    const paths = await uploadFiles( files );
+    const paths = await uploadFiles(files);
 
-    if ( paths.length ) {
-      field.onChange( paths[ 0 ] );
+    if (paths.length) {
+      field.onChange(paths[0]);
     }
   }
 
-  function clear( event: React.MouseEvent<HTMLButtonElement, MouseEvent> ) {
+  function clear(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     event.stopPropagation();
-    
+
     const prev = field.value;
 
-    field.onChange( "" );
-    setPreview( null );
+    field.onChange("");
+    setPreview(null);
 
-    if ( prev ) {
-      maybeRemoveFromAssets( prev );
+    if (prev) {
+      maybeRemoveFromAssets(prev);
     }
   }
 
   return (
     <div
       className="relative h-20"
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         inputRef.current?.click()
       }}
-      onDragOver={( e ) => e.preventDefault()}
-      onDrop={async( e ) => {
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={async (e) => {
         e.preventDefault();
 
-        if ( e.dataTransfer.files?.length ) {
-          await onFiles( e.dataTransfer.files );
+        if (e.dataTransfer.files?.length) {
+          await onFiles(e.dataTransfer.files);
         }
       }}
     >
@@ -122,7 +123,7 @@ export default function ControlledImageInput( {
             onClick={clear}
             className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-md border border-theme p-0.5"
           >
-            <Trash2 className="w-3.5 h-3.5"/>
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
