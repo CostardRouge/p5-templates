@@ -200,13 +200,13 @@ export const TextItemSchema = z.object( {
     x: 0,
     y: 0.5
   } ),
-  alignment: z.tuple( [
-    HorizontalAlign,
-    VerticalAlign
-  ] ).default( [
-    "left",
-    "baseline"
-  ] ),
+  alignment: z.object( {
+    horizontal: HorizontalAlign,
+    vertical: VerticalAlign,
+  } ).default({
+    vertical: "baseline",
+    horizontal: "center",
+  }),
   margin: z.object( {
     horizontal: z.number()
       .min( 0 )
@@ -216,7 +216,10 @@ export const TextItemSchema = z.object( {
       .min( 0 )
       .max( 1 )
       .default( 0.015 )
-  } )
+  } ).default({
+    vertical: 0.01,
+    horizontal: 0.01,
+  })
 } );
 
 export const ImageItemAnimations = z.discriminatedUnion(

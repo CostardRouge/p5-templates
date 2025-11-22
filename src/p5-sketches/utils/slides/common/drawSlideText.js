@@ -13,8 +13,8 @@ const parseFloatDefault = (
 };
 
 export default function drawSlideText( textOption ) {
-  const horizontalMargin = parseFloatDefault( textOption.horizontalMargin );
-  const verticalMargin = parseFloatDefault( textOption.verticalMargin );
+  const horizontalMargin = parseFloatDefault( textOption.margin.horizontal );
+  const verticalMargin = parseFloatDefault( textOption.margin.vertical );
 
   string.write(
     textOption.content,
@@ -24,8 +24,8 @@ export default function drawSlideText( textOption ) {
       size: Number( textOption.size ),
       font: string.fonts?.[ textOption.font ] ?? string.fonts.martian,
       textAlign: [
-        textOption?.align?.[ 0 ] ?? "center",
-        textOption?.align?.[ 1 ] ?? "baseline",
+        textOption.alignment?.horizontal ?? "center",
+        textOption.alignment?.vertical ?? "baseline"
       ],
       blendMode: textOption.blend,
       fill: color( ...textOption.fill ),

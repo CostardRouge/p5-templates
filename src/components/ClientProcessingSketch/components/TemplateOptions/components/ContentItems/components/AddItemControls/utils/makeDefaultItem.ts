@@ -17,7 +17,7 @@ export default function makeDefaultItem( type: ItemKind ): ContentItem {
     case "text":
       return TextItemSchema.parse( {
         type,
-        content: "new text"
+        content: "new text",
       } );
     case "image":
       return ImageItemSchema.parse( {
