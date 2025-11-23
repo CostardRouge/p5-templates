@@ -18,17 +18,17 @@ export async function GET(
   {
     params
   }: {
- params: Promise<{
- id: string
-}>
-}
+    params: Promise<{
+      id: string
+    }>
+  }
 ) {
-  const jobId = ( await params ).id;
+  const jobId = (await params).id;
 
   try {
-    const job = await getJobById( jobId );
+    const job = await getJobById(jobId);
 
-    if ( !job ) {
+    if (!job) {
       return new NextResponse(
         "Job not found",
         {
@@ -38,23 +38,27 @@ export async function GET(
     }
 
     // Only try to get recording thumbnail for completed jobs with thumbnails
-    if ( job.status === "completed" && job.thumbnails ) {
+    if (job.status === "completed" && job.thumbnails) {
       const thumbnails = job.thumbnails as unknown as string[];
 
-      if ( thumbnails.length > 0 ) {
+      if (thumbnails.length > 0) {
         try {
           // Generate signed URL for the first thumbnail
           const signedUrl = await getDownloadUrlFromS3Url(
-            thumbnails[ 0 ],
+            thumbnails[0],
             3600
           );
 
           // Redirect to the signed S3 URL
-          return NextResponse.redirect(
+          const response = NextResponse.redirect(
             signedUrl,
             302
           );
-        } catch ( error ) {
+          response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+          response.headers.set("Pragma", "no-cache");
+          response.headers.set("Expires", "0");
+          return response;
+        } catch (error) {
           console.error(
             "Failed to generate signed URL for thumbnail:",
             error
@@ -65,26 +69,30 @@ export async function GET(
     }
 
     // Fall back to sketch template thumbnail
-    const templateThumbnailUrl = getP5SketchThumbnailURL( job.template.replace(
+    const templateThumbnailUrl = getP5SketchThumbnailURL(job.template.replace(
       "p5",
       ""
-    ) );
+    ));
 
     // Convert relative URL to absolute URL for redirect
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    `${ _req.nextUrl.protocol }//${ _req.nextUrl.host }`;
+      `${_req.nextUrl.protocol}//${_req.nextUrl.host}`;
     const absoluteUrl = new URL(
       templateThumbnailUrl,
       baseUrl
     ).toString();
 
-    return NextResponse.redirect(
+    const response = NextResponse.redirect(
       absoluteUrl,
       302
     );
-  } catch ( error ) {
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    return response;
+  } catch (error) {
     console.error(
-      `[GET /api/recordings/${ jobId }/thumbnail]`,
+      `[GET /api/recordings/${jobId}/thumbnail]`,
       error
     );
     return new NextResponse(

@@ -16,58 +16,46 @@ interface RecordingThumbnailProps {
   showEyeInCorner?: boolean;
 }
 
-export default function RecordingThumbnail( {
+export default function RecordingThumbnail({
   job,
   onClick,
   className,
   showEyeInCorner = false
-}: RecordingThumbnailProps ) {
+}: RecordingThumbnailProps) {
   const [
     imageError,
     setImageError
-  ] = useState( false );
+  ] = useState(false);
 
-  const src = `/api/recordings/${ job.id }/thumbnail`;
+  const src = `/api/recordings/${job.id}/thumbnail?t=${new Date(job.updatedAt).getTime()}`;
   const showEyeIcon = job.status === "completed" && job.videoUrls && job.thumbnails;
   const isRecording = job.status === "active";
+  const isQueued = job.status === "queued";
+  const isFailed = job.status === "failed";
+  const isCompleted = job.status === "completed";
 
-  // Check if we should show thumbnail:
-  // - For completed: check if thumbnails exist
-  // - For draft/active: always try to show (API will fallback to template thumbnail)
-  // - For other statuses: check if thumbnails exist
-  const shouldShowThumbnail =
-    job.status === "draft" ||
-    job.status === "active" ||
-    ( job.thumbnails && ( Array.isArray( job.thumbnails ) ? job.thumbnails.length > 0 : true ) );
-
-  const getStatusColor = () => {
-    switch ( job.status ) {
-      case "completed": return "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400";
-      case "active": return "bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400";
-      case "failed": return "bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400";
-      case "cancelled": return "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400";
-      case "queued": return "bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400";
-      default: return "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
-    }
-  };
+  // We assume the API will return the template thumbnail if the recording one isn't ready.
+  // If the image fails to load (404 etc), we show the placeholder.
+  const shouldShowThumbnail = !imageError;
 
   return (
     <div
       onClick={onClick}
       className={clsx(
         className,
-        "relative overflow-hidden flex items-center justify-center",
+        "relative overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800",
         {
-          "animate-pulse": job.status === "active"
+          "animate-pulse": isQueued,
+          "cursor-pointer": !!onClick
         }
       )}
     >
-      {!shouldShowThumbnail || imageError ? (
-        <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${ getStatusColor() }`}>
+      {!shouldShowThumbnail ? (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400">
           <Video className="w-8 h-8 opacity-50" />
           <div className="text-center px-2">
             <div className="text-xs font-medium opacity-75">No Preview</div>
-            <div className="text-[10px] opacity-50 truncate max-w-full">{job.template}</div>
+            <div className="text-[10px] opacity-50 truncate max-w-full px-10 elipsis">{job.template}</div>
           </div>
         </div>
       ) : (
@@ -98,15 +86,18 @@ export default function RecordingThumbnail( {
               </div>
             </div>
           )}
+          {isFailed && (
+            <div className="absolute inset-0 bg-red-500/20 z-10 mix-blend-multiply pointer-events-none" />
+          )}
           <img
             src={src}
             alt={job.template}
             loading="lazy"
-            onError={() => setImageError( true )}
+            onError={() => setImageError(true)}
             className={clsx(
-              "w-full h-full object-cover",
+              "w-full h-full object-cover transition-all duration-300",
               {
-                grayscale: job.status !== "completed"
+                "grayscale": !isCompleted
               }
             )}
           />
