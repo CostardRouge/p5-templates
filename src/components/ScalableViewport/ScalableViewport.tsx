@@ -11,16 +11,18 @@ import { useGesture } from "@use-gesture/react";
 import clamp from "@/utils/clamp";
 import ZoomControls from "@/components/ScalableViewport/components/ZoomControls";
 
+import easing from "@/p5-sketches/utils/easing";
+
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 6;
-const ZOOM_STEP = 0.5;
+const ZOOM_STEP = 0.2;
 
 const ANIMATION_CONFIG = {
-  duration: 300, // ms
-  easing: (t: number) => 1 - Math.pow(1 - t, 3), // easeOutCubic
+  duration: 250,
+  easing: easing.easeOutCubic
 };
 
 export default function ScalableViewport({
@@ -59,6 +61,7 @@ export default function ScalableViewport({
     if (contentRef.current) {
       const { x, y, scale } = transform.current;
       contentRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+      contentRef.current.style.setProperty("--viewport-scale", scale.toString());
     }
   }, []);
 
