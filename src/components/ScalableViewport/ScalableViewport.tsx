@@ -7,9 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  useGesture
-} from "@use-gesture/react";
+import { useGesture } from "@use-gesture/react";
 import clamp from "@/utils/clamp";
 import ZoomControls from "@/components/ScalableViewport/components/ZoomControls";
 
@@ -35,250 +33,55 @@ export default function ScalableViewport({
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // We use a ref for the transform state to ensure high-performance updates
-  // without triggering React renders on every frame.
+  // State for high-performance transforms
   const transform = useRef({
     x: 0,
     y: 0,
     scale: initialScale || 1,
   });
-  // ... (refs and state unchanged)
 
-  // We sync the scale to React state occasionally for the UI (ZoomControls)
-  const [
-    displayScale,
-    setDisplayScale
-  ] = useState(initialScale || 1);
-  // ... (updateDom and setTransform unchanged)
+  // Sync scale to React state for UI (ZoomControls)
+  const [displayScale, setDisplayScale] = useState(initialScale || 1);
 
   /* ---------------------------------------------------------------- */
   /*  DOM Manipulation                                                */
   /* ---------------------------------------------------------------- */
-  const updateDom = useCallback(
-    () => {
-      if (contentRef.current) {
-        const {
-          x, y, scale
-        } = transform.current;
-
-        contentRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-      }
-    },
-    [
-    ]
-  );
+  const updateDom = useCallback(() => {
+    if (contentRef.current) {
+      const { x, y, scale } = transform.current;
+      contentRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    }
+  }, []);
 
   const setTransform = useCallback(
     (newValues: Partial<typeof transform.current>) => {
-      transform.current = {
-        ...transform.current,
-        ...newValues
-      };
+      transform.current = { ...transform.current, ...newValues };
       updateDom();
-      // Sync display scale if it changed
       if (newValues.scale !== undefined) {
         setDisplayScale(newValues.scale);
       }
     },
-    [
-      updateDom
-    ]
-  );
-
-  /* ---------------------------------------------------------------- */
-  /*  Gestures                                                        */
-  /* ---------------------------------------------------------------- */
-  useGesture(
-    {
-      onDrag: ({ delta: [dx, dy] }) => {
-        const { x, y } = transform.current;
-        setTransform({
-          x: x + dx,
-          y: y + dy,
-        });
-      },
-      onPinch: ({
-        origin: [ox, oy],
-        offset: [s],
-        memo
-      }) => {
-        // use-gesture handles the scale accumulation in `offset`
-        // We need to handle the focal point translation manually.
-        // `memo` stores the previous scale to calculate delta.
-
-        const previousScale = memo ?? transform.current.scale;
-        const newScale = s;
-
-        // Re-implement focal logic for incremental updates:
-        const container = containerRef.current;
-
-        if (!container) return previousScale;
-
-        const rect = container.getBoundingClientRect();
-        const relX = ox - rect.left;
-        const relY = oy - rect.top;
-
-        const { x, y } = transform.current;
-        const scaleRatio = newScale / previousScale;
-
-        const nextX = relX - (relX - x) * scaleRatio;
-        const nextY = relY - (relY - y) * scaleRatio;
-
-        setTransform({
-          x: nextX,
-          y: nextY,
-          scale: newScale
-        });
-
-        return newScale;
-      },
-      onWheel: ({
-        event, delta: [dx, dy], ctrlKey
-      }) => {
-        // If ctrlKey is pressed, it's a trackpad pinch (handled by onPinch usually).
-        if (ctrlKey) return;
-
-        // Ignore horizontal scrolling for zoom
-        if (Math.abs(dx) > Math.abs(dy)) return;
-
-        event.preventDefault();
-
-        const { scale } = transform.current;
-        // Determine zoom factor.
-        // dy > 0 means scrolling down (zoom out usually), dy < 0 means scrolling up (zoom in).
-        // Adjust sensitivity as needed.
-        const zoomFactor = Math.exp(-dy * 0.002);
-        const newScale = scale * zoomFactor;
-
-        zoomToPoint(newScale, event.clientX, event.clientY);
-      },
-    },
-    {
-      target: containerRef,
-      drag: {
-        // Using delta, so 'from' is not strictly needed for position syncing,
-        // but good practice to keep internal state aligned if we switched back.
-        from: () => [transform.current.x, transform.current.y],
-        // Prevent text selection while dragging
-        filterTaps: true,
-      },
-      pinch: {
-        scaleBounds: { min: MIN_SCALE, max: MAX_SCALE },
-        modifierKey: null, // Handle all pinches (touch + trackpad)
-        from: () => [transform.current.scale, 0], // 0 is rotation, we ignore it
-      },
-      wheel: {
-        eventOptions: { passive: false },
-        // Only prevent default if we are actually zooming (vertical)
-        preventDefault: true,
-      },
-    }
-  );
-
-  /* ---------------------------------------------------------------- */
-  /*  Fit to Viewport                                                 */
-  /* ---------------------------------------------------------------- */
-  const fitToViewport = useCallback(
-    () => {
-      const viewport = containerRef.current;
-      const canvas = contentRef.current;
-
-      if (!viewport || !canvas) return;
-
-      // Reset transform temporarily to get natural size?
-      // Or just use offsetWidth/Height which are unscaled?
-      // offsetWidth/Height include scale transforms in some browsers/contexts,
-      // but usually clientWidth/Height on the element itself are pre-transform if we measure correctly.
-      // Actually, `getBoundingClientRect` is affected by transform. `offsetWidth` is usually not?
-      // Let's use the natural dimensions.
-
-      const contentWidth = canvas.offsetWidth;
-      const contentHeight = canvas.offsetHeight;
-      const viewportWidth = viewport.clientWidth;
-      const viewportHeight = viewport.clientHeight;
-
-      if (contentWidth === 0 || contentHeight === 0) return;
-
-      const widthRatio = viewportWidth / contentWidth;
-      const heightRatio = viewportHeight / contentHeight;
-      const bestFitScale = Math.min(
-        widthRatio,
-        heightRatio
-      ) * 0.9; // 90% fit
-
-      const newScale = clamp(
-        bestFitScale,
-        MIN_SCALE,
-        MAX_SCALE
-      );
-
-      // Center it
-      const newX = (viewportWidth - contentWidth * newScale) / 2;
-      const newY = (viewportHeight - contentHeight * newScale) / 2;
-
-      setTransform({
-        x: newX,
-        y: newY,
-        scale: newScale
-      });
-    },
-    [
-      setTransform
-    ]
-  );
-
-  const resetToActualPixels = useCallback(
-    () => {
-      const viewport = containerRef.current;
-      const canvas = contentRef.current;
-
-      if (!viewport || !canvas) return;
-
-      const newScale = 1;
-      // Center
-      const newX = (viewport.clientWidth - canvas.offsetWidth) / 2;
-      const newY = (viewport.clientHeight - canvas.offsetHeight) / 2;
-
-      setTransform({
-        x: newX,
-        y: newY,
-        scale: newScale
-      });
-    },
-    [
-      setTransform
-    ]
+    [updateDom]
   );
 
   /* ---------------------------------------------------------------- */
   /*  Zoom Logic (Focal Point)                                        */
   /* ---------------------------------------------------------------- */
   const zoomToPoint = useCallback(
-    (
-      newScale: number, clientX: number, clientY: number
-    ) => {
+    (newScale: number, clientX: number, clientY: number) => {
       const container = containerRef.current;
-
       if (!container) return;
 
       const rect = container.getBoundingClientRect();
-      const {
-        x, y, scale
-      } = transform.current;
+      const { x, y, scale } = transform.current;
 
-      // Clamp scale
-      const clampedScale = clamp(
-        newScale,
-        MIN_SCALE,
-        MAX_SCALE
-      );
+      const clampedScale = clamp(newScale, MIN_SCALE, MAX_SCALE);
 
-      // Calculate the point relative to the container
+      // Calculate local coordinates relative to container
       const relX = clientX - rect.left;
       const relY = clientY - rect.top;
 
       // Calculate the translation adjustment to keep the focal point fixed
-      // Formula: nextX = relX - (relX - currentX) * (nextScale / currentScale)
       const scaleRatio = clampedScale / scale;
       const nextX = relX - (relX - x) * scaleRatio;
       const nextY = relY - (relY - y) * scaleRatio;
@@ -289,99 +92,204 @@ export default function ScalableViewport({
         scale: clampedScale,
       });
     },
-    [
-      setTransform
-    ]
+    [setTransform]
   );
+
+  /* ---------------------------------------------------------------- */
+  /*  Gestures                                                        */
+  /* ---------------------------------------------------------------- */
+  useGesture(
+    {
+      // 1. Mouse Click + Drag = Pan
+      onDrag: ({ delta: [dx, dy] }) => {
+        const { x, y } = transform.current;
+        setTransform({
+          x: x + dx,
+          y: y + dy,
+        });
+      },
+
+
+      // 2. Trackpad Pinch / Touch Pinch = Zoom
+      onPinch: ({ origin: [ox, oy], offset: [s], first, memo }) => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        if (first) {
+          const rect = container.getBoundingClientRect();
+          // 1. Capture the initial state at the start of the gesture
+          const { x, y, scale } = transform.current;
+
+          // Calculate the "focal point" relative to the container
+          // This is the point we want to remain fixed visually
+          const tx = ox - rect.left;
+          const ty = oy - rect.top;
+
+          // Return these values to be used in subsequent frames as 'memo'
+          return {
+            initialScale: scale,
+            initialX: x,
+            initialY: y,
+            focalX: tx,
+            focalY: ty,
+          };
+        }
+
+        // 2. Retrieve the initial state from memo
+        const { initialScale, initialX, initialY, focalX, focalY } = memo;
+
+        // 3. Calculate new position based on the FIXED focal point
+        // Math: The point under the cursor (focalX) must remain at focalX.
+        // Current world position of focal point: (focalX - initialX) / initialScale
+        // New Screen Position = NewWorldPos * NewScale + NewTranslate
+        // focalX = ((focalX - initialX) / initialScale) * s + newX
+
+        const newScale = s;
+        const nextX = focalX - ((focalX - initialX) / initialScale) * newScale;
+        const nextY = focalY - ((focalY - initialY) / initialScale) * newScale;
+
+        setTransform({
+          x: nextX,
+          y: nextY,
+          scale: newScale,
+        });
+
+        return memo;
+      },
+
+      // 3. Trackpad 2-finger Move / Mouse Wheel = Pan
+      onWheel: ({ event, delta: [dx, dy], ctrlKey }) => {
+        // If ctrlKey is pressed, it is technically a "pinch" on some trackpads/browsers.
+        // We can let onPinch handle that, or handle it here if onPinch doesn't fire.
+        // For Figma behavior, standard wheel events (no ctrl) should PAN.
+
+        if (ctrlKey) {
+          // Optional: Handle "Ctrl + Wheel" as zoom if onPinch doesn't catch it.
+          // Most modern browsers map Ctrl+Wheel to pinch automatically.
+          // If you specifically want Ctrl+Wheel to Zoom manually:
+          event.preventDefault();
+          const { scale } = transform.current;
+          const zoomFactor = Math.exp(-dy * 0.01);
+          zoomToPoint(scale * zoomFactor, event.clientX, event.clientY);
+          return;
+        }
+
+        // Standard Pan Logic
+        event.preventDefault(); // Prevent browser history navigation (swipe back)
+        const { x, y } = transform.current;
+
+        // Subtract delta to mimic "natural" scrolling or Add depending on preference.
+        // Standard Figma/Maps: Wheel Down (positive dy) moves view down (content moves up).
+        // So we subtract delta.
+        setTransform({
+          x: x - dx,
+          y: y - dy,
+        });
+      },
+    },
+    {
+      target: containerRef,
+      drag: {
+        from: () => [transform.current.x, transform.current.y],
+        filterTaps: true,
+      },
+      pinch: {
+        scaleBounds: { min: MIN_SCALE, max: MAX_SCALE },
+        // Important: 'from' must sync with current scale to avoid jumping
+        from: () => [transform.current.scale, 0],
+      },
+      wheel: {
+        eventOptions: { passive: false },
+        from: () => [transform.current.x, transform.current.y],
+      },
+    }
+  );
+
+  /* ---------------------------------------------------------------- */
+  /*  Fit to Viewport                                                 */
+  /* ---------------------------------------------------------------- */
+  const fitToViewport = useCallback(() => {
+    const viewport = containerRef.current;
+    const canvas = contentRef.current;
+    if (!viewport || !canvas) return;
+
+    const contentWidth = canvas.offsetWidth;
+    const contentHeight = canvas.offsetHeight;
+    const viewportWidth = viewport.clientWidth;
+    const viewportHeight = viewport.clientHeight;
+
+    if (contentWidth === 0 || contentHeight === 0) return;
+
+    const widthRatio = viewportWidth / contentWidth;
+    const heightRatio = viewportHeight / contentHeight;
+    const bestFitScale = Math.min(widthRatio, heightRatio) * 0.9;
+
+    const newScale = clamp(bestFitScale, MIN_SCALE, MAX_SCALE);
+
+    const newX = (viewportWidth - contentWidth * newScale) / 2;
+    const newY = (viewportHeight - contentHeight * newScale) / 2;
+
+    setTransform({
+      x: newX,
+      y: newY,
+      scale: newScale,
+    });
+  }, [setTransform]);
+
+  const resetToActualPixels = useCallback(() => {
+    const viewport = containerRef.current;
+    const canvas = contentRef.current;
+    if (!viewport || !canvas) return;
+
+    const newScale = 1;
+    const newX = (viewport.clientWidth - canvas.offsetWidth) / 2;
+    const newY = (viewport.clientHeight - canvas.offsetHeight) / 2;
+
+    setTransform({ x: newX, y: newY, scale: newScale });
+  }, [setTransform]);
 
   /* ---------------------------------------------------------------- */
   /*  Lifecycle                                                       */
   /* ---------------------------------------------------------------- */
-  // Initial fit and fit on resolution change
-  useEffect(
-    () => {
-      if (!isReady) return;
+  useEffect(() => {
+    if (!isReady) return;
+    const timer = setTimeout(() => {
+      fitToViewport();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [resolutionKey, isReady, fitToViewport]);
 
-      // Small timeout to ensure layout is ready
-      const timer = setTimeout(
-        () => {
-          // Always fit to viewport when resolution changes or on initial load
-          fitToViewport();
-        },
-        100 // Increased timeout to ensure canvas is rendered with new dimensions
-      );
-
-      return () => clearTimeout(timer);
-    },
-    [
-      resolutionKey,
-      isReady,
-      fitToViewport,
-      setTransform
-    ]
-  );
-
-  // Resize observer
-  useEffect(
-    () => {
-      if (!containerRef.current) return;
-      const observer = new ResizeObserver(() => {
-        // Optional: Refit on resize? Or just keep current scale/pos?
-        // Usually keeping relative pos is hard.
-        // Let's just do nothing or maybe clamp bounds?
-        // User asked for "stable".
-        // Let's leave it as is, or maybe re-center if it was centered?
-        // For now, let's not force re-fit to avoid annoying jumps during window resize.
-      });
-
-      observer.observe(containerRef.current);
-      return () => observer.disconnect();
-    },
-    [
-    ]
-  );
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(() => {
+      // Optional: Handle resize logic
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div
       ref={containerRef}
       className="w-full h-full overflow-hidden touch-none relative cursor-grab active:cursor-grabbing"
-      style={{
-        touchAction: "none"
-      }}
+      style={{ touchAction: "none" }}
     >
       {showZoomControls && (
         <ZoomControls
           onPlus={() => {
-            const {
-              scale, x, y
-            } = transform.current;
+            const { scale } = transform.current;
             const container = containerRef.current;
-
             if (container) {
               const rect = container.getBoundingClientRect();
-
-              // Zoom to center of viewport
-              zoomToPoint(
-                scale + 0.5,
-                rect.left + rect.width / 2,
-                rect.top + rect.height / 2
-              );
+              zoomToPoint(scale + 0.5, rect.left + rect.width / 2, rect.top + rect.height / 2);
             }
           }}
           onMinus={() => {
-            const {
-              scale
-            } = transform.current;
+            const { scale } = transform.current;
             const container = containerRef.current;
-
             if (container) {
               const rect = container.getBoundingClientRect();
-
-              zoomToPoint(
-                scale - 0.5,
-                rect.left + rect.width / 2,
-                rect.top + rect.height / 2
-              );
+              zoomToPoint(scale - 0.5, rect.left + rect.width / 2, rect.top + rect.height / 2);
             }
           }}
           onFit={fitToViewport}
