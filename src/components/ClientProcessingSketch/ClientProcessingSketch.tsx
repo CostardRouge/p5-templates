@@ -83,6 +83,7 @@ export default function ClientProcessingSketch() {
         <ScalableViewport
           showZoomControls={!capturing && sketchLoaded}
           resolutionKey={`${currentOptions.size.width}x${currentOptions.size.height}`}
+          isReady={sketchLoaded}
         >
           {sketchLoaded && (
             <div className="flex justify-between font-mono text-[calc((5vh+5vw)/2)] md:text-[calc((2vh+2vw)/2)] ">

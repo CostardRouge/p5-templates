@@ -24,11 +24,13 @@ export default function ScalableViewport({
   initialScale,
   showZoomControls = true,
   resolutionKey,
+  isReady = true,
 }: {
   children: ReactNode;
   initialScale?: number;
   resolutionKey?: string;
   showZoomControls?: boolean;
+  isReady?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -40,12 +42,14 @@ export default function ScalableViewport({
     y: 0,
     scale: initialScale || 1,
   });
+  // ... (refs and state unchanged)
 
   // We sync the scale to React state occasionally for the UI (ZoomControls)
   const [
     displayScale,
     setDisplayScale
   ] = useState(initialScale || 1);
+  // ... (updateDom and setTransform unchanged)
 
   /* ---------------------------------------------------------------- */
   /*  DOM Manipulation                                                */
@@ -82,72 +86,21 @@ export default function ScalableViewport({
   );
 
   /* ---------------------------------------------------------------- */
-  /*  Zoom Logic (Focal Point)                                        */
-  /* ---------------------------------------------------------------- */
-  const zoomToPoint = useCallback(
-    (
-      newScale: number, clientX: number, clientY: number
-    ) => {
-      const container = containerRef.current;
-
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
-      const {
-        x, y, scale
-      } = transform.current;
-
-      // Clamp scale
-      const clampedScale = clamp(
-        newScale,
-        MIN_SCALE,
-        MAX_SCALE
-      );
-
-      // Calculate the point relative to the container
-      const relX = clientX - rect.left;
-      const relY = clientY - rect.top;
-
-      // Calculate the translation adjustment to keep the focal point fixed
-      // Formula: nextX = relX - (relX - currentX) * (nextScale / currentScale)
-      const scaleRatio = clampedScale / scale;
-      const nextX = relX - (relX - x) * scaleRatio;
-      const nextY = relY - (relY - y) * scaleRatio;
-
-      setTransform({
-        x: nextX,
-        y: nextY,
-        scale: clampedScale,
-      });
-    },
-    [
-      setTransform
-    ]
-  );
-
-  /* ---------------------------------------------------------------- */
   /*  Gestures                                                        */
   /* ---------------------------------------------------------------- */
   useGesture(
     {
-      onDrag: ({
-        offset: [
-          x,
-          y
-        ]
-      }) => {
+      onDrag: ({ delta: [dx, dy] }) => {
+        const { x, y } = transform.current;
         setTransform({
-          x,
-          y
+          x: x + dx,
+          y: y + dy,
         });
       },
       onPinch: ({
-        origin: [
-          ox,
-          oy
-        ], offset: [
-          s
-        ], memo
+        origin: [ox, oy],
+        offset: [s],
+        memo
       }) => {
         // use-gesture handles the scale accumulation in `offset`
         // We need to handle the focal point translation manually.
@@ -165,9 +118,7 @@ export default function ScalableViewport({
         const relX = ox - rect.left;
         const relY = oy - rect.top;
 
-        const {
-          x, y
-        } = transform.current;
+        const { x, y } = transform.current;
         const scaleRatio = newScale / previousScale;
 
         const nextX = relX - (relX - x) * scaleRatio;
@@ -182,10 +133,7 @@ export default function ScalableViewport({
         return newScale;
       },
       onWheel: ({
-        event, delta: [
-          dx,
-          dy
-        ], ctrlKey
+        event, delta: [dx, dy], ctrlKey
       }) => {
         // If ctrlKey is pressed, it's a trackpad pinch (handled by onPinch usually).
         if (ctrlKey) return;
@@ -195,47 +143,32 @@ export default function ScalableViewport({
 
         event.preventDefault();
 
-        const {
-          scale
-        } = transform.current;
+        const { scale } = transform.current;
         // Determine zoom factor.
         // dy > 0 means scrolling down (zoom out usually), dy < 0 means scrolling up (zoom in).
         // Adjust sensitivity as needed.
         const zoomFactor = Math.exp(-dy * 0.002);
         const newScale = scale * zoomFactor;
 
-        zoomToPoint(
-          newScale,
-          event.clientX,
-          event.clientY
-        );
+        zoomToPoint(newScale, event.clientX, event.clientY);
       },
     },
     {
       target: containerRef,
       drag: {
-        from: () => [
-          transform.current.x,
-          transform.current.y
-        ],
+        // Using delta, so 'from' is not strictly needed for position syncing,
+        // but good practice to keep internal state aligned if we switched back.
+        from: () => [transform.current.x, transform.current.y],
         // Prevent text selection while dragging
         filterTaps: true,
       },
       pinch: {
-        scaleBounds: {
-          min: MIN_SCALE,
-          max: MAX_SCALE
-        },
+        scaleBounds: { min: MIN_SCALE, max: MAX_SCALE },
         modifierKey: null, // Handle all pinches (touch + trackpad)
-        from: () => [
-          transform.current.scale,
-          0
-        ], // 0 is rotation, we ignore it
+        from: () => [transform.current.scale, 0], // 0 is rotation, we ignore it
       },
       wheel: {
-        eventOptions: {
-          passive: false
-        },
+        eventOptions: { passive: false },
         // Only prevent default if we are actually zooming (vertical)
         preventDefault: true,
       },
@@ -318,11 +251,57 @@ export default function ScalableViewport({
   );
 
   /* ---------------------------------------------------------------- */
+  /*  Zoom Logic (Focal Point)                                        */
+  /* ---------------------------------------------------------------- */
+  const zoomToPoint = useCallback(
+    (
+      newScale: number, clientX: number, clientY: number
+    ) => {
+      const container = containerRef.current;
+
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const {
+        x, y, scale
+      } = transform.current;
+
+      // Clamp scale
+      const clampedScale = clamp(
+        newScale,
+        MIN_SCALE,
+        MAX_SCALE
+      );
+
+      // Calculate the point relative to the container
+      const relX = clientX - rect.left;
+      const relY = clientY - rect.top;
+
+      // Calculate the translation adjustment to keep the focal point fixed
+      // Formula: nextX = relX - (relX - currentX) * (nextScale / currentScale)
+      const scaleRatio = clampedScale / scale;
+      const nextX = relX - (relX - x) * scaleRatio;
+      const nextY = relY - (relY - y) * scaleRatio;
+
+      setTransform({
+        x: nextX,
+        y: nextY,
+        scale: clampedScale,
+      });
+    },
+    [
+      setTransform
+    ]
+  );
+
+  /* ---------------------------------------------------------------- */
   /*  Lifecycle                                                       */
   /* ---------------------------------------------------------------- */
   // Initial fit and fit on resolution change
   useEffect(
     () => {
+      if (!isReady) return;
+
       // Small timeout to ensure layout is ready
       const timer = setTimeout(
         () => {
@@ -336,6 +315,7 @@ export default function ScalableViewport({
     },
     [
       resolutionKey,
+      isReady,
       fitToViewport,
       setTransform
     ]
