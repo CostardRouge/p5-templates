@@ -40,8 +40,8 @@ export type CaptureActionsRef = {
 };
 
 // Helper function to format file size
-function formatFileSize( bytes: number ): string {
-  if ( bytes === 0 ) return "0 B";
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 B";
   const k = 1024;
   const sizes = [
     "B",
@@ -49,16 +49,16 @@ function formatFileSize( bytes: number ): string {
     "MB",
     "GB"
   ];
-  const i = Math.floor( Math.log( bytes ) / Math.log( k ) );
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${ ( bytes / Math.pow(
+  return `${(bytes / Math.pow(
     k,
     i
-  ) ).toFixed( 1 ) } ${ sizes[ i ] }`;
+  )).toFixed(1)} ${sizes[i]}`;
 }
 
 // Completed actions component with file size display
-function CompletedActions( {
+function CompletedActions({
   persistedJob,
   activeSlideIndex,
   onPreview,
@@ -78,11 +78,11 @@ function CompletedActions( {
   onDownload: () => Promise<void>;
   deleting: boolean;
   cloning: boolean;
-} ) {
+}) {
   // Get video sizes directly from job data
-  const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [
+  const videoSizes = (persistedJob.videoSizes as unknown as number[]) || [
   ];
-  const currentVideoSize = videoSizes[ activeSlideIndex ];
+  const currentVideoSize = videoSizes[activeSlideIndex];
 
   return (
     <div className="grid grid-cols-2 gap-1">
@@ -102,7 +102,7 @@ function CompletedActions( {
       >
         {downloading ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> : <Download className="h-4 w-4 flex-shrink-0" />}
         <span className="truncate">
-          {downloading ? "Downloading..." : `Download${ currentVideoSize ? ` (${ formatFileSize( currentVideoSize ) })` : "" }`}
+          {downloading ? "Downloading..." : `Download${currentVideoSize ? ` (${formatFileSize(currentVideoSize)})` : ""}`}
         </span>
       </button>
 
@@ -132,7 +132,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   options: SketchOption;
   persistedJob?: JobModel;
   activeSlideIndex: number;
-}>( (
+}>((
   {
     name,
     options,
@@ -148,37 +148,37 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const [
     jobId,
     setJobId
-  ] = useState<JobId | undefined>( persistedJob?.id );
+  ] = useState<JobId | undefined>(persistedJob?.id);
 
   const [
     saving,
     setSaving
-  ] = useState<boolean>( false );
+  ] = useState<boolean>(false);
 
   const [
     showPreviewModal,
     setShowPreviewModal
-  ] = useState<boolean>( false );
+  ] = useState<boolean>(false);
 
   const [
     deleting,
     setDeleting
-  ] = useState<boolean>( false );
+  ] = useState<boolean>(false);
 
   const [
     cancelling,
     setCancelling
-  ] = useState<boolean>( false );
+  ] = useState<boolean>(false);
 
   const [
     retrying,
     setRetrying
-  ] = useState<boolean>( false );
+  ] = useState<boolean>(false);
 
   const [
     downloading,
     setDownloading
-  ] = useState<boolean>( false );
+  ] = useState<boolean>(false);
 
   const {
     backendRecording
@@ -188,7 +188,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const [
     isBrowserRecordingSupported,
     setIsBrowserRecordingSupported
-  ] = useState<boolean>( false );
+  ] = useState<boolean>(false);
 
   React.useEffect(
     () => {
@@ -204,17 +204,21 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         "video/webm"
       ];
 
-      const hasWebMSupport = hasMediaRecorder && webmCodecs.some( codec => {
+      const hasWebMSupport = hasMediaRecorder && webmCodecs.some(codec => {
         try {
-          return MediaRecorder.isTypeSupported( codec );
+          return MediaRecorder.isTypeSupported(codec);
         } catch {
           return false;
         }
-      } );
+      });
 
-      const isSupported = hasMediaRecorder && hasCaptureStream && hasWebMSupport;
+      // Check if device is iOS (iPhone, iPad, iPod)
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-      setIsBrowserRecordingSupported( isSupported );
+      const isSupported = hasMediaRecorder && hasCaptureStream && hasWebMSupport && !isIOS;
+
+      setIsBrowserRecordingSupported(isSupported);
     },
     [
     ]
@@ -230,11 +234,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   // Auto-subscribe to recording status on mount if job is active/queued
   React.useEffect(
     () => {
-      if ( persistedJob && [
+      if (persistedJob && [
         "active",
         "queued"
-      ].includes( persistedJob.status ) ) {
-        subscribeToRecordingStatus( persistedJob.id );
+      ].includes(persistedJob.status)) {
+        subscribeToRecordingStatus(persistedJob.id);
       }
     },
     [
@@ -250,17 +254,17 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
       const isRecording = recordingProgress && [
         "queued",
         "active"
-      ].includes( recordingProgress.status );
+      ].includes(recordingProgress.status);
 
-      if ( isRecording ) {
+      if (isRecording) {
         // Pause the sketch
-        if ( typeof ( window as any ).noLoop === "function" ) {
-          ( window as any ).noLoop();
+        if (typeof (window as any).noLoop === "function") {
+          (window as any).noLoop();
         }
       } else {
         // Resume when not recording
-        if ( typeof ( window as any ).loop === "function" ) {
-          ( window as any ).loop();
+        if (typeof (window as any).loop === "function") {
+          (window as any).loop();
         }
       }
     },
@@ -269,18 +273,18 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     ]
   );
 
-  const handleSubmit = async(
+  const handleSubmit = async (
     status: JobStatusEnum = "queued",
     persistedJobId?: JobId,
     skipRedirect = false
   ) => {
-    if ( status === "draft" ) {
-      setSaving( true );
+    if (status === "draft") {
+      setSaving(true);
     }
 
     const formData = new FormData();
 
-    if ( persistedJobId ) {
+    if (persistedJobId) {
       formData.append(
         "jobId",
         persistedJobId
@@ -293,70 +297,70 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
     );
     formData.append(
       "template",
-      `p5/${ name }`
+      `p5/${name}`
     );
     formData.append(
       "options",
-      JSON.stringify( options )
+      JSON.stringify(options)
     );
 
     // Handle GLOBAL assets
     const globalAssets = options.assets || {
     };
 
-    for ( const type of Object.keys( globalAssets ) ) {
-      const fileList = globalAssets[ type as keyof typeof globalAssets ] || [
+    for (const type of Object.keys(globalAssets)) {
+      const fileList = globalAssets[type as keyof typeof globalAssets] || [
       ];
 
-      await Promise.all( fileList.map( async(
+      await Promise.all(fileList.map(async (
         assetUrl: string, index: number
       ) => {
-        const blob = await fetch( resolveAssetURL(
+        const blob = await fetch(resolveAssetURL(
           assetUrl,
           options.id
-        ) ).then( r => r.blob() );
-        const name = assetUrl.split( "/" ).pop() ?? `${ type }-${ index }`;
+        )).then(r => r.blob());
+        const name = assetUrl.split("/").pop() ?? `${type}-${index}`;
 
         formData.append(
-          `file[global][${ type }]`,
+          `file[global][${type}]`,
           new File(
             [
               blob
             ],
-            `global/${ type }/${ name }`,
+            `global/${type}/${name}`,
             {
               type: blob.type
             }
           )
         );
-      } ) );
+      }));
     }
 
     // Handle SLIDE assets
     const slides: SlideOption[] = options.slides || [
     ];
 
-    for ( let i = 0; i < slides.length; i++ ) {
-      const slide = slides[ i ];
+    for (let i = 0; i < slides.length; i++) {
+      const slide = slides[i];
       const assets = slide.assets || {
       };
 
-      for ( const type of Object.keys( assets ) ) {
-        const fileList = assets[ type as keyof typeof assets ] || [
+      for (const type of Object.keys(assets)) {
+        const fileList = assets[type as keyof typeof assets] || [
         ];
 
-        await Promise.all( fileList.map( async(
+        await Promise.all(fileList.map(async (
           assetUrl: string, index: number
         ) => {
-          const blob = await fetch( resolveAssetURL(
+          const blob = await fetch(resolveAssetURL(
             assetUrl,
             options.id
-          ) ).then( r => r.blob() );
-          const prefix = `slide-${ i }-${ type }-${ index }`;
-          const name = assetUrl.split( "/" ).pop() ?? prefix;
+          )).then(r => r.blob());
+          const prefix = `slide-${i}-${type}-${index}`;
+          const name = assetUrl.split("/").pop() ?? prefix;
 
           formData.append(
-            `file[slide-${ i }][${ type }]`,
+            `file[slide-${i}][${type}]`,
             new File(
               [
                 blob
@@ -373,37 +377,37 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
               }
             )
           );
-        } ) );
+        }));
       }
     }
 
-    const newJobId = await enqueueRecording( formData );
+    const newJobId = await enqueueRecording(formData);
 
-    if ( newJobId !== null ) {
-      setJobId( newJobId );
+    if (newJobId !== null) {
+      setJobId(newJobId);
 
-      if ( status !== "draft" ) {
-        subscribeToRecordingStatus( newJobId );
+      if (status !== "draft") {
+        subscribeToRecordingStatus(newJobId);
       }
 
       // Redirect to URL with job ID for both drafts and recordings (unless skipRedirect is true)
-      if ( !skipRedirect ) {
-        router.replace( `${ name }?id=${ newJobId }` );
+      if (!skipRedirect) {
+        router.replace(`${name}?id=${newJobId}`);
       }
 
-      if ( status === "draft" ) {
-        setSaving( false );
+      if (status === "draft") {
+        setSaving(false);
       }
-    } else if ( status === "draft" ) {
-      setSaving( false );
+    } else if (status === "draft") {
+      setSaving(false);
     }
   };
 
   // Expose save function to parent via ref
   useImperativeHandle(
     ref,
-    () => ( {
-      saveAsDraft: async() => {
+    () => ({
+      saveAsDraft: async () => {
         await handleSubmit(
           "draft",
           persistedJob?.id,
@@ -411,141 +415,141 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         );
       },
       isSaving: saving,
-    } )
+    })
   );
 
-  const handleDelete = async() => {
+  const handleDelete = async () => {
     const jobToDelete = persistedJob?.id || jobId;
 
-    if ( !jobToDelete ) return;
+    if (!jobToDelete) return;
 
     const statusText = persistedJob?.status || currentStatus || "recording";
 
-    if ( !confirm( `Delete this ${ statusText }? This action cannot be undone.` ) ) {
+    if (!confirm(`Delete this ${statusText}? This action cannot be undone.`)) {
       return;
     }
 
-    setDeleting( true );
+    setDeleting(true);
 
     try {
       const response = await fetch(
-        `/api/recordings/${ jobToDelete }`,
+        `/api/recordings/${jobToDelete}`,
         {
           method: "DELETE"
         }
       );
 
-      if ( !response.ok ) throw new Error( "Delete failed" );
+      if (!response.ok) throw new Error("Delete failed");
 
       const {
         deleted
       } = await response.json();
 
-      if ( deleted ) {
-        router.push( `/templates/p5/${ name }` );
+      if (deleted) {
+        router.push(`/templates/p5/${name}`);
       } else {
-        alert( `Could not delete job: ${ jobToDelete }` );
-        setDeleting( false );
+        alert(`Could not delete job: ${jobToDelete}`);
+        setDeleting(false);
       }
-    } catch ( error ) {
-      alert( "Failed to delete. Please try again." );
-      setDeleting( false );
+    } catch (error) {
+      alert("Failed to delete. Please try again.");
+      setDeleting(false);
     }
   };
 
-  const handleCancel = async() => {
-    if ( !jobId ) return;
+  const handleCancel = async () => {
+    if (!jobId) return;
 
-    setCancelling( true );
+    setCancelling(true);
 
     try {
       const response = await fetch(
-        `/api/recordings/${ jobId }/cancel`,
+        `/api/recordings/${jobId}/cancel`,
         {
           method: "POST"
         }
       );
 
-      if ( !response.ok ) throw new Error( "Cancel failed" );
+      if (!response.ok) throw new Error("Cancel failed");
 
       const {
         cancelled
       } = await response.json();
 
-      if ( !cancelled ) {
-        alert( `Could not cancel job: ${ jobId }` );
+      if (!cancelled) {
+        alert(`Could not cancel job: ${jobId}`);
       }
-    } catch ( error ) {
-      alert( "Failed to cancel. Please try again." );
+    } catch (error) {
+      alert("Failed to cancel. Please try again.");
     } finally {
-      setCancelling( false );
+      setCancelling(false);
     }
   };
 
-  const handleRetry = async() => {
-    if ( !persistedJob?.id ) return;
+  const handleRetry = async () => {
+    if (!persistedJob?.id) return;
 
-    setRetrying( true );
+    setRetrying(true);
 
     try {
       const response = await fetch(
-        `/api/recordings/${ persistedJob.id }/retry`,
+        `/api/recordings/${persistedJob.id}/retry`,
         {
           method: "POST"
         }
       );
 
-      if ( !response.ok ) throw new Error( "Retry failed" );
+      if (!response.ok) throw new Error("Retry failed");
 
       const {
         retried
       } = await response.json();
 
-      if ( retried ) {
-        setJobId( persistedJob.id );
-        subscribeToRecordingStatus( persistedJob.id );
+      if (retried) {
+        setJobId(persistedJob.id);
+        subscribeToRecordingStatus(persistedJob.id);
       } else {
-        alert( `Could not retry job: ${ persistedJob.id }` );
-        setRetrying( false );
+        alert(`Could not retry job: ${persistedJob.id}`);
+        setRetrying(false);
       }
-    } catch ( error ) {
-      alert( "Failed to retry. Please try again." );
-      setRetrying( false );
+    } catch (error) {
+      alert("Failed to retry. Please try again.");
+      setRetrying(false);
     }
   };
 
   const [
     cloning,
     setCloning
-  ] = useState<boolean>( false );
+  ] = useState<boolean>(false);
 
-  const handleRecordAgain = async() => {
-    setCloning( true );
+  const handleRecordAgain = async () => {
+    setCloning(true);
     try {
-      await handleSubmit( "draft" );
-    } catch ( error ) {
+      await handleSubmit("draft");
+    } catch (error) {
       console.error(
         "Failed to clone:",
         error
       );
-      alert( "Failed to clone. Please try again." );
+      alert("Failed to clone. Please try again.");
     } finally {
-      setCloning( false );
+      setCloning(false);
     }
   };
 
-  const handleDownload = async() => {
+  const handleDownload = async () => {
     const jobToDownload = persistedJob?.id || jobId;
 
-    if ( !jobToDownload ) return;
+    if (!jobToDownload) return;
 
-    setDownloading( true );
+    setDownloading(true);
     try {
-      await fetchDownload( `/api/recordings/download/${ jobToDownload }/slide/${ activeSlideIndex }` );
-    } catch ( error ) {
-      alert( "Failed to download. Please try again." );
+      await fetchDownload(`/api/recordings/download/${jobToDownload}/slide/${activeSlideIndex}`);
+    } catch (error) {
+      alert("Failed to download. Please try again.");
     } finally {
-      setDownloading( false );
+      setDownloading(false);
     }
   };
 
@@ -553,23 +557,23 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
   const isRecording = currentStatus && [
     "queued",
     "active"
-  ].includes( currentStatus );
+  ].includes(currentStatus);
   const isCompleted = currentStatus === "completed";
   const isFailed = [
     "failed",
     "cancelled"
-  ].includes( currentStatus || "" );
+  ].includes(currentStatus || "");
   const isDraft = currentStatus === "draft";
   const hasNoJob = !persistedJob && !recordingProgress && !jobId;
   const isAnyActionLoading = isLoading || saving || deleting || cancelling || retrying || downloading || cloning;
   const isBlockingActionLoading = isLoading || deleting || cancelling || retrying || downloading || cloning;
 
   // Use persistedJob or construct a minimal job object from recordingProgress/jobId
-  const effectiveJob = persistedJob || ( jobId ? {
+  const effectiveJob = persistedJob || (jobId ? {
     id: jobId,
     status: currentStatus || "queued",
     progress: recordingProgress?.percentage || 0,
-  } as JobModel : undefined );
+  } as JobModel : undefined);
 
   return (
     <>
@@ -588,10 +592,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
             <button
               className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5"
-              onClick={async() => {
-                await window?.startLoopRecording( {
+              onClick={async () => {
+                await window?.startLoopRecording({
                   format: "webm"
-                } );
+                });
               }}
             >
               <Save className="h-4 w-4 flex-shrink-0" />
@@ -607,7 +611,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
               <div className="flex gap-1">
                 <button
                   className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 flex-1"
-                  onClick={() => handleSubmit( "draft" )}
+                  onClick={() => handleSubmit("draft")}
                   disabled={isAnyActionLoading}
                 >
                   {saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> :
@@ -617,7 +621,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
                 <button
                   className="rounded-xl px-3 py-2.5 border border-border bg-hover hover:bg-hover/70 text-foreground disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 flex-1"
-                  onClick={() => handleSubmit( "queued" )}
+                  onClick={() => handleSubmit("queued")}
                   disabled={isBlockingActionLoading}
                 >
                   {isLoading && !saving ? <Loader className="h-4 w-4 animate-spin flex-shrink-0" /> :
@@ -692,12 +696,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
                       progress: recordingProgress?.percentage || persistedJob?.progress || 0,
                       status: recordingProgress?.status || persistedJob?.status || "queued",
                     } as JobModel}
-                    steps={( recordingProgress?.status || persistedJob?.status ) === "active" ? getRecordingSteps( {
+                    steps={(recordingProgress?.status || persistedJob?.status) === "active" ? getRecordingSteps({
                       ...persistedJob,
                       id: persistedJob?.id || jobId || "",
                       progress: recordingProgress?.percentage || persistedJob?.progress || 0,
                       status: recordingProgress?.status || persistedJob?.status || "active",
-                    } as JobModel ) : [
+                    } as JobModel) : [
                     ]}
                     startTime={jobId && recordingProgress?.recordingDuration ? Date.now() - recordingProgress.recordingDuration : undefined}
                   />
@@ -730,7 +734,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
               <CompletedActions
                 persistedJob={effectiveJob}
                 activeSlideIndex={activeSlideIndex}
-                onPreview={() => setShowPreviewModal( true )}
+                onPreview={() => setShowPreviewModal(true)}
                 onRecordAgain={handleRecordAgain}
                 onDelete={handleDelete}
                 downloading={downloading}
@@ -754,7 +758,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
 
                 <button
                   className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5"
-                  onClick={async() => {
+                  onClick={async () => {
                     await handleSubmit(
                       "draft",
                       effectiveJob.id
@@ -785,12 +789,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, {
         <VideoPreviewModal
           jobId={effectiveJob.id}
           isOpen={showPreviewModal}
-          onClose={() => setShowPreviewModal( false )}
+          onClose={() => setShowPreviewModal(false)}
         />
       )}
     </>
   );
-} );
+});
 
 CaptureActions.displayName = "CaptureActions";
 
