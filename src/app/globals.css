@@ -20,8 +20,6 @@
     /* ring/outline color */
     --label: 0 0% 30%;
     /* dimmer than body text */
-    --shadow-color: 0 0% 90%;
-
 }
 
 /* Dark theme: invert to black bg, white text */
@@ -39,7 +37,6 @@
     --active: 0 0% 10%;
     --focus: 0 0% 100%;
     --label: 0 0% 70%;
-    --shadow-color: 0 0% 5%;
 }
 
 /* Respect system dark when no explicit "light" is set */
