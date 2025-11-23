@@ -16,6 +16,12 @@ import ZoomControls from "@/components/ScalableViewport/components/ZoomControls"
 /* ------------------------------------------------------------------ */
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 6;
+const ZOOM_STEP = 0.5;
+
+const ANIMATION_CONFIG = {
+  duration: 300, // ms
+  easing: (t: number) => 1 - Math.pow(1 - t, 3), // easeOutCubic
+};
 
 export default function ScalableViewport({
   children,
@@ -43,6 +49,9 @@ export default function ScalableViewport({
   // Sync scale to React state for UI (ZoomControls)
   const [displayScale, setDisplayScale] = useState(initialScale || 1);
 
+  // Animation frame ref
+  const animationFrameRef = useRef<number | null>(null);
+
   /* ---------------------------------------------------------------- */
   /*  DOM Manipulation                                                */
   /* ---------------------------------------------------------------- */
@@ -65,12 +74,55 @@ export default function ScalableViewport({
   );
 
   /* ---------------------------------------------------------------- */
+  /*  Animation Logic                                                 */
+  /* ---------------------------------------------------------------- */
+  const cancelAnimation = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+  }, []);
+
+  const animateTo = useCallback(
+    (targetX: number, targetY: number, targetScale: number) => {
+      cancelAnimation();
+
+      const startX = transform.current.x;
+      const startY = transform.current.y;
+      const startScale = transform.current.scale;
+      const startTime = performance.now();
+
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / ANIMATION_CONFIG.duration, 1);
+        const easedProgress = ANIMATION_CONFIG.easing(progress);
+
+        const currentX = startX + (targetX - startX) * easedProgress;
+        const currentY = startY + (targetY - startY) * easedProgress;
+        const currentScale =
+          startScale + (targetScale - startScale) * easedProgress;
+
+        setTransform({ x: currentX, y: currentY, scale: currentScale });
+
+        if (progress < 1) {
+          animationFrameRef.current = requestAnimationFrame(animate);
+        } else {
+          animationFrameRef.current = null;
+        }
+      };
+
+      animationFrameRef.current = requestAnimationFrame(animate);
+    },
+    [setTransform, cancelAnimation]
+  );
+
+  /* ---------------------------------------------------------------- */
   /*  Zoom Logic (Focal Point)                                        */
   /* ---------------------------------------------------------------- */
-  const zoomToPoint = useCallback(
+  const getZoomTarget = useCallback(
     (newScale: number, clientX: number, clientY: number) => {
       const container = containerRef.current;
-      if (!container) return;
+      if (!container) return null;
 
       const rect = container.getBoundingClientRect();
       const { x, y, scale } = transform.current;
@@ -86,13 +138,19 @@ export default function ScalableViewport({
       const nextX = relX - (relX - x) * scaleRatio;
       const nextY = relY - (relY - y) * scaleRatio;
 
-      setTransform({
-        x: nextX,
-        y: nextY,
-        scale: clampedScale,
-      });
+      return { x: nextX, y: nextY, scale: clampedScale };
     },
-    [setTransform]
+    []
+  );
+
+  const zoomToPoint = useCallback(
+    (newScale: number, clientX: number, clientY: number) => {
+      const target = getZoomTarget(newScale, clientX, clientY);
+      if (target) {
+        setTransform(target);
+      }
+    },
+    [getZoomTarget, setTransform]
   );
 
   /* ---------------------------------------------------------------- */
@@ -100,6 +158,10 @@ export default function ScalableViewport({
   /* ---------------------------------------------------------------- */
   useGesture(
     {
+      onDragStart: () => cancelAnimation(),
+      onPinchStart: () => cancelAnimation(),
+      onWheelStart: () => cancelAnimation(),
+
       // 1. Mouse Click + Drag = Pan
       onDrag: ({ delta: [dx, dy] }) => {
         const { x, y } = transform.current;
@@ -108,7 +170,6 @@ export default function ScalableViewport({
           y: y + dy,
         });
       },
-
 
       // 2. Trackpad Pinch / Touch Pinch = Zoom
       onPinch: ({ origin: [ox, oy], offset: [s], first, memo }) => {
@@ -208,17 +269,17 @@ export default function ScalableViewport({
   /* ---------------------------------------------------------------- */
   /*  Fit to Viewport                                                 */
   /* ---------------------------------------------------------------- */
-  const fitToViewport = useCallback(() => {
+  const getFitToViewportTarget = useCallback(() => {
     const viewport = containerRef.current;
     const canvas = contentRef.current;
-    if (!viewport || !canvas) return;
+    if (!viewport || !canvas) return null;
 
     const contentWidth = canvas.offsetWidth;
     const contentHeight = canvas.offsetHeight;
     const viewportWidth = viewport.clientWidth;
     const viewportHeight = viewport.clientHeight;
 
-    if (contentWidth === 0 || contentHeight === 0) return;
+    if (contentWidth === 0 || contentHeight === 0) return null;
 
     const widthRatio = viewportWidth / contentWidth;
     const heightRatio = viewportHeight / contentHeight;
@@ -229,24 +290,48 @@ export default function ScalableViewport({
     const newX = (viewportWidth - contentWidth * newScale) / 2;
     const newY = (viewportHeight - contentHeight * newScale) / 2;
 
-    setTransform({
-      x: newX,
-      y: newY,
-      scale: newScale,
-    });
-  }, [setTransform]);
+    return { x: newX, y: newY, scale: newScale };
+  }, []);
 
-  const resetToActualPixels = useCallback(() => {
+  const fitToViewport = useCallback(
+    (animate = false) => {
+      const target = getFitToViewportTarget();
+      if (!target) return;
+
+      if (animate) {
+        animateTo(target.x, target.y, target.scale);
+      } else {
+        setTransform(target);
+      }
+    },
+    [getFitToViewportTarget, setTransform, animateTo]
+  );
+
+  const getResetTarget = useCallback(() => {
     const viewport = containerRef.current;
     const canvas = contentRef.current;
-    if (!viewport || !canvas) return;
+    if (!viewport || !canvas) return null;
 
     const newScale = 1;
     const newX = (viewport.clientWidth - canvas.offsetWidth) / 2;
     const newY = (viewport.clientHeight - canvas.offsetHeight) / 2;
 
-    setTransform({ x: newX, y: newY, scale: newScale });
-  }, [setTransform]);
+    return { x: newX, y: newY, scale: newScale };
+  }, []);
+
+  const resetToActualPixels = useCallback(
+    (animate = false) => {
+      const target = getResetTarget();
+      if (!target) return;
+
+      if (animate) {
+        animateTo(target.x, target.y, target.scale);
+      } else {
+        setTransform(target);
+      }
+    },
+    [getResetTarget, setTransform, animateTo]
+  );
 
   /* ---------------------------------------------------------------- */
   /*  Lifecycle                                                       */
@@ -254,7 +339,7 @@ export default function ScalableViewport({
   useEffect(() => {
     if (!isReady) return;
     const timer = setTimeout(() => {
-      fitToViewport();
+      fitToViewport(false);
     }, 100);
     return () => clearTimeout(timer);
   }, [resolutionKey, isReady, fitToViewport]);
@@ -281,7 +366,12 @@ export default function ScalableViewport({
             const container = containerRef.current;
             if (container) {
               const rect = container.getBoundingClientRect();
-              zoomToPoint(scale + 0.5, rect.left + rect.width / 2, rect.top + rect.height / 2);
+              const target = getZoomTarget(
+                scale + ZOOM_STEP,
+                rect.left + rect.width / 2,
+                rect.top + rect.height / 2
+              );
+              if (target) animateTo(target.x, target.y, target.scale);
             }
           }}
           onMinus={() => {
@@ -289,11 +379,16 @@ export default function ScalableViewport({
             const container = containerRef.current;
             if (container) {
               const rect = container.getBoundingClientRect();
-              zoomToPoint(scale - 0.5, rect.left + rect.width / 2, rect.top + rect.height / 2);
+              const target = getZoomTarget(
+                scale - ZOOM_STEP,
+                rect.left + rect.width / 2,
+                rect.top + rect.height / 2
+              );
+              if (target) animateTo(target.x, target.y, target.scale);
             }
           }}
-          onFit={fitToViewport}
-          onReset={resetToActualPixels}
+          onFit={() => fitToViewport(true)}
+          onReset={() => resetToActualPixels(true)}
         />
       )}
 
