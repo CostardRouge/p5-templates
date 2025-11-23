@@ -97,6 +97,7 @@ export default function TemplateOptions({
     control,
     watch,
     getValues,
+    setValue,
     formState: {
       errors
     },
@@ -211,43 +212,60 @@ export default function TemplateOptions({
   useEffect(
     () => {
       const length = slideFields.length;
+      let next = activeSlideIndex;
+      let needsAdjustment = false;
 
-      setActiveSlideIndex((current) => {
-        let next = current;
-
-        if (length === 0) {
-          next = 0;
-          handleSlideSelect(undefined);
+      if (length === 0) {
+        if (activeSlideIndex !== 0) {
+          setActiveSlideIndex(0);
         }
-        else if (current < 0) {
+        handleSlideSelect(undefined);
+      }
+      else {
+        if (activeSlideIndex < 0) {
           next = 0;
+          needsAdjustment = true;
         }
-        else if (current > length - 1) {
+        else if (activeSlideIndex > length - 1) {
           next = length - 1;
+          needsAdjustment = true;
         }
 
-        if (next !== current) {
+        if (needsAdjustment) {
           handleSlideSelect(next);
-          return next;
         }
-
-        if (typeof window.setSlide === "function") {
-          window.setSlide(next);
+        else {
+          if (typeof window.setSlide === "function") {
+            window.setSlide(next);
+          }
         }
-        return next;
-      });
+      }
     },
     [
       handleSlideSelect,
-      slideFields.length
+      slideFields.length,
+      activeSlideIndex
     ]
   );
 
   const handleAddSlide = () => {
     const nextIndex = slideFields.length;
 
+    // Determine settings to clone:
+    // If no slides exist yet, use the global 'sketch' settings.
+    // Otherwise, use the settings from the currently active slide.
+    let settingsToClone: any;
+    if (slideFields.length === 0) {
+      settingsToClone = getValues("sketch");
+    }
+    else {
+      const activeSlide = getValues(`slides.${activeSlideIndex}`);
+      settingsToClone = activeSlide?.sketch;
+    }
+
     appendSlide(makeDefaultSlide({
       indexForLabel: nextIndex,
+      sketch: deepClone(settingsToClone),
     }));
 
     handleSlideSelect(nextIndex);
@@ -283,6 +301,15 @@ export default function TemplateOptions({
 
     if (lengthBefore <= 0) {
       return;
+    }
+
+    // If we are deleting the LAST remaining slide, we want to move its settings
+    // back to the global 'sketch' object so the user doesn't lose their configuration.
+    if (lengthBefore === 1) {
+      const lastSlideSettings = getValues(`slides.${indexToDelete}.sketch`);
+      if (lastSlideSettings) {
+        setValue("sketch", deepClone(lastSlideSettings));
+      }
     }
 
     removeSlide(indexToDelete);
