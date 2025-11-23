@@ -86,7 +86,17 @@ export default function ClientProcessingSketch() {
           isReady={sketchLoaded}
         >
           {sketchLoaded && (
-            <div className="flex justify-between font-mono text-[calc((5vh+5vw)/2)] md:text-[calc((2vh+2vw)/2)] ">
+            <div
+              className="keep-scale flex justify-between font-mono text-sm"
+              style={
+                {
+                  "--scale-factor": "var(--viewport-scale, 1)",
+                  transform: "scale(calc(1 / var(--scale-factor)))",
+                  transformOrigin: "bottom left",
+                  width: "calc(100% * var(--scale-factor))",
+                } as React.CSSProperties
+              }
+            >
               <p>{name} {activeSlideIndex !== undefined && `· slide ${activeSlideIndex + 1}`}</p>
               <p id="p5-sketch-fps-counter"></p>
             </div>
