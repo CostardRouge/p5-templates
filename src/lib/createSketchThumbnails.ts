@@ -68,7 +68,7 @@ async function createSketchThumbnails() {
       }
 
       await recordingState.page.goto(
-        `http://localhost:3000/${ href }`,
+        `http://localhost:3000/${ href }?capturing`,
         {
           waitUntil: "networkidle"
         },
