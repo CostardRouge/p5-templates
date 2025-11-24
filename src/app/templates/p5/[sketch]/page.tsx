@@ -1,31 +1,26 @@
 import React from "react";
 
-import type {
-  Metadata
-} from "next";
+import type { Metadata } from "next";
 import listDirectory from "@/utils/listDirectory";
 import ClientProcessingSketch from "@/components/ClientProcessingSketch/ClientProcessingSketch";
 
 import getCaptureOptions from "@/utils/getCaptureOptions";
-import {
-  getJobById
-} from "@/lib/jobStore";
-import {
-  notFound
-} from "next/navigation";
+import { getJobById } from "@/lib/jobStore";
+import { notFound } from "next/navigation";
 
-import {
-  OptionsSchema
-} from "@/types/sketch.types";
+import { OptionsSchema } from "@/types/sketch.types";
 import SketchContextProvider from "@/components/ClientProcessingSketch/components/SketchProvider/SketchContextProvider";
-import {
-  getJSONSketchOptions, getSketchMeta
-} from "@/utils/getSketchOptions";
+import { getJSONSketchOptions, getSketchMeta } from "@/utils/getSketchOptions";
+import { generateSketchMetadata } from "@/utils/generateSketchMetadata";
 
-export const metadata: Metadata = {
-  title: "My p5*js templates | @costardrouge.jpg",
-  description: "Generate p5js sketch videos",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ sketch: string }>;
+}): Promise<Metadata> {
+  const sketchName = (await params).sketch;
+  return generateSketchMetadata(sketchName);
+}
 
 const acceptedImageTypes = [
   "png",
