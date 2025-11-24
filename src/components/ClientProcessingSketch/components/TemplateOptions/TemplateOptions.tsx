@@ -372,35 +372,38 @@ export default function TemplateOptions({
         isSaving={captureActionsRef.current?.isSaving}
       />
 
-      <CollapsibleItem
-        data-no-zoom=""
-        className="w-64 flex flex-col gap-1 absolute right-2 bottom-2 glass p-2 border border-theme z-50 rounded-2xl shadow-lg"
-        style={{
-          maxHeight: "calc(80svh)",
-          maxWidth: "calc(50% - 0.75rem)"
-        }}
-        header={(expanded) => (
-          <button
-            className={
-              clsx(
-                "text-foreground text-sm text-right",
-                {
-                  "w-full": !expanded,
-                  "absolute top-2 right-2": expanded
-                }
-              )
-            }
-            aria-label={expanded ? "Collapse controls" : "Expand controls"}
-          >
-            <span>options</span>
-            <ArrowDownFromLine
-              className="inline text-foreground h-3 w-3 ml-1"
-              style={{
-                rotate: expanded ? "0deg" : "180deg"
-              }}
-            />
-          </button>
-        )}
+      <div
+        className="w-64 absolute right-2 bottom-2 flex flex-col gap-2 z-50"
+        style={{ maxWidth: "calc(50% - 0.75rem)" }}
+      >
+        <CollapsibleItem
+          data-no-zoom=""
+          className="flex flex-col gap-1 glass p-2 border border-theme rounded-2xl shadow-lg"
+          style={{
+            maxHeight: "calc(80svh)",
+          }}
+          header={(expanded) => (
+            <button
+              className={
+                clsx(
+                  "text-foreground text-sm text-right",
+                  {
+                    "w-full": !expanded,
+                    "absolute top-2 right-2": expanded
+                  }
+                )
+              }
+              aria-label={expanded ? "Collapse controls" : "Expand controls"}
+            >
+              <span>options</span>
+              <ArrowDownFromLine
+                className="inline text-foreground h-3 w-3 ml-1"
+                style={{
+                  rotate: expanded ? "0deg" : "180deg"
+                }}
+              />
+            </button>
+          )}
       >
         <FormUndoRedo
           maxHistory={50}
@@ -499,6 +502,7 @@ export default function TemplateOptions({
             </CollapsibleItem>
           </Fragment>
         )}
+        </CollapsibleItem>
 
         <CaptureActions
           ref={captureActionsRef}
@@ -507,7 +511,7 @@ export default function TemplateOptions({
           persistedJob={persistedJob}
           activeSlideIndex={activeSlideIndex}
         />
-      </CollapsibleItem>
+      </div>
 
       <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
         <SketchSettings
