@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Archive, Clapperboard, Loader, Save, Trash2 } from "lucide-react";
+import {
+  Archive, Clapperboard, Loader, Save, Trash2
+} from "lucide-react";
 import clsx from "clsx";
 
 type DraftActionsProps = {
@@ -15,7 +17,7 @@ type DraftActionsProps = {
   isBlockingActionLoading: boolean;
 };
 
-export default function DraftActions({
+export default function DraftActions( {
   onSave,
   onStart,
   onDelete,
@@ -24,7 +26,7 @@ export default function DraftActions({
   deleting,
   isAnyActionLoading,
   isBlockingActionLoading,
-}: DraftActionsProps) {
+}: DraftActionsProps ) {
   return (
     <>
       <div className="flex gap-1">

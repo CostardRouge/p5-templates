@@ -54,4 +54,46 @@ window.disableRecordingMode = function() {
   time.isRecording = false;
 };
 
+// Expose global functions for animation progression control
+window.setAnimationProgression = function( progression ) {
+  // Clamp progression to valid range [0, 1]
+  const clampedProgression = Math.max(
+    0,
+    Math.min(
+      1,
+      progression
+    )
+  );
+
+  // Get animation duration, default to 10 seconds if undefined
+  const duration = sketch?.sketchOptions?.animation?.duration || 10;
+
+  // Convert progression (0-1) to elapsed time in milliseconds
+  time.elapsed = clampedProgression * duration * 1000;
+
+  // Update lastUpdate to current time to prevent jumps
+  const now = sketch?.engine?.getElapsedTime();
+
+  if ( typeof now === "number" ) {
+    time.lastUpdate = now;
+  }
+};
+
+window.getAnimationProgression = function() {
+  // Get animation duration, default to 10 seconds if undefined
+  const duration = sketch?.sketchOptions?.animation?.duration || 10;
+  const seconds = time.seconds();
+
+  // During recording, don't wrap - let it go beyond 1.0
+  if ( time.isRecording ) {
+    return Math.min(
+      seconds / duration,
+      1.0
+    );
+  }
+
+  // Normal playback: wrap around for continuous loop
+  return ( seconds % duration ) / duration;
+};
+
 export default time;

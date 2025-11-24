@@ -17,9 +17,10 @@ import {
 } from "@/components/ClientProcessingSketch/components/P5Controls";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
+import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import useSketch from "./components/SketchProvider/hooks/useSketch";
 
-const TemplateOptions = dynamic(() => import("@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions"));
+const TemplateOptions = dynamic( () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
 
 export default function ClientProcessingSketch() {
   const {
@@ -28,15 +29,15 @@ export default function ClientProcessingSketch() {
   const [
     currentOptions,
     setCurrentOptions
-  ] = useState<SketchOption>(() => ({
+  ] = useState<SketchOption>( () => ( {
     ...getSketchOptions(),
     ...options,
-  }),);
+  } ), );
 
   const [
     sketchLoaded,
     setSketchLoaded
-  ] = useState<boolean>(false);
+  ] = useState<boolean>( false );
 
   useEffect(
     () => {
@@ -51,9 +52,9 @@ export default function ClientProcessingSketch() {
   );
 
   useEffect(
-    () => subscribeSketchOptions((updatedOptions: any) => {
-      setCurrentOptions(updatedOptions);
-    }),
+    () => subscribeSketchOptions( ( updatedOptions: any ) => {
+      setCurrentOptions( updatedOptions );
+    } ),
     [
     ]
   );
@@ -61,11 +62,11 @@ export default function ClientProcessingSketch() {
   const [
     activeSlideIndex,
     setActiveSlideIndex
-  ] = useState<number | undefined>(undefined);
+  ] = useState<number | undefined>( undefined );
 
   const handleActiveSlideChange = useCallback(
-    (index: number | undefined) => {
-      setActiveSlideIndex(index);
+    ( index: number | undefined ) => {
+      setActiveSlideIndex( index );
     },
     [
     ]
@@ -79,15 +80,15 @@ export default function ClientProcessingSketch() {
         </div>
       )}
 
-      <div className="h-full w-full">
+      <div className="h-full w-full relative">
         <ScalableViewport
           showZoomControls={!capturing && sketchLoaded}
-          resolutionKey={`${currentOptions.size.width}x${currentOptions.size.height}`}
+          resolutionKey={`${ currentOptions.size.width }x${ currentOptions.size.height }`}
           isReady={sketchLoaded}
         >
           {sketchLoaded && (
             <div
-              className="keep-scale flex justify-between font-mono text-sm"
+              className="flex justify-between font-mono text-sm"
               style={
                 {
                   "--scale-factor": "var(--viewport-scale, 1)",
@@ -97,7 +98,7 @@ export default function ClientProcessingSketch() {
                 } as React.CSSProperties
               }
             >
-              <p>{name} {activeSlideIndex !== undefined && `· slide ${activeSlideIndex + 1}`}</p>
+              <p>{name} {activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}</p>
               <p id="p5-sketch-fps-counter"></p>
             </div>
           )}
@@ -105,10 +106,17 @@ export default function ClientProcessingSketch() {
           <P5Sketch
             name={name}
             onLoaded={() => {
-              setSketchLoaded(true);
+              setSketchLoaded( true );
             }}
           />
         </ScalableViewport>
+
+        {/* Animation progression bar - positioned outside viewport to prevent drag conflicts */}
+        {sketchLoaded && !capturing && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-[600px] px-4 z-10 pointer-events-auto">
+            <AnimationProgressionBar disabled />
+          </div>
+        )}
       </div>
 
       {sketchLoaded && (
@@ -119,8 +127,8 @@ export default function ClientProcessingSketch() {
             name={name}
             options={currentOptions}
             persistedJob={persistedJob}
-            onOptionsChange={(updatedOptions) =>
-              setCurrentOptions(updatedOptions as SketchOption)
+            onOptionsChange={( updatedOptions ) =>
+              setCurrentOptions( updatedOptions as SketchOption )
             }
             onActiveSlideChange={handleActiveSlideChange}
           />

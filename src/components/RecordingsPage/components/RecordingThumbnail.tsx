@@ -16,18 +16,18 @@ interface RecordingThumbnailProps {
   showEyeInCorner?: boolean;
 }
 
-export default function RecordingThumbnail({
+export default function RecordingThumbnail( {
   job,
   onClick,
   className,
   showEyeInCorner = false
-}: RecordingThumbnailProps) {
+}: RecordingThumbnailProps ) {
   const [
     imageError,
     setImageError
-  ] = useState(false);
+  ] = useState( false );
 
-  const src = `/api/recordings/${job.id}/thumbnail?t=${new Date(job.updatedAt).getTime()}`;
+  const src = `/api/recordings/${ job.id }/thumbnail?t=${ new Date( job.updatedAt ).getTime() }`;
   const showEyeIcon = job.status === "completed" && job.videoUrls && job.thumbnails;
   const isRecording = job.status === "active";
   const isQueued = job.status === "queued";
@@ -93,11 +93,11 @@ export default function RecordingThumbnail({
             src={src}
             alt={job.template}
             loading="lazy"
-            onError={() => setImageError(true)}
+            onError={() => setImageError( true )}
             className={clsx(
               "w-full h-full object-cover transition-all duration-300",
               {
-                "grayscale": !isCompleted
+                grayscale: !isCompleted
               }
             )}
           />

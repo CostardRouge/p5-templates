@@ -18,18 +18,18 @@ export function checkBrowserRecordingSupport(): boolean {
 
   const hasWebMSupport =
     hasMediaRecorder &&
-    webmCodecs.some((codec) => {
+    webmCodecs.some( ( codec ) => {
       try {
-        return MediaRecorder.isTypeSupported(codec);
+        return MediaRecorder.isTypeSupported( codec );
       } catch {
         return false;
       }
-    });
+    } );
 
   // Check if device is iOS (iPhone, iPad, iPod)
   const isIOS =
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.userAgent.includes("Mac") && navigator.maxTouchPoints > 1);
+    /iPad|iPhone|iPod/.test( navigator.userAgent ) ||
+    ( navigator.userAgent.includes( "Mac" ) && navigator.maxTouchPoints > 1 );
 
   return hasMediaRecorder && hasCaptureStream && hasWebMSupport && !isIOS;
 }

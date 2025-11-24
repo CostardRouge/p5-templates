@@ -1,6 +1,12 @@
-import { useGesture } from "@use-gesture/react";
-import type { TransformState } from "./useTransformState";
-import { calculateZoomTarget, MIN_SCALE, MAX_SCALE } from "../utils/zoomCalculations";
+import {
+  useGesture
+} from "@use-gesture/react";
+import type {
+  TransformState
+} from "./useTransformState";
+import {
+  calculateZoomTarget, MIN_SCALE, MAX_SCALE
+} from "../utils/zoomCalculations";
 
 interface UseViewportGesturesProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -13,13 +19,13 @@ interface UseViewportGesturesProps {
   cancelAnimation: () => void;
 }
 
-export function useViewportGestures({
+export function useViewportGestures( {
   containerRef,
   contentRef,
   transform,
   setTransform,
   cancelAnimation,
-}: UseViewportGesturesProps) {
+}: UseViewportGesturesProps ) {
   useGesture(
     {
       onDragStart: () => cancelAnimation(),
@@ -27,8 +33,16 @@ export function useViewportGestures({
       onWheelStart: () => cancelAnimation(),
 
       // One-finger Drag (Pan)
-      onDrag: ({ delta: [deltaX, deltaY] }) => {
-        const { x, y } = transform.current;
+      onDrag: ( {
+        delta: [
+          deltaX,
+          deltaY
+        ]
+      } ) => {
+        const {
+          x, y
+        } = transform.current;
+
         setTransform(
           {
             x: x + deltaX,
@@ -39,9 +53,17 @@ export function useViewportGestures({
       },
 
       // Two-finger Pinch (Zoom + Pan)
-      onPinch: ({ origin: [originX, originY], offset: [scale], first, memo }) => {
+      onPinch: ( {
+        origin: [
+          originX,
+          originY
+        ], offset: [
+          scale
+        ], first, memo
+      } ) => {
         const container = containerRef.current;
-        if (!container) return;
+
+        if ( !container ) return;
 
         const rect = container.getBoundingClientRect();
 
@@ -49,8 +71,10 @@ export function useViewportGestures({
         const currentGestureX = originX - rect.left;
         const currentGestureY = originY - rect.top;
 
-        if (first) {
-          const { x, y, scale } = transform.current;
+        if ( first ) {
+          const {
+            x, y, scale
+          } = transform.current;
 
           // Store the state at the VERY MOMENT the pinch starts
           return {
@@ -83,10 +107,10 @@ export function useViewportGestures({
 
         const newX =
           currentGestureX -
-          ((initialGestureX - initialX) / initialScale) * newScale;
+          ( ( initialGestureX - initialX ) / initialScale ) * newScale;
         const newY =
           currentGestureY -
-          ((initialGestureY - initialY) / initialScale) * newScale;
+          ( ( initialGestureY - initialY ) / initialScale ) * newScale;
 
         setTransform(
           {
@@ -101,15 +125,23 @@ export function useViewportGestures({
       },
 
       // Wheel / Trackpad Pan
-      onWheel: ({ event, delta: [deltaX, deltaY], ctrlKey }) => {
+      onWheel: ( {
+        event, delta: [
+          deltaX,
+          deltaY
+        ], ctrlKey
+      } ) => {
         const container = containerRef.current;
-        if (!container) return;
 
-        if (ctrlKey) {
+        if ( !container ) return;
+
+        if ( ctrlKey ) {
           // Ctrl + Wheel = Zoom
           event.preventDefault();
-          const { scale } = transform.current;
-          const zoomFactor = Math.exp(-deltaY * 0.01);
+          const {
+            scale
+          } = transform.current;
+          const zoomFactor = Math.exp( -deltaY * 0.01 );
           const rect = container.getBoundingClientRect();
           const target = calculateZoomTarget(
             scale * zoomFactor,
@@ -118,13 +150,20 @@ export function useViewportGestures({
             rect,
             transform.current
           );
-          setTransform(target, contentRef.current);
+
+          setTransform(
+            target,
+            contentRef.current
+          );
           return;
         }
 
         // Standard Wheel = Pan
         event.preventDefault();
-        const { x, y } = transform.current;
+        const {
+          x, y
+        } = transform.current;
+
         setTransform(
           {
             x: x - deltaX,
@@ -137,16 +176,30 @@ export function useViewportGestures({
     {
       target: containerRef,
       drag: {
-        from: () => [transform.current.x, transform.current.y],
+        from: () => [
+          transform.current.x,
+          transform.current.y
+        ],
         filterTaps: true,
       },
       pinch: {
-        scaleBounds: { min: MIN_SCALE, max: MAX_SCALE },
-        from: () => [transform.current.scale, 0],
+        scaleBounds: {
+          min: MIN_SCALE,
+          max: MAX_SCALE
+        },
+        from: () => [
+          transform.current.scale,
+          0
+        ],
       },
       wheel: {
-        eventOptions: { passive: false },
-        from: () => [transform.current.x, transform.current.y],
+        eventOptions: {
+          passive: false
+        },
+        from: () => [
+          transform.current.x,
+          transform.current.y
+        ],
       },
     }
   );

@@ -1,15 +1,17 @@
 "use client";
 
 import React from "react";
-import { Save } from "lucide-react";
+import {
+  Save
+} from "lucide-react";
 
 type BrowserRecordingButtonProps = {
   onRecord: () => Promise<void>;
 };
 
-export default function BrowserRecordingButton({
+export default function BrowserRecordingButton( {
   onRecord,
-}: BrowserRecordingButtonProps) {
+}: BrowserRecordingButtonProps ) {
   return (
     <button
       className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5"

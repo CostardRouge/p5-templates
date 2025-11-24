@@ -1,10 +1,16 @@
 "use client";
 
 import React from "react";
-import { Copy, Loader, X } from "lucide-react";
-import { JobModel } from "@/types/recording.types";
+import {
+  Copy, Loader, X
+} from "lucide-react";
+import {
+  JobModel
+} from "@/types/recording.types";
 import CompactProgressBar from "@/components/CompactProgressBar";
-import { getRecordingSteps } from "@/utils/recordingSteps";
+import {
+  getRecordingSteps
+} from "@/utils/recordingSteps";
 
 type RecordingActionsProps = {
   persistedJob?: JobModel;
@@ -20,7 +26,7 @@ type RecordingActionsProps = {
   cancelling: boolean;
 };
 
-export default function RecordingActions({
+export default function RecordingActions( {
   persistedJob,
   jobId,
   recordingProgress,
@@ -28,7 +34,7 @@ export default function RecordingActions({
   onCancel,
   cloning,
   cancelling,
-}: RecordingActionsProps) {
+}: RecordingActionsProps ) {
   return (
     <>
       <div className="relative my-2">
@@ -50,16 +56,17 @@ export default function RecordingActions({
             } as JobModel
           }
           steps={
-            (recordingProgress?.status || persistedJob?.status) === "active"
-              ? getRecordingSteps({
-                  ...persistedJob,
-                  id: persistedJob?.id || jobId || "",
-                  progress:
+            ( recordingProgress?.status || persistedJob?.status ) === "active"
+              ? getRecordingSteps( {
+                ...persistedJob,
+                id: persistedJob?.id || jobId || "",
+                progress:
                     recordingProgress?.percentage || persistedJob?.progress || 0,
-                  status:
+                status:
                     recordingProgress?.status || persistedJob?.status || "active",
-                } as JobModel)
-              : []
+              } as JobModel )
+              : [
+              ]
           }
           startTime={
             jobId && recordingProgress?.recordingDuration

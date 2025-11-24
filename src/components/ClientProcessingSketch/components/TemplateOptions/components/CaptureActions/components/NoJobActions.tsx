@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Archive, Clapperboard, Loader } from "lucide-react";
+import {
+  Archive, Clapperboard, Loader
+} from "lucide-react";
 
 type NoJobActionsProps = {
   onSaveDraft: () => void;
@@ -12,14 +14,14 @@ type NoJobActionsProps = {
   isBlockingActionLoading: boolean;
 };
 
-export default function NoJobActions({
+export default function NoJobActions( {
   onSaveDraft,
   onStart,
   saving,
   isLoading,
   isAnyActionLoading,
   isBlockingActionLoading,
-}: NoJobActionsProps) {
+}: NoJobActionsProps ) {
   return (
     <div className="flex gap-1">
       <button

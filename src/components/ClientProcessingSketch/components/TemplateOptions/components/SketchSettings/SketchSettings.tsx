@@ -15,21 +15,21 @@ type SketchSettingsProps = {
   activeSlideIndex?: number;
 };
 
-export default function SketchSettings({
+export default function SketchSettings( {
   basePath,
   activeSlideIndex
-}: SketchSettingsProps) {
+}: SketchSettingsProps ) {
   const {
     sketchFormConfiguration, sketchFormValues
   } = useSketch();
 
-  if (!sketchFormConfiguration || Object.keys(sketchFormConfiguration).length === 0) {
+  if ( !sketchFormConfiguration || Object.keys( sketchFormConfiguration ).length === 0 ) {
     return null;
   }
 
   // Use slide-specific basePath if a slide is active, otherwise use global sketch settings
   const effectiveBasePath = activeSlideIndex !== undefined
-    ? `slides.${activeSlideIndex}.sketch`
+    ? `slides.${ activeSlideIndex }.sketch`
     : basePath ?? "sketch";
 
   return (
@@ -40,7 +40,7 @@ export default function SketchSettings({
         maxHeight: "calc(80svh - 5rem)",
         maxWidth: "calc(50% - 0.75rem)"
       }}
-      header={(expanded) => (
+      header={( expanded ) => (
         <button
           className="text-foreground text-sm text-left"
           aria-label={expanded ? "Collapse controls" : "Expand controls"}
@@ -52,8 +52,8 @@ export default function SketchSettings({
             }}
           />
           <span>
-            sketch options {sketchFormValues && `(${Object.keys(sketchFormValues).length})`}
-            {activeSlideIndex !== undefined && ` (slide ${activeSlideIndex + 1})`}
+            sketch options {sketchFormValues && `(${ Object.keys( sketchFormValues ).length })`}
+            {activeSlideIndex !== undefined && ` (slide ${ activeSlideIndex + 1 })`}
           </span>
         </button>
       )}

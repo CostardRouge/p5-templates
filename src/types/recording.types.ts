@@ -128,4 +128,8 @@ declare global { interface Window {
   toggleLoop: () => void,
   toggleFPS: () => void,
   saveCanvas: ( name: string ) => void,
+
+  // P5 animation progression controls
+  setAnimationProgression: ( progression: number ) => void,
+  getAnimationProgression: () => number,
 } }

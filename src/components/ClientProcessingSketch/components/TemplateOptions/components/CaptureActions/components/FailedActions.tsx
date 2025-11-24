@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Archive, Loader, RotateCcw, Trash2 } from "lucide-react";
+import {
+  Archive, Loader, RotateCcw, Trash2
+} from "lucide-react";
 
 type FailedActionsProps = {
   onRetry: () => void;
@@ -13,7 +15,7 @@ type FailedActionsProps = {
   isAnyActionLoading: boolean;
 };
 
-export default function FailedActions({
+export default function FailedActions( {
   onRetry,
   onSaveAsDraft,
   onDelete,
@@ -21,7 +23,7 @@ export default function FailedActions({
   saving,
   deleting,
   isAnyActionLoading,
-}: FailedActionsProps) {
+}: FailedActionsProps ) {
   return (
     <>
       <button

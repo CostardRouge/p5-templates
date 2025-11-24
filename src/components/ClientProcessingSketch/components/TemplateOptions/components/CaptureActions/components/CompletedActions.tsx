@@ -1,9 +1,15 @@
 "use client";
 
 import React from "react";
-import { Copy, Download, Eye, Loader, Trash2 } from "lucide-react";
-import { JobModel } from "@/types/recording.types";
-import { formatFileSize } from "../utils/formatFileSize";
+import {
+  Copy, Download, Eye, Loader, Trash2
+} from "lucide-react";
+import {
+  JobModel
+} from "@/types/recording.types";
+import {
+  formatFileSize
+} from "../utils/formatFileSize";
 
 type CompletedActionsProps = {
   persistedJob: JobModel;
@@ -17,7 +23,7 @@ type CompletedActionsProps = {
   cloning: boolean;
 };
 
-export default function CompletedActions({
+export default function CompletedActions( {
   persistedJob,
   activeSlideIndex,
   onPreview,
@@ -27,10 +33,11 @@ export default function CompletedActions({
   onDownload,
   deleting,
   cloning,
-}: CompletedActionsProps) {
+}: CompletedActionsProps ) {
   // Get video sizes directly from job data
-  const videoSizes = (persistedJob.videoSizes as unknown as number[]) || [];
-  const currentVideoSize = videoSizes[activeSlideIndex];
+  const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [
+  ];
+  const currentVideoSize = videoSizes[ activeSlideIndex ];
 
   return (
     <div className="grid grid-cols-2 gap-1">
@@ -56,7 +63,7 @@ export default function CompletedActions({
         <span className="truncate">
           {downloading
             ? "Downloading..."
-            : `Download${currentVideoSize ? ` (${formatFileSize(currentVideoSize)})` : ""}`}
+            : `Download${ currentVideoSize ? ` (${ formatFileSize( currentVideoSize ) })` : "" }`}
         </span>
       </button>
 
