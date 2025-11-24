@@ -75,7 +75,7 @@ export default function ClientProcessingSketch() {
     <>
       {!sketchLoaded && (
         <div className="flex items-center justify-center absolute h-full w-full">
-          <p className="text-foreground">→ loading <strong>{name}</strong>...</p>
+          <p className="text-foreground">→ loading <span className="font-bold">{name}</span>...</p>
         </div>
       )}
 
