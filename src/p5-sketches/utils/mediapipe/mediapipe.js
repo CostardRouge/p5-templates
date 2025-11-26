@@ -25,7 +25,7 @@ const mediapipe = {
   },
   mode: "VIDEO", // VIDEO or IMAGE
   previousFrameSentTime: 0,
-  inferenceIntervalMilliseconds: 100, // Default speed
+  inferenceIntervalMilliseconds: 20, // Default speed
 };
 
 export async function init( config = {

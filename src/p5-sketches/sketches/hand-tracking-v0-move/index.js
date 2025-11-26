@@ -58,7 +58,7 @@ sketch.setup(
     background( ...options.colors.background );
 
     await mediapipeInit( {
-      worker: true,
+      worker: false,
       tasks: [
         "hands"
       ]
@@ -280,7 +280,7 @@ function updateHandBodies() {
   matter.handBodies = [
   ];
 
-  mediapipe.workerResult?.hands?.landmarks?.forEach?.( createHandInteractionBodies );
+  mediapipe.tasks?.hands?.result?.landmarks?.forEach?.( createHandInteractionBodies );
 }
 
 // Key landmarks for interaction (palm, fingertips)

@@ -6,7 +6,9 @@ import scripts from "../../utils/scripts.js";
 
 import * as common from "../../utils/common.js";
 
-import mediapipe from "../../utils/mediapipe/mediapipe.js";
+import mediapipe, {
+  init as mediapipeInit
+} from "../../utils/mediapipe/mediapipe.js";
 
 import drawHands from "./drawHands.js";
 import neonDot from "../../utils/visuals/neonDot.js";
@@ -56,8 +58,15 @@ const matter = {
 };
 
 sketch.setup(
-  () => {
+  async() => {
     background( ...options.colors.background );
+
+    await mediapipeInit( {
+      worker: false,
+      tasks: [
+        "hands"
+      ]
+    } );
 
     for ( const layerName in layers ) {
       const {
@@ -147,7 +156,7 @@ sketch.draw( (
   }
 
   drawHands(
-    mediapipe.workerResult.hands,
+    mediapipe.tasks?.hands?.result,
     layers.hands.graphics
   );
 
@@ -181,6 +190,10 @@ sketch.draw( (
     const {
       graphics, background, erase, size
     } = layer;
+
+    if ( !graphics ) {
+      continue;
+    }
 
     image(
       graphics,
@@ -247,7 +260,7 @@ function updateHandBodies() {
   matter.handBodies = [
   ];
 
-  mediapipe.workerResult?.hands?.landmarks?.forEach?.( createHandInteractionBodies );
+  mediapipe.tasks?.hands?.result?.landmarks?.forEach?.( createHandInteractionBodies );
 }
 
 // Key landmarks for interaction (palm, fingertips)
@@ -338,7 +351,7 @@ function applyRepulsionFromHands(
   maxForce = 0.02,
   repulseDistance = 600
 ) {
-  const hands = mediapipe.workerResult?.hands?.landmarks ?? [
+  const hands = mediapipe.tasks?.hands?.result?.landmarks ?? [
   ];
 
   if ( hands.length === 0 || matter.balls.length === 0 ) {
