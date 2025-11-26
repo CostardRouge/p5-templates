@@ -49,7 +49,9 @@ import clsx from "clsx";
 import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOptions/components/UndoRedo";
 import SketchSettings
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/SketchSettings";
-import useSketch from "../SketchProvider/hooks/useSketch";
+import useBrowserRecordingSupported
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/CaptureActions/hooks/useBrowserRecordingSupported";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 type TemplateOptionsProps = {
   name: string;
@@ -68,13 +70,7 @@ export default function TemplateOptions( {
   onActiveSlideChange,
   options: initialOptions,
 }: TemplateOptionsProps ) {
-  const {
-    capturing
-  } = useSketch();
-
-  if ( capturing ) {
-    return null;
-  }
+  const browserRecordingSupported = useBrowserRecordingSupported();
 
   const [
     activeSlideIndex,
@@ -368,6 +364,10 @@ export default function TemplateOptions( {
   const options = watch();
   const editorKey = slideIds[ activeSlideIndex ] ?? `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.name ?? "unnamed-slide" }`;
 
+  const {
+    backendRecording
+  } = useSketch();
+
   return (
     <FormProvider {...methods}>
       <UnsavedChangesModal
@@ -511,13 +511,17 @@ export default function TemplateOptions( {
           )}
         </CollapsibleItem>
 
-        <CaptureActions
-          ref={captureActionsRef}
-          name={name}
-          options={options as SketchOption}
-          persistedJob={persistedJob}
-          activeSlideIndex={activeSlideIndex}
-        />
+        { ( backendRecording || browserRecordingSupported ) && (
+          <CaptureActions
+            ref={captureActionsRef}
+            name={name}
+            backendRecording={backendRecording}
+            persistedJob={persistedJob}
+            options={options as SketchOption}
+            activeSlideIndex={activeSlideIndex}
+            browserRecordingSupported={browserRecordingSupported}
+          />
+        ) }
       </div>
 
       <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>

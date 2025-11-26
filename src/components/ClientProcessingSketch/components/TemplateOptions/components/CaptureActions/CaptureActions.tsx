@@ -6,9 +6,6 @@ import React, {
 import {
   useRouter
 } from "next/navigation";
-import {
-  ArrowDownFromLine
-} from "lucide-react";
 
 import {
   useRecordingQueue
@@ -24,16 +21,11 @@ import {
 import {
   SketchOption, SlideOption
 } from "@/types/sketch.types";
-import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
-import CollapsibleItem from "@/components/CollapsibleItem";
 
 import {
   getRecordingStatus
 } from "./utils/getRecordingStatus";
-import {
-  checkBrowserRecordingSupport
-} from "./utils/checkBrowserRecordingSupport";
 import BrowserRecordingButton from "./components/BrowserRecordingButton";
 import NoJobActions from "./components/NoJobActions";
 import DraftActions from "./components/DraftActions";
@@ -51,11 +43,13 @@ type CaptureActionsProps = {
   options: SketchOption;
   persistedJob?: JobModel;
   activeSlideIndex: number;
+  backendRecording: boolean;
+  browserRecordingSupported: boolean;
 };
 
 const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   {
-    name, options, persistedJob, activeSlideIndex
+    name, options, persistedJob, activeSlideIndex, backendRecording, browserRecordingSupported
   }, ref
 ) => {
   const router = useRouter();
@@ -97,28 +91,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   ] = useState<boolean>( false );
 
   const {
-    backendRecording
-  } = useSketch();
-
-  // Check if browser supports MediaRecorder for browser recording
-  const [
-    isBrowserRecordingSupported,
-    setIsBrowserRecordingSupported
-  ] =
-      useState<boolean>( false );
-
-  React.useEffect(
-    () => {
-      setIsBrowserRecordingSupported( checkBrowserRecordingSupport() );
-    },
-    [
-    ]
-  );
-
-  const {
     subscribeToRecordingStatus, recordingProgress
-  } =
-      useRecordingStatusStream();
+  } = useRecordingStatusStream();
 
   // Determine current status
   const currentStatus = ( recordingProgress?.status || persistedJob?.status ) as JobStatusEnum | undefined;
@@ -485,7 +459,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       >
         <div className="flex flex-col gap-1 h-auto w-full">
           {/* Browser Recording - Only on Compatible Devices */}
-          {!isRecording && isBrowserRecordingSupported && (
+          {!isRecording && browserRecordingSupported && (
             <BrowserRecordingButton onRecord={handleBrowserRecord} />
           )}
 
