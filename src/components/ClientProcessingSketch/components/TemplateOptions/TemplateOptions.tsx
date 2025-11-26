@@ -438,7 +438,7 @@ export default function TemplateOptions( {
               <button
                 className={
                   clsx(
-                    "text-foreground text-xs w-full text-left -ml-1 align-text-top",
+                    "truncate text-foreground text-xs w-full text-left -ml-1 align-text-top",
                     {
                       "mb-1": expanded
                     }

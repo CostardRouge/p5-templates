@@ -34,7 +34,7 @@ export default function NoJobActions( {
         ) : (
           <Archive className="h-4 w-4 flex-shrink-0" />
         )}
-        <span className="truncate">{saving ? "Saving..." : "Save Draft"}</span>
+        {saving ? "Saving..." : "Save Draft"}
       </button>
 
       <button
@@ -47,9 +47,7 @@ export default function NoJobActions( {
         ) : (
           <Clapperboard className="h-4 w-4 flex-shrink-0" />
         )}
-        <span className="truncate">
-          {isLoading && !saving ? "Starting..." : "Start"}
-        </span>
+        {isLoading && !saving ? "Starting..." : "Start"}
       </button>
     </div>
   );

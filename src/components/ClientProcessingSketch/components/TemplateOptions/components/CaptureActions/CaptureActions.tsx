@@ -454,7 +454,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   return (
     <>
       <div
-        data-no-zoom=""
         className="flex flex-col gap-1 glass px-2 py-2 border border-theme rounded-2xl shadow-lg"
       >
         <div className="flex flex-col gap-1 h-auto w-full">

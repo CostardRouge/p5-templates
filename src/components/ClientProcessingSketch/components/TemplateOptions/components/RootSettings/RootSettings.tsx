@@ -17,7 +17,7 @@ export default function RootSettings() {
       headerContainerClassName="leading-none"
       header={( expanded ) => (
         <button
-          className="text-foreground text-xs w-full text-left -ml-1 align-text-top"
+          className="truncate text-foreground text-xs w-full text-left -ml-1 align-text-top"
           aria-label={expanded ? "Collapse controls" : "Expand controls"}
         >
           <ListCollapse
@@ -26,7 +26,7 @@ export default function RootSettings() {
               rotate: expanded ? "180deg" : "0deg"
             }}
           />
-          <span>general settings</span>
+          general settings
         </button>
       )}
     >

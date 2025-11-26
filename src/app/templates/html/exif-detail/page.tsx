@@ -265,7 +265,6 @@ const ImageInfoHelper = () => {
 
       {!capturing && image && (
         <div
-          data-no-zoom=""
           className="w-64 flex flex-col gap-1 absolute right-0 bottom-0 bg-background p-2 border border-b-0 border-theme  border-r-0 z-50 rounded-xl-tl"
           style={{
             maxHeight: "calc(60svh)",
