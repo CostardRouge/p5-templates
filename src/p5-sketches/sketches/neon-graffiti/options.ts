@@ -10,6 +10,14 @@ export const formValues = {
   cosAngleMultiplier: 2,
   hueIndexMultiplier: 1.5,
   hueAmplitude: Math.PI,
+  circleSizeEasing: "easeOutSine",
+  positionSinEasing: "easeInOutQuad",
+  positionCosEasing: "easeInOutSine",
+  positionCosMultiplier: 8,
+  hueEasing: "easeInOutSine",
+  hueStepDivider: 10,
+  opacityStart: 1,
+  opacityEnd: 2.25,
   start: {
     x: 0,
     y: 0.5
@@ -25,6 +33,8 @@ export const formValues = {
     255
   ]
 };
+
+import easing from "@/p5-sketches/utils/easing";
 
 export const formConfiguration: Record<string, any> = {
   amplitude: {
@@ -103,6 +113,66 @@ export const formConfiguration: Record<string, any> = {
     min: 0,
     max: Math.PI * 2,
     step: 0.1
+  },
+  circleSizeEasing: {
+    component: "select",
+    label: "Circle size easing",
+    options: Object.keys(easing).map(easingFunctionName => ({
+      label: easingFunctionName,
+      value: easingFunctionName,
+    }))
+  },
+  positionSinEasing: {
+    component: "select",
+    label: "Position sin easing",
+    options: Object.keys(easing).map(easingFunctionName => ({
+      label: easingFunctionName,
+      value: easingFunctionName,
+    }))
+  },
+  positionCosEasing: {
+    component: "select",
+    label: "Position cos easing",
+    options: Object.keys(easing).map(easingFunctionName => ({
+      label: easingFunctionName,
+      value: easingFunctionName,
+    }))
+  },
+  positionCosMultiplier: {
+    label: "Position cos multiplier",
+    component: "slider",
+    min: 1,
+    max: 20,
+    step: 1
+  },
+  hueEasing: {
+    component: "select",
+    label: "Hue easing",
+    options: Object.keys(easing).map(easingFunctionName => ({
+      label: easingFunctionName,
+      value: easingFunctionName,
+    }))
+  },
+  hueStepDivider: {
+    label: "Hue step divider",
+    component: "slider",
+    min: 1,
+    max: 50,
+    step: 1
+  },
+  opacityStart: {
+    label: "Opacity start",
+    component: "slider",
+    min: 0,
+    max: 5,
+    step: 0.05
+  },
+  opacityEnd: {
+    label: "Opacity end",
+    component: "slider",
+    min: 0,
+    max: 5,
+    step: 0.05
   },
   start: {
     label: "Start position",

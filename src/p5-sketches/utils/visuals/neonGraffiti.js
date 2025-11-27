@@ -16,6 +16,14 @@ export default function neonGraffiti( {
   cosAngleMultiplier = 2,
   hueIndexMultiplier = 1.5,
   hueAmplitude = PI,
+  circleSizeEasing = "easeOutSine",
+  positionSinEasing = "easeInOutQuad",
+  positionCosEasing = "easeInOutSine",
+  positionCosMultiplier = 8,
+  hueEasing = "easeInOutSine",
+  hueStepDivider = 10,
+  opacityStart = 1,
+  opacityEnd = 2.25,
   start = createVector(
     0,
     height / 2
@@ -31,13 +39,14 @@ export default function neonGraffiti( {
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
     const shadowProgression = shadowsCount / shadowsCount;
 
+    const circleSizeEasingFn = easing?.[circleSizeEasing] ?? easing.easeOutSine;
     const circleSize = mappers.fn(
       shadowIndex,
       0,
       shadowsCount,
       innerCircleSize * shadowsCount,
       innerCircleSize,
-      easing.easeOutSine
+      circleSizeEasingFn
     );
 
     for ( let step = 0; step < stepsCount; step++ ) {
@@ -82,10 +91,13 @@ export default function neonGraffiti( {
         )
       );
 
+      const positionSinEasingFn = easing?.[positionSinEasing] ?? easing.easeInOutQuad;
+      const positionCosEasingFn = easing?.[positionCosEasing] ?? easing.easeInOutSine;
+
       position.add(
         map(
           Math.sin( +animation.angle * sinAngleMultiplier
-            + easing.easeInOutQuad( stepProgression ) ),
+            + positionSinEasingFn( stepProgression ) ),
           -1,
           1,
           -amplitude,
@@ -93,7 +105,7 @@ export default function neonGraffiti( {
         ),
         map(
           Math.cos( +animation.angle * cosAngleMultiplier
-            + easing.easeInOutSine( stepProgression ) * 8 ),
+            + positionCosEasingFn( stepProgression ) * positionCosMultiplier ),
           -1,
           1,
           -amplitude,
@@ -101,15 +113,17 @@ export default function neonGraffiti( {
         )
       );
 
+      const hueEasingFn = easing?.[hueEasing] ?? easing.easeInOutSine;
+
       fill( colors.rainbow( {
         opacityFactor: map(
           shadowIndex,
           0,
           shadowsCount,
-          1,
-          2.25,
+          opacityStart,
+          opacityEnd,
         ),
-        hueOffset: easing.easeInOutSine( shadowProgression + stepProgression / 10 ),
+        hueOffset: hueEasingFn( shadowProgression + stepProgression / hueStepDivider ),
         // hueOffset: easing.easeOutSine( shadowProgression + shadowIndex / 2 ),
         hueIndex: map(
           Math.sin( animation.angle

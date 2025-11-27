@@ -22,6 +22,14 @@ sketch.draw( ( _time ) => {
     cosAngleMultiplier: options.sketch.cosAngleMultiplier,
     hueIndexMultiplier: options.sketch.hueIndexMultiplier,
     hueAmplitude: options.sketch.hueAmplitude,
+    circleSizeEasing: options.sketch.circleSizeEasing,
+    positionSinEasing: options.sketch.positionSinEasing,
+    positionCosEasing: options.sketch.positionCosEasing,
+    positionCosMultiplier: options.sketch.positionCosMultiplier,
+    hueEasing: options.sketch.hueEasing,
+    hueStepDivider: options.sketch.hueStepDivider,
+    opacityStart: options.sketch.opacityStart,
+    opacityEnd: options.sketch.opacityEnd,
     start: createVector(
       width * options.sketch.start.x,
       height * options.sketch.start.y
