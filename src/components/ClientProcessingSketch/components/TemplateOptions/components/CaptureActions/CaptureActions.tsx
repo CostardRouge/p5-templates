@@ -546,14 +546,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         </div>
       </div>
 
-      {/* Preview Modal */}
-      {showPreviewModal && effectiveJob && (
+      { backendRecording && effectiveJob && showPreviewModal && (
         <VideoPreviewModal
           jobId={effectiveJob.id}
           isOpen={showPreviewModal}
           onClose={() => setShowPreviewModal( false )}
         />
-      )}
+      ) }
     </>
   );
 } );

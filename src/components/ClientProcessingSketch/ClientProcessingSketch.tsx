@@ -82,11 +82,12 @@ export default function ClientProcessingSketch() {
 
       <div className="h-full w-full relative">
         <ScalableViewport
+          disable={capturing}
           showZoomControls={!capturing && sketchLoaded}
           resolutionKey={`${ currentOptions.size.width }x${ currentOptions.size.height }`}
           isReady={sketchLoaded}
         >
-          {sketchLoaded && (
+          {sketchLoaded && !capturing && (
             <div
               className="flex justify-between font-mono text-sm"
               style={
@@ -119,9 +120,9 @@ export default function ClientProcessingSketch() {
         )}
       </div>
 
-      {sketchLoaded && (
+      {sketchLoaded && !capturing && (
         <>
-          {!capturing && <P5Controls name={name} />}
+          <P5Controls name={name} />
 
           <TemplateOptions
             name={name}

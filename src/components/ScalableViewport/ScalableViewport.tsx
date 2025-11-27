@@ -23,11 +23,13 @@ export default function ScalableViewport( {
   showZoomControls = true,
   resolutionKey,
   isReady = true,
+  disable = false,
 }: {
   children: ReactNode;
   initialScale?: number;
   resolutionKey?: string;
   showZoomControls?: boolean;
+  disable?: boolean;
   isReady?: boolean;
 } ) {
   const containerRef = useRef<HTMLDivElement | null>( null );
@@ -55,14 +57,13 @@ export default function ScalableViewport( {
 
   const {
     fitToViewport, resetToActualPixels, zoomIn, zoomOut
-  } =
-    useViewportActions( {
-      containerRef,
-      contentRef,
-      transform,
-      setTransform,
-      animateTo,
-    } );
+  } = useViewportActions( {
+    containerRef,
+    contentRef,
+    transform,
+    setTransform,
+    animateTo,
+  } );
 
   useEffect(
     () => {
@@ -94,6 +95,17 @@ export default function ScalableViewport( {
     [
     ]
   );
+
+  if ( disable ) {
+    return (
+      <div
+        ref={contentRef}
+        className="origin-top-left absolute top-0 left-0 will-change-transform"
+      >
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div
