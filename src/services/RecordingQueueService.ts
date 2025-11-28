@@ -125,6 +125,31 @@ export class RecordingQueueService {
 
       // 4. Enqueue if not draft
       if ( status !== "draft" ) {
+        // Check if job is already in the queue
+        const existingJob = await this.queue.getJob( jobId );
+        
+        if ( existingJob ) {
+          const jobState = await existingJob.getState();
+          
+          // If job is already waiting or active, don't re-add it
+          if ( [
+            "waiting",
+            "active",
+            "delayed"
+          ].includes( jobState ) ) {
+            console.log( `[Queue] Job ${ jobId } already in queue with state: ${ jobState }` );
+            return jobId;
+          }
+          
+          // If job is in a terminal state, remove it before re-adding
+          if ( [
+            "completed",
+            "failed"
+          ].includes( jobState ) ) {
+            await existingJob.remove();
+          }
+        }
+        
         // ensure DB and SSE reflect queued state before worker picks it
         await updateJob(
           jobId,

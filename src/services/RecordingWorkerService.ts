@@ -16,6 +16,9 @@ import {
 import {
   NotificationService
 } from "@/services/NotificationService";
+import {
+  RecordingQueueService
+} from "@/services/RecordingQueueService";
 
 export class RecordingWorkerService {
   private static instance: RecordingWorkerService | null = null;
@@ -63,8 +66,9 @@ export class RecordingWorkerService {
       {
         connection: Redis.getInstance(),
         concurrency: this.concurrency,
-        stalledInterval: 30_000, // Check for stalled jobs every 30 seconds
-        maxStalledCount: 1,
+        stalledInterval: 10_000, // Check for stalled jobs every 10 seconds (more aggressive)
+        maxStalledCount: 2, // Allow 2 stalls before giving up
+        lockDuration: 60_000, // Lock jobs for 60 seconds (default is 30s)
         removeOnComplete: {
           count: 100
         },
@@ -207,8 +211,69 @@ export class RecordingWorkerService {
     );
   }
 
-  private handleStalledJob( jobId: string ): void {
-    console.warn( `[Worker] Job stalled: ${ jobId }` );
+  private async handleStalledJob( jobId: string ): Promise<void> {
+    console.warn( `[Worker] Job stalled: ${ jobId }, attempting to recover...` );
+    
+    try {
+      // Get the stalled job from the queue
+      const queue = RecordingQueueService.getInstance().getQueue();
+      const stalledJob = await queue.getJob( jobId );
+      
+      if ( !stalledJob ) {
+        console.error( `[Worker] Stalled job not found in queue: ${ jobId }` );
+        return;
+      }
+      
+      // Check the job state
+      const state = await stalledJob.getState();
+      console.log( `[Worker] Stalled job ${ jobId } state: ${ state }` );
+      
+      // Retry the stalled job by moving it back to waiting
+      if ( state === "active" ) {
+        await stalledJob.retry();
+        console.log( `[Worker] Retrying stalled job: ${ jobId }` );
+        
+        // Update the database status back to queued
+        await updateJob(
+          jobId,
+          {
+            status: "queued",
+            progress: 0
+          }
+        );
+        
+        await updateRecordingStatus(
+          jobId,
+          "queued"
+        );
+      }
+    } catch ( error ) {
+      console.error(
+        `[Worker] Error recovering stalled job: ${ jobId }`,
+        error
+      );
+      
+      // If recovery fails, mark the job as failed
+      try {
+        await updateJob(
+          jobId,
+          {
+            status: "failed",
+            progress: 0
+          }
+        );
+        
+        await updateRecordingStatus(
+          jobId,
+          "failed"
+        );
+      } catch ( updateError ) {
+        console.error(
+          `[Worker] Error marking stalled job as failed: ${ jobId }`,
+          updateError
+        );
+      }
+    }
   }
 
   public async pauseWorker(): Promise<void> {
