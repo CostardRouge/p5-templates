@@ -15,8 +15,6 @@ import {
   captureCanvasThumbnail
 } from "@/utils/captureCanvasThumbnail";
 
-const canvasSelectorToScreenShot = "canvas#defaultCanvas0.loaded";
-
 async function exists( filePath: string ) {
   try {
     await fs.stat( filePath );
@@ -74,18 +72,19 @@ async function createSketchThumbnails() {
         },
       );
 
-      // Resize canvas before capturing
-      await recordingState.page.waitForSelector( canvasSelectorToScreenShot );
-      await recordingState.page.locator( canvasSelectorToScreenShot )
-        .evaluate( ( element ) => {
-          element.style.width = "360px";
-          element.style.height = "450px";
-        } );
-
-      // Capture clean thumbnail without UI overlays
+      // Capture and resize thumbnail with high-quality interpolation
       await captureCanvasThumbnail(
         recordingState.page,
-        thumbnailPath
+        thumbnailPath,
+        {
+          resize: {
+            width: 360,
+            height: 450,
+            fit: "cover"
+          },
+          quality: 90,
+          format: "jpeg"
+        }
       );
       console.log( `💾 ${ name }/thumbnail.jpeg has been generated` );
     }

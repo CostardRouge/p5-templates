@@ -1,5 +1,7 @@
 import { Page } from "playwright";
+import sharp from "sharp";
 import fs from "node:fs/promises";
+import path from "path";
 
 /**
  * Captures a clean thumbnail from a canvas element using Canvas API
@@ -7,7 +9,8 @@ import fs from "node:fs/promises";
  * This function uses the Canvas API directly to extract image data:
  * 1. Waits for canvas to be loaded
  * 2. Uses canvas.toDataURL() to get image data directly from canvas
- * 3. Converts data URL to buffer and saves to file
+ * 3. Optionally resizes with high-quality interpolation (lanczos3)
+ * 4. Saves to file
  * 
  * This approach is more efficient than Playwright screenshots because:
  * - No UI elements can interfere (we get raw canvas data)
@@ -24,9 +27,14 @@ export async function captureCanvasThumbnail(
   options?: {
     quality?: number;
     format?: "jpeg" | "png";
+    resize?: {
+      width?: number;
+      height?: number;
+      fit?: "cover" | "contain" | "fill" | "inside" | "outside";
+    };
   }
 ) {
-  const { quality = 0.9, format = "jpeg" } = options ?? {};
+  const { quality = 90, format = "jpeg", resize } = options ?? {};
 
   // Wait for canvas to be loaded
   await page.waitForSelector( "canvas#defaultCanvas0.loaded", { timeout: 30000 } );
@@ -41,7 +49,7 @@ export async function captureCanvasThumbnail(
 
       // Use canvas.toDataURL to get image data
       const mimeType = format === "jpeg" ? "image/jpeg" : "image/png";
-      return canvas.toDataURL( mimeType, quality );
+      return canvas.toDataURL( mimeType, quality / 100 );
     },
     { format, quality }
   );
@@ -50,6 +58,31 @@ export async function captureCanvasThumbnail(
   const base64Data = imageDataUrl.replace( /^data:image\/\w+;base64,/, "" );
   const buffer = Buffer.from( base64Data, "base64" );
 
-  // Save to file
-  await fs.writeFile( thumbnailPath, buffer );
+  // Ensure directory exists
+  const directory = path.dirname( thumbnailPath );
+  await fs.mkdir( directory, { recursive: true } );
+
+  // Process image with sharp
+  let sharpInstance = sharp( buffer );
+
+  // Apply resize if specified
+  if ( resize ) {
+    sharpInstance = sharpInstance.resize( {
+      width: resize.width,
+      height: resize.height,
+      fit: resize.fit ?? "cover",
+      kernel: sharp.kernel.lanczos3, // High-quality interpolation, no aliasing
+    } );
+  }
+
+  // Save to file with appropriate format
+  if ( format === "jpeg" ) {
+    await sharpInstance
+      .jpeg( { quality } )
+      .toFile( thumbnailPath );
+  } else {
+    await sharpInstance
+      .png( { quality } )
+      .toFile( thumbnailPath );
+  }
 }

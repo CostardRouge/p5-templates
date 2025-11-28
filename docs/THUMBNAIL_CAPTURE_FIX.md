@@ -26,14 +26,16 @@ Created a robust thumbnail capture utility (`src/utils/captureCanvasThumbnail.ts
 
 1. **Waits for canvas to load** - Ensures the canvas has the `.loaded` class (30s timeout)
 2. **Uses Canvas API** - Calls `canvas.toDataURL()` to extract image data directly from the canvas
-3. **Converts and saves** - Converts the data URL to a buffer and saves to file
+3. **High-quality resize** - Uses Sharp with lanczos3 kernel for smooth, anti-aliased resizing
+4. **Saves to file** - Outputs optimized JPEG or PNG
 
-### Why Canvas API?
+### Why Canvas API + Sharp?
 
-Using `canvas.toDataURL()` instead of Playwright screenshots provides:
+Using `canvas.toDataURL()` + Sharp instead of Playwright screenshots provides:
 - **No UI interference** - Gets raw canvas pixel data, UI elements can't appear
 - **Faster execution** - No screenshot rendering overhead
 - **More reliable** - Direct canvas access, no timing issues
+- **High-quality resizing** - Lanczos3 interpolation produces smooth, professional thumbnails
 - **Consistent with codebase** - Same approach used in `captureFramesWithStreaming`
 
 ## Changes Made
@@ -58,12 +60,17 @@ Using `canvas.toDataURL()` instead of Playwright screenshots provides:
 ```typescript
 import { captureCanvasThumbnail } from "@/utils/captureCanvasThumbnail";
 
-// Basic usage (JPEG at 90% quality)
+// Basic usage (JPEG at 90% quality, original size)
 await captureCanvasThumbnail(page, thumbnailPath);
 
-// With options
+// With resize (high-quality lanczos3 interpolation, no aliasing)
 await captureCanvasThumbnail(page, thumbnailPath, {
-  quality: 0.95,  // 0.0 to 1.0 for JPEG quality
+  resize: {
+    width: 360,
+    height: 450,
+    fit: "cover"  // or "contain", "fill", "inside", "outside"
+  },
+  quality: 90,  // 0-100 for JPEG quality
   format: "jpeg"  // or "png"
 });
 ```
