@@ -41,13 +41,13 @@ export default function RecordingCard( {
   onClone
 }: RecordingCardProps ) {
   return (
-    <div className={`group bg-background border border-border hover:border-foreground/20 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative ${
+    <div className={`group bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative ${
       isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
     }`}>
       {/* Thumbnail Section */}
-      <div className="relative overflow-hidden rounded-t-2xl">
+      <div className="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl">
         {/* Checkbox Overlay */}
-        <div className="absolute top-3 left-3 z-20">
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
           <input
             type="checkbox"
             checked={isSelected}
@@ -70,7 +70,7 @@ export default function RecordingCard( {
         />
 
         {/* Status Badge Overlay */}
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
           <StatusBadge
             status={job.status}
             className="shadow-lg backdrop-blur-sm"
@@ -78,7 +78,7 @@ export default function RecordingCard( {
         </div>
 
         {/* Actions Menu Overlay */}
-        <div className="absolute bottom-3 right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
           <ActionsMenu
             job={job}
             onCancel={onCancel}
@@ -92,12 +92,12 @@ export default function RecordingCard( {
       </div>
 
       {/* Content Section */}
-      <div className="p-4 space-y-3">
+      <div className="p-2 sm:p-4 space-y-2 sm:space-y-3">
         {/* Template & ID */}
-        <div className="space-y-1.5">
+        <div className="space-y-1 sm:space-y-1.5">
           <HardLink
             href={`templates/${ job.template }`}
-            className="block text-sm font-semibold text-foreground hover:text-foreground/70 transition-colors truncate group/link"
+            className="block text-xs sm:text-sm font-semibold text-foreground hover:text-foreground/70 transition-colors truncate group/link"
           >
             {job.template}
             <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">→</span>
@@ -105,7 +105,7 @@ export default function RecordingCard( {
 
           <HardLink
             href={`templates/${ job.template }?id=${ job.id }`}
-            className="block text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors truncate group/link"
+            className="block text-[10px] sm:text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors truncate group/link"
           >
             #{job.id.slice(
               0,
@@ -116,7 +116,7 @@ export default function RecordingCard( {
         </div>
 
         {/* Metadata */}
-        <div className="flex items-center gap-2 text-xs text-foreground/50">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-foreground/50">
           <span className="truncate">
             {new Date( job.createdAt ).toLocaleDateString(
               undefined,
@@ -138,7 +138,7 @@ export default function RecordingCard( {
 
         {/* Progress Bar */}
         {( job.status === "active" || job.status === "queued" || job.progress < 100 ) && (
-          <div className="pt-1 min-w-0">
+          <div className="pt-0.5 sm:pt-1 min-w-0">
             <CompactProgressBar
               job={job}
               steps={job.status === "active" ? getRecordingSteps( job ) : [

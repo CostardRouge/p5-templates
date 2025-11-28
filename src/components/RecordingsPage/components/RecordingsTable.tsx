@@ -39,12 +39,12 @@ export default function RecordingsTable( {
   const someSelected = jobs.some( j => selectedIds.has( j.id ) ) && !allSelected;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+    <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
             <tr className="border-b border-border bg-hover/30">
-              <th className="text-left px-4 py-4 w-12">
+              <th className="text-left px-2 py-2 sm:px-4 sm:py-4 w-8 sm:w-12">
                 <input
                   type="checkbox"
                   checked={allSelected}
@@ -52,28 +52,28 @@ export default function RecordingsTable( {
                     if ( input ) input.indeterminate = someSelected;
                   }}
                   onChange={onSelectAll}
-                  className="w-4 h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                 />
               </th>
-              <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+              <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
                 Preview
               </th>
-              <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+              <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
                 ID
               </th>
-              <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+              <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
                 Template
               </th>
-              <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+              <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
                 Created
               </th>
-              <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+              <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
                 Status
               </th>
-              <th className="text-left text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+              <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
                 Progress
               </th>
-              <th className="text-right text-xs font-semibold text-foreground/70 uppercase tracking-wider px-4 py-4">
+              <th className="text-right text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
                 Actions
               </th>
             </tr>

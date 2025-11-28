@@ -201,7 +201,7 @@ export default function RecordingsPage() {
 
   return (
     <div>
-      <div ref={contentRef} className="space-y-6 p-6">
+      <div ref={contentRef} className="space-y-3 p-3 sm:space-y-6 sm:p-6">
         {/* Toolbar */}
         <RecordingsToolbar
           search={search}
@@ -217,13 +217,13 @@ export default function RecordingsPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
-            <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-hover/50 mb-4 animate-pulse">
-                <Video className="w-8 h-8 text-foreground/40" />
+          <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-sm">
+            <div className="text-center py-8 sm:py-16">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-hover/50 mb-3 sm:mb-4 animate-pulse">
+                <Video className="w-6 h-6 sm:w-8 sm:h-8 text-foreground/40" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-1">Loading recordings...</h3>
-              <p className="text-sm text-foreground/60">Please wait while we fetch your recordings</p>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">Loading recordings...</h3>
+              <p className="text-xs sm:text-sm text-foreground/60">Please wait while we fetch your recordings</p>
             </div>
           </div>
         )}

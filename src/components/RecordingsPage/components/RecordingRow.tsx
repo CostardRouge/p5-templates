@@ -44,16 +44,16 @@ export default function RecordingRow( {
     <tr className={`group hover:bg-hover/50 transition-colors ${
       isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
     }`}>
-      <td className="px-4 py-3">
+      <td className="px-2 py-2 sm:px-4 sm:py-3">
         <input
           type="checkbox"
           checked={isSelected}
           onChange={onToggleSelection}
-          className="w-4 h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+          className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
           onClick={( e ) => e.stopPropagation()}
         />
       </td>
-      <td className="px-4 py-3">
+      <td className="px-2 py-2 sm:px-4 sm:py-3">
         <RecordingThumbnail
           job={job}
           onClick={() => {
@@ -61,38 +61,38 @@ export default function RecordingRow( {
               onPreview();
             }
           }}
-          className={`w-20 h-20 rounded-xl border border-border object-cover transition-all duration-300 ${
+          className={`w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl border border-border object-cover transition-all duration-300 ${
             job.videoUrls ? "cursor-pointer group-hover:scale-105 group-hover:shadow-md" : "cursor-default"
           }`}
         />
       </td>
 
-      <td className="px-4 py-3">
+      <td className="px-2 py-2 sm:px-4 sm:py-3">
         <HardLink
           href={`templates/${ job.template }?id=${ job.id }`}
-          className="group/link inline-flex items-center gap-1.5 text-sm font-mono text-foreground hover:text-foreground/70 transition-colors"
+          className="group/link inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-mono text-foreground hover:text-foreground/70 transition-colors"
         >
           #{job.id.slice(
             0,
             8
           )}
-          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-xs">→</span>
+          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px] sm:text-xs">→</span>
         </HardLink>
       </td>
 
-      <td className="px-4 py-3">
+      <td className="px-2 py-2 sm:px-4 sm:py-3">
         <HardLink
           href={`templates/${ job.template }`}
-          className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
+          className="group/link inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
         >
           {job.template}
-          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-xs">→</span>
+          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px] sm:text-xs">→</span>
         </HardLink>
       </td>
 
-      <td className="px-4 py-3">
+      <td className="px-2 py-2 sm:px-4 sm:py-3">
         <div className="space-y-0.5">
-          <div className="text-sm text-foreground">
+          <div className="text-xs sm:text-sm text-foreground">
             {new Date( job.createdAt ).toLocaleDateString(
               undefined,
               {
@@ -102,7 +102,7 @@ export default function RecordingRow( {
               }
             )}
           </div>
-          <div className="text-xs text-foreground/50">
+          <div className="text-[10px] sm:text-xs text-foreground/50">
             {new Date( job.createdAt ).toLocaleTimeString(
               undefined,
               {
@@ -115,12 +115,12 @@ export default function RecordingRow( {
         </div>
       </td>
 
-      <td className="px-4 py-3">
+      <td className="px-2 py-2 sm:px-4 sm:py-3">
         <StatusBadge status={job.status} />
       </td>
 
-      <td className="px-4 py-3">
-        <div className="min-w-[200px] max-w-xs">
+      <td className="px-2 py-2 sm:px-4 sm:py-3">
+        <div className="min-w-[120px] sm:min-w-[200px] max-w-xs">
           <CompactProgressBar
             job={job}
             steps={job.status === "active" ? getRecordingSteps( job ) : [
@@ -130,7 +130,7 @@ export default function RecordingRow( {
         </div>
       </td>
 
-      <td className="px-4 py-3 text-right">
+      <td className="px-2 py-2 sm:px-4 sm:py-3 text-right">
         <ActionsMenu
           job={job}
           onCancel={onCancel}
