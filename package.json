@@ -49,6 +49,9 @@
     "@eslint/eslintrc": "^3",
     "@stylistic/eslint-plugin-js": "^4.2.0",
     "@stylistic/eslint-plugin-ts": "^4.2.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
     "@types/mime-types": "^2.1.4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -61,9 +64,12 @@
     "eslint-plugin-next": "^0.0.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "fast-check": "^4.3.0",
+    "jest": "^30.2.0",
     "postcss": "^8",
     "prisma": "^6.19.0",
     "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.4.5",
     "typescript": "^5"
   }
 }

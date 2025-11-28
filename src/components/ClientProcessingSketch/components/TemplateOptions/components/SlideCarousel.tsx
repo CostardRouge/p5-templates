@@ -1,5 +1,5 @@
 import {
-  Copy, Plus, Trash2
+  Plus
 } from "lucide-react";
 import {
   rectSwappingStrategy, SortableContext
@@ -18,35 +18,38 @@ import {
 import type {
   SlideOption
 } from "@/types/sketch.types";
-import clsx from "clsx";
 import {
-  restrictToParentElement, restrictToVerticalAxis
+  restrictToParentElement
 } from "@dnd-kit/modifiers";
 import React from "react";
 import {
-  DragBinder,
   SortableRow
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/ContentItems";
+import SlideThumbnail from "./SlideThumbnail";
 
-export default function SlideCarousel( {
+export default function SlideCarousel({
   slideIds,
   slides,
+  thumbnails,
   activeIndex,
   onSelect,
   onReorder,
   onAdd,
   onDuplicate,
-  onDelete
+  onDelete,
+  onRename
 }: {
   slideIds: string[];
   slides: SlideOption[];
+  thumbnails: Record<string, string>;
   activeIndex: number;
-  onSelect: ( index: number ) => void;
-  onReorder: ( oldIndex: number, newIndex: number ) => void;
+  onSelect: (index: number) => void;
+  onReorder: (oldIndex: number, newIndex: number) => void;
   onAdd: () => void;
-  onDuplicate: ( index: number ) => void;
-  onDelete: ( index: number ) => void;
-} ) {
+  onDuplicate: (index: number) => void;
+  onDelete: (index: number) => void;
+  onRename: (index: number, newName: string) => void;
+}) {
   const sensors = useSensors(
     useSensor(
       MouseSensor,
@@ -65,22 +68,22 @@ export default function SlideCarousel( {
         }
       }
     ),
-    useSensor( KeyboardSensor )
+    useSensor(KeyboardSensor)
   );
 
-  const handleDragEnd = ( event: DragEndEvent ) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const {
       active, over
     } = event;
 
-    if ( !over || active.id === over.id ) {
+    if (!over || active.id === over.id) {
       return;
     }
 
-    const oldIndex = slideIds.indexOf( String( active.id ) );
-    const newIndex = slideIds.indexOf( String( over.id ) );
+    const oldIndex = slideIds.indexOf(String(active.id));
+    const newIndex = slideIds.indexOf(String(over.id));
 
-    if ( oldIndex < 0 || newIndex < 0 || oldIndex === newIndex ) {
+    if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) {
       return;
     }
 
@@ -90,124 +93,73 @@ export default function SlideCarousel( {
     );
   };
 
+  // Calculate aspect ratio from the first slide's sketch settings or default
+  // Ideally this should come from the global sketch settings, but we can infer it
+  // For now, let's assume a standard vertical ratio if not available, or try to get it from props if we passed it
+  // Since we don't have global options here, we'll default to 0.8 (4:5) which is common for social
+  const aspectRatio = 0.8;
+
   return (
     <DndContext
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
       sensors={sensors}
       modifiers={[
-        restrictToVerticalAxis,
         restrictToParentElement
       ]}
     >
       <div
-        onDragOver={( event ) => event.preventDefault()}
-        className="grid grid-cols-1 gap-1 min-h-8"
+        className="flex flex-col gap-2"
       >
-        <SortableContext
-          items={slideIds} strategy={rectSwappingStrategy}
+        <div
+          className="grid grid-cols-2 gap-2"
         >
-          {slides.map( (
-            slide, index
-          ) => {
-            const id = slideIds[ index ];
+          <SortableContext
+            items={slideIds} strategy={rectSwappingStrategy}
+          >
+            {slides.map((
+              slide, index
+            ) => {
+              const id = slideIds[index];
+              const thumbnail = thumbnails[id] || null;
 
-            return (
-              <SortableRow key={`${ id }-${ index }`} id={id}>
-                {( dragBinder ) => (
-                  <SlideThumbnail
-                    id={id}
-                    dragBinder={dragBinder}
-                    isActive={index === activeIndex}
-                    label={`Slide ${ index + 1 }`}
-                    onClick={() => onSelect( index )}
-                    onDelete={() => onDelete( index )}
-                    onDuplicate={() => onDuplicate( index )}
-                  />
-                )}
-              </SortableRow>
-            );
-          } )}
-        </SortableContext>
+              return (
+                <SortableRow key={`${id}-${index}`} id={id}>
+                  {(dragBinder) => (
+                    <SlideThumbnail
+                      id={id}
+                      name={slide.name || `Slide ${index + 1}`}
+                      isActive={index === activeIndex}
+                      thumbnailUrl={thumbnail}
+                      aspectRatio={aspectRatio}
+                      onSelect={() => onSelect(index)}
+                      onRename={(newName) => onRename(index, newName)}
+                      onDelete={() => onDelete(index)}
+                      onDuplicate={() => onDuplicate(index)}
+                      dragBinder={dragBinder}
+                    />
+                  )}
+                </SortableRow>
+              );
+            })}
+          </SortableContext>
 
-        <button
-          type="button"
-          onClick={onAdd}
-          className="flex items-center justify-center h-8 text-foreground border border-dashed border-theme rounded-lg"
-          aria-label="Add new slide"
-          title="Add new slide"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          <span className="text-xs">new slide</span>
-        </button>
+          <button
+            type="button"
+            onClick={onAdd}
+            className="flex flex-col items-center justify-center border-2 border-dashed border-theme rounded-lg hover:bg-secondary/10 transition-colors text-muted-foreground hover:text-foreground gap-2"
+            style={{
+              aspectRatio
+            }}
+            aria-label="Add new slide"
+            title="Add new slide"
+          >
+            <Plus className="h-6 w-6" />
+            <span className="text-xs font-medium">New Slide</span>
+          </button>
+        </div>
       </div>
     </DndContext>
   );
 }
 
-function SlideThumbnail( {
-  id,
-  isActive,
-  label,
-  onClick,
-  onDuplicate,
-  onDelete,
-  dragBinder
-}: {
-  id: string;
-  isActive: boolean;
-  label: string;
-  onClick: () => void;
-  onDuplicate: () => void;
-  onDelete: () => void;
-  dragBinder?: DragBinder;
-} ) {
-  return (
-    <div
-      ref={dragBinder?.setHandleRef}
-      {
-        ...( dragBinder?.handleProps ?? {
-        } )
-      }
-      onClick={onClick}
-      className={clsx(
-        "relative bg-background border border-theme flex items-center p-1 h-8 rounded-lg",
-        "cursor-grab",
-        {
-          "border-active bg-hover": isActive,
-          "opacity-70 cursor-grabbing z-20": dragBinder?.isDragging
-        }
-      )}
-    >
-      <span className="text-xs text-foreground truncate">{label}</span>
-
-      <div className="ml-auto flex items-center gap-1">
-        <button
-          type="button"
-          onClick={( event ) => {
-            event.stopPropagation();
-            onDuplicate();
-          }}
-          className="cursor-copy inline-flex items-center justify-center"
-          aria-label="Duplicate slide"
-          title="Duplicate slide"
-        >
-          <Copy className="h-3.5 w-3.5 text-foreground" />
-        </button>
-
-        <button
-          type="button"
-          onClick={( event ) => {
-            event.stopPropagation();
-            onDelete();
-          }}
-          className="inline-flex items-center justify-center"
-          aria-label="Delete slide"
-          title="Delete slide"
-        >
-          <Trash2 className="h-3.5 w-3.5 text-red-500"/>
-        </button>
-      </div>
-    </div>
-  );
-}
