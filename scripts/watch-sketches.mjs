@@ -23,44 +23,96 @@ function generateMetadata() {
   }
 
   const entries = fs.readdirSync( SKETCHES_DIR );
+  const sketchMeta = [];
 
-  const sketchMeta = entries
-    .filter( ( name ) => {
-      if ( name.startsWith( "_" ) ) return false;
-      const fullPath = path.join(
-        SKETCHES_DIR,
-        name
-      );
+  for ( const name of entries ) {
+    if ( name.startsWith( "_" ) || name.startsWith( "." ) ) continue;
 
-      try {
-        return fs.statSync( fullPath ).isDirectory();
-      } catch {
-        return false;
-      }
-    } )
-    .map( ( name ) => {
-      const fullPath = path.join(
-        SKETCHES_DIR,
-        name
-      );
+    const fullPath = path.join(
+      SKETCHES_DIR,
+      name
+    );
 
+    let isDir = false;
+    try {
+      isDir = fs.statSync( fullPath ).isDirectory();
+    } catch {
+      continue;
+    }
+
+    if ( !isDir ) continue;
+
+    // Check if this is a sketch folder (has index.js)
+    const indexPath = path.join(
+      fullPath,
+      "index.js"
+    );
+    const hasIndex = fs.existsSync( indexPath );
+
+    if ( hasIndex ) {
+      // This is a sketch folder at root level
       const optionsTypescriptFilePath = path.join(
         fullPath,
         "options.ts"
       );
-
       const stats = fs.statSync( fullPath );
 
-      return {
+      sketchMeta.push( {
         name,
+        category: null,
         hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
         mtime: stats.mtime.toISOString(),
         ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
-      };
-    } )
-    .sort( (
-      a, b
-    ) => new Date( a.mtime ).getTime() - new Date( b.mtime ).getTime() );
+      } );
+    } else {
+      // This might be a category folder, check for nested sketches
+      const nestedEntries = fs.readdirSync( fullPath );
+
+      for ( const nestedName of nestedEntries ) {
+        if ( nestedName.startsWith( "_" ) || nestedName.startsWith( "." ) ) continue;
+
+        const nestedPath = path.join(
+          fullPath,
+          nestedName
+        );
+
+        let isNestedDir = false;
+        try {
+          isNestedDir = fs.statSync( nestedPath ).isDirectory();
+        } catch {
+          continue;
+        }
+
+        if ( !isNestedDir ) continue;
+
+        const nestedIndexPath = path.join(
+          nestedPath,
+          "index.js"
+        );
+
+        if ( fs.existsSync( nestedIndexPath ) ) {
+          // This is a sketch inside a category folder
+          const optionsTypescriptFilePath = path.join(
+            nestedPath,
+            "options.ts"
+          );
+          const stats = fs.statSync( nestedPath );
+
+          sketchMeta.push( {
+            name: nestedName,
+            category: name,
+            hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
+            mtime: stats.mtime.toISOString(),
+            ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
+          } );
+        }
+      }
+    }
+  }
+
+  sketchMeta.sort( (
+    a, b
+  ) => new Date( a.mtime ).getTime() - new Date( b.mtime ).getTime() );
 
   const oldContent = fs.existsSync( META_OUTPUT )
     ? fs.readFileSync(

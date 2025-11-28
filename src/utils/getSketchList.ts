@@ -3,6 +3,7 @@ import metadata from "@/p5-sketches/sketches/metadata.json";
 
 type SketchMeta = {
   name: string;
+  category: string | null;
   mtime: string;
   ctime: string;
   hasSketchForm: boolean;
@@ -13,9 +14,10 @@ async function getSketchList() {
     const meta = metadata as SketchMeta[];
 
     return meta.map( ( {
-      name, hasSketchForm
+      name, category, hasSketchForm
     } ) => ( {
       name,
+      category,
       hasSketchForm
     } ) );
   } catch ( err ) {

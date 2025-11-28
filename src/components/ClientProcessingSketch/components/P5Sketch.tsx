@@ -8,9 +8,33 @@ type Props = {
   onLoaded: ( canvas: HTMLCanvasElement ) => void;
 };
 
+import metadata from "@/p5-sketches/sketches/metadata.json";
+
+type SketchMetadata = {
+  name: string;
+  category: string | null;
+  hasSketchForm: boolean;
+  mtime: string;
+  ctime: string;
+};
+
+// Helper to get the full sketch path (with category if it exists)
+function getSketchPath( name: string ): string {
+  const meta = ( metadata as SketchMetadata[] ).find( m => m.name === name );
+
+  if ( meta?.category ) {
+    return `${ meta.category }/${ name }`;
+  }
+
+  return name;
+}
+
 // Webpack will create a context covering all .../sketches/*/index.js files
-const importSketch = ( name: string ) =>
-  import( `@/p5-sketches/sketches/${ name }/index.js` );
+const importSketch = ( name: string ) => {
+  const sketchPath = getSketchPath( name );
+
+  return import( `@/p5-sketches/sketches/${ sketchPath }/index.js` );
+};
 
 export default function P5Sketch( {
   name, onLoaded

@@ -6,7 +6,8 @@ export type TemplateCategory = Array<{
   href: string,
   name: string,
   thumbnail: string,
-  hasSketchForm: boolean
+  hasSketchForm: boolean,
+  category?: string | null
 }>
 
 export default async function TemplatesPage() {
@@ -15,12 +16,13 @@ export default async function TemplatesPage() {
 
   const p5sketchNames = p5sketches
     .map( ( {
-      name, hasSketchForm
+      name, category, hasSketchForm
     } ) => ( {
-      thumbnail: getP5SketchThumbnailURL( name ),
+      thumbnail: getP5SketchThumbnailURL(name),
       href: `templates/p5/${ name }`,
       hasSketchForm,
-      name
+      name,
+      category
     } ) )
     .reverse();
 

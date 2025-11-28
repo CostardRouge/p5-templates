@@ -79,7 +79,9 @@ export default function TemplatesList( {
       ]
     ) => {
       const filtered = items.filter( item =>
-        item.name.toLowerCase().includes( search.toLowerCase() ) );
+        item.name.toLowerCase().includes( search.toLowerCase() ) ||
+        ( item.category && item.category.toLowerCase().includes( search.toLowerCase() ) )
+      );
 
       if ( filtered.length > 0 ) {
         acc[ category ] = filtered;
@@ -171,107 +173,193 @@ export default function TemplatesList( {
       {Object.entries( filteredTemplates ).map( ( [
         category,
         items
-      ] ) => (
-        <div key={category} className="space-y-2 sm:space-y-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">{category}</h2>
-            <span className="text-xs sm:text-sm text-foreground/50 font-medium">
-              {items.length} {items.length === 1 ? "template" : "templates"}
-            </span>
-          </div>
+      ] ) => {
+        // Group items by their category field (for p5 sketches)
+        const groupedItems: Record<string, typeof items> = {};
+        const uncategorized: typeof items = [];
 
-          <div
-            className={
-              view === "grid"
-                ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                : "space-y-2 sm:space-y-3"
+        items.forEach( item => {
+          if ( item.category ) {
+            if ( !groupedItems[ item.category ] ) {
+              groupedItems[ item.category ] = [];
             }
-          >
-            {items.map( ( {
-              href, name, thumbnail, hasSketchForm
-            } ) => {
-              if ( view === "grid" ) {
-                return (
-                  <HardLink
-                    key={name}
-                    href={href}
-                    className="group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5"
-                  >
-                    {/* Aspect ratio box for 4:5 (360x450) */}
-                    <div className="w-full relative" style={{
-                      paddingTop: "125%"
-                    }}>
-                      { hasSketchForm && (
-                        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10" title="Has a magic form">
-                          <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg p-1 sm:p-1.5">
-                            <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
-                          </div>
-                        </div>
-                      )}
-                      <img
-                        alt={name}
-                        loading="lazy"
-                        src={thumbnail}
-                        className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-                      />
+            groupedItems[ item.category ].push( item );
+          } else {
+            uncategorized.push( item );
+          }
+        } );
 
-                      {/* Gradient overlay on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
+        return (
+          <div key={category} className="space-y-2 sm:space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground">{category}</h2>
+              <span className="text-xs sm:text-sm text-foreground/50 font-medium">
+                {items.length} {items.length === 1 ? "template" : "templates"}
+              </span>
+            </div>
 
-                    {/* Template name */}
-                    <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
-                      <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
-                        <p className="text-xs sm:text-sm font-medium text-foreground truncate text-center">
-                          {name}
-                        </p>
-                      </div>
-                    </div>
-                  </HardLink>
-                );
-              }
+            {/* Render categorized groups */}
+            {Object.entries( groupedItems ).map( ( [
+              subCategory,
+              subItems
+            ] ) => (
+              <div key={subCategory} className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2 pl-2 sm:pl-4">
+                  <h3 className="text-sm sm:text-base font-medium text-foreground/80">{subCategory}</h3>
+                  <span className="text-xs text-foreground/40">
+                    {subItems.length}
+                  </span>
+                </div>
 
-              // list view
-              return (
-                <HardLink
-                  key={name}
-                  href={href}
-                  className="group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5"
+                <div
+                  className={
+                    view === "grid"
+                      ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
+                      : "space-y-2 sm:space-y-3"
+                  }
                 >
-                  <div className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border" style={{
-                    aspectRatio: "4 / 5"
-                  }}>
-                    <img
-                      alt={name}
-                      loading="lazy"
-                      src={thumbnail}
-                      className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                  {subItems.map( ( {
+                    href, name, thumbnail, hasSketchForm
+                  } ) => (
+                    <TemplateCard
+                      key={name}
+                      href={href}
+                      name={name}
+                      thumbnail={thumbnail}
+                      hasSketchForm={hasSketchForm}
+                      view={view}
                     />
-                  </div>
+                  ) )}
+                </div>
+              </div>
+            ) )}
 
-                  <div className="flex-grow min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
-                      {name}
-                    </p>
-                  </div>
+            {/* Render uncategorized items */}
+            {uncategorized.length > 0 && (
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2 pl-2 sm:pl-4">
+                  <h3 className="text-sm sm:text-base font-medium text-foreground/80">No category</h3>
+                  <span className="text-xs text-foreground/40">
+                    {uncategorized.length}
+                  </span>
+                </div>
 
-                  { hasSketchForm && (
-                    <div className="flex-shrink-0" title="Has a magic form">
-                      <div className="bg-hover/50 rounded-lg border border-border p-1 sm:p-1.5">
-                        <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
-                      </div>
-                    </div>
-                  )}
+                <div
+                  className={
+                    view === "grid"
+                      ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
+                      : "space-y-2 sm:space-y-3"
+                  }
+                >
+                  {uncategorized.map( ( {
+                    href, name, thumbnail, hasSketchForm
+                  } ) => (
+                    <TemplateCard
+                      key={name}
+                      href={href}
+                      name={name}
+                      thumbnail={thumbnail}
+                      hasSketchForm={hasSketchForm}
+                      view={view}
+                    />
+                  ) )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      } )}
+    </div>
+  );
+}
 
-                  <div className="flex-shrink-0 text-foreground/40 group-hover:text-foreground/60 transition-colors">
-                    <span className="text-xs sm:text-sm">→</span>
-                  </div>
-                </HardLink>
-              );
-            } )}
+function TemplateCard( {
+  href,
+  name,
+  thumbnail,
+  hasSketchForm,
+  view
+}: {
+  href: string;
+  name: string;
+  thumbnail: string;
+  hasSketchForm: boolean;
+  view: "grid" | "list";
+} ) {
+  if ( view === "grid" ) {
+    return (
+      <HardLink
+        href={href}
+        className="group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5"
+      >
+        {/* Aspect ratio box for 4:5 (360x450) */}
+        <div className="w-full relative" style={{
+          paddingTop: "125%"
+        }}>
+          { hasSketchForm && (
+            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10" title="Has a magic form">
+              <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg p-1 sm:p-1.5">
+                <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
+              </div>
+            </div>
+          )}
+          <img
+            alt={name}
+            loading="lazy"
+            src={thumbnail}
+            className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+
+          {/* Gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </div>
+
+        {/* Template name */}
+        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
+          <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
+            <p className="text-xs sm:text-sm font-medium text-foreground truncate text-center">
+              {name}
+            </p>
           </div>
         </div>
-      ) )}
-    </div>
+      </HardLink>
+    );
+  }
+
+  // list view
+  return (
+    <HardLink
+      href={href}
+      className="group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5"
+    >
+      <div className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border" style={{
+        aspectRatio: "4 / 5"
+      }}>
+        <img
+          alt={name}
+          loading="lazy"
+          src={thumbnail}
+          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+
+      <div className="flex-grow min-w-0">
+        <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
+          {name}
+        </p>
+      </div>
+
+      { hasSketchForm && (
+        <div className="flex-shrink-0" title="Has a magic form">
+          <div className="bg-hover/50 rounded-lg border border-border p-1 sm:p-1.5">
+            <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
+          </div>
+        </div>
+      )}
+
+      <div className="flex-shrink-0 text-foreground/40 group-hover:text-foreground/60 transition-colors">
+        <span className="text-xs sm:text-sm">→</span>
+      </div>
+    </HardLink>
   );
 }
