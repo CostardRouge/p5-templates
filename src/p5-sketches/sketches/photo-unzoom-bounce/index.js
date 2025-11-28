@@ -1,18 +1,16 @@
 import options from "../../utils/options.js";
 
 import cache from "../../utils/cache.js";
-import string from "../../utils/string.js";
 import easing from "../../utils/easing.js";
 import sketch from "../../utils/sketch.js";
 
-import shapes from "../../utils/shapes.js";
 import mappers from "../../utils/mappers.js";
 import animation from "../../utils/animation.js";
 import imageUtils from "../../utils/imageUtils.js";
 
 sketch.setup(
   () => {
-    background( ...options.colors.background );
+    applyBackground()
   },
   {
     size: {
@@ -26,29 +24,22 @@ sketch.setup(
   }
 );
 
+function applyBackground() {
+  background( ...( options.sketch?.backgroundColor ?? [
+    255,
+    255,
+    255
+  ] ) );
+}
+
 sketch.draw( (
-  _time, center, favoriteColor
+  _time
 ) => {
   const images = cache.get( "images" );
 
-  background( ...options.colors.background );
+  applyBackground()
 
-  if ( options.lines || false ) {
-    stroke( options.colors.accent );
-    stroke( 0 );
-
-    shapes.hl( 0 );
-    shapes.hl( height );
-
-    shapes.vl( 0 );
-    shapes.vl( width );
-  }
-
-  if ( options.durationBar || true ) {
-    shapes.sketchDurationBar( color( ...options.colors.accent ) );
-  }
-
-  const count = options.count || 20;
+  const count = options.sketch.count;
   const imageIndexes = images.map( (
     _, index
   ) => index );
@@ -62,14 +53,13 @@ sketch.draw( (
     img, filename
   } = images[ imageIndex ];
 
-  const imageStepAnimationProgression = options.animationProgression || "triangleProgression";
-  // const imageStepAnimationProgression = options.animationProgression || "linearProgression";
+  const imageStepAnimationProgression = options.sketch.animationProgression;
   const imageStepAnimationProgressionComponent = animation?.[ imageStepAnimationProgression ];
   const isImageStepAnimationProgressionComponentFunction = typeof imageStepAnimationProgressionComponent === "function";
 
   const imageStepIndexMapValue = isImageStepAnimationProgressionComponentFunction ? imageStepAnimationProgressionComponent( images.length ) : imageStepAnimationProgressionComponent;
-  const imageStepMin = options.zoom ? 1 : 0;
-  const imageStepMax = options.zoom ? 0 : 1;
+  const imageStepMin = options.sketch.zoom ? 1 : 0;
+  const imageStepMax = options.sketch.zoom ? 0 : 1;
   const imageStepIndex = map(
     imageStepIndexMapValue,
     imageStepMin,
@@ -84,8 +74,7 @@ sketch.draw( (
     }
 
     const t = i / count;
-    const scaleEasingFunction = options?.scaleEasingFunctionName || "easeOutQuad";
-    // const scaleEasingFunction = options?.scaleEasingFunctionName || "easeOutBounce";
+    const scaleEasingFunction = options.sketch.scaleEasingFunctionName;
 
     push();
     translate(
@@ -93,7 +82,7 @@ sketch.draw( (
       height / 2
     );
 
-    if ( options.rotate || false ) {
+    if ( options.sketch.rotate ) {
       rotate( map(
         i,
         0,
@@ -114,35 +103,13 @@ sketch.draw( (
       scale: mappers.fn(
         t,
         1,
-        Number( options.scaleStart ) || 0,
-        Number( options.scaleEnd ) || 0,
+        Number( options.sketch.scaleStart ),
+        Number( options.sketch.scaleEnd ),
         1,
         easing?.[ scaleEasingFunction ]
       )
     } );
 
     pop();
-  }
-
-  if ( animation.progression < 0.1 ) {
-    string.write(
-      options.name.replaceAll(
-        "-",
-        "\n"
-      ),
-      0,
-      height / 2,
-      {
-        size: 172,
-        stroke: color( ...options.colors.text ),
-        fill: color( ...options.colors.background ),
-        font: string.fonts.martian,
-        textAlign: [
-          CENTER,
-          CENTER
-        ],
-        blendMode: EXCLUSION
-      }
-    );
   }
 } );
