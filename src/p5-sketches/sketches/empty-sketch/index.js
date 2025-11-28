@@ -1,5 +1,5 @@
-import options from "../../utils/options.js";
-import sketch from "../../utils/sketch.js";
+import options from "@/p5/utils/options.js";
+import sketch from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
 

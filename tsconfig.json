@@ -28,6 +28,9 @@
       ],
       "@/public/*": [
         "./public/*"
+      ],
+      "@/p5/*": [
+        "./src/p5-sketches/*"
       ]
     },
     "strictNullChecks": true

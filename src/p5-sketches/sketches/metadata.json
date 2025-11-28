@@ -1,216 +1,245 @@
 [
   {
     "name": "photo-in-arc",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-04T03:16:56.452Z",
     "ctime": "2025-04-21T11:29:50.531Z"
   },
   {
     "name": "photo-in-circle",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-05T11:32:35.857Z",
     "ctime": "2025-04-21T11:29:50.537Z"
   },
   {
     "name": "photo-3d-cylinder",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:51:44.684Z",
     "ctime": "2025-05-13T07:50:43.765Z"
   },
   {
     "name": "photo-3d-vertical-stack",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:51:59.440Z",
     "ctime": "2025-04-21T11:29:50.498Z"
   },
   {
     "name": "photo-ballons-collision",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:52:06.239Z",
     "ctime": "2025-04-21T11:29:50.504Z"
   },
   {
     "name": "photo-dice",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:52:12.506Z",
     "ctime": "2025-04-21T11:29:50.515Z"
   },
   {
     "name": "photo-balloons",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:52:32.136Z",
     "ctime": "2025-04-21T11:29:50.509Z"
   },
   {
     "name": "text-post",
+    "category": "text",
     "hasSketchForm": false,
     "mtime": "2025-11-11T11:52:32.337Z",
     "ctime": "2025-05-27T10:40:53.863Z"
   },
   {
     "name": "text-post-with-medias",
+    "category": "text",
     "hasSketchForm": false,
     "mtime": "2025-11-11T11:52:32.404Z",
     "ctime": "2025-06-20T05:24:52.830Z"
   },
   {
     "name": "photo-3d-sphere",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:52:32.521Z",
     "ctime": "2025-05-16T05:30:38.969Z"
   },
   {
     "name": "photo-grid-with-blurry-photo-as-background",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:52:32.655Z",
     "ctime": "2025-04-21T11:29:50.520Z"
   },
   {
-    "name": "slides-with-assets",
-    "hasSketchForm": false,
-    "mtime": "2025-11-11T11:52:32.856Z",
-    "ctime": "2025-06-30T07:46:09.011Z"
-  },
-  {
     "name": "text-animation-typein-typeout",
+    "category": "text",
     "hasSketchForm": false,
     "mtime": "2025-11-11T11:52:33.024Z",
     "ctime": "2025-05-13T11:06:34.341Z"
   },
   {
     "name": "empty-sketch",
+    "category": null,
     "hasSketchForm": true,
     "mtime": "2025-11-11T11:58:02.735Z",
     "ctime": "2025-11-11T11:44:28.079Z"
   },
   {
     "name": "photo-exif",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-15T03:00:11.097Z",
     "ctime": "2025-10-25T22:30:06.986Z"
   },
   {
     "name": "dominant-colors-block-switch",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-15T03:06:49.114Z",
     "ctime": "2025-04-21T11:29:50.492Z"
   },
   {
     "name": "photo-switch-tiles",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-15T03:07:29.548Z",
     "ctime": "2025-05-03T04:56:58.803Z"
   },
   {
     "name": "text-mask-with-noise-strips",
+    "category": "text",
     "hasSketchForm": true,
     "mtime": "2025-11-15T03:56:09.666Z",
     "ctime": "2025-04-21T11:29:50.582Z"
   },
   {
     "name": "photo-stack",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-16T00:49:06.905Z",
     "ctime": "2025-04-21T11:29:50.549Z"
   },
   {
     "name": "photo-stack-top-bottom",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-16T01:21:38.587Z",
     "ctime": "2025-04-21T11:29:50.543Z"
   },
   {
     "name": "photo-grid-with-photo-switch-overlay",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-16T01:21:41.326Z",
     "ctime": "2025-04-21T11:29:50.526Z"
   },
   {
     "name": "photo-switch-blurry-background",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-16T01:22:53.133Z",
     "ctime": "2025-04-21T11:29:50.554Z"
   },
   {
     "name": "photo-switch-letter-mask",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-16T01:22:55.083Z",
     "ctime": "2025-04-21T11:29:50.560Z"
   },
   {
     "name": "photo-unzoom-bounce",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-16T01:22:56.270Z",
     "ctime": "2025-04-21T11:29:50.571Z"
   },
   {
     "name": "photo-switch",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-16T10:41:22.537Z",
     "ctime": "2025-04-21T11:29:50.566Z"
   },
   {
     "name": "hello-world",
+    "category": "text",
     "hasSketchForm": true,
     "mtime": "2025-11-16T23:29:03.178Z",
     "ctime": "2025-11-10T02:48:04.569Z"
   },
   {
     "name": "mask-v1",
+    "category": null,
     "hasSketchForm": true,
     "mtime": "2025-11-18T08:27:43.434Z",
     "ctime": "2025-11-17T11:37:47.254Z"
   },
   {
     "name": "censored-v9-wave",
+    "category": null,
     "hasSketchForm": true,
     "mtime": "2025-11-18T12:48:46.171Z",
     "ctime": "2025-11-17T22:54:31.291Z"
   },
   {
     "name": "photo-segmentation",
+    "category": "photo",
     "hasSketchForm": true,
     "mtime": "2025-11-21T11:48:45.209Z",
     "ctime": "2025-11-19T09:47:56.327Z"
   },
   {
     "name": "hand-tracking-v1-attract",
+    "category": "hand-capture",
     "hasSketchForm": false,
     "mtime": "2025-11-26T03:42:07.928Z",
     "ctime": "2025-07-19T00:22:59.895Z"
   },
   {
     "name": "hand-tracking-v0-move",
+    "category": "hand-capture",
     "hasSketchForm": false,
     "mtime": "2025-11-26T03:45:06.229Z",
     "ctime": "2025-07-16T23:43:56.712Z"
   },
   {
     "name": "hand-tracking-v3-restore",
+    "category": "hand-capture",
     "hasSketchForm": false,
     "mtime": "2025-11-26T03:46:37.102Z",
     "ctime": "2025-07-20T23:08:20.845Z"
   },
   {
     "name": "hand-tracking-v2-repulse",
+    "category": "hand-capture",
     "hasSketchForm": false,
     "mtime": "2025-11-26T03:48:59.534Z",
     "ctime": "2025-07-23T08:58:19.417Z"
   },
   {
     "name": "hand-tracking-v4-text",
+    "category": "hand-capture",
     "hasSketchForm": false,
     "mtime": "2025-11-26T03:50:45.076Z",
     "ctime": "2025-07-22T09:36:06.755Z"
   },
   {
     "name": "36days-of-type-2023-8",
+    "category": "36days-of-type-2023",
     "hasSketchForm": true,
     "mtime": "2025-11-26T10:51:01.981Z",
     "ctime": "2025-11-26T07:38:43.732Z"
   },
   {
     "name": "neon-graffiti",
+    "category": null,
     "hasSketchForm": true,
     "mtime": "2025-11-27T13:03:39.933Z",
     "ctime": "2025-11-13T23:03:17.178Z"

@@ -1,11 +1,11 @@
-import options from "../../utils/options.js";
+import options from "@/p5/utils/options.js";
 
-import string from "../../utils/string.js";
-import sketch from "../../utils/sketch.js";
-import events from "../../utils/events.js";
-import scripts from "../../utils/scripts.js";
+import string from "@/p5/utils/string.js";
+import sketch from "@/p5/utils/sketch.js";
+import events from "@/p5/utils/events.js";
+import scripts from "@/p5/utils/scripts.js";
 
-import * as common from "../../utils/common.js";
+import * as common from "@/p5/utils/common.js";
 
 await scripts.load( "/assets/libraries/decomp.min.js" );
 await scripts.load( "/assets/libraries/matter.min.js" );

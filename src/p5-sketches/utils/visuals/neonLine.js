@@ -1,8 +1,8 @@
-import easing from "../../utils/easing.js";
-import colors from "../../utils/colors.js";
-import mappers from "../../utils/mappers.js";
-import animation from "../../utils/animation.js";
-import iterators from "../../utils/iterators.js";
+import easing from "@/p5/utils/easing.js";
+import colors from "@/p5/utils/colors.js";
+import mappers from "@/p5/utils/mappers.js";
+import animation from "@/p5/utils/animation.js";
+import iterators from "@/p5/utils/iterators.js";
 
 export default function neonLine( {
   innerCircleSize = 10,

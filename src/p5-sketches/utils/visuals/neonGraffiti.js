@@ -1,8 +1,8 @@
-import easing from "../../utils/easing.js";
-import colors from "../../utils/colors.js";
-import mappers from "../../utils/mappers.js";
-import animation from "../../utils/animation.js";
-import converters from "../../utils/converters.js";
+import easing from "@/p5/utils/easing.js";
+import colors from "@/p5/utils/colors.js";
+import mappers from "@/p5/utils/mappers.js";
+import animation from "@/p5/utils/animation.js";
+import converters from "@/p5/utils/converters.js";
 
 export default function neonGraffiti( {
   amplitude = 200,

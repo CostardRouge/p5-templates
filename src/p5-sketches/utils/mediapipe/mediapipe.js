@@ -1,4 +1,4 @@
-import events from "../../utils/events.js";
+import events from "@/p5/utils/events.js";
 
 // We dynamically import the manager if not using worker
 let VisionManagerClass = null;

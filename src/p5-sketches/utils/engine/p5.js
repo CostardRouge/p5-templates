@@ -1,6 +1,6 @@
-import time from "../../utils/time.js";
-import events from "../../utils/events.js";
-import scripts from "../../utils/scripts.js";
+import time from "@/p5/utils/time.js";
+import events from "@/p5/utils/events.js";
+import scripts from "@/p5/utils/scripts.js";
 
 const p5js = {
   camera: undefined,

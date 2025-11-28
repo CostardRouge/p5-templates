@@ -1,6 +1,6 @@
 import string from "../string.js";
 import animation from "../animation.js";
-import options from "../../utils/options.js";
+import options from "@/p5/utils/options.js";
 
 /**
  * Get font from string.fonts

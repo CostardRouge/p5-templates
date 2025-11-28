@@ -1,6 +1,6 @@
-import colors from "../../utils/colors.js";
-import mappers from "../../utils/mappers.js";
-import animation from "../../utils/animation.js";
+import colors from "@/p5/utils/colors.js";
+import mappers from "@/p5/utils/mappers.js";
+import animation from "@/p5/utils/animation.js";
 
 export default function neonDot( {
   sizeRange = [

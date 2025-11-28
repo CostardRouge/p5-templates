@@ -1,6 +1,6 @@
-import options from "../../utils/options.js";
-import sketch from "../../utils/sketch.js";
-import neonGraffiti from "../../utils/visuals/neonGraffiti.js";
+import options from "@/p5/utils/options.js";
+import sketch from "@/p5/utils/sketch.js";
+import neonGraffiti from "@/p5/utils/visuals/neonGraffiti.js";
 
 sketch.setup( () => {
 
