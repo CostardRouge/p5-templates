@@ -1,227 +1,368 @@
 "use client";
 
 import React from "react";
-import {
-  useFormContext
-} from "react-hook-form";
-
-import deepClone from "@/utils/deepClone";
+import { useFormContext } from "react-hook-form";
+import { nanoid } from "nanoid";
 
 import FormUndoRedoContext from "./contexts/FormUndoRedoContext";
+import {
+  createHistoryEntry,
+  createStateHash,
+  safeDeepClone,
+  shouldTrackPath,
+  compressHistory,
+  estimateHistorySize,
+  extractAffectedPaths,
+} from "./utils/historyUtils";
 
 import type {
-  FormUndoRedoAutoCaptureMode, FormUndoRedoStacks, FormUndoRedoContextType
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/FormUndoRedo/types/FormUndoRedo.types";
+  FormUndoRedoStacks,
+  FormUndoRedoContextType,
+  HistoryEntry,
+  PerformanceMetrics,
+  FormUndoRedoConfig,
+} from "./types/FormUndoRedo.types";
 
-export type FormUndoRedoProps = {
-  maxHistory?: number; // default 50
-  hotkeys?: boolean; // Cmd/Ctrl+Z (+Shift)/Ctrl+Y. default true
-  captureInitial?: boolean; // push initial state as first undo step. default false
-  autoCapture?: FormUndoRedoAutoCaptureMode; // "off" | "debounced". default "off"
-  debounceMs?: number; // for "debounced" mode. default 400
-  watchPaths?: string[]; // e.g., ["slides", "content"] to limit tracking
+export type FormUndoRedoProps<T = any> = FormUndoRedoConfig & {
   resetOptions?: Parameters<ReturnType<typeof useFormContext>["reset"]>[1];
-  children?: React.ReactNode; // optional UI (buttons, etc.)
+  children?: React.ReactNode;
 };
-export default function FormUndoRedo( {
+
+export default function FormUndoRedo<T = any>({
   maxHistory = 50,
   hotkeys = true,
   captureInitial = false,
   autoCapture = "off",
   debounceMs = 400,
   watchPaths,
+  usePatches = true,
+  enablePersistence = false,
+  persistenceKey = "form-undo-redo",
+  debug = false,
   resetOptions,
   children,
-}: FormUndoRedoProps ) {
-  const {
-    watch, getValues, reset
-  } = useFormContext();
+}: FormUndoRedoProps<T>) {
+  const { watch, getValues, reset } = useFormContext();
 
-  const stacksRef = React.useRef<FormUndoRedoStacks>( {
-    past: [
-    ],
-    future: [
-    ]
-  } );
+  // State
+  const stacksRef = React.useRef<FormUndoRedoStacks<T>>({
+    past: [],
+    future: [],
+  });
 
-  const [
-    canUndo,
-    setCanUndo
-  ] = React.useState( false );
-  const [
-    canRedo,
-    setCanRedo
-  ] = React.useState( false );
+  const [canUndo, setCanUndo] = React.useState(false);
+  const [canRedo, setCanRedo] = React.useState(false);
 
-  const lastCommittedRef = React.useRef<any | null>( null );
-  const lastCommittedHashRef = React.useRef<string | null>( null );
+  // Tracking refs
+  const lastCommittedRef = React.useRef<T | null>(null);
+  const lastCommittedHashRef = React.useRef<string | null>(null);
+  const inReplayRef = React.useRef(false);
+  const pauseCountRef = React.useRef(0);
+  const debounceTimerRef = React.useRef<number | null>(null);
+  const currentBatchIdRef = React.useRef<string | null>(null);
+  const currentBatchDescriptionRef = React.useRef<string | null>(null);
 
-  const inReplayRef = React.useRef( false ); // true while undo/redo reset is happening
-  const pauseCountRef = React.useRef( 0 ); // >=1 => paused
-  const debounceTimerRef = React.useRef<number | null>( null );
+  // Performance metrics
+  const metricsRef = React.useRef<PerformanceMetrics>({
+    historySize: 0,
+    memoryEstimate: 0,
+    lastOperationTime: 0,
+    totalOperations: 0,
+  });
+
+  const debugLog = React.useCallback(
+    (...args: any[]) => {
+      if (debug) {
+        console.log("[FormUndoRedo]", ...args);
+      }
+    },
+    [debug]
+  );
 
   const paused = () => pauseCountRef.current > 0;
 
-  const stableHash = ( obj: any ) => {
+  const snapshot = React.useCallback((): T => {
+    return safeDeepClone(getValues()) as T;
+  }, [getValues]);
+
+  const syncFlags = React.useCallback(() => {
+    const { past, future } = stacksRef.current;
+    setCanUndo(past.length > 0);
+    setCanRedo(future.length > 0);
+
+    // Update metrics
+    metricsRef.current.historySize = past.length + future.length;
+    metricsRef.current.memoryEstimate = estimateHistorySize(stacksRef.current);
+  }, []);
+
+  const persistHistory = React.useCallback(() => {
+    if (!enablePersistence) return;
+
     try {
-      // @ts-ignore
-      return typeof structuredClone === "function"
-        ? JSON.stringify( obj ) // stringify is fine for plain form data
-        : JSON.stringify( obj );
-    } catch {
-      return JSON.stringify( obj );
+      const data = {
+        past: stacksRef.current.past.slice(-10), // Only persist last 10
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(persistenceKey, JSON.stringify(data));
+    } catch (error) {
+      debugLog("Failed to persist history:", error);
     }
-  };
+  }, [enablePersistence, persistenceKey, debugLog]);
 
-  const snapshot = React.useCallback(
-    () => deepClone( getValues() ),
-    [
-      getValues
-    ]
-  );
+  const loadPersistedHistory = React.useCallback(() => {
+    if (!enablePersistence) return;
 
-  const syncFlags = React.useCallback(
-    () => {
-      const {
-        past, future
-      } = stacksRef.current;
+    try {
+      const stored = localStorage.getItem(persistenceKey);
+      if (stored) {
+        const data = JSON.parse(stored);
+        // Only load if less than 1 hour old
+        if (Date.now() - data.timestamp < 3600000) {
+          stacksRef.current.past = data.past || [];
+          syncFlags();
+          debugLog("Loaded persisted history:", data.past.length, "entries");
+        }
+      }
+    } catch (error) {
+      debugLog("Failed to load persisted history:", error);
+    }
+  }, [enablePersistence, persistenceKey, syncFlags, debugLog]);
 
-      setCanUndo( past.length > 0 );
-      setCanRedo( future.length > 0 );
-    },
-    [
-    ]
-  );
-
-  const pushPreviousCommitted = React.useCallback(
-    () => {
-    // Push the last committed snapshot (the state before the current change)
-      if ( lastCommittedRef.current == null ) return;
+  const pushToHistory = React.useCallback(
+    (entry: HistoryEntry<T>) => {
+      const startTime = performance.now();
       const stacks = stacksRef.current;
 
-      stacks.past.push( deepClone( lastCommittedRef.current ) );
-      if ( stacks.past.length > maxHistory ) stacks.past.shift();
-      stacks.future = [
-      ]; // new edits clear redo chain
+      stacks.past.push(entry);
+
+      // Compress if needed
+      if (stacks.past.length > maxHistory) {
+        stacks.past = compressHistory(stacks.past, maxHistory);
+      }
+
+      // Clear future on new change
+      stacks.future = [];
+
       syncFlags();
+      persistHistory();
+
+      const duration = performance.now() - startTime;
+      metricsRef.current.lastOperationTime = duration;
+      metricsRef.current.totalOperations++;
+
+      debugLog("Pushed to history:", {
+        description: entry.description,
+        affectedPaths: entry.affectedPaths,
+        duration: `${duration.toFixed(2)}ms`,
+      });
     },
-    [
-      maxHistory,
-      syncFlags
-    ]
+    [maxHistory, syncFlags, persistHistory, debugLog]
   );
 
   const setCommitted = React.useCallback(
-    ( state: any ) => {
-      lastCommittedRef.current = deepClone( state );
-      lastCommittedHashRef.current = stableHash( state );
+    (state: T) => {
+      lastCommittedRef.current = safeDeepClone(state);
+      lastCommittedHashRef.current = createStateHash(state);
     },
-    [
-    ]
+    []
   );
 
-  const undo = React.useCallback(
-    () => {
-      const stacks = stacksRef.current;
+  const capture = React.useCallback(
+    (description?: string) => {
+      if (inReplayRef.current || paused()) return;
 
-      if ( !stacks.past.length ) {
+      const current = snapshot();
+      const currentHash = createStateHash(current);
+
+      // Skip if no change
+      if (currentHash === lastCommittedHashRef.current) {
+        debugLog("Skipped capture: no changes detected");
+        return;
+      }
+
+      const previous = lastCommittedRef.current;
+      const entry = createHistoryEntry(
+        current,
+        usePatches ? previous || undefined : undefined,
+        description,
+        undefined,
+        currentBatchIdRef.current || undefined
+      );
+
+      // Extract affected paths from patches if available
+      if (entry.patches) {
+        entry.affectedPaths = extractAffectedPaths(entry.patches);
+      }
+
+      pushToHistory(entry);
+      setCommitted(current);
+    },
+    [snapshot, usePatches, pushToHistory, setCommitted, debugLog]
+  );
+
+  const undo = React.useCallback(() => {
+    const stacks = stacksRef.current;
+    if (!stacks.past.length) {
+      debugLog("Undo: no history");
+      return;
+    }
+
+    const startTime = performance.now();
+    inReplayRef.current = true;
+
+    try {
+      const prevEntry = stacks.past.pop()!;
+      
+      // Capture current state BEFORE reset
+      const currentState = snapshot();
+      const currentEntry = createHistoryEntry(
+        currentState,
+        usePatches ? prevEntry.state : undefined,
+        "Redo point"
+      );
+
+      // Push to future for redo
+      stacks.future.push(currentEntry);
+
+      // Reset to previous state
+      reset(prevEntry.state, resetOptions);
+      setCommitted(prevEntry.state);
+      syncFlags();
+
+      const duration = performance.now() - startTime;
+      debugLog("Undo:", {
+        description: prevEntry.description,
+        duration: `${duration.toFixed(2)}ms`,
+      });
+    } catch (error) {
+      console.error("Undo failed:", error);
+    } finally {
+      queueMicrotask(() => {
+        inReplayRef.current = false;
+      });
+    }
+  }, [reset, resetOptions, snapshot, setCommitted, syncFlags, usePatches, debugLog]);
+
+  const redo = React.useCallback(() => {
+    const stacks = stacksRef.current;
+    if (!stacks.future.length) {
+      debugLog("Redo: no future");
+      return;
+    }
+
+    const startTime = performance.now();
+    inReplayRef.current = true;
+
+    try {
+      const nextEntry = stacks.future.pop()!;
+      
+      // Capture current state BEFORE reset
+      const currentState = snapshot();
+      const currentEntry = createHistoryEntry(
+        currentState,
+        usePatches ? nextEntry.state : undefined,
+        "Undo point"
+      );
+
+      // Push to past for undo
+      stacks.past.push(currentEntry);
+
+      // Reset to next state
+      reset(nextEntry.state, resetOptions);
+      setCommitted(nextEntry.state);
+      syncFlags();
+
+      const duration = performance.now() - startTime;
+      debugLog("Redo:", {
+        description: nextEntry.description,
+        duration: `${duration.toFixed(2)}ms`,
+      });
+    } catch (error) {
+      console.error("Redo failed:", error);
+    } finally {
+      queueMicrotask(() => {
+        inReplayRef.current = false;
+      });
+    }
+  }, [reset, resetOptions, snapshot, setCommitted, syncFlags, usePatches, debugLog]);
+
+  const jumpTo = React.useCallback(
+    (index: number, direction: "past" | "future") => {
+      const stacks = stacksRef.current;
+      const targetStack = direction === "past" ? stacks.past : stacks.future;
+
+      if (index < 0 || index >= targetStack.length) {
+        debugLog("JumpTo: invalid index", index);
         return;
       }
 
       inReplayRef.current = true;
 
       try {
-        const prev = stacks.past.pop()!;
-        // Save current as redo target
-        const current = snapshot();
+        const targetEntry = targetStack[index];
+        reset(targetEntry.state, resetOptions);
+        setCommitted(targetEntry.state);
 
-        stacks.future.push( current );
-        reset(
-          prev,
-          resetOptions
-        );
-        setCommitted( prev ); // update last committed to the state we just reset to
+        // Reorganize stacks
+        if (direction === "past") {
+          stacks.future = [...stacks.past.slice(index + 1), ...stacks.future];
+          stacks.past = stacks.past.slice(0, index);
+        } else {
+          stacks.past = [...stacks.past, ...stacks.future.slice(0, index)];
+          stacks.future = stacks.future.slice(index + 1);
+        }
+
         syncFlags();
+        debugLog("Jumped to:", { index, direction });
+      } catch (error) {
+        console.error("JumpTo failed:", error);
       } finally {
-      // allow a microtask so RHF finishes notify; then re-enable capture
-        queueMicrotask( () => { inReplayRef.current = false; } );
+        queueMicrotask(() => {
+          inReplayRef.current = false;
+        });
       }
     },
-    [
-      reset,
-      resetOptions,
-      snapshot,
-      setCommitted,
-      syncFlags
-    ]
+    [reset, resetOptions, setCommitted, syncFlags, debugLog]
   );
 
-  const redo = React.useCallback(
-    () => {
-      const stacks = stacksRef.current;
+  const clear = React.useCallback(() => {
+    stacksRef.current = { past: [], future: [] };
+    syncFlags();
+    if (enablePersistence) {
+      localStorage.removeItem(persistenceKey);
+    }
+    debugLog("Cleared history");
+  }, [syncFlags, enablePersistence, persistenceKey, debugLog]);
 
-      if ( !stacks.future.length ) return;
-
-      inReplayRef.current = true;
-      try {
-        const next = stacks.future.pop()!;
-        // Save current into past so we can undo the redo
-        const current = snapshot();
-
-        stacks.past.push( current );
-        reset(
-          next,
-          resetOptions
-        );
-        setCommitted( next );
-        syncFlags();
-      } finally {
-        queueMicrotask( () => { inReplayRef.current = false; } );
-      }
+  const startBatch = React.useCallback(
+    (description?: string): string => {
+      const batchId = nanoid(8);
+      currentBatchIdRef.current = batchId;
+      currentBatchDescriptionRef.current = description || null;
+      debugLog("Started batch:", batchId, description);
+      return batchId;
     },
-    [
-      reset,
-      resetOptions,
-      snapshot,
-      setCommitted,
-      syncFlags
-    ]
+    [debugLog]
   );
 
-  const clear = React.useCallback(
-    () => {
-      stacksRef.current = {
-        past: [
-        ],
-        future: [
-        ]
-      };
-      syncFlags();
-    },
-    [
-      syncFlags
-    ]
-  );
+  const endBatch = React.useCallback(() => {
+    currentBatchIdRef.current = null;
+    currentBatchDescriptionRef.current = null;
+    debugLog("Ended batch");
+  }, [debugLog]);
 
-  const pause = React.useCallback(
-    () => {
-      pauseCountRef.current += 1;
-    },
-    [
-    ]
-  );
-  const resume = React.useCallback(
-    () => {
-      pauseCountRef.current = Math.max(
-        0,
-        pauseCountRef.current - 1
-      );
-    },
-    [
-    ]
-  );
+  const pause = React.useCallback(() => {
+    pauseCountRef.current += 1;
+    debugLog("Paused (count:", pauseCountRef.current, ")");
+  }, [debugLog]);
+
+  const resume = React.useCallback(() => {
+    pauseCountRef.current = Math.max(0, pauseCountRef.current - 1);
+    debugLog("Resumed (count:", pauseCountRef.current, ")");
+  }, [debugLog]);
+
   const runSilently = React.useCallback(
-    ( fn: () => void ) => {
+    (fn: () => void) => {
       pause();
       try {
         fn();
@@ -229,150 +370,147 @@ export default function FormUndoRedo( {
         resume();
       }
     },
-    [
-      pause,
-      resume
-    ]
+    [pause, resume]
   );
 
-  // Initialize last committed snapshot (and optionally capture as first undo step)
-  React.useEffect(
-    () => {
-      const initial = snapshot();
+  const getHistory = React.useCallback(() => {
+    return {
+      past: [...stacksRef.current.past],
+      future: [...stacksRef.current.future],
+    };
+  }, []);
 
-      setCommitted( initial );
-      if ( captureInitial ) {
-        stacksRef.current.past.push( deepClone( initial ) );
-        syncFlags();
-      }
-    },
-    [
-    ]
-  );
+  const getMetrics = React.useCallback((): PerformanceMetrics => {
+    return { ...metricsRef.current };
+  }, []);
+
+  const [debugEnabled, setDebugEnabled] = React.useState(debug);
+  const enableDebug = React.useCallback((enabled: boolean) => {
+    setDebugEnabled(enabled);
+  }, []);
+
+  // Initialize
+  React.useEffect(() => {
+    loadPersistedHistory();
+
+    const initial = snapshot();
+    setCommitted(initial);
+
+    if (captureInitial) {
+      const entry = createHistoryEntry(initial, undefined, "Initial state");
+      stacksRef.current.past.push(entry);
+      syncFlags();
+    }
+
+    debugLog("Initialized", {
+      captureInitial,
+      autoCapture,
+      maxHistory,
+      usePatches,
+    });
+  }, []);
 
   // Hotkeys
-  React.useEffect(
-    () => {
-      if ( !hotkeys ) return;
+  React.useEffect(() => {
+    if (!hotkeys) return;
 
-      const isTextEditingTarget = ( el: EventTarget | null ) => {
-        const node = el as HTMLElement | null;
+    const isTextEditingTarget = (el: EventTarget | null) => {
+      const node = el as HTMLElement | null;
+      if (!node) return false;
+      const tag = node.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+      if (node.isContentEditable) return true;
+      return false;
+    };
 
-        if ( !node ) return false;
-        const tag = node.tagName;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (isTextEditingTarget(e.target)) return;
 
-        if ( tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" ) return true;
-        if ( node.isContentEditable ) return true;
-        return false;
-      };
+      const key = e.key.toLowerCase();
 
-      const onKeyDown = ( e: KeyboardEvent ) => {
-        if ( !( e.metaKey || e.ctrlKey ) ) return;
-        if ( isTextEditingTarget( e.target ) ) return;
-        const key = e.key.toLowerCase();
+      if (key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      } else if (key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
 
-        if ( key === "z" ) {
-          e.preventDefault();
-          if ( e.shiftKey ) redo();
-          else undo();
-        } else if ( key === "y" ) {
-          e.preventDefault();
-          redo();
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [hotkeys, undo, redo]);
+
+  // Auto-capture
+  React.useEffect(() => {
+    if (autoCapture === "off") return;
+
+    const sub = watch((_, info) => {
+      if (inReplayRef.current || paused()) return;
+      if (!shouldTrackPath(info?.name, watchPaths)) return;
+
+      if (autoCapture === "immediate") {
+        capture();
+      } else if (autoCapture === "debounced") {
+        if (debounceTimerRef.current) {
+          window.clearTimeout(debounceTimerRef.current);
         }
-      };
+        debounceTimerRef.current = window.setTimeout(() => {
+          capture();
+        }, debounceMs);
+      }
+    });
 
-      window.addEventListener(
-        "keydown",
-        onKeyDown
-      );
-      return () => window.removeEventListener(
-        "keydown",
-        onKeyDown
-      );
-    },
-    [
-      hotkeys,
-      undo,
-      redo
-    ]
-  );
+    return () => {
+      if (debounceTimerRef.current) {
+        window.clearTimeout(debounceTimerRef.current);
+      }
+      sub.unsubscribe();
+    };
+  }, [autoCapture, debounceMs, watch, watchPaths, capture]);
 
-  // Auto-capture via RHF watch subscription
-  React.useEffect(
-    () => {
-      if ( autoCapture === "off" ) return;
-
-      const shouldTrack = ( name?: string ) => {
-        if ( !watchPaths || watchPaths.length === 0 ) return true;
-        if ( !name ) return true; // some ops may not report a specific field name
-        return watchPaths.some( ( p ) => name === p || name.startsWith( p + "." ) );
-      };
-
-      // Subscribe without causing re-renders
-      const sub = watch( (
-        _, info
-      ) => {
-        if ( inReplayRef.current || paused() ) return;
-        if ( !shouldTrack( info?.name ) ) return;
-
-        // Debounce capture
-        if ( debounceTimerRef.current ) {
-          window.clearTimeout( debounceTimerRef.current );
-        }
-        debounceTimerRef.current = window.setTimeout(
-          () => {
-            if ( inReplayRef.current || paused() ) return;
-
-            const next = snapshot();
-            const nextHash = stableHash( next );
-
-            if ( nextHash !== lastCommittedHashRef.current ) {
-              // State changed => record previous committed state, then commit the new one
-              pushPreviousCommitted();
-              setCommitted( next );
-            }
-          },
-          debounceMs
-        );
-      } );
-
-      return () => {
-        if ( debounceTimerRef.current ) window.clearTimeout( debounceTimerRef.current );
-        sub.unsubscribe();
-      };
-    },
-    [
-      autoCapture,
-      debounceMs,
-      watch,
-      watchPaths,
-      pushPreviousCommitted,
-      setCommitted
-    ]
-  );
-
-  const value = React.useMemo<FormUndoRedoContextType>(
-    () => ( {
+  const value = React.useMemo<FormUndoRedoContextType<T>>(
+    () => ({
       undo,
       redo,
       clear,
       canUndo,
       canRedo,
+      getHistory,
+      jumpTo,
+      capture,
+      startBatch,
+      endBatch,
       pause,
       resume,
-      runSilently
-    } ),
+      runSilently,
+      getMetrics,
+      enableDebug,
+    }),
     [
       undo,
       redo,
       clear,
       canUndo,
       canRedo,
+      getHistory,
+      jumpTo,
+      capture,
+      startBatch,
+      endBatch,
       pause,
       resume,
-      runSilently
+      runSilently,
+      getMetrics,
+      enableDebug,
     ]
   );
 
-  return <FormUndoRedoContext.Provider value={value}>{children ?? null}</FormUndoRedoContext.Provider>;
+  return (
+    <FormUndoRedoContext.Provider value={value}>
+      {children ?? null}
+    </FormUndoRedoContext.Provider>
+  );
 }

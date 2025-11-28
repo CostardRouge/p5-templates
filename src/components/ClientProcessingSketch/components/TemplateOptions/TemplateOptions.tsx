@@ -247,23 +247,9 @@ export default function TemplateOptions( {
   const handleAddSlide = () => {
     const nextIndex = slideFields.length;
 
-    // Determine settings to clone:
-    // If no slides exist yet, use the global 'sketch' settings.
-    // Otherwise, use the settings from the currently active slide.
-    let settingsToClone: any;
-
-    if ( slideFields.length === 0 ) {
-      settingsToClone = getValues( "sketch" );
-    }
-    else {
-      const activeSlide = getValues( `slides.${ activeSlideIndex }` );
-
-      settingsToClone = activeSlide?.sketch;
-    }
-
     appendSlide( makeDefaultSlide( {
       indexForLabel: nextIndex,
-      sketch: deepClone( settingsToClone ),
+      sketch: sketchFormValues,
     } ) );
 
     handleSlideSelect( nextIndex );
@@ -365,7 +351,7 @@ export default function TemplateOptions( {
   const editorKey = slideIds[ activeSlideIndex ] ?? `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.name ?? "unnamed-slide" }`;
 
   const {
-    backendRecording
+    backendRecording, sketchFormValues
   } = useSketch();
 
   return (
