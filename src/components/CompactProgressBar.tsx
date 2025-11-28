@@ -41,11 +41,19 @@ export default function CompactProgressBar( {
 
   useEffect(
     () => {
-      if ( !startTime || job.status !== "active" ) return;
+      // Use recordingStartAt from DB if available, otherwise fall back to client-side startTime
+      const recordingStart = job.recordingStartAt 
+        ? new Date( job.recordingStartAt ).getTime()
+        : startTime;
+
+      if ( !recordingStart || job.status !== "active" ) return;
+
+      // Calculate initial elapsed time
+      setElapsedTime( Math.floor( ( Date.now() - recordingStart ) / 1000 ) );
 
       const interval = setInterval(
         () => {
-          setElapsedTime( Math.floor( ( Date.now() - startTime ) / 1000 ) );
+          setElapsedTime( Math.floor( ( Date.now() - recordingStart ) / 1000 ) );
         },
         1000
       );
@@ -54,7 +62,8 @@ export default function CompactProgressBar( {
     },
     [
       startTime,
-      job.status
+      job.status,
+      job.recordingStartAt
     ]
   );
 
