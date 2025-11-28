@@ -437,8 +437,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       retrying ||
       downloading ||
       cloning;
+  // Don't block start button when only saving (isLoading is true during save too)
   const isBlockingActionLoading =
-      isLoading || deleting || cancelling || retrying || downloading || cloning;
+      ( isLoading && !saving ) || deleting || cancelling || retrying || downloading || cloning;
 
   // Use persistedJob or construct a minimal job object from recordingProgress/jobId
   const effectiveJob =
