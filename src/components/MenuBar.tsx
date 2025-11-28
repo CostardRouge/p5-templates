@@ -133,7 +133,7 @@ function MenuBar( {
           </>
         )}
         <ThemeToggle
-          iconClassName="h-5"
+          iconClassName="h-4"
         />
       </div>
     </nav>

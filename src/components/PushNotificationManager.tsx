@@ -170,7 +170,7 @@ export default function PushNotificationManager() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div>
       {subscription ? (
         <>
           {isDevelopment && (
@@ -189,7 +189,7 @@ export default function PushNotificationManager() {
             className="disabled:opacity-50"
             title="Notifications enabled"
           >
-            <Bell className="h-5" />
+            <Bell className="h-4" />
           </button>
         </>
       ) : (
@@ -199,7 +199,7 @@ export default function PushNotificationManager() {
           className="disabled:opacity-50"
           title="Enable notifications"
         >
-          <BellOff className="h-5" />
+          <BellOff className="h-4" />
         </button>
       )}
     </div>
