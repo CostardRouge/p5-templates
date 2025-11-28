@@ -7,6 +7,9 @@ import {
 import {
   captureFramesWithStreaming
 } from "@/utils/captureFramesWithStreaming";
+import {
+  captureCanvasThumbnail
+} from "@/utils/captureCanvasThumbnail";
 
 import {
   updateJob
@@ -254,15 +257,12 @@ async function recordSingleSketch(
         waitUntil: "networkidle"
       }
     );
-    await thumbnailPage.waitForSelector( "canvas#defaultCanvas0.loaded" );
 
-    const canvas = await thumbnailPage.locator( "canvas#defaultCanvas0" );
+    await captureCanvasThumbnail(
+      thumbnailPage,
+      thumbnailPath
+    );
 
-    await canvas.screenshot( {
-      path: thumbnailPath,
-      type: "jpeg",
-      quality: 90
-    } );
     await thumbnailPage.close();
   } else {
     // ─── Disk-based mode: Capture to disk, then encode ────────────────────
@@ -457,13 +457,10 @@ async function recordMultipleSlides(
       } );
 
       // Capture thumbnail via canvas screenshot
-      const canvas = await page.locator( "canvas#defaultCanvas0" );
-
-      await canvas.screenshot( {
-        path: slideThumbnailPath,
-        type: "jpeg",
-        quality: 90
-      } );
+      await captureCanvasThumbnail(
+        page,
+        slideThumbnailPath
+      );
     } else {
       // ─── Disk-based mode: Capture to disk, then encode ──────────────────
       const slideFramesDirectory = path.join(

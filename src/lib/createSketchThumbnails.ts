@@ -12,8 +12,8 @@ import {
 
 import fs from "node:fs/promises";
 import {
-  log
-} from "node:console";
+  captureCanvasThumbnail
+} from "@/utils/captureCanvasThumbnail";
 
 const canvasSelectorToScreenShot = "canvas#defaultCanvas0.loaded";
 
@@ -74,19 +74,19 @@ async function createSketchThumbnails() {
         },
       );
 
+      // Resize canvas before capturing
       await recordingState.page.waitForSelector( canvasSelectorToScreenShot );
-
       await recordingState.page.locator( canvasSelectorToScreenShot )
         .evaluate( ( element ) => {
           element.style.width = "360px";
           element.style.height = "450px";
         } );
 
-      await recordingState.page
-        .locator( canvasSelectorToScreenShot )
-        .screenshot( {
-          path: thumbnailPath
-        } );
+      // Capture clean thumbnail without UI overlays
+      await captureCanvasThumbnail(
+        recordingState.page,
+        thumbnailPath
+      );
       console.log( `💾 ${ name }/thumbnail.jpeg has been generated` );
     }
   }
