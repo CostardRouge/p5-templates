@@ -2,7 +2,13 @@ export const formValues = {
   amplitude: 200,
   shadowsCount: 3,
   stepsCount: 500,
-  innerCircleSize: 40,
+  size: {
+    radius: 40,
+    min: 1,
+    max: 2,
+    variable: false,
+    easing: "easeOutSine",
+  },
   stepAngleAmplitude: 1,
   sinAmplitudeMultiplier: 2,
   cosAmplitudeMultiplier: 1,
@@ -10,7 +16,6 @@ export const formValues = {
   cosAngleMultiplier: 2,
   hueIndexMultiplier: 1.5,
   hueAmplitude: Math.PI,
-  circleSizeEasing: "easeOutSine",
   positionSinEasing: "easeInOutQuad",
   positionCosEasing: "easeInOutSine",
   positionCosMultiplier: 8,
@@ -54,16 +59,48 @@ export const formConfiguration: Record<string, any> = {
   stepsCount: {
     label: "Steps count",
     component: "slider",
-    min: 50,
-    max: 1000,
-    step: 10
-  },
-  innerCircleSize: {
-    label: "Inner circle size",
-    component: "slider",
     min: 1,
-    max: 100,
+    max: 2000,
     step: 1
+  },
+  size: {
+    label: "Size",
+    component: "nested-object",
+    fields: {
+      radius: {
+        label: "Radius",
+        component: "slider",
+        min: 1,
+        max: 500,
+        step: 0.1
+      },
+      easing: {
+        component: "select",
+        label: "Circle size easing",
+        options: Object.keys(easing).map(easingFunctionName => ({
+          label: easingFunctionName,
+          value: easingFunctionName,
+        }))
+      },
+      variable: {
+        label: "Variable size?",
+        component: "checkbox",
+      },
+      min: {
+        label: "Minimum size multiplier",
+        component: "slider",
+        min: 1,
+        max: 3,
+        step: 0.1
+      },
+      max: {
+        label: "Maximum size multiplier",
+        component: "slider",
+        min: 1,
+        max: 6,
+        step: 0.1
+      }
+    }
   },
   stepAngleAmplitude: {
     label: "Step angle amplitude",
@@ -113,14 +150,6 @@ export const formConfiguration: Record<string, any> = {
     min: 0,
     max: Math.PI * 2,
     step: 0.1
-  },
-  circleSizeEasing: {
-    component: "select",
-    label: "Circle size easing",
-    options: Object.keys(easing).map(easingFunctionName => ({
-      label: easingFunctionName,
-      value: easingFunctionName,
-    }))
   },
   positionSinEasing: {
     component: "select",

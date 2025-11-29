@@ -2,19 +2,17 @@ import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
 import neonGraffiti from "@/p5/utils/visuals/neonGraffiti.js";
 
-sketch.setup( () => {
+sketch.setup();
 
-}, );
-
-sketch.draw( ( _time ) => {
-  background( ...( options.sketch.backgroundColor ?? [
+sketch.draw((_time) => {
+  background(...(options.sketch.backgroundColor ?? [
     0
-  ] ) );
-  neonGraffiti( {
+  ]));
+  neonGraffiti({
     amplitude: options.sketch.amplitude,
     shadowsCount: options.sketch.shadowsCount,
     stepsCount: options.sketch.stepsCount,
-    innerCircleSize: options.sketch.innerCircleSize,
+    size: options.sketch.size,
     stepAngleAmplitude: options.sketch.stepAngleAmplitude,
     sinAmplitudeMultiplier: options.sketch.sinAmplitudeMultiplier,
     cosAmplitudeMultiplier: options.sketch.cosAmplitudeMultiplier,
@@ -22,7 +20,6 @@ sketch.draw( ( _time ) => {
     cosAngleMultiplier: options.sketch.cosAngleMultiplier,
     hueIndexMultiplier: options.sketch.hueIndexMultiplier,
     hueAmplitude: options.sketch.hueAmplitude,
-    circleSizeEasing: options.sketch.circleSizeEasing,
     positionSinEasing: options.sketch.positionSinEasing,
     positionCosEasing: options.sketch.positionCosEasing,
     positionCosMultiplier: options.sketch.positionCosMultiplier,
@@ -38,5 +35,5 @@ sketch.draw( ( _time ) => {
       width * options.sketch.end.x,
       height * options.sketch.end.y
     )
-  } );
-} );
+  });
+});

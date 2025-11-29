@@ -4,11 +4,56 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 
-export default function neonGraffiti( {
+function getCircleSize(circleSizeOption = {
+  radius: 40,
+  min: 1,
+  max: 2,
+  variable: false,
+  easing: "easeOutSine",
+},
+  {
+    shadowIndex,
+    shadowsCount,
+    shadowProgression,
+    stepAngle,
+    step,
+    stepsCount,
+    stepProgression
+  }) {
+  const circleSizeEasingFn = easing?.[circleSizeOption.easing] ?? easing.easeOutSine;
+
+  if (circleSizeOption.variable) {
+    return animation.ease({
+      values: [
+        (circleSizeOption.radius * circleSizeOption.max * shadowsCount),
+        (circleSizeOption.radius * circleSizeOption.min * shadowsCount),
+        (circleSizeOption.radius * circleSizeOption.max * shadowsCount),
+
+      ],
+      currentTime: (
+        animation.progression
+        + shadowProgression
+        + stepProgression
+      ),
+      easingFn: circleSizeEasingFn
+    });
+  }
+
+  return mappers.fn(
+    shadowProgression,
+    0,
+    1,
+    circleSizeOption.radius * shadowsCount,
+    circleSizeOption.radius,
+    circleSizeEasingFn
+  );
+}
+
+export default function neonGraffiti({
   amplitude = 200,
   shadowsCount = 3,
   stepsCount = 500,
-  innerCircleSize = 40,
+  size,
   stepAngleAmplitude = 1,
   sinAmplitudeMultiplier = 2,
   cosAmplitudeMultiplier = 1,
@@ -16,7 +61,6 @@ export default function neonGraffiti( {
   cosAngleMultiplier = 2,
   hueIndexMultiplier = 1.5,
   hueAmplitude = PI,
-  circleSizeEasing = "easeOutSine",
   positionSinEasing = "easeInOutQuad",
   positionCosEasing = "easeInOutSine",
   positionCosMultiplier = 8,
@@ -33,23 +77,13 @@ export default function neonGraffiti( {
     height / 2
   )
 } = {
-} ) {
+  }) {
   noStroke();
 
-  for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
-    const shadowProgression = shadowsCount / shadowsCount;
+  for (let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++) {
+    const shadowProgression = shadowIndex / shadowsCount;
 
-    const circleSizeEasingFn = easing?.[circleSizeEasing] ?? easing.easeOutSine;
-    const circleSize = mappers.fn(
-      shadowIndex,
-      0,
-      shadowsCount,
-      innerCircleSize * shadowsCount,
-      innerCircleSize,
-      circleSizeEasingFn
-    );
-
-    for ( let step = 0; step < stepsCount; step++ ) {
+    for (let step = 0; step < stepsCount; step++) {
       const stepProgression = step / stepsCount;
       const stepAngle = map(
         stepProgression,
@@ -69,7 +103,7 @@ export default function neonGraffiti( {
           Math.sin,
           amplitude * sinAmplitudeMultiplier,
           map(
-            Math.sin( animation.angle + stepAngle + slides.index ),
+            Math.sin(animation.angle + stepAngle + slides.index),
             // Math.cos( animation.angle + stepAngle + easing.easeInOutSine( stepProgression ) ),
             -1,
             1,
@@ -82,7 +116,7 @@ export default function neonGraffiti( {
           amplitude * cosAmplitudeMultiplier,
           map(
             // Math.cos( animation.angle + stepAngle * 2 + easing.easeInOutSine( shadowProgression ) ),
-            Math.cos( animation.angle + stepAngle + slides.index ),
+            Math.cos(animation.angle + stepAngle + slides.index),
             -1,
             1,
             -PI,
@@ -96,16 +130,16 @@ export default function neonGraffiti( {
 
       position.add(
         map(
-          Math.sin( +animation.angle * sinAngleMultiplier
-            + positionSinEasingFn( stepProgression ) ),
+          Math.sin(+animation.angle * sinAngleMultiplier
+            + positionSinEasingFn(stepProgression)),
           -1,
           1,
           -amplitude,
           amplitude
         ),
         map(
-          Math.cos( +animation.angle * cosAngleMultiplier
-            + positionCosEasingFn( stepProgression ) * positionCosMultiplier ),
+          Math.cos(+animation.angle * cosAngleMultiplier
+            + positionCosEasingFn(stepProgression) * positionCosMultiplier),
           -1,
           1,
           -amplitude,
@@ -115,7 +149,7 @@ export default function neonGraffiti( {
 
       const hueEasingFn = easing?.[hueEasing] ?? easing.easeInOutSine;
 
-      fill( colors.rainbow( {
+      fill(colors.rainbow({
         opacityFactor: map(
           shadowIndex,
           0,
@@ -123,22 +157,35 @@ export default function neonGraffiti( {
           opacityStart,
           opacityEnd,
         ),
-        hueOffset: hueEasingFn( shadowProgression + stepProgression / hueStepDivider ),
+        hueOffset: hueEasingFn(shadowProgression + stepProgression / hueIndexMultiplier),
         // hueOffset: easing.easeOutSine( shadowProgression + shadowIndex / 2 ),
         hueIndex: map(
-          Math.sin( animation.angle
-            + easing.easeOutSine( stepAngle ) * -3 ),
+          Math.sin(animation.angle
+            + hueEasingFn(stepAngle) * -3
+            + shadowProgression * stepProgression
+          ),
           -1,
           1,
           -hueAmplitude,
           hueAmplitude
         ) * hueIndexMultiplier,
-      } ) );
+      }));
 
       circle(
         position.x,
         position.y,
-        circleSize
+        getCircleSize(
+          size,
+          {
+            shadowProgression,
+            shadowIndex,
+            shadowsCount,
+            stepAngle,
+            step,
+            stepsCount,
+            stepProgression
+          }
+        )
       );
     }
   }
