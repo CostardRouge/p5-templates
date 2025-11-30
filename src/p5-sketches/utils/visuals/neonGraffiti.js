@@ -162,7 +162,7 @@ export default function neonGraffiti({
         hueIndex: map(
           Math.sin(animation.angle
             + hueEasingFn(stepAngle) * -3
-            + shadowProgression * stepProgression
+            + shadowProgression + stepProgression
           ),
           -1,
           1,

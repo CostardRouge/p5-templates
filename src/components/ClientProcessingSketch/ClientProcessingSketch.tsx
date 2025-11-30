@@ -80,7 +80,10 @@ export default function ClientProcessingSketch() {
         </div>
       )}
 
-      <div className="h-full w-full relative">
+      <div
+        className="h-full w-full relative"
+        hidden={!sketchLoaded}
+      >
         <ScalableViewport
           disable={capturing}
           showZoomControls={!capturing && sketchLoaded}
