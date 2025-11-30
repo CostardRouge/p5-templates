@@ -128,6 +128,8 @@ export default function TemplateOptions({
   // Initialize thumbnails from persisted job
   useEffect(
     () => {
+      return;
+
       if (persistedJob?.thumbnails && slideFields.length > 0) {
         const initialThumbnails: Record<string, string> = {
         };
