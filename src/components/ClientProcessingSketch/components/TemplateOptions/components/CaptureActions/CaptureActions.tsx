@@ -19,7 +19,7 @@ import {
   getScopeAssetPath, resolveAssetURL
 } from "@/p5-sketches/shared/utils";
 import {
-  SketchOption, SlideOption
+  SketchOption, SketchOptionInput, SlideOption, SlideOptionInput
 } from "@/types/sketch.types";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
 
@@ -40,16 +40,17 @@ export type CaptureActionsRef = {
 
 type CaptureActionsProps = {
   name: string;
-  options: SketchOption;
+  options: SketchOptionInput;
   persistedJob?: JobModel;
   activeSlideIndex: number;
   backendRecording: boolean;
   browserRecordingSupported: boolean;
+  thumbnails?: Record<string, string>;
 };
 
 const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   {
-    name, options, persistedJob, activeSlideIndex, backendRecording, browserRecordingSupported
+    name, options, persistedJob, activeSlideIndex, backendRecording, browserRecordingSupported, thumbnails
   }, ref
 ) => {
   const router = useRouter();
@@ -108,6 +109,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       }
     },
     [
+      persistedJob,
       persistedJob?.id,
       persistedJob?.status,
       subscribeToRecordingStatus
@@ -124,12 +126,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         ].includes( recordingProgress.status );
 
       if ( isRecording ) {
-      // Pause the sketch
+        // Pause the sketch
         if ( typeof ( window as any ).noLoop === "function" ) {
           ( window as any ).noLoop();
         }
       } else {
-      // Resume when not recording
+        // Resume when not recording
         if ( typeof ( window as any ).loop === "function" ) {
           ( window as any ).loop();
         }
@@ -171,12 +173,23 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       JSON.stringify( options )
     );
 
+    if ( thumbnails ) {
+      formData.append(
+        "thumbnails",
+        JSON.stringify( thumbnails )
+      );
+    }
+
     // Handle GLOBAL assets
-    const globalAssets = options.assets || {
+    const globalAssets = options.assets ?? {
+      images: [
+      ],
+      videos: [
+      ]
     };
 
     for ( const type of Object.keys( globalAssets ) ) {
-      const fileList = globalAssets[ type as keyof typeof globalAssets ] || [
+      const fileList = globalAssets[ type as keyof typeof globalAssets ] ?? [
       ];
 
       await Promise.all( fileList.map( async(
@@ -204,16 +217,20 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     }
 
     // Handle SLIDE assets
-    const slides: SlideOption[] = options.slides || [
+    const slides: SlideOptionInput[] = options.slides || [
     ];
 
     for ( let i = 0; i < slides.length; i++ ) {
       const slide = slides[ i ];
-      const assets = slide.assets || {
+      const assets = slide.assets ?? {
+        images: [
+        ],
+        videos: [
+        ]
       };
 
       for ( const type of Object.keys( assets ) ) {
-        const fileList = assets[ type as keyof typeof assets ] || [
+        const fileList = assets[ type as keyof typeof assets ] ?? [
         ];
 
         await Promise.all( fileList.map( async(
@@ -427,30 +444,30 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const {
     isRecording, isCompleted, isFailed, isDraft
   } =
-      getRecordingStatus( currentStatus );
+    getRecordingStatus( currentStatus );
   const hasNoJob = !persistedJob && !recordingProgress && !jobId;
   const isAnyActionLoading =
-      isLoading ||
-      saving ||
-      deleting ||
-      cancelling ||
-      retrying ||
-      downloading ||
-      cloning;
+    isLoading ||
+    saving ||
+    deleting ||
+    cancelling ||
+    retrying ||
+    downloading ||
+    cloning;
   // Don't block start button when only saving (isLoading is true during save too)
   const isBlockingActionLoading =
-      ( isLoading && !saving ) || deleting || cancelling || retrying || downloading || cloning;
+    ( isLoading && !saving ) || deleting || cancelling || retrying || downloading || cloning;
 
   // Use persistedJob or construct a minimal job object from recordingProgress/jobId
   const effectiveJob =
-      persistedJob ||
-      ( jobId
-        ? ( {
-          id: jobId,
-          status: currentStatus || "queued",
-          progress: recordingProgress?.percentage || 0,
-        } as JobModel )
-        : undefined );
+    persistedJob ||
+    ( jobId
+      ? ( {
+        id: jobId,
+        status: currentStatus || "queued",
+        progress: recordingProgress?.percentage || 0,
+      } as JobModel )
+      : undefined );
 
   return (
     <>
@@ -547,13 +564,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         </div>
       </div>
 
-      { backendRecording && effectiveJob && showPreviewModal && (
+      {backendRecording && effectiveJob && showPreviewModal && (
         <VideoPreviewModal
           jobId={effectiveJob.id}
           isOpen={showPreviewModal}
           onClose={() => setShowPreviewModal( false )}
         />
-      ) }
+      )}
     </>
   );
 } );

@@ -46,11 +46,17 @@ function ThemeToggle( {
       };
 
       if ( isOpen ) {
-        document.addEventListener( "mousedown", handleClickOutside );
+        document.addEventListener(
+          "mousedown",
+          handleClickOutside
+        );
       }
 
       return () => {
-        document.removeEventListener( "mousedown", handleClickOutside );
+        document.removeEventListener(
+          "mousedown",
+          handleClickOutside
+        );
       };
     },
     [
@@ -62,13 +68,19 @@ function ThemeToggle( {
 
   const themeOptions = [
     {
-      value: "light", label: "Light", icon: Sun
+      value: "light",
+      label: "Light",
+      icon: Sun
     },
     {
-      value: "dark", label: "Dark", icon: Moon
+      value: "dark",
+      label: "Dark",
+      icon: Moon
     },
     {
-      value: "system", label: "System", icon: Monitor
+      value: "system",
+      label: "System",
+      icon: Monitor
     },
   ];
 

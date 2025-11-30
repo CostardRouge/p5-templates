@@ -3,13 +3,12 @@ import events from "@/p5/utils/events.js";
 import string from "@/p5/utils/string.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
-import scripts from "@/p5/utils/scripts.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
-await scripts.load( "/assets/libraries/decomp.min.js" );
-await scripts.load( "/assets/libraries/matter.min.js" );
+import "@/public/assets/libraries/decomp.min.js";
+import Matter from "@/public/assets/libraries/matter.min.js";
 
 const {
   Engine, Body, Bodies, Vector, Composite, Common

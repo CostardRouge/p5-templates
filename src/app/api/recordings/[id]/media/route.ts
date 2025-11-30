@@ -37,8 +37,21 @@ export async function GET(
     }
 
     // Parse thumbnails and videoUrls from JSON
-    const thumbnails = job.thumbnails ? ( job.thumbnails as unknown as string[] ) : [
+    // Thumbnails can be either an array (old format) or a Record<slideId, url> (new format)
+    let thumbnails: string[] = [
     ];
+
+    if ( job.thumbnails ) {
+      const thumbData = job.thumbnails as unknown;
+
+      if ( Array.isArray( thumbData ) ) {
+        thumbnails = thumbData;
+      } else if ( typeof thumbData === "object" && thumbData !== null ) {
+        // Convert Record to array - extract values in order
+        thumbnails = Object.values( thumbData as Record<string, string> );
+      }
+    }
+
     const videoUrls = job.videoUrls ? ( job.videoUrls as unknown as string[] ) : [
     ];
     const videoSizes = job.videoSizes ? ( job.videoSizes as unknown as number[] ) : [

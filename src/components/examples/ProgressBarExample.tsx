@@ -57,7 +57,7 @@ export function RecordingProgressExample() {
 
   useEffect(
     () => {
-    // Simulate recording progress
+      // Simulate recording progress
       const simulate = async() => {
         progress.startStep( "launch" );
         await new Promise( r => setTimeout(
@@ -116,6 +116,7 @@ export function RecordingProgressExample() {
       simulate();
     },
     [
+      progress
     ]
   );
 

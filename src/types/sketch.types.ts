@@ -399,7 +399,7 @@ export const Assets = z
 
 /* ---------------- slide schema (with name) ---------------------- */
 export const SlideSchema = z.object( {
-  name: z.string().optional( ),
+  name: z.string().optional(),
   content: z.array( ContentItemSchema ).default( [
   ] ),
   assets: Assets,
@@ -474,4 +474,5 @@ export type SlideOption = z.infer<typeof SlideSchema>;
 export type AssetsOption = z.infer<typeof Assets>;
 
 export type SketchOption = z.infer<typeof OptionsSchema>;
+export type SlideOptionInput = z.input<typeof SlideSchema>;
 export type SketchOptionInput = z.input<typeof OptionsSchema>;

@@ -6,11 +6,12 @@ import useFormUndoRedo from "./useFormUndoRedo";
  */
 export default function useFormUndoRedoBatch() {
   const context = useFormUndoRedo();
-  const batchIdRef = React.useRef<string | null>(null);
+  const batchIdRef = React.useRef<string | null>( null );
 
   const withBatch = React.useCallback(
-    <T,>(fn: () => T, description?: string): T => {
-      const batchId = context.startBatch(description);
+    <T, >( fn: () => T, description?: string ): T => {
+      const batchId = context.startBatch( description );
+
       batchIdRef.current = batchId;
 
       try {
@@ -20,12 +21,15 @@ export default function useFormUndoRedoBatch() {
         batchIdRef.current = null;
       }
     },
-    [context]
+    [
+      context
+    ]
   );
 
   const withBatchAsync = React.useCallback(
-    async <T,>(fn: () => Promise<T>, description?: string): Promise<T> => {
-      const batchId = context.startBatch(description);
+    async <T, >( fn: () => Promise<T>, description?: string ): Promise<T> => {
+      const batchId = context.startBatch( description );
+
       batchIdRef.current = batchId;
 
       try {
@@ -35,7 +39,9 @@ export default function useFormUndoRedoBatch() {
         batchIdRef.current = null;
       }
     },
-    [context]
+    [
+      context
+    ]
   );
 
   return {

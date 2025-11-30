@@ -1,4 +1,6 @@
-import type { Patch } from "immer";
+import type {
+  Patch
+} from "immer";
 
 // History entry with metadata
 export type HistoryEntry<T = any> = {
@@ -34,35 +36,35 @@ export type FormUndoRedoContextType<T = any> = {
   undo: () => void;
   redo: () => void;
   clear: () => void;
-  
+
   // State queries
   canUndo: boolean;
   canRedo: boolean;
-  
+
   // History access
   getHistory: () => {
     past: HistoryEntry<T>[];
     future: HistoryEntry<T>[];
   };
-  
+
   // Jump to specific point
-  jumpTo: (index: number, direction: "past" | "future") => void;
-  
+  jumpTo: ( index: number, direction: "past" | "future" ) => void;
+
   // Manual capture
-  capture: (description?: string) => void;
-  
+  capture: ( description?: string ) => void;
+
   // Batch operations
-  startBatch: (description?: string) => string; // Returns batchId
+  startBatch: ( description?: string ) => string; // Returns batchId
   endBatch: () => void;
-  
+
   // Control
   pause: () => void;
   resume: () => void;
-  runSilently: (fn: () => void) => void;
-  
+  runSilently: ( fn: () => void ) => void;
+
   // Debugging
   getMetrics: () => PerformanceMetrics;
-  enableDebug: (enabled: boolean) => void;
+  enableDebug: ( enabled: boolean ) => void;
 };
 
 // Configuration options

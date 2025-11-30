@@ -4,11 +4,8 @@ import string from "@/p5/utils/string.js";
 import sketch from "@/p5/utils/sketch.js";
 import events from "@/p5/utils/events.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import scripts from "@/p5/utils/scripts.js";
 
-// import "https://unpkg.com/ml5@1/dist/ml5.js";
-
-await scripts.load( "https://unpkg.com/ml5@1/dist/ml5.js" );
+import "@/public/assets/libraries/ml5.js";
 
 const trackedHandParts = [
   "thumb_tip",
@@ -64,7 +61,7 @@ events.register(
         maskType: "parts"
       }
     );
-  // _ml5.faceMesh = ml5.faceMesh();
+    // _ml5.faceMesh = ml5.faceMesh();
   }
 );
 

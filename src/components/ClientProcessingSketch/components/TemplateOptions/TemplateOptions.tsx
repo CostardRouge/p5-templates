@@ -11,6 +11,7 @@ import UnsavedChangesModal from "@/components/UnsavedChangesModal";
 import {
   ArrowDownFromLine, ListCollapse
 } from "lucide-react";
+import pica from "pica";
 
 import {
   JobModel
@@ -58,41 +59,53 @@ type TemplateOptionsProps = {
   options: SketchOption;
   persistedJob?: JobModel;
   onOptionsChange: (
-    nextOptions: SketchOption | ((existingOptions: SketchOption) => void)
+    nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
   ) => void;
-  onActiveSlideChange?: (index: number | undefined) => void;
+  onActiveSlideChange?: ( index: number | undefined ) => void;
 }
 
-export default function TemplateOptions({
+export default function TemplateOptions( {
   name,
   persistedJob,
   onOptionsChange,
   onActiveSlideChange,
   options: initialOptions,
-}: TemplateOptionsProps) {
+}: TemplateOptionsProps ) {
   const browserRecordingSupported = useBrowserRecordingSupported();
 
   const [
     activeSlideIndex,
     setActiveSlideIndex
-  ] = useState(0);
+  ] = useState( 0 );
 
   const [
     thumbnails,
     setThumbnails
-  ] = useState<Record<string, string>>({});
+  ] = useState<Record<string, string>>( {
+  } );
 
-  const captureActionsRef = useRef<CaptureActionsRef>(null);
+  const captureActionsRef = useRef<CaptureActionsRef>( null );
+  const pendingThumbnailCaptureRef = useRef<number | null>( null );
+  const picaRef = useRef<ReturnType<typeof pica> | null>( null );
   const [
     hasUnsavedChanges,
     setHasUnsavedChanges
-  ] = useState(false);
+  ] = useState( false );
 
-  const methods = useForm<SketchOptionInput>({
+  // Initialize pica instance
+  useEffect(
+    () => {
+      picaRef.current = pica();
+    },
+    [
+    ]
+  );
+
+  const methods = useForm<SketchOptionInput>( {
     mode: "onChange",
-    defaultValues: initOptions(initialOptions),
-    resolver: zodResolver(OptionsSchema),
-  });
+    defaultValues: initOptions( initialOptions ),
+    resolver: zodResolver( OptionsSchema ),
+  } );
 
   const {
     control,
@@ -110,65 +123,146 @@ export default function TemplateOptions({
     insert: insertSlide,
     move: moveSlide,
     remove: removeSlide,
-  } = useFieldArray({
+  } = useFieldArray( {
     control,
     name: "slides",
-  });
+  } );
 
-  const slides = useWatch({
+  const slides = useWatch( {
     control,
     name: "slides",
-  }) as SlideOption[] | undefined;
+  } ) as SlideOption[] | undefined;
 
-  const jobId = useWatch({
+  const jobId = useWatch( {
     control,
     name: "id",
-  }) as string | undefined;
+  } ) as string | undefined;
 
   // Initialize thumbnails from persisted job
   useEffect(
     () => {
-      return;
+      if ( persistedJob?.thumbnails && slideFields.length > 0 ) {
+        try {
+          // For completed recordings, thumbnails are S3 URLs - we need to fetch signed URLs
+          if ( persistedJob.status === "completed" ) {
+            fetch( `/api/recordings/${ persistedJob.id }/media` )
+              .then( ( res ) => {
+                if ( !res.ok ) {
+                  throw new Error( `Failed to fetch media: ${ res.status }` );
+                }
+                return res.json();
+              } )
+              .then( ( data ) => {
+                if ( data.thumbnails && Array.isArray( data.thumbnails ) ) {
+                  const newThumbnails: Record<string, string> = {
+                  };
 
-      if (persistedJob?.thumbnails && slideFields.length > 0) {
-        const initialThumbnails: Record<string, string> = {
-        };
+                  slideFields.forEach( (
+                    field, index
+                  ) => {
+                    if ( data.thumbnails[ index ] ) {
+                      newThumbnails[ field.id ] = data.thumbnails[ index ];
+                    }
+                  } );
+                  setThumbnails( ( prev ) => ( {
+                    ...prev,
+                    ...newThumbnails
+                  } ) );
+                }
+              } )
+              .catch( ( e ) => {
+                console.error(
+                  "Failed to fetch signed thumbnail URLs:",
+                  e
+                );
+              } );
+          } else {
+            // For draft recordings, thumbnails are stored as Record<slideId, dataUrl>
+            if ( typeof persistedJob.thumbnails === "object" && !Array.isArray( persistedJob.thumbnails ) ) {
+              // Direct object map (new format)
+              setThumbnails( ( prev ) => ( {
+                ...prev,
+                ...( persistedJob.thumbnails as Record<string, string> )
+              } ) );
+            } else if ( typeof persistedJob.thumbnails === "string" ) {
+              // Try parsing if it's a string
+              try {
+                const parsed = JSON.parse( persistedJob.thumbnails );
 
-        persistedJob.thumbnails.forEach((
-          url, index
-        ) => {
-          const slideId = slideFields[index]?.id;
+                if ( typeof parsed === "object" && !Array.isArray( parsed ) ) {
+                  setThumbnails( ( prev ) => ( {
+                    ...prev,
+                    ...parsed
+                  } ) );
+                } else if ( Array.isArray( parsed ) ) {
+                  // Legacy array format - convert to map
+                  const newThumbnails: Record<string, string> = {
+                  };
 
-          if (slideId) {
-            initialThumbnails[slideId] = url;
+                  slideFields.forEach( (
+                    field, index
+                  ) => {
+                    if ( parsed[ index ] ) {
+                      newThumbnails[ field.id ] = parsed[ index ];
+                    }
+                  } );
+                  setThumbnails( ( prev ) => ( {
+                    ...prev,
+                    ...newThumbnails
+                  } ) );
+                }
+              } catch ( e ) {
+                console.warn(
+                  "Failed to parse thumbnails string",
+                  e
+                );
+              }
+            } else if ( Array.isArray( persistedJob.thumbnails ) ) {
+              // Legacy array format - convert to map
+              const thumbArray = persistedJob.thumbnails as string[];
+              const newThumbnails: Record<string, string> = {
+              };
+
+              slideFields.forEach( (
+                field, index
+              ) => {
+                if ( thumbArray[ index ] ) {
+                  newThumbnails[ field.id ] = thumbArray[ index ];
+                }
+              } );
+              setThumbnails( ( prev ) => ( {
+                ...prev,
+                ...newThumbnails
+              } ) );
+            }
           }
-        });
-
-        setThumbnails((prev) => ({
-          ...prev,
-          ...initialThumbnails
-        }));
+        } catch ( e ) {
+          console.error(
+            "Error loading persisted thumbnails:",
+            e
+          );
+        }
       }
     },
     [
       persistedJob?.thumbnails,
-      // We only want to run this when we have slide fields populated initially
-      // Adding slideFields to deps might cause re-runs but we check if we have thumbnails
-      // Ideally we only run this once or when job changes.
-      persistedJob?.id
+      persistedJob?.status,
+      persistedJob?.id,
+      slideFields.length,
+      slideFields
     ]
   );
 
   useEffect(
     () => {
-      const subscription = watch((value) => {
-        onOptionsChange(value as SketchOption);
+      const subscription = watch( ( value ) => {
+        onOptionsChange( value as SketchOption );
 
         // Track unsaved changes
-        if (persistedJob?.status !== "completed") {
-          setHasUnsavedChanges(true);
+        if ( persistedJob?.status !== "completed" ) {
+          setHasUnsavedChanges( true );
         }
-      });
+      } );
 
       return () => subscription.unsubscribe();
     },
@@ -181,74 +275,124 @@ export default function TemplateOptions({
   );
 
   // Auto-save every 10 seconds when jobId exists and status is draft
-  useInterval({
-    callback: async () => {
-      if (captureActionsRef.current && !captureActionsRef.current.isSaving) {
+  useInterval( {
+    callback: async() => {
+      if ( captureActionsRef.current && !captureActionsRef.current.isSaving ) {
         await captureActionsRef.current.saveAsDraft();
-        setHasUnsavedChanges(false);
+        setHasUnsavedChanges( false );
       }
     },
     enabled: !!jobId && persistedJob?.status === "draft",
     intervalMs: 10000, // 10 seconds
-  });
+  } );
 
   // Unsaved changes detection - triggers modal on navigation attempts
   const {
     showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving
-  } = useUnsavedChanges({
+  } = useUnsavedChanges( {
     hasUnsavedChanges: hasUnsavedChanges,
-    onSaveAsDraft: async () => {
-      if (captureActionsRef.current) {
+    onSaveAsDraft: async() => {
+      if ( captureActionsRef.current ) {
         await captureActionsRef.current.saveAsDraft();
-        setHasUnsavedChanges(false);
+        setHasUnsavedChanges( false );
       }
     },
-  });
+  } );
 
-  const didInitSelection = useRef(false);
+  const didInitSelection = useRef( false );
+
+  const captureThumbnail = useCallback(
+    async( slideId: string ) => {
+      const canvas = document.querySelector( "canvas#defaultCanvas0" ) as HTMLCanvasElement;
+
+      if ( !canvas || !picaRef.current ) {
+        return;
+      }
+
+      try {
+        // Target width for thumbnail - optimal for grid display
+        const targetWidth = 240;
+        const scaleFactor = targetWidth / canvas.width;
+        const targetHeight = Math.round( canvas.height * scaleFactor );
+
+        // Create destination canvas
+        const destCanvas = document.createElement( "canvas" );
+
+        destCanvas.width = targetWidth;
+        destCanvas.height = targetHeight;
+
+        // Use pica for high-quality resizing
+        await picaRef.current.resize(
+          canvas,
+          destCanvas,
+          {
+            quality: 3, // High quality (0-3)
+            unsharpAmount: 80,
+            unsharpRadius: 0.6,
+            unsharpThreshold: 2
+          }
+        );
+
+        // Convert to JPEG blob
+        const blob = await picaRef.current.toBlob(
+          destCanvas,
+          "image/jpeg",
+          0.85
+        );
+
+        // Convert blob to data URL
+        const reader = new FileReader();
+
+        reader.onloadend = () => {
+          const dataUrl = reader.result as string;
+
+          setThumbnails( ( prev ) => ( {
+            ...prev,
+            [ slideId ]: dataUrl
+          } ) );
+        };
+        reader.readAsDataURL( blob );
+      }
+      catch ( e ) {
+        console.error(
+          "Failed to capture thumbnail",
+          e
+        );
+      }
+    },
+    [
+    ]
+  );
 
   const handleSlideSelect = useCallback(
-    (index: number | undefined) => {
+    async( index: number | undefined ) => {
       // Capture thumbnail of current slide before switching
-      if (activeSlideIndex !== undefined && slideFields[activeSlideIndex]) {
-        const currentSlideId = slideFields[activeSlideIndex].id;
-        const canvas = document.querySelector("canvas#defaultCanvas0") as HTMLCanvasElement;
+      // We capture if we have an active slide index
+      if ( activeSlideIndex !== undefined && slideFields[ activeSlideIndex ] ) {
+        const currentSlideId = slideFields[ activeSlideIndex ].id;
 
-        if (canvas && currentSlideId) {
-          try {
-            const dataUrl = canvas.toDataURL(
-              "image/jpeg",
-              0.5
-            );
+        await captureThumbnail( currentSlideId );
+      }
 
-            setThumbnails((prev) => ({
-              ...prev,
-              [currentSlideId]: dataUrl
-            }));
-          }
-          catch (e) {
-            console.error(
-              "Failed to capture thumbnail",
-              e
-            );
+      if ( index !== undefined ) {
+        // If clicking the same slide, we still want to update the thumbnail (which we just did above)
+        // but we don't need to re-set the active index or window.setSlide if it's the same
+        if ( index !== activeSlideIndex ) {
+          setActiveSlideIndex( index );
+
+          if ( typeof window.setSlide === "function" ) {
+            window.setSlide( index );
           }
         }
       }
 
-      if (index !== undefined) {
-        setActiveSlideIndex(index);
-
-        if (typeof window.setSlide === "function") {
-          window.setSlide(index);
-        }
-      }
-
-      onActiveSlideChange?.(index);
+      onActiveSlideChange?.( index );
     },
     [
       onActiveSlideChange,
       activeSlideIndex,
-      slideFields
+      slideFields,
+      captureThumbnail
     ]
   );
 
@@ -256,19 +400,64 @@ export default function TemplateOptions({
     () => {
       const length = slideFields.length;
 
-      if (!didInitSelection.current && length > 0) {
+      if ( !didInitSelection.current && length > 0 ) {
         didInitSelection.current = true;
 
-        handleSlideSelect(0);
+        handleSlideSelect( 0 );
 
-        if (typeof window.setSlide === "function") {
-          window.setSlide(0);
+        if ( typeof window.setSlide === "function" ) {
+          window.setSlide( 0 );
+        }
+
+        // Capture initial thumbnail for the first slide after a short delay
+        const firstSlideId = slideFields[ 0 ]?.id;
+
+        if ( firstSlideId ) {
+          requestAnimationFrame( () => {
+            setTimeout(
+              () => {
+                captureThumbnail( firstSlideId );
+              },
+              300
+            );
+          } );
         }
       }
     },
     [
       handleSlideSelect,
-      slideFields.length
+      slideFields.length,
+      slideFields,
+      captureThumbnail
+    ]
+  );
+
+  // Capture thumbnail for newly added slides
+  useEffect(
+    () => {
+      if ( pendingThumbnailCaptureRef.current !== null ) {
+        const slideIndex = pendingThumbnailCaptureRef.current;
+        const slideId = slideFields[ slideIndex ]?.id;
+
+        if ( slideId ) {
+          // Give the sketch time to render the new slide
+          // Use requestAnimationFrame to ensure canvas is rendered
+          requestAnimationFrame( () => {
+            setTimeout(
+              async() => {
+                await captureThumbnail( slideId );
+              },
+              300
+            );
+          } );
+        }
+
+        pendingThumbnailCaptureRef.current = null;
+      }
+    },
+    [
+      slideFields,
+      captureThumbnail
     ]
   );
 
@@ -278,28 +467,28 @@ export default function TemplateOptions({
       let next = activeSlideIndex;
       let needsAdjustment = false;
 
-      if (length === 0) {
-        if (activeSlideIndex !== 0) {
-          setActiveSlideIndex(0);
+      if ( length === 0 ) {
+        if ( activeSlideIndex !== 0 ) {
+          setActiveSlideIndex( 0 );
         }
-        handleSlideSelect(undefined);
+        handleSlideSelect( undefined );
       }
       else {
-        if (activeSlideIndex < 0) {
+        if ( activeSlideIndex < 0 ) {
           next = 0;
           needsAdjustment = true;
         }
-        else if (activeSlideIndex > length - 1) {
+        else if ( activeSlideIndex > length - 1 ) {
           next = length - 1;
           needsAdjustment = true;
         }
 
-        if (needsAdjustment) {
-          handleSlideSelect(next);
+        if ( needsAdjustment ) {
+          handleSlideSelect( next );
         }
         else {
-          if (typeof window.setSlide === "function") {
-            window.setSlide(next);
+          if ( typeof window.setSlide === "function" ) {
+            window.setSlide( next );
           }
         }
       }
@@ -311,30 +500,40 @@ export default function TemplateOptions({
     ]
   );
 
-  const handleAddSlide = () => {
+  const handleAddSlide = async() => {
+    // Capture the current slide's thumbnail before adding a new one
+    if ( activeSlideIndex !== undefined && slideFields[ activeSlideIndex ] ) {
+      await captureThumbnail( slideFields[ activeSlideIndex ].id );
+    }
+
     const nextIndex = slideFields.length;
 
-    appendSlide(makeDefaultSlide({
+    const newSlide = makeDefaultSlide( {
       indexForLabel: nextIndex,
       sketch: sketchFormValues,
-    }));
+    } );
 
-    handleSlideSelect(nextIndex);
+    appendSlide( newSlide );
+
+    await handleSlideSelect( nextIndex );
+
+    // Mark that we need to capture thumbnail for the new slide
+    pendingThumbnailCaptureRef.current = nextIndex;
   };
 
-  const handleDuplicateSlide = (indexToDuplicate: number) => {
-    const allSlides = getValues("slides") ?? [
+  const handleDuplicateSlide = ( indexToDuplicate: number ) => {
+    const allSlides = getValues( "slides" ) ?? [
     ];
-    const original = allSlides[indexToDuplicate];
+    const original = allSlides[ indexToDuplicate ];
 
-    if (!original) {
+    if ( !original ) {
       return;
     }
 
-    const duplicated = deepClone(original);
+    const duplicated = deepClone( original );
 
-    if (duplicated?.name) {
-      duplicated.name = `${duplicated.name} (copy)`;
+    if ( duplicated?.name ) {
+      duplicated.name = `${ duplicated.name } (copy)`;
     }
 
     const insertIndex = indexToDuplicate + 1;
@@ -344,58 +543,58 @@ export default function TemplateOptions({
       duplicated
     );
 
-    handleSlideSelect(insertIndex);
+    handleSlideSelect( insertIndex );
   };
 
-  const handleDeleteSlide = (indexToDelete: number) => {
+  const handleDeleteSlide = ( indexToDelete: number ) => {
     const lengthBefore = slideFields.length;
 
-    if (lengthBefore <= 0) {
+    if ( lengthBefore <= 0 ) {
       return;
     }
 
     // If we are deleting the LAST remaining slide, we want to move its settings
     // back to the global 'sketch' object so the user doesn't lose their configuration.
-    if (lengthBefore === 1) {
-      const lastSlideSettings = getValues(`slides.${indexToDelete}.sketch`);
+    if ( lengthBefore === 1 ) {
+      const lastSlideSettings = getValues( `slides.${ indexToDelete }.sketch` );
 
-      if (lastSlideSettings) {
+      if ( lastSlideSettings ) {
         setValue(
           "sketch",
-          deepClone(lastSlideSettings)
+          deepClone( lastSlideSettings )
         );
       }
     }
 
-    removeSlide(indexToDelete);
+    removeSlide( indexToDelete );
     const lengthAfter = lengthBefore - 1;
 
-    if (lengthAfter <= 0) {
-      handleSlideSelect(0);
+    if ( lengthAfter <= 0 ) {
+      handleSlideSelect( 0 );
       return;
     }
 
-    if (indexToDelete < activeSlideIndex) {
-      handleSlideSelect(activeSlideIndex - 1);
+    if ( indexToDelete < activeSlideIndex ) {
+      handleSlideSelect( activeSlideIndex - 1 );
       return;
     }
 
-    if (indexToDelete === activeSlideIndex) {
+    if ( indexToDelete === activeSlideIndex ) {
       const nextIndex = Math.min(
         activeSlideIndex,
         lengthAfter - 1
       );
 
-      handleSlideSelect(nextIndex);
+      handleSlideSelect( nextIndex );
       return;
     }
-    handleSlideSelect(activeSlideIndex);
+    handleSlideSelect( activeSlideIndex );
   };
 
   const handleReorderSlides = (
     oldIndex: number, newIndex: number
   ) => {
-    if (oldIndex === newIndex) {
+    if ( oldIndex === newIndex ) {
       return;
     }
 
@@ -404,27 +603,27 @@ export default function TemplateOptions({
       newIndex
     );
 
-    handleSlideSelect(newIndex);
+    handleSlideSelect( newIndex );
   };
 
   const handleRenameSlide = (
     index: number, newName: string
   ) => {
     setValue(
-      `slides.${index}.name`,
+      `slides.${ index }.name`,
       newName
     );
   };
 
-  const slideIds = slideFields.map((field) => field.id);
+  const slideIds = slideFields.map( ( field ) => field.id );
   const slidesLength = slides?.length;
-  const rootContentLength = useWatch({
+  const rootContentLength = useWatch( {
     control,
     name: "content",
-  })?.length;
+  } )?.length;
 
   const options = watch();
-  const editorKey = slideIds[activeSlideIndex] ?? `${activeSlideIndex}-${slides?.[activeSlideIndex]?.name ?? "unnamed-slide"}`;
+  const editorKey = slideIds[ activeSlideIndex ] ?? `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.name ?? "unnamed-slide" }`;
 
   const {
     backendRecording, sketchFormValues
@@ -451,7 +650,7 @@ export default function TemplateOptions({
           style={{
             maxHeight: "calc(80svh)",
           }}
-          header={(expanded) => (
+          header={( expanded ) => (
             <button
               className={
                 clsx(
@@ -496,7 +695,7 @@ export default function TemplateOptions({
             initialExpandedValue={false}
             className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
             headerContainerClassName="leading-none"
-            header={(expanded) => (
+            header={( expanded ) => (
               <button
                 className={
                   clsx(
@@ -514,7 +713,7 @@ export default function TemplateOptions({
                     rotate: expanded ? "180deg" : "0deg"
                   }}
                 />
-                <span>global content {rootContentLength ? `(${rootContentLength})` : null}</span>
+                <span>global content {rootContentLength ? `(${ rootContentLength })` : null}</span>
               </button>
             )}
           >
@@ -531,7 +730,7 @@ export default function TemplateOptions({
                 initialExpandedValue={!!slidesLength}
                 className="p-1 border border-theme rounded-lg bg-background overflow-y-auto"
                 headerContainerClassName="leading-none"
-                header={(expanded) => (
+                header={( expanded ) => (
                   <button
                     className={
                       clsx(
@@ -549,7 +748,7 @@ export default function TemplateOptions({
                         rotate: expanded ? "180deg" : "0deg"
                       }}
                     />
-                    <span>slides {slidesLength ? `(${slidesLength})` : null}</span>
+                    <span>slides {slidesLength ? `(${ slidesLength })` : null}</span>
                   </button>
                 )}
               >
@@ -575,17 +774,17 @@ export default function TemplateOptions({
           )}
         </CollapsibleItem>
 
-        {(backendRecording || browserRecordingSupported) && (
-          <CaptureActions
-            ref={captureActionsRef}
-            name={name}
-            backendRecording={backendRecording}
-            persistedJob={persistedJob}
-            options={options as SketchOption}
-            activeSlideIndex={activeSlideIndex}
-            browserRecordingSupported={browserRecordingSupported}
-          />
-        )}
+        {( backendRecording || browserRecordingSupported ) && <CaptureActions
+          ref={captureActionsRef}
+          name={name}
+          options={options}
+          persistedJob={persistedJob}
+          activeSlideIndex={activeSlideIndex}
+          backendRecording={backendRecording}
+          browserRecordingSupported={browserRecordingSupported}
+          thumbnails={thumbnails}
+        />
+        }
       </div>
 
       <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>

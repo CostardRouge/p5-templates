@@ -176,7 +176,6 @@ export default function AnimationProgressionBar( {
     },
     [
       isDragging,
-      wasLooping
     ]
   );
 
@@ -272,7 +271,9 @@ export default function AnimationProgressionBar( {
   const hoverMillis = hoverTime !== null ? Math.floor( ( hoverTime % 1 ) * 100 ) : null;
 
   // Format time display
-  const formatTime = ( seconds: number, millis: number ) => {
+  const formatTime = (
+    seconds: number, millis: number
+  ) => {
     return `${ seconds }.${ millis.toString().padStart(
       2,
       "0"

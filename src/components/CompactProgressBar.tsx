@@ -42,7 +42,7 @@ export default function CompactProgressBar( {
   useEffect(
     () => {
       // Use recordingStartAt from DB if available, otherwise fall back to client-side startTime
-      const recordingStart = job.recordingStartAt 
+      const recordingStart = job.recordingStartAt
         ? new Date( job.recordingStartAt ).getTime()
         : startTime;
 

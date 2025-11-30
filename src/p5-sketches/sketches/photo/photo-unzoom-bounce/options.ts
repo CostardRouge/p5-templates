@@ -9,10 +9,10 @@ export const formValues = {
   scaleEasingFunctionName: "easeInQuint",
   animationProgression: "linearProgression",
   backgroundColor: [
-      255,
-      255,
-      255
-    ]
+    255,
+    255,
+    255
+  ]
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -48,10 +48,10 @@ export const formConfiguration: Record<string, any> = {
   scaleEasingFunctionName: {
     component: "select",
     label: "Scale easing",
-    options: Object.keys(easing).map(easingFunctionName => ({
+    options: Object.keys( easing ).map( easingFunctionName => ( {
       label: easingFunctionName,
       value: easingFunctionName,
-    }))
+    } ) )
   },
   animationProgression: {
     component: "select",
@@ -67,7 +67,7 @@ export const formConfiguration: Record<string, any> = {
       }
     ]
   },
-   backgroundColor: {
+  backgroundColor: {
     component: "color",
     label: "Background color"
   },

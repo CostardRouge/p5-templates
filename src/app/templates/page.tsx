@@ -18,7 +18,7 @@ export default async function TemplatesPage() {
     .map( ( {
       name, category, hasSketchForm
     } ) => ( {
-      thumbnail: getP5SketchThumbnailURL(name),
+      thumbnail: getP5SketchThumbnailURL( name ),
       href: `templates/p5/${ name }`,
       hasSketchForm,
       name,

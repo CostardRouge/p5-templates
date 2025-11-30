@@ -10,7 +10,7 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 
 sketch.setup(
   () => {
-    applyBackground()
+    applyBackground();
   },
   {
     size: {
@@ -32,12 +32,10 @@ function applyBackground() {
   ] ) );
 }
 
-sketch.draw( (
-  _time
-) => {
+sketch.draw( ( _time ) => {
   const images = cache.get( "images" );
 
-  applyBackground()
+  applyBackground();
 
   const count = options.sketch.count;
   const imageIndexes = images.map( (

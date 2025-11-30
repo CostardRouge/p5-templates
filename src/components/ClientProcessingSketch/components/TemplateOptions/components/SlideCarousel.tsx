@@ -27,7 +27,7 @@ import {
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/ContentItems";
 import SlideThumbnail from "./SlideThumbnail";
 
-export default function SlideCarousel({
+export default function SlideCarousel( {
   slideIds,
   slides,
   thumbnails,
@@ -43,13 +43,13 @@ export default function SlideCarousel({
   slides: SlideOption[];
   thumbnails: Record<string, string>;
   activeIndex: number;
-  onSelect: (index: number) => void;
-  onReorder: (oldIndex: number, newIndex: number) => void;
+  onSelect: ( index: number ) => void;
+  onReorder: ( oldIndex: number, newIndex: number ) => void;
   onAdd: () => void;
-  onDuplicate: (index: number) => void;
-  onDelete: (index: number) => void;
-  onRename: (index: number, newName: string) => void;
-}) {
+  onDuplicate: ( index: number ) => void;
+  onDelete: ( index: number ) => void;
+  onRename: ( index: number, newName: string ) => void;
+} ) {
   const sensors = useSensors(
     useSensor(
       MouseSensor,
@@ -68,22 +68,22 @@ export default function SlideCarousel({
         }
       }
     ),
-    useSensor(KeyboardSensor)
+    useSensor( KeyboardSensor )
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = ( event: DragEndEvent ) => {
     const {
       active, over
     } = event;
 
-    if (!over || active.id === over.id) {
+    if ( !over || active.id === over.id ) {
       return;
     }
 
-    const oldIndex = slideIds.indexOf(String(active.id));
-    const newIndex = slideIds.indexOf(String(over.id));
+    const oldIndex = slideIds.indexOf( String( active.id ) );
+    const newIndex = slideIds.indexOf( String( over.id ) );
 
-    if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) {
+    if ( oldIndex < 0 || newIndex < 0 || oldIndex === newIndex ) {
       return;
     }
 
@@ -112,50 +112,53 @@ export default function SlideCarousel({
         className="flex flex-col gap-2"
       >
         <div
-          className="grid grid-cols-2 gap-2"
+          className="grid grid-cols-3 gap-2"
         >
           <SortableContext
             items={slideIds} strategy={rectSwappingStrategy}
           >
-            {slides.map((
+            {slides.map( (
               slide, index
             ) => {
-              const id = slideIds[index];
-              const thumbnail = thumbnails[id] || null;
+              const id = slideIds[ index ];
+              const thumbnail = thumbnails[ id ] || null;
 
               return (
-                <SortableRow key={`${id}-${index}`} id={id}>
-                  {(dragBinder) => (
+                <SortableRow key={`${ id }-${ index }`} id={id}>
+                  {( dragBinder ) => (
                     <SlideThumbnail
                       id={id}
-                      name={slide.name || `Slide ${index + 1}`}
+                      name={slide.name || `Slide ${ index + 1 }`}
                       isActive={index === activeIndex}
                       thumbnailUrl={thumbnail}
                       aspectRatio={aspectRatio}
-                      onSelect={() => onSelect(index)}
-                      onRename={(newName) => onRename(index, newName)}
-                      onDelete={() => onDelete(index)}
-                      onDuplicate={() => onDuplicate(index)}
+                      onSelect={() => onSelect( index )}
+                      onRename={( newName ) => onRename(
+                        index,
+                        newName
+                      )}
+                      onDelete={() => onDelete( index )}
+                      onDuplicate={() => onDuplicate( index )}
                       dragBinder={dragBinder}
                     />
                   )}
                 </SortableRow>
               );
-            })}
+            } )}
           </SortableContext>
 
           <button
             type="button"
             onClick={onAdd}
-            className="flex flex-col items-center justify-center border-2 border-dashed border-theme rounded-lg hover:bg-secondary/10 transition-colors text-muted-foreground hover:text-foreground gap-2"
+            className="flex flex-col items-center justify-center border border-dashed border-theme rounded-lg hover:bg-secondary/10 transition-colors text-muted-foreground hover:text-foreground gap-2"
             style={{
               aspectRatio
             }}
             aria-label="Add new slide"
             title="Add new slide"
           >
-            <Plus className="h-6 w-6" />
-            <span className="text-xs font-medium">New Slide</span>
+            <Plus className="h-4 w-4" />
+            <span className="text-xs">Add slide</span>
           </button>
         </div>
       </div>

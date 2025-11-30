@@ -2,7 +2,6 @@ import options from "@/p5/utils/options.js";
 
 import string from "@/p5/utils/string.js";
 import sketch from "@/p5/utils/sketch.js";
-import scripts from "@/p5/utils/scripts.js";
 
 import * as common from "@/p5/utils/common.js";
 
@@ -13,8 +12,8 @@ import mediapipe, {
 import drawHands from "./drawHands.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 
-await scripts.load( "/assets/libraries/decomp.min.js" );
-await scripts.load( "/assets/libraries/matter.min.js" );
+import "@/public/assets/libraries/decomp.min.js";
+import Matter from "@/public/assets/libraries/matter.min.js";
 
 const {
   Engine, Bodies, Composite, Vector
@@ -159,10 +158,10 @@ sketch.draw( (
   // Update hand physics bodies
   updateHandBodies();
 
-  applyAttractionFromHands(
-    // 0.5,
-    // 0.01
-  );
+  applyAttractionFromHands();
+
+  // 0.5,
+  // 0.01
 
   Engine.update( matter.engine );
 

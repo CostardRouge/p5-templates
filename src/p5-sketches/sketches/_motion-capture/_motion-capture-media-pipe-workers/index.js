@@ -8,8 +8,8 @@ import drawNeonDot from "./drawNeonDot.js";
 
 import drawHands from "./drawHands.js";
 
-await scripts.load( "/assets/libraries/decomp.min.js" );
-await scripts.load( "/assets/libraries/matter.min.js" );
+import "@/public/assets/libraries/decomp.min.js";
+import Matter from "@/public/assets/libraries/matter.min.js";
 
 const {
   Engine, Bodies, Vector, Composite
@@ -225,7 +225,7 @@ sketch.setup(
   }
 );
 
-const sendFrameToWorkerIfDue = ( ) => {
+const sendFrameToWorkerIfDue = () => {
   const now = performance.now();
 
   if ( now - mediapipe.previousFrameSentTime < mediapipe.inferenceIntervalMilliseconds ) {

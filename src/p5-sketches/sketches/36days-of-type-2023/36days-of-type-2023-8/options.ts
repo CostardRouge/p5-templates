@@ -45,7 +45,8 @@ export const formConfiguration: Record<string, any> = {
         label: "Size",
         component: "slider",
         min: 0.1,
-        max: 4
+        max: 4,
+        step: 0.1
       },
       depth: {
         label: "Depth",

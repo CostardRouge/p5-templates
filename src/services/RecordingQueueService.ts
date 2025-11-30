@@ -73,13 +73,15 @@ export class RecordingQueueService {
     options,
     status,
     files,
-    jobId: providedJobId
-  }:{
+    jobId: providedJobId,
+    thumbnails
+  }: {
     status: JobStatusEnum,
     template: string,
     options: string,
     files: File[],
-    jobId?: string
+    jobId?: string,
+    thumbnails?: Record<string, string>
   } ): Promise<string> {
     const jobId = providedJobId ?? generateUuid();
 
@@ -119,7 +121,11 @@ export class RecordingQueueService {
       await updateJob(
         jobId,
         {
-          options: JSON.parse( options )
+          options: JSON.parse( options ),
+          ...( thumbnails ? {
+            thumbnails
+          } : {
+          } )
         }
       );
 
@@ -127,10 +133,10 @@ export class RecordingQueueService {
       if ( status !== "draft" ) {
         // Check if job is already in the queue
         const existingJob = await this.queue.getJob( jobId );
-        
+
         if ( existingJob ) {
           const jobState = await existingJob.getState();
-          
+
           // If job is already waiting or active, don't re-add it
           if ( [
             "waiting",
@@ -140,7 +146,7 @@ export class RecordingQueueService {
             console.log( `[Queue] Job ${ jobId } already in queue with state: ${ jobState }` );
             return jobId;
           }
-          
+
           // If job is in a terminal state, remove it before re-adding
           if ( [
             "completed",
@@ -149,7 +155,7 @@ export class RecordingQueueService {
             await existingJob.remove();
           }
         }
-        
+
         // ensure DB and SSE reflect queued state before worker picks it
         await updateJob(
           jobId,

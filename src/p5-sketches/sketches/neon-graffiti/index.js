@@ -4,11 +4,11 @@ import neonGraffiti from "@/p5/utils/visuals/neonGraffiti.js";
 
 sketch.setup();
 
-sketch.draw((_time) => {
-  background(...(options.sketch.backgroundColor ?? [
+sketch.draw( ( _time ) => {
+  background( ...( options.sketch.backgroundColor ?? [
     0
-  ]));
-  neonGraffiti({
+  ] ) );
+  neonGraffiti( {
     amplitude: options.sketch.amplitude,
     shadowsCount: options.sketch.shadowsCount,
     stepsCount: options.sketch.stepsCount,
@@ -35,5 +35,5 @@ sketch.draw((_time) => {
       width * options.sketch.end.x,
       height * options.sketch.end.y
     )
-  });
-});
+  } );
+} );

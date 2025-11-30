@@ -1,5 +1,6 @@
 import options from "@/p5/utils/options.js";
 import cache from "@/p5/utils/cache.js";
+import renderTitle from "@/p5/utils/title/renderTitle.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
@@ -297,8 +298,5 @@ sketch.draw( (
     } );
   } );
 
-  title.renderTitle(
-    options,
-    "photo-balloons"
-  );
+  renderTitle( options.sketch?.title );
 } );

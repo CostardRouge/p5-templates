@@ -2,6 +2,8 @@ import {
   default as p5js
 } from "./p5.js";
 
-export default {
+const engines = {
   p5js
 };
+
+export default engines;

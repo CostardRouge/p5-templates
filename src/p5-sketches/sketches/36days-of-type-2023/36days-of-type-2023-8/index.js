@@ -11,18 +11,18 @@ import string from "@/p5/utils/string.js";
 
 sketch.setup(
   () => {
-    background( ...getBackgroundColor() );
+    background(...getBackgroundColor());
   },
   {
     type: "webgl"
   }
 );
 
-function getAlphaFromMask( {
+function getAlphaFromMask({
   position: {
     x, y
   }, maskPoints, distance = options.sketch?.mask?.distance ?? 0.015
-} ) {
+}) {
   const normalizedPosition = createVector(
     map(
       x,
@@ -44,7 +44,7 @@ function getAlphaFromMask( {
     (
       result, pointPosition
     ) => {
-      if ( true === result ) {
+      if (true === result) {
         return result;
       }
 
@@ -65,7 +65,7 @@ function getAlphaFromMask( {
         )
       );
 
-      const d = normalizedPointPosition.dist( normalizedPosition );
+      const d = normalizedPointPosition.dist(normalizedPosition);
 
       return Math.max(
         result,
@@ -80,7 +80,7 @@ function createGridAlphaPoints(
   gridOptions, textPointsMatrix, cacheKey
 ) {
   return cache.store(
-    `alpha-points-matrix+${ cacheKey }`,
+    `alpha-points-matrix+${cacheKey}`,
     () => {
       const alphaPoints = [
       ];
@@ -91,19 +91,19 @@ function createGridAlphaPoints(
           const alphaLayers = [
           ];
 
-          for ( const points of textPointsMatrix ) {
-            const alpha = getAlphaFromMask( {
+          for (const points of textPointsMatrix) {
+            const alpha = getAlphaFromMask({
               position,
               maskPoints: points
-            } );
+            });
 
-            alphaLayers.push( alpha );
+            alphaLayers.push(alpha);
           }
 
-          alphaPoints.push( {
+          alphaPoints.push({
             position,
             layers: alphaLayers
-          } );
+          });
         }
       );
 
@@ -113,17 +113,15 @@ function createGridAlphaPoints(
 }
 
 const getBackgroundColor = () =>
-  ( options.sketch?.backgroundColor ??
-    [
-      246,
-      235,
-      225
-    ] );
+(options.sketch?.backgroundColor ??
+  [
+    246,
+    235,
+    225
+  ]);
 
-sketch.draw( (
-  time
-) => {
-  background( ...getBackgroundColor() );
+sketch.draw((time) => {
+  background(...getBackgroundColor());
 
   const size = (options.sketch?.shape?.size * width) ?? width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
@@ -157,16 +155,16 @@ sketch.draw( (
 
   const fonts = [
     string.fonts.martian,
-    string.fonts.multicoloure,
+    // string.fonts.multicoloure,
     // string.fonts.openSans,
     // string.fonts.sans,
-    string.fonts.serif
+    // string.fonts.serif
   ];
 
   const textToWrite = options.sketch?.shape?.text ?? "8";
 
-  const textPointsMatrix = fonts.map( font => (
-    string.getTextPoints( {
+  const textPointsMatrix = fonts.map(font => (
+    string.getTextPoints({
       text: textToWrite,
       position: createVector(
         0,
@@ -176,10 +174,10 @@ sketch.draw( (
       font,
       sampleFactor,
       simplifyThreshold
-    } )
-  ) );
+    })
+  ));
 
-  if ( textPointsMatrix.some( matrix => matrix.length === 0 ) ) {
+  if (textPointsMatrix.some(matrix => matrix.length === 0)) {
     return;
   }
 
@@ -191,7 +189,7 @@ sketch.draw( (
     simplifyThreshold,
     options.sketch?.mask?.distance
   ];
-  const cacheKey = cacheComponent.join('+')
+  const cacheKey = cacheComponent.join("+");
 
   const alphaPoints = createGridAlphaPoints(
     gridOptions,
@@ -199,14 +197,14 @@ sketch.draw( (
     cacheKey
   );
 
-  if ( options.sketch?.animation?.rotate ?? true ) {
-    const rotationMax = PI * ( options.sketch?.animation?.rotationCount ?? 2 );
+  if (options.sketch?.animation?.rotate ?? true) {
+    const rotationMax = PI * (options.sketch?.animation?.rotationCount ?? 2);
 
     const {
       x: rX,
       y: rY,
-    // z: rZ
-    } = animation.ease( {
+      // z: rZ
+    } = animation.ease({
       values: [
         createVector(),
         createVector(
@@ -217,29 +215,29 @@ sketch.draw( (
           rotationMax,
           rotationMax
         ),
-        createVector( rotationMax ),
+        createVector(rotationMax),
       ],
-      currentTime: animation.progression,
+      currentTime: animation.progression * 3,
       duration: 1,
       lerpFn: p5.Vector.lerp,
       easingFn: easing.easeInOutExpo,
-    // easingFn: easing.easeInOutElastic,
-    // easingFn: easing.easeInOutCirc,
-    } );
+      // easingFn: easing.easeInOutElastic,
+      // easingFn: easing.easeInOutCirc,
+    });
 
-    rotateX( rX );
-    rotateY( rY );
+    rotateX(rX);
+    rotateY(rY);
   }
 
   // const finalPoints = alphaPoints
 
-  alphaPoints.forEach( (
+  alphaPoints.forEach((
     {
       layers, position
     }, index
   ) => {
     const layer = mappers.circularIndex(
-      animation.progression + 1 / 2,
+      animation.progression / 3,
       layers
     );
     // const layer = animation.ease({
@@ -249,7 +247,7 @@ sketch.draw( (
     //   easingFn: easing.easeInOutExpo
     // })
 
-    if ( !layer ) {
+    if (!layer) {
       return;
     }
 
@@ -266,7 +264,7 @@ sketch.draw( (
     const hue = noise(
       position.x / columns + (
         +map(
-          sin( animation.sinAngle ),
+          sin(animation.angle),
           -1,
           1,
           0,
@@ -275,7 +273,7 @@ sketch.draw( (
       ),
       position.y / rows + (
         +map(
-          cos( animation.cosAngle ),
+          cos(animation.angle),
           -1,
           1,
           0,
@@ -287,8 +285,8 @@ sketch.draw( (
     const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
     const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
-    const tint = colors.rainbow( {
-      hueOffset: animation.progression,
+    const tint = colors.rainbow({
+      hueOffset: animation.circularProgression,
       hueIndex: map(
         hue,
         0,
@@ -297,7 +295,7 @@ sketch.draw( (
         PI
       ) * hueMultiplier,
       opacityFactor
-    } );
+    });
 
     const {
       levels: [
@@ -311,15 +309,15 @@ sketch.draw( (
 
     const w = cellSize;// -2
     const h = cellSize;// -2
-    const d = cellSize * ( options.sketch?.shape?.depth ?? 20 );
+    const d = cellSize * (options.sketch?.shape?.depth ?? 20);
 
-    translate( position );
+    translate(position);
 
     const fillAlphaStart = options.sketch?.color?.fillAlphaStart ?? 240;
     const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
-    const fillAlpha = animation.ease( {
+    const fillAlpha = animation.ease({
       values: [
         fillAlphaStart,
         fillAlphaEnd
@@ -327,7 +325,7 @@ sketch.draw( (
       currentTime: switchIndex,
       duration: 1,
       easingFn: easing.easeInOutExpo,
-    } );
+    });
 
     fill(
       red,
@@ -348,5 +346,5 @@ sketch.draw( (
     );
 
     pop();
-  } );
-} );
+  });
+});

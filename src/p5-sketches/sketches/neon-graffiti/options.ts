@@ -77,10 +77,10 @@ export const formConfiguration: Record<string, any> = {
       easing: {
         component: "select",
         label: "Circle size easing",
-        options: Object.keys(easing).map(easingFunctionName => ({
+        options: Object.keys( easing ).map( easingFunctionName => ( {
           label: easingFunctionName,
           value: easingFunctionName,
-        }))
+        } ) )
       },
       variable: {
         label: "Variable size?",
@@ -154,18 +154,18 @@ export const formConfiguration: Record<string, any> = {
   positionSinEasing: {
     component: "select",
     label: "Position sin easing",
-    options: Object.keys(easing).map(easingFunctionName => ({
+    options: Object.keys( easing ).map( easingFunctionName => ( {
       label: easingFunctionName,
       value: easingFunctionName,
-    }))
+    } ) )
   },
   positionCosEasing: {
     component: "select",
     label: "Position cos easing",
-    options: Object.keys(easing).map(easingFunctionName => ({
+    options: Object.keys( easing ).map( easingFunctionName => ( {
       label: easingFunctionName,
       value: easingFunctionName,
-    }))
+    } ) )
   },
   positionCosMultiplier: {
     label: "Position cos multiplier",
@@ -177,10 +177,10 @@ export const formConfiguration: Record<string, any> = {
   hueEasing: {
     component: "select",
     label: "Hue easing",
-    options: Object.keys(easing).map(easingFunctionName => ({
+    options: Object.keys( easing ).map( easingFunctionName => ( {
       label: easingFunctionName,
       value: easingFunctionName,
-    }))
+    } ) )
   },
   hueStepDivider: {
     label: "Hue step divider",

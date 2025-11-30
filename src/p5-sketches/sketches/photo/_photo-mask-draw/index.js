@@ -16,12 +16,18 @@ function drawImageWithMask( {
 } ) {
   const eraseMode = 1;// animation.progression >= .5;
 
-  eraseMode && canvases.mask.erase();
+  if ( eraseMode ) {
+    canvases.mask.erase();
+  }
+
   maskDrawer?.(
     canvases.mask,
     eraseMode
   );
-  eraseMode && canvases.mask.noErase();
+
+  if ( eraseMode ) {
+    canvases.mask.enoEraserase();
+  }
 
   const maskedImage = img.get();
 

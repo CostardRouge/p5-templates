@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Clock, ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  Clock, ArrowLeft, ArrowRight
+} from "lucide-react";
 import useFormUndoRedoHistory from "../hooks/useFormUndoRedoHistory";
 import useFormUndoRedoMetrics from "../hooks/useFormUndoRedoMetrics";
 
@@ -13,16 +15,23 @@ type HistoryVisualizerProps = {
 /**
  * Debug component to visualize undo/redo history
  */
-export default function HistoryVisualizer({
+export default function HistoryVisualizer( {
   maxItems = 10,
   showMetrics = true,
-}: HistoryVisualizerProps) {
-  const { getHistoryItems, jumpTo, clear } = useFormUndoRedoHistory();
+}: HistoryVisualizerProps ) {
+  const {
+    getHistoryItems, jumpTo, clear
+  } = useFormUndoRedoHistory();
   const metrics = useFormUndoRedoMetrics();
-  const { past, future } = getHistoryItems();
+  const {
+    past, future
+  } = getHistoryItems();
 
-  const displayPast = past.slice(-maxItems);
-  const displayFuture = future.slice(0, maxItems);
+  const displayPast = past.slice( -maxItems );
+  const displayFuture = future.slice(
+    0,
+    maxItems
+  );
 
   return (
     <div className="p-2 border border-theme rounded-lg bg-background text-xs space-y-2">
@@ -48,7 +57,7 @@ export default function HistoryVisualizer({
           </div>
           <div>
             <div className="text-[10px] opacity-70">Last Op</div>
-            <div className="font-mono">{metrics.lastOperationTime.toFixed(2)}ms</div>
+            <div className="font-mono">{metrics.lastOperationTime.toFixed( 2 )}ms</div>
           </div>
           <div>
             <div className="text-[10px] opacity-70">Total Ops</div>
@@ -62,17 +71,20 @@ export default function HistoryVisualizer({
           <ArrowLeft className="h-3 w-3" />
           <span className="text-[10px] font-semibold">PAST ({past.length})</span>
         </div>
-        
+
         {displayPast.length === 0 ? (
           <div className="text-muted-foreground/50 text-[10px] italic pl-4">
             No history
           </div>
         ) : (
           <div className="space-y-0.5">
-            {displayPast.map((item) => (
+            {displayPast.map( ( item ) => (
               <button
-                key={`past-${item.index}`}
-                onClick={() => jumpTo(item.index, "past")}
+                key={`past-${ item.index }`}
+                onClick={() => jumpTo(
+                  item.index,
+                  "past"
+                )}
                 className="w-full text-left p-1.5 rounded hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -82,7 +94,7 @@ export default function HistoryVisualizer({
                     </div>
                     {item.affectedPaths.length > 0 && (
                       <div className="text-[10px] text-muted-foreground truncate">
-                        {item.affectedPaths.join(", ")}
+                        {item.affectedPaths.join( ", " )}
                       </div>
                     )}
                   </div>
@@ -92,7 +104,7 @@ export default function HistoryVisualizer({
                   </div>
                 </div>
               </button>
-            ))}
+            ) )}
           </div>
         )}
       </div>
@@ -102,17 +114,20 @@ export default function HistoryVisualizer({
           <ArrowRight className="h-3 w-3" />
           <span className="text-[10px] font-semibold">FUTURE ({future.length})</span>
         </div>
-        
+
         {displayFuture.length === 0 ? (
           <div className="text-muted-foreground/50 text-[10px] italic pl-4">
             No future states
           </div>
         ) : (
           <div className="space-y-0.5">
-            {displayFuture.map((item) => (
+            {displayFuture.map( ( item ) => (
               <button
-                key={`future-${item.index}`}
-                onClick={() => jumpTo(item.index, "future")}
+                key={`future-${ item.index }`}
+                onClick={() => jumpTo(
+                  item.index,
+                  "future"
+                )}
                 className="w-full text-left p-1.5 rounded hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -122,7 +137,7 @@ export default function HistoryVisualizer({
                     </div>
                     {item.affectedPaths.length > 0 && (
                       <div className="text-[10px] text-muted-foreground truncate">
-                        {item.affectedPaths.join(", ")}
+                        {item.affectedPaths.join( ", " )}
                       </div>
                     )}
                   </div>
@@ -132,7 +147,7 @@ export default function HistoryVisualizer({
                   </div>
                 </div>
               </button>
-            ))}
+            ) )}
           </div>
         )}
       </div>

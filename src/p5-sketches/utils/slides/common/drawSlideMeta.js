@@ -1,13 +1,19 @@
 import string from "../../string.js";
+import sketch from "../../sketch.js";
 
-export default function drawSlideMeta( metaOption ) {
+export default function drawSlideMeta(metaOption) {
+  push();
+  if (sketch.sketchOptions.type === "webgl") {
+    translate(-width / 2, -height / 2);
+  }
+
   const horizontalMargin = metaOption.horizontalMargin || .05;
   const verticalMargin = metaOption.verticalMargin || .05;
 
   const textStyle = {
     size: 24,
-    stroke: color( ...metaOption.stroke ),
-    fill: color( ...metaOption.fill ),
+    stroke: color(...metaOption.stroke),
+    fill: color(...metaOption.fill),
     font: string.fonts.martian,
     textAlign: [
       LEFT,
@@ -42,7 +48,7 @@ export default function drawSlideMeta( metaOption ) {
   string.write(
     metaOption.bottomLeft,
     width * horizontalMargin,
-    height * ( 1 - verticalMargin ),
+    height * (1 - verticalMargin),
     textStyle
   );
 
@@ -50,7 +56,7 @@ export default function drawSlideMeta( metaOption ) {
   string.write(
     metaOption.bottomRight,
     -width * horizontalMargin,
-    height * ( 1 - verticalMargin ),
+    height * (1 - verticalMargin),
     {
       ...textStyle,
       textAlign: [
@@ -59,30 +65,30 @@ export default function drawSlideMeta( metaOption ) {
     }
   );
 
-  if ( metaOption.slideProgression !== undefined ) {
-    if ( metaOption.slideProgression?.hidden === true ) {
+  if (metaOption.slideProgression !== undefined) {
+    if (metaOption.slideProgression?.hidden === true) {
       return;
     }
 
     const slideProgressionLineStartPosition = createVector(
       width * horizontalMargin,
-      height - ( height * horizontalMargin ) + 14
+      height - (height * horizontalMargin) + 14
     );
 
     const slideProgressionLineEndPosition = createVector(
-      width - ( width * horizontalMargin ),
-      height - ( height * horizontalMargin ) + 14
+      width - (width * horizontalMargin),
+      height - (height * horizontalMargin) + 14
     );
 
     const slideProgressionLineCurrentPosition = p5.Vector.lerp(
       slideProgressionLineStartPosition,
       slideProgressionLineEndPosition,
-      ( slides.index + 1 ) / slides.count
+      (slides.index + 1) / slides.count
     );
 
-    stroke( ...( metaOption?.slideProgression?.stroke || [
+    stroke(...(metaOption?.slideProgression?.stroke || [
       0
-    ] ) );
+    ]));
     line(
       slideProgressionLineStartPosition.x,
       slideProgressionLineStartPosition.y,
@@ -104,4 +110,5 @@ export default function drawSlideMeta( metaOption ) {
   //     ]
   //   }
   // );
+  pop();
 }

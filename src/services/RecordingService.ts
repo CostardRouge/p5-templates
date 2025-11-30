@@ -34,20 +34,23 @@ export class RecordingService {
     options,
     status,
     files,
-    jobId
+    jobId,
+    thumbnails
   }: {
     status: JobStatusEnum,
     template: string,
     options: string,
     files: File[],
-    jobId?: string
+    jobId?: string,
+    thumbnails?: Record<string, string>
   } ): Promise<string> {
     return this.queueService.enqueueRecording( {
       template,
       options,
       status,
       files,
-      jobId
+      jobId,
+      thumbnails
     } );
   }
 

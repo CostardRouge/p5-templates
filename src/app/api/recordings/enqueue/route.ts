@@ -14,6 +14,8 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
     const jobIdRaw = formData.get( "jobId" );
     const template = formData.get( "template" );
     const status = formData.get( "status" ) ?? "queued";
+    const thumbnailsRaw = formData.get( "thumbnails" );
+    const thumbnails = thumbnailsRaw && typeof thumbnailsRaw === "string" ? JSON.parse( thumbnailsRaw ) : undefined;
 
     if ( !template || typeof template !== "string" ) {
       return NextResponse.json(
@@ -116,6 +118,7 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
         2
       ),
       jobId: typeof jobIdRaw === "string" ? jobIdRaw : undefined,
+      thumbnails
     } );
 
     return NextResponse.json( {

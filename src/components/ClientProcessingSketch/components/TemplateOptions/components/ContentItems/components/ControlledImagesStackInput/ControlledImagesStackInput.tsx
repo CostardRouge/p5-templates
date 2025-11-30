@@ -87,7 +87,7 @@ export default function ControlledImagesStackInput( {
   // Self-heal the list if it contains empty strings (once per change)
   React.useEffect(
     () => {
-    // Only run if original value had empties or non-array
+      // Only run if original value had empties or non-array
       const v = field.value as unknown;
       const originalLen = Array.isArray( v ) ? v.length : 0;
 
@@ -96,6 +96,7 @@ export default function ControlledImagesStackInput( {
       }
     },
     [
+      field,
       items
     ]
   );

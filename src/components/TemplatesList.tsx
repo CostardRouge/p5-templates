@@ -80,8 +80,7 @@ export default function TemplatesList( {
     ) => {
       const filtered = items.filter( item =>
         item.name.toLowerCase().includes( search.toLowerCase() ) ||
-        ( item.category && item.category.toLowerCase().includes( search.toLowerCase() ) )
-      );
+        ( item.category && item.category.toLowerCase().includes( search.toLowerCase() ) ) );
 
       if ( filtered.length > 0 ) {
         acc[ category ] = filtered;
@@ -175,13 +174,16 @@ export default function TemplatesList( {
         items
       ] ) => {
         // Group items by their category field (for p5 sketches)
-        const groupedItems: Record<string, typeof items> = {};
-        const uncategorized: typeof items = [];
+        const groupedItems: Record<string, typeof items> = {
+        };
+        const uncategorized: typeof items = [
+        ];
 
         items.forEach( item => {
           if ( item.category ) {
             if ( !groupedItems[ item.category ] ) {
-              groupedItems[ item.category ] = [];
+              groupedItems[ item.category ] = [
+              ];
             }
             groupedItems[ item.category ].push( item );
           } else {

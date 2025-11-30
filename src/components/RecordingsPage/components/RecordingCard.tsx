@@ -20,14 +20,14 @@ interface RecordingCardProps {
   isNewlyAdded?: boolean;
   onToggleSelection: () => void;
   onPreview: () => void;
-  onCancel: (job: JobModel) => void;
-  onDelete: (job: JobModel) => void;
-  onRetry: (job: JobModel) => void;
-  onStart: (job: JobModel) => void;
-  onClone: (job: JobModel) => void;
+  onCancel: ( job: JobModel ) => void;
+  onDelete: ( job: JobModel ) => void;
+  onRetry: ( job: JobModel ) => void;
+  onStart: ( job: JobModel ) => void;
+  onClone: ( job: JobModel ) => void;
 }
 
-export default function RecordingCard({
+export default function RecordingCard( {
   job,
   startTime,
   isSelected,
@@ -39,10 +39,10 @@ export default function RecordingCard({
   onRetry,
   onStart,
   onClone
-}: RecordingCardProps) {
+}: RecordingCardProps ) {
   return (
-    <div className={`group bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden ${isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
-      }`}>
+    <div className={`group bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden ${ isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
+    }`}>
       {/* Thumbnail Section */}
       <div className="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl">
         {/* Checkbox Overlay */}
@@ -52,18 +52,18 @@ export default function RecordingCard({
             checked={isSelected}
             onChange={onToggleSelection}
             className="w-5 h-5 rounded border-2 border-white shadow-lg text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer bg-white/90 backdrop-blur-sm"
-            onClick={(e) => e.stopPropagation()}
+            onClick={( e ) => e.stopPropagation()}
           />
         </div>
         <RecordingThumbnail
           job={job}
           onClick={() => {
-            if (job.status === "completed" && job.videoUrls) {
+            if ( job.status === "completed" && job.videoUrls ) {
               onPreview();
             }
           }}
-          className={`w-full aspect-square object-cover transition-all duration-300 ${job.videoUrls ? "cursor-pointer group-hover:scale-105" : "cursor-default"
-            }`}
+          className={`w-full aspect-square object-cover transition-all duration-300 ${ job.videoUrls ? "cursor-pointer group-hover:scale-105" : "cursor-default"
+          }`}
           showEyeInCorner={true}
         />
 
@@ -94,7 +94,7 @@ export default function RecordingCard({
         {/* Template & ID */}
         <div className="space-y-1 sm:space-y-1.5">
           <HardLink
-            href={`templates/${job.template}`}
+            href={`templates/${ job.template }`}
             className="block text-xs sm:text-sm font-semibold text-foreground hover:text-foreground/70 transition-colors truncate group/link"
           >
             {job.template}
@@ -102,7 +102,7 @@ export default function RecordingCard({
           </HardLink>
 
           <HardLink
-            href={`templates/${job.template}?id=${job.id}`}
+            href={`templates/${ job.template }?id=${ job.id }`}
             className="block text-[10px] sm:text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors truncate group/link"
           >
             #{job.id.slice(
@@ -116,7 +116,7 @@ export default function RecordingCard({
         {/* Metadata */}
         <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-foreground/50">
           <span className="truncate">
-            {new Date(job.createdAt).toLocaleDateString(
+            {new Date( job.createdAt ).toLocaleDateString(
               undefined,
               {
                 month: "short",
@@ -129,17 +129,17 @@ export default function RecordingCard({
           {job.recordingDuration && (
             <>
               <span className="text-border">•</span>
-              <span>{formatDuration(job.recordingDuration)}</span>
+              <span>{formatDuration( job.recordingDuration )}</span>
             </>
           )}
         </div>
 
         {/* Progress Bar */}
-        {(job.status === "active" || job.status === "queued" || job.progress < 100) && (
+        {( job.status === "active" || job.status === "queued" || job.progress < 100 ) && (
           <div className="pt-0.5 sm:pt-1 min-w-0">
             <CompactProgressBar
               job={job}
-              steps={job.status === "active" ? getRecordingSteps(job) : [
+              steps={job.status === "active" ? getRecordingSteps( job ) : [
               ]}
               startTime={startTime}
             />
