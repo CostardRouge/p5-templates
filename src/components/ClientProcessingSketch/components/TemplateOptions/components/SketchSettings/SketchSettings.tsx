@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ArrowDownFromLine
 } from "lucide-react";
@@ -9,6 +9,7 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import { injectSketchSchemas } from "./utils/injectSketchSchemas";
 
 type SketchSettingsProps = {
   basePath?: string;
@@ -20,10 +21,16 @@ export default function SketchSettings( {
   activeSlideIndex
 }: SketchSettingsProps ) {
   const {
-    sketchFormConfiguration, sketchFormValues
+    sketchFormConfiguration, sketchFormValues, name
   } = useSketch();
 
-  if ( !sketchFormConfiguration || Object.keys( sketchFormConfiguration ).length === 0 ) {
+  // Inject schemas on the client side
+  const configWithSchemas = useMemo(() => {
+    if (!sketchFormConfiguration) return undefined;
+    return injectSketchSchemas(name, sketchFormConfiguration);
+  }, [name, sketchFormConfiguration]);
+
+  if ( !configWithSchemas || Object.keys( configWithSchemas ).length === 0 ) {
     return null;
   }
 
@@ -61,7 +68,7 @@ export default function SketchSettings( {
         <GenericObjectForm
           key={effectiveBasePath}
           basePath={effectiveBasePath}
-          config={sketchFormConfiguration}
+          config={configWithSchemas}
         />
       </div>
     </CollapsibleItem>

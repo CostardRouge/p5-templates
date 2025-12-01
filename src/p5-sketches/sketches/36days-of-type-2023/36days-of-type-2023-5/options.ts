@@ -1,0 +1,253 @@
+export const formValues = {
+  shape: {
+    text: "5",
+    depth: 20,
+    size: 1,
+    columns: 65,
+    sampleFactor: 0.1,
+    simplifyThreshold: 0,
+  },
+  interactive: {
+    enabled: false,
+    mouse: false,
+    sensitivityMultiplier: 0.3,
+    sinMultiplier: 3,
+    cosMultiplier: 1,
+  },
+  mask: {
+    distance: 0.015,
+  },
+  animation: {
+    rotate: false,
+    rotationCount: 1,
+    waveSpeed: 1,
+    waveSpread: 0.3,
+    wave: {
+      mode: "linear" as const,
+      directionX: -1,
+      directionY: -1,
+    },
+  },
+  color: {
+    opacityFactor: 1.5,
+    fillAlphaStart: 240,
+    fillAlphaEnd: 0,
+    strokeAlpha: 200,
+    hueMultiplier: 2,
+  },
+  backgroundColor: [
+    246,
+    235,
+    225
+  ],
+};
+
+// UI configuration only
+export const formConfiguration: Record<string, any> = {
+  shape: {
+    component: "nested-object",
+    label: "Shape",
+    fields: {
+      text: {
+        label: "Text",
+        component: "text",
+      },
+      size: {
+        label: "Size",
+        component: "slider",
+        min: 0.1,
+        max: 4,
+        step: 0.1
+      },
+      depth: {
+        label: "Depth",
+        component: "slider",
+        min: 1,
+        max: 100,
+        step: 1
+      },
+      columns: {
+        label: "Grid columns",
+        component: "slider",
+        min: 10,
+        max: 150,
+        step: 1
+      },
+      sampleFactor: {
+        label: "Text sample factor",
+        component: "slider",
+        min: 0.01,
+        max: 1,
+        step: 0.01
+      },
+      simplifyThreshold: {
+        label: "Simplify threshold",
+        component: "slider",
+        min: 0,
+        max: 10,
+        step: 0.1
+      },
+    }
+  },
+  interactive: {
+    component: "nested-object",
+    label: "Interactive",
+    fields: {
+      enabled: {
+        label: "Enabled",
+        component: "checkbox",
+      },
+      mouse: {
+        label: "With mouse?",
+        component: "checkbox",
+      },
+      sensitivityMultiplier: {
+        label: "sensitivityMultiplier",
+        component: "slider",
+        min: 0.1,
+        max: 1,
+        step: 0.01
+      },
+      sinMultiplier: {
+        label: "sinMultiplier",
+        component: "slider",
+        min: 1,
+        max: 9,
+        step: 0.1
+      },
+      cosMultiplier: {
+        label: "cosMultiplier",
+        component: "slider",
+        min: 1,
+        max: 9,
+        step: 0.1
+      },
+    }
+  },
+  mask: {
+    component: "nested-object",
+    label: "Mask",
+    fields: {
+      distance: {
+        label: "Distance threshold",
+        component: "slider",
+        min: 0.001,
+        max: 0.1,
+        step: 0.001
+      },
+    }
+  },
+  animation: {
+    component: "nested-object",
+    label: "Animation",
+    fields: {
+      rotate: {
+        label: "Rotate",
+        component: "checkbox",
+      },
+      rotationCount: {
+        label: "Rotation count",
+        component: "slider",
+        min: 1,
+        max: 10,
+        step: 0.5
+      },
+      waveSpeed: {
+        label: "Wave speed",
+        component: "slider",
+        min: 0,
+        max: 10,
+        step: 0.5
+      },
+      waveSpread: {
+        label: "Wave spread",
+        component: "slider",
+        min: 0,
+        max: 20,
+        step: 0.1
+      },
+      wave: {
+        label: "Wave Configuration",
+        component: "conditional-group",
+        conditionalOn: "mode",
+        typeSelector: {
+          options: [
+            { label: "Linear", value: "linear" },
+            { label: "Radial", value: "radial" }
+          ]
+        },
+        configs: {
+          linear: {
+            directionX: {
+              label: "Direction X",
+              component: "slider",
+              min: -1,
+              max: 1,
+              step: 0.1
+            },
+            directionY: {
+              label: "Direction Y",
+              component: "slider",
+              min: -1,
+              max: 1,
+              step: 0.1
+            },
+          },
+          radial: {
+            fromCenter: {
+              label: "From center (vs edges)",
+              component: "checkbox",
+            },
+          }
+        },
+        // Schema is injected client-side in injectSketchSchemas.ts
+        // See schemas.ts for WaveConfigSchema definition
+      },
+    }
+  },
+  color: {
+    component: "nested-object",
+    label: "Color",
+    fields: {
+      opacityFactor: {
+        label: "Opacity factor",
+        component: "slider",
+        min: 0.1,
+        max: 3,
+        step: 0.1
+      },
+      fillAlphaStart: {
+        label: "Fill alpha (visible)",
+        component: "slider",
+        min: 0,
+        max: 255,
+        step: 1
+      },
+      fillAlphaEnd: {
+        label: "Fill alpha (hidden)",
+        component: "slider",
+        min: 0,
+        max: 255,
+        step: 1
+      },
+      strokeAlpha: {
+        label: "Stroke alpha",
+        component: "slider",
+        min: 0,
+        max: 255,
+        step: 1
+      },
+      hueMultiplier: {
+        label: "Hue range multiplier",
+        component: "slider",
+        min: 0.5,
+        max: 5,
+        step: 0.1
+      },
+    }
+  },
+  backgroundColor: {
+    component: "color",
+    label: "Background color"
+  },
+};

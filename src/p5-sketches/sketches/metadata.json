@@ -7,7 +7,7 @@
     "ctime": "2025-11-26T07:38:43.732Z"
   },
   {
-    "name": "pointer",
+    "name": "36days-of-type-2023-8b",
     "category": "36days-of-type-2023",
     "hasSketchForm": true,
     "mtime": "2025-11-30T12:49:18.934Z",
@@ -250,5 +250,12 @@
     "hasSketchForm": false,
     "mtime": "2025-11-30T12:49:18.996Z",
     "ctime": "2025-05-27T10:40:53.863Z"
+  },
+  {
+    "name": "36days-of-type-2023-5",
+    "category": "36days-of-type-2023",
+    "hasSketchForm": true,
+    "mtime": "2025-12-01T04:46:33.754Z",
+    "ctime": "2025-12-01T04:46:33.752Z"
   }
 ]
