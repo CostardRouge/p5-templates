@@ -112,7 +112,7 @@ export default function SlideCarousel( {
         className="flex flex-col gap-2"
       >
         <div
-          className="grid grid-cols-3 gap-2"
+          className="grid grid-cols-3 gap-2 p-1"
         >
           <SortableContext
             items={slideIds} strategy={rectSwappingStrategy}

@@ -100,10 +100,10 @@ export default function SlideThumbnail( {
       {/* Thumbnail Container */}
       <div
         className={clsx(
-          "relative w-full overflow-hidden rounded-lg border-2 transition-all",
+          "relative w-full overflow-hidden rounded-lg transition-all",
           {
-            "border-primary": isActive,
-            "border-transparent hover:border-theme": !isActive,
+            "outline outline-2 outline-offset-1 outline-primary": isActive,
+            "outline outline-2 outline-offset-1 outline-transparent hover:outline-theme": !isActive,
           }
         )}
         style={{
