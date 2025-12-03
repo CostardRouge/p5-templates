@@ -1,5 +1,5 @@
 import React, {
-  Fragment
+  Fragment, useCallback
 } from "react";
 import {
   get, useFormContext, useWatch
@@ -18,6 +18,7 @@ import ControlledColorInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledColorInput/ControlledColorInput";
 import ConditionalGroup
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ConditionalGroup";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 type FieldRendererProps = {
   fieldBasePath: string;
@@ -31,8 +32,10 @@ export default function FieldRenderer( {
   const {
     register, formState: {
       errors
-    }, control
+    }, control, setValue
   } = useFormContext();
+  
+  const { sketchFormValues } = useSketch();
 
   const registeredName = fieldName ? `${ fieldBasePath }.${ fieldName }` : fieldBasePath;
 
@@ -41,12 +44,58 @@ export default function FieldRenderer( {
     registeredName
   );
 
+  // Watch current value
+  const currentValue = useWatch( {
+    control,
+    name: registeredName,
+  } );
+
   // Watch slider value for display
   const sliderValue = useWatch( {
     control,
     name: registeredName,
     defaultValue: config.component === "slider" ? ( config.min ?? 0 ) : undefined
   } );
+
+  // Get default value from sketch form values
+  const getDefaultValue = useCallback(() => {
+    if (!sketchFormValues) return undefined;
+    
+    // Parse the path to get nested value
+    const pathParts = registeredName.split('.');
+    let defaultValue: any = sketchFormValues;
+    
+    for (const part of pathParts) {
+      if (defaultValue && typeof defaultValue === 'object' && part in defaultValue) {
+        defaultValue = defaultValue[part];
+      } else {
+        return undefined;
+      }
+    }
+    
+    return defaultValue;
+  }, [registeredName, sketchFormValues]);
+
+  // Check if value has changed from default
+  const isChanged = useCallback(() => {
+    const defaultValue = getDefaultValue();
+    if (defaultValue === undefined) return false;
+    
+    // Deep comparison for arrays and objects
+    if (Array.isArray(currentValue) && Array.isArray(defaultValue)) {
+      return JSON.stringify(currentValue) !== JSON.stringify(defaultValue);
+    }
+    
+    return currentValue !== defaultValue;
+  }, [currentValue, getDefaultValue]);
+
+  // Handle double-click to reset to default
+  const handleLabelDoubleClick = useCallback(() => {
+    const defaultValue = getDefaultValue();
+    if (defaultValue !== undefined) {
+      setValue(registeredName, defaultValue, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [getDefaultValue, registeredName, setValue]);
 
   const renderInput = () => {
     // A helper for common props to keep the JSX clean
@@ -159,8 +208,13 @@ export default function FieldRenderer( {
       case "nested-object":
         return (
           <Fragment>
-            <label htmlFor={registeredName} className="text-gray-400">
-              {config.label}
+            <label 
+              htmlFor={registeredName} 
+              className={`text-gray-400 cursor-pointer select-none ${valueChanged ? 'italic' : ''}`}
+              onDoubleClick={handleLabelDoubleClick}
+              title="Double-click to reset to default"
+            >
+              {config.label}{valueChanged && ' *'}
             </label>
 
             <div className="p-1 border border-theme rounded-xl space-y-1 bg-background/50">
@@ -210,18 +264,31 @@ export default function FieldRenderer( {
     }
   };
 
+  const valueChanged = isChanged();
+
   return (
     <div className="text-xs">
       {/* Don't show a label for groups, as they have their own internal labels */}
       {( config.component !== "nested-object" && config.component !== "conditional-group" ) && config.label && (
-        <label htmlFor={registeredName} className="text-gray-400">
-          {config.label}
+        <label 
+          htmlFor={registeredName} 
+          className={`text-gray-400 cursor-pointer select-none ${valueChanged ? 'italic' : ''}`}
+          onDoubleClick={handleLabelDoubleClick}
+          title="Double-click to reset to default"
+        >
+          {config.label}{valueChanged && ' *'}
         </label>
       )}
 
       {/* For conditional groups, the main label is part of the box */}
       {config.component === "conditional-group" && config.label && (
-        <h4 className="text-gray-400">{config.label}</h4>
+        <h4 
+          className={`text-gray-400 cursor-pointer select-none ${valueChanged ? 'italic' : ''}`}
+          onDoubleClick={handleLabelDoubleClick}
+          title="Double-click to reset to default"
+        >
+          {config.label}{valueChanged && ' *'}
+        </h4>
       )}
 
       {renderInput()}

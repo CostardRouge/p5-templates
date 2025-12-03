@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import events from "@/p5/utils/events.js";
 import sketch from "@/p5/utils/sketch.js";
 import string from "@/p5/utils/string.js";
+import imageUtils from "@/p5/utils/imageUtils.js";
 import mediapipe, {
   init as mediapipeInit, interact
 } from "@/p5/utils/mediapipe/mediapipe.js";
@@ -12,6 +13,10 @@ import {
 import * as common from "@/p5/utils/common.js";
 
 import renderTitle from "@/p5/utils/title/renderTitle.js";
+
+import {
+  setSketchOptions, subscribeSketchOptions
+} from "@/p5/shared/syncSketchOptions.js";
 
 const layers = {
   photo: {
@@ -32,6 +37,13 @@ const layers = {
     background: undefined,
     erase: false
   },
+};
+
+// Cache for performance optimization
+const cache = {
+  currentImagePath: null,
+  maskedImage: null,
+  interactiveResultProcessed: false
 };
 
 sketch.setup( async() => {
@@ -58,7 +70,75 @@ sketch.setup( async() => {
       "interactive"
     ]
   } );
+
+  // Subscribe to option changes
+  subscribeSketchOptions( (
+    newOptions, origin
+  ) => {
+    // Only react to changes from React (user editing settings)
+    if ( origin !== "react" ) return;
+
+    const currentImagePath = newOptions.sketch?.photo?.image;
+    
+    // Clear cache if image changed
+    if ( cache.currentImagePath !== currentImagePath ) {
+      cache.currentImagePath = currentImagePath;
+      cache.maskedImage = null;
+      cache.interactiveResultProcessed = false;
+      
+      console.log( "Image changed, cache cleared" );
+      
+      return;
+    }
+    
+    // Re-trigger segmentation if ROI exists and hasn't been processed yet
+    if ( newOptions.sketch?.segmentation?.roi && !cache.interactiveResultProcessed ) {
+      console.log( "Options changed, re-triggering segmentation" );
+      triggerSegmentation();
+    }
+  } );
+
+  // Initialize current image path
+  cache.currentImagePath = options.sketch?.photo?.image;
+
+  // Trigger segmentation on startup if ROI already exists
+  if ( options.sketch?.segmentation?.roi ) {
+    triggerSegmentation();
+  }
 } );
+
+// Helper function to trigger segmentation
+function triggerSegmentation() {
+  const photo = common.getAsset( options.sketch?.photo?.image );
+  const roi = options.sketch?.segmentation?.roi;
+  
+  if ( !photo || !roi ) return;
+  
+  // Get the underlying canvas element from p5.Image
+  const imageElement = photo.img.canvas || photo.img.elt || photo.img;
+  
+  // ROI is already in normalized coordinates (0-1)
+  // Convert to image pixel coordinates for interact function
+  const imageX = roi.x * photo.img.width;
+  const imageY = roi.y * photo.img.height;
+  
+  console.log(
+    "Triggering segmentation at ROI:",
+    roi,
+    "-> image coords:",
+    imageX,
+    imageY
+  );
+  
+  // Reset the processed flag to allow new result
+  cache.interactiveResultProcessed = false;
+  
+  interact(
+    imageX,
+    imageY,
+    imageElement
+  );
+}
 
 events.register(
   "engine-mouse-pressed",
@@ -79,6 +159,10 @@ events.register(
       const imageX = mouseX * scaleX;
       const imageY = mouseY * scaleY;
 
+      // Calculate normalized coordinates (0-1) for storage
+      const normalizedX = imageX / photo.img.width;
+      const normalizedY = imageY / photo.img.height;
+
       console.log(
         "Click at canvas:",
         mouseX,
@@ -86,11 +170,28 @@ events.register(
         "-> image:",
         imageX,
         imageY,
-        "element:",
-        imageElement
+        "-> normalized:",
+        normalizedX,
+        normalizedY
       );
 
-      console.log("interact")
+      // Save ROI to options
+      setSketchOptions( {
+        ...options,
+        sketch: {
+          ...options.sketch,
+          segmentation: {
+            ...options.sketch?.segmentation,
+            roi: {
+              x: normalizedX,
+              y: normalizedY
+            }
+          }
+        }
+      } );
+
+      // Reset the processed flag to allow new result
+      cache.interactiveResultProcessed = false;
 
       interact(
         imageX,
@@ -101,7 +202,9 @@ events.register(
   }
 );
 
-sketch.draw( () => {
+
+
+sketch.draw( (_, center) => {
   background( ...options.sketch.backgroundColor );
 
   const photo = common.getAsset( options.sketch?.photo?.image );
@@ -128,13 +231,15 @@ sketch.draw( () => {
   }
   else {
     frameRate(options.animation.framerate)
-    image(
-      photo.img,
-      0,
-      0,
-      width,
-      height
-    );
+     imageUtils.marginImage( {
+      img: photo.img,
+      position: center,
+      margin: width * options.sketch?.photo?.margin,
+      scale: options.sketch?.photo?.scale ?? 1,
+      center: options.sketch?.photo?.center ?? true,
+      clip: options.sketch?.photo?.clip ?? false,
+      fill: options.sketch?.photo?.fill ?? true,
+    } );
   }
 
   // if ( mediapipe.idle ) background( 90 );
@@ -172,10 +277,7 @@ sketch.draw( () => {
 
   const interactiveResult = mediapipe.tasks.interactive?.result;
 
-  if ( interactiveResult ) {
-
-    // console.log("interactiveResult", interactiveResult)
-
+  if ( interactiveResult && !cache.interactiveResultProcessed ) {
     const {
       data, width: maskWidth, height: maskHeight
     } = interactiveResult;
@@ -200,70 +302,29 @@ sketch.draw( () => {
       ],
       true
     );
+
+    // Create and cache the masked image
+    cache.maskedImage = photo.img.get();
+    cache.maskedImage.mask( layers.mask.graphics );
+    
+    // Mark as processed so we only do this once
+    cache.interactiveResultProcessed = true;
+    
+    console.log( "Segmentation result processed and cached" );
   }
 
-  // --- 2. Draw Layers ---
-  // for ( const layerName in layers ) {
-  //   const layer = layers[ layerName ];
-  //
-  //   // Stretch whatever size the layer is to fill the screen
-  //   image(
-  //     layer.graphics,
-  //     0,
-  //     0,
-  //     width,
-  //     height
-  //   );
-  //
-  //   if ( layer.background ) {
-  //     layer.graphics.background( ...layer.background );
-  //   }
-  //
-  //   // Only clear photo layer, mask is self-clearing
-  //   if ( layer.erase ) {
-  //     layer.graphics.clear();
-  //   }
-  // }
+  // Display masked image if available
+  if ( cache.maskedImage ) {
+    renderTitle( options.sketch?.title );
 
-  // image(
-  //   mediapipe.capture.element,
-  //   0,
-  //   0,
-  //   width,
-  //   height
-  // );
-
-  // Display mask overlay if available
-  if ( interactiveResult ) {
-    string.write(
-      "TEXT BETWEEN PHOTO AND DETECTED MASK",
-      0,
-      0,
-      {
-        size: 144,
-        stroke: color( 0, 0, 0, 0 ),
-        fill: color( 255 ),
-        textHeight: height,
-        font: string.fonts.martian,
-        textAlign: [
-          CENTER,
-          CENTER
-        ]
-      }
-    );
-
-    const maskedImage = photo.img.get();
-
-    maskedImage.mask( layers.mask.graphics );
-
-    image(
-      maskedImage,
-      0,
-      0,
-      width,
-      height
-    );
+    imageUtils.marginImage( {
+      img: cache.maskedImage,
+      position: center,
+      margin: width * options.sketch?.photo?.margin,
+      scale: options.sketch?.photo?.scale ?? 1,
+      center: options.sketch?.photo?.center ?? true,
+      clip: options.sketch?.photo?.clip ?? false,
+      fill: options.sketch?.photo?.fill ?? true,
+    } );
   }
-
-  // renderTitle( options.sketch?.title );
 } );
