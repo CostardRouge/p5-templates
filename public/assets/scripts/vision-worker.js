@@ -64,7 +64,7 @@ import( "./vision-manager.js" )
         // Run the interactive segmenter
         manager.interact(
           message.bitmap,
-          message.point
+          message.roi
         );
 
         // Cleanup

@@ -174,6 +174,7 @@ export class VisionManager {
       input,
       roi,
       ( result ) => {
+        console.log({result})
       // We reuse the same processor because the result format is identical
         this.processSegmenterResult(
           result,
@@ -183,7 +184,7 @@ export class VisionManager {
     );
   }
 
-  processSegmenterResult( result ) {
+  processSegmenterResult( result, lib = "segmenter" ) {
     const {
       categoryMask
     } = result;
@@ -200,7 +201,7 @@ export class VisionManager {
     categoryMask.close(); // Clean up WASM memory
 
     this.emitResult(
-      "segmenter",
+      lib,
       {
         data,
         width,

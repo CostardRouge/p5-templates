@@ -14,7 +14,6 @@ import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositi
 
 const sketchState = {
   interactive: {
-    currentTimeValue: 0,
     position: null,
     image: null,
   },
@@ -226,7 +225,7 @@ sketch.draw(() => {
     }, index
   ) => {
     const layer = mappers.circularIndex(
-      animation.progression / 3,
+      animation.progression,
       layers
     );
     // const layer = animation.ease({
@@ -260,7 +259,6 @@ sketch.draw(() => {
         )
       )
     );
-
     const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
     const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
@@ -296,19 +294,6 @@ sketch.draw(() => {
     const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
-    if (options.sketch.interactive.enabled && sketchState.interactive.position) {
-      const screenPos = sketchState.shape.graphics.screenPosition(width / 2, height / 2, 0);
-      const distance = sketchState.shape.graphics.dist(sketchState.interactive.position.x, sketchState.interactive.position.y, screenPos.x, screenPos.y);
-
-      sketchState.interactive.currentTimeValue = map(
-        distance,
-        0,
-        (options.sketch.interactive.sensitivityMultiplier * width) ?? width * 0.5,
-        0,
-        1
-      ) / 6;
-    }
-
     // Calculate wave propagation
     const normalizedX = map(position.x, -width / 2, width / 2, 0, 1);
     const normalizedY = map(position.y, -height / 2, height / 2, 0, 1);
@@ -317,27 +302,56 @@ sketch.draw(() => {
     const waveSpeed = options.sketch?.animation?.waveSpeed ?? 1;
     const waveSpread = options.sketch?.animation?.waveSpread ?? 0.3;
     
-    let waveOffset;
+    let switchIndex;
     
-    if (waveConfig.mode === "radial") {
-      // Radial wave from center or edges
-      const distanceFromCenter = dist(normalizedX, normalizedY, 0.5, 0.5) / (Math.sqrt(2) / 2);
-      const fromCenter = waveConfig.fromCenter ?? true;
-      waveOffset = fromCenter ? distanceFromCenter : (1 - distanceFromCenter);
+    if (waveConfig.mode === "interactive") {
+      // Interactive mode: distance from cursor/animated point
+      if (sketchState.interactive.position) {
+        const screenPos = sketchState.shape.graphics.screenPosition(0, 0, 0);
+        const distance = sketchState.shape.graphics.dist(
+          sketchState.interactive.position.x, 
+          sketchState.interactive.position.y, 
+          screenPos.x, 
+          screenPos.y
+        );
+        const sensitivity = waveConfig.sensitivity ?? 0.3;
+        
+        // Invert sensitivity: lower value = more impact (smaller radius)
+        // Map distance to 0-1, where closer = higher value
+        const normalizedDistance = map(
+          distance,
+          0,
+          (1 / sensitivity) * width * 0.5, // Inverted: lower sensitivity = larger radius
+          1, // Close to cursor = 1
+          0, // Far from cursor = 0
+          true // Constrain
+        );
+        
+        // Apply wave speed and spread like other modes
+        switchIndex = (animation.progression * waveSpeed + normalizedDistance * waveSpread) % 1;
+      } else {
+        switchIndex = 0;
+      }
     } else {
-      // Linear wave with controllable direction
-      const directionX = waveConfig.directionX ?? -1;
-      const directionY = waveConfig.directionY ?? -1;
-      const xComponent = directionX * (normalizedX - 0.5);
-      const yComponent = directionY * (normalizedY - 0.5);
-      waveOffset = (xComponent + yComponent + 1) / 2; // Normalize to 0-1
+      // Linear or Radial modes
+      let waveOffset;
+      
+      if (waveConfig.mode === "radial") {
+        // Radial wave from center or edges
+        const distanceFromCenter = dist(normalizedX, normalizedY, 0.5, 0.5) / (Math.sqrt(2) / 2);
+        const fromCenter = waveConfig.fromCenter ?? true;
+        waveOffset = fromCenter ? distanceFromCenter : (1 - distanceFromCenter);
+      } else {
+        // Linear wave with controllable direction
+        const directionX = waveConfig.directionX ?? -1;
+        const directionY = waveConfig.directionY ?? -1;
+        const xComponent = directionX * (normalizedX - 0.5);
+        const yComponent = directionY * (normalizedY - 0.5);
+        waveOffset = (xComponent + yComponent + 1) / 2; // Normalize to 0-1
+      }
+      
+      switchIndex = (animation.progression * waveSpeed + waveOffset * waveSpread) % 1;
     }
-    
-    const switchIndex = (animation.progression * waveSpeed + waveOffset * waveSpread) % 1;
-
-    // const currentTimeValue = options.sketch.interactive.enabled ? sketchState.interactive.currentTimeValue : (
-    //   switchIndex
-    // );
 
     const fillAlpha = animation.ease({
       values: [
@@ -365,13 +379,28 @@ sketch.draw(() => {
     if (options.sketch?.animation?.rotate ?? true) {
       const rotationMax = PI * (options.sketch?.animation?.rotationCount ?? 2);
 
+      // Calculate radial rotation for radial mode
+      let radialAngle = 0;
+      if (waveConfig.mode === "radial") {
+        // Calculate angle from center to this position
+        const centerX = 0;
+        const centerY = 0;
+        radialAngle = atan2(position.y - centerY, position.x - centerX);
+        
+        // Reverse direction if radiating from center
+        const fromCenter = waveConfig.fromCenter ?? true;
+        if (fromCenter) {
+          radialAngle += PI; // Flip 180 degrees
+        }
+      }
+
       const {
         x: rX,
         y: rY,
         // z: rZ
       } = animation.ease({
         values: [
-          // createVector(),
+          createVector(),
           createVector(
             0,
             rotationMax
@@ -391,6 +420,11 @@ sketch.draw(() => {
         // easingFn: easing.easeInOutCirc,
       });
 
+      // Apply radial rotation first (around Z axis to point toward/away from center)
+      if (waveConfig.mode === "radial" && (waveConfig.radialRotation ?? true)) {
+        sketchState.shape.graphics.rotateZ(radialAngle);
+      }
+      
       sketchState.shape.graphics.rotateX(rX);
       sketchState.shape.graphics.rotateY(rY);
     }
@@ -407,42 +441,33 @@ sketch.draw(() => {
   image(sketchState.shape.graphics, 0, 0);
   sketchState.shape.graphics.clear();
 
-  if (options.sketch.interactive.enabled) {
-    if (options.sketch.interactive.mouse) {
-      sketchState.interactive.position = createVector(
-        mouseX,
-        mouseY
-      )
+  // Update interactive position if in interactive mode
+  const waveConfig = options.sketch?.animation?.wave ?? { mode: "linear" };
+  if (waveConfig.mode === "interactive") {
+    if (waveConfig.useMouse) {
+      sketchState.interactive.position = createVector(mouseX, mouseY);
     } else {
+      const sinMult = waveConfig.sinMultiplier ?? 3;
+      const cosMult = waveConfig.cosMultiplier ?? 1;
       sketchState.interactive.position = createVector(
-        map(Math.sin(animation.angle * options.sketch.interactive.sinMultiplier), -1, 1, 0, width),
-        map(Math.cos(animation.angle * options.sketch.interactive.cosMultiplier), -1, 1, 0, height)
-      )
+        map(Math.sin(animation.angle * sinMult), -1, 1, 0, width),
+        map(Math.cos(animation.angle * cosMult), -1, 1, 0, height)
+      );
     }
 
-    stroke(128, 128, 255)
-    strokeWeight(2)
-    line(
-      sketchState.interactive.position.x,
-      0,
-      sketchState.interactive.position.x,
-      height
-    )
-    line(
-      0,
-      sketchState.interactive.position.y,
-      width,
-      sketchState.interactive.position.y
-    )
+    // Draw crosshair
+    stroke(128, 128, 255);
+    strokeWeight(2);
+    line(sketchState.interactive.position.x, 0, sketchState.interactive.position.x, height);
+    line(0, sketchState.interactive.position.y, width, sketchState.interactive.position.y);
 
-    if (options.sketch.interactive.enabled) {
-      if (!options.sketch.interactive.mouse) {
-        image(
-          sketchState.interactive.image,
-          sketchState.interactive.position.x,
-          sketchState.interactive.position.y
-        )
-      }
+    // Draw pointer image if not using mouse
+    if (!waveConfig.useMouse) {
+      image(
+        sketchState.interactive.image,
+        sketchState.interactive.position.x,
+        sketchState.interactive.position.y
+      );
     }
   }
 });

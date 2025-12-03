@@ -10,7 +10,8 @@ export function drawSegmentationMask(
     0,
     0,
     255
-  ]
+  ],
+  inverse = false
 ) {
   if ( !maskData ) return;
 
@@ -39,9 +40,9 @@ export function drawSegmentationMask(
   // If mask[i] == 0 -> write Transparent (0).
   while ( i < len ) {
     if ( maskData[ i ] > 0 ) {
-      pixelBuffer[ i ] = color32;
+      pixelBuffer[ i ] = inverse ? 0 : color32;
     } else {
-      pixelBuffer[ i ] = 0; // Clears the pixel to transparent
+      pixelBuffer[ i ] = inverse ? color32 : 0; // Clears the pixel to transparent
     }
     i++;
   }

@@ -7,13 +7,6 @@ export const formValues = {
     sampleFactor: 0.1,
     simplifyThreshold: 0,
   },
-  interactive: {
-    enabled: false,
-    mouse: false,
-    sensitivityMultiplier: 0.3,
-    sinMultiplier: 3,
-    cosMultiplier: 1,
-  },
   mask: {
     distance: 0.015,
   },
@@ -89,41 +82,6 @@ export const formConfiguration: Record<string, any> = {
       },
     }
   },
-  interactive: {
-    component: "nested-object",
-    label: "Interactive",
-    fields: {
-      enabled: {
-        label: "Enabled",
-        component: "checkbox",
-      },
-      mouse: {
-        label: "With mouse?",
-        component: "checkbox",
-      },
-      sensitivityMultiplier: {
-        label: "sensitivityMultiplier",
-        component: "slider",
-        min: 0.1,
-        max: 1,
-        step: 0.01
-      },
-      sinMultiplier: {
-        label: "sinMultiplier",
-        component: "slider",
-        min: 1,
-        max: 9,
-        step: 0.1
-      },
-      cosMultiplier: {
-        label: "cosMultiplier",
-        component: "slider",
-        min: 1,
-        max: 9,
-        step: 0.1
-      },
-    }
-  },
   mask: {
     component: "nested-object",
     label: "Mask",
@@ -173,7 +131,8 @@ export const formConfiguration: Record<string, any> = {
         typeSelector: {
           options: [
             { label: "Linear", value: "linear" },
-            { label: "Radial", value: "radial" }
+            { label: "Radial", value: "radial" },
+            { label: "Interactive", value: "interactive" }
           ]
         },
         configs: {
@@ -197,6 +156,37 @@ export const formConfiguration: Record<string, any> = {
             fromCenter: {
               label: "From center (vs edges)",
               component: "checkbox",
+            },
+            radialRotation: {
+              label: "Rotate toward direction",
+              component: "checkbox",
+            },
+          },
+          interactive: {
+            useMouse: {
+              label: "Use mouse (vs animated)",
+              component: "checkbox",
+            },
+            sensitivity: {
+              label: "Sensitivity (lower = wider impact)",
+              component: "slider",
+              min: 0.1,
+              max: 2,
+              step: 0.05
+            },
+            sinMultiplier: {
+              label: "Sin multiplier (animated)",
+              component: "slider",
+              min: 1,
+              max: 9,
+              step: 0.1
+            },
+            cosMultiplier: {
+              label: "Cos multiplier (animated)",
+              component: "slider",
+              min: 1,
+              max: 9,
+              step: 0.1
             },
           }
         },

@@ -34,7 +34,11 @@ export async function init( config = {
   mediapipe.config.tasks = config.tasks ?? [
   ];
 
-  createVideoCaptureElements();
+  // Only initialize camera if enableCapture is true (default: true for backward compatibility)
+  const enableCapture = config.enableCapture ?? true;
+  if ( enableCapture ) {
+    createVideoCaptureElements();
+  }
 
   if ( mediapipe.config.useWorker ) {
     setupWorker();
@@ -150,12 +154,16 @@ export function interact(
   const elWidth = element.width || element.videoWidth;
   const elHeight = element.height || element.videoHeight;
 
-  // Map screen click to video coordinates
-  // Note: This assumes the video is stretched to fill screen.
-  // If you have black bars, you need more complex mapping.
-  const normalizedPoint = {
-    x: x / width, // p5 global width
-    y: y / height // p5 global height
+  // Map to normalized coordinates (0.0 to 1.0)
+  const normalizedX = x / elWidth;
+  const normalizedY = y / elHeight;
+
+  // Create ROI object with keypoint as required by InteractiveSegmenter
+  const roi = {
+    keypoint: {
+      x: normalizedX,
+      y: normalizedY
+    }
   };
 
   // 2. Send to Processor
@@ -163,9 +171,9 @@ export function interact(
     createImageBitmap( element ).then( bmp => {
       mediapipe.processor.instance.postMessage(
         {
-          type: "INTERACT", // New Message Type
+          type: "INTERACT",
           bitmap: bmp,
-          point: normalizedPoint
+          roi: roi
         },
         [
           bmp
@@ -175,7 +183,7 @@ export function interact(
   } else {
     mediapipe.processor.instance.interact(
       element,
-      normalizedPoint
+      roi
     );
   }
 }
@@ -208,6 +216,9 @@ events.register(
 
 function sendFrameIfDue() {
   if ( !mediapipe.processor.ready || mediapipe.processor.busy ) return;
+
+  // Skip if capture element was not initialized
+  if ( !mediapipe.capture.element ) return;
 
   const now = performance.now();
 

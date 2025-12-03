@@ -1,12 +1,15 @@
 import options from "@/p5/utils/options.js";
 import events from "@/p5/utils/events.js";
 import sketch from "@/p5/utils/sketch.js";
+import string from "@/p5/utils/string.js";
 import mediapipe, {
   init as mediapipeInit, interact
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   drawSegmentationMask
 } from "@/p5/utils/segmentation.js";
+
+import * as common from "@/p5/utils/common.js";
 
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
@@ -49,6 +52,7 @@ sketch.setup( async() => {
   await mediapipeInit( {
     enableIdle: false,
     worker: false,
+    enableCapture: false, // No camera needed for image-based interactive segmentation
     tasks: [
       // "segmenter",
       "interactive"
@@ -59,60 +63,129 @@ sketch.setup( async() => {
 events.register(
   "engine-mouse-pressed",
   () => {
+    const photo = common.getAsset( options.sketch?.photo?.image );
+    
+    if ( !photo ) return;
+    
     if ( mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height ) {
-      // Map Mouse (Screen) -> Video (Capture)
-      // If your canvas is full screen (windowWidth) but video is 320x240,
-      // the normalization in `interact()` handles the ratio,
-      // but we need to ensure we pass the "Video Relative" pixel or just pass raw
-      // and let `interact` normalize based on video size?
+      // Get the underlying canvas element from p5.Image
+      const imageElement = photo.img.canvas || photo.img.elt || photo.img;
+      
+      // Map Mouse (Screen) -> Photo (Image)
+      // Scale from canvas coordinates to image coordinates
+      const scaleX = photo.img.width / width;
+      const scaleY = photo.img.height / height;
 
-      // Actually, `interact` expects pixel coordinates relative to the video element.
-      // If we draw the video using `image(video, 0, 0, width, height)`,
-      // The scale factor is:
-      const scaleX = mediapipe.capture.size.width / width;
-      const scaleY = mediapipe.capture.size.height / height;
-
-      const videoX = mouseX * scaleX;
-      const videoY = mouseY * scaleY;
+      const imageX = mouseX * scaleX;
+      const imageY = mouseY * scaleY;
 
       console.log(
-        scaleX,
-        scaleY,
-        videoX,
-        videoY
+        "Click at canvas:",
+        mouseX,
+        mouseY,
+        "-> image:",
+        imageX,
+        imageY,
+        "element:",
+        imageElement
       );
 
+      console.log("interact")
+
       interact(
-        videoX,
-        videoY
+        imageX,
+        imageY,
+        imageElement
       );
     }
   }
 );
 
-sketch.draw( (
-  time, center, favouriteColour
-) => {
+sketch.draw( () => {
   background( ...options.sketch.backgroundColor );
+
+  const photo = common.getAsset( options.sketch?.photo?.image );
+  
+  if ( !photo ) {
+    frameRate(1)
+    string.write(
+      "add a photo :)",
+      0,
+      0,
+      {
+        size: 72,
+        stroke: color( 255 ),
+        fill: color( 0 ),
+        textHeight: height,
+        font: string.fonts.martian,
+        textAlign: [
+          CENTER,
+          CENTER
+        ]
+      }
+    );
+    return
+  }
+  else {
+    frameRate(options.animation.framerate)
+    image(
+      photo.img,
+      0,
+      0,
+      width,
+      height
+    );
+  }
 
   // if ( mediapipe.idle ) background( 90 );
 
   // --- 1. Mask Logic ---
-  const segmenterResult = mediapipe.tasks.segmenter?.result ?? null;
+  // const segmenterResult = mediapipe.tasks.segmenter?.result ?? null;
 
-  if ( segmenterResult ) {
-    // Extract strict dimensions from the result
+  // if ( segmenterResult ) {
+  //   // Extract strict dimensions from the result
+  //   const {
+  //     data, width: maskWidth, height: maskHeight
+  //   } = segmenterResult;
+
+  //   // Resize graphics if model output size changes (e.g. 256x256 vs 144x256)
+  //   if ( layers.mask.graphics.width !== maskWidth || layers.mask.graphics.height !== maskHeight ) {
+  //     layers.mask.graphics.resizeCanvas(
+  //       maskWidth,
+  //       maskHeight
+  //     );
+  //     // Critical: Reset density for pixel manipulation
+  //     layers.mask.graphics.pixelDensity( 1 );
+  //   }
+
+  //   drawSegmentationMask(
+  //     layers.mask.graphics,
+  //     data,
+  //     [
+  //       255,
+  //       0,
+  //       0,
+  //       255
+  //     ]
+  //   );
+  // }
+
+  const interactiveResult = mediapipe.tasks.interactive?.result;
+
+  if ( interactiveResult ) {
+
+    // console.log("interactiveResult", interactiveResult)
+
     const {
       data, width: maskWidth, height: maskHeight
-    } = segmenterResult;
+    } = interactiveResult;
 
-    // Resize graphics if model output size changes (e.g. 256x256 vs 144x256)
+    // Resize mask graphics if needed
     if ( layers.mask.graphics.width !== maskWidth || layers.mask.graphics.height !== maskHeight ) {
       layers.mask.graphics.resizeCanvas(
         maskWidth,
         maskHeight
       );
-      // Critical: Reset density for pixel manipulation
       layers.mask.graphics.pixelDensity( 1 );
     }
 
@@ -120,31 +193,12 @@ sketch.draw( (
       layers.mask.graphics,
       data,
       [
-        255,
+        0,
         0,
         0,
         255
-      ]
-    );
-  }
-
-  const interactiveResult = mediapipe.tasks.interactive?.result;
-
-  if ( interactiveResult ) {
-    console.log(
-      "interactive result",
-      interactiveResult
-    );
-
-    drawSegmentationMask(
-      layers.mask.graphics,
-      interactiveResult,
-      [
-        0,
-        255,
-        255,
-        150
-      ]
+      ],
+      true
     );
   }
 
@@ -171,21 +225,45 @@ sketch.draw( (
   //   }
   // }
 
-  image(
-    mediapipe.capture.element,
-    0,
-    0,
-    width,
-    height
-  );
+  // image(
+  //   mediapipe.capture.element,
+  //   0,
+  //   0,
+  //   width,
+  //   height
+  // );
 
-  renderTitle( options.sketch?.title );
+  // Display mask overlay if available
+  if ( interactiveResult ) {
+    string.write(
+      "TEXT BETWEEN PHOTO AND DETECTED MASK",
+      0,
+      0,
+      {
+        size: 144,
+        stroke: color( 0, 0, 0, 0 ),
+        fill: color( 255 ),
+        textHeight: height,
+        font: string.fonts.martian,
+        textAlign: [
+          CENTER,
+          CENTER
+        ]
+      }
+    );
 
-  image(
-    layers.mask.graphics,
-    0,
-    0,
-    width,
-    height
-  );
+    const maskedImage = photo.img.get();
+
+    maskedImage.mask( layers.mask.graphics );
+
+    image(
+      maskedImage,
+      0,
+      0,
+      width,
+      height
+    );
+  }
+
+  // renderTitle( options.sketch?.title );
 } );
