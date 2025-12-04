@@ -129,6 +129,7 @@ export type FieldConfig =
   | ConditionalGroupConfig
   | ImagesStackConfig
   | ImageConfig
+  | SizePresetConfig
   | HiddenConfig
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
