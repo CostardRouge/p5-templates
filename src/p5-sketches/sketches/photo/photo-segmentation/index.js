@@ -43,7 +43,15 @@ const layers = {
 const cache = {
   currentImagePath: null,
   maskedImage: null,
-  interactiveResultProcessed: false
+  interactiveResultProcessed: false,
+  lastInverseValue: null,
+  // Track photo display bounds for accurate coordinate mapping
+  photoBounds: {
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0
+  }
 };
 
 sketch.setup( async() => {
@@ -79,14 +87,32 @@ sketch.setup( async() => {
     if ( origin !== "react" ) return;
 
     const currentImagePath = newOptions.sketch?.photo?.image;
+    const currentInverse = newOptions.sketch?.segmentation?.inverse;
     
     // Clear cache if image changed
     if ( cache.currentImagePath !== currentImagePath ) {
       cache.currentImagePath = currentImagePath;
       cache.maskedImage = null;
       cache.interactiveResultProcessed = false;
+      cache.lastInverseValue = currentInverse;
       
       console.log( "Image changed, cache cleared" );
+      
+      return;
+    }
+
+    // Check if inverse parameter changed
+    if ( cache.lastInverseValue !== currentInverse ) {
+      cache.lastInverseValue = currentInverse;
+      cache.maskedImage = null;
+      cache.interactiveResultProcessed = false;
+      
+      console.log( "Inverse parameter changed, recalculating mask" );
+      
+      // Re-trigger segmentation if ROI exists
+      if ( newOptions.sketch?.segmentation?.roi ) {
+        triggerSegmentation();
+      }
       
       return;
     }
@@ -98,8 +124,9 @@ sketch.setup( async() => {
     }
   } );
 
-  // Initialize current image path
+  // Initialize cache values
   cache.currentImagePath = options.sketch?.photo?.image;
+  cache.lastInverseValue = options.sketch?.segmentation?.inverse;
 
   // Trigger segmentation on startup if ROI already exists
   if ( options.sketch?.segmentation?.roi ) {
@@ -140,65 +167,81 @@ function triggerSegmentation() {
   );
 }
 
+// Handle canvas click for segmentation (ignores drag events automatically)
 events.register(
-  "engine-mouse-pressed",
+  "engine-canvas-mouse-pressed",
   () => {
     const photo = common.getAsset( options.sketch?.photo?.image );
     
     if ( !photo ) return;
     
-    if ( mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height ) {
-      // Get the underlying canvas element from p5.Image
-      const imageElement = photo.img.canvas || photo.img.elt || photo.img;
-      
-      // Map Mouse (Screen) -> Photo (Image)
-      // Scale from canvas coordinates to image coordinates
-      const scaleX = photo.img.width / width;
-      const scaleY = photo.img.height / height;
-
-      const imageX = mouseX * scaleX;
-      const imageY = mouseY * scaleY;
-
-      // Calculate normalized coordinates (0-1) for storage
-      const normalizedX = imageX / photo.img.width;
-      const normalizedY = imageY / photo.img.height;
-
-      console.log(
-        "Click at canvas:",
-        mouseX,
-        mouseY,
-        "-> image:",
-        imageX,
-        imageY,
-        "-> normalized:",
-        normalizedX,
-        normalizedY
-      );
-
-      // Save ROI to options
-      setSketchOptions( {
-        ...options,
-        sketch: {
-          ...options.sketch,
-          segmentation: {
-            ...options.sketch?.segmentation,
-            roi: {
-              x: normalizedX,
-              y: normalizedY
-            }
+    // Check if click is within photo bounds
+    const {
+      x: photoX, y: photoY, w: photoW, h: photoH
+    } = cache.photoBounds;
+    
+    if ( mouseX < photoX || mouseX > photoX + photoW || 
+         mouseY < photoY || mouseY > photoY + photoH ) {
+      console.log( "Click outside photo bounds" );
+      return;
+    }
+    
+    // Get the underlying canvas element from p5.Image
+    const imageElement = photo.img.canvas || photo.img.elt || photo.img;
+    
+    // Map Mouse (Canvas) -> Photo Display (with margins/scale) -> Original Image
+    const relativeX = mouseX - photoX;
+    const relativeY = mouseY - photoY;
+    
+    // Scale from displayed photo to original image dimensions
+    const scaleX = photo.img.width / photoW;
+    const scaleY = photo.img.height / photoH;
+    
+    const imageX = relativeX * scaleX;
+    const imageY = relativeY * scaleY;
+    
+    // Calculate normalized coordinates (0-1) for storage
+    const normalizedX = imageX / photo.img.width;
+    const normalizedY = imageY / photo.img.height;
+    
+    console.log(
+      "Click at canvas:",
+      mouseX,
+      mouseY,
+      "-> photo bounds:",
+      relativeX,
+      relativeY,
+      "-> image:",
+      imageX,
+      imageY,
+      "-> normalized:",
+      normalizedX,
+      normalizedY
+    );
+    
+    // Save ROI to options
+    setSketchOptions( {
+      ...options,
+      sketch: {
+        ...options.sketch,
+        segmentation: {
+          ...options.sketch?.segmentation,
+          roi: {
+            x: normalizedX,
+            y: normalizedY
           }
         }
-      } );
-
-      // Reset the processed flag to allow new result
-      cache.interactiveResultProcessed = false;
-
-      interact(
-        imageX,
-        imageY,
-        imageElement
-      );
-    }
+      }
+    } );
+    
+    // Reset the processed flag to allow new result
+    cache.interactiveResultProcessed = false;
+    
+    interact(
+      imageX,
+      imageY,
+      imageElement
+    );
   }
 );
 
@@ -231,7 +274,9 @@ sketch.draw( (_, center) => {
   }
   else {
     frameRate(options.animation.framerate)
-     imageUtils.marginImage( {
+    
+    // Draw photo and capture its bounds for coordinate mapping
+    imageUtils.marginImage( {
       img: photo.img,
       position: center,
       margin: width * options.sketch?.photo?.margin,
@@ -239,6 +284,15 @@ sketch.draw( (_, center) => {
       center: options.sketch?.photo?.center ?? true,
       clip: options.sketch?.photo?.clip ?? false,
       fill: options.sketch?.photo?.fill ?? true,
+      callback: (
+        x, y, w, h
+      ) => {
+        // Store photo bounds for click detection
+        cache.photoBounds.x = x;
+        cache.photoBounds.y = y;
+        cache.photoBounds.w = w;
+        cache.photoBounds.h = h;
+      }
     } );
   }
 
@@ -300,7 +354,7 @@ sketch.draw( (_, center) => {
         0,
         255
       ],
-      true
+      options.sketch.segmentation.inverse ?? true
     );
 
     // Create and cache the masked image
@@ -313,10 +367,10 @@ sketch.draw( (_, center) => {
     console.log( "Segmentation result processed and cached" );
   }
 
+  renderTitle( options.sketch?.title );
+
   // Display masked image if available
   if ( cache.maskedImage ) {
-    renderTitle( options.sketch?.title );
-
     imageUtils.marginImage( {
       img: cache.maskedImage,
       position: center,
@@ -325,6 +379,15 @@ sketch.draw( (_, center) => {
       center: options.sketch?.photo?.center ?? true,
       clip: options.sketch?.photo?.clip ?? false,
       fill: options.sketch?.photo?.fill ?? true,
+      callback: (
+        x, y, w, h
+      ) => {
+        // Update photo bounds even when showing masked image
+        cache.photoBounds.x = x;
+        cache.photoBounds.y = y;
+        cache.photoBounds.w = w;
+        cache.photoBounds.h = h;
+      }
     } );
   }
 } );

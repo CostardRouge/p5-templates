@@ -143,11 +143,12 @@ async function readExifInfo(
         tags = await exif.load( url );
       }
     }
-    catch ( e ) {
+    catch ( error ) {
       console.error(
-        "readExifInfo",
-        e
+        "readExifInfo error",
+        error
       );
+      tags = null
     }
 
     object.exif = tags;

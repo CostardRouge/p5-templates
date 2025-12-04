@@ -96,6 +96,10 @@ type Scope = "global" | {
  slide: number
 };
 
+interface HiddenConfig extends BaseConfig {
+  component: "hidden";
+}
+
 interface ImageConfig extends BaseConfig {
   component: "image";
   assetsName?: string;
@@ -125,7 +129,7 @@ export type FieldConfig =
   | ConditionalGroupConfig
   | ImagesStackConfig
   | ImageConfig
-  | SizePresetConfig
+  | HiddenConfig
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema

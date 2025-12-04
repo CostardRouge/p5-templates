@@ -7,11 +7,18 @@ export const formValues = {
     sampleFactor: 0.1,
     simplifyThreshold: 0,
   },
+  interactive: {
+    enabled: true,
+    mouse: false,
+    sensitivityMultiplier: 0.3,
+    sinMultiplier: 3,
+    cosMultiplier: 1,
+  },
   mask: {
     distance: 0.015,
   },
   animation: {
-    rotate: true,
+    rotate: false,
     rotationCount: 2,
     switchSpeed: 2,
     switchIndexDivisor: 5,
@@ -74,6 +81,41 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 10,
+        step: 0.1
+      },
+    }
+  },
+  interactive: {
+    component: "nested-object",
+    label: "Interactive",
+    fields: {
+      enabled: {
+        label: "Enabled",
+        component: "checkbox",
+      },
+      mouse: {
+        label: "With mouse?",
+        component: "checkbox",
+      },
+      sensitivityMultiplier: {
+        label: "sensitivityMultiplier",
+        component: "slider",
+        min: 0.1,
+        max: 1,
+        step: 0.01
+      },
+      sinMultiplier: {
+        label: "sinMultiplier",
+        component: "slider",
+        min: 1,
+        max: 9,
+        step: 0.1
+      },
+      cosMultiplier: {
+        label: "cosMultiplier",
+        component: "slider",
+        min: 1,
+        max: 9,
         step: 0.1
       },
     }

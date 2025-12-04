@@ -252,6 +252,9 @@ export default function FieldRenderer( {
       case "images-stack":
         return <ControlledImagesStackInput name={registeredName} />;
 
+      case "hidden":
+        return null;
+
       case "text":
       default:
         return (
@@ -269,7 +272,7 @@ export default function FieldRenderer( {
   return (
     <div className="text-xs">
       {/* Don't show a label for groups, as they have their own internal labels */}
-      {( config.component !== "nested-object" && config.component !== "conditional-group" ) && config.label && (
+      {( config.component !== "nested-object" && config.component !== "conditional-group" && config.component !== "hidden" ) && config.label && (
         <label 
           htmlFor={registeredName} 
           className={`text-gray-400 cursor-pointer select-none ${valueChanged ? 'italic' : ''}`}

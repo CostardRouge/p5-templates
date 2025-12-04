@@ -11,7 +11,8 @@ export const formValues = {
     fill: false,
   },
   segmentation: {
-    roi: null // { x: number, y: number } - normalized coordinates (0-1)
+    roi: null, // { x: number, y: number } - normalized coordinates (0-1),
+    inverse: true
   },
   title: {
     ...titleDefaultValues,
@@ -72,7 +73,11 @@ export const formConfiguration: Record<string, any> = {
       roi: {
         component: "hidden",
         label: "ROI (Region of Interest)"
-      }
+      },
+      inverse: {
+        label: "Inverse mask",
+        component: "checkbox",
+      },
     }
   },
   backgroundColor: {

@@ -4,14 +4,36 @@ import sketch from "@/p5/utils/sketch.js";
 import cache from "@/p5/utils/cache.js";
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
+import events from "@/p5/utils/events.js";
 import grid from "@/p5/utils/grid.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
-sketch.setup(
+import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+
+const interactive = {
+  currentTimeValue: 0,
+  graphics: null,
+  position: null,
+  image: null,
+}
+
+events.register(
+  "engine-window-preload",
   () => {
+    interactive.image = loadImage("/assets/images/handpointing.png")
+  }
+);
+
+sketch.setup(
+  ({
+    canvas
+  }) => {
+    interactive.graphics = createGraphics(width, height);
+
     background(...getBackgroundColor());
+    addScreenPositionFunction(window);
   },
   {
     type: "webgl"
@@ -120,7 +142,7 @@ const getBackgroundColor = () =>
     225
   ]);
 
-sketch.draw((time) => {
+sketch.draw(() => {
   background(...getBackgroundColor());
 
   const size = (options.sketch?.shape?.size * width) ?? width;
@@ -229,8 +251,6 @@ sketch.draw((time) => {
     rotateY(rY);
   }
 
-  // const finalPoints = alphaPoints
-
   alphaPoints.forEach((
     {
       layers, position
@@ -254,12 +274,6 @@ sketch.draw((time) => {
     const switchSpeed = options.sketch?.animation?.switchSpeed ?? 2;
     const switchIndexDivisor = options.sketch?.animation?.switchIndexDivisor ?? 5;
     const positionInfluence = options.sketch?.animation?.positionInfluence ?? 100;
-
-    const switchIndex = animation.progression * switchSpeed + (
-      +index / alphaPoints.length / switchIndexDivisor
-      + position.x / columns / positionInfluence
-      + position.y / rows / positionInfluence
-    );
 
     const hue = noise(
       position.x / columns + (
@@ -317,12 +331,36 @@ sketch.draw((time) => {
     const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
+    if (options.sketch.interactive.enabled && interactive.position) {
+      const screenPos = screenPosition(0, 0, 0);
+      const distance = dist(interactive.position.x, interactive.position.y, screenPos.x, screenPos.y);
+
+      interactive.currentTimeValue = map(
+        distance,
+        0,
+        (options.sketch.interactive.sensitivityMultiplier * width) ?? width * 0.5,
+        0,
+        1
+      );
+    }
+
+
+    const currentTimeValue = options.sketch.interactive.enabled ? interactive.currentTimeValue : (
+      animation.progression * switchSpeed + (
+        +index / alphaPoints.length / switchIndexDivisor
+        + position.x / columns / positionInfluence
+        + position.y / rows / positionInfluence
+      )
+    );
+
+    const constrainedTime = constrain(currentTimeValue, 0, 1);
+
     const fillAlpha = animation.ease({
       values: [
         fillAlphaStart,
         fillAlphaEnd
       ],
-      currentTime: switchIndex,
+      currentTime: constrainedTime,
       duration: 1,
       easingFn: easing.easeInOutExpo,
     });
@@ -347,4 +385,22 @@ sketch.draw((time) => {
 
     pop();
   });
+
+  if (options.sketch.interactive.enabled) {
+    if (options.sketch.interactive.mouse) {
+      interactive.position = createVector(
+        mouseX - width / 2,
+        mouseY - height / 2
+      )
+    } else {
+      interactive.position = createVector(
+        sin(animation.angle * options.sketch.interactive.sinMultiplier) * (-width / 2) * 0.8,
+        cos(animation.angle * options.sketch.interactive.cosMultiplier) * (-height / 2) * 0.8
+      )
+
+      interactive.graphics.clear()
+      interactive.graphics.image(interactive.image, interactive.position.x, interactive.position.y)
+      image(interactive.graphics, 0, 0)
+    }
+  }
 });
