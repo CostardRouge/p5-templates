@@ -1,3 +1,5 @@
+import easing from "@/p5/utils/easing";
+
 export const formValues = {
   shape: {
     text: "5",
@@ -11,10 +13,12 @@ export const formValues = {
     distance: 0.015,
   },
   animation: {
+    variableDepth: false,
     rotate: false,
     rotationCount: 1,
     waveSpeed: 1,
     waveSpread: 0.3,
+    waveEasing: "easeInOutElastic",
     wave: {
       mode: "linear" as const,
       directionX: -1,
@@ -99,6 +103,10 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Animation",
     fields: {
+      variableDepth: {
+        label: "Variable depth",
+        component: "checkbox",
+      },
       rotate: {
         label: "Rotate",
         component: "checkbox",
@@ -124,15 +132,32 @@ export const formConfiguration: Record<string, any> = {
         max: 20,
         step: 0.1
       },
+      waveEasing: {
+        component: "select",
+        label: "Wave easing",
+        options: Object.keys( easing ).map( easingFunctionName => ( {
+          label: easingFunctionName,
+          value: easingFunctionName,
+        } ) )
+      },
       wave: {
         label: "Wave Configuration",
         component: "conditional-group",
         conditionalOn: "mode",
         typeSelector: {
           options: [
-            { label: "Linear", value: "linear" },
-            { label: "Radial", value: "radial" },
-            { label: "Interactive", value: "interactive" }
+            {
+              label: "Linear",
+              value: "linear"
+            },
+            {
+              label: "Radial",
+              value: "radial"
+            },
+            {
+              label: "Interactive",
+              value: "interactive"
+            }
           ]
         },
         configs: {
