@@ -1,0 +1,11 @@
+html:has(body.bg-background) {
+  background: white;
+}
+
+div:has(#exif-info) #image {
+  max-height: calc(1350px - 16rem);
+}
+
+#image {
+  max-height: calc(1350px - 8rem);
+}

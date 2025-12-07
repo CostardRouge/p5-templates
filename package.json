@@ -28,6 +28,7 @@
     "bullmq": "^5.53.2",
     "clsx": "^2.1.1",
     "exifreader": "^4.26.1",
+    "gsap": "^3.13.0",
     "immer": "^11.0.1",
     "ioredis": "^5.6.1",
     "json-edit-react": "^1.26.1",
