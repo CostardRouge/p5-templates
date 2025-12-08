@@ -89,9 +89,10 @@ sketch.draw( () => {
     ) );
   }
 
+  const margin = 150;
+  const W = width / 2 - margin;
+  const H = height / 2 - margin;
   const targetsCount = options.sketch.animation.spheresCount ?? 3;
-  const W = width / 2 - 90;
-  const H = height / 2 - 90;
 
   for ( let i = 0; i < targetsCount; i++ ) {
     const targetProgression = i / targetsCount;

@@ -290,7 +290,7 @@ export default function TemplateOptions( {
   const {
     showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving
   } = useUnsavedChanges( {
-    hasUnsavedChanges: hasUnsavedChanges,
+    hasUnsavedChanges: hasUnsavedChanges && !captureActionsRef.current?.isRecording,
     onSaveAsDraft: async() => {
       if ( captureActionsRef.current ) {
         await captureActionsRef.current.saveAsDraft();

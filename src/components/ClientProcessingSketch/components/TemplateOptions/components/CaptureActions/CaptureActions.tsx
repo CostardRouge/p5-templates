@@ -19,7 +19,7 @@ import {
   getScopeAssetPath, resolveAssetURL
 } from "@/p5-sketches/shared/utils";
 import {
-  SketchOption, SketchOptionInput, SlideOption, SlideOptionInput
+  SketchOptionInput, SlideOptionInput
 } from "@/types/sketch.types";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
 
@@ -35,6 +35,7 @@ import FailedActions from "./components/FailedActions";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
+  isRecording: boolean;
   isSaving: boolean;
 };
 
@@ -299,6 +300,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         );
       },
       isSaving: saving,
+      isRecording: !!isRecording
     } )
   );
 
