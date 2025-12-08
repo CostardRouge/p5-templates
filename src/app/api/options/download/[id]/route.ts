@@ -7,7 +7,6 @@ import {
 import {
   getDownloadUrlFromS3Url
 } from "@/lib/connections/s3";
-import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
 
 /**
  * GET /api/options/download/[id]
@@ -38,7 +37,35 @@ export async function GET(
 
     const s3DownloadUrl = await getDownloadUrlFromS3Url( `${ jobId }/options.json` );
 
-    return downloadFromUrlResponse( s3DownloadUrl );
+    // Fetch the file from S3
+    const response = await fetch( s3DownloadUrl );
+
+    if ( !response.ok || !response.body ) {
+      return new NextResponse(
+        "Failed to fetch file from S3",
+        {
+          status: 502
+        }
+      );
+    }
+
+    // Extract sketch name from template (e.g., "p5/photo-in-circle" -> "photo-in-circle")
+    const sketchName = job.template.split( "/" ).pop() || "sketch";
+    const jobIdShort = jobId.slice( 0, 8 );
+    
+    // Format: {sketch-name}-options-{jobId}.json
+    const filename = `${ sketchName }-options-${ jobIdShort }.json`;
+
+    return new Response(
+      response.body,
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Disposition": `attachment; filename="${ filename }"`,
+        },
+      }
+    );
   } catch ( error ) {
     console.error(
       `[GET /api/options/download/${ jobId }]`,

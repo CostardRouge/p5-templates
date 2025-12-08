@@ -3,6 +3,9 @@ import CompactProgressBar from "@/components/CompactProgressBar";
 import {
   getRecordingSteps
 } from "@/utils/recordingSteps";
+import {
+  getSlideCount
+} from "@/utils/getSlideCount";
 import RecordingThumbnail from "./RecordingThumbnail";
 import StatusBadge from "./StatusBadge";
 import ActionsMenu from "./ActionsMenu";
@@ -40,6 +43,8 @@ export default function RecordingRow( {
   onStart,
   onClone
 }: RecordingRowProps ) {
+  const slideCount = getSlideCount( job );
+
   return (
     <tr className={`group hover:bg-hover/50 transition-colors ${
       isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
@@ -61,22 +66,30 @@ export default function RecordingRow( {
               onPreview();
             }
           }}
-          className={`w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl border border-border object-cover transition-all duration-300 ${
-            job.videoUrls ? "cursor-pointer group-hover:scale-105 group-hover:shadow-md" : "cursor-default"
+          className={`w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl border border-border object-cover ${
+            job.videoUrls ? "cursor-pointer" : "cursor-default"
           }`}
+          enableHoverPreview={true}
         />
       </td>
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <HardLink
           href={`templates/${ job.template }?id=${ job.id }`}
-          className="group/link inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-mono text-foreground hover:text-foreground/70 transition-colors"
+          className="group/link text-xs sm:text-sm text-foreground hover:text-foreground/70 transition-colors"
         >
-          #{job.id.slice(
-            0,
-            8
+          <div className="font-mono">
+            #{job.id.slice(
+              0,
+              8
+            )}
+            <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px] sm:text-xs">→</span>
+          </div>
+          {slideCount > 1 && (
+            <div className="text-[10px] sm:text-xs text-foreground/50 font-sans mt-0.5">
+              {slideCount} slides
+            </div>
           )}
-          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px] sm:text-xs">→</span>
         </HardLink>
       </td>
 

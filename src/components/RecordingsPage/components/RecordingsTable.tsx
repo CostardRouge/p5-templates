@@ -59,7 +59,7 @@ export default function RecordingsTable( {
                 Preview
               </th>
               <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
-                ID
+                Details
               </th>
               <th className="text-left text-[10px] sm:text-xs font-semibold text-foreground/70 uppercase tracking-wider px-2 py-2 sm:px-4 sm:py-4">
                 Template

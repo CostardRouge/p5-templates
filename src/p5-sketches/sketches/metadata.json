@@ -266,17 +266,17 @@
     "ctime": "2025-12-07T14:08:39.613Z"
   },
   {
-    "name": "hand-capture-interactive-grid",
-    "category": "hand-capture",
-    "hasSketchForm": true,
-    "mtime": "2025-12-07T14:08:39.616Z",
-    "ctime": "2025-12-07T14:08:39.615Z"
-  },
-  {
     "name": "text-animated-points",
     "category": "text",
     "hasSketchForm": true,
     "mtime": "2025-12-07T14:08:39.618Z",
     "ctime": "2025-12-07T14:08:39.617Z"
+  },
+  {
+    "name": "hand-capture-interactive-grid",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "mtime": "2025-12-07T23:02:55.807Z",
+    "ctime": "2025-12-07T14:08:39.615Z"
   }
 ]

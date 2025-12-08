@@ -7,6 +7,7 @@ import {
   Copy,
   Download,
   Eye,
+  FileUp,
   Link,
   Menu as MenuIcon,
   RotateCcw,
@@ -19,6 +20,10 @@ import DownloadMenuItems from "./DownloadMenuItems";
 import type {
   JobModel
 } from "@/types/recording.types";
+import React, {
+  useRef
+} from "react";
+import Toast from "@/components/Toast";
 
 interface ActionsMenuProps {
   job: JobModel;
@@ -39,6 +44,8 @@ export default function ActionsMenu( {
   onPreviewModal,
   onClone
 }: ActionsMenuProps ) {
+  const fileInputRef = useRef<HTMLInputElement>( null );
+  
   const isStale = [
     "active",
     "queued"
@@ -82,7 +89,74 @@ export default function ActionsMenu( {
     }
   };
 
+  const [
+    importToast,
+    setImportToast
+  ] = React.useState<{
+    message: string; type: "success" | "error"
+  } | null>( null );
+
+  const handleImportOptions = async( file: File ) => {
+    try {
+      const formData = new FormData();
+      formData.append(
+        "file",
+        file
+      );
+
+      const response = await fetch(
+        `/api/options/import/${ job.id }`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if ( !response.ok ) {
+        const error = await response.json();
+        throw new Error( error.error || "Import failed" );
+      }
+
+      const result = await response.json();
+
+      if ( result.success ) {
+        setImportToast( {
+          message: "Options imported successfully",
+          type: "success"
+        } );
+        // Reload after showing toast
+        setTimeout(
+          () => {
+            window.location.reload();
+          },
+          1000
+        );
+      } else {
+        throw new Error( "Failed to import options" );
+      }
+    } catch ( error ) {
+      setImportToast( {
+        message: error instanceof Error ? error.message : "Failed to import options",
+        type: "error"
+      } );
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = ( event: React.ChangeEvent<HTMLInputElement> ) => {
+    const file = event.target.files?.[ 0 ];
+    if ( file ) {
+      handleImportOptions( file );
+      // Reset input so same file can be selected again
+      event.target.value = "";
+    }
+  };
+
   return (
+    <>
     <Menu as="div" className="relative inline-block text-left">
       <MenuButton className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center">
         <MenuIcon className="h-4 w-4 text-foreground"/>
@@ -174,6 +248,43 @@ export default function ActionsMenu( {
             </button>
           )}
         </MenuItem>
+
+        {/* Import Section - Only for draft, failed, cancelled */}
+        {[
+          "draft",
+          "failed",
+          "cancelled"
+        ].includes( job.status ) && (
+          <>
+            <div className="h-px bg-border" />
+            <div className="px-3 py-2 bg-hover/30">
+              <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Import</p>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <MenuItem>
+              {( {
+                focus
+              } ) => (
+                <button
+                  onClick={handleImportClick}
+                  className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                >
+                  <FileUp className="h-4 w-4 text-purple-600" />
+                  <div className="flex-1 min-w-0 text-left">
+                    <span className="font-medium text-purple-600">Import Options JSON</span>
+                    <p className="text-xs text-foreground/50">Assets will be ignored</p>
+                  </div>
+                </button>
+              )}
+            </MenuItem>
+          </>
+        )}
 
         {/* Action Section */}
         <div className="h-px bg-border" />
@@ -310,5 +421,14 @@ export default function ActionsMenu( {
         )}
       </MenuItems>
     </Menu>
+
+    {importToast && (
+      <Toast
+        message={importToast.message}
+        type={importToast.type}
+        onClose={() => setImportToast( null )}
+      />
+    )}
+    </>
   );
 }

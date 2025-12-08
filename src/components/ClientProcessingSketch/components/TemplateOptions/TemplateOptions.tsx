@@ -112,6 +112,7 @@ export default function TemplateOptions( {
     watch,
     getValues,
     setValue,
+    reset,
     formState: {
       errors
     },
@@ -123,6 +124,7 @@ export default function TemplateOptions( {
     insert: insertSlide,
     move: moveSlide,
     remove: removeSlide,
+    replace: replaceSlides,
   } = useFieldArray( {
     control,
     name: "slides",
@@ -783,6 +785,20 @@ export default function TemplateOptions( {
           backendRecording={backendRecording}
           browserRecordingSupported={browserRecordingSupported}
           thumbnails={thumbnails}
+          onImportOptions={( importedOptions ) => {
+            // Use reset to properly update all form values including arrays
+            const processedOptions = initOptions( importedOptions as SketchOption );
+            console.log(
+              "Importing options:",
+              {
+                imported: importedOptions,
+                processed: processedOptions,
+                slidesCount: processedOptions.slides?.length
+              }
+            );
+            reset( processedOptions );
+            setHasUnsavedChanges( true );
+          }}
         />
         }
       </div>

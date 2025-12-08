@@ -32,6 +32,8 @@ import DraftActions from "./components/DraftActions";
 import RecordingActions from "./components/RecordingActions";
 import CompletedActions from "./components/CompletedActions";
 import FailedActions from "./components/FailedActions";
+import DownloadOptionsButton from "./components/DownloadOptionsButton";
+import ImportOptionsButton from "./components/ImportOptionsButton";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
@@ -47,11 +49,12 @@ type CaptureActionsProps = {
   backendRecording: boolean;
   browserRecordingSupported: boolean;
   thumbnails?: Record<string, string>;
+  onImportOptions?: ( options: SketchOptionInput ) => void;
 };
 
 const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   {
-    name, options, persistedJob, activeSlideIndex, backendRecording, browserRecordingSupported, thumbnails
+    name, options, persistedJob, activeSlideIndex, backendRecording, browserRecordingSupported, thumbnails, onImportOptions
   }, ref
 ) => {
   const router = useRouter();
@@ -477,6 +480,21 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         className="flex flex-col gap-1 glass px-2 py-2 border border-theme rounded-2xl shadow-lg"
       >
         <div className="flex flex-col gap-1 h-auto w-full">
+          {/* Download Options JSON - Always Available */}
+          <DownloadOptionsButton
+            options={options}
+            name={name}
+            persistedJobId={persistedJob?.id}
+          />
+
+          {/* Import Options JSON - Always available */}
+          <ImportOptionsButton
+            persistedJobId={persistedJob?.id}
+            jobStatus={currentStatus}
+            name={name}
+            onImportInMemory={onImportOptions}
+          />
+
           {/* Browser Recording - Only on Compatible Devices */}
           {!isRecording && browserRecordingSupported && (
             <BrowserRecordingButton onRecord={handleBrowserRecord} />

@@ -3,6 +3,9 @@ import CompactProgressBar from "@/components/CompactProgressBar";
 import {
   getRecordingSteps
 } from "@/utils/recordingSteps";
+import {
+  getSlideCount
+} from "@/utils/getSlideCount";
 import RecordingThumbnail from "./RecordingThumbnail";
 import StatusBadge from "./StatusBadge";
 import ActionsMenu from "./ActionsMenu";
@@ -40,6 +43,8 @@ export default function RecordingCard( {
   onStart,
   onClone
 }: RecordingCardProps ) {
+  const slideCount = getSlideCount( job );
+
   return (
     <div className={`group bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden ${ isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
     }`}>
@@ -62,13 +67,14 @@ export default function RecordingCard( {
               onPreview();
             }
           }}
-          className={`w-full aspect-square object-cover transition-all duration-300 ${ job.videoUrls ? "cursor-pointer group-hover:scale-105" : "cursor-default"
+          className={`w-full aspect-square object-cover ${ job.videoUrls ? "cursor-pointer" : "cursor-default"
           }`}
           showEyeInCorner={true}
+          enableHoverPreview={true}
         />
 
         {/* Status Badge Overlay */}
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-40">
           <StatusBadge
             status={job.status}
             className="shadow-lg backdrop-blur-sm"
@@ -76,7 +82,7 @@ export default function RecordingCard( {
         </div>
 
         {/* Actions Menu Overlay */}
-        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-40">
           <ActionsMenu
             job={job}
             onCancel={onCancel}
@@ -103,12 +109,20 @@ export default function RecordingCard( {
 
           <HardLink
             href={`templates/${ job.template }?id=${ job.id }`}
-            className="block text-[10px] sm:text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors truncate group/link"
+            className="block text-[10px] sm:text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors group/link"
           >
-            #{job.id.slice(
-              0,
-              8
-            )}
+            <span className="truncate">
+              #{job.id.slice(
+                0,
+                8
+              )}
+              {slideCount > 1 && (
+                <>
+                  <span className="text-border mx-1">·</span>
+                  <span className="font-sans">{slideCount} slides</span>
+                </>
+              )}
+            </span>
             <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">→</span>
           </HardLink>
         </div>
@@ -128,7 +142,7 @@ export default function RecordingCard( {
           </span>
           {job.recordingDuration && (
             <>
-              <span className="text-border">•</span>
+              <span className="text-border">·</span>
               <span>{formatDuration( job.recordingDuration )}</span>
             </>
           )}

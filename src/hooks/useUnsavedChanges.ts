@@ -83,9 +83,17 @@ export function useUnsavedChanges( {
 
         if ( !link ) return;
 
+        // Skip download links (blob URLs or links with download attribute)
+        if ( link.hasAttribute( "download" ) || link.getAttribute( "data-download-link" ) === "true" ) {
+          return;
+        }
+
         const href = link.getAttribute( "href" );
 
         if ( !href ) return;
+
+        // Skip blob URLs (used for downloads)
+        if ( href.startsWith( "blob:" ) ) return;
 
         // Check if it's a navigation link (not same page anchor)
         if ( href.startsWith( "#" ) ) return;
