@@ -102,7 +102,7 @@ export default function TemplatesList( {
   return (
     <div className="space-y-3 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:gap-6">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Templates</h1>
           <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">
@@ -111,16 +111,16 @@ export default function TemplatesList( {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 w-full">
+        <div className="flex items-center gap-2 w-full">
           {/* Search Input */}
           <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground/40" />
+            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground/40" />
             <input
               type="text"
               placeholder="Search templates..."
               value={search}
               onChange={( e ) => setSearch( e.target.value )}
-              className="pl-8 pr-3 py-2 sm:pl-10 sm:pr-4 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40"
+              className="pl-9 pr-3 py-2 sm:pl-11 sm:pr-4 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40"
             />
           </div>
 

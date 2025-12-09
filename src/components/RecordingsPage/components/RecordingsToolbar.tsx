@@ -30,56 +30,26 @@ export default function RecordingsToolbar( {
   onSortChange
 }: RecordingsToolbarProps ) {
   return (
-    <div className="flex flex-col gap-2 sm:gap-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Recordings</h1>
-          <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">
-            {recordingsCount} {recordingsCount === 1 ? "recording" : "recordings"}
-            {statusFilter !== "all" && ` • ${ statusFilter }`}
-          </p>
-        </div>
-
-        {/* View Toggle - Desktop only in header */}
-        <div className="hidden sm:flex items-center bg-background border border-border rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
-          <button
-            onClick={() => onViewChange( "cards" )}
-            className={`px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
-              view === "cards"
-                ? "bg-hover text-foreground"
-                : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
-            }`}
-            title="Card view"
-          >
-            <Grid className="w-4 h-4" />
-          </button>
-
-          <div className="w-px h-5 sm:h-6 bg-border" />
-
-          <button
-            onClick={() => onViewChange( "table" )}
-            className={`px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
-              view === "table"
-                ? "bg-hover text-foreground"
-                : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
-            }`}
-            title="Table view"
-          >
-            <List className="w-4 h-4" />
-          </button>
-        </div>
+    <div className="flex flex-col gap-3 sm:gap-4">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Recordings</h1>
+        <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">
+          {recordingsCount} {recordingsCount === 1 ? "recording" : "recordings"}
+          {statusFilter !== "all" && ` • ${ statusFilter }`}
+        </p>
       </div>
 
-      {/* Controls Row */}
-      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+      {/* Desktop: Single row with all controls */}
+      <div className="hidden sm:flex items-center gap-2 w-full">
         {/* Search Input */}
-        <div className="relative flex-1 sm:flex-initial min-w-[150px] sm:min-w-[200px]">
+        <div className="relative flex-1 min-w-0">
           <input
             type="text"
             placeholder="Search..."
             value={search}
             onChange={( e ) => onSearchChange( e.target.value )}
-            className="pl-3 pr-3 py-2 sm:pl-4 sm:pr-4 sm:py-2.5 rounded-lg sm:rounded-xl w-full sm:w-56 bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40"
+            className="px-4 py-2.5 rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40"
           />
         </div>
 
@@ -87,7 +57,7 @@ export default function RecordingsToolbar( {
         <select
           value={statusFilter}
           onChange={( e ) => onStatusFilterChange( e.target.value )}
-          className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm font-medium cursor-pointer flex-shrink-0"
+          className="px-4 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm font-medium cursor-pointer flex-shrink-0"
         >
           <option value="all">All Status</option>
           <option value="draft">Draft</option>
@@ -101,33 +71,100 @@ export default function RecordingsToolbar( {
         {/* Sort Controls */}
         <SortControls sortConfig={sortConfig} onSortChange={onSortChange} />
 
-        {/* View Toggle - Mobile */}
-        <div className="flex sm:hidden items-center bg-background border border-border rounded-lg overflow-hidden flex-shrink-0 ml-auto">
+        {/* View Toggle */}
+        <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden flex-shrink-0">
           <button
             onClick={() => onViewChange( "cards" )}
-            className={`px-2.5 py-2 transition-all duration-200 ${
+            className={`px-3 py-2.5 transition-all duration-200 ${
               view === "cards"
                 ? "bg-hover text-foreground"
                 : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
             }`}
             title="Card view"
           >
-            <Grid className="w-3.5 h-3.5" />
+            <Grid className="w-4 h-4" />
           </button>
 
-          <div className="w-px h-5 bg-border" />
+          <div className="w-px h-6 bg-border" />
 
           <button
             onClick={() => onViewChange( "table" )}
-            className={`px-2.5 py-2 transition-all duration-200 ${
+            className={`px-3 py-2.5 transition-all duration-200 ${
               view === "table"
                 ? "bg-hover text-foreground"
                 : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
             }`}
             title="Table view"
           >
-            <List className="w-3.5 h-3.5" />
+            <List className="w-4 h-4" />
           </button>
+        </div>
+      </div>
+
+      {/* Mobile: Search on top, filters and toggle below */}
+      <div className="flex sm:hidden flex-col gap-2">
+        {/* Search Input - Full width on top */}
+        <div className="relative w-full">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={( e ) => onSearchChange( e.target.value )}
+            className="px-3 py-2 rounded-lg w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs placeholder:text-foreground/40"
+          />
+        </div>
+
+        {/* Filters and Toggle Row */}
+        <div className="flex items-center gap-2">
+          {/* Left: Status, Sort, Sort Direction */}
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={( e ) => onStatusFilterChange( e.target.value )}
+              className="px-2.5 py-2 rounded-lg bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs font-medium cursor-pointer flex-shrink-0 min-w-0"
+            >
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="queued">Queued</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            {/* Sort Controls */}
+            <SortControls sortConfig={sortConfig} onSortChange={onSortChange} />
+          </div>
+
+          {/* Right: View Toggle */}
+          <div className="flex items-center bg-background border border-border rounded-lg overflow-hidden flex-shrink-0">
+            <button
+              onClick={() => onViewChange( "cards" )}
+              className={`px-2.5 py-2 transition-all duration-200 ${
+                view === "cards"
+                  ? "bg-hover text-foreground"
+                  : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
+              }`}
+              title="Card view"
+            >
+              <Grid className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="w-px h-5 bg-border" />
+
+            <button
+              onClick={() => onViewChange( "table" )}
+              className={`px-2.5 py-2 transition-all duration-200 ${
+                view === "table"
+                  ? "bg-hover text-foreground"
+                  : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
+              }`}
+              title="Table view"
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
