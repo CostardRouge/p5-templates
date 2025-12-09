@@ -112,7 +112,7 @@ export default function AnimationProgressionBar( {
     ( event: React.PointerEvent ) => {
       if ( disabled ) return;
 
-      // Prevent viewport dragging
+      // Prevent viewport dragging - CRITICAL: stop propagation before anything else
       event.stopPropagation();
       event.preventDefault();
 
@@ -299,7 +299,11 @@ export default function AnimationProgressionBar( {
           className={`
             relative h-4 bg-background border border-theme
             ${ isDragging ? "cursor-grabbing" : "cursor-pointer" }
+            touch-none
           `}
+          style={{
+            touchAction: "none"
+          }}
           onClick={handleClick}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -310,13 +314,13 @@ export default function AnimationProgressionBar( {
         >
           {/* Filled portion */}
           <div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-100 ease-out"
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-progress-start to-progress-end transition-all duration-100 ease-out"
             style={{
               width: `${ progression * 100 }%`
             }}
           >
             {isDragging && (
-              <div className="absolute inset-0 bg-white/20 animate-pulse" />
+              <div className="absolute inset-0 bg-foreground/10 animate-pulse" />
             )}
           </div>
 
@@ -332,7 +336,7 @@ export default function AnimationProgressionBar( {
         </div>
 
         {/* Info display */}
-        <div className="flex items-center justify-between mt-2 text-xs font-medium text-foreground/60 gap-4">
+        <div className="flex items-center justify-around w-full mt-2 text-xs font-medium text-foreground/60 gap-4">
           {/* Current values */}
           <div className="flex items-center gap-3">
             <span className="font-mono">
@@ -346,7 +350,7 @@ export default function AnimationProgressionBar( {
               )}/{duration}s
             </span>
             <span className="text-foreground/30">·</span>
-            <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+            <span className="font-mono font-semibold text-active">
               {percentage}%
             </span>
           </div>

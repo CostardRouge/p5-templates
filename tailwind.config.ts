@@ -23,6 +23,8 @@ export default {
         active: "hsl(var(--active) / <alpha-value>)",
         focus: "hsl(var(--focus) / <alpha-value>)",
         label: "hsl(var(--label))",
+        "progress-start": "hsl(var(--progress-start))",
+        "progress-end": "hsl(var(--progress-end))",
       },
       keyframes: {
         "cycle-align": {

@@ -47,9 +47,42 @@ The template supports the following configurable options:
 - **5.2**: Separate files for component, options, and types ✓
 - **7.2**: TypeScript interfaces from options schema ✓
 
-## Next Steps
+## Features
 
-1. Implement the main page.tsx component with GSAP integration
-2. Migrate ExifInfo and ImageDropzone components
-3. Add GSAP animations for data reveal
-4. Integrate with capture API
+- ✅ GSAP-powered smooth animations
+- ✅ Automatic EXIF data extraction
+- ✅ Interactive preview with playback controls
+- ✅ Frame-accurate video capture
+- ✅ Customizable colors, fonts, and timing
+- ✅ Support for JPEG, PNG, GIF, and WebP
+
+## Usage
+
+### Interactive Mode
+
+Navigate to `/templates/gsap/photo-exif`:
+1. Upload a photo
+2. Preview the animation
+3. Use controls to play/pause/scrub
+4. Click "Record" to capture as MP4
+
+### API Capture
+
+```typescript
+const response = await fetch('/api/capture/gsap/photo-exif', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ options }),
+});
+const video = await response.blob();
+```
+
+## Animation Timeline
+
+- **Phase 1 (0-30%)**: Image entrance with fade and scale
+- **Phase 2 (20-60%)**: EXIF data reveal with stagger
+- **Phase 3 (60-100%)**: Hold final state
+
+## Status
+
+✅ **Complete and Production Ready**

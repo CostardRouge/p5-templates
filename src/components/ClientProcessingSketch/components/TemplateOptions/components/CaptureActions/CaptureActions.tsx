@@ -32,8 +32,7 @@ import DraftActions from "./components/DraftActions";
 import RecordingActions from "./components/RecordingActions";
 import CompletedActions from "./components/CompletedActions";
 import FailedActions from "./components/FailedActions";
-import DownloadOptionsButton from "./components/DownloadOptionsButton";
-import ImportOptionsButton from "./components/ImportOptionsButton";
+import OptionsMenu from "./components/OptionsMenu";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
@@ -480,21 +479,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         className="flex flex-col gap-1 glass px-2 py-2 border border-theme rounded-2xl shadow-lg"
       >
         <div className="flex flex-col gap-1 h-auto w-full">
-          {/* Download Options JSON - Always Available */}
-          <DownloadOptionsButton
-            options={options}
-            name={name}
-            persistedJobId={persistedJob?.id}
-          />
-
-          {/* Import Options JSON - Always available */}
-          <ImportOptionsButton
-            persistedJobId={persistedJob?.id}
-            jobStatus={currentStatus}
-            name={name}
-            onImportInMemory={onImportOptions}
-          />
-
           {/* Browser Recording - Only on Compatible Devices */}
           {!isRecording && browserRecordingSupported && (
             <BrowserRecordingButton onRecord={handleBrowserRecord} />
@@ -581,6 +565,15 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
               )}
             </>
           )}
+
+          {/* Options Menu - Always at bottom */}
+          <OptionsMenu
+            options={options}
+            name={name}
+            persistedJobId={persistedJob?.id}
+            jobStatus={currentStatus}
+            onImportInMemory={onImportOptions}
+          />
         </div>
       </div>
 

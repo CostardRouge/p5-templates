@@ -17,12 +17,21 @@ describe(
       progress: number, status: string = "active"
     ): JobModel => ( {
       id: "test-job",
+      snapshotId: null,
       progress,
       status: status as any,
       template: "test-template",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    } as JobModel );
+      resultUrl: null,
+      thumbnails: [],
+      videoUrls: [],
+      videoSizes: [],
+      recordingStartAt: null,
+      recordingEndAt: null,
+      recordingDuration: null,
+      options: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } );
 
     describe(
       "Draft/Queued recordings",

@@ -1,6 +1,7 @@
 import getSketchList from "@/utils/getSketchList";
 import TemplatesList from "@/components/TemplatesList";
 import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
+import { getAllTemplates } from "@/lib/gsap/templateRegistry";
 
 export type TemplateCategory = Array<{
   href: string,
@@ -26,8 +27,19 @@ export default async function TemplatesPage() {
     } ) )
     .reverse();
 
+  // Get GSAP templates
+  const gsapTemplates = getAllTemplates();
+  const gsapTemplatesList = gsapTemplates.map((template) => ({
+    thumbnail: template.thumbnail,
+    href: `templates/gsap/${template.id}`,
+    hasSketchForm: false,
+    name: template.name,
+    category: template.category,
+  }));
+
   const templates: Record<string, TemplateCategory> = {
     p5: p5sketchNames,
+    gsap: gsapTemplatesList,
     html: [
       {
         thumbnail: "assets/images/templates/html/exif-detail/thumbnail.jpg",

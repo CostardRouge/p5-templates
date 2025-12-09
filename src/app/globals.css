@@ -20,6 +20,12 @@
     /* ring/outline color */
     --label: 0 0% 30%;
     /* dimmer than body text */
+    
+    /* Progress bar gradient - visible on light backgrounds */
+    --progress-start: 0 0% 75%;
+    /* light gray start */
+    --progress-end: 0 0% 40%;
+    /* darker gray end */
 }
 
 /* Dark theme: invert to black bg, white text */
@@ -37,6 +43,12 @@
     --active: 0 0% 10%;
     --focus: 0 0% 100%;
     --label: 0 0% 70%;
+    
+    /* Progress bar gradient - visible on dark backgrounds */
+    --progress-start: 0 0% 30%;
+    /* medium gray start */
+    --progress-end: 0 0% 60%;
+    /* lighter gray end */
 }
 
 /* Respect system dark when no explicit "light" is set */

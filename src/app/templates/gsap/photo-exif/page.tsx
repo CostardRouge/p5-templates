@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import gsap from "gsap";
 import { useGSAPTimeline } from "@/lib/gsap/useGSAPTimeline";
 import { PhotoExifTemplateOptions, ExifData } from "./types";
@@ -9,6 +9,9 @@ import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import ImageDropzone from "./components/ImageDropzone";
 import ExifInfo from "./components/ExifInfo";
 import ExifReader from "exifreader";
+import GSAPTemplateControls from "@/components/GSAPTemplateControls/GSAPTemplateControls";
+import GSAPTemplateError from "@/components/GSAPTemplateError/GSAPTemplateError";
+import { preloadImages, optimizeForAnimation, cleanupAnimationOptimizations } from "@/lib/gsap/performance";
 
 import "./photo-exif.css";
 
@@ -27,10 +30,13 @@ export default function PhotoExifTemplate() {
   const [rawFile, setRawFile] = useState<File | null>(null);
   const [exifData, setExifData] = useState<ExifData | null>(null);
   const [showExif, setShowExif] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Initialize GSAP timeline synced to options.animation
-  const { timeline, progress, isReady: timelineReady } = useGSAPTimeline({
+  const { timeline, progress, isReady: timelineReady, currentFrame, totalFrames } = useGSAPTimeline({
     container: containerRef as React.RefObject<HTMLElement>,
     options: options?.animation,
     capturing,
@@ -39,6 +45,7 @@ export default function PhotoExifTemplate() {
       if (capturing) {
         document.body.setAttribute('data-capture-complete', 'true');
       }
+      setIsPlaying(false);
     }
   });
 
@@ -47,6 +54,14 @@ export default function PhotoExifTemplate() {
     setExifData(null);
     setImage(null);
     setRawFile(file);
+    setImageError(false);
+    setError(null);
+
+    // Validate file type
+    if (!supportedImageTypes.includes(file.type)) {
+      setError('Unsupported image format. Please use JPEG, PNG, GIF, or WebP.');
+      return;
+    }
 
     // Parse EXIF data
     ExifReader.load(file)
@@ -90,13 +105,17 @@ export default function PhotoExifTemplate() {
         } as ExifData;
       })
       .then(setExifData)
-      .catch(console.error);
+      .catch((err) => {
+        console.error('EXIF parsing error:', err);
+        // Continue even if EXIF parsing fails
+      });
 
     // Create image URL for display
-    if (supportedImageTypes.includes(file.type)) {
+    try {
       setImage(URL.createObjectURL(file));
-    } else {
-      setImage(null);
+    } catch (err) {
+      console.error('Failed to create image URL:', err);
+      setError('Failed to load image');
     }
   };
 
@@ -117,6 +136,7 @@ export default function PhotoExifTemplate() {
         setOptions(parsedOptions);
       } catch (error) {
         console.error('Failed to parse options:', error);
+        setError('Invalid options configuration');
         setOptions(defaultOptions);
       }
     } else {
@@ -129,7 +149,10 @@ export default function PhotoExifTemplate() {
       const imageUrl = `/api/assets?name=${encodeURIComponent(imageFilename)}`;
 
       fetch(imageUrl)
-        .then((res) => res.blob())
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to load image');
+          return res.blob();
+        })
         .then((blob) => {
           handleImageFile(
             new File([blob], "image.jpg", {
@@ -137,23 +160,102 @@ export default function PhotoExifTemplate() {
             })
           );
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error('Image loading error:', err);
+          setError('Failed to load image from server');
+        });
     }
   }, []);
 
   // Mark as ready when options and timeline are ready
   useEffect(() => {
     if (options && timelineReady) {
-      setIsReady(true);
+      // Preload and optimize before marking as ready
+      const prepareAnimation = async () => {
+        try {
+          // Preload images if any
+          if (image) {
+            await preloadImages([image]);
+          }
+
+          // Optimize elements for animation
+          optimizeForAnimation('#image');
+          optimizeForAnimation('#exif-info');
+
+          setIsReady(true);
+        } catch (err) {
+          console.error('Failed to prepare animation:', err);
+          setIsReady(true); // Continue anyway
+        }
+      };
+
+      prepareAnimation();
+
+      // Cleanup on unmount
+      return () => {
+        cleanupAnimationOptimizations('#image');
+        cleanupAnimationOptimizations('#exif-info');
+      };
     }
-  }, [options, timelineReady]);
+  }, [options, timelineReady, image]);
+
+  // Interactive controls handlers
+  const handlePlayPause = useCallback(() => {
+    if (!timeline) return;
+    
+    if (isPlaying) {
+      timeline.pause();
+    } else {
+      timeline.play();
+    }
+    setIsPlaying(!isPlaying);
+  }, [timeline, isPlaying]);
+
+  const handleRestart = useCallback(() => {
+    if (!timeline) return;
+    timeline.restart();
+    setIsPlaying(true);
+  }, [timeline]);
+
+  const handleSeek = useCallback((seekProgress: number) => {
+    if (!timeline) return;
+    timeline.pause();
+    timeline.progress(seekProgress);
+    setIsPlaying(false);
+  }, [timeline]);
+
+  const handleRecord = useCallback(async () => {
+    if (!options) return;
+    
+    try {
+      const response = await fetch('/api/capture/gsap/photo-exif', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ options }),
+      });
+
+      if (!response.ok) throw new Error('Recording failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `photo-exif-${Date.now()}.mp4`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Recording error:', error);
+      alert('Failed to record video');
+    }
+  }, [options]);
 
   // Define GSAP animations
   useEffect(() => {
     if (!timeline || !isReady || !options || !image) return;
 
-    // Clear previous animations
-    timeline.clear();
+    try {
+      // Clear previous animations
+      timeline.clear();
 
     const duration = options.animation.duration;
     
@@ -216,9 +318,26 @@ export default function PhotoExifTemplate() {
     if (timeline.duration() < duration) {
       timeline.to({}, { duration: duration - timeline.duration() });
     }
-
+    } catch (err) {
+      console.error('Animation setup error:', err);
+      setError('Failed to initialize animations');
+    }
   }, [timeline, isReady, options, image]);
 
+  // Show error state
+  if (error) {
+    return (
+      <GSAPTemplateError
+        message={error}
+        onRetry={() => {
+          setError(null);
+          window.location.reload();
+        }}
+      />
+    );
+  }
+
+  // Show loading state
   if (!options) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -230,37 +349,63 @@ export default function PhotoExifTemplate() {
   const backgroundColor = `rgb(${options.photo.backgroundColor.join(',')})`;
 
   return (
-    <ScalableViewport
-      initialScale={capturing ? 1 : undefined}
-      showZoomControls={!capturing}
-      disable={capturing}
-    >
-      <div className="flex items-center justify-center h-screen">
-        <div
-          id="capture-container"
-          ref={containerRef}
-          className="w-[1080px] h-[1350px] p-16"
-          style={{ backgroundColor }}
-          data-ready={isReady}
-        >
-          <ImageDropzone image={image} onImageDrop={handleImageFile}>
-            <ExifInfo
-              exifData={exifData}
-              visible={showExif}
-              className="flex flex-col"
-            >
-              {image && (
-                <img
-                  id="image"
-                  src={image}
-                  alt="Uploaded"
-                  className="max-w-full object-cover"
-                />
-              )}
-            </ExifInfo>
-          </ImageDropzone>
+    <>
+      <ScalableViewport
+        initialScale={capturing ? 1 : undefined}
+        showZoomControls={!capturing}
+        disable={capturing}
+      >
+        <div className="flex items-center justify-center h-screen">
+          <div
+            id="capture-container"
+            ref={containerRef}
+            className="w-[1080px] h-[1350px] p-16"
+            style={{ backgroundColor }}
+            data-ready={isReady}
+          >
+            <ImageDropzone image={image} onImageDrop={handleImageFile}>
+              <ExifInfo
+                exifData={exifData}
+                visible={showExif}
+                className="flex flex-col"
+              >
+                {image && (
+                  <img
+                    id="image"
+                    src={image}
+                    alt="Uploaded"
+                    className="max-w-full object-cover"
+                    onError={() => {
+                      setImageError(true);
+                      setError('Failed to display image');
+                    }}
+                    onLoad={() => setImageError(false)}
+                  />
+                )}
+                {imageError && (
+                  <div className="text-red-500 text-center p-4">
+                    Failed to load image
+                  </div>
+                )}
+              </ExifInfo>
+            </ImageDropzone>
+          </div>
         </div>
-      </div>
-    </ScalableViewport>
+      </ScalableViewport>
+
+      {/* Interactive controls - only show in non-capture mode */}
+      {!capturing && isReady && (
+        <GSAPTemplateControls
+          isPlaying={isPlaying}
+          progress={progress}
+          currentFrame={currentFrame}
+          totalFrames={totalFrames}
+          onPlayPause={handlePlayPause}
+          onRestart={handleRestart}
+          onSeek={handleSeek}
+          onRecord={handleRecord}
+        />
+      )}
+    </>
   );
 }

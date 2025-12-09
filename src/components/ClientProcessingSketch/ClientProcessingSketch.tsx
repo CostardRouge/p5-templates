@@ -113,15 +113,24 @@ export default function ClientProcessingSketch() {
               setSketchLoaded( true );
             }}
           />
-        </ScalableViewport>
 
-        {/* Animation progression bar - positioned outside viewport to prevent drag conflicts */}
-        {sketchLoaded && !capturing && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-[600px] px-4 z-10 pointer-events-auto">
-            <AnimationProgressionBar disabled />
-          </div>
-        )}
-      </div>
+          {sketchLoaded && !capturing && (
+            <div
+            className="mt-4"
+              style={
+                {
+                  "--scale-factor": "var(--viewport-scale, 1)",
+                  transform: "scale(calc(1 / var(--scale-factor)))",
+                  transformOrigin: "top left",
+                  width: "calc(100% * var(--scale-factor))",
+                } as React.CSSProperties
+              }
+            >
+              <AnimationProgressionBar />
+            </div>
+          )}
+        </ScalableViewport>
+      </div> 
 
       {sketchLoaded && !capturing && (
         <>
