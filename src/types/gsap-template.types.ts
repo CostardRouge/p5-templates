@@ -27,7 +27,7 @@ export interface GSAPTemplateMetadata {
   description: string;
   category: 'photo' | 'text' | 'motion' | 'mixed';
   thumbnail: string;
-  defaultOptions: GSAPTemplateOptions;
+  defaultOptions?: GSAPTemplateOptions;
 }
 
 /**

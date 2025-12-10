@@ -259,13 +259,6 @@
     "ctime": "2025-12-01T04:46:33.752Z"
   },
   {
-    "name": "alphabet-scroll-v1-a-z-Z-A",
-    "category": "alphabet",
-    "hasSketchForm": true,
-    "mtime": "2025-12-07T14:08:39.614Z",
-    "ctime": "2025-12-07T14:08:39.613Z"
-  },
-  {
     "name": "text-animated-points",
     "category": "text",
     "hasSketchForm": true,
@@ -273,10 +266,17 @@
     "ctime": "2025-12-07T14:08:39.617Z"
   },
   {
-    "name": "hand-capture-interactive-grid",
-    "category": "hand-capture",
+    "name": "kinetic-grid-spheres",
+    "category": "kinetic-grid",
     "hasSketchForm": true,
-    "mtime": "2025-12-07T23:02:55.807Z",
-    "ctime": "2025-12-07T14:08:39.615Z"
+    "mtime": "2025-12-09T22:37:41.761Z",
+    "ctime": "2025-12-09T22:37:41.752Z"
+  },
+  {
+    "name": "text-morphing-capitalize",
+    "category": "text-morphing",
+    "hasSketchForm": true,
+    "mtime": "2025-12-10T00:28:16.372Z",
+    "ctime": "2025-12-07T14:08:39.613Z"
   }
 ]

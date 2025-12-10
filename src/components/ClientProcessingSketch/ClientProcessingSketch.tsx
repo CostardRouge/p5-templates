@@ -81,7 +81,7 @@ export default function ClientProcessingSketch() {
       )}
 
       <div
-        className="h-full w-full relative"
+        className="h-full w-full relative select-none"
         hidden={!sketchLoaded}
       >
         <ScalableViewport
@@ -92,7 +92,8 @@ export default function ClientProcessingSketch() {
         >
           {sketchLoaded && !capturing && (
             <div
-              className="flex justify-between font-mono text-sm"
+              onClick={( e ) => e.stopPropagation()}
+              className="flex justify-between font-mono text-sm select-none mt-2"
               style={
                 {
                   "--scale-factor": "var(--viewport-scale, 1)",
@@ -102,7 +103,7 @@ export default function ClientProcessingSketch() {
                 } as React.CSSProperties
               }
             >
-              <p>{name} {activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}</p>
+              <p className="truncate">{name} {activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}</p>
               <p id="p5-sketch-fps-counter"></p>
             </div>
           )}
@@ -116,7 +117,7 @@ export default function ClientProcessingSketch() {
 
           {sketchLoaded && !capturing && (
             <div
-            className="mt-4"
+              className="mt-2 mb-4 truncate"
               style={
                 {
                   "--scale-factor": "var(--viewport-scale, 1)",
@@ -130,7 +131,7 @@ export default function ClientProcessingSketch() {
             </div>
           )}
         </ScalableViewport>
-      </div> 
+      </div>
 
       {sketchLoaded && !capturing && (
         <>

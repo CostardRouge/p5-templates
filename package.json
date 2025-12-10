@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",
-    "dev": "concurrently \"npm run sketch:meta\" \"next dev\"",
-    "build": "next build",
+    "gsap:meta": "node scripts/watch-gsap-templates.mjs",
+    "dev": "concurrently \"npm run sketch:meta\" \"npm run gsap:meta\" \"next dev --turbo\"",
+    "build": "npm run gsap:meta && next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  useState, useEffect, useRef, useCallback
+  useCallback, useEffect, useRef, useState
 } from "react";
 import {
   getSketchOptions
@@ -336,7 +336,7 @@ export default function AnimationProgressionBar( {
         </div>
 
         {/* Info display */}
-        <div className="flex items-center justify-around w-full mt-2 text-xs font-medium text-foreground/60 gap-4">
+        <div className="flex items-center justify-between w-full mt-2 text-xs font-medium text-foreground/60 gap-4">
           {/* Current values */}
           <div className="flex items-center gap-3">
             <span className="font-mono">

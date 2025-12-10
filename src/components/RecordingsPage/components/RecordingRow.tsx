@@ -78,7 +78,7 @@ export default function RecordingRow( {
           href={`templates/${ job.template }?id=${ job.id }`}
           className="group/link text-xs sm:text-sm text-foreground hover:text-foreground/70 transition-colors"
         >
-          <div className="font-mono">
+          <div className="font-mono truncate">
             #{job.id.slice(
               0,
               8
