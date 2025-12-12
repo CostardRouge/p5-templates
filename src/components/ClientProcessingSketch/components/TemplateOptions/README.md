@@ -27,7 +27,7 @@ Handles all slide operations and active slide tracking.
 
 #### `useThumbnails.ts`
 Manages thumbnail capture and storage (feature-flagged).
-- Thumbnail capture from canvas using pica
+- Thumbnail capture from canvas using native Canvas API
 - Loading persisted thumbnails from jobs
 - Support for both draft (data URLs) and completed (S3 URLs) recordings
 - Returns: thumbnails map, capture function, pending ref
@@ -46,9 +46,10 @@ Renders the options UI panel with all controls.
 
 #### `thumbnailUtils.ts`
 Pure utility functions for thumbnail operations.
-- `captureThumbnailFromCanvas()` - High-quality canvas capture using pica
-- Configurable quality settings
+- `captureThumbnailFromCanvas()` - High-quality canvas capture using native Canvas API
+- Configurable quality settings (JPEG quality, image smoothing)
 - Error handling
+- No external dependencies (Turbopack compatible)
 
 ## Feature Flag: `enableThumbnails`
 
@@ -59,21 +60,36 @@ The thumbnail feature is now controlled by an optional prop:
   name="my-sketch"
   options={options}
   onOptionsChange={handleChange}
-  enableThumbnails={false} // Default: false (disabled)
+  enableThumbnails={true} // Default: true (enabled)
 />
 ```
 
-### When `enableThumbnails={false}` (default):
+### When `enableThumbnails={false}`:
 - No thumbnail capture logic runs
 - No pica initialization
 - Empty thumbnails object passed to components
 - Reduced memory usage and processing
 
-### When `enableThumbnails={true}`:
+### When `enableThumbnails={true}` (default):
 - Full thumbnail capture functionality
 - Automatic capture on slide changes
-- Persisted thumbnails loaded from jobs
-- High-quality resizing with pica
+- Persisted thumbnails loaded from jobs immediately on mount
+- Initial thumbnail capture for slides without thumbnails
+- High-quality resizing with native Canvas API (no external dependencies)
+
+## Thumbnail Features
+
+### Automatic Loading
+- **Persisted thumbnails**: Automatically loaded when component mounts
+  - For completed recordings: Fetches signed S3 URLs
+  - For draft recordings: Loads data URLs from job data
+- **Initial capture**: If no persisted thumbnails exist, captures the first slide after 500ms
+
+### Manual Capture
+The hook exposes methods for manual thumbnail management:
+- `captureThumbnail(slideId)` - Capture thumbnail for a specific slide
+- `captureCurrentSlide(slideId)` - Capture with a small delay (useful for refresh)
+- `clearThumbnails()` - Clear all thumbnails and reset state
 
 ## Benefits
 
@@ -86,18 +102,26 @@ The thumbnail feature is now controlled by an optional prop:
 
 ## Migration Guide
 
-For existing usage, no changes required - the component API remains the same. To enable thumbnails:
+For existing usage, no changes required - thumbnails are now enabled by default:
 
 ```tsx
-// Before (thumbnails always active)
+// Before refactoring (thumbnails always active)
 <TemplateOptions {...props} />
 
-// After (thumbnails disabled by default)
+// After refactoring (thumbnails enabled by default)
 <TemplateOptions {...props} />
 
-// After (thumbnails enabled)
-<TemplateOptions {...props} enableThumbnails={true} />
+// To disable thumbnails if needed
+<TemplateOptions {...props} enableThumbnails={false} />
 ```
+
+## Thumbnail Improvements
+
+### Fixed Issues
+1. **Immediate display**: Thumbnails now load immediately when arriving on a persisted sketch
+2. **Prevent duplicate loads**: Uses ref to track if persisted thumbnails have been loaded
+3. **Initial capture**: Automatically captures first slide thumbnail if none exist
+4. **Better state management**: Replaces entire thumbnail state instead of merging to avoid stale data
 
 ## File Structure
 

@@ -1,7 +1,6 @@
 import {
   useCallback, useEffect, useRef, useState
 } from "react";
-import pica from "pica";
 import {
   JobModel
 } from "@/types/recording.types";
@@ -25,27 +24,24 @@ export function useThumbnails( {
     setThumbnails
   ] = useState<Record<string, string>>( {
   } );
-  const picaRef = useRef<ReturnType<typeof pica> | null>( null );
   const pendingThumbnailCaptureRef = useRef<number | null>( null );
-
-  // Initialize pica instanc e
-  useEffect(
-    () => {
-      if ( enabled ) {
-        picaRef.current = pica();
-      }
-    },
-    [
-      enabled
-    ]
-  );
+  const hasLoadedPersistedThumbnails = useRef( false );
+  const initialCaptureAttempted = useRef( false );
 
   // Initialize thumbnails from persisted job
   useEffect(
     () => {
       if ( !enabled || !persistedJob?.thumbnails || slideFields.length === 0 ) {
+        hasLoadedPersistedThumbnails.current = false;
         return;
       }
+
+      // Prevent loading multiple times
+      if ( hasLoadedPersistedThumbnails.current ) {
+        return;
+      }
+
+      hasLoadedPersistedThumbnails.current = true;
 
       try {
       // For completed recordings, thumbnails are S3 URLs - we need to fetch signed URLs
@@ -69,10 +65,7 @@ export function useThumbnails( {
                     newThumbnails[ field.id ] = data.thumbnails[ index ];
                   }
                 } );
-                setThumbnails( ( prev ) => ( {
-                  ...prev,
-                  ...newThumbnails
-                } ) );
+                setThumbnails( newThumbnails );
               }
             } )
             .catch( ( e ) => {
@@ -84,19 +77,13 @@ export function useThumbnails( {
         } else {
         // For draft recordings, thumbnails are stored as Record<slideId, dataUrl>
           if ( typeof persistedJob.thumbnails === "object" && !Array.isArray( persistedJob.thumbnails ) ) {
-            setThumbnails( ( prev ) => ( {
-              ...prev,
-              ...( persistedJob.thumbnails as Record<string, string> )
-            } ) );
+            setThumbnails( persistedJob.thumbnails as Record<string, string> );
           } else if ( typeof persistedJob.thumbnails === "string" ) {
             try {
               const parsed = JSON.parse( persistedJob.thumbnails );
 
               if ( typeof parsed === "object" && !Array.isArray( parsed ) ) {
-                setThumbnails( ( prev ) => ( {
-                  ...prev,
-                  ...parsed
-                } ) );
+                setThumbnails( parsed );
               } else if ( Array.isArray( parsed ) ) {
                 const newThumbnails: Record<string, string> = {
                 };
@@ -108,10 +95,7 @@ export function useThumbnails( {
                     newThumbnails[ field.id ] = parsed[ index ];
                   }
                 } );
-                setThumbnails( ( prev ) => ( {
-                  ...prev,
-                  ...newThumbnails
-                } ) );
+                setThumbnails( newThumbnails );
               }
             } catch ( e ) {
               console.warn(
@@ -131,10 +115,7 @@ export function useThumbnails( {
                 newThumbnails[ field.id ] = thumbArray[ index ];
               }
             } );
-            setThumbnails( ( prev ) => ( {
-              ...prev,
-              ...newThumbnails
-            } ) );
+            setThumbnails( newThumbnails );
           }
         }
       } catch ( e ) {
@@ -154,13 +135,66 @@ export function useThumbnails( {
     ]
   );
 
-  const captureThumbnail = useCallback(
-    async( slideId: string ) => {
-      if ( !enabled || !picaRef.current ) {
+  // Capture initial thumbnails for slides that don't have them
+  useEffect(
+    () => {
+      if ( !enabled || slideFields.length === 0 || initialCaptureAttempted.current ) {
         return;
       }
 
-      const dataUrl = await captureThumbnailFromCanvas( picaRef.current );
+      // Wait a bit for the canvas to be ready and rendered
+      const timeoutId = setTimeout(
+        () => {
+          initialCaptureAttempted.current = true;
+
+          // Check which slides need thumbnails
+          const slidesNeedingThumbnails = slideFields.filter(
+            ( field ) => !thumbnails[ field.id ]
+          );
+
+          if ( slidesNeedingThumbnails.length === 0 ) {
+            return;
+          }
+
+          // Capture thumbnail for the first slide that needs one
+          // (assuming it's the active slide)
+          const firstSlideId = slidesNeedingThumbnails[ 0 ].id;
+
+          captureThumbnailFromCanvas()
+            .then( ( dataUrl ) => {
+              if ( dataUrl ) {
+                setThumbnails( ( prev ) => ( {
+                  ...prev,
+                  [ firstSlideId ]: dataUrl
+                } ) );
+              }
+            } )
+            .catch( ( e ) => {
+              console.error(
+                "Failed to capture initial thumbnail:",
+                e
+              );
+            } );
+        },
+        500
+      ); // Give canvas time to render
+
+      return () => clearTimeout( timeoutId );
+    },
+    [
+      enabled,
+      slideFields,
+      thumbnails
+    ]
+  );
+
+  const captureThumbnail = useCallback(
+    async( slideId: string ) => {
+      if ( !enabled ) {
+        return;
+      }
+
+      const dataUrl = await captureThumbnailFromCanvas();
 
       if ( dataUrl ) {
         setThumbnails( ( prev ) => ( {
@@ -174,9 +208,43 @@ export function useThumbnails( {
     ]
   );
 
+  // Manually capture thumbnail for current slide (useful for refresh)
+  const captureCurrentSlide = useCallback(
+    async( slideId: string ) => {
+      if ( !enabled ) {
+        return;
+      }
+
+      // Wait a bit for canvas to update
+      await new Promise( ( resolve ) => setTimeout(
+        resolve,
+        100
+      ) );
+      await captureThumbnail( slideId );
+    },
+    [
+      enabled,
+      captureThumbnail
+    ]
+  );
+
+  // Clear all thumbnails (useful for reset)
+  const clearThumbnails = useCallback(
+    () => {
+      setThumbnails( {
+      } );
+      hasLoadedPersistedThumbnails.current = false;
+      initialCaptureAttempted.current = false;
+    },
+    [
+    ]
+  );
+
   return {
     thumbnails,
     captureThumbnail,
+    captureCurrentSlide,
+    clearThumbnails,
     pendingThumbnailCaptureRef,
   };
 }

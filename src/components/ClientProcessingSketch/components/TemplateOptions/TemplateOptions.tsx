@@ -45,7 +45,7 @@ export default function TemplateOptions( {
   onOptionsChange,
   onActiveSlideChange,
   options: initialOptions,
-  enableThumbnails = false,
+  enableThumbnails = true, // Enable by default now
 }: TemplateOptionsProps ) {
   const browserRecordingSupported = useBrowserRecordingSupported();
   const captureActionsRef = useRef<CaptureActionsRef>( null );
@@ -87,7 +87,7 @@ export default function TemplateOptions( {
 
   // Thumbnail management (only when enabled)
   const {
-    thumbnails, captureThumbnail, pendingThumbnailCaptureRef
+    thumbnails, captureThumbnail, captureCurrentSlide, clearThumbnails, pendingThumbnailCaptureRef
   } = useThumbnails( {
     enabled: enableThumbnails,
     persistedJob,
