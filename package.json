@@ -5,7 +5,7 @@
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",
     "gsap:meta": "node scripts/watch-gsap-templates.mjs",
-    "dev": "concurrently \"npm run sketch:meta\" \"npm run gsap:meta\" \"next dev --turbo\"",
+    "dev": "concurrently \"npm run sketch:meta\" \"npm run gsap:meta\" \"next dev --turbopack\"",
     "build": "npm run gsap:meta && next build",
     "start": "next start",
     "lint": "next lint",

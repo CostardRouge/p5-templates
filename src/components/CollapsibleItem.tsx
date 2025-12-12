@@ -1,14 +1,11 @@
 import {
-  DetailedHTMLProps,
-  HTMLAttributes,
-  JSX,
-  useState
+  DetailedHTMLProps, HTMLAttributes, JSX, useState
 } from "react";
 
 const CollapsibleItem = ( {
   header, children, className, headerContainerClassName, initialExpandedValue = true, ...props
 }: {
-  header: ( expanded: boolean ) => JSX.Element;
+  header: ( expanded: boolean, title: string ) => JSX.Element;
   initialExpandedValue?: boolean,
   children: React.ReactNode;
   className?: string;
@@ -27,9 +24,11 @@ const CollapsibleItem = ( {
       <div
         className={headerContainerClassName}
         onClick={() => setExpanded( e => !e )}
-        title={expanded ? "click to collapse" : "click to expand"}
       >
-        {header( expanded )}
+        {header(
+          expanded,
+          expanded ? "click to collapse" : "click to expand"
+        )}
       </div>
 
       {expanded && children}

@@ -34,8 +34,10 @@ export default function FieldRenderer( {
       errors
     }, control, setValue
   } = useFormContext();
-  
-  const { sketchFormValues } = useSketch();
+
+  const {
+    sketchFormValues
+  } = useSketch();
 
   const registeredName = fieldName ? `${ fieldBasePath }.${ fieldName }` : fieldBasePath;
 
@@ -58,44 +60,72 @@ export default function FieldRenderer( {
   } );
 
   // Get default value from sketch form values
-  const getDefaultValue = useCallback(() => {
-    if (!sketchFormValues) return undefined;
-    
-    // Parse the path to get nested value
-    const pathParts = registeredName.split('.');
-    let defaultValue: any = sketchFormValues;
-    
-    for (const part of pathParts) {
-      if (defaultValue && typeof defaultValue === 'object' && part in defaultValue) {
-        defaultValue = defaultValue[part];
-      } else {
-        return undefined;
+  const getDefaultValue = useCallback(
+    () => {
+      if ( !sketchFormValues ) return undefined;
+
+      // Parse the path to get nested value
+      const pathParts = registeredName.split( "." );
+      let defaultValue: any = sketchFormValues;
+
+      for ( const part of pathParts ) {
+        if ( defaultValue && typeof defaultValue === "object" && part in defaultValue ) {
+          defaultValue = defaultValue[ part ];
+        } else {
+          return undefined;
+        }
       }
-    }
-    
-    return defaultValue;
-  }, [registeredName, sketchFormValues]);
+
+      return defaultValue;
+    },
+    [
+      registeredName,
+      sketchFormValues
+    ]
+  );
 
   // Check if value has changed from default
-  const isChanged = useCallback(() => {
-    const defaultValue = getDefaultValue();
-    if (defaultValue === undefined) return false;
-    
-    // Deep comparison for arrays and objects
-    if (Array.isArray(currentValue) && Array.isArray(defaultValue)) {
-      return JSON.stringify(currentValue) !== JSON.stringify(defaultValue);
-    }
-    
-    return currentValue !== defaultValue;
-  }, [currentValue, getDefaultValue]);
+  const isChanged = useCallback(
+    () => {
+      const defaultValue = getDefaultValue();
+
+      if ( defaultValue === undefined ) return false;
+
+      // Deep comparison for arrays and objects
+      if ( Array.isArray( currentValue ) && Array.isArray( defaultValue ) ) {
+        return JSON.stringify( currentValue ) !== JSON.stringify( defaultValue );
+      }
+
+      return currentValue !== defaultValue;
+    },
+    [
+      currentValue,
+      getDefaultValue
+    ]
+  );
 
   // Handle double-click to reset to default
-  const handleLabelDoubleClick = useCallback(() => {
-    const defaultValue = getDefaultValue();
-    if (defaultValue !== undefined) {
-      setValue(registeredName, defaultValue, { shouldDirty: true, shouldValidate: true });
-    }
-  }, [getDefaultValue, registeredName, setValue]);
+  const handleLabelDoubleClick = useCallback(
+    () => {
+      const defaultValue = getDefaultValue();
+
+      if ( defaultValue !== undefined ) {
+        setValue(
+          registeredName,
+          defaultValue,
+          {
+            shouldDirty: true,
+            shouldValidate: true
+          }
+        );
+      }
+    },
+    [
+      getDefaultValue,
+      registeredName,
+      setValue
+    ]
+  );
 
   const renderInput = () => {
     // A helper for common props to keep the JSX clean
@@ -208,13 +238,13 @@ export default function FieldRenderer( {
       case "nested-object":
         return (
           <Fragment>
-            <label 
-              htmlFor={registeredName} 
-              className={`text-gray-400 cursor-pointer select-none ${valueChanged ? 'italic' : ''}`}
+            <label
+              htmlFor={registeredName}
+              className={`text-gray-400 cursor-pointer select-none ${ valueChanged ? "italic" : "" }`}
               onDoubleClick={handleLabelDoubleClick}
               title="Double-click to reset to default"
             >
-              {config.label}{valueChanged && ' *'}
+              {config.label}{valueChanged && " *"}
             </label>
 
             <div className="p-1 border border-theme rounded-xl space-y-1 bg-background/50">
@@ -273,24 +303,24 @@ export default function FieldRenderer( {
     <div className="text-xs">
       {/* Don't show a label for groups, as they have their own internal labels */}
       {( config.component !== "nested-object" && config.component !== "conditional-group" && config.component !== "hidden" ) && config.label && (
-        <label 
-          htmlFor={registeredName} 
-          className={`text-gray-400 cursor-pointer select-none ${valueChanged ? 'italic' : ''}`}
+        <label
+          htmlFor={registeredName}
+          className={`text-gray-400 cursor-pointer select-none ${ valueChanged ? "italic" : "" }`}
           onDoubleClick={handleLabelDoubleClick}
           title="Double-click to reset to default"
         >
-          {config.label}{valueChanged && ' *'}
+          {config.label}{valueChanged && " *"}
         </label>
       )}
 
       {/* For conditional groups, the main label is part of the box */}
       {config.component === "conditional-group" && config.label && (
-        <h4 
-          className={`text-gray-400 cursor-pointer select-none ${valueChanged ? 'italic' : ''}`}
+        <h4
+          className={`text-gray-400 cursor-pointer select-none ${ valueChanged ? "italic" : "" }`}
           onDoubleClick={handleLabelDoubleClick}
           title="Double-click to reset to default"
         >
-          {config.label}{valueChanged && ' *'}
+          {config.label}{valueChanged && " *"}
         </h4>
       )}
 
