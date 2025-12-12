@@ -20,7 +20,7 @@ type OptionsMenuProps = {
   onImportInMemory?: ( options: SketchOptionInput ) => void;
 };
 
-export default function OptionsMenu( {
+export default function OptionsImportExport( {
   options,
   name,
   persistedJobId,
