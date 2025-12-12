@@ -100,6 +100,62 @@ export const formConfiguration: Record<string, any> = {
       },
     }
   },
+  morphing: {
+    component: "nested-object",
+    label: "Morphing",
+    fields: {
+      easing: {
+        component: "select",
+        label: "Morphing easing function",
+        options: Object.keys( easing ).map( easingFunctionName => ( {
+          label: easingFunctionName,
+          value: easingFunctionName,
+        } ) )
+      },
+      depthLayersCount: {
+        label: "Depth layers count",
+        component: "slider",
+        min: 1,
+        max: 1000,
+        step: 1
+      },
+      depthLength: {
+        label: "Depth length",
+        component: "slider",
+        min: -4,
+        max: 4,
+        step: 0.01
+      },
+      point: {
+        component: "nested-object",
+        label: "Point settings",
+        fields: {
+          strokeWeightMax: {
+            label: "Max stroke weight",
+            component: "slider",
+            min: 1,
+            max: 150,
+            step: 1
+          },
+          strokeWeightMin: {
+            label: "Min stroke weight",
+            component: "slider",
+            min: 1,
+            max: 150,
+            step: 1
+          },
+          strokeWeightEasing: {
+            component: "select",
+            label: "Stroke weight easing function",
+            options: Object.keys( easing ).map( easingFunctionName => ( {
+              label: easingFunctionName,
+              value: easingFunctionName,
+            } ) )
+          },
+        }
+      }
+    }
+  },
   sliders: {
     component: "nested-object",
     label: "Sliders",
@@ -185,62 +241,6 @@ export const formConfiguration: Record<string, any> = {
           fill: {
             label: "Circle fill",
             component: "color",
-          },
-        }
-      }
-    }
-  },
-  morphing: {
-    component: "nested-object",
-    label: "Morphing",
-    fields: {
-      easing: {
-        component: "select",
-        label: "Morphing easing function",
-        options: Object.keys( easing ).map( easingFunctionName => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) )
-      },
-      depthLayersCount: {
-        label: "Depth layers count",
-        component: "slider",
-        min: 1,
-        max: 1000,
-        step: 1
-      },
-      depthLength: {
-        label: "Depth length",
-        component: "slider",
-        min: -4,
-        max: 4,
-        step: 0.01
-      },
-      point: {
-        component: "nested-object",
-        label: "Point settings",
-        fields: {
-          strokeWeightMax: {
-            label: "Max stroke weight",
-            component: "slider",
-            min: 1,
-            max: 150,
-            step: 1
-          },
-          strokeWeightMin: {
-            label: "Min stroke weight",
-            component: "slider",
-            min: 1,
-            max: 150,
-            step: 1
-          },
-          strokeWeightEasing: {
-            component: "select",
-            label: "Stroke weight easing function",
-            options: Object.keys( easing ).map( easingFunctionName => ( {
-              label: easingFunctionName,
-              value: easingFunctionName,
-            } ) )
           },
         }
       }
