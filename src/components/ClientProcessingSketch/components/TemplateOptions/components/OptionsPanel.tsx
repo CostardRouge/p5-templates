@@ -1,0 +1,187 @@
+import React, { Fragment } from "react";
+import { UseFormReturn, useWatch } from "react-hook-form";
+import { ArrowDownFromLine, ListCollapse } from "lucide-react";
+import clsx from "clsx";
+import { SketchOption, SketchOptionInput, SlideOption } from "@/types/sketch.types";
+import { JobModel } from "@/types/recording.types";
+import CollapsibleItem from "@/components/CollapsibleItem";
+import RootSettings from "./RootSettings/RootSettings";
+import ContentItems from "./ContentItems/ContentItems";
+import SlideCarousel from "./SlideCarousel";
+import SlideEditor from "./SlideEditor";
+import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvider";
+import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
+import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
+import initOptions from "@/components/utils/initOptions";
+
+type OptionsPanelProps = {
+  methods: UseFormReturn<SketchOptionInput>;
+  name: string;
+  persistedJob?: JobModel;
+  activeSlideIndex: number;
+  slideIds: string[];
+  thumbnails: Record<string, string>;
+  slides?: SlideOption[];
+  jobStatus?: string;
+  onAddSlide: () => Promise<void>;
+  onSelectSlide: (index: number | undefined) => Promise<void>;
+  onReorderSlides: (oldIndex: number, newIndex: number) => void;
+  onDuplicateSlide: (index: number) => void;
+  onDeleteSlide: (index: number) => void;
+  onRenameSlide: (index: number, newName: string) => void;
+  onImportOptions: (options: SketchOption) => void;
+  enableThumbnails: boolean;
+};
+
+export default function OptionsPanel({
+  methods,
+  name,
+  persistedJob,
+  activeSlideIndex,
+  slideIds,
+  thumbnails,
+  slides,
+  jobStatus,
+  onAddSlide,
+  onSelectSlide,
+  onReorderSlides,
+  onDuplicateSlide,
+  onDeleteSlide,
+  onRenameSlide,
+  onImportOptions,
+  enableThumbnails,
+}: OptionsPanelProps) {
+  const { control, watch } = methods;
+
+  const rootContentLength = useWatch({
+    control,
+    name: "content",
+  })?.length;
+
+  const slidesLength = slides?.length;
+  const jobId = useWatch({ control, name: "id" }) as string | undefined;
+  const options = watch();
+
+  const editorKey =
+    slideIds[activeSlideIndex] ?? `${activeSlideIndex}-${slides?.[activeSlideIndex]?.name ?? "unnamed-slide"}`;
+
+  return (
+    <div
+      className="w-64 absolute right-2 bottom-2 flex flex-col gap-2 z-50"
+      style={{
+        maxWidth: "calc(50% - 0.75rem)",
+      }}
+    >
+      <CollapsibleItem
+        className="flex flex-col gap-1 glass p-2 border border-theme rounded-2xl shadow-lg"
+        style={{
+          maxHeight: "calc(80svh)",
+        }}
+        header={(expanded, title) => (
+          <div className="flex gap-1">
+            <OptionsImportExport
+              options={options}
+              name={name}
+              persistedJobId={persistedJob?.id}
+              jobStatus={jobStatus}
+              onImportInMemory={(importedOptions) => {
+                const processedOptions = initOptions(importedOptions as SketchOption);
+                console.log("Importing options:", {
+                  imported: importedOptions,
+                  processed: processedOptions,
+                  slidesCount: processedOptions.slides?.length,
+                });
+                onImportOptions(importedOptions as SketchOption);
+              }}
+            />
+
+            <button
+              title={title}
+              className="text-foreground text-sm text-right w-full"
+              aria-label={expanded ? "Collapse controls" : "Expand controls"}
+            >
+              <span>options</span>
+              <ArrowDownFromLine
+                className="inline text-foreground h-3 w-3 ml-1"
+                style={{
+                  rotate: expanded ? "0deg" : "180deg",
+                }}
+              />
+            </button>
+          </div>
+        )}
+      >
+        <RootSettings />
+
+        <CollapsibleItem
+          initialExpandedValue={false}
+          className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
+          headerContainerClassName="leading-none"
+          header={(expanded) => (
+            <button
+              className={clsx("truncate text-foreground text-xs w-full text-left -ml-1 align-text-top", {
+                "mb-1": expanded,
+              })}
+              aria-label={expanded ? "Collapse" : "Expand"}
+            >
+              <ListCollapse
+                className="inline text-foreground h-3"
+                style={{
+                  rotate: expanded ? "180deg" : "0deg",
+                }}
+              />
+              <span>global content {rootContentLength ? `(${rootContentLength})` : null}</span>
+            </button>
+          )}
+        >
+          <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
+            <ContentArrayProvider name="content">
+              <ContentItems baseFieldName="content" />
+            </ContentArrayProvider>
+          </TemplateAssetsProvider>
+        </CollapsibleItem>
+
+        {slides && (
+          <Fragment>
+            <CollapsibleItem
+              initialExpandedValue={!!slidesLength}
+              className="p-1 border border-theme rounded-lg bg-background overflow-y-auto"
+              headerContainerClassName="leading-none"
+              header={(expanded) => (
+                <button
+                  className={clsx("text-foreground text-xs w-full text-left -ml-1 align-text-top", {
+                    "mb-1": expanded,
+                  })}
+                  aria-label={expanded ? "Collapse" : "Expand"}
+                >
+                  <ListCollapse
+                    className="inline text-foreground h-3"
+                    style={{
+                      rotate: expanded ? "180deg" : "0deg",
+                    }}
+                  />
+                  <span>slides {slidesLength ? `(${slidesLength})` : null}</span>
+                </button>
+              )}
+            >
+              <SlideCarousel
+                slides={slides as SlideOption[]}
+                slideIds={slideIds}
+                thumbnails={enableThumbnails ? thumbnails : {}}
+                activeIndex={activeSlideIndex}
+                onAdd={onAddSlide}
+                onSelect={onSelectSlide}
+                onReorder={onReorderSlides}
+                onDuplicate={onDuplicateSlide}
+                onDelete={onDeleteSlide}
+                onRename={onRenameSlide}
+              />
+
+              <SlideEditor key={editorKey} activeIndex={activeSlideIndex} />
+            </CollapsibleItem>
+          </Fragment>
+        )}
+      </CollapsibleItem>
+    </div>
+  );
+}
