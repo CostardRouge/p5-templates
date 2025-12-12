@@ -19,8 +19,6 @@ import {
 import {
   OptionsSchema, SketchOption, SketchOptionInput, SlideOption,
 } from "@/types/sketch.types";
-
-import FormUndoRedo from "./components/FormUndoRedo/FormUndoRedo";
 import ContentItems from "./components/ContentItems/ContentItems";
 import CaptureActions, {
   CaptureActionsRef
@@ -47,12 +45,13 @@ import makeDefaultSlide from "@/components/ClientProcessingSketch/components/Tem
 import RootSettings
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/RootSettings";
 import clsx from "clsx";
-import UndoRedo from "@/components/ClientProcessingSketch/components/TemplateOptions/components/UndoRedo";
 import SketchSettings
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/SketchSettings/SketchSettings";
 import useBrowserRecordingSupported
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/CaptureActions/hooks/useBrowserRecordingSupported";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import OptionsMenu
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/CaptureActions/components/OptionsMenu";
 
 type TemplateOptionsProps = {
   name: string;
@@ -652,44 +651,63 @@ export default function TemplateOptions( {
           style={{
             maxHeight: "calc(80svh)",
           }}
-          header={( expanded ) => (
-            <button
-              className={
-                clsx(
-                  "text-foreground text-sm text-right",
-                  {
-                    "w-full": !expanded,
-                    "absolute top-2 right-2": expanded
-                  }
-                )
-              }
-              aria-label={expanded ? "Collapse controls" : "Expand controls"}
-            >
-              <span>options</span>
-              <ArrowDownFromLine
-                className="inline text-foreground h-3 w-3 ml-1"
-                style={{
-                  rotate: expanded ? "0deg" : "180deg"
+          header={(
+            expanded, title
+          ) => (
+            <div className="flex gap-1">
+              <OptionsMenu
+                options={options}
+                name={name}
+                persistedJobId={persistedJob?.id}
+                jobStatus={captureActionsRef.current?.currentStatus}
+                onImportInMemory={( importedOptions ) => {
+                  // Use reset to properly update all form values including arrays
+                  const processedOptions = initOptions( importedOptions as SketchOption );
+
+                  console.log(
+                    "Importing options:",
+                    {
+                      imported: importedOptions,
+                      processed: processedOptions,
+                      slidesCount: processedOptions.slides?.length
+                    }
+                  );
+                  reset( processedOptions );
+                  setHasUnsavedChanges( true );
                 }}
               />
-            </button>
+
+              <button
+                title={title}
+                className="text-foreground text-sm text-right w-full"
+                aria-label={expanded ? "Collapse controls" : "Expand controls"}
+              >
+                <span>options</span>
+                <ArrowDownFromLine
+                  className="inline text-foreground h-3 w-3 ml-1"
+                  style={{
+                    rotate: expanded ? "0deg" : "180deg"
+                  }}
+                />
+              </button>
+            </div>
           )}
         >
-          <FormUndoRedo
-            maxHistory={50}
-            hotkeys
-            autoCapture="debounced"
-            debounceMs={400}
-            watchPaths={[
-              "content",
-              "sketch",
-              "slides",
-              "animation"
-            ]}
-            captureInitial
-          >
-            <UndoRedo />
-          </FormUndoRedo>
+          {/* <FormUndoRedo*/}
+          {/*  maxHistory={50}*/}
+          {/*  hotkeys*/}
+          {/*  autoCapture="debounced"*/}
+          {/*  debounceMs={400}*/}
+          {/*  watchPaths={[*/}
+          {/*    "content",*/}
+          {/*    "sketch",*/}
+          {/*    "slides",*/}
+          {/*    "animation"*/}
+          {/*  ]}*/}
+          {/*  captureInitial*/}
+          {/* >*/}
+          {/*  <UndoRedo />*/}
+          {/* </FormUndoRedo>*/}
 
           <RootSettings />
 
@@ -785,20 +803,6 @@ export default function TemplateOptions( {
           backendRecording={backendRecording}
           browserRecordingSupported={browserRecordingSupported}
           thumbnails={thumbnails}
-          onImportOptions={( importedOptions ) => {
-            // Use reset to properly update all form values including arrays
-            const processedOptions = initOptions( importedOptions as SketchOption );
-            console.log(
-              "Importing options:",
-              {
-                imported: importedOptions,
-                processed: processedOptions,
-                slidesCount: processedOptions.slides?.length
-              }
-            );
-            reset( processedOptions );
-            setHasUnsavedChanges( true );
-          }}
         />
         }
       </div>

@@ -4,15 +4,13 @@ import React, {
   useRef, useState
 } from "react";
 import {
-  Menu, MenuButton, MenuItem, MenuItems
-} from "@headlessui/react";
-import {
-  Download, FileUp, MoreVertical
+  Download, FileUp
 } from "lucide-react";
 import {
   SketchOptionInput
 } from "@/types/sketch.types";
 import Toast from "@/components/Toast";
+import clsx from "clsx";
 
 type OptionsMenuProps = {
   options: SketchOptionInput;
@@ -50,7 +48,7 @@ export default function OptionsMenu( {
 
   const handleDownload = ( e: React.MouseEvent ) => {
     e.stopPropagation();
-    
+
     const cleanOptions = JSON.parse( JSON.stringify( options ) );
     const blob = new Blob(
       [
@@ -64,14 +62,17 @@ export default function OptionsMenu( {
         type: "application/json"
       }
     );
-    
+
     const url = URL.createObjectURL( blob );
     const a = document.createElement( "a" );
-    const suffix = persistedJobId 
-      ? persistedJobId.slice( 0, 8 )
+    const suffix = persistedJobId
+      ? persistedJobId.slice(
+        0,
+        8
+      )
       : Date.now().toString();
     const filename = `${ name }-options-${ suffix }.json`;
-    
+
     a.href = url;
     a.download = filename;
     a.setAttribute(
@@ -90,6 +91,7 @@ export default function OptionsMenu( {
 
   const handleFileChange = async( event: React.ChangeEvent<HTMLInputElement> ) => {
     const file = event.target.files?.[ 0 ];
+
     if ( !file ) return;
 
     setImporting( true );
@@ -114,6 +116,7 @@ export default function OptionsMenu( {
         }
       } else {
         const formData = new FormData();
+
         formData.append(
           "file",
           file
@@ -129,6 +132,7 @@ export default function OptionsMenu( {
 
         if ( !response.ok ) {
           const error = await response.json();
+
           throw new Error( error.error || "Import failed" );
         }
 
@@ -170,51 +174,34 @@ export default function OptionsMenu( {
         className="hidden"
       />
 
-      <Menu as="div" className="relative">
-        <MenuButton className="flex items-center justify-center gap-2 px-4 py-2 bg-foreground/10 hover:bg-foreground/20 text-foreground rounded-lg transition-colors text-sm font-medium w-full">
-          <MoreVertical className="h-4 w-4" />
-          <span>Options</span>
-        </MenuButton>
-
-        <MenuItems
-          anchor="top"
-          className="z-50 w-56 border border-border rounded-xl bg-background shadow-xl overflow-hidden mb-2 focus:outline-none [--anchor-gap:0.5rem]"
+      <div className="flex gap-1">
+        <button
+          onClick={handleDownload}
+          className="hover:bg-hover w-full items-center"
         >
-          <MenuItem>
-            {( {
-              focus
-            } ) => (
-              <button
-                onClick={handleDownload}
-                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
-              >
-                <Download className="h-4 w-4 text-blue-600" />
-                <span className="font-medium">Download Options</span>
-              </button>
-            )}
-          </MenuItem>
+          <Download className="h-4 w-4" />
+        </button>
 
-          {canImport && (
-            <MenuItem>
-              {( {
-                focus
-              } ) => (
-                <button
-                  onClick={handleImportClick}
-                  disabled={importing}
-                  className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors disabled:opacity-50`}
-                >
-                  <FileUp className="h-4 w-4 text-purple-600" />
-                  <span className="font-medium">{importing ? "Importing..." : "Import Options"}</span>
-                </button>
-              )}
-            </MenuItem>
-          )}
-        </MenuItems>
-      </Menu>
+        <button
+          onClick={handleImportClick}
+          disabled={importing}
+          className={
+            clsx(
+              "hover:bg-hover disabled:opacity-50",
+              {
+                "animate-pulse": importing,
+              }
+            )
+          }
+        >
+          <FileUp className="h-4 w-4" />
+          {/* <span className="font-medium">{importing ? "Importing..." : "Import Options"}</span>*/}
+        </button>
+      </div>
 
       {toast && (
         <Toast
+
           message={toast.message}
           type={toast.type}
           onClose={() => setToast( null )}

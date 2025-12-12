@@ -32,10 +32,10 @@ import DraftActions from "./components/DraftActions";
 import RecordingActions from "./components/RecordingActions";
 import CompletedActions from "./components/CompletedActions";
 import FailedActions from "./components/FailedActions";
-import OptionsMenu from "./components/OptionsMenu";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
+  currentStatus?: string,
   isRecording: boolean;
   isSaving: boolean;
 };
@@ -48,12 +48,11 @@ type CaptureActionsProps = {
   backendRecording: boolean;
   browserRecordingSupported: boolean;
   thumbnails?: Record<string, string>;
-  onImportOptions?: ( options: SketchOptionInput ) => void;
 };
 
 const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   {
-    name, options, persistedJob, activeSlideIndex, backendRecording, browserRecordingSupported, thumbnails, onImportOptions
+    name, options, persistedJob, activeSlideIndex, backendRecording, browserRecordingSupported, thumbnails
   }, ref
 ) => {
   const router = useRouter();
@@ -302,7 +301,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         );
       },
       isSaving: saving,
-      isRecording: !!isRecording
+      isRecording: !!isRecording,
+      currentStatus
     } )
   );
 
@@ -565,15 +565,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
               )}
             </>
           )}
-
-          {/* Options Menu - Always at bottom */}
-          <OptionsMenu
-            options={options}
-            name={name}
-            persistedJobId={persistedJob?.id}
-            jobStatus={currentStatus}
-            onImportInMemory={onImportOptions}
-          />
         </div>
       </div>
 
