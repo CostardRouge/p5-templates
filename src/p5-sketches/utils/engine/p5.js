@@ -30,49 +30,49 @@ const p5js = {
   getFrameCount: () => frameCount,
   getFrameRate: () => frameRate(),
   getElapsedTime: () => millis(),
-  loadScripts: async () => {
-    await scripts.load("/assets/libraries/p5.min.js");
+  loadScripts: async() => {
+    await scripts.load( "/assets/libraries/p5.min.js" );
     // await scripts.load("/assets/libraries/q5.js");
   },
   attachGlobalFunctions: () => {
     window.setup = () => {
-      events.handle("pre-setup");
-      events.handle("setup");
-      events.handle("post-setup");
+      events.handle( "pre-setup" );
+      events.handle( "setup" );
+      events.handle( "post-setup" );
     };
     window.draw = () => {
-      events.handle("pre-draw");
+      events.handle( "pre-draw" );
       events.handle(
         "draw",
         time.seconds(),
         p5js.getCanvasCenter(),
         p5js.favoriteColors.purple
       );
-      events.handle("post-draw");
+      events.handle( "post-draw" );
     };
     window.keyTyped = () => {
-      events.handle("engine-on-key-typed");
+      events.handle( "engine-on-key-typed" );
     };
     window.keyPressed = () => {
-      events.handle("engine-key-pressed");
+      events.handle( "engine-key-pressed" );
     };
     window.mousePressed = () => {
-      events.handle("engine-mouse-pressed");
+      events.handle( "engine-mouse-pressed" );
     };
     window.mouseDragged = () => {
-      events.handle("engine-mouse-dragged");
+      events.handle( "engine-mouse-dragged" );
     };
     window.mouseReleased = () => {
-      events.handle("engine-mouse-released");
+      events.handle( "engine-mouse-released" );
     };
     window.doubleClicked = () => {
-      events.handle("engine-window-double-click");
+      events.handle( "engine-window-double-click" );
     };
     window.windowResized = () => {
-      events.handle("engine-window-resized");
+      events.handle( "engine-window-resized" );
     };
     window.preload = () => {
-      events.handle("engine-window-preload");
+      events.handle( "engine-window-preload" );
     };
   },
   setup: (
@@ -102,34 +102,34 @@ const p5js = {
           type
         );
 
-        if ("webgl" === type) {
+        if ( "webgl" === type ) {
           p5js.camera = createCamera();
-          setCamera(p5js.camera);
+          setCamera( p5js.camera );
         }
 
         // applying options
-        frameRate(sketchOptions?.animation?.framerate);
+        frameRate( sketchOptions?.animation?.framerate );
 
         smooth();
 
         // registering events
-        Object.entries(p5js.eventHandlers).forEach(([
+        Object.entries( p5js.eventHandlers ).forEach( ( [
           eventName,
           eventHandler
-        ]) => {
+        ] ) => {
           events.register(
             eventName,
             eventHandler
           );
-        });
+        } );
 
-        p5js.canvas.doubleClicked(() => {
-          events.handle("engine-canvas-double-clicked");
-        });
+        p5js.canvas.doubleClicked( () => {
+          events.handle( "engine-canvas-double-clicked" );
+        } );
 
-        p5js.canvas.mousePressed(() => {
-          events.handle("engine-canvas-mouse-pressed");
-        });
+        p5js.canvas.mousePressed( () => {
+          events.handle( "engine-canvas-mouse-pressed" );
+        } );
 
         p5js.canvas.drop(
           file => {
@@ -152,16 +152,16 @@ const p5js = {
       "setup",
       () => {
         noStroke();
-        pixelDensity(1);
-        setupEngineFunction?.({
+        pixelDensity( 1 );
+        setupEngineFunction?.( {
           center: p5js.getCanvasCenter(),
           canvas: p5js.canvas,
-        });
+        } );
       }
     );
   },
   getCanvasCenter: () => {
-    if (p5js.canvas.isP3D) {
+    if ( p5js.canvas.isP3D ) {
       return createVector(
         0,
         0
@@ -174,18 +174,18 @@ const p5js = {
     );
   },
   eventHandlers: {
-    "engine-toggle-loop": function () {
+    "engine-toggle-loop": function() {
       p5js.paused = p5js.paused ?? false;
       p5js.paused = !p5js.paused;
 
-      if (p5js.paused) {
+      if ( p5js.paused ) {
         noLoop();
       } else {
         loop();
       }
     },
     "engine-get-key-typed": () => key,
-    "engine-toggle-fullscreen": () => fullscreen(!fullscreen()),
+    "engine-toggle-fullscreen": () => fullscreen( !fullscreen() ),
     "engine-fill-screen": () =>
       events.handle(
         "engine-resize-canvas",
@@ -194,12 +194,18 @@ const p5js = {
       ),
     "engine-resize-canvas": (
       canvasWidth, canvasHeight
-    ) =>
+    ) => {
       p5js.canvas.resize(
         canvasWidth,
         canvasHeight
-      ),
-    "engine-fullscreen-toggle": () => fullscreen(!fullscreen()),
+      );
+      events.handle(
+        "engine-resized-canvas",
+        canvasWidth,
+        canvasHeight
+      );
+    },
+    "engine-fullscreen-toggle": () => fullscreen( !fullscreen() ),
     "engine-pause": () => noLoop(),
     "engine-resume": () => loop(),
     "engine-redraw": () => redraw(),
@@ -210,10 +216,10 @@ const p5js = {
       name,
       type
     ),
-    "engine-smooth-pixel-change": (checked) =>
+    "engine-smooth-pixel-change": ( checked ) =>
       checked ? smooth() : noSmooth(),
-    "engine-framerate-change": (value) => {
-      frameRate(value);
+    "engine-framerate-change": ( value ) => {
+      frameRate( value );
     },
   },
 };

@@ -1,0 +1,34 @@
+import events from "./events.js";
+
+const graphics = {
+  createAutoResizableGraphics(
+    width, height, type, callback
+  ) {
+    const _graphics = createGraphics(
+      width,
+      height,
+      type
+    );
+
+    _graphics.canvas.remove();
+
+    events.register(
+      "engine-resized-canvas",
+      (
+        nw, nh
+      ) => {
+        _graphics.width = nw;
+        _graphics.height = nh;
+
+        callback?.(
+          nw,
+          nh
+        );
+      }
+    );
+
+    return _graphics;
+  }
+};
+
+export default graphics;
