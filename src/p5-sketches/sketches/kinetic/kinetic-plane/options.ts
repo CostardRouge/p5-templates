@@ -6,7 +6,7 @@ export const formValues = {
   image: null,
   grid: {
     columns: 20,
-    rows: 10,
+    rows: 30,
   },
   animation: {
     useMouse: false,
@@ -64,7 +64,7 @@ export const formConfiguration: Record<string, any> = {
         component: "checkbox",
       },
       showWebcam: {
-        label: "Show Webcam",
+        label: "Show webcam",
         component: "checkbox",
       },
       showSpheres: {

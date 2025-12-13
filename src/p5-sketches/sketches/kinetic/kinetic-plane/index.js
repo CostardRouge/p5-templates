@@ -70,6 +70,7 @@ sketch.setup( async( {
   );
 
   await mediapipeInit( {
+    enableCapture: false,
     worker: false,
     tasks: [
       "hands"
@@ -244,7 +245,7 @@ function displayTriangleGrid(
     // stroke("red")
     // noFill();
 
-    sketchState.plane.graphics.noStroke();
+    // sketchState.plane.graphics.noStroke();
     // sketchState.plane.graphics.noFill();
     sketchState.plane.graphics.endShape();
   } );
@@ -288,7 +289,9 @@ sketch.draw( () => {
 
   setMediapipeEnabled( useHands );
 
-  const _image = common.getAsset( options.sketch?.image );
+  const _image = common.getAsset( options.sketch?.image )?.img;
+
+  // mediapipe.capture.element
 
   const targetVectors = [
 
@@ -330,7 +333,7 @@ sketch.draw( () => {
     const targetProgression = i / targetsCount;
 
     targetVectors.push( sketchState.plane.graphics.screenPosition( createVector(
-      Math.sin( animation.angle + i * 2 ) * W,
+      Math.sin( animation.angle + i * 3 ) * W,
       Math.cos( animation.angle + i * targetProgression ) * H
     ) ) );
   }
@@ -338,7 +341,7 @@ sketch.draw( () => {
   displayTriangleGrid(
     sketchState.plane.gridData,
     targetVectors,
-    _image?.img
+    _image
   );
 
   if ( options.sketch.animation.showSpheres ?? true ) {
