@@ -177,9 +177,10 @@ export default function OptionsImportExport( {
       <div className="flex gap-1">
         <button
           onClick={handleDownload}
-          className="hover:bg-hover w-full items-center"
+          className="hover:bg-hover px-1 border rounded-lg text-xs flex items-center"
         >
-          <Download className="h-4 w-4" />
+          <Download className="h-3.5" />
+          <span>Export</span>
         </button>
 
         <button
@@ -187,15 +188,15 @@ export default function OptionsImportExport( {
           disabled={importing}
           className={
             clsx(
-              "hover:bg-hover disabled:opacity-50",
+              "hover:bg-hover disabled:opacity-50 px-1 border rounded-lg text-xs flex items-center",
               {
                 "animate-pulse": importing,
               }
             )
           }
         >
-          <FileUp className="h-4 w-4" />
-          {/* <span className="font-medium">{importing ? "Importing..." : "Import Options"}</span>*/}
+          <FileUp className="h-3.5" />
+          <span>{importing ? "Importing..." : "Import"}</span>
         </button>
       </div>
 
