@@ -118,31 +118,31 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     ]
   );
 
-  // Pause P5 sketch during recording
-  React.useEffect(
-    () => {
-      const isRecording =
-        recordingProgress && [
-          "queued",
-          "active"
-        ].includes( recordingProgress.status );
-
-      if ( isRecording ) {
-        // Pause the sketch
-        if ( typeof ( window as any ).noLoop === "function" ) {
-          ( window as any ).noLoop();
-        }
-      } else {
-        // Resume when not recording
-        if ( typeof ( window as any ).loop === "function" ) {
-          ( window as any ).loop();
-        }
-      }
-    },
-    [
-      recordingProgress
-    ]
-  );
+  // // Pause P5 sketch during recording
+  // React.useEffect(
+  //   () => {
+  //     const isRecording =
+  //       recordingProgress && [
+  //         "queued",
+  //         "active"
+  //       ].includes( recordingProgress.status );
+  //
+  //     if ( isRecording ) {
+  //       // Pause the sketch
+  //       if ( typeof ( window as any ).noLoop === "function" ) {
+  //         ( window as any ).noLoop();
+  //       }
+  //     } else {
+  //       // Resume when not recording
+  //       if ( typeof ( window as any ).loop === "function" ) {
+  //         ( window as any ).loop();
+  //       }
+  //     }
+  //   },
+  //   [
+  //     recordingProgress
+  //   ]
+  // );
 
   const handleSubmit = async(
     status: JobStatusEnum = "queued",
