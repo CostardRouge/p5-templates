@@ -26,6 +26,7 @@ const mediapipe = {
   mode: "VIDEO", // VIDEO or IMAGE
   previousFrameSentTime: 0,
   inferenceIntervalMilliseconds: 20, // Default speed
+  enabled: true, // Dynamic enable/disable flag
 };
 
 export async function init( config = {
@@ -215,6 +216,9 @@ events.register(
 );
 
 function sendFrameIfDue() {
+  // Early return if mediapipe is disabled
+  if ( !mediapipe.enabled ) return;
+  
   if ( !mediapipe.processor.ready || mediapipe.processor.busy ) return;
 
   // Skip if capture element was not initialized
@@ -250,6 +254,56 @@ function sendFrameIfDue() {
       videoEl,
       now
     );
+  }
+}
+
+// Dynamic enable/disable functions
+export function enable() {
+  mediapipe.enabled = true;
+  
+  // If capture element doesn't exist, create it
+  if ( !mediapipe.capture.element ) {
+    createVideoCaptureElements();
+  }
+}
+
+export function disable() {
+  mediapipe.enabled = false;
+  
+  // Stop any ongoing processing
+  mediapipe.processor.busy = false;
+  
+  // Clear results to prevent stale data
+  Object.keys(mediapipe.tasks).forEach(taskName => {
+    if (mediapipe.tasks[taskName]) {
+      mediapipe.tasks[taskName].result = null;
+    }
+  });
+}
+
+export function deallocateWebcam() {
+  disable();
+  
+  // Stop and remove webcam stream
+  if ( mediapipe.capture.element?.elt?.srcObject ) {
+    const stream = mediapipe.capture.element.elt.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach( track => track.stop() );
+    mediapipe.capture.element.elt.srcObject = null;
+  }
+  
+  // Remove the video element
+  if ( mediapipe.capture.element ) {
+    mediapipe.capture.element.remove();
+    mediapipe.capture.element = null;
+  }
+}
+
+export function setEnabled( enabled ) {
+  if ( enabled ) {
+    enable();
+  } else {
+    disable();
   }
 }
 

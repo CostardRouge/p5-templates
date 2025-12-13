@@ -10,6 +10,7 @@ export const formValues = {
   },
   animation: {
     useMouse: false,
+    useHands: true,
     showSpheres: true,
     spheresCount: 6,
     sphereSize: 30,
@@ -66,6 +67,10 @@ export const formConfiguration: Record<string, any> = {
         label: "Use mouse",
         component: "checkbox",
       },
+      useHands: {
+        label: "Use hands",
+        component: "checkbox",
+      },
       showSpheres: {
         label: "Show spheres",
         component: "checkbox",
@@ -73,7 +78,7 @@ export const formConfiguration: Record<string, any> = {
       spheresCount: {
         label: "Spheres count",
         component: "slider",
-        min: 1,
+        min: 0,
         max: 24,
       },
       sphereSize: {

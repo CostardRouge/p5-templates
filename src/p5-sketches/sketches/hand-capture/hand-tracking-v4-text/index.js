@@ -4,7 +4,6 @@ import options from "@/p5/utils/options.js";
 
 import string from "@/p5/utils/string.js";
 import sketch from "@/p5/utils/sketch.js";
-import scripts from "@/p5/utils/scripts.js";
 
 import * as common from "@/p5/utils/common.js";
 
@@ -21,6 +20,16 @@ import Matter from "@/public/assets/libraries/matter.min.js";
 const {
   Engine, Bodies, Composite, Vector
 } = Matter;
+
+// Key landmarks for interaction (palm, fingertips)
+const interactionIndices = [
+  0,
+  4,
+  8,
+  12,
+  16,
+  20,
+];
 
 const BOUNDARY_THICKNESS = 50;
 const BOUNDARY_MARGIN = 50;
@@ -289,17 +298,6 @@ function updateHandBodies() {
 
   mediapipe.tasks?.hands?.result?.landmarks?.forEach?.( createHandInteractionBodies );
 }
-
-// Key landmarks for interaction (palm, fingertips)
-const interactionIndices = [
-  0,
-  4,
-  8,
-  12,
-  16,
-  20,
-  9
-];
 
 function createHandInteractionBodies( hand ) {
   const interactionPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
