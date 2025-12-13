@@ -168,38 +168,45 @@ export default function TemplateOptions( {
         isSaving={captureActionsRef.current?.isSaving}
       />
 
-      <OptionsPanel
-        methods={methods}
-        name={name}
-        persistedJob={persistedJob}
-        activeSlideIndex={activeSlideIndex}
-        slideIds={slideIds}
-        thumbnails={thumbnails}
-        slides={slides}
-        jobStatus={captureActionsRef.current?.currentStatus}
-        onAddSlide={handleAddSlide}
-        onSelectSlide={handleSlideSelect}
-        onReorderSlides={handleReorderSlides}
-        onDuplicateSlide={handleDuplicateSlide}
-        onDeleteSlide={handleDeleteSlide}
-        onRenameSlide={handleRenameSlide}
-        onImportOptions={handleImportOptions}
-        enableThumbnails={enableThumbnails}
-      />
-
-      {( backendRecording || browserRecordingSupported ) && (
-        <CaptureActions
-          ref={captureActionsRef}
+      <div
+        className="w-64 absolute right-2 bottom-2 space-y-2"
+        style={{
+          maxWidth: "calc(50% - 0.75rem)",
+        }}
+      >
+        <OptionsPanel
+          methods={methods}
           name={name}
-          options={methods.watch()}
           persistedJob={persistedJob}
           activeSlideIndex={activeSlideIndex}
-          backendRecording={backendRecording}
-          browserRecordingSupported={browserRecordingSupported}
-          thumbnails={enableThumbnails ? thumbnails : {
-          }}
+          slideIds={slideIds}
+          thumbnails={thumbnails}
+          slides={slides}
+          jobStatus={captureActionsRef.current?.currentStatus}
+          onAddSlide={handleAddSlide}
+          onSelectSlide={handleSlideSelect}
+          onReorderSlides={handleReorderSlides}
+          onDuplicateSlide={handleDuplicateSlide}
+          onDeleteSlide={handleDeleteSlide}
+          onRenameSlide={handleRenameSlide}
+          onImportOptions={handleImportOptions}
+          enableThumbnails={enableThumbnails}
         />
-      )}
+
+        {( backendRecording || browserRecordingSupported ) && (
+          <CaptureActions
+            ref={captureActionsRef}
+            name={name}
+            options={methods.watch()}
+            persistedJob={persistedJob}
+            activeSlideIndex={activeSlideIndex}
+            backendRecording={backendRecording}
+            browserRecordingSupported={browserRecordingSupported}
+            thumbnails={enableThumbnails ? thumbnails : {
+            }}
+          />
+        )}
+      </div>
 
       <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
         <SketchSettings activeSlideIndex={slides && slides.length > 0 ? activeSlideIndex : undefined} />

@@ -177,7 +177,7 @@ export default function OptionsImportExport( {
       <div className="flex gap-1">
         <button
           onClick={handleDownload}
-          className="hover:bg-hover px-1 border rounded-lg text-xs flex items-center"
+          className="text-xs flex items-center bg-background"
         >
           <Download className="h-3.5" />
           <span>Export</span>
@@ -188,7 +188,7 @@ export default function OptionsImportExport( {
           disabled={importing}
           className={
             clsx(
-              "hover:bg-hover disabled:opacity-50 px-1 border rounded-lg text-xs flex items-center",
+              "disabled:opacity-50 text-xs flex items-center bg-background",
               {
                 "animate-pulse": importing,
               }
