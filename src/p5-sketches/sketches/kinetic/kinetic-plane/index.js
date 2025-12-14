@@ -1,3 +1,4 @@
+import cache from "@/p5/utils/cache.js";
 import easing from "@/p5/utils/easing.js";
 import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
@@ -37,12 +38,7 @@ const sketchState = {
 function createGridData(
   width, height
 ) {
-  sketchState.plane.gridData = createTriangleGrid(
-    options.sketch.grid.columns,
-    options.sketch.grid.rows,
-    width,
-    height
-  );
+
 }
 
 sketch.setup( async( {
@@ -55,14 +51,9 @@ sketch.setup( async( {
     width,
     height,
     "webgl",
-    createGridData
   );
+  sketchState.plane.graphics.pixelDensity( 1 );
   addScreenPositionFunction( sketchState.plane.graphics );
-
-  createGridData(
-    width,
-    height,
-  );
 
   sketchState.webcam.graphics = createGraphics(
     width,
@@ -284,14 +275,27 @@ function computeDisplacement(
 sketch.draw( () => {
   background( ...getBackgroundColor() );
 
+  sketchState.plane.gridData = cache.store(
+    cache.key(
+      options.sketch.grid.columns,
+      options.sketch.grid.rows,
+      sketchState.plane.graphics.width,
+      sketchState.plane.graphics.height
+    ),
+    () => createTriangleGrid(
+      options.sketch.grid.columns,
+      options.sketch.grid.rows,
+      sketchState.plane.graphics.width,
+      sketchState.plane.graphics.height
+    )
+  );
+
   // Dynamically enable/disable mediapipe based on useHands option
   const useHands = options.sketch.animation.useHands ?? true;
 
   setMediapipeEnabled( useHands );
 
-  const _image = common.getAsset( options.sketch?.image )?.img;
-
-  // mediapipe.capture.element
+  const _image = options.sketch.texture.useWebcam ? mediapipe.capture.element : common.getAsset( options.sketch?.texture.image )?.img;
 
   const targetVectors = [
 

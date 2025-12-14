@@ -3,7 +3,10 @@ import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfigura
 import easing from "@/p5/utils/easing";
 
 export const formValues = {
-  image: null,
+  texture: {
+    image: null,
+    useWebcam: false,
+  },
   grid: {
     columns: 20,
     rows: 30,
@@ -11,13 +14,13 @@ export const formValues = {
   animation: {
     useMouse: false,
     useHands: false,
+    showWebcam: false,
     showSpheres: true,
     spheresCount: 6,
     sphereSize: 30,
     depth: 100,
     maxInfluenceDistance: 150,
     easing: "easeOutBack",
-    showWebcam: false,
   },
   title: titleDefaultValues,
   backgroundColor: [
@@ -29,9 +32,19 @@ export const formValues = {
 
 // UI configuration only
 export const formConfiguration: Record<string, any> = {
-  image: {
-    component: "image",
-    label: "Image"
+  texture: {
+    component: "nested-object",
+    label: "Texture",
+    fields: {
+      image: {
+        component: "image",
+        label: "Image"
+      },
+      useWebcam: {
+        label: "Use webcam as texture",
+        component: "checkbox",
+      },
+    }
   },
   grid: {
     component: "nested-object",
