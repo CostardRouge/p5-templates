@@ -11,8 +11,11 @@ import mediapipe, {
 import drawHands from "./drawHands.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 
-import "@/public/assets/libraries/decomp.min.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
+
+import scripts from "@/p5/utils/scripts.js";
+
+scripts.load( "/assets/libraries/decomp.min.js" );
 
 const {
   Engine, Bodies, Composite

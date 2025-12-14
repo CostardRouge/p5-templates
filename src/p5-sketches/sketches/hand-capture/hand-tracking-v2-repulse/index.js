@@ -13,8 +13,9 @@ import mediapipe, {
 import drawHands from "./drawHands.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 
-import "@/public/assets/libraries/decomp.min.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
+
+scripts.load( "/assets/libraries/decomp.min.js" );
 
 mediapipe.tasks = [
   "hands"

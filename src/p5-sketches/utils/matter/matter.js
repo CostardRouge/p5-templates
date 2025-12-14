@@ -5,8 +5,11 @@ import sketch from "@/p5/utils/sketch.js";
 import events from "@/p5/utils/events.js";
 import * as common from "@/p5/utils/common.js";
 
-import "@/public/assets/libraries/decomp.min.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
+
+import scripts from "@/p5/utils/scripts.js";
+
+scripts.load( "/assets/libraries/decomp.min.js" );
 
 const {
   Engine, Bodies, Composite, Vector

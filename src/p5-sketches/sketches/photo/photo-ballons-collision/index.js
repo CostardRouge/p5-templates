@@ -4,14 +4,16 @@ import cache from "@/p5/utils/cache.js";
 import string from "@/p5/utils/string.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
+import scripts from "@/p5/utils/scripts.js";
 import events from "@/p5/utils/events.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 
-import "@/public/assets/libraries/decomp.min.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
+
+scripts.load( "/assets/libraries/decomp.min.js" );
 
 // helpers
 const getBg = () => (

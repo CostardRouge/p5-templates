@@ -8,8 +8,9 @@ import drawNeonDot from "./drawNeonDot.js";
 
 import drawHands from "./drawHands.js";
 
-import "@/public/assets/libraries/decomp.min.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
+
+scripts.load( "/assets/libraries/decomp.min.js" );
 
 const {
   Engine, Bodies, Vector, Composite
