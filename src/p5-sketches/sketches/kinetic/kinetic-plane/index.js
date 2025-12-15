@@ -223,8 +223,11 @@ function displayTriangleGrid(
       ];
 
       if ( imageTexture && imageTexture.width && imageTexture.height ) {
+        // Flip U coordinate horizontally when using webcam to correct mirroring
+        const u = options.sketch.texture.useWebcam ? ( 1 - _vertex.u ) : _vertex.u;
+
         vertices.push(
-          _vertex.u * imageTexture.width,
+          u * imageTexture.width,
           _vertex.v * imageTexture.height
         );
       }
@@ -236,10 +239,17 @@ function displayTriangleGrid(
     // stroke("red")
     // noFill();
 
-    // sketchState.plane.graphics.noStroke();
+    if ( options.sketch.grid.stroke.hide ) {
+      sketchState.plane.graphics.noStroke();
+    }
+    else {
+      sketchState.plane.graphics.stroke( ...options.sketch.grid.stroke.color );
+    }
     // sketchState.plane.graphics.noFill();
     sketchState.plane.graphics.endShape();
   } );
+
+  sketchState.plane.graphics.reset();
 }
 
 function computeDisplacement(

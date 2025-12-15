@@ -10,7 +10,7 @@ import mediapipe, {
   init as mediapipeInit
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
-import drawHands from "./drawHands.js";
+import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 
 import Matter from "@/public/assets/libraries/matter.min.js";

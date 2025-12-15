@@ -6,7 +6,7 @@ import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 
-import drawHands from "./drawHands.js";
+import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 
 let mask = undefined;
 let hands = undefined;

@@ -10,12 +10,18 @@ export const formValues = {
   grid: {
     columns: 20,
     rows: 30,
+    stroke: {
+      color: [
+        0
+      ],
+      hide: false
+    }
   },
   animation: {
     useMouse: false,
     useHands: false,
     showWebcam: false,
-    showSpheres: true,
+    showSpheres: false,
     spheresCount: 6,
     sphereSize: 30,
     depth: 100,
@@ -62,6 +68,20 @@ export const formConfiguration: Record<string, any> = {
         min: 1,
         max: 100,
       },
+      stroke: {
+        component: "nested-object",
+        label: "Stroke",
+        fields: {
+          color: {
+            component: "color",
+            label: "stroke"
+          },
+          hide: {
+            label: "noStroke()",
+            component: "checkbox",
+          },
+        }
+      }
     }
   },
   animation: {

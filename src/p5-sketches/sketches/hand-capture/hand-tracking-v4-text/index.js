@@ -7,7 +7,7 @@ import sketch from "@/p5/utils/sketch.js";
 
 import * as common from "@/p5/utils/common.js";
 
-import drawHands from "./drawHands.js";
+import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 
 import mediapipe, {

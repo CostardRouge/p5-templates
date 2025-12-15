@@ -8,14 +8,14 @@ const titleValues = {
   font: "martian",
   size: 128,
   fill: [
-    0,
-    0,
-    0
-  ],
-  stroke: [
     255,
     255,
     255
+  ],
+  stroke: [
+    0,
+    0,
+    0
   ],
   position: {
     x: 0,

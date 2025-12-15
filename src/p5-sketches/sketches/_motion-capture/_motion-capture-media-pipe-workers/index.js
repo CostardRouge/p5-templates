@@ -6,7 +6,7 @@ import drawSocialMediaOverlay from "./drawSocialMediaOverlay.js";
 import drawGuidelines from "./drawGuidelines.js";
 import drawNeonDot from "./drawNeonDot.js";
 
-import drawHands from "./drawHands.js";
+import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 
 import Matter from "@/public/assets/libraries/matter.min.js";
 
