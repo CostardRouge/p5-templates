@@ -114,7 +114,6 @@ export default function OptionsPanel( {
             className="text-foreground text-sm text-right w-full"
             aria-label={expanded ? "Collapse controls" : "Expand controls"}
           >
-            <span>options</span>
             <ArrowDownFromLine
               className="inline text-foreground h-3 w-3 ml-1"
               style={{
