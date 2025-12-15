@@ -93,6 +93,18 @@ const string = {
         "/assets/fonts/peix.ttf"
       );
     },
+    get onlysansVariable() {
+      return string.fonts.loadFont(
+        "onlysans-variable",
+        "/assets/fonts/onlysans-variable.ttf"
+      );
+    },
+    get waverseVariable() {
+      return string.fonts.loadFont(
+        "waverse-variable",
+        "/assets/fonts/waverse-variable.ttf"
+      );
+    },
   },
   write: function(
     str,

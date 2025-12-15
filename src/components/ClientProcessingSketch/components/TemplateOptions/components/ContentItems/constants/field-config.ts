@@ -150,7 +150,9 @@ export const fontNames = [
   "multicoloure",
   "cloitre",
   "agiro",
-  "peix"
+  "peix",
+  "onlysansVariable",
+  "waverseVariable"
 ];
 
 const visualSelectOptions = [
