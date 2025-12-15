@@ -31,16 +31,20 @@ const shapes = {
     }
     pop();
   },
-  hl: ( y ) => {
-    line(
+  hl: (
+    y, graphics = window
+  ) => {
+    graphics.line(
       0,
       y,
       width,
       y
     );
   },
-  vl: ( x ) => {
-    line(
+  vl: (
+    x, graphics = window
+  ) => {
+    graphics.line(
       x,
       0,
       x,
