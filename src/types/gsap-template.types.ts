@@ -6,8 +6,8 @@
  * Base animation configuration that all GSAP templates must include
  */
 export interface GSAPAnimationOptions {
-  duration: number;      // Total duration in seconds
-  framerate: number;     // Frames per second for recording
+  duration: number; // Total duration in seconds
+  framerate: number; // Frames per second for recording
 }
 
 /**
@@ -15,7 +15,7 @@ export interface GSAPAnimationOptions {
  */
 export interface GSAPTemplateOptions {
   animation: GSAPAnimationOptions;
-  [key: string]: any;  // Template-specific options
+  [key: string]: any; // Template-specific options
 }
 
 /**
@@ -25,7 +25,7 @@ export interface GSAPTemplateMetadata {
   id: string;
   name: string;
   description: string;
-  category: 'photo' | 'text' | 'motion' | 'mixed';
+  category: "photo" | "text" | "motion" | "mixed";
   thumbnail: string;
   defaultOptions?: GSAPTemplateOptions;
 }
@@ -36,7 +36,7 @@ export interface GSAPTemplateMetadata {
 export interface CaptureRequest {
   template: string;
   options: GSAPTemplateOptions;
-  outputFormat: 'video' | 'frames' | 'gif';
+  outputFormat: "video" | "frames" | "gif";
 }
 
 /**
@@ -46,7 +46,7 @@ export interface CaptureProgress {
   currentFrame: number;
   totalFrames: number;
   progress: number;
-  status: 'initializing' | 'capturing' | 'encoding' | 'complete' | 'error';
+  status: "initializing" | "capturing" | "encoding" | "complete" | "error";
   message?: string;
 }
 
@@ -77,7 +77,7 @@ export interface UseGSAPTimelineOptions {
   options?: GSAPAnimationOptions;
   capturing: boolean;
   onComplete?: () => void;
-  onUpdate?: (progress: number) => void;
+  onUpdate?: ( progress: number ) => void;
 }
 
 /**

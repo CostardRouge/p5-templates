@@ -10,7 +10,7 @@ sketch.draw( () => {
     0
   ] ) );
 
-  renderTitle( options.sketch?.text );
+  renderTitle( options.sketch?.text ?? options.name );
 
   strokeWeight( 2 );
   stroke( color( ...( options.sketch?.font?.stroke ?? [

@@ -77,7 +77,20 @@ window.setAnimationProgression = function( progression ) {
   if ( typeof now === "number" ) {
     time.lastUpdate = now;
   }
+
+  // Dispatch event for reactive updates
+  window.dispatchEvent( new CustomEvent(
+    "animation-progression-changed",
+    {
+      detail: {
+        progression: clampedProgression
+      }
+    }
+  ) );
 };
+
+// Track last dispatched progression to avoid excessive events
+let lastDispatchedProgression = -1;
 
 window.getAnimationProgression = function() {
   // Get animation duration, default to 10 seconds if undefined
@@ -86,14 +99,44 @@ window.getAnimationProgression = function() {
 
   // During recording, don't wrap - let it go beyond 1.0
   if ( time.isRecording ) {
-    return Math.min(
+    const progression = Math.min(
       seconds / duration,
       1.0
     );
+
+    // Dispatch event only when progression changes significantly (every 0.01 or so)
+    if ( Math.abs( progression - lastDispatchedProgression ) > 0.01 ) {
+      lastDispatchedProgression = progression;
+      window.dispatchEvent( new CustomEvent(
+        "animation-progression-changed",
+        {
+          detail: {
+            progression
+          }
+        }
+      ) );
+    }
+
+    return progression;
   }
 
   // Normal playback: wrap around for continuous loop
-  return ( seconds % duration ) / duration;
+  const progression = ( seconds % duration ) / duration;
+
+  // Dispatch event only when progression changes significantly
+  if ( Math.abs( progression - lastDispatchedProgression ) > 0.01 ) {
+    lastDispatchedProgression = progression;
+    window.dispatchEvent( new CustomEvent(
+      "animation-progression-changed",
+      {
+        detail: {
+          progression
+        }
+      }
+    ) );
+  }
+
+  return progression;
 };
 
 export default time;

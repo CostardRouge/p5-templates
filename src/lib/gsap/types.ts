@@ -2,4 +2,4 @@
  * Shared GSAP types and utilities
  */
 
-export * from '@/types/gsap-template.types';
+export * from "@/types/gsap-template.types";

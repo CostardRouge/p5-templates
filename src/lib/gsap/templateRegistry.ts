@@ -4,7 +4,9 @@
  * DO NOT EDIT MANUALLY - Changes will be overwritten
  */
 
-import { GSAPTemplateMetadata } from '@/types/gsap-template.types';
+import {
+  GSAPTemplateMetadata
+} from "@/types/gsap-template.types";
 
 /**
  * Registry of available GSAP templates
@@ -29,27 +31,24 @@ export function getAllTemplates(): GSAPTemplateMetadata[] {
 /**
  * Get template by ID
  */
-export function getTemplateById(id: string): GSAPTemplateMetadata | undefined {
-  return gsapTemplates.find((t) => t.id === id);
+export function getTemplateById( id: string ): GSAPTemplateMetadata | undefined {
+  return gsapTemplates.find( ( t ) => t.id === id );
 }
 
 /**
  * Get templates by category
  */
-export function getTemplatesByCategory(
-  category: GSAPTemplateMetadata['category']
-): GSAPTemplateMetadata[] {
-  return gsapTemplates.filter((t) => t.category === category);
+export function getTemplatesByCategory( category: GSAPTemplateMetadata["category"] ): GSAPTemplateMetadata[] {
+  return gsapTemplates.filter( ( t ) => t.category === category );
 }
 
 /**
  * Search templates by name or description
  */
-export function searchTemplates(query: string): GSAPTemplateMetadata[] {
+export function searchTemplates( query: string ): GSAPTemplateMetadata[] {
   const lowerQuery = query.toLowerCase();
-  return gsapTemplates.filter(
-    (t) =>
-      t.name.toLowerCase().includes(lowerQuery) ||
-      t.description.toLowerCase().includes(lowerQuery)
-  );
+
+  return gsapTemplates.filter( ( t ) =>
+    t.name.toLowerCase().includes( lowerQuery ) ||
+      t.description.toLowerCase().includes( lowerQuery ) );
 }

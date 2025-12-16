@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { UseFieldArrayReturn, UseFormGetValues, UseFormSetValue } from "react-hook-form";
-import { SketchOptionInput } from "@/types/sketch.types";
+import {
+  useCallback, useEffect, useRef, useState
+} from "react";
+import {
+  UseFieldArrayReturn, UseFormGetValues, UseFormSetValue
+} from "react-hook-form";
+import {
+  SketchOptionInput
+} from "@/types/sketch.types";
 import deepClone from "@/utils/deepClone";
 import makeDefaultSlide from "../utils/makeDefaultSlide";
 
@@ -13,13 +19,13 @@ type UseSlideManagementProps = {
   getValues: UseFormGetValues<SketchOptionInput>;
   setValue: UseFormSetValue<SketchOptionInput>;
   sketchFormValues: any;
-  onActiveSlideChange?: (index: number | undefined) => void;
-  captureThumbnail?: (slideId: string) => Promise<void>;
+  onActiveSlideChange?: ( index: number | undefined ) => void;
+  captureThumbnail?: ( slideId: string ) => Promise<void>;
   enableThumbnails: boolean;
   pendingThumbnailCaptureRef: React.MutableRefObject<number | null>;
 };
 
-export function useSlideManagement({
+export function useSlideManagement( {
   slideFields,
   appendSlide,
   insertSlide,
@@ -32,187 +38,268 @@ export function useSlideManagement({
   captureThumbnail,
   enableThumbnails,
   pendingThumbnailCaptureRef,
-}: UseSlideManagementProps) {
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const didInitSelection = useRef(false);
+}: UseSlideManagementProps ) {
+  const [
+    activeSlideIndex,
+    setActiveSlideIndex
+  ] = useState( 0 );
+  const didInitSelection = useRef( false );
 
   const handleSlideSelect = useCallback(
-    async (index: number | undefined) => {
+    async( index: number | undefined ) => {
       // Capture thumbnail of current slide before switching
-      if (enableThumbnails && captureThumbnail && activeSlideIndex !== undefined && slideFields[activeSlideIndex]) {
-        const currentSlideId = slideFields[activeSlideIndex].id;
-        await captureThumbnail(currentSlideId);
+      if ( enableThumbnails && captureThumbnail && activeSlideIndex !== undefined && slideFields[ activeSlideIndex ] ) {
+        const currentSlideId = slideFields[ activeSlideIndex ].id;
+
+        await captureThumbnail( currentSlideId );
       }
 
-      if (index !== undefined) {
-        if (index !== activeSlideIndex) {
-          setActiveSlideIndex(index);
-          if (typeof window.setSlide === "function") {
-            window.setSlide(index);
+      if ( index !== undefined ) {
+        if ( index !== activeSlideIndex ) {
+          setActiveSlideIndex( index );
+          if ( typeof window.setSlide === "function" ) {
+            window.setSlide( index );
           }
         }
       }
 
-      onActiveSlideChange?.(index);
+      onActiveSlideChange?.( index );
     },
-    [onActiveSlideChange, activeSlideIndex, slideFields, captureThumbnail, enableThumbnails]
+    [
+      onActiveSlideChange,
+      activeSlideIndex,
+      slideFields,
+      captureThumbnail,
+      enableThumbnails
+    ]
   );
 
   // Initialize first slide selection
-  useEffect(() => {
-    const length = slideFields.length;
-    if (!didInitSelection.current && length > 0) {
-      didInitSelection.current = true;
-      handleSlideSelect(0);
+  useEffect(
+    () => {
+      const length = slideFields.length;
 
-      if (typeof window.setSlide === "function") {
-        window.setSlide(0);
-      }
+      if ( !didInitSelection.current && length > 0 ) {
+        didInitSelection.current = true;
+        handleSlideSelect( 0 );
 
-      // Capture initial thumbnail for the first slide after a short delay
-      if (enableThumbnails && captureThumbnail) {
-        const firstSlideId = slideFields[0]?.id;
-        if (firstSlideId) {
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              captureThumbnail(firstSlideId);
-            }, 300);
-          });
+        if ( typeof window.setSlide === "function" ) {
+          window.setSlide( 0 );
+        }
+
+        // Capture initial thumbnail for the first slide after a short delay
+        if ( enableThumbnails && captureThumbnail ) {
+          const firstSlideId = slideFields[ 0 ]?.id;
+
+          if ( firstSlideId ) {
+            requestAnimationFrame( () => {
+              setTimeout(
+                () => {
+                  captureThumbnail( firstSlideId );
+                },
+                300
+              );
+            } );
+          }
         }
       }
-    }
-  }, [handleSlideSelect, slideFields.length, slideFields, captureThumbnail, enableThumbnails]);
+    },
+    [
+      handleSlideSelect,
+      slideFields.length,
+      slideFields,
+      captureThumbnail,
+      enableThumbnails
+    ]
+  );
 
   // Adjust active slide when slides change
-  useEffect(() => {
-    const length = slideFields.length;
-    let next = activeSlideIndex;
-    let needsAdjustment = false;
+  useEffect(
+    () => {
+      const length = slideFields.length;
+      let next = activeSlideIndex;
+      let needsAdjustment = false;
 
-    if (length === 0) {
-      if (activeSlideIndex !== 0) {
-        setActiveSlideIndex(0);
-      }
-      handleSlideSelect(undefined);
-    } else {
-      if (activeSlideIndex < 0) {
-        next = 0;
-        needsAdjustment = true;
-      } else if (activeSlideIndex > length - 1) {
-        next = length - 1;
-        needsAdjustment = true;
-      }
-
-      if (needsAdjustment) {
-        handleSlideSelect(next);
+      if ( length === 0 ) {
+        if ( activeSlideIndex !== 0 ) {
+          setActiveSlideIndex( 0 );
+        }
+        handleSlideSelect( undefined );
       } else {
-        if (typeof window.setSlide === "function") {
-          window.setSlide(next);
+        if ( activeSlideIndex < 0 ) {
+          next = 0;
+          needsAdjustment = true;
+        } else if ( activeSlideIndex > length - 1 ) {
+          next = length - 1;
+          needsAdjustment = true;
+        }
+
+        if ( needsAdjustment ) {
+          handleSlideSelect( next );
+        } else {
+          if ( typeof window.setSlide === "function" ) {
+            window.setSlide( next );
+          }
         }
       }
-    }
-  }, [handleSlideSelect, slideFields.length, activeSlideIndex]);
+    },
+    [
+      handleSlideSelect,
+      slideFields.length,
+      activeSlideIndex
+    ]
+  );
 
   const handleAddSlide = useCallback(
-    async () => {
+    async() => {
       // Capture the current slide's thumbnail before adding a new one
-      if (enableThumbnails && captureThumbnail && activeSlideIndex !== undefined && slideFields[activeSlideIndex]) {
-        await captureThumbnail(slideFields[activeSlideIndex].id);
+      if ( enableThumbnails && captureThumbnail && activeSlideIndex !== undefined && slideFields[ activeSlideIndex ] ) {
+        await captureThumbnail( slideFields[ activeSlideIndex ].id );
       }
 
       const nextIndex = slideFields.length;
-      const newSlide = makeDefaultSlide({
+      const newSlide = makeDefaultSlide( {
         indexForLabel: nextIndex,
         sketch: sketchFormValues,
-      });
+      } );
 
-      appendSlide(newSlide);
-      await handleSlideSelect(nextIndex);
+      appendSlide( newSlide );
+      await handleSlideSelect( nextIndex );
 
       // Mark that we need to capture thumbnail for the new slide
-      if (enableThumbnails) {
+      if ( enableThumbnails ) {
         pendingThumbnailCaptureRef.current = nextIndex;
       }
     },
-    [activeSlideIndex, slideFields, sketchFormValues, appendSlide, handleSlideSelect, captureThumbnail, enableThumbnails, pendingThumbnailCaptureRef]
+    [
+      activeSlideIndex,
+      slideFields,
+      sketchFormValues,
+      appendSlide,
+      handleSlideSelect,
+      captureThumbnail,
+      enableThumbnails,
+      pendingThumbnailCaptureRef
+    ]
   );
 
   const handleDuplicateSlide = useCallback(
-    (indexToDuplicate: number) => {
-      const allSlides = getValues("slides") ?? [];
-      const original = allSlides[indexToDuplicate];
+    ( indexToDuplicate: number ) => {
+      const allSlides = getValues( "slides" ) ?? [
+      ];
+      const original = allSlides[ indexToDuplicate ];
 
-      if (!original) {
+      if ( !original ) {
         return;
       }
 
-      const duplicated = deepClone(original);
-      if (duplicated?.name) {
-        duplicated.name = `${duplicated.name} (copy)`;
+      const duplicated = deepClone( original );
+
+      if ( duplicated?.name ) {
+        duplicated.name = `${ duplicated.name } (copy)`;
       }
 
       const insertIndex = indexToDuplicate + 1;
-      insertSlide(insertIndex, duplicated);
-      handleSlideSelect(insertIndex);
+
+      insertSlide(
+        insertIndex,
+        duplicated
+      );
+      handleSlideSelect( insertIndex );
     },
-    [getValues, insertSlide, handleSlideSelect]
+    [
+      getValues,
+      insertSlide,
+      handleSlideSelect
+    ]
   );
 
   const handleDeleteSlide = useCallback(
-    (indexToDelete: number) => {
+    ( indexToDelete: number ) => {
       const lengthBefore = slideFields.length;
-      if (lengthBefore <= 0) {
+
+      if ( lengthBefore <= 0 ) {
         return;
       }
 
       // If we are deleting the LAST remaining slide, move its settings to global 'sketch'
-      if (lengthBefore === 1) {
-        const lastSlideSettings = getValues(`slides.${indexToDelete}.sketch`);
-        if (lastSlideSettings) {
-          setValue("sketch", deepClone(lastSlideSettings));
+      if ( lengthBefore === 1 ) {
+        const lastSlideSettings = getValues( `slides.${ indexToDelete }.sketch` );
+
+        if ( lastSlideSettings ) {
+          setValue(
+            "sketch",
+            deepClone( lastSlideSettings )
+          );
         }
       }
 
-      removeSlide(indexToDelete);
+      removeSlide( indexToDelete );
       const lengthAfter = lengthBefore - 1;
 
-      if (lengthAfter <= 0) {
-        handleSlideSelect(0);
+      if ( lengthAfter <= 0 ) {
+        handleSlideSelect( 0 );
         return;
       }
 
-      if (indexToDelete < activeSlideIndex) {
-        handleSlideSelect(activeSlideIndex - 1);
+      if ( indexToDelete < activeSlideIndex ) {
+        handleSlideSelect( activeSlideIndex - 1 );
         return;
       }
 
-      if (indexToDelete === activeSlideIndex) {
-        const nextIndex = Math.min(activeSlideIndex, lengthAfter - 1);
-        handleSlideSelect(nextIndex);
+      if ( indexToDelete === activeSlideIndex ) {
+        const nextIndex = Math.min(
+          activeSlideIndex,
+          lengthAfter - 1
+        );
+
+        handleSlideSelect( nextIndex );
         return;
       }
 
-      handleSlideSelect(activeSlideIndex);
+      handleSlideSelect( activeSlideIndex );
     },
-    [slideFields.length, activeSlideIndex, getValues, setValue, removeSlide, handleSlideSelect]
+    [
+      slideFields.length,
+      activeSlideIndex,
+      getValues,
+      setValue,
+      removeSlide,
+      handleSlideSelect
+    ]
   );
 
   const handleReorderSlides = useCallback(
-    (oldIndex: number, newIndex: number) => {
-      if (oldIndex === newIndex) {
+    (
+      oldIndex: number, newIndex: number
+    ) => {
+      if ( oldIndex === newIndex ) {
         return;
       }
-      moveSlide(oldIndex, newIndex);
-      handleSlideSelect(newIndex);
+      moveSlide(
+        oldIndex,
+        newIndex
+      );
+      handleSlideSelect( newIndex );
     },
-    [moveSlide, handleSlideSelect]
+    [
+      moveSlide,
+      handleSlideSelect
+    ]
   );
 
   const handleRenameSlide = useCallback(
-    (index: number, newName: string) => {
-      setValue(`slides.${index}.name`, newName);
+    (
+      index: number, newName: string
+    ) => {
+      setValue(
+        `slides.${ index }.name`,
+        newName
+      );
     },
-    [setValue]
+    [
+      setValue
+    ]
   );
 
   return {

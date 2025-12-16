@@ -18,28 +18,34 @@ export function useToast() {
   const [
     toasts,
     setToasts
-  ] = useState<ToastMessage[]>( [] );
+  ] = useState<ToastMessage[]>( [
+  ] );
 
   const showToast = useCallback(
     (
       message: string, type: ToastType = "info"
     ) => {
       const id = toastId++;
+
       setToasts( ( prev ) => [
         ...prev,
         {
-          id, message, type
+          id,
+          message,
+          type
         }
       ] );
     },
-    []
+    [
+    ]
   );
 
   const removeToast = useCallback(
     ( id: number ) => {
       setToasts( ( prev ) => prev.filter( ( toast ) => toast.id !== id ) );
     },
-    []
+    [
+    ]
   );
 
   return {

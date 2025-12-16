@@ -88,16 +88,16 @@ sketch.setup( async() => {
 
     const currentImagePath = newOptions.sketch?.photo?.image;
     const currentInverse = newOptions.sketch?.segmentation?.inverse;
-    
+
     // Clear cache if image changed
     if ( cache.currentImagePath !== currentImagePath ) {
       cache.currentImagePath = currentImagePath;
       cache.maskedImage = null;
       cache.interactiveResultProcessed = false;
       cache.lastInverseValue = currentInverse;
-      
+
       console.log( "Image changed, cache cleared" );
-      
+
       return;
     }
 
@@ -106,17 +106,17 @@ sketch.setup( async() => {
       cache.lastInverseValue = currentInverse;
       cache.maskedImage = null;
       cache.interactiveResultProcessed = false;
-      
+
       console.log( "Inverse parameter changed, recalculating mask" );
-      
+
       // Re-trigger segmentation if ROI exists
       if ( newOptions.sketch?.segmentation?.roi ) {
         triggerSegmentation();
       }
-      
+
       return;
     }
-    
+
     // Re-trigger segmentation if ROI exists and hasn't been processed yet
     if ( newOptions.sketch?.segmentation?.roi && !cache.interactiveResultProcessed ) {
       console.log( "Options changed, re-triggering segmentation" );
@@ -138,17 +138,17 @@ sketch.setup( async() => {
 function triggerSegmentation() {
   const photo = common.getAsset( options.sketch?.photo?.image );
   const roi = options.sketch?.segmentation?.roi;
-  
+
   if ( !photo || !roi ) return;
-  
+
   // Get the underlying canvas element from p5.Image
   const imageElement = photo.img.canvas || photo.img.elt || photo.img;
-  
+
   // ROI is already in normalized coordinates (0-1)
   // Convert to image pixel coordinates for interact function
   const imageX = roi.x * photo.img.width;
   const imageY = roi.y * photo.img.height;
-  
+
   console.log(
     "Triggering segmentation at ROI:",
     roi,
@@ -156,10 +156,10 @@ function triggerSegmentation() {
     imageX,
     imageY
   );
-  
+
   // Reset the processed flag to allow new result
   cache.interactiveResultProcessed = false;
-  
+
   interact(
     imageX,
     imageY,
@@ -172,38 +172,38 @@ events.register(
   "engine-canvas-mouse-pressed",
   () => {
     const photo = common.getAsset( options.sketch?.photo?.image );
-    
+
     if ( !photo ) return;
-    
+
     // Check if click is within photo bounds
     const {
       x: photoX, y: photoY, w: photoW, h: photoH
     } = cache.photoBounds;
-    
-    if ( mouseX < photoX || mouseX > photoX + photoW || 
+
+    if ( mouseX < photoX || mouseX > photoX + photoW ||
          mouseY < photoY || mouseY > photoY + photoH ) {
       console.log( "Click outside photo bounds" );
       return;
     }
-    
+
     // Get the underlying canvas element from p5.Image
     const imageElement = photo.img.canvas || photo.img.elt || photo.img;
-    
+
     // Map Mouse (Canvas) -> Photo Display (with margins/scale) -> Original Image
     const relativeX = mouseX - photoX;
     const relativeY = mouseY - photoY;
-    
+
     // Scale from displayed photo to original image dimensions
     const scaleX = photo.img.width / photoW;
     const scaleY = photo.img.height / photoH;
-    
+
     const imageX = relativeX * scaleX;
     const imageY = relativeY * scaleY;
-    
+
     // Calculate normalized coordinates (0-1) for storage
     const normalizedX = imageX / photo.img.width;
     const normalizedY = imageY / photo.img.height;
-    
+
     console.log(
       "Click at canvas:",
       mouseX,
@@ -218,7 +218,7 @@ events.register(
       normalizedX,
       normalizedY
     );
-    
+
     // Save ROI to options
     setSketchOptions( {
       ...options,
@@ -233,10 +233,10 @@ events.register(
         }
       }
     } );
-    
+
     // Reset the processed flag to allow new result
     cache.interactiveResultProcessed = false;
-    
+
     interact(
       imageX,
       imageY,
@@ -245,15 +245,15 @@ events.register(
   }
 );
 
-
-
-sketch.draw( (_, center) => {
+sketch.draw( (
+  _, center
+) => {
   background( ...options.sketch.backgroundColor );
 
   const photo = common.getAsset( options.sketch?.photo?.image );
-  
+
   if ( !photo ) {
-    frameRate(1)
+    frameRate( 1 );
     string.write(
       "add a photo :)",
       0,
@@ -270,11 +270,11 @@ sketch.draw( (_, center) => {
         ]
       }
     );
-    return
+    return;
   }
   else {
-    frameRate(options.animation.framerate)
-    
+    frameRate( options.animation.framerate );
+
     // Draw photo and capture its bounds for coordinate mapping
     imageUtils.marginImage( {
       img: photo.img,
@@ -360,10 +360,10 @@ sketch.draw( (_, center) => {
     // Create and cache the masked image
     cache.maskedImage = photo.img.get();
     cache.maskedImage.mask( layers.mask.graphics );
-    
+
     // Mark as processed so we only do this once
     cache.interactiveResultProcessed = true;
-    
+
     console.log( "Segmentation result processed and cached" );
   }
 

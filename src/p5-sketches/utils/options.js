@@ -148,7 +148,7 @@ async function readExifInfo(
         "readExifInfo error",
         error
       );
-      tags = null
+      tags = null;
     }
 
     object.exif = tags;

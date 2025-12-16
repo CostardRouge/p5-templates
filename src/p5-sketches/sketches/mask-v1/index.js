@@ -14,13 +14,13 @@ let maskImage = null;
 let masked = null;
 let o = options;
 
-sketch.setup(() => {
+sketch.setup( () => {
   pixilatedCanvas = createGraphics(
     sketch?.engine?.canvas?.width,
     sketch?.engine?.canvas?.height
   );
 
-  pixilatedCanvas.pixelDensity(0.05);
+  pixilatedCanvas.pixelDensity( 0.05 );
   pixilatedCanvas.noStroke();
 
   maskImage = createGraphics(
@@ -38,11 +38,11 @@ sketch.setup(() => {
 
   const xCount = 4;
   const yCount = 4;
-  const size = (width + height) / 2 / (xCount + yCount) / 3.5;
+  const size = ( width + height ) / 2 / ( xCount + yCount ) / 3.5;
 
-  for (let x = 1; x <= xCount; x++) {
-    for (let y = 1; y <= yCount; y++) {
-      shapes.push(new Spiral({
+  for ( let x = 1; x <= xCount; x++ ) {
+    for ( let y = 1; y <= yCount; y++ ) {
+      shapes.push( new Spiral( {
         size,
         start: createVector(
           0,
@@ -53,16 +53,16 @@ sketch.setup(() => {
           height / 3
         ),
         relativePosition: {
-          x: x / (xCount + 1),
-          y: y / (yCount + 1),
+          x: x / ( xCount + 1 ),
+          y: y / ( yCount + 1 ),
         },
-      }));
+      } ) );
     }
   }
-});
+} );
 
 class Spiral {
-  constructor(options) {
+  constructor( options ) {
     Object.assign(
       this,
       options
@@ -98,9 +98,9 @@ class Spiral {
       position.y
     );
 
-    for (let lerpIndex = 0; lerpIndex < 1; lerpIndex += lerpStep) {
+    for ( let lerpIndex = 0; lerpIndex < 1; lerpIndex += lerpStep ) {
       const waveAmplitude = size * mappers.fn(
-        Math.sin(lerpIndex * 2 + animation.sinAngle * 5),
+        Math.sin( lerpIndex * 2 + animation.sinAngle * 5 ),
         -1,
         1,
         0.8,
@@ -113,7 +113,7 @@ class Spiral {
         0,
         1,
         map(
-          Math.sin(lerpIndex * f + animation.sinAngle * 3),
+          Math.sin( lerpIndex * f + animation.sinAngle * 3 ),
           -1,
           1,
           1,
@@ -129,7 +129,7 @@ class Spiral {
       );
 
       const xOffset = mappers.fn(
-        Math.sin(animation.sinAngle * 2 + animation.progression + animation.progression + 8 * lerpIndex),
+        Math.sin( animation.sinAngle * 2 + animation.progression + animation.progression + 8 * lerpIndex ),
         -1,
         1,
         -waveAmplitude,
@@ -137,7 +137,7 @@ class Spiral {
         easing.easeInOutExpo
       );
       const yOffset = mappers.fn(
-        Math.cos(animation.cosAngle * 3 + animation.progression + 8 * lerpIndex),
+        Math.cos( animation.cosAngle * 3 + animation.progression + 8 * lerpIndex ),
         -1,
         1,
         -waveAmplitude,
@@ -146,7 +146,7 @@ class Spiral {
       );
 
       const s = mappers.fn(
-        Math.sin(animation.progression + 8 * lerpIndex * lerpIndex * -5),
+        Math.sin( animation.progression + 8 * lerpIndex * lerpIndex * -5 ),
         -1,
         1,
         40,
@@ -155,7 +155,7 @@ class Spiral {
       );
       const c = 5;// mappers.fn(Math.sin(animation.sinAngle+ 8 *lerpIndex), -1, 1, 3, 5, easing.easeInOutExpo);
 
-      for (let i = 0; i < c; i++) {
+      for ( let i = 0; i < c; i++ ) {
         const x = lerp(
           lerpPosition.x + xOffset, //* 1.5,
           lerpPosition.y - yOffset,
@@ -176,21 +176,21 @@ class Spiral {
           //   opacityFactor
           // })
           map(
-            Math.sin(lerpIndex * a + animation.sinAngle),
+            Math.sin( lerpIndex * a + animation.sinAngle ),
             -1,
             1,
             0,
             360
           ) / opacityFactor,
           map(
-            Math.cos(lerpIndex * a - animation.cosAngle * 2),
+            Math.cos( lerpIndex * a - animation.cosAngle * 2 ),
             -1,
             1,
             0,
             255
           ) / opacityFactor,
           map(
-            Math.sin(lerpIndex * a + animation.sinAngle),
+            Math.sin( lerpIndex * a + animation.sinAngle ),
             -1,
             1,
             255,
@@ -224,19 +224,19 @@ class Spiral {
   }
 }
 
-sketch.draw(() => {
+sketch.draw( () => {
   noStroke();
   noSmooth();
-  background(0);
+  background( 0 );
 
-  shapes[0].draw(
+  shapes[ 0 ].draw(
     1,
     window,
     1 / 1600
   );
 
-  pixilatedCanvas.background(0);
-  shapes[0].draw(
+  pixilatedCanvas.background( 0 );
+  shapes[ 0 ].draw(
     1,
     pixilatedCanvas,
     1 / 300
@@ -265,14 +265,14 @@ sketch.draw(() => {
   // position.y = map(cos(animation.cosAngle/3), -1, 1, h/2+strokeSize/2, height-h/2-strokeSize/2)
 
   position.x = map(
-    sin(animation.sinAngle * 5),
+    sin( animation.sinAngle * 5 ),
     -1,
     1,
     20,
     width - 20
   );
   position.y = map(
-    cos(animation.cosAngle),
+    cos( animation.cosAngle ),
     -1,
     1,
     20,
@@ -305,9 +305,9 @@ sketch.draw(() => {
     position.x - w / 2,
     position.y + h / 2
   );
-  maskImage.endShape(CLOSE);
+  maskImage.endShape( CLOSE );
 
-  (masked = pixilatedCanvas.get()).mask(maskImage);
+  ( masked = pixilatedCanvas.get() ).mask( maskImage );
   // image(
   //   masked,
   //   0,
@@ -325,7 +325,7 @@ sketch.draw(() => {
     128,
     255
   );
-  strokeWeight(strokeSize);
+  strokeWeight( strokeSize );
 
   beginShape();
   vertex(
@@ -376,5 +376,5 @@ sketch.draw(() => {
       height
     )
   );
-  endShape(CLOSE);
-});
+  endShape( CLOSE );
+} );

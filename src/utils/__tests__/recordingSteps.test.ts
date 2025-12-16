@@ -22,13 +22,17 @@ describe(
       status: status as any,
       template: "test-template",
       resultUrl: null,
-      thumbnails: [],
-      videoUrls: [],
-      videoSizes: [],
+      thumbnails: [
+      ],
+      videoUrls: [
+      ],
+      videoSizes: [
+      ],
       recordingStartAt: null,
       recordingEndAt: null,
       recordingDuration: null,
-      options: {},
+      options: {
+      },
       createdAt: new Date(),
       updatedAt: new Date(),
     } );

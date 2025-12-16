@@ -17,8 +17,15 @@ export const formValues = {
   title: {
     ...titleDefaultValues,
     blend: "source-over",
-    fill: [ 255 ],
-    stroke: [ 0, 0, 0, 0],
+    fill: [
+      255
+    ],
+    stroke: [
+      0,
+      0,
+      0,
+      0
+    ],
     displayFrom: 0.0,
     displayTo: 1
   },

@@ -2,7 +2,9 @@
  * Type definitions for photo-exif GSAP template
  */
 
-import { GSAPTemplateOptions } from '@/types/gsap-template.types';
+import {
+  GSAPTemplateOptions
+} from "@/types/gsap-template.types";
 
 /**
  * Photo configuration options

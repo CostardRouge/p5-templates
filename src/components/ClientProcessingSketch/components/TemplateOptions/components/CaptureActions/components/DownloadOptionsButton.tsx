@@ -1,8 +1,12 @@
 "use client";
 
 import React from "react";
-import { Download } from "lucide-react";
-import { SketchOptionInput } from "@/types/sketch.types";
+import {
+  Download
+} from "lucide-react";
+import {
+  SketchOptionInput
+} from "@/types/sketch.types";
 
 type DownloadOptionsButtonProps = {
   options: SketchOptionInput;
@@ -18,10 +22,10 @@ export default function DownloadOptionsButton( {
   const handleDownload = ( e: React.MouseEvent ) => {
     // Prevent event from bubbling to avoid triggering unsaved changes modal
     e.stopPropagation();
-    
+
     // Create a clean copy of options without blob URLs or runtime data
     const cleanOptions = JSON.parse( JSON.stringify( options ) );
-    
+
     const blob = new Blob(
       [
         JSON.stringify(
@@ -34,16 +38,19 @@ export default function DownloadOptionsButton( {
         type: "application/json"
       }
     );
-    
+
     const url = URL.createObjectURL( blob );
     const a = document.createElement( "a" );
-    
+
     // Format: {sketch-name}-options-{jobId or timestamp}.json
-    const suffix = persistedJobId 
-      ? persistedJobId.slice( 0, 8 )
+    const suffix = persistedJobId
+      ? persistedJobId.slice(
+        0,
+        8
+      )
       : Date.now().toString();
     const filename = `${ name }-options-${ suffix }.json`;
-    
+
     a.href = url;
     a.download = filename;
     // Add a data attribute to mark this as a download link

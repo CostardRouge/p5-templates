@@ -44,9 +44,9 @@ export default function ImportOptionsButton( {
     "failed",
     "cancelled"
   ];
-  
+
   const canImport = !persistedJobId || ( jobStatus && allowedStatuses.includes( jobStatus ) );
-  
+
   if ( !canImport ) {
     return null;
   }
@@ -57,7 +57,7 @@ export default function ImportOptionsButton( {
 
   const handleFileChange = async( event: React.ChangeEvent<HTMLInputElement> ) => {
     const file = event.target.files?.[ 0 ];
-    
+
     if ( !file ) return;
 
     setImporting( true );
@@ -84,6 +84,7 @@ export default function ImportOptionsButton( {
       } else {
         // Import into existing persisted job
         const formData = new FormData();
+
         formData.append(
           "file",
           file
@@ -99,6 +100,7 @@ export default function ImportOptionsButton( {
 
         if ( !response.ok ) {
           const error = await response.json();
+
           throw new Error( error.error || "Import failed" );
         }
 

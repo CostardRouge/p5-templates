@@ -6,12 +6,10 @@ import React, {
 import {
   ArrowDownFromLine
 } from "lucide-react";
-import {
-  useFormContext
-} from "react-hook-form";
 
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
+import ResetSettingsButton from "@/components/ResetSettingsButton";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
@@ -31,14 +29,14 @@ export default function SketchSettings( {
   const {
     sketchFormConfiguration, sketchFormValues, name
   } = useSketch();
-  const {
-    setValue
-  } = useFormContext();
 
   // Inject schemas on the client side
   const configWithSchemas = useMemo(
     () => {
-      if ( !sketchFormConfiguration ) return undefined;
+      if ( !sketchFormConfiguration ) {
+        return undefined;
+      }
+
       return injectSketchSchemas(
         name,
         sketchFormConfiguration
@@ -84,7 +82,10 @@ export default function SketchSettings( {
             </span>
           </button>
 
-          <RandomizeSettingsButton config={configWithSchemas} basePath={effectiveBasePath} />
+          <div className="flex items-center gap-1">
+            <ResetSettingsButton basePath={effectiveBasePath} />
+            <RandomizeSettingsButton config={configWithSchemas} basePath={effectiveBasePath} />
+          </div>
         </div>
       )}
     >

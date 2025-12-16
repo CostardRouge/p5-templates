@@ -148,9 +148,7 @@ export function useThumbnails( {
           initialCaptureAttempted.current = true;
 
           // Check which slides need thumbnails
-          const slidesNeedingThumbnails = slideFields.filter(
-            ( field ) => !thumbnails[ field.id ]
-          );
+          const slidesNeedingThumbnails = slideFields.filter( ( field ) => !thumbnails[ field.id ] );
 
           if ( slidesNeedingThumbnails.length === 0 ) {
             return;

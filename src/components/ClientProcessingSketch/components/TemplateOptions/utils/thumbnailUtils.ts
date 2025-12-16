@@ -3,9 +3,9 @@
  * Uses native Canvas API for better compatibility with Next.js/Turbopack
  */
 export async function captureThumbnailFromCanvas(): Promise<string | null> {
-  const canvas = document.querySelector("canvas#defaultCanvas0") as HTMLCanvasElement;
+  const canvas = document.querySelector( "canvas#defaultCanvas0" ) as HTMLCanvasElement;
 
-  if (!canvas) {
+  if ( !canvas ) {
     return null;
   }
 
@@ -13,21 +13,25 @@ export async function captureThumbnailFromCanvas(): Promise<string | null> {
     // Target width for thumbnail - optimal for grid display
     const targetWidth = 240;
     const scaleFactor = targetWidth / canvas.width;
-    const targetHeight = Math.round(canvas.height * scaleFactor);
+    const targetHeight = Math.round( canvas.height * scaleFactor );
 
     // Create destination canvas
-    const destCanvas = document.createElement("canvas");
+    const destCanvas = document.createElement( "canvas" );
+
     destCanvas.width = targetWidth;
     destCanvas.height = targetHeight;
 
     // Get context and use native canvas resizing
-    const ctx = destCanvas.getContext("2d", {
-      alpha: false, // No transparency for better JPEG compression
-      willReadFrequently: false,
-    });
+    const ctx = destCanvas.getContext(
+      "2d",
+      {
+        alpha: false, // No transparency for better JPEG compression
+        willReadFrequently: false,
+      }
+    );
 
-    if (!ctx) {
-      throw new Error("Failed to get 2D context");
+    if ( !ctx ) {
+      throw new Error( "Failed to get 2D context" );
     }
 
     // Enable image smoothing for better quality
@@ -35,14 +39,26 @@ export async function captureThumbnailFromCanvas(): Promise<string | null> {
     ctx.imageSmoothingQuality = "high";
 
     // Draw the source canvas onto the destination canvas (resized)
-    ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+    ctx.drawImage(
+      canvas,
+      0,
+      0,
+      targetWidth,
+      targetHeight
+    );
 
     // Convert to data URL (JPEG format, 85% quality)
-    const dataUrl = destCanvas.toDataURL("image/jpeg", 0.85);
+    const dataUrl = destCanvas.toDataURL(
+      "image/jpeg",
+      0.85
+    );
 
     return dataUrl;
-  } catch (e) {
-    console.error("Failed to capture thumbnail", e);
+  } catch ( e ) {
+    console.error(
+      "Failed to capture thumbnail",
+      e
+    );
     return null;
   }
 }

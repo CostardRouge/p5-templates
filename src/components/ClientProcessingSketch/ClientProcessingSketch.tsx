@@ -127,7 +127,7 @@ export default function ClientProcessingSketch() {
                 } as React.CSSProperties
               }
             >
-              <AnimationProgressionBar disabled />
+              <AnimationProgressionBar />
             </div>
           )}
         </ScalableViewport>

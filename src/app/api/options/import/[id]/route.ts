@@ -40,7 +40,7 @@ export async function POST(
       "failed",
       "cancelled"
     ];
-    
+
     if ( !allowedStatuses.includes( job.status ) ) {
       return NextResponse.json(
         {
@@ -87,12 +87,13 @@ export async function POST(
     if ( importedOptions.assets ) {
       delete importedOptions.assets;
     }
-    
+
     if ( importedOptions.slides ) {
       importedOptions.slides = importedOptions.slides.map( ( slide: any ) => {
         const {
           assets, ...rest
         } = slide;
+
         return rest;
       } );
     }

@@ -17,34 +17,37 @@ const interactive = {
   graphics: null,
   position: null,
   image: null,
-}
+};
 
 events.register(
   "engine-window-preload",
   () => {
-    interactive.image = loadImage("/assets/images/handpointing.png")
+    interactive.image = loadImage( "/assets/images/handpointing.png" );
   }
 );
 
 sketch.setup(
-  ({
+  ( {
     canvas
-  }) => {
-    interactive.graphics = createGraphics(width, height);
+  } ) => {
+    interactive.graphics = createGraphics(
+      width,
+      height
+    );
 
-    background(...getBackgroundColor());
-    addScreenPositionFunction(window);
+    background( ...getBackgroundColor() );
+    addScreenPositionFunction( window );
   },
   {
     type: "webgl"
   }
 );
 
-function getAlphaFromMask({
+function getAlphaFromMask( {
   position: {
     x, y
   }, maskPoints, distance = options.sketch?.mask?.distance ?? 0.015
-}) {
+} ) {
   const normalizedPosition = createVector(
     map(
       x,
@@ -66,7 +69,7 @@ function getAlphaFromMask({
     (
       result, pointPosition
     ) => {
-      if (true === result) {
+      if ( true === result ) {
         return result;
       }
 
@@ -87,7 +90,7 @@ function getAlphaFromMask({
         )
       );
 
-      const d = normalizedPointPosition.dist(normalizedPosition);
+      const d = normalizedPointPosition.dist( normalizedPosition );
 
       return Math.max(
         result,
@@ -102,7 +105,7 @@ function createGridAlphaPoints(
   gridOptions, textPointsMatrix, cacheKey
 ) {
   return cache.store(
-    `alpha-points-matrix+${cacheKey}`,
+    `alpha-points-matrix+${ cacheKey }`,
     () => {
       const alphaPoints = [
       ];
@@ -113,19 +116,19 @@ function createGridAlphaPoints(
           const alphaLayers = [
           ];
 
-          for (const points of textPointsMatrix) {
-            const alpha = getAlphaFromMask({
+          for ( const points of textPointsMatrix ) {
+            const alpha = getAlphaFromMask( {
               position,
               maskPoints: points
-            });
+            } );
 
-            alphaLayers.push(alpha);
+            alphaLayers.push( alpha );
           }
 
-          alphaPoints.push({
+          alphaPoints.push( {
             position,
             layers: alphaLayers
-          });
+          } );
         }
       );
 
@@ -135,17 +138,17 @@ function createGridAlphaPoints(
 }
 
 const getBackgroundColor = () =>
-(options.sketch?.backgroundColor ??
+  ( options.sketch?.backgroundColor ??
   [
     246,
     235,
     225
-  ]);
+  ] );
 
-sketch.draw(() => {
-  background(...getBackgroundColor());
+sketch.draw( () => {
+  background( ...getBackgroundColor() );
 
-  const size = (options.sketch?.shape?.size * width) ?? width;
+  const size = ( options.sketch?.shape?.size * width ) ?? width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
   const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
 
@@ -185,8 +188,8 @@ sketch.draw(() => {
 
   const textToWrite = options.sketch?.shape?.text ?? "8";
 
-  const textPointsMatrix = fonts.map(font => (
-    string.getTextPoints({
+  const textPointsMatrix = fonts.map( font => (
+    string.getTextPoints( {
       text: textToWrite,
       position: createVector(
         0,
@@ -196,10 +199,10 @@ sketch.draw(() => {
       font,
       sampleFactor,
       simplifyThreshold
-    })
-  ));
+    } )
+  ) );
 
-  if (textPointsMatrix.some(matrix => matrix.length === 0)) {
+  if ( textPointsMatrix.some( matrix => matrix.length === 0 ) ) {
     return;
   }
 
@@ -211,7 +214,7 @@ sketch.draw(() => {
     simplifyThreshold,
     options.sketch?.mask?.distance
   ];
-  const cacheKey = cacheComponent.join("+");
+  const cacheKey = cacheComponent.join( "+" );
 
   const alphaPoints = createGridAlphaPoints(
     gridOptions,
@@ -219,14 +222,14 @@ sketch.draw(() => {
     cacheKey
   );
 
-  if (options.sketch?.animation?.rotate ?? true) {
-    const rotationMax = PI * (options.sketch?.animation?.rotationCount ?? 2);
+  if ( options.sketch?.animation?.rotate ?? true ) {
+    const rotationMax = PI * ( options.sketch?.animation?.rotationCount ?? 2 );
 
     const {
       x: rX,
       y: rY,
       // z: rZ
-    } = animation.ease({
+    } = animation.ease( {
       values: [
         createVector(),
         createVector(
@@ -237,7 +240,7 @@ sketch.draw(() => {
           rotationMax,
           rotationMax
         ),
-        createVector(rotationMax),
+        createVector( rotationMax ),
       ],
       currentTime: animation.progression * 3,
       duration: 1,
@@ -245,13 +248,13 @@ sketch.draw(() => {
       easingFn: easing.easeInOutExpo,
       // easingFn: easing.easeInOutElastic,
       // easingFn: easing.easeInOutCirc,
-    });
+    } );
 
-    rotateX(rX);
-    rotateY(rY);
+    rotateX( rX );
+    rotateY( rY );
   }
 
-  alphaPoints.forEach((
+  alphaPoints.forEach( (
     {
       layers, position
     }, index
@@ -267,7 +270,7 @@ sketch.draw(() => {
     //   easingFn: easing.easeInOutExpo
     // })
 
-    if (!layer) {
+    if ( !layer ) {
       return;
     }
 
@@ -278,7 +281,7 @@ sketch.draw(() => {
     const hue = noise(
       position.x / columns + (
         +map(
-          sin(animation.angle),
+          sin( animation.angle ),
           -1,
           1,
           0,
@@ -287,7 +290,7 @@ sketch.draw(() => {
       ),
       position.y / rows + (
         +map(
-          cos(animation.angle),
+          cos( animation.angle ),
           -1,
           1,
           0,
@@ -299,7 +302,7 @@ sketch.draw(() => {
     const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
     const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
-    const tint = colors.rainbow({
+    const tint = colors.rainbow( {
       hueOffset: animation.circularProgression,
       hueIndex: map(
         hue,
@@ -309,7 +312,7 @@ sketch.draw(() => {
         PI
       ) * hueMultiplier,
       opacityFactor
-    });
+    } );
 
     const {
       levels: [
@@ -323,27 +326,35 @@ sketch.draw(() => {
 
     const w = cellSize;// -2
     const h = cellSize;// -2
-    const d = cellSize * (options.sketch?.shape?.depth ?? 20);
+    const d = cellSize * ( options.sketch?.shape?.depth ?? 20 );
 
-    translate(position);
+    translate( position );
 
     const fillAlphaStart = options.sketch?.color?.fillAlphaStart ?? 240;
     const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
-    if (options.sketch.interactive.enabled && interactive.position) {
-      const screenPos = screenPosition(0, 0, 0);
-      const distance = dist(interactive.position.x, interactive.position.y, screenPos.x, screenPos.y);
+    if ( options.sketch.interactive.enabled && interactive.position ) {
+      const screenPos = screenPosition(
+        0,
+        0,
+        0
+      );
+      const distance = dist(
+        interactive.position.x,
+        interactive.position.y,
+        screenPos.x,
+        screenPos.y
+      );
 
       interactive.currentTimeValue = map(
         distance,
         0,
-        (options.sketch.interactive.sensitivityMultiplier * width) ?? width * 0.5,
+        ( options.sketch.interactive.sensitivityMultiplier * width ) ?? width * 0.5,
         0,
         1
       );
     }
-
 
     const currentTimeValue = options.sketch.interactive.enabled ? interactive.currentTimeValue : (
       animation.progression * switchSpeed + (
@@ -353,9 +364,13 @@ sketch.draw(() => {
       )
     );
 
-    const constrainedTime = constrain(currentTimeValue, 0, 1);
+    const constrainedTime = constrain(
+      currentTimeValue,
+      0,
+      1
+    );
 
-    const fillAlpha = animation.ease({
+    const fillAlpha = animation.ease( {
       values: [
         fillAlphaStart,
         fillAlphaEnd
@@ -363,7 +378,7 @@ sketch.draw(() => {
       currentTime: constrainedTime,
       duration: 1,
       easingFn: easing.easeInOutExpo,
-    });
+    } );
 
     fill(
       red,
@@ -384,23 +399,31 @@ sketch.draw(() => {
     );
 
     pop();
-  });
+  } );
 
-  if (options.sketch.interactive.enabled) {
-    if (options.sketch.interactive.mouse) {
+  if ( options.sketch.interactive.enabled ) {
+    if ( options.sketch.interactive.mouse ) {
       interactive.position = createVector(
         mouseX - width / 2,
         mouseY - height / 2
-      )
+      );
     } else {
       interactive.position = createVector(
-        sin(animation.angle * options.sketch.interactive.sinMultiplier) * (-width / 2) * 0.8,
-        cos(animation.angle * options.sketch.interactive.cosMultiplier) * (-height / 2) * 0.8
-      )
+        sin( animation.angle * options.sketch.interactive.sinMultiplier ) * ( -width / 2 ) * 0.8,
+        cos( animation.angle * options.sketch.interactive.cosMultiplier ) * ( -height / 2 ) * 0.8
+      );
 
-      interactive.graphics.clear()
-      interactive.graphics.image(interactive.image, interactive.position.x, interactive.position.y)
-      image(interactive.graphics, 0, 0)
+      interactive.graphics.clear();
+      interactive.graphics.image(
+        interactive.image,
+        interactive.position.x,
+        interactive.position.y
+      );
+      image(
+        interactive.graphics,
+        0,
+        0
+      );
     }
   }
-});
+} );

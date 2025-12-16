@@ -1,56 +1,63 @@
-import React, { useRef, useState } from "react";
+import React, {
+  useRef, useState
+} from "react";
 
 interface ImageDropzoneProps {
-  onImageDrop: (data: File) => void;
+  onImageDrop: ( data: File ) => void;
   image: string | null;
   children: React.ReactNode;
 }
 
-const ImageDropzone = ({ image, onImageDrop, children }: ImageDropzoneProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
+const ImageDropzone = ( {
+  image, onImageDrop, children
+}: ImageDropzoneProps ) => {
+  const fileInputRef = useRef<HTMLInputElement>( null );
+  const [
+    isDragging,
+    setIsDragging
+  ] = useState( false );
 
-  const handleDrag = (e: React.DragEvent) => {
+  const handleDrag = ( e: React.DragEvent ) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
-  const handleDragIn = (e: React.DragEvent) => {
+  const handleDragIn = ( e: React.DragEvent ) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
+    setIsDragging( true );
   };
 
-  const handleDragOut = (e: React.DragEvent) => {
+  const handleDragOut = ( e: React.DragEvent ) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
+    setIsDragging( false );
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = ( e: React.DragEvent ) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
+    setIsDragging( false );
 
     const files = e.dataTransfer.files;
 
-    if (files && files.length > 0) {
-      processFile(files[0]);
+    if ( files && files.length > 0 ) {
+      processFile( files[ 0 ] );
     }
   };
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInput = ( e: React.ChangeEvent<HTMLInputElement> ) => {
     const files = e.target.files;
 
-    if (files && files.length > 0) {
-      processFile(files[0]);
+    if ( files && files.length > 0 ) {
+      processFile( files[ 0 ] );
     }
   };
 
-  const processFile = (file: File) => {
-    if (!file.type.startsWith("image/")) return;
+  const processFile = ( file: File ) => {
+    if ( !file.type.startsWith( "image/" ) ) return;
 
-    onImageDrop(file);
+    onImageDrop( file );
   };
 
   return (
