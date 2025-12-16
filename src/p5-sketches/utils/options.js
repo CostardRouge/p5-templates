@@ -18,20 +18,7 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Local mutable copy (initialised once)                             */
 /* ------------------------------------------------------------------ */
-const sketchOptions = {
-  /* sensible defaults --------------------------------------------- */
-  size: {
-    width: 1080,
-    height: 1350
-  },
-  animation: {
-    duration: 10,
-    framerate: 60
-  },
-  assets: {
-  },
-  ...getSketchOptions(),
-};
+const sketchOptions = getSketchOptions();
 
 /* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
@@ -205,12 +192,12 @@ events.register(
       }
 
       if ( JSON.stringify( newOptions.animation ) !== JSON.stringify( sketchOptions.animation ) ) {
-        sketch.sketchOptions.animation = newOptions?.animation;
-
         events.handle(
           "engine-framerate-change",
           newOptions?.animation?.framerate
         );
+
+        sketch.sketchOptions.animation = newOptions?.animation;
       }
 
       Object.assign(
