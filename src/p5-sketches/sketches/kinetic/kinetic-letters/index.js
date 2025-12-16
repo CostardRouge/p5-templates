@@ -259,7 +259,7 @@ function addLetterBoxes(
 
   for ( let i = 0; i < text.length; i++ ) {
     const x = random(
-      0,
+      margin,
       width - margin
     );
 
