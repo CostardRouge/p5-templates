@@ -54,15 +54,19 @@ export function useFormState( {
 
   const jobId = methods.watch( "id" ) as string | undefined;
 
+  // Store initial values to detect actual changes
+  const initialValuesRef = useRef<SketchOptionInput>( initOptions( initialOptions ) );
+
   // Watch for changes and propagate to parent
   useEffect(
     () => {
       const subscription = watch( ( value ) => {
         onOptionsChange( value as SketchOption );
 
-        // Track unsaved changes
+        // Track unsaved changes only if values differ from initial
         if ( persistedJob?.status !== "completed" ) {
-          setHasUnsavedChanges( true );
+          const hasChanged = JSON.stringify( value ) !== JSON.stringify( initialValuesRef.current );
+          setHasUnsavedChanges( hasChanged );
         }
       } );
 
