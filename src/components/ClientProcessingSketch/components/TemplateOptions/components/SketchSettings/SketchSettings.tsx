@@ -1,15 +1,23 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, {
+  useMemo
+} from "react";
 import {
   ArrowDownFromLine
 } from "lucide-react";
+import {
+  useFormContext
+} from "react-hook-form";
 
 import CollapsibleItem from "@/components/CollapsibleItem";
+import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
-import { injectSketchSchemas } from "./utils/injectSketchSchemas";
+import {
+  injectSketchSchemas
+} from "./utils/injectSketchSchemas";
 
 type SketchSettingsProps = {
   basePath?: string;
@@ -23,12 +31,24 @@ export default function SketchSettings( {
   const {
     sketchFormConfiguration, sketchFormValues, name
   } = useSketch();
+  const {
+    setValue
+  } = useFormContext();
 
   // Inject schemas on the client side
-  const configWithSchemas = useMemo(() => {
-    if (!sketchFormConfiguration) return undefined;
-    return injectSketchSchemas(name, sketchFormConfiguration);
-  }, [name, sketchFormConfiguration]);
+  const configWithSchemas = useMemo(
+    () => {
+      if ( !sketchFormConfiguration ) return undefined;
+      return injectSketchSchemas(
+        name,
+        sketchFormConfiguration
+      );
+    },
+    [
+      name,
+      sketchFormConfiguration
+    ]
+  );
 
   if ( !configWithSchemas || Object.keys( configWithSchemas ).length === 0 ) {
     return null;
@@ -47,21 +67,25 @@ export default function SketchSettings( {
         maxWidth: "calc(50% - 0.75rem)"
       }}
       header={( expanded ) => (
-        <button
-          className="text-foreground text-sm text-left"
-          aria-label={expanded ? "Collapse controls" : "Expand controls"}
-        >
-          <ArrowDownFromLine
-            className="inline text-foreground h-3 w-3 mr-1"
-            style={{
-              rotate: expanded ? "0deg" : "180deg"
-            }}
-          />
-          <span>
-            {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`} sketch options
-            {activeSlideIndex !== undefined && ` (slide ${ activeSlideIndex + 1 })`}
-          </span>
-        </button>
+        <div className="flex items-center justify-between w-full">
+          <button
+            className="text-foreground text-sm text-left flex items-center"
+            aria-label={expanded ? "Collapse controls" : "Expand controls"}
+          >
+            <ArrowDownFromLine
+              className="text-foreground h-3 w-3 mr-1"
+              style={{
+                rotate: expanded ? "0deg" : "180deg"
+              }}
+            />
+            <span>
+              {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`} sketch options
+              {activeSlideIndex !== undefined && ` (slide ${ activeSlideIndex + 1 })`}
+            </span>
+          </button>
+
+          <RandomizeSettingsButton config={configWithSchemas} basePath={effectiveBasePath} />
+        </div>
       )}
     >
       <div className="overflow-y-auto">
