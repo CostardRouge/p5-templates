@@ -19,6 +19,7 @@ import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import useSketch from "./components/SketchProvider/hooks/useSketch";
+import Link from "next/link";
 
 const TemplateOptions = dynamic( () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
 
@@ -103,7 +104,16 @@ export default function ClientProcessingSketch() {
                 } as React.CSSProperties
               }
             >
-              <p className="truncate">{name} {activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}</p>
+               <p className="truncate">
+                 <Link
+                   href={`/templates/p5/${ name }`}
+                   target="_blank"
+                 >
+                   {name}
+                 </Link>
+
+                <span>{activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}</span>
+              </p>
               <p id="p5-sketch-fps-counter"></p>
             </div>
           )}
