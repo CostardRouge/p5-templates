@@ -158,9 +158,10 @@ export function useSlideManagement( {
       }
 
       const nextIndex = slideFields.length;
+      const currentGlobalSketch = getValues( "sketch" );
       const newSlide = makeDefaultSlide( {
         indexForLabel: nextIndex,
-        sketch: sketchFormValues,
+        sketch: currentGlobalSketch,
       } );
 
       appendSlide( newSlide );
@@ -174,7 +175,7 @@ export function useSlideManagement( {
     [
       activeSlideIndex,
       slideFields,
-      sketchFormValues,
+      getValues,
       appendSlide,
       handleSlideSelect,
       captureThumbnail,
