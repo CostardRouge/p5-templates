@@ -64,16 +64,18 @@ export default function ControlledColorInput( {
         };
 
         return (
-          <div className="flex flex-col gap-2 w-ful">
-            <input
-              type="color"
-              className="h-8 w-full rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
-              onChange={( e ) => handleColorChange( e.target.value )}
-              value={rgbaToHex( currentValue )}
-            />
+          <div className="flex flex-row gap-2 w-full">
+            <div className="w-1/4">
+              <input
+                type="color"
+                className="h-8 w-full rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
+                onChange={( e ) => handleColorChange( e.target.value )}
+                value={rgbaToHex( currentValue )}
+              />
+            </div>
 
             {/* Alpha control */}
-            <div className="flex items-center justify-between gap-2 w-ful">
+            <div className="flex items-center justify-between gap-2 w-3/4">
               <div
                 className="flex-shrink-0 w-8 h-8 rounded-lg border border-theme relative overflow-hidden"
                 style={{
