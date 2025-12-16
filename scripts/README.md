@@ -112,9 +112,35 @@ Or mount a persistent .env file as a volume.
 
 Injects version information into the service worker.
 
+### `dev-watch.mjs`
+
+Improved development watch script that replaces `concurrently` for better terminal state management.
+
+**Features:**
+- Proper signal handling for graceful shutdown
+- Terminal state restoration on exit (fixes "^[OA" issue)
+- Prefixed output for each process
+- Better error handling and cleanup
+
+**Usage:**
+```bash
+# Use instead of the old concurrently-based watch command
+npm run watch
+
+# The old command is still available as:
+npm run watch:legacy
+```
+
+**Why it fixes the terminal issue:**
+The previous `concurrently` setup didn't properly restore terminal state when interrupted with Ctrl+C, leaving the terminal in raw mode. This script handles all signals properly and restores cooked mode before exit.
+
 ### `watch-sketches.mjs`
 
 Watches sketch files for changes and regenerates metadata.
+
+### `watch-gsap-templates.mjs`
+
+Watches GSAP template files for changes and regenerates the template registry.
 
 ## Testing the Migration
 

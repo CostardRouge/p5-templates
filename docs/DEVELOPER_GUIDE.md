@@ -78,17 +78,18 @@ npx prisma migrate dev
 6. **Start development server**
 
 ```bash
-pnpm dev
+npm run watch
 ```
 
 The app will be available at `http://localhost:3000`.
 
 ### Development Workflow
 
-The `pnpm dev` command runs two processes concurrently:
+The `npm run watch` command runs three processes concurrently:
 
 1. **Next.js dev server** - Hot reloads the web app
 2. **Sketch metadata watcher** - Auto-generates sketch metadata
+3. **GSAP templates watcher** - Auto-generates GSAP template metadata
 
 ---
 
