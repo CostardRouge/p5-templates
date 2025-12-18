@@ -1,15 +1,54 @@
 "use client";
 
 import {
-  useCallback, useEffect, useRef, useState
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
+
 import {
-  getSketchOptions
+  getSketchOptions,
+  subscribeSketchOptions,
 } from "@/p5-sketches/shared/syncSketchOptions";
 
 interface AnimationProgressionBarProps {
   className?: string;
   disabled?: boolean;
+}
+
+type AnimationConfig = {
+  duration: number;
+  framerate: number;
+  totalFrames: number;
+};
+
+type ProgressionGetter = () => number;
+
+function clamp01( value: number ) {
+  return Math.max(
+    0,
+    Math.min(
+      1,
+      value
+    )
+  );
+}
+
+function getAnimationConfigFromSketchOptions( sketchOptions: any ): AnimationConfig {
+  const duration = sketchOptions?.animation?.duration ?? 10;
+  const framerate = sketchOptions?.animation?.framerate ?? 60;
+  const totalFrames = Math.max(
+    1,
+    Math.floor( duration * framerate )
+  );
+
+  return {
+    duration,
+    framerate,
+    totalFrames,
+  };
 }
 
 export default function AnimationProgressionBar( {
@@ -18,183 +57,284 @@ export default function AnimationProgressionBar( {
 }: AnimationProgressionBarProps ) {
   const [
     progression,
-    setProgression
+    setProgression,
   ] = useState( 0 );
   const [
     isDragging,
-    setIsDragging
+    setIsDragging,
   ] = useState( false );
   const [
     hoverPosition,
-    setHoverPosition
+    setHoverPosition,
   ] = useState<number | null>( null );
+
   const [
-    wasLooping,
-    setWasLooping
-  ] = useState( true );
+    animationConfig,
+    setAnimationConfig,
+  ] = useState<AnimationConfig>( () => getAnimationConfigFromSketchOptions( getSketchOptions() ) );
 
   const barRef = useRef<HTMLDivElement | null>( null );
-  const animationFrameRef = useRef<number | undefined>( undefined );
+  const dragThrottleRef = useRef<number>( 0 );
 
-  // Poll progression from p5 animation system
+  const isDraggingRef = useRef( false );
+  const lastProgressionRef = useRef( 0 );
+  const getExternalProgressionRef = useRef<ProgressionGetter | null>( null );
+
   useEffect(
     () => {
-      if ( disabled ) return;
-
-      const updateProgression = () => {
-        if ( typeof window.getAnimationProgression === "function" ) {
-          const currentProgression = window.getAnimationProgression();
-
-          setProgression( currentProgression );
-        }
-
-        animationFrameRef.current = requestAnimationFrame( updateProgression );
-      };
-
-      updateProgression();
-
-      return () => {
-        if ( animationFrameRef.current ) {
-          cancelAnimationFrame( animationFrameRef.current );
-        }
-      };
+      isDraggingRef.current = isDragging;
     },
     [
-      disabled
+      isDragging,
     ]
   );
 
-  // Calculate progression from mouse/pointer event
-  const calculateProgressionFromEvent = useCallback(
-    ( event: React.MouseEvent | React.PointerEvent | MouseEvent | PointerEvent ) => {
-      if ( !barRef.current ) return 0;
-
-      const rect = barRef.current.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const width = rect.width;
-      const calculatedProgression = Math.max(
-        0,
-        Math.min(
-          1,
-          x / width
-        )
-      );
-
-      return calculatedProgression;
-    },
-    [
-    ]
-  );
-
-  // Handle click to seek
-  const handleClick = useCallback(
-    ( event: React.MouseEvent ) => {
-      if ( disabled || isDragging ) return;
-
-      // Prevent viewport dragging
-      event.stopPropagation();
-
-      const targetProgression = calculateProgressionFromEvent( event );
-
-      if ( typeof window.setAnimationProgression === "function" ) {
-        window.setAnimationProgression( targetProgression );
+  // Keep animation config in sync with sketch options.
+  useEffect(
+    () => {
+      if ( disabled ) {
+        return;
       }
+
+      return subscribeSketchOptions( ( updatedOptions: any ) => {
+        setAnimationConfig( getAnimationConfigFromSketchOptions( updatedOptions ) );
+      } );
     },
     [
       disabled,
-      isDragging,
-      calculateProgressionFromEvent
     ]
   );
 
-  // Handle drag start
+  // Prefer reading progression from the p5 util (`animation.progression`).
+  // Fall back to the global window helper if the import isn't available.
+  useEffect(
+    () => {
+      if ( disabled ) {
+        return;
+      }
+
+      let cancelled = false;
+
+      ( async() => {
+        try {
+          const mod = await import( "@/p5-sketches/utils/animation.js" );
+          const animation = ( mod as any )?.default;
+
+          if ( cancelled || !animation || typeof animation !== "object" ) {
+            return;
+          }
+
+          getExternalProgressionRef.current = () => animation.progression;
+        }
+        catch {
+          // Ignore; we can always fall back to `window.getAnimationProgression`.
+        }
+      } )();
+
+      return () => {
+        cancelled = true;
+      };
+    },
+    [
+      disabled,
+    ]
+  );
+
+  // Drive the UI from a continuous progression source (raf polling).
+  // This is more robust than relying on custom events being dispatched.
+  useEffect(
+    () => {
+      if ( disabled ) {
+        return;
+      }
+
+      let rafId = 0;
+
+      const tick = () => {
+        let nextProgression = lastProgressionRef.current;
+
+        try {
+          if ( typeof getExternalProgressionRef.current === "function" ) {
+            nextProgression = getExternalProgressionRef.current();
+          }
+          else if ( typeof window.getAnimationProgression === "function" ) {
+            nextProgression = window.getAnimationProgression();
+          }
+        }
+        catch {
+          // Ignore - keep previous progression.
+        }
+
+        if ( typeof nextProgression !== "number" || Number.isNaN( nextProgression ) ) {
+          nextProgression = lastProgressionRef.current;
+        }
+
+        nextProgression = clamp01( nextProgression );
+
+        if ( !isDraggingRef.current && Math.abs( nextProgression - lastProgressionRef.current ) > 0.001 ) {
+          lastProgressionRef.current = nextProgression;
+          setProgression( nextProgression );
+        }
+
+        rafId = requestAnimationFrame( tick );
+      };
+
+      rafId = requestAnimationFrame( tick );
+
+      return () => {
+        cancelAnimationFrame( rafId );
+      };
+    },
+    [
+      disabled,
+    ]
+  );
+
+  const calculateProgressionFromEvent = useCallback(
+    ( event: React.MouseEvent | React.PointerEvent | MouseEvent | PointerEvent ) => {
+      if ( !barRef.current ) {
+        return 0;
+      }
+
+      const rect = barRef.current.getBoundingClientRect();
+      const width = rect.width;
+
+      if ( width <= 0 ) {
+        return 0;
+      }
+
+      const x = event.clientX - rect.left;
+
+      return clamp01( x / width );
+    },
+    [
+    ]
+  );
+
+  const setAnimationProgression = useCallback(
+    ( nextProgression: number ) => {
+      const clamped = clamp01( nextProgression );
+
+      lastProgressionRef.current = clamped;
+      setProgression( clamped );
+
+      try {
+        if ( typeof window.setAnimationProgression === "function" ) {
+          window.setAnimationProgression( clamped );
+        }
+      }
+      catch ( error ) {
+        console.warn(
+          "AnimationProgressionBar: Error setting progression:",
+          error
+        );
+      }
+    },
+    [
+    ]
+  );
+
+  const handleClick = useCallback(
+    ( event: React.MouseEvent ) => {
+      if ( disabled || isDraggingRef.current ) {
+        return;
+      }
+
+      event.stopPropagation();
+
+      setAnimationProgression( calculateProgressionFromEvent( event ) );
+    },
+    [
+      disabled,
+      calculateProgressionFromEvent,
+      setAnimationProgression,
+    ]
+  );
+
   const handlePointerDown = useCallback(
     ( event: React.PointerEvent ) => {
-      if ( disabled ) return;
+      if ( disabled ) {
+        return;
+      }
 
-      // Prevent viewport dragging - CRITICAL: stop propagation before anything else
       event.stopPropagation();
       event.preventDefault();
 
+      isDraggingRef.current = true;
       setIsDragging( true );
 
-      // Store current loop state and pause animation
-      // Note: This assumes window.toggleLoop exists and pauses when called
-      // We'll need to track if it was already paused
-      setWasLooping( true ); // TODO: Get actual loop state from p5
+      setAnimationProgression( calculateProgressionFromEvent( event ) );
 
-      const targetProgression = calculateProgressionFromEvent( event );
-
-      if ( typeof window.setAnimationProgression === "function" ) {
-        window.setAnimationProgression( targetProgression );
-      }
-
-      // Capture pointer for smooth dragging
       event.currentTarget.setPointerCapture( event.pointerId );
     },
     [
       disabled,
-      calculateProgressionFromEvent
+      calculateProgressionFromEvent,
+      setAnimationProgression,
     ]
   );
 
-  // Handle drag move
-  const handlePointerMove = useCallback(
+  const stopDragging = useCallback(
     ( event: React.PointerEvent ) => {
-      if ( isDragging ) {
-        // Prevent viewport dragging
-        event.stopPropagation();
-        event.preventDefault();
+      if ( !isDraggingRef.current ) {
+        return;
+      }
 
-        const targetProgression = calculateProgressionFromEvent( event );
+      event.stopPropagation();
 
-        if ( typeof window.setAnimationProgression === "function" ) {
-          window.setAnimationProgression( targetProgression );
-        }
+      isDraggingRef.current = false;
+      setIsDragging( false );
+
+      try {
+        event.currentTarget.releasePointerCapture( event.pointerId );
+      }
+      catch {
+        // Ignore (can throw if capture already released).
       }
     },
     [
-      isDragging,
-      calculateProgressionFromEvent
     ]
   );
 
-  // Handle drag end
-  const handlePointerUp = useCallback(
+  const handlePointerMove = useCallback(
     ( event: React.PointerEvent ) => {
-      if ( !isDragging ) return;
+      if ( !isDraggingRef.current ) {
+        return;
+      }
 
-      // Prevent viewport dragging
       event.stopPropagation();
+      event.preventDefault();
 
-      setIsDragging( false );
+      const now = Date.now();
 
-      // Restore loop state if it was looping before
-      // TODO: Implement proper loop state restoration
+      // Throttle drag updates to keep React + p5 happy.
+      if ( now - dragThrottleRef.current < 16 ) {
+        return;
+      }
 
-      event.currentTarget.releasePointerCapture( event.pointerId );
+      dragThrottleRef.current = now;
+
+      setAnimationProgression( calculateProgressionFromEvent( event ) );
     },
     [
-      isDragging,
+      calculateProgressionFromEvent,
+      setAnimationProgression,
     ]
   );
 
-  // Handle hover
   const handleMouseMove = useCallback(
     ( event: React.MouseEvent ) => {
-      if ( disabled || isDragging ) return;
+      if ( disabled || isDraggingRef.current ) {
+        return;
+      }
 
-      // Prevent viewport dragging during hover
       event.stopPropagation();
 
-      const hoverProg = calculateProgressionFromEvent( event );
-
-      setHoverPosition( hoverProg );
+      setHoverPosition( calculateProgressionFromEvent( event ) );
     },
     [
       disabled,
-      isDragging,
-      calculateProgressionFromEvent
+      calculateProgressionFromEvent,
     ]
   );
 
@@ -206,79 +346,213 @@ export default function AnimationProgressionBar( {
     ]
   );
 
-  // Handle keyboard navigation
   const handleKeyDown = useCallback(
     ( event: React.KeyboardEvent ) => {
-      if ( disabled ) return;
+      if ( disabled ) {
+        return;
+      }
 
-      let newProgression = progression;
+      let next = progression;
 
       switch ( event.key ) {
         case "ArrowLeft":
           event.preventDefault();
-          newProgression = Math.max(
-            0,
-            progression - 0.01
-          ); // -1%
+          next = progression - 0.01;
           break;
         case "ArrowRight":
           event.preventDefault();
-          newProgression = Math.min(
-            1,
-            progression + 0.01
-          ); // +1%
+          next = progression + 0.01;
           break;
         case "Home":
           event.preventDefault();
-          newProgression = 0;
+          next = 0;
           break;
         case "End":
           event.preventDefault();
-          newProgression = 1;
+          next = 1;
           break;
         default:
           return;
       }
 
-      if ( typeof window.setAnimationProgression === "function" ) {
-        window.setAnimationProgression( newProgression );
-      }
+      setAnimationProgression( next );
     },
     [
       disabled,
-      progression
+      progression,
+      setAnimationProgression,
     ]
   );
 
-  // Get animation configuration
-  const sketchOptions = getSketchOptions();
-  const duration = sketchOptions?.animation?.duration || 10; // seconds
-  const framerate = sketchOptions?.animation?.framerate || 60; // fps
-  const totalFrames = Math.floor( duration * framerate );
+  const currentValues = useMemo(
+    () => {
+      const percentage = Math.floor( progression * 100 );
+      const currentFrame = Math.floor( progression * animationConfig.totalFrames );
+      const currentTime = progression * animationConfig.duration;
+      const currentSeconds = Math.floor( currentTime );
+      const currentMillis = Math.floor( ( currentTime % 1 ) * 100 );
 
-  // Calculate current values
-  const percentage = Math.floor( progression * 100 );
-  const currentFrame = Math.floor( progression * totalFrames );
-  const currentTime = progression * duration;
-  const currentSeconds = Math.floor( currentTime );
-  const currentMillis = Math.floor( ( currentTime % 1 ) * 100 );
+      return {
+        percentage,
+        currentFrame,
+        currentTime,
+        currentSeconds,
+        currentMillis,
+      };
+    },
+    [
+      progression,
+      animationConfig,
+    ]
+  );
 
-  // Calculate hover values
-  const hoverPercentage = hoverPosition !== null ? Math.floor( hoverPosition * 100 ) : null;
-  const hoverFrame = hoverPosition !== null ? Math.floor( hoverPosition * totalFrames ) : null;
-  const hoverTime = hoverPosition !== null ? hoverPosition * duration : null;
-  const hoverSeconds = hoverTime !== null ? Math.floor( hoverTime ) : null;
-  const hoverMillis = hoverTime !== null ? Math.floor( ( hoverTime % 1 ) * 100 ) : null;
+  const hoverValues = useMemo(
+    () => {
+      if ( hoverPosition === null ) {
+        return null;
+      }
 
-  // Format time display
-  const formatTime = (
-    seconds: number, millis: number
-  ) => {
-    return `${ seconds }.${ millis.toString().padStart(
-      2,
-      "0"
-    ) }s`;
-  };
+      const hoverPercentage = Math.floor( hoverPosition * 100 );
+      const hoverFrame = Math.floor( hoverPosition * animationConfig.totalFrames );
+      const hoverTime = hoverPosition * animationConfig.duration;
+      const hoverSeconds = Math.floor( hoverTime );
+      const hoverMillis = Math.floor( ( hoverTime % 1 ) * 100 );
+
+      return {
+        hoverPercentage,
+        hoverFrame,
+        hoverTime,
+        hoverSeconds,
+        hoverMillis,
+      };
+    },
+    [
+      hoverPosition,
+      animationConfig,
+    ]
+  );
+
+  const formatTime = useCallback(
+    (
+      seconds: number, millis: number
+    ) => {
+      return `${ seconds }.${ millis.toString().padStart(
+        2,
+        "0"
+      ) }s`;
+    },
+    [
+    ]
+  );
+
+  const ProgressBar = useMemo(
+    () => (
+      <div
+        ref={barRef}
+        role="slider"
+        aria-label="Animation progression bar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={currentValues.percentage}
+        tabIndex={0}
+        className={`relative h-4 bg-background border border-theme touch-none ${ isDragging ? "cursor-grabbing" : "cursor-pointer" }`}
+        style={{
+          touchAction: "none",
+        }}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={stopDragging}
+        onPointerCancel={stopDragging}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onKeyDown={handleKeyDown}
+      >
+        <div
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-progress-start to-progress-end transition-all duration-100 ease-out"
+          style={{
+            width: `${ progression * 100 }%`,
+          }}
+        >
+          {isDragging && (
+            <div className="absolute inset-0 bg-foreground/10 animate-pulse" />
+          )}
+        </div>
+
+        {hoverPosition !== null && !isDragging && (
+          <div
+            className="absolute inset-y-0 w-0.5 bg-foreground pointer-events-none"
+            style={{
+              left: `${ hoverPosition * 100 }%`,
+            }}
+          />
+        )}
+      </div>
+    ),
+    [
+      currentValues.percentage,
+      isDragging,
+      progression,
+      hoverPosition,
+      handleClick,
+      handlePointerDown,
+      handlePointerMove,
+      stopDragging,
+      handleMouseMove,
+      handleMouseLeave,
+      handleKeyDown,
+    ]
+  );
+
+  const ProgressInfo = useMemo(
+    () => (
+      <div className="flex items-center justify-between w-full mt-2 text-xs font-medium text-foreground/60 gap-4">
+        <div className="flex items-center gap-3">
+          <span className="font-mono">
+            {currentValues.currentFrame}/{animationConfig.totalFrames}
+          </span>
+          <span className="text-foreground/30">·</span>
+          <span className="font-mono">
+            {formatTime(
+              currentValues.currentSeconds,
+              currentValues.currentMillis
+            )}/{animationConfig.duration}s
+          </span>
+          <span className="text-foreground/30">·</span>
+          <span className="font-mono font-semibold text-active">
+            {currentValues.percentage}%
+          </span>
+        </div>
+
+        {hoverValues && !isDragging && (
+          <div className="flex items-center gap-2 text-foreground/40">
+            <span>→</span>
+            <span className="font-mono">
+              {hoverValues.hoverFrame}/{animationConfig.totalFrames}
+            </span>
+            <span className="text-foreground/20">·</span>
+            <span className="font-mono">
+              {formatTime(
+                hoverValues.hoverSeconds,
+                hoverValues.hoverMillis
+              )}
+            </span>
+            <span className="text-foreground/20">·</span>
+            <span className="font-mono">
+              {hoverValues.hoverPercentage}%
+            </span>
+          </div>
+        )}
+      </div>
+    ),
+    [
+      currentValues,
+      hoverValues,
+      isDragging,
+      animationConfig,
+      formatTime,
+    ]
+  );
 
   if ( disabled ) {
     return null;
@@ -287,95 +561,8 @@ export default function AnimationProgressionBar( {
   return (
     <div className={`w-full mx-auto px-0 ${ className }`}>
       <div className="relative">
-        {/* Progress bar */}
-        <div
-          ref={barRef}
-          role="slider"
-          aria-label="Animation progression bar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percentage}
-          tabIndex={0}
-          className={`
-            relative h-4 bg-background border border-theme
-            ${ isDragging ? "cursor-grabbing" : "cursor-pointer" }
-            touch-none
-          `}
-          style={{
-            touchAction: "none"
-          }}
-          onClick={handleClick}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          onKeyDown={handleKeyDown}
-        >
-          {/* Filled portion */}
-          <div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-progress-start to-progress-end transition-all duration-100 ease-out"
-            style={{
-              width: `${ progression * 100 }%`
-            }}
-          >
-            {isDragging && (
-              <div className="absolute inset-0 bg-foreground/10 animate-pulse" />
-            )}
-          </div>
-
-          {/* Hover indicator */}
-          {hoverPosition !== null && !isDragging && (
-            <div
-              className="absolute inset-y-0 w-0.5 bg-foreground pointer-events-none"
-              style={{
-                left: `${ hoverPosition * 100 }%`
-              }}
-            />
-          )}
-        </div>
-
-        {/* Info display */}
-        <div className="flex items-center justify-between w-full mt-2 text-xs font-medium text-foreground/60 gap-4">
-          {/* Current values */}
-          <div className="flex items-center gap-3">
-            <span className="font-mono">
-              {currentFrame}/{totalFrames}
-            </span>
-            <span className="text-foreground/30">·</span>
-            <span className="font-mono">
-              {formatTime(
-                currentSeconds,
-                currentMillis
-              )}/{duration}s
-            </span>
-            <span className="text-foreground/30">·</span>
-            <span className="font-mono font-semibold text-active">
-              {percentage}%
-            </span>
-          </div>
-
-          {/* Hover preview */}
-          {hoverPosition !== null && !isDragging && hoverFrame !== null && hoverSeconds !== null && hoverMillis !== null && (
-            <div className="flex items-center gap-2 text-foreground/40">
-              <span>→</span>
-              <span className="font-mono">
-                {hoverFrame}/{totalFrames}
-              </span>
-              <span className="text-foreground/20">·</span>
-              <span className="font-mono">
-                {formatTime(
-                  hoverSeconds,
-                  hoverMillis
-                )}
-              </span>
-              <span className="text-foreground/20">·</span>
-              <span className="font-mono">
-                {hoverPercentage}%
-              </span>
-            </div>
-          )}
-        </div>
+        {ProgressBar}
+        {ProgressInfo}
       </div>
     </div>
   );
