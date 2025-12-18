@@ -104,13 +104,13 @@ export default function ClientProcessingSketch() {
                 } as React.CSSProperties
               }
             >
-               <p className="truncate">
-                 <Link
-                   href={`/templates/p5/${ name }`}
-                   target="_blank"
-                 >
-                   {name}
-                 </Link>
+              <p className="truncate">
+                <Link
+                  href={`/templates/p5/${ name }`}
+                  target="_blank"
+                >
+                  {name}
+                </Link>
 
                 <span>{activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}</span>
               </p>
