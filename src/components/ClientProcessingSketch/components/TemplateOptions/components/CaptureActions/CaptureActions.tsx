@@ -44,7 +44,7 @@ type CaptureActionsProps = {
   name: string;
   options: SketchOptionInput;
   persistedJob?: JobModel;
-  activeSlideIndex: number;
+  activeSlideIndex: number | undefined;
   backendRecording: boolean;
   browserRecordingSupported: boolean;
   thumbnails?: Record<string, string>;
@@ -115,6 +115,25 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       persistedJob?.id,
       persistedJob?.status,
       subscribeToRecordingStatus
+    ]
+  );
+
+  // Auto-open preview modal when recording completes successfully
+  const prevStatusRef = React.useRef<JobStatusEnum | undefined>( currentStatus );
+
+  React.useEffect(
+    () => {
+      const prevStatus = prevStatusRef.current;
+
+      prevStatusRef.current = currentStatus;
+
+      if ( backendRecording && currentStatus === "completed" && prevStatus !== "completed" ) {
+        setShowPreviewModal( true );
+      }
+    },
+    [
+      backendRecording,
+      currentStatus
     ]
   );
 
@@ -426,7 +445,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const handleDownload = async() => {
     const jobToDownload = persistedJob?.id || jobId;
 
-    if ( !jobToDownload ) return;
+    if ( !jobToDownload || activeSlideIndex === undefined ) return;
 
     setDownloading( true );
     try {

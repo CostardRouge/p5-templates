@@ -28,13 +28,14 @@ type OptionsPanelProps = {
   methods: UseFormReturn<SketchOptionInput>;
   name: string;
   persistedJob?: JobModel;
-  activeSlideIndex: number;
-  slideIds: string[];
+  activeSlideIndex: number | undefined;
+  slideFields: any[];
   thumbnails: Record<string, string>;
   slides?: SlideOption[];
   jobStatus?: string;
-  onAddSlide: () => Promise<void>;
-  onSelectSlide: ( index: number | undefined ) => Promise<void>;
+  isAdding: boolean;
+  onAddSlide: () => void;
+  onSelectSlide: ( index: number | undefined ) => void;
   onReorderSlides: ( oldIndex: number, newIndex: number ) => void;
   onDuplicateSlide: ( index: number ) => void;
   onDeleteSlide: ( index: number ) => void;
@@ -48,10 +49,11 @@ export default function OptionsPanel( {
   name,
   persistedJob,
   activeSlideIndex,
-  slideIds,
+  slideFields,
   thumbnails,
   slides,
   jobStatus,
+  isAdding,
   onAddSlide,
   onSelectSlide,
   onReorderSlides,
@@ -70,6 +72,7 @@ export default function OptionsPanel( {
     name: "content",
   } )?.length;
 
+  const slideIds = slideFields.map( ( field ) => field.id );
   const slidesLength = slides?.length;
   const jobId = useWatch( {
     control,
@@ -77,7 +80,9 @@ export default function OptionsPanel( {
   } ) as string | undefined;
   const options = watch();
 
-  const editorKey = slideIds[ activeSlideIndex ] ?? `${ activeSlideIndex }-${ slides?.[ activeSlideIndex ]?.name ?? "unnamed-slide" }`;
+  const editorKey = activeSlideIndex !== undefined && slideIds[activeSlideIndex]
+    ? slideIds[activeSlideIndex]
+    : `no-slides-${slideFields.length}`;
 
   return (
     <CollapsibleItem
@@ -184,11 +189,11 @@ export default function OptionsPanel( {
             )}
           >
             <SlideCarousel
-              slides={slides as SlideOption[]}
-              slideIds={slideIds}
+              slideFields={slideFields}
               thumbnails={enableThumbnails ? thumbnails : {
               }}
               activeIndex={activeSlideIndex}
+              isAdding={isAdding}
               onAdd={onAddSlide}
               onSelect={onSelectSlide}
               onReorder={onReorderSlides}
@@ -197,7 +202,9 @@ export default function OptionsPanel( {
               onRename={onRenameSlide}
             />
 
-            <SlideEditor key={editorKey} activeIndex={activeSlideIndex} />
+            {activeSlideIndex !== undefined && (
+              <SlideEditor key={editorKey} activeIndex={activeSlideIndex} />
+            )}
           </CollapsibleItem>
         </Fragment>
       )}

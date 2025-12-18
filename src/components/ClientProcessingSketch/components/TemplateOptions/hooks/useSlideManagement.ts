@@ -1,5 +1,5 @@
 import {
-  useCallback, useEffect, useRef, useState
+  useCallback, useEffect, useState
 } from "react";
 import {
   UseFieldArrayReturn, UseFormGetValues, UseFormSetValue
@@ -42,143 +42,86 @@ export function useSlideManagement( {
   const [
     activeSlideIndex,
     setActiveSlideIndex
-  ] = useState( 0 );
-  const didInitSelection = useRef( false );
+  ] = useState<number | undefined>( undefined );
+  const [
+    isAdding,
+    setIsAdding
+  ] = useState( false );
 
-  const handleSlideSelect = useCallback(
-    async( index: number | undefined ) => {
-      // Capture thumbnail of current slide before switching
-      if ( enableThumbnails && captureThumbnail && activeSlideIndex !== undefined && slideFields[ activeSlideIndex ] ) {
-        const currentSlideId = slideFields[ activeSlideIndex ].id;
+  // Compute the effective active index based on current slides
+  const effectiveActiveIndex = slideFields.length > 0
+    ? ( activeSlideIndex !== undefined && activeSlideIndex < slideFields.length ? activeSlideIndex : 0 )
+    : undefined;
 
-        await captureThumbnail( currentSlideId );
-      }
-
-      if ( index !== undefined ) {
-        if ( index !== activeSlideIndex ) {
-          setActiveSlideIndex( index );
-          if ( typeof window.setSlide === "function" ) {
-            window.setSlide( index );
-          }
-        }
-      }
-
-      onActiveSlideChange?.( index );
-    },
-    [
-      onActiveSlideChange,
-      activeSlideIndex,
-      slideFields,
-      captureThumbnail,
-      enableThumbnails
-    ]
-  );
-
-  // Initialize first slide selection
+  // Update active index when slides change
   useEffect(
     () => {
-      const length = slideFields.length;
-
-      if ( !didInitSelection.current && length > 0 ) {
-        didInitSelection.current = true;
-        handleSlideSelect( 0 );
-
+      if ( slideFields.length === 0 ) {
+        setActiveSlideIndex( undefined );
+        onActiveSlideChange?.( undefined );
+      } else if ( activeSlideIndex === undefined || activeSlideIndex >= slideFields.length ) {
+        setActiveSlideIndex( 0 );
+        onActiveSlideChange?.( 0 );
         if ( typeof window.setSlide === "function" ) {
           window.setSlide( 0 );
         }
-
-        // Capture initial thumbnail for the first slide after a short delay
-        if ( enableThumbnails && captureThumbnail ) {
-          const firstSlideId = slideFields[ 0 ]?.id;
-
-          if ( firstSlideId ) {
-            requestAnimationFrame( () => {
-              setTimeout(
-                () => {
-                  captureThumbnail( firstSlideId );
-                },
-                300
-              );
-            } );
-          }
-        }
       }
     },
     [
-      handleSlideSelect,
       slideFields.length,
-      slideFields,
-      captureThumbnail,
-      enableThumbnails
+      activeSlideIndex,
+      onActiveSlideChange
     ]
   );
 
-  // Adjust active slide when slides change
-  useEffect(
-    () => {
-      const length = slideFields.length;
-      let next = activeSlideIndex;
-      let needsAdjustment = false;
+  const handleSlideSelect = useCallback(
+    ( index: number | undefined ) => {
+      if ( index !== undefined && ( index < 0 || index >= slideFields.length ) ) {
+        return; // Invalid index
+      }
 
-      if ( length === 0 ) {
-        if ( activeSlideIndex !== 0 ) {
-          setActiveSlideIndex( 0 );
-        }
-        handleSlideSelect( undefined );
-      } else {
-        if ( activeSlideIndex < 0 ) {
-          next = 0;
-          needsAdjustment = true;
-        } else if ( activeSlideIndex > length - 1 ) {
-          next = length - 1;
-          needsAdjustment = true;
-        }
+      setActiveSlideIndex( index );
+      onActiveSlideChange?.( index );
 
-        if ( needsAdjustment ) {
-          handleSlideSelect( next );
-        } else {
-          if ( typeof window.setSlide === "function" ) {
-            window.setSlide( next );
-          }
-        }
+      if ( typeof window.setSlide === "function" ) {
+        window.setSlide( index ?? 0 );
       }
     },
     [
-      handleSlideSelect,
       slideFields.length,
-      activeSlideIndex
+      onActiveSlideChange
     ]
   );
 
   const handleAddSlide = useCallback(
-    async() => {
-      // Capture the current slide's thumbnail before adding a new one
-      if ( enableThumbnails && captureThumbnail && activeSlideIndex !== undefined && slideFields[ activeSlideIndex ] ) {
-        await captureThumbnail( slideFields[ activeSlideIndex ].id );
-      }
+    () => {
+      if ( isAdding ) return;
+
+      setIsAdding( true );
 
       const nextIndex = slideFields.length;
       const currentGlobalSketch = getValues( "sketch" );
       const newSlide = makeDefaultSlide( {
         indexForLabel: nextIndex,
-        sketch: currentGlobalSketch,
+        sketch: nextIndex === 0 ? currentGlobalSketch : sketchFormValues,
       } );
 
       appendSlide( newSlide );
-      await handleSlideSelect( nextIndex );
+      handleSlideSelect( nextIndex );
 
       // Mark that we need to capture thumbnail for the new slide
       if ( enableThumbnails ) {
         pendingThumbnailCaptureRef.current = nextIndex;
       }
+
+      setIsAdding( false );
     },
     [
-      activeSlideIndex,
-      slideFields,
+      isAdding,
+      slideFields.length,
       getValues,
       appendSlide,
       handleSlideSelect,
-      captureThumbnail,
       enableThumbnails,
       pendingThumbnailCaptureRef
     ]
@@ -186,13 +129,13 @@ export function useSlideManagement( {
 
   const handleDuplicateSlide = useCallback(
     ( indexToDuplicate: number ) => {
+      if ( indexToDuplicate < 0 || indexToDuplicate >= slideFields.length ) return;
+
       const allSlides = getValues( "slides" ) ?? [
       ];
       const original = allSlides[ indexToDuplicate ];
 
-      if ( !original ) {
-        return;
-      }
+      if ( !original ) return;
 
       const duplicated = deepClone( original );
 
@@ -209,6 +152,7 @@ export function useSlideManagement( {
       handleSlideSelect( insertIndex );
     },
     [
+      slideFields.length,
       getValues,
       insertSlide,
       handleSlideSelect
@@ -217,13 +161,11 @@ export function useSlideManagement( {
 
   const handleDeleteSlide = useCallback(
     ( indexToDelete: number ) => {
+      if ( indexToDelete < 0 || indexToDelete >= slideFields.length ) return;
+
       const lengthBefore = slideFields.length;
 
-      if ( lengthBefore <= 0 ) {
-        return;
-      }
-
-      // If we are deleting the LAST remaining slide, move its settings to global 'sketch'
+      // If deleting the last slide, preserve its settings
       if ( lengthBefore === 1 ) {
         const lastSlideSettings = getValues( `slides.${ indexToDelete }.sketch` );
 
@@ -236,33 +178,24 @@ export function useSlideManagement( {
       }
 
       removeSlide( indexToDelete );
-      const lengthAfter = lengthBefore - 1;
 
-      if ( lengthAfter <= 0 ) {
-        handleSlideSelect( 0 );
-        return;
-      }
+      // Adjust active slide after deletion
+      const newLength = lengthBefore - 1;
 
-      if ( indexToDelete < activeSlideIndex ) {
-        handleSlideSelect( activeSlideIndex - 1 );
-        return;
-      }
-
-      if ( indexToDelete === activeSlideIndex ) {
-        const nextIndex = Math.min(
-          activeSlideIndex,
-          lengthAfter - 1
+      if ( newLength === 0 ) {
+        handleSlideSelect( undefined );
+      } else if ( indexToDelete <= effectiveActiveIndex! ) {
+        const newIndex = Math.max(
+          0,
+effectiveActiveIndex! - ( indexToDelete === effectiveActiveIndex! ? 0 : 1 )
         );
 
-        handleSlideSelect( nextIndex );
-        return;
+        handleSlideSelect( newIndex );
       }
-
-      handleSlideSelect( activeSlideIndex );
     },
     [
       slideFields.length,
-      activeSlideIndex,
+      effectiveActiveIndex,
       getValues,
       setValue,
       removeSlide,
@@ -274,7 +207,8 @@ export function useSlideManagement( {
     (
       oldIndex: number, newIndex: number
     ) => {
-      if ( oldIndex === newIndex ) {
+      if ( oldIndex === newIndex || oldIndex < 0 || newIndex < 0 ||
+          oldIndex >= slideFields.length || newIndex >= slideFields.length ) {
         return;
       }
       moveSlide(
@@ -284,6 +218,7 @@ export function useSlideManagement( {
       handleSlideSelect( newIndex );
     },
     [
+      slideFields.length,
       moveSlide,
       handleSlideSelect
     ]
@@ -293,18 +228,21 @@ export function useSlideManagement( {
     (
       index: number, newName: string
     ) => {
+      if ( index < 0 || index >= slideFields.length ) return;
       setValue(
         `slides.${ index }.name`,
         newName
       );
     },
     [
+      slideFields.length,
       setValue
     ]
   );
 
   return {
-    activeSlideIndex,
+    activeSlideIndex: effectiveActiveIndex,
+    isAdding,
     handleSlideSelect,
     handleAddSlide,
     handleDuplicateSlide,

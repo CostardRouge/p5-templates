@@ -97,6 +97,7 @@ export default function TemplateOptions( {
   // Slide management
   const {
     activeSlideIndex,
+    isAdding,
     handleSlideSelect,
     handleAddSlide,
     handleDuplicateSlide,
@@ -179,10 +180,11 @@ export default function TemplateOptions( {
           name={name}
           persistedJob={persistedJob}
           activeSlideIndex={activeSlideIndex}
-          slideIds={slideIds}
+          slideFields={slideFields}
           thumbnails={thumbnails}
           slides={slides}
           jobStatus={captureActionsRef.current?.currentStatus}
+          isAdding={isAdding}
           onAddSlide={handleAddSlide}
           onSelectSlide={handleSlideSelect}
           onReorderSlides={handleReorderSlides}
@@ -209,7 +211,7 @@ export default function TemplateOptions( {
       </div>
 
       <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
-        <SketchSettings activeSlideIndex={slides && slides.length > 0 ? activeSlideIndex : undefined} />
+        <SketchSettings activeSlideIndex={activeSlideIndex} />
       </TemplateAssetsProvider>
     </FormProvider>
   );

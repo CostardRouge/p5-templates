@@ -13,7 +13,7 @@ import {
 
 type CompletedActionsProps = {
   persistedJob: JobModel;
-  activeSlideIndex: number;
+  activeSlideIndex: number | undefined;
   onPreview: () => void;
   onRecordAgain: () => void;
   onDelete: () => void;
@@ -37,7 +37,7 @@ export default function CompletedActions( {
   // Get video sizes directly from job data
   const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [
   ];
-  const currentVideoSize = videoSizes[ activeSlideIndex ];
+  const currentVideoSize = activeSlideIndex !== undefined ? videoSizes?.[ activeSlideIndex ] : undefined;
 
   return (
     <div className="grid grid-cols-2 gap-1">
