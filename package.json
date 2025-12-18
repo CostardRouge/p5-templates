@@ -7,7 +7,7 @@
     "gsap:meta": "node scripts/watch-gsap-templates.mjs",
     "dev": "next dev --turbopack",
     "watch": "node scripts/dev-watch.mjs",
-    "build": "npm run gsap:meta && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
