@@ -5,7 +5,8 @@ import {
   JobModel
 } from "@/types/recording.types";
 import {
-  captureThumbnailFromCanvas
+  captureThumbnailFromCanvas,
+  waitForSlideRendered
 } from "../utils/thumbnailUtils";
 
 type UseThumbnailsProps = {
@@ -144,7 +145,7 @@ export function useThumbnails( {
 
       // Wait a bit for the canvas to be ready and rendered
       const timeoutId = setTimeout(
-        () => {
+        async() => {
           initialCaptureAttempted.current = true;
 
           // Check which slides need thumbnails
@@ -155,24 +156,25 @@ export function useThumbnails( {
           }
 
           // Capture thumbnail for the first slide that needs one
-          // (assuming it's the active slide)
+          // (assuming it's the active slide at index 0)
           const firstSlideId = slidesNeedingThumbnails[ 0 ].id;
 
-          captureThumbnailFromCanvas()
-            .then( ( dataUrl ) => {
-              if ( dataUrl ) {
-                setThumbnails( ( prev ) => ( {
-                  ...prev,
-                  [ firstSlideId ]: dataUrl
-                } ) );
-              }
-            } )
-            .catch( ( e ) => {
-              console.error(
-                "Failed to capture initial thumbnail:",
-                e
-              );
-            } );
+          try {
+            await waitForSlideRendered( 0 ); // Wait for slide 0 to be rendered
+            const dataUrl = await captureThumbnailFromCanvas();
+
+            if ( dataUrl ) {
+              setThumbnails( ( prev ) => ( {
+                ...prev,
+                [ firstSlideId ]: dataUrl
+              } ) );
+            }
+          } catch ( e ) {
+            console.error(
+              "Failed to capture initial thumbnail:",
+              e
+            );
+          }
         },
         500
       ); // Give canvas time to render
@@ -187,9 +189,24 @@ export function useThumbnails( {
   );
 
   const captureThumbnail = useCallback(
-    async( slideId: string ) => {
+    async(
+      slideId: string, slideIndex?: number
+    ) => {
       if ( !enabled ) {
         return;
+      }
+
+      // If slideIndex is provided, wait for the slide to be rendered
+      if ( slideIndex !== undefined ) {
+        try {
+          await waitForSlideRendered( slideIndex );
+        } catch ( error ) {
+          console.warn(
+            `Failed to wait for slide ${ slideIndex } rendering:`,
+            error
+          );
+          // Continue with capture anyway to avoid completely breaking thumbnails
+        }
       }
 
       const dataUrl = await captureThumbnailFromCanvas();
@@ -208,7 +225,9 @@ export function useThumbnails( {
 
   // Manually capture thumbnail for current slide (useful for refresh)
   const captureCurrentSlide = useCallback(
-    async( slideId: string ) => {
+    async(
+      slideId: string, slideIndex?: number
+    ) => {
       if ( !enabled ) {
         return;
       }
@@ -218,7 +237,10 @@ export function useThumbnails( {
         resolve,
         100
       ) );
-      await captureThumbnail( slideId );
+      await captureThumbnail(
+        slideId,
+        slideIndex
+      );
     },
     [
       enabled,

@@ -1,5 +1,5 @@
 import {
-  useCallback, useEffect, useState
+  useCallback, useEffect, useRef, useState
 } from "react";
 import {
   UseFieldArrayReturn, UseFormGetValues, UseFormSetValue
@@ -20,7 +20,7 @@ type UseSlideManagementProps = {
   setValue: UseFormSetValue<SketchOptionInput>;
   sketchFormValues: any;
   onActiveSlideChange?: ( index: number | undefined ) => void;
-   captureThumbnail?: ( slideId: string, slideIndex?: number ) => Promise<void>;
+  captureThumbnail?: ( slideId: string, slideIndex?: number ) => Promise<void>;
   enableThumbnails: boolean;
   pendingThumbnailCaptureRef: React.MutableRefObject<number | null>;
 };
@@ -47,6 +47,7 @@ export function useSlideManagement( {
     isAdding,
     setIsAdding
   ] = useState( false );
+  const pendingSelectIndexRef = useRef<number | null>( null );
 
   // Compute the effective active index based on current slides
   const effectiveActiveIndex = slideFields.length > 0
@@ -80,6 +81,20 @@ export function useSlideManagement( {
         return; // Invalid index
       }
 
+      // Capture the previous slide thumbnail before switching
+      if (
+        enableThumbnails &&
+        captureThumbnail &&
+        activeSlideIndex !== undefined &&
+        index !== activeSlideIndex
+      ) {
+        const previousSlideId = slideFields[ activeSlideIndex ]?.id;
+
+        if ( previousSlideId ) {
+          void captureThumbnail( previousSlideId );
+        }
+      }
+
       setActiveSlideIndex( index );
       onActiveSlideChange?.( index );
 
@@ -88,8 +103,34 @@ export function useSlideManagement( {
       }
     },
     [
-      slideFields.length,
+      slideFields,
+      enableThumbnails,
+      captureThumbnail,
+      activeSlideIndex,
       onActiveSlideChange
+    ]
+  );
+
+  // After append/insert, wait for react-hook-form to expose the new field id
+  useEffect(
+    () => {
+      const pendingIndex = pendingSelectIndexRef.current;
+
+      if ( pendingIndex === null ) {
+        return;
+      }
+
+      if ( pendingIndex < 0 || pendingIndex >= slideFields.length ) {
+        return;
+      }
+
+      pendingSelectIndexRef.current = null;
+      handleSlideSelect( pendingIndex );
+      setIsAdding( false );
+    },
+    [
+      slideFields.length,
+      handleSlideSelect
     ]
   );
 
@@ -107,23 +148,21 @@ export function useSlideManagement( {
       } );
 
       appendSlide( newSlide );
-      handleSlideSelect( nextIndex );
+      pendingSelectIndexRef.current = nextIndex;
 
-      // Mark that we need to capture thumbnail for the new slide
       if ( enableThumbnails ) {
         pendingThumbnailCaptureRef.current = nextIndex;
       }
-
-      setIsAdding( false );
     },
     [
       isAdding,
       slideFields.length,
       getValues,
       appendSlide,
-      handleSlideSelect,
+      sketchFormValues,
       enableThumbnails,
-      pendingThumbnailCaptureRef
+      pendingThumbnailCaptureRef,
+      pendingSelectIndexRef
     ]
   );
 
@@ -149,13 +188,19 @@ export function useSlideManagement( {
         insertIndex,
         duplicated
       );
-      handleSlideSelect( insertIndex );
+      pendingSelectIndexRef.current = insertIndex;
+
+      if ( enableThumbnails ) {
+        pendingThumbnailCaptureRef.current = insertIndex;
+      }
     },
     [
       slideFields.length,
       getValues,
       insertSlide,
-      handleSlideSelect
+      enableThumbnails,
+      pendingThumbnailCaptureRef,
+      pendingSelectIndexRef
     ]
   );
 

@@ -49,6 +49,11 @@ export default function TemplateOptions( {
 }: TemplateOptionsProps ) {
   const browserRecordingSupported = useBrowserRecordingSupported();
   const captureActionsRef = useRef<CaptureActionsRef>( null );
+  const pendingPeriodicThumbnailCaptureRef = useRef<{
+    slideId: string;
+    slideIndex: number;
+  } | null>( null );
+  const periodicCaptureInFlightRef = useRef( false );
 
   // Form state management
   const {
@@ -121,6 +126,114 @@ export default function TemplateOptions( {
 
   const slideIds = slideFields.map( ( field ) => field.id );
 
+  // Mark the active slide thumbnail as stale on any form change.
+  // A periodic task below refreshes it at most every 5s.
+  useEffect(
+    () => {
+      if ( !enableThumbnails ) {
+        return;
+      }
+
+      const subscription = methods.watch( () => {
+        if ( activeSlideIndex === undefined ) {
+          return;
+        }
+
+        const slideId = slideFields[ activeSlideIndex ]?.id;
+
+        if ( !slideId ) {
+          return;
+        }
+
+        pendingPeriodicThumbnailCaptureRef.current = {
+          slideId,
+          slideIndex: activeSlideIndex,
+        };
+      } );
+
+      return () => subscription.unsubscribe();
+    },
+    [
+      enableThumbnails,
+      methods,
+      activeSlideIndex,
+      slideFields
+    ]
+  );
+
+  // Refresh thumbnails periodically (best-effort), so changes in sketch settings
+  // are reflected even if the user doesn't switch slides.
+  useEffect(
+    () => {
+      if ( !enableThumbnails ) {
+        return;
+      }
+
+      const intervalId = window.setInterval(
+        async() => {
+          const pending = pendingPeriodicThumbnailCaptureRef.current;
+
+          if ( !pending || periodicCaptureInFlightRef.current ) {
+            return;
+          }
+
+          periodicCaptureInFlightRef.current = true;
+
+          try {
+            await captureCurrentSlide(
+              pending.slideId,
+              pending.slideIndex
+            );
+          } finally {
+            pendingPeriodicThumbnailCaptureRef.current = null;
+            periodicCaptureInFlightRef.current = false;
+          }
+        },
+        5000
+      );
+
+      return () => window.clearInterval( intervalId );
+    },
+    [
+      enableThumbnails,
+      captureCurrentSlide
+    ]
+  );
+
+  // Lazy-capture a thumbnail when visiting a slide that lacks one
+  useEffect(
+    () => {
+      if ( !enableThumbnails || activeSlideIndex === undefined ) {
+        return;
+      }
+
+      const slideId = slideFields[ activeSlideIndex ]?.id;
+
+      if ( !slideId || thumbnails[ slideId ] ) {
+        return;
+      }
+
+      const timeoutId = setTimeout(
+        () => {
+          captureCurrentSlide(
+            slideId,
+            activeSlideIndex
+          );
+        },
+        150
+      );
+
+      return () => clearTimeout( timeoutId );
+    },
+    [
+      enableThumbnails,
+      activeSlideIndex,
+      slideFields,
+      thumbnails,
+      captureCurrentSlide
+    ]
+  );
+
   // Capture thumbnail for newly added slides
   useEffect(
     () => {
@@ -131,18 +244,24 @@ export default function TemplateOptions( {
       const slideIndex = pendingThumbnailCaptureRef.current;
       const slideId = slideFields[ slideIndex ]?.id;
 
-      if ( slideId ) {
-        requestAnimationFrame( () => {
-          setTimeout(
-            async() => {
-              await captureThumbnail( slideId );
-            },
-            300
-          );
-        } );
+      if ( !slideId ) {
+        pendingThumbnailCaptureRef.current = null;
+        return;
       }
 
-      pendingThumbnailCaptureRef.current = null;
+      // Give the sketch time to render the newly selected slide
+      const timeoutId = setTimeout(
+        () => {
+          captureThumbnail(
+            slideId,
+            slideIndex
+          );
+          pendingThumbnailCaptureRef.current = null;
+        },
+        300
+      );
+
+      return () => clearTimeout( timeoutId );
     },
     [
       slideFields,

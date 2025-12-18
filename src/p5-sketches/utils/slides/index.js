@@ -34,7 +34,7 @@ const slides = {
     events.register(
       "post-draw",
       () => {
-        const canvas = document.querySelector( "canvas#defaultCanvas0.loaded" );
+        const canvas = document.querySelector( "canvas#defaultCanvas0, canvas.p5Canvas" );
 
         if ( !canvas ) {
           return;
