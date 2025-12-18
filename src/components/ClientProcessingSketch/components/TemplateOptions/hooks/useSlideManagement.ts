@@ -20,7 +20,7 @@ type UseSlideManagementProps = {
   setValue: UseFormSetValue<SketchOptionInput>;
   sketchFormValues: any;
   onActiveSlideChange?: ( index: number | undefined ) => void;
-  captureThumbnail?: ( slideId: string ) => Promise<void>;
+   captureThumbnail?: ( slideId: string, slideIndex?: number ) => Promise<void>;
   enableThumbnails: boolean;
   pendingThumbnailCaptureRef: React.MutableRefObject<number | null>;
 };

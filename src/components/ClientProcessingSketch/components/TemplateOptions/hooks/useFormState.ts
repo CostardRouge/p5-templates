@@ -66,6 +66,7 @@ export function useFormState( {
         // Track unsaved changes only if values differ from initial
         if ( persistedJob?.status !== "completed" ) {
           const hasChanged = JSON.stringify( value ) !== JSON.stringify( initialValuesRef.current );
+
           setHasUnsavedChanges( hasChanged );
         }
       } );

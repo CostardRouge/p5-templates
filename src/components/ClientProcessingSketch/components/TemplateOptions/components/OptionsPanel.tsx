@@ -80,9 +80,9 @@ export default function OptionsPanel( {
   } ) as string | undefined;
   const options = watch();
 
-  const editorKey = activeSlideIndex !== undefined && slideIds[activeSlideIndex]
-    ? slideIds[activeSlideIndex]
-    : `no-slides-${slideFields.length}`;
+  const editorKey = activeSlideIndex !== undefined && slideIds[ activeSlideIndex ]
+    ? slideIds[ activeSlideIndex ]
+    : `no-slides-${ slideFields.length }`;
 
   return (
     <CollapsibleItem

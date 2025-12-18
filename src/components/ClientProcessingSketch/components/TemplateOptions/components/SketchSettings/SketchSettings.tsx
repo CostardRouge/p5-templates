@@ -77,7 +77,7 @@ export default function SketchSettings( {
               }}
             />
             <span>
-              {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`} sketch options
+              {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`} options
               {activeSlideIndex !== undefined && ` (slide ${ activeSlideIndex + 1 })`}
             </span>
           </button>

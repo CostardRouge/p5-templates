@@ -28,10 +28,10 @@ import {
 import SlideThumbnail from "./SlideThumbnail";
 
 export default function SlideCarousel( {
-  slideIds,
-  slides,
+  slideFields,
   thumbnails,
   activeIndex,
+  isAdding,
   onSelect,
   onReorder,
   onAdd,
@@ -39,10 +39,10 @@ export default function SlideCarousel( {
   onDelete,
   onRename
 }: {
-  slideIds: string[];
-  slides: SlideOption[];
+  slideFields: any[];
   thumbnails: Record<string, string>;
-  activeIndex: number;
+  activeIndex: number | undefined;
+  isAdding: boolean;
   onSelect: ( index: number ) => void;
   onReorder: ( oldIndex: number, newIndex: number ) => void;
   onAdd: () => void;
@@ -50,6 +50,9 @@ export default function SlideCarousel( {
   onDelete: ( index: number ) => void;
   onRename: ( index: number, newName: string ) => void;
 } ) {
+  const slideIds = slideFields.map( ( field ) => field.id );
+  const slides = slideFields.map( ( field ) => field.value as SlideOption );
+
   const sensors = useSensors(
     useSensor(
       MouseSensor,
@@ -117,18 +120,20 @@ export default function SlideCarousel( {
           <SortableContext
             items={slideIds} strategy={rectSwappingStrategy}
           >
-            {slides.map( (
-              slide, index
+            {slideFields.map( (
+              field, index
             ) => {
-              const id = slideIds[ index ];
+              const slide = field.value as SlideOption;
+              const id = field.id;
               const thumbnail = thumbnails[ id ] || null;
+              const name = slide?.name || `Slide ${ index + 1 }`;
 
               return (
-                <SortableRow key={`${ id }-${ index }`} id={id}>
+                <SortableRow key={id} id={id}>
                   {( dragBinder ) => (
                     <SlideThumbnail
                       id={id}
-                      name={slide.name || `Slide ${ index + 1 }`}
+                      name={name}
                       isActive={index === activeIndex}
                       thumbnailUrl={thumbnail}
                       aspectRatio={aspectRatio}
@@ -150,7 +155,8 @@ export default function SlideCarousel( {
           <button
             type="button"
             onClick={onAdd}
-            className="flex flex-col items-center justify-center border border-dashed border-theme rounded-lg hover:bg-secondary/10 transition-colors text-muted-foreground hover:text-foreground gap-2"
+            disabled={isAdding}
+            className="flex flex-col items-center justify-center border border-dashed border-theme rounded-lg hover:bg-secondary/10 transition-colors text-muted-foreground hover:text-foreground gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               aspectRatio
             }}
