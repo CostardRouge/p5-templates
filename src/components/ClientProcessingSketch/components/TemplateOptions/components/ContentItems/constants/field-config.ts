@@ -9,9 +9,7 @@ import {
   VisualOptions,
 } from "@/types/sketch.types";
 
-import {
-  ZodDiscriminatedUnion, ZodObject
-} from "zod";
+import { ZodDiscriminatedUnion, ZodObject } from "zod";
 
 // Step 1: Define a common base for all config types
 interface BaseConfig {
@@ -60,9 +58,9 @@ export interface SizePresetConfig extends BaseConfig {
 // For 'select' inputs
 export type SelectOption = {
   label: string;
-  value: string | number
-  group?: string
-}
+  value: string | number;
+  group?: string;
+};
 
 interface SelectConfig extends BaseConfig {
   component: "select";
@@ -92,12 +90,22 @@ export interface ConditionalGroupConfig extends BaseConfig {
   schema: ZodDiscriminatedUnion<any, any> | ZodObject<any>;
 }
 
-type Scope = "global" | {
- slide: number
-};
+type Scope =
+  | "global"
+  | {
+      slide: number;
+    };
 
 interface HiddenConfig extends BaseConfig {
   component: "hidden";
+}
+
+interface ImagesStackConfig extends BaseConfig {
+  component: "images-stack";
+  assetsName?: string;
+  scope?: Scope;
+  jobId?: string;
+  label?: string;
 }
 
 interface ImageConfig extends BaseConfig {
@@ -108,12 +116,13 @@ interface ImageConfig extends BaseConfig {
   label?: string;
 }
 
-interface ImagesStackConfig extends BaseConfig {
-  component: "images-stack";
-  assetsName?: string;
-  scope?: Scope;
-  jobId?: string;
-  label?: string;
+interface ItemListConfig extends BaseConfig {
+  component: "item-list";
+  itemConfig: FieldConfig;
+  minItems?: number;
+  maxItems?: number;
+  defaultItems?: any[];
+  locked?: boolean;
 }
 
 // Step 3: Create the master Discriminated Union
@@ -131,6 +140,7 @@ export type FieldConfig =
   | ImageConfig
   | SizePresetConfig
   | HiddenConfig
+  | ItemListConfig;
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema
@@ -152,37 +162,30 @@ export const fontNames = [
   "agiro",
   "peix",
   "onlysansVariable",
-  "waverseVariable"
+  "waverseVariable",
 ];
 
 const visualSelectOptions = [
   {
     label: "Neon graffiti",
     value: "neon-graffiti",
-    config: {
-
-    }
+    config: {},
   },
   {
     label: "Neon line",
     value: "neon-line",
-    config: {
-    }
+    config: {},
   },
   {
     label: "Neon dot",
     value: "neon-dot",
-    config: {
-
-    }
+    config: {},
   },
   {
     label: "Churros snake",
     value: "churros-snake",
-    config: {
-
-    }
-  }
+    config: {},
+  },
 ];
 
 const gridPatternFields: ItemFormConfig = {
@@ -191,22 +194,22 @@ const gridPatternFields: ItemFormConfig = {
     component: "number",
     step: 1,
     min: 0,
-    max: 100
+    max: 100,
   },
   strokeWeight: {
     label: "Stroke Weight",
     component: "number",
     step: 0.5,
     min: 0,
-    max: 100
+    max: 100,
   },
   stroke: {
     label: "Stroke Color",
-    component: "color"
+    component: "color",
   },
   borders: {
     label: "Borders",
-    component: "checkbox"
+    component: "checkbox",
   },
 };
 
@@ -216,22 +219,22 @@ const dotsPatternFields: ItemFormConfig = {
     component: "number",
     step: 1,
     min: 0,
-    max: 100
+    max: 100,
   },
   strokeWeight: {
     label: "Dot weight",
     component: "number",
     step: 0.5,
     min: 0,
-    max: 100
+    max: 100,
   },
   stroke: {
     label: "Stroke Color",
-    component: "color"
+    component: "color",
   },
   borders: {
     label: "Borders",
-    component: "checkbox"
+    component: "checkbox",
   },
 };
 
@@ -241,31 +244,31 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
   meta: {
     fill: {
       label: "Fill",
-      component: "color"
+      component: "color",
     },
     stroke: {
       label: "Stroke",
-      component: "color"
+      component: "color",
     },
     topLeft: {
       label: "Top left",
       component: "text",
-      placeholder: "Text on the top left corner"
+      placeholder: "Text on the top left corner",
     },
     topRight: {
       label: "Top right",
       component: "text",
-      placeholder: "Text on the top right corner"
+      placeholder: "Text on the top right corner",
     },
     bottomLeft: {
       label: "Bottom left",
       component: "text",
-      placeholder: "Text on the bottom left corner"
+      placeholder: "Text on the bottom left corner",
     },
     bottomRight: {
       label: "Bottom right",
       component: "text",
-      placeholder: "Text on the bottom right corner"
+      placeholder: "Text on the bottom right corner",
     },
     slideProgression: {
       label: "Slide progression",
@@ -277,45 +280,45 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         },
         stroke: {
           label: "Stroke",
-          component: "color"
+          component: "color",
         },
-      }
-    }
+      },
+    },
   },
   text: {
     content: {
       label: "Content",
-      component: "textarea"
+      component: "textarea",
     },
     size: {
       label: "Size",
       component: "slider",
       step: 1,
       min: 1,
-      max: 1024
+      max: 1024,
     },
     fill: {
       label: "Fill",
-      component: "color"
+      component: "color",
     },
     stroke: {
       label: "Stroke",
-      component: "color"
+      component: "color",
     },
     font: {
       label: "font",
       component: "select",
-      options: fontNames.map( fontName => ( {
+      options: fontNames.map((fontName) => ({
         value: fontName,
-        label: fontName
-      } ) ),
+        label: fontName,
+      })),
     },
     strokeWeight: {
       label: "Stroke weight",
       component: "slider",
       min: 0,
       max: 20,
-      step: 0.5
+      step: 0.5,
     },
     position: {
       label: "Position",
@@ -326,16 +329,16 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
+          max: 1,
         },
         y: {
           label: "y",
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
-        }
-      }
+          max: 1,
+        },
+      },
     },
     alignment: {
       label: "Alignment",
@@ -344,20 +347,20 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         horizontal: {
           label: "Horizontal alignment",
           component: "select",
-          options: HorizontalAlign.options.map( horizontalAlignOption => ( {
+          options: HorizontalAlign.options.map((horizontalAlignOption) => ({
             value: horizontalAlignOption,
-            label: horizontalAlignOption
-          } ) )
+            label: horizontalAlignOption,
+          })),
         },
         vertical: {
           label: "Vertical alignment",
           component: "select",
-          options: VerticalAlign.options.map( verticalAlignOption => ( {
+          options: VerticalAlign.options.map((verticalAlignOption) => ({
             value: verticalAlignOption,
-            label: verticalAlignOption
-          } ) )
-        }
-      }
+            label: verticalAlignOption,
+          })),
+        },
+      },
     },
     margin: {
       label: "Margin",
@@ -368,31 +371,31 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
+          max: 1,
         },
         vertical: {
           label: "Vertical",
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
+          max: 1,
         },
-      }
+      },
     },
     blend: {
       label: "Blend",
       component: "select",
-      options: Blend.options.map( blendOption => ( {
+      options: Blend.options.map((blendOption) => ({
         value: blendOption,
-        label: blendOption
-      } ) )
-    }
+        label: blendOption,
+      })),
+    },
     // We can add more fields here and they will auto-generate
   },
   background: {
     background: {
       label: "Background color",
-      component: "color"
+      component: "color",
     },
     // THIS IS THE NEW PART
     pattern: {
@@ -405,11 +408,11 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         options: [
           {
             value: "grid",
-            label: "Grid"
+            label: "Grid",
           },
           {
             value: "dots",
-            label: "Dots"
+            label: "Dots",
           },
         ],
       },
@@ -417,7 +420,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       // A map of which config to use for each 'type'
       configs: {
         grid: gridPatternFields,
-        dots: dotsPatternFields
+        dots: dotsPatternFields,
       },
 
       // The schema is needed to create default objects when the type changes
@@ -428,14 +431,14 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
   image: {
     source: {
       label: "Source",
-      component: "image"
+      component: "image",
     },
     margin: {
       label: "Margin",
       component: "slider",
       step: 1,
       min: 0,
-      max: 1000
+      max: 1000,
     },
     center: {
       label: "Center",
@@ -446,7 +449,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       component: "slider",
       step: 0.1,
       min: 0.1,
-      max: 6
+      max: 6,
     },
     position: {
       label: "Position",
@@ -457,16 +460,16 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
+          max: 1,
         },
         y: {
           label: "y",
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
-        }
-      }
+          max: 1,
+        },
+      },
     },
     animation: {
       label: "Animation",
@@ -476,7 +479,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         options: [
           {
             label: "Noise floating",
-            value: "noise-floating"
+            value: "noise-floating",
           },
         ],
       },
@@ -487,7 +490,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
             component: "slider",
             step: 1,
             min: 0,
-            max: 512
+            max: 512,
           },
           noiseDetail: {
             label: "Noise detail",
@@ -498,18 +501,18 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
                 component: "slider",
                 step: 0.1,
                 min: 0,
-                max: 8
+                max: 8,
               },
               1: {
                 label: "falloff",
                 component: "slider",
                 step: 0.1,
                 min: 0,
-                max: 1
-              }
-            }
+                max: 1,
+              },
+            },
           },
-        }
+        },
       },
 
       schema: ImageItemAnimations,
@@ -518,7 +521,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
   "images-stack": {
     sources: {
       label: "Sources",
-      component: "images-stack"
+      component: "images-stack",
     },
     margin: {
       label: "Margin",
@@ -529,7 +532,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       component: "slider",
       step: 0.1,
       min: 0.1,
-      max: 6
+      max: 6,
     },
     position: {
       label: "Position",
@@ -540,23 +543,23 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
+          max: 1,
         },
         y: {
           label: "y",
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
-        }
-      }
+          max: 1,
+        },
+      },
     },
     rotation: {
       label: "Rotation",
       component: "slider",
       min: 0,
       max: Math.PI * 2,
-      step: 0.001
+      step: 0.001,
     },
     center: {
       label: "Center",
@@ -567,7 +570,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       component: "slider",
       min: 0,
       max: Math.PI * 2,
-      step: 0.001
+      step: 0.001,
     },
     animation: {
       label: "Animation",
@@ -577,7 +580,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         options: [
           {
             label: "Display on/off",
-            value: "random"
+            value: "random",
           },
         ],
       },
@@ -588,9 +591,9 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
             component: "number",
             step: 1,
             min: 1,
-            max: 30
+            max: 30,
           },
-        }
+        },
       },
 
       schema: ImagesStackAnimations,
@@ -606,56 +609,51 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
+          max: 1,
         },
         y: {
           label: "y",
           component: "slider",
           step: 0.01,
           min: 0,
-          max: 1
-        }
-      }
+          max: 1,
+        },
+      },
     },
     scale: {
       label: "Scale",
       component: "slider",
       min: -10,
       max: 10,
-      step: 0.01
+      step: 0.01,
     },
     rotation: {
       label: "Rotation",
       component: "slider",
       min: 0,
       max: Math.PI * 2,
-      step: 0.001
+      step: 0.001,
     },
     visual: {
       component: "conditional-group",
       conditionalOn: "name",
       typeSelector: {
-        options: visualSelectOptions.map( ( {
-          value, label
-        } ) => ( {
+        options: visualSelectOptions.map(({ value, label }) => ({
           value,
-          label
-        } ) ),
+          label,
+        })),
       },
       configs: visualSelectOptions.reduce(
-        (
-          finalConfigs, visualSelectOption
-        ) => {
-          finalConfigs[ visualSelectOption.value ] = visualSelectOption.config;
+        (finalConfigs, visualSelectOption) => {
+          finalConfigs[visualSelectOption.value] = visualSelectOption.config;
 
           return finalConfigs;
         },
-        {
-        } as ConditionalGroupConfig["configs"]
+        {} as ConditionalGroupConfig["configs"]
       ),
 
       // @ts-ignore
-      schema: VisualOptions
+      schema: VisualOptions,
     },
-  }
+  },
 };

@@ -23,7 +23,8 @@ function generateMetadata() {
   }
 
   const entries = fs.readdirSync( SKETCHES_DIR );
-  const sketchMeta = [];
+  const sketchMeta = [
+  ];
 
   for ( const name of entries ) {
     if ( name.startsWith( "_" ) || name.startsWith( "." ) ) continue;
@@ -34,6 +35,7 @@ function generateMetadata() {
     );
 
     let isDir = false;
+
     try {
       isDir = fs.statSync( fullPath ).isDirectory();
     } catch {
@@ -77,6 +79,7 @@ function generateMetadata() {
         );
 
         let isNestedDir = false;
+
         try {
           isNestedDir = fs.statSync( nestedPath ).isDirectory();
         } catch {

@@ -206,13 +206,13 @@ sketch.draw( () => {
     gridOptions,
     textPointsMatrix,
     cache.key(
-      textToWrite,
+      textToWrite.join( "-" ),
       cellSize,
       size,
       sampleFactor,
       simplifyThreshold,
       options.sketch?.mask?.distance,
-      font// s.join( "-f-" )
+      font
     )
   );
 
@@ -222,18 +222,9 @@ sketch.draw( () => {
     }, index
   ) => {
     const layer = mappers.circularIndex(
-      animation.progression,
+      animation.progression * textToWrite.length,
       layers
     );
-    // const layer = animation.ease( {
-    //   values: layers,
-    //   currentTime: (
-    //     animation.progression
-    //     + index / alphaPoints.length
-    //   ),
-    //   duration: 1,
-    //   easingFn: easing.easeInOutExpo
-    // } );
 
     if ( !layer ) {
       return;
