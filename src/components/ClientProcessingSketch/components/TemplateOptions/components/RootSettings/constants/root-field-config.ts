@@ -1,14 +1,17 @@
 import {
   FieldConfig,
-  SelectOption
+  SelectOption,
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 const createSizePresetOption = (
-  width: number, height: number, name?: string, group?: string
+  width: number,
+  height: number,
+  name?: string,
+  group?: string
 ): SelectOption => ( {
   label: `${ width } × ${ height }${ name ? ` (${ name })` : "" }`,
   value: `${ width }x${ height }`,
-  group
+  group,
 } );
 
 export const sizePresetOptions: SelectOption[] = [
@@ -94,7 +97,7 @@ export const sizePresetOptions: SelectOption[] = [
     1080 * 4,
     "Ultra HD",
     "Landscape"
-  )
+  ),
 ];
 
 export const framerateOptions = [

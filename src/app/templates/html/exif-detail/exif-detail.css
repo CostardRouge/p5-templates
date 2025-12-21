@@ -3,9 +3,9 @@ html:has(body.bg-background) {
 }
 
 div:has(#exif-info) #image {
-  max-height: calc(1350px - 16rem)
+  max-height: calc(1350px - 16rem);
 }
 
 #image {
-  max-height: calc(1350px - 8rem)
+  max-height: calc(1350px - 8rem);
 }

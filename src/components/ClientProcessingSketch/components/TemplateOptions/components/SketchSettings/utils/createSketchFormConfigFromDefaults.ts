@@ -1,7 +1,7 @@
 // Adjust this import to where your FieldConfig types live
 import {
   FieldConfig,
-  NestedObjectConfig
+  NestedObjectConfig,
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 // ———————————————————————————————————————————————————————————
@@ -31,14 +31,13 @@ export default function createSketchFormConfigFromDefaults(
   hints: FieldHints = {
   }
 ): Record<string, FieldConfig> {
-  if ( !isPlainObject( defaults ) )
-    return {
-    };
+  if ( !isPlainObject( defaults ) ) return {
+  };
 
   return objectToConfig(
-     defaults as Record<string, any>,
-     "",
-     hints
+ defaults as Record<string, any>,
+ "",
+ hints
   );
 }
 
@@ -169,7 +168,7 @@ function defaultConfigForValue(
         label,
         min: 0,
         max: 360,
-        step: 1
+        step: 1,
       };
     }
     return {
@@ -178,14 +177,14 @@ function defaultConfigForValue(
       step: pickStep(
         value,
         1
-      )
+      ),
     };
   }
 
   if ( typeof value === "boolean" ) {
     return {
       component: "checkbox",
-      label
+      label,
     };
   }
 
@@ -193,7 +192,7 @@ function defaultConfigForValue(
     return {
       component: "text",
       label,
-      placeholder: ""
+      placeholder: "",
     };
   }
 
@@ -209,7 +208,7 @@ function defaultConfigForValue(
     return {
       component: "nested-object",
       label,
-      fields
+      fields,
     } as NestedObjectConfig;
   }
 
@@ -217,7 +216,7 @@ function defaultConfigForValue(
   return {
     component: "text",
     label,
-    placeholder: ""
+    placeholder: "",
   };
 }
 
@@ -240,14 +239,14 @@ function mergeConfig<T extends FieldConfig>(
   if ( override.component && override.component !== baseCfg.component ) {
     return {
       ...( baseCfg as any ),
-      ...( override as any )
+      ...( override as any ),
     } as T;
   }
 
   // Same component: shallow-merge
   const merged = {
     ...( baseCfg as any ),
-    ...( override as any )
+    ...( override as any ),
   } as T;
 
   // If nested-object with fields override, merge nested fields too
@@ -287,7 +286,8 @@ function toLabel( key: string ): string {
 }
 
 function pickNumberKind(
-  key: string, value: number
+  key: string,
+  value: number
 ): "ratio" | "angleDeg" | "number" {
   const k = key.toLowerCase();
 
@@ -321,10 +321,12 @@ function pickNumberKind(
 function pickStep(
   value: number, intDefault: number
 ): number {
-  return Number.isInteger( value ) ? intDefault : Math.min(
-    0.01,
-    roundToMagnitude( value ) / 10
-  );
+  return Number.isInteger( value )
+    ? intDefault
+    : Math.min(
+      0.01,
+      roundToMagnitude( value ) / 10
+    );
 }
 
 function roundToMagnitude( x: number ): number {

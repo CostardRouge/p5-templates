@@ -11,11 +11,9 @@ import animation from "@/p5/utils/animation.js";
 const canvases = {
 };
 
-const getBg = () =>
-  ( options.sketch?.background ??
-    [
-      0
-    ] );
+const getBg = () => options.sketch?.background ?? [
+  0
+];
 
 const getFont = () => {
   const key = options.sketch?.font ?? options.font ?? "martian";
@@ -27,7 +25,7 @@ sketch.setup(
   () => {
     canvases.mask = createGraphics(
       sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height,
+      sketch?.engine?.canvas?.height
     );
     background( ...getBg() );
   },
@@ -67,7 +65,10 @@ sketch.draw( ( time ) => {
   const weightMax = options.sketch?.weightMax ?? 200;
 
   const paletteName = options.sketch?.palette ?? "rainbow";
-  const paletteFn = typeof colors?.[ paletteName ] === "function" ? colors[ paletteName ] : colors.rainbow;
+  const paletteFn =
+    typeof colors?.[ paletteName ] === "function"
+      ? colors[ paletteName ]
+      : colors.rainbow;
   const hueOffset = options.sketch?.hueOffset ?? 0;
 
   const opacityFrom = options.sketch?.opacityFactorFrom ?? 2;
@@ -93,7 +94,7 @@ sketch.draw( ( time ) => {
         CENTER
       ],
       popPush: false,
-      graphics: canvases.mask
+      graphics: canvases.mask,
     }
   );
 
@@ -144,7 +145,7 @@ sketch.draw( ( time ) => {
     ),
     rows,
     columns,
-    centered
+    centered,
   };
 
   noiseDetail(
@@ -156,8 +157,10 @@ sketch.draw( ( time ) => {
     x, y
   ) {
     return (
-      x >= maskBoundary[ 0 ] && ( x - boundaryMargin ) <= maskBoundary[ 2 ] &&
-      y >= maskBoundary[ 1 ] && y <= maskBoundary[ 2 ]
+      x >= maskBoundary[ 0 ] &&
+      x - boundaryMargin <= maskBoundary[ 2 ] &&
+      y >= maskBoundary[ 1 ] &&
+      y <= maskBoundary[ 2 ]
     );
   }
 
@@ -171,12 +174,12 @@ sketch.draw( ( time ) => {
       const xOff = ( x / width ) * xOffScale;
       const yOff = ( y / height ) * yOffScale;
 
-      if ( !inMaskingBoundary(
-        cellVector.x,
-        cellVector.y
-      ) ) {
-        return;
-      }
+      // if ( !inMaskingBoundary(
+      //   cellVector.x,
+      //   cellVector.y
+      // ) ) {
+      //   return;
+      // }
 
       const angle = mappers.fn(
         noise(
@@ -217,7 +220,7 @@ sketch.draw( ( time ) => {
           opacityFrom,
           opacityTo,
           easing.easeInOutSine
-        )
+        ),
       } ) );
 
       push();
