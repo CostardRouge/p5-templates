@@ -34,10 +34,12 @@ type TemplateOptionsProps = {
   name: string;
   options: SketchOption;
   persistedJob?: JobModel;
-  onOptionsChange: ( nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => void;
+  onOptionsChange: (
+    nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
+  ) => void;
   onActiveSlideChange?: ( index: number | undefined ) => void;
   enableThumbnails?: boolean;
-}
+};
 
 export default function TemplateOptions( {
   name,
@@ -57,21 +59,29 @@ export default function TemplateOptions( {
 
   // Form state management
   const {
-    methods, setHasUnsavedChanges, showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving
-  } =
-    useFormState( {
-      initialOptions,
-      persistedJob,
-      onOptionsChange,
-      captureActionsRef: captureActionsRef as React.RefObject<CaptureActionsRef>,
-    } );
+    methods,
+    setHasUnsavedChanges,
+    showModal,
+    handleStay,
+    handleSaveAsDraft,
+    handleLeaveWithoutSaving,
+  } = useFormState( {
+    initialOptions,
+    persistedJob,
+    onOptionsChange,
+    captureActionsRef: captureActionsRef as React.RefObject<CaptureActionsRef>,
+  } );
 
   const {
     control, getValues, setValue, reset
   } = methods;
 
   const {
-    fields: slideFields, append: appendSlide, insert: insertSlide, move: moveSlide, remove: removeSlide
+    fields: slideFields,
+    append: appendSlide,
+    insert: insertSlide,
+    move: moveSlide,
+    remove: removeSlide,
   } = useFieldArray( {
     control,
     name: "slides",
@@ -79,11 +89,11 @@ export default function TemplateOptions( {
 
   const slides = useWatch( {
     control,
-    name: "slides"
+    name: "slides",
   } ) as SlideOption[] | undefined;
   const jobId = useWatch( {
     control,
-    name: "id"
+    name: "id",
   } ) as string | undefined;
 
   const {
@@ -92,7 +102,11 @@ export default function TemplateOptions( {
 
   // Thumbnail management (only when enabled)
   const {
-    thumbnails, captureThumbnail, captureCurrentSlide, clearThumbnails, pendingThumbnailCaptureRef
+    thumbnails,
+    captureThumbnail,
+    captureCurrentSlide,
+    clearThumbnails,
+    pendingThumbnailCaptureRef,
   } = useThumbnails( {
     enabled: enableThumbnails,
     persistedJob,
@@ -230,7 +244,7 @@ export default function TemplateOptions( {
       activeSlideIndex,
       slideFields,
       thumbnails,
-      captureCurrentSlide
+      captureCurrentSlide,
     ]
   );
 
@@ -267,7 +281,7 @@ export default function TemplateOptions( {
       slideFields,
       captureThumbnail,
       enableThumbnails,
-      pendingThumbnailCaptureRef
+      pendingThumbnailCaptureRef,
     ]
   );
 
@@ -335,4 +349,3 @@ export default function TemplateOptions( {
     </FormProvider>
   );
 }
-

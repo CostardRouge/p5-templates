@@ -2,7 +2,9 @@ import {
   NextRequest
 } from "next/server";
 import {
-  getAllTemplates, getTemplatesByCategory, searchTemplates
+  getAllTemplates,
+  getTemplatesByCategory,
+  searchTemplates,
 } from "@/lib/gsap/templateRegistry";
 
 /**
@@ -40,10 +42,10 @@ export async function GET( request: NextRequest ) {
     );
     return Response.json(
       {
-        error: "Failed to list templates"
+        error: "Failed to list templates",
       },
       {
-        status: 500
+        status: 500,
       }
     );
   }

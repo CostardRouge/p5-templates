@@ -3,7 +3,8 @@
  */
 
 import {
-  GSAPTemplateOptions, GSAPAnimationOptions
+  GSAPTemplateOptions,
+  GSAPAnimationOptions,
 } from "@/types/gsap-template.types";
 
 /**

@@ -16,9 +16,7 @@ export default async function captureFirstFrame(
   const files = await fs.readdir( framesDirectory );
 
   // Sort to get the first frame (usually frame_0000.png or similar)
-  const frameFiles = files
-    .filter( f => f.match( /\.(png|jpg|jpeg)$/i ) )
-    .sort();
+  const frameFiles = files.filter( ( f ) => f.match( /\.(png|jpg|jpeg)$/i ) ).sort();
 
   if ( frameFiles.length === 0 ) {
     throw new Error( `No frames found in ${ framesDirectory }` );
@@ -36,11 +34,11 @@ export default async function captureFirstFrame(
       null,
       {
         fit: "inside",
-        withoutEnlargement: true
+        withoutEnlargement: true,
       }
     )
     .jpeg( {
-      quality: 80
+      quality: 80,
     } )
     .toFile( outputPath );
 }

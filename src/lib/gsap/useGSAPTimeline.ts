@@ -14,7 +14,7 @@ import type {
 import {
   setupFrameSync,
   calculateTotalFrames,
-  signalCaptureComplete
+  signalCaptureComplete,
 } from "./syncWithRecording";
 
 /**

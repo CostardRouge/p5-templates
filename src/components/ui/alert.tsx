@@ -35,7 +35,7 @@ const Alert = React.forwardRef<
     role="alert"
     className={cn(
       alertVariants( {
-        variant
+        variant,
       } ),
       className
     )}

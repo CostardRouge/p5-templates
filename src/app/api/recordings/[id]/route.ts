@@ -18,11 +18,11 @@ import {
 export async function GET(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      id: string
-    }>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -34,7 +34,7 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -49,7 +49,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }
@@ -62,11 +62,11 @@ export async function GET(
 export async function DELETE(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      id: string
-    }>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -78,7 +78,7 @@ export async function DELETE(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -87,19 +87,18 @@ export async function DELETE(
       "failed",
       "draft",
       "completed",
-      "cancelled",
+      "cancelled"
     ].includes( dbJob.status ) ) {
       return new NextResponse(
         "Job is not finalized and cannot be deleted",
         {
-          status: 400
+          status: 400,
         }
       );
     }
 
     try {
-      const bullJob = await RecordingQueueService
-        .getInstance()
+      const bullJob = await RecordingQueueService.getInstance()
         .getQueue()
         .getJob( jobId );
 
@@ -113,8 +112,7 @@ export async function DELETE(
           await bullJob.remove();
         }
       }
-    }
-    catch ( _err ) {
+    } catch ( _err ) {
       // ignore queue errors on delete
     }
 
@@ -122,7 +120,7 @@ export async function DELETE(
     await deleteArtifact( jobId );
 
     return NextResponse.json( {
-      deleted: true
+      deleted: true,
     } );
   } catch ( error ) {
     console.error(
@@ -132,7 +130,7 @@ export async function DELETE(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

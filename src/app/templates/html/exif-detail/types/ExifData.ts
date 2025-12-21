@@ -1,26 +1,26 @@
 export type ExifData = {
-  iso: number,
+  iso: number;
   shutterSpeed: {
-    description: string,
-    value: [number, number],
-  },
+    description: string;
+    value: [number, number];
+  };
   focalLength: {
-    description: string,
-    value: [number, number],
-  },
+    description: string;
+    value: [number, number];
+  };
   aperture: {
-    description: string,
-    value: [number, number],
-  },
-  type: string,
-  lens: string,
+    description: string;
+    value: [number, number];
+  };
+  type: string;
+  lens: string;
   camera: {
-    brand: string,
-    model: string,
-  },
-  date: Date,
+    brand: string;
+    model: string;
+  };
+  date: Date;
   gps: {
-    latitude: number
-    longitude: number
-  }
-}
+    latitude: number;
+    longitude: number;
+  };
+};

@@ -11,8 +11,7 @@ import {
   Job
 } from "bullmq";
 import {
-  deleteJob,
-  getJobById
+  deleteJob, getJobById
 } from "@/lib/jobStore";
 import {
   deleteArtifact
@@ -21,16 +20,16 @@ import {
 export async function DELETE( req: NextRequest ) {
   try {
     const {
-      ids
+      ids,
     }: {
-      ids: string[]
+      ids: string[];
     } = await req.json();
 
     if ( !Array.isArray( ids ) || ids.length === 0 ) {
       return new NextResponse(
         "Missing or invalid job IDs",
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -45,21 +44,22 @@ export async function DELETE( req: NextRequest ) {
         continue;
       }
 
-      if ( ![
-        "failed",
-        "draft",
-        "completed",
-        "cancelled",
-      ].includes( dbJob.status ) ) {
+      if (
+        ![
+          "failed",
+          "draft",
+          "completed",
+          "cancelled"
+        ].includes( dbJob.status )
+      ) {
         console.warn( `Job ${ jobId } is not finalized and cannot be deleted.` );
         continue;
       }
 
       try {
-        const bullJob: Job | undefined = await RecordingQueueService
-          .getInstance()
-          .getQueue()
-          .getJob( jobId );
+        const bullJob: Job | undefined =
+          await RecordingQueueService.getInstance().getQueue()
+            .getJob( jobId );
 
         if ( bullJob ) {
           const state = await bullJob.getState();
@@ -71,10 +71,7 @@ export async function DELETE( req: NextRequest ) {
             await bullJob.remove();
           }
         }
-      }
-      catch ( error ) {
-
-      }
+      } catch ( error ) {}
 
       await deleteJob( jobId );
       await deleteArtifact( jobId );
@@ -83,7 +80,7 @@ export async function DELETE( req: NextRequest ) {
     }
 
     return NextResponse.json( {
-      deleted
+      deleted,
     } );
   } catch ( err ) {
     console.error(
@@ -93,7 +90,7 @@ export async function DELETE( req: NextRequest ) {
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

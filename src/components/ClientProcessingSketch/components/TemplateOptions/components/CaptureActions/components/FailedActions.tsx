@@ -36,7 +36,9 @@ export default function FailedActions( {
         ) : (
           <Archive className="h-4 w-4 flex-shrink-0" />
         )}
-        <span className="truncate">{saving ? "Saving..." : "Save as Draft"}</span>
+        <span className="truncate">
+          {saving ? "Saving..." : "Save as Draft"}
+        </span>
       </button>
 
       <div className="grid grid-cols-2 gap-1">
@@ -63,10 +65,11 @@ export default function FailedActions( {
           ) : (
             <Trash2 className="h-4 w-4 flex-shrink-0" />
           )}
-          <span className="truncate">{deleting ? "Deleting..." : "Delete"}</span>
+          <span className="truncate">
+            {deleting ? "Deleting..." : "Delete"}
+          </span>
         </button>
       </div>
-
     </div>
   );
 }

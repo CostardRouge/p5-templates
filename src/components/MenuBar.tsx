@@ -62,7 +62,7 @@ function MenuBar( {
     },
     {
       href: "/templates",
-      Icon: Paintbrush
+      Icon: Paintbrush,
     },
   ];
 
@@ -70,14 +70,17 @@ function MenuBar( {
   if ( mounted && showRecordings ) {
     items.push( {
       href: "/recordings",
-      Icon: Video
-    }, );
+      Icon: Video,
+    } );
   }
 
   return (
     <nav className="w-full glass px-4 py-3 flex justify-between items-center gap-4 z-50 border-t border-border backdrop-blur-xl bg-background/80">
       {/* Logo */}
-      <Link href="/templates" className="group flex items-center gap-3 flex-shrink-0">
+      <Link
+        href="/templates"
+        className="group flex items-center gap-3 flex-shrink-0"
+      >
         <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-border group-hover:border-foreground/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-foreground/10">
           <Image
             alt="my p5*js templates"
@@ -132,9 +135,7 @@ function MenuBar( {
             <div className="w-px h-6 bg-border" />
           </>
         )}
-        <ThemeToggle
-          iconClassName="h-4"
-        />
+        <ThemeToggle iconClassName="h-4" />
       </div>
     </nav>
   );

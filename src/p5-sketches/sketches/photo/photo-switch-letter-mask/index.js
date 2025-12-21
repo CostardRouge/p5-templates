@@ -14,17 +14,17 @@ const canvases = {
 sketch.setup( () => {
   canvases.mask = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   background( ...options.colors.background );
-}, );
+} );
 
 sketch.draw( (
   time, center, favoriteColor
 ) => {
   const images = cache.get( "images" );
-  const imageSwitchSpeed = 3 / 2;// images.length;
+  const imageSwitchSpeed = 3 / 2; // images.length;
   const imageObject = mappers.circularIndex(
     imageSwitchSpeed * animation.progression * images.length,
     images
@@ -57,7 +57,7 @@ sketch.draw( (
     // string.fonts.multicoloure,
     // string.fonts.sans
   ];
-  const textFontSwitchSpeed = 1;// textFonts.length;
+  const textFontSwitchSpeed = 1; // textFonts.length;
   const textFontSize = ( height + width ) / 2;
   const textFont = mappers.circularIndex(
     textFontSwitchSpeed * animation.progression * textFonts.length,
@@ -67,22 +67,21 @@ sketch.draw( (
   canvases.mask.clear();
 
   const points = animation.ease( {
-    values: text.split( "" ).map( text => (
+    values: text.split( "" ).map( ( text ) =>
       string.getTextPoints( {
         text,
         position: createVector(
           width / 2,
-          height / 2,
+          height / 2
         ),
         size: textFontSize,
         font: textFont,
         sampleFactor: 1,
-        simplifyThreshold: 0
-      } )
-    ) ),
+        simplifyThreshold: 0,
+      } ) ),
     lerpFn: mappers.lerpPoints,
     currentTime: 2 * animation.progression * text.length,
-    easingFn: easing.easeInOutExpo
+    easingFn: easing.easeInOutExpo,
   } );
 
   // canvases.mask.stroke("red")

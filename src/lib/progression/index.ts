@@ -1,6 +1,8 @@
 import {
   RecordingProgressionSteps,
-  JobId, RecordingProgressionStream, RecordingProgressionNestedSteps
+  JobId,
+  RecordingProgressionStream,
+  RecordingProgressionNestedSteps,
 } from "@/types/recording.types";
 import Redis from "@/lib/connections/redis";
 
@@ -23,7 +25,8 @@ export const addRecordingStatus = async(
 };
 
 export const addRecordingDuration = async(
-  jobId: JobId, recordingDuration: number
+  jobId: JobId,
+  recordingDuration: number
 ) => {
   const key = getKey( jobId );
   const existing = await Redis.getInstance().get( key );
@@ -39,7 +42,9 @@ export const addRecordingDuration = async(
 };
 
 export const addRecordingSteps = async(
-  jobId: JobId, steps: RecordingProgressionSteps, status: string
+  jobId: JobId,
+  steps: RecordingProgressionSteps,
+  status: string
 ) => {
   const key = getKey( jobId );
   const existing = await Redis.getInstance().get( key );
@@ -51,7 +56,7 @@ export const addRecordingSteps = async(
     JSON.stringify( {
       ...parsed,
       steps,
-      status
+      status,
     } )
   );
 };
@@ -116,15 +121,14 @@ export const updateRecordingStepPercentage = async(
       getKey( jobId ),
       JSON.stringify( {
         ...currentStatus,
-        steps: jobRecordingSteps
+        steps: jobRecordingSteps,
       } )
     );
-  }
-  catch ( error ) {
+  } catch ( error ) {
     console.error(
       "updateRecordingStepPercentage failed:",
       {
-        error
+        error,
       }
     );
   }
@@ -132,7 +136,7 @@ export const updateRecordingStepPercentage = async(
 
 export const updateRecordingStatus = async(
   jobId: string,
-  status: string,
+  status: string
 ): Promise<void> => {
   try {
     const currentStatus = await getRecordingStatus( jobId );
@@ -145,15 +149,14 @@ export const updateRecordingStatus = async(
       getKey( jobId ),
       JSON.stringify( {
         ...currentStatus,
-        status
+        status,
       } )
     );
-  }
-  catch ( error ) {
+  } catch ( error ) {
     console.error(
       "updateRecordingStatus failed:",
       {
-        error
+        error,
       }
     );
   }
@@ -173,11 +176,12 @@ export const getRecordingStatusAndTotalPercentage = async( jobId: string ): Prom
 
   let currentStep: {
     name: string;
-    percentage: number
+    percentage: number;
   } | null = null;
 
   const walk = (
-    obj: RecordingProgressionSteps | RecordingProgressionNestedSteps, path: string[] = [
+    obj: RecordingProgressionSteps | RecordingProgressionNestedSteps,
+    path: string[] = [
     ]
   ) => {
     for ( const key in obj ) {
@@ -194,13 +198,11 @@ export const getRecordingStatusAndTotalPercentage = async( jobId: string ): Prom
               name: [
                 ...path,
                 key
-              ]
-                .join( "." )
-                .replaceAll(
-                  ".steps.",
-                  "."
-                ),
-              percentage: value.percentage
+              ].join( "." ).replaceAll(
+                ".steps.",
+                "."
+              ),
+              percentage: value.percentage,
             };
           }
         }
@@ -225,6 +227,6 @@ export const getRecordingStatusAndTotalPercentage = async( jobId: string ): Prom
   return {
     currentStep,
     percentage: count === 0 ? 0 : Math.round( total / count ),
-    ...jobRecordingStatus
+    ...jobRecordingStatus,
   };
 };

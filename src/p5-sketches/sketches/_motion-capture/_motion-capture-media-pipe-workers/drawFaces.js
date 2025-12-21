@@ -58,11 +58,11 @@ export default function drawFace(
 
   result.forEach( ( detection ) => {
     // const boundingBox = detection.boundingBox;
-    const keyPointVectors = detection.keypoints.map( faceKeyPoint => {
+    const keyPointVectors = detection.keypoints.map( ( faceKeyPoint ) => {
       return createVector(
         inverseX( faceKeyPoint.x ) * width,
         faceKeyPoint.y * height,
-        faceKeyPoint.z,
+        faceKeyPoint.z
       );
     } );
 

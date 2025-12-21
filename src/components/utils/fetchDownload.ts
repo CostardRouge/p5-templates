@@ -1,7 +1,9 @@
 async function fetchDownload(
-  url: string, options?: {
- method?: string, body?: FormData
-}
+  url: string,
+  options?: {
+    method?: string;
+    body?: FormData;
+  }
 ) {
   const {
     method = "GET", body

@@ -75,9 +75,7 @@ async function formatGPSCoordinates( coordinates?: ExifData["gps"] ) {
  * Example: "37.77° N, 122.42° W"
  */
 function formatCoordinates(
-  latitude: number,
-  longitude: number,
-  precision = 2
+  latitude: number, longitude: number, precision = 2
 ) {
   const latDir = latitude >= 0 ? "N" : "S";
   const lonDir = longitude >= 0 ? "E" : "W";
@@ -86,7 +84,10 @@ function formatCoordinates(
 }
 
 const ExifInfo = ( {
-  exifData, visible, className, children
+  exifData,
+  visible,
+  className,
+  children,
 }: ExifInfoProps ) => {
   const [
     computedGPSInfo,
@@ -96,7 +97,7 @@ const ExifInfo = ( {
   >( undefined );
 
   console.log( {
-    computedGPSInfo
+    computedGPSInfo,
   } );
 
   useEffect(

@@ -1,5 +1,5 @@
 import {
-  getBufferFromS3Url,
+  getBufferFromS3Url
 } from "@/lib/connections/s3";
 import {
   SketchOption

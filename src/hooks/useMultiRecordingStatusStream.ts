@@ -20,11 +20,11 @@ function useMultiRecordingStatusStream() {
   const subscribe = (
     jobIds: JobId[], callback: UpdateCallback
   ) => {
-    const newIds = jobIds.filter( id => !subscribedJobs.current.has( id ) );
+    const newIds = jobIds.filter( ( id ) => !subscribedJobs.current.has( id ) );
 
     if ( newIds.length === 0 ) return;
 
-    newIds.forEach( id => subscribedJobs.current.add( id ) );
+    newIds.forEach( ( id ) => subscribedJobs.current.add( id ) );
     callbackRef.current = callback;
 
     const url = `/api/progression/stream?ids=${ Array.from( subscribedJobs.current ).join( "," ) }`;
@@ -44,7 +44,7 @@ function useMultiRecordingStatusStream() {
 
         callbackRef.current?.( {
           jobId,
-          data
+          data,
         } );
       } catch ( err ) {
         console.error(
@@ -94,7 +94,7 @@ function useMultiRecordingStatusStream() {
 
   return {
     subscribe,
-    unsubscribe
+    unsubscribe,
   };
 }
 

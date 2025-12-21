@@ -9,24 +9,27 @@
  */
 export const resolveAssetURL = (
   path, id
-) => (
+) =>
   window.__blobAssetMap?.[ path ] ??
   ( id
     ? `${ location.origin }/api/s3/${ id }/assets/${ path }`
-    : `${ location.origin }/${ path }` )
-);
+    : `${ location.origin }/${ path }` );
 
 export function deepMerge(
   targetObject, sourceObject
 ) {
-  if ( typeof targetObject !== "object" || targetObject === null ) return sourceObject;
-  if ( typeof sourceObject !== "object" || sourceObject === null ) return targetObject;
+  if ( typeof targetObject !== "object" || targetObject === null )
+    return sourceObject;
+  if ( typeof sourceObject !== "object" || sourceObject === null )
+    return targetObject;
 
-  const mergedObject = Array.isArray( targetObject ) ? [
-    ...targetObject
-  ] : {
-    ...targetObject
-  };
+  const mergedObject = Array.isArray( targetObject )
+    ? [
+      ...targetObject
+    ]
+    : {
+      ...targetObject,
+    };
 
   for ( const key of Object.keys( sourceObject ) ) {
     const sourceValue = sourceObject[ key ];
@@ -67,9 +70,7 @@ export function structuredClone( value ) {
       port2.onmessageerror = reject;
       port1.postMessage( value );
     } );
-  } catch {
-
-  }
+  } catch {}
 
   return JSON.parse( JSON.stringify( value ) );
 }

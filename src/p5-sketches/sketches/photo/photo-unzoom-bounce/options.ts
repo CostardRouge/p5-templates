@@ -12,7 +12,7 @@ export const formValues = {
     255,
     255,
     255
-  ]
+  ],
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -21,7 +21,7 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     min: 1,
     max: 1000,
-    step: 1
+    step: 1,
   },
   zoom: {
     label: "Zoom mode (instead of unzoom)",
@@ -36,22 +36,22 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     min: 0,
     max: 2,
-    step: 0.1
+    step: 0.1,
   },
   scaleEnd: {
     label: "Scale end",
     component: "slider",
     min: 0,
     max: 2,
-    step: 0.1
+    step: 0.1,
   },
   scaleEasingFunctionName: {
     component: "select",
     label: "Scale easing",
-    options: Object.keys( easing ).map( easingFunctionName => ( {
+    options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
       label: easingFunctionName,
       value: easingFunctionName,
-    } ) )
+    } ) ),
   },
   animationProgression: {
     component: "select",
@@ -64,11 +64,11 @@ export const formConfiguration: Record<string, any> = {
       {
         label: "Linear progression",
         value: "linearProgression",
-      }
-    ]
+      },
+    ],
   },
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
 };

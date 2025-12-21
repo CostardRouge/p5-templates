@@ -15,7 +15,7 @@ import * as common from "@/p5/utils/common.js";
 
 sketch.setup( () => {
   background( ...options.colors.background );
-}, );
+} );
 
 function neonGraffiti( {
   amplitude = 200,
@@ -36,7 +36,7 @@ function neonGraffiti( {
   end = createVector(
     width,
     height / 2
-  )
+  ),
 } = {
 } ) {
   noStroke();
@@ -65,7 +65,7 @@ function neonGraffiti( {
       const position = p5.Vector.lerp(
         start,
         end,
-        step / stepsCount,
+        step / stepsCount
       );
 
       position.add(
@@ -79,7 +79,7 @@ function neonGraffiti( {
             1,
             -TAU,
             TAU
-          ),
+          )
         ),
         converters.polar.get(
           Math.sin,
@@ -97,16 +97,16 @@ function neonGraffiti( {
 
       position.add(
         map(
-          Math.sin( +animation.angle * sinAngleMultiplier
-            + easing.easeInOutQuad( stepProgression ) ),
+          Math.sin( +animation.angle * sinAngleMultiplier +
+              easing.easeInOutQuad( stepProgression ) ),
           -1,
           1,
           -amplitude,
           amplitude
         ),
         map(
-          Math.cos( +animation.angle * cosAngleMultiplier
-            + easing.easeInOutSine( stepProgression ) * 8 ),
+          Math.cos( +animation.angle * cosAngleMultiplier +
+              easing.easeInOutSine( stepProgression ) * 8 ),
           -1,
           1,
           -amplitude,
@@ -120,18 +120,18 @@ function neonGraffiti( {
           0,
           shadowsCount,
           1,
-          2.25,
+          2.25
         ),
         hueOffset: easing.easeInOutSine( shadowProgression + stepProgression / 10 ),
         // hueOffset: easing.easeOutSine( shadowProgression + shadowIndex / 2 ),
-        hueIndex: map(
-          Math.sin( animation.angle
-            + easing.easeOutSine( stepAngle ) * -3 ),
-          -1,
-          1,
-          -hueAmplitude,
-          hueAmplitude
-        ) * hueIndexMultiplier,
+        hueIndex:
+            map(
+              Math.sin( animation.angle + easing.easeOutSine( stepAngle ) * -3 ),
+              -1,
+              1,
+              -hueAmplitude,
+              hueAmplitude
+            ) * hueIndexMultiplier,
       } ) );
 
       circle(
@@ -143,8 +143,8 @@ function neonGraffiti( {
   }
 }
 
-const horizontalMargin = options.horizontalMargin || .05;
-const verticalMargin = options.verticalMargin || .05;
+const horizontalMargin = options.horizontalMargin || 0.05;
+const verticalMargin = options.verticalMargin || 0.05;
 
 function drawSlideBackground( options ) {
   background( ...options.colors.background );
@@ -152,11 +152,11 @@ function drawSlideBackground( options ) {
   strokeWeight( options.colors.strokeWeight || 1 );
 
   const columns = options.columns || 9;
-  const rows = columns * height / width;
+  const rows = ( columns * height ) / width;
 
   shapes.grid( {
     columns,
-    rows
+    rows,
   } );
 
   shapes.vl( width );
@@ -172,11 +172,11 @@ function drawSlideMeta( options ) {
       0,
       0
     ),
-    fill: color( ...options.colors.text, ),
+    fill: color( ...options.colors.text ),
     font: string.fonts.martian,
     textAlign: [
       LEFT,
-      LEFT,
+      LEFT
     ],
   };
 
@@ -198,8 +198,8 @@ function drawSlideMeta( options ) {
     {
       ...textStyle,
       textAlign: [
-        RIGHT,
-      ]
+        RIGHT
+      ],
     }
   );
 
@@ -227,12 +227,12 @@ function drawSlideMeta( options ) {
 
   const slideProgressionLineStartPosition = createVector(
     width * horizontalMargin,
-    height - ( height * horizontalMargin ) + 14
+    height - height * horizontalMargin + 14
   );
 
   const slideProgressionLineEndPosition = createVector(
-    width - ( width * horizontalMargin ),
-    height - ( height * horizontalMargin ) + 14
+    width - width * horizontalMargin,
+    height - height * horizontalMargin + 14
   );
 
   const slideProgressionLineCurrentPosition = p5.Vector.lerp(
@@ -264,7 +264,7 @@ function drawIntroSlide( options ) {
     amplitude: options.neonGraffiti.amplitude,
     innerCircleSize: options.neonGraffiti.innerCircleSize,
     shadowsCount: options.neonGraffiti.shadowsCount,
-    stepAngleAmplitude: options.neonGraffiti.stepAngleAmplitude
+    stepAngleAmplitude: options.neonGraffiti.stepAngleAmplitude,
   } );
 
   const textStyle = {
@@ -274,28 +274,28 @@ function drawIntroSlide( options ) {
       0,
       0
     ),
-    fill: color( ...options.colors.text, ),
+    fill: color( ...options.colors.text ),
     font: string.fonts.martian,
-    textWidth: width - ( 2 * ( width * horizontalMargin ) ),
+    textWidth: width - 2 * ( width * horizontalMargin ),
     textAlign: [
       CENTER,
-      CENTER,
+      CENTER
     ],
   };
 
   string.write(
     options.title,
-    ( width * horizontalMargin ),
+    width * horizontalMargin,
     height / 2 - height / 8,
     {
       size: 196,
-      ...textStyle
+      ...textStyle,
     }
   );
 
   string.write(
     options.body,
-    ( width * horizontalMargin ),
+    width * horizontalMargin,
     height / 2 + height / 5,
     {
       ...textStyle,
@@ -310,7 +310,8 @@ function drawTextSlide( options ) {
   drawSlideBackground( options );
   const {
     startHeight, endHeight, ...neonGraffitiOptions
-  } = options.neonGraffiti;
+  } =
+    options.neonGraffiti;
 
   neonGraffiti( {
     start: createVector(
@@ -321,7 +322,7 @@ function drawTextSlide( options ) {
       width,
       height * endHeight
     ),
-    ...neonGraffitiOptions
+    ...neonGraffitiOptions,
   } );
 
   const textStyle = {
@@ -331,12 +332,12 @@ function drawTextSlide( options ) {
       0,
       0
     ),
-    textWidth: width - ( 1 * ( width * horizontalMargin ) ),
-    fill: color( ...options.colors.text, ),
+    textWidth: width - 1 * ( width * horizontalMargin ),
+    fill: color( ...options.colors.text ),
     font: string.fonts.martian,
     textAlign: [
       LEFT,
-      CENTER,
+      CENTER
     ],
   };
 
@@ -346,21 +347,21 @@ function drawTextSlide( options ) {
     height * 0.2,
     {
       ...textStyle,
-      textWidth: width - ( 2 * horizontalMargin ),
+      textWidth: width - 2 * horizontalMargin,
       textAlign: [
-        LEFT,
+        LEFT
       ],
-      size: 96
+      size: 96,
     }
   );
 
   string.write(
     options.body,
     width * horizontalMargin,
-    height * .55,
+    height * 0.55,
     {
       ...textStyle,
-      size: 36
+      size: 36,
     }
   );
 
@@ -387,4 +388,3 @@ sketch.draw( (
     options
   ) );
 } );
-

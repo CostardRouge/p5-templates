@@ -9,7 +9,7 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 
 import * as common from "@/p5/utils/common.js";
 
-sketch.setup( );
+sketch.setup();
 
 const getFont = () => {
   const key = options.sketch?.font?.face ?? "martian";
@@ -42,7 +42,7 @@ sketch.draw( (
         textAlign: [
           CENTER,
           CENTER
-        ]
+        ],
       }
     );
   }
@@ -72,7 +72,9 @@ sketch.draw( (
 
         // TOP LEFT
         string.write(
-          options.sketch.textOverrides?.topLeft !== "" ? options.sketch?.textOverrides?.topLeft : exif.formatPhotoDate( photo.exif?.date ),
+          options.sketch.textOverrides?.topLeft !== ""
+            ? options.sketch?.textOverrides?.topLeft
+            : exif.formatPhotoDate( photo.exif?.date ),
           x,
           yTopPosition,
           textStyle
@@ -80,10 +82,12 @@ sketch.draw( (
 
         // TOP RIGHT
         string.write(
-          options.sketch.textOverrides?.topRight !== "" ? options.sketch.textOverrides?.topRight : exif.formatGPSCoordinates(
-            photo.exif?.gps?.latitude,
-            photo.exif?.gps?.longitude
-          ),
+          options.sketch.textOverrides?.topRight !== ""
+            ? options.sketch.textOverrides?.topRight
+            : exif.formatGPSCoordinates(
+              photo.exif?.gps?.latitude,
+              photo.exif?.gps?.longitude
+            ),
           x,
           yTopPosition,
           {
@@ -91,7 +95,7 @@ sketch.draw( (
             textWidth: w,
             textAlign: [
               RIGHT
-            ]
+            ],
           }
         );
 
@@ -106,7 +110,7 @@ sketch.draw( (
             textAlign: [
               LEFT,
               TOP
-            ]
+            ],
           }
         );
 
@@ -125,7 +129,9 @@ sketch.draw( (
 
         // BOTTOM RIGHT
         string.write(
-          options.sketch.textOverrides?.bottomRight !== "" ? options.sketch.textOverrides?.bottomRight : bottomRightText,
+          options.sketch.textOverrides?.bottomRight !== ""
+            ? options.sketch.textOverrides?.bottomRight
+            : bottomRightText,
           x,
           yBottomPosition,
           {
@@ -134,10 +140,10 @@ sketch.draw( (
             textAlign: [
               RIGHT,
               TOP
-            ]
+            ],
           }
         );
-      }
+      },
     } );
   }
 } );

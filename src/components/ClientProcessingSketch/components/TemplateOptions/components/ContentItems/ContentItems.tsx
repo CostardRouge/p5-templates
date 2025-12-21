@@ -20,7 +20,8 @@ import {
   CSS
 } from "@dnd-kit/utilities";
 import {
-  restrictToVerticalAxis, restrictToParentElement
+  restrictToVerticalAxis,
+  restrictToParentElement,
 } from "@dnd-kit/modifiers";
 
 import AddItemControls from "./components/AddItemControls/AddItemControls";
@@ -55,7 +56,7 @@ export function SortableRow( props: {
     transition,
     isDragging,
   } = useSortable( {
-    id: props.id
+    id: props.id,
   } );
 
   const style: React.CSSProperties = {
@@ -65,7 +66,7 @@ export function SortableRow( props: {
 
   const handleProps = {
     ...( attributes as object ),
-    ...( listeners as object )
+    ...( listeners as object ),
   } as DragBinder["handleProps"];
 
   return (
@@ -74,7 +75,7 @@ export function SortableRow( props: {
       style={style}
       className={clsx(
         "relative",
-        "data-[dragging=true]:opacity-70",
+        "data-[dragging=true]:opacity-70"
         // isDragging && "cursor-grab active:cursor-grabbing",
       )}
       data-dragging={isDragging ? "true" : "false"}
@@ -104,8 +105,8 @@ export default function ContentItems( {
       MouseSensor,
       {
         activationConstraint: {
-          distance: 6
-        }
+          distance: 6,
+        },
       }
     ),
     useSensor(
@@ -113,8 +114,8 @@ export default function ContentItems( {
       {
         activationConstraint: {
           delay: 120,
-          tolerance: 8
-        }
+          tolerance: 8,
+        },
       }
     ),
     useSensor( KeyboardSensor )
@@ -193,10 +194,7 @@ export default function ContentItems( {
           restrictToParentElement
         ]}
       >
-        <SortableContext
-          items={ids}
-          strategy={verticalListSortingStrategy}
-        >
+        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {fields.map( (
             field, index
           ) => (

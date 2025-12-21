@@ -30,7 +30,7 @@ export const formValues = {
       0,
       0,
       0
-    ]
+    ],
   },
   wave: {
     step: 0.01,
@@ -46,7 +46,7 @@ export const formValues = {
     ],
     strokeWeight: 2,
     close: false,
-  }
+  },
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -55,7 +55,7 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     min: 0.01,
     max: 1,
-    step: 0.01
+    step: 0.01,
   },
   backgroundColor: {
     component: "color",
@@ -80,15 +80,15 @@ export const formConfiguration: Record<string, any> = {
           {
             value: "purple",
             label: "Purple",
-          }
-        ]
+          },
+        ],
       },
       font: {
         component: "select",
         label: "Font name",
-        options: fontNames.map( fontName => ( {
+        options: fontNames.map( ( fontName ) => ( {
           value: fontName,
-          label: fontName
+          label: fontName,
         } ) ),
       },
       sizeRatio: {
@@ -96,72 +96,71 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 1,
-        step: 0.1
+        step: 0.1,
       },
       sampleFactor: {
         label: "Text sample factor",
         component: "slider",
         min: 0.1,
         max: 1,
-        step: 0.1
+        step: 0.1,
       },
       simplifyThreshold: {
         label: "Simplify threshold",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       morphingSpeed: {
         label: "Speed",
         component: "slider",
         min: 0.25,
         max: 20,
-        step: 0.25
+        step: 0.25,
       },
       pointsStrokeWeight: {
         label: "Text points stroke weight",
         component: "slider",
         min: 1,
         max: 50,
-        step: 1
+        step: 1,
       },
 
       depthCount: {
         label: "Depth count",
         component: "slider",
         min: 1,
-        max: 100
+        max: 100,
       },
       depthStart: {
         label: "Depth start",
         component: "slider",
         min: 0,
         max: 2,
-        step: 0.1
-
+        step: 0.1,
       },
       depthEnd: {
         label: "Depth end",
         component: "slider",
         min: -2,
         max: 0,
-        step: 0.1
+        step: 0.1,
       },
 
       easing: {
         component: "select",
         label: "Wave easing",
-        options: Object.keys( easing ).map( easingFunctionName => ( {
+        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
           label: easingFunctionName,
           value: easingFunctionName,
-        } ) )
+        } ) ),
       },
       backgroundColor: {
         component: "color",
         label: "Background color",
-      }
-    }
+      },
+    },
   },
   wave: {
     label: "Wave",
@@ -172,35 +171,35 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.01,
         max: 0.95,
-        step: 0.001
+        step: 0.001,
       },
       count: {
         label: "Count",
         component: "slider",
         min: 0.25,
         max: 10,
-        step: 0.25
+        step: 0.25,
       },
       speed: {
         label: "Speed",
         component: "slider",
         min: 0.25,
         max: 20,
-        step: 0.25
+        step: 0.25,
       },
       heightStart: {
         label: "Height start",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.1
+        step: 0.1,
       },
       heightEnd: {
         label: "Height end",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.1
+        step: 0.1,
       },
       stroke: {
         label: "Stroke",
@@ -211,20 +210,20 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 50,
-        step: 0.1
+        step: 0.1,
       },
       easing: {
         component: "select",
         label: "Wave easing",
-        options: Object.keys( easing ).map( easingFunctionName => ( {
+        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
           label: easingFunctionName,
           value: easingFunctionName,
-        } ) )
+        } ) ),
       },
       close: {
         label: "Close shape",
         component: "checkbox",
       },
-    }
-  }
+    },
+  },
 };

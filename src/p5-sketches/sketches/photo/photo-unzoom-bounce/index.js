@@ -52,10 +52,15 @@ sketch.draw( ( _time ) => {
   } = images[ imageIndex ];
 
   const imageStepAnimationProgression = options.sketch.animationProgression;
-  const imageStepAnimationProgressionComponent = animation?.[ imageStepAnimationProgression ];
-  const isImageStepAnimationProgressionComponentFunction = typeof imageStepAnimationProgressionComponent === "function";
+  const imageStepAnimationProgressionComponent =
+    animation?.[ imageStepAnimationProgression ];
+  const isImageStepAnimationProgressionComponentFunction =
+    typeof imageStepAnimationProgressionComponent === "function";
 
-  const imageStepIndexMapValue = isImageStepAnimationProgressionComponentFunction ? imageStepAnimationProgressionComponent( images.length ) : imageStepAnimationProgressionComponent;
+  const imageStepIndexMapValue =
+    isImageStepAnimationProgressionComponentFunction
+      ? imageStepAnimationProgressionComponent( images.length )
+      : imageStepAnimationProgressionComponent;
   const imageStepMin = options.sketch.zoom ? 1 : 0;
   const imageStepMax = options.sketch.zoom ? 0 : 1;
   const imageStepIndex = map(
@@ -105,7 +110,7 @@ sketch.draw( ( _time ) => {
         Number( options.sketch.scaleEnd ),
         1,
         easing?.[ scaleEasingFunction ]
-      )
+      ),
     } );
 
     pop();

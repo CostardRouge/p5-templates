@@ -19,7 +19,9 @@ export {
   useSorting
 } from "./hooks/useSorting";
 export type {
-  SortConfig, SortField, SortOrder
+  SortConfig,
+  SortField,
+  SortOrder,
 } from "./hooks/useSorting";
 
 // Components

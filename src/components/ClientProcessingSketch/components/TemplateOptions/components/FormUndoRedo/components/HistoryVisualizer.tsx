@@ -57,7 +57,9 @@ export default function HistoryVisualizer( {
           </div>
           <div>
             <div className="text-[10px] opacity-70">Last Op</div>
-            <div className="font-mono">{metrics.lastOperationTime.toFixed( 2 )}ms</div>
+            <div className="font-mono">
+              {metrics.lastOperationTime.toFixed( 2 )}ms
+            </div>
           </div>
           <div>
             <div className="text-[10px] opacity-70">Total Ops</div>
@@ -69,7 +71,9 @@ export default function HistoryVisualizer( {
       <div className="space-y-1">
         <div className="flex items-center gap-1 text-muted-foreground">
           <ArrowLeft className="h-3 w-3" />
-          <span className="text-[10px] font-semibold">PAST ({past.length})</span>
+          <span className="text-[10px] font-semibold">
+            PAST ({past.length})
+          </span>
         </div>
 
         {displayPast.length === 0 ? (
@@ -112,7 +116,9 @@ export default function HistoryVisualizer( {
       <div className="border-t border-theme pt-1 space-y-1">
         <div className="flex items-center gap-1 text-muted-foreground">
           <ArrowRight className="h-3 w-3" />
-          <span className="text-[10px] font-semibold">FUTURE ({future.length})</span>
+          <span className="text-[10px] font-semibold">
+            FUTURE ({future.length})
+          </span>
         </div>
 
         {displayFuture.length === 0 ? (

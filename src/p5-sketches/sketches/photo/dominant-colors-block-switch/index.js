@@ -10,27 +10,20 @@ import animation from "@/p5/utils/animation.js";
 import * as common from "@/p5/utils/common.js";
 
 // helpers
-const getBg = () => (
-  options.sketch?.backgroundColor ??
-  options.colors?.background ??
-  [
+const getBg = () =>
+  options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0,
     0,
     0
-  ]
-);
+  ];
 
-const getTextColor = () => (
-  options.sketch?.textColor ??
-  options.colors?.text ??
-  [
+const getTextColor = () =>
+  options.sketch?.textColor ?? options.colors?.text ?? [
     0
-  ]
-);
+  ];
 
-const getFont = () => (
-  string.fonts?.[ options.sketch?.font ] || string.fonts.martian
-);
+const getFont = () =>
+  string.fonts?.[ options.sketch?.font ] || string.fonts.martian;
 
 const getImages = () => {
   const imagesFromOptions =
@@ -48,7 +41,7 @@ const getImages = () => {
 
 sketch.setup( () => {
   background( ...getBg() );
-}, );
+} );
 
 function getImagePart(
   img, x, y, w, h
@@ -72,8 +65,8 @@ function getImagePart(
   let offsetY = ( height - displayH ) / 2;
 
   return img.get(
-    ( x - offsetX ) / displayW * img.width,
-    ( y - offsetY ) / displayH * img.height,
+    ( ( x - offsetX ) / displayW ) * img.width,
+    ( ( y - offsetY ) / displayH ) * img.height,
     ( w / displayW ) * img.width,
     ( h / displayH ) * img.height
   );
@@ -90,8 +83,8 @@ sketch.draw( (
   // const sizes = [8, 16, 2, 9, 3, 4];
   // const columns = mappers.circularIndex(time/2, sizes);
   // const rows = mappers.circularIndex(time/2, sizes.reverse());
-  const rows = options.sketch?.rows ?? 16;// columns*height/width;
-  const columns = options.sketch?.columns ?? 9;// rows*width/height;
+  const rows = options.sketch?.rows ?? 16; // columns*height/width;
+  const columns = options.sketch?.columns ?? 9; // rows*width/height;
   const borderSize = options.sketch?.borderSize ?? 0;
   const images = getImages();
 
@@ -114,7 +107,7 @@ sketch.draw( (
     ),
     rows,
     columns,
-    centered: false
+    centered: false,
   };
 
   const W = width / columns;
@@ -130,10 +123,10 @@ sketch.draw( (
 
   const imageParts = cache.store(
     `image-parts-${ columns }-${ rows }-${ imagePaths }`,
-    () => (
+    () =>
       images.map( ( {
         img
-      } ) => (
+      } ) =>
         gridCells.reduce(
           (
             imageCells, {
@@ -153,24 +146,24 @@ sketch.draw( (
               dominantColor: colors.getDominantColor(
                 imagePart,
                 options.sketch?.dominantColorSample ?? 50
-              )
+              ),
             } );
 
             return imageCells;
           },
           [
           ]
-        )
-      ) )
-    )
+        ) )
   );
 
-  const imageIndexes = imageParts.map( (
-    _, index
-  ) => [
-    index,
-    index
-  ] ).flat( Infinity );
+  const imageIndexes = imageParts
+    .map( (
+      _, index
+    ) => [
+      index,
+      index
+    ] )
+    .flat( Infinity );
 
   gridCells.forEach( (
     {
@@ -180,7 +173,7 @@ sketch.draw( (
     const {
       x, y
     } = position;
-    const switchIndex = (
+    const switchIndex =
       // -cellIndex/(columns*rows)
       // +mappers.circularIndex(time, [-xIndex, xIndex])/columns
       // +mappers.circularIndex(time, [-yIndex, yIndex])/rows
@@ -189,18 +182,13 @@ sketch.draw( (
         xIndex / columns,
         yIndex / rows,
         animation.circularProgression
-      )
-			+ xIndex / columns
-			+ yIndex / rows
-			// +x/width
-			// +y/height
-    );
+      ) +
+      xIndex / columns +
+      yIndex / rows;
+    // +x/width
+    // +y/height
     const imageIndex = mappers.circularIndex(
-      (
-        0
-				+ animation.progression * imageIndexes.length
-				+ switchIndex
-      ),
+      0 + animation.progression * imageIndexes.length + switchIndex,
       imageIndexes
     );
 
@@ -216,7 +204,8 @@ sketch.draw( (
 
     if ( imagePart ) {
       const veil = mappers.circularIndex(
-        animation.progression * sketch.sketchOptions.animation.duration + switchIndex,
+        animation.progression * sketch.sketchOptions.animation.duration +
+          switchIndex,
         [
           1,
           0
@@ -229,7 +218,7 @@ sketch.draw( (
             r,
             g,
             b
-          ]
+          ],
         } = dominantColor;
 
         strokeWeight( 1 );
@@ -254,8 +243,7 @@ sketch.draw( (
           W,
           H
         );
-      }
-      else {
+      } else {
         image(
           imagePart,
           x,
@@ -324,7 +312,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        // blendMode: EXCLUSION
+      // blendMode: EXCLUSION
       }
     );
   }

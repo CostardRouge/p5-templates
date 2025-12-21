@@ -26,7 +26,7 @@ async function runRecording( jobId: string ) {
   await fs.mkdir(
     temporaryDirectoryPath,
     {
-      recursive: true
+      recursive: true,
     }
   );
 
@@ -53,14 +53,13 @@ async function runRecording( jobId: string ) {
       options,
       temporaryDirectoryPath
     );
-  }
-  catch ( error ) {
+  } catch ( error ) {
     // If anything fails, mark job as failed and rethrow
     await updateJob(
       jobId,
       {
         status: "failed",
-        progress: 100
+        progress: 100,
       }
     );
     throw error;

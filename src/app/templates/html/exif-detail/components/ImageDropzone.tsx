@@ -4,12 +4,14 @@ import React, {
 
 interface ImageDropzoneProps {
   onImageDrop: ( data: File ) => void;
-  image: string | null,
+  image: string | null;
   children: React.ReactNode;
 }
 
 const ImageDropzone = ( {
-  image, onImageDrop, children
+  image,
+  onImageDrop,
+  children,
 }: ImageDropzoneProps ) => {
   const fileInputRef = useRef<HTMLInputElement>( null );
 
@@ -70,14 +72,13 @@ const ImageDropzone = ( {
       onClick={() => fileInputRef.current?.click()}
       className="flex flex-col items-center justify-center w-full h-full"
     >
-      {image !== null ? children : (
+      {image !== null ? (
+        children
+      ) : (
         <div
           className={`flex flex-col items-center justify-center w-full h-full border-2 border-dashed transition-colors cursor-pointer ${ isDragging ? "border-blue-500 bg-blue-50" : "border-theme hover:border-theme" }`}
         >
-          <label
-            htmlFor="file-input"
-            className="cursor-pointer"
-          >
+          <label htmlFor="file-input" className="cursor-pointer">
             Upload
           </label>
         </div>

@@ -11,11 +11,11 @@ import {
 export async function POST(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
- id: string
-}>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -27,7 +27,7 @@ export async function POST(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -39,12 +39,11 @@ export async function POST(
     ].includes( dbJob.status ) ) {
       return NextResponse.json( {
         cancelled: false,
-        reason: "already finalized"
+        reason: "already finalized",
       } );
     }
 
-    const bullJob = await RecordingQueueService
-      .getInstance()
+    const bullJob = await RecordingQueueService.getInstance()
       .getQueue()
       .getJob( jobId );
 
@@ -60,18 +59,18 @@ export async function POST(
           jobId,
           {
             status: "cancelled",
-            progress: 100
+            progress: 100,
           }
         );
         return NextResponse.json( {
-          cancelled: true
+          cancelled: true,
         } );
       }
 
       if ( state === "active" ) {
         return NextResponse.json( {
           cancelled: false,
-          reason: "job is active"
+          reason: "job is active",
         } );
       }
     }
@@ -79,7 +78,7 @@ export async function POST(
     // No bull job: if it's draft or other pre-flight, don't mark cancelled, suggest delete
     return NextResponse.json( {
       cancelled: false,
-      reason: "not cancellable in current state"
+      reason: "not cancellable in current state",
     } );
   } catch ( error ) {
     console.error(
@@ -89,7 +88,7 @@ export async function POST(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

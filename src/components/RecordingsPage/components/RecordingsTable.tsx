@@ -33,10 +33,11 @@ export default function RecordingsTable( {
   onDelete,
   onRetry,
   onStart,
-  onClone
+  onClone,
 }: RecordingsTableProps ) {
-  const allSelected = jobs.length > 0 && jobs.every( j => selectedIds.has( j.id ) );
-  const someSelected = jobs.some( j => selectedIds.has( j.id ) ) && !allSelected;
+  const allSelected =
+    jobs.length > 0 && jobs.every( ( j ) => selectedIds.has( j.id ) );
+  const someSelected = jobs.some( ( j ) => selectedIds.has( j.id ) ) && !allSelected;
 
   return (
     <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-sm">
@@ -48,7 +49,7 @@ export default function RecordingsTable( {
                 <input
                   type="checkbox"
                   checked={allSelected}
-                  ref={input => {
+                  ref={( input ) => {
                     if ( input ) input.indeterminate = someSelected;
                   }}
                   onChange={onSelectAll}
@@ -100,9 +101,7 @@ export default function RecordingsTable( {
         </table>
       </div>
 
-      {jobs.length === 0 && (
-        <RecordingsEmptyState hasFilters={hasFilters} />
-      )}
+      {jobs.length === 0 && <RecordingsEmptyState hasFilters={hasFilters} />}
     </div>
   );
 }

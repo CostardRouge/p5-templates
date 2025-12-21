@@ -19,7 +19,7 @@ const sketchState = {
   },
   shape: {
     graphics: null,
-  }
+  },
 };
 
 events.register(
@@ -45,7 +45,9 @@ sketch.setup( ( {
 function getAlphaFromMask( {
   position: {
     x, y
-  }, maskPoints, distance = options.sketch?.mask?.distance ?? 0.015
+  },
+  maskPoints,
+  distance = options.sketch?.mask?.distance ?? 0.015,
 } ) {
   const normalizedPosition = createVector(
     map(
@@ -111,14 +113,14 @@ function createGridAlphaPoints(
 
       grid.draw(
         gridOptions,
-        position => {
+        ( position ) => {
           const alphaLayers = [
           ];
 
           for ( const points of textPointsMatrix ) {
             const alpha = getAlphaFromMask( {
               position,
-              maskPoints: points
+              maskPoints: points,
             } );
 
             alphaLayers.push( alpha );
@@ -126,7 +128,7 @@ function createGridAlphaPoints(
 
           alphaPoints.push( {
             position,
-            layers: alphaLayers
+            layers: alphaLayers,
           } );
         }
       );
@@ -137,22 +139,21 @@ function createGridAlphaPoints(
 }
 
 const getBackgroundColor = () =>
-  ( options.sketch?.backgroundColor ??
-  [
+  options.sketch?.backgroundColor ?? [
     246,
     235,
     225
-  ] );
+  ];
 
 sketch.draw( () => {
   background( ...getBackgroundColor() );
 
-  const size = ( options.sketch?.shape?.size * width ) ?? width;
+  const size = options.sketch?.shape?.size * width ?? width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
   const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
 
   const columns = options.sketch?.shape?.columns ?? 65;
-  const rows = columns * height / width;
+  const rows = ( columns * height ) / width;
   const cellSize = width / columns;
 
   const gridOptions = {
@@ -174,7 +175,7 @@ sketch.draw( () => {
     ),
     rows,
     columns,
-    centered: true
+    centered: true,
   };
 
   const fonts = [
@@ -187,7 +188,7 @@ sketch.draw( () => {
 
   const textToWrite = options.sketch?.shape?.text ?? "5";
 
-  const textPointsMatrix = fonts.map( font => (
+  const textPointsMatrix = fonts.map( ( font ) =>
     string.getTextPoints( {
       text: textToWrite,
       position: createVector(
@@ -197,11 +198,10 @@ sketch.draw( () => {
       size,
       font,
       sampleFactor,
-      simplifyThreshold
-    } )
-  ) );
+      simplifyThreshold,
+    } ) );
 
-  if ( textPointsMatrix.some( matrix => matrix.length === 0 ) ) {
+  if ( textPointsMatrix.some( ( matrix ) => matrix.length === 0 ) ) {
     return;
   }
 
@@ -211,7 +211,7 @@ sketch.draw( () => {
     size,
     sampleFactor,
     simplifyThreshold,
-    options.sketch?.mask?.distance
+    options.sketch?.mask?.distance,
   ];
   const cacheKey = cacheComponent.join( "+" );
 
@@ -242,16 +242,15 @@ sketch.draw( () => {
     }
 
     const hue = sketchState.shape.graphics.noise(
-      position.x / columns + (
+      position.x / columns +
         +sketchState.shape.graphics.map(
           Math.sin( animation.angle ),
           -1,
           1,
           0,
           1
-        )
-      ),
-      position.y / rows + (
+        ),
+      position.y / rows +
         +sketchState.shape.graphics.map(
           Math.cos( animation.angle ),
           -1,
@@ -259,21 +258,21 @@ sketch.draw( () => {
           0,
           1
         )
-      )
     );
     const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
     const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
     const tint = colors.rainbow( {
       hueOffset: animation.circularProgression,
-      hueIndex: sketchState.shape.graphics.map(
-        hue,
-        0,
-        1,
-        -PI,
-        PI
-      ) * hueMultiplier,
-      opacityFactor
+      hueIndex:
+        sketchState.shape.graphics.map(
+          hue,
+          0,
+          1,
+          -PI,
+          PI
+        ) * hueMultiplier,
+      opacityFactor,
     } );
 
     const {
@@ -281,13 +280,13 @@ sketch.draw( () => {
         red,
         green,
         blue
-      ]
+      ],
     } = tint;
 
     sketchState.shape.graphics.push();
 
-    const w = cellSize;// -2
-    const h = cellSize;// -2
+    const w = cellSize; // -2
+    const h = cellSize; // -2
 
     sketchState.shape.graphics.translate( position );
 
@@ -314,7 +313,7 @@ sketch.draw( () => {
     const waveConfig = options.sketch?.animation?.wave ?? {
       mode: "linear",
       directionX: -1,
-      directionY: -1
+      directionY: -1,
     };
     const waveSpeed = options.sketch?.animation?.waveSpeed ?? 1;
     const waveSpread = options.sketch?.animation?.waveSpread ?? 0.3;
@@ -349,7 +348,10 @@ sketch.draw( () => {
         );
 
         // Apply wave speed and spread like other modes
-        switchIndex = ( animation.progression * waveSpeed + normalizedDistance * waveSpread ) % 1;
+        switchIndex =
+          ( animation.progression * waveSpeed +
+            normalizedDistance * waveSpread ) %
+          1;
       } else {
         switchIndex = 0;
       }
@@ -359,15 +361,16 @@ sketch.draw( () => {
 
       if ( waveConfig.mode === "radial" ) {
         // Radial wave from center or edges
-        const distanceFromCenter = dist(
-          normalizedX,
-          normalizedY,
-          0.5,
-          0.5
-        ) / ( Math.sqrt( 2 ) / 2 );
+        const distanceFromCenter =
+          dist(
+            normalizedX,
+            normalizedY,
+            0.5,
+            0.5
+          ) / ( Math.sqrt( 2 ) / 2 );
         const fromCenter = waveConfig.fromCenter ?? true;
 
-        waveOffset = fromCenter ? distanceFromCenter : ( 1 - distanceFromCenter );
+        waveOffset = fromCenter ? distanceFromCenter : 1 - distanceFromCenter;
       } else {
         // Linear wave with controllable direction
         const directionX = waveConfig.directionX ?? -1;
@@ -378,7 +381,8 @@ sketch.draw( () => {
         waveOffset = ( xComponent + yComponent + 1 ) / 2; // Normalize to 0-1
       }
 
-      switchIndex = ( animation.progression * waveSpeed + waveOffset * waveSpread ) % 1;
+      switchIndex =
+        ( animation.progression * waveSpeed + waveOffset * waveSpread ) % 1;
     }
 
     const fractionalPart = Math.abs( switchIndex - Math.round( switchIndex ) );
@@ -390,22 +394,28 @@ sketch.draw( () => {
 
     const depthMax = cellSize * ( options.sketch?.shape?.depth ?? 20 );
 
-    const d = options.sketch.animation.variableDepth ? animation.ease( {
-      values: [
-        depthMax,
-        cellSize,
-      ],
-      currentTime: movementIndex,
-      easingFn: easing?.[ options.sketch.animation.waveEasing ] ?? easing.easeInOutElastic,
-    } ) : depthMax;
+    const d = options.sketch.animation.variableDepth
+      ? animation.ease( {
+        values: [
+          depthMax,
+          cellSize
+        ],
+        currentTime: movementIndex,
+        easingFn:
+            easing?.[ options.sketch.animation.waveEasing ] ??
+            easing.easeInOutElastic,
+      } )
+      : depthMax;
 
     const fillAlpha = animation.ease( {
       values: [
         fillAlphaStart,
-        fillAlphaEnd,
+        fillAlphaEnd
       ],
       currentTime: movementIndex,
-      easingFn: easing?.[ options.sketch.animation.waveEasing ] ?? easing.easeInOutElastic,
+      easingFn:
+        easing?.[ options.sketch.animation.waveEasing ] ??
+        easing.easeInOutElastic,
     } );
 
     sketchState.shape.graphics.fill(
@@ -498,7 +508,7 @@ sketch.draw( () => {
 
   // Update interactive position if in interactive mode
   const waveConfig = options.sketch?.animation?.wave ?? {
-    mode: "linear"
+    mode: "linear",
   };
 
   if ( waveConfig.mode === "interactive" ) {

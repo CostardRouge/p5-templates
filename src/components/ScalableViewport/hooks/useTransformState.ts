@@ -45,7 +45,7 @@ export function useTransformState( initialScale: number = 1 ) {
     ) => {
       transform.current = {
         ...transform.current,
-        ...newValues
+        ...newValues,
       };
       updateDom( contentElement );
       if ( newValues.scale !== undefined ) {

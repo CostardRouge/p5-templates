@@ -10,16 +10,16 @@ import {
 } from "./ContentItems/ContentItems";
 
 interface SlideThumbnailProps {
-    id: string;
-    name: string;
-    isActive: boolean;
-    thumbnailUrl: string | null;
-    aspectRatio: number;
-    onSelect: () => void;
-    onRename: ( newName: string ) => void;
-    onDelete: () => void;
-    onDuplicate: () => void;
-    dragBinder?: DragBinder;
+  id: string;
+  name: string;
+  isActive: boolean;
+  thumbnailUrl: string | null;
+  aspectRatio: number;
+  onSelect: () => void;
+  onRename: ( newName: string ) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  dragBinder?: DragBinder;
 }
 
 export default function SlideThumbnail( {
@@ -32,7 +32,7 @@ export default function SlideThumbnail( {
   onRename,
   onDelete,
   onDuplicate,
-  dragBinder
+  dragBinder,
 }: SlideThumbnailProps ) {
   const [
     isEditing,
@@ -92,7 +92,7 @@ export default function SlideThumbnail( {
         "group relative flex flex-col gap-1",
         "cursor-pointer",
         {
-          "opacity-50": dragBinder?.isDragging
+          "opacity-50": dragBinder?.isDragging,
         }
       )}
       onClick={onSelect}
@@ -103,11 +103,12 @@ export default function SlideThumbnail( {
           "relative w-full overflow-hidden rounded-lg transition-all",
           {
             "outline outline-2 outline-offset-1 outline-primary": isActive,
-            "outline outline-2 outline-offset-1 outline-transparent hover:outline-theme": !isActive,
+            "outline outline-2 outline-offset-1 outline-transparent hover:outline-theme":
+              !isActive,
           }
         )}
         style={{
-          aspectRatio
+          aspectRatio,
         }}
       >
         {thumbnailUrl ? (

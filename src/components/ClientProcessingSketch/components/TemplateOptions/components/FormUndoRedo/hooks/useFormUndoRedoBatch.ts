@@ -9,7 +9,7 @@ export default function useFormUndoRedoBatch() {
   const batchIdRef = React.useRef<string | null>( null );
 
   const withBatch = React.useCallback(
-    <T, >( fn: () => T, description?: string ): T => {
+    <T>( fn: () => T, description?: string ): T => {
       const batchId = context.startBatch( description );
 
       batchIdRef.current = batchId;
@@ -27,7 +27,7 @@ export default function useFormUndoRedoBatch() {
   );
 
   const withBatchAsync = React.useCallback(
-    async <T, >( fn: () => Promise<T>, description?: string ): Promise<T> => {
+    async <T>( fn: () => Promise<T>, description?: string ): Promise<T> => {
       const batchId = context.startBatch( description );
 
       batchIdRef.current = batchId;

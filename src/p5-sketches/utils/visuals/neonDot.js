@@ -10,7 +10,7 @@ export default function neonDot( {
   shadowsCount = 3,
   graphics = window,
   position,
-  index
+  index,
 } = {
 } ) {
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
@@ -21,7 +21,7 @@ export default function neonDot( {
       0,
       shadowsCount,
       sizeRange[ 0 ],
-      sizeRange[ 1 ],
+      sizeRange[ 1 ]
     );
 
     graphics.stroke( colors.rainbow( {
@@ -32,7 +32,7 @@ export default function neonDot( {
         2,
         0.75
       ),
-      hueOffset: ( animation.circularProgression + shadowProgression ),
+      hueOffset: animation.circularProgression + shadowProgression,
       hueIndex: map(
         index,
         0,

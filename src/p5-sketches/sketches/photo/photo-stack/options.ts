@@ -7,8 +7,8 @@ export const formValues = {
       246,
       235,
       225
-    ]
-  }
+    ],
+  },
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -17,18 +17,18 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     min: 0,
     max: 200,
-    step: 5
+    step: 5,
   },
   randomPosition: {
     label: "Random position",
-    component: "checkbox"
+    component: "checkbox",
   },
   imageMargin: {
     label: "Image margin",
     component: "slider",
     min: 0,
     max: 200,
-    step: 5
+    step: 5,
   },
   colors: {
     label: "Colors",
@@ -36,8 +36,8 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       background: {
         component: "color",
-        label: "Background color"
-      }
-    }
-  }
+        label: "Background color",
+      },
+    },
+  },
 };

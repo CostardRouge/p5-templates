@@ -61,7 +61,7 @@ export function useViewportActions( {
           {
             x,
             y,
-            scale
+            scale,
           },
           contentRef.current
         );
@@ -107,7 +107,7 @@ export function useViewportActions( {
           {
             x,
             y,
-            scale
+            scale,
           },
           contentRef.current
         );

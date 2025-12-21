@@ -31,11 +31,11 @@ export default function ControlledSizePresetSelect( {
   // Keep the select in sync with the current size in the form
   const width = useWatch( {
     control,
-    name: "size.width"
+    name: "size.width",
   } ) as number | undefined;
   const height = useWatch( {
     control,
-    name: "size.height"
+    name: "size.height",
   } ) as number | undefined;
   const currentValue = width && height ? `${ width }x${ height }` : "";
 
@@ -62,7 +62,7 @@ export default function ControlledSizePresetSelect( {
       }
       return {
         ungrouped,
-        groups
+        groups,
       };
     },
     [
@@ -92,7 +92,7 @@ export default function ControlledSizePresetSelect( {
       width,
       {
         shouldDirty: true,
-        shouldValidate: true
+        shouldValidate: true,
       }
     );
     setValue(
@@ -100,7 +100,7 @@ export default function ControlledSizePresetSelect( {
       height,
       {
         shouldDirty: true,
-        shouldValidate: true
+        shouldValidate: true,
       }
     );
   };

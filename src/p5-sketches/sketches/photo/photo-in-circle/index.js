@@ -84,12 +84,14 @@ sketch.draw( (
   const scaleEasingName = options.sketch?.scaleEasing ?? "easeInOutQuint";
 
   const indexRotDeg = options.sketch?.indexRotationDegrees ?? 180;
-  const indexRotEasingName = options.sketch?.indexRotationEasing ?? "easeInExpo_";
+  const indexRotEasingName =
+    options.sketch?.indexRotationEasing ?? "easeInExpo_";
 
   const noiseXDiv = options.sketch?.noiseXDiv ?? 2; // position.x / (width * divisor)
   const noiseRotFromDeg = options.sketch?.noiseRotationFromDeg ?? 360;
   const noiseRotToDeg = options.sketch?.noiseRotationToDeg ?? 0;
-  const noiseRotEasingName = options.sketch?.noiseRotationEasing ?? "easeInOutQuint";
+  const noiseRotEasingName =
+    options.sketch?.noiseRotationEasing ?? "easeInOutQuint";
 
   const centerX = center.x;
   const centerY = center.y;
@@ -201,10 +203,12 @@ sketch.draw( (
 
   if ( ( options.sketch?.showTitle ?? true ) && within ) {
     const customTitle = options.sketch?.title?.trim?.() || "";
-    const fallback = ( options.name || "orbit-images" ).toUpperCase().replaceAll(
-      "-",
-      "\n"
-    );
+    const fallback = ( options.name || "orbit-images" )
+      .toUpperCase()
+      .replaceAll(
+        "-",
+        "\n"
+      );
     const title = customTitle !== "" ? customTitle : fallback;
 
     const blendValue = options.sketch?.titleBlendMode ?? "exclusion";

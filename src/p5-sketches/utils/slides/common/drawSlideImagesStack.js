@@ -7,7 +7,11 @@ export default function drawSlideImagesStack(
   imagesStackOption, slideOptions
 ) {
   const {
-    sources, position, scale: scaleValue, rotation: rotationValue, progressiveRotation
+    sources,
+    position,
+    scale: scaleValue,
+    rotation: rotationValue,
+    progressiveRotation,
   } = imagesStackOption;
 
   if ( !sources ) {
@@ -62,23 +66,22 @@ export default function drawSlideImagesStack(
       if ( imagesStackOption.animation.name === "random" ) {
         const randomShiftMargin = imagesStackOption.animation.shift || 80;
 
-        imagePosition
-          .add(
-            map(
-              noise( i ),
-              0,
-              1,
-              -randomShiftMargin,
-              randomShiftMargin
-            ),
-            map(
-              noise( i ),
-              0,
-              1,
-              -randomShiftMargin,
-              randomShiftMargin
-            ),
-          );
+        imagePosition.add(
+          map(
+            noise( i ),
+            0,
+            1,
+            -randomShiftMargin,
+            randomShiftMargin
+          ),
+          map(
+            noise( i ),
+            0,
+            1,
+            -randomShiftMargin,
+            randomShiftMargin
+          )
+        );
       }
     }
 

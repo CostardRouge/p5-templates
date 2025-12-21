@@ -48,9 +48,10 @@ export async function preloadFonts( fontFamilies: string[] ): Promise<void> {
  * Adds will-change and other performance hints
  */
 export function optimizeForAnimation( element: HTMLElement | string ): void {
-  const el = typeof element === "string"
-    ? document.querySelector( element ) as HTMLElement
-    : element;
+  const el =
+    typeof element === "string"
+      ? ( document.querySelector( element ) as HTMLElement )
+      : element;
 
   if ( !el ) return;
 
@@ -65,9 +66,10 @@ export function optimizeForAnimation( element: HTMLElement | string ): void {
  * Clean up animation optimizations
  */
 export function cleanupAnimationOptimizations( element: HTMLElement | string ): void {
-  const el = typeof element === "string"
-    ? document.querySelector( element ) as HTMLElement
-    : element;
+  const el =
+    typeof element === "string"
+      ? ( document.querySelector( element ) as HTMLElement )
+      : element;
 
   if ( !el ) return;
 
@@ -145,8 +147,7 @@ export function checkPerformanceCapability(): {
 } {
   return {
     isHighPerformance:
-      navigator.hardwareConcurrency >= 4 &&
-      window.devicePixelRatio <= 2,
+      navigator.hardwareConcurrency >= 4 && window.devicePixelRatio <= 2,
     devicePixelRatio: window.devicePixelRatio,
     hardwareConcurrency: navigator.hardwareConcurrency,
   };

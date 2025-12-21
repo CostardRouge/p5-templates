@@ -3,10 +3,15 @@ import {
 } from "react";
 
 const CollapsibleItem = ( {
-  header, children, className, headerContainerClassName, initialExpandedValue = true, ...props
+  header,
+  children,
+  className,
+  headerContainerClassName,
+  initialExpandedValue = true,
+  ...props
 }: {
   header: ( expanded: boolean, title: string ) => JSX.Element;
-  initialExpandedValue?: boolean,
+  initialExpandedValue?: boolean;
   children: React.ReactNode;
   className?: string;
   headerContainerClassName?: string;
@@ -17,13 +22,10 @@ const CollapsibleItem = ( {
   ] = useState( initialExpandedValue );
 
   return (
-    <div
-      className={className}
-      {...props}
-    >
+    <div className={className} {...props}>
       <div
         className={headerContainerClassName}
-        onClick={() => setExpanded( e => !e )}
+        onClick={() => setExpanded( ( e ) => !e )}
       >
         {header(
           expanded,

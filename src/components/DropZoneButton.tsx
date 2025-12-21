@@ -18,7 +18,8 @@ export default forwardRef( function DropZoneButton(
     multiple = false,
     className = "",
     accept = "image/*",
-  }: DropZoneButtonProps, ref: React.Ref<HTMLInputElement>
+  }: DropZoneButtonProps,
+  ref: React.Ref<HTMLInputElement>
 ) {
   const internalRef = useRef<HTMLInputElement>( null );
 

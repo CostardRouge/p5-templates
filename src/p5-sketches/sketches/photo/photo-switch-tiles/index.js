@@ -10,7 +10,7 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 
 sketch.setup( () => {
   background( ...options.colors.background );
-}, );
+} );
 
 const borderSize = 0;
 
@@ -19,8 +19,8 @@ sketch.draw( (
 ) => {
   background( ...options.colors.background );
 
-  const rows = options.rows || 16;// columns*height/width;
-  const columns = options.columns || 9;// rows*width/height;
+  const rows = options.rows || 16; // columns*height/width;
+  const columns = options.columns || 9; // rows*width/height;
 
   const gridOptions = {
     topLeft: createVector(
@@ -41,7 +41,7 @@ sketch.draw( (
     ),
     rows,
     columns,
-    centered: false
+    centered: false,
   };
 
   const W = width / columns;
@@ -56,60 +56,58 @@ sketch.draw( (
     () => {
       const buffer = createGraphics(
         sketch?.engine?.canvas?.width,
-        sketch?.engine?.canvas?.height,
+        sketch?.engine?.canvas?.height
       );
 
-      return (
-        cache.get( "images" ).map( ( {
-          img
-        } ) => {
-          imageUtils.marginImage( {
-            img,
-            position: createVector(
-              width / 2,
-              height / 2
-            ),
-            graphics: buffer,
-            center: true,
-            fill: true,
-          } );
+      return cache.get( "images" ).map( ( {
+        img
+      } ) => {
+        imageUtils.marginImage( {
+          img,
+          position: createVector(
+            width / 2,
+            height / 2
+          ),
+          graphics: buffer,
+          center: true,
+          fill: true,
+        } );
 
-          return (
-            gridCells.reduce(
-              (
-                imageCells, {
-                  x, y
-                }
-              ) => {
-                const imagePart = buffer.get(
-                  x,
-                  y,
-                  W,
-                  H
-                );
+        return gridCells.reduce(
+          (
+            imageCells, {
+              x, y
+            }
+          ) => {
+            const imagePart = buffer.get(
+              x,
+              y,
+              W,
+              H
+            );
 
-                imageCells.push( {
-                  imagePart,
-                  // dominantColor: colors.getDominantColor( imagePart, 500 )
-                } );
+            imageCells.push( {
+              imagePart,
+              // dominantColor: colors.getDominantColor( imagePart, 500 )
+            } );
 
-                return imageCells;
-              },
-              [
-              ]
-            )
-          );
-        } )
-      );
+            return imageCells;
+          },
+          [
+          ]
+        );
+      } );
     }
   );
 
-  const imageIndexes = imageParts.map( (
-    _, index
-  ) => [
-    index,
-    index
-  ] ).flat( Infinity );
+  const imageIndexes = imageParts
+    .map( (
+      _, index
+    ) => [
+      index,
+      index
+    ] )
+    .flat( Infinity );
 
   noFill();
   stroke( favoriteColor );
@@ -125,23 +123,19 @@ sketch.draw( (
 
     const timeIndex = animation.progression * imageIndexes.length;
 
-    const switchIndex = (
+    const switchIndex =
       +noise(
         xIndex,
         yIndex,
         timeIndex
-      )
-      + noise(
+      ) +
+      noise(
         x / width,
         y / height,
         cellIndex
-      )
-    );
+      );
     const imageIndex = mappers.circularIndex(
-      (
-        timeIndex
-        + switchIndex//* gridCells.length
-      ),
+      timeIndex + switchIndex, //* gridCells.length
       imageIndexes
     );
 
@@ -180,7 +174,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: EXCLUSION,
       }
     );
   }

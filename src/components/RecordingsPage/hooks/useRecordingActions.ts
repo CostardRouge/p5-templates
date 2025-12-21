@@ -17,7 +17,7 @@ export default function useRecordingActions() {
       const response = await fetch(
         `/api/recordings/${ job.id }/clone`,
         {
-          method: "POST"
+          method: "POST",
         }
       );
 
@@ -56,6 +56,6 @@ export default function useRecordingActions() {
 
   return {
     handleClone,
-    isActionInProgress
+    isActionInProgress,
   };
 }

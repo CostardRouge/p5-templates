@@ -16,11 +16,11 @@ import {
 export async function POST(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
- id: string
-}>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -32,7 +32,7 @@ export async function POST(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -44,24 +44,24 @@ export async function POST(
     ].includes( dbJob.status ) ) {
       return NextResponse.json( {
         cancelled: false,
-        reason: "Job is not in active or queued state"
+        reason: "Job is not in active or queued state",
       } );
     }
 
     // Check if job is actually stale (more than 1 hour old)
-    const hoursSinceUpdate = ( Date.now() - new Date( dbJob.updatedAt ).getTime() ) / ( 1000 * 60 * 60 );
+    const hoursSinceUpdate =
+      ( Date.now() - new Date( dbJob.updatedAt ).getTime() ) / ( 1000 * 60 * 60 );
 
     if ( hoursSinceUpdate < 1 ) {
       return NextResponse.json( {
         cancelled: false,
-        reason: "Job is not stale (less than 1 hour old)"
+        reason: "Job is not stale (less than 1 hour old)",
       } );
     }
 
     // Try to remove from queue if it exists
     try {
-      const bullJob = await RecordingQueueService
-        .getInstance()
+      const bullJob = await RecordingQueueService.getInstance()
         .getQueue()
         .getJob( jobId );
 
@@ -89,12 +89,12 @@ export async function POST(
       jobId,
       {
         status: "cancelled",
-        progress: 100
+        progress: 100,
       }
     );
 
     return NextResponse.json( {
-      cancelled: true
+      cancelled: true,
     } );
   } catch ( error ) {
     console.error(
@@ -104,7 +104,7 @@ export async function POST(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

@@ -30,5 +30,5 @@ export const _layouts = {
   strip: imageStripLayout,
   split: imageSplitLayout,
   grid2x2: imageGridLayout,
-  polaroid: imagePolaroidLayout
+  polaroid: imagePolaroidLayout,
 };

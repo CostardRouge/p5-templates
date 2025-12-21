@@ -9,8 +9,7 @@ import {
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
 
 import makeDefaultItem from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/AddItemControls/utils/makeDefaultItem";
-import useContentArray
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/hooks/useContentArray";
+import useContentArray from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentArrayProvider/hooks/useContentArray";
 
 export default function AddItemControls() {
   const {
@@ -22,7 +21,7 @@ export default function AddItemControls() {
       append(
         makeDefaultItem( kind ),
         {
-          shouldFocus: false
+          shouldFocus: false,
         }
       );
     },

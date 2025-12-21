@@ -39,14 +39,16 @@ sketch.setup(
     addScreenPositionFunction( window );
   },
   {
-    type: "webgl"
+    type: "webgl",
   }
 );
 
 function getAlphaFromMask( {
   position: {
     x, y
-  }, maskPoints, distance = options.sketch?.mask?.distance ?? 0.015
+  },
+  maskPoints,
+  distance = options.sketch?.mask?.distance ?? 0.015,
 } ) {
   const normalizedPosition = createVector(
     map(
@@ -112,14 +114,14 @@ function createGridAlphaPoints(
 
       grid.draw(
         gridOptions,
-        position => {
+        ( position ) => {
           const alphaLayers = [
           ];
 
           for ( const points of textPointsMatrix ) {
             const alpha = getAlphaFromMask( {
               position,
-              maskPoints: points
+              maskPoints: points,
             } );
 
             alphaLayers.push( alpha );
@@ -127,7 +129,7 @@ function createGridAlphaPoints(
 
           alphaPoints.push( {
             position,
-            layers: alphaLayers
+            layers: alphaLayers,
           } );
         }
       );
@@ -138,22 +140,21 @@ function createGridAlphaPoints(
 }
 
 const getBackgroundColor = () =>
-  ( options.sketch?.backgroundColor ??
-  [
+  options.sketch?.backgroundColor ?? [
     246,
     235,
     225
-  ] );
+  ];
 
 sketch.draw( () => {
   background( ...getBackgroundColor() );
 
-  const size = ( options.sketch?.shape?.size * width ) ?? width;
+  const size = options.sketch?.shape?.size * width ?? width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
   const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
 
   const columns = options.sketch?.shape?.columns ?? 65;
-  const rows = columns * height / width;
+  const rows = ( columns * height ) / width;
   const cellSize = width / columns;
 
   const gridOptions = {
@@ -175,7 +176,7 @@ sketch.draw( () => {
     ),
     rows,
     columns,
-    centered: true
+    centered: true,
   };
 
   const fonts = [
@@ -188,7 +189,7 @@ sketch.draw( () => {
 
   const textToWrite = options.sketch?.shape?.text ?? "8";
 
-  const textPointsMatrix = fonts.map( font => (
+  const textPointsMatrix = fonts.map( ( font ) =>
     string.getTextPoints( {
       text: textToWrite,
       position: createVector(
@@ -198,11 +199,10 @@ sketch.draw( () => {
       size,
       font,
       sampleFactor,
-      simplifyThreshold
-    } )
-  ) );
+      simplifyThreshold,
+    } ) );
 
-  if ( textPointsMatrix.some( matrix => matrix.length === 0 ) ) {
+  if ( textPointsMatrix.some( ( matrix ) => matrix.length === 0 ) ) {
     return;
   }
 
@@ -212,7 +212,7 @@ sketch.draw( () => {
     size,
     sampleFactor,
     simplifyThreshold,
-    options.sketch?.mask?.distance
+    options.sketch?.mask?.distance,
   ];
   const cacheKey = cacheComponent.join( "+" );
 
@@ -275,27 +275,25 @@ sketch.draw( () => {
     }
 
     const switchSpeed = options.sketch?.animation?.switchSpeed ?? 2;
-    const switchIndexDivisor = options.sketch?.animation?.switchIndexDivisor ?? 5;
-    const positionInfluence = options.sketch?.animation?.positionInfluence ?? 100;
+    const switchIndexDivisor =
+      options.sketch?.animation?.switchIndexDivisor ?? 5;
+    const positionInfluence =
+      options.sketch?.animation?.positionInfluence ?? 100;
 
     const hue = noise(
-      position.x / columns + (
-        +map(
-          sin( animation.angle ),
-          -1,
-          1,
-          0,
-          1
-        )
+      position.x / columns + +map(
+        sin( animation.angle ),
+        -1,
+        1,
+        0,
+        1
       ),
-      position.y / rows + (
-        +map(
-          cos( animation.angle ),
-          -1,
-          1,
-          0,
-          1
-        )
+      position.y / rows + +map(
+        cos( animation.angle ),
+        -1,
+        1,
+        0,
+        1
       )
     );
 
@@ -311,7 +309,7 @@ sketch.draw( () => {
         -PI,
         PI
       ) * hueMultiplier,
-      opacityFactor
+      opacityFactor,
     } );
 
     const {
@@ -319,13 +317,13 @@ sketch.draw( () => {
         red,
         green,
         blue
-      ]
+      ],
     } = tint;
 
     push();
 
-    const w = cellSize;// -2
-    const h = cellSize;// -2
+    const w = cellSize; // -2
+    const h = cellSize; // -2
     const d = cellSize * ( options.sketch?.shape?.depth ?? 20 );
 
     translate( position );
@@ -350,19 +348,18 @@ sketch.draw( () => {
       interactive.currentTimeValue = map(
         distance,
         0,
-        ( options.sketch.interactive.sensitivityMultiplier * width ) ?? width * 0.5,
+        options.sketch.interactive.sensitivityMultiplier * width ?? width * 0.5,
         0,
         1
       );
     }
 
-    const currentTimeValue = options.sketch.interactive.enabled ? interactive.currentTimeValue : (
-      animation.progression * switchSpeed + (
-        +index / alphaPoints.length / switchIndexDivisor
-        + position.x / columns / positionInfluence
-        + position.y / rows / positionInfluence
-      )
-    );
+    const currentTimeValue = options.sketch.interactive.enabled
+      ? interactive.currentTimeValue
+      : animation.progression * switchSpeed +
+        ( +index / alphaPoints.length / switchIndexDivisor +
+          position.x / columns / positionInfluence +
+          position.y / rows / positionInfluence );
 
     const constrainedTime = constrain(
       currentTimeValue,
@@ -409,8 +406,12 @@ sketch.draw( () => {
       );
     } else {
       interactive.position = createVector(
-        sin( animation.angle * options.sketch.interactive.sinMultiplier ) * ( -width / 2 ) * 0.8,
-        cos( animation.angle * options.sketch.interactive.cosMultiplier ) * ( -height / 2 ) * 0.8
+        sin( animation.angle * options.sketch.interactive.sinMultiplier ) *
+          ( -width / 2 ) *
+          0.8,
+        cos( animation.angle * options.sketch.interactive.cosMultiplier ) *
+          ( -height / 2 ) *
+          0.8
       );
 
       interactive.graphics.clear();

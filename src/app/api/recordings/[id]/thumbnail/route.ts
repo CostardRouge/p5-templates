@@ -16,11 +16,11 @@ import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
 export async function GET(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      id: string
-    }>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -32,7 +32,7 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -85,7 +85,8 @@ export async function GET(
     ) );
 
     // Convert relative URL to absolute URL for redirect
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
       `${ _req.nextUrl.protocol }//${ _req.nextUrl.host }`;
     const absoluteUrl = new URL(
       templateThumbnailUrl,
@@ -118,7 +119,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

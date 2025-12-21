@@ -22,8 +22,8 @@ export function SimpleProgressExample() {
           {
             id: "1",
             name: "Processing video...",
-            status: "active"
-          }
+            status: "active",
+          },
         ]}
       />
     </div>
@@ -35,32 +35,32 @@ export function RecordingProgressExample() {
   const progress = useProgress( [
     {
       id: "launch",
-      name: "Launching browser"
+      name: "Launching browser",
     },
     {
       id: "capture",
-      name: "Capturing frames"
+      name: "Capturing frames",
     },
     {
       id: "save",
-      name: "Saving frames"
+      name: "Saving frames",
     },
     {
       id: "encode",
-      name: "Encoding video"
+      name: "Encoding video",
     },
     {
       id: "finalize",
-      name: "Finalizing"
+      name: "Finalizing",
     },
   ] );
 
   useEffect(
     () => {
-      // Simulate recording progress
+    // Simulate recording progress
       const simulate = async() => {
         progress.startStep( "launch" );
-        await new Promise( r => setTimeout(
+        await new Promise( ( r ) => setTimeout(
           r,
           1000
         ) );
@@ -72,7 +72,7 @@ export function RecordingProgressExample() {
             "capture",
             i
           );
-          await new Promise( r => setTimeout(
+          await new Promise( ( r ) => setTimeout(
             r,
             300
           ) );
@@ -85,7 +85,7 @@ export function RecordingProgressExample() {
             "save",
             i
           );
-          await new Promise( r => setTimeout(
+          await new Promise( ( r ) => setTimeout(
             r,
             200
           ) );
@@ -98,7 +98,7 @@ export function RecordingProgressExample() {
             "encode",
             i
           );
-          await new Promise( r => setTimeout(
+          await new Promise( ( r ) => setTimeout(
             r,
             400
           ) );
@@ -106,7 +106,7 @@ export function RecordingProgressExample() {
         progress.completeStep( "encode" );
 
         progress.startStep( "finalize" );
-        await new Promise( r => setTimeout(
+        await new Promise( ( r ) => setTimeout(
           r,
           500
         ) );
@@ -140,19 +140,19 @@ export function SketchProgressExample() {
   const progress = useProgress( [
     {
       id: "init",
-      name: "Initializing sketch"
+      name: "Initializing sketch",
     },
     {
       id: "render",
-      name: "Rendering slides"
+      name: "Rendering slides",
     },
     {
       id: "thumbnail",
-      name: "Generating thumbnails"
+      name: "Generating thumbnails",
     },
     {
       id: "save",
-      name: "Saving sketch"
+      name: "Saving sketch",
     },
   ] );
 

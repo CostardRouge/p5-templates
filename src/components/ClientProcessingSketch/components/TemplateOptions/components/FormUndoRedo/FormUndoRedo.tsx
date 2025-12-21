@@ -27,10 +27,11 @@ import type {
   FormUndoRedoConfig,
 } from "./types/FormUndoRedo.types";
 
-export type FormUndoRedoProps<T extends FieldValues = FieldValues> = FormUndoRedoConfig & {
-  resetOptions?: Parameters<ReturnType<typeof useFormContext>["reset"]>[1];
-  children?: React.ReactNode;
-};
+export type FormUndoRedoProps<T extends FieldValues = FieldValues> =
+  FormUndoRedoConfig & {
+    resetOptions?: Parameters<ReturnType<typeof useFormContext>["reset"]>[1];
+    children?: React.ReactNode;
+  };
 
 export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   maxHistory = 50,
@@ -345,7 +346,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       setCommitted,
       syncFlags,
       usePatches,
-      debugLog
+      debugLog,
     ]
   );
 
@@ -411,7 +412,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       setCommitted,
       syncFlags,
       usePatches,
-      debugLog
+      debugLog,
     ]
   );
 
@@ -467,7 +468,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
           "Jumped to:",
           {
             index,
-            direction
+            direction,
           }
         );
       } catch ( error ) {
@@ -496,7 +497,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         past: [
         ],
         future: [
-        ]
+        ],
       };
       syncFlags();
       if ( enablePersistence ) {
@@ -605,7 +606,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   const getMetrics = React.useCallback(
     (): PerformanceMetrics => {
       return {
-        ...metricsRef.current
+        ...metricsRef.current,
       };
     },
     [
@@ -663,7 +664,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       setCommitted,
       snapshot,
       syncFlags,
-      usePatches
+      usePatches,
     ]
   );
 
@@ -678,7 +679,8 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         if ( !node ) return false;
         const tag = node.tagName;
 
-        if ( tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" ) return true;
+        if ( tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" )
+          return true;
         if ( node.isContentEditable ) return true;
         return false;
       };

@@ -14,11 +14,11 @@ import {
 export async function POST(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
- id: string
-}>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -30,7 +30,7 @@ export async function POST(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -41,19 +41,19 @@ export async function POST(
     ].includes( job.status ) ) {
       return NextResponse.json( {
         started: false,
-        reason: "already in-flight"
+        reason: "already in-flight",
       } );
     }
 
     if ( ![
       "draft",
       "failed",
-      "cancelled",
+      "cancelled"
     ].includes( job.status ) ) {
       return new NextResponse(
         "Job not startable in current state",
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -63,7 +63,7 @@ export async function POST(
       jobId,
       {
         status: "queued",
-        progress: 0
+        progress: 0,
       }
     );
     await addRecordingStatus(
@@ -77,7 +77,7 @@ export async function POST(
     );
 
     return NextResponse.json( {
-      started: true
+      started: true,
     } );
   } catch ( error ) {
     console.error(
@@ -87,7 +87,7 @@ export async function POST(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

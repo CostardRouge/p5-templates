@@ -5,22 +5,22 @@ import {
 async function createBrowserPage( {
   headless = true,
   deviceScaleFactor = 2,
-  timeout = 3000000
+  timeout = 3000000,
 } = {
 } ) {
   const browser = await chromium.launch( {
     headless,
-    timeout
+    timeout,
   } );
   const createPage = async( {
     viewportSize = {
       width: 1080,
-      height: 1350
-    }
+      height: 1350,
+    },
   } = {
   } ) => {
     const page = await browser.newPage( {
-      deviceScaleFactor
+      deviceScaleFactor,
     } );
 
     await page.setViewportSize( viewportSize );

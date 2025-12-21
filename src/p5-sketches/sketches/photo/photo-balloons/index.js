@@ -10,7 +10,7 @@ import * as common from "@/p5/utils/common.js";
 
 const canvases = {
   mask: undefined,
-  imageBuffer: undefined
+  imageBuffer: undefined,
 };
 
 const getBg = () => options.sketch?.colors?.background ?? [
@@ -53,12 +53,12 @@ function initBall() {
     vy: random(
       -1,
       1
-    ) * ( motionConfig.phaseJitter ?? 1 )
+    ) * ( motionConfig.phaseJitter ?? 1 ),
   };
 }
 
 function ensureBalls( images ) {
-  images.forEach( imgObj => {
+  images.forEach( ( imgObj ) => {
     if ( imgObj && !imgObj.ball ) {
       imgObj.ball = initBall();
     }
@@ -81,7 +81,7 @@ function drawImageWithMask( {
     position: createVector(
       width / 2,
       height / 2
-    )
+    ),
   } );
 
   canvases.mask.erase();
@@ -279,14 +279,15 @@ sketch.draw( (
     } = image;
 
     const {
-      size, position: {
+      size,
+      position: {
         x, y
-      }
+      },
     } = ball;
 
     drawImageWithMask( {
       img,
-      maskDrawer: graphics => {
+      maskDrawer: ( graphics ) => {
         graphics.fill( 255 );
         graphics.noStroke();
         graphics.circle(
@@ -294,7 +295,7 @@ sketch.draw( (
           y,
           size
         );
-      }
+      },
     } );
   } );
 

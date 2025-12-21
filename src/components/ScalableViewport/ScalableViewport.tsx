@@ -57,13 +57,14 @@ export default function ScalableViewport( {
 
   const {
     fitToViewport, resetToActualPixels, zoomIn, zoomOut
-  } = useViewportActions( {
-    containerRef,
-    contentRef,
-    transform,
-    setTransform,
-    animateTo,
-  } );
+  } =
+    useViewportActions( {
+      containerRef,
+      contentRef,
+      transform,
+      setTransform,
+      animateTo,
+    } );
 
   useEffect(
     () => {
@@ -112,7 +113,7 @@ export default function ScalableViewport( {
       ref={containerRef}
       className="w-full h-full overflow-hidden touch-none relative cursor-grab active:cursor-grabbing"
       style={{
-        touchAction: "none"
+        touchAction: "none",
       }}
     >
       {showZoomControls && (

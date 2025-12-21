@@ -26,30 +26,28 @@ async function exists( filePath: string ) {
 
 async function createSketchThumbnails() {
   const recordingState: {
-    page?: Page,
-    browser?: Browser,
+    page?: Page;
+    browser?: Browser;
   } = {
-    page: undefined
+    page: undefined,
   };
 
   try {
-    const p5sketches = await getSketchList() ?? [
+    const p5sketches = ( await getSketchList() ) ?? [
     ];
 
-    const p5sketchNames = p5sketches
-      .map( ( {
-        name
-      } ) => ( {
-        href: `templates/p5/${ name }`,
-        name
-      } ) );
+    const p5sketchNames = p5sketches.map( ( {
+      name
+    } ) => ( {
+      href: `templates/p5/${ name }`,
+      name,
+    } ) );
 
     const {
-      createPage,
-      browser
+      createPage, browser
     } = await createBrowserPage( {
       headless: true,
-      deviceScaleFactor: 1
+      deviceScaleFactor: 1,
     } );
 
     recordingState.browser = browser;
@@ -68,8 +66,8 @@ async function createSketchThumbnails() {
       await recordingState.page.goto(
         `http://localhost:3000/${ href }?capturing`,
         {
-          waitUntil: "networkidle"
-        },
+          waitUntil: "networkidle",
+        }
       );
 
       // Capture and resize thumbnail with high-quality interpolation
@@ -80,19 +78,17 @@ async function createSketchThumbnails() {
           resize: {
             width: 360,
             height: 450,
-            fit: "cover"
+            fit: "cover",
           },
           quality: 90,
-          format: "jpeg"
+          format: "jpeg",
         }
       );
       console.log( `💾 ${ name }/thumbnail.jpeg has been generated` );
     }
-  }
-  catch ( error ) {
+  } catch ( error ) {
     console.error( error );
-  }
-  finally {
+  } finally {
     await recordingState?.browser?.close();
   }
 }

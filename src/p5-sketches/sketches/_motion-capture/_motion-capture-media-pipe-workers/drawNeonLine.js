@@ -10,7 +10,7 @@ export default function drawNeonLine( {
   graphics = window,
   vectorsStep = 0.05,
   vectors,
-  index
+  index,
 } = {
 } ) {
   graphics.noStroke();
@@ -43,15 +43,14 @@ export default function drawNeonLine( {
             3
           ),
           hueOffset: easing.easeOutSine( shadowProgression * shadowIndex ),
-          hueIndex: map(
-            Math.sin( animation.angle
-              + shadowProgression
-              + totalProgression ),
-            -1,
-            1,
-            -PI,
-            PI
-          ) * 4,
+          hueIndex:
+              map(
+                Math.sin( animation.angle + shadowProgression + totalProgression ),
+                -1,
+                1,
+                -PI,
+                PI
+              ) * 4,
         } ) );
 
         graphics.circle(

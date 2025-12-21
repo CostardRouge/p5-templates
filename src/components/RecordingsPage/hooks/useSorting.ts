@@ -5,7 +5,13 @@ import type {
   JobModel
 } from "@/types/recording.types";
 
-export type SortField = "createdAt" | "updatedAt" | "status" | "template" | "duration" | "id";
+export type SortField =
+  | "createdAt"
+  | "updatedAt"
+  | "status"
+  | "template"
+  | "duration"
+  | "id";
 export type SortOrder = "asc" | "desc";
 
 export interface SortConfig {
@@ -39,7 +45,9 @@ export function useSorting(
         switch ( sortConfig.field ) {
           case "createdAt":
           case "updatedAt":
-            comparison = new Date( a[ sortConfig.field ] ).getTime() - new Date( b[ sortConfig.field ] ).getTime();
+            comparison =
+            new Date( a[ sortConfig.field ] ).getTime() -
+            new Date( b[ sortConfig.field ] ).getTime();
             break;
 
           case "status":

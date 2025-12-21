@@ -21,10 +21,10 @@ export default function drawSlideImage(
 
   if ( imageOption.animation ) {
     if ( imageOption.animation.name === "noise-floating" ) {
-      noiseDetail( ...imageOption?.animation?.noiseDetail ?? [
+      noiseDetail( ...( imageOption?.animation?.noiseDetail ?? [
         2,
         0.7
-      ] );
+      ] ) );
 
       const imageAngle = noise( animation.angle ) * TAU;
 
@@ -52,6 +52,6 @@ export default function drawSlideImage(
     center: imageOption.center ?? true,
     margin: imageOption.margin ?? 80,
     scale: imageOption.scale,
-    img: image.img
+    img: image.img,
   } );
 }

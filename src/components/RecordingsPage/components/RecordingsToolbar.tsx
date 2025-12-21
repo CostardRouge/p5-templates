@@ -27,13 +27,15 @@ export default function RecordingsToolbar( {
   onViewChange,
   recordingsCount,
   sortConfig,
-  onSortChange
+  onSortChange,
 }: RecordingsToolbarProps ) {
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Recordings</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+          Recordings
+        </h1>
         <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">
           {recordingsCount} {recordingsCount === 1 ? "recording" : "recordings"}
           {statusFilter !== "all" && ` • ${ statusFilter }`}

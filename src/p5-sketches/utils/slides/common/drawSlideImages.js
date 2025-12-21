@@ -16,7 +16,7 @@ export default function drawSlideImages(
     imageUtils.marginImage( {
       center: imagesOptions.center ?? true,
       margin: imagesOptions.margin ?? 80,
-      img: imageAsset.img
+      img: imageAsset.img,
     } );
   }
 }

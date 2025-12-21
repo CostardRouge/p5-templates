@@ -31,7 +31,7 @@ export default function RecordingsCards( {
   onDelete,
   onRetry,
   onStart,
-  onClone
+  onClone,
 }: RecordingsCardsProps ) {
   if ( jobs.length === 0 ) {
     return (

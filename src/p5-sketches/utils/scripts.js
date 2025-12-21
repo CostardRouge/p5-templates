@@ -19,12 +19,12 @@ const scripts = {
           "load",
           () => {
             resolve( {
-              status: true
+              status: true,
             } );
 
             scripts.loaded.push( {
               container,
-              scriptElement
+              scriptElement,
             } );
           }
         );
@@ -34,7 +34,7 @@ const scripts = {
           () => {
             reject( {
               status: false,
-              message: `Failed to load the script ${ src }`
+              message: `Failed to load the script ${ src }`,
             } );
           }
         );
@@ -44,7 +44,7 @@ const scripts = {
         reject( error );
       }
     } );
-  }
+  },
 };
 
 window.removeLoadedScripts = () => {
@@ -53,8 +53,7 @@ window.removeLoadedScripts = () => {
   } ) => {
     try {
       container?.removeChild( scriptElement );
-    }
-    catch ( e ) {}
+    } catch ( e ) {}
   } );
 };
 

@@ -15,16 +15,16 @@ import {
 export async function POST( req: NextRequest ) {
   try {
     const {
-      ids
+      ids,
     }: {
- ids: string[]
-} = await req.json();
+      ids: string[];
+    } = await req.json();
 
     if ( !Array.isArray( ids ) || ids.length === 0 ) {
       return new NextResponse(
         "Missing or invalid job IDs",
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -44,7 +44,7 @@ export async function POST( req: NextRequest ) {
         jobId,
         {
           status: "queued",
-          progress: 0
+          progress: 0,
         }
       );
       await addRecordingStatus(
@@ -52,21 +52,19 @@ export async function POST( req: NextRequest ) {
         "queued"
       );
 
-      await RecordingQueueService
-        .getInstance()
-        .getQueue()
+      await RecordingQueueService.getInstance().getQueue()
         .add(
           "process-recording",
           {
             jobId: existing.id,
-            template: existing.template
+            template: existing.template,
           },
           {
             jobId,
             priority: 1,
             delay: 0,
             removeOnFail: true,
-            removeOnComplete: true
+            removeOnComplete: true,
           }
         );
 
@@ -74,7 +72,7 @@ export async function POST( req: NextRequest ) {
     }
 
     return NextResponse.json( {
-      retried
+      retried,
     } );
   } catch ( err ) {
     console.error(
@@ -84,7 +82,7 @@ export async function POST( req: NextRequest ) {
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

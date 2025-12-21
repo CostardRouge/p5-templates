@@ -7,7 +7,11 @@ import {
   GSAPTemplateMetadata
 } from "@/types/gsap-template.types";
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
   Input
@@ -32,7 +36,9 @@ export default function GSAPTemplateBrowser() {
   const [
     filteredTemplates,
     setFilteredTemplates
-  ] = useState<GSAPTemplateMetadata[]>( [
+  ] = useState<
+    GSAPTemplateMetadata[]
+  >( [
   ] );
   const [
     searchQuery,
@@ -158,7 +164,10 @@ export default function GSAPTemplateBrowser() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTemplates.map( ( template ) => (
-                <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                <Card
+                  key={template.id}
+                  className="hover:shadow-lg transition-shadow"
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">

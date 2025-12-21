@@ -4,7 +4,9 @@ import {
   useState, useEffect
 } from "react";
 import {
-  subscribeUser, unsubscribeUser, sendTestNotification
+  subscribeUser,
+  unsubscribeUser,
+  sendTestNotification,
 } from "@/app/actions/notifications";
 import {
   Bell, BellOff

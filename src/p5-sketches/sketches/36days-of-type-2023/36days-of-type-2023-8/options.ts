@@ -53,37 +53,37 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1
+        step: 0.1,
       },
       depth: {
         label: "Depth",
         component: "slider",
         min: 1,
         max: 100,
-        step: 1
+        step: 1,
       },
       columns: {
         label: "Grid columns",
         component: "slider",
         min: 10,
         max: 150,
-        step: 1
+        step: 1,
       },
       sampleFactor: {
         label: "Text sample factor",
         component: "slider",
         min: 0.01,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       simplifyThreshold: {
         label: "Simplify threshold",
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.1
+        step: 0.1,
       },
-    }
+    },
   },
   interactive: {
     component: "nested-object",
@@ -102,23 +102,23 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       sinMultiplier: {
         label: "sinMultiplier",
         component: "slider",
         min: 1,
         max: 9,
-        step: 0.1
+        step: 0.1,
       },
       cosMultiplier: {
         label: "cosMultiplier",
         component: "slider",
         min: 1,
         max: 9,
-        step: 0.1
+        step: 0.1,
       },
-    }
+    },
   },
   mask: {
     component: "nested-object",
@@ -129,9 +129,9 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.001,
         max: 0.1,
-        step: 0.001
+        step: 0.001,
       },
-    }
+    },
   },
   animation: {
     component: "nested-object",
@@ -146,30 +146,30 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 1,
         max: 10,
-        step: 0.5
+        step: 0.5,
       },
       switchSpeed: {
         label: "Layer switch speed",
         component: "slider",
         min: 0.5,
         max: 10,
-        step: 0.5
+        step: 0.5,
       },
       switchIndexDivisor: {
         label: "Switch index divisor",
         component: "slider",
         min: 1,
         max: 20,
-        step: 1
+        step: 1,
       },
       positionInfluence: {
         label: "Position influence",
         component: "slider",
         min: 10,
         max: 500,
-        step: 10
+        step: 10,
       },
-    }
+    },
   },
   color: {
     component: "nested-object",
@@ -180,40 +180,40 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 3,
-        step: 0.1
+        step: 0.1,
       },
       fillAlphaStart: {
         label: "Fill alpha (visible)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       fillAlphaEnd: {
         label: "Fill alpha (hidden)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       strokeAlpha: {
         label: "Stroke alpha",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       hueMultiplier: {
         label: "Hue range multiplier",
         component: "slider",
         min: 0.5,
         max: 5,
-        step: 0.1
+        step: 0.1,
       },
-    }
+    },
   },
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
 };

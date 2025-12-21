@@ -53,7 +53,7 @@ export default function useAssetsBridge() {
  next,
  {
    shouldDirty: true,
-   shouldTouch: true
+   shouldTouch: true,
  }
     );
   }
@@ -78,14 +78,15 @@ export default function useAssetsBridge() {
  filtered,
  {
    shouldDirty: true,
-   shouldTouch: true
+   shouldTouch: true,
  }
       );
     }
   }
 
   async function uploadFiles(
-    files: FileList, type: AssetType = "images"
+    files: FileList,
+    type: AssetType = "images"
   ): Promise<string[]> {
     if ( !files || files.length === 0 ) {
       return [
@@ -95,7 +96,7 @@ export default function useAssetsBridge() {
     const newPaths = ( await addAssets( {
       type,
       files,
-      scope
+      scope,
     } ) ) as unknown as string[] | undefined;
 
     const paths = newPaths ?? [
@@ -110,6 +111,6 @@ export default function useAssetsBridge() {
   return {
     uploadFiles,
     ensureInAssets,
-    maybeRemoveFromAssets
+    maybeRemoveFromAssets,
   };
 }

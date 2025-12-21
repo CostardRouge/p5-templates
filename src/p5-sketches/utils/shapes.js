@@ -2,10 +2,7 @@ import animation from "./animation.js";
 
 const shapes = {
   cross: ( {
-    position,
-    size = 10,
-    amount = 2,
-    angle = 0
+    position, size = 10, amount = 2, angle = 0
   } ) => {
     const {
       x, y
@@ -131,10 +128,7 @@ const shapes = {
     }
   },
   dots( {
-    columns,
-    rows,
-    border = false,
-    inset = 1,
+    columns, rows, border = false, inset = 1
   } ) {
     /* 1. Validation – same rules as in grid( … ) */
     if ( ![
@@ -163,15 +157,19 @@ const shapes = {
     for ( let c = colStart; c <= colEnd; ++c ) {
       // exact X coordinate
       const x =
-        ( border && ( c === 0 || c === columns ) )
-          ? ( c === 0 ? 0 : width ) // hard border
+        border && ( c === 0 || c === columns )
+          ? c === 0
+            ? 0
+            : width // hard border
           : Math.round( c * colStep ) + ( border ? inset : 0 );
 
       for ( let r = rowStart; r <= rowEnd; ++r ) {
         // exact Y coordinate
         const y =
-          ( border && ( r === 0 || r === rows ) )
-            ? ( r === 0 ? 0 : height )
+          border && ( r === 0 || r === rows )
+            ? r === 0
+              ? 0
+              : height
             : Math.round( r * rowStep ) + ( border ? inset : 0 );
 
         // draw it
@@ -181,7 +179,7 @@ const shapes = {
         ); // ← adapt this primitive if necessary
       }
     }
-  }
+  },
 };
 
 export default shapes;

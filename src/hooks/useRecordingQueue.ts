@@ -6,7 +6,7 @@ import {
 import {
   EnqueueRecordingRequest,
   EnqueueRecordingResponse,
-  QueueHealthResponse
+  QueueHealthResponse,
 } from "@/types/recording.types";
 
 export function useRecordingQueue() {
@@ -41,7 +41,8 @@ export function useRecordingQueue() {
 
         return data.jobId || null;
       } catch ( error ) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
 
         setError( errorMessage );
         return null;
@@ -53,33 +54,35 @@ export function useRecordingQueue() {
     ]
   );
 
-  const getQueueHealth = useCallback(
-    async(): Promise<QueueHealthResponse | null> => {
-      setIsLoading( true );
-      setError( null );
+  const getQueueHealth =
+    useCallback(
+      async(): Promise<QueueHealthResponse | null> => {
+        setIsLoading( true );
+        setError( null );
 
-      try {
-        const response = await fetch( "/api/recordings/health" );
+        try {
+          const response = await fetch( "/api/recordings/health" );
 
-        if ( !response.ok ) {
-          throw new Error( "Failed to fetch queue health" );
+          if ( !response.ok ) {
+            throw new Error( "Failed to fetch queue health" );
+          }
+
+          const data: QueueHealthResponse = await response.json();
+
+          return data;
+        } catch ( error ) {
+          const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+
+          setError( errorMessage );
+          return null;
+        } finally {
+          setIsLoading( false );
         }
-
-        const data: QueueHealthResponse = await response.json();
-
-        return data;
-      } catch ( error ) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-
-        setError( errorMessage );
-        return null;
-      } finally {
-        setIsLoading( false );
-      }
-    },
-    [
-    ]
-  );
+      },
+      [
+      ]
+    );
 
   const controlQueue = useCallback(
     async( action: "pause" | "resume" ): Promise<boolean> => {
@@ -95,7 +98,7 @@ export function useRecordingQueue() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify( {
-              action
+              action,
             } ),
           }
         );
@@ -108,7 +111,8 @@ export function useRecordingQueue() {
 
         return true;
       } catch ( error ) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
 
         setError( errorMessage );
         return false;

@@ -99,14 +99,16 @@ class Spiral {
     );
 
     for ( let lerpIndex = 0; lerpIndex < 1; lerpIndex += lerpStep ) {
-      const waveAmplitude = size * mappers.fn(
-        Math.sin( lerpIndex * 2 + animation.sinAngle * 5 ),
-        -1,
-        1,
-        0.8,
-        1.25,
-        easing.easeInOutBack
-      );
+      const waveAmplitude =
+        size *
+        mappers.fn(
+          Math.sin( lerpIndex * 2 + animation.sinAngle * 5 ),
+          -1,
+          1,
+          0.8,
+          1.25,
+          easing.easeInOutBack
+        );
       const f = 70;
       const opacityFactor = map(
         lerpIndex,
@@ -129,7 +131,10 @@ class Spiral {
       );
 
       const xOffset = mappers.fn(
-        Math.sin( animation.sinAngle * 2 + animation.progression + animation.progression + 8 * lerpIndex ),
+        Math.sin( animation.sinAngle * 2 +
+            animation.progression +
+            animation.progression +
+            8 * lerpIndex ),
         -1,
         1,
         -waveAmplitude,
@@ -153,7 +158,7 @@ class Spiral {
         90,
         easing.easeInOutSine
       );
-      const c = 5;// mappers.fn(Math.sin(animation.sinAngle+ 8 *lerpIndex), -1, 1, 3, 5, easing.easeInOutExpo);
+      const c = 5; // mappers.fn(Math.sin(animation.sinAngle+ 8 *lerpIndex), -1, 1, 3, 5, easing.easeInOutExpo);
 
       for ( let i = 0; i < c; i++ ) {
         const x = lerp(
@@ -181,21 +186,24 @@ class Spiral {
             1,
             0,
             360
-          ) / opacityFactor,
+          ) /
+            opacityFactor,
           map(
             Math.cos( lerpIndex * a - animation.cosAngle * 2 ),
             -1,
             1,
             0,
             255
-          ) / opacityFactor,
+          ) /
+            opacityFactor,
           map(
             Math.sin( lerpIndex * a + animation.sinAngle ),
             -1,
             1,
             255,
             0
-          ) / opacityFactor
+          ) /
+            opacityFactor
         );
 
         target.circle(

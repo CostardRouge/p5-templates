@@ -13,7 +13,7 @@ const trackedHandParts = [
   "middle_finger_tip",
   "ring_finger_tip",
   "pinky_finger_tip",
-  "wrist"
+  "wrist",
 ];
 
 const _ml5 = {
@@ -22,14 +22,14 @@ const _ml5 = {
     size: {
       width: 640,
       height: 480,
-    }
+    },
   },
   webcam: {
     element: undefined,
     size: {
       width: 960,
       height: 720,
-    }
+    },
   },
 
   bodySegmentation: undefined,
@@ -58,10 +58,10 @@ events.register(
     _ml5.bodySegmentation = ml5.bodySegmentation(
       "BodyPix",
       {
-        maskType: "parts"
+        maskType: "parts",
       }
     );
-    // _ml5.faceMesh = ml5.faceMesh();
+  // _ml5.faceMesh = ml5.faceMesh();
   }
 );
 
@@ -76,7 +76,7 @@ sketch.setup( () => {
   _ml5.capture.element = createCapture(
     VIDEO,
     {
-      flipped: true
+      flipped: true,
     }
   );
   _ml5.capture.element.size(
@@ -88,7 +88,7 @@ sketch.setup( () => {
   _ml5.webcam.element = createCapture(
     VIDEO,
     {
-      flipped: true
+      flipped: true,
     }
   );
   _ml5.webcam.element.size(
@@ -103,17 +103,17 @@ sketch.setup( () => {
 
   _ml5.bodySegmentation.detectStart(
     _ml5.capture.element,
-    results => {
+    ( results ) => {
       _ml5.segmentation = results;
     }
   );
-}, );
+} );
 
 function drawHand(
   hand, color, graphics = window
 ) {
   graphics.beginShape();
-  hand.forEach( tip => {
+  hand.forEach( ( tip ) => {
     graphics.vertex(
       map(
         tip.x,
@@ -128,7 +128,7 @@ function drawHand(
         _ml5.capture.size.height,
         0,
         _ml5.webcam.size.height
-      ),
+      )
     );
   } );
   graphics.strokeWeight( 5 );
@@ -147,7 +147,7 @@ sketch.draw( (
 
   _ml5.handPose?.detect(
     _ml5.capture.element,
-    results => {
+    ( results ) => {
       _ml5.hands = results;
     }
   );
@@ -169,12 +169,12 @@ sketch.draw( (
     handFingers[ handedness ] = handFingers[ handedness ] ?? [
     ];
 
-    trackedHandParts.forEach( trackedHandPart => {
+    trackedHandParts.forEach( ( trackedHandPart ) => {
       handFingers[ handedness ].push( createVector(
         // mappers.smoother(`${handedness}-${trackedHandPart}-x`, hand[trackedHandPart].x, 0.35),
         // mappers.smoother(`${handedness}-${trackedHandPart}-y`, hand[trackedHandPart].y, 0.35),
         hand[ trackedHandPart ].x,
-        hand[ trackedHandPart ].y,
+        hand[ trackedHandPart ].y
       ) );
     } );
   }
@@ -232,7 +232,7 @@ sketch.draw( (
       "\n"
     ),
     0,
-    height * .2,
+    height * 0.2,
     {
       size: 92,
       stroke: color( ...options.colors.background ),

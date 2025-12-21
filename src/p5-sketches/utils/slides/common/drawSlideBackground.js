@@ -9,7 +9,7 @@ export default function drawSlideBackground( backgroundOption ) {
   if ( backgroundPattern !== undefined ) {
     if ( backgroundPattern.type === "grid" ) {
       const columns = backgroundPattern.columns || 9;
-      const rows = columns * height / width;
+      const rows = ( columns * height ) / width;
 
       stroke( ...backgroundPattern.stroke );
       strokeWeight( backgroundPattern.strokeWeight || 1 );
@@ -23,7 +23,7 @@ export default function drawSlideBackground( backgroundOption ) {
 
     if ( backgroundPattern.type === "dots" ) {
       const columns = backgroundPattern.columns || 50;
-      const rows = columns * height / width;
+      const rows = ( columns * height ) / width;
 
       stroke( ...backgroundPattern.stroke );
       strokeWeight( backgroundPattern.strokeWeight || 4 );

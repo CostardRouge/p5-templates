@@ -62,9 +62,9 @@ sketch.draw( (
         y
       ),
       center: true,
-      scale: .8,
+      scale: 0.8,
       margin,
-      img
+      img,
     } );
   }
 } );

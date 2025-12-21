@@ -3,7 +3,7 @@ import {
 } from "./p5.js";
 
 const engines = {
-  p5js
+  p5js,
 };
 
 export default engines;

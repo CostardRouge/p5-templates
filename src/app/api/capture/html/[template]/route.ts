@@ -9,11 +9,11 @@ import os from "node:os";
 export async function POST(
   request: Request,
   {
-    params
+    params,
   }: {
-   params: Promise<{
-     template: string
-    }>
+    params: Promise<{
+      template: string;
+    }>;
   }
 ) {
   const {
@@ -24,7 +24,7 @@ export async function POST(
     return new Response(
       "missing form-data!",
       {
-        status: 400
+        status: 400,
       }
     );
   }
@@ -39,13 +39,14 @@ export async function POST(
   const imageFile = data.get( "image" ) as unknown as File;
   const hideExif = data.get( "showExif" ) === "false";
   const objectStyle = data.get( "objectStyle" ) as string;
-  const contentDisposition = data.get( "contentDisposition" ) as string ?? "attachment";
+  const contentDisposition =
+    ( data.get( "contentDisposition" ) as string ) ?? "attachment";
 
   if ( !imageFile ) {
     return new Response(
       "missing image!",
       {
-        status: 400
+        status: 400,
       }
     );
   }
@@ -54,12 +55,12 @@ export async function POST(
     return new Response(
       "empty image!",
       {
-        status: 400
+        status: 400,
       }
     );
   }
 
-  const timestamp = ( new Date() ).getTime();
+  const timestamp = new Date().getTime();
 
   const tmpDir = os.tmpdir();
   const uploadFilename = `${ timestamp }_${ imageFile.name }`;
@@ -111,7 +112,7 @@ export async function POST(
     createPage, browser
   } = await createBrowserPage( {
     headless: true,
-    deviceScaleFactor: 2
+    deviceScaleFactor: 2,
   } );
 
   const page = await createPage();
@@ -120,20 +121,17 @@ export async function POST(
     url: url.toString(),
     selectorToWaitFor: "div#loaded",
     callbefore: ( page: {
-      evaluate: ( arg0: () => void ) => void;
-    } ) => {
-      page.evaluate( ( ) => {
+ evaluate: ( arg0: () => void ) => void
+} ) => {
+      page.evaluate( () => {
         try {
           document.body.style.backgroundColor = "white";
           document.querySelector( "nextjs-portal" )?.remove();
-        }
-        catch ( e ) {
-
-        }
+        } catch ( e ) {}
       } );
     },
     outputPath,
-    page
+    page,
   } );
 
   await page.close();
@@ -145,6 +143,6 @@ export async function POST(
       await fs.unlink( uploadPath ).catch( () => {} );
       await fs.unlink( outputPath ).catch( () => {} );
       await browser.close();
-    }
+    },
   } );
 }

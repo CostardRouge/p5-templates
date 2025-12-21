@@ -50,17 +50,21 @@ export default function drawHands(
     indexFingerJointIndices,
     middleFingerJointIndices,
     ringFingerJointIndices,
-    pinkyFingerJointIndices
+    pinkyFingerJointIndices,
   ];
 
   handLandmarks.forEach( ( hand ) => {
     const fingers = [
     ];
 
-    for ( let fingerToTraceIndex = 0; fingerToTraceIndex < fingersToTrace.length; fingerToTraceIndex++ ) {
+    for (
+      let fingerToTraceIndex = 0;
+      fingerToTraceIndex < fingersToTrace.length;
+      fingerToTraceIndex++
+    ) {
       const jointIndices = fingersToTrace[ fingerToTraceIndex ];
 
-      const fingerJointVectors = jointIndices.map( fingerJointIndex => {
+      const fingerJointVectors = jointIndices.map( ( fingerJointIndex ) => {
         const joint = hand[ fingerJointIndex ];
         const fingerJointVector = createVector(
           inverseX( joint.x ) * width,
@@ -86,16 +90,16 @@ export default function drawHands(
         return fingerJointVector;
       } );
 
-      const averageFingerZ = fingerJointVectors.reduce(
-        (
-          sum, {
-            z
-          }
-        ) => (
-          sum + z
-        ),
-        0
-      ) / fingerJointVectors.length;
+      const averageFingerZ =
+        fingerJointVectors.reduce(
+          (
+            sum, {
+              z
+            }
+          ) => sum + z,
+          0
+        ) /
+        fingerJointVectors.length;
 
       fingers.push( [
         averageFingerZ,
@@ -124,7 +128,7 @@ export default function drawHands(
         ),
         vectors,
         index: fingerIndex / ( fingers.length - 1 ),
-        graphics
+        graphics,
       } );
     }
   } );

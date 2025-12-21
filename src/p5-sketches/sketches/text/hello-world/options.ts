@@ -7,13 +7,13 @@ export const formValues = {
     0,
     0,
     0
-  ]
+  ],
 };
 
 export const formConfiguration: Record<string, any> = {
   text: titleFormConfiguration,
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
 };

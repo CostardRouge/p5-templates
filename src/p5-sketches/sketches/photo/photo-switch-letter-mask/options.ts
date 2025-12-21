@@ -4,8 +4,8 @@ export const formValues = {
       246,
       235,
       225
-    ] as [number, number, number]
-  }
+    ] as [number, number, number],
+  },
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -15,8 +15,8 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       background: {
         component: "color",
-        label: "Background color"
-      }
-    }
-  }
+        label: "Background color",
+      },
+    },
+  },
 };

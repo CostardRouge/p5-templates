@@ -27,7 +27,7 @@ const supportedImageTypes = [
   "image/jpeg",
   "image/png",
   "image/gif",
-  "image/webp"
+  "image/webp",
 ];
 
 const ImageInfoHelper = () => {
@@ -66,9 +66,8 @@ const ImageInfoHelper = () => {
     setImage( null );
     setRawFile( file );
 
-    ExifReader
-      .load( file )
-      .then( tags => {
+    ExifReader.load( file )
+      .then( ( tags ) => {
         const parseDate = ( tags: ExifReader.Tags ) => {
           const dateString = tags?.DateTimeOriginal?.description;
 
@@ -102,16 +101,16 @@ const ImageInfoHelper = () => {
           iso: Number( tags?.ISOSpeedRatings?.description ),
           shutterSpeed: {
             description: tags?.ExposureTime?.description || "",
-            value: tags?.ExposureTime?.value
+            value: tags?.ExposureTime?.value,
           },
           focalLength: {
             description: tags?.FocalLength?.description || "",
-            value: tags?.FocalLength?.value
+            value: tags?.FocalLength?.value,
           },
           lens: tags?.Lens?.description,
           camera: {
             brand: tags?.Make?.description || "",
-            model: tags?.Model?.description || ""
+            model: tags?.Model?.description || "",
           },
           aperture: {
             description: tags?.FNumber?.description || "",
@@ -122,7 +121,7 @@ const ImageInfoHelper = () => {
           gps: {
             latitude: Number( tags?.GPSLatitude?.description ) || -1,
             longitude: Number( tags?.GPSLongitude?.description ) || -1,
-          }
+          },
         } as ExifData;
       } )
       .then( setExifData )
@@ -174,7 +173,7 @@ const ImageInfoHelper = () => {
         ],
         [
           "contentDisposition",
-          target === "_self" ? "attachment" : "inline",
+          target === "_self" ? "attachment" : "inline"
         ],
       ];
 
@@ -214,15 +213,15 @@ const ImageInfoHelper = () => {
         const imageUrl = `/api/assets?name=${ encodeURIComponent( imageFilename ) }`;
 
         fetch( imageUrl )
-          .then( res => res.blob() )
-          .then( blob => {
+          .then( ( res ) => res.blob() )
+          .then( ( blob ) => {
             handleImageFile( new File(
               [
                 blob
               ],
               "image.jpg",
               {
-                type: blob.type
+                type: blob.type,
               }
             ) );
           } )
@@ -236,19 +235,20 @@ const ImageInfoHelper = () => {
   return (
     <>
       <ScalableViewport
-        initialScale={ capturing ? 1 : undefined }
-        showZoomControls={ !capturing }
+        initialScale={capturing ? 1 : undefined}
+        showZoomControls={!capturing}
       >
         <div className="flex flex-col items-center justify-center h-[100svh] text-foreground">
           <div
             id="div-to-capture"
             className={"p-16 bg-background h-[1350px] w-[1080px]"}
           >
-            <ImageDropzone
-              image={image}
-              onImageDrop={handleImageFile}
-            >
-              <ExifInfo exifData={exifData} visible={showExif} className="flex flex-col">
+            <ImageDropzone image={image} onImageDrop={handleImageFile}>
+              <ExifInfo
+                exifData={exifData}
+                visible={showExif}
+                className="flex flex-col"
+              >
                 {image && (
                   <img
                     id="image"
@@ -275,10 +275,12 @@ const ImageInfoHelper = () => {
               className="rounded-xl p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
               onClick={( e ) => {
                 e.preventDefault();
-                setObjectStyle( current => {
+                setObjectStyle( ( current ) => {
                   const i = supportedObjectStyles.indexOf( current );
 
-                  return supportedObjectStyles[ ( i + 1 ) % supportedObjectStyles.length ];
+                  return supportedObjectStyles[
+                    ( i + 1 ) % supportedObjectStyles.length
+                  ];
                 } );
               }}
             >
@@ -299,14 +301,16 @@ const ImageInfoHelper = () => {
           )}
 
           {image && (
-
             <div className="flex gap-1 h-auto">
               <button
                 className="flex-grow rounded-xl p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
                 onClick={async() => await submitDownloadForm( "_self" )}
               >
-                {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-                  <SaveIcon className="inline mr-1 h-4"/>}
+                {rendering ? (
+                  <Loader className="inline mr-1 h-4 animate-spin" />
+                ) : (
+                  <SaveIcon className="inline mr-1 h-4" />
+                )}
                 <span className="align-middle">Download</span>
               </button>
 
@@ -314,8 +318,11 @@ const ImageInfoHelper = () => {
                 className="rounded-xl p-2 border border-theme  disabled:opacity-50 text-foreground  active:text-foreground bg-background text-sm"
                 onClick={async() => await submitDownloadForm( "_blank" )}
               >
-                {rendering ? <Loader className="inline mr-1 h-4 animate-spin"/> :
-                  <ExternalLink className="inline mr-1 h-4"/>}
+                {rendering ? (
+                  <Loader className="inline mr-1 h-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="inline mr-1 h-4" />
+                )}
                 <span className="align-middle">Open</span>
               </button>
             </div>

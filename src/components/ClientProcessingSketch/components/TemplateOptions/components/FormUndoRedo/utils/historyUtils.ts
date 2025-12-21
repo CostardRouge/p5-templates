@@ -89,8 +89,7 @@ export function createHistoryEntry<T>(
  * Apply patches to reconstruct state
  */
 export function applyHistoryPatches<T>(
-  baseState: T,
-  patches: Patch[]
+  baseState: T, patches: Patch[]
 ): T {
   try {
     return applyPatches(
@@ -216,7 +215,8 @@ function mergeBatchGroup<T>( entries: HistoryEntry<T>[] ): HistoryEntry<T> {
   return {
     state: last.state,
     timestamp: first.timestamp,
-    description: first.description || `Batch operation (${ entries.length } changes)`,
+    description:
+      first.description || `Batch operation (${ entries.length } changes)`,
     affectedPaths: Array.from( new Set( entries.flatMap( ( e ) => e.affectedPaths || [
     ] ) ) ),
     batchId: first.batchId,

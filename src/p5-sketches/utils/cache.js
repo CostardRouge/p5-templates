@@ -29,8 +29,8 @@ const cache = {
   set: (
     key, value
   ) => {
-    return cache.values[ key ] = value;
-  }
+    return ( cache.values[ key ] = value );
+  },
 };
 
 export default cache;

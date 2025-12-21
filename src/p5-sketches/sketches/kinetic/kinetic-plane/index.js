@@ -10,7 +10,8 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
 
 import mediapipe, {
-  init as mediapipeInit, setEnabled as setMediapipeEnabled
+  init as mediapipeInit,
+  setEnabled as setMediapipeEnabled,
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
 // Key landmarks for interaction (fingertips)
@@ -28,18 +29,16 @@ const sketchState = {
   },
   plane: {
     graphics: null,
-    gridData: null
+    gridData: null,
   },
   webcam: {
     graphics: null,
-  }
+  },
 };
 
 function createGridData(
   width, height
-) {
-
-}
+) {}
 
 sketch.setup( async( {
   canvas
@@ -50,7 +49,7 @@ sketch.setup( async( {
   sketchState.plane.graphics = graphics.createAutoResizableGraphics(
     width,
     height,
-    "webgl",
+    "webgl"
   );
   sketchState.plane.graphics.pixelDensity( 1 );
   addScreenPositionFunction( sketchState.plane.graphics );
@@ -65,17 +64,16 @@ sketch.setup( async( {
     worker: false,
     tasks: [
       "hands"
-    ]
+    ],
   } );
 } );
 
 const getBackgroundColor = () =>
-  ( options.sketch?.backgroundColor ??
-  [
+  options.sketch?.backgroundColor ?? [
     246,
     235,
     225
-  ] );
+  ];
 
 // Creates a grid of triangle vertices
 // Returns an immutable data structure containing all vertex information
@@ -110,23 +108,23 @@ function createTriangleGrid(
             y: y,
             z: 0,
             u: u0,
-            v: v0
+            v: v0,
           },
           {
             x: x + cellWidth,
             y: y,
             z: 0,
             u: u1,
-            v: v0
+            v: v0,
           },
           {
             x: x,
             y: y + cellHeight,
             z: 0,
             u: u0,
-            v: v1
-          }
-        ]
+            v: v1,
+          },
+        ],
       } );
 
       // Triangle 2: bottom-right half
@@ -137,23 +135,23 @@ function createTriangleGrid(
             y: y,
             z: 0,
             u: u1,
-            v: v0
+            v: v0,
           },
           {
             x: x + cellWidth,
             y: y + cellHeight,
             z: 0,
             u: u1,
-            v: v1
+            v: v1,
           },
           {
             x: x,
             y: y + cellHeight,
             z: 0,
             u: u0,
-            v: v1
-          }
-        ]
+            v: v1,
+          },
+        ],
       } );
     }
   }
@@ -163,7 +161,7 @@ function createTriangleGrid(
     columns,
     rows,
     cellWidth,
-    cellHeight
+    cellHeight,
   };
 }
 
@@ -176,7 +174,8 @@ function displayTriangleGrid(
     sketchState.plane.graphics.texture( imageTexture );
   }
 
-  const maxInfluenceDistance = options.sketch.animation.maxInfluenceDistance ?? 150;
+  const maxInfluenceDistance =
+    options.sketch.animation.maxInfluenceDistance ?? 150;
 
   // Render each triangle
   grid.vertices.forEach( ( {
@@ -184,7 +183,7 @@ function displayTriangleGrid(
   } ) => {
     sketchState.plane.graphics.beginShape( TRIANGLES );
 
-    triangle.forEach( _vertex => {
+    triangle.forEach( ( _vertex ) => {
       const wave = 0;
 
       //   map(
@@ -201,30 +200,33 @@ function displayTriangleGrid(
       const switchIndex = computeDisplacement(
         createVector(
           _vertex.x,
-          _vertex.y,
+          _vertex.y
         ),
         targetVectors,
         maxInfluenceDistance
       );
 
-      const z = _vertex.z + animation.ease( {
-        values: [
-          0,
-          options.sketch?.animation?.depth,
-        ],
-        currentTime: switchIndex,
-        easingFn: easing?.[ options.sketch.animation.easing ] ?? easing.easeOutBack,
-      } );
+      const z =
+        _vertex.z +
+        animation.ease( {
+          values: [
+            0,
+            options.sketch?.animation?.depth
+          ],
+          currentTime: switchIndex,
+          easingFn:
+            easing?.[ options.sketch.animation.easing ] ?? easing.easeOutBack,
+        } );
 
       const vertices = [
         _vertex.x,
         _vertex.y,
-        z,
+        z
       ];
 
       if ( imageTexture && imageTexture.width && imageTexture.height ) {
         // Flip U coordinate horizontally when using webcam to correct mirroring
-        const u = options.sketch.texture.useWebcam ? ( 1 - _vertex.u ) : _vertex.u;
+        const u = options.sketch.texture.useWebcam ? 1 - _vertex.u : _vertex.u;
 
         vertices.push(
           u * imageTexture.width,
@@ -241,8 +243,7 @@ function displayTriangleGrid(
 
     if ( options.sketch.grid.stroke.hide ) {
       sketchState.plane.graphics.noStroke();
-    }
-    else {
+    } else {
       sketchState.plane.graphics.stroke( ...options.sketch.grid.stroke.color );
     }
     // sketchState.plane.graphics.noFill();
@@ -292,12 +293,13 @@ sketch.draw( () => {
       sketchState.plane.graphics.width,
       sketchState.plane.graphics.height
     ),
-    () => createTriangleGrid(
-      options.sketch.grid.columns,
-      options.sketch.grid.rows,
-      sketchState.plane.graphics.width,
-      sketchState.plane.graphics.height
-    )
+    () =>
+      createTriangleGrid(
+        options.sketch.grid.columns,
+        options.sketch.grid.rows,
+        sketchState.plane.graphics.width,
+        sketchState.plane.graphics.height
+      )
   );
 
   // Dynamically enable/disable mediapipe based on useHands option
@@ -305,33 +307,36 @@ sketch.draw( () => {
 
   setMediapipeEnabled( useHands );
 
-  const _image = options.sketch.texture.useWebcam ? mediapipe.capture.element : common.getAsset( options.sketch?.texture.image )?.img;
+  const _image = options.sketch.texture.useWebcam
+    ? mediapipe.capture.element
+    : common.getAsset( options.sketch?.texture.image )?.img;
 
   const targetVectors = [
-
   ];
 
   if ( options.sketch.animation.useMouse ?? true ) {
     sketchState.plane.graphics.screenPosition( createVector(
       mouseX - width / 2,
-      mouseY - height / 2,
+      mouseY - height / 2
     ) );
   }
 
   if ( options.sketch.animation.useHands ?? true ) {
-    mediapipe.tasks?.hands?.result?.landmarks?.forEach( hand => {
-      const interactionPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+    mediapipe.tasks?.hands?.result?.landmarks?.forEach( ( hand ) => {
+      const interactionPoints = interactionIndices
+        .map( ( i ) => hand[ i ] )
+        .filter( Boolean );
 
-      interactionPoints.forEach( point => {
+      interactionPoints.forEach( ( point ) => {
         if ( point ) {
           const x = common.inverseX( point.x ) * width;
           const y = point.y * height;
-          const z = point.z * ( width + height ) / 2;
+          const z = ( point.z * ( width + height ) ) / 2;
 
           targetVectors.push( sketchState.plane.graphics.screenPosition( createVector(
             x - width / 2,
             y - height / 2,
-            z - ( width / 2 ) + ( height / 2 ),
+            z - width / 2 + height / 2
           ) ) );
         }
       } );
@@ -381,7 +386,11 @@ sketch.draw( () => {
   sketchState.plane.graphics.clear();
 
   // WEBCAM - only render if enabled and capture element exists
-  if ( mediapipe.enabled && mediapipe.capture.element && options.sketch.animation.showWebcam ) {
+  if (
+    mediapipe.enabled &&
+    mediapipe.capture.element &&
+    options.sketch.animation.showWebcam
+  ) {
     sketchState.webcam.graphics.clear();
     sketchState.webcam.graphics.image(
       mediapipe.capture.element,

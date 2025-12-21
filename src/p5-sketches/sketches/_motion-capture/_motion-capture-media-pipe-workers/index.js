@@ -31,7 +31,7 @@ const mediapipe = {
       // height: 256,
       // width: options.size.width,
       // height: options.size.height
-    }
+    },
   },
   feedback: {
     element: null,
@@ -39,8 +39,8 @@ const mediapipe = {
       // width: 640,
       // height: 480,
       width: options.size.width,
-      height: options.size.height
-    }
+      height: options.size.height,
+    },
   },
   worker: null,
   workerReady: false,
@@ -60,13 +60,13 @@ const layers = {
       0,
       10
     ],
-    erase: 20
+    erase: 20,
   },
   hands: {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 255
+    erase: 255,
   },
   guidelines: {
     graphics: undefined,
@@ -84,7 +84,7 @@ const layers = {
 
 const handDetectionState = {
   handsAreVisible: 0,
-  lastDetectedHandTime: -GUIDELINE_DELAY
+  lastDetectedHandTime: -GUIDELINE_DELAY,
 };
 
 const matter = {
@@ -95,7 +95,7 @@ const matter = {
   handBodies: [
   ],
   boundaries: [
-  ]
+  ],
 };
 
 sketch.setup(
@@ -121,7 +121,7 @@ sketch.setup(
     mediapipe.capture.element = createCapture(
       VIDEO,
       {
-        flipped: true
+        flipped: true,
       }
     );
     mediapipe.capture.element.size(
@@ -141,7 +141,7 @@ sketch.setup(
     mediapipe.feedback.element = createCapture(
       VIDEO,
       {
-        flipped: true
+        flipped: true,
       }
     );
     mediapipe.feedback.element.size(
@@ -152,11 +152,11 @@ sketch.setup(
 
     // --- spin up the vision worker ---
 
-    mediapipe.worker = new Worker( new URL( "/assets/scripts/vision-worker.js", ) );
+    mediapipe.worker = new Worker( new URL( "/assets/scripts/vision-worker.js" ) );
 
     mediapipe.worker.postMessage( {
       type: "INIT",
-      wasmPath: "/assets/libraries/mediapipe/wasm"
+      wasmPath: "/assets/libraries/mediapipe/wasm",
     } );
 
     mediapipe.worker.onmessage = ( event ) => {
@@ -221,21 +221,28 @@ sketch.setup(
     },
     animation: {
       framerate: options.animation.framerate,
-      duration: options.animation.duration
-    }
+      duration: options.animation.duration,
+    },
   }
 );
 
 const sendFrameToWorkerIfDue = () => {
   const now = performance.now();
 
-  if ( now - mediapipe.previousFrameSentTime < mediapipe.inferenceIntervalMilliseconds ) {
+  if (
+    now - mediapipe.previousFrameSentTime <
+    mediapipe.inferenceIntervalMilliseconds
+  ) {
     return;
   }
 
   const videoElement = mediapipe.capture.element.elt;
 
-  if ( !videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0 ) {
+  if (
+    !videoElement ||
+    videoElement.readyState < 2 ||
+    videoElement.videoWidth === 0
+  ) {
     return; // video not yet delivering frames
   }
 
@@ -245,7 +252,7 @@ const sendFrameToWorkerIfDue = () => {
         {
           type: "FRAME",
           bitmap,
-          timestamp: now
+          timestamp: now,
         },
         [
           bitmap
@@ -269,16 +276,18 @@ sketch.draw( (
   const now = performance.now();
 
   // handDetectionState.handsAreCurrentlyVisible = Object.values( mediapipe.workerResult ).some( libResult => libResult?.length > 0 ?? false );
-  handDetectionState.handsAreCurrentlyVisible = (
+  handDetectionState.handsAreCurrentlyVisible =
     ( mediapipe.workerResult?.hands?.landmarks?.length > 0 ?? false ) ||
-    ( mediapipe.workerResult?.poses?.landmarks?.length > 0 ?? false )
-  );
+    ( mediapipe.workerResult?.poses?.landmarks?.length > 0 ?? false );
 
   if ( handDetectionState.handsAreCurrentlyVisible ) {
     handDetectionState.lastDetectedHandTime = now;
   }
 
-  if ( !handDetectionState.handsAreCurrentlyVisible && handDetectionState.lastDetectedHandTime !== -1 ) {
+  if (
+    !handDetectionState.handsAreCurrentlyVisible &&
+    handDetectionState.lastDetectedHandTime !== -1
+  ) {
     const timeSinceLastHand = now - handDetectionState.lastDetectedHandTime;
 
     if ( timeSinceLastHand > GUIDELINE_DELAY ) {
@@ -295,8 +304,7 @@ sketch.draw( (
         layers.guidelines
       );
     }
-  }
-  else {
+  } else {
     mediapipe.inferenceIntervalMilliseconds = RUNNING_INFERENCE;
     frameRate( options.animation.framerate );
   }
@@ -306,7 +314,8 @@ sketch.draw( (
     layers.socialMediaOverlay
   );
 
-  const motionCaptureExperienceIsRunning = ( now - handDetectionState.lastDetectedHandTime ) < GUIDELINE_DELAY;
+  const motionCaptureExperienceIsRunning =
+    now - handDetectionState.lastDetectedHandTime < GUIDELINE_DELAY;
 
   if ( motionCaptureExperienceIsRunning ) {
     image(
@@ -370,12 +379,12 @@ sketch.draw( (
       drawNeonDot( {
         sizeRange: [
           circleRadius * 2,
-          circleRadius * 2 / 3
+          ( circleRadius * 2 ) / 3
         ],
         shadowsCount: 3,
         graphics: layers.visuals.graphics,
         position,
-        index: index / ( matter.balls.length )
+        index: index / matter.balls.length,
       } );
 
       // drawImageWithMask( {
@@ -471,7 +480,7 @@ function createHandInteractionBodies( hand ) {
     hand[ 9 ], // Middle finger base (palm center)
   ];
 
-  interactionPoints.forEach( point => {
+  interactionPoints.forEach( ( point ) => {
     if ( point ) {
       const x = inverseX( point.x ) * width;
       const y = point.y * height;

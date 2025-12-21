@@ -33,8 +33,13 @@ export function usePersistedViewMode<T extends ViewMode>(
           const parsed = JSON.parse( stored ) as T;
 
           // Type guard to ensure the value is valid
-          if ( typeof parsed === "string" &&
-            ( parsed === "grid" || parsed === "list" || parsed === "table" || parsed === "cards" ) ) {
+          if (
+            typeof parsed === "string" &&
+          ( parsed === "grid" ||
+            parsed === "list" ||
+            parsed === "table" ||
+            parsed === "cards" )
+          ) {
             setViewModeState( parsed );
           }
         }

@@ -38,31 +38,31 @@ export const formConfiguration: Record<string, any> = {
   // Assets
   images: {
     component: "images-stack",
-    label: "Images"
+    label: "Images",
   },
 
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
   textColor: {
     component: "color",
-    label: "Text color"
+    label: "Text color",
   },
 
   // Typography / Title
   font: {
     component: "select",
     label: "Font name",
-    options: fontNames.map( fontName => ( {
+    options: fontNames.map( ( fontName ) => ( {
       value: fontName,
-      label: fontName
+      label: fontName,
     } ) ),
   },
   title: {
     component: "text",
-    label: "Custom title (empty → default)"
+    label: "Custom title (empty → default)",
   },
 
   // Grid
@@ -97,4 +97,3 @@ export const formConfiguration: Record<string, any> = {
     step: 1,
   },
 };
-

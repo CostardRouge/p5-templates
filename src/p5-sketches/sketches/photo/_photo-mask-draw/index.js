@@ -6,15 +6,13 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 
 const canvases = {
-  mask: undefined
+  mask: undefined,
 };
 
 function drawImageWithMask( {
-  img,
-  maskDrawer,
-  graphics = window
+  img, maskDrawer, graphics = window
 } ) {
-  const eraseMode = 1;// animation.progression >= .5;
+  const eraseMode = 1; // animation.progression >= .5;
 
   if ( eraseMode ) {
     canvases.mask.erase();
@@ -44,7 +42,7 @@ function drawImageWithMask( {
 sketch.setup( () => {
   canvases.mask = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
@@ -58,12 +56,12 @@ sketch.setup( () => {
   );
 
   // resetBallPositions();
-}, );
+} );
 
 events.register(
   "engine-window-preload",
   () => {
-    cache.get( "images" ).forEach( image => {
+    cache.get( "images" ).forEach( ( image ) => {
       Object.assign(
         image,
         {
@@ -82,7 +80,7 @@ events.register(
               -1,
               1
             ),
-          }
+          },
         }
       );
     } );
@@ -125,7 +123,7 @@ sketch.draw( (
   );
 
   for ( let ballIndex = 0; ballIndex < ballsCount; ballIndex++ ) {
-    const angleProgression = ( ballIndex / ballsCount );
+    const angleProgression = ballIndex / ballsCount;
     const angle = angleProgression * TAU;
     // const size = mappers.fn(animation.circularProgression, 0, 1, 250, 150, easing.easeInOutExpo);
 
@@ -137,14 +135,14 @@ sketch.draw( (
 
     const ballPosition = createVector(
       sin( angle + animation.progression ) * radius,
-      cos( angle + animation.progression ) * radius,
+      cos( angle + animation.progression ) * radius
     );
 
     ballPosition.add( center );
 
     drawImageWithMask( {
       img: imageObjects[ 0 ].img,
-      maskDrawer: graphics => {
+      maskDrawer: ( graphics ) => {
         graphics.fill( 255 );
         graphics.noStroke();
         graphics.circle(
@@ -152,7 +150,7 @@ sketch.draw( (
           ballPosition.y,
           size
         );
-      }
+      },
     } );
   }
 
@@ -176,7 +174,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: EXCLUSION,
       }
     );
   }

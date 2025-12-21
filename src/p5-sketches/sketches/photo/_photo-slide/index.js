@@ -14,9 +14,7 @@ const canvases = {
 };
 
 function drawImageWithMask( {
-  img,
-  maskDrawer,
-  graphics = window
+  img, maskDrawer, graphics = window
 } ) {
   imageUtils.marginImage( {
     img,
@@ -65,22 +63,22 @@ function drawImageWithMask( {
 sketch.setup( () => {
   canvases.maskBuffer = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   canvases.imageBuffer = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   canvases.sliderBuffer = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
   background( ...options.colors.background );
-}, );
+} );
 
 let offset = 0;
 
@@ -94,7 +92,6 @@ sketch.draw( (
   imageObjects.forEach( ( {
     img
   } ) => {
-
     // drawImageWithMask({
     // 	img,
     // 	maskDrawer: graphics => {
@@ -179,7 +176,7 @@ sketch.draw( (
     0
   );
 
-  offset -= 1;// ((width)/imageIndices.length)/options.animation.duration;
+  offset -= 1; // ((width)/imageIndices.length)/options.animation.duration;
   if ( offset <= -width ) {
     offset = 0;
   }
@@ -204,7 +201,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: EXCLUSION,
       }
     );
   }

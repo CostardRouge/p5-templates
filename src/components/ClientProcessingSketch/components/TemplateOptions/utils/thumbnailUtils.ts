@@ -16,7 +16,8 @@ export function waitForSlideRendered(
       const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0" ) as HTMLCanvasElement | null;
 
       const dataSlide = canvas?.dataset?.slide;
-      const dataSlideIndex = dataSlide !== undefined ? Number( dataSlide ) : undefined;
+      const dataSlideIndex =
+        dataSlide !== undefined ? Number( dataSlide ) : undefined;
 
       let currentSlideIndex: number | undefined = dataSlideIndex;
 

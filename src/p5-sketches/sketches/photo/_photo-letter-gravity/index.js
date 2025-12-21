@@ -39,12 +39,12 @@ events.register(
         mouseY,
         shape,
         {
-          friction: .3,
-          frictionAir: .0001,
-          restitution: .9,
+          friction: 0.3,
+          frictionAir: 0.0001,
+          restitution: 0.9,
         },
         false,
-        .01,
+        0.01,
         10,
         0.1
       ),
@@ -54,7 +54,7 @@ events.register(
       ),
       points: [
         ...shape
-      ]
+      ],
     };
 
     if ( !bodyObject.body ) {
@@ -83,13 +83,11 @@ const matter = {
   bodies: [
   ],
   boundaries: [
-  ]
+  ],
 };
 
 function drawImageWithMask( {
-  img,
-  maskDrawer,
-  graphics = window
+  img, maskDrawer, graphics = window
 } ) {
   // image(img, 0, 0, graphics.width, graphics.height);
 
@@ -140,7 +138,7 @@ function addLetter(
       x,
       y
     ),
-    body: undefined// Bodies.circle(x, y, size, size)
+    body: undefined, // Bodies.circle(x, y, size, size)
   };
 
   matter.bodies.unshift( bodyObject );
@@ -170,11 +168,11 @@ function addBoundary(
 sketch.setup( () => {
   canvases.mask = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
   canvases.imageBuffer = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
@@ -218,7 +216,7 @@ sketch.setup( () => {
   // 		288
   // 	)
   // })
-}, );
+} );
 
 sketch.draw( (
   time, center, favoriteColor
@@ -232,7 +230,7 @@ sketch.draw( (
       points
     } ) => points === undefined );
 
-    emptyLetterPoints.forEach( bodyObject => {
+    emptyLetterPoints.forEach( ( bodyObject ) => {
       const {
         text, position, size
       } = bodyObject;
@@ -242,7 +240,7 @@ sketch.draw( (
         size,
         position,
         // sampleFactor: .1,
-        font: string.fonts.agiro
+        font: string.fonts.agiro,
       } );
 
       bodyObject.body = Bodies.fromVertices(
@@ -257,10 +255,11 @@ sketch.draw( (
         // bodyObject.points.map(({x, y})=> Vector.create(x, y))
         bodyObject.points.map( ( {
           x, y
-        } ) => Vector.create(
-          position.x - x,
-          position.y - y
-        ) )
+        } ) =>
+          Vector.create(
+            position.x - x,
+            position.y - y
+          ) )
       );
 
       if ( !bodyObject.body ) {
@@ -290,7 +289,7 @@ sketch.draw( (
       -1,
       1,
       easing.easeInOutExpo
-    ),
+    )
   );
 
   push();
@@ -329,7 +328,9 @@ sketch.draw( (
     const {
       position: {
         x: mX, y: mY
-      }, vertices, angle
+      },
+      vertices,
+      angle,
     } = body;
 
     push();

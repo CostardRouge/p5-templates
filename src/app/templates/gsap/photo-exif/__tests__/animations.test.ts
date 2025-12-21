@@ -6,7 +6,10 @@
 import gsap from "gsap";
 import fc from "fast-check";
 import {
-  calculateTotalFrames, calculateProgress, dispatchSeekFrame, setupFrameSync
+  calculateTotalFrames,
+  calculateProgress,
+  dispatchSeekFrame,
+  setupFrameSync,
 } from "@/lib/gsap/syncWithRecording";
 import type {
   PhotoExifTemplateOptions
@@ -109,7 +112,7 @@ describe(
           () => {
             const duration = 5;
             const timeline = gsap.timeline( {
-              paused: true
+              paused: true,
             } );
 
             timeline.duration( duration );
@@ -123,7 +126,7 @@ describe(
           () => {
             const duration = 5;
             const timeline = gsap.timeline( {
-              paused: true
+              paused: true,
             } );
 
             // Add some animations
@@ -131,14 +134,14 @@ describe(
               {
               },
               {
-                duration: 1
+                duration: 1,
               }
             );
             timeline.to(
               {
               },
               {
-                duration: 2
+                duration: 2,
               }
             );
 
@@ -159,9 +162,9 @@ describe(
               30
             ];
 
-            durations.forEach( duration => {
+            durations.forEach( ( duration ) => {
               const timeline = gsap.timeline( {
-                paused: true
+                paused: true,
               } );
 
               timeline.duration( duration );
@@ -243,7 +246,7 @@ describe(
               "#image",
               {
                 opacity: 0,
-                scale: 0.95
+                scale: 0.95,
               }
             );
 
@@ -272,14 +275,14 @@ describe(
             document.body.appendChild( mockElement );
 
             const timeline = gsap.timeline( {
-              paused: true
+              paused: true,
             } );
 
             gsap.set(
               "#image",
               {
                 opacity: 0,
-                scale: 0.95
+                scale: 0.95,
               }
             );
             timeline.to(
@@ -335,7 +338,7 @@ describe(
                   duration: fc.float( {
                     min: 0.5,
                     max: 30,
-                    noNaN: true
+                    noNaN: true,
                   } ),
                   framerate: fc.constantFrom(
                     24,
@@ -346,7 +349,7 @@ describe(
                 ( animationOptions ) => {
                   // Create a timeline with the generated options
                   const timeline = gsap.timeline( {
-                    paused: true
+                    paused: true,
                   } );
 
                   timeline.duration( animationOptions.duration );
@@ -383,7 +386,7 @@ describe(
                 }
               ),
               {
-                numRuns: 100
+                numRuns: 100,
               }
             );
           }
@@ -398,7 +401,7 @@ describe(
                   duration: fc.float( {
                     min: 1,
                     max: 10,
-                    noNaN: true
+                    noNaN: true,
                   } ),
                   framerate: fc.constantFrom(
                     24,
@@ -409,7 +412,7 @@ describe(
                 ( animationOptions ) => {
                   // Create a timeline
                   const timeline = gsap.timeline( {
-                    paused: true
+                    paused: true,
                   } );
 
                   timeline.duration( animationOptions.duration );
@@ -445,7 +448,7 @@ describe(
                 }
               ),
               {
-                numRuns: 100
+                numRuns: 100,
               }
             );
           }
@@ -460,7 +463,7 @@ describe(
                   duration: fc.float( {
                     min: 0.01,
                     max: 0.1,
-                    noNaN: true
+                    noNaN: true,
                   } ),
                   framerate: fc.constantFrom(
                     24,
@@ -469,7 +472,7 @@ describe(
                 } ),
                 ( animationOptions ) => {
                   const timeline = gsap.timeline( {
-                    paused: true
+                    paused: true,
                   } );
 
                   timeline.duration( animationOptions.duration );
@@ -501,7 +504,7 @@ describe(
                 }
               ),
               {
-                numRuns: 100
+                numRuns: 100,
               }
             );
           }

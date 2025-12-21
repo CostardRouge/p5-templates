@@ -20,7 +20,7 @@ type SketchMetadata = {
 
 // Helper to get the full sketch path (with category if it exists)
 function getSketchPath( name: string ): string {
-  const meta = ( metadata as SketchMetadata[] ).find( m => m.name === name );
+  const meta = ( metadata as SketchMetadata[] ).find( ( m ) => m.name === name );
 
   if ( meta?.category ) {
     return `${ meta.category }/${ name }`;
@@ -68,18 +68,17 @@ export default function P5Sketch( {
         document.body,
         {
           childList: true,
-          subtree: true
+          subtree: true,
         }
       );
 
       // 3) Import the sketch module by name
-      importSketch( name )
-        .catch( ( e ) => {
-          console.error(
-            `[P5Sketch] failed to import sketch "${ name }"`,
-            e
-          );
-        } );
+      importSketch( name ).catch( ( e ) => {
+        console.error(
+          `[P5Sketch] failed to import sketch "${ name }"`,
+          e
+        );
+      } );
 
       return () => {
         observer.disconnect();

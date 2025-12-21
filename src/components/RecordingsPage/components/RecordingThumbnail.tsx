@@ -26,7 +26,7 @@ export default function RecordingThumbnail( {
   onClick,
   className,
   showEyeInCorner = false,
-  enableHoverPreview = false
+  enableHoverPreview = false,
 }: RecordingThumbnailProps ) {
   const [
     imageError,
@@ -38,7 +38,8 @@ export default function RecordingThumbnail( {
   ] = useState( false );
 
   const src = `/api/recordings/${ job.id }/thumbnail?t=${ new Date( job.updatedAt ).getTime() }`;
-  const showEyeIcon = job.status === "completed" && job.videoUrls && job.thumbnails;
+  const showEyeIcon =
+    job.status === "completed" && job.videoUrls && job.thumbnails;
   const isRecording = job.status === "active";
   const isQueued = job.status === "queued";
   const isFailed = job.status === "failed";
@@ -52,14 +53,16 @@ export default function RecordingThumbnail( {
   return (
     <div
       onClick={onClick}
-      onMouseEnter={() => enableHoverPreview && slideCount > 1 && setShowPreview( true )}
+      onMouseEnter={() =>
+        enableHoverPreview && slideCount > 1 && setShowPreview( true )
+      }
       onMouseLeave={() => setShowPreview( false )}
       className={clsx(
         className,
         "relative overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800",
         {
           "animate-pulse": isQueued,
-          "cursor-pointer": !!onClick
+          "cursor-pointer": !!onClick,
         }
       )}
     >
@@ -77,15 +80,15 @@ export default function RecordingThumbnail( {
           <Video className="w-8 h-8 opacity-50" />
           <div className="text-center px-2">
             <div className="text-xs font-medium opacity-75">No Preview</div>
-            <div className="text-[10px] opacity-50 truncate max-w-full px-10 elipsis">{job.template}</div>
+            <div className="text-[10px] opacity-50 truncate max-w-full px-10 elipsis">
+              {job.template}
+            </div>
           </div>
         </div>
       ) : (
         <>
           {showEyeIcon && !showEyeInCorner && (
-            <Eye
-              className="w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground bg-background rounded-lg py-1 px-1 border border-theme z-40"
-            />
+            <Eye className="w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground bg-background rounded-lg py-1 px-1 border border-theme z-40" />
           )}
           {showEyeIcon && showEyeInCorner && (
             <div className="absolute bottom-3 left-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-40">
@@ -97,14 +100,20 @@ export default function RecordingThumbnail( {
           {isRecording && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" style={{
-                  width: "24px",
-                  height: "24px"
-                }} />
-                <div className="relative rounded-full bg-red-600 shadow-lg" style={{
-                  width: "24px",
-                  height: "24px"
-                }} />
+                <div
+                  className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                  }}
+                />
+                <div
+                  className="relative rounded-full bg-red-600 shadow-lg"
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                  }}
+                />
               </div>
             </div>
           )}
@@ -119,7 +128,7 @@ export default function RecordingThumbnail( {
             className={clsx(
               "w-full h-full object-cover transition-all duration-300",
               {
-                grayscale: !isCompleted
+                grayscale: !isCompleted,
               }
             )}
           />

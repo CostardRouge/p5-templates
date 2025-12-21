@@ -92,15 +92,15 @@ export const formConfiguration: Record<string, any> = {
         options: [
           {
             value: 24,
-            label: "24 fps"
+            label: "24 fps",
           },
           {
             value: 30,
-            label: "30 fps"
+            label: "30 fps",
           },
           {
             value: 60,
-            label: "60 fps"
+            label: "60 fps",
           },
         ],
       },

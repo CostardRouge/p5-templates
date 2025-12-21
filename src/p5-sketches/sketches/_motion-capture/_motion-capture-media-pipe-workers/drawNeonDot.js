@@ -33,12 +33,12 @@ export function createNeonDots( count ) {
           height - maxSize * 2
         )
       ),
-      index: i / count
+      index: i / count,
     } );
   }
 }
 
-export function drawNeonDots( ) {
+export function drawNeonDots() {
   neonDots.forEach( (
     neonDotData, index
   ) => {
@@ -61,7 +61,7 @@ export default function drawNeonDot( {
   shadowsCount = 3,
   graphics = window,
   position,
-  index
+  index,
 } = {
 } ) {
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
@@ -72,7 +72,7 @@ export default function drawNeonDot( {
       0,
       shadowsCount,
       sizeRange[ 0 ],
-      sizeRange[ 1 ],
+      sizeRange[ 1 ]
       // easing.easeInExpo
     );
 
@@ -84,7 +84,7 @@ export default function drawNeonDot( {
         2,
         0.75
       ),
-      hueOffset: ( animation.circularProgression + shadowProgression ),
+      hueOffset: animation.circularProgression + shadowProgression,
       hueIndex: map(
         index,
         0,

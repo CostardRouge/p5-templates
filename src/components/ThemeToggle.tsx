@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 
 type Props = {
-  className?: string
-  iconClassName?: string
-}
+  className?: string;
+  iconClassName?: string;
+};
 
 function ThemeToggle( {
   className = "", iconClassName = "h-5"
@@ -70,17 +70,17 @@ function ThemeToggle( {
     {
       value: "light",
       label: "Light",
-      icon: Sun
+      icon: Sun,
     },
     {
       value: "dark",
       label: "Dark",
-      icon: Moon
+      icon: Moon,
     },
     {
       value: "system",
       label: "System",
-      icon: Monitor
+      icon: Monitor,
     },
   ];
 
@@ -90,7 +90,7 @@ function ThemeToggle( {
         aria-label="Toggle theme"
         title="Toggle theme"
         onClick={() => setIsOpen( !isOpen )}
-        className={ className }
+        className={className}
       >
         {!mounted ? (
           <span aria-hidden className="inline-block h-5 w-5" />
@@ -118,9 +118,7 @@ function ThemeToggle( {
                 <Icon className="w-4 h-4" />
                 {label}
               </span>
-              {theme === value && (
-                <Check className="w-4 h-4" />
-              )}
+              {theme === value && <Check className="w-4 h-4" />}
             </button>
           ) )}
         </div>

@@ -23,12 +23,12 @@ export function createChewingGums( count ) {
           height - size * 2
         )
       ),
-      index: i / count
+      index: i / count,
     } );
   }
 }
 
-export function drawChewingGums( ) {
+export function drawChewingGums() {
   chewingGums.forEach( (
     chewingGumData, index
   ) => {
@@ -45,7 +45,7 @@ export default function drawChewingGum( {
   graphics = window,
   position,
   size = 10,
-  index
+  index,
 } = {
 } ) {
   graphics.push();
@@ -83,13 +83,14 @@ export default function drawChewingGum( {
         3
       ),
       // hueOffset: easing.easeOutSine( index ),
-      hueIndex: map(
-        Math.sin( lerpIndex + angle - animation.circularProgression ),
-        -1,
-        1,
-        -PI,
-        PI
-      ) * 2,
+      hueIndex:
+          map(
+            Math.sin( lerpIndex + angle - animation.circularProgression ),
+            -1,
+            1,
+            -PI,
+            PI
+          ) * 2,
     } ) );
 
     const xOff = map(

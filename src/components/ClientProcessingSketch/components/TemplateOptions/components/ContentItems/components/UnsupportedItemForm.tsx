@@ -14,11 +14,12 @@ type ItemFormProps = {
 };
 
 export default function UnsupportedItemForm( {
-  onRemove, index, baseFieldName
+  onRemove,
+  index,
+  baseFieldName,
 }: ItemFormProps ) {
   const {
-    register,
-    getValues,
+    register, getValues
   } = useFormContext();
 
   const fieldName = `${ baseFieldName }.${ index }`;
@@ -40,7 +41,7 @@ export default function UnsupportedItemForm( {
           aria-label="Remove layer"
           className="text-red-500"
         >
-          <X size={16}/>
+          <X size={16} />
         </button>
       </div>
     </div>

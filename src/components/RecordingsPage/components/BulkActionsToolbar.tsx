@@ -20,21 +20,23 @@ export default function BulkActionsToolbar( {
   onClearSelection,
   onBulkDelete,
   onBulkCancel,
-  onBulkRetry
+  onBulkRetry,
 }: BulkActionsToolbarProps ) {
   if ( selectedJobs.length === 0 ) return null;
 
-  const canDelete = selectedJobs.some( j => [
-    "completed",
-    "cancelled",
-    "draft",
-    "failed"
-  ].includes( j.status ) );
-  const canCancel = selectedJobs.some( j => j.status === "queued" );
-  const canRetry = selectedJobs.some( j => [
-    "cancelled",
-    "failed"
-  ].includes( j.status ) );
+  const canDelete = selectedJobs.some( ( j ) =>
+    [
+      "completed",
+      "cancelled",
+      "draft",
+      "failed"
+    ].includes( j.status ) );
+  const canCancel = selectedJobs.some( ( j ) => j.status === "queued" );
+  const canRetry = selectedJobs.some( ( j ) =>
+    [
+      "cancelled",
+      "failed"
+    ].includes( j.status ) );
 
   return (
     <div className="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-300 max-w-[calc(100vw-1rem)] sm:max-w-none">

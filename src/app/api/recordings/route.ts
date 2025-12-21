@@ -17,7 +17,7 @@ export async function GET( req: NextRequest ) {
     const statusParam = req.nextUrl.searchParams.get( "status" );
     const statusFilter = statusParam
       ?.split( "," )
-      .map( s => s.trim() )
+      .map( ( s ) => s.trim() )
       .filter( isValidStatus );
 
     const jobs = await getAllJobs( statusFilter );
@@ -31,9 +31,8 @@ export async function GET( req: NextRequest ) {
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }
 }
-

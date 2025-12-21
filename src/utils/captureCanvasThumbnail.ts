@@ -45,7 +45,7 @@ export async function captureCanvasThumbnail(
   await page.waitForSelector(
     "canvas#defaultCanvas0.loaded",
     {
-      timeout: 30000
+      timeout: 30000,
     }
   );
 
@@ -70,7 +70,7 @@ export async function captureCanvasThumbnail(
     },
     {
       format,
-      quality
+      quality,
     }
   );
 
@@ -90,7 +90,7 @@ export async function captureCanvasThumbnail(
   await fs.mkdir(
     directory,
     {
-      recursive: true
+      recursive: true,
     }
   );
 
@@ -111,13 +111,13 @@ export async function captureCanvasThumbnail(
   if ( format === "jpeg" ) {
     await sharpInstance
       .jpeg( {
-        quality
+        quality,
       } )
       .toFile( thumbnailPath );
   } else {
     await sharpInstance
       .png( {
-        quality
+        quality,
       } )
       .toFile( thumbnailPath );
   }

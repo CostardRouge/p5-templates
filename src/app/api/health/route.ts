@@ -1,5 +1,5 @@
-export async function GET( ) {
+export async function GET() {
   return Response.json( {
-    status: 200
+    status: 200,
   } );
 }

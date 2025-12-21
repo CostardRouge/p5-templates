@@ -16,7 +16,7 @@ export const formValues = {
 
   // Sketch titles
   title: {
-    ...titleDefaultValues
+    ...titleDefaultValues,
   },
 
   // Image display
@@ -30,7 +30,7 @@ export const formConfiguration: Record<string, any> = {
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
   // Image display
   image: {
@@ -39,7 +39,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       images: {
         component: "images-stack",
-        label: "Images"
+        label: "Images",
       },
       margin: {
         component: "slider",
@@ -50,7 +50,7 @@ export const formConfiguration: Record<string, any> = {
       },
       center: {
         component: "checkbox",
-        label: "Center"
+        label: "Center",
       },
       scale: {
         component: "slider",
@@ -59,11 +59,11 @@ export const formConfiguration: Record<string, any> = {
         max: 3,
         step: 0.01,
       },
-    }
+    },
   },
 
   // Sketch title
   title: {
-    ...titleFormConfiguration
-  }
+    ...titleFormConfiguration,
+  },
 };

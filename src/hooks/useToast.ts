@@ -32,8 +32,8 @@ export function useToast() {
         {
           id,
           message,
-          type
-        }
+          type,
+        },
       ] );
     },
     [

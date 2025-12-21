@@ -1,6 +1,4 @@
-import type {
-  Config
-} from "tailwindcss";
+import type { Config } from "tailwindcss";
 
 export default {
   content: [
@@ -8,10 +6,7 @@ export default {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: [
-    "class",
-    "[data-theme=\"dark\"]"
-  ],
+  darkMode: ["class", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
@@ -29,19 +24,19 @@ export default {
       keyframes: {
         "cycle-align": {
           "0%": {
-            "text-align": "left"
+            "text-align": "left",
           },
           "25%": {
-            "text-align": "center"
+            "text-align": "center",
           },
           "50%": {
-            "text-align": "right"
+            "text-align": "right",
           },
           "75%": {
-            "text-align": "center"
+            "text-align": "center",
           },
           "100%": {
-            "text-align": "left"
+            "text-align": "left",
           },
         },
         "pulse-soft": {
@@ -78,6 +73,5 @@ export default {
       },
     },
   },
-  plugins: [
-  ],
+  plugins: [],
 } satisfies Config;

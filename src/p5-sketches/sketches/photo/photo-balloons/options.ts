@@ -10,7 +10,7 @@ export const formValues = {
       246,
       235,
       225
-    ]
+    ],
   },
 
   title: titleDefaultValues,
@@ -20,12 +20,12 @@ export const formValues = {
     phaseJitter: 1,
     travelMargin: 100,
     minWidthAmplitude: 200,
-    minHeightAmplitude: 6
+    minHeightAmplitude: 6,
   },
 
   balls: {
     minSize: 200,
-    maxSize: 400
+    maxSize: 400,
   },
 
   lines: {
@@ -37,19 +37,19 @@ export const formValues = {
     ] as [number, number, number],
     weight: 1,
     maxDistance: 1000,
-    alphaScale: 100
+    alphaScale: 100,
   },
 
   image: {
     fill: true,
-    center: true
-  }
+    center: true,
+  },
 };
 
 export const formConfiguration: Record<string, any> = {
   images: {
     component: "images-stack",
-    label: "Images"
+    label: "Images",
   },
 
   image: {
@@ -58,13 +58,13 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       fill: {
         component: "checkbox",
-        label: "Fill in buffer"
+        label: "Fill in buffer",
       },
       center: {
         component: "checkbox",
-        label: "Center"
-      }
-    }
+        label: "Center",
+      },
+    },
   },
 
   colors: {
@@ -73,9 +73,9 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       background: {
         component: "color",
-        label: "Background color"
-      }
-    }
+        label: "Background color",
+      },
+    },
   },
 
   motion: {
@@ -87,37 +87,37 @@ export const formConfiguration: Record<string, any> = {
         label: "Angle speed",
         min: 0,
         max: 3,
-        step: 0.01
+        step: 0.01,
       },
       phaseJitter: {
         component: "slider",
         label: "Phase jitter",
         min: 0,
         max: 3,
-        step: 0.01
+        step: 0.01,
       },
       travelMargin: {
         component: "slider",
         label: "Travel margin",
         min: 0,
         max: 300,
-        step: 1
+        step: 1,
       },
       minWidthAmplitude: {
         component: "slider",
         label: "Min width amplitude",
         min: 0,
         max: 1000,
-        step: 1
+        step: 1,
       },
       minHeightAmplitude: {
         component: "slider",
         label: "Min height amplitude",
         min: 0,
         max: 500,
-        step: 1
-      }
-    }
+        step: 1,
+      },
+    },
   },
 
   balls: {
@@ -129,16 +129,16 @@ export const formConfiguration: Record<string, any> = {
         label: "Min size",
         min: 10,
         max: 800,
-        step: 1
+        step: 1,
       },
       maxSize: {
         component: "slider",
         label: "Max size",
         min: 10,
         max: 1000,
-        step: 1
-      }
-    }
+        step: 1,
+      },
+    },
   },
 
   lines: {
@@ -147,34 +147,34 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       show: {
         component: "checkbox",
-        label: "Show lines"
+        label: "Show lines",
       },
       color: {
         component: "color",
-        label: "Color"
+        label: "Color",
       },
       weight: {
         component: "slider",
         label: "Weight",
         min: 0,
         max: 10,
-        step: 0.1
+        step: 0.1,
       },
       maxDistance: {
         component: "slider",
         label: "Fade max distance",
         min: 50,
         max: 2000,
-        step: 1
+        step: 1,
       },
       alphaScale: {
         component: "slider",
         label: "Alpha scale",
         min: 0,
         max: 255,
-        step: 1
-      }
-    }
+        step: 1,
+      },
+    },
   },
 
   title: titleFormConfiguration,

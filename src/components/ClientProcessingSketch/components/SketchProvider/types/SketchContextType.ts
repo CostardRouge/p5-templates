@@ -10,11 +10,11 @@ import {
 
 export type SketchContextType = {
   name: string;
-  capturing: boolean,
+  capturing: boolean;
   options: SketchOption;
   persistedJob?: JobModel;
-  backendRecording: boolean
-  activeSlideIndex?: number,
-  sketchFormValues?: Record<string, any>
-  sketchFormConfiguration?: Record<string, FieldConfig>
-}
+  backendRecording: boolean;
+  activeSlideIndex?: number;
+  sketchFormValues?: Record<string, any>;
+  sketchFormConfiguration?: Record<string, FieldConfig>;
+};

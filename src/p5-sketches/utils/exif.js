@@ -12,9 +12,11 @@ export const friendlyLensModelNames = {
   "Sony FE 24mm F2.8 G (SEL24F28G)": "Sony FE 24mm F2.8 G",
   "Sony FE 50mm F1.4 GM (SEL50F14GM)": "Sony FE 50mm F1.4 GM",
   "Sony FE 24-105mm F4 G OSS (SEL24105G)": "Sony FE 24-105mm F4 G OSS",
-  "Sony FE 70-200mm F2.8 GM OSS II (SEL70200GM2)": "Sony FE 70-200mm F2.8 GM II",
+  "Sony FE 70-200mm F2.8 GM OSS II (SEL70200GM2)":
+    "Sony FE 70-200mm F2.8 GM II",
 
-  "iPhone 15 Pro Max back triple camera 6.765mm f/1.78": "iPhone 15 Pro Max 24mm equiv.",
+  "iPhone 15 Pro Max back triple camera 6.765mm f/1.78":
+    "iPhone 15 Pro Max 24mm equiv.",
 };
 
 const exif = {
@@ -32,10 +34,7 @@ const exif = {
 
     const result = ExifReader.load( file );
 
-    const tags =
-      typeof result?.then === "function"
-        ? await result
-        : result;
+    const tags = typeof result?.then === "function" ? await result : result;
 
     return {
       iso: Number( tags?.ISOSpeedRatings?.description ),
@@ -171,7 +170,12 @@ const exif = {
   formatGPSCoordinates: (
     latitude, longitude, precision = 2
   ) => {
-    if ( -1 === latitude || -1 === longitude || isNaN( latitude ) || isNaN( longitude ) ) {
+    if (
+      -1 === latitude ||
+      -1 === longitude ||
+      isNaN( latitude ) ||
+      isNaN( longitude )
+    ) {
       return;
     }
 
@@ -179,7 +183,7 @@ const exif = {
     const lonDir = longitude >= 0 ? "E" : "W";
 
     return `${ Math.abs( latitude ).toFixed( precision ) }° ${ latDir }, ${ Math.abs( longitude ).toFixed( precision ) }° ${ lonDir }`;
-  }
+  },
 };
 
 export default exif;

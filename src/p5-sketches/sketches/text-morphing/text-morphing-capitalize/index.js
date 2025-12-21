@@ -8,7 +8,7 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
 const sketchState = {
-  threeDimensionGraphics: null
+  threeDimensionGraphics: null,
 };
 
 sketch.setup(
@@ -121,7 +121,8 @@ sketch.draw( (
   const W = width / 2;
   const H = height / 2;
 
-  const easingFunction = easing?.[ options.sketch.morphing.easing ] ?? easing.easeInOutExpo;
+  const easingFunction =
+    easing?.[ options.sketch.morphing.easing ] ?? easing.easeInOutExpo;
 
   const xProgression = mappers.fn(
     Math.sin( animation.angle ),
@@ -171,7 +172,7 @@ sketch.draw( (
       xProgression,
       sketchState.threeDimensionGraphics.createVector(
         -W + margin,
-        H - margin,
+        H - margin
       ),
       sketchState.threeDimensionGraphics.createVector(
         W - margin,
@@ -203,7 +204,7 @@ sketch.draw( (
     // );
   }
 
-  const size = ( options.sketch.text.size * width ) ?? width / 2;
+  const size = options.sketch.text.size * width ?? width / 2;
   const font = string.fonts?.[ options.sketch?.text.font ] ?? string.fonts.serif;
 
   const sampleFactor = options.sketch.text.sampleFactor ?? 0.05;
@@ -220,7 +221,7 @@ sketch.draw( (
     size,
     font,
     sampleFactor,
-    simplifyThreshold
+    simplifyThreshold,
   } );
 
   const fromUpperCased = string.getTextPoints( {
@@ -229,16 +230,16 @@ sketch.draw( (
     size,
     font,
     sampleFactor,
-    simplifyThreshold
+    simplifyThreshold,
   } );
 
   const fromAnimatedPoints = animation.ease( {
     values: [
       fromLowerCased,
-      fromUpperCased,
+      fromUpperCased
     ],
     currentTime: yProgression,
-    lerpFn: mappers.lerpPoints
+    lerpFn: mappers.lerpPoints,
   } );
 
   // TO
@@ -248,7 +249,7 @@ sketch.draw( (
     size,
     font,
     sampleFactor,
-    simplifyThreshold
+    simplifyThreshold,
   } );
 
   const toUpperCased = string.getTextPoints( {
@@ -257,26 +258,26 @@ sketch.draw( (
     size,
     font,
     sampleFactor,
-    simplifyThreshold
+    simplifyThreshold,
   } );
 
   const toAnimatedPoints = animation.ease( {
     values: [
       toLowerCased,
-      toUpperCased,
+      toUpperCased
     ],
     currentTime: yProgression,
-    lerpFn: mappers.lerpPoints
+    lerpFn: mappers.lerpPoints,
   } );
 
   // FINAL
   const points = animation.ease( {
     values: [
       fromAnimatedPoints,
-      toAnimatedPoints,
+      toAnimatedPoints
     ],
     currentTime: xProgression,
-    lerpFn: mappers.lerpPoints
+    lerpFn: mappers.lerpPoints,
   } );
 
   sketchState.threeDimensionGraphics.push();
@@ -305,7 +306,8 @@ sketch.draw( (
       depth,
       options.sketch.morphing.point.strokeWeightMax ?? 20,
       options.sketch.morphing.point.strokeWeightMin ?? 3,
-      easing?.[ options.sketch.morphing.point.strokeWeightEasing ] ?? easing.easeOutExpo
+      easing?.[ options.sketch.morphing.point.strokeWeightEasing ] ??
+          easing.easeOutExpo
     ) );
 
     for ( let i = 0; i < points.length; i++ ) {
@@ -315,71 +317,66 @@ sketch.draw( (
         x, y
       } = points[ i ];
       const colorFunction = colors.rainbow;
-      const opacityFactor = mappers.fn(
-        sin(
-          depthProgression * 20 + progression * 50 + time * 2,
-          easing.easeInOutExpo
-        ),
-        -1,
-        1,
-        5,
-        1
-      ) * Math.pow(
-        1.05,
-        z
-      );
+      const opacityFactor =
+        mappers.fn(
+          sin(
+            depthProgression * 20 + progression * 50 + time * 2,
+            easing.easeInOutExpo
+          ),
+          -1,
+          1,
+          5,
+          1
+        ) * Math.pow(
+          1.05,
+          z
+        );
 
       if ( opacityFactor > 8 ) {
         // continue;
       }
 
       sketchState.threeDimensionGraphics.stroke( colorFunction( {
-        hueOffset: (
-          // +depthProgression*10
-          // +mappers.fn(depthProgression, 0, 1, 0, PI/2, easing.easeInOutExpo)
-          // +time
-          +0
-        ),
+        hueOffset:
+            // +depthProgression*10
+            // +mappers.fn(depthProgression, 0, 1, 0, PI/2, easing.easeInOutExpo)
+            // +time
+            +0,
         // hueIndex: mappers.circularPolar(progression, 0, 1, -PI, PI)*2,
-        hueIndex: mappers.fn(
-          noise(
-            x / width,
-            y / height,
-            progression / 2 + depthProgression / 2 + time / 16
-          ),
-          0,
-          1,
-          -PI,
-          PI
-        ) * 10,
+        hueIndex:
+            mappers.fn(
+              noise(
+                x / width,
+                y / height,
+                progression / 2 + depthProgression / 2 + time / 16
+              ),
+              0,
+              1,
+              -PI,
+              PI
+            ) * 10,
         // hueIndex:mappers.fn(noise(x/width, y/height, progression/2+depthProgression/2), 0, 1, -PI, PI)*10,
         opacityFactor,
         // opacityFactor: map(depthProgression, 0, 1, 3, 1) * Math.pow(1.05, z)
       } ) );
 
-      const xx = (
-        x * mappers.fn(
-          z,
-          0,
-          depth,
-          1,
-          -1,
-          easing.s
-        )
-        + x
-      );
+      const xx = x * mappers.fn(
+        z,
+        0,
+        depth,
+        1,
+        -1,
+        easing.s
+      ) + x;
 
-      const yy = (
-        y * mappers.fn(
-          z,
-          0,
-          depth,
-          1,
-          -1,
-          easing.s
-        )
-        + y
-      );
+      const yy = y * mappers.fn(
+        z,
+        0,
+        depth,
+        1,
+        -1,
+        easing.s
+      ) + y;
 
       sketchState.threeDimensionGraphics.point(
         xx,

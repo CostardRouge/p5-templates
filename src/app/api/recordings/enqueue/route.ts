@@ -5,7 +5,8 @@ import {
   RecordingService
 } from "@/services/RecordingService";
 import {
-  EnqueueRecordingResponse, JobStatusEnum
+  EnqueueRecordingResponse,
+  JobStatusEnum,
 } from "@/types/recording.types";
 
 export async function POST( request: NextRequest ): Promise<NextResponse<EnqueueRecordingResponse>> {
@@ -15,16 +16,19 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
     const template = formData.get( "template" );
     const status = formData.get( "status" ) ?? "queued";
     const thumbnailsRaw = formData.get( "thumbnails" );
-    const thumbnails = thumbnailsRaw && typeof thumbnailsRaw === "string" ? JSON.parse( thumbnailsRaw ) : undefined;
+    const thumbnails =
+      thumbnailsRaw && typeof thumbnailsRaw === "string"
+        ? JSON.parse( thumbnailsRaw )
+        : undefined;
 
     if ( !template || typeof template !== "string" ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Template is required"
+          error: "Template is required",
         },
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -35,10 +39,10 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       return NextResponse.json(
         {
           success: false,
-          error: "Options is required"
+          error: "Options is required",
         },
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -76,8 +80,7 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       if ( !match ) continue;
 
       const [
-        ,
-        scope,
+        , scope,
         slideIndexRaw,
         type
       ] = match;
@@ -118,12 +121,12 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
         2
       ),
       jobId: typeof jobIdRaw === "string" ? jobIdRaw : undefined,
-      thumbnails
+      thumbnails,
     } );
 
     return NextResponse.json( {
       success: true,
-      jobId
+      jobId,
     } );
   } catch ( error ) {
     console.error(
@@ -133,10 +136,10 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error"
+        error: error instanceof Error ? error.message : "Internal server error",
       },
       {
-        status: 500
+        status: 500,
       }
     );
   }

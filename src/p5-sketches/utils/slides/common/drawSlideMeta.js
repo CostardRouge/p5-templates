@@ -10,8 +10,8 @@ export default function drawSlideMeta( metaOption ) {
     );
   }
 
-  const horizontalMargin = metaOption.horizontalMargin || .05;
-  const verticalMargin = metaOption.verticalMargin || .05;
+  const horizontalMargin = metaOption.horizontalMargin || 0.05;
+  const verticalMargin = metaOption.verticalMargin || 0.05;
 
   const textStyle = {
     size: 24,
@@ -20,7 +20,7 @@ export default function drawSlideMeta( metaOption ) {
     font: string.fonts.martian,
     textAlign: [
       LEFT,
-      LEFT,
+      LEFT
     ],
   };
 
@@ -42,8 +42,8 @@ export default function drawSlideMeta( metaOption ) {
     {
       ...textStyle,
       textAlign: [
-        RIGHT,
-      ]
+        RIGHT
+      ],
     }
   );
 
@@ -63,8 +63,8 @@ export default function drawSlideMeta( metaOption ) {
     {
       ...textStyle,
       textAlign: [
-        RIGHT,
-      ]
+        RIGHT
+      ],
     }
   );
 
@@ -75,12 +75,12 @@ export default function drawSlideMeta( metaOption ) {
 
     const slideProgressionLineStartPosition = createVector(
       width * horizontalMargin,
-      height - ( height * horizontalMargin ) + 14
+      height - height * horizontalMargin + 14
     );
 
     const slideProgressionLineEndPosition = createVector(
-      width - ( width * horizontalMargin ),
-      height - ( height * horizontalMargin ) + 14
+      width - width * horizontalMargin,
+      height - height * horizontalMargin + 14
     );
 
     const slideProgressionLineCurrentPosition = p5.Vector.lerp(

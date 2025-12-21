@@ -6,19 +6,21 @@ import {
 } from "@/types/recording.types";
 import {
   captureThumbnailFromCanvas,
-  waitForSlideRendered
+  waitForSlideRendered,
 } from "../utils/thumbnailUtils";
 
 type UseThumbnailsProps = {
   enabled: boolean;
   persistedJob?: JobModel;
   slideFields: Array<{
- id: string
-}>;
+    id: string;
+  }>;
 };
 
 export function useThumbnails( {
-  enabled, persistedJob, slideFields
+  enabled,
+  persistedJob,
+  slideFields,
 }: UseThumbnailsProps ) {
   const [
     thumbnails,
@@ -77,7 +79,10 @@ export function useThumbnails( {
             } );
         } else {
         // For draft recordings, thumbnails are stored as Record<slideId, dataUrl>
-          if ( typeof persistedJob.thumbnails === "object" && !Array.isArray( persistedJob.thumbnails ) ) {
+          if (
+            typeof persistedJob.thumbnails === "object" &&
+          !Array.isArray( persistedJob.thumbnails )
+          ) {
             setThumbnails( persistedJob.thumbnails as Record<string, string> );
           } else if ( typeof persistedJob.thumbnails === "string" ) {
             try {
@@ -132,14 +137,18 @@ export function useThumbnails( {
       persistedJob?.status,
       persistedJob?.id,
       slideFields.length,
-      slideFields
+      slideFields,
     ]
   );
 
   // Capture initial thumbnails for slides that don't have them
   useEffect(
     () => {
-      if ( !enabled || slideFields.length === 0 || initialCaptureAttempted.current ) {
+      if (
+        !enabled ||
+      slideFields.length === 0 ||
+      initialCaptureAttempted.current
+      ) {
         return;
       }
 
@@ -166,7 +175,7 @@ export function useThumbnails( {
             if ( dataUrl ) {
               setThumbnails( ( prev ) => ( {
                 ...prev,
-                [ firstSlideId ]: dataUrl
+                [ firstSlideId ]: dataUrl,
               } ) );
             }
           } catch ( e ) {
@@ -214,7 +223,7 @@ export function useThumbnails( {
       if ( dataUrl ) {
         setThumbnails( ( prev ) => ( {
           ...prev,
-          [ slideId ]: dataUrl
+          [ slideId ]: dataUrl,
         } ) );
       }
     },

@@ -11,6 +11,11 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "biome": "biome check .",
+    "biome:fix": "biome check --write .",
+    "biome:format": "biome format --write .",
+    "format": "biome format --write . && npm run lint:fix",
+    "check": "biome check . && npm run lint",
     "postinstall": "npx prisma generate",
     "setup:notifications": "node scripts/generate-vapid-keys.mjs"
   },
@@ -54,6 +59,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.10",
     "@eslint/eslintrc": "^3",
     "@stylistic/eslint-plugin-js": "^4.2.0",
     "@stylistic/eslint-plugin-ts": "^4.2.0",

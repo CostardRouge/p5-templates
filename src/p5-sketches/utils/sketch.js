@@ -14,8 +14,7 @@ const sketch = {
     .join( "-" ),
   engine: undefined,
   setup: (
-    setupEngineFunction,
-    sketchOptions
+    setupEngineFunction, sketchOptions
   ) => {
     sketchOptions = Object.assign(
       {
@@ -27,7 +26,7 @@ const sketch = {
         animation: {
           framerate: options.animation.framerate ?? 60,
           duration: options.animation.duration ?? 12,
-        }
+        },
       },
       sketchOptions
     );

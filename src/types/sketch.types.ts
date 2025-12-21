@@ -6,35 +6,30 @@ import {
 const RGB = z.tuple( [
   z.number(),
   z.number(),
-  z.number(),
+  z.number()
 ] );
 
 const RGBA = z.union( [
   RGB,
   z.tuple( [
     ...RGB.items,
-    z.number()
-      .optional()
+    z.number().optional()
       .default( 255 )
-  ] )
+  ] ),
 ] );
 
 const Vec2 = z
   .object( {
-    x: z
-      .number()
-      .min( 0 )
+    x: z.number().min( 0 )
       .max( 1 )
       .default( 0.5 ),
-    y: z
-      .number()
-      .min( 0 )
+    y: z.number().min( 0 )
       .max( 1 )
-      .default( 0.5 )
+      .default( 0.5 ),
   } )
   .default( {
     x: 0.5,
-    y: 0.5
+    y: 0.5,
   } );
 
 export const HorizontalAlign = z.enum( [
@@ -64,74 +59,62 @@ export const Blend = z.enum( [
   "soft-light",
   "color-dodge",
   "color-burn",
-  "lighter"
+  "lighter",
 ] );
 
 /* ---------------- content discriminated union ------------------- */
 const GridPatternSchema = z.object( {
   type: z.literal( "grid" ),
-  columns: z
-    .number()
-    .min( 0 )
+  columns: z.number().min( 0 )
     .max( 100 )
     .default( 9 ),
-  strokeWeight: z
-    .number()
-    .min( 0 )
+  strokeWeight: z.number().min( 0 )
     .max( 100 )
     .default( 1 ),
-  stroke: RGBA
-    .default( [
-      226,
-      215,
-      205
-    ] ),
-  borders: z
-    .boolean()
-    .default( false ),
+  stroke: RGBA.default( [
+    226,
+    215,
+    205
+  ] ),
+  borders: z.boolean().default( false ),
 } );
 
 const DotsPatternSchema = z.object( {
   type: z.literal( "dots" ),
-  columns: z
-    .number()
-    .min( 0 )
+  columns: z.number().min( 0 )
     .max( 100 )
     .default( 50 ),
-  strokeWeight: z
-    .number()
-    .min( 0 )
+  strokeWeight: z.number().min( 0 )
     .max( 100 )
     .default( 4 ),
-  stroke: RGBA
-    .default( [
-      226,
-      215,
-      205
-    ] ),
-  borders: z
-    .boolean()
-    .default( false ),
-} );
-
-// Create a discriminated union for the pattern
-export const PatternSchema = z.discriminatedUnion(
-  "type",
-  [
-    GridPatternSchema,
-    DotsPatternSchema,
-  ]
-).default( {
-  type: "grid",
-  columns: 8,
-  strokeWeight: 1,
-  stroke: [
+  stroke: RGBA.default( [
     226,
     215,
     205
-  ],
-  borders: false
+  ] ),
+  borders: z.boolean().default( false ),
 } );
+
+// Create a discriminated union for the pattern
+export const PatternSchema = z
+  .discriminatedUnion(
+    "type",
+    [
+      GridPatternSchema,
+      DotsPatternSchema
+    ]
+  )
+  .default( {
+    type: "grid",
+    columns: 8,
+    strokeWeight: 1,
+    stroke: [
+      226,
+      215,
+      205
+    ],
+    borders: false,
+  } );
 
 export const BackgroundItemSchema = z.object( {
   type: z.literal( "background" ),
@@ -140,7 +123,7 @@ export const BackgroundItemSchema = z.object( {
     235,
     225
   ] ),
-  pattern: PatternSchema.optional()
+  pattern: PatternSchema.optional(),
 } );
 
 export const MetaItemSchema = z.object( {
@@ -159,30 +142,30 @@ export const MetaItemSchema = z.object( {
     0,
     0
   ] ),
-  slideProgression: z.object( {
-    hidden: z.boolean().default( false ),
-    stroke: RGBA.default( [
-      0,
-      0,
-      0
-    ] )
-  } )
+  slideProgression: z
+    .object( {
+      hidden: z.boolean().default( false ),
+      stroke: RGBA.default( [
+        0,
+        0,
+        0
+      ] ),
+    } )
     .default( {
       hidden: false,
       stroke: [
         0,
         0,
         0
-      ]
-    } )
+      ],
+    } ),
 } );
 
 export const TextItemSchema = z.object( {
   type: z.literal( "text" ),
   content: z.string().default( "" ),
 
-  size: z.number()
-    .positive()
+  size: z.number().positive()
     .default( 24 ),
   stroke: RGBA.default( [
     255,
@@ -198,76 +181,71 @@ export const TextItemSchema = z.object( {
   blend: Blend.default( "source-over" ),
   position: Vec2.default( {
     x: 0,
-    y: 0.5
+    y: 0.5,
   } ),
-  alignment: z.object( {
-    horizontal: HorizontalAlign,
-    vertical: VerticalAlign,
-  } ).default( {
-    vertical: "baseline",
-    horizontal: "center",
-  } ),
-  margin: z.object( {
-    horizontal: z.number()
-      .min( 0 )
-      .max( 1 )
-      .default( 0.015 ),
-    vertical: z.number()
-      .min( 0 )
-      .max( 1 )
-      .default( 0.015 )
-  } ).default( {
-    vertical: 0.01,
-    horizontal: 0.01,
-  } )
+  alignment: z
+    .object( {
+      horizontal: HorizontalAlign,
+      vertical: VerticalAlign,
+    } )
+    .default( {
+      vertical: "baseline",
+      horizontal: "center",
+    } ),
+  margin: z
+    .object( {
+      horizontal: z.number().min( 0 )
+        .max( 1 )
+        .default( 0.015 ),
+      vertical: z.number().min( 0 )
+        .max( 1 )
+        .default( 0.015 ),
+    } )
+    .default( {
+      vertical: 0.01,
+      horizontal: 0.01,
+    } ),
 } );
 
 export const ImageItemAnimations = z.discriminatedUnion(
   "name",
   [
-    z
-      .object( {
-        name: z.literal( "noise-floating" ),
-        amplitude: z.number().default( 50 ),
-        noiseDetail: z
-          .array(
-            z
-              .number()
-              .min( 0 )
-              .max( 8 ),
-            z.number()
-              .min( 0 )
-              .max( 1 )
-          )
-          .default( [
-            2,
-            0.7
-          ] )
-      } )
+    z.object( {
+      name: z.literal( "noise-floating" ),
+      amplitude: z.number().default( 50 ),
+      noiseDetail: z
+        .array(
+          z.number().min( 0 )
+            .max( 8 ),
+          z.number().min( 0 )
+            .max( 1 )
+        )
+        .default( [
+          2,
+          0.7
+        ] ),
+    } ),
   ]
 );
 
 export const ImagesStackAnimations = z.discriminatedUnion(
   "name",
   [
-    z
-      .object( {
-        name: z.literal( "random" ),
-        shift: z.number().default( 30 ),
-      } )
+    z.object( {
+      name: z.literal( "random" ),
+      shift: z.number().default( 30 ),
+    } ),
   ]
 );
 
 export const ImageItemSchema = z.object( {
   type: z.literal( "image" ),
   source: z.string().default( "" ),
-  margin: z.number()
-    .min( 0 )
+  margin: z.number().min( 0 )
     .max( 1000 )
     .default( 0 ),
   center: z.boolean().default( true ),
-  scale: z.number()
-    .min( 0 )
+  scale: z.number().min( 0 )
     .max( 6 )
     .default( 1 ),
   position: Vec2,
@@ -277,7 +255,11 @@ export const ImageItemSchema = z.object( {
         return undefined;
       }
 
-      if ( typeof v === "object" && "name" in ( v as any ) && ( v as any ).name === "" ) {
+      if (
+        typeof v === "object" &&
+      "name" in ( v as any ) &&
+      ( v as any ).name === ""
+      ) {
         return undefined;
       }
 
@@ -287,70 +269,59 @@ export const ImageItemSchema = z.object( {
   ),
 } );
 
-const NonEmptyPath = z
-  .string()
-  .trim()
+const NonEmptyPath = z.string().trim()
   .min( 1 );
 
 export const ImagesStackItemSchema = z.object( {
   type: z.literal( "images-stack" ),
   sources: z.preprocess(
-    ( v ) => Array.isArray( v )
-      ? v.filter( ( s ) => typeof s === "string" && s.trim().length > 0 )
-      : [
-      ],
+    ( v ) =>
+      Array.isArray( v )
+        ? v.filter( ( s ) => typeof s === "string" && s.trim().length > 0 )
+        : [
+        ],
     z.array( NonEmptyPath ).default( [
     ] )
   ),
-  margin: z
-    .number()
-    .nonnegative()
+  margin: z.number().nonnegative()
     .default( 0 ),
-  scale: z.number()
-    .min( 0 )
+  scale: z.number().min( 0 )
     .max( 6 )
     .default( 1 ),
-  rotation: z
-    .number()
-    .default( 0 ),
-  progressiveRotation: z
-    .number()
-    .default( 0 ),
+  rotation: z.number().default( 0 ),
+  progressiveRotation: z.number().default( 0 ),
   center: z.boolean().default( false ),
   position: Vec2,
   animation: ImagesStackAnimations.optional(),
 } );
 
 // Visual items
-export const neonGraffitiSchema = z
-  .object( {
-    name: z.literal( "neon-graffiti" ),
-  } );
+export const neonGraffitiSchema = z.object( {
+  name: z.literal( "neon-graffiti" ),
+} );
 
-export const neonLineSchema = z
-  .object( {
-    name: z.literal( "neon-line" ),
-  } );
+export const neonLineSchema = z.object( {
+  name: z.literal( "neon-line" ),
+} );
 
-export const neonDotSchema = z
-  .object( {
-    name: z.literal( "neon-dot" ),
-  } );
+export const neonDotSchema = z.object( {
+  name: z.literal( "neon-dot" ),
+} );
 
-export const churrosSnakeSchema = z
-  .object( {
-    name: z.literal( "churros-snake" ),
-  } );
+export const churrosSnakeSchema = z.object( {
+  name: z.literal( "churros-snake" ),
+} );
 
-export const VisualOptions = z.discriminatedUnion(
-  "name",
-  [
-    neonGraffitiSchema,
-    neonLineSchema,
-    neonDotSchema,
-    churrosSnakeSchema
-  ]
-)
+export const VisualOptions = z
+  .discriminatedUnion(
+    "name",
+    [
+      neonGraffitiSchema,
+      neonLineSchema,
+      neonDotSchema,
+      churrosSnakeSchema,
+    ]
+  )
   .default( {
     name: "neon-graffiti",
   } );
@@ -361,14 +332,10 @@ export const VisualItemSchema = z.object( {
 
   position: Vec2.default( {
     x: 0,
-    y: 0
+    y: 0,
   } ),
-  scale: z
-    .number()
-    .default( 1 ),
-  rotation: z
-    .number()
-    .default( 0 ),
+  scale: z.number().default( 1 ),
+  rotation: z.number().default( 0 ),
 } );
 
 export const ContentItemSchema = z.discriminatedUnion(
@@ -385,14 +352,10 @@ export const ContentItemSchema = z.discriminatedUnion(
 
 export const Assets = z
   .object( {
-    images: z
-      .array( z.string() )
-      .default( [
-      ] ),
-    videos: z.
-      array( z.string() )
-      .default( [
-      ] ),
+    images: z.array( z.string() ).default( [
+    ] ),
+    videos: z.array( z.string() ).default( [
+    ] ),
   } )
   .default( {
   } );
@@ -403,70 +366,50 @@ export const SlideSchema = z.object( {
   content: z.array( ContentItemSchema ).default( [
   ] ),
   assets: Assets,
-  sketch: z.any().optional()
+  sketch: z.any().optional(),
 } );
 
 /* ---------------- root options.json ----------------------------- */
 const SketchSizeSchema = z.object( {
-  width: z
-    .number()
-    .min( 50 )
+  width: z.number().min( 50 )
     .max( 8192 )
     .default( 1080 ),
-  height: z
-    .number()
-    .min( 50 )
+  height: z.number().min( 50 )
     .max( 8192 )
     .default( 1350 ),
 } );
 
 const SketchAnimationSchema = z.object( {
-  framerate: z
-    .number()
-    .int()
+  framerate: z.number().int()
     .min( 1 )
     .max( 240 )
     .default( 60 ),
-  duration: z.coerce
-    .number()
-    .min( 1 )
+  duration: z.coerce.number().min( 1 )
     .max( 60 )
     .default( 12 ),
 } );
 
 export const OptionsSchema = z.object( {
-  id: z
-    .string()
-    .default( "" )
+  id: z.string().default( "" )
     .optional(),
-  name: z
-    .string()
-    .default( "" )
+  name: z.string().default( "" )
     .optional(),
-  consumeTestImages: z
-    .boolean()
-    .default( false )
+  consumeTestImages: z.boolean().default( false )
     .optional(),
-  size: SketchSizeSchema
-    .default( {
-      width: 1080,
-      height: 1350
-    } ),
-  animation: SketchAnimationSchema
-    .default( {
-      framerate: 60,
-      duration: 12
-    } ),
-  content: z
-    .array( ContentItemSchema )
-    .default( [
-    ] ),
+  size: SketchSizeSchema.default( {
+    width: 1080,
+    height: 1350,
+  } ),
+  animation: SketchAnimationSchema.default( {
+    framerate: 60,
+    duration: 12,
+  } ),
+  content: z.array( ContentItemSchema ).default( [
+  ] ),
   assets: Assets,
-  slides: z
-    .array( SlideSchema )
-    .default( [
-    ] ),
-  sketch: z.any()
+  slides: z.array( SlideSchema ).default( [
+  ] ),
+  sketch: z.any(),
 } );
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;

@@ -16,17 +16,16 @@ import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
 export async function GET(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      id: string,
-      slideIndex: string
-    }>
+      id: string;
+      slideIndex: string;
+    }>;
   }
 ) {
   const {
-    id: jobId,
-    slideIndex
+    id: jobId, slideIndex
   } = await params;
   const index = parseInt(
     slideIndex,
@@ -40,19 +39,21 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
 
-    const videoUrls = job.videoUrls ? ( job.videoUrls as unknown as string[] ) : [
-    ];
+    const videoUrls = job.videoUrls
+      ? ( job.videoUrls as unknown as string[] )
+      : [
+      ];
 
     if ( isNaN( index ) || index < 0 || index >= videoUrls.length ) {
       return new NextResponse(
         "Invalid slide index",
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -63,7 +64,7 @@ export async function GET(
       return new NextResponse(
         "Video URL not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -80,7 +81,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

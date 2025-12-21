@@ -4,7 +4,10 @@ export default function drawSlideVisual(
   visualItemOptions, _slideOptions
 ) {
   const {
-    visual, position, scale: scaleValue, rotation: rotationValue,
+    visual,
+    position,
+    scale: scaleValue,
+    rotation: rotationValue,
   } = visualItemOptions;
 
   if ( !visual ) {

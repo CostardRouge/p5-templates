@@ -33,7 +33,7 @@ const matter = {
   handBodies: [
   ],
   boundaries: [
-  ]
+  ],
 };
 
 events.register(
@@ -143,12 +143,12 @@ sketch.draw( (
       neonDot( {
         sizeRange: [
           circleRadius * 2,
-          circleRadius * 2 / 3
+          ( circleRadius * 2 ) / 3
         ],
         shadowsCount: 3,
         graphics: layers.visuals.graphics,
         position,
-        index: index / ( matter.balls.length )
+        index: index / matter.balls.length,
       } );
     } );
   }
@@ -239,9 +239,11 @@ const interactionIndices = [
 ];
 
 function createHandInteractionBodies( hand ) {
-  const interactionPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+  const interactionPoints = interactionIndices
+    .map( ( i ) => hand[ i ] )
+    .filter( Boolean );
 
-  interactionPoints.forEach( point => {
+  interactionPoints.forEach( ( point ) => {
     if ( point ) {
       const x = common.inverseX( point.x ) * width;
       const y = point.y * height;
@@ -278,7 +280,7 @@ function addBall(
 
   newBall.initialPosition = {
     x,
-    y
+    y,
   };
 
   matter.balls.unshift( newBall );
@@ -331,7 +333,7 @@ function applyRestoringForces(
       pos,
       {
         x: fx,
-        y: fy
+        y: fy,
       }
     );
   }
@@ -358,10 +360,10 @@ function applyRestoringForcesTo(
       pos,
       {
         x: fx,
-        y: fy
+        y: fy,
       },
       {
-        angle: 0
+        angle: 0,
       }
     );
   }
@@ -393,15 +395,15 @@ function addLetterBoxes(
       {
         restitution: 0.4,
         friction: 0.1,
-        // isStatic: true, // Static so it doesn't fall
-        // isSensor: false, // Can interact with other bodies
+      // isStatic: true, // Static so it doesn't fall
+      // isSensor: false, // Can interact with other bodies
       }
     );
 
     body.label = char;
     body.initialPosition = {
       x: startX,
-      y: startY
+      y: startY,
     };
 
     Composite.add(
@@ -447,4 +449,3 @@ function drawLetterBodies(
     graphics.pop();
   }
 }
-

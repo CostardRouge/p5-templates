@@ -34,23 +34,23 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1
+        step: 0.1,
       },
       sampleFactor: {
         label: "Text sample factor",
         component: "slider",
         min: 0.01,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       simplifyThreshold: {
         label: "Simplify threshold",
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.1
+        step: 0.1,
       },
-    }
+    },
   },
   color: {
     component: "nested-object",
@@ -61,40 +61,40 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 3,
-        step: 0.1
+        step: 0.1,
       },
       fillAlphaStart: {
         label: "Fill alpha (visible)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       fillAlphaEnd: {
         label: "Fill alpha (hidden)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       strokeAlpha: {
         label: "Stroke alpha",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       hueMultiplier: {
         label: "Hue range multiplier",
         component: "slider",
         min: 0.5,
         max: 5,
-        step: 0.1
+        step: 0.1,
       },
-    }
+    },
   },
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
 };

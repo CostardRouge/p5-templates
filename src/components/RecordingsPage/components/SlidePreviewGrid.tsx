@@ -19,7 +19,7 @@ interface SlidePreviewGridProps {
 export default function SlidePreviewGrid( {
   jobId,
   slideCount,
-  isVisible
+  isVisible,
 }: SlidePreviewGridProps ) {
   const [
     thumbnails,
@@ -111,7 +111,14 @@ export default function SlidePreviewGrid( {
     ]
   );
 
-  if ( !isVisible || slideCount <= 1 || loading || error || thumbnails.length === 0 ) return null;
+  if (
+    !isVisible ||
+    slideCount <= 1 ||
+    loading ||
+    error ||
+    thumbnails.length === 0
+  )
+    return null;
 
   return (
     <div className="absolute inset-0 z-10 overflow-hidden">
@@ -125,7 +132,7 @@ export default function SlidePreviewGrid( {
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
           style={{
             opacity: idx === currentIndex ? 1 : 0,
-            pointerEvents: idx === currentIndex ? "auto" : "none"
+            pointerEvents: idx === currentIndex ? "auto" : "none",
           }}
         />
       ) )}

@@ -55,14 +55,14 @@ export default function ActiveRecordingBanner( {
                     className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"
                     style={{
                       width: "12px",
-                      height: "12px"
+                      height: "12px",
                     }}
                   />
                   <div
                     className="relative rounded-full bg-red-600"
                     style={{
                       width: "12px",
-                      height: "12px"
+                      height: "12px",
                     }}
                   />
                 </div>

@@ -73,17 +73,21 @@ export default function drawPoses(
     leftArmIndices,
     rightArmIndices,
     faceIndices,
-    mouthIndices
+    mouthIndices,
   ];
 
   poseLandmarks.forEach( ( pose ) => {
     const bodyParts = [
     ];
 
-    for ( let bodyPartToTraceIndex = 0; bodyPartToTraceIndex < bodyPartsToTrace.length; bodyPartToTraceIndex++ ) {
+    for (
+      let bodyPartToTraceIndex = 0;
+      bodyPartToTraceIndex < bodyPartsToTrace.length;
+      bodyPartToTraceIndex++
+    ) {
       const bodyPartJoinIndices = bodyPartsToTrace[ bodyPartToTraceIndex ];
 
-      const bodyPartJointVectors = bodyPartJoinIndices.map( bodyPartJoinIndex => {
+      const bodyPartJointVectors = bodyPartJoinIndices.map( ( bodyPartJoinIndex ) => {
         const joint = pose[ bodyPartJoinIndex ];
 
         return createVector(
@@ -99,16 +103,16 @@ export default function drawPoses(
         );
       } );
 
-      const averageJointZ = bodyPartJointVectors.reduce(
-        (
-          sum, {
-            z
-          }
-        ) => (
-          sum + z
-        ),
-        0
-      ) / bodyPartJointVectors.length;
+      const averageJointZ =
+        bodyPartJointVectors.reduce(
+          (
+            sum, {
+              z
+            }
+          ) => sum + z,
+          0
+        ) /
+        bodyPartJointVectors.length;
 
       bodyParts.push( [
         averageJointZ,
@@ -116,12 +120,15 @@ export default function drawPoses(
       ] );
     }
 
-    bodyParts
-      .sort( (
-        b, a
-      ) => a[ 0 ] - b[ 0 ] );
+    bodyParts.sort( (
+      b, a
+    ) => a[ 0 ] - b[ 0 ] );
 
-    for ( let bodyPartIndex = 0; bodyPartIndex < bodyParts.length; bodyPartIndex++ ) {
+    for (
+      let bodyPartIndex = 0;
+      bodyPartIndex < bodyParts.length;
+      bodyPartIndex++
+    ) {
       const [
         z,
         vectors
@@ -139,7 +146,7 @@ export default function drawPoses(
         vectors,
         vectorsStep: 0.01,
         index: bodyPartIndex / ( bodyParts.length - 1 ),
-        graphics
+        graphics,
       } );
     }
   } );

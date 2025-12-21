@@ -74,7 +74,9 @@ export default function DraftActions( {
         ) : (
           <Trash2 className="h-4 w-4 flex-shrink-0" />
         )}
-        <span className="truncate">{deleting ? "Deleting..." : "Delete Draft"}</span>
+        <span className="truncate">
+          {deleting ? "Deleting..." : "Delete Draft"}
+        </span>
       </button>
     </>
   );

@@ -1,16 +1,11 @@
 "use client";
 
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+  useCallback, useEffect, useMemo, useRef, useState
 } from "react";
 
 import {
-  getSketchOptions,
-  subscribeSketchOptions,
+  getSketchOptions, subscribeSketchOptions,
 } from "@/p5-sketches/shared/syncSketchOptions";
 
 interface AnimationProgressionBarProps {
@@ -57,21 +52,22 @@ export default function AnimationProgressionBar( {
 }: AnimationProgressionBarProps ) {
   const [
     progression,
-    setProgression,
+    setProgression
   ] = useState( 0 );
   const [
     isDragging,
-    setIsDragging,
+    setIsDragging
   ] = useState( false );
   const [
     hoverPosition,
-    setHoverPosition,
+    setHoverPosition
   ] = useState<number | null>( null );
 
   const [
     animationConfig,
-    setAnimationConfig,
-  ] = useState<AnimationConfig>( () => getAnimationConfigFromSketchOptions( getSketchOptions() ) );
+    setAnimationConfig
+  ] = useState<AnimationConfig>( () =>
+    getAnimationConfigFromSketchOptions( getSketchOptions() ) );
 
   const barRef = useRef<HTMLDivElement | null>( null );
   const dragThrottleRef = useRef<number>( 0 );
@@ -85,7 +81,7 @@ export default function AnimationProgressionBar( {
       isDraggingRef.current = isDragging;
     },
     [
-      isDragging,
+      isDragging
     ]
   );
 
@@ -101,7 +97,7 @@ export default function AnimationProgressionBar( {
       } );
     },
     [
-      disabled,
+      disabled
     ]
   );
 
@@ -125,9 +121,8 @@ export default function AnimationProgressionBar( {
           }
 
           getExternalProgressionRef.current = () => animation.progression;
-        }
-        catch {
-          // Ignore; we can always fall back to `window.getAnimationProgression`.
+        } catch {
+        // Ignore; we can always fall back to `window.getAnimationProgression`.
         }
       } )();
 
@@ -136,7 +131,7 @@ export default function AnimationProgressionBar( {
       };
     },
     [
-      disabled,
+      disabled
     ]
   );
 
@@ -156,22 +151,26 @@ export default function AnimationProgressionBar( {
         try {
           if ( typeof getExternalProgressionRef.current === "function" ) {
             nextProgression = getExternalProgressionRef.current();
-          }
-          else if ( typeof window.getAnimationProgression === "function" ) {
+          } else if ( typeof window.getAnimationProgression === "function" ) {
             nextProgression = window.getAnimationProgression();
           }
-        }
-        catch {
-          // Ignore - keep previous progression.
+        } catch {
+        // Ignore - keep previous progression.
         }
 
-        if ( typeof nextProgression !== "number" || Number.isNaN( nextProgression ) ) {
+        if (
+          typeof nextProgression !== "number" ||
+        Number.isNaN( nextProgression )
+        ) {
           nextProgression = lastProgressionRef.current;
         }
 
         nextProgression = clamp01( nextProgression );
 
-        if ( !isDraggingRef.current && Math.abs( nextProgression - lastProgressionRef.current ) > 0.001 ) {
+        if (
+          !isDraggingRef.current &&
+        Math.abs( nextProgression - lastProgressionRef.current ) > 0.001
+        ) {
           lastProgressionRef.current = nextProgression;
           setProgression( nextProgression );
         }
@@ -186,7 +185,7 @@ export default function AnimationProgressionBar( {
       };
     },
     [
-      disabled,
+      disabled
     ]
   );
 
@@ -222,8 +221,7 @@ export default function AnimationProgressionBar( {
         if ( typeof window.setAnimationProgression === "function" ) {
           window.setAnimationProgression( clamped );
         }
-      }
-      catch ( error ) {
+      } catch ( error ) {
         console.warn(
           "AnimationProgressionBar: Error setting progression:",
           error
@@ -241,13 +239,14 @@ export default function AnimationProgressionBar( {
       }
 
       event.stopPropagation();
+      event.preventDefault();
 
       setAnimationProgression( calculateProgressionFromEvent( event ) );
     },
     [
       disabled,
       calculateProgressionFromEvent,
-      setAnimationProgression,
+      setAnimationProgression
     ]
   );
 
@@ -270,7 +269,7 @@ export default function AnimationProgressionBar( {
     [
       disabled,
       calculateProgressionFromEvent,
-      setAnimationProgression,
+      setAnimationProgression
     ]
   );
 
@@ -287,9 +286,8 @@ export default function AnimationProgressionBar( {
 
       try {
         event.currentTarget.releasePointerCapture( event.pointerId );
-      }
-      catch {
-        // Ignore (can throw if capture already released).
+      } catch {
+      // Ignore (can throw if capture already released).
       }
     },
     [
@@ -318,7 +316,7 @@ export default function AnimationProgressionBar( {
     },
     [
       calculateProgressionFromEvent,
-      setAnimationProgression,
+      setAnimationProgression
     ]
   );
 
@@ -334,7 +332,7 @@ export default function AnimationProgressionBar( {
     },
     [
       disabled,
-      calculateProgressionFromEvent,
+      calculateProgressionFromEvent
     ]
   );
 
@@ -380,7 +378,7 @@ export default function AnimationProgressionBar( {
     [
       disabled,
       progression,
-      setAnimationProgression,
+      setAnimationProgression
     ]
   );
 
@@ -402,7 +400,7 @@ export default function AnimationProgressionBar( {
     },
     [
       progression,
-      animationConfig,
+      animationConfig
     ]
   );
 
@@ -428,7 +426,7 @@ export default function AnimationProgressionBar( {
     },
     [
       hoverPosition,
-      animationConfig,
+      animationConfig
     ]
   );
 
@@ -506,7 +504,7 @@ export default function AnimationProgressionBar( {
 
   const ProgressInfo = useMemo(
     () => (
-      <div className="flex items-center justify-between w-full mt-2 text-xs font-medium text-foreground/60 gap-4">
+      <div className="flex items-center justify-between w-full mt-1 text-xs font-medium text-foreground/60 gap-4">
         <div className="flex items-center gap-3">
           <span className="font-mono">
             {currentValues.currentFrame}/{animationConfig.totalFrames}
@@ -516,7 +514,8 @@ export default function AnimationProgressionBar( {
             {formatTime(
               currentValues.currentSeconds,
               currentValues.currentMillis
-            )}/{animationConfig.duration}s
+            )}
+            /{animationConfig.duration}s
           </span>
           <span className="text-foreground/30">·</span>
           <span className="font-mono font-semibold text-active">
@@ -538,9 +537,7 @@ export default function AnimationProgressionBar( {
               )}
             </span>
             <span className="text-foreground/20">·</span>
-            <span className="font-mono">
-              {hoverValues.hoverPercentage}%
-            </span>
+            <span className="font-mono">{hoverValues.hoverPercentage}%</span>
           </div>
         )}
       </div>
@@ -550,7 +547,7 @@ export default function AnimationProgressionBar( {
       hoverValues,
       isDragging,
       animationConfig,
-      formatTime,
+      formatTime
     ]
   );
 

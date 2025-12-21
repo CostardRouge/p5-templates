@@ -7,7 +7,9 @@ const string = {
     loadFont: (
       key, path
     ) => {
-      return string.fonts.loaded[ key ] ?? ( string.fonts.loaded[ key ] = loadFont( path ) );
+      return (
+        string.fonts.loaded[ key ] ?? ( string.fonts.loaded[ key ] = loadFont( path ) )
+      );
     },
     get loraItalic() {
       return string.fonts.loadFont(
@@ -107,10 +109,7 @@ const string = {
     },
   },
   write: function(
-    str,
-    x,
-    y,
-    options = {
+    str, x, y, options = {
     }
   ) {
     if ( !str ) {
@@ -223,8 +222,7 @@ const string = {
 
     if ( textWidth !== -1 ) {
       textParams.push( textWidth );
-    }
-    else {
+    } else {
       textParams.push( undefined );
     }
 
@@ -241,10 +239,15 @@ const string = {
     return box;
   },
   getTextPoints: ( {
-    text, size, font, position = createVector(
+    text,
+    size,
+    font,
+    position = createVector(
       0,
       0
-    ), sampleFactor = 1, simplifyThreshold = 0
+    ),
+    sampleFactor = 1,
+    simplifyThreshold = 0,
   } ) => {
     // Guard clause: Return an empty array to prevent downstream errors
     if ( !font?.font ) {
@@ -278,7 +281,7 @@ const string = {
           size,
           {
             sampleFactor,
-            simplifyThreshold
+            simplifyThreshold,
           }
         );
 
@@ -336,8 +339,8 @@ const string = {
           rawPoints,
           center: {
             x: xCenter,
-            y: yCenter
-          }
+            y: yCenter,
+          },
         };
       }
     );
@@ -362,7 +365,7 @@ const string = {
         alpha
       );
     } );
-  }
+  },
 };
 
 export default string;

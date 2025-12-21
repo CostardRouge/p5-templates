@@ -4,7 +4,10 @@
  */
 
 import {
-  getRecordingSteps, createStepConfig, getCurrentStepIndex, getCompletedStepsCount
+  getRecordingSteps,
+  createStepConfig,
+  getCurrentStepIndex,
+  getCompletedStepsCount,
 } from "../recordingSteps";
 import {
   JobModel
@@ -14,7 +17,8 @@ describe(
   "getRecordingSteps",
   () => {
     const createJob = (
-      progress: number, status: string = "active"
+      progress: number,
+      status: string = "active"
     ): JobModel => ( {
       id: "test-job",
       snapshotId: null,
@@ -50,7 +54,7 @@ describe(
             const steps = getRecordingSteps( job );
 
             expect( steps ).toHaveLength( 5 );
-            steps.forEach( step => {
+            steps.forEach( ( step ) => {
               expect( step.status ).toBe( "pending" );
               expect( step.percentage ).toBe( 0 );
             } );
@@ -66,7 +70,7 @@ describe(
             );
             const steps = getRecordingSteps( job );
 
-            steps.forEach( step => {
+            steps.forEach( ( step ) => {
               expect( step.status ).toBe( "pending" );
               expect( step.percentage ).toBe( 0 );
             } );
@@ -82,7 +86,7 @@ describe(
             );
             const steps = getRecordingSteps( job );
 
-            steps.forEach( step => {
+            steps.forEach( ( step ) => {
               expect( step.status ).toBe( "pending" );
               expect( step.percentage ).toBe( 0 );
             } );
@@ -155,7 +159,7 @@ describe(
             const job = createJob( 100 );
             const steps = getRecordingSteps( job );
 
-            steps.forEach( step => {
+            steps.forEach( ( step ) => {
               expect( step.status ).toBe( "completed" );
               expect( step.percentage ).toBe( 100 );
             } );
@@ -174,17 +178,17 @@ describe(
               {
                 id: "init",
                 name: "Init",
-                weight: 20
+                weight: 20,
               },
               {
                 id: "work",
                 name: "Work",
-                weight: 60
+                weight: 60,
               },
               {
                 id: "done",
                 name: "Done",
-                weight: 20
+                weight: 20,
               },
             ] );
 
@@ -209,12 +213,12 @@ describe(
               {
                 id: "step1",
                 name: "Step 1",
-                weight: 50
+                weight: 50,
               },
               {
                 id: "step2",
                 name: "Step 2",
-                weight: 50
+                weight: 50,
               },
             ] );
 
@@ -245,12 +249,12 @@ describe(
           {
             id: "step1",
             name: "Step 1",
-            weight: 50
+            weight: 50,
           },
           {
             id: "step2",
             name: "Step 2",
-            weight: 50
+            weight: 50,
           },
         ];
 
@@ -267,12 +271,12 @@ describe(
           {
             id: "step1",
             name: "Step 1",
-            weight: 50
+            weight: 50,
           },
           {
             id: "step2",
             name: "Step 2",
-            weight: 60
+            weight: 60,
           }, // Total: 110
         ];
 
@@ -296,17 +300,17 @@ describe(
           {
             id: "step1",
             name: "Step 1",
-            weight: 33.33
+            weight: 33.33,
           },
           {
             id: "step2",
             name: "Step 2",
-            weight: 33.33
+            weight: 33.33,
           },
           {
             id: "step3",
             name: "Step 3",
-            weight: 33.33
+            weight: 33.33,
           }, // Total: 99.99
         ];
 
@@ -339,19 +343,19 @@ describe(
             id: "1",
             name: "Step 1",
             status: "completed" as const,
-            percentage: 100
+            percentage: 100,
           },
           {
             id: "2",
             name: "Step 2",
             status: "active" as const,
-            percentage: 50
+            percentage: 50,
           },
           {
             id: "3",
             name: "Step 3",
             status: "pending" as const,
-            percentage: 0
+            percentage: 0,
           },
         ];
 
@@ -367,13 +371,13 @@ describe(
             id: "1",
             name: "Step 1",
             status: "pending" as const,
-            percentage: 0
+            percentage: 0,
           },
           {
             id: "2",
             name: "Step 2",
             status: "pending" as const,
-            percentage: 0
+            percentage: 0,
           },
         ];
 
@@ -394,25 +398,25 @@ describe(
             id: "1",
             name: "Step 1",
             status: "completed" as const,
-            percentage: 100
+            percentage: 100,
           },
           {
             id: "2",
             name: "Step 2",
             status: "completed" as const,
-            percentage: 100
+            percentage: 100,
           },
           {
             id: "3",
             name: "Step 3",
             status: "active" as const,
-            percentage: 50
+            percentage: 50,
           },
           {
             id: "4",
             name: "Step 4",
             status: "pending" as const,
-            percentage: 0
+            percentage: 0,
           },
         ];
 
@@ -428,13 +432,13 @@ describe(
             id: "1",
             name: "Step 1",
             status: "active" as const,
-            percentage: 50
+            percentage: 50,
           },
           {
             id: "2",
             name: "Step 2",
             status: "pending" as const,
-            percentage: 0
+            percentage: 0,
           },
         ];
 

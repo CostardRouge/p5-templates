@@ -14,14 +14,14 @@ const canvases = {
 sketch.setup( () => {
   canvases.background = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   canvases.background.pixelDensity( options.backgroundPixelDensity || 0.055 );
   canvases.background.drawingContext.filter = "blur(2px)";
 
   background( ...options.colors.background );
-}, );
+} );
 
 sketch.draw( (
   time, center, favoriteColor
@@ -47,7 +47,7 @@ sketch.draw( (
     // margin: undefined,
     center: true,
     fill: true,
-    scale: 1
+    scale: 1,
   } );
 
   // canvases.background.background(...options.colors.background, 0);
@@ -67,7 +67,7 @@ sketch.draw( (
   imageUtils.marginImage( {
     img: imageAtIndex,
     // graphics: canvases.background,
-    margin: width * .1,
+    margin: width * 0.1,
     center: true,
     position: createVector(
       width / 2,
@@ -110,7 +110,7 @@ sketch.draw( (
           ...textStyle,
           textAlign: [
             RIGHT
-          ]
+          ],
         }
       );
 
@@ -128,7 +128,7 @@ sketch.draw( (
           ...textStyle,
           textAlign: [
             LEFT
-          ]
+          ],
         }
       );
 
@@ -146,7 +146,7 @@ sketch.draw( (
           ...textStyle,
           textAlign: [
             LEFT
-          ]
+          ],
         }
       );
 
@@ -159,10 +159,10 @@ sketch.draw( (
           textAlign: [
             CENTER,
             TOP
-          ]
+          ],
         }
       );
-    }
+    },
   } );
 
   const defaultTitle = options?.name?.replaceAll(
@@ -184,7 +184,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: EXCLUSION,
       }
     );
   }

@@ -12,40 +12,40 @@ async function takeScreenshot( {
   selectorWaitForTimeout = 10_000_000,
   viewportSize = {
     width: 1080,
-    height: 1350
-  }
+    height: 1350,
+  },
 }: {
-    page: Page,
-    url: string,
-    outputPath: string,
-    selectorToWaitFor?: string,
-    selectorToCapture?: string,
-    selectorWaitForTimeout?: number,
-    callbefore?: ( page: Page ) => void,
-    viewportSize?: {
-        width: number,
-        height: number
-    }
+  page: Page;
+  url: string;
+  outputPath: string;
+  selectorToWaitFor?: string;
+  selectorToCapture?: string;
+  selectorWaitForTimeout?: number;
+  callbefore?: ( page: Page ) => void;
+  viewportSize?: {
+    width: number;
+    height: number;
+  };
 } ) {
   await page.setViewportSize( viewportSize );
   await page.emulateMedia( {
-    reducedMotion: "reduce"
+    reducedMotion: "reduce",
   } );
   await page.goto(
     url,
     {
-      waitUntil: "networkidle"
+      waitUntil: "networkidle",
     }
   );
   await page.waitForSelector(
     selectorToWaitFor,
     {
-      timeout: selectorWaitForTimeout
+      timeout: selectorWaitForTimeout,
     }
   );
   callbefore?.( page );
   await page.locator( selectorToCapture ).screenshot( {
-    path: outputPath
+    path: outputPath,
   } );
 }
 

@@ -54,12 +54,14 @@ export default function TemplatesList( {
         params.delete( "keyword" );
       }
 
-      const newUrl = params.toString() ? `/templates?${ params.toString() }` : "/templates";
+      const newUrl = params.toString()
+        ? `/templates?${ params.toString() }`
+        : "/templates";
 
       router.replace(
         newUrl,
         {
-          scroll: false
+          scroll: false,
         }
       );
     },
@@ -78,9 +80,10 @@ export default function TemplatesList( {
         items
       ]
     ) => {
-      const filtered = items.filter( item =>
+      const filtered = items.filter( ( item ) =>
         item.name.toLowerCase().includes( search.toLowerCase() ) ||
-        ( item.category && item.category.toLowerCase().includes( search.toLowerCase() ) ) );
+          ( item.category &&
+            item.category.toLowerCase().includes( search.toLowerCase() ) ) );
 
       if ( filtered.length > 0 ) {
         acc[ category ] = filtered;
@@ -88,8 +91,8 @@ export default function TemplatesList( {
 
       return acc;
     },
-{
-} as Record<string, TemplateCategory>
+    {
+    } as Record<string, TemplateCategory>
   );
 
   const totalCount = Object.values( filteredTemplates ).reduce(
@@ -104,7 +107,9 @@ export default function TemplatesList( {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Templates</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            Templates
+          </h1>
           <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">
             {totalCount} {totalCount === 1 ? "template" : "templates"}
             {search && ` matching "${ search }"`}
@@ -161,7 +166,9 @@ export default function TemplatesList( {
           <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-hover/50 mb-3 sm:mb-4">
             <Search className="w-6 h-6 sm:w-8 sm:h-8 text-foreground/40" />
           </div>
-          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">No templates found</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+            No templates found
+          </h3>
           <p className="text-xs sm:text-sm text-foreground/60">
             Try adjusting your search term
           </p>
@@ -179,7 +186,7 @@ export default function TemplatesList( {
         const uncategorized: typeof items = [
         ];
 
-        items.forEach( item => {
+        items.forEach( ( item ) => {
           if ( item.category ) {
             if ( !groupedItems[ item.category ] ) {
               groupedItems[ item.category ] = [
@@ -194,7 +201,9 @@ export default function TemplatesList( {
         return (
           <div key={category} className="space-y-2 sm:space-y-4">
             <div className="flex items-center gap-2 sm:gap-3">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground">{category}</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-foreground">
+                {category}
+              </h2>
               <span className="text-xs sm:text-sm text-foreground/50 font-medium">
                 {items.length} {items.length === 1 ? "template" : "templates"}
               </span>
@@ -207,7 +216,9 @@ export default function TemplatesList( {
             ] ) => (
               <div key={subCategory} className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                  <h3 className="text-sm sm:text-base font-medium text-foreground/80">{subCategory}</h3>
+                  <h3 className="text-sm sm:text-base font-medium text-foreground/80">
+                    {subCategory}
+                  </h3>
                   <span className="text-xs text-foreground/40">
                     {subItems.length}
                   </span>
@@ -240,7 +251,9 @@ export default function TemplatesList( {
             {uncategorized.length > 0 && (
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                  <h3 className="text-sm sm:text-base font-medium text-foreground/80">No category</h3>
+                  <h3 className="text-sm sm:text-base font-medium text-foreground/80">
+                    No category
+                  </h3>
                   <span className="text-xs text-foreground/40">
                     {uncategorized.length}
                   </span>
@@ -280,7 +293,7 @@ function TemplateCard( {
   name,
   thumbnail,
   hasSketchForm,
-  view
+  view,
 }: {
   href: string;
   name: string;
@@ -295,11 +308,17 @@ function TemplateCard( {
         className="group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5"
       >
         {/* Aspect ratio box for 4:5 (360x450) */}
-        <div className="w-full relative" style={{
-          paddingTop: "125%"
-        }}>
-          { hasSketchForm && (
-            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10" title="Has a magic form">
+        <div
+          className="w-full relative"
+          style={{
+            paddingTop: "125%",
+          }}
+        >
+          {hasSketchForm && (
+            <div
+              className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10"
+              title="Has a magic form"
+            >
               <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg p-1 sm:p-1.5">
                 <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
               </div>
@@ -334,9 +353,12 @@ function TemplateCard( {
       href={href}
       className="group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5"
     >
-      <div className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border" style={{
-        aspectRatio: "4 / 5"
-      }}>
+      <div
+        className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border"
+        style={{
+          aspectRatio: "4 / 5",
+        }}
+      >
         <img
           alt={name}
           loading="lazy"
@@ -351,7 +373,7 @@ function TemplateCard( {
         </p>
       </div>
 
-      { hasSketchForm && (
+      {hasSketchForm && (
         <div className="flex-shrink-0" title="Has a magic form">
           <div className="bg-hover/50 rounded-lg border border-border p-1 sm:p-1.5">
             <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />

@@ -15,11 +15,10 @@ import * as common from "@/p5/utils/common.js";
 
 sketch.setup( () => {
   background( ...options.colors.background );
-}, );
+} );
 
 function drawGrid( {
-  columns,
-  rows
+  columns, rows
 } ) {
   for ( let column = 0; column < columns; column++ ) {
     const x = map(
@@ -59,7 +58,7 @@ function neonGraffiti( {
   end = createVector(
     width,
     height / 2
-  )
+  ),
 } = {
 } ) {
   noStroke();
@@ -88,7 +87,7 @@ function neonGraffiti( {
       const position = p5.Vector.lerp(
         start,
         end,
-        step / stepsCount,
+        step / stepsCount
       );
 
       position.add(
@@ -97,12 +96,14 @@ function neonGraffiti( {
           amplitude,
           map(
             // Math.sin( animation.angle + stepAngle ),
-            Math.cos( animation.angle + stepAngle * 3 + easing.easeInOutSine( shadowProgression ) ),
+            Math.cos( animation.angle +
+                stepAngle * 3 +
+                easing.easeInOutSine( shadowProgression ) ),
             -1,
             1,
             -TAU,
             TAU
-          ) / 4,
+          ) / 4
         ),
         converters.polar.get(
           Math.sin,
@@ -128,9 +129,9 @@ function neonGraffiti( {
         ),
         hueOffset: easing.easeInBack( stepProgression ),
         hueIndex: map(
-          Math.sin( animation.angle
-            + easing.easeInOutBack( stepProgression ) * 2
-            + shadowProgression ),
+          Math.sin( animation.angle +
+                easing.easeInOutBack( stepProgression ) * 2 +
+                shadowProgression ),
           -1,
           1,
           -PI,
@@ -147,8 +148,8 @@ function neonGraffiti( {
   }
 }
 
-const horizontalMargin = options.colors.horizontalMargin || .05;
-const verticalMargin = options.colors.verticalMargin || .05;
+const horizontalMargin = options.colors.horizontalMargin || 0.05;
+const verticalMargin = options.colors.verticalMargin || 0.05;
 
 function drawSlideBackground( options ) {
   background( ...options.colors.background );
@@ -156,11 +157,11 @@ function drawSlideBackground( options ) {
   strokeWeight( options.colors.strokeWeight || 1 );
 
   const columns = options.columns || 9;
-  const rows = columns * height / width;
+  const rows = ( columns * height ) / width;
 
   drawGrid( {
     columns,
-    rows
+    rows,
   } );
 
   shapes.vl( width );
@@ -176,11 +177,11 @@ function drawSlideMeta( options ) {
       0,
       0
     ),
-    fill: color( ...options.colors.text, ),
+    fill: color( ...options.colors.text ),
     font: string.fonts.martian,
     textAlign: [
       LEFT,
-      LEFT,
+      LEFT
     ],
   };
 
@@ -191,7 +192,7 @@ function drawSlideMeta( options ) {
     height * verticalMargin,
     {
       ...textStyle,
-      size: 24
+      size: 24,
     }
   );
 
@@ -204,8 +205,8 @@ function drawSlideMeta( options ) {
       ...textStyle,
       size: 24,
       textAlign: [
-        RIGHT,
-      ]
+        RIGHT
+      ],
     }
   );
 
@@ -216,7 +217,7 @@ function drawSlideMeta( options ) {
     height * ( 1 - verticalMargin ),
     {
       ...textStyle,
-      size: 24
+      size: 24,
     }
   );
 
@@ -227,11 +228,11 @@ function drawSlideMeta( options ) {
     height * ( 1 - verticalMargin ),
     {
       ...textStyle,
-      textWidth: width - ( 2 * horizontalMargin ),
+      textWidth: width - 2 * horizontalMargin,
       size: 24,
       textAlign: [
-        RIGHT,
-      ]
+        RIGHT
+      ],
     }
   );
 }
@@ -250,7 +251,7 @@ function drawIntroSlide( options ) {
     amplitude: options.neonGraffiti.amplitude,
     innerCircleSize: options.neonGraffiti.innerCircleSize,
     shadowsCount: options.neonGraffiti.shadowsCount,
-    stepAngleAmplitude: options.neonGraffiti.stepAngleAmplitude
+    stepAngleAmplitude: options.neonGraffiti.stepAngleAmplitude,
   } );
 
   const textStyle = {
@@ -260,11 +261,11 @@ function drawIntroSlide( options ) {
       0,
       0
     ),
-    fill: color( ...options.colors.text, ),
+    fill: color( ...options.colors.text ),
     font: string.fonts.martian,
     textAlign: [
       CENTER,
-      CENTER,
+      CENTER
     ],
   };
 
@@ -274,7 +275,7 @@ function drawIntroSlide( options ) {
     height / 2 + height / 9,
     {
       ...textStyle,
-      size: 36
+      size: 36,
     }
   );
 
@@ -305,7 +306,7 @@ function drawTextSlide( options ) {
     amplitude: options.neonGraffiti.amplitude,
     innerCircleSize: options.neonGraffiti.innerCircleSize,
     shadowsCount: options.neonGraffiti.shadowsCount,
-    stepAngleAmplitude: options.neonGraffiti.stepAngleAmplitude
+    stepAngleAmplitude: options.neonGraffiti.stepAngleAmplitude,
   } );
 
   const textStyle = {
@@ -315,11 +316,11 @@ function drawTextSlide( options ) {
       0,
       0
     ),
-    fill: color( ...options.colors.text, ),
+    fill: color( ...options.colors.text ),
     font: string.fonts.martian,
     textAlign: [
       LEFT,
-      CENTER,
+      CENTER
     ],
   };
 
@@ -329,22 +330,22 @@ function drawTextSlide( options ) {
     height * 0.2,
     {
       ...textStyle,
-      textWidth: width - ( 2 * horizontalMargin ),
+      textWidth: width - 2 * horizontalMargin,
       textAlign: [
-        LEFT,
+        LEFT
       ],
-      size: 96
+      size: 96,
     }
   );
 
   string.write(
     options.body,
     width * horizontalMargin,
-    height * .55,
+    height * 0.55,
     {
       ...textStyle,
       textWidth: width - 2 * ( width * horizontalMargin ),
-      size: 36
+      size: 36,
     }
   );
 
@@ -367,4 +368,3 @@ sketch.draw( (
     options
   ) );
 } );
-

@@ -13,8 +13,12 @@ function naturalStringCompare(
   a: string, b: string
 ): number {
   // Natural order compare so "..._2.png" < "..._10.png"
-  const aParts = a.split( /(\d+)/ ).map( ( part ) => ( /\d+/.test( part ) ? Number( part ) : part ) );
-  const bParts = b.split( /(\d+)/ ).map( ( part ) => ( /\d+/.test( part ) ? Number( part ) : part ) );
+  const aParts = a
+    .split( /(\d+)/ )
+    .map( ( part ) => ( /\d+/.test( part ) ? Number( part ) : part ) );
+  const bParts = b
+    .split( /(\d+)/ )
+    .map( ( part ) => ( /\d+/.test( part ) ? Number( part ) : part ) );
 
   const length = Math.max(
     aParts.length,
@@ -47,7 +51,7 @@ async function listPngFramesSorted( framesDirectoryPath: string ): Promise<strin
   const directoryEntries = await fs.readdir(
     framesDirectoryPath,
     {
-      withFileTypes: true
+      withFileTypes: true,
     }
   );
 
@@ -140,9 +144,15 @@ export default async function encodeVideoFromFrames(
   // Fallback: 60 frames per second as a reasonable default.
   let targetFramesPerSecond: number | undefined = undefined;
 
-  if ( typeof animationOptions?.framerate === "number" && animationOptions.framerate > 0 ) {
+  if (
+    typeof animationOptions?.framerate === "number" &&
+    animationOptions.framerate > 0
+  ) {
     targetFramesPerSecond = animationOptions.framerate;
-  } else if ( typeof animationOptions?.duration === "number" && animationOptions.duration > 0 ) {
+  } else if (
+    typeof animationOptions?.duration === "number" &&
+    animationOptions.duration > 0
+  ) {
     targetFramesPerSecond = totalFrameCount / animationOptions.duration;
   } else {
     targetFramesPerSecond = 60;

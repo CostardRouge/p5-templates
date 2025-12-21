@@ -5,7 +5,10 @@ import {
 } from "lucide-react";
 
 const ZoomControls = ( {
-  onPlus, onMinus, onFit, onReset
+  onPlus,
+  onMinus,
+  onFit,
+  onReset,
 }: {
   onPlus: () => void;
   onMinus: () => void;

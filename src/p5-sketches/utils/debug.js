@@ -8,15 +8,15 @@ const debug = {
   options: {
     fps: {
       log: false,
-      display: true
+      display: true,
     },
     print: {
-      frequency: 60
+      frequency: 60,
     },
   },
   // debugGraphics: undefined,
   DOMElements: {
-    canvasOverlay: undefined
+    canvasOverlay: undefined,
   },
   // createDebugGraphics: () => {
   //   debug.debugGraphics = createGraphics(48, 32, P2D);
@@ -53,13 +53,15 @@ const debug = {
     const {
       fps: {
         log, display
-      }
+      },
     } = debug.options;
 
     const fpsCounterParagraph = document.querySelector( "p#p5-sketch-fps-counter" );
 
     if ( fpsCounterParagraph ) {
-      fpsCounterParagraph.innerHTML = sketch.engine.paused ? "paused" : Math.ceil( debug.frameRate );
+      fpsCounterParagraph.innerHTML = sketch.engine.paused
+        ? "paused"
+        : Math.ceil( debug.frameRate );
     }
 
     if ( !display ) {
@@ -68,7 +70,7 @@ const debug = {
 
     const currentTime = performance.now();
 
-    if ( ( currentTime - debug.countDeltaTime ) > 1000 ) {
+    if ( currentTime - debug.countDeltaTime > 1000 ) {
       debug.frameRate = debug.frameRateCount;
       debug.frameRateCount = 0;
       debug.countDeltaTime = performance.now();
@@ -76,8 +78,7 @@ const debug = {
       if ( log === true ) {
         console.log( debug.frameRate );
       }
-    }
-    else {
+    } else {
       debug.frameRateCount += 1;
     }
   },
@@ -89,7 +90,7 @@ const debug = {
       frequency
     } = {
       ...debug.options.print,
-      ...printOptions
+      ...printOptions,
     };
 
     time.every(
@@ -160,7 +161,7 @@ const debug = {
       createContent,
       sketch?.engine?.camera
     );
-  }
+  },
 };
 
 export default debug;

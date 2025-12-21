@@ -16,7 +16,9 @@ type ConditionalGroupProps = {
 };
 
 export default function ConditionalGroup( {
-  basePath, config, selectClassName
+  basePath,
+  config,
+  selectClassName,
 }: ConditionalGroupProps ) {
   const {
     control, setValue, unregister, clearErrors
@@ -39,7 +41,7 @@ export default function ConditionalGroup( {
         undefined,
         {
           shouldValidate: true,
-          shouldDirty: true
+          shouldDirty: true,
         }
       );
       unregister( basePath );
@@ -49,14 +51,14 @@ export default function ConditionalGroup( {
 
     // Build a fresh default object for the selected variant
     const defaultObject = schema.parse( {
-      [ conditionalOn ]: newType
+      [ conditionalOn ]: newType,
     } );
 
     setValue(
       basePath,
       defaultObject,
       {
-        shouldValidate: true
+        shouldValidate: true,
       }
     );
   };
@@ -68,7 +70,10 @@ export default function ConditionalGroup( {
     <Fragment>
       <div className="p-1 border border-theme space-y-2 rounded-xl">
         <div>
-          <label htmlFor={conditionalFieldName} className="text-xs text-gray-400">
+          <label
+            htmlFor={conditionalFieldName}
+            className="text-xs text-gray-400"
+          >
             {config.typeSelector.label || "Type"}
           </label>
 

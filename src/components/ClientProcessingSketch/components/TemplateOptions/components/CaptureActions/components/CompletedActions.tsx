@@ -37,7 +37,8 @@ export default function CompletedActions( {
   // Get video sizes directly from job data
   const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [
   ];
-  const currentVideoSize = activeSlideIndex !== undefined ? videoSizes?.[ activeSlideIndex ] : undefined;
+  const currentVideoSize =
+    activeSlideIndex !== undefined ? videoSizes?.[ activeSlideIndex ] : undefined;
 
   return (
     <div className="grid grid-cols-2 gap-1">

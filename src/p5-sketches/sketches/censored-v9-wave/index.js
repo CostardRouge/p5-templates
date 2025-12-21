@@ -39,7 +39,7 @@ function drawShape( {
   const canvasFlatDimensionAverage = ( width + height ) / 2;
 
   const points = animation.ease( {
-    values: text.split( "" ).map( text => (
+    values: text.split( "" ).map( ( text ) =>
       string.getTextPoints( {
         text,
         position: createVector(
@@ -50,11 +50,11 @@ function drawShape( {
         size: canvasFlatDimensionAverage * options.sketch.shape.sizeRatio,
         simplifyThreshold: options.sketch.shape.simplifyThreshold,
         font: string.fonts?.[ options.sketch.shape.font ?? "sans" ],
-      } )
-    ) ),
+      } ) ),
     lerpFn: mappers.lerpPoints,
-    currentTime: animation.progression * text.length * options.sketch.shape.morphingSpeed,
-    easingFn: easing?.[ options.sketch.shape.morphingEasing ?? "easeInOutExpo" ]
+    currentTime:
+      animation.progression * text.length * options.sketch.shape.morphingSpeed,
+    easingFn: easing?.[ options.sketch.shape.morphingEasing ?? "easeInOutExpo" ],
   } );
 
   canvas.push();
@@ -85,44 +85,45 @@ function drawShape( {
       } = points[ i ];
       const colorFunction = colors?.[ options.sketch.shape.colorScheme ];
 
-      const opacityFactor = mappers.fn(
-        sin(
-          depthProgression * 2 * PI,
-          easing.easeInOutExpo
-        ),
-        -1,
-        1,
-        1,
-        1
-      ) * Math.pow(
-        1.175,
-        z
-      );
+      const opacityFactor =
+        mappers.fn(
+          sin(
+            depthProgression * 2 * PI,
+            easing.easeInOutExpo
+          ),
+          -1,
+          1,
+          1,
+          1
+        ) * Math.pow(
+          1.175,
+          z
+        );
 
       canvas.stroke( colorFunction( {
-        hueOffset: (
-          // +depthProgression*10
-          // +mappers.fn(depthProgression, 0, 1, 0, PI/2, easing.easeInOutExpo)
-          +animation.progression
-        ),
+        hueOffset:
+            // +depthProgression*10
+            // +mappers.fn(depthProgression, 0, 1, 0, PI/2, easing.easeInOutExpo)
+            +animation.progression,
         // hueIndex: mappers.circularPolar(progression, 0, 1, -PI, PI)*2,
-        hueIndex: mappers.fn(
-          noise(
-            x / width,
-            y / height + animation.progression * 1,
-            depthProgression / 2
-          ),
-          0,
-          1,
-          -PI,
-          PI
-        ) * 14,
+        hueIndex:
+            mappers.fn(
+              noise(
+                x / width,
+                y / height + animation.progression * 1,
+                depthProgression / 2
+              ),
+              0,
+              1,
+              -PI,
+              PI
+            ) * 14,
         // hueIndex:mappers.fn(noise(x/width, y/height, progression/2+depthProgression/2), 0, 1, -PI, PI)*10,
         opacityFactor,
         // opacityFactor: map(depthProgression, 0, 1, 1.75, 1) * Math.pow(1.05, z)
       } ) );
 
-      const xx = (
+      const xx =
         x * mappers.fn(
           z,
           0,
@@ -130,14 +131,13 @@ function drawShape( {
           1,
           0,
           easing.easeInExpo
-        )
-        + x * Math.pow(
+        ) +
+        x * Math.pow(
           1.1,
           z
-        )
-      );
+        );
 
-      const yy = (
+      const yy =
         y * mappers.fn(
           z,
           0,
@@ -145,12 +145,11 @@ function drawShape( {
           1,
           0,
           easing.easeInExpo
-        )
-        + y * Math.pow(
+        ) +
+        y * Math.pow(
           1.12,
           z
-        )
-      );
+        );
 
       canvas.point(
         xx,
@@ -172,14 +171,13 @@ function wave(
 
   for ( let index = 0; index < 1; index += step ) {
     canvas.vertex(
-      ( index ) * width,
+      index * width,
       animation.ease( {
         values,
-        currentTime: (
-          +index * options.sketch.wave.count
-          + animation.progression * options.sketch.wave.speed
-        ),
-        easingFn: easing?.[ options.sketch.wave.easing ?? "easeInOutSine" ]
+        currentTime:
+          +index * options.sketch.wave.count +
+          animation.progression * options.sketch.wave.speed,
+        easingFn: easing?.[ options.sketch.wave.easing ?? "easeInOutSine" ],
       } )
     );
   }
@@ -197,7 +195,7 @@ sketch.draw( (
   drawShape( {
     canvas: canvases.buffer,
     depth: options.sketch.shape.depthCount,
-    text: options.sketch.shape.text
+    text: options.sketch.shape.text,
   } );
 
   image(

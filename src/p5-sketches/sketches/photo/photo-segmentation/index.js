@@ -4,7 +4,8 @@ import sketch from "@/p5/utils/sketch.js";
 import string from "@/p5/utils/string.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import mediapipe, {
-  init as mediapipeInit, interact
+  init as mediapipeInit,
+  interact,
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   drawSegmentationMask
@@ -15,7 +16,8 @@ import * as common from "@/p5/utils/common.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  setSketchOptions, subscribeSketchOptions
+  setSketchOptions,
+  subscribeSketchOptions,
 } from "@/p5/shared/syncSketchOptions.js";
 
 const layers = {
@@ -25,17 +27,17 @@ const layers = {
     background: [
       80
     ],
-    erase: 255
+    erase: 255,
   },
   mask: {
     graphics: undefined,
     // Initialize with a default, but we will resize this dynamically!
     size: {
       width: 1,
-      height: 1
+      height: 1,
     },
     background: undefined,
-    erase: false
+    erase: false,
   },
 };
 
@@ -50,8 +52,8 @@ const cache = {
     x: 0,
     y: 0,
     w: 0,
-    h: 0
-  }
+    h: 0,
+  },
 };
 
 sketch.setup( async() => {
@@ -75,8 +77,8 @@ sketch.setup( async() => {
     enableCapture: false, // No camera needed for image-based interactive segmentation
     tasks: [
       // "segmenter",
-      "interactive"
-    ]
+      "interactive",
+    ],
   } );
 
   // Subscribe to option changes
@@ -118,7 +120,10 @@ sketch.setup( async() => {
     }
 
     // Re-trigger segmentation if ROI exists and hasn't been processed yet
-    if ( newOptions.sketch?.segmentation?.roi && !cache.interactiveResultProcessed ) {
+    if (
+      newOptions.sketch?.segmentation?.roi &&
+      !cache.interactiveResultProcessed
+    ) {
       console.log( "Options changed, re-triggering segmentation" );
       triggerSegmentation();
     }
@@ -180,8 +185,12 @@ events.register(
       x: photoX, y: photoY, w: photoW, h: photoH
     } = cache.photoBounds;
 
-    if ( mouseX < photoX || mouseX > photoX + photoW ||
-         mouseY < photoY || mouseY > photoY + photoH ) {
+    if (
+      mouseX < photoX ||
+    mouseX > photoX + photoW ||
+    mouseY < photoY ||
+    mouseY > photoY + photoH
+    ) {
       console.log( "Click outside photo bounds" );
       return;
     }
@@ -228,10 +237,10 @@ events.register(
           ...options.sketch?.segmentation,
           roi: {
             x: normalizedX,
-            y: normalizedY
-          }
-        }
-      }
+            y: normalizedY,
+          },
+        },
+      },
     } );
 
     // Reset the processed flag to allow new result
@@ -267,12 +276,11 @@ sketch.draw( (
         textAlign: [
           CENTER,
           CENTER
-        ]
+        ],
       }
     );
     return;
-  }
-  else {
+  } else {
     frameRate( options.animation.framerate );
 
     // Draw photo and capture its bounds for coordinate mapping
@@ -292,7 +300,7 @@ sketch.draw( (
         cache.photoBounds.y = y;
         cache.photoBounds.w = w;
         cache.photoBounds.h = h;
-      }
+      },
     } );
   }
 
@@ -337,7 +345,10 @@ sketch.draw( (
     } = interactiveResult;
 
     // Resize mask graphics if needed
-    if ( layers.mask.graphics.width !== maskWidth || layers.mask.graphics.height !== maskHeight ) {
+    if (
+      layers.mask.graphics.width !== maskWidth ||
+      layers.mask.graphics.height !== maskHeight
+    ) {
       layers.mask.graphics.resizeCanvas(
         maskWidth,
         maskHeight
@@ -387,7 +398,7 @@ sketch.draw( (
         cache.photoBounds.y = y;
         cache.photoBounds.w = w;
         cache.photoBounds.h = h;
-      }
+      },
     } );
   }
 } );

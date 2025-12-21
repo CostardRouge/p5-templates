@@ -88,7 +88,7 @@ sketch.draw( () => {
         img: imageAtIndex,
         position: imagePosition,
         scale: imageConfig.scale ?? 0.5,
-        center: imageConfig.center ?? true
+        center: imageConfig.center ?? true,
       } );
 
       if ( debugConfig.showPoints ) {

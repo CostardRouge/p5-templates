@@ -14,7 +14,8 @@ export default function SimpleProgressBar( {
   status,
 }: SimpleProgressBarProps ) {
   // Show indeterminate state for active/queued jobs with 0 progress
-  const isIndeterminate = ( status === "active" || status === "queued" ) && progress === 0;
+  const isIndeterminate =
+    ( status === "active" || status === "queued" ) && progress === 0;
 
   return (
     <div className="w-full space-y-1">
@@ -34,7 +35,7 @@ export default function SimpleProgressBar( {
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out rounded-full"
             style={{
-              width: `${ progress }%`
+              width: `${ progress }%`,
             }}
           />
         )}

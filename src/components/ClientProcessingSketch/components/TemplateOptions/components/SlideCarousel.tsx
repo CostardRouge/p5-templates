@@ -37,7 +37,7 @@ export default function SlideCarousel( {
   onAdd,
   onDuplicate,
   onDelete,
-  onRename
+  onRename,
 }: {
   slideFields: any[];
   thumbnails: Record<string, string>;
@@ -58,8 +58,8 @@ export default function SlideCarousel( {
       MouseSensor,
       {
         activationConstraint: {
-          distance: 6
-        }
+          distance: 6,
+        },
       }
     ),
     useSensor(
@@ -67,8 +67,8 @@ export default function SlideCarousel( {
       {
         activationConstraint: {
           delay: 120,
-          tolerance: 8
-        }
+          tolerance: 8,
+        },
       }
     ),
     useSensor( KeyboardSensor )
@@ -111,15 +111,9 @@ export default function SlideCarousel( {
         restrictToParentElement
       ]}
     >
-      <div
-        className="flex flex-col gap-2"
-      >
-        <div
-          className="grid grid-cols-3 gap-2 p-1"
-        >
-          <SortableContext
-            items={slideIds} strategy={rectSwappingStrategy}
-          >
+      <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-3 gap-2 p-1">
+          <SortableContext items={slideIds} strategy={rectSwappingStrategy}>
             {slideFields.map( (
               field, index
             ) => {
@@ -158,7 +152,7 @@ export default function SlideCarousel( {
             disabled={isAdding}
             className="flex flex-col items-center justify-center border border-dashed border-theme rounded-lg hover:bg-secondary/10 transition-colors text-muted-foreground hover:text-foreground gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              aspectRatio
+              aspectRatio,
             }}
             aria-label="Add new slide"
             title="Add new slide"
@@ -171,4 +165,3 @@ export default function SlideCarousel( {
     </DndContext>
   );
 }
-

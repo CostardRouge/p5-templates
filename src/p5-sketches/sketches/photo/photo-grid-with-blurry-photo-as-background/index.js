@@ -15,13 +15,13 @@ const canvases = {
 sketch.setup( () => {
   canvases.background = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
 
   background( ...( options.sketch?.backgroundColor ?? options.colors.background ) );
-}, );
+} );
 
 sketch.draw( (
   time, center, favoriteColor
@@ -32,16 +32,17 @@ sketch.draw( (
   background( ...bg );
   canvases.background.background( ...bg );
 
-  const imagesFromOptions = options.sketch?.images && options.sketch.images.length
-    ? options.sketch.images
-    : null;
+  const imagesFromOptions =
+    options.sketch?.images && options.sketch.images.length
+      ? options.sketch.images
+      : null;
   const images = imagesFromOptions
     ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
     : cache.get( "images" );
 
   const borderSize = 0;
-  const rows = options.sketch?.rows ?? 4;// columns*height/width;
-  const columns = options.sketch?.columns ?? 3;// rows*width/height;
+  const rows = options.sketch?.rows ?? 4; // columns*height/width;
+  const columns = options.sketch?.columns ?? 3; // rows*width/height;
   const gridOptions = {
     topLeft: createVector(
       borderSize,
@@ -61,7 +62,7 @@ sketch.draw( (
     ),
     rows,
     columns,
-    centered: false
+    centered: false,
   };
   const {
     cells: gridCells
@@ -162,11 +163,11 @@ sketch.draw( (
       ),
       boundary: {
         height: H,
-        width: W
+        width: W,
       },
       center: true,
       fill: true,
-      scale: .9,
+      scale: 0.9,
       clip: true,
       margin: 10,
     } );
@@ -179,7 +180,7 @@ sketch.draw( (
 
   if ( animation.progression < 0.2 ) {
     string.write(
-      ( options.sketch?.title || defaultTitle ),
+      options.sketch?.title || defaultTitle,
       0,
       height / 2,
       {
@@ -191,7 +192,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: EXCLUSION,
       }
     );
   }

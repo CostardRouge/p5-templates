@@ -3,12 +3,12 @@ import {
   NextResponse
 } from "next/server";
 
-export async function GET( ) {
+export async function GET() {
   if ( process.env.NODE_ENV === "production" ) {
     return new NextResponse(
       "Not found",
       {
-        status: 404
+        status: 404,
       }
     );
   }
@@ -16,6 +16,6 @@ export async function GET( ) {
   await createSketchThumbnails();
 
   return Response.json( {
-    status: 200
+    status: 200,
   } );
 }

@@ -51,30 +51,29 @@ sketch.draw( (
     );
 
     if ( options.sketch.randomPosition ) {
-      imagePosition
-        .add(
-          map(
-            noise( i ),
-            0,
-            1,
-            -shiftMargin,
-            shiftMargin
-          ),
-          map(
-            noise( i ),
-            0,
-            1,
-            -shiftMargin,
-            shiftMargin
-          ),
-        );
+      imagePosition.add(
+        map(
+          noise( i ),
+          0,
+          1,
+          -shiftMargin,
+          shiftMargin
+        ),
+        map(
+          noise( i ),
+          0,
+          1,
+          -shiftMargin,
+          shiftMargin
+        )
+      );
     }
 
     imageUtils.marginImage( {
       position: imagePosition,
       img: images[ i ].img,
       center: true,
-      margin: options.sketch.imageMargin
+      margin: options.sketch.imageMargin,
     } );
   }
 } );

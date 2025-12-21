@@ -9,7 +9,9 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import {
-  SketchOption, SketchOptionInput, SlideOption
+  SketchOption,
+  SketchOptionInput,
+  SlideOption,
 } from "@/types/sketch.types";
 import {
   JobModel
@@ -76,19 +78,20 @@ export default function OptionsPanel( {
   const slidesLength = slides?.length;
   const jobId = useWatch( {
     control,
-    name: "id"
+    name: "id",
   } ) as string | undefined;
   const options = watch();
 
-  const editorKey = activeSlideIndex !== undefined && slideIds[ activeSlideIndex ]
-    ? slideIds[ activeSlideIndex ]
-    : `no-slides-${ slideFields.length }`;
+  const editorKey =
+    activeSlideIndex !== undefined && slideIds[ activeSlideIndex ]
+      ? slideIds[ activeSlideIndex ]
+      : `no-slides-${ slideFields.length }`;
 
   return (
     <CollapsibleItem
       className="flex flex-col gap-1 glass p-2 border border-theme rounded-2xl shadow-lg w-full"
       style={{
-        maxHeight: "calc(80svh)"
+        maxHeight: "calc(80svh)",
       }}
       header={(
         expanded, title
@@ -151,11 +154,18 @@ export default function OptionsPanel( {
                 rotate: expanded ? "180deg" : "0deg",
               }}
             />
-            <span>global content {rootContentLength ? `(${ rootContentLength })` : null}</span>
+            <span>
+              global content{" "}
+              {rootContentLength ? `(${ rootContentLength })` : null}
+            </span>
           </button>
         )}
       >
-        <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
+        <TemplateAssetsProvider
+          scope="global"
+          assetsName="assets"
+          jobId={jobId}
+        >
           <ContentArrayProvider name="content">
             <ContentItems baseFieldName="content" />
           </ContentArrayProvider>

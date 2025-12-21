@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useCallback, useEffect, useState,
+  useCallback, useEffect, useState
 } from "react";
 import dynamic from "next/dynamic";
 
@@ -21,7 +21,8 @@ import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import useSketch from "./components/SketchProvider/hooks/useSketch";
 import Link from "next/link";
 
-const TemplateOptions = dynamic( () => import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
+const TemplateOptions = dynamic( () =>
+  import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
 
 export default function ClientProcessingSketch() {
   const {
@@ -33,7 +34,7 @@ export default function ClientProcessingSketch() {
   ] = useState<SketchOption>( () => ( {
     ...getSketchOptions(),
     ...options,
-  } ), );
+  } ) );
 
   const [
     sketchLoaded,
@@ -53,9 +54,10 @@ export default function ClientProcessingSketch() {
   );
 
   useEffect(
-    () => subscribeSketchOptions( ( updatedOptions: any ) => {
-      setCurrentOptions( updatedOptions );
-    } ),
+    () =>
+      subscribeSketchOptions( ( updatedOptions: any ) => {
+        setCurrentOptions( updatedOptions );
+      } ),
     [
     ]
   );
@@ -77,7 +79,9 @@ export default function ClientProcessingSketch() {
     <>
       {!sketchLoaded && (
         <div className="flex items-center justify-center absolute h-full w-full">
-          <p className="text-foreground">→ loading <span className="font-bold">{name}</span>...</p>
+          <p className="text-foreground">
+            → loading <span className="font-bold">{name}</span>...
+          </p>
         </div>
       )}
 
@@ -105,14 +109,14 @@ export default function ClientProcessingSketch() {
               }
             >
               <p className="truncate">
-                <Link
-                  href={`/templates/p5/${ name }`}
-                  target="_blank"
-                >
+                <Link href={`/templates/p5/${ name }`} target="_blank">
                   {name}
                 </Link>
 
-                <span>{activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}</span>
+                <span>
+                  {activeSlideIndex !== undefined &&
+                    `· slide ${ activeSlideIndex + 1 }`}
+                </span>
               </p>
               <p id="p5-sketch-fps-counter"></p>
             </div>

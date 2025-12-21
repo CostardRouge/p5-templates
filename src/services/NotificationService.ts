@@ -39,7 +39,7 @@ export class NotificationService {
     try {
       await prisma.pushSubscription.upsert( {
         where: {
-          endpoint: subscription.endpoint
+          endpoint: subscription.endpoint,
         },
         update: {
           p256dh: subscription.keys.p256dh,
@@ -71,7 +71,7 @@ export class NotificationService {
     try {
       await prisma.pushSubscription.deleteMany( {
         where: {
-          endpoint
+          endpoint,
         },
       } );
       console.log(
@@ -166,7 +166,7 @@ export class NotificationService {
             console.log( `[Notification] Removing invalid subscription ${ sub.id }` );
             await prisma.pushSubscription.delete( {
               where: {
-                id: sub.id
+                id: sub.id,
               },
             } );
           } else {
@@ -191,7 +191,8 @@ export class NotificationService {
    * Send a job completion notification
    */
   async sendJobCompletionNotification(
-    jobId: string, jobName?: string
+    jobId: string,
+    jobName?: string
   ): Promise<void> {
     const payload = {
       title: "Job Completed! 🎉",
@@ -210,7 +211,8 @@ export class NotificationService {
    * Send a job failure notification
    */
   async sendJobFailureNotification(
-    jobId: string, jobName?: string
+    jobId: string,
+    jobName?: string
   ): Promise<void> {
     const payload = {
       title: "Job Failed ❌",

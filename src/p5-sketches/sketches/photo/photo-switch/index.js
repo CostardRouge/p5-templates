@@ -9,12 +9,11 @@ import * as common from "@/p5/utils/common.js";
 
 // helpers
 const getBackgroundColor = () =>
-  ( options.sketch?.backgroundColor ??
-    [
-      246,
-      235,
-      225
-    ] );
+  options.sketch?.backgroundColor ?? [
+    246,
+    235,
+    225
+  ];
 
 const getImages = () => {
   const imagesFromOptions =
@@ -48,7 +47,7 @@ sketch.setup(
   }
 );
 
-sketch.draw( ( ) => {
+sketch.draw( () => {
   background( ...getBackgroundColor() );
 
   const images = getImages();
@@ -58,7 +57,8 @@ sketch.draw( ( ) => {
   }
 
   // Which image to show this frame
-  const imageIndex = Math.floor( animation.progression * images.length ) % images.length;
+  const imageIndex =
+    Math.floor( animation.progression * images.length ) % images.length;
   const imageAtIndex = pickImg( images[ imageIndex ] );
 
   const margin = options.sketch?.margin ?? 80;
@@ -76,5 +76,5 @@ sketch.draw( ( ) => {
     img: imageAtIndex,
   } );
 
-  renderTitle( );
+  renderTitle();
 } );

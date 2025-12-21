@@ -13,11 +13,11 @@ import {
 export async function POST(
   request: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      id: string
-    }>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -29,7 +29,7 @@ export async function POST(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -44,10 +44,10 @@ export async function POST(
     if ( !allowedStatuses.includes( job.status ) ) {
       return NextResponse.json(
         {
-          error: `Cannot import options for job with status: ${ job.status }. Only draft, failed, and cancelled jobs can be updated.`
+          error: `Cannot import options for job with status: ${ job.status }. Only draft, failed, and cancelled jobs can be updated.`,
         },
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -59,10 +59,10 @@ export async function POST(
     if ( !file || !( file instanceof File ) ) {
       return NextResponse.json(
         {
-          error: "No file provided"
+          error: "No file provided",
         },
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -75,10 +75,10 @@ export async function POST(
     } catch ( error ) {
       return NextResponse.json(
         {
-          error: "Invalid JSON file"
+          error: "Invalid JSON file",
         },
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -113,7 +113,7 @@ export async function POST(
 
     return NextResponse.json( {
       success: true,
-      jobId
+      jobId,
     } );
   } catch ( error ) {
     console.error(
@@ -124,7 +124,7 @@ export async function POST(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

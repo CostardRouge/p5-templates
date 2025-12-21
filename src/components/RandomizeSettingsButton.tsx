@@ -17,14 +17,16 @@ type RandomizeSettingsButtonProps = {
 };
 
 export default function RandomizeSettingsButton( {
-  config, basePath
+  config,
+  basePath,
 }: RandomizeSettingsButtonProps ) {
   const {
     setValue
   } = useFormContext();
 
   const randomizeConfig = (
-    config: Record<string, FieldConfig>, path: string
+    config: Record<string, FieldConfig>,
+    path: string
   ) => {
     for ( const [
       key,
@@ -36,11 +38,14 @@ export default function RandomizeSettingsButton( {
         case "number":
         case "slider":
           if ( field.min !== undefined && field.max !== undefined ) {
-            const randomValue = Math.random() * ( field.max - field.min ) + field.min;
+            const randomValue =
+              Math.random() * ( field.max - field.min ) + field.min;
 
             setValue(
               fullPath,
-              field.step ? Math.round( randomValue / field.step ) * field.step : randomValue
+              field.step
+                ? Math.round( randomValue / field.step ) * field.step
+                : randomValue
             );
           }
           break;
@@ -56,13 +61,14 @@ export default function RandomizeSettingsButton( {
             [
               Math.floor( Math.random() * 255 ),
               Math.floor( Math.random() * 255 ),
-              Math.floor( Math.random() * 255 )
+              Math.floor( Math.random() * 255 ),
             ]
           );
           break;
         case "select":
           if ( field.options && field.options.length > 0 ) {
-            const randomOption = field.options[ Math.floor( Math.random() * field.options.length ) ];
+            const randomOption =
+              field.options[ Math.floor( Math.random() * field.options.length ) ];
 
             setValue(
               fullPath,

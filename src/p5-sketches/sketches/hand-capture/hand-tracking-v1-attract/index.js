@@ -6,7 +6,7 @@ import sketch from "@/p5/utils/sketch.js";
 import * as common from "@/p5/utils/common.js";
 
 import mediapipe, {
-  init as mediapipeInit
+  init as mediapipeInit,
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
 import drawHands from "@/p5/utils/mediapipe/drawHands.js";
@@ -32,7 +32,7 @@ const layers = {
       0,
       10
     ],
-    erase: 255
+    erase: 255,
   },
   hands: {
     graphics: undefined,
@@ -40,7 +40,7 @@ const layers = {
     background: [
       230
     ],
-    erase: 255
+    erase: 255,
   },
 };
 
@@ -52,7 +52,7 @@ const matter = {
   handBodies: [
   ],
   boundaries: [
-  ]
+  ],
 };
 
 sketch.setup(
@@ -63,7 +63,7 @@ sketch.setup(
       worker: false,
       tasks: [
         "hands"
-      ]
+      ],
     } );
 
     for ( const layerName in layers ) {
@@ -134,8 +134,8 @@ sketch.setup(
     },
     animation: {
       framerate: options.animation.framerate,
-      duration: options.animation.duration
-    }
+      duration: options.animation.duration,
+    },
   }
 );
 
@@ -178,12 +178,12 @@ sketch.draw( (
     neonDot( {
       sizeRange: [
         circleRadius * 2,
-        circleRadius * 2 / 3
+        ( circleRadius * 2 ) / 3
       ],
       shadowsCount: 3,
       graphics: layers.visuals.graphics,
       position,
-      index: index / ( matter.balls.length )
+      index: index / matter.balls.length,
     } );
   } );
 
@@ -228,14 +228,14 @@ sketch.draw( (
         CENTER,
         CENTER
       ],
-      blendMode: EXCLUSION
+      blendMode: EXCLUSION,
     }
   );
 
   string.write(
     "hand tracking v1",
     0,
-    height * 6 / 10,
+    ( height * 6 ) / 10,
     {
       size: 32,
       strokeWeight: 0,
@@ -246,7 +246,7 @@ sketch.draw( (
         CENTER,
         CENTER
       ],
-      blendMode: EXCLUSION
+      blendMode: EXCLUSION,
     }
   );
 } );
@@ -277,9 +277,11 @@ const interactionIndices = [
 ];
 
 function createHandInteractionBodies( hand ) {
-  const interactionPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+  const interactionPoints = interactionIndices
+    .map( ( i ) => hand[ i ] )
+    .filter( Boolean );
 
-  interactionPoints.forEach( point => {
+  interactionPoints.forEach( ( point ) => {
     if ( point ) {
       const x = common.inverseX( point.x ) * width;
       const y = point.y * height;
@@ -311,7 +313,7 @@ function addBall(
   const newBall = Bodies.circle(
     x,
     y,
-    radius,
+    radius
     // {
     //   friction: .001,
     //   frictionAir: 0.9,
@@ -357,12 +359,14 @@ function applyAttractionFromHands(
   }
 
   for ( const hand of hands ) {
-    const attractPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+    const attractPoints = interactionIndices
+      .map( ( i ) => hand[ i ] )
+      .filter( Boolean );
 
     for ( const point of attractPoints ) {
       const target = {
         x: common.inverseX( point.x ) * width,
-        y: point.y * height
+        y: point.y * height,
       };
 
       for ( const ball of matter.balls ) {
@@ -378,12 +382,15 @@ function applyAttractionFromHands(
 }
 
 function attractBallToPoint(
-  ballBody, target, strength = 0.0005, maxForce = 0.002
+  ballBody,
+  target,
+  strength = 0.0005,
+  maxForce = 0.002
 ) {
   const pos = ballBody.position;
   let force = {
     x: ( target.x - pos.x ) * strength,
-    y: ( target.y - pos.y ) * strength
+    y: ( target.y - pos.y ) * strength,
   };
 
   // Clamp force magnitude

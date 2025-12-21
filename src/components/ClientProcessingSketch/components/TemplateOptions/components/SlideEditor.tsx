@@ -23,11 +23,11 @@ export default function SlideEditor( {
 
   const slide = useWatch( {
     control,
-    name: `slides.${ activeIndex }`
+    name: `slides.${ activeIndex }`,
   } );
   const jobId = useWatch( {
     control,
-    name: "id"
+    name: "id",
   } );
 
   const slideFieldPath = `slides.${ activeIndex }` as const;
@@ -42,12 +42,13 @@ export default function SlideEditor( {
   return (
     <div className="text-foreground text-left bg-background rounded-xl">
       <span className="p-1 text-xs text-foreground">
-        root.slides[{activeIndex}].content {slideContentLength ? `(${ slideContentLength })` : null}
+        root.slides[{activeIndex}].content{" "}
+        {slideContentLength ? `(${ slideContentLength })` : null}
       </span>
 
       <TemplateAssetsProvider
         scope={{
-          slide: activeIndex
+          slide: activeIndex,
         }}
         assetsName={`${ slideFieldPath }.assets`}
         jobId={jobId}

@@ -18,7 +18,7 @@ async function getSketchList() {
     } ) => ( {
       name,
       category,
-      hasSketchForm
+      hasSketchForm,
     } ) );
   } catch ( err ) {
     console.error(

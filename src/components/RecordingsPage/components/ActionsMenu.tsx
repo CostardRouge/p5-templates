@@ -12,7 +12,7 @@ import {
   Menu as MenuIcon,
   RotateCcw,
   Trash2,
-  X
+  X,
 } from "lucide-react";
 import HardLink from "@/components/HardLink";
 import fetchDownload from "@/components/utils/fetchDownload";
@@ -42,15 +42,16 @@ export default function ActionsMenu( {
   onStart,
   onRetry,
   onPreviewModal,
-  onClone
+  onClone,
 }: ActionsMenuProps ) {
   const fileInputRef = useRef<HTMLInputElement>( null );
 
-  const isStale = [
-    "active",
-    "queued"
-  ].includes( job.status ) &&
-    ( Date.now() - new Date( job.updatedAt ).getTime() ) > 60 * 60 * 1000;
+  const isStale =
+    [
+      "active",
+      "queued"
+    ].includes( job.status ) &&
+    Date.now() - new Date( job.updatedAt ).getTime() > 60 * 60 * 1000;
 
   const handleAction = async(
     action: string,
@@ -64,14 +65,15 @@ export default function ActionsMenu( {
       const response = await fetch(
         endpoint,
         {
-          method
+          method,
         }
       );
 
       if ( !response.ok ) throw new Error( `${ action } failed` );
 
       const result = await response.json();
-      const success = result.cancelled || result.deleted || result.retried || result.started;
+      const success =
+        result.cancelled || result.deleted || result.retried || result.started;
 
       if ( success ) {
         if ( action === "cancel" || action === "force-cancel" ) onCancel?.( job );
@@ -93,7 +95,8 @@ export default function ActionsMenu( {
     importToast,
     setImportToast
   ] = React.useState<{
-    message: string; type: "success" | "error"
+    message: string;
+    type: "success" | "error";
   } | null>( null );
 
   const handleImportOptions = async( file: File ) => {
@@ -124,7 +127,7 @@ export default function ActionsMenu( {
       if ( result.success ) {
         setImportToast( {
           message: "Options imported successfully",
-          type: "success"
+          type: "success",
         } );
         // Reload after showing toast
         setTimeout(
@@ -138,8 +141,9 @@ export default function ActionsMenu( {
       }
     } catch ( error ) {
       setImportToast( {
-        message: error instanceof Error ? error.message : "Failed to import options",
-        type: "error"
+        message:
+          error instanceof Error ? error.message : "Failed to import options",
+        type: "error",
       } );
     }
   };
@@ -162,7 +166,7 @@ export default function ActionsMenu( {
     <>
       <Menu as="div" className="relative inline-block text-left">
         <MenuButton className="p-2 bg-background/90 backdrop-blur-sm hover:bg-hover rounded-lg border border-border shadow-lg transition-colors inline-flex items-center justify-center">
-          <MenuIcon className="h-4 w-4 text-foreground"/>
+          <MenuIcon className="h-4 w-4 text-foreground" />
         </MenuButton>
 
         <MenuItems
@@ -173,7 +177,9 @@ export default function ActionsMenu( {
           {job.status === "completed" && job.videoUrls && (
             <>
               <div className="px-3 py-2 bg-hover/30">
-                <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">View</p>
+                <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">
+                  View
+                </p>
               </div>
               <MenuItem>
                 {( {
@@ -194,7 +200,9 @@ export default function ActionsMenu( {
 
           {/* Navigation Section */}
           <div className="px-3 py-2 bg-hover/30">
-            <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Navigate</p>
+            <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">
+              Navigate
+            </p>
           </div>
           <MenuItem>
             {( {
@@ -207,10 +215,12 @@ export default function ActionsMenu( {
                 <Link className="h-4 w-4 text-foreground/70" />
                 <div className="flex-1 min-w-0">
                   <span className="font-medium">Open Recording</span>
-                  <p className="text-xs text-foreground/50 font-mono truncate">#{job.id.slice(
-                    0,
-                    8
-                  )}</p>
+                  <p className="text-xs text-foreground/50 font-mono truncate">
+                    #{job.id.slice(
+                      0,
+                      8
+                    )}
+                  </p>
                 </div>
               </HardLink>
             )}
@@ -226,7 +236,9 @@ export default function ActionsMenu( {
                 <Clapperboard className="h-4 w-4 text-foreground/70" />
                 <div className="flex-1 min-w-0">
                   <span className="font-medium">Open Template</span>
-                  <p className="text-xs text-foreground/50 truncate">{job.template}</p>
+                  <p className="text-xs text-foreground/50 truncate">
+                    {job.template}
+                  </p>
                 </div>
               </HardLink>
             )}
@@ -235,7 +247,9 @@ export default function ActionsMenu( {
           {/* Download Section */}
           <div className="h-px bg-border" />
           <div className="px-3 py-2 bg-hover/30">
-            <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Download</p>
+            <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">
+              Download
+            </p>
           </div>
           <DownloadMenuItems job={job} />
           <MenuItem>
@@ -243,7 +257,9 @@ export default function ActionsMenu( {
               focus
             } ) => (
               <button
-                onClick={async() => await fetchDownload( `/api/options/download/${ job.id }` )}
+                onClick={async() =>
+                  await fetchDownload( `/api/options/download/${ job.id }` )
+                }
                 className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
               >
                 <Download className="h-4 w-4 text-foreground/70" />
@@ -261,7 +277,9 @@ export default function ActionsMenu( {
             <>
               <div className="h-px bg-border" />
               <div className="px-3 py-2 bg-hover/30">
-                <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Import</p>
+                <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">
+                  Import
+                </p>
               </div>
               <input
                 ref={fileInputRef}
@@ -280,8 +298,12 @@ export default function ActionsMenu( {
                   >
                     <FileUp className="h-4 w-4 text-purple-600" />
                     <div className="flex-1 min-w-0 text-left">
-                      <span className="font-medium text-purple-600">Import Options JSON</span>
-                      <p className="text-xs text-foreground/50">Assets will be ignored</p>
+                      <span className="font-medium text-purple-600">
+                        Import Options JSON
+                      </span>
+                      <p className="text-xs text-foreground/50">
+                        Assets will be ignored
+                      </p>
                     </div>
                   </button>
                 )}
@@ -292,7 +314,9 @@ export default function ActionsMenu( {
           {/* Action Section */}
           <div className="h-px bg-border" />
           <div className="px-3 py-2 bg-hover/30">
-            <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">Actions</p>
+            <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">
+              Actions
+            </p>
           </div>
 
           {job.status === "draft" && (
@@ -301,14 +325,18 @@ export default function ActionsMenu( {
                 focus
               } ) => (
                 <button
-                  onClick={() => handleAction(
-                    "start",
-                    `/api/recordings/${ job.id }/start`
-                  )}
+                  onClick={() =>
+                    handleAction(
+                      "start",
+                      `/api/recordings/${ job.id }/start`
+                    )
+                  }
                   className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
                 >
                   <Clapperboard className="h-4 w-4 text-green-600" />
-                  <span className="font-medium text-green-600">Start Recording</span>
+                  <span className="font-medium text-green-600">
+                    Start Recording
+                  </span>
                 </button>
               )}
             </MenuItem>
@@ -320,10 +348,12 @@ export default function ActionsMenu( {
                 focus
               } ) => (
                 <button
-                  onClick={() => handleAction(
-                    "cancel",
-                    `/api/recordings/${ job.id }/cancel`
-                  )}
+                  onClick={() =>
+                    handleAction(
+                      "cancel",
+                      `/api/recordings/${ job.id }/cancel`
+                    )
+                  }
                   className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
                 >
                   <X className="h-4 w-4 text-orange-600" />
@@ -339,19 +369,23 @@ export default function ActionsMenu( {
                 focus
               } ) => (
                 <button
-                  onClick={() => handleAction(
-                    "force-cancel",
-                    `/api/recordings/${ job.id }/force-cancel`,
-                    "POST",
-                    `Force cancel stale job ${ job.id.slice(
-                      0,
-                      8
-                    ) }? This will mark it as cancelled.`
-                  )}
+                  onClick={() =>
+                    handleAction(
+                      "force-cancel",
+                      `/api/recordings/${ job.id }/force-cancel`,
+                      "POST",
+                      `Force cancel stale job ${ job.id.slice(
+                        0,
+                        8
+                      ) }? This will mark it as cancelled.`
+                    )
+                  }
                   className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
                 >
                   <AlertTriangle className="h-4 w-4 text-orange-600" />
-                  <span className="font-medium text-orange-600">Force Cancel (Stale)</span>
+                  <span className="font-medium text-orange-600">
+                    Force Cancel (Stale)
+                  </span>
                 </button>
               )}
             </MenuItem>
@@ -366,14 +400,18 @@ export default function ActionsMenu( {
                 focus
               } ) => (
                 <button
-                  onClick={() => handleAction(
-                    "retry",
-                    `/api/recordings/${ job.id }/retry`
-                  )}
+                  onClick={() =>
+                    handleAction(
+                      "retry",
+                      `/api/recordings/${ job.id }/retry`
+                    )
+                  }
                   className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
                 >
                   <RotateCcw className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium text-blue-600">Retry Recording</span>
+                  <span className="font-medium text-blue-600">
+                    Retry Recording
+                  </span>
                 </button>
               )}
             </MenuItem>
@@ -388,7 +426,9 @@ export default function ActionsMenu( {
                 className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
               >
                 <Copy className="h-4 w-4 text-purple-600" />
-                <span className="font-medium text-purple-600">Clone as Draft</span>
+                <span className="font-medium text-purple-600">
+                  Clone as Draft
+                </span>
               </button>
             )}
           </MenuItem>
@@ -407,16 +447,20 @@ export default function ActionsMenu( {
                   focus
                 } ) => (
                   <button
-                    onClick={() => handleAction(
-                      "delete",
-                      `/api/recordings/${ job.id }`,
-                      "DELETE",
-                      `Delete this ${ job.status } recording? This action cannot be undone.`
-                    )}
+                    onClick={() =>
+                      handleAction(
+                        "delete",
+                        `/api/recordings/${ job.id }`,
+                        "DELETE",
+                        `Delete this ${ job.status } recording? This action cannot be undone.`
+                      )
+                    }
                     className={`${ focus ? "bg-red-50 dark:bg-red-950/20" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
                   >
                     <Trash2 className="h-4 w-4 text-red-600" />
-                    <span className="font-medium text-red-600">Delete Recording</span>
+                    <span className="font-medium text-red-600">
+                      Delete Recording
+                    </span>
                   </button>
                 )}
               </MenuItem>

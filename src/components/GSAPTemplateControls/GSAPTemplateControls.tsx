@@ -44,7 +44,11 @@ export default function GSAPTemplateControls( {
           onClick={onPlayPause}
           disabled={isRecording}
         >
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          {isPlaying ? (
+            <Pause className="h-4 w-4" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
         </Button>
 
         {/* Restart Button */}

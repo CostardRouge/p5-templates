@@ -9,7 +9,7 @@ import animation from "@/p5/utils/animation.js";
 
 sketch.setup( () => {
   background( ...options.colors.background );
-}, );
+} );
 
 function drawRectangle( {
   firstCornerPosition,
@@ -22,7 +22,7 @@ function drawRectangle( {
     0,
     0
   ),
-  atCorner
+  atCorner,
 } ) {
   const width = abs( firstCornerPosition.x - oppositeCornerPosition.x );
   const height = abs( firstCornerPosition.y - oppositeCornerPosition.y );
@@ -37,7 +37,7 @@ function drawRectangle( {
     firstCornerPosition.x,
     firstCornerPosition.y,
     oppositeCornerPosition.x,
-    oppositeCornerPosition.y,
+    oppositeCornerPosition.y
   );
 
   if ( atCorner ) {
@@ -45,19 +45,20 @@ function drawRectangle( {
       firstCornerPosition,
       createVector(
         firstCornerPosition.x + width,
-        firstCornerPosition.y,
+        firstCornerPosition.y
       ),
       oppositeCornerPosition,
       createVector(
         firstCornerPosition.x,
-        firstCornerPosition.y + height,
-      )
+        firstCornerPosition.y + height
+      ),
     ].forEach( (
       cornerPosition, cornerIndex
-    ) => atCorner?.(
-      cornerPosition,
-      cornerIndex
-    ) );
+    ) =>
+      atCorner?.(
+        cornerPosition,
+        cornerIndex
+      ) );
   }
 
   pop();
@@ -79,7 +80,7 @@ const cornerPositionCorrections = [
   [
     -1,
     1
-  ]
+  ],
 ];
 
 sketch.draw( (
@@ -92,31 +93,31 @@ sketch.draw( (
   } = animation.ease( {
     values: [
       createVector(
-        width * .3,
-        height * .2,
+        width * 0.3,
+        height * 0.2
       ),
       createVector(
-        width * .7,
-        height * .4,
+        width * 0.7,
+        height * 0.4
       ),
       createVector(
-        width * .3,
-        height * .3,
-      )
+        width * 0.3,
+        height * 0.3
+      ),
     ],
     currentTime: animation.progression * 3,
     easingFn: easing.easeInOutElastic,
-    lerpFn: p5.Vector.lerp
+    lerpFn: p5.Vector.lerp,
   } );
 
   const firstRectangleCornerPosition = createVector(
     center.x - rectangleWidth / 2,
-    center.y - rectangleHeight / 2,
+    center.y - rectangleHeight / 2
   );
 
   const oppositeRectangleCornerPosition = createVector(
     center.x + rectangleWidth / 2,
-    center.y + rectangleHeight / 2,
+    center.y + rectangleHeight / 2
   );
 
   drawRectangle( {
@@ -136,17 +137,17 @@ sketch.draw( (
       const length = 30;
 
       line(
-        cornerPosition.x + ( xShift * margin ),
+        cornerPosition.x + xShift * margin,
         cornerPosition.y,
-        cornerPosition.x + ( xShift * length ),
-        cornerPosition.y,
+        cornerPosition.x + xShift * length,
+        cornerPosition.y
       );
 
       line(
         cornerPosition.x,
-        cornerPosition.y + ( yShift * margin ),
+        cornerPosition.y + yShift * margin,
         cornerPosition.x,
-        cornerPosition.y + ( yShift * length ),
+        cornerPosition.y + yShift * length
       );
 
       if ( cornerIndex === 0 ) {
@@ -169,8 +170,8 @@ sketch.draw( (
 
         push();
         translate(
-          cornerPosition.x - ( xShift * margin ),
-          cornerPosition.y + ( yShift * ( length / 2 ) + ( yShift * margin * 2 / 3 ) ),
+          cornerPosition.x - xShift * margin,
+          cornerPosition.y + ( yShift * ( length / 2 ) + ( yShift * margin * 2 ) / 3 )
         );
         rotate( PI / 2 );
         string.write(
@@ -192,7 +193,7 @@ sketch.draw( (
         );
         pop();
       }
-    }
+    },
   } );
 
   shapes.vl( 1 );

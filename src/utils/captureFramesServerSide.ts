@@ -26,7 +26,7 @@ export async function captureFramesServerSide( {
   await fs.mkdir(
     framesDirectory,
     {
-      recursive: true
+      recursive: true,
     }
   );
 

@@ -73,7 +73,7 @@ export default function ProgressBar( {
   };
 
   const currentStep = steps[ currentStepIndex ];
-  const completedSteps = steps.filter( s => s.status === "completed" ).length;
+  const completedSteps = steps.filter( ( s ) => s.status === "completed" ).length;
 
   if ( variant === "simple" ) {
     return (
@@ -97,7 +97,7 @@ export default function ProgressBar( {
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out"
             style={{
-              width: `${ overallPercentage }%`
+              width: `${ overallPercentage }%`,
             }}
           />
         </div>
@@ -146,7 +146,7 @@ export default function ProgressBar( {
           <div
             className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 transition-all duration-500 ease-out relative"
             style={{
-              width: `${ overallPercentage }%`
+              width: `${ overallPercentage }%`,
             }}
           >
             <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -155,7 +155,8 @@ export default function ProgressBar( {
 
         {/* Step Counter */}
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Step {currentStepIndex + 1} of {steps.length} • {completedSteps} completed
+          Step {currentStepIndex + 1} of {steps.length} • {completedSteps}{" "}
+          completed
         </div>
       </button>
 
@@ -238,7 +239,7 @@ export default function ProgressBar( {
                     <div
                       className="h-full bg-blue-500 transition-all duration-300"
                       style={{
-                        width: `${ step.percentage }%`
+                        width: `${ step.percentage }%`,
                       }}
                     />
                   </div>

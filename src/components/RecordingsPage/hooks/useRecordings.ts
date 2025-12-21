@@ -26,7 +26,7 @@ export default function useRecordings() {
   } );
 
   // Track start times for active jobs
-  inFlightJobs.forEach( job => {
+  inFlightJobs.forEach( ( job ) => {
     if ( job.status === "active" && !recordingStartTimesRef.current[ job.id ] ) {
       recordingStartTimesRef.current[ job.id ] = Date.now();
     }
@@ -37,18 +37,20 @@ export default function useRecordings() {
     () => {
       setIsLoading( true );
       fetch( "/api/recordings" )
-        .then( ( res ) => res.ok ? res.json() : Promise.reject( "Fetch error" ) )
+        .then( ( res ) => ( res.ok ? res.json() : Promise.reject( "Fetch error" ) ) )
         .then( ( data: JobModel[] ) => {
-          const staticJobs = data.filter( j => [
-            "draft",
-            "completed",
-            "failed",
-            "cancelled"
-          ].includes( j.status ) );
-          const inFlightJobs = data.filter( j => [
-            "queued",
-            "active"
-          ].includes( j.status ) );
+          const staticJobs = data.filter( ( j ) =>
+            [
+              "draft",
+              "completed",
+              "failed",
+              "cancelled"
+            ].includes( j.status ) );
+          const inFlightJobs = data.filter( ( j ) =>
+            [
+              "queued",
+              "active"
+            ].includes( j.status ) );
 
           setStaticJobs( staticJobs );
           setInFlightJobs( inFlightJobs );
@@ -69,7 +71,7 @@ export default function useRecordings() {
     () => {
       if ( inFlightJobs.length === 0 ) return;
 
-      const jobIds = inFlightJobs.map( j => j.id );
+      const jobIds = inFlightJobs.map( ( j ) => j.id );
 
       subscribe(
         jobIds,
@@ -77,45 +79,50 @@ export default function useRecordings() {
           jobId, data
         } ) => {
           setInFlightJobs( ( prev ) =>
-            prev.map( j => j.id === jobId ? {
-              ...j,
-              progress: data.percentage,
-              status: data.status as JobStatusEnum,
-              recordingDuration: data.recordingDuration ?? j.recordingDuration
-            } : j ) );
+            prev.map( ( j ) =>
+              j.id === jobId
+                ? {
+                  ...j,
+                  progress: data.percentage,
+                  status: data.status as JobStatusEnum,
+                  recordingDuration:
+                  data.recordingDuration ?? j.recordingDuration,
+                }
+                : j ) );
 
           if ( [
             "completed",
             "failed",
             "cancelled"
           ].includes( data.status ) ) {
-            setInFlightJobs( prev => prev.filter( j => j.id !== jobId ) );
+            setInFlightJobs( ( prev ) => prev.filter( ( j ) => j.id !== jobId ) );
             delete recordingStartTimesRef.current[ jobId ];
 
             fetch( `/api/recordings/${ jobId }` )
-              .then( res => res.ok ? res.json() : Promise.reject( "Fetch error" ) )
+              .then( ( res ) => ( res.ok ? res.json() : Promise.reject( "Fetch error" ) ) )
               .then( ( updatedJob: JobModel ) => {
-                setStaticJobs( prev => [
+                setStaticJobs( ( prev ) => [
                   updatedJob,
                   ...prev
                 ] );
               } )
-              .catch( err => {
+              .catch( ( err ) => {
                 console.error(
                   "Failed to fetch updated job:",
                   err
                 );
-                const completedJob = inFlightJobs.find( j => j.id === jobId );
+                const completedJob = inFlightJobs.find( ( j ) => j.id === jobId );
 
                 if ( completedJob ) {
-                  setStaticJobs( prev => [
+                  setStaticJobs( ( prev ) => [
                     {
                       ...completedJob,
                       progress: 100,
                       status: data.status as JobStatusEnum,
-                      recordingDuration: data.recordingDuration ?? completedJob.recordingDuration
+                      recordingDuration:
+                    data.recordingDuration ?? completedJob.recordingDuration,
                     },
-                    ...prev
+                    ...prev,
                   ] );
                 }
               } );
@@ -149,7 +156,7 @@ export default function useRecordings() {
             const newLiveJobs: JobModel[] = await res.json();
 
             setInFlightJobs( ( prev ) => {
-              const prevIds = new Set( prev.map( j => j.id ) );
+              const prevIds = new Set( prev.map( ( j ) => j.id ) );
               const merged = [
                 ...prev
               ];
@@ -184,19 +191,19 @@ export default function useRecordings() {
       {
         ...job,
         status: "cancelled",
-        progress: 100
+        progress: 100,
       },
       ...prev,
     ] );
   };
 
   const handleDelete = ( job: JobModel ) => {
-    setInFlightJobs( prev => prev.filter( j => j.id !== job.id ) );
-    setStaticJobs( prev => prev.filter( j => j.id !== job.id ) );
+    setInFlightJobs( ( prev ) => prev.filter( ( j ) => j.id !== job.id ) );
+    setStaticJobs( ( prev ) => prev.filter( ( j ) => j.id !== job.id ) );
   };
 
   const handleStart = ( job: JobModel ) => {
-    setStaticJobs( ( prev ) => prev.filter( j => j.id !== job.id ) );
+    setStaticJobs( ( prev ) => prev.filter( ( j ) => j.id !== job.id ) );
     setInFlightJobs( ( prev ) => [
       {
         ...job,
@@ -208,7 +215,7 @@ export default function useRecordings() {
   };
 
   const handleRetry = ( job: JobModel ) => {
-    setStaticJobs( ( prev ) => prev.filter( j => j.id !== job.id ) );
+    setStaticJobs( ( prev ) => prev.filter( ( j ) => j.id !== job.id ) );
     setInFlightJobs( ( prev ) => [
       {
         ...job,
@@ -224,12 +231,12 @@ export default function useRecordings() {
       "queued",
       "active"
     ].includes( job.status ) ) {
-      setInFlightJobs( prev => [
+      setInFlightJobs( ( prev ) => [
         job,
         ...prev
       ] );
     } else {
-      setStaticJobs( prev => [
+      setStaticJobs( ( prev ) => [
         job,
         ...prev
       ] );
@@ -249,6 +256,6 @@ export default function useRecordings() {
     handleDelete,
     handleStart,
     handleRetry,
-    addJob
+    addJob,
   };
 }

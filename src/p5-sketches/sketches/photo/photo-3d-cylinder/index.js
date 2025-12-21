@@ -32,12 +32,16 @@ sketch.setup(
     type: "webgl",
     size: {
       width: options.size?.width,
-      height: options.size?.height
+      height: options.size?.height,
     },
     animation: {
-      framerate: options.sketch?.animation?.framerate ?? options.animation?.framerate ?? 60,
-      duration: options.sketch?.animation?.duration ?? options.animation?.duration ?? 8
-    }
+      framerate:
+      options.sketch?.animation?.framerate ??
+      options.animation?.framerate ??
+      60,
+      duration:
+      options.sketch?.animation?.duration ?? options.animation?.duration ?? 8,
+    },
   }
 );
 
@@ -73,7 +77,7 @@ sketch.draw( (
     const zoom = animation.ease( {
       values: zoomValues,
       currentTime: animation.progression * zoomValues.length,
-      easingFn: easing.easeInOutQuart
+      easingFn: easing.easeInOutQuart,
     } );
 
     translate(
@@ -100,7 +104,7 @@ sketch.draw( (
     rotateX( animation.ease( {
       values: xRotationValues,
       currentTime: animation.progression * xRotationValues.length,
-      easingFn: easing.easeInOutExpo
+      easingFn: easing.easeInOutExpo,
     } ) );
   }
 
@@ -111,7 +115,7 @@ sketch.draw( (
         PI / 2
       ],
       currentTime: +time,
-      easingFn: easing.easeInOutExpo
+      easingFn: easing.easeInOutExpo,
     } ) );
   }
 
@@ -130,7 +134,7 @@ sketch.draw( (
       width / 2
     ],
     currentTime: foldingSpeed,
-    easingFn: easing.easeInOutExpo
+    easingFn: easing.easeInOutExpo,
   } );
   const R = animation.ease( {
     values: [
@@ -138,7 +142,7 @@ sketch.draw( (
       width / 2
     ],
     currentTime: 0,
-    easingFn: easing.easeInOutExpo
+    easingFn: easing.easeInOutExpo,
   } );
 
   const diamond = 0;
@@ -163,7 +167,7 @@ sketch.draw( (
     bottomRight: createVector(
       R,
       height - borderSize
-    )
+    ),
   };
 
   const W = width / columns;
@@ -196,7 +200,7 @@ sketch.draw( (
           ),
           graphics: buffer,
           center: true,
-          fill: true
+          fill: true,
         } );
 
         return cells.reduce(
@@ -213,7 +217,7 @@ sketch.draw( (
             );
 
             imageCells.push( {
-              imagePart
+              imagePart,
             } );
             return imageCells;
           },
@@ -229,7 +233,8 @@ sketch.draw( (
       center, width: cellWidth, height: cellHeight, row
     }, cellIndex
   ) => {
-    const circonference = ( cylinderConfig.vertical ? cellHeight : cellWidth ) * images?.length;
+    const circonference =
+        ( cylinderConfig.vertical ? cellHeight : cellWidth ) * images?.length;
 
     push();
     translate(
@@ -256,19 +261,21 @@ sketch.draw( (
       rotateFunction( angle );
 
       rotateFunction( animation.ease( {
-        values: images.map( (
-          _, index
-        ) => [
-          ( index / images.length ) * TAU
-        ] ).flat( Infinity ),
+        values: images
+          .map( (
+            _, index
+          ) => [
+            ( index / images.length ) * TAU
+          ] )
+          .flat( Infinity ),
         currentTime: +row / rows + animation.progression * images.length,
-        easingFn: easing.easeInOutExpo
+        easingFn: easing.easeInOutExpo,
       } ) );
 
       translate(
         0,
         0,
-        ( circonference / 2 ) / PI
+        circonference / 2 / PI
       );
 
       noFill();

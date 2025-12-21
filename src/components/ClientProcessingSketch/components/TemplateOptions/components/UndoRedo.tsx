@@ -2,8 +2,7 @@ import {
   Redo, Undo
 } from "lucide-react";
 
-import useFormUndoRedo
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/FormUndoRedo/hooks/useFormUndoRedo";
+import useFormUndoRedo from "@/components/ClientProcessingSketch/components/TemplateOptions/components/FormUndoRedo/hooks/useFormUndoRedo";
 
 export default function UndoRedo() {
   const {

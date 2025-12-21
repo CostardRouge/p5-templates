@@ -5,7 +5,9 @@
  * @param {Array<number>} color - [r, g, b, a] color.
  */
 export function drawSegmentationMask(
-  layer, maskData, color = [
+  layer,
+  maskData,
+  color = [
     255,
     0,
     0,

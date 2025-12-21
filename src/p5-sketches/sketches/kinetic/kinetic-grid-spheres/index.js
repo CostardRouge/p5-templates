@@ -11,7 +11,8 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
 
 import mediapipe, {
-  init as mediapipeInit, setEnabled as setMediapipeEnabled
+  init as mediapipeInit,
+  setEnabled as setMediapipeEnabled,
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
 // Key landmarks for interaction (fingertips)
@@ -32,7 +33,7 @@ const sketchState = {
   },
   webcam: {
     graphics: null,
-  }
+  },
 };
 
 sketch.setup( async( {
@@ -56,17 +57,16 @@ sketch.setup( async( {
     worker: false,
     tasks: [
       "hands"
-    ]
+    ],
   } );
 } );
 
 const getBackgroundColor = () =>
-  ( options.sketch?.backgroundColor ??
-  [
+  options.sketch?.backgroundColor ?? [
     246,
     235,
     225
-  ] );
+  ];
 
 sketch.draw( () => {
   background( ...getBackgroundColor() );
@@ -79,7 +79,7 @@ sketch.draw( () => {
   setMediapipeEnabled( useHands );
 
   const columns = options.sketch?.grid?.columns ?? 65;
-  const rows = columns * height / width;
+  const rows = ( columns * height ) / width;
   const cellSize = width / columns;
 
   const gridOptions = {
@@ -101,7 +101,7 @@ sketch.draw( () => {
     ),
     rows,
     columns,
-    centered: true
+    centered: true,
   };
 
   const gap = options.sketch.grid.gap ?? 3;
@@ -111,31 +111,33 @@ sketch.draw( () => {
   const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
   const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
-  const maxInfluenceDistance = options.sketch.animation.maxInfluenceDistance ?? 150;
+  const maxInfluenceDistance =
+    options.sketch.animation.maxInfluenceDistance ?? 150;
 
   const targetVectors = [
-
   ];
 
   if ( options.sketch.animation.useMouse ?? true ) {
     sketchState.shape.graphics.screenPosition( createVector(
       mouseX - width / 2,
-      mouseY - height / 2,
+      mouseY - height / 2
     ) );
   }
 
   if ( options.sketch.animation.useHands ?? true ) {
-    mediapipe.tasks?.hands?.result?.landmarks?.forEach( hand => {
-      const interactionPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+    mediapipe.tasks?.hands?.result?.landmarks?.forEach( ( hand ) => {
+      const interactionPoints = interactionIndices
+        .map( ( i ) => hand[ i ] )
+        .filter( Boolean );
 
-      interactionPoints.forEach( point => {
+      interactionPoints.forEach( ( point ) => {
         if ( point ) {
           const x = common.inverseX( point.x ) * width;
           const y = point.y * height;
 
           targetVectors.push( sketchState.shape.graphics.screenPosition( createVector(
             x - width / 2,
-            y - height / 2,
+            y - height / 2
           ) ) );
         }
       } );
@@ -172,7 +174,7 @@ sketch.draw( () => {
 
   grid.draw(
     gridOptions,
-    position => {
+    ( position ) => {
       sketchState.shape.graphics.push();
       sketchState.shape.graphics.translate( position );
 
@@ -207,7 +209,7 @@ sketch.draw( () => {
       const depth = animation.ease( {
         values: [
           depthMax,
-          cellSize,
+          cellSize
         ],
         currentTime: switchIndex,
         easingFn: easing?.[ options.sketch.animation.easing ] ?? easing.easeOutBack,
@@ -223,22 +225,23 @@ sketch.draw( () => {
 
       const hue = sketchState.shape.graphics.noise(
         position.x / columns / 5,
-        position.y / rows / 5,
-        // switchIndex
+        position.y / rows / 5
+      // switchIndex
       );
       const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
       const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
       const tint = colors.rainbow( {
         hueOffset: switchIndex,
-        hueIndex: sketchState.shape.graphics.map(
+        hueIndex:
+        sketchState.shape.graphics.map(
           hue,
           0,
           1,
           -PI,
           PI
         ) * hueMultiplier,
-        opacityFactor
+        opacityFactor,
       } );
 
       const {
@@ -246,7 +249,7 @@ sketch.draw( () => {
           red,
           green,
           blue
-        ]
+        ],
       } = tint;
 
       sketchState.shape.graphics.fill(

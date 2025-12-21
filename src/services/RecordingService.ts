@@ -6,8 +6,7 @@ import {
 } from "./RecordingWorkerService";
 import Redis from "@/lib/connections/redis";
 import {
-  JobStatusEnum,
-  QueueHealthResponse
+  JobStatusEnum, QueueHealthResponse
 } from "@/types/recording.types";
 
 export class RecordingService {
@@ -35,14 +34,14 @@ export class RecordingService {
     status,
     files,
     jobId,
-    thumbnails
+    thumbnails,
   }: {
-    status: JobStatusEnum,
-    template: string,
-    options: string,
-    files: File[],
-    jobId?: string,
-    thumbnails?: Record<string, string>
+    status: JobStatusEnum;
+    template: string;
+    options: string;
+    files: File[];
+    jobId?: string;
+    thumbnails?: Record<string, string>;
   } ): Promise<string> {
     return this.queueService.enqueueRecording( {
       template,
@@ -50,7 +49,7 @@ export class RecordingService {
       status,
       files,
       jobId,
-      thumbnails
+      thumbnails,
     } );
   }
 
@@ -61,14 +60,14 @@ export class RecordingService {
       "process-recording",
       {
         jobId,
-        template
+        template,
       },
       {
         jobId,
         priority: 1,
         delay: 0,
         removeOnFail: true,
-        removeOnComplete: true
+        removeOnComplete: true,
       }
     );
   }

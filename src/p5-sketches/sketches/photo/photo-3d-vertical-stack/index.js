@@ -87,7 +87,7 @@ class Card {
     graphics.translate( this.position );
     imageUtils.marginImage( {
       img: this.img,
-      scale: .85,
+      scale: 0.85,
       center: true,
       graphics,
     } );
@@ -116,7 +116,7 @@ class Card {
         0,
         0,
         {
-          // graphics,
+        // graphics,
           size: 24,
           // fill: color(...options.colors.text),
           // stroke: color(...options.colors.background),
@@ -131,7 +131,7 @@ class Card {
             CENTER,
             CENTER
           ],
-          blendMode: DIFFERENCE
+          blendMode: DIFFERENCE,
         }
       );
       pop();
@@ -146,19 +146,18 @@ const canvases = {
 const cardsLength = options.sketch?.count ?? 200;
 
 // helpers
-const getBg = () => (
-  options.sketch?.backgroundColor ?? options.colors?.background ?? [
+const getBg = () =>
+  options.sketch?.backgroundColor ??
+  options.colors?.background ?? [
     230,
     230,
     230
-  ]
-);
+  ];
 
-const getTextColor = () => (
+const getTextColor = () =>
   options.sketch?.textColor ?? options.colors?.text ?? [
     0
-  ]
-);
+  ];
 
 const getImages = () => {
   const imagesFromOptions =
@@ -185,26 +184,26 @@ sketch.setup( () => {
 
   const start = createVector(
     0,
-    height * 1 / 8 - height / 2,
+    ( height * 1 ) / 8 - height / 2,
     -500
   );
   const end = createVector(
     0,
-    height * 2.75 / 4 - height / 2
+    ( height * 2.75 ) / 4 - height / 2
   );
 
   cache.store(
     "positions",
-    () => (
+    () =>
       Array.from( {
-        length: cardsLength
+        length: cardsLength,
       } ).map( (
         _, index
       ) => {
         const position = p5.Vector.lerp(
           start,
           end,
-          index / ( cardsLength )
+          index / cardsLength
         );
 
         cards.push( new Card( {
@@ -214,9 +213,8 @@ sketch.setup( () => {
 
         return position;
       } )
-    )
   );
-}, );
+} );
 
 sketch.draw( (
   _time, center, favoriteColor
@@ -288,14 +286,14 @@ sketch.draw( (
     animation.ease( {
       values: [
         height / 2 - 200,
-        height * 1 / 8,
+        ( height * 1 ) / 8
       ],
       currentTime: animation.circularProgression,
-      easingFn: easing.easeOutQuint
+      easingFn: easing.easeOutQuint,
     } ),
     {
       ...textWriteOptions,
-      blendMode: EXCLUSION
+      blendMode: EXCLUSION,
     }
   );
 
@@ -305,14 +303,14 @@ sketch.draw( (
     animation.ease( {
       values: [
         height / 2 + 200,
-        height * 6.5 / 8
+        ( height * 6.5 ) / 8
       ],
       currentTime: animation.circularProgression,
-      easingFn: easing.easeOutQuint
+      easingFn: easing.easeOutQuint,
     } ),
     {
       ...textWriteOptions,
-      blendMode: EXCLUSION
+      blendMode: EXCLUSION,
     }
   );
 } );

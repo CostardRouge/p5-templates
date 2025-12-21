@@ -24,7 +24,7 @@ const recorder = {
     format = "png", framerate = 60
   ) {
     console.log( {
-      format
+      format,
     } );
     recorder.lib = new CCapture( {
       // format: options.get('recording-format'),
@@ -55,7 +55,7 @@ const recorder = {
     }
 
     await recorder.load( format );
-    recorder.lib.start( );
+    recorder.lib.start();
 
     recorder.recording = true;
     recorder.savedFramesCount = 0;
@@ -98,8 +98,12 @@ const recorder = {
       !recorder.recording
     );
 
-    if ( recorder.maximumFrames && document.getElementById( "recording-progression" ) ) {
-      document.getElementById( "recording-progression" ).style.width = ( recorder.savedFramesCount / recorder.maximumFrames ) * 100 + "%";
+    if (
+      recorder.maximumFrames &&
+      document.getElementById( "recording-progression" )
+    ) {
+      document.getElementById( "recording-progression" ).style.width =
+        ( recorder.savedFramesCount / recorder.maximumFrames ) * 100 + "%";
     }
 
     if ( recorder.maximumFrames === recorder.savedFramesCount ) {
@@ -125,11 +129,12 @@ const recorder = {
     recorder.savedFramesCount++;
 
     if ( typeof window.reportCaptureProgress === "function" ) {
-      const progression = ( recorder.savedFramesCount / animation.maximumFramesCount );
+      const progression =
+        recorder.savedFramesCount / animation.maximumFramesCount;
 
       window.reportCaptureProgress( progression * 100 );
     }
-  }
+  },
 };
 
 // recorder.onDraw();
@@ -141,13 +146,15 @@ window.recorder = recorder;
 window.startLoopRecording = async( {
   format
 } = {
-} ) => recorder.start( {
-  maximumFrames: animation.maximumFramesCount,
-  format,
-} );
-window.startLoopRecordingWithSaveCallback = async saveCallback => recorder.start( {
-  maximumFrames: animation.maximumFramesCount,
-  saveCallback,
-} );
+} ) =>
+  recorder.start( {
+    maximumFrames: animation.maximumFramesCount,
+    format,
+  } );
+window.startLoopRecordingWithSaveCallback = async( saveCallback ) =>
+  recorder.start( {
+    maximumFrames: animation.maximumFramesCount,
+    saveCallback,
+  } );
 
 export default recorder;

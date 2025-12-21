@@ -106,7 +106,7 @@ const slides = {
     layout, ...opts
   } ) {
     // ( _layouts[ layout ] ?? _layouts.auto )( opts );
-    ( _layouts.free )( opts );
+    _layouts.free( opts );
   },
 
   renderCurrentSlide() {
@@ -133,7 +133,7 @@ const slides = {
 
     return {
       ...globalSketch,
-      ...slideSketch
+      ...slideSketch,
     };
   },
 };
@@ -145,9 +145,10 @@ window.setSlide = ( index ) => {
 window.getSlide = ( index ) => slides.getSlide( index );
 window.getCurrentSlide = () => ( {
   slide: slides.current,
-  index: slides.index
+  index: slides.index,
 } );
-window.getSketchSettings = ( optionsTarget ) => slides.getSketchSettings( optionsTarget );
+window.getSketchSettings = ( optionsTarget ) =>
+  slides.getSketchSettings( optionsTarget );
 
 window.slides = slides;
 

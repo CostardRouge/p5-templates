@@ -8,9 +8,14 @@ import {
   QueueHealthResponse
 } from "@/types/recording.types";
 
-export async function GET(): Promise<NextResponse<QueueHealthResponse | {
- error: string
-}>> {
+export async function GET(): Promise<
+  NextResponse<
+    | QueueHealthResponse
+    | {
+        error: string;
+      }
+  >
+> {
   try {
     const recordingService = RecordingService.getInstance();
     const health = await recordingService.getQueueHealth();
@@ -24,10 +29,10 @@ export async function GET(): Promise<NextResponse<QueueHealthResponse | {
 
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Internal server error"
+        error: error instanceof Error ? error.message : "Internal server error",
       },
       {
-        status: 500
+        status: 500,
       }
     );
   }

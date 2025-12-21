@@ -6,7 +6,7 @@ import Link from "next/link";
 
 type P5ControlsProps = {
   name: string;
-}
+};
 
 export function P5Controls( {
   name
@@ -32,7 +32,7 @@ export function P5Controls( {
         <button
           onClick={() => {
             window?.toggleLoop();
-            setLooping( looping => !looping );
+            setLooping( ( looping ) => !looping );
           }}
           title={looping ? "Pause animation" : "Play animation"}
           aria-label={looping ? "Pause animation" : "Play animation"}

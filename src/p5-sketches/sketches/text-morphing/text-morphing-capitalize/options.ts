@@ -23,7 +23,7 @@ export const formValues = {
     cross: {
       enabled: true,
       strokeWeight: 5,
-      size: 20
+      size: 20,
     },
     line: {
       enabled: true,
@@ -36,7 +36,7 @@ export const formValues = {
         0
       ],
       strokeWeight: 5,
-    }
+    },
   },
   morphing: {
     easing: "easeInOutExpo",
@@ -46,7 +46,7 @@ export const formValues = {
       strokeWeightMax: 20,
       strokeWeightMin: 3,
       strokeWeightEasing: "easeOutExpo",
-    }
+    },
   },
   backgroundColor: [
     0,
@@ -72,9 +72,9 @@ export const formConfiguration: Record<string, any> = {
       font: {
         component: "select",
         label: "Font name",
-        options: fontNames.map( fontName => ( {
+        options: fontNames.map( ( fontName ) => ( {
           value: fontName,
-          label: fontName
+          label: fontName,
         } ) ),
       },
       size: {
@@ -82,23 +82,23 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1
+        step: 0.1,
       },
       sampleFactor: {
         label: "Text sample factor",
         component: "slider",
         min: 0.01,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       simplifyThreshold: {
         label: "Simplify threshold",
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.1
+        step: 0.1,
       },
-    }
+    },
   },
   morphing: {
     component: "nested-object",
@@ -107,24 +107,24 @@ export const formConfiguration: Record<string, any> = {
       easing: {
         component: "select",
         label: "Morphing easing function",
-        options: Object.keys( easing ).map( easingFunctionName => ( {
+        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
           label: easingFunctionName,
           value: easingFunctionName,
-        } ) )
+        } ) ),
       },
       depthLayersCount: {
         label: "Depth layers count",
         component: "slider",
         min: 1,
         max: 1000,
-        step: 1
+        step: 1,
       },
       depthLength: {
         label: "Depth length",
         component: "slider",
         min: -4,
         max: 4,
-        step: 0.01
+        step: 0.01,
       },
       point: {
         component: "nested-object",
@@ -135,26 +135,26 @@ export const formConfiguration: Record<string, any> = {
             component: "slider",
             min: 1,
             max: 150,
-            step: 1
+            step: 1,
           },
           strokeWeightMin: {
             label: "Min stroke weight",
             component: "slider",
             min: 1,
             max: 150,
-            step: 1
+            step: 1,
           },
           strokeWeightEasing: {
             component: "select",
             label: "Stroke weight easing function",
-            options: Object.keys( easing ).map( easingFunctionName => ( {
+            options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
               label: easingFunctionName,
               value: easingFunctionName,
-            } ) )
+            } ) ),
           },
-        }
-      }
-    }
+        },
+      },
+    },
   },
   sliders: {
     component: "nested-object",
@@ -169,7 +169,7 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       stroke: {
         label: "Stroke",
@@ -188,16 +188,16 @@ export const formConfiguration: Record<string, any> = {
             component: "slider",
             min: 1,
             max: 20,
-            step: 0.1
+            step: 0.1,
           },
           size: {
             label: "Cross size",
             component: "slider",
             min: 1,
             max: 100,
-            step: 0.1
+            step: 0.1,
           },
-        }
+        },
       },
       line: {
         component: "nested-object",
@@ -212,9 +212,9 @@ export const formConfiguration: Record<string, any> = {
             component: "slider",
             min: 1,
             max: 20,
-            step: 0.1
-          }
-        }
+            step: 0.1,
+          },
+        },
       },
       circle: {
         component: "nested-object",
@@ -229,25 +229,25 @@ export const formConfiguration: Record<string, any> = {
             component: "slider",
             min: 1,
             max: 100,
-            step: 0.1
+            step: 0.1,
           },
           strokeWeight: {
             label: "Circle stroke weight",
             component: "slider",
             min: 1,
             max: 20,
-            step: 0.1
+            step: 0.1,
           },
           fill: {
             label: "Circle fill",
             component: "color",
           },
-        }
-      }
-    }
+        },
+      },
+    },
   },
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
 };

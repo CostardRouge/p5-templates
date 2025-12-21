@@ -16,23 +16,21 @@ import Matter from "@/public/assets/libraries/matter.min.js";
 scripts.load( "/assets/libraries/decomp.min.js" );
 
 // helpers
-const getBg = () => (
-  options.sketch?.backgroundColor ?? options.colors?.background ?? [
+const getBg = () =>
+  options.sketch?.backgroundColor ??
+  options.colors?.background ?? [
     246,
     235,
     225
-  ]
-);
+  ];
 
-const getTextColor = () => (
+const getTextColor = () =>
   options.sketch?.textColor ?? options.colors?.text ?? [
     0
-  ]
-);
+  ];
 
-const getFont = () => (
-  string.fonts?.[ options.sketch?.font ] || string.fonts.martian
-);
+const getFont = () =>
+  string.fonts?.[ options.sketch?.font ] || string.fonts.martian;
 
 const getImages = () => {
   const imagesFromOptions =
@@ -60,14 +58,14 @@ events.register(
       mouseX,
       mouseY,
       random(
-        // 50,
-        // 75,
+      // 50,
+      // 75,
         100,
         125,
-        150,
-        // 200,
-        // 250,
-        // 300
+        150
+      // 200,
+      // 250,
+      // 300
       )
     );
   }
@@ -84,13 +82,11 @@ const matter = {
   balls: [
   ],
   boundaries: [
-  ]
+  ],
 };
 
 function drawImageWithMask( {
-  img,
-  maskDrawer,
-  graphics = window
+  img, maskDrawer, graphics = window
 } ) {
   // image(img, 0, 0, graphics.width, graphics.height);
 
@@ -148,7 +144,7 @@ function addImageBall(
       y,
       radius,
       radius
-    )
+    ),
   };
 
   // const velocityMagnitude = 5;
@@ -191,11 +187,11 @@ function addBoundary(
 sketch.setup( () => {
   canvases.mask = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
   canvases.imageBuffer = createGraphics(
     sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+    sketch?.engine?.canvas?.height
   );
 
   // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
@@ -233,14 +229,14 @@ sketch.setup( () => {
 
   for ( let i = 0; i <= 10; i++ ) {
     addImageBall(
-      ( images?.[ 0 ]?.img ),
+      images?.[ 0 ]?.img,
       random( width ),
       random( height ),
-      ( width / 6 - 2 * margin )
+      width / 6 - 2 * margin
       // random(100)
     );
   }
-}, );
+} );
 
 sketch.draw( (
   time, center, favoriteColor
@@ -273,7 +269,7 @@ sketch.draw( (
       -1,
       1,
       easing.easeInOutExpo
-    ),
+    )
 
     // animation.sinOscillation,
     // animation.cosOscillation
@@ -290,7 +286,8 @@ sketch.draw( (
     const {
       position: {
         x, y
-      }, circleRadius
+      },
+      circleRadius,
     } = ball;
 
     matter.balls.forEach( (
@@ -309,7 +306,7 @@ sketch.draw( (
       const {
         position: {
           x: _x, y: _y
-        }
+        },
       } = ball;
 
       // stroke(0, 0, 0, map(position.dist(_position), 0, 1000, 0, 100));
@@ -326,7 +323,7 @@ sketch.draw( (
 
     drawImageWithMask( {
       img,
-      maskDrawer: graphics => {
+      maskDrawer: ( graphics ) => {
         graphics.fill( 255 );
         graphics.noStroke();
         graphics.ellipse(
@@ -335,18 +332,20 @@ sketch.draw( (
           circleRadius * 2,
           circleRadius * 2
         );
-      }
+      },
     } );
   } );
 
-  const defaultTitle = "variable-gravity-test".toUpperCase().replaceAll(
-    "-",
-    "\n"
-  );
+  const defaultTitle = "variable-gravity-test"
+    .toUpperCase()
+    .replaceAll(
+      "-",
+      "\n"
+    );
 
   if ( animation.progression < 0.2 ) {
     string.write(
-      ( options.sketch?.title || defaultTitle ),
+      options.sketch?.title || defaultTitle,
       // options.texts.title || defaultTitle,
       0,
       height / 2,
@@ -359,7 +358,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: EXCLUSION,
       }
     );
   }

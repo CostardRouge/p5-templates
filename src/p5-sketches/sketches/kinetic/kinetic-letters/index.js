@@ -13,7 +13,8 @@ import animation from "@/p5/utils/animation.js";
 import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 
 import mediapipe, {
-  init as mediapipeInit, setEnabled as setMediapipeEnabled
+  init as mediapipeInit,
+  setEnabled as setMediapipeEnabled,
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
 // Key landmarks for interaction (palm, fingertips)
@@ -31,7 +32,7 @@ const layers = {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 255
+    erase: 255,
   },
   visuals: {
     graphics: undefined,
@@ -39,21 +40,20 @@ const layers = {
     background: [
       80
     ],
-    erase: 255
+    erase: 255,
   },
   pointers: {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 255
+    erase: 255,
   },
-
 };
 
 const sketchState = {
   letters: [
   ],
-  handPointingImage: null
+  handPointingImage: null,
 };
 
 events.register(
@@ -76,7 +76,7 @@ sketch.setup(
       worker: false,
       tasks: [
         "hands"
-      ]
+      ],
     } );
 
     for ( const layerName in layers ) {
@@ -101,8 +101,8 @@ sketch.setup(
     },
     animation: {
       framerate: options.animation.framerate,
-      duration: options.animation.duration
-    }
+      duration: options.animation.duration,
+    },
   }
 );
 
@@ -122,10 +122,11 @@ sketch.draw( () => {
       options.sketch.text,
       options.sketch.letterPositionMargin
     ),
-    () => addLetterBoxes(
-      options.sketch.text,
-      options.sketch.letterPositionMargin
-    )
+    () =>
+      addLetterBoxes(
+        options.sketch.text,
+        options.sketch.letterPositionMargin
+      )
   );
 
   drawHands(
@@ -134,7 +135,6 @@ sketch.draw( () => {
   );
 
   const targetVectors = [
-
   ];
 
   if ( options.sketch.interactive.useMouse ) {
@@ -145,10 +145,12 @@ sketch.draw( () => {
   }
 
   if ( useHands ) {
-    mediapipe.tasks?.hands?.result?.landmarks?.forEach( hand => {
-      const interactionPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+    mediapipe.tasks?.hands?.result?.landmarks?.forEach( ( hand ) => {
+      const interactionPoints = interactionIndices
+        .map( ( i ) => hand[ i ] )
+        .filter( Boolean );
 
-      interactionPoints.forEach( point => {
+      interactionPoints.forEach( ( point ) => {
         if ( point ) {
           const x = common.inverseX( point.x ) * width;
           const y = point.y * height;
@@ -172,25 +174,31 @@ sketch.draw( () => {
 
     const pointerPosition = createVector(
       map(
-        Math.sin( animation.angle * options.sketch.interactive.pointersSinAngleMultiplier + handProgression * options.sketch.interactive.pointersSinProgressionMultiplier ),
+        Math.sin( animation.angle *
+            options.sketch.interactive.pointersSinAngleMultiplier +
+            handProgression *
+              options.sketch.interactive.pointersSinProgressionMultiplier ),
         -1,
         1,
         margin,
         W
       ),
       map(
-        Math.cos( animation.angle * options.sketch.interactive.pointersCosAngleMultiplier + handProgression * options.sketch.interactive.pointersCosProgressionMultiplier ),
+        Math.cos( animation.angle *
+            options.sketch.interactive.pointersCosAngleMultiplier +
+            handProgression *
+              options.sketch.interactive.pointersCosProgressionMultiplier ),
         -1,
         1,
         margin,
         H
-      ),
+      )
     );
 
     targetVectors.push( pointerPosition );
 
     if ( options.sketch.interactive.pointersLinesShow ) {
-      layers.pointers.graphics?.stroke( ... ( options.sketch.interactive.pointersLinesStroke ?? [
+      layers.pointers.graphics?.stroke( ...( options.sketch.interactive.pointersLinesStroke ?? [
         0
       ] ) );
 
@@ -206,7 +214,10 @@ sketch.draw( () => {
       );
     }
 
-    if ( layers.pointers.graphics && options.sketch.interactive.pointersImageShow ) {
+    if (
+      layers.pointers.graphics &&
+      options.sketch.interactive.pointersImageShow
+    ) {
       layers.pointers.graphics.image(
         sketchState.handPointingImage,
         pointerPosition.x,
@@ -271,7 +282,7 @@ function addLetterBoxes(
     letterBodies.push( {
       x,
       y,
-      char: text[ i ]
+      char: text[ i ],
     } );
   }
 
@@ -283,7 +294,7 @@ function drawLetterBodies(
 ) {
   const sizeValues = [
     options.sketch.minLetterSize,
-    options.sketch.maxLetterSize
+    options.sketch.maxLetterSize,
   ];
 
   for ( const body of bodies ) {
@@ -294,10 +305,10 @@ function drawLetterBodies(
     const switchIndex = computeDisplacement(
       createVector(
         x,
-        y,
+        y
       ),
       targetVectors,
-      options.sketch.interactive.maxInfluenceDistance ?? 250,
+      options.sketch.interactive.maxInfluenceDistance ?? 250
     );
 
     graphics?.push();
@@ -310,10 +321,11 @@ function drawLetterBodies(
       const angle = animation.ease( {
         values: [
           0,
-          PI,
+          PI
         ],
         currentTime: switchIndex,
-        easingFn: easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine,
+        easingFn:
+          easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine,
       } );
 
       graphics.rotate( angle );
@@ -332,12 +344,12 @@ function drawLetterBodies(
       const size = animation.ease( {
         values: sizeValues,
         currentTime: switchIndex,
-        easingFn: easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine,
+        easingFn:
+          easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine,
       } );
 
       graphics.textSize( size );
-    }
-    else {
+    } else {
       graphics.textSize( options.sketch.minLetterSize );
     }
 
@@ -383,4 +395,3 @@ function computeDisplacement(
     1
   );
 }
-

@@ -17,7 +17,7 @@ type SketchMetadata = {
 
 // Helper to get the full sketch path (with category if it exists)
 function getSketchPath( sketchName: string ): string {
-  const meta = ( metadata as SketchMetadata[] ).find( m => m.name === sketchName );
+  const meta = ( metadata as SketchMetadata[] ).find( ( m ) => m.name === sketchName );
 
   if ( meta?.category ) {
     return `${ meta.category }/${ sketchName }`;
@@ -33,17 +33,16 @@ export async function getJSONSketchOptions( sketchName: string ): Promise<Partia
     const options = await import( `@/p5-sketches/sketches/${ sketchPath }/options.json` );
 
     return options.default || options;
-  }
-  catch ( error ) {
+  } catch ( error ) {
     return {
     };
   }
 }
 
 export type SketchMeta = {
-  formValues?: Record<string, any>,
-  formConfiguration?: Record<string, FieldConfig>
-}
+  formValues?: Record<string, any>;
+  formConfiguration?: Record<string, FieldConfig>;
+};
 
 export async function getSketchMeta( sketchName: string ): Promise<SketchMeta> {
   try {

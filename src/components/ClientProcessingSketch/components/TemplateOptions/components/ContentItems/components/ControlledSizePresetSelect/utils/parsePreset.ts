@@ -1,5 +1,6 @@
 export default function parseSizePreset( value: string | number | null | undefined ): {
-  width: number; height: number
+  width: number;
+  height: number;
 } | null {
   if ( typeof value !== "string" ) return null;
   const [
@@ -12,8 +13,10 @@ export default function parseSizePreset( value: string | number | null | undefin
       10
     ) );
 
-  return Number.isFinite( width ) && Number.isFinite( height ) ? {
-    width,
-    height
-  } : null;
+  return Number.isFinite( width ) && Number.isFinite( height )
+    ? {
+      width,
+      height,
+    }
+    : null;
 }

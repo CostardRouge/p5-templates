@@ -2,9 +2,15 @@ import React from "react";
 
 // HardLink forces a full page reload (no client routing)
 function HardLink( {
-  href, className, children, target
+  href,
+  className,
+  children,
+  target,
 }: {
- href: string; className?: string; children: React.ReactNode, target?: string
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+  target?: string;
 } ) {
   return (
     <a

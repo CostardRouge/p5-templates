@@ -11,10 +11,6 @@ export default function SketchContextProvider( {
   ...props
 }: React.PropsWithChildren<SketchContextType> ) {
   return (
-    <SketchContext.Provider
-      value={props}
-    >
-      { children }
-    </SketchContext.Provider>
+    <SketchContext.Provider value={props}>{children}</SketchContext.Provider>
   );
 }

@@ -18,10 +18,10 @@ export default function TemplateAssetsProvider( {
       value={{
         scope,
         assetsName,
-        jobId
+        jobId,
       }}
     >
-      { children }
+      {children}
     </TemplateAssetsContext.Provider>
   );
 }

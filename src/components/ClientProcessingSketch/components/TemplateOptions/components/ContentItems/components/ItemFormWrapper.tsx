@@ -17,35 +17,37 @@ export type ItemFormWrapperProps = {
 };
 
 export default function ItemFormWrapper( {
-  onRemove, onDuplicate, children, itemType, dragBinder
+  onRemove,
+  onDuplicate,
+  children,
+  itemType,
+  dragBinder,
 }: ItemFormWrapperProps ) {
   return (
     <CollapsibleItem
       initialExpandedValue={false}
       className="p-1 border border-theme rounded-lg bg-background "
-      header={expanded => (
+      header={( expanded ) => (
         <div
           ref={dragBinder?.setHandleRef}
-          {
-            ...( dragBinder?.handleProps ?? {
-            } )
-          }
-          className={
-            clsx(
-              "flex items-center",
-              {
-                "mb-2": expanded,
-                "active:cursor-grabbing": dragBinder?.isDragging
-              }
-            )
-          }
+          {...( dragBinder?.handleProps ?? {
+          } )}
+          className={clsx(
+            "flex items-center",
+            {
+              "mb-2": expanded,
+              "active:cursor-grabbing": dragBinder?.isDragging,
+            }
+          )}
         >
-          <h4 className="text-foreground bg-background px-1 rounded-xl">{itemType}</h4>
+          <h4 className="text-foreground bg-background px-1 rounded-xl">
+            {itemType}
+          </h4>
 
           <div className="ml-auto flex items-center gap-1">
             <button
               type="button"
-              onClick={event => {
+              onClick={( event ) => {
                 event.stopPropagation();
                 onDuplicate();
               }}
@@ -55,11 +57,7 @@ export default function ItemFormWrapper( {
               <Copy className="h-3.5 w-3.5 text-foreground" />
             </button>
 
-            <button
-              type="button"
-              onClick={onRemove}
-              aria-label="Remove layer"
-            >
+            <button type="button" onClick={onRemove} aria-label="Remove layer">
               <Trash2 className="h-3.5 w-3.5 text-red-500" />
             </button>
           </div>

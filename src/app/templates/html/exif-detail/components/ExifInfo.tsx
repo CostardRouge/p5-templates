@@ -43,9 +43,14 @@ async function formatGPSCoordinates( coordinates?: ExifData["gps"] ) {
     console.log( data );
 
     if ( data.address ) {
-      return data.address.city || data.address.town || data.address.village || formatCoordinates(
-        latitude,
-        longitude
+      return (
+        data.address.city ||
+        data.address.town ||
+        data.address.village ||
+        formatCoordinates(
+          latitude,
+          longitude
+        )
       );
     }
   } catch ( error ) {
@@ -71,15 +76,20 @@ function formatCoordinates(
 }
 
 const ExifInfo = ( {
-  exifData, visible, className, children
+  exifData,
+  visible,
+  className,
+  children,
 }: ExifInfoProps ) => {
   const [
     computedGPSInfo,
     setComputedGPSInfo
-  ] = useState<string | null | undefined>( undefined );
+  ] = useState<
+    string | null | undefined
+  >( undefined );
 
   console.log( {
-    computedGPSInfo
+    computedGPSInfo,
   } );
 
   useEffect(
@@ -178,58 +188,59 @@ const ExifInfo = ( {
   };
 
   return (
-    <div id={computedGPSInfo === undefined ? "loading" : "loaded"} className={className}>
-      { visible && exifData && (
-        <div
-          id="exif-info"
-          className="flex justify-between pb-8 text-2xl"
-        >
-          {
-            exifData.date && (
-              <div className="flex gap-8">
-                <div className="flex uppercase">
-                  <CalendarClock className="inline mr-1.5 h-8"/>
-                  <span>{formatPhotoDate( exifData.date )}</span>
-                </div>
+    <div
+      id={computedGPSInfo === undefined ? "loading" : "loaded"}
+      className={className}
+    >
+      {visible && exifData && (
+        <div id="exif-info" className="flex justify-between pb-8 text-2xl">
+          {exifData.date && (
+            <div className="flex gap-8">
+              <div className="flex uppercase">
+                <CalendarClock className="inline mr-1.5 h-8" />
+                <span>{formatPhotoDate( exifData.date )}</span>
               </div>
-            )
-          }
+            </div>
+          )}
 
-          { computedGPSInfo && (
+          {computedGPSInfo && (
             <div className="flex">
               <span className="text-gray-700 uppercase">
-                <MapPin className="inline mr-1.5 h-8 align-top"/>
-                <span>
-                  {computedGPSInfo}
-                </span>
+                <MapPin className="inline mr-1.5 h-8 align-top" />
+                <span>{computedGPSInfo}</span>
               </span>
             </div>
-          ) }
+          )}
         </div>
       )}
 
-      { children}
+      {children}
 
-      { visible && exifData && (
-        <div
-          id="exif-info"
-          className="flex justify-between pt-8 text-2xl"
-        >
+      {visible && exifData && (
+        <div id="exif-info" className="flex justify-between pt-8 text-2xl">
           <div className="flex gap-8">
             <div className="flex">
-              <span className="text-gray-700">{formatFocalLength( exifData.focalLength )}</span>
+              <span className="text-gray-700">
+                {formatFocalLength( exifData.focalLength )}
+              </span>
             </div>
 
             <div className="flex">
-              <span className="text-gray-700">{formatAperture( exifData.aperture )}</span>
+              <span className="text-gray-700">
+                {formatAperture( exifData.aperture )}
+              </span>
             </div>
 
             <div className="flex">
-              <span className="text-gray-700">{formatShutterSpeed( exifData.shutterSpeed )}</span>
+              <span className="text-gray-700">
+                {formatShutterSpeed( exifData.shutterSpeed )}
+              </span>
             </div>
 
             <div className="flex">
-              <span className="text-gray-700">{ Boolean( exifData.iso ) && `ISO ${ exifData.iso }`}</span>
+              <span className="text-gray-700">
+                {Boolean( exifData.iso ) && `ISO ${ exifData.iso }`}
+              </span>
             </div>
           </div>
 

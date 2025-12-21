@@ -1,15 +1,8 @@
-import type {
-  NextConfig
-} from "next";
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
-  allowedDevOrigins: [
-    "*",
-    "192.168.1.161",
-    "172.20.10.2",
-    "172.20.10.3",
-  ],
+  allowedDevOrigins: ["*", "192.168.1.161", "172.20.10.2", "172.20.10.3"],
   crossOrigin: "anonymous",
   eslint: {
     ignoreDuringBuilds: true,
@@ -47,7 +40,7 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
     ];
-  }
+  },
 };
 
 export default nextConfig;

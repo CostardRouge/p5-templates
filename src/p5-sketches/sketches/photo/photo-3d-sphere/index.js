@@ -10,27 +10,20 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 
 // helpers
-const getBg = () => (
-  options.sketch?.backgroundColor ??
-  options.colors?.background ??
-  [
+const getBg = () =>
+  options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0,
     0,
     0
-  ]
-);
+  ];
 
-const getTextColor = () => (
-  options.sketch?.textColor ??
-  options.colors?.text ??
-  [
+const getTextColor = () =>
+  options.sketch?.textColor ?? options.colors?.text ?? [
     0
-  ]
-);
+  ];
 
-const getFont = () => (
-  string.fonts?.[ options.sketch?.font ] || string.fonts.martian
-);
+const getFont = () =>
+  string.fonts?.[ options.sketch?.font ] || string.fonts.martian;
 
 const getImages = () => {
   const imagesFromOptions =
@@ -62,12 +55,11 @@ sketch.draw( (
     const backgroundColor = lerpColor(
       color( ...getBg() ),
       favoriteColor,
-      animation.triangleProgression( )
+      animation.triangleProgression()
     );
 
     background( backgroundColor );
-  }
-  else {
+  } else {
     background( ...getBg() );
   }
 
@@ -82,16 +74,15 @@ sketch.draw( (
     const zoom = animation.ease( {
       values: zoomValues,
       currentTime: animation.progression * zoomValues.length,
-      easingFn: easing.easeInOutQuart
+      easingFn: easing.easeInOutQuart,
     } );
 
     translate(
       0,
       0,
-      zoom * .8
+      zoom * 0.8
     );
-  }
-  else {
+  } else {
     translate(
       0,
       0,
@@ -110,7 +101,7 @@ sketch.draw( (
     rotateX( animation.ease( {
       values: xRotationValues,
       currentTime: animation.progression * xRotationValues.length,
-      easingFn: easing.easeInOutExpo
+      easingFn: easing.easeInOutExpo,
     } ) );
   }
 
@@ -120,10 +111,8 @@ sketch.draw( (
         0,
         PI / 2
       ],
-      currentTime: (
-        +time
-      ),
-      easingFn: easing.easeInOutExpo
+      currentTime: +time,
+      easingFn: easing.easeInOutExpo,
     } ) );
   }
 
@@ -142,7 +131,7 @@ sketch.draw( (
       width / 2
     ],
     currentTime: foldingSpeed,
-    easingFn: easing.easeInOutExpo
+    easingFn: easing.easeInOutExpo,
   } );
   const R = animation.ease( {
     values: [
@@ -150,7 +139,7 @@ sketch.draw( (
       width / 2
     ],
     currentTime: 0,
-    easingFn: easing.easeInOutExpo
+    easingFn: easing.easeInOutExpo,
   } );
 
   const diamond = 0;
@@ -175,7 +164,7 @@ sketch.draw( (
     bottomRight: createVector(
       R,
       height - borderSize
-    )
+    ),
   };
 
   const W = width / columns;
@@ -196,53 +185,49 @@ sketch.draw( (
     () => {
       const buffer = createGraphics(
         sketch?.engine?.canvas?.width,
-        sketch?.engine?.canvas?.height,
+        sketch?.engine?.canvas?.height
       );
 
-      return (
-        images.map( ( {
-          img
-        } ) => {
-          buffer.clear();
-          imageUtils.marginImage( {
-            img,
-            position: createVector(
-              width / 2,
-              height / 2
-            ),
-            graphics: buffer,
-            center: true,
-            // clip: true,
-            fill: true,
-          } );
+      return images.map( ( {
+        img
+      } ) => {
+        buffer.clear();
+        imageUtils.marginImage( {
+          img,
+          position: createVector(
+            width / 2,
+            height / 2
+          ),
+          graphics: buffer,
+          center: true,
+          // clip: true,
+          fill: true,
+        } );
 
-          return (
-            cells.reduce(
-              (
-                imageCells, {
-                  x, y
-                }
-              ) => {
-                const imagePart = buffer.get(
-                  x,
-                  y,
-                  W,
-                  H
-                );
+        return cells.reduce(
+          (
+            imageCells, {
+              x, y
+            }
+          ) => {
+            const imagePart = buffer.get(
+              x,
+              y,
+              W,
+              H
+            );
 
-                imageCells.push( {
-                  imagePart,
-                  // dominantColor: colors.getDominantColor( imagePart, 500 )
-                } );
+            imageCells.push( {
+              imagePart,
+            // dominantColor: colors.getDominantColor( imagePart, 500 )
+            } );
 
-                return imageCells;
-              },
-              [
-              ]
-            )
-          );
-        } )
-      );
+            return imageCells;
+          },
+          [
+          ]
+        );
+      } );
     }
   );
 
@@ -252,11 +237,20 @@ sketch.draw( (
 
   cells.forEach( (
     {
-      center, xIndex, yIndex, corners, absoluteCorners, width: cellWidth, height: cellHeight, row, column
-    }, cellIndex
+      center,
+      xIndex,
+      yIndex,
+      corners,
+      absoluteCorners,
+      width: cellWidth,
+      height: cellHeight,
+      row,
+      column,
+    },
+    cellIndex
   ) => {
     // const circonference = ( options.vertical ? cellHeight : cellWidth ) * images.length;
-    const circonference = ( cellWidth * images.length ) * 1.15;
+    const circonference = cellWidth * images.length * 1.15;
 
     push();
     translate(
@@ -272,46 +266,48 @@ sketch.draw( (
 
       push();
 
-      const rotateFunction = rotateZ;// options.vertical ? rotateX : rotateY;
+      const rotateFunction = rotateZ; // options.vertical ? rotateX : rotateY;
 
       rotateFunction( angle );
 
       rotateFunction( animation.ease( {
-        values: images.map( (
-          _, index
-        ) => [
-          ( index / images.length ) * TAU
-        ] ).flat( Infinity ),
-        currentTime: (
-          // +column / columns
-          // +imageIndex
-          +row / rows
-          // +angle
-          + animation.progression * images.length
-        ),
-        easingFn: easing.easeInOutSine
+        values: images
+          .map( (
+            _, index
+          ) => [
+            ( index / images.length ) * TAU
+          ] )
+          .flat( Infinity ),
+        currentTime:
+              // +column / columns
+              // +imageIndex
+              +row / rows +
+              // +angle
+              animation.progression * images.length,
+        easingFn: easing.easeInOutSine,
       } ) );
 
       rotateX( animation.ease( {
-        values: images.map( (
-          _, index
-        ) => [
-          ( index / images.length ) * TAU
-        ] ).flat( Infinity ),
-        currentTime: (
-          // +column / columns
-          +imageIndex
-          + angle
-          + row / rows
-          + animation.progression * images.length
-        ),
-        easingFn: easing.easeInOutExpo
+        values: images
+          .map( (
+            _, index
+          ) => [
+            ( index / images.length ) * TAU
+          ] )
+          .flat( Infinity ),
+        currentTime:
+              // +column / columns
+              +imageIndex +
+              angle +
+              row / rows +
+              animation.progression * images.length,
+        easingFn: easing.easeInOutExpo,
       } ) );
 
       translate(
         0,
         0,
-        ( circonference ) / TAU
+        circonference / TAU
       );
       // translate(
       //   cellWidth * imageIndex,
@@ -355,8 +351,8 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-      // blendMode: EXCLUSION
-      // graphics: canvases.text
+        // blendMode: EXCLUSION
+        // graphics: canvases.text
       }
     );
   }

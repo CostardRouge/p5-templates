@@ -1,7 +1,12 @@
 const colors = {
   test: ( {
-    hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360, easingFunction
-  } ) => (
+    hueOffset = 0,
+    hueIndex,
+    opacityFactor = 1,
+    min = 0,
+    max = 360,
+    easingFunction,
+  } ) =>
     color(
       map(
         sin(
@@ -12,7 +17,8 @@ const colors = {
         1,
         min,
         max
-      ) / opacityFactor,
+      ) /
+        opacityFactor,
       map(
         cos(
           PI * ( hueIndex + 1 / 3 + hueOffset ),
@@ -32,39 +38,51 @@ const colors = {
         1,
         min,
         max
-      ) / opacityFactor,
-    )
-  ),
-  rainbowCrazy: ( {
-    hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360, easingFunction
-  } ) => (
-    color(
-      map(
-        ( easingFunction ?? cos )( hueOffset - hueIndex ),
-        -1,
-        1,
-        min,
-        max
-      ) / opacityFactor,
-      map(
-        ( easingFunction ?? sin )( hueOffset + hueIndex ),
-        -1,
-        1,
-        max,
-        min
-      ) / opacityFactor,
-      map(
-        ( easingFunction ?? cos )( hueOffset - hueIndex ),
-        -1,
-        1,
-        max,
-        min
       ) / opacityFactor
-    )
-  ),
+    ),
+  rainbowCrazy: ( {
+    hueOffset = 0,
+    hueIndex,
+    opacityFactor = 1,
+    min = 0,
+    max = 360,
+    easingFunction,
+  } ) =>
+    color(
+      map(
+        ( easingFunction ?? cos )( hueOffset - hueIndex ),
+        -1,
+        1,
+        min,
+        max
+      ) /
+        opacityFactor,
+      map(
+        ( easingFunction ?? sin )( hueOffset + hueIndex ),
+        -1,
+        1,
+        max,
+        min
+      ) /
+        opacityFactor,
+      map(
+        ( easingFunction ?? cos )( hueOffset - hueIndex ),
+        -1,
+        1,
+        max,
+        min
+      ) /
+        opacityFactor
+    ),
   rainbow: ( {
-    hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360, easingFunction, alpha
-  } ) => (
+    hueOffset = 0,
+    hueIndex,
+    opacityFactor = 1,
+    min = 0,
+    max = 360,
+    easingFunction,
+    alpha,
+  } ) =>
     color(
       map(
         ( easingFunction ?? sin )( hueOffset + hueIndex ),
@@ -72,27 +90,33 @@ const colors = {
         1,
         min,
         max
-      ) / opacityFactor,
+      ) /
+        opacityFactor,
       map(
         ( easingFunction ?? cos )( hueOffset - hueIndex ),
         -1,
         1,
         max,
         min
-      ) / opacityFactor,
+      ) /
+        opacityFactor,
       map(
         ( easingFunction ?? sin )( hueOffset + hueIndex ),
         -1,
         1,
         max,
         min
-      ) / opacityFactor,
+      ) /
+        opacityFactor,
       alpha
-    )
-  ),
+    ),
   darkBlueYellow: ( {
-    hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360
-  } ) => (
+    hueOffset = 0,
+    hueIndex,
+    opacityFactor = 1,
+    min = 0,
+    max = 360,
+  } ) =>
     color(
       map(
         cos( hueOffset + hueIndex ),
@@ -114,12 +138,15 @@ const colors = {
         1,
         max,
         min
-      ) / opacityFactor,
-    )
-  ),
+      ) / opacityFactor
+    ),
   purple: ( {
-    hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360
-  } ) => (
+    hueOffset = 0,
+    hueIndex,
+    opacityFactor = 1,
+    min = 0,
+    max = 360,
+  } ) =>
     color(
       max / 4 / opacityFactor,
       map(
@@ -129,36 +156,35 @@ const colors = {
         max / 2,
         0
       ) / opacityFactor,
-      max / opacityFactor,
-    )
-  ),
+      max / opacityFactor
+    ),
   purpleSimple: ( {
-    hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360
-  } ) => (
-    color(
-      128,
-      128,
-      255
-    )
+    hueOffset = 0,
+    hueIndex,
+    opacityFactor = 1,
+    min = 0,
+    max = 360,
+  } ) => color(
+    128,
+    128,
+    255
   ),
   green: ( {
     hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360
-  } ) => (
+  } ) =>
     color(
       92,
       255,
       128
-    )
-  ),
+    ),
   black: ( {
     hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360
-  } ) => (
+  } ) =>
     color(
       4,
       2,
       8
-    )
-  ),
+    ),
 
   chunk: (
     array, chunkSize
@@ -183,20 +209,18 @@ const colors = {
       4
     );
 
-    const filteredPixels = chunkedPixels
-      .filter( (
-        [
-          r,
-          g,
-          b
-        ], index
-      ) => (
-        index % precision === 0 && [
-          r,
-          g,
-          b
-        ].every( channel => channel > 10 )
-      ) );
+    const filteredPixels = chunkedPixels.filter( (
+      [
+        r,
+        g,
+        b
+      ], index
+    ) =>
+      index % precision === 0 && [
+        r,
+        g,
+        b
+      ].every( ( channel ) => channel > 10 ) );
 
     return filteredPixels.reduce(
       (
@@ -237,7 +261,7 @@ const colors = {
       img.pixels,
       precision
     );
-  }
+  },
 };
 
 export default colors;

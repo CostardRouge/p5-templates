@@ -1,5 +1,6 @@
 import {
-  getRecordingStatus, getRecordingStatusAndTotalPercentage
+  getRecordingStatus,
+  getRecordingStatusAndTotalPercentage,
 } from "@/lib/progression";
 
 import {
@@ -15,11 +16,11 @@ import {
 export async function GET(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      id: JobId
-    }>
+      id: JobId;
+    }>;
   }
 ) {
   const id = ( await params ).id;
@@ -29,7 +30,7 @@ export async function GET(
     return new NextResponse(
       `recordingStatus not found for job ${ id }`,
       {
-        status: 404
+        status: 404,
       }
     );
   }
@@ -41,7 +42,8 @@ export async function GET(
       controller.enqueue( "retry: 250\n\n" );
 
       const sendUpdate = async() => {
-        const jobCurrentStepAndPercentage = await getRecordingStatusAndTotalPercentage( id );
+        const jobCurrentStepAndPercentage =
+          await getRecordingStatusAndTotalPercentage( id );
 
         if ( !jobCurrentStepAndPercentage ) {
           if ( intervalId ) {
@@ -52,11 +54,14 @@ export async function GET(
           return;
         }
 
-        if ( jobCurrentStepAndPercentage.percentage === 100 || [
-          "completed",
-          "failed",
-          "cancelled"
-        ].includes( jobCurrentStepAndPercentage.status ) ) {
+        if (
+          jobCurrentStepAndPercentage.percentage === 100 ||
+          [
+            "completed",
+            "failed",
+            "cancelled"
+          ].includes( jobCurrentStepAndPercentage.status )
+        ) {
           controller.enqueue( `data: ${ JSON.stringify( jobCurrentStepAndPercentage ) }\n\n` );
 
           if ( intervalId ) {
@@ -83,7 +88,7 @@ export async function GET(
       if ( intervalId ) {
         clearInterval( intervalId );
       }
-    }
+    },
   } );
 
   return new Response(

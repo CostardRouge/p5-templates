@@ -17,7 +17,7 @@ export default function useBulkActions() {
 
   const toggleSelection = useCallback(
     ( id: string ) => {
-      setSelectedIds( prev => {
+      setSelectedIds( ( prev ) => {
         const next = new Set( prev );
 
         if ( next.has( id ) ) {
@@ -34,7 +34,7 @@ export default function useBulkActions() {
 
   const selectAll = useCallback(
     ( jobs: JobModel[] ) => {
-      setSelectedIds( new Set( jobs.map( j => j.id ) ) );
+      setSelectedIds( new Set( jobs.map( ( j ) => j.id ) ) );
     },
     [
     ]
@@ -54,7 +54,7 @@ export default function useBulkActions() {
         return {
           success: false,
           deleted: [
-          ]
+          ],
         };
       }
 
@@ -68,7 +68,7 @@ export default function useBulkActions() {
             const res = await fetch(
               `/api/recordings/${ id }`,
               {
-                method: "DELETE"
+                method: "DELETE",
               }
             );
 
@@ -83,7 +83,7 @@ export default function useBulkActions() {
 
         return {
           success: true,
-          deleted
+          deleted,
         };
       } finally {
         setIsProcessing( false );
@@ -99,7 +99,7 @@ export default function useBulkActions() {
         return {
           success: false,
           cancelled: [
-          ]
+          ],
         };
       }
 
@@ -113,7 +113,7 @@ export default function useBulkActions() {
             const res = await fetch(
               `/api/recordings/${ id }/cancel`,
               {
-                method: "POST"
+                method: "POST",
               }
             );
 
@@ -128,7 +128,7 @@ export default function useBulkActions() {
 
         return {
           success: true,
-          cancelled
+          cancelled,
         };
       } finally {
         setIsProcessing( false );
@@ -144,7 +144,7 @@ export default function useBulkActions() {
         return {
           success: false,
           retried: [
-          ]
+          ],
         };
       }
 
@@ -158,7 +158,7 @@ export default function useBulkActions() {
             const res = await fetch(
               `/api/recordings/${ id }/retry`,
               {
-                method: "POST"
+                method: "POST",
               }
             );
 
@@ -173,7 +173,7 @@ export default function useBulkActions() {
 
         return {
           success: true,
-          retried
+          retried,
         };
       } finally {
         setIsProcessing( false );

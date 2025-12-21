@@ -13,7 +13,7 @@ events.register(
 export default function drawSocialMediaOverlay(
   text, {
     graphics
-  },
+  }
 ) {
   const qrCodeMargin = 10;
   const qrCodeWidth = qrCode.width * 0.5;
@@ -38,14 +38,14 @@ export default function drawSocialMediaOverlay(
       font: string.fonts?.martian,
       stroke: color( 0 ),
       fill: color( 255 ),
-      textWidth: width - ( 2 * qrCodeMargin ) - qrCodeWidth,
+      textWidth: width - 2 * qrCodeMargin - qrCodeWidth,
       textHeight: qrCodeHeight,
       textAlign: [
         LEFT,
         TOP
       ],
       popPush: true,
-      graphics: graphics
+      graphics: graphics,
     }
   );
 }

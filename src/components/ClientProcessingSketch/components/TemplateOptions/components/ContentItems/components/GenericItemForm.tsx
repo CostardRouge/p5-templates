@@ -3,7 +3,9 @@ import {
   useFormContext
 } from "react-hook-form";
 import {
-  ContentItem, SketchOption, ContentItemSchema
+  ContentItem,
+  SketchOption,
+  ContentItemSchema,
 } from "@/types/sketch.types";
 
 import {
@@ -25,7 +27,11 @@ type GenericItemFormProps = {
 };
 
 export default function GenericItemForm( {
-  baseFieldName, index, onRemove, onDuplicate, dragBinder
+  baseFieldName,
+  index,
+  onRemove,
+  onDuplicate,
+  dragBinder,
 }: GenericItemFormProps ) {
   const {
     watch
@@ -41,7 +47,11 @@ export default function GenericItemForm( {
   const itemConfig = formConfig[ itemType ];
 
   if ( !itemSchema || !itemConfig ) {
-    return <div className="text-red-500 p-2">Error: No schema or config for type &#34;{itemType}&#34;</div>;
+    return (
+      <div className="text-red-500 p-2">
+        Error: No schema or config for type &#34;{itemType}&#34;
+      </div>
+    );
   }
 
   // Get the list of fields from the Zod schema's shape

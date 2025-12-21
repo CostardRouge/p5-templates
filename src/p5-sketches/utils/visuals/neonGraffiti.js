@@ -19,25 +19,21 @@ function getCircleSize(
     stepAngle,
     step,
     stepsCount,
-    stepProgression
+    stepProgression,
   }
 ) {
-  const circleSizeEasingFn = easing?.[ circleSizeOption.easing ] ?? easing.easeOutSine;
+  const circleSizeEasingFn =
+    easing?.[ circleSizeOption.easing ] ?? easing.easeOutSine;
 
   if ( circleSizeOption.variable ) {
     return animation.ease( {
       values: [
-        ( circleSizeOption.radius * circleSizeOption.max * shadowsCount ),
-        ( circleSizeOption.radius * circleSizeOption.min * shadowsCount ),
-        ( circleSizeOption.radius * circleSizeOption.max * shadowsCount ),
-
+        circleSizeOption.radius * circleSizeOption.max * shadowsCount,
+        circleSizeOption.radius * circleSizeOption.min * shadowsCount,
+        circleSizeOption.radius * circleSizeOption.max * shadowsCount,
       ],
-      currentTime: (
-        animation.progression
-        + shadowProgression
-        + stepProgression
-      ),
-      easingFn: circleSizeEasingFn
+      currentTime: animation.progression + shadowProgression + stepProgression,
+      easingFn: circleSizeEasingFn,
     } );
   }
 
@@ -77,7 +73,7 @@ export default function neonGraffiti( {
   end = createVector(
     width,
     height / 2
-  )
+  ),
 } = {
 } ) {
   noStroke();
@@ -97,7 +93,7 @@ export default function neonGraffiti( {
       const position = p5.Vector.lerp(
         start,
         end,
-        step / stepsCount,
+        step / stepsCount
       );
 
       position.add(
@@ -111,7 +107,7 @@ export default function neonGraffiti( {
             1,
             -TAU,
             TAU
-          ),
+          )
         ),
         converters.polar.get(
           Math.sin,
@@ -127,21 +123,23 @@ export default function neonGraffiti( {
         )
       );
 
-      const positionSinEasingFn = easing?.[ positionSinEasing ] ?? easing.easeInOutQuad;
-      const positionCosEasingFn = easing?.[ positionCosEasing ] ?? easing.easeInOutSine;
+      const positionSinEasingFn =
+        easing?.[ positionSinEasing ] ?? easing.easeInOutQuad;
+      const positionCosEasingFn =
+        easing?.[ positionCosEasing ] ?? easing.easeInOutSine;
 
       position.add(
         map(
-          Math.sin( +animation.angle * sinAngleMultiplier
-            + positionSinEasingFn( stepProgression ) ),
+          Math.sin( +animation.angle * sinAngleMultiplier +
+              positionSinEasingFn( stepProgression ) ),
           -1,
           1,
           -amplitude,
           amplitude
         ),
         map(
-          Math.cos( +animation.angle * cosAngleMultiplier
-            + positionCosEasingFn( stepProgression ) * positionCosMultiplier ),
+          Math.cos( +animation.angle * cosAngleMultiplier +
+              positionCosEasingFn( stepProgression ) * positionCosMultiplier ),
           -1,
           1,
           -amplitude,
@@ -157,19 +155,21 @@ export default function neonGraffiti( {
           0,
           shadowsCount,
           opacityStart,
-          opacityEnd,
+          opacityEnd
         ),
         hueOffset: hueEasingFn( shadowProgression + stepProgression / hueIndexMultiplier ),
         // hueOffset: easing.easeOutSine( shadowProgression + shadowIndex / 2 ),
-        hueIndex: map(
-          Math.sin( animation.angle
-            + hueEasingFn( stepAngle ) * -3
-            + shadowProgression + stepProgression ),
-          -1,
-          1,
-          -hueAmplitude,
-          hueAmplitude
-        ) * hueIndexMultiplier,
+        hueIndex:
+            map(
+              Math.sin( animation.angle +
+                  hueEasingFn( stepAngle ) * -3 +
+                  shadowProgression +
+                  stepProgression ),
+              -1,
+              1,
+              -hueAmplitude,
+              hueAmplitude
+            ) * hueIndexMultiplier,
       } ) );
 
       circle(
@@ -184,7 +184,7 @@ export default function neonGraffiti( {
             stepAngle,
             step,
             stepsCount,
-            stepProgression
+            stepProgression,
           }
         )
       );

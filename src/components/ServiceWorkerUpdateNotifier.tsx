@@ -20,7 +20,8 @@ export default function ServiceWorkerUpdateNotifier() {
   const [
     registration,
     setRegistration
-  ] = useState<ServiceWorkerRegistration | null>( null );
+  ] =
+    useState<ServiceWorkerRegistration | null>( null );
 
   useEffect(
     () => {
@@ -59,7 +60,7 @@ export default function ServiceWorkerUpdateNotifier() {
     if ( registration?.waiting ) {
       // Tell the waiting service worker to skip waiting
       registration.waiting.postMessage( {
-        type: "SKIP_WAITING"
+        type: "SKIP_WAITING",
       } );
 
       // Listen for the controller change before reloading
@@ -86,18 +87,22 @@ export default function ServiceWorkerUpdateNotifier() {
   return (
     <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md mx-auto">
       <div className="glass border border-border rounded-lg shadow-md shadow-active/5 flex items-center gap-3 max-w-md px-4 py-3">
-        <RefreshCw className={
-          clsx(
+        <RefreshCw
+          className={clsx(
             "w-5 h-5 flex-shrink-0 text-foreground",
             {
               "animate-spin": updating,
             }
-          )
-        } />
+          )}
+        />
 
         <div className="flex-1">
-          <p className="font-medium text-sm text-foreground">Update available</p>
-          <p className="text-xs text-label">A new version of the app is ready</p>
+          <p className="font-medium text-sm text-foreground">
+            Update available
+          </p>
+          <p className="text-xs text-label">
+            A new version of the app is ready
+          </p>
         </div>
 
         <button

@@ -6,15 +6,15 @@ import {
 } from "@/lib/gsap/templateRegistry";
 
 export type TemplateCategory = Array<{
-  href: string,
-  name: string,
-  thumbnail: string,
-  hasSketchForm: boolean,
-  category?: string | null
-}>
+  href: string;
+  name: string;
+  thumbnail: string;
+  hasSketchForm: boolean;
+  category?: string | null;
+}>;
 
 export default async function TemplatesPage() {
-  const p5sketches = await getSketchList() ?? [
+  const p5sketches = ( await getSketchList() ) ?? [
   ];
 
   const p5sketchNames = p5sketches
@@ -25,7 +25,7 @@ export default async function TemplatesPage() {
       href: `templates/p5/${ name }`,
       hasSketchForm,
       name,
-      category
+      category,
     } ) )
     .reverse();
 
@@ -47,8 +47,8 @@ export default async function TemplatesPage() {
         thumbnail: "assets/images/templates/html/exif-detail/thumbnail.jpg",
         href: "templates/html/exif-detail",
         hasSketchForm: false,
-        name: "exif-detail"
-      }
+        name: "exif-detail",
+      },
     ],
   };
 

@@ -19,14 +19,15 @@ events.register(
 );
 
 export default function drawGuidelines(
-  text, {
+  text,
+  {
     graphics, background: backgroundColor
-  },
+  }
 ) {
   if ( !mask ) {
     mask = createGraphics(
       width,
-      height,
+      height
     );
 
     // hands = Object.values( hands );
@@ -51,7 +52,7 @@ export default function drawGuidelines(
         CENTER
       ],
       popPush: false,
-      graphics: mask
+      graphics: mask,
     }
   );
 
@@ -59,7 +60,7 @@ export default function drawGuidelines(
 
   const weight = 50;
   const rows = weight * 4;
-  const columns = ( W / weight );
+  const columns = W / weight;
   const gridOptions = {
     topLeft: createVector(
       width * 0.3,
@@ -83,7 +84,7 @@ export default function drawGuidelines(
 
   noiseDetail(
     3,
-    .7,
+    0.7
   );
 
   grid.draw(
@@ -93,8 +94,8 @@ export default function drawGuidelines(
         x, y
       }
     ) => {
-      const xOff = x / width * 1.5;
-      const yOff = y / height * 1.5;
+      const xOff = ( x / width ) * 1.5;
+      const yOff = ( y / height ) * 1.5;
       const angle = mappers.fn(
         noise(
           xOff + animation.circularProgression,
@@ -111,7 +112,7 @@ export default function drawGuidelines(
         0,
         [
           colors.rainbow,
-          colors.purple
+          colors.purple,
         ]
       );
 
@@ -130,7 +131,7 @@ export default function drawGuidelines(
           2,
           1,
           easing.easeInOutSine
-        )
+        ),
       } ) );
 
       graphics.push();
@@ -197,7 +198,7 @@ export default function drawGuidelines(
       {
         landmarks: [
           hand
-        ]
+        ],
       },
       graphics
     );

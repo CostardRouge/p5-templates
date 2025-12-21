@@ -27,7 +27,7 @@ import {
 } from "playwright";
 import {
   updateRecordingStepPercentage,
-  addRecordingDuration
+  addRecordingDuration,
 } from "@/lib/progression";
 import {
   NotificationService
@@ -78,21 +78,20 @@ async function recordSketch(
   temporaryDirectoryPath: string
 ) {
   const recordingState: {
-    page?: Page,
-    browser?: Browser,
+    page?: Page;
+    browser?: Browser;
   } = {
-    page: undefined
+    page: undefined,
   };
 
   const recordingStartAt = new Date();
 
   try {
     const {
-      createPage,
-      browser
+      createPage, browser
     } = await createBrowserPage( {
       headless: true,
-      deviceScaleFactor: 1
+      deviceScaleFactor: 1,
     } );
 
     recordingState.browser = browser;
@@ -102,7 +101,7 @@ async function recordSketch(
     await updateJob(
       jobId,
       {
-        recordingStartAt
+        recordingStartAt,
       }
     );
 
@@ -132,13 +131,14 @@ async function recordSketch(
 
     // Update recording end time and duration
     const recordingEndAt = new Date();
-    const recordingDuration = recordingEndAt.getTime() - recordingStartAt.getTime();
+    const recordingDuration =
+      recordingEndAt.getTime() - recordingStartAt.getTime();
 
     await updateJob(
       jobId,
       {
         recordingEndAt,
-        recordingDuration
+        recordingDuration,
       }
     );
 
@@ -147,13 +147,12 @@ async function recordSketch(
       jobId,
       recordingDuration
     );
-  }
-  catch ( error ) {
+  } catch ( error ) {
     await updateJob(
       jobId,
       {
         status: "failed",
-        progress: 100
+        progress: 100,
       }
     );
 
@@ -166,15 +165,16 @@ async function recordSketch(
     );
 
     throw error;
-  }
-  finally {
-    await fs.rm(
-      temporaryDirectoryPath,
-      {
-        recursive: true,
-        force: true
-      }
-    ).catch( () => {} );
+  } finally {
+    await fs
+      .rm(
+        temporaryDirectoryPath,
+        {
+          recursive: true,
+          force: true,
+        }
+      )
+      .catch( () => {} );
 
     await recordingState?.browser?.close();
   }
@@ -200,8 +200,8 @@ async function recordSingleSketch(
   await page.goto(
     `http://localhost:3000/templates/${ template }?id=${ jobId }&capturing`,
     {
-      waitUntil: "networkidle"
-    },
+      waitUntil: "networkidle",
+    }
   );
 
   await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
@@ -247,14 +247,14 @@ async function recordSingleSketch(
       createPage: createThumbnailPage
     } = await createBrowserPage( {
       headless: true,
-      deviceScaleFactor: 1
+      deviceScaleFactor: 1,
     } );
     const thumbnailPage = await createThumbnailPage();
 
     await thumbnailPage.goto(
       `http://localhost:3000/templates/${ template }?id=${ jobId }&capturing`,
       {
-        waitUntil: "networkidle"
+        waitUntil: "networkidle",
       }
     );
 
@@ -307,13 +307,15 @@ async function recordSingleSketch(
     );
 
     // Cleanup frames
-    await fs.rm(
-      framesDirectory,
-      {
-        recursive: true,
-        force: true
-      }
-    ).catch( () => {} );
+    await fs
+      .rm(
+        framesDirectory,
+        {
+          recursive: true,
+          force: true,
+        }
+      )
+      .catch( () => {} );
   }
 
   // ─── Upload to S3 ─────────────────────────────────────────────────────────
@@ -357,7 +359,7 @@ async function recordSingleSketch(
       ],
       videoSizes: [
         videoSize
-      ]
+      ],
     }
   );
 
@@ -397,8 +399,8 @@ async function recordMultipleSlides(
     await page.goto(
       `http://localhost:3000/templates/${ template }?id=${ jobId }&capturing`,
       {
-        waitUntil: "networkidle"
-      },
+        waitUntil: "networkidle",
+      }
     );
 
     await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
@@ -410,7 +412,7 @@ async function recordMultipleSlides(
     await page.waitForSelector(
       `canvas[data-slide="${ slideIndex }"]`,
       {
-        timeout: 0
+        timeout: 0,
       }
     );
 
@@ -428,7 +430,7 @@ async function recordMultipleSlides(
 
     console.log( {
       totalFrames,
-      framerate
+      framerate,
     } );
 
     const slideVideoPath = path.join(
@@ -502,13 +504,15 @@ async function recordMultipleSlides(
       );
 
       // Cleanup frames
-      await fs.rm(
-        slideFramesDirectory,
-        {
-          recursive: true,
-          force: true
-        }
-      ).catch( () => {} );
+      await fs
+        .rm(
+          slideFramesDirectory,
+          {
+            recursive: true,
+            force: true,
+          }
+        )
+        .catch( () => {} );
     }
 
     slideVideoPaths.push( slideVideoPath );
@@ -572,7 +576,7 @@ async function recordMultipleSlides(
       resultUrl: videoS3Urls[ 0 ] || null,
       thumbnails: thumbnailS3Urls,
       videoUrls: videoS3Urls,
-      videoSizes: videoSizes
+      videoSizes: videoSizes,
     }
   );
 

@@ -41,13 +41,18 @@ export default function RecordingCard( {
   onDelete,
   onRetry,
   onStart,
-  onClone
+  onClone,
 }: RecordingCardProps ) {
   const slideCount = getSlideCount( job );
 
   return (
-    <div className={`group bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden ${ isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
-    }`}>
+    <div
+      className={`group bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden ${
+        isNewlyAdded
+          ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]"
+          : ""
+      }`}
+    >
       {/* Thumbnail Section */}
       <div className="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl">
         {/* Checkbox Overlay */}
@@ -67,7 +72,8 @@ export default function RecordingCard( {
               onPreview();
             }
           }}
-          className={`w-full aspect-square object-cover ${ job.videoUrls ? "cursor-pointer" : "cursor-default"
+          className={`w-full aspect-square object-cover ${
+            job.videoUrls ? "cursor-pointer" : "cursor-default"
           }`}
           showEyeInCorner={true}
           enableHoverPreview={true}
@@ -104,7 +110,9 @@ export default function RecordingCard( {
             className="block text-xs sm:text-sm font-semibold text-foreground hover:text-foreground/70 transition-colors truncate group/link"
           >
             {job.template}
-            <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">→</span>
+            <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">
+              →
+            </span>
           </HardLink>
 
           <HardLink
@@ -123,7 +131,9 @@ export default function RecordingCard( {
                 </>
               )}
             </span>
-            <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">→</span>
+            <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">
+              →
+            </span>
           </HardLink>
         </div>
 
@@ -136,7 +146,7 @@ export default function RecordingCard( {
                 month: "short",
                 day: "numeric",
                 hour: "2-digit",
-                minute: "2-digit"
+                minute: "2-digit",
               }
             )}
           </span>
@@ -149,7 +159,9 @@ export default function RecordingCard( {
         </div>
 
         {/* Progress Bar */}
-        {( job.status === "active" || job.status === "queued" || job.progress < 100 ) && (
+        {( job.status === "active" ||
+          job.status === "queued" ||
+          job.progress < 100 ) && (
           <div className="pt-0.5 sm:pt-1 min-w-0">
             <CompactProgressBar
               job={job}

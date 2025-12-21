@@ -14,11 +14,11 @@ import {
 export async function POST(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
- id: string
-}>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -30,19 +30,19 @@ export async function POST(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
 
     if ( ![
       "failed",
-      "cancelled",
+      "cancelled"
     ].includes( job.status ) ) {
       return new NextResponse(
         "Job is not retryable in current state",
         {
-          status: 400
+          status: 400,
         }
       );
     }
@@ -52,7 +52,7 @@ export async function POST(
       jobId,
       {
         status: "queued",
-        progress: 0
+        progress: 0,
       }
     );
     await addRecordingStatus(
@@ -60,9 +60,7 @@ export async function POST(
       "queued"
     );
 
-    await RecordingQueueService
-      .getInstance()
-      .getQueue()
+    await RecordingQueueService.getInstance().getQueue()
       .add(
         "process-recording",
         {
@@ -79,7 +77,7 @@ export async function POST(
       );
 
     return NextResponse.json( {
-      retried: true
+      retried: true,
     } );
   } catch ( error ) {
     console.error(
@@ -89,7 +87,7 @@ export async function POST(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

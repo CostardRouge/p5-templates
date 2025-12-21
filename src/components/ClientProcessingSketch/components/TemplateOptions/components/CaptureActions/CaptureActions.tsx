@@ -35,7 +35,7 @@ import FailedActions from "./components/FailedActions";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
-  currentStatus?: string,
+  currentStatus?: string;
   isRecording: boolean;
   isSaving: boolean;
 };
@@ -52,8 +52,15 @@ type CaptureActionsProps = {
 
 const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   {
-    name, options, persistedJob, activeSlideIndex, backendRecording, browserRecordingSupported, thumbnails
-  }, ref
+    name,
+    options,
+    persistedJob,
+    activeSlideIndex,
+    backendRecording,
+    browserRecordingSupported,
+    thumbnails,
+  },
+  ref
 ) => {
   const router = useRouter();
   const {
@@ -95,10 +102,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
   const {
     subscribeToRecordingStatus, recordingProgress
-  } = useRecordingStatusStream();
+  } =
+      useRecordingStatusStream();
 
   // Determine current status
-  const currentStatus = ( recordingProgress?.status || persistedJob?.status ) as JobStatusEnum | undefined;
+  const currentStatus = ( recordingProgress?.status || persistedJob?.status ) as
+      | JobStatusEnum
+      | undefined;
 
   // Auto-subscribe to recording status on mount if job is active/queued
   React.useEffect(
@@ -114,7 +124,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       persistedJob,
       persistedJob?.id,
       persistedJob?.status,
-      subscribeToRecordingStatus
+      subscribeToRecordingStatus,
     ]
   );
 
@@ -127,7 +137,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
       prevStatusRef.current = currentStatus;
 
-      if ( backendRecording && currentStatus === "completed" && prevStatus !== "completed" ) {
+      if (
+        backendRecording &&
+        currentStatus === "completed" &&
+        prevStatus !== "completed"
+      ) {
         setShowPreviewModal( true );
       }
     },
@@ -206,7 +220,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       images: [
       ],
       videos: [
-      ]
+      ],
     };
 
     for ( const type of Object.keys( globalAssets ) ) {
@@ -247,7 +261,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         images: [
         ],
         videos: [
-        ]
+        ],
       };
 
       for ( const type of Object.keys( assets ) ) {
@@ -321,7 +335,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       },
       isSaving: saving,
       isRecording: !!isRecording,
-      currentStatus
+      currentStatus,
     } )
   );
 
@@ -467,36 +481,39 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const {
     isRecording, isCompleted, isFailed, isDraft
   } =
-    getRecordingStatus( currentStatus );
+      getRecordingStatus( currentStatus );
   const hasNoJob = !persistedJob && !recordingProgress && !jobId;
   const isAnyActionLoading =
-    isLoading ||
-    saving ||
-    deleting ||
-    cancelling ||
-    retrying ||
-    downloading ||
-    cloning;
-  // Don't block start button when only saving (isLoading is true during save too)
+      isLoading ||
+      saving ||
+      deleting ||
+      cancelling ||
+      retrying ||
+      downloading ||
+      cloning;
+    // Don't block start button when only saving (isLoading is true during save too)
   const isBlockingActionLoading =
-    ( isLoading && !saving ) || deleting || cancelling || retrying || downloading || cloning;
+      ( isLoading && !saving ) ||
+      deleting ||
+      cancelling ||
+      retrying ||
+      downloading ||
+      cloning;
 
   // Use persistedJob or construct a minimal job object from recordingProgress/jobId
   const effectiveJob =
-    persistedJob ||
-    ( jobId
-      ? ( {
-        id: jobId,
-        status: currentStatus || "queued",
-        progress: recordingProgress?.percentage || 0,
-      } as JobModel )
-      : undefined );
+      persistedJob ||
+      ( jobId
+        ? ( {
+          id: jobId,
+          status: currentStatus || "queued",
+          progress: recordingProgress?.percentage || 0,
+        } as JobModel )
+        : undefined );
 
   return (
     <>
-      <div
-        className="flex flex-col gap-1 glass px-2 py-2 border border-theme rounded-2xl shadow-lg"
-      >
+      <div className="flex flex-col gap-1 glass px-2 py-2 border border-theme rounded-2xl shadow-lg">
         <div className="flex flex-col gap-1 h-auto w-full">
           {/* Browser Recording - Only on Compatible Devices */}
           {!isRecording && browserRecordingSupported && (

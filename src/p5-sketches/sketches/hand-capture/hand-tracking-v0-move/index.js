@@ -5,7 +5,7 @@ import sketch from "@/p5/utils/sketch.js";
 import * as common from "@/p5/utils/common.js";
 
 import mediapipe, {
-  init as mediapipeInit
+  init as mediapipeInit,
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
 import drawHands from "@/p5/utils/mediapipe/drawHands.js";
@@ -31,7 +31,7 @@ const layers = {
       0,
       10
     ],
-    erase: 255
+    erase: 255,
   },
   hands: {
     graphics: undefined,
@@ -39,7 +39,7 @@ const layers = {
     background: [
       230
     ],
-    erase: 255
+    erase: 255,
   },
 };
 
@@ -51,7 +51,7 @@ const matter = {
   handBodies: [
   ],
   boundaries: [
-  ]
+  ],
 };
 
 sketch.setup(
@@ -62,7 +62,7 @@ sketch.setup(
       worker: false,
       tasks: [
         "hands"
-      ]
+      ],
     } );
 
     for ( const layerName in layers ) {
@@ -133,8 +133,8 @@ sketch.setup(
     },
     animation: {
       framerate: options.animation.framerate,
-      duration: options.animation.duration
-    }
+      duration: options.animation.duration,
+    },
   }
 );
 
@@ -197,12 +197,12 @@ sketch.draw( (
     neonDot( {
       sizeRange: [
         circleRadius * 2,
-        circleRadius * 2 / 3
+        ( circleRadius * 2 ) / 3
       ],
       shadowsCount: 3,
       graphics: layers.visuals.graphics,
       position,
-      index: index / ( matter.balls.length )
+      index: index / matter.balls.length,
     } );
   } );
 
@@ -247,14 +247,14 @@ sketch.draw( (
         CENTER,
         CENTER
       ],
-      blendMode: EXCLUSION
+      blendMode: EXCLUSION,
     }
   );
 
   string.write(
     "hand tracking v0",
     0,
-    height * 6 / 10,
+    ( height * 6 ) / 10,
     {
       size: 32,
       strokeWeight: 0,
@@ -265,7 +265,7 @@ sketch.draw( (
         CENTER,
         CENTER
       ],
-      blendMode: EXCLUSION
+      blendMode: EXCLUSION,
     }
   );
 } );
@@ -296,9 +296,11 @@ const interactionIndices = [
 ];
 
 function createHandInteractionBodies( hand ) {
-  const interactionPoints = interactionIndices.map( i => hand[ i ] ).filter( Boolean );
+  const interactionPoints = interactionIndices
+    .map( ( i ) => hand[ i ] )
+    .filter( Boolean );
 
-  interactionPoints.forEach( point => {
+  interactionPoints.forEach( ( point ) => {
     if ( point ) {
       const x = common.inverseX( point.x ) * width;
       const y = point.y * height;
@@ -330,7 +332,7 @@ function addBall(
   const newBall = Bodies.circle(
     x,
     y,
-    radius,
+    radius
     // {
     //   friction: .001,
     //   frictionAir: 0.9,

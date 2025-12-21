@@ -9,7 +9,9 @@ interface ImageDropzoneProps {
 }
 
 const ImageDropzone = ( {
-  image, onImageDrop, children
+  image,
+  onImageDrop,
+  children,
 }: ImageDropzoneProps ) => {
   const fileInputRef = useRef<HTMLInputElement>( null );
   const [

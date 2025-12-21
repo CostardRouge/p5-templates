@@ -29,8 +29,8 @@ export async function generateMetadata( {
   params,
 }: {
   params: Promise<{
- sketch: string
-}>;
+    sketch: string;
+  }>;
 } ): Promise<Metadata> {
   const sketchName = ( await params ).sketch;
 
@@ -48,15 +48,16 @@ const acceptedImageTypes = [
 export const revalidate = 0;
 
 async function ProcessingSketch( {
-  params, searchParams
+  params,
+  searchParams,
 }: {
   params: Promise<{
-    sketch: string
-  }>,
+    sketch: string;
+  }>;
   searchParams: Promise<{
-    id?: string
-    capturing?: string
-  }>
+    id?: string;
+    capturing?: string;
+  }>;
 } ) {
   const sketchName = ( await params ).sketch;
   const jobIdSearchParams = ( await searchParams ).id;
@@ -79,7 +80,7 @@ async function ProcessingSketch( {
     Object.assign(
       sketchOptions,
       {
-        sketch: formValues
+        sketch: formValues,
       }
     );
   }
@@ -106,32 +107,32 @@ async function ProcessingSketch( {
 
     sketchOptions.assets = sketchOptions.assets || {
       images: [
-      ]
+      ],
     };
 
     const testImageFileNames = await listDirectory( "public/assets/images/test" );
 
     sketchOptions.assets.images = testImageFileNames
-      .filter( testImageFileName => acceptedImageTypes.includes( testImageFileName.split( "." )[ 1 ] ) )
-      .map( testImageFileName => `/assets/images/test/${ testImageFileName }` );
+      .filter( ( testImageFileName ) =>
+        acceptedImageTypes.includes( testImageFileName.split( "." )[ 1 ] ) )
+      .map( ( testImageFileName ) => `/assets/images/test/${ testImageFileName }` );
   }
 
   sketchOptions.name = sketchName;
 
   return (
     <SketchContextProvider
-      name={ sketchName }
-      options={ sketchOptions }
-      persistedJob={ persistedJob }
-      sketchFormValues={ formValues }
-      sketchFormConfiguration={ formConfiguration }
-      capturing={ ( await searchParams ).capturing === ""}
+      name={sketchName}
+      options={sketchOptions}
+      persistedJob={persistedJob}
+      sketchFormValues={formValues}
+      sketchFormConfiguration={formConfiguration}
+      capturing={( await searchParams ).capturing === ""}
       backendRecording={process.env.BACKEND_RECORDING === "true"}
-      activeSlideIndex={ sketchOptions.slides?.length > 0 ? 0 : undefined}
+      activeSlideIndex={sketchOptions.slides?.length > 0 ? 0 : undefined}
     >
-      <ClientProcessingSketch/>
+      <ClientProcessingSketch />
     </SketchContextProvider>
-
   );
 }
 

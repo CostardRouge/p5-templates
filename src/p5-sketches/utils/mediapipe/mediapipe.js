@@ -7,7 +7,7 @@ const mediapipe = {
   config: {
     useWorker: false,
     tasks: [
-    ]
+    ],
   },
   tasks: {
   },
@@ -15,13 +15,13 @@ const mediapipe = {
     element: null,
     size: {
       width: 320,
-      height: 240
-    }
+      height: 240,
+    },
   },
   processor: {
     instance: null,
     busy: false,
-    ready: false
+    ready: false,
   },
   mode: "VIDEO", // VIDEO or IMAGE
   previousFrameSentTime: 0,
@@ -53,13 +53,13 @@ function setupWorker() {
   mediapipe.processor.instance = new Worker(
     "/assets/scripts/vision-worker.js",
     {
-      type: "module"
+      type: "module",
     }
   );
   mediapipe.processor.instance.postMessage( {
     type: "INIT",
     tasks: mediapipe.config.tasks,
-    mediapipeLibraryPath: "/assets/libraries/mediapipe"
+    mediapipeLibraryPath: "/assets/libraries/mediapipe",
   } );
 
   mediapipe.processor.instance.onmessage = ( e ) => {
@@ -76,7 +76,7 @@ async function setupMainThread() {
   mediapipe.processor.instance.setResultCallback( handleResult );
   await mediapipe.processor.instance.initialize( {
     tasks: mediapipe.config.tasks,
-    mediapipeLibraryPath: "/assets/libraries/mediapipe"
+    mediapipeLibraryPath: "/assets/libraries/mediapipe",
   } );
   mediapipe.processor.ready = true;
 }
@@ -100,7 +100,7 @@ export async function predictImage( imageSource ) {
     if ( mediapipe.config.useWorker ) {
       mediapipe.processor.instance.postMessage( {
         type: "SET_MODE",
-        mode: "IMAGE"
+        mode: "IMAGE",
       } );
     } else {
       await mediapipe.processor.instance.setMode( "IMAGE" );
@@ -118,7 +118,7 @@ export async function predictImage( imageSource ) {
       {
         type: "FRAME",
         bitmap,
-        timestamp: performance.now()
+        timestamp: performance.now(),
       },
       [
         bitmap
@@ -147,10 +147,12 @@ export function interact(
 
   // 1. Normalize Coordinates (0.0 to 1.0)
   // We must use the actual element size, not the screen size
-  const rect = element.getBoundingClientRect ? element.getBoundingClientRect() : {
-    width: element.width,
-    height: element.height
-  };
+  const rect = element.getBoundingClientRect
+    ? element.getBoundingClientRect()
+    : {
+      width: element.width,
+      height: element.height,
+    };
 
   // If using p5 video capture, it might not be in the DOM, so we rely on internal size
   const elWidth = element.width || element.videoWidth;
@@ -164,18 +166,18 @@ export function interact(
   const roi = {
     keypoint: {
       x: normalizedX,
-      y: normalizedY
-    }
+      y: normalizedY,
+    },
   };
 
   // 2. Send to Processor
   if ( mediapipe.config.useWorker ) {
-    createImageBitmap( element ).then( bmp => {
+    createImageBitmap( element ).then( ( bmp ) => {
       mediapipe.processor.instance.postMessage(
         {
           type: "INTERACT",
           bitmap: bmp,
-          roi: roi
+          roi: roi,
         },
         [
           bmp
@@ -194,7 +196,7 @@ function createVideoCaptureElements() {
   mediapipe.capture.element = createCapture(
     VIDEO,
     {
-      flipped: true
+      flipped: true,
     }
   );
   mediapipe.capture.element.size(
@@ -204,7 +206,9 @@ function createVideoCaptureElements() {
   mediapipe.capture.element.hide();
   mediapipe.capture.element.elt.addEventListener(
     "loadeddata",
-    () => { mediapipe.videoReady = true; }
+    () => {
+      mediapipe.videoReady = true;
+    }
   );
 }
 
@@ -212,7 +216,7 @@ events.register(
   "post-draw",
   () => {
   // Only run automatic video loop if we are in VIDEO mode
-    if( mediapipe.mode === "VIDEO" ) sendFrameIfDue();
+    if ( mediapipe.mode === "VIDEO" ) sendFrameIfDue();
   }
 );
 
@@ -227,7 +231,11 @@ function sendFrameIfDue() {
 
   const now = performance.now();
 
-  if ( now - mediapipe.previousFrameSentTime < mediapipe.inferenceIntervalMilliseconds ) return;
+  if (
+    now - mediapipe.previousFrameSentTime <
+    mediapipe.inferenceIntervalMilliseconds
+  )
+    return;
 
   const videoEl = mediapipe.capture.element.elt;
 
@@ -237,19 +245,20 @@ function sendFrameIfDue() {
   mediapipe.previousFrameSentTime = now;
 
   if ( mediapipe.config.useWorker ) {
-    createImageBitmap( videoEl ).then( bmp => {
-      mediapipe.processor.instance.postMessage(
-        {
-          type: "FRAME",
-          bitmap: bmp,
-          timestamp: now
-        },
-        [
-          bmp
-        ]
-      );
-    } )
-      .catch( e => mediapipe.processor.busy = false );
+    createImageBitmap( videoEl )
+      .then( ( bmp ) => {
+        mediapipe.processor.instance.postMessage(
+          {
+            type: "FRAME",
+            bitmap: bmp,
+            timestamp: now,
+          },
+          [
+            bmp
+          ]
+        );
+      } )
+      .catch( ( e ) => ( mediapipe.processor.busy = false ) );
   } else {
     mediapipe.processor.instance.detect(
       videoEl,
@@ -275,7 +284,7 @@ export function disable() {
   mediapipe.processor.busy = false;
 
   // Clear results to prevent stale data
-  Object.keys( mediapipe.tasks ).forEach( taskName => {
+  Object.keys( mediapipe.tasks ).forEach( ( taskName ) => {
     if ( mediapipe.tasks[ taskName ] ) {
       mediapipe.tasks[ taskName ].result = null;
     }
@@ -290,7 +299,7 @@ export function deallocateWebcam() {
     const stream = mediapipe.capture.element.elt.srcObject;
     const tracks = stream.getTracks();
 
-    tracks.forEach( track => track.stop() );
+    tracks.forEach( ( track ) => track.stop() );
     mediapipe.capture.element.elt.srcObject = null;
   }
 

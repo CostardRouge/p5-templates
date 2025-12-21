@@ -29,9 +29,9 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout( {
-  children
+  children,
 }: {
- children: React.ReactNode
+  children: React.ReactNode;
 } ) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -43,15 +43,13 @@ export default function RootLayout( {
           enableSystem
           disableTransitionOnChange
         >
-          <div
-            className="flex flex-col h-[100svh] bg-hover/50"
-          >
-            <main className="flex-1 overflow-auto relative">
-              {children}
-            </main>
+          <div className="flex flex-col h-[100svh] bg-hover/50">
+            <main className="flex-1 overflow-auto relative">{children}</main>
 
             <Suspense>
-              <MenuBar showRecordings={process.env.BACKEND_RECORDING === "true"} />
+              <MenuBar
+                showRecordings={process.env.BACKEND_RECORDING === "true"}
+              />
             </Suspense>
           </div>
 

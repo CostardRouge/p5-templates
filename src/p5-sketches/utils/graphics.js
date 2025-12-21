@@ -28,7 +28,7 @@ const graphics = {
     );
 
     return _graphics;
-  }
+  },
 };
 
 export default graphics;

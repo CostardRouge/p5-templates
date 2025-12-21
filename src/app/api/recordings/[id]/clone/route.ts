@@ -14,7 +14,7 @@ import {
   S3Client,
   ListObjectsV2Command,
   CopyObjectCommand,
-  ObjectCannedACL
+  ObjectCannedACL,
 } from "@aws-sdk/client-s3";
 import {
   uploadArtifact
@@ -33,11 +33,11 @@ const s3client = new S3Client( {
 export async function POST(
   _request: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      id: string
-    }>
+      id: string;
+    }>;
   }
 ): Promise<NextResponse<EnqueueRecordingResponse>> {
   try {
@@ -52,10 +52,10 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Recording not found"
+          error: "Recording not found",
         },
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -64,9 +64,10 @@ export async function POST(
     const newJobId = generateUuid();
 
     // Parse options and update the ID
-    const options = typeof originalJob.options === "string"
-      ? JSON.parse( originalJob.options )
-      : originalJob.options;
+    const options =
+      typeof originalJob.options === "string"
+        ? JSON.parse( originalJob.options )
+        : originalJob.options;
 
     options.id = newJobId;
 
@@ -124,7 +125,7 @@ export async function POST(
     await updateJob(
       newJobId,
       {
-        options
+        options,
       }
     );
 
@@ -132,7 +133,7 @@ export async function POST(
 
     return NextResponse.json( {
       success: true,
-      jobId: newJobId
+      jobId: newJobId,
     } );
   } catch ( error ) {
     console.error(
@@ -142,10 +143,10 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error"
+        error: error instanceof Error ? error.message : "Internal server error",
       },
       {
-        status: 500
+        status: 500,
       }
     );
   }

@@ -29,14 +29,14 @@ export function setSketchOptions(
     {
       detail: {
         opts: current,
-        origin
-      }
+        origin,
+      },
     }
   ) );
 }
 
 export function subscribeSketchOptions( cb ) {
-  const handler = e => {
+  const handler = ( e ) => {
     cb(
       e.detail.opts,
       e.detail.origin

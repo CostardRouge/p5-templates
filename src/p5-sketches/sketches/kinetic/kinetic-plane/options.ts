@@ -14,8 +14,8 @@ export const formValues = {
       color: [
         0
       ],
-      hide: false
-    }
+      hide: false,
+    },
   },
   animation: {
     useMouse: false,
@@ -44,13 +44,13 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       image: {
         component: "image",
-        label: "Image"
+        label: "Image",
       },
       useWebcam: {
         label: "Use webcam as texture",
         component: "checkbox",
       },
-    }
+    },
   },
   grid: {
     component: "nested-object",
@@ -74,15 +74,15 @@ export const formConfiguration: Record<string, any> = {
         fields: {
           color: {
             component: "color",
-            label: "stroke"
+            label: "stroke",
           },
           hide: {
             label: "noStroke()",
             component: "checkbox",
           },
-        }
-      }
-    }
+        },
+      },
+    },
   },
   animation: {
     component: "nested-object",
@@ -127,21 +127,21 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 500,
-        step: 0.5
+        step: 0.5,
       },
       easing: {
         component: "select",
         label: "Depth easing",
-        options: Object.keys( easing ).map( easingFunctionName => ( {
+        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
           label: easingFunctionName,
           value: easingFunctionName,
-        } ) )
+        } ) ),
       },
-    }
+    },
   },
   title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
 };

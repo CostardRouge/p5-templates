@@ -15,7 +15,7 @@ export async function GET( req: NextRequest ) {
     return new Response(
       "Missing job IDs",
       {
-        status: 400
+        status: 400,
       }
     );
   }
@@ -26,7 +26,7 @@ export async function GET( req: NextRequest ) {
     return new Response(
       "No valid job IDs provided",
       {
-        status: 400
+        status: 400,
       }
     );
   }
@@ -47,7 +47,7 @@ export async function GET( req: NextRequest ) {
                 jobId: id,
                 percentage: update.percentage,
                 status: update.status,
-                recordingDuration: update.recordingDuration
+                recordingDuration: update.recordingDuration,
               } ) }\n\n` );
             }
           }
@@ -59,7 +59,7 @@ export async function GET( req: NextRequest ) {
       if ( intervalId ) {
         clearInterval( intervalId );
       }
-    }
+    },
   } );
 
   return new Response(
@@ -69,7 +69,7 @@ export async function GET( req: NextRequest ) {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
-      }
+      },
     }
   );
 }

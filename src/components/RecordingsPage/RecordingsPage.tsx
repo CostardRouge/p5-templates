@@ -36,7 +36,7 @@ export default function RecordingsPage() {
     handleDelete,
     handleStart,
     handleRetry,
-    addJob
+    addJob,
   } = useRecordings();
 
   const contentRef = useRef<HTMLDivElement>( null );
@@ -86,13 +86,14 @@ export default function RecordingsPage() {
     "recordings-sort",
     {
       field: "createdAt",
-      order: "desc"
+      order: "desc",
     }
   );
 
   // Filter and sort jobs
   const filtered = allJobs.filter( ( job ) => {
-    const matchSearch = job.id.includes( search ) || job.template.includes( search );
+    const matchSearch =
+      job.id.includes( search ) || job.template.includes( search );
     const matchStatus = statusFilter === "all" || job.status === statusFilter;
 
     return matchSearch && matchStatus;
@@ -105,11 +106,12 @@ export default function RecordingsPage() {
   const hasFilters = search !== "" || statusFilter !== "all";
 
   // Get selected jobs for bulk actions
-  const selectedJobs = sorted.filter( j => selectedIds.has( j.id ) );
+  const selectedJobs = sorted.filter( ( j ) => selectedIds.has( j.id ) );
 
   // Toggle select all handler
   const handleToggleSelectAll = () => {
-    const allSelected = sorted.length > 0 && sorted.every( j => selectedIds.has( j.id ) );
+    const allSelected =
+      sorted.length > 0 && sorted.every( ( j ) => selectedIds.has( j.id ) );
 
     if ( allSelected ) {
       clearSelection();
@@ -121,19 +123,20 @@ export default function RecordingsPage() {
   // Bulk action handlers
   const handleBulkDelete = async() => {
     const ids = selectedJobs
-      .filter( j => [
-        "completed",
-        "cancelled",
-        "draft",
-        "failed"
-      ].includes( j.status ) )
-      .map( j => j.id );
+      .filter( ( j ) =>
+        [
+          "completed",
+          "cancelled",
+          "draft",
+          "failed"
+        ].includes( j.status ) )
+      .map( ( j ) => j.id );
 
     const result = await bulkDelete( ids );
 
     if ( result.success ) {
-      result.deleted.forEach( id => {
-        const job = allJobs.find( j => j.id === id );
+      result.deleted.forEach( ( id ) => {
+        const job = allJobs.find( ( j ) => j.id === id );
 
         if ( job ) handleDelete( job );
       } );
@@ -143,14 +146,14 @@ export default function RecordingsPage() {
 
   const handleBulkCancel = async() => {
     const ids = selectedJobs
-      .filter( j => j.status === "queued" )
-      .map( j => j.id );
+      .filter( ( j ) => j.status === "queued" )
+      .map( ( j ) => j.id );
 
     const result = await bulkCancel( ids );
 
     if ( result.success ) {
-      result.cancelled.forEach( id => {
-        const job = allJobs.find( j => j.id === id );
+      result.cancelled.forEach( ( id ) => {
+        const job = allJobs.find( ( j ) => j.id === id );
 
         if ( job ) handleCancel( job );
       } );
@@ -160,17 +163,17 @@ export default function RecordingsPage() {
 
   const handleBulkRetry = async() => {
     const ids = selectedJobs
-      .filter( j => [
+      .filter( ( j ) => [
         "cancelled",
         "failed"
       ].includes( j.status ) )
-      .map( j => j.id );
+      .map( ( j ) => j.id );
 
     const result = await bulkRetry( ids );
 
     if ( result.success ) {
-      result.retried.forEach( id => {
-        const job = allJobs.find( j => j.id === id );
+      result.retried.forEach( ( id ) => {
+        const job = allJobs.find( ( j ) => j.id === id );
 
         if ( job ) handleRetry( job );
       } );
@@ -188,7 +191,7 @@ export default function RecordingsPage() {
       // Smooth scroll to top
       contentRef.current?.scrollIntoView( {
         behavior: "smooth",
-        block: "start"
+        block: "start",
       } );
 
       // Remove animation class after animation completes
@@ -222,8 +225,12 @@ export default function RecordingsPage() {
               <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-hover/50 mb-3 sm:mb-4 animate-pulse">
                 <Video className="w-6 h-6 sm:w-8 sm:h-8 text-foreground/40" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">Loading recordings...</h3>
-              <p className="text-xs sm:text-sm text-foreground/60">Please wait while we fetch your recordings</p>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+                Loading recordings...
+              </h3>
+              <p className="text-xs sm:text-sm text-foreground/60">
+                Please wait while we fetch your recordings
+              </p>
             </div>
           </div>
         )}

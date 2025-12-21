@@ -11,7 +11,8 @@ import {
 import {
   RecordingJobData,
   JobConfiguration,
-  QueueHealthResponse, JobStatusEnum
+  QueueHealthResponse,
+  JobStatusEnum,
 } from "@/types/recording.types";
 import {
   uploadArtifact
@@ -74,14 +75,14 @@ export class RecordingQueueService {
     status,
     files,
     jobId: providedJobId,
-    thumbnails
+    thumbnails,
   }: {
-    status: JobStatusEnum,
-    template: string,
-    options: string,
-    files: File[],
-    jobId?: string,
-    thumbnails?: Record<string, string>
+    status: JobStatusEnum;
+    template: string;
+    options: string;
+    files: File[];
+    jobId?: string;
+    thumbnails?: Record<string, string>;
   } ): Promise<string> {
     const jobId = providedJobId ?? generateUuid();
 
@@ -122,10 +123,12 @@ export class RecordingQueueService {
         jobId,
         {
           options: JSON.parse( options ),
-          ...( thumbnails ? {
-            thumbnails
-          } : {
-          } )
+          ...( thumbnails
+            ? {
+              thumbnails,
+            }
+            : {
+            } ),
         }
       );
 
@@ -161,7 +164,7 @@ export class RecordingQueueService {
           jobId,
           {
             status: "queued",
-            progress: 0
+            progress: 0,
           }
         );
         await addRecordingStatus(
@@ -173,14 +176,14 @@ export class RecordingQueueService {
           "process-recording",
           {
             jobId,
-            template
+            template,
           },
           {
             jobId,
             priority: 1,
             delay: 0,
             removeOnFail: true,
-            removeOnComplete: true
+            removeOnComplete: true,
           }
         );
       }

@@ -18,7 +18,8 @@ const compat = new FlatCompat( {
 const eslintConfig = [
   {
     ignores: [
-      "src/generated/**"
+      "src/generated/**",
+      "public/assets/libraries/**"
     ]
   },
   ...compat.extends(

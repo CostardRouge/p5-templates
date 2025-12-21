@@ -52,7 +52,8 @@ export default function RecordingActions( {
               id: persistedJob?.id || jobId || "",
               progress:
                 recordingProgress?.percentage || persistedJob?.progress || 0,
-              status: recordingProgress?.status || persistedJob?.status || "queued",
+              status:
+                recordingProgress?.status || persistedJob?.status || "queued",
             } as JobModel
           }
           steps={
@@ -61,9 +62,13 @@ export default function RecordingActions( {
                 ...persistedJob,
                 id: persistedJob?.id || jobId || "",
                 progress:
-                    recordingProgress?.percentage || persistedJob?.progress || 0,
+                    recordingProgress?.percentage ||
+                    persistedJob?.progress ||
+                    0,
                 status:
-                    recordingProgress?.status || persistedJob?.status || "active",
+                    recordingProgress?.status ||
+                    persistedJob?.status ||
+                    "active",
               } as JobModel )
               : [
               ]

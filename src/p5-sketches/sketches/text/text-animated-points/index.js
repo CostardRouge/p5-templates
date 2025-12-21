@@ -8,7 +8,7 @@ import string from "@/p5/utils/string.js";
 const sketchState = {
   shape: {
     graphics: null,
-  }
+  },
 };
 
 sketch.setup( ( {
@@ -24,19 +24,18 @@ sketch.setup( ( {
 } );
 
 const getBackgroundColor = () =>
-  ( options.sketch?.backgroundColor ??
-  [
+  options.sketch?.backgroundColor ?? [
     246,
     235,
     225
-  ] );
+  ];
 
 sketch.draw( () => {
   background( ...getBackgroundColor() );
 
   const textToWrite = options.sketch?.shape?.text ?? "x";
 
-  const size = ( options.sketch?.shape?.size * width ) ?? width;
+  const size = options.sketch?.shape?.size * width ?? width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
   const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
 
@@ -49,7 +48,7 @@ sketch.draw( () => {
     size,
     font: string.fonts.martian,
     sampleFactor,
-    simplifyThreshold
+    simplifyThreshold,
   } );
 
   textPoints.forEach( (
@@ -75,19 +74,19 @@ sketch.draw( () => {
       values: [
         createVector(
           0,
-          0,
+          0
         ),
         createVector(
           0,
-          rotationMax,
+          rotationMax
         ),
         createVector(
           0,
-          rotationMax,
+          rotationMax
         ),
         createVector(
           rotationMax,
-          0,
+          0
         ),
       ],
       currentTime: animation.progression,
@@ -96,9 +95,7 @@ sketch.draw( () => {
     } );
 
     const {
-      x: rX,
-      y: rY,
-      z: rZ
+      x: rX, y: rY, z: rZ
     } = rotation;
 
     // sketchState.shape.graphics.rotateX( rX );
@@ -115,16 +112,15 @@ sketch.draw( () => {
     } );
 
     const hue = sketchState.shape.graphics.noise(
-      position.x / width + (
+      position.x / width +
         +sketchState.shape.graphics.map(
           Math.sin( animation.angle ),
           -1,
           1,
           0,
           1
-        )
-      ),
-      position.y / height + (
+        ),
+      position.y / height +
         +sketchState.shape.graphics.map(
           Math.cos( animation.angle ),
           -1,
@@ -132,21 +128,21 @@ sketch.draw( () => {
           0,
           1
         )
-      )
     );
     const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
     const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
 
     const tint = colors.rainbow( {
       hueOffset: animation.circularProgression,
-      hueIndex: sketchState.shape.graphics.map(
-        hue,
-        0,
-        1,
-        -PI,
-        PI
-      ) * hueMultiplier,
-      opacityFactor
+      hueIndex:
+        sketchState.shape.graphics.map(
+          hue,
+          0,
+          1,
+          -PI,
+          PI
+        ) * hueMultiplier,
+      opacityFactor,
     } );
 
     const {
@@ -154,7 +150,7 @@ sketch.draw( () => {
         red,
         green,
         blue
-      ]
+      ],
     } = tint;
 
     sketchState.shape.graphics.fill(

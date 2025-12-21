@@ -20,7 +20,9 @@ import ExifReader from "exifreader";
 import GSAPTemplateControls from "@/components/GSAPTemplateControls/GSAPTemplateControls";
 import GSAPTemplateError from "@/components/GSAPTemplateError/GSAPTemplateError";
 import {
-  preloadImages, optimizeForAnimation, cleanupAnimationOptimizations
+  preloadImages,
+  optimizeForAnimation,
+  cleanupAnimationOptimizations,
 } from "@/lib/gsap/performance";
 
 import "./photo-exif.css";
@@ -77,7 +79,11 @@ export default function PhotoExifTemplate() {
 
   // Initialize GSAP timeline synced to options.animation
   const {
-    timeline, progress, isReady: timelineReady, currentFrame, totalFrames
+    timeline,
+    progress,
+    isReady: timelineReady,
+    currentFrame,
+    totalFrames,
   } = useGSAPTimeline( {
     container: containerRef as React.RefObject<HTMLElement>,
     options: options?.animation,
@@ -91,7 +97,7 @@ export default function PhotoExifTemplate() {
         );
       }
       setIsPlaying( false );
-    }
+    },
   } );
 
   // Handle image file upload and EXIF parsing
@@ -349,10 +355,10 @@ export default function PhotoExifTemplate() {
           {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
             body: JSON.stringify( {
-              options
+              options,
             } ),
           }
         );
@@ -406,7 +412,7 @@ export default function PhotoExifTemplate() {
           {
             opacity: 0,
             scale: 0.95,
-            transformOrigin: "center center"
+            transformOrigin: "center center",
           }
         );
 
@@ -442,10 +448,11 @@ export default function PhotoExifTemplate() {
         );
 
         // Animate individual EXIF elements if they exist
-        const exifElements = containerRef.current?.querySelectorAll( "#exif-info > div" );
+        const exifElements =
+        containerRef.current?.querySelectorAll( "#exif-info > div" );
 
         if ( exifElements && exifElements.length > 0 ) {
-          // Set initial state for individual elements
+        // Set initial state for individual elements
           gsap.set(
             exifElements,
             {
@@ -474,7 +481,7 @@ export default function PhotoExifTemplate() {
             {
             },
             {
-              duration: duration - timeline.duration()
+              duration: duration - timeline.duration(),
             }
           );
         }
@@ -531,7 +538,7 @@ export default function PhotoExifTemplate() {
             ref={containerRef}
             className="w-[1080px] h-[1350px] p-16"
             style={{
-              backgroundColor
+              backgroundColor,
             }}
             data-ready={isReady}
           >

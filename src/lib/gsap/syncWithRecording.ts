@@ -91,7 +91,7 @@ export function dispatchSeekFrame( frameNumber: number ): void {
     "capture:seek-frame",
     {
       detail: {
-        frame: frameNumber
+        frame: frameNumber,
       },
     }
   ) );

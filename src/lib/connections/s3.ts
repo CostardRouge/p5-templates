@@ -50,7 +50,8 @@ export async function uploadArtifact(
 }
 
 export async function getDownloadUrlFromS3Url(
-  objectKey: string, expiresInSeconds = 3600
+  objectKey: string,
+  expiresInSeconds = 3600
 ): Promise<string> {
   // Use public client to generate signed URLs with the correct public endpoint
   const signedUrl = await getSignedUrl(

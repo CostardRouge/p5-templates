@@ -2,8 +2,7 @@ import {
   RecordingProgressionSteps
 } from "@/types/recording.types";
 import {
-  SketchOption,
-  SlideOption
+  SketchOption, SlideOption
 } from "@/types/sketch.types";
 
 export const recordingSketchSteps: RecordingProgressionSteps = {
@@ -27,28 +26,26 @@ export const recordingSketchSteps: RecordingProgressionSteps = {
 
 function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
   const recordingSketchStepsForSketchSlides = {
-    ...recordingSketchSteps
+    ...recordingSketchSteps,
   };
 
   recordingSketchStepsForSketchSlides.recording = {
     steps: slides.reduce(
       (
-        accumulator,
-        slide: SlideOption,
-        slideIndex
+        accumulator, slide: SlideOption, slideIndex
       ) => {
         const clonedSlideRecordingStep: any = JSON.parse( JSON.stringify( recordingSketchSteps.recording ) );
 
         return {
           ...accumulator,
           [ `slide-${ slideIndex }` ]: {
-            ...clonedSlideRecordingStep
-          }
+            ...clonedSlideRecordingStep,
+          },
         };
       },
       {
       }
-    )
+    ),
   };
 
   recordingSketchStepsForSketchSlides.uploading = {
@@ -58,8 +55,8 @@ function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
       },
       s3: {
         percentage: 0,
-      }
-    }
+      },
+    },
   };
 
   return recordingSketchStepsForSketchSlides;
@@ -73,6 +70,6 @@ export function getRecordingSketchStepsByOptions( sketchOptions: SketchOption ) 
   }
 
   return {
-    ...recordingSketchSteps
+    ...recordingSketchSteps,
   };
 }

@@ -1,13 +1,22 @@
 "use client";
 import React from "react";
 import {
-  FieldPathByValue, useController, useFormContext,
+  FieldPathByValue,
+  useController,
+  useFormContext,
 } from "react-hook-form";
 import {
-  DndContext, DragEndEvent, PointerSensor, useSensor, useSensors,
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 import {
-  arrayMove, rectSortingStrategy, SortableContext, useSortable,
+  arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  useSortable,
 } from "@dnd-kit/sortable";
 import {
   CSS
@@ -17,8 +26,7 @@ import {
 } from "lucide-react";
 
 import useAssetsBridge from "@/hooks/useAssetsBridge";
-import useTemplateAssets
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
+import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
 import DropZoneButton from "@/components/DropZoneButton";
 import {
   resolveAssetURL
@@ -71,7 +79,7 @@ export default function ControlledImagesStackInput( {
     PointerSensor,
     {
       activationConstraint: {
-        distance: 5
+        distance: 5,
       },
     }
   ) );
@@ -87,7 +95,7 @@ export default function ControlledImagesStackInput( {
   // Self-heal the list if it contains empty strings (once per change)
   React.useEffect(
     () => {
-      // Only run if original value had empties or non-array
+    // Only run if original value had empties or non-array
       const v = field.value as unknown;
       const originalLen = Array.isArray( v ) ? v.length : 0;
 
@@ -196,7 +204,10 @@ export default function ControlledImagesStackInput( {
     <div className="flex flex-col gap-1">
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
         <div className="grid grid-cols-3 gap-1">
-          <SortableContext items={rows.map( ( r ) => r.id )} strategy={rectSortingStrategy}>
+          <SortableContext
+            items={rows.map( ( r ) => r.id )}
+            strategy={rectSortingStrategy}
+          >
             {rows.map( (
               r, i
             ) => (
@@ -230,9 +241,10 @@ function SortableThumb( {
 } ) {
   const {
     attributes, listeners, setNodeRef, transform, transition
-  } = useSortable( {
-    id
-  } );
+  } =
+    useSortable( {
+      id,
+    } );
   const style = {
     transform: CSS.Transform.toString( transform ),
     transition,

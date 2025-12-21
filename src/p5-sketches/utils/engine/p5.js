@@ -7,7 +7,7 @@ const p5js = {
   canvas: undefined,
   paused: false,
   favoriteColors: {
-    purple: undefined
+    purple: undefined,
   },
   init: (
     sketchOptions, setupEngineFunction
@@ -81,7 +81,7 @@ const p5js = {
     events.register(
       "pre-setup",
       () => {
-        // init favorite colors
+      // init favorite colors
         p5js.favoriteColors.purple = color(
           128,
           128,
@@ -132,13 +132,13 @@ const p5js = {
         } );
 
         p5js.canvas.drop(
-          file => {
+          ( file ) => {
             events.handle(
               "engine-canvas-handle-file",
               file
             );
           },
-          event => {
+          ( event ) => {
             events.handle(
               "engine-canvas-handle-drop",
               event

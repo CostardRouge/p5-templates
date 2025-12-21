@@ -19,7 +19,7 @@ export default function useFormUndoRedoHistory() {
     past: [
     ],
     future: [
-    ]
+    ],
   } );
 
   // Poll history (could be optimized with events)

@@ -22,7 +22,7 @@ export default function ImportOptionsButton( {
   persistedJobId,
   jobStatus,
   name,
-  onImportInMemory
+  onImportInMemory,
 }: ImportOptionsButtonProps ) {
   const fileInputRef = useRef<HTMLInputElement>( null );
   const [
@@ -33,7 +33,8 @@ export default function ImportOptionsButton( {
     toast,
     setToast
   ] = useState<{
-    message: string; type: "success" | "error"
+    message: string;
+    type: "success" | "error";
   } | null>( null );
 
   // Show for:
@@ -45,7 +46,8 @@ export default function ImportOptionsButton( {
     "cancelled"
   ];
 
-  const canImport = !persistedJobId || ( jobStatus && allowedStatuses.includes( jobStatus ) );
+  const canImport =
+    !persistedJobId || ( jobStatus && allowedStatuses.includes( jobStatus ) );
 
   if ( !canImport ) {
     return null;
@@ -78,7 +80,7 @@ export default function ImportOptionsButton( {
           onImportInMemory( importedOptions );
           setToast( {
             message: "Options imported successfully",
-            type: "success"
+            type: "success",
           } );
         }
       } else {
@@ -109,7 +111,7 @@ export default function ImportOptionsButton( {
         if ( result.success ) {
           setToast( {
             message: "Options imported successfully",
-            type: "success"
+            type: "success",
           } );
           // Reload after a short delay to show the toast
           setTimeout(
@@ -124,8 +126,9 @@ export default function ImportOptionsButton( {
       }
     } catch ( error ) {
       setToast( {
-        message: error instanceof Error ? error.message : "Failed to import options",
-        type: "error"
+        message:
+          error instanceof Error ? error.message : "Failed to import options",
+        type: "error",
       } );
     } finally {
       setImporting( false );
@@ -147,7 +150,11 @@ export default function ImportOptionsButton( {
         onClick={handleImportClick}
         disabled={importing}
         className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium"
-        title={persistedJobId ? "Import options.json (assets will be ignored)" : "Import options.json in memory"}
+        title={
+          persistedJobId
+            ? "Import options.json (assets will be ignored)"
+            : "Import options.json in memory"
+        }
       >
         <FileUp className="h-4 w-4" />
         <span>{importing ? "Importing..." : "Import Options"}</span>

@@ -43,7 +43,7 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 1,
         max: 500,
-        step: 0.5
+        step: 0.5,
       },
       depth: {
         label: "Depth",
@@ -57,7 +57,7 @@ export const formConfiguration: Record<string, any> = {
         min: 10,
         max: 300,
       },
-    }
+    },
   },
   animation: {
     component: "nested-object",
@@ -92,17 +92,17 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 500,
-        step: 0.5
+        step: 0.5,
       },
       easing: {
         component: "select",
         label: "Depth easing",
-        options: Object.keys( easing ).map( easingFunctionName => ( {
+        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
           label: easingFunctionName,
           value: easingFunctionName,
-        } ) )
-      }
-    }
+        } ) ),
+      },
+    },
   },
   color: {
     component: "nested-object",
@@ -113,41 +113,41 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 3,
-        step: 0.1
+        step: 0.1,
       },
       fillAlphaStart: {
         label: "Fill alpha (visible)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       fillAlphaEnd: {
         label: "Fill alpha (hidden)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       strokeAlpha: {
         label: "Stroke alpha",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1
+        step: 1,
       },
       hueMultiplier: {
         label: "Hue range multiplier",
         component: "slider",
         min: 0.5,
         max: 5,
-        step: 0.1
+        step: 0.1,
       },
-    }
+    },
   },
   title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
 };

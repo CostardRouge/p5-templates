@@ -8,12 +8,12 @@ import {
 export async function GET(
   _request: Request,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      key: string[]
-    }>
-}
+      key: string[];
+    }>;
+  }
 ) {
   const objectKey = ( await params ).key.join( "/" );
   const signedUrl = await getDownloadUrlFromS3Url( objectKey );

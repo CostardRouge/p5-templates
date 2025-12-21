@@ -8,7 +8,9 @@ import {
   zodResolver
 } from "@hookform/resolvers/zod";
 import {
-  OptionsSchema, SketchOption, SketchOptionInput
+  OptionsSchema,
+  SketchOption,
+  SketchOptionInput,
 } from "@/types/sketch.types";
 import initOptions from "@/components/utils/initOptions";
 import {
@@ -27,7 +29,9 @@ import {
 type UseFormStateProps = {
   initialOptions: SketchOption;
   persistedJob?: JobModel;
-  onOptionsChange: ( nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => void;
+  onOptionsChange: (
+    nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
+  ) => void;
   captureActionsRef: React.RefObject<CaptureActionsRef>;
 };
 
@@ -65,7 +69,8 @@ export function useFormState( {
 
         // Track unsaved changes only if values differ from initial
         if ( persistedJob?.status !== "completed" ) {
-          const hasChanged = JSON.stringify( value ) !== JSON.stringify( initialValuesRef.current );
+          const hasChanged =
+          JSON.stringify( value ) !== JSON.stringify( initialValuesRef.current );
 
           setHasUnsavedChanges( hasChanged );
         }
@@ -96,15 +101,17 @@ export function useFormState( {
   // Unsaved changes detection - triggers modal on navigation attempts
   const {
     showModal, handleStay, handleSaveAsDraft, handleLeaveWithoutSaving
-  } = useUnsavedChanges( {
-    hasUnsavedChanges: hasUnsavedChanges && !captureActionsRef.current?.isRecording,
-    onSaveAsDraft: async() => {
-      if ( captureActionsRef.current ) {
-        await captureActionsRef.current.saveAsDraft();
-        setHasUnsavedChanges( false );
-      }
-    },
-  } );
+  } =
+    useUnsavedChanges( {
+      hasUnsavedChanges:
+        hasUnsavedChanges && !captureActionsRef.current?.isRecording,
+      onSaveAsDraft: async() => {
+        if ( captureActionsRef.current ) {
+          await captureActionsRef.current.saveAsDraft();
+          setHasUnsavedChanges( false );
+        }
+      },
+    } );
 
   return {
     methods,

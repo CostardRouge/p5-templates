@@ -36,35 +36,35 @@ export const formConfiguration: Record<string, any> = {
   // Assets
   images: {
     component: "images-stack",
-    label: "Images"
+    label: "Images",
   },
 
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color"
+    label: "Background color",
   },
   textColor: {
     component: "color",
-    label: "Text color"
+    label: "Text color",
   },
 
   // Typography
   font: {
     component: "select",
     label: "Font name",
-    options: fontNames.map( fontName => ( {
+    options: fontNames.map( ( fontName ) => ( {
       value: fontName,
-      label: fontName
+      label: fontName,
     } ) ),
   },
   topText: {
     component: "text",
-    label: "Top text"
+    label: "Top text",
   },
   bottomText: {
     component: "text",
-    label: "Bottom text"
+    label: "Bottom text",
   },
 
   // Cards / motion
@@ -73,15 +73,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Card count",
     min: 1,
     max: 500,
-    step: 1
+    step: 1,
   },
   rotate: {
     component: "checkbox",
-    label: "Rotate cards"
+    label: "Rotate cards",
   },
   showExifBar: {
     component: "checkbox",
-    label: "Show EXIF bar"
+    label: "Show EXIF bar",
   },
 };
-

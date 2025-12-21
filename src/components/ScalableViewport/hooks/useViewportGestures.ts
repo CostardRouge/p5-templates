@@ -5,7 +5,9 @@ import type {
   TransformState
 } from "./useTransformState";
 import {
-  calculateZoomTarget, MIN_SCALE, MAX_SCALE
+  calculateZoomTarget,
+  MIN_SCALE,
+  MAX_SCALE,
 } from "../utils/zoomCalculations";
 
 interface UseViewportGesturesProps {
@@ -57,9 +59,12 @@ export function useViewportGestures( {
         origin: [
           originX,
           originY
-        ], offset: [
+        ],
+        offset: [
           scale
-        ], first, memo
+        ],
+        first,
+        memo,
       } ) => {
         const container = containerRef.current;
 
@@ -185,7 +190,7 @@ export function useViewportGestures( {
       pinch: {
         scaleBounds: {
           min: MIN_SCALE,
-          max: MAX_SCALE
+          max: MAX_SCALE,
         },
         from: () => [
           transform.current.scale,
@@ -194,7 +199,7 @@ export function useViewportGestures( {
       },
       wheel: {
         eventOptions: {
-          passive: false
+          passive: false,
         },
         from: () => [
           transform.current.x,

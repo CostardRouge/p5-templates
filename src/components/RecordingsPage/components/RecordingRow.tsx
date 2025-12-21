@@ -41,14 +41,18 @@ export default function RecordingRow( {
   onDelete,
   onRetry,
   onStart,
-  onClone
+  onClone,
 }: RecordingRowProps ) {
   const slideCount = getSlideCount( job );
 
   return (
-    <tr className={`group hover:bg-hover/50 transition-colors ${
-      isNewlyAdded ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]" : ""
-    }`}>
+    <tr
+      className={`group hover:bg-hover/50 transition-colors ${
+        isNewlyAdded
+          ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]"
+          : ""
+      }`}
+    >
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <input
           type="checkbox"
@@ -83,7 +87,9 @@ export default function RecordingRow( {
               0,
               8
             )}
-            <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px] sm:text-xs">→</span>
+            <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px] sm:text-xs">
+              →
+            </span>
           </div>
           {slideCount > 1 && (
             <div className="text-[10px] sm:text-xs text-foreground/50 font-sans mt-0.5">
@@ -99,7 +105,9 @@ export default function RecordingRow( {
           className="group/link inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
         >
           {job.template}
-          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px] sm:text-xs">→</span>
+          <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px] sm:text-xs">
+            →
+          </span>
         </HardLink>
       </td>
 
@@ -111,7 +119,7 @@ export default function RecordingRow( {
               {
                 month: "short",
                 day: "numeric",
-                year: "numeric"
+                year: "numeric",
               }
             )}
           </div>
@@ -120,10 +128,11 @@ export default function RecordingRow( {
               undefined,
               {
                 hour: "2-digit",
-                minute: "2-digit"
+                minute: "2-digit",
               }
             )}
-            {job.recordingDuration && ` • ${ formatDuration( job.recordingDuration ) }`}
+            {job.recordingDuration &&
+              ` • ${ formatDuration( job.recordingDuration ) }`}
           </div>
         </div>
       </td>

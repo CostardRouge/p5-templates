@@ -12,19 +12,15 @@ import * as common from "@/p5/utils/common.js";
 const canvases = {
 };
 
-const getBg = () =>
-  ( options.sketch?.backgroundColor ??
-  [
-    0
-  ] );
+const getBg = () => options.sketch?.backgroundColor ?? [
+  0
+];
 
-const getTextColor = () =>
-  ( options.sketch?.textColor ??
-  [
-    255,
-    255,
-    255
-  ] );
+const getTextColor = () => options.sketch?.textColor ?? [
+  255,
+  255,
+  255
+];
 
 const getFont = () => {
   const key = options.sketch?.font ?? "martian";
@@ -79,8 +75,7 @@ function dice(
 
   for ( let i = 0; i < rotations.length; i++ ) {
     const {
-      x: rX, y: rY /* , z: rZ */
-    } = rotations[ i ];
+      x: rX, y: rY /* , z: rZ */ } = rotations[ i ];
 
     canvases.dice.push();
     canvases.dice.rotateX( rX );
@@ -117,8 +112,7 @@ sketch.draw( (
 
   // Calculate current rotation target (6 faces in cycle)
   const {
-    x: rX, y: rY /* , z: rZ */
-  } = animation.ease( {
+    x: rX, y: rY /* , z: rZ */ } = animation.ease( {
     values: [
       canvases.dice.createVector(), // face
       canvases.dice.createVector(
@@ -160,11 +154,11 @@ sketch.draw( (
     (
       index, size
     ) => {
-      // pick image for this face
+    // pick image for this face
       let imgObj = null;
 
       if ( images.length > 0 ) {
-        const i = repeatImages ? ( index % images.length ) : index;
+        const i = repeatImages ? index % images.length : index;
 
         imgObj = images[ i ];
       }
@@ -181,7 +175,7 @@ sketch.draw( (
           graphics: canvases.dice,
         } );
       } else {
-        // fallback: draw a simple face label if no image
+      // fallback: draw a simple face label if no image
         canvases.dice.push();
         canvases.dice.noFill();
         canvases.dice.stroke(
@@ -239,7 +233,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: blendModeValue
+        blendMode: blendModeValue,
       }
     );
   }

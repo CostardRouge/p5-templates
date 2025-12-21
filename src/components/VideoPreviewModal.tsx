@@ -26,10 +26,10 @@ interface VideoMetadata {
 interface MediaData {
   thumbnails: string[];
   videos: Array<{
-    index: number,
-    url: string,
-    key: string,
-    size: number
+    index: number;
+    url: string;
+    key: string;
+    size: number;
   }>;
   isZipArchive?: boolean;
   resultUrl?: string;
@@ -86,7 +86,9 @@ export default function VideoPreviewModal( {
   const [
     videoMetadata,
     setVideoMetadata
-  ] = useState<Map<number, VideoMetadata>>( new Map() );
+  ] = useState<
+    Map<number, VideoMetadata>
+  >( new Map() );
   const videoRefs = useRef<Map<number, HTMLVideoElement>>( new Map() );
 
   useEffect(
@@ -156,7 +158,8 @@ export default function VideoPreviewModal( {
   );
 
   const handleVideoLoadedMetadata = (
-    index: number, video: HTMLVideoElement
+    index: number,
+    video: HTMLVideoElement
   ) => {
     setVideoMetadata( ( prev ) => {
       const newMap = new Map( prev );
@@ -166,7 +169,7 @@ export default function VideoPreviewModal( {
         {
           duration: video.duration,
           width: video.videoWidth,
-          height: video.videoHeight
+          height: video.videoHeight,
         }
       );
       return newMap;
@@ -201,18 +204,28 @@ export default function VideoPreviewModal( {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5 bg-background border-b border-border flex-shrink-0">
           <div className="min-w-0 flex-1 pr-2">
-            <h2 className="text-base sm:text-xl font-bold text-foreground truncate">Recording Preview</h2>
-            {media && !loading && !media.isZipArchive && media.videos.length > 0 && (
+            <h2 className="text-base sm:text-xl font-bold text-foreground truncate">
+              Recording Preview
+            </h2>
+            {media &&
+              !loading &&
+              !media.isZipArchive &&
+              media.videos.length > 0 && (
               <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 truncate">
-                {media.videos.length} {media.videos.length === 1 ? "slide" : "slides"}
-                {media.recordingDuration && ` • ${ formatDuration( media.recordingDuration ) }`}
+                {media.videos.length}{" "}
+                {media.videos.length === 1 ? "slide" : "slides"}
+                {media.recordingDuration &&
+                    ` • ${ formatDuration( media.recordingDuration ) }`}
               </p>
             )}
           </div>
 
           {/* Action buttons */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {media && !loading && !media.isZipArchive && media.videos.length > 0 && (
+            {media &&
+              !loading &&
+              !media.isZipArchive &&
+              media.videos.length > 0 && (
               <>
                 {/* Download All - Only show for multiple videos */}
                 {media.videos.length > 1 && (
@@ -268,8 +281,12 @@ export default function VideoPreviewModal( {
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="inline-block w-10 h-10 sm:w-12 sm:h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3 sm:mb-4" />
-                <p className="text-sm sm:text-base font-medium text-foreground">Loading videos...</p>
-                <p className="text-xs sm:text-sm text-foreground/60 mt-1">Please wait</p>
+                <p className="text-sm sm:text-base font-medium text-foreground">
+                  Loading videos...
+                </p>
+                <p className="text-xs sm:text-sm text-foreground/60 mt-1">
+                  Please wait
+                </p>
               </div>
             </div>
           )}
@@ -280,7 +297,9 @@ export default function VideoPreviewModal( {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-4">
                   <X className="w-8 h-8 text-red-500" />
                 </div>
-                <p className="text-base font-semibold text-foreground mb-1">Failed to load videos</p>
+                <p className="text-base font-semibold text-foreground mb-1">
+                  Failed to load videos
+                </p>
                 <p className="text-sm text-foreground/60">{error}</p>
               </div>
             </div>
@@ -298,10 +317,13 @@ export default function VideoPreviewModal( {
                       Archived Recording
                     </h3>
                     <p className="text-sm text-foreground/60 mb-4">
-                      This is an older recording stored as a zip archive. Video preview is not available for archived recordings.
+                      This is an older recording stored as a zip archive. Video
+                      preview is not available for archived recordings.
                     </p>
                     <button
-                      onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }/zip` )}
+                      onClick={async() =>
+                        await fetchDownload( `/api/recordings/download/${ jobId }/zip` )
+                      }
                       className="inline-flex items-center gap-2 px-5 py-2.5 bg-hover hover:bg-hover/70 border border-border rounded-xl transition-all font-medium text-sm"
                     >
                       <Download className="w-4 h-4" />
@@ -317,7 +339,9 @@ export default function VideoPreviewModal( {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-foreground/5 mb-4">
                       <X className="w-8 h-8 text-foreground/40" />
                     </div>
-                    <p className="text-base font-medium text-foreground">No videos available</p>
+                    <p className="text-base font-medium text-foreground">
+                      No videos available
+                    </p>
                   </div>
                 </div>
               )}
@@ -326,11 +350,12 @@ export default function VideoPreviewModal( {
                 <div className="h-full flex flex-col gap-3 sm:gap-4 md:gap-6 min-h-0">
                   {/* Horizontal scroll container for videos */}
                   <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-foreground/20 scrollbar-track-transparent min-h-0">
-                    <div className={`flex gap-4 sm:gap-6 md:gap-8 h-full pb-2 ${ media.videos.length === 1 ? "justify-center" : "" }`}>
+                    <div
+                      className={`flex gap-4 sm:gap-6 md:gap-8 h-full pb-2 ${ media.videos.length === 1 ? "justify-center" : "" }`}
+                    >
                       {media.videos.map( (
                         {
-                          url,
-                          size
+                          url, size
                         }, index
                       ) => (
                         <div
@@ -364,10 +389,12 @@ export default function VideoPreviewModal( {
                               className="w-full h-full object-contain"
                               preload="metadata"
                               poster={media.thumbnails[ index ]}
-                              onLoadedMetadata={( e ) => handleVideoLoadedMetadata(
-                                index,
-                                e.currentTarget
-                              )}
+                              onLoadedMetadata={( e ) =>
+                                handleVideoLoadedMetadata(
+                                  index,
+                                  e.currentTarget
+                                )
+                              }
                             >
                               <source src={url} type="video/mp4" />
                               Your browser does not support the video tag.
@@ -381,12 +408,19 @@ export default function VideoPreviewModal( {
                               <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs text-foreground/60">
                                 <span className="inline-flex items-center gap-1">
                                   <span className="font-medium">Duration:</span>
-                                  <span>{formatDuration( videoMetadata.get( index )!.duration * 1000 )}</span>
+                                  <span>
+                                    {formatDuration( videoMetadata.get( index )!.duration * 1000 )}
+                                  </span>
                                 </span>
                                 <span className="text-foreground/30">•</span>
                                 <span className="inline-flex items-center gap-1">
-                                  <span className="font-medium">Resolution:</span>
-                                  <span>{videoMetadata.get( index )!.width} × {videoMetadata.get( index )!.height}</span>
+                                  <span className="font-medium">
+                                    Resolution:
+                                  </span>
+                                  <span>
+                                    {videoMetadata.get( index )!.width} ×{" "}
+                                    {videoMetadata.get( index )!.height}
+                                  </span>
                                 </span>
                               </div>
                             )}
@@ -394,13 +428,17 @@ export default function VideoPreviewModal( {
                             {/* Download button */}
                             <div className="flex justify-center">
                               <button
-                                onClick={async() => await fetchDownload( `/api/recordings/download/${ jobId }/slide/${ index }` )}
+                                onClick={async() =>
+                                  await fetchDownload( `/api/recordings/download/${ jobId }/slide/${ index }` )
+                                }
                                 className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-hover hover:bg-hover/70 border border-border rounded-xl transition-all font-medium text-xs sm:text-sm group"
                               >
                                 <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform" />
                                 <span className="sm:inline">Download</span>
                                 {size && (
-                                  <span className="text-foreground/60">({formatFileSize( size )})</span>
+                                  <span className="text-foreground/60">
+                                    ({formatFileSize( size )})
+                                  </span>
                                 )}
                               </button>
                             </div>
@@ -414,7 +452,8 @@ export default function VideoPreviewModal( {
                   {media.videos.length > 1 && (
                     <div className="text-center py-2 bg-hover/30 rounded-xl border border-border flex-shrink-0">
                       <p className="text-xs sm:text-sm text-foreground/60 font-medium">
-                        ← Scroll horizontally to view all {media.videos.length} slides →
+                        ← Scroll horizontally to view all {media.videos.length}{" "}
+                        slides →
                       </p>
                     </div>
                   )}

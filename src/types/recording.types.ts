@@ -1,6 +1,5 @@
 import {
-  InputJsonValue,
-  JsonValue
+  InputJsonValue, JsonValue
 } from "@prisma/client/runtime/edge";
 
 import type {
@@ -15,10 +14,10 @@ export const validStatuses = [
   "completed",
   "failed",
   "cancelled",
-  "draft"
+  "draft",
 ] as const;
 
-export type JobStatusEnum = typeof validStatuses[number];
+export type JobStatusEnum = ( typeof validStatuses )[number];
 
 /**
  * TypeScript type matching the Prisma Job model.
@@ -27,7 +26,7 @@ export type JobModel = {
   id: JobId;
   snapshotId: string | null;
   template: string;
-  status: JobStatusEnum,
+  status: JobStatusEnum;
   progress: number; // 0–100
   resultUrl: string | null;
   thumbnails: JsonValue; // Array of thumbnail URLs stored as JSON
@@ -41,21 +40,25 @@ export type JobModel = {
   updatedAt: Date;
 };
 
-export type RecordingProgressionSteps = Record<string, {
-  percentage: number,
-  description?: string
-} | RecordingProgressionNestedSteps>;
+export type RecordingProgressionSteps = Record<
+  string,
+  | {
+      percentage: number;
+      description?: string;
+    }
+  | RecordingProgressionNestedSteps
+>;
 
 export type RecordingProgressionNestedSteps = {
-  description?: string,
-  steps: RecordingProgressionSteps,
-}
+  description?: string;
+  steps: RecordingProgressionSteps;
+};
 
 export type RecordingStatus = {
-  status: string,
-  steps?: RecordingProgressionSteps,
-  recordingDuration?: number,
-}
+  status: string;
+  steps?: RecordingProgressionSteps;
+  recordingDuration?: number;
+};
 
 export interface RecordingJobData {
   jobId: string;
@@ -65,7 +68,7 @@ export interface RecordingJobData {
 export interface JobConfiguration {
   jobId: string;
   removeOnComplete: number;
-  removeOnFail: number,
+  removeOnFail: number;
   attempts: number;
   backoff: {
     type: "exponential";
@@ -102,34 +105,36 @@ export type RecordingProgressionStream = {
 /* Map filename → object-URL   (lives only for the browser session) */
 type BlobMap = Record<string, string>;
 
-declare global { interface Window {
-  // Assets
- __blobAssetMap?: BlobMap
-  // Recorder
-  startLoopRecording: ( arg?: {
+declare global {
+  interface Window {
+    // Assets
+    __blobAssetMap?: BlobMap;
+    // Recorder
+    startLoopRecording: ( arg?: {
  format: "png" | "webm"
-} ) => Promise<void>
-  stopRecording: () => void
-  // Slides
-  slides: {
-    index: number;
-    current: SlideOption;
+} ) => Promise<void>;
+    stopRecording: () => void;
+    // Slides
+    slides: {
+      index: number;
+      current: SlideOption;
+    };
+    setSlide: ( index: number ) => void;
+    getSlide: ( index: number ) => SlideOption;
+    getCurrentSlide: () => {
+      slide: SlideOption;
+      index: number;
+    };
+    // Script loader
+    removeLoadedScripts: () => void;
+
+    // P5 sketch controls
+    toggleLoop: () => void;
+    toggleFPS: () => void;
+    saveCanvas: ( name: string ) => void;
+
+    // P5 animation progression controls
+    setAnimationProgression: ( progression: number ) => void;
+    getAnimationProgression: () => number;
   }
-  setSlide: ( index: number ) => void
-  getSlide: ( index: number ) => SlideOption
-  getCurrentSlide: () => {
-    slide: SlideOption
-    index: number
-  };
-  // Script loader
-  removeLoadedScripts: () => void
-
-  // P5 sketch controls
-  toggleLoop: () => void,
-  toggleFPS: () => void,
-  saveCanvas: ( name: string ) => void,
-
-  // P5 animation progression controls
-  setAnimationProgression: ( progression: number ) => void,
-  getAnimationProgression: () => number,
-} }
+}

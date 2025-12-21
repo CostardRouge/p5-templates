@@ -2,7 +2,9 @@ import {
   useCallback, useEffect, useRef, useState
 } from "react";
 import {
-  UseFieldArrayReturn, UseFormGetValues, UseFormSetValue
+  UseFieldArrayReturn,
+  UseFormGetValues,
+  UseFormSetValue,
 } from "react-hook-form";
 import {
   SketchOptionInput
@@ -50,9 +52,12 @@ export function useSlideManagement( {
   const pendingSelectIndexRef = useRef<number | null>( null );
 
   // Compute the effective active index based on current slides
-  const effectiveActiveIndex = slideFields.length > 0
-    ? ( activeSlideIndex !== undefined && activeSlideIndex < slideFields.length ? activeSlideIndex : 0 )
-    : undefined;
+  const effectiveActiveIndex =
+    slideFields.length > 0
+      ? activeSlideIndex !== undefined && activeSlideIndex < slideFields.length
+        ? activeSlideIndex
+        : 0
+      : undefined;
 
   // Update active index when slides change
   useEffect(
@@ -60,7 +65,10 @@ export function useSlideManagement( {
       if ( slideFields.length === 0 ) {
         setActiveSlideIndex( undefined );
         onActiveSlideChange?.( undefined );
-      } else if ( activeSlideIndex === undefined || activeSlideIndex >= slideFields.length ) {
+      } else if (
+        activeSlideIndex === undefined ||
+      activeSlideIndex >= slideFields.length
+      ) {
         setActiveSlideIndex( 0 );
         onActiveSlideChange?.( 0 );
         if ( typeof window.setSlide === "function" ) {
@@ -107,7 +115,7 @@ export function useSlideManagement( {
       enableThumbnails,
       captureThumbnail,
       activeSlideIndex,
-      onActiveSlideChange
+      onActiveSlideChange,
     ]
   );
 
@@ -162,13 +170,14 @@ export function useSlideManagement( {
       sketchFormValues,
       enableThumbnails,
       pendingThumbnailCaptureRef,
-      pendingSelectIndexRef
+      pendingSelectIndexRef,
     ]
   );
 
   const handleDuplicateSlide = useCallback(
     ( indexToDuplicate: number ) => {
-      if ( indexToDuplicate < 0 || indexToDuplicate >= slideFields.length ) return;
+      if ( indexToDuplicate < 0 || indexToDuplicate >= slideFields.length )
+        return;
 
       const allSlides = getValues( "slides" ) ?? [
       ];
@@ -200,7 +209,7 @@ export function useSlideManagement( {
       insertSlide,
       enableThumbnails,
       pendingThumbnailCaptureRef,
-      pendingSelectIndexRef
+      pendingSelectIndexRef,
     ]
   );
 
@@ -232,7 +241,8 @@ export function useSlideManagement( {
       } else if ( indexToDelete <= effectiveActiveIndex! ) {
         const newIndex = Math.max(
           0,
-effectiveActiveIndex! - ( indexToDelete === effectiveActiveIndex! ? 0 : 1 )
+          effectiveActiveIndex! -
+            ( indexToDelete === effectiveActiveIndex! ? 0 : 1 )
         );
 
         handleSlideSelect( newIndex );
@@ -244,7 +254,7 @@ effectiveActiveIndex! - ( indexToDelete === effectiveActiveIndex! ? 0 : 1 )
       getValues,
       setValue,
       removeSlide,
-      handleSlideSelect
+      handleSlideSelect,
     ]
   );
 
@@ -252,8 +262,13 @@ effectiveActiveIndex! - ( indexToDelete === effectiveActiveIndex! ? 0 : 1 )
     (
       oldIndex: number, newIndex: number
     ) => {
-      if ( oldIndex === newIndex || oldIndex < 0 || newIndex < 0 ||
-          oldIndex >= slideFields.length || newIndex >= slideFields.length ) {
+      if (
+        oldIndex === newIndex ||
+        oldIndex < 0 ||
+        newIndex < 0 ||
+        oldIndex >= slideFields.length ||
+        newIndex >= slideFields.length
+      ) {
         return;
       }
       moveSlide(

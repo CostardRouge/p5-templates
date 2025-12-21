@@ -23,17 +23,23 @@ const imageUtils = {
       boundary.height * scale
     );
 
-    const availableWidth = fill ? boundary.width - margin : scaledBoundary.x - 2 * margin;
-    const availableHeight = fill ? boundary.height - margin : scaledBoundary.y - 2 * margin;
-    const screenHeightScale = ( availableHeight / img.height );
-    const screenWidthScale = ( availableWidth / img.width );
-    const screenScale = fill ? Math.max(
-      screenWidthScale,
-      screenHeightScale
-    ) : Math.min(
-      screenWidthScale,
-      screenHeightScale
-    );
+    const availableWidth = fill
+      ? boundary.width - margin
+      : scaledBoundary.x - 2 * margin;
+    const availableHeight = fill
+      ? boundary.height - margin
+      : scaledBoundary.y - 2 * margin;
+    const screenHeightScale = availableHeight / img.height;
+    const screenWidthScale = availableWidth / img.width;
+    const screenScale = fill
+      ? Math.max(
+        screenWidthScale,
+        screenHeightScale
+      )
+      : Math.min(
+        screenWidthScale,
+        screenHeightScale
+      );
 
     const h = img.height * screenScale * scale;
     const w = img.width * screenScale * scale;
@@ -53,7 +59,7 @@ const imageUtils = {
           );
         },
         {
-          invert: false
+          invert: false,
         }
       );
     }
@@ -125,7 +131,7 @@ const imageUtils = {
         _r,
         _g,
         _b
-      ]
+      ],
     } = clr;
 
     for ( let i = 0; i < img.pixels.length; i += 4 ) {
@@ -139,7 +145,7 @@ const imageUtils = {
     }
 
     img.updatePixels();
-  }
+  },
 };
 
 export default imageUtils;

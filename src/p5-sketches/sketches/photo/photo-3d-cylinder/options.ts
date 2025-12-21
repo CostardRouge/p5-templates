@@ -16,7 +16,7 @@ export const formValues = {
       128,
       128,
       255
-    ] as [number, number, number]
+    ] as [number, number, number],
   },
 
   title: {
@@ -38,10 +38,10 @@ export const formValues = {
     blend: "exclusion",
     align: {
       horizontal: "center",
-      vertical: "center"
+      vertical: "center",
     },
     displayFrom: 0.0,
-    displayTo: 1.0
+    displayTo: 1.0,
   },
 
   cylinder: {
@@ -49,20 +49,20 @@ export const formValues = {
     rotateX: true,
     rotateZ: false,
     zoom: -2000,
-    variableZoom: false
+    variableZoom: false,
   },
 
   animation: {
     duration: 8,
     framerate: 60,
-    variableBackgroundColor: true
-  }
+    variableBackgroundColor: true,
+  },
 };
 
 export const formConfiguration: Record<string, any> = {
   images: {
     component: "images-stack",
-    label: "Images"
+    label: "Images",
   },
 
   colors: {
@@ -71,13 +71,13 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       background: {
         component: "color",
-        label: "Background color"
+        label: "Background color",
       },
       text: {
         component: "color",
-        label: "Text color"
-      }
-    }
+        label: "Text color",
+      },
+    },
   },
 
   title: {
@@ -86,42 +86,42 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       show: {
         label: "Show title",
-        component: "checkbox"
+        component: "checkbox",
       },
       content: {
         label: "Custom title",
         component: "text",
-        placeholder: "Leave empty to use sketch name"
+        placeholder: "Leave empty to use sketch name",
       },
       font: {
         label: "Font",
         component: "select",
-        options: fontNames.map( fontName => ( {
+        options: fontNames.map( ( fontName ) => ( {
           value: fontName,
-          label: fontName
-        } ) )
+          label: fontName,
+        } ) ),
       },
       size: {
         label: "Size",
         component: "slider",
         min: 12,
         max: 800,
-        step: 1
+        step: 1,
       },
       color: {
         label: "Color",
-        component: "color"
+        component: "color",
       },
       stroke: {
         label: "Stroke",
-        component: "color"
+        component: "color",
       },
       strokeWeight: {
         label: "Stroke weight",
         component: "slider",
         min: 0,
         max: 20,
-        step: 0.5
+        step: 0.5,
       },
       blend: {
         label: "Blend mode",
@@ -129,61 +129,61 @@ export const formConfiguration: Record<string, any> = {
         options: [
           {
             value: "blend",
-            label: "Blend"
+            label: "Blend",
           },
           {
             value: "darkest",
-            label: "Darkest"
+            label: "Darkest",
           },
           {
             value: "lightest",
-            label: "Lightest"
+            label: "Lightest",
           },
           {
             value: "difference",
-            label: "Difference"
+            label: "Difference",
           },
           {
             value: "multiply",
-            label: "Multiply"
+            label: "Multiply",
           },
           {
             value: "exclusion",
-            label: "Exclusion"
+            label: "Exclusion",
           },
           {
             value: "screen",
-            label: "Screen"
+            label: "Screen",
           },
           {
             value: "overlay",
-            label: "Overlay"
+            label: "Overlay",
           },
           {
             value: "hard-light",
-            label: "Hard Light"
+            label: "Hard Light",
           },
           {
             value: "soft-light",
-            label: "Soft Light"
+            label: "Soft Light",
           },
           {
             value: "dodge",
-            label: "Dodge"
+            label: "Dodge",
           },
           {
             value: "burn",
-            label: "Burn"
+            label: "Burn",
           },
           {
             value: "add",
-            label: "Add"
+            label: "Add",
           },
           {
             value: "subtract",
-            label: "Subtract"
-          }
-        ]
+            label: "Subtract",
+          },
+        ],
       },
       align: {
         label: "Alignment",
@@ -195,17 +195,17 @@ export const formConfiguration: Record<string, any> = {
             options: [
               {
                 value: "left",
-                label: "Left"
+                label: "Left",
               },
               {
                 value: "center",
-                label: "Center"
+                label: "Center",
               },
               {
                 value: "right",
-                label: "Right"
-              }
-            ]
+                label: "Right",
+              },
+            ],
           },
           vertical: {
             label: "Vertical",
@@ -213,39 +213,39 @@ export const formConfiguration: Record<string, any> = {
             options: [
               {
                 value: "top",
-                label: "Top"
+                label: "Top",
               },
               {
                 value: "center",
-                label: "Center"
+                label: "Center",
               },
               {
                 value: "bottom",
-                label: "Bottom"
+                label: "Bottom",
               },
               {
                 value: "baseline",
-                label: "Baseline"
-              }
-            ]
-          }
-        }
+                label: "Baseline",
+              },
+            ],
+          },
+        },
       },
       displayFrom: {
         label: "Display from (0-1)",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       displayTo: {
         label: "Display to (0-1)",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01
-      }
-    }
+        step: 0.01,
+      },
+    },
   },
 
   cylinder: {
@@ -254,28 +254,28 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       vertical: {
         component: "checkbox",
-        label: "Vertical orientation"
+        label: "Vertical orientation",
       },
       rotateX: {
         component: "checkbox",
-        label: "Rotate X"
+        label: "Rotate X",
       },
       rotateZ: {
         component: "checkbox",
-        label: "Rotate Z"
+        label: "Rotate Z",
       },
       zoom: {
         component: "slider",
         label: "Zoom (Z translate)",
         min: -10000,
         max: 1000,
-        step: 10
+        step: 10,
       },
       variableZoom: {
         component: "checkbox",
-        label: "Animated zoom"
-      }
-    }
+        label: "Animated zoom",
+      },
+    },
   },
 
   animation: {
@@ -287,20 +287,19 @@ export const formConfiguration: Record<string, any> = {
         label: "Duration (seconds)",
         min: 1,
         max: 60,
-        step: 0.5
+        step: 0.5,
       },
       framerate: {
         component: "slider",
         label: "Framerate",
         min: 1,
         max: 120,
-        step: 1
+        step: 1,
       },
       variableBackgroundColor: {
         component: "checkbox",
-        label: "Animated background color"
-      }
-    }
-  }
+        label: "Animated background color",
+      },
+    },
+  },
 };
-

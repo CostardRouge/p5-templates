@@ -19,24 +19,24 @@ const mediapipe = {
     element: null,
     size: {
       width: 640,
-      height: 480
-    }
+      height: 480,
+    },
   },
   feedback: {
     element: null,
     size: {
       width: options.size.width,
-      height: options.size.height
-    }
+      height: options.size.height,
+    },
   },
   tasks: {
     segmenter: null,
     handLandmarker: null,
-    faceDetector: null
+    faceDetector: null,
   },
   lastPredictTime: 0,
   runningMode: "VIDEO",
-  ready: false
+  ready: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -56,11 +56,11 @@ events.register(
         baseOptions: {
           delegate: "GPU",
           // modelAssetPath: "https://storage.googleapis.com/mediapipe-assets/deeplabv3.tflite?generation=1661875711618421"
-          modelAssetPath: "/assets/scripts/mediapipe/deeplabv3.tflite"
+          modelAssetPath: "/assets/scripts/mediapipe/deeplabv3.tflite",
         },
         outputCategoryMask: true,
         outputConfidenceMasks: true,
-        runningMode: mediapipe.runningMode
+        runningMode: mediapipe.runningMode,
       }
     );
 
@@ -72,8 +72,8 @@ events.register(
         baseOptions: {
           delegate: "GPU",
           // modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
-          modelAssetPath: "/assets/scripts/mediapipe/hand_landmarker.task"
-        }
+          modelAssetPath: "/assets/scripts/mediapipe/hand_landmarker.task",
+        },
       }
     );
 
@@ -84,8 +84,9 @@ events.register(
         baseOptions: {
           delegate: "GPU",
           // modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
-          modelAssetPath: "/assets/scripts/mediapipe/blaze_face_short_range.tflite"
-        }
+          modelAssetPath:
+            "/assets/scripts/mediapipe/blaze_face_short_range.tflite",
+        },
       }
     );
 
@@ -104,7 +105,7 @@ sketch.setup(
     mediapipe.capture.element = createCapture(
       VIDEO,
       {
-        flipped: true
+        flipped: true,
       }
     );
     mediapipe.capture.element.size(
@@ -116,7 +117,7 @@ sketch.setup(
     mediapipe.feedback.element = createCapture(
       VIDEO,
       {
-        flipped: true
+        flipped: true,
       }
     );
     mediapipe.feedback.element.size(
@@ -134,8 +135,8 @@ sketch.setup(
     },
     animation: {
       framerate: options.animation.framerate,
-      duration: options.animation.duration
-    }
+      duration: options.animation.duration,
+    },
   }
 );
 

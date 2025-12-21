@@ -10,7 +10,7 @@ const getFont = ( fontKey ) => {
 };
 
 const parseFloatDefault = (
-  value, _default = .015
+  value, _default = 0.015
 ) => {
   const float = Number.parseFloat( value );
 
@@ -42,8 +42,7 @@ export default function renderTitle(
   const displayFrom = titleConfig.displayFrom ?? 0.0;
   const displayTo = titleConfig.displayTo ?? 0.2;
   const withinWindow =
-    animation.progression >= displayFrom &&
-    animation.progression <= displayTo;
+    animation.progression >= displayFrom && animation.progression <= displayTo;
 
   if ( !withinWindow ) {
     return;
@@ -81,8 +80,8 @@ export default function renderTitle(
 
   string.write(
     text,
-    ( width * horizontalMargin ) + width * titleConfig.position.x,
-    ( height * verticalMargin ) + height * titleConfig.position.y,
+    width * horizontalMargin + width * titleConfig.position.x,
+    height * verticalMargin + height * titleConfig.position.y,
     {
       size: titleConfig.size ?? 128,
       stroke: color( ...strokeColor ),
@@ -91,11 +90,11 @@ export default function renderTitle(
       font: font,
       textAlign: [
         titleConfig.alignment?.horizontal ?? "center",
-        titleConfig.alignment?.vertical ?? "center"
+        titleConfig.alignment?.vertical ?? "center",
       ],
       blendMode: titleConfig.blend || "exclusion",
-      textWidth: width - ( 2 * horizontalMargin ),
-      textHeight: height - ( 2 * verticalMargin ),
+      textWidth: width - 2 * horizontalMargin,
+      textHeight: height - 2 * verticalMargin,
     }
   );
 }

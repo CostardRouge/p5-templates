@@ -6,10 +6,11 @@ import {
  * Determine the current recording status and UI states
  */
 export function getRecordingStatus( currentStatus?: JobStatusEnum ) {
-  const isRecording = currentStatus && [
-    "queued",
-    "active"
-  ].includes( currentStatus );
+  const isRecording =
+    currentStatus && [
+      "queued",
+      "active"
+    ].includes( currentStatus );
   const isCompleted = currentStatus === "completed";
   const isFailed = [
     "failed",

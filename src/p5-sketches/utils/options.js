@@ -8,7 +8,9 @@ import cache from "./cache.js";
 import sketch from "./sketch.js";
 
 import {
-  getSketchOptions, setSketchOptions, subscribeSketchOptions,
+  getSketchOptions,
+  setSketchOptions,
+  subscribeSketchOptions,
 } from "../shared/syncSketchOptions.js";
 
 import {
@@ -41,9 +43,8 @@ async function _refreshAssets() {
   const globalImages = sketchOptions.assets?.images ?? [
   ];
   const slideImages = ( sketchOptions.slides ?? [
-  ] )
-    .flatMap( slide => slide?.assets?.images ?? [
-    ] );
+  ] ).flatMap( ( slide ) => slide?.assets?.images ?? [
+  ] );
 
   const allPaths = [
     ...new Set( [
@@ -98,7 +99,7 @@ async function _refreshAssets() {
     prevMap.delete( path );
   }
 
-  prevMap.forEach( o => {
+  prevMap.forEach( ( o ) => {
     o.img?.remove?.();
     delete o.exif;
   } );
@@ -129,8 +130,7 @@ async function readExifInfo(
       } else {
         tags = await exif.load( url );
       }
-    }
-    catch ( error ) {
+    } catch ( error ) {
       console.error(
         "readExifInfo error",
         error
@@ -191,7 +191,10 @@ events.register(
         sketch.sketchOptions.size = newOptions?.size;
       }
 
-      if ( JSON.stringify( newOptions.animation ) !== JSON.stringify( sketchOptions.animation ) ) {
+      if (
+        JSON.stringify( newOptions.animation ) !==
+      JSON.stringify( sketchOptions.animation )
+      ) {
         events.handle(
           "engine-framerate-change",
           newOptions?.animation?.framerate
@@ -225,11 +228,15 @@ const optionsProxy = new Proxy(
       target, prop
     ) {
     // If accessing 'sketch' property and slides exist, merge with current slide
-      if ( prop === "sketch" && typeof window !== "undefined" && window.getSketchSettings ) {
+      if (
+        prop === "sketch" &&
+      typeof window !== "undefined" &&
+      window.getSketchSettings
+      ) {
         return window.getSketchSettings( target );
       }
       return target[ prop ];
-    }
+    },
   }
 );
 

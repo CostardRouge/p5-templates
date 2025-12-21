@@ -12,7 +12,9 @@ import {
  * Create a new Job record with status = 'queued' and progress = 0
  */
 export async function createJob(
-  id: string, template: string, status: JobStatusEnum
+  id: string,
+  template: string,
+  status: JobStatusEnum
 ): Promise<JobModel> {
   return prisma.job.create( {
     data: {
@@ -34,7 +36,7 @@ export async function updateJob(
 ): Promise<void> {
   await prisma.job.update( {
     where: {
-      id: jobId
+      id: jobId,
     },
     // @ts-ignore
     data,
@@ -54,7 +56,7 @@ export async function updateJob(
 export async function getJobById( jobId: string ): Promise<JobModel | null> {
   return prisma.job.findUnique( {
     where: {
-      id: jobId
+      id: jobId,
     },
   } ) as Promise<JobModel | null>;
 }
@@ -67,12 +69,12 @@ export async function getAllJobs( status?: JobStatusEnum[] ): Promise<JobModel[]
     where: status
       ? {
         status: {
-          in: status
-        }
+          in: status,
+        },
       }
       : undefined,
     orderBy: {
-      createdAt: "desc"
+      createdAt: "desc",
     },
   } );
 }
@@ -83,7 +85,7 @@ export async function getAllJobs( status?: JobStatusEnum[] ): Promise<JobModel[]
 export async function deleteJob( jobId: string ): Promise<void> {
   await prisma.job.delete( {
     where: {
-      id: jobId
+      id: jobId,
     },
   } );
 }

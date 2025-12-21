@@ -36,7 +36,7 @@ export default function DownloadMenuItems( {
       0
     );
 
-    zipSize = totalVideoSize + ( videoSizes.length * 100 ) + 1024;
+    zipSize = totalVideoSize + videoSizes.length * 100 + 1024;
   }
 
   const videos = videoUrls.map( (
@@ -45,31 +45,36 @@ export default function DownloadMenuItems( {
     url,
     size: videoSizes[ index ] || null,
     index,
-    key: url
+    key: url,
   } ) );
 
   return (
     <>
-      {videos.length > 1 && videos.map( ( video ) => (
-        <MenuItem key={video.index}>
-          {( {
-            focus
-          } ) => (
-            <button
-              onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/slide/${ video.index }` )}
-              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
-            >
-              <Video className="h-4 w-4 text-foreground/70" />
-              <div className="flex-1 flex items-center justify-between">
-                <span className="font-medium">Slide { video.index + 1 }</span>
-                {video.size && (
-                  <span className="text-xs text-foreground/50">{ formatFileSize( video.size ) }</span>
-                )}
-              </div>
-            </button>
-          )}
-        </MenuItem>
-      ) )}
+      {videos.length > 1 &&
+        videos.map( ( video ) => (
+          <MenuItem key={video.index}>
+            {( {
+              focus
+            } ) => (
+              <button
+                onClick={async() =>
+                  await fetchDownload( `/api/recordings/download/${ job.id }/slide/${ video.index }` )
+                }
+                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+              >
+                <Video className="h-4 w-4 text-foreground/70" />
+                <div className="flex-1 flex items-center justify-between">
+                  <span className="font-medium">Slide {video.index + 1}</span>
+                  {video.size && (
+                    <span className="text-xs text-foreground/50">
+                      {formatFileSize( video.size )}
+                    </span>
+                  )}
+                </div>
+              </button>
+            )}
+          </MenuItem>
+        ) )}
 
       {videos.length === 1 && (
         <MenuItem>
@@ -77,14 +82,18 @@ export default function DownloadMenuItems( {
             focus
           } ) => (
             <button
-              onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/slide/0` )}
+              onClick={async() =>
+                await fetchDownload( `/api/recordings/download/${ job.id }/slide/0` )
+              }
               className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
             >
               <Video className="h-4 w-4 text-foreground/70" />
               <div className="flex-1 flex items-center justify-between">
                 <span className="font-medium">Video</span>
                 {videos[ 0 ].size && (
-                  <span className="text-xs text-foreground/50">{ formatFileSize( videos[ 0 ].size ) }</span>
+                  <span className="text-xs text-foreground/50">
+                    {formatFileSize( videos[ 0 ].size )}
+                  </span>
                 )}
               </div>
             </button>
@@ -98,14 +107,18 @@ export default function DownloadMenuItems( {
             focus
           } ) => (
             <button
-              onClick={async() => await fetchDownload( `/api/recordings/download/${ job.id }/zip` )}
+              onClick={async() =>
+                await fetchDownload( `/api/recordings/download/${ job.id }/zip` )
+              }
               className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
             >
               <FileArchive className="h-4 w-4 text-foreground/70" />
               <div className="flex-1 flex items-center justify-between">
                 <span className="font-medium">All Slides (ZIP)</span>
                 {zipSize && (
-                  <span className="text-xs text-foreground/50">{ formatFileSize( zipSize ) }</span>
+                  <span className="text-xs text-foreground/50">
+                    {formatFileSize( zipSize )}
+                  </span>
                 )}
               </div>
             </button>

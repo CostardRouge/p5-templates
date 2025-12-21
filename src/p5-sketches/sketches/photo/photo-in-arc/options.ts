@@ -14,7 +14,7 @@ export const formValues = {
     ] as [number, number, number],
     text: [
       0
-    ] as [number]
+    ] as [number],
   },
 
   title: {
@@ -34,10 +34,10 @@ export const formValues = {
     blend: "exclusion",
     align: {
       horizontal: "center",
-      vertical: "center"
+      vertical: "center",
     },
     displayFrom: 0.0,
-    displayTo: 0.2
+    displayTo: 0.2,
   },
 
   arc: {
@@ -46,12 +46,12 @@ export const formValues = {
     radiusX: 0.5,
     radiusY: 0.5,
     startAngle: 270,
-    endAngle: 90
+    endAngle: 90,
   },
 
   image: {
     scale: 0.5,
-    center: true
+    center: true,
   },
 
   debug: {
@@ -61,14 +61,14 @@ export const formValues = {
       255,
       0,
       0
-    ] as [number, number, number]
-  }
+    ] as [number, number, number],
+  },
 };
 
 export const formConfiguration: Record<string, any> = {
   images: {
     component: "images-stack",
-    label: "Images"
+    label: "Images",
   },
 
   colors: {
@@ -77,13 +77,13 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       background: {
         component: "color",
-        label: "Background color"
+        label: "Background color",
       },
       text: {
         component: "color",
-        label: "Text color"
-      }
-    }
+        label: "Text color",
+      },
+    },
   },
 
   title: {
@@ -92,42 +92,42 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       show: {
         label: "Show title",
-        component: "checkbox"
+        component: "checkbox",
       },
       content: {
         label: "Custom title",
         component: "text",
-        placeholder: "Leave empty to use sketch name"
+        placeholder: "Leave empty to use sketch name",
       },
       font: {
         label: "Font",
         component: "select",
-        options: fontNames.map( fontName => ( {
+        options: fontNames.map( ( fontName ) => ( {
           value: fontName,
-          label: fontName
-        } ) )
+          label: fontName,
+        } ) ),
       },
       size: {
         label: "Size",
         component: "slider",
         min: 12,
         max: 300,
-        step: 1
+        step: 1,
       },
       color: {
         label: "Color",
-        component: "color"
+        component: "color",
       },
       stroke: {
         label: "Stroke",
-        component: "color"
+        component: "color",
       },
       strokeWeight: {
         label: "Stroke weight",
         component: "slider",
         min: 0,
         max: 20,
-        step: 0.5
+        step: 0.5,
       },
       blend: {
         label: "Blend mode",
@@ -135,61 +135,61 @@ export const formConfiguration: Record<string, any> = {
         options: [
           {
             value: "blend",
-            label: "Blend"
+            label: "Blend",
           },
           {
             value: "darkest",
-            label: "Darkest"
+            label: "Darkest",
           },
           {
             value: "lightest",
-            label: "Lightest"
+            label: "Lightest",
           },
           {
             value: "difference",
-            label: "Difference"
+            label: "Difference",
           },
           {
             value: "multiply",
-            label: "Multiply"
+            label: "Multiply",
           },
           {
             value: "exclusion",
-            label: "Exclusion"
+            label: "Exclusion",
           },
           {
             value: "screen",
-            label: "Screen"
+            label: "Screen",
           },
           {
             value: "overlay",
-            label: "Overlay"
+            label: "Overlay",
           },
           {
             value: "hard-light",
-            label: "Hard Light"
+            label: "Hard Light",
           },
           {
             value: "soft-light",
-            label: "Soft Light"
+            label: "Soft Light",
           },
           {
             value: "dodge",
-            label: "Dodge"
+            label: "Dodge",
           },
           {
             value: "burn",
-            label: "Burn"
+            label: "Burn",
           },
           {
             value: "add",
-            label: "Add"
+            label: "Add",
           },
           {
             value: "subtract",
-            label: "Subtract"
-          }
-        ]
+            label: "Subtract",
+          },
+        ],
       },
       align: {
         label: "Alignment",
@@ -201,17 +201,17 @@ export const formConfiguration: Record<string, any> = {
             options: [
               {
                 value: "left",
-                label: "Left"
+                label: "Left",
               },
               {
                 value: "center",
-                label: "Center"
+                label: "Center",
               },
               {
                 value: "right",
-                label: "Right"
-              }
-            ]
+                label: "Right",
+              },
+            ],
           },
           vertical: {
             label: "Vertical",
@@ -219,39 +219,39 @@ export const formConfiguration: Record<string, any> = {
             options: [
               {
                 value: "top",
-                label: "Top"
+                label: "Top",
               },
               {
                 value: "center",
-                label: "Center"
+                label: "Center",
               },
               {
                 value: "bottom",
-                label: "Bottom"
+                label: "Bottom",
               },
               {
                 value: "baseline",
-                label: "Baseline"
-              }
-            ]
-          }
-        }
+                label: "Baseline",
+              },
+            ],
+          },
+        },
       },
       displayFrom: {
         label: "Display from (0-1)",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       displayTo: {
         label: "Display to (0-1)",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01
-      }
-    }
+        step: 0.01,
+      },
+    },
   },
 
   arc: {
@@ -263,44 +263,44 @@ export const formConfiguration: Record<string, any> = {
         label: "Anchor X (0–1)",
         min: 0,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       anchorY: {
         component: "slider",
         label: "Anchor Y (0–1)",
         min: 0,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       radiusX: {
         component: "slider",
         label: "Radius X (vs height)",
         min: 0,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       radiusY: {
         component: "slider",
         label: "Radius Y (vs width)",
         min: 0,
         max: 1,
-        step: 0.01
+        step: 0.01,
       },
       startAngle: {
         component: "slider",
         label: "Start angle (deg)",
         min: -720,
         max: 720,
-        step: 1
+        step: 1,
       },
       endAngle: {
         component: "slider",
         label: "End angle (deg)",
         min: -720,
         max: 720,
-        step: 1
-      }
-    }
+        step: 1,
+      },
+    },
   },
 
   image: {
@@ -312,13 +312,13 @@ export const formConfiguration: Record<string, any> = {
         label: "Scale",
         min: 0.05,
         max: 2,
-        step: 0.01
+        step: 0.01,
       },
       center: {
         component: "checkbox",
-        label: "Center"
-      }
-    }
+        label: "Center",
+      },
+    },
   },
 
   debug: {
@@ -327,19 +327,19 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       showPoints: {
         component: "checkbox",
-        label: "Show points"
+        label: "Show points",
       },
       pointWeight: {
         component: "slider",
         label: "Point weight",
         min: 1,
         max: 40,
-        step: 1
+        step: 1,
       },
       pointColor: {
         component: "color",
-        label: "Point color"
-      }
-    }
-  }
+        label: "Point color",
+      },
+    },
+  },
 };

@@ -11,16 +11,17 @@ function useRecordingStatusStream() {
   const [
     recordingProgress,
     setRecordingProgress
-  ] = useState<RecordingProgressionStream | null>( null );
+  ] =
+    useState<RecordingProgressionStream | null>( null );
 
   const onError = () => {
     setRecordingProgress( {
       currentStep: {
         name: "network error",
-        progression: 100
+        progression: 100,
       },
       percentage: 0,
-      status: "failed"
+      status: "failed",
     } );
   };
 
@@ -28,7 +29,7 @@ function useRecordingStatusStream() {
     ( jobId: JobId ) => {
       const source = new EventSource( `/api/progression/stream/${ jobId }` );
 
-      source.onerror = event => {
+      source.onerror = ( event ) => {
         console.error( event );
         source.close();
         onError();
@@ -36,7 +37,8 @@ function useRecordingStatusStream() {
 
       source.onmessage = async( event: MessageEvent<string> ): Promise<void> => {
         try {
-          const parsedRecordingProgress: RecordingProgressionStream | null = JSON.parse( event.data );
+          const parsedRecordingProgress: RecordingProgressionStream | null =
+          JSON.parse( event.data );
 
           setRecordingProgress( parsedRecordingProgress );
 
@@ -51,8 +53,7 @@ function useRecordingStatusStream() {
           if ( parsedRecordingProgress?.status === "completed" ) {
             source.close();
           }
-        }
-        catch ( error ) {
+        } catch ( error ) {
           console.error( error );
           source.close();
           onError();
@@ -65,7 +66,7 @@ function useRecordingStatusStream() {
 
   return {
     subscribeToRecordingStatus,
-    recordingProgress
+    recordingProgress,
   };
 }
 

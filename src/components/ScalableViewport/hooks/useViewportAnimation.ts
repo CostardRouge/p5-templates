@@ -60,7 +60,7 @@ export function useViewportAnimation(
           {
             x: currentX,
             y: currentY,
-            scale: currentScale
+            scale: currentScale,
           },
           contentRef.current
         );

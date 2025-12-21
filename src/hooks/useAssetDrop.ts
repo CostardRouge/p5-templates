@@ -7,7 +7,8 @@ import {
 } from "@/p5-sketches/shared/utils";
 
 import {
-  getSketchOptions, setSketchOptions
+  getSketchOptions,
+  setSketchOptions,
 } from "@/p5-sketches/shared/syncSketchOptions";
 
 const ensurePath = (
@@ -18,9 +19,11 @@ const ensurePath = (
   return obj[ key ];
 };
 
-type Scope = "global" | {
-  slide: number
-};
+type Scope =
+  | "global"
+  | {
+      slide: number;
+    };
 
 export type AssetType = "images" | "videos" | "audios" | "json";
 
@@ -142,6 +145,6 @@ export default function useAssetDrop() {
 
   return {
     addAssets,
-    removeAsset
+    removeAsset,
   };
 }

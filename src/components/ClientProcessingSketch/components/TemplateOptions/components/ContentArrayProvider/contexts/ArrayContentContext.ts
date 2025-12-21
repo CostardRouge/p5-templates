@@ -10,6 +10,7 @@ import {
   ContentItem
 } from "@/types/sketch.types";
 
-const ArrayContentContext = createContext<ArrayContentContextType<ContentItem> | null>( null );
+const ArrayContentContext =
+  createContext<ArrayContentContextType<ContentItem> | null>( null );
 
 export default ArrayContentContext;

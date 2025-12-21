@@ -9,9 +9,9 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
   const [
     steps,
     setSteps
-  ] = useState<ProgressStep[]>( initialSteps.map( step => ( {
+  ] = useState<ProgressStep[]>( initialSteps.map( ( step ) => ( {
     ...step,
-    status: "pending" as const
+    status: "pending" as const,
   } ) ) );
   const [
     currentStepIndex,
@@ -23,13 +23,15 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
 
   const startStep = useCallback(
     ( stepId: string ) => {
-      setSteps( prev =>
-        prev.map( step =>
-          step.id === stepId ? {
-            ...step,
-            status: "active" as const
-          } : step ) );
-      const index = steps.findIndex( s => s.id === stepId );
+      setSteps( ( prev ) =>
+        prev.map( ( step ) =>
+          step.id === stepId
+            ? {
+              ...step,
+              status: "active" as const,
+            }
+            : step ) );
+      const index = steps.findIndex( ( s ) => s.id === stepId );
 
       if ( index !== -1 ) setCurrentStepIndex( index );
     },
@@ -40,13 +42,13 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
 
   const completeStep = useCallback(
     ( stepId: string ) => {
-      setSteps( prev =>
-        prev.map( step =>
+      setSteps( ( prev ) =>
+        prev.map( ( step ) =>
           step.id === stepId
             ? {
               ...step,
               status: "completed" as const,
-              percentage: 100
+              percentage: 100,
             }
             : step ) );
     },
@@ -58,12 +60,14 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
     (
       stepId: string, percentage: number
     ) => {
-      setSteps( prev =>
-        prev.map( step =>
-          step.id === stepId ? {
-            ...step,
-            percentage
-          } : step ) );
+      setSteps( ( prev ) =>
+        prev.map( ( step ) =>
+          step.id === stepId
+            ? {
+              ...step,
+              percentage,
+            }
+            : step ) );
     },
     [
     ]
@@ -71,12 +75,14 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
 
   const errorStep = useCallback(
     ( stepId: string ) => {
-      setSteps( prev =>
-        prev.map( step =>
-          step.id === stepId ? {
-            ...step,
-            status: "error" as const
-          } : step ) );
+      setSteps( ( prev ) =>
+        prev.map( ( step ) =>
+          step.id === stepId
+            ? {
+              ...step,
+              status: "error" as const,
+            }
+            : step ) );
     },
     [
     ]
@@ -88,10 +94,10 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
 
       if ( totalSteps === 0 ) return 0;
 
-      const completedWeight = steps.filter( s => s.status === "completed" ).length;
-      const activeStep = steps.find( s => s.status === "active" );
+      const completedWeight = steps.filter( ( s ) => s.status === "completed" ).length;
+      const activeStep = steps.find( ( s ) => s.status === "active" );
       const activeWeight = activeStep?.percentage
-        ? ( activeStep.percentage / 100 )
+        ? activeStep.percentage / 100
         : 0;
 
       return Math.round( ( ( completedWeight + activeWeight ) / totalSteps ) * 100 );
@@ -103,11 +109,11 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
 
   const reset = useCallback(
     () => {
-      setSteps( prev =>
-        prev.map( step => ( {
+      setSteps( ( prev ) =>
+        prev.map( ( step ) => ( {
           ...step,
           status: "pending" as const,
-          percentage: 0
+          percentage: 0,
         } ) ) );
       setCurrentStepIndex( 0 );
     },

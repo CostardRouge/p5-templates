@@ -4,7 +4,8 @@ import {
 import createBrowserPage from "@/utils/createBrowserPage";
 import downloadFileResponse from "@/utils/downloadFileResponse";
 import {
-  validateTemplateOptions, TemplateValidationError
+  validateTemplateOptions,
+  TemplateValidationError,
 } from "@/lib/gsap/validation";
 import fs from "node:fs/promises";
 import path from "path";
@@ -21,12 +22,12 @@ const execAsync = promisify( exec );
 export async function POST(
   request: NextRequest,
   {
-    params
+    params,
   }: {
- params: Promise<{
- template: string
-}>
-}
+    params: Promise<{
+      template: string;
+    }>;
+  }
 ) {
   const {
     template
@@ -48,10 +49,10 @@ export async function POST(
       if ( error instanceof TemplateValidationError ) {
         return Response.json(
           {
-            error: error.message
+            error: error.message,
           },
           {
-            status: 400
+            status: 400,
           }
         );
       }
@@ -74,7 +75,7 @@ export async function POST(
     await fs.mkdir(
       framesDir,
       {
-        recursive: true
+        recursive: true,
       }
     );
 
@@ -88,7 +89,7 @@ export async function POST(
     const page = await createPage();
 
     try {
-    // Navigate to template with options
+      // Navigate to template with options
       const url = new URL( `http://localhost:3000/templates/gsap/${ template }` );
 
       url.searchParams.set(
@@ -103,7 +104,7 @@ export async function POST(
       await page.goto(
         url.toString(),
         {
-          waitUntil: "networkidle"
+          waitUntil: "networkidle",
         }
       );
 
@@ -111,7 +112,7 @@ export async function POST(
       await page.waitForSelector(
         "[data-ready=\"true\"]",
         {
-          timeout: 30000
+          timeout: 30000,
         }
       );
 
@@ -120,14 +121,14 @@ export async function POST(
 
       // Capture frames
       for ( let frame = 0; frame < totalFrames; frame++ ) {
-      // Seek timeline to frame
+        // Seek timeline to frame
         await page.evaluate(
           ( frameNum ) => {
             window.dispatchEvent( new CustomEvent(
               "capture:seek-frame",
               {
                 detail: {
-                  frame: frameNum
+                  frame: frameNum,
                 },
               }
             ) );
@@ -170,12 +171,12 @@ export async function POST(
         filePath: outputPath,
         contentDisposition,
         onFileRead: async() => {
-        // Cleanup
+          // Cleanup
           await fs.rm(
             framesDir,
             {
               recursive: true,
-              force: true
+              force: true,
             }
           );
           await fs.unlink( outputPath ).catch( () => {} );
@@ -184,13 +185,15 @@ export async function POST(
     } catch ( error ) {
       await page.close().catch( () => {} );
       await browser.close().catch( () => {} );
-      await fs.rm(
-        framesDir,
-        {
-          recursive: true,
-          force: true
-        }
-      ).catch( () => {} );
+      await fs
+        .rm(
+          framesDir,
+          {
+            recursive: true,
+            force: true,
+          }
+        )
+        .catch( () => {} );
 
       console.error(
         "Capture error:",
@@ -198,10 +201,10 @@ export async function POST(
       );
       return Response.json(
         {
-          error: error instanceof Error ? error.message : "Capture failed"
+          error: error instanceof Error ? error.message : "Capture failed",
         },
         {
-          status: 500
+          status: 500,
         }
       );
     }
@@ -212,10 +215,10 @@ export async function POST(
     );
     return Response.json(
       {
-        error: error instanceof Error ? error.message : "Invalid request"
+        error: error instanceof Error ? error.message : "Invalid request",
       },
       {
-        status: 400
+        status: 400,
       }
     );
   }

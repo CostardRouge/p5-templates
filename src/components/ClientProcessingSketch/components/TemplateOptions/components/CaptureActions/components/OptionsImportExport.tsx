@@ -25,7 +25,7 @@ export default function OptionsImportExport( {
   name,
   persistedJobId,
   jobStatus,
-  onImportInMemory
+  onImportInMemory,
 }: OptionsMenuProps ) {
   const fileInputRef = useRef<HTMLInputElement>( null );
   const [
@@ -36,7 +36,8 @@ export default function OptionsImportExport( {
     toast,
     setToast
   ] = useState<{
-    message: string; type: "success" | "error"
+    message: string;
+    type: "success" | "error";
   } | null>( null );
 
   const allowedStatuses = [
@@ -44,7 +45,8 @@ export default function OptionsImportExport( {
     "failed",
     "cancelled"
   ];
-  const canImport = !persistedJobId || ( jobStatus && allowedStatuses.includes( jobStatus ) );
+  const canImport =
+    !persistedJobId || ( jobStatus && allowedStatuses.includes( jobStatus ) );
 
   const handleDownload = ( e: React.MouseEvent ) => {
     e.stopPropagation();
@@ -59,7 +61,7 @@ export default function OptionsImportExport( {
         )
       ],
       {
-        type: "application/json"
+        type: "application/json",
       }
     );
 
@@ -111,7 +113,7 @@ export default function OptionsImportExport( {
           onImportInMemory( importedOptions );
           setToast( {
             message: "Options imported successfully",
-            type: "success"
+            type: "success",
           } );
         }
       } else {
@@ -141,7 +143,7 @@ export default function OptionsImportExport( {
         if ( result.success ) {
           setToast( {
             message: "Options imported successfully",
-            type: "success"
+            type: "success",
           } );
           setTimeout(
             () => {
@@ -155,8 +157,9 @@ export default function OptionsImportExport( {
       }
     } catch ( error ) {
       setToast( {
-        message: error instanceof Error ? error.message : "Failed to import options",
-        type: "error"
+        message:
+          error instanceof Error ? error.message : "Failed to import options",
+        type: "error",
       } );
     } finally {
       setImporting( false );
@@ -175,10 +178,7 @@ export default function OptionsImportExport( {
       />
 
       <div className="flex gap-1">
-        <button
-          onClick={handleDownload}
-          className="text-xs flex items-center"
-        >
+        <button onClick={handleDownload} className="text-xs flex items-center">
           <Download className="h-3.5" />
           <span>Export</span>
         </button>
@@ -186,14 +186,12 @@ export default function OptionsImportExport( {
         <button
           onClick={handleImportClick}
           disabled={importing}
-          className={
-            clsx(
-              "disabled:opacity-50 text-xs flex items-center",
-              {
-                "animate-pulse": importing,
-              }
-            )
-          }
+          className={clsx(
+            "disabled:opacity-50 text-xs flex items-center",
+            {
+              "animate-pulse": importing,
+            }
+          )}
         >
           <FileUp className="h-3.5" />
           <span>{importing ? "Importing..." : "Import"}</span>
@@ -202,7 +200,6 @@ export default function OptionsImportExport( {
 
       {toast && (
         <Toast
-
           message={toast.message}
           type={toast.type}
           onClose={() => setToast( null )}

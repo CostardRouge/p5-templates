@@ -11,8 +11,8 @@ export default function imageGridLayout( opts ) {
   imgs.forEach( (
     o, i
   ) => {
-    const x = ( i % 2 ) * width / 2;
-    const y = Math.floor( i / 2 ) * height / 2;
+    const x = ( ( i % 2 ) * width ) / 2;
+    const y = ( Math.floor( i / 2 ) * height ) / 2;
 
     image(
       o.img,

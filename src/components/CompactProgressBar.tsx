@@ -41,7 +41,7 @@ export default function CompactProgressBar( {
 
   useEffect(
     () => {
-      // Use recordingStartAt from DB if available, otherwise fall back to client-side startTime
+    // Use recordingStartAt from DB if available, otherwise fall back to client-side startTime
       const recordingStart = job.recordingStartAt
         ? new Date( job.recordingStartAt ).getTime()
         : startTime;
@@ -77,8 +77,8 @@ export default function CompactProgressBar( {
     ) }`;
   };
 
-  const currentStep = steps.find( s => s.status === "active" );
-  const completedSteps = steps.filter( s => s.status === "completed" ).length;
+  const currentStep = steps.find( ( s ) => s.status === "active" );
+  const completedSteps = steps.filter( ( s ) => s.status === "completed" ).length;
   const isActive = job.status === "active" || job.status === "queued";
   const progress = job.progress || 0;
 
@@ -88,7 +88,9 @@ export default function CompactProgressBar( {
       <div className={`w-full ${ className }`}>
         <div className="flex items-center justify-between text-xs mb-1">
           <span className="text-foreground/50">Completed</span>
-          <span className="text-green-600 dark:text-green-400 font-semibold">100%</span>
+          <span className="text-green-600 dark:text-green-400 font-semibold">
+            100%
+          </span>
         </div>
         <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
           <div className="h-full bg-gradient-to-r from-green-500 to-green-600 w-full" />
@@ -109,7 +111,7 @@ export default function CompactProgressBar( {
           <div
             className="h-full bg-gray-400 dark:bg-gray-500 transition-all duration-300"
             style={{
-              width: `${ progress }%`
+              width: `${ progress }%`,
             }}
           />
         </div>
@@ -159,7 +161,7 @@ export default function CompactProgressBar( {
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out relative"
                 style={{
-                  width: `${ progress }%`
+                  width: `${ progress }%`,
                 }}
               >
                 <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -168,7 +170,8 @@ export default function CompactProgressBar( {
 
             {steps.length > 0 && (
               <div className="text-[10px] text-foreground/40 mt-1 truncate">
-                Step {completedSteps + 1} of {steps.length} • {completedSteps} completed
+                Step {completedSteps + 1} of {steps.length} • {completedSteps}{" "}
+                completed
               </div>
             )}
           </PopoverButton>
@@ -181,18 +184,26 @@ export default function CompactProgressBar( {
               {/* Header */}
               <div className="flex items-center justify-between pb-2 border-b border-border">
                 <div>
-                  <div className="text-xs font-semibold text-foreground">Recording Progress</div>
+                  <div className="text-xs font-semibold text-foreground">
+                    Recording Progress
+                  </div>
                   {job.id && (
-                    <div className="text-[10px] text-foreground/50 font-mono">#{job.id.slice(
-                      0,
-                      8
-                    )}</div>
+                    <div className="text-[10px] text-foreground/50 font-mono">
+                      #{job.id.slice(
+                        0,
+                        8
+                      )}
+                    </div>
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-bold text-blue-600 dark:text-blue-400">{progress}%</div>
+                  <div className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                    {progress}%
+                  </div>
                   {startTime && (
-                    <div className="text-[10px] text-foreground/50 font-mono">{formatTime( elapsedTime )}</div>
+                    <div className="text-[10px] text-foreground/50 font-mono">
+                      {formatTime( elapsedTime )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -254,7 +265,8 @@ export default function CompactProgressBar( {
                         >
                           {step.name}
                         </span>
-                        {step.percentage !== undefined && step.status === "active" && (
+                        {step.percentage !== undefined &&
+                          step.status === "active" && (
                           <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
                             {step.percentage.toPrecision( 3 )}%
                           </span>
@@ -262,12 +274,13 @@ export default function CompactProgressBar( {
                       </div>
 
                       {/* Step Progress Bar */}
-                      {step.status === "active" && step.percentage !== undefined && (
+                      {step.status === "active" &&
+                        step.percentage !== undefined && (
                         <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-500 transition-all duration-300"
                             style={{
-                              width: `${ step.percentage }%`
+                              width: `${ step.percentage }%`,
                             }}
                           />
                         </div>

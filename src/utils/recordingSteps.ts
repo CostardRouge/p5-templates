@@ -27,27 +27,27 @@ const DEFAULT_STEP_CONFIG: StepConfig[] = [
   {
     id: "launch",
     name: "Launching browser",
-    weight: 10
+    weight: 10,
   },
   {
     id: "capture",
     name: "Capturing frames",
-    weight: 30
+    weight: 30,
   },
   {
     id: "save",
     name: "Saving frames",
-    weight: 20
+    weight: 20,
   },
   {
     id: "encode",
     name: "Encoding video",
-    weight: 35
+    weight: 35,
   },
   {
     id: "finalize",
     name: "Finalizing",
-    weight: 5
+    weight: 5,
   },
 ];
 
@@ -67,7 +67,7 @@ export function getRecordingSteps(
 
   // Handle draft/queued recordings (no progress yet)
   if ( progress === 0 || job.status === "draft" || job.status === "queued" ) {
-    return stepConfig.map( config => ( {
+    return stepConfig.map( ( config ) => ( {
       id: config.id,
       name: config.name,
       status: "pending" as const,
@@ -77,7 +77,7 @@ export function getRecordingSteps(
 
   // Calculate cumulative progress ranges for each step
   let cumulativeProgress = 0;
-  const stepRanges = stepConfig.map( config => {
+  const stepRanges = stepConfig.map( ( config ) => {
     const start = cumulativeProgress;
     const end = cumulativeProgress + config.weight;
 
@@ -85,7 +85,7 @@ export function getRecordingSteps(
     return {
       ...config,
       start,
-      end
+      end,
     };
   } );
 
@@ -169,7 +169,7 @@ export function createStepConfig( configs: StepConfig[] ): StepConfig[] {
     console.warn( `Step weights sum to ${ totalWeight }%, expected 100%. Normalizing...` );
 
     // Normalize weights to sum to 100
-    return configs.map( config => ( {
+    return configs.map( ( config ) => ( {
       ...config,
       weight: ( config.weight / totalWeight ) * 100,
     } ) );

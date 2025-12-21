@@ -15,11 +15,11 @@ import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
 export async function GET(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
     params: Promise<{
-      id: string
-    }>
+      id: string;
+    }>;
   }
 ) {
   const jobId = ( await params ).id;
@@ -31,7 +31,7 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -42,7 +42,7 @@ export async function GET(
       return new NextResponse(
         "resultUrl not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -59,7 +59,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

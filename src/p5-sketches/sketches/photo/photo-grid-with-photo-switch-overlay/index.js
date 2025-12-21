@@ -10,7 +10,7 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 
 sketch.setup( () => {
   background( ...options.colors.background );
-}, );
+} );
 
 sketch.draw( (
   time, center, favoriteColor
@@ -20,8 +20,8 @@ sketch.draw( (
   const images = cache.get( "images" );
 
   const borderSize = 0;
-  const rows = options.rows || 3;// columns*height/width;
-  const columns = options.columns || 3;// rows*width/height;
+  const rows = options.rows || 3; // columns*height/width;
+  const columns = options.columns || 3; // rows*width/height;
   const gridOptions = {
     topLeft: createVector(
       borderSize,
@@ -41,7 +41,7 @@ sketch.draw( (
     ),
     rows,
     columns,
-    centered: false
+    centered: false,
   };
   const {
     cells: gridCells
@@ -70,11 +70,11 @@ sketch.draw( (
       ),
       boundary: {
         height: H,
-        width: W
+        width: W,
       },
       center: true,
       fill: true,
-      scale: .8,
+      scale: 0.8,
       clip: true,
     } );
   } );
@@ -94,7 +94,7 @@ sketch.draw( (
     // graphics: canvases.background,
     center: true,
     fill: true,
-    scale: .5,
+    scale: 0.5,
     // clip: true,
   } );
 
@@ -117,7 +117,7 @@ sketch.draw( (
           CENTER,
           CENTER
         ],
-        blendMode: EXCLUSION
+        blendMode: EXCLUSION,
       }
     );
   }

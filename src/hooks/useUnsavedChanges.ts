@@ -84,7 +84,10 @@ export function useUnsavedChanges( {
         if ( !link ) return;
 
         // Skip download links (blob URLs or links with download attribute)
-        if ( link.hasAttribute( "download" ) || link.getAttribute( "data-download-link" ) === "true" ) {
+        if (
+          link.hasAttribute( "download" ) ||
+        link.getAttribute( "data-download-link" ) === "true"
+        ) {
           return;
         }
 

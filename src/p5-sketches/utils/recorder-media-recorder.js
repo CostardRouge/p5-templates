@@ -21,17 +21,19 @@ const recorder = {
     const mimeTypes = [
       "video/webm;codecs=vp9",
       "video/webm;codecs=vp8",
-      "video/webm"
+      "video/webm",
     ];
 
-    const mimeType = mimeTypes.find( type => MediaRecorder.isTypeSupported( type ) ) || "video/webm";
+    const mimeType =
+      mimeTypes.find( ( type ) => MediaRecorder.isTypeSupported( type ) ) ||
+      "video/webm";
 
     // Create media recorder instance
     recorder.mediaRecorder = new MediaRecorder(
       recorder.stream,
       {
         mimeType: mimeType,
-        videoBitsPerSecond: 15000000 // 15 Mbps - adjust as needed
+        videoBitsPerSecond: 15000000, // 15 Mbps - adjust as needed
       }
     );
 
@@ -50,7 +52,7 @@ const recorder = {
       const blob = new Blob(
         recorder.recordedChunks,
         {
-          type: "video/webm"
+          type: "video/webm",
         }
       );
 
@@ -164,9 +166,12 @@ const recorder = {
       !recorder.recording
     );
 
-    if ( recorder.maximumFrames && document.getElementById( "recording-progression" ) ) {
+    if (
+      recorder.maximumFrames &&
+      document.getElementById( "recording-progression" )
+    ) {
       document.getElementById( "recording-progression" ).style.width =
-          ( recorder.savedFramesCount / recorder.maximumFrames ) * 100 + "%";
+        ( recorder.savedFramesCount / recorder.maximumFrames ) * 100 + "%";
     }
 
     if ( recorder.maximumFrames === recorder.savedFramesCount ) {
@@ -175,7 +180,7 @@ const recorder = {
 
     // Count frames and stop if we've reached the maximum
     recorder.savedFramesCount++;
-  }
+  },
 };
 
 // Start the draw loop

@@ -10,7 +10,7 @@ async function zipFiles(
       file: outputZipPath,
       cwd: path.dirname( files[ 0 ] ),
     },
-    files.map( file => path.basename( file ) )
+    files.map( ( file ) => path.basename( file ) )
   );
 }
 

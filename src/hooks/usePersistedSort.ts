@@ -3,11 +3,9 @@ import {
 } from "react";
 
 export function usePersistedSort<T>(
-  key: string, defaultValue: T
-): [
-  T,
-  ( value: T ) => void
-] {
+  key: string,
+  defaultValue: T
+): [T, ( value: T ) => void] {
   const [
     value,
     setValue

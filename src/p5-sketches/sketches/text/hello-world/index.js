@@ -3,7 +3,7 @@ import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
-sketch.setup( );
+sketch.setup();
 
 sketch.draw( () => {
   background( ...( options.sketch?.backgroundColor ?? [

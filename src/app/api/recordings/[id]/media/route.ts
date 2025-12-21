@@ -15,12 +15,12 @@ import {
 export async function GET(
   _req: NextRequest,
   {
-    params
+    params,
   }: {
- params: Promise<{
- id: string
-}>
-}
+    params: Promise<{
+      id: string;
+    }>;
+  }
 ) {
   const jobId = ( await params ).id;
 
@@ -31,7 +31,7 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404
+          status: 404,
         }
       );
     }
@@ -52,13 +52,18 @@ export async function GET(
       }
     }
 
-    const videoUrls = job.videoUrls ? ( job.videoUrls as unknown as string[] ) : [
-    ];
-    const videoSizes = job.videoSizes ? ( job.videoSizes as unknown as number[] ) : [
-    ];
+    const videoUrls = job.videoUrls
+      ? ( job.videoUrls as unknown as string[] )
+      : [
+      ];
+    const videoSizes = job.videoSizes
+      ? ( job.videoSizes as unknown as number[] )
+      : [
+      ];
 
     // Check if this is an old recording (has resultUrl but no videoUrls)
-    const isOldRecording = job.resultUrl && ( !videoUrls || videoUrls.length === 0 );
+    const isOldRecording =
+      job.resultUrl && ( !videoUrls || videoUrls.length === 0 );
 
     // For old recordings with zip files, don't provide video URLs
     if ( isOldRecording && job.resultUrl?.endsWith( ".zip" ) ) {
@@ -68,7 +73,7 @@ export async function GET(
         videos: [
         ],
         isZipArchive: true,
-        resultUrl: job.resultUrl
+        resultUrl: job.resultUrl,
       } );
     }
 
@@ -107,7 +112,7 @@ export async function GET(
           url,
           size,
           index,
-          key
+          key,
         };
       } catch ( error ) {
         console.error(
@@ -132,7 +137,7 @@ export async function GET(
       );
 
       // Add small overhead for zip structure (roughly 100 bytes per file + 1KB for headers)
-      zipSize = totalVideoSize + ( validVideos.length * 100 ) + 1024;
+      zipSize = totalVideoSize + validVideos.length * 100 + 1024;
     }
 
     return NextResponse.json( {
@@ -141,7 +146,7 @@ export async function GET(
       zipSize,
       recordingDuration: job.recordingDuration,
       template: job.template,
-      isZipArchive: false
+      isZipArchive: false,
     } );
   } catch ( error ) {
     console.error(
@@ -151,7 +156,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500
+        status: 500,
       }
     );
   }

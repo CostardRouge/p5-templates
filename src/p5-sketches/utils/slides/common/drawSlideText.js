@@ -1,7 +1,7 @@
 import string from "../../string.js";
 
 const parseFloatDefault = (
-  value, _default = .015
+  value, _default = 0.015
 ) => {
   const float = Number.parseFloat( value );
 
@@ -18,20 +18,20 @@ export default function drawSlideText( textOption ) {
 
   string.write(
     textOption.content,
-    ( width * horizontalMargin ) + width * textOption.position.x,
-    ( height * verticalMargin ) + height * textOption.position.y,
+    width * horizontalMargin + width * textOption.position.x,
+    height * verticalMargin + height * textOption.position.y,
     {
       size: Number( textOption.size ),
       font: string.fonts?.[ textOption.font ] ?? string.fonts.martian,
       textAlign: [
         textOption.alignment?.horizontal ?? "center",
-        textOption.alignment?.vertical ?? "baseline"
+        textOption.alignment?.vertical ?? "baseline",
       ],
       blendMode: textOption.blend,
       fill: color( ...textOption.fill ),
       stroke: color( ...textOption.stroke ),
-      textWidth: width - ( 2 * ( width * horizontalMargin ) ),
-      textHeight: height - ( 2 * ( height * verticalMargin ) )
+      textWidth: width - 2 * ( width * horizontalMargin ),
+      textHeight: height - 2 * ( height * verticalMargin ),
     }
   );
 }

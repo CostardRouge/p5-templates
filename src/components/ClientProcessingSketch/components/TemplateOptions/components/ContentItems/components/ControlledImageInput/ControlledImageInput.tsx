@@ -11,8 +11,7 @@ import {
 } from "@/p5-sketches/shared/utils";
 import useAssetsBridge from "@/hooks/useAssetsBridge";
 
-import useTemplateAssets
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
+import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
 
 import DropZoneButton from "@/components/DropZoneButton";
 import {
@@ -20,7 +19,7 @@ import {
 } from "lucide-react";
 
 type Props = {
-  name: string
+  name: string;
 };
 
 export default function ControlledImageInput( {
@@ -35,7 +34,7 @@ export default function ControlledImageInput( {
     field, fieldState
   } = useController( {
     name,
-    control
+    control,
   } );
   const {
     uploadFiles, maybeRemoveFromAssets

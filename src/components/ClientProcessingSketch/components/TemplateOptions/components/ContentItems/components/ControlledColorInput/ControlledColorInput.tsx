@@ -11,7 +11,7 @@ type ControlledColorInputProps = {
 };
 
 export default function ControlledColorInput( {
-  name
+  name,
 }: ControlledColorInputProps ) {
   const {
     control
@@ -25,14 +25,15 @@ export default function ControlledColorInput( {
         field
       } ) => {
         // Ensure we always have a valid RGBA array
-        const currentValue = Array.isArray( field.value ) && field.value.length >= 3
-          ? field.value
-          : [
-            0,
-            0,
-            0,
-            255
-          ];
+        const currentValue =
+          Array.isArray( field.value ) && field.value.length >= 3
+            ? field.value
+            : [
+              0,
+              0,
+              0,
+              255
+            ];
         const r = currentValue[ 0 ] ?? 0;
         const g = currentValue[ 1 ] ?? 0;
         const b = currentValue[ 2 ] ?? 0;
@@ -82,13 +83,13 @@ export default function ControlledColorInput( {
                   background: `linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), 
                               linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)`,
                   backgroundSize: "8px 8px",
-                  backgroundPosition: "0 0, 4px 4px"
+                  backgroundPosition: "0 0, 4px 4px",
                 }}
               >
                 <div
                   className="absolute inset-0"
                   style={{
-                    backgroundColor: `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`
+                    backgroundColor: `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`,
                   }}
                 />
               </div>

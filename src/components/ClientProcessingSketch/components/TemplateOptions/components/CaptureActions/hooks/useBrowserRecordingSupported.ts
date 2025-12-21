@@ -9,7 +9,8 @@ export default function useBrowserRecordingSupported() {
   const [
     isBrowserRecordingSupported,
     setIsBrowserRecordingSupported
-  ] = useState<boolean>( false );
+  ] =
+    useState<boolean>( false );
 
   React.useEffect(
     () => {
