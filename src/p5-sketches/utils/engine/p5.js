@@ -1,6 +1,6 @@
-import time from "@/p5/utils/time.js";
 import events from "@/p5/utils/events.js";
 import scripts from "@/p5/utils/scripts.js";
+import time from "@/p5/utils/time.js";
 
 const p5js = {
   camera: undefined,
@@ -50,29 +50,77 @@ const p5js = {
       );
       events.handle( "post-draw" );
     };
-    window.keyTyped = () => {
-      events.handle( "engine-on-key-typed" );
+    window.keyTyped = ( event ) => {
+      events.handle(
+        "engine-on-key-typed",
+        event
+      );
     };
-    window.keyPressed = () => {
-      events.handle( "engine-key-pressed" );
+    window.keyPressed = ( event ) => {
+      events.handle(
+        "engine-key-pressed",
+        event
+      );
     };
-    window.mousePressed = () => {
-      events.handle( "engine-mouse-pressed" );
+    window.mousePressed = ( event ) => {
+      events.handle(
+        "engine-mouse-pressed",
+        event
+      );
     };
-    window.mouseDragged = () => {
-      events.handle( "engine-mouse-dragged" );
+    window.mouseClicked = ( event ) => {
+      events.handle(
+        "engine-mouse-clicked",
+        event
+      );
     };
-    window.mouseReleased = () => {
-      events.handle( "engine-mouse-released" );
+    window.mouseDragged = ( event ) => {
+      events.handle(
+        "engine-mouse-dragged",
+        event
+      );
     };
-    window.doubleClicked = () => {
-      events.handle( "engine-window-double-click" );
+    window.mouseReleased = ( event ) => {
+      events.handle(
+        "engine-mouse-released",
+        event
+      );
     };
-    window.windowResized = () => {
-      events.handle( "engine-window-resized" );
+    window.doubleClicked = ( event ) => {
+      events.handle(
+        "engine-window-double-click",
+        event
+      );
     };
-    window.preload = () => {
-      events.handle( "engine-window-preload" );
+    window.touchStarted = ( event ) => {
+      events.handle(
+        "engine-touch-started",
+        event
+      );
+    };
+    window.touchMoved = ( event ) => {
+      events.handle(
+        "engine-touch-moved",
+        event
+      );
+    };
+    window.touchEnded = ( event ) => {
+      events.handle(
+        "engine-touch-ended",
+        event
+      );
+    };
+    window.windowResized = ( event ) => {
+      events.handle(
+        "engine-window-resized",
+        event
+      );
+    };
+    window.preload = ( event ) => {
+      events.handle(
+        "engine-window-preload",
+        event
+      );
     };
   },
   setup: (
@@ -123,13 +171,37 @@ const p5js = {
           );
         } );
 
-        p5js.canvas.doubleClicked( () => {
-          events.handle( "engine-canvas-double-clicked" );
+        p5js.canvas.doubleClicked( ( event ) => {
+          events.handle(
+            "engine-canvas-double-clicked",
+            event
+          );
         } );
 
-        p5js.canvas.mousePressed( () => {
-          events.handle( "engine-canvas-mouse-pressed" );
+        p5js.canvas.mousePressed( ( event ) => {
+          events.handle(
+            "engine-canvas-mouse-pressed",
+            event
+          );
         } );
+
+        if ( typeof p5js.canvas.mouseClicked === "function" ) {
+          p5js.canvas.mouseClicked( ( event ) => {
+            events.handle(
+              "engine-canvas-mouse-clicked",
+              event
+            );
+          } );
+        }
+
+        if ( typeof p5js.canvas.touchStarted === "function" ) {
+          p5js.canvas.touchStarted( ( event ) => {
+            events.handle(
+              "engine-canvas-touch-started",
+              event
+            );
+          } );
+        }
 
         p5js.canvas.drop(
           ( file ) => {
@@ -174,7 +246,7 @@ const p5js = {
     );
   },
   eventHandlers: {
-    "engine-toggle-loop": function() {
+    "engine-toggle-loop": () => {
       p5js.paused = p5js.paused ?? false;
       p5js.paused = !p5js.paused;
 
