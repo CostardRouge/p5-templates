@@ -1,12 +1,15 @@
-import options from "@/p5/utils/options.js";
+import {
+  setSketchOptions
+} from "@/p5/shared/syncSketchOptions.js";
 
+import options from "@/p5/utils/options.js";
 import animation from "@/p5/utils/animation.js";
 import * as common from "@/p5/utils/common.js";
+import mappers from "@/p5/utils/mappers.js";
 import easing from "@/p5/utils/easing.js";
 import events from "@/p5/utils/events.js";
 import graphics from "@/p5/utils/graphics.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-
 import sketch from "@/p5/utils/sketch.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
@@ -20,15 +23,9 @@ const sketchState = {
     ty: 0,
   },
   lastPointer: {
-    type: null,
     at: 0,
   },
-  touchTap: {
-    active: false,
-    moved: false,
-    at: 0,
-    startCanvasPoint: null,
-  },
+  lastSelectedCanvasPoint: null,
 };
 
 function getClientPositionFromEvent( event ) {
@@ -119,26 +116,29 @@ function setZoomFocusFromCanvasPoint( canvasPoint ) {
   };
 }
 
-function handlePointerSelect(
-  canvasPoint, pointerType
-) {
+function handlePointerSelect( canvasPoint ) {
   const now = performance.now();
 
-  // A tap on mobile often triggers a synthetic mouse event.
-  if (
-    sketchState.lastPointer.type === "touch" &&
-    pointerType === "mouse" &&
-    now - sketchState.lastPointer.at < 750
-  ) {
+  // Avoid double-firing (canvas + window handlers)
+  if ( now - sketchState.lastPointer.at < 50 ) {
     return;
   }
 
-  sketchState.lastPointer = {
-    type: pointerType,
-    at: now,
-  };
+  sketchState.lastPointer.at = now;
+  sketchState.lastSelectedCanvasPoint = canvasPoint;
 
   setZoomFocusFromCanvasPoint( canvasPoint );
+
+  setSketchOptions( {
+    ...options,
+    sketch: {
+      ...options.sketch,
+      point: {
+        x: canvasPoint.x,
+        y: canvasPoint.y,
+      },
+    },
+  } );
 }
 
 sketch.setup( () => {
@@ -148,6 +148,14 @@ sketch.setup( () => {
     width,
     height
   );
+
+  // Restore persisted point (if any)
+  if ( options.sketch?.point ) {
+    sketchState.lastSelectedCanvasPoint = {
+      x: options.sketch.point.x,
+      y: options.sketch.point.y,
+    };
+  }
 } );
 
 events.register(
@@ -155,93 +163,18 @@ events.register(
   ( event ) => {
     const canvasPoint = getCanvasPositionFromEvent( event );
 
-    handlePointerSelect(
-      canvasPoint,
-      "mouse"
-    );
+    handlePointerSelect( canvasPoint );
   }
 );
 
 // Fallback for environments where canvas mouseClicked isn’t available
+// (this can fire too on some platforms, so handlePointerSelect dedupes)
 events.register(
   "engine-mouse-clicked",
   ( event ) => {
     const canvasPoint = getCanvasPositionFromEvent( event );
 
-    handlePointerSelect(
-      canvasPoint,
-      "mouse"
-    );
-  }
-);
-
-// Mobile tap detection (avoid triggering while panning/pinching the viewport)
-events.register(
-  "engine-touch-started",
-  ( event ) => {
-    const touchCount = event?.touches?.length ?? 0;
-
-    if ( touchCount !== 1 ) {
-      sketchState.touchTap.active = false;
-      return;
-    }
-
-    sketchState.touchTap.active = true;
-    sketchState.touchTap.moved = false;
-    sketchState.touchTap.at = performance.now();
-    sketchState.touchTap.startCanvasPoint = getCanvasPositionFromEvent( event );
-  }
-);
-
-events.register(
-  "engine-touch-moved",
-  ( event ) => {
-    if ( !sketchState.touchTap.active || sketchState.touchTap.moved ) return;
-
-    const touchCount = event?.touches?.length ?? 0;
-
-    if ( touchCount !== 1 ) {
-      sketchState.touchTap.active = false;
-      return;
-    }
-
-    const currentCanvasPoint = getCanvasPositionFromEvent( event );
-    const startCanvasPoint = sketchState.touchTap.startCanvasPoint;
-
-    if ( !startCanvasPoint ) return;
-
-    const dx = currentCanvasPoint.x - startCanvasPoint.x;
-    const dy = currentCanvasPoint.y - startCanvasPoint.y;
-
-    if ( Math.hypot(
-      dx,
-      dy
-    ) > 12 ) {
-      sketchState.touchTap.moved = true;
-    }
-  }
-);
-
-events.register(
-  "engine-touch-ended",
-  ( event ) => {
-    if ( !sketchState.touchTap.active ) return;
-
-    const elapsed = performance.now() - sketchState.touchTap.at;
-    const startCanvasPoint = sketchState.touchTap.startCanvasPoint;
-
-    sketchState.touchTap.active = false;
-
-    if ( sketchState.touchTap.moved || elapsed > 400 || !startCanvasPoint ) {
-      return;
-    }
-
-    const endCanvasPoint = getCanvasPositionFromEvent( event ) ?? startCanvasPoint;
-
-    handlePointerSelect(
-      endCanvasPoint,
-      "touch"
-    );
+    handlePointerSelect( canvasPoint );
   }
 );
 
@@ -257,17 +190,22 @@ sketch.draw( () => {
 
   sketchState.photoGraphics.clear();
 
+  // If a point was persisted, convert it to UV once
+  if ( !sketchState.focusUV && options.sketch?.point ) {
+    setZoomFocusFromCanvasPoint( options.sketch.point );
+  }
+
   // Required timing snippet
   const images = [
     photo
   ];
-  const zoomStep = map(
-    animation.triangleProgression( 2 ),
+  const zoomStep = mappers.fn(
+    animation.triangleProgression( options.sketch.zoom.count ?? 1 ),
     0,
     1,
     0,
     images.length,
-    easing.easeInOutBack
+    easing?.[ options.sketch.zoom.easing ] ?? easing.easeInOutExpo
   );
 
   const zoomProgress = constrain(
@@ -280,8 +218,8 @@ sketch.draw( () => {
   );
 
   const zoomScale = lerp(
-    1,
-    6,
+    options.sketch.zoom.minZoomScale ?? 1,
+    options.sketch.zoom.maxZoomScale ?? 3,
     zoomProgress
   );
 
@@ -324,11 +262,11 @@ sketch.draw( () => {
       height / 2
     ),
     graphics: sketchState.photoGraphics,
-    margin: width * options.sketch?.margin,
-    scale: options.sketch?.scale ?? 1,
-    center: options.sketch?.center ?? true,
-    clip: options.sketch?.clip ?? false,
-    fill: options.sketch?.fill ?? true,
+    margin: width * options.sketch?.imageSettings?.margin,
+    scale: options.sketch?.imageSettings?.scale ?? 1,
+    center: options.sketch?.imageSettings?.center ?? true,
+    clip: options.sketch?.imageSettings?.clip ?? false,
+    fill: options.sketch?.imageSettings?.fill ?? true,
     img: photo.img,
     callback: (
       x, y, w, h
@@ -349,6 +287,33 @@ sketch.draw( () => {
     0,
     0
   );
+
+  if ( sketchState.photoRect && sketchState.focusUV ) {
+    const focusX =
+      sketchState.photoRect.x + sketchState.focusUV.u * sketchState.photoRect.w;
+    const focusY =
+      sketchState.photoRect.y + sketchState.focusUV.v * sketchState.photoRect.h;
+
+    const focusScreenX =
+      focusX * sketchState.viewTransform.scale + sketchState.viewTransform.tx;
+    const focusScreenY =
+      focusY * sketchState.viewTransform.scale + sketchState.viewTransform.ty;
+
+    if ( options.sketch.circle.draw ?? true ) {
+      push();
+      noFill();
+      stroke( ...( options.sketch.circle.stroke ?? [
+        255
+      ] ) );
+      strokeWeight( options.sketch.circle.strokeWeight ?? 3 );
+      circle(
+        focusScreenX,
+        focusScreenY,
+        options.sketch.circle.radius ?? 24
+      );
+      pop();
+    }
+  }
 
   renderTitle();
 } );
