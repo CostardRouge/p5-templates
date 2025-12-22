@@ -1,5 +1,7 @@
+import cache from "./cache.js";
 import shapes from "./shapes.js";
 import options from "./options.js";
+import * as common from "@/p5/utils/common.js";
 
 const imageUtils = {
   marginImage: ( {
@@ -146,6 +148,25 @@ const imageUtils = {
 
     img.updatePixels();
   },
+  getImages( sourcePath = "sketch.images" ) {
+    const imagesFromOptions = sourcePath
+      .split( "." )
+      .reduce(
+        (
+          current, key
+        ) => ( current !== undefined && current !== null ? current[ key ] : undefined ),
+        options
+      );
+
+    if ( Array.isArray( imagesFromOptions ) && imagesFromOptions.length > 0 ) {
+      return imagesFromOptions
+        .map( ( imagePath ) => common.getAsset( imagePath ) )
+        .filter( ( asset ) => asset !== undefined && asset !== null );
+    }
+
+    return cache.get( "images" ) ?? [
+    ];
+  }
 };
 
 export default imageUtils;
