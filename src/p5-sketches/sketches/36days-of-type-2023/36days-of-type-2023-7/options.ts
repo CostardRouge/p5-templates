@@ -1,19 +1,8 @@
 import easing from "@/p5/utils/easing";
 
-import titleDefaultValues from "@/p5-sketches/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfiguration";
-import {
-  fontNames
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-
 export const formValues = {
   shape: {
-    text: [
-      "x",
-      "y",
-      "z"
-    ],
-    font: "waverseVariable",
+    text: "7",
     depth: 20,
     size: 1,
     columns: 65,
@@ -23,12 +12,12 @@ export const formValues = {
   mask: {
     distance: 0.015,
   },
-  title: titleDefaultValues,
   animation: {
     variableDepth: false,
+    rotate: true,
     rotationCount: 1,
     waveSpeed: 1,
-    waveSpread: 0.5,
+    waveSpread: 0.3,
     waveEasing: "easeInOutElastic",
     wave: {
       mode: "linear" as const,
@@ -38,8 +27,8 @@ export const formValues = {
   },
   color: {
     opacityFactor: 1.5,
-    fillAlphaStart: 230,
-    fillAlphaEnd: 20,
+    fillAlphaStart: 240,
+    fillAlphaEnd: 0,
     strokeAlpha: 200,
     hueMultiplier: 2,
   },
@@ -57,25 +46,8 @@ export const formConfiguration: Record<string, any> = {
     label: "Shape",
     fields: {
       text: {
-        label: "Text list",
-        component: "item-list",
-        itemConfig: {
-          component: "text",
-        },
-        defaultItems: [
-          "a",
-          "s",
-          "d",
-          "f"
-        ],
-      },
-      font: {
-        component: "select",
-        label: "Font name",
-        options: fontNames.map( ( fontName ) => ( {
-          value: fontName,
-          label: fontName,
-        } ) ),
+        label: "Text",
+        component: "text",
       },
       size: {
         label: "Size",
@@ -88,14 +60,14 @@ export const formConfiguration: Record<string, any> = {
         label: "Depth",
         component: "slider",
         min: 1,
-        max: 500,
+        max: 100,
         step: 1,
       },
       columns: {
         label: "Grid columns",
         component: "slider",
         min: 10,
-        max: 300,
+        max: 150,
         step: 1,
       },
       sampleFactor: {
@@ -133,6 +105,10 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       variableDepth: {
         label: "Variable depth",
+        component: "checkbox",
+      },
+      rotate: {
+        label: "Rotate",
         component: "checkbox",
       },
       rotationCount: {
@@ -285,7 +261,6 @@ export const formConfiguration: Record<string, any> = {
       },
     },
   },
-  title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color",

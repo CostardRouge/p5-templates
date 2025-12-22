@@ -196,13 +196,6 @@
     "ctime": "2025-12-07T14:08:39.608Z"
   },
   {
-    "name": "36days-of-type-2023-5",
-    "category": "36days-of-type-2023",
-    "hasSketchForm": true,
-    "mtime": "2025-12-07T14:08:39.613Z",
-    "ctime": "2025-12-01T04:46:33.752Z"
-  },
-  {
     "name": "text-animated-points",
     "category": "text",
     "hasSketchForm": true,
@@ -290,28 +283,21 @@
     "name": "text-mask-with-noise-strips",
     "category": "text",
     "hasSketchForm": true,
-    "mtime": "2025-12-18T09:16:21.519Z",
+    "mtime": "2025-12-21T21:30:52.807Z",
     "ctime": "2025-04-21T11:29:50.582Z"
   },
   {
-    "name": "kinetic-letters-extrude",
-    "category": "kinetic",
+    "name": "36days-of-type-2023-5",
+    "category": "36days-of-type-2023",
     "hasSketchForm": true,
-    "mtime": "2025-12-18T12:15:27.537Z",
-    "ctime": "2025-12-18T12:01:34.506Z"
+    "mtime": "2025-12-22T00:36:08.300Z",
+    "ctime": "2025-12-01T04:46:33.752Z"
   },
   {
     "name": "36days-of-type-2023-7",
     "category": "36days-of-type-2023",
     "hasSketchForm": true,
-    "mtime": "2025-12-21T08:07:19.454Z",
-    "ctime": "2025-12-21T06:18:30.747Z"
-  },
-  {
-    "name": "36days-of-type-2023-7",
-    "category": "bublly-lines",
-    "hasSketchForm": true,
-    "mtime": "2025-12-21T20:32:33.677Z",
-    "ctime": "2025-12-21T20:32:33.669Z"
+    "mtime": "2025-12-22T00:51:01.692Z",
+    "ctime": "2025-12-22T00:47:56.333Z"
   }
 ]

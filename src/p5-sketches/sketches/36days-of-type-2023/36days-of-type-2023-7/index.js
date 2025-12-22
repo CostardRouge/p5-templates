@@ -2,14 +2,13 @@ import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
 
 import cache from "@/p5/utils/cache.js";
-import mappers from "@/p5/utils/mappers.js";
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import events from "@/p5/utils/events.js";
 import grid from "@/p5/utils/grid.js";
+import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
 
@@ -127,10 +126,15 @@ function createGridAlphaPoints(
             alphaLayers.push( alpha );
           }
 
-          alphaPoints.push( {
-            position,
-            layers: alphaLayers,
-          } );
+          if ( alphaLayers.length > 0 ) {
+            const randomPosition = p5.Vector.random3D().mult( ( width + height ) / 2 );
+
+            alphaPoints.push( {
+              position,
+              randomPosition,
+              layers: alphaLayers,
+            } );
+          }
         }
       );
 
@@ -148,8 +152,6 @@ const getBackgroundColor = () =>
 
 sketch.draw( () => {
   background( ...getBackgroundColor() );
-
-  renderTitle( options.sketch?.title );
 
   const size = options.sketch?.shape?.size * width ?? width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
@@ -181,17 +183,23 @@ sketch.draw( () => {
     centered: true,
   };
 
-  const font = string.fonts?.[ options.sketch.shape.font ?? "waverseVariable" ];
-
-  const textToWrite = options.sketch?.shape?.text ?? [
-    "1",
-    "2",
-    "3"
+  const fonts = [
+    string.fonts.martian,
+    // string.fonts.multicoloure,
+    // string.fonts.openSans,
+    // string.fonts.sans,
+    // string.fonts.serif
   ];
 
-  const textPointsMatrix = textToWrite.map( ( text ) =>
+  const textToWrite = options.sketch?.shape?.text ?? "5";
+
+  const textPointsMatrix = fonts.map( ( font ) =>
     string.getTextPoints( {
-      text,
+      text: textToWrite,
+      position: createVector(
+        0,
+        0
+      ),
       size,
       font,
       sampleFactor,
@@ -202,38 +210,89 @@ sketch.draw( () => {
     return;
   }
 
+  const cacheComponent = [
+    textToWrite,
+    cellSize,
+    size,
+    sampleFactor,
+    simplifyThreshold,
+    options.sketch?.mask?.distance,
+  ];
+  const cacheKey = cacheComponent.join( "+" );
+
   const alphaPoints = createGridAlphaPoints(
     gridOptions,
     textPointsMatrix,
-    cache.key(
-      textToWrite.join( "-" ),
-      cellSize,
-      size,
-      sampleFactor,
-      simplifyThreshold,
-      options.sketch?.mask?.distance,
-      font
-    )
+    cacheKey
   );
 
   alphaPoints.forEach( (
     {
-      layers, position
+      layers, position, randomPosition
     }, index
   ) => {
     const layer = mappers.circularIndex(
-      animation.progression * textToWrite.length,
+      animation.progression,
       layers
     );
+    // const layer = animation.ease({
+    //   values: layers,
+    //   currentTime: generalAnimationTime+1/2,
+    //   duration: 1,
+    //   easingFn: easing.easeInOutExpo
+    // })
 
     if ( !layer ) {
       return;
     }
 
+    const hue = sketchState.shape.graphics.noise(
+      position.x / columns +
+        +sketchState.shape.graphics.map(
+          Math.sin( animation.angle ),
+          -1,
+          1,
+          0,
+          1
+        ),
+      position.y / rows +
+        +sketchState.shape.graphics.map(
+          Math.cos( animation.angle ),
+          -1,
+          1,
+          0,
+          1
+        )
+    );
+    const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
+    const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
+
+    const tint = colors.rainbow( {
+      hueOffset: animation.circularProgression,
+      hueIndex:
+        sketchState.shape.graphics.map(
+          hue,
+          0,
+          1,
+          -PI,
+          PI
+        ) * hueMultiplier,
+      opacityFactor,
+    } );
+
+    const {
+      levels: [
+        red,
+        green,
+        blue
+      ],
+    } = tint;
+
     sketchState.shape.graphics.push();
 
     const w = cellSize; // -2
     const h = cellSize; // -2
+
     const fillAlphaStart = options.sketch?.color?.fillAlphaStart ?? 240;
     const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
@@ -329,75 +388,26 @@ sketch.draw( () => {
         ( animation.progression * waveSpeed + waveOffset * waveSpread ) % 1;
     }
 
-    const rotationMax = TAU * ( options.sketch?.animation?.rotationCount ?? 2 );
-
-    // Calculate radial rotation for radial mode
-    let radialAngle = 0;
-
-    if ( waveConfig.mode === "radial" ) {
-      // Calculate angle from center to this position
-      const centerX = 0;
-      const centerY = 0;
-
-      radialAngle = atan2(
-        position.y - centerY,
-        position.x - centerX
-      );
-
-      // Reverse direction if radiating from center
-      const fromCenter = waveConfig.fromCenter ?? true;
-
-      if ( fromCenter ) {
-        radialAngle += PI; // Flip 180 degrees
-      }
-    }
-
-    const rotation = animation.ease( {
-      values: [
-        createVector(),
-        createVector(
-          0,
-          rotationMax,
-          rotationMax
-        ),
-        createVector(
-          0,
-          rotationMax,
-          0
-        ),
-        createVector(
-          rotationMax,
-          0,
-          rotationMax
-        ),
-      ],
-      currentTime: switchIndex,
-      lerpFn: p5.Vector.lerp,
-      easingFn:
-        easing?.[ options.sketch.animation.waveEasing ] ??
-        easing.easeInOutElastic,
-    } );
-    const {
-      x: rX, y: rY, z: rZ
-    } = rotation;
-
-    // Apply radial rotation first (around Z axis to point toward/away from center)
-    if ( waveConfig.mode === "radial" && ( waveConfig.radialRotation ?? true ) ) {
-      sketchState.shape.graphics.rotateZ( radialAngle );
-    }
-
-    sketchState.shape.graphics.rotateX( rX );
-    sketchState.shape.graphics.rotateY( rY );
-    // sketchState.shape.graphics.rotateZ( rZ );
-
-    sketchState.shape.graphics.translate( position );
-
     const fractionalPart = Math.abs( switchIndex - Math.round( switchIndex ) );
     const movementIndex = constrain(
       fractionalPart / 0.5,
       0,
       1
     );
+
+    const movingPosition = animation.ease( {
+      values: [
+        position,
+        randomPosition
+      ],
+      currentTime: movementIndex,
+      lerpFn: p5.Vector.lerp,
+      easingFn:
+        easing?.[ options.sketch.animation.waveEasing ] ??
+        easing.easeInOutElastic,
+    } );
+
+    sketchState.shape.graphics.translate( movingPosition );
 
     const depthMax = cellSize * ( options.sketch?.shape?.depth ?? 20 );
 
@@ -425,37 +435,6 @@ sketch.draw( () => {
         easing.easeInOutElastic,
     } );
 
-    // const d = cellSize * ( options.sketch?.shape?.depth ?? 20 );
-
-    const hue = sketchState.shape.graphics.noise(
-      position.x / columns,
-      position.y / rows,
-      animation.circularProgression
-    );
-    const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
-    const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
-
-    const tint = colors.rainbow( {
-      hueOffset: animation.circularProgression + hue,
-      hueIndex:
-        sketchState.shape.graphics.map(
-          hue,
-          0,
-          1,
-          -PI,
-          PI
-        ) * hueMultiplier,
-      opacityFactor,
-    } );
-
-    const {
-      levels: [
-        red,
-        green,
-        blue
-      ],
-    } = tint;
-
     sketchState.shape.graphics.fill(
       red,
       green,
@@ -468,6 +447,65 @@ sketch.draw( () => {
       blue,
       strokeAlpha
     );
+
+    if ( options.sketch?.animation?.rotate ?? true ) {
+      const rotationMax = PI * ( options.sketch?.animation?.rotationCount ?? 2 );
+
+      // Calculate radial rotation for radial mode
+      let radialAngle = 0;
+
+      if ( waveConfig.mode === "radial" ) {
+        // Calculate angle from center to this position
+        const centerX = 0;
+        const centerY = 0;
+
+        radialAngle = atan2(
+          position.y - centerY,
+          position.x - centerX
+        );
+
+        // Reverse direction if radiating from center
+        const fromCenter = waveConfig.fromCenter ?? true;
+
+        if ( fromCenter ) {
+          radialAngle += PI; // Flip 180 degrees
+        }
+      }
+
+      const {
+        x: rX,
+        y: rY,
+        // z: rZ
+      } = animation.ease( {
+        values: [
+          createVector(),
+          createVector(
+            0,
+            rotationMax
+          ),
+          createVector(
+            rotationMax,
+            rotationMax,
+            0
+          ),
+          createVector( rotationMax ),
+        ],
+        currentTime: switchIndex,
+        duration: 1,
+        lerpFn: p5.Vector.lerp,
+        easingFn: easing.easeInOutExpo,
+        // easingFn: easing.easeInOutElastic,
+        // easingFn: easing.easeInOutCirc,
+      } );
+
+      // Apply radial rotation first (around Z axis to point toward/away from center)
+      if ( waveConfig.mode === "radial" && ( waveConfig.radialRotation ?? true ) ) {
+        sketchState.shape.graphics.rotateZ( radialAngle );
+      }
+
+      sketchState.shape.graphics.rotateX( rX );
+      sketchState.shape.graphics.rotateY( rY );
+    }
 
     sketchState.shape.graphics.box(
       w,

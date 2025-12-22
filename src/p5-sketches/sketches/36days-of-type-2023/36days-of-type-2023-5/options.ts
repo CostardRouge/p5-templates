@@ -14,7 +14,7 @@ export const formValues = {
   },
   animation: {
     variableDepth: false,
-    rotate: false,
+    rotate: true,
     rotationCount: 1,
     waveSpeed: 1,
     waveSpread: 0.3,
