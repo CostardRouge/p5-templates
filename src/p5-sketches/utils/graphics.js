@@ -17,6 +17,11 @@ const graphics = {
       (
         nw, nh
       ) => {
+        _graphics.resizeCanvas(
+          nw,
+          nh
+        );
+
         _graphics.width = nw;
         _graphics.height = nh;
 
