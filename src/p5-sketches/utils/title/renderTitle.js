@@ -27,8 +27,7 @@ const parseFloatDefault = (
  * @param {string} fallbackName - Fallback name if no custom title provided
  */
 export default function renderTitle(
-  titleConfig = {
-  },
+  titleConfig = options?.sketch?.title,
   fallbackName = options.name
 ) {
   // Check if title should be shown
