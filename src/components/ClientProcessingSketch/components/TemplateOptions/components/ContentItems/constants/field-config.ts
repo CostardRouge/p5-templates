@@ -1,6 +1,7 @@
+import type { ZodDiscriminatedUnion, ZodObject } from "zod";
 import {
   Blend,
-  ContentItem,
+  type ContentItem,
   HorizontalAlign,
   ImageItemAnimations,
   ImagesStackAnimations,
@@ -8,8 +9,6 @@ import {
   VerticalAlign,
   VisualOptions,
 } from "@/types/sketch.types";
-
-import { ZodDiscriminatedUnion, ZodObject } from "zod";
 
 // Step 1: Define a common base for all config types
 interface BaseConfig {
@@ -100,6 +99,11 @@ interface HiddenConfig extends BaseConfig {
   component: "hidden";
 }
 
+interface JsonConfig extends BaseConfig {
+  component: "json";
+  rows?: number;
+}
+
 interface ImagesStackConfig extends BaseConfig {
   component: "images-stack";
   assetsName?: string;
@@ -125,6 +129,10 @@ interface ItemListConfig extends BaseConfig {
   locked?: boolean;
 }
 
+interface HiddenFieldConfig extends BaseConfig {
+  component: "hidden";
+}
+
 // Step 3: Create the master Discriminated Union
 // This tells TypeScript: "If component is 'select', then it MUST have an 'options' property."
 export type FieldConfig =
@@ -140,7 +148,9 @@ export type FieldConfig =
   | ImageConfig
   | SizePresetConfig
   | HiddenConfig
-  | ItemListConfig;
+  | JsonConfig
+  | ItemListConfig
+  | HiddenFieldConfig;
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema
@@ -424,7 +434,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       },
 
       // The schema is needed to create default objects when the type changes
-      // @ts-ignore
+      // @ts-expect-error
       schema: PatternSchema,
     },
   },
@@ -652,7 +662,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         {} as ConditionalGroupConfig["configs"]
       ),
 
-      // @ts-ignore
+      // @ts-expect-error
       schema: VisualOptions,
     },
   },

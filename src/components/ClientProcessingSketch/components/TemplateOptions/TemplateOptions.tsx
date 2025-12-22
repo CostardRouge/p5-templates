@@ -1,61 +1,48 @@
-import React, {
-  useEffect, useRef
-} from "react";
+import type React from "react";
+import { useEffect, useRef } from "react";
+import { FormProvider, useFieldArray, useWatch } from "react-hook-form";
 import UnsavedChangesModal from "@/components/UnsavedChangesModal";
-import {
-  JobModel
-} from "@/types/recording.types";
-import {
-  SketchOption, SlideOption
-} from "@/types/sketch.types";
-import CaptureActions, {
-  CaptureActionsRef
-} from "./components/CaptureActions";
-import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
-import {
-  FormProvider, useFieldArray, useWatch
-} from "react-hook-form";
-import SketchSettings from "./components/SketchSettings/SketchSettings";
-import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
-import useSketch from "../SketchProvider/hooks/useSketch";
 import initOptions from "@/components/utils/initOptions";
-import {
-  useThumbnails
-} from "./hooks/useThumbnails";
-import {
-  useSlideManagement
-} from "./hooks/useSlideManagement";
-import {
-  useFormState
-} from "./hooks/useFormState";
+import type { JobModel } from "@/types/recording.types";
+import type { SketchOption, SlideOption } from "@/types/sketch.types";
+import useSketch from "../SketchProvider/hooks/useSketch";
+import CaptureActions, {
+  type CaptureActionsRef,
+} from "./components/CaptureActions";
+import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import OptionsPanel from "./components/OptionsPanel";
+import SketchSettings from "./components/SketchSettings/SketchSettings";
+import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
+import { useFormState } from "./hooks/useFormState";
+import { useSlideManagement } from "./hooks/useSlideManagement";
+import { useThumbnails } from "./hooks/useThumbnails";
 
 type TemplateOptionsProps = {
   name: string;
   options: SketchOption;
   persistedJob?: JobModel;
   onOptionsChange: (
-    nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
+    nextOptions: SketchOption | ((existingOptions: SketchOption) => void)
   ) => void;
-  onActiveSlideChange?: ( index: number | undefined ) => void;
+  onActiveSlideChange?: (index: number | undefined) => void;
   enableThumbnails?: boolean;
 };
 
-export default function TemplateOptions( {
+export default function TemplateOptions({
   name,
   persistedJob,
   onOptionsChange,
   onActiveSlideChange,
   options: initialOptions,
   enableThumbnails = true, // Enable by default now
-}: TemplateOptionsProps ) {
+}: TemplateOptionsProps) {
   const browserRecordingSupported = useBrowserRecordingSupported();
-  const captureActionsRef = useRef<CaptureActionsRef>( null );
+  const captureActionsRef = useRef<CaptureActionsRef>(null);
   const pendingPeriodicThumbnailCaptureRef = useRef<{
     slideId: string;
     slideIndex: number;
-  } | null>( null );
-  const periodicCaptureInFlightRef = useRef( false );
+  } | null>(null);
+  const periodicCaptureInFlightRef = useRef(false);
 
   // Form state management
   const {
@@ -65,16 +52,14 @@ export default function TemplateOptions( {
     handleStay,
     handleSaveAsDraft,
     handleLeaveWithoutSaving,
-  } = useFormState( {
+  } = useFormState({
     initialOptions,
     persistedJob,
     onOptionsChange,
     captureActionsRef: captureActionsRef as React.RefObject<CaptureActionsRef>,
-  } );
+  });
 
-  const {
-    control, getValues, setValue, reset
-  } = methods;
+  const { control, getValues, setValue, reset } = methods;
 
   const {
     fields: slideFields,
@@ -82,36 +67,33 @@ export default function TemplateOptions( {
     insert: insertSlide,
     move: moveSlide,
     remove: removeSlide,
-  } = useFieldArray( {
+  } = useFieldArray({
     control,
     name: "slides",
-  } );
+  });
 
-  const slides = useWatch( {
+  const slides = useWatch({
     control,
     name: "slides",
-  } ) as SlideOption[] | undefined;
-  const jobId = useWatch( {
+  }) as SlideOption[] | undefined;
+  const jobId = useWatch({
     control,
     name: "id",
-  } ) as string | undefined;
+  }) as string | undefined;
 
-  const {
-    backendRecording, sketchFormValues
-  } = useSketch();
+  const { backendRecording, sketchFormValues } = useSketch();
 
   // Thumbnail management (only when enabled)
   const {
     thumbnails,
     captureThumbnail,
     captureCurrentSlide,
-    clearThumbnails,
     pendingThumbnailCaptureRef,
-  } = useThumbnails( {
+  } = useThumbnails({
     enabled: enableThumbnails,
     persistedJob,
     slideFields,
-  } );
+  });
 
   // Slide management
   const {
@@ -123,7 +105,7 @@ export default function TemplateOptions( {
     handleDeleteSlide,
     handleReorderSlides,
     handleRenameSlide,
-  } = useSlideManagement( {
+  } = useSlideManagement({
     slideFields,
     appendSlide,
     insertSlide,
@@ -136,160 +118,157 @@ export default function TemplateOptions( {
     captureThumbnail: enableThumbnails ? captureThumbnail : undefined,
     enableThumbnails,
     pendingThumbnailCaptureRef,
-  } );
+  });
 
-  const slideIds = slideFields.map( ( field ) => field.id );
+  // Sync external (p5) option updates into the form, so they
+  // get submitted/recorded. Keep this narrowly scoped to `point`.
+  useEffect(() => {
+    if (activeSlideIndex !== undefined) {
+      const slidePoint =
+        initialOptions?.slides?.[activeSlideIndex]?.sketch?.point;
+
+      if (slidePoint) {
+        const fieldPath = `slides.${activeSlideIndex}.sketch.point` as any;
+
+        if (
+          JSON.stringify(getValues(fieldPath)) !== JSON.stringify(slidePoint)
+        ) {
+          setValue(fieldPath, slidePoint, {
+            shouldDirty: true,
+            shouldValidate: false,
+          });
+        }
+      }
+    }
+
+    const globalPoint = initialOptions?.sketch?.point;
+
+    if (globalPoint) {
+      const fieldPath = "sketch.point" as any;
+
+      if (
+        JSON.stringify(getValues(fieldPath)) !== JSON.stringify(globalPoint)
+      ) {
+        setValue(fieldPath, globalPoint, {
+          shouldDirty: true,
+          shouldValidate: false,
+        });
+      }
+    }
+  }, [activeSlideIndex, getValues, initialOptions, setValue]);
 
   // Mark the active slide thumbnail as stale on any form change.
   // A periodic task below refreshes it at most every 5s.
-  useEffect(
-    () => {
-      if ( !enableThumbnails ) {
+  useEffect(() => {
+    if (!enableThumbnails) {
+      return;
+    }
+
+    const subscription = methods.watch(() => {
+      if (activeSlideIndex === undefined) {
         return;
       }
 
-      const subscription = methods.watch( () => {
-        if ( activeSlideIndex === undefined ) {
-          return;
-        }
+      const slideId = slideFields[activeSlideIndex]?.id;
 
-        const slideId = slideFields[ activeSlideIndex ]?.id;
+      if (!slideId) {
+        return;
+      }
 
-        if ( !slideId ) {
-          return;
-        }
+      pendingPeriodicThumbnailCaptureRef.current = {
+        slideId,
+        slideIndex: activeSlideIndex,
+      };
+    });
 
-        pendingPeriodicThumbnailCaptureRef.current = {
-          slideId,
-          slideIndex: activeSlideIndex,
-        };
-      } );
-
-      return () => subscription.unsubscribe();
-    },
-    [
-      enableThumbnails,
-      methods,
-      activeSlideIndex,
-      slideFields
-    ]
-  );
+    return () => subscription.unsubscribe();
+  }, [enableThumbnails, methods, activeSlideIndex, slideFields]);
 
   // Refresh thumbnails periodically (best-effort), so changes in sketch settings
   // are reflected even if the user doesn't switch slides.
-  useEffect(
-    () => {
-      if ( !enableThumbnails ) {
+  useEffect(() => {
+    if (!enableThumbnails) {
+      return;
+    }
+
+    const intervalId = window.setInterval(async () => {
+      const pending = pendingPeriodicThumbnailCaptureRef.current;
+
+      if (!pending || periodicCaptureInFlightRef.current) {
         return;
       }
 
-      const intervalId = window.setInterval(
-        async() => {
-          const pending = pendingPeriodicThumbnailCaptureRef.current;
+      periodicCaptureInFlightRef.current = true;
 
-          if ( !pending || periodicCaptureInFlightRef.current ) {
-            return;
-          }
+      try {
+        await captureCurrentSlide(pending.slideId, pending.slideIndex);
+      } finally {
+        pendingPeriodicThumbnailCaptureRef.current = null;
+        periodicCaptureInFlightRef.current = false;
+      }
+    }, 5000);
 
-          periodicCaptureInFlightRef.current = true;
-
-          try {
-            await captureCurrentSlide(
-              pending.slideId,
-              pending.slideIndex
-            );
-          } finally {
-            pendingPeriodicThumbnailCaptureRef.current = null;
-            periodicCaptureInFlightRef.current = false;
-          }
-        },
-        5000
-      );
-
-      return () => window.clearInterval( intervalId );
-    },
-    [
-      enableThumbnails,
-      captureCurrentSlide
-    ]
-  );
+    return () => window.clearInterval(intervalId);
+  }, [enableThumbnails, captureCurrentSlide]);
 
   // Lazy-capture a thumbnail when visiting a slide that lacks one
-  useEffect(
-    () => {
-      if ( !enableThumbnails || activeSlideIndex === undefined ) {
-        return;
-      }
+  useEffect(() => {
+    if (!enableThumbnails || activeSlideIndex === undefined) {
+      return;
+    }
 
-      const slideId = slideFields[ activeSlideIndex ]?.id;
+    const slideId = slideFields[activeSlideIndex]?.id;
 
-      if ( !slideId || thumbnails[ slideId ] ) {
-        return;
-      }
+    if (!slideId || thumbnails[slideId]) {
+      return;
+    }
 
-      const timeoutId = setTimeout(
-        () => {
-          captureCurrentSlide(
-            slideId,
-            activeSlideIndex
-          );
-        },
-        150
-      );
+    const timeoutId = setTimeout(() => {
+      captureCurrentSlide(slideId, activeSlideIndex);
+    }, 150);
 
-      return () => clearTimeout( timeoutId );
-    },
-    [
-      enableThumbnails,
-      activeSlideIndex,
-      slideFields,
-      thumbnails,
-      captureCurrentSlide,
-    ]
-  );
+    return () => clearTimeout(timeoutId);
+  }, [
+    enableThumbnails,
+    activeSlideIndex,
+    slideFields,
+    thumbnails,
+    captureCurrentSlide,
+  ]);
 
   // Capture thumbnail for newly added slides
-  useEffect(
-    () => {
-      if ( !enableThumbnails || pendingThumbnailCaptureRef.current === null ) {
-        return;
-      }
+  useEffect(() => {
+    if (!enableThumbnails || pendingThumbnailCaptureRef.current === null) {
+      return;
+    }
 
-      const slideIndex = pendingThumbnailCaptureRef.current;
-      const slideId = slideFields[ slideIndex ]?.id;
+    const slideIndex = pendingThumbnailCaptureRef.current;
+    const slideId = slideFields[slideIndex]?.id;
 
-      if ( !slideId ) {
-        pendingThumbnailCaptureRef.current = null;
-        return;
-      }
+    if (!slideId) {
+      pendingThumbnailCaptureRef.current = null;
+      return;
+    }
 
-      // Give the sketch time to render the newly selected slide
-      const timeoutId = setTimeout(
-        () => {
-          captureThumbnail(
-            slideId,
-            slideIndex
-          );
-          pendingThumbnailCaptureRef.current = null;
-        },
-        300
-      );
+    // Give the sketch time to render the newly selected slide
+    const timeoutId = setTimeout(() => {
+      captureThumbnail(slideId, slideIndex);
+      pendingThumbnailCaptureRef.current = null;
+    }, 300);
 
-      return () => clearTimeout( timeoutId );
-    },
-    [
-      slideFields,
-      captureThumbnail,
-      enableThumbnails,
-      pendingThumbnailCaptureRef,
-    ]
-  );
+    return () => clearTimeout(timeoutId);
+  }, [
+    slideFields,
+    captureThumbnail,
+    enableThumbnails,
+    pendingThumbnailCaptureRef,
+  ]);
 
-  const handleImportOptions = ( importedOptions: SketchOption ) => {
-    const processedOptions = initOptions( importedOptions );
+  const handleImportOptions = (importedOptions: SketchOption) => {
+    const processedOptions = initOptions(importedOptions);
 
-    reset( processedOptions );
-    setHasUnsavedChanges( true );
+    reset(processedOptions);
+    setHasUnsavedChanges(true);
   };
 
   return (
@@ -328,7 +307,7 @@ export default function TemplateOptions( {
           enableThumbnails={enableThumbnails}
         />
 
-        {( backendRecording || browserRecordingSupported ) && (
+        {(backendRecording || browserRecordingSupported) && (
           <CaptureActions
             ref={captureActionsRef}
             name={name}
@@ -337,8 +316,7 @@ export default function TemplateOptions( {
             activeSlideIndex={activeSlideIndex}
             backendRecording={backendRecording}
             browserRecordingSupported={browserRecordingSupported}
-            thumbnails={enableThumbnails ? thumbnails : {
-            }}
+            thumbnails={enableThumbnails ? thumbnails : {}}
           />
         )}
       </div>

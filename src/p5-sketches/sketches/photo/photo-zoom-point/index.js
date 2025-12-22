@@ -1,15 +1,15 @@
+import options from "@/p5/utils/options.js";
+
 import {
   setSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
-
-import options from "@/p5/utils/options.js";
 import animation from "@/p5/utils/animation.js";
 import * as common from "@/p5/utils/common.js";
-import mappers from "@/p5/utils/mappers.js";
 import easing from "@/p5/utils/easing.js";
 import events from "@/p5/utils/events.js";
 import graphics from "@/p5/utils/graphics.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import mappers from "@/p5/utils/mappers.js";
 import sketch from "@/p5/utils/sketch.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
@@ -129,16 +129,51 @@ function handlePointerSelect( canvasPoint ) {
 
   setZoomFocusFromCanvasPoint( canvasPoint );
 
-  setSketchOptions( {
-    ...options,
-    sketch: {
-      ...options.sketch,
-      point: {
-        x: canvasPoint.x,
-        y: canvasPoint.y,
+  const currentSlideIndex = window.getCurrentSlide?.().index;
+
+  if (
+    typeof currentSlideIndex === "number" &&
+    Array.isArray( options.slides ) &&
+    options.slides[ currentSlideIndex ]
+  ) {
+    const nextSlides = options.slides.map( (
+      slide, idx
+    ) =>
+      idx === currentSlideIndex
+        ? {
+          ...slide,
+          sketch: {
+            ...( slide?.sketch ?? {
+            } ),
+            point: {
+              x: canvasPoint.x,
+              y: canvasPoint.y,
+            },
+          },
+        }
+        : slide );
+
+    setSketchOptions(
+      {
+        slides: nextSlides,
+      },
+      "p5"
+    );
+
+    return;
+  }
+
+  setSketchOptions(
+    {
+      sketch: {
+        point: {
+          x: canvasPoint.x,
+          y: canvasPoint.y,
+        },
       },
     },
-  } );
+    "p5"
+  );
 }
 
 sketch.setup( () => {
@@ -160,17 +195,6 @@ sketch.setup( () => {
 
 events.register(
   "engine-canvas-mouse-clicked",
-  ( event ) => {
-    const canvasPoint = getCanvasPositionFromEvent( event );
-
-    handlePointerSelect( canvasPoint );
-  }
-);
-
-// Fallback for environments where canvas mouseClicked isn’t available
-// (this can fire too on some platforms, so handlePointerSelect dedupes)
-events.register(
-  "engine-mouse-clicked",
   ( event ) => {
     const canvasPoint = getCanvasPositionFromEvent( event );
 

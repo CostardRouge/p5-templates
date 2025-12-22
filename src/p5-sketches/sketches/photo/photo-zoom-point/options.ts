@@ -1,6 +1,6 @@
+import easing from "@/p5/utils/easing";
 import titleDefaultValues from "@/p5-sketches/utils/title/titleDefaultValues.js";
 import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfiguration.js";
-import easing from "@/p5/utils/easing";
 
 export const formValues = {
   photo: null,
@@ -23,7 +23,7 @@ export const formValues = {
       255
     ],
     strokeWeight: 3,
-    radius: 30
+    radius: 30,
   },
 
   imageSettings: {
@@ -81,11 +81,13 @@ export const formConfiguration: Record<string, any> = {
           value: easingFunctionName,
         } ) ),
       },
-    }
+    },
   },
 
   point: {
-    component: "hidden"
+    component: "json",
+    label: "Point",
+    rows: 2,
   },
 
   imageSettings: {
@@ -118,7 +120,7 @@ export const formConfiguration: Record<string, any> = {
         label: "Fill",
         component: "checkbox",
       },
-    }
+    },
   },
 
   circle: {
@@ -145,8 +147,8 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 100,
-      }
-    }
+      },
+    },
   },
 
   // Colors

@@ -1,15 +1,14 @@
-import React from "react";
-import { get, useFormContext, useWatch } from "react-hook-form";
-import { FieldConfig } from "./ContentItems/constants/field-config";
-
+import { ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Controller, get, useFormContext, useWatch } from "react-hook-form";
+import ConditionalGroup from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ConditionalGroup";
+import ControlledColorInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledColorInput/ControlledColorInput";
+import ControlledImageInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImageInput/ControlledImageInput";
 import ControlledImagesStackInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImagesStackInput/ControlledImagesStackInput";
 import ControlledSizePresetSelect from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSizePresetSelect/ControlledSizePresetSelect";
-import ControlledImageInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImageInput/ControlledImageInput";
-import ControlledColorInput from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledColorInput/ControlledColorInput";
-import ConditionalGroup from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ConditionalGroup";
-import ItemListRenderer from "./ItemListRenderer";
 import CollapsibleItem from "@/components/CollapsibleItem";
-import { ChevronDown } from "lucide-react";
+import type { FieldConfig } from "./ContentItems/constants/field-config";
+import ItemListRenderer from "./ItemListRenderer";
 
 type FieldRendererProps = {
   fieldBasePath: string;
@@ -28,6 +27,8 @@ export default function FieldRenderer({
     register,
     formState: { errors },
     control,
+    clearErrors,
+    setError,
   } = useFormContext();
 
   const registeredName = fieldName
@@ -42,6 +43,24 @@ export default function FieldRenderer({
     name: registeredName,
     defaultValue: config.component === "slider" ? (config.min ?? 0) : undefined,
   });
+
+  const watchedJsonValue = useWatch({
+    control,
+    name: registeredName,
+  });
+
+  const jsonDirtyRef = useRef(false);
+  const [jsonDraft, setJsonDraft] = useState<string>("");
+
+  useEffect(() => {
+    if (config.component !== "json") return;
+
+    const pretty = JSON.stringify(watchedJsonValue ?? {}, null, 2);
+
+    if (!jsonDirtyRef.current) {
+      setJsonDraft(pretty);
+    }
+  }, [config.component, watchedJsonValue]);
 
   const renderInput = () => {
     // A helper for common props to keep the JSX clean
@@ -204,12 +223,49 @@ export default function FieldRenderer({
         return <ControlledImagesStackInput name={registeredName} />;
 
       case "hidden":
-        return null;
+        return <input type="hidden" {...register(registeredName)} />;
+
+      case "json":
+        return (
+          <Controller
+            name={registeredName}
+            control={control}
+            render={({ field }) => (
+              <textarea
+                {...commonInputProps}
+                rows={config.rows ?? 6}
+                value={jsonDraft}
+                onChange={(e) => {
+                  jsonDirtyRef.current = true;
+                  setJsonDraft(e.target.value);
+                }}
+                onBlur={() => {
+                  field.onBlur();
+
+                  const trimmed = jsonDraft.trim();
+
+                  try {
+                    const parsed = trimmed ? JSON.parse(trimmed) : {};
+
+                    jsonDirtyRef.current = false;
+                    field.onChange(parsed);
+                    clearErrors(registeredName);
+                    setJsonDraft(JSON.stringify(parsed ?? {}, null, 2));
+                  } catch {
+                    setError(registeredName, {
+                      type: "validate",
+                      message: "Invalid JSON",
+                    });
+                  }
+                }}
+              />
+            )}
+          />
+        );
 
       case "item-list":
         return <ItemListRenderer name={registeredName} config={config} />;
 
-      case "text":
       default:
         return (
           <input
