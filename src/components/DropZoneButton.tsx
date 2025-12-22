@@ -39,7 +39,7 @@ export default forwardRef( function DropZoneButton(
 
   return (
     <div
-      className={`border border-dashed border-theme rounded-lg w-full h-full p-3 flex flex-col items-center justify-center gap-2 text-foreground bg-background ${ className }`}
+      className={`border border-dashed border-theme rounded-lg w-full p-3 flex flex-col items-center justify-center gap-2 text-foreground bg-background ${ className }`}
       onClick={( e ) => {
         e.stopPropagation();
         internalRef.current?.click();
