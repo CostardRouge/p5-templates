@@ -1,45 +1,11 @@
 import options from "@/p5/utils/options.js";
-
-import cache from "@/p5/utils/cache.js";
-import string from "@/p5/utils/string.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-
-import * as common from "@/p5/utils/common.js";
+import renderTitle from "../../../utils/title/renderTitle";
 
 const canvases = {
-};
-
-const getBg = () => options.sketch?.backgroundColor ?? [
-  0
-];
-
-const getTextColor = () => options.sketch?.textColor ?? [
-  255,
-  255,
-  255
-];
-
-const getFont = () => {
-  const key = options.sketch?.font ?? "martian";
-
-  return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
-};
-
-const getImages = () => {
-  const imagesFromOptions =
-    options.sketch?.images && options.sketch.images.length
-      ? options.sketch.images
-      : null;
-
-  const fromCache = cache.get( "images" );
-
-  return imagesFromOptions
-    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : fromCache || [
-    ];
 };
 
 sketch.setup( () => {
@@ -49,7 +15,7 @@ sketch.setup( () => {
     WEBGL
   );
 
-  background( ...getBg() );
+  background( ...options.sketch.backgroundColor );
 } );
 
 function dice(
@@ -99,10 +65,11 @@ function dice(
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...getBg() );
+  clear();
+  background( ...options.sketch.backgroundColor );
 
   // Images from UI or cache
-  const images = getImages();
+  const images = imageUtils.getImages();
 
   const repeatImages = options.sketch?.repeatImages ?? true;
 
@@ -137,11 +104,7 @@ sketch.draw( (
 
   // Prepare WEBGL canvas
   canvases.dice.push();
-  canvases.dice.background( ...getBg() );
-
-  if ( options.sketch?.useOrbitControl ?? true ) {
-    canvases.dice.orbitControl();
-  }
+  canvases.dice.background( ...options.sketch.backgroundColor );
 
   canvases.dice.rotateX( rX );
   canvases.dice.rotateY( rY );
@@ -203,38 +166,5 @@ sketch.draw( (
     0
   );
 
-  // Title overlay (optional)
-  const titleVisibleFrom = options.sketch?.titleProgressStart ?? 0.0;
-  const titleVisibleTo = options.sketch?.titleProgressEnd ?? 0.2;
-  const withinWindow =
-    animation.progression >= titleVisibleFrom &&
-    animation.progression <= titleVisibleTo;
-
-  if ( ( options.sketch?.showTitle ?? true ) && withinWindow ) {
-    const customTitle = options.sketch?.title?.trim?.() || "";
-    const defaultTitle = "photo-dice".toUpperCase().replaceAll(
-      "-",
-      "\n"
-    );
-    const title = customTitle !== "" ? customTitle : defaultTitle;
-
-    const blendModeValue = options.sketch?.titleBlendMode ?? "exclusion";
-
-    string.write(
-      title,
-      0,
-      height / 2,
-      {
-        size: options.sketch?.titleSize ?? 128,
-        stroke: color( ...getTextColor() ),
-        fill: color( ...getBg() ),
-        font: getFont(),
-        textAlign: [
-          CENTER,
-          CENTER
-        ],
-        blendMode: blendModeValue,
-      }
-    );
-  }
+  renderTitle();
 } );

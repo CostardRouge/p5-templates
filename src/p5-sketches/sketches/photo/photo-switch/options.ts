@@ -11,14 +11,12 @@ export const formValues = {
   clip: false,
   fill: false,
 
-  // Colors (sketch-level overrides; falls back to global options.colors if unset)
   backgroundColor: [
     246,
     235,
     225
   ],
 
-  // Sketch titles
   title: {
     ...titleDefaultValues,
   },
