@@ -37,14 +37,7 @@ export default function RecordingActions( {
 }: RecordingActionsProps ) {
   return (
     <>
-      <div className="relative my-2">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border"></div>
-        </div>
-      </div>
-
-      {/* Compact Progress Bar with Steps */}
-      <div className="px-1">
+      <div className="p-1">
         <CompactProgressBar
           job={
             {
