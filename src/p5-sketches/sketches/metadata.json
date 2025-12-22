@@ -63,13 +63,6 @@
     "ctime": "2025-04-21T11:29:50.498Z"
   },
   {
-    "name": "photo-dice",
-    "category": "photo",
-    "hasSketchForm": true,
-    "mtime": "2025-11-30T12:49:18.952Z",
-    "ctime": "2025-04-21T11:29:50.515Z"
-  },
-  {
     "name": "photo-exif",
     "category": "photo",
     "hasSketchForm": true,
@@ -89,13 +82,6 @@
     "hasSketchForm": true,
     "mtime": "2025-11-30T12:49:18.975Z",
     "ctime": "2025-04-21T11:29:50.526Z"
-  },
-  {
-    "name": "photo-in-arc",
-    "category": "photo",
-    "hasSketchForm": true,
-    "mtime": "2025-11-30T12:49:18.984Z",
-    "ctime": "2025-04-21T11:29:50.531Z"
   },
   {
     "name": "photo-segmentation",
@@ -259,13 +245,6 @@
     "ctime": "2025-04-21T11:29:50.509Z"
   },
   {
-    "name": "photo-switch",
-    "category": "photo",
-    "hasSketchForm": true,
-    "mtime": "2025-12-22T08:02:14.162Z",
-    "ctime": "2025-04-21T11:29:50.566Z"
-  },
-  {
     "name": "photo-in-circle",
     "category": "photo",
     "hasSketchForm": true,
@@ -299,5 +278,33 @@
     "hasSketchForm": true,
     "mtime": "2025-12-22T08:08:31.357Z",
     "ctime": "2025-04-21T11:29:50.549Z"
+  },
+  {
+    "name": "photo-switch",
+    "category": "photo",
+    "hasSketchForm": true,
+    "mtime": "2025-12-22T08:51:54.588Z",
+    "ctime": "2025-04-21T11:29:50.566Z"
+  },
+  {
+    "name": "photo-dice",
+    "category": "photo",
+    "hasSketchForm": true,
+    "mtime": "2025-12-22T08:54:48.877Z",
+    "ctime": "2025-04-21T11:29:50.515Z"
+  },
+  {
+    "name": "photo-in-arc",
+    "category": "photo",
+    "hasSketchForm": true,
+    "mtime": "2025-12-22T09:08:09.324Z",
+    "ctime": "2025-04-21T11:29:50.531Z"
+  },
+  {
+    "name": "photo-zoom-point",
+    "category": "photo",
+    "hasSketchForm": true,
+    "mtime": "2025-12-22T09:16:09.053Z",
+    "ctime": "2025-12-22T09:16:09.027Z"
   }
 ]
