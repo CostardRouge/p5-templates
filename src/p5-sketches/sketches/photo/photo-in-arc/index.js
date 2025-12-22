@@ -1,50 +1,18 @@
 import options from "@/p5/utils/options.js";
-import cache from "@/p5/utils/cache.js";
 import sketch from "@/p5/utils/sketch.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import * as common from "@/p5/utils/common.js";
 
-const getImages = () => {
-  const imagesFromOptions =
-    options.sketch?.images && options.sketch.images.length
-      ? options.sketch.images
-      : null;
+import renderTitle from "../../../utils/title/renderTitle";
 
-  const fromCache = cache.get( "images" );
-
-  return imagesFromOptions
-    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : fromCache || [
-    ];
-};
-
-const getBg = () => options.sketch?.colors?.background ?? [
-  246,
-  235,
-  225
-];
-const degToRad = ( d ) => ( d * Math.PI ) / 180;
-
-sketch.setup(
-  () => {
-    background( ...getBg() );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
-  }
-);
+sketch.setup( () => {
+  background( ...options.sketch.backgroundColor );
+} );
 
 sketch.draw( () => {
-  background( ...getBg() );
+  clear();
+  background( ...options.sketch.backgroundColor );
 
-  const imgs = getImages();
+  const images = imageUtils.getImages();
   const arcConfig = options.sketch?.arc ?? {
   };
   const imageConfig = options.sketch?.image ?? {
@@ -60,12 +28,12 @@ sketch.draw( () => {
   const radiusX = ( arcConfig.radiusX ?? 0.5 ) * height;
   const radiusY = ( arcConfig.radiusY ?? 0.5 ) * width;
 
-  const startAngle = degToRad( arcConfig.startAngle ?? 270 );
-  const endAngle = degToRad( arcConfig.endAngle ?? 90 );
+  const startAngle = radians( arcConfig.startAngle ?? 270 );
+  const endAngle = radians( arcConfig.endAngle ?? 90 );
 
-  if ( imgs?.length ) {
-    for ( let i = 0; i < imgs.length; i++ ) {
-      const t = imgs.length > 1 ? i / ( imgs.length - 1 ) : 0;
+  if ( images?.length ) {
+    for ( let i = 0; i < images.length; i++ ) {
+      const t = images.length > 1 ? i / ( images.length - 1 ) : 0;
       const angle = map(
         t,
         0,
@@ -74,7 +42,7 @@ sketch.draw( () => {
         endAngle
       );
 
-      const imageObjectAtIndex = imgs[ i ];
+      const imageObjectAtIndex = images[ i ];
       const imageAtIndex = imageObjectAtIndex.img ?? imageObjectAtIndex;
 
       const imagePosition = circlePosition.copy();
@@ -106,8 +74,5 @@ sketch.draw( () => {
     }
   }
 
-  title.renderTitle(
-    options,
-    options.name
-  );
+  renderTitle();
 } );

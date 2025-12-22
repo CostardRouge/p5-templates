@@ -1,43 +1,18 @@
-import {
-  fontNames
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   images: [
   ],
 
-  colors: {
-    background: [
-      246,
-      235,
-      225
-    ] as [number, number, number],
-    text: [
-      0
-    ] as [number],
-  },
+  backgroundColor: [
+    246,
+    235,
+    225
+  ],
 
   title: {
-    show: true,
-    content: "",
-    font: "martian",
-    size: 128,
-    color: [
-      0
-    ] as [number],
-    stroke: [
-      246,
-      235,
-      225
-    ] as [number, number, number],
-    strokeWeight: 2,
-    blend: "exclusion",
-    align: {
-      horizontal: "center",
-      vertical: "center",
-    },
-    displayFrom: 0.0,
-    displayTo: 0.2,
+    ...titleDefaultValues,
   },
 
   arc: {
@@ -71,187 +46,9 @@ export const formConfiguration: Record<string, any> = {
     label: "Images",
   },
 
-  colors: {
-    label: "Colors",
-    component: "nested-object",
-    fields: {
-      background: {
-        component: "color",
-        label: "Background color",
-      },
-      text: {
-        component: "color",
-        label: "Text color",
-      },
-    },
-  },
-
-  title: {
-    label: "Title",
-    component: "nested-object",
-    fields: {
-      show: {
-        label: "Show title",
-        component: "checkbox",
-      },
-      content: {
-        label: "Custom title",
-        component: "text",
-        placeholder: "Leave empty to use sketch name",
-      },
-      font: {
-        label: "Font",
-        component: "select",
-        options: fontNames.map( ( fontName ) => ( {
-          value: fontName,
-          label: fontName,
-        } ) ),
-      },
-      size: {
-        label: "Size",
-        component: "slider",
-        min: 12,
-        max: 300,
-        step: 1,
-      },
-      color: {
-        label: "Color",
-        component: "color",
-      },
-      stroke: {
-        label: "Stroke",
-        component: "color",
-      },
-      strokeWeight: {
-        label: "Stroke weight",
-        component: "slider",
-        min: 0,
-        max: 20,
-        step: 0.5,
-      },
-      blend: {
-        label: "Blend mode",
-        component: "select",
-        options: [
-          {
-            value: "blend",
-            label: "Blend",
-          },
-          {
-            value: "darkest",
-            label: "Darkest",
-          },
-          {
-            value: "lightest",
-            label: "Lightest",
-          },
-          {
-            value: "difference",
-            label: "Difference",
-          },
-          {
-            value: "multiply",
-            label: "Multiply",
-          },
-          {
-            value: "exclusion",
-            label: "Exclusion",
-          },
-          {
-            value: "screen",
-            label: "Screen",
-          },
-          {
-            value: "overlay",
-            label: "Overlay",
-          },
-          {
-            value: "hard-light",
-            label: "Hard Light",
-          },
-          {
-            value: "soft-light",
-            label: "Soft Light",
-          },
-          {
-            value: "dodge",
-            label: "Dodge",
-          },
-          {
-            value: "burn",
-            label: "Burn",
-          },
-          {
-            value: "add",
-            label: "Add",
-          },
-          {
-            value: "subtract",
-            label: "Subtract",
-          },
-        ],
-      },
-      align: {
-        label: "Alignment",
-        component: "nested-object",
-        fields: {
-          horizontal: {
-            label: "Horizontal",
-            component: "select",
-            options: [
-              {
-                value: "left",
-                label: "Left",
-              },
-              {
-                value: "center",
-                label: "Center",
-              },
-              {
-                value: "right",
-                label: "Right",
-              },
-            ],
-          },
-          vertical: {
-            label: "Vertical",
-            component: "select",
-            options: [
-              {
-                value: "top",
-                label: "Top",
-              },
-              {
-                value: "center",
-                label: "Center",
-              },
-              {
-                value: "bottom",
-                label: "Bottom",
-              },
-              {
-                value: "baseline",
-                label: "Baseline",
-              },
-            ],
-          },
-        },
-      },
-      displayFrom: {
-        label: "Display from (0-1)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01,
-      },
-      displayTo: {
-        label: "Display to (0-1)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01,
-      },
-    },
+  backgroundColor: {
+    component: "color",
+    label: "Background color",
   },
 
   arc: {
@@ -341,5 +138,9 @@ export const formConfiguration: Record<string, any> = {
         label: "Point color",
       },
     },
+  },
+
+  title: {
+    ...titleFormConfiguration,
   },
 };
