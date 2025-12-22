@@ -1,13 +1,35 @@
-import React, {
-  Fragment
-} from "react";
-import {
-  useFormContext, useWatch
-} from "react-hook-form";
-import {
-  ConditionalGroupConfig
-} from "../constants/field-config";
+import React, { Fragment } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
+import { ConditionalGroupConfig } from "../constants/field-config";
 import FieldRenderer from "../../FieldRenderer";
+
+function getDefaultValueForFieldConfig(config: any): any {
+  switch (config?.component) {
+    case "text":
+    case "textarea":
+      return "";
+    case "number":
+    case "slider":
+      return config.min ?? 0;
+    case "checkbox":
+      return false;
+    case "color":
+      return [255, 255, 255];
+    case "select":
+      return config.options?.[0]?.value ?? "";
+    case "nested-object": {
+      const result: Record<string, any> = {};
+      for (const [key, subConfig] of Object.entries(config.fields ?? {})) {
+        result[key] = getDefaultValueForFieldConfig(subConfig);
+      }
+      return result;
+    }
+    case "item-list":
+      return config.defaultItems ?? [];
+    default:
+      return "";
+  }
+}
 
 type ConditionalGroupProps = {
   basePath: string;
@@ -15,56 +37,59 @@ type ConditionalGroupProps = {
   config: ConditionalGroupConfig;
 };
 
-export default function ConditionalGroup( {
+export default function ConditionalGroup({
   basePath,
   config,
   selectClassName,
-}: ConditionalGroupProps ) {
-  const {
-    control, setValue, unregister, clearErrors
-  } = useFormContext();
-  const {
-    conditionalOn, typeSelector, configs, schema
-  } = config;
+}: ConditionalGroupProps) {
+  const { control, setValue, unregister, clearErrors } = useFormContext();
+  const { conditionalOn, typeSelector, configs, schema } = config;
 
-  const watchedValue = useWatch( {
+  const watchedValue = useWatch({
     control,
-    name: `${ basePath }.${ conditionalOn }`,
-  } );
+    name: `${basePath}.${conditionalOn}`,
+  });
 
-  const handleTypeChange = ( e: React.ChangeEvent<HTMLSelectElement> ) => {
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = e.target.value;
 
-    if ( newType === "" ) {
-      setValue(
-        basePath,
-        undefined,
-        {
-          shouldValidate: true,
-          shouldDirty: true,
-        }
-      );
-      unregister( basePath );
-      clearErrors( basePath );
+    if (newType === "") {
+      setValue(basePath, undefined, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      unregister(basePath);
+      clearErrors(basePath);
       return;
     }
 
-    // Build a fresh default object for the selected variant
-    const defaultObject = schema.parse( {
-      [ conditionalOn ]: newType,
-    } );
+    const nextConfig = configs[newType as keyof typeof configs];
 
-    setValue(
-      basePath,
-      defaultObject,
-      {
-        shouldValidate: true,
-      }
-    );
+    // Build a fresh default object for the selected variant
+    const defaultObject =
+      schema && typeof (schema as any).parse === "function"
+        ? schema.parse({
+            [conditionalOn]: newType,
+          })
+        : {
+            [conditionalOn]: newType,
+            ...(nextConfig
+              ? Object.fromEntries(
+                  Object.entries(nextConfig).map(([key, fieldConfig]) => [
+                    key,
+                    getDefaultValueForFieldConfig(fieldConfig),
+                  ])
+                )
+              : {}),
+          };
+
+    setValue(basePath, defaultObject, {
+      shouldValidate: true,
+    });
   };
 
-  const conditionalFieldName = `${ basePath }.${ conditionalOn }`;
-  const activeConfig = configs[ watchedValue as keyof typeof configs ];
+  const conditionalFieldName = `${basePath}.${conditionalOn}`;
+  const activeConfig = configs[watchedValue as keyof typeof configs];
 
   return (
     <Fragment>
@@ -85,26 +110,23 @@ export default function ConditionalGroup( {
           >
             <option value="">{config.typeSelector.noneLabel || "--"}</option>
 
-            {config.typeSelector.options.map( ( option ) => (
+            {config.typeSelector.options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
-            ) )}
+            ))}
           </select>
         </div>
 
         {activeConfig &&
-          Object.entries( activeConfig ).map( ( [
-            subFieldName,
-            subConfig
-          ] ) => (
+          Object.entries(activeConfig).map(([subFieldName, subConfig]) => (
             <FieldRenderer
               key={subFieldName}
               fieldBasePath={basePath}
               fieldName={subFieldName}
               config={subConfig}
             />
-          ) )}
+          ))}
       </div>
     </Fragment>
   );
