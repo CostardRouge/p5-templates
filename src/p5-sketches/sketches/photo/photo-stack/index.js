@@ -1,33 +1,21 @@
 import options from "@/p5/utils/options.js";
 
-import cache from "@/p5/utils/cache.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
-sketch.setup(
-  () => {
-    background( ...options.colors.background );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
-  }
-);
+sketch.setup( () => {
+  background( ...options.sketch.backgroundColor );
+} );
 
 sketch.draw( (
   _time, center, favoriteColor
 ) => {
-  const images = cache.get( "images" );
+  clear();
+  background( ...options.sketch.backgroundColor );
 
-  background( ...options.sketch.colors.background );
+  const images = imageUtils.getImages();
 
   const imageIndexDisplay = map(
     animation.triangleProgression( 2 ),
@@ -38,7 +26,7 @@ sketch.draw( (
     easing.easeInOutBack
   );
 
-  const shiftMargin = options.sketch.shiftMargin;
+  const randomMargin = options.sketch.randomMargin;
 
   for ( let i = 0; i < images.length; i++ ) {
     if ( imageIndexDisplay < i ) {
@@ -50,30 +38,33 @@ sketch.draw( (
       height / 2
     );
 
-    if ( options.sketch.randomPosition ) {
+    if ( options.sketch.randomMargin > 0 ) {
       imagePosition.add(
         map(
           noise( i ),
           0,
           1,
-          -shiftMargin,
-          shiftMargin
+          -randomMargin,
+          randomMargin
         ),
         map(
           noise( i ),
           0,
           1,
-          -shiftMargin,
-          shiftMargin
+          -randomMargin,
+          randomMargin
         )
       );
     }
 
     imageUtils.marginImage( {
-      position: imagePosition,
       img: images[ i ].img,
-      center: true,
-      margin: options.sketch.imageMargin,
+      position: imagePosition,
+      margin: width * options.sketch?.margin,
+      scale: options.sketch?.scale ?? 1,
+      center: options.sketch?.center ?? true,
+      clip: options.sketch?.clip ?? false,
+      fill: options.sketch?.fill ?? true,
     } );
   }
 } );

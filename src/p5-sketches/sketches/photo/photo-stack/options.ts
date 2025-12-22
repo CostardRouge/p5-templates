@@ -1,43 +1,62 @@
 export const formValues = {
-  shiftMargin: 80,
-  randomPosition: true,
-  imageMargin: 80,
-  colors: {
-    background: [
-      246,
-      235,
-      225
-    ],
-  },
+  images: [
+  ],
+
+  margin: 0.1,
+  scale: 1,
+  center: true,
+  clip: false,
+  fill: false,
+
+  randomMargin: 80,
+
+  backgroundColor: [
+    246,
+    235,
+    225
+  ],
 };
 
 export const formConfiguration: Record<string, any> = {
-  shiftMargin: {
-    label: "Shift margin",
+  images: {
+    component: "images-stack",
+    label: "Images",
+  },
+  randomMargin: {
+    label: "Random margin",
     component: "slider",
     min: 0,
-    max: 200,
-    step: 5,
+    max: 1500,
+    step: 1,
   },
-  randomPosition: {
-    label: "Random position",
-    component: "checkbox",
-  },
-  imageMargin: {
+  margin: {
     label: "Image margin",
     component: "slider",
     min: 0,
-    max: 200,
-    step: 5,
+    max: 0.45,
+    step: 0.005,
   },
-  colors: {
-    label: "Colors",
-    component: "nested-object",
-    fields: {
-      background: {
-        component: "color",
-        label: "Background color",
-      },
-    },
+  scale: {
+    label: "Scale",
+    component: "slider",
+    min: 0.1,
+    max: 4,
+    step: 0.1,
+  },
+  center: {
+    label: "Center image",
+    component: "checkbox",
+  },
+  clip: {
+    label: "Clip",
+    component: "checkbox",
+  },
+  fill: {
+    label: "Fill",
+    component: "checkbox",
+  },
+  backgroundColor: {
+    component: "color",
+    label: "Background color",
   },
 };
