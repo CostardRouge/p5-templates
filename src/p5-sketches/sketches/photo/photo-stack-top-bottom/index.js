@@ -1,26 +1,12 @@
 import options from "@/p5/utils/options.js";
-
-import cache from "@/p5/utils/cache.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
-sketch.setup(
-  () => {
-    background( ...options.colors.background );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
-  }
-);
+sketch.setup( () => {
+  background( ...options.sketch.backgroundColor );
+} );
 
 sketch.draw( (
   _time, center, favoriteColor
@@ -28,11 +14,11 @@ sketch.draw( (
   // options.colors.text = [252, 209, 83]
   // blendMode(HARD_LIGHT);
 
-  const images = cache.get( "images" );
+  clear();
+  background( ...options.sketch.backgroundColor );
 
-  background( ...options.colors.background );
+  const images = imageUtils.getImages();
 
-  const margin = 80;
   const imageIndexDisplay = map(
     animation.triangleProgression( 2 ),
     0,
@@ -43,6 +29,7 @@ sketch.draw( (
   );
 
   // Calculate step size for vertical positioning
+  const margin = width * options.sketch?.margin;
   const availableVerticalSpace = height - 2 * margin;
   const step = availableVerticalSpace / ( images.length - 1 || 1 );
 
@@ -61,9 +48,11 @@ sketch.draw( (
         width / 2,
         y
       ),
-      center: true,
-      scale: 0.8,
       margin,
+      scale: options.sketch?.scale ?? 0.8,
+      center: options.sketch?.center ?? true,
+      clip: options.sketch?.clip ?? false,
+      fill: options.sketch?.fill ?? true,
       img,
     } );
   }
