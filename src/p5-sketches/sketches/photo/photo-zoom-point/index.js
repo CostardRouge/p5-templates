@@ -22,9 +22,6 @@ const sketchState = {
     tx: 0,
     ty: 0,
   },
-  lastPointer: {
-    at: 0,
-  },
   lastSelectedCanvasPoint: null,
 };
 
@@ -117,14 +114,6 @@ function setZoomFocusFromCanvasPoint( canvasPoint ) {
 }
 
 function handlePointerSelect( canvasPoint ) {
-  const now = performance.now();
-
-  // Avoid double-firing (canvas + window handlers)
-  if ( now - sketchState.lastPointer.at < 50 ) {
-    return;
-  }
-
-  sketchState.lastPointer.at = now;
   sketchState.lastSelectedCanvasPoint = canvasPoint;
 
   setZoomFocusFromCanvasPoint( canvasPoint );
@@ -184,18 +173,31 @@ sketch.setup( () => {
     height
   );
 
-  // Restore persisted point (if any)
+  // 1. Restore persisted point (if any) from options
   if ( options.sketch?.point ) {
     sketchState.lastSelectedCanvasPoint = {
       x: options.sketch.point.x,
       y: options.sketch.point.y,
     };
+  }
 
-    console.log(
-      "point",
-      sketchState.lastSelectedCanvasPoint,
-      options.sketch?.point
-    );
+  // 2. [NEW] Force Layout Calculation
+  // We fetch the asset and run displayPhoto immediately.
+  // This ensures photoRect is calculated before the first draw loop.
+  const photo = common.getAsset( options.sketch.photo );
+
+  if ( photo?.img ) {
+    // This call triggers the callback inside displayPhoto,
+    // which populates sketchState.photoRect
+    displayPhoto( photo.img );
+
+    // Now that we have the rect, validuate and calculate the UV focus point
+    if ( sketchState.lastSelectedCanvasPoint ) {
+      setZoomFocusFromCanvasPoint( sketchState.lastSelectedCanvasPoint );
+    }
+
+    // Clear the buffer so the canvas is clean for the first draw() frame
+    sketchState.photoGraphics.clear();
   }
 } );
 
@@ -274,15 +276,12 @@ sketch.draw( () => {
     zoomProgress
   );
 
-  // First, render photo without transform to get photoRect
-  displayPhoto( photo.img );
+  const previousRect = sketchState.photoRect;
 
-  // If a point was persisted, convert it to UV once (after photoRect is set)
-  if ( !sketchState.focusUV && options.sketch?.point ) {
-    setZoomFocusFromCanvasPoint( options.sketch.point );
+  if ( !sketchState.focusUV && sketchState.lastSelectedCanvasPoint && previousRect ) {
+    // setZoomFocusFromCanvasPoint( sketchState.lastSelectedCanvasPoint );
   }
 
-  const previousRect = sketchState.photoRect;
   const focusPoint = previousRect
     ? sketchState.focusUV
       ? {
@@ -300,7 +299,7 @@ sketch.draw( () => {
 
   console.log( {
     focusPoint,
-    focusUV: sketchState.focusUV,
+    focusUV: sketchState.focusUV
   } );
 
   // Translation to keep focusPoint centered during zoom
@@ -313,9 +312,7 @@ sketch.draw( () => {
     ty,
   };
 
-  // Now clear and re-render with correct transform
   sketchState.photoGraphics.clear();
-
   sketchState.photoGraphics.push();
   sketchState.photoGraphics.translate(
     tx,
@@ -334,15 +331,11 @@ sketch.draw( () => {
   );
 
   if ( sketchState.photoRect && sketchState.focusUV ) {
-    const focusX =
-      sketchState.photoRect.x + sketchState.focusUV.u * sketchState.photoRect.w;
-    const focusY =
-      sketchState.photoRect.y + sketchState.focusUV.v * sketchState.photoRect.h;
+    const focusX = sketchState.photoRect.x + sketchState.focusUV.u * sketchState.photoRect.w;
+    const focusY = sketchState.photoRect.y + sketchState.focusUV.v * sketchState.photoRect.h;
 
-    const focusScreenX =
-      focusX * sketchState.viewTransform.scale + sketchState.viewTransform.tx;
-    const focusScreenY =
-      focusY * sketchState.viewTransform.scale + sketchState.viewTransform.ty;
+    const focusScreenX = focusX * sketchState.viewTransform.scale + sketchState.viewTransform.tx;
+    const focusScreenY = focusY * sketchState.viewTransform.scale + sketchState.viewTransform.ty;
 
     if ( options.sketch.circle.draw ?? true ) {
       push();

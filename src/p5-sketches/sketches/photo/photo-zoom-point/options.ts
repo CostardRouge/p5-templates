@@ -4,8 +4,7 @@ import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfigura
 
 export const formValues = {
   photo: null,
-
-  focusPoint: null,
+  point: null,
 
   zoom: {
     count: 1,
@@ -16,7 +15,11 @@ export const formValues = {
 
   circle: {
     draw: true,
-    stroke: [255, 255, 255],
+    stroke: [
+      255,
+      255,
+      255
+    ],
     strokeWeight: 3,
     radius: 30,
   },
@@ -29,7 +32,11 @@ export const formValues = {
     fill: false,
   },
 
-  backgroundColor: [246, 235, 225],
+  backgroundColor: [
+    246,
+    235,
+    225
+  ],
 
   title: {
     ...titleDefaultValues,
@@ -67,17 +74,17 @@ export const formConfiguration: Record<string, any> = {
       easing: {
         component: "select",
         label: "Easing",
-        options: Object.keys(easing).map((easingFunctionName) => ({
+        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
           label: easingFunctionName,
           value: easingFunctionName,
-        })),
+        } ) ),
       },
     },
   },
 
-  focusPoint: {
+  point: {
     component: "json",
-    label: "Focus Point",
+    label: "Point",
     rows: 2,
   },
 
