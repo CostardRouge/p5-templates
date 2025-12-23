@@ -120,43 +120,6 @@ export default function TemplateOptions({
     pendingThumbnailCaptureRef,
   });
 
-  // Sync external (p5) option updates into the form, so they
-  // get submitted/recorded. Keep this narrowly scoped to `point`.
-  useEffect(() => {
-    if (activeSlideIndex !== undefined) {
-      const slidePoint =
-        initialOptions?.slides?.[activeSlideIndex]?.sketch?.point;
-
-      if (slidePoint) {
-        const fieldPath = `slides.${activeSlideIndex}.sketch.point` as any;
-
-        if (
-          JSON.stringify(getValues(fieldPath)) !== JSON.stringify(slidePoint)
-        ) {
-          setValue(fieldPath, slidePoint, {
-            shouldDirty: true,
-            shouldValidate: false,
-          });
-        }
-      }
-    }
-
-    const globalPoint = initialOptions?.sketch?.point;
-
-    if (globalPoint) {
-      const fieldPath = "sketch.point" as any;
-
-      if (
-        JSON.stringify(getValues(fieldPath)) !== JSON.stringify(globalPoint)
-      ) {
-        setValue(fieldPath, globalPoint, {
-          shouldDirty: true,
-          shouldValidate: false,
-        });
-      }
-    }
-  }, [activeSlideIndex, getValues, initialOptions, setValue]);
-
   // Mark the active slide thumbnail as stale on any form change.
   // A periodic task below refreshes it at most every 5s.
   useEffect(() => {

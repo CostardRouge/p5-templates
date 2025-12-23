@@ -190,6 +190,12 @@ sketch.setup( () => {
       x: options.sketch.point.x,
       y: options.sketch.point.y,
     };
+
+    console.log(
+      "point",
+      sketchState.lastSelectedCanvasPoint,
+      options.sketch?.point
+    );
   }
 } );
 
@@ -202,6 +208,32 @@ events.register(
   }
 );
 
+function displayPhoto( img ) {
+  imageUtils.marginImage( {
+    position: createVector(
+      width / 2,
+      height / 2
+    ),
+    graphics: sketchState.photoGraphics,
+    margin: width * options.sketch?.imageSettings?.margin,
+    scale: options.sketch?.imageSettings?.scale ?? 1,
+    center: options.sketch?.imageSettings?.center ?? true,
+    clip: options.sketch?.imageSettings?.clip ?? false,
+    fill: options.sketch?.imageSettings?.fill ?? true,
+    img,
+    callback: (
+      x, y, w, h
+    ) => {
+      sketchState.photoRect = {
+        x,
+        y,
+        w,
+        h,
+      };
+    },
+  } );
+}
+
 sketch.draw( () => {
   clear();
   background( ...options.sketch.backgroundColor );
@@ -213,11 +245,6 @@ sketch.draw( () => {
   }
 
   sketchState.photoGraphics.clear();
-
-  // If a point was persisted, convert it to UV once
-  if ( !sketchState.focusUV && options.sketch?.point ) {
-    setZoomFocusFromCanvasPoint( options.sketch.point );
-  }
 
   // Required timing snippet
   const images = [
@@ -247,6 +274,14 @@ sketch.draw( () => {
     zoomProgress
   );
 
+  // First, render photo without transform to get photoRect
+  displayPhoto( photo.img );
+
+  // If a point was persisted, convert it to UV once (after photoRect is set)
+  if ( !sketchState.focusUV && options.sketch?.point ) {
+    setZoomFocusFromCanvasPoint( options.sketch.point );
+  }
+
   const previousRect = sketchState.photoRect;
   const focusPoint = previousRect
     ? sketchState.focusUV
@@ -263,6 +298,11 @@ sketch.draw( () => {
       y: height / 2,
     };
 
+  console.log( {
+    focusPoint,
+    focusUV: sketchState.focusUV,
+  } );
+
   // Translation to keep focusPoint centered during zoom
   const tx = width / 2 - focusPoint.x * zoomScale;
   const ty = height / 2 - focusPoint.y * zoomScale;
@@ -273,6 +313,9 @@ sketch.draw( () => {
     ty,
   };
 
+  // Now clear and re-render with correct transform
+  sketchState.photoGraphics.clear();
+
   sketchState.photoGraphics.push();
   sketchState.photoGraphics.translate(
     tx,
@@ -280,29 +323,7 @@ sketch.draw( () => {
   );
   sketchState.photoGraphics.scale( zoomScale );
 
-  imageUtils.marginImage( {
-    position: createVector(
-      width / 2,
-      height / 2
-    ),
-    graphics: sketchState.photoGraphics,
-    margin: width * options.sketch?.imageSettings?.margin,
-    scale: options.sketch?.imageSettings?.scale ?? 1,
-    center: options.sketch?.imageSettings?.center ?? true,
-    clip: options.sketch?.imageSettings?.clip ?? false,
-    fill: options.sketch?.imageSettings?.fill ?? true,
-    img: photo.img,
-    callback: (
-      x, y, w, h
-    ) => {
-      sketchState.photoRect = {
-        x,
-        y,
-        w,
-        h,
-      };
-    },
-  } );
+  displayPhoto( photo.img );
 
   sketchState.photoGraphics.pop();
 
