@@ -77,6 +77,17 @@ export default function TemplateOptions( {
     control, getValues, setValue, reset
   } = methods;
 
+  // Sync form with external options changes (e.g., from sketch interactions)
+  useEffect( () => {
+    const processedOptions = initOptions( initialOptions );
+    const currentFormValues = getValues();
+    
+    // Only reset if the options actually changed to avoid unnecessary re-renders
+    if ( JSON.stringify( processedOptions ) !== JSON.stringify( currentFormValues ) ) {
+      reset( processedOptions );
+    }
+  }, [ initialOptions, reset, getValues ] );
+
   const {
     fields: slideFields,
     append: appendSlide,

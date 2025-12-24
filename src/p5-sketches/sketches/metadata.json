@@ -273,13 +273,6 @@
     "ctime": "2025-12-22T00:47:56.333Z"
   },
   {
-    "name": "photo-stack",
-    "category": "photo",
-    "hasSketchForm": true,
-    "mtime": "2025-12-22T08:08:31.357Z",
-    "ctime": "2025-04-21T11:29:50.549Z"
-  },
-  {
     "name": "photo-switch",
     "category": "photo",
     "hasSketchForm": true,
@@ -301,10 +294,17 @@
     "ctime": "2025-04-21T11:29:50.531Z"
   },
   {
+    "name": "photo-stack",
+    "category": "photo",
+    "hasSketchForm": true,
+    "mtime": "2025-12-22T21:57:14.042Z",
+    "ctime": "2025-04-21T11:29:50.549Z"
+  },
+  {
     "name": "photo-zoom-point",
     "category": "photo",
     "hasSketchForm": true,
-    "mtime": "2025-12-22T09:16:09.053Z",
+    "mtime": "2025-12-24T22:28:31.453Z",
     "ctime": "2025-12-22T09:16:09.027Z"
   }
 ]

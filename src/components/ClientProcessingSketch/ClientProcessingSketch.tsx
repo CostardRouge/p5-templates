@@ -55,7 +55,9 @@ export default function ClientProcessingSketch() {
 
   useEffect(
     () =>
-      subscribeSketchOptions( ( updatedOptions: any ) => {
+      subscribeSketchOptions( (
+        updatedOptions: any, origin?: string
+      ) => {
         setCurrentOptions( updatedOptions );
       } ),
     [
@@ -114,10 +116,10 @@ export default function ClientProcessingSketch() {
                 </Link>
 
                 <span>
-                  {activeSlideIndex !== undefined &&
-                    `· slide ${ activeSlideIndex + 1 }`}
+                  {activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}
                 </span>
               </p>
+
               <p id="p5-sketch-fps-counter"></p>
             </div>
           )}
@@ -141,7 +143,7 @@ export default function ClientProcessingSketch() {
                 } as React.CSSProperties
               }
             >
-              <AnimationProgressionBar />
+              <AnimationProgressionBar disabled />
             </div>
           )}
         </ScalableViewport>

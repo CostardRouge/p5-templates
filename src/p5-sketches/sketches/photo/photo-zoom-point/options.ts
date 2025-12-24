@@ -4,7 +4,8 @@ import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfigura
 
 export const formValues = {
   photo: null,
-  point: null,
+  point: {
+  },
 
   zoom: {
     count: 1,
@@ -81,13 +82,6 @@ export const formConfiguration: Record<string, any> = {
       },
     },
   },
-
-  point: {
-    component: "json",
-    label: "Point",
-    rows: 2,
-  },
-
   imageSettings: {
     label: "Image settings",
     component: "nested-object",
@@ -149,13 +143,19 @@ export const formConfiguration: Record<string, any> = {
     },
   },
 
+  title: {
+    ...titleFormConfiguration,
+  },
+
   // Colors
   backgroundColor: {
     component: "color",
     label: "Background color",
   },
 
-  title: {
-    ...titleFormConfiguration,
+  point: {
+    component: "json",
+    label: "Point",
+    rows: 2,
   },
 };

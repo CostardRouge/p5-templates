@@ -118,6 +118,10 @@ function handlePointerSelect( canvasPoint ) {
 
   setZoomFocusFromCanvasPoint( canvasPoint );
 
+  console.log( {
+    canvasPoint
+  } );
+
   const currentSlideIndex = window.getCurrentSlide?.().index;
 
   if (
@@ -134,10 +138,7 @@ function handlePointerSelect( canvasPoint ) {
           sketch: {
             ...( slide?.sketch ?? {
             } ),
-            point: {
-              x: canvasPoint.x,
-              y: canvasPoint.y,
-            },
+            point: canvasPoint,
           },
         }
         : slide );
@@ -155,10 +156,7 @@ function handlePointerSelect( canvasPoint ) {
   setSketchOptions(
     {
       sketch: {
-        point: {
-          x: canvasPoint.x,
-          y: canvasPoint.y,
-        },
+        point: canvasPoint
       },
     },
     "p5"
@@ -191,7 +189,7 @@ sketch.setup( () => {
     // which populates sketchState.photoRect
     displayPhoto( photo.img );
 
-    // Now that we have the rect, validuate and calculate the UV focus point
+    // Now that we have the rect, validate and calculate the UV focus point
     if ( sketchState.lastSelectedCanvasPoint ) {
       setZoomFocusFromCanvasPoint( sketchState.lastSelectedCanvasPoint );
     }
@@ -296,11 +294,6 @@ sketch.draw( () => {
       x: width / 2,
       y: height / 2,
     };
-
-  console.log( {
-    focusPoint,
-    focusUV: sketchState.focusUV
-  } );
 
   // Translation to keep focusPoint centered during zoom
   const tx = width / 2 - focusPoint.x * zoomScale;
