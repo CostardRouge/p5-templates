@@ -1,8 +1,12 @@
 import easing from "@/p5/utils/easing";
+import {
+  fontNames
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 export const formValues = {
   shape: {
     text: "7",
+    font: "martian",
     depth: 20,
     size: 1,
     columns: 65,
@@ -13,6 +17,7 @@ export const formValues = {
     distance: 0.015,
   },
   animation: {
+    randomDistance: 1500,
     variableDepth: false,
     rotate: true,
     rotationCount: 1,
@@ -48,6 +53,14 @@ export const formConfiguration: Record<string, any> = {
       text: {
         label: "Text",
         component: "text",
+      },
+      font: {
+        component: "select",
+        label: "Font name",
+        options: fontNames.map( ( fontName ) => ( {
+          value: fontName,
+          label: fontName,
+        } ) ),
       },
       size: {
         label: "Size",
@@ -116,6 +129,13 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 1,
         max: 10,
+        step: 0.5,
+      },
+      randomDistance: {
+        label: "Random distance",
+        component: "slider",
+        min: 1,
+        max: 5000,
         step: 0.5,
       },
       waveSpeed: {

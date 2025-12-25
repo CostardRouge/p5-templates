@@ -127,7 +127,7 @@ function createGridAlphaPoints(
           }
 
           if ( alphaLayers.length > 0 ) {
-            const randomPosition = p5.Vector.random3D().mult( ( width + height ) / 2 );
+            const randomPosition = p5.Vector.random3D().mult( options.sketch?.animation?.randomDistance );
 
             alphaPoints.push( {
               position,
@@ -183,6 +183,8 @@ sketch.draw( () => {
     centered: true,
   };
 
+  const fontName = options.sketch?.shape?.font ?? "serif";
+
   const fonts = [
     string.fonts.martian,
     // string.fonts.multicoloure,
@@ -191,7 +193,7 @@ sketch.draw( () => {
     // string.fonts.serif
   ];
 
-  const textToWrite = options.sketch?.shape?.text ?? "5";
+  const textToWrite = options.sketch?.shape?.text ?? "7";
 
   const textPointsMatrix = fonts.map( ( font ) =>
     string.getTextPoints( {
@@ -201,7 +203,7 @@ sketch.draw( () => {
         0
       ),
       size,
-      font,
+      font: string.fonts?.[ fontName ],
       sampleFactor,
       simplifyThreshold,
     } ) );
@@ -210,20 +212,21 @@ sketch.draw( () => {
     return;
   }
 
-  const cacheComponent = [
-    textToWrite,
-    cellSize,
-    size,
-    sampleFactor,
-    simplifyThreshold,
-    options.sketch?.mask?.distance,
-  ];
-  const cacheKey = cacheComponent.join( "+" );
+  const randomDistance = options.sketch?.animation?.randomDistance ?? 1500;
 
   const alphaPoints = createGridAlphaPoints(
     gridOptions,
     textPointsMatrix,
-    cacheKey
+    cache.key(
+      randomDistance,
+      textToWrite,
+      cellSize,
+      size,
+      fontName,
+      sampleFactor,
+      simplifyThreshold,
+      options.sketch?.mask?.distance
+    )
   );
 
   alphaPoints.forEach( (

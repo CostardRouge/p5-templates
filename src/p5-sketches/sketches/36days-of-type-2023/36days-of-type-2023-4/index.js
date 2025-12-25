@@ -181,6 +181,8 @@ sketch.draw( () => {
     centered: true,
   };
 
+  const fontName = options.sketch?.shape?.font ?? "serif";
+
   const fonts = [
     string.fonts.serif,
     // string.fonts.multicoloure,
@@ -199,7 +201,7 @@ sketch.draw( () => {
         0
       ),
       size,
-      font,
+      font: string.fonts?.[ fontName ],
       sampleFactor,
       simplifyThreshold,
     } ) );
@@ -212,6 +214,7 @@ sketch.draw( () => {
     textToWrite,
     cellSize,
     size,
+    fontName,
     sampleFactor,
     simplifyThreshold,
     options.sketch?.mask?.distance,
