@@ -61,16 +61,18 @@ export const formConfiguration: Record<string, any> = {
         max: 10,
       },
       minZoomScale: {
-        label: "Minimum Scale",
+        label: "Start scale",
         component: "slider",
         min: 0,
         max: 10,
+        step: 0.1
       },
       maxZoomScale: {
-        label: "Maximum Scale",
+        label: "End scale",
         component: "slider",
         min: 0,
         max: 10,
+        step: 0.1
       },
       easing: {
         component: "select",

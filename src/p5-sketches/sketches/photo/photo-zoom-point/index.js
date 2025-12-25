@@ -1,10 +1,10 @@
 import options from "@/p5/utils/options.js";
-
 import {
   setSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
 import animation from "@/p5/utils/animation.js";
 import * as common from "@/p5/utils/common.js";
+import string from "@/p5/utils/string.js";
 import easing from "@/p5/utils/easing.js";
 import events from "@/p5/utils/events.js";
 import graphics from "@/p5/utils/graphics.js";
@@ -15,114 +15,96 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
   photoGraphics: null,
-  photoRect: null,
-  focusUV: null,
-  viewTransform: {
-    scale: 1,
-    tx: 0,
-    ty: 0,
+  // Where the image sits inside the unscaled buffer
+  photoRect: {
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0
   },
-  lastSelectedCanvasPoint: null,
+  // The current visual transform (updated every draw loop)
+  // We need this to "reverse math" where you clicked
+  viewTransform: {
+    x: 0,
+    y: 0,
+    scale: 1
+  },
 };
 
-function getClientPositionFromEvent( event ) {
-  if ( !event ) return null;
-
-  // TouchEvent (mobile)
-  const anyEvent = event;
-  const touch = anyEvent.touches?.[ 0 ] ?? anyEvent.changedTouches?.[ 0 ];
-
-  if ( touch ) {
-    return {
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-    };
-  }
-
-  // MouseEvent / PointerEvent
-  if (
-    typeof anyEvent.clientX === "number" &&
-    typeof anyEvent.clientY === "number"
-  ) {
-    return {
-      clientX: anyEvent.clientX,
-      clientY: anyEvent.clientY,
-    };
-  }
-
-  return null;
-}
-
-function getCanvasPositionFromEvent( event ) {
+/**
+ * 1. ROBUST SCREEN-TO-CANVAS MAPPING
+ * Handles the canvas being inside a draggable/zoomable div.
+ */
+function getInternalCanvasPoint( event ) {
   const canvasElement = sketch.engine?.getCanvasElement?.();
 
-  if ( !canvasElement ) {
-    return {
-      x: mouseX,
-      y: mouseY,
-    };
-  }
+  if ( !canvasElement ) return null;
 
-  const clientPos = getClientPositionFromEvent( event );
-
-  if ( !clientPos ) {
-    return {
-      x: mouseX,
-      y: mouseY,
-    };
-  }
-
+  // getBoundingClientRect gives the actual size/pos on screen,
+  // accounting for any CSS scaling or parent transforms.
   const rect = canvasElement.getBoundingClientRect();
 
-  if ( rect.width === 0 || rect.height === 0 ) {
-    return {
-      x: mouseX,
-      y: mouseY,
-    };
-  }
+  const clientX = event.touches?.[ 0 ]?.clientX ?? event.changedTouches?.[ 0 ]?.clientX ?? event.clientX;
+  const clientY = event.touches?.[ 0 ]?.clientY ?? event.changedTouches?.[ 0 ]?.clientY ?? event.clientY;
 
-  // Map DOM pixels (post-CSS transform) → canvas pixels
+  if ( typeof clientX !== "number" || typeof clientY !== "number" ) return null;
+
+  // Normalize to 0-1 based on the DOM element size
+  const relX = ( clientX - rect.left ) / rect.width;
+  const relY = ( clientY - rect.top ) / rect.height;
+
+  // Scale up to the internal P5 canvas resolution
   return {
-    x: ( ( clientPos.clientX - rect.left ) * width ) / rect.width,
-    y: ( ( clientPos.clientY - rect.top ) * height ) / rect.height,
+    x: relX * width,
+    y: relY * height,
   };
 }
 
-function setZoomFocusFromCanvasPoint( canvasPoint ) {
+/**
+ * 2. REVERSE TRANSFORM LOGIC
+ * We take the screen click, reverse the zoom/pan, and find the UV on the photo.
+ */
+function handlePointerSelect( screenPoint ) {
+  if ( !screenPoint ) return;
+
+  // Retrieve the transform active at the moment of the click
   const {
-    photoRect, viewTransform
-  } = sketchState;
+    x: tx,
+    y: ty,
+    scale: currentScale
+  } = sketchState.viewTransform;
+  const {
+    x: imgX,
+    y: imgY,
+    w: imgW,
+    h: imgH
+  } = sketchState.photoRect;
 
-  if ( !photoRect ) return;
+  // A. Un-project: Convert Screen Pixel -> Buffer Pixel
+  // Formula: (Screen - Translate) / Scale
+  const bufferX = ( screenPoint.x - tx ) / currentScale;
+  const bufferY = ( screenPoint.y - ty ) / currentScale;
 
-  // Inverse of the photoGraphics transform applied in draw()
-  const unscaledX = ( canvasPoint.x - viewTransform.tx ) / viewTransform.scale;
-  const unscaledY = ( canvasPoint.y - viewTransform.ty ) / viewTransform.scale;
+  // B. Check collision with the photo inside the buffer
+  const isInside =
+    bufferX >= imgX &&
+    bufferX <= imgX + imgW &&
+    bufferY >= imgY &&
+    bufferY <= imgY + imgH;
 
-  const isInsidePhoto =
-    unscaledX >= photoRect.x &&
-    unscaledX <= photoRect.x + photoRect.w &&
-    unscaledY >= photoRect.y &&
-    unscaledY <= photoRect.y + photoRect.h;
+  if ( !isInside ) return;
 
-  if ( !isInsidePhoto ) return;
-
-  sketchState.focusUV = {
-    u: ( unscaledX - photoRect.x ) / photoRect.w,
-    v: ( unscaledY - photoRect.y ) / photoRect.h,
+  // C. Calculate UV (0.0 to 1.0)
+  const uvPoint = {
+    x: ( bufferX - imgX ) / imgW,
+    y: ( bufferY - imgY ) / imgH,
   };
-}
 
-function handlePointerSelect( canvasPoint ) {
-  sketchState.lastSelectedCanvasPoint = canvasPoint;
-
-  setZoomFocusFromCanvasPoint( canvasPoint );
-
-  console.log( {
-    canvasPoint
-  } );
-
+  // D. Save Update
   const currentSlideIndex = window.getCurrentSlide?.().index;
+  const sketchUpdate = {
+    point: uvPoint
+  };
 
   if (
     typeof currentSlideIndex === "number" &&
@@ -138,84 +120,58 @@ function handlePointerSelect( canvasPoint ) {
           sketch: {
             ...( slide?.sketch ?? {
             } ),
-            point: canvasPoint,
+            ...sketchUpdate
           },
         }
         : slide );
 
     setSketchOptions(
       {
-        slides: nextSlides,
+        slides: nextSlides
       },
       "p5"
     );
-
-    return;
-  }
-
-  setSketchOptions(
-    {
-      sketch: {
-        point: canvasPoint
+  } else {
+    setSketchOptions(
+      {
+        sketch: sketchUpdate
       },
-    },
-    "p5"
-  );
+      "p5"
+    );
+  }
 }
 
 sketch.setup( () => {
   background( ...options.sketch.backgroundColor );
-
   sketchState.photoGraphics = graphics.createAutoResizableGraphics(
     width,
     height
   );
 
-  // 1. Restore persisted point (if any) from options
-  if ( options.sketch?.point ) {
-    sketchState.lastSelectedCanvasPoint = {
-      x: options.sketch.point.x,
-      y: options.sketch.point.y,
-    };
-  }
-
-  // 2. [NEW] Force Layout Calculation
-  // We fetch the asset and run displayPhoto immediately.
-  // This ensures photoRect is calculated before the first draw loop.
+  // Initialize Rect immediately to prevent null errors on start
   const photo = common.getAsset( options.sketch.photo );
 
-  if ( photo?.img ) {
-    // This call triggers the callback inside displayPhoto,
-    // which populates sketchState.photoRect
-    displayPhoto( photo.img );
-
-    // Now that we have the rect, validate and calculate the UV focus point
-    if ( sketchState.lastSelectedCanvasPoint ) {
-      setZoomFocusFromCanvasPoint( sketchState.lastSelectedCanvasPoint );
-    }
-
-    // Clear the buffer so the canvas is clean for the first draw() frame
-    sketchState.photoGraphics.clear();
-  }
+  if ( photo?.img ) displayPhoto( photo.img );
 } );
 
 events.register(
   "engine-canvas-mouse-clicked",
   ( event ) => {
-    const canvasPoint = getCanvasPositionFromEvent( event );
+    const screenPoint = getInternalCanvasPoint( event );
 
-    handlePointerSelect( canvasPoint );
+    handlePointerSelect( screenPoint );
   }
 );
 
 function displayPhoto( img ) {
+  sketchState.photoGraphics.clear();
   imageUtils.marginImage( {
     position: createVector(
       width / 2,
       height / 2
     ),
     graphics: sketchState.photoGraphics,
-    margin: width * options.sketch?.imageSettings?.margin,
+    margin: width * ( options.sketch?.imageSettings?.margin ?? 0 ),
     scale: options.sketch?.imageSettings?.scale ?? 1,
     center: options.sketch?.imageSettings?.center ?? true,
     clip: options.sketch?.imageSettings?.clip ?? false,
@@ -224,11 +180,12 @@ function displayPhoto( img ) {
     callback: (
       x, y, w, h
     ) => {
+      // Store the image bounds relative to the UNZOOMED buffer
       sketchState.photoRect = {
         x,
         y,
         w,
-        h,
+        h
       };
     },
   } );
@@ -241,81 +198,85 @@ sketch.draw( () => {
   const photo = common.getAsset( options.sketch.photo );
 
   if ( !photo?.img ) {
+    string.write(
+      "photo-zoom-point:\n\nadd a photo :)",
+      0,
+      0,
+      {
+        size: 72,
+        stroke: color(
+          0,
+          0,
+          0,
+          0
+        ),
+        fill: color( 0 ),
+        textHeight: height,
+        font: string.fonts.martian,
+        textAlign: [
+          CENTER,
+          CENTER
+        ],
+      }
+    );
     return;
   }
 
-  sketchState.photoGraphics.clear();
+  // 1. Draw Image to Buffer (Unscaled)
+  displayPhoto( photo.img );
 
-  // Required timing snippet
-  const images = [
-    photo
-  ];
+  // 2. Animation Logic
   const zoomStep = mappers.fn(
     animation.triangleProgression( options.sketch.zoom.count ?? 1 ),
     0,
     1,
     0,
-    images.length,
+    1,
     easing?.[ options.sketch.zoom.easing ] ?? easing.easeInOutExpo
-  );
-
-  const zoomProgress = constrain(
-    zoomStep / Math.max(
-      1,
-      images.length
-    ),
-    0,
-    1
   );
 
   const zoomScale = lerp(
     options.sketch.zoom.minZoomScale ?? 1,
     options.sketch.zoom.maxZoomScale ?? 3,
-    zoomProgress
+    zoomStep
   );
 
-  const previousRect = sketchState.photoRect;
+  // 3. Focus Point Logic
+  const uvPoint = options.sketch.point ?? {
+    x: 0.5,
+    y: 0.5
+  };
+  const {
+    x,
+    y,
+    w,
+    h
+  } = sketchState.photoRect;
 
-  if ( !sketchState.focusUV && sketchState.lastSelectedCanvasPoint && previousRect ) {
-    // setZoomFocusFromCanvasPoint( sketchState.lastSelectedCanvasPoint );
-  }
+  // Convert UV -> Buffer Pixel
+  const focusX = x + ( uvPoint.x * w );
+  const focusY = y + ( uvPoint.y * h );
 
-  const focusPoint = previousRect
-    ? sketchState.focusUV
-      ? {
-        x: previousRect.x + sketchState.focusUV.u * previousRect.w,
-        y: previousRect.y + sketchState.focusUV.v * previousRect.h,
-      }
-      : {
-        x: previousRect.x + previousRect.w / 2,
-        y: previousRect.y + previousRect.h / 2,
-      }
-    : {
-      x: width / 2,
-      y: height / 2,
-    };
+  // 4. Calculate Center Transform
+  // We want the focusPoint to land exactly at (width/2, height/2)
+  const tx = ( width / 2 ) - ( focusX * zoomScale );
+  const ty = ( height / 2 ) - ( focusY * zoomScale );
 
-  // Translation to keep focusPoint centered during zoom
-  const tx = width / 2 - focusPoint.x * zoomScale;
-  const ty = height / 2 - focusPoint.y * zoomScale;
-
+  // 5. IMPORTANT: Update State for the Click Handler
+  // This allows handlePointerSelect to know "where" the image was during this frame
   sketchState.viewTransform = {
-    scale: zoomScale,
-    tx,
-    ty,
+    x: tx,
+    y: ty,
+    scale: zoomScale
   };
 
-  sketchState.photoGraphics.clear();
-  sketchState.photoGraphics.push();
-  sketchState.photoGraphics.translate(
+  // 6. Apply & Draw
+  push();
+  translate(
     tx,
     ty
   );
-  sketchState.photoGraphics.scale( zoomScale );
-
-  displayPhoto( photo.img );
-
-  sketchState.photoGraphics.pop();
+  scale( zoomScale );
 
   image(
     sketchState.photoGraphics,
@@ -323,28 +284,20 @@ sketch.draw( () => {
     0
   );
 
-  if ( sketchState.photoRect && sketchState.focusUV ) {
-    const focusX = sketchState.photoRect.x + sketchState.focusUV.u * sketchState.photoRect.w;
-    const focusY = sketchState.photoRect.y + sketchState.focusUV.v * sketchState.photoRect.h;
-
-    const focusScreenX = focusX * sketchState.viewTransform.scale + sketchState.viewTransform.tx;
-    const focusScreenY = focusY * sketchState.viewTransform.scale + sketchState.viewTransform.ty;
-
-    if ( options.sketch.circle.draw ?? true ) {
-      push();
-      noFill();
-      stroke( ...( options.sketch.circle.stroke ?? [
-        255
-      ] ) );
-      strokeWeight( options.sketch.circle.strokeWeight ?? 3 );
-      circle(
-        focusScreenX,
-        focusScreenY,
-        options.sketch.circle.radius ?? 24
-      );
-      pop();
-    }
+  // Draw Marker (Circle) at the specific focus point in Buffer Space
+  if ( options.sketch.circle?.draw ?? true ) {
+    noFill();
+    stroke( ...( options.sketch.circle.stroke ?? [
+      255
+    ] ) );
+    strokeWeight( ( options.sketch.circle.strokeWeight ?? 3 ) / zoomScale );
+    circle(
+      focusX,
+      focusY,
+      ( options.sketch.circle.radius ?? 24 ) / zoomScale
+    );
   }
+  pop();
 
   renderTitle();
 } );
