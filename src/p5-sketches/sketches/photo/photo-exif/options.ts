@@ -7,9 +7,9 @@ export const formValues = {
     image: null,
     margin: 0.1,
     backgroundColor: [
-      255,
-      255,
-      255
+      246,
+      235,
+      225
     ],
   },
   topLeft: "",

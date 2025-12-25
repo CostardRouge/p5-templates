@@ -21,16 +21,16 @@ sketch.draw( (
   _time, center
 ) => {
   background( ...( options.sketch?.photo?.backgroundColor ?? [
-    255,
-    255,
-    255
+    246,
+    235,
+    225
   ] ) );
 
   const photo = common.getAsset( options.sketch?.photo?.image );
 
   if ( !photo ) {
     string.write(
-      "add a photo :)",
+      "photo-exif:\n\nadd a photo :)",
       0,
       0,
       {
