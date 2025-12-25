@@ -1,6 +1,11 @@
+import {
+  fontNames
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+
 export const formValues = {
   shape: {
     text: "x",
+    font: "martian",
     size: 1,
     sampleFactor: 0.1,
     simplifyThreshold: 0,
@@ -28,6 +33,14 @@ export const formConfiguration: Record<string, any> = {
       text: {
         label: "Text",
         component: "text",
+      },
+      font: {
+        component: "select",
+        label: "Font name",
+        options: fontNames.map( ( fontName ) => ( {
+          value: fontName,
+          label: fontName,
+        } ) ),
       },
       size: {
         label: "Size",

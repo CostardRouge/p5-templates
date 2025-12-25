@@ -34,6 +34,7 @@ sketch.draw( () => {
   background( ...getBackgroundColor() );
 
   const textToWrite = options.sketch?.shape?.text ?? "x";
+  const fontName = options.sketch?.shape?.font ?? "martian";
 
   const size = options.sketch?.shape?.size * width ?? width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
@@ -46,7 +47,7 @@ sketch.draw( () => {
       0
     ),
     size,
-    font: string.fonts.martian,
+    font: string.fonts?.[ fontName ],
     sampleFactor,
     simplifyThreshold,
   } );
