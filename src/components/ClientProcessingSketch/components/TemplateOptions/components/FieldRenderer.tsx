@@ -184,7 +184,7 @@ export default function FieldRenderer( {
               </div>
             )}
           >
-            <div className="p-1 border border-theme rounded-xl space-y-1 bg-background/50 ml-4">
+            <div className="p-1 border border-theme rounded-xl space-y-1 bg-background/50 ml-2">
               {Object.entries( config.fields ).map( ( [
                 subFieldName,
                 subConfig

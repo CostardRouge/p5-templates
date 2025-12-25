@@ -6,7 +6,7 @@ import React, {
 import dynamic from "next/dynamic";
 
 import {
-  getSketchOptions, setSketchOptions, subscribeSketchOptions,
+  setSketchOptions, subscribeSketchOptions,
 } from "@/p5-sketches/shared/syncSketchOptions";
 
 import type {
@@ -28,19 +28,19 @@ export default function ClientProcessingSketch() {
   const {
     name, capturing, options, persistedJob
   } = useSketch();
+
+  // Initialize with options from context, which includes persisted data
   const [
     currentOptions,
     setCurrentOptions
-  ] = useState<SketchOption>( () => ( {
-    ...getSketchOptions(),
-    ...options,
-  } ) );
+  ] = useState<SketchOption>( options );
 
   const [
     sketchLoaded,
     setSketchLoaded
   ] = useState<boolean>( false );
 
+  // Sync global sketch options when currentOptions changes
   useEffect(
     () => {
       setSketchOptions(
@@ -50,6 +50,16 @@ export default function ClientProcessingSketch() {
     },
     [
       currentOptions
+    ]
+  );
+
+  // Update currentOptions when options prop changes (e.g., from persisted data loading)
+  useEffect(
+    () => {
+      setCurrentOptions( options );
+    },
+    [
+      options
     ]
   );
 
