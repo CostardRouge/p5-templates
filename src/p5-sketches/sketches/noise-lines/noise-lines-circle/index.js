@@ -1,6 +1,8 @@
 import options from "@/p5/utils/options.js";
 import animation from "@/p5/utils/animation.js";
 import sketch from "@/p5/utils/sketch.js";
+import mappers from "@/p5/utils/mappers.js";
+import easing from "@/p5/utils/mappers.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
@@ -20,6 +22,40 @@ const getBackgroundColor = () =>
     225
   ];
 
+function getFixedOrVariableParameter(
+  parameterName, progression = 1
+) {
+  const parameterConfig = options.sketch?.[ parameterName ];
+
+  if ( !parameterConfig ) {
+    return;
+  }
+
+  const {
+    mode
+  } = parameterConfig;
+
+  if ( "fixed" === mode ) {
+    return parameterConfig.value;
+  }
+
+  if ( "variable" === mode ) {
+    const {
+      startValue, endValue, count, speedMultiplier, progressionMultiplier
+    } = parameterConfig;
+
+    return mappers.fn(
+      Math.sin( animation.angle * speedMultiplier +
+      progression * progressionMultiplier ),
+      -1,
+      1,
+      startValue,
+      endValue,
+      easing.easeInOutSine
+    );
+  }
+}
+
 /**
  * Draws a seamless organic blob using Perlin Noise
  * * @param {number} baseRadius - The average size of the circle
@@ -30,7 +66,7 @@ const getBackgroundColor = () =>
  * @param incrementStep
  */
 function drawBlob(
-  baseRadius, roughness, magnitude, zOffset, incrementStep = 0.05
+  baseRadius, roughness, zOffset, incrementStep = 0.05
 ) {
   beginShape();
   for ( let a = 0; a < TWO_PI; a += incrementStep ) {
@@ -52,6 +88,12 @@ function drawBlob(
     );
 
     // Calculate radius based on noise
+
+    const magnitude = getFixedOrVariableParameter(
+      "magnitude",
+      a / ( TWO_PI - incrementStep )
+    );
+
     const r =
       baseRadius + map(
         noise(
@@ -104,23 +146,12 @@ sketch.draw( () => {
   for ( let i = 0; i < linesCount; i++ ) {
     const radiusOffset = i * radiusOffsetMultiplier;
     const noisePhase = i * noisePhaseMultiplier;
-    const lineProgression = linesCount / linesCount;
-
-    const finalRoughness = options.sketch.variableRoughtness ? (
-      map(
-        Math.sin( animation.angle + lineProgression ),
-        0,
-        1,
-        variableRoughtnessStart,
-        variableRoughtnessEnd
-      )
-    ) : roughness;
+    const lineProgression = i / ( linesCount - 1 );
 
     // We pass a unique z-offset for each line so they don't look identical
     drawBlob(
       baseRadius + radiusOffset,
-      finalRoughness,
-      magnitude,
+      roughness,
       sketchState.zOff + noisePhase,
       incrementStep
     );

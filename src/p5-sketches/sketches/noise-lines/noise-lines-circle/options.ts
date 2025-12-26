@@ -16,6 +16,14 @@ export const formValues = {
     incrementStep: 0.05,
     zOffSpeed: 0.005,
   },
+  magnitude: {
+    mode: "variable",
+    count: 1,
+    speedMultiplier: 1,
+    progressionMultiplier: 1,
+    startValue: 50,
+    endValue: 500
+  },
   backgroundColor: [
     246,
     235,
@@ -94,10 +102,70 @@ export const formConfiguration: Record<string, any> = {
         label: "Increment step",
         component: "slider",
         min: 0.01,
-        max: 1,
+        max: 3.14,
         step: 0.01,
       },
     },
+  },
+  magnitude: {
+    label: "Magnitude",
+    component: "conditional-group",
+    conditionalOn: "mode",
+    typeSelector: {
+      options: [
+        {
+          label: "Fixed magnitude",
+          value: "fixed",
+        },
+        {
+          label: "Variable magnitude",
+          value: "variable",
+        },
+      ],
+    },
+    configs: {
+      fixed: {
+        value: {
+          label: "Fixed Magnitude",
+          component: "slider",
+          min: 0,
+          max: 500,
+          step: 0.1,
+        },
+      },
+      variable: {
+        speedMultiplier: {
+          label: "Speed multiplier",
+          component: "slider",
+          min: 0,
+          max: 10,
+          step: 0.1,
+        },
+        progressionMultiplier: {
+          label: "Progression multiplier",
+          component: "slider",
+          min: 0,
+          max: 100,
+          step: 0.1,
+        },
+        startValue: {
+          label: "Magnitude start",
+          component: "slider",
+          min: 0,
+          max: 500,
+          step: 0.1,
+        },
+        endValue: {
+          label: "Magnitude end",
+          component: "slider",
+          min: 0,
+          max: 500,
+          step: 0.1,
+        },
+      },
+    },
+    // Schema is injected client-side in injectSketchSchemas.ts
+    // See schemas.ts for WaveConfigSchema definition
   },
   title: titleFormConfiguration,
   backgroundColor: {
