@@ -22,27 +22,27 @@ const getBackgroundColor = () =>
     225
   ];
 
-function getFixedOrVariableParameter(
-  parameterName, progression = 1
+function getFixedOrVariableOption(
+  optionKeyName, progression = 1
 ) {
-  const parameterConfig = options.sketch?.[ parameterName ];
+  const optionConfig = options.sketch?.[ optionKeyName ];
 
-  if ( !parameterConfig ) {
+  if ( !optionConfig ) {
     return;
   }
 
   const {
     mode
-  } = parameterConfig;
+  } = optionConfig;
 
   if ( "fixed" === mode ) {
-    return parameterConfig.value;
+    return optionConfig.value;
   }
 
   if ( "variable" === mode ) {
     const {
-      startValue, endValue, count, speedMultiplier, progressionMultiplier
-    } = parameterConfig;
+      startValue, endValue, count, speedMultiplier, progressionMultiplier, easingFn
+    } = optionConfig;
 
     return mappers.fn(
       Math.sin( animation.angle * speedMultiplier +
@@ -51,7 +51,7 @@ function getFixedOrVariableParameter(
       1,
       startValue,
       endValue,
-      easing.easeInOutSine
+      easing?.[ easingFn ] ?? easing.easeInOutSine
     );
   }
 }
@@ -66,10 +66,15 @@ function getFixedOrVariableParameter(
  * @param incrementStep
  */
 function drawBlob(
-  baseRadius, roughness, zOffset, incrementStep = 0.05
+  baseRadius, roughness, magnitude, zOffset, incrementStep = 0.05
 ) {
   beginShape();
   for ( let a = 0; a < TWO_PI; a += incrementStep ) {
+    // const magnitude = getFixedOrVariableOption(
+    //   "magnitude",
+    //   a / ( TWO_PI - incrementStep )
+    // );
+
     // THE TRICK: Map the circular angle to 2D Noise Space
     // This ensures that when angle is 0 and TWO_PI, we sample the exact same noise value.
     const xoff = map(
@@ -88,12 +93,6 @@ function drawBlob(
     );
 
     // Calculate radius based on noise
-
-    const magnitude = getFixedOrVariableParameter(
-      "magnitude",
-      a / ( TWO_PI - incrementStep )
-    );
-
     const r =
       baseRadius + map(
         noise(
@@ -148,10 +147,21 @@ sketch.draw( () => {
     const noisePhase = i * noisePhaseMultiplier;
     const lineProgression = i / ( linesCount - 1 );
 
+    const roughness = getFixedOrVariableOption(
+      "roughness",
+      lineProgression
+    );
+
+    const magnitude = getFixedOrVariableOption(
+      "magnitude",
+      lineProgression
+    );
+
     // We pass a unique z-offset for each line so they don't look identical
     drawBlob(
       baseRadius + radiusOffset,
       roughness,
+      magnitude,
       sketchState.zOff + noisePhase,
       incrementStep
     );

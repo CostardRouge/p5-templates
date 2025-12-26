@@ -1,5 +1,85 @@
 import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfiguration";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import capitalize from "@/utils/capitalize";
+import easing from "@/p5/utils/easing";
+
+function createFixedOrVariableOption(
+  optionName: string, optionConfiguration: Record<string, number>
+) {
+  const capitalizedOptionName = capitalize( optionName );
+  const {
+    min, max, step
+  } = optionConfiguration;
+
+  return ( {
+    label: capitalizedOptionName,
+    component: "conditional-group",
+    conditionalOn: "mode",
+    typeSelector: {
+      options: [
+        {
+          label: `Fixed ${ optionName.toLowerCase() }`,
+          value: "fixed",
+        },
+        {
+          label: `Variable ${ optionName.toLowerCase() }`,
+          value: "variable",
+        },
+      ],
+    },
+    configs: {
+      fixed: {
+        value: {
+          label: `Fixed ${ optionName.toLowerCase() }`,
+          component: "slider",
+          min,
+          max,
+          step,
+        },
+      },
+      variable: {
+        speedMultiplier: {
+          label: "Speed multiplier",
+          component: "slider",
+          min: 0,
+          max: 10,
+          step: 0.1,
+        },
+        progressionMultiplier: {
+          label: "Progression multiplier",
+          component: "slider",
+          min: 0,
+          max: 100,
+          step: 0.1,
+        },
+        startValue: {
+          label: `${ optionName } start`,
+          component: "slider",
+          min,
+          max,
+          step,
+        },
+        endValue: {
+          label: `${ optionName } end`,
+          component: "slider",
+          min,
+          max,
+          step,
+        },
+        easingFn: {
+          component: "select",
+          label: `${ capitalizedOptionName } easing`,
+          options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
+            label: easingFunctionName,
+            value: easingFunctionName,
+          } ) ),
+        },
+      },
+    },
+    // Schema is injected client-side in injectSketchSchemas.ts
+    // See schemas.ts for WaveConfigSchema definition
+  } );
+}
 
 export const formValues = {
   shape: {
@@ -22,7 +102,8 @@ export const formValues = {
     speedMultiplier: 1,
     progressionMultiplier: 1,
     startValue: 50,
-    endValue: 500
+    endValue: 500,
+    easingFn: "easeInOutExpo",
   },
   backgroundColor: [
     246,
@@ -77,20 +158,6 @@ export const formConfiguration: Record<string, any> = {
         max: 500,
         step: 0.1,
       },
-      roughness: {
-        label: "Roughness",
-        component: "slider",
-        min: 0,
-        max: 10,
-        step: 0.1,
-      },
-      magnitude: {
-        label: "Magnitude",
-        component: "slider",
-        min: 0,
-        max: 200,
-        step: 0.1,
-      },
       zOffSpeed: {
         label: "Z offset speed",
         component: "slider",
@@ -107,66 +174,23 @@ export const formConfiguration: Record<string, any> = {
       },
     },
   },
-  magnitude: {
-    label: "Magnitude",
-    component: "conditional-group",
-    conditionalOn: "mode",
-    typeSelector: {
-      options: [
-        {
-          label: "Fixed magnitude",
-          value: "fixed",
-        },
-        {
-          label: "Variable magnitude",
-          value: "variable",
-        },
-      ],
-    },
-    configs: {
-      fixed: {
-        value: {
-          label: "Fixed Magnitude",
-          component: "slider",
-          min: 0,
-          max: 500,
-          step: 0.1,
-        },
-      },
-      variable: {
-        speedMultiplier: {
-          label: "Speed multiplier",
-          component: "slider",
-          min: 0,
-          max: 10,
-          step: 0.1,
-        },
-        progressionMultiplier: {
-          label: "Progression multiplier",
-          component: "slider",
-          min: 0,
-          max: 100,
-          step: 0.1,
-        },
-        startValue: {
-          label: "Magnitude start",
-          component: "slider",
-          min: 0,
-          max: 500,
-          step: 0.1,
-        },
-        endValue: {
-          label: "Magnitude end",
-          component: "slider",
-          min: 0,
-          max: 500,
-          step: 0.1,
-        },
-      },
-    },
-    // Schema is injected client-side in injectSketchSchemas.ts
-    // See schemas.ts for WaveConfigSchema definition
-  },
+  roughness: createFixedOrVariableOption(
+    "roughness",
+    {
+      min: 0,
+      max: 10,
+      step: 0.1
+    }
+  ),
+  magnitude: createFixedOrVariableOption(
+    "magnitude",
+    {
+      min: 0,
+      max: 500,
+      step: 0.1
+    }
+  ),
+
   title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
