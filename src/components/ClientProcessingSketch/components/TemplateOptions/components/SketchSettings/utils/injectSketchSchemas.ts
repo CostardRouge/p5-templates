@@ -17,7 +17,7 @@ export function injectSketchSchemas(
   const clonedConfig = JSON.parse( JSON.stringify( config ) );
 
   // Add schemas based on sketch name
-  if ( sketchName === "36days-of-type-2023-5" ) {
+  if ( sketchName.startsWith( "36days-of-type-2023-" ) ) {
     // Navigate to the wave conditional-group and inject the schema
     if ( clonedConfig.animation?.fields?.wave ) {
       clonedConfig.animation.fields.wave.schema = WaveConfigSchema;
