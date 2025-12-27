@@ -78,15 +78,22 @@ export default function TemplateOptions( {
   } = methods;
 
   // Sync form with external options changes (e.g., from sketch interactions)
-  useEffect( () => {
-    const processedOptions = initOptions( initialOptions );
-    const currentFormValues = getValues();
-    
-    // Only reset if the options actually changed to avoid unnecessary re-renders
-    if ( JSON.stringify( processedOptions ) !== JSON.stringify( currentFormValues ) ) {
-      reset( processedOptions );
-    }
-  }, [ initialOptions, reset, getValues ] );
+  useEffect(
+    () => {
+      const processedOptions = initOptions( initialOptions );
+      const currentFormValues = getValues();
+
+      // Only reset if the options actually changed to avoid unnecessary re-renders
+      if ( JSON.stringify( processedOptions ) !== JSON.stringify( currentFormValues ) ) {
+        reset( processedOptions );
+      }
+    },
+    [
+      initialOptions,
+      reset,
+      getValues
+    ]
+  );
 
   const {
     fields: slideFields,
@@ -312,7 +319,7 @@ export default function TemplateOptions( {
       />
 
       <div
-        className="w-64 absolute right-2 bottom-2 space-y-2"
+        className="w-64 absolute right-2 bottom-2 md:right-4 md:bottom-4 space-y-2"
         style={{
           maxWidth: "calc(50% - 0.75rem)",
         }}

@@ -56,14 +56,14 @@ export default function RandomizeSettingsButton( {
           );
           break;
         case "color":
-          setValue(
-            fullPath,
-            [
-              Math.floor( Math.random() * 255 ),
-              Math.floor( Math.random() * 255 ),
-              Math.floor( Math.random() * 255 ),
-            ]
-          );
+          // setValue(
+          //   fullPath,
+          //   [
+          //     Math.floor( Math.random() * 255 ),
+          //     Math.floor( Math.random() * 255 ),
+          //     Math.floor( Math.random() * 255 ),
+          //   ]
+          // );
           break;
         case "select":
           if ( field.options && field.options.length > 0 ) {
@@ -118,7 +118,7 @@ export default function RandomizeSettingsButton( {
   return (
     <button
       onClick={handleRandomize}
-      className="p-1 text-foreground hover:bg-theme/20 rounded transition-colors"
+      className="text-foreground hover:bg-theme/20 rounded transition-colors"
       title="Randomize parameters"
     >
       <Shuffle className="w-4 h-4" />

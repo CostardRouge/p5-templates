@@ -1,13 +1,19 @@
-import React, { Fragment } from "react";
-import { UseFormReturn, useWatch } from "react-hook-form";
-import { ArrowDownFromLine, ListCollapse } from "lucide-react";
+import React, {
+  Fragment
+} from "react";
+import {
+  UseFormReturn, useWatch
+} from "react-hook-form";
+import {
+  ArrowDownFromLine, ListCollapse
+} from "lucide-react";
 import clsx from "clsx";
 import {
-  SketchOption,
-  SketchOptionInput,
-  SlideOption,
+  SketchOption, SketchOptionInput, SlideOption,
 } from "@/types/sketch.types";
-import { JobModel } from "@/types/recording.types";
+import {
+  JobModel
+} from "@/types/recording.types";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RootSettings from "./RootSettings/RootSettings";
 import ContentItems from "./ContentItems/ContentItems";
@@ -29,16 +35,16 @@ type OptionsPanelProps = {
   jobStatus?: string;
   isAdding: boolean;
   onAddSlide: () => void;
-  onSelectSlide: (index: number | undefined) => void;
-  onReorderSlides: (oldIndex: number, newIndex: number) => void;
-  onDuplicateSlide: (index: number) => void;
-  onDeleteSlide: (index: number) => void;
-  onRenameSlide: (index: number, newName: string) => void;
-  onImportOptions: (options: SketchOption) => void;
+  onSelectSlide: ( index: number | undefined ) => void;
+  onReorderSlides: ( oldIndex: number, newIndex: number ) => void;
+  onDuplicateSlide: ( index: number ) => void;
+  onDeleteSlide: ( index: number ) => void;
+  onRenameSlide: ( index: number, newName: string ) => void;
+  onImportOptions: ( options: SketchOption ) => void;
   enableThumbnails: boolean;
 };
 
-export default function OptionsPanel({
+export default function OptionsPanel( {
   methods,
   name,
   persistedJob,
@@ -56,26 +62,28 @@ export default function OptionsPanel({
   onRenameSlide,
   onImportOptions,
   enableThumbnails,
-}: OptionsPanelProps) {
-  const { control, watch } = methods;
+}: OptionsPanelProps ) {
+  const {
+    control, watch
+  } = methods;
 
-  const rootContentLength = useWatch({
+  const rootContentLength = useWatch( {
     control,
     name: "content",
-  })?.length;
+  } )?.length;
 
-  const slideIds = slideFields.map((field) => field.id);
+  const slideIds = slideFields.map( ( field ) => field.id );
   const slidesLength = slides?.length;
-  const jobId = useWatch({
+  const jobId = useWatch( {
     control,
     name: "id",
-  }) as string | undefined;
+  } ) as string | undefined;
   const options = watch();
 
   const editorKey =
-    activeSlideIndex !== undefined && slideIds[activeSlideIndex]
-      ? slideIds[activeSlideIndex]
-      : `no-slides-${slideFields.length}`;
+    activeSlideIndex !== undefined && slideIds[ activeSlideIndex ]
+      ? slideIds[ activeSlideIndex ]
+      : `no-slides-${ slideFields.length }`;
 
   return (
     <CollapsibleItem
@@ -83,30 +91,33 @@ export default function OptionsPanel({
       style={{
         maxHeight: "calc(80svh)",
       }}
-      header={(expanded, title) => (
+      header={(
+        expanded, title
+      ) => (
         <div className="flex gap-1">
           <OptionsImportExport
             options={options}
             name={name}
             persistedJobId={persistedJob?.id}
             jobStatus={jobStatus}
-            onImportInMemory={(importedOptions) => {
-              const processedOptions = initOptions(
-                importedOptions as SketchOption
-              );
+            onImportInMemory={( importedOptions ) => {
+              const processedOptions = initOptions( importedOptions as SketchOption );
 
-              console.log("Importing options:", {
-                imported: importedOptions,
-                processed: processedOptions,
-                slidesCount: processedOptions.slides?.length,
-              });
-              onImportOptions(importedOptions as SketchOption);
+              console.log(
+                "Importing options:",
+                {
+                  imported: importedOptions,
+                  processed: processedOptions,
+                  slidesCount: processedOptions.slides?.length,
+                }
+              );
+              onImportOptions( importedOptions as SketchOption );
             }}
           />
 
           <button
             title={title}
-            className="text-foreground text-sm text-right w-full"
+            className="text-foreground text-sm w-full flex items-center justify-end"
             aria-label={expanded ? "Collapse controls" : "Expand controls"}
           >
             <ArrowDownFromLine
@@ -125,7 +136,7 @@ export default function OptionsPanel({
         initialExpandedValue={false}
         className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
         headerContainerClassName="leading-none"
-        header={(expanded) => (
+        header={( expanded ) => (
           <button
             className={clsx(
               "truncate text-foreground text-xs w-full text-left -ml-1 align-text-top",
@@ -143,7 +154,7 @@ export default function OptionsPanel({
             />
             <span>
               global content{" "}
-              {rootContentLength ? `(${rootContentLength})` : null}
+              {rootContentLength ? `(${ rootContentLength })` : null}
             </span>
           </button>
         )}
@@ -165,7 +176,7 @@ export default function OptionsPanel({
             initialExpandedValue={!!slidesLength}
             className="p-1 border border-theme rounded-lg bg-background overflow-y-auto"
             headerContainerClassName="leading-none"
-            header={(expanded) => (
+            header={( expanded ) => (
               <button
                 className={clsx(
                   "text-foreground text-xs w-full text-left -ml-1 align-text-top",
@@ -181,14 +192,15 @@ export default function OptionsPanel({
                     rotate: expanded ? "180deg" : "0deg",
                   }}
                 />
-                <span>slides {slidesLength ? `(${slidesLength})` : null}</span>
+                <span>slides {slidesLength ? `(${ slidesLength })` : null}</span>
               </button>
             )}
           >
             <SlideCarousel
               slideFields={slideFields}
               slides={slides}
-              thumbnails={enableThumbnails ? thumbnails : {}}
+              thumbnails={enableThumbnails ? thumbnails : {
+              }}
               activeIndex={activeSlideIndex}
               isAdding={isAdding}
               onAdd={onAddSlide}

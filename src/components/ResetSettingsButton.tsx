@@ -35,7 +35,7 @@ export default function ResetSettingsButton( {
   return (
     <button
       onClick={handleReset}
-      className="p-1 text-foreground hover:bg-theme/20 rounded transition-colors"
+      className="text-foreground hover:bg-theme/20 rounded transition-colors"
       title="Reset to defaults"
     >
       <RotateCcw className="w-4 h-4" />

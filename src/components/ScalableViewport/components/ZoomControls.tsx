@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Maximize2, Minus, Plus, RotateCcw
+  Maximize2, Minus, Plus
 } from "lucide-react";
 
 const ZoomControls = ( {
@@ -16,7 +16,7 @@ const ZoomControls = ( {
   onFit: () => void;
 } ) => {
   return (
-    <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
+    <div className="absolute top-2 right-2 md:top-4 md:right-4 flex items-center gap-2 z-50">
       <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden">
         <button
           onClick={onMinus}
