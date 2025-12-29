@@ -259,11 +259,6 @@ export default function FieldRenderer( {
         </label>
       )}
 
-      {/* For conditional groups, the main label is part of the box */}
-      {config.component === "conditional-group" && config.label && (
-        <h4 className="text-gray-400 select-none">{config.label}</h4>
-      )}
-
       {renderInput()}
 
       {/* Display validation errors */}
