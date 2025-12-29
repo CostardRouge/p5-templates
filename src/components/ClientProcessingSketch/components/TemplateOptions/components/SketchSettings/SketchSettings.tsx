@@ -68,7 +68,7 @@ export default function SketchSettings( {
       header={( expanded ) => (
         <div className="flex items-center justify-between w-full">
           <button
-            className="text-foreground text-sm text-left flex items-center"
+            className="text-foreground text-xs flex items-center"
             aria-label={expanded ? "Collapse controls" : "Expand controls"}
           >
             <ArrowDownFromLine
@@ -87,6 +87,7 @@ export default function SketchSettings( {
 
           <div className="flex items-center gap-2">
             <ResetSettingsButton basePath={effectiveBasePath} />
+
             <RandomizeSettingsButton
               config={configWithSchemas}
               basePath={effectiveBasePath}

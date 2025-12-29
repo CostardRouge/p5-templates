@@ -121,7 +121,7 @@ export default function RandomizeSettingsButton( {
       className="text-foreground hover:bg-theme/20 rounded transition-colors"
       title="Randomize parameters"
     >
-      <Shuffle className="w-4 h-4" />
+      <Shuffle className="w-3.5 h-3.5" />
     </button>
   );
 }

@@ -38,7 +38,7 @@ export default function ResetSettingsButton( {
       className="text-foreground hover:bg-theme/20 rounded transition-colors"
       title="Reset to defaults"
     >
-      <RotateCcw className="w-4 h-4" />
+      <RotateCcw className="w-3.5 h-3.5" />
     </button>
   );
 }

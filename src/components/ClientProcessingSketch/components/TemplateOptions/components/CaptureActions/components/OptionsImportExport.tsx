@@ -178,7 +178,7 @@ export default function OptionsImportExport( {
       />
 
       <div className="flex gap-1">
-        <button onClick={handleDownload} className="text-sm flex items-center">
+        <button onClick={handleDownload} className="text-xs flex items-center">
           <Download className="h-3.5" />
           <span>Export</span>
         </button>
@@ -187,7 +187,7 @@ export default function OptionsImportExport( {
           onClick={handleImportClick}
           disabled={importing}
           className={clsx(
-            "disabled:opacity-50 text-sm flex items-center",
+            "disabled:opacity-50 text-xs flex items-center",
             {
               "animate-pulse": importing,
             }
