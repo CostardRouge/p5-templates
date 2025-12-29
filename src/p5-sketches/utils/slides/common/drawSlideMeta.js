@@ -17,7 +17,8 @@ export default function drawSlideMeta( metaOption ) {
     size: 24,
     stroke: color( ...metaOption.stroke ),
     fill: color( ...metaOption.fill ),
-    font: string.fonts.martian,
+    font: string.fonts?.[ metaOption.font ] ?? string.fonts.martian,
+    blendMode: metaOption.blend,
     textAlign: [
       LEFT,
       LEFT

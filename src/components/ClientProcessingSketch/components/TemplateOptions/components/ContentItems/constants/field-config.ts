@@ -1,4 +1,6 @@
-import type { ZodDiscriminatedUnion, ZodObject } from "zod";
+import type {
+  ZodDiscriminatedUnion, ZodObject
+} from "zod";
 import {
   Blend,
   type ContentItem,
@@ -179,22 +181,26 @@ const visualSelectOptions = [
   {
     label: "Neon graffiti",
     value: "neon-graffiti",
-    config: {},
+    config: {
+    },
   },
   {
     label: "Neon line",
     value: "neon-line",
-    config: {},
+    config: {
+    },
   },
   {
     label: "Neon dot",
     value: "neon-dot",
-    config: {},
+    config: {
+    },
   },
   {
     label: "Churros snake",
     value: "churros-snake",
-    config: {},
+    config: {
+    },
   },
 ];
 
@@ -260,6 +266,22 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       label: "Stroke",
       component: "color",
     },
+    blend: {
+      label: "Blend",
+      component: "select",
+      options: Blend.options.map( ( blendOption ) => ( {
+        value: blendOption,
+        label: blendOption,
+      } ) ),
+    },
+    font: {
+      label: "font",
+      component: "select",
+      options: fontNames.map( ( fontName ) => ( {
+        value: fontName,
+        label: fontName,
+      } ) ),
+    },
     topLeft: {
       label: "Top left",
       component: "text",
@@ -318,10 +340,10 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     font: {
       label: "font",
       component: "select",
-      options: fontNames.map((fontName) => ({
+      options: fontNames.map( ( fontName ) => ( {
         value: fontName,
         label: fontName,
-      })),
+      } ) ),
     },
     strokeWeight: {
       label: "Stroke weight",
@@ -357,18 +379,18 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
         horizontal: {
           label: "Horizontal alignment",
           component: "select",
-          options: HorizontalAlign.options.map((horizontalAlignOption) => ({
+          options: HorizontalAlign.options.map( ( horizontalAlignOption ) => ( {
             value: horizontalAlignOption,
             label: horizontalAlignOption,
-          })),
+          } ) ),
         },
         vertical: {
           label: "Vertical alignment",
           component: "select",
-          options: VerticalAlign.options.map((verticalAlignOption) => ({
+          options: VerticalAlign.options.map( ( verticalAlignOption ) => ( {
             value: verticalAlignOption,
             label: verticalAlignOption,
-          })),
+          } ) ),
         },
       },
     },
@@ -395,10 +417,10 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
     blend: {
       label: "Blend",
       component: "select",
-      options: Blend.options.map((blendOption) => ({
+      options: Blend.options.map( ( blendOption ) => ( {
         value: blendOption,
         label: blendOption,
-      })),
+      } ) ),
     },
     // We can add more fields here and they will auto-generate
   },
@@ -648,18 +670,23 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
       component: "conditional-group",
       conditionalOn: "name",
       typeSelector: {
-        options: visualSelectOptions.map(({ value, label }) => ({
+        options: visualSelectOptions.map( ( {
+          value, label
+        } ) => ( {
           value,
           label,
-        })),
+        } ) ),
       },
       configs: visualSelectOptions.reduce(
-        (finalConfigs, visualSelectOption) => {
-          finalConfigs[visualSelectOption.value] = visualSelectOption.config;
+        (
+          finalConfigs, visualSelectOption
+        ) => {
+          finalConfigs[ visualSelectOption.value ] = visualSelectOption.config;
 
           return finalConfigs;
         },
-        {} as ConditionalGroupConfig["configs"]
+        {
+        } as ConditionalGroupConfig["configs"]
       ),
 
       // @ts-expect-error

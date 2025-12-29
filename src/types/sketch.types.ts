@@ -128,19 +128,21 @@ export const BackgroundItemSchema = z.object( {
 
 export const MetaItemSchema = z.object( {
   type: z.literal( "meta" ),
-  topLeft: z.string().default( "" ),
+  topLeft: z.string().default( "@costardrouge.jpg" ),
   topRight: z.string().default( "" ),
   bottomLeft: z.string().default( "" ),
   bottomRight: z.string().default( "" ),
-  stroke: RGBA.default( [
-    255,
-    255,
-    255
-  ] ),
+  font: z.string().default( "martian" ),
+  blend: Blend.default( "source-over" ),
   fill: RGBA.default( [
     0,
     0,
     0
+  ] ),
+  stroke: RGBA.default( [
+    255,
+    255,
+    255
   ] ),
   slideProgression: z
     .object( {
