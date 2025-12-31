@@ -1,4 +1,8 @@
 import cache from "./cache.js";
+import easing from "./easing.js";
+import mappers from "./mappers.js";
+import options from "./options.js";
+import animation from "./animation.js";
 
 export function deepMerge(
   target = {
@@ -63,4 +67,38 @@ export function inverseX(
     limit,
     0
   );
+}
+
+export function getFixedOrVariableOption(
+  optionKeyName, progression = 1
+) {
+  const optionConfig = options.sketch?.[ optionKeyName ];
+
+  if ( !optionConfig ) {
+    return;
+  }
+
+  const {
+    mode
+  } = optionConfig;
+
+  if ( "fixed" === mode ) {
+    return optionConfig.value;
+  }
+
+  if ( "variable" === mode ) {
+    const {
+      startValue, endValue, count, speedMultiplier, progressionMultiplier, easingFn
+    } = optionConfig;
+
+    return mappers.fn(
+      Math.sin( animation.angle * speedMultiplier +
+        progression * progressionMultiplier ),
+      -1,
+      1,
+      startValue,
+      endValue,
+      easing?.[ easingFn ] ?? easing.easeInOutSine
+    );
+  }
 }

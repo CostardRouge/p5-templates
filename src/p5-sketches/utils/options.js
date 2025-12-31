@@ -8,9 +8,7 @@ import cache from "./cache.js";
 import sketch from "./sketch.js";
 
 import {
-  getSketchOptions,
-  setSketchOptions,
-  subscribeSketchOptions,
+  getSketchOptions, setSketchOptions, subscribeSketchOptions,
 } from "../shared/syncSketchOptions.js";
 
 import {
