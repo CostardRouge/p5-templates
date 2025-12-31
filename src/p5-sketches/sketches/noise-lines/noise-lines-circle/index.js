@@ -1,13 +1,10 @@
 import options from "@/p5/utils/options.js";
 import animation from "@/p5/utils/animation.js";
 import sketch from "@/p5/utils/sketch.js";
-import mappers from "@/p5/utils/mappers.js";
-import easing from "@/p5/utils/mappers.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
-
-const sketchState = {
-  zOff: 0,
-};
+import {
+  getFixedOrVariableOption
+} from "@/p5/utils/common.js";
 
 sketch.setup( ( {
   canvas
@@ -21,40 +18,6 @@ const getBackgroundColor = () =>
     235,
     225
   ];
-
-function getFixedOrVariableOption(
-  optionKeyName, progression = 1
-) {
-  const optionConfig = options.sketch?.[ optionKeyName ];
-
-  if ( !optionConfig ) {
-    return;
-  }
-
-  const {
-    mode
-  } = optionConfig;
-
-  if ( "fixed" === mode ) {
-    return optionConfig.value;
-  }
-
-  if ( "variable" === mode ) {
-    const {
-      startValue, endValue, count, speedMultiplier, progressionMultiplier, easingFn
-    } = optionConfig;
-
-    return mappers.fn(
-      Math.sin( animation.angle * speedMultiplier +
-      progression * progressionMultiplier ),
-      -1,
-      1,
-      startValue,
-      endValue,
-      easing?.[ easingFn ] ?? easing.easeInOutSine
-    );
-  }
-}
 
 /**
  * Draws a seamless organic blob using Perlin Noise
@@ -70,11 +33,6 @@ function drawBlob(
 ) {
   beginShape();
   for ( let a = 0; a < TWO_PI; a += incrementStep ) {
-    // const magnitude = getFixedOrVariableOption(
-    //   "magnitude",
-    //   a / ( TWO_PI - incrementStep )
-    // );
-
     // THE TRICK: Map the circular angle to 2D Noise Space
     // This ensures that when angle is 0 and TWO_PI, we sample the exact same noise value.
     const xoff = map(
@@ -134,18 +92,31 @@ sketch.draw( () => {
   strokeWeight( options.sketch.shape.strokeWeight ?? 0.5 );
 
   const linesCount = options.sketch.shape.linesCount ?? 50;
-  const radiusOffsetMultiplier = options.sketch.shape.radiusOffsetMultiplier ?? 20;
-  const noisePhaseMultiplier = options.sketch.shape.noisePhaseMultiplier ?? 0.02;
-  const baseRadius = options.sketch.shape.baseRadius ?? 150;
-  const roughness = options.sketch.shape.roughness ?? 1.5;
-  const magnitude = options.sketch.shape.magnitude ?? 50;
-  const zOffSpeed = options.sketch.shape.zOffSpeed ?? 0.005;
   const incrementStep = options.sketch.shape.incrementStep ?? 0.05;
 
+  const timeRadius = 1.5; // Controls how much the noise changes over the loop
+  const zLoop = map(
+    cos( animation.angle ),
+    -1,
+    1,
+    0,
+    timeRadius
+  );
+
   for ( let i = 0; i < linesCount; i++ ) {
-    const radiusOffset = i * radiusOffsetMultiplier;
-    const noisePhase = i * noisePhaseMultiplier;
     const lineProgression = i / ( linesCount - 1 );
+
+    const noisePhaseMultiplier = getFixedOrVariableOption(
+      "noisePhaseMultiplier",
+      lineProgression
+    );
+
+    const noisePhase = i * noisePhaseMultiplier;
+
+    const radiusOffsetMultiplier = getFixedOrVariableOption(
+      "radiusOffsetMultiplier",
+      lineProgression
+    );
 
     const roughness = getFixedOrVariableOption(
       "roughness",
@@ -157,19 +128,24 @@ sketch.draw( () => {
       lineProgression
     );
 
+    const baseRadius = getFixedOrVariableOption(
+      "baseRadius",
+      lineProgression
+    );
+
+    const radiusOffset = i * radiusOffsetMultiplier;
+
     // We pass a unique z-offset for each line so they don't look identical
     drawBlob(
       baseRadius + radiusOffset,
       roughness,
       magnitude,
-      sketchState.zOff + noisePhase,
+      zLoop + noisePhase,
       incrementStep
     );
   }
 
   pop();
-
-  sketchState.zOff += zOffSpeed;
 
   renderTitle( options.sketch?.title );
 } );

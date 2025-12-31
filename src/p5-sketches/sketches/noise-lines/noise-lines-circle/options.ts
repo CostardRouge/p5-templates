@@ -2,11 +2,13 @@ import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfigura
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import capitalize from "@/utils/capitalize";
 import easing from "@/p5/utils/easing";
+import camelCaseToSpace from "@/utils/camelCaseToSpace";
 
 function createFixedOrVariableOption(
   optionName: string, optionConfiguration: Record<string, number>
 ) {
-  const capitalizedOptionName = capitalize( optionName );
+  const spacedOptionName = camelCaseToSpace( optionName );
+  const capitalizedOptionName = capitalize( spacedOptionName );
   const {
     min, max, step
   } = optionConfiguration;
@@ -18,11 +20,11 @@ function createFixedOrVariableOption(
     typeSelector: {
       options: [
         {
-          label: `Fixed ${ optionName.toLowerCase() }`,
+          label: `Fixed ${ spacedOptionName.toLowerCase() }`,
           value: "fixed",
         },
         {
-          label: `Variable ${ optionName.toLowerCase() }`,
+          label: `Variable ${ spacedOptionName.toLowerCase() }`,
           value: "variable",
         },
       ],
@@ -30,7 +32,7 @@ function createFixedOrVariableOption(
     configs: {
       fixed: {
         value: {
-          label: `Fixed ${ optionName.toLowerCase() }`,
+          label: `Fixed ${ spacedOptionName.toLowerCase() }`,
           component: "slider",
           min,
           max,
@@ -53,14 +55,14 @@ function createFixedOrVariableOption(
           step: 0.1,
         },
         startValue: {
-          label: `${ optionName } start`,
+          label: `${ capitalizedOptionName } start`,
           component: "slider",
           min,
           max,
           step,
         },
         endValue: {
-          label: `${ optionName } end`,
+          label: `${ capitalizedOptionName } end`,
           component: "slider",
           min,
           max,
@@ -86,24 +88,49 @@ export const formValues = {
     stroke: [
       0
     ],
-    strokeWeight: 1,
-    linesCount: 150,
-    radiusOffsetMultiplier: 2,
-    noisePhaseMultiplier: 0.02,
-    baseRadius: 150,
-    roughness: 1.5,
-    magnitude: 50,
+    strokeWeight: 3.9,
+    linesCount: 200,
     incrementStep: 0.05,
-    zOffSpeed: 0.005,
+  },
+  roughness: {
+    mode: "fixed",
+    value: 1.5
   },
   magnitude: {
     mode: "variable",
     count: 1,
     speedMultiplier: 1,
     progressionMultiplier: 1,
-    startValue: 50,
-    endValue: 500,
+    startValue: 125,
+    endValue: 225,
     easingFn: "easeInOutExpo",
+  },
+  baseRadius: {
+    mode: "variable",
+    count: 1,
+    speedMultiplier: 1,
+    progressionMultiplier: 1,
+    startValue: 190.5,
+    endValue: 200,
+    easingFn: "easeInOutExpo",
+  },
+  radiusOffsetMultiplier: {
+    mode: "variable",
+    count: 1,
+    speedMultiplier: 1,
+    progressionMultiplier: 1,
+    startValue: 4,
+    endValue: 5.70,
+    easingFn: "easeInOutSine",
+  },
+  noisePhaseMultiplier: {
+    mode: "variable",
+    count: 1,
+    speedMultiplier: 3,
+    progressionMultiplier: 1,
+    startValue: 0.02,
+    endValue: 0.03,
+    easingFn: "easeInOutBack",
   },
   backgroundColor: [
     246,
@@ -137,34 +164,6 @@ export const formConfiguration: Record<string, any> = {
         max: 1000,
         step: 1,
       },
-      radiusOffsetMultiplier: {
-        label: "Radius offset multiplier",
-        component: "slider",
-        min: 0,
-        max: 10,
-        step: 0.1,
-      },
-      noisePhaseMultiplier: {
-        label: "Noise phase multiplier",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.001,
-      },
-      baseRadius: {
-        label: "Base radius",
-        component: "slider",
-        min: 10,
-        max: 500,
-        step: 0.1,
-      },
-      zOffSpeed: {
-        label: "Z offset speed",
-        component: "slider",
-        min: -0.1,
-        max: 0.1,
-        step: 0.001,
-      },
       incrementStep: {
         label: "Increment step",
         component: "slider",
@@ -188,6 +187,30 @@ export const formConfiguration: Record<string, any> = {
       min: 0,
       max: 500,
       step: 0.1
+    }
+  ),
+  baseRadius: createFixedOrVariableOption(
+    "baseRadius",
+    {
+      min: 10,
+      max: 500,
+      step: 0.1
+    }
+  ),
+  radiusOffsetMultiplier: createFixedOrVariableOption(
+    "radiusOffsetMultiplier",
+    {
+      min: 0.1,
+      max: 15,
+      step: 0.1
+    }
+  ),
+  noisePhaseMultiplier: createFixedOrVariableOption(
+    "noisePhaseMultiplier",
+    {
+      min: 0.01,
+      max: 1,
+      step: 0.01
     }
   ),
 
