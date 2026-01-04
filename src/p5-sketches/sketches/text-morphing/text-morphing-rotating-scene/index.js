@@ -204,7 +204,7 @@ sketch.draw( ( time ) => {
       );
 
       if ( opacityFactor > 20 ) {
-        // continue;
+        continue;
       }
 
       sketchState.threeDimensionGraphics.stroke( colorFunction( {
@@ -213,24 +213,36 @@ sketch.draw( ( time ) => {
           noise(
             x / width,
             y / height,
-            depthProgression / 2
+            depthProgression + map(
+              animation.progression,
+              0,
+              1,
+              0,
+              animation.angle / 4
+            ),
           ),
           0,
           1,
           -PI,
           PI
-        ) * 12,
+        ) * map(
+          animation.progression,
+          0,
+          1,
+          8,
+          16
+        ),
         opacityFactor,
       } ) );
 
       const xx = x * Math.pow(
-        1.15,
+        1.1,
         z
       );
 
       const yy =
         y * Math.pow(
-          1.15,
+          1.1,
           z
         );
 
@@ -241,6 +253,7 @@ sketch.draw( ( time ) => {
     }
     sketchState.threeDimensionGraphics.pop();
   }
+
   if ( options.sketch.rotation.enabled ) {
     sketchState.threeDimensionGraphics.pop();
   }
