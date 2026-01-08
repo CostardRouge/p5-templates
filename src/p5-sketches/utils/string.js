@@ -234,6 +234,8 @@ const string = {
 
     if ( popPush ) {
       graphics.pop();
+
+      graphics.blendMode( "source-over" );
     }
 
     return box;

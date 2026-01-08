@@ -91,9 +91,10 @@ export default function renderTitle(
         titleConfig.alignment?.horizontal ?? "center",
         titleConfig.alignment?.vertical ?? "center",
       ],
-      blendMode: titleConfig.blend || "exclusion",
+      blendMode: titleConfig.blend || "source-over",
       textWidth: width - 2 * horizontalMargin,
       textHeight: height - 2 * verticalMargin,
+      popPush: true,
     }
   );
 }
