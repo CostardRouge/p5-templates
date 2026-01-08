@@ -66,104 +66,92 @@ const matter = {
   ],
 };
 
-sketch.setup(
-  async() => {
-    background( ...options.colors.background );
+sketch.setup( async() => {
+  background( ...options.colors.background );
 
-    await mediapipeInit( {
-      worker: false,
-      tasks: [
-        "hands"
-      ],
-    } );
+  await mediapipeInit( {
+    worker: false,
+    tasks: [
+      "hands"
+    ],
+  } );
 
-    for ( const layerName in layers ) {
-      const {
-        background, size
-      } = layers[ layerName ];
+  for ( const layerName in layers ) {
+    const {
+      background, size
+    } = layers[ layerName ];
 
-      layers[ layerName ].graphics = createGraphics(
-        size.width,
-        size.height
-      );
+    layers[ layerName ].graphics = createGraphics(
+      size.width,
+      size.height
+    );
 
-      if ( background ) {
-        layers[ layerName ].graphics.background( ...background );
-      }
+    if ( background ) {
+      layers[ layerName ].graphics.background( ...background );
     }
-
-    // / MATTER
-    const margin = BOUNDARY_MARGIN;
-    const thickness = BOUNDARY_THICKNESS;
-
-    addBoundary(
-      width / 2,
-      height + thickness / 2 - margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      width / 2,
-      -thickness / 2 + margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      -thickness / 2 + margin,
-      height / 2,
-      thickness,
-      height
-    );
-    addBoundary(
-      width + thickness / 2 - margin,
-      height / 2,
-      thickness,
-      height
-    );
-
-    // for ( let i = 0; i < BALLS_COUNT; i++ ) {
-    //   addBall(
-    //     random(
-    //       thickness,
-    //       width - thickness
-    //     ),
-    //     random(
-    //       thickness,
-    //       height - thickness
-    //     ),
-    //     random( ...BALLS_SIZE )
-    //   );
-    // }
-
-    matter.letterBodies = addLetterBoxes( "abcdefghijklmnopqrstuvwxyz0123456789" );
-    // matter.letterBodies = addLetterBoxes( Array.from(
-    //   {
-    //     length: 128
-    //   },
-    //   (
-    //     _, i
-    //   ) => String.fromCharCode( i )
-    // ) );
-    // matter.letterBodies = addLetterBoxes( Array.from(
-    //   {
-    //     length: 95
-    //   },
-    //   (
-    //     _, i
-    //   ) => String.fromCharCode( i + 32 )
-    // ) );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
   }
-);
+
+  // / MATTER
+  const margin = BOUNDARY_MARGIN;
+  const thickness = BOUNDARY_THICKNESS;
+
+  addBoundary(
+    width / 2,
+    height + thickness / 2 - margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    width / 2,
+    -thickness / 2 + margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    -thickness / 2 + margin,
+    height / 2,
+    thickness,
+    height
+  );
+  addBoundary(
+    width + thickness / 2 - margin,
+    height / 2,
+    thickness,
+    height
+  );
+
+  // for ( let i = 0; i < BALLS_COUNT; i++ ) {
+  //   addBall(
+  //     random(
+  //       thickness,
+  //       width - thickness
+  //     ),
+  //     random(
+  //       thickness,
+  //       height - thickness
+  //     ),
+  //     random( ...BALLS_SIZE )
+  //   );
+  // }
+
+  matter.letterBodies = addLetterBoxes( "abcdefghijklmnopqrstuvwxyz0123456789" );
+  // matter.letterBodies = addLetterBoxes( Array.from(
+  //   {
+  //     length: 128
+  //   },
+  //   (
+  //     _, i
+  //   ) => String.fromCharCode( i )
+  // ) );
+  // matter.letterBodies = addLetterBoxes( Array.from(
+  //   {
+  //     length: 95
+  //   },
+  //   (
+  //     _, i
+  //   ) => String.fromCharCode( i + 32 )
+  // ) );
+} );
 
 matter.engine.gravity = {
   x: 0,

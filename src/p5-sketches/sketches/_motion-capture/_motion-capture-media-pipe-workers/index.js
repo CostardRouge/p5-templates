@@ -98,133 +98,119 @@ const matter = {
   ],
 };
 
-sketch.setup(
-  () => {
-    background( ...options.colors.background );
+sketch.setup( () => {
+  background( ...options.colors.background );
 
-    for ( const layerName in layers ) {
-      const {
-        background, size
-      } = layers[ layerName ];
+  for ( const layerName in layers ) {
+    const {
+      background, size
+    } = layers[ layerName ];
 
-      layers[ layerName ].graphics = createGraphics(
-        size.width,
-        size.height
-      );
+    layers[ layerName ].graphics = createGraphics(
+      size.width,
+      size.height
+    );
 
-      if ( background ) {
-        layers[ layerName ].graphics.background( ...background );
-      }
+    if ( background ) {
+      layers[ layerName ].graphics.background( ...background );
     }
-
-    // --- capture feed (used for inference only) ---
-    mediapipe.capture.element = createCapture(
-      VIDEO,
-      {
-        flipped: true,
-      }
-    );
-    mediapipe.capture.element.size(
-      mediapipe.capture.size.width,
-      mediapipe.capture.size.height
-    );
-    mediapipe.capture.element.hide();
-
-    mediapipe.capture.element.elt.addEventListener(
-      "loadeddata",
-      () => {
-        mediapipe.videoReady = true;
-      }
-    );
-
-    // --- feedback feed (drawn to canvas) ---
-    mediapipe.feedback.element = createCapture(
-      VIDEO,
-      {
-        flipped: true,
-      }
-    );
-    mediapipe.feedback.element.size(
-      mediapipe.feedback.size.width,
-      mediapipe.feedback.size.height
-    );
-    mediapipe.feedback.element.hide();
-
-    // --- spin up the vision worker ---
-
-    mediapipe.worker = new Worker( new URL( "/assets/scripts/vision-worker.js" ) );
-
-    mediapipe.worker.postMessage( {
-      type: "INIT",
-      wasmPath: "/assets/libraries/mediapipe/wasm",
-    } );
-
-    mediapipe.worker.onmessage = ( event ) => {
-      const message = event.data;
-
-      if ( message.type === "READY" ) {
-        mediapipe.workerReady = true;
-      }
-
-      if ( message.type === "LIB_RESULT" ) {
-        mediapipe.workerResult[ message.payload.lib ] = message.payload.result;
-      }
-    };
-
-    // / MATTER
-    const margin = 50;
-    const thickness = 50;
-
-    addBoundary(
-      width / 2,
-      height + thickness / 2 - margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      width / 2,
-      -thickness / 2 + margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      -thickness / 2 + margin,
-      height / 2,
-      thickness,
-      height
-    );
-    addBoundary(
-      width + thickness / 2 - margin,
-      height / 2,
-      thickness,
-      height
-    );
-
-    for ( let i = 0; i <= 20; i++ ) {
-      addImageBall(
-        mediapipe.feedback.element,
-        random( width ),
-        random( height ),
-        random(
-          20,
-          50
-        )
-      );
-    }
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-      // width: 640,
-      // height: 480,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
   }
-);
+
+  // --- capture feed (used for inference only) ---
+  mediapipe.capture.element = createCapture(
+    VIDEO,
+    {
+      flipped: true,
+    }
+  );
+  mediapipe.capture.element.size(
+    mediapipe.capture.size.width,
+    mediapipe.capture.size.height
+  );
+  mediapipe.capture.element.hide();
+
+  mediapipe.capture.element.elt.addEventListener(
+    "loadeddata",
+    () => {
+      mediapipe.videoReady = true;
+    }
+  );
+
+  // --- feedback feed (drawn to canvas) ---
+  mediapipe.feedback.element = createCapture(
+    VIDEO,
+    {
+      flipped: true,
+    }
+  );
+  mediapipe.feedback.element.size(
+    mediapipe.feedback.size.width,
+    mediapipe.feedback.size.height
+  );
+  mediapipe.feedback.element.hide();
+
+  // --- spin up the vision worker ---
+
+  mediapipe.worker = new Worker( new URL( "/assets/scripts/vision-worker.js" ) );
+
+  mediapipe.worker.postMessage( {
+    type: "INIT",
+    wasmPath: "/assets/libraries/mediapipe/wasm",
+  } );
+
+  mediapipe.worker.onmessage = ( event ) => {
+    const message = event.data;
+
+    if ( message.type === "READY" ) {
+      mediapipe.workerReady = true;
+    }
+
+    if ( message.type === "LIB_RESULT" ) {
+      mediapipe.workerResult[ message.payload.lib ] = message.payload.result;
+    }
+  };
+
+  // / MATTER
+  const margin = 50;
+  const thickness = 50;
+
+  addBoundary(
+    width / 2,
+    height + thickness / 2 - margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    width / 2,
+    -thickness / 2 + margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    -thickness / 2 + margin,
+    height / 2,
+    thickness,
+    height
+  );
+  addBoundary(
+    width + thickness / 2 - margin,
+    height / 2,
+    thickness,
+    height
+  );
+
+  for ( let i = 0; i <= 20; i++ ) {
+    addImageBall(
+      mediapipe.feedback.element,
+      random( width ),
+      random( height ),
+      random(
+        20,
+        50
+      )
+    );
+  }
+} );
 
 const sendFrameToWorkerIfDue = () => {
   const now = performance.now();

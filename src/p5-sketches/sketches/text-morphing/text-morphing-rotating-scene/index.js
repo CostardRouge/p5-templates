@@ -47,7 +47,6 @@ sketch.draw( ( time ) => {
   }
 
   const morphingEasingFunction = easing?.[ options.sketch.morphing.easing ] ?? easing.easeInOutExpo;
-  const rotationEasingFunction = easing?.[ options.sketch.rotation.easing ] ?? easing.easeInOutExpo;
 
   const size = options.sketch.textStyle.size * width ?? width / 2;
   const font = string.fonts?.[ options.sketch?.textStyle.font ] ?? string.fonts.serif;
@@ -56,7 +55,7 @@ sketch.draw( ( time ) => {
   const simplifyThreshold = options.sketch.textStyle.simplifyThreshold ?? 0;
 
   const steps = itemsToMorph.length;
-  const phase = ( animation.progression * steps ) % steps;
+  const phase = animation.progression * steps;
   const t = phase % 1; // 0 → 1 inside each morph
 
   const changeProgress = mappers.fn(
@@ -126,23 +125,32 @@ sketch.draw( ( time ) => {
       ),
     ];
 
+    const rotationSteps = rotationAngles.length;
+    const phase = animation.progression * rotationSteps;
+
+    if ( options.sketch.rotation.syncWithMorphing ) {
+      const diffLength = itemsToMorph.length - rotationAngles.length;
+
+      if ( diffLength ) {
+        for ( let i = 0; i < diffLength; ++i ) {
+          rotationAngles.push( rotationAngles[ i % rotationAngles.length ] );
+        }
+      }
+    }
+
+    if ( options.sketch.rotation.angleMultiplier !== 1 ) {
+      rotationAngles.forEach( angle => {
+        angle.mult( options.sketch.rotation.angleMultiplier );
+      } );
+    }
+
     const {
       x: rX, y: rY, z: rZ
     } = animation.ease( {
       values: rotationAngles,
       currentTime: phase,
       lerpFn: p5.Vector.lerp,
-      easingFn: rotationEasingFunction
-    } );
-
-    rotationAngles.forEach( angle => {
-      angle.mult( map(
-        changeProgressSmooth,
-        1,
-        0,
-        0.5,
-        1
-      ) );
+      easingFn: easing?.[ options.sketch.rotation.easing ] ?? easing.easeInOutExpo
     } );
 
     sketchState.threeDimensionGraphics.push();
@@ -191,7 +199,7 @@ sketch.draw( ( time ) => {
       const colorFunction = colors.rainbow;
       const opacityFactor = mappers.fn(
         sin(
-          depthProgression * 20 + animation.angle * 5,
+          depthProgression * 20 + animation.angle * 3,
           easing.easeInOutExpo
         ),
         -1,
@@ -213,20 +221,14 @@ sketch.draw( ( time ) => {
           noise(
             x / width,
             y / height,
-            depthProgression + map(
-              animation.progression,
-              0,
-              1,
-              0,
-              animation.angle / 4
-            ),
+            depthProgression // + animation.circularProgression,
           ),
           0,
           1,
           -PI,
           PI
         ) * map(
-          animation.progression,
+          animation.circularProgression,
           0,
           1,
           8,

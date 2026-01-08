@@ -1,6 +1,4 @@
 import options from "@/p5/utils/options.js";
-
-import cache from "@/p5/utils/cache.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 
@@ -8,21 +6,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
-sketch.setup(
-  () => {
-    applyBackground();
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
-  }
-);
+sketch.setup( () => {
+  applyBackground();
+} );
 
 function applyBackground() {
   background( ...( options.sketch?.backgroundColor ?? [
@@ -33,7 +19,7 @@ function applyBackground() {
 }
 
 sketch.draw( ( _time ) => {
-  const images = cache.get( "images" );
+  const images = imageUtils.getImages();
 
   applyBackground();
 
@@ -46,6 +32,10 @@ sketch.draw( ( _time ) => {
     animation.linearProgression() * images.length,
     imageIndexes
   );
+
+  if ( !images[ imageIndex ] ) {
+    return;
+  }
 
   const {
     img, filename

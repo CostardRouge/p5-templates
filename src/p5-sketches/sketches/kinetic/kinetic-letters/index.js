@@ -13,8 +13,7 @@ import animation from "@/p5/utils/animation.js";
 import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 
 import mediapipe, {
-  init as mediapipeInit,
-  setEnabled as setMediapipeEnabled,
+  init as mediapipeInit, setEnabled as setMediapipeEnabled,
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
 // Key landmarks for interaction (palm, fingertips)
@@ -63,48 +62,36 @@ events.register(
   }
 );
 
-sketch.setup(
-  async() => {
-    background( ...( options.sketch.backgroundColor ?? [
-      246,
-      235,
-      225
-    ] ) );
+sketch.setup( async() => {
+  background( ...( options.sketch.backgroundColor ?? [
+    246,
+    235,
+    225
+  ] ) );
 
-    await mediapipeInit( {
-      enableCapture: false,
-      worker: false,
-      tasks: [
-        "hands"
-      ],
-    } );
+  await mediapipeInit( {
+    enableCapture: false,
+    worker: false,
+    tasks: [
+      "hands"
+    ],
+  } );
 
-    for ( const layerName in layers ) {
-      const {
-        background, size
-      } = layers[ layerName ];
+  for ( const layerName in layers ) {
+    const {
+      background, size
+    } = layers[ layerName ];
 
-      layers[ layerName ].graphics = graphics.createAutoResizableGraphics(
-        size.width,
-        size.height
-      );
+    layers[ layerName ].graphics = graphics.createAutoResizableGraphics(
+      size.width,
+      size.height
+    );
 
-      if ( background ) {
-        layers[ layerName ].graphics.background( ...background );
-      }
+    if ( background ) {
+      layers[ layerName ].graphics.background( ...background );
     }
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
   }
-);
+} );
 
 sketch.draw( () => {
   background( ...( options.sketch.backgroundColor ?? [

@@ -1,13 +1,12 @@
 import options from "@/p5/utils/options.js";
 
 import grid from "@/p5/utils/grid.js";
-import cache from "@/p5/utils/cache.js";
-import string from "@/p5/utils/string.js";
 import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import * as common from "@/p5/utils/common.js";
+
+import renderTitle from "@/p5/utils/title/renderTitle";
 
 const canvases = {
 };
@@ -20,25 +19,20 @@ sketch.setup( () => {
 
   // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
 
-  background( ...( options.sketch?.backgroundColor ?? options.colors.background ) );
+  background( ...options.sketch.backgroundColor );
+
+  canvases.background.background( ...options.sketch.backgroundColor );
 } );
 
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  const bg = options.sketch?.backgroundColor ?? options.colors.background;
-  const textColor = options.sketch?.textColor ?? options.colors.text;
+  clear();
+  background( ...options.sketch.backgroundColor );
 
-  background( ...bg );
-  canvases.background.background( ...bg );
+  canvases.background.background( ...options.sketch.backgroundColor );
 
-  const imagesFromOptions =
-    options.sketch?.images && options.sketch.images.length
-      ? options.sketch.images
-      : null;
-  const images = imagesFromOptions
-    ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : cache.get( "images" );
+  const images = imageUtils.getImages();
 
   const borderSize = 0;
   const rows = options.sketch?.rows ?? 4; // columns*height/width;
@@ -68,13 +62,7 @@ sketch.draw( (
     cells: gridCells
   } = grid.create( gridOptions );
 
-  canvases.background.background( ...bg );
-  canvases.background.background(
-    0,
-    0,
-    0,
-    92
-  );
+  canvases.background.background( ...options.sketch.backgroundColor );
 
   // gridCells.forEach( ({ position, xIndex, yIndex, width: W, height: H }) => {
   //     const { x, y } = position;
@@ -166,34 +154,12 @@ sketch.draw( (
         width: W,
       },
       center: true,
-      fill: true,
-      scale: 0.9,
+      // fill: true,
+      scale: 1,
       clip: true,
       margin: 10,
     } );
   } );
 
-  const defaultTitle = options.name.replaceAll(
-    "-",
-    "\n"
-  );
-
-  if ( animation.progression < 0.2 ) {
-    string.write(
-      options.sketch?.title || defaultTitle,
-      0,
-      height / 2,
-      {
-        size: options.sketch?.titleSize ?? 128,
-        stroke: color( ...textColor ),
-        fill: color( ...bg ),
-        font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
-        textAlign: [
-          CENTER,
-          CENTER
-        ],
-        blendMode: EXCLUSION,
-      }
-    );
-  }
+  renderTitle();
 } );

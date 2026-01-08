@@ -1,13 +1,3 @@
 {
-  "rows": 16,
-  "columns": 12,
-  "colors": {
-    "background": [230],
-    "text": [230]
-  },
-  "animation": {
-    "duration": 12,
-    "framerate": 60
-  },
   "consumeTestImages": true
 }

@@ -2,53 +2,10 @@ import easing from "@/p5/utils/easing";
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-import camelCaseToSpace from "@/utils/camelCaseToSpace";
-import capitalize from "@/utils/capitalize";
 
-function createSingleOrMultipleTextOption( optionName: string ) {
-  const spacedOptionName = camelCaseToSpace( optionName );
-  const capitalizedOptionName = capitalize( spacedOptionName );
-
-  return ( {
-    label: capitalizedOptionName,
-    component: "conditional-group",
-    conditionalOn: "mode",
-    typeSelector: {
-      options: [
-        {
-          label: "Single (letter by letter)",
-          value: "single",
-        },
-        {
-          label: "Multiple (word by word)",
-          value: "multiple",
-        },
-      ],
-    },
-    configs: {
-      single: {
-        value: {
-          label: "single",
-          component: "text",
-        },
-      },
-      multiple: {
-        value: {
-          label: "multiple",
-          component: "item-list",
-          itemConfig: {
-            label: "Multiple",
-            defaultItems: [
-              "one",
-              "two",
-              "three"
-            ]
-          }
-        },
-      }
-    }
-  } );
-}
+import {
+  createSingleOrMultipleTextOption
+} from "@/utils/sketchOptionUtils";
 
 export const formValues = {
   text: {
@@ -63,6 +20,8 @@ export const formValues = {
   },
   rotation: {
     enabled: true,
+    syncWithMorphing: true,
+    angleMultiplier: 1,
     rotationAngles: [
       {
         x: 0,
@@ -191,6 +150,17 @@ export const formConfiguration: Record<string, any> = {
       enabled: {
         label: "Enable rotation?",
         component: "checkbox"
+      },
+      syncWithMorphing: {
+        label: "Sync with morphing?",
+        component: "checkbox"
+      },
+      angleMultiplier: {
+        label: "Angle multiplier",
+        component: "slider",
+        min: 0,
+        max: 10,
+        step: 0.1,
       },
       rotationAngles: {
         label: "Rotation angles",

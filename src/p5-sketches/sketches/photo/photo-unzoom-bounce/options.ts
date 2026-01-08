@@ -1,6 +1,8 @@
 import easing from "@/p5-sketches/utils/easing";
 
 export const formValues = {
+  images: [
+  ],
   count: 100,
   zoom: false,
   rotate: false,
@@ -16,6 +18,10 @@ export const formValues = {
 };
 
 export const formConfiguration: Record<string, any> = {
+  images: {
+    component: "images-stack",
+    label: "Images",
+  },
   count: {
     label: "Image steps count",
     component: "slider",

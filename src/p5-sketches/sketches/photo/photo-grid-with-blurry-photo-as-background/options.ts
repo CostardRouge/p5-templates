@@ -1,6 +1,5 @@
-import {
-  fontNames
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 // Default values only
 export const formValues = {
@@ -13,21 +12,16 @@ export const formValues = {
     246,
     235,
     225
-  ] as [number, number, number],
-  textColor: [
-    0
-  ] as [number],
+  ],
 
   // Grid
   rows: 4,
   columns: 3,
   blur: 9,
 
-  // Title
-  font: "martian",
-  title: "",
-  showTitle: true,
-  titleSize: 128,
+  title: {
+    ...titleDefaultValues,
+  },
 };
 
 // UI configuration only
@@ -42,10 +36,6 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color",
-  },
-  textColor: {
-    component: "color",
-    label: "Text color",
   },
 
   // Grid
@@ -71,28 +61,7 @@ export const formConfiguration: Record<string, any> = {
     step: 1,
   },
 
-  // Title
-  font: {
-    component: "select",
-    label: "Font name",
-    options: fontNames.map( ( fontName ) => ( {
-      value: fontName,
-      label: fontName,
-    } ) ),
-  },
   title: {
-    component: "text",
-    label: "Custom title (empty → default)",
-  },
-  showTitle: {
-    component: "checkbox",
-    label: "Show title",
-  },
-  titleSize: {
-    component: "slider",
-    label: "Title size",
-    min: 12,
-    max: 400,
-    step: 1,
+    ...titleFormConfiguration,
   },
 };

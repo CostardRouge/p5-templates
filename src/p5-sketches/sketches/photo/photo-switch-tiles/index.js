@@ -2,25 +2,35 @@ import options from "@/p5/utils/options.js";
 
 import grid from "@/p5/utils/grid.js";
 import cache from "@/p5/utils/cache.js";
-import string from "@/p5/utils/string.js";
 import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
+import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
-sketch.setup( () => {
-  background( ...options.colors.background );
-} );
+const sketchState = {
+  buffer: null
+};
 
-const borderSize = 0;
+sketch.setup( () => {
+  background( ...options.sketch.backgroundColor );
+
+  sketchState.buffer = graphics.createAutoResizableGraphics(
+    width,
+    height
+  );
+} );
 
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...options.colors.background );
+  clear();
+  background( ...options.sketch.backgroundColor );
 
-  const rows = options.rows || 16; // columns*height/width;
-  const columns = options.columns || 9; // rows*width/height;
+  const rows = options.sketch.grid.rows ?? 16; // columns*height/width;
+  const columns = options.sketch.grid.columns ?? 9; // rows*width/height;
+  const borderSize = options.sketch.grid.borderSize ?? 16;
+  // const dominantColorSample = options.sketch.dominantColorSample ?? 50;
 
   const gridOptions = {
     topLeft: createVector(
@@ -41,7 +51,7 @@ sketch.draw( (
     ),
     rows,
     columns,
-    centered: false,
+    centered: true,
   };
 
   const W = width / columns;
@@ -51,24 +61,43 @@ sketch.draw( (
     cells: gridCells
   } = grid.create( gridOptions );
 
-  const imageParts = cache.store(
-    `image-parts-${ columns }-${ rows }`,
-    () => {
-      const buffer = createGraphics(
-        sketch?.engine?.canvas?.width,
-        sketch?.engine?.canvas?.height
-      );
+  const images = imageUtils.getImages();
+  const imageFingerprints = images.reduce(
+    (
+      accumulator, image
+    ) => {
+      if ( image.img ) {
+        accumulator.push( `${ image.path }-${ image.filename }` );
+      }
 
-      return cache.get( "images" ).map( ( {
+      return accumulator;
+    },
+    [
+    ]
+  );
+
+  console.log( imageFingerprints );
+
+  if ( imageFingerprints.length === 0 ) {
+    return;
+  }
+
+  const imageParts = cache.store(
+    cache.key(
+      columns,
+      rows,
+      borderSize,
+      imageFingerprints.join( "i" ),
+      // dominantColorSample
+    ),
+    () => {
+      console.log( "new" );
+      return images.map( ( {
         img
       } ) => {
         imageUtils.marginImage( {
           img,
-          position: createVector(
-            width / 2,
-            height / 2
-          ),
-          graphics: buffer,
+          graphics: sketchState.buffer,
           center: true,
           fill: true,
         } );
@@ -79,7 +108,7 @@ sketch.draw( (
               x, y
             }
           ) => {
-            const imagePart = buffer.get(
+            const imagePart = sketchState.buffer.get(
               x,
               y,
               W,
@@ -104,7 +133,6 @@ sketch.draw( (
     .map( (
       _, index
     ) => [
-      index,
       index
     ] )
     .flat( Infinity );
@@ -155,27 +183,4 @@ sketch.draw( (
       // rect(x, y, W, H)
     }
   } );
-
-  if ( animation.progression < 0.2 ) {
-    string.write(
-      options.name.replaceAll(
-        "-",
-        "\n"
-      ),
-      0,
-      height / 2,
-      {
-        size: 172,
-        strokeWeight: 0,
-        stroke: color( ...options.colors.background ),
-        fill: color( ...options.colors.background ),
-        font: string.fonts.martian,
-        textAlign: [
-          CENTER,
-          CENTER
-        ],
-        blendMode: EXCLUSION,
-      }
-    );
-  }
 } );

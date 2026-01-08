@@ -21,25 +21,13 @@ const getFont = () => {
   return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
 };
 
-sketch.setup(
-  () => {
-    canvases.mask = createGraphics(
-      sketch?.engine?.canvas?.width,
-      sketch?.engine?.canvas?.height
-    );
-    background( ...getBg() );
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
-  }
-);
+sketch.setup( () => {
+  canvases.mask = createGraphics(
+    sketch?.engine?.canvas?.width,
+    sketch?.engine?.canvas?.height
+  );
+  background( ...getBg() );
+} );
 
 sketch.draw( ( time ) => {
   background( ...getBg() );

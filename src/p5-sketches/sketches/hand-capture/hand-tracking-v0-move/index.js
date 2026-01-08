@@ -54,89 +54,77 @@ const matter = {
   ],
 };
 
-sketch.setup(
-  async() => {
-    background( ...options.colors.background );
+sketch.setup( async() => {
+  background( ...options.colors.background );
 
-    await mediapipeInit( {
-      worker: false,
-      tasks: [
-        "hands"
-      ],
-    } );
+  await mediapipeInit( {
+    worker: false,
+    tasks: [
+      "hands"
+    ],
+  } );
 
-    for ( const layerName in layers ) {
-      const {
-        background, size
-      } = layers[ layerName ];
+  for ( const layerName in layers ) {
+    const {
+      background, size
+    } = layers[ layerName ];
 
-      layers[ layerName ].graphics = createGraphics(
-        size.width,
-        size.height
-      );
+    layers[ layerName ].graphics = createGraphics(
+      size.width,
+      size.height
+    );
 
-      if ( background ) {
-        layers[ layerName ].graphics.background( ...background );
-      }
+    if ( background ) {
+      layers[ layerName ].graphics.background( ...background );
     }
-
-    // / MATTER
-    const margin = 50;
-    const thickness = 50;
-
-    addBoundary(
-      width / 2,
-      height + thickness / 2 - margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      width / 2,
-      -thickness / 2 + margin,
-      width,
-      thickness
-    );
-    addBoundary(
-      -thickness / 2 + margin,
-      height / 2,
-      thickness,
-      height
-    );
-    addBoundary(
-      width + thickness / 2 - margin,
-      height / 2,
-      thickness,
-      height
-    );
-
-    for ( let i = 0; i <= 25; i++ ) {
-      addBall(
-        random(
-          thickness,
-          width - thickness
-        ),
-        random(
-          thickness,
-          height - thickness
-        ),
-        random(
-          50,
-          80
-        )
-      );
-    }
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
   }
-);
+
+  // / MATTER
+  const margin = 50;
+  const thickness = 50;
+
+  addBoundary(
+    width / 2,
+    height + thickness / 2 - margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    width / 2,
+    -thickness / 2 + margin,
+    width,
+    thickness
+  );
+  addBoundary(
+    -thickness / 2 + margin,
+    height / 2,
+    thickness,
+    height
+  );
+  addBoundary(
+    width + thickness / 2 - margin,
+    height / 2,
+    thickness,
+    height
+  );
+
+  for ( let i = 0; i <= 25; i++ ) {
+    addBall(
+      random(
+        thickness,
+        width - thickness
+      ),
+      random(
+        thickness,
+        height - thickness
+      ),
+      random(
+        50,
+        80
+      )
+    );
+  }
+} );
 
 matter.engine.gravity = {
   x: 0,

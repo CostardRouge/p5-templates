@@ -98,47 +98,33 @@ events.register(
 // p5.js setup – create both webcam feeds (capture + feedback)
 // ---------------------------------------------------------------------------
 
-sketch.setup(
-  () => {
-    background( ...options.colors.background );
+sketch.setup( () => {
+  background( ...options.colors.background );
 
-    mediapipe.capture.element = createCapture(
-      VIDEO,
-      {
-        flipped: true,
-      }
-    );
-    mediapipe.capture.element.size(
-      mediapipe.capture.size.width,
-      mediapipe.capture.size.height
-    );
-    mediapipe.capture.element.hide();
+  mediapipe.capture.element = createCapture(
+    VIDEO,
+    {
+      flipped: true,
+    }
+  );
+  mediapipe.capture.element.size(
+    mediapipe.capture.size.width,
+    mediapipe.capture.size.height
+  );
+  mediapipe.capture.element.hide();
 
-    mediapipe.feedback.element = createCapture(
-      VIDEO,
-      {
-        flipped: true,
-      }
-    );
-    mediapipe.feedback.element.size(
-      mediapipe.feedback.size.width,
-      mediapipe.feedback.size.height
-    );
-    mediapipe.feedback.element.hide();
-  },
-  {
-    size: {
-      width: options.size.width,
-      height: options.size.height,
-      // width: 1920,
-      // height: 1080
-    },
-    animation: {
-      framerate: options.animation.framerate,
-      duration: options.animation.duration,
-    },
-  }
-);
+  mediapipe.feedback.element = createCapture(
+    VIDEO,
+    {
+      flipped: true,
+    }
+  );
+  mediapipe.feedback.element.size(
+    mediapipe.feedback.size.width,
+    mediapipe.feedback.size.height
+  );
+  mediapipe.feedback.element.hide();
+} );
 
 // ---------------------------------------------------------------------------
 // Self‑contained helper functions (each performs inference + drawing)
