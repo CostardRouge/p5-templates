@@ -1,87 +1,9 @@
 import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfiguration";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import capitalize from "@/utils/capitalize";
-import easing from "@/p5/utils/easing";
-import camelCaseToSpace from "@/utils/camelCaseToSpace";
 
-function createFixedOrVariableOption(
-  optionName: string, optionConfiguration: Record<string, number>
-) {
-  const spacedOptionName = camelCaseToSpace( optionName );
-  const capitalizedOptionName = capitalize( spacedOptionName );
-  const {
-    min, max, step
-  } = optionConfiguration;
-
-  return ( {
-    label: capitalizedOptionName,
-    component: "conditional-group",
-    conditionalOn: "mode",
-    typeSelector: {
-      options: [
-        {
-          label: `Fixed ${ spacedOptionName.toLowerCase() }`,
-          value: "fixed",
-        },
-        {
-          label: `Variable ${ spacedOptionName.toLowerCase() }`,
-          value: "variable",
-        },
-      ],
-    },
-    configs: {
-      fixed: {
-        value: {
-          label: `Fixed ${ spacedOptionName.toLowerCase() }`,
-          component: "slider",
-          min,
-          max,
-          step,
-        },
-      },
-      variable: {
-        speedMultiplier: {
-          label: "Speed multiplier",
-          component: "slider",
-          min: 0,
-          max: 10,
-          step: 0.1,
-        },
-        progressionMultiplier: {
-          label: "Progression multiplier",
-          component: "slider",
-          min: 0,
-          max: 100,
-          step: 0.1,
-        },
-        startValue: {
-          label: `${ capitalizedOptionName } start`,
-          component: "slider",
-          min,
-          max,
-          step,
-        },
-        endValue: {
-          label: `${ capitalizedOptionName } end`,
-          component: "slider",
-          min,
-          max,
-          step,
-        },
-        easingFn: {
-          component: "select",
-          label: `${ capitalizedOptionName } easing`,
-          options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-            label: easingFunctionName,
-            value: easingFunctionName,
-          } ) ),
-        },
-      },
-    },
-    // Schema is injected client-side in injectSketchSchemas.ts
-    // See schemas.ts for WaveConfigSchema definition
-  } );
-}
+import {
+  createFixedOrVariableOption
+} from "@/utils/sketchOptionUtils";
 
 export const formValues = {
   shape: {

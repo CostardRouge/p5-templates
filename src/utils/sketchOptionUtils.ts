@@ -1,0 +1,143 @@
+import easing from "@/p5/utils/easing";
+
+import camelCaseToSpace from "@/utils/camelCaseToSpace";
+import capitalize from "@/utils/capitalize";
+
+type FixedOption = {
+  mode: "fixed",
+  value: number
+}
+
+type VariableOption<T> = {
+  mode: "variable",
+  startValue: T,
+  endValue: T,
+  count: number,
+  speedMultiplier: number,
+  progressionMultiplier: number,
+  easingFn: string
+}
+
+export function createFixedOrVariableOption(
+  optionName: string, optionConfiguration: Record<string, number>
+) {
+  const spacedOptionName = camelCaseToSpace( optionName );
+  const capitalizedOptionName = capitalize( spacedOptionName );
+  const {
+    min, max, step
+  } = optionConfiguration;
+
+  return ( {
+    label: capitalizedOptionName,
+    component: "conditional-group",
+    conditionalOn: "mode",
+    typeSelector: {
+      options: [
+        {
+          label: `Fixed ${ spacedOptionName.toLowerCase() }`,
+          value: "fixed",
+        },
+        {
+          label: `Variable ${ spacedOptionName.toLowerCase() }`,
+          value: "variable",
+        },
+      ],
+    },
+    configs: {
+      fixed: {
+        value: {
+          label: `Fixed ${ spacedOptionName.toLowerCase() }`,
+          component: "slider",
+          min,
+          max,
+          step,
+        },
+      },
+      variable: {
+        speedMultiplier: {
+          label: "Speed multiplier",
+          component: "slider",
+          min: 0,
+          max: 10,
+          step: 0.1,
+        },
+        progressionMultiplier: {
+          label: "Progression multiplier",
+          component: "slider",
+          min: 0,
+          max: 100,
+          step: 0.1,
+        },
+        startValue: {
+          label: `${ capitalizedOptionName } start`,
+          component: "slider",
+          min,
+          max,
+          step,
+        },
+        endValue: {
+          label: `${ capitalizedOptionName } end`,
+          component: "slider",
+          min,
+          max,
+          step,
+        },
+        easingFn: {
+          component: "select",
+          label: `${ capitalizedOptionName } easing`,
+          options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
+            label: easingFunctionName,
+            value: easingFunctionName,
+          } ) ),
+        },
+      },
+    },
+    // Schema is injected client-side in injectSketchSchemas.ts
+    // See schemas.ts for WaveConfigSchema definition
+  } );
+}
+
+export function createSingleOrMultipleTextOption( optionName: string ) {
+  const spacedOptionName = camelCaseToSpace( optionName );
+  const capitalizedOptionName = capitalize( spacedOptionName );
+
+  return ( {
+    label: capitalizedOptionName,
+    component: "conditional-group",
+    conditionalOn: "mode",
+    typeSelector: {
+      options: [
+        {
+          label: "Single (letter by letter)",
+          value: "single",
+        },
+        {
+          label: "Multiple (word by word)",
+          value: "multiple",
+        },
+      ],
+    },
+    configs: {
+      single: {
+        value: {
+          label: "single",
+          component: "text",
+        },
+      },
+      multiple: {
+        value: {
+          label: "multiple",
+          component: "item-list",
+          itemConfig: {
+            label: "Multiple",
+            defaultItems: [
+              "one",
+              "two",
+              "three"
+            ]
+          }
+        },
+      }
+    }
+  } );
+}
