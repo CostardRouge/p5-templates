@@ -318,7 +318,14 @@
     "name": "photo-switch-letter-mask",
     "category": "photo",
     "hasSketchForm": true,
-    "mtime": "2026-01-09T00:36:38.387Z",
+    "mtime": "2026-01-10T00:59:46.923Z",
     "ctime": "2025-04-21T11:29:50.560Z"
+  },
+  {
+    "name": "photo-grid",
+    "category": "photo",
+    "hasSketchForm": true,
+    "mtime": "2026-01-12T08:08:36.416Z",
+    "ctime": "2026-01-12T07:03:09.037Z"
   }
 ]
