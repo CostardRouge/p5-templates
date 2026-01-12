@@ -1,12 +1,14 @@
 import options from "@/p5/utils/options.js";
-
-import cache from "@/p5/utils/cache.js";
 import string from "@/p5/utils/string.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+
+import {
+  getFixedOrVariableOption
+} from "@/p5/utils/common.js";
 
 const canvases = {
 };
@@ -17,13 +19,17 @@ sketch.setup( () => {
     sketch?.engine?.canvas?.height
   );
 
-  background( ...options.colors.background );
+  background( ...options.sketch.backgroundColor );
 } );
 
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  const images = cache.get( "images" );
+  clear();
+  background( ...options.sketch.backgroundColor );
+
+  const images = imageUtils.getImages();
+
   const imageSwitchSpeed = 3 / 2; // images.length;
   const imageObject = mappers.circularIndex(
     imageSwitchSpeed * animation.progression * images.length,
@@ -32,95 +38,75 @@ sketch.draw( (
 
   imageUtils.marginImage( {
     img: imageObject.img,
-    position: center,
-    scale: mappers.fn(
-      animation.triangleProgression( 1 ),
-      0,
-      1,
-      1,
-      1.5,
-      easing.easeInOutElastic
-    ),
-    center: true,
-    fill: true,
+    scale: options.sketch.imageStyle.scale ?? 1,
+    center: options.sketch.imageStyle.center ?? true,
+    fill: options.sketch.imageStyle.fill ?? true,
   } );
 
-  const text = "ROADTRIP";
-  const textFonts = [
-    // string.fonts.peix,
-    // string.fonts.cloitre,
-    // string.fonts.serif,
-    string.fonts.agiro,
-    // string.fonts.martian,
-    // string.fonts.tilt,
-    // string.fonts.openSans,
-    // string.fonts.multicoloure,
-    // string.fonts.sans
+  const itemsToMorph = [
   ];
-  const textFontSwitchSpeed = 1; // textFonts.length;
-  const textFontSize = ( height + width ) / 2;
-  const textFont = mappers.circularIndex(
-    textFontSwitchSpeed * animation.progression * textFonts.length,
-    textFonts
-  );
+
+  if ( "single" === options.sketch.text.mode ) {
+    itemsToMorph.push( ...( options.sketch.text.value.split( "" ) ) );
+  }
+
+  if ( "multiple" === options.sketch.text.mode ) {
+    itemsToMorph.push( ...options.sketch.text.value );
+  }
+
+  if ( itemsToMorph.length === 0 ) {
+    itemsToMorph.push( ...( "0123456789".split( "" ) ) );
+  }
+
+  const size = options.sketch.textStyle.size * ( ( height + width ) / 2 ) ?? ( height + width ) / 2;
+  const font = string.fonts?.[ options.sketch?.textStyle.font ] ?? string.fonts.serif;
+  const sampleFactor = options.sketch.textStyle.sampleFactor ?? 0.05;
+  const simplifyThreshold = options.sketch.textStyle.simplifyThreshold ?? 0;
 
   canvases.mask.clear();
 
   const points = animation.ease( {
-    values: text.split( "" ).map( ( text ) =>
+    values: itemsToMorph.map( ( text ) =>
       string.getTextPoints( {
         text,
-        position: createVector(
-          width / 2,
-          height / 2
-        ),
-        size: textFontSize,
-        font: textFont,
-        sampleFactor: 1,
-        simplifyThreshold: 0,
+        size,
+        font,
+        sampleFactor,
+        simplifyThreshold,
+        position: center,
       } ) ),
     lerpFn: mappers.lerpPoints,
-    currentTime: 2 * animation.progression * text.length,
+    currentTime: animation.progression * itemsToMorph.length,
     easingFn: easing.easeInOutExpo,
   } );
 
-  // canvases.mask.stroke("red")
-  // canvases.mask.fill("red")
-  // canvases.mask.noFill();
-  // canvases.mask.strokeWeight(50);
-
-  canvases.mask.beginShape();
+  // canvases.mask.beginShape();
   for ( let i = 0; i < points.length; i++ ) {
+    const pointsProgression = i / ( points.length - 1 );
+
+    canvases.mask.strokeWeight( getFixedOrVariableOption(
+      "strokeWeight",
+      pointsProgression
+    ) );
+
     // canvases.mask.rect(points[i].x, points[i].y, 30, 30);
-    canvases.mask.vertex(
+    // canvases.mask.vertex(
+    //   points[ i ].x,
+    //   points[ i ].y
+    // );
+    canvases.mask.point(
       points[ i ].x,
-      points[ i ].y
+      points[ i ].y,
     );
   }
-  canvases.mask.endShape();
-
-  // string.write(
-  // 	"S",
-  // 	// mappers.circularIndex(animation.progression*text.length, text.split("")),
-  // 	width/2,
-  // 	height/2-textFontSize/8,
-  // 	{
-  // 		size: textFontSize,
-  // 		// stroke: color(...options.colors.text),
-  // 		fill: color(...options.colors.background),
-  // 		font: textFont,
-  // 		textAlign: [CENTER, CENTER],
-  // 		// blendMode: EXCLUSION,
-  // 		graphics: canvases.mask
-  // 	}
-  // )
+  // canvases.mask.endShape( );
 
   const mask = displayMask(
     window,
     canvases.mask
   );
 
-  background( ...options.colors.background );
+  background( ...options.sketch.backgroundColor );
   image(
     mask,
     0,
