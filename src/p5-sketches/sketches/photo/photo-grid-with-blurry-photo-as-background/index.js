@@ -118,8 +118,16 @@ sketch.draw( (
     width,
     height
   );
-  // filter( BLUR, options.sketch?.blur ?? 9, true );
-  // filter(POSTERIZE, options.blur || 9, true);
+  filter(
+    BLUR,
+    options.sketch?.blur ?? 9,
+    true
+  );
+  filter(
+    POSTERIZE,
+    options.sketch.posterize ?? 9,
+    true
+  );
 
   gridCells.forEach( (
     {

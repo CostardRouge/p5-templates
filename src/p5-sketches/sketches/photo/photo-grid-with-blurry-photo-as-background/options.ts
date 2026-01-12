@@ -32,12 +32,6 @@ export const formConfiguration: Record<string, any> = {
     label: "Images",
   },
 
-  // Colors
-  backgroundColor: {
-    component: "color",
-    label: "Background color",
-  },
-
   // Grid
   rows: {
     component: "slider",
@@ -59,6 +53,20 @@ export const formConfiguration: Record<string, any> = {
     min: 0,
     max: 40,
     step: 1,
+  },
+
+  posterize: {
+    component: "slider",
+    label: "Background posterize",
+    min: 0,
+    max: 40,
+    step: 1,
+  },
+
+  // Colors
+  backgroundColor: {
+    component: "color",
+    label: "Background color",
   },
 
   title: {
