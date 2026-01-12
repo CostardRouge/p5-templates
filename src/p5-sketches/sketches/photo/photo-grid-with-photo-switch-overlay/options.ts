@@ -53,7 +53,7 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  background: {
+  backgroundColor: {
     component: "color",
     label: "Background color",
   },
