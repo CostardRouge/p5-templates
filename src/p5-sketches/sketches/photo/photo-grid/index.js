@@ -19,9 +19,9 @@ sketch.draw( (
 
   const images = imageUtils.getImages();
 
-  const borderSize = options.sketch?.borderSize ?? 0;
-  const rows = options.sketch?.rows ?? 4; // columns*height/width;
-  const columns = options.sketch?.columns ?? 3; // rows*width/height;
+  const borderSize = options.sketch?.grid.borderSize ?? 0;
+  const rows = options.sketch?.grid.rows ?? 4; // columns*height/width;
+  const columns = options.sketch?.grid.columns ?? 3; // rows*width/height;
   const gridOptions = {
     topLeft: createVector(
       borderSize,
@@ -58,10 +58,10 @@ sketch.draw( (
     const imageObjectAtIndex = mappers.circularIndex(
       cellIndex,
       // (
-      //     +animation.progression*images.length
-      //     +(
-      //         +xIndex/columns
-      //         +yIndex/rows
+      //   +animation.progression * images.length
+      //     + (
+      //       +xIndex / columns
+      //         + yIndex / rows
       //     )
       // ),
       images

@@ -22,9 +22,11 @@ export const formValues = {
     225
   ],
 
-  // Grid
-  rows: 4,
-  columns: 3,
+  grid: {
+    borderSize: 0,
+    rows: 3,
+    columns: 3
+  },
 
   title: {
     ...titleDefaultValues,
@@ -39,20 +41,29 @@ export const formConfiguration: Record<string, any> = {
     label: "Images",
   },
 
-  // Grid
-  rows: {
-    component: "slider",
-    label: "Rows",
-    min: 1,
-    max: 12,
-    step: 1,
-  },
-  columns: {
-    component: "slider",
-    label: "Columns",
-    min: 1,
-    max: 12,
-    step: 1,
+  grid: {
+    component: "nested-object",
+    label: "Grid settings",
+    fields: {
+      borderSize: {
+        label: "Border size",
+        component: "slider",
+        min: 0,
+        max: 100,
+      },
+      rows: {
+        label: "Rows",
+        component: "slider",
+        min: 1,
+        max: 100,
+      },
+      columns: {
+        label: "Rows",
+        component: "slider",
+        min: 1,
+        max: 100,
+      },
+    }
   },
 
   imageStyle: {

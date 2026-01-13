@@ -322,10 +322,17 @@
     "ctime": "2025-04-21T11:29:50.560Z"
   },
   {
+    "name": "noise-lines-circle-colored",
+    "category": "noise-lines",
+    "hasSketchForm": true,
+    "mtime": "2026-01-12T13:37:26.234Z",
+    "ctime": "2026-01-12T13:27:28.821Z"
+  },
+  {
     "name": "photo-grid",
     "category": "photo",
     "hasSketchForm": true,
-    "mtime": "2026-01-12T08:08:36.416Z",
+    "mtime": "2026-01-13T05:30:30.640Z",
     "ctime": "2026-01-12T07:03:09.037Z"
   }
 ]
