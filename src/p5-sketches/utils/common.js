@@ -102,3 +102,66 @@ export function getFixedOrVariableOption(
     );
   }
 }
+
+export const getLoopMultiplier = ( targetValue ) => (
+  Math.max(
+    Math.round( targetValue / TAU ),
+    1
+  ) * TAU
+);
+
+export const getVariableOptionValue = (
+  optionConfig, component, mapFunction = Math.sin, mapMin = -1, mapMax = 1
+) => {
+  if ( !optionConfig ) {
+    return;
+  }
+
+  const {
+    x, y, z
+  } = component;
+
+  const {
+    start, end, xMultiplier, yMultiplier, zMultiplier, generalMultiplier, easingFn
+  } = optionConfig;
+
+  const phase = [
+    [
+      x,
+      xMultiplier
+    ],
+    [
+      y,
+      yMultiplier
+    ],
+    [
+      z,
+      zMultiplier
+    ]
+  ].reduce(
+    (
+      previousValue, currentValue
+    ) => {
+      const [
+        value,
+        multiplier
+      ] = currentValue;
+
+      if ( undefined !== value ) {
+        return previousValue + ( value * getLoopMultiplier( multiplier ) );
+      }
+
+      return previousValue;
+    },
+    0
+  );
+
+  return mappers.fn(
+    mapFunction( phase ),
+    mapMin,
+    mapMax,
+    start,
+    end,
+    easing?.[ easingFn ] ?? easing.easeInOutSine
+  ) * generalMultiplier;
+};

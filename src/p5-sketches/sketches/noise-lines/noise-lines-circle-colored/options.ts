@@ -2,7 +2,7 @@ import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfigura
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 
 import {
-  createFixedOrVariableOption
+  createFixedOrVariableOption, createVariableOption
 } from "@/utils/sketchOptionUtils";
 
 export const formValues = {
@@ -50,6 +50,27 @@ export const formValues = {
     startValue: 0.02,
     endValue: 0.03,
     easingFn: "easeInOutBack",
+  },
+  colors: {
+    colorFunction: "rainbow",
+    hueIndex: {
+      easing: "easeInOutSine",
+      start: 3,
+      end: 1,
+      generalMultiplier: 6,
+      xMultiplier: 1,
+      yMultiplier: 2,
+      zMultiplier: 2
+    },
+    opacityFactor: {
+      easing: "easeInOutSine",
+      start: 9,
+      end: 1,
+      generalMultiplier: 1,
+      xMultiplier: 6,
+      yMultiplier: 9,
+      zMultiplier: 9
+    }
   },
   backgroundColor: [
     0,
@@ -128,6 +149,43 @@ export const formConfiguration: Record<string, any> = {
       step: 0.01
     }
   ),
+
+  colors: {
+    label: "Colors",
+    component: "nested-object",
+    fields: {
+      colorFunction: {
+        component: "select",
+        label: "Palette",
+        options: [
+          {
+            label: "Rainbow",
+            value: "rainbow",
+          },
+          {
+            label: "Purple",
+            value: "purple",
+          },
+        ],
+      },
+      opacityFactor: createVariableOption(
+        "opacityFactor",
+        {
+          min: 9,
+          max: 1,
+          step: 0.01
+        }
+      ),
+      hueIndex: createVariableOption(
+        "hueIndex",
+        {
+          min: 3,
+          max: 1,
+          step: 0.01
+        }
+      )
+    }
+  },
 
   title: titleFormConfiguration,
   backgroundColor: {

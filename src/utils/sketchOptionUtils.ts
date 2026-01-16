@@ -141,3 +141,70 @@ export function createSingleOrMultipleTextOption( optionName: string ) {
     }
   } );
 }
+
+export function createVariableOption(
+  optionName: string, optionConfiguration: Record<string, number>
+) {
+  const spacedOptionName = camelCaseToSpace( optionName );
+  const capitalizedOptionName = capitalize( spacedOptionName );
+  const {
+    min, max, step
+  } = optionConfiguration;
+
+  return ( {
+    label: capitalizedOptionName,
+    component: "nested-object",
+    fields: {
+      generalMultiplier: {
+        label: "General multiplier",
+        component: "slider",
+        min: -9,
+        max: 9,
+        step: 0.1,
+      },
+      start: {
+        label: `${ capitalizedOptionName } start`,
+        component: "slider",
+        min,
+        max,
+        step,
+      },
+      end: {
+        label: `${ capitalizedOptionName } end`,
+        component: "slider",
+        min,
+        max,
+        step,
+      },
+      xMultiplier: {
+        label: `${ capitalizedOptionName } xMultiplier`,
+        component: "slider",
+        min: -9,
+        max: 9,
+        step: 0.1,
+      },
+      yMultiplier: {
+        label: `${ capitalizedOptionName } yMultiplier`,
+        component: "slider",
+        min: -9,
+        max: 9,
+        step: 0.1,
+      },
+      zMultiplier: {
+        label: `${ capitalizedOptionName } zMultiplier`,
+        component: "slider",
+        min: -9,
+        max: 9,
+        step: 0.1,
+      },
+      easingFn: {
+        component: "select",
+        label: `${ capitalizedOptionName } easing`,
+        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
+          label: easingFunctionName,
+          value: easingFunctionName,
+        } ) ),
+      },
+    },
+  } );
+}

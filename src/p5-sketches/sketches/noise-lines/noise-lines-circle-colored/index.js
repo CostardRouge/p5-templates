@@ -2,27 +2,19 @@ import options from "@/p5/utils/options.js";
 import animation from "@/p5/utils/animation.js";
 import colors from "@/p5/utils/colors.js";
 import sketch from "@/p5/utils/sketch.js";
-import easing from "@/p5/utils/easing.js";
-import mappers from "@/p5/utils/mappers.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getFixedOrVariableOption
 } from "@/p5/utils/common.js";
+import {
+  getVariableOptionValue
+} from "../../../utils/common";
 
 sketch.setup( ( {
   canvas
 } ) => {
   background( ...getBackgroundColor() );
 } );
-
-function getLoopMult( targetValue ) {
-  const rotations = Math.round( targetValue / TAU );
-
-  return Math.max(
-    rotations,
-    1
-  ) * TAU;
-}
 
 const getBackgroundColor = () =>
   options.sketch?.backgroundColor ?? [
@@ -82,26 +74,22 @@ function drawBlob(
     const y = r * sin( a );
 
     stroke( colors.rainbow( {
-      opacityFactor: map(
-        Math.sin( ( animation.angle * 6 )
-          + ( lineProgression * getLoopMult( 9 ) )
-          + ( angleProgression * getLoopMult( 9 ) ) ),
-        -1,
-        1,
-        9,
-        1
+      opacityFactor: getVariableOptionValue(
+        options.sketch.colors.opacityFactor,
+        {
+          x: animation.angle,
+          y: lineProgression,
+          z: angleProgression,
+        }
       ),
-      // opacityFactor: 1.5,
-      hueIndex: mappers.fn(
-        Math.sin( ( animation.angle )
-          + ( lineProgression * getLoopMult( 2 ) )
-          + ( angleProgression * getLoopMult( 2 ) ) ),
-        -1,
-        1,
-        3,
-        1,
-        easing.easeInOutSine
-      ) * 6
+      hueIndex: getVariableOptionValue(
+        options.sketch.colors.hueIndex,
+        {
+          x: animation.angle,
+          y: lineProgression,
+          z: angleProgression,
+        }
+      )
     } ) );
 
     point(
