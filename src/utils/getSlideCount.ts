@@ -7,7 +7,24 @@ import type {
  * Handles both array format and Record<slideId, url> format
  */
 export function getSlideCount( job: JobModel ): number {
-  // Try videoUrls first (most reliable for completed recordings)
+  // Check options first (authoritative source for intended slide count)
+  if ( job.options ) {
+    const options = job.options as unknown;
+
+    if (
+      typeof options === "object" &&
+      options !== null &&
+      "slides" in options
+    ) {
+      const slides = ( options as any ).slides;
+
+      if ( Array.isArray( slides ) ) {
+        return slides.length || 1;
+      }
+    }
+  }
+
+  // For completed recordings, videoUrls should match options but use as final confirmation
   if ( job.videoUrls ) {
     const videoData = job.videoUrls as unknown;
 
@@ -16,18 +33,5 @@ export function getSlideCount( job: JobModel ): number {
     }
   }
 
-  // Fall back to thumbnails
-  if ( job.thumbnails ) {
-    const thumbData = job.thumbnails as unknown;
-
-    if ( Array.isArray( thumbData ) ) {
-      return thumbData.length;
-    } else if ( typeof thumbData === "object" && thumbData !== null ) {
-      // Record<slideId, url> format
-      return Object.keys( thumbData as Record<string, unknown> ).length;
-    }
-  }
-
-  // Default to 1 slide
   return 1;
 }
