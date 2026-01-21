@@ -1,37 +1,35 @@
 "use client";
 
-import React, {
-  forwardRef, useImperativeHandle, useState
-} from "react";
 import {
   useRouter
 } from "next/navigation";
-
+import React, {
+  forwardRef, useImperativeHandle, useState
+} from "react";
+import fetchDownload from "@/components/utils/fetchDownload";
+import VideoPreviewModal from "@/components/VideoPreviewModal";
 import {
   useRecordingQueue
 } from "@/hooks/useRecordingQueue";
 import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import {
-  JobId, JobModel, JobStatusEnum
-} from "@/types/recording.types";
-import fetchDownload from "@/components/utils/fetchDownload";
-import {
   getScopeAssetPath, resolveAssetURL
 } from "@/p5-sketches/shared/utils";
-import {
+import type {
+  JobId, JobModel, JobStatusEnum
+} from "@/types/recording.types";
+import type {
   SketchOptionInput, SlideOptionInput
 } from "@/types/sketch.types";
-import VideoPreviewModal from "@/components/VideoPreviewModal";
-
+import BrowserRecordingButton from "./components/BrowserRecordingButton";
+import CompletedActions from "./components/CompletedActions";
+import DraftActions from "./components/DraftActions";
+import FailedActions from "./components/FailedActions";
+import NoJobActions from "./components/NoJobActions";
+import RecordingActions from "./components/RecordingActions";
 import {
   getRecordingStatus
 } from "./utils/getRecordingStatus";
-import BrowserRecordingButton from "./components/BrowserRecordingButton";
-import NoJobActions from "./components/NoJobActions";
-import DraftActions from "./components/DraftActions";
-import RecordingActions from "./components/RecordingActions";
-import CompletedActions from "./components/CompletedActions";
-import FailedActions from "./components/FailedActions";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
@@ -186,87 +184,48 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       setSaving( true );
     }
 
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
 
-    if ( persistedJobId ) {
-      formData.append(
-        "jobId",
-        persistedJobId
-      );
-    }
-
-    formData.append(
-      "status",
-      status
-    );
-    formData.append(
-      "template",
-      `p5/${ name }`
-    );
-    formData.append(
-      "options",
-      JSON.stringify( options )
-    );
-
-    if ( thumbnails ) {
-      formData.append(
-        "thumbnails",
-        JSON.stringify( thumbnails )
-      );
-    }
-
-    // Handle GLOBAL assets
-    const globalAssets = options.assets ?? {
-      images: [
-      ],
-      videos: [
-      ],
-    };
-
-    for ( const type of Object.keys( globalAssets ) ) {
-      const fileList = globalAssets[ type as keyof typeof globalAssets ] ?? [
-      ];
-
-      await Promise.all( fileList.map( async(
-        assetUrl: string, index: number
-      ) => {
-        const blob = await fetch( resolveAssetURL(
-          assetUrl,
-          options.id
-        ) ).then( ( r ) => r.blob() );
-        const name = assetUrl.split( "/" ).pop() ?? `${ type }-${ index }`;
-
+      if ( persistedJobId ) {
         formData.append(
-          `file[global][${ type }]`,
-          new File(
-            [
-              blob
-            ],
-            `global/${ type }/${ name }`,
-            {
-              type: blob.type,
-            }
-          )
+          "jobId",
+          persistedJobId
         );
-      } ) );
-    }
+      }
 
-    // Handle SLIDE assets
-    const slides: SlideOptionInput[] = options.slides || [
-    ];
+      formData.append(
+        "status",
+        status
+      );
+      formData.append(
+        "template",
+        `p5/${ name }`
+      );
+      formData.append(
+        "options",
+        JSON.stringify( options )
+      );
 
-    for ( let i = 0; i < slides.length; i++ ) {
-      const slide = slides[ i ];
-      const assets = slide.assets ?? {
+      if ( thumbnails ) {
+        formData.append(
+          "thumbnails",
+          JSON.stringify( thumbnails )
+        );
+      }
+
+      // Handle GLOBAL assets
+      const globalAssets = options.assets ?? {
         images: [
         ],
         videos: [
         ],
       };
 
-      for ( const type of Object.keys( assets ) ) {
-        const fileList = assets[ type as keyof typeof assets ] ?? [
-        ];
+      for ( const type of Object.keys( globalAssets ) ) {
+        const fileList =
+            globalAssets[ type as keyof typeof globalAssets ] ?? [
+            ];
 
         await Promise.all( fileList.map( async(
           assetUrl: string, index: number
@@ -275,22 +234,15 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
             assetUrl,
             options.id
           ) ).then( ( r ) => r.blob() );
-          const prefix = `slide-${ i }-${ type }-${ index }`;
-          const name = assetUrl.split( "/" ).pop() ?? prefix;
+          const name = assetUrl.split( "/" ).pop() ?? `${ type }-${ index }`;
 
           formData.append(
-            `file[slide-${ i }][${ type }]`,
+            `file[global][${ type }]`,
             new File(
               [
                 blob
               ],
-              getScopeAssetPath(
-                name,
-                type,
-                {
-                  slide: i,
-                }
-              ),
+              `global/${ type }/${ name }`,
               {
                 type: blob.type,
               }
@@ -298,27 +250,130 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
           );
         } ) );
       }
-    }
 
-    const newJobId = await enqueueRecording( formData );
+      // Handle SLIDE assets
+      const slides: SlideOptionInput[] = options.slides || [
+      ];
 
-    if ( newJobId !== null ) {
-      setJobId( newJobId );
+      for ( let i = 0; i < slides.length; i++ ) {
+        const slide = slides[ i ];
+        const assets = slide.assets ?? {
+          images: [
+          ],
+          videos: [
+          ],
+        };
 
-      if ( status !== "draft" ) {
-        subscribeToRecordingStatus( newJobId );
+        for ( const type of Object.keys( assets ) ) {
+          const fileList = assets[ type as keyof typeof assets ] ?? [
+          ];
+
+          await Promise.all( fileList.map( async(
+            assetUrl: string, index: number
+          ) => {
+            const blob = await fetch( resolveAssetURL(
+              assetUrl,
+              options.id
+            ) ).then( ( r ) => r.blob() );
+            const prefix = `slide-${ i }-${ type }-${ index }`;
+            const name = assetUrl.split( "/" ).pop() ?? prefix;
+
+            formData.append(
+              `file[slide-${ i }][${ type }]`,
+              new File(
+                [
+                  blob
+                ],
+                getScopeAssetPath(
+                  name,
+                  type,
+                  {
+                    slide: i,
+                  }
+                ),
+                {
+                  type: blob.type,
+                }
+              )
+            );
+          } ) );
+        }
       }
 
-      // Redirect to URL with job ID for both drafts and recordings (unless skipRedirect is true)
-      if ( !skipRedirect ) {
-        router.replace( `${ name }?id=${ newJobId }` );
-      }
+      const newJobId = await enqueueRecording( formData );
 
+      if ( newJobId !== null ) {
+        console.log(
+          `[CaptureActions] Successfully saved/enqueued job with ID: ${ newJobId }`,
+          {
+            status,
+            skipRedirect,
+            persistedJobId,
+          }
+        );
+
+        // Update state first
+        setJobId( newJobId );
+
+        if ( status !== "draft" ) {
+          subscribeToRecordingStatus( newJobId );
+        }
+
+        // Redirect to URL with job ID for both drafts and recordings (unless skipRedirect is true)
+        if ( !skipRedirect ) {
+          const newUrl = `${ name }?id=${ newJobId }`;
+
+          console.log( `[CaptureActions] Updating URL to: ${ newUrl }` );
+          // Use router.replace with error handling
+          try {
+            router.replace( newUrl );
+            // Also update browser history as a backup
+            window.history.replaceState(
+              null,
+              "",
+              `/templates/p5/${ newUrl }`
+            );
+          } catch ( routerError ) {
+            console.error(
+              "[CaptureActions] Router.replace failed, falling back to window.history:",
+              routerError
+            );
+            // Fallback to direct history manipulation
+            window.history.replaceState(
+              null,
+              "",
+              `/templates/p5/${ newUrl }`
+            );
+          }
+        }
+
+        if ( status === "draft" ) {
+          setSaving( false );
+        }
+      } else {
+        console.error(
+          "[CaptureActions] enqueueRecording returned null",
+          {
+            status,
+            persistedJobId,
+          }
+        );
+        if ( status === "draft" ) {
+          setSaving( false );
+        }
+        // Optionally show error to user
+        alert( "Failed to save draft. Please try again." );
+      }
+    } catch ( error ) {
+      console.error(
+        "[CaptureActions] Error in handleSubmit:",
+        error
+      );
       if ( status === "draft" ) {
         setSaving( false );
       }
-    } else if ( status === "draft" ) {
-      setSaving( false );
+      // Show error to user
+      alert( "An error occurred while saving. Please try again." );
     }
   };
 

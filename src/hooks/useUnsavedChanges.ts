@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  useEffect, useRef, useState, useCallback
-} from "react";
-import {
   useRouter
 } from "next/navigation";
+import {
+  useCallback, useEffect, useRef, useState
+} from "react";
 
 type UseUnsavedChangesOptions = {
   hasUnsavedChanges: boolean;
@@ -135,21 +135,22 @@ export function useUnsavedChanges( {
 
   const handleLeaveWithoutSaving = useCallback(
     () => {
-      setShowModal( false );
+      const targetUrl = pendingNavigation;
 
-      if ( pendingNavigation ) {
+      setShowModal( false );
+      setPendingNavigation( null );
+
+      if ( targetUrl ) {
         isNavigatingRef.current = true;
         shouldBlockRef.current = false;
 
         // Navigate without saving
-        if ( pendingNavigation.startsWith( "http" ) ) {
-          window.location.href = pendingNavigation;
+        if ( targetUrl.startsWith( "http" ) ) {
+          window.location.href = targetUrl;
         } else {
-          router.push( pendingNavigation );
+          router.push( targetUrl );
         }
       }
-
-      setPendingNavigation( null );
     },
     [
       pendingNavigation,
@@ -170,25 +171,28 @@ export function useUnsavedChanges( {
   const handleSaveAsDraft = useCallback(
     async() => {
       if ( onSaveAsDraft ) {
+        const targetUrl = pendingNavigation;
+
         try {
           await onSaveAsDraft();
           setShowModal( false );
+          setPendingNavigation( null );
 
           // Navigate after saving
-          if ( pendingNavigation ) {
+          if ( targetUrl ) {
             isNavigatingRef.current = true;
             shouldBlockRef.current = false;
 
             // Use Next.js router for internal navigation, window.location for external
-            if ( pendingNavigation.startsWith( "http" ) ) {
-              window.location.href = pendingNavigation;
+            if ( targetUrl.startsWith( "http" ) ) {
+              window.location.href = targetUrl;
             } else {
             // Use router.push for Next.js navigation
-              router.push( pendingNavigation );
+              router.push( targetUrl );
             }
           }
         } catch ( error ) {
-        // Failed to save
+        // Failed to save - keep modal open
         }
       }
     },

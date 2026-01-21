@@ -1,12 +1,10 @@
 "use client";
 
 import {
-  useState, useCallback
+  useCallback, useState
 } from "react";
 import {
-  EnqueueRecordingRequest,
-  EnqueueRecordingResponse,
-  QueueHealthResponse,
+  type EnqueueRecordingResponse, type QueueHealthResponse,
 } from "@/types/recording.types";
 
 export function useRecordingQueue() {
@@ -33,17 +31,44 @@ export function useRecordingQueue() {
           }
         );
 
+        if ( !response.ok ) {
+          console.error(
+            "[useRecordingQueue] HTTP error:",
+            response.status,
+            response.statusText
+          );
+        }
+
         const data: EnqueueRecordingResponse = await response.json();
 
         if ( !data.success ) {
-          throw new Error( data.error || "Failed to enqueue recording" );
+          const errorMsg = data.error || "Failed to enqueue recording";
+
+          console.error(
+            "[useRecordingQueue] API returned error:",
+            errorMsg
+          );
+          throw new Error( errorMsg );
         }
 
-        return data.jobId || null;
+        if ( !data.jobId ) {
+          console.error( "[useRecordingQueue] API returned success but no jobId" );
+          throw new Error( "No job ID returned from server" );
+        }
+
+        console.log(
+          "[useRecordingQueue] Successfully enqueued recording:",
+          data.jobId
+        );
+        return data.jobId;
       } catch ( error ) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
 
+        console.error(
+          "[useRecordingQueue] Error enqueuing recording:",
+          error
+        );
         setError( errorMessage );
         return null;
       } finally {
