@@ -32,35 +32,9 @@ export const formValues = {
   },
   rotation: {
     enabled: true,
-    syncWithMorphing: true,
-    angleMultiplier: 1,
-    rotationAngles: [
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: Math.PI / 5,
-        y: 0,
-        z: 0
-      },
-      {
-        x: -Math.PI / 5,
-        y: Math.PI / 5,
-        z: 0
-      },
-      {
-        x: Math.PI / 4,
-        y: Math.PI / 5
-      },
-      {
-        x: -Math.PI / 5,
-        y: -Math.PI / 5,
-        z: 0
-      },
-    ],
-    easing: "easeInOutExpo",
+    xMultiplier: 1,
+    yMultiplier: 1,
+    easing: "easeInOutElastic",
   },
   morphing: {
     easing: "easeInOutExpo",
@@ -163,47 +137,19 @@ export const formConfiguration: Record<string, any> = {
         label: "Enable rotation?",
         component: "checkbox"
       },
-      syncWithMorphing: {
-        label: "Sync with morphing?",
-        component: "checkbox"
-      },
-      angleMultiplier: {
-        label: "Angle multiplier",
+      xMultiplier: {
+        label: "X multiplier",
         component: "slider",
-        min: 0,
+        min: -10,
         max: 10,
         step: 0.1,
       },
-      rotationAngles: {
-        label: "Rotation angles",
-        component: "item-list",
-        itemConfig: {
-          label: "3D vector",
-          component: "nested-object",
-          fields: {
-            x: {
-              label: "X rotation angle",
-              component: "slider",
-              min: 0,
-              max: Math.PI * 2,
-              step: 0.1,
-            },
-            y: {
-              label: "Y rotation angle",
-              component: "slider",
-              min: 0,
-              max: Math.PI * 2,
-              step: 0.1,
-            },
-            z: {
-              label: "Z rotation angle",
-              component: "slider",
-              min: 0,
-              max: Math.PI * 2,
-              step: 0.1,
-            }
-          }
-        }
+      yMultiplier: {
+        label: "Y multiplier",
+        component: "slider",
+        min: -10,
+        max: 10,
+        step: 0.1,
       },
       easing: {
         component: "select",
@@ -227,14 +173,14 @@ export const formConfiguration: Record<string, any> = {
         label: "Max stroke weight",
         component: "slider",
         min: 1,
-        max: 150,
+        max: 500,
         step: 1,
       },
       strokeWeightMin: {
         label: "Min stroke weight",
         component: "slider",
         min: 1,
-        max: 150,
+        max: 500,
         step: 1,
       },
       strokeWeightEasing: {

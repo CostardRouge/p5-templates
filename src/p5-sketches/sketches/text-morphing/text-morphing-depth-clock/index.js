@@ -95,6 +95,38 @@ sketch.draw( ( time ) => {
   const H = height / 2 - size / 2;
 
   const depth = options.sketch.morphing.depthLayersCount ?? 200 / 4;
+  const rotationEnabled = options.sketch.rotation.enabled ?? true;
+  const xMultiplier = options.sketch.rotation.xMultiplier ?? 3;
+  const yMultiplier = options.sketch.rotation.yMultiplier ?? 2;
+  const rotationEasingFunction = easing?.[ options.sketch.rotation.easing ] ?? easing.easeInOutElastic;
+
+  const clockPositions = [
+  ];
+
+  if ( rotationEnabled ) {
+    itemsToMorph.forEach( (
+      _, index
+    ) => {
+      const angle = ( index / ( itemsToMorph.length ) ) * TAU;
+
+      clockPositions.push( createVector(
+        map(
+          Math.sin( -angle * xMultiplier - PI ),
+          -1,
+          1,
+          -W,
+          W
+        ),
+        map(
+          Math.cos( -angle * yMultiplier - PI ),
+          -1,
+          1,
+          -H,
+          H
+        ),
+      ) );
+    } );
+  }
 
   for ( let z = 0; z < depth; z++ ) {
     const depthProgression = z / ( depth - 1 );
@@ -108,34 +140,49 @@ sketch.draw( ( time ) => {
       easing?.[ options.sketch.morphing.depthEasing ] ?? easing.easeOutExpo
     );
 
-    const clockPosition = p5.Vector.lerp(
-      createVector(
-        map(
-          Math.sin( -animation.angle - PI ),
-          -1,
-          1,
-          -W,
-          W
-        ),
-        map(
-          Math.cos( -animation.angle - PI ),
-          -1,
-          1,
-          -H,
-          H
-        ),
-      ),
-      createVector(
-        0,
-        0
-      ),
-      depthProgression
-    );
-
     sketchState.threeDimensionGraphics.push();
+
+    if ( rotationEnabled ) {
+      const clockPosition = animation.ease( {
+        values: clockPositions,
+        currentTime: animation.progression * itemsToMorph.length,
+        lerpFn: p5.Vector.lerp,
+        easingFn: rotationEasingFunction
+      } );
+
+      // const clockPosition = p5.Vector.lerp(
+      //   createVector(
+      //     map(
+      //       Math.sin( -animation.angle * xMultiplier - PI ),
+      //       -1,
+      //       1,
+      //       -W,
+      //       W
+      //     ),
+      //     map(
+      //       Math.cos( -animation.angle * yMultiplier - PI ),
+      //       -1,
+      //       1,
+      //       -H,
+      //       H
+      //     ),
+      //   ),
+      //   createVector(
+      //     0,
+      //     0
+      //   ),
+      //   depthProgression
+      // );
+
+      sketchState.threeDimensionGraphics.translate(
+        clockPosition.x,
+        clockPosition.y,
+      );
+    }
+
     sketchState.threeDimensionGraphics.translate(
-      clockPosition.x,
-      clockPosition.y,
+      0,
+      0,
       zPosition
     );
 
@@ -174,11 +221,12 @@ sketch.draw( ( time ) => {
       }
 
       sketchState.threeDimensionGraphics.stroke( colorFunction( {
-        hueOffset: 0,
+        hueOffset: depthProgression,
         hueIndex: mappers.fn(
           noise(
-            x / width,
-            y / height,
+            ( x / width ) + animation.circularProgression,
+            ( y / height ) + animation.circularProgression,
+
             depthProgression // + animation.circularProgression,
           ),
           0,
@@ -186,23 +234,23 @@ sketch.draw( ( time ) => {
           -PI,
           PI
         ) * map(
-          animation.circularProgression,
+          depthProgression,
           0,
           1,
-          8,
-          16
+          16,
+          32
         ),
         opacityFactor,
       } ) );
 
       const xx = x * Math.pow(
-        1.1,
+        1.11,
         z
       );
 
       const yy =
         y * Math.pow(
-          1.1,
+          1.11,
           z
         );
 

@@ -1,4 +1,5 @@
 const easing = {
+  linear: ( x ) => x,
   easeInSine: ( x ) => {
     return 1 - Math.cos( ( x * Math.PI ) / 2 );
   },

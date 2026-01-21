@@ -322,13 +322,6 @@
     "ctime": "2026-01-12T07:03:09.037Z"
   },
   {
-    "name": "noise-lines-circle-colored",
-    "category": "noise-lines",
-    "hasSketchForm": true,
-    "mtime": "2026-01-16T08:27:26.683Z",
-    "ctime": "2026-01-12T13:27:28.821Z"
-  },
-  {
     "name": "text-morphing-rotating-scene",
     "category": "text-morphing",
     "hasSketchForm": true,
@@ -336,10 +329,17 @@
     "ctime": "2025-12-30T00:29:50.118Z"
   },
   {
+    "name": "noise-lines-circle-colored",
+    "category": "noise-lines",
+    "hasSketchForm": true,
+    "mtime": "2026-01-16T13:29:35.444Z",
+    "ctime": "2026-01-12T13:27:28.821Z"
+  },
+  {
     "name": "text-morphing-depth-clock",
     "category": "text-morphing",
     "hasSketchForm": true,
-    "mtime": "2026-01-16T11:08:52.392Z",
+    "mtime": "2026-01-21T00:03:30.958Z",
     "ctime": "2026-01-16T08:47:46.979Z"
   }
 ]
