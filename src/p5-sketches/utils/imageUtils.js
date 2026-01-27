@@ -10,7 +10,7 @@ const imageUtils = {
     boundary = graphics,
     margin = 0,
     scale = 1,
-    angle = 1,
+    angle = 0,
     callback,
     center = false,
     clip = false,
@@ -48,14 +48,12 @@ const imageUtils = {
 
     graphics.push();
 
-    const clonedPosition = position.copy();
-
     if ( clip ) {
       graphics.clip(
         () => {
           graphics.rect(
-            clonedPosition.x - scaledBoundary.x / 2,
-            clonedPosition.y - scaledBoundary.y / 2,
+            position.x - scaledBoundary.x / 2,
+            position.y - scaledBoundary.y / 2,
             scaledBoundary.x,
             scaledBoundary.y
           );
@@ -66,32 +64,13 @@ const imageUtils = {
       );
     }
 
-    // graphics.noFill();
-    // graphics.stroke("red");
-    // graphics.strokeWeight(5);
-    //
-    // graphics.circle(
-    // 	position.x,
-    // 	position.y,
-    // 	10
-    // );
-    //
-    // graphics.rect(
-    // 	position.x-scaledBoundary.x/2,
-    // 	position.y-scaledBoundary.y/2,
-    // 	scaledBoundary.x,
-    // 	scaledBoundary.y
-    // );
-
-    if ( center ) {
-      clonedPosition.x -= w / 2;
-      clonedPosition.y -= h / 2;
-    }
+    graphics.translate( position );
+    graphics.rotate( angle );
 
     graphics.image(
       img,
-      clonedPosition.x,
-      clonedPosition.y,
+      center ? -w / 2 : 0,
+      center ? -h / 2 : 0,
       w,
       h
     );
@@ -99,8 +78,8 @@ const imageUtils = {
     graphics.pop();
 
     callback?.(
-      clonedPosition.x,
-      clonedPosition.y,
+      position.x,
+      position.y,
       w,
       h
     );
