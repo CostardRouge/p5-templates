@@ -70,9 +70,9 @@ export function inverseX(
 }
 
 export function getFixedOrVariableOption(
-  optionKeyName, progression = 1
+  option, progression = 1
 ) {
-  const optionConfig = options.sketch?.[ optionKeyName ];
+  const optionConfig = typeof option === "object" ? option : options.sketch?.[ option ];
 
   if ( !optionConfig ) {
     return;
@@ -88,7 +88,7 @@ export function getFixedOrVariableOption(
 
   if ( "variable" === mode ) {
     const {
-      startValue, endValue, count, speedMultiplier, progressionMultiplier, easingFn
+      start, end, count, speedMultiplier, progressionMultiplier, easingFn
     } = optionConfig;
 
     return mappers.fn(
@@ -96,8 +96,8 @@ export function getFixedOrVariableOption(
         progression * progressionMultiplier ),
       -1,
       1,
-      startValue,
-      endValue,
+      start,
+      end,
       easing?.[ easingFn ] ?? easing.easeInOutSine
     );
   }
@@ -110,35 +110,8 @@ export const getLoopMultiplier = ( targetValue ) => (
   ) * TAU
 );
 
-export const getVariableOptionValue = (
-  optionConfig, component, mapFunction = Math.sin, mapMin = -1, mapMax = 1
-) => {
-  if ( !optionConfig ) {
-    return;
-  }
-
-  const {
-    x, y, z
-  } = component;
-
-  const {
-    start, end, xMultiplier, yMultiplier, zMultiplier, generalMultiplier, easingFn
-  } = optionConfig;
-
-  const phase = [
-    [
-      x,
-      xMultiplier
-    ],
-    [
-      y,
-      yMultiplier
-    ],
-    [
-      z,
-      zMultiplier
-    ]
-  ].reduce(
+export function getLoopPhase( components ) {
+  return components.reduce(
     (
       previousValue, currentValue
     ) => {
@@ -155,6 +128,37 @@ export const getVariableOptionValue = (
     },
     0
   );
+}
+
+export const getVariableOptionValue = (
+  optionConfig, component, mapFunction = Math.sin, mapMin = -1, mapMax = 1
+) => {
+  if ( !optionConfig ) {
+    return;
+  }
+
+  const {
+    x, y, z
+  } = component;
+
+  const {
+    start, end, xMultiplier, yMultiplier, zMultiplier, generalMultiplier, easingFn
+  } = optionConfig;
+
+  const phase = getLoopPhase( [
+    [
+      x,
+      xMultiplier
+    ],
+    [
+      y,
+      yMultiplier
+    ],
+    [
+      z,
+      zMultiplier
+    ]
+  ] );
 
   return mappers.fn(
     mapFunction( phase ),

@@ -10,8 +10,8 @@ type FixedOption = {
 
 type VariableOption<T> = {
   mode: "variable",
-  startValue: T,
-  endValue: T,
+  start: T,
+  end: T,
   count: number,
   speedMultiplier: number,
   progressionMultiplier: number,
@@ -68,14 +68,14 @@ export function createFixedOrVariableOption(
           max: 100,
           step: 0.1,
         },
-        startValue: {
+        start: {
           label: `${ capitalizedOptionName } start`,
           component: "slider",
           min,
           max,
           step,
         },
-        endValue: {
+        end: {
           label: `${ capitalizedOptionName } end`,
           component: "slider",
           min,
@@ -165,16 +165,16 @@ export function createVariableOption(
       start: {
         label: `${ capitalizedOptionName } start`,
         component: "slider",
-        min,
-        max,
-        step,
+        min: -9,
+        max: 9,
+        step: 0.1,
       },
       end: {
         label: `${ capitalizedOptionName } end`,
         component: "slider",
-        min,
-        max,
-        step,
+        min: -9,
+        max: 9,
+        step: 0.1,
       },
       xMultiplier: {
         label: `${ capitalizedOptionName } xMultiplier`,
