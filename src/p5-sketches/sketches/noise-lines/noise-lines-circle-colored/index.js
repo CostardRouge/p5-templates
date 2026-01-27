@@ -4,11 +4,8 @@ import colors from "@/p5/utils/colors.js";
 import sketch from "@/p5/utils/sketch.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  getFixedOrVariableOption
+  getFixedOrVariableOption, getVariableOptionValue
 } from "@/p5/utils/common.js";
-import {
-  getVariableOptionValue
-} from "../../../utils/common";
 
 sketch.setup( ( {
   canvas

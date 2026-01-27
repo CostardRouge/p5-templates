@@ -20,8 +20,8 @@ export const formValues = {
     count: 1,
     speedMultiplier: 1,
     progressionMultiplier: 1,
-    startValue: 125,
-    endValue: 225,
+    start: 125,
+    end: 225,
     easingFn: "easeInOutExpo",
   },
   baseRadius: {
@@ -29,8 +29,8 @@ export const formValues = {
     count: 1,
     speedMultiplier: 1,
     progressionMultiplier: 1,
-    startValue: 190.5,
-    endValue: 200,
+    start: 190.5,
+    end: 200,
     easingFn: "easeInOutExpo",
   },
   radiusOffsetMultiplier: {
@@ -38,8 +38,8 @@ export const formValues = {
     count: 1,
     speedMultiplier: 1,
     progressionMultiplier: 1,
-    startValue: 4,
-    endValue: 5.70,
+    start: 4,
+    end: 5.70,
     easingFn: "easeInOutSine",
   },
   noisePhaseMultiplier: {
@@ -47,8 +47,8 @@ export const formValues = {
     count: 1,
     speedMultiplier: 3,
     progressionMultiplier: 1,
-    startValue: 0.02,
-    endValue: 0.03,
+    start: 0.02,
+    end: 0.03,
     easingFn: "easeInOutBack",
   },
   colors: {
