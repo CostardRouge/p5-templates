@@ -3,21 +3,21 @@ import sketch from "@/p5/utils/sketch.js";
 
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
-import mappers from "@/p5/utils/mappers.js";
-import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
+import mappers from "@/p5/utils/mappers.js";
+import graphics from "@/p5/utils/graphics.js";
+import animation from "@/p5/utils/animation.js";
+import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
 };
 
 sketch.setup(
-  ( {
-    canvas
-  } ) => {
-    sketchState.threeDimensionGraphics = createGraphics(
-      canvas.width,
-      canvas.height,
+  ( ) => {
+    sketchState.threeDimensionGraphics = graphics.createAutoResizableGraphics(
+      width,
+      height,
       "webgl"
     );
   },
@@ -393,4 +393,7 @@ sketch.draw( (
     0
   );
   sketchState.threeDimensionGraphics.clear();
+  sketchState.threeDimensionGraphics.reset();
+
+  renderTitle();
 } );

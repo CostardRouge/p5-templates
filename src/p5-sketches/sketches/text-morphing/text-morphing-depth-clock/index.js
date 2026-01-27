@@ -4,8 +4,9 @@ import sketch from "@/p5/utils/sketch.js";
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
-import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
+import animation from "@/p5/utils/animation.js";
+import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -273,4 +274,5 @@ sketch.draw( ( time ) => {
   );
   sketchState.threeDimensionGraphics.clear();
   sketchState.threeDimensionGraphics.reset();
+  renderTitle();
 } );
