@@ -1,14 +1,24 @@
+import easing from "@/p5/utils/easing";
+
 export const formValues = {
   images: [
   ],
 
-  margin: 0.1,
-  scale: 1,
-  center: true,
-  clip: false,
-  fill: false,
+  imageStyle: {
+    margin: 0.1,
+    scale: 0.8,
+    center: true,
+    clip: false,
+    fill: false,
+  },
 
-  randomMargin: 80,
+  randomPosition: {
+    x: 0.3,
+    y: 0.5,
+  },
+  randomAngle: 15,
+  animationCount: 3,
+  displayEasing: "linear",
 
   backgroundColor: [
     246,
@@ -22,38 +32,77 @@ export const formConfiguration: Record<string, any> = {
     component: "images-stack",
     label: "Images",
   },
-  randomMargin: {
-    label: "Random margin",
+  randomAngle: {
+    label: "Rotation angle",
     component: "slider",
     min: 0,
-    max: 1500,
-    step: 1,
+    max: 360,
   },
-  margin: {
-    label: "Image margin",
+  animationCount: {
+    label: "Animation count",
     component: "slider",
     min: 0,
-    max: 0.45,
-    step: 0.005,
+    max: 10,
   },
-  scale: {
-    label: "Scale",
-    component: "slider",
-    min: 0.1,
-    max: 4,
-    step: 0.1,
+  randomPosition: {
+    label: "Random position",
+    component: "nested-object",
+    fields: {
+      x: {
+        label: "X",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.1,
+      },
+      y: {
+        label: "Y",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.1,
+      }
+    }
   },
-  center: {
-    label: "Center image",
-    component: "checkbox",
+  imageStyle: {
+    label: "Image style",
+    component: "nested-object",
+    fields: {
+      margin: {
+        label: "Image margin",
+        component: "slider",
+        min: 0,
+        max: 0.45,
+        step: 0.005,
+      },
+      scale: {
+        label: "Scale",
+        component: "slider",
+        min: 0.1,
+        max: 4,
+        step: 0.1,
+      },
+      center: {
+        label: "Center image",
+        component: "checkbox",
+      },
+      clip: {
+        label: "Clip",
+        component: "checkbox",
+      },
+      fill: {
+        label: "Fill",
+        component: "checkbox",
+      },
+    }
   },
-  clip: {
-    label: "Clip",
-    component: "checkbox",
-  },
-  fill: {
-    label: "Fill",
-    component: "checkbox",
+  displayEasing: {
+    component: "select",
+    label: "Display easing function",
+    options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
+      label: easingFunctionName,
+      value: easingFunctionName,
+    } ) ),
   },
   backgroundColor: {
     component: "color",
