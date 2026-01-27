@@ -4,41 +4,59 @@ import {
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 import {
-  createSingleOrMultipleTextOption
+  createSingleOrMultipleTextOption, createVariableOption
 } from "@/utils/sketchOptionUtils";
+import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
+import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 
 export const formValues = {
   text: {
     mode: "single",
-    value: "1234"
+    value: "perth"
   },
   textStyle: {
-    font: "martian",
-    size: 0.5,
+    font: "spaceMonoRegular",
+    size: 0.75,
     sampleFactor: 0.0625,
     simplifyThreshold: 0,
   },
-  rotation: {
-    enabled: false,
-    xMultiplier: 1,
-    yMultiplier: 1,
-    easing: "easeInOutElastic",
-  },
   morphing: {
     easing: "easeInOutExpo",
-    depthEasing: "easeOutExpo",
-    depthLayersCount: 200,
-    depthLength: -0.1
+    depthLayersCount: 150,
   },
   point: {
-    varyStrokeWithDepthProgression: true,
+    strokeWeightMin: 250,
     strokeWeightMax: 10,
-    strokeWeightMin: 5,
-    strokeWeightEasing: "easeOutExpo",
+    strokeWeightEasing: "easeOutQuad",
+  },
+  strokeColor: {
+    colorFunction: "rainbow",
+    hueIndex: {
+      easing: "easeInOutSine",
+      start: 3,
+      end: 1,
+      generalMultiplier: 6,
+      xMultiplier: 1,
+      yMultiplier: 2,
+      zMultiplier: 2
+    },
+    opacityFactor: {
+      easing: "easeInOutSine",
+      start: 9,
+      end: 1,
+      generalMultiplier: 1,
+      xMultiplier: 6,
+      yMultiplier: 9,
+      zMultiplier: 9
+    }
   },
   backgroundColor: [
     0
   ],
+
+  title: {
+    ...titleDefaultValues,
+  },
 };
 
 // UI configuration only
@@ -90,56 +108,9 @@ export const formConfiguration: Record<string, any> = {
         max: 1000,
         step: 1,
       },
-      depthLength: {
-        label: "Depth length multiplier",
-        component: "slider",
-        min: -4,
-        max: 4,
-        step: 0.01,
-      },
-      depthEasing: {
-        component: "select",
-        label: "Depth easing function",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
-      },
       easing: {
         component: "select",
         label: "Morphing easing function",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
-      }
-    },
-  },
-  rotation: {
-    component: "nested-object",
-    label: "Rotation animation",
-    fields: {
-      enabled: {
-        label: "Enable rotation?",
-        component: "checkbox"
-      },
-      xMultiplier: {
-        label: "X multiplier",
-        component: "slider",
-        min: -10,
-        max: 10,
-        step: 0.1,
-      },
-      yMultiplier: {
-        label: "Y multiplier",
-        component: "slider",
-        min: -10,
-        max: 10,
-        step: 0.1,
-      },
-      easing: {
-        component: "select",
-        label: "Rotation easing function",
         options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
           label: easingFunctionName,
           value: easingFunctionName,
@@ -151,19 +122,15 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Point settings",
     fields: {
-      varyStrokeWithDepthProgression: {
-        label: "Vary stroke weight with depth progression?",
-        component: "checkbox",
-      },
-      strokeWeightMax: {
-        label: "Max stroke weight",
+      strokeWeightMin: {
+        label: "Min stroke weight",
         component: "slider",
         min: 1,
         max: 500,
         step: 1,
       },
-      strokeWeightMin: {
-        label: "Min stroke weight",
+      strokeWeightMax: {
+        label: "Max stroke weight",
         component: "slider",
         min: 1,
         max: 500,
@@ -179,8 +146,48 @@ export const formConfiguration: Record<string, any> = {
       },
     },
   },
+  strokeColor: {
+    label: "Stroke color",
+    component: "nested-object",
+    fields: {
+      colorFunction: {
+        component: "select",
+        label: "Palette",
+        options: [
+          {
+            label: "Rainbow",
+            value: "rainbow",
+          },
+          {
+            label: "Purple",
+            value: "purple",
+          },
+        ],
+      },
+      opacityFactor: createVariableOption(
+        "opacityFactor",
+        {
+          min: 9,
+          max: 1,
+          step: 0.01
+        }
+      ),
+      hueIndex: createVariableOption(
+        "hueIndex",
+        {
+          min: 3,
+          max: 1,
+          step: 0.01
+        }
+      )
+    }
+  },
   backgroundColor: {
     component: "color",
     label: "Background color",
+  },
+
+  title: {
+    ...titleFormConfiguration,
   },
 };
