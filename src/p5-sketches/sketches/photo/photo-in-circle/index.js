@@ -11,8 +11,6 @@ const getEasing = (
 ) =>
   easing?.[ name ] || fallback;
 
-const rad = ( deg ) => ( deg * Math.PI ) / 180;
-
 // ---------- setup/draw ----------
 sketch.setup( () => {
   background( ...options.sketch.backgroundColor );
@@ -98,8 +96,8 @@ sketch.draw( (
       ),
       0,
       1,
-      rad( noiseRotFromDeg ),
-      rad( noiseRotToDeg ),
+      radians( noiseRotFromDeg ),
+      radians( noiseRotToDeg ),
       getEasing(
         noiseRotEasingName,
         easing.easeInOutQuint
@@ -110,8 +108,8 @@ sketch.draw( (
       progression,
       0,
       1,
-      -rad( indexRotDeg ),
-      rad( indexRotDeg ),
+      -radians( indexRotDeg ),
+      radians( indexRotDeg ),
       getEasing(
         indexRotEasingName,
         easing.easeInExpo
