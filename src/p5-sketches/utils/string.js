@@ -108,44 +108,17 @@ const string = {
       );
     },
   },
-  write: function(
-    str, x, y, options = {
-    }
-  ) {
-    if ( !str ) {
-      return;
-    }
-
-    const {
-      size = 18,
-      fill = 0,
-      stroke = 255,
-      strokeWeight = 2,
-      font = string.fonts.serif,
-      graphics = window,
-      textWidth = graphics.width,
-      textHeight = -1,
-      showBox = false,
-      showLines = false,
-      textAlign = [
-      ],
-      blendMode = undefined,
-      popPush = true,
-    } = options;
-
-    if ( !font?.font ) {
-      return;
-    }
-
-    const position = graphics.createVector(
-      x,
-      y
-    );
-
-    if ( popPush ) {
-      graphics.push();
-    }
-
+  applyFontStyle: function( {
+    graphics = window,
+    blendMode,
+    size,
+    font,
+    fill,
+    textWrap,
+    stroke,
+    strokeWeight,
+    textAlign
+  } ) {
     if ( blendMode ) {
       graphics.blendMode( blendMode );
     }
@@ -162,7 +135,55 @@ const string = {
     graphics.textSize( size );
     graphics.textFont?.( font );
     graphics.textAlign( ...textAlign );
-    graphics.textWrap( WORD );
+    graphics.textWrap( textWrap );
+  },
+  write: function(
+    str, x, y, options = {
+    }
+  ) {
+    if ( !str ) {
+      return;
+    }
+
+    options.size ??= 18;
+    options.strokeWeight ??= 2;
+    options.stroke ??= 255;
+    options.fill ??= 0;
+    options.font ??= string.fonts.serif;
+    options.graphics ??= window;
+    options.textWidth ??= options.graphics.width;
+    options.textHeight ??= -1;
+    options.showBox ??= false;
+    options.showLines ??= false;
+    options.popPush ??= true;
+    options.blendMode ??= undefined;
+    options.textWrap ??= WORD;
+
+    const {
+      size,
+      font,
+      graphics,
+      textWidth,
+      textHeight,
+      showBox,
+      showLines,
+      popPush,
+    } = options;
+
+    if ( !font?.font ) {
+      return;
+    }
+
+    const position = graphics.createVector(
+      x,
+      y
+    );
+
+    if ( popPush ) {
+      graphics.push();
+    }
+
+    string.applyFontStyle( options );
 
     const box = font.textBounds(
       str,

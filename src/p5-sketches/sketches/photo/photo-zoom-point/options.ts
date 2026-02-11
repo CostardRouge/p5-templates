@@ -5,6 +5,8 @@ import titleFormConfiguration from "@/p5-sketches/utils/title/titleFormConfigura
 export const formValues = {
   photo: null,
   point: {
+    x: 0.5,
+    y: 0.5
   },
 
   zoom: {
@@ -48,6 +50,27 @@ export const formConfiguration: Record<string, any> = {
   photo: {
     component: "image",
     label: "Photo",
+  },
+
+  point: {
+    component: "nested-object",
+    label: "Point",
+    fields: {
+      x: {
+        component: "slider",
+        label: "X",
+        min: 0,
+        max: 1,
+        step: 0.1,
+      },
+      y: {
+        component: "slider",
+        label: "Y",
+        min: 0,
+        max: 1,
+        step: 0.1,
+      }
+    },
   },
 
   zoom: {
@@ -153,11 +176,5 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color",
-  },
-
-  point: {
-    component: "json",
-    label: "Point",
-    rows: 2,
   },
 };

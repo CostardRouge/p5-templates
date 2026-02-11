@@ -270,6 +270,11 @@ sketch.draw( () => {
     scale: zoomScale
   };
 
+  console.log(
+    uvPoint,
+    options.sketch.point
+  );
+
   // 6. Apply & Draw
   push();
   translate(
