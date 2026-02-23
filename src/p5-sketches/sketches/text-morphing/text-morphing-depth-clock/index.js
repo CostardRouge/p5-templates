@@ -101,6 +101,8 @@ sketch.draw( ( time ) => {
   const yMultiplier = options.sketch.rotation.yMultiplier ?? 2;
   const rotationEasingFunction = easing?.[ options.sketch.rotation.easing ] ?? easing.easeInOutElastic;
 
+  const depthProgressionMultiplier = options.sketch.rotation.depthProgressionMultiplier ?? 2;
+
   const clockPositions = [
   ];
 
@@ -146,7 +148,10 @@ sketch.draw( ( time ) => {
     if ( rotationEnabled ) {
       const clockPosition = animation.ease( {
         values: clockPositions,
-        currentTime: animation.progression * itemsToMorph.length,
+        currentTime: (
+          animation.progression * itemsToMorph.length
+          + depthProgression * depthProgressionMultiplier
+        ),
         lerpFn: p5.Vector.lerp,
         easingFn: rotationEasingFunction
       } );

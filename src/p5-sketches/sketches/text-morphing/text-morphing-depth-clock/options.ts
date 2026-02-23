@@ -156,6 +156,13 @@ export const formConfiguration: Record<string, any> = {
         max: 10,
         step: 0.1,
       },
+      depthProgressionMultiplier: {
+        label: "depthProgressionMultiplier multiplier",
+        component: "slider",
+        min: -10,
+        max: 10,
+        step: 0.1,
+      },
       easing: {
         component: "select",
         label: "Rotation easing function",
