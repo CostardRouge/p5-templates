@@ -1,12 +1,12 @@
 import {
-  NextRequest, NextResponse
+  type NextRequest, NextResponse
 } from "next/server";
-import {
-  getJobById
-} from "@/lib/jobStore";
 import {
   getDownloadUrlFromS3Url
 } from "@/lib/connections/s3";
+import {
+  getJobById
+} from "@/lib/jobStore";
 import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
 
 /**
@@ -85,12 +85,9 @@ export async function GET(
     ) );
 
     // Convert relative URL to absolute URL for redirect
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      `${ _req.nextUrl.protocol }//${ _req.nextUrl.host }`;
     const absoluteUrl = new URL(
       templateThumbnailUrl,
-      baseUrl
+      `${ _req.nextUrl.protocol }//${ _req.nextUrl.host }`
     ).toString();
 
     const response = NextResponse.redirect(
