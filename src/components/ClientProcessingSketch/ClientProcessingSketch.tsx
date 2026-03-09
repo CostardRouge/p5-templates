@@ -1,25 +1,27 @@
 "use client";
 
-import React, {
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import type React from "react";
+import {
   useCallback, useEffect, useState
 } from "react";
-import dynamic from "next/dynamic";
-
-import {
-  setSketchOptions, subscribeSketchOptions,
-} from "@/p5-sketches/shared/syncSketchOptions";
-
-import type {
-  SketchOption
-} from "@/types/sketch.types";
+import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import {
   P5Controls
 } from "@/components/ClientProcessingSketch/components/P5Controls";
-import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
-import AnimationProgressionBar from "@/components/AnimationProgressionBar";
+import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
+import {
+  setSketchOptions, subscribeSketchOptions,
+} from "@/p5-sketches/shared/syncSketchOptions";
+import type {
+  SketchOption
+} from "@/types/sketch.types";
 import useSketch from "./components/SketchProvider/hooks/useSketch";
-import Link from "next/link";
+import {
+  useSketchThumbnail
+} from "./components/SketchProvider/hooks/useSketchThumbnail";
 
 const TemplateOptions = dynamic( () =>
   import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
@@ -28,6 +30,12 @@ export default function ClientProcessingSketch() {
   const {
     name, capturing, options, persistedJob
   } = useSketch();
+  const {
+    thumbnailUrl
+  } = useSketchThumbnail( {
+    name,
+    persistedJob
+  } );
 
   // Initialize with options from context, which includes persisted data
   const [
@@ -91,9 +99,17 @@ export default function ClientProcessingSketch() {
     <>
       {!sketchLoaded && (
         <div className="flex items-center justify-center absolute h-full w-full">
-          <p className="text-foreground">
-            → loading <span className="font-bold">{name}</span>...
-          </p>
+          <div className="flex flex-col items-center gap-4">
+            <img
+              src={ thumbnailUrl }
+              alt={`${ name } thumbnail`}
+              className="w-60 h-auto rounded-lg shadow-lg"
+            />
+
+            <p className="text-foreground">
+              → loading <span className="font-bold">{name}</span>...
+            </p>
+          </div>
         </div>
       )}
 
@@ -126,7 +142,8 @@ export default function ClientProcessingSketch() {
                 </Link>
 
                 <span>
-                  {activeSlideIndex !== undefined && `· slide ${ activeSlideIndex + 1 }`}
+                  {activeSlideIndex !== undefined &&
+                    `· slide ${ activeSlideIndex + 1 }`}
                 </span>
               </p>
 

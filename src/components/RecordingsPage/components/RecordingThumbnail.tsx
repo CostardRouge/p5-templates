@@ -1,16 +1,9 @@
-import {
-  useState
-} from "react";
-import {
-  Eye, Video
-} from "lucide-react";
 import clsx from "clsx";
-import type {
-  JobModel
-} from "@/types/recording.types";
-import {
-  getSlideCount
-} from "@/utils/getSlideCount";
+import { Eye, Video } from "lucide-react";
+import { useState } from "react";
+import { useSketchThumbnail } from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketchThumbnail";
+import type { JobModel } from "@/types/recording.types";
+import { getSlideCount } from "@/utils/getSlideCount";
 import SlidePreviewGrid from "./SlidePreviewGrid";
 
 interface RecordingThumbnailProps {
@@ -21,30 +14,28 @@ interface RecordingThumbnailProps {
   enableHoverPreview?: boolean;
 }
 
-export default function RecordingThumbnail( {
+export default function RecordingThumbnail({
   job,
   onClick,
   className,
   showEyeInCorner = false,
   enableHoverPreview = false,
-}: RecordingThumbnailProps ) {
-  const [
-    imageError,
-    setImageError
-  ] = useState( false );
-  const [
-    showPreview,
-    setShowPreview
-  ] = useState( false );
+}: RecordingThumbnailProps) {
+  const [imageError, setImageError] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const src = `/api/recordings/${ job.id }/thumbnail?t=${ new Date( job.updatedAt ).getTime() }`;
+  const { thumbnailUrl: src } = useSketchThumbnail({
+    name: job.template.replace("p5", ""),
+    persistedJob: job,
+    updatedAt: new Date(job.updatedAt).getTime(),
+  });
   const showEyeIcon =
     job.status === "completed" && job.videoUrls && job.thumbnails;
   const isRecording = job.status === "active";
   const isQueued = job.status === "queued";
   const isFailed = job.status === "failed";
   const isCompleted = job.status === "completed";
-  const slideCount = getSlideCount( job );
+  const slideCount = getSlideCount(job);
 
   // We assume the API will return the template thumbnail if the recording one isn't ready.
   // If the image fails to load (404 etc), we show the placeholder.
@@ -54,9 +45,9 @@ export default function RecordingThumbnail( {
     <div
       onClick={onClick}
       onMouseEnter={() =>
-        enableHoverPreview && slideCount > 1 && setShowPreview( true )
+        enableHoverPreview && slideCount > 1 && setShowPreview(true)
       }
-      onMouseLeave={() => setShowPreview( false )}
+      onMouseLeave={() => setShowPreview(false)}
       className={clsx(
         className,
         "relative overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800",
@@ -124,7 +115,7 @@ export default function RecordingThumbnail( {
             src={src}
             alt={job.template}
             loading="lazy"
-            onError={() => setImageError( true )}
+            onError={() => setImageError(true)}
             className={clsx(
               "w-full h-full object-cover transition-all duration-300",
               {
