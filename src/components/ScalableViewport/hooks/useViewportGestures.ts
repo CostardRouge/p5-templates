@@ -134,46 +134,29 @@ export function useViewportGestures( {
         event, delta: [
           deltaX,
           deltaY
-        ], ctrlKey
+        ]
       } ) => {
         const container = containerRef.current;
 
         if ( !container ) return;
 
-        if ( ctrlKey ) {
-          // Ctrl + Wheel = Zoom
-          event.preventDefault();
-          const {
-            scale
-          } = transform.current;
-          const zoomFactor = Math.exp( -deltaY * 0.01 );
-          const rect = container.getBoundingClientRect();
-          const target = calculateZoomTarget(
-            scale * zoomFactor,
-            event.clientX,
-            event.clientY,
-            rect,
-            transform.current
-          );
-
-          setTransform(
-            target,
-            contentRef.current
-          );
-          return;
-        }
-
-        // Standard Wheel = Pan
+        // Standard Wheel = Zoom
         event.preventDefault();
         const {
-          x, y
+          scale
         } = transform.current;
+        const zoomFactor = Math.exp( -deltaY * 0.01 );
+        const rect = container.getBoundingClientRect();
+        const target = calculateZoomTarget(
+          scale * zoomFactor,
+          event.clientX,
+          event.clientY,
+          rect,
+          transform.current
+        );
 
         setTransform(
-          {
-            x: x - deltaX,
-            y: y - deltaY,
-          },
+          target,
           contentRef.current
         );
       },
