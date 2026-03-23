@@ -118,33 +118,70 @@ export async function getObjectSize( objectKey: string ): Promise<number | null>
 }
 
 export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void> {
-  const bucketName = process.env.S3_BUCKET!;
+  try {
+    const bucketName = process.env.S3_BUCKET!;
 
-  // 1. Check if it's a folder (ends with slash or acts as prefix)
-  const listedObjects = await s3client.send( new ListObjectsV2Command( {
-    Bucket: bucketName,
-    Prefix: objectKeyOrPrefix,
-  } ) );
+    // 1. Check if it's a folder (ends with slash or acts as prefix)
+    let listedObjects;
+    
+    try {
+      listedObjects = await s3client.send( new ListObjectsV2Command( {
+        Bucket: bucketName,
+        Prefix: objectKeyOrPrefix,
+      } ) );
+    } catch ( err ) {
+      console.error(
+        `Failed to list objects with prefix ${ objectKeyOrPrefix }:`,
+        err
+      );
+      throw err;
+    }
 
-  if ( listedObjects.Contents && listedObjects.Contents.length > 1 ) {
-    // Multiple objects = treat as folder (prefix)
-    const deleteCommand = new DeleteObjectsCommand( {
-      Bucket: bucketName,
-      Delete: {
-        Objects: listedObjects.Contents.map( ( item ) => ( {
-          Key: item.Key!,
-        } ) ),
-      },
-    } );
+    if ( listedObjects.Contents && listedObjects.Contents.length > 1 ) {
+      // Multiple objects = treat as folder (prefix)
+      try {
+        const deleteCommand = new DeleteObjectsCommand( {
+          Bucket: bucketName,
+          Delete: {
+            Objects: listedObjects.Contents.map( ( item ) => ( {
+              Key: item.Key!,
+            } ) ),
+            Quiet: true, // Don't return deleted objects in response
+          },
+        } );
 
-    await s3client.send( deleteCommand );
-  } else {
-    // Single object = delete directly
-    const deleteCommand = new DeleteObjectCommand( {
-      Bucket: bucketName,
-      Key: objectKeyOrPrefix,
-    } );
+        await s3client.send( deleteCommand );
+      } catch ( err ) {
+        console.error(
+          `Failed to delete multiple objects with prefix ${ objectKeyOrPrefix }:`,
+          err
+        );
+        throw err;
+      }
+    } else if ( listedObjects.Contents && listedObjects.Contents.length === 1 ) {
+      // Single object = delete directly
+      try {
+        const deleteCommand = new DeleteObjectCommand( {
+          Bucket: bucketName,
+          Key: listedObjects.Contents[ 0 ].Key!,
+        } );
 
-    await s3client.send( deleteCommand );
+        await s3client.send( deleteCommand );
+      } catch ( err ) {
+        console.error(
+          `Failed to delete object ${ objectKeyOrPrefix }:`,
+          err
+        );
+        throw err;
+      }
+    } else {
+      // No objects found - this is OK, might have been deleted already
+      console.warn(
+        `No objects found with prefix ${ objectKeyOrPrefix }, skipping deletion`
+      );
+    }
+  } catch ( err ) {
+    // Re-throw to let caller handle
+    throw err;
   }
 }

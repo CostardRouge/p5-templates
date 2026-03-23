@@ -36,51 +36,86 @@ export async function DELETE( req: NextRequest ) {
 
     const deleted = [
     ];
+    const failed = [
+    ];
 
     for ( const jobId of ids ) {
-      const dbJob = await getJobById( jobId );
-
-      if ( !dbJob ) {
-        continue;
-      }
-
-      if (
-        ![
-          "failed",
-          "draft",
-          "completed",
-          "cancelled"
-        ].includes( dbJob.status )
-      ) {
-        console.warn( `Job ${ jobId } is not finalized and cannot be deleted.` );
-        continue;
-      }
-
       try {
-        const bullJob: Job | undefined =
-          await RecordingQueueService.getInstance().getQueue()
-            .getJob( jobId );
+        const dbJob = await getJobById( jobId );
 
-        if ( bullJob ) {
-          const state = await bullJob.getState();
-
-          if ( [
-            "waiting",
-            "delayed"
-          ].includes( state ) ) {
-            await bullJob.remove();
-          }
+        if ( !dbJob ) {
+          console.warn( `Job ${ jobId } not found, skipping.` );
+          continue;
         }
-      } catch ( error ) {}
 
-      await deleteJob( jobId );
-      await deleteArtifact( jobId );
+        if (
+          ![
+            "failed",
+            "draft",
+            "completed",
+            "cancelled"
+          ].includes( dbJob.status )
+        ) {
+          console.warn( `Job ${ jobId } is not finalized and cannot be deleted.` );
+          continue;
+        }
 
-      deleted.push( jobId );
+        // Try to remove from queue (best effort)
+        try {
+          const bullJob: Job | undefined =
+            await RecordingQueueService.getInstance().getQueue()
+              .getJob( jobId );
+
+          if ( bullJob ) {
+            try {
+              await bullJob.remove();
+            } catch ( err ) {
+              console.warn(
+                `Could not remove job ${ jobId } from queue:`,
+                err
+              );
+            }
+          }
+        } catch ( err ) {
+          console.warn(
+            `Error accessing queue for job ${ jobId }:`,
+            err
+          );
+        }
+
+        // Try to delete artifacts from S3 (best effort)
+        try {
+          await deleteArtifact( jobId );
+        } catch ( err ) {
+          console.warn(
+            `Could not delete artifacts for job ${ jobId } from S3:`,
+            err
+          );
+        }
+
+        // Always delete from database (critical operation)
+        try {
+          await deleteJob( jobId );
+          deleted.push( jobId );
+        } catch ( err ) {
+          console.error(
+            `Failed to delete job ${ jobId } from database:`,
+            err
+          );
+          failed.push( jobId );
+        }
+      } catch ( err ) {
+        console.error(
+          `Error processing job ${ jobId }:`,
+          err
+        );
+        failed.push( jobId );
+      }
     }
 
     return NextResponse.json( {
       deleted,
+      failed,
     } );
   } catch ( err ) {
     console.error(

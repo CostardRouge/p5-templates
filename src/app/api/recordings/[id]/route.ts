@@ -58,6 +58,7 @@ export async function GET(
 /**
  * DELETE /api/recordings/[id]
  *   → delete a finalized job and its artifacts
+ *   → robust: always deletes DB record even if queue/S3 cleanup fails
  */
 export async function DELETE(
   _req: NextRequest,
@@ -97,27 +98,54 @@ export async function DELETE(
       );
     }
 
+    // Try to remove from queue (best effort)
     try {
       const bullJob = await RecordingQueueService.getInstance()
         .getQueue()
         .getJob( jobId );
 
       if ( bullJob ) {
-        const state = await bullJob.getState();
-
-        if ( [
-          "waiting",
-          "delayed"
-        ].includes( state ) ) {
+        try {
           await bullJob.remove();
+        } catch ( err ) {
+          console.warn(
+            `Could not remove job ${ jobId } from queue:`,
+            err
+          );
         }
       }
-    } catch ( _err ) {
-      // ignore queue errors on delete
+    } catch ( err ) {
+      console.warn(
+        `Error accessing queue for job ${ jobId }:`,
+        err
+      );
     }
 
-    await deleteJob( jobId );
-    await deleteArtifact( jobId );
+    // Try to delete artifacts from S3 (best effort)
+    try {
+      await deleteArtifact( jobId );
+    } catch ( err ) {
+      console.warn(
+        `Could not delete artifacts for job ${ jobId } from S3:`,
+        err
+      );
+    }
+
+    // Always delete from database (critical operation)
+    try {
+      await deleteJob( jobId );
+    } catch ( err ) {
+      console.error(
+        `Failed to delete job ${ jobId } from database:`,
+        err
+      );
+      return new NextResponse(
+        "Failed to delete job from database",
+        {
+          status: 500,
+        }
+      );
+    }
 
     return NextResponse.json( {
       deleted: true,
