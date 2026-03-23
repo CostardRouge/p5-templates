@@ -43,42 +43,42 @@ export async function POST(
       } );
     }
 
-    const bullJob = await RecordingQueueService.getInstance()
-      .getQueue()
-      .getJob( jobId );
+    // Try to remove from queue if it exists
+    try {
+      const bullJob = await RecordingQueueService.getInstance()
+        .getQueue()
+        .getJob( jobId );
 
-    if ( bullJob ) {
-      const state = await bullJob.getState();
-
-      if ( [
-        "waiting",
-        "delayed"
-      ].includes( state ) ) {
-        await bullJob.remove();
-        await updateJob(
-          jobId,
-          {
-            status: "cancelled",
-            progress: 100,
-          }
-        );
-        return NextResponse.json( {
-          cancelled: true,
-        } );
+      if ( bullJob ) {
+        try {
+          await bullJob.remove();
+        } catch ( err ) {
+          console.warn(
+            `Could not remove job ${ jobId } from queue:`,
+            err
+          );
+          // Continue anyway - we'll mark it cancelled in DB
+        }
       }
-
-      if ( state === "active" ) {
-        return NextResponse.json( {
-          cancelled: false,
-          reason: "job is active",
-        } );
-      }
+    } catch ( err ) {
+      console.warn(
+        `Error accessing queue for job ${ jobId }:`,
+        err
+      );
+      // Continue anyway - we'll mark it cancelled in DB
     }
 
-    // No bull job: if it's draft or other pre-flight, don't mark cancelled, suggest delete
+    // Force update to cancelled status
+    await updateJob(
+      jobId,
+      {
+        status: "cancelled",
+        progress: 100,
+      }
+    );
+
     return NextResponse.json( {
-      cancelled: false,
-      reason: "not cancellable in current state",
+      cancelled: true,
     } );
   } catch ( error ) {
     console.error(

@@ -2,7 +2,6 @@ import {
   Menu, MenuButton, MenuItem, MenuItems
 } from "@headlessui/react";
 import {
-  AlertTriangle,
   Clapperboard,
   Copy,
   Download,
@@ -46,12 +45,7 @@ export default function ActionsMenu( {
 }: ActionsMenuProps ) {
   const fileInputRef = useRef<HTMLInputElement>( null );
 
-  const isStale =
-    [
-      "active",
-      "queued"
-    ].includes( job.status ) &&
-    Date.now() - new Date( job.updatedAt ).getTime() > 60 * 60 * 1000;
+
 
   const handleAction = async(
     action: string,
@@ -76,7 +70,7 @@ export default function ActionsMenu( {
         result.cancelled || result.deleted || result.retried || result.started;
 
       if ( success ) {
-        if ( action === "cancel" || action === "force-cancel" ) onCancel?.( job );
+        if ( action === "cancel" ) onCancel?.( job );
         else if ( action === "delete" ) onDelete?.( job );
         else if ( action === "retry" ) onRetry?.( job );
         else if ( action === "start" ) onStart?.( job );
@@ -342,7 +336,10 @@ export default function ActionsMenu( {
             </MenuItem>
           )}
 
-          {job.status === "queued" && (
+          {[
+            "queued",
+            "active"
+          ].includes( job.status ) && (
             <MenuItem>
               {( {
                 focus
@@ -358,34 +355,6 @@ export default function ActionsMenu( {
                 >
                   <X className="h-4 w-4 text-orange-600" />
                   <span className="font-medium text-orange-600">Cancel</span>
-                </button>
-              )}
-            </MenuItem>
-          )}
-
-          {isStale && (
-            <MenuItem>
-              {( {
-                focus
-              } ) => (
-                <button
-                  onClick={() =>
-                    handleAction(
-                      "force-cancel",
-                      `/api/recordings/${ job.id }/force-cancel`,
-                      "POST",
-                      `Force cancel stale job ${ job.id.slice(
-                        0,
-                        8
-                      ) }? This will mark it as cancelled.`
-                    )
-                  }
-                  className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
-                >
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
-                  <span className="font-medium text-orange-600">
-                    Force Cancel (Stale)
-                  </span>
                 </button>
               )}
             </MenuItem>
