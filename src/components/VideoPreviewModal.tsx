@@ -276,9 +276,9 @@ export default function VideoPreviewModal( {
         </div>
 
         {/* Content */}
-        <div className="p-3 sm:p-4 md:p-6 overflow-hidden flex-1 min-h-0">
+        <div className="p-3 sm:p-4 md:p-6 overflow-hidden flex-1 min-h-[500px] sm:min-h-[600px] md:min-h-[70vh]">
           {loading && (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center min-h-[500px] sm:min-h-[600px] md:min-h-[70vh]">
               <div className="text-center">
                 <div className="inline-block w-10 h-10 sm:w-12 sm:h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3 sm:mb-4" />
                 <p className="text-sm sm:text-base font-medium text-foreground">
@@ -347,11 +347,11 @@ export default function VideoPreviewModal( {
               )}
 
               {!media.isZipArchive && media.videos.length > 0 && (
-                <div className="h-full flex flex-col gap-3 sm:gap-4 md:gap-6 min-h-0">
+                <div className="h-full flex flex-col gap-3 sm:gap-4 md:gap-6 min-h-[500px] sm:min-h-[600px] md:min-h-[70vh]">
                   {/* Horizontal scroll container for videos */}
-                  <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-foreground/20 scrollbar-track-transparent min-h-0">
+                  <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-foreground/20 scrollbar-track-transparent min-h-0 flex items-center">
                     <div
-                      className={`flex gap-4 sm:gap-6 md:gap-8 h-full pb-2 ${ media.videos.length === 1 ? "justify-center" : "" }`}
+                      className={`flex gap-4 sm:gap-6 md:gap-8 ${ media.videos.length === 1 ? "justify-center w-full" : "" }`}
                     >
                       {media.videos.map( (
                         {
@@ -360,7 +360,7 @@ export default function VideoPreviewModal( {
                       ) => (
                         <div
                           key={index}
-                          className={`flex flex-col gap-2 sm:gap-3 md:gap-4 ${ media.videos.length === 1 ? "w-full max-w-5xl" : "flex-shrink-0 w-[85vw] sm:w-[80vw] md:w-[650px] lg:w-[750px]" }`}
+                          className={`flex flex-col gap-2 sm:gap-3 md:gap-4 ${ media.videos.length === 1 ? "w-full max-w-5xl mx-auto" : "flex-shrink-0 w-[85vw] sm:w-[80vw] md:w-[650px] lg:w-[750px]" }`}
                         >
                           {/* Slide header */}
                           {media.videos.length > 1 && (
@@ -375,7 +375,7 @@ export default function VideoPreviewModal( {
                           )}
 
                           {/* Video container */}
-                          <div className="border border-border rounded-xl sm:rounded-2xl overflow-hidden flex-1 flex items-center justify-center bg-black shadow-lg aspect-video min-h-0">
+                          <div className="border border-border rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center bg-black shadow-lg aspect-video flex-shrink-0">
                             <video
                               ref={( el ) => {
                                 if ( el ) {
@@ -402,7 +402,7 @@ export default function VideoPreviewModal( {
                           </div>
 
                           {/* Video info and download */}
-                          <div className="flex flex-col gap-2 flex-shrink-0">
+                          <div className="flex flex-col gap-2 flex-shrink-0 min-h-[72px] sm:min-h-[80px]">
                             {/* Video metadata */}
                             {videoMetadata.get( index ) && (
                               <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs text-foreground/60">
