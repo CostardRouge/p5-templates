@@ -336,9 +336,9 @@ function TemplateCard( {
         </div>
 
         {/* Template name */}
-        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
-          <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg">
-            <p className="text-xs sm:text-sm font-medium text-foreground truncate text-center">
+        <div className="absolute bottom-0 left-0 right-0 p-1 sm:p-2">
+          <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg sm:rounded-xl px-2 py-1.5 shadow-lg">
+            <p className="text-xs sm:text-sm font-medium text-foreground text-center">
               {name}
             </p>
           </div>
