@@ -17,9 +17,7 @@ export const formValues = {
     225
   ],
 
-  title: {
-    ...titleDefaultValues,
-  },
+  title: titleDefaultValues,
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -58,7 +56,5 @@ export const formConfiguration: Record<string, any> = {
     label: "Background color",
   },
 
-  title: {
-    ...titleFormConfiguration,
-  },
+  title: titleFormConfiguration,
 };

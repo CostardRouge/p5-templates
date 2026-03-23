@@ -11,9 +11,7 @@ export const formValues = {
     225
   ],
 
-  title: {
-    ...titleDefaultValues,
-  },
+  title: titleDefaultValues,
 
   arc: {
     anchorX: 0.5,
@@ -140,7 +138,5 @@ export const formConfiguration: Record<string, any> = {
     },
   },
 
-  title: {
-    ...titleFormConfiguration,
-  },
+  title: titleFormConfiguration,
 };

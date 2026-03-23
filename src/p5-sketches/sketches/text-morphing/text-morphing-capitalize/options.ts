@@ -55,9 +55,7 @@ export const formValues = {
     0,
     0
   ],
-  title: {
-    ...titleDefaultValues,
-  },
+  title: titleDefaultValues,
 };
 
 // UI configuration only
@@ -255,7 +253,5 @@ export const formConfiguration: Record<string, any> = {
     component: "color",
     label: "Background color",
   },
-  title: {
-    ...titleFormConfiguration,
-  },
+  title: titleFormConfiguration,
 };
