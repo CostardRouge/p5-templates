@@ -12,11 +12,14 @@ import {
 import {
   useRouter, useSearchParams
 } from "next/navigation";
-
-import HardLink from "@/components/HardLink";
 import {
   usePersistedViewMode
 } from "@/hooks/usePersistedViewMode";
+
+import {
+  fuzzyFilter
+} from "@/utils/fuzzySearch";
+import HardLink from "@/components/HardLink";
 
 interface TemplatesListProps {
   templates: Record<string, TemplateCategory>;
@@ -72,7 +75,7 @@ export default function TemplatesList( {
     ]
   );
 
-  // Filter templates based on search
+  // Filter templates based on fuzzy search
   const filteredTemplates = Object.entries( templates ).reduce(
     (
       acc, [
@@ -80,10 +83,14 @@ export default function TemplatesList( {
         items
       ]
     ) => {
-      const filtered = items.filter( ( item ) =>
-        item.name.toLowerCase().includes( search.toLowerCase() ) ||
-          ( item.category &&
-            item.category.toLowerCase().includes( search.toLowerCase() ) ) );
+      const filtered = fuzzyFilter(
+        items,
+        search,
+        ( item ) => [
+          item.name,
+          item.category || ""
+        ]
+      );
 
       if ( filtered.length > 0 ) {
         acc[ category ] = filtered;

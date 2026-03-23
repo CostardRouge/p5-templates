@@ -26,6 +26,7 @@ import RecordingsToolbar from "./components/RecordingsToolbar";
 import RecordingsTable from "./components/RecordingsTable";
 import RecordingsCards from "./components/RecordingsCards";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
+import { fuzzyFilter } from "@/utils/fuzzySearch";
 
 export default function RecordingsPage() {
   const {
@@ -91,12 +92,17 @@ export default function RecordingsPage() {
   );
 
   // Filter and sort jobs
-  const filtered = allJobs.filter( ( job ) => {
-    const matchSearch =
-      job.id.includes( search ) || job.template.includes( search );
+  const filtered = fuzzyFilter(
+    allJobs,
+    search,
+    ( job ) => [
+      job.id,
+      job.template
+    ]
+  ).filter( ( job ) => {
     const matchStatus = statusFilter === "all" || job.status === statusFilter;
 
-    return matchSearch && matchStatus;
+    return matchStatus;
   } );
 
   const sorted = useSorting(
