@@ -1,110 +1,67 @@
 "use client";
 
-import {
-  FileSliders, Grid, List, Search
-} from "lucide-react";
-import {
-  useRouter, useSearchParams
-} from "next/navigation";
-import React, {
-  useEffect, useState
-} from "react";
-import type {
-  TemplateCategory
-} from "@/app/templates/page";
+import { FileSliders, Grid, List, Search } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import type { TemplateCategory } from "@/app/templates/page";
 import HardLink from "@/components/HardLink";
-import {
-  usePersistedViewMode
-} from "@/hooks/usePersistedViewMode";
-import {
-  fuzzyFilter
-} from "@/utils/fuzzySearch";
+import { usePersistedViewMode } from "@/hooks/usePersistedViewMode";
+import { fuzzyFilter } from "@/utils/fuzzySearch";
 
 interface TemplatesListProps {
   templates: Record<string, TemplateCategory>;
 }
 
-export default function TemplatesList( {
-  templates
-}: TemplatesListProps ) {
+export default function TemplatesList({ templates }: TemplatesListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [
-    view,
-    setView
-  ] = usePersistedViewMode<"grid" | "list">(
+  const [view, setView] = usePersistedViewMode<"grid" | "list">(
     "templates-view-mode",
     "grid"
   );
-  const [
-    search,
-    setSearch
-  ] = useState<string>( searchParams.get( "keyword" ) || "" );
-
-  // Update URL when search changes
-  useEffect(
-    () => {
-      const params = new URLSearchParams( searchParams.toString() );
-
-      if ( search ) {
-        params.set(
-          "keyword",
-          search
-        );
-      } else {
-        params.delete( "keyword" );
-      }
-
-      const newUrl = params.toString()
-        ? `/templates?${ params.toString() }`
-        : "/templates";
-
-      router.replace(
-        newUrl,
-        {
-          scroll: false,
-        }
-      );
-    },
-    [
-      search,
-      router,
-      searchParams
-    ]
+  const [search, setSearch] = useState<string>(
+    searchParams.get("keyword") || ""
   );
 
-  // Filter templates based on fuzzy search
-  const filteredTemplates = Object.entries( templates ).reduce(
-    (
-      acc, [
-        category,
-        items
-      ]
-    ) => {
-      const filtered = fuzzyFilter(
-        items,
-        search,
-        ( item ) => [
-          item.name,
-          item.category || "",
-        ]
-      );
+  // Update URL when search changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
 
-      if ( filtered.length > 0 ) {
-        acc[ category ] = filtered;
+    if (search) {
+      params.set("keyword", search);
+    } else {
+      params.delete("keyword");
+    }
+
+    const newUrl = params.toString()
+      ? `/templates?${params.toString()}`
+      : "/templates";
+
+    router.replace(newUrl, {
+      scroll: false,
+    });
+  }, [search, router, searchParams]);
+
+  // Filter templates based on fuzzy search
+  const filteredTemplates = Object.entries(templates).reduce(
+    (acc, [category, items]) => {
+      const filtered = fuzzyFilter(items, search, (item) => [
+        item.name,
+        item.category || "",
+      ]);
+
+      if (filtered.length > 0) {
+        acc[category] = filtered;
       }
 
       return acc;
     },
-    {
-    } as Record<string, TemplateCategory>
+    {} as Record<string, TemplateCategory>
   );
 
-  const totalCount = Object.values( filteredTemplates ).reduce(
-    (
-      sum, items
-    ) => sum + items.length,
+  const totalCount = Object.values(filteredTemplates).reduce(
+    (sum, items) => sum + items.length,
     0
   );
 
@@ -114,11 +71,45 @@ export default function TemplatesList( {
       <div className="flex flex-col gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Templates
+            Social Media Video and Image Templates
           </h1>
-          <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">
-            {totalCount} {totalCount === 1 ? "template" : "templates"}
-            {search && ` matching "${ search }"`}
+          <p className="text-xs sm:text-sm text-foreground/60 mt-1 sm:mt-2 max-w-3xl leading-relaxed">
+            Browse {totalCount} {totalCount === 1 ? "template" : "templates"}
+            {search && ` matching "${search}"`} for creating social media
+            content. Each template is built with web technologies like{" "}
+            <a
+              href="https://p5js.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground transition-colors"
+            >
+              p5.js
+            </a>
+            ,{" "}
+            <a
+              href="https://gsap.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground transition-colors"
+            >
+              GSAP
+            </a>
+            , and standard HTML, giving you full creative control over
+            animations, typography, photo effects, and more. Templates support
+            customizable options such as colors, fonts, timing, and layout to
+            help you generate unique visuals for Instagram, TikTok, and other
+            platforms. Use the search bar below to find templates by name or
+            category, and switch between grid and list views for easier
+            browsing. Photo templates let you apply 3D transformations,
+            segmentation masks, particle effects, and EXIF data overlays to your
+            images. Text templates offer kinetic typography, morphing
+            animations, and animated point displays for eye-catching title cards
+            and social posts. Interactive templates include hand tracking,
+            webcam input, and real-time generative visuals you can record
+            directly from the browser. Every template can be exported as a
+            high-quality video or image sequence suitable for social media
+            publishing. Choose a template below to get started with
+            customization and recording.
           </p>
         </div>
 
@@ -130,7 +121,7 @@ export default function TemplatesList( {
               type="text"
               placeholder="Search templates..."
               value={search}
-              onChange={( e ) => setSearch( e.target.value )}
+              onChange={(e) => setSearch(e.target.value)}
               className="pl-9 pr-3 py-2 sm:pl-11 sm:pr-4 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40"
             />
           </div>
@@ -138,7 +129,7 @@ export default function TemplatesList( {
           {/* View Toggle */}
           <div className="flex items-center bg-background border border-border rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
             <button
-              onClick={() => setView( "grid" )}
+              onClick={() => setView("grid")}
               className={`px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
                 view === "grid"
                   ? "bg-hover text-foreground"
@@ -152,7 +143,7 @@ export default function TemplatesList( {
             <div className="w-px h-5 sm:h-6 bg-border" />
 
             <button
-              onClick={() => setView( "list" )}
+              onClick={() => setView("list")}
               className={`px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
                 view === "list"
                   ? "bg-hover text-foreground"
@@ -182,33 +173,27 @@ export default function TemplatesList( {
       )}
 
       {/* Categories */}
-      {Object.entries( filteredTemplates ).map( ( [
-        category,
-        items
-      ] ) => {
+      {Object.entries(filteredTemplates).map(([category, items]) => {
         // Group items by their category field (for p5 sketches)
-        const groupedItems: Record<string, typeof items> = {
-        };
-        const uncategorized: typeof items = [
-        ];
+        const groupedItems: Record<string, typeof items> = {};
+        const uncategorized: typeof items = [];
 
-        items.forEach( ( item ) => {
-          if ( item.category ) {
-            if ( !groupedItems[ item.category ] ) {
-              groupedItems[ item.category ] = [
-              ];
+        items.forEach((item) => {
+          if (item.category) {
+            if (!groupedItems[item.category]) {
+              groupedItems[item.category] = [];
             }
-            groupedItems[ item.category ].push( item );
+            groupedItems[item.category].push(item);
           } else {
-            uncategorized.push( item );
+            uncategorized.push(item);
           }
-        } );
+        });
 
         return (
           <div key={category} className="space-y-2 sm:space-y-4">
             <div className="flex items-center gap-2 sm:gap-3">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground">
-                {category}
+              <h2 className="text-base sm:text-lg font-semibold text-foreground capitalize">
+                {category} templates
               </h2>
               <span className="text-xs sm:text-sm text-foreground/50 font-medium">
                 {items.length} {items.length === 1 ? "template" : "templates"}
@@ -216,10 +201,7 @@ export default function TemplatesList( {
             </div>
 
             {/* Render categorized groups */}
-            {Object.entries( groupedItems ).map( ( [
-              subCategory,
-              subItems
-            ] ) => (
+            {Object.entries(groupedItems).map(([subCategory, subItems]) => (
               <div key={subCategory} className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 pl-2 sm:pl-4">
                   <h3 className="text-sm sm:text-base font-medium text-foreground/80">
@@ -237,31 +219,29 @@ export default function TemplatesList( {
                       : "space-y-2 sm:space-y-3"
                   }
                 >
-                  {subItems.map( (
-                    {
-                      href, name, thumbnail, hasSketchForm
-                    }, index
-                  ) => (
-                    <TemplateCard
-                      key={name}
-                      href={href}
-                      name={name}
-                      thumbnail={thumbnail}
-                      hasSketchForm={hasSketchForm}
-                      view={view}
-                      eager={index < 8}
-                    />
-                  ) )}
+                  {subItems.map(
+                    ({ href, name, thumbnail, hasSketchForm }, index) => (
+                      <TemplateCard
+                        key={name}
+                        href={href}
+                        name={name}
+                        thumbnail={thumbnail}
+                        hasSketchForm={hasSketchForm}
+                        view={view}
+                        eager={index < 8}
+                      />
+                    )
+                  )}
                 </div>
               </div>
-            ) )}
+            ))}
 
             {/* Render uncategorized items */}
             {uncategorized.length > 0 && (
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 pl-2 sm:pl-4">
                   <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                    No category
+                    Other {category} templates
                   </h3>
                   <span className="text-xs text-foreground/40">
                     {uncategorized.length}
@@ -275,32 +255,30 @@ export default function TemplatesList( {
                       : "space-y-2 sm:space-y-3"
                   }
                 >
-                  {uncategorized.map( (
-                    {
-                      href, name, thumbnail, hasSketchForm
-                    }, index
-                  ) => (
-                    <TemplateCard
-                      key={name}
-                      href={href}
-                      name={name}
-                      thumbnail={thumbnail}
-                      hasSketchForm={hasSketchForm}
-                      view={view}
-                      eager={index < 8}
-                    />
-                  ) )}
+                  {uncategorized.map(
+                    ({ href, name, thumbnail, hasSketchForm }, index) => (
+                      <TemplateCard
+                        key={name}
+                        href={href}
+                        name={name}
+                        thumbnail={thumbnail}
+                        hasSketchForm={hasSketchForm}
+                        view={view}
+                        eager={index < 8}
+                      />
+                    )
+                  )}
                 </div>
               </div>
             )}
           </div>
         );
-      } )}
+      })}
     </div>
   );
 }
 
-function TemplateCard( {
+function TemplateCard({
   href,
   name,
   thumbnail,
@@ -314,8 +292,8 @@ function TemplateCard( {
   hasSketchForm: boolean;
   view: "grid" | "list";
   eager?: boolean;
-} ) {
-  if ( view === "grid" ) {
+}) {
+  if (view === "grid") {
     return (
       <HardLink
         href={href}
