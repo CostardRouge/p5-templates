@@ -4,7 +4,7 @@ import React, {
   useEffect, useState
 } from "react";
 import {
-  Github, Paintbrush, Video
+  ExternalLink, Github, Paintbrush, Video
 } from "lucide-react";
 import clsx from "clsx";
 import Link from "next/link";
@@ -19,7 +19,7 @@ type NavItem = {
   href: string;
   name?: string;
   target?: string;
-  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  Icon?: React.FC<React.SVGProps<SVGSVGElement>>;
 };
 
 type MenuBarProps = {
@@ -55,13 +55,8 @@ function MenuBar( {
 
   const items: NavItem[] = [
     {
-      href: "https://github.com/CostardRouge/p5-templates",
-      name: "//github",
-      Icon: Github,
-      target: "_blank",
-    },
-    {
       href: "/templates",
+      name: "templates",
       Icon: Paintbrush,
     },
   ];
@@ -70,9 +65,26 @@ function MenuBar( {
   if ( mounted && showRecordings ) {
     items.push( {
       href: "/recordings",
+      name: "recordings",
       Icon: Video,
     } );
   }
+
+  items.push( ...[
+
+    {
+      href: "https://github.com/CostardRouge/p5-templates",
+      name: "github",
+      Icon: Github,
+      target: "_blank",
+    },
+    {
+      href: "instagram.com/costardrouge.jpg",
+      name: "@costardrouge.jpg",
+      target: "_blank",
+      Icon: ExternalLink,
+    },
+  ] );
 
   return (
     <nav className="w-full glass px-4 py-3 flex justify-between items-center gap-4 z-50 border-t border-border backdrop-blur-xl bg-background/80">
@@ -115,7 +127,7 @@ function MenuBar( {
                   : "text-foreground/70 hover:text-foreground hover:bg-hover/50"
               )}
             >
-              <Icon className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+              {Icon ? <Icon className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" /> : null}
               <span className="hidden sm:inline">{name ?? href}</span>
 
               {/* Active indicator */}
