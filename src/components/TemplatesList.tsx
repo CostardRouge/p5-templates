@@ -1,25 +1,24 @@
 "use client";
 
-import React, {
-  useEffect, useState
-} from "react";
 import {
   FileSliders, Grid, List, Search
 } from "lucide-react";
 import {
-  TemplateCategory
-} from "@/app/templates/page";
-import {
   useRouter, useSearchParams
 } from "next/navigation";
+import React, {
+  useEffect, useState
+} from "react";
+import type {
+  TemplateCategory
+} from "@/app/templates/page";
+import HardLink from "@/components/HardLink";
 import {
   usePersistedViewMode
 } from "@/hooks/usePersistedViewMode";
-
 import {
   fuzzyFilter
 } from "@/utils/fuzzySearch";
-import HardLink from "@/components/HardLink";
 
 interface TemplatesListProps {
   templates: Record<string, TemplateCategory>;
@@ -88,7 +87,7 @@ export default function TemplatesList( {
         search,
         ( item ) => [
           item.name,
-          item.category || ""
+          item.category || "",
         ]
       );
 
@@ -238,9 +237,11 @@ export default function TemplatesList( {
                       : "space-y-2 sm:space-y-3"
                   }
                 >
-                  {subItems.map( ( {
-                    href, name, thumbnail, hasSketchForm
-                  } ) => (
+                  {subItems.map( (
+                    {
+                      href, name, thumbnail, hasSketchForm
+                    }, index
+                  ) => (
                     <TemplateCard
                       key={name}
                       href={href}
@@ -248,6 +249,7 @@ export default function TemplatesList( {
                       thumbnail={thumbnail}
                       hasSketchForm={hasSketchForm}
                       view={view}
+                      eager={index < 8}
                     />
                   ) )}
                 </div>
@@ -273,9 +275,11 @@ export default function TemplatesList( {
                       : "space-y-2 sm:space-y-3"
                   }
                 >
-                  {uncategorized.map( ( {
-                    href, name, thumbnail, hasSketchForm
-                  } ) => (
+                  {uncategorized.map( (
+                    {
+                      href, name, thumbnail, hasSketchForm
+                    }, index
+                  ) => (
                     <TemplateCard
                       key={name}
                       href={href}
@@ -283,6 +287,7 @@ export default function TemplatesList( {
                       thumbnail={thumbnail}
                       hasSketchForm={hasSketchForm}
                       view={view}
+                      eager={index < 8}
                     />
                   ) )}
                 </div>
@@ -301,12 +306,14 @@ function TemplateCard( {
   thumbnail,
   hasSketchForm,
   view,
+  eager = false,
 }: {
   href: string;
   name: string;
   thumbnail: string;
   hasSketchForm: boolean;
   view: "grid" | "list";
+  eager?: boolean;
 } ) {
   if ( view === "grid" ) {
     return (
@@ -333,7 +340,9 @@ function TemplateCard( {
           )}
           <img
             alt={name}
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : undefined}
+            decoding={eager ? "sync" : "async"}
             src={thumbnail}
             className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
           />
@@ -368,7 +377,9 @@ function TemplateCard( {
       >
         <img
           alt={name}
-          loading="lazy"
+          loading={eager ? "eager" : "lazy"}
+          fetchPriority={eager ? "high" : undefined}
+          decoding={eager ? "sync" : "async"}
           src={thumbnail}
           className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
         />

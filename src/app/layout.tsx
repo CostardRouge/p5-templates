@@ -1,24 +1,84 @@
 import "./globals.css";
-import type {
-  Metadata, Viewport
-} from "next";
-import {
-  ThemeProvider
-} from "next-themes";
-
-import MenuBar from "@/components/MenuBar";
+import type { Metadata, Viewport } from "next";
+import { ThemeProvider } from "next-themes";
+import { Suspense } from "react";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import MenuBar from "@/components/MenuBar";
 import ServiceWorkerUpdateNotifier from "@/components/ServiceWorkerUpdateNotifier";
 import {
-  Suspense
-} from "react";
+  getBaseUrl,
+  getWebApplicationJsonLd,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+} from "@/lib/seo";
 
 // Force dynamic rendering to read env vars at runtime
 export const dynamic = "force-dynamic";
 
+const baseUrl = getBaseUrl();
+
 export const metadata: Metadata = {
-  title: "Social-pipeline",
-  description: "Generate social-templates with HTML and JavaScript (p5*js)",
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  authors: [
+    {
+      name: "Social Templates Renderer",
+    },
+  ],
+  creator: "Social Templates Renderer",
+  publisher: "Social Templates Renderer",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: baseUrl,
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/assets/images/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: `${SITE_NAME} - Create social media videos from code templates`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: ["/assets/images/icon-512x512.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/icon.png",
+    apple: "/assets/images/icon-192x192.png",
+  },
+  category: "technology",
 };
 
 export const viewport: Viewport = {
@@ -26,15 +86,42 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: [
+    {
+      media: "(prefers-color-scheme: light)",
+      color: "#ffffff",
+    },
+    {
+      media: "(prefers-color-scheme: dark)",
+      color: "#000000",
+    },
+  ],
 };
 
-export default function RootLayout( {
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-} ) {
+}) {
+  const jsonLd = getWebApplicationJsonLd();
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link
+          rel="preconnect"
+          href="https://www.googletagmanager.com"
+          crossOrigin="anonymous"
+        />
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires dangerouslySetInnerHTML */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd),
+          }}
+        />
+      </head>
       <body>
         <GoogleAnalytics />
         <ThemeProvider

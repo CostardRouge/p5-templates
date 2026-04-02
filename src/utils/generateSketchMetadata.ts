@@ -1,54 +1,87 @@
-import type {
-  Metadata
-} from "next";
+import type { Metadata } from "next";
+import { getBaseUrl, SITE_NAME } from "@/lib/seo";
 import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
 
-export function generateSketchMetadata( sketchName: string ): Metadata {
-  const siteTitle = "Social-pipeline";
-  const sketchTitle = sketchName
-    .split( "-" )
-    .map( ( word ) => word.charAt( 0 ).toUpperCase() + word.slice( 1 ) )
-    .join( " " );
+/**
+ * Formats a sketch name slug into a human-readable title.
+ * e.g. "text-morphing-depth" -> "Text Morphing Depth"
+ */
+function formatSketchTitle(sketchName: string): string {
+  return sketchName
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
-  const title = `${ sketchTitle } | ${ siteTitle }`;
-  const description = `Generate ${ sketchTitle } sketch videos with p5.js`;
+/**
+ * Derives a category keyword from the sketch name for SEO.
+ * e.g. "photo-3d-cylinder" -> "photo", "text-morphing-depth" -> "text"
+ */
+function deriveCategory(sketchName: string): string {
+  const prefix = sketchName.split("-")[0];
+  const categoryMap: Record<string, string> = {
+    photo: "photo effects",
+    text: "text animation",
+    kinetic: "kinetic typography",
+    slides: "slideshow",
+    hand: "hand tracking",
+    neon: "neon effects",
+    mask: "masking effects",
+    dominant: "color analysis",
+    hello: "starter template",
+    empty: "blank template",
+  };
 
-  // Get the base URL from environment or use a default
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    ( process.env.VERCEL_URL
-      ? `https://${ process.env.VERCEL_URL }`
-      : "http://localhost:3000" );
+  return categoryMap[prefix] || "creative coding";
+}
 
-  const thumbnailPath = getP5SketchThumbnailURL( sketchName );
-  const thumbnailUrl = `${ baseUrl }/${ thumbnailPath }`;
-  const pageUrl = `${ baseUrl }/templates/p5/${ sketchName }`;
+export function generateSketchMetadata(sketchName: string): Metadata {
+  const sketchTitle = formatSketchTitle(sketchName);
+  const category = deriveCategory(sketchName);
+  const baseUrl = getBaseUrl();
+
+  const description = `Create ${sketchTitle} videos and images with p5.js. A ${category} template for generating social media content.`;
+
+  const thumbnailPath = getP5SketchThumbnailURL(sketchName);
+  const thumbnailUrl = `${baseUrl}/${thumbnailPath}`;
+  const pageUrl = `${baseUrl}/templates/p5/${sketchName}`;
 
   return {
-    title,
+    title: sketchTitle,
     description,
+    keywords: [
+      sketchTitle,
+      "p5.js",
+      category,
+      "social media template",
+      "video generator",
+      "creative coding",
+      "generative art",
+      ...sketchName.split("-"),
+    ],
+    alternates: {
+      canonical: `/templates/p5/${sketchName}`,
+    },
     openGraph: {
-      title,
+      title: `${sketchTitle} | ${SITE_NAME}`,
       description,
       url: pageUrl,
-      siteName: siteTitle,
+      siteName: SITE_NAME,
       images: [
         {
           url: thumbnailUrl,
           width: 1200,
           height: 630,
-          alt: `${ sketchTitle } preview`,
+          alt: `${sketchTitle} - p5.js template preview`,
         },
       ],
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: `${sketchTitle} | ${SITE_NAME}`,
       description,
-      images: [
-        thumbnailUrl
-      ],
+      images: [thumbnailUrl],
     },
   };
 }
