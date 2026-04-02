@@ -7,6 +7,26 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "s3.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "s3.*.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.*.amazonaws.com",
+      },
+    ],
+  },
   env: {
     NEXT_PUBLIC_BACKEND_RECORDING: process.env.BACKEND_RECORDING,
     NEXT_PUBLIC_NOTIFICATIONS: process.env.NOTIFICATIONS,
