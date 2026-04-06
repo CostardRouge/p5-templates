@@ -1,85 +1,24 @@
-import type { NextConfig } from "next";
+import type {
+  NextConfig
+} from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   devIndicators: false,
-  allowedDevOrigins: ["*", "192.168.1.161", "172.20.10.2", "172.20.10.3"],
+  allowedDevOrigins: [
+    "*",
+    "192.168.1.161",
+    "172.20.10.2",
+    "172.20.10.3"
+  ],
   crossOrigin: "anonymous",
   eslint: {
     ignoreDuringBuilds: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "s3.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "*.s3.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "s3.*.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "*.s3.*.amazonaws.com",
-      },
-    ],
-  },
   env: {
     NEXT_PUBLIC_BACKEND_RECORDING: process.env.BACKEND_RECORDING,
     NEXT_PUBLIC_NOTIFICATIONS: process.env.NOTIFICATIONS,
-  },
-  async headers() {
-    return [
-      {
-        source: "/sw.js",
-        headers: [
-          {
-            key: "Content-Type",
-            value: "application/javascript; charset=utf-8",
-          },
-          {
-            key: "Cache-Control",
-            value: "no-cache, no-store, must-revalidate",
-          },
-          {
-            key: "Service-Worker-Allowed",
-            value: "/",
-          },
-        ],
-      },
-      {
-        source: "/templates",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=60, stale-while-revalidate=300",
-          },
-        ],
-      },
-      {
-        source: "/templates/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=60, stale-while-revalidate=300",
-          },
-        ],
-      },
-    ];
-  },
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/templates",
-        permanent: true,
-      },
-    ];
-  },
+  }
 };
 
 export default nextConfig;

@@ -1,7 +1,13 @@
-import type { Metadata } from "next";
+import type {
+  Metadata
+} from "next";
 import TemplatesList from "@/components/TemplatesList";
-import { getAllTemplates } from "@/lib/gsap/templateRegistry";
-import { getBaseUrl, SITE_NAME } from "@/lib/seo";
+import {
+  getAllTemplates
+} from "@/lib/gsap/templateRegistry";
+import {
+  getBaseUrl, SITE_NAME
+} from "@/lib/seo";
 import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
 import getSketchList from "@/utils/getSketchList";
 
@@ -13,10 +19,10 @@ export const metadata: Metadata = {
     canonical: "/templates",
   },
   openGraph: {
-    title: `Templates | ${SITE_NAME}`,
+    title: `Templates | ${ SITE_NAME }`,
     description:
       "Browse all available social media templates. Choose from p5.js sketches, GSAP animations, and HTML templates.",
-    url: `${getBaseUrl()}/templates`,
+    url: `${ getBaseUrl() }/templates`,
     type: "website",
   },
 };
@@ -30,27 +36,30 @@ export type TemplateCategory = Array<{
 }>;
 
 export default async function TemplatesPage() {
-  const p5sketches = (await getSketchList()) ?? [];
+  const p5sketches = ( await getSketchList() ) ?? [
+  ];
 
   const p5sketchNames = p5sketches
-    .map(({ name, category, hasSketchForm }) => ({
-      thumbnail: getP5SketchThumbnailURL(name),
-      href: `templates/p5/${name}`,
+    .map( ( {
+      name, category, hasSketchForm
+    } ) => ( {
+      thumbnail: getP5SketchThumbnailURL( name ),
+      href: `templates/p5/${ name }`,
       hasSketchForm,
       name,
       category,
-    }))
+    } ) )
     .reverse();
 
   // Get GSAP templates
   const gsapTemplates = getAllTemplates();
-  const gsapTemplatesList = gsapTemplates.map((template) => ({
+  const gsapTemplatesList = gsapTemplates.map( ( template ) => ( {
     thumbnail: template.thumbnail,
-    href: `templates/gsap/${template.id}`,
+    href: `templates/gsap/${ template.id }`,
     hasSketchForm: false,
     name: template.name,
     category: template.category,
-  }));
+  } ) );
 
   const templates: Record<string, TemplateCategory> = {
     p5: p5sketchNames,
