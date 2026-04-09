@@ -12,13 +12,13 @@ npm run dev
 
 ### 2. Open the Template Browser
 
-Navigate to: **http://localhost:3000/templates/gsap**
+Navigate to: **http://localhost:3000/gsap**
 
 You'll see the GSAP template gallery with available templates.
 
 ### 3. Try the Photo EXIF Template
 
-Click on "Photo EXIF" or navigate to: **http://localhost:3000/templates/gsap/photo-exif**
+Click on "Photo EXIF" or navigate to: **http://localhost:3000/gsap/photo-exif**
 
 #### Interactive Mode:
 1. **Upload a photo** - Drag & drop or click to select
@@ -30,7 +30,7 @@ Click on "Photo EXIF" or navigate to: **http://localhost:3000/templates/gsap/pho
 
 ### Browse Templates
 ```
-http://localhost:3000/templates/gsap
+http://localhost:3000/gsap
 ```
 - View all available templates
 - Filter by category (photo, text, motion, mixed)
@@ -38,7 +38,7 @@ http://localhost:3000/templates/gsap
 
 ### Use Templates Interactively
 ```
-http://localhost:3000/templates/gsap/[template-name]
+http://localhost:3000/gsap/[template-name]
 ```
 - Preview animations in real-time
 - Control playback (play/pause/scrub)
@@ -81,12 +81,12 @@ const url = URL.createObjectURL(videoBlob);
 ### 1. Create Template Directory
 
 ```bash
-mkdir -p src/app/templates/gsap/my-template/{components,types}
+mkdir -p src/app/gsap/my-template/{components,types}
 ```
 
 ### 2. Define Types
 
-Create `src/app/templates/gsap/my-template/types/index.ts`:
+Create `src/app/gsap/my-template/types/index.ts`:
 
 ```typescript
 import { GSAPTemplateOptions } from '@/types/gsap-template.types';
@@ -105,7 +105,7 @@ export interface MyTemplateOptions extends GSAPTemplateOptions {
 
 ### 3. Create Options
 
-Create `src/app/templates/gsap/my-template/options.ts`:
+Create `src/app/gsap/my-template/options.ts`:
 
 ```typescript
 import { MyTemplateOptions } from './types';
@@ -124,7 +124,7 @@ export const defaultOptions: MyTemplateOptions = {
 
 ### 4. Create Template Component
 
-Create `src/app/templates/gsap/my-template/page.tsx`:
+Create `src/app/gsap/my-template/page.tsx`:
 
 ```typescript
 "use client";
@@ -220,14 +220,14 @@ Add to `src/lib/gsap/templateRegistry.ts`:
   name: 'My Template',
   description: 'My awesome GSAP template',
   category: 'text',
-  thumbnail: '/templates/gsap/my-template/thumbnail.png',
+  thumbnail: '/gsap/my-template/thumbnail.png',
   defaultOptions: defaultOptions,
 }
 ```
 
 ### 6. Test It!
 
-Navigate to: **http://localhost:3000/templates/gsap/my-template**
+Navigate to: **http://localhost:3000/gsap/my-template**
 
 ## 🎯 Key Concepts
 
@@ -255,7 +255,7 @@ animation: {
 
 - **Full Documentation**: `docs/GSAP_TEMPLATES.md`
 - **Implementation Details**: `docs/GSAP_TEMPLATES_IMPLEMENTATION.md`
-- **Example Template**: `src/app/templates/gsap/photo-exif/`
+- **Example Template**: `src/app/gsap/photo-exif/`
 
 ## 🆘 Troubleshooting
 

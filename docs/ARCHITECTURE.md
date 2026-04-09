@@ -20,7 +20,7 @@ Social Templates Renderer is a full-stack application that enables the creation,
 │                    Next.js Application                       │
 │  ┌────────────────┐  ┌──────────────┐  ┌─────────────────┐ │
 │  │   API Routes   │  │  SSR Pages   │  │  Static Assets  │ │
-│  │  /api/...      │  │  /templates  │  │  /public        │ │
+│  │  /api/...      │  │  /           │  │  /public        │ │
 │  └────────────────┘  └──────────────┘  └─────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -54,12 +54,12 @@ Social Templates Renderer is a full-stack application that enables the creation,
 
 ### 1. Frontend Layer
 
-#### Template Gallery (`/templates`)
+#### Template Gallery (`/`)
 - Lists all available p5.js sketches
 - Shows preview thumbnails
 - Provides navigation to individual sketch editors
 
-#### Sketch Editor (`/templates/[sketchName]`)
+#### Sketch Editor (`//[sketchName]`)
 - **Dynamic Form Generation**: Forms are automatically generated from Zod schemas
 - **Live Preview**: Real-time p5.js sketch rendering with parameter updates
 - **Asset Management**: Drag-and-drop image/video uploads

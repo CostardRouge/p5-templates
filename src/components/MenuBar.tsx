@@ -1,19 +1,19 @@
 "use client";
 
-import React, {
-  useEffect, useState
-} from "react";
+import clsx from "clsx";
 import {
   ExternalLink, Github, Paintbrush, Video
 } from "lucide-react";
-import clsx from "clsx";
 import Link from "next/link";
-import Image from "next/image";
 import {
   usePathname, useSearchParams
 } from "next/navigation";
-import ThemeToggle from "@/components/ThemeToggle";
+import type React from "react";
+import {
+  useEffect, useState
+} from "react";
 import PushNotificationManager from "@/components/PushNotificationManager";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type NavItem = {
   href: string;
@@ -55,7 +55,7 @@ function MenuBar( {
 
   const items: NavItem[] = [
     {
-      href: "/templates",
+      href: "/",
       name: "templates",
       Icon: Paintbrush,
     },
@@ -71,7 +71,6 @@ function MenuBar( {
   }
 
   items.push( ...[
-
     {
       href: "https://github.com/CostardRouge/p5-templates",
       name: "github",
@@ -80,40 +79,40 @@ function MenuBar( {
     },
     {
       href: "instagram.com/costardrouge.jpg",
-      name: "@costardrouge.jpg",
+      name: "instagram",
       target: "_blank",
       Icon: ExternalLink,
     },
   ] );
 
-  return (
-    <nav className="w-full glass px-4 py-3 flex justify-between items-center gap-4 z-50 border-t border-border backdrop-blur-xl bg-background/80">
-      {/* Logo */}
-      <Link
-        href="/templates"
-        className="group flex items-center gap-3 flex-shrink-0"
-      >
-        <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-border group-hover:border-foreground/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-foreground/10">
-          <Image
-            alt="my p5*js templates"
-            src="/assets/images/icon-512x512.png"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
-            width={64}
-            height={64}
-          />
-        </div>
-        <span className="hidden sm:block text-sm font-semibold text-foreground group-hover:text-foreground/70 transition-colors">
-          p5 templates
-        </span>
-      </Link>
+  // Get all internal route prefixes except "/"
+  const internalRoutes = items
+    .filter( ( item ) => item.href.startsWith( "/" ) && item.href !== "/" )
+    .map( ( item ) => item.href );
 
+  const isActive = ( href: string ) => {
+    if ( !href.startsWith( "/" ) ) return false;
+
+    if ( href === "/" ) {
+      // Home route is active if pathname is "/" or doesn't match any other internal route
+      return (
+        pathname === "/" ||
+        !internalRoutes.some( ( route ) => pathname.startsWith( route ) )
+      );
+    }
+
+    // Other routes use standard prefix matching
+    return pathname.startsWith( href );
+  };
+
+  return (
+    <nav className="w-full glass px-4 py-3 flex justify-between gap-4 z-50 border-t border-border backdrop-blur-xl bg-background/80">
       {/* Navigation Items */}
-      <div className="flex items-center gap-2 flex-1 justify-center">
+      <div className="flex items-center gap-2 justify-center">
         {items.map( ( {
           href, name, Icon, target
         } ) => {
-          const isInternal = href.startsWith( "/" );
-          const active = isInternal && pathname.startsWith( href );
+          const active = isActive( href );
 
           return (
             <Link
@@ -127,7 +126,9 @@ function MenuBar( {
                   : "text-foreground/70 hover:text-foreground hover:bg-hover/50"
               )}
             >
-              {Icon ? <Icon className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" /> : null}
+              {Icon ? (
+                <Icon className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+              ) : null}
               <span className="hidden sm:inline">{name ?? href}</span>
 
               {/* Active indicator */}

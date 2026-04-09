@@ -78,7 +78,7 @@ All core tasks have been implemented successfully. The GSAP HTML Templates featu
 - `src/components/ui/alert.tsx`
 
 ### Pages
-- `src/app/templates/gsap/page.tsx` - Template browser page
+- `src/app/gsap/page.tsx` - Template browser page
 
 ### Documentation
 - `docs/GSAP_TEMPLATES.md` - User guide
@@ -86,7 +86,7 @@ All core tasks have been implemented successfully. The GSAP HTML Templates featu
 - `.kiro/specs/gsap-html-templates/COMPLETION_SUMMARY.md` - This file
 
 ### Template Example
-- `src/app/templates/gsap/photo-exif/` - Complete working template
+- `src/app/gsap/photo-exif/` - Complete working template
 
 ## 📊 Statistics
 
@@ -140,10 +140,10 @@ Existing dependencies used:
 ## 🎬 How to Use
 
 ### 1. Browse Templates
-Visit `/templates/gsap` to see all available templates
+Visit `/gsap` to see all available templates
 
 ### 2. Use a Template Interactively
-Visit `/templates/gsap/photo-exif` to:
+Visit `/gsap/photo-exif` to:
 - Upload a photo
 - Preview the animation
 - Control playback
@@ -194,7 +194,7 @@ preloadImages([url1, url2]); // Async preloading
 
 - **User Guide**: `docs/GSAP_TEMPLATES.md`
 - **Implementation Details**: `docs/GSAP_TEMPLATES_IMPLEMENTATION.md`
-- **Example Template**: `src/app/templates/gsap/photo-exif/`
+- **Example Template**: `src/app/gsap/photo-exif/`
 - **API Reference**: See documentation files
 
 ## ✨ Next Steps (Optional Enhancements)

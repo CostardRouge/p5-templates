@@ -71,7 +71,7 @@ This feature adds support for HTML-based animation templates using React, GSAP, 
 
 #### Acceptance Criteria
 
-1. WHEN a developer creates a new template THEN the Template System SHALL follow a consistent directory structure under `src/app/templates/gsap/`
+1. WHEN a developer creates a new template THEN the Template System SHALL follow a consistent directory structure under `src/app/gsap/`
 2. WHEN a template is created THEN the Template System SHALL include separate files for the component, options configuration, and types
 3. WHEN templates are listed THEN the Template System SHALL discover and display all available GSAP templates
 4. WHEN a template includes shared utilities THEN the Template System SHALL provide a common utilities directory accessible to all templates

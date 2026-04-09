@@ -43,7 +43,7 @@ The template supports the following configurable options:
 
 - **3.1**: Options configuration file with animation settings ✓
 - **3.2**: Form configuration for UI controls ✓
-- **5.1**: Consistent directory structure under `src/app/templates/gsap/` ✓
+- **5.1**: Consistent directory structure under `src/app/gsap/` ✓
 - **5.2**: Separate files for component, options, and types ✓
 - **7.2**: TypeScript interfaces from options schema ✓
 
@@ -60,7 +60,7 @@ The template supports the following configurable options:
 
 ### Interactive Mode
 
-Navigate to `/templates/gsap/photo-exif`:
+Navigate to `/gsap/photo-exif`:
 1. Upload a photo
 2. Preview the animation
 3. Use controls to play/pause/scrub

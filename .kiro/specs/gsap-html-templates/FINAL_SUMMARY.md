@@ -78,7 +78,7 @@ src/components/
 
 ### Pages (1 file)
 ```
-src/app/templates/gsap/
+src/app/gsap/
 └── page.tsx                 # Template browser page
 ```
 
@@ -96,7 +96,7 @@ docs/
 
 ### Example Template (Already existed, enhanced)
 ```
-src/app/templates/gsap/photo-exif/
+src/app/gsap/photo-exif/
 ├── page.tsx                 # Enhanced with controls
 ├── options.ts
 ├── types/
@@ -163,10 +163,10 @@ npm run dev
 ```
 
 ### 2. Browse Templates
-Navigate to: **http://localhost:3000/templates/gsap**
+Navigate to: **http://localhost:3000/gsap**
 
 ### 3. Try Photo EXIF Template
-Navigate to: **http://localhost:3000/templates/gsap/photo-exif**
+Navigate to: **http://localhost:3000/gsap/photo-exif**
 - Upload a photo
 - Watch the animation
 - Use playback controls
@@ -203,7 +203,7 @@ const video = await response.blob();
 1. **Quick Start**: `docs/GSAP_QUICK_START.md`
 2. **Full Guide**: `docs/GSAP_TEMPLATES.md`
 3. **Implementation**: `docs/GSAP_TEMPLATES_IMPLEMENTATION.md`
-4. **Example**: `src/app/templates/gsap/photo-exif/`
+4. **Example**: `src/app/gsap/photo-exif/`
 
 ## 🔍 Verification
 

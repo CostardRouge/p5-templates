@@ -38,7 +38,7 @@
    ✅ ui/tabs.tsx
    ✅ ui/alert.tsx
 
-✅ src/app/templates/gsap/
+✅ src/app/gsap/
    ✅ page.tsx (browser)
    ✅ photo-exif/ (example template)
 
@@ -51,14 +51,14 @@
 ## 🧪 Manual Testing Checklist
 
 ### 1. Template Browser
-- [ ] Navigate to `/templates/gsap`
+- [ ] Navigate to `/gsap`
 - [ ] Verify template cards display
 - [ ] Test category filtering (All, Photo, Text, Motion, Mixed)
 - [ ] Test search functionality
 - [ ] Click on Photo EXIF template
 
 ### 2. Photo EXIF Template - Interactive Mode
-- [ ] Navigate to `/templates/gsap/photo-exif`
+- [ ] Navigate to `/gsap/photo-exif`
 - [ ] Upload a photo with EXIF data
 - [ ] Verify EXIF data is parsed and displayed
 - [ ] Check animation plays automatically
@@ -192,8 +192,8 @@ npm run lint
 npm run dev
 
 # 4. Open browser and test
-# - http://localhost:3000/templates/gsap
-# - http://localhost:3000/templates/gsap/photo-exif
+# - http://localhost:3000/gsap
+# - http://localhost:3000/gsap/photo-exif
 ```
 
 ## 🎉 Sign-Off

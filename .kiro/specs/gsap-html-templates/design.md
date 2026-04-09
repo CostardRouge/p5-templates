@@ -78,7 +78,7 @@ Screenshot Capture → Video Generation
 Each GSAP template follows this pattern:
 
 ```typescript
-// src/app/templates/gsap/[template-name]/page.tsx
+// src/app/gsap/[template-name]/page.tsx
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
@@ -154,7 +154,7 @@ export default function TemplatePage() {
 Templates define options using the same pattern as p5.js sketches:
 
 ```typescript
-// src/app/templates/gsap/[template-name]/options.ts
+// src/app/gsap/[template-name]/options.ts
 
 export interface TemplateOptions {
   animation: {
@@ -362,7 +362,7 @@ export async function POST(
 
   try {
     // Navigate to template with options
-    const url = new URL(`http://localhost:3000/templates/gsap/${template}`);
+    const url = new URL(`http://localhost:3000/gsap/${template}`);
     url.searchParams.set('capturing', 'true');
     url.searchParams.set('options', JSON.stringify(options));
 
@@ -499,7 +499,7 @@ export interface TimelineSyncState {
 **Validates: Requirements 4.5**
 
 ### Property 7: Template Discovery
-*For any* valid template directory under `src/app/templates/gsap/`, the Template System should discover and list it
+*For any* valid template directory under `src/app/gsap/`, the Template System should discover and list it
 **Validates: Requirements 5.3**
 
 ### Property 8: TypeScript Type Safety
@@ -806,7 +806,7 @@ return (
 
 The existing `exif-detail` template can be migrated to the GSAP system:
 
-1. Move from `src/app/templates/html/exif-detail` to `src/app/templates/gsap/photo-exif`
+1. Move from `src/app/html/exif-detail` to `src/app/gsap/photo-exif`
 2. Add `options.ts` with animation configuration
 3. Integrate `useGSAPTimeline` hook
 4. Add GSAP animations for EXIF data reveal

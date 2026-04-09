@@ -1,6 +1,10 @@
-import type { Metadata } from "next";
+import type {
+  Metadata
+} from "next";
 import GSAPTemplateBrowser from "@/components/GSAPTemplateBrowser/GSAPTemplateBrowser";
-import { getBaseUrl, SITE_NAME } from "@/lib/seo";
+import {
+  getBaseUrl, SITE_NAME
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "GSAP Templates",
@@ -14,13 +18,13 @@ export const metadata: Metadata = {
     "social media video",
   ],
   alternates: {
-    canonical: "/templates/gsap",
+    canonical: "/gsap",
   },
   openGraph: {
-    title: `GSAP Templates | ${SITE_NAME}`,
+    title: `GSAP Templates | ${ SITE_NAME }`,
     description:
       "Browse GSAP animation templates for creating smooth, professional social media videos.",
-    url: `${getBaseUrl()}/templates/gsap`,
+    url: `${ getBaseUrl() }/gsap`,
     type: "website",
   },
 };

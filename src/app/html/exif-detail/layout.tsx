@@ -1,5 +1,9 @@
-import type { Metadata } from "next";
-import { getBaseUrl, SITE_NAME } from "@/lib/seo";
+import type {
+  Metadata
+} from "next";
+import {
+  getBaseUrl, SITE_NAME
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "EXIF Detail Template",
@@ -14,13 +18,13 @@ export const metadata: Metadata = {
     "social media photography",
   ],
   alternates: {
-    canonical: "/templates/html/exif-detail",
+    canonical: "/html/exif-detail",
   },
   openGraph: {
-    title: `EXIF Detail Template | ${SITE_NAME}`,
+    title: `EXIF Detail Template | ${ SITE_NAME }`,
     description:
       "Upload a photo and overlay its EXIF metadata in a beautiful social media-ready format.",
-    url: `${getBaseUrl()}/templates/html/exif-detail`,
+    url: `${ getBaseUrl() }/html/exif-detail`,
     type: "website",
     images: [
       {
@@ -33,10 +37,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ExifDetailLayout({
+export default function ExifDetailLayout( {
   children,
 }: {
   children: React.ReactNode;
-}) {
+} ) {
   return children;
 }

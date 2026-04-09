@@ -1,13 +1,13 @@
 "use client";
 
 import React, {
-  useEffect, useState, useRef
+  useEffect, useRef, useState
 } from "react";
 import {
   createPortal
 } from "react-dom";
 import {
-  Download, X, ExternalLink, FileVideo
+  Download, ExternalLink, FileVideo, X
 } from "lucide-react";
 import fetchDownload from "@/components/utils/fetchDownload";
 
@@ -253,7 +253,7 @@ export default function VideoPreviewModal( {
                 {/* Open Template Link */}
                 {media.template && (
                   <a
-                    href={`/templates/${ media.template }`}
+                    href={`/${ media.template }`}
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
                     title="Open template"

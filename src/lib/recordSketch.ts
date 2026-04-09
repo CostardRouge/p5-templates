@@ -26,8 +26,7 @@ import {
   Browser, Page
 } from "playwright";
 import {
-  updateRecordingStepPercentage,
-  addRecordingDuration,
+  addRecordingDuration, updateRecordingStepPercentage,
 } from "@/lib/progression";
 import {
   NotificationService
@@ -198,7 +197,7 @@ async function recordSingleSketch(
   );
 
   await page.goto(
-    `http://localhost:3000/templates/${ template }?id=${ jobId }&capturing`,
+    `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
     {
       waitUntil: "networkidle",
     }
@@ -252,7 +251,7 @@ async function recordSingleSketch(
     const thumbnailPage = await createThumbnailPage();
 
     await thumbnailPage.goto(
-      `http://localhost:3000/templates/${ template }?id=${ jobId }&capturing`,
+      `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
       {
         waitUntil: "networkidle",
       }
@@ -397,7 +396,7 @@ async function recordMultipleSlides(
     );
 
     await page.goto(
-      `http://localhost:3000/templates/${ template }?id=${ jobId }&capturing`,
+      `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
       {
         waitUntil: "networkidle",
       }

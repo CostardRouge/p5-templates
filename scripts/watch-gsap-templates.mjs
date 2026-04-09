@@ -1,88 +1,116 @@
 #!/usr/bin/env node
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import {
+  fileURLToPath
+} from "url";
 import chokidar from "chokidar";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TEMPLATES_DIR = path.join(__dirname, "../src/app/templates/gsap");
+const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
+const TEMPLATES_DIR = path.join(
+  __dirname,
+  "../src/app/gsap"
+);
 const REGISTRY_OUTPUT = path.join(
   __dirname,
   "../src/lib/gsap/templateRegistry.ts"
 );
 
 function generateRegistry() {
-  if (!fs.existsSync(TEMPLATES_DIR)) {
-    console.warn(`⚠️ GSAP templates directory not found: ${TEMPLATES_DIR}`);
+  if ( !fs.existsSync( TEMPLATES_DIR ) ) {
+    console.warn( `⚠️ GSAP templates directory not found: ${ TEMPLATES_DIR }` );
     return;
   }
 
-  const entries = fs.readdirSync(TEMPLATES_DIR);
-  const templates = [];
+  const entries = fs.readdirSync( TEMPLATES_DIR );
+  const templates = [
+  ];
 
-  for (const name of entries) {
-    if (name.startsWith("_") || name.startsWith(".") || name === "page.tsx") {
+  for ( const name of entries ) {
+    if ( name.startsWith( "_" ) || name.startsWith( "." ) || name === "page.tsx" ) {
       continue;
     }
 
-    const fullPath = path.join(TEMPLATES_DIR, name);
+    const fullPath = path.join(
+      TEMPLATES_DIR,
+      name
+    );
 
     let isDir = false;
+
     try {
-      isDir = fs.statSync(fullPath).isDirectory();
+      isDir = fs.statSync( fullPath ).isDirectory();
     } catch {
       continue;
     }
 
-    if (!isDir) continue;
+    if ( !isDir ) continue;
 
     // Check if this is a template folder (has page.tsx)
-    const pagePath = path.join(fullPath, "page.tsx");
-    const optionsPath = path.join(fullPath, "options.ts");
+    const pagePath = path.join(
+      fullPath,
+      "page.tsx"
+    );
+    const optionsPath = path.join(
+      fullPath,
+      "options.ts"
+    );
 
-    if (fs.existsSync(pagePath) && fs.existsSync(optionsPath)) {
+    if ( fs.existsSync( pagePath ) && fs.existsSync( optionsPath ) ) {
       // Try to read options to get default values
       let category = "mixed";
-      let description = `GSAP template: ${name}`;
+      let description = `GSAP template: ${ name }`;
 
       try {
         // Try to extract category from comments or infer from name
-        if (name.includes("photo") || name.includes("image")) {
+        if ( name.includes( "photo" ) || name.includes( "image" ) ) {
           category = "photo";
-        } else if (name.includes("text")) {
+        } else if ( name.includes( "text" ) ) {
           category = "text";
-        } else if (name.includes("motion") || name.includes("anim")) {
+        } else if ( name.includes( "motion" ) || name.includes( "anim" ) ) {
           category = "motion";
         }
 
         // Try to extract description from README
-        const readmePath = path.join(fullPath, "README.md");
-        if (fs.existsSync(readmePath)) {
-          const readmeContent = fs.readFileSync(readmePath, "utf-8");
-          const lines = readmeContent.split("\n");
+        const readmePath = path.join(
+          fullPath,
+          "README.md"
+        );
+
+        if ( fs.existsSync( readmePath ) ) {
+          const readmeContent = fs.readFileSync(
+            readmePath,
+            "utf-8"
+          );
+          const lines = readmeContent.split( "\n" );
+
           // Get first non-empty line after the title
-          for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (line && !line.startsWith("#")) {
+          for ( let i = 1; i < lines.length; i++ ) {
+            const line = lines[ i ].trim();
+
+            if ( line && !line.startsWith( "#" ) ) {
               description = line;
               break;
             }
           }
         }
-      } catch (err) {
-        console.warn(`⚠️ Could not read options for ${name}:`, err.message);
+      } catch ( err ) {
+        console.warn(
+          `⚠️ Could not read options for ${ name }:`,
+          err.message
+        );
       }
 
-      templates.push({
+      templates.push( {
         id: name,
         name: name
-          .split("-")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" "),
+          .split( "-" )
+          .map( ( word ) => word.charAt( 0 ).toUpperCase() + word.slice( 1 ) )
+          .join( " " ),
         description,
         category,
-        thumbnail: `/templates/gsap/${name}/thumbnail.png`,
-      });
+        thumbnail: `/gsap/${ name }/thumbnail.png`,
+      } );
     }
   }
 
@@ -98,11 +126,14 @@ import { GSAPTemplateMetadata } from '@/types/gsap-template.types';
 /**
  * Registry of available GSAP templates
  */
-export const gsapTemplates: GSAPTemplateMetadata[] = ${JSON.stringify(
-    templates,
-    null,
-    2
-  ).replace(/"([^"]+)":/g, "$1:")};
+export const gsapTemplates: GSAPTemplateMetadata[] = ${ JSON.stringify(
+  templates,
+  null,
+  2
+).replace(
+  /"([^"]+)":/g,
+  "$1:"
+) };
 
 /**
  * Get all GSAP templates
@@ -140,65 +171,84 @@ export function searchTemplates(query: string): GSAPTemplateMetadata[] {
 }
 `;
 
-  const oldContent = fs.existsSync(REGISTRY_OUTPUT)
-    ? fs.readFileSync(REGISTRY_OUTPUT, "utf-8")
+  const oldContent = fs.existsSync( REGISTRY_OUTPUT )
+    ? fs.readFileSync(
+      REGISTRY_OUTPUT,
+      "utf-8"
+    )
     : "";
 
-  if (oldContent !== registryContent) {
-    fs.writeFileSync(REGISTRY_OUTPUT, registryContent, "utf-8");
-    console.log(
-      `✅  Updated templateRegistry.ts (${templates.length} templates)`
+  if ( oldContent !== registryContent ) {
+    fs.writeFileSync(
+      REGISTRY_OUTPUT,
+      registryContent,
+      "utf-8"
     );
+    console.log( `✅  Updated templateRegistry.ts (${ templates.length } templates)` );
   } else {
-    console.log(
-      `✅  templateRegistry.ts is up to date (${templates.length} templates)`
-    );
+    console.log( `✅  templateRegistry.ts is up to date (${ templates.length } templates)` );
   }
 }
 
 generateRegistry();
 
-if (process.env.NODE_ENV !== "production") {
-  console.log(`👀 Watching GSAP templates directory: ${TEMPLATES_DIR}`);
+if ( process.env.NODE_ENV !== "production" ) {
+  console.log( `👀 Watching GSAP templates directory: ${ TEMPLATES_DIR }` );
 
-  const watcher = chokidar.watch(TEMPLATES_DIR, {
-    persistent: true,
-    ignoreInitial: true,
-    depth: 2,
-    awaitWriteFinish: {
-      stabilityThreshold: 500,
-      pollInterval: 100,
-    },
-  });
+  const watcher = chokidar.watch(
+    TEMPLATES_DIR,
+    {
+      persistent: true,
+      ignoreInitial: true,
+      depth: 2,
+      awaitWriteFinish: {
+        stabilityThreshold: 500,
+        pollInterval: 100,
+      },
+    }
+  );
 
   watcher
-    .on("addDir", (dirPath) => {
-      const name = path.basename(dirPath);
-      if (!name.startsWith("_") && name !== "page.tsx") {
-        console.log(`📁 New GSAP template detected: ${name}`);
-        generateRegistry();
-      }
-    })
-    .on("unlinkDir", (dirPath) => {
-      console.log(`🗑️  GSAP template removed: ${path.basename(dirPath)}`);
-      generateRegistry();
-    })
-    .on("change", (filePath) => {
-      if (
-        filePath.endsWith("options.ts") ||
-        filePath.endsWith("README.md") ||
-        filePath.endsWith("page.tsx")
-      ) {
-        console.log(`📝 GSAP template updated: ${path.basename(path.dirname(filePath))}`);
-        generateRegistry();
-      }
-    });
+    .on(
+      "addDir",
+      ( dirPath ) => {
+        const name = path.basename( dirPath );
 
-  process.on("SIGINT", () => {
-    console.log("\n👋 Stopping GSAP template watcher");
-    watcher.close();
-    process.exit(0);
-  });
+        if ( !name.startsWith( "_" ) && name !== "page.tsx" ) {
+          console.log( `📁 New GSAP template detected: ${ name }` );
+          generateRegistry();
+        }
+      }
+    )
+    .on(
+      "unlinkDir",
+      ( dirPath ) => {
+        console.log( `🗑️  GSAP template removed: ${ path.basename( dirPath ) }` );
+        generateRegistry();
+      }
+    )
+    .on(
+      "change",
+      ( filePath ) => {
+        if (
+          filePath.endsWith( "options.ts" ) ||
+        filePath.endsWith( "README.md" ) ||
+        filePath.endsWith( "page.tsx" )
+        ) {
+          console.log( `📝 GSAP template updated: ${ path.basename( path.dirname( filePath ) ) }` );
+          generateRegistry();
+        }
+      }
+    );
+
+  process.on(
+    "SIGINT",
+    () => {
+      console.log( "\n👋 Stopping GSAP template watcher" );
+      watcher.close();
+      process.exit( 0 );
+    }
+  );
 } else {
-  process.exit(0);
+  process.exit( 0 );
 }

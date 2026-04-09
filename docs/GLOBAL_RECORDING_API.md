@@ -271,7 +271,7 @@ console.log("After disable:", time.isRecording);
 ```typescript
 // Test script
 const page = await browser.newPage();
-await page.goto("http://localhost:3000/templates/photo-dice");
+await page.goto("http://localhost:3000/photo-dice");
 
 // Enable recording mode
 await page.evaluate(() => {

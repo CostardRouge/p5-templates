@@ -245,7 +245,7 @@ function sketch(p, options, assets) {
 
 ### Step 4: Test Your Sketch
 
-Navigate to `http://localhost:3000/templates/my-new-sketch` to see your sketch in action.
+Navigate to `http://localhost:3000/my-new-sketch` to see your sketch in action.
 
 ### Step 5: Add Custom Options
 
@@ -620,7 +620,7 @@ const slideImg = assets.images['slide-1-image.jpg']
 ### Manual Testing
 
 1. **Test sketch rendering**
-   - Navigate to `/templates/[sketch-name]`
+   - Navigate to `/[sketh-category]/[sketch-name]`
    - Verify sketch renders correctly
    - Test parameter changes
    - Test asset uploads

@@ -79,7 +79,7 @@ export default function RecordingRow( {
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <HardLink
-          href={`templates/${ job.template }?id=${ job.id }`}
+          href={`/${ job.template }?id=${ job.id }`}
           className="group/link text-xs sm:text-sm text-foreground hover:text-foreground/70 transition-colors"
         >
           <div className="font-mono truncate">
@@ -101,7 +101,7 @@ export default function RecordingRow( {
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <HardLink
-          href={`templates/${ job.template }`}
+          href={`/${ job.template }`}
           className="group/link inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
         >
           {job.template}

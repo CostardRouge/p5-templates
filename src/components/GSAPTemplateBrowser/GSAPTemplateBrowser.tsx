@@ -7,11 +7,7 @@ import {
   GSAPTemplateMetadata
 } from "@/types/gsap-template.types";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from "@/components/ui/card";
 import {
   Input
@@ -23,7 +19,7 @@ import {
   Tabs, TabsContent, TabsList, TabsTrigger
 } from "@/components/ui/tabs";
 import {
-  Search, Image, Type, Zap, Layers
+  Image, Layers, Search, Type, Zap
 } from "lucide-react";
 import Link from "next/link";
 
@@ -56,7 +52,7 @@ export default function GSAPTemplateBrowser() {
   // Load templates
   useEffect(
     () => {
-      fetch( "/api/templates/gsap" )
+      fetch( "/api/gsap" )
         .then( ( res ) => res.json() )
         .then( ( data ) => {
           setTemplates( data.templates );
@@ -194,7 +190,7 @@ export default function GSAPTemplateBrowser() {
                       {/* Actions */}
                       <div className="flex gap-2">
                         <Button asChild className="flex-1">
-                          <Link href={`/templates/gsap/${ template.id }`}>
+                          <Link href={`/gsap/${ template.id }`}>
                             Open Template
                           </Link>
                         </Button>

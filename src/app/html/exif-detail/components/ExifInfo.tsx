@@ -1,6 +1,6 @@
 import {
   ExifData
-} from "@/app/templates/html/exif-detail/types/ExifData";
+} from "@/app/html/exif-detail/types/ExifData";
 import React, {
   useEffect, useState
 } from "react";

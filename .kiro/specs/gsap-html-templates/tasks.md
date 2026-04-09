@@ -12,7 +12,7 @@
   - **Validates: Requirements 2.2**
 
 - [x] 2. Create photo-exif GSAP template structure
-  - Create directory structure under `src/app/templates/gsap/photo-exif/`
+  - Create directory structure under `src/app/gsap/photo-exif/`
   - Define options configuration with animation settings
   - Create TypeScript types for template options
   - Set up form configuration for UI controls
@@ -66,7 +66,7 @@
   - _Requirements: 4.4_
 
 - [x] 8. Create template discovery and listing system
-  - Scan `src/app/templates/gsap/` directory
+  - Scan `src/app/gsap/` directory
   - Generate template metadata
   - Create template registry
   - Add template thumbnails

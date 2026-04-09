@@ -56,7 +56,7 @@ async function createSketchThumbnails() {
     for ( const {
       href, name
     } of p5sketchNames ) {
-      const thumbnailPath = `${ ASSETS_DIRECTORY }/images/templates/p5/${ name }/thumbnail.jpeg`;
+      const thumbnailPath = `${ ASSETS_DIRECTORY }/images/p5/${ name }/thumbnail.jpeg`;
 
       if ( await exists( thumbnailPath ) ) {
         console.log( `✅ ${ name }/thumbnail.jpeg already exists!` );

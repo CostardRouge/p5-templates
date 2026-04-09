@@ -2,7 +2,7 @@
 
 This directory will contain template-specific components for the photo-exif GSAP template.
 
-Components to be migrated from `src/app/templates/html/exif-detail/components/`:
+Components to be migrated from `src/app/html/exif-detail/components/`:
 - ExifInfo.tsx - Component for displaying EXIF metadata
 - ImageDropzone.tsx - Component for image upload and handling
 

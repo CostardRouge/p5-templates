@@ -15,7 +15,7 @@ export const gsapTemplates: GSAPTemplateMetadata[] = [
     name: "Photo Exif",
     description: "A GSAP-based HTML template that displays photos with EXIF metadata using smooth animations.",
     category: "photo",
-    thumbnail: "/templates/gsap/photo-exif/thumbnail.png"
+    thumbnail: "/gsap/photo-exif/thumbnail.png"
   }
 ];
 

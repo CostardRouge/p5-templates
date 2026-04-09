@@ -83,7 +83,7 @@ export async function POST(
     buffer
   );
 
-  const url = new URL( `http://localhost:3000/templates/html/${ template }` );
+  const url = new URL( `http://localhost:3000/html/${ template }` );
 
   url.searchParams.set(
     "image",

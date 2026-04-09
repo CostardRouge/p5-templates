@@ -4,8 +4,7 @@ import {
 import createBrowserPage from "@/utils/createBrowserPage";
 import downloadFileResponse from "@/utils/downloadFileResponse";
 import {
-  validateTemplateOptions,
-  TemplateValidationError,
+  TemplateValidationError, validateTemplateOptions,
 } from "@/lib/gsap/validation";
 import fs from "node:fs/promises";
 import path from "path";
@@ -90,7 +89,7 @@ export async function POST(
 
     try {
       // Navigate to template with options
-      const url = new URL( `http://localhost:3000/templates/gsap/${ template }` );
+      const url = new URL( `http://localhost:3000/gsap/${ template }` );
 
       url.searchParams.set(
         "capturing",

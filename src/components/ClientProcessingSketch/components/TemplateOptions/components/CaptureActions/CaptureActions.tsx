@@ -331,7 +331,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
             window.history.replaceState(
               null,
               "",
-              `/templates/p5/${ newUrl }`
+              `/p5/${ newUrl }`
             );
           } catch ( routerError ) {
             console.error(
@@ -342,7 +342,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
             window.history.replaceState(
               null,
               "",
-              `/templates/p5/${ newUrl }`
+              `/p5/${ newUrl }`
             );
           }
         }
@@ -424,7 +424,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       } = await response.json();
 
       if ( deleted ) {
-        router.push( `/templates/p5/${ name }` );
+        router.push( `/p5/${ name }` );
       } else {
         alert( `Could not delete job: ${ jobToDelete }` );
         setDeleting( false );

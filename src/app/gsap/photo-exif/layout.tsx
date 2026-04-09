@@ -1,5 +1,9 @@
-import type { Metadata } from "next";
-import { getBaseUrl, SITE_NAME } from "@/lib/seo";
+import type {
+  Metadata
+} from "next";
+import {
+  getBaseUrl, SITE_NAME
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Photo EXIF - GSAP Template",
@@ -14,21 +18,21 @@ export const metadata: Metadata = {
     "camera metadata",
   ],
   alternates: {
-    canonical: "/templates/gsap/photo-exif",
+    canonical: "/gsap/photo-exif",
   },
   openGraph: {
-    title: `Photo EXIF - GSAP Template | ${SITE_NAME}`,
+    title: `Photo EXIF - GSAP Template | ${ SITE_NAME }`,
     description:
       "Create animated photo presentations with EXIF metadata overlays using GSAP timeline animations.",
-    url: `${getBaseUrl()}/templates/gsap/photo-exif`,
+    url: `${ getBaseUrl() }/gsap/photo-exif`,
     type: "website",
   },
 };
 
-export default function PhotoExifLayout({
+export default function PhotoExifLayout( {
   children,
 }: {
   children: React.ReactNode;
-}) {
+} ) {
   return children;
 }

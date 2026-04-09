@@ -19,7 +19,7 @@ GSAP HTML Templates are React-based animation templates that use GSAP (GreenSock
 Each GSAP template follows this structure:
 
 ```
-src/app/templates/gsap/[template-name]/
+src/app/gsap/[template-name]/
 ├── page.tsx              # Main template component
 ├── options.ts            # Configuration schema and defaults
 ├── types/                # TypeScript type definitions
@@ -41,12 +41,12 @@ src/app/templates/gsap/[template-name]/
 ### 1. Create Template Directory
 
 ```bash
-mkdir -p src/app/templates/gsap/my-template/{components,types}
+mkdir -p src/app/gsap/my-template/{components,types}
 ```
 
 ### 2. Define Types
 
-Create `src/app/templates/gsap/my-template/types/index.ts`:
+Create `src/app/gsap/my-template/types/index.ts`:
 
 ```typescript
 import { GSAPTemplateOptions } from '@/types/gsap-template.types';
@@ -66,7 +66,7 @@ export interface MyTemplateOptions extends GSAPTemplateOptions {
 
 ### 3. Define Options
 
-Create `src/app/templates/gsap/my-template/options.ts`:
+Create `src/app/gsap/my-template/options.ts`:
 
 ```typescript
 import { MyTemplateOptions } from './types';
@@ -120,7 +120,7 @@ export const formConfiguration = {
 
 ### 4. Create Template Component
 
-Create `src/app/templates/gsap/my-template/page.tsx`:
+Create `src/app/gsap/my-template/page.tsx`:
 
 ```typescript
 "use client";
@@ -269,7 +269,7 @@ Add your template to `src/lib/gsap/templateRegistry.ts`:
   name: 'My Template',
   description: 'Description of what your template does',
   category: 'text',
-  thumbnail: '/templates/gsap/my-template/thumbnail.png',
+  thumbnail: '/gsap/my-template/thumbnail.png',
   defaultOptions: defaultOptions,
 }
 ```
@@ -278,7 +278,7 @@ Add your template to `src/lib/gsap/templateRegistry.ts`:
 
 ### Interactive Mode
 
-Navigate to `/templates/gsap/[template-name]` to use the template interactively:
+Navigate to `/gsap/[template-name]` to use the template interactively:
 
 - Use the play/pause button to control playback
 - Scrub through the timeline with the progress slider
@@ -414,7 +414,7 @@ validateAnimationOptions(options.animation);
 ## Examples
 
 See the `photo-exif` template for a complete working example:
-- `src/app/templates/gsap/photo-exif/`
+- `src/app/gsap/photo-exif/`
 
 This template demonstrates:
 - Image loading and display

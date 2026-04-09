@@ -16,13 +16,13 @@ export const metadata: Metadata = {
   description:
     "Browse all available social media templates. Choose from p5.js sketches, GSAP animations, and HTML templates to create stunning visual content.",
   alternates: {
-    canonical: "/templates",
+    canonical: "/",
   },
   openGraph: {
     title: `Templates | ${ SITE_NAME }`,
     description:
       "Browse all available social media templates. Choose from p5.js sketches, GSAP animations, and HTML templates.",
-    url: `${ getBaseUrl() }/templates`,
+    url: `${ getBaseUrl() }/`,
     type: "website",
   },
 };
@@ -44,7 +44,7 @@ export default async function TemplatesPage() {
       name, category, hasSketchForm
     } ) => ( {
       thumbnail: getP5SketchThumbnailURL( name ),
-      href: `templates/p5/${ name }`,
+      href: `/p5/${ name }`,
       hasSketchForm,
       name,
       category,
@@ -55,7 +55,7 @@ export default async function TemplatesPage() {
   const gsapTemplates = getAllTemplates();
   const gsapTemplatesList = gsapTemplates.map( ( template ) => ( {
     thumbnail: template.thumbnail,
-    href: `templates/gsap/${ template.id }`,
+    href: `/gsap/${ template.id }`,
     hasSketchForm: false,
     name: template.name,
     category: template.category,
@@ -67,7 +67,7 @@ export default async function TemplatesPage() {
     html: [
       {
         thumbnail: "assets/images/templates/html/exif-detail/thumbnail.jpg",
-        href: "templates/html/exif-detail",
+        href: "/html/exif-detail",
         hasSketchForm: false,
         name: "exif-detail",
       },

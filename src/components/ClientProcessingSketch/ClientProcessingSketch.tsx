@@ -137,7 +137,7 @@ export default function ClientProcessingSketch() {
               }
             >
               <p className="truncate">
-                <Link href={`/templates/p5/${ name }`} target="_blank">
+                <Link href={`/p5/${ name }`} target="_blank">
                   {name}
                 </Link>
 

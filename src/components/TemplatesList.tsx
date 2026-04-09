@@ -11,7 +11,7 @@ import React, {
 } from "react";
 import type {
   TemplateCategory
-} from "@/app/templates/page";
+} from "@/app/page";
 import HardLink from "@/components/HardLink";
 import {
   usePersistedViewMode
@@ -57,8 +57,8 @@ export default function TemplatesList( {
       }
 
       const newUrl = params.toString()
-        ? `/templates?${ params.toString() }`
-        : "/templates";
+        ? `/?${ params.toString() }`
+        : "/";
 
       router.replace(
         newUrl,
