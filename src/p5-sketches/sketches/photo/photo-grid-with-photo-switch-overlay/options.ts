@@ -43,7 +43,7 @@ export const formConfiguration: Record<string, any> = {
         max: 100,
       },
       columns: {
-        label: "Rows",
+        label: "Columns",
         component: "slider",
         min: 1,
         max: 100,

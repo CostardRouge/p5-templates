@@ -39,7 +39,7 @@ async function createSketchThumbnails() {
     const p5sketchNames = p5sketches.map( ( {
       name
     } ) => ( {
-      href: `templates/p5/${ name }`,
+      href: `p5/${ name }`,
       name,
     } ) );
 
@@ -56,7 +56,7 @@ async function createSketchThumbnails() {
     for ( const {
       href, name
     } of p5sketchNames ) {
-      const thumbnailPath = `${ ASSETS_DIRECTORY }/images/p5/${ name }/thumbnail.jpeg`;
+      const thumbnailPath = `${ ASSETS_DIRECTORY }/images/templates/p5/${ name }/thumbnail.jpeg`;
 
       if ( await exists( thumbnailPath ) ) {
         console.log( `✅ ${ name }/thumbnail.jpeg already exists!` );
