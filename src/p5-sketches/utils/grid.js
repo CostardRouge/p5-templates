@@ -332,15 +332,18 @@ const grid = {
       cells
     } = grid.create( gridOptions );
 
-    cells.forEach( ( {
-      position, x, y
-    } ) => {
+    cells.forEach( (
+      {
+        position, x, y
+      }, index
+    ) => {
       handler(
         position,
         {
           x,
           y,
-        }
+        },
+        index / ( cells.length - 1 ),
       );
     } );
 
