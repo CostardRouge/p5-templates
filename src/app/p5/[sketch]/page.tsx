@@ -152,6 +152,7 @@ async function ProcessingSketch( {
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data */}
       <script
         type="application/ld+json"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{
           __html: JSON.stringify( templateJsonLd ),
         }}
@@ -159,6 +160,7 @@ async function ProcessingSketch( {
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data */}
       <script
         type="application/ld+json"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{
           __html: JSON.stringify( breadcrumbJsonLd ),
         }}
