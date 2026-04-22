@@ -10,6 +10,7 @@ import {
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import ResetSettingsButton from "@/components/ResetSettingsButton";
+import SaveDefaultsButton from "./SaveDefaultsButton";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
@@ -86,6 +87,8 @@ export default function SketchSettings( {
           </button>
 
           <div className="flex items-center gap-2">
+            <SaveDefaultsButton />
+
             <ResetSettingsButton basePath={effectiveBasePath} />
 
             <RandomizeSettingsButton
