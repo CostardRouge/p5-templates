@@ -164,8 +164,8 @@ sketch.draw( (
         const noiseLayerProgressionMultiplier = options.sketch.noise?.layerProgressionMultiplier ?? 1;
 
         const rotationNoise = noise(
-          ( x / width ) * noiseXMultiplier + rX,
-          ( y / height ) * noiseYMultiplier + rY,
+          -( x / width ) * noiseXMultiplier + rX,
+          -( y / height ) * noiseYMultiplier + rY,
           layerProgression * noiseLayerProgressionMultiplier + progression * noiseProgressionMultiplier + rZ
         );
 

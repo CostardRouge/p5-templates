@@ -15,8 +15,8 @@ export const formValues = {
   },
   grid: {
     proportional: true,
-    columns: 5,
-    rows: 13,
+    columns: 7,
+    rows: 12,
   },
   backgroundColor: [
     0,
@@ -36,18 +36,18 @@ export const formValues = {
     opacityEasing: "easeOutCirc",
     progressionMultiplier: 1,
     layerProgressionMultiplier: 1,
-    hueIndexMultiplier: 4,
-    hueIndexEasing: "linear",
+    hueIndexMultiplier: 6.2,
+    hueIndexEasing: "easeOutSine",
     hueOffset: 0,
   },
   noise: {
-    seed: 488,
+    seed: 620,
     detail: 4,
     falloff: 0.5,
     xMultiplier: 1,
     yMultiplier: 1,
-    progressionMultiplier: 1,
-    layerProgressionMultiplier: 1,
+    progressionMultiplier: 0,
+    layerProgressionMultiplier: 0.45,
   },
   title: {
     ...titleDefaultValues,
@@ -113,21 +113,21 @@ export const formConfiguration: Record<string, any> = {
       },
     },
   },
-    colors: {
+  colors: {
     component: "nested-object",
     label: "Colors",
     fields: {
       opacityMax: {
         label: "Opacity max",
         component: "slider",
-        min: -10,
+        min: 1,
         max: 10,
         step: 0.1,
       },
       opacityMin: {
         label: "Opacity min",
         component: "slider",
-        min: -10,
+        min: 0,
         max: 10,
         step: 0.1,
       },
