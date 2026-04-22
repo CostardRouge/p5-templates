@@ -22,6 +22,9 @@ import {
 } from "@/utils/generateSketchMetadata";
 import getCaptureOptions from "@/utils/getCaptureOptions";
 import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
+import type {
+  FieldConfig
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import {
   getJSONSketchOptions, getSketchMeta
 } from "@/utils/getSketchOptions";
@@ -46,6 +49,46 @@ const acceptedImageTypes = [
   "jpeg",
   "webp"
 ];
+
+/**
+ * When `consumeTestImages` is active, pre-populate sketch form fields with
+ * test image paths so they appear in the form UI exactly as if the user had
+ * added them through the classic form (thumbnails, drag-drop, delete, etc.).
+ *
+ * Rules:
+ * - `images-stack` fields: append test paths to any existing defaults.
+ * - `image` (single) fields: set the first test path only when the field is empty.
+ * - Slide-scoped fields (scope: { slide: number }) are skipped; only global
+ *   sketch fields are populated.
+ */
+function injectTestImagesIntoSketchFields(
+  sketch: Record<string, unknown>,
+  formConfiguration: Record<string, FieldConfig>,
+  testImagePaths: string[]
+): void {
+  for ( const [
+    key,
+    config
+  ] of Object.entries( formConfiguration ) ) {
+    if ( config.component === "images-stack" ) {
+      if ( typeof config.scope === "object" ) continue;
+      const existing = Array.isArray( sketch[ key ] )
+        ? ( sketch[ key ] as string[] )
+        : [
+        ];
+
+      sketch[ key ] = [
+        ...existing,
+        ...testImagePaths
+      ];
+    } else if ( config.component === "image" ) {
+      if ( typeof config.scope === "object" ) continue;
+      if ( !sketch[ key ] ) {
+        sketch[ key ] = testImagePaths[ 0 ] ?? null;
+      }
+    }
+  }
+}
 
 export const revalidate = 0;
 
@@ -109,15 +152,28 @@ async function ProcessingSketch( {
 
     sketchOptions.assets = sketchOptions.assets || {
       images: [
-      ],
+      ]
     };
 
     const testImageFileNames = await listDirectory( "public/assets/images/test" );
 
-    sketchOptions.assets.images = testImageFileNames
+    const testImagePaths = testImageFileNames
       .filter( ( testImageFileName ) =>
         acceptedImageTypes.includes( testImageFileName.split( "." )[ 1 ] ) )
       .map( ( testImageFileName ) => `/assets/images/test/${ testImageFileName }` );
+
+    sketchOptions.assets.images = testImagePaths;
+
+    if ( formConfiguration ) {
+      sketchOptions.sketch =
+        ( sketchOptions.sketch as Record<string, unknown> ) ?? {
+        };
+      injectTestImagesIntoSketchFields(
+        sketchOptions.sketch as Record<string, unknown>,
+        formConfiguration,
+        testImagePaths
+      );
+    }
   }
 
   sketchOptions.name = sketchName;
