@@ -107,6 +107,12 @@ type BlobMap = Record<string, string>;
 
 declare global {
   interface Window {
+    // p5
+    noLoop(): () => void;
+    redraw(): () => void;
+    loop(): () => void;
+    frameRate( fps: number ): void;
+
     // Assets
     __blobAssetMap?: BlobMap;
     // Recorder
