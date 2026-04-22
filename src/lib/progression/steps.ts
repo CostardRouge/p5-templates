@@ -25,41 +25,35 @@ export const recordingSketchSteps: RecordingProgressionSteps = {
 };
 
 function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
-  const recordingSketchStepsForSketchSlides = {
-    ...recordingSketchSteps,
-  };
-
-  recordingSketchStepsForSketchSlides.recording = {
-    steps: slides.reduce(
-      (
-        accumulator, slide: SlideOption, slideIndex
-      ) => {
-        const clonedSlideRecordingStep: any = JSON.parse( JSON.stringify( recordingSketchSteps.recording ) );
-
-        return {
-          ...accumulator,
-          [ `slide-${ slideIndex }` ]: {
-            ...clonedSlideRecordingStep,
+  const perSlideSteps = slides.reduce(
+    ( acc: Record<string, any>, _slide: SlideOption, slideIndex: number ) => {
+      return {
+        ...acc,
+        [ `slide-${ slideIndex }` ]: {
+          steps: {
+            "saving-frames": { percentage: 0 },
+            "encoding-frames": { percentage: 0 },
           },
-        };
-      },
-      {
-      }
-    ),
-  };
+        },
+      };
+    },
+    {}
+  );
 
-  recordingSketchStepsForSketchSlides.uploading = {
-    steps: {
-      archiving: {
-        percentage: 0,
+  return {
+    recording: {
+      steps: {
+        "launching-browser": { percentage: 0 },
+        ...perSlideSteps,
       },
-      s3: {
-        percentage: 0,
+    },
+    uploading: {
+      steps: {
+        archiving: { percentage: 0 },
+        s3: { percentage: 0 },
       },
     },
   };
-
-  return recordingSketchStepsForSketchSlides;
 }
 
 export function getRecordingSketchStepsByOptions( sketchOptions: SketchOption ) {

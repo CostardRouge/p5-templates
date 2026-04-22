@@ -3,8 +3,13 @@ import {
 } from "react";
 import useMultiRecordingStatusStream from "@/hooks/useMultiRecordingStatusStream";
 import type {
-  JobModel, JobStatusEnum
+  JobModel, JobStatusEnum, RecordingProgressionSteps
 } from "@/types/recording.types";
+
+export type JobProgression = {
+  steps?: RecordingProgressionSteps;
+  currentSlideIndex?: number;
+};
 
 export default function useRecordings() {
   const [
@@ -24,6 +29,11 @@ export default function useRecordings() {
 
   const recordingStartTimesRef = useRef<Record<string, number>>( {
   } );
+
+  const [
+    jobProgressions,
+    setJobProgressions
+  ] = useState<Record<string, JobProgression>>( {} );
 
   // Track start times for active jobs
   inFlightJobs.forEach( ( job ) => {
@@ -90,6 +100,16 @@ export default function useRecordings() {
                 }
                 : j ) );
 
+          if ( data.steps !== undefined || data.currentSlideIndex !== undefined ) {
+            setJobProgressions( ( prev ) => ( {
+              ...prev,
+              [ jobId ]: {
+                steps: data.steps,
+                currentSlideIndex: data.currentSlideIndex,
+              },
+            } ) );
+          }
+
           if ( [
             "completed",
             "failed",
@@ -97,6 +117,13 @@ export default function useRecordings() {
           ].includes( data.status ) ) {
             setInFlightJobs( ( prev ) => prev.filter( ( j ) => j.id !== jobId ) );
             delete recordingStartTimesRef.current[ jobId ];
+
+            setJobProgressions( ( prev ) => {
+              const next = { ...prev };
+
+              delete next[ jobId ];
+              return next;
+            } );
 
             fetch( `/api/recordings/${ jobId }` )
               .then( ( res ) => ( res.ok ? res.json() : Promise.reject( "Fetch error" ) ) )
@@ -252,6 +279,7 @@ export default function useRecordings() {
     ],
     isLoading,
     recordingStartTimesRef,
+    jobProgressions,
     handleCancel,
     handleDelete,
     handleStart,

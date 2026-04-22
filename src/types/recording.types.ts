@@ -58,6 +58,7 @@ export type RecordingStatus = {
   status: string;
   steps?: RecordingProgressionSteps;
   recordingDuration?: number;
+  currentSlideIndex?: number;
 };
 
 export interface RecordingJobData {

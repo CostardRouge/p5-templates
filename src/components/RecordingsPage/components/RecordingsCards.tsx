@@ -3,10 +3,14 @@ import RecordingsEmptyState from "./RecordingsEmptyState";
 import type {
   JobModel
 } from "@/types/recording.types";
+import type {
+  JobProgression
+} from "../hooks/useRecordings";
 
 interface RecordingsCardsProps {
   jobs: JobModel[];
   recordingStartTimes: Record<string, number>;
+  jobProgressions?: Record<string, JobProgression>;
   hasFilters: boolean;
   selectedIds: Set<string>;
   newlyAddedId: string | null;
@@ -22,6 +26,7 @@ interface RecordingsCardsProps {
 export default function RecordingsCards( {
   jobs,
   recordingStartTimes,
+  jobProgressions,
   hasFilters,
   selectedIds,
   newlyAddedId,
@@ -48,6 +53,7 @@ export default function RecordingsCards( {
           key={job.id}
           job={job}
           startTime={recordingStartTimes[ job.id ]}
+          progression={jobProgressions?.[ job.id ]}
           isSelected={selectedIds.has( job.id )}
           isNewlyAdded={newlyAddedId === job.id}
           onToggleSelection={() => onToggleSelection( job.id )}

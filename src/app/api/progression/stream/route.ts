@@ -48,6 +48,8 @@ export async function GET( req: NextRequest ) {
                 percentage: update.percentage,
                 status: update.status,
                 recordingDuration: update.recordingDuration,
+                steps: update.steps,
+                currentSlideIndex: update.currentSlideIndex,
               } ) }\n\n` );
             }
           }

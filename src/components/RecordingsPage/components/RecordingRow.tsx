@@ -15,10 +15,14 @@ import {
 import type {
   JobModel
 } from "@/types/recording.types";
+import type {
+  JobProgression
+} from "../hooks/useRecordings";
 
 interface RecordingRowProps {
   job: JobModel;
   startTime?: number;
+  progression?: JobProgression;
   isSelected: boolean;
   isNewlyAdded?: boolean;
   onToggleSelection: () => void;
@@ -33,6 +37,7 @@ interface RecordingRowProps {
 export default function RecordingRow( {
   job,
   startTime,
+  progression,
   isSelected,
   isNewlyAdded = false,
   onToggleSelection,
@@ -44,6 +49,7 @@ export default function RecordingRow( {
   onClone,
 }: RecordingRowProps ) {
   const slideCount = getSlideCount( job );
+  const slideOptions = ( job.options as any )?.slides ?? undefined;
 
   return (
     <tr
@@ -147,6 +153,9 @@ export default function RecordingRow( {
             job={job}
             steps={job.status === "active" ? getRecordingSteps( job ) : [
             ]}
+            recordingSteps={progression?.steps}
+            currentSlideIndex={progression?.currentSlideIndex}
+            slideOptions={slideOptions}
             startTime={startTime}
           />
         </div>

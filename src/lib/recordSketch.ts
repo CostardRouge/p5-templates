@@ -26,7 +26,7 @@ import {
   Browser, Page
 } from "playwright";
 import {
-  addRecordingDuration, updateRecordingStepPercentage,
+  addRecordingDuration, updateRecordingStepPercentage, updateCurrentSlide,
 } from "@/lib/progression";
 import {
   NotificationService
@@ -387,22 +387,44 @@ async function recordMultipleSlides(
   const slideThumbnailPaths: string[] = [
   ];
 
+  // ─── Launch browser & load template (shared step, done once) ─────────────
+  await updateRecordingStepPercentage(
+    jobId,
+    "recording.launching-browser",
+    0
+  );
+
+  await page.goto(
+    `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
+    {
+      waitUntil: "networkidle",
+    }
+  );
+
+  await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
+
+  await updateRecordingStepPercentage(
+    jobId,
+    "recording.launching-browser",
+    100
+  );
+
   for ( let slideIndex = 0; slideIndex < slides.length; slideIndex++ ) {
-    // ─── Launch browser & load slide ─────────────────────────────────────────
-    await updateRecordingStepPercentage(
-      jobId,
-      `recording.slide-${ slideIndex }.launching-browser`,
-      0
-    );
+    // Track which slide is being recorded
+    await updateCurrentSlide( jobId, slideIndex );
 
-    await page.goto(
-      `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
-      {
-        waitUntil: "networkidle",
-      }
-    );
+    if ( slideIndex > 0 ) {
+      // Re-navigate for subsequent slides (no dedicated step)
+      await page.goto(
+        `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
+        {
+          waitUntil: "networkidle",
+        }
+      );
 
-    await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
+      await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
+    }
+
     await page.evaluate(
       ( index ) => window.setSlide( index ),
       slideIndex
@@ -413,12 +435,6 @@ async function recordMultipleSlides(
       {
         timeout: 0,
       }
-    );
-
-    await updateRecordingStepPercentage(
-      jobId,
-      `recording.slide-${ slideIndex }.launching-browser`,
-      100
     );
 
     // ─── Capture frames and encode video ────────────────────────────────────

@@ -33,6 +33,7 @@ export default function RecordingsPage() {
     allJobs,
     isLoading,
     recordingStartTimesRef,
+    jobProgressions,
     handleCancel,
     handleDelete,
     handleStart,
@@ -246,6 +247,7 @@ export default function RecordingsPage() {
           <RecordingsTable
             jobs={sorted}
             recordingStartTimes={recordingStartTimesRef.current}
+            jobProgressions={jobProgressions}
             hasFilters={hasFilters}
             selectedIds={selectedIds}
             newlyAddedId={newlyAddedId}
@@ -265,6 +267,7 @@ export default function RecordingsPage() {
           <RecordingsCards
             jobs={sorted}
             recordingStartTimes={recordingStartTimesRef.current}
+            jobProgressions={jobProgressions}
             hasFilters={hasFilters}
             selectedIds={selectedIds}
             newlyAddedId={newlyAddedId}

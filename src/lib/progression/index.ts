@@ -162,6 +162,33 @@ export const updateRecordingStatus = async(
   }
 };
 
+export const updateCurrentSlide = async(
+  jobId: string,
+  slideIndex: number
+): Promise<void> => {
+  try {
+    const key = getKey( jobId );
+    const existing = await Redis.getInstance().get( key );
+    const parsed = existing ? JSON.parse( existing ) : {
+    };
+
+    await Redis.getInstance().set(
+      key,
+      JSON.stringify( {
+        ...parsed,
+        currentSlideIndex: slideIndex,
+      } )
+    );
+  } catch ( error ) {
+    console.error(
+      "updateCurrentSlide failed:",
+      {
+        error,
+      }
+    );
+  }
+};
+
 export const getRecordingStatusAndTotalPercentage = async( jobId: string ): Promise<RecordingProgressionStream | null> => {
   const jobRecordingStatus = await getRecordingStatus( jobId );
 

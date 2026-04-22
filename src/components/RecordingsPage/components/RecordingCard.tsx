@@ -15,10 +15,14 @@ import {
 import type {
   JobModel
 } from "@/types/recording.types";
+import type {
+  JobProgression
+} from "../hooks/useRecordings";
 
 interface RecordingCardProps {
   job: JobModel;
   startTime?: number;
+  progression?: JobProgression;
   isSelected: boolean;
   isNewlyAdded?: boolean;
   onToggleSelection: () => void;
@@ -33,6 +37,7 @@ interface RecordingCardProps {
 export default function RecordingCard( {
   job,
   startTime,
+  progression,
   isSelected,
   isNewlyAdded = false,
   onToggleSelection,
@@ -44,6 +49,7 @@ export default function RecordingCard( {
   onClone,
 }: RecordingCardProps ) {
   const slideCount = getSlideCount( job );
+  const slideOptions = ( job.options as any )?.slides ?? undefined;
 
   return (
     <div
@@ -167,6 +173,9 @@ export default function RecordingCard( {
               job={job}
               steps={job.status === "active" ? getRecordingSteps( job ) : [
               ]}
+              recordingSteps={progression?.steps}
+              currentSlideIndex={progression?.currentSlideIndex}
+              slideOptions={slideOptions}
               startTime={startTime}
             />
           </div>

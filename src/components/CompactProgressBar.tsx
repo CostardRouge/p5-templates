@@ -4,14 +4,17 @@ import {
   useState, useEffect
 } from "react";
 import {
-  Check, Loader2, ChevronUp
+  Check, Loader2, ChevronUp, ChevronDown
 } from "lucide-react";
 import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
-import {
-  JobModel
+import type {
+  JobModel, RecordingProgressionSteps
 } from "@/types/recording.types";
+import type {
+  SlideOption
+} from "@/types/sketch.types";
 
 export interface ProgressStep {
   id: string;
@@ -20,9 +23,59 @@ export interface ProgressStep {
   percentage?: number;
 }
 
+const STEP_LABELS: Record<string, string> = {
+  "launching-browser": "Launching browser",
+  "saving-frames": "Capturing frames",
+  "encoding-frames": "Encoding video",
+  "archiving": "Archiving",
+  "s3": "Uploading to S3",
+};
+
+function getCurrentStepLabel(
+  recordingSteps: RecordingProgressionSteps,
+  currentSlideIndex: number | undefined,
+  slideOptions: SlideOption[] | undefined
+): string {
+  const rec = ( recordingSteps.recording as any );
+  const uploading = ( recordingSteps.uploading as any );
+  const launchingBrowser = rec?.steps?.[ "launching-browser" ];
+
+  if ( launchingBrowser && launchingBrowser.percentage < 100 ) {
+    return "Launching browser";
+  }
+
+  if ( currentSlideIndex !== undefined ) {
+    const slideSteps = rec?.steps?.[ `slide-${ currentSlideIndex }` ]?.steps;
+
+    if ( slideSteps ) {
+      const slideName = slideOptions?.[ currentSlideIndex ]?.name ?? `Slide ${ currentSlideIndex + 1 }`;
+
+      if ( ( slideSteps[ "saving-frames" ]?.percentage ?? 100 ) < 100 ) {
+        return `${ slideName } — Capturing frames`;
+      }
+
+      if ( ( slideSteps[ "encoding-frames" ]?.percentage ?? 100 ) < 100 ) {
+        return `${ slideName } — Encoding video`;
+      }
+    }
+  }
+
+  if ( uploading?.steps ) {
+    if ( ( uploading.steps.archiving?.percentage ?? 100 ) < 100 ) return "Archiving";
+    if ( ( uploading.steps.s3?.percentage ?? 100 ) < 100 ) return "Uploading to S3";
+  } else if ( typeof uploading?.percentage === "number" && uploading.percentage < 100 ) {
+    return "Uploading";
+  }
+
+  return "Processing...";
+}
+
 interface CompactProgressBarProps {
   job: JobModel;
   steps?: ProgressStep[];
+  recordingSteps?: RecordingProgressionSteps;
+  currentSlideIndex?: number;
+  slideOptions?: SlideOption[];
   startTime?: number;
   className?: string;
 }
@@ -31,6 +84,9 @@ export default function CompactProgressBar( {
   job,
   steps = [
   ],
+  recordingSteps,
+  currentSlideIndex,
+  slideOptions,
   startTime,
   className = "",
 }: CompactProgressBarProps ) {
@@ -38,6 +94,10 @@ export default function CompactProgressBar( {
     elapsedTime,
     setElapsedTime
   ] = useState( 0 );
+  const [
+    expandedSlides,
+    setExpandedSlides
+  ] = useState<Set<number>>( new Set() );
 
   useEffect(
     () => {
@@ -67,6 +127,26 @@ export default function CompactProgressBar( {
     ]
   );
 
+  // Auto-expand the active slide, auto-collapse the previous one
+  useEffect(
+    () => {
+      if ( currentSlideIndex !== undefined ) {
+        setExpandedSlides( ( prev ) => {
+          const next = new Set( prev );
+
+          next.add( currentSlideIndex );
+
+          if ( currentSlideIndex > 0 ) {
+            next.delete( currentSlideIndex - 1 );
+          }
+
+          return next;
+        } );
+      }
+    },
+    [ currentSlideIndex ]
+  );
+
   const formatTime = ( seconds: number ) => {
     const mins = Math.floor( seconds / 60 );
     const secs = seconds % 60;
@@ -81,6 +161,38 @@ export default function CompactProgressBar( {
   const completedSteps = steps.filter( ( s ) => s.status === "completed" ).length;
   const isActive = job.status === "active" || job.status === "queued";
   const progress = job.progress || 0;
+
+  // Detect multi-slide step structure
+  const recSteps = ( recordingSteps?.recording as any )?.steps;
+  const isMultiSlide = !!recSteps && Object.keys( recSteps ).some( ( k ) => k.startsWith( "slide-" ) );
+  const slideKeys = isMultiSlide
+    ? Object.keys( recSteps ).filter( ( k ) => k.startsWith( "slide-" ) ).sort()
+    : [];
+  const hasPopover = isMultiSlide || steps.length > 0;
+
+  const compactStepLabel = recordingSteps
+    ? getCurrentStepLabel( recordingSteps, currentSlideIndex, slideOptions )
+    : ( currentStep?.name ?? "Processing..." );
+
+  function slideAggregate( idx: number ) {
+    const ss = recSteps?.[ `slide-${ idx }` ]?.steps;
+
+    if ( !ss ) return 0;
+    const saving = ss[ "saving-frames" ]?.percentage ?? 0;
+    const encoding = ss[ "encoding-frames" ]?.percentage ?? 0;
+
+    return Math.round( ( saving + encoding ) / 2 );
+  }
+
+  function slideStatus( idx: number ): "pending" | "active" | "completed" {
+    if ( currentSlideIndex === undefined ) return "pending";
+    if ( idx < currentSlideIndex ) return "completed";
+    if ( idx === currentSlideIndex ) return "active";
+
+    return "pending";
+  }
+
+  const completedSlideCount = currentSlideIndex ?? 0;
 
   // For completed recordings, show simple green progress bar
   if ( job.status === "completed" ) {
@@ -131,14 +243,19 @@ export default function CompactProgressBar( {
           >
             <div className="flex items-center justify-between text-xs mb-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                {currentStep && (
+                {( currentStep || recordingSteps ) && (
                   <Loader2 className="w-3 h-3 text-blue-500 animate-spin flex-shrink-0" />
                 )}
                 <span className="text-foreground/70 truncate">
-                  {currentStep?.name || "Processing..."}
+                  {compactStepLabel}
                 </span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
+                {isMultiSlide && currentSlideIndex !== undefined && slideOptions && (
+                  <span className="text-[10px] font-mono text-foreground/40">
+                    {currentSlideIndex + 1}/{slideOptions.length}
+                  </span>
+                )}
                 {startTime && (
                   <span className="text-foreground/50 font-mono text-[10px]">
                     {formatTime( elapsedTime )}
@@ -147,7 +264,7 @@ export default function CompactProgressBar( {
                 <span className="text-blue-600 dark:text-blue-400 font-semibold">
                   {progress}%
                 </span>
-                {steps.length > 0 && (
+                {hasPopover && (
                   <ChevronUp
                     className={`w-3 h-3 text-foreground/40 transition-transform ${
                       open ? "rotate-180" : ""
@@ -168,7 +285,13 @@ export default function CompactProgressBar( {
               </div>
             </div>
 
-            {steps.length > 0 && (
+            {isMultiSlide ? (
+              <div className="text-[10px] text-foreground/40 mt-1 truncate">
+                {completedSlideCount > 0
+                  ? `${ completedSlideCount } of ${ slideKeys.length } slides done`
+                  : `${ slideKeys.length } slides to record`}
+              </div>
+            ) : steps.length > 0 && (
               <div className="text-[10px] text-foreground/40 mt-1 truncate">
                 Step {completedSteps + 1} of {steps.length} • {completedSteps}{" "}
                 completed
@@ -176,7 +299,7 @@ export default function CompactProgressBar( {
             )}
           </PopoverButton>
 
-          {steps.length > 0 && (
+          {hasPopover && (
             <PopoverPanel
               anchor="bottom start"
               className="z-50 w-80 max-w-[calc(100vw-1rem)] bg-background rounded-lg border border-border shadow-xl p-3 space-y-2 [--anchor-gap:0.5rem] [--anchor-padding:0.5rem]"
@@ -208,13 +331,137 @@ export default function CompactProgressBar( {
                 </div>
               </div>
 
-              {/* Steps List */}
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {steps.map( (
-                  step, index
-                ) => (
-                  <div
-                    key={step.id}
+              <div className="space-y-1.5 max-h-72 overflow-y-auto">
+                {isMultiSlide ? (
+                  <>
+                    {/* Shared: Launching browser */}
+                    {recSteps[ "launching-browser" ] && (
+                      <SharedStepRow
+                        label="Launching browser"
+                        percentage={recSteps[ "launching-browser" ].percentage ?? 0}
+                      />
+                    )}
+
+                    {/* Per-slide rows */}
+                    {slideKeys.map( ( key, idx ) => {
+                      const status = slideStatus( idx );
+                      const aggregate = slideAggregate( idx );
+                      const ss = recSteps[ key ]?.steps ?? {};
+                      const isExpanded = expandedSlides.has( idx );
+                      const slideName = slideOptions?.[ idx ]?.name ?? `Slide ${ idx + 1 }`;
+
+                      return (
+                        <div key={key}>
+                          <button
+                            type="button"
+                            className={`w-full flex items-center gap-2 p-1.5 rounded-lg transition-all text-left ${
+                              status === "active"
+                                ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+                                : status === "completed"
+                                  ? "bg-green-50 dark:bg-green-900/10"
+                                  : "bg-gray-50 dark:bg-gray-900/30"
+                            }`}
+                            onClick={() =>
+                              setExpandedSlides( ( prev ) => {
+                                const next = new Set( prev );
+
+                                if ( next.has( idx ) ) next.delete( idx );
+                                else next.add( idx );
+
+                                return next;
+                              } )}
+                          >
+                            <div className="flex-shrink-0">
+                              {status === "completed" && (
+                                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-white" />
+                                </div>
+                              )}
+                              {status === "active" && (
+                                <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                                  <Loader2 className="w-3 h-3 text-white animate-spin" />
+                                </div>
+                              )}
+                              {status === "pending" && (
+                                <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                                  <span className="text-[10px] text-gray-600 dark:text-gray-400 font-medium">
+                                    {idx + 1}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            <span
+                              className={`flex-1 text-xs font-medium truncate ${
+                                status === "active"
+                                  ? "text-blue-700 dark:text-blue-300"
+                                  : status === "completed"
+                                    ? "text-green-700 dark:text-green-300"
+                                    : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              {slideName}
+                            </span>
+
+                            {status !== "pending" && (
+                              <span
+                                className={`text-[10px] font-semibold flex-shrink-0 ${
+                                  status === "completed"
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-blue-600 dark:text-blue-400"
+                                }`}
+                              >
+                                {status === "completed" ? "100" : aggregate}%
+                              </span>
+                            )}
+
+                            <ChevronDown
+                              className={`w-3 h-3 text-foreground/40 flex-shrink-0 transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {/* Expanded sub-steps */}
+                          {isExpanded && (
+                            <div className="ml-7 mt-1 space-y-1">
+                              {Object.entries( ss ).map( ( [ subKey, subVal ] ) => (
+                                <SubStepRow
+                                  key={subKey}
+                                  label={STEP_LABELS[ subKey ] ?? subKey}
+                                  percentage={( subVal as any )?.percentage ?? 0}
+                                  parentStatus={status}
+                                />
+                              ) )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    } )}
+
+                    {/* Shared: Uploading */}
+                    {( recordingSteps?.uploading as any )?.steps && (
+                      <div className="pt-1 border-t border-border/50 space-y-1.5">
+                        {Object.entries( ( recordingSteps!.uploading as any ).steps ).map(
+                          ( [ key, val ] ) => (
+                            <SharedStepRow
+                              key={key}
+                              label={STEP_LABELS[ key ] ?? key}
+                              percentage={( val as any )?.percentage ?? 0}
+                            />
+                          )
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  /* Existing flat single-slide step list */
+                  <>
+                    {steps.map( (
+                      step, index
+                    ) => (
+                    <div
+                      key={step.id}
                     className={`flex items-start gap-2 p-2 rounded-lg transition-all ${
                       step.status === "active"
                         ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
@@ -286,13 +533,102 @@ export default function CompactProgressBar( {
                         </div>
                       )}
                     </div>
-                  </div>
-                ) )}
+                    </div>
+                    ) )}
+                  </>
+                )}
               </div>
             </PopoverPanel>
           )}
         </>
       )}
     </Popover>
+  );
+}
+
+function SharedStepRow( {
+  label,
+  percentage,
+}: {
+  label: string;
+  percentage: number;
+} ) {
+  const isDone = percentage >= 100;
+
+  return (
+    <div
+      className={`flex items-center gap-2 p-1.5 rounded-lg ${
+        isDone
+          ? "bg-green-50 dark:bg-green-900/10"
+          : "bg-gray-50 dark:bg-gray-900/30"
+      }`}
+    >
+      <div className="w-5 h-5 flex-shrink-0">
+        {isDone ? (
+          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+            <Check className="w-3 h-3 text-white" />
+          </div>
+        ) : (
+          <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600" />
+        )}
+      </div>
+      <span
+        className={`text-xs flex-1 ${
+          isDone
+            ? "text-green-700 dark:text-green-300"
+            : "text-gray-500 dark:text-gray-400"
+        }`}
+      >
+        {label}
+      </span>
+      {isDone && (
+        <span className="text-[10px] text-green-600 dark:text-green-400 font-semibold">
+          100%
+        </span>
+      )}
+    </div>
+  );
+}
+
+function SubStepRow( {
+  label,
+  percentage,
+  parentStatus,
+}: {
+  label: string;
+  percentage: number;
+  parentStatus: "pending" | "active" | "completed";
+} ) {
+  const isActive = parentStatus === "active" && percentage > 0 && percentage < 100;
+  const isDone = percentage >= 100 || parentStatus === "completed";
+
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+          isDone
+            ? "bg-green-500"
+            : isActive
+              ? "bg-blue-500"
+              : "bg-gray-300 dark:bg-gray-600"
+        }`}
+      />
+      <span
+        className={`text-[11px] flex-1 ${
+          isDone
+            ? "text-green-700 dark:text-green-300"
+            : isActive
+              ? "text-blue-700 dark:text-blue-300"
+              : "text-gray-500 dark:text-gray-400"
+        }`}
+      >
+        {label}
+      </span>
+      {isActive && (
+        <span className="text-[10px] text-blue-600 dark:text-blue-400">
+          {Math.round( percentage )}%
+        </span>
+      )}
+    </div>
   );
 }

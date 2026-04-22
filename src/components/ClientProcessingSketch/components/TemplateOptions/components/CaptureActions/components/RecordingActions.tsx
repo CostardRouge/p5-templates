@@ -19,6 +19,8 @@ type RecordingActionsProps = {
     percentage: number;
     status: string;
     recordingDuration?: number;
+    steps?: import( "@/types/recording.types" ).RecordingProgressionSteps;
+    currentSlideIndex?: number;
   };
   onClone: () => void;
   onCancel: () => void;
@@ -66,6 +68,9 @@ export default function RecordingActions( {
               : [
               ]
           }
+          recordingSteps={recordingProgress?.steps}
+          currentSlideIndex={recordingProgress?.currentSlideIndex}
+          slideOptions={( persistedJob?.options as any )?.slides ?? undefined}
           startTime={
             jobId && recordingProgress?.recordingDuration
               ? Date.now() - recordingProgress.recordingDuration
