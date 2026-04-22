@@ -29,7 +29,6 @@ export function useThumbnails( {
   } );
   const pendingThumbnailCaptureRef = useRef<number | null>( null );
   const hasLoadedPersistedThumbnails = useRef( false );
-  const initialCaptureAttempted = useRef( false );
 
   // Initialize thumbnails from persisted job
   useEffect(
@@ -83,7 +82,19 @@ export function useThumbnails( {
             typeof persistedJob.thumbnails === "object" &&
           !Array.isArray( persistedJob.thumbnails )
           ) {
-            setThumbnails( persistedJob.thumbnails as Record<string, string> );
+            // Remap by position: stored keys are stale RHF field IDs from the previous session
+            const thumbValues = Object.values( persistedJob.thumbnails as Record<string, string> );
+            const newThumbnails: Record<string, string> = {
+            };
+
+            slideFields.forEach( (
+              field, index
+            ) => {
+              if ( thumbValues[ index ] ) {
+                newThumbnails[ field.id ] = thumbValues[ index ];
+              }
+            } );
+            setThumbnails( newThumbnails );
           } else if ( typeof persistedJob.thumbnails === "string" ) {
             try {
               const parsed = JSON.parse( persistedJob.thumbnails );
@@ -138,62 +149,6 @@ export function useThumbnails( {
       persistedJob?.id,
       slideFields.length,
       slideFields,
-    ]
-  );
-
-  // Capture initial thumbnails for slides that don't have them
-  useEffect(
-    () => {
-      if (
-        !enabled ||
-      slideFields.length === 0 ||
-      initialCaptureAttempted.current
-      ) {
-        return;
-      }
-
-      // Wait a bit for the canvas to be ready and rendered
-      const timeoutId = setTimeout(
-        async() => {
-          initialCaptureAttempted.current = true;
-
-          // Check which slides need thumbnails
-          const slidesNeedingThumbnails = slideFields.filter( ( field ) => !thumbnails[ field.id ] );
-
-          if ( slidesNeedingThumbnails.length === 0 ) {
-            return;
-          }
-
-          // Capture thumbnail for the first slide that needs one
-          // (assuming it's the active slide at index 0)
-          const firstSlideId = slidesNeedingThumbnails[ 0 ].id;
-
-          try {
-            await waitForSlideRendered( 0 ); // Wait for slide 0 to be rendered
-            const dataUrl = await captureThumbnailFromCanvas();
-
-            if ( dataUrl ) {
-              setThumbnails( ( prev ) => ( {
-                ...prev,
-                [ firstSlideId ]: dataUrl,
-              } ) );
-            }
-          } catch ( e ) {
-            console.error(
-              "Failed to capture initial thumbnail:",
-              e
-            );
-          }
-        },
-        500
-      ); // Give canvas time to render
-
-      return () => clearTimeout( timeoutId );
-    },
-    [
-      enabled,
-      slideFields,
-      thumbnails
     ]
   );
 
@@ -257,13 +212,30 @@ export function useThumbnails( {
     ]
   );
 
+  const copyThumbnail = useCallback(
+    ( fromSlideId: string, toSlideId: string ) => {
+      setThumbnails( ( prev ) => {
+        const thumb = prev[ fromSlideId ];
+
+        if ( !thumb ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [ toSlideId ]: thumb,
+        };
+      } );
+    },
+    []
+  );
+
   // Clear all thumbnails (useful for reset)
   const clearThumbnails = useCallback(
     () => {
       setThumbnails( {
       } );
       hasLoadedPersistedThumbnails.current = false;
-      initialCaptureAttempted.current = false;
     },
     [
     ]
@@ -273,6 +245,7 @@ export function useThumbnails( {
     thumbnails,
     captureThumbnail,
     captureCurrentSlide,
+    copyThumbnail,
     clearThumbnails,
     pendingThumbnailCaptureRef,
   };

@@ -23,6 +23,7 @@ type UseSlideManagementProps = {
   sketchFormValues: any;
   onActiveSlideChange?: ( index: number | undefined ) => void;
   captureThumbnail?: ( slideId: string, slideIndex?: number ) => Promise<void>;
+  copyThumbnail?: ( fromSlideId: string, toSlideId: string ) => void;
   enableThumbnails: boolean;
   pendingThumbnailCaptureRef: React.MutableRefObject<number | null>;
 };
@@ -38,6 +39,7 @@ export function useSlideManagement( {
   sketchFormValues,
   onActiveSlideChange,
   captureThumbnail,
+  copyThumbnail,
   enableThumbnails,
   pendingThumbnailCaptureRef,
 }: UseSlideManagementProps ) {
@@ -50,6 +52,7 @@ export function useSlideManagement( {
     setIsAdding
   ] = useState( false );
   const pendingSelectIndexRef = useRef<number | null>( null );
+  const pendingThumbnailCopyFromIndexRef = useRef<number | null>( null );
 
   // Compute the effective active index based on current slides
   const effectiveActiveIndex =
@@ -109,6 +112,22 @@ export function useSlideManagement( {
       if ( typeof window.setSlide === "function" ) {
         window.setSlide( index ?? 0 );
       }
+
+      // Capture the incoming slide's thumbnail after it finishes rendering.
+      // Skip if a pending add/duplicate capture is already scheduled — that
+      // effect owns the capture for newly created slides.
+      if (
+        enableThumbnails &&
+        captureThumbnail &&
+        index !== undefined &&
+        pendingThumbnailCaptureRef.current === null
+      ) {
+        const incomingSlideId = slideFields[ index ]?.id;
+
+        if ( incomingSlideId ) {
+          void captureThumbnail( incomingSlideId, index );
+        }
+      }
     },
     [
       slideFields,
@@ -133,6 +152,21 @@ export function useSlideManagement( {
       }
 
       pendingSelectIndexRef.current = null;
+
+      // Instantly copy the source thumbnail to the duplicate before switching
+      const copyFromIndex = pendingThumbnailCopyFromIndexRef.current;
+
+      if ( copyFromIndex !== null && copyThumbnail ) {
+        const fromId = slideFields[ copyFromIndex ]?.id;
+        const toId = slideFields[ pendingIndex ]?.id;
+
+        if ( fromId && toId ) {
+          copyThumbnail( fromId, toId );
+        }
+
+        pendingThumbnailCopyFromIndexRef.current = null;
+      }
+
       handleSlideSelect( pendingIndex );
       setIsAdding( false );
     },
@@ -200,6 +234,7 @@ export function useSlideManagement( {
       pendingSelectIndexRef.current = insertIndex;
 
       if ( enableThumbnails ) {
+        pendingThumbnailCopyFromIndexRef.current = indexToDuplicate;
         pendingThumbnailCaptureRef.current = insertIndex;
       }
     },
@@ -209,6 +244,7 @@ export function useSlideManagement( {
       insertSlide,
       enableThumbnails,
       pendingThumbnailCaptureRef,
+      pendingThumbnailCopyFromIndexRef,
       pendingSelectIndexRef,
     ]
   );

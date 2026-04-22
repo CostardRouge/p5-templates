@@ -8,6 +8,9 @@ import clsx from "clsx";
 import {
   DragBinder
 } from "./ContentItems/ContentItems";
+import {
+  useLiveThumbnail
+} from "../utils/useLiveThumbnail";
 
 interface SlideThumbnailProps {
   id: string;
@@ -43,6 +46,11 @@ export default function SlideThumbnail( {
     setEditedName
   ] = useState( name );
   const inputRef = useRef<HTMLInputElement>( null );
+  const thumbCanvasRef = useRef<HTMLCanvasElement>( null );
+  const liveEnabled = useLiveThumbnail( {
+    thumbCanvasRef,
+    isActive,
+  } );
 
   useEffect(
     () => {
@@ -111,7 +119,39 @@ export default function SlideThumbnail( {
           aspectRatio,
         }}
       >
-        {thumbnailUrl ? (
+        {liveEnabled ? (
+          <>
+            {/* Canvas stays mounted so its last frame is preserved when isActive
+                goes false — this eliminates the white flash between live and static. */}
+            <canvas
+              ref={thumbCanvasRef}
+              className="absolute inset-0 w-full h-full"
+              style={{
+                display: "block",
+              }}
+            />
+            {/* Static img layers on top once inactive; canvas last-frame shows
+                through during the brief img load so there is no blank gap. */}
+            {!isActive && thumbnailUrl && (
+              <img
+                src={thumbnailUrl}
+                alt={name}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{
+                  transform: "translateZ(0)",
+                }}
+                draggable={false}
+              />
+            )}
+            {!isActive && !thumbnailUrl && (
+              <div className="absolute inset-0 w-full h-full bg-secondary/20 flex items-center justify-center p-2 text-center">
+                <span className="text-xs text-muted-foreground font-medium truncate w-full">
+                  {name}
+                </span>
+              </div>
+            )}
+          </>
+        ) : thumbnailUrl ? (
           <img
             src={thumbnailUrl}
             alt={name}
@@ -120,7 +160,7 @@ export default function SlideThumbnail( {
               imageRendering: "auto",
               width: "100%",
               height: "100%",
-              transform: "translateZ(0)", // Force GPU acceleration for smoother rendering
+              transform: "translateZ(0)",
             }}
             loading="lazy"
             draggable={false}

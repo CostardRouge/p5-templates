@@ -51,11 +51,7 @@ export default function TemplateOptions( {
 }: TemplateOptionsProps ) {
   const browserRecordingSupported = useBrowserRecordingSupported();
   const captureActionsRef = useRef<CaptureActionsRef>( null );
-  const pendingPeriodicThumbnailCaptureRef = useRef<{
-    slideId: string;
-    slideIndex: number;
-  } | null>( null );
-  const periodicCaptureInFlightRef = useRef( false );
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
 
   // Form state management
   const {
@@ -118,6 +114,7 @@ export default function TemplateOptions( {
     thumbnails,
     captureThumbnail,
     captureCurrentSlide,
+    copyThumbnail,
     pendingThumbnailCaptureRef,
   } = useThumbnails( {
     enabled: enableThumbnails,
@@ -146,12 +143,13 @@ export default function TemplateOptions( {
     sketchFormValues,
     onActiveSlideChange,
     captureThumbnail: enableThumbnails ? captureThumbnail : undefined,
+    copyThumbnail: enableThumbnails ? copyThumbnail : undefined,
     enableThumbnails,
     pendingThumbnailCaptureRef,
   } );
 
-  // Mark the active slide thumbnail as stale on any form change.
-  // A periodic task below refreshes it at most every 5s.
+  // Debounce thumbnail capture: refresh the active slide's thumbnail 1 second
+  // after the user stops changing form values (e.g., releasing a slider).
   useEffect(
     () => {
       if ( !enableThumbnails ) {
@@ -169,58 +167,31 @@ export default function TemplateOptions( {
           return;
         }
 
-        pendingPeriodicThumbnailCaptureRef.current = {
-          slideId,
-          slideIndex: activeSlideIndex,
-        };
+        if ( debounceTimerRef.current !== null ) {
+          clearTimeout( debounceTimerRef.current );
+        }
+
+        debounceTimerRef.current = setTimeout( () => {
+          debounceTimerRef.current = null;
+          void captureCurrentSlide( slideId, activeSlideIndex );
+        }, 1000 );
       } );
 
-      return () => subscription.unsubscribe();
+      return () => {
+        subscription.unsubscribe();
+
+        if ( debounceTimerRef.current !== null ) {
+          clearTimeout( debounceTimerRef.current );
+          debounceTimerRef.current = null;
+        }
+      };
     },
     [
       enableThumbnails,
       methods,
       activeSlideIndex,
-      slideFields
-    ]
-  );
-
-  // Refresh thumbnails periodically (best-effort), so changes in sketch settings
-  // are reflected even if the user doesn't switch slides.
-  useEffect(
-    () => {
-      if ( !enableThumbnails ) {
-        return;
-      }
-
-      const intervalId = window.setInterval(
-        async() => {
-          const pending = pendingPeriodicThumbnailCaptureRef.current;
-
-          if ( !pending || periodicCaptureInFlightRef.current ) {
-            return;
-          }
-
-          periodicCaptureInFlightRef.current = true;
-
-          try {
-            await captureCurrentSlide(
-              pending.slideId,
-              pending.slideIndex
-            );
-          } finally {
-            pendingPeriodicThumbnailCaptureRef.current = null;
-            periodicCaptureInFlightRef.current = false;
-          }
-        },
-        5000
-      );
-
-      return () => window.clearInterval( intervalId );
-    },
-    [
-      enableThumbnails,
-      captureCurrentSlide
+      slideFields,
+      captureCurrentSlide,
     ]
   );
 
@@ -233,7 +204,8 @@ export default function TemplateOptions( {
 
       const slideId = slideFields[ activeSlideIndex ]?.id;
 
-      if ( !slideId || thumbnails[ slideId ] ) {
+      // Skip if a pending add/duplicate capture is already scheduled
+      if ( !slideId || thumbnails[ slideId ] || pendingThumbnailCaptureRef.current !== null ) {
         return;
       }
 
@@ -273,23 +245,22 @@ export default function TemplateOptions( {
         return;
       }
 
-      // Give the sketch time to render the newly selected slide
+      // Give the sketch enough time to initialise slide mode before capturing.
+      // Use captureCurrentSlide (no slideIndex) to avoid waitForSlideRendered
+      // racing against a freshly created slide that hasn't set data-slide yet.
       const timeoutId = setTimeout(
         () => {
-          captureThumbnail(
-            slideId,
-            slideIndex
-          );
+          captureCurrentSlide( slideId );
           pendingThumbnailCaptureRef.current = null;
         },
-        300
+        600
       );
 
       return () => clearTimeout( timeoutId );
     },
     [
       slideFields,
-      captureThumbnail,
+      captureCurrentSlide,
       enableThumbnails,
       pendingThumbnailCaptureRef,
     ]
