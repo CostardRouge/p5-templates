@@ -4,7 +4,7 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   peaks: {
-    depthLayersCount: 150,
+    depthLayersCount: 100,
     depthLengthMultiplier: 1,
     depthEasing: "easeOutQuad",
     point: {
@@ -15,7 +15,7 @@ export const formValues = {
   },
   grid: {
     proportional: true,
-    columns: 8,
+    columns: 5,
     rows: 13,
   },
   backgroundColor: [
