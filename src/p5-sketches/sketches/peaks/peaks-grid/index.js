@@ -109,9 +109,13 @@ sketch.draw( (
   sketchState.threeDimensionGraphics.rotateY( rY );
   sketchState.threeDimensionGraphics.rotateZ( rZ );
 
-  noiseSeed( options.sketch.peaks.noiseSeed ?? 115 );
+  noiseSeed( options.sketch.noise?.seed ?? 488 );
+  noiseDetail(
+    options.sketch.noise?.detail ?? 4,
+    options.sketch.noise?.falloff ?? 0.5
+  );
 
-  const layers = options.sketch.peaks.depthLayersCount ?? 200 / 4;
+  const layers = options.sketch.peaks.depthLayersCount ?? 150;
   const depthLength = Math.min(
     width,
     height
@@ -154,38 +158,49 @@ sketch.draw( (
           easing?.[ options.sketch.peaks.point.strokeWeightEasing ] ?? easing.easeOutCirc
         ) );
 
+        const noiseXMultiplier = options.sketch.noise?.xMultiplier ?? 1;
+        const noiseYMultiplier = options.sketch.noise?.yMultiplier ?? 1;
+        const noiseProgressionMultiplier = options.sketch.noise?.progressionMultiplier ?? 1;
+        const noiseLayerProgressionMultiplier = options.sketch.noise?.layerProgressionMultiplier ?? 1;
+
         const rotationNoise = noise(
-          x / width + rX,
-          y / height + rY,
-          layerProgression + rZ
+          ( x / width ) * noiseXMultiplier + rX,
+          ( y / height ) * noiseYMultiplier + rY,
+          layerProgression * noiseLayerProgressionMultiplier + progression * noiseProgressionMultiplier + rZ
         );
 
         const colorFunction = colors.rainbow;
+
+        const opacityMax = options.sketch.colors?.opacityMax ?? 4;
+        const opacityMin = options.sketch.colors?.opacityMin ?? 1;
+        const progressionMultiplier = options.sketch.colors?.progressionMultiplier ?? 1;
+        const layerProgressionMultiplier = options.sketch.colors?.layerProgressionMultiplier ?? 1;
+        const hueIndexMultiplier = options.sketch.colors?.hueIndexMultiplier ?? 4;
+        const hueOffset = options.sketch.colors?.hueOffset ?? 0;
+
         const opacityFactor = mappers.fn(
           sin(
-            rotationNoise * TAU + progression + layerProgression
+            rotationNoise * TAU
+            + progression * progressionMultiplier
+            + layerProgression * layerProgressionMultiplier
           ),
           -1,
           1,
-          5,
-          1,
-          easing.easeOutQuad
+          opacityMax,
+          opacityMin,
+          easing?.[ options.sketch.colors?.opacityEasing ] ?? easing.easeInCirc
         );
 
-        //  * Math.pow(
-        //   1.05,
-        //   layerProgression
-        // );
-
         sketchState.threeDimensionGraphics.stroke( colorFunction( {
-          hueOffset: 0,
+          hueOffset,
           hueIndex: mappers.fn(
             rotationNoise,
             0,
             1,
             -PI,
-            PI
-          ) * 4,
+            PI,
+            easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.linear
+          ) * hueIndexMultiplier,
           opacityFactor,
         } ) );
 
