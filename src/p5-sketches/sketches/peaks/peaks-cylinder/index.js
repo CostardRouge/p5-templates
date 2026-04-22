@@ -49,11 +49,11 @@ sketch.draw( (
   const easingFunction =
     easing?.[ options.sketch.peaks.depthEasing ] ?? easing.easeInOutExpo;
 
-  const cylinderRadius = options.sketch.cylinder?.radius      ?? 200;
-  const cylinderHeight = options.sketch.cylinder?.height      ?? 400;
-  const spikeLength    = options.sketch.cylinder?.spikeLength ?? 150;
-  const columns        = options.sketch.cylinder?.columns     ?? 24;
-  const rows           = options.sketch.cylinder?.rows        ?? 12;
+  const cylinderRadius = options.sketch.cylinder?.radius ?? 200;
+  const cylinderHeight = options.sketch.cylinder?.height ?? 400;
+  const spikeLength = options.sketch.cylinder?.spikeLength ?? 150;
+  const columns = options.sketch.cylinder?.columns ?? 24;
+  const rows = options.sketch.cylinder?.rows ?? 12;
 
   const rotationEnabled = options.sketch.rotation?.enabled ?? true;
   const angleMax = options.sketch.rotation?.angleMax ?? ( PI / 16 );
@@ -63,17 +63,29 @@ sketch.draw( (
 
   const rX = rotationEnabled
     ? mappers.fn(
-      sin( animation.angle * xMultiplier ), -1, 1, -angleMax, angleMax
+      sin( animation.angle * xMultiplier ),
+      -1,
+      1,
+      -angleMax,
+      angleMax
     )
     : 0;
   const rY = rotationEnabled
     ? mappers.fn(
-      cos( animation.angle * yMultiplier ), -1, 1, -angleMax, angleMax
+      cos( animation.angle * yMultiplier ),
+      -1,
+      1,
+      -angleMax,
+      angleMax
     )
     : 0;
   const rZ = rotationEnabled
     ? mappers.fn(
-      sin( animation.angle * zMultiplier ), -1, 1, -angleMax, angleMax
+      sin( animation.angle * zMultiplier ),
+      -1,
+      1,
+      -angleMax,
+      angleMax
     )
     : 0;
 
@@ -136,7 +148,13 @@ sketch.draw( (
         const progression = ( col * rows + row ) / ( totalPoints - 1 );
 
         const px = layerRadius * cos( theta );
-        const py = mappers.fn( rowProgression, 0, 1, -cylinderHeight / 2, cylinderHeight / 2 );
+        const py = mappers.fn(
+          rowProgression,
+          0,
+          1,
+          -cylinderHeight / 2,
+          cylinderHeight / 2
+        );
         const pz = layerRadius * sin( theta );
 
         const rotationNoise = noise(
@@ -146,11 +164,7 @@ sketch.draw( (
         );
 
         const opacityFactor = mappers.fn(
-          sin(
-            rotationNoise * TAU
-            + progression * progressionMultiplier
-            + layerProgression * layerProgressionMultiplier
-          ),
+          sin( rotationNoise * TAU + progression * progressionMultiplier + layerProgression * layerProgressionMultiplier ),
           -1,
           1,
           opacityMax,
@@ -171,7 +185,11 @@ sketch.draw( (
           opacityFactor,
         } ) );
 
-        sketchState.threeDimensionGraphics.point( px, py, pz );
+        sketchState.threeDimensionGraphics.point(
+          px,
+          py,
+          pz
+        );
       }
     }
   }
