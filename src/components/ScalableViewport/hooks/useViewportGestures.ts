@@ -30,7 +30,14 @@ export function useViewportGestures( {
 }: UseViewportGesturesProps ) {
   useGesture(
     {
-      onDragStart: () => cancelAnimation(),
+      onDragStart: ( { event, cancel } ) => {
+        if ( ( event?.target as Element )?.closest?.( "[data-no-drag]" ) ) {
+          cancel();
+          return;
+        }
+
+        cancelAnimation();
+      },
       onPinchStart: () => cancelAnimation(),
       onWheelStart: () => cancelAnimation(),
 
@@ -39,8 +46,11 @@ export function useViewportGestures( {
         delta: [
           deltaX,
           deltaY
-        ]
+        ],
+        canceled,
       } ) => {
+        if ( canceled ) return;
+
         const {
           x, y
         } = transform.current;

@@ -165,6 +165,7 @@ export default function ClientProcessingSketch() {
           {sketchLoaded && !capturing && (
             <div
               className="mt-2 mb-4 truncate"
+              data-no-drag="true"
               style={
                 {
                   "--scale-factor": "var(--viewport-scale, 1)",

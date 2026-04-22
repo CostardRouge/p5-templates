@@ -75,6 +75,8 @@ export default function AnimationProgressionBar( {
   const isDraggingRef = useRef( false );
   const lastProgressionRef = useRef( 0 );
   const getExternalProgressionRef = useRef<ProgressionGetter | null>( null );
+  // Tracks whether we paused p5's loop so we only resume when we caused the pause.
+  const pausedByDragRef = useRef( false );
 
   useEffect(
     () => {
@@ -262,7 +264,22 @@ export default function AnimationProgressionBar( {
       isDraggingRef.current = true;
       setIsDragging( true );
 
+      // Pause the p5 sketch so the loop doesn't keep advancing while scrubbing.
+      try {
+        if ( typeof window.noLoop === "function" ) {
+          window.noLoop();
+          pausedByDragRef.current = true;
+        }
+      } catch {
+        // Ignore — p5 may not be initialised yet.
+      }
+
       setAnimationProgression( calculateProgressionFromEvent( event ) );
+
+      // Render one frame at the new position so the sketch isn't frozen on the old one.
+      try {
+        if ( typeof window.redraw === "function" ) window.redraw();
+      } catch { /* ignore */ }
 
       event.currentTarget.setPointerCapture( event.pointerId );
     },
@@ -283,6 +300,17 @@ export default function AnimationProgressionBar( {
 
       isDraggingRef.current = false;
       setIsDragging( false );
+
+      // Resume the loop only if we were the ones who paused it.
+      if ( pausedByDragRef.current ) {
+        pausedByDragRef.current = false;
+
+        try {
+          if ( typeof window.loop === "function" ) window.loop();
+        } catch {
+          // Ignore.
+        }
+      }
 
       try {
         event.currentTarget.releasePointerCapture( event.pointerId );
@@ -313,6 +341,11 @@ export default function AnimationProgressionBar( {
       dragThrottleRef.current = now;
 
       setAnimationProgression( calculateProgressionFromEvent( event ) );
+
+      // Render one frame at the scrubbed position while the loop is paused.
+      try {
+        if ( typeof window.redraw === "function" ) window.redraw();
+      } catch { /* ignore */ }
     },
     [
       calculateProgressionFromEvent,
