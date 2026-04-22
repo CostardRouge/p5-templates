@@ -15,7 +15,6 @@ import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositi
 
 const sketchState = {
   threeDimensionGraphics: null,
-  interactiveGraphics: null,
   interactive: {
     position: null,
     image: null,
@@ -35,11 +34,6 @@ sketch.setup(
       width,
       height,
       "webgl"
-    );
-
-    sketchState.interactiveGraphics = graphics.createAutoResizableGraphics(
-      width,
-      height
     );
 
     addScreenPositionFunction( sketchState.threeDimensionGraphics );
@@ -88,20 +82,6 @@ sketch.draw( (
     // center: true,
     diamond: false,
   };
-
-  // const rotations = [
-  //   sketchState.threeDimensionGraphics.createVector( PI / 4, ),
-  //   sketchState.threeDimensionGraphics.createVector( -PI / 4, )
-  // ];
-
-  // const {
-  //   x: rX, y: rY, z: rZ
-  // } = animation.ease( {
-  //   values: rotations,
-  //   currentTime: animation.progression * 6,
-  //   lerpFn: p5.Vector.lerp,
-  //   easingFn: easingFunction,
-  // } );
 
   const rotationEnabled = options.sketch.rotation?.enabled ?? true;
   const angleMax = options.sketch.rotation?.angleMax ?? ( PI / 16 );
