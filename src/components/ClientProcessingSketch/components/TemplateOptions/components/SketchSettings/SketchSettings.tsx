@@ -87,14 +87,14 @@ export default function SketchSettings( {
           </button>
 
           <div className="flex items-center gap-2">
-            <SaveDefaultsButton />
-
             <ResetSettingsButton basePath={effectiveBasePath} />
 
             <RandomizeSettingsButton
               config={configWithSchemas}
               basePath={effectiveBasePath}
             />
+
+            <SaveDefaultsButton />
           </div>
         </div>
       )}

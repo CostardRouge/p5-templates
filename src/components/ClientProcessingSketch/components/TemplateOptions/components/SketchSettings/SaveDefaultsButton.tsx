@@ -4,7 +4,7 @@ import React, {
   useState
 } from "react";
 import {
-  BookmarkCheck, Loader2
+  Save, Loader2
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -16,7 +16,7 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 
 export default function SaveDefaultsButton() {
   const {
-    name
+    name, sketchFormValues
   } = useSketch();
   const {
     getValues
@@ -55,6 +55,7 @@ export default function SaveDefaultsButton() {
           body: JSON.stringify( {
             sketch: name,
             formValues,
+            originalFormValues: sketchFormValues ?? {},
           } ),
         }
       );
@@ -109,7 +110,7 @@ export default function SaveDefaultsButton() {
       {saveState === "saving" ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
       ) : (
-        <BookmarkCheck className="h-3.5 w-3.5" />
+        <Save className="h-3.5 w-3.5" />
       )}
     </button>
   );
