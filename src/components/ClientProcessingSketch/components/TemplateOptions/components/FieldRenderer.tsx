@@ -37,6 +37,7 @@ export default function FieldRenderer( {
 }: FieldRendererProps ) {
   const {
     register,
+    setValue,
     formState: {
       errors
     },
@@ -110,11 +111,26 @@ export default function FieldRenderer( {
               min={config.min}
               max={config.max}
             />
-            <span className="text-xs font-mono bg-theme/20 px-2 py-0.5 rounded min-w-[3rem] text-center border border-theme/30">
-              {sliderValue != null
-                ? Number( sliderValue ).toFixed( config.step && config.step < 1 ? 2 : 0 )
-                : ( config.min ?? 0 )}
-            </span>
+            <input
+              type="number"
+              className="text-xs font-mono bg-theme/20 px-1 py-0.5 rounded w-14 text-center border border-theme/30 focus:outline-none focus:ring-1 focus:ring-theme"
+              value={sliderValue != null ? Number( sliderValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 )}
+              step={config.step}
+              min={config.min}
+              max={config.max}
+              onChange={( e ) => {
+                const parsed = config.step && config.step < 1
+                  ? parseFloat( e.target.value )
+                  : parseInt( e.target.value, 10 );
+                if ( !isNaN( parsed ) ) {
+                  const clamped =
+                    config.min !== undefined && config.max !== undefined
+                      ? Math.min( config.max, Math.max( config.min, parsed ) )
+                      : parsed;
+                  setValue( registeredName, clamped, { shouldDirty: true } );
+                }
+              }}
+            />
           </div>
         );
 
