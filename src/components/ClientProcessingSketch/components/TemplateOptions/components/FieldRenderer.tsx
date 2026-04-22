@@ -56,7 +56,6 @@ export default function FieldRenderer( {
   const sliderValue = useWatch( {
     control,
     name: registeredName,
-    defaultValue: config.component === "slider" ? ( config.min ?? 0 ) : undefined,
   } );
 
   const renderInput = () => {
@@ -112,7 +111,7 @@ export default function FieldRenderer( {
               max={config.max}
             />
             <span className="text-xs font-mono bg-theme/20 px-2 py-0.5 rounded min-w-[3rem] text-center border border-theme/30">
-              {sliderValue
+              {sliderValue != null
                 ? Number( sliderValue ).toFixed( config.step && config.step < 1 ? 2 : 0 )
                 : ( config.min ?? 0 )}
             </span>

@@ -53,8 +53,8 @@ export const formConfiguration: Record<string, any> = {
       depthLengthMultiplier: {
         label: "Depth length",
         component: "slider",
-        min: -10,
-        max: 10,
+        min: -50,
+        max: 50,
         step: 0.01,
       },
       noiseSeed: {
@@ -124,7 +124,6 @@ export const formConfiguration: Record<string, any> = {
       },
     }
   },
-  
   rotation: {
     component: "nested-object",
     label: "Rotation",
