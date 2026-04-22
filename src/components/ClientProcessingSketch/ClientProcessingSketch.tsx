@@ -18,6 +18,7 @@ import {
 import type {
   SketchOption
 } from "@/types/sketch.types";
+import useSketchDevWatch from "@/hooks/useSketchDevWatch";
 import useSketch from "./components/SketchProvider/hooks/useSketch";
 import {
   useSketchThumbnail
@@ -30,6 +31,9 @@ export default function ClientProcessingSketch() {
   const {
     name, capturing, options, persistedJob
   } = useSketch();
+
+  useSketchDevWatch( name );
+
   const {
     thumbnailUrl
   } = useSketchThumbnail( {
