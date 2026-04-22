@@ -123,8 +123,40 @@ sketch.draw( (
     options.sketch.peaks.depthLengthMultiplier ?? 1
   );
 
+  const noiseXMultiplier = options.sketch.noise?.xMultiplier ?? 1;
+  const noiseYMultiplier = options.sketch.noise?.yMultiplier ?? 1;
+  const noiseProgressionMultiplier = options.sketch.noise?.progressionMultiplier ?? 1;
+  const noiseLayerProgressionMultiplier = options.sketch.noise?.layerProgressionMultiplier ?? 1;
+
+  const colorFunction = colors.rainbow;
+
+  const opacityMax = options.sketch.colors?.opacityMax ?? 4;
+  const opacityMin = options.sketch.colors?.opacityMin ?? 1;
+  const progressionMultiplier = options.sketch.colors?.progressionMultiplier ?? 1;
+  const layerProgressionMultiplier = options.sketch.colors?.layerProgressionMultiplier ?? 1;
+  const hueIndexMultiplier = options.sketch.colors?.hueIndexMultiplier ?? 4;
+  const hueOffset = options.sketch.colors?.hueOffset ?? 0;
+
   for ( let layer = 0; layer < layers; layer++ ) {
     const layerProgression = ( layer / ( layers - 1 ) );
+
+    const pointZ = mappers.fn(
+      layerProgression,
+      0,
+      1,
+      depthLength * -1,
+      0,
+      easingFunction
+    );
+
+    const layerStrokeWeight = mappers.fn(
+      layerProgression,
+      0,
+      1,
+      options.sketch.peaks.point.strokeWeightMin ?? 3,
+      options.sketch.peaks.point.strokeWeightMax ?? 20,
+      easing?.[ options.sketch.peaks.point.strokeWeightEasing ] ?? easing.easeOutCirc
+    );
 
     grid.draw(
       gridOptions,
@@ -135,48 +167,13 @@ sketch.draw( (
           x, y
         } = coordinates;
 
-        sketchState.threeDimensionGraphics.push();
-        sketchState.threeDimensionGraphics.translate(
-          position.x + halfCellSize,
-          position.y + halfCellSize,
-          mappers.fn(
-            layerProgression,
-            0,
-            1,
-            depthLength * -1,
-            0,
-            easingFunction
-          )
-        );
-
-        sketchState.threeDimensionGraphics.strokeWeight( mappers.fn(
-          layerProgression,
-          0,
-          1,
-          options.sketch.peaks.point.strokeWeightMin ?? 3,
-          options.sketch.peaks.point.strokeWeightMax ?? 20,
-          easing?.[ options.sketch.peaks.point.strokeWeightEasing ] ?? easing.easeOutCirc
-        ) );
-
-        const noiseXMultiplier = options.sketch.noise?.xMultiplier ?? 1;
-        const noiseYMultiplier = options.sketch.noise?.yMultiplier ?? 1;
-        const noiseProgressionMultiplier = options.sketch.noise?.progressionMultiplier ?? 1;
-        const noiseLayerProgressionMultiplier = options.sketch.noise?.layerProgressionMultiplier ?? 1;
+        sketchState.threeDimensionGraphics.strokeWeight( layerStrokeWeight );
 
         const rotationNoise = noise(
           -( x / width ) * noiseXMultiplier + rX,
           -( y / height ) * noiseYMultiplier + rY,
           layerProgression * noiseLayerProgressionMultiplier + progression * noiseProgressionMultiplier + rZ
         );
-
-        const colorFunction = colors.rainbow;
-
-        const opacityMax = options.sketch.colors?.opacityMax ?? 4;
-        const opacityMin = options.sketch.colors?.opacityMin ?? 1;
-        const progressionMultiplier = options.sketch.colors?.progressionMultiplier ?? 1;
-        const layerProgressionMultiplier = options.sketch.colors?.layerProgressionMultiplier ?? 1;
-        const hueIndexMultiplier = options.sketch.colors?.hueIndexMultiplier ?? 4;
-        const hueOffset = options.sketch.colors?.hueOffset ?? 0;
 
         const opacityFactor = mappers.fn(
           sin(
@@ -205,11 +202,10 @@ sketch.draw( (
         } ) );
 
         sketchState.threeDimensionGraphics.point(
-          0,
-          0
+          position.x + halfCellSize,
+          position.y + halfCellSize,
+          pointZ
         );
-
-        sketchState.threeDimensionGraphics.pop();
       }
     );
   }
