@@ -373,9 +373,6 @@ function TemplateCard( {
     >
       <div
         className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border"
-        style={{
-          aspectRatio: "4 / 5",
-        }}
       >
         <img
           alt={name}
