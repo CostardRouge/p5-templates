@@ -12,6 +12,9 @@ import {
   SITE_KEYWORDS,
   SITE_NAME,
 } from "@/lib/seo";
+import {
+  getDevThumbnailStatus
+} from "@/utils/getDevThumbnailStatus";
 
 // Force dynamic rendering to read env vars at runtime
 export const dynamic = "force-dynamic";
@@ -104,6 +107,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const jsonLd = getWebApplicationJsonLd();
+  const {
+    hasMissingThumbnails
+  } = getDevThumbnailStatus();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -137,6 +143,7 @@ export default function RootLayout({
             <Suspense>
               <MenuBar
                 showRecordings={process.env.BACKEND_RECORDING === "true"}
+                hasMissingThumbnails={hasMissingThumbnails}
               />
             </Suspense>
           </div>

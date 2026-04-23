@@ -32,7 +32,10 @@ export default function ClientProcessingSketch() {
     name, capturing, options, persistedJob
   } = useSketch();
 
-  useSketchDevWatch( name );
+  useSketchDevWatch(
+    name,
+    capturing
+  );
 
   const {
     thumbnailUrl

@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 
-export default function useSketchDevWatch( name: string ) {
+export default function useSketchDevWatch( name: string, capturing = false ) {
   useEffect(
     () => {
-      if ( process.env.NODE_ENV !== "development" ) {
+      if ( process.env.NODE_ENV !== "development" || capturing ) {
         return;
       }
 

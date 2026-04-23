@@ -7,6 +7,7 @@ type SketchMeta = {
   mtime: string;
   ctime: string;
   hasSketchForm: boolean;
+  hasThumbnail?: boolean;
 };
 
 async function getSketchList() {

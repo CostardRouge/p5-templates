@@ -12,6 +12,7 @@ import type React from "react";
 import {
   useEffect, useState
 } from "react";
+import GenerateThumbnailsButton from "@/components/GenerateThumbnailsButton";
 import PushNotificationManager from "@/components/PushNotificationManager";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -24,6 +25,7 @@ type NavItem = {
 
 type MenuBarProps = {
   showRecordings?: boolean;
+  hasMissingThumbnails?: boolean;
 };
 
 const BACKEND_RECORDING = process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true";
@@ -31,7 +33,8 @@ const NOTIFICATIONS_ENABLED = process.env.NEXT_PUBLIC_NOTIFICATIONS === "true";
 const SHOW_NOTIFICATIONS = BACKEND_RECORDING && NOTIFICATIONS_ENABLED;
 
 function MenuBar( {
-  showRecordings = false
+  showRecordings = false,
+  hasMissingThumbnails = false,
 }: MenuBarProps ) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -142,6 +145,7 @@ function MenuBar( {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
+        <GenerateThumbnailsButton hasMissingThumbnails={hasMissingThumbnails} />
         {SHOW_NOTIFICATIONS && (
           <>
             <PushNotificationManager />
