@@ -11,6 +11,7 @@ import {
 } from "@/constants";
 
 import fs from "node:fs/promises";
+import path from "node:path";
 import {
   captureCanvasThumbnail
 } from "@/utils/captureCanvasThumbnail";
@@ -84,6 +85,32 @@ async function createSketchThumbnails() {
           format: "jpeg",
         }
       );
+
+      // Mark hasThumbnail: true in metadata.json
+      const metadataPath = path.join(
+        process.cwd(),
+        "src/p5-sketches/sketches/metadata.json"
+      );
+      const raw = await fs.readFile(
+        metadataPath,
+        "utf-8"
+      );
+      const entries = JSON.parse( raw ) as Array<Record<string, unknown>>;
+      const entry = entries.find( ( e ) => e.name === name );
+
+      if ( entry ) {
+        entry.hasThumbnail = true;
+        await fs.writeFile(
+          metadataPath,
+          JSON.stringify(
+            entries,
+            null,
+            2
+          ),
+          "utf-8"
+        );
+      }
+
       console.log( `💾 ${ name }/thumbnail.jpeg has been generated` );
     }
   } catch ( error ) {

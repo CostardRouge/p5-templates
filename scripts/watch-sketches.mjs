@@ -58,11 +58,16 @@ function generateMetadata() {
         "options.ts"
       );
       const stats = fs.statSync( fullPath );
+      const thumbnailPath = path.join(
+        __dirname,
+        `../public/assets/images/templates/p5/${ name }/thumbnail.jpeg`
+      );
 
       sketchMeta.push( {
         name,
         category: null,
         hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
+        hasThumbnail: fs.existsSync( thumbnailPath ),
         mtime: stats.mtime.toISOString(),
         ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
       } );
@@ -100,11 +105,16 @@ function generateMetadata() {
             "options.ts"
           );
           const stats = fs.statSync( nestedPath );
+          const thumbnailPath = path.join(
+            __dirname,
+            `../public/assets/images/templates/p5/${ nestedName }/thumbnail.jpeg`
+          );
 
           sketchMeta.push( {
             name: nestedName,
             category: name,
             hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
+            hasThumbnail: fs.existsSync( thumbnailPath ),
             mtime: stats.mtime.toISOString(),
             ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
           } );
