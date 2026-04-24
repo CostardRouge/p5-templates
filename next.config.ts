@@ -19,7 +19,21 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BACKEND_RECORDING: process.env.BACKEND_RECORDING,
     NEXT_PUBLIC_NOTIFICATIONS: process.env.NOTIFICATIONS,
     NEXT_PUBLIC_LIVE_THUMBNAIL: process.env.LIVE_THUMBNAIL,
-  }
+  },
+  async redirects() {
+    return [
+      {
+        source: "/templates",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/templates/:path*",
+        destination: "/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
