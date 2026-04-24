@@ -41,6 +41,22 @@ export default function P5Sketch( {
 }: Props ) {
   const containerRef = useRef<HTMLDivElement | null>( null );
 
+  const attachMainCanvas = () => {
+    const canvas = document.querySelector( "canvas#defaultCanvas0" ) as HTMLCanvasElement | null;
+
+    if ( !canvas ) {
+      return false;
+    }
+
+    onLoaded?.( canvas );
+
+    if ( containerRef.current && !containerRef.current.contains( canvas ) ) {
+      containerRef.current.appendChild( canvas );
+    }
+
+    return true;
+  };
+
   useEffect(
     () => {
       document
@@ -49,19 +65,9 @@ export default function P5Sketch( {
 
       // 2) Observe for canvases if the sketch self-bootstraps on import
       const observer = new MutationObserver( () => {
-        const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0" ) as HTMLCanvasElement | null;
-
-        if ( !canvas ) {
-          return;
+        if ( attachMainCanvas() ) {
+          observer.disconnect();
         }
-
-        onLoaded?.( canvas );
-
-        if ( containerRef.current && !containerRef.current.contains( canvas ) ) {
-          containerRef.current.appendChild( canvas );
-        }
-
-        observer.disconnect();
       } );
 
       observer.observe(
@@ -79,6 +85,11 @@ export default function P5Sketch( {
           e
         );
       } );
+
+      // Handle sketches that create the main canvas immediately after import.
+      if ( attachMainCanvas() ) {
+        observer.disconnect();
+      }
 
       return () => {
         observer.disconnect();

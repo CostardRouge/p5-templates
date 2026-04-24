@@ -16,9 +16,6 @@ import {
   getDevThumbnailStatus
 } from "@/utils/getDevThumbnailStatus";
 
-// Force dynamic rendering to read env vars at runtime
-export const dynamic = "force-dynamic";
-
 const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
