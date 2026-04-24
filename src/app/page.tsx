@@ -1,6 +1,7 @@
 import type {
   Metadata
 } from "next";
+import { Suspense } from "react";
 import TemplatesList from "@/components/TemplatesList";
 import {
   getAllTemplates
@@ -76,7 +77,9 @@ export default async function TemplatesPage() {
 
   return (
     <div className="p-3 sm:p-6">
-      <TemplatesList templates={templates} />
+      <Suspense>
+        <TemplatesList templates={templates} />
+      </Suspense>
     </div>
   );
 }
