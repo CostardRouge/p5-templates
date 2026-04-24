@@ -6,7 +6,7 @@ import {
 
 import {
   getSketchOptions, subscribeSketchOptions,
-} from "@/p5-sketches/shared/syncSketchOptions";
+} from "@/lib/syncSketchOptions";
 
 interface AnimationProgressionBarProps {
   className?: string;

@@ -1,18 +1,11 @@
-// Import metadata.json directly as a module so it's bundled in production
-import metadata from "@/p5-sketches/sketches/metadata.json";
-
-type SketchMeta = {
-  name: string;
-  category: string | null;
-  mtime: string;
-  ctime: string;
-  hasSketchForm: boolean;
-  hasThumbnail?: boolean;
-};
+// Import metadata from the unified sketches registry
+import {
+  getMetadata
+} from "@/engines/metadata";
 
 async function getSketchList() {
   try {
-    const meta = metadata as SketchMeta[];
+    const meta = getMetadata();
 
     return meta.map( ( {
       name, category, hasSketchForm

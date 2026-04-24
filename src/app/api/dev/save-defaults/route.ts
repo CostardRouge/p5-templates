@@ -1,20 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
-import metadata from "@/p5-sketches/sketches/metadata.json";
-
-type SketchMetadata = {
-  name: string;
-  category: string | null;
-};
+import {
+  findSketchMeta, resolveSketchPath
+} from "@/engines/metadata";
 
 function getOptionsFilePath( sketchName: string ): string | null {
-  const meta = ( metadata as SketchMetadata[] ).find( ( m ) => m.name === sketchName );
+  const meta = findSketchMeta( sketchName );
 
   if ( !meta ) return null;
 
-  const sketchPath = meta.category
-    ? `${ meta.category }/${ sketchName }`
-    : sketchName;
+  const sketchPath = resolveSketchPath( sketchName );
 
   return path.join(
     process.cwd(),

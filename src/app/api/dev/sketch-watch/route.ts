@@ -1,15 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import metadata from "@/p5-sketches/sketches/metadata.json";
-
-type SketchMetadata = {
-  name: string;
-  category: string | null;
-};
+import {
+  resolveSketchPath
+} from "@/engines/metadata";
 
 function getSketchDir( sketchName: string ): string {
-  const meta = ( metadata as SketchMetadata[] ).find( ( m ) => m.name === sketchName );
-  const sketchPath = meta?.category ? `${ meta.category }/${ sketchName }` : sketchName;
+  const sketchPath = resolveSketchPath( sketchName );
 
   return path.join(
     process.cwd(),

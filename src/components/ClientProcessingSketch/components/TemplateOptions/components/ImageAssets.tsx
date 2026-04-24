@@ -29,7 +29,7 @@ import {
 } from "@/p5-sketches/shared/utils";
 import {
   setSketchOptions
-} from "@/p5-sketches/shared/syncSketchOptions";
+} from "@/lib/syncSketchOptions";
 import useAssetDrop from "@/hooks/useAssetDrop";
 
 import {

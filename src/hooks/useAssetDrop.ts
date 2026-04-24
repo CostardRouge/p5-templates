@@ -9,7 +9,7 @@ import {
 import {
   getSketchOptions,
   setSketchOptions,
-} from "@/p5-sketches/shared/syncSketchOptions";
+} from "@/lib/syncSketchOptions";
 
 const ensurePath = (
   obj: any, key: string, value: any = [

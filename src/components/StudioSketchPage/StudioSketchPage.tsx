@@ -7,35 +7,36 @@ import {
   useCallback, useEffect, useState
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
+import EngineSketchRenderer from "@/components/StudioSketchPage/EngineSketchRenderer";
 import {
-  P5Controls
-} from "@/components/ClientProcessingSketch/components/P5Controls";
-import P5Sketch from "@/components/ClientProcessingSketch/components/P5Sketch";
+  EngineControls
+} from "@/components/StudioSketchPage/EngineControls";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import {
-  setSketchOptions, subscribeSketchOptions,
+  setSketchOptions,
+  subscribeSketchOptions,
 } from "@/lib/syncSketchOptions";
 import type {
   SketchOption
 } from "@/types/sketch.types";
-import useSketchDevWatch from "@/hooks/useSketchDevWatch";
-import useSketch from "./components/SketchProvider/hooks/useSketch";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import {
   useSketchThumbnail
-} from "./components/SketchProvider/hooks/useSketchThumbnail";
+} from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketchThumbnail";
 
 const TemplateOptions = dynamic( () =>
-  import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
+  import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ), );
 
-export default function ClientProcessingSketch() {
+type Props = {
+  engineId: string;
+};
+
+export default function StudioSketchPage( {
+  engineId
+}: Props ) {
   const {
     name, capturing, options, persistedJob
   } = useSketch();
-
-  useSketchDevWatch(
-    name,
-    capturing
-  );
 
   const {
     thumbnailUrl
@@ -44,18 +45,17 @@ export default function ClientProcessingSketch() {
     persistedJob
   } );
 
-  // Initialize with options from context, which includes persisted data
   const [
     currentOptions,
     setCurrentOptions
   ] = useState<SketchOption>( options );
-
   const [
     sketchLoaded,
     setSketchLoaded
-  ] = useState<boolean>( false );
+  ] = useState( false );
 
-  // Sync global sketch options when currentOptions changes
+  /* ---- sync options ---------------------------------------------- */
+
   useEffect(
     () => {
       setSketchOptions(
@@ -68,7 +68,6 @@ export default function ClientProcessingSketch() {
     ]
   );
 
-  // Update currentOptions when options prop changes (e.g., from persisted data loading)
   useEffect(
     () => {
       setCurrentOptions( options );
@@ -80,46 +79,51 @@ export default function ClientProcessingSketch() {
 
   useEffect(
     () =>
-      subscribeSketchOptions( (
-        updatedOptions: any, origin?: string
-      ) => {
+      subscribeSketchOptions( ( updatedOptions: any ) => {
         setCurrentOptions( updatedOptions );
       } ),
     [
-    ]
+    ],
   );
+
+  /* ---- slide management ------------------------------------------ */
 
   const [
     activeSlideIndex,
     setActiveSlideIndex
-  ] = useState<number | undefined>( undefined );
+  ] = useState<
+    number | undefined
+  >( undefined );
 
   const handleActiveSlideChange = useCallback(
-    ( index: number | undefined ) => {
-      setActiveSlideIndex( index );
-    },
+    ( index: number | undefined ) => setActiveSlideIndex( index ),
     [
-    ]
+    ],
   );
 
   return (
     <>
+      {/* Loading placeholder */}
       {!sketchLoaded && (
         <div className="flex items-center justify-center absolute h-full w-full">
           <div className="flex flex-col items-center gap-4">
-            <img
-              src={ thumbnailUrl }
-              alt={`${ name } thumbnail`}
-              className="w-60 h-auto rounded-lg shadow-lg"
-            />
+            {thumbnailUrl && (
+              <img
+                src={thumbnailUrl}
+                alt={`${ name } thumbnail`}
+                className="w-60 h-auto rounded-lg shadow-lg"
+              />
+            )}
 
             <p className="text-foreground">
-              → loading <span className="font-bold">{name}</span>...
+              → loading{" "}
+              <span className="font-bold">{name}</span> ({engineId})…
             </p>
           </div>
         </div>
       )}
 
+      {/* Sketch viewport */}
       <div
         className="h-full w-full relative select-none"
         hidden={!sketchLoaded}
@@ -144,25 +148,29 @@ export default function ClientProcessingSketch() {
               }
             >
               <p className="truncate">
-                <Link href={`/p5/${ name }`} target="_blank">
+                <Link
+                  href={`/studio/${ engineId }/${ name }`}
+                  target="_blank"
+                >
                   {name}
                 </Link>
 
                 <span>
                   {activeSlideIndex !== undefined &&
-                    `· slide ${ activeSlideIndex + 1 }`}
+                    ` · slide ${ activeSlideIndex + 1 }`}
                 </span>
               </p>
 
-              <p id="p5-sketch-fps-counter"></p>
+              <p id="p5-sketch-fps-counter" />
             </div>
           )}
 
-          <P5Sketch
-            name={name}
-            onLoaded={() => {
-              setSketchLoaded( true );
-            }}
+          <EngineSketchRenderer
+            engineId={engineId}
+            templateName={name}
+            options={currentOptions}
+            capturing={capturing}
+            onLoaded={() => setSketchLoaded( true )}
           />
 
           {sketchLoaded && !capturing && (
@@ -184,9 +192,10 @@ export default function ClientProcessingSketch() {
         </ScalableViewport>
       </div>
 
+      {/* Controls & options panel */}
       {sketchLoaded && !capturing && (
         <>
-          <P5Controls name={name} />
+          <EngineControls name={name} engineId={engineId} />
 
           <TemplateOptions
             name={name}

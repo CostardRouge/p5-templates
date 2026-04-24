@@ -16,6 +16,16 @@ const META_OUTPUT = path.join(
   "metadata.json"
 );
 
+/* ---- Unified output (engine-agnostic) ----------------------------- */
+const UNIFIED_SKETCHES_DIR = path.join(
+  __dirname,
+  "../src/sketches"
+);
+const UNIFIED_META_OUTPUT = path.join(
+  UNIFIED_SKETCHES_DIR,
+  "metadata.json"
+);
+
 function generateMetadata() {
   if ( !fs.existsSync( SKETCHES_DIR ) ) {
     console.warn( `⚠️ Sketches directory not found: ${ SKETCHES_DIR }` );
@@ -65,6 +75,7 @@ function generateMetadata() {
 
       sketchMeta.push( {
         name,
+        engine: "p5",
         category: null,
         hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
         hasThumbnail: fs.existsSync( thumbnailPath ),
@@ -112,6 +123,7 @@ function generateMetadata() {
 
           sketchMeta.push( {
             name: nestedName,
+            engine: "p5",
             category: name,
             hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
             hasThumbnail: fs.existsSync( thumbnailPath ),
@@ -127,27 +139,121 @@ function generateMetadata() {
     a, b
   ) => new Date( a.mtime ).getTime() - new Date( b.mtime ).getTime() );
 
-  const oldContent = fs.existsSync( META_OUTPUT )
-    ? fs.readFileSync(
-      META_OUTPUT,
-      "utf-8"
-    )
-    : "";
+  /* ---- Also scan src/sketches/<engine>/ directories --------------- */
+  if ( fs.existsSync( UNIFIED_SKETCHES_DIR ) ) {
+    const engineDirs = fs.readdirSync( UNIFIED_SKETCHES_DIR ).filter( ( d ) => {
+      if ( d.startsWith( "." ) || d === "metadata.json" ) return false;
+      try { return fs.statSync( path.join( UNIFIED_SKETCHES_DIR, d ) ).isDirectory(); }
+      catch { return false; }
+    } );
+
+    for ( const engineId of engineDirs ) {
+      const engineDir = path.join( UNIFIED_SKETCHES_DIR, engineId );
+      scanEngineDir( engineDir, engineId, sketchMeta );
+    }
+  }
+
   const newContent = JSON.stringify(
     sketchMeta,
     null,
     2
   );
 
-  if ( oldContent !== newContent ) {
-    fs.writeFileSync(
-      META_OUTPUT,
-      newContent,
-      "utf-8"
-    );
-    console.log( `✅  Updated metadata.json (${ sketchMeta.length } sketches)` );
+  // Write legacy p5-only file (backward compat)
+  writeIfChanged( META_OUTPUT, newContent, "p5 metadata.json" );
+
+  // Write unified file
+  writeIfChanged( UNIFIED_META_OUTPUT, newContent, "unified metadata.json" );
+}
+
+/**
+ * Scan a `src/sketches/<engine>/` directory for sketches.
+ * Same structure as p5: root-level sketch dirs or category/sketch nesting.
+ */
+function scanEngineDir( engineDir, engineId, target ) {
+  const entries = fs.readdirSync( engineDir );
+
+  for ( const name of entries ) {
+    if ( name.startsWith( "_" ) || name.startsWith( "." ) ) continue;
+
+    const fullPath = path.join( engineDir, name );
+    let isDir = false;
+
+    try { isDir = fs.statSync( fullPath ).isDirectory(); }
+    catch { continue; }
+
+    if ( !isDir ) continue;
+
+    const indexPath = path.join( fullPath, "index.js" );
+    const indexTsPath = path.join( fullPath, "index.ts" );
+
+    if ( fs.existsSync( indexPath ) || fs.existsSync( indexTsPath ) ) {
+      const optionsTs = path.join( fullPath, "options.ts" );
+      const stats = fs.statSync( fullPath );
+      const thumbnailPath = path.join(
+        __dirname,
+        `../public/assets/images/templates/${ engineId }/${ name }/thumbnail.jpeg`
+      );
+
+      target.push( {
+        name,
+        engine: engineId,
+        category: null,
+        hasSketchForm: fs.existsSync( optionsTs ),
+        hasThumbnail: fs.existsSync( thumbnailPath ),
+        mtime: stats.mtime.toISOString(),
+        ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
+      } );
+    } else {
+      // category folder
+      const nestedEntries = fs.readdirSync( fullPath );
+
+      for ( const nestedName of nestedEntries ) {
+        if ( nestedName.startsWith( "_" ) || nestedName.startsWith( "." ) ) continue;
+        const nestedPath = path.join( fullPath, nestedName );
+        let isNestedDir = false;
+
+        try { isNestedDir = fs.statSync( nestedPath ).isDirectory(); }
+        catch { continue; }
+
+        if ( !isNestedDir ) continue;
+
+        const nestedIndex = path.join( nestedPath, "index.js" );
+        const nestedIndexTs = path.join( nestedPath, "index.ts" );
+
+        if ( fs.existsSync( nestedIndex ) || fs.existsSync( nestedIndexTs ) ) {
+          const optionsTs = path.join( nestedPath, "options.ts" );
+          const stats = fs.statSync( nestedPath );
+          const thumbnailPath = path.join(
+            __dirname,
+            `../public/assets/images/templates/${ engineId }/${ nestedName }/thumbnail.jpeg`
+          );
+
+          target.push( {
+            name: nestedName,
+            engine: engineId,
+            category: name,
+            hasSketchForm: fs.existsSync( optionsTs ),
+            hasThumbnail: fs.existsSync( thumbnailPath ),
+            mtime: stats.mtime.toISOString(),
+            ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
+          } );
+        }
+      }
+    }
+  }
+}
+
+function writeIfChanged( filePath, content, label ) {
+  const oldContent = fs.existsSync( filePath )
+    ? fs.readFileSync( filePath, "utf-8" )
+    : "";
+
+  if ( oldContent !== content ) {
+    fs.writeFileSync( filePath, content, "utf-8" );
+    console.log( `✅  Updated ${ label } (${ JSON.parse( content ).length } sketches)` );
   } else {
-    console.log( `✅  metadata.json is up to date (${ sketchMeta.length } sketches)` );
+    console.log( `✅  ${ label } is up to date (${ JSON.parse( content ).length } sketches)` );
   }
 }
 

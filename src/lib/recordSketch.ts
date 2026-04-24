@@ -58,6 +58,24 @@ const USE_STREAMING_MODE = process.env.USE_STREAMING_MODE ?? false;
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
+ * Wait for the sketch canvas to be ready.
+ *
+ * Studio routes (`/studio/…`) signal readiness via a
+ * `[data-engine-ready]` attribute set by `EngineSketchRenderer`.
+ * Legacy p5 routes use the `canvas#defaultCanvas0.loaded` selector.
+ */
+async function waitForSketchReady(
+  page: Page,
+  template: string,
+): Promise<void> {
+  if ( template.startsWith( "studio/" ) ) {
+    await page.waitForSelector( "[data-engine-ready]" );
+  } else {
+    await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
+  }
+}
+
+/**
  * Calculate total frames from animation options
  */
 function calculateTotalFrames( animationOptions: any ): number {
@@ -203,7 +221,10 @@ async function recordSingleSketch(
     }
   );
 
-  await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
+  await waitForSketchReady(
+    page,
+    template,
+  );
 
   await updateRecordingStepPercentage(
     jobId,
@@ -401,7 +422,10 @@ async function recordMultipleSlides(
     }
   );
 
-  await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
+  await waitForSketchReady(
+    page,
+    template,
+  );
 
   await updateRecordingStepPercentage(
     jobId,
@@ -411,7 +435,10 @@ async function recordMultipleSlides(
 
   for ( let slideIndex = 0; slideIndex < slides.length; slideIndex++ ) {
     // Track which slide is being recorded
-    await updateCurrentSlide( jobId, slideIndex );
+    await updateCurrentSlide(
+      jobId,
+      slideIndex,
+    );
 
     if ( slideIndex > 0 ) {
       // Re-navigate for subsequent slides (no dedicated step)
@@ -422,7 +449,10 @@ async function recordMultipleSlides(
         }
       );
 
-      await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
+      await waitForSketchReady(
+        page,
+        template,
+      );
     }
 
     await page.evaluate(
