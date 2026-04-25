@@ -31,6 +31,7 @@ type MenuBarProps = {
 const BACKEND_RECORDING = process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true";
 const NOTIFICATIONS_ENABLED = process.env.NEXT_PUBLIC_NOTIFICATIONS === "true";
 const SHOW_NOTIFICATIONS = BACKEND_RECORDING && NOTIFICATIONS_ENABLED;
+const GITHUB_REPO_URL = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
 
 function MenuBar( {
   showRecordings = false,
@@ -73,13 +74,16 @@ function MenuBar( {
     } );
   }
 
-  items.push( ...[
-    {
-      href: "https://github.com/CostardRouge/p5-templates",
+  if ( GITHUB_REPO_URL ) {
+    items.push( {
+      href: GITHUB_REPO_URL,
       name: "github",
       Icon: Github,
       target: "_blank",
-    },
+    } );
+  }
+
+  items.push( ...[
     {
       href: "instagram.com/costardrouge.jpg",
       name: "instagram",

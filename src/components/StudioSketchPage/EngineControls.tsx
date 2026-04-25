@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import { Camera, Pause, Play } from "lucide-react";
+import { Camera, Github, Pause, Play } from "lucide-react";
+import Link from "next/link";
 import { useEngine } from "./EngineContext";
+import { resolveSketchPath } from "@/engines/metadata";
 
 type Props = {
   name: string;
@@ -19,9 +21,28 @@ export function EngineControls( { name, engineId }: Props ) {
   const engine = useEngine();
   const [looping, setLooping] = React.useState( true );
 
+  const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
+  const sketchPath = githubRepoUrl ? resolveSketchPath( name, engineId ) : undefined;
+  const githubUrl =
+    githubRepoUrl && sketchPath
+      ? `${ githubRepoUrl }/blob/main/src/templates/${ engineId }/sketches/${ sketchPath }/index.js`
+      : undefined;
+
   return (
     <div className="absolute top-2 left-2 md:top-4 md:left-4 flex items-center gap-2 z-50">
       <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden">
+        {githubUrl && (
+          <Link
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View source code on GitHub"
+            aria-label="View source code on GitHub"
+            className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center"
+          >
+            <Github className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
+          </Link>
+        )}
         <button
           onClick={() => {
             if ( looping ) {
