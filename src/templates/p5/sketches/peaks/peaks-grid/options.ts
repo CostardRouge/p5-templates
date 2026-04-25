@@ -3,18 +3,18 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   peaks: {
-    depthLayersCount: 100,
-    depthLengthMultiplier: 1,
+    depthLayersCount: 90,
+    depthLengthMultiplier: 0.42,
     depthEasing: "easeOutQuad",
     point: {
-      strokeWeightMax: 1,
-      strokeWeightMin: 500,
-      strokeWeightEasing: "linear",
+      strokeWeightMax: 9,
+      strokeWeightMin: 104,
+      strokeWeightEasing: "easeOutQuad",
     },
   },
   grid: {
     proportional: true,
-    columns: 7,
+    columns: 6,
     rows: 12,
   },
   backgroundColor: [
