@@ -119,14 +119,14 @@ export const formConfiguration: Record<string, any> = {
             label: "Stroke weight (tip)",
             component: "slider",
             min: 0.5,
-            max: 50,
+            max: 500,
             step: 0.5,
           },
           strokeWeightMax: {
             label: "Stroke weight (base)",
             component: "slider",
             min: 0.5,
-            max: 50,
+            max: 500,
             step: 0.5,
           },
           strokeWeightEasing: {

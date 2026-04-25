@@ -44,7 +44,10 @@ sketch.setup(
 sketch.draw( (
   time, center
 ) => {
-  background( 0 );
+  clear();
+  background( ...( options.sketch.backgroundColor ?? [
+    0
+  ] ) );
 
   const easingFunction =
     easing?.[ options.sketch.peaks.depthEasing ] ?? easing.easeInOutExpo;

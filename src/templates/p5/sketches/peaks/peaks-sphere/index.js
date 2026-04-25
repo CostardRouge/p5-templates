@@ -44,7 +44,10 @@ sketch.setup(
 sketch.draw( (
   time, center
 ) => {
-  background( 0 );
+  clear();
+  background( ...( options.sketch.backgroundColor ?? [
+    0
+  ] ) );
 
   const g = sketchState.threeDimensionGraphics;
 
@@ -156,6 +159,15 @@ sketch.draw( (
       // Latitude angle: 0 → π (top pole → bottom pole)
       const phi = rowNorm * PI;
 
+      // At the poles (row 0 = north, last row = south), all meridians
+      // converge to the same point. Only draw once (col 0) to avoid
+      // stacked duplicate spikes.
+      const isPole = row === 0 || row === parallels - 1;
+
+      if ( isPole && col > 0 ) {
+        continue;
+      }
+
       const progression = ( col * parallels + row ) / ( totalPoints - 1 );
 
       // ── Unit direction on the ellipsoid ──────────────────────────────
@@ -193,10 +205,13 @@ sketch.draw( (
       );
 
       // LOD: fewer layers for shorter spikes
+      const normalizedSurface = surfaceContrast > 0
+        ? surfaceFactor / surfaceContrast
+        : 1;
       const effectiveLayers = lodEnabled
         ? Math.max(
           lodMinLayers,
-          Math.round( layers * surfaceFactor / surfaceContrast )
+          Math.round( layers * normalizedSurface )
         )
         : layers;
 
@@ -245,7 +260,7 @@ sketch.draw( (
         // Mix surface height into hue
         const hueNoise = lerp(
           colorNoise,
-          surfaceFactor / surfaceContrast,
+          normalizedSurface,
           hueSurfaceMixing
         );
 

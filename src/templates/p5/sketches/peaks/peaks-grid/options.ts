@@ -8,7 +8,7 @@ export const formValues = {
     depthEasing: "easeOutQuad",
     point: {
       strokeWeightMax: 1,
-      strokeWeightMin: 150,
+      strokeWeightMin: 500,
       strokeWeightEasing: "linear",
     },
   },

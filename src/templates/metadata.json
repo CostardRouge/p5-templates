@@ -481,7 +481,7 @@
     "engine": "p5",
     "category": "peaks",
     "hasSketchForm": true,
-    "hasThumbnail": false,
+    "hasThumbnail": true,
     "mtime": "2026-04-25T20:27:14.924Z",
     "ctime": "2026-04-25T20:27:14.923Z"
   }

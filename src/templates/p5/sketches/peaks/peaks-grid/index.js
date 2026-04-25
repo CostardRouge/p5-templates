@@ -45,7 +45,10 @@ sketch.setup(
 sketch.draw( (
   time, center
 ) => {
-  background( 0 );
+  clear();
+  background( ...( options.sketch.backgroundColor ?? [
+    0
+  ] ) );
 
   const W = width / 2;
   const H = height / 2;
