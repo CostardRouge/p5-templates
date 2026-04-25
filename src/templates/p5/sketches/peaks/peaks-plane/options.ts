@@ -3,8 +3,8 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   peaks: {
-    layers: 99,
-    spikeLengthMax: 144,
+    layers: 100,
+    spikeLengthMax: 154,
     spikeLengthEasing: "easeOutQuad",
     baseHeightMax: 400,
     baseHeightEasing: "easeInQuad",
@@ -29,8 +29,8 @@ export const formValues = {
   },
   grid: {
     proportional: true,
-    columns: 19,
-    rows: 11,
+    columns: 21,
+    rows: 20,
   },
   backgroundColor: [
     0,
