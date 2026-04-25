@@ -39,7 +39,7 @@ async function createSketchThumbnails() {
     const templates = sketches.map( ( {
       name, engine, category,
     } ) => ( {
-      href: category ? `studio/${ engine }/${ category }/${ name }` : `studio/${ engine }/${ name }`,
+      href: category ? `templates/${ engine }/${ category }/${ name }` : `templates/${ engine }/${ name }`,
       name,
       engine,
     } ) );

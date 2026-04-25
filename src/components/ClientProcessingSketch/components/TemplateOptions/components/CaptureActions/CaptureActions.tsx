@@ -30,6 +30,7 @@ import RecordingActions from "./components/RecordingActions";
 import {
   getRecordingStatus
 } from "./utils/getRecordingStatus";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
@@ -61,6 +62,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   ref
 ) => {
   const router = useRouter();
+  const { engineId } = useSketch();
   const {
     enqueueRecording, isLoading
   } = useRecordingQueue();
@@ -200,7 +202,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       );
       formData.append(
         "template",
-        `p5/${ name }`
+        window.location.pathname.replace( /^\//, "" )
       );
       formData.append(
         "options",
@@ -321,28 +323,27 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
         // Redirect to URL with job ID for both drafts and recordings (unless skipRedirect is true)
         if ( !skipRedirect ) {
-          const newUrl = `${ name }?id=${ newJobId }`;
+          const currentPath = window.location.pathname.replace( /\?.*$/, "" );
+          const newUrl = `${ currentPath }?id=${ newJobId }`;
 
           console.log( `[CaptureActions] Updating URL to: ${ newUrl }` );
           // Use router.replace with error handling
           try {
             router.replace( newUrl );
-            // Also update browser history as a backup
             window.history.replaceState(
               null,
               "",
-              `/p5/${ newUrl }`
+              newUrl
             );
           } catch ( routerError ) {
             console.error(
               "[CaptureActions] Router.replace failed, falling back to window.history:",
               routerError
             );
-            // Fallback to direct history manipulation
             window.history.replaceState(
               null,
               "",
-              `/p5/${ newUrl }`
+              newUrl
             );
           }
         }
@@ -424,7 +425,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       } = await response.json();
 
       if ( deleted ) {
-        router.push( `/p5/${ name }` );
+        router.push( `/templates/${ engineId }/${ name }` );
       } else {
         alert( `Could not delete job: ${ jobToDelete }` );
         setDeleting( false );

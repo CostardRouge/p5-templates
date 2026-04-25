@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Studio pages — all engines, derived from unified metadata
   const studioPages: MetadataRoute.Sitemap = getMetadata().map( ( m ) => ( {
-    url: `${ baseUrl }/studio/${ m.engine }/${ m.category ? `${ m.category }/` : "" }${ m.name }`,
+    url: `${ baseUrl }/templates/${ m.engine }/${ m.category ? `${ m.category }/` : "" }${ m.name }`,
     lastModified: new Date( m.mtime ),
     changeFrequency: "monthly" as const,
     priority: 0.8,

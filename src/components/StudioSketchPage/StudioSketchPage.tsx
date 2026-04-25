@@ -149,7 +149,7 @@ export default function StudioSketchPage( {
             >
               <p className="truncate">
                 <Link
-                  href={`/studio/${ engineId }/${ name }`}
+                  href={`/templates/${ engineId }/${ name }`}
                   target="_blank"
                 >
                   {name}

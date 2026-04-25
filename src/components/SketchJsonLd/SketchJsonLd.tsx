@@ -19,8 +19,8 @@ export default function SketchJsonLd( {
     .map( ( w ) => w.charAt( 0 ).toUpperCase() + w.slice( 1 ) )
     .join( " " );
   const canonicalPath = category
-    ? `/studio/${ engineId }/${ category }/${ sketchName }`
-    : `/studio/${ engineId }/${ sketchName }`;
+    ? `/templates/${ engineId }/${ category }/${ sketchName }`
+    : `/templates/${ engineId }/${ sketchName }`;
 
   const jsonLd = {
     "@context": "https://schema.org",

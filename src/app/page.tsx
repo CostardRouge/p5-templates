@@ -45,7 +45,7 @@ export default async function TemplatesPage() {
       name, engine, category, hasSketchForm
     } ) => ( {
       thumbnail: getP5SketchThumbnailURL( name ),
-      href: category ? `/studio/${ engine }/${ category }/${ name }` : `/studio/${ engine }/${ name }`,
+      href: category ? `/templates/${ engine }/${ category }/${ name }` : `/templates/${ engine }/${ name }`,
       hasSketchForm,
       name,
       category,

@@ -111,8 +111,8 @@ export async function generateMetadata( {
     .join( " " );
 
   const canonicalPath = sketchMeta?.category
-    ? `/studio/${ engineId }/${ sketchMeta.category }/${ sketchName }`
-    : `/studio/${ engineId }/${ sketchName }`;
+    ? `/templates/${ engineId }/${ sketchMeta.category }/${ sketchName }`
+    : `/templates/${ engineId }/${ sketchName }`;
 
   const thumbnailUrl = sketchMeta?.hasThumbnail
     ? `${ baseUrl }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.jpeg`
@@ -203,9 +203,9 @@ export default async function StudioPage( {
 
   /* ---- canonical URL redirect ----------------------------------- */
   // If the sketch has a category but the URL is missing it,
-  // redirect to the canonical path: /studio/<engine>/<category>/<name>
+  // redirect to the canonical path: /templates/<engine>/<category>/<name>
   if ( sketchMeta.category && sketchSegments.length === 1 ) {
-    redirect( `/studio/${ engineId }/${ sketchMeta.category }/${ sketchName }` );
+    redirect( `/templates/${ engineId }/${ sketchMeta.category }/${ sketchName }` );
   }
 
   /* ---- load options & form meta (reuses existing p5 utils) ------- */

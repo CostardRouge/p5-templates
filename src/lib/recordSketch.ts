@@ -60,7 +60,7 @@ const USE_STREAMING_MODE = process.env.USE_STREAMING_MODE ?? false;
 /**
  * Wait for the sketch canvas to be ready.
  *
- * Studio routes (`/studio/…`) signal readiness via a
+ * Routes (`/templates/…`) signal readiness via a
  * `[data-engine-ready]` attribute set by `EngineSketchRenderer`.
  * Legacy p5 routes use the `canvas#defaultCanvas0.loaded` selector.
  */
@@ -68,7 +68,7 @@ async function waitForSketchReady(
   page: Page,
   template: string,
 ): Promise<void> {
-  if ( template.startsWith( "studio/" ) ) {
+  if ( template.startsWith( "templates/" ) ) {
     await page.waitForSelector( "[data-engine-ready]" );
   } else {
     await page.waitForSelector( "canvas#defaultCanvas0.loaded" );
