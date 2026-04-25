@@ -17,6 +17,8 @@ import ControlledImagesStackInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImagesStackInput/ControlledImagesStackInput";
 import ControlledSizePresetSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSizePresetSelect/ControlledSizePresetSelect";
+import ControlledEasingInput
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import type {
   FieldConfig
@@ -260,6 +262,9 @@ export default function FieldRenderer( {
 
       case "item-list":
         return <ItemListRenderer name={registeredName} config={config} />;
+
+      case "easing":
+        return <ControlledEasingInput name={registeredName} />;
 
       default:
         return (

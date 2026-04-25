@@ -1,4 +1,3 @@
-import easing from "@/p5/utils/easing";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 
@@ -114,12 +113,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01,
       },
       scaleEasing: {
-        component: "select",
+        component: "easing",
         label: "Scale easing",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
 
       // Rotation by index
@@ -131,12 +126,8 @@ export const formConfiguration: Record<string, any> = {
         step: 1,
       },
       indexRotationEasing: {
-        component: "select",
+        component: "easing",
         label: "Index rotation easing",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
 
       // Rotation by noise
@@ -162,12 +153,8 @@ export const formConfiguration: Record<string, any> = {
         step: 1,
       },
       noiseRotationEasing: {
-        component: "select",
+        component: "easing",
         label: "Noise rotation easing",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
     }
   },

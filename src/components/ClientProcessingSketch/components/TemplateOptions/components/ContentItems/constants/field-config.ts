@@ -135,6 +135,10 @@ interface HiddenFieldConfig extends BaseConfig {
   component: "hidden";
 }
 
+interface EasingConfig extends BaseConfig {
+  component: "easing";
+}
+
 // Step 3: Create the master Discriminated Union
 // This tells TypeScript: "If component is 'select', then it MUST have an 'options' property."
 export type FieldConfig =
@@ -152,7 +156,8 @@ export type FieldConfig =
   | HiddenConfig
   | JsonConfig
   | ItemListConfig
-  | HiddenFieldConfig;
+  | HiddenFieldConfig
+  | EasingConfig;
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema

@@ -1,5 +1,6 @@
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues.js";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration.js";
+import { t } from "tar";
 
 export const formValues = {
   images: [
@@ -17,9 +18,7 @@ export const formValues = {
     225
   ],
 
-  title: {
-    ...titleDefaultValues,
-  },
+  title: titleDefaultValues,
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -61,7 +60,5 @@ export const formConfiguration: Record<string, any> = {
     label: "Background color",
   },
 
-  title: {
-    ...titleFormConfiguration,
-  },
+  title: titleFormConfiguration,
 };

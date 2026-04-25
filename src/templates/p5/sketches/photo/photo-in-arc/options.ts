@@ -34,7 +34,7 @@ export const formValues = {
       255,
       0,
       0
-    ] as [number, number, number],
+    ],
   },
 };
 

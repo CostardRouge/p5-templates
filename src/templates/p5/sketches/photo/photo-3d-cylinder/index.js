@@ -7,6 +7,8 @@ import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 
+import renderTitle from "@/p5/utils/title/renderTitle.js";
+
 const getBg = () => options.sketch?.colors?.background ?? [
   0,
   0,
@@ -294,10 +296,7 @@ sketch.draw( (
     pop();
   } );
 
-  title.renderTitle(
-    options,
-    options.name
-  );
+  renderTitle();
 
   return orbitControl();
 } );

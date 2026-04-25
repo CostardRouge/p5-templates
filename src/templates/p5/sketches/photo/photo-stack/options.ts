@@ -1,5 +1,3 @@
-import easing from "@/p5/utils/easing";
-
 export const formValues = {
   images: [
   ],
@@ -97,12 +95,8 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   displayEasing: {
-    component: "select",
+    component: "easing",
     label: "Display easing function",
-    options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-      label: easingFunctionName,
-      value: easingFunctionName,
-    } ) ),
   },
   backgroundColor: {
     component: "color",

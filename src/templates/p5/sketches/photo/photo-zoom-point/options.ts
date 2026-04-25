@@ -1,4 +1,3 @@
-import easing from "@/p5/utils/easing";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues.js";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration.js";
 
@@ -96,12 +95,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       easing: {
-        component: "select",
+        component: "easing",
         label: "Easing",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
     },
   },

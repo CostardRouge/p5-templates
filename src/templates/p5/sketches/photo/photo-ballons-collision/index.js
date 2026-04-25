@@ -11,6 +11,8 @@ import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 
+import renderTitle from "@/p5/utils/title/renderTitle";
+
 import Matter from "@/public/assets/libraries/matter.min.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
@@ -336,30 +338,5 @@ sketch.draw( (
     } );
   } );
 
-  const defaultTitle = "variable-gravity-test"
-    .toUpperCase()
-    .replaceAll(
-      "-",
-      "\n"
-    );
-
-  if ( animation.progression < 0.2 ) {
-    string.write(
-      options.sketch?.title || defaultTitle,
-      // options.texts.title || defaultTitle,
-      0,
-      height / 2,
-      {
-        size: options.sketch?.titleSize ?? 172,
-        stroke: color( ...getTextColor() ),
-        fill: color( ...getBg() ),
-        font: getFont(),
-        textAlign: [
-          CENTER,
-          CENTER
-        ],
-        blendMode: EXCLUSION,
-      }
-    );
-  }
+  renderTitle();
 } );

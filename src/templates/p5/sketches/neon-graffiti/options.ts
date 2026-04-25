@@ -39,8 +39,6 @@ export const formValues = {
   ],
 };
 
-import easing from "@/p5/utils/easing";
-
 export const formConfiguration: Record<string, any> = {
   amplitude: {
     label: "Amplitude",
@@ -75,12 +73,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1,
       },
       easing: {
-        component: "select",
+        component: "easing",
         label: "Circle size easing",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
       variable: {
         label: "Variable size?",
@@ -152,20 +146,12 @@ export const formConfiguration: Record<string, any> = {
     step: 0.1,
   },
   positionSinEasing: {
-    component: "select",
+    component: "easing",
     label: "Position sin easing",
-    options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-      label: easingFunctionName,
-      value: easingFunctionName,
-    } ) ),
   },
   positionCosEasing: {
-    component: "select",
+    component: "easing",
     label: "Position cos easing",
-    options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-      label: easingFunctionName,
-      value: easingFunctionName,
-    } ) ),
   },
   positionCosMultiplier: {
     label: "Position cos multiplier",
@@ -175,12 +161,8 @@ export const formConfiguration: Record<string, any> = {
     step: 1,
   },
   hueEasing: {
-    component: "select",
+    component: "easing",
     label: "Hue easing",
-    options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-      label: easingFunctionName,
-      value: easingFunctionName,
-    } ) ),
   },
   hueStepDivider: {
     label: "Hue step divider",

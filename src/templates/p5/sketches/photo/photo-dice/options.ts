@@ -1,4 +1,3 @@
-import easing from "@/p5/utils/easing";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
@@ -23,9 +22,7 @@ export const formValues = {
   easing: "easeInOutExpo", // easing function for face rotations
   repeatImages: true, // if fewer than 6 images, repeat across faces
 
-  title: {
-    ...titleDefaultValues,
-  },
+  title: titleDefaultValues,
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -68,15 +65,9 @@ export const formConfiguration: Record<string, any> = {
     step: 0.01,
   },
   easing: {
-    component: "select",
+    component: "easing",
     label: "Rotation easing",
-    options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-      label: easingFunctionName,
-      value: easingFunctionName,
-    } ) ),
   },
 
-  title: {
-    ...titleFormConfiguration,
-  },
+  title: titleFormConfiguration,
 };

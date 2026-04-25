@@ -34,7 +34,7 @@ export const formValues = {
       0,
       0,
       0
-    ] as [number, number, number],
+    ],
     weight: 1,
     maxDistance: 1000,
     alphaScale: 100,

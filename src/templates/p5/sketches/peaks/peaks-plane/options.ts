@@ -1,4 +1,3 @@
-import easing from "@/p5/utils/easing";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
@@ -94,9 +93,8 @@ export const formConfiguration: Record<string, any> = {
         step: 1,
       },
       spikeLengthEasing: {
-        component: "select",
+        component: "easing",
         label: "Spike length easing",
-        options: Object.keys( easing ).map( ( n ) => ( { label: n, value: n } ) ),
       },
       baseHeightMax: {
         label: "Max terrain height offset",
@@ -106,14 +104,12 @@ export const formConfiguration: Record<string, any> = {
         step: 1,
       },
       baseHeightEasing: {
-        component: "select",
+        component: "easing",
         label: "Terrain height easing",
-        options: Object.keys( easing ).map( ( n ) => ( { label: n, value: n } ) ),
       },
       depthEasing: {
-        component: "select",
+        component: "easing",
         label: "Depth distribution easing",
-        options: Object.keys( easing ).map( ( n ) => ( { label: n, value: n } ) ),
       },
       point: {
         component: "nested-object",
@@ -134,9 +130,8 @@ export const formConfiguration: Record<string, any> = {
             step: 0.5,
           },
           strokeWeightEasing: {
-            component: "select",
+            component: "easing",
             label: "Stroke weight easing",
-            options: Object.keys( easing ).map( ( n ) => ( { label: n, value: n } ) ),
           },
         },
       },
@@ -299,9 +294,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1,
       },
       opacityEasing: {
-        component: "select",
+        component: "easing",
         label: "Opacity easing",
-        options: Object.keys( easing ).map( ( n ) => ( { label: n, value: n } ) ),
       },
       layerProgressionMultiplier: {
         label: "Layer progression multiplier",
@@ -332,9 +326,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01,
       },
       hueIndexEasing: {
-        component: "select",
+        component: "easing",
         label: "Hue index easing",
-        options: Object.keys( easing ).map( ( n ) => ( { label: n, value: n } ) ),
       },
       hueOffset: {
         label: "Hue offset",

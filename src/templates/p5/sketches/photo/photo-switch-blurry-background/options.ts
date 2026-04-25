@@ -4,10 +4,10 @@ export const formValues = {
       246,
       235,
       225
-    ] as [number, number, number],
+    ],
     text: [
       0
-    ] as [number],
+    ],
   },
 };
 

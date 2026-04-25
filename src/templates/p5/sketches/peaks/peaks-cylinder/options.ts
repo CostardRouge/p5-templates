@@ -1,4 +1,3 @@
-import easing from "@/p5/utils/easing";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
@@ -70,12 +69,8 @@ export const formConfiguration: Record<string, any> = {
         step: 1,
       },
       depthEasing: {
-        component: "select",
+        component: "easing",
         label: "Depth easing function",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
       point: {
         component: "nested-object",
@@ -96,12 +91,8 @@ export const formConfiguration: Record<string, any> = {
             step: 1,
           },
           strokeWeightEasing: {
-            component: "select",
+            component: "easing",
             label: "Stroke weight easing function",
-            options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-              label: easingFunctionName,
-              value: easingFunctionName,
-            } ) ),
           },
         },
       },
@@ -126,12 +117,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1,
       },
       opacityEasing: {
-        component: "select",
+        component: "easing",
         label: "Opacity easing function",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
       progressionMultiplier: {
         label: "Progression multiplier",
@@ -155,12 +142,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1,
       },
       hueIndexEasing: {
-        component: "select",
+        component: "easing",
         label: "Hue index easing function",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
       hueOffset: {
         label: "Hue offset",

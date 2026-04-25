@@ -1,4 +1,3 @@
-import easing from "@/p5/utils/easing";
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
@@ -149,12 +148,8 @@ export const formConfiguration: Record<string, any> = {
       },
 
       easing: {
-        component: "select",
+        component: "easing",
         label: "Wave easing",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
       backgroundColor: {
         component: "color",
@@ -213,12 +208,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1,
       },
       easing: {
-        component: "select",
+        component: "easing",
         label: "Wave easing",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
       close: {
         label: "Close shape",

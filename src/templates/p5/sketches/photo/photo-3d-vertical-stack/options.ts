@@ -13,12 +13,12 @@ export const formValues = {
     230,
     230,
     230
-  ] as [number, number, number],
+  ],
   textColor: [
     0,
     0,
     0
-  ] as [number, number, number],
+  ],
 
   // Typography
   font: "cloitre",

@@ -1,4 +1,3 @@
-import easing from "@/p5/utils/easing";
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
@@ -107,12 +106,8 @@ export const formConfiguration: Record<string, any> = {
         step: 1,
       },
       easing: {
-        component: "select",
+        component: "easing",
         label: "Morphing easing function",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       }
     },
   },
@@ -135,12 +130,8 @@ export const formConfiguration: Record<string, any> = {
         step: 1,
       },
       strokeWeightEasing: {
-        component: "select",
+        component: "easing",
         label: "Stroke weight easing function",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
     },
   },

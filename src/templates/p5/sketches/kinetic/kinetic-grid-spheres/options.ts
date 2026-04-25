@@ -1,7 +1,5 @@
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
-import easing from "@/p5/utils/easing";
-
 export const formValues = {
   grid: {
     gap: 3,
@@ -95,12 +93,8 @@ export const formConfiguration: Record<string, any> = {
         step: 0.5,
       },
       easing: {
-        component: "select",
+        component: "easing",
         label: "Depth easing",
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
     },
   },
