@@ -16,6 +16,7 @@ import {
 } from "@/engines/metadata";
 import SketchContextProvider from "@/components/ClientProcessingSketch/components/SketchProvider/SketchContextProvider";
 import StudioSketchPage from "@/components/StudioSketchPage/StudioSketchPage";
+import SketchJsonLd from "@/components/SketchJsonLd/SketchJsonLd";
 import {
   getJobById
 } from "@/lib/jobStore";
@@ -290,36 +291,14 @@ export default async function StudioPage( {
 
   sketchOptions.name = sketchName;
 
-  /* ---- JSON-LD structured data ----------------------------------- */
-  const pageTitle = sketchName
-    .split( "-" )
-    .map( ( w ) => w.charAt( 0 ).toUpperCase() + w.slice( 1 ) )
-    .join( " " );
-  const canonicalPath = sketchMeta.category
-    ? `/studio/${ engineId }/${ sketchMeta.category }/${ sketchName }`
-    : `/studio/${ engineId }/${ sketchName }`;
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: pageTitle,
-    applicationCategory: "DesignApplication",
-    operatingSystem: "Web",
-    description: `Create ${ pageTitle } content with ${ engineId }.`,
-    url: `${ getBaseUrl() }${ canonicalPath }`,
-    ...( sketchMeta.hasThumbnail && {
-      screenshot: `${ getBaseUrl() }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.jpeg`,
-    } ),
-  };
-
   /* ---- render ---------------------------------------------------- */
   return (
     <>
-      <script
-        type="application/ld+json"
-        suppressHydrationWarning
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify( jsonLd )
-        }}
+      <SketchJsonLd
+        sketchName={sketchName}
+        engineId={engineId}
+        category={sketchMeta.category}
+        hasThumbnail={sketchMeta.hasThumbnail}
       />
       <SketchContextProvider
         name={sketchName}
