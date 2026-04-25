@@ -5,7 +5,7 @@ import {
 import {
   FormProvider, useFieldArray, useWatch
 } from "react-hook-form";
-import initOptions from "@/components/utils/initOptions";
+import initOptions from "@/utils/initOptions";
 import type {
   JobModel
 } from "@/types/recording.types";

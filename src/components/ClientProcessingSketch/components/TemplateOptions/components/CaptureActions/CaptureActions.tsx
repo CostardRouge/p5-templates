@@ -6,7 +6,7 @@ import {
 import React, {
   forwardRef, useImperativeHandle, useState
 } from "react";
-import fetchDownload from "@/components/utils/fetchDownload";
+import fetchDownload from "@/utils/fetchDownload";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
 import {
   useRecordingQueue
@@ -14,7 +14,7 @@ import {
 import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import {
   getScopeAssetPath, resolveAssetURL
-} from "@/p5-sketches/shared/utils";
+} from "@/p5/shared/utils";
 import type {
   JobId, JobModel, JobStatusEnum
 } from "@/types/recording.types";

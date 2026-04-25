@@ -6,17 +6,23 @@ import {
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 import {
-  resolveSketchPath
+  findSketchMeta, resolveSketchPath
 } from "@/engines/metadata";
 
-export async function getJSONSketchOptions( sketchName: string ): Promise<Partial<SketchOption>> {
+export async function getJSONSketchOptions( sketchName: string, engineId: string ): Promise<Partial<SketchOption>> {
   try {
-    const sketchPath = resolveSketchPath( sketchName );
+    const sketchPath = resolveSketchPath( sketchName, engineId );
+
+    if ( !sketchPath ) {
+      return {
+      };
+    }
+
     // Use dynamic import so it works in production builds
-    const options = await import( `@/p5-sketches/sketches/${ sketchPath }/options.json` );
+    const options = await import( `@/p5/sketches/${ sketchPath }/options.json` );
 
     return options.default || options;
-  } catch ( error ) {
+  } catch {
     return {
     };
   }
@@ -27,16 +33,17 @@ export type SketchMeta = {
   formConfiguration?: Record<string, FieldConfig>;
 };
 
-export async function getSketchMeta( sketchName: string ): Promise<SketchMeta> {
-  try {
-    const sketchPath = resolveSketchPath( sketchName );
+export async function getSketchMeta( sketchName: string, engineId: string ): Promise<SketchMeta> {
+  const meta = findSketchMeta( sketchName, engineId );
 
-    return await import( `@/p5-sketches/sketches/${ sketchPath }/options.ts` );
-  } catch ( error ) {
-    // console.error(
-    //   "error",
-    //   error
-    // );
+  if ( !meta?.hasSketchForm ) {
+    return {
+    };
+  }
+
+  try {
+    return await import( `@/p5/sketches/${ meta.sketchPath }/options.ts` );
+  } catch {
     return {
     };
   }

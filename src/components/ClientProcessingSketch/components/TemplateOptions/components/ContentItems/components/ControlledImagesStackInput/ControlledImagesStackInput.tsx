@@ -30,7 +30,7 @@ import useTemplateAssets from "@/components/ClientProcessingSketch/components/Te
 import DropZoneButton from "@/components/DropZoneButton";
 import {
   resolveAssetURL
-} from "@/p5-sketches/shared/utils";
+} from "@/p5/shared/utils";
 import type {
   SketchOptionInput
 } from "@/types/sketch.types";

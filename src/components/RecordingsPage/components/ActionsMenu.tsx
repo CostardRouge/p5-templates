@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import HardLink from "@/components/HardLink";
-import fetchDownload from "@/components/utils/fetchDownload";
+import fetchDownload from "@/utils/fetchDownload";
 import DownloadMenuItems from "./DownloadMenuItems";
 import type {
   JobModel

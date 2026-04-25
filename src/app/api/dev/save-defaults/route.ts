@@ -1,22 +1,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  findSketchMeta, resolveSketchPath
+  findSketchMeta
 } from "@/engines/metadata";
 
-function getOptionsFilePath( sketchName: string ): string | null {
-  const meta = findSketchMeta( sketchName );
+function getOptionsFilePath( sketchName: string, engineId: string ): string | null {
+  const meta = findSketchMeta( sketchName, engineId );
 
   if ( !meta ) return null;
-
-  const sketchPath = resolveSketchPath( sketchName );
 
   return path.join(
     process.cwd(),
     "src",
-    "p5-sketches",
+    "templates",
+    engineId,
     "sketches",
-    sketchPath,
+    meta.sketchPath,
     "options.ts"
   );
 }
@@ -341,13 +340,14 @@ export async function POST( request: Request ) {
     typeof body !== "object" ||
     body === null ||
     typeof ( body as Record<string, unknown> ).sketch !== "string" ||
+    typeof ( body as Record<string, unknown> ).engineId !== "string" ||
     typeof ( body as Record<string, unknown> ).formValues !== "object" ||
     ( body as Record<string, unknown> ).formValues === null ||
     typeof ( body as Record<string, unknown> ).originalFormValues !== "object" ||
     ( body as Record<string, unknown> ).originalFormValues === null
   ) {
     return new Response(
-      "Missing required fields: sketch (string), formValues (object), originalFormValues (object)",
+      "Missing required fields: sketch (string), engineId (string), formValues (object), originalFormValues (object)",
       {
         status: 400,
       }
@@ -356,15 +356,17 @@ export async function POST( request: Request ) {
 
   const {
     sketch,
+    engineId,
     formValues,
     originalFormValues,
   } = body as {
     sketch: string;
+    engineId: string;
     formValues: Record<string, unknown>;
     originalFormValues: Record<string, unknown>;
   };
 
-  const optionsPath = getOptionsFilePath( sketch );
+  const optionsPath = getOptionsFilePath( sketch, engineId );
 
   if ( !optionsPath ) {
     return new Response(

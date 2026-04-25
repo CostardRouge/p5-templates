@@ -94,10 +94,11 @@ export class P5Engine implements SketchEngine {
     // Dynamic-import the sketch module – the import triggers the
     // global p5 bootstrap (`sketch.setup()` → engine init → canvas
     // creation) exactly as the current P5Sketch.tsx does.
-    const sketchPath = resolveSketchPath( templatePath );
+    const sketchPath = resolveSketchPath( templatePath, "p5" );
 
     await import(
-      `@/p5-sketches/sketches/${ sketchPath }/index.js`
+      /* webpackInclude: /index\.js$/ */
+      `@/p5/sketches/${ sketchPath }/index.js`
     ).catch( ( err ) => {
       this.emit(
         "error",

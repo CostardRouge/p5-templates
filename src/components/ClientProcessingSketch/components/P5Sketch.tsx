@@ -19,7 +19,7 @@ const importSketch = ( name: string ) => {
     "p5",
   );
 
-  return import( `@/p5-sketches/sketches/${ sketchPath }/index.js` );
+  return import( `@/p5/sketches/${ sketchPath }/index.js` );
 };
 
 export default function P5Sketch( {

@@ -21,7 +21,10 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/public/*": ["./public/*"],
-      "@/p5/*": ["./src/p5-sketches/*"]
+      "@/p5/*": ["./src/templates/p5/*"],
+      "@/gsap/*": ["./src/templates/gsap/*"],
+      "@/html/*": ["./src/templates/html/*"],
+      "@/threejs/*": ["./src/templates/threejs/*"],
     },
     "strictNullChecks": true
   },

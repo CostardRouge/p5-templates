@@ -2,14 +2,14 @@
 
 import { useEffect } from "react";
 
-export default function useSketchDevWatch( name: string, capturing = false ) {
+export default function useSketchDevWatch( name: string, engineId: string, capturing = false ) {
   useEffect(
     () => {
       if ( process.env.NODE_ENV !== "development" || capturing ) {
         return;
       }
 
-      const source = new EventSource( `/api/dev/sketch-watch?sketch=${ encodeURIComponent( name ) }` );
+      const source = new EventSource( `/api/dev/sketch-watch?sketch=${ encodeURIComponent( name ) }&engine=${ encodeURIComponent( engineId ) }` );
 
       source.onmessage = () => {
         window.location.reload();
@@ -24,7 +24,8 @@ export default function useSketchDevWatch( name: string, capturing = false ) {
       };
     },
     [
-      name
+      name,
+      engineId
     ]
   );
 }

@@ -1,10 +1,10 @@
 import {
   registerBlob
-} from "@/p5-sketches/shared/blobMap";
+} from "@/p5/shared/blobMap";
 
 import {
   getScopeAssetPath
-} from "@/p5-sketches/shared/utils";
+} from "@/p5/shared/utils";
 
 import {
   getSketchOptions,

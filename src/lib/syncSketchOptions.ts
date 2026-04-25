@@ -10,7 +10,7 @@
  */
 import {
   deepMerge, structuredClone
-} from "@/p5-sketches/shared/utils.js";
+} from "@/p5/shared/utils.js";
 
 export const EVENT = "sketch-options";
 

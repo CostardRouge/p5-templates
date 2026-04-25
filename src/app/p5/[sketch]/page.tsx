@@ -110,9 +110,9 @@ async function ProcessingSketch( {
   } );
   const {
     formValues, formConfiguration
-  } = await getSketchMeta( sketchName );
+  } = await getSketchMeta( sketchName, "p5" );
 
-  const jsonOptions = await getJSONSketchOptions( sketchName );
+  const jsonOptions = await getJSONSketchOptions( sketchName, "p5" );
 
   if ( jsonOptions ) {
     Object.assign(
@@ -223,6 +223,7 @@ async function ProcessingSketch( {
       />
       <SketchContextProvider
         name={sketchName}
+        engineId="p5"
         options={sketchOptions}
         persistedJob={persistedJob}
         sketchFormValues={formValues}

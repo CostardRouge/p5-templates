@@ -4,7 +4,7 @@ import {
 import {
   FileArchive, Video
 } from "lucide-react";
-import fetchDownload from "@/components/utils/fetchDownload";
+import fetchDownload from "@/utils/fetchDownload";
 import {
   formatFileSize
 } from "../utils/formatters";

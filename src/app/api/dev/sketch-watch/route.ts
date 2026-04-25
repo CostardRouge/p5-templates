@@ -4,13 +4,16 @@ import {
   resolveSketchPath
 } from "@/engines/metadata";
 
-function getSketchDir( sketchName: string ): string {
-  const sketchPath = resolveSketchPath( sketchName );
+function getSketchDir( sketchName: string, engineId: string ): string | null {
+  const sketchPath = resolveSketchPath( sketchName, engineId );
+
+  if ( !sketchPath ) return null;
 
   return path.join(
     process.cwd(),
     "src",
-    "p5-sketches",
+    "templates",
+    engineId,
     "sketches",
     sketchPath
   );
@@ -30,19 +33,20 @@ export async function GET( request: Request ) {
     searchParams
   } = new URL( request.url );
   const sketchName = searchParams.get( "sketch" );
+  const engineId = searchParams.get( "engine" );
 
-  if ( !sketchName ) {
+  if ( !sketchName || !engineId ) {
     return new Response(
-      "Missing sketch param",
+      "Missing sketch or engine param",
       {
         status: 400,
       }
     );
   }
 
-  const sketchDir = getSketchDir( sketchName );
+  const sketchDir = getSketchDir( sketchName, engineId );
 
-  if ( !fs.existsSync( sketchDir ) ) {
+  if ( !sketchDir || !fs.existsSync( sketchDir ) ) {
     return new Response(
       "Sketch not found",
       {

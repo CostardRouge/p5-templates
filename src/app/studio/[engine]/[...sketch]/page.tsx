@@ -2,7 +2,7 @@ import type {
   Metadata
 } from "next";
 import {
-  notFound
+  notFound, redirect
 } from "next/navigation";
 import React from "react";
 
@@ -11,6 +11,9 @@ import "@/engines/index"; // register all engines
 import {
   getEngine, hasEngine
 } from "@/engines/registry";
+import {
+  findSketchMeta
+} from "@/engines/metadata";
 import SketchContextProvider from "@/components/ClientProcessingSketch/components/SketchProvider/SketchContextProvider";
 import StudioSketchPage from "@/components/StudioSketchPage/StudioSketchPage";
 import {
@@ -127,6 +130,20 @@ export default async function StudioPage( {
   //      ["hello-world"]             → name = "hello-world"
   const sketchName = sketchSegments[ sketchSegments.length - 1 ];
 
+  /* ---- validate sketch exists in metadata ------------------------ */
+  const sketchMeta = findSketchMeta( sketchName, engineId );
+
+  if ( !sketchMeta ) {
+    return notFound();
+  }
+
+  /* ---- canonical URL redirect ----------------------------------- */
+  // If the sketch has a category but the URL is missing it,
+  // redirect to the canonical path: /studio/<engine>/<category>/<name>
+  if ( sketchMeta.category && sketchSegments.length === 1 ) {
+    redirect( `/studio/${ engineId }/${ sketchMeta.category }/${ sketchName }` );
+  }
+
   /* ---- load options & form meta (reuses existing p5 utils) ------- */
   const sketchOptions = OptionsSchema.parse( {
 
@@ -134,8 +151,9 @@ export default async function StudioPage( {
 
   const {
     formValues, formConfiguration
-  } = await getSketchMeta( sketchName );
-  const jsonOptions = await getJSONSketchOptions( sketchName );
+  } = await getSketchMeta( sketchName, engineId );
+
+  const jsonOptions = await getJSONSketchOptions( sketchName, engineId );
 
   if ( jsonOptions ) {
     Object.assign(
@@ -207,6 +225,7 @@ export default async function StudioPage( {
   return (
     <SketchContextProvider
       name={sketchName}
+      engineId={engineId}
       options={sketchOptions}
       persistedJob={persistedJob}
       sketchFormValues={formValues}

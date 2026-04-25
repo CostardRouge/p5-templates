@@ -1,7 +1,7 @@
 import {
   useCallback, useRef
 } from "react";
-import easing from "@/p5-sketches/utils/easing";
+import easing from "@/p5/utils/easing";
 import type {
   TransformState
 } from "./useTransformState";

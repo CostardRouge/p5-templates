@@ -115,7 +115,7 @@ export default function AnimationProgressionBar( {
 
       ( async() => {
         try {
-          const mod = await import( "@/p5-sketches/utils/animation.js" );
+          const mod = await import( "@/p5/utils/animation.js" );
           const animation = ( mod as any )?.default;
 
           if ( cancelled || !animation || typeof animation !== "object" ) {

@@ -29,11 +29,12 @@ const TemplateOptions = dynamic( () =>
 
 export default function ClientProcessingSketch() {
   const {
-    name, capturing, options, persistedJob
+    name, engineId, capturing, options, persistedJob
   } = useSketch();
 
   useSketchDevWatch(
     name,
+    engineId,
     capturing
   );
 

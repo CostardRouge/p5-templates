@@ -16,7 +16,7 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 
 export default function SaveDefaultsButton() {
   const {
-    name, sketchFormValues
+    name, sketchFormValues, engineId
   } = useSketch();
   const {
     getValues
@@ -54,6 +54,7 @@ export default function SaveDefaultsButton() {
           },
           body: JSON.stringify( {
             sketch: name,
+            engineId,
             formValues,
             originalFormValues: sketchFormValues ?? {},
           } ),

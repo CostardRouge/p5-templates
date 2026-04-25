@@ -22,7 +22,7 @@ import SlideEditor from "./SlideEditor";
 import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvider";
 import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
-import initOptions from "@/components/utils/initOptions";
+import initOptions from "@/utils/initOptions";
 
 type OptionsPanelProps = {
   methods: UseFormReturn<SketchOptionInput>;

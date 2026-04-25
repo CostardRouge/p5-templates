@@ -5,7 +5,7 @@ import {
   P5Engine
 } from "./P5Engine";
 import {
-  findSketchMeta, listTemplatesForEngine, resolveSketchPath,
+  findSketchMeta, listTemplatesForEngine,
 } from "@/engines/metadata";
 
 export const p5Registration: EngineRegistration = {
@@ -24,10 +24,7 @@ export const p5Registration: EngineRegistration = {
       throw new Error( `P5 template "${ sketchName }" not found in metadata.` );
     }
 
-    return resolveSketchPath(
-      sketchName,
-      "p5",
-    );
+    return meta.sketchPath;
   },
 
   listTemplates(): TemplateMetadata[] {

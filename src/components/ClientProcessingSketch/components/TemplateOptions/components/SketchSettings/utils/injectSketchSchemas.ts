@@ -3,7 +3,7 @@ import {
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import {
   WaveConfigSchema
-} from "@/p5-sketches/sketches/36days-of-type-2023/36days-of-type-2023-5/schemas";
+} from "@/p5/sketches/36days-of-type-2023/36days-of-type-2023-5/schemas";
 
 /**
  * Injects Zod schemas into sketch configurations on the client side.

@@ -9,7 +9,7 @@ import {
 import {
   Download, ExternalLink, FileVideo, X
 } from "lucide-react";
-import fetchDownload from "@/components/utils/fetchDownload";
+import fetchDownload from "@/utils/fetchDownload";
 
 interface VideoPreviewModalProps {
   jobId: string;
