@@ -8,9 +8,10 @@ async function getSketchList() {
     const meta = getMetadata();
 
     return meta.map( ( {
-      name, category, hasSketchForm
+      name, engine, category, hasSketchForm
     } ) => ( {
       name,
+      engine,
       category,
       hasSketchForm,
     } ) );

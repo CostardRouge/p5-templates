@@ -20,6 +20,9 @@ import {
   getJobById
 } from "@/lib/jobStore";
 import {
+  getBaseUrl, SITE_NAME
+} from "@/lib/seo";
+import {
   OptionsSchema
 } from "@/types/sketch.types";
 import getCaptureOptions from "@/utils/getCaptureOptions";
@@ -92,12 +95,69 @@ export async function generateMetadata( {
   params: Promise<RouteParams>;
 } ): Promise<Metadata> {
   const {
-    engine, sketch
+    engine: engineId, sketch
   } = await params;
   const sketchName = sketch[ sketch.length - 1 ];
+  const sketchMeta = findSketchMeta(
+    sketchName,
+    engineId
+  );
+  const baseUrl = getBaseUrl();
+
+  const title = sketchName
+    .split( "-" )
+    .map( ( w ) => w.charAt( 0 ).toUpperCase() + w.slice( 1 ) )
+    .join( " " );
+
+  const canonicalPath = sketchMeta?.category
+    ? `/studio/${ engineId }/${ sketchMeta.category }/${ sketchName }`
+    : `/studio/${ engineId }/${ sketchName }`;
+
+  const thumbnailUrl = sketchMeta?.hasThumbnail
+    ? `${ baseUrl }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.jpeg`
+    : undefined;
+
+  const description = `Create ${ title } content with ${ engineId }. A template for generating social media visuals.`;
 
   return {
-    title: `${ sketchName } — ${ engine } | Studio`,
+    title: `${ title } | ${ SITE_NAME }`,
+    description,
+    keywords: [
+      title,
+      engineId,
+      "social media template",
+      "video generator",
+      "creative coding",
+      ...sketchName.split( "-" ),
+    ],
+    alternates: {
+      canonical: canonicalPath,
+    },
+    ...( thumbnailUrl && {
+      openGraph: {
+        title: `${ title } | ${ SITE_NAME }`,
+        description,
+        url: `${ baseUrl }${ canonicalPath }`,
+        siteName: SITE_NAME,
+        images: [
+          {
+            url: thumbnailUrl,
+            width: 1200,
+            height: 630,
+            alt: `${ title } template preview`,
+          },
+        ],
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${ title } | ${ SITE_NAME }`,
+        description,
+        images: [
+          thumbnailUrl
+        ],
+      },
+    } ),
   };
 }
 
@@ -131,7 +191,10 @@ export default async function StudioPage( {
   const sketchName = sketchSegments[ sketchSegments.length - 1 ];
 
   /* ---- validate sketch exists in metadata ------------------------ */
-  const sketchMeta = findSketchMeta( sketchName, engineId );
+  const sketchMeta = findSketchMeta(
+    sketchName,
+    engineId
+  );
 
   if ( !sketchMeta ) {
     return notFound();
@@ -151,9 +214,15 @@ export default async function StudioPage( {
 
   const {
     formValues, formConfiguration
-  } = await getSketchMeta( sketchName, engineId );
+  } = await getSketchMeta(
+    sketchName,
+    engineId
+  );
 
-  const jsonOptions = await getJSONSketchOptions( sketchName, engineId );
+  const jsonOptions = await getJSONSketchOptions(
+    sketchName,
+    engineId
+  );
 
   if ( jsonOptions ) {
     Object.assign(
@@ -221,22 +290,52 @@ export default async function StudioPage( {
 
   sketchOptions.name = sketchName;
 
+  /* ---- JSON-LD structured data ----------------------------------- */
+  const pageTitle = sketchName
+    .split( "-" )
+    .map( ( w ) => w.charAt( 0 ).toUpperCase() + w.slice( 1 ) )
+    .join( " " );
+  const canonicalPath = sketchMeta.category
+    ? `/studio/${ engineId }/${ sketchMeta.category }/${ sketchName }`
+    : `/studio/${ engineId }/${ sketchName }`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: pageTitle,
+    applicationCategory: "DesignApplication",
+    operatingSystem: "Web",
+    description: `Create ${ pageTitle } content with ${ engineId }.`,
+    url: `${ getBaseUrl() }${ canonicalPath }`,
+    ...( sketchMeta.hasThumbnail && {
+      screenshot: `${ getBaseUrl() }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.jpeg`,
+    } ),
+  };
+
   /* ---- render ---------------------------------------------------- */
   return (
-    <SketchContextProvider
-      name={sketchName}
-      engineId={engineId}
-      options={sketchOptions}
-      persistedJob={persistedJob}
-      sketchFormValues={formValues}
-      sketchFormConfiguration={formConfiguration}
-      capturing={( await searchParams ).capturing === ""}
-      backendRecording={process.env.BACKEND_RECORDING === "true"}
-      activeSlideIndex={
-        sketchOptions.slides?.length > 0 ? 0 : undefined
-      }
-    >
-      <StudioSketchPage engineId={engineId} />
-    </SketchContextProvider>
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify( jsonLd )
+        }}
+      />
+      <SketchContextProvider
+        name={sketchName}
+        engineId={engineId}
+        options={sketchOptions}
+        persistedJob={persistedJob}
+        sketchFormValues={formValues}
+        sketchFormConfiguration={formConfiguration}
+        capturing={( await searchParams ).capturing === ""}
+        backendRecording={process.env.BACKEND_RECORDING === "true"}
+        activeSlideIndex={
+          sketchOptions.slides?.length > 0 ? 0 : undefined
+        }
+      >
+        <StudioSketchPage engineId={engineId} />
+      </SketchContextProvider>
+    </>
   );
 }

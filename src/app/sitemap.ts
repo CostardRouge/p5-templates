@@ -2,18 +2,26 @@ import type {
   MetadataRoute
 } from "next";
 import {
+  getMetadata
+} from "@/engines/metadata";
+import {
   getAllTemplates
 } from "@/lib/gsap/templateRegistry";
 import {
   getBaseUrl
 } from "@/lib/seo";
-import getSketchList from "@/utils/getSketchList";
+
+// HTML templates not yet in the unified registry — list here so the loop is
+// easy to extend without adding new hardcoded sitemap entries.
+const HTML_TEMPLATES = [
+  { name: "exif-detail" },
+] as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getBaseUrl();
   const now = new Date();
 
-  // Static pages
+  // Always-present pages
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: `${ baseUrl }/`,
@@ -27,42 +35,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.6,
     },
-    {
-      url: `${ baseUrl }/gsap`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${ baseUrl }/html/exif-detail`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
   ];
 
-  // Dynamic p5.js sketch pages
-  const sketches = ( await getSketchList() ) ?? [
-  ];
-  const sketchPages: MetadataRoute.Sitemap = sketches.map( ( sketch ) => ( {
-    url: `${ baseUrl }/p5/${ sketch.name }`,
-    lastModified: now,
+  // Studio pages — all engines, derived from unified metadata
+  const studioPages: MetadataRoute.Sitemap = getMetadata().map( ( m ) => ( {
+    url: `${ baseUrl }/studio/${ m.engine }/${ m.category ? `${ m.category }/` : "" }${ m.name }`,
+    lastModified: new Date( m.mtime ),
     changeFrequency: "monthly" as const,
     priority: 0.8,
   } ) );
 
-  // GSAP template pages
+  // GSAP — listing page (only when templates exist) + individual template pages
   const gsapTemplates = getAllTemplates();
-  const gsapPages: MetadataRoute.Sitemap = gsapTemplates.map( ( template ) => ( {
-    url: `${ baseUrl }/gsap/${ template.id }`,
+  const gsapPages: MetadataRoute.Sitemap = [
+    ...( gsapTemplates.length > 0
+      ? [
+          {
+            url: `${ baseUrl }/gsap`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.8,
+          },
+        ]
+      : [] ),
+    ...gsapTemplates.map( ( t ) => ( {
+      url: `${ baseUrl }/gsap/${ t.id }`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    } ) ),
+  ];
+
+  // HTML templates
+  const htmlPages: MetadataRoute.Sitemap = HTML_TEMPLATES.map( ( t ) => ( {
+    url: `${ baseUrl }/html/${ t.name }`,
     lastModified: now,
     changeFrequency: "monthly" as const,
-    priority: 0.8,
+    priority: 0.7,
   } ) );
 
   return [
     ...staticPages,
-    ...sketchPages,
-    ...gsapPages
+    ...studioPages,
+    ...gsapPages,
+    ...htmlPages,
   ];
 }

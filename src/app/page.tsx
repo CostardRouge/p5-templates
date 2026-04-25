@@ -42,10 +42,10 @@ export default async function TemplatesPage() {
 
   const p5sketchNames = p5sketches
     .map( ( {
-      name, category, hasSketchForm
+      name, engine, category, hasSketchForm
     } ) => ( {
       thumbnail: getP5SketchThumbnailURL( name ),
-      href: `/p5/${ name }`,
+      href: category ? `/studio/${ engine }/${ category }/${ name }` : `/studio/${ engine }/${ name }`,
       hasSketchForm,
       name,
       category,
