@@ -125,7 +125,7 @@ async function ProcessingSketch( {
     Object.assign(
       sketchOptions,
       {
-        sketch: formValues,
+        sketch: structuredClone( formValues ),
       }
     );
   }

@@ -166,7 +166,7 @@ export default async function StudioPage( {
     Object.assign(
       sketchOptions,
       {
-        sketch: formValues
+        sketch: structuredClone( formValues )
       }
     );
   }
