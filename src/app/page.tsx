@@ -1,11 +1,11 @@
 import type {
   Metadata
 } from "next";
-import { Suspense } from "react";
-import TemplatesList from "@/components/TemplatesList";
 import {
-  getAllTemplates
-} from "@/lib/gsap/templateRegistry";
+  Suspense
+} from "react";
+import TemplatesList from "@/components/TemplatesList";
+
 import {
   getBaseUrl, SITE_NAME
 } from "@/lib/seo";
@@ -52,27 +52,8 @@ export default async function TemplatesPage() {
     } ) )
     .reverse();
 
-  // Get GSAP templates
-  const gsapTemplates = getAllTemplates();
-  const gsapTemplatesList = gsapTemplates.map( ( template ) => ( {
-    thumbnail: template.thumbnail,
-    href: `/gsap/${ template.id }`,
-    hasSketchForm: false,
-    name: template.name,
-    category: template.category,
-  } ) );
-
   const templates: Record<string, TemplateCategory> = {
     p5: p5sketchNames,
-    gsap: gsapTemplatesList,
-    html: [
-      {
-        thumbnail: "assets/images/templates/html/exif-detail/thumbnail.jpg",
-        href: "/html/exif-detail",
-        hasSketchForm: false,
-        name: "exif-detail",
-      },
-    ],
   };
 
   return (
