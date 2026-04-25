@@ -7,270 +7,218 @@ import {
 import chokidar from "chokidar";
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
-const SKETCHES_DIR = path.join(
+const TEMPLATES_DIR = path.join(
   __dirname,
-  "../src/p5-sketches/sketches"
+  "../src/templates"
 );
 const META_OUTPUT = path.join(
-  SKETCHES_DIR,
+  TEMPLATES_DIR,
   "metadata.json"
 );
 
-/* ---- Unified output (engine-agnostic) ----------------------------- */
-const UNIFIED_SKETCHES_DIR = path.join(
-  __dirname,
-  "../src/sketches"
-);
-const UNIFIED_META_OUTPUT = path.join(
-  UNIFIED_SKETCHES_DIR,
-  "metadata.json"
-);
+/* ---- Scanning ---------------------------------------------------- */
 
-function generateMetadata() {
-  if ( !fs.existsSync( SKETCHES_DIR ) ) {
-    console.warn( `⚠️ Sketches directory not found: ${ SKETCHES_DIR }` );
-    return;
-  }
+/**
+ * Detect whether `dir` is a sketch (has index.js or index.ts).
+ */
+function isSketchDir( dir ) {
+  return (
+    fs.existsSync( path.join(
+      dir,
+      "index.js"
+    ) ) ||
+    fs.existsSync( path.join(
+      dir,
+      "index.ts"
+    ) )
+  );
+}
 
-  const entries = fs.readdirSync( SKETCHES_DIR );
-  const sketchMeta = [
+/**
+ * Build a metadata entry for a single sketch directory.
+ */
+function buildEntry(
+  sketchDir, name, engineId, category
+) {
+  const stats = fs.statSync( sketchDir );
+  const thumbnailPath = path.join(
+    __dirname,
+    `../public/assets/images/templates/${ engineId }/${ name }/thumbnail.jpeg`
+  );
+
+  return {
+    name,
+    engine: engineId,
+    category,
+    hasSketchForm: fs.existsSync( path.join(
+      sketchDir,
+      "options.ts"
+    ) ),
+    hasThumbnail: fs.existsSync( thumbnailPath ),
+    mtime: stats.mtime.toISOString(),
+    ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
+  };
+}
+
+/**
+ * List visible sub-directories of `dir` (skip _ and . prefixed).
+ */
+function listSubDirs( dir ) {
+  if ( !fs.existsSync( dir ) ) return [
   ];
 
-  for ( const name of entries ) {
-    if ( name.startsWith( "_" ) || name.startsWith( "." ) ) continue;
+  return fs.readdirSync( dir ).filter( ( name ) => {
+    if ( name.startsWith( "_" ) || name.startsWith( "." ) ) return false;
 
+    try {
+      return fs.statSync( path.join(
+        dir,
+        name
+      ) ).isDirectory();
+    } catch {
+      return false;
+    }
+  } );
+}
+
+/**
+ * Scan a single engine's `sketches/` directory.
+ * Supports two nesting levels:
+ *   sketches/<sketch>/index.js          → root-level sketch (no category)
+ *   sketches/<category>/<sketch>/index.js → categorised sketch
+ */
+function scanEngine( engineId ) {
+  const sketchesDir = path.join(
+    TEMPLATES_DIR,
+    engineId,
+    "sketches"
+  );
+  const results = [
+  ];
+
+  for ( const name of listSubDirs( sketchesDir ) ) {
     const fullPath = path.join(
-      SKETCHES_DIR,
+      sketchesDir,
       name
     );
 
-    let isDir = false;
-
-    try {
-      isDir = fs.statSync( fullPath ).isDirectory();
-    } catch {
-      continue;
-    }
-
-    if ( !isDir ) continue;
-
-    // Check if this is a sketch folder (has index.js)
-    const indexPath = path.join(
-      fullPath,
-      "index.js"
-    );
-    const hasIndex = fs.existsSync( indexPath );
-
-    if ( hasIndex ) {
-      // This is a sketch folder at root level
-      const optionsTypescriptFilePath = path.join(
+    if ( isSketchDir( fullPath ) ) {
+      results.push( buildEntry(
         fullPath,
-        "options.ts"
-      );
-      const stats = fs.statSync( fullPath );
-      const thumbnailPath = path.join(
-        __dirname,
-        `../public/assets/images/templates/p5/${ name }/thumbnail.jpeg`
-      );
-
-      sketchMeta.push( {
         name,
-        engine: "p5",
-        category: null,
-        hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
-        hasThumbnail: fs.existsSync( thumbnailPath ),
-        mtime: stats.mtime.toISOString(),
-        ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
-      } );
+        engineId,
+        null
+      ) );
     } else {
-      // This might be a category folder, check for nested sketches
-      const nestedEntries = fs.readdirSync( fullPath );
-
-      for ( const nestedName of nestedEntries ) {
-        if ( nestedName.startsWith( "_" ) || nestedName.startsWith( "." ) ) continue;
-
+      // Treat as category folder
+      for ( const nested of listSubDirs( fullPath ) ) {
         const nestedPath = path.join(
           fullPath,
-          nestedName
+          nested
         );
 
-        let isNestedDir = false;
-
-        try {
-          isNestedDir = fs.statSync( nestedPath ).isDirectory();
-        } catch {
-          continue;
-        }
-
-        if ( !isNestedDir ) continue;
-
-        const nestedIndexPath = path.join(
-          nestedPath,
-          "index.js"
-        );
-
-        if ( fs.existsSync( nestedIndexPath ) ) {
-          // This is a sketch inside a category folder
-          const optionsTypescriptFilePath = path.join(
+        if ( isSketchDir( nestedPath ) ) {
+          results.push( buildEntry(
             nestedPath,
-            "options.ts"
-          );
-          const stats = fs.statSync( nestedPath );
-          const thumbnailPath = path.join(
-            __dirname,
-            `../public/assets/images/templates/p5/${ nestedName }/thumbnail.jpeg`
-          );
-
-          sketchMeta.push( {
-            name: nestedName,
-            engine: "p5",
-            category: name,
-            hasSketchForm: fs.existsSync( optionsTypescriptFilePath ),
-            hasThumbnail: fs.existsSync( thumbnailPath ),
-            mtime: stats.mtime.toISOString(),
-            ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
-          } );
+            nested,
+            engineId,
+            name
+          ) );
         }
       }
     }
   }
 
-  sketchMeta.sort( (
-    a, b
-  ) => new Date( a.mtime ).getTime() - new Date( b.mtime ).getTime() );
+  return results;
+}
 
-  /* ---- Also scan src/sketches/<engine>/ directories --------------- */
-  if ( fs.existsSync( UNIFIED_SKETCHES_DIR ) ) {
-    const engineDirs = fs.readdirSync( UNIFIED_SKETCHES_DIR ).filter( ( d ) => {
-      if ( d.startsWith( "." ) || d === "metadata.json" ) return false;
-      try { return fs.statSync( path.join( UNIFIED_SKETCHES_DIR, d ) ).isDirectory(); }
-      catch { return false; }
-    } );
+/**
+ * Discover all engine directories under src/templates/ and scan each.
+ */
+function generateMetadata() {
+  const engineIds = listSubDirs( TEMPLATES_DIR );
+  const allMeta = [
+  ];
 
-    for ( const engineId of engineDirs ) {
-      const engineDir = path.join( UNIFIED_SKETCHES_DIR, engineId );
-      scanEngineDir( engineDir, engineId, sketchMeta );
-    }
+  for ( const engineId of engineIds ) {
+    const sketchesDir = path.join(
+      TEMPLATES_DIR,
+      engineId,
+      "sketches"
+    );
+
+    if ( !fs.existsSync( sketchesDir ) ) continue;
+
+    allMeta.push( ...scanEngine( engineId ) );
   }
 
-  const newContent = JSON.stringify(
-    sketchMeta,
+  allMeta.sort( (
+    a, b
+  ) =>
+    new Date( a.mtime ).getTime() - new Date( b.mtime ).getTime() );
+
+  const content = JSON.stringify(
+    allMeta,
     null,
     2
   );
 
-  // Write legacy p5-only file (backward compat)
-  writeIfChanged( META_OUTPUT, newContent, "p5 metadata.json" );
-
-  // Write unified file
-  writeIfChanged( UNIFIED_META_OUTPUT, newContent, "unified metadata.json" );
+  writeIfChanged(
+    META_OUTPUT,
+    content
+  );
 }
 
-/**
- * Scan a `src/sketches/<engine>/` directory for sketches.
- * Same structure as p5: root-level sketch dirs or category/sketch nesting.
- */
-function scanEngineDir( engineDir, engineId, target ) {
-  const entries = fs.readdirSync( engineDir );
-
-  for ( const name of entries ) {
-    if ( name.startsWith( "_" ) || name.startsWith( "." ) ) continue;
-
-    const fullPath = path.join( engineDir, name );
-    let isDir = false;
-
-    try { isDir = fs.statSync( fullPath ).isDirectory(); }
-    catch { continue; }
-
-    if ( !isDir ) continue;
-
-    const indexPath = path.join( fullPath, "index.js" );
-    const indexTsPath = path.join( fullPath, "index.ts" );
-
-    if ( fs.existsSync( indexPath ) || fs.existsSync( indexTsPath ) ) {
-      const optionsTs = path.join( fullPath, "options.ts" );
-      const stats = fs.statSync( fullPath );
-      const thumbnailPath = path.join(
-        __dirname,
-        `../public/assets/images/templates/${ engineId }/${ name }/thumbnail.jpeg`
-      );
-
-      target.push( {
-        name,
-        engine: engineId,
-        category: null,
-        hasSketchForm: fs.existsSync( optionsTs ),
-        hasThumbnail: fs.existsSync( thumbnailPath ),
-        mtime: stats.mtime.toISOString(),
-        ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
-      } );
-    } else {
-      // category folder
-      const nestedEntries = fs.readdirSync( fullPath );
-
-      for ( const nestedName of nestedEntries ) {
-        if ( nestedName.startsWith( "_" ) || nestedName.startsWith( "." ) ) continue;
-        const nestedPath = path.join( fullPath, nestedName );
-        let isNestedDir = false;
-
-        try { isNestedDir = fs.statSync( nestedPath ).isDirectory(); }
-        catch { continue; }
-
-        if ( !isNestedDir ) continue;
-
-        const nestedIndex = path.join( nestedPath, "index.js" );
-        const nestedIndexTs = path.join( nestedPath, "index.ts" );
-
-        if ( fs.existsSync( nestedIndex ) || fs.existsSync( nestedIndexTs ) ) {
-          const optionsTs = path.join( nestedPath, "options.ts" );
-          const stats = fs.statSync( nestedPath );
-          const thumbnailPath = path.join(
-            __dirname,
-            `../public/assets/images/templates/${ engineId }/${ nestedName }/thumbnail.jpeg`
-          );
-
-          target.push( {
-            name: nestedName,
-            engine: engineId,
-            category: name,
-            hasSketchForm: fs.existsSync( optionsTs ),
-            hasThumbnail: fs.existsSync( thumbnailPath ),
-            mtime: stats.mtime.toISOString(),
-            ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
-          } );
-        }
-      }
-    }
-  }
-}
-
-function writeIfChanged( filePath, content, label ) {
-  const oldContent = fs.existsSync( filePath )
-    ? fs.readFileSync( filePath, "utf-8" )
+function writeIfChanged(
+  filePath, content
+) {
+  const existing = fs.existsSync( filePath )
+    ? fs.readFileSync(
+      filePath,
+      "utf-8"
+    )
     : "";
 
-  if ( oldContent !== content ) {
-    fs.writeFileSync( filePath, content, "utf-8" );
-    console.log( `✅  Updated ${ label } (${ JSON.parse( content ).length } sketches)` );
-  } else {
-    console.log( `✅  ${ label } is up to date (${ JSON.parse( content ).length } sketches)` );
+  if ( existing !== content ) {
+    fs.writeFileSync(
+      filePath,
+      content,
+      "utf-8"
+    );
+    console.log( `✅  Updated metadata.json (${ JSON.parse( content ).length } templates)` );
   }
 }
+
+/* ---- Run --------------------------------------------------------- */
 
 generateMetadata();
 
 if ( process.env.NODE_ENV !== "production" ) {
-  console.log( `👀 Watching sketches directory: ${ SKETCHES_DIR }` );
+  // Watch every engine's sketches/ directory
+  const watchPaths = listSubDirs( TEMPLATES_DIR )
+    .map( ( id ) => path.join(
+      TEMPLATES_DIR,
+      id,
+      "sketches"
+    ) )
+    .filter( ( dir ) => fs.existsSync( dir ) );
+
+  if ( watchPaths.length === 0 ) {
+    console.log( "⚠️  No engine sketches directories found to watch" );
+    process.exit( 0 );
+  }
+
+  console.log( `👀 Watching ${ watchPaths.length } engine(s): ${ watchPaths.map( ( p ) => path.basename( path.dirname( p ) ) ).join( ", " ) }` );
 
   const watcher = chokidar.watch(
-    SKETCHES_DIR,
+    watchPaths,
     {
       persistent: true,
       ignoreInitial: true,
-      depth: 1,
+      depth: 2,
       awaitWriteFinish: {
         stabilityThreshold: 500,
-        pollInterval: 100,
+        pollInterval: 100
       },
     }
   );
@@ -282,7 +230,7 @@ if ( process.env.NODE_ENV !== "production" ) {
         const name = path.basename( dirPath );
 
         if ( !name.startsWith( "_" ) ) {
-          console.log( `📁 New sketch detected: ${ name }` );
+          console.log( `📁 New template detected: ${ name }` );
           generateMetadata();
         }
       }
@@ -290,7 +238,7 @@ if ( process.env.NODE_ENV !== "production" ) {
     .on(
       "unlinkDir",
       ( dirPath ) => {
-        console.log( `🗑️  Sketch removed: ${ path.basename( dirPath ) }` );
+        console.log( `🗑️  Template removed: ${ path.basename( dirPath ) }` );
         generateMetadata();
       }
     );

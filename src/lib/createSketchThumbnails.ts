@@ -34,14 +34,14 @@ async function createSketchThumbnails() {
   };
 
   try {
-    const p5sketches = ( await getSketchList() ) ?? [
-    ];
+    const sketches = ( await getSketchList() ) ?? [];
 
-    const p5sketchNames = p5sketches.map( ( {
-      name
+    const templates = sketches.map( ( {
+      name, engine, category,
     } ) => ( {
-      href: `p5/${ name }`,
+      href: category ? `studio/${ engine }/${ category }/${ name }` : `studio/${ engine }/${ name }`,
       name,
+      engine,
     } ) );
 
     const {
@@ -55,9 +55,9 @@ async function createSketchThumbnails() {
     recordingState.page = await createPage();
 
     for ( const {
-      href, name
-    } of p5sketchNames ) {
-      const thumbnailPath = `${ ASSETS_DIRECTORY }/images/templates/p5/${ name }/thumbnail.jpeg`;
+      href, name, engine
+    } of templates ) {
+      const thumbnailPath = `${ ASSETS_DIRECTORY }/images/templates/${ engine }/${ name }/thumbnail.jpeg`;
 
       if ( await exists( thumbnailPath ) ) {
         console.log( `✅ ${ name }/thumbnail.jpeg already exists!` );
@@ -89,7 +89,7 @@ async function createSketchThumbnails() {
       // Mark hasThumbnail: true in metadata.json
       const metadataPath = path.join(
         process.cwd(),
-        "src/p5-sketches/sketches/metadata.json"
+        "src/templates/metadata.json"
       );
       const raw = await fs.readFile(
         metadataPath,
