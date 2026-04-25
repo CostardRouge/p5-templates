@@ -1,5 +1,6 @@
 import {
-  ChevronDown
+  ChevronDown,
+  RotateCcw,
 } from "lucide-react";
 import {
   get, useFormContext, useWatch
@@ -38,8 +39,10 @@ export default function FieldRenderer( {
   const {
     register,
     setValue,
+    resetField,
     formState: {
-      errors
+      errors,
+      defaultValues,
     },
     control,
   } = useFormContext();
@@ -53,11 +56,20 @@ export default function FieldRenderer( {
     registeredName
   );
 
-  // Watch slider value for display
-  const sliderValue = useWatch( {
+  // Watch current value for display (slider) and modified detection
+  const currentValue = useWatch( {
     control,
     name: registeredName,
   } );
+
+  const defaultValue = get( defaultValues ?? {}, registeredName );
+  const isModified =
+    JSON.stringify( currentValue ) !== JSON.stringify( defaultValue );
+
+  const handleReset = ( e: React.MouseEvent ) => {
+    e.preventDefault();
+    resetField( registeredName );
+  };
 
   const renderInput = () => {
     const commonInputProps = {
@@ -114,7 +126,7 @@ export default function FieldRenderer( {
             <input
               type="number"
               className="text-xs font-mono bg-theme/20 px-1 py-0.5 rounded w-14 text-center border border-theme/30 focus:outline-none focus:ring-1 focus:ring-theme"
-              value={sliderValue != null ? Number( sliderValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 )}
+              value={currentValue != null ? Number( currentValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 )}
               step={config.step}
               min={config.min}
               max={config.max}
@@ -269,8 +281,28 @@ export default function FieldRenderer( {
         config.component !== "hidden" &&
         config.label &&
         !hideLabel && (
-        <label htmlFor={registeredName} className="text-gray-400 select-none">
+        <label
+          htmlFor={registeredName}
+          className={`select-none ${
+            isModified
+              ? "font-medium cursor-pointer"
+              : "text-gray-400"
+          }`}
+          onDoubleClick={isModified ? handleReset : undefined}
+          title={isModified ? "Double-click to reset" : undefined}
+        >
           {config.label}
+          {isModified && (
+            <button
+              type="button"
+              onClick={handleReset}
+              tabIndex={-1}
+              title="Reset to saved value"
+              className="ml-1 inline-flex md:hidden items-center opacity-60 hover:opacity-100 align-middle"
+            >
+              <RotateCcw className="w-2.5 h-2.5" />
+            </button>
+          )}
         </label>
       )}
 
