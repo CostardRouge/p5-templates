@@ -432,15 +432,6 @@
     "ctime": "2026-04-24T16:01:11.213Z"
   },
   {
-    "name": "photo-grid-with-photo-switch-overlay",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "mtime": "2026-04-25T18:50:36.804Z",
-    "ctime": "2026-04-24T16:01:11.224Z"
-  },
-  {
     "name": "photo-stack",
     "engine": "p5",
     "category": "photo",
@@ -477,12 +468,21 @@
     "ctime": "2026-04-24T16:01:11.229Z"
   },
   {
+    "name": "photo-grid-with-photo-switch-overlay",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "mtime": "2026-04-26T07:22:35.749Z",
+    "ctime": "2026-04-24T16:01:11.224Z"
+  },
+  {
     "name": "peaks-sphere",
     "engine": "p5",
     "category": "peaks",
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "mtime": "2026-04-25T20:27:14.924Z",
+    "mtime": "2026-04-26T08:11:17.075Z",
     "ctime": "2026-04-25T20:27:14.923Z"
   }
 ]

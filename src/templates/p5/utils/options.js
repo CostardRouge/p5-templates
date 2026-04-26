@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Imports + shared store                                            */
+/*  Imports                                                           */
 /* ------------------------------------------------------------------ */
 
 import events from "./events.js";
@@ -16,13 +16,9 @@ import {
 } from "../shared/utils.js";
 
 /* ------------------------------------------------------------------ */
-/*  Local mutable copy (initialised once)                             */
-/* ------------------------------------------------------------------ */
-const sketchOptions = getSketchOptions();
-
-/* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
 /* ------------------------------------------------------------------ */
+
 let refreshTimer = -1;
 
 function refreshAssets() {
@@ -38,9 +34,10 @@ function refreshAssets() {
 }
 
 async function _refreshAssets() {
-  const globalImages = sketchOptions.assets?.images ?? [
+  const opts = getSketchOptions();
+  const globalImages = opts.assets?.images ?? [
   ];
-  const slideImages = ( sketchOptions.slides ?? [
+  const slideImages = ( opts.slides ?? [
   ] ).flatMap( ( slide ) => slide?.assets?.images ?? [
   ] );
 
@@ -74,7 +71,7 @@ async function _refreshAssets() {
     if ( !obj ) {
       const url = resolveAssetURL(
         path,
-        sketchOptions.id
+        opts.id
       );
 
       obj = {
@@ -121,13 +118,9 @@ async function readExifInfo(
     let tags;
 
     try {
-      if ( url.startsWith( "blob:" ) ) {
-        const buffer = await ( await fetch( url ) ).arrayBuffer();
-
-        tags = await exif.load( buffer );
-      } else {
-        tags = await exif.load( url );
-      }
+      tags = url.startsWith( "blob:" )
+        ? await exif.load( await ( await fetch( url ) ).arrayBuffer() )
+        : await exif.load( url );
     } catch ( error ) {
       console.error(
         "readExifInfo error",
@@ -148,8 +141,9 @@ async function readExifInfo(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Canvas “loaded” indicator once a single EXIF result returns       */
+/*  Canvas "loaded" indicator once EXIF results return               */
 /* ------------------------------------------------------------------ */
+
 function markLoadedWhenExifReady() {
   const c = document.querySelector( "canvas#defaultCanvas0" );
 
@@ -161,6 +155,7 @@ function markLoadedWhenExifReady() {
 /* ------------------------------------------------------------------ */
 /*  Event hooks                                                       */
 /* ------------------------------------------------------------------ */
+
 events.register(
   "engine-window-preload",
   refreshAssets
@@ -173,67 +168,63 @@ events.register(
 events.register(
   "pre-setup",
   () => {
-  /* listen for React-side option mutations ----------------------- */
-    subscribeSketchOptions( (
-      newOptions, origin
-    ) => {
-      if (
-        JSON.stringify( newOptions.size ) !== JSON.stringify( sketchOptions.size )
-      ) {
+    subscribeSketchOptions( ( newOptions ) => {
+      const current = getSketchOptions();
+
+      if ( JSON.stringify( newOptions.size ) !== JSON.stringify( current.size ) ) {
         events.handle(
           "engine-resize-canvas",
           newOptions?.size?.width,
           newOptions?.size?.height
         );
-
         sketch.sketchOptions.size = newOptions?.size;
       }
 
-      if (
-        JSON.stringify( newOptions.animation ) !==
-      JSON.stringify( sketchOptions.animation )
-      ) {
+      if ( JSON.stringify( newOptions.animation ) !== JSON.stringify( current.animation ) ) {
         events.handle(
           "engine-framerate-change",
           newOptions?.animation?.framerate
         );
-
         sketch.sketchOptions.animation = newOptions?.animation;
       }
-
-      Object.assign(
-        sketchOptions,
-        newOptions
-      );
 
       refreshAssets();
     } );
 
     setSketchOptions(
-      sketchOptions,
+      getSketchOptions(),
       sketch.sketchOptions?.engine
     );
   }
 );
 
 /* ------------------------------------------------------------------ */
-/*  Proxy to support sketch settings from current slide              */
+/*  Proxy — always reads from the live store on every access.         */
+/*                                                                    */
+/*  .sketch  returns base sketch options merged with per-slide        */
+/*           overrides via window.getSketchSettings when registered.  */
+/*           Falls back to the raw store value for simple sketches.   */
 /* ------------------------------------------------------------------ */
+
 const optionsProxy = new Proxy(
-  sketchOptions,
+  {
+  },
   {
     get(
-      target, prop
+      _, prop
     ) {
-    // If accessing 'sketch' property and slides exist, merge with current slide
-      if (
-        prop === "sketch" &&
-      typeof window !== "undefined" &&
-      window.getSketchSettings
-      ) {
-        return window.getSketchSettings( target );
+      const live = getSketchOptions();
+
+      if ( prop === "sketch" && typeof window !== "undefined" && window.getSketchSettings ) {
+        try {
+          return window.getSketchSettings( live );
+        } catch {
+          return live[ prop ] ?? {
+          };
+        }
       }
-      return target[ prop ];
+
+      return live[ prop ];
     },
   }
 );
