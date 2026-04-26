@@ -105,9 +105,11 @@ export default function TemplateOptions( {
     name: "id",
   } ) as string | undefined;
 
-  const {
-    backendRecording, sketchFormValues
-  } = useSketch();
+  const [
+    {
+      backendRecording, sketchFormValues
+    }
+  ] = useSketch();
 
   // Thumbnail management (only when enabled)
   const {
@@ -171,10 +173,16 @@ export default function TemplateOptions( {
           clearTimeout( debounceTimerRef.current );
         }
 
-        debounceTimerRef.current = setTimeout( () => {
-          debounceTimerRef.current = null;
-          void captureCurrentSlide( slideId, activeSlideIndex );
-        }, 1000 );
+        debounceTimerRef.current = setTimeout(
+          () => {
+            debounceTimerRef.current = null;
+            void captureCurrentSlide(
+              slideId,
+              activeSlideIndex
+            );
+          },
+          1000
+        );
       } );
 
       return () => {
@@ -227,6 +235,7 @@ export default function TemplateOptions( {
       slideFields,
       thumbnails,
       captureCurrentSlide,
+      pendingThumbnailCaptureRef
     ]
   );
 

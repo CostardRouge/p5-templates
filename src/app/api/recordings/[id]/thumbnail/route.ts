@@ -7,7 +7,7 @@ import {
 import {
   getJobById
 } from "@/lib/jobStore";
-import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
+import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 
 /**
  * GET /api/recordings/[id]/thumbnail
@@ -79,10 +79,9 @@ export async function GET(
     }
 
     // Fall back to sketch template thumbnail
-    const templateThumbnailUrl = getP5SketchThumbnailURL( job.template.replace(
-      "p5",
-      ""
-    ) );
+    const [ templateEngine, ...templateNameParts ] = job.template.split( "/" );
+    const templateName = templateNameParts.join( "/" );
+    const templateThumbnailUrl = getSketchThumbnailURL( templateEngine, templateName );
 
     // Convert relative URL to absolute URL for redirect
     const absoluteUrl = new URL(

@@ -15,9 +15,9 @@ import useSketch from "@/components/ClientProcessingSketch/components/SketchProv
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 export default function SaveDefaultsButton() {
-  const {
-    name, sketchFormValues, engineId
-  } = useSketch();
+  const [
+    { name, sketchFormValues, engineId }
+  ] = useSketch();
   const {
     getValues, reset, formState: { defaultValues }
   } = useFormContext();

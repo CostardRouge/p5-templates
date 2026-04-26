@@ -67,5 +67,8 @@ export function resolveSketchPath(
   name: string,
   engineId: string,
 ): string | undefined {
-  return findSketchMeta( name, engineId )?.sketchPath;
+  return findSketchMeta(
+    name,
+    engineId
+  )?.sketchPath;
 }

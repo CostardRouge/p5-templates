@@ -3,19 +3,12 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type React from "react";
-import {
-  useCallback, useEffect, useState
-} from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
 import {
   EngineControls
 } from "@/components/TemplateSketchPage/EngineControls";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
-import {
-  setSketchOptions,
-  subscribeSketchOptions,
-} from "@/lib/syncSketchOptions";
 import type {
   SketchOption
 } from "@/types/sketch.types";
@@ -27,79 +20,21 @@ import {
 const TemplateOptions = dynamic( () =>
   import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ), );
 
-type Props = {
-  engineId: string;
-};
-
-export default function TemplateSketchPage( {
-  engineId
-}: Props ) {
-  const {
-    name, capturing, options, persistedJob
-  } = useSketch();
+export default function TemplateSketchPage() {
+  const [
+    {
+      name, capturing, options, persistedJob, engineId, sketchLoaded, activeSlideIndex
+    },
+    dispatch
+  ] = useSketch();
 
   const {
     thumbnailUrl
   } = useSketchThumbnail( {
     name,
-    persistedJob
+    persistedJob,
+    engine: engineId,
   } );
-
-  const [
-    currentOptions,
-    setCurrentOptions
-  ] = useState<SketchOption>( options );
-  const [
-    sketchLoaded,
-    setSketchLoaded
-  ] = useState( false );
-
-  /* ---- sync options ---------------------------------------------- */
-
-  useEffect(
-    () => {
-      setSketchOptions(
-        currentOptions,
-        "react"
-      );
-    },
-    [
-      currentOptions
-    ]
-  );
-
-  useEffect(
-    () => {
-      setCurrentOptions( options );
-    },
-    [
-      options
-    ]
-  );
-
-  useEffect(
-    () =>
-      subscribeSketchOptions( ( updatedOptions: any ) => {
-        setCurrentOptions( updatedOptions );
-      } ),
-    [
-    ],
-  );
-
-  /* ---- slide management ------------------------------------------ */
-
-  const [
-    activeSlideIndex,
-    setActiveSlideIndex
-  ] = useState<
-    number | undefined
-  >( undefined );
-
-  const handleActiveSlideChange = useCallback(
-    ( index: number | undefined ) => setActiveSlideIndex( index ),
-    [
-    ],
-  );
 
   return (
     <>
@@ -131,7 +66,7 @@ export default function TemplateSketchPage( {
         <ScalableViewport
           disable={capturing}
           showZoomControls={!capturing && sketchLoaded}
-          resolutionKey={`${ currentOptions.size.width }x${ currentOptions.size.height }`}
+          resolutionKey={`${ options.size.width }x${ options.size.height }`}
           isReady={sketchLoaded}
         >
           {sketchLoaded && !capturing && (
@@ -156,22 +91,15 @@ export default function TemplateSketchPage( {
                 </Link>
 
                 <span>
-                  {activeSlideIndex !== undefined &&
-                    ` · slide ${ activeSlideIndex + 1 }`}
+                  {activeSlideIndex !== undefined && ` · slide ${ activeSlideIndex + 1 }`}
                 </span>
               </p>
 
-              <p id="p5-sketch-fps-counter" />
+              <p id="sketch-fps-counter" />
             </div>
           )}
 
-          <EngineSketchRenderer
-            engineId={engineId}
-            templateName={name}
-            options={currentOptions}
-            capturing={capturing}
-            onLoaded={() => setSketchLoaded( true )}
-          />
+          <EngineSketchRenderer />
 
           {sketchLoaded && !capturing && (
             <div
@@ -193,21 +121,29 @@ export default function TemplateSketchPage( {
       </div>
 
       {/* Controls & options panel */}
-      {sketchLoaded && !capturing && (
+      { sketchLoaded && !capturing && (
         <>
-          <EngineControls name={name} engineId={engineId} />
+          <EngineControls />
 
           <TemplateOptions
             name={name}
-            options={currentOptions}
+            options={options}
             persistedJob={persistedJob}
             onOptionsChange={( updatedOptions ) =>
-              setCurrentOptions( updatedOptions as SketchOption )
+              dispatch( {
+                type: "SET_OPTIONS",
+                payload: updatedOptions as SketchOption
+              } )
             }
-            onActiveSlideChange={handleActiveSlideChange}
+            onActiveSlideChange={( index ) =>
+              dispatch( {
+                type: "SET_ACTIVE_SLIDE",
+                payload: index
+              } )
+            }
           />
         </>
-      )}
+      ) }
     </>
   );
 }

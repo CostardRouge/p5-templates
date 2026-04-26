@@ -27,9 +27,9 @@ export default function SketchSettings( {
   basePath,
   activeSlideIndex,
 }: SketchSettingsProps ) {
-  const {
-    sketchFormConfiguration, sketchFormValues, name
-  } = useSketch();
+  const [
+    { sketchFormConfiguration, sketchFormValues, name }
+  ] = useSketch();
 
   // Inject schemas on the client side
   const configWithSchemas = useMemo(

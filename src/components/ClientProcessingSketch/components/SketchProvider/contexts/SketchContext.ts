@@ -3,9 +3,9 @@ import {
 } from "react";
 
 import type {
-  SketchContextType
+  SketchState, SketchAction
 } from "../types/SketchContextType";
 
-const SketchContext = createContext<SketchContextType | null>( null );
+const SketchContext = createContext<[SketchState, React.Dispatch<SketchAction>] | null>( null );
 
 export default SketchContext;

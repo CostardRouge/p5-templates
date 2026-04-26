@@ -156,9 +156,9 @@ export async function generateMetadata( {
         description,
         images: [
           thumbnailUrl
-        ],
-      },
-    } ),
+        ]
+      }
+    } )
   };
 }
 
@@ -174,8 +174,8 @@ export default async function StudioPage( {
 }: {
   params: Promise<RouteParams>;
   searchParams: Promise<{
- id?: string; capturing?: string
-}>;
+    id?: string; capturing?: string
+  }>;
 } ) {
   const {
     engine: engineId, sketch: sketchSegments
@@ -198,7 +198,7 @@ export default async function StudioPage( {
   );
 
   if ( !sketchMeta ) {
-    return notFound();
+    return notFound( );
   }
 
   /* ---- canonical URL redirect ----------------------------------- */
@@ -209,9 +209,7 @@ export default async function StudioPage( {
   }
 
   /* ---- load options & form meta (reuses existing p5 utils) ------- */
-  const sketchOptions = OptionsSchema.parse( {
-
-  } );
+  const sketchOptions = OptionsSchema.parse( {} );
 
   const {
     formValues, formConfiguration
@@ -268,7 +266,7 @@ export default async function StudioPage( {
       ]
     };
 
-    const testImageFileNames = await listDirectory( "public/assets/images/test", );
+    const testImageFileNames = await listDirectory( "public/assets/images/test" );
 
     const testImagePaths = testImageFileNames
       .filter( ( f ) => acceptedImageTypes.includes( f.split( "." )[ 1 ] ) )
@@ -277,10 +275,8 @@ export default async function StudioPage( {
     sketchOptions.assets.images = testImagePaths;
 
     if ( formConfiguration ) {
-      sketchOptions.sketch =
-        ( sketchOptions.sketch as Record<string, unknown> ) ?? {
+      sketchOptions.sketch = ( sketchOptions.sketch as Record<string, unknown> ) ?? {};
 
-        };
       injectTestImagesIntoSketchFields(
         sketchOptions.sketch as Record<string, unknown>,
         formConfiguration,
@@ -300,12 +296,13 @@ export default async function StudioPage( {
         category={sketchMeta.category}
         hasThumbnail={sketchMeta.hasThumbnail}
       />
+
       <SketchContextProvider
         name={sketchName}
         engineId={engineId}
         options={sketchOptions}
         persistedJob={persistedJob}
-        sketchFormValues={formValues}
+        sketchFormValues={formValues} 
         sketchFormConfiguration={formConfiguration}
         capturing={( await searchParams ).capturing === ""}
         backendRecording={process.env.BACKEND_RECORDING === "true"}
@@ -313,7 +310,7 @@ export default async function StudioPage( {
           sketchOptions.slides?.length > 0 ? 0 : undefined
         }
       >
-        <TemplateSketchPage engineId={engineId} />
+        <TemplateSketchPage />
       </SketchContextProvider>
     </>
   );
