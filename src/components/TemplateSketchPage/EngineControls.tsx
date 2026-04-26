@@ -1,10 +1,16 @@
 "use client";
 
 import React from "react";
-import { Camera, Github, Pause, Play } from "lucide-react";
+import {
+  Camera, Github, Pause, Play
+} from "lucide-react";
 import Link from "next/link";
-import { useEngine } from "./EngineContext";
-import { resolveSketchPath } from "@/engines/metadata";
+import {
+  useEngine
+} from "./EngineContext";
+import {
+  resolveSketchPath
+} from "@/engines/metadata";
 
 type Props = {
   name: string;
@@ -17,12 +23,20 @@ type Props = {
  * Uses the `SketchEngine` instance from context rather than calling
  * p5-specific globals like `window.toggleLoop()`.
  */
-export function EngineControls( { name, engineId }: Props ) {
+export function EngineControls( {
+  name, engineId
+}: Props ) {
   const engine = useEngine();
-  const [looping, setLooping] = React.useState( true );
+  const [
+    looping,
+    setLooping
+  ] = React.useState( true );
 
   const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
-  const sketchPath = githubRepoUrl ? resolveSketchPath( name, engineId ) : undefined;
+  const sketchPath = githubRepoUrl ? resolveSketchPath(
+    name,
+    engineId
+  ) : undefined;
   const githubUrl =
     githubRepoUrl && sketchPath
       ? `${ githubRepoUrl }/blob/main/src/templates/${ engineId }/sketches/${ sketchPath }/index.js`
@@ -72,6 +86,7 @@ export function EngineControls( { name, engineId }: Props ) {
 
             if ( canvas ) {
               const link = document.createElement( "a" );
+
               link.download = `${ name }.png`;
               link.href = canvas.toDataURL( "image/png" );
               link.click();

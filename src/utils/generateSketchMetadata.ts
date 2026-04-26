@@ -4,7 +4,7 @@ import type {
 import {
   getBaseUrl, SITE_NAME
 } from "@/lib/seo";
-import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
+import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 
 /**
  * Formats a sketch name slug into a human-readable title.
@@ -39,23 +39,28 @@ function deriveCategory( sketchName: string ): string {
   return categoryMap[ prefix ] || "creative coding";
 }
 
-export function generateSketchMetadata( sketchName: string ): Metadata {
+export function generateSketchMetadata(
+  engine: string, sketchName: string
+): Metadata {
   const sketchTitle = formatSketchTitle( sketchName );
   const category = deriveCategory( sketchName );
   const baseUrl = getBaseUrl();
 
-  const description = `Create ${ sketchTitle } videos and images with p5.js. A ${ category } template for generating social media content.`;
+  const description = `Create ${ sketchTitle } videos and images. A ${ category } template for generating social media content.`;
 
-  const thumbnailPath = getP5SketchThumbnailURL( sketchName );
+  const thumbnailPath = getSketchThumbnailURL(
+    engine,
+    sketchName
+  );
   const thumbnailUrl = `${ baseUrl }/${ thumbnailPath }`;
-  const pageUrl = `${ baseUrl }/p5/${ sketchName }`;
+  const pageUrl = `${ baseUrl }/${ engine }/${ sketchName }`;
 
   return {
     title: sketchTitle,
     description,
     keywords: [
       sketchTitle,
-      "p5.js",
+      engine,
       category,
       "social media template",
       "video generator",
@@ -64,7 +69,7 @@ export function generateSketchMetadata( sketchName: string ): Metadata {
       ...sketchName.split( "-" ),
     ],
     alternates: {
-      canonical: `/p5/${ sketchName }`,
+      canonical: `/${ engine }/${ sketchName }`,
     },
     openGraph: {
       title: `${ sketchTitle } | ${ SITE_NAME }`,
@@ -76,7 +81,7 @@ export function generateSketchMetadata( sketchName: string ): Metadata {
           url: thumbnailUrl,
           width: 1200,
           height: 630,
-          alt: `${ sketchTitle } - p5.js template preview`,
+          alt: `${ sketchTitle } - ${ engine } template preview`,
         },
       ],
       type: "website",

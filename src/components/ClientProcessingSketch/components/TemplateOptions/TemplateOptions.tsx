@@ -171,10 +171,16 @@ export default function TemplateOptions( {
           clearTimeout( debounceTimerRef.current );
         }
 
-        debounceTimerRef.current = setTimeout( () => {
-          debounceTimerRef.current = null;
-          void captureCurrentSlide( slideId, activeSlideIndex );
-        }, 1000 );
+        debounceTimerRef.current = setTimeout(
+          () => {
+            debounceTimerRef.current = null;
+            void captureCurrentSlide(
+              slideId,
+              activeSlideIndex
+            );
+          },
+          1000
+        );
       } );
 
       return () => {
@@ -227,6 +233,7 @@ export default function TemplateOptions( {
       slideFields,
       thumbnails,
       captureCurrentSlide,
+      pendingThumbnailCaptureRef
     ]
   );
 

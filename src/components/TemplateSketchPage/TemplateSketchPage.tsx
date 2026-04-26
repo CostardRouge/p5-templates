@@ -41,6 +41,7 @@ export default function TemplateSketchPage( {
   const {
     thumbnailUrl
   } = useSketchThumbnail( {
+    engine: engineId,
     name,
     persistedJob
   } );

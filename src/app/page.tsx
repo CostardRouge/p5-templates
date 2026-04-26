@@ -9,7 +9,7 @@ import TemplatesList from "@/components/TemplatesList";
 import {
   getBaseUrl, SITE_NAME
 } from "@/lib/seo";
-import getP5SketchThumbnailURL from "@/utils/getP5SketchThumbnailURL";
+import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import getSketchList from "@/utils/getSketchList";
 
 export const metadata: Metadata = {
@@ -44,7 +44,10 @@ export default async function TemplatesPage() {
     .map( ( {
       name, engine, category, hasSketchForm
     } ) => ( {
-      thumbnail: getP5SketchThumbnailURL( name ),
+      thumbnail: getSketchThumbnailURL(
+        engine,
+        name
+      ),
       href: category ? `/templates/${ engine }/${ category }/${ name }` : `/templates/${ engine }/${ name }`,
       hasSketchForm,
       name,
