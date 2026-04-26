@@ -3,16 +3,16 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   sphere: {
-    radiusX: 267,
-    radiusY: 245,
-    radiusZ: 247,
-    meridians: 13,
-    parallels: 13,
+    radiusX: 250,
+    radiusY: 250,
+    radiusZ: 250,
+    meridians: 10,
+    parallels: 10,
   },
   peaks: {
-    layers: 201,
-    spikeLengthMax: 196,
-    spikeLengthMin: 29,
+    layers: 200,
+    spikeLengthMax: 170,
+    spikeLengthMin: 36,
     depthEasing: "easeOutQuad",
     point: {
       strokeWeightMin: 16.5,
