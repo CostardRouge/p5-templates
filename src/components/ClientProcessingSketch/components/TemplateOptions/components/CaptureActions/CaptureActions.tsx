@@ -62,7 +62,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   ref
 ) => {
   const router = useRouter();
-  const { engineId } = useSketch();
+  const [
+    {
+      engineId
+    }
+  ] = useSketch();
   const {
     enqueueRecording, isLoading
   } = useRecordingQueue();
@@ -151,32 +155,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     ]
   );
 
-  // // Pause P5 sketch during recording
-  // React.useEffect(
-  //   () => {
-  //     const isRecording =
-  //       recordingProgress && [
-  //         "queued",
-  //         "active"
-  //       ].includes( recordingProgress.status );
-  //
-  //     if ( isRecording ) {
-  //       // Pause the sketch
-  //       if ( typeof ( window as any ).noLoop === "function" ) {
-  //         ( window as any ).noLoop();
-  //       }
-  //     } else {
-  //       // Resume when not recording
-  //       if ( typeof ( window as any ).loop === "function" ) {
-  //         ( window as any ).loop();
-  //       }
-  //     }
-  //   },
-  //   [
-  //     recordingProgress
-  //   ]
-  // );
-
   const handleSubmit = async(
     status: JobStatusEnum = "queued",
     persistedJobId?: JobId,
@@ -202,7 +180,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       );
       formData.append(
         "template",
-        window.location.pathname.replace( /^\//, "" )
+        window.location.pathname.replace(
+          /^\//,
+          ""
+        )
       );
       formData.append(
         "options",
@@ -323,7 +304,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
         // Redirect to URL with job ID for both drafts and recordings (unless skipRedirect is true)
         if ( !skipRedirect ) {
-          const currentPath = window.location.pathname.replace( /\?.*$/, "" );
+          const currentPath = window.location.pathname.replace(
+            /\?.*$/,
+            ""
+          );
           const newUrl = `${ currentPath }?id=${ newJobId }`;
 
           console.log( `[CaptureActions] Updating URL to: ${ newUrl }` );

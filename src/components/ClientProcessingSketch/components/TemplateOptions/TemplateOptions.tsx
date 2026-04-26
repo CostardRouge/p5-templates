@@ -105,9 +105,11 @@ export default function TemplateOptions( {
     name: "id",
   } ) as string | undefined;
 
-  const {
-    backendRecording, sketchFormValues
-  } = useSketch();
+  const [
+    {
+      backendRecording, sketchFormValues
+    }
+  ] = useSketch();
 
   // Thumbnail management (only when enabled)
   const {

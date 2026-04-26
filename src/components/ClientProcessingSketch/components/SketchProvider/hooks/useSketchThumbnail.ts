@@ -22,11 +22,12 @@ export function useSketchThumbnail( {
   const thumbnailUrl = useMemo(
     () => {
       if ( persistedJob?.id && persistedJob?.thumbnails ) {
-        const timestamp =
-        updatedAt ||
-        ( persistedJob.updatedAt &&
-          new Date( persistedJob.updatedAt ).getTime() ) ||
-        Date.now();
+        const timestamp = (
+          updatedAt ||
+          ( persistedJob.updatedAt &&
+            new Date( persistedJob.updatedAt ).getTime() ) ||
+            Date.now()
+        );
 
         return `/api/recordings/${ persistedJob.id }/thumbnail?t=${ timestamp }`;
       }

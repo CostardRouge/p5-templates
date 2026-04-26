@@ -125,7 +125,6 @@ export default function RootLayout( {
           href="https://www.googletagmanager.com"
           crossOrigin="anonymous"
         />
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires dangerouslySetInnerHTML */}
         <script
           type="application/ld+json"
           suppressHydrationWarning

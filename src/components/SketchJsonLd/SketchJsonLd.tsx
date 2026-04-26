@@ -1,4 +1,6 @@
-import { getBaseUrl } from "@/lib/seo";
+import {
+  getBaseUrl
+} from "@/lib/seo";
 
 interface SketchJsonLdProps {
   sketchName: string;
@@ -39,7 +41,9 @@ export default function SketchJsonLd( {
     <script
       type="application/ld+json"
       suppressHydrationWarning
-      dangerouslySetInnerHTML={{ __html: JSON.stringify( jsonLd ) }}
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify( jsonLd )
+      }}
     />
   );
 }

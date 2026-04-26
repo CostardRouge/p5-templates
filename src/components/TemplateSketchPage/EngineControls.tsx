@@ -6,16 +6,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import {
-  useEngine
-} from "./EngineContext";
-import {
   resolveSketchPath
 } from "@/engines/metadata";
-
-type Props = {
-  name: string;
-  engineId: string;
-};
+import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 
 /**
  * Engine-agnostic playback controls.
@@ -23,10 +16,12 @@ type Props = {
  * Uses the `SketchEngine` instance from context rather than calling
  * p5-specific globals like `window.toggleLoop()`.
  */
-export function EngineControls( {
-  name, engineId
-}: Props ) {
-  const engine = useEngine();
+export function EngineControls( ) {
+  const [
+    {
+      engineId, name, engine
+    }
+  ] = useSketch();
   const [
     looping,
     setLooping
@@ -45,7 +40,7 @@ export function EngineControls( {
   return (
     <div className="absolute top-2 left-2 md:top-4 md:left-4 flex items-center gap-2 z-50">
       <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden">
-        {githubUrl && (
+        { githubUrl && (
           <Link
             href={githubUrl}
             target="_blank"
@@ -56,7 +51,7 @@ export function EngineControls( {
           >
             <Github className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
           </Link>
-        )}
+        ) }
         <button
           onClick={() => {
             if ( looping ) {

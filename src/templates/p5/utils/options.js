@@ -191,10 +191,10 @@ events.register(
       refreshAssets();
     } );
 
-    setSketchOptions(
-      getSketchOptions(),
-      sketch.sketchOptions?.engine
-    );
+    // setSketchOptions(
+    //   getSketchOptions(),
+    //   sketch.sketchOptions?.engine
+    // );
   }
 );
 
