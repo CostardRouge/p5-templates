@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect, useRef, useState
+} from "react";
 import {
   closestCenter,
   DndContext,
@@ -18,13 +20,21 @@ import {
   restrictToParentElement,
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
-import { CSS } from "@dnd-kit/utilities";
-import { useFormContext, useWatch } from "react-hook-form";
-import { ChevronDown, GripVertical, Plus, Trash2 } from "lucide-react";
+import {
+  CSS
+} from "@dnd-kit/utilities";
+import {
+  useFormContext, useWatch
+} from "react-hook-form";
+import {
+  ChevronDown, GripVertical, Plus, Trash2
+} from "lucide-react";
 import clsx from "clsx";
 import FieldRenderer from "./FieldRenderer";
 import CollapsibleItem from "@/components/CollapsibleItem";
-import type { FieldConfig } from "./ContentItems/constants/field-config";
+import type {
+  FieldConfig
+} from "./ContentItems/constants/field-config";
 
 type ItemListRendererProps = {
   name: string;
@@ -48,26 +58,39 @@ type SortableItemProps = {
 };
 
 function createId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+  if ( typeof crypto !== "undefined" && "randomUUID" in crypto ) {
     return crypto.randomUUID();
   }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${ Date.now() }-${ Math.random().toString( 16 )
+    .slice( 2 ) }`;
 }
 
-function arrayMove<T>(arr: T[], fromIndex: number, toIndex: number) {
+function arrayMove<T>(
+  arr: T[], fromIndex: number, toIndex: number
+) {
   const next = arr.slice();
-  const [item] = next.splice(fromIndex, 1);
-  next.splice(toIndex, 0, item);
+  const [
+    item
+  ] = next.splice(
+    fromIndex,
+    1
+  );
+
+  next.splice(
+    toIndex,
+    0,
+    item
+  );
   return next;
 }
 
-function SortableItem({
+function SortableItem( {
   id,
   fieldPath,
   itemConfig,
   onRemove,
   locked,
-}: SortableItemProps) {
+}: SortableItemProps ) {
   const {
     attributes,
     listeners,
@@ -76,12 +99,12 @@ function SortableItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({
+  } = useSortable( {
     id,
-  });
+  } );
 
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Transform.toString( transform ),
     transition,
   };
 
@@ -129,142 +152,208 @@ function SortableItem({
   );
 }
 
-export default function ItemListRenderer({
+export default function ItemListRenderer( {
   name,
   config,
-}: ItemListRendererProps) {
-  const { control, getValues, setValue } = useFormContext();
+}: ItemListRendererProps ) {
+  const {
+    control, getValues, setValue
+  } = useFormContext();
 
-  const watchedValue = useWatch({
+  const watchedValue = useWatch( {
     control,
     name,
-  });
+  } );
 
-  const values = Array.isArray(watchedValue) ? watchedValue : [];
+  const values = Array.isArray( watchedValue ) ? watchedValue : [
+  ];
 
-  const [itemIds, setItemIds] = useState<string[]>([]);
-  const didInitRef = useRef(false);
+  const [
+    itemIds,
+    setItemIds
+  ] = useState<string[]>( [
+  ] );
+  const didInitRef = useRef( false );
 
   // Initialize values once (defaults/minItems) without clobbering existing values.
-  useEffect(() => {
-    if (didInitRef.current) return;
+  useEffect(
+    () => {
+      if ( didInitRef.current ) return;
 
-    const currentValue = getValues(name);
-    const hasExistingValues =
-      Array.isArray(currentValue) && currentValue.length > 0;
+      const currentValue = getValues( name );
+      const hasExistingValues =
+      Array.isArray( currentValue ) && currentValue.length > 0;
 
-    if (!hasExistingValues) {
-      if (config.defaultItems && config.defaultItems.length > 0) {
-        setValue(name, config.defaultItems, {
-          shouldDirty: false,
-          shouldTouch: false,
-        });
-      } else if (config.minItems && config.minItems > 0) {
-        setValue(
-          name,
-          Array.from({ length: config.minItems }, () =>
-            getDefaultValueForConfig(config.itemConfig)
-          ),
-          {
-            shouldDirty: false,
-            shouldTouch: false,
-          }
-        );
+      if ( !hasExistingValues ) {
+        if ( config.defaultItems && config.defaultItems.length > 0 ) {
+          setValue(
+            name,
+            config.defaultItems,
+            {
+              shouldDirty: false,
+              shouldTouch: false,
+            }
+          );
+        } else if ( config.minItems && config.minItems > 0 ) {
+          setValue(
+            name,
+            Array.from(
+              {
+                length: config.minItems
+              },
+              () =>
+                getDefaultValueForConfig( config.itemConfig )
+            ),
+            {
+              shouldDirty: false,
+              shouldTouch: false,
+            }
+          );
+        }
       }
-    }
 
-    didInitRef.current = true;
-  }, [
-    config.defaultItems,
-    config.itemConfig,
-    config.minItems,
-    getValues,
-    name,
-    setValue,
-  ]);
-
-  // Keep stable ids aligned with array length.
-  useEffect(() => {
-    setItemIds((prev) => {
-      const next = prev.slice(0, values.length);
-      while (next.length < values.length) {
-        next.push(createId());
-      }
-      return next;
-    });
-  }, [values.length]);
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor)
+      didInitRef.current = true;
+    },
+    [
+      config.defaultItems,
+      config.itemConfig,
+      config.minItems,
+      getValues,
+      name,
+      setValue,
+    ]
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  // Keep stable ids aligned with array length.
+  useEffect(
+    () => {
+      setItemIds( ( prev ) => {
+        const next = prev.slice(
+          0,
+          values.length
+        );
 
-    if (!over || active.id === over.id) {
+        while ( next.length < values.length ) {
+          next.push( createId() );
+        }
+        return next;
+      } );
+    },
+    [
+      values.length
+    ]
+  );
+
+  const sensors = useSensors(
+    useSensor(
+      MouseSensor,
+      {
+        activationConstraint: {
+          distance: 8,
+        },
+      }
+    ),
+    useSensor(
+      TouchSensor,
+      {
+        activationConstraint: {
+          delay: 200,
+          tolerance: 5,
+        },
+      }
+    ),
+    useSensor( KeyboardSensor )
+  );
+
+  const handleDragEnd = ( event: DragEndEvent ) => {
+    const {
+      active, over
+    } = event;
+
+    if ( !over || active.id === over.id ) {
       return;
     }
 
-    const oldIndex = itemIds.indexOf(String(active.id));
-    const newIndex = itemIds.indexOf(String(over.id));
+    const oldIndex = itemIds.indexOf( String( active.id ) );
+    const newIndex = itemIds.indexOf( String( over.id ) );
 
-    if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) {
+    if ( oldIndex < 0 || newIndex < 0 || oldIndex === newIndex ) {
       return;
     }
 
-    const currentValue = getValues(name);
-    const currentArray = Array.isArray(currentValue) ? currentValue : [];
+    const currentValue = getValues( name );
+    const currentArray = Array.isArray( currentValue ) ? currentValue : [
+    ];
 
-    setItemIds((prev) => arrayMove(prev, oldIndex, newIndex));
-    setValue(name, arrayMove(currentArray, oldIndex, newIndex), {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
+    setItemIds( ( prev ) => arrayMove(
+      prev,
+      oldIndex,
+      newIndex
+    ) );
+    setValue(
+      name,
+      arrayMove(
+        currentArray,
+        oldIndex,
+        newIndex
+      ),
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+      }
+    );
   };
 
   const handleAdd = () => {
-    if (config.locked) return;
-    if (config.maxItems && values.length >= config.maxItems) return;
+    if ( config.locked ) return;
+    if ( config.maxItems && values.length >= config.maxItems ) return;
 
-    const next = values.concat(getDefaultValueForConfig(config.itemConfig));
-    setValue(name, next, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
-    setItemIds((prev) => prev.concat(createId()));
+    const next = values.concat( getDefaultValueForConfig( config.itemConfig ) );
+
+    setValue(
+      name,
+      next,
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+      }
+    );
+    setItemIds( ( prev ) => prev.concat( createId() ) );
   };
 
-  const handleRemove = (index: number) => {
-    if (config.locked) return;
-    if (config.minItems && values.length <= config.minItems) return;
+  const handleRemove = ( index: number ) => {
+    if ( config.locked ) return;
+    if ( config.minItems && values.length <= config.minItems ) return;
 
-    const next = values.slice(0, index).concat(values.slice(index + 1));
-    setValue(name, next, {
-      shouldDirty: true,
-      shouldTouch: true,
-    });
+    const next = values.slice(
+      0,
+      index
+    ).concat( values.slice( index + 1 ) );
 
-    setItemIds((prev) => prev.slice(0, index).concat(prev.slice(index + 1)));
+    setValue(
+      name,
+      next,
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+      }
+    );
+
+    setItemIds( ( prev ) => prev.slice(
+      0,
+      index
+    ).concat( prev.slice( index + 1 ) ) );
   };
 
   return (
     <div className="text-xs">
       <CollapsibleItem
         initialExpandedValue={false}
-        header={(expanded, title) => (
+        header={(
+          expanded, title
+        ) => (
           <div
-            className="text-gray-400 cursor-pointer select-none flex items-center gap-1"
+            className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
             title={title}
           >
             <ChevronDown
@@ -284,44 +373,49 @@ export default function ItemListRenderer({
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
-            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+            modifiers={[
+              restrictToVerticalAxis,
+              restrictToParentElement
+            ]}
           >
             <SortableContext
               items={itemIds}
               strategy={verticalListSortingStrategy}
             >
-              {itemIds.map((id, index) => (
+              {itemIds.map( (
+                id, index
+              ) => (
                 <SortableItem
                   key={id}
                   id={id}
-                  fieldPath={`${name}.${index}`}
+                  fieldPath={`${ name }.${ index }`}
                   itemConfig={config.itemConfig}
-                  onRemove={() => handleRemove(index)}
+                  onRemove={() => handleRemove( index )}
                   locked={config.locked}
                 />
-              ))}
+              ) )}
             </SortableContext>
           </DndContext>
 
           {!config.locked &&
-            (!config.maxItems || values.length < config.maxItems) && (
-              <button
-                type="button"
-                onClick={handleAdd}
-                className="w-full flex items-center gap-1 px-1 py-1 border border-theme rounded-lg bg-background hover:bg-theme/10"
-              >
-                <Plus className="h-4 w-4" />
-                Add Item
-              </button>
-            )}
+            ( !config.maxItems || values.length < config.maxItems ) && (
+            <button
+              type="button"
+              onClick={handleAdd}
+              className="w-full flex items-center gap-1 px-1 py-1 border border-theme rounded-lg bg-background hover:bg-theme/10"
+            >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </button>
+          )}
         </div>
       </CollapsibleItem>
     </div>
   );
 }
 
-function getDefaultValueForConfig(config: FieldConfig): any {
-  switch (config.component) {
+function getDefaultValueForConfig( config: FieldConfig ): any {
+  switch ( config.component ) {
     case "text":
     case "textarea":
       return "";
@@ -334,14 +428,23 @@ function getDefaultValueForConfig(config: FieldConfig): any {
     case "checkbox":
       return false;
     case "color":
-      return [255, 255, 255];
+      return [
+        255,
+        255,
+        255
+      ];
     case "select": {
-      return config.options[0]?.value ?? "";
+      return config.options[ 0 ]?.value ?? "";
     }
     case "nested-object": {
-      const obj: Record<string, any> = {};
-      for (const [key, subConfig] of Object.entries(config.fields)) {
-        obj[key] = getDefaultValueForConfig(subConfig);
+      const obj: Record<string, any> = {
+      };
+
+      for ( const [
+        key,
+        subConfig
+      ] of Object.entries( config.fields ) ) {
+        obj[ key ] = getDefaultValueForConfig( subConfig );
       }
       return obj;
     }

@@ -1,7 +1,13 @@
 import "./globals.css";
-import type { Metadata, Viewport } from "next";
-import { ThemeProvider } from "next-themes";
-import { Suspense } from "react";
+import type {
+  Metadata, Viewport
+} from "next";
+import {
+  ThemeProvider
+} from "next-themes";
+import {
+  Suspense
+} from "react";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import MenuBar from "@/components/MenuBar";
 import ServiceWorkerUpdateNotifier from "@/components/ServiceWorkerUpdateNotifier";
@@ -19,20 +25,20 @@ import {
 const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(baseUrl),
+  metadataBase: new URL( baseUrl ),
   title: {
     default: SITE_NAME,
-    template: `%s | ${SITE_NAME}`,
+    template: `%s | ${ SITE_NAME }`,
   },
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
   authors: [
     {
-      name: "Social Templates Renderer",
+      name: "Steeve Pommier",
     },
   ],
-  creator: "Social Templates Renderer",
-  publisher: "Social Templates Renderer",
+  creator: "Steeve Pommier",
+  publisher: "Steeve Pommier",
   formatDetection: {
     email: false,
     address: false,
@@ -53,7 +59,7 @@ export const metadata: Metadata = {
         url: "/assets/images/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: `${SITE_NAME} - Create social media videos from code templates`,
+        alt: `${ SITE_NAME } - Create social media videos from code templates`,
       },
     ],
   },
@@ -61,7 +67,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ["/assets/images/icon-512x512.png"],
+    images: [
+      "/assets/images/icon-512x512.png"
+    ],
   },
   robots: {
     index: true,
@@ -98,11 +106,11 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default function RootLayout( {
   children,
 }: {
   children: React.ReactNode;
-}) {
+} ) {
   const jsonLd = getWebApplicationJsonLd();
   const {
     hasMissingThumbnails
@@ -122,7 +130,7 @@ export default function RootLayout({
           type="application/ld+json"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd),
+            __html: JSON.stringify( jsonLd ),
           }}
         />
       </head>

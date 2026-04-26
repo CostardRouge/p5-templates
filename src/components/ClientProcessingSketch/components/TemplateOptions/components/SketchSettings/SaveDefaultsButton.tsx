@@ -19,7 +19,7 @@ export default function SaveDefaultsButton() {
     name, sketchFormValues, engineId
   } = useSketch();
   const {
-    getValues
+    getValues, reset, formState: { defaultValues }
   } = useFormContext();
   const [
     saveState,
@@ -66,6 +66,17 @@ export default function SaveDefaultsButton() {
 
         throw new Error( text || `HTTP ${ res.status }` );
       }
+
+      // Update RHF defaultValues so fields are no longer considered modified
+      reset(
+        {
+          ...defaultValues,
+          sketch: formValues,
+        },
+        {
+          keepValues: true,
+        }
+      );
 
       setSaveState( "saved" );
       setTimeout(

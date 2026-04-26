@@ -3,10 +3,11 @@
  * All metadata, OpenGraph defaults, and structured data helpers live here.
  */
 
-export const SITE_NAME = "Social Templates Renderer";
+export const SITE_NAME = "Coded templates";
 export const SITE_DESCRIPTION =
-  "Create stunning social media videos and images from customizable p5.js, GSAP, and HTML templates. Record, export, and share animated content for Instagram, TikTok, and more.";
+  "Create stunning videos and images from customizable p5.js, GSAP, and HTML templates. Record, export, and share animated content for Instagram, TikTok, and more.";
 export const SITE_KEYWORDS = [
+  "code templates",
   "social media templates",
   "video generator",
   "p5.js",
@@ -30,9 +31,9 @@ export const SITE_KEYWORDS = [
 export function getBaseUrl(): string {
   return (
     process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000")
+    ( process.env.VERCEL_URL
+      ? `https://${ process.env.VERCEL_URL }`
+      : "http://localhost:3000" )
   );
 }
 
@@ -64,32 +65,34 @@ export function getWebApplicationJsonLd() {
       "EXIF data overlay",
       "Multiple export formats",
     ],
-    screenshot: `${baseUrl}/assets/images/icon-512x512.png`,
+    screenshot: `${ baseUrl }/assets/images/icon-512x512.png`,
   };
 }
 
 /**
  * Generates a BreadcrumbList JSON-LD structured data object.
  */
-export function getBreadcrumbJsonLd(
-  items: Array<{ name: string; url: string }>
-) {
+export function getBreadcrumbJsonLd( items: Array<{
+ name: string; url: string
+}> ) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: items.map((item, index) => ({
+    itemListElement: items.map( (
+      item, index
+    ) => ( {
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
       item: item.url,
-    })),
+    } ) ),
   };
 }
 
 /**
  * Generates a CreativeWork JSON-LD for an individual template.
  */
-export function getTemplateJsonLd({
+export function getTemplateJsonLd( {
   name,
   description,
   url,
@@ -101,7 +104,7 @@ export function getTemplateJsonLd({
   url: string;
   thumbnailUrl: string;
   category: string;
-}) {
+} ) {
   return {
     "@context": "https://schema.org",
     "@type": "CreativeWork",

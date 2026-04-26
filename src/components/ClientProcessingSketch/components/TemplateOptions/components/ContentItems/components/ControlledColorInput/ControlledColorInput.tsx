@@ -7,7 +7,7 @@ import rgbaToHex from "./utils/rgbaToHex";
 import hexToRgba from "./utils/hexToRgba";
 
 type ControlledColorInputProps = {
-  name: string; // The name of the field, e.g., "content.0.fill"
+  name: string;
 };
 
 export default function ControlledColorInput( {

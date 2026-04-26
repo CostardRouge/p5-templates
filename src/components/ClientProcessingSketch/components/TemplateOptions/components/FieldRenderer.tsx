@@ -198,7 +198,7 @@ export default function FieldRenderer( {
             initialExpandedValue={false}
             header={( expanded ) => (
               <div
-                className="text-gray-400 cursor-pointer select-none flex items-center gap-1"
+                className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
                 title="Click to expand/collapse"
               >
                 <ChevronDown
