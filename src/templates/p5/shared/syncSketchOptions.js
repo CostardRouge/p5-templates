@@ -4,8 +4,10 @@ import {
 
 export const EVENT = "sketch-options";
 
-let current = globalThis.sketchOptions ?? {
+globalThis.sketchOptions ??= {
 };
+
+let current = globalThis.sketchOptions;
 
 export function setSketchOptions(
   update, origin = "react"
@@ -21,7 +23,12 @@ export function setSketchOptions(
     return;
   }
 
-  current = merged;
+  // Mutate in place so existing references stay live
+  for ( const key of Object.keys( current ) ) {
+    if ( !( key in merged ) ) delete current[ key ];
+  }
+
+  Object.assign( current, merged );
   globalThis.sketchOptions = current;
 
   window.dispatchEvent( new CustomEvent(
@@ -54,4 +61,4 @@ export function subscribeSketchOptions( cb ) {
   );
 }
 
-export const getSketchOptions = () => current;
+export const getSketchOptions = () => globalThis.sketchOptions ?? current;

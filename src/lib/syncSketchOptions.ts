@@ -14,7 +14,13 @@ import {
 
 export const EVENT = "sketch-options";
 
-let current: Record<string, any> = ( globalThis as any ).sketchOptions ?? {};
+const globalStore = globalThis as typeof globalThis & {
+  sketchOptions?: Record<string, any>;
+};
+
+globalStore.sketchOptions ??= {};
+
+let current: Record<string, any> = globalStore.sketchOptions;
 
 export function setSketchOptions(
   update: Record<string, any>,
@@ -31,8 +37,16 @@ export function setSketchOptions(
     return;
   }
 
-  current = merged;
-  ( globalThis as any ).sketchOptions = current;
+  for ( const key of Object.keys( current ) ) {
+    if ( !( key in merged ) ) delete current[ key ];
+  }
+
+  Object.assign(
+    current,
+    merged,
+  );
+
+  globalStore.sketchOptions = current;
 
   window.dispatchEvent(
     new CustomEvent( EVENT, {
@@ -68,4 +82,4 @@ export function subscribeSketchOptions(
     );
 }
 
-export const getSketchOptions = (): Record<string, any> => current;
+export const getSketchOptions = (): Record<string, any> => globalStore.sketchOptions ?? current;

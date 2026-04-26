@@ -96,7 +96,11 @@ const p5js = {
       // canvas creation
       const {
         type = "p2d",
-        size: { width, height, ratio },
+        size: {
+          width = 1080,
+          height = 1350,
+          ratio,
+        } = {},
       } = sketchOptions;
 
       p5js.canvas = createCanvas(width, ratio ? width / ratio : height, type);
