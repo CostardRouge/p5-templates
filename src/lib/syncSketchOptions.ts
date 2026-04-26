@@ -4,9 +4,6 @@
  * Manages a global `sketchOptions` store and broadcasts changes
  * via a `CustomEvent("sketch-options")` so both React components and
  * sketch runtime code (p5, GSAP, Three.js …) stay in sync.
- *
- * Moved from `src/p5-sketches/shared/syncSketchOptions.js` — the
- * logic has no dependency on any specific engine.
  */
 import {
   deepMerge, structuredClone
@@ -18,9 +15,10 @@ const globalStore = globalThis as typeof globalThis & {
   sketchOptions?: Record<string, any>;
 };
 
-globalStore.sketchOptions ??= {};
+globalStore.sketchOptions ??= {
+};
 
-let current: Record<string, any> = globalStore.sketchOptions;
+const current: Record<string, any> = globalStore.sketchOptions;
 
 export function setSketchOptions(
   update: Record<string, any>,
@@ -48,19 +46,18 @@ export function setSketchOptions(
 
   globalStore.sketchOptions = current;
 
-  window.dispatchEvent(
-    new CustomEvent( EVENT, {
+  window.dispatchEvent( new CustomEvent(
+    EVENT,
+    {
       detail: {
         opts: current,
         origin,
       },
-    } ),
-  );
+    }
+  ), );
 }
 
-export function subscribeSketchOptions(
-  cb: ( opts: Record<string, any>, origin?: string ) => void,
-): () => void {
+export function subscribeSketchOptions( cb: ( opts: Record<string, any>, origin?: string ) => void, ): () => void {
   const handler = ( e: Event ) => {
     const detail = ( e as CustomEvent ).detail;
 

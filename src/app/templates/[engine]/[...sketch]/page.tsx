@@ -15,7 +15,7 @@ import {
   findSketchMeta
 } from "@/engines/metadata";
 import SketchContextProvider from "@/components/ClientProcessingSketch/components/SketchProvider/SketchContextProvider";
-import StudioSketchPage from "@/components/StudioSketchPage/StudioSketchPage";
+import TemplateSketchPage from "@/components/TemplateSketchPage/TemplateSketchPage";
 import SketchJsonLd from "@/components/SketchJsonLd/SketchJsonLd";
 import {
   getJobById
@@ -313,7 +313,7 @@ export default async function StudioPage( {
           sketchOptions.slides?.length > 0 ? 0 : undefined
         }
       >
-        <StudioSketchPage engineId={engineId} />
+        <TemplateSketchPage engineId={engineId} />
       </SketchContextProvider>
     </>
   );

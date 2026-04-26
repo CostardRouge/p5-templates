@@ -7,10 +7,10 @@ import {
   useCallback, useEffect, useState
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
-import EngineSketchRenderer from "@/components/StudioSketchPage/EngineSketchRenderer";
+import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
 import {
   EngineControls
-} from "@/components/StudioSketchPage/EngineControls";
+} from "@/components/TemplateSketchPage/EngineControls";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import {
   setSketchOptions,
@@ -31,7 +31,7 @@ type Props = {
   engineId: string;
 };
 
-export default function StudioSketchPage( {
+export default function TemplateSketchPage( {
   engineId
 }: Props ) {
   const {
@@ -117,7 +117,7 @@ export default function StudioSketchPage( {
 
             <p className="text-foreground">
               → loading{" "}
-              <span className="font-bold">{name}</span> ({engineId})…
+              <span className="font-bold">{name}</span> ({engineId})
             </p>
           </div>
         </div>
