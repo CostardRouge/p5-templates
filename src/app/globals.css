@@ -82,13 +82,9 @@
     }
 }
 
-canvas#defaultCanvas0 {
+canvas#defaultCanvas0:hover {
     @apply border;
     @apply border-theme;
-}
-
-canvas#defaultCanvas0:hover {
-    @apply border-foreground/10;
 }
 
 .glass {
@@ -97,7 +93,6 @@ canvas#defaultCanvas0:hover {
 }
 
 @keyframes pulse-border {
-
     0%,
     100% {
         border-width: 3px;
