@@ -53,6 +53,16 @@ export function useSlideManagement( {
   ] = useState( false );
   const pendingSelectIndexRef = useRef<number | null>( null );
   const pendingThumbnailCopyFromIndexRef = useRef<number | null>( null );
+  const onActiveSlideChangeRef = useRef( onActiveSlideChange );
+
+  useEffect(
+    () => {
+      onActiveSlideChangeRef.current = onActiveSlideChange;
+    },
+    [
+      onActiveSlideChange
+    ]
+  );
 
   // Compute the effective active index based on current slides
   const effectiveActiveIndex =
@@ -62,27 +72,39 @@ export function useSlideManagement( {
         : 0
       : undefined;
 
+  const notifyActiveSlideChange = useCallback(
+    ( index: number | undefined ) => {
+      onActiveSlideChangeRef.current?.( index );
+    },
+    [
+    ]
+  );
+
   // Update active index when slides change
   useEffect(
     () => {
-      if ( slideFields.length === 0 ) {
-        setActiveSlideIndex( undefined );
-        onActiveSlideChange?.( undefined );
-      } else if (
-        activeSlideIndex === undefined ||
-      activeSlideIndex >= slideFields.length
-      ) {
-        setActiveSlideIndex( 0 );
-        onActiveSlideChange?.( 0 );
-        if ( typeof window.setSlide === "function" ) {
-          window.setSlide( 0 );
-        }
+      const nextIndex =
+        slideFields.length === 0
+          ? undefined
+          : activeSlideIndex !== undefined && activeSlideIndex < slideFields.length
+            ? activeSlideIndex
+            : 0;
+
+      if ( nextIndex === activeSlideIndex ) {
+        return;
+      }
+
+      setActiveSlideIndex( nextIndex );
+      notifyActiveSlideChange( nextIndex );
+
+      if ( typeof window.setSlide === "function" ) {
+        window.setSlide( nextIndex ?? 0 );
       }
     },
     [
       slideFields.length,
       activeSlideIndex,
-      onActiveSlideChange
+      notifyActiveSlideChange
     ]
   );
 
@@ -106,8 +128,12 @@ export function useSlideManagement( {
         }
       }
 
+      if ( index === activeSlideIndex ) {
+        return;
+      }
+
       setActiveSlideIndex( index );
-      onActiveSlideChange?.( index );
+      notifyActiveSlideChange( index );
 
       if ( typeof window.setSlide === "function" ) {
         window.setSlide( index ?? 0 );
@@ -125,7 +151,10 @@ export function useSlideManagement( {
         const incomingSlideId = slideFields[ index ]?.id;
 
         if ( incomingSlideId ) {
-          void captureThumbnail( incomingSlideId, index );
+          void captureThumbnail(
+            incomingSlideId,
+            index
+          );
         }
       }
     },
@@ -134,7 +163,8 @@ export function useSlideManagement( {
       enableThumbnails,
       captureThumbnail,
       activeSlideIndex,
-      onActiveSlideChange,
+      pendingThumbnailCaptureRef,
+      notifyActiveSlideChange,
     ]
   );
 
@@ -171,6 +201,8 @@ export function useSlideManagement( {
       setIsAdding( false );
     },
     [
+      copyThumbnail,
+      slideFields,
       slideFields.length,
       handleSlideSelect
     ]
@@ -290,7 +322,9 @@ export function useSlideManagement( {
       getValues,
       setValue,
       removeSlide,
-      handleSlideSelect,
+        deepClone(
+          slides
+        )
     ]
   );
 

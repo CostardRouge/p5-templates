@@ -3,6 +3,9 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type React from "react";
+import {
+  useCallback,
+} from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
 import {
@@ -35,6 +38,30 @@ export default function TemplateSketchPage() {
     persistedJob,
     engine: engineId,
   } );
+
+  const handleOptionsChange = useCallback(
+    ( updatedOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => {
+      dispatch( {
+        type: "SET_OPTIONS",
+        payload: updatedOptions as SketchOption
+      } );
+    },
+    [
+      dispatch
+    ]
+  );
+
+  const handleActiveSlideChange = useCallback(
+    ( index: number | undefined ) => {
+      dispatch( {
+        type: "SET_ACTIVE_SLIDE",
+        payload: index
+      } );
+    },
+    [
+      dispatch
+    ]
+  );
 
   return (
     <>
@@ -129,18 +156,8 @@ export default function TemplateSketchPage() {
             name={name}
             options={options}
             persistedJob={persistedJob}
-            onOptionsChange={( updatedOptions ) =>
-              dispatch( {
-                type: "SET_OPTIONS",
-                payload: updatedOptions as SketchOption
-              } )
-            }
-            onActiveSlideChange={( index ) =>
-              dispatch( {
-                type: "SET_ACTIVE_SLIDE",
-                payload: index
-              } )
-            }
+            onOptionsChange={handleOptionsChange}
+            onActiveSlideChange={handleActiveSlideChange}
           />
         </>
       ) }
