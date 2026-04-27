@@ -30,6 +30,10 @@ function sketchReducer(
         sketchLoaded: action.payload
       };
     case "SET_ACTIVE_SLIDE":
+      if ( state.activeSlideIndex === action.payload ) {
+        return state;
+      }
+
       return {
         ...state,
         activeSlideIndex: action.payload
