@@ -6,7 +6,7 @@ import {
 const LIVE_THUMBNAIL_ENABLED =
   process.env.NEXT_PUBLIC_LIVE_THUMBNAIL === "true";
 
-const TARGET_FPS = 15;
+const TARGET_FPS = 30;
 const FRAME_INTERVAL = 1000 / TARGET_FPS;
 
 /**
@@ -44,9 +44,7 @@ export function useLiveThumbnail( {
 
         lastTime = time;
 
-        const srcCanvas = document.querySelector(
-          "canvas.p5Canvas, canvas#defaultCanvas0"
-        ) as HTMLCanvasElement | null;
+        const srcCanvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0" ) as HTMLCanvasElement | null;
         const thumbCanvas = thumbCanvasRef.current;
 
         if ( !srcCanvas || !thumbCanvas ) {
