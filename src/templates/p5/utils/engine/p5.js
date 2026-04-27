@@ -1,6 +1,7 @@
 import events from "@/p5/utils/events.js";
 import scripts from "@/p5/utils/scripts.js";
 import time from "@/p5/utils/time.js";
+import { registerAnimationBridge } from "@/lib/animationBridge";
 
 const p5js = {
   camera: undefined,
@@ -10,6 +11,8 @@ const p5js = {
     purple: undefined,
   },
   init: (sketchOptions, setupEngineFunction) => {
+    p5js.sketchOptions = sketchOptions;
+
     // scripts
     p5js.loadScripts();
 
@@ -18,6 +21,9 @@ const p5js = {
 
     // setup (using events)
     p5js.setup(sketchOptions, setupEngineFunction);
+
+    // register engine-agnostic animation bridge
+    p5js.registerBridge();
 
     return p5js;
   },
@@ -168,6 +174,64 @@ const p5js = {
 
     return createVector(width / 2, height / 2);
   },
+  /**
+   * Registers this engine's AnimationBridge implementation.
+   * Computes progression from `time` so that all engines sharing the
+   * same time module stay in sync without extra coupling.
+   */
+  registerBridge: () => {
+    const subscribers = new Set();
+
+    // Push progression to all subscribers once per draw frame.
+    events.register("post-draw", () => {
+      if ( subscribers.size === 0 ) return;
+
+      const duration = p5js.sketchOptions?.animation?.duration || 10;
+      const seconds = time.seconds();
+      const progression = time.isRecording
+        ? Math.min( seconds / duration, 1.0 )
+        : ( seconds % duration ) / duration;
+
+      subscribers.forEach( ( cb ) => cb( progression ) );
+    } );
+
+    registerAnimationBridge( {
+      getProgression: () => {
+        const duration = p5js.sketchOptions?.animation?.duration || 10;
+        const seconds = time.seconds();
+
+        return time.isRecording
+          ? Math.min( seconds / duration, 1.0 )
+          : ( seconds % duration ) / duration;
+      },
+
+      setProgression: ( value ) => {
+        const clamped = Math.max( 0, Math.min( 1, value ) );
+        const duration = p5js.sketchOptions?.animation?.duration || 10;
+
+        time.elapsed = clamped * duration * 1000;
+
+        try {
+          const now = p5js.getElapsedTime();
+
+          if ( typeof now === "number" ) time.lastUpdate = now;
+        } catch {
+          // p5 millis() may not be available before the first draw.
+        }
+      },
+
+      pause:  () => events.handle( "engine-pause" ),
+      resume: () => events.handle( "engine-resume" ),
+      redraw: () => events.handle( "engine-redraw" ),
+
+      subscribe: ( cb ) => {
+        subscribers.add( cb );
+
+        return () => subscribers.delete( cb );
+      },
+    } );
+  },
+
   eventHandlers: {
     "engine-toggle-loop": () => {
       p5js.paused = p5js.paused ?? false;

@@ -5,6 +5,9 @@ import {
 } from "react";
 
 import {
+  type AnimationBridge, onAnimationBridgeReady,
+} from "@/lib/animationBridge";
+import {
   getSketchOptions, subscribeSketchOptions,
 } from "@/lib/syncSketchOptions";
 
@@ -18,8 +21,6 @@ type AnimationConfig = {
   framerate: number;
   totalFrames: number;
 };
-
-type ProgressionGetter = () => number;
 
 function clamp01( value: number ) {
   return Math.max(
@@ -71,21 +72,13 @@ export default function AnimationProgressionBar( {
 
   const barRef = useRef<HTMLDivElement | null>( null );
   const dragThrottleRef = useRef<number>( 0 );
+  const lastStateUpdateRef = useRef<number>( 0 );
 
   const isDraggingRef = useRef( false );
   const lastProgressionRef = useRef( 0 );
-  const getExternalProgressionRef = useRef<ProgressionGetter | null>( null );
-  // Tracks whether we paused p5's loop so we only resume when we caused the pause.
+  const bridgeRef = useRef<AnimationBridge | null>( null );
+  // Tracks whether we paused the engine loop so we only resume when we caused the pause.
   const pausedByDragRef = useRef( false );
-
-  useEffect(
-    () => {
-      isDraggingRef.current = isDragging;
-    },
-    [
-      isDragging
-    ]
-  );
 
   // Keep animation config in sync with sketch options.
   useEffect(
@@ -103,78 +96,55 @@ export default function AnimationProgressionBar( {
     ]
   );
 
-  // Prefer reading progression from the p5 util (`animation.progression`).
-  // Fall back to the global window helper if the import isn't available.
+  // Hydrate bridgeRef as soon as the engine is ready.
+  // Separated from the RAF loop so the bridge reference stays stable
+  // even if disabled toggles and the loop restarts.
   useEffect(
     () => {
       if ( disabled ) {
+        bridgeRef.current = null;
+
         return;
       }
 
-      let cancelled = false;
+      return onAnimationBridgeReady( ( bridge ) => {
+        bridgeRef.current = bridge;
 
-      ( async() => {
-        try {
-          const mod = await import( "@/p5/utils/animation.js" );
-          const animation = ( mod as any )?.default;
-
-          if ( cancelled || !animation || typeof animation !== "object" ) {
-            return;
-          }
-
-          getExternalProgressionRef.current = () => animation.progression;
-        } catch {
-        // Ignore; we can always fall back to `window.getAnimationProgression`.
-        }
-      } )();
-
-      return () => {
-        cancelled = true;
-      };
+        return () => {
+          bridgeRef.current = null;
+        };
+      } );
     },
     [
       disabled
     ]
   );
 
-  // Drive the UI from a continuous progression source (raf polling).
-  // This is more robust than relying on custom events being dispatched.
+  // Pull progression from the bridge at ~30 fps via the component's own RAF.
+  // Using a pull model (reading bridgeRef inside RAF) rather than a push model
+  // (setState inside bridge.subscribe) avoids React detecting setState calls
+  // originating from an effect context, which triggers "maximum update depth".
   useEffect(
     () => {
       if ( disabled ) {
         return;
       }
 
-      let rafId = 0;
+      let rafId: number;
 
       const tick = () => {
-        let nextProgression = lastProgressionRef.current;
+        if ( bridgeRef.current && !isDraggingRef.current ) {
+          const next = clamp01( bridgeRef.current.getProgression() );
 
-        try {
-          if ( typeof getExternalProgressionRef.current === "function" ) {
-            nextProgression = getExternalProgressionRef.current();
-          } else if ( typeof window.getAnimationProgression === "function" ) {
-            nextProgression = window.getAnimationProgression();
+          if ( Math.abs( next - lastProgressionRef.current ) > 0.001 ) {
+            const now = performance.now();
+
+            if ( now - lastStateUpdateRef.current >= 33 ) {
+              lastProgressionRef.current = next;
+              lastStateUpdateRef.current = now;
+              setProgression( next );
+            }
           }
-        } catch {
-        // Ignore - keep previous progression.
-        }
-
-        if (
-          typeof nextProgression !== "number" ||
-        Number.isNaN( nextProgression )
-        ) {
-          nextProgression = lastProgressionRef.current;
-        }
-
-        nextProgression = clamp01( nextProgression );
-
-        if (
-          !isDraggingRef.current &&
-        Math.abs( nextProgression - lastProgressionRef.current ) > 0.001
-        ) {
-          lastProgressionRef.current = nextProgression;
-          setProgression( nextProgression );
         }
 
         rafId = requestAnimationFrame( tick );
@@ -182,9 +152,7 @@ export default function AnimationProgressionBar( {
 
       rafId = requestAnimationFrame( tick );
 
-      return () => {
-        cancelAnimationFrame( rafId );
-      };
+      return () => cancelAnimationFrame( rafId );
     },
     [
       disabled
@@ -218,17 +186,7 @@ export default function AnimationProgressionBar( {
 
       lastProgressionRef.current = clamped;
       setProgression( clamped );
-
-      try {
-        if ( typeof window.setAnimationProgression === "function" ) {
-          window.setAnimationProgression( clamped );
-        }
-      } catch ( error ) {
-        console.warn(
-          "AnimationProgressionBar: Error setting progression:",
-          error
-        );
-      }
+      bridgeRef.current?.setProgression( clamped );
     },
     [
     ]
@@ -264,22 +222,15 @@ export default function AnimationProgressionBar( {
       isDraggingRef.current = true;
       setIsDragging( true );
 
-      // Pause the p5 sketch so the loop doesn't keep advancing while scrubbing.
-      try {
-        if ( typeof window.noLoop === "function" ) {
-          window.noLoop();
-          pausedByDragRef.current = true;
-        }
-      } catch {
-        // Ignore — p5 may not be initialised yet.
+      if ( bridgeRef.current ) {
+        bridgeRef.current.pause();
+        pausedByDragRef.current = true;
       }
 
       setAnimationProgression( calculateProgressionFromEvent( event ) );
 
       // Render one frame at the new position so the sketch isn't frozen on the old one.
-      try {
-        if ( typeof window.redraw === "function" ) window.redraw();
-      } catch { /* ignore */ }
+      bridgeRef.current?.redraw();
 
       event.currentTarget.setPointerCapture( event.pointerId );
     },
@@ -304,12 +255,7 @@ export default function AnimationProgressionBar( {
       // Resume the loop only if we were the ones who paused it.
       if ( pausedByDragRef.current ) {
         pausedByDragRef.current = false;
-
-        try {
-          if ( typeof window.loop === "function" ) window.loop();
-        } catch {
-          // Ignore.
-        }
+        bridgeRef.current?.resume();
       }
 
       try {
@@ -331,9 +277,9 @@ export default function AnimationProgressionBar( {
       event.stopPropagation();
       event.preventDefault();
 
-      const now = Date.now();
+      const now = performance.now();
 
-      // Throttle drag updates to keep React + p5 happy.
+      // Throttle drag updates to ~60 fps.
       if ( now - dragThrottleRef.current < 16 ) {
         return;
       }
@@ -343,9 +289,7 @@ export default function AnimationProgressionBar( {
       setAnimationProgression( calculateProgressionFromEvent( event ) );
 
       // Render one frame at the scrubbed position while the loop is paused.
-      try {
-        if ( typeof window.redraw === "function" ) window.redraw();
-      } catch { /* ignore */ }
+      bridgeRef.current?.redraw();
     },
     [
       calculateProgressionFromEvent,
