@@ -325,7 +325,9 @@ export function useSlideManagement( {
       getValues,
       setValue,
       removeSlide,
-      handleSlideSelect,
+        deepClone(
+          slides
+        )
     ]
   );
 
