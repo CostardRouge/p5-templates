@@ -18,8 +18,10 @@ export async function getJSONSketchOptions( sketchName: string, engineId: string
       };
     }
 
-    // Use dynamic import so it works in production builds
-    const options = await import( `@/p5/sketches/${ sketchPath }/options.json` );
+    const options = await import(
+      /* webpackInclude: /options\.json$/ */
+      `@/p5/sketches/${ sketchPath }/options.json`
+    );
 
     return options.default || options;
   } catch {
@@ -42,7 +44,10 @@ export async function getSketchMeta( sketchName: string, engineId: string ): Pro
   }
 
   try {
-    return await import( `@/p5/sketches/${ meta.sketchPath }/options.ts` );
+    return await import(
+      /* webpackInclude: /options\.ts$/ */
+      `@/p5/sketches/${ meta.sketchPath }/options.ts`
+    );
   } catch {
     return {
     };
