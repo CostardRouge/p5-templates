@@ -97,5 +97,6 @@ clean: ## Stop services and remove volumes
 
 # ─── Legacy Aliases ────────────────────────────────────────────────────────
 all: dc-up
+stop: dc-down
 build: dc-build
 init: build all
