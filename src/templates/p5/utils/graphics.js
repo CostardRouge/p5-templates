@@ -1,10 +1,13 @@
 import events from "./events.js";
+import {
+  getP5
+} from "./sketch.js";
 
 const graphics = {
   createAutoResizableGraphics(
     width, height, type, callback
   ) {
-    const _graphics = createGraphics(
+    const _graphics = getP5().createGraphics(
       width,
       height,
       type

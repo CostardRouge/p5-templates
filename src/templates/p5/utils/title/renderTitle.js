@@ -1,6 +1,9 @@
 import string from "../string.js";
 import animation from "../animation.js";
 import options from "@/p5/utils/options.js";
+import {
+  getP5
+} from "../sketch.js";
 
 /**
  * Get font from string.fonts
@@ -77,14 +80,16 @@ export default function renderTitle(
   const horizontalMargin = parseFloatDefault( titleConfig.margin.horizontal );
   const verticalMargin = parseFloatDefault( titleConfig.margin.vertical );
 
+  const p = getP5();
+
   string.write(
     text,
-    width * horizontalMargin + width * titleConfig.position.x,
-    height * verticalMargin + height * titleConfig.position.y,
+    p.width * horizontalMargin + p.width * titleConfig.position.x,
+    p.height * verticalMargin + p.height * titleConfig.position.y,
     {
       size: titleConfig.size ?? 128,
-      stroke: color( ...strokeColor ),
-      fill: color( ...fillColor ),
+      stroke: p.color( ...strokeColor ),
+      fill: p.color( ...fillColor ),
       strokeWeight: titleConfig.strokeWeight ?? 0,
       font: font,
       textAlign: [
@@ -92,8 +97,8 @@ export default function renderTitle(
         titleConfig.alignment?.vertical ?? "center",
       ],
       blendMode: titleConfig.blend || "source-over",
-      textWidth: width - 2 * horizontalMargin,
-      textHeight: height - 2 * verticalMargin,
+      textWidth: p.width - 2 * horizontalMargin,
+      textHeight: p.height - 2 * verticalMargin,
       popPush: true,
     }
   );

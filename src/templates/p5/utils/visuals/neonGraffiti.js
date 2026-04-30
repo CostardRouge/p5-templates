@@ -3,6 +3,9 @@ import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 function getCircleSize(
   circleSizeOption = {
@@ -58,7 +61,7 @@ export default function neonGraffiti( {
   sinAngleMultiplier = 2,
   cosAngleMultiplier = 2,
   hueIndexMultiplier = 1.5,
-  hueAmplitude = PI,
+  hueAmplitude,
   positionSinEasing = "easeInOutQuad",
   positionCosEasing = "easeInOutSine",
   positionCosMultiplier = 8,
@@ -66,32 +69,37 @@ export default function neonGraffiti( {
   hueStepDivider = 10,
   opacityStart = 1,
   opacityEnd = 2.25,
-  start = createVector(
-    0,
-    height / 2
-  ),
-  end = createVector(
-    width,
-    height / 2
-  ),
+  start,
+  end,
 } = {
 } ) {
-  noStroke();
+  const _p = getP5();
+
+  if ( hueAmplitude === undefined ) hueAmplitude = _p.PI;
+  if ( !start ) start = _p.createVector(
+    0,
+    _p.height / 2
+  );
+  if ( !end ) end = _p.createVector(
+    _p.width,
+    _p.height / 2
+  );
+
+  _p.noStroke();
 
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
     const shadowProgression = shadowIndex / shadowsCount;
 
     for ( let step = 0; step < stepsCount; step++ ) {
       const stepProgression = step / stepsCount;
-      const stepAngle = map(
+      const stepAngle = _p.map(
         stepProgression,
         0,
         1,
         -stepAngleAmplitude,
         stepAngleAmplitude
       );
-      const position = p5.Vector.lerp(
-        start,
+      const position = start.copy().lerp(
         end,
         step / stepsCount
       );
@@ -100,25 +108,23 @@ export default function neonGraffiti( {
         converters.polar.get(
           Math.sin,
           amplitude * sinAmplitudeMultiplier,
-          map(
+          _p.map(
             Math.sin( animation.angle + stepAngle + slides.index ),
-            // Math.cos( animation.angle + stepAngle + easing.easeInOutSine( stepProgression ) ),
             -1,
             1,
-            -TAU,
-            TAU
+            -_p.TAU,
+            _p.TAU
           )
         ),
         converters.polar.get(
           Math.sin,
           amplitude * cosAmplitudeMultiplier,
-          map(
-            // Math.cos( animation.angle + stepAngle * 2 + easing.easeInOutSine( shadowProgression ) ),
+          _p.map(
             Math.cos( animation.angle + stepAngle + slides.index ),
             -1,
             1,
-            -PI,
-            PI
+            -_p.PI,
+            _p.PI
           )
         )
       );
@@ -129,7 +135,7 @@ export default function neonGraffiti( {
         easing?.[ positionCosEasing ] ?? easing.easeInOutSine;
 
       position.add(
-        map(
+        _p.map(
           Math.sin( +animation.angle * sinAngleMultiplier +
               positionSinEasingFn( stepProgression ) ),
           -1,
@@ -137,7 +143,7 @@ export default function neonGraffiti( {
           -amplitude,
           amplitude
         ),
-        map(
+        _p.map(
           Math.cos( +animation.angle * cosAngleMultiplier +
               positionCosEasingFn( stepProgression ) * positionCosMultiplier ),
           -1,
@@ -149,8 +155,8 @@ export default function neonGraffiti( {
 
       const hueEasingFn = easing?.[ hueEasing ] ?? easing.easeInOutSine;
 
-      fill( colors.rainbow( {
-        opacityFactor: map(
+      _p.fill( colors.rainbow( {
+        opacityFactor: _p.map(
           shadowIndex,
           0,
           shadowsCount,
@@ -158,9 +164,8 @@ export default function neonGraffiti( {
           opacityEnd
         ),
         hueOffset: hueEasingFn( shadowProgression + stepProgression / hueIndexMultiplier ),
-        // hueOffset: easing.easeOutSine( shadowProgression + shadowIndex / 2 ),
         hueIndex:
-            map(
+            _p.map(
               Math.sin( animation.angle +
                   hueEasingFn( stepAngle ) * -3 +
                   shadowProgression +
@@ -172,7 +177,7 @@ export default function neonGraffiti( {
             ) * hueIndexMultiplier,
       } ) );
 
-      circle(
+      _p.circle(
         position.x,
         position.y,
         getCircleSize(

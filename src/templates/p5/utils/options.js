@@ -6,6 +6,9 @@ import events from "./events.js";
 import exif from "./exif.js";
 import cache from "./cache.js";
 import sketch from "./sketch.js";
+import {
+  getP5, getContainer
+} from "./sketch.js";
 
 import {
   getSketchOptions, setSketchOptions, subscribeSketchOptions,
@@ -58,7 +61,10 @@ async function _refreshAssets() {
       [
       ]
     );
-    document.querySelector( "canvas#defaultCanvas0" )?.classList.add( "loaded" );
+    const container = getContainer();
+    const canvas = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas#defaultCanvas0" );
+
+    canvas?.classList.add( "loaded" );
     return;
   }
 
@@ -77,7 +83,7 @@ async function _refreshAssets() {
       obj = {
         path,
         filename: path.split( "/" ).pop(),
-        img: loadImage( url ),
+        img: getP5().loadImage( url ),
         exif: undefined,
       };
 
@@ -145,7 +151,8 @@ async function readExifInfo(
 /* ------------------------------------------------------------------ */
 
 function markLoadedWhenExifReady() {
-  const c = document.querySelector( "canvas#defaultCanvas0" );
+  const container = getContainer();
+  const c = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas#defaultCanvas0" );
 
   if ( !c || c.classList.contains( "loaded" ) ) return;
   if ( cache.get( "images" )?.every( ( img ) => img.exif === undefined ) ) return;

@@ -87,7 +87,7 @@ export default function TemplateSketchPage() {
 
       {/* Sketch viewport */}
       <div
-        className="h-full w-full relative select-none"
+        className="h-full w-full relative"
         hidden={!sketchLoaded}
       >
         <ScalableViewport
@@ -99,7 +99,7 @@ export default function TemplateSketchPage() {
           {sketchLoaded && !capturing && (
             <div
               onClick={( e ) => e.stopPropagation()}
-              className="flex justify-between font-mono text-sm select-none mt-2"
+              className="flex justify-between font-mono text-sm mt-2"
               style={
                 {
                   "--scale-factor": "var(--viewport-scale, 1)",

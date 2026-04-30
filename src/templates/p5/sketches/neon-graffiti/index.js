@@ -1,11 +1,16 @@
 import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 import neonGraffiti from "@/p5/utils/visuals/neonGraffiti.js";
 
 sketch.setup();
 
 sketch.draw( ( _time ) => {
-  background( ...( options.sketch.backgroundColor ?? [
+  const p = getP5();
+
+  p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );
   neonGraffiti( {
@@ -27,13 +32,13 @@ sketch.draw( ( _time ) => {
     hueStepDivider: options.sketch.hueStepDivider,
     opacityStart: options.sketch.opacityStart,
     opacityEnd: options.sketch.opacityEnd,
-    start: createVector(
-      width * options.sketch.start.x,
-      height * options.sketch.start.y
+    start: p.createVector(
+      p.width * options.sketch.start.x,
+      p.height * options.sketch.start.y
     ),
-    end: createVector(
-      width * options.sketch.end.x,
-      height * options.sketch.end.y
+    end: p.createVector(
+      p.width * options.sketch.end.x,
+      p.height * options.sketch.end.y
     ),
   } );
 } );

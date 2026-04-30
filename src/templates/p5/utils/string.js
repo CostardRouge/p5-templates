@@ -1,4 +1,7 @@
 import cache from "./cache.js";
+import {
+  getP5
+} from "./sketch.js";
 
 const string = {
   fonts: {
@@ -8,7 +11,7 @@ const string = {
       key, path
     ) => {
       return (
-        string.fonts.loaded[ key ] ?? ( string.fonts.loaded[ key ] = loadFont( path ) )
+        string.fonts.loaded[ key ] ?? ( string.fonts.loaded[ key ] = getP5().loadFont( path ) )
       );
     },
     get loraItalic() {
@@ -150,14 +153,14 @@ const string = {
     options.stroke ??= 255;
     options.fill ??= 0;
     options.font ??= string.fonts.serif;
-    options.graphics ??= window;
+    options.graphics ??= getP5();
     options.textWidth ??= options.graphics.width;
     options.textHeight ??= -1;
     options.showBox ??= false;
     options.showLines ??= false;
     options.popPush ??= true;
     options.blendMode ??= undefined;
-    options.textWrap ??= WORD;
+    options.textWrap ??= getP5().WORD;
 
     const {
       size,
@@ -191,28 +194,28 @@ const string = {
       y,
       size
     );
-    const asc = int( textAscent() * 0.8 );
-    const desc = int( textDescent() * 0.8 );
+    const asc = getP5().int( getP5().textAscent() * 0.8 );
+    const desc = getP5().int( getP5().textDescent() * 0.8 );
 
     if ( showLines ) {
       graphics.push();
       // translate(position.x, position.y)
       graphics.line(
-        -width / 2,
+        -graphics.width / 2,
         position.y - asc,
-        width / 2,
+        graphics.width / 2,
         position.y - asc
       );
       graphics.line(
-        -width / 2,
+        -graphics.width / 2,
         position.y + desc,
-        width / 2,
+        graphics.width / 2,
         position.y + desc
       );
       graphics.line(
-        -width / 2,
+        -graphics.width / 2,
         position.y,
-        width,
+        graphics.width,
         position.y
       ); // baseline
       graphics.pop();
@@ -265,7 +268,7 @@ const string = {
     text,
     size,
     font,
-    position = createVector(
+    position = getP5().createVector(
       0,
       0
     ),
@@ -382,7 +385,7 @@ const string = {
     } ) => {
       // Create a new vector at the final position
       // Preserving the original's use of 'alpha' as the z-component
-      return createVector(
+      return getP5().createVector(
         x + offsetX,
         y + offsetY,
         alpha

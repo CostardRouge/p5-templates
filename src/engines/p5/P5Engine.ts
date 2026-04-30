@@ -10,19 +10,25 @@ import {
   resolveSketchPath
 } from "@/engines/metadata";
 
+type P5SketchRuntime = {
+  start: ( container: HTMLElement ) => Promise<any>;
+  reset: () => void;
+  getP5: () => any;
+};
+
 /**
  * P5.js implementation of `SketchEngine`.
  *
- * It delegates to the existing p5 bootstrap files
- * (`src/p5-sketches/utils/sketch.js`, `engine/p5.js`, etc.) so the
- * actual drawing code remains unchanged.
+ * Uses p5 instance mode: the p5 constructor receives the container
+ * element directly, so the canvas is created inside it — no need
+ * for MutationObserver or body-level DOM queries.
  */
 export class P5Engine implements SketchEngine {
   readonly engineId = "p5";
 
   private _isReady = false;
   private container: HTMLElement | null = null;
-  private observer: MutationObserver | null = null;
+  private sketchRuntime: P5SketchRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
 
   get isReady(): boolean {
@@ -39,8 +45,8 @@ export class P5Engine implements SketchEngine {
     this.container = container;
 
     // Remove stale canvases from a previous run
-    document
-      .querySelectorAll( "canvas.p5Canvas, canvas#defaultCanvas0" )
+    container
+      .querySelectorAll( "canvas" )
       .forEach( ( el ) => el.remove() );
 
     // Push options into the global syncSketchOptions store so the
@@ -54,60 +60,31 @@ export class P5Engine implements SketchEngine {
       "react"
     );
 
-    // Watch for the canvas the p5 bootstrap appends to the body.
-    const canvasAttached = new Promise<HTMLCanvasElement>( ( resolve ) => {
-      const tryAttach = (): HTMLCanvasElement | null => {
-        const canvas = document.querySelector( "canvas#defaultCanvas0", ) as HTMLCanvasElement | null;
+    // Dynamic-import the sketch module — the module calls
+    // sketch.setup(fn, opts) and sketch.draw(fn) which store
+    // the functions without creating the p5 instance yet.
+    const sketchPath = resolveSketchPath(
+      templatePath,
+      "p5"
+    );
 
-        if ( canvas && this.container && !this.container.contains( canvas ) ) {
-          this.container.appendChild( canvas );
-        }
+    const {
+      default: sketch
+    } = await import( "@/p5/utils/sketch.js" );
 
-        return canvas;
-      };
+    this.sketchRuntime = sketch as P5SketchRuntime;
 
-      // Already present?
-      const existing = tryAttach();
-
-      if ( existing ) {
-        return resolve( existing );
-      }
-
-      this.observer = new MutationObserver( () => {
-        const canvas = tryAttach();
-
-        if ( canvas ) {
-          this.observer?.disconnect();
-          resolve( canvas );
-        }
+    await import( `@/p5/sketches/${ sketchPath }/index.js` )
+      .catch( ( err ) => {
+        this.emit(
+          "error",
+          err
+        );
+        throw err;
       } );
 
-      this.observer.observe(
-        document.body,
-        {
-          childList: true,
-          subtree: true,
-        }
-      );
-    } );
+    await this.sketchRuntime.start( container );
 
-    // Dynamic-import the sketch module – the import triggers the
-    // global p5 bootstrap (`sketch.setup()` → engine init → canvas
-    // creation) exactly as the current P5Sketch.tsx does.
-    const sketchPath = resolveSketchPath( templatePath, "p5" );
-
-    await import(
-      /* webpackInclude: /index\.js$/ */
-      `@/p5/sketches/${ sketchPath }/index.js`
-    ).catch( ( err ) => {
-      this.emit(
-        "error",
-        err
-      );
-      throw err;
-    } );
-
-    await canvasAttached;
     this._isReady = true;
     this.emit(
       "ready",
@@ -116,13 +93,12 @@ undefined as any
   }
 
   destroy(): void {
-    this.observer?.disconnect();
-    this.observer = null;
+    // p5 instance cleanup — removes canvas, stops draw, unbinds events.
+    this.sketchRuntime?.getP5()?.remove();
+    this.sketchRuntime?.reset();
+    this.sketchRuntime = null;
 
-    document
-      .querySelectorAll( "canvas.p5Canvas, canvas#defaultCanvas0" )
-      .forEach( ( el ) => el.remove() );
-
+    // Clean up scripts loaded by other libraries (decomp, CCapture, etc.)
     ( window as any ).removeLoadedScripts?.();
 
     this._isReady = false;
@@ -133,7 +109,6 @@ undefined as any
   /* ---- options --------------------------------------------------- */
 
   updateOptions( partial: Partial<SketchOption> ): void {
-    // Fires the same "sketch-options" CustomEvent the React UI uses.
     import( "@/lib/syncSketchOptions" ).then( ( {
       setSketchOptions
     } ) => setSketchOptions(
@@ -145,28 +120,31 @@ undefined as any
   /* ---- playback -------------------------------------------------- */
 
   play(): void {
-    ( window as any ).loop?.();
+    this.sketchRuntime?.getP5()?.loop();
   }
 
   pause(): void {
-    ( window as any ).noLoop?.();
+    this.sketchRuntime?.getP5()?.noLoop();
   }
 
   stop(): void {
-    ( window as any ).noLoop?.();
+    this.sketchRuntime?.getP5()?.noLoop();
 
-    // Reset to frame 0 (best-effort – p5 doesn't expose a clean API)
-    if ( typeof ( window as any ).frameCount !== "undefined" ) {
-      ( window as any ).frameCount = 0;
+    const p = this.sketchRuntime?.getP5();
+
+    if ( p ) {
+      p.frameCount = 0;
     }
   }
 
   seek( frame: number ): void {
-    if ( typeof ( window as any ).frameCount !== "undefined" ) {
-      ( window as any ).frameCount = frame;
+    const p = this.sketchRuntime?.getP5();
+
+    if ( p ) {
+      p.frameCount = frame;
     }
 
-    ( window as any ).redraw?.();
+    this.sketchRuntime?.getP5()?.redraw();
   }
 
   /* ---- capture --------------------------------------------------- */
@@ -194,7 +172,7 @@ undefined as any
   }
 
   getCanvas(): HTMLCanvasElement | null {
-    return document.querySelector( "canvas#defaultCanvas0" );
+    return this.container?.querySelector( "canvas" ) ?? null;
   }
 
   /* ---- events ---------------------------------------------------- */

@@ -1,3 +1,7 @@
+import {
+  getP5
+} from "./sketch.js";
+
 const colors = {
   test: ( {
     hueOffset = 0,
@@ -6,11 +10,13 @@ const colors = {
     min = 0,
     max = 360,
     easingFunction,
-  } ) =>
-    color(
-      map(
-        sin(
-          PI * hueIndex + hueOffset,
+  } ) => {
+    const p = getP5();
+
+    return p.color(
+      p.map(
+        p.sin(
+          p.PI * hueIndex + hueOffset,
           hueOffset
         ),
         -1,
@@ -19,9 +25,9 @@ const colors = {
         max
       ) /
         opacityFactor,
-      map(
-        cos(
-          PI * ( hueIndex + 1 / 3 + hueOffset ),
+      p.map(
+        p.cos(
+          p.PI * ( hueIndex + 1 / 3 + hueOffset ),
           hueOffset
         ),
         -1,
@@ -29,9 +35,9 @@ const colors = {
         min,
         max
       ) / opacityFactor,
-      map(
-        cos(
-          PI * ( hueIndex + 2 / 3 + hueOffset ),
+      p.map(
+        p.cos(
+          p.PI * ( hueIndex + 2 / 3 + hueOffset ),
           hueOffset
         ),
         -1,
@@ -39,7 +45,8 @@ const colors = {
         min,
         max
       ) / opacityFactor
-    ),
+    );
+  },
   rainbowCrazy: ( {
     hueOffset = 0,
     hueIndex,
@@ -47,33 +54,36 @@ const colors = {
     min = 0,
     max = 360,
     easingFunction,
-  } ) =>
-    color(
-      map(
-        ( easingFunction ?? cos )( hueOffset - hueIndex ),
+  } ) => {
+    const p = getP5();
+
+    return p.color(
+      p.map(
+        ( easingFunction ?? p.cos.bind( p ) )( hueOffset - hueIndex ),
         -1,
         1,
         min,
         max
       ) /
         opacityFactor,
-      map(
-        ( easingFunction ?? sin )( hueOffset + hueIndex ),
+      p.map(
+        ( easingFunction ?? p.sin.bind( p ) )( hueOffset + hueIndex ),
         -1,
         1,
         max,
         min
       ) /
         opacityFactor,
-      map(
-        ( easingFunction ?? cos )( hueOffset - hueIndex ),
+      p.map(
+        ( easingFunction ?? p.cos.bind( p ) )( hueOffset - hueIndex ),
         -1,
         1,
         max,
         min
       ) /
         opacityFactor
-    ),
+    );
+  },
   rainbow: ( {
     hueOffset = 0,
     hueIndex,
@@ -82,26 +92,28 @@ const colors = {
     max = 360,
     easingFunction,
     alpha,
-  } ) =>
-    color(
-      map(
-        ( easingFunction ?? sin )( hueOffset + hueIndex ),
+  } ) => {
+    const p = getP5();
+
+    return p.color(
+      p.map(
+        ( easingFunction ?? p.sin.bind( p ) )( hueOffset + hueIndex ),
         -1,
         1,
         min,
         max
       ) /
         opacityFactor,
-      map(
-        ( easingFunction ?? cos )( hueOffset - hueIndex ),
+      p.map(
+        ( easingFunction ?? p.cos.bind( p ) )( hueOffset - hueIndex ),
         -1,
         1,
         max,
         min
       ) /
         opacityFactor,
-      map(
-        ( easingFunction ?? sin )( hueOffset + hueIndex ),
+      p.map(
+        ( easingFunction ?? p.sin.bind( p ) )( hueOffset + hueIndex ),
         -1,
         1,
         max,
@@ -109,62 +121,69 @@ const colors = {
       ) /
         opacityFactor,
       alpha
-    ),
+    );
+  },
   darkBlueYellow: ( {
     hueOffset = 0,
     hueIndex,
     opacityFactor = 1,
     min = 0,
     max = 360,
-  } ) =>
-    color(
-      map(
-        cos( hueOffset + hueIndex ),
+  } ) => {
+    const p = getP5();
+
+    return p.color(
+      p.map(
+        p.cos( hueOffset + hueIndex ),
         -1,
         1,
         min,
         max
       ) / opacityFactor,
-      map(
-        cos( hueOffset + hueIndex ),
+      p.map(
+        p.cos( hueOffset + hueIndex ),
         -1,
         1,
         min,
         max
       ) / opacityFactor,
-      map(
-        sin( hueOffset + hueIndex ),
+      p.map(
+        p.sin( hueOffset + hueIndex ),
         -1,
         1,
         max,
         min
       ) / opacityFactor
-    ),
+    );
+  },
   purple: ( {
     hueOffset = 0,
     hueIndex,
     opacityFactor = 1,
     min = 0,
     max = 360,
-  } ) =>
-    color(
+  } ) => {
+    const p = getP5();
+
+    return p.color(
       max / 4 / opacityFactor,
-      map(
-        sin( hueOffset - hueIndex ),
+      p.map(
+        p.sin( hueOffset - hueIndex ),
         -1,
         1,
         max / 2,
         0
       ) / opacityFactor,
       max / opacityFactor
-    ),
+    );
+  },
   purpleSimple: ( {
     hueOffset = 0,
     hueIndex,
     opacityFactor = 1,
     min = 0,
     max = 360,
-  } ) => color(
+  } ) => getP5().color(
     128,
     128,
     255
@@ -172,7 +191,7 @@ const colors = {
   green: ( {
     hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360
   } ) =>
-    color(
+    getP5().color(
       92,
       255,
       128
@@ -180,7 +199,7 @@ const colors = {
   black: ( {
     hueOffset = 0, hueIndex, opacityFactor = 1, min = 0, max = 360
   } ) =>
-    color(
+    getP5().color(
       4,
       2,
       8
@@ -204,6 +223,7 @@ const colors = {
   getDominantColorFromPixels: (
     pixels, precision = 100
   ) => {
+    const p = getP5();
     const chunkedPixels = colors.chunk(
       pixels,
       4
@@ -231,7 +251,7 @@ const colors = {
           a
         ]
       ) => {
-        const pixelColor = color(
+        const pixelColor = p.color(
           r,
           g,
           b,
@@ -242,7 +262,7 @@ const colors = {
           return pixelColor;
         }
 
-        return lerpColor(
+        return p.lerpColor(
           accumulator,
           pixelColor,
           0.5

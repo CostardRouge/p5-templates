@@ -1,18 +1,23 @@
 import shapes from "../../shapes.js";
+import {
+  getP5
+} from "../../sketch.js";
 
 export default function drawSlideBackground( backgroundOption ) {
-  push();
-  background( ...backgroundOption.background );
+  const p = getP5();
+
+  p.push();
+  p.background( ...backgroundOption.background );
 
   const backgroundPattern = backgroundOption.pattern;
 
   if ( backgroundPattern !== undefined ) {
     if ( backgroundPattern.type === "grid" ) {
       const columns = backgroundPattern.columns || 9;
-      const rows = ( columns * height ) / width;
+      const rows = ( columns * p.height ) / p.width;
 
-      stroke( ...backgroundPattern.stroke );
-      strokeWeight( backgroundPattern.strokeWeight || 1 );
+      p.stroke( ...backgroundPattern.stroke );
+      p.strokeWeight( backgroundPattern.strokeWeight || 1 );
 
       shapes.grid( {
         borders: backgroundPattern.borders,
@@ -23,10 +28,10 @@ export default function drawSlideBackground( backgroundOption ) {
 
     if ( backgroundPattern.type === "dots" ) {
       const columns = backgroundPattern.columns || 50;
-      const rows = ( columns * height ) / width;
+      const rows = ( columns * p.height ) / p.width;
 
-      stroke( ...backgroundPattern.stroke );
-      strokeWeight( backgroundPattern.strokeWeight || 4 );
+      p.stroke( ...backgroundPattern.stroke );
+      p.strokeWeight( backgroundPattern.strokeWeight || 4 );
 
       shapes.dots( {
         border: backgroundPattern.borders,
@@ -35,5 +40,5 @@ export default function drawSlideBackground( backgroundOption ) {
       } );
     }
   }
-  pop();
+  p.pop();
 }

@@ -1,11 +1,23 @@
 import cache from "./cache.js";
+import {
+  getP5
+} from "./sketch.js";
+
+const lerpVector = (
+  from, to, amount
+) => from.copy().lerp(
+  to,
+  amount
+);
 
 const mappers = {
   circularMap: function(
     value, length, min, max, fn
   ) {
+    const p = getP5();
+
     return mappers.fn(
-      abs( ( value % length ) - length / 2 ),
+      p.abs( ( value % length ) - length / 2 ),
       0,
       length / 2,
       max,
@@ -16,7 +28,9 @@ const mappers = {
   circular: function(
     value, min, max, start = min, end = max, fn, base = 1
   ) {
-    return constrain(
+    const p = getP5();
+
+    return p.constrain(
       base - Math.abs( mappers.fn(
         value,
         min,
@@ -30,15 +44,18 @@ const mappers = {
     );
   },
   circularPolar: function(
-    v, min, max, start = min, end = max, fn = cos
+    v, min, max, start = min, end = max, fn
   ) {
-    return map(
-      fn( map(
+    const p = getP5();
+    const polarFn = fn ?? p.cos.bind( p );
+
+    return p.map(
+      polarFn( p.map(
         v,
         min,
         max,
-        -PI,
-        PI
+        -p.PI,
+        p.PI
       ) ),
       -1,
       1,
@@ -49,8 +66,10 @@ const mappers = {
   fn: function(
     value, min, max, start, end, fn = ( x ) => x
   ) {
-    return map(
-      fn( map(
+    const p = getP5();
+
+    return p.map(
+      fn( p.map(
         value,
         min,
         max,
@@ -66,13 +85,16 @@ const mappers = {
   circularIndex: function(
     index, values
   ) {
-    // return values[~~(mappers.circularConstrain(index, 0, values.length-1)) % values.length];
-    return values[ ~~abs( index ) % values.length ];
+    const p = getP5();
+
+    return values[ ~~p.abs( index ) % values.length ];
   },
   circularValueOn: function(
     index, values, scale = values.length - 1
   ) {
-    return values[ ceil( circularMap(
+    const p = getP5();
+
+    return values[ p.ceil( mappers.circularMap(
       index,
       scale,
       0,
@@ -107,8 +129,9 @@ const mappers = {
     }
   },
   lerpPoints: (
-    from, to, amount, fn = p5.Vector?.lerp
+    from, to, amount, fn
   ) => {
+    const vectorLerp = fn ?? lerpVector;
     const result = [
     ];
     const maxLength = Math.max(
@@ -118,7 +141,7 @@ const mappers = {
 
     for ( let i = 0; i < maxLength; i++ ) {
       if ( from[ i % from.length ] && to[ i % to.length ] ) {
-        const lerpedVector = fn(
+        const lerpedVector = vectorLerp(
           from[ i % from.length ],
           to[ i % to.length ],
           amount
@@ -134,8 +157,9 @@ const mappers = {
     // return Object.values( result );
   },
   fastLerpPoints: (
-    from, to, amount, fn = p5.Vector?.lerp
+    from, to, amount, fn
   ) => {
+    const vectorLerp = fn ?? lerpVector;
     const longest = from;
     const shortest = to;
 
@@ -145,7 +169,7 @@ const mappers = {
       // const targetIndex = ~~map(index, 0, longest.length-1, 0, shortest.length-1, true);
       const targetIndex = index % shortest.length;
 
-      return fn(
+      return vectorLerp(
         longest[ index ],
         shortest[ ~~targetIndex ],
         amount
@@ -235,8 +259,10 @@ const mappers = {
     return vectorsList;
   },
   valuer: (
-    key, value, smoothAmount = 0.07, fn = lerp
+    key, value, smoothAmount = 0.07, fn
   ) => {
+    const p = getP5();
+    const lerpFn = fn ?? p.lerp.bind( p );
     const cacheKey = `valuer-${ key }`;
     const storedValue = cache.store(
       cacheKey,
@@ -256,7 +282,7 @@ const mappers = {
           storedValue?.max ?? -Infinity,
           value
         ),
-        smooth: fn(
+        smooth: lerpFn(
           storedValue?.smooth ?? 0,
           value,
           smoothAmount
@@ -265,8 +291,10 @@ const mappers = {
     );
   },
   smoother: (
-    key, value, amount = 0.07, fn = lerp
+    key, value, amount = 0.07, fn
   ) => {
+    const p = getP5();
+    const lerpFn = fn ?? p.lerp.bind( p );
     const cacheKey = `smoother-${ key }`;
     const storedValue = cache.store(
       cacheKey,
@@ -275,7 +303,7 @@ const mappers = {
 
     return cache.set(
       cacheKey,
-      fn(
+      lerpFn(
         storedValue,
         value,
         amount

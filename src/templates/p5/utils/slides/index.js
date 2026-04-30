@@ -1,5 +1,8 @@
 import options from "../options.js";
 import events from "../events.js";
+import {
+  getP5, getContainer
+} from "../sketch.js";
 
 import {
   _layouts
@@ -18,7 +21,7 @@ const slides = {
       "pre-draw",
       () => {
         if ( options?.slides && options?.slides.length ) {
-          clear();
+          getP5()?.clear();
         }
       }
     );
@@ -34,7 +37,8 @@ const slides = {
     events.register(
       "post-draw",
       () => {
-        const canvas = document.querySelector( "canvas#defaultCanvas0, canvas.p5Canvas" );
+        const container = getContainer();
+        const canvas = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas#defaultCanvas0, canvas.p5Canvas" );
 
         if ( !canvas ) {
           return;

@@ -1,6 +1,9 @@
 import mappers from "./mappers.js";
 import sketch from "./sketch.js";
 import time from "./time.js";
+import {
+  getP5
+} from "./sketch.js";
 
 const animation = {
   animate: (
@@ -65,30 +68,33 @@ const animation = {
     return ( animation.progression * speedFactor ) % 1;
   },
   get noiseProgression() {
-    return noise( animation.circularProgression );
+    return getP5().noise( animation.circularProgression );
   },
 
   get angle() {
-    return animation.progression * TAU;
-    // return map(animation.circularProgression, 0, 1, 0, TAU)
+    return animation.progression * getP5().TAU;
   },
 
   get sinAngle() {
-    return map(
+    const p = getP5();
+
+    return p.map(
       animation.progression,
       0,
       1,
-      -PI / 2,
-      PI / 2
+      -p.PI / 2,
+      p.PI / 2
     );
   },
   get cosAngle() {
-    return map(
+    const p = getP5();
+
+    return p.map(
       animation.progression,
       0,
       1,
-      PI,
-      TAU
+      p.PI,
+      p.TAU
     );
   },
 
@@ -99,10 +105,11 @@ const animation = {
     return Math.cos( animation.angle * speedFactor );
   },
   get linearOscillation() {
+    const p = getP5();
     const progression = animation.progression;
 
     if ( progression < 0.5 ) {
-      return map(
+      return p.map(
         progression,
         0,
         0.5,
@@ -111,7 +118,7 @@ const animation = {
       ); // Forward phase
     }
 
-    return map(
+    return p.map(
       progression,
       0.5,
       1,
@@ -125,11 +132,13 @@ const animation = {
     currentTime,
     duration = 1,
     easingFn = ( x ) => x,
-    lerpFn = lerp,
+    lerpFn,
     startIndex = currentTime,
     endIndex = currentTime + 1,
-  } ) =>
-    lerpFn(
+  } ) => {
+    const _lerpFn = lerpFn ?? getP5().lerp.bind( getP5() );
+
+    return _lerpFn(
       mappers.circularIndex(
         startIndex,
         values
@@ -139,7 +148,8 @@ const animation = {
         values
       ),
       easingFn( ( currentTime * duration ) % duration )
-    ),
+    );
+  },
   makeEaseInOut:
     (
       inFn, outFn = inFn
@@ -149,8 +159,9 @@ const animation = {
         else return ( 2 - outFn( 2 * ( 1 - timeFraction ) ) ) / 2;
       },
   sequence: function(
-    key, speed, values, amount = 0.07, lerpFn = lerp
+    key, speed, values, amount = 0.07, lerpFn
   ) {
+    const _lerpFn = lerpFn ?? getP5().lerp.bind( getP5() );
     this.values = this.values ?? {
     };
 
@@ -160,7 +171,7 @@ const animation = {
     );
     const currentSavedValue = this.values[ key ] ? this.values[ key ] : newValue;
 
-    return ( this.values[ key ] = lerpFn(
+    return ( this.values[ key ] = _lerpFn(
       currentSavedValue,
       newValue,
       amount

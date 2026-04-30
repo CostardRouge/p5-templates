@@ -1,3 +1,7 @@
+import {
+  getP5
+} from "./sketch.js";
+
 const converters = {
   polar: {
     get: function(
@@ -8,14 +12,16 @@ const converters = {
     vector: function(
       angle, sizeX, sizeY = sizeX
     ) {
-      return createVector(
+      const p = getP5();
+
+      return p.createVector(
         this.get(
-          sin,
+          p.sin.bind( p ),
           sizeX,
           angle
         ),
         this.get(
-          cos,
+          p.cos.bind( p ),
           sizeY,
           angle
         )

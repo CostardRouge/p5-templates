@@ -1,6 +1,17 @@
-import recorder from "./recorder-ccapture.js";
 import animation from "./animation.js";
 import debug from "./debug.js";
+
+let recorderModulePromise;
+
+async function getRecorder() {
+  if ( !recorderModulePromise ) {
+    recorderModulePromise = import( "./recorder-ccapture.js" ).then( ( {
+      default: recorder
+    } ) => recorder );
+  }
+
+  return recorderModulePromise;
+}
 
 const events = {
   lastEventId: 0,
@@ -101,7 +112,7 @@ const events = {
   toggleCanvasRecordingOnKey: function( onKey = "r" ) {
     events.register(
       "engine-on-key-typed",
-      function() {
+      async function() {
         if ( true !== options.get( "press-r-to-record" ) ) {
           return;
         }
@@ -109,6 +120,8 @@ const events = {
         if ( !events.handle( "engine-get-key-typed" ).includes( onKey ) ) {
           return;
         }
+
+        const recorder = await getRecorder();
 
         if ( recorder.recording ) {
           recorder.stop();
