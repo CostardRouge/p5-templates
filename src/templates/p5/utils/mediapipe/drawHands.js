@@ -1,5 +1,5 @@
 import * as common from "@/p5/utils/common.js";
-
+import { getP5 } from "@/p5/utils/sketch.js";
 import neonLine from "@/p5/utils/visuals/neonLine.js";
 
 const indexFingerJointIndices = [
@@ -41,6 +41,7 @@ const pinkyFingerJointIndices = [
 export default function drawHands(
   result, graphics, addObstacle
 ) {
+  const p = getP5();
   const handLandmarks = result?.landmarks;
 
   if ( !handLandmarks?.length > 0 ?? false ) {
@@ -68,10 +69,10 @@ export default function drawHands(
 
       const fingerJointVectors = jointIndices.map( ( fingerJointIndex ) => {
         const joint = hand[ fingerJointIndex ];
-        const fingerJointVector = createVector(
-          common.inverseX( joint.x ) * width,
-          joint.y * height,
-          map(
+        const fingerJointVector = p.createVector(
+          common.inverseX( joint.x ) * p.width,
+          joint.y * p.height,
+          p.map(
             joint.z,
             0,
             -1,
@@ -121,7 +122,7 @@ export default function drawHands(
       ] = fingers[ fingerIndex ];
 
       neonLine( {
-        innerCircleSize: map(
+        innerCircleSize: p.map(
           z,
           0,
           1,

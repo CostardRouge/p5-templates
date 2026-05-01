@@ -1,71 +1,79 @@
 import animation from "./animation.js";
+import {
+  getP5
+} from "./sketch.js";
 
 const shapes = {
   cross: ( {
     position, size = 10, amount = 2, angle = 0
   } ) => {
+    const p = getP5();
     const {
       x, y
     } = position;
 
-    push();
-    translate(
+    p.push();
+    p.translate(
       x,
       y
     );
-    rotate( angle );
+    p.rotate( angle );
 
-    const step = PI / amount;
+    const step = p.PI / amount;
 
     for ( let i = 0; i < amount; i++ ) {
-      rotate( step );
-      line(
+      p.rotate( step );
+      p.line(
         -size,
         0,
         size,
         0
       );
     }
-    pop();
+    p.pop();
   },
   hl: (
-    y, graphics = window
+    y, graphics
   ) => {
+    graphics ??= getP5();
+
     graphics.line(
       0,
       y,
-      width,
+      graphics.width,
       y
     );
   },
   vl: (
-    x, graphics = window
+    x, graphics
   ) => {
+    graphics ??= getP5();
+
     graphics.line(
       x,
       0,
       x,
-      height
+      graphics.height
     );
   },
   sketchDurationBar: ( color ) => {
-    const sketchDurationBarStartPosition = createVector(
+    const p = getP5();
+    const sketchDurationBarStartPosition = p.createVector(
       0,
-      height - 2
+      p.height - 2
     );
-    const sketchDurationBarEndPosition = createVector(
-      width,
-      height - 2
+    const sketchDurationBarEndPosition = p.createVector(
+      p.width,
+      p.height - 2
     );
-    const sketchDurationBarCurrentPosition = p5.Vector.lerp(
-      sketchDurationBarStartPosition,
+    const sketchDurationBarCurrentPosition = sketchDurationBarStartPosition.copy().lerp(
       sketchDurationBarEndPosition,
       animation.progression
     );
 
-    stroke( color );
-    strokeWeight( 2 );
-    line(
+    p.stroke( color );
+    p.strokeWeight( 2 );
+    p.line(
       sketchDurationBarStartPosition.x,
       sketchDurationBarStartPosition.y,
       sketchDurationBarCurrentPosition.x,
@@ -75,9 +83,11 @@ const shapes = {
   grid( {
     columns, rows, border = false
   } ) {
+    const p = getP5();
+
     // Calculate the spacing between lines
-    const columnSpacing = width / columns;
-    const rowSpacing = height / rows;
+    const columnSpacing = p.width / columns;
+    const rowSpacing = p.height / rows;
 
     // Draw vertical lines
     for ( let column = 0; column <= columns; column++ ) {
@@ -91,7 +101,7 @@ const shapes = {
         if ( column === 0 ) {
           x = 1; // Left border
         } else if ( column === columns ) {
-          x = width - 1; // Right border
+          x = p.width - 1; // Right border
         }
       } else {
         // Without borders, skip first vertical line
@@ -115,7 +125,7 @@ const shapes = {
         if ( row === 0 ) {
           y = 1; // Top border
         } else if ( row === rows ) {
-          y = height - 1; // Bottom border
+          y = p.height - 1; // Bottom border
         }
       } else {
         // Without borders, skip first horizontal line
@@ -130,10 +140,12 @@ const shapes = {
   dots( {
     columns, rows, border = false, inset = 1
   } ) {
+    const p = getP5();
+
     /* 1. Validation – same rules as in grid( … ) */
     if ( ![
-      width,
-      height,
+      p.width,
+      p.height,
       columns,
       rows
     ].every( Number.isFinite ) ) {
@@ -142,8 +154,8 @@ const shapes = {
     if ( columns < 1 || rows < 1 ) return;
 
     /* 2. Pre-compute the spacing */
-    const colStep = width / columns;
-    const rowStep = height / rows;
+    const colStep = p.width / columns;
+    const rowStep = p.height / rows;
 
     /* 3. Decide where to start/stop depending on the border flag       *
      *    - With border=false we skip the first row/col (0) so that the *
@@ -160,7 +172,7 @@ const shapes = {
         border && ( c === 0 || c === columns )
           ? c === 0
             ? 0
-            : width // hard border
+            : p.width // hard border
           : Math.round( c * colStep ) + ( border ? inset : 0 );
 
       for ( let r = rowStart; r <= rowEnd; ++r ) {
@@ -169,11 +181,11 @@ const shapes = {
           border && ( r === 0 || r === rows )
             ? r === 0
               ? 0
-              : height
+              : p.height
             : Math.round( r * rowStep ) + ( border ? inset : 0 );
 
         // draw it
-        point(
+        p.point(
           x,
           y
         ); // ← adapt this primitive if necessary

@@ -2,6 +2,7 @@ import cache from "./cache.js";
 import shapes from "./shapes.js";
 import options from "./options.js";
 import * as common from "@/p5/utils/common.js";
+import { getP5 } from "./sketch.js";
 
 const imageUtils = {
   marginImage: ( {
@@ -15,12 +16,13 @@ const imageUtils = {
     center = false,
     clip = false,
     fill = false,
-    position = createVector(
-      width / 2,
-      height / 2
-    ),
+    position = null,
   } ) => {
-    const scaledBoundary = createVector(
+    const p = getP5();
+    if (position === null) {
+      position = p.createVector(p.width / 2, p.height / 2);
+    }
+    const scaledBoundary = p.createVector(
       boundary.width * scale,
       boundary.height * scale
     );
@@ -85,7 +87,7 @@ const imageUtils = {
     );
 
     if ( options.lines ) {
-      stroke( options?.colors?.accent || color(
+      p.stroke( options?.colors?.accent || p.color(
         128,
         128,
         255
@@ -99,12 +101,12 @@ const imageUtils = {
     }
   },
   clearColor: (
-    img, clr = color(
-      255,
-      255,
-      255
-    )
+    img, clr = null
   ) => {
+    const p = getP5();
+    if (clr === null) {
+      clr = p.color(255, 255, 255);
+    }
     img.loadPixels();
 
     const {

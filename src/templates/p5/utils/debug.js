@@ -1,5 +1,6 @@
 import sketch from "./sketch.js";
 import time from "./time.js";
+import { getP5 } from "./sketch.js";
 
 const debug = {
   frameRate: 0,
@@ -101,35 +102,36 @@ const debug = {
     );
   },
   lines: function() {
-    stroke( 255 );
-    line(
-      width / 2,
+    const p = getP5();
+    p.stroke( 255 );
+    p.line(
+      p.width / 2,
       0,
-      width / 2,
-      height
+      p.width / 2,
+      p.height
     );
-    line(
+    p.line(
       0,
-      height / 2,
-      width,
-      height / 2
+      p.height / 2,
+      p.width,
+      p.height / 2
     );
 
-    stroke(
+    p.stroke(
       255,
       64
     );
-    line(
-      mouseX,
+    p.line(
+      p.mouseX,
       0,
-      mouseX,
-      height
+      p.mouseX,
+      p.height
     );
-    line(
+    p.line(
       0,
-      mouseY,
-      width,
-      mouseY
+      p.mouseY,
+      p.width,
+      p.mouseY
     );
   },
   webgl: function() {

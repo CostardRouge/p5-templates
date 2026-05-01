@@ -1,4 +1,5 @@
 import cache from "./cache.js";
+import { getP5 } from "./sketch.js";
 
 const grid = {
   create: (
@@ -6,37 +7,33 @@ const grid = {
       rows = 2,
       columns = 2,
       diamond = false,
-      topLeft = createVector(
-        0,
-        0
-      ),
-      topRight = createVector(
-        width,
-        0
-      ),
-      bottomLeft = createVector(
-        0,
-        height
-      ),
-      bottomRight = createVector(
-        width,
-        height
-      ),
+      topLeft = null,
+      topRight = null,
+      bottomLeft = null,
+      bottomRight = null,
     },
     cached = true
   ) => {
+    const p = getP5();
+    
+    // Set defaults for p5-dependent parameters
+    if (topLeft === null) topLeft = p.createVector(0, 0);
+    if (topRight === null) topRight = p.createVector(p.width, 0);
+    if (bottomLeft === null) bottomLeft = p.createVector(0, p.height);
+    if (bottomRight === null) bottomRight = p.createVector(p.width, p.height);
+    
     const compute = () => {
-      const baseCellWidth = p5.Vector.dist(
+      const baseCellWidth = p.Vector.dist(
         topLeft,
         topRight
       ) / columns;
-      const baseCellHeight = p5.Vector.dist(
+      const baseCellHeight = p.Vector.dist(
         topLeft,
         bottomLeft
       ) / rows;
 
-      const cellWidth = diamond ? baseCellWidth / sqrt( 2 ) : baseCellWidth;
-      const cellHeight = diamond ? baseCellWidth / sqrt( 2 ) : baseCellHeight;
+      const cellWidth = diamond ? baseCellWidth / p.sqrt( 2 ) : baseCellWidth;
+      const cellHeight = diamond ? baseCellWidth / p.sqrt( 2 ) : baseCellHeight;
 
       const halfDiagonal = baseCellWidth / 2;
 
@@ -51,36 +48,36 @@ const grid = {
           const y = topLeft.y + row * baseCellHeight;
 
           if ( diamond ) {
-            corners.push( createVector(
+            corners.push( p.createVector(
               0,
               -halfDiagonal
             ) ); // top
-            corners.push( createVector(
+            corners.push( p.createVector(
               halfDiagonal,
               0
             ) ); // right
-            corners.push( createVector(
+            corners.push( p.createVector(
               0,
               halfDiagonal
             ) ); // bottom
-            corners.push( createVector(
+            corners.push( p.createVector(
               -halfDiagonal,
               0
             ) ); // left
           } else {
-            corners.push( createVector(
+            corners.push( p.createVector(
               0,
               0
             ) );
-            corners.push( createVector(
+            corners.push( p.createVector(
               cellWidth,
               0
             ) );
-            corners.push( createVector(
+            corners.push( p.createVector(
               cellWidth,
               cellHeight
             ) );
-            corners.push( createVector(
+            corners.push( p.createVector(
               0,
               cellHeight
             ) );
@@ -88,11 +85,11 @@ const grid = {
 
           cells.push( {
             center: diamond
-              ? createVector(
+              ? p.createVector(
                 x + halfDiagonal,
                 y + halfDiagonal
               )
-              : createVector(
+              : p.createVector(
                 x + cellWidth / 2,
                 y + cellHeight / 2
               ),
@@ -100,7 +97,7 @@ const grid = {
               x,
               y
             ) ),
-            position: createVector(
+            position: p.createVector(
               x,
               y
             ),
@@ -117,27 +114,27 @@ const grid = {
 
           if ( diamond && row < rows - 1 && column < columns - 1 ) {
             const corners = [
-              createVector(
+              p.createVector(
                 0,
                 -halfDiagonal
               ), // top
-              createVector(
+              p.createVector(
                 halfDiagonal,
                 0
               ), // right
-              createVector(
+              p.createVector(
                 0,
                 halfDiagonal
               ), // bottom
-              createVector(
+              p.createVector(
                 -halfDiagonal,
                 0
               ), // left
             ];
 
             cells.push( {
-              // position: createVector(x + halfDiagonal, y + halfDiagonal),
-              center: createVector(
+              // position: p.createVector(x + halfDiagonal, y + halfDiagonal),
+              center: p.createVector(
                 x + halfDiagonal * 2,
                 y + halfDiagonal * 2
               ),
@@ -200,56 +197,57 @@ const grid = {
   debug: (
     gridOptions, cells, corners
   ) => {
+    const p = getP5();
     // Draw grid corners
-    stroke(
+    p.stroke(
       255,
       0,
       0
     );
-    strokeWeight( 10 );
-    point(
+    p.strokeWeight( 10 );
+    p.point(
       corners.topLeft.x,
       corners.topLeft.y
     );
-    point(
+    p.point(
       corners.topRight.x,
       corners.topRight.y
     );
-    point(
+    p.point(
       corners.bottomLeft.x,
       corners.bottomLeft.y
     );
-    point(
+    p.point(
       corners.bottomRight.x,
       corners.bottomRight.y
     );
 
     // Draw grid lines
-    stroke( 0 );
-    strokeWeight( 1 );
+    p.stroke( 0 );
+    p.strokeWeight( 1 );
     for ( let row = 0; row < gridOptions.rows + 1; row++ ) {
-      let startX = lerp(
+      let startX = p.lerp(
         corners.topLeft.x,
         corners.bottomLeft.x,
         row / gridOptions.rows
       );
-      let startY = lerp(
+      let startY = p.lerp(
         corners.topLeft.y,
         corners.bottomLeft.y,
         row / gridOptions.rows
       );
-      let endX = lerp(
+      let endX = p.lerp(
         corners.topRight.x,
         corners.bottomRight.x,
         row / gridOptions.rows
       );
-      let endY = lerp(
+      let endY = p.lerp(
         corners.topRight.y,
         corners.bottomRight.y,
         row / gridOptions.rows
       );
 
-      line(
+      p.line(
         startX,
         startY,
         endX,
@@ -257,28 +255,28 @@ const grid = {
       );
     }
     for ( let col = 0; col < gridOptions.columns + 1; col++ ) {
-      let startX = lerp(
+      let startX = p.lerp(
         corners.topLeft.x,
         corners.topRight.x,
         col / gridOptions.columns
       );
-      let startY = lerp(
+      let startY = p.lerp(
         corners.topLeft.y,
         corners.topRight.y,
         col / gridOptions.columns
       );
-      let endX = lerp(
+      let endX = p.lerp(
         corners.bottomLeft.x,
         corners.bottomRight.x,
         col / gridOptions.columns
       );
-      let endY = lerp(
+      let endY = p.lerp(
         corners.bottomLeft.y,
         corners.bottomRight.y,
         col / gridOptions.columns
       );
 
-      line(
+      p.line(
         startX,
         startY,
         endX,
@@ -287,14 +285,14 @@ const grid = {
     }
 
     // Draw grid cells as dots
-    stroke(
+    p.stroke(
       0,
       0,
       255
     );
-    strokeWeight( 5 );
+    p.strokeWeight( 5 );
     for ( let cell of cells ) {
-      point(
+      p.point(
         cell.x,
         cell.y
       );
