@@ -1,6 +1,8 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 // Default values only
 export const formValues = {
@@ -13,18 +15,14 @@ export const formValues = {
     0,
     0,
     0
-  ] ,
+  ],
   textColor: [
     128,
     128,
     255
-  ] ,
+  ],
 
-  // Typography / Title
-  font: "martian",
-  title: "photo-3d-sphere",
-  showTitle: true,
-  titleSize: 450,
+  title: titleDefaultValues,
 
   // Behavior
   rotateX: false,
@@ -52,31 +50,6 @@ export const formConfiguration: Record<string, any> = {
     label: "Text color",
   },
 
-  // Typography / Title
-  font: {
-    component: "select",
-    label: "Font name",
-    options: fontNames.map( ( fontName ) => ( {
-      value: fontName,
-      label: fontName,
-    } ) ),
-  },
-  title: {
-    component: "text",
-    label: "Custom title (empty → default)",
-  },
-  showTitle: {
-    component: "checkbox",
-    label: "Show title",
-  },
-  titleSize: {
-    component: "slider",
-    label: "Title size",
-    min: 12,
-    max: 800,
-    step: 1,
-  },
-
   // Behavior
   rotateX: {
     component: "checkbox",
@@ -101,4 +74,6 @@ export const formConfiguration: Record<string, any> = {
     max: 1000,
     step: 10,
   },
+
+  title: titleFormConfiguration,
 };

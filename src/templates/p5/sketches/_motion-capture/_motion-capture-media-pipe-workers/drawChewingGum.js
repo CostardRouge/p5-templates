@@ -42,7 +42,7 @@ export function drawChewingGums() {
 
 export default function drawChewingGum( {
   lerpStep = 1 / 250,
-  graphics = window,
+  graphics = getP5(),
   position,
   size = 10,
   index,

@@ -1,6 +1,7 @@
 import sketch from "@/p5/utils/sketch.js";
 import options from "@/p5/utils/options.js";
 import events from "@/p5/utils/events.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 // import {
 //   FaceDetector,
@@ -99,7 +100,8 @@ events.register(
 // ---------------------------------------------------------------------------
 
 sketch.setup( () => {
-  background( ...options.colors.background );
+  const p = getP5();
+  p.background( ...options.colors.background );
 
   mediapipe.capture.element = createCapture(
     VIDEO,
@@ -166,18 +168,18 @@ const drawHandLandmarks = () => {
   if ( handResult === null ) {
     return;
   }
-  stroke(
+  p.stroke(
     0,
     255,
     0
   );
-  strokeWeight( 5 );
+  p.strokeWeight( 5 );
 
   handResult.landmarks.forEach( ( handLandmarkArray ) => {
     handLandmarkArray.forEach( ( joint ) => {
-      circle(
-        inverseX( joint.x ) * width,
-        joint.y * height,
+      p.circle(
+        inverseX( joint.x ) * p.width,
+        joint.y * p.height,
         16
       );
     } );
@@ -200,19 +202,19 @@ const drawFaceDetections = () => {
     return;
   }
 
-  noFill();
-  stroke(
+  p.noFill();
+  p.stroke(
     0,
     0,
     255
   );
-  strokeWeight( 5 );
+  p.strokeWeight( 5 );
 
   faceResult.detections.forEach( ( detection ) => {
     const boundingBox = detection.boundingBox;
     const keypoints = detection.keypoints;
 
-    rect(
+    p.rect(
       scaleX( inverseX(
         boundingBox.originX,
         mediapipe.capture.size.width
@@ -222,15 +224,15 @@ const drawFaceDetections = () => {
       scaleY( boundingBox.height )
     );
 
-    beginShape( POINTS );
+    p.beginShape( p.POINTS );
     keypoints.forEach( ( keypoint ) => {
-      vertex(
-        inverseX( keypoint.x ) * width,
-        keypoint.y * height
+      p.vertex(
+        inverseX( keypoint.x ) * p.width,
+        keypoint.y * p.height
       );
     } );
-    strokeWeight( 10 );
-    endShape();
+    p.strokeWeight( 10 );
+    p.endShape();
   } );
 };
 
@@ -241,18 +243,19 @@ const drawFaceDetections = () => {
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...options.colors.background );
+  const p = getP5();
+  p.background( ...options.colors.background );
 
   if ( !mediapipe.ready ) {
     return; // Early exit until all models are loaded
   }
 
-  image(
+  p.image(
     mediapipe.feedback.element,
     0,
     0,
-    width,
-    height
+    p.width,
+    p.height
   );
 
   // drawSegmentationMask();
@@ -265,7 +268,7 @@ sketch.draw( (
 function inverseX(
   x, limit = 1
 ) {
-  return map(
+  return p.map(
     x,
     0,
     limit,
@@ -275,7 +278,7 @@ function inverseX(
 }
 
 function scaleY( y ) {
-  return map(
+  return p.map(
     y,
     0,
     mediapipe.capture.size.height,
@@ -285,7 +288,7 @@ function scaleY( y ) {
 }
 
 function scaleX( x ) {
-  return map(
+  return p.map(
     x,
     0,
     mediapipe.capture.size.width,

@@ -11,6 +11,7 @@ import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -23,15 +24,17 @@ const sketchState = {
 events.register(
   "engine-window-preload",
   () => {
-    sketchState.interactive.image = loadImage( "/assets/images/handpointing.png" );
+  const p = getP5();
+    sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
   }
 );
 
 sketch.setup(
   () => {
+  const p = getP5();
     sketchState.threeDimensionGraphics = graphics.createAutoResizableGraphics(
-      width,
-      height,
+      p.width,
+      p.height,
       "webgl"
     );
 
@@ -44,13 +47,14 @@ sketch.setup(
 sketch.draw( (
   time, center
 ) => {
-  clear();
-  background( ...( options.sketch.backgroundColor ?? [
+  const p = getP5();
+  p.clear();
+  p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );
 
-  const W = width / 2;
-  const H = height / 2;
+  const W = p.width / 2;
+  const H = p.height / 2;
 
   const g = sketchState.threeDimensionGraphics;
 
@@ -68,7 +72,7 @@ sketch.draw( (
 
   // ── LOD ───────────────────────────────────────────────────────────────────
   // Short/flat spikes are rendered with fewer layers proportional to their
-  // height factor, down to lodMinLayers at minimum.
+  // p.height factor, down to lodMinLayers at minimum.
   const lodEnabled = options.sketch.lod?.enabled ?? true;
   const lodMinLayers = options.sketch.lod?.minLayers ?? 3;
 
@@ -88,13 +92,13 @@ sketch.draw( (
   const proportional = options.sketch?.grid?.proportional ?? true;
   const columns = options.sketch?.grid?.columns ?? 14;
   const rows = proportional
-    ? Math.round( columns * height / width )
+    ? Math.round( columns * p.height / p.width )
     : ( options.sketch?.grid?.rows ?? 10 );
 
   // ── Rotation (with constant base tilt to see the plane from above) ────────
   const rotationEnabled = options.sketch.rotation?.enabled ?? true;
-  const angleMax = options.sketch.rotation?.angleMax ?? ( PI / 32 );
-  const xBase = options.sketch.rotation?.xBase ?? ( -PI / 4 );
+  const angleMax = options.sketch.rotation?.angleMax ?? ( p.PI / 32 );
+  const xBase = options.sketch.rotation?.xBase ?? ( -p.PI / 4 );
   const yBase = options.sketch.rotation?.yBase ?? 0;
   const xMultiplier = options.sketch.rotation?.xMultiplier ?? 1;
   const yMultiplier = options.sketch.rotation?.yMultiplier ?? 0.5;
@@ -102,7 +106,7 @@ sketch.draw( (
 
   const rX = xBase + ( rotationEnabled
     ? mappers.fn(
-      sin( animation.angle * xMultiplier ),
+      p.sin( animation.angle * xMultiplier ),
       -1,
       1,
       -angleMax,
@@ -111,7 +115,7 @@ sketch.draw( (
     : 0 );
   const rY = yBase + ( rotationEnabled
     ? mappers.fn(
-      cos( animation.angle * yMultiplier ),
+      p.cos( animation.angle * yMultiplier ),
       -1,
       1,
       -angleMax,
@@ -120,7 +124,7 @@ sketch.draw( (
     : 0 );
   const rZ = rotationEnabled
     ? mappers.fn(
-      sin( animation.angle * zMultiplier ),
+      p.sin( animation.angle * zMultiplier ),
       -1,
       1,
       -angleMax,
@@ -133,8 +137,8 @@ sketch.draw( (
   g.rotateZ( rZ );
 
   // ── Noise setup ───────────────────────────────────────────────────────────
-  noiseSeed( options.sketch.noise?.seed ?? 42 );
-  noiseDetail(
+  p.noiseSeed( options.sketch.noise?.seed ?? 42 );
+  p.noiseDetail(
     options.sketch.noise?.detail ?? 4,
     options.sketch.noise?.falloff ?? 0.5
   );
@@ -187,13 +191,13 @@ sketch.draw( (
       const ny = rowNorm * fieldYScale;
 
       // Height field → spike length
-      const heightFactor = noise(
+      const heightFactor = p.noise(
         nx,
         ny,
         fieldHeightOffset + fieldTime
       );
       // Terrain field → base elevation (offset in noise-Z to decorrelate)
-      const terrainFactor = noise(
+      const terrainFactor = p.noise(
         nx + 100,
         ny + 50,
         fieldTerrainOffset + fieldTime
@@ -250,21 +254,21 @@ sketch.draw( (
         );
 
         // Per-point color noise
-        const colorNoise = noise(
+        const colorNoise = p.noise(
           colNorm * noiseXMult + rX,
           rowNorm * noiseYMult + rY,
           layerProgression * noiseLayerMult + fieldTime * noiseAnimMult + columnProgression + rZ
         );
 
-        // Mix spatial height into hue so tall peaks have different colors
-        const hueNoise = lerp(
+        // Mix spatial p.height into hue so tall peaks have different colors
+        const hueNoise = p.lerp(
           colorNoise,
           heightFactor,
           hueHeightMixing
         );
 
         const opacityFactor = mappers.fn(
-          sin( colorNoise * TAU + heightFactor * heightProgressionMult + layerProgression * layerProgressionMult ),
+          p.sin( colorNoise * p.TAU + heightFactor * heightProgressionMult + layerProgression * layerProgressionMult ),
           -1,
           1,
           opacityMax,
@@ -279,8 +283,8 @@ sketch.draw( (
             hueNoise,
             0,
             1,
-            -PI,
-            PI,
+            -p.PI,
+            p.PI,
             hueIndexEasingFn
           ) * hueIndexMultiplier,
           opacityFactor,
@@ -295,7 +299,7 @@ sketch.draw( (
     }
   }
 
-  image(
+  p.image(
     g,
     0,
     0

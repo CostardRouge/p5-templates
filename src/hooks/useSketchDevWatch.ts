@@ -16,7 +16,7 @@ export default function useSketchDevWatch( name: string, engineId: string, captu
       };
 
       source.onerror = () => {
-        source.close();
+        // Let EventSource auto-reconnect during transient dev-server restarts.
       };
 
       return () => {
@@ -25,7 +25,8 @@ export default function useSketchDevWatch( name: string, engineId: string, captu
     },
     [
       name,
-      engineId
+      engineId,
+      capturing
     ]
   );
 }

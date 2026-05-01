@@ -15,6 +15,9 @@ import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 import mediapipe, {
   init as mediapipeInit, setEnabled as setMediapipeEnabled,
 } from "@/p5/utils/mediapipe/mediapipe.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 // Key landmarks for interaction (palm, fingertips)
 const interactionIndices = [
@@ -58,12 +61,16 @@ const sketchState = {
 events.register(
   "engine-window-preload",
   () => {
-    sketchState.handPointingImage = loadImage( "/assets/images/handpointing.png" );
+    const p = getP5();
+
+    sketchState.handPointingImage = getP5().loadImage( "/assets/images/handpointing.png" );
   }
 );
 
 sketch.setup( async() => {
-  background( ...( options.sketch.backgroundColor ?? [
+  const p = getP5();
+
+  p.background( ...( options.sketch.backgroundColor ?? [
     246,
     235,
     225
@@ -94,7 +101,9 @@ sketch.setup( async() => {
 } );
 
 sketch.draw( () => {
-  background( ...( options.sketch.backgroundColor ?? [
+  const p = getP5();
+
+  p.background( ...( options.sketch.backgroundColor ?? [
     246,
     235,
     225
@@ -125,9 +134,9 @@ sketch.draw( () => {
   ];
 
   if ( options.sketch.interactive.useMouse ) {
-    targetVectors.push( createVector(
-      mouseX,
-      mouseY
+    targetVectors.push( p.createVector(
+      p.mouseX,
+      p.mouseY
     ) );
   }
 
@@ -139,10 +148,10 @@ sketch.draw( () => {
 
       interactionPoints.forEach( ( point ) => {
         if ( point ) {
-          const x = common.inverseX( point.x ) * width;
-          const y = point.y * height;
+          const x = common.inverseX( point.x ) * p.width;
+          const y = point.y * p.height;
 
-          targetVectors.push( createVector(
+          targetVectors.push( p.createVector(
             x,
             y
           ) );
@@ -153,14 +162,14 @@ sketch.draw( () => {
 
   const margin = options.sketch.interactive.pointersMargin ?? 150;
   const pointersCount = options.sketch.interactive.pointersCount ?? 5;
-  const W = width - margin;
-  const H = height - margin;
+  const W = p.width - margin;
+  const H = p.height - margin;
 
-  for ( let p = 0; p < pointersCount; p++ ) {
-    const handProgression = p / pointersCount;
+  for ( let pointerIndex = 0; pointerIndex < pointersCount; pointerIndex++ ) {
+    const handProgression = pointerIndex / pointersCount;
 
-    const pointerPosition = createVector(
-      map(
+    const pointerPosition = p.createVector(
+      p.map(
         Math.sin( animation.angle *
             options.sketch.interactive.pointersSinAngleMultiplier +
             handProgression *
@@ -170,7 +179,7 @@ sketch.draw( () => {
         margin,
         W
       ),
-      map(
+      p.map(
         Math.cos( animation.angle *
             options.sketch.interactive.pointersCosAngleMultiplier +
             handProgression *
@@ -231,7 +240,7 @@ sketch.draw( () => {
       continue;
     }
 
-    image(
+    p.image(
       graphics,
       0,
       0,
@@ -252,18 +261,19 @@ sketch.draw( () => {
 function addLetterBoxes(
   text, margin = 50
 ) {
+  const p = getP5();
   const letterBodies = [
   ];
 
   for ( let i = 0; i < text.length; i++ ) {
-    const x = random(
+    const x = p.random(
       margin,
-      width - margin
+      p.width - margin
     );
 
-    const y = random(
+    const y = p.random(
       margin,
-      height - margin
+      p.height - margin
     );
 
     letterBodies.push( {
@@ -279,6 +289,7 @@ function addLetterBoxes(
 function drawLetterBodies(
   graphics, bodies, targetVectors
 ) {
+  const p = getP5();
   const sizeValues = [
     options.sketch.minLetterSize,
     options.sketch.maxLetterSize,
@@ -290,7 +301,7 @@ function drawLetterBodies(
     } = body;
 
     const switchIndex = computeDisplacement(
-      createVector(
+      p.createVector(
         x,
         y
       ),
@@ -308,7 +319,7 @@ function drawLetterBodies(
       const angle = animation.ease( {
         values: [
           0,
-          PI
+          p.PI
         ],
         currentTime: switchIndex,
         easingFn:
@@ -341,8 +352,8 @@ function drawLetterBodies(
     }
 
     graphics.textAlign(
-      CENTER,
-      CENTER
+      p.CENTER,
+      p.CENTER
     );
     graphics.text(
       char,
@@ -356,6 +367,7 @@ function drawLetterBodies(
 function computeDisplacement(
   position, targetVectors, maxInfluenceDistance
 ) {
+  const p = getP5();
   let minDistance = Infinity;
 
   for ( let i = 0; i < targetVectors.length; i++ ) {
@@ -367,7 +379,7 @@ function computeDisplacement(
     }
   }
 
-  const proximity = map(
+  const proximity = p.map(
     minDistance,
     0,
     maxInfluenceDistance,
@@ -376,7 +388,7 @@ function computeDisplacement(
   );
 
   // Ensure the value is clamped between 0 and 1
-  return constrain(
+  return p.constrain(
     proximity,
     0,
     1

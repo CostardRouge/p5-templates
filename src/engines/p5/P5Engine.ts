@@ -88,7 +88,7 @@ export class P5Engine implements SketchEngine {
     this._isReady = true;
     this.emit(
       "ready",
-undefined as any
+      undefined as any
     );
   }
 

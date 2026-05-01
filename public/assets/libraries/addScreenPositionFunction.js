@@ -3,7 +3,6 @@
 
 // See: https://editor.p5js.org/bohnacker/sketches/nUk3bVW7b on how to use it
 
-
 export default function addScreenPositionFunction(p5Instance) {
 	let p = p5Instance || this;
 

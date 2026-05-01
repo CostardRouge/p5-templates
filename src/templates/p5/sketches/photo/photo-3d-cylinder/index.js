@@ -8,6 +8,9 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 
 import renderTitle from "@/p5/utils/title/renderTitle.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const getBg = () => options.sketch?.colors?.background ?? [
   0,
@@ -49,24 +52,25 @@ sketch.setup(
 
 const borderSize = 0;
 
-sketch.draw( (
+sketch.draw( async(
   time, center, favoriteColor
 ) => {
+  const p = getP5();
   const cylinderConfig = options.sketch?.cylinder ?? {
   };
   const animationConfig = options.sketch?.animation ?? {
   };
 
   if ( animationConfig.variableBackgroundColor ) {
-    const backgroundColor = lerpColor(
-      color( ...getBg() ),
+    const backgroundColor = p.lerpColor(
+      p.color( ...getBg() ),
       favoriteColor,
       animation.triangleProgression()
     );
 
-    background( backgroundColor );
+    p.background( backgroundColor );
   } else {
-    background( ...getBg() );
+    p.background( ...getBg() );
   }
 
   if ( cylinderConfig.variableZoom ) {
@@ -82,13 +86,13 @@ sketch.draw( (
       easingFn: easing.easeInOutQuart,
     } );
 
-    translate(
+    p.translate(
       0,
       0,
       zoom * 0.8
     );
   } else {
-    translate(
+    p.translate(
       0,
       0,
       cylinderConfig.zoom ?? -2000
@@ -98,12 +102,12 @@ sketch.draw( (
   if ( cylinderConfig.rotateX ) {
     const xRotationValues = [
       0,
-      PI / 6,
-      -PI / 6,
-      PI / 2
+      p.PI / 6,
+      -p.PI / 6,
+      p.PI / 2
     ];
 
-    rotateX( animation.ease( {
+    p.rotateX( animation.ease( {
       values: xRotationValues,
       currentTime: animation.progression * xRotationValues.length,
       easingFn: easing.easeInOutExpo,
@@ -111,19 +115,19 @@ sketch.draw( (
   }
 
   if ( cylinderConfig.rotateZ ) {
-    rotateZ( animation.ease( {
+    p.rotateZ( animation.ease( {
       values: [
         0,
-        PI / 2
+        p.PI / 2
       ],
       currentTime: +time,
       easingFn: easing.easeInOutExpo,
     } ) );
   }
 
-  translate(
-    -width / 2,
-    -height / 2
+  p.translate(
+    -p.width / 2,
+    -p.height / 2
   );
 
   const foldingSpeed = 0;
@@ -133,15 +137,15 @@ sketch.draw( (
   const L = animation.ease( {
     values: [
       0,
-      width / 2
+      p.width / 2
     ],
     currentTime: foldingSpeed,
     easingFn: easing.easeInOutExpo,
   } );
   const R = animation.ease( {
     values: [
-      width,
-      width / 2
+      p.width,
+      p.width / 2
     ],
     currentTime: 0,
     easingFn: easing.easeInOutExpo,
@@ -154,30 +158,30 @@ sketch.draw( (
     columns,
     diamond,
     centered: 0,
-    topLeft: createVector(
+    topLeft: p.createVector(
       L,
       borderSize
     ),
-    topRight: createVector(
+    topRight: p.createVector(
       R,
       borderSize
     ),
-    bottomLeft: createVector(
+    bottomLeft: p.createVector(
       L,
-      height - borderSize
+      p.height - borderSize
     ),
-    bottomRight: createVector(
+    bottomRight: p.createVector(
       R,
-      height - borderSize
+      p.height - borderSize
     ),
   };
 
-  const W = width / columns;
-  const H = height / rows;
+  const W = p.width / columns;
+  const H = p.height / rows;
 
   const {
     cells
-  } = grid.create( gridOptions );
+  } = await grid.create( gridOptions );
   const images = getImages();
   const imagePaths = images.map( ( {
     path
@@ -186,9 +190,9 @@ sketch.draw( (
   const imageParts = cache.store(
     `image-parts-${ columns }-${ rows }-${ imagePaths }`,
     () => {
-      const buffer = createGraphics(
-        sketch?.engine?.canvas?.width,
-        sketch?.engine?.canvas?.height
+      const buffer = p.createGraphics(
+        p.width,
+        p.height
       );
 
       return images.map( ( {
@@ -196,9 +200,9 @@ sketch.draw( (
       } ) => {
         imageUtils.marginImage( {
           img,
-          position: createVector(
-            width / 2,
-            height / 2
+          position: p.createVector(
+            p.width / 2,
+            p.height / 2
           ),
           graphics: buffer,
           center: true,
@@ -238,8 +242,8 @@ sketch.draw( (
     const circonference =
         ( cylinderConfig.vertical ? cellHeight : cellWidth ) * images?.length;
 
-    push();
-    translate(
+    p.push();
+    p.translate(
       center.x,
       center.y
     );
@@ -248,17 +252,17 @@ sketch.draw( (
       const imageAtIndex = imageParts?.[ ~~imageIndex ];
       const imagePart = imageAtIndex?.[ ~~cellIndex ]?.imagePart;
 
-      const angle = map(
+      const angle = p.map(
         imageIndex,
         0,
         images.length,
         0,
-        TAU
+        p.TAU
       );
 
-      push();
+      p.push();
 
-      const rotateFunction = cylinderConfig.vertical ? rotateX : rotateY;
+      const rotateFunction = cylinderConfig.vertical ? p.rotateX.bind( p ) : p.rotateY.bind( p );
 
       rotateFunction( angle );
 
@@ -267,36 +271,34 @@ sketch.draw( (
           .map( (
             _, index
           ) => [
-            ( index / images.length ) * TAU
+            ( index / images.length ) * p.TAU
           ] )
           .flat( Infinity ),
         currentTime: +row / rows + animation.progression * images.length,
         easingFn: easing.easeInOutExpo,
       } ) );
 
-      translate(
+      p.translate(
         0,
         0,
-        circonference / 2 / PI
+        circonference / 2 / p.PI
       );
 
-      noFill();
-      texture( imagePart );
+      p.noFill();
+      p.texture( imagePart );
 
-      rect(
+      p.rect(
         -cellWidth / 2,
         -cellHeight / 2,
         cellWidth,
         cellHeight
       );
 
-      pop();
+      p.pop();
     }
 
-    pop();
+    p.pop();
   } );
 
   renderTitle();
-
-  return orbitControl();
 } );

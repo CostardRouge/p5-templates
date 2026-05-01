@@ -19,6 +19,7 @@ import {
   setSketchOptions,
   subscribeSketchOptions,
 } from "@/p5/shared/syncSketchOptions.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const layers = {
   photo: {
@@ -57,14 +58,15 @@ const cache = {
 };
 
 sketch.setup( async() => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.background( ...options.sketch.backgroundColor );
 
   for ( const layerName in layers ) {
     const {
       background, size
     } = layers[ layerName ];
 
-    layers[ layerName ].graphics = createGraphics(
+    layers[ layerName ].graphics = p.createGraphics(
       size.width,
       size.height
     );
@@ -176,6 +178,7 @@ function triggerSegmentation() {
 events.register(
   "engine-canvas-mouse-pressed",
   () => {
+  const p = getP5();
     const photo = common.getAsset( options.sketch?.photo?.image );
 
     if ( !photo ) return;
@@ -186,10 +189,10 @@ events.register(
     } = cache.photoBounds;
 
     if (
-      mouseX < photoX ||
-    mouseX > photoX + photoW ||
-    mouseY < photoY ||
-    mouseY > photoY + photoH
+      p.mouseX < photoX ||
+    p.mouseX > photoX + photoW ||
+    p.mouseY < photoY ||
+    p.mouseY > photoY + photoH
     ) {
       console.log( "Click outside photo bounds" );
       return;
@@ -199,8 +202,8 @@ events.register(
     const imageElement = photo.img.canvas || photo.img.elt || photo.img;
 
     // Map Mouse (Canvas) -> Photo Display (with margins/scale) -> Original Image
-    const relativeX = mouseX - photoX;
-    const relativeY = mouseY - photoY;
+    const relativeX = p.mouseX - photoX;
+    const relativeY = p.mouseY - photoY;
 
     // Scale from displayed photo to original image dimensions
     const scaleX = photo.img.width / photoW;
@@ -215,8 +218,8 @@ events.register(
 
     console.log(
       "Click at canvas:",
-      mouseX,
-      mouseY,
+      p.mouseX,
+      p.mouseY,
       "-> photo bounds:",
       relativeX,
       relativeY,
@@ -257,37 +260,38 @@ events.register(
 sketch.draw( (
   _, center
 ) => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.background( ...options.sketch.backgroundColor );
 
   const photo = common.getAsset( options.sketch?.photo?.image );
 
   if ( !photo ) {
-    frameRate( 1 );
+    p.frameRate( 1 );
     string.write(
       "add a photo :)",
       0,
       0,
       {
         size: 72,
-        stroke: color( 255 ),
-        fill: color( 0 ),
-        textHeight: height,
+        stroke: p.color( 255 ),
+        fill: p.color( 0 ),
+        textHeight: p.height,
         font: string.fonts.martian,
         textAlign: [
-          CENTER,
-          CENTER
+          p.CENTER,
+          p.CENTER
         ],
       }
     );
     return;
   } else {
-    frameRate( options.animation.framerate );
+    p.frameRate( options.animation.framerate );
 
     // Draw photo and capture its bounds for coordinate mapping
     imageUtils.marginImage( {
       img: photo.img,
       position: center,
-      margin: width * options.sketch?.photo?.margin,
+      margin: p.width * options.sketch?.photo?.margin,
       scale: options.sketch?.photo?.scale ?? 1,
       center: options.sketch?.photo?.center ?? true,
       clip: options.sketch?.photo?.clip ?? false,
@@ -304,7 +308,7 @@ sketch.draw( (
     } );
   }
 
-  // if ( mediapipe.idle ) background( 90 );
+  // if ( mediapipe.idle ) p.background( 90 );
 
   // --- 1. Mask Logic ---
   // const segmenterResult = mediapipe.tasks.segmenter?.result ?? null;
@@ -385,7 +389,7 @@ sketch.draw( (
     imageUtils.marginImage( {
       img: cache.maskedImage,
       position: center,
-      margin: width * options.sketch?.photo?.margin,
+      margin: p.width * options.sketch?.photo?.margin,
       scale: options.sketch?.photo?.scale ?? 1,
       center: options.sketch?.photo?.center ?? true,
       clip: options.sketch?.photo?.clip ?? false,

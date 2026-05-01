@@ -2,12 +2,14 @@ import cache from "./cache.js";
 import shapes from "./shapes.js";
 import options from "./options.js";
 import * as common from "@/p5/utils/common.js";
-import { getP5 } from "./sketch.js";
+import {
+  getP5
+} from "./sketch.js";
 
 const imageUtils = {
   marginImage: ( {
     img,
-    graphics = window,
+    graphics = getP5(),
     boundary = graphics,
     margin = 0,
     scale = 1,
@@ -19,8 +21,12 @@ const imageUtils = {
     position = null,
   } ) => {
     const p = getP5();
-    if (position === null) {
-      position = p.createVector(p.width / 2, p.height / 2);
+
+    if ( position === null ) {
+      position = p.createVector(
+        p.width / 2,
+        p.height / 2
+      );
     }
     const scaledBoundary = p.createVector(
       boundary.width * scale,
@@ -104,8 +110,13 @@ const imageUtils = {
     img, clr = null
   ) => {
     const p = getP5();
-    if (clr === null) {
-      clr = p.color(255, 255, 255);
+
+    if ( clr === null ) {
+      clr = p.color(
+        255,
+        255,
+        255
+      );
     }
     img.loadPixels();
 

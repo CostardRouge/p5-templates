@@ -19,6 +19,7 @@ import useSketch from "@/components/ClientProcessingSketch/components/SketchProv
 import {
   useSketchThumbnail
 } from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketchThumbnail";
+import useSketchDevWatch from "@/hooks/useSketchDevWatch";
 
 const TemplateOptions = dynamic( () =>
   import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ), );
@@ -38,6 +39,8 @@ export default function TemplateSketchPage() {
     persistedJob,
     engine: engineId,
   } );
+
+  useSketchDevWatch( name, engineId, capturing );
 
   const handleOptionsChange = useCallback(
     ( updatedOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => {

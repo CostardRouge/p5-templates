@@ -1,42 +1,50 @@
 import options from "@/p5/utils/options.js";
 import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
+import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import renderTitle from "../../../utils/title/renderTitle";
+import renderTitle from "@/p5/utils/title/renderTitle";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const canvases = {
 };
 
 sketch.setup( () => {
-  canvases.dice = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
-    WEBGL
+  const p = getP5();
+
+  canvases.dice = p.createGraphics(
+    p.width,
+    p.height,
+    p.WEBGL
   );
 
-  background( ...options.sketch.backgroundColor );
+  p.background( ...options.sketch.backgroundColor );
 } );
 
 function dice(
-  size = width, render
+  size = p.width, render
 ) {
+  const p = getP5();
+
   const rotations = [
     canvases.dice.createVector(), // face
     canvases.dice.createVector(
       0,
-      HALF_PI
+      p.HALF_PI
     ), // right
-    canvases.dice.createVector( HALF_PI ), // up
+    canvases.dice.createVector( p.HALF_PI ), // up
     canvases.dice.createVector(
       0,
-      -HALF_PI
+      -p.HALF_PI
     ), // left
     canvases.dice.createVector(
       0,
-      PI
+      p.PI
     ), // back
-    canvases.dice.createVector( -HALF_PI ), // bottom
+    canvases.dice.createVector( -p.HALF_PI ), // bottom
   ];
 
   for ( let i = 0; i < rotations.length; i++ ) {
@@ -65,8 +73,10 @@ function dice(
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
 
   // Images from UI or cache
   const images = imageUtils.getImages();
@@ -84,25 +94,25 @@ sketch.draw( (
       canvases.dice.createVector(), // face
       canvases.dice.createVector(
         0,
-        -HALF_PI
+        -p.HALF_PI
       ), // right
-      canvases.dice.createVector( -HALF_PI ), // up
+      canvases.dice.createVector( -p.HALF_PI ), // up
       canvases.dice.createVector(
         0,
-        HALF_PI
+        p.HALF_PI
       ), // left
       canvases.dice.createVector(
         0,
-        PI
+        p.PI
       ), // back
-      canvases.dice.createVector( HALF_PI ), // bottom
+      canvases.dice.createVector( p.HALF_PI ), // bottom
     ],
     currentTime: animation.progression * 6 * rotateSpeed,
-    lerpFn: p5.Vector.lerp,
+    lerpFn: mappers.lerpVector,
     easingFn: easeFn,
   } );
 
-  // Prepare WEBGL canvas
+  // Prepare p.WEBGL canvas
   canvases.dice.push();
   canvases.dice.background( ...options.sketch.backgroundColor );
 
@@ -113,7 +123,7 @@ sketch.draw( (
   const faceScale = options.sketch?.faceScale ?? 0.65;
 
   dice(
-    width / diceSizeFactor,
+    p.width / diceSizeFactor,
     (
       index, size
     ) => {
@@ -128,7 +138,7 @@ sketch.draw( (
 
       if ( imgObj?.img ) {
         imageUtils.marginImage( {
-          position: createVector(
+          position: p.createVector(
             0,
             0
           ),
@@ -145,7 +155,7 @@ sketch.draw( (
           0,
           50
         );
-        canvases.dice.rectMode( CENTER );
+        canvases.dice.rectMode( p.CENTER );
         canvases.dice.rect(
           0,
           0,
@@ -160,7 +170,7 @@ sketch.draw( (
   canvases.dice.pop();
 
   // Compose to main canvas
-  image(
+  p.image(
     canvases.dice,
     0,
     0

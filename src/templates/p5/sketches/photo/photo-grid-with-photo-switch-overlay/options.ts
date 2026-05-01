@@ -51,10 +51,10 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
+  title: titleFormConfiguration,
+
   backgroundColor: {
     component: "color",
     label: "Background color",
   },
-
-  title: titleFormConfiguration,
 };

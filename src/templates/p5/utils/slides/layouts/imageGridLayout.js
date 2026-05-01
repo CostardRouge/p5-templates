@@ -18,7 +18,7 @@ export default function imageGridLayout( opts ) {
       o.img,
       x,
       y,
-      width / 2,
+      p.width / 2,
       height / 2
     );
   } );

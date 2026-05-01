@@ -7,7 +7,7 @@ import iterators from "@/p5/utils/iterators.js";
 export default function drawNeonLine( {
   innerCircleSize = 10,
   shadowsCount = 3,
-  graphics = window,
+  graphics = getP5(),
   vectorsStep = 0.05,
   vectors,
   index,

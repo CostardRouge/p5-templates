@@ -14,6 +14,9 @@ import * as common from "@/p5/utils/common.js";
 import renderTitle from "@/p5/utils/title/renderTitle";
 
 import Matter from "@/public/assets/libraries/matter.min.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
@@ -55,11 +58,13 @@ const {
 events.register(
   "engine-mouse-dragged",
   () => {
+    const p = getP5();
+
     addImageBall(
-      random( getImages() ).img,
-      mouseX,
-      mouseY,
-      random(
+      p.random( getImages() ).img,
+      p.mouseX,
+      p.mouseY,
+      p.random(
       // 50,
       // 75,
         100,
@@ -88,18 +93,20 @@ const matter = {
 };
 
 function drawImageWithMask( {
-  img, maskDrawer, graphics = window
+  img, maskDrawer, graphics = getP5()
 } ) {
-  // image(img, 0, 0, graphics.width, graphics.height);
+  const p = graphics;
+
+  // p.image(img, 0, 0, graphics.width, graphics.height);
 
   imageUtils.marginImage( {
     img,
     fill: true,
     center: true,
     graphics: canvases.imageBuffer,
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
   } );
 
@@ -154,8 +161,8 @@ function addImageBall(
   // Body.setVelocity(
   // 	newImageBall.ball,
   // 	Vector.create(
-  // 		random(-velocityMagnitude),
-  // 		random(velocityMagnitude)
+  // 		p.random(-velocityMagnitude),
+  // 		p.random(velocityMagnitude)
   // 	)
   // )
 
@@ -187,44 +194,46 @@ function addBoundary(
 }
 
 sketch.setup( () => {
-  canvases.mask = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  const p = getP5();
+
+  canvases.mask = p.createGraphics(
+    p.width,
+    p.height
   );
-  canvases.imageBuffer = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  canvases.imageBuffer = p.createGraphics(
+    p.width,
+    p.height
   );
 
   // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
-  background( ...getBg() );
+  p.background( ...getBg() );
 
   const margin = 50;
   const thickness = 50;
 
   addBoundary(
-    width / 2,
-    height + thickness / 2 - margin,
-    width,
+    p.width / 2,
+    p.height + thickness / 2 - margin,
+    p.width,
     thickness
   );
   addBoundary(
-    width / 2,
+    p.width / 2,
     -thickness / 2 + margin,
-    width,
+    p.width,
     thickness
   );
   addBoundary(
     -thickness / 2 + margin,
-    height / 2,
+    p.height / 2,
     thickness,
-    height
+    p.height
   );
   addBoundary(
-    width + thickness / 2 - margin,
-    height / 2,
+    p.width + thickness / 2 - margin,
+    p.height / 2,
     thickness,
-    height
+    p.height
   );
 
   const images = getImages();
@@ -232,10 +241,10 @@ sketch.setup( () => {
   for ( let i = 0; i <= 10; i++ ) {
     addImageBall(
       images?.[ 0 ]?.img,
-      random( width ),
-      random( height ),
-      width / 6 - 2 * margin
-      // random(100)
+      p.random( p.width ),
+      p.random( p.height ),
+      p.width / 6 - 2 * margin
+      // p.random(100)
     );
   }
 } );
@@ -243,9 +252,11 @@ sketch.setup( () => {
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...getBg() );
+  const p = getP5();
 
-  // if (frameCount === 1) {
+  p.background( ...getBg() );
+
+  // if (p.frameCount === 1) {
   // 	for (let i = 0; i < 120; i++) {
   // 		Engine.update(matter.engine);
   // 	}
@@ -257,7 +268,7 @@ sketch.draw( (
     // mappers.fn(animation.circularProgression, 0, 1, -1, 1, easing.easeInOutExpo),
     // mappers.fn(animation.circularProgression, 0, 1, -1, 1, easing.easeInOutExpo)
     mappers.fn(
-      sin( animation.angle * 2 ),
+      p.sin( animation.angle * 2 ),
       -1,
       1,
       -1,
@@ -265,7 +276,7 @@ sketch.draw( (
       easing.easeInOutExpo
     ),
     mappers.fn(
-      cos( animation.angle * 2 ),
+      p.cos( animation.angle * 2 ),
       -1,
       1,
       -1,
@@ -311,10 +322,10 @@ sketch.draw( (
         },
       } = ball;
 
-      // stroke(0, 0, 0, map(position.dist(_position), 0, 1000, 0, 100));
+      // p.stroke(0, 0, 0, p.map(position.dist(_position), 0, 1000, 0, 100));
 
-      strokeWeight( 1 );
-      line(
+      p.strokeWeight( 1 );
+      p.line(
         x,
         y,
         _x,

@@ -8,6 +8,7 @@ import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -15,9 +16,10 @@ const sketchState = {
 
 sketch.setup(
   ( ) => {
+  const p = getP5();
     sketchState.threeDimensionGraphics = graphics.createAutoResizableGraphics(
-      width,
-      height,
+      p.width,
+      p.height,
       "webgl"
     );
   },
@@ -59,7 +61,7 @@ function drawProgression(
     255
   ] ) );
 
-  const currentProgression = p5.Vector.lerp(
+  const currentProgression = mappers.lerpVector(
     start,
     end,
     progression
@@ -116,10 +118,11 @@ function drawProgression(
 sketch.draw( (
   time, center
 ) => {
-  background( 0 );
+  const p = getP5();
+  p.background( 0 );
 
-  const W = width / 2;
-  const H = height / 2;
+  const W = p.width / 2;
+  const H = p.height / 2;
 
   const easingFunction =
     easing?.[ options.sketch.morphing.easing ] ?? easing.easeInOutExpo;
@@ -150,23 +153,23 @@ sketch.draw( (
     easingFunction
   );
 
-  // const xProgression = map(
+  // const xProgression = p.map(
   //   winMouseX,
   //   0,
-  //   width,
+  //   p.width,
   //   0,
   //   1
   // );
-  // const yProgression = map(
+  // const yProgression = p.map(
   //   winMouseY,
   //   0,
-  //   height,
+  //   p.height,
   //   0,
   //   1
   // );
 
   if ( options.sketch.sliders.enabled ?? true ) {
-    const margin = ( options.sketch.sliders.margin ?? 0.1 ) * width;
+    const margin = ( options.sketch.sliders.margin ?? 0.1 ) * p.width;
 
     drawProgression(
       xProgression,
@@ -204,12 +207,12 @@ sketch.draw( (
     // );
   }
 
-  const size = options.sketch.text.size * width ?? width / 2;
+  const size = options.sketch.text.size * p.width ?? p.width / 2;
   const font = string.fonts?.[ options.sketch?.text.font ] ?? string.fonts.serif;
 
   const sampleFactor = options.sketch.text.sampleFactor ?? 0.05;
   const simplifyThreshold = options.sketch.text.simplifyThreshold ?? 0;
-  const letterPosition = createVector(
+  const letterPosition = p.createVector(
     0,
     0
   );
@@ -291,12 +294,12 @@ sketch.draw( (
     sketchState.threeDimensionGraphics.translate(
       0,
       0,
-      map(
+      p.map(
         z,
         0,
         depth,
         0,
-        ( options.sketch.morphing.depthLength ?? 0.2 ) * ( width + height )
+        ( options.sketch.morphing.depthLength ?? 0.2 ) * ( p.width + p.height )
       )
     );
 
@@ -319,7 +322,7 @@ sketch.draw( (
       const colorFunction = colors.rainbow;
       const opacityFactor =
         mappers.fn(
-          sin(
+          p.sin(
             depthProgression * 20 + progression * 50 + time * 2,
             easing.easeInOutExpo
           ),
@@ -339,25 +342,25 @@ sketch.draw( (
       sketchState.threeDimensionGraphics.stroke( colorFunction( {
         hueOffset:
             // +depthProgression*10
-            // +mappers.fn(depthProgression, 0, 1, 0, PI/2, easing.easeInOutExpo)
+            // +mappers.fn(depthProgression, 0, 1, 0, p.PI/2, easing.easeInOutExpo)
             // +time
             +0,
-        // hueIndex: mappers.circularPolar(progression, 0, 1, -PI, PI)*2,
+        // hueIndex: mappers.circularPolar(progression, 0, 1, -p.PI, p.PI)*2,
         hueIndex:
             mappers.fn(
-              noise(
-                x / width,
-                y / height,
+              p.noise(
+                x / p.width,
+                y / p.height,
                 progression / 2 + depthProgression / 2 + time / 16
               ),
               0,
               1,
-              -PI,
-              PI
+              -p.PI,
+              p.PI
             ) * 10,
-        // hueIndex:mappers.fn(noise(x/width, y/height, progression/2+depthProgression/2), 0, 1, -PI, PI)*10,
+        // hueIndex:mappers.fn(p.noise(x/p.width, y/p.height, progression/2+depthProgression/2), 0, 1, -p.PI, p.PI)*10,
         opacityFactor,
-        // opacityFactor: map(depthProgression, 0, 1, 3, 1) * Math.pow(1.05, z)
+        // opacityFactor: p.map(depthProgression, 0, 1, 3, 1) * Math.pow(1.05, z)
       } ) );
 
       const xx = x * mappers.fn(
@@ -387,7 +390,7 @@ sketch.draw( (
   }
   sketchState.threeDimensionGraphics.pop();
 
-  image(
+  p.image(
     sketchState.threeDimensionGraphics,
     0,
     0

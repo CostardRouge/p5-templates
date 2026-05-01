@@ -5,13 +5,20 @@ import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
+  const p = getP5();
+
   applyBackground();
 } );
 
 function applyBackground() {
-  background( ...( options.sketch?.backgroundColor ?? [
+  const p = getP5();
+
+  p.background( ...( options.sketch?.backgroundColor ?? [
     255,
     255,
     255
@@ -19,6 +26,7 @@ function applyBackground() {
 }
 
 sketch.draw( ( _time ) => {
+  const p = getP5();
   const images = imageUtils.getImages();
 
   applyBackground();
@@ -53,7 +61,7 @@ sketch.draw( ( _time ) => {
       : imageStepAnimationProgressionComponent;
   const imageStepMin = options.sketch.zoom ? 1 : 0;
   const imageStepMax = options.sketch.zoom ? 0 : 1;
-  const imageStepIndex = map(
+  const imageStepIndex = p.map(
     imageStepIndexMapValue,
     imageStepMin,
     imageStepMax,
@@ -69,25 +77,25 @@ sketch.draw( ( _time ) => {
     const t = i / count;
     const scaleEasingFunction = options.sketch.scaleEasingFunctionName;
 
-    push();
-    translate(
-      width / 2,
-      height / 2
+    p.push();
+    p.translate(
+      p.width / 2,
+      p.height / 2
     );
 
     if ( options.sketch.rotate ) {
-      rotate( map(
+      p.rotate( p.map(
         i,
         0,
         count,
         0,
-        PI / 2
+        p.PI / 2
       ) );
     }
 
     imageUtils.marginImage( {
       img,
-      position: createVector(
+      position: p.createVector(
         0,
         0
       ),
@@ -103,6 +111,6 @@ sketch.draw( ( _time ) => {
       ),
     } );
 
-    pop();
+    p.pop();
   }
 } );

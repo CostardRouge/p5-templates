@@ -7,6 +7,9 @@ import sketch from "@/p5/utils/sketch.js";
 import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const canvases = {
 };
@@ -22,15 +25,20 @@ const getFont = () => {
 };
 
 sketch.setup( () => {
-  canvases.mask = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  const p = getP5();
+
+  canvases.mask = p.createGraphics(
+    p.width,
+    p.height
   );
-  background( ...getBg() );
+
+  p.background( ...getBg() );
 } );
 
-sketch.draw( ( time ) => {
-  background( ...getBg() );
+sketch.draw( async( time ) => {
+  const p = getP5();
+
+  p.background( ...getBg() );
 
   // Controls
   const rows = options.sketch?.rows ?? 25;
@@ -46,7 +54,7 @@ sketch.draw( ( time ) => {
   const xOffScale = options.sketch?.xOffScale ?? 1.5;
   const yOffScale = options.sketch?.yOffScale ?? 1.5;
 
-  const angleRange = options.sketch?.angleRange ?? 1; // multiplies TAU
+  const angleRange = options.sketch?.angleRange ?? 1; // multiplies p.TAU
   const scale = options.sketch?.scale ?? 1;
 
   const weightMin = options.sketch?.weightMin ?? 150;
@@ -65,21 +73,21 @@ sketch.draw( ( time ) => {
   const title = options.sketch?.title ?? options.title ?? "";
   const textSizeDivisor = options.sketch?.textSizeDivisor ?? 2.3;
 
-  const textFontSize = ( height + width ) / textSizeDivisor;
+  const textFontSize = ( p.height + p.width ) / textSizeDivisor;
 
   canvases.mask.clear();
 
   const textBox = string.write(
     title,
     0,
-    height / 2 - textFontSize / 8,
+    p.height / 2 - textFontSize / 8,
     {
       size: textFontSize,
       font: getFont(),
-      textWidth: width,
+      textWidth: p.width,
       textAlign: [
-        CENTER,
-        CENTER
+        p.CENTER,
+        p.CENTER
       ],
       popPush: false,
       graphics: canvases.mask,
@@ -92,51 +100,51 @@ sketch.draw( ( time ) => {
 
   const boundaryMargin = 50;
   const maskBoundary = [
-    constrain(
-      ( width - textBox.w ) / 2 - boundaryMargin,
+    p.constrain(
+      ( p.width - textBox.w ) / 2 - boundaryMargin,
       0,
-      width
+      p.width
     ),
-    constrain(
-      ( height - textBox.h ) / 2 - boundaryMargin,
+    p.constrain(
+      ( p.height - textBox.h ) / 2 - boundaryMargin,
       0,
-      height
+      p.height
     ),
-    constrain(
+    p.constrain(
       textBox.w + boundaryMargin * 2,
       0,
-      width
+      p.width
     ),
-    constrain(
+    p.constrain(
       textBox.h + boundaryMargin * 2,
       0,
-      height
+      p.height
     ),
   ];
 
   const gridOptions = {
-    topLeft: createVector(
+    topLeft: p.createVector(
       0,
       0
     ),
-    topRight: createVector(
-      width,
+    topRight: p.createVector(
+      p.width,
       0
     ),
-    bottomLeft: createVector(
+    bottomLeft: p.createVector(
       0,
-      height
+      p.height
     ),
-    bottomRight: createVector(
-      width,
-      height
+    bottomRight: p.createVector(
+      p.width,
+      p.height
     ),
     rows,
     columns,
     centered,
   };
 
-  noiseDetail(
+  p.noiseDetail(
     noiseOctaves,
     noiseFalloff
   );
@@ -152,15 +160,15 @@ sketch.draw( ( time ) => {
     );
   }
 
-  grid.draw(
+  await grid.draw(
     gridOptions,
     (
       cellVector, {
         x, y
       }
     ) => {
-      const xOff = ( x / width ) * xOffScale;
-      const yOff = ( y / height ) * yOffScale;
+      const xOff = ( x / p.width ) * xOffScale;
+      const yOff = ( y / p.height ) * yOffScale;
 
       // if ( !inMaskingBoundary(
       //   cellVector.x,
@@ -170,19 +178,19 @@ sketch.draw( ( time ) => {
       // }
 
       const angle = mappers.fn(
-        noise(
+        p.noise(
           xOff + t / 2,
           yOff / 2 - t / 4
         ),
         0,
         1,
-        -TAU * angleRange,
-        TAU * angleRange,
+        -p.TAU * angleRange,
+        p.TAU * angleRange,
         easing.easeInOutSine
       );
 
       const weight = mappers.fn(
-        noise(
+        p.noise(
           xOff,
           yOff + y,
           animation.circularProgression
@@ -194,11 +202,11 @@ sketch.draw( ( time ) => {
         easing.easeInOutBack
       );
 
-      stroke( paletteFn( {
+      p.stroke( paletteFn( {
         hueOffset,
         hueIndex: angle,
         opacityFactor: mappers.fn(
-          noise(
+          p.noise(
             xOff,
             yOff,
             animation.circularProgression
@@ -211,37 +219,37 @@ sketch.draw( ( time ) => {
         ),
       } ) );
 
-      push();
-      translate(
-        cellVector.x + scale * sin( angle ),
-        cellVector.y + angle * scale * cos( angle + y )
+      p.push();
+      p.translate(
+        cellVector.x + scale * p.sin( angle ),
+        cellVector.y + angle * scale * p.cos( angle + y )
       );
-      strokeWeight( weight );
-      point(
+      p.strokeWeight( weight );
+      p.point(
         0,
         0
       );
-      pop();
+      p.pop();
     }
   );
 
-  const maskedImage = window.get();
+  const maskedImage = p.get();
 
   maskedImage.mask( canvases.mask );
 
-  background( ...getBg() );
-  image(
+  p.background( ...getBg() );
+  p.image(
     maskedImage,
     0,
     0
   );
 
-  // noFill();
-  // stroke( "red" );
-  // strokeWeight( 2 );
-  // rect( ...maskBoundary );
+  // p.noFill();
+  // p.stroke( "red" );
+  // p.strokeWeight( 2 );
+  // p.rect( ...maskBoundary );
   //
-  // image(
+  // p.image(
   //   canvases.mask,
   //   0,
   //   0

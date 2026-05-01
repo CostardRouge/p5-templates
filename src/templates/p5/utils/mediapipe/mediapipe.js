@@ -1,5 +1,9 @@
 import events from "@/p5/utils/events.js";
 
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
+
 // We dynamically import the manager if not using worker
 let VisionManagerClass = null;
 
@@ -193,8 +197,10 @@ export function interact(
 }
 
 function createVideoCaptureElements() {
-  mediapipe.capture.element = createCapture(
-    VIDEO,
+  const p = getP5();
+
+  mediapipe.capture.element = p.createCapture(
+    p.VIDEO,
     {
       flipped: true,
     }

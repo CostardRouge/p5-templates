@@ -11,6 +11,7 @@ import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -23,15 +24,17 @@ const sketchState = {
 events.register(
   "engine-window-preload",
   () => {
-    sketchState.interactive.image = loadImage( "/assets/images/handpointing.png" );
+  const p = getP5();
+    sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
   }
 );
 
 sketch.setup(
   ( ) => {
+  const p = getP5();
     sketchState.threeDimensionGraphics = graphics.createAutoResizableGraphics(
-      width,
-      height,
+      p.width,
+      p.height,
       "webgl"
     );
 
@@ -44,8 +47,9 @@ sketch.setup(
 sketch.draw( (
   time, center
 ) => {
-  clear();
-  background( ...( options.sketch.backgroundColor ?? [
+  const p = getP5();
+  p.clear();
+  p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );
 
@@ -80,14 +84,14 @@ sketch.draw( (
 
   // ── Rotation ──────────────────────────────────────────────────────────────
   const rotationEnabled = options.sketch.rotation?.enabled ?? true;
-  const angleMax = options.sketch.rotation?.angleMax ?? ( PI / 16 );
+  const angleMax = options.sketch.rotation?.angleMax ?? ( p.PI / 16 );
   const xMultiplier = options.sketch.rotation?.xMultiplier ?? 1;
   const yMultiplier = options.sketch.rotation?.yMultiplier ?? 2;
   const zMultiplier = options.sketch.rotation?.zMultiplier ?? 0;
 
   const rX = rotationEnabled
     ? mappers.fn(
-      sin( animation.angle * xMultiplier ),
+      p.sin( animation.angle * xMultiplier ),
       -1,
       1,
       -angleMax,
@@ -96,7 +100,7 @@ sketch.draw( (
     : 0;
   const rY = rotationEnabled
     ? mappers.fn(
-      cos( animation.angle * yMultiplier ),
+      p.cos( animation.angle * yMultiplier ),
       -1,
       1,
       -angleMax,
@@ -105,7 +109,7 @@ sketch.draw( (
     : 0;
   const rZ = rotationEnabled
     ? mappers.fn(
-      sin( animation.angle * zMultiplier ),
+      p.sin( animation.angle * zMultiplier ),
       -1,
       1,
       -angleMax,
@@ -118,8 +122,8 @@ sketch.draw( (
   g.rotateZ( rZ );
 
   // ── Noise setup ───────────────────────────────────────────────────────────
-  noiseSeed( options.sketch.noise?.seed ?? 42 );
-  noiseDetail(
+  p.noiseSeed( options.sketch.noise?.seed ?? 42 );
+  p.noiseDetail(
     options.sketch.noise?.detail ?? 4,
     options.sketch.noise?.falloff ?? 0.5
   );
@@ -152,12 +156,12 @@ sketch.draw( (
   for ( let col = 0; col < meridians; col++ ) {
     const colNorm = col / meridians;
     // Longitude angle: 0 → 2π (full circle around Y axis)
-    const theta = colNorm * TWO_PI;
+    const theta = colNorm * p.TWO_PI;
 
     for ( let row = 0; row < parallels; row++ ) {
       const rowNorm = row / ( parallels - 1 );
       // Latitude angle: 0 → π (top pole → bottom pole)
-      const phi = rowNorm * PI;
+      const phi = rowNorm * p.PI;
 
       // At the poles (row 0 = north, last row = south), all meridians
       // converge to the same point. Only draw once (col 0) to avoid
@@ -171,10 +175,10 @@ sketch.draw( (
       const progression = ( col * parallels + row ) / ( totalPoints - 1 );
 
       // ── Unit direction on the ellipsoid ──────────────────────────────
-      const sinPhi = sin( phi );
-      const cosPhi = cos( phi );
-      const sinTheta = sin( theta );
-      const cosTheta = cos( theta );
+      const sinPhi = p.sin( phi );
+      const cosPhi = p.cos( phi );
+      const sinTheta = p.sin( theta );
+      const cosTheta = p.cos( theta );
 
       // Base position on ellipsoid surface
       const baseX = radiusX * sinPhi * cosTheta;
@@ -182,7 +186,7 @@ sketch.draw( (
       const baseZ = radiusZ * sinPhi * sinTheta;
 
       // ── Surface deformation factor (noise-driven spike length) ───────
-      const surfaceNoise = noise(
+      const surfaceNoise = p.noise(
         colNorm * surfaceNoiseScale + surfaceOffset,
         rowNorm * surfaceNoiseScale,
         surfaceTime
@@ -251,21 +255,21 @@ sketch.draw( (
         );
 
         // Color noise
-        const colorNoise = noise(
+        const colorNoise = p.noise(
           colNorm * noiseXMult + rX,
           rowNorm * noiseYMult + rY,
           layerProgression * noiseLayerMult + surfaceTime * noiseAnimMult + progression + rZ
         );
 
-        // Mix surface height into hue
-        const hueNoise = lerp(
+        // Mix surface p.height into hue
+        const hueNoise = p.lerp(
           colorNoise,
           normalizedSurface,
           hueSurfaceMixing
         );
 
         const opacityFactor = mappers.fn(
-          sin( colorNoise * TAU + progression * progressionMultiplier + layerProgression * layerProgressionMultiplier ),
+          p.sin( colorNoise * p.TAU + progression * progressionMultiplier + layerProgression * layerProgressionMultiplier ),
           -1,
           1,
           opacityMax,
@@ -280,8 +284,8 @@ sketch.draw( (
             hueNoise,
             0,
             1,
-            -PI,
-            PI,
+            -p.PI,
+            p.PI,
             hueIndexEasingFn
           ) * hueIndexMultiplier,
           opacityFactor,
@@ -296,7 +300,7 @@ sketch.draw( (
     }
   }
 
-  image(
+  p.image(
     g,
     0,
     0

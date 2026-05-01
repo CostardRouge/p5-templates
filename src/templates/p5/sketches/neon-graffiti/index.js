@@ -5,8 +5,6 @@ import {
 } from "@/p5/utils/sketch.js";
 import neonGraffiti from "@/p5/utils/visuals/neonGraffiti.js";
 
-sketch.setup();
-
 sketch.draw( ( _time ) => {
   const p = getP5();
 

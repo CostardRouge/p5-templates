@@ -4,6 +4,10 @@ import mappers from "./mappers.js";
 import options from "./options.js";
 import animation from "./animation.js";
 
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
+
 export function deepMerge(
   target = {
   }, source = {
@@ -60,7 +64,9 @@ export function getAsset(
 export function inverseX(
   x, limit = 1
 ) {
-  return map(
+  const p = getP5();
+
+  return p.map(
     x,
     0,
     limit,
@@ -103,12 +109,16 @@ export function getFixedOrVariableOption(
   }
 }
 
-export const getLoopMultiplier = ( targetValue ) => (
-  Math.max(
-    Math.round( targetValue / TAU ),
-    1
-  ) * TAU
-);
+export const getLoopMultiplier = ( targetValue ) => {
+  const p = getP5();
+
+  return (
+    Math.max(
+      Math.round( targetValue / p.TAU ),
+      1
+    ) * p.TAU
+  );
+};
 
 export function getLoopPhase( components ) {
   return components.reduce(

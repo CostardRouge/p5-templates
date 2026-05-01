@@ -15,6 +15,9 @@ import neonDot from "@/p5/utils/visuals/neonDot.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
 
 import scripts from "@/p5/utils/scripts.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
@@ -56,7 +59,9 @@ const matter = {
 };
 
 sketch.setup( async() => {
-  background( ...options.colors.background );
+  const p = getP5();
+
+  p.background( ...options.colors.background );
 
   await mediapipeInit( {
     worker: false,
@@ -70,7 +75,7 @@ sketch.setup( async() => {
       background, size
     } = layers[ layerName ];
 
-    layers[ layerName ].graphics = createGraphics(
+    layers[ layerName ].graphics = p.createGraphics(
       size.width,
       size.height
     );
@@ -85,41 +90,41 @@ sketch.setup( async() => {
   const thickness = 50;
 
   addBoundary(
-    width / 2,
-    height + thickness / 2 - margin,
-    width,
+    p.width / 2,
+    p.height + thickness / 2 - margin,
+    p.width,
     thickness
   );
   addBoundary(
-    width / 2,
+    p.width / 2,
     -thickness / 2 + margin,
-    width,
+    p.width,
     thickness
   );
   addBoundary(
     -thickness / 2 + margin,
-    height / 2,
+    p.height / 2,
     thickness,
-    height
+    p.height
   );
   addBoundary(
-    width + thickness / 2 - margin,
-    height / 2,
+    p.width + thickness / 2 - margin,
+    p.height / 2,
     thickness,
-    height
+    p.height
   );
 
   for ( let i = 0; i <= 50; i++ ) {
     addBall(
-      random(
+      p.random(
         thickness,
-        width - thickness
+        p.width - thickness
       ),
-      random(
+      p.random(
         thickness,
-        height - thickness
+        p.height - thickness
       ),
-      random(
+      p.random(
         20,
         50
       )
@@ -135,10 +140,12 @@ matter.engine.gravity = {
 sketch.draw( (
   time, center, favouriteColour
 ) => {
-  background( ...options.colors.background );
+  const p = getP5();
+
+  p.background( ...options.colors.background );
 
   if ( mediapipe.idle ) {
-    background( 90 );
+    p.background( 90 );
   }
 
   drawHands(
@@ -185,7 +192,7 @@ sketch.draw( (
       continue;
     }
 
-    image(
+    p.image(
       graphics,
       0,
       0,
@@ -205,16 +212,16 @@ sketch.draw( (
   string.write(
     "attract",
     0,
-    height / 2,
+    p.height / 2,
     {
       size: 172,
       strokeWeight: 0,
-      stroke: color( ...options.colors.background ),
-      fill: color( ...options.colors.background ),
+      stroke: p.color( ...options.colors.background ),
+      fill: p.color( ...options.colors.background ),
       font: string.fonts.martian,
       textAlign: [
-        CENTER,
-        CENTER
+        p.CENTER,
+        p.CENTER
       ],
       blendMode: EXCLUSION,
     }
@@ -223,16 +230,16 @@ sketch.draw( (
   string.write(
     "hand tracking v1",
     0,
-    ( height * 6 ) / 10,
+    ( p.height * 6 ) / 10,
     {
       size: 32,
       strokeWeight: 0,
-      stroke: color( ...options.colors.background ),
-      fill: color( ...options.colors.background ),
+      stroke: p.color( ...options.colors.background ),
+      fill: p.color( ...options.colors.background ),
       font: string.fonts.loraItalic,
       textAlign: [
-        CENTER,
-        CENTER
+        p.CENTER,
+        p.CENTER
       ],
       blendMode: EXCLUSION,
     }
@@ -271,8 +278,8 @@ function createHandInteractionBodies( hand ) {
 
   interactionPoints.forEach( ( point ) => {
     if ( point ) {
-      const x = common.inverseX( point.x ) * width;
-      const y = point.y * height;
+      const x = common.inverseX( point.x ) * p.width;
+      const y = point.y * p.height;
 
       // Create invisible circular body
       const handBody = Matter.Bodies.circle(
@@ -353,8 +360,8 @@ function applyAttractionFromHands(
 
     for ( const point of attractPoints ) {
       const target = {
-        x: common.inverseX( point.x ) * width,
-        y: point.y * height,
+        x: common.inverseX( point.x ) * p.width,
+        y: point.y * p.height,
       };
 
       for ( const ball of matter.balls ) {

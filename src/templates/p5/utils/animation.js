@@ -136,7 +136,9 @@ const animation = {
     startIndex = currentTime,
     endIndex = currentTime + 1,
   } ) => {
-    const _lerpFn = lerpFn ?? getP5().lerp.bind( getP5() );
+    const p = getP5();
+
+    const _lerpFn = lerpFn ?? p.lerp.bind( p );
 
     return _lerpFn(
       mappers.circularIndex(
@@ -162,6 +164,7 @@ const animation = {
     key, speed, values, amount = 0.07, lerpFn
   ) {
     const _lerpFn = lerpFn ?? getP5().lerp.bind( getP5() );
+
     this.values = this.values ?? {
     };
 

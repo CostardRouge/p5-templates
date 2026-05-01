@@ -3,23 +3,26 @@ import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.background( ...options.sketch.backgroundColor );
 } );
 
 sketch.draw( (
   _time, center, favoriteColor
 ) => {
+  const p = getP5();
   // options.colors.text = [252, 209, 83]
   // blendMode(HARD_LIGHT);
 
-  clear();
-  background( ...options.sketch.backgroundColor );
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
 
-  const imageIndexDisplay = map(
+  const imageIndexDisplay = p.map(
     animation.triangleProgression( 2 ),
     0,
     1,
@@ -29,8 +32,8 @@ sketch.draw( (
   );
 
   // Calculate step size for vertical positioning
-  const margin = width * options.sketch?.margin;
-  const availableVerticalSpace = height - 2 * margin;
+  const margin = p.width * options.sketch?.margin;
+  const availableVerticalSpace = p.height - 2 * margin;
   const step = availableVerticalSpace / ( images.length - 1 || 1 );
 
   for ( let i = 0; i < images.length; i++ ) {
@@ -44,8 +47,8 @@ sketch.draw( (
     const y = margin + i * step;
 
     imageUtils.marginImage( {
-      position: createVector(
-        width / 2,
+      position: p.createVector(
+        p.width / 2,
         y
       ),
       margin,

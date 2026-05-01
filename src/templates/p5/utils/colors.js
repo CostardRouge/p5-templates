@@ -59,7 +59,7 @@ const colors = {
 
     return p.color(
       p.map(
-        ( easingFunction ?? p.cos.bind( p ) )( hueOffset - hueIndex ),
+        ( easingFunction ?? p.cos )( hueOffset - hueIndex ),
         -1,
         1,
         min,
@@ -67,7 +67,7 @@ const colors = {
       ) /
         opacityFactor,
       p.map(
-        ( easingFunction ?? p.sin.bind( p ) )( hueOffset + hueIndex ),
+        ( easingFunction ?? p.sin )( hueOffset + hueIndex ),
         -1,
         1,
         max,
@@ -75,7 +75,7 @@ const colors = {
       ) /
         opacityFactor,
       p.map(
-        ( easingFunction ?? p.cos.bind( p ) )( hueOffset - hueIndex ),
+        ( easingFunction ?? p.cos )( hueOffset - hueIndex ),
         -1,
         1,
         max,
@@ -91,13 +91,13 @@ const colors = {
     min = 0,
     max = 360,
     easingFunction,
-    alpha,
+    alpha = 255,
   } ) => {
     const p = getP5();
 
     return p.color(
       p.map(
-        ( easingFunction ?? p.sin.bind( p ) )( hueOffset + hueIndex ),
+        ( easingFunction ?? Math.sin )( hueOffset + hueIndex ),
         -1,
         1,
         min,
@@ -105,7 +105,7 @@ const colors = {
       ) /
         opacityFactor,
       p.map(
-        ( easingFunction ?? p.cos.bind( p ) )( hueOffset - hueIndex ),
+        ( easingFunction ?? Math.cos )( hueOffset - hueIndex ),
         -1,
         1,
         max,
@@ -113,7 +113,7 @@ const colors = {
       ) /
         opacityFactor,
       p.map(
-        ( easingFunction ?? p.sin.bind( p ) )( hueOffset + hueIndex ),
+        ( easingFunction ?? Math.sin )( hueOffset + hueIndex ),
         -1,
         1,
         max,

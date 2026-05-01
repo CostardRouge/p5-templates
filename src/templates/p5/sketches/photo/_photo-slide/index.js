@@ -6,6 +6,7 @@ import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const canvases = {
   imageBuffer: undefined,
@@ -14,16 +15,16 @@ const canvases = {
 };
 
 function drawImageWithMask( {
-  img, maskDrawer, graphics = window
+  img, maskDrawer, graphics = getP5()
 } ) {
   imageUtils.marginImage( {
     img,
     fill: true,
     center: true,
     graphics: canvases.imageBuffer,
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
   } );
 
@@ -61,23 +62,24 @@ function drawImageWithMask( {
 }
 
 sketch.setup( () => {
-  canvases.maskBuffer = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  const p = getP5();
+  canvases.maskBuffer = p.createGraphics(
+    p.width,
+    p.height
   );
 
-  canvases.imageBuffer = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  canvases.imageBuffer = p.createGraphics(
+    p.width,
+    p.height
   );
 
-  canvases.sliderBuffer = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  canvases.sliderBuffer = p.createGraphics(
+    p.width,
+    p.height
   );
 
   // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.075);
-  background( ...options.colors.background );
+  p.background( ...options.colors.background );
 } );
 
 let offset = 0;
@@ -85,7 +87,8 @@ let offset = 0;
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...options.colors.background );
+  const p = getP5();
+  p.background( ...options.colors.background );
 
   const imageObjects = cache.get( "images" );
 
@@ -144,14 +147,14 @@ sketch.draw( (
     img: currentImage,
     fill: true,
     // boundary: {
-    // 	width: width/2,
-    // 	height: height/2,
+    // 	width: p.width/2,
+    // 	height: p.height/2,
     // },
     center: true,
     graphics: canvases.sliderBuffer,
-    position: createVector(
+    position: p.createVector(
       offset,
-      height / 2
+      p.height / 2
     ),
   } );
 
@@ -159,25 +162,25 @@ sketch.draw( (
     img: nextImage,
     fill: true,
     // boundary: {
-    // 	width: width/2,
-    // 	height: height/2,
+    // 	width: p.width/2,
+    // 	height: p.height/2,
     // },
     center: true,
     graphics: canvases.sliderBuffer,
-    position: createVector(
-      offset + width + width / 2,
-      height / 2
+    position: p.createVector(
+      offset + p.width + p.width / 2,
+      p.height / 2
     ),
   } );
 
-  image(
+  p.image(
     canvases.sliderBuffer,
     0,
     0
   );
 
-  offset -= 1; // ((width)/imageIndices.length)/options.animation.duration;
-  if ( offset <= -width ) {
+  offset -= 1; // ((p.width)/imageIndices.length)/options.animation.duration;
+  if ( offset <= -p.width ) {
     offset = 0;
   }
 
@@ -190,16 +193,16 @@ sketch.draw( (
     string.write(
       defaultTitle,
       // options.texts.title || defaultTitle,
-      width / 2,
-      height / 2,
+      p.width / 2,
+      p.height / 2,
       {
         size: 128,
-        stroke: color( ...options.colors.text ),
-        fill: color( ...options.colors.background ),
+        stroke: p.color( ...options.colors.text ),
+        fill: p.color( ...options.colors.background ),
         font: string.fonts.martian,
         textAlign: [
-          CENTER,
-          CENTER
+          p.CENTER,
+          p.CENTER
         ],
         blendMode: EXCLUSION,
       }

@@ -4,10 +4,14 @@ import exif from "@/p5/utils/exif.js";
 import cache from "@/p5/utils/cache.js";
 import string from "@/p5/utils/string.js";
 import easing from "@/p5/utils/easing.js";
+import mappers from "@/p5/utils/mappers.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 class Card {
   constructor( {
@@ -28,7 +32,7 @@ class Card {
 
     // const stepSize = (end - start) / 360; // Compute step size dynamically
     // const limitsLength = (end-start);
-    // const limitUnit = abs(limitsLength)/cardsLength;
+    // const limitUnit = p.abs(limitsLength)/cardsLength;
 
     // this.position.y += (
     //     easing.easeInOutExpo(animation.progression)
@@ -41,7 +45,7 @@ class Card {
     //         +this.index
     //     ),
     //     easingFn: easing.easeInOutExpo,
-    //     lerpFn: p5.Vector.lerp
+    //     lerpFn: mappers.lerpVector
     // });
 
     // this.position.y = circularConstrain(this.position.y, start, end)
@@ -67,7 +71,7 @@ class Card {
     const easedT = easing.easeOutSine( t );
 
     // Lerp between positions
-    this.position = p5.Vector.lerp(
+    this.position = mappers.lerpVector(
       positions[ this.currentIndex ],
       positions[ this.nextIndex ],
       easedT
@@ -79,6 +83,8 @@ class Card {
   }
 
   draw( graphics ) {
+    const p = graphics;
+
     if ( !this.img ) {
       return;
     }
@@ -105,12 +111,12 @@ class Card {
         exif.formatISO( this?.exif?.iso ),
       ].join( " · " );
 
-      push();
-      translate(
+      p.push();
+      p.translate(
         50,
-        height
+        p.height
       );
-      rotate( -PI / 2 );
+      p.rotate( -p.PI / 2 );
       string.write(
         exifInfoText,
         0,
@@ -118,23 +124,23 @@ class Card {
         {
         // graphics,
           size: 24,
-          // fill: color(...options.colors.text),
-          // stroke: color(...options.colors.background),
+          // fill: p.color(...options.colors.text),
+          // stroke: p.color(...options.colors.background),
 
-          stroke: color( ...( options.sketch?.textColor ?? options.colors.text ) ),
-          fill: color( ...( options.sketch?.backgroundColor ?? options.colors.background ) ),
+          stroke: p.color( ...( options.sketch?.textColor ?? options.colors.text ) ),
+          fill: p.color( ...( options.sketch?.backgroundColor ?? options.colors.background ) ),
 
           font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
-          textWidth: height,
+          textWidth: p.height,
           popPush: false,
           textAlign: [
-            CENTER,
-            CENTER
+            p.CENTER,
+            p.CENTER
           ],
-          blendMode: DIFFERENCE,
+          blendMode: p.DIFFERENCE,
         }
       );
-      pop();
+      p.pop();
     }
   }
 }
@@ -174,22 +180,24 @@ const getImages = () => {
 };
 
 sketch.setup( () => {
-  canvases._3d = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+  const p = getP5();
+
+  canvases._3d = p.createGraphics(
+    p.width,
+    p.height,
     "webgl"
   );
 
-  background( ...getBg() );
+  p.background( ...getBg() );
 
-  const start = createVector(
+  const start = p.createVector(
     0,
-    ( height * 1 ) / 8 - height / 2,
+    ( p.height * 1 ) / 8 - p.height / 2,
     -500
   );
-  const end = createVector(
+  const end = p.createVector(
     0,
-    ( height * 2.75 ) / 4 - height / 2
+    ( p.height * 2.75 ) / 4 - p.height / 2
   );
 
   cache.store(
@@ -200,7 +208,7 @@ sketch.setup( () => {
       } ).map( (
         _, index
       ) => {
-        const position = p5.Vector.lerp(
+        const position = mappers.lerpVector(
           start,
           end,
           index / cardsLength
@@ -219,16 +227,17 @@ sketch.setup( () => {
 sketch.draw( (
   _time, center, favoriteColor
 ) => {
+  const p = getP5();
   // options.colors.text = [252, 209, 83]
-  // background(...options.colors.background);
+  // p.background(...options.colors.background);
 
   // PHOTO 3D SLIDER
-  image(
+  p.image(
     canvases._3d,
     0,
     0,
-    width,
-    height
+    p.width,
+    p.height
   );
 
   canvases._3d.background( ...getBg() );
@@ -237,12 +246,12 @@ sketch.draw( (
     card.draw( canvases._3d );
   }
 
-  push();
-  translate(
-    width - 50,
+  p.push();
+  p.translate(
+    p.width - 50,
     0
   );
-  rotate( PI / 2 );
+  p.rotate( p.PI / 2 );
   string.write(
     String( Number( animation.progression ).toPrecision( 3 ) ).slice(
       0,
@@ -252,31 +261,31 @@ sketch.draw( (
     0,
     {
       size: 24,
-      fill: color( ...getTextColor() ),
-      stroke: color( ...getBg() ),
+      fill: p.color( ...getTextColor() ),
+      stroke: p.color( ...getBg() ),
       font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
-      textWidth: height,
+      textWidth: p.height,
       popPush: false,
       textAlign: [
-        CENTER,
-        CENTER
+        p.CENTER,
+        p.CENTER
       ],
     }
   );
-  pop();
+  p.pop();
 
   // TEXTS OVER
   const textWriteOptions = {
     size: 172,
-    stroke: color( ...getTextColor() ),
-    fill: color( ...getBg() ),
+    stroke: p.color( ...getTextColor() ),
+    fill: p.color( ...getBg() ),
 
-    // stroke: color(0),
-    // fill: color(255),
+    // stroke: p.color(0),
+    // fill: p.color(255),
     font: string.fonts?.[ options.sketch?.font ] || string.fonts.martian,
     textAlign: [
-      CENTER,
-      CENTER
+      p.CENTER,
+      p.CENTER
     ],
   };
 
@@ -285,15 +294,15 @@ sketch.draw( (
     0,
     animation.ease( {
       values: [
-        height / 2 - 200,
-        ( height * 1 ) / 8
+        p.height / 2 - 200,
+        ( p.height * 1 ) / 8
       ],
       currentTime: animation.circularProgression,
       easingFn: easing.easeOutQuint,
     } ),
     {
       ...textWriteOptions,
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 
@@ -302,15 +311,15 @@ sketch.draw( (
     0,
     animation.ease( {
       values: [
-        height / 2 + 200,
-        ( height * 6.5 ) / 8
+        p.height / 2 + 200,
+        ( p.height * 6.5 ) / 8
       ],
       currentTime: animation.circularProgression,
       easingFn: easing.easeOutQuint,
     } ),
     {
       ...textWriteOptions,
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 } );

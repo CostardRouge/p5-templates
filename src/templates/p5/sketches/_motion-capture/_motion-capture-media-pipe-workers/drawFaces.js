@@ -1,4 +1,7 @@
 import drawNeonLine from "./drawNeonLine.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const rightEye = 0;
 const leftEye = 1;
@@ -10,15 +13,15 @@ const leftEar = 5;
 const getZoomFromFace = ( face ) => {
   if ( !face || face.length < 6 ) return 0;
 
-  const dEyes = p5.Vector.dist(
+  const dEyes = getP5().Vector.dist(
     face[ 0 ],
     face[ 1 ]
   ); // right eye to left eye
-  const dEars = p5.Vector.dist(
+  const dEars = getP5().Vector.dist(
     face[ 4 ],
     face[ 5 ]
   ); // right ear to left ear
-  const dNoseMouth = p5.Vector.dist(
+  const dNoseMouth = getP5().Vector.dist(
     face[ 2 ],
     face[ 3 ]
   ); // nose to mouth
@@ -28,8 +31,8 @@ const getZoomFromFace = ( face ) => {
   const minDist = 20;
   const maxDist = 120;
 
-  return constrain(
-    map(
+  return p.constrain(
+    p.map(
       avgDist,
       minDist,
       maxDist,
@@ -48,20 +51,20 @@ export default function drawFace(
     return;
   }
 
-  noFill();
-  stroke(
+  p.noFill();
+  p.stroke(
     0,
     0,
     255
   );
-  strokeWeight( 5 );
+  p.strokeWeight( 5 );
 
   result.forEach( ( detection ) => {
     // const boundingBox = detection.boundingBox;
     const keyPointVectors = detection.keypoints.map( ( faceKeyPoint ) => {
-      return createVector(
-        inverseX( faceKeyPoint.x ) * width,
-        faceKeyPoint.y * height,
+      return p.createVector(
+        inverseX( faceKeyPoint.x ) * p.width,
+        faceKeyPoint.y * p.height,
         faceKeyPoint.z
       );
     } );
@@ -82,14 +85,14 @@ export default function drawFace(
       position: keyPointVectors[ nose ],
     } );
 
-    // beginShape( POINTS );
+    // p.beginShape( p.POINTS );
     // keypoints.forEach( ( keypoint ) => {
-    //   vertex(
-    //     inverseX( keypoint.x ) * width,
-    //     keypoint.y * height
+    //   p.vertex(
+    //     inverseX( keypoint.x ) * p.width,
+    //     keypoint.y * p.height
     //   );
     // } );
-    // strokeWeight( 10 );
-    // endShape();
+    // p.strokeWeight( 10 );
+    // p.endShape();
   } );
 }

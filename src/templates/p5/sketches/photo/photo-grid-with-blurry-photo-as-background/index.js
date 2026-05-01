@@ -7,52 +7,59 @@ import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
 import renderTitle from "@/p5/utils/title/renderTitle";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const canvases = {
 };
 
 sketch.setup( () => {
-  canvases.background = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  const p = getP5();
+
+  canvases.background = p.createGraphics(
+    p.width,
+    p.height
   );
 
   // canvases.background.pixelDensity(options.backgroundPixelDensity || 0.0175);
 
-  background( ...options.sketch.backgroundColor );
+  p.background( ...options.sketch.backgroundColor );
 
-  canvases.background.background( ...options.sketch.backgroundColor );
+  canvases.background( ...options.sketch.backgroundColor );
 } );
 
-sketch.draw( (
+sketch.draw( async(
   time, center, favoriteColor
 ) => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
 
-  canvases.background.background( ...options.sketch.backgroundColor );
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
+
+  canvases.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
 
   const borderSize = 0;
-  const rows = options.sketch?.rows ?? 4; // columns*height/width;
-  const columns = options.sketch?.columns ?? 3; // rows*width/height;
+  const rows = options.sketch?.rows ?? 4; // columns*p.height/p.width;
+  const columns = options.sketch?.columns ?? 3; // rows*p.width/p.height;
   const gridOptions = {
-    topLeft: createVector(
+    topLeft: p.createVector(
       borderSize,
       borderSize
     ),
-    topRight: createVector(
-      width - borderSize,
+    topRight: p.createVector(
+      p.width - borderSize,
       borderSize
     ),
-    bottomLeft: createVector(
+    bottomLeft: p.createVector(
       borderSize,
-      height - borderSize
+      p.height - borderSize
     ),
-    bottomRight: createVector(
-      width - borderSize,
-      height - borderSize
+    bottomRight: p.createVector(
+      p.width - borderSize,
+      p.height - borderSize
     ),
     rows,
     columns,
@@ -60,9 +67,9 @@ sketch.draw( (
   };
   const {
     cells: gridCells
-  } = grid.create( gridOptions );
+  } = await grid.create( gridOptions );
 
-  canvases.background.background( ...options.sketch.backgroundColor );
+  canvases.background( ...options.sketch.backgroundColor );
 
   // gridCells.forEach( ({ position, xIndex, yIndex, width: W, height: H }) => {
   //     const { x, y } = position;
@@ -80,7 +87,7 @@ sketch.draw( (
   //
   //     imageUtils.marginImage({
   //         img: imageAtIndex,
-  //         position: createVector(x+W/2, y+H/2),
+  //         position: p.createVector(x+W/2, y+H/2),
   //         boundary: {
   //             height: H/2,
   //             width: W/2
@@ -102,21 +109,21 @@ sketch.draw( (
 
   imageUtils.marginImage( {
     img: imageAtIndex,
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
     graphics: canvases.background,
     center: true,
     fill: true,
   } );
 
-  image(
+  p.image(
     canvases.background,
     0,
     0,
-    width,
-    height
+    p.width,
+    p.height
   );
   filter(
     BLUR,
@@ -153,7 +160,7 @@ sketch.draw( (
 
     imageUtils.marginImage( {
       img: imageAtIndex,
-      position: createVector(
+      position: p.createVector(
         x + W / 2,
         y + H / 2
       ),

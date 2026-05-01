@@ -8,8 +8,9 @@ import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
 import * as common from "@/p5/utils/common.js";
-
-sketch.setup();
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const getFont = () => {
   const key = options.sketch?.font?.face ?? "martian";
@@ -20,7 +21,9 @@ const getFont = () => {
 sketch.draw( (
   _time, center
 ) => {
-  background( ...( options.sketch?.photo?.backgroundColor ?? [
+  const p = getP5();
+
+  p.background( ...( options.sketch?.photo?.backgroundColor ?? [
     246,
     235,
     225
@@ -35,13 +38,13 @@ sketch.draw( (
       0,
       {
         size: 72,
-        stroke: color( 255 ),
-        fill: color( 0 ),
-        textHeight: height,
+        stroke: p.color( 255 ),
+        fill: p.color( 0 ),
+        textHeight: p.height,
         font: getFont(),
         textAlign: [
-          CENTER,
-          CENTER
+          p.CENTER,
+          p.CENTER
         ],
       }
     );
@@ -50,7 +53,7 @@ sketch.draw( (
   if ( photo ) {
     imageUtils.marginImage( {
       img: photo.img,
-      margin: width * options.sketch?.photo?.margin,
+      margin: p.width * options.sketch?.photo?.margin,
       center: true,
       position: center,
       callback: (
@@ -61,16 +64,16 @@ sketch.draw( (
         const yBottomPosition = y + h + fontSize / 2;
         const textStyle = {
           size: fontSize,
-          stroke: color( ...( options.sketch?.font?.stroke ?? [
+          stroke: p.color( ...( options.sketch?.font?.stroke ?? [
             255
           ] ) ),
-          fill: color( ...( options.sketch?.font?.color ?? [
+          fill: p.color( ...( options.sketch?.font?.color ?? [
             0
           ] ) ),
           font: getFont(),
         };
 
-        // TOP LEFT
+        // p.TOP p.LEFT
         string.write(
           options.sketch.textOverrides?.topLeft !== ""
             ? options.sketch?.textOverrides?.topLeft
@@ -80,7 +83,7 @@ sketch.draw( (
           textStyle
         );
 
-        // TOP RIGHT
+        // p.TOP p.RIGHT
         string.write(
           options.sketch.textOverrides?.topRight !== ""
             ? options.sketch.textOverrides?.topRight
@@ -94,12 +97,12 @@ sketch.draw( (
             ...textStyle,
             textWidth: w,
             textAlign: [
-              RIGHT
+              p.RIGHT
             ],
           }
         );
 
-        // BOTTOM LEFT
+        // p.BOTTOM p.LEFT
         string.write(
           options.sketch.textOverrides?.bottomLeft,
           x,
@@ -108,8 +111,8 @@ sketch.draw( (
             ...textStyle,
             textWidth: w,
             textAlign: [
-              LEFT,
-              TOP
+              p.LEFT,
+              p.TOP
             ],
           }
         );
@@ -127,7 +130,7 @@ sketch.draw( (
           bottomRightTexts
         );
 
-        // BOTTOM RIGHT
+        // p.BOTTOM p.RIGHT
         string.write(
           options.sketch.textOverrides?.bottomRight !== ""
             ? options.sketch.textOverrides?.bottomRight
@@ -138,8 +141,8 @@ sketch.draw( (
             ...textStyle,
             textWidth: w,
             textAlign: [
-              RIGHT,
-              TOP
+              p.RIGHT,
+              p.TOP
             ],
           }
         );

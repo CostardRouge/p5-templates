@@ -13,16 +13,16 @@ export default function imageSplitLayout( opts ) {
       a.img,
       0,
       0,
-      width / 2,
+      p.width / 2,
       height
     );
   }
   if ( b ) {
     image(
       b.img,
-      width / 2,
+      p.width / 2,
       0,
-      width / 2,
+      p.width / 2,
       height
     );
   }

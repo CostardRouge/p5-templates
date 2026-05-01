@@ -43,13 +43,13 @@ events.register(
     const thickness = BOUNDARY_THICKNESS;
 
     addBoundary(
-      width / 2,
+      p.width / 2,
       height + thickness / 2 - margin,
       width,
       thickness
     );
     addBoundary(
-      width / 2,
+      p.width / 2,
       -thickness / 2 + margin,
       width,
       thickness
@@ -83,7 +83,7 @@ events.register(
 
     matter.letterBodies = addLetterBoxes(
       "soup tracking",
-      width / 2 - 300,
+      p.width / 2 - 300,
       height / 2
     );
   }
@@ -97,7 +97,7 @@ matter.engine.gravity = {
 sketch.draw( (
   time, center, favouriteColour
 ) => {
-  background( ...options.colors.background );
+  p.background( ...options.colors.background );
 
   if ( !mediapipe.idle ) {
     drawHands(
@@ -183,8 +183,8 @@ sketch.draw( (
   //   {
   //     size: 172,
   //     strokeWeight: 0,
-  //     stroke: color( ...options.colors.background ),
-  //     fill: color( ...options.colors.background ),
+  //     stroke: p.color( ...options.colors.background ),
+  //     fill: p.color( ...options.colors.background ),
   //     font: string.fonts.martian,
   //     textAlign: [
   //       CENTER,
@@ -201,8 +201,8 @@ sketch.draw( (
   //   {
   //     size: 32,
   //     strokeWeight: 0,
-  //     stroke: color( ...options.colors.background ),
-  //     fill: color( ...options.colors.background ),
+  //     stroke: p.color( ...options.colors.background ),
+  //     fill: p.color( ...options.colors.background ),
   //     font: string.fonts.loraItalic,
   //     textAlign: [
   //       CENTER,

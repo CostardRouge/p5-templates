@@ -9,24 +9,31 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import {
   getFixedOrVariableOption
 } from "@/p5/utils/common.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const canvases = {
 };
 
 sketch.setup( () => {
-  canvases.mask = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  const p = getP5();
+
+  canvases.mask = p.createGraphics(
+    p.width,
+    p.height
   );
 
-  background( ...options.sketch.backgroundColor );
+  p.background( ...options.sketch.backgroundColor );
 } );
 
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
 
@@ -58,7 +65,7 @@ sketch.draw( (
     itemsToMorph.push( ...( "0123456789".split( "" ) ) );
   }
 
-  const size = options.sketch.textStyle.size * ( ( height + width ) / 2 ) ?? ( height + width ) / 2;
+  const size = options.sketch.textStyle.size * ( ( p.height + p.width ) / 2 ) ?? ( p.height + p.width ) / 2;
   const font = string.fonts?.[ options.sketch?.textStyle.font ] ?? string.fonts.serif;
   const sampleFactor = options.sketch.textStyle.sampleFactor ?? 0.05;
   const simplifyThreshold = options.sketch.textStyle.simplifyThreshold ?? 0;
@@ -84,6 +91,11 @@ sketch.draw( (
   for ( let i = 0; i < points.length; i++ ) {
     const pointsProgression = i / ( points.length - 1 );
 
+    console.log( getFixedOrVariableOption(
+      "strokeWeight",
+      pointsProgression
+    ) );
+
     canvases.mask.strokeWeight( getFixedOrVariableOption(
       "strokeWeight",
       pointsProgression
@@ -102,12 +114,12 @@ sketch.draw( (
   // canvases.mask.endShape( );
 
   const mask = displayMask(
-    window,
+    p,
     canvases.mask
   );
 
-  background( ...options.sketch.backgroundColor );
-  image(
+  p.background( ...options.sketch.backgroundColor );
+  p.image(
     mask,
     0,
     0
@@ -115,7 +127,7 @@ sketch.draw( (
 } );
 
 function displayMask(
-  source = window, mask
+  source = getP5(), mask
 ) {
   const maskedImage = source.get();
 

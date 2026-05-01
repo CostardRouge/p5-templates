@@ -15,7 +15,7 @@ export default function drawCircleEchoes( {
   for ( let circleEchoIndex = 0; circleEchoIndex < count; circleEchoIndex++ ) {
     const circleEchoProgression = easing.easeInExpo( circleEchoIndex / count );
 
-    strokeWeight( 1 );
+    p.strokeWeight( 1 );
     stroke( echoColor );
 
     circle(

@@ -5,16 +5,19 @@ import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.background( ...options.sketch.backgroundColor );
 } );
 
 sketch.draw( (
   _time, center, favoriteColor
 ) => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
 
@@ -34,16 +37,16 @@ sketch.draw( (
       return;
     }
 
-    const imagePosition = createVector(
-      width / 2,
-      height / 2
+    const imagePosition = p.createVector(
+      p.width / 2,
+      p.height / 2
     );
 
     if ( options.sketch.randomPosition.x > 0 ) {
-      const xMargin = ( options.sketch.randomPosition.x ?? 0.3 ) * width;
+      const xMargin = ( options.sketch.randomPosition.x ?? 0.3 ) * p.width;
 
-      imagePosition.add( map(
-        noise(
+      imagePosition.add( p.map(
+        p.noise(
           i,
           imageProgression,
           xMargin
@@ -56,12 +59,12 @@ sketch.draw( (
     }
 
     if ( options.sketch.randomPosition.y > 0 ) {
-      const yMargin = ( options.sketch.randomPosition.y ?? 0.5 ) * height;
+      const yMargin = ( options.sketch.randomPosition.y ?? 0.5 ) * p.height;
 
       imagePosition.add(
         0,
-        map(
-          noise(
+        p.map(
+          p.noise(
             i,
             imageProgression,
             yMargin
@@ -74,16 +77,16 @@ sketch.draw( (
       );
     }
 
-    const randomAngle = noise(
+    const randomAngle = p.noise(
       i,
       imageProgression,
-    ) * radians( options.sketch.randomAngle ?? 15 ) * ( i % 2 === 0 ? -1 : 1 );
+    ) * p.radians( options.sketch.randomAngle ?? 15 ) * ( i % 2 === 0 ? -1 : 1 );
 
     imageUtils.marginImage( {
       img: images[ i ].img,
       angle: randomAngle,
       position: imagePosition,
-      margin: width * options.sketch.imageStyle?.margin,
+      margin: p.width * options.sketch.imageStyle?.margin,
       scale: options.sketch.imageStyle?.scale ?? 1,
       center: options.sketch.imageStyle?.center ?? true,
       clip: options.sketch.imageStyle?.clip ?? false,

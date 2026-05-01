@@ -1,7 +1,5 @@
-// Default values only
-import {
-  fontNames
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   // Assets
@@ -14,15 +12,6 @@ export const formValues = {
     0,
     0
   ],
-  textColor: [
-    128,
-    128,
-    255
-  ],
-
-  // Typography / Title
-  font: "spaceMonoRegular",
-  title: "dominant\ncolors",
 
   // Grid
   rows: 16,
@@ -31,6 +20,8 @@ export const formValues = {
 
   // Image processing
   dominantColorSample: 50,
+
+  title: titleDefaultValues
 };
 
 // UI configuration only
@@ -49,20 +40,6 @@ export const formConfiguration: Record<string, any> = {
   textColor: {
     component: "color",
     label: "Text color",
-  },
-
-  // Typography / Title
-  font: {
-    component: "select",
-    label: "Font name",
-    options: fontNames.map( ( fontName ) => ( {
-      value: fontName,
-      label: fontName,
-    } ) ),
-  },
-  title: {
-    component: "text",
-    label: "Custom title (empty → default)",
   },
 
   // Grid
@@ -96,4 +73,6 @@ export const formConfiguration: Record<string, any> = {
     max: 200,
     step: 1,
   },
+
+  title: titleFormConfiguration,
 };

@@ -1,12 +1,15 @@
 import events from "@/p5/utils/events.js";
 import string from "@/p5/utils/string.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 let qrCode = undefined;
 
 events.register(
   "engine-window-preload",
   () => {
-    qrCode = loadImage( "/assets/scripts/p5-sketches/sketches/_motion-capture-media-pipe-workers/instagram.png" );
+    qrCode = getP5().loadImage( "/assets/scripts/p5-sketches/sketches/_motion-capture-media-pipe-workers/instagram.png" );
   }
 );
 
@@ -19,11 +22,11 @@ export default function drawSocialMediaOverlay(
   const qrCodeWidth = qrCode.width * 0.5;
   const qrCodeHeight = qrCode.height * 0.5;
 
-  const bottomLinePosition = height - ( qrCodeHeight + qrCodeMargin );
+  const bottomLinePosition = p.height - ( qrCodeHeight + qrCodeMargin );
 
   graphics.image(
     qrCode,
-    width - qrCodeMargin - qrCodeWidth,
+    p.width - qrCodeMargin - qrCodeWidth,
     bottomLinePosition,
     qrCodeWidth,
     qrCodeHeight
@@ -36,13 +39,13 @@ export default function drawSocialMediaOverlay(
     {
       size: qrCodeHeight * 0.3,
       font: string.fonts?.martian,
-      stroke: color( 0 ),
-      fill: color( 255 ),
-      textWidth: width - 2 * qrCodeMargin - qrCodeWidth,
+      stroke: p.color( 0 ),
+      fill: p.color( 255 ),
+      textWidth: p.width - 2 * qrCodeMargin - qrCodeWidth,
       textHeight: qrCodeHeight,
       textAlign: [
-        LEFT,
-        TOP
+        p.LEFT,
+        p.TOP
       ],
       popPush: true,
       graphics: graphics,

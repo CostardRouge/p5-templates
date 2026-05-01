@@ -1,3 +1,6 @@
+import {
+  get
+} from "http";
 import cache from "./cache.js";
 import {
   getP5
@@ -112,7 +115,7 @@ const string = {
     },
   },
   applyFontStyle: function( {
-    graphics = window,
+    graphics = getP5(),
     blendMode,
     size,
     font,
@@ -148,19 +151,23 @@ const string = {
       return;
     }
 
+    const p = getP5();
+
     options.size ??= 18;
     options.strokeWeight ??= 2;
     options.stroke ??= 255;
     options.fill ??= 0;
     options.font ??= string.fonts.serif;
-    options.graphics ??= getP5();
+    options.graphics ??= p;
     options.textWidth ??= options.graphics.width;
     options.textHeight ??= -1;
     options.showBox ??= false;
     options.showLines ??= false;
     options.popPush ??= true;
     options.blendMode ??= undefined;
-    options.textWrap ??= getP5().WORD;
+    options.textWrap ??= p.WORD;
+    options.textAlign ??= [
+    ];
 
     const {
       size,
@@ -194,8 +201,8 @@ const string = {
       y,
       size
     );
-    const asc = getP5().int( getP5().textAscent() * 0.8 );
-    const desc = getP5().int( getP5().textDescent() * 0.8 );
+    const asc = p.int( p.textAscent() * 0.8 );
+    const desc = p.int( p.textDescent() * 0.8 );
 
     if ( showLines ) {
       graphics.push();

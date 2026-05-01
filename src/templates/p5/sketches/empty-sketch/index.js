@@ -1,10 +1,11 @@
 import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
-
-sketch.setup( () => {} );
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 sketch.draw( (
   _time, center
 ) => {
-  text( options.name );
+  const p = getP5();
 } );

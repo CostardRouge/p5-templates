@@ -3,7 +3,7 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 export default function drawImageWithMask( {
   img,
   maskDrawer,
-  graphics = window,
+  graphics = getP5(),
   mask,
   imageBuffer,
 } ) {

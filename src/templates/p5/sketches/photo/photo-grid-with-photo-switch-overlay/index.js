@@ -6,38 +6,45 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import renderTitle from "@/p5/utils/title/renderTitle";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+
+  p.background( ...options.sketch.backgroundColor );
 } );
 
-sketch.draw( (
+sketch.draw( async(
   time, center, favoriteColor
 ) => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
 
   const borderSize = options.sketch?.grid?.borderSize ?? 0;
-  const rows = options.sketch?.grid?.rows || 3; // columns*height/width;
-  const columns = options.sketch?.grid?.columns || 3; // rows*width/height;
+  const rows = options.sketch?.grid?.rows || 3; // columns*p.height/p.width;
+  const columns = options.sketch?.grid?.columns || 3; // rows*p.width/p.height;
   const gridOptions = {
-    topLeft: createVector(
+    topLeft: p.createVector(
       borderSize,
       borderSize
     ),
-    topRight: createVector(
-      width - borderSize,
+    topRight: p.createVector(
+      p.width - borderSize,
       borderSize
     ),
-    bottomLeft: createVector(
+    bottomLeft: p.createVector(
       borderSize,
-      height - borderSize
+      p.height - borderSize
     ),
-    bottomRight: createVector(
-      width - borderSize,
-      height - borderSize
+    bottomRight: p.createVector(
+      p.width - borderSize,
+      p.height - borderSize
     ),
     rows,
     columns,
@@ -45,7 +52,7 @@ sketch.draw( (
   };
   const {
     cells: gridCells
-  } = grid.create( gridOptions );
+  } = await grid.create( gridOptions );
 
   gridCells.forEach( (
     {
@@ -69,7 +76,7 @@ sketch.draw( (
 
     imageUtils.marginImage( {
       img: imageAtIndex,
-      position: createVector(
+      position: p.createVector(
         x + W / 2,
         y + H / 2
       ),

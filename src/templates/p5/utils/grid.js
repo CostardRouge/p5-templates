@@ -1,8 +1,10 @@
 import cache from "./cache.js";
-import { getP5 } from "./sketch.js";
+import {
+  getP5, loadP5Class
+} from "./sketch.js";
 
 const grid = {
-  create: (
+  create: async(
     {
       rows = 2,
       columns = 2,
@@ -15,22 +17,28 @@ const grid = {
     cached = true
   ) => {
     const p = getP5();
-    
+
     // Set defaults for p5-dependent parameters
-    if (topLeft === null) topLeft = p.createVector(0, 0);
-    if (topRight === null) topRight = p.createVector(p.width, 0);
-    if (bottomLeft === null) bottomLeft = p.createVector(0, p.height);
-    if (bottomRight === null) bottomRight = p.createVector(p.width, p.height);
-    
+    if ( topLeft === null ) topLeft = p.createVector(
+      0,
+      0
+    );
+    if ( topRight === null ) topRight = p.createVector(
+      p.width,
+      0
+    );
+    if ( bottomLeft === null ) bottomLeft = p.createVector(
+      0,
+      p.height
+    );
+    if ( bottomRight === null ) bottomRight = p.createVector(
+      p.width,
+      p.height
+    );
+
     const compute = () => {
-      const baseCellWidth = p.Vector.dist(
-        topLeft,
-        topRight
-      ) / columns;
-      const baseCellHeight = p.Vector.dist(
-        topLeft,
-        bottomLeft
-      ) / rows;
+      const baseCellWidth = topLeft.dist( topRight ) / columns;
+      const baseCellHeight = topLeft.dist( bottomLeft ) / rows;
 
       const cellWidth = diamond ? baseCellWidth / p.sqrt( 2 ) : baseCellWidth;
       const cellHeight = diamond ? baseCellWidth / p.sqrt( 2 ) : baseCellHeight;
@@ -198,6 +206,7 @@ const grid = {
     gridOptions, cells, corners
   ) => {
     const p = getP5();
+
     // Draw grid corners
     p.stroke(
       255,
@@ -298,10 +307,10 @@ const grid = {
       );
     }
   },
-  prepare: ( gridOptions ) => {
+  prepare: async( gridOptions ) => {
     const {
       cells
-    } = grid.create( gridOptions );
+    } = await grid.create( gridOptions );
 
     return {
       cells,
@@ -323,12 +332,12 @@ const grid = {
       },
     };
   },
-  draw: (
+  draw: async(
     gridOptions, handler
   ) => {
     const {
       cells
-    } = grid.create( gridOptions );
+    } = await grid.create( gridOptions );
 
     cells.forEach( (
       {

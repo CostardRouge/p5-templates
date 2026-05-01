@@ -7,59 +7,66 @@ import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   buffer: null
 };
 
 sketch.setup( () => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+
+  p.background( ...options.sketch.backgroundColor );
 
   sketchState.buffer = graphics.createAutoResizableGraphics(
-    width,
-    height
+    p.width,
+    p.height
   );
 } );
 
-sketch.draw( (
+sketch.draw( async(
   time, center, favoriteColor
 ) => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
 
-  const rows = options.sketch.grid.rows ?? 16; // columns*height/width;
-  const columns = options.sketch.grid.columns ?? 9; // rows*width/height;
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
+
+  const rows = options.sketch.grid.rows ?? 16; // columns*p.height/p.width;
+  const columns = options.sketch.grid.columns ?? 9; // rows*p.width/p.height;
   const borderSize = options.sketch.grid.borderSize ?? 16;
   // const dominantColorSample = options.sketch.dominantColorSample ?? 50;
 
   const gridOptions = {
-    topLeft: createVector(
+    topLeft: p.createVector(
       borderSize,
       borderSize
     ),
-    topRight: createVector(
-      width - borderSize,
+    topRight: p.createVector(
+      p.width - borderSize,
       borderSize
     ),
-    bottomLeft: createVector(
+    bottomLeft: p.createVector(
       borderSize,
-      height - borderSize
+      p.height - borderSize
     ),
-    bottomRight: createVector(
-      width - borderSize,
-      height - borderSize
+    bottomRight: p.createVector(
+      p.width - borderSize,
+      p.height - borderSize
     ),
     rows,
     columns,
     centered: true,
   };
 
-  const W = width / columns;
-  const H = height / rows;
+  const W = p.width / columns;
+  const H = p.height / rows;
 
   const {
     cells: gridCells
-  } = grid.create( gridOptions );
+  } = await grid.create( gridOptions );
 
   const images = imageUtils.getImages();
   const imageFingerprints = images.reduce(
@@ -76,8 +83,6 @@ sketch.draw( (
     ]
   );
 
-  console.log( imageFingerprints );
-
   if ( imageFingerprints.length === 0 ) {
     return;
   }
@@ -91,7 +96,6 @@ sketch.draw( (
       // dominantColorSample
     ),
     () => {
-      console.log( "new" );
       return images.map( ( {
         img
       } ) => {
@@ -137,8 +141,8 @@ sketch.draw( (
     ] )
     .flat( Infinity );
 
-  noFill();
-  stroke( favoriteColor );
+  p.noFill();
+  p.stroke( favoriteColor );
 
   gridCells.forEach( (
     {
@@ -152,14 +156,14 @@ sketch.draw( (
     const timeIndex = animation.progression * imageIndexes.length;
 
     const switchIndex =
-      +noise(
+      +p.noise(
         xIndex,
         yIndex,
         timeIndex
       ) +
-      noise(
-        x / width,
-        y / height,
+      p.noise(
+        x / p.width,
+        y / p.height,
         cellIndex
       );
     const imageIndex = mappers.circularIndex(
@@ -173,14 +177,14 @@ sketch.draw( (
     } = imageAtIndex?.[ ~~cellIndex ];
 
     if ( imagePart ) {
-      image(
+      p.image(
         imagePart,
         x,
         y,
         W + 1,
         H + 1
       );
-      // rect(x, y, W, H)
+      // p.rect(x, y, W, H)
     }
   } );
 } );

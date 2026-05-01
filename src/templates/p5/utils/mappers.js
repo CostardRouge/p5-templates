@@ -3,14 +3,13 @@ import {
   getP5
 } from "./sketch.js";
 
-const lerpVector = (
-  from, to, amount
-) => from.copy().lerp(
-  to,
-  amount
-);
-
 const mappers = {
+  lerpVector: (
+    from, to, amount
+  ) => from.copy().lerp(
+    to,
+    amount
+  ),
   circularMap: function(
     value, length, min, max, fn
   ) {
@@ -131,7 +130,7 @@ const mappers = {
   lerpPoints: (
     from, to, amount, fn
   ) => {
-    const vectorLerp = fn ?? lerpVector;
+    const vectorLerp = fn ?? mappers.lerpVector;
     const result = [
     ];
     const maxLength = Math.max(
@@ -159,7 +158,7 @@ const mappers = {
   fastLerpPoints: (
     from, to, amount, fn
   ) => {
-    const vectorLerp = fn ?? lerpVector;
+    const vectorLerp = fn ?? mappers.lerpVector;
     const longest = from;
     const shortest = to;
 

@@ -28,8 +28,8 @@ export default function drawSlideText( textOption ) {
         textOption.alignment?.vertical ?? "baseline",
       ],
       blendMode: textOption.blend,
-      fill: color( ...textOption.fill ),
-      stroke: color( ...textOption.stroke ),
+      fill: p.color( ...textOption.fill ),
+      stroke: p.color( ...textOption.stroke ),
       textWidth: width - 2 * ( width * horizontalMargin ),
       textHeight: height - 2 * ( height * verticalMargin ),
     }

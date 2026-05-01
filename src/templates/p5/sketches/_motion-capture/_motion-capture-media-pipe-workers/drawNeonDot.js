@@ -59,7 +59,7 @@ export default function drawNeonDot( {
     75
   ],
   shadowsCount = 3,
-  graphics = window,
+  graphics = getP5(),
   position,
   index,
 } = {

@@ -8,6 +8,10 @@ import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
+import renderTitle from "@/p5/utils/title/renderTitle.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 // helpers
 const getBg = () =>
@@ -48,19 +52,21 @@ sketch.setup(
 
 const borderSize = 0;
 
-sketch.draw( (
+sketch.draw( async(
   time, center, favoriteColor
 ) => {
+  const p = getP5();
+
   if ( options.sketch?.variableBackgroundColor ) {
-    const backgroundColor = lerpColor(
-      color( ...getBg() ),
+    const backgroundColor = p.lerpColor(
+      p.color( ...getBg() ),
       favoriteColor,
       animation.triangleProgression()
     );
 
-    background( backgroundColor );
+    p.background( backgroundColor );
   } else {
-    background( ...getBg() );
+    p.background( ...getBg() );
   }
 
   if ( options.sketch?.variableZoom ) {
@@ -77,13 +83,13 @@ sketch.draw( (
       easingFn: easing.easeInOutQuart,
     } );
 
-    translate(
+    p.translate(
       0,
       0,
       zoom * 0.8
     );
   } else {
-    translate(
+    p.translate(
       0,
       0,
       options.sketch?.zoom ?? -2000
@@ -93,12 +99,12 @@ sketch.draw( (
   if ( options.sketch?.rotateX ) {
     const xRotationValues = [
       0,
-      PI / 6,
-      -PI / 6,
-      PI / 2
+      p.PI / 6,
+      -p.PI / 6,
+      p.PI / 2
     ];
 
-    rotateX( animation.ease( {
+    p.rotateX( animation.ease( {
       values: xRotationValues,
       currentTime: animation.progression * xRotationValues.length,
       easingFn: easing.easeInOutExpo,
@@ -106,19 +112,19 @@ sketch.draw( (
   }
 
   if ( options.sketch?.rotateZ ) {
-    rotateZ( animation.ease( {
+    p.rotateZ( animation.ease( {
       values: [
         0,
-        PI / 2
+        p.PI / 2
       ],
       currentTime: +time,
       easingFn: easing.easeInOutExpo,
     } ) );
   }
 
-  translate(
-    -width / 2,
-    -height / 2
+  p.translate(
+    -p.width / 2,
+    -p.height / 2
   );
 
   const foldingSpeed = 0;
@@ -128,15 +134,15 @@ sketch.draw( (
   const L = animation.ease( {
     values: [
       0,
-      width / 2
+      p.width / 2
     ],
     currentTime: foldingSpeed,
     easingFn: easing.easeInOutExpo,
   } );
   const R = animation.ease( {
     values: [
-      width,
-      width / 2
+      p.width,
+      p.width / 2
     ],
     currentTime: 0,
     easingFn: easing.easeInOutExpo,
@@ -149,30 +155,30 @@ sketch.draw( (
     columns,
     diamond,
     centered: 0,
-    topLeft: createVector(
+    topLeft: p.createVector(
       L,
       borderSize
     ),
-    topRight: createVector(
+    topRight: p.createVector(
       R,
       borderSize
     ),
-    bottomLeft: createVector(
+    bottomLeft: p.createVector(
       L,
-      height - borderSize
+      p.height - borderSize
     ),
-    bottomRight: createVector(
+    bottomRight: p.createVector(
       R,
-      height - borderSize
+      p.height - borderSize
     ),
   };
 
-  const W = width / columns;
-  const H = height / rows;
+  const W = p.width / columns;
+  const H = p.height / rows;
 
   const {
     cells
-  } = grid.create( gridOptions );
+  } = await grid.create( gridOptions );
 
   const images = getImages();
 
@@ -183,9 +189,9 @@ sketch.draw( (
   const imageParts = cache.store(
     `image-parts-${ columns }-${ rows }-${ imagePaths }`,
     () => {
-      const buffer = createGraphics(
-        sketch?.engine?.canvas?.width,
-        sketch?.engine?.canvas?.height
+      const buffer = p.createGraphics(
+        p.width,
+        p.height
       );
 
       return images.map( ( {
@@ -194,9 +200,9 @@ sketch.draw( (
         buffer.clear();
         imageUtils.marginImage( {
           img,
-          position: createVector(
-            width / 2,
-            height / 2
+          position: p.createVector(
+            p.width / 2,
+            p.height / 2
           ),
           graphics: buffer,
           center: true,
@@ -233,7 +239,7 @@ sketch.draw( (
 
   // images already computed above
 
-  // background( ...options.colors.background );
+  // p.background( ...options.colors.background );
 
   cells.forEach( (
     {
@@ -252,8 +258,8 @@ sketch.draw( (
     // const circonference = ( options.vertical ? cellHeight : cellWidth ) * images.length;
     const circonference = cellWidth * images.length * 1.15;
 
-    push();
-    translate(
+    p.push();
+    p.translate(
       center.x,
       center.y
     );
@@ -262,11 +268,11 @@ sketch.draw( (
       const imageAtIndex = imageParts?.[ ~~imageIndex ];
       const imagePart = imageAtIndex?.[ ~~cellIndex ]?.imagePart;
 
-      const angle = ( imageIndex / images.length ) * TAU;
+      const angle = ( imageIndex / images.length ) * p.TAU;
 
-      push();
+      p.push();
 
-      const rotateFunction = rotateZ; // options.vertical ? rotateX : rotateY;
+      const rotateFunction = p.rotateZ.bind( p ); // options.vertical ? p.rotateX : p.rotateY;
 
       rotateFunction( angle );
 
@@ -275,7 +281,7 @@ sketch.draw( (
           .map( (
             _, index
           ) => [
-            ( index / images.length ) * TAU
+            ( index / images.length ) * p.TAU
           ] )
           .flat( Infinity ),
         currentTime:
@@ -287,12 +293,12 @@ sketch.draw( (
         easingFn: easing.easeInOutSine,
       } ) );
 
-      rotateX( animation.ease( {
+      p.rotateX( animation.ease( {
         values: images
           .map( (
             _, index
           ) => [
-            ( index / images.length ) * TAU
+            ( index / images.length ) * p.TAU
           ] )
           .flat( Infinity ),
         currentTime:
@@ -304,59 +310,33 @@ sketch.draw( (
         easingFn: easing.easeInOutExpo,
       } ) );
 
-      translate(
+      p.translate(
         0,
         0,
-        circonference / TAU
+        circonference / p.TAU
       );
-      // translate(
+      // p.translate(
       //   cellWidth * imageIndex,
       //   0
       // );
 
-      noFill();
-      texture( imagePart );
+      p.noFill();
+      p.texture( imagePart );
 
-      // stroke( favoriteColor );
-      // strokeWeight( 2 );
-      rect(
+      // p.stroke( favoriteColor );
+      // p.strokeWeight( 2 );
+      p.rect(
         -cellWidth / 2,
         -cellHeight / 2,
         cellWidth,
         cellHeight
       );
 
-      pop();
+      p.pop();
     }
 
-    pop();
+    p.pop();
   } );
 
-  // if ( animation.progression < 0.2 ) {
-  if ( options.sketch?.showTitle ?? true ) {
-    string.write(
-      ( options.sketch?.title || options.name ).replaceAll(
-        "-",
-        "\n"
-      ),
-      0,
-      height / 2,
-      {
-        size: options.sketch?.titleSize ?? 450,
-        strokeWeight: 0,
-        stroke: color( ...getTextColor() ),
-        fill: color( ...getTextColor() ),
-        font: getFont(),
-        textAlign: [
-          CENTER,
-          CENTER
-        ],
-        // blendMode: EXCLUSION
-        // graphics: canvases.text
-      }
-    );
-  }
-  // }
-
-  return orbitControl();
+  renderTitle();
 } );

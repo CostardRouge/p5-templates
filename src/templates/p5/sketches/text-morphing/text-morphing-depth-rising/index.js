@@ -11,6 +11,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getLoopPhase
 } from "@/p5/utils/common.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -20,7 +21,8 @@ sketch.setup(
   ( {
     canvas
   } ) => {
-    sketchState.threeDimensionGraphics = createGraphics(
+  const p = getP5();
+    sketchState.threeDimensionGraphics = p.createGraphics(
       canvas.width,
       canvas.height,
       "webgl"
@@ -33,8 +35,9 @@ sketch.setup(
 let pointLength = 0;
 
 sketch.draw( ( time ) => {
-  clear();
-  background( ...( options.sketch.backgroundColor ?? [
+  const p = getP5();
+  p.clear();
+  p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );
 
@@ -56,7 +59,7 @@ sketch.draw( ( time ) => {
 
   const morphingEasingFunction = easing?.[ options.sketch.morphing.easing ] ?? easing.easeInOutExpo;
 
-  const size = options.sketch.textStyle.size * width ?? width / 2;
+  const size = options.sketch.textStyle.size * p.width ?? p.width / 2;
   const font = string.fonts?.[ options.sketch?.textStyle.font ] ?? string.fonts.serif;
 
   const sampleFactor = options.sketch.textStyle.sampleFactor ?? 0.05;
@@ -95,7 +98,7 @@ sketch.draw( ( time ) => {
   );
 
   const depth = options.sketch.morphing.depthLayersCount ?? 200 / 4;
-  const D = 3 * ( width + height );
+  const D = 3 * ( p.width + p.height );
 
   for ( let z = 0; z < depth; z++ ) {
     const depthProgression = z / ( depth - 1 );
@@ -117,11 +120,11 @@ sketch.draw( ( time ) => {
       } = points[ i ];
 
       const changeProgressSmooth = mappers.fn(
-        // Math.sin( t * PI ),
-        sin( getLoopPhase( [
+        // Math.sin( t * p.PI ),
+        p.sin( getLoopPhase( [
           [
             t,
-            PI,
+            p.PI,
           ],
           [
             progression,
@@ -140,7 +143,7 @@ sketch.draw( ( time ) => {
         // morphingEasingFunction
       );
 
-      const power = map(
+      const power = p.map(
         changeProgressSmooth,
         0,
         1,
@@ -192,25 +195,25 @@ sketch.draw( ( time ) => {
         // opacityFactor: getVariableOptionValue(
         //   options.sketch.strokeColor.opacityFactor,
         //   {
-        //     x: x / width,
-        //     y: y / height,
+        //     x: x / p.width,
+        //     y: y / p.height,
         //     z: depthProgression,
         //   }
         // ),
         // hueIndex: getVariableOptionValue(
         //   options.sketch.strokeColor.hueIndex,
         //   {
-        //     x: x / width,
-        //     y: y / height,
+        //     x: x / p.width,
+        //     y: y / p.height,
         //     z: depthProgression,
         //   }
         // ),
         //
         hueOffset: depthProgression,
         hueIndex: mappers.fn(
-          // noise(
-          //   ( x / width ) + strokeHueOffset,
-          //   ( y / height ) + strokeHueOffset,
+          // p.noise(
+          //   ( x / p.width ) + strokeHueOffset,
+          //   ( y / p.height ) + strokeHueOffset,
           //   depthProgression + strokeHueOffset,
           // ),
           Math.sin( getLoopPhase( [
@@ -229,8 +232,8 @@ sketch.draw( ( time ) => {
           ] ) ),
           -1,
           1,
-          -PI,
-          PI
+          -p.PI,
+          p.PI
         ),
         opacityFactor
       } ) );
@@ -254,7 +257,7 @@ sketch.draw( ( time ) => {
     }
   }
 
-  image(
+  p.image(
     sketchState.threeDimensionGraphics,
     0,
     0

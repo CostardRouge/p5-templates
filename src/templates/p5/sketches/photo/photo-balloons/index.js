@@ -7,6 +7,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const canvases = {
   mask: undefined,
@@ -32,25 +35,26 @@ const getImages = () => {
 };
 
 function initBall() {
+  const p = getP5();
   const ballsConfig = options.sketch?.balls ?? {
   };
   const motionConfig = options.sketch?.motion ?? {
   };
 
   return {
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
-    size: random(
+    size: p.random(
       ballsConfig.minSize ?? 200,
       ballsConfig.maxSize ?? 400
     ),
-    vx: random(
+    vx: p.random(
       -1,
       1
     ) * ( motionConfig.phaseJitter ?? 1 ),
-    vy: random(
+    vy: p.random(
       -1,
       1
     ) * ( motionConfig.phaseJitter ?? 1 ),
@@ -68,8 +72,9 @@ function ensureBalls( images ) {
 /* ---------- mask draw helper ---------- */
 
 function drawImageWithMask( {
-  img, maskDrawer, graphics = window
+  img, maskDrawer, graphics = getP5()
 } ) {
+  const p = graphics;
   const imageConfig = options.sketch?.image ?? {
   };
 
@@ -78,9 +83,9 @@ function drawImageWithMask( {
     fill: imageConfig.fill ?? true,
     center: imageConfig.center ?? true,
     graphics: canvases.imageBuffer,
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
   } );
 
@@ -118,17 +123,19 @@ function drawImageWithMask( {
 /* ---------- setup ---------- */
 
 sketch.setup( () => {
-  canvases.mask = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  const p = getP5();
+
+  canvases.mask = p.createGraphics(
+    p.width,
+    p.height
   );
 
-  canvases.imageBuffer = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  canvases.imageBuffer = p.createGraphics(
+    p.width,
+    p.height
   );
 
-  background( ...getBg() );
+  p.background( ...getBg() );
 
   ensureBalls( getImages() );
 } );
@@ -138,7 +145,9 @@ sketch.setup( () => {
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...getBg() );
+  const p = getP5();
+
+  p.background( ...getBg() );
 
   const images = getImages();
 
@@ -153,8 +162,8 @@ sketch.draw( (
   const minWAmp = motionConfig.minWidthAmplitude ?? 200;
   const minHAmp = motionConfig.minHeightAmplitude ?? 6;
 
-  const w = width / 2;
-  const h = height / 2;
+  const w = p.width / 2;
+  const h = p.height / 2;
 
   const angleSpeed = motionConfig.angleSpeed ?? 1;
 
@@ -208,14 +217,14 @@ sketch.draw( (
     } = ball;
 
     position.x = mappers.fn(
-      sin( animation.angle * angleSpeed + index + vx ),
+      p.sin( animation.angle * angleSpeed + index + vx ),
       -1,
       1,
       -vw + m,
       vw - m
     );
     position.y = mappers.fn(
-      cos( animation.angle * angleSpeed - index + vy ),
+      p.cos( animation.angle * angleSpeed - index + vy ),
       -1,
       1,
       -vh + m,
@@ -227,7 +236,7 @@ sketch.draw( (
 
     if ( !showLines ) return;
 
-    strokeWeight( lineWeight );
+    p.strokeWeight( lineWeight );
 
     images.forEach( (
       {
@@ -240,24 +249,24 @@ sketch.draw( (
       const {
         x: _x, y: _y
       } = other.position;
-      const d = map(
+      const d = p.map(
         position.dist( other.position ),
         0,
         lineMaxDist,
         0,
         1
       );
-      const fade = constrain(
+      const fade = p.constrain(
         d,
         0,
         1
       );
 
-      stroke(
+      p.stroke(
         ...lineColor,
         fade * lineAlphaScale
       );
-      line(
+      p.line(
         position.x,
         position.y,
         _x,

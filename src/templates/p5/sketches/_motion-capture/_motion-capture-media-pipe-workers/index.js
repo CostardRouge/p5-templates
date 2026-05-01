@@ -9,6 +9,9 @@ import drawNeonDot from "./drawNeonDot.js";
 import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 
 import Matter from "@/public/assets/libraries/matter.min.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
@@ -99,14 +102,16 @@ const matter = {
 };
 
 sketch.setup( () => {
-  background( ...options.colors.background );
+  const p = getP5();
+
+  p.background( ...options.colors.background );
 
   for ( const layerName in layers ) {
     const {
       background, size
     } = layers[ layerName ];
 
-    layers[ layerName ].graphics = createGraphics(
+    layers[ layerName ].graphics = p.createGraphics(
       size.width,
       size.height
     );
@@ -175,36 +180,36 @@ sketch.setup( () => {
   const thickness = 50;
 
   addBoundary(
-    width / 2,
-    height + thickness / 2 - margin,
-    width,
+    p.width / 2,
+    p.height + thickness / 2 - margin,
+    p.width,
     thickness
   );
   addBoundary(
-    width / 2,
+    p.width / 2,
     -thickness / 2 + margin,
-    width,
+    p.width,
     thickness
   );
   addBoundary(
     -thickness / 2 + margin,
-    height / 2,
+    p.height / 2,
     thickness,
-    height
+    p.height
   );
   addBoundary(
-    width + thickness / 2 - margin,
-    height / 2,
+    p.width + thickness / 2 - margin,
+    p.height / 2,
     thickness,
-    height
+    p.height
   );
 
   for ( let i = 0; i <= 20; i++ ) {
     addImageBall(
       mediapipe.feedback.element,
-      random( width ),
-      random( height ),
-      random(
+      p.random( p.width ),
+      p.random( p.height ),
+      p.random(
         20,
         50
       )
@@ -253,7 +258,9 @@ const sendFrameToWorkerIfDue = () => {
 sketch.draw( (
   time, center, favouriteColour
 ) => {
-  background( ...options.colors.background );
+  const p = getP5();
+
+  p.background( ...options.colors.background );
 
   if ( !mediapipe.videoReady || !mediapipe.workerReady ) {
     return;
@@ -277,7 +284,7 @@ sketch.draw( (
     const timeSinceLastHand = now - handDetectionState.lastDetectedHandTime;
 
     if ( timeSinceLastHand > GUIDELINE_DELAY ) {
-      frameRate( IDLE_FRAMERATE );
+      p.frameRate( IDLE_FRAMERATE );
       mediapipe.inferenceIntervalMilliseconds = IDLE_INFERENCE;
 
       clearGraphics(
@@ -292,7 +299,7 @@ sketch.draw( (
     }
   } else {
     mediapipe.inferenceIntervalMilliseconds = RUNNING_INFERENCE;
-    frameRate( options.animation.framerate );
+    p.frameRate( options.animation.framerate );
   }
 
   drawSocialMediaOverlay(
@@ -304,12 +311,12 @@ sketch.draw( (
     now - handDetectionState.lastDetectedHandTime < GUIDELINE_DELAY;
 
   if ( motionCaptureExperienceIsRunning ) {
-    image(
+    p.image(
       mediapipe.feedback.element,
       0,
       0,
-      width,
-      height
+      p.width,
+      p.height
     );
 
     drawHands(
@@ -395,7 +402,7 @@ sketch.draw( (
       graphics, background, erase, size
     } = layer;
 
-    image(
+    p.image(
       graphics,
       0,
       0,
@@ -468,8 +475,8 @@ function createHandInteractionBodies( hand ) {
 
   interactionPoints.forEach( ( point ) => {
     if ( point ) {
-      const x = inverseX( point.x ) * width;
-      const y = point.y * height;
+      const x = inverseX( point.x ) * p.width;
+      const y = point.y * p.height;
 
       // Create invisible circular body
       const handBody = Matter.Bodies.circle(
@@ -532,7 +539,7 @@ function addBoundary(
 function inverseX(
   x, limit = 1
 ) {
-  return map(
+  return p.map(
     x,
     0,
     limit,

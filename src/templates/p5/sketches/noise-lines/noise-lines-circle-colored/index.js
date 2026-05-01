@@ -6,11 +6,16 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getFixedOrVariableOption, getVariableOptionValue
 } from "@/p5/utils/common.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 sketch.setup( ( {
   canvas
 } ) => {
-  background( ...getBackgroundColor() );
+  const p = getP5();
+
+  p.background( ...getBackgroundColor() );
 } );
 
 const getBackgroundColor = () =>
@@ -32,20 +37,22 @@ const getBackgroundColor = () =>
 function drawBlob(
   baseRadius, roughness, magnitude, zOffset, incrementStep = 0.05, lineProgression
 ) {
-  beginShape();
-  for ( let a = 0; a < TWO_PI; a += incrementStep ) {
-    const angleProgression = a / ( TWO_PI - incrementStep );
+  const p = getP5();
+
+  p.beginShape();
+  for ( let a = 0; a < p.TWO_PI; a += incrementStep ) {
+    const angleProgression = a / ( p.TWO_PI - incrementStep );
     // THE TRICK: Map the circular angle to 2D Noise Space
-    // This ensures that when angle is 0 and TWO_PI, we sample the exact same noise value.
-    const xoff = map(
-      cos( a ),
+    // This ensures that when angle is 0 and p.TWO_PI, we sample the exact same noise value.
+    const xoff = p.map(
+      p.cos( a ),
       -1,
       1,
       0,
       roughness
     );
-    const yoff = map(
-      sin( a ),
+    const yoff = p.map(
+      p.sin( a ),
       -1,
       1,
       0,
@@ -54,8 +61,8 @@ function drawBlob(
 
     // Calculate radius based on noise
     const r =
-      baseRadius + map(
-        noise(
+      baseRadius + p.map(
+        p.noise(
           xoff,
           yoff,
           zOffset
@@ -67,10 +74,10 @@ function drawBlob(
       );
 
     // Convert polar to cartesian coordinates
-    const x = r * cos( a );
-    const y = r * sin( a );
+    const x = r * p.cos( a );
+    const y = r * p.sin( a );
 
-    stroke( colors.rainbow( {
+    p.stroke( colors.rainbow( {
       opacityFactor: getVariableOptionValue(
         options.sketch.colors.opacityFactor,
         {
@@ -89,35 +96,37 @@ function drawBlob(
       )
     } ) );
 
-    point(
+    p.point(
       x,
       y
     );
   }
-  endShape( CLOSE ); // CLOSE ensures the last point connects to the first
+  p.endShape( p.CLOSE ); // p.CLOSE ensures the last point connects to the first
 }
 
 sketch.draw( () => {
-  background( ...getBackgroundColor() );
+  const p = getP5();
 
-  push();
-  translate(
-    width / 2,
-    height / 2
+  p.background( ...getBackgroundColor() );
+
+  p.push();
+  p.translate(
+    p.width / 2,
+    p.height / 2
   );
 
-  noFill();
-  stroke( ...( options.sketch.shape.stroke ?? [
+  p.noFill();
+  p.stroke( ...( options.sketch.shape.stroke ?? [
     0
   ] ) );
-  strokeWeight( options.sketch.shape.strokeWeight ?? 0.5 );
+  p.strokeWeight( options.sketch.shape.strokeWeight ?? 0.5 );
 
   const linesCount = options.sketch.shape.linesCount ?? 50;
   const incrementStep = options.sketch.shape.incrementStep ?? 0.05;
 
   const timeRadius = 1.5; // Controls how much the noise changes over the loop
-  const zLoop = map(
-    cos( animation.angle ),
+  const zLoop = p.map(
+    p.cos( animation.angle ),
     -1,
     1,
     0,
@@ -167,7 +176,7 @@ sketch.draw( () => {
     );
   }
 
-  pop();
+  p.pop();
 
   renderTitle( options.sketch?.title );
 } );

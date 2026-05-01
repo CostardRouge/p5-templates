@@ -4,8 +4,13 @@ import {
   resolveSketchPath
 } from "@/engines/metadata";
 
-function getSketchDir( sketchName: string, engineId: string ): string | null {
-  const sketchPath = resolveSketchPath( sketchName, engineId );
+function getSketchDir(
+  sketchName: string, engineId: string
+): string | null {
+  const sketchPath = resolveSketchPath(
+    sketchName,
+    engineId
+  );
 
   if ( !sketchPath ) return null;
 
@@ -44,7 +49,10 @@ export async function GET( request: Request ) {
     );
   }
 
-  const sketchDir = getSketchDir( sketchName, engineId );
+  const sketchDir = getSketchDir(
+    sketchName,
+    engineId
+  );
 
   if ( !sketchDir || !fs.existsSync( sketchDir ) ) {
     return new Response(

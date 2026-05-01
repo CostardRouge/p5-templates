@@ -5,6 +5,7 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const getEasing = (
   name, fallback = easing.easeInOutExpo
@@ -13,14 +14,16 @@ const getEasing = (
 
 // ---------- setup/draw ----------
 sketch.setup( () => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.background( ...options.sketch.backgroundColor );
 } );
 
 sketch.draw( (
   time, center
 ) => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
 
@@ -40,7 +43,7 @@ sketch.draw( (
   const indexRotDeg = options.sketch?.animation?.indexRotationDegrees ?? 180;
   const indexRotEasingName = options.sketch?.animation?.indexRotationEasing ?? "easeInExpo";
 
-  const noiseXDiv = options.sketch?.animation?.noiseXDiv ?? 2; // position.x / (width * divisor)
+  const noiseXDiv = options.sketch?.animation?.noiseXDiv ?? 2; // position.x / (p.width * divisor)
   const noiseRotFromDeg = options.sketch?.animation?.noiseRotationFromDeg ?? 360;
   const noiseRotToDeg = options.sketch?.animation?.noiseRotationToDeg ?? 0;
   const noiseRotEasingName = options.sketch?.animation?.noiseRotationEasing ?? "easeInOutQuint";
@@ -54,23 +57,23 @@ sketch.draw( (
 
     const progression = i / images.length;
 
-    const base = map(
+    const base = p.map(
       animation.progression * orbitSpeed,
       0,
       1,
-      TAU,
+      p.TAU,
       0
     );
-    const angle = progression * TAU + base;
+    const angle = progression * p.TAU + base;
 
-    const away = createVector(
-      centerX + sin( angle ) * width * outerRadiusFactor,
-      centerY + cos( angle ) * height * outerRadiusFactor
+    const away = p.createVector(
+      centerX + p.sin( angle ) * p.width * outerRadiusFactor,
+      centerY + p.cos( angle ) * p.height * outerRadiusFactor
     );
 
-    const near = createVector(
-      centerX + sin( angle ) * width * innerRadiusFactor,
-      centerY + cos( angle ) * height * innerRadiusFactor
+    const near = p.createVector(
+      centerX + p.sin( angle ) * p.width * innerRadiusFactor,
+      centerY + p.cos( angle ) * p.height * innerRadiusFactor
     );
 
     const pos = animation.ease( {
@@ -79,25 +82,25 @@ sketch.draw( (
         near
       ],
       currentTime: animation.circularProgression + progression / images.length,
-      lerpFn: p5.Vector.lerp,
+      lerpFn: mappers.lerpVector,
       easingFn: easing.easeInOutExpo,
     } );
 
-    push();
-    translate(
+    p.push();
+    p.translate(
       pos.x,
       pos.y
     );
 
     const rotNoise = mappers.fn(
-      noise(
-        pos.x / ( width * noiseXDiv ),
+      p.noise(
+        pos.x / ( p.width * noiseXDiv ),
         i
       ),
       0,
       1,
-      radians( noiseRotFromDeg ),
-      radians( noiseRotToDeg ),
+      p.radians( noiseRotFromDeg ),
+      p.radians( noiseRotToDeg ),
       getEasing(
         noiseRotEasingName,
         easing.easeInOutQuint
@@ -108,16 +111,16 @@ sketch.draw( (
       progression,
       0,
       1,
-      -radians( indexRotDeg ),
-      radians( indexRotDeg ),
+      -p.radians( indexRotDeg ),
+      p.radians( indexRotDeg ),
       getEasing(
         indexRotEasingName,
         easing.easeInExpo
       )
     );
 
-    rotate( rotNoise );
-    rotate( rotIndex );
+    p.rotate( rotNoise );
+    p.rotate( rotIndex );
 
     const imgScale = mappers.fn(
       animation.circularProgression,
@@ -133,18 +136,18 @@ sketch.draw( (
 
     imageUtils.marginImage( {
       img: imageAtIndex,
-      position: createVector(
+      position: p.createVector(
         0,
         0
       ),
       scale: imgScale,
-      margin: width * options.sketch?.margin,
+      margin: p.width * options.sketch?.margin,
       center: options.sketch?.center ?? true,
       clip: options.sketch?.clip ?? false,
       fill: options.sketch?.fill ?? true,
     } );
 
-    pop();
+    p.pop();
   }
 
   renderTitle();

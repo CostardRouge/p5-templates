@@ -7,27 +7,34 @@ import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const canvases = {
 };
 
 sketch.setup( () => {
-  canvases.background = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  const p = getP5();
+
+  canvases.blurredLayer = p.createGraphics(
+    p.width,
+    p.height
   );
 
-  canvases.background.pixelDensity( options.backgroundPixelDensity || 0.055 );
-  canvases.background.drawingContext.filter = "blur(2px)";
+  canvases.blurredLayer.pixelDensity( options.backgroundPixelDensity || 0.055 );
+  canvases.blurredLayer.drawingContext.filter = "blur(2px)";
 
-  background( ...options.colors.background );
+  p.background( ...options.colors.background );
 } );
 
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...options.colors.background );
-  canvases.background.background( ...options.colors.background );
+  const p = getP5();
+
+  p.background( ...options.colors.background );
+  canvases.blurredLayer.background( ...options.colors.background );
 
   const images = cache.get( "images" );
   const imageObjectAtIndex = mappers.circularIndex(
@@ -39,39 +46,39 @@ sketch.draw( (
 
   imageUtils.marginImage( {
     img: imageAtIndex,
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
-    graphics: canvases.background,
+    graphics: canvases.blurredLayer,
     // margin: undefined,
     center: true,
     fill: true,
     scale: 1,
   } );
 
-  // canvases.background.background(...options.colors.background, 0);
-  // canvases.background.background(0, 0 ,0, 90);
-  image(
-    canvases.background,
+  // canvases.background(...options.colors.background, 0);
+  // canvases.background(0, 0 ,0, 90);
+  p.image(
+    canvases.blurredLayer,
     0,
     0,
-    width,
-    height
+    p.width,
+    p.height
   );
   // filter(BLUR, options.blur || 2);
   // filter(POSTERIZE, options.blur || 9, true);
 
-  // background(...options.colors.background);
+  // p.background(...options.colors.background);
 
   imageUtils.marginImage( {
     img: imageAtIndex,
-    // graphics: canvases.background,
-    margin: width * 0.1,
+    // graphics: canvases.blurredLayer,
+    margin: p.width * 0.1,
     center: true,
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
     // scale: .5,
     callback: (
@@ -82,17 +89,17 @@ sketch.draw( (
       const yBottomPosition = y + h + fontSize / 2;
       const textStyle = {
         size: fontSize,
-        stroke: color(
+        stroke: p.color(
           0,
           0,
           0,
           255
         ),
-        fill: color( ...options.colors.background ),
-        // fill: color(0, 0, 0, 255),
-        // stroke: color(...options.colors.background),
+        fill: p.color( ...options.colors.background ),
+        // fill: p.color(0, 0, 0, 255),
+        // stroke: p.color(...options.colors.background),
         font: string.fonts.martian,
-        // blendMode: EXCLUSION
+        // blendMode: p.EXCLUSION
       };
 
       string.write(
@@ -109,14 +116,14 @@ sketch.draw( (
         {
           ...textStyle,
           textAlign: [
-            RIGHT
+            p.RIGHT
           ],
         }
       );
 
       string.write(
         exif.formatAperture( imageObjectAtIndex?.exif?.aperture ),
-        map(
+        p.map(
           1 / 4,
           0,
           1,
@@ -127,14 +134,14 @@ sketch.draw( (
         {
           ...textStyle,
           textAlign: [
-            LEFT
+            p.LEFT
           ],
         }
       );
 
       string.write(
         exif.formatShutterSpeed( imageObjectAtIndex?.exif?.shutterSpeed ),
-        map(
+        p.map(
           2 / 4,
           0,
           1,
@@ -145,7 +152,7 @@ sketch.draw( (
         {
           ...textStyle,
           textAlign: [
-            LEFT
+            p.LEFT
           ],
         }
       );
@@ -157,8 +164,8 @@ sketch.draw( (
         {
           ...textStyle,
           textAlign: [
-            CENTER,
-            TOP
+            p.CENTER,
+            p.TOP
           ],
         }
       );
@@ -174,27 +181,27 @@ sketch.draw( (
     string.write(
       options?.texts?.title || defaultTitle,
       0,
-      height / 2,
+      p.height / 2,
       {
         size: 144,
-        stroke: color( ...options.colors.text ),
-        fill: color( ...options.colors.background ),
+        stroke: p.color( ...options.colors.text ),
+        fill: p.color( ...options.colors.background ),
         font: string.fonts.martian,
         textAlign: [
-          CENTER,
-          CENTER
+          p.CENTER,
+          p.CENTER
         ],
-        blendMode: EXCLUSION,
+        blendMode: p.EXCLUSION,
       }
     );
   }
 
-  push();
-  translate(
+  p.push();
+  p.translate(
     0,
     48
   );
-  // rotate(PI/2)
+  // p.rotate(p.PI/2)
   string.write(
     String( Number( animation.progression ).toPrecision( 3 ) ).slice(
       0,
@@ -204,13 +211,13 @@ sketch.draw( (
     0,
     {
       size: 24,
-      stroke: color( ...options.colors.text ),
-      fill: color( ...options.colors.background ),
+      stroke: p.color( ...options.colors.text ),
+      fill: p.color( ...options.colors.background ),
       font: string.fonts.martian,
       textAlign: [
-        CENTER
+        p.CENTER
       ],
     }
   );
-  pop();
+  p.pop();
 } );

@@ -11,6 +11,7 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
   interactive: {
@@ -25,20 +26,22 @@ const sketchState = {
 events.register(
   "engine-window-preload",
   () => {
-    sketchState.interactive.image = loadImage( "/assets/images/handpointing.png" );
+  const p = getP5();
+    sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
   }
 );
 
 sketch.setup( ( {
   canvas
 } ) => {
-  sketchState.shape.graphics = createGraphics(
-    width,
-    height,
+  const p = getP5();
+  sketchState.shape.graphics = p.createGraphics(
+    p.width,
+    p.height,
     "webgl"
   );
 
-  background( ...getBackgroundColor() );
+  p.background( ...getBackgroundColor() );
   addScreenPositionFunction( sketchState.shape.graphics );
 } );
 
@@ -49,18 +52,18 @@ function getAlphaFromMask( {
   maskPoints,
   distance = options.sketch?.mask?.distance ?? 0.015,
 } ) {
-  const normalizedPosition = createVector(
-    map(
+  const normalizedPosition = p.createVector(
+    p.map(
       x,
-      -width / 2,
-      width / 2,
+      -p.width / 2,
+      p.width / 2,
       0,
       1
     ),
-    map(
+    p.map(
       y,
-      -height / 2,
-      height / 2,
+      -p.height / 2,
+      p.height / 2,
       0,
       1
     )
@@ -74,18 +77,18 @@ function getAlphaFromMask( {
         return result;
       }
 
-      const normalizedPointPosition = createVector(
-        map(
+      const normalizedPointPosition = p.createVector(
+        p.map(
           pointPosition.x,
-          -width / 2,
-          width / 2,
+          -p.width / 2,
+          p.width / 2,
           0,
           1
         ),
-        map(
+        p.map(
           pointPosition.y,
-          -height / 2,
-          height / 2,
+          -p.height / 2,
+          p.height / 2,
           0,
           1
         )
@@ -146,32 +149,33 @@ const getBackgroundColor = () =>
   ];
 
 sketch.draw( () => {
-  background( ...getBackgroundColor() );
+  const p = getP5();
+  p.background( ...getBackgroundColor() );
 
-  const size = options.sketch?.shape?.size * width ?? width;
+  const size = options.sketch?.shape?.size * p.width ?? p.width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
   const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
 
   const columns = options.sketch?.shape?.columns ?? 65;
-  const rows = ( columns * height ) / width;
-  const cellSize = width / columns;
+  const rows = ( columns * p.height ) / p.width;
+  const cellSize = p.width / columns;
 
   const gridOptions = {
-    topLeft: createVector(
-      -width / 2,
-      -height / 2
+    topLeft: p.createVector(
+      -p.width / 2,
+      -p.height / 2
     ),
-    topRight: createVector(
-      width / 2,
-      -height / 2
+    topRight: p.createVector(
+      p.width / 2,
+      -p.height / 2
     ),
-    bottomLeft: createVector(
-      -width / 2,
-      height / 2
+    bottomLeft: p.createVector(
+      -p.width / 2,
+      p.height / 2
     ),
-    bottomRight: createVector(
-      width / 2,
-      height / 2
+    bottomRight: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
     rows,
     columns,
@@ -193,7 +197,7 @@ sketch.draw( () => {
   const textPointsMatrix = fonts.map( ( font ) =>
     string.getTextPoints( {
       text: textToWrite,
-      position: createVector(
+      position: p.createVector(
         0,
         0
       ),
@@ -272,8 +276,8 @@ sketch.draw( () => {
           hue,
           0,
           1,
-          -PI,
-          PI
+          -p.PI,
+          p.PI
         ) * hueMultiplier,
       opacityFactor,
     } );
@@ -298,17 +302,17 @@ sketch.draw( () => {
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
     // Calculate wave propagation
-    const normalizedX = map(
+    const normalizedX = p.map(
       position.x,
-      -width / 2,
-      width / 2,
+      -p.width / 2,
+      p.width / 2,
       0,
       1
     );
-    const normalizedY = map(
+    const normalizedY = p.map(
       position.y,
-      -height / 2,
-      height / 2,
+      -p.height / 2,
+      p.height / 2,
       0,
       1
     );
@@ -341,10 +345,10 @@ sketch.draw( () => {
 
         // Invert sensitivity: lower value = more impact (smaller radius)
         // Map distance to 0-1, where closer = higher value
-        const normalizedDistance = map(
+        const normalizedDistance = p.map(
           distance,
           0,
-          ( 1 / sensitivity ) * width * 0.5, // Inverted: lower sensitivity = larger radius
+          ( 1 / sensitivity ) * p.width * 0.5, // Inverted: lower sensitivity = larger radius
           1, // Close to cursor = 1
           0, // Far from cursor = 0
           true // Constrain
@@ -365,7 +369,7 @@ sketch.draw( () => {
       if ( waveConfig.mode === "radial" ) {
         // Radial wave from center or edges
         const distanceFromCenter =
-          dist(
+          p.dist(
             normalizedX,
             normalizedY,
             0.5,
@@ -389,7 +393,7 @@ sketch.draw( () => {
     }
 
     const fractionalPart = Math.abs( switchIndex - Math.round( switchIndex ) );
-    const movementIndex = constrain(
+    const movementIndex = p.constrain(
       fractionalPart / 0.5,
       0,
       1
@@ -435,7 +439,7 @@ sketch.draw( () => {
     );
 
     if ( options.sketch?.animation?.rotate ?? true ) {
-      const rotationMax = PI * ( options.sketch?.animation?.rotationCount ?? 2 );
+      const rotationMax = p.PI * ( options.sketch?.animation?.rotationCount ?? 2 );
 
       // Calculate radial rotation for radial mode
       let radialAngle = 0;
@@ -445,7 +449,7 @@ sketch.draw( () => {
         const centerX = 0;
         const centerY = 0;
 
-        radialAngle = atan2(
+        radialAngle = p.atan2(
           position.y - centerY,
           position.x - centerX
         );
@@ -454,7 +458,7 @@ sketch.draw( () => {
         const fromCenter = waveConfig.fromCenter ?? true;
 
         if ( fromCenter ) {
-          radialAngle += PI; // Flip 180 degrees
+          radialAngle += p.PI; // Flip 180 degrees
         }
       }
 
@@ -464,21 +468,21 @@ sketch.draw( () => {
         // z: rZ
       } = animation.ease( {
         values: [
-          createVector(),
-          createVector(
+          p.createVector(),
+          p.createVector(
             0,
             rotationMax
           ),
-          createVector(
+          p.createVector(
             rotationMax,
             rotationMax,
             0
           ),
-          createVector( rotationMax ),
+          p.createVector( rotationMax ),
         ],
         currentTime: switchIndex,
         duration: 1,
-        lerpFn: p5.Vector.lerp,
+        lerpFn: mappers.lerpVector,
         easingFn: easing.easeInOutExpo,
         // easingFn: easing.easeInOutElastic,
         // easingFn: easing.easeInOutCirc,
@@ -502,7 +506,7 @@ sketch.draw( () => {
     sketchState.shape.graphics.pop();
   } );
 
-  image(
+  p.image(
     sketchState.shape.graphics,
     0,
     0
@@ -516,55 +520,55 @@ sketch.draw( () => {
 
   if ( waveConfig.mode === "interactive" ) {
     if ( waveConfig.useMouse ) {
-      sketchState.interactive.position = createVector(
-        mouseX,
-        mouseY
+      sketchState.interactive.position = p.createVector(
+        p.mouseX,
+        p.mouseY
       );
     } else {
       const sinMult = waveConfig.sinMultiplier ?? 3;
       const cosMult = waveConfig.cosMultiplier ?? 1;
 
-      sketchState.interactive.position = createVector(
-        map(
+      sketchState.interactive.position = p.createVector(
+        p.map(
           Math.sin( animation.angle * sinMult ),
           -1,
           1,
           0,
-          width
+          p.width
         ),
-        map(
+        p.map(
           Math.cos( animation.angle * cosMult ),
           -1,
           1,
           0,
-          height
+          p.height
         )
       );
     }
 
     // Draw crosshair
-    stroke(
+    p.stroke(
       128,
       128,
       255
     );
-    strokeWeight( 2 );
-    line(
+    p.strokeWeight( 2 );
+    p.line(
       sketchState.interactive.position.x,
       0,
       sketchState.interactive.position.x,
-      height
+      p.height
     );
-    line(
+    p.line(
       0,
       sketchState.interactive.position.y,
-      width,
+      p.width,
       sketchState.interactive.position.y
     );
 
     // Draw pointer image if not using mouse
     if ( !waveConfig.useMouse ) {
-      image(
+      p.image(
         sketchState.interactive.image,
         sketchState.interactive.position.x,
         sketchState.interactive.position.y

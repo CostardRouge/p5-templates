@@ -142,11 +142,12 @@ const sketch = {
     // Register pre-draw handlers
     events.register(
       "pre-draw",
-      debug.fps
-    );
-    events.register(
-      "pre-draw",
       time.incrementElapsedTime
+    );
+    // Register post-draw handlers
+    events.register(
+      "post-draw",
+      debug.fps
     );
 
     // Create the p5 instance in instance mode

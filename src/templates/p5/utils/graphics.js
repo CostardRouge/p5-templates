@@ -7,7 +7,9 @@ const graphics = {
   createAutoResizableGraphics(
     width, height, type, callback
   ) {
-    const _graphics = getP5().createGraphics(
+    const p = getP5();
+
+    const _graphics = p.createGraphics(
       width,
       height,
       type

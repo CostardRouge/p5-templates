@@ -11,6 +11,7 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const interactive = {
   currentTimeValue: 0,
@@ -22,7 +23,8 @@ const interactive = {
 events.register(
   "engine-window-preload",
   () => {
-    interactive.image = loadImage( "/assets/images/handpointing.png" );
+  const p = getP5();
+    interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
   }
 );
 
@@ -30,12 +32,13 @@ sketch.setup(
   ( {
     canvas
   } ) => {
-    interactive.graphics = createGraphics(
-      width,
-      height
+  const p = getP5();
+    interactive.graphics = p.createGraphics(
+      p.width,
+      p.height
     );
 
-    background( ...getBackgroundColor() );
+    p.background( ...getBackgroundColor() );
     addScreenPositionFunction( window );
   },
   {
@@ -50,18 +53,18 @@ function getAlphaFromMask( {
   maskPoints,
   distance = options.sketch?.mask?.distance ?? 0.015,
 } ) {
-  const normalizedPosition = createVector(
-    map(
+  const normalizedPosition = p.createVector(
+    p.map(
       x,
-      -width / 2,
-      width / 2,
+      -p.width / 2,
+      p.width / 2,
       0,
       1
     ),
-    map(
+    p.map(
       y,
-      -height / 2,
-      height / 2,
+      -p.height / 2,
+      p.height / 2,
       0,
       1
     )
@@ -75,18 +78,18 @@ function getAlphaFromMask( {
         return result;
       }
 
-      const normalizedPointPosition = createVector(
-        map(
+      const normalizedPointPosition = p.createVector(
+        p.map(
           pointPosition.x,
-          -width / 2,
-          width / 2,
+          -p.width / 2,
+          p.width / 2,
           0,
           1
         ),
-        map(
+        p.map(
           pointPosition.y,
-          -height / 2,
-          height / 2,
+          -p.height / 2,
+          p.height / 2,
           0,
           1
         )
@@ -147,32 +150,33 @@ const getBackgroundColor = () =>
   ];
 
 sketch.draw( () => {
-  background( ...getBackgroundColor() );
+  const p = getP5();
+  p.background( ...getBackgroundColor() );
 
-  const size = options.sketch?.shape?.size * width ?? width;
+  const size = options.sketch?.shape?.size * p.width ?? p.width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
   const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
 
   const columns = options.sketch?.shape?.columns ?? 65;
-  const rows = ( columns * height ) / width;
-  const cellSize = width / columns;
+  const rows = ( columns * p.height ) / p.width;
+  const cellSize = p.width / columns;
 
   const gridOptions = {
-    topLeft: createVector(
-      -width / 2,
-      -height / 2
+    topLeft: p.createVector(
+      -p.width / 2,
+      -p.height / 2
     ),
-    topRight: createVector(
-      width / 2,
-      -height / 2
+    topRight: p.createVector(
+      p.width / 2,
+      -p.height / 2
     ),
-    bottomLeft: createVector(
-      -width / 2,
-      height / 2
+    bottomLeft: p.createVector(
+      -p.width / 2,
+      p.height / 2
     ),
-    bottomRight: createVector(
-      width / 2,
-      height / 2
+    bottomRight: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
     rows,
     columns,
@@ -194,7 +198,7 @@ sketch.draw( () => {
   const textPointsMatrix = fonts.map( ( font ) =>
     string.getTextPoints( {
       text: textToWrite,
-      position: createVector(
+      position: p.createVector(
         0,
         0
       ),
@@ -226,7 +230,7 @@ sketch.draw( () => {
   );
 
   if ( options.sketch?.animation?.rotate ?? true ) {
-    const rotationMax = PI * ( options.sketch?.animation?.rotationCount ?? 2 );
+    const rotationMax = p.PI * ( options.sketch?.animation?.rotationCount ?? 2 );
 
     const {
       x: rX,
@@ -234,27 +238,27 @@ sketch.draw( () => {
       // z: rZ
     } = animation.ease( {
       values: [
-        createVector(),
-        createVector(
+        p.createVector(),
+        p.createVector(
           0,
           rotationMax
         ),
-        createVector(
+        p.createVector(
           rotationMax,
           rotationMax
         ),
-        createVector( rotationMax ),
+        p.createVector( rotationMax ),
       ],
       currentTime: animation.progression * 3,
       duration: 1,
-      lerpFn: p5.Vector.lerp,
+      lerpFn: mappers.lerpVector,
       easingFn: easing.easeInOutExpo,
       // easingFn: easing.easeInOutElastic,
       // easingFn: easing.easeInOutCirc,
     } );
 
-    rotateX( rX );
-    rotateY( rY );
+    p.rotateX( rX );
+    p.rotateY( rY );
   }
 
   alphaPoints.forEach( (
@@ -283,16 +287,16 @@ sketch.draw( () => {
     const positionInfluence =
       options.sketch?.animation?.positionInfluence ?? 100;
 
-    const hue = noise(
-      position.x / columns + +map(
-        sin( animation.angle ),
+    const hue = p.noise(
+      position.x / columns + +p.map(
+        p.sin( animation.angle ),
         -1,
         1,
         0,
         1
       ),
-      position.y / rows + +map(
-        cos( animation.angle ),
+      position.y / rows + +p.map(
+        p.cos( animation.angle ),
         -1,
         1,
         0,
@@ -305,12 +309,12 @@ sketch.draw( () => {
 
     const tint = colors.rainbow( {
       hueOffset: animation.circularProgression,
-      hueIndex: map(
+      hueIndex: p.map(
         hue,
         0,
         1,
-        -PI,
-        PI
+        -p.PI,
+        p.PI
       ) * hueMultiplier,
       opacityFactor,
     } );
@@ -323,13 +327,13 @@ sketch.draw( () => {
       ],
     } = tint;
 
-    push();
+    p.push();
 
     const w = cellSize; // -2
     const h = cellSize; // -2
     const d = cellSize * ( options.sketch?.shape?.depth ?? 20 );
 
-    translate( position );
+    p.translate( position );
 
     const fillAlphaStart = options.sketch?.color?.fillAlphaStart ?? 240;
     const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
@@ -341,17 +345,17 @@ sketch.draw( () => {
         0,
         0
       );
-      const distance = dist(
+      const distance = p.dist(
         interactive.position.x,
         interactive.position.y,
         screenPos.x,
         screenPos.y
       );
 
-      interactive.currentTimeValue = map(
+      interactive.currentTimeValue = p.map(
         distance,
         0,
-        options.sketch.interactive.sensitivityMultiplier * width ?? width * 0.5,
+        options.sketch.interactive.sensitivityMultiplier * p.width ?? p.width * 0.5,
         0,
         1
       );
@@ -364,7 +368,7 @@ sketch.draw( () => {
           position.x / columns / positionInfluence +
           position.y / rows / positionInfluence );
 
-    const constrainedTime = constrain(
+    const constrainedTime = p.constrain(
       currentTimeValue,
       0,
       1
@@ -380,40 +384,40 @@ sketch.draw( () => {
       easingFn: easing.easeInOutExpo,
     } );
 
-    fill(
+    p.fill(
       red,
       green,
       blue,
       fillAlpha
     );
-    stroke(
+    p.stroke(
       red,
       green,
       blue,
       strokeAlpha
     );
-    box(
+    p.box(
       w,
       h,
       -d
     );
 
-    pop();
+    p.pop();
   } );
 
   if ( options.sketch.interactive.enabled ) {
     if ( options.sketch.interactive.mouse ) {
-      interactive.position = createVector(
-        mouseX - width / 2,
-        mouseY - height / 2
+      interactive.position = p.createVector(
+        p.mouseX - p.width / 2,
+        p.mouseY - p.height / 2
       );
     } else {
-      interactive.position = createVector(
-        sin( animation.angle * options.sketch.interactive.sinMultiplier ) *
-          ( -width / 2 ) *
+      interactive.position = p.createVector(
+        p.sin( animation.angle * options.sketch.interactive.sinMultiplier ) *
+          ( -p.width / 2 ) *
           0.8,
-        cos( animation.angle * options.sketch.interactive.cosMultiplier ) *
-          ( -height / 2 ) *
+        p.cos( animation.angle * options.sketch.interactive.cosMultiplier ) *
+          ( -p.height / 2 ) *
           0.8
       );
 
@@ -423,7 +427,7 @@ sketch.draw( () => {
         interactive.position.x,
         interactive.position.y
       );
-      image(
+      p.image(
         interactive.graphics,
         0,
         0

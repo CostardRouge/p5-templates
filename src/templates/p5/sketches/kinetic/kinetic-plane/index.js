@@ -13,6 +13,9 @@ import mediapipe, {
   init as mediapipeInit,
   setEnabled as setMediapipeEnabled,
 } from "@/p5/utils/mediapipe/mediapipe.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 // Key landmarks for interaction (fingertips)
 const interactionIndices = [
@@ -36,27 +39,25 @@ const sketchState = {
   },
 };
 
-function createGridData(
-  width, height
-) {}
-
 sketch.setup( async( {
   canvas
 } ) => {
-  background( ...getBackgroundColor() );
-  pixelDensity( 1 );
+  const p = getP5();
+
+  p.background( ...getBackgroundColor() );
+  p.pixelDensity( 1 );
 
   sketchState.plane.graphics = graphics.createAutoResizableGraphics(
-    width,
-    height,
+    p.width,
+    p.height,
     "webgl"
   );
   sketchState.plane.graphics.pixelDensity( 1 );
   addScreenPositionFunction( sketchState.plane.graphics );
 
-  sketchState.webcam.graphics = createGraphics(
-    width,
-    height
+  sketchState.webcam.graphics = p.createGraphics(
+    p.width,
+    p.height
   );
 
   await mediapipeInit( {
@@ -181,15 +182,15 @@ function displayTriangleGrid(
   grid.vertices.forEach( ( {
     triangle
   } ) => {
-    sketchState.plane.graphics.beginShape( TRIANGLES );
+    sketchState.plane.graphics.beginShape( p.TRIANGLES );
 
     triangle.forEach( ( _vertex ) => {
       const wave = 0;
 
-      //   map(
+      //   p.map(
       //   Math.sin( animation.angle +
-      //     ( _vertex.x / width ) * 3 +
-      //     ( _vertex.y / height ) * 2 ),
+      //     ( _vertex.x / p.width ) * 3 +
+      //     ( _vertex.y / p.height ) * 2 ),
       //   -1,
       //   1,
       //   0,
@@ -198,7 +199,7 @@ function displayTriangleGrid(
 
       // mouse displacement
       const switchIndex = computeDisplacement(
-        createVector(
+        p.createVector(
           _vertex.x,
           _vertex.y
         ),
@@ -237,9 +238,9 @@ function displayTriangleGrid(
       sketchState.plane.graphics.vertex( ...vertices );
     } );
 
-    // strokeWeight(3)
-    // stroke("red")
-    // noFill();
+    // p.strokeWeight(3)
+    // p.stroke("red")
+    // p.noFill();
 
     if ( options.sketch.grid.stroke.hide ) {
       sketchState.plane.graphics.noStroke();
@@ -267,7 +268,7 @@ function computeDisplacement(
     }
   }
 
-  const proximity = map(
+  const proximity = p.map(
     minDistance,
     0,
     maxInfluenceDistance,
@@ -276,7 +277,7 @@ function computeDisplacement(
   );
 
   // Ensure the value is clamped between 0 and 1
-  return constrain(
+  return p.constrain(
     proximity,
     0,
     1
@@ -284,7 +285,9 @@ function computeDisplacement(
 }
 
 sketch.draw( () => {
-  background( ...getBackgroundColor() );
+  const p = getP5();
+
+  p.background( ...getBackgroundColor() );
 
   sketchState.plane.gridData = cache.store(
     cache.key(
@@ -315,9 +318,9 @@ sketch.draw( () => {
   ];
 
   if ( options.sketch.animation.useMouse ?? true ) {
-    sketchState.plane.graphics.screenPosition( createVector(
-      mouseX - width / 2,
-      mouseY - height / 2
+    sketchState.plane.graphics.screenPosition( p.createVector(
+      p.mouseX - p.width / 2,
+      p.mouseY - p.height / 2
     ) );
   }
 
@@ -329,14 +332,14 @@ sketch.draw( () => {
 
       interactionPoints.forEach( ( point ) => {
         if ( point ) {
-          const x = common.inverseX( point.x ) * width;
-          const y = point.y * height;
-          const z = ( point.z * ( width + height ) ) / 2;
+          const x = common.inverseX( point.x ) * p.width;
+          const y = point.y * p.height;
+          const z = ( point.z * ( p.width + p.height ) ) / 2;
 
-          targetVectors.push( sketchState.plane.graphics.screenPosition( createVector(
-            x - width / 2,
-            y - height / 2,
-            z - width / 2 + height / 2
+          targetVectors.push( sketchState.plane.graphics.screenPosition( p.createVector(
+            x - p.width / 2,
+            y - p.height / 2,
+            z - p.width / 2 + p.height / 2
           ) ) );
         }
       } );
@@ -344,14 +347,14 @@ sketch.draw( () => {
   }
 
   const margin = 150;
-  const W = width / 2 - margin;
-  const H = height / 2 - margin;
+  const W = p.width / 2 - margin;
+  const H = p.height / 2 - margin;
   const targetsCount = options.sketch.animation.spheresCount ?? 3;
 
   for ( let i = 0; i < targetsCount; i++ ) {
     const targetProgression = i / targetsCount;
 
-    targetVectors.push( sketchState.plane.graphics.screenPosition( createVector(
+    targetVectors.push( sketchState.plane.graphics.screenPosition( p.createVector(
       Math.sin( animation.angle + i * 3 ) * W,
       Math.cos( animation.angle + i * targetProgression ) * H
     ) ) );
@@ -378,7 +381,7 @@ sketch.draw( () => {
   }
 
   // PLANE
-  image(
+  p.image(
     sketchState.plane.graphics,
     0,
     0
@@ -402,12 +405,12 @@ sketch.draw( () => {
     // sketchState.webcam.graphics.filter( POSTERIZE );
     // sketchState.webcam.graphics.filter( INVERT );
     // sketchState.webcam.graphics.filter( GRAY );
-    image(
+    p.image(
       sketchState.webcam.graphics,
       0,
       0,
-      width,
-      height
+      p.width,
+      p.height
     );
   }
 

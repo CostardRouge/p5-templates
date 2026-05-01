@@ -5,8 +5,8 @@ export default function drawSlideMeta( metaOption ) {
   push();
   if ( sketch.sketchOptions.type === "webgl" ) {
     translate(
-      -width / 2,
-      -height / 2
+      -p.width / 2,
+      -p.height / 2
     );
   }
 
@@ -15,8 +15,8 @@ export default function drawSlideMeta( metaOption ) {
 
   const textStyle = {
     size: 24,
-    stroke: color( ...metaOption.stroke ),
-    fill: color( ...metaOption.fill ),
+    stroke: p.color( ...metaOption.stroke ),
+    fill: p.color( ...metaOption.fill ),
     font: string.fonts?.[ metaOption.font ] ?? string.fonts.martian,
     blendMode: metaOption.blend,
     textAlign: [
@@ -84,7 +84,7 @@ export default function drawSlideMeta( metaOption ) {
       height - height * horizontalMargin + 14
     );
 
-    const slideProgressionLineCurrentPosition = p5.Vector.lerp(
+    const slideProgressionLineCurrentPosition = mappers.lerpVector(
       slideProgressionLineStartPosition,
       slideProgressionLineEndPosition,
       ( slides.index + 1 ) / slides.count

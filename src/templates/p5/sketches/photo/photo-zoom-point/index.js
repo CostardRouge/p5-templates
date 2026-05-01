@@ -12,6 +12,7 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import mappers from "@/p5/utils/mappers.js";
 import sketch from "@/p5/utils/sketch.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
   photoGraphics: null,
@@ -32,7 +33,7 @@ const sketchState = {
 };
 
 /**
- * 1. ROBUST SCREEN-TO-CANVAS MAPPING
+ * 1. ROBUST p.SCREEN-TO-CANVAS MAPPING
  * Handles the canvas being inside a draggable/zoomable div.
  */
 function getInternalCanvasPoint( event ) {
@@ -55,8 +56,8 @@ function getInternalCanvasPoint( event ) {
 
   // Scale up to the internal P5 canvas resolution
   return {
-    x: relX * width,
-    y: relY * height,
+    x: relX * p.width,
+    y: relY * p.height,
   };
 }
 
@@ -101,7 +102,7 @@ function handlePointerSelect( screenPoint ) {
   };
 
   // D. Save Update
-  const currentSlideIndex = window.getCurrentSlide?.().index;
+  const currentSlideIndex = getP5().getCurrentSlide?.().index;
   const sketchUpdate = {
     point: uvPoint
   };
@@ -142,10 +143,11 @@ function handlePointerSelect( screenPoint ) {
 }
 
 sketch.setup( () => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.background( ...options.sketch.backgroundColor );
   sketchState.photoGraphics = graphics.createAutoResizableGraphics(
-    width,
-    height
+    p.width,
+    p.height
   );
 
   // Initialize Rect immediately to prevent null errors on start
@@ -157,6 +159,7 @@ sketch.setup( () => {
 events.register(
   "engine-canvas-mouse-clicked",
   ( event ) => {
+  const p = getP5();
     const screenPoint = getInternalCanvasPoint( event );
 
     handlePointerSelect( screenPoint );
@@ -166,12 +169,12 @@ events.register(
 function displayPhoto( img ) {
   sketchState.photoGraphics.clear();
   imageUtils.marginImage( {
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
     graphics: sketchState.photoGraphics,
-    margin: width * ( options.sketch?.imageSettings?.margin ?? 0 ),
+    margin: p.width * ( options.sketch?.imageSettings?.margin ?? 0 ),
     scale: options.sketch?.imageSettings?.scale ?? 1,
     center: options.sketch?.imageSettings?.center ?? true,
     clip: options.sketch?.imageSettings?.clip ?? false,
@@ -192,8 +195,9 @@ function displayPhoto( img ) {
 }
 
 sketch.draw( () => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
 
   const photo = common.getAsset( options.sketch.photo );
 
@@ -204,18 +208,18 @@ sketch.draw( () => {
       0,
       {
         size: 72,
-        stroke: color(
+        stroke: p.color(
           0,
           0,
           0,
           0
         ),
-        fill: color( 0 ),
-        textHeight: height,
+        fill: p.color( 0 ),
+        textHeight: p.height,
         font: string.fonts.martian,
         textAlign: [
-          CENTER,
-          CENTER
+          p.CENTER,
+          p.CENTER
         ],
       }
     );
@@ -235,7 +239,7 @@ sketch.draw( () => {
     easing?.[ options.sketch.zoom.easing ] ?? easing.easeInOutExpo
   );
 
-  const zoomScale = lerp(
+  const zoomScale = p.lerp(
     options.sketch.zoom.minZoomScale ?? 1,
     options.sketch.zoom.maxZoomScale ?? 3,
     zoomStep
@@ -258,9 +262,9 @@ sketch.draw( () => {
   const focusY = y + ( uvPoint.y * h );
 
   // 4. Calculate Center Transform
-  // We want the focusPoint to land exactly at (width/2, height/2)
-  const tx = ( width / 2 ) - ( focusX * zoomScale );
-  const ty = ( height / 2 ) - ( focusY * zoomScale );
+  // We want the focusPoint to land exactly at (p.width/2, p.height/2)
+  const tx = ( p.width / 2 ) - ( focusX * zoomScale );
+  const ty = ( p.height / 2 ) - ( focusY * zoomScale );
 
   // 5. IMPORTANT: Update State for the Click Handler
   // This allows handlePointerSelect to know "where" the image was during this frame
@@ -276,14 +280,14 @@ sketch.draw( () => {
   );
 
   // 6. Apply & Draw
-  push();
-  translate(
+  p.push();
+  p.translate(
     tx,
     ty
   );
-  scale( zoomScale );
+  p.scale( zoomScale );
 
-  image(
+  p.image(
     sketchState.photoGraphics,
     0,
     0
@@ -291,18 +295,18 @@ sketch.draw( () => {
 
   // Draw Marker (Circle) at the specific focus point in Buffer Space
   if ( options.sketch.circle?.draw ?? true ) {
-    noFill();
-    stroke( ...( options.sketch.circle.stroke ?? [
+    p.noFill();
+    p.stroke( ...( options.sketch.circle.stroke ?? [
       255
     ] ) );
-    strokeWeight( ( options.sketch.circle.strokeWeight ?? 3 ) / zoomScale );
-    circle(
+    p.strokeWeight( ( options.sketch.circle.strokeWeight ?? 3 ) / zoomScale );
+    p.circle(
       focusX,
       focusY,
       ( options.sketch.circle.radius ?? 24 ) / zoomScale
     );
   }
-  pop();
+  p.pop();
 
   renderTitle();
 } );

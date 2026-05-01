@@ -2,11 +2,14 @@ import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
 import string from "@/p5/utils/string.js";
 import cache from "@/p5/utils/cache.js";
-
-sketch.setup();
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 sketch.draw( () => {
-  background( ...( options.sketch?.backgroundColor ?? [
+  const p = getP5();
+
+  p.background( ...( options.sketch?.backgroundColor ?? [
     0
   ] ) );
 
@@ -26,14 +29,14 @@ sketch.draw( () => {
     fill: "white",
     strokeWeight: 3,
     font,
-    textWrap: WORD,
+    textWrap: p.WORD,
     textAlign: [
       "left",
       "top",
     ],
     blendMode: "source-over",
-    textWidth: width - 2 * ( horizontalMargin * width ),
-    textHeight: height - 2 * ( verticalMargin * height ),
+    textWidth: p.width - 2 * ( horizontalMargin * p.width ),
+    textHeight: p.height - 2 * ( verticalMargin * p.height ),
   };
 
   const decomposedText = cache.store(
@@ -85,8 +88,8 @@ sketch.draw( () => {
           text: currentBlock,
           box: font?.textBounds(
             paddedBlock,
-            width * horizontalMargin,
-            height * verticalMargin,
+            p.width * horizontalMargin,
+            p.height * verticalMargin,
             fontStyle.size
           )
         } );
@@ -112,8 +115,8 @@ sketch.draw( () => {
       //     text: textBlock,
       //     box: font?.textBounds(
       //       paddedBlock,
-      //       width * horizontalMargin,
-      //       height * verticalMargin,
+      //       p.width * horizontalMargin,
+      //       p.height * verticalMargin,
       //       fontStyle.size
       //     )
       //   } );
@@ -125,8 +128,8 @@ sketch.draw( () => {
 
   // string.write(
   //   text,
-  //   width * horizontalMargin,
-  //   height * verticalMargin,
+  //   p.width * horizontalMargin,
+  //   p.height * verticalMargin,
   //   fontStyle
   // );
 
@@ -135,30 +138,30 @@ sketch.draw( () => {
   decomposedText.forEach( ( {
     text, box
   } ) => {
-    push();
-    stroke( 255 );
-    strokeWeight( 1 );
-    noFill();
-    rect(
+    p.push();
+    p.stroke( 255 );
+    p.strokeWeight( 1 );
+    p.noFill();
+    p.rect(
       box.x,
       box.y,
       box.w,
       box.h
     );
-    pop();
+    p.pop();
 
     string.write(
       text,
-      width * horizontalMargin + box.x,
-      height * verticalMargin + box.y,
+      p.width * horizontalMargin + box.x,
+      p.height * verticalMargin + box.y,
       fontStyle
     );
   } );
 
   // string.write(
   //   text,
-  //   width * horizontalMargin + width * 0,
-  //   height * verticalMargin + height * 0,
+  //   p.width * horizontalMargin + p.width * 0,
+  //   p.height * verticalMargin + p.height * 0,
   //   {
   //     size: 112,
   //     stroke: "blue",
@@ -170,8 +173,8 @@ sketch.draw( () => {
   //       "top",
   //     ],
   //     blendMode: "source-over",
-  //     textWidth: width - 2 * horizontalMargin,
-  //     textHeight: height - 2 * verticalMargin,
+  //     textWidth: p.width - 2 * horizontalMargin,
+  //     textHeight: p.height - 2 * verticalMargin,
   //     popPush: true,
   //   }
   // );

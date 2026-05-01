@@ -8,6 +8,7 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
@@ -23,9 +24,10 @@ const shape = [
 events.register(
   "engine-mouse-dragged",
   () => {
-    shape.push( createVector(
-      mouseX,
-      mouseY
+  const p = getP5();
+    shape.push( p.createVector(
+      p.mouseX,
+      p.mouseY
     ) );
   }
 );
@@ -33,10 +35,11 @@ events.register(
 events.register(
   "engine-mouse-released",
   () => {
+  const p = getP5();
     const bodyObject = {
       body: Bodies.fromVertices(
-        mouseX,
-        mouseY,
+        p.mouseX,
+        p.mouseY,
         shape,
         {
           friction: 0.3,
@@ -48,9 +51,9 @@ events.register(
         10,
         0.1
       ),
-      position: createVector(
-        mouseX,
-        mouseY
+      position: p.createVector(
+        p.mouseX,
+        p.mouseY
       ),
       points: [
         ...shape
@@ -87,18 +90,18 @@ const matter = {
 };
 
 function drawImageWithMask( {
-  img, maskDrawer, graphics = window
+  img, maskDrawer, graphics = getP5()
 } ) {
-  // image(img, 0, 0, graphics.width, graphics.height);
+  // p.image(img, 0, 0, graphics.width, graphics.height);
 
   imageUtils.marginImage( {
     img,
     fill: true,
     center: true,
     graphics: canvases.imageBuffer,
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
   } );
 
@@ -134,7 +137,7 @@ function addLetter(
     text,
     size,
     points: undefined,
-    position: createVector(
+    position: p.createVector(
       x,
       y
     ),
@@ -166,52 +169,53 @@ function addBoundary(
 }
 
 sketch.setup( () => {
-  canvases.mask = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  const p = getP5();
+  canvases.mask = p.createGraphics(
+    p.width,
+    p.height
   );
-  canvases.imageBuffer = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  canvases.imageBuffer = p.createGraphics(
+    p.width,
+    p.height
   );
 
   // canvases.mask.pixelDensity(options.backgroundPixelDensity || 0.5);
-  background( ...options.colors.background );
+  p.background( ...options.colors.background );
 
   const margin = 50;
   const thickness = 50;
 
   addBoundary(
-    width / 2,
-    height + thickness / 2 - margin,
-    width,
+    p.width / 2,
+    p.height + thickness / 2 - margin,
+    p.width,
     thickness
   );
   addBoundary(
-    width / 2,
+    p.width / 2,
     -thickness / 2 + margin,
-    width,
+    p.width,
     thickness
   );
   addBoundary(
     -thickness / 2 + margin,
-    height / 2,
+    p.height / 2,
     thickness,
-    height
+    p.height
   );
   addBoundary(
-    width + thickness / 2 - margin,
-    height / 2,
+    p.width + thickness / 2 - margin,
+    p.height / 2,
     thickness,
-    height
+    p.height
   );
 
   // "gravity".split("").forEach( letter => {
   // 	addLetter(
-  // 		width/2,
-  // 		height/2,
-  // 		// random(width),
-  // 		// random(height),
+  // 		p.width/2,
+  // 		p.height/2,
+  // 		// p.random(p.width),
+  // 		// p.random(p.height),
   // 		letter,
   // 		288
   // 	)
@@ -221,7 +225,8 @@ sketch.setup( () => {
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background( ...options.colors.background );
+  const p = getP5();
+  p.background( ...options.colors.background );
 
   Engine.update( matter.engine );
 
@@ -250,7 +255,7 @@ sketch.draw( (
         // {
         // 	// friction: 0.5,
         // 	// restitution: 0.8,
-        // 	// angle: PI
+        // 	// angle: p.PI
         // }
         // bodyObject.points.map(({x, y})=> Vector.create(x, y))
         bodyObject.points.map( ( {
@@ -275,7 +280,7 @@ sketch.draw( (
 
   matter.engine.gravity = Vector.create(
     mappers.fn(
-      sin( animation.angle * 2 ),
+      p.sin( animation.angle * 2 ),
       -1,
       1,
       -1,
@@ -283,7 +288,7 @@ sketch.draw( (
       easing.easeInOutExpo
     ),
     mappers.fn(
-      cos( animation.angle * 2 ),
+      p.cos( animation.angle * 2 ),
       -1,
       1,
       -1,
@@ -292,22 +297,22 @@ sketch.draw( (
     )
   );
 
-  push();
-  stroke( "blue" );
-  strokeWeight( 1 );
-  point(
-    mouseX,
-    mouseY
+  p.push();
+  p.stroke( "blue" );
+  p.strokeWeight( 1 );
+  p.point(
+    p.mouseX,
+    p.mouseY
   );
-  beginShape();
+  p.beginShape();
   for ( let i = 0; i < shape?.length; i++ ) {
-    vertex(
+    p.vertex(
       shape[ i ].x,
       shape[ i ].y
     );
   }
-  endShape();
-  pop();
+  p.endShape();
+  p.pop();
 
   matter.bodies.forEach( (
     {
@@ -317,8 +322,8 @@ sketch.draw( (
     }, index
   ) => {
     if ( !body ) {
-      strokeWeight( 50 );
-      point(
+      p.strokeWeight( 50 );
+      p.point(
         x,
         y
       );
@@ -333,27 +338,27 @@ sketch.draw( (
       angle,
     } = body;
 
-    push();
-    stroke( "blue" );
+    p.push();
+    p.stroke( "blue" );
 
-    // translate(mX, mY);
-    // rotate(angle)
-    beginShape();
+    // p.translate(mX, mY);
+    // p.rotate(angle)
+    p.beginShape();
     for ( let i = 0; i < vertices?.length; i++ ) {
-      vertex(
+      p.vertex(
         vertices[ i ].x,
         vertices[ i ].y
       );
     }
-    endShape( CLOSE );
+    p.endShape( p.CLOSE );
 
-    strokeWeight( 50 );
-    point(
+    p.strokeWeight( 50 );
+    p.point(
       mX,
       mY
     );
 
-    pop();
+    p.pop();
 
     // drawImageWithMask({
     // 	img: cache.get("images")[0].img,
@@ -374,14 +379,14 @@ sketch.draw( (
   // 	string.write(
   // 		defaultTitle,
   // 		// options.texts.title || defaultTitle,
-  // 		width/2,
-  // 		height/2,
+  // 		p.width/2,
+  // 		p.height/2,
   // 		{
   // 			size: 172,
-  // 			stroke: color(...options.colors.text),
-  // 			fill: color(...options.colors.background),
+  // 			stroke: p.color(...options.colors.text),
+  // 			fill: p.color(...options.colors.background),
   // 			font: string.fonts.martian,
-  // 			textAlign: [CENTER, CENTER],
+  // 			textAlign: [p.CENTER, p.CENTER],
   // 			blendMode: EXCLUSION
   // 		}
   // 	)

@@ -14,6 +14,9 @@ import mediapipe, {
   init as mediapipeInit,
   setEnabled as setMediapipeEnabled,
 } from "@/p5/utils/mediapipe/mediapipe.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 // Key landmarks for interaction (fingertips)
 const interactionIndices = [
@@ -39,18 +42,20 @@ const sketchState = {
 sketch.setup( async( {
   canvas
 } ) => {
-  background( ...getBackgroundColor() );
+  const p = getP5();
+
+  p.background( ...getBackgroundColor() );
 
   sketchState.shape.graphics = graphics.createAutoResizableGraphics(
-    width,
-    height,
+    p.width,
+    p.height,
     "webgl"
   );
   addScreenPositionFunction( sketchState.shape.graphics );
 
-  sketchState.webcam.graphics = createGraphics(
-    width,
-    height
+  sketchState.webcam.graphics = p.createGraphics(
+    p.width,
+    p.height
   );
 
   await mediapipeInit( {
@@ -69,7 +74,9 @@ const getBackgroundColor = () =>
   ];
 
 sketch.draw( () => {
-  background( ...getBackgroundColor() );
+  const p = getP5();
+
+  p.background( ...getBackgroundColor() );
 
   renderTitle( options.sketch?.title );
 
@@ -79,25 +86,25 @@ sketch.draw( () => {
   setMediapipeEnabled( useHands );
 
   const columns = options.sketch?.grid?.columns ?? 65;
-  const rows = ( columns * height ) / width;
-  const cellSize = width / columns;
+  const rows = ( columns * p.height ) / p.width;
+  const cellSize = p.width / columns;
 
   const gridOptions = {
-    topLeft: createVector(
-      -width / 2,
-      -height / 2
+    topLeft: p.createVector(
+      -p.width / 2,
+      -p.height / 2
     ),
-    topRight: createVector(
-      width / 2,
-      -height / 2
+    topRight: p.createVector(
+      p.width / 2,
+      -p.height / 2
     ),
-    bottomLeft: createVector(
-      -width / 2,
-      height / 2
+    bottomLeft: p.createVector(
+      -p.width / 2,
+      p.height / 2
     ),
-    bottomRight: createVector(
-      width / 2,
-      height / 2
+    bottomRight: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
     rows,
     columns,
@@ -118,9 +125,9 @@ sketch.draw( () => {
   ];
 
   if ( options.sketch.animation.useMouse ?? true ) {
-    sketchState.shape.graphics.screenPosition( createVector(
-      mouseX - width / 2,
-      mouseY - height / 2
+    sketchState.shape.graphics.screenPosition( p.createVector(
+      p.mouseX - p.width / 2,
+      p.mouseY - p.height / 2
     ) );
   }
 
@@ -132,12 +139,12 @@ sketch.draw( () => {
 
       interactionPoints.forEach( ( point ) => {
         if ( point ) {
-          const x = common.inverseX( point.x ) * width;
-          const y = point.y * height;
+          const x = common.inverseX( point.x ) * p.width;
+          const y = point.y * p.height;
 
-          targetVectors.push( sketchState.shape.graphics.screenPosition( createVector(
-            x - width / 2,
-            y - height / 2
+          targetVectors.push( sketchState.shape.graphics.screenPosition( p.createVector(
+            x - p.width / 2,
+            y - p.height / 2
           ) ) );
         }
       } );
@@ -145,14 +152,14 @@ sketch.draw( () => {
   }
 
   const margin = 150;
-  const W = width / 2 - margin;
-  const H = height / 2 - margin;
+  const W = p.width / 2 - margin;
+  const H = p.height / 2 - margin;
   const targetsCount = options.sketch.animation.spheresCount ?? 3;
 
   for ( let i = 0; i < targetsCount; i++ ) {
     const targetProgression = i / targetsCount;
 
-    targetVectors.push( sketchState.shape.graphics.screenPosition( createVector(
+    targetVectors.push( sketchState.shape.graphics.screenPosition( p.createVector(
       Math.sin( animation.angle + i * 2 ) * W,
       Math.cos( animation.angle + i * targetProgression ) * H
     ) ) );
@@ -189,7 +196,7 @@ sketch.draw( () => {
         }
       }
 
-      const proximity = map(
+      const proximity = p.map(
         minDistance,
         0,
         maxInfluenceDistance,
@@ -198,7 +205,7 @@ sketch.draw( () => {
       );
 
       // Ensure the value is clamped between 0 and 1
-      const switchIndex = constrain(
+      const switchIndex = p.constrain(
         proximity,
         0,
         1
@@ -238,8 +245,8 @@ sketch.draw( () => {
           hue,
           0,
           1,
-          -PI,
-          PI
+          -p.PI,
+          p.PI
         ) * hueMultiplier,
         opacityFactor,
       } );
@@ -276,7 +283,7 @@ sketch.draw( () => {
   );
 
   // SHAPE
-  image(
+  p.image(
     sketchState.shape.graphics,
     0,
     0
@@ -296,12 +303,12 @@ sketch.draw( () => {
     // sketchState.webcam.graphics.filter( POSTERIZE );
     // sketchState.webcam.graphics.filter( INVERT );
     // sketchState.webcam.graphics.filter( GRAY );
-    image(
+    p.image(
       sketchState.webcam.graphics,
       0,
       0,
-      width,
-      height
+      p.width,
+      p.height
     );
   }
 } );

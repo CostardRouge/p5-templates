@@ -1,9 +1,13 @@
 import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
 import colors from "@/p5/utils/colors.js";
+import mappers from "@/p5/utils/mappers.js";
 import easing from "@/p5/utils/easing.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   shape: {
@@ -14,13 +18,15 @@ const sketchState = {
 sketch.setup( ( {
   canvas
 } ) => {
-  sketchState.shape.graphics = createGraphics(
-    width,
-    height,
+  const p = getP5();
+
+  sketchState.shape.graphics = p.createGraphics(
+    p.width,
+    p.height,
     "webgl"
   );
 
-  background( ...getBackgroundColor() );
+  p.background( ...getBackgroundColor() );
 } );
 
 const getBackgroundColor = () =>
@@ -31,18 +37,20 @@ const getBackgroundColor = () =>
   ];
 
 sketch.draw( () => {
-  background( ...getBackgroundColor() );
+  const p = getP5();
+
+  p.background( ...getBackgroundColor() );
 
   const textToWrite = options.sketch?.shape?.text ?? "x";
   const fontName = options.sketch?.shape?.font ?? "martian";
 
-  const size = options.sketch?.shape?.size * width ?? width;
+  const size = options.sketch?.shape?.size * p.width ?? p.width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
   const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
 
   const textPoints = string.getTextPoints( {
     text: textToWrite,
-    position: createVector(
+    position: p.createVector(
       0,
       0
     ),
@@ -69,30 +77,30 @@ sketch.draw( () => {
     const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
-    const rotationMax = TAU;
+    const rotationMax = p.TAU;
 
     const rotation = animation.ease( {
       values: [
-        createVector(
+        p.createVector(
           0,
           0
         ),
-        createVector(
+        p.createVector(
           0,
           rotationMax
         ),
-        createVector(
+        p.createVector(
           0,
           rotationMax
         ),
-        createVector(
+        p.createVector(
           rotationMax,
           0
         ),
       ],
       currentTime: animation.progression,
       easingFn: easing.easeInOutExpo,
-      lerpFn: p5.Vector.lerp,
+      lerpFn: mappers.lerpVector,
     } );
 
     const {
@@ -113,7 +121,7 @@ sketch.draw( () => {
     } );
 
     const hue = sketchState.shape.graphics.noise(
-      position.x / width +
+      position.x / p.width +
         +sketchState.shape.graphics.map(
           Math.sin( animation.angle ),
           -1,
@@ -121,7 +129,7 @@ sketch.draw( () => {
           0,
           1
         ),
-      position.y / height +
+      position.y / p.height +
         +sketchState.shape.graphics.map(
           Math.cos( animation.angle ),
           -1,
@@ -140,8 +148,8 @@ sketch.draw( () => {
           hue,
           0,
           1,
-          -PI,
-          PI
+          -p.PI,
+          p.PI
         ) * hueMultiplier,
       opacityFactor,
     } );
@@ -186,7 +194,7 @@ sketch.draw( () => {
     //   position.y,
     // );
 
-    // sketchState.shape.graphics.rotate( radians( position.z ) );
+    // sketchState.shape.graphics.rotate( p.radians( position.z ) );
     //
     // sketchState.shape.graphics.line(
     //   0,
@@ -198,7 +206,7 @@ sketch.draw( () => {
     sketchState.shape.graphics.pop();
   } );
 
-  image(
+  p.image(
     sketchState.shape.graphics,
     0,
     0

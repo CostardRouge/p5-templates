@@ -5,44 +5,49 @@ import easing from "@/p5/utils/easing.js";
 import colors from "@/p5/utils/colors.js";
 import string from "@/p5/utils/string.js";
 import sketch from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const canvases = {
 };
 let o = options;
 
 sketch.setup( () => {
-  canvases.buffer = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height,
+  const p = getP5();
+
+  canvases.buffer = p.createGraphics(
+    p.width,
+    p.height,
     "webgl"
   );
 
-  canvases.pixilated = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  canvases.pixilated = p.createGraphics(
+    p.width,
+    p.height
   );
 
-  canvases.mask = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  canvases.mask = p.createGraphics(
+    p.width,
+    p.height
   );
 
   canvases.pixilated.pixelDensity( 0.06 );
 } );
 
 function drawShape( {
-  canvas = window, depth = 60, text = "sinewave"
+  canvas = getP5(), depth = 60, text = "sinewave"
 } ) {
   canvas.background( ...( options.sketch.shape.backgroundColor ?? [
     0
   ] ) );
-  const canvasFlatDimensionAverage = ( width + height ) / 2;
+  const canvasFlatDimensionAverage = ( canvas.width + canvas.height ) / 2;
 
   const points = animation.ease( {
     values: text.split( "" ).map( ( text ) =>
       string.getTextPoints( {
         text,
-        position: createVector(
+        position: canvas.createVector(
           0,
           0
         ),
@@ -87,8 +92,8 @@ function drawShape( {
 
       const opacityFactor =
         mappers.fn(
-          sin(
-            depthProgression * 2 * PI,
+          canvas.sin(
+            depthProgression * 2 * canvas.PI,
             easing.easeInOutExpo
           ),
           -1,
@@ -103,24 +108,24 @@ function drawShape( {
       canvas.stroke( colorFunction( {
         hueOffset:
             // +depthProgression*10
-            // +mappers.fn(depthProgression, 0, 1, 0, PI/2, easing.easeInOutExpo)
+            // +mappers.fn(depthProgression, 0, 1, 0, p.PI/2, easing.easeInOutExpo)
             +animation.progression,
-        // hueIndex: mappers.circularPolar(progression, 0, 1, -PI, PI)*2,
+        // hueIndex: mappers.circularPolar(progression, 0, 1, -p.PI, p.PI)*2,
         hueIndex:
             mappers.fn(
-              noise(
-                x / width,
-                y / height + animation.progression * 1,
+              canvas.noise(
+                x / canvas.width,
+                y / canvas.height + animation.progression * 1,
                 depthProgression / 2
               ),
               0,
               1,
-              -PI,
-              PI
+              -canvas.PI,
+              canvas.PI
             ) * 14,
-        // hueIndex:mappers.fn(noise(x/width, y/height, progression/2+depthProgression/2), 0, 1, -PI, PI)*10,
+        // hueIndex:mappers.fn(canvas.noise(x/canvas.width, y/canvas.height, progression/2+depthProgression/2), 0, 1, -canvas.PI, canvas.PI)*10,
         opacityFactor,
-        // opacityFactor: map(depthProgression, 0, 1, 1.75, 1) * Math.pow(1.05, z)
+        // opacityFactor: p.map(depthProgression, 0, 1, 1.75, 1) * Math.pow(1.05, z)
       } ) );
 
       const xx =
@@ -162,16 +167,16 @@ function drawShape( {
 }
 
 function wave(
-  canvas = window, step = options.sketch.wave.step
+  canvas = getP5(), step = options.sketch.wave.step
 ) {
   const values = [
-    height * options.sketch.wave.heightStart,
-    height * options.sketch.wave.heightEnd,
+    canvas.height * options.sketch.wave.heightStart,
+    canvas.height * options.sketch.wave.heightEnd,
   ];
 
   for ( let index = 0; index < 1; index += step ) {
     canvas.vertex(
-      index * width,
+      index * canvas.width,
       animation.ease( {
         values,
         currentTime:
@@ -186,9 +191,11 @@ function wave(
 sketch.draw( (
   _time, _center, favoriteColor
 ) => {
-  noSmooth();
+  const p = getP5();
 
-  background( ...( options.sketch.backgroundColor ?? [
+  p.noSmooth();
+
+  p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );
 
@@ -198,28 +205,28 @@ sketch.draw( (
     text: options.sketch.shape.text,
   } );
 
-  image(
+  p.image(
     canvases.buffer,
     0,
     0,
-    width,
-    height
+    p.width,
+    p.height
   );
 
   canvases.pixilated.image(
     canvases.buffer.get(),
     0,
     0,
-    width,
-    height
+    p.width,
+    p.height
   );
 
   canvases.mask.erase();
   canvases.mask.rect(
     0,
     0,
-    width,
-    height
+    p.width,
+    p.height
   );
   canvases.mask.noErase();
   canvases.mask.beginShape();
@@ -227,40 +234,44 @@ sketch.draw( (
   wave( canvases.mask );
 
   canvases.mask.vertex(
-    width,
-    height
+    p.width,
+    p.height
   );
   canvases.mask.vertex(
     0,
-    height
+    p.height
   );
-  canvases.mask.endShape( CLOSE );
+  canvases.mask.endShape( p.CLOSE );
 
   const maskedImage = canvases.pixilated.get();
 
   maskedImage.mask( canvases.mask );
 
-  image(
+  p.image(
     maskedImage,
     0,
     0
   );
 
-  // image(
+  // p.image(
   //   canvases.pixilated,
   //   0,
   //   0,
-  //   width,
-  //   height
+  //   canvas.width,
+  //   canvas.height
   // );
 
-  noFill();
-  strokeWeight( options.sketch.wave.strokeWeight );
-  stroke( options.sketch.wave.stroke ?? favoriteColor );
+  p.noFill();
+  p.strokeWeight( options.sketch.wave.strokeWeight );
+  p.stroke( options.sketch.wave.stroke ?? favoriteColor );
 
-  beginShape();
-  wave( window );
-  endShape( options.sketch.wave.close && CLOSE );
+  p.beginShape();
+  wave( );
+  if ( options.sketch.wave.close ) {
+    p.endShape( p.CLOSE );
+  } else {
+    p.endShape();
+  }
 
   canvases.pixilated.pixelDensity( options.sketch.pixelDensity );
 } );

@@ -6,6 +6,9 @@ import events from "@/p5/utils/events.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
 import "@/public/assets/libraries/ml5.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const trackedHandParts = [
   "thumb_tip",
@@ -48,6 +51,8 @@ const _ml5 = {
 events.register(
   "engine-window-preload",
   () => {
+    const p = getP5();
+
     _ml5.handPose = ml5.handPose( {
       maxHands: 4,
       flipped: true,
@@ -66,11 +71,13 @@ events.register(
 );
 
 sketch.setup( () => {
-  background( ...options.colors.background );
+  const p = getP5();
 
-  _ml5.drawing = createGraphics(
-    sketch?.engine?.canvas?.width,
-    sketch?.engine?.canvas?.height
+  p.background( ...options.colors.background );
+
+  _ml5.drawing = p.createGraphics(
+    p.width,
+    p.height
   );
 
   _ml5.capture.element = createCapture(
@@ -110,19 +117,19 @@ sketch.setup( () => {
 } );
 
 function drawHand(
-  hand, color, graphics = window
+  hand, color, graphics = getP5()
 ) {
   graphics.beginShape();
   hand.forEach( ( tip ) => {
     graphics.vertex(
-      map(
+      p.map(
         tip.x,
         0,
         _ml5.capture.size.width,
         0,
         _ml5.webcam.size.width
       ),
-      map(
+      p.map(
         tip.y,
         0,
         _ml5.capture.size.height,
@@ -134,13 +141,15 @@ function drawHand(
   graphics.strokeWeight( 5 );
   graphics.stroke( "white" );
   graphics.fill( color );
-  graphics.endShape( CLOSE );
+  graphics.endShape( p.CLOSE );
 }
 
 sketch.draw( (
   time, center, favoriteColor
 ) => {
-  background(
+  const p = getP5();
+
+  p.background(
     ...options.colors.background,
     10
   );
@@ -170,7 +179,7 @@ sketch.draw( (
     ];
 
     trackedHandParts.forEach( ( trackedHandPart ) => {
-      handFingers[ handedness ].push( createVector(
+      handFingers[ handedness ].push( p.createVector(
         // mappers.smoother(`${handedness}-${trackedHandPart}-x`, hand[trackedHandPart].x, 0.35),
         // mappers.smoother(`${handedness}-${trackedHandPart}-y`, hand[trackedHandPart].y, 0.35),
         hand[ trackedHandPart ].x,
@@ -192,31 +201,31 @@ sketch.draw( (
     // _ml5.drawing.noErase()
   }
 
-  // image(_ml5.webcam.element, 0, 0, _ml5.webcam.size.width, _ml5.webcam.size.height);
-  // image(_ml5.drawing, 0, 0, _ml5.webcam.size.width, _ml5.webcam.size.height);
+  // p.image(_ml5.webcam.element, 0, 0, _ml5.webcam.size.width, _ml5.webcam.size.height);
+  // p.image(_ml5.drawing, 0, 0, _ml5.webcam.size.width, _ml5.webcam.size.height);
 
   if ( _ml5.segmentation ) {
     imageUtils.clearColor( _ml5.segmentation.mask );
-    // image(_ml5.segmentation.mask, 0, 0, _ml5.webcam.size.width, _ml5.webcam.size.height);
+    // p.image(_ml5.segmentation.mask, 0, 0, _ml5.webcam.size.width, _ml5.webcam.size.height);
 
     imageMode( CORNER );
-    push();
-    translate(
-      width,
+    p.push();
+    p.translate(
+      p.width,
       0
     );
-    scale(
+    p.scale(
       -1,
       1
     );
-    image(
+    p.image(
       _ml5.segmentation.mask,
       0,
       0,
-      width,
-      height
+      p.width,
+      p.height
     );
-    pop();
+    p.pop();
   }
 
   // for (const handedness in handFingers) {
@@ -232,17 +241,17 @@ sketch.draw( (
       "\n"
     ),
     0,
-    height * 0.2,
+    p.height * 0.2,
     {
       size: 92,
-      stroke: color( ...options.colors.background ),
-      fill: color(
+      stroke: p.color( ...options.colors.background ),
+      fill: p.color(
         ...options.colors.text,
         190
       ),
       font: string.fonts.martian,
       textAlign: [
-        CENTER
+        p.CENTER
       ],
     }
   );

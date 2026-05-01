@@ -8,6 +8,10 @@ import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import * as common from "@/p5/utils/common.js";
+import renderTitle from "@/p5/utils/title/renderTitle.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 // helpers
 const getBg = () =>
@@ -40,29 +44,33 @@ const getImages = () => {
 };
 
 sketch.setup( () => {
-  background( ...getBg() );
+  const p = getP5();
+
+  p.background( ...getBg() );
 } );
 
 function getImagePart(
   img, x, y, w, h
 ) {
+  const p = getP5();
+
   let imgAspect = img.width / img.height;
-  let canvasAspect = width / height;
+  let canvasAspect = p.width / p.height;
 
   let displayW, displayH;
 
   if ( imgAspect > canvasAspect ) {
-    // Image is wider than canvas, fit to width
-    displayW = width;
-    displayH = width / imgAspect;
+    // Image is wider than canvas, fit to p.width
+    displayW = p.width;
+    displayH = p.width / imgAspect;
   } else {
-    // Image is taller than canvas, fit to height
-    displayH = height;
-    displayW = height * imgAspect;
+    // Image is taller than canvas, fit to p.height
+    displayH = p.height;
+    displayW = p.height * imgAspect;
   }
 
-  let offsetX = ( width - displayW ) / 2;
-  let offsetY = ( height - displayH ) / 2;
+  let offsetX = ( p.width - displayW ) / 2;
+  let offsetY = ( p.height - displayH ) / 2;
 
   return img.get(
     ( ( x - offsetX ) / displayW ) * img.width,
@@ -72,10 +80,12 @@ function getImagePart(
   );
 }
 
-sketch.draw( (
+sketch.draw( async(
   time, center, favoriteColor
 ) => {
-  background(
+  const p = getP5();
+
+  p.background(
     ...getBg(),
     20
   );
@@ -83,39 +93,39 @@ sketch.draw( (
   // const sizes = [8, 16, 2, 9, 3, 4];
   // const columns = mappers.circularIndex(time/2, sizes);
   // const rows = mappers.circularIndex(time/2, sizes.reverse());
-  const rows = options.sketch?.rows ?? 16; // columns*height/width;
-  const columns = options.sketch?.columns ?? 9; // rows*width/height;
+  const rows = options.sketch?.rows ?? 16; // columns*p.height/p.width;
+  const columns = options.sketch?.columns ?? 9; // rows*p.width/p.height;
   const borderSize = options.sketch?.borderSize ?? 0;
   const images = getImages();
 
   const gridOptions = {
-    topLeft: createVector(
+    topLeft: p.createVector(
       borderSize,
       borderSize
     ),
-    topRight: createVector(
-      width - borderSize,
+    topRight: p.createVector(
+      p.width - borderSize,
       borderSize
     ),
-    bottomLeft: createVector(
+    bottomLeft: p.createVector(
       borderSize,
-      height - borderSize
+      p.height - borderSize
     ),
-    bottomRight: createVector(
-      width - borderSize,
-      height - borderSize
+    bottomRight: p.createVector(
+      p.width - borderSize,
+      p.height - borderSize
     ),
     rows,
     columns,
     centered: false,
   };
 
-  const W = width / columns;
-  const H = height / rows;
+  const W = p.width / columns;
+  const H = p.height / rows;
 
   const {
     cells: gridCells
-  } = grid.create( gridOptions );
+  } = await grid.create( gridOptions );
 
   const imagePaths = images.map( ( {
     path
@@ -178,15 +188,15 @@ sketch.draw( (
       // +mappers.circularIndex(time, [-xIndex, xIndex])/columns
       // +mappers.circularIndex(time, [-yIndex, yIndex])/rows
       //
-      +noise(
+      +p.noise(
         xIndex / columns,
         yIndex / rows,
         animation.circularProgression
       ) +
       xIndex / columns +
       yIndex / rows;
-    // +x/width
-    // +y/height
+    // +x/p.width
+    // +y/p.height
     const imageIndex = mappers.circularIndex(
       0 + animation.progression * imageIndexes.length + switchIndex,
       imageIndexes
@@ -221,30 +231,30 @@ sketch.draw( (
           ],
         } = dominantColor;
 
-        strokeWeight( 1 );
-        fill(
+        p.strokeWeight( 1 );
+        p.fill(
           r,
           g,
           b,
           190
         );
-        stroke(
+        p.stroke(
           r,
           g,
           b,
           255
         );
-        // stroke(color(230))
-        // noStroke()
+        // p.stroke(p.color(230))
+        // p.noStroke()
 
-        rect(
+        p.rect(
           x,
           y,
           W,
           H
         );
       } else {
-        image(
+        p.image(
           imagePart,
           x,
           y,
@@ -252,13 +262,13 @@ sketch.draw( (
           H
         );
 
-        noFill();
-        noStroke();
-        // strokeWeight(1/4)
-        // stroke(favoriteColor)
-        // strokeWeight(1)
-        // stroke(color(230))
-        rect(
+        p.noFill();
+        p.noStroke();
+        // p.strokeWeight(1/4)
+        // p.stroke(favoriteColor)
+        // p.strokeWeight(1)
+        // p.stroke(p.color(230))
+        p.rect(
           x,
           y,
           W,
@@ -266,10 +276,10 @@ sketch.draw( (
         );
       }
 
-      // strokeWeight(1)
+      // p.strokeWeight(1)
       // cross(x + W - 30, y + H - 30, 20)
 
-      // const II = round(imageIndex);
+      // const II = p.round(imageIndex);
 
       // string.write(`D${II}`, x+18, y+30, {
       //   size: 18,
@@ -290,7 +300,7 @@ sketch.draw( (
       // string.write(`${cellIndex}`, x+W-30, y+H, {
       //   size: 18,
       //   stroke: 0,
-      //   textAlign: [CENTER, CENTER],
+      //   textAlign: [p.CENTER, p.CENTER],
       //   strokeWeight: 1,
       //   fill: favoriteColor,
       //   font: string.fonts.openSans
@@ -298,22 +308,5 @@ sketch.draw( (
     }
   } );
 
-  if ( animation.progression < 0.2 ) {
-    string.write(
-      options.sketch?.title || options?.name,
-      0,
-      height / 2,
-      {
-        size: 172,
-        stroke: color( ...getTextColor() ),
-        fill: color( ...getBg() ),
-        font: getFont(),
-        textAlign: [
-          CENTER,
-          CENTER
-        ],
-      // blendMode: EXCLUSION
-      }
-    );
-  }
+  renderTitle();
 } );

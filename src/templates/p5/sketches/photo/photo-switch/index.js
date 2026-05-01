@@ -3,14 +3,17 @@ import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
+import { getP5 } from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.background( ...options.sketch.backgroundColor );
 } );
 
 sketch.draw( () => {
-  clear();
-  background( ...options.sketch.backgroundColor );
+  const p = getP5();
+  p.clear();
+  p.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
 
@@ -23,11 +26,11 @@ sketch.draw( () => {
   const imageAtIndex = images?.[ imageIndex ]?.img;
 
   imageUtils.marginImage( {
-    position: createVector(
-      width / 2,
-      height / 2
+    position: p.createVector(
+      p.width / 2,
+      p.height / 2
     ),
-    margin: width * options.sketch?.margin,
+    margin: p.width * options.sketch?.margin,
     scale: options.sketch?.scale ?? 1,
     center: options.sketch?.center ?? true,
     clip: options.sketch?.clip ?? false,

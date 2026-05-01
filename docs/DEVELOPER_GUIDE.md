@@ -195,30 +195,27 @@ cd src/p5-sketches/sketches/my-new-sketch
 ```javascript
 // sketch.js
 function sketch(p, options, assets) {
-  let canvas
+  let canvas;
 
-  p.setup = function() {
+  p.setup = function () {
     // Create canvas with options size
-    canvas = p.createCanvas(
-      options.size.width,
-      options.size.height
-    )
-    canvas.id('defaultCanvas0')
-    
-    // Set framerate from options
-    p.frameRate(options.animation.framerate)
-  }
+    canvas = p.createCanvas(options.size.width, options.size.height);
+    canvas.id("defaultCanvas0");
 
-  p.draw = function() {
+    // Set framerate from options
+    p.frameRate(options.animation.framerate);
+  };
+
+  p.draw = function () {
     // Clear background
-    p.background(246, 235, 225)
-    
+    p.background(246, 235, 225);
+
     // Your sketch logic here
-    p.fill(0)
-    p.textAlign(p.CENTER, p.CENTER)
-    p.textSize(48)
-    p.text('Hello World!', p.width / 2, p.height / 2)
-  }
+    p.fill(0);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.textSize(48);
+    p.text("Hello World!", p.p.width / 2, p.height / 2);
+  };
 }
 ```
 
@@ -257,22 +254,24 @@ To add custom options to your sketch, extend the Zod schema:
 // Add to OptionsSchema
 export const OptionsSchema = z.object({
   // ... existing fields ...
-  
-  sketch: z.object({
-    myCustomOption: z.string().default('default value'),
-    myNumber: z.number().min(0).max(100).default(50)
-  }).optional()
-})
+
+  sketch: z
+    .object({
+      myCustomOption: z.string().default("default value"),
+      myNumber: z.number().min(0).max(100).default(50),
+    })
+    .optional(),
+});
 ```
 
 Then use in your sketch:
 
 ```javascript
 // sketch.js
-p.draw = function() {
-  const customValue = options.sketch?.myCustomOption || 'default'
-  p.text(customValue, p.width / 2, p.height / 2)
-}
+p.draw = function () {
+  const customValue = options.sketch?.myCustomOption || "default";
+  p.text(customValue, p.p.width / 2, p.height / 2);
+};
 ```
 
 ---
@@ -304,22 +303,22 @@ OptionsSchema (root)
 // src/types/sketch.types.ts
 
 export const MyCustomItemSchema = z.object({
-  type: z.literal('my-custom'),
-  title: z.string().default(''),
+  type: z.literal("my-custom"),
+  title: z.string().default(""),
   color: RGBA.default([255, 0, 0]),
-  size: z.number().min(10).max(200).default(50)
-})
+  size: z.number().min(10).max(200).default(50),
+});
 
 // Add to discriminated union
-export const ContentItemSchema = z.discriminatedUnion('type', [
+export const ContentItemSchema = z.discriminatedUnion("type", [
   BackgroundItemSchema,
   MetaItemSchema,
   TextItemSchema,
   ImageItemSchema,
   ImagesStackItemSchema,
   VisualItemSchema,
-  MyCustomItemSchema,  // Add here
-])
+  MyCustomItemSchema, // Add here
+]);
 ```
 
 2. **Create form configuration**
@@ -329,26 +328,26 @@ export const ContentItemSchema = z.discriminatedUnion('type', [
 
 export const formConfig: FormConfig = {
   // ... existing configs ...
-  
-  'my-custom': {
+
+  "my-custom": {
     title: {
-      type: 'text',
-      label: 'Title',
-      placeholder: 'Enter title...'
+      type: "text",
+      label: "Title",
+      placeholder: "Enter title...",
     },
     color: {
-      type: 'color',
-      label: 'Color'
+      type: "color",
+      label: "Color",
     },
     size: {
-      type: 'number',
-      label: 'Size',
+      type: "number",
+      label: "Size",
       min: 10,
       max: 200,
-      step: 1
-    }
-  }
-}
+      step: 1,
+    },
+  },
+};
 ```
 
 3. **Add to item palette**
@@ -358,30 +357,30 @@ export const formConfig: FormConfig = {
 
 export const itemPalette: ItemPaletteConfig[] = [
   // ... existing items ...
-  
+
   {
-    type: 'my-custom',
-    label: 'My Custom Item',
-    icon: Star,  // Lucide icon
-    description: 'Add a custom item'
-  }
-]
+    type: "my-custom",
+    label: "My Custom Item",
+    icon: Star, // Lucide icon
+    description: "Add a custom item",
+  },
+];
 ```
 
 4. **Use in sketch**
 
 ```javascript
 // sketch.js
-p.draw = function() {
+p.draw = function () {
   // Iterate through content items
-  options.content.forEach(item => {
-    if (item.type === 'my-custom') {
-      p.fill(...item.color)
-      p.circle(p.width / 2, p.height / 2, item.size)
-      p.text(item.title, p.width / 2, p.height / 2 + 50)
+  options.content.forEach((item) => {
+    if (item.type === "my-custom") {
+      p.fill(...item.color);
+      p.circle(p.p.width / 2, p.height / 2, item.size);
+      p.text(item.title, p.p.width / 2, p.height / 2 + 50);
     }
-  })
-}
+  });
+};
 ```
 
 ### Schema Best Practices
@@ -390,52 +389,52 @@ p.draw = function() {
 
 ```typescript
 // Good
-z.string().default('')
-z.number().min(0).max(100).default(50)
+z.string().default("");
+z.number().min(0).max(100).default(50);
 
 // Bad - can cause validation errors
-z.string()
-z.number()
+z.string();
+z.number();
 ```
 
 2. **Use descriptive field names**
 
 ```typescript
 // Good
-horizontalMargin: z.number()
-textAlignment: z.enum(['left', 'center', 'right'])
+horizontalMargin: z.number();
+textAlignment: z.enum(["left", "center", "right"]);
 
 // Bad
-margin: z.number()  // Which margin?
-align: z.string()   // What values are valid?
+margin: z.number(); // Which margin?
+align: z.string(); // What values are valid?
 ```
 
 3. **Add validation constraints**
 
 ```typescript
 // Good
-z.number().min(1).max(240)  // Framerate
-z.number().min(50).max(8192)  // Canvas size
+z.number().min(1).max(240); // Framerate
+z.number().min(50).max(8192); // Canvas size
 
 // Bad
-z.number()  // Any number is valid?
+z.number(); // Any number is valid?
 ```
 
 4. **Use discriminated unions for variants**
 
 ```typescript
 // Good
-z.discriminatedUnion('type', [
-  z.object({ type: z.literal('grid'), columns: z.number() }),
-  z.object({ type: z.literal('dots'), radius: z.number() })
-])
+z.discriminatedUnion("type", [
+  z.object({ type: z.literal("grid"), columns: z.number() }),
+  z.object({ type: z.literal("dots"), radius: z.number() }),
+]);
 
 // Bad - harder to type and validate
 z.object({
-  type: z.enum(['grid', 'dots']),
+  type: z.enum(["grid", "dots"]),
   columns: z.number().optional(),
-  radius: z.number().optional()
-})
+  radius: z.number().optional(),
+});
 ```
 
 ---
@@ -457,37 +456,37 @@ Content items are modular pieces that can be added to sketches. They're automati
 
 ```javascript
 // sketch.js
-p.draw = function() {
+p.draw = function () {
   // Process content items in order
-  options.content.forEach(item => {
+  options.content.forEach((item) => {
     switch (item.type) {
-      case 'background':
-        p.background(...item.background)
-        break
-        
-      case 'text':
-        p.fill(...item.fill)
-        p.textSize(item.size)
+      case "background":
+        p.background(...item.background);
+        break;
+
+      case "text":
+        p.fill(...item.fill);
+        p.textSize(item.size);
         p.textAlign(
           p[item.align[0].toUpperCase()],
-          p[item.align[1].toUpperCase()]
-        )
-        const x = item.position.x * p.width
-        const y = item.position.y * p.height
-        p.text(item.content, x, y)
-        break
-        
-      case 'image':
+          p[item.align[1].toUpperCase()],
+        );
+        const x = item.position.x * p.width;
+        const y = item.position.y * p.height;
+        p.text(item.content, x, y);
+        break;
+
+      case "image":
         if (assets.images[item.source]) {
-          const img = assets.images[item.source]
-          const x = item.position.x * p.width
-          const y = item.position.y * p.height
-          p.image(img, x, y)
+          const img = assets.images[item.source];
+          const x = item.position.x * p.width;
+          const y = item.position.y * p.height;
+          p.image(img, x, y);
         }
-        break
+        break;
     }
-  })
-}
+  });
+};
 ```
 
 ### Multi-Slide Support
@@ -496,31 +495,31 @@ For sketches with multiple slides:
 
 ```javascript
 // sketch.js
-let currentSlideIndex = 0
+let currentSlideIndex = 0;
 
-p.setup = function() {
+p.setup = function () {
   // ... setup code ...
-  
-  // Calculate slide duration
-  const totalFrames = options.animation.framerate * options.animation.duration
-  const framesPerSlide = Math.floor(totalFrames / options.slides.length)
-  
-  // Store for later
-  p.framesPerSlide = framesPerSlide
-}
 
-p.draw = function() {
+  // Calculate slide duration
+  const totalFrames = options.animation.framerate * options.animation.duration;
+  const framesPerSlide = Math.floor(totalFrames / options.slides.length);
+
+  // Store for later
+  p.framesPerSlide = framesPerSlide;
+};
+
+p.draw = function () {
   // Calculate current slide
-  currentSlideIndex = Math.floor(p.frameCount / p.framesPerSlide)
-  const slide = options.slides[currentSlideIndex]
-  
-  if (!slide) return
-  
+  currentSlideIndex = Math.floor(p.frameCount / p.framesPerSlide);
+  const slide = options.slides[currentSlideIndex];
+
+  if (!slide) return;
+
   // Render slide content
-  slide.content.forEach(item => {
+  slide.content.forEach((item) => {
     // ... render item ...
-  })
-}
+  });
+};
 ```
 
 ---
@@ -535,27 +534,27 @@ Assets are uploaded directly to S3 using presigned URLs:
 // Example: Upload an image
 async function uploadImage(file: File, jobId: string) {
   // 1. Get presigned URL
-  const response = await fetch('/api/s3/presigned-url', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/s3/presigned-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       fileName: file.name,
       fileType: file.type,
-      jobId
-    })
-  })
-  
-  const { uploadUrl, fileUrl } = await response.json()
-  
+      jobId,
+    }),
+  });
+
+  const { uploadUrl, fileUrl } = await response.json();
+
   // 2. Upload to S3
   await fetch(uploadUrl, {
-    method: 'PUT',
+    method: "PUT",
     body: file,
-    headers: { 'Content-Type': file.type }
-  })
-  
+    headers: { "Content-Type": file.type },
+  });
+
   // 3. Return S3 URL
-  return fileUrl
+  return fileUrl;
 }
 ```
 
@@ -566,19 +565,19 @@ Assets are preloaded and passed to your sketch:
 ```javascript
 // sketch.js
 function sketch(p, options, assets) {
-  p.setup = function() {
+  p.setup = function () {
     // Assets are already loaded
-    console.log('Available images:', Object.keys(assets.images))
-    console.log('Available videos:', Object.keys(assets.videos))
-  }
-  
-  p.draw = function() {
+    console.log("Available images:", Object.keys(assets.images));
+    console.log("Available videos:", Object.keys(assets.videos));
+  };
+
+  p.draw = function () {
     // Use loaded assets
-    const img = assets.images['my-image.jpg']
+    const img = assets.images["my-image.jpg"];
     if (img) {
-      p.image(img, 0, 0)
+      p.image(img, 0, 0);
     }
-  }
+  };
 }
 ```
 
@@ -606,11 +605,11 @@ In your sketch:
 
 ```javascript
 // Access global assets
-const globalImg = assets.images['global-image.jpg']
+const globalImg = assets.images["global-image.jpg"];
 
 // Access slide-specific assets
-const slide = options.slides[currentSlideIndex]
-const slideImg = assets.images['slide-1-image.jpg']
+const slide = options.slides[currentSlideIndex];
+const slideImg = assets.images["slide-1-image.jpg"];
 ```
 
 ---
@@ -642,26 +641,26 @@ Consider adding:
 
 ```typescript
 // __tests__/sketch.test.ts
-import { OptionsSchema } from '@/types/sketch.types'
+import { OptionsSchema } from "@/types/sketch.types";
 
-describe('OptionsSchema', () => {
-  it('should validate valid options', () => {
+describe("OptionsSchema", () => {
+  it("should validate valid options", () => {
     const valid = {
       size: { width: 1080, height: 1350 },
-      animation: { framerate: 60, duration: 6 }
-    }
-    
-    expect(() => OptionsSchema.parse(valid)).not.toThrow()
-  })
-  
-  it('should reject invalid framerate', () => {
+      animation: { framerate: 60, duration: 6 },
+    };
+
+    expect(() => OptionsSchema.parse(valid)).not.toThrow();
+  });
+
+  it("should reject invalid framerate", () => {
     const invalid = {
-      animation: { framerate: 300 }  // Max is 240
-    }
-    
-    expect(() => OptionsSchema.parse(invalid)).toThrow()
-  })
-})
+      animation: { framerate: 300 }, // Max is 240
+    };
+
+    expect(() => OptionsSchema.parse(invalid)).toThrow();
+  });
+});
 ```
 
 ---
@@ -676,10 +675,10 @@ Enable verbose logging:
 // src/lib/recordSketch.ts
 
 // Add console logs
-console.log('[Recording] Starting job:', jobId)
-console.log('[Recording] Options:', JSON.stringify(options, null, 2))
-console.log('[Recording] Browser launched')
-console.log('[Recording] Frames captured:', frameCount)
+console.log("[Recording] Starting job:", jobId);
+console.log("[Recording] Options:", JSON.stringify(options, null, 2));
+console.log("[Recording] Browser launched");
+console.log("[Recording] Frames captured:", frameCount);
 ```
 
 ### Debug Sketch Rendering
@@ -688,13 +687,13 @@ Use p5.js console:
 
 ```javascript
 // sketch.js
-p.draw = function() {
+p.draw = function () {
   // Log frame info
   if (p.frameCount % 60 === 0) {
-    console.log('Frame:', p.frameCount)
-    console.log('Options:', options)
+    console.log("Frame:", p.frameCount);
+    console.log("Options:", options);
   }
-}
+};
 ```
 
 ### Debug Form State
@@ -707,7 +706,7 @@ import { DevTool } from '@hookform/devtools'
 
 function TemplateEditor() {
   const methods = useForm()
-  
+
   return (
     <>
       <FormProvider {...methods}>
@@ -722,21 +721,25 @@ function TemplateEditor() {
 ### Common Issues
 
 **Issue: Canvas not loading**
+
 - Check browser console for errors
 - Verify p5.js is loaded
 - Ensure canvas has correct ID: `defaultCanvas0`
 
 **Issue: Recording fails**
+
 - Check FFmpeg is installed: `ffmpeg -version`
 - Verify browser can access sketch URL
 - Check disk space for temporary files
 
 **Issue: Assets not loading**
+
 - Verify S3 credentials
 - Check CORS configuration
 - Ensure presigned URLs haven't expired
 
 **Issue: Form not updating**
+
 - Check Zod schema has defaults
 - Verify field names match schema
 - Use React DevTools to inspect form state
@@ -805,14 +808,14 @@ function TemplateEditor() {
 
 ```javascript
 // sketch.js
-p.draw = function() {
-  options.content.forEach(item => {
+p.draw = function () {
+  options.content.forEach((item) => {
     // Only render if visible
     if (item.visible !== false) {
-      renderItem(item)
+      renderItem(item);
     }
-  })
-}
+  });
+};
 ```
 
 ### Pattern: Animation Easing
@@ -820,18 +823,16 @@ p.draw = function() {
 ```javascript
 // sketch.js
 function easeInOutCubic(t) {
-  return t < 0.5
-    ? 4 * t * t * t
-    : 1 - Math.pow(-2 * t + 2, 3) / 2
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-p.draw = function() {
-  const progress = p.frameCount / totalFrames
-  const eased = easeInOutCubic(progress)
-  
+p.draw = function () {
+  const progress = p.frameCount / totalFrames;
+  const eased = easeInOutCubic(progress);
+
   // Use eased value for smooth animations
-  const x = p.lerp(startX, endX, eased)
-}
+  const x = p.lerp(startX, endX, eased);
+};
 ```
 
 ### Pattern: Responsive Positioning
@@ -841,16 +842,16 @@ p.draw = function() {
 function getPosition(item) {
   return {
     x: item.position.x * p.width,
-    y: item.position.y * p.height
-  }
+    y: item.position.y * p.height,
+  };
 }
 
-p.draw = function() {
-  options.content.forEach(item => {
-    const pos = getPosition(item)
-    p.circle(pos.x, pos.y, 50)
-  })
-}
+p.draw = function () {
+  options.content.forEach((item) => {
+    const pos = getPosition(item);
+    p.circle(pos.x, pos.y, 50);
+  });
+};
 ```
 
 ### Pattern: Asset Fallbacks
@@ -858,13 +859,13 @@ p.draw = function() {
 ```javascript
 // sketch.js
 function getImage(path) {
-  return assets.images[path] || assets.images['default.jpg']
+  return assets.images[path] || assets.images["default.jpg"];
 }
 
-p.draw = function() {
-  const img = getImage('my-image.jpg')
-  p.image(img, 0, 0)
-}
+p.draw = function () {
+  const img = getImage("my-image.jpg");
+  p.image(img, 0, 0);
+};
 ```
 
 ### Pattern: Progress Tracking
@@ -872,23 +873,23 @@ p.draw = function() {
 ```javascript
 // sketch.js
 function getSlideProgress() {
-  const slideFrames = p.frameCount % p.framesPerSlide
-  return slideFrames / p.framesPerSlide
+  const slideFrames = p.frameCount % p.framesPerSlide;
+  return slideFrames / p.framesPerSlide;
 }
 
-p.draw = function() {
-  const progress = getSlideProgress()
-  
+p.draw = function () {
+  const progress = getSlideProgress();
+
   // Fade in at start
   if (progress < 0.1) {
-    p.tint(255, progress * 10 * 255)
+    p.tint(255, progress * 10 * 255);
   }
-  
+
   // Fade out at end
   if (progress > 0.9) {
-    p.tint(255, (1 - progress) * 10 * 255)
+    p.tint(255, (1 - progress) * 10 * 255);
   }
-}
+};
 ```
 
 ---

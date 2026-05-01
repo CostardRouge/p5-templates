@@ -7,7 +7,7 @@ import iterators from "@/p5/utils/iterators.js";
 export default function neonLine( {
   innerCircleSize = 10,
   shadowsCount = 3,
-  graphics = window,
+  graphics = getP5(),
   vectorsStep = 0.05,
   vectors,
   index,
@@ -35,7 +35,7 @@ export default function neonLine( {
         );
 
         graphics.fill( colors.rainbow( {
-          opacityFactor: map(
+          opacityFactor: graphics.map(
             shadowIndex,
             0,
             shadowsCount,
@@ -44,12 +44,12 @@ export default function neonLine( {
           ),
           hueOffset: easing.easeOutSine( shadowProgression * shadowIndex ),
           hueIndex:
-              map(
+              graphics.map(
                 Math.sin( animation.angle + shadowProgression + totalProgression ),
                 -1,
                 1,
-                -PI,
-                PI
+                -graphics.PI,
+                graphics.PI
               ) * 4,
         } ) );
 

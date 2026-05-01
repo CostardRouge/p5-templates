@@ -4,7 +4,7 @@ import {
 
 export default function imagePolaroidLayout( opts ) {
   const imgs = getAssets( opts );
-  const w = width / 2;
+  const w = p.width / 2;
   const h = ( w * 4 ) / 3;
 
   imgs.forEach( (

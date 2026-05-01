@@ -19,10 +19,11 @@ Located at `src/hooks/usePersistedViewMode.ts`, this hook provides:
 ### Usage
 
 #### Recordings Page
+
 ```typescript
 const [view, setView] = usePersistedViewMode<"table" | "cards">(
-  "recordings-view-mode", 
-  "table"
+  "recordings-view-mode",
+  "table",
 );
 ```
 
@@ -30,10 +31,11 @@ Storage key: `recordings-view-mode`
 Default: `table`
 
 #### Templates Page
+
 ```typescript
 const [view, setView] = usePersistedViewMode<"grid" | "list">(
-  "templates-view-mode", 
-  "grid"
+  "templates-view-mode",
+  "grid",
 );
 ```
 
@@ -43,9 +45,11 @@ Default: `grid`
 ## Features
 
 ### 1. Persistent Preference
+
 User's view mode choice is saved to localStorage and restored on page reload.
 
 ### 2. Minimal Layout Reflow
+
 The hook loads from localStorage immediately after the component mounts (after hydration), resulting in a single quick update. This prevents hydration errors while keeping the flash to a minimum.
 
 ### 3. Error Handling
@@ -60,6 +64,7 @@ The implementation handles several error scenarios:
 ### 4. Type Safety
 
 The hook validates stored values against the expected union type:
+
 ```typescript
 type ViewMode = "grid" | "list" | "table" | "cards";
 ```
@@ -101,14 +106,16 @@ If a stored value doesn't match the expected type for that page, it falls back t
 ### Clearing Preferences
 
 To reset to defaults, run in browser console:
+
 ```javascript
-localStorage.removeItem('recordings-view-mode');
-localStorage.removeItem('templates-view-mode');
+localStorage.removeItem("recordings-view-mode");
+localStorage.removeItem("templates-view-mode");
 ```
 
 Or clear all:
+
 ```javascript
-localStorage.clear();
+localStorage.p.clear();
 ```
 
 ## Benefits

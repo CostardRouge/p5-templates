@@ -11,6 +11,9 @@ import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -23,15 +26,19 @@ const sketchState = {
 events.register(
   "engine-window-preload",
   () => {
-    sketchState.interactive.image = loadImage( "/assets/images/handpointing.png" );
+    const p = getP5();
+
+    sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
   }
 );
 
 sketch.setup(
   ( ) => {
+    const p = getP5();
+
     sketchState.threeDimensionGraphics = graphics.createAutoResizableGraphics(
-      width,
-      height,
+      p.width,
+      p.height,
       "webgl"
     );
 
@@ -44,8 +51,10 @@ sketch.setup(
 sketch.draw( (
   time, center
 ) => {
-  clear();
-  background( ...( options.sketch.backgroundColor ?? [
+  const p = getP5();
+
+  p.clear();
+  p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );
 
@@ -59,14 +68,14 @@ sketch.draw( (
   const rows = options.sketch.cylinder?.rows ?? 12;
 
   const rotationEnabled = options.sketch.rotation?.enabled ?? true;
-  const angleMax = options.sketch.rotation?.angleMax ?? ( PI / 16 );
+  const angleMax = options.sketch.rotation?.angleMax ?? ( p.PI / 16 );
   const xMultiplier = options.sketch.rotation?.xMultiplier ?? 2;
   const yMultiplier = options.sketch.rotation?.yMultiplier ?? 3;
   const zMultiplier = options.sketch.rotation?.zMultiplier ?? 1;
 
   const rX = rotationEnabled
     ? mappers.fn(
-      sin( animation.angle * xMultiplier ),
+      p.sin( animation.angle * xMultiplier ),
       -1,
       1,
       -angleMax,
@@ -75,7 +84,7 @@ sketch.draw( (
     : 0;
   const rY = rotationEnabled
     ? mappers.fn(
-      cos( animation.angle * yMultiplier ),
+      p.cos( animation.angle * yMultiplier ),
       -1,
       1,
       -angleMax,
@@ -84,7 +93,7 @@ sketch.draw( (
     : 0;
   const rZ = rotationEnabled
     ? mappers.fn(
-      sin( animation.angle * zMultiplier ),
+      p.sin( animation.angle * zMultiplier ),
       -1,
       1,
       -angleMax,
@@ -96,8 +105,8 @@ sketch.draw( (
   sketchState.threeDimensionGraphics.rotateY( rY );
   sketchState.threeDimensionGraphics.rotateZ( rZ );
 
-  noiseSeed( options.sketch.noise?.seed ?? 488 );
-  noiseDetail(
+  p.noiseSeed( options.sketch.noise?.seed ?? 488 );
+  p.noiseDetail(
     options.sketch.noise?.detail ?? 4,
     options.sketch.noise?.falloff ?? 0.5
   );
@@ -144,13 +153,13 @@ sketch.draw( (
 
     for ( let col = 0; col < columns; col++ ) {
       const colProgression = col / columns;
-      const theta = colProgression * TWO_PI;
+      const theta = colProgression * p.TWO_PI;
 
       for ( let row = 0; row < rows; row++ ) {
         const rowProgression = row / ( rows - 1 );
         const progression = ( col * rows + row ) / ( totalPoints - 1 );
 
-        const px = layerRadius * cos( theta );
+        const px = layerRadius * p.cos( theta );
         const py = mappers.fn(
           rowProgression,
           0,
@@ -158,16 +167,16 @@ sketch.draw( (
           -cylinderHeight / 2,
           cylinderHeight / 2
         );
-        const pz = layerRadius * sin( theta );
+        const pz = layerRadius * p.sin( theta );
 
-        const rotationNoise = noise(
+        const rotationNoise = p.noise(
           colProgression * noiseXMultiplier + rX,
           rowProgression * noiseYMultiplier + rY,
           layerProgression * noiseLayerProgressionMultiplier + progression * noiseProgressionMultiplier + rZ
         );
 
         const opacityFactor = mappers.fn(
-          sin( rotationNoise * TAU + progression * progressionMultiplier + layerProgression * layerProgressionMultiplier ),
+          p.sin( rotationNoise * p.TAU + progression * progressionMultiplier + layerProgression * layerProgressionMultiplier ),
           -1,
           1,
           opacityMax,
@@ -181,8 +190,8 @@ sketch.draw( (
             rotationNoise,
             0,
             1,
-            -PI,
-            PI,
+            -p.PI,
+            p.PI,
             easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.linear
           ) * hueIndexMultiplier,
           opacityFactor,
@@ -197,7 +206,7 @@ sketch.draw( (
     }
   }
 
-  image(
+  p.image(
     sketchState.threeDimensionGraphics,
     0,
     0
