@@ -68,10 +68,12 @@ export default function ControlledColorInput( {
           <div className="flex flex-row gap-2 w-full">
             <div className="w-1/4">
               <input
+                id={name}
                 type="color"
                 className="h-8 w-full rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
                 onChange={( e ) => handleColorChange( e.target.value )}
                 value={rgbaToHex( currentValue )}
+                aria-label="Color picker"
               />
             </div>
 
@@ -102,6 +104,7 @@ export default function ControlledColorInput( {
                 step={1}
                 value={a}
                 onChange={( e ) => handleAlphaChange( Number( e.target.value ) )}
+                aria-label="Alpha transparency"
               />
 
               <span className="text-xs font-mono bg-theme/20 px-2 py-0.5 rounded min-w-[3rem] text-center border border-theme/30">

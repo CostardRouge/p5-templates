@@ -131,6 +131,7 @@ export default function FieldRenderer( {
             />
             <input
               type="number"
+              aria-label={`${ config.label ?? registeredName } value`}
               className="text-xs font-mono bg-theme/20 px-1 py-0.5 rounded w-14 text-center border border-theme/30 focus:outline-none focus:ring-1 focus:ring-theme"
               value={currentValue != null ? Number( currentValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 )}
               step={config.step}
