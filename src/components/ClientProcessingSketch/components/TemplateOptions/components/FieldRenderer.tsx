@@ -1,6 +1,5 @@
 import {
   ChevronDown,
-  RotateCcw,
 } from "lucide-react";
 import {
   get, useFormContext, useWatch
@@ -308,29 +307,29 @@ export default function FieldRenderer( {
         config.component !== "hidden" &&
         config.label &&
         !hideLabel && (
-        <label
-          htmlFor={registeredName}
-          className={`select-none ${
-            isModified
-              ? "font-medium cursor-pointer"
-              : "text-gray-400"
-          }`}
-          onDoubleClick={isModified ? handleReset : undefined}
-          title={isModified ? "Double-click to reset" : undefined}
-        >
-          {config.label}
+        <div className="flex items-center gap-1">
+          <label
+            htmlFor={registeredName}
+            className={`select-none ${
+              isModified
+                ? "font-medium"
+                : "text-gray-400"
+            }`}
+          >
+            {config.label}
+          </label>
           {isModified && (
             <button
               type="button"
               onClick={handleReset}
               tabIndex={-1}
               title="Reset to saved value"
-              className="ml-1 inline-flex md:hidden items-center opacity-60 hover:opacity-100 align-middle"
+              className="text-gray-400 hover:text-foreground transition-colors"
             >
-              <RotateCcw className="w-2.5 h-2.5" />
+              · reset
             </button>
           )}
-        </label>
+        </div>
       )}
 
       {renderInput()}
