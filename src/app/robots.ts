@@ -1,5 +1,9 @@
-import type { MetadataRoute } from "next";
-import { getBaseUrl } from "@/lib/seo";
+import type {
+  MetadataRoute
+} from "next";
+import {
+  getBaseUrl
+} from "@/lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = getBaseUrl();
@@ -9,9 +13,13 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/_next/", "/sw.js"],
+        disallow: [
+          "/api/",
+          "/_next/",
+          "/sw.js"
+        ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${ baseUrl }/sitemap.xml`,
   };
 }

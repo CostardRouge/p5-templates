@@ -11,7 +11,9 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   interactive: {
@@ -26,7 +28,8 @@ const sketchState = {
 events.register(
   "engine-window-preload",
   () => {
-  const p = getP5();
+    const p = getP5();
+
     sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
   }
 );
@@ -35,6 +38,7 @@ sketch.setup( ( {
   canvas
 } ) => {
   const p = getP5();
+
   sketchState.shape.graphics = p.createGraphics(
     p.width,
     p.height,
@@ -155,6 +159,7 @@ const getBackgroundColor = () =>
 
 sketch.draw( () => {
   const p = getP5();
+
   p.background( ...getBackgroundColor() );
 
   const size = options.sketch?.shape?.size * p.width ?? p.width;

@@ -8,7 +8,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
@@ -24,7 +26,8 @@ const shape = [
 events.register(
   "engine-mouse-dragged",
   () => {
-  const p = getP5();
+    const p = getP5();
+
     shape.push( p.createVector(
       p.mouseX,
       p.mouseY
@@ -35,7 +38,7 @@ events.register(
 events.register(
   "engine-mouse-released",
   () => {
-  const p = getP5();
+    const p = getP5();
     const bodyObject = {
       body: Bodies.fromVertices(
         p.mouseX,
@@ -170,6 +173,7 @@ function addBoundary(
 
 sketch.setup( () => {
   const p = getP5();
+
   canvases.mask = p.createGraphics(
     p.width,
     p.height
@@ -226,6 +230,7 @@ sketch.draw( (
   time, center, favoriteColor
 ) => {
   const p = getP5();
+
   p.background( ...options.colors.background );
 
   Engine.update( matter.engine );

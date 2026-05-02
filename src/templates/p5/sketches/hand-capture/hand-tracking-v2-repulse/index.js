@@ -222,7 +222,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 
@@ -240,7 +240,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 } );
@@ -271,6 +271,7 @@ const interactionIndices = [
 ];
 
 function createHandInteractionBodies( hand ) {
+  const p = getP5();
   const interactionPoints = interactionIndices
     .map( ( i ) => hand[ i ] )
     .filter( Boolean );
@@ -349,6 +350,7 @@ function applyRepulsionFromHands(
   maxForce = 0.02,
   repulseDistance = 600
 ) {
+  const p = getP5();
   const hands = mediapipe.tasks?.hands?.result?.landmarks ?? [
   ];
 

@@ -12,7 +12,9 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import mappers from "@/p5/utils/mappers.js";
 import sketch from "@/p5/utils/sketch.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   photoGraphics: null,
@@ -144,6 +146,7 @@ function handlePointerSelect( screenPoint ) {
 
 sketch.setup( () => {
   const p = getP5();
+
   p.background( ...options.sketch.backgroundColor );
   sketchState.photoGraphics = graphics.createAutoResizableGraphics(
     p.width,
@@ -159,7 +162,7 @@ sketch.setup( () => {
 events.register(
   "engine-canvas-mouse-clicked",
   ( event ) => {
-  const p = getP5();
+    const p = getP5();
     const screenPoint = getInternalCanvasPoint( event );
 
     handlePointerSelect( screenPoint );
@@ -196,6 +199,7 @@ function displayPhoto( img ) {
 
 sketch.draw( () => {
   const p = getP5();
+
   p.clear();
   p.background( ...options.sketch.backgroundColor );
 

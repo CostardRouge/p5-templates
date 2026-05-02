@@ -9,19 +9,21 @@ import {
   findSketchMeta, resolveSketchPath
 } from "@/engines/metadata";
 
-export async function getJSONSketchOptions( sketchName: string, engineId: string ): Promise<Partial<SketchOption>> {
+export async function getJSONSketchOptions(
+  sketchName: string, engineId: string
+): Promise<Partial<SketchOption>> {
   try {
-    const sketchPath = resolveSketchPath( sketchName, engineId );
+    const sketchPath = resolveSketchPath(
+      sketchName,
+      engineId
+    );
 
     if ( !sketchPath ) {
       return {
       };
     }
 
-    const options = await import(
-      /* webpackInclude: /options\.json$/ */
-      `@/p5/sketches/${ sketchPath }/options.json`
-    );
+    const options = await import( `@/p5/sketches/${ sketchPath }/options.json` );
 
     return options.default || options;
   } catch {
@@ -35,8 +37,13 @@ export type SketchMeta = {
   formConfiguration?: Record<string, FieldConfig>;
 };
 
-export async function getSketchMeta( sketchName: string, engineId: string ): Promise<SketchMeta> {
-  const meta = findSketchMeta( sketchName, engineId );
+export async function getSketchMeta(
+  sketchName: string, engineId: string
+): Promise<SketchMeta> {
+  const meta = findSketchMeta(
+    sketchName,
+    engineId
+  );
 
   if ( !meta?.hasSketchForm ) {
     return {
@@ -44,10 +51,7 @@ export async function getSketchMeta( sketchName: string, engineId: string ): Pro
   }
 
   try {
-    return await import(
-      /* webpackInclude: /options\.ts$/ */
-      `@/p5/sketches/${ meta.sketchPath }/options.ts`
-    );
+    return await import( `@/p5/sketches/${ meta.sketchPath }/options.ts` );
   } catch {
     return {
     };

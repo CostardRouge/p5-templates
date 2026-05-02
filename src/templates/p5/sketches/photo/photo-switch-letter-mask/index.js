@@ -91,11 +91,6 @@ sketch.draw( (
   for ( let i = 0; i < points.length; i++ ) {
     const pointsProgression = i / ( points.length - 1 );
 
-    console.log( getFixedOrVariableOption(
-      "strokeWeight",
-      pointsProgression
-    ) );
-
     canvases.mask.strokeWeight( getFixedOrVariableOption(
       "strokeWeight",
       pointsProgression

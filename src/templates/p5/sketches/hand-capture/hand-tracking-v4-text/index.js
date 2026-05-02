@@ -259,7 +259,7 @@ sketch.draw( (
   //       p.CENTER,
   //       p.CENTER
   //     ],
-  //     blendMode: EXCLUSION
+  //     blendMode: p.EXCLUSION,
   //   }
   // );
 
@@ -277,7 +277,7 @@ sketch.draw( (
   //       p.CENTER,
   //       p.CENTER
   //     ],
-  //     blendMode: EXCLUSION
+  //     blendMode: p.EXCLUSION
   //   }
   // );
 } );
@@ -297,6 +297,7 @@ function updateHandBodies() {
 }
 
 function createHandInteractionBodies( hand ) {
+  const p = getP5();
   const interactionPoints = interactionIndices
     .map( ( i ) => hand[ i ] )
     .filter( Boolean );
@@ -398,6 +399,7 @@ function applyRestoringForcesTo(
 }
 
 function addLetterBoxes( text ) {
+  const p = getP5();
   const letterBodies = [
   ];
 
@@ -451,6 +453,8 @@ function addLetterBoxes( text ) {
 function drawLetterBodies(
   graphics, bodies
 ) {
+  const p = getP5();
+
   for ( const body of bodies ) {
     const {
       x, y

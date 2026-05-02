@@ -24,7 +24,8 @@ export function fuzzyMatch(
 
   if ( !search ) return {
     score: 0,
-    matches: []
+    matches: [
+    ]
   };
 
   // Split search into words

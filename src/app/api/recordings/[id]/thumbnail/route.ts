@@ -79,9 +79,15 @@ export async function GET(
     }
 
     // Fall back to sketch template thumbnail
-    const [ templateEngine, ...templateNameParts ] = job.template.split( "/" );
+    const [
+      templateEngine,
+      ...templateNameParts
+    ] = job.template.split( "/" );
     const templateName = templateNameParts.join( "/" );
-    const templateThumbnailUrl = getSketchThumbnailURL( templateEngine, templateName );
+    const templateThumbnailUrl = getSketchThumbnailURL(
+      templateEngine,
+      templateName
+    );
 
     // Convert relative URL to absolute URL for redirect
     const absoluteUrl = new URL(

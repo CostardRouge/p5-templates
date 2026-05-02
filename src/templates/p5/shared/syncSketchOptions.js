@@ -28,7 +28,10 @@ export function setSketchOptions(
     if ( !( key in merged ) ) delete current[ key ];
   }
 
-  Object.assign( current, merged );
+  Object.assign(
+    current,
+    merged
+  );
   globalThis.sketchOptions = current;
 
   window.dispatchEvent( new CustomEvent(

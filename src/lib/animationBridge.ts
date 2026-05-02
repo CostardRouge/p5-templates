@@ -17,7 +17,7 @@ export interface AnimationBridge {
   getProgression(): number;
 
   /** Seek to a specific progression in [0, 1]. */
-  setProgression(value: number): void;
+  setProgression( value: number ): void;
 
   /** Pause the engine draw loop. */
   pause(): void;
@@ -33,13 +33,14 @@ export interface AnimationBridge {
    * The callback is called once per draw frame.
    * Returns an unsubscribe function.
    */
-  subscribe(cb: (progression: number) => void): () => void;
+  subscribe( cb: ( progression: number ) => void ): () => void;
 }
 
-type ReadyCallback = (bridge: AnimationBridge) => (() => void) | void;
+type ReadyCallback = ( bridge: AnimationBridge ) => ( () => void ) | void;
 
 let current: AnimationBridge | null = null;
-const pending: ReadyCallback[] = [];
+const pending: ReadyCallback[] = [
+];
 
 /**
  * Called by an engine once it has fully initialised.
@@ -81,7 +82,10 @@ export function onAnimationBridgeReady( cb: ReadyCallback ): () => void {
   return () => {
     const idx = pending.indexOf( cb );
 
-    if ( idx !== -1 ) pending.splice( idx, 1 );
+    if ( idx !== -1 ) pending.splice(
+      idx,
+      1
+    );
   };
 }
 

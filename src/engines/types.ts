@@ -1,4 +1,6 @@
-import type { SketchOption } from "@/types/sketch.types";
+import type {
+  SketchOption
+} from "@/types/sketch.types";
 
 /* ------------------------------------------------------------------ */
 /*  Engine event system                                                */

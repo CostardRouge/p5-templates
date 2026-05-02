@@ -32,7 +32,12 @@ export const formValues = {
     enabled: true,
     minLayers: 30,
   },
-  backgroundColor: [ 0, 0, 0, 255 ],
+  backgroundColor: [
+    0,
+    0,
+    0,
+    255
+  ],
   rotation: {
     enabled: true,
     angleMax: 0.6,

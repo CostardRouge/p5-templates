@@ -1,5 +1,7 @@
 import * as common from "@/p5/utils/common.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 import neonLine from "@/p5/utils/visuals/neonLine.js";
 
 const indexFingerJointIndices = [

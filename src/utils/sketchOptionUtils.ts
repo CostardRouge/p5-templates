@@ -83,12 +83,8 @@ export function createFixedOrVariableOption(
           step,
         },
         easingFn: {
-          component: "select",
-          label: `${ capitalizedOptionName } easing`,
-          options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-            label: easingFunctionName,
-            value: easingFunctionName,
-          } ) ),
+          component: "easing",
+          label: `${ capitalizedOptionName } easing`
         },
       },
     },
@@ -198,12 +194,8 @@ export function createVariableOption(
         step: 0.1,
       },
       easingFn: {
-        component: "select",
+        component: "easing",
         label: `${ capitalizedOptionName } easing`,
-        options: Object.keys( easing ).map( ( easingFunctionName ) => ( {
-          label: easingFunctionName,
-          value: easingFunctionName,
-        } ) ),
       },
     },
   } );

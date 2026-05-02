@@ -17,7 +17,9 @@ export default function ResetSettingsButton( {
   basePath,
 }: ResetSettingsButtonProps ) {
   const [
-    { sketchFormValues }
+    {
+      sketchFormValues
+    }
   ] = useSketch();
   const {
     setValue

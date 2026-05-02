@@ -1,6 +1,8 @@
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues.js";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration.js";
-import { t } from "tar";
+import {
+  t
+} from "tar";
 
 export const formValues = {
   images: [

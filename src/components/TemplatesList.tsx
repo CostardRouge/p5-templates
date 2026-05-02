@@ -12,6 +12,8 @@ import React, {
 import type {
   TemplateCategory
 } from "@/app/page";
+import Link from "next/link";
+
 import HardLink from "@/components/HardLink";
 import {
   usePersistedViewMode
@@ -319,7 +321,7 @@ function TemplateCard( {
 } ) {
   if ( view === "grid" ) {
     return (
-      <HardLink
+      <Link
         href={href}
         className="group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5"
       >
@@ -361,13 +363,13 @@ function TemplateCard( {
             </p>
           </div>
         </div>
-      </HardLink>
+      </Link>
     );
   }
 
   // list view
   return (
-    <HardLink
+    <Link
       href={href}
       className="group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5"
     >
@@ -401,6 +403,6 @@ function TemplateCard( {
       <div className="flex-shrink-0 text-foreground/40 group-hover:text-foreground/60 transition-colors">
         <span className="text-xs sm:text-sm">→</span>
       </div>
-    </HardLink>
+    </Link>
   );
 }

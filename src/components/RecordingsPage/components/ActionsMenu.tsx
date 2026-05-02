@@ -45,8 +45,6 @@ export default function ActionsMenu( {
 }: ActionsMenuProps ) {
   const fileInputRef = useRef<HTMLInputElement>( null );
 
-
-
   const handleAction = async(
     action: string,
     endpoint: string,

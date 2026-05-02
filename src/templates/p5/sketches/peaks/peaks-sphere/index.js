@@ -11,7 +11,9 @@ import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -24,14 +26,16 @@ const sketchState = {
 events.register(
   "engine-window-preload",
   () => {
-  const p = getP5();
+    const p = getP5();
+
     sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
   }
 );
 
 sketch.setup(
   ( ) => {
-  const p = getP5();
+    const p = getP5();
+
     sketchState.threeDimensionGraphics = graphics.createAutoResizableGraphics(
       p.width,
       p.height,
@@ -48,6 +52,7 @@ sketch.draw( (
   time, center
 ) => {
   const p = getP5();
+
   p.clear();
   p.background( ...( options.sketch.backgroundColor ?? [
     0

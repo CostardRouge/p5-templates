@@ -5,7 +5,9 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const getEasing = (
   name, fallback = easing.easeInOutExpo
@@ -15,6 +17,7 @@ const getEasing = (
 // ---------- setup/draw ----------
 sketch.setup( () => {
   const p = getP5();
+
   p.background( ...options.sketch.backgroundColor );
 } );
 
@@ -22,6 +25,7 @@ sketch.draw( (
   time, center
 ) => {
   const p = getP5();
+
   p.clear();
   p.background( ...options.sketch.backgroundColor );
 

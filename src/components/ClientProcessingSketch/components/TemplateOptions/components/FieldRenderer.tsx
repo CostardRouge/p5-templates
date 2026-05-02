@@ -64,7 +64,11 @@ export default function FieldRenderer( {
     name: registeredName,
   } );
 
-  const defaultValue = get( defaultValues ?? {}, registeredName );
+  const defaultValue = get(
+    defaultValues ?? {
+    },
+    registeredName
+  );
   const isModified =
     JSON.stringify( currentValue ) !== JSON.stringify( defaultValue );
 
@@ -135,13 +139,30 @@ export default function FieldRenderer( {
               onChange={( e ) => {
                 const parsed = config.step && config.step < 1
                   ? parseFloat( e.target.value )
-                  : parseInt( e.target.value, 10 );
+                  : parseInt(
+                    e.target.value,
+                    10
+                  );
+
                 if ( !isNaN( parsed ) ) {
                   const clamped =
                     config.min !== undefined && config.max !== undefined
-                      ? Math.min( config.max, Math.max( config.min, parsed ) )
+                      ? Math.min(
+                        config.max,
+                        Math.max(
+                          config.min,
+                          parsed
+                        )
+                      )
                       : parsed;
-                  setValue( registeredName, clamped, { shouldDirty: true } );
+
+                  setValue(
+                    registeredName,
+                    clamped,
+                    {
+                      shouldDirty: true
+                    }
+                  );
                 }
               }}
             />

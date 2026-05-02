@@ -53,14 +53,34 @@ export function useFormState( {
   // Store initial values to detect actual changes
   const initialValuesRef = useRef<SketchOptionInput>( initOptions( initialOptions ) );
 
-  // Watch for changes and propagate to parent
+  // Watch for changes and propagate to parent (throttled to ~60 Hz via rAF)
+  const rafRef = useRef<number | null>( null );
+  const latestValueRef = useRef<SketchOption | null>( null );
+
   useEffect(
     () => {
       const subscription = watch( ( value ) => {
-        onOptionsChange( value as SketchOption );
+        latestValueRef.current = value as SketchOption;
+
+        if ( rafRef.current === null ) {
+          rafRef.current = requestAnimationFrame( () => {
+            rafRef.current = null;
+
+            if ( latestValueRef.current !== null ) {
+              onOptionsChange( latestValueRef.current );
+            }
+          } );
+        }
       } );
 
-      return () => subscription.unsubscribe();
+      return () => {
+        subscription.unsubscribe();
+
+        if ( rafRef.current !== null ) {
+          cancelAnimationFrame( rafRef.current );
+          rafRef.current = null;
+        }
+      };
     },
     [
       watch,

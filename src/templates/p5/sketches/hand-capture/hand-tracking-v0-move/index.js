@@ -242,7 +242,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 
@@ -260,7 +260,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 } );
@@ -291,6 +291,7 @@ const interactionIndices = [
 ];
 
 function createHandInteractionBodies( hand ) {
+  const p = getP5();
   const interactionPoints = interactionIndices
     .map( ( i ) => hand[ i ] )
     .filter( Boolean );

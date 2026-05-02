@@ -27,8 +27,8 @@ const STEP_LABELS: Record<string, string> = {
   "launching-browser": "Launching browser",
   "saving-frames": "Capturing frames",
   "encoding-frames": "Encoding video",
-  "archiving": "Archiving",
-  "s3": "Uploading to S3",
+  archiving: "Archiving",
+  s3: "Uploading to S3",
 };
 
 function getCurrentStepLabel(
@@ -144,7 +144,9 @@ export default function CompactProgressBar( {
         } );
       }
     },
-    [ currentSlideIndex ]
+    [
+      currentSlideIndex
+    ]
   );
 
   const formatTime = ( seconds: number ) => {
@@ -166,12 +168,18 @@ export default function CompactProgressBar( {
   const recSteps = ( recordingSteps?.recording as any )?.steps;
   const isMultiSlide = !!recSteps && Object.keys( recSteps ).some( ( k ) => k.startsWith( "slide-" ) );
   const slideKeys = isMultiSlide
-    ? Object.keys( recSteps ).filter( ( k ) => k.startsWith( "slide-" ) ).sort()
-    : [];
+    ? Object.keys( recSteps ).filter( ( k ) => k.startsWith( "slide-" ) )
+      .sort()
+    : [
+    ];
   const hasPopover = isMultiSlide || steps.length > 0;
 
   const compactStepLabel = recordingSteps
-    ? getCurrentStepLabel( recordingSteps, currentSlideIndex, slideOptions )
+    ? getCurrentStepLabel(
+      recordingSteps,
+      currentSlideIndex,
+      slideOptions
+    )
     : ( currentStep?.name ?? "Processing..." );
 
   function slideAggregate( idx: number ) {
@@ -343,10 +351,13 @@ export default function CompactProgressBar( {
                     )}
 
                     {/* Per-slide rows */}
-                    {slideKeys.map( ( key, idx ) => {
+                    {slideKeys.map( (
+                      key, idx
+                    ) => {
                       const status = slideStatus( idx );
                       const aggregate = slideAggregate( idx );
-                      const ss = recSteps[ key ]?.steps ?? {};
+                      const ss = recSteps[ key ]?.steps ?? {
+                      };
                       const isExpanded = expandedSlides.has( idx );
                       const slideName = slideOptions?.[ idx ]?.name ?? `Slide ${ idx + 1 }`;
 
@@ -425,7 +436,10 @@ export default function CompactProgressBar( {
                           {/* Expanded sub-steps */}
                           {isExpanded && (
                             <div className="ml-7 mt-1 space-y-1">
-                              {Object.entries( ss ).map( ( [ subKey, subVal ] ) => (
+                              {Object.entries( ss ).map( ( [
+                                subKey,
+                                subVal
+                              ] ) => (
                                 <SubStepRow
                                   key={subKey}
                                   label={STEP_LABELS[ subKey ] ?? subKey}
@@ -442,15 +456,16 @@ export default function CompactProgressBar( {
                     {/* Shared: Uploading */}
                     {( recordingSteps?.uploading as any )?.steps && (
                       <div className="pt-1 border-t border-border/50 space-y-1.5">
-                        {Object.entries( ( recordingSteps!.uploading as any ).steps ).map(
-                          ( [ key, val ] ) => (
-                            <SharedStepRow
-                              key={key}
-                              label={STEP_LABELS[ key ] ?? key}
-                              percentage={( val as any )?.percentage ?? 0}
-                            />
-                          )
-                        )}
+                        {Object.entries( ( recordingSteps!.uploading as any ).steps ).map( ( [
+                          key,
+                          val
+                        ] ) => (
+                          <SharedStepRow
+                            key={key}
+                            label={STEP_LABELS[ key ] ?? key}
+                            percentage={( val as any )?.percentage ?? 0}
+                          />
+                        ) )}
                       </div>
                     )}
                   </>
@@ -460,80 +475,80 @@ export default function CompactProgressBar( {
                     {steps.map( (
                       step, index
                     ) => (
-                    <div
-                      key={step.id}
-                    className={`flex items-start gap-2 p-2 rounded-lg transition-all ${
-                      step.status === "active"
-                        ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
-                        : step.status === "completed"
-                          ? "bg-green-50 dark:bg-green-900/10"
-                          : "bg-gray-50 dark:bg-gray-900/30"
-                    }`}
-                  >
-                    {/* Status Icon */}
-                    <div className="flex-shrink-0 mt-0.5">
-                      {step.status === "completed" && (
-                        <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                          <Check className="w-3 h-3 text-white" />
+                      <div
+                        key={step.id}
+                        className={`flex items-start gap-2 p-2 rounded-lg transition-all ${
+                          step.status === "active"
+                            ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+                            : step.status === "completed"
+                              ? "bg-green-50 dark:bg-green-900/10"
+                              : "bg-gray-50 dark:bg-gray-900/30"
+                        }`}
+                      >
+                        {/* Status Icon */}
+                        <div className="flex-shrink-0 mt-0.5">
+                          {step.status === "completed" && (
+                            <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                          {step.status === "active" && (
+                            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                              <Loader2 className="w-3 h-3 text-white animate-spin" />
+                            </div>
+                          )}
+                          {step.status === "pending" && (
+                            <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                              <span className="text-[10px] text-gray-600 dark:text-gray-400 font-medium">
+                                {index + 1}
+                              </span>
+                            </div>
+                          )}
+                          {step.status === "error" && (
+                            <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
+                              <span className="text-white text-[10px]">✕</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {step.status === "active" && (
-                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                          <Loader2 className="w-3 h-3 text-white animate-spin" />
-                        </div>
-                      )}
-                      {step.status === "pending" && (
-                        <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                          <span className="text-[10px] text-gray-600 dark:text-gray-400 font-medium">
-                            {index + 1}
-                          </span>
-                        </div>
-                      )}
-                      {step.status === "error" && (
-                        <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
-                          <span className="text-white text-[10px]">✕</span>
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Step Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <span
-                          className={`text-xs font-medium truncate ${
-                            step.status === "active"
-                              ? "text-blue-700 dark:text-blue-300"
-                              : step.status === "completed"
-                                ? "text-green-700 dark:text-green-300"
-                                : step.status === "error"
-                                  ? "text-red-700 dark:text-red-300"
-                                  : "text-gray-500 dark:text-gray-400"
-                          }`}
-                        >
-                          {step.name}
-                        </span>
-                        {step.percentage !== undefined &&
+                        {/* Step Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span
+                              className={`text-xs font-medium truncate ${
+                                step.status === "active"
+                                  ? "text-blue-700 dark:text-blue-300"
+                                  : step.status === "completed"
+                                    ? "text-green-700 dark:text-green-300"
+                                    : step.status === "error"
+                                      ? "text-red-700 dark:text-red-300"
+                                      : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              {step.name}
+                            </span>
+                            {step.percentage !== undefined &&
                           step.status === "active" && (
-                          <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
-                            {step.percentage.toPrecision( 3 )}%
-                          </span>
-                        )}
-                      </div>
+                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                                {step.percentage.toPrecision( 3 )}%
+                              </span>
+                            )}
+                          </div>
 
-                      {/* Step Progress Bar */}
-                      {step.status === "active" &&
+                          {/* Step Progress Bar */}
+                          {step.status === "active" &&
                         step.percentage !== undefined && (
-                        <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-blue-500 transition-all duration-300"
-                            style={{
-                              width: `${ step.percentage }%`,
-                            }}
-                          />
+                            <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-blue-500 transition-all duration-300"
+                                style={{
+                                  width: `${ step.percentage }%`,
+                                }}
+                              />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    </div>
+                      </div>
                     ) )}
                   </>
                 )}

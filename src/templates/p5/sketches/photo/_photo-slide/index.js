@@ -6,7 +6,9 @@ import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const canvases = {
   imageBuffer: undefined,
@@ -63,6 +65,7 @@ function drawImageWithMask( {
 
 sketch.setup( () => {
   const p = getP5();
+
   canvases.maskBuffer = p.createGraphics(
     p.width,
     p.height
@@ -88,6 +91,7 @@ sketch.draw( (
   time, center, favoriteColor
 ) => {
   const p = getP5();
+
   p.background( ...options.colors.background );
 
   const imageObjects = cache.get( "images" );
@@ -204,7 +208,7 @@ sketch.draw( (
           p.CENTER,
           p.CENTER
         ],
-        blendMode: EXCLUSION,
+        blendMode: p.EXCLUSION,
       }
     );
   }

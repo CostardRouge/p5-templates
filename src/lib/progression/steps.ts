@@ -26,31 +26,44 @@ export const recordingSketchSteps: RecordingProgressionSteps = {
 
 function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
   const perSlideSteps = slides.reduce(
-    ( acc: Record<string, any>, _slide: SlideOption, slideIndex: number ) => {
+    (
+      acc: Record<string, any>, _slide: SlideOption, slideIndex: number
+    ) => {
       return {
         ...acc,
         [ `slide-${ slideIndex }` ]: {
           steps: {
-            "saving-frames": { percentage: 0 },
-            "encoding-frames": { percentage: 0 },
+            "saving-frames": {
+              percentage: 0
+            },
+            "encoding-frames": {
+              percentage: 0
+            },
           },
         },
       };
     },
-    {}
+    {
+    }
   );
 
   return {
     recording: {
       steps: {
-        "launching-browser": { percentage: 0 },
+        "launching-browser": {
+          percentage: 0
+        },
         ...perSlideSteps,
       },
     },
     uploading: {
       steps: {
-        archiving: { percentage: 0 },
-        s3: { percentage: 0 },
+        archiving: {
+          percentage: 0
+        },
+        s3: {
+          percentage: 0
+        },
       },
     },
   };

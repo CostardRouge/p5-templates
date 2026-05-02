@@ -13,7 +13,8 @@
     "format": "npm run lint:fix",
     "check": "npm run lint",
     "postinstall": "npx prisma generate",
-    "setup:notifications": "node scripts/generate-vapid-keys.mjs"
+    "setup:notifications": "node scripts/generate-vapid-keys.mjs",
+    "prepare": "husky"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.825.0",
@@ -64,7 +65,7 @@
     "@types/jest": "^30.0.0",
     "@types/mime-types": "^2.1.4",
     "@types/node": "^20",
-    "@types/p5": "^1.9.4",
+    "@types/p5": "^1.7.7",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.3",
@@ -79,6 +80,7 @@
     "postcss": "^8",
     "prisma": "^6.19.0",
     "tailwindcss": "^3.4.1",
+    "husky": "^9.1.7",
     "ts-jest": "^29.4.5",
     "typescript": "^5"
   }

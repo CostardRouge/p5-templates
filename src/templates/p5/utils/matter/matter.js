@@ -190,7 +190,7 @@ sketch.draw( (
   //       CENTER,
   //       CENTER
   //     ],
-  //     blendMode: EXCLUSION
+  //     blendMode: p.EXCLUSION
   //   }
   // );
 
@@ -208,7 +208,7 @@ sketch.draw( (
   //       CENTER,
   //       CENTER
   //     ],
-  //     blendMode: EXCLUSION
+  //     blendMode: p.EXCLUSION
   //   }
   // );
 } );

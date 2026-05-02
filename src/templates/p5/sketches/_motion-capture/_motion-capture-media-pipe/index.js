@@ -1,7 +1,9 @@
 import sketch from "@/p5/utils/sketch.js";
 import options from "@/p5/utils/options.js";
 import events from "@/p5/utils/events.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 // import {
 //   FaceDetector,
@@ -101,6 +103,7 @@ events.register(
 
 sketch.setup( () => {
   const p = getP5();
+
   p.background( ...options.colors.background );
 
   mediapipe.capture.element = createCapture(
@@ -244,6 +247,7 @@ sketch.draw( (
   time, center, favoriteColor
 ) => {
   const p = getP5();
+
   p.background( ...options.colors.background );
 
   if ( !mediapipe.ready ) {

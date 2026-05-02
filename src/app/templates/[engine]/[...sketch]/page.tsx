@@ -209,7 +209,8 @@ export default async function StudioPage( {
   }
 
   /* ---- load options & form meta (reuses existing p5 utils) ------- */
-  const sketchOptions = OptionsSchema.parse( {} );
+  const sketchOptions = OptionsSchema.parse( {
+  } );
 
   const {
     formValues, formConfiguration
@@ -275,7 +276,8 @@ export default async function StudioPage( {
     sketchOptions.assets.images = testImagePaths;
 
     if ( formConfiguration ) {
-      sketchOptions.sketch = ( sketchOptions.sketch as Record<string, unknown> ) ?? {};
+      sketchOptions.sketch = ( sketchOptions.sketch as Record<string, unknown> ) ?? {
+      };
 
       injectTestImagesIntoSketchFields(
         sketchOptions.sketch as Record<string, unknown>,
@@ -302,7 +304,7 @@ export default async function StudioPage( {
         engineId={engineId}
         options={sketchOptions}
         persistedJob={persistedJob}
-        sketchFormValues={formValues} 
+        sketchFormValues={formValues}
         sketchFormConfiguration={formConfiguration}
         capturing={( await searchParams ).capturing === ""}
         backendRecording={process.env.BACKEND_RECORDING === "true"}

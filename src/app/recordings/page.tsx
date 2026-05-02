@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import type {
+  Metadata
+} from "next";
 import RecordingsPage from "@/components/RecordingsPage/RecordingsPage";
 
 export const metadata: Metadata = {

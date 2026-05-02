@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import {
+  useEffect
+} from "react";
 
-export default function useSketchDevWatch( name: string, engineId: string, capturing = false ) {
+export default function useSketchDevWatch(
+  name: string, engineId: string, capturing = false
+) {
   useEffect(
     () => {
       if ( process.env.NODE_ENV !== "development" || capturing ) {

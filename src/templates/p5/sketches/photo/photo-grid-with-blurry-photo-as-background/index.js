@@ -17,7 +17,7 @@ const canvases = {
 sketch.setup( () => {
   const p = getP5();
 
-  canvases.background = p.createGraphics(
+  canvases.blurredLayer = p.createGraphics(
     p.width,
     p.height
   );
@@ -26,7 +26,7 @@ sketch.setup( () => {
 
   p.background( ...options.sketch.backgroundColor );
 
-  canvases.background( ...options.sketch.backgroundColor );
+  canvases.blurredLayer.background( ...options.sketch.backgroundColor );
 } );
 
 sketch.draw( async(
@@ -37,7 +37,7 @@ sketch.draw( async(
   p.clear();
   p.background( ...options.sketch.backgroundColor );
 
-  canvases.background( ...options.sketch.backgroundColor );
+  canvases.blurredLayer.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
 
@@ -69,7 +69,7 @@ sketch.draw( async(
     cells: gridCells
   } = await grid.create( gridOptions );
 
-  canvases.background( ...options.sketch.backgroundColor );
+  canvases.blurredLayer.background( ...options.sketch.backgroundColor );
 
   // gridCells.forEach( ({ position, xIndex, yIndex, width: W, height: H }) => {
   //     const { x, y } = position;
@@ -92,7 +92,7 @@ sketch.draw( async(
   //             height: H/2,
   //             width: W/2
   //         },
-  //         graphics: canvases.background,
+  //         graphics: canvases.blurredLayer,
   //         center: true,
   //     });
   // });
@@ -113,25 +113,25 @@ sketch.draw( async(
       p.width / 2,
       p.height / 2
     ),
-    graphics: canvases.background,
+    graphics: canvases.blurredLayer,
     center: true,
     fill: true,
   } );
 
   p.image(
-    canvases.background,
+    canvases.blurredLayer,
     0,
     0,
     p.width,
     p.height
   );
-  filter(
-    BLUR,
+  p.filter(
+    p.BLUR,
     options.sketch?.blur ?? 9,
     true
   );
-  filter(
-    POSTERIZE,
+  p.filter(
+    p.POSTERIZE,
     options.sketch.posterize ?? 9,
     true
   );

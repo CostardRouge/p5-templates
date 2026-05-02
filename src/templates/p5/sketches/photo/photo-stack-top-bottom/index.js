@@ -3,10 +3,13 @@ import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
   const p = getP5();
+
   p.background( ...options.sketch.backgroundColor );
 } );
 
@@ -27,8 +30,7 @@ sketch.draw( (
     0,
     1,
     0,
-    images.length,
-    easing.easeInOutExpo_
+    images.length
   );
 
   // Calculate step size for vertical positioning

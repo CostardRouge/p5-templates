@@ -1,4 +1,6 @@
-import React, { useMemo } from "react";
+import React, {
+  useMemo
+} from "react";
 import {
   Controller, useFormContext
 } from "react-hook-form";
@@ -22,34 +24,40 @@ export default function ControlledJsonInput( {
   } = useFormContext();
 
   // Memoize the helper functions to avoid recreating them on every render
-  const { formatValue, parseValue } = useMemo( () => ( {
-    formatValue: ( value: any ): string => {
-      if ( value === null || value === undefined ) {
-        return "";
-      }
+  const {
+    formatValue, parseValue
+  } = useMemo(
+    () => ( {
+      formatValue: ( value: any ): string => {
+        if ( value === null || value === undefined ) {
+          return "";
+        }
 
-      if ( typeof value === "string" ) {
+        if ( typeof value === "string" ) {
         // If it's already a string, it might be user input during editing
-        return value;
-      }
+          return value;
+        }
 
-      return JSON.stringify(
-        value,
-        null,
-        2
-      );
-    },
+        return JSON.stringify(
+          value,
+          null,
+          2
+        );
+      },
 
-    parseValue: ( text: string ): any => {
-      const trimmed = text.trim();
+      parseValue: ( text: string ): any => {
+        const trimmed = text.trim();
 
-      if ( !trimmed ) {
-        return null;
-      }
+        if ( !trimmed ) {
+          return null;
+        }
 
-      return JSON.parse( trimmed );
-    },
-  } ), [] );
+        return JSON.parse( trimmed );
+      },
+    } ),
+    [
+    ]
+  );
 
   return (
     <Controller

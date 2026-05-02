@@ -213,7 +213,9 @@ export function useThumbnails( {
   );
 
   const copyThumbnail = useCallback(
-    ( fromSlideId: string, toSlideId: string ) => {
+    (
+      fromSlideId: string, toSlideId: string
+    ) => {
       setThumbnails( ( prev ) => {
         const thumb = prev[ fromSlideId ];
 
@@ -227,7 +229,8 @@ export function useThumbnails( {
         };
       } );
     },
-    []
+    [
+    ]
   );
 
   // Clear all thumbnails (useful for reset)

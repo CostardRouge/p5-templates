@@ -7,13 +7,8 @@ import {
 
 export const formValues = {
   strokeWeight: {
-    mode: "variable",
-    count: 1,
-    speedMultiplier: 1,
-    progressionMultiplier: 1,
-    startValue: 20,
-    endValue: 100,
-    easingFn: "easeInOutExpo",
+    mode: "fixed",
+    value: 100,
   },
 
   text: {
@@ -31,6 +26,7 @@ export const formValues = {
   switchEasing: "linear",
 
   images: [
+
   ],
   imageStyle: {
     fill: true,

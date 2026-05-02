@@ -1,6 +1,8 @@
 import sketch from "./sketch.js";
 import time from "./time.js";
-import { getP5 } from "./sketch.js";
+import {
+  getP5
+} from "./sketch.js";
 
 const debug = {
   frameRate: 0,
@@ -103,6 +105,7 @@ const debug = {
   },
   lines: function() {
     const p = getP5();
+
     p.stroke( 255 );
     p.line(
       p.width / 2,

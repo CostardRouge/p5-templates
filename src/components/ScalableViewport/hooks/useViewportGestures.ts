@@ -30,7 +30,9 @@ export function useViewportGestures( {
 }: UseViewportGesturesProps ) {
   useGesture(
     {
-      onDragStart: ( { event, cancel } ) => {
+      onDragStart: ( {
+        event, cancel
+      } ) => {
         if ( ( event?.target as Element )?.closest?.( "[data-no-drag]" ) ) {
           cancel();
           return;

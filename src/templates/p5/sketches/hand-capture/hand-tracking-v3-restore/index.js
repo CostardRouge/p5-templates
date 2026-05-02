@@ -14,7 +14,9 @@ import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 
 import Matter from "@/public/assets/libraries/matter.min.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
@@ -60,6 +62,7 @@ const matter = {
 
 sketch.setup( async() => {
   const p = getP5();
+
   p.background( ...options.colors.background );
 
   await mediapipeInit( {
@@ -137,6 +140,7 @@ sketch.draw( (
   time, center, favouriteColour
 ) => {
   const p = getP5();
+
   p.background( ...options.colors.background );
 
   if ( mediapipe.idle ) {
@@ -222,7 +226,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 
@@ -240,7 +244,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 } );
@@ -271,6 +275,7 @@ const interactionIndices = [
 ];
 
 function createHandInteractionBodies( hand ) {
+  const p = getP5();
   const interactionPoints = interactionIndices
     .map( ( i ) => hand[ i ] )
     .filter( Boolean );

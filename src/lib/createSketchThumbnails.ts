@@ -34,7 +34,8 @@ async function createSketchThumbnails() {
   };
 
   try {
-    const sketches = ( await getSketchList() ) ?? [];
+    const sketches = ( await getSketchList() ) ?? [
+    ];
 
     const templates = sketches.map( ( {
       name, engine, category,

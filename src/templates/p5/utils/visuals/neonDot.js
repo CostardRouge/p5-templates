@@ -25,7 +25,7 @@ export default function neonDot( {
     );
 
     graphics.stroke( colors.rainbow( {
-      opacityFactor: map(
+      opacityFactor: graphics.map(
         shadowIndex,
         0,
         shadowsCount,
@@ -33,12 +33,12 @@ export default function neonDot( {
         0.75
       ),
       hueOffset: animation.circularProgression + shadowProgression,
-      hueIndex: map(
+      hueIndex: graphics.map(
         index,
         0,
         1,
-        -PI,
-        PI
+        -graphics.PI,
+        graphics.PI
       ),
     } ) );
 

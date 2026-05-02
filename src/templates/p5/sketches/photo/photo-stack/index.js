@@ -5,10 +5,13 @@ import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
   const p = getP5();
+
   p.background( ...options.sketch.backgroundColor );
 } );
 
@@ -16,6 +19,7 @@ sketch.draw( (
   _time, center, favoriteColor
 ) => {
   const p = getP5();
+
   p.clear();
   p.background( ...options.sketch.backgroundColor );
 

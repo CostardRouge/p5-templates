@@ -8,7 +8,9 @@ import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -16,7 +18,8 @@ const sketchState = {
 
 sketch.setup(
   ( ) => {
-  const p = getP5();
+    const p = getP5();
+
     sketchState.threeDimensionGraphics = graphics.createAutoResizableGraphics(
       p.width,
       p.height,
@@ -119,6 +122,7 @@ sketch.draw( (
   time, center
 ) => {
   const p = getP5();
+
   p.background( 0 );
 
   const W = p.width / 2;

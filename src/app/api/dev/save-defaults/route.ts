@@ -4,8 +4,13 @@ import {
   findSketchMeta
 } from "@/engines/metadata";
 
-function getOptionsFilePath( sketchName: string, engineId: string ): string | null {
-  const meta = findSketchMeta( sketchName, engineId );
+function getOptionsFilePath(
+  sketchName: string, engineId: string
+): string | null {
+  const meta = findSketchMeta(
+    sketchName,
+    engineId
+  );
 
   if ( !meta ) return null;
 
@@ -33,7 +38,8 @@ type PathChange = {
 function deepDiff(
   original: unknown,
   updated: unknown,
-  currentPath: string[] = []
+  currentPath: string[] = [
+  ]
 ): PathChange[] {
   if (
     typeof original === "object" &&
@@ -43,30 +49,38 @@ function deepDiff(
     updated !== null &&
     !Array.isArray( updated )
   ) {
-    const changes: PathChange[] = [];
+    const changes: PathChange[] = [
+    ];
     const allKeys = new Set( [
       ...Object.keys( original as Record<string, unknown> ),
       ...Object.keys( updated as Record<string, unknown> ),
     ] );
 
     for ( const key of allKeys ) {
-      changes.push(
-        ...deepDiff(
-          ( original as Record<string, unknown> )[ key ],
-          ( updated as Record<string, unknown> )[ key ],
-          [ ...currentPath, key ]
-        )
-      );
+      changes.push( ...deepDiff(
+        ( original as Record<string, unknown> )[ key ],
+        ( updated as Record<string, unknown> )[ key ],
+        [
+          ...currentPath,
+          key
+        ]
+      ) );
     }
 
     return changes;
   }
 
   if ( JSON.stringify( original ) !== JSON.stringify( updated ) ) {
-    return [ { path: currentPath, newValue: updated } ];
+    return [
+      {
+        path: currentPath,
+        newValue: updated
+      }
+    ];
   }
 
-  return [];
+  return [
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -74,7 +88,9 @@ function deepDiff(
 // ---------------------------------------------------------------------------
 
 /** Find the position of the matching closing `}` for the `{` at openBracePos. */
-function findObjectClose( content: string, openBracePos: number ): number {
+function findObjectClose(
+  content: string, openBracePos: number
+): number {
   let depth = 0;
 
   for ( let i = openBracePos; i < content.length; i++ ) {
@@ -93,12 +109,17 @@ function findObjectClose( content: string, openBracePos: number ): number {
  * Handles: objects, arrays, strings, numbers, booleans, null,
  * and arbitrary expressions (e.g. Math.PI / 16) as a fallback.
  */
-function findValueEnd( content: string, pos: number ): number {
+function findValueEnd(
+  content: string, pos: number
+): number {
   const ch = content[ pos ];
 
   // Object
   if ( ch === "{" ) {
-    const close = findObjectClose( content, pos );
+    const close = findObjectClose(
+      content,
+      pos
+    );
 
     return close === -1 ? content.length : close + 1;
   }
@@ -119,7 +140,7 @@ function findValueEnd( content: string, pos: number ): number {
   }
 
   // String literal (single / double / template)
-  if ( ch === '"' || ch === "'" || ch === "`" ) {
+  if ( ch === "\"" || ch === "'" || ch === "`" ) {
     const quote = ch;
     let i = pos + 1;
 
@@ -181,7 +202,9 @@ function findKeyAtDepth0(
   innerStart: number,
   innerEnd: number,
   key: string
-): { valueStart: number; valueEnd: number } | null {
+): {
+ valueStart: number; valueEnd: number
+} | null {
   let i = innerStart;
   let depth = 0;
 
@@ -189,8 +212,9 @@ function findKeyAtDepth0(
     const ch = content[ i ];
 
     // Skip string literals entirely
-    if ( ch === '"' || ch === "'" || ch === "`" ) {
+    if ( ch === "\"" || ch === "'" || ch === "`" ) {
       const quote = ch;
+
       i++;
 
       while ( i < innerEnd ) {
@@ -218,9 +242,15 @@ function findKeyAtDepth0(
           valueStart++;
         }
 
-        const valueEnd = findValueEnd( content, valueStart );
+        const valueEnd = findValueEnd(
+          content,
+          valueStart
+        );
 
-        return { valueStart, valueEnd };
+        return {
+          valueStart,
+          valueEnd
+        };
       }
     }
 
@@ -247,7 +277,9 @@ function serializeLeaf( value: unknown ): string {
 // Main rewrite: apply targeted leaf replacements only
 // ---------------------------------------------------------------------------
 
-function applyChanges( content: string, changes: PathChange[] ): string {
+function applyChanges(
+  content: string, changes: PathChange[]
+): string {
   const marker = "export const formValues =";
   const markerPos = content.indexOf( marker );
 
@@ -255,17 +287,25 @@ function applyChanges( content: string, changes: PathChange[] ): string {
     throw new Error( "Could not find 'export const formValues' in options.ts" );
   }
 
-  const openBracePos = content.indexOf( "{", markerPos + marker.length );
+  const openBracePos = content.indexOf(
+    "{",
+    markerPos + marker.length
+  );
 
   if ( openBracePos === -1 ) {
     throw new Error( "Could not find opening brace for formValues" );
   }
 
-  type Replacement = { start: number; end: number; text: string };
-  const replacements: Replacement[] = [];
+  type Replacement = {
+ start: number; end: number; text: string
+};
+  const replacements: Replacement[] = [
+  ];
 
   for ( const change of changes ) {
-    const { path, newValue } = change;
+    const {
+      path, newValue
+    } = change;
 
     let currentObjOpen = openBracePos;
     let found = true;
@@ -275,11 +315,19 @@ function applyChanges( content: string, changes: PathChange[] ): string {
     for ( let pi = 0; pi < path.length; pi++ ) {
       const key = path[ pi ];
       const isLast = pi === path.length - 1;
-      const objClose = findObjectClose( content, currentObjOpen );
+      const objClose = findObjectClose(
+        content,
+        currentObjOpen
+      );
 
       if ( objClose === -1 ) { found = false; break; }
 
-      const inner = findKeyAtDepth0( content, currentObjOpen + 1, objClose, key );
+      const inner = findKeyAtDepth0(
+        content,
+        currentObjOpen + 1,
+        objClose,
+        key
+      );
 
       if ( !inner ) { found = false; break; }
 
@@ -295,19 +343,28 @@ function applyChanges( content: string, changes: PathChange[] ): string {
     }
 
     if ( found && valueStart !== -1 ) {
-      replacements.push( { start: valueStart, end: valueEnd, text: serializeLeaf( newValue ) } );
+      replacements.push( {
+        start: valueStart,
+        end: valueEnd,
+        text: serializeLeaf( newValue )
+      } );
     }
   }
 
   if ( replacements.length === 0 ) return content;
 
   // Apply in reverse position order so earlier offsets stay valid
-  replacements.sort( ( a, b ) => b.start - a.start );
+  replacements.sort( (
+    a, b
+  ) => b.start - a.start );
 
   let result = content;
 
   for ( const rep of replacements ) {
-    result = result.slice( 0, rep.start ) + rep.text + result.slice( rep.end );
+    result = result.slice(
+      0,
+      rep.start
+    ) + rep.text + result.slice( rep.end );
   }
 
   return result;
@@ -366,7 +423,10 @@ export async function POST( request: Request ) {
     originalFormValues: Record<string, unknown>;
   };
 
-  const optionsPath = getOptionsFilePath( sketch, engineId );
+  const optionsPath = getOptionsFilePath(
+    sketch,
+    engineId
+  );
 
   if ( !optionsPath ) {
     return new Response(
@@ -386,23 +446,37 @@ export async function POST( request: Request ) {
     );
   }
 
-  const changes = deepDiff( originalFormValues, formValues );
+  const changes = deepDiff(
+    originalFormValues,
+    formValues
+  );
 
   if ( changes.length === 0 ) {
     return new Response(
-      JSON.stringify( { ok: true, changed: 0 } ),
+      JSON.stringify( {
+        ok: true,
+        changed: 0
+      } ),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
       }
     );
   }
 
-  const content = fs.readFileSync( optionsPath, "utf-8" );
+  const content = fs.readFileSync(
+    optionsPath,
+    "utf-8"
+  );
   let updated: string;
 
   try {
-    updated = applyChanges( content, changes );
+    updated = applyChanges(
+      content,
+      changes
+    );
   } catch ( err ) {
     return new Response(
       String( err ),
@@ -412,15 +486,23 @@ export async function POST( request: Request ) {
     );
   }
 
-  fs.writeFileSync( optionsPath, updated, "utf-8" );
+  fs.writeFileSync(
+    optionsPath,
+    updated,
+    "utf-8"
+  );
 
   return new Response(
-    JSON.stringify( { ok: true, changed: changes.length } ),
+    JSON.stringify( {
+      ok: true,
+      changed: changes.length
+    } ),
     {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
     }
   );
 }
-
 

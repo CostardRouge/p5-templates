@@ -49,12 +49,13 @@ function dice(
 
   for ( let i = 0; i < rotations.length; i++ ) {
     const {
-      x: rX, y: rY /* , z: rZ */ } = rotations[ i ];
+      x: rX, y: rY, z: rZ
+    } = rotations[ i ];
 
     canvases.dice.push();
     canvases.dice.rotateX( rX );
     canvases.dice.rotateY( rY );
-    // canvases.dice.rotateZ(rZ)
+    canvases.dice.rotateZ( rZ );
     canvases.dice.translate(
       0,
       0,
@@ -89,7 +90,8 @@ sketch.draw( (
 
   // Calculate current rotation target (6 faces in cycle)
   const {
-    x: rX, y: rY /* , z: rZ */ } = animation.ease( {
+    x: rX, y: rY, z: rZ
+  } = animation.ease( {
     values: [
       canvases.dice.createVector(), // face
       canvases.dice.createVector(
@@ -118,6 +120,7 @@ sketch.draw( (
 
   canvases.dice.rotateX( rX );
   canvases.dice.rotateY( rY );
+  canvases.dice.rotateZ( rZ );
 
   const diceSizeFactor = options.sketch?.diceSizeFactor ?? 1.5;
   const faceScale = options.sketch?.faceScale ?? 0.65;

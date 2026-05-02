@@ -19,7 +19,9 @@ import {
   setSketchOptions,
   subscribeSketchOptions,
 } from "@/p5/shared/syncSketchOptions.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const layers = {
   photo: {
@@ -59,6 +61,7 @@ const cache = {
 
 sketch.setup( async() => {
   const p = getP5();
+
   p.background( ...options.sketch.backgroundColor );
 
   for ( const layerName in layers ) {
@@ -178,7 +181,7 @@ function triggerSegmentation() {
 events.register(
   "engine-canvas-mouse-pressed",
   () => {
-  const p = getP5();
+    const p = getP5();
     const photo = common.getAsset( options.sketch?.photo?.image );
 
     if ( !photo ) return;
@@ -261,6 +264,7 @@ sketch.draw( (
   _, center
 ) => {
   const p = getP5();
+
   p.background( ...options.sketch.backgroundColor );
 
   const photo = common.getAsset( options.sketch?.photo?.image );

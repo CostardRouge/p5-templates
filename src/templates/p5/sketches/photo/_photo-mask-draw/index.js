@@ -183,7 +183,7 @@ sketch.draw( (
           p.CENTER,
           p.CENTER
         ],
-        blendMode: EXCLUSION,
+        blendMode: p.EXCLUSION,
       }
     );
   }

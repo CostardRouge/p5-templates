@@ -26,7 +26,9 @@ import RecordingsToolbar from "./components/RecordingsToolbar";
 import RecordingsTable from "./components/RecordingsTable";
 import RecordingsCards from "./components/RecordingsCards";
 import BulkActionsToolbar from "./components/BulkActionsToolbar";
-import { fuzzyFilter } from "@/utils/fuzzySearch";
+import {
+  fuzzyFilter
+} from "@/utils/fuzzySearch";
 
 export default function RecordingsPage() {
   const {

@@ -11,7 +11,9 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getLoopPhase
 } from "@/p5/utils/common.js";
-import { getP5 } from "@/p5/utils/sketch.js";
+import {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   threeDimensionGraphics: null,
@@ -21,7 +23,8 @@ sketch.setup(
   ( {
     canvas
   } ) => {
-  const p = getP5();
+    const p = getP5();
+
     sketchState.threeDimensionGraphics = p.createGraphics(
       canvas.width,
       canvas.height,
@@ -36,6 +39,7 @@ let pointLength = 0;
 
 sketch.draw( ( time ) => {
   const p = getP5();
+
   p.clear();
   p.background( ...( options.sketch.backgroundColor ?? [
     0

@@ -40,7 +40,11 @@ export default function TemplateSketchPage() {
     engine: engineId,
   } );
 
-  useSketchDevWatch( name, engineId, capturing );
+  useSketchDevWatch(
+    name,
+    engineId,
+    capturing
+  );
 
   const handleOptionsChange = useCallback(
     ( updatedOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => {

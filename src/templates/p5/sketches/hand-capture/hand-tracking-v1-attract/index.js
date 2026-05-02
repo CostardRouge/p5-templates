@@ -223,7 +223,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 
@@ -241,7 +241,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: EXCLUSION,
+      blendMode: p.EXCLUSION,
     }
   );
 } );
@@ -272,6 +272,7 @@ const interactionIndices = [
 ];
 
 function createHandInteractionBodies( hand ) {
+  const p = getP5();
   const interactionPoints = interactionIndices
     .map( ( i ) => hand[ i ] )
     .filter( Boolean );
@@ -346,6 +347,7 @@ function addBoundary(
 function applyAttractionFromHands(
   strength = 0.0005, maxForce = 0.002
 ) {
+  const p = getP5();
   const hands = mediapipe.tasks?.hands?.result?.landmarks ?? [
   ];
 

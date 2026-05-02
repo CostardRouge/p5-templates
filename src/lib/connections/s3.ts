@@ -123,7 +123,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
 
     // 1. Check if it's a folder (ends with slash or acts as prefix)
     let listedObjects;
-    
+
     try {
       listedObjects = await s3client.send( new ListObjectsV2Command( {
         Bucket: bucketName,
@@ -176,9 +176,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
       }
     } else {
       // No objects found - this is OK, might have been deleted already
-      console.warn(
-        `No objects found with prefix ${ objectKeyOrPrefix }, skipping deletion`
-      );
+      console.warn( `No objects found with prefix ${ objectKeyOrPrefix }, skipping deletion` );
     }
   } catch ( err ) {
     // Re-throw to let caller handle

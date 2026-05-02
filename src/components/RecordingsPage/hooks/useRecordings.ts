@@ -33,7 +33,8 @@ export default function useRecordings() {
   const [
     jobProgressions,
     setJobProgressions
-  ] = useState<Record<string, JobProgression>>( {} );
+  ] = useState<Record<string, JobProgression>>( {
+  } );
 
   // Track start times for active jobs
   inFlightJobs.forEach( ( job ) => {
@@ -119,7 +120,9 @@ export default function useRecordings() {
             delete recordingStartTimesRef.current[ jobId ];
 
             setJobProgressions( ( prev ) => {
-              const next = { ...prev };
+              const next = {
+                ...prev
+              };
 
               delete next[ jobId ];
               return next;
