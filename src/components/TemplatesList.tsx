@@ -12,9 +12,9 @@ import React, {
 import type {
   TemplateCategory
 } from "@/app/page";
-import Link from "next/link";
+// import Link from "next/link";
 
-import HardLink from "@/components/HardLink";
+import Link from "@/components/HardLink";
 import {
   usePersistedViewMode
 } from "@/hooks/usePersistedViewMode";

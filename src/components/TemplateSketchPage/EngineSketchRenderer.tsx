@@ -35,7 +35,9 @@ export default function EngineSketchRenderer() {
 
   useEffect(
     () => {
-      if ( !containerRef.current ) return;
+      if ( !containerRef.current ) {
+        return;
+      }
 
       const registration = getEngine( engineId );
       const instance = registration.createEngine();

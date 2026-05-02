@@ -85,7 +85,7 @@ export default function TemplateSketchPage() {
             )}
 
             <p className="text-foreground">
-              → loading{" "}
+              {" → loading "}
               <span className="font-bold">{name}</span> ({engineId})
             </p>
           </div>

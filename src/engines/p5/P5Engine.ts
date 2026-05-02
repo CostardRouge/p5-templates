@@ -75,12 +75,12 @@ export class P5Engine implements SketchEngine {
     this.sketchRuntime = sketch as P5SketchRuntime;
 
     await import( `@/p5/sketches/${ sketchPath }/index.js` )
-      .catch( ( err ) => {
+      .catch( ( error ) => {
         this.emit(
           "error",
-          err
+          error
         );
-        throw err;
+        throw error;
       } );
 
     await this.sketchRuntime.start( container );
