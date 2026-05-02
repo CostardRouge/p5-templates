@@ -31,6 +31,13 @@ import {
 import {
   NotificationService
 } from "@/services/NotificationService";
+import {
+  RECORDING_STEPS,
+  UPLOAD_STEPS,
+  buildRecordingStepPath,
+  buildSlideStepPath,
+  buildUploadStepPath,
+} from "@/lib/progression/stepConfig";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION: Toggle between capture methods
@@ -210,7 +217,7 @@ async function recordSingleSketch(
   // ─── Launch browser & load sketch ─────────────────────────────────────────
   await updateRecordingStepPercentage(
     jobId,
-    "recording.launching-browser",
+    buildRecordingStepPath( RECORDING_STEPS.LAUNCHING_BROWSER.key ),
     0
   );
 
@@ -228,7 +235,7 @@ async function recordSingleSketch(
 
   await updateRecordingStepPercentage(
     jobId,
-    "recording.launching-browser",
+    buildRecordingStepPath( RECORDING_STEPS.LAUNCHING_BROWSER.key ),
     100
   );
 
@@ -254,7 +261,7 @@ async function recordSingleSketch(
       onProgress: async( percentage: number ) => {
         await updateRecordingStepPercentage(
           jobId,
-          "recording.saving-frames",
+          buildRecordingStepPath( RECORDING_STEPS.SAVING_FRAMES.key ),
           percentage
         );
       },
@@ -298,7 +305,7 @@ async function recordSingleSketch(
       onProgress: async( percentage: number ) => {
         await updateRecordingStepPercentage(
           jobId,
-          "recording.saving-frames",
+          buildRecordingStepPath( RECORDING_STEPS.SAVING_FRAMES.key ),
           percentage
         );
       },
@@ -320,7 +327,7 @@ async function recordSingleSketch(
       async( percentage ) => {
         await updateRecordingStepPercentage(
           jobId,
-          "recording.encoding-frames",
+          buildRecordingStepPath( RECORDING_STEPS.ENCODING_FRAMES.key ),
           percentage
         );
       }
@@ -411,7 +418,7 @@ async function recordMultipleSlides(
   // ─── Launch browser & load template (shared step, done once) ─────────────
   await updateRecordingStepPercentage(
     jobId,
-    "recording.launching-browser",
+    buildRecordingStepPath( RECORDING_STEPS.LAUNCHING_BROWSER.key ),
     0
   );
 
@@ -429,7 +436,7 @@ async function recordMultipleSlides(
 
   await updateRecordingStepPercentage(
     jobId,
-    "recording.launching-browser",
+    buildRecordingStepPath( RECORDING_STEPS.LAUNCHING_BROWSER.key ),
     100
   );
 
@@ -497,7 +504,10 @@ async function recordMultipleSlides(
         onProgress: async( percentage: number ) => {
           await updateRecordingStepPercentage(
             jobId,
-            `recording.slide-${ slideIndex }.saving-frames`,
+            buildSlideStepPath(
+              slideIndex,
+              RECORDING_STEPS.SAVING_FRAMES.key
+            ),
             percentage
           );
         },
@@ -522,7 +532,10 @@ async function recordMultipleSlides(
         onProgress: async( percentage: number ) => {
           await updateRecordingStepPercentage(
             jobId,
-            `recording.slide-${ slideIndex }.saving-frames`,
+            buildSlideStepPath(
+              slideIndex,
+              RECORDING_STEPS.SAVING_FRAMES.key
+            ),
             percentage
           );
         },
@@ -542,7 +555,10 @@ async function recordMultipleSlides(
         async( percentage: number ) => {
           await updateRecordingStepPercentage(
             jobId,
-            `recording.slide-${ slideIndex }.encoding-frames`,
+            buildSlideStepPath(
+              slideIndex,
+              RECORDING_STEPS.ENCODING_FRAMES.key
+            ),
             percentage
           );
         }
@@ -567,7 +583,7 @@ async function recordMultipleSlides(
   // ─── Upload all videos and thumbnails ───────────────────────────────────
   await updateRecordingStepPercentage(
     jobId,
-    "uploading.s3",
+    buildUploadStepPath( UPLOAD_STEPS.S3.key ),
     0
   );
 
@@ -608,7 +624,7 @@ async function recordMultipleSlides(
 
   await updateRecordingStepPercentage(
     jobId,
-    "uploading.s3",
+    buildUploadStepPath( UPLOAD_STEPS.S3.key ),
     100
   );
 

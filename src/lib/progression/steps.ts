@@ -4,17 +4,20 @@ import {
 import {
   SketchOption, SlideOption
 } from "@/types/sketch.types";
+import {
+  RECORDING_STEPS
+} from "./stepConfig";
 
 export const recordingSketchSteps: RecordingProgressionSteps = {
   recording: {
     steps: {
-      "launching-browser": {
+      [ RECORDING_STEPS.LAUNCHING_BROWSER.key ]: {
         percentage: 0,
       },
-      "saving-frames": {
+      [ RECORDING_STEPS.SAVING_FRAMES.key ]: {
         percentage: 0,
       },
-      "encoding-frames": {
+      [ RECORDING_STEPS.ENCODING_FRAMES.key ]: {
         percentage: 0,
       },
     },
@@ -33,10 +36,10 @@ function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
         ...acc,
         [ `slide-${ slideIndex }` ]: {
           steps: {
-            "saving-frames": {
+            [ RECORDING_STEPS.SAVING_FRAMES.key ]: {
               percentage: 0
             },
-            "encoding-frames": {
+            [ RECORDING_STEPS.ENCODING_FRAMES.key ]: {
               percentage: 0
             },
           },
@@ -50,7 +53,7 @@ function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
   return {
     recording: {
       steps: {
-        "launching-browser": {
+        [ RECORDING_STEPS.LAUNCHING_BROWSER.key ]: {
           percentage: 0
         },
         ...perSlideSteps,
