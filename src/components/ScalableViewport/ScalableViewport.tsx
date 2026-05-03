@@ -66,15 +66,24 @@ export default function ScalableViewport( {
       animateTo,
     } );
 
+  // Fit to viewport when resolution changes or when ready
   useEffect(
     () => {
-      if ( !isReady ) {
+      if ( !isReady || !contentRef.current ) {
         return;
       }
 
-      // Fit immediately when ready - no timeout needed since the engine
-      // guarantees the canvas is fully rendered via its ready event.
-      fitToViewport( false );
+      // Use requestAnimationFrame to ensure the canvas has been resized
+      // before we calculate the fit. This handles the case where the
+      // resolution changes but the DOM hasn't updated yet.
+      const rafId = requestAnimationFrame( () => {
+        // Double RAF to ensure layout has been calculated
+        requestAnimationFrame( () => {
+          fitToViewport( false );
+        } );
+      } );
+
+      return () => cancelAnimationFrame( rafId );
     },
     [
       resolutionKey,
@@ -83,18 +92,55 @@ export default function ScalableViewport( {
     ]
   );
 
+  // Observe content size changes and refit when canvas dimensions change
   useEffect(
     () => {
-      if ( !containerRef.current ) {
+      if ( !contentRef.current || !isReady ) {
         return;
       }
-      const observer = new ResizeObserver( () => {} );
+
+      const observer = new ResizeObserver( ( entries ) => {
+        for ( const entry of entries ) {
+          // Only refit if the content size actually changed
+          if ( entry.contentBoxSize && entry.contentBoxSize.length > 0 ) {
+            // Use requestAnimationFrame to batch the refit
+            requestAnimationFrame( () => {
+              fitToViewport( false );
+            } );
+          }
+        }
+      } );
+
+      observer.observe( contentRef.current );
+
+      return () => observer.disconnect();
+    },
+    [
+      isReady,
+      fitToViewport
+    ]
+  );
+
+  // Observe container size changes (viewport resize)
+  useEffect(
+    () => {
+      if ( !containerRef.current || !isReady ) {
+        return;
+      }
+
+      const observer = new ResizeObserver( () => {
+        requestAnimationFrame( () => {
+          fitToViewport( false );
+        } );
+      } );
 
       observer.observe( containerRef.current );
 
       return () => observer.disconnect();
     },
     [
+      isReady,
+      fitToViewport
     ]
   );
 
