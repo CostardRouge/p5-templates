@@ -68,8 +68,10 @@ export default function ScalableViewport( {
 
   useEffect(
     () => {
-      if ( !isReady ) return;
-      
+      if ( !isReady ) {
+        return;
+      }
+
       // Fit immediately when ready - no timeout needed since the engine
       // guarantees the canvas is fully rendered via its ready event.
       fitToViewport( false );
@@ -83,10 +85,13 @@ export default function ScalableViewport( {
 
   useEffect(
     () => {
-      if ( !containerRef.current ) return;
+      if ( !containerRef.current ) {
+        return;
+      }
       const observer = new ResizeObserver( () => {} );
 
       observer.observe( containerRef.current );
+
       return () => observer.disconnect();
     },
     [
