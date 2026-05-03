@@ -97,12 +97,9 @@ window.getAnimationProgression = function() {
   const duration = sketch?.sketchOptions?.animation?.duration || 10;
   const seconds = time.seconds();
 
-  // During recording, don't wrap - let it go beyond 1.0
+  // During recording, don't wrap and don't cap - progression should match frame count
   if ( time.isRecording ) {
-    const progression = Math.min(
-      seconds / duration,
-      1.0
-    );
+    const progression = seconds / duration;
 
     // Dispatch event only when progression changes significantly (every 0.01 or so)
     if ( Math.abs( progression - lastDispatchedProgression ) > 0.01 ) {

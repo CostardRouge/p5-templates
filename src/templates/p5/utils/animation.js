@@ -38,13 +38,9 @@ const animation = {
     const duration = sketch.sketchOptions?.animation?.duration || 10;
     const seconds = time.seconds();
 
-    // During recording, don't wrap - let it go beyond 1.0
-    // The recording will stop at the right frame count
+    // During recording, don't wrap and don't cap - progression should match frame count
     if ( time.isRecording ) {
-      return Math.min(
-        seconds / duration,
-        1.0
-      );
+      return seconds / duration;
     }
 
     // Normal playback: wrap around for continuous loop
