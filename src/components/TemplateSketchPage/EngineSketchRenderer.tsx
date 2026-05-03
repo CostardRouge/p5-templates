@@ -44,6 +44,27 @@ export default function EngineSketchRenderer() {
 
       engineRef.current = instance;
 
+      // Listen for the engine's ready event to know when the first frame
+      // has been rendered and the canvas is ready to be measured/centered.
+      const handleReady = () => {
+        dispatch( {
+          type: "SET_LOADED",
+          payload: true
+        } );
+
+        // Mark the container so the recording pipeline can detect
+        // engine readiness via a generic CSS selector.
+        containerRef.current?.setAttribute(
+          "data-engine-ready",
+          engineId
+        );
+      };
+
+      instance.on(
+        "ready",
+        handleReady
+      );
+
       instance
         .init(
           containerRef.current,
@@ -55,17 +76,6 @@ export default function EngineSketchRenderer() {
             type: "SET_ENGINE",
             payload: instance
           } );
-          dispatch( {
-            type: "SET_LOADED",
-            payload: true
-          } );
-
-          // Mark the container so the recording pipeline can detect
-          // engine readiness via a generic CSS selector.
-          containerRef.current?.setAttribute(
-            "data-engine-ready",
-            engineId
-          );
         } )
         .catch( ( error ) => {
           console.error(
@@ -75,6 +85,10 @@ export default function EngineSketchRenderer() {
         } );
 
       return () => {
+        instance.off(
+          "ready",
+          handleReady
+        );
         instance.destroy();
         engineRef.current = null;
         dispatch( {

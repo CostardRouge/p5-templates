@@ -85,6 +85,22 @@ export class P5Engine implements SketchEngine {
 
     await this.sketchRuntime.start( container );
 
+    // Wait for the first draw cycle to complete before marking as ready.
+    // This ensures the canvas is fully rendered and ready to be measured/centered.
+    await new Promise<void>( async( resolve ) => {
+      const {
+        default: events
+      } = await import( "@/templates/p5/utils/events.js" );
+
+      const unregister = events.register(
+        "post-draw",
+        () => {
+          unregister(); // Only listen to the first draw
+          resolve();
+        }
+      );
+    } );
+
     this._isReady = true;
     this.emit(
       "ready",

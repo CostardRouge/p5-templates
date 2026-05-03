@@ -69,14 +69,10 @@ export default function ScalableViewport( {
   useEffect(
     () => {
       if ( !isReady ) return;
-      const timer = setTimeout(
-        () => {
-          fitToViewport( false );
-        },
-        100
-      );
-
-      return () => clearTimeout( timer );
+      
+      // Fit immediately when ready - no timeout needed since the engine
+      // guarantees the canvas is fully rendered via its ready event.
+      fitToViewport( false );
     },
     [
       resolutionKey,
