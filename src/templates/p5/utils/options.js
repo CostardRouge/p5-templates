@@ -172,37 +172,150 @@ events.register(
   markLoadedWhenExifReady
 );
 
+/* ------------------------------------------------------------------ */
+/*  Options change tracking                                           */
+/* ------------------------------------------------------------------ */
+
+let previousOptions = {
+  size: null,
+  animation: null,
+};
+
+let unsubscribe = null;
+
+/**
+ * Compare two objects for deep equality
+ */
+function isEqual(
+  a, b
+) {
+  if ( a === b ) return true;
+  if ( !a || !b ) return false;
+  if ( typeof a !== "object" || typeof b !== "object" ) return false;
+
+  return JSON.stringify( a ) === JSON.stringify( b );
+}
+
+/**
+ * Handle options changes and trigger appropriate events
+ */
+function handleOptionsChange(
+  newOptions, origin
+) {
+  // Skip if this update came from the p5 engine itself to avoid loops
+  if ( origin === "p5" ) return;
+
+  let hasChanges = false;
+
+  // Check for size changes
+  if ( newOptions?.size && !isEqual(
+    newOptions.size,
+    previousOptions.size
+  ) ) {
+    const {
+      width,
+      height
+    } = newOptions.size;
+
+    if ( width && height ) {
+      events.handle(
+        "engine-resize-canvas",
+        width,
+        height
+      );
+
+      // Update sketch options reference
+      if ( sketch.sketchOptions ) {
+        sketch.sketchOptions.size = {
+          ...newOptions.size
+        };
+      }
+
+      previousOptions.size = {
+        ...newOptions.size
+      };
+      hasChanges = true;
+    }
+  }
+
+  // Check for animation/framerate changes
+  if ( newOptions?.animation && !isEqual(
+    newOptions.animation,
+    previousOptions.animation
+  ) ) {
+    const framerate = newOptions.animation?.framerate;
+
+    if ( framerate && typeof framerate === "number" && framerate > 0 ) {
+      events.handle(
+        "engine-framerate-change",
+        framerate
+      );
+
+      // Update sketch options reference
+      if ( sketch.sketchOptions ) {
+        sketch.sketchOptions.animation = {
+          ...newOptions.animation
+        };
+      }
+
+      previousOptions.animation = {
+        ...newOptions.animation
+      };
+      hasChanges = true;
+    }
+  }
+
+  // Refresh assets if there were any changes or if assets changed
+  if ( hasChanges || !isEqual(
+    newOptions?.assets,
+    previousOptions.assets
+  ) || !isEqual(
+    newOptions?.slides,
+    previousOptions.slides
+  ) ) {
+    refreshAssets();
+    previousOptions.assets = newOptions?.assets;
+    previousOptions.slides = newOptions?.slides;
+  }
+}
+
+/**
+ * Initialize options subscription
+ */
+function initializeOptionsSubscription() {
+  // Clean up existing subscription if any
+  if ( unsubscribe ) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+
+  // Get initial options and store them
+  const initialOptions = getSketchOptions();
+
+  previousOptions = {
+    size: initialOptions?.size ? {
+      ...initialOptions.size
+    } : null,
+    animation: initialOptions?.animation ? {
+      ...initialOptions.animation
+    } : null,
+    assets: initialOptions?.assets,
+    slides: initialOptions?.slides,
+  };
+
+  // Subscribe to future changes
+  unsubscribe = subscribeSketchOptions( handleOptionsChange );
+
+  // Sync initial options to sketch
+  setSketchOptions(
+    initialOptions,
+    sketch.sketchOptions?.engine ?? "p5"
+  );
+}
+
 events.register(
   "pre-setup",
-  () => {
-    subscribeSketchOptions( ( newOptions ) => {
-      const current = getSketchOptions();
-
-      if ( JSON.stringify( newOptions.size ) !== JSON.stringify( current.size ) ) {
-        events.handle(
-          "engine-resize-canvas",
-          newOptions?.size?.width,
-          newOptions?.size?.height
-        );
-        sketch.sketchOptions.size = newOptions?.size;
-      }
-
-      if ( JSON.stringify( newOptions.animation ) !== JSON.stringify( current.animation ) ) {
-        events.handle(
-          "engine-framerate-change",
-          newOptions?.animation?.framerate
-        );
-        sketch.sketchOptions.animation = newOptions?.animation;
-      }
-
-      refreshAssets();
-    } );
-
-    // setSketchOptions(
-    //   getSketchOptions(),
-    //   sketch.sketchOptions?.engine
-    // );
-  }
+  initializeOptionsSubscription
 );
 
 /* ------------------------------------------------------------------ */
