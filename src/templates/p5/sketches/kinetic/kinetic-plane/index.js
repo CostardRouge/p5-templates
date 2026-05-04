@@ -53,6 +53,7 @@ sketch.setup( async( {
     "webgl"
   );
   sketchState.plane.graphics.pixelDensity( 1 );
+
   await addScreenPositionFunction( sketchState.plane.graphics );
 
   sketchState.webcam.graphics = p.createGraphics(
@@ -228,7 +229,7 @@ function displayTriangleGrid(
 
       if ( imageTexture && imageTexture.width && imageTexture.height ) {
         // Flip U coordinate horizontally when using webcam to correct mirroring
-        const u = options.sketch.texture.useWebcam ? 1 - _vertex.u : _vertex.u;
+        const u = options.sketch.texture.useWebcam ? _vertex.u : _vertex.u;
 
         vertices.push(
           u * imageTexture.width,
@@ -290,6 +291,7 @@ function computeDisplacement(
 sketch.draw( () => {
   const p = getP5();
 
+  p.clear();
   p.background( ...getBackgroundColor() );
 
   sketchState.plane.gridData = cache.store(
@@ -376,19 +378,21 @@ sketch.draw( () => {
         vector.y,
         50
       );
-      sketchState.plane.graphics.normalMaterial( );
+      // sketchState.plane.graphics.normalMaterial( );
       sketchState.plane.graphics.sphere( options.sketch.animation.sphereSize ?? 30 );
       sketchState.plane.graphics.pop();
     } );
   }
 
   // PLANE
+
   p.image(
     sketchState.plane.graphics,
     0,
     0
   );
   sketchState.plane.graphics.clear();
+  sketchState.plane.graphics.reset();
 
   // WEBCAM - only render if enabled and capture element exists
   if (

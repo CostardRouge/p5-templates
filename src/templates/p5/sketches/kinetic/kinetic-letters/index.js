@@ -190,34 +190,35 @@ sketch.draw( () => {
     );
 
     targetVectors.push( pointerPosition );
+  }
 
-    if ( options.sketch.interactive.pointersLinesShow ) {
-      layers.pointers.graphics?.stroke( ...( options.sketch.interactive.pointersLinesStroke ?? [
-        0
-      ] ) );
+  if ( options.sketch.interactive.pointersLinesShow ) {
+    layers.pointers.graphics?.stroke( ...( options.sketch.interactive.pointersLinesStroke ?? [
+      0
+    ] ) );
 
-      layers.pointers.graphics?.strokeWeight( options.sketch.interactive.pointersLinesStrokeWeight );
+    layers.pointers.graphics?.strokeWeight( options.sketch.interactive.pointersLinesStrokeWeight );
 
+    targetVectors.forEach( ( vector ) => {
       shapes.vl(
-        pointerPosition.x,
+        vector.x,
         layers.pointers.graphics
       );
       shapes.hl(
-        pointerPosition.y,
+        vector.y,
         layers.pointers.graphics
       );
-    }
 
-    if (
-      layers.pointers.graphics &&
-      options.sketch.interactive.pointersImageShow
-    ) {
-      layers.pointers.graphics.image(
-        sketchState.handPointingImage,
-        pointerPosition.x,
-        pointerPosition.y
-      );
-    }
+      if (
+        layers.pointers.graphics && options.sketch.interactive.pointersImageShow
+      ) {
+        layers.pointers.graphics.image(
+          sketchState.handPointingImage,
+          vector.x,
+          vector.y
+        );
+      }
+    } );
   }
 
   if ( layers.visuals.graphics ) {
