@@ -9,11 +9,36 @@
  */
 export const resolveAssetURL = (
   path, id
-) =>
-  window.__blobAssetMap?.[ path ] ??
-  ( id
-    ? `${ location.origin }/api/s3/${ id }/assets/${ path }`
-    : `${ location.origin }/${ path }` );
+) => {
+  if ( !path ) {
+    return "";
+  }
+
+  const blobURL = window.__blobAssetMap?.[ path ];
+
+  if ( blobURL ) {
+    return blobURL;
+  }
+
+  // Keep already-resolved remote/blob URLs untouched.
+  if ( /^(https?:|blob:)/.test( path ) ) {
+    return path;
+  }
+
+  const normalizedPath = path.replace(
+    /^\/+/,
+    ""
+  );
+
+  // Public assets must always resolve from /assets (even when an id exists).
+  if ( /^assets\//.test( normalizedPath ) ) {
+    return `${ location.origin }/${ normalizedPath }`;
+  }
+
+  return id
+    ? `${ location.origin }/api/s3/${ id }/assets/${ normalizedPath }`
+    : `${ location.origin }/${ normalizedPath }`;
+};
 
 export function deepMerge(
   targetObject, sourceObject
