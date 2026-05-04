@@ -1,13 +1,12 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import getTestImagePaths from "@/utils/getTestImagePaths";
 
 // Default values only
 export const formValues = {
-  // Assets
-  images: [],
+  images: await getTestImagePaths(),
 
-  // Colors
   backgroundColor: [
     230,
     230,
@@ -19,12 +18,10 @@ export const formValues = {
     0
   ],
 
-  // Typography
   font: "cloitre",
   topText: "3d\nphoto",
   bottomText: "stack\nscroll",
 
-  // Cards / motion
   count: 200,
   rotate: true,
   showExifBar: true

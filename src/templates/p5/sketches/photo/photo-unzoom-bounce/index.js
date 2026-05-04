@@ -10,8 +10,6 @@ import {
 } from "@/p5/utils/sketch.js";
 
 sketch.setup( () => {
-  const p = getP5();
-
   applyBackground();
 } );
 

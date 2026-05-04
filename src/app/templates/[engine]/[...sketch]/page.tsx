@@ -9,7 +9,7 @@ import React from "react";
 import "@/engines/index"; // register all engines
 
 import {
-  getEngine, hasEngine
+  hasEngine
 } from "@/engines/registry";
 import {
   findSketchMeta
@@ -31,59 +31,10 @@ import {
   getJSONSketchOptions,
   getSketchMeta
 } from "@/utils/getSketchOptions";
-import type {
-  FieldConfig
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-import listDirectory from "@/utils/listDirectory";
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-const acceptedImageTypes = [
-  "png",
-  "jpg",
-  "arw",
-  "jpeg",
-  "webp"
-];
-
-function injectTestImagesIntoSketchFields(
-  sketch: Record<string, unknown>,
-  formConfiguration: Record<string, FieldConfig>,
-  testImagePaths: string[]
-): void {
-  for ( const [
-    key,
-    config
-  ] of Object.entries( formConfiguration ) ) {
-    if ( config.component === "images-stack" ) {
-      if ( typeof config.scope === "object" ) {
-        continue;
-      }
-      const existing = Array.isArray( sketch[ key ] )
-        ? ( sketch[ key ] as string[] )
-        : [];
-
-      sketch[ key ] = [
-        ...existing,
-        ...testImagePaths
-      ];
-    } else if ( config.component === "image" ) {
-      if ( typeof config.scope === "object" ) {
-        continue;
-      }
-      if ( !sketch[ key ] ) {
-        sketch[ key ] = testImagePaths[ 0 ] ?? null;
-      }
-    }
-  }
-}
 
 /* ------------------------------------------------------------------ */
 /*  Route params type                                                  */
 /* ------------------------------------------------------------------ */
-
 type RouteParams = {
   engine: string;
   sketch: string[]; // catch-all: ["category", "name"] or ["name"]
@@ -92,7 +43,6 @@ type RouteParams = {
 /* ------------------------------------------------------------------ */
 /*  Metadata                                                           */
 /* ------------------------------------------------------------------ */
-
 export async function generateMetadata( {
   params
 }: {
@@ -177,7 +127,8 @@ export default async function StudioPage( {
 }: {
   params: Promise<RouteParams>;
   searchParams: Promise<{
-    id?: string; capturing?: string
+    id?: string;
+    capturing?: string
   }>;
 } ) {
   const {
@@ -260,54 +211,27 @@ export default async function StudioPage( {
     sketchOptions.id = persistedJob.id;
   }
 
-  /* ---- test images injection ------------------------------------- */
-  if ( sketchOptions.consumeTestImages && !jobIdSearchParams ) {
-    delete sketchOptions.consumeTestImages;
-
-    sketchOptions.assets = sketchOptions.assets || {
-      images: []
-    };
-
-    const testImageFileNames = await listDirectory( "public/assets/images/test" );
-
-    const testImagePaths = testImageFileNames
-      .filter( ( f ) => acceptedImageTypes.includes( f.split( "." )[ 1 ] ) )
-      .map( ( f ) => `/assets/images/test/${ f }` );
-
-    sketchOptions.assets.images = testImagePaths;
-
-    if ( formConfiguration ) {
-      sketchOptions.sketch = ( sketchOptions.sketch as Record<string, unknown> ) ?? {};
-
-      injectTestImagesIntoSketchFields(
-        sketchOptions.sketch as Record<string, unknown>,
-        formConfiguration,
-        testImagePaths
-      );
-    }
-  }
-
   sketchOptions.name = sketchName;
 
   /* ---- render ---------------------------------------------------- */
   return (
     <>
       <SketchJsonLd
-        sketchName={sketchName}
-        engineId={engineId}
-        category={sketchMeta.category}
-        hasThumbnail={sketchMeta.hasThumbnail}
+        sketchName={ sketchName }
+        engineId={ engineId }
+        category={ sketchMeta.category }
+        hasThumbnail={ sketchMeta.hasThumbnail }
       />
 
       <SketchContextProvider
-        name={sketchName}
-        engineId={engineId}
-        options={sketchOptions}
-        persistedJob={persistedJob}
-        sketchFormValues={formValues}
-        sketchFormConfiguration={formConfiguration}
-        capturing={( await searchParams ).capturing === ""}
-        backendRecording={process.env.BACKEND_RECORDING === "true"}
+        name={ sketchName }
+        engineId={ engineId }
+        options={ sketchOptions }
+        persistedJob={ persistedJob }
+        sketchFormValues={ formValues }
+        sketchFormConfiguration={ formConfiguration }
+        capturing={ ( await searchParams ).capturing === "" }
+        backendRecording={ process.env.BACKEND_RECORDING === "true" }
         activeSlideIndex={
           sketchOptions.slides?.length > 0 ? 0 : undefined
         }

@@ -22,6 +22,7 @@ const eslintConfig = [
   {
     ignores: [
       "src/generated/**",
+      "node_modules/**",
       "public/assets/libraries/**"
     ]
   },

@@ -390,8 +390,6 @@ export const OptionsSchema = z.object( {
     .optional(),
   name: z.string().default( "" )
     .optional(),
-  consumeTestImages: z.boolean().default( false )
-    .optional(),
   size: SketchSizeSchema.default( {
     width: 1080,
     height: 1350

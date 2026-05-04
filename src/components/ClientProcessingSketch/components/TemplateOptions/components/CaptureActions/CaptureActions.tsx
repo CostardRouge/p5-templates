@@ -107,7 +107,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const {
     subscribeToRecordingStatus, recordingProgress
   } =
-      useRecordingStatusStream();
+    useRecordingStatusStream();
 
   // Determine current status
   const currentStatus = ( recordingProgress?.status || persistedJob?.status ) as
@@ -204,8 +204,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       };
 
       for ( const type of Object.keys( globalAssets ) ) {
-        const fileList =
-            globalAssets[ type as keyof typeof globalAssets ] ?? [];
+        const fileList = globalAssets[ type as keyof typeof globalAssets ] ?? [];
 
         await Promise.all( fileList.map( async(
           assetUrl: string, index: number
@@ -312,7 +311,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
               "",
               newUrl
             );
-          } catch ( routerError ) {
+          } catch( routerError ) {
             console.error(
               "[CaptureActions] Router.replace failed, falling back to window.history:",
               routerError
@@ -342,7 +341,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         // Optionally show error to user
         alert( "Failed to save draft. Please try again." );
       }
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[CaptureActions] Error in handleSubmit:",
         error
@@ -411,7 +410,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         alert( `Could not delete job: ${ jobToDelete }` );
         setDeleting( false );
       }
-    } catch ( error ) {
+    } catch( error ) {
       alert( "Failed to delete. Please try again." );
       setDeleting( false );
     }
@@ -443,7 +442,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       if ( !cancelled ) {
         alert( `Could not cancel job: ${ jobId }` );
       }
-    } catch ( error ) {
+    } catch( error ) {
       alert( "Failed to cancel. Please try again." );
     } finally {
       setCancelling( false );
@@ -480,7 +479,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         alert( `Could not retry job: ${ persistedJob.id }` );
         setRetrying( false );
       }
-    } catch ( error ) {
+    } catch( error ) {
       alert( "Failed to retry. Please try again." );
       setRetrying( false );
     }
@@ -490,7 +489,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     setCloning( true );
     try {
       await handleSubmit( "draft" );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "Failed to clone:",
         error
@@ -511,7 +510,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     setDownloading( true );
     try {
       await fetchDownload( `/api/recordings/download/${ jobToDownload }/slide/${ activeSlideIndex }` );
-    } catch ( error ) {
+    } catch( error ) {
       alert( "Failed to download. Please try again." );
     } finally {
       setDownloading( false );
@@ -528,10 +527,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const {
     isRecording, isCompleted, isFailed, isDraft
   } =
-      getRecordingStatus( currentStatus );
+    getRecordingStatus( currentStatus );
   const hasNoJob = !persistedJob && !recordingProgress && !jobId;
   const isAnyActionLoading =
-      isLoading ||
+    isLoading ||
       saving ||
       deleting ||
       cancelling ||
@@ -540,7 +539,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       cloning;
     // Don't block start button when only saving (isLoading is true during save too)
   const isBlockingActionLoading =
-      ( isLoading && !saving ) ||
+    ( isLoading && !saving ) ||
       deleting ||
       cancelling ||
       retrying ||
@@ -549,7 +548,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
   // Use persistedJob or construct a minimal job object from recordingProgress/jobId
   const effectiveJob =
-      persistedJob ||
+    persistedJob ||
       ( jobId
         ? ( {
           id: jobId,
@@ -564,7 +563,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         <div className="flex flex-col gap-1 h-auto w-full">
           {/* Browser Recording - Only on Compatible Devices */}
           {!isRecording && browserRecordingSupported && (
-            <BrowserRecordingButton onRecord={handleBrowserRecord} />
+            <BrowserRecordingButton onRecord={ handleBrowserRecord } />
           )}
 
           {backendRecording && (
@@ -572,78 +571,78 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
               {/* NO JOB - Fresh Start */}
               {hasNoJob && (
                 <NoJobActions
-                  onSaveDraft={() => handleSubmit( "draft" )}
-                  onStart={() => handleSubmit( "queued" )}
-                  saving={saving}
-                  isLoading={isLoading}
-                  isAnyActionLoading={isAnyActionLoading}
-                  isBlockingActionLoading={isBlockingActionLoading}
+                  onSaveDraft={ () => handleSubmit( "draft" ) }
+                  onStart={ () => handleSubmit( "queued" ) }
+                  saving={ saving }
+                  isLoading={ isLoading }
+                  isAnyActionLoading={ isAnyActionLoading }
+                  isBlockingActionLoading={ isBlockingActionLoading }
                 />
               )}
 
               {/* DRAFT Status */}
               {isDraft && !isRecording && persistedJob && (
                 <DraftActions
-                  onSave={() => handleSubmit(
+                  onSave={ () => handleSubmit(
                     "draft",
                     persistedJob.id
-                  )}
-                  onStart={() => handleSubmit(
+                  ) }
+                  onStart={ () => handleSubmit(
                     "queued",
                     persistedJob.id
-                  )}
-                  onDelete={handleDelete}
-                  saving={saving}
-                  isLoading={isLoading}
-                  deleting={deleting}
-                  isAnyActionLoading={isAnyActionLoading}
-                  isBlockingActionLoading={isBlockingActionLoading}
+                  ) }
+                  onDelete={ handleDelete }
+                  saving={ saving }
+                  isLoading={ isLoading }
+                  deleting={ deleting }
+                  isAnyActionLoading={ isAnyActionLoading }
+                  isBlockingActionLoading={ isBlockingActionLoading }
                 />
               )}
 
               {/* RECORDING Status (Queued/Active) */}
               {isRecording && (
                 <RecordingActions
-                  persistedJob={persistedJob}
-                  jobId={jobId}
-                  recordingProgress={recordingProgress || undefined}
-                  onClone={handleRecordAgain}
-                  onCancel={handleCancel}
-                  cloning={cloning}
-                  cancelling={cancelling}
+                  persistedJob={ persistedJob }
+                  jobId={ jobId }
+                  recordingProgress={ recordingProgress || undefined }
+                  onClone={ handleRecordAgain }
+                  onCancel={ handleCancel }
+                  cloning={ cloning }
+                  cancelling={ cancelling }
                 />
               )}
 
               {/* COMPLETED Status */}
               {isCompleted && effectiveJob && (
                 <CompletedActions
-                  persistedJob={effectiveJob}
-                  activeSlideIndex={activeSlideIndex}
-                  onPreview={() => setShowPreviewModal( true )}
-                  onRecordAgain={handleRecordAgain}
-                  onDelete={handleDelete}
-                  downloading={downloading}
-                  onDownload={handleDownload}
-                  deleting={deleting}
-                  cloning={cloning}
+                  persistedJob={ effectiveJob }
+                  activeSlideIndex={ activeSlideIndex }
+                  onPreview={ () => setShowPreviewModal( true ) }
+                  onRecordAgain={ handleRecordAgain }
+                  onDelete={ handleDelete }
+                  downloading={ downloading }
+                  onDownload={ handleDownload }
+                  deleting={ deleting }
+                  cloning={ cloning }
                 />
               )}
 
               {/* FAILED/CANCELLED Status */}
               {isFailed && effectiveJob && (
                 <FailedActions
-                  onRetry={handleRetry}
-                  onSaveAsDraft={async() => {
+                  onRetry={ handleRetry }
+                  onSaveAsDraft={ async() => {
                     await handleSubmit(
                       "draft",
                       effectiveJob.id
                     );
-                  }}
-                  onDelete={handleDelete}
-                  retrying={retrying}
-                  saving={saving}
-                  deleting={deleting}
-                  isAnyActionLoading={isAnyActionLoading}
+                  } }
+                  onDelete={ handleDelete }
+                  retrying={ retrying }
+                  saving={ saving }
+                  deleting={ deleting }
+                  isAnyActionLoading={ isAnyActionLoading }
                 />
               )}
             </>
@@ -653,9 +652,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
       {backendRecording && effectiveJob && showPreviewModal && (
         <VideoPreviewModal
-          jobId={effectiveJob.id}
-          isOpen={showPreviewModal}
-          onClose={() => setShowPreviewModal( false )}
+          jobId={ effectiveJob.id }
+          isOpen={ showPreviewModal }
+          onClose={ () => setShowPreviewModal( false ) }
         />
       )}
     </>

@@ -1,7 +1,9 @@
 // Default values only
 
+import getTestImagePaths from "@/utils/getTestImagePaths";
+
 export const formValues = {
-  images: [],
+  images: await getTestImagePaths(),
 
   // dominantColorSample: 50,
 

@@ -4,6 +4,7 @@ import {
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
   strokeWeight: {
@@ -25,7 +26,7 @@ export const formValues = {
   switchSpeed: 1,
   switchEasing: "linear",
 
-  images: [],
+  images: await getTestImagePaths(),
   imageStyle: {
     fill: true,
     clip: true,

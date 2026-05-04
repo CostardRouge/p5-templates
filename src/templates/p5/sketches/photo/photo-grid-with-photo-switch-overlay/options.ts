@@ -1,8 +1,9 @@
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
-  images: [],
+  images: await getTestImagePaths(),
 
   grid: {
     borderSize: 0,

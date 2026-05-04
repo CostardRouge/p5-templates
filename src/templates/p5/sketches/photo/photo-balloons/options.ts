@@ -1,8 +1,9 @@
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues.js";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration.js";
+import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
-  images: [],
+  images: await getTestImagePaths(),
 
   colors: {
     background: [

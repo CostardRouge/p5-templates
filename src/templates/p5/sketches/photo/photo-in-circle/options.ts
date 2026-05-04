@@ -1,9 +1,10 @@
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
   // Assets
-  images: [],
+  images: await getTestImagePaths(),
 
   margin: 0.1,
   scale: 1,

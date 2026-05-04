@@ -1,5 +1,7 @@
+import getTestImagePaths from "@/utils/getTestImagePaths";
+
 export const formValues = {
-  images: [],
+  images: await getTestImagePaths(),
 
   imageStyle: {
     margin: 0.1,

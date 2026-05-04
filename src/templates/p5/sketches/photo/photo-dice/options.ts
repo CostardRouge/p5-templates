@@ -12,15 +12,13 @@ export const formValues = {
     225
   ],
 
-  // Dice / scene
   useOrbitControl: true,
-  diceSizeFactor: 1.5, // dice size = width / diceSizeFactor
-  faceScale: 0.65, // image scale on each face (0..1)
+  diceSizeFactor: 1.5,
+  faceScale: 0.65,
 
-  // Motion
-  rotateSpeed: 1, // multiplies rotation progression
-  easing: "easeInOutExpo", // easing function for face rotations
-  repeatImages: true, // if fewer than 6 images, repeat across faces
+  rotateSpeed: 1,
+  easing: "easeInOutExpo",
+  repeatImages: true,
 
   title: titleDefaultValues
 };
@@ -44,15 +42,15 @@ export const formConfiguration: Record<string, any> = {
   diceSizeFactor: {
     component: "slider",
     label: "Dice size factor",
-    min: 0.5,
-    max: 3,
+    min: 0.1,
+    max: 9,
     step: 0.01
   },
   faceScale: {
     component: "slider",
     label: "Face image scale",
     min: 0.1,
-    max: 1,
+    max: 6,
     step: 0.01
   },
 

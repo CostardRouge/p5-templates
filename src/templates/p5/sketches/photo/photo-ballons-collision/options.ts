@@ -3,11 +3,12 @@ import {
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import titleFormConfiguration from "@/templates/p5/utils/title/titleFormConfiguration";
 import titleDefaultValues from "@/templates/p5/utils/title/titleDefaultValues";
+import getTestImagePaths from "@/utils/getTestImagePaths";
 
 // Default values only
 export const formValues = {
   // Assets
-  images: [],
+  images: await getTestImagePaths(),
 
   // Colors
   backgroundColor: [
