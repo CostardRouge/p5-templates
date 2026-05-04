@@ -10,7 +10,7 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
-import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -34,7 +34,7 @@ events.register(
   }
 );
 
-sketch.setup( ( {
+sketch.setup( async( {
   canvas
 } ) => {
   const p = getP5();
@@ -46,7 +46,7 @@ sketch.setup( ( {
   );
 
   p.background( ...getBackgroundColor() );
-  addScreenPositionFunction( sketchState.shape.graphics );
+  await addScreenPositionFunction( sketchState.shape.graphics );
 } );
 
 function getAlphaFromMask( {

@@ -159,7 +159,7 @@ const sketch = {
           events.handle( "engine-window-preload" );
         };
 
-        p.setup = () => {
+        p.setup = async() => {
           // -- pre-setup ------------------------------------------------
           sketch.favoriteColors.purple = p.color(
             128,
@@ -244,9 +244,11 @@ const sketch = {
           // -- setup (user function) ------------------------------------
           p.noStroke();
           p.pixelDensity( 1 );
-          sketch._setupFn?.( {
+
+          await sketch._setupFn?.( {
             center: sketch.getCanvasCenter(),
             canvas: sketch.canvas,
+            p,
           } );
           events.handle( "setup" );
 
@@ -254,14 +256,15 @@ const sketch = {
           events.handle( "post-setup" );
         };
 
-        p.draw = () => {
+        p.draw = async() => {
           events.handle( "pre-draw" );
 
           // Call the user's draw function with the same args as before
-          sketch._drawFn?.(
+          await sketch._drawFn?.(
             time.seconds(),
             sketch.getCanvasCenter(),
-            sketch.favoriteColors.purple
+            sketch.favoriteColors.purple,
+            p
           );
 
           events.handle( "post-draw" );

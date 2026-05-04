@@ -8,7 +8,7 @@ import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
-import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 
 import mediapipe, {
   init as mediapipeInit,

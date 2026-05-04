@@ -7,7 +7,7 @@ import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
-import addScreenPositionFunction from "@/public/assets/libraries/addScreenPositionFunction.js";
+import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 
 import mediapipe, {
   init as mediapipeInit,
@@ -53,7 +53,7 @@ sketch.setup( async( {
     "webgl"
   );
   sketchState.plane.graphics.pixelDensity( 1 );
-  addScreenPositionFunction( sketchState.plane.graphics );
+  await addScreenPositionFunction( sketchState.plane.graphics );
 
   sketchState.webcam.graphics = p.createGraphics(
     p.width,
@@ -171,6 +171,8 @@ function createTriangleGrid(
 function displayTriangleGrid(
   grid, targetVectors, imageTexture
 ) {
+  const p = getP5();
+
   if ( imageTexture && imageTexture.width && imageTexture.height ) {
     sketchState.plane.graphics.texture( imageTexture );
   }
@@ -257,6 +259,8 @@ function displayTriangleGrid(
 function computeDisplacement(
   position, targetVectors, maxInfluenceDistance
 ) {
+  const p = getP5();
+
   let minDistance = Infinity;
 
   for ( let i = 0; i < targetVectors.length; i++ ) {
@@ -374,7 +378,7 @@ sketch.draw( () => {
         vector.y,
         50
       );
-      sketchState.plane.graphics.normalMaterial( vector );
+      sketchState.plane.graphics.normalMaterial( );
       sketchState.plane.graphics.sphere( options.sketch.animation.sphereSize ?? 30 );
       sketchState.plane.graphics.pop();
     } );
