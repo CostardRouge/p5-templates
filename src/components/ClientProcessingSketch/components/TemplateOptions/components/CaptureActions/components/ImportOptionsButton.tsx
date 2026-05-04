@@ -22,7 +22,7 @@ export default function ImportOptionsButton( {
   persistedJobId,
   jobStatus,
   name,
-  onImportInMemory,
+  onImportInMemory
 }: ImportOptionsButtonProps ) {
   const fileInputRef = useRef<HTMLInputElement>( null );
   const [
@@ -80,7 +80,7 @@ export default function ImportOptionsButton( {
           onImportInMemory( importedOptions );
           setToast( {
             message: "Options imported successfully",
-            type: "success",
+            type: "success"
           } );
         }
       } else {
@@ -96,7 +96,7 @@ export default function ImportOptionsButton( {
           `/api/options/import/${ persistedJobId }`,
           {
             method: "POST",
-            body: formData,
+            body: formData
           }
         );
 
@@ -111,7 +111,7 @@ export default function ImportOptionsButton( {
         if ( result.success ) {
           setToast( {
             message: "Options imported successfully",
-            type: "success",
+            type: "success"
           } );
           // Reload after a short delay to show the toast
           setTimeout(
@@ -128,7 +128,7 @@ export default function ImportOptionsButton( {
       setToast( {
         message:
           error instanceof Error ? error.message : "Failed to import options",
-        type: "error",
+        type: "error"
       } );
     } finally {
       setImporting( false );

@@ -13,8 +13,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {
-};
+const canvases = {};
 
 sketch.setup( () => {
   const p = getP5();
@@ -47,11 +46,10 @@ sketch.draw( (
     img: imageObject.img,
     scale: options.sketch.imageStyle.scale ?? 1,
     center: options.sketch.imageStyle.center ?? true,
-    fill: options.sketch.imageStyle.fill ?? true,
+    fill: options.sketch.imageStyle.fill ?? true
   } );
 
-  const itemsToMorph = [
-  ];
+  const itemsToMorph = [];
 
   if ( "single" === options.sketch.text.mode ) {
     itemsToMorph.push( ...( options.sketch.text.value.split( "" ) ) );
@@ -80,11 +78,11 @@ sketch.draw( (
         font,
         sampleFactor,
         simplifyThreshold,
-        position: center,
+        position: center
       } ) ),
     lerpFn: mappers.lerpPoints,
     currentTime: animation.progression * itemsToMorph.length,
-    easingFn: easing.easeInOutExpo,
+    easingFn: easing.easeInOutExpo
   } );
 
   // canvases.mask.beginShape();
@@ -103,7 +101,7 @@ sketch.draw( (
     // );
     canvases.mask.point(
       points[ i ].x,
-      points[ i ].y,
+      points[ i ].y
     );
   }
   // canvases.mask.endShape( );

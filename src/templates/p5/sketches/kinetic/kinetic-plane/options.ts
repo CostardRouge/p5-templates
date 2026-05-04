@@ -3,7 +3,7 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 export const formValues = {
   texture: {
     image: null,
-    useWebcam: false,
+    useWebcam: false
   },
   grid: {
     columns: 20,
@@ -12,8 +12,8 @@ export const formValues = {
       color: [
         0
       ],
-      hide: false,
-    },
+      hide: false
+    }
   },
   animation: {
     useMouse: false,
@@ -24,14 +24,14 @@ export const formValues = {
     sphereSize: 30,
     depth: 100,
     maxInfluenceDistance: 150,
-    easing: "easeOutBack",
+    easing: "easeOutBack"
   },
   title: titleDefaultValues,
   backgroundColor: [
     246,
     235,
     225
-  ],
+  ]
 };
 
 // UI configuration only
@@ -42,13 +42,13 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       image: {
         component: "image",
-        label: "Image",
+        label: "Image"
       },
       useWebcam: {
         label: "Use webcam as texture",
-        component: "checkbox",
-      },
-    },
+        component: "checkbox"
+      }
+    }
   },
   grid: {
     component: "nested-object",
@@ -58,13 +58,13 @@ export const formConfiguration: Record<string, any> = {
         label: "Grid columns",
         component: "slider",
         min: 1,
-        max: 100,
+        max: 100
       },
       rows: {
         label: "Grid rows",
         component: "slider",
         min: 1,
-        max: 100,
+        max: 100
       },
       stroke: {
         component: "nested-object",
@@ -72,15 +72,15 @@ export const formConfiguration: Record<string, any> = {
         fields: {
           color: {
             component: "color",
-            label: "stroke",
+            label: "stroke"
           },
           hide: {
             label: "noStroke()",
-            component: "checkbox",
-          },
-        },
-      },
-    },
+            component: "checkbox"
+          }
+        }
+      }
+    }
   },
   animation: {
     component: "nested-object",
@@ -88,54 +88,54 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       useMouse: {
         label: "Use mouse",
-        component: "checkbox",
+        component: "checkbox"
       },
       useHands: {
         label: "Use hands",
-        component: "checkbox",
+        component: "checkbox"
       },
       showWebcam: {
         label: "Show webcam",
-        component: "checkbox",
+        component: "checkbox"
       },
       showSpheres: {
         label: "Show spheres",
-        component: "checkbox",
+        component: "checkbox"
       },
       spheresCount: {
         label: "Spheres count",
         component: "slider",
         min: 0,
-        max: 24,
+        max: 24
       },
       sphereSize: {
         label: "Sphere size",
         component: "slider",
         min: 1,
-        max: 100,
+        max: 100
       },
       depth: {
         label: "Depth",
         component: "slider",
         min: 1,
-        max: 500,
+        max: 500
       },
       maxInfluenceDistance: {
         label: "Max influence distance",
         component: "slider",
         min: 0,
         max: 500,
-        step: 0.5,
+        step: 0.5
       },
       easing: {
         component: "easing",
-        label: "Depth easing",
-      },
-    },
+        label: "Depth easing"
+      }
+    }
   },
   title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

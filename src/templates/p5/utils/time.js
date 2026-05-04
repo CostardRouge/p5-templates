@@ -41,7 +41,7 @@ const time = {
       time.elapsed += delta;
       time.lastUpdate = now;
     }
-  },
+  }
 };
 
 // Expose global function for server-side recording control
@@ -83,8 +83,8 @@ window.setAnimationProgression = function( progression ) {
     "animation-progression-changed",
     {
       detail: {
-        progression: clampedProgression,
-      },
+        progression: clampedProgression
+      }
     }
   ) );
 };
@@ -108,8 +108,8 @@ window.getAnimationProgression = function() {
         "animation-progression-changed",
         {
           detail: {
-            progression,
-          },
+            progression
+          }
         }
       ) );
     }
@@ -127,8 +127,8 @@ window.getAnimationProgression = function() {
       "animation-progression-changed",
       {
         detail: {
-          progression,
-        },
+          progression
+        }
       }
     ) );
   }

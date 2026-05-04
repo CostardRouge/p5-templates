@@ -58,7 +58,7 @@ export function createHistoryEntry<T>(
     timestamp: Date.now(),
     description,
     affectedPaths,
-    batchId,
+    batchId
   };
 
   // Generate patches if we have a previous state
@@ -169,10 +169,8 @@ export function compressHistory<T>(
 export function mergeBatchEntries<T>( entries: HistoryEntry<T>[] ): HistoryEntry<T>[] {
   if ( entries.length === 0 ) return entries;
 
-  const merged: HistoryEntry<T>[] = [
-  ];
-  let currentBatch: HistoryEntry<T>[] = [
-  ];
+  const merged: HistoryEntry<T>[] = [];
+  let currentBatch: HistoryEntry<T>[] = [];
   let currentBatchId: string | undefined;
 
   entries.forEach( ( entry ) => {
@@ -191,8 +189,7 @@ export function mergeBatchEntries<T>( entries: HistoryEntry<T>[] ): HistoryEntry
         currentBatchId = entry.batchId;
       } else {
         merged.push( entry );
-        currentBatch = [
-        ];
+        currentBatch = [];
         currentBatchId = undefined;
       }
     }
@@ -217,8 +214,7 @@ function mergeBatchGroup<T>( entries: HistoryEntry<T>[] ): HistoryEntry<T> {
     timestamp: first.timestamp,
     description:
       first.description || `Batch operation (${ entries.length } changes)`,
-    affectedPaths: Array.from( new Set( entries.flatMap( ( e ) => e.affectedPaths || [
-    ] ) ) ),
-    batchId: first.batchId,
+    affectedPaths: Array.from( new Set( entries.flatMap( ( e ) => e.affectedPaths || [] ) ) ),
+    batchId: first.batchId
   };
 }

@@ -16,7 +16,7 @@ import {
 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
-  threeDimensionGraphics: null,
+  threeDimensionGraphics: null
 };
 
 sketch.setup(
@@ -31,8 +31,7 @@ sketch.setup(
       "webgl"
     );
   },
-  {
-  }
+  {}
 );
 
 let pointLength = 0;
@@ -45,8 +44,7 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
-  const itemsToMorph = [
-  ];
+  const itemsToMorph = [];
 
   if ( "single" === options.sketch.text.mode ) {
     itemsToMorph.push( ...( options.sketch.text.value.split( "" ) ) );
@@ -128,12 +126,12 @@ sketch.draw( ( time ) => {
         p.sin( getLoopPhase( [
           [
             t,
-            p.PI,
+            p.PI
           ],
           [
             progression,
             3
-          ],
+          ]
           // [
           //   depthProgression,
           //   1
@@ -142,7 +140,7 @@ sketch.draw( ( time ) => {
         -1,
         1,
         1,
-        0,
+        0
         // easing.easeInOutBack
         // morphingEasingFunction
       );
@@ -171,7 +169,7 @@ sketch.draw( ( time ) => {
         Math.sin( getLoopPhase( [
           [
             animation.angle,
-            1,
+            1
           ],
           [
             depthProgression,
@@ -180,12 +178,12 @@ sketch.draw( ( time ) => {
           [
             progression,
             9
-          ],
+          ]
         ] ) ),
         -1,
         1,
         1.5,
-        1,
+        1
       ) * Math.pow(
         1.2,
         z
@@ -223,7 +221,7 @@ sketch.draw( ( time ) => {
           Math.sin( getLoopPhase( [
             [
               animation.angle,
-              1,
+              1
             ],
             [
               depthProgression,
@@ -232,7 +230,7 @@ sketch.draw( ( time ) => {
             [
               progression,
               9
-            ],
+            ]
           ] ) ),
           -1,
           1,

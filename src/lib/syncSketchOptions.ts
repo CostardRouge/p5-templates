@@ -15,20 +15,19 @@ const globalStore = globalThis as typeof globalThis & {
   sketchOptions?: Record<string, any>;
 };
 
-globalStore.sketchOptions ??= {
-};
+globalStore.sketchOptions ??= {};
 
 const current: Record<string, any> = globalStore.sketchOptions;
 
 export function setSketchOptions(
   update: Record<string, any>,
-  origin = "react",
+  origin = "react"
 ): void {
   const sourceClone = structuredClone( update );
 
   const merged = deepMerge(
     structuredClone( current ),
-    sourceClone,
+    sourceClone
   );
 
   if ( JSON.stringify( merged ) === JSON.stringify( current ) ) {
@@ -41,7 +40,7 @@ export function setSketchOptions(
 
   Object.assign(
     current,
-    merged,
+    merged
   );
 
   globalStore.sketchOptions = current;
@@ -51,31 +50,31 @@ export function setSketchOptions(
     {
       detail: {
         opts: current,
-        origin,
-      },
+        origin
+      }
     }
-  ), );
+  ) );
 }
 
-export function subscribeSketchOptions( cb: ( opts: Record<string, any>, origin?: string ) => void, ): () => void {
+export function subscribeSketchOptions( cb: ( opts: Record<string, any>, origin?: string ) => void ): () => void {
   const handler = ( e: Event ) => {
     const detail = ( e as CustomEvent ).detail;
 
     cb(
       detail.opts,
-      detail.origin,
+      detail.origin
     );
   };
 
   window.addEventListener(
     EVENT,
-    handler,
+    handler
   );
 
   return () =>
     window.removeEventListener(
       EVENT,
-      handler,
+      handler
     );
 }
 

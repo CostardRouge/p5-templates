@@ -18,7 +18,7 @@ type RandomizeSettingsButtonProps = {
 
 export default function RandomizeSettingsButton( {
   config,
-  basePath,
+  basePath
 }: RandomizeSettingsButtonProps ) {
   const {
     setValue

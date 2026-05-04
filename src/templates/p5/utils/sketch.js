@@ -67,7 +67,7 @@ const sketch = {
   paused: false,
   sketchOptions: undefined,
   favoriteColors: {
-    purple: undefined,
+    purple: undefined
   },
 
   // ---- public API (called by sketch modules) --------------------------
@@ -77,23 +77,23 @@ const sketch = {
   ) => {
     const size = options.size ?? {
       width: 1080,
-      height: 1350,
+      height: 1350
     };
     const animation = options.animation ?? {
       framerate: 60,
-      duration: 12,
+      duration: 12
     };
 
     sketchOptions = Object.assign(
       {
         size: {
           width: size.width,
-          height: size.height,
+          height: size.height
         },
         animation: {
           framerate: animation.framerate ?? 60,
-          duration: animation.duration ?? 12,
-        },
+          duration: animation.duration ?? 12
+        }
       },
       sketchOptions
     );
@@ -117,12 +117,12 @@ const sketch = {
     const sketchOptions = sketch.sketchOptions ?? {
       size: {
         width: 1080,
-        height: 1350,
+        height: 1350
       },
       animation: {
         framerate: 60,
-        duration: 12,
-      },
+        duration: 12
+      }
     };
 
     // backward compat: sketch.engine points to sketch itself
@@ -172,9 +172,8 @@ const sketch = {
             size: {
               width = 1080,
               height = 1350,
-              ratio,
-            } = {
-            },
+              ratio
+            } = {}
           } = sketchOptions;
 
           sketch.canvas = p.createCanvas(
@@ -248,7 +247,7 @@ const sketch = {
           await sketch._setupFn?.( {
             center: sketch.getCanvasCenter(),
             canvas: sketch.canvas,
-            p,
+            p
           } );
           events.handle( "setup" );
 
@@ -385,8 +384,7 @@ const sketch = {
     sketch.engine = undefined;
 
     // Clear all registered events so the next sketch starts fresh
-    events.registeredEvents = {
-    };
+    events.registeredEvents = {};
   },
 
   // ---- engine methods (backward compat for time.js, debug.js, etc.) ---
@@ -490,7 +488,7 @@ const sketch = {
         subscribers.add( cb );
 
         return () => subscribers.delete( cb );
-      },
+      }
     } );
   },
 
@@ -558,8 +556,8 @@ const sketch = {
       checked ? getP5()?.smooth() : getP5()?.noSmooth(),
     "engine-framerate-change": ( value ) => {
       getP5()?.frameRate( value );
-    },
-  },
+    }
+  }
 };
 
 export default sketch;

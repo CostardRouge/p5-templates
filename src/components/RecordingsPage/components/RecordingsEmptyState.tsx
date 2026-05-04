@@ -7,7 +7,7 @@ interface RecordingsEmptyStateProps {
 }
 
 export default function RecordingsEmptyState( {
-  hasFilters,
+  hasFilters
 }: RecordingsEmptyStateProps ) {
   return (
     <div className="text-center py-8 sm:py-12">

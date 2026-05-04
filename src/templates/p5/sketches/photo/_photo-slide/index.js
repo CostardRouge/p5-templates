@@ -13,7 +13,7 @@ import {
 const canvases = {
   imageBuffer: undefined,
   maskBuffer: undefined,
-  sliderBuffer: undefined,
+  sliderBuffer: undefined
 };
 
 function drawImageWithMask( {
@@ -27,7 +27,7 @@ function drawImageWithMask( {
     position: p.createVector(
       p.width / 2,
       p.height / 2
-    ),
+    )
   } );
 
   // Clean mask
@@ -159,7 +159,7 @@ sketch.draw( (
     position: p.createVector(
       offset,
       p.height / 2
-    ),
+    )
   } );
 
   imageUtils.marginImage( {
@@ -174,7 +174,7 @@ sketch.draw( (
     position: p.createVector(
       offset + p.width + p.width / 2,
       p.height / 2
-    ),
+    )
   } );
 
   p.image(
@@ -208,7 +208,7 @@ sketch.draw( (
           p.CENTER,
           p.CENTER
         ],
-        blendMode: p.EXCLUSION,
+        blendMode: p.EXCLUSION
       }
     );
   }

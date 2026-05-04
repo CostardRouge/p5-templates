@@ -25,7 +25,7 @@ export default function OptionsImportExport( {
   name,
   persistedJobId,
   jobStatus,
-  onImportInMemory,
+  onImportInMemory
 }: OptionsMenuProps ) {
   const fileInputRef = useRef<HTMLInputElement>( null );
   const [
@@ -61,7 +61,7 @@ export default function OptionsImportExport( {
         )
       ],
       {
-        type: "application/json",
+        type: "application/json"
       }
     );
 
@@ -113,7 +113,7 @@ export default function OptionsImportExport( {
           onImportInMemory( importedOptions );
           setToast( {
             message: "Options imported successfully",
-            type: "success",
+            type: "success"
           } );
         }
       } else {
@@ -128,7 +128,7 @@ export default function OptionsImportExport( {
           `/api/options/import/${ persistedJobId }`,
           {
             method: "POST",
-            body: formData,
+            body: formData
           }
         );
 
@@ -143,7 +143,7 @@ export default function OptionsImportExport( {
         if ( result.success ) {
           setToast( {
             message: "Options imported successfully",
-            type: "success",
+            type: "success"
           } );
           setTimeout(
             () => {
@@ -159,7 +159,7 @@ export default function OptionsImportExport( {
       setToast( {
         message:
           error instanceof Error ? error.message : "Failed to import options",
-        type: "error",
+        type: "error"
       } );
     } finally {
       setImporting( false );
@@ -189,7 +189,7 @@ export default function OptionsImportExport( {
           className={clsx(
             "disabled:opacity-50 text-xs flex items-center",
             {
-              "animate-pulse": importing,
+              "animate-pulse": importing
             }
           )}
         >

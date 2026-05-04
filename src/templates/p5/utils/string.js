@@ -8,8 +8,7 @@ import {
 
 const string = {
   fonts: {
-    loaded: {
-    },
+    loaded: {},
     loadFont: (
       key, path
     ) => {
@@ -112,7 +111,7 @@ const string = {
         "waverse-variable",
         "/assets/fonts/waverse-variable.ttf"
       );
-    },
+    }
   },
   applyFontStyle: function( {
     graphics = getP5(),
@@ -144,8 +143,7 @@ const string = {
     graphics.textWrap( textWrap );
   },
   write: function(
-    str, x, y, options = {
-    }
+    str, x, y, options = {}
   ) {
     if ( !str ) {
       return;
@@ -166,8 +164,7 @@ const string = {
     options.popPush ??= true;
     options.blendMode ??= undefined;
     options.textWrap ??= p.WORD;
-    options.textAlign ??= [
-    ];
+    options.textAlign ??= [];
 
     const {
       size,
@@ -177,7 +174,7 @@ const string = {
       textHeight,
       showBox,
       showLines,
-      popPush,
+      popPush
     } = options;
 
     if ( !font?.font ) {
@@ -280,12 +277,11 @@ const string = {
       0
     ),
     sampleFactor = 1,
-    simplifyThreshold = 0,
+    simplifyThreshold = 0
   } ) => {
     // Guard clause: Return an empty array to prevent downstream errors
     if ( !font?.font ) {
-      return [
-      ];
+      return [];
     }
 
     const fontFamily = font.font?.names?.fontFamily?.en || "unknown";
@@ -314,7 +310,7 @@ const string = {
           size,
           {
             sampleFactor,
-            simplifyThreshold,
+            simplifyThreshold
           }
         );
 
@@ -372,8 +368,8 @@ const string = {
           rawPoints,
           center: {
             x: xCenter,
-            y: yCenter,
-          },
+            y: yCenter
+          }
         };
       }
     );
@@ -398,7 +394,7 @@ const string = {
         alpha
       );
     } );
-  },
+  }
 };
 
 export default string;

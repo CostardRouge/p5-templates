@@ -21,7 +21,7 @@ const size = "h-3 w-3";
 export default function ItemPalette( {
   onAdd,
   kinds = ITEM_ORDER,
-  className = "",
+  className = ""
 }: Props ) {
   return (
     <div

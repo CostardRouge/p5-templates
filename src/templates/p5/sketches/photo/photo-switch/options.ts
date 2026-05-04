@@ -5,8 +5,7 @@ import {
 } from "tar";
 
 export const formValues = {
-  images: [
-  ],
+  images: [],
 
   margin: 0.1,
   scale: 1,
@@ -20,13 +19,13 @@ export const formValues = {
     225
   ],
 
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 export const formConfiguration: Record<string, any> = {
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   margin: {
@@ -34,33 +33,33 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     min: 0,
     max: 0.45,
-    step: 0.005,
+    step: 0.005
   },
   scale: {
     label: "Scale",
     component: "slider",
     min: 0.1,
     max: 4,
-    step: 0.1,
+    step: 0.1
   },
   center: {
     label: "Center image",
-    component: "checkbox",
+    component: "checkbox"
   },
   clip: {
     label: "Clip",
-    component: "checkbox",
+    component: "checkbox"
   },
   fill: {
     label: "Fill",
-    component: "checkbox",
+    component: "checkbox"
   },
 
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color",
+    label: "Background color"
   },
 
-  title: titleFormConfiguration,
+  title: titleFormConfiguration
 };

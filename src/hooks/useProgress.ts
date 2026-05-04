@@ -11,7 +11,7 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
     setSteps
   ] = useState<ProgressStep[]>( initialSteps.map( ( step ) => ( {
     ...step,
-    status: "pending" as const,
+    status: "pending" as const
   } ) ) );
   const [
     currentStepIndex,
@@ -28,7 +28,7 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
           step.id === stepId
             ? {
               ...step,
-              status: "active" as const,
+              status: "active" as const
             }
             : step ) );
       const index = steps.findIndex( ( s ) => s.id === stepId );
@@ -48,12 +48,11 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
             ? {
               ...step,
               status: "completed" as const,
-              percentage: 100,
+              percentage: 100
             }
             : step ) );
     },
-    [
-    ]
+    []
   );
 
   const updateStepProgress = useCallback(
@@ -65,12 +64,11 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
           step.id === stepId
             ? {
               ...step,
-              percentage,
+              percentage
             }
             : step ) );
     },
-    [
-    ]
+    []
   );
 
   const errorStep = useCallback(
@@ -80,12 +78,11 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
           step.id === stepId
             ? {
               ...step,
-              status: "error" as const,
+              status: "error" as const
             }
             : step ) );
     },
-    [
-    ]
+    []
   );
 
   const calculateOverallPercentage = useCallback(
@@ -113,12 +110,11 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
         prev.map( ( step ) => ( {
           ...step,
           status: "pending" as const,
-          percentage: 0,
+          percentage: 0
         } ) ) );
       setCurrentStepIndex( 0 );
     },
-    [
-    ]
+    []
   );
 
   return {
@@ -130,6 +126,6 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
     completeStep,
     updateStepProgress,
     errorStep,
-    reset,
+    reset
   };
 }

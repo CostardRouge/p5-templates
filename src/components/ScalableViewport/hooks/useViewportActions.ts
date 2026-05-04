@@ -8,7 +8,7 @@ import {
   calculateFitToViewport,
   calculateActualPixels,
   calculateZoomTarget,
-  ZOOM_STEP,
+  ZOOM_STEP
 } from "../utils/zoomCalculations";
 
 interface UseViewportActionsProps {
@@ -27,7 +27,7 @@ export function useViewportActions( {
   contentRef,
   transform,
   setTransform,
-  animateTo,
+  animateTo
 }: UseViewportActionsProps ) {
   const fitToViewport = useCallback(
     ( animate = false ) => {
@@ -61,7 +61,7 @@ export function useViewportActions( {
           {
             x,
             y,
-            scale,
+            scale
           },
           contentRef.current
         );
@@ -107,7 +107,7 @@ export function useViewportActions( {
           {
             x,
             y,
-            scale,
+            scale
           },
           contentRef.current
         );
@@ -187,6 +187,6 @@ export function useViewportActions( {
     fitToViewport,
     resetToActualPixels,
     zoomIn,
-    zoomOut,
+    zoomOut
   };
 }

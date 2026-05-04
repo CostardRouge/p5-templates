@@ -31,7 +31,7 @@ const sketchState = {
     x: 0,
     y: 0,
     scale: 1
-  },
+  }
 };
 
 /**
@@ -59,7 +59,7 @@ function getInternalCanvasPoint( event ) {
   // Scale up to the internal P5 canvas resolution
   return {
     x: relX * p.width,
-    y: relY * p.height,
+    y: relY * p.height
   };
 }
 
@@ -100,7 +100,7 @@ function handlePointerSelect( screenPoint ) {
   // C. Calculate UV (0.0 to 1.0)
   const uvPoint = {
     x: ( bufferX - imgX ) / imgW,
-    y: ( bufferY - imgY ) / imgH,
+    y: ( bufferY - imgY ) / imgH
   };
 
   // D. Save Update
@@ -121,10 +121,9 @@ function handlePointerSelect( screenPoint ) {
         ? {
           ...slide,
           sketch: {
-            ...( slide?.sketch ?? {
-            } ),
+            ...( slide?.sketch ?? {} ),
             ...sketchUpdate
-          },
+          }
         }
         : slide );
 
@@ -193,7 +192,7 @@ function displayPhoto( img ) {
         w,
         h
       };
-    },
+    }
   } );
 }
 
@@ -224,7 +223,7 @@ sketch.draw( () => {
         textAlign: [
           p.CENTER,
           p.CENTER
-        ],
+        ]
       }
     );
     return;

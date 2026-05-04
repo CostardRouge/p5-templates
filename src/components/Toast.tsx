@@ -20,21 +20,21 @@ const iconMap = {
   success: CheckCircle,
   error: XCircle,
   info: Info,
-  warning: AlertTriangle,
+  warning: AlertTriangle
 };
 
 const iconColorMap = {
   success: "text-green-600",
   error: "text-red-600",
   info: "text-blue-600",
-  warning: "text-orange-600",
+  warning: "text-orange-600"
 };
 
 export default function Toast( {
   message,
   type = "info",
   duration = 3000,
-  onClose,
+  onClose
 }: ToastProps ) {
   const [
     isVisible,

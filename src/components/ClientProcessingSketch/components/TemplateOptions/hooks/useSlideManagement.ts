@@ -4,7 +4,7 @@ import {
 import {
   UseFieldArrayReturn,
   UseFormGetValues,
-  UseFormSetValue,
+  UseFormSetValue
 } from "react-hook-form";
 import {
   SketchOptionInput
@@ -41,7 +41,7 @@ export function useSlideManagement( {
   captureThumbnail,
   copyThumbnail,
   enableThumbnails,
-  pendingThumbnailCaptureRef,
+  pendingThumbnailCaptureRef
 }: UseSlideManagementProps ) {
   const [
     activeSlideIndex,
@@ -76,8 +76,7 @@ export function useSlideManagement( {
     ( index: number | undefined ) => {
       onActiveSlideChangeRef.current?.( index );
     },
-    [
-    ]
+    []
   );
 
   // Update active index when slides change
@@ -164,7 +163,7 @@ export function useSlideManagement( {
       captureThumbnail,
       activeSlideIndex,
       pendingThumbnailCaptureRef,
-      notifyActiveSlideChange,
+      notifyActiveSlideChange
     ]
   );
 
@@ -221,7 +220,7 @@ export function useSlideManagement( {
       const currentGlobalSketch = getValues( "sketch" );
       const newSlide = makeDefaultSlide( {
         indexForLabel: nextIndex,
-        sketch: nextIndex === 0 ? currentGlobalSketch : sketchFormValues,
+        sketch: nextIndex === 0 ? currentGlobalSketch : sketchFormValues
       } );
 
       appendSlide( newSlide );
@@ -239,7 +238,7 @@ export function useSlideManagement( {
       sketchFormValues,
       enableThumbnails,
       pendingThumbnailCaptureRef,
-      pendingSelectIndexRef,
+      pendingSelectIndexRef
     ]
   );
 
@@ -248,8 +247,7 @@ export function useSlideManagement( {
       if ( indexToDuplicate < 0 || indexToDuplicate >= slideFields.length )
         return;
 
-      const allSlides = getValues( "slides" ) ?? [
-      ];
+      const allSlides = getValues( "slides" ) ?? [];
       const original = allSlides[ indexToDuplicate ];
 
       if ( !original ) return;
@@ -280,7 +278,7 @@ export function useSlideManagement( {
       enableThumbnails,
       pendingThumbnailCaptureRef,
       pendingThumbnailCopyFromIndexRef,
-      pendingSelectIndexRef,
+      pendingSelectIndexRef
     ]
   );
 
@@ -325,7 +323,7 @@ export function useSlideManagement( {
       getValues,
       setValue,
       removeSlide,
-      handleSlideSelect,
+      handleSlideSelect
       // deepClone( slides )
     ]
   );
@@ -380,6 +378,6 @@ export function useSlideManagement( {
     handleDuplicateSlide,
     handleDeleteSlide,
     handleReorderSlides,
-    handleRenameSlide,
+    handleRenameSlide
   };
 }

@@ -27,11 +27,11 @@ export default function SaveDefaultsButton() {
   } = useFormContext();
   const [
     saveState,
-    setSaveState,
+    setSaveState
   ] = useState<SaveState>( "idle" );
   const [
     errorMessage,
-    setErrorMessage,
+    setErrorMessage
   ] = useState<string | null>( null );
 
   if ( process.env.NODE_ENV !== "development" ) {
@@ -54,15 +54,14 @@ export default function SaveDefaultsButton() {
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
           body: JSON.stringify( {
             sketch: name,
             engineId,
             formValues,
-            originalFormValues: sketchFormValues ?? {
-            },
-          } ),
+            originalFormValues: sketchFormValues ?? {}
+          } )
         }
       );
 
@@ -76,10 +75,10 @@ export default function SaveDefaultsButton() {
       reset(
         {
           ...defaultValues,
-          sketch: formValues,
+          sketch: formValues
         },
         {
-          keepValues: true,
+          keepValues: true
         }
       );
 
@@ -120,7 +119,7 @@ export default function SaveDefaultsButton() {
           "text-green-400":
             saveState === "saved",
           "text-red-400":
-            saveState === "error",
+            saveState === "error"
         }
       )}
     >

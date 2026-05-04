@@ -33,7 +33,7 @@ export function getMetadata(): SketchMetadata[] {
  */
 export function findSketchMeta(
   name: string,
-  engineId: string,
+  engineId: string
 ): ResolvedSketchMeta | undefined {
   const meta = getMetadata()
     .find( ( m ) => m.name === name && m.engine === engineId );
@@ -44,14 +44,14 @@ export function findSketchMeta(
 
   return {
     ...meta,
-    sketchPath: meta.category ? `${ meta.category }/${ name }` : name,
+    sketchPath: meta.category ? `${ meta.category }/${ name }` : name
   };
 }
 
 /**
  * Return all templates that belong to `engineId`.
  */
-export function listTemplatesForEngine( engineId: string, ): SketchMetadata[] {
+export function listTemplatesForEngine( engineId: string ): SketchMetadata[] {
   return getMetadata().filter( ( m ) => m.engine === engineId );
 }
 
@@ -65,7 +65,7 @@ export function listTemplatesForEngine( engineId: string, ): SketchMetadata[] {
  */
 export function resolveSketchPath(
   name: string,
-  engineId: string,
+  engineId: string
 ): string | undefined {
   return findSketchMeta(
     name,

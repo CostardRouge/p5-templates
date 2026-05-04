@@ -11,7 +11,7 @@ import {
 } from "./sketch.js";
 
 import {
-  getSketchOptions, setSketchOptions, subscribeSketchOptions,
+  getSketchOptions, setSketchOptions, subscribeSketchOptions
 } from "../shared/syncSketchOptions.js";
 
 import {
@@ -41,18 +41,16 @@ async function _refreshAssets() {
   const globalImages = opts.assets?.images ?? [];
   // Also pick up images stored directly in sketch form fields (e.g. images-stack)
   const sketchImages = opts.sketch?.images ?? [];
-  const slideImages = ( opts.slides ?? [] ).flatMap(
-    ( slide ) => [
-      ...( slide?.assets?.images ?? [] ),
-      ...( slide?.sketch?.images ?? [] ),
-    ]
-  );
+  const slideImages = ( opts.slides ?? [] ).flatMap( ( slide ) => [
+    ...( slide?.assets?.images ?? [] ),
+    ...( slide?.sketch?.images ?? [] )
+  ] );
 
   const allPaths = [
     ...new Set( [
       ...globalImages,
       ...sketchImages,
-      ...slideImages,
+      ...slideImages
     ] )
   ];
 
@@ -63,8 +61,7 @@ async function _refreshAssets() {
     );
     cache.set(
       "images",
-      [
-      ]
+      []
     );
     const container = getContainer();
     const canvas = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas#defaultCanvas0" );
@@ -89,7 +86,7 @@ async function _refreshAssets() {
         path,
         filename: path.split( "/" ).pop(),
         img: getP5().loadImage( url ),
-        exif: undefined,
+        exif: undefined
       };
 
       readExifInfo(
@@ -183,7 +180,7 @@ events.register(
 
 let previousOptions = {
   size: null,
-  animation: null,
+  animation: null
 };
 
 let unsubscribe = null;
@@ -305,7 +302,7 @@ function initializeOptionsSubscription() {
       ...initialOptions.animation
     } : null,
     assets: initialOptions?.assets,
-    slides: initialOptions?.slides,
+    slides: initialOptions?.slides
   };
 
   // Subscribe to future changes
@@ -332,8 +329,7 @@ events.register(
 /* ------------------------------------------------------------------ */
 
 const optionsProxy = new Proxy(
-  {
-  },
+  {},
   {
     get(
       _, prop
@@ -344,13 +340,12 @@ const optionsProxy = new Proxy(
         try {
           return window.getSketchSettings( live );
         } catch {
-          return live[ prop ] ?? {
-          };
+          return live[ prop ] ?? {};
         }
       }
 
       return live[ prop ];
-    },
+    }
   }
 );
 

@@ -20,7 +20,7 @@ import {
 export async function DELETE( req: NextRequest ) {
   try {
     const {
-      ids,
+      ids
     }: {
       ids: string[];
     } = await req.json();
@@ -29,15 +29,13 @@ export async function DELETE( req: NextRequest ) {
       return new NextResponse(
         "Missing or invalid job IDs",
         {
-          status: 400,
+          status: 400
         }
       );
     }
 
-    const deleted = [
-    ];
-    const failed = [
-    ];
+    const deleted = [];
+    const failed = [];
 
     for ( const jobId of ids ) {
       try {
@@ -115,7 +113,7 @@ export async function DELETE( req: NextRequest ) {
 
     return NextResponse.json( {
       deleted,
-      failed,
+      failed
     } );
   } catch ( err ) {
     console.error(
@@ -125,7 +123,7 @@ export async function DELETE( req: NextRequest ) {
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

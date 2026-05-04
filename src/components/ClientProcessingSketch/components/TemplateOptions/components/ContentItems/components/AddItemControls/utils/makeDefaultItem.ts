@@ -5,7 +5,7 @@ import {
   MetaItemSchema,
   TextItemSchema,
   ContentItem,
-  VisualItemSchema,
+  VisualItemSchema
 } from "@/types/sketch.types";
 
 import {
@@ -17,27 +17,27 @@ export default function makeDefaultItem( type: ItemKind ): ContentItem {
     case "text":
       return TextItemSchema.parse( {
         type,
-        content: "new text",
+        content: "new text"
       } );
     case "image":
       return ImageItemSchema.parse( {
-        type,
+        type
       } );
     case "images-stack":
       return ImagesStackItemSchema.parse( {
-        type,
+        type
       } );
     case "meta":
       return MetaItemSchema.parse( {
-        type,
+        type
       } );
     case "background":
       return BackgroundItemSchema.parse( {
-        type,
+        type
       } );
     case "visual":
       return VisualItemSchema.parse( {
-        type,
+        type
       } );
     default:
       throw new Error( `Unsupported kind: ${ type }` );

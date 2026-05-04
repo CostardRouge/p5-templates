@@ -14,7 +14,7 @@ import {
   S3Client,
   ListObjectsV2Command,
   CopyObjectCommand,
-  ObjectCannedACL,
+  ObjectCannedACL
 } from "@aws-sdk/client-s3";
 import {
   uploadArtifact
@@ -25,15 +25,15 @@ const s3client = new S3Client( {
   region: process.env.S3_REGION,
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY!,
-    secretAccessKey: process.env.S3_SECRET_KEY!,
+    secretAccessKey: process.env.S3_SECRET_KEY!
   },
-  forcePathStyle: true,
+  forcePathStyle: true
 } );
 
 export async function POST(
   _request: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -52,10 +52,10 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Recording not found",
+          error: "Recording not found"
         },
         {
-          status: 404,
+          status: 404
         }
       );
     }
@@ -82,7 +82,7 @@ export async function POST(
     const bucketName = process.env.S3_BUCKET!;
     const listCommand = new ListObjectsV2Command( {
       Bucket: bucketName,
-      Prefix: `${ originalJobId }/`,
+      Prefix: `${ originalJobId }/`
     } );
 
     const listedObjects = await s3client.send( listCommand );
@@ -104,7 +104,7 @@ export async function POST(
           Bucket: bucketName,
           CopySource: `${ bucketName }/${ object.Key }`,
           Key: newKey,
-          ACL: ObjectCannedACL.public_read,
+          ACL: ObjectCannedACL.public_read
         } );
 
         await s3client.send( copyCommand );
@@ -125,7 +125,7 @@ export async function POST(
     await updateJob(
       newJobId,
       {
-        options,
+        options
       }
     );
 
@@ -133,7 +133,7 @@ export async function POST(
 
     return NextResponse.json( {
       success: true,
-      jobId: newJobId,
+      jobId: newJobId
     } );
   } catch ( error ) {
     console.error(
@@ -143,10 +143,10 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
+        error: error instanceof Error ? error.message : "Internal server error"
       },
       {
-        status: 500,
+        status: 500
       }
     );
   }

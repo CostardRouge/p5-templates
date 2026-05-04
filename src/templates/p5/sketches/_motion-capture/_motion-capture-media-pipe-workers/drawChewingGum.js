@@ -1,8 +1,7 @@
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
 
-export const chewingGums = [
-];
+export const chewingGums = [];
 
 export function createChewingGums( count ) {
   for ( let i = 0; i < count; i++ ) {
@@ -23,7 +22,7 @@ export function createChewingGums( count ) {
           height - size * 2
         )
       ),
-      index: i / count,
+      index: i / count
     } );
   }
 }
@@ -35,7 +34,7 @@ export function drawChewingGums() {
     chewingGum( {
       ...chewingGumData,
       graphics: layers.dots.graphics,
-      index: index / chewingGums.length,
+      index: index / chewingGums.length
     } );
   } );
 }
@@ -45,9 +44,8 @@ export default function drawChewingGum( {
   graphics = getP5(),
   position,
   size = 10,
-  index,
-} = {
-} ) {
+  index
+} = {} ) {
   graphics.push();
   graphics.noStroke();
   graphics.translate(
@@ -90,7 +88,7 @@ export default function drawChewingGum( {
             1,
             -PI,
             PI
-          ) * 2,
+          ) * 2
     } ) );
 
     const xOff = map(

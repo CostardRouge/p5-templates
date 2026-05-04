@@ -1,6 +1,6 @@
 import {
   FieldConfig,
-  SelectOption,
+  SelectOption
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 const createSizePresetOption = (
@@ -11,7 +11,7 @@ const createSizePresetOption = (
 ): SelectOption => ( {
   label: `${ width } × ${ height }${ name ? ` (${ name })` : "" }`,
   value: `${ width }x${ height }`,
-  group,
+  group
 } );
 
 export const sizePresetOptions: SelectOption[] = [
@@ -97,7 +97,7 @@ export const sizePresetOptions: SelectOption[] = [
     1080 * 4,
     "Ultra HD",
     "Landscape"
-  ),
+  )
 ];
 
 export const framerateOptions = [
@@ -112,14 +112,14 @@ export const framerateOptions = [
   240
 ].map( ( fps ) => ( {
   label: String( fps ),
-  value: fps,
+  value: fps
 } ) );
 
 const rootFormConfig: Record<string, FieldConfig> = {
   sizePreset: {
     label: "Canvas size",
     component: "size-preset",
-    options: sizePresetOptions,
+    options: sizePresetOptions
   },
 
   animation: {
@@ -132,16 +132,16 @@ const rootFormConfig: Record<string, FieldConfig> = {
         step: 1,
         min: 0,
         max: 60,
-        placeholder: "x seconds",
+        placeholder: "x seconds"
       },
       framerate: {
         label: "Framerate",
         component: "select",
         options: framerateOptions,
-        asNumber: true,
-      },
-    },
-  },
+        asNumber: true
+      }
+    }
+  }
 };
 
 export default rootFormConfig;

@@ -21,10 +21,8 @@ export default function DownloadMenuItems( {
 }: DownloadMenuItemsProps ) {
   if ( job.status !== "completed" ) return null;
 
-  const videoUrls = ( job.videoUrls as unknown as string[] ) || [
-  ];
-  const videoSizes = ( job.videoSizes as unknown as number[] ) || [
-  ];
+  const videoUrls = ( job.videoUrls as unknown as string[] ) || [];
+  const videoSizes = ( job.videoSizes as unknown as number[] ) || [];
 
   let zipSize: number | null = null;
 
@@ -45,7 +43,7 @@ export default function DownloadMenuItems( {
     url,
     size: videoSizes[ index ] || null,
     index,
-    key: url,
+    key: url
   } ) );
 
   return (

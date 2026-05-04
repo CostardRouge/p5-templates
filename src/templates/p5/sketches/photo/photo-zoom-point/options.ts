@@ -12,7 +12,7 @@ export const formValues = {
     count: 1,
     easing: "easeInOutExpo",
     minZoomScale: 1,
-    maxZoomScale: 5,
+    maxZoomScale: 5
   },
 
   circle: {
@@ -23,7 +23,7 @@ export const formValues = {
       255
     ],
     strokeWeight: 3,
-    radius: 30,
+    radius: 30
   },
 
   imageSettings: {
@@ -31,7 +31,7 @@ export const formValues = {
     scale: 1,
     center: true,
     clip: false,
-    fill: false,
+    fill: false
   },
 
   backgroundColor: [
@@ -40,13 +40,13 @@ export const formValues = {
     225
   ],
 
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 export const formConfiguration: Record<string, any> = {
   photo: {
     component: "image",
-    label: "Photo",
+    label: "Photo"
   },
 
   point: {
@@ -58,16 +58,16 @@ export const formConfiguration: Record<string, any> = {
         label: "X",
         min: 0,
         max: 1,
-        step: 0.1,
+        step: 0.1
       },
       y: {
         component: "slider",
         label: "Y",
         min: 0,
         max: 1,
-        step: 0.1,
+        step: 0.1
       }
-    },
+    }
   },
 
   zoom: {
@@ -78,7 +78,7 @@ export const formConfiguration: Record<string, any> = {
         label: "Count",
         component: "slider",
         min: 0,
-        max: 10,
+        max: 10
       },
       minZoomScale: {
         label: "Start scale",
@@ -96,9 +96,9 @@ export const formConfiguration: Record<string, any> = {
       },
       easing: {
         component: "easing",
-        label: "Easing",
-      },
-    },
+        label: "Easing"
+      }
+    }
   },
   imageSettings: {
     label: "Image settings",
@@ -109,28 +109,28 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 0.45,
-        step: 0.005,
+        step: 0.005
       },
       scale: {
         label: "Scale",
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1,
+        step: 0.1
       },
       center: {
         label: "Center image",
-        component: "checkbox",
+        component: "checkbox"
       },
       clip: {
         label: "Clip",
-        component: "checkbox",
+        component: "checkbox"
       },
       fill: {
         label: "Fill",
-        component: "checkbox",
-      },
-    },
+        component: "checkbox"
+      }
+    }
   },
 
   circle: {
@@ -139,26 +139,26 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       draw: {
         label: "Draw circle?",
-        component: "checkbox",
+        component: "checkbox"
       },
       stroke: {
         label: "Stroke",
-        component: "color",
+        component: "color"
       },
       strokeWeight: {
         label: "Stroke weight",
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.1,
+        step: 0.1
       },
       radius: {
         label: "Radius",
         component: "slider",
         min: 0,
-        max: 100,
-      },
-    },
+        max: 100
+      }
+    }
   },
 
   title: titleFormConfiguration,
@@ -166,6 +166,6 @@ export const formConfiguration: Record<string, any> = {
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

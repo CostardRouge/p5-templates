@@ -50,8 +50,7 @@ export default function ServiceWorkerUpdateNotifier() {
         }
       } );
     },
-    [
-    ]
+    []
   );
 
   const handleUpdate = () => {
@@ -60,7 +59,7 @@ export default function ServiceWorkerUpdateNotifier() {
     if ( registration?.waiting ) {
       // Tell the waiting service worker to skip waiting
       registration.waiting.postMessage( {
-        type: "SKIP_WAITING",
+        type: "SKIP_WAITING"
       } );
 
       // Listen for the controller change before reloading
@@ -91,7 +90,7 @@ export default function ServiceWorkerUpdateNotifier() {
           className={clsx(
             "w-5 h-5 flex-shrink-0 text-foreground",
             {
-              "animate-spin": updating,
+              "animate-spin": updating
             }
           )}
         />

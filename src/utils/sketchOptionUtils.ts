@@ -35,13 +35,13 @@ export function createFixedOrVariableOption(
       options: [
         {
           label: `Fixed ${ spacedOptionName.toLowerCase() }`,
-          value: "fixed",
+          value: "fixed"
         },
         {
           label: `Variable ${ spacedOptionName.toLowerCase() }`,
-          value: "variable",
-        },
-      ],
+          value: "variable"
+        }
+      ]
     },
     configs: {
       fixed: {
@@ -50,8 +50,8 @@ export function createFixedOrVariableOption(
           component: "slider",
           min,
           max,
-          step,
-        },
+          step
+        }
       },
       variable: {
         speedMultiplier: {
@@ -59,35 +59,35 @@ export function createFixedOrVariableOption(
           component: "slider",
           min: 0,
           max: 10,
-          step: 0.1,
+          step: 0.1
         },
         progressionMultiplier: {
           label: "Progression multiplier",
           component: "slider",
           min: 0,
           max: 100,
-          step: 0.1,
+          step: 0.1
         },
         start: {
           label: `${ capitalizedOptionName } start`,
           component: "slider",
           min,
           max,
-          step,
+          step
         },
         end: {
           label: `${ capitalizedOptionName } end`,
           component: "slider",
           min,
           max,
-          step,
+          step
         },
         easingFn: {
           component: "easing",
           label: `${ capitalizedOptionName } easing`
-        },
-      },
-    },
+        }
+      }
+    }
     // Schema is injected client-side in injectSketchSchemas.ts
     // See schemas.ts for WaveConfigSchema definition
   } );
@@ -105,20 +105,20 @@ export function createSingleOrMultipleTextOption( optionName: string ) {
       options: [
         {
           label: "Single (letter by letter)",
-          value: "single",
+          value: "single"
         },
         {
           label: "Multiple (word by word)",
-          value: "multiple",
-        },
-      ],
+          value: "multiple"
+        }
+      ]
     },
     configs: {
       single: {
         value: {
           label: "single",
-          component: "text",
-        },
+          component: "text"
+        }
       },
       multiple: {
         value: {
@@ -132,7 +132,7 @@ export function createSingleOrMultipleTextOption( optionName: string ) {
               "three"
             ]
           }
-        },
+        }
       }
     }
   } );
@@ -156,47 +156,47 @@ export function createVariableOption(
         component: "slider",
         min: -9,
         max: 9,
-        step: 0.1,
+        step: 0.1
       },
       start: {
         label: `${ capitalizedOptionName } start`,
         component: "slider",
         min: -9,
         max: 9,
-        step: 0.1,
+        step: 0.1
       },
       end: {
         label: `${ capitalizedOptionName } end`,
         component: "slider",
         min: -9,
         max: 9,
-        step: 0.1,
+        step: 0.1
       },
       xMultiplier: {
         label: `${ capitalizedOptionName } xMultiplier`,
         component: "slider",
         min: -9,
         max: 9,
-        step: 0.1,
+        step: 0.1
       },
       yMultiplier: {
         label: `${ capitalizedOptionName } yMultiplier`,
         component: "slider",
         min: -9,
         max: 9,
-        step: 0.1,
+        step: 0.1
       },
       zMultiplier: {
         label: `${ capitalizedOptionName } zMultiplier`,
         component: "slider",
         min: -9,
         max: 9,
-        step: 0.1,
+        step: 0.1
       },
       easingFn: {
         component: "easing",
-        label: `${ capitalizedOptionName } easing`,
-      },
-    },
+        label: `${ capitalizedOptionName } easing`
+      }
+    }
   } );
 }

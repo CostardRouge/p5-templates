@@ -25,13 +25,13 @@ export default function drawSlideText( textOption ) {
       font: string.fonts?.[ textOption.font ] ?? string.fonts.martian,
       textAlign: [
         textOption.alignment?.horizontal ?? "center",
-        textOption.alignment?.vertical ?? "baseline",
+        textOption.alignment?.vertical ?? "baseline"
       ],
       blendMode: textOption.blend,
       fill: p.color( ...textOption.fill ),
       stroke: p.color( ...textOption.stroke ),
       textWidth: width - 2 * ( width * horizontalMargin ),
-      textHeight: height - 2 * ( height * verticalMargin ),
+      textHeight: height - 2 * ( height * verticalMargin )
     }
   );
 }

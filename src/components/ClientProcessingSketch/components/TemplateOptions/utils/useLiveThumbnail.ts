@@ -18,7 +18,7 @@ const FRAME_INTERVAL = 1000 / TARGET_FPS;
  */
 export function useLiveThumbnail( {
   thumbCanvasRef,
-  isActive,
+  isActive
 }: {
   thumbCanvasRef: React.RefObject<HTMLCanvasElement | null>;
   isActive: boolean;
@@ -91,7 +91,7 @@ export function useLiveThumbnail( {
     },
     [
       isActive,
-      thumbCanvasRef,
+      thumbCanvasRef
     ]
   );
 

@@ -1,6 +1,5 @@
 const cache = {
-  values: {
-  },
+  values: {},
   store: function(
     key, compute, enabled = true
   ) {
@@ -20,8 +19,7 @@ const cache = {
     return cache.get( key );
   },
   key: function() {
-    return [
-    ].slice.apply( arguments ).join( "-" );
+    return [].slice.apply( arguments ).join( "-" );
   },
   get: function( key ) {
     return cache.values?.[ key ];
@@ -30,7 +28,7 @@ const cache = {
     key, value
   ) => {
     return ( cache.values[ key ] = value );
-  },
+  }
 };
 
 export default cache;

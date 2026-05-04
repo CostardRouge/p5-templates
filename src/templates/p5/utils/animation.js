@@ -130,7 +130,7 @@ const animation = {
     easingFn = ( x ) => x,
     lerpFn,
     startIndex = currentTime,
-    endIndex = currentTime + 1,
+    endIndex = currentTime + 1
   } ) => {
     const p = getP5();
 
@@ -161,8 +161,7 @@ const animation = {
   ) {
     const _lerpFn = lerpFn ?? getP5().lerp.bind( getP5() );
 
-    this.values = this.values ?? {
-    };
+    this.values = this.values ?? {};
 
     const newValue = mappers.circularIndex(
       speed,
@@ -175,7 +174,7 @@ const animation = {
       newValue,
       amount
     ) );
-  },
+  }
 };
 
 export default animation;

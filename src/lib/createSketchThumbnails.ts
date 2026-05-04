@@ -30,26 +30,25 @@ async function createSketchThumbnails() {
     page?: Page;
     browser?: Browser;
   } = {
-    page: undefined,
+    page: undefined
   };
 
   try {
-    const sketches = ( await getSketchList() ) ?? [
-    ];
+    const sketches = ( await getSketchList() ) ?? [];
 
     const templates = sketches.map( ( {
-      name, engine, category,
+      name, engine, category
     } ) => ( {
       href: category ? `templates/${ engine }/${ category }/${ name }` : `templates/${ engine }/${ name }`,
       name,
-      engine,
+      engine
     } ) );
 
     const {
       createPage, browser
     } = await createBrowserPage( {
       headless: true,
-      deviceScaleFactor: 1,
+      deviceScaleFactor: 1
     } );
 
     recordingState.browser = browser;
@@ -68,7 +67,7 @@ async function createSketchThumbnails() {
       await recordingState.page.goto(
         `http://localhost:3000/${ href }?capturing`,
         {
-          waitUntil: "networkidle",
+          waitUntil: "networkidle"
         }
       );
 
@@ -80,10 +79,10 @@ async function createSketchThumbnails() {
           resize: {
             width: 360,
             height: 450,
-            fit: "cover",
+            fit: "cover"
           },
           quality: 90,
-          format: "jpeg",
+          format: "jpeg"
         }
       );
 

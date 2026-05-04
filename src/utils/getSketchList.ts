@@ -13,15 +13,14 @@ async function getSketchList() {
       name,
       engine,
       category,
-      hasSketchForm,
+      hasSketchForm
     } ) );
   } catch ( err ) {
     console.error(
       "Failed to read sketch metadata:",
       err
     );
-    return [
-    ];
+    return [];
   }
 }
 

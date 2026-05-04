@@ -34,7 +34,7 @@ export default function ControlledImageInput( {
     field, fieldState
   } = useController( {
     name,
-    control,
+    control
   } );
   const {
     uploadFiles, maybeRemoveFromAssets

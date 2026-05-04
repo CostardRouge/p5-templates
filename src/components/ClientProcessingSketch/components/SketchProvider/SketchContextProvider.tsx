@@ -9,7 +9,7 @@ import type {
 } from "./types/SketchContextType";
 import {
   setSketchOptions,
-  subscribeSketchOptions,
+  subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
 import type {
   SketchOption
@@ -60,7 +60,7 @@ export default function SketchContextProvider( {
   const initialState: SketchState = {
     ...props,
     sketchLoaded: false,
-    engine: null,
+    engine: null
   };
 
   const [
@@ -81,7 +81,7 @@ export default function SketchContextProvider( {
     },
     [
       state.options
-    ],
+    ]
   );
 
   /* ---- p5 → React sync ------------------------------------------ */
@@ -97,8 +97,7 @@ export default function SketchContextProvider( {
           } );
         }
       } ),
-    [
-    ],
+    []
   );
 
   const value = useMemo<[SketchState, React.Dispatch<SketchAction>]>(
@@ -108,7 +107,7 @@ export default function SketchContextProvider( {
     ],
     [
       state
-    ],
+    ]
   );
 
   return (

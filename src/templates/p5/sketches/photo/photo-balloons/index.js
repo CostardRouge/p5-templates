@@ -13,7 +13,7 @@ import {
 
 const canvases = {
   mask: undefined,
-  imageBuffer: undefined,
+  imageBuffer: undefined
 };
 
 const getBg = () => options.sketch?.colors?.background ?? [
@@ -30,16 +30,13 @@ const getImages = () => {
 
   return imagesFromOptions
     ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : fromCache || [
-    ];
+    : fromCache || [];
 };
 
 function initBall() {
   const p = getP5();
-  const ballsConfig = options.sketch?.balls ?? {
-  };
-  const motionConfig = options.sketch?.motion ?? {
-  };
+  const ballsConfig = options.sketch?.balls ?? {};
+  const motionConfig = options.sketch?.motion ?? {};
 
   return {
     position: p.createVector(
@@ -57,7 +54,7 @@ function initBall() {
     vy: p.random(
       -1,
       1
-    ) * ( motionConfig.phaseJitter ?? 1 ),
+    ) * ( motionConfig.phaseJitter ?? 1 )
   };
 }
 
@@ -75,8 +72,7 @@ function drawImageWithMask( {
   img, maskDrawer, graphics = getP5()
 } ) {
   const p = graphics;
-  const imageConfig = options.sketch?.image ?? {
-  };
+  const imageConfig = options.sketch?.image ?? {};
 
   imageUtils.marginImage( {
     img,
@@ -86,7 +82,7 @@ function drawImageWithMask( {
     position: p.createVector(
       p.width / 2,
       p.height / 2
-    ),
+    )
   } );
 
   canvases.mask.erase();
@@ -153,10 +149,8 @@ sketch.draw( (
 
   ensureBalls( images );
 
-  const motionConfig = options.sketch?.motion ?? {
-  };
-  const linesConfig = options.sketch?.lines ?? {
-  };
+  const motionConfig = options.sketch?.motion ?? {};
+  const linesConfig = options.sketch?.lines ?? {};
 
   const m = motionConfig.travelMargin ?? 100;
   const minWAmp = motionConfig.minWidthAmplitude ?? 200;
@@ -177,8 +171,7 @@ sketch.draw( (
   const lineMaxDist = linesConfig.maxDistance ?? 1000;
   const lineAlphaScale = linesConfig.alphaScale ?? 100;
 
-  const links = [
-  ];
+  const links = [];
 
   // Precompute easing-based amplitudes
   const vw = mappers.fn(
@@ -291,7 +284,7 @@ sketch.draw( (
       size,
       position: {
         x, y
-      },
+      }
     } = ball;
 
     drawImageWithMask( {
@@ -304,7 +297,7 @@ sketch.draw( (
           y,
           size
         );
-      },
+      }
     } );
   } );
 

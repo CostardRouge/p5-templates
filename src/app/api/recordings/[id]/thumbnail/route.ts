@@ -16,7 +16,7 @@ import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 export async function GET(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -32,7 +32,7 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
@@ -121,7 +121,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

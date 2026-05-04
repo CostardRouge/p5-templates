@@ -55,7 +55,7 @@ export default function drawGuidelines(
         p.CENTER
       ],
       popPush: false,
-      graphics: mask,
+      graphics: mask
     }
   );
 
@@ -82,7 +82,7 @@ export default function drawGuidelines(
       p.height * 0.8
     ),
     rows,
-    columns,
+    columns
   };
 
   p.noiseDetail(
@@ -115,7 +115,7 @@ export default function drawGuidelines(
         0,
         [
           colors.rainbow,
-          colors.purple,
+          colors.purple
         ]
       );
 
@@ -134,7 +134,7 @@ export default function drawGuidelines(
           2,
           1,
           easing.easeInOutSine
-        ),
+        )
       } ) );
 
       graphics.push();
@@ -201,7 +201,7 @@ export default function drawGuidelines(
       {
         landmarks: [
           hand
-        ],
+        ]
       },
       graphics
     );

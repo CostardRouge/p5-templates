@@ -69,7 +69,7 @@ const iterators = {
       );
       index++;
     }
-  },
+  }
 };
 
 export default iterators;

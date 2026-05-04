@@ -21,7 +21,7 @@ export default function AddItemControls() {
       append(
         makeDefaultItem( kind ),
         {
-          shouldFocus: false,
+          shouldFocus: false
         }
       );
     },

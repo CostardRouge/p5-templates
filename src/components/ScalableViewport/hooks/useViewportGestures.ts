@@ -7,7 +7,7 @@ import type {
 import {
   calculateZoomTarget,
   MIN_SCALE,
-  MAX_SCALE,
+  MAX_SCALE
 } from "../utils/zoomCalculations";
 
 interface UseViewportGesturesProps {
@@ -26,7 +26,7 @@ export function useViewportGestures( {
   contentRef,
   transform,
   setTransform,
-  cancelAnimation,
+  cancelAnimation
 }: UseViewportGesturesProps ) {
   useGesture(
     {
@@ -49,7 +49,7 @@ export function useViewportGestures( {
           deltaX,
           deltaY
         ],
-        canceled,
+        canceled
       } ) => {
         if ( canceled ) return;
 
@@ -60,7 +60,7 @@ export function useViewportGestures( {
         setTransform(
           {
             x: x + deltaX,
-            y: y + deltaY,
+            y: y + deltaY
           },
           contentRef.current
         );
@@ -76,7 +76,7 @@ export function useViewportGestures( {
           scale
         ],
         first,
-        memo,
+        memo
       } ) => {
         const container = containerRef.current;
 
@@ -100,7 +100,7 @@ export function useViewportGestures( {
             initialY: y,
             // Store where the fingers were relative to container at start
             initialGestureX: currentGestureX,
-            initialGestureY: currentGestureY,
+            initialGestureY: currentGestureY
           };
         }
 
@@ -110,7 +110,7 @@ export function useViewportGestures( {
           initialX,
           initialY,
           initialGestureX,
-          initialGestureY,
+          initialGestureY
         } = memo;
 
         // LOGIC:
@@ -133,7 +133,7 @@ export function useViewportGestures( {
           {
             x: newX,
             y: newY,
-            scale: newScale,
+            scale: newScale
           },
           contentRef.current
         );
@@ -171,7 +171,7 @@ export function useViewportGestures( {
           target,
           contentRef.current
         );
-      },
+      }
     },
     {
       target: containerRef,
@@ -180,27 +180,27 @@ export function useViewportGestures( {
           transform.current.x,
           transform.current.y
         ],
-        filterTaps: true,
+        filterTaps: true
       },
       pinch: {
         scaleBounds: {
           min: MIN_SCALE,
-          max: MAX_SCALE,
+          max: MAX_SCALE
         },
         from: () => [
           transform.current.scale,
           0
-        ],
+        ]
       },
       wheel: {
         eventOptions: {
-          passive: false,
+          passive: false
         },
         from: () => [
           transform.current.x,
           transform.current.y
-        ],
-      },
+        ]
+      }
     }
   );
 }

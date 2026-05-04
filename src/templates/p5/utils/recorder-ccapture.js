@@ -24,7 +24,7 @@ const recorder = {
     format = "png", framerate = 60
   ) {
     console.log( {
-      format,
+      format
     } );
     recorder.lib = new CCapture( {
       // format: options.get('recording-format'),
@@ -34,7 +34,7 @@ const recorder = {
       verbose: false,
       name: options.name || sketch.name,
       manualStart: true,
-      workersPath: "libraries/",
+      workersPath: "libraries/"
     } );
   },
   start: async( {
@@ -134,7 +134,7 @@ const recorder = {
 
       window.reportCaptureProgress( progression * 100 );
     }
-  },
+  }
 };
 
 // recorder.onDraw();
@@ -145,16 +145,15 @@ requestAnimationFrame( recorder.onDraw );
 window.recorder = recorder;
 window.startLoopRecording = async( {
   format
-} = {
-} ) =>
+} = {} ) =>
   recorder.start( {
     maximumFrames: animation.maximumFramesCount,
-    format,
+    format
   } );
 window.startLoopRecordingWithSaveCallback = async( saveCallback ) =>
   recorder.start( {
     maximumFrames: animation.maximumFramesCount,
-    saveCallback,
+    saveCallback
   } );
 
 export default recorder;

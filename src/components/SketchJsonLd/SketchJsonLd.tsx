@@ -13,7 +13,7 @@ export default function SketchJsonLd( {
   sketchName,
   engineId,
   category,
-  hasThumbnail,
+  hasThumbnail
 }: SketchJsonLdProps ) {
   const baseUrl = getBaseUrl();
   const title = sketchName
@@ -33,8 +33,8 @@ export default function SketchJsonLd( {
     description: `Create ${ title } content with ${ engineId }.`,
     url: `${ baseUrl }${ canonicalPath }`,
     ...( hasThumbnail && {
-      screenshot: `${ baseUrl }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.jpeg`,
-    } ),
+      screenshot: `${ baseUrl }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.jpeg`
+    } )
   };
 
   return (

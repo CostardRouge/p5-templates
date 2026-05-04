@@ -39,8 +39,7 @@ export interface AnimationBridge {
 type ReadyCallback = ( bridge: AnimationBridge ) => ( () => void ) | void;
 
 let current: AnimationBridge | null = null;
-const pending: ReadyCallback[] = [
-];
+const pending: ReadyCallback[] = [];
 
 /**
  * Called by an engine once it has fully initialised.

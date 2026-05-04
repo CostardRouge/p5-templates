@@ -1,5 +1,3 @@
-export const formValues = {
-};
+export const formValues = {};
 
-export const formConfiguration: Record<string, any> = {
-};
+export const formConfiguration: Record<string, any> = {};

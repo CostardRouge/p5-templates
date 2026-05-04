@@ -29,7 +29,7 @@ export default function RecordingThumbnail( {
   onClick,
   className,
   showEyeInCorner = false,
-  enableHoverPreview = false,
+  enableHoverPreview = false
 }: RecordingThumbnailProps ) {
   const [
     imageError,
@@ -51,7 +51,7 @@ export default function RecordingThumbnail( {
     engine: templateEngine,
     name: templateName,
     persistedJob: job,
-    updatedAt: new Date( job.updatedAt ).getTime(),
+    updatedAt: new Date( job.updatedAt ).getTime()
   } );
   const showEyeIcon =
     job.status === "completed" && job.videoUrls && job.thumbnails;
@@ -77,7 +77,7 @@ export default function RecordingThumbnail( {
         "relative overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800",
         {
           "animate-pulse": isQueued,
-          "cursor-pointer": !!onClick,
+          "cursor-pointer": !!onClick
         }
       )}
     >
@@ -119,14 +119,14 @@ export default function RecordingThumbnail( {
                   className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"
                   style={{
                     width: "24px",
-                    height: "24px",
+                    height: "24px"
                   }}
                 />
                 <div
                   className="relative rounded-full bg-red-600 shadow-lg"
                   style={{
                     width: "24px",
-                    height: "24px",
+                    height: "24px"
                   }}
                 />
               </div>
@@ -143,7 +143,7 @@ export default function RecordingThumbnail( {
             className={clsx(
               "w-full h-full object-cover transition-all duration-300",
               {
-                grayscale: !isCompleted,
+                grayscale: !isCompleted
               }
             )}
           />

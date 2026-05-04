@@ -129,17 +129,15 @@ const slides = {
    * @param {object} optionsTarget - The raw options object (to avoid proxy recursion)
    */
   getSketchSettings( optionsTarget ) {
-    const globalSketch = optionsTarget?.sketch || {
-    };
+    const globalSketch = optionsTarget?.sketch || {};
     const currentSlide = this.current;
-    const slideSketch = currentSlide?.sketch || {
-    };
+    const slideSketch = currentSlide?.sketch || {};
 
     return {
       ...globalSketch,
-      ...slideSketch,
+      ...slideSketch
     };
-  },
+  }
 };
 
 // Public helpers used by React
@@ -149,7 +147,7 @@ window.setSlide = ( index ) => {
 window.getSlide = ( index ) => slides.getSlide( index );
 window.getCurrentSlide = () => ( {
   slide: slides.current,
-  index: slides.index,
+  index: slides.index
 } );
 window.getSketchSettings = ( optionsTarget ) =>
   slides.getSketchSettings( optionsTarget );

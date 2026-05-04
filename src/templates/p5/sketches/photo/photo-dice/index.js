@@ -9,8 +9,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {
-};
+const canvases = {};
 
 sketch.setup( () => {
   const p = getP5();
@@ -44,7 +43,7 @@ function dice(
       0,
       p.PI
     ), // back
-    canvases.dice.createVector( -p.HALF_PI ), // bottom
+    canvases.dice.createVector( -p.HALF_PI ) // bottom
   ];
 
   for ( let i = 0; i < rotations.length; i++ ) {
@@ -107,11 +106,11 @@ sketch.draw( (
         0,
         p.PI
       ), // back
-      canvases.dice.createVector( p.HALF_PI ), // bottom
+      canvases.dice.createVector( p.HALF_PI ) // bottom
     ],
     currentTime: animation.progression * 6 * rotateSpeed,
     lerpFn: mappers.lerpVector,
-    easingFn: easeFn,
+    easingFn: easeFn
   } );
 
   // Prepare p.WEBGL canvas
@@ -148,7 +147,7 @@ sketch.draw( (
           img: imgObj.img,
           scale: faceScale,
           center: true,
-          graphics: canvases.dice,
+          graphics: canvases.dice
         } );
       } else {
       // fallback: draw a simple face label if no image

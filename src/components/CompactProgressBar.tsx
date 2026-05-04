@@ -19,7 +19,7 @@ import {
   resolveProgressionUIState,
   type FlatStepUI,
   type SlideUI,
-  type StepUIStatus,
+  type StepUIStatus
 } from "@/lib/progression/stepConfig";
 
 export interface ProgressStep {
@@ -41,13 +41,12 @@ interface CompactProgressBarProps {
 
 export default function CompactProgressBar( {
   job,
-  steps = [
-  ],
+  steps = [],
   recordingSteps,
   currentSlideIndex,
   slideOptions,
   startTime,
-  className = "",
+  className = ""
 }: CompactProgressBarProps ) {
   const [
     elapsedTime,
@@ -294,7 +293,7 @@ export default function CompactProgressBar( {
 function MultiSlideStepList( {
   uiState,
   expandedSlides,
-  onToggleSlide,
+  onToggleSlide
 }: {
   uiState: ReturnType<typeof resolveProgressionUIState>;
   expandedSlides: Set<number>;
@@ -332,7 +331,7 @@ function MultiSlideStepList( {
 function SlideRow( {
   slide,
   isExpanded,
-  onToggle,
+  onToggle
 }: {
   slide: SlideUI;
   isExpanded: boolean;
@@ -417,7 +416,7 @@ function SharedStepRow( {
 
 function SubStepRow( {
   step,
-  parentStatus,
+  parentStatus
 }: {
   step: FlatStepUI;
   parentStatus: StepUIStatus;

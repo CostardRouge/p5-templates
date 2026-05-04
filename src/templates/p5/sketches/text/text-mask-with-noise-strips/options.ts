@@ -41,28 +41,28 @@ export const formValues = {
   opacityFactorTo: 1,
 
   // Title text sizing
-  textSizeDivisor: 6, // text size = (w + h) / textSizeDivisor
+  textSizeDivisor: 6 // text size = (w + h) / textSizeDivisor
 };
 
 export const formConfiguration: Record<string, any> = {
   // Text
   title: {
     component: "text",
-    label: "Title",
+    label: "Title"
   },
   font: {
     component: "select",
     label: "Font name",
     options: fontNames.map( ( fontName ) => ( {
       value: fontName,
-      label: fontName,
-    } ) ),
+      label: fontName
+    } ) )
   },
 
   // Colors
   background: {
     component: "color",
-    label: "Background color",
+    label: "Background color"
   },
 
   // Grid
@@ -71,18 +71,18 @@ export const formConfiguration: Record<string, any> = {
     label: "Rows",
     min: 1,
     max: 300,
-    step: 1,
+    step: 1
   },
   columns: {
     component: "slider",
     label: "Columns",
     min: 1,
     max: 800,
-    step: 1,
+    step: 1
   },
   centered: {
     component: "checkbox",
-    label: "Center grid",
+    label: "Center grid"
   },
 
   // Noise
@@ -91,14 +91,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Noise octaves",
     min: 1,
     max: 8,
-    step: 1,
+    step: 1
   },
   noiseFalloff: {
     component: "slider",
     label: "Noise falloff",
     min: 0,
     max: 1,
-    step: 0.01,
+    step: 0.01
   },
 
   // Animation/speeds
@@ -107,21 +107,21 @@ export const formConfiguration: Record<string, any> = {
     label: "Time speed",
     min: 0,
     max: 3,
-    step: 0.01,
+    step: 0.01
   },
   xOffScale: {
     component: "slider",
     label: "X offset scale",
     min: 0,
     max: 4,
-    step: 0.01,
+    step: 0.01
   },
   yOffScale: {
     component: "slider",
     label: "Y offset scale",
     min: 0,
     max: 4,
-    step: 0.01,
+    step: 0.01
   },
 
   // Geometry
@@ -130,14 +130,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Angle range (×TAU)",
     min: 0,
     max: 3,
-    step: 0.01,
+    step: 0.01
   },
   scale: {
     component: "slider",
     label: "Point scale",
     min: 0,
     max: 2,
-    step: 0.01,
+    step: 0.01
   },
 
   // Stroke weight mapping
@@ -146,14 +146,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Stroke weight min",
     min: 0,
     max: 300,
-    step: 1,
+    step: 1
   },
   weightMax: {
     component: "slider",
     label: "Stroke weight max",
     min: 0,
     max: 300,
-    step: 1,
+    step: 1
   },
 
   // Color palette + styling
@@ -163,34 +163,34 @@ export const formConfiguration: Record<string, any> = {
     options: [
       {
         label: "Rainbow",
-        value: "rainbow",
+        value: "rainbow"
       },
       {
         label: "Purple",
-        value: "purple",
-      },
-    ],
+        value: "purple"
+      }
+    ]
   },
   hueOffset: {
     component: "slider",
     label: "Hue offset",
     min: 0,
     max: 360,
-    step: 1,
+    step: 1
   },
   opacityFactorFrom: {
     component: "slider",
     label: "Opacity factor (from)",
     min: 0,
     max: 3,
-    step: 0.01,
+    step: 0.01
   },
   opacityFactorTo: {
     component: "slider",
     label: "Opacity factor (to)",
     min: 0,
     max: 3,
-    step: 0.01,
+    step: 0.01
   },
 
   // Title text sizing
@@ -199,6 +199,6 @@ export const formConfiguration: Record<string, any> = {
     label: "Title size divisor",
     min: 1,
     max: 16,
-    step: 0.01,
-  },
+    step: 0.01
+  }
 };

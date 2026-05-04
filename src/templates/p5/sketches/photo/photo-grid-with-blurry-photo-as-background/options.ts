@@ -4,8 +4,7 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 // Default values only
 export const formValues = {
   // Assets
-  images: [
-  ],
+  images: [],
 
   // Colors
   backgroundColor: [
@@ -19,7 +18,7 @@ export const formValues = {
   columns: 3,
   blur: 9,
 
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 // UI configuration only
@@ -27,7 +26,7 @@ export const formConfiguration: Record<string, any> = {
   // Assets
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   // Grid
@@ -36,21 +35,21 @@ export const formConfiguration: Record<string, any> = {
     label: "Rows",
     min: 1,
     max: 12,
-    step: 1,
+    step: 1
   },
   columns: {
     component: "slider",
     label: "Columns",
     min: 1,
     max: 12,
-    step: 1,
+    step: 1
   },
   blur: {
     component: "slider",
     label: "Background blur",
     min: 0,
     max: 40,
-    step: 1,
+    step: 1
   },
 
   posterize: {
@@ -58,14 +57,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Background posterize",
     min: 0,
     max: 40,
-    step: 1,
+    step: 1
   },
 
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color",
+    label: "Background color"
   },
 
-  title: titleFormConfiguration,
+  title: titleFormConfiguration
 };

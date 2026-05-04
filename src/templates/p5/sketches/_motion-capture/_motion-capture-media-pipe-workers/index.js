@@ -29,12 +29,12 @@ const mediapipe = {
     element: null,
     size: {
       width: 640,
-      height: 480,
+      height: 480
       // width: 256,
       // height: 256,
       // width: options.size.width,
       // height: options.size.height
-    },
+    }
   },
   feedback: {
     element: null,
@@ -42,15 +42,14 @@ const mediapipe = {
       // width: 640,
       // height: 480,
       width: options.size.width,
-      height: options.size.height,
-    },
+      height: options.size.height
+    }
   },
   worker: null,
   workerReady: false,
-  workerResult: {
-  },
+  workerResult: {},
   previousFrameSentTime: 0,
-  inferenceIntervalMilliseconds: IDLE_INFERENCE,
+  inferenceIntervalMilliseconds: IDLE_INFERENCE
 };
 
 const layers = {
@@ -63,42 +62,39 @@ const layers = {
       0,
       10
     ],
-    erase: 20,
+    erase: 20
   },
   hands: {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 255,
+    erase: 255
   },
   guidelines: {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 255,
+    erase: 255
   },
   socialMediaOverlay: {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 255,
-  },
+    erase: 255
+  }
 };
 
 const handDetectionState = {
   handsAreVisible: 0,
-  lastDetectedHandTime: -GUIDELINE_DELAY,
+  lastDetectedHandTime: -GUIDELINE_DELAY
 };
 
 const matter = {
   engine: Engine.create(),
   bottom: undefined,
-  balls: [
-  ],
-  handBodies: [
-  ],
-  boundaries: [
-  ],
+  balls: [],
+  handBodies: [],
+  boundaries: []
 };
 
 sketch.setup( () => {
@@ -125,7 +121,7 @@ sketch.setup( () => {
   mediapipe.capture.element = createCapture(
     VIDEO,
     {
-      flipped: true,
+      flipped: true
     }
   );
   mediapipe.capture.element.size(
@@ -145,7 +141,7 @@ sketch.setup( () => {
   mediapipe.feedback.element = createCapture(
     VIDEO,
     {
-      flipped: true,
+      flipped: true
     }
   );
   mediapipe.feedback.element.size(
@@ -160,7 +156,7 @@ sketch.setup( () => {
 
   mediapipe.worker.postMessage( {
     type: "INIT",
-    wasmPath: "/assets/libraries/mediapipe/wasm",
+    wasmPath: "/assets/libraries/mediapipe/wasm"
   } );
 
   mediapipe.worker.onmessage = ( event ) => {
@@ -243,7 +239,7 @@ const sendFrameToWorkerIfDue = () => {
         {
           type: "FRAME",
           bitmap,
-          timestamp: now,
+          timestamp: now
         },
         [
           bitmap
@@ -377,7 +373,7 @@ sketch.draw( (
         shadowsCount: 3,
         graphics: layers.visuals.graphics,
         position,
-        index: index / matter.balls.length,
+        index: index / matter.balls.length
       } );
 
       // drawImageWithMask( {
@@ -455,8 +451,7 @@ function updateHandBodies() {
       handBody
     );
   }
-  matter.handBodies = [
-  ];
+  matter.handBodies = [];
 
   mediapipe.workerResult?.hands?.landmarks?.forEach?.( createHandInteractionBodies );
 }
@@ -470,7 +465,7 @@ function createHandInteractionBodies( hand ) {
     hand[ 12 ], // Middle tip
     hand[ 16 ], // Ring tip
     hand[ 20 ], // Pinky tip
-    hand[ 9 ], // Middle finger base (palm center)
+    hand[ 9 ] // Middle finger base (palm center)
   ];
 
   interactionPoints.forEach( ( point ) => {
@@ -485,7 +480,7 @@ function createHandInteractionBodies( hand ) {
         75,
         {
           isStatic: true, // Static so it doesn't fall
-          isSensor: false, // Can interact with other bodies
+          isSensor: false // Can interact with other bodies
         }
       );
 
@@ -525,7 +520,7 @@ function addBoundary(
     w,
     h,
     {
-      isStatic: true,
+      isStatic: true
     }
   );
 

@@ -11,8 +11,8 @@ import {
 
 const sketchState = {
   shape: {
-    graphics: null,
-  },
+    graphics: null
+  }
 };
 
 sketch.setup( ( {
@@ -57,7 +57,7 @@ sketch.draw( () => {
     size,
     font: string.fonts?.[ fontName ],
     sampleFactor,
-    simplifyThreshold,
+    simplifyThreshold
   } );
 
   textPoints.forEach( (
@@ -96,11 +96,11 @@ sketch.draw( () => {
         p.createVector(
           rotationMax,
           0
-        ),
+        )
       ],
       currentTime: animation.progression,
       easingFn: easing.easeInOutExpo,
-      lerpFn: mappers.lerpVector,
+      lerpFn: mappers.lerpVector
     } );
 
     const {
@@ -117,7 +117,7 @@ sketch.draw( () => {
         fillAlphaStart
       ],
       currentTime: animation.progression,
-      easingFn: easing.easeInOutElastic,
+      easingFn: easing.easeInOutElastic
     } );
 
     const hue = sketchState.shape.graphics.noise(
@@ -151,7 +151,7 @@ sketch.draw( () => {
           -p.PI,
           p.PI
         ) * hueMultiplier,
-      opacityFactor,
+      opacityFactor
     } );
 
     const {
@@ -159,7 +159,7 @@ sketch.draw( () => {
         red,
         green,
         blue
-      ],
+      ]
     } = tint;
 
     sketchState.shape.graphics.fill(

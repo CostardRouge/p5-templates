@@ -14,7 +14,7 @@ type GenerateThumbnailsButtonProps = {
 };
 
 export default function GenerateThumbnailsButton( {
-  hasMissingThumbnails,
+  hasMissingThumbnails
 }: GenerateThumbnailsButtonProps ) {
   const [
     generating,

@@ -11,7 +11,7 @@ type GenericObjectFormProps = {
 
 export default function GenericObjectForm( {
   basePath = "",
-  config,
+  config
 }: GenericObjectFormProps ) {
   const keys = Object.keys( config );
 

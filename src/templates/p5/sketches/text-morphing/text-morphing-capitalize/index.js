@@ -13,7 +13,7 @@ import {
 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
-  threeDimensionGraphics: null,
+  threeDimensionGraphics: null
 };
 
 sketch.setup(
@@ -26,8 +26,7 @@ sketch.setup(
       "webgl"
     );
   },
-  {
-  }
+  {}
 );
 
 function cross(
@@ -228,7 +227,7 @@ sketch.draw( (
     size,
     font,
     sampleFactor,
-    simplifyThreshold,
+    simplifyThreshold
   } );
 
   const fromUpperCased = string.getTextPoints( {
@@ -237,7 +236,7 @@ sketch.draw( (
     size,
     font,
     sampleFactor,
-    simplifyThreshold,
+    simplifyThreshold
   } );
 
   const fromAnimatedPoints = animation.ease( {
@@ -246,7 +245,7 @@ sketch.draw( (
       fromUpperCased
     ],
     currentTime: yProgression,
-    lerpFn: mappers.lerpPoints,
+    lerpFn: mappers.lerpPoints
   } );
 
   // TO
@@ -256,7 +255,7 @@ sketch.draw( (
     size,
     font,
     sampleFactor,
-    simplifyThreshold,
+    simplifyThreshold
   } );
 
   const toUpperCased = string.getTextPoints( {
@@ -265,7 +264,7 @@ sketch.draw( (
     size,
     font,
     sampleFactor,
-    simplifyThreshold,
+    simplifyThreshold
   } );
 
   const toAnimatedPoints = animation.ease( {
@@ -274,7 +273,7 @@ sketch.draw( (
       toUpperCased
     ],
     currentTime: yProgression,
-    lerpFn: mappers.lerpPoints,
+    lerpFn: mappers.lerpPoints
   } );
 
   // FINAL
@@ -284,7 +283,7 @@ sketch.draw( (
       toAnimatedPoints
     ],
     currentTime: xProgression,
-    lerpFn: mappers.lerpPoints,
+    lerpFn: mappers.lerpPoints
   } );
 
   sketchState.threeDimensionGraphics.push();
@@ -363,7 +362,7 @@ sketch.draw( (
               p.PI
             ) * 10,
         // hueIndex:mappers.fn(p.noise(x/p.width, y/p.height, progression/2+depthProgression/2), 0, 1, -p.PI, p.PI)*10,
-        opacityFactor,
+        opacityFactor
         // opacityFactor: p.map(depthProgression, 0, 1, 3, 1) * Math.pow(1.05, z)
       } ) );
 

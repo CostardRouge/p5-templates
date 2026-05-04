@@ -6,7 +6,7 @@ import mime from "mime-types";
 async function downloadFileResponse( {
   filePath,
   contentDisposition = "attachment",
-  onFileRead,
+  onFileRead
 }: {
   filePath: string;
   contentDisposition?: string;
@@ -23,7 +23,7 @@ async function downloadFileResponse( {
     },
     async cancel() {
       await onFileRead?.( fileBuffer );
-    },
+    }
   } );
 
   const mimeType = mime.lookup( fileName );
@@ -35,12 +35,11 @@ async function downloadFileResponse( {
       headers: {
         ...( mimeType
           ? {
-            "Content-Type": mimeType,
+            "Content-Type": mimeType
           }
-          : {
-          } ),
-        "Content-Disposition": `${ contentDisposition }; filename="${ fileName }"`,
-      },
+          : {} ),
+        "Content-Disposition": `${ contentDisposition }; filename="${ fileName }"`
+      }
     }
   );
 }

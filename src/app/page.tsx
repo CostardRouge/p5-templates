@@ -17,15 +17,15 @@ export const metadata: Metadata = {
   description:
     "Browse all available social media templates. Choose from p5.js sketches, GSAP animations, and HTML templates to create stunning visual content.",
   alternates: {
-    canonical: "/",
+    canonical: "/"
   },
   openGraph: {
     title: `Templates | ${ SITE_NAME }`,
     description:
       "Browse all available social media templates. Choose from p5.js sketches, GSAP animations, and HTML templates.",
     url: `${ getBaseUrl() }/`,
-    type: "website",
-  },
+    type: "website"
+  }
 };
 
 export type TemplateCategory = Array<{
@@ -37,8 +37,7 @@ export type TemplateCategory = Array<{
 }>;
 
 export default async function TemplatesPage() {
-  const p5sketches = ( await getSketchList() ) ?? [
-  ];
+  const p5sketches = ( await getSketchList() ) ?? [];
 
   const p5sketchNames = p5sketches
     .map( ( {
@@ -51,12 +50,12 @@ export default async function TemplatesPage() {
       href: category ? `/templates/${ engine }/${ category }/${ name }` : `/templates/${ engine }/${ name }`,
       hasSketchForm,
       name,
-      category,
+      category
     } ) )
     .reverse();
 
   const templates: Record<string, TemplateCategory> = {
-    p5: p5sketchNames,
+    p5: p5sketchNames
   };
 
   return (

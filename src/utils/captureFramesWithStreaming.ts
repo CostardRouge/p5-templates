@@ -27,7 +27,7 @@ export async function captureFramesWithStreaming( {
   totalFrames,
   outputVideoPath,
   framerate,
-  onProgress,
+  onProgress
 }: CaptureFramesWithStreamingOptions ): Promise<void> {
   let lastReportedPercentage = -1;
 
@@ -73,7 +73,7 @@ export async function captureFramesWithStreaming( {
     "-movflags",
     "+faststart",
 
-    outputVideoPath,
+    outputVideoPath
   ];
 
   const ffmpegProcess: ChildProcessWithoutNullStreams = spawn(

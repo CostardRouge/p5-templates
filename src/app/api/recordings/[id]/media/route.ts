@@ -15,7 +15,7 @@ import {
 export async function GET(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -31,15 +31,14 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
 
     // Parse thumbnails and videoUrls from JSON
     // Thumbnails can be either an array (old format) or a Record<slideId, url> (new format)
-    let thumbnails: string[] = [
-    ];
+    let thumbnails: string[] = [];
 
     if ( job.thumbnails ) {
       const thumbData = job.thumbnails as unknown;
@@ -54,12 +53,10 @@ export async function GET(
 
     const videoUrls = job.videoUrls
       ? ( job.videoUrls as unknown as string[] )
-      : [
-      ];
+      : [];
     const videoSizes = job.videoSizes
       ? ( job.videoSizes as unknown as number[] )
-      : [
-      ];
+      : [];
 
     // Check if this is an old recording (has resultUrl but no videoUrls)
     const isOldRecording =
@@ -68,12 +65,10 @@ export async function GET(
     // For old recordings with zip files, don't provide video URLs
     if ( isOldRecording && job.resultUrl?.endsWith( ".zip" ) ) {
       return NextResponse.json( {
-        thumbnails: [
-        ],
-        videos: [
-        ],
+        thumbnails: [],
+        videos: [],
         isZipArchive: true,
-        resultUrl: job.resultUrl,
+        resultUrl: job.resultUrl
       } );
     }
 
@@ -112,7 +107,7 @@ export async function GET(
           url,
           size,
           index,
-          key,
+          key
         };
       } catch ( error ) {
         console.error(
@@ -146,7 +141,7 @@ export async function GET(
       zipSize,
       recordingDuration: job.recordingDuration,
       template: job.template,
-      isZipArchive: false,
+      isZipArchive: false
     } );
   } catch ( error ) {
     console.error(
@@ -156,7 +151,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

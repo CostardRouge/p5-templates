@@ -17,7 +17,7 @@ export default forwardRef( function DropZoneButton(
     onFiles,
     multiple = false,
     className = "",
-    accept = "image/*",
+    accept = "image/*"
   }: DropZoneButtonProps,
   ref: React.Ref<HTMLInputElement>
 ) {

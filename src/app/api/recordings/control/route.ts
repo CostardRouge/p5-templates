@@ -22,10 +22,10 @@ export async function POST( request: NextRequest ): Promise<NextResponse> {
     ].includes( body.action ) ) {
       return NextResponse.json(
         {
-          error: "Action must be either \"pause\" or \"resume\"",
+          error: "Action must be either \"pause\" or \"resume\""
         },
         {
-          status: 400,
+          status: 400
         }
       );
     }
@@ -40,7 +40,7 @@ export async function POST( request: NextRequest ): Promise<NextResponse> {
 
     return NextResponse.json( {
       success: true,
-      message: `Recording processing ${ body.action }d successfully`,
+      message: `Recording processing ${ body.action }d successfully`
     } );
   } catch ( error ) {
     console.error(
@@ -50,10 +50,10 @@ export async function POST( request: NextRequest ): Promise<NextResponse> {
 
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Internal server error",
+        error: error instanceof Error ? error.message : "Internal server error"
       },
       {
-        status: 500,
+        status: 500
       }
     );
   }

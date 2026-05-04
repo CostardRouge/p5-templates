@@ -27,7 +27,7 @@ export default function RecordingsToolbar( {
   onViewChange,
   recordingsCount,
   sortConfig,
-  onSortChange,
+  onSortChange
 }: RecordingsToolbarProps ) {
   return (
     <div className="flex flex-col gap-3 sm:gap-4">

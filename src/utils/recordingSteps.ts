@@ -27,28 +27,28 @@ const DEFAULT_STEP_CONFIG: StepConfig[] = [
   {
     id: "launch",
     name: "Launching browser",
-    weight: 10,
+    weight: 10
   },
   {
     id: "capture",
     name: "Capturing frames",
-    weight: 30,
+    weight: 30
   },
   {
     id: "save",
     name: "Saving frames",
-    weight: 20,
+    weight: 20
   },
   {
     id: "encode",
     name: "Encoding video",
-    weight: 35,
+    weight: 35
   },
   {
     id: "finalize",
     name: "Finalizing",
-    weight: 5,
-  },
+    weight: 5
+  }
 ];
 
 /**
@@ -71,7 +71,7 @@ export function getRecordingSteps(
       id: config.id,
       name: config.name,
       status: "pending" as const,
-      percentage: 0,
+      percentage: 0
     } ) );
   }
 
@@ -85,7 +85,7 @@ export function getRecordingSteps(
     return {
       ...config,
       start,
-      end,
+      end
     };
   } );
 
@@ -124,7 +124,7 @@ export function getRecordingSteps(
       id: range.id,
       name: range.name,
       status,
-      percentage,
+      percentage
     };
   } );
 }
@@ -171,7 +171,7 @@ export function createStepConfig( configs: StepConfig[] ): StepConfig[] {
     // Normalize weights to sum to 100
     return configs.map( ( config ) => ( {
       ...config,
-      weight: ( config.weight / totalWeight ) * 100,
+      weight: ( config.weight / totalWeight ) * 100
     } ) );
   }
 

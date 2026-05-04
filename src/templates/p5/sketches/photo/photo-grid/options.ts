@@ -4,15 +4,14 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 // Default values only
 export const formValues = {
   // Assets
-  images: [
-  ],
+  images: [],
 
   imageStyle: {
     fill: true,
     clip: true,
     center: true,
     scale: 1,
-    margin: 0,
+    margin: 0
   },
 
   // Colors
@@ -28,7 +27,7 @@ export const formValues = {
     columns: 3
   },
 
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 // UI configuration only
@@ -36,7 +35,7 @@ export const formConfiguration: Record<string, any> = {
   // Assets
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   grid: {
@@ -47,20 +46,20 @@ export const formConfiguration: Record<string, any> = {
         label: "Border size",
         component: "slider",
         min: 0,
-        max: 100,
+        max: 100
       },
       rows: {
         label: "Rows",
         component: "slider",
         min: 1,
-        max: 100,
+        max: 100
       },
       columns: {
         label: "Rows",
         component: "slider",
         min: 1,
-        max: 100,
-      },
+        max: 100
+      }
     }
   },
 
@@ -73,35 +72,35 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 0.45,
-        step: 0.005,
+        step: 0.005
       },
       scale: {
         label: "Scale",
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1,
+        step: 0.1
       },
       center: {
         label: "Center image",
-        component: "checkbox",
+        component: "checkbox"
       },
       clip: {
         label: "Clip",
-        component: "checkbox",
+        component: "checkbox"
       },
       fill: {
         label: "Fill",
-        component: "checkbox",
-      },
+        component: "checkbox"
+      }
     }
   },
 
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color",
+    label: "Background color"
   },
 
-  title: titleFormConfiguration,
+  title: titleFormConfiguration
 };

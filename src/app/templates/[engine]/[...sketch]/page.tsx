@@ -29,10 +29,10 @@ import {
 import getCaptureOptions from "@/utils/getCaptureOptions";
 import {
   getJSONSketchOptions,
-  getSketchMeta,
+  getSketchMeta
 } from "@/utils/getSketchOptions";
 import type {
-  FieldConfig,
+  FieldConfig
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import listDirectory from "@/utils/listDirectory";
 
@@ -51,7 +51,7 @@ const acceptedImageTypes = [
 function injectTestImagesIntoSketchFields(
   sketch: Record<string, unknown>,
   formConfiguration: Record<string, FieldConfig>,
-  testImagePaths: string[],
+  testImagePaths: string[]
 ): void {
   for ( const [
     key,
@@ -61,8 +61,7 @@ function injectTestImagesIntoSketchFields(
       if ( typeof config.scope === "object" ) continue;
       const existing = Array.isArray( sketch[ key ] )
         ? ( sketch[ key ] as string[] )
-        : [
-        ];
+        : [];
 
       sketch[ key ] = [
         ...existing,
@@ -91,7 +90,7 @@ type RouteParams = {
 /* ------------------------------------------------------------------ */
 
 export async function generateMetadata( {
-  params,
+  params
 }: {
   params: Promise<RouteParams>;
 } ): Promise<Metadata> {
@@ -129,10 +128,10 @@ export async function generateMetadata( {
       "social media template",
       "video generator",
       "creative coding",
-      ...sketchName.split( "-" ),
+      ...sketchName.split( "-" )
     ],
     alternates: {
-      canonical: canonicalPath,
+      canonical: canonicalPath
     },
     ...( thumbnailUrl && {
       openGraph: {
@@ -145,10 +144,10 @@ export async function generateMetadata( {
             url: thumbnailUrl,
             width: 1200,
             height: 630,
-            alt: `${ title } template preview`,
-          },
+            alt: `${ title } template preview`
+          }
         ],
-        type: "website",
+        type: "website"
       },
       twitter: {
         card: "summary_large_image",
@@ -170,7 +169,7 @@ export const revalidate = 0;
 
 export default async function StudioPage( {
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<RouteParams>;
   searchParams: Promise<{
@@ -209,8 +208,7 @@ export default async function StudioPage( {
   }
 
   /* ---- load options & form meta (reuses existing p5 utils) ------- */
-  const sketchOptions = OptionsSchema.parse( {
-  } );
+  const sketchOptions = OptionsSchema.parse( {} );
 
   const {
     formValues, formConfiguration
@@ -253,7 +251,7 @@ export default async function StudioPage( {
 
     Object.assign(
       sketchOptions,
-      await getCaptureOptions( `${ persistedJob.id }/options.json` ),
+      await getCaptureOptions( `${ persistedJob.id }/options.json` )
     );
     sketchOptions.id = persistedJob.id;
   }
@@ -263,8 +261,7 @@ export default async function StudioPage( {
     delete sketchOptions.consumeTestImages;
 
     sketchOptions.assets = sketchOptions.assets || {
-      images: [
-      ]
+      images: []
     };
 
     const testImageFileNames = await listDirectory( "public/assets/images/test" );
@@ -276,13 +273,12 @@ export default async function StudioPage( {
     sketchOptions.assets.images = testImagePaths;
 
     if ( formConfiguration ) {
-      sketchOptions.sketch = ( sketchOptions.sketch as Record<string, unknown> ) ?? {
-      };
+      sketchOptions.sketch = ( sketchOptions.sketch as Record<string, unknown> ) ?? {};
 
       injectTestImagesIntoSketchFields(
         sketchOptions.sketch as Record<string, unknown>,
         formConfiguration,
-        testImagePaths,
+        testImagePaths
       );
     }
   }

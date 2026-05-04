@@ -28,7 +28,7 @@ export function deepMerge(
       ...targetObject
     ]
     : {
-      ...targetObject,
+      ...targetObject
     };
 
   for ( const key of Object.keys( sourceObject ) ) {
@@ -41,8 +41,7 @@ export function deepMerge(
       !Array.isArray( sourceValue )
     ) {
       mergedObject[ key ] = deepMerge(
-        targetValue || {
-        },
+        targetValue || {},
         sourceValue
       );
     } else {

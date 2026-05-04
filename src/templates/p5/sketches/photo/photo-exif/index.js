@@ -45,7 +45,7 @@ sketch.draw( (
         textAlign: [
           p.CENTER,
           p.CENTER
-        ],
+        ]
       }
     );
   }
@@ -70,7 +70,7 @@ sketch.draw( (
           fill: p.color( ...( options.sketch?.font?.color ?? [
             0
           ] ) ),
-          font: getFont(),
+          font: getFont()
         };
 
         // p.TOP p.LEFT
@@ -98,7 +98,7 @@ sketch.draw( (
             textWidth: w,
             textAlign: [
               p.RIGHT
-            ],
+            ]
           }
         );
 
@@ -113,7 +113,7 @@ sketch.draw( (
             textAlign: [
               p.LEFT,
               p.TOP
-            ],
+            ]
           }
         );
 
@@ -122,7 +122,7 @@ sketch.draw( (
           exif.formatLensModel( photo.exif?.lens ),
           exif.formatFocalLength( photo.exif?.focalLength ),
           exif.formatAperture( photo.exif?.aperture ),
-          exif.formatShutterSpeed( photo.exif?.shutterSpeed ),
+          exif.formatShutterSpeed( photo.exif?.shutterSpeed )
         ].filter( Boolean );
 
         const bottomRightText = mappers.circularIndex(
@@ -143,10 +143,10 @@ sketch.draw( (
             textAlign: [
               p.RIGHT,
               p.TOP
-            ],
+            ]
           }
         );
-      },
+      }
     } );
   }
 } );

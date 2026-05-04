@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import type React from "react";
 import {
-  useCallback,
+  useCallback
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
@@ -22,7 +22,7 @@ import {
 import useSketchDevWatch from "@/hooks/useSketchDevWatch";
 
 const TemplateOptions = dynamic( () =>
-  import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ), );
+  import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
 
 export default function TemplateSketchPage() {
   const [
@@ -37,7 +37,7 @@ export default function TemplateSketchPage() {
   } = useSketchThumbnail( {
     name,
     persistedJob,
-    engine: engineId,
+    engine: engineId
   } );
 
   useSketchDevWatch(
@@ -112,7 +112,7 @@ export default function TemplateSketchPage() {
                   "--scale-factor": "var(--viewport-scale, 1)",
                   transform: "scale(calc(1 / var(--scale-factor)))",
                   transformOrigin: "bottom left",
-                  width: "calc(100% * var(--scale-factor))",
+                  width: "calc(100% * var(--scale-factor))"
                 } as React.CSSProperties
               }
             >
@@ -144,7 +144,7 @@ export default function TemplateSketchPage() {
                   "--scale-factor": "var(--viewport-scale, 1)",
                   transform: "scale(calc(1 / var(--scale-factor)))",
                   transformOrigin: "top left",
-                  width: "calc(100% * var(--scale-factor))",
+                  width: "calc(100% * var(--scale-factor))"
                 } as React.CSSProperties
               }
             >

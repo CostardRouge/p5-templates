@@ -51,7 +51,9 @@ const eslintConfig = [
       ],
       "@stylistic/js/array-bracket-newline": [
         "error",
-        "always"
+        {
+          minItems: 1
+        }
       ],
       "@stylistic/js/array-bracket-spacing": [
         "error",
@@ -64,7 +66,14 @@ const eslintConfig = [
       "@stylistic/js/key-spacing": [
         "error",
         {
+          beforeColon: false,
           afterColon: true
+        }
+      ],
+      "@stylistic/js/keyword-spacing": [
+        "error",
+        {
+          after: true
         }
       ],
       "@stylistic/js/function-call-argument-newline": [
@@ -145,7 +154,17 @@ const eslintConfig = [
       "@stylistic/js/newline-per-chained-call": "error",
       "@stylistic/js/object-curly-newline": [
         "error",
-        "always"
+        {
+          ObjectExpression: { multiline: true, minProperties: 1 },
+          ObjectPattern: { multiline: true, minProperties: 1 },
+          ImportDeclaration: { multiline: true, minProperties: 1 },
+          ExportDeclaration: { multiline: true, minProperties: 1 }
+        }
+      ],
+      "@stylistic/js/jsx-curly-spacing": "off",
+      "@stylistic/js/comma-dangle": [
+        "error",
+        "never"
       ],
       "@stylistic/js/object-property-newline": "error",
       "@stylistic/js/padded-blocks": [

@@ -82,7 +82,7 @@ export default function drawFace(
     drawCircleEchoes( {
       size,
       count: 30,
-      position: keyPointVectors[ nose ],
+      position: keyPointVectors[ nose ]
     } );
 
     // p.beginShape( p.POINTS );

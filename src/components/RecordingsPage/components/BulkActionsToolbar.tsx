@@ -20,7 +20,7 @@ export default function BulkActionsToolbar( {
   onClearSelection,
   onBulkDelete,
   onBulkCancel,
-  onBulkRetry,
+  onBulkRetry
 }: BulkActionsToolbarProps ) {
   if ( selectedJobs.length === 0 ) return null;
 

@@ -9,16 +9,16 @@ import {
   MouseSensor,
   TouchSensor,
   useSensor,
-  useSensors,
+  useSensors
 } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
-  verticalListSortingStrategy,
+  verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import {
   restrictToParentElement,
-  restrictToVerticalAxis,
+  restrictToVerticalAxis
 } from "@dnd-kit/modifiers";
 import {
   CSS
@@ -89,7 +89,7 @@ function SortableItem( {
   fieldPath,
   itemConfig,
   onRemove,
-  locked,
+  locked
 }: SortableItemProps ) {
   const {
     attributes,
@@ -98,14 +98,14 @@ function SortableItem( {
     setActivatorNodeRef,
     transform,
     transition,
-    isDragging,
+    isDragging
   } = useSortable( {
-    id,
+    id
   } );
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString( transform ),
-    transition,
+    transition
   };
 
   return (
@@ -154,7 +154,7 @@ function SortableItem( {
 
 export default function ItemListRenderer( {
   name,
-  config,
+  config
 }: ItemListRendererProps ) {
   const {
     control, getValues, setValue
@@ -162,17 +162,15 @@ export default function ItemListRenderer( {
 
   const watchedValue = useWatch( {
     control,
-    name,
+    name
   } );
 
-  const values = Array.isArray( watchedValue ) ? watchedValue : [
-  ];
+  const values = Array.isArray( watchedValue ) ? watchedValue : [];
 
   const [
     itemIds,
     setItemIds
-  ] = useState<string[]>( [
-  ] );
+  ] = useState<string[]>( [] );
   const didInitRef = useRef( false );
 
   // Initialize values once (defaults/minItems) without clobbering existing values.
@@ -191,7 +189,7 @@ export default function ItemListRenderer( {
             config.defaultItems,
             {
               shouldDirty: false,
-              shouldTouch: false,
+              shouldTouch: false
             }
           );
         } else if ( config.minItems && config.minItems > 0 ) {
@@ -206,7 +204,7 @@ export default function ItemListRenderer( {
             ),
             {
               shouldDirty: false,
-              shouldTouch: false,
+              shouldTouch: false
             }
           );
         }
@@ -220,7 +218,7 @@ export default function ItemListRenderer( {
       config.minItems,
       getValues,
       name,
-      setValue,
+      setValue
     ]
   );
 
@@ -249,8 +247,8 @@ export default function ItemListRenderer( {
       MouseSensor,
       {
         activationConstraint: {
-          distance: 8,
-        },
+          distance: 8
+        }
       }
     ),
     useSensor(
@@ -258,8 +256,8 @@ export default function ItemListRenderer( {
       {
         activationConstraint: {
           delay: 200,
-          tolerance: 5,
-        },
+          tolerance: 5
+        }
       }
     ),
     useSensor( KeyboardSensor )
@@ -282,8 +280,7 @@ export default function ItemListRenderer( {
     }
 
     const currentValue = getValues( name );
-    const currentArray = Array.isArray( currentValue ) ? currentValue : [
-    ];
+    const currentArray = Array.isArray( currentValue ) ? currentValue : [];
 
     setItemIds( ( prev ) => arrayMove(
       prev,
@@ -299,7 +296,7 @@ export default function ItemListRenderer( {
       ),
       {
         shouldDirty: true,
-        shouldTouch: true,
+        shouldTouch: true
       }
     );
   };
@@ -315,7 +312,7 @@ export default function ItemListRenderer( {
       next,
       {
         shouldDirty: true,
-        shouldTouch: true,
+        shouldTouch: true
       }
     );
     setItemIds( ( prev ) => prev.concat( createId() ) );
@@ -335,7 +332,7 @@ export default function ItemListRenderer( {
       next,
       {
         shouldDirty: true,
-        shouldTouch: true,
+        shouldTouch: true
       }
     );
 
@@ -359,7 +356,7 @@ export default function ItemListRenderer( {
             <ChevronDown
               className="w-3 h-3 transition-transform"
               style={{
-                transform: expanded ? "rotate(0deg)" : "rotate(-90deg)",
+                transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
               }}
             />
             <span>
@@ -437,8 +434,7 @@ function getDefaultValueForConfig( config: FieldConfig ): any {
       return config.options[ 0 ]?.value ?? "";
     }
     case "nested-object": {
-      const obj: Record<string, any> = {
-      };
+      const obj: Record<string, any> = {};
 
       for ( const [
         key,

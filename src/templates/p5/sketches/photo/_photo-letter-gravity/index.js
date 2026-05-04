@@ -20,8 +20,7 @@ const {
 
 Common.setDecomp( window.decomp );
 
-const shape = [
-];
+const shape = [];
 
 events.register(
   "engine-mouse-dragged",
@@ -47,7 +46,7 @@ events.register(
         {
           friction: 0.3,
           frictionAir: 0.0001,
-          restitution: 0.9,
+          restitution: 0.9
         },
         false,
         0.01,
@@ -60,7 +59,7 @@ events.register(
       ),
       points: [
         ...shape
-      ],
+      ]
     };
 
     if ( !bodyObject.body ) {
@@ -80,16 +79,14 @@ events.register(
 
 const canvases = {
   mask: undefined,
-  imageBuffer: undefined,
+  imageBuffer: undefined
 };
 
 const matter = {
   engine: Engine.create(),
   bottom: undefined,
-  bodies: [
-  ],
-  boundaries: [
-  ],
+  bodies: [],
+  boundaries: []
 };
 
 function drawImageWithMask( {
@@ -105,7 +102,7 @@ function drawImageWithMask( {
     position: p.createVector(
       p.width / 2,
       p.height / 2
-    ),
+    )
   } );
 
   // Clean mask
@@ -144,7 +141,7 @@ function addLetter(
       x,
       y
     ),
-    body: undefined, // Bodies.circle(x, y, size, size)
+    body: undefined // Bodies.circle(x, y, size, size)
   };
 
   matter.bodies.unshift( bodyObject );
@@ -160,7 +157,7 @@ function addBoundary(
     w,
     h,
     {
-      isStatic: true,
+      isStatic: true
     }
   );
 
@@ -250,7 +247,7 @@ sketch.draw( (
         size,
         position,
         // sampleFactor: .1,
-        font: string.fonts.agiro,
+        font: string.fonts.agiro
       } );
 
       bodyObject.body = Bodies.fromVertices(
@@ -340,7 +337,7 @@ sketch.draw( (
         x: mX, y: mY
       },
       vertices,
-      angle,
+      angle
     } = body;
 
     p.push();

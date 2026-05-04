@@ -25,7 +25,7 @@ type SketchSettingsProps = {
 
 export default function SketchSettings( {
   basePath,
-  activeSlideIndex,
+  activeSlideIndex
 }: SketchSettingsProps ) {
   const [
     {
@@ -66,7 +66,7 @@ export default function SketchSettings( {
       className="w-64 flex flex-col gap-1 absolute left-2 bottom-2 md:bottom-4 md:left-4 glass p-2 border border-theme z-50 rounded-2xl shadow-lg overflow-y-auto"
       style={{
         maxHeight: "calc(80svh - 5rem)",
-        maxWidth: "calc(50% - 0.75rem)",
+        maxWidth: "calc(50% - 0.75rem)"
       }}
       header={( expanded ) => (
         <div className="flex items-center justify-between w-full">
@@ -77,7 +77,7 @@ export default function SketchSettings( {
             <ArrowDownFromLine
               className="text-foreground h-3 w-3 mr-1"
               style={{
-                rotate: expanded ? "0deg" : "180deg",
+                rotate: expanded ? "0deg" : "180deg"
               }}
             />
             <span>

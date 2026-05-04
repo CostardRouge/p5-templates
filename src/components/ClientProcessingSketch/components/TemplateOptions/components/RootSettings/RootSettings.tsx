@@ -23,7 +23,7 @@ export default function RootSettings() {
           <ListCollapse
             className="inline text-foreground h-3"
             style={{
-              rotate: expanded ? "180deg" : "0deg",
+              rotate: expanded ? "180deg" : "0deg"
             }}
           />
           general settings

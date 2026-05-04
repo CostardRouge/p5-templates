@@ -7,7 +7,7 @@ export const formValues = {
     min: 1,
     max: 2,
     variable: false,
-    easing: "easeOutSine",
+    easing: "easeOutSine"
   },
   stepAngleAmplitude: 1,
   sinAmplitudeMultiplier: 2,
@@ -25,18 +25,18 @@ export const formValues = {
   opacityEnd: 2.25,
   start: {
     x: 0,
-    y: 0.5,
+    y: 0.5
   },
   end: {
     x: 1,
-    y: 0.5,
+    y: 0.5
   },
   backgroundColor: [
     0,
     0,
     0,
     255
-  ],
+  ]
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -45,21 +45,21 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     min: 10,
     max: 1000,
-    step: 1,
+    step: 1
   },
   shadowsCount: {
     label: "Shadows count",
     component: "slider",
     min: 1,
     max: 30,
-    step: 1,
+    step: 1
   },
   stepsCount: {
     label: "Steps count",
     component: "slider",
     min: 1,
     max: 2000,
-    step: 1,
+    step: 1
   },
   size: {
     label: "Size",
@@ -70,120 +70,120 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 1,
         max: 500,
-        step: 0.1,
+        step: 0.1
       },
       easing: {
         component: "easing",
-        label: "Circle size easing",
+        label: "Circle size easing"
       },
       variable: {
         label: "Variable size?",
-        component: "checkbox",
+        component: "checkbox"
       },
       min: {
         label: "Minimum size multiplier",
         component: "slider",
         min: 1,
         max: 3,
-        step: 0.1,
+        step: 0.1
       },
       max: {
         label: "Maximum size multiplier",
         component: "slider",
         min: 1,
         max: 6,
-        step: 0.1,
-      },
-    },
+        step: 0.1
+      }
+    }
   },
   stepAngleAmplitude: {
     label: "Step angle amplitude",
     component: "slider",
     min: 0,
     max: 5,
-    step: 0.1,
+    step: 0.1
   },
   sinAmplitudeMultiplier: {
     label: "Sin amplitude multiplier",
     component: "slider",
     min: 0,
     max: 10,
-    step: 0.1,
+    step: 0.1
   },
   cosAmplitudeMultiplier: {
     label: "Cos amplitude multiplier",
     component: "slider",
     min: 0,
     max: 10,
-    step: 0.1,
+    step: 0.1
   },
   sinAngleMultiplier: {
     label: "Sin angle multiplier",
     component: "slider",
     min: 0,
     max: 10,
-    step: 0.1,
+    step: 0.1
   },
   cosAngleMultiplier: {
     label: "Cos angle multiplier",
     component: "slider",
     min: 0,
     max: 10,
-    step: 0.1,
+    step: 0.1
   },
   hueIndexMultiplier: {
     label: "Hue index multiplier",
     component: "slider",
     min: 0,
     max: 5,
-    step: 0.1,
+    step: 0.1
   },
   hueAmplitude: {
     label: "Hue amplitude",
     component: "slider",
     min: 0,
     max: Math.PI * 2,
-    step: 0.1,
+    step: 0.1
   },
   positionSinEasing: {
     component: "easing",
-    label: "Position sin easing",
+    label: "Position sin easing"
   },
   positionCosEasing: {
     component: "easing",
-    label: "Position cos easing",
+    label: "Position cos easing"
   },
   positionCosMultiplier: {
     label: "Position cos multiplier",
     component: "slider",
     min: 1,
     max: 20,
-    step: 1,
+    step: 1
   },
   hueEasing: {
     component: "easing",
-    label: "Hue easing",
+    label: "Hue easing"
   },
   hueStepDivider: {
     label: "Hue step divider",
     component: "slider",
     min: 1,
     max: 50,
-    step: 1,
+    step: 1
   },
   opacityStart: {
     label: "Opacity start",
     component: "slider",
     min: 0,
     max: 5,
-    step: 0.05,
+    step: 0.05
   },
   opacityEnd: {
     label: "Opacity end",
     component: "slider",
     min: 0,
     max: 5,
-    step: 0.05,
+    step: 0.05
   },
   start: {
     label: "Start position",
@@ -194,16 +194,16 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01,
+        step: 0.01
       },
       y: {
         label: "Y (0-1)",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01,
-      },
-    },
+        step: 0.01
+      }
+    }
   },
   end: {
     label: "End position",
@@ -214,19 +214,19 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01,
+        step: 0.01
       },
       y: {
         label: "Y (0-1)",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01,
-      },
-    },
+        step: 0.01
+      }
+    }
   },
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

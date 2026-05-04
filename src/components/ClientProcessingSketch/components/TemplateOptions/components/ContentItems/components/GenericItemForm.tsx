@@ -5,7 +5,7 @@ import {
 import {
   ContentItem,
   SketchOption,
-  ContentItemSchema,
+  ContentItemSchema
 } from "@/types/sketch.types";
 
 import {
@@ -31,7 +31,7 @@ export default function GenericItemForm( {
   index,
   onRemove,
   onDuplicate,
-  dragBinder,
+  dragBinder
 }: GenericItemFormProps ) {
   const {
     watch

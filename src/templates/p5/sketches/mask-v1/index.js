@@ -9,8 +9,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const shapes = [
-];
+const shapes = [];
 
 let pixilatedCanvas = null;
 let maskImage = null;
@@ -61,8 +60,8 @@ sketch.setup( () => {
         ),
         relativePosition: {
           x: x / ( xCount + 1 ),
-          y: y / ( yCount + 1 ),
-        },
+          y: y / ( yCount + 1 )
+        }
       } ) );
     }
   }

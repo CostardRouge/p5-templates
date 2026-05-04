@@ -9,7 +9,7 @@ export const EASING_FAMILIES = [
   "circ",
   "back",
   "elastic",
-  "bounce",
+  "bounce"
 ] as const;
 
 export type EasingFamily = ( typeof EASING_FAMILIES )[number];
@@ -26,7 +26,7 @@ export const EASING_DIRECTIONS = [
   {
     label: "In-Out",
     value: "InOut"
-  },
+  }
 ] as const;
 
 export type EasingDirection = ( typeof EASING_DIRECTIONS )[number]["value"];

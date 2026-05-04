@@ -7,8 +7,7 @@ import titleDefaultValues from "@/templates/p5/utils/title/titleDefaultValues";
 // Default values only
 export const formValues = {
   // Assets
-  images: [
-  ],
+  images: [],
 
   // Colors
   backgroundColor: [
@@ -20,7 +19,7 @@ export const formValues = {
     0
   ],
 
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 // UI configuration only
@@ -28,17 +27,17 @@ export const formConfiguration: Record<string, any> = {
   // Assets
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color",
+    label: "Background color"
   },
   textColor: {
     component: "color",
-    label: "Text color",
+    label: "Text color"
   },
 
   title: titleFormConfiguration

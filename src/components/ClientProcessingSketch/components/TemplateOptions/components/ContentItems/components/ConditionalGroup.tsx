@@ -30,21 +30,18 @@ function getDefaultValueForFieldConfig( config: any ): any {
     case "select":
       return config.options?.[ 0 ]?.value ?? "";
     case "nested-object": {
-      const result: Record<string, any> = {
-      };
+      const result: Record<string, any> = {};
 
       for ( const [
         key,
         subConfig
-      ] of Object.entries( config.fields ?? {
-        } ) ) {
+      ] of Object.entries( config.fields ?? {} ) ) {
         result[ key ] = getDefaultValueForFieldConfig( subConfig );
       }
       return result;
     }
     case "item-list":
-      return config.defaultItems ?? [
-      ];
+      return config.defaultItems ?? [];
     default:
       return "";
   }
@@ -59,7 +56,7 @@ type ConditionalGroupProps = {
 export default function ConditionalGroup( {
   basePath,
   config,
-  selectClassName,
+  selectClassName
 }: ConditionalGroupProps ) {
   const {
     control, setValue, unregister, clearErrors
@@ -70,7 +67,7 @@ export default function ConditionalGroup( {
 
   const watchedValue = useWatch( {
     control,
-    name: `${ basePath }.${ conditionalOn }`,
+    name: `${ basePath }.${ conditionalOn }`
   } );
 
   const handleTypeChange = ( e: React.ChangeEvent<HTMLSelectElement> ) => {
@@ -82,7 +79,7 @@ export default function ConditionalGroup( {
         undefined,
         {
           shouldValidate: true,
-          shouldDirty: true,
+          shouldDirty: true
         }
       );
       unregister( basePath );
@@ -96,7 +93,7 @@ export default function ConditionalGroup( {
     const defaultObject =
       schema && typeof ( schema as any ).parse === "function"
         ? schema.parse( {
-          [ conditionalOn ]: newType,
+          [ conditionalOn ]: newType
         } )
         : {
           [ conditionalOn ]: newType,
@@ -106,17 +103,16 @@ export default function ConditionalGroup( {
               fieldConfig
             ] ) => [
               key,
-              getDefaultValueForFieldConfig( fieldConfig ),
+              getDefaultValueForFieldConfig( fieldConfig )
             ] ) )
-            : {
-            } ),
+            : {} )
         };
 
     setValue(
       basePath,
       defaultObject,
       {
-        shouldValidate: true,
+        shouldValidate: true
       }
     );
   };
@@ -135,7 +131,7 @@ export default function ConditionalGroup( {
           <ChevronDown
             className="w-3 h-3 transition-transform"
             style={{
-              transform: expanded ? "rotate(0deg)" : "rotate(-90deg)",
+              transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
             }}
           />
           <span>

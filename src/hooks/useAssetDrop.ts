@@ -8,12 +8,11 @@ import {
 
 import {
   getSketchOptions,
-  setSketchOptions,
+  setSketchOptions
 } from "@/lib/syncSketchOptions";
 
 const ensurePath = (
-  obj: any, key: string, value: any = [
-  ]
+  obj: any, key: string, value: any = []
 ) => {
   obj[ key ] ??= value;
   return obj[ key ];
@@ -31,14 +30,13 @@ export default function useAssetDrop() {
   async function addAssets( {
     files,
     type,
-    scope,
+    scope
   }: {
     files: FileList;
     type: AssetType;
     scope: Scope;
   } ) {
-    const registeredBlobNames = [
-    ];
+    const registeredBlobNames = [];
     const opts = structuredClone( getSketchOptions() );
 
     const targetArray = resolveArray(
@@ -73,7 +71,7 @@ export default function useAssetDrop() {
   function removeAsset( {
     index,
     type,
-    scope,
+    scope
   }: {
     index: number;
     type: AssetType;
@@ -112,12 +110,10 @@ export default function useAssetDrop() {
         ensurePath(
           base,
           "assets",
-          {
-          }
+          {}
         ),
         type,
-        [
-        ]
+        []
       );
     }
 
@@ -125,26 +121,22 @@ export default function useAssetDrop() {
       slide
     } = scope;
 
-    base.slides ??= [
-    ];
-    base.slides[ slide ] ??= {
-    };
+    base.slides ??= [];
+    base.slides[ slide ] ??= {};
 
     return ensurePath(
       ensurePath(
         base.slides[ slide ],
         "assets",
-        {
-        }
+        {}
       ),
       type,
-      [
-      ]
+      []
     );
   }
 
   return {
     addAssets,
-    removeAsset,
+    removeAsset
   };
 }

@@ -19,7 +19,7 @@ const interactive = {
   currentTimeValue: 0,
   graphics: null,
   position: null,
-  image: null,
+  image: null
 };
 
 events.register(
@@ -46,7 +46,7 @@ sketch.setup(
     await addScreenPositionFunction( p );
   },
   {
-    type: "webgl",
+    type: "webgl"
   }
 );
 
@@ -55,7 +55,7 @@ function getAlphaFromMask( {
     x, y
   },
   maskPoints,
-  distance = options.sketch?.mask?.distance ?? 0.015,
+  distance = options.sketch?.mask?.distance ?? 0.015
 } ) {
   const normalizedPosition = p.createVector(
     p.map(
@@ -116,19 +116,17 @@ function createGridAlphaPoints(
   return cache.store(
     `alpha-points-matrix+${ cacheKey }`,
     () => {
-      const alphaPoints = [
-      ];
+      const alphaPoints = [];
 
       grid.draw(
         gridOptions,
         ( position ) => {
-          const alphaLayers = [
-          ];
+          const alphaLayers = [];
 
           for ( const points of textPointsMatrix ) {
             const alpha = getAlphaFromMask( {
               position,
-              maskPoints: points,
+              maskPoints: points
             } );
 
             alphaLayers.push( alpha );
@@ -136,7 +134,7 @@ function createGridAlphaPoints(
 
           alphaPoints.push( {
             position,
-            layers: alphaLayers,
+            layers: alphaLayers
           } );
         }
       );
@@ -185,13 +183,13 @@ sketch.draw( () => {
     ),
     rows,
     columns,
-    centered: true,
+    centered: true
   };
 
   const fontName = options.sketch?.shape?.font ?? "martian";
 
   const fonts = [
-    string.fonts.martian,
+    string.fonts.martian
     // string.fonts.multicoloure,
     // string.fonts.openSans,
     // string.fonts.sans,
@@ -210,7 +208,7 @@ sketch.draw( () => {
       size,
       font: string.fonts?.[ fontName ],
       sampleFactor,
-      simplifyThreshold,
+      simplifyThreshold
     } ) );
 
   if ( textPointsMatrix.some( ( matrix ) => matrix.length === 0 ) ) {
@@ -224,7 +222,7 @@ sketch.draw( () => {
     fontName,
     sampleFactor,
     simplifyThreshold,
-    options.sketch?.mask?.distance,
+    options.sketch?.mask?.distance
   ];
   const cacheKey = cacheComponent.join( "+" );
 
@@ -239,7 +237,7 @@ sketch.draw( () => {
 
     const {
       x: rX,
-      y: rY,
+      y: rY
       // z: rZ
     } = animation.ease( {
       values: [
@@ -252,12 +250,12 @@ sketch.draw( () => {
           rotationMax,
           rotationMax
         ),
-        p.createVector( rotationMax ),
+        p.createVector( rotationMax )
       ],
       currentTime: animation.progression * 3,
       duration: 1,
       lerpFn: mappers.lerpVector,
-      easingFn: easing.easeInOutExpo,
+      easingFn: easing.easeInOutExpo
       // easingFn: easing.easeInOutElastic,
       // easingFn: easing.easeInOutCirc,
     } );
@@ -321,7 +319,7 @@ sketch.draw( () => {
         -p.PI,
         p.PI
       ) * hueMultiplier,
-      opacityFactor,
+      opacityFactor
     } );
 
     const {
@@ -329,7 +327,7 @@ sketch.draw( () => {
         red,
         green,
         blue
-      ],
+      ]
     } = tint;
 
     p.push();
@@ -386,7 +384,7 @@ sketch.draw( () => {
       ],
       currentTime: constrainedTime,
       duration: 1,
-      easingFn: easing.easeInOutExpo,
+      easingFn: easing.easeInOutExpo
     } );
 
     p.fill(

@@ -17,7 +17,7 @@ export const formValues = {
     font: "waverseVariable",
     size: 0.5,
     sampleFactor: 0.0625,
-    simplifyThreshold: 0,
+    simplifyThreshold: 0
   },
   rotation: {
     enabled: true,
@@ -47,9 +47,9 @@ export const formValues = {
         x: -Math.PI / 5,
         y: -Math.PI / 5,
         z: 0
-      },
+      }
     ],
-    easing: "easeInOutExpo",
+    easing: "easeInOutExpo"
   },
   morphing: {
     easing: "easeInOutExpo",
@@ -61,14 +61,14 @@ export const formValues = {
     varyStrokeWithDepthProgression: true,
     strokeWeightMax: 10,
     strokeWeightMin: 5,
-    strokeWeightEasing: "easeInOutExpo",
+    strokeWeightEasing: "easeInOutExpo"
   },
   backgroundColor: [
     0,
     0,
     0
   ],
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 // UI configuration only
@@ -83,31 +83,31 @@ export const formConfiguration: Record<string, any> = {
         label: "Font name",
         options: fontNames.map( ( fontName ) => ( {
           value: fontName,
-          label: fontName,
-        } ) ),
+          label: fontName
+        } ) )
       },
       size: {
         label: "Size",
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1,
+        step: 0.1
       },
       sampleFactor: {
         label: "Text sample factor",
         component: "slider",
         min: 0.01,
         max: 1,
-        step: 0.01,
+        step: 0.01
       },
       simplifyThreshold: {
         label: "Simplify threshold",
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.1,
-      },
-    },
+        step: 0.1
+      }
+    }
   },
   morphing: {
     component: "nested-object",
@@ -118,24 +118,24 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 1,
         max: 1000,
-        step: 1,
+        step: 1
       },
       depthLength: {
         label: "Depth length multiplier",
         component: "slider",
         min: -4,
         max: 4,
-        step: 0.01,
+        step: 0.01
       },
       depthEasing: {
         component: "easing",
-        label: "Depth easing function",
+        label: "Depth easing function"
       },
       easing: {
         component: "easing",
-        label: "Morphing easing function",
+        label: "Morphing easing function"
       }
-    },
+    }
   },
   rotation: {
     component: "nested-object",
@@ -154,7 +154,7 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.1,
+        step: 0.1
       },
       rotationAngles: {
         label: "Rotation angles",
@@ -168,30 +168,30 @@ export const formConfiguration: Record<string, any> = {
               component: "slider",
               min: 0,
               max: Math.PI * 2,
-              step: 0.1,
+              step: 0.1
             },
             y: {
               label: "Y rotation angle",
               component: "slider",
               min: 0,
               max: Math.PI * 2,
-              step: 0.1,
+              step: 0.1
             },
             z: {
               label: "Z rotation angle",
               component: "slider",
               min: 0,
               max: Math.PI * 2,
-              step: 0.1,
+              step: 0.1
             }
           }
         }
       },
       easing: {
         component: "easing",
-        label: "Rotation easing function",
+        label: "Rotation easing function"
       }
-    },
+    }
   },
   point: {
     component: "nested-object",
@@ -199,31 +199,31 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       varyStrokeWithDepthProgression: {
         label: "Vary stroke weight with depth progression?",
-        component: "checkbox",
+        component: "checkbox"
       },
       strokeWeightMax: {
         label: "Max stroke weight",
         component: "slider",
         min: 1,
         max: 150,
-        step: 1,
+        step: 1
       },
       strokeWeightMin: {
         label: "Min stroke weight",
         component: "slider",
         min: 1,
         max: 150,
-        step: 1,
+        step: 1
       },
       strokeWeightEasing: {
         component: "easing",
-        label: "Stroke weight easing function",
-      },
-    },
+        label: "Stroke weight easing function"
+      }
+    }
   },
   backgroundColor: {
     component: "color",
-    label: "Background color",
+    label: "Background color"
   },
-  title: titleFormConfiguration,
+  title: titleFormConfiguration
 };

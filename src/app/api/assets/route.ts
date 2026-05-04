@@ -13,7 +13,7 @@ export async function GET( request: Request ) {
     return new Response(
       "Missing asset name",
       {
-        status: 400,
+        status: 400
       }
     );
   }
@@ -27,7 +27,7 @@ export async function GET( request: Request ) {
         folder,
         "assets",
         name
-      ),
+      )
     } );
   }
 
@@ -35,6 +35,6 @@ export async function GET( request: Request ) {
     filePath: path.join(
       os.tmpdir(),
       name
-    ),
+    )
   } );
 }

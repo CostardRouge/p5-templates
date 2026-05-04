@@ -7,8 +7,7 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 // Default values only
 export const formValues = {
   // Assets
-  images: [
-  ],
+  images: [],
 
   // Colors (sketch-level overrides; falls back to global options.colors if unset)
   backgroundColor: [
@@ -29,7 +28,7 @@ export const formValues = {
   rotateZ: false,
   variableBackgroundColor: false,
   variableZoom: false,
-  zoom: -2000,
+  zoom: -2000
 };
 
 // UI configuration only
@@ -37,43 +36,43 @@ export const formConfiguration: Record<string, any> = {
   // Assets
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color",
+    label: "Background color"
   },
   textColor: {
     component: "color",
-    label: "Text color",
+    label: "Text color"
   },
 
   // Behavior
   rotateX: {
     component: "checkbox",
-    label: "Rotate X",
+    label: "Rotate X"
   },
   rotateZ: {
     component: "checkbox",
-    label: "Rotate Z",
+    label: "Rotate Z"
   },
   variableBackgroundColor: {
     component: "checkbox",
-    label: "Animated background color",
+    label: "Animated background color"
   },
   variableZoom: {
     component: "checkbox",
-    label: "Animated zoom",
+    label: "Animated zoom"
   },
   zoom: {
     component: "slider",
     label: "Zoom (Z translate)",
     min: -10000,
     max: 1000,
-    step: 10,
+    step: 10
   },
 
-  title: titleFormConfiguration,
+  title: titleFormConfiguration
 };

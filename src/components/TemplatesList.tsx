@@ -65,7 +65,7 @@ export default function TemplatesList( {
       router.replace(
         newUrl,
         {
-          scroll: false,
+          scroll: false
         }
       );
     },
@@ -89,7 +89,7 @@ export default function TemplatesList( {
         search,
         ( item ) => [
           item.name,
-          item.category || "",
+          item.category || ""
         ]
       );
 
@@ -99,8 +99,7 @@ export default function TemplatesList( {
 
       return acc;
     },
-    {
-    } as Record<string, TemplateCategory>
+    {} as Record<string, TemplateCategory>
   );
 
   const totalCount = Object.values( filteredTemplates ).reduce(
@@ -190,16 +189,13 @@ export default function TemplatesList( {
         items
       ] ) => {
         // Group items by their category field (for p5 sketches)
-        const groupedItems: Record<string, typeof items> = {
-        };
-        const uncategorized: typeof items = [
-        ];
+        const groupedItems: Record<string, typeof items> = {};
+        const uncategorized: typeof items = [];
 
         items.forEach( ( item ) => {
           if ( item.category ) {
             if ( !groupedItems[ item.category ] ) {
-              groupedItems[ item.category ] = [
-              ];
+              groupedItems[ item.category ] = [];
             }
             groupedItems[ item.category ].push( item );
           } else {
@@ -310,7 +306,7 @@ function TemplateCard( {
   thumbnail,
   hasSketchForm,
   view,
-  eager = false,
+  eager = false
 }: {
   href: string;
   name: string;
@@ -329,7 +325,7 @@ function TemplateCard( {
         <div
           className="w-full relative"
           style={{
-            paddingTop: "125%",
+            paddingTop: "125%"
           }}
         >
           {hasSketchForm && (

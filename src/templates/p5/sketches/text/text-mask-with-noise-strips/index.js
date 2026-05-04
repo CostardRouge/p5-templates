@@ -11,8 +11,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {
-};
+const canvases = {};
 
 const getBg = () => options.sketch?.background ?? [
   0
@@ -90,7 +89,7 @@ sketch.draw( async( time ) => {
         p.CENTER
       ],
       popPush: false,
-      graphics: canvases.mask,
+      graphics: canvases.mask
     }
   );
 
@@ -119,7 +118,7 @@ sketch.draw( async( time ) => {
       textBox.h + boundaryMargin * 2,
       0,
       p.height
-    ),
+    )
   ];
 
   const gridOptions = {
@@ -141,7 +140,7 @@ sketch.draw( async( time ) => {
     ),
     rows,
     columns,
-    centered,
+    centered
   };
 
   p.noiseDetail(
@@ -216,7 +215,7 @@ sketch.draw( async( time ) => {
           opacityFrom,
           opacityTo,
           easing.easeInOutSine
-        ),
+        )
       } ) );
 
       p.push();

@@ -11,15 +11,15 @@ const debug = {
   options: {
     fps: {
       log: false,
-      display: true,
+      display: true
     },
     print: {
-      frequency: 60,
-    },
+      frequency: 60
+    }
   },
   // debugGraphics: undefined,
   DOMElements: {
-    canvasOverlay: undefined,
+    canvasOverlay: undefined
   },
   // createDebugGraphics: () => {
   //   debug.debugGraphics = createGraphics(48, 32, P2D);
@@ -56,7 +56,7 @@ const debug = {
     const {
       fps: {
         log, display
-      },
+      }
     } = debug.options;
 
     const fpsCounterParagraph = document.querySelector( "p#sketch-fps-counter" );
@@ -86,14 +86,13 @@ const debug = {
     }
   },
   print: function(
-    what, printOptions = {
-    }
+    what, printOptions = {}
   ) {
     const {
       frequency
     } = {
       ...debug.options.print,
-      ...printOptions,
+      ...printOptions
     };
 
     time.every(
@@ -166,7 +165,7 @@ const debug = {
       createContent,
       sketch?.engine?.camera
     );
-  },
+  }
 };
 
 export default debug;

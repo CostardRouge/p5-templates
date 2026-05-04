@@ -18,14 +18,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${ baseUrl }/`,
       lastModified: now,
       changeFrequency: "weekly",
-      priority: 1.0,
+      priority: 1.0
     },
     {
       url: `${ baseUrl }/recordings`,
       lastModified: now,
       changeFrequency: "daily",
-      priority: 0.6,
-    },
+      priority: 0.6
+    }
   ];
 
   // Studio pages — all engines, derived from unified metadata
@@ -33,11 +33,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${ baseUrl }/templates/${ m.engine }/${ m.category ? `${ m.category }/` : "" }${ m.name }`,
     lastModified: new Date( m.mtime ),
     changeFrequency: "monthly" as const,
-    priority: 0.8,
+    priority: 0.8
   } ) );
 
   return [
     ...staticPages,
-    ...studioPages,
+    ...studioPages
   ];
 }

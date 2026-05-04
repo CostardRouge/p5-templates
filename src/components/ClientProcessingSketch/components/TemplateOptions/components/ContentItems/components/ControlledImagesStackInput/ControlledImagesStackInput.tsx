@@ -3,20 +3,20 @@ import React from "react";
 import {
   FieldPathByValue,
   useController,
-  useFormContext,
+  useFormContext
 } from "react-hook-form";
 import {
   DndContext,
   DragEndEvent,
   PointerSensor,
   useSensor,
-  useSensors,
+  useSensors
 } from "@dnd-kit/core";
 import {
   arrayMove,
   rectSortingStrategy,
   SortableContext,
-  useSortable,
+  useSortable
 } from "@dnd-kit/sortable";
 import {
   CSS
@@ -40,8 +40,7 @@ const isNonEmptyString = ( v: unknown ): v is string =>
   typeof v === "string" && v.trim().length > 0;
 
 const asStringList = ( v: unknown ): string[] =>
-  Array.isArray( v ) ? ( v as unknown[] ).filter( isNonEmptyString ) : [
-  ];
+  Array.isArray( v ) ? ( v as unknown[] ).filter( isNonEmptyString ) : [];
 
 const fileName = ( p: string ) => p.split( /[\\/]/ ).pop() || p;
 
@@ -64,7 +63,7 @@ export default function ControlledImagesStackInput( {
     FieldPathByValue<SketchOptionInput, string[]>
   >( {
     name: name as FieldPathByValue<SketchOptionInput, string[]>,
-    control,
+    control
   } );
 
   const {
@@ -79,8 +78,8 @@ export default function ControlledImagesStackInput( {
     PointerSensor,
     {
       activationConstraint: {
-        distance: 5,
-      },
+        distance: 5
+      }
     }
   ) );
 
@@ -120,7 +119,7 @@ export default function ControlledImagesStackInput( {
         url: resolveAssetURL(
           p,
           jobId
-        ),
+        )
       } ) ),
     [
       items,
@@ -232,7 +231,7 @@ function SortableThumb( {
   id,
   url,
   alt,
-  onDelete,
+  onDelete
 }: {
   id: string;
   url: string;
@@ -243,11 +242,11 @@ function SortableThumb( {
     attributes, listeners, setNodeRef, transform, transition
   } =
     useSortable( {
-      id,
+      id
     } );
   const style = {
     transform: CSS.Transform.toString( transform ),
-    transition,
+    transition
   };
 
   return (

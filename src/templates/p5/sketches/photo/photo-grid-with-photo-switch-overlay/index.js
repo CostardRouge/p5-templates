@@ -48,7 +48,7 @@ sketch.draw( async(
     ),
     rows,
     columns,
-    centered: false,
+    centered: false
   };
   const {
     cells: gridCells
@@ -82,12 +82,12 @@ sketch.draw( async(
       ),
       boundary: {
         height: H,
-        width: W,
+        width: W
       },
       center: true,
       fill: true,
       scale: 0.8,
-      clip: true,
+      clip: true
     } );
   } );
 
@@ -106,7 +106,7 @@ sketch.draw( async(
     img: imageAtIndex,
     center: true,
     fill: true,
-    scale: 0.8,
+    scale: 0.8
   } );
 
   renderTitle();

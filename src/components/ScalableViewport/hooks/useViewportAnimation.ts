@@ -8,7 +8,7 @@ import type {
 
 const ANIMATION_CONFIG = {
   duration: 250,
-  easing: easing.easeOutCubic,
+  easing: easing.easeOutCubic
 };
 
 export function useViewportAnimation(
@@ -28,8 +28,7 @@ export function useViewportAnimation(
         animationFrameRef.current = null;
       }
     },
-    [
-    ]
+    []
   );
 
   const animateTo = useCallback(
@@ -60,7 +59,7 @@ export function useViewportAnimation(
           {
             x: currentX,
             y: currentY,
-            scale: currentScale,
+            scale: currentScale
           },
           contentRef.current
         );
@@ -84,6 +83,6 @@ export function useViewportAnimation(
 
   return {
     animateTo,
-    cancelAnimation,
+    cancelAnimation
   };
 }

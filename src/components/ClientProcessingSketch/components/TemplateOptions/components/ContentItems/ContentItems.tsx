@@ -9,19 +9,19 @@ import {
   MouseSensor,
   TouchSensor,
   KeyboardSensor,
-  type DragEndEvent,
+  type DragEndEvent
 } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
-  verticalListSortingStrategy,
+  verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import {
   CSS
 } from "@dnd-kit/utilities";
 import {
   restrictToVerticalAxis,
-  restrictToParentElement,
+  restrictToParentElement
 } from "@dnd-kit/modifiers";
 
 import AddItemControls from "./components/AddItemControls/AddItemControls";
@@ -54,19 +54,19 @@ export function SortableRow( props: {
     setActivatorNodeRef,
     transform,
     transition,
-    isDragging,
+    isDragging
   } = useSortable( {
-    id: props.id,
+    id: props.id
   } );
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString( transform ),
-    transition,
+    transition
   };
 
   const handleProps = {
     ...( attributes as object ),
-    ...( listeners as object ),
+    ...( listeners as object )
   } as DragBinder["handleProps"];
 
   return (
@@ -83,7 +83,7 @@ export function SortableRow( props: {
       {props.children( {
         handleProps,
         isDragging,
-        setHandleRef: setActivatorNodeRef,
+        setHandleRef: setActivatorNodeRef
       } )}
     </div>
   );
@@ -105,8 +105,8 @@ export default function ContentItems( {
       MouseSensor,
       {
         activationConstraint: {
-          distance: 6,
-        },
+          distance: 6
+        }
       }
     ),
     useSensor(
@@ -114,8 +114,8 @@ export default function ContentItems( {
       {
         activationConstraint: {
           delay: 120,
-          tolerance: 8,
-        },
+          tolerance: 8
+        }
       }
     ),
     useSensor( KeyboardSensor )
@@ -162,8 +162,7 @@ export default function ContentItems( {
 
       const current = getValues( path );
 
-      const clone = current ? JSON.parse( JSON.stringify( current ) ) : {
-      };
+      const clone = current ? JSON.parse( JSON.stringify( current ) ) : {};
 
       if ( clone && typeof clone === "object" && "id" in clone ) {
         delete ( clone as Record<string, unknown> ).id;

@@ -16,7 +16,7 @@ import {
 export async function POST(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -32,7 +32,7 @@ export async function POST(
       return new NextResponse(
         "Job not found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
@@ -44,7 +44,7 @@ export async function POST(
     ].includes( dbJob.status ) ) {
       return NextResponse.json( {
         cancelled: false,
-        reason: "Job is not in active or queued state",
+        reason: "Job is not in active or queued state"
       } );
     }
 
@@ -55,7 +55,7 @@ export async function POST(
     if ( hoursSinceUpdate < 1 ) {
       return NextResponse.json( {
         cancelled: false,
-        reason: "Job is not stale (less than 1 hour old)",
+        reason: "Job is not stale (less than 1 hour old)"
       } );
     }
 
@@ -89,12 +89,12 @@ export async function POST(
       jobId,
       {
         status: "cancelled",
-        progress: 100,
+        progress: 100
       }
     );
 
     return NextResponse.json( {
-      cancelled: true,
+      cancelled: true
     } );
   } catch ( error ) {
     console.error(
@@ -104,7 +104,7 @@ export async function POST(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

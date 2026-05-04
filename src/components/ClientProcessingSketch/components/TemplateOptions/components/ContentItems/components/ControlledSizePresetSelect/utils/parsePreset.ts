@@ -16,7 +16,7 @@ export default function parseSizePreset( value: string | number | null | undefin
   return Number.isFinite( width ) && Number.isFinite( height )
     ? {
       width,
-      height,
+      height
     }
     : null;
 }

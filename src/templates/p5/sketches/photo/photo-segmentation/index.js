@@ -5,7 +5,7 @@ import string from "@/p5/utils/string.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import mediapipe, {
   init as mediapipeInit,
-  interact,
+  interact
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   drawSegmentationMask
@@ -17,7 +17,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
   setSketchOptions,
-  subscribeSketchOptions,
+  subscribeSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
 import {
   getP5
@@ -30,18 +30,18 @@ const layers = {
     background: [
       80
     ],
-    erase: 255,
+    erase: 255
   },
   mask: {
     graphics: undefined,
     // Initialize with a default, but we will resize this dynamically!
     size: {
       width: 1,
-      height: 1,
+      height: 1
     },
     background: undefined,
-    erase: false,
-  },
+    erase: false
+  }
 };
 
 // Cache for performance optimization
@@ -55,8 +55,8 @@ const cache = {
     x: 0,
     y: 0,
     w: 0,
-    h: 0,
-  },
+    h: 0
+  }
 };
 
 sketch.setup( async() => {
@@ -82,8 +82,8 @@ sketch.setup( async() => {
     enableCapture: false, // No camera needed for image-based interactive segmentation
     tasks: [
       // "segmenter",
-      "interactive",
-    ],
+      "interactive"
+    ]
   } );
 
   // Subscribe to option changes
@@ -243,10 +243,10 @@ events.register(
           ...options.sketch?.segmentation,
           roi: {
             x: normalizedX,
-            y: normalizedY,
-          },
-        },
-      },
+            y: normalizedY
+          }
+        }
+      }
     } );
 
     // Reset the processed flag to allow new result
@@ -284,7 +284,7 @@ sketch.draw( (
         textAlign: [
           p.CENTER,
           p.CENTER
-        ],
+        ]
       }
     );
     return;
@@ -308,7 +308,7 @@ sketch.draw( (
         cache.photoBounds.y = y;
         cache.photoBounds.w = w;
         cache.photoBounds.h = h;
-      },
+      }
     } );
   }
 
@@ -406,7 +406,7 @@ sketch.draw( (
         cache.photoBounds.y = y;
         cache.photoBounds.w = w;
         cache.photoBounds.h = h;
-      },
+      }
     } );
   }
 } );

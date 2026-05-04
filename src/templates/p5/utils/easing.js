@@ -211,7 +211,7 @@ const easing = {
     return x < 0.5
       ? ( 1 - easing.easeOutBounce( 1 - 2 * x ) ) / 2
       : ( 1 + easing.easeOutBounce( 2 * x - 1 ) ) / 2;
-  },
+  }
 };
 
 export default easing;

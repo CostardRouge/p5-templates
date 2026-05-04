@@ -22,6 +22,6 @@ export function getRecordingStatus( currentStatus?: JobStatusEnum ) {
     isRecording,
     isCompleted,
     isFailed,
-    isDraft,
+    isDraft
   };
 }

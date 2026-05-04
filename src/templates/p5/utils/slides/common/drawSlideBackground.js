@@ -22,7 +22,7 @@ export default function drawSlideBackground( backgroundOption ) {
       shapes.grid( {
         borders: backgroundPattern.borders,
         columns,
-        rows,
+        rows
       } );
     }
 
@@ -36,7 +36,7 @@ export default function drawSlideBackground( backgroundOption ) {
       shapes.dots( {
         border: backgroundPattern.borders,
         columns,
-        rows,
+        rows
       } );
     }
   }

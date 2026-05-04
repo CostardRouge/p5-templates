@@ -34,11 +34,11 @@ export default async function captureFirstFrame(
       null,
       {
         fit: "inside",
-        withoutEnlargement: true,
+        withoutEnlargement: true
       }
     )
     .jpeg( {
-      quality: 80,
+      quality: 80
     } )
     .toFile( outputPath );
 }

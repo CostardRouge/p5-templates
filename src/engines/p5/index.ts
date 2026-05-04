@@ -5,7 +5,7 @@ import {
   P5Engine
 } from "./P5Engine";
 import {
-  findSketchMeta, listTemplatesForEngine,
+  findSketchMeta, listTemplatesForEngine
 } from "@/engines/metadata";
 
 export const p5Registration: EngineRegistration = {
@@ -17,7 +17,7 @@ export const p5Registration: EngineRegistration = {
   resolveTemplatePath( sketchName: string ): string {
     const meta = findSketchMeta(
       sketchName,
-      "p5",
+      "p5"
     );
 
     if ( !meta ) {
@@ -33,7 +33,7 @@ export const p5Registration: EngineRegistration = {
       engine: m.engine,
       category: m.category,
       hasSketchForm: m.hasSketchForm,
-      hasThumbnail: m.hasThumbnail,
+      hasThumbnail: m.hasThumbnail
     } ) );
-  },
+  }
 };

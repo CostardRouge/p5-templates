@@ -1,5 +1,5 @@
 import {
-  ChevronDown,
+  ChevronDown
 } from "lucide-react";
 import {
   useRef
@@ -38,7 +38,7 @@ export default function FieldRenderer( {
   fieldBasePath,
   fieldName,
   config,
-  hideLabel = false,
+  hideLabel = false
 }: FieldRendererProps ) {
   const {
     register,
@@ -46,9 +46,9 @@ export default function FieldRenderer( {
     resetField,
     getValues,
     formState: {
-      errors,
+      errors
     },
-    control,
+    control
   } = useFormContext();
 
   const registeredName = fieldName
@@ -69,7 +69,7 @@ export default function FieldRenderer( {
   // Watch current value for display (slider) and modified detection
   const currentValue = useWatch( {
     control,
-    name: registeredName,
+    name: registeredName
   } );
 
   if ( !isInitializedRef.current ) {
@@ -90,7 +90,7 @@ export default function FieldRenderer( {
       id: registeredName,
       placeholder: config.placeholder,
       className: "w-full p-1 border border-theme rounded-lg bg-background text-foreground",
-      "aria-invalid": !!error,
+      "aria-invalid": !!error
     };
 
     switch ( config.component ) {
@@ -112,7 +112,7 @@ export default function FieldRenderer( {
             {...register(
               registeredName,
               {
-                valueAsNumber: true,
+                valueAsNumber: true
               }
             )}
             step={config.step}
@@ -130,7 +130,7 @@ export default function FieldRenderer( {
               {...register(
                 registeredName,
                 {
-                  valueAsNumber: true,
+                  valueAsNumber: true
                 }
               )}
               step={config.step}
@@ -197,7 +197,7 @@ export default function FieldRenderer( {
                 setValueAs: config.asNumber
                   ? ( value: unknown ) =>
                     value === "" || value == null ? undefined : Number( value )
-                  : undefined,
+                  : undefined
               }
             )}
           >
@@ -234,7 +234,7 @@ export default function FieldRenderer( {
                 <ChevronDown
                   className="w-3 h-3 transition-transform"
                   style={{
-                    transform: expanded ? "rotate(0deg)" : "rotate(-90deg)",
+                    transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
                   }}
                 />
                 <span>

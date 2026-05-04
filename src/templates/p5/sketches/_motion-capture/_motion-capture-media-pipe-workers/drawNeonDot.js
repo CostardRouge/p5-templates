@@ -33,7 +33,7 @@ export function createNeonDots( count ) {
           height - maxSize * 2
         )
       ),
-      index: i / count,
+      index: i / count
     } );
   }
 }
@@ -45,13 +45,12 @@ export function drawNeonDots() {
     neonDot( {
       ...neonDotData,
       graphics: layers.dots.graphics,
-      index: index / neonDots.length,
+      index: index / neonDots.length
     } );
   } );
 }
 
-export const neonDots = [
-];
+export const neonDots = [];
 
 export default function drawNeonDot( {
   sizeRange = [
@@ -61,9 +60,8 @@ export default function drawNeonDot( {
   shadowsCount = 3,
   graphics = getP5(),
   position,
-  index,
-} = {
-} ) {
+  index
+} = {} ) {
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
     const shadowProgression = shadowsCount / shadowsCount;
 
@@ -91,7 +89,7 @@ export default function drawNeonDot( {
         1,
         -PI,
         PI
-      ),
+      )
     } ) );
 
     graphics.strokeWeight( circleSize );

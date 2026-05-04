@@ -69,7 +69,7 @@ function formatDuration( ms: number ): string {
 export default function VideoPreviewModal( {
   jobId,
   isOpen,
-  onClose,
+  onClose
 }: VideoPreviewModalProps ) {
   const [
     media,
@@ -169,7 +169,7 @@ export default function VideoPreviewModal( {
         {
           duration: video.duration,
           width: video.videoWidth,
-          height: video.videoHeight,
+          height: video.videoHeight
         }
       );
       return newMap;

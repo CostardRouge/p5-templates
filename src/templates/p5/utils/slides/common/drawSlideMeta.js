@@ -22,7 +22,7 @@ export default function drawSlideMeta( metaOption ) {
     textAlign: [
       LEFT,
       LEFT
-    ],
+    ]
   };
 
   // top - left;
@@ -31,7 +31,7 @@ export default function drawSlideMeta( metaOption ) {
     width * horizontalMargin,
     height * verticalMargin,
     {
-      ...textStyle,
+      ...textStyle
     }
   );
 
@@ -44,7 +44,7 @@ export default function drawSlideMeta( metaOption ) {
       ...textStyle,
       textAlign: [
         RIGHT
-      ],
+      ]
     }
   );
 
@@ -65,7 +65,7 @@ export default function drawSlideMeta( metaOption ) {
       ...textStyle,
       textAlign: [
         RIGHT
-      ],
+      ]
     }
   );
 

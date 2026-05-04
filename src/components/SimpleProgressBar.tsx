@@ -11,7 +11,7 @@ interface SimpleProgressBarProps {
 
 export default function SimpleProgressBar( {
   progress,
-  status,
+  status
 }: SimpleProgressBarProps ) {
   // Show indeterminate state for active/queued jobs with 0 progress
   const isIndeterminate =
@@ -35,7 +35,7 @@ export default function SimpleProgressBar( {
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out rounded-full"
             style={{
-              width: `${ progress }%`,
+              width: `${ progress }%`
             }}
           />
         )}

@@ -48,7 +48,7 @@ sketch.draw( async(
     ),
     rows,
     columns,
-    centered: false,
+    centered: false
   };
   const {
     cells: gridCells
@@ -92,13 +92,13 @@ sketch.draw( async(
       ),
       boundary: {
         height: H,
-        width: W,
+        width: W
       },
       fill: options.sketch.imageStyle.fill,
       clip: options.sketch.imageStyle.clip,
       scale: options.sketch.imageStyle.scale,
       center: options.sketch.imageStyle.center,
-      margin: options.sketch.imageStyle.margin * p.width,
+      margin: options.sketch.imageStyle.margin * p.width
     } );
   } );
 

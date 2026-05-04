@@ -28,24 +28,21 @@ export default function useBulkActions() {
         return next;
       } );
     },
-    [
-    ]
+    []
   );
 
   const selectAll = useCallback(
     ( jobs: JobModel[] ) => {
       setSelectedIds( new Set( jobs.map( ( j ) => j.id ) ) );
     },
-    [
-    ]
+    []
   );
 
   const clearSelection = useCallback(
     () => {
       setSelectedIds( new Set() );
     },
-    [
-    ]
+    []
   );
 
   const bulkDelete = useCallback(
@@ -53,14 +50,12 @@ export default function useBulkActions() {
       if ( !confirm( `Delete ${ ids.length } recording(s)? This cannot be undone.` ) ) {
         return {
           success: false,
-          deleted: [
-          ],
+          deleted: []
         };
       }
 
       setIsProcessing( true );
-      const deleted: string[] = [
-      ];
+      const deleted: string[] = [];
 
       try {
         await Promise.all( ids.map( async( id ) => {
@@ -68,7 +63,7 @@ export default function useBulkActions() {
             const res = await fetch(
               `/api/recordings/${ id }`,
               {
-                method: "DELETE",
+                method: "DELETE"
               }
             );
 
@@ -83,14 +78,13 @@ export default function useBulkActions() {
 
         return {
           success: true,
-          deleted,
+          deleted
         };
       } finally {
         setIsProcessing( false );
       }
     },
-    [
-    ]
+    []
   );
 
   const bulkCancel = useCallback(
@@ -98,14 +92,12 @@ export default function useBulkActions() {
       if ( !confirm( `Cancel ${ ids.length } recording(s)?` ) ) {
         return {
           success: false,
-          cancelled: [
-          ],
+          cancelled: []
         };
       }
 
       setIsProcessing( true );
-      const cancelled: string[] = [
-      ];
+      const cancelled: string[] = [];
 
       try {
         await Promise.all( ids.map( async( id ) => {
@@ -113,7 +105,7 @@ export default function useBulkActions() {
             const res = await fetch(
               `/api/recordings/${ id }/cancel`,
               {
-                method: "POST",
+                method: "POST"
               }
             );
 
@@ -128,14 +120,13 @@ export default function useBulkActions() {
 
         return {
           success: true,
-          cancelled,
+          cancelled
         };
       } finally {
         setIsProcessing( false );
       }
     },
-    [
-    ]
+    []
   );
 
   const bulkRetry = useCallback(
@@ -143,14 +134,12 @@ export default function useBulkActions() {
       if ( !confirm( `Retry ${ ids.length } recording(s)?` ) ) {
         return {
           success: false,
-          retried: [
-          ],
+          retried: []
         };
       }
 
       setIsProcessing( true );
-      const retried: string[] = [
-      ];
+      const retried: string[] = [];
 
       try {
         await Promise.all( ids.map( async( id ) => {
@@ -158,7 +147,7 @@ export default function useBulkActions() {
             const res = await fetch(
               `/api/recordings/${ id }/retry`,
               {
-                method: "POST",
+                method: "POST"
               }
             );
 
@@ -173,14 +162,13 @@ export default function useBulkActions() {
 
         return {
           success: true,
-          retried,
+          retried
         };
       } finally {
         setIsProcessing( false );
       }
     },
-    [
-    ]
+    []
   );
 
   return {
@@ -191,6 +179,6 @@ export default function useBulkActions() {
     clearSelection,
     bulkDelete,
     bulkCancel,
-    bulkRetry,
+    bulkRetry
   };
 }

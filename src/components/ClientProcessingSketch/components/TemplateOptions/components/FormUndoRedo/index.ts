@@ -32,7 +32,7 @@ export type {
   FormUndoRedoAutoCaptureMode,
   PerformanceMetrics,
   FormUndoRedoContextType,
-  FormUndoRedoConfig,
+  FormUndoRedoConfig
 } from "./types/FormUndoRedo.types";
 
 // Utils
@@ -40,5 +40,5 @@ export {
   createStateHash,
   safeDeepClone,
   shouldTrackPath,
-  estimateHistorySize,
+  estimateHistorySize
 } from "./utils/historyUtils";

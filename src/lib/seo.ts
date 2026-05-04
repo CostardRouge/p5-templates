@@ -22,7 +22,7 @@ export const SITE_KEYWORDS = [
   "motion graphics",
   "HTML templates",
   "video export",
-  "content creation tool",
+  "content creation tool"
 ];
 
 /**
@@ -54,7 +54,7 @@ export function getWebApplicationJsonLd() {
     offers: {
       "@type": "Offer",
       price: "0",
-      priceCurrency: "USD",
+      priceCurrency: "USD"
     },
     featureList: [
       "p5.js template rendering",
@@ -63,9 +63,9 @@ export function getWebApplicationJsonLd() {
       "Video recording and export",
       "Customizable sketch options",
       "EXIF data overlay",
-      "Multiple export formats",
+      "Multiple export formats"
     ],
-    screenshot: `${ baseUrl }/assets/images/icon-512x512.png`,
+    screenshot: `${ baseUrl }/assets/images/icon-512x512.png`
   };
 }
 
@@ -84,8 +84,8 @@ export function getBreadcrumbJsonLd( items: Array<{
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      item: item.url,
-    } ) ),
+      item: item.url
+    } ) )
   };
 }
 
@@ -97,7 +97,7 @@ export function getTemplateJsonLd( {
   description,
   url,
   thumbnailUrl,
-  category,
+  category
 }: {
   name: string;
   description: string;
@@ -116,7 +116,7 @@ export function getTemplateJsonLd( {
     isAccessibleForFree: true,
     provider: {
       "@type": "WebApplication",
-      name: SITE_NAME,
-    },
+      name: SITE_NAME
+    }
   };
 }

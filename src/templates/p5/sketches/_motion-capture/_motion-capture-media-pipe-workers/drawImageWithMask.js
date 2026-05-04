@@ -5,13 +5,13 @@ export default function drawImageWithMask( {
   maskDrawer,
   graphics = getP5(),
   mask,
-  imageBuffer,
+  imageBuffer
 } ) {
   imageUtils.marginImage( {
     img,
     fill: true,
     center: true,
-    graphics: imageBuffer,
+    graphics: imageBuffer
   } );
 
   // Clean mask

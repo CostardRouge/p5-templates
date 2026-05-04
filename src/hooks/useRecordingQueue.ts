@@ -4,7 +4,7 @@ import {
   useCallback, useState
 } from "react";
 import {
-  type EnqueueRecordingResponse, type QueueHealthResponse,
+  type EnqueueRecordingResponse, type QueueHealthResponse
 } from "@/types/recording.types";
 
 export function useRecordingQueue() {
@@ -27,7 +27,7 @@ export function useRecordingQueue() {
           "/api/recordings/enqueue",
           {
             method: "POST",
-            body: formData,
+            body: formData
           }
         );
 
@@ -75,8 +75,7 @@ export function useRecordingQueue() {
         setIsLoading( false );
       }
     },
-    [
-    ]
+    []
   );
 
   const getQueueHealth =
@@ -105,8 +104,7 @@ export function useRecordingQueue() {
           setIsLoading( false );
         }
       },
-      [
-      ]
+      []
     );
 
   const controlQueue = useCallback(
@@ -120,11 +118,11 @@ export function useRecordingQueue() {
           {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": "application/json"
             },
             body: JSON.stringify( {
-              action,
-            } ),
+              action
+            } )
           }
         );
 
@@ -145,8 +143,7 @@ export function useRecordingQueue() {
         setIsLoading( false );
       }
     },
-    [
-    ]
+    []
   );
 
   return {
@@ -154,6 +151,6 @@ export function useRecordingQueue() {
     getQueueHealth,
     controlQueue,
     isLoading,
-    error,
+    error
   };
 }

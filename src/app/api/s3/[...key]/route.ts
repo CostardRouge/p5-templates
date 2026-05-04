@@ -8,7 +8,7 @@ import {
 export async function GET(
   _request: Request,
   {
-    params,
+    params
   }: {
     params: Promise<{
       key: string[];

@@ -116,7 +116,7 @@ describe(
       {
         name: "photo-dice",
         category: "photo"
-      },
+      }
     ];
 
     it(

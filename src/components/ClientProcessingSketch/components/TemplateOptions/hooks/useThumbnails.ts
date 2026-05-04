@@ -6,7 +6,7 @@ import {
 } from "@/types/recording.types";
 import {
   captureThumbnailFromCanvas,
-  waitForSlideRendered,
+  waitForSlideRendered
 } from "../utils/thumbnailUtils";
 
 type UseThumbnailsProps = {
@@ -20,13 +20,12 @@ type UseThumbnailsProps = {
 export function useThumbnails( {
   enabled,
   persistedJob,
-  slideFields,
+  slideFields
 }: UseThumbnailsProps ) {
   const [
     thumbnails,
     setThumbnails
-  ] = useState<Record<string, string>>( {
-  } );
+  ] = useState<Record<string, string>>( {} );
   const pendingThumbnailCaptureRef = useRef<number | null>( null );
   const hasLoadedPersistedThumbnails = useRef( false );
 
@@ -57,8 +56,7 @@ export function useThumbnails( {
             } )
             .then( ( data ) => {
               if ( data.thumbnails && Array.isArray( data.thumbnails ) ) {
-                const newThumbnails: Record<string, string> = {
-                };
+                const newThumbnails: Record<string, string> = {};
 
                 slideFields.forEach( (
                   field, index
@@ -84,8 +82,7 @@ export function useThumbnails( {
           ) {
             // Remap by position: stored keys are stale RHF field IDs from the previous session
             const thumbValues = Object.values( persistedJob.thumbnails as Record<string, string> );
-            const newThumbnails: Record<string, string> = {
-            };
+            const newThumbnails: Record<string, string> = {};
 
             slideFields.forEach( (
               field, index
@@ -102,8 +99,7 @@ export function useThumbnails( {
               if ( typeof parsed === "object" && !Array.isArray( parsed ) ) {
                 setThumbnails( parsed );
               } else if ( Array.isArray( parsed ) ) {
-                const newThumbnails: Record<string, string> = {
-                };
+                const newThumbnails: Record<string, string> = {};
 
                 slideFields.forEach( (
                   field, index
@@ -122,8 +118,7 @@ export function useThumbnails( {
             }
           } else if ( Array.isArray( persistedJob.thumbnails ) ) {
             const thumbArray = persistedJob.thumbnails as string[];
-            const newThumbnails: Record<string, string> = {
-            };
+            const newThumbnails: Record<string, string> = {};
 
             slideFields.forEach( (
               field, index
@@ -148,7 +143,7 @@ export function useThumbnails( {
       persistedJob?.status,
       persistedJob?.id,
       slideFields.length,
-      slideFields,
+      slideFields
     ]
   );
 
@@ -178,7 +173,7 @@ export function useThumbnails( {
       if ( dataUrl ) {
         setThumbnails( ( prev ) => ( {
           ...prev,
-          [ slideId ]: dataUrl,
+          [ slideId ]: dataUrl
         } ) );
       }
     },
@@ -225,23 +220,20 @@ export function useThumbnails( {
 
         return {
           ...prev,
-          [ toSlideId ]: thumb,
+          [ toSlideId ]: thumb
         };
       } );
     },
-    [
-    ]
+    []
   );
 
   // Clear all thumbnails (useful for reset)
   const clearThumbnails = useCallback(
     () => {
-      setThumbnails( {
-      } );
+      setThumbnails( {} );
       hasLoadedPersistedThumbnails.current = false;
     },
-    [
-    ]
+    []
   );
 
   return {
@@ -250,6 +242,6 @@ export function useThumbnails( {
     captureCurrentSlide,
     copyThumbnail,
     clearThumbnails,
-    pendingThumbnailCaptureRef,
+    pendingThumbnailCaptureRef
   };
 }

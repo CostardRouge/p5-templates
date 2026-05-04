@@ -9,13 +9,13 @@ import {
   DragEndEvent,
   PointerSensor,
   useSensor,
-  useSensors,
+  useSensors
 } from "@dnd-kit/core";
 import {
   arrayMove,
   rectSortingStrategy,
   SortableContext,
-  useSortable,
+  useSortable
 } from "@dnd-kit/sortable";
 import {
   CSS
@@ -42,7 +42,7 @@ import {
 export default function ImageAssets( {
   assets,
   scope,
-  id,
+  id
 }: {
   assets: AssetsOption;
   scope:
@@ -61,8 +61,8 @@ export default function ImageAssets( {
     PointerSensor,
     {
       activationConstraint: {
-        distance: 5,
-      },
+        distance: 5
+      }
     }
   ) );
 
@@ -76,8 +76,7 @@ export default function ImageAssets( {
     }
 
     const list = [
-      ...( assets?.images ?? [
-      ] )
+      ...( assets?.images ?? [] )
     ];
     const oldIdx = list.indexOf( active.id as string );
     const newIdx = list.indexOf( over.id as string );
@@ -96,17 +95,17 @@ export default function ImageAssets( {
       scope === "global"
         ? {
           assets: {
-            images: reordered,
-          },
+            images: reordered
+          }
         }
         : {
           slides: {
             [ scope.slide ]: {
               assets: {
-                images: reordered,
-              },
-            },
-          },
+                images: reordered
+              }
+            }
+          }
         };
 
     setSketchOptions(
@@ -122,13 +121,12 @@ export default function ImageAssets( {
       await addAssets( {
         files: e.dataTransfer.files,
         type: "images",
-        scope,
+        scope
       } );
     }
   }
 
-  const imgPaths: string[] = assets?.images ?? [
-  ];
+  const imgPaths: string[] = assets?.images ?? [];
 
   return (
     <DndContext
@@ -156,7 +154,7 @@ export default function ImageAssets( {
                 removeAsset( {
                   type: "images",
                   index: i,
-                  scope,
+                  scope
                 } )
               }
             />
@@ -187,7 +185,7 @@ export default function ImageAssets( {
             await addAssets( {
               files: e.target.files,
               type: "images",
-              scope,
+              scope
             } );
 
             e.target.value = "";
@@ -202,7 +200,7 @@ export default function ImageAssets( {
 function SortableThumb( {
   id,
   url,
-  onDelete,
+  onDelete
 }: {
   id: string;
   url: string;
@@ -212,12 +210,12 @@ function SortableThumb( {
     attributes, listeners, setNodeRef, transform, transition
   } =
     useSortable( {
-      id,
+      id
     } );
 
   const style = {
     transform: CSS.Transform.toString( transform ),
-    transition,
+    transition
   };
 
   return (

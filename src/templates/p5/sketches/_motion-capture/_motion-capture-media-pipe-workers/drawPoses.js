@@ -23,7 +23,7 @@ const chestIndices = [
 const leftArmIndices = [
   12,
   14,
-  16,
+  16
   // 18,
   // 20,
   // 22,
@@ -33,7 +33,7 @@ const leftArmIndices = [
 const rightArmIndices = [
   11,
   13,
-  15,
+  15
   // 17,
   // 19,
   // 21,
@@ -73,12 +73,11 @@ export default function drawPoses(
     leftArmIndices,
     rightArmIndices,
     faceIndices,
-    mouthIndices,
+    mouthIndices
   ];
 
   poseLandmarks.forEach( ( pose ) => {
-    const bodyParts = [
-    ];
+    const bodyParts = [];
 
     for (
       let bodyPartToTraceIndex = 0;
@@ -146,7 +145,7 @@ export default function drawPoses(
         vectors,
         vectorsStep: 0.01,
         index: bodyPartIndex / ( bodyParts.length - 1 ),
-        graphics,
+        graphics
       } );
     }
   } );

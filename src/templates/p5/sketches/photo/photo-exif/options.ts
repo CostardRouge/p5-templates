@@ -10,7 +10,7 @@ export const formValues = {
       246,
       235,
       225
-    ],
+    ]
   },
   topLeft: "",
   topRight: "",
@@ -28,8 +28,8 @@ export const formValues = {
       255,
       255,
       255
-    ],
-  },
+    ]
+  }
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -39,20 +39,20 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       image: {
         component: "image",
-        label: "Image",
+        label: "Image"
       },
       margin: {
         label: "Image margin",
         component: "slider",
         min: 0,
         max: 0.45,
-        step: 0.005,
+        step: 0.005
       },
       backgroundColor: {
         component: "color",
-        label: "Background color",
-      },
-    },
+        label: "Background color"
+      }
+    }
   },
   font: {
     label: "Font style",
@@ -62,25 +62,25 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         label: "Font size",
         min: 1,
-        max: 244,
+        max: 244
       },
       face: {
         component: "select",
         label: "Font name",
         options: fontNames.map( ( fontName ) => ( {
           value: fontName,
-          label: fontName,
-        } ) ),
+          label: fontName
+        } ) )
       },
       color: {
         component: "color",
-        label: "Font color",
+        label: "Font color"
       },
       stroke: {
         component: "color",
-        label: "Font stroke",
-      },
-    },
+        label: "Font stroke"
+      }
+    }
   },
   textOverrides: {
     label: "Text overrides",
@@ -88,20 +88,20 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       topLeft: {
         component: "text",
-        label: "Top left",
+        label: "Top left"
       },
       topRight: {
         component: "text",
-        label: "Top right",
+        label: "Top right"
       },
       bottomLeft: {
         component: "text",
-        label: "Bottom left",
+        label: "Bottom left"
       },
       bottomRight: {
         component: "text",
-        label: "Bottom right",
-      },
-    },
-  },
+        label: "Bottom right"
+      }
+    }
+  }
 };

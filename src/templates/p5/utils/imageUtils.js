@@ -18,7 +18,7 @@ const imageUtils = {
     center = false,
     clip = false,
     fill = false,
-    position = null,
+    position = null
   } ) => {
     const p = getP5();
 
@@ -67,7 +67,7 @@ const imageUtils = {
           );
         },
         {
-          invert: false,
+          invert: false
         }
       );
     }
@@ -125,7 +125,7 @@ const imageUtils = {
         _r,
         _g,
         _b
-      ],
+      ]
     } = clr;
 
     for ( let i = 0; i < img.pixels.length; i += 4 ) {
@@ -156,8 +156,7 @@ const imageUtils = {
         .filter( ( asset ) => asset !== undefined && asset !== null );
     }
 
-    return cache.get( "images" ) ?? [
-    ];
+    return cache.get( "images" ) ?? [];
   }
 };
 

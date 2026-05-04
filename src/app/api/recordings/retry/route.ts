@@ -15,7 +15,7 @@ import {
 export async function POST( req: NextRequest ) {
   try {
     const {
-      ids,
+      ids
     }: {
       ids: string[];
     } = await req.json();
@@ -24,13 +24,12 @@ export async function POST( req: NextRequest ) {
       return new NextResponse(
         "Missing or invalid job IDs",
         {
-          status: 400,
+          status: 400
         }
       );
     }
 
-    const retried: string[] = [
-    ];
+    const retried: string[] = [];
 
     for ( const jobId of ids ) {
       const existing = await getJobById( jobId );
@@ -44,7 +43,7 @@ export async function POST( req: NextRequest ) {
         jobId,
         {
           status: "queued",
-          progress: 0,
+          progress: 0
         }
       );
       await addRecordingStatus(
@@ -57,14 +56,14 @@ export async function POST( req: NextRequest ) {
           "process-recording",
           {
             jobId: existing.id,
-            template: existing.template,
+            template: existing.template
           },
           {
             jobId,
             priority: 1,
             delay: 0,
             removeOnFail: true,
-            removeOnComplete: true,
+            removeOnComplete: true
           }
         );
 
@@ -72,7 +71,7 @@ export async function POST( req: NextRequest ) {
     }
 
     return NextResponse.json( {
-      retried,
+      retried
     } );
   } catch ( err ) {
     console.error(
@@ -82,7 +81,7 @@ export async function POST( req: NextRequest ) {
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

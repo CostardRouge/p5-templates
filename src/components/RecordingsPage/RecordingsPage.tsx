@@ -40,7 +40,7 @@ export default function RecordingsPage() {
     handleDelete,
     handleStart,
     handleRetry,
-    addJob,
+    addJob
   } = useRecordings();
 
   const contentRef = useRef<HTMLDivElement>( null );
@@ -61,7 +61,7 @@ export default function RecordingsPage() {
     clearSelection,
     bulkDelete,
     bulkCancel,
-    bulkRetry,
+    bulkRetry
   } = useBulkActions();
 
   const [
@@ -90,7 +90,7 @@ export default function RecordingsPage() {
     "recordings-sort",
     {
       field: "createdAt",
-      order: "desc",
+      order: "desc"
     }
   );
 
@@ -200,7 +200,7 @@ export default function RecordingsPage() {
       // Smooth scroll to top
       contentRef.current?.scrollIntoView( {
         behavior: "smooth",
-        block: "start",
+        block: "start"
       } );
 
       // Remove animation class after animation completes

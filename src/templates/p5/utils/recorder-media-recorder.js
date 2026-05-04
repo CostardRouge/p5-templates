@@ -6,8 +6,7 @@ const recorder = {
   savedFramesCount: 0,
   recording: false,
   mediaRecorder: undefined,
-  recordedChunks: [
-  ],
+  recordedChunks: [],
   stream: undefined,
   maximumFrames: undefined,
 
@@ -21,7 +20,7 @@ const recorder = {
     const mimeTypes = [
       "video/webm;codecs=vp9",
       "video/webm;codecs=vp8",
-      "video/webm",
+      "video/webm"
     ];
 
     const mimeType =
@@ -33,7 +32,7 @@ const recorder = {
       recorder.stream,
       {
         mimeType: mimeType,
-        videoBitsPerSecond: 15000000, // 15 Mbps - adjust as needed
+        videoBitsPerSecond: 15000000 // 15 Mbps - adjust as needed
       }
     );
 
@@ -52,7 +51,7 @@ const recorder = {
       const blob = new Blob(
         recorder.recordedChunks,
         {
-          type: "video/webm",
+          type: "video/webm"
         }
       );
 
@@ -104,8 +103,7 @@ const recorder = {
 
     recorder.createRecorder();
 
-    recorder.recordedChunks = [
-    ];
+    recorder.recordedChunks = [];
     recorder.maximumFrames = maximumFrames;
     recorder.savedFramesCount = 0;
     recorder.recording = true;
@@ -180,7 +178,7 @@ const recorder = {
 
     // Count frames and stop if we've reached the maximum
     recorder.savedFramesCount++;
-  },
+  }
 };
 
 // Start the draw loop

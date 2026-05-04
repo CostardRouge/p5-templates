@@ -5,7 +5,7 @@ import sketch from "@/p5/utils/sketch.js";
 import * as common from "@/p5/utils/common.js";
 
 import mediapipe, {
-  init as mediapipeInit,
+  init as mediapipeInit
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
 import drawHands from "@/p5/utils/mediapipe/drawHands.js";
@@ -34,7 +34,7 @@ const layers = {
       0,
       10
     ],
-    erase: 255,
+    erase: 255
   },
   hands: {
     graphics: undefined,
@@ -42,19 +42,16 @@ const layers = {
     background: [
       230
     ],
-    erase: 255,
-  },
+    erase: 255
+  }
 };
 
 const matter = {
   engine: Engine.create(),
   bottom: undefined,
-  balls: [
-  ],
-  handBodies: [
-  ],
-  boundaries: [
-  ],
+  balls: [],
+  handBodies: [],
+  boundaries: []
 };
 
 sketch.setup( async() => {
@@ -66,7 +63,7 @@ sketch.setup( async() => {
     worker: false,
     tasks: [
       "hands"
-    ],
+    ]
   } );
 
   for ( const layerName in layers ) {
@@ -133,7 +130,7 @@ sketch.setup( async() => {
 
 matter.engine.gravity = {
   x: 0,
-  y: 0,
+  y: 0
 };
 
 sketch.draw( (
@@ -197,7 +194,7 @@ sketch.draw( (
       shadowsCount: 3,
       graphics: layers.visuals.graphics,
       position,
-      index: index / matter.balls.length,
+      index: index / matter.balls.length
     } );
   } );
 
@@ -242,7 +239,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: p.EXCLUSION,
+      blendMode: p.EXCLUSION
     }
   );
 
@@ -260,7 +257,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: p.EXCLUSION,
+      blendMode: p.EXCLUSION
     }
   );
 } );
@@ -273,8 +270,7 @@ function updateHandBodies() {
       handBody
     );
   }
-  matter.handBodies = [
-  ];
+  matter.handBodies = [];
 
   mediapipe.tasks?.hands?.result?.landmarks?.forEach?.( createHandInteractionBodies );
 }
@@ -308,7 +304,7 @@ function createHandInteractionBodies( hand ) {
         75,
         {
           isStatic: true, // Static so it doesn't fall
-          isSensor: false, // Can interact with other bodies
+          isSensor: false // Can interact with other bodies
         }
       );
 
@@ -352,7 +348,7 @@ function addBoundary(
     w,
     h,
     {
-      isStatic: true,
+      isStatic: true
     }
   );
 

@@ -11,7 +11,7 @@ type ControlledColorInputProps = {
 };
 
 export default function ControlledColorInput( {
-  name,
+  name
 }: ControlledColorInputProps ) {
   const {
     control
@@ -85,13 +85,13 @@ export default function ControlledColorInput( {
                   background: `linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), 
                               linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)`,
                   backgroundSize: "8px 8px",
-                  backgroundPosition: "0 0, 4px 4px",
+                  backgroundPosition: "0 0, 4px 4px"
                 }}
               >
                 <div
                   className="absolute inset-0"
                   style={{
-                    backgroundColor: `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`,
+                    backgroundColor: `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`
                   }}
                 />
               </div>

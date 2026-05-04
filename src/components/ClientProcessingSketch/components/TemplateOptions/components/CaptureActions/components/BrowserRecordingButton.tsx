@@ -10,7 +10,7 @@ type BrowserRecordingButtonProps = {
 };
 
 export default function BrowserRecordingButton( {
-  onRecord,
+  onRecord
 }: BrowserRecordingButtonProps ) {
   return (
     <button

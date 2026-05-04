@@ -83,7 +83,7 @@ sketch.draw( (
 
     const randomAngle = p.noise(
       i,
-      imageProgression,
+      imageProgression
     ) * p.radians( options.sketch.randomAngle ?? 15 ) * ( i % 2 === 0 ? -1 : 1 );
 
     imageUtils.marginImage( {
@@ -94,7 +94,7 @@ sketch.draw( (
       scale: options.sketch.imageStyle?.scale ?? 1,
       center: options.sketch.imageStyle?.center ?? true,
       clip: options.sketch.imageStyle?.clip ?? false,
-      fill: options.sketch.imageStyle?.fill ?? true,
+      fill: options.sketch.imageStyle?.fill ?? true
     } );
   }
 } );

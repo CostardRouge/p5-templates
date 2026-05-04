@@ -12,7 +12,7 @@ const titleFormConfiguration = {
   fields: {
     show: {
       label: "Show title",
-      component: "checkbox",
+      component: "checkbox"
     },
     ...formConfig.text,
     displayFrom: {
@@ -20,16 +20,16 @@ const titleFormConfiguration = {
       component: "slider",
       min: 0,
       max: 1,
-      step: 0.01,
+      step: 0.01
     },
     displayTo: {
       label: "Display to (0-1)",
       component: "slider",
       min: 0,
       max: 1,
-      step: 0.01,
-    },
-  },
+      step: 0.01
+    }
+  }
 };
 
 export default titleFormConfiguration;

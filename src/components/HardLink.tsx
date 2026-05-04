@@ -5,7 +5,7 @@ function HardLink( {
   href,
   className,
   children,
-  target,
+  target
 }: {
   href: string;
   className?: string;

@@ -9,7 +9,7 @@ export const formValues = {
   shape: {
     linesCount: 65,
     strokeWeight: 25,
-    incrementStep: 0.05,
+    incrementStep: 0.05
   },
   roughness: {
     mode: "fixed",
@@ -22,7 +22,7 @@ export const formValues = {
     progressionMultiplier: 1,
     start: 125,
     end: 225,
-    easingFn: "easeInOutExpo",
+    easingFn: "easeInOutExpo"
   },
   baseRadius: {
     mode: "variable",
@@ -31,7 +31,7 @@ export const formValues = {
     progressionMultiplier: 1,
     start: 190.5,
     end: 200,
-    easingFn: "easeInOutExpo",
+    easingFn: "easeInOutExpo"
   },
   radiusOffsetMultiplier: {
     mode: "variable",
@@ -40,7 +40,7 @@ export const formValues = {
     progressionMultiplier: 1,
     start: 4,
     end: 5.70,
-    easingFn: "easeInOutSine",
+    easingFn: "easeInOutSine"
   },
   noisePhaseMultiplier: {
     mode: "variable",
@@ -49,7 +49,7 @@ export const formValues = {
     progressionMultiplier: 1,
     start: 0.02,
     end: 0.03,
-    easingFn: "easeInOutBack",
+    easingFn: "easeInOutBack"
   },
   colors: {
     colorFunction: "rainbow",
@@ -77,7 +77,7 @@ export const formValues = {
     0,
     0
   ],
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 // UI configuration only
@@ -91,23 +91,23 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 100,
-        step: 0.1,
+        step: 0.1
       },
       linesCount: {
         label: "Lines count",
         component: "slider",
         min: 1,
         max: 1000,
-        step: 1,
+        step: 1
       },
       incrementStep: {
         label: "Increment step",
         component: "slider",
         min: 0.01,
         max: 3.14,
-        step: 0.01,
-      },
-    },
+        step: 0.01
+      }
+    }
   },
   roughness: createFixedOrVariableOption(
     "roughness",
@@ -160,13 +160,13 @@ export const formConfiguration: Record<string, any> = {
         options: [
           {
             label: "Rainbow",
-            value: "rainbow",
+            value: "rainbow"
           },
           {
             label: "Purple",
-            value: "purple",
-          },
-        ],
+            value: "purple"
+          }
+        ]
       },
       opacityFactor: createVariableOption(
         "opacityFactor",
@@ -190,6 +190,6 @@ export const formConfiguration: Record<string, any> = {
   title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

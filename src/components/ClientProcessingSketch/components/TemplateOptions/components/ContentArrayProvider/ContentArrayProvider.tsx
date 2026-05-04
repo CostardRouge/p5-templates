@@ -14,14 +14,14 @@ type ContentArrayProviderProps = {
 
 export default function ContentArrayProvider( {
   children,
-  name,
+  name
 }: React.PropsWithChildren<ContentArrayProviderProps> ) {
   const {
     control
   } = useFormContext();
   const fieldArray = useFieldArray( {
     control,
-    name,
+    name
   } );
 
   return (
@@ -33,7 +33,7 @@ export default function ContentArrayProvider( {
         append: fieldArray.append,
         remove: fieldArray.remove,
         insert: fieldArray.insert,
-        move: fieldArray.move,
+        move: fieldArray.move
       }}
     >
       {children}

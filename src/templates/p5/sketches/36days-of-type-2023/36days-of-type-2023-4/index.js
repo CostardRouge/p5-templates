@@ -19,11 +19,11 @@ import {
 const sketchState = {
   interactive: {
     position: null,
-    image: null,
+    image: null
   },
   shape: {
-    graphics: null,
-  },
+    graphics: null
+  }
 };
 
 events.register(
@@ -55,7 +55,7 @@ function getAlphaFromMask( {
     x, y
   },
   maskPoints,
-  distance = options.sketch?.mask?.distance ?? 0.015,
+  distance = options.sketch?.mask?.distance ?? 0.015
 } ) {
   const p = getP5();
 
@@ -118,19 +118,17 @@ function createGridAlphaPoints(
   return cache.store(
     `alpha-points-matrix+${ cacheKey }`,
     () => {
-      const alphaPoints = [
-      ];
+      const alphaPoints = [];
 
       grid.draw(
         gridOptions,
         ( position ) => {
-          const alphaLayers = [
-          ];
+          const alphaLayers = [];
 
           for ( const points of textPointsMatrix ) {
             const alpha = getAlphaFromMask( {
               position,
-              maskPoints: points,
+              maskPoints: points
             } );
 
             alphaLayers.push( alpha );
@@ -138,7 +136,7 @@ function createGridAlphaPoints(
 
           alphaPoints.push( {
             position,
-            layers: alphaLayers,
+            layers: alphaLayers
           } );
         }
       );
@@ -189,13 +187,13 @@ sketch.draw( () => {
     ),
     rows,
     columns,
-    centered: true,
+    centered: true
   };
 
   const fontName = options.sketch?.shape?.font ?? "serif";
 
   const fonts = [
-    string.fonts.serif,
+    string.fonts.serif
     // string.fonts.multicoloure,
     // string.fonts.openSans,
     // string.fonts.sans,
@@ -214,7 +212,7 @@ sketch.draw( () => {
       size,
       font: string.fonts?.[ fontName ],
       sampleFactor,
-      simplifyThreshold,
+      simplifyThreshold
     } ) );
 
   if ( textPointsMatrix.some( ( matrix ) => matrix.length === 0 ) ) {
@@ -228,7 +226,7 @@ sketch.draw( () => {
     fontName,
     sampleFactor,
     simplifyThreshold,
-    options.sketch?.mask?.distance,
+    options.sketch?.mask?.distance
   ];
   const cacheKey = cacheComponent.join( "+" );
 
@@ -285,7 +283,7 @@ sketch.draw( () => {
     const waveConfig = options.sketch?.animation?.wave ?? {
       mode: "linear",
       directionX: -1,
-      directionY: -1,
+      directionY: -1
     };
     const waveSpeed = options.sketch?.animation?.waveSpeed ?? 1;
     const waveSpread = options.sketch?.animation?.waveSpread ?? 0.3;
@@ -397,13 +395,13 @@ sketch.draw( () => {
           rotationMax,
           0,
           rotationMax
-        ),
+        )
       ],
       currentTime: switchIndex,
       lerpFn: mappers.lerpVector,
       easingFn:
         easing?.[ options.sketch.animation.waveEasing ] ??
-        easing.easeInOutElastic,
+        easing.easeInOutElastic
     } );
     const {
       x: rX, y: rY, z: rZ
@@ -438,7 +436,7 @@ sketch.draw( () => {
         currentTime: movementIndex,
         easingFn:
             easing?.[ options.sketch.animation.waveEasing ] ??
-            easing.easeInOutElastic,
+            easing.easeInOutElastic
       } )
       : depthMax;
 
@@ -450,7 +448,7 @@ sketch.draw( () => {
       currentTime: movementIndex,
       easingFn:
         easing?.[ options.sketch.animation.waveEasing ] ??
-        easing.easeInOutElastic,
+        easing.easeInOutElastic
     } );
 
     // const d = cellSize * ( options.sketch?.shape?.depth ?? 20 );
@@ -473,7 +471,7 @@ sketch.draw( () => {
           -p.PI,
           p.PI
         ) * hueMultiplier,
-      opacityFactor,
+      opacityFactor
     } );
 
     const {
@@ -481,7 +479,7 @@ sketch.draw( () => {
         red,
         green,
         blue
-      ],
+      ]
     } = tint;
 
     sketchState.shape.graphics.fill(
@@ -515,7 +513,7 @@ sketch.draw( () => {
 
   // Update interactive position if in interactive mode
   const waveConfig = options.sketch?.animation?.wave ?? {
-    mode: "linear",
+    mode: "linear"
   };
 
   if ( waveConfig.mode === "interactive" ) {

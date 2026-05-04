@@ -6,7 +6,7 @@ import {
 } from "@/services/RecordingService";
 import {
   EnqueueRecordingResponse,
-  JobStatusEnum,
+  JobStatusEnum
 } from "@/types/recording.types";
 
 export async function POST( request: NextRequest ): Promise<NextResponse<EnqueueRecordingResponse>> {
@@ -25,10 +25,10 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       return NextResponse.json(
         {
           success: false,
-          error: "Template is required",
+          error: "Template is required"
         },
         {
-          status: 400,
+          status: 400
         }
       );
     }
@@ -39,33 +39,28 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       return NextResponse.json(
         {
           success: false,
-          error: "Options is required",
+          error: "Options is required"
         },
         {
-          status: 400,
+          status: 400
         }
       );
     }
 
     const options = JSON.parse( optionsRaw );
-    const slides = options.slides ?? [
-    ];
+    const slides = options.slides ?? [];
 
-    options.assets = {
-    };
+    options.assets = {};
 
     if ( options.assets?.images ) {
-      options.assets.images = [
-      ];
+      options.assets.images = [];
     }
 
     for ( const slide of slides ) {
-      slide.assets = {
-      };
+      slide.assets = {};
     }
 
-    const collectedFiles: File[] = [
-    ];
+    const collectedFiles: File[] = [];
 
     for ( const [
       key,
@@ -92,16 +87,12 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
 
       // Update options object
       if ( scope === "global" ) {
-        options.assets[ type ] = options.assets[ type ] || [
-        ];
+        options.assets[ type ] = options.assets[ type ] || [];
         options.assets[ type ].push( filename );
       } else if ( slideIndex !== null ) {
-        slides[ slideIndex ] = slides[ slideIndex ] || {
-        };
-        slides[ slideIndex ].assets = slides[ slideIndex ].assets || {
-        };
-        slides[ slideIndex ].assets[ type ] = slides[ slideIndex ].assets[ type ] || [
-        ];
+        slides[ slideIndex ] = slides[ slideIndex ] || {};
+        slides[ slideIndex ].assets = slides[ slideIndex ].assets || {};
+        slides[ slideIndex ].assets[ type ] = slides[ slideIndex ].assets[ type ] || [];
         slides[ slideIndex ].assets[ type ].push( filename );
       }
 
@@ -121,12 +112,12 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
         2
       ),
       jobId: typeof jobIdRaw === "string" ? jobIdRaw : undefined,
-      thumbnails,
+      thumbnails
     } );
 
     return NextResponse.json( {
       success: true,
-      jobId,
+      jobId
     } );
   } catch ( error ) {
     console.error(
@@ -136,10 +127,10 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
+        error: error instanceof Error ? error.message : "Internal server error"
       },
       {
-        status: 500,
+        status: 500
       }
     );
   }

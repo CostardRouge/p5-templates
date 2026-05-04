@@ -28,7 +28,7 @@ function drawRectangle( {
     0,
     0
   ),
-  atCorner,
+  atCorner
 } ) {
   const p = getP5();
   const width = p.abs( firstCornerPosition.x - oppositeCornerPosition.x );
@@ -58,7 +58,7 @@ function drawRectangle( {
       p.createVector(
         firstCornerPosition.x,
         firstCornerPosition.y + p.height
-      ),
+      )
     ].forEach( (
       cornerPosition, cornerIndex
     ) =>
@@ -87,7 +87,7 @@ const cornerPositionCorrections = [
   [
     -1,
     1
-  ],
+  ]
 ];
 
 sketch.draw( (
@@ -112,11 +112,11 @@ sketch.draw( (
       p.createVector(
         p.width * 0.3,
         p.height * 0.3
-      ),
+      )
     ],
     currentTime: animation.progression * 3,
     easingFn: easing.easeInOutElastic,
-    lerpFn: mappers.lerpVector,
+    lerpFn: mappers.lerpVector
   } );
 
   const firstRectangleCornerPosition = p.createVector(
@@ -197,12 +197,12 @@ sketch.draw( (
             textAlign: [
               p.CENTER,
               p.CENTER
-            ],
+            ]
           }
         );
         p.pop();
       }
-    },
+    }
   } );
 
   shapes.vl( 1 );

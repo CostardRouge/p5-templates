@@ -191,7 +191,7 @@ const shapes = {
         ); // ← adapt this primitive if necessary
       }
     }
-  },
+  }
 };
 
 export default shapes;

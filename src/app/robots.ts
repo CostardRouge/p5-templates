@@ -17,9 +17,9 @@ export default function robots(): MetadataRoute.Robots {
           "/api/",
           "/_next/",
           "/sw.js"
-        ],
-      },
+        ]
+      }
     ],
-    sitemap: `${ baseUrl }/sitemap.xml`,
+    sitemap: `${ baseUrl }/sitemap.xml`
   };
 }

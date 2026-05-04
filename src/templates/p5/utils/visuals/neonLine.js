@@ -10,9 +10,8 @@ export default function neonLine( {
   graphics = getP5(),
   vectorsStep = 0.05,
   vectors,
-  index,
-} = {
-} ) {
+  index
+} = {} ) {
   graphics.noStroke();
 
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
@@ -50,7 +49,7 @@ export default function neonLine( {
                 1,
                 -graphics.PI,
                 graphics.PI
-              ) * 4,
+              ) * 4
         } ) );
 
         graphics.circle(

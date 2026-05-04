@@ -33,7 +33,7 @@ function deriveCategory( sketchName: string ): string {
     mask: "masking effects",
     dominant: "color analysis",
     hello: "starter template",
-    empty: "blank template",
+    empty: "blank template"
   };
 
   return categoryMap[ prefix ] || "creative coding";
@@ -66,10 +66,10 @@ export function generateSketchMetadata(
       "video generator",
       "creative coding",
       "generative art",
-      ...sketchName.split( "-" ),
+      ...sketchName.split( "-" )
     ],
     alternates: {
-      canonical: `/${ engine }/${ sketchName }`,
+      canonical: `/${ engine }/${ sketchName }`
     },
     openGraph: {
       title: `${ sketchTitle } | ${ SITE_NAME }`,
@@ -81,10 +81,10 @@ export function generateSketchMetadata(
           url: thumbnailUrl,
           width: 1200,
           height: 630,
-          alt: `${ sketchTitle } - ${ engine } template preview`,
-        },
+          alt: `${ sketchTitle } - ${ engine } template preview`
+        }
       ],
-      type: "website",
+      type: "website"
     },
     twitter: {
       card: "summary_large_image",
@@ -92,7 +92,7 @@ export function generateSketchMetadata(
       description,
       images: [
         thumbnailUrl
-      ],
-    },
+      ]
+    }
   };
 }

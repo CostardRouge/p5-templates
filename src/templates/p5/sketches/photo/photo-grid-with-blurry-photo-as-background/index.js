@@ -11,8 +11,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {
-};
+const canvases = {};
 
 sketch.setup( () => {
   const p = getP5();
@@ -63,7 +62,7 @@ sketch.draw( async(
     ),
     rows,
     columns,
-    centered: false,
+    centered: false
   };
   const {
     cells: gridCells
@@ -115,7 +114,7 @@ sketch.draw( async(
     ),
     graphics: canvases.blurredLayer,
     center: true,
-    fill: true,
+    fill: true
   } );
 
   p.image(
@@ -166,13 +165,13 @@ sketch.draw( async(
       ),
       boundary: {
         height: H,
-        width: W,
+        width: W
       },
       center: true,
       // fill: true,
       scale: 1,
       clip: true,
-      margin: 10,
+      margin: 10
     } );
   } );
 

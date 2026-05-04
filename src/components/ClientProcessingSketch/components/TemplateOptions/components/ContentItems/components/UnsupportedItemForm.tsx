@@ -16,7 +16,7 @@ type ItemFormProps = {
 export default function UnsupportedItemForm( {
   onRemove,
   index,
-  baseFieldName,
+  baseFieldName
 }: ItemFormProps ) {
   const {
     register, getValues

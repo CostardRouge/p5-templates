@@ -3,7 +3,7 @@ import scripts from "./scripts.js";
 export const friendlyCameraModelNames = {
   FC8482: "MINI 4 PRO",
   "ILCE-7CM2": "ALPHA 7CII",
-  "ILCE-6700": "ALPHA A6700",
+  "ILCE-6700": "ALPHA A6700"
 };
 
 export const friendlyLensModelNames = {
@@ -16,7 +16,7 @@ export const friendlyLensModelNames = {
     "Sony FE 70-200mm F2.8 GM II",
 
   "iPhone 15 Pro Max back triple camera 6.765mm f/1.78":
-    "iPhone 15 Pro Max 24mm equiv.",
+    "iPhone 15 Pro Max 24mm equiv."
 };
 
 const exif = {
@@ -40,27 +40,27 @@ const exif = {
       iso: Number( tags?.ISOSpeedRatings?.description ),
       shutterSpeed: {
         description: tags?.ExposureTime?.description || "",
-        value: tags?.ExposureTime?.value || -1,
+        value: tags?.ExposureTime?.value || -1
       },
       focalLength: {
         description: tags?.FocalLength?.description || "",
-        value: tags?.FocalLength?.value || -1,
+        value: tags?.FocalLength?.value || -1
       },
       lens: tags?.Lens?.description, // ou LensModel
       camera: {
         brand: tags?.Make?.description || "",
-        model: tags?.Model?.description || "",
+        model: tags?.Model?.description || ""
       },
       aperture: {
         description: tags?.FNumber?.description || "",
-        value: tags?.FNumber?.value || -1,
+        value: tags?.FNumber?.value || -1
       },
       type: tags?.FileType?.description,
       date: tags?.DateCreated ? new Date( tags?.DateCreated?.description ) : null,
       gps: {
         latitude: Number( tags?.GPSLatitude?.description ) || -1,
-        longitude: Number( tags?.GPSLongitude?.description ) || -1,
-      },
+        longitude: Number( tags?.GPSLongitude?.description ) || -1
+      }
     };
   },
   formatFocalLength: ( focalLength ) => {
@@ -161,7 +161,7 @@ const exif = {
       // weekday: 'short',
         day: "numeric",
         month: "short",
-        year: "numeric",
+        year: "numeric"
       }
     );
 
@@ -183,7 +183,7 @@ const exif = {
     const lonDir = longitude >= 0 ? "E" : "W";
 
     return `${ Math.abs( latitude ).toFixed( precision ) }° ${ latDir }, ${ Math.abs( longitude ).toFixed( precision ) }° ${ lonDir }`;
-  },
+  }
 };
 
 export default exif;

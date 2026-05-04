@@ -35,7 +35,7 @@ export default function SlideThumbnail( {
   onRename,
   onDelete,
   onDuplicate,
-  dragBinder,
+  dragBinder
 }: SlideThumbnailProps ) {
   const [
     isEditing,
@@ -49,7 +49,7 @@ export default function SlideThumbnail( {
   const thumbCanvasRef = useRef<HTMLCanvasElement>( null );
   const liveEnabled = useLiveThumbnail( {
     thumbCanvasRef,
-    isActive,
+    isActive
   } );
 
   useEffect(
@@ -94,13 +94,12 @@ export default function SlideThumbnail( {
   return (
     <div
       ref={dragBinder?.setHandleRef}
-      {...( dragBinder?.handleProps ?? {
-      } )}
+      {...( dragBinder?.handleProps ?? {} )}
       className={clsx(
         "group relative flex flex-col gap-1",
         "cursor-pointer",
         {
-          "opacity-50": dragBinder?.isDragging,
+          "opacity-50": dragBinder?.isDragging
         }
       )}
       onClick={onSelect}
@@ -112,11 +111,11 @@ export default function SlideThumbnail( {
           {
             "outline outline-2 outline-offset-1 outline-primary": isActive,
             "outline outline-2 outline-offset-1 outline-transparent hover:outline-theme":
-              !isActive,
+              !isActive
           }
         )}
         style={{
-          aspectRatio,
+          aspectRatio
         }}
       >
         {liveEnabled ? (
@@ -127,7 +126,7 @@ export default function SlideThumbnail( {
               ref={thumbCanvasRef}
               className="absolute inset-0 w-full h-full"
               style={{
-                display: "block",
+                display: "block"
               }}
             />
             {/* Static img layers on top once inactive; canvas last-frame shows
@@ -138,7 +137,7 @@ export default function SlideThumbnail( {
                 alt={name}
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{
-                  transform: "translateZ(0)",
+                  transform: "translateZ(0)"
                 }}
                 draggable={false}
               />
@@ -160,7 +159,7 @@ export default function SlideThumbnail( {
               imageRendering: "auto",
               width: "100%",
               height: "100%",
-              transform: "translateZ(0)",
+              transform: "translateZ(0)"
             }}
             loading="lazy"
             draggable={false}

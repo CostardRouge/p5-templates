@@ -9,7 +9,7 @@ const colors = {
     opacityFactor = 1,
     min = 0,
     max = 360,
-    easingFunction,
+    easingFunction
   } ) => {
     const p = getP5();
 
@@ -53,7 +53,7 @@ const colors = {
     opacityFactor = 1,
     min = 0,
     max = 360,
-    easingFunction,
+    easingFunction
   } ) => {
     const p = getP5();
 
@@ -91,7 +91,7 @@ const colors = {
     min = 0,
     max = 360,
     easingFunction,
-    alpha = 255,
+    alpha = 255
   } ) => {
     const p = getP5();
 
@@ -128,7 +128,7 @@ const colors = {
     hueIndex,
     opacityFactor = 1,
     min = 0,
-    max = 360,
+    max = 360
   } ) => {
     const p = getP5();
 
@@ -161,7 +161,7 @@ const colors = {
     hueIndex,
     opacityFactor = 1,
     min = 0,
-    max = 360,
+    max = 360
   } ) => {
     const p = getP5();
 
@@ -182,7 +182,7 @@ const colors = {
     hueIndex,
     opacityFactor = 1,
     min = 0,
-    max = 360,
+    max = 360
   } ) => getP5().color(
     128,
     128,
@@ -208,8 +208,7 @@ const colors = {
   chunk: (
     array, chunkSize
   ) => {
-    const chunkedArray = [
-    ];
+    const chunkedArray = [];
 
     for ( let i = 0; i < array.length; i += chunkSize ) {
       chunkedArray.push( array.slice(
@@ -281,7 +280,7 @@ const colors = {
       img.pixels,
       precision
     );
-  },
+  }
 };
 
 export default colors;

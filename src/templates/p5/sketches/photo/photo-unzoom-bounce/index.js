@@ -108,7 +108,7 @@ sketch.draw( ( _time ) => {
         Number( options.sketch.scaleEnd ),
         1,
         easing?.[ scaleEasingFunction ]
-      ),
+      )
     } );
 
     p.pop();

@@ -20,12 +20,9 @@ sketch.draw( () => {
   p.background( ...options.sketch.backgroundColor );
 
   const images = imageUtils.getImages();
-  const arcConfig = options.sketch?.arc ?? {
-  };
-  const imageConfig = options.sketch?.image ?? {
-  };
-  const debugConfig = options.sketch?.debug ?? {
-  };
+  const arcConfig = options.sketch?.arc ?? {};
+  const imageConfig = options.sketch?.image ?? {};
+  const debugConfig = options.sketch?.debug ?? {};
 
   const circlePosition = p.createVector(
     ( arcConfig.anchorX ?? 0.5 ) * p.width,
@@ -63,7 +60,7 @@ sketch.draw( () => {
         img: imageAtIndex,
         position: imagePosition,
         scale: imageConfig.scale ?? 0.5,
-        center: imageConfig.center ?? true,
+        center: imageConfig.center ?? true
       } );
 
       if ( debugConfig.showPoints ) {

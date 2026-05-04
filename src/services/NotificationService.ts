@@ -39,17 +39,17 @@ export class NotificationService {
     try {
       await prisma.pushSubscription.upsert( {
         where: {
-          endpoint: subscription.endpoint,
+          endpoint: subscription.endpoint
         },
         update: {
           p256dh: subscription.keys.p256dh,
-          auth: subscription.keys.auth,
+          auth: subscription.keys.auth
         },
         create: {
           endpoint: subscription.endpoint,
           p256dh: subscription.keys.p256dh,
-          auth: subscription.keys.auth,
-        },
+          auth: subscription.keys.auth
+        }
       } );
       console.log(
         "[Notification] Subscription stored:",
@@ -71,8 +71,8 @@ export class NotificationService {
     try {
       await prisma.pushSubscription.deleteMany( {
         where: {
-          endpoint,
-        },
+          endpoint
+        }
       } );
       console.log(
         "[Notification] Subscription removed:",
@@ -155,8 +155,8 @@ export class NotificationService {
               endpoint: sub.endpoint,
               keys: {
                 p256dh: sub.p256dh,
-                auth: sub.auth,
-              },
+                auth: sub.auth
+              }
             },
             payload
           );
@@ -166,8 +166,8 @@ export class NotificationService {
             console.log( `[Notification] Removing invalid subscription ${ sub.id }` );
             await prisma.pushSubscription.delete( {
               where: {
-                id: sub.id,
-              },
+                id: sub.id
+              }
             } );
           } else {
             throw error;
@@ -201,7 +201,7 @@ export class NotificationService {
         : "Your recording job has finished processing.",
       icon: "/icon-192x192.png",
       url: `/recordings/${ jobId }`,
-      jobId,
+      jobId
     };
 
     await this.sendNotificationToAll( payload );
@@ -221,7 +221,7 @@ export class NotificationService {
         : "Your recording job has failed.",
       icon: "/icon-192x192.png",
       url: `/recordings/${ jobId }`,
-      jobId,
+      jobId
     };
 
     await this.sendNotificationToAll( payload );

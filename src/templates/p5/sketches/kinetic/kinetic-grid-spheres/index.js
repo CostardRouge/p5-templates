@@ -12,7 +12,7 @@ import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 
 import mediapipe, {
   init as mediapipeInit,
-  setEnabled as setMediapipeEnabled,
+  setEnabled as setMediapipeEnabled
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   getP5
@@ -29,14 +29,14 @@ const interactionIndices = [
 
 const sketchState = {
   interactive: {
-    image: null,
+    image: null
   },
   shape: {
-    graphics: null,
+    graphics: null
   },
   webcam: {
-    graphics: null,
-  },
+    graphics: null
+  }
 };
 
 sketch.setup( async( {
@@ -62,7 +62,7 @@ sketch.setup( async( {
     worker: false,
     tasks: [
       "hands"
-    ],
+    ]
   } );
 } );
 
@@ -108,7 +108,7 @@ sketch.draw( () => {
     ),
     rows,
     columns,
-    centered: true,
+    centered: true
   };
 
   const gap = options.sketch.grid.gap ?? 3;
@@ -121,8 +121,7 @@ sketch.draw( () => {
   const maxInfluenceDistance =
     options.sketch.animation.maxInfluenceDistance ?? 150;
 
-  const targetVectors = [
-  ];
+  const targetVectors = [];
 
   if ( options.sketch.animation.useMouse ?? true ) {
     sketchState.shape.graphics.screenPosition( p.createVector(
@@ -219,7 +218,7 @@ sketch.draw( () => {
           cellSize
         ],
         currentTime: switchIndex,
-        easingFn: easing?.[ options.sketch.animation.easing ] ?? easing.easeOutBack,
+        easingFn: easing?.[ options.sketch.animation.easing ] ?? easing.easeOutBack
       } );
 
       const fillAlpha = animation.ease( {
@@ -227,7 +226,7 @@ sketch.draw( () => {
           fillAlphaStart,
           fillAlphaEnd
         ],
-        currentTime: switchIndex,
+        currentTime: switchIndex
       } );
 
       const hue = sketchState.shape.graphics.noise(
@@ -248,7 +247,7 @@ sketch.draw( () => {
           -p.PI,
           p.PI
         ) * hueMultiplier,
-        opacityFactor,
+        opacityFactor
       } );
 
       const {
@@ -256,7 +255,7 @@ sketch.draw( () => {
           red,
           green,
           blue
-        ],
+        ]
       } = tint;
 
       sketchState.shape.graphics.fill(

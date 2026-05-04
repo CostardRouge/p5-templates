@@ -12,8 +12,8 @@ async function takeScreenshot( {
   selectorWaitForTimeout = 10_000_000,
   viewportSize = {
     width: 1080,
-    height: 1350,
-  },
+    height: 1350
+  }
 }: {
   page: Page;
   url: string;
@@ -29,23 +29,23 @@ async function takeScreenshot( {
 } ) {
   await page.setViewportSize( viewportSize );
   await page.emulateMedia( {
-    reducedMotion: "reduce",
+    reducedMotion: "reduce"
   } );
   await page.goto(
     url,
     {
-      waitUntil: "networkidle",
+      waitUntil: "networkidle"
     }
   );
   await page.waitForSelector(
     selectorToWaitFor,
     {
-      timeout: selectorWaitForTimeout,
+      timeout: selectorWaitForTimeout
     }
   );
   callbefore?.( page );
   await page.locator( selectorToCapture ).screenshot( {
-    path: outputPath,
+    path: outputPath
   } );
 }
 

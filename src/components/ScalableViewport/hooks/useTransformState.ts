@@ -12,7 +12,7 @@ export function useTransformState( initialScale: number = 1 ) {
   const transform = useRef<TransformState>( {
     x: 0,
     y: 0,
-    scale: initialScale,
+    scale: initialScale
   } );
 
   const [
@@ -34,8 +34,7 @@ export function useTransformState( initialScale: number = 1 ) {
         );
       }
     },
-    [
-    ]
+    []
   );
 
   const setTransform = useCallback(
@@ -45,7 +44,7 @@ export function useTransformState( initialScale: number = 1 ) {
     ) => {
       transform.current = {
         ...transform.current,
-        ...newValues,
+        ...newValues
       };
       updateDom( contentElement );
       if ( newValues.scale !== undefined ) {
@@ -60,6 +59,6 @@ export function useTransformState( initialScale: number = 1 ) {
   return {
     transform,
     displayScale,
-    setTransform,
+    setTransform
   };
 }

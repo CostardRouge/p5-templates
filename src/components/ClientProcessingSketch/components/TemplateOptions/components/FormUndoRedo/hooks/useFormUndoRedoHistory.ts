@@ -16,10 +16,8 @@ export default function useFormUndoRedoHistory() {
     past: HistoryEntry[];
     future: HistoryEntry[];
   }>( {
-    past: [
-    ],
-    future: [
-    ],
+    past: [],
+    future: []
   } );
 
   // Poll history (could be optimized with events)
@@ -55,9 +53,8 @@ export default function useFormUndoRedoHistory() {
         timestamp: entry.timestamp,
         formattedTime: formatTimestamp( entry.timestamp ),
         description: entry.description || "Change",
-        affectedPaths: entry.affectedPaths || [
-        ],
-        hasPatch: !!entry.patches,
+        affectedPaths: entry.affectedPaths || [],
+        hasPatch: !!entry.patches
       } ) ),
       future: history.future.map( (
         entry, index
@@ -67,16 +64,15 @@ export default function useFormUndoRedoHistory() {
         timestamp: entry.timestamp,
         formattedTime: formatTimestamp( entry.timestamp ),
         description: entry.description || "Change",
-        affectedPaths: entry.affectedPaths || [
-        ],
-        hasPatch: !!entry.patches,
-      } ) ),
+        affectedPaths: entry.affectedPaths || [],
+        hasPatch: !!entry.patches
+      } ) )
     };
   };
 
   return {
     ...context,
     history,
-    getHistoryItems,
+    getHistoryItems
   };
 }

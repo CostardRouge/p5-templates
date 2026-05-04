@@ -15,26 +15,22 @@ export default function useRecordings() {
   const [
     staticJobs,
     setStaticJobs
-  ] = useState<JobModel[]>( [
-  ] );
+  ] = useState<JobModel[]>( [] );
   const [
     inFlightJobs,
     setInFlightJobs
-  ] = useState<JobModel[]>( [
-  ] );
+  ] = useState<JobModel[]>( [] );
   const [
     isLoading,
     setIsLoading
   ] = useState<boolean>( true );
 
-  const recordingStartTimesRef = useRef<Record<string, number>>( {
-  } );
+  const recordingStartTimesRef = useRef<Record<string, number>>( {} );
 
   const [
     jobProgressions,
     setJobProgressions
-  ] = useState<Record<string, JobProgression>>( {
-  } );
+  ] = useState<Record<string, JobProgression>>( {} );
 
   // Track start times for active jobs
   inFlightJobs.forEach( ( job ) => {
@@ -69,8 +65,7 @@ export default function useRecordings() {
         .catch( console.error )
         .finally( () => setIsLoading( false ) );
     },
-    [
-    ]
+    []
   );
 
   const {
@@ -97,7 +92,7 @@ export default function useRecordings() {
                   progress: data.percentage,
                   status: data.status as JobStatusEnum,
                   recordingDuration:
-                  data.recordingDuration ?? j.recordingDuration,
+                  data.recordingDuration ?? j.recordingDuration
                 }
                 : j ) );
 
@@ -106,8 +101,8 @@ export default function useRecordings() {
               ...prev,
               [ jobId ]: {
                 steps: data.steps,
-                currentSlideIndex: data.currentSlideIndex,
-              },
+                currentSlideIndex: data.currentSlideIndex
+              }
             } ) );
           }
 
@@ -150,9 +145,9 @@ export default function useRecordings() {
                       progress: 100,
                       status: data.status as JobStatusEnum,
                       recordingDuration:
-                    data.recordingDuration ?? completedJob.recordingDuration,
+                    data.recordingDuration ?? completedJob.recordingDuration
                     },
-                    ...prev,
+                    ...prev
                   ] );
                 }
               } );
@@ -211,8 +206,7 @@ export default function useRecordings() {
 
       return () => clearInterval( interval );
     },
-    [
-    ]
+    []
   );
 
   const handleCancel = ( job: JobModel ) => {
@@ -221,9 +215,9 @@ export default function useRecordings() {
       {
         ...job,
         status: "cancelled",
-        progress: 100,
+        progress: 100
       },
-      ...prev,
+      ...prev
     ] );
   };
 
@@ -238,9 +232,9 @@ export default function useRecordings() {
       {
         ...job,
         status: "queued",
-        progress: 0,
+        progress: 0
       },
-      ...prev,
+      ...prev
     ] );
   };
 
@@ -250,9 +244,9 @@ export default function useRecordings() {
       {
         ...job,
         status: "queued",
-        progress: 0,
+        progress: 0
       },
-      ...prev,
+      ...prev
     ] );
   };
 
@@ -287,6 +281,6 @@ export default function useRecordings() {
     handleDelete,
     handleStart,
     handleRetry,
-    addJob,
+    addJob
   };
 }

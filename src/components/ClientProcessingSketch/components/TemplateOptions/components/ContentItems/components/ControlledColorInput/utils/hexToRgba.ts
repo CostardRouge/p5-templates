@@ -27,6 +27,6 @@ export default function hexToRgba( hex: string ): [number, number, number, numbe
       result[ 3 ],
       16
     ),
-    255, // Default alpha
+    255 // Default alpha
   ];
 }

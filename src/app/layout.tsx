@@ -16,7 +16,7 @@ import {
   getWebApplicationJsonLd,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
-  SITE_NAME,
+  SITE_NAME
 } from "@/lib/seo";
 import {
   getDevThumbnailStatus
@@ -28,24 +28,24 @@ export const metadata: Metadata = {
   metadataBase: new URL( baseUrl ),
   title: {
     default: SITE_NAME,
-    template: `%s | ${ SITE_NAME }`,
+    template: `%s | ${ SITE_NAME }`
   },
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
   authors: [
     {
-      name: "Steeve Pommier",
-    },
+      name: "Steeve Pommier"
+    }
   ],
   creator: "Steeve Pommier",
   publisher: "Steeve Pommier",
   formatDetection: {
     email: false,
     address: false,
-    telephone: false,
+    telephone: false
   },
   alternates: {
-    canonical: "/",
+    canonical: "/"
   },
   openGraph: {
     type: "website",
@@ -59,9 +59,9 @@ export const metadata: Metadata = {
         url: "/assets/images/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: `${ SITE_NAME } - Create social media videos from code templates`,
-      },
-    ],
+        alt: `${ SITE_NAME } - Create social media videos from code templates`
+      }
+    ]
   },
   twitter: {
     card: "summary_large_image",
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       "/assets/images/icon-512x512.png"
-    ],
+    ]
   },
   robots: {
     index: true,
@@ -79,14 +79,14 @@ export const metadata: Metadata = {
       follow: true,
       "max-video-preview": -1,
       "max-image-preview": "large",
-      "max-snippet": -1,
-    },
+      "max-snippet": -1
+    }
   },
   icons: {
     icon: "/icon.png",
-    apple: "/assets/images/icon-192x192.png",
+    apple: "/assets/images/icon-192x192.png"
   },
-  category: "technology",
+  category: "technology"
 };
 
 export const viewport: Viewport = {
@@ -97,17 +97,17 @@ export const viewport: Viewport = {
   themeColor: [
     {
       media: "(prefers-color-scheme: light)",
-      color: "#ffffff",
+      color: "#ffffff"
     },
     {
       media: "(prefers-color-scheme: dark)",
-      color: "#000000",
-    },
-  ],
+      color: "#000000"
+    }
+  ]
 };
 
 export default function RootLayout( {
-  children,
+  children
 }: {
   children: React.ReactNode;
 } ) {
@@ -129,7 +129,7 @@ export default function RootLayout( {
           type="application/ld+json"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify( jsonLd ),
+            __html: JSON.stringify( jsonLd )
           }}
         />
       </head>

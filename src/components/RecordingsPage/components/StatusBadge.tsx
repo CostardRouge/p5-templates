@@ -9,7 +9,7 @@ interface StatusBadgeProps {
 
 export default function StatusBadge( {
   status,
-  className = "",
+  className = ""
 }: StatusBadgeProps ) {
   const classes: Record<string, string> = {
     completed:
@@ -21,7 +21,7 @@ export default function StatusBadge( {
       "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
     queued: "bg-foreground/5 text-foreground/70 border-foreground/10",
     draft:
-      "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+      "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
   };
 
   return (

@@ -11,7 +11,7 @@ import {
   Menu as MenuIcon,
   RotateCcw,
   Trash2,
-  X,
+  X
 } from "lucide-react";
 import HardLink from "@/components/HardLink";
 import fetchDownload from "@/utils/fetchDownload";
@@ -41,7 +41,7 @@ export default function ActionsMenu( {
   onStart,
   onRetry,
   onPreviewModal,
-  onClone,
+  onClone
 }: ActionsMenuProps ) {
   const fileInputRef = useRef<HTMLInputElement>( null );
 
@@ -57,7 +57,7 @@ export default function ActionsMenu( {
       const response = await fetch(
         endpoint,
         {
-          method,
+          method
         }
       );
 
@@ -104,7 +104,7 @@ export default function ActionsMenu( {
         `/api/options/import/${ job.id }`,
         {
           method: "POST",
-          body: formData,
+          body: formData
         }
       );
 
@@ -119,7 +119,7 @@ export default function ActionsMenu( {
       if ( result.success ) {
         setImportToast( {
           message: "Options imported successfully",
-          type: "success",
+          type: "success"
         } );
         // Reload after showing toast
         setTimeout(
@@ -135,7 +135,7 @@ export default function ActionsMenu( {
       setImportToast( {
         message:
           error instanceof Error ? error.message : "Failed to import options",
-        type: "error",
+        type: "error"
       } );
     }
   };

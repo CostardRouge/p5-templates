@@ -21,7 +21,7 @@ export default function ItemFormWrapper( {
   onDuplicate,
   children,
   itemType,
-  dragBinder,
+  dragBinder
 }: ItemFormWrapperProps ) {
   return (
     <CollapsibleItem
@@ -30,13 +30,12 @@ export default function ItemFormWrapper( {
       header={( expanded ) => (
         <div
           ref={dragBinder?.setHandleRef}
-          {...( dragBinder?.handleProps ?? {
-          } )}
+          {...( dragBinder?.handleProps ?? {} )}
           className={clsx(
             "flex items-center",
             {
               "mb-2": expanded,
-              "active:cursor-grabbing": dragBinder?.isDragging,
+              "active:cursor-grabbing": dragBinder?.isDragging
             }
           )}
         >

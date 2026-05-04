@@ -131,8 +131,7 @@ const mappers = {
     from, to, amount, fn
   ) => {
     const vectorLerp = fn ?? mappers.lerpVector;
-    const result = [
-    ];
+    const result = [];
     const maxLength = Math.max(
       from?.length,
       to?.length
@@ -285,7 +284,7 @@ const mappers = {
           storedValue?.smooth ?? 0,
           value,
           smoothAmount
-        ),
+        )
       }
     );
   },
@@ -308,7 +307,7 @@ const mappers = {
         amount
       )
     );
-  },
+  }
 };
 
 export default mappers;

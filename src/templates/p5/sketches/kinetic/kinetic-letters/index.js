@@ -13,7 +13,7 @@ import animation from "@/p5/utils/animation.js";
 import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 
 import mediapipe, {
-  init as mediapipeInit, setEnabled as setMediapipeEnabled,
+  init as mediapipeInit, setEnabled as setMediapipeEnabled
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   getP5
@@ -25,7 +25,7 @@ const interactionIndices = [
   4,
   8,
   12,
-  16,
+  16
   // 20,
 ];
 
@@ -34,7 +34,7 @@ const layers = {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 255,
+    erase: 255
   },
   visuals: {
     graphics: undefined,
@@ -42,20 +42,19 @@ const layers = {
     background: [
       80
     ],
-    erase: 255,
+    erase: 255
   },
   pointers: {
     graphics: undefined,
     size: options.size,
     background: undefined,
-    erase: 255,
-  },
+    erase: 255
+  }
 };
 
 const sketchState = {
-  letters: [
-  ],
-  handPointingImage: null,
+  letters: [],
+  handPointingImage: null
 };
 
 events.register(
@@ -81,7 +80,7 @@ sketch.setup( async() => {
     worker: false,
     tasks: [
       "hands"
-    ],
+    ]
   } );
 
   for ( const layerName in layers ) {
@@ -130,8 +129,7 @@ sketch.draw( () => {
     layers.hands.graphics
   );
 
-  const targetVectors = [
-  ];
+  const targetVectors = [];
 
   if ( options.sketch.interactive.useMouse ) {
     targetVectors.push( p.createVector(
@@ -262,8 +260,7 @@ function addLetterBoxes(
   text, margin = 50
 ) {
   const p = getP5();
-  const letterBodies = [
-  ];
+  const letterBodies = [];
 
   for ( let i = 0; i < text.length; i++ ) {
     const x = p.random(
@@ -279,7 +276,7 @@ function addLetterBoxes(
     letterBodies.push( {
       x,
       y,
-      char: text[ i ],
+      char: text[ i ]
     } );
   }
 
@@ -292,7 +289,7 @@ function drawLetterBodies(
   const p = getP5();
   const sizeValues = [
     options.sketch.minLetterSize,
-    options.sketch.maxLetterSize,
+    options.sketch.maxLetterSize
   ];
 
   for ( const body of bodies ) {
@@ -323,7 +320,7 @@ function drawLetterBodies(
         ],
         currentTime: switchIndex,
         easingFn:
-          easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine,
+          easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine
       } );
 
       graphics.rotate( angle );
@@ -343,7 +340,7 @@ function drawLetterBodies(
         values: sizeValues,
         currentTime: switchIndex,
         easingFn:
-          easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine,
+          easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine
       } );
 
       graphics.textSize( size );

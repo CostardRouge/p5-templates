@@ -3,8 +3,7 @@ import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 
 export const formValues = {
   // Assets
-  images: [
-  ],
+  images: [],
 
   margin: 0.1,
   scale: 1,
@@ -31,7 +30,7 @@ export const formValues = {
     noiseXDiv: 2,
     noiseRotationFromDeg: 360,
     noiseRotationToDeg: 0,
-    noiseRotationEasing: "easeInOutQuint",
+    noiseRotationEasing: "easeInOutQuint"
   },
 
   backgroundColor: [
@@ -40,14 +39,14 @@ export const formValues = {
     225
   ],
 
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 export const formConfiguration: Record<string, any> = {
   // Assets
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   margin: {
@@ -55,19 +54,19 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     min: 0,
     max: 0.45,
-    step: 0.005,
+    step: 0.005
   },
   center: {
     label: "Center image",
-    component: "checkbox",
+    component: "checkbox"
   },
   clip: {
     label: "Clip",
-    component: "checkbox",
+    component: "checkbox"
   },
   fill: {
     label: "Fill",
-    component: "checkbox",
+    component: "checkbox"
   },
 
   animation: {
@@ -80,21 +79,21 @@ export const formConfiguration: Record<string, any> = {
         label: "Orbit speed",
         min: 0,
         max: 3,
-        step: 0.01,
+        step: 0.01
       },
       outerRadiusFactor: {
         component: "slider",
         label: "Outer radius factor",
         min: 0,
         max: 1.5,
-        step: 0.001,
+        step: 0.001
       },
       innerRadiusFactor: {
         component: "slider",
         label: "Inner radius factor",
         min: 0,
         max: 1.0,
-        step: 0.001,
+        step: 0.001
       },
 
       // Scaling
@@ -103,18 +102,18 @@ export const formConfiguration: Record<string, any> = {
         label: "Scale start",
         min: 0.1,
         max: 2,
-        step: 0.01,
+        step: 0.01
       },
       scaleEnd: {
         component: "slider",
         label: "Scale end",
         min: 0.1,
         max: 2,
-        step: 0.01,
+        step: 0.01
       },
       scaleEasing: {
         component: "easing",
-        label: "Scale easing",
+        label: "Scale easing"
       },
 
       // Rotation by index
@@ -123,11 +122,11 @@ export const formConfiguration: Record<string, any> = {
         label: "Index rotation (deg)",
         min: 0,
         max: 360,
-        step: 1,
+        step: 1
       },
       indexRotationEasing: {
         component: "easing",
-        label: "Index rotation easing",
+        label: "Index rotation easing"
       },
 
       // Rotation by noise
@@ -136,26 +135,26 @@ export const formConfiguration: Record<string, any> = {
         label: "Noise X divisor",
         min: 0.1,
         max: 5,
-        step: 0.01,
+        step: 0.01
       },
       noiseRotationFromDeg: {
         component: "slider",
         label: "Noise rotation from (deg)",
         min: 0,
         max: 720,
-        step: 1,
+        step: 1
       },
       noiseRotationToDeg: {
         component: "slider",
         label: "Noise rotation to (deg)",
         min: 0,
         max: 720,
-        step: 1,
+        step: 1
       },
       noiseRotationEasing: {
         component: "easing",
-        label: "Noise rotation easing",
-      },
+        label: "Noise rotation easing"
+      }
     }
   },
 
@@ -164,7 +163,7 @@ export const formConfiguration: Record<string, any> = {
   // Colors
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 
 };

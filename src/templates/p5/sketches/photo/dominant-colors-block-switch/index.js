@@ -39,8 +39,7 @@ const getImages = () => {
 
   return imagesFromOptions
     ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : fromCache || [
-    ];
+    : fromCache || [];
 };
 
 sketch.setup( () => {
@@ -117,7 +116,7 @@ sketch.draw( async(
     ),
     rows,
     columns,
-    centered: false,
+    centered: false
   };
 
   const W = p.width / columns;
@@ -156,13 +155,12 @@ sketch.draw( async(
               dominantColor: colors.getDominantColor(
                 imagePart,
                 options.sketch?.dominantColorSample ?? 50
-              ),
+              )
             } );
 
             return imageCells;
           },
-          [
-          ]
+          []
         ) )
   );
 
@@ -228,7 +226,7 @@ sketch.draw( async(
             r,
             g,
             b
-          ],
+          ]
         } = dominantColor;
 
         p.strokeWeight( 1 );

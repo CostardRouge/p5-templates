@@ -50,12 +50,11 @@ export default function drawHands(
     indexFingerJointIndices,
     middleFingerJointIndices,
     ringFingerJointIndices,
-    pinkyFingerJointIndices,
+    pinkyFingerJointIndices
   ];
 
   handLandmarks.forEach( ( hand ) => {
-    const fingers = [
-    ];
+    const fingers = [];
 
     for (
       let fingerToTraceIndex = 0;
@@ -128,7 +127,7 @@ export default function drawHands(
         ),
         vectors,
         index: fingerIndex / ( fingers.length - 1 ),
-        graphics,
+        graphics
       } );
     }
   } );

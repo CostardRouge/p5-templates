@@ -16,38 +16,38 @@ const SORT_OPTIONS: {
 }[] = [
   {
     value: "createdAt",
-    label: "Created Date",
+    label: "Created Date"
   },
   {
     value: "updatedAt",
-    label: "Updated Date",
+    label: "Updated Date"
   },
   {
     value: "status",
-    label: "Status",
+    label: "Status"
   },
   {
     value: "template",
-    label: "Template",
+    label: "Template"
   },
   {
     value: "duration",
-    label: "Duration",
+    label: "Duration"
   },
   {
     value: "id",
-    label: "ID",
-  },
+    label: "ID"
+  }
 ];
 
 export default function SortControls( {
   sortConfig,
-  onSortChange,
+  onSortChange
 }: SortControlsProps ) {
   const toggleOrder = () => {
     onSortChange( {
       ...sortConfig,
-      order: sortConfig.order === "asc" ? "desc" : "asc",
+      order: sortConfig.order === "asc" ? "desc" : "asc"
     } );
   };
 
@@ -60,7 +60,7 @@ export default function SortControls( {
         onChange={( e ) =>
           onSortChange( {
             ...sortConfig,
-            field: e.target.value as SortField,
+            field: e.target.value as SortField
           } )
         }
         className="px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm font-medium cursor-pointer flex-shrink-0 min-w-0"

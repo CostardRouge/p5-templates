@@ -6,7 +6,7 @@ import {
   S3Client,
   DeleteObjectCommand,
   ListObjectsV2Command,
-  DeleteObjectsCommand,
+  DeleteObjectsCommand
 } from "@aws-sdk/client-s3";
 
 import {
@@ -19,9 +19,9 @@ const s3client = new S3Client( {
   region: process.env.S3_REGION,
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY!,
-    secretAccessKey: process.env.S3_SECRET_KEY!,
+    secretAccessKey: process.env.S3_SECRET_KEY!
   },
-  forcePathStyle: true,
+  forcePathStyle: true
 } );
 
 // Public S3 client for generating signed URLs (uses public endpoint for browser access)
@@ -30,9 +30,9 @@ const s3clientPublic = new S3Client( {
   region: process.env.S3_REGION,
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY!,
-    secretAccessKey: process.env.S3_SECRET_KEY!,
+    secretAccessKey: process.env.S3_SECRET_KEY!
   },
-  forcePathStyle: true,
+  forcePathStyle: true
 } );
 
 export async function uploadArtifact(
@@ -43,7 +43,7 @@ export async function uploadArtifact(
     Bucket: process.env.S3_BUCKET!,
     Key: objectKey,
     Body: fileStream,
-    ACL: ObjectCannedACL.public_read,
+    ACL: ObjectCannedACL.public_read
   } ) );
 
   return objectKey;
@@ -58,10 +58,10 @@ export async function getDownloadUrlFromS3Url(
     s3clientPublic,
     new GetObjectCommand( {
       Bucket: process.env.S3_BUCKET!,
-      Key: objectKey,
+      Key: objectKey
     } ),
     {
-      expiresIn: expiresInSeconds,
+      expiresIn: expiresInSeconds
     }
   );
 
@@ -78,13 +78,12 @@ export async function getBufferFromS3Url( objectKey: string ): Promise<Buffer> {
   // 1) Fetch the object
   const response = await s3client.send( new GetObjectCommand( {
     Bucket: process.env.S3_BUCKET!,
-    Key: objectKey,
+    Key: objectKey
   } ) );
 
   // 2) response.Body is a Readable stream—accumulate into chunks
   const stream = response.Body as NodeJS.ReadableStream;
-  const chunks: Buffer[] = [
-  ];
+  const chunks: Buffer[] = [];
 
   for await ( const chunk of stream ) {
     // chunk can be string or Buffer; normalize to Buffer
@@ -104,7 +103,7 @@ export async function getObjectSize( objectKey: string ): Promise<number | null>
   try {
     const response = await s3client.send( new HeadObjectCommand( {
       Bucket: process.env.S3_BUCKET!,
-      Key: objectKey,
+      Key: objectKey
     } ) );
 
     return response.ContentLength ?? null;
@@ -127,7 +126,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
     try {
       listedObjects = await s3client.send( new ListObjectsV2Command( {
         Bucket: bucketName,
-        Prefix: objectKeyOrPrefix,
+        Prefix: objectKeyOrPrefix
       } ) );
     } catch ( err ) {
       console.error(
@@ -144,10 +143,10 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
           Bucket: bucketName,
           Delete: {
             Objects: listedObjects.Contents.map( ( item ) => ( {
-              Key: item.Key!,
+              Key: item.Key!
             } ) ),
-            Quiet: true, // Don't return deleted objects in response
-          },
+            Quiet: true // Don't return deleted objects in response
+          }
         } );
 
         await s3client.send( deleteCommand );
@@ -163,7 +162,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
       try {
         const deleteCommand = new DeleteObjectCommand( {
           Bucket: bucketName,
-          Key: listedObjects.Contents[ 0 ].Key!,
+          Key: listedObjects.Contents[ 0 ].Key!
         } );
 
         await s3client.send( deleteCommand );

@@ -52,6 +52,6 @@ export default function drawSlideImage(
     center: imageOption.center ?? true,
     margin: imageOption.margin ?? 80,
     scale: imageOption.scale,
-    img: image.img,
+    img: image.img
   } );
 }

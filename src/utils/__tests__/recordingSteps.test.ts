@@ -7,7 +7,7 @@ import {
   getRecordingSteps,
   createStepConfig,
   getCurrentStepIndex,
-  getCompletedStepsCount,
+  getCompletedStepsCount
 } from "../recordingSteps";
 import {
   JobModel
@@ -26,19 +26,15 @@ describe(
       status: status as any,
       template: "test-template",
       resultUrl: null,
-      thumbnails: [
-      ],
-      videoUrls: [
-      ],
-      videoSizes: [
-      ],
+      thumbnails: [],
+      videoUrls: [],
+      videoSizes: [],
       recordingStartAt: null,
       recordingEndAt: null,
       recordingDuration: null,
-      options: {
-      },
+      options: {},
       createdAt: new Date(),
-      updatedAt: new Date(),
+      updatedAt: new Date()
     } );
 
     describe(
@@ -178,18 +174,18 @@ describe(
               {
                 id: "init",
                 name: "Init",
-                weight: 20,
+                weight: 20
               },
               {
                 id: "work",
                 name: "Work",
-                weight: 60,
+                weight: 60
               },
               {
                 id: "done",
                 name: "Done",
-                weight: 20,
-              },
+                weight: 20
+              }
             ] );
 
             const job = createJob( 50 );
@@ -213,13 +209,13 @@ describe(
               {
                 id: "step1",
                 name: "Step 1",
-                weight: 50,
+                weight: 50
               },
               {
                 id: "step2",
                 name: "Step 2",
-                weight: 50,
-              },
+                weight: 50
+              }
             ] );
 
             const job = createJob( 25 );
@@ -249,13 +245,13 @@ describe(
           {
             id: "step1",
             name: "Step 1",
-            weight: 50,
+            weight: 50
           },
           {
             id: "step2",
             name: "Step 2",
-            weight: 50,
-          },
+            weight: 50
+          }
         ];
 
         const result = createStepConfig( config );
@@ -271,13 +267,13 @@ describe(
           {
             id: "step1",
             name: "Step 1",
-            weight: 50,
+            weight: 50
           },
           {
             id: "step2",
             name: "Step 2",
-            weight: 60,
-          }, // Total: 110
+            weight: 60
+          } // Total: 110
         ];
 
         const result = createStepConfig( config );
@@ -300,18 +296,18 @@ describe(
           {
             id: "step1",
             name: "Step 1",
-            weight: 33.33,
+            weight: 33.33
           },
           {
             id: "step2",
             name: "Step 2",
-            weight: 33.33,
+            weight: 33.33
           },
           {
             id: "step3",
             name: "Step 3",
-            weight: 33.33,
-          }, // Total: 99.99
+            weight: 33.33
+          } // Total: 99.99
         ];
 
         const result = createStepConfig( config );
@@ -343,20 +339,20 @@ describe(
             id: "1",
             name: "Step 1",
             status: "completed" as const,
-            percentage: 100,
+            percentage: 100
           },
           {
             id: "2",
             name: "Step 2",
             status: "active" as const,
-            percentage: 50,
+            percentage: 50
           },
           {
             id: "3",
             name: "Step 3",
             status: "pending" as const,
-            percentage: 0,
-          },
+            percentage: 0
+          }
         ];
 
         expect( getCurrentStepIndex( steps ) ).toBe( 1 );
@@ -371,14 +367,14 @@ describe(
             id: "1",
             name: "Step 1",
             status: "pending" as const,
-            percentage: 0,
+            percentage: 0
           },
           {
             id: "2",
             name: "Step 2",
             status: "pending" as const,
-            percentage: 0,
-          },
+            percentage: 0
+          }
         ];
 
         expect( getCurrentStepIndex( steps ) ).toBe( 0 );
@@ -398,26 +394,26 @@ describe(
             id: "1",
             name: "Step 1",
             status: "completed" as const,
-            percentage: 100,
+            percentage: 100
           },
           {
             id: "2",
             name: "Step 2",
             status: "completed" as const,
-            percentage: 100,
+            percentage: 100
           },
           {
             id: "3",
             name: "Step 3",
             status: "active" as const,
-            percentage: 50,
+            percentage: 50
           },
           {
             id: "4",
             name: "Step 4",
             status: "pending" as const,
-            percentage: 0,
-          },
+            percentage: 0
+          }
         ];
 
         expect( getCompletedStepsCount( steps ) ).toBe( 2 );
@@ -432,14 +428,14 @@ describe(
             id: "1",
             name: "Step 1",
             status: "active" as const,
-            percentage: 50,
+            percentage: 50
           },
           {
             id: "2",
             name: "Step 2",
             status: "pending" as const,
-            percentage: 0,
-          },
+            percentage: 0
+          }
         ];
 
         expect( getCompletedStepsCount( steps ) ).toBe( 0 );

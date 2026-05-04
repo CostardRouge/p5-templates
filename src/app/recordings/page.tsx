@@ -8,12 +8,12 @@ export const metadata: Metadata = {
   description:
     "View and manage your recorded social media videos and images. Download, preview, and share your generated content.",
   alternates: {
-    canonical: "/recordings",
+    canonical: "/recordings"
   },
   robots: {
     index: false,
-    follow: true,
-  },
+    follow: true
+  }
 };
 
 export default RecordingsPage;

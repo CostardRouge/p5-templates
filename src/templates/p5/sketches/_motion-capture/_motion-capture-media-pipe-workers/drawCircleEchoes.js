@@ -8,7 +8,7 @@ export default function drawCircleEchoes( {
     255
   ),
   count,
-  size,
+  size
 } ) {
   noFill();
 

@@ -22,7 +22,7 @@ export default function FailedActions( {
   retrying,
   saving,
   deleting,
-  isAnyActionLoading,
+  isAnyActionLoading
 }: FailedActionsProps ) {
   return (
     <div className="flex flex-col gap-1">

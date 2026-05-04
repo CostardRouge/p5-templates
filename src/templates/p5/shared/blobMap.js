@@ -1,8 +1,7 @@
 export function registerBlob(
   filename, file
 ) {
-  window.__blobAssetMap ??= {
-  };
+  window.__blobAssetMap ??= {};
 
   /* revoke old url if we re-use the name */
   if ( window.__blobAssetMap[ filename ] ) {

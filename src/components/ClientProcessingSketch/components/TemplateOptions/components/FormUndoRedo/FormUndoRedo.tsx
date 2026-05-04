@@ -16,7 +16,7 @@ import {
   shouldTrackPath,
   compressHistory,
   estimateHistorySize,
-  extractAffectedPaths,
+  extractAffectedPaths
 } from "./utils/historyUtils";
 
 import type {
@@ -24,7 +24,7 @@ import type {
   FormUndoRedoContextType,
   HistoryEntry,
   PerformanceMetrics,
-  FormUndoRedoConfig,
+  FormUndoRedoConfig
 } from "./types/FormUndoRedo.types";
 
 export type FormUndoRedoProps<T extends FieldValues = FieldValues> =
@@ -45,7 +45,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   persistenceKey = "form-undo-redo",
   debug = false,
   resetOptions,
-  children,
+  children
 }: FormUndoRedoProps<T> ) {
   const {
     watch, getValues, reset
@@ -53,10 +53,8 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
   // State
   const stacksRef = React.useRef<FormUndoRedoStacks<T>>( {
-    past: [
-    ],
-    future: [
-    ],
+    past: [],
+    future: []
   } );
 
   const [
@@ -82,7 +80,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     historySize: 0,
     memoryEstimate: 0,
     lastOperationTime: 0,
-    totalOperations: 0,
+    totalOperations: 0
   } );
 
   const debugLog = React.useCallback(
@@ -123,8 +121,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       metricsRef.current.historySize = past.length + future.length;
       metricsRef.current.memoryEstimate = estimateHistorySize( stacksRef.current );
     },
-    [
-    ]
+    []
   );
 
   const persistHistory = React.useCallback(
@@ -134,7 +131,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       try {
         const data = {
           past: stacksRef.current.past.slice( -10 ), // Only persist last 10
-          timestamp: Date.now(),
+          timestamp: Date.now()
         };
 
         localStorage.setItem(
@@ -167,8 +164,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
           // Only load if less than 1 hour old
           if ( Date.now() - data.timestamp < 3600000 ) {
-            stacksRef.current.past = data.past || [
-            ];
+            stacksRef.current.past = data.past || [];
             syncFlags();
             debugLog(
               "Loaded persisted history:",
@@ -208,8 +204,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
 
       // Clear future on new change
-      stacks.future = [
-      ];
+      stacks.future = [];
 
       syncFlags();
       persistHistory();
@@ -224,7 +219,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         {
           description: entry.description,
           affectedPaths: entry.affectedPaths,
-          duration: `${ duration.toFixed( 2 ) }ms`,
+          duration: `${ duration.toFixed( 2 ) }ms`
         }
       );
     },
@@ -241,8 +236,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       lastCommittedRef.current = safeDeepClone( state );
       lastCommittedHashRef.current = createStateHash( state );
     },
-    [
-    ]
+    []
   );
 
   const capture = React.useCallback(
@@ -325,7 +319,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
           "Undo:",
           {
             description: prevEntry.description,
-            duration: `${ duration.toFixed( 2 ) }ms`,
+            duration: `${ duration.toFixed( 2 ) }ms`
           }
         );
       } catch ( error ) {
@@ -346,7 +340,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       setCommitted,
       syncFlags,
       usePatches,
-      debugLog,
+      debugLog
     ]
   );
 
@@ -391,7 +385,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
           "Redo:",
           {
             description: nextEntry.description,
-            duration: `${ duration.toFixed( 2 ) }ms`,
+            duration: `${ duration.toFixed( 2 ) }ms`
           }
         );
       } catch ( error ) {
@@ -412,7 +406,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       setCommitted,
       syncFlags,
       usePatches,
-      debugLog,
+      debugLog
     ]
   );
 
@@ -468,7 +462,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
           "Jumped to:",
           {
             index,
-            direction,
+            direction
           }
         );
       } catch ( error ) {
@@ -494,10 +488,8 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   const clear = React.useCallback(
     () => {
       stacksRef.current = {
-        past: [
-        ],
-        future: [
-        ],
+        past: [],
+        future: []
       };
       syncFlags();
       if ( enablePersistence ) {
@@ -596,21 +588,19 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         ],
         future: [
           ...stacksRef.current.future
-        ],
+        ]
       };
     },
-    [
-    ]
+    []
   );
 
   const getMetrics = React.useCallback(
     (): PerformanceMetrics => {
       return {
-        ...metricsRef.current,
+        ...metricsRef.current
       };
     },
-    [
-    ]
+    []
   );
 
   const [
@@ -621,8 +611,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     ( enabled: boolean ) => {
       setDebugEnabled( enabled );
     },
-    [
-    ]
+    []
   );
 
   // Initialize
@@ -651,7 +640,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
           captureInitial,
           autoCapture,
           maxHistory,
-          usePatches,
+          usePatches
         }
       );
     },
@@ -664,7 +653,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       setCommitted,
       snapshot,
       syncFlags,
-      usePatches,
+      usePatches
     ]
   );
 
@@ -778,7 +767,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       resume,
       runSilently,
       getMetrics,
-      enableDebug,
+      enableDebug
     } ),
     [
       undo,
@@ -795,7 +784,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       resume,
       runSilently,
       getMetrics,
-      enableDebug,
+      enableDebug
     ]
   );
 

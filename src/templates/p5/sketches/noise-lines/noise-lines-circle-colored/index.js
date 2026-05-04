@@ -83,7 +83,7 @@ function drawBlob(
         {
           x: animation.angle,
           y: lineProgression,
-          z: angleProgression,
+          z: angleProgression
         }
       ),
       hueIndex: getVariableOptionValue(
@@ -91,7 +91,7 @@ function drawBlob(
         {
           x: animation.angle,
           y: lineProgression,
-          z: angleProgression,
+          z: angleProgression
         }
       )
     } ) );

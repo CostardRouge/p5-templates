@@ -38,7 +38,7 @@ export default function RecordingsTable( {
   onDelete,
   onRetry,
   onStart,
-  onClone,
+  onClone
 }: RecordingsTableProps ) {
   const allSelected =
     jobs.length > 0 && jobs.every( ( j ) => selectedIds.has( j.id ) );

@@ -14,7 +14,7 @@ import {
 export async function POST(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -30,7 +30,7 @@ export async function POST(
       return new NextResponse(
         "Job not found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
@@ -42,7 +42,7 @@ export async function POST(
       return new NextResponse(
         "Job is not retryable in current state",
         {
-          status: 400,
+          status: 400
         }
       );
     }
@@ -52,7 +52,7 @@ export async function POST(
       jobId,
       {
         status: "queued",
-        progress: 0,
+        progress: 0
       }
     );
     await addRecordingStatus(
@@ -65,19 +65,19 @@ export async function POST(
         "process-recording",
         {
           jobId: job.id,
-          template: job.template,
+          template: job.template
         },
         {
           jobId,
           priority: 1,
           delay: 0,
           removeOnFail: true,
-          removeOnComplete: true,
+          removeOnComplete: true
         }
       );
 
     return NextResponse.json( {
-      retried: true,
+      retried: true
     } );
   } catch ( error ) {
     console.error(
@@ -87,7 +87,7 @@ export async function POST(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

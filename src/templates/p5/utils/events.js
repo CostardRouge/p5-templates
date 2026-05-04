@@ -15,8 +15,7 @@ async function getRecorder() {
 
 const events = {
   lastEventId: 0,
-  registeredEvents: {
-  },
+  registeredEvents: {},
   handle: function(
     eventName, ...args
   ) {
@@ -24,8 +23,7 @@ const events = {
       return;
     }
 
-    const results = [
-    ];
+    const results = [];
 
     for ( const eventId in events.registeredEvents[ eventName ] ) {
       const eventHandler = events.registeredEvents[ eventName ][ eventId ];
@@ -45,8 +43,7 @@ const events = {
     const eventId = "event_id_" + events.lastEventId;
 
     if ( !events.registeredEvents[ eventName ] ) {
-      events.registeredEvents[ eventName ] = {
-      };
+      events.registeredEvents[ eventName ] = {};
     }
 
     events.registeredEvents[ eventName ][ eventId ] = eventFunction;
@@ -144,7 +141,7 @@ const events = {
         return false;
       }
     );
-  },
+  }
 };
 
 export default events;

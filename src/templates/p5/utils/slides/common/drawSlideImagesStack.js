@@ -11,7 +11,7 @@ export default function drawSlideImagesStack(
     position,
     scale: scaleValue,
     rotation: rotationValue,
-    progressiveRotation,
+    progressiveRotation
   } = imagesStackOption;
 
   if ( !sources ) {
@@ -90,7 +90,7 @@ export default function drawSlideImagesStack(
       margin: imagesStackOption.margin ?? 80,
       position: imagePosition,
       scale: scaleValue,
-      img: images[ i ].img,
+      img: images[ i ].img
     } );
   }
 

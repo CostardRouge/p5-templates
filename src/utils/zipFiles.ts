@@ -8,7 +8,7 @@ async function zipFiles(
     {
       gzip: true,
       file: outputZipPath,
-      cwd: path.dirname( files[ 0 ] ),
+      cwd: path.dirname( files[ 0 ] )
     },
     files.map( ( file ) => path.basename( file ) )
   );

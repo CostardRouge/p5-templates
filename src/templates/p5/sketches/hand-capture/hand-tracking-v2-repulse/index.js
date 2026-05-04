@@ -7,7 +7,7 @@ import scripts from "@/p5/utils/scripts.js";
 import * as common from "@/p5/utils/common.js";
 
 import mediapipe, {
-  init as mediapipeInit,
+  init as mediapipeInit
 } from "@/p5/utils/mediapipe/mediapipe.js";
 
 import drawHands from "@/p5/utils/mediapipe/drawHands.js";
@@ -38,7 +38,7 @@ const layers = {
       0,
       10
     ],
-    erase: 255,
+    erase: 255
   },
   hands: {
     graphics: undefined,
@@ -46,19 +46,16 @@ const layers = {
     background: [
       230
     ],
-    erase: 255,
-  },
+    erase: 255
+  }
 };
 
 const matter = {
   engine: Engine.create(),
   bottom: undefined,
-  balls: [
-  ],
-  handBodies: [
-  ],
-  boundaries: [
-  ],
+  balls: [],
+  handBodies: [],
+  boundaries: []
 };
 
 sketch.setup( async() => {
@@ -70,7 +67,7 @@ sketch.setup( async() => {
     worker: false,
     tasks: [
       "hands"
-    ],
+    ]
   } );
 
   for ( const layerName in layers ) {
@@ -137,7 +134,7 @@ sketch.setup( async() => {
 
 matter.engine.gravity = {
   x: 0,
-  y: 0,
+  y: 0
 };
 
 sketch.draw( (
@@ -177,7 +174,7 @@ sketch.draw( (
       shadowsCount: 3,
       graphics: layers.visuals.graphics,
       position,
-      index: index / matter.balls.length,
+      index: index / matter.balls.length
     } );
   } );
 
@@ -222,7 +219,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: p.EXCLUSION,
+      blendMode: p.EXCLUSION
     }
   );
 
@@ -240,7 +237,7 @@ sketch.draw( (
         p.CENTER,
         p.CENTER
       ],
-      blendMode: p.EXCLUSION,
+      blendMode: p.EXCLUSION
     }
   );
 } );
@@ -253,8 +250,7 @@ function updateHandBodies() {
       handBody
     );
   }
-  matter.handBodies = [
-  ];
+  matter.handBodies = [];
 
   mediapipe.tasks?.hands?.result?.landmarks?.forEach?.( createHandInteractionBodies );
 }
@@ -288,7 +284,7 @@ function createHandInteractionBodies( hand ) {
         75,
         {
           isStatic: true, // Static so it doesn't fall
-          isSensor: false, // Can interact with other bodies
+          isSensor: false // Can interact with other bodies
         }
       );
 
@@ -334,7 +330,7 @@ function addBoundary(
     {
       isStatic: true,
       frictionAir: 0.15,
-      restitution: 0.2,
+      restitution: 0.2
     }
   );
 
@@ -351,8 +347,7 @@ function applyRepulsionFromHands(
   repulseDistance = 600
 ) {
   const p = getP5();
-  const hands = mediapipe.tasks?.hands?.result?.landmarks ?? [
-  ];
+  const hands = mediapipe.tasks?.hands?.result?.landmarks ?? [];
 
   if ( hands.length === 0 || matter.balls.length === 0 ) {
     return;
@@ -366,7 +361,7 @@ function applyRepulsionFromHands(
     for ( const point of repulsePoints ) {
       const target = {
         x: common.inverseX( point.x ) * p.width,
-        y: point.y * p.height,
+        y: point.y * p.height
       };
 
       for ( const ball of matter.balls ) {
@@ -399,7 +394,7 @@ function repulseBallFromPoint(
   // Calculate force in the opposite direction of the target
   let force = {
     x: ( pos.x - target.x ) * strength,
-    y: ( pos.y - target.y ) * strength,
+    y: ( pos.y - target.y ) * strength
   };
 
   // Clamp force magnitude

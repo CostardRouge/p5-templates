@@ -10,7 +10,7 @@ export const runtime = "edge";
 export const alt = SITE_NAME;
 export const size = {
   width: 1200,
-  height: 630,
+  height: 630
 };
 export const contentType = "image/png";
 
@@ -26,7 +26,7 @@ export default async function Image() {
         justifyContent: "center",
         backgroundColor: "#000",
         color: "#fff",
-        fontFamily: "system-ui, sans-serif",
+        fontFamily: "system-ui, sans-serif"
       }}
     >
       {/* Decorative circles inspired by the app icon */}
@@ -34,7 +34,7 @@ export default async function Image() {
         style={{
           display: "flex",
           gap: "24px",
-          marginBottom: "48px",
+          marginBottom: "48px"
         }}
       >
         {[
@@ -46,7 +46,7 @@ export default async function Image() {
           "#42c5d9",
           "#4cbcac",
           "#2a6fb5",
-          "#5e548e",
+          "#5e548e"
         ].map( ( color ) => (
           <div
             key={color}
@@ -54,7 +54,7 @@ export default async function Image() {
               width: "48px",
               height: "48px",
               borderRadius: "50%",
-              backgroundColor: color,
+              backgroundColor: color
             }}
           />
         ) )}
@@ -65,7 +65,7 @@ export default async function Image() {
           fontSize: "64px",
           fontWeight: 700,
           letterSpacing: "-0.02em",
-          marginBottom: "16px",
+          marginBottom: "16px"
         }}
       >
         {SITE_NAME}
@@ -77,14 +77,14 @@ export default async function Image() {
           color: "#999",
           maxWidth: "800px",
           textAlign: "center",
-          lineHeight: 1.4,
+          lineHeight: 1.4
         }}
       >
         {SITE_DESCRIPTION}
       </div>
     </div>,
     {
-      ...size,
+      ...size
     }
   );
 }

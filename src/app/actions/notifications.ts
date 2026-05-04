@@ -2,7 +2,7 @@
 
 import {
   NotificationService,
-  PushSubscriptionData,
+  PushSubscriptionData
 } from "@/services/NotificationService";
 
 const notificationService = NotificationService.getInstance();
@@ -14,7 +14,7 @@ export async function subscribeUser( subscription: PushSubscriptionData ) {
   try {
     await notificationService.storeSubscription( subscription );
     return {
-      success: true,
+      success: true
     };
   } catch ( error ) {
     console.error(
@@ -23,7 +23,7 @@ export async function subscribeUser( subscription: PushSubscriptionData ) {
     );
     return {
       success: false,
-      error: "Failed to subscribe",
+      error: "Failed to subscribe"
     };
   }
 }
@@ -35,7 +35,7 @@ export async function unsubscribeUser( endpoint: string ) {
   try {
     await notificationService.removeSubscription( endpoint );
     return {
-      success: true,
+      success: true
     };
   } catch ( error ) {
     console.error(
@@ -44,7 +44,7 @@ export async function unsubscribeUser( endpoint: string ) {
     );
     return {
       success: false,
-      error: "Failed to unsubscribe",
+      error: "Failed to unsubscribe"
     };
   }
 }
@@ -62,12 +62,12 @@ export async function sendTestNotification(
       {
         title: "Test Notification",
         body: message,
-        icon: "/icon-192x192.png",
+        icon: "/icon-192x192.png"
       }
     );
 
     return {
-      success,
+      success
     };
   } catch ( error ) {
     console.error(
@@ -76,7 +76,7 @@ export async function sendTestNotification(
     );
     return {
       success: false,
-      error: "Failed to send notification",
+      error: "Failed to send notification"
     };
   }
 }

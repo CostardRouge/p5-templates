@@ -20,7 +20,7 @@ export default function NoJobActions( {
   saving,
   isLoading,
   isAnyActionLoading,
-  isBlockingActionLoading,
+  isBlockingActionLoading
 }: NoJobActionsProps ) {
   return (
     <div className="flex gap-1">

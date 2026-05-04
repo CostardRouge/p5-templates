@@ -95,7 +95,7 @@ class Card {
       img: this.img,
       scale: 0.85,
       center: true,
-      graphics,
+      graphics
     } );
     graphics.pop();
 
@@ -108,7 +108,7 @@ class Card {
         exif.formatFocalLength( this?.exif?.focalLength ),
         exif.formatAperture( this?.exif?.aperture ),
         exif.formatShutterSpeed( this?.exif?.shutterSpeed ),
-        exif.formatISO( this?.exif?.iso ),
+        exif.formatISO( this?.exif?.iso )
       ].join( " · " );
 
       p.push();
@@ -137,7 +137,7 @@ class Card {
             p.CENTER,
             p.CENTER
           ],
-          blendMode: p.DIFFERENCE,
+          blendMode: p.DIFFERENCE
         }
       );
       p.pop();
@@ -145,10 +145,8 @@ class Card {
   }
 }
 
-const cards = [
-];
-const canvases = {
-};
+const cards = [];
+const canvases = {};
 const cardsLength = options.sketch?.count ?? 200;
 
 // helpers
@@ -175,8 +173,7 @@ const getImages = () => {
 
   return imagesFromOptions
     ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : fromCache || [
-    ];
+    : fromCache || [];
 };
 
 sketch.setup( () => {
@@ -204,7 +201,7 @@ sketch.setup( () => {
     "positions",
     () =>
       Array.from( {
-        length: cardsLength,
+        length: cardsLength
       } ).map( (
         _, index
       ) => {
@@ -216,7 +213,7 @@ sketch.setup( () => {
 
         cards.push( new Card( {
           position,
-          index,
+          index
         } ) );
 
         return position;
@@ -269,7 +266,7 @@ sketch.draw( (
       textAlign: [
         p.CENTER,
         p.CENTER
-      ],
+      ]
     }
   );
   p.pop();
@@ -286,7 +283,7 @@ sketch.draw( (
     textAlign: [
       p.CENTER,
       p.CENTER
-    ],
+    ]
   };
 
   string.write(
@@ -298,11 +295,11 @@ sketch.draw( (
         ( p.height * 1 ) / 8
       ],
       currentTime: animation.circularProgression,
-      easingFn: easing.easeOutQuint,
+      easingFn: easing.easeOutQuint
     } ),
     {
       ...textWriteOptions,
-      blendMode: p.EXCLUSION,
+      blendMode: p.EXCLUSION
     }
   );
 
@@ -315,11 +312,11 @@ sketch.draw( (
         ( p.height * 6.5 ) / 8
       ],
       currentTime: animation.circularProgression,
-      easingFn: easing.easeOutQuint,
+      easingFn: easing.easeOutQuint
     } ),
     {
       ...textWriteOptions,
-      blendMode: p.EXCLUSION,
+      blendMode: p.EXCLUSION
     }
   );
 } );

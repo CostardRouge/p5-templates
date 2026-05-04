@@ -8,7 +8,7 @@ import {
 export const formValues = {
   strokeWeight: {
     mode: "fixed",
-    value: 100,
+    value: 100
   },
 
   text: {
@@ -19,21 +19,19 @@ export const formValues = {
     font: "waverseVariable",
     size: 1,
     sampleFactor: 0.0625,
-    simplifyThreshold: 0,
+    simplifyThreshold: 0
   },
 
   switchSpeed: 1,
   switchEasing: "linear",
 
-  images: [
-
-  ],
+  images: [],
   imageStyle: {
     fill: true,
     clip: true,
     center: true,
     scale: 1,
-    margin: 0,
+    margin: 0
   },
 
   backgroundColor: [
@@ -64,36 +62,36 @@ export const formConfiguration: Record<string, any> = {
         label: "Font name",
         options: fontNames.map( ( fontName ) => ( {
           value: fontName,
-          label: fontName,
-        } ) ),
+          label: fontName
+        } ) )
       },
       size: {
         label: "Size",
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1,
+        step: 0.1
       },
       sampleFactor: {
         label: "Text sample factor",
         component: "slider",
         min: 0.01,
         max: 1,
-        step: 0.01,
+        step: 0.01
       },
       simplifyThreshold: {
         label: "Simplify threshold",
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.1,
-      },
-    },
+        step: 0.1
+      }
+    }
   },
 
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   imageStyle: {
@@ -105,32 +103,32 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 0.45,
-        step: 0.005,
+        step: 0.005
       },
       scale: {
         label: "Scale",
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1,
+        step: 0.1
       },
       center: {
         label: "Center image",
-        component: "checkbox",
+        component: "checkbox"
       },
       clip: {
         label: "Clip",
-        component: "checkbox",
+        component: "checkbox"
       },
       fill: {
         label: "Fill",
-        component: "checkbox",
-      },
+        component: "checkbox"
+      }
     }
   },
 
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

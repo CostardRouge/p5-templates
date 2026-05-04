@@ -29,7 +29,7 @@ export async function GET( request: Request ) {
     return new Response(
       "Not found",
       {
-        status: 404,
+        status: 404
       }
     );
   }
@@ -44,7 +44,7 @@ export async function GET( request: Request ) {
     return new Response(
       "Missing sketch or engine param",
       {
-        status: 400,
+        status: 400
       }
     );
   }
@@ -58,7 +58,7 @@ export async function GET( request: Request ) {
     return new Response(
       "Sketch not found",
       {
-        status: 404,
+        status: 404
       }
     );
   }
@@ -73,13 +73,13 @@ export async function GET( request: Request ) {
       const watcher = fs.watch(
         sketchDir,
         {
-          recursive: true,
+          recursive: true
         },
         (
           _eventType, filename
         ) => {
           const payload = JSON.stringify( {
-            filename: filename ?? "",
+            filename: filename ?? ""
           } );
 
           controller.enqueue( encoder.encode( `data: ${ payload }\n\n` ) );
@@ -93,7 +93,7 @@ export async function GET( request: Request ) {
           controller.close();
         }
       );
-    },
+    }
   } );
 
   return new Response(
@@ -102,8 +102,8 @@ export async function GET( request: Request ) {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-      },
+        Connection: "keep-alive"
+      }
     }
   );
 }

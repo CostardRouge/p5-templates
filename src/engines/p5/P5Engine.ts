@@ -1,7 +1,7 @@
 import type {
   SketchEngine,
   EngineEventName,
-  EngineEventMap,
+  EngineEventMap
 } from "@/engines/types";
 import type {
   SketchOption
@@ -40,7 +40,7 @@ export class P5Engine implements SketchEngine {
   async init(
     container: HTMLElement,
     templatePath: string,
-    options: SketchOption,
+    options: SketchOption
   ): Promise<void> {
     this.container = container;
 
@@ -130,7 +130,7 @@ export class P5Engine implements SketchEngine {
     } ) => setSketchOptions(
       partial,
       "react"
-    ), );
+    ) );
   }
 
   /* ---- playback -------------------------------------------------- */
@@ -195,7 +195,7 @@ export class P5Engine implements SketchEngine {
 
   on<E extends EngineEventName>(
     event: E,
-    handler: ( payload: EngineEventMap[E] ) => void,
+    handler: ( payload: EngineEventMap[E] ) => void
   ): void {
     if ( !this.listeners.has( event ) ) {
       this.listeners.set(
@@ -209,14 +209,14 @@ export class P5Engine implements SketchEngine {
 
   off<E extends EngineEventName>(
     event: E,
-    handler: ( payload: EngineEventMap[E] ) => void,
+    handler: ( payload: EngineEventMap[E] ) => void
   ): void {
     this.listeners.get( event )?.delete( handler );
   }
 
   private emit<E extends EngineEventName>(
     event: E,
-    payload: EngineEventMap[E],
+    payload: EngineEventMap[E]
   ): void {
     this.listeners.get( event )?.forEach( ( h ) => h( payload ) );
   }

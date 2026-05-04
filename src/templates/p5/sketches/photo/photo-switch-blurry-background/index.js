@@ -11,8 +11,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {
-};
+const canvases = {};
 
 sketch.setup( () => {
   const p = getP5();
@@ -54,7 +53,7 @@ sketch.draw( (
     // margin: undefined,
     center: true,
     fill: true,
-    scale: 1,
+    scale: 1
   } );
 
   // canvases.background(...options.colors.background, 0);
@@ -98,7 +97,7 @@ sketch.draw( (
         fill: p.color( ...options.colors.background ),
         // fill: p.color(0, 0, 0, 255),
         // stroke: p.color(...options.colors.background),
-        font: string.fonts.martian,
+        font: string.fonts.martian
         // blendMode: p.EXCLUSION
       };
 
@@ -117,7 +116,7 @@ sketch.draw( (
           ...textStyle,
           textAlign: [
             p.RIGHT
-          ],
+          ]
         }
       );
 
@@ -135,7 +134,7 @@ sketch.draw( (
           ...textStyle,
           textAlign: [
             p.LEFT
-          ],
+          ]
         }
       );
 
@@ -153,7 +152,7 @@ sketch.draw( (
           ...textStyle,
           textAlign: [
             p.LEFT
-          ],
+          ]
         }
       );
 
@@ -166,10 +165,10 @@ sketch.draw( (
           textAlign: [
             p.CENTER,
             p.TOP
-          ],
+          ]
         }
       );
-    },
+    }
   } );
 
   const defaultTitle = options?.name?.replaceAll(
@@ -191,7 +190,7 @@ sketch.draw( (
           p.CENTER,
           p.CENTER
         ],
-        blendMode: p.EXCLUSION,
+        blendMode: p.EXCLUSION
       }
     );
   }
@@ -216,7 +215,7 @@ sketch.draw( (
       font: string.fonts.martian,
       textAlign: [
         p.CENTER
-      ],
+      ]
     }
   );
   p.pop();

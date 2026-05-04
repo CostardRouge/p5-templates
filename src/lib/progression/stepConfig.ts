@@ -35,20 +35,20 @@ export const RECORDING_STEPS = {
     label: "Launching browser",
     order: 1,
     section: "recording" as const,
-    shared: true,
+    shared: true
   },
   SAVING_FRAMES: {
     key: "saving-frames",
     label: "Capturing frames",
     order: 2,
-    section: "recording" as const,
+    section: "recording" as const
   },
   ENCODING_FRAMES: {
     key: "encoding-frames",
     label: "Encoding video",
     order: 3,
-    section: "recording" as const,
-  },
+    section: "recording" as const
+  }
 } satisfies Record<string, StepDefinition>;
 
 export const UPLOAD_STEPS = {
@@ -56,19 +56,19 @@ export const UPLOAD_STEPS = {
     key: "archiving",
     label: "Archiving",
     order: 1,
-    section: "uploading" as const,
+    section: "uploading" as const
   },
   S3: {
     key: "s3",
     label: "Uploading to S3",
     order: 2,
-    section: "uploading" as const,
-  },
+    section: "uploading" as const
+  }
 } satisfies Record<string, StepDefinition>;
 
 export const ALL_STEPS = {
   ...RECORDING_STEPS,
-  ...UPLOAD_STEPS,
+  ...UPLOAD_STEPS
 } satisfies Record<string, StepDefinition>;
 
 // ─── Lookup helpers ───────────────────────────────────────────────────────────
@@ -81,8 +81,7 @@ export const STEP_LABEL_MAP: Record<string, string> = Object.values( ALL_STEPS )
     acc[ step.key ] = step.label;
     return acc;
   },
-  {
-  } as Record<string, string>
+  {} as Record<string, string>
 );
 
 /** Returns the human-readable label for a step key, falling back to the key itself */
@@ -175,8 +174,7 @@ export function resolveProgressionUIState(
 ): ProgressionUIState {
   const rec = ( recordingSteps.recording as any );
   const uploading = ( recordingSteps.uploading as any );
-  const recSteps: Record<string, any> = rec?.steps ?? {
-  };
+  const recSteps: Record<string, any> = rec?.steps ?? {};
 
   // ── Detect multi-slide ──────────────────────────────────────────────────
   const slideKeys = Object.keys( recSteps )
@@ -198,14 +196,13 @@ export function resolveProgressionUIState(
         key: def.key,
         label: def.label,
         percentage: pct,
-        status: stepStatus( pct ),
+        status: stepStatus( pct )
       };
     } );
 
   // ── Flat steps for single recordings ────────────────────────────────────
   // Walk all non-slide entries in the recording section, then uploading
-  const flatSteps: FlatStepUI[] = [
-  ];
+  const flatSteps: FlatStepUI[] = [];
 
   // recording section — ordered by definition
   Object.values( RECORDING_STEPS )
@@ -220,7 +217,7 @@ export function resolveProgressionUIState(
         key: def.key,
         label: def.label,
         percentage: pct,
-        status: stepStatus( pct ),
+        status: stepStatus( pct )
       } );
     } );
 
@@ -239,7 +236,7 @@ export function resolveProgressionUIState(
             key: def.key,
             label: def.label,
             percentage: pct,
-            status: stepStatus( pct ),
+            status: stepStatus( pct )
           } );
         } );
     } else if ( typeof uploading.percentage === "number" ) {
@@ -247,7 +244,7 @@ export function resolveProgressionUIState(
         key: "uploading",
         label: "Uploading",
         percentage: uploading.percentage,
-        status: stepStatus( uploading.percentage ),
+        status: stepStatus( uploading.percentage )
       } );
     }
   }
@@ -256,8 +253,7 @@ export function resolveProgressionUIState(
   const slides: SlideUI[] = slideKeys.map( (
     key, idx
   ) => {
-    const ss: Record<string, any> = recSteps[ key ]?.steps ?? {
-    };
+    const ss: Record<string, any> = recSteps[ key ]?.steps ?? {};
 
     // Sub-steps ordered by definition
     const subSteps: FlatStepUI[] = Object.values( RECORDING_STEPS )
@@ -272,7 +268,7 @@ export function resolveProgressionUIState(
           key: def.key,
           label: def.label,
           percentage: pct,
-          status: stepStatus( pct ),
+          status: stepStatus( pct )
         };
       } );
 
@@ -285,7 +281,7 @@ export function resolveProgressionUIState(
           key: subKey,
           label: getStepLabel( subKey ),
           percentage: pct,
-          status: stepStatus( pct ),
+          status: stepStatus( pct )
         } );
       }
     } );
@@ -312,13 +308,12 @@ export function resolveProgressionUIState(
       name: slideOptions?.[ idx ]?.name ?? `Slide ${ idx + 1 }`,
       status,
       aggregate,
-      subSteps,
+      subSteps
     };
   } );
 
   // ── Shared trailing steps (uploading section for multi-slide) ────────────
-  const sharedTrailingSteps: FlatStepUI[] = [
-  ];
+  const sharedTrailingSteps: FlatStepUI[] = [];
 
   if ( uploading?.steps ) {
     Object.values( UPLOAD_STEPS )
@@ -333,7 +328,7 @@ export function resolveProgressionUIState(
           key: def.key,
           label: def.label,
           percentage: pct,
-          status: stepStatus( pct ),
+          status: stepStatus( pct )
         } );
       } );
   }
@@ -357,7 +352,7 @@ export function resolveProgressionUIState(
     sharedLeadingSteps,
     slides,
     sharedTrailingSteps,
-    flatSteps,
+    flatSteps
   };
 }
 

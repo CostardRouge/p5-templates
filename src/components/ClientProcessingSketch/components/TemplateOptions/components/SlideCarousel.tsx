@@ -12,7 +12,7 @@ import {
   MouseSensor,
   TouchSensor,
   useSensor,
-  useSensors,
+  useSensors
 } from "@dnd-kit/core";
 
 import type {
@@ -38,7 +38,7 @@ export default function SlideCarousel( {
   onAdd,
   onDuplicate,
   onDelete,
-  onRename,
+  onRename
 }: {
   slideFields: any[];
   slides?: any[];
@@ -59,8 +59,8 @@ export default function SlideCarousel( {
       MouseSensor,
       {
         activationConstraint: {
-          distance: 6,
-        },
+          distance: 6
+        }
       }
     ),
     useSensor(
@@ -68,8 +68,8 @@ export default function SlideCarousel( {
       {
         activationConstraint: {
           delay: 120,
-          tolerance: 8,
-        },
+          tolerance: 8
+        }
       }
     ),
     useSensor( KeyboardSensor )
@@ -155,7 +155,7 @@ export default function SlideCarousel( {
             disabled={isAdding}
             className="flex flex-col items-center justify-center border border-dashed border-theme rounded-lg hover:bg-secondary/10 transition-colors text-muted-foreground hover:text-foreground gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              aspectRatio,
+              aspectRatio
             }}
             aria-label="Add new slide"
             title="Add new slide"

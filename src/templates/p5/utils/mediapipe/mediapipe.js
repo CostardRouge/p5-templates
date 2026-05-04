@@ -10,34 +10,30 @@ let VisionManagerClass = null;
 const mediapipe = {
   config: {
     useWorker: false,
-    tasks: [
-    ],
+    tasks: []
   },
-  tasks: {
-  },
+  tasks: {},
   capture: {
     element: null,
     size: {
       width: 320,
-      height: 240,
-    },
+      height: 240
+    }
   },
   processor: {
     instance: null,
     busy: false,
-    ready: false,
+    ready: false
   },
   mode: "VIDEO", // VIDEO or IMAGE
   previousFrameSentTime: 0,
   inferenceIntervalMilliseconds: 20, // Default speed
-  enabled: true, // Dynamic enable/disable flag
+  enabled: true // Dynamic enable/disable flag
 };
 
-export async function init( config = {
-} ) {
+export async function init( config = {} ) {
   mediapipe.config.useWorker = config.worker ?? false;
-  mediapipe.config.tasks = config.tasks ?? [
-  ];
+  mediapipe.config.tasks = config.tasks ?? [];
 
   // Only initialize camera if enableCapture is true (default: true for backward compatibility)
   const enableCapture = config.enableCapture ?? true;
@@ -57,13 +53,13 @@ function setupWorker() {
   mediapipe.processor.instance = new Worker(
     "/assets/scripts/vision-worker.js",
     {
-      type: "module",
+      type: "module"
     }
   );
   mediapipe.processor.instance.postMessage( {
     type: "INIT",
     tasks: mediapipe.config.tasks,
-    mediapipeLibraryPath: "/assets/libraries/mediapipe",
+    mediapipeLibraryPath: "/assets/libraries/mediapipe"
   } );
 
   mediapipe.processor.instance.onmessage = ( e ) => {
@@ -80,7 +76,7 @@ async function setupMainThread() {
   mediapipe.processor.instance.setResultCallback( handleResult );
   await mediapipe.processor.instance.initialize( {
     tasks: mediapipe.config.tasks,
-    mediapipeLibraryPath: "/assets/libraries/mediapipe",
+    mediapipeLibraryPath: "/assets/libraries/mediapipe"
   } );
   mediapipe.processor.ready = true;
 }
@@ -88,8 +84,7 @@ async function setupMainThread() {
 function handleResult( {
   lib, result
 } ) {
-  mediapipe.tasks[ lib ] = mediapipe.tasks[ lib ] || {
-  };
+  mediapipe.tasks[ lib ] = mediapipe.tasks[ lib ] || {};
   mediapipe.tasks[ lib ].result = result;
   mediapipe.processor.busy = false;
 }
@@ -104,7 +99,7 @@ export async function predictImage( imageSource ) {
     if ( mediapipe.config.useWorker ) {
       mediapipe.processor.instance.postMessage( {
         type: "SET_MODE",
-        mode: "IMAGE",
+        mode: "IMAGE"
       } );
     } else {
       await mediapipe.processor.instance.setMode( "IMAGE" );
@@ -122,7 +117,7 @@ export async function predictImage( imageSource ) {
       {
         type: "FRAME",
         bitmap,
-        timestamp: performance.now(),
+        timestamp: performance.now()
       },
       [
         bitmap
@@ -155,7 +150,7 @@ export function interact(
     ? element.getBoundingClientRect()
     : {
       width: element.width,
-      height: element.height,
+      height: element.height
     };
 
   // If using p5 video capture, it might not be in the DOM, so we rely on internal size
@@ -170,8 +165,8 @@ export function interact(
   const roi = {
     keypoint: {
       x: normalizedX,
-      y: normalizedY,
-    },
+      y: normalizedY
+    }
   };
 
   // 2. Send to Processor
@@ -181,7 +176,7 @@ export function interact(
         {
           type: "INTERACT",
           bitmap: bmp,
-          roi: roi,
+          roi: roi
         },
         [
           bmp
@@ -202,7 +197,7 @@ function createVideoCaptureElements() {
   mediapipe.capture.element = p.createCapture(
     p.VIDEO,
     {
-      flipped: true,
+      flipped: true
     }
   );
   mediapipe.capture.element.size(
@@ -257,7 +252,7 @@ function sendFrameIfDue() {
           {
             type: "FRAME",
             bitmap: bmp,
-            timestamp: now,
+            timestamp: now
           },
           [
             bmp

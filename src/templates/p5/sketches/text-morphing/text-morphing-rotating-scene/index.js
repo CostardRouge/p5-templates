@@ -12,7 +12,7 @@ import {
 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
-  threeDimensionGraphics: null,
+  threeDimensionGraphics: null
 };
 
 sketch.setup(
@@ -27,8 +27,7 @@ sketch.setup(
       "webgl"
     );
   },
-  {
-  }
+  {}
 );
 
 sketch.draw( ( time ) => {
@@ -39,8 +38,7 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
-  const itemsToMorph = [
-  ];
+  const itemsToMorph = [];
 
   if ( "single" === options.sketch.text.mode ) {
     itemsToMorph.push( ...( options.sketch.text.value.split( "" ) ) );
@@ -130,7 +128,7 @@ sketch.draw( ( time ) => {
         -p.PI / 5,
         -p.PI / 5,
         0
-      ),
+      )
     ];
 
     const rotationSteps = rotationAngles.length;
@@ -242,7 +240,7 @@ sketch.draw( ( time ) => {
           8,
           16
         ),
-        opacityFactor,
+        opacityFactor
       } ) );
 
       const xx = x * Math.pow(

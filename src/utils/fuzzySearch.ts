@@ -24,15 +24,13 @@ export function fuzzyMatch(
 
   if ( !search ) return {
     score: 0,
-    matches: [
-    ]
+    matches: []
   };
 
   // Split search into words
   const searchWords = search.split( /\s+/ );
   let totalScore = 0;
-  const allMatches: number[] = [
-  ];
+  const allMatches: number[] = [];
 
   // Each word must match somewhere in the target
   for ( const word of searchWords ) {
@@ -40,8 +38,7 @@ export function fuzzyMatch(
     let textIndex = 0;
     let wordScore = 0;
     let consecutiveMatches = 0;
-    const wordMatches: number[] = [
-    ];
+    const wordMatches: number[] = [];
     let lastMatchIndex = -1;
 
     while ( wordIndex < word.length && textIndex < text.length ) {
@@ -84,7 +81,7 @@ export function fuzzyMatch(
 
   return {
     score: totalScore,
-    matches: allMatches,
+    matches: allMatches
   };
 }
 
@@ -105,8 +102,7 @@ export function fuzzyFilter<T>(
   const results: Array<{
     item: T;
     score: number;
-  }> = [
-  ];
+  }> = [];
 
   for ( const item of items ) {
     const searchableTexts = getSearchableText( item );
@@ -132,7 +128,7 @@ export function fuzzyFilter<T>(
     if ( bestScore > -1 ) {
       results.push( {
         item,
-        score: bestScore,
+        score: bestScore
       } );
     }
   }

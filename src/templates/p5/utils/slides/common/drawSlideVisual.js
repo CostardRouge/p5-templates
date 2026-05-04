@@ -7,7 +7,7 @@ export default function drawSlideVisual(
     visual,
     position,
     scale: scaleValue,
-    rotation: rotationValue,
+    rotation: rotationValue
   } = visualItemOptions;
 
   if ( !visual ) {

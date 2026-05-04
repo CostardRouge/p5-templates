@@ -23,11 +23,11 @@ export default function SlideEditor( {
 
   const slide = useWatch( {
     control,
-    name: `slides.${ activeIndex }`,
+    name: `slides.${ activeIndex }`
   } );
   const jobId = useWatch( {
     control,
-    name: "id",
+    name: "id"
   } );
 
   const slideFieldPath = `slides.${ activeIndex }` as const;
@@ -48,7 +48,7 @@ export default function SlideEditor( {
 
       <TemplateAssetsProvider
         scope={{
-          slide: activeIndex,
+          slide: activeIndex
         }}
         assetsName={`${ slideFieldPath }.assets`}
         jobId={jobId}

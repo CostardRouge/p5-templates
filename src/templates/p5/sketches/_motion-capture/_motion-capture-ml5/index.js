@@ -16,7 +16,7 @@ const trackedHandParts = [
   "middle_finger_tip",
   "ring_finger_tip",
   "pinky_finger_tip",
-  "wrist",
+  "wrist"
 ];
 
 const _ml5 = {
@@ -24,15 +24,15 @@ const _ml5 = {
     element: undefined,
     size: {
       width: 640,
-      height: 480,
-    },
+      height: 480
+    }
   },
   webcam: {
     element: undefined,
     size: {
       width: 960,
-      height: 720,
-    },
+      height: 720
+    }
   },
 
   bodySegmentation: undefined,
@@ -41,11 +41,9 @@ const _ml5 = {
 
   drawing: undefined,
 
-  hands: [
-  ],
-  faces: [
-  ],
-  segmentation: undefined,
+  hands: [],
+  faces: [],
+  segmentation: undefined
 };
 
 events.register(
@@ -57,13 +55,13 @@ events.register(
       maxHands: 4,
       flipped: true,
       runtime: "tfjs",
-      modelType: "full",
+      modelType: "full"
     } );
 
     _ml5.bodySegmentation = ml5.bodySegmentation(
       "BodyPix",
       {
-        maskType: "parts",
+        maskType: "parts"
       }
     );
   // _ml5.faceMesh = ml5.faceMesh();
@@ -83,7 +81,7 @@ sketch.setup( () => {
   _ml5.capture.element = createCapture(
     VIDEO,
     {
-      flipped: true,
+      flipped: true
     }
   );
   _ml5.capture.element.size(
@@ -95,7 +93,7 @@ sketch.setup( () => {
   _ml5.webcam.element = createCapture(
     VIDEO,
     {
-      flipped: true,
+      flipped: true
     }
   );
   _ml5.webcam.element.size(
@@ -168,15 +166,13 @@ sketch.draw( (
   //   }
   // );
 
-  const handFingers = {
-  };
+  const handFingers = {};
 
   for ( let i = 0; i < _ml5.hands.length; i++ ) {
     const hand = _ml5.hands[ i ];
     const handedness = `${ hand.handedness }-${ i }`;
 
-    handFingers[ handedness ] = handFingers[ handedness ] ?? [
-    ];
+    handFingers[ handedness ] = handFingers[ handedness ] ?? [];
 
     trackedHandParts.forEach( ( trackedHandPart ) => {
       handFingers[ handedness ].push( p.createVector(
@@ -252,7 +248,7 @@ sketch.draw( (
       font: string.fonts.martian,
       textAlign: [
         p.CENTER
-      ],
+      ]
     }
   );
 } );

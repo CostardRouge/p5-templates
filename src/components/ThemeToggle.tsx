@@ -33,8 +33,7 @@ function ThemeToggle( {
 
   useEffect(
     () => setMounted( true ),
-    [
-    ]
+    []
   );
 
   useEffect(
@@ -70,18 +69,18 @@ function ThemeToggle( {
     {
       value: "light",
       label: "Light",
-      icon: Sun,
+      icon: Sun
     },
     {
       value: "dark",
       label: "Dark",
-      icon: Moon,
+      icon: Moon
     },
     {
       value: "system",
       label: "System",
-      icon: Monitor,
-    },
+      icon: Monitor
+    }
   ];
 
   return (

@@ -8,7 +8,7 @@ export async function GET() {
     return new NextResponse(
       "Not found",
       {
-        status: 404,
+        status: 404
       }
     );
   }
@@ -16,6 +16,6 @@ export async function GET() {
   await createSketchThumbnails();
 
   return Response.json( {
-    status: 200,
+    status: 200
   } );
 }

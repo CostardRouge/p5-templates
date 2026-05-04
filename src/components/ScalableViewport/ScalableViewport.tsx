@@ -23,7 +23,7 @@ export default function ScalableViewport( {
   showZoomControls = true,
   resolutionKey,
   isReady = true,
-  disable = false,
+  disable = false
 }: {
   children: ReactNode;
   initialScale?: number;
@@ -52,7 +52,7 @@ export default function ScalableViewport( {
     contentRef,
     transform,
     setTransform,
-    cancelAnimation,
+    cancelAnimation
   } );
 
   const {
@@ -63,7 +63,7 @@ export default function ScalableViewport( {
       contentRef,
       transform,
       setTransform,
-      animateTo,
+      animateTo
     } );
 
   // Fit to viewport when resolution changes or when ready
@@ -160,7 +160,7 @@ export default function ScalableViewport( {
       ref={containerRef}
       className="w-full h-full overflow-hidden touch-none relative cursor-grab active:cursor-grabbing"
       style={{
-        touchAction: "none",
+        touchAction: "none"
       }}
     >
       {showZoomControls && (

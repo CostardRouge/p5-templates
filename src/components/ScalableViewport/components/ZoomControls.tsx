@@ -8,7 +8,7 @@ const ZoomControls = ( {
   onPlus,
   onMinus,
   onFit,
-  onReset,
+  onReset
 }: {
   onPlus: () => void;
   onMinus: () => void;

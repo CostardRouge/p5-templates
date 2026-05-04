@@ -32,11 +32,11 @@ sketch.draw( () => {
     textWrap: p.WORD,
     textAlign: [
       "left",
-      "top",
+      "top"
     ],
     blendMode: "source-over",
     textWidth: p.width - 2 * ( horizontalMargin * p.width ),
-    textHeight: p.height - 2 * ( verticalMargin * p.height ),
+    textHeight: p.height - 2 * ( verticalMargin * p.height )
   };
 
   const decomposedText = cache.store(
@@ -47,8 +47,7 @@ sketch.draw( () => {
       text
     ),
     () => {
-      const result = [
-      ];
+      const result = [];
       const textBlocks = text.split( " " );
 
       textBlocks.forEach( (

@@ -20,8 +20,8 @@ const sketchState = {
   threeDimensionGraphics: null,
   interactive: {
     position: null,
-    image: null,
-  },
+    image: null
+  }
 };
 
 events.register(
@@ -45,8 +45,7 @@ sketch.setup(
 
     await addScreenPositionFunction( sketchState.threeDimensionGraphics );
   },
-  {
-  }
+  {}
 );
 
 sketch.draw( (
@@ -92,7 +91,7 @@ sketch.draw( (
     rows,
     columns,
     // center: true,
-    diamond: false,
+    diamond: false
   };
 
   const rotationEnabled = options.sketch.rotation?.enabled ?? true;
@@ -220,7 +219,7 @@ sketch.draw( (
             p.PI,
             easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.linear
           ) * hueIndexMultiplier,
-          opacityFactor,
+          opacityFactor
         } ) );
 
         sketchState.threeDimensionGraphics.point(

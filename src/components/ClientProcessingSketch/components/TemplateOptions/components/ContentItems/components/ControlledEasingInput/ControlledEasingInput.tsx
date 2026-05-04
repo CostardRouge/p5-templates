@@ -12,7 +12,7 @@ import {
   EASING_FAMILIES,
   parseEasingKey,
   type EasingDirection,
-  type EasingFamily,
+  type EasingFamily
 } from "../../constants/easing-options";
 
 type Props = {
@@ -27,7 +27,7 @@ export default function ControlledEasingInput( {
   } = useFormContext();
 
   const {
-    field,
+    field
   } = useController( {
     name,
     control
@@ -67,7 +67,7 @@ export default function ControlledEasingInput( {
     },
     [
       field
-    ],
+    ]
   );
 
   const selectClassName =

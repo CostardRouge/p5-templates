@@ -4,8 +4,7 @@ import {
 
 export const EVENT = "sketch-options";
 
-globalThis.sketchOptions ??= {
-};
+globalThis.sketchOptions ??= {};
 
 let current = globalThis.sketchOptions;
 
@@ -39,8 +38,8 @@ export function setSketchOptions(
     {
       detail: {
         opts: current,
-        origin,
-      },
+        origin
+      }
     }
   ) );
 }

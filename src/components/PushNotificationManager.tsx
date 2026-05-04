@@ -6,7 +6,7 @@ import {
 import {
   subscribeUser,
   unsubscribeUser,
-  sendTestNotification,
+  sendTestNotification
 } from "@/app/actions/notifications";
 import {
   Bell, BellOff
@@ -56,8 +56,7 @@ export default function PushNotificationManager() {
       }
       setIsDevelopment( process.env.NODE_ENV === "development" );
     },
-    [
-    ]
+    []
   );
 
   async function registerServiceWorker() {
@@ -66,7 +65,7 @@ export default function PushNotificationManager() {
         "/sw.js",
         {
           scope: "/",
-          updateViaCache: "none",
+          updateViaCache: "none"
         }
       );
       const sub = await registration.pushManager.getSubscription();
@@ -105,7 +104,7 @@ export default function PushNotificationManager() {
 
       const sub = await registration.pushManager.subscribe( {
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array( publicKey ),
+        applicationServerKey: urlBase64ToUint8Array( publicKey )
       } );
 
       setSubscription( sub );

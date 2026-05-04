@@ -57,7 +57,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     activeSlideIndex,
     backendRecording,
     browserRecordingSupported,
-    thumbnails,
+    thumbnails
   },
   ref
 ) => {
@@ -128,7 +128,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       persistedJob,
       persistedJob?.id,
       persistedJob?.status,
-      subscribeToRecordingStatus,
+      subscribeToRecordingStatus
     ]
   );
 
@@ -199,16 +199,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
       // Handle GLOBAL assets
       const globalAssets = options.assets ?? {
-        images: [
-        ],
-        videos: [
-        ],
+        images: [],
+        videos: []
       };
 
       for ( const type of Object.keys( globalAssets ) ) {
         const fileList =
-            globalAssets[ type as keyof typeof globalAssets ] ?? [
-            ];
+            globalAssets[ type as keyof typeof globalAssets ] ?? [];
 
         await Promise.all( fileList.map( async(
           assetUrl: string, index: number
@@ -227,7 +224,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
               ],
               `global/${ type }/${ name }`,
               {
-                type: blob.type,
+                type: blob.type
               }
             )
           );
@@ -235,21 +232,17 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       }
 
       // Handle SLIDE assets
-      const slides: SlideOptionInput[] = options.slides || [
-      ];
+      const slides: SlideOptionInput[] = options.slides || [];
 
       for ( let i = 0; i < slides.length; i++ ) {
         const slide = slides[ i ];
         const assets = slide.assets ?? {
-          images: [
-          ],
-          videos: [
-          ],
+          images: [],
+          videos: []
         };
 
         for ( const type of Object.keys( assets ) ) {
-          const fileList = assets[ type as keyof typeof assets ] ?? [
-          ];
+          const fileList = assets[ type as keyof typeof assets ] ?? [];
 
           await Promise.all( fileList.map( async(
             assetUrl: string, index: number
@@ -271,11 +264,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
                   name,
                   type,
                   {
-                    slide: i,
+                    slide: i
                   }
                 ),
                 {
-                  type: blob.type,
+                  type: blob.type
                 }
               )
             );
@@ -291,7 +284,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
           {
             status,
             skipRedirect,
-            persistedJobId,
+            persistedJobId
           }
         );
 
@@ -340,7 +333,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
           "[CaptureActions] enqueueRecording returned null",
           {
             status,
-            persistedJobId,
+            persistedJobId
           }
         );
         if ( status === "draft" ) {
@@ -375,7 +368,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       },
       isSaving: saving,
       isRecording: !!isRecording,
-      currentStatus,
+      currentStatus
     } )
   );
 
@@ -398,7 +391,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       const response = await fetch(
         `/api/recordings/${ jobToDelete }`,
         {
-          method: "DELETE",
+          method: "DELETE"
         }
       );
 
@@ -429,7 +422,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       const response = await fetch(
         `/api/recordings/${ jobId }/cancel`,
         {
-          method: "POST",
+          method: "POST"
         }
       );
 
@@ -458,7 +451,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       const response = await fetch(
         `/api/recordings/${ persistedJob.id }/retry`,
         {
-          method: "POST",
+          method: "POST"
         }
       );
 
@@ -513,7 +506,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
   const handleBrowserRecord = async() => {
     await window?.startLoopRecording( {
-      format: "webm",
+      format: "webm"
     } );
   };
 
@@ -547,7 +540,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         ? ( {
           id: jobId,
           status: currentStatus || "queued",
-          progress: recordingProgress?.percentage || 0,
+          progress: recordingProgress?.percentage || 0
         } as JobModel )
         : undefined );
 

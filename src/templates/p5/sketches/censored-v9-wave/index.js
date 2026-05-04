@@ -9,8 +9,7 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-const canvases = {
-};
+const canvases = {};
 let o = options;
 
 sketch.setup( () => {
@@ -54,12 +53,12 @@ function drawShape( {
         sampleFactor: options.sketch.shape.sampleFactor,
         size: canvasFlatDimensionAverage * options.sketch.shape.sizeRatio,
         simplifyThreshold: options.sketch.shape.simplifyThreshold,
-        font: string.fonts?.[ options.sketch.shape.font ?? "sans" ],
+        font: string.fonts?.[ options.sketch.shape.font ?? "sans" ]
       } ) ),
     lerpFn: mappers.lerpPoints,
     currentTime:
       animation.progression * text.length * options.sketch.shape.morphingSpeed,
-    easingFn: easing?.[ options.sketch.shape.morphingEasing ?? "easeInOutExpo" ],
+    easingFn: easing?.[ options.sketch.shape.morphingEasing ?? "easeInOutExpo" ]
   } );
 
   canvas.push();
@@ -124,7 +123,7 @@ function drawShape( {
               canvas.PI
             ) * 14,
         // hueIndex:mappers.fn(canvas.noise(x/canvas.width, y/canvas.height, progression/2+depthProgression/2), 0, 1, -canvas.PI, canvas.PI)*10,
-        opacityFactor,
+        opacityFactor
         // opacityFactor: p.map(depthProgression, 0, 1, 1.75, 1) * Math.pow(1.05, z)
       } ) );
 
@@ -171,7 +170,7 @@ function wave(
 ) {
   const values = [
     canvas.height * options.sketch.wave.heightStart,
-    canvas.height * options.sketch.wave.heightEnd,
+    canvas.height * options.sketch.wave.heightEnd
   ];
 
   for ( let index = 0; index < 1; index += step ) {
@@ -182,7 +181,7 @@ function wave(
         currentTime:
           +index * options.sketch.wave.count +
           animation.progression * options.sketch.wave.speed,
-        easingFn: easing?.[ options.sketch.wave.easing ?? "easeInOutSine" ],
+        easingFn: easing?.[ options.sketch.wave.easing ?? "easeInOutSine" ]
       } )
     );
   }
@@ -202,7 +201,7 @@ sketch.draw( (
   drawShape( {
     canvas: canvases.buffer,
     depth: options.sketch.shape.depthCount,
-    text: options.sketch.shape.text,
+    text: options.sketch.shape.text
   } );
 
   p.image(

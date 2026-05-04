@@ -17,7 +17,7 @@ class Redis {
           maxRetriesPerRequest: null,
           lazyConnect: true,
           enableReadyCheck: false,
-          family: 4, // Force IPv4
+          family: 4 // Force IPv4
         }
       );
 

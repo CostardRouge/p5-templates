@@ -19,16 +19,14 @@ export async function getJSONSketchOptions(
     );
 
     if ( !sketchPath ) {
-      return {
-      };
+      return {};
     }
 
     const options = await import( `@/p5/sketches/${ sketchPath }/options.json` );
 
     return options.default || options;
   } catch {
-    return {
-    };
+    return {};
   }
 }
 
@@ -46,14 +44,12 @@ export async function getSketchMeta(
   );
 
   if ( !meta?.hasSketchForm ) {
-    return {
-    };
+    return {};
   }
 
   try {
     return await import( `@/p5/sketches/${ meta.sketchPath }/options.ts` );
   } catch {
-    return {
-    };
+    return {};
   }
 }

@@ -20,13 +20,13 @@ export async function captureFramesServerSide( {
   page,
   framesDirectory,
   totalFrames,
-  onProgress,
+  onProgress
 }: CaptureFramesOptions ): Promise<void> {
   // Ensure frames directory exists
   await fs.mkdir(
     framesDirectory,
     {
-      recursive: true,
+      recursive: true
     }
   );
 

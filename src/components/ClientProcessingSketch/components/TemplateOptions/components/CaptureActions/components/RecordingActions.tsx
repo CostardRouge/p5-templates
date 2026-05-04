@@ -35,7 +35,7 @@ export default function RecordingActions( {
   onClone,
   onCancel,
   cloning,
-  cancelling,
+  cancelling
 }: RecordingActionsProps ) {
   return (
     <>
@@ -48,7 +48,7 @@ export default function RecordingActions( {
               progress:
                 recordingProgress?.percentage || persistedJob?.progress || 0,
               status:
-                recordingProgress?.status || persistedJob?.status || "queued",
+                recordingProgress?.status || persistedJob?.status || "queued"
             } as JobModel
           }
           steps={
@@ -63,10 +63,9 @@ export default function RecordingActions( {
                 status:
                     recordingProgress?.status ||
                     persistedJob?.status ||
-                    "active",
+                    "active"
               } as JobModel )
-              : [
-              ]
+              : []
           }
           recordingSteps={recordingProgress?.steps}
           currentSlideIndex={recordingProgress?.currentSlideIndex}

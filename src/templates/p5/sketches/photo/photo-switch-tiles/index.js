@@ -58,7 +58,7 @@ sketch.draw( async(
     ),
     rows,
     columns,
-    centered: true,
+    centered: true
   };
 
   const W = p.width / columns;
@@ -79,8 +79,7 @@ sketch.draw( async(
 
       return accumulator;
     },
-    [
-    ]
+    []
   );
 
   if ( imageFingerprints.length === 0 ) {
@@ -92,7 +91,7 @@ sketch.draw( async(
       columns,
       rows,
       borderSize,
-      imageFingerprints.join( "i" ),
+      imageFingerprints.join( "i" )
       // dominantColorSample
     ),
     () => {
@@ -103,7 +102,7 @@ sketch.draw( async(
           img,
           graphics: sketchState.buffer,
           center: true,
-          fill: true,
+          fill: true
         } );
 
         return gridCells.reduce(
@@ -120,14 +119,13 @@ sketch.draw( async(
             );
 
             imageCells.push( {
-              imagePart,
+              imagePart
               // dominantColor: colors.getDominantColor( imagePart, 500 )
             } );
 
             return imageCells;
           },
-          [
-          ]
+          []
         );
       } );
     }

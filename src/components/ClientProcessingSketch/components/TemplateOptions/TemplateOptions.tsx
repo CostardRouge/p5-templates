@@ -14,7 +14,7 @@ import type {
 } from "@/types/sketch.types";
 import useSketch from "../SketchProvider/hooks/useSketch";
 import CaptureActions, {
-  type CaptureActionsRef,
+  type CaptureActionsRef
 } from "./components/CaptureActions";
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import OptionsPanel from "./components/OptionsPanel";
@@ -47,7 +47,7 @@ export default function TemplateOptions( {
   onOptionsChange,
   onActiveSlideChange,
   options: initialOptions,
-  enableThumbnails = true, // Enable by default now
+  enableThumbnails = true // Enable by default now
 }: TemplateOptionsProps ) {
   const browserRecordingSupported = useBrowserRecordingSupported();
   const captureActionsRef = useRef<CaptureActionsRef>( null );
@@ -60,7 +60,7 @@ export default function TemplateOptions( {
     initialOptions,
     persistedJob,
     onOptionsChange,
-    captureActionsRef: captureActionsRef as React.RefObject<CaptureActionsRef>,
+    captureActionsRef: captureActionsRef as React.RefObject<CaptureActionsRef>
   } );
 
   const {
@@ -90,19 +90,19 @@ export default function TemplateOptions( {
     append: appendSlide,
     insert: insertSlide,
     move: moveSlide,
-    remove: removeSlide,
+    remove: removeSlide
   } = useFieldArray( {
     control,
-    name: "slides",
+    name: "slides"
   } );
 
   const slides = useWatch( {
     control,
-    name: "slides",
+    name: "slides"
   } ) as SlideOption[] | undefined;
   const jobId = useWatch( {
     control,
-    name: "id",
+    name: "id"
   } ) as string | undefined;
 
   const [
@@ -117,11 +117,11 @@ export default function TemplateOptions( {
     captureThumbnail,
     captureCurrentSlide,
     copyThumbnail,
-    pendingThumbnailCaptureRef,
+    pendingThumbnailCaptureRef
   } = useThumbnails( {
     enabled: enableThumbnails,
     persistedJob,
-    slideFields,
+    slideFields
   } );
 
   // Slide management
@@ -133,7 +133,7 @@ export default function TemplateOptions( {
     handleDuplicateSlide,
     handleDeleteSlide,
     handleReorderSlides,
-    handleRenameSlide,
+    handleRenameSlide
   } = useSlideManagement( {
     slideFields,
     appendSlide,
@@ -147,7 +147,7 @@ export default function TemplateOptions( {
     captureThumbnail: enableThumbnails ? captureThumbnail : undefined,
     copyThumbnail: enableThumbnails ? copyThumbnail : undefined,
     enableThumbnails,
-    pendingThumbnailCaptureRef,
+    pendingThumbnailCaptureRef
   } );
 
   // Debounce thumbnail capture: refresh the active slide's thumbnail 1 second
@@ -199,7 +199,7 @@ export default function TemplateOptions( {
       methods,
       activeSlideIndex,
       slideFields,
-      captureCurrentSlide,
+      captureCurrentSlide
     ]
   );
 
@@ -271,7 +271,7 @@ export default function TemplateOptions( {
       slideFields,
       captureCurrentSlide,
       enableThumbnails,
-      pendingThumbnailCaptureRef,
+      pendingThumbnailCaptureRef
     ]
   );
 
@@ -286,7 +286,7 @@ export default function TemplateOptions( {
       <div
         className="w-64 absolute right-2 bottom-2 md:right-4 md:bottom-4 space-y-2"
         style={{
-          maxWidth: "calc(50% - 0.75rem)",
+          maxWidth: "calc(50% - 0.75rem)"
         }}
       >
         <OptionsPanel
@@ -318,8 +318,7 @@ export default function TemplateOptions( {
             activeSlideIndex={activeSlideIndex}
             backendRecording={backendRecording}
             browserRecordingSupported={browserRecordingSupported}
-            thumbnails={enableThumbnails ? thumbnails : {
-            }}
+            thumbnails={enableThumbnails ? thumbnails : {}}
           />
         )}
       </div>

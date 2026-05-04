@@ -19,13 +19,12 @@ interface SlidePreviewGridProps {
 export default function SlidePreviewGrid( {
   jobId,
   slideCount,
-  isVisible,
+  isVisible
 }: SlidePreviewGridProps ) {
   const [
     thumbnails,
     setThumbnails
-  ] = useState<string[]>( [
-  ] );
+  ] = useState<string[]>( [] );
   const [
     loading,
     setLoading
@@ -55,8 +54,7 @@ export default function SlidePreviewGrid( {
 
           const data = await response.json();
 
-          setThumbnails( data.thumbnails || [
-          ] );
+          setThumbnails( data.thumbnails || [] );
         } catch ( err ) {
           console.error(
             "Failed to load slide thumbnails:",
@@ -132,7 +130,7 @@ export default function SlidePreviewGrid( {
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
           style={{
             opacity: idx === currentIndex ? 1 : 0,
-            pointerEvents: idx === currentIndex ? "auto" : "none",
+            pointerEvents: idx === currentIndex ? "auto" : "none"
           }}
         />
       ) )}

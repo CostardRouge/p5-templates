@@ -12,7 +12,7 @@ import {
   RecordingJobData,
   JobConfiguration,
   QueueHealthResponse,
-  JobStatusEnum,
+  JobStatusEnum
 } from "@/types/recording.types";
 import {
   uploadArtifact
@@ -31,8 +31,8 @@ export class RecordingQueueService {
     attempts: 1,
     backoff: {
       type: "exponential",
-      delay: 30_000,
-    },
+      delay: 30_000
+    }
   };
 
   private constructor() {
@@ -44,8 +44,8 @@ export class RecordingQueueService {
           removeOnComplete: this.DEFAULT_JOB_OPTIONS.removeOnComplete,
           removeOnFail: this.DEFAULT_JOB_OPTIONS.removeOnFail,
           attempts: this.DEFAULT_JOB_OPTIONS.attempts,
-          backoff: this.DEFAULT_JOB_OPTIONS.backoff,
-        },
+          backoff: this.DEFAULT_JOB_OPTIONS.backoff
+        }
       }
     );
 
@@ -75,7 +75,7 @@ export class RecordingQueueService {
     status,
     files,
     jobId: providedJobId,
-    thumbnails,
+    thumbnails
   }: {
     status: JobStatusEnum;
     template: string;
@@ -125,10 +125,9 @@ export class RecordingQueueService {
           options: JSON.parse( options ),
           ...( thumbnails
             ? {
-              thumbnails,
+              thumbnails
             }
-            : {
-            } ),
+            : {} )
         }
       );
 
@@ -164,7 +163,7 @@ export class RecordingQueueService {
           jobId,
           {
             status: "queued",
-            progress: 0,
+            progress: 0
           }
         );
         await addRecordingStatus(
@@ -176,14 +175,14 @@ export class RecordingQueueService {
           "process-recording",
           {
             jobId,
-            template,
+            template
           },
           {
             jobId,
             priority: 1,
             delay: 0,
             removeOnFail: true,
-            removeOnComplete: true,
+            removeOnComplete: true
           }
         );
       }
@@ -210,14 +209,14 @@ export class RecordingQueueService {
         this.queue.getWaiting(),
         this.queue.getActive(),
         this.queue.getCompleted(),
-        this.queue.getFailed(),
+        this.queue.getFailed()
       ] );
 
       return {
         waiting: waiting.length,
         active: active.length,
         completed: completed.length,
-        failed: failed.length,
+        failed: failed.length
       };
     } catch ( error ) {
       console.error(

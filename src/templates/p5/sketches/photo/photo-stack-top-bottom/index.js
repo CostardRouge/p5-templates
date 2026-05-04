@@ -58,7 +58,7 @@ sketch.draw( (
       center: options.sketch?.center ?? true,
       clip: options.sketch?.clip ?? false,
       fill: options.sketch?.fill ?? true,
-      img,
+      img
     } );
   }
 } );

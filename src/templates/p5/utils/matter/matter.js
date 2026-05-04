@@ -26,14 +26,10 @@ const BOUNDARY_MARGIN = 50;
 const matter = {
   engine: Engine.create(),
   bottom: undefined,
-  balls: [
-  ],
-  letterBodies: [
-  ],
-  handBodies: [
-  ],
-  boundaries: [
-  ],
+  balls: [],
+  letterBodies: [],
+  handBodies: [],
+  boundaries: []
 };
 
 events.register(
@@ -91,7 +87,7 @@ events.register(
 
 matter.engine.gravity = {
   x: 0,
-  y: 0,
+  y: 0
 };
 
 sketch.draw( (
@@ -148,7 +144,7 @@ sketch.draw( (
         shadowsCount: 3,
         graphics: layers.visuals.graphics,
         position,
-        index: index / matter.balls.length,
+        index: index / matter.balls.length
       } );
     } );
   }
@@ -221,8 +217,7 @@ function updateHandBodies() {
       handBody
     );
   }
-  matter.handBodies = [
-  ];
+  matter.handBodies = [];
 
   mediapipe.workerResult?.hands?.landmarks?.forEach?.( createHandInteractionBodies );
 }
@@ -255,7 +250,7 @@ function createHandInteractionBodies( hand ) {
         75,
         {
           isStatic: true, // Static so it doesn't fall
-          isSensor: false, // Can interact with other bodies
+          isSensor: false // Can interact with other bodies
         }
       );
 
@@ -280,7 +275,7 @@ function addBall(
 
   newBall.initialPosition = {
     x,
-    y,
+    y
   };
 
   matter.balls.unshift( newBall );
@@ -299,7 +294,7 @@ function addBoundary(
     w,
     h,
     {
-      isStatic: true,
+      isStatic: true
     }
   );
 
@@ -333,7 +328,7 @@ function applyRestoringForces(
       pos,
       {
         x: fx,
-        y: fy,
+        y: fy
       }
     );
   }
@@ -360,10 +355,10 @@ function applyRestoringForcesTo(
       pos,
       {
         x: fx,
-        y: fy,
+        y: fy
       },
       {
-        angle: 0,
+        angle: 0
       }
     );
   }
@@ -372,8 +367,7 @@ function applyRestoringForcesTo(
 function addLetterBoxes(
   text, startX, startY, spacing = 60
 ) {
-  const letterBodies = [
-  ];
+  const letterBodies = [];
 
   for ( let i = 0; i < text.length; i++ ) {
     const char = text[ i ];
@@ -394,7 +388,7 @@ function addLetterBoxes(
       h,
       {
         restitution: 0.4,
-        friction: 0.1,
+        friction: 0.1
       // isStatic: true, // Static so it doesn't fall
       // isSensor: false, // Can interact with other bodies
       }
@@ -403,7 +397,7 @@ function addLetterBoxes(
     body.label = char;
     body.initialPosition = {
       x: startX,
-      y: startY,
+      y: startY
     };
 
     Composite.add(

@@ -14,7 +14,7 @@ export const validStatuses = [
   "completed",
   "failed",
   "cancelled",
-  "draft",
+  "draft"
 ] as const;
 
 export type JobStatusEnum = ( typeof validStatuses )[number];

@@ -32,11 +32,10 @@ export default function CompletedActions( {
   downloading,
   onDownload,
   deleting,
-  cloning,
+  cloning
 }: CompletedActionsProps ) {
   // Get video sizes directly from job data
-  const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [
-  ];
+  const videoSizes = ( persistedJob.videoSizes as unknown as number[] ) || [];
   const currentVideoSize =
     activeSlideIndex !== undefined ? videoSizes?.[ activeSlideIndex ] : undefined;
 

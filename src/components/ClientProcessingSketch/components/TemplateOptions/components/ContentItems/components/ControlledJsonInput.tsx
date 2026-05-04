@@ -53,10 +53,9 @@ export default function ControlledJsonInput( {
         }
 
         return JSON.parse( trimmed );
-      },
+      }
     } ),
-    [
-    ]
+    []
   );
 
   return (
@@ -89,7 +88,7 @@ export default function ControlledJsonInput( {
                 name,
                 {
                   type: "validate",
-                  message: "Invalid JSON",
+                  message: "Invalid JSON"
                 }
               );
             }

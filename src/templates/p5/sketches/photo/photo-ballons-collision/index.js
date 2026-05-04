@@ -47,8 +47,7 @@ const getImages = () => {
 
   return imagesFromOptions
     ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : fromCache || [
-    ];
+    : fromCache || [];
 };
 
 const {
@@ -80,16 +79,14 @@ events.register(
 
 const canvases = {
   mask: undefined,
-  imageBuffer: undefined,
+  imageBuffer: undefined
 };
 
 const matter = {
   engine: Engine.create(),
   bottom: undefined,
-  balls: [
-  ],
-  boundaries: [
-  ],
+  balls: [],
+  boundaries: []
 };
 
 function drawImageWithMask( {
@@ -107,7 +104,7 @@ function drawImageWithMask( {
     position: p.createVector(
       p.width / 2,
       p.height / 2
-    ),
+    )
   } );
 
   // Clean mask
@@ -153,7 +150,7 @@ function addImageBall(
       y,
       radius,
       radius
-    ),
+    )
   };
 
   // const velocityMagnitude = 5;
@@ -182,7 +179,7 @@ function addBoundary(
     w,
     h,
     {
-      isStatic: true,
+      isStatic: true
     }
   );
 
@@ -288,8 +285,7 @@ sketch.draw( (
     // animation.cosOscillation
   );
 
-  const links = [
-  ];
+  const links = [];
 
   matter.balls.forEach( (
     {
@@ -300,7 +296,7 @@ sketch.draw( (
       position: {
         x, y
       },
-      circleRadius,
+      circleRadius
     } = ball;
 
     matter.balls.forEach( (
@@ -319,7 +315,7 @@ sketch.draw( (
       const {
         position: {
           x: _x, y: _y
-        },
+        }
       } = ball;
 
       // p.stroke(0, 0, 0, p.map(position.dist(_position), 0, 1000, 0, 100));
@@ -345,7 +341,7 @@ sketch.draw( (
           circleRadius * 2,
           circleRadius * 2
         );
-      },
+      }
     } );
   } );
 

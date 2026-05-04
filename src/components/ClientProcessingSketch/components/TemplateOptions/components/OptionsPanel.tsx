@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import {
-  SketchOption, SketchOptionInput, SlideOption,
+  SketchOption, SketchOptionInput, SlideOption
 } from "@/types/sketch.types";
 import {
   JobModel
@@ -61,7 +61,7 @@ export default function OptionsPanel( {
   onDeleteSlide,
   onRenameSlide,
   onImportOptions,
-  enableThumbnails,
+  enableThumbnails
 }: OptionsPanelProps ) {
   const {
     control, watch
@@ -69,14 +69,14 @@ export default function OptionsPanel( {
 
   const rootContentLength = useWatch( {
     control,
-    name: "content",
+    name: "content"
   } )?.length;
 
   const slideIds = slideFields.map( ( field ) => field.id );
   const slidesLength = slides?.length;
   const jobId = useWatch( {
     control,
-    name: "id",
+    name: "id"
   } ) as string | undefined;
   const options = watch();
 
@@ -89,7 +89,7 @@ export default function OptionsPanel( {
     <CollapsibleItem
       className="flex flex-col gap-1 glass p-2 border border-theme rounded-2xl shadow-lg w-full"
       style={{
-        maxHeight: "calc(80svh)",
+        maxHeight: "calc(80svh)"
       }}
       header={(
         expanded, title
@@ -108,7 +108,7 @@ export default function OptionsPanel( {
                 {
                   imported: importedOptions,
                   processed: processedOptions,
-                  slidesCount: processedOptions.slides?.length,
+                  slidesCount: processedOptions.slides?.length
                 }
               );
               onImportOptions( importedOptions as SketchOption );
@@ -123,7 +123,7 @@ export default function OptionsPanel( {
             <ArrowDownFromLine
               className="inline text-foreground h-3 w-3 ml-1"
               style={{
-                rotate: expanded ? "0deg" : "180deg",
+                rotate: expanded ? "0deg" : "180deg"
               }}
             />
           </button>
@@ -141,7 +141,7 @@ export default function OptionsPanel( {
             className={clsx(
               "truncate text-foreground text-xs w-full text-left -ml-1 align-text-top",
               {
-                "mb-1": expanded,
+                "mb-1": expanded
               }
             )}
             aria-label={expanded ? "Collapse" : "Expand"}
@@ -149,7 +149,7 @@ export default function OptionsPanel( {
             <ListCollapse
               className="inline text-foreground h-3"
               style={{
-                rotate: expanded ? "180deg" : "0deg",
+                rotate: expanded ? "180deg" : "0deg"
               }}
             />
             <span>
@@ -181,7 +181,7 @@ export default function OptionsPanel( {
                 className={clsx(
                   "text-foreground text-xs w-full text-left -ml-1 align-text-top",
                   {
-                    "mb-1": expanded,
+                    "mb-1": expanded
                   }
                 )}
                 aria-label={expanded ? "Collapse" : "Expand"}
@@ -189,7 +189,7 @@ export default function OptionsPanel( {
                 <ListCollapse
                   className="inline text-foreground h-3"
                   style={{
-                    rotate: expanded ? "180deg" : "0deg",
+                    rotate: expanded ? "180deg" : "0deg"
                   }}
                 />
                 <span>slides {slidesLength ? `(${ slidesLength })` : null}</span>
@@ -199,8 +199,7 @@ export default function OptionsPanel( {
             <SlideCarousel
               slideFields={slideFields}
               slides={slides}
-              thumbnails={enableThumbnails ? thumbnails : {
-              }}
+              thumbnails={enableThumbnails ? thumbnails : {}}
               activeIndex={activeSlideIndex}
               isAdding={isAdding}
               onAdd={onAddSlide}

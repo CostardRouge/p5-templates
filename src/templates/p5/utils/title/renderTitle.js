@@ -94,12 +94,12 @@ export default function renderTitle(
       font: font,
       textAlign: [
         titleConfig.alignment?.horizontal ?? "center",
-        titleConfig.alignment?.vertical ?? "center",
+        titleConfig.alignment?.vertical ?? "center"
       ],
       blendMode: titleConfig.blend || "source-over",
       textWidth: p.width - 2 * horizontalMargin,
       textHeight: p.height - 2 * verticalMargin,
-      popPush: true,
+      popPush: true
     }
   );
 }

@@ -25,7 +25,7 @@ const STATUS_ORDER: Record<string, number> = {
   draft: 2,
   completed: 3,
   failed: 4,
-  cancelled: 5,
+  cancelled: 5
 };
 
 export function useSorting(

@@ -9,9 +9,7 @@ import {
 } from "@/p5/utils/sketch.js";
 
 export function deepMerge(
-  target = {
-  }, source = {
-  }
+  target = {}, source = {}
 ) {
   if ( typeof target !== "object" || target === null ) return target;
   if ( typeof source !== "object" || source === null ) return target;
@@ -50,8 +48,7 @@ export function getAssets(
   return (
     ( paths || options.assets?.[ type ] )
       ?.map( ( path ) => cache.get( `${ type }Map` ).get( path ) )
-      .filter( Boolean ) || [
-    ]
+      .filter( Boolean ) || []
   );
 }
 

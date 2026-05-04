@@ -11,7 +11,7 @@ export default function useTemplateAssets() {
     return {
       scope: "global" as const,
       assetsName: "assets",
-      jobId: undefined,
+      jobId: undefined
     };
   }
 

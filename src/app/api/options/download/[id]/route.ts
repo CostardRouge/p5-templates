@@ -14,7 +14,7 @@ import {
 export async function GET(
   request: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -30,7 +30,7 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
@@ -44,7 +44,7 @@ export async function GET(
       return new NextResponse(
         "Failed to fetch file from S3",
         {
-          status: 502,
+          status: 502
         }
       );
     }
@@ -65,8 +65,8 @@ export async function GET(
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Content-Disposition": `attachment; filename="${ filename }"`,
-        },
+          "Content-Disposition": `attachment; filename="${ filename }"`
+        }
       }
     );
   } catch ( error ) {
@@ -78,7 +78,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

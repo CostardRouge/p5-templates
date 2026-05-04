@@ -17,13 +17,12 @@ export default function useRecordingActions() {
       const response = await fetch(
         `/api/recordings/${ job.id }/clone`,
         {
-          method: "POST",
+          method: "POST"
         }
       );
 
       if ( !response.ok ) {
-        const errorData = await response.json().catch( () => ( {
-        } ) );
+        const errorData = await response.json().catch( () => ( {} ) );
 
         throw new Error( errorData.error || "Failed to clone recording" );
       }
@@ -56,6 +55,6 @@ export default function useRecordingActions() {
 
   return {
     handleClone,
-    isActionInProgress,
+    isActionInProgress
   };
 }

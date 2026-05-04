@@ -11,7 +11,7 @@ import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 
 import mediapipe, {
   init as mediapipeInit,
-  setEnabled as setMediapipeEnabled,
+  setEnabled as setMediapipeEnabled
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   getP5
@@ -28,15 +28,15 @@ const interactionIndices = [
 
 const sketchState = {
   interactive: {
-    image: null,
+    image: null
   },
   plane: {
     graphics: null,
-    gridData: null,
+    gridData: null
   },
   webcam: {
-    graphics: null,
-  },
+    graphics: null
+  }
 };
 
 sketch.setup( async( {
@@ -65,7 +65,7 @@ sketch.setup( async( {
     worker: false,
     tasks: [
       "hands"
-    ],
+    ]
   } );
 } );
 
@@ -86,8 +86,7 @@ function createTriangleGrid(
   const halfWidth = totalWidth / 2;
   const halfHeight = totalHeight / 2;
 
-  const vertices = [
-  ];
+  const vertices = [];
 
   for ( let row = 0; row < rows; row++ ) {
     for ( let column = 0; column < columns; column++ ) {
@@ -109,23 +108,23 @@ function createTriangleGrid(
             y: y,
             z: 0,
             u: u0,
-            v: v0,
+            v: v0
           },
           {
             x: x + cellWidth,
             y: y,
             z: 0,
             u: u1,
-            v: v0,
+            v: v0
           },
           {
             x: x,
             y: y + cellHeight,
             z: 0,
             u: u0,
-            v: v1,
-          },
-        ],
+            v: v1
+          }
+        ]
       } );
 
       // Triangle 2: bottom-right half
@@ -136,23 +135,23 @@ function createTriangleGrid(
             y: y,
             z: 0,
             u: u1,
-            v: v0,
+            v: v0
           },
           {
             x: x + cellWidth,
             y: y + cellHeight,
             z: 0,
             u: u1,
-            v: v1,
+            v: v1
           },
           {
             x: x,
             y: y + cellHeight,
             z: 0,
             u: u0,
-            v: v1,
-          },
-        ],
+            v: v1
+          }
+        ]
       } );
     }
   }
@@ -162,7 +161,7 @@ function createTriangleGrid(
     columns,
     rows,
     cellWidth,
-    cellHeight,
+    cellHeight
   };
 }
 
@@ -218,7 +217,7 @@ function displayTriangleGrid(
           ],
           currentTime: switchIndex,
           easingFn:
-            easing?.[ options.sketch.animation.easing ] ?? easing.easeOutBack,
+            easing?.[ options.sketch.animation.easing ] ?? easing.easeOutBack
         } );
 
       const vertices = [
@@ -318,8 +317,7 @@ sketch.draw( () => {
     ? mediapipe.capture.element
     : common.getAsset( options.sketch?.texture.image )?.img;
 
-  const targetVectors = [
-  ];
+  const targetVectors = [];
 
   if ( options.sketch.animation.useMouse ?? true ) {
     sketchState.plane.graphics.screenPosition( p.createVector(

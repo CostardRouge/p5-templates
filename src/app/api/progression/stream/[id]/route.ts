@@ -1,6 +1,6 @@
 import {
   getRecordingStatus,
-  getRecordingStatusAndTotalPercentage,
+  getRecordingStatusAndTotalPercentage
 } from "@/lib/progression";
 
 import {
@@ -16,7 +16,7 @@ import {
 export async function GET(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: JobId;
@@ -30,7 +30,7 @@ export async function GET(
     return new NextResponse(
       `recordingStatus not found for job ${ id }`,
       {
-        status: 404,
+        status: 404
       }
     );
   }
@@ -88,7 +88,7 @@ export async function GET(
       if ( intervalId ) {
         clearInterval( intervalId );
       }
-    },
+    }
   } );
 
   return new Response(
@@ -97,8 +97,8 @@ export async function GET(
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
+        Connection: "keep-alive"
+      }
     }
   );
 }

@@ -34,7 +34,7 @@ export class RecordingService {
     status,
     files,
     jobId,
-    thumbnails,
+    thumbnails
   }: {
     status: JobStatusEnum;
     template: string;
@@ -49,7 +49,7 @@ export class RecordingService {
       status,
       files,
       jobId,
-      thumbnails,
+      thumbnails
     } );
   }
 
@@ -60,14 +60,14 @@ export class RecordingService {
       "process-recording",
       {
         jobId,
-        template,
+        template
       },
       {
         jobId,
         priority: 1,
         delay: 0,
         removeOnFail: true,
-        removeOnComplete: true,
+        removeOnComplete: true
       }
     );
   }
@@ -79,14 +79,14 @@ export class RecordingService {
   public async pauseProcessing(): Promise<void> {
     await Promise.all( [
       this.queueService.pauseQueue(),
-      this.workerService.pauseWorker(),
+      this.workerService.pauseWorker()
     ] );
   }
 
   public async resumeProcessing(): Promise<void> {
     await Promise.all( [
       this.queueService.resumeQueue(),
-      this.workerService.resumeWorker(),
+      this.workerService.resumeWorker()
     ] );
   }
 
@@ -96,7 +96,7 @@ export class RecordingService {
     try {
       await Promise.all( [
         this.workerService.closeWorker(),
-        this.queueService.closeQueue(),
+        this.queueService.closeQueue()
       ] );
 
       await Redis.disconnect();

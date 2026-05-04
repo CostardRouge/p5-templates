@@ -1,6 +1,5 @@
 const scripts = {
-  loaded: [
-  ],
+  loaded: [],
   pending: new Map(),
   load: (
     src, async = true, type = "text/javascript"
@@ -16,7 +15,7 @@ const scripts = {
 
     if ( existingScript?.dataset.loaded === "true" ) {
       return Promise.resolve( {
-        status: true,
+        status: true
       } );
     }
 
@@ -36,13 +35,13 @@ const scripts = {
           scriptElement.dataset.loaded = "true";
 
           resolve( {
-            status: true,
+            status: true
           } );
 
           if ( !scripts.loaded.some( ( entry ) => entry.scriptElement === scriptElement ) ) {
             scripts.loaded.push( {
               container,
-              scriptElement,
+              scriptElement
             } );
           }
         };
@@ -50,7 +49,7 @@ const scripts = {
         const handleError = () => {
           reject( {
             status: false,
-            message: `Failed to load the script ${ src }`,
+            message: `Failed to load the script ${ src }`
           } );
         };
 
@@ -58,7 +57,7 @@ const scripts = {
           "load",
           handleLoad,
           {
-            once: true,
+            once: true
           }
         );
 
@@ -66,7 +65,7 @@ const scripts = {
           "error",
           handleError,
           {
-            once: true,
+            once: true
           }
         );
 
@@ -86,7 +85,7 @@ const scripts = {
     );
 
     return loadPromise;
-  },
+  }
 };
 
 window.removeLoadedScripts = () => {
@@ -98,8 +97,7 @@ window.removeLoadedScripts = () => {
     } catch ( e ) {}
   } );
 
-  scripts.loaded = [
-  ];
+  scripts.loaded = [];
   scripts.pending.clear();
 };
 

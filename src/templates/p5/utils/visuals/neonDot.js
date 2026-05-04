@@ -10,9 +10,8 @@ export default function neonDot( {
   shadowsCount = 3,
   graphics = getP5(),
   position,
-  index,
-} = {
-} ) {
+  index
+} = {} ) {
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
     const shadowProgression = shadowsCount / shadowsCount;
 
@@ -39,7 +38,7 @@ export default function neonDot( {
         1,
         -graphics.PI,
         graphics.PI
-      ),
+      )
     } ) );
 
     graphics.strokeWeight( circleSize );

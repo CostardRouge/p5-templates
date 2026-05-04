@@ -37,6 +37,6 @@ sketch.draw( ( _time ) => {
     end: p.createVector(
       p.width * options.sketch.end.x,
       p.height * options.sketch.end.y
-    ),
+    )
   } );
 } );

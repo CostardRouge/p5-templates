@@ -70,11 +70,11 @@ export class RecordingWorkerService {
         maxStalledCount: 2, // Allow 2 stalls before giving up
         lockDuration: 60_000, // Lock jobs for 60 seconds (default is 30s)
         removeOnComplete: {
-          count: 100,
+          count: 100
         },
         removeOnFail: {
-          count: 50,
-        },
+          count: 50
+        }
       }
     );
   }
@@ -92,7 +92,7 @@ export class RecordingWorkerService {
         job.id,
         {
           status: "active",
-          progress: 0,
+          progress: 0
         }
       );
 
@@ -111,7 +111,7 @@ export class RecordingWorkerService {
         job.id,
         {
           status: "failed",
-          progress: 0,
+          progress: 0
         }
       );
 
@@ -239,7 +239,7 @@ export class RecordingWorkerService {
           jobId,
           {
             status: "queued",
-            progress: 0,
+            progress: 0
           }
         );
 
@@ -260,7 +260,7 @@ export class RecordingWorkerService {
           jobId,
           {
             status: "failed",
-            progress: 0,
+            progress: 0
           }
         );
 

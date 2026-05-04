@@ -39,14 +39,13 @@ const getImages = () => {
 
   return imagesFromOptions
     ? imagesFromOptions.map( ( p ) => common.getAsset( p ) ).filter( Boolean )
-    : fromCache || [
-    ];
+    : fromCache || [];
 };
 
 sketch.setup(
   undefined,
   {
-    type: "webgl",
+    type: "webgl"
   }
 );
 
@@ -80,7 +79,7 @@ sketch.draw( async(
     const zoom = animation.ease( {
       values: zoomValues,
       currentTime: animation.progression * zoomValues.length,
-      easingFn: easing.easeInOutQuart,
+      easingFn: easing.easeInOutQuart
     } );
 
     p.translate(
@@ -107,7 +106,7 @@ sketch.draw( async(
     p.rotateX( animation.ease( {
       values: xRotationValues,
       currentTime: animation.progression * xRotationValues.length,
-      easingFn: easing.easeInOutExpo,
+      easingFn: easing.easeInOutExpo
     } ) );
   }
 
@@ -118,7 +117,7 @@ sketch.draw( async(
         p.PI / 2
       ],
       currentTime: +time,
-      easingFn: easing.easeInOutExpo,
+      easingFn: easing.easeInOutExpo
     } ) );
   }
 
@@ -137,7 +136,7 @@ sketch.draw( async(
       p.width / 2
     ],
     currentTime: foldingSpeed,
-    easingFn: easing.easeInOutExpo,
+    easingFn: easing.easeInOutExpo
   } );
   const R = animation.ease( {
     values: [
@@ -145,7 +144,7 @@ sketch.draw( async(
       p.width / 2
     ],
     currentTime: 0,
-    easingFn: easing.easeInOutExpo,
+    easingFn: easing.easeInOutExpo
   } );
 
   const diamond = 0;
@@ -170,7 +169,7 @@ sketch.draw( async(
     bottomRight: p.createVector(
       R,
       p.height - borderSize
-    ),
+    )
   };
 
   const W = p.width / columns;
@@ -207,7 +206,7 @@ sketch.draw( async(
           graphics: buffer,
           center: true,
           // clip: true,
-          fill: true,
+          fill: true
         } );
 
         return cells.reduce(
@@ -224,14 +223,13 @@ sketch.draw( async(
             );
 
             imageCells.push( {
-              imagePart,
+              imagePart
             // dominantColor: colors.getDominantColor( imagePart, 500 )
             } );
 
             return imageCells;
           },
-          [
-          ]
+          []
         );
       } );
     }
@@ -251,7 +249,7 @@ sketch.draw( async(
       width: cellWidth,
       height: cellHeight,
       row,
-      column,
+      column
     },
     cellIndex
   ) => {
@@ -290,7 +288,7 @@ sketch.draw( async(
               +row / rows +
               // +angle
               animation.progression * images.length,
-        easingFn: easing.easeInOutSine,
+        easingFn: easing.easeInOutSine
       } ) );
 
       p.rotateX( animation.ease( {
@@ -307,7 +305,7 @@ sketch.draw( async(
               angle +
               row / rows +
               animation.progression * images.length,
-        easingFn: easing.easeInOutExpo,
+        easingFn: easing.easeInOutExpo
       } ) );
 
       p.translate(

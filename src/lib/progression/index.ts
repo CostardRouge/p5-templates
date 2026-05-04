@@ -2,7 +2,7 @@ import {
   RecordingProgressionSteps,
   JobId,
   RecordingProgressionStream,
-  RecordingProgressionNestedSteps,
+  RecordingProgressionNestedSteps
 } from "@/types/recording.types";
 import Redis from "@/lib/connections/redis";
 
@@ -13,8 +13,7 @@ export const addRecordingStatus = async(
 ) => {
   const key = getKey( jobId );
   const existing = await Redis.getInstance().get( key );
-  const parsed = existing ? JSON.parse( existing ) : {
-  };
+  const parsed = existing ? JSON.parse( existing ) : {};
 
   parsed.status = status;
 
@@ -30,8 +29,7 @@ export const addRecordingDuration = async(
 ) => {
   const key = getKey( jobId );
   const existing = await Redis.getInstance().get( key );
-  const parsed = existing ? JSON.parse( existing ) : {
-  };
+  const parsed = existing ? JSON.parse( existing ) : {};
 
   parsed.recordingDuration = recordingDuration;
 
@@ -48,15 +46,14 @@ export const addRecordingSteps = async(
 ) => {
   const key = getKey( jobId );
   const existing = await Redis.getInstance().get( key );
-  const parsed = existing ? JSON.parse( existing ) : {
-  };
+  const parsed = existing ? JSON.parse( existing ) : {};
 
   await Redis.getInstance().set(
     key,
     JSON.stringify( {
       ...parsed,
       steps,
-      status,
+      status
     } )
   );
 };
@@ -98,8 +95,7 @@ export const updateRecordingStepPercentage = async(
       // @ts-ignore
       if ( !current[ key ] ) {
         // @ts-ignore
-        current[ key ] = {
-        };
+        current[ key ] = {};
       }
 
       // @ts-ignore
@@ -121,14 +117,14 @@ export const updateRecordingStepPercentage = async(
       getKey( jobId ),
       JSON.stringify( {
         ...currentStatus,
-        steps: jobRecordingSteps,
+        steps: jobRecordingSteps
       } )
     );
   } catch ( error ) {
     console.error(
       "updateRecordingStepPercentage failed:",
       {
-        error,
+        error
       }
     );
   }
@@ -149,14 +145,14 @@ export const updateRecordingStatus = async(
       getKey( jobId ),
       JSON.stringify( {
         ...currentStatus,
-        status,
+        status
       } )
     );
   } catch ( error ) {
     console.error(
       "updateRecordingStatus failed:",
       {
-        error,
+        error
       }
     );
   }
@@ -169,21 +165,20 @@ export const updateCurrentSlide = async(
   try {
     const key = getKey( jobId );
     const existing = await Redis.getInstance().get( key );
-    const parsed = existing ? JSON.parse( existing ) : {
-    };
+    const parsed = existing ? JSON.parse( existing ) : {};
 
     await Redis.getInstance().set(
       key,
       JSON.stringify( {
         ...parsed,
-        currentSlideIndex: slideIndex,
+        currentSlideIndex: slideIndex
       } )
     );
   } catch ( error ) {
     console.error(
       "updateCurrentSlide failed:",
       {
-        error,
+        error
       }
     );
   }
@@ -208,8 +203,7 @@ export const getRecordingStatusAndTotalPercentage = async( jobId: string ): Prom
 
   const walk = (
     obj: RecordingProgressionSteps | RecordingProgressionNestedSteps,
-    path: string[] = [
-    ]
+    path: string[] = []
   ) => {
     for ( const key in obj ) {
       // @ts-ignore
@@ -229,7 +223,7 @@ export const getRecordingStatusAndTotalPercentage = async( jobId: string ): Prom
                 ".steps.",
                 "."
               ),
-              percentage: value.percentage,
+              percentage: value.percentage
             };
           }
         }
@@ -254,6 +248,6 @@ export const getRecordingStatusAndTotalPercentage = async( jobId: string ): Prom
   return {
     currentStep,
     percentage: count === 0 ? 0 : Math.round( total / count ),
-    ...jobRecordingStatus,
+    ...jobRecordingStatus
   };
 };

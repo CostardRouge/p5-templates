@@ -48,7 +48,7 @@ export default function drawSocialMediaOverlay(
         p.TOP
       ],
       popPush: true,
-      graphics: graphics,
+      graphics: graphics
     }
   );
 }

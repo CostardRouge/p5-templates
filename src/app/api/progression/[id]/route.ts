@@ -2,7 +2,7 @@ import {
   addRecordingStatus,
   addRecordingSteps,
   getRecordingStatusAndTotalPercentage,
-  updateRecordingStepPercentage,
+  updateRecordingStepPercentage
 } from "@/lib/progression";
 
 import {
@@ -21,7 +21,7 @@ import {
 export async function GET(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: JobId;
@@ -63,7 +63,7 @@ export async function GET(
     return new NextResponse(
       `recordingStatusAndTotalPercentage not found for job ${ id }`,
       {
-        status: 404,
+        status: 404
       }
     );
   }

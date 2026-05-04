@@ -26,8 +26,8 @@ const converters = {
           angle
         )
       );
-    },
-  },
+    }
+  }
 };
 
 export default converters;

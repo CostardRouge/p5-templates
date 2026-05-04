@@ -5,10 +5,10 @@ import {
 } from "react";
 
 import {
-  type AnimationBridge, onAnimationBridgeReady,
+  type AnimationBridge, onAnimationBridgeReady
 } from "@/lib/animationBridge";
 import {
-  getSketchOptions, subscribeSketchOptions,
+  getSketchOptions, subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
 
 interface AnimationProgressionBarProps {
@@ -43,13 +43,13 @@ function getAnimationConfigFromSketchOptions( sketchOptions: any ): AnimationCon
   return {
     duration,
     framerate,
-    totalFrames,
+    totalFrames
   };
 }
 
 export default function AnimationProgressionBar( {
   className = "",
-  disabled = false,
+  disabled = false
 }: AnimationProgressionBarProps ) {
   const [
     progression,
@@ -176,8 +176,7 @@ export default function AnimationProgressionBar( {
 
       return clamp01( x / width );
     },
-    [
-    ]
+    []
   );
 
   const setAnimationProgression = useCallback(
@@ -188,8 +187,7 @@ export default function AnimationProgressionBar( {
       setProgression( clamped );
       bridgeRef.current?.setProgression( clamped );
     },
-    [
-    ]
+    []
   );
 
   const handleClick = useCallback(
@@ -264,8 +262,7 @@ export default function AnimationProgressionBar( {
       // Ignore (can throw if capture already released).
       }
     },
-    [
-    ]
+    []
   );
 
   const handlePointerMove = useCallback(
@@ -317,8 +314,7 @@ export default function AnimationProgressionBar( {
     () => {
       setHoverPosition( null );
     },
-    [
-    ]
+    []
   );
 
   const handleKeyDown = useCallback(
@@ -372,7 +368,7 @@ export default function AnimationProgressionBar( {
         currentFrame,
         currentTime,
         currentSeconds,
-        currentMillis,
+        currentMillis
       };
     },
     [
@@ -398,7 +394,7 @@ export default function AnimationProgressionBar( {
         hoverFrame,
         hoverTime,
         hoverSeconds,
-        hoverMillis,
+        hoverMillis
       };
     },
     [
@@ -416,8 +412,7 @@ export default function AnimationProgressionBar( {
         "0"
       ) }s`;
     },
-    [
-    ]
+    []
   );
 
   const ProgressBar = useMemo(
@@ -432,7 +427,7 @@ export default function AnimationProgressionBar( {
         tabIndex={0}
         className={`relative h-4 bg-background border border-theme touch-none ${ isDragging ? "cursor-grabbing" : "cursor-pointer" }`}
         style={{
-          touchAction: "none",
+          touchAction: "none"
         }}
         onClick={handleClick}
         onPointerDown={handlePointerDown}
@@ -446,7 +441,7 @@ export default function AnimationProgressionBar( {
         <div
           className="absolute inset-y-0 left-0 bg-gradient-to-r from-progress-start to-progress-end"
           style={{
-            width: `${ progression * 100 }%`,
+            width: `${ progression * 100 }%`
           }}
         >
           {isDragging && (
@@ -458,7 +453,7 @@ export default function AnimationProgressionBar( {
           <div
             className="absolute inset-y-0 w-0.5 bg-foreground pointer-events-none"
             style={{
-              left: `${ hoverPosition * 100 }%`,
+              left: `${ hoverPosition * 100 }%`
             }}
           />
         )}
@@ -475,7 +470,7 @@ export default function AnimationProgressionBar( {
       stopDragging,
       handleMouseMove,
       handleMouseLeave,
-      handleKeyDown,
+      handleKeyDown
     ]
   );
 

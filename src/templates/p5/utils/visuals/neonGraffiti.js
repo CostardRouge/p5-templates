@@ -13,7 +13,7 @@ function getCircleSize(
     min: 1,
     max: 2,
     variable: false,
-    easing: "easeOutSine",
+    easing: "easeOutSine"
   },
   {
     shadowIndex,
@@ -22,7 +22,7 @@ function getCircleSize(
     stepAngle,
     step,
     stepsCount,
-    stepProgression,
+    stepProgression
   }
 ) {
   const circleSizeEasingFn =
@@ -33,10 +33,10 @@ function getCircleSize(
       values: [
         circleSizeOption.radius * circleSizeOption.max * shadowsCount,
         circleSizeOption.radius * circleSizeOption.min * shadowsCount,
-        circleSizeOption.radius * circleSizeOption.max * shadowsCount,
+        circleSizeOption.radius * circleSizeOption.max * shadowsCount
       ],
       currentTime: animation.progression + shadowProgression + stepProgression,
-      easingFn: circleSizeEasingFn,
+      easingFn: circleSizeEasingFn
     } );
   }
 
@@ -70,9 +70,8 @@ export default function neonGraffiti( {
   opacityStart = 1,
   opacityEnd = 2.25,
   start,
-  end,
-} = {
-} ) {
+  end
+} = {} ) {
   const _p = getP5();
 
   if ( hueAmplitude === undefined ) hueAmplitude = _p.PI;
@@ -174,7 +173,7 @@ export default function neonGraffiti( {
               1,
               -hueAmplitude,
               hueAmplitude
-            ) * hueIndexMultiplier,
+            ) * hueIndexMultiplier
       } ) );
 
       _p.circle(
@@ -189,7 +188,7 @@ export default function neonGraffiti( {
             stepAngle,
             step,
             stepsCount,
-            stepProgression,
+            stepProgression
           }
         )
       );

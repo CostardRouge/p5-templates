@@ -17,7 +17,7 @@ import type {
 import {
   OptionsSchema,
   type SketchOption,
-  type SketchOptionInput,
+  type SketchOptionInput
 } from "@/types/sketch.types";
 import type {
   CaptureActionsRef
@@ -36,12 +36,12 @@ export function useFormState( {
   initialOptions,
   persistedJob,
   onOptionsChange,
-  captureActionsRef,
+  captureActionsRef
 }: UseFormStateProps ) {
   const methods = useForm<SketchOptionInput>( {
     mode: "onChange",
     defaultValues: initOptions( initialOptions ),
-    resolver: zodResolver( OptionsSchema ),
+    resolver: zodResolver( OptionsSchema )
   } );
 
   const {
@@ -96,10 +96,10 @@ export function useFormState( {
       }
     },
     enabled: !!jobId && persistedJob?.status === "draft",
-    intervalMs: 10000, // 10 seconds
+    intervalMs: 10000 // 10 seconds
   } );
 
   return {
-    methods,
+    methods
   };
 }

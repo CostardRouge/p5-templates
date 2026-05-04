@@ -16,7 +16,7 @@ export default function useFormUndoRedoMetrics() {
     historySize: 0,
     memoryEstimate: 0,
     lastOperationTime: 0,
-    totalOperations: 0,
+    totalOperations: 0
   } );
 
   React.useEffect(
@@ -58,6 +58,6 @@ export default function useFormUndoRedoMetrics() {
     averageOperationTime:
       metrics.totalOperations > 0
         ? ( metrics.lastOperationTime / metrics.totalOperations ).toFixed( 2 )
-        : "0",
+        : "0"
   };
 }

@@ -5,7 +5,7 @@ import neonDot from "./neonDot.js";
 const visualsMap = {
   "neon-graffiti": neonGraffiti,
   "neon-line": neonLine,
-  "neon-dot": neonDot,
+  "neon-dot": neonDot
 };
 
 export default visualsMap;

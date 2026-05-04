@@ -17,7 +17,7 @@ export function useSketchThumbnail( {
   engine,
   name,
   persistedJob,
-  updatedAt,
+  updatedAt
 }: UseSketchThumbnailProps ) {
   const thumbnailUrl = useMemo(
     () => {
@@ -43,11 +43,11 @@ export function useSketchThumbnail( {
       persistedJob?.id,
       persistedJob?.thumbnails,
       persistedJob?.updatedAt,
-      updatedAt,
+      updatedAt
     ]
   );
 
   return {
-    thumbnailUrl,
+    thumbnailUrl
   };
 }

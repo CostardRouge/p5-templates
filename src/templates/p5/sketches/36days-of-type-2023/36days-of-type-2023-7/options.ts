@@ -10,10 +10,10 @@ export const formValues = {
     size: 1,
     columns: 65,
     sampleFactor: 0.1,
-    simplifyThreshold: 0,
+    simplifyThreshold: 0
   },
   mask: {
-    distance: 0.015,
+    distance: 0.015
   },
   animation: {
     randomDistance: 1500,
@@ -26,21 +26,21 @@ export const formValues = {
     wave: {
       mode: "linear" as const,
       directionX: -1,
-      directionY: -1,
-    },
+      directionY: -1
+    }
   },
   color: {
     opacityFactor: 1.5,
     fillAlphaStart: 240,
     fillAlphaEnd: 0,
     strokeAlpha: 200,
-    hueMultiplier: 2,
+    hueMultiplier: 2
   },
   backgroundColor: [
     246,
     235,
     225
-  ],
+  ]
 };
 
 // UI configuration only
@@ -51,52 +51,52 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       text: {
         label: "Text",
-        component: "text",
+        component: "text"
       },
       font: {
         component: "select",
         label: "Font name",
         options: fontNames.map( ( fontName ) => ( {
           value: fontName,
-          label: fontName,
-        } ) ),
+          label: fontName
+        } ) )
       },
       size: {
         label: "Size",
         component: "slider",
         min: 0.1,
         max: 4,
-        step: 0.1,
+        step: 0.1
       },
       depth: {
         label: "Depth",
         component: "slider",
         min: 1,
         max: 100,
-        step: 1,
+        step: 1
       },
       columns: {
         label: "Grid columns",
         component: "slider",
         min: 10,
         max: 150,
-        step: 1,
+        step: 1
       },
       sampleFactor: {
         label: "Text sample factor",
         component: "slider",
         min: 0.01,
         max: 1,
-        step: 0.01,
+        step: 0.01
       },
       simplifyThreshold: {
         label: "Simplify threshold",
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.1,
-      },
-    },
+        step: 0.1
+      }
+    }
   },
   mask: {
     component: "nested-object",
@@ -107,9 +107,9 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.001,
         max: 0.1,
-        step: 0.001,
-      },
-    },
+        step: 0.001
+      }
+    }
   },
   animation: {
     component: "nested-object",
@@ -117,43 +117,43 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       variableDepth: {
         label: "Variable depth",
-        component: "checkbox",
+        component: "checkbox"
       },
       rotate: {
         label: "Rotate",
-        component: "checkbox",
+        component: "checkbox"
       },
       rotationCount: {
         label: "Rotation count",
         component: "slider",
         min: 1,
         max: 10,
-        step: 0.5,
+        step: 0.5
       },
       randomDistance: {
         label: "Random distance",
         component: "slider",
         min: 1,
         max: 5000,
-        step: 0.5,
+        step: 0.5
       },
       waveSpeed: {
         label: "Wave speed",
         component: "slider",
         min: 0,
         max: 10,
-        step: 0.5,
+        step: 0.5
       },
       waveSpread: {
         label: "Wave spread",
         component: "slider",
         min: 0,
         max: 20,
-        step: 0.1,
+        step: 0.1
       },
       waveEasing: {
         component: "easing",
-        label: "Wave easing",
+        label: "Wave easing"
       },
       wave: {
         label: "Wave Configuration",
@@ -163,17 +163,17 @@ export const formConfiguration: Record<string, any> = {
           options: [
             {
               label: "Linear",
-              value: "linear",
+              value: "linear"
             },
             {
               label: "Radial",
-              value: "radial",
+              value: "radial"
             },
             {
               label: "Interactive",
-              value: "interactive",
-            },
-          ],
+              value: "interactive"
+            }
+          ]
         },
         configs: {
           linear: {
@@ -182,58 +182,58 @@ export const formConfiguration: Record<string, any> = {
               component: "slider",
               min: -1,
               max: 1,
-              step: 0.1,
+              step: 0.1
             },
             directionY: {
               label: "Direction Y",
               component: "slider",
               min: -1,
               max: 1,
-              step: 0.1,
-            },
+              step: 0.1
+            }
           },
           radial: {
             fromCenter: {
               label: "From center (vs edges)",
-              component: "checkbox",
+              component: "checkbox"
             },
             radialRotation: {
               label: "Rotate toward direction",
-              component: "checkbox",
-            },
+              component: "checkbox"
+            }
           },
           interactive: {
             useMouse: {
               label: "Use mouse (vs animated)",
-              component: "checkbox",
+              component: "checkbox"
             },
             sensitivity: {
               label: "Sensitivity (lower = wider impact)",
               component: "slider",
               min: 0.1,
               max: 2,
-              step: 0.05,
+              step: 0.05
             },
             sinMultiplier: {
               label: "Sin multiplier (animated)",
               component: "slider",
               min: 1,
               max: 9,
-              step: 0.1,
+              step: 0.1
             },
             cosMultiplier: {
               label: "Cos multiplier (animated)",
               component: "slider",
               min: 1,
               max: 9,
-              step: 0.1,
-            },
-          },
-        },
+              step: 0.1
+            }
+          }
+        }
         // Schema is injected client-side in injectSketchSchemas.ts
         // See schemas.ts for WaveConfigSchema definition
-      },
-    },
+      }
+    }
   },
   color: {
     component: "nested-object",
@@ -244,40 +244,40 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 3,
-        step: 0.1,
+        step: 0.1
       },
       fillAlphaStart: {
         label: "Fill alpha (visible)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1,
+        step: 1
       },
       fillAlphaEnd: {
         label: "Fill alpha (hidden)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1,
+        step: 1
       },
       strokeAlpha: {
         label: "Stroke alpha",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1,
+        step: 1
       },
       hueMultiplier: {
         label: "Hue range multiplier",
         component: "slider",
         min: 0.5,
         max: 5,
-        step: 0.1,
-      },
-    },
+        step: 0.1
+      }
+    }
   },
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

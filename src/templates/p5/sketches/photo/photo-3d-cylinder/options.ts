@@ -5,8 +5,7 @@ import titleDefaultValues from "@/templates/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/templates/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
-  images: [
-  ],
+  images: [],
 
   colors: {
     background: [
@@ -18,7 +17,7 @@ export const formValues = {
       128,
       128,
       255
-    ],
+    ]
   },
 
   title: titleDefaultValues,
@@ -28,20 +27,20 @@ export const formValues = {
     rotateX: true,
     rotateZ: false,
     zoom: -2000,
-    variableZoom: false,
+    variableZoom: false
   },
 
   animation: {
     duration: 8,
     framerate: 60,
-    variableBackgroundColor: true,
-  },
+    variableBackgroundColor: true
+  }
 };
 
 export const formConfiguration: Record<string, any> = {
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   colors: {
@@ -50,13 +49,13 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       background: {
         component: "color",
-        label: "Background color",
+        label: "Background color"
       },
       text: {
         component: "color",
-        label: "Text color",
-      },
-    },
+        label: "Text color"
+      }
+    }
   },
 
   title: titleFormConfiguration,
@@ -67,28 +66,28 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       vertical: {
         component: "checkbox",
-        label: "Vertical orientation",
+        label: "Vertical orientation"
       },
       rotateX: {
         component: "checkbox",
-        label: "Rotate X",
+        label: "Rotate X"
       },
       rotateZ: {
         component: "checkbox",
-        label: "Rotate Z",
+        label: "Rotate Z"
       },
       zoom: {
         component: "slider",
         label: "Zoom (Z translate)",
         min: -10000,
         max: 1000,
-        step: 10,
+        step: 10
       },
       variableZoom: {
         component: "checkbox",
-        label: "Animated zoom",
-      },
-    },
+        label: "Animated zoom"
+      }
+    }
   },
 
   animation: {
@@ -100,19 +99,19 @@ export const formConfiguration: Record<string, any> = {
         label: "Duration (seconds)",
         min: 1,
         max: 60,
-        step: 0.5,
+        step: 0.5
       },
       framerate: {
         component: "slider",
         label: "Framerate",
         min: 1,
         max: 120,
-        step: 1,
+        step: 1
       },
       variableBackgroundColor: {
         component: "checkbox",
-        label: "Animated background color",
-      },
-    },
-  },
+        label: "Animated background color"
+      }
+    }
+  }
 };

@@ -46,7 +46,7 @@ export default function RecordingRow( {
   onDelete,
   onRetry,
   onStart,
-  onClone,
+  onClone
 }: RecordingRowProps ) {
   const slideCount = getSlideCount( job );
   const slideOptions = ( job.options as any )?.slides ?? undefined;
@@ -125,7 +125,7 @@ export default function RecordingRow( {
               {
                 month: "short",
                 day: "numeric",
-                year: "numeric",
+                year: "numeric"
               }
             )}
           </div>
@@ -134,7 +134,7 @@ export default function RecordingRow( {
               undefined,
               {
                 hour: "2-digit",
-                minute: "2-digit",
+                minute: "2-digit"
               }
             )}
             {job.recordingDuration &&
@@ -151,8 +151,7 @@ export default function RecordingRow( {
         <div className="min-w-[120px] sm:min-w-[200px] max-w-xs">
           <CompactProgressBar
             job={job}
-            steps={job.status === "active" ? getRecordingSteps( job ) : [
-            ]}
+            steps={job.status === "active" ? getRecordingSteps( job ) : []}
             recordingSteps={progression?.steps}
             currentSlideIndex={progression?.currentSlideIndex}
             slideOptions={slideOptions}

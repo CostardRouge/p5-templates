@@ -1,6 +1,5 @@
 export const formValues = {
-  images: [
-  ],
+  images: [],
   count: 100,
   zoom: false,
   rotate: false,
@@ -12,46 +11,46 @@ export const formValues = {
     255,
     255,
     255
-  ],
+  ]
 };
 
 export const formConfiguration: Record<string, any> = {
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
   count: {
     label: "Image steps count",
     component: "slider",
     min: 1,
     max: 1000,
-    step: 1,
+    step: 1
   },
   zoom: {
     label: "Zoom mode (instead of unzoom)",
-    component: "checkbox",
+    component: "checkbox"
   },
   rotate: {
     label: "Rotate images",
-    component: "checkbox",
+    component: "checkbox"
   },
   scaleStart: {
     label: "Scale start",
     component: "slider",
     min: 0,
     max: 2,
-    step: 0.1,
+    step: 0.1
   },
   scaleEnd: {
     label: "Scale end",
     component: "slider",
     min: 0,
     max: 2,
-    step: 0.1,
+    step: 0.1
   },
   scaleEasingFunctionName: {
     component: "easing",
-    label: "Scale easing",
+    label: "Scale easing"
   },
   animationProgression: {
     component: "select",
@@ -59,16 +58,16 @@ export const formConfiguration: Record<string, any> = {
     options: [
       {
         label: "Triangle progression",
-        value: "triangleProgression",
+        value: "triangleProgression"
       },
       {
         label: "Linear progression",
-        value: "linearProgression",
-      },
-    ],
+        value: "linearProgression"
+      }
+    ]
   },
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

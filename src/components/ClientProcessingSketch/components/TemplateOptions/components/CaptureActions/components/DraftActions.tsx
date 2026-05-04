@@ -25,7 +25,7 @@ export default function DraftActions( {
   isLoading,
   deleting,
   isAnyActionLoading,
-  isBlockingActionLoading,
+  isBlockingActionLoading
 }: DraftActionsProps ) {
   return (
     <>
@@ -34,7 +34,7 @@ export default function DraftActions( {
           className={clsx(
             "rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 flex-1",
             {
-              "animate-pulse-soft": saving,
+              "animate-pulse-soft": saving
             }
           )}
           onClick={onSave}

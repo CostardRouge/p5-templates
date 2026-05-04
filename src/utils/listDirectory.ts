@@ -16,8 +16,7 @@ async function listDirectory( directoryPath: string ) {
       `Error reading directory "${ directoryPath }":`,
       error
     );
-    return [
-    ];
+    return [];
   }
 }
 

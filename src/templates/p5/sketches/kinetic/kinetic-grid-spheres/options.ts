@@ -4,7 +4,7 @@ export const formValues = {
   grid: {
     gap: 3,
     depth: 10,
-    columns: 36,
+    columns: 36
   },
   animation: {
     useMouse: false,
@@ -13,7 +13,7 @@ export const formValues = {
     spheresCount: 6,
     sphereSize: 30,
     maxInfluenceDistance: 150,
-    easing: "easeOutBack",
+    easing: "easeOutBack"
   },
   title: titleDefaultValues,
   color: {
@@ -21,13 +21,13 @@ export const formValues = {
     fillAlphaStart: 230,
     fillAlphaEnd: 20,
     strokeAlpha: 200,
-    hueMultiplier: 2,
+    hueMultiplier: 2
   },
   backgroundColor: [
     246,
     235,
     225
-  ],
+  ]
 };
 
 // UI configuration only
@@ -41,21 +41,21 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 1,
         max: 500,
-        step: 0.5,
+        step: 0.5
       },
       depth: {
         label: "Depth",
         component: "slider",
         min: 1,
-        max: 500,
+        max: 500
       },
       columns: {
         label: "Grid columns",
         component: "slider",
         min: 10,
-        max: 300,
-      },
-    },
+        max: 300
+      }
+    }
   },
   animation: {
     component: "nested-object",
@@ -63,40 +63,40 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       useMouse: {
         label: "Use mouse",
-        component: "checkbox",
+        component: "checkbox"
       },
       useHands: {
         label: "Use hands",
-        component: "checkbox",
+        component: "checkbox"
       },
       showSpheres: {
         label: "Show spheres",
-        component: "checkbox",
+        component: "checkbox"
       },
       spheresCount: {
         label: "Spheres count",
         component: "slider",
         min: 0,
-        max: 24,
+        max: 24
       },
       sphereSize: {
         label: "Sphere size",
         component: "slider",
         min: 1,
-        max: 100,
+        max: 100
       },
       maxInfluenceDistance: {
         label: "Max influence distance",
         component: "slider",
         min: 0,
         max: 500,
-        step: 0.5,
+        step: 0.5
       },
       easing: {
         component: "easing",
-        label: "Depth easing",
-      },
-    },
+        label: "Depth easing"
+      }
+    }
   },
   color: {
     component: "nested-object",
@@ -107,41 +107,41 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.1,
         max: 3,
-        step: 0.1,
+        step: 0.1
       },
       fillAlphaStart: {
         label: "Fill alpha (visible)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1,
+        step: 1
       },
       fillAlphaEnd: {
         label: "Fill alpha (hidden)",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1,
+        step: 1
       },
       strokeAlpha: {
         label: "Stroke alpha",
         component: "slider",
         min: 0,
         max: 255,
-        step: 1,
+        step: 1
       },
       hueMultiplier: {
         label: "Hue range multiplier",
         component: "slider",
         min: 0.5,
         max: 5,
-        step: 0.1,
-      },
-    },
+        step: 0.1
+      }
+    }
   },
   title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

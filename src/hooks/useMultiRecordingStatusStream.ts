@@ -44,7 +44,7 @@ function useMultiRecordingStatusStream() {
 
         callbackRef.current?.( {
           jobId,
-          data,
+          data
         } );
       } catch ( err ) {
         console.error(
@@ -88,13 +88,12 @@ function useMultiRecordingStatusStream() {
         eventSourceRef.current?.close();
       };
     },
-    [
-    ]
+    []
   );
 
   return {
     subscribe,
-    unsubscribe,
+    unsubscribe
   };
 }
 

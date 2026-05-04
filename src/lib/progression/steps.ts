@@ -12,19 +12,19 @@ export const recordingSketchSteps: RecordingProgressionSteps = {
   recording: {
     steps: {
       [ RECORDING_STEPS.LAUNCHING_BROWSER.key ]: {
-        percentage: 0,
+        percentage: 0
       },
       [ RECORDING_STEPS.SAVING_FRAMES.key ]: {
-        percentage: 0,
+        percentage: 0
       },
       [ RECORDING_STEPS.ENCODING_FRAMES.key ]: {
-        percentage: 0,
-      },
-    },
+        percentage: 0
+      }
+    }
   },
   uploading: {
-    percentage: 0,
-  },
+    percentage: 0
+  }
 };
 
 function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
@@ -41,13 +41,12 @@ function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
             },
             [ RECORDING_STEPS.ENCODING_FRAMES.key ]: {
               percentage: 0
-            },
-          },
-        },
+            }
+          }
+        }
       };
     },
-    {
-    }
+    {}
   );
 
   return {
@@ -56,8 +55,8 @@ function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
         [ RECORDING_STEPS.LAUNCHING_BROWSER.key ]: {
           percentage: 0
         },
-        ...perSlideSteps,
-      },
+        ...perSlideSteps
+      }
     },
     uploading: {
       steps: {
@@ -66,9 +65,9 @@ function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
         },
         s3: {
           percentage: 0
-        },
-      },
-    },
+        }
+      }
+    }
   };
 }
 
@@ -80,6 +79,6 @@ export function getRecordingSketchStepsByOptions( sketchOptions: SketchOption ) 
   }
 
   return {
-    ...recordingSketchSteps,
+    ...recordingSketchSteps
   };
 }

@@ -6,7 +6,7 @@ import {
 } from "@/lib/jobStore";
 import {
   getBufferFromS3Url,
-  getDownloadUrlFromS3Url,
+  getDownloadUrlFromS3Url
 } from "@/lib/connections/s3";
 import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
 import archiver from "archiver";
@@ -23,7 +23,7 @@ import {
 export async function GET(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -39,15 +39,14 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
 
     const videoUrls = job.videoUrls
       ? ( job.videoUrls as unknown as string[] )
-      : [
-      ];
+      : [];
 
     // If this is an old recording with a zip file in resultUrl, use that
     if ( job.resultUrl?.endsWith( ".zip" ) ) {
@@ -61,7 +60,7 @@ export async function GET(
       return new NextResponse(
         "No videos found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
@@ -71,8 +70,8 @@ export async function GET(
       "zip",
       {
         zlib: {
-          level: 0,
-        },
+          level: 0
+        }
       }
     ); // No compression for speed
 
@@ -104,7 +103,7 @@ export async function GET(
         archive.append(
           buffer,
           {
-            name: filename,
+            name: filename
           }
         );
       } catch ( error ) {
@@ -124,7 +123,7 @@ export async function GET(
     return new NextResponse(
       stream,
       {
-        headers,
+        headers
       }
     );
   } catch ( error ) {
@@ -136,7 +135,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

@@ -12,7 +12,7 @@ import {
 } from "@/p5/utils/sketch.js";
 
 const sketchState = {
-  threeDimensionGraphics: null,
+  threeDimensionGraphics: null
 };
 
 sketch.setup(
@@ -27,8 +27,7 @@ sketch.setup(
       "webgl"
     );
   },
-  {
-  }
+  {}
 );
 
 sketch.draw( ( time ) => {
@@ -39,8 +38,7 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
-  const itemsToMorph = [
-  ];
+  const itemsToMorph = [];
 
   if ( "single" === options.sketch.text.mode ) {
     itemsToMorph.push( ...( options.sketch.text.value.split( "" ) ) );
@@ -109,8 +107,7 @@ sketch.draw( ( time ) => {
   const yMultiplier = options.sketch.rotation.yMultiplier ?? 2;
   const rotationEasingFunction = easing?.[ options.sketch.rotation.easing ] ?? easing.easeInOutElastic;
 
-  const clockPositions = [
-  ];
+  const clockPositions = [];
 
   if ( rotationEnabled ) {
     itemsToMorph.forEach( (
@@ -132,7 +129,7 @@ sketch.draw( ( time ) => {
           1,
           -H,
           H
-        ),
+        )
       ) );
     } );
   }
@@ -185,7 +182,7 @@ sketch.draw( ( time ) => {
 
       sketchState.threeDimensionGraphics.translate(
         clockPosition.x,
-        clockPosition.y,
+        clockPosition.y
       );
     }
 
@@ -248,7 +245,7 @@ sketch.draw( ( time ) => {
           16,
           32
         ),
-        opacityFactor,
+        opacityFactor
       } ) );
 
       const xx = x * Math.pow(

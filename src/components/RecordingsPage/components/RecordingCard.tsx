@@ -46,7 +46,7 @@ export default function RecordingCard( {
   onDelete,
   onRetry,
   onStart,
-  onClone,
+  onClone
 }: RecordingCardProps ) {
   const slideCount = getSlideCount( job );
   const slideOptions = ( job.options as any )?.slides ?? undefined;
@@ -152,7 +152,7 @@ export default function RecordingCard( {
                 month: "short",
                 day: "numeric",
                 hour: "2-digit",
-                minute: "2-digit",
+                minute: "2-digit"
               }
             )}
           </span>
@@ -171,8 +171,7 @@ export default function RecordingCard( {
           <div className="pt-0.5 sm:pt-1 min-w-0">
             <CompactProgressBar
               job={job}
-              steps={job.status === "active" ? getRecordingSteps( job ) : [
-              ]}
+              steps={job.status === "active" ? getRecordingSteps( job ) : []}
               recordingSteps={progression?.steps}
               currentSlideIndex={progression?.currentSlideIndex}
               slideOptions={slideOptions}

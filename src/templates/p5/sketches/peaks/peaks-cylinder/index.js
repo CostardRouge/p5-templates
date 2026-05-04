@@ -19,8 +19,8 @@ const sketchState = {
   threeDimensionGraphics: null,
   interactive: {
     position: null,
-    image: null,
-  },
+    image: null
+  }
 };
 
 events.register(
@@ -44,8 +44,7 @@ sketch.setup(
 
     await addScreenPositionFunction( sketchState.threeDimensionGraphics );
   },
-  {
-  }
+  {}
 );
 
 sketch.draw( (
@@ -194,7 +193,7 @@ sketch.draw( (
             p.PI,
             easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.linear
           ) * hueIndexMultiplier,
-          opacityFactor,
+          opacityFactor
         } ) );
 
         sketchState.threeDimensionGraphics.point(

@@ -17,7 +17,7 @@ type HistoryVisualizerProps = {
  */
 export default function HistoryVisualizer( {
   maxItems = 10,
-  showMetrics = true,
+  showMetrics = true
 }: HistoryVisualizerProps ) {
   const {
     getHistoryItems, jumpTo, clear

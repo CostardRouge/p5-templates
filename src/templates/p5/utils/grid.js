@@ -12,7 +12,7 @@ const grid = {
       topLeft = null,
       topRight = null,
       bottomLeft = null,
-      bottomRight = null,
+      bottomRight = null
     },
     cached = true
   ) => {
@@ -45,13 +45,11 @@ const grid = {
 
       const halfDiagonal = baseCellWidth / 2;
 
-      const cells = [
-      ];
+      const cells = [];
 
       for ( let row = 0; row < rows; row++ ) {
         for ( let column = 0; column < columns; column++ ) {
-          const corners = [
-          ];
+          const corners = [];
           const x = topLeft.x + column * baseCellWidth;
           const y = topLeft.y + row * baseCellHeight;
 
@@ -117,7 +115,7 @@ const grid = {
             column,
             row,
             x,
-            y,
+            y
           } );
 
           if ( diamond && row < rows - 1 && column < columns - 1 ) {
@@ -137,7 +135,7 @@ const grid = {
               p.createVector(
                 -halfDiagonal,
                 0
-              ), // left
+              ) // left
             ];
 
             cells.push( {
@@ -158,7 +156,7 @@ const grid = {
               column: column + 0.5,
               row: row + 0.5,
               x: x + halfDiagonal,
-              y: y + halfDiagonal,
+              y: y + halfDiagonal
             } );
           }
         }
@@ -168,14 +166,14 @@ const grid = {
         topLeft,
         topRight,
         bottomLeft,
-        bottomRight,
+        bottomRight
       };
 
       return {
         cells,
         corners,
         cellWidth,
-        cellHeight,
+        cellHeight
       };
     };
 
@@ -324,12 +322,12 @@ const grid = {
             position,
             {
               x,
-              y,
+              y
             },
             index
           );
         } );
-      },
+      }
     };
   },
   draw: async(
@@ -348,14 +346,14 @@ const grid = {
         position,
         {
           x,
-          y,
+          y
         },
-        index / ( cells.length - 1 ),
+        index / ( cells.length - 1 )
       );
     } );
 
     return cells;
-  },
+  }
 };
 
 export default grid;

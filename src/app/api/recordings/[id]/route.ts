@@ -18,7 +18,7 @@ import {
 export async function GET(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -34,7 +34,7 @@ export async function GET(
       return new NextResponse(
         "Job not found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
@@ -49,7 +49,7 @@ export async function GET(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }
@@ -63,7 +63,7 @@ export async function GET(
 export async function DELETE(
   _req: NextRequest,
   {
-    params,
+    params
   }: {
     params: Promise<{
       id: string;
@@ -79,7 +79,7 @@ export async function DELETE(
       return new NextResponse(
         "Job not found",
         {
-          status: 404,
+          status: 404
         }
       );
     }
@@ -93,7 +93,7 @@ export async function DELETE(
       return new NextResponse(
         "Job is not finalized and cannot be deleted",
         {
-          status: 400,
+          status: 400
         }
       );
     }
@@ -142,13 +142,13 @@ export async function DELETE(
       return new NextResponse(
         "Failed to delete job from database",
         {
-          status: 500,
+          status: 500
         }
       );
     }
 
     return NextResponse.json( {
-      deleted: true,
+      deleted: true
     } );
   } catch ( error ) {
     console.error(
@@ -158,7 +158,7 @@ export async function DELETE(
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

@@ -2,8 +2,7 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 
 export const formValues = {
-  images: [
-  ],
+  images: [],
 
   grid: {
     borderSize: 0,
@@ -17,13 +16,13 @@ export const formValues = {
     225
   ],
 
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 export const formConfiguration: Record<string, any> = {
   images: {
     component: "images-stack",
-    label: "Images",
+    label: "Images"
   },
 
   grid: {
@@ -34,20 +33,20 @@ export const formConfiguration: Record<string, any> = {
         label: "Border size",
         component: "slider",
         min: 0,
-        max: 100,
+        max: 100
       },
       rows: {
         label: "Rows",
         component: "slider",
         min: 1,
-        max: 100,
+        max: 100
       },
       columns: {
         label: "Columns",
         component: "slider",
         min: 1,
-        max: 100,
-      },
+        max: 100
+      }
     }
   },
 
@@ -55,6 +54,6 @@ export const formConfiguration: Record<string, any> = {
 
   backgroundColor: {
     component: "color",
-    label: "Background color",
-  },
+    label: "Background color"
+  }
 };

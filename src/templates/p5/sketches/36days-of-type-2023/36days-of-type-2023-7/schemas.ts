@@ -10,13 +10,13 @@ const LinearWaveSchema = z.object( {
     .default( -1 ),
   directionY: z.number().min( -1 )
     .max( 1 )
-    .default( -1 ),
+    .default( -1 )
 } );
 
 const RadialWaveSchema = z.object( {
   mode: z.literal( "radial" ),
   fromCenter: z.boolean().default( true ),
-  radialRotation: z.boolean().default( true ),
+  radialRotation: z.boolean().default( true )
 } );
 
 const InteractiveWaveSchema = z.object( {
@@ -30,7 +30,7 @@ const InteractiveWaveSchema = z.object( {
     .default( 3 ),
   cosMultiplier: z.number().min( 1 )
     .max( 9 )
-    .default( 1 ),
+    .default( 1 )
 } );
 
 export const WaveConfigSchema = z.discriminatedUnion(
@@ -38,6 +38,6 @@ export const WaveConfigSchema = z.discriminatedUnion(
   [
     LinearWaveSchema,
     RadialWaveSchema,
-    InteractiveWaveSchema,
+    InteractiveWaveSchema
   ]
 );

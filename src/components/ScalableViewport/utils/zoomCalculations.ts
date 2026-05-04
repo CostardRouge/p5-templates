@@ -35,7 +35,7 @@ export function calculateZoomTarget(
   return {
     x: nextX,
     y: nextY,
-    scale: clampedScale,
+    scale: clampedScale
   };
 }
 
@@ -49,7 +49,7 @@ export function calculateFitToViewport(
     return {
       x: 0,
       y: 0,
-      scale: 1,
+      scale: 1
     };
   }
 
@@ -71,7 +71,7 @@ export function calculateFitToViewport(
   return {
     x: newX,
     y: newY,
-    scale: newScale,
+    scale: newScale
   };
 }
 
@@ -88,6 +88,6 @@ export function calculateActualPixels(
   return {
     x: newX,
     y: newY,
-    scale: newScale,
+    scale: newScale
   };
 }

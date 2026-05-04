@@ -29,10 +29,10 @@ export async function GET(): Promise<
 
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Internal server error",
+        error: error instanceof Error ? error.message : "Internal server error"
       },
       {
-        status: 500,
+        status: 500
       }
     );
   }

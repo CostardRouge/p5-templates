@@ -35,7 +35,7 @@ const GITHUB_REPO_URL = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
 
 function MenuBar( {
   showRecordings = false,
-  hasMissingThumbnails = false,
+  hasMissingThumbnails = false
 }: MenuBarProps ) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -48,8 +48,7 @@ function MenuBar( {
     () => {
       setMounted( true );
     },
-    [
-    ]
+    []
   );
 
   // Hide menu bar when in capturing mode
@@ -61,8 +60,8 @@ function MenuBar( {
     {
       href: "/",
       name: "templates",
-      Icon: Paintbrush,
-    },
+      Icon: Paintbrush
+    }
   ];
 
   // Only add recordings link after mount to avoid hydration mismatch
@@ -70,7 +69,7 @@ function MenuBar( {
     items.push( {
       href: "/recordings",
       name: "recordings",
-      Icon: Video,
+      Icon: Video
     } );
   }
 
@@ -79,7 +78,7 @@ function MenuBar( {
       href: GITHUB_REPO_URL,
       name: "github",
       Icon: Github,
-      target: "_blank",
+      target: "_blank"
     } );
   }
 
@@ -88,8 +87,8 @@ function MenuBar( {
       href: "instagram.com/costardrouge.jpg",
       name: "instagram",
       target: "_blank",
-      Icon: ExternalLink,
-    },
+      Icon: ExternalLink
+    }
   ] );
 
   // Get all internal route prefixes except "/"

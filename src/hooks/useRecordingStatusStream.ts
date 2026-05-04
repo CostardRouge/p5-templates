@@ -18,10 +18,10 @@ function useRecordingStatusStream() {
     setRecordingProgress( {
       currentStep: {
         name: "network error",
-        progression: 100,
+        progression: 100
       },
       percentage: 0,
-      status: "failed",
+      status: "failed"
     } );
   };
 
@@ -60,13 +60,12 @@ function useRecordingStatusStream() {
         }
       };
     },
-    [
-    ]
+    []
   );
 
   return {
     subscribeToRecordingStatus,
-    recordingProgress,
+    recordingProgress
   };
 }
 

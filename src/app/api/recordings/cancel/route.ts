@@ -28,13 +28,12 @@ export async function POST( req: NextRequest ) {
       return new NextResponse(
         "Invalid job ids",
         {
-          status: 400,
+          status: 400
         }
       );
     }
 
-    const cancelled = [
-    ];
+    const cancelled = [];
 
     for ( const jobId of ids ) {
       const dbJob = await getJobById( jobId );
@@ -67,7 +66,7 @@ export async function POST( req: NextRequest ) {
             jobId,
             {
               status: "cancelled",
-              progress: 100,
+              progress: 100
             }
           );
 
@@ -79,7 +78,7 @@ export async function POST( req: NextRequest ) {
     }
 
     return NextResponse.json( {
-      cancelled,
+      cancelled
     } );
   } catch ( error ) {
     console.error(
@@ -89,7 +88,7 @@ export async function POST( req: NextRequest ) {
     return new NextResponse(
       "Internal Server Error",
       {
-        status: 500,
+        status: 500
       }
     );
   }

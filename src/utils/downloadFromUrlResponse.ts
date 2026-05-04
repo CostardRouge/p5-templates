@@ -7,7 +7,7 @@ export async function downloadFromUrlResponse( fileUrl: string ): Promise<Respon
     return new Response(
       "Failed to fetch file",
       {
-        status: 502,
+        status: 502
       }
     );
   }
@@ -23,12 +23,11 @@ export async function downloadFromUrlResponse( fileUrl: string ): Promise<Respon
       headers: {
         ...( mimeType
           ? {
-            "Content-Type": mimeType,
+            "Content-Type": mimeType
           }
-          : {
-          } ),
-        "Content-Disposition": `attachment; filename="${ fileName }"`,
-      },
+          : {} ),
+        "Content-Disposition": `attachment; filename="${ fileName }"`
+      }
     }
   );
 }

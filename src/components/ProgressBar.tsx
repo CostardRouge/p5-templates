@@ -25,14 +25,13 @@ interface ProgressBarProps {
 }
 
 export default function ProgressBar( {
-  steps = [
-  ],
+  steps = [],
   currentStepIndex = 0,
   overallPercentage = 0,
   showElapsedTime = false,
   startTime,
   variant = "simple",
-  className = "",
+  className = ""
 }: ProgressBarProps ) {
   const [
     elapsedTime,
@@ -97,7 +96,7 @@ export default function ProgressBar( {
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out"
             style={{
-              width: `${ overallPercentage }%`,
+              width: `${ overallPercentage }%`
             }}
           />
         </div>
@@ -146,7 +145,7 @@ export default function ProgressBar( {
           <div
             className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 transition-all duration-500 ease-out relative"
             style={{
-              width: `${ overallPercentage }%`,
+              width: `${ overallPercentage }%`
             }}
           >
             <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -239,7 +238,7 @@ export default function ProgressBar( {
                     <div
                       className="h-full bg-blue-500 transition-all duration-300"
                       style={{
-                        width: `${ step.percentage }%`,
+                        width: `${ step.percentage }%`
                       }}
                     />
                   </div>

@@ -16,8 +16,7 @@ export default function useBrowserRecordingSupported() {
     () => {
       setIsBrowserRecordingSupported( checkBrowserRecordingSupport() );
     },
-    [
-    ]
+    []
   );
 
   return isBrowserRecordingSupported;

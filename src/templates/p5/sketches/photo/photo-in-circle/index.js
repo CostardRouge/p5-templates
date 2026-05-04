@@ -87,7 +87,7 @@ sketch.draw( (
       ],
       currentTime: animation.circularProgression + progression / images.length,
       lerpFn: mappers.lerpVector,
-      easingFn: easing.easeInOutExpo,
+      easingFn: easing.easeInOutExpo
     } );
 
     p.push();
@@ -148,7 +148,7 @@ sketch.draw( (
       margin: p.width * options.sketch?.margin,
       center: options.sketch?.center ?? true,
       clip: options.sketch?.clip ?? false,
-      fill: options.sketch?.fill ?? true,
+      fill: options.sketch?.fill ?? true
     } );
 
     p.pop();

@@ -96,7 +96,7 @@ export async function captureThumbnailFromCanvas(): Promise<string | null> {
       "2d",
       {
         alpha: false, // No transparency for better JPEG compression
-        willReadFrequently: false,
+        willReadFrequently: false
       }
     );
 

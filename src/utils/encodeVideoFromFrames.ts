@@ -51,7 +51,7 @@ async function listPngFramesSorted( framesDirectoryPath: string ): Promise<strin
   const directoryEntries = await fs.readdir(
     framesDirectoryPath,
     {
-      withFileTypes: true,
+      withFileTypes: true
     }
   );
 
@@ -84,8 +84,7 @@ async function writeConcatListFile(
     throw new Error( "No PNG frames were found to encode." );
   }
 
-  const lines: string[] = [
-  ];
+  const lines: string[] = [];
 
   for ( const fileName of sortedFrameFileNames ) {
     const absolutePath = path.resolve(
@@ -213,14 +212,14 @@ export default async function encodeVideoFromFrames(
       "-r",
       String( normalizedFramesPerSecond ),
 
-      outputVideoFilePath,
+      outputVideoFilePath
     ];
 
     const ffmpegProcess: ChildProcessWithoutNullStreams = spawn(
       "ffmpeg",
       ffmpegArguments,
       {
-        cwd: framesDirectoryPath,
+        cwd: framesDirectoryPath
       }
     );
 

@@ -1,7 +1,7 @@
 // Adjust this import to where your FieldConfig types live
 import {
   FieldConfig,
-  NestedObjectConfig,
+  NestedObjectConfig
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
 // ———————————————————————————————————————————————————————————
@@ -28,11 +28,9 @@ export type FieldHints = Record<string, Partial<FieldConfig>>;
  */
 export default function createSketchFormConfigFromDefaults(
   defaults: unknown,
-  hints: FieldHints = {
-  }
+  hints: FieldHints = {}
 ): Record<string, FieldConfig> {
-  if ( !isPlainObject( defaults ) ) return {
-  };
+  if ( !isPlainObject( defaults ) ) return {};
 
   return objectToConfig(
  defaults as Record<string, any>,
@@ -50,8 +48,7 @@ function objectToConfig(
   basePath: string,
   hints: FieldHints
 ): Record<string, FieldConfig> {
-  const config: Record<string, FieldConfig> = {
-  };
+  const config: Record<string, FieldConfig> = {};
 
   for ( const key of Object.keys( obj ) ) {
     const value = obj[ key ];
@@ -83,7 +80,7 @@ function objectToConfig(
           value,
           path,
           hints
-        ), // ← hints already passed, good
+        ) // ← hints already passed, good
       };
 
       config[ key ] = mergeConfig(
@@ -94,8 +91,7 @@ function objectToConfig(
     }
 
     if ( Array.isArray( value ) ) {
-      const arrayFields: Record<string, FieldConfig> = {
-      };
+      const arrayFields: Record<string, FieldConfig> = {};
 
       value.forEach( (
         v, i
@@ -111,7 +107,7 @@ function objectToConfig(
       const group: NestedObjectConfig = {
         component: "nested-object",
         label: override?.label ?? toLabel( key ),
-        fields: arrayFields,
+        fields: arrayFields
       };
 
       config[ key ] = mergeConfig(
@@ -159,7 +155,7 @@ function defaultConfigForValue(
         step: pickStep(
           value,
           0.01
-        ),
+        )
       };
     }
     if ( kind === "angleDeg" ) {
@@ -168,7 +164,7 @@ function defaultConfigForValue(
         label,
         min: 0,
         max: 360,
-        step: 1,
+        step: 1
       };
     }
     return {
@@ -177,14 +173,14 @@ function defaultConfigForValue(
       step: pickStep(
         value,
         1
-      ),
+      )
     };
   }
 
   if ( typeof value === "boolean" ) {
     return {
       component: "checkbox",
-      label,
+      label
     };
   }
 
@@ -192,7 +188,7 @@ function defaultConfigForValue(
     return {
       component: "text",
       label,
-      placeholder: "",
+      placeholder: ""
     };
   }
 
@@ -201,14 +197,13 @@ function defaultConfigForValue(
     const fields = objectToConfig(
       value as Record<string, any>,
       parentPath ? `${ parentPath }.${ key }` : key,
-      hints ?? {
-      }
+      hints ?? {}
     );
 
     return {
       component: "nested-object",
       label,
-      fields,
+      fields
     } as NestedObjectConfig;
   }
 
@@ -216,7 +211,7 @@ function defaultConfigForValue(
   return {
     component: "text",
     label,
-    placeholder: "",
+    placeholder: ""
   };
 }
 
@@ -239,21 +234,21 @@ function mergeConfig<T extends FieldConfig>(
   if ( override.component && override.component !== baseCfg.component ) {
     return {
       ...( baseCfg as any ),
-      ...( override as any ),
+      ...( override as any )
     } as T;
   }
 
   // Same component: shallow-merge
   const merged = {
     ...( baseCfg as any ),
-    ...( override as any ),
+    ...( override as any )
   } as T;
 
   // If nested-object with fields override, merge nested fields too
   if ( merged.component === "nested-object" && ( override as any )?.fields ) {
     merged.fields = {
       ...( baseCfg as any ).fields,
-      ...( override as any ).fields,
+      ...( override as any ).fields
     };
   }
 

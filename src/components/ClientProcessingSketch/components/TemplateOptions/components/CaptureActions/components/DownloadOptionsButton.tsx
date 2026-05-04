@@ -17,7 +17,7 @@ type DownloadOptionsButtonProps = {
 export default function DownloadOptionsButton( {
   options,
   name,
-  persistedJobId,
+  persistedJobId
 }: DownloadOptionsButtonProps ) {
   const handleDownload = ( e: React.MouseEvent ) => {
     // Prevent event from bubbling to avoid triggering unsaved changes modal
@@ -35,7 +35,7 @@ export default function DownloadOptionsButton( {
         )
       ],
       {
-        type: "application/json",
+        type: "application/json"
       }
     );
 

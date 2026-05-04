@@ -22,7 +22,7 @@ export function useInterval( {
   callback,
   enabled,
   intervalMs = 10000,
-  preventConcurrent = true,
+  preventConcurrent = true
 }: UseIntervalOptions ) {
   const intervalRef = useRef<NodeJS.Timeout | null>( null );
   const isExecutingRef = useRef( false );

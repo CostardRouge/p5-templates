@@ -22,23 +22,23 @@ export const formValues = {
   easing: "easeInOutExpo", // easing function for face rotations
   repeatImages: true, // if fewer than 6 images, repeat across faces
 
-  title: titleDefaultValues,
+  title: titleDefaultValues
 };
 
 export const formConfiguration: Record<string, any> = {
 
   repeatImages: {
     component: "checkbox",
-    label: "Repeat images if fewer than 6",
+    label: "Repeat images if fewer than 6"
   },
   images: {
     component: "images-stack",
-    label: "Images (up to 6 faces)",
+    label: "Images (up to 6 faces)"
   },
 
   backgroundColor: {
     component: "color",
-    label: "Background color",
+    label: "Background color"
   },
 
   diceSizeFactor: {
@@ -46,14 +46,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Dice size factor",
     min: 0.5,
     max: 3,
-    step: 0.01,
+    step: 0.01
   },
   faceScale: {
     component: "slider",
     label: "Face image scale",
     min: 0.1,
     max: 1,
-    step: 0.01,
+    step: 0.01
   },
 
   // Motion
@@ -62,12 +62,12 @@ export const formConfiguration: Record<string, any> = {
     label: "Rotation speed",
     min: 0,
     max: 3,
-    step: 0.01,
+    step: 0.01
   },
   easing: {
     component: "easing",
-    label: "Rotation easing",
+    label: "Rotation easing"
   },
 
-  title: titleFormConfiguration,
+  title: titleFormConfiguration
 };

@@ -38,8 +38,7 @@ type PathChange = {
 function deepDiff(
   original: unknown,
   updated: unknown,
-  currentPath: string[] = [
-  ]
+  currentPath: string[] = []
 ): PathChange[] {
   if (
     typeof original === "object" &&
@@ -49,11 +48,10 @@ function deepDiff(
     updated !== null &&
     !Array.isArray( updated )
   ) {
-    const changes: PathChange[] = [
-    ];
+    const changes: PathChange[] = [];
     const allKeys = new Set( [
       ...Object.keys( original as Record<string, unknown> ),
-      ...Object.keys( updated as Record<string, unknown> ),
+      ...Object.keys( updated as Record<string, unknown> )
     ] );
 
     for ( const key of allKeys ) {
@@ -79,8 +77,7 @@ function deepDiff(
     ];
   }
 
-  return [
-  ];
+  return [];
 }
 
 // ---------------------------------------------------------------------------
@@ -299,8 +296,7 @@ function applyChanges(
   type Replacement = {
  start: number; end: number; text: string
 };
-  const replacements: Replacement[] = [
-  ];
+  const replacements: Replacement[] = [];
 
   for ( const change of changes ) {
     const {
@@ -375,7 +371,7 @@ export async function POST( request: Request ) {
     return new Response(
       "Not found",
       {
-        status: 404,
+        status: 404
       }
     );
   }
@@ -388,7 +384,7 @@ export async function POST( request: Request ) {
     return new Response(
       "Invalid JSON body",
       {
-        status: 400,
+        status: 400
       }
     );
   }
@@ -406,7 +402,7 @@ export async function POST( request: Request ) {
     return new Response(
       "Missing required fields: sketch (string), engineId (string), formValues (object), originalFormValues (object)",
       {
-        status: 400,
+        status: 400
       }
     );
   }
@@ -415,7 +411,7 @@ export async function POST( request: Request ) {
     sketch,
     engineId,
     formValues,
-    originalFormValues,
+    originalFormValues
   } = body as {
     sketch: string;
     engineId: string;
@@ -432,7 +428,7 @@ export async function POST( request: Request ) {
     return new Response(
       `Sketch "${ sketch }" not found in metadata`,
       {
-        status: 404,
+        status: 404
       }
     );
   }
@@ -441,7 +437,7 @@ export async function POST( request: Request ) {
     return new Response(
       "options.ts not found for this sketch",
       {
-        status: 404,
+        status: 404
       }
     );
   }
@@ -461,7 +457,7 @@ export async function POST( request: Request ) {
         status: 200,
         headers: {
           "Content-Type": "application/json"
-        },
+        }
       }
     );
   }
@@ -481,7 +477,7 @@ export async function POST( request: Request ) {
     return new Response(
       String( err ),
       {
-        status: 422,
+        status: 422
       }
     );
   }
@@ -501,7 +497,7 @@ export async function POST( request: Request ) {
       status: 200,
       headers: {
         "Content-Type": "application/json"
-      },
+      }
     }
   );
 }

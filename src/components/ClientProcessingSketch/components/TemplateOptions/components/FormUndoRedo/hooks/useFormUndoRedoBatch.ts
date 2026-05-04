@@ -48,6 +48,6 @@ export default function useFormUndoRedoBatch() {
     withBatch,
     withBatchAsync,
     isInBatch: () => batchIdRef.current !== null,
-    currentBatchId: batchIdRef.current,
+    currentBatchId: batchIdRef.current
   };
 }

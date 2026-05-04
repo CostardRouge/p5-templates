@@ -9,7 +9,7 @@ import {
 } from "@/p5/utils/sketch.js";
 
 const canvases = {
-  mask: undefined,
+  mask: undefined
 };
 
 function drawImageWithMask( {
@@ -86,8 +86,8 @@ events.register(
             vy: p.random(
               -1,
               1
-            ),
-          },
+            )
+          }
         }
       );
     } );
@@ -159,7 +159,7 @@ sketch.draw( (
           ballPosition.y,
           size
         );
-      },
+      }
     } );
   }
 
@@ -183,7 +183,7 @@ sketch.draw( (
           p.CENTER,
           p.CENTER
         ],
-        blendMode: p.EXCLUSION,
+        blendMode: p.EXCLUSION
       }
     );
   }
