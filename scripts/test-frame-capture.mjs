@@ -49,7 +49,9 @@ function log(
 }
 
 function formatBytes( bytes ) {
-  if ( bytes === 0 ) return "0 Bytes";
+  if ( bytes === 0 ) {
+    return "0 Bytes";
+  }
   const k = 1024;
   const sizes = [
     "Bytes",
@@ -66,7 +68,9 @@ function formatBytes( bytes ) {
 }
 
 function formatTime( ms ) {
-  if ( ms < 1000 ) return `${ Math.round( ms ) }ms`;
+  if ( ms < 1000 ) {
+    return `${ Math.round( ms ) }ms`;
+  }
   return `${ ( ms / 1000 ).toFixed( 2 ) }s`;
 }
 
@@ -119,7 +123,9 @@ async function captureFramesServerSide(
     const frameDataUrl = await page.evaluate( () => {
       const canvas = document.querySelector( "canvas#defaultCanvas0" );
 
-      if ( !canvas ) throw new Error( "Canvas not found" );
+      if ( !canvas ) {
+        throw new Error( "Canvas not found" );
+      }
       return canvas.toDataURL( "image/png" );
     } );
 

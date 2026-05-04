@@ -30,7 +30,9 @@ export default function createSketchFormConfigFromDefaults(
   defaults: unknown,
   hints: FieldHints = {}
 ): Record<string, FieldConfig> {
-  if ( !isPlainObject( defaults ) ) return {};
+  if ( !isPlainObject( defaults ) ) {
+    return {};
+  }
 
   return objectToConfig(
  defaults as Record<string, any>,
@@ -228,7 +230,9 @@ function mergeConfig<T extends FieldConfig>(
   baseCfg: T,
   override?: Partial<FieldConfig>
 ): T {
-  if ( !override ) return baseCfg;
+  if ( !override ) {
+    return baseCfg;
+  }
 
   // If override has a different component, replace component and shallow-merge common fields.
   if ( override.component && override.component !== baseCfg.component ) {
@@ -299,7 +303,9 @@ function pickNumberKind(
     ].some( ( s ) =>
       k.includes( s ) );
 
-  if ( looksLikeRatio ) return "ratio";
+  if ( looksLikeRatio ) {
+    return "ratio";
+  }
 
   if ( [
     "angle",
@@ -327,7 +333,9 @@ function pickStep(
 function roundToMagnitude( x: number ): number {
   const abs = Math.abs( x );
 
-  if ( abs === 0 ) return 1;
+  if ( abs === 0 ) {
+    return 1;
+  }
   const pow = Math.pow(
     10,
     Math.floor( Math.log10( abs ) )

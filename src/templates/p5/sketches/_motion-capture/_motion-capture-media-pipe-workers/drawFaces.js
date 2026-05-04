@@ -11,7 +11,9 @@ const rightEar = 4;
 const leftEar = 5;
 
 const getZoomFromFace = ( face ) => {
-  if ( !face || face.length < 6 ) return 0;
+  if ( !face || face.length < 6 ) {
+    return 0;
+  }
 
   const dEyes = getP5().Vector.dist(
     face[ 0 ],

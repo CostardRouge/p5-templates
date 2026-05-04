@@ -41,7 +41,9 @@ const sketchState = {
 function getInternalCanvasPoint( event ) {
   const canvasElement = sketch.engine?.getCanvasElement?.();
 
-  if ( !canvasElement ) return null;
+  if ( !canvasElement ) {
+    return null;
+  }
 
   // getBoundingClientRect gives the actual size/pos on screen,
   // accounting for any CSS scaling or parent transforms.
@@ -50,7 +52,9 @@ function getInternalCanvasPoint( event ) {
   const clientX = event.touches?.[ 0 ]?.clientX ?? event.changedTouches?.[ 0 ]?.clientX ?? event.clientX;
   const clientY = event.touches?.[ 0 ]?.clientY ?? event.changedTouches?.[ 0 ]?.clientY ?? event.clientY;
 
-  if ( typeof clientX !== "number" || typeof clientY !== "number" ) return null;
+  if ( typeof clientX !== "number" || typeof clientY !== "number" ) {
+    return null;
+  }
 
   // Normalize to 0-1 based on the DOM element size
   const relX = ( clientX - rect.left ) / rect.width;
@@ -68,7 +72,9 @@ function getInternalCanvasPoint( event ) {
  * We take the screen click, reverse the zoom/pan, and find the UV on the photo.
  */
 function handlePointerSelect( screenPoint ) {
-  if ( !screenPoint ) return;
+  if ( !screenPoint ) {
+    return;
+  }
 
   // Retrieve the transform active at the moment of the click
   const {
@@ -95,7 +101,9 @@ function handlePointerSelect( screenPoint ) {
     bufferY >= imgY &&
     bufferY <= imgY + imgH;
 
-  if ( !isInside ) return;
+  if ( !isInside ) {
+    return;
+  }
 
   // C. Calculate UV (0.0 to 1.0)
   const uvPoint = {
@@ -155,7 +163,9 @@ sketch.setup( () => {
   // Initialize Rect immediately to prevent null errors on start
   const photo = common.getAsset( options.sketch.photo );
 
-  if ( photo?.img ) displayPhoto( photo.img );
+  if ( photo?.img ) {
+    displayPhoto( photo.img );
+  }
 } );
 
 events.register(

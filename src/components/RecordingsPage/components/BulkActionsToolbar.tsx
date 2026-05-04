@@ -22,7 +22,9 @@ export default function BulkActionsToolbar( {
   onBulkCancel,
   onBulkRetry
 }: BulkActionsToolbarProps ) {
-  if ( selectedJobs.length === 0 ) return null;
+  if ( selectedJobs.length === 0 ) {
+    return null;
+  }
 
   const canDelete = selectedJobs.some( ( j ) =>
     [

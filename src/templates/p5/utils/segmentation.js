@@ -15,7 +15,9 @@ export function drawSegmentationMask(
   ],
   inverse = false
 ) {
-  if ( !maskData ) return;
+  if ( !maskData ) {
+    return;
+  }
 
   // 1. Lock the pixels for manipulation
   layer.loadPixels();

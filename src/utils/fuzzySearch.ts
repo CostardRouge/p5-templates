@@ -22,10 +22,12 @@ export function fuzzyMatch(
   const search = searchTerm.toLowerCase().trim();
   const text = target.toLowerCase();
 
-  if ( !search ) return {
-    score: 0,
-    matches: []
-  };
+  if ( !search ) {
+    return {
+      score: 0,
+      matches: []
+    };
+  }
 
   // Split search into words
   const searchWords = search.split( /\s+/ );
@@ -97,7 +99,9 @@ export function fuzzyFilter<T>(
   searchTerm: string,
   getSearchableText: ( item: T ) => string | string[]
 ): T[] {
-  if ( !searchTerm.trim() ) return items;
+  if ( !searchTerm.trim() ) {
+    return items;
+  }
 
   const results: Array<{
     item: T;

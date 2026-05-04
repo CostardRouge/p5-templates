@@ -75,7 +75,9 @@ export default function useRecordings() {
   // Subscribe to in-flight job updates
   useEffect(
     () => {
-      if ( inFlightJobs.length === 0 ) return;
+      if ( inFlightJobs.length === 0 ) {
+        return;
+      }
 
       const jobIds = inFlightJobs.map( ( j ) => j.id );
 
@@ -176,7 +178,9 @@ export default function useRecordings() {
           try {
             const res = await fetch( "/api/recordings?status=queued,active" );
 
-            if ( !res.ok ) throw new Error( "Polling failed" );
+            if ( !res.ok ) {
+              throw new Error( "Polling failed" );
+            }
 
             const newLiveJobs: JobModel[] = await res.json();
 

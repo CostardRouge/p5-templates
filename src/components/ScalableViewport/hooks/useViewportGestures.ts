@@ -51,7 +51,9 @@ export function useViewportGestures( {
         ],
         canceled
       } ) => {
-        if ( canceled ) return;
+        if ( canceled ) {
+          return;
+        }
 
         const {
           x, y
@@ -80,7 +82,9 @@ export function useViewportGestures( {
       } ) => {
         const container = containerRef.current;
 
-        if ( !container ) return;
+        if ( !container ) {
+          return;
+        }
 
         const rect = container.getBoundingClientRect();
 
@@ -150,7 +154,9 @@ export function useViewportGestures( {
       } ) => {
         const container = containerRef.current;
 
-        if ( !container ) return;
+        if ( !container ) {
+          return;
+        }
 
         // Standard Wheel = Zoom
         event.preventDefault();

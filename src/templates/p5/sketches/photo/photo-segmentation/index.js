@@ -73,7 +73,9 @@ sketch.setup( async() => {
       size.width,
       size.height
     );
-    if ( background ) layers[ layerName ].graphics.background( ...background );
+    if ( background ) {
+      layers[ layerName ].graphics.background( ...background );
+    }
   }
 
   await mediapipeInit( {
@@ -91,7 +93,9 @@ sketch.setup( async() => {
     newOptions, origin
   ) => {
     // Only react to changes from React (user editing settings)
-    if ( origin !== "react" ) return;
+    if ( origin !== "react" ) {
+      return;
+    }
 
     const currentImagePath = newOptions.sketch?.photo?.image;
     const currentInverse = newOptions.sketch?.segmentation?.inverse;
@@ -149,7 +153,9 @@ function triggerSegmentation() {
   const photo = common.getAsset( options.sketch?.photo?.image );
   const roi = options.sketch?.segmentation?.roi;
 
-  if ( !photo || !roi ) return;
+  if ( !photo || !roi ) {
+    return;
+  }
 
   // Get the underlying canvas element from p5.Image
   const imageElement = photo.img.canvas || photo.img.elt || photo.img;
@@ -184,7 +190,9 @@ events.register(
     const p = getP5();
     const photo = common.getAsset( options.sketch?.photo?.image );
 
-    if ( !photo ) return;
+    if ( !photo ) {
+      return;
+    }
 
     // Check if click is within photo bounds
     const {

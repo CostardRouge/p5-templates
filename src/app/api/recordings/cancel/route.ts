@@ -38,7 +38,9 @@ export async function POST( req: NextRequest ) {
     for ( const jobId of ids ) {
       const dbJob = await getJobById( jobId );
 
-      if ( !dbJob ) continue;
+      if ( !dbJob ) {
+        continue;
+      }
 
       if ( [
         "completed",

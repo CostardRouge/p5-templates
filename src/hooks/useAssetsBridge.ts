@@ -14,7 +14,9 @@ function countImageRefs(
 
   for ( const s of slides ?? [] ) {
     for ( const it of s?.content ?? [] ) {
-      if ( it?.type === "image" && it?.src === target ) n++;
+      if ( it?.type === "image" && it?.src === target ) {
+        n++;
+      }
       if ( it?.type === "images-stack" && Array.isArray( it.items ) ) {
         n += it.items.filter( ( p: string ) => p === target ).length;
       }

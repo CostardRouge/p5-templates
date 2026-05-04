@@ -63,8 +63,12 @@ function setupWorker() {
   } );
 
   mediapipe.processor.instance.onmessage = ( e ) => {
-    if ( e.data.type === "READY" ) mediapipe.processor.ready = true;
-    if ( e.data.type === "LIB_RESULT" ) handleResult( e.data.payload );
+    if ( e.data.type === "READY" ) {
+      mediapipe.processor.ready = true;
+    }
+    if ( e.data.type === "LIB_RESULT" ) {
+      handleResult( e.data.payload );
+    }
   };
 }
 
@@ -91,7 +95,9 @@ function handleResult( {
 
 // --- NEW: Manual Image Prediction ---
 export async function predictImage( imageSource ) {
-  if ( !mediapipe.processor.ready || mediapipe.processor.busy ) return;
+  if ( !mediapipe.processor.ready || mediapipe.processor.busy ) {
+    return;
+  }
 
   // 1. Ensure Mode is IMAGE
   if ( mediapipe.mode !== "IMAGE" ) {
@@ -140,7 +146,9 @@ export async function predictImage( imageSource ) {
 export function interact(
   x, y, sourceElement
 ) {
-  if ( !mediapipe.processor.ready ) return;
+  if ( !mediapipe.processor.ready ) {
+    return;
+  }
 
   const element = sourceElement || mediapipe.capture.element.elt;
 
@@ -217,30 +225,41 @@ events.register(
   "post-draw",
   () => {
   // Only run automatic video loop if we are in VIDEO mode
-    if ( mediapipe.mode === "VIDEO" ) sendFrameIfDue();
+    if ( mediapipe.mode === "VIDEO" ) {
+      sendFrameIfDue();
+    }
   }
 );
 
 function sendFrameIfDue() {
   // Early return if mediapipe is disabled
-  if ( !mediapipe.enabled ) return;
+  if ( !mediapipe.enabled ) {
+    return;
+  }
 
-  if ( !mediapipe.processor.ready || mediapipe.processor.busy ) return;
+  if ( !mediapipe.processor.ready || mediapipe.processor.busy ) {
+    return;
+  }
 
   // Skip if capture element was not initialized
-  if ( !mediapipe.capture.element ) return;
+  if ( !mediapipe.capture.element ) {
+    return;
+  }
 
   const now = performance.now();
 
   if (
     now - mediapipe.previousFrameSentTime <
     mediapipe.inferenceIntervalMilliseconds
-  )
+  ) {
     return;
+  }
 
   const videoEl = mediapipe.capture.element.elt;
 
-  if ( !videoEl || videoEl.readyState < 2 ) return;
+  if ( !videoEl || videoEl.readyState < 2 ) {
+    return;
+  }
 
   mediapipe.processor.busy = true;
   mediapipe.previousFrameSentTime = now;

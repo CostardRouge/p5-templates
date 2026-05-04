@@ -33,7 +33,9 @@ export function useSorting(
 ) {
   return useMemo(
     () => {
-      if ( !jobs.length ) return jobs;
+      if ( !jobs.length ) {
+        return jobs;
+      }
 
       const sorted = [
         ...jobs

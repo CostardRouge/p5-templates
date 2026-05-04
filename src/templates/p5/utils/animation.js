@@ -153,8 +153,11 @@ const animation = {
       inFn, outFn = inFn
     ) =>
       ( timeFraction ) => {
-        if ( timeFraction < 0.5 ) return inFn( 2 * timeFraction ) / 2;
-        else return ( 2 - outFn( 2 * ( 1 - timeFraction ) ) ) / 2;
+        if ( timeFraction < 0.5 ) {
+          return inFn( 2 * timeFraction ) / 2;
+        } else {
+          return ( 2 - outFn( 2 * ( 1 - timeFraction ) ) ) / 2;
+        }
       },
   sequence: function(
     key, speed, values, amount = 0.07, lerpFn

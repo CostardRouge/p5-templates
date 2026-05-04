@@ -155,8 +155,12 @@ export interface ProgressionUIState {
 }
 
 function stepStatus( percentage: number ): StepUIStatus {
-  if ( percentage >= 100 ) return "completed";
-  if ( percentage > 0 ) return "active";
+  if ( percentage >= 100 ) {
+    return "completed";
+  }
+  if ( percentage > 0 ) {
+    return "active";
+  }
   return "pending";
 }
 
@@ -299,8 +303,11 @@ export function resolveProgressionUIState(
     let status: StepUIStatus = "pending";
 
     if ( currentSlideIndex !== undefined ) {
-      if ( idx < currentSlideIndex ) status = "completed";
-      else if ( idx === currentSlideIndex ) status = "active";
+      if ( idx < currentSlideIndex ) {
+        status = "completed";
+      } else if ( idx === currentSlideIndex ) {
+        status = "active";
+      }
     }
 
     return {
@@ -370,7 +377,9 @@ function resolveCurrentLabel(
     // Check shared leading steps first
     const activeLeading = sharedLeadingSteps.find( ( s ) => s.status !== "completed" );
 
-    if ( activeLeading ) return activeLeading.label;
+    if ( activeLeading ) {
+      return activeLeading.label;
+    }
 
     // Check active slide sub-steps
     if ( currentSlideIndex !== undefined ) {
@@ -388,12 +397,16 @@ function resolveCurrentLabel(
     // Check trailing (upload) steps
     const activeTrailing = sharedTrailingSteps.find( ( s ) => s.status !== "completed" );
 
-    if ( activeTrailing ) return activeTrailing.label;
+    if ( activeTrailing ) {
+      return activeTrailing.label;
+    }
   } else {
     // Single recording: walk flat steps in order
     const activeFlat = flatSteps.find( ( s ) => s.status !== "completed" );
 
-    if ( activeFlat ) return activeFlat.label;
+    if ( activeFlat ) {
+      return activeFlat.label;
+    }
   }
 
   // Fallback for flat uploading (no nested steps)

@@ -126,7 +126,9 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
   const persistHistory = React.useCallback(
     () => {
-      if ( !enablePersistence ) return;
+      if ( !enablePersistence ) {
+        return;
+      }
 
       try {
         const data = {
@@ -154,7 +156,9 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
   const loadPersistedHistory = React.useCallback(
     () => {
-      if ( !enablePersistence ) return;
+      if ( !enablePersistence ) {
+        return;
+      }
 
       try {
         const stored = localStorage.getItem( persistenceKey );
@@ -241,7 +245,9 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
   const capture = React.useCallback(
     ( description?: string ) => {
-      if ( inReplayRef.current || paused() ) return;
+      if ( inReplayRef.current || paused() ) {
+        return;
+      }
 
       const current = snapshot();
       const currentHash = createStateHash( current );
@@ -660,30 +666,44 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   // Hotkeys
   React.useEffect(
     () => {
-      if ( !hotkeys ) return;
+      if ( !hotkeys ) {
+        return;
+      }
 
       const isTextEditingTarget = ( el: EventTarget | null ) => {
         const node = el as HTMLElement | null;
 
-        if ( !node ) return false;
+        if ( !node ) {
+          return false;
+        }
         const tag = node.tagName;
 
-        if ( tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" )
+        if ( tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" ) {
           return true;
-        if ( node.isContentEditable ) return true;
+        }
+        if ( node.isContentEditable ) {
+          return true;
+        }
         return false;
       };
 
       const onKeyDown = ( e: KeyboardEvent ) => {
-        if ( !( e.metaKey || e.ctrlKey ) ) return;
-        if ( isTextEditingTarget( e.target ) ) return;
+        if ( !( e.metaKey || e.ctrlKey ) ) {
+          return;
+        }
+        if ( isTextEditingTarget( e.target ) ) {
+          return;
+        }
 
         const key = e.key.toLowerCase();
 
         if ( key === "z" ) {
           e.preventDefault();
-          if ( e.shiftKey ) redo();
-          else undo();
+          if ( e.shiftKey ) {
+            redo();
+          } else {
+            undo();
+          }
         } else if ( key === "y" ) {
           e.preventDefault();
           redo();
@@ -709,16 +729,22 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   // Auto-capture
   React.useEffect(
     () => {
-      if ( autoCapture === "off" ) return;
+      if ( autoCapture === "off" ) {
+        return;
+      }
 
       const sub = watch( (
         _, info
       ) => {
-        if ( inReplayRef.current || paused() ) return;
+        if ( inReplayRef.current || paused() ) {
+          return;
+        }
         if ( !shouldTrackPath(
           info?.name,
           watchPaths
-        ) ) return;
+        ) ) {
+          return;
+        }
 
         if ( autoCapture === "immediate" ) {
           capture();

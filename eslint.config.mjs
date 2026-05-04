@@ -1,3 +1,4 @@
+import stylistic from "@stylistic/eslint-plugin";
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals.js";
 import nextTypescript from "eslint-config-next/typescript.js";
 import {
@@ -29,105 +30,104 @@ const eslintConfig = [
   ...compat.extends( "plugin:react/recommended" ),
   ...compat.extends( "plugin:react-hooks/recommended" ),
   ...compat.extends( "plugin:@next/next/recommended" ),
-  ...compat.config( {
-    plugins: [
-      "@stylistic/js"
-    ],
-
+  {
+    plugins: {
+      "@stylistic": stylistic
+    },
     rules: {
-    // Overides
+      // Overides
       "react/react-in-jsx-scope": "off",
 
       // Example rules (customize as needed)
-      "@stylistic/js/semi": [
+      "@stylistic/semi": [
         "error",
         "always"
       ],
-      "@stylistic/js/no-extra-semi": [
+      "@stylistic/no-extra-semi": [
         "error"
       ],
-      "@stylistic/js/quotes": [
+      "@stylistic/quotes": [
         "error",
         "double"
       ],
-      "@stylistic/js/array-bracket-newline": [
+      "@stylistic/array-bracket-newline": [
         "error",
         {
           minItems: 1
         }
       ],
-      "@stylistic/js/array-bracket-spacing": [
+      "@stylistic/array-bracket-spacing": [
         "error",
         "always"
       ],
-      "@stylistic/js/array-element-newline": [
+      "@stylistic/array-element-newline": [
         "error",
         "always"
       ],
-      "@stylistic/js/key-spacing": [
+      "@stylistic/key-spacing": [
         "error",
         {
           beforeColon: false,
           afterColon: true
         }
       ],
-      "@stylistic/js/keyword-spacing": [
+      "@stylistic/keyword-spacing": [
         "error",
         {
           after: true
         }
       ],
-      "@stylistic/js/function-call-argument-newline": [
+      "@stylistic/function-call-argument-newline": [
         "error",
         "always"
       ],
-      "@stylistic/js/function-paren-newline": [
+      "@stylistic/function-paren-newline": [
         "error",
         {
           minItems: 2
         }
       ],
-      "@stylistic/js/no-trailing-spaces": "error",
-      "@stylistic/js/no-multiple-empty-lines": [
+      "@stylistic/no-trailing-spaces": "error",
+      "@stylistic/no-multiple-empty-lines": [
         "error",
         {
           max: 1
         }
       ],
-      "@stylistic/js/no-multi-spaces": "error",
-      "@stylistic/js/space-before-function-paren": [
+      "@stylistic/no-multi-spaces": "error",
+      "@stylistic/space-before-function-paren": [
         "error",
         "never"
       ],
-      "@stylistic/js/space-in-parens": [
+      "@stylistic/space-in-parens": [
         "error",
         "always"
       ],
-      "@stylistic/js/semi-spacing": "error",
-      "@stylistic/js/switch-colon-spacing": "error",
-      "@stylistic/js/function-call-spacing": [
+      "@stylistic/semi-spacing": "error",
+      "@stylistic/switch-colon-spacing": "error",
+      "@stylistic/function-call-spacing": [
         "error",
         "never"
       ],
-      "@stylistic/js/comma-spacing": [
+      "@stylistic/comma-spacing": [
         "error",
         {
           before: false,
           after: true
         }
       ],
-      "@stylistic/js/arrow-spacing": "error",
-      "@stylistic/js/spaced-comment": [
+      "@stylistic/arrow-spacing": "error",
+      "@stylistic/spaced-comment": [
         "error",
         "always"
       ],
-      "@stylistic/js/computed-property-spacing": [
+      "@stylistic/computed-property-spacing": [
         "error",
         "always"
       ],
-      "@stylistic/js/space-infix-ops": "error",
-      "@stylistic/js/space-unary-ops": "error",
-      "@stylistic/js/padding-line-between-statements": [
+      "@stylistic/space-infix-ops": "error",
+      "@stylistic/space-unary-ops": "error",
+      "@stylistic/padding-line-between-statements": [
         "error",
         {
           blankLine: "always",
@@ -152,8 +152,8 @@ const eslintConfig = [
           ]
         }
       ],
-      "@stylistic/js/newline-per-chained-call": "error",
-      "@stylistic/js/object-curly-newline": [
+      "@stylistic/newline-per-chained-call": "error",
+      "@stylistic/object-curly-newline": [
         "error",
         {
           ObjectExpression: {
@@ -174,19 +174,22 @@ const eslintConfig = [
           }
         }
       ],
-      "@stylistic/js/jsx-curly-spacing": "off",
-      "@stylistic/js/comma-dangle": [
+      "@stylistic/jsx-curly-spacing": [
+        "error",
+        "always"
+      ],
+      "@stylistic/comma-dangle": [
         "error",
         "never"
       ],
-      "@stylistic/js/object-property-newline": "error",
-      "@stylistic/js/padded-blocks": [
+      "@stylistic/object-property-newline": "error",
+      "@stylistic/padded-blocks": [
         "error",
         {
           blocks: "never"
         }
       ],
-      "@stylistic/js/indent": [
+      "@stylistic/indent": [
         "error",
         2,
         {
@@ -194,19 +197,25 @@ const eslintConfig = [
           ObjectExpression: 1
         }
       ],
-
-      "@stylistic/js/jsx-quotes": [
+      "@stylistic/jsx-quotes": [
         "error",
         "prefer-double"
       ],
-      "@stylistic/js/space-before-blocks": "error",
-      "@stylistic/js/template-curly-spacing": [
+      "@stylistic/space-before-blocks": "error",
+      "@stylistic/template-curly-spacing": [
         "error",
         "always"
       ],
-      "@stylistic/js/quote-props": [
+      "@stylistic/quote-props": [
         "error",
         "as-needed"
+      ],
+      "@stylistic/brace-style": [
+        "error",
+        "1tbs",
+        {
+          allowSingleLine: false
+        }
       ],
 
       // Your existing rules
@@ -214,9 +223,15 @@ const eslintConfig = [
       "@next/next/no-img-element": "off",
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off"
+      "@typescript-eslint/no-explicit-any": "off",
+
+      // Braces: require { } on all control flow, never inline
+      curly: [
+        "error",
+        "all"
+      ]
     }
-  } )
+  }
 ];
 
 export default eslintConfig;

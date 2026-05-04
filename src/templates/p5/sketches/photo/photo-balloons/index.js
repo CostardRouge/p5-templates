@@ -227,7 +227,9 @@ sketch.draw( (
     position.x += w;
     position.y += h;
 
-    if ( !showLines ) return;
+    if ( !showLines ) {
+      return;
+    }
 
     p.strokeWeight( lineWeight );
 
@@ -236,8 +238,12 @@ sketch.draw( (
         ball: other
       }, _index
     ) => {
-      if ( index === _index ) return;
-      if ( links.includes( `${ _index }-${ index }` ) ) return;
+      if ( index === _index ) {
+        return;
+      }
+      if ( links.includes( `${ _index }-${ index }` ) ) {
+        return;
+      }
 
       const {
         x: _x, y: _y

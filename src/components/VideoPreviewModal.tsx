@@ -39,7 +39,9 @@ interface MediaData {
 }
 
 function formatFileSize( bytes: number ): string {
-  if ( bytes === 0 ) return "0 B";
+  if ( bytes === 0 ) {
+    return "0 B";
+  }
   const k = 1024;
   const sizes = [
     "B",
@@ -93,7 +95,9 @@ export default function VideoPreviewModal( {
 
   useEffect(
     () => {
-      if ( !isOpen ) return;
+      if ( !isOpen ) {
+        return;
+      }
 
       const fetchMedia = async() => {
         try {
@@ -177,7 +181,9 @@ export default function VideoPreviewModal( {
   };
 
   const handleDownloadAll = async() => {
-    if ( !media || media.videos.length === 0 ) return;
+    if ( !media || media.videos.length === 0 ) {
+      return;
+    }
 
     if ( media.videos.length === 1 ) {
       // Single video - download directly

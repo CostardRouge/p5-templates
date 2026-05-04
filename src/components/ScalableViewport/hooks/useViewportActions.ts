@@ -34,7 +34,9 @@ export function useViewportActions( {
       const viewport = containerRef.current;
       const canvas = contentRef.current;
 
-      if ( !viewport || !canvas ) return;
+      if ( !viewport || !canvas ) {
+        return;
+      }
 
       const contentWidth = canvas.offsetWidth;
       const contentHeight = canvas.offsetHeight;
@@ -80,7 +82,9 @@ export function useViewportActions( {
       const viewport = containerRef.current;
       const canvas = contentRef.current;
 
-      if ( !viewport || !canvas ) return;
+      if ( !viewport || !canvas ) {
+        return;
+      }
 
       const contentWidth = canvas.offsetWidth;
       const contentHeight = canvas.offsetHeight;

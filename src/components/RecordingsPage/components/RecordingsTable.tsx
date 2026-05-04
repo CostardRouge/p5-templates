@@ -55,7 +55,9 @@ export default function RecordingsTable( {
                   type="checkbox"
                   checked={allSelected}
                   ref={( input ) => {
-                    if ( input ) input.indeterminate = someSelected;
+                    if ( input ) {
+                      input.indeterminate = someSelected;
+                    }
                   }}
                   onChange={onSelectAll}
                   className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"

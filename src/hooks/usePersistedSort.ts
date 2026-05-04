@@ -10,7 +10,9 @@ export function usePersistedSort<T>(
     value,
     setValue
   ] = useState<T>( () => {
-    if ( typeof window === "undefined" ) return defaultValue;
+    if ( typeof window === "undefined" ) {
+      return defaultValue;
+    }
 
     try {
       const stored = localStorage.getItem( key );

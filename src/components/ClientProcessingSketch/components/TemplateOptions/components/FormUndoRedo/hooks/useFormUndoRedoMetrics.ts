@@ -36,7 +36,9 @@ export default function useFormUndoRedoMetrics() {
   );
 
   const formatBytes = ( bytes: number ) => {
-    if ( bytes === 0 ) return "0 B";
+    if ( bytes === 0 ) {
+      return "0 B";
+    }
     const k = 1024;
     const sizes = [
       "B",

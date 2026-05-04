@@ -19,7 +19,9 @@ interface DownloadMenuItemsProps {
 export default function DownloadMenuItems( {
   job
 }: DownloadMenuItemsProps ) {
-  if ( job.status !== "completed" ) return null;
+  if ( job.status !== "completed" ) {
+    return null;
+  }
 
   const videoUrls = ( job.videoUrls as unknown as string[] ) || [];
   const videoSizes = ( job.videoSizes as unknown as number[] ) || [];

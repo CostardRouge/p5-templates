@@ -66,13 +66,19 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       key,
       value
     ] of formData.entries() ) {
-      if ( !key.startsWith( "file[" ) ) continue;
-      if ( !( value instanceof File ) ) continue;
+      if ( !key.startsWith( "file[" ) ) {
+        continue;
+      }
+      if ( !( value instanceof File ) ) {
+        continue;
+      }
 
       // Match keys like file[slide-1][images]
       const match = key.match( /^file\[(global|slide-(\d+))]\[(\w+)]$/ );
 
-      if ( !match ) continue;
+      if ( !match ) {
+        continue;
+      }
 
       const [
         , scope,

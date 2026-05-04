@@ -11,8 +11,12 @@ import {
 export function deepMerge(
   target = {}, source = {}
 ) {
-  if ( typeof target !== "object" || target === null ) return target;
-  if ( typeof source !== "object" || source === null ) return target;
+  if ( typeof target !== "object" || target === null ) {
+    return target;
+  }
+  if ( typeof source !== "object" || source === null ) {
+    return target;
+  }
 
   for ( const [
     key,

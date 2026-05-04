@@ -90,7 +90,9 @@ export async function POST(
     if ( listedObjects.Contents && listedObjects.Contents.length > 0 ) {
       // Copy each object to the new job folder
       await Promise.all( listedObjects.Contents.map( async( object ) => {
-        if ( !object.Key ) return;
+        if ( !object.Key ) {
+          return;
+        }
 
         // Get the relative path within the job folder
         const relativePath = object.Key.replace(

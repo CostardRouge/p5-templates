@@ -33,7 +33,9 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
             : step ) );
       const index = steps.findIndex( ( s ) => s.id === stepId );
 
-      if ( index !== -1 ) setCurrentStepIndex( index );
+      if ( index !== -1 ) {
+        setCurrentStepIndex( index );
+      }
     },
     [
       steps
@@ -89,7 +91,9 @@ export function useProgress( initialSteps: Omit<ProgressStep, "status">[] ) {
     () => {
       const totalSteps = steps.length;
 
-      if ( totalSteps === 0 ) return 0;
+      if ( totalSteps === 0 ) {
+        return 0;
+      }
 
       const completedWeight = steps.filter( ( s ) => s.status === "completed" ).length;
       const activeStep = steps.find( ( s ) => s.status === "active" );

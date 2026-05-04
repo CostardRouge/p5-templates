@@ -132,7 +132,9 @@ export default function ControlledImagesStackInput( {
       const paths = await uploadFiles( files );
       const validNew = paths.filter( isNonEmptyString );
 
-      if ( !validNew.length ) return;
+      if ( !validNew.length ) {
+        return;
+      }
 
       const previous = asStringList( field.value );
 
@@ -173,7 +175,9 @@ export default function ControlledImagesStackInput( {
         active, over
       } = evt;
 
-      if ( !over || active.id === over.id ) return;
+      if ( !over || active.id === over.id ) {
+        return;
+      }
 
       const indexById = new Map( rows.map( (
         r, i
@@ -184,7 +188,9 @@ export default function ControlledImagesStackInput( {
       const oldIdx = indexById.get( String( active.id ) );
       const newIdx = indexById.get( String( over.id ) );
 
-      if ( oldIdx == null || newIdx == null ) return;
+      if ( oldIdx == null || newIdx == null ) {
+        return;
+      }
 
       field.onChange( arrayMove(
         items,

@@ -63,7 +63,9 @@ export default function CompactProgressBar( {
         ? new Date( job.recordingStartAt ).getTime()
         : startTime;
 
-      if ( !recordingStart || job.status !== "active" ) return;
+      if ( !recordingStart || job.status !== "active" ) {
+        return;
+      }
 
       setElapsedTime( Math.floor( ( Date.now() - recordingStart ) / 1000 ) );
 
@@ -91,7 +93,9 @@ export default function CompactProgressBar( {
           const next = new Set( prev );
 
           next.add( currentSlideIndex );
-          if ( currentSlideIndex > 0 ) next.delete( currentSlideIndex - 1 );
+          if ( currentSlideIndex > 0 ) {
+            next.delete( currentSlideIndex - 1 );
+          }
           return next;
         } );
       }
@@ -270,8 +274,11 @@ export default function CompactProgressBar( {
                       setExpandedSlides( ( prev ) => {
                         const next = new Set( prev );
 
-                        if ( next.has( idx ) ) next.delete( idx );
-                        else next.add( idx );
+                        if ( next.has( idx ) ) {
+                          next.delete( idx );
+                        } else {
+                          next.add( idx );
+                        }
                         return next;
                       } )
                     }
@@ -560,7 +567,11 @@ function StatusIcon( {
 }
 
 function statusTextClass( status: StepUIStatus ): string {
-  if ( status === "active" ) return "text-blue-700 dark:text-blue-300";
-  if ( status === "completed" ) return "text-green-700 dark:text-green-300";
+  if ( status === "active" ) {
+    return "text-blue-700 dark:text-blue-300";
+  }
+  if ( status === "completed" ) {
+    return "text-green-700 dark:text-green-300";
+  }
   return "text-gray-500 dark:text-gray-400";
 }

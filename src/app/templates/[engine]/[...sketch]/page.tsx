@@ -58,7 +58,9 @@ function injectTestImagesIntoSketchFields(
     config
   ] of Object.entries( formConfiguration ) ) {
     if ( config.component === "images-stack" ) {
-      if ( typeof config.scope === "object" ) continue;
+      if ( typeof config.scope === "object" ) {
+        continue;
+      }
       const existing = Array.isArray( sketch[ key ] )
         ? ( sketch[ key ] as string[] )
         : [];
@@ -68,7 +70,9 @@ function injectTestImagesIntoSketchFields(
         ...testImagePaths
       ];
     } else if ( config.component === "image" ) {
-      if ( typeof config.scope === "object" ) continue;
+      if ( typeof config.scope === "object" ) {
+        continue;
+      }
       if ( !sketch[ key ] ) {
         sketch[ key ] = testImagePaths[ 0 ] ?? null;
       }

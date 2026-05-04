@@ -18,10 +18,12 @@ export const resolveAssetURL = (
 export function deepMerge(
   targetObject, sourceObject
 ) {
-  if ( typeof targetObject !== "object" || targetObject === null )
+  if ( typeof targetObject !== "object" || targetObject === null ) {
     return sourceObject;
-  if ( typeof sourceObject !== "object" || sourceObject === null )
+  }
+  if ( typeof sourceObject !== "object" || sourceObject === null ) {
     return targetObject;
+  }
 
   const mergedObject = Array.isArray( targetObject )
     ? [

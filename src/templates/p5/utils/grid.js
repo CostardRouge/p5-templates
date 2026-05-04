@@ -19,22 +19,30 @@ const grid = {
     const p = getP5();
 
     // Set defaults for p5-dependent parameters
-    if ( topLeft === null ) topLeft = p.createVector(
-      0,
-      0
-    );
-    if ( topRight === null ) topRight = p.createVector(
-      p.width,
-      0
-    );
-    if ( bottomLeft === null ) bottomLeft = p.createVector(
-      0,
-      p.height
-    );
-    if ( bottomRight === null ) bottomRight = p.createVector(
-      p.width,
-      p.height
-    );
+    if ( topLeft === null ) {
+      topLeft = p.createVector(
+        0,
+        0
+      );
+    }
+    if ( topRight === null ) {
+      topRight = p.createVector(
+        p.width,
+        0
+      );
+    }
+    if ( bottomLeft === null ) {
+      bottomLeft = p.createVector(
+        0,
+        p.height
+      );
+    }
+    if ( bottomRight === null ) {
+      bottomRight = p.createVector(
+        p.width,
+        p.height
+      );
+    }
 
     const compute = () => {
       const baseCellWidth = topLeft.dist( topRight ) / columns;

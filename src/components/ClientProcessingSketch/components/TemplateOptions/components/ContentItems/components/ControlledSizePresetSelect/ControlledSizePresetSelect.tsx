@@ -48,10 +48,12 @@ export default function ControlledSizePresetSelect( {
 
       for ( const option of options ) {
         if ( option.group ) {
-          if ( !groups.has( option.group ) ) groups.set(
-            option.group,
-            []
-          );
+          if ( !groups.has( option.group ) ) {
+            groups.set(
+              option.group,
+              []
+            );
+          }
 
         groups.get( option.group )!.push( option );
         } else {

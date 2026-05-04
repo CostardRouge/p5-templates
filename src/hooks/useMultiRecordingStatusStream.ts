@@ -22,7 +22,9 @@ function useMultiRecordingStatusStream() {
   ) => {
     const newIds = jobIds.filter( ( id ) => !subscribedJobs.current.has( id ) );
 
-    if ( newIds.length === 0 ) return;
+    if ( newIds.length === 0 ) {
+      return;
+    }
 
     newIds.forEach( ( id ) => subscribedJobs.current.add( id ) );
     callbackRef.current = callback;
@@ -64,7 +66,9 @@ function useMultiRecordingStatusStream() {
   };
 
   const unsubscribe = ( jobId: JobId ) => {
-    if ( !subscribedJobs.current.has( jobId ) ) return;
+    if ( !subscribedJobs.current.has( jobId ) ) {
+      return;
+    }
     subscribedJobs.current.delete( jobId );
 
     // Reconnect if jobs remain

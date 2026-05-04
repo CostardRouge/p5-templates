@@ -375,7 +375,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const handleDelete = async() => {
     const jobToDelete = persistedJob?.id || jobId;
 
-    if ( !jobToDelete ) return;
+    if ( !jobToDelete ) {
+      return;
+    }
 
     const statusText = persistedJob?.status || currentStatus || "recording";
 
@@ -395,7 +397,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         }
       );
 
-      if ( !response.ok ) throw new Error( "Delete failed" );
+      if ( !response.ok ) {
+        throw new Error( "Delete failed" );
+      }
 
       const {
         deleted
@@ -414,7 +418,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   };
 
   const handleCancel = async() => {
-    if ( !jobId ) return;
+    if ( !jobId ) {
+      return;
+    }
 
     setCancelling( true );
 
@@ -426,7 +432,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         }
       );
 
-      if ( !response.ok ) throw new Error( "Cancel failed" );
+      if ( !response.ok ) {
+        throw new Error( "Cancel failed" );
+      }
 
       const {
         cancelled
@@ -443,7 +451,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   };
 
   const handleRetry = async() => {
-    if ( !persistedJob?.id ) return;
+    if ( !persistedJob?.id ) {
+      return;
+    }
 
     setRetrying( true );
 
@@ -455,7 +465,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         }
       );
 
-      if ( !response.ok ) throw new Error( "Retry failed" );
+      if ( !response.ok ) {
+        throw new Error( "Retry failed" );
+      }
 
       const {
         retried
@@ -492,7 +504,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const handleDownload = async() => {
     const jobToDownload = persistedJob?.id || jobId;
 
-    if ( !jobToDownload || activeSlideIndex === undefined ) return;
+    if ( !jobToDownload || activeSlideIndex === undefined ) {
+      return;
+    }
 
     setDownloading( true );
     try {

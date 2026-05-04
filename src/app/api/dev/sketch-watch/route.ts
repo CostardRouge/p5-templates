@@ -12,7 +12,9 @@ function getSketchDir(
     engineId
   );
 
-  if ( !sketchPath ) return null;
+  if ( !sketchPath ) {
+    return null;
+  }
 
   return path.join(
     process.cwd(),

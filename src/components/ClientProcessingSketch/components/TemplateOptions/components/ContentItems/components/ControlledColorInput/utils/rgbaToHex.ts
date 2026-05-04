@@ -3,7 +3,9 @@
  * Alpha is ignored as <input type="color"> does not support it.
  */
 export default function rgbaToHex( rgba: number[] ): string {
-  if ( !rgba || rgba.length < 3 ) return "#000000";
+  if ( !rgba || rgba.length < 3 ) {
+    return "#000000";
+  }
 
   const toHex = ( c: number ) => {
     const num = c ?? 0;

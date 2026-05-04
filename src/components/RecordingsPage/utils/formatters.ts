@@ -2,8 +2,12 @@
  * Format file size in bytes to human-readable string
  */
 export function formatFileSize( bytes: number | null ): string {
-  if ( bytes === null ) return "";
-  if ( bytes === 0 ) return "0 B";
+  if ( bytes === null ) {
+    return "";
+  }
+  if ( bytes === 0 ) {
+    return "0 B";
+  }
   const k = 1024;
   const sizes = [
     "B",
@@ -23,7 +27,9 @@ export function formatFileSize( bytes: number | null ): string {
  * Format duration in milliseconds to human-readable string
  */
 export function formatDuration( ms: number | null ): string {
-  if ( ms === null ) return "";
+  if ( ms === null ) {
+    return "";
+  }
   const seconds = Math.floor( ms / 1000 );
   const minutes = Math.floor( seconds / 60 );
   const remainingSeconds = seconds % 60;

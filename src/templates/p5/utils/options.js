@@ -156,8 +156,12 @@ function markLoadedWhenExifReady() {
   const container = getContainer();
   const c = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas#defaultCanvas0" );
 
-  if ( !c || c.classList.contains( "loaded" ) ) return;
-  if ( cache.get( "images" )?.every( ( img ) => img.exif === undefined ) ) return;
+  if ( !c || c.classList.contains( "loaded" ) ) {
+    return;
+  }
+  if ( cache.get( "images" )?.every( ( img ) => img.exif === undefined ) ) {
+    return;
+  }
   c.classList.add( "loaded" );
 }
 
@@ -191,9 +195,15 @@ let unsubscribe = null;
 function isEqual(
   a, b
 ) {
-  if ( a === b ) return true;
-  if ( !a || !b ) return false;
-  if ( typeof a !== "object" || typeof b !== "object" ) return false;
+  if ( a === b ) {
+    return true;
+  }
+  if ( !a || !b ) {
+    return false;
+  }
+  if ( typeof a !== "object" || typeof b !== "object" ) {
+    return false;
+  }
 
   return JSON.stringify( a ) === JSON.stringify( b );
 }
@@ -205,7 +215,9 @@ function handleOptionsChange(
   newOptions, origin
 ) {
   // Skip if this update came from the p5 engine itself to avoid loops
-  if ( origin === "p5" ) return;
+  if ( origin === "p5" ) {
+    return;
+  }
 
   let hasChanges = false;
 

@@ -64,10 +64,14 @@ function buildEntry(
  * List visible sub-directories of `dir` (skip _ and . prefixed).
  */
 function listSubDirs( dir ) {
-  if ( !fs.existsSync( dir ) ) return [];
+  if ( !fs.existsSync( dir ) ) {
+    return [];
+  }
 
   return fs.readdirSync( dir ).filter( ( name ) => {
-    if ( name.startsWith( "_" ) || name.startsWith( "." ) ) return false;
+    if ( name.startsWith( "_" ) || name.startsWith( "." ) ) {
+      return false;
+    }
 
     try {
       return fs.statSync( path.join(
@@ -144,7 +148,9 @@ function generateMetadata() {
       "sketches"
     );
 
-    if ( !fs.existsSync( sketchesDir ) ) continue;
+    if ( !fs.existsSync( sketchesDir ) ) {
+      continue;
+    }
 
     allMeta.push( ...scanEngine( engineId ) );
   }

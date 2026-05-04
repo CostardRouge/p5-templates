@@ -24,7 +24,9 @@ export function setSketchOptions(
 
   // Mutate in place so existing references stay live
   for ( const key of Object.keys( current ) ) {
-    if ( !( key in merged ) ) delete current[ key ];
+    if ( !( key in merged ) ) {
+      delete current[ key ];
+    }
   }
 
   Object.assign(

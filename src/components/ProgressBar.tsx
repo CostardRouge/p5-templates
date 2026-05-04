@@ -44,7 +44,9 @@ export default function ProgressBar( {
 
   useEffect(
     () => {
-      if ( !showElapsedTime || !startTime ) return;
+      if ( !showElapsedTime || !startTime ) {
+        return;
+      }
 
       const interval = setInterval(
         () => {

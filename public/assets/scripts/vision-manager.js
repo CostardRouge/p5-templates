@@ -37,7 +37,9 @@ export class VisionManager {
     } = config;
 
     tasks.forEach( ( task ) => {
-      if ( this.state[ task ] ) this.state[ task ].enabled = true;
+      if ( this.state[ task ] ) {
+        this.state[ task ].enabled = true;
+      }
     } );
 
     const {
@@ -114,7 +116,9 @@ export class VisionManager {
   }
 
   async setMode( mode ) {
-    if ( mode === this.state.runningMode ) return;
+    if ( mode === this.state.runningMode ) {
+      return;
+    }
     this.state.runningMode = mode;
 
     if ( this.state.segmenter.task ) {
@@ -128,7 +132,9 @@ export class VisionManager {
   detect(
     input, timestamp
   ) {
-    if ( !this.state.ready ) return;
+    if ( !this.state.ready ) {
+      return;
+    }
 
     if ( this.state.segmenter.enabled ) {
       // Handle different modes
@@ -176,7 +182,9 @@ export class VisionManager {
   interact(
     input, roi
   ) {
-    if ( !this.state.interactive.enabled || !this.state.interactive.task ) return;
+    if ( !this.state.interactive.enabled || !this.state.interactive.task ) {
+      return;
+    }
 
     // ROI = Region of Interest (The click coordinates)
     // { keypoint: { x: 0.5, y: 0.5 } }
@@ -203,7 +211,9 @@ export class VisionManager {
       categoryMask
     } = result;
 
-    if ( !categoryMask ) return;
+    if ( !categoryMask ) {
+      return;
+    }
 
     const width = categoryMask.width;
     const height = categoryMask.height;
@@ -227,10 +237,11 @@ export class VisionManager {
   emitResult(
     lib, result
   ) {
-    if ( this.onResultCallback )
+    if ( this.onResultCallback ) {
       this.onResultCallback( {
         lib,
         result
       } );
+    }
   }
 }

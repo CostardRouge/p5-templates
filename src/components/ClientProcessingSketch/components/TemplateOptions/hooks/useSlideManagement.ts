@@ -212,7 +212,9 @@ export function useSlideManagement( {
 
   const handleAddSlide = useCallback(
     () => {
-      if ( isAdding ) return;
+      if ( isAdding ) {
+        return;
+      }
 
       setIsAdding( true );
 
@@ -244,13 +246,16 @@ export function useSlideManagement( {
 
   const handleDuplicateSlide = useCallback(
     ( indexToDuplicate: number ) => {
-      if ( indexToDuplicate < 0 || indexToDuplicate >= slideFields.length )
+      if ( indexToDuplicate < 0 || indexToDuplicate >= slideFields.length ) {
         return;
+      }
 
       const allSlides = getValues( "slides" ) ?? [];
       const original = allSlides[ indexToDuplicate ];
 
-      if ( !original ) return;
+      if ( !original ) {
+        return;
+      }
 
       const duplicated = deepClone( original );
 
@@ -284,7 +289,9 @@ export function useSlideManagement( {
 
   const handleDeleteSlide = useCallback(
     ( indexToDelete: number ) => {
-      if ( indexToDelete < 0 || indexToDelete >= slideFields.length ) return;
+      if ( indexToDelete < 0 || indexToDelete >= slideFields.length ) {
+        return;
+      }
 
       const lengthBefore = slideFields.length;
 
@@ -358,7 +365,9 @@ export function useSlideManagement( {
     (
       index: number, newName: string
     ) => {
-      if ( index < 0 || index >= slideFields.length ) return;
+      if ( index < 0 || index >= slideFields.length ) {
+        return;
+      }
       setValue(
         `slides.${ index }.name`,
         newName

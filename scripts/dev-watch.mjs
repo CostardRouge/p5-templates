@@ -7,7 +7,9 @@ const processes = [];
 let shuttingDown = false;
 
 function killAllProcesses() {
-  if ( shuttingDown ) return;
+  if ( shuttingDown ) {
+    return;
+  }
   shuttingDown = true;
 
   console.log( "\n👋 Shutting down all processes..." );
@@ -20,7 +22,9 @@ function killAllProcesses() {
         "SIGTERM"
       );
     } catch {
-      try { proc.kill( "SIGTERM" ); } catch { /* already dead */ }
+      try {
+        proc.kill( "SIGTERM" );
+      } catch { /* already dead */ }
     }
   }
 
@@ -28,7 +32,9 @@ function killAllProcesses() {
     () => {
       for ( const proc of processes ) {
         try {
-          if ( !proc.killed ) proc.kill( "SIGKILL" );
+          if ( !proc.killed ) {
+            proc.kill( "SIGKILL" );
+          }
         } catch { /* already dead */ }
       }
 

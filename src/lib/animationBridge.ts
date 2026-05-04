@@ -81,10 +81,12 @@ export function onAnimationBridgeReady( cb: ReadyCallback ): () => void {
   return () => {
     const idx = pending.indexOf( cb );
 
-    if ( idx !== -1 ) pending.splice(
-      idx,
-      1
-    );
+    if ( idx !== -1 ) {
+      pending.splice(
+        idx,
+        1
+      );
+    }
   };
 }
 

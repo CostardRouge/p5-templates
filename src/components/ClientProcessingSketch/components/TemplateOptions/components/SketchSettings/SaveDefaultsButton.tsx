@@ -41,7 +41,9 @@ export default function SaveDefaultsButton() {
   const handleSave = async( e: React.MouseEvent ) => {
     e.stopPropagation();
 
-    if ( saveState === "saving" ) return;
+    if ( saveState === "saving" ) {
+      return;
+    }
 
     const formValues = getValues( "sketch" );
 

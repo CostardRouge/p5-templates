@@ -74,15 +74,21 @@ export default function neonGraffiti( {
 } = {} ) {
   const _p = getP5();
 
-  if ( hueAmplitude === undefined ) hueAmplitude = _p.PI;
-  if ( !start ) start = _p.createVector(
-    0,
-    _p.height / 2
-  );
-  if ( !end ) end = _p.createVector(
-    _p.width,
-    _p.height / 2
-  );
+  if ( hueAmplitude === undefined ) {
+    hueAmplitude = _p.PI;
+  }
+  if ( !start ) {
+    start = _p.createVector(
+      0,
+      _p.height / 2
+    );
+  }
+  if ( !end ) {
+    end = _p.createVector(
+      _p.width,
+      _p.height / 2
+    );
+  }
 
   _p.noStroke();
 

@@ -12,7 +12,9 @@ function getOptionsFilePath(
     engineId
   );
 
-  if ( !meta ) return null;
+  if ( !meta ) {
+    return null;
+  }
 
   return path.join(
     process.cwd(),
@@ -91,10 +93,13 @@ function findObjectClose(
   let depth = 0;
 
   for ( let i = openBracePos; i < content.length; i++ ) {
-    if ( content[ i ] === "{" ) depth++;
-    else if ( content[ i ] === "}" ) {
+    if ( content[ i ] === "{" ) {
+      depth++;
+    } else if ( content[ i ] === "}" ) {
       depth--;
-      if ( depth === 0 ) return i;
+      if ( depth === 0 ) {
+        return i;
+      }
     }
   }
 
@@ -126,10 +131,13 @@ function findValueEnd(
     let depth = 0;
 
     for ( let i = pos; i < content.length; i++ ) {
-      if ( content[ i ] === "[" ) depth++;
-      else if ( content[ i ] === "]" ) {
+      if ( content[ i ] === "[" ) {
+        depth++;
+      } else if ( content[ i ] === "]" ) {
         depth--;
-        if ( depth === 0 ) return i + 1;
+        if ( depth === 0 ) {
+          return i + 1;
+        }
       }
     }
 
@@ -142,8 +150,12 @@ function findValueEnd(
     let i = pos + 1;
 
     while ( i < content.length ) {
-      if ( content[ i ] === "\\" ) { i += 2; continue; }
-      if ( content[ i ] === quote ) return i + 1;
+      if ( content[ i ] === "\\" ) {
+        i += 2; continue;
+      }
+      if ( content[ i ] === quote ) {
+        return i + 1;
+      }
       i++;
     }
 
@@ -153,12 +165,16 @@ function findValueEnd(
   // Number (including negative / scientific)
   const numMatch = content.slice( pos ).match( /^-?[\d.]+(?:[eE][+-]?\d+)?/ );
 
-  if ( numMatch ) return pos + numMatch[ 0 ].length;
+  if ( numMatch ) {
+    return pos + numMatch[ 0 ].length;
+  }
 
   // Boolean / null / undefined
   const kwMatch = content.slice( pos ).match( /^(?:true|false|null|undefined)\b/ );
 
-  if ( kwMatch ) return pos + kwMatch[ 0 ].length;
+  if ( kwMatch ) {
+    return pos + kwMatch[ 0 ].length;
+  }
 
   // Fallback: arbitrary expression – scan to the next unmatched , } ] )
   let depth = 0;
@@ -166,12 +182,15 @@ function findValueEnd(
   for ( let i = pos; i < content.length; i++ ) {
     const c = content[ i ];
 
-    if ( c === "{" || c === "[" || c === "(" ) depth++;
-    else if ( c === "}" || c === "]" || c === ")" ) {
+    if ( c === "{" || c === "[" || c === "(" ) {
+      depth++;
+    } else if ( c === "}" || c === "]" || c === ")" ) {
       if ( depth === 0 ) {
         let end = i;
 
-        while ( end > pos && /\s/.test( content[ end - 1 ] ) ) end--;
+        while ( end > pos && /\s/.test( content[ end - 1 ] ) ) {
+          end--;
+        }
 
         return end;
       }
@@ -180,7 +199,9 @@ function findValueEnd(
     } else if ( c === "," && depth === 0 ) {
       let end = i;
 
-      while ( end > pos && /\s/.test( content[ end - 1 ] ) ) end--;
+      while ( end > pos && /\s/.test( content[ end - 1 ] ) ) {
+        end--;
+      }
 
       return end;
     }
@@ -215,16 +236,24 @@ function findKeyAtDepth0(
       i++;
 
       while ( i < innerEnd ) {
-        if ( content[ i ] === "\\" ) { i += 2; continue; }
-        if ( content[ i ] === quote ) { i++; break; }
+        if ( content[ i ] === "\\" ) {
+          i += 2; continue;
+        }
+        if ( content[ i ] === quote ) {
+          i++; break;
+        }
         i++;
       }
 
       continue;
     }
 
-    if ( ch === "{" || ch === "[" ) { depth++; i++; continue; }
-    if ( ch === "}" || ch === "]" ) { depth--; i++; continue; }
+    if ( ch === "{" || ch === "[" ) {
+      depth++; i++; continue;
+    }
+    if ( ch === "}" || ch === "]" ) {
+      depth--; i++; continue;
+    }
 
     if ( depth === 0 ) {
       // Try to match `key:` at the current position
@@ -259,9 +288,15 @@ function findKeyAtDepth0(
 
 /** Serialize a leaf value (scalar or array) as a compact inline literal. */
 function serializeLeaf( value: unknown ): string {
-  if ( value === null ) return "null";
-  if ( typeof value === "boolean" || typeof value === "number" ) return String( value );
-  if ( typeof value === "string" ) return JSON.stringify( value );
+  if ( value === null ) {
+    return "null";
+  }
+  if ( typeof value === "boolean" || typeof value === "number" ) {
+    return String( value );
+  }
+  if ( typeof value === "string" ) {
+    return JSON.stringify( value );
+  }
 
   if ( Array.isArray( value ) ) {
     return `[ ${ value.map( serializeLeaf ).join( ", " ) } ]`;
@@ -316,7 +351,9 @@ function applyChanges(
         currentObjOpen
       );
 
-      if ( objClose === -1 ) { found = false; break; }
+      if ( objClose === -1 ) {
+        found = false; break;
+      }
 
       const inner = findKeyAtDepth0(
         content,
@@ -325,14 +362,18 @@ function applyChanges(
         key
       );
 
-      if ( !inner ) { found = false; break; }
+      if ( !inner ) {
+        found = false; break;
+      }
 
       if ( isLast ) {
         valueStart = inner.valueStart;
         valueEnd = inner.valueEnd;
       } else {
         // Must be an object to navigate further
-        if ( content[ inner.valueStart ] !== "{" ) { found = false; break; }
+        if ( content[ inner.valueStart ] !== "{" ) {
+          found = false; break;
+        }
 
         currentObjOpen = inner.valueStart;
       }
@@ -347,7 +388,9 @@ function applyChanges(
     }
   }
 
-  if ( replacements.length === 0 ) return content;
+  if ( replacements.length === 0 ) {
+    return content;
+  }
 
   // Apply in reverse position order so earlier offsets stay valid
   replacements.sort( (

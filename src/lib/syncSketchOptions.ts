@@ -35,7 +35,9 @@ export function setSketchOptions(
   }
 
   for ( const key of Object.keys( current ) ) {
-    if ( !( key in merged ) ) delete current[ key ];
+    if ( !( key in merged ) ) {
+      delete current[ key ];
+    }
   }
 
   Object.assign(

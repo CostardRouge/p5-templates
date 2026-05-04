@@ -147,7 +147,9 @@ export default function RecordingsPage() {
       result.deleted.forEach( ( id ) => {
         const job = allJobs.find( ( j ) => j.id === id );
 
-        if ( job ) handleDelete( job );
+        if ( job ) {
+          handleDelete( job );
+        }
       } );
       clearSelection();
     }
@@ -164,7 +166,9 @@ export default function RecordingsPage() {
       result.cancelled.forEach( ( id ) => {
         const job = allJobs.find( ( j ) => j.id === id );
 
-        if ( job ) handleCancel( job );
+        if ( job ) {
+          handleCancel( job );
+        }
       } );
       clearSelection();
     }
@@ -184,7 +188,9 @@ export default function RecordingsPage() {
       result.retried.forEach( ( id ) => {
         const job = allJobs.find( ( j ) => j.id === id );
 
-        if ( job ) handleRetry( job );
+        if ( job ) {
+          handleRetry( job );
+        }
       } );
       clearSelection();
     }

@@ -51,7 +51,9 @@ export default function ActionsMenu( {
     method: string = "POST",
     confirmMessage?: string
   ) => {
-    if ( confirmMessage && !confirm( confirmMessage ) ) return;
+    if ( confirmMessage && !confirm( confirmMessage ) ) {
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -61,17 +63,24 @@ export default function ActionsMenu( {
         }
       );
 
-      if ( !response.ok ) throw new Error( `${ action } failed` );
+      if ( !response.ok ) {
+        throw new Error( `${ action } failed` );
+      }
 
       const result = await response.json();
       const success =
         result.cancelled || result.deleted || result.retried || result.started;
 
       if ( success ) {
-        if ( action === "cancel" ) onCancel?.( job );
-        else if ( action === "delete" ) onDelete?.( job );
-        else if ( action === "retry" ) onRetry?.( job );
-        else if ( action === "start" ) onStart?.( job );
+        if ( action === "cancel" ) {
+          onCancel?.( job );
+        } else if ( action === "delete" ) {
+          onDelete?.( job );
+        } else if ( action === "retry" ) {
+          onRetry?.( job );
+        } else if ( action === "start" ) {
+          onStart?.( job );
+        }
       } else {
         alert( `Could not ${ action } job: ${ job.id.slice(
           0,

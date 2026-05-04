@@ -145,7 +145,9 @@ export default function PushNotificationManager() {
   }
 
   async function sendTest() {
-    if ( !subscription ) return;
+    if ( !subscription ) {
+      return;
+    }
 
     setIsLoading( true );
     try {

@@ -29,9 +29,11 @@ export default async function addScreenPositionFunction( p5Instance ) {
     let drawNative = p.draw;
 
     p.draw = function( ...args ) {
-      if ( context == R_2D ) p._renderer.matrixStack = [
-        new p5Class.Matrix()
-      ];
+      if ( context == R_2D ) {
+        p._renderer.matrixStack = [
+          new p5Class.Matrix()
+        ];
+      }
       drawNative.apply(
         p,
         args
@@ -43,9 +45,11 @@ export default async function addScreenPositionFunction( p5Instance ) {
     let resetMatrixNative = p.resetMatrix;
 
     p.resetMatrix = function( ...args ) {
-      if ( context == R_2D ) p._renderer.matrixStack = [
-        new p5Class.Matrix()
-      ];
+      if ( context == R_2D ) {
+        p._renderer.matrixStack = [
+          new p5Class.Matrix()
+        ];
+      }
       resetMatrixNative.apply(
         p,
         args
@@ -57,7 +61,9 @@ export default async function addScreenPositionFunction( p5Instance ) {
     let translateNative = p.translate;
 
     p.translate = function( ...args ) {
-      if ( context == R_2D ) last( p._renderer.matrixStack ).translate( args );
+      if ( context == R_2D ) {
+        last( p._renderer.matrixStack ).translate( args );
+      }
       translateNative.apply(
         p,
         args
@@ -240,7 +246,9 @@ export default async function addScreenPositionFunction( p5Instance ) {
     let popNative = p.pop;
 
     p.pop = function( ...args ) {
-      if ( context == R_2D ) p._renderer.matrixStack.pop();
+      if ( context == R_2D ) {
+        p._renderer.matrixStack.pop();
+      }
       popNative.apply(
         p,
         args

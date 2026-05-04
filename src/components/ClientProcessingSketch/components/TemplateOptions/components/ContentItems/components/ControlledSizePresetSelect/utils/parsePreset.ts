@@ -2,7 +2,9 @@ export default function parseSizePreset( value: string | number | null | undefin
   width: number;
   height: number;
 } | null {
-  if ( typeof value !== "string" ) return null;
+  if ( typeof value !== "string" ) {
+    return null;
+  }
   const [
     width,
     height

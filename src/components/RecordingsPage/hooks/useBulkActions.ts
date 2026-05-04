@@ -67,7 +67,9 @@ export default function useBulkActions() {
               }
             );
 
-            if ( res.ok ) deleted.push( id );
+            if ( res.ok ) {
+              deleted.push( id );
+            }
           } catch ( err ) {
             console.error(
               `Failed to delete ${ id }:`,
@@ -109,7 +111,9 @@ export default function useBulkActions() {
               }
             );
 
-            if ( res.ok ) cancelled.push( id );
+            if ( res.ok ) {
+              cancelled.push( id );
+            }
           } catch ( err ) {
             console.error(
               `Failed to cancel ${ id }:`,
@@ -151,7 +155,9 @@ export default function useBulkActions() {
               }
             );
 
-            if ( res.ok ) retried.push( id );
+            if ( res.ok ) {
+              retried.push( id );
+            }
           } catch ( err ) {
             console.error(
               `Failed to retry ${ id }:`,

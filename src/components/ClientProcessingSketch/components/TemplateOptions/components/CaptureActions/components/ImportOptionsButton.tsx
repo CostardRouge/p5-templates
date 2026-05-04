@@ -60,7 +60,9 @@ export default function ImportOptionsButton( {
   const handleFileChange = async( event: React.ChangeEvent<HTMLInputElement> ) => {
     const file = event.target.files?.[ 0 ];
 
-    if ( !file ) return;
+    if ( !file ) {
+      return;
+    }
 
     setImporting( true );
 

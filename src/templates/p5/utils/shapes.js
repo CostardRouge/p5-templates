@@ -151,7 +151,9 @@ const shapes = {
     ].every( Number.isFinite ) ) {
       throw new TypeError( "width, height, columns and rows must be numbers" );
     }
-    if ( columns < 1 || rows < 1 ) return;
+    if ( columns < 1 || rows < 1 ) {
+      return;
+    }
 
     /* 2. Pre-compute the spacing */
     const colStep = p.width / columns;

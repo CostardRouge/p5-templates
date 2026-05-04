@@ -176,7 +176,9 @@ export default function ItemListRenderer( {
   // Initialize values once (defaults/minItems) without clobbering existing values.
   useEffect(
     () => {
-      if ( didInitRef.current ) return;
+      if ( didInitRef.current ) {
+        return;
+      }
 
       const currentValue = getValues( name );
       const hasExistingValues =
@@ -302,8 +304,12 @@ export default function ItemListRenderer( {
   };
 
   const handleAdd = () => {
-    if ( config.locked ) return;
-    if ( config.maxItems && values.length >= config.maxItems ) return;
+    if ( config.locked ) {
+      return;
+    }
+    if ( config.maxItems && values.length >= config.maxItems ) {
+      return;
+    }
 
     const next = values.concat( getDefaultValueForConfig( config.itemConfig ) );
 
@@ -319,8 +325,12 @@ export default function ItemListRenderer( {
   };
 
   const handleRemove = ( index: number ) => {
-    if ( config.locked ) return;
-    if ( config.minItems && values.length <= config.minItems ) return;
+    if ( config.locked ) {
+      return;
+    }
+    if ( config.minItems && values.length <= config.minItems ) {
+      return;
+    }
 
     const next = values.slice(
       0,

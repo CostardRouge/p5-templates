@@ -41,7 +41,9 @@ export default function SlidePreviewGrid( {
   // Fetch thumbnails when visible
   useEffect(
     () => {
-      if ( !isVisible || slideCount <= 1 ) return;
+      if ( !isVisible || slideCount <= 1 ) {
+        return;
+      }
 
       const fetchThumbnails = async() => {
         setLoading( true );
@@ -50,7 +52,9 @@ export default function SlidePreviewGrid( {
         try {
           const response = await fetch( `/api/recordings/${ jobId }/media` );
 
-          if ( !response.ok ) throw new Error( "Failed to fetch thumbnails" );
+          if ( !response.ok ) {
+            throw new Error( "Failed to fetch thumbnails" );
+          }
 
           const data = await response.json();
 
@@ -78,7 +82,9 @@ export default function SlidePreviewGrid( {
   // Carousel auto-advance
   useEffect(
     () => {
-      if ( !isVisible || thumbnails.length <= 1 || loading || error ) return;
+      if ( !isVisible || thumbnails.length <= 1 || loading || error ) {
+        return;
+      }
 
       const interval = setInterval(
         () => {
@@ -115,8 +121,9 @@ export default function SlidePreviewGrid( {
     loading ||
     error ||
     thumbnails.length === 0
-  )
+  ) {
     return null;
+  }
 
   return (
     <div className="absolute inset-0 z-10 overflow-hidden">

@@ -405,10 +405,12 @@ const sketch = {
   getCanvasCenter: () => {
     const p = getP5();
 
-    if ( !p ) return {
-      x: 0,
-      y: 0
-    };
+    if ( !p ) {
+      return {
+        x: 0,
+        y: 0
+      };
+    }
 
     if ( sketch.canvas?.isP3D ) {
       return p.createVector(
@@ -431,7 +433,9 @@ const sketch = {
     events.register(
       "post-draw",
       () => {
-        if ( subscribers.size === 0 ) return;
+        if ( subscribers.size === 0 ) {
+          return;
+        }
 
         const duration = sketch.sketchOptions?.animation?.duration || 10;
         const seconds = time.seconds();
@@ -474,7 +478,9 @@ const sketch = {
         try {
           const now = sketch.getElapsedTime();
 
-          if ( typeof now === "number" ) time.lastUpdate = now;
+          if ( typeof now === "number" ) {
+            time.lastUpdate = now;
+          }
         } catch {
           // p5 millis() may not be available before the first draw.
         }

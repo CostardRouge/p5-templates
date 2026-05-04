@@ -38,7 +38,9 @@ function capitalize( s: string ): string {
 export function buildEasingKey(
   direction: string, family: string
 ): string {
-  if ( family === "linear" ) return "linear";
+  if ( family === "linear" ) {
+    return "linear";
+  }
   return `ease${ direction }${ capitalize( family ) }`;
 }
 

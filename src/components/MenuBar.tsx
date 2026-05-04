@@ -97,7 +97,9 @@ function MenuBar( {
     .map( ( item ) => item.href );
 
   const isActive = ( href: string ) => {
-    if ( !href.startsWith( "/" ) ) return false;
+    if ( !href.startsWith( "/" ) ) {
+      return false;
+    }
 
     if ( href === "/" ) {
       // Home route is active if pathname is "/" or doesn't match any other internal route

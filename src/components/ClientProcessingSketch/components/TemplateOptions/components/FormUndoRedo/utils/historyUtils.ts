@@ -129,8 +129,12 @@ export function shouldTrackPath(
   fieldName: string | undefined,
   watchPaths?: string[]
 ): boolean {
-  if ( !watchPaths || watchPaths.length === 0 ) return true;
-  if ( !fieldName ) return true;
+  if ( !watchPaths || watchPaths.length === 0 ) {
+    return true;
+  }
+  if ( !fieldName ) {
+    return true;
+  }
 
   return watchPaths.some( ( path ) => fieldName === path || fieldName.startsWith( path + "." ) );
 }
@@ -144,7 +148,9 @@ export function extractAffectedPaths( patches: Patch[] ): string[] {
   patches.forEach( ( patch ) => {
     const path = patch.path.join( "." );
 
-    if ( path ) paths.add( path );
+    if ( path ) {
+      paths.add( path );
+    }
   } );
 
   return Array.from( paths );
@@ -157,7 +163,9 @@ export function compressHistory<T>(
   entries: HistoryEntry<T>[],
   maxSize: number
 ): HistoryEntry<T>[] {
-  if ( entries.length <= maxSize ) return entries;
+  if ( entries.length <= maxSize ) {
+    return entries;
+  }
 
   // Keep most recent entries
   return entries.slice( -maxSize );
@@ -167,7 +175,9 @@ export function compressHistory<T>(
  * Merge consecutive entries in the same batch
  */
 export function mergeBatchEntries<T>( entries: HistoryEntry<T>[] ): HistoryEntry<T>[] {
-  if ( entries.length === 0 ) return entries;
+  if ( entries.length === 0 ) {
+    return entries;
+  }
 
   const merged: HistoryEntry<T>[] = [];
   let currentBatch: HistoryEntry<T>[] = [];
@@ -204,7 +214,9 @@ export function mergeBatchEntries<T>( entries: HistoryEntry<T>[] ): HistoryEntry
 }
 
 function mergeBatchGroup<T>( entries: HistoryEntry<T>[] ): HistoryEntry<T> {
-  if ( entries.length === 1 ) return entries[ 0 ];
+  if ( entries.length === 1 ) {
+    return entries[ 0 ];
+  }
 
   const first = entries[ 0 ];
   const last = entries[ entries.length - 1 ];
