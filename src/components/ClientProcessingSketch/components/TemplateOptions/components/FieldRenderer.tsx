@@ -1,6 +1,7 @@
 import {
   ChevronDown,
 } from "lucide-react";
+import { useRef } from "react";
 import {
   get, useFormContext, useWatch
 } from "react-hook-form";
@@ -41,9 +42,9 @@ export default function FieldRenderer( {
     register,
     setValue,
     resetField,
+    getValues,
     formState: {
       errors,
-      defaultValues,
     },
     control,
   } = useFormContext();
@@ -57,19 +58,25 @@ export default function FieldRenderer( {
     registeredName
   );
 
+  // Capture the initial (DB-loaded) value once on mount via a ref.
+  // Using getValues() is more reliable than formState.defaultValues
+  // which can behave unexpectedly through RHF's proxy.
+  const initialValueRef = useRef<unknown>( undefined );
+  const isInitializedRef = useRef( false );
+
   // Watch current value for display (slider) and modified detection
   const currentValue = useWatch( {
     control,
     name: registeredName,
   } );
 
-  const defaultValue = get(
-    defaultValues ?? {
-    },
-    registeredName
-  );
+  if ( !isInitializedRef.current ) {
+    isInitializedRef.current = true;
+    initialValueRef.current = getValues( registeredName );
+  }
+
   const isModified =
-    JSON.stringify( currentValue ) !== JSON.stringify( defaultValue );
+    JSON.stringify( currentValue ) !== JSON.stringify( initialValueRef.current );
 
   const handleReset = ( e: React.MouseEvent ) => {
     e.preventDefault();
