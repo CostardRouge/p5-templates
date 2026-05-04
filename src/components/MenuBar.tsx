@@ -124,15 +124,15 @@ function MenuBar( {
 
           return (
             <Link
-              key={href}
-              href={href}
-              target={target}
-              className={clsx(
+              key={ href }
+              href={ href }
+              target={ target }
+              className={ clsx(
                 "group relative flex items-center gap-2 rounded-xl px-4 py-2 transition-all duration-300 text-sm font-medium",
                 active
                   ? "bg-hover text-foreground shadow-sm"
                   : "text-foreground/70 hover:text-foreground hover:bg-hover/50"
-              )}
+              ) }
             >
               {Icon ? (
                 <Icon className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
@@ -150,7 +150,7 @@ function MenuBar( {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        <GenerateThumbnailsButton hasMissingThumbnails={hasMissingThumbnails} />
+        <GenerateThumbnailsButton hasMissingThumbnails={ hasMissingThumbnails } />
         {SHOW_NOTIFICATIONS && (
           <>
             <PushNotificationManager />

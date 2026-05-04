@@ -84,19 +84,19 @@ function ThemeToggle( {
   ];
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative" ref={ menuRef }>
       <button
         aria-label="Toggle theme"
         title="Toggle theme"
-        onClick={() => setIsOpen( !isOpen )}
-        className={className}
+        onClick={ () => setIsOpen( !isOpen ) }
+        className={ className }
       >
         {!mounted ? (
           <span aria-hidden className="inline-block h-5 w-5" />
         ) : isDark ? (
-          <Sun className={iconClassName} />
+          <Sun className={ iconClassName } />
         ) : (
-          <Moon className={iconClassName} />
+          <Moon className={ iconClassName } />
         )}
       </button>
 
@@ -106,11 +106,11 @@ function ThemeToggle( {
             value, label, icon: Icon
           } ) => (
             <button
-              key={value}
-              onClick={() => {
+              key={ value }
+              onClick={ () => {
                 setTheme( value );
                 setIsOpen( false );
-              }}
+              } }
               className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-hover transition-colors text-left"
             >
               <span className="flex items-center gap-2">

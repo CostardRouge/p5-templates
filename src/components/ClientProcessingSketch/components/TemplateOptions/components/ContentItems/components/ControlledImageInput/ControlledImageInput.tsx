@@ -90,27 +90,27 @@ export default function ControlledImageInput( {
   return (
     <div
       className="relative h-20"
-      onClick={( e ) => {
+      onClick={ ( e ) => {
         e.stopPropagation();
         inputRef.current?.click();
-      }}
-      onDragOver={( e ) => e.preventDefault()}
-      onDrop={async( e ) => {
+      } }
+      onDragOver={ ( e ) => e.preventDefault() }
+      onDrop={ async( e ) => {
         e.preventDefault();
 
         if ( e.dataTransfer.files?.length ) {
           await onFiles( e.dataTransfer.files );
         }
-      }}
+      } }
     >
-      <DropZoneButton onFiles={onFiles} ref={inputRef} />
+      <DropZoneButton onFiles={ onFiles } ref={ inputRef } />
 
       {field.value && (
         <div className="absolute inset-0 overflow-hidden">
           {resolved ? (
             <img
-              src={resolved}
-              alt={field.value}
+              src={ resolved }
+              alt={ field.value }
               className="w-full h-full object-cover rounded-lg border border-theme"
             />
           ) : (
@@ -119,7 +119,7 @@ export default function ControlledImageInput( {
 
           <button
             type="button"
-            onClick={clear}
+            onClick={ clear }
             className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-md border border-theme p-0.5"
           >
             <Trash2 className="w-3.5 h-3.5" />

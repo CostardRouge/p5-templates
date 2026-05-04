@@ -67,14 +67,14 @@ export async function DELETE( req: NextRequest ) {
           if ( bullJob ) {
             try {
               await bullJob.remove();
-            } catch ( err ) {
+            } catch( err ) {
               console.warn(
                 `Could not remove job ${ jobId } from queue:`,
                 err
               );
             }
           }
-        } catch ( err ) {
+        } catch( err ) {
           console.warn(
             `Error accessing queue for job ${ jobId }:`,
             err
@@ -84,7 +84,7 @@ export async function DELETE( req: NextRequest ) {
         // Try to delete artifacts from S3 (best effort)
         try {
           await deleteArtifact( jobId );
-        } catch ( err ) {
+        } catch( err ) {
           console.warn(
             `Could not delete artifacts for job ${ jobId } from S3:`,
             err
@@ -95,14 +95,14 @@ export async function DELETE( req: NextRequest ) {
         try {
           await deleteJob( jobId );
           deleted.push( jobId );
-        } catch ( err ) {
+        } catch( err ) {
           console.error(
             `Failed to delete job ${ jobId } from database:`,
             err
           );
           failed.push( jobId );
         }
-      } catch ( err ) {
+      } catch( err ) {
         console.error(
           `Error processing job ${ jobId }:`,
           err
@@ -115,7 +115,7 @@ export async function DELETE( req: NextRequest ) {
       deleted,
       failed
     } );
-  } catch ( err ) {
+  } catch( err ) {
     console.error(
       "[DELETE /api/recordings] error:",
       err

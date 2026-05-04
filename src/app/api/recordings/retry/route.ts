@@ -73,7 +73,7 @@ export async function POST( req: NextRequest ) {
     return NextResponse.json( {
       retried
     } );
-  } catch ( err ) {
+  } catch( err ) {
     console.error(
       "[POST /api/recordings/retry] error:",
       err

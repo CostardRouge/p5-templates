@@ -117,7 +117,7 @@ export default function RandomizeSettingsButton( {
 
   return (
     <button
-      onClick={handleRandomize}
+      onClick={ handleRandomize }
       className="text-foreground hover:bg-theme/20 rounded transition-colors"
       title="Randomize parameters"
     >

@@ -35,9 +35,9 @@ export default function createSketchFormConfigFromDefaults(
   }
 
   return objectToConfig(
- defaults as Record<string, any>,
- "",
- hints
+    defaults as Record<string, any>,
+    "",
+    hints
   );
 }
 
@@ -86,8 +86,8 @@ function objectToConfig(
       };
 
       config[ key ] = mergeConfig(
- group as FieldConfig,
- override
+        group as FieldConfig,
+        override
       );
       continue;
     }
@@ -113,8 +113,8 @@ function objectToConfig(
       };
 
       config[ key ] = mergeConfig(
- group as FieldConfig,
- override
+        group as FieldConfig,
+        override
       );
       continue;
     }

@@ -42,7 +42,7 @@ export function EngineControls( ) {
       <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden">
         { githubUrl && (
           <Link
-            href={githubUrl}
+            href={ githubUrl }
             target="_blank"
             rel="noopener noreferrer"
             title="View source code on GitHub"
@@ -53,7 +53,7 @@ export function EngineControls( ) {
           </Link>
         ) }
         <button
-          onClick={() => {
+          onClick={ () => {
             if ( looping ) {
               engine?.pause();
             } else {
@@ -61,9 +61,9 @@ export function EngineControls( ) {
             }
 
             setLooping( ( prev ) => !prev );
-          }}
-          title={looping ? "Pause animation" : "Play animation"}
-          aria-label={looping ? "Pause animation" : "Play animation"}
+          } }
+          title={ looping ? "Pause animation" : "Play animation" }
+          aria-label={ looping ? "Pause animation" : "Play animation" }
           className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center"
         >
           {looping ? (
@@ -76,7 +76,7 @@ export function EngineControls( ) {
         <button
           title="Save canvas as image"
           aria-label="Save canvas as image"
-          onClick={() => {
+          onClick={ () => {
             const canvas = engine?.getCanvas();
 
             if ( canvas ) {
@@ -86,7 +86,7 @@ export function EngineControls( ) {
               link.href = canvas.toDataURL( "image/png" );
               link.click();
             }
-          }}
+          } }
           className="h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center"
         >
           <Camera className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />

@@ -27,10 +27,10 @@ export default function GenericObjectForm( {
 
         return (
           <FieldRenderer
-            key={fieldName}
-            fieldBasePath={basePath}
-            fieldName={fieldName}
-            config={fieldConfig}
+            key={ fieldName }
+            fieldBasePath={ basePath }
+            fieldName={ fieldName }
+            config={ fieldConfig }
           />
         );
       } )}

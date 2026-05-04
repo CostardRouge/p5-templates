@@ -98,9 +98,9 @@ export default function FieldRenderer( {
         return (
           <input
             type="checkbox"
-            {...commonInputProps}
-            {...register( registeredName )}
-            className={`${ commonInputProps.className } block w-fit`}
+            { ...commonInputProps }
+            { ...register( registeredName ) }
+            className={ `${ commonInputProps.className } block w-fit` }
           />
         );
 
@@ -108,16 +108,16 @@ export default function FieldRenderer( {
         return (
           <input
             type="number"
-            {...commonInputProps}
-            {...register(
+            { ...commonInputProps }
+            { ...register(
               registeredName,
               {
                 valueAsNumber: true
               }
-            )}
-            step={config.step}
-            min={config.min}
-            max={config.max}
+            ) }
+            step={ config.step }
+            min={ config.min }
+            max={ config.max }
           />
         );
 
@@ -126,26 +126,26 @@ export default function FieldRenderer( {
           <div className="flex items-center gap-2">
             <input
               type="range"
-              {...commonInputProps}
-              {...register(
+              { ...commonInputProps }
+              { ...register(
                 registeredName,
                 {
                   valueAsNumber: true
                 }
-              )}
-              step={config.step}
-              min={config.min}
-              max={config.max}
+              ) }
+              step={ config.step }
+              min={ config.min }
+              max={ config.max }
             />
             <input
               type="number"
-              aria-label={`${ config.label ?? registeredName } value`}
+              aria-label={ `${ config.label ?? registeredName } value` }
               className="text-xs font-mono bg-theme/20 px-1 py-0.5 rounded w-14 text-center border border-theme/30 focus:outline-none focus:ring-1 focus:ring-theme"
-              value={currentValue != null ? Number( currentValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 )}
-              step={config.step}
-              min={config.min}
-              max={config.max}
-              onChange={( e ) => {
+              value={ currentValue != null ? Number( currentValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 ) }
+              step={ config.step }
+              min={ config.min }
+              max={ config.max }
+              onChange={ ( e ) => {
                 const parsed = config.step && config.step < 1
                   ? parseFloat( e.target.value )
                   : parseInt(
@@ -173,7 +173,7 @@ export default function FieldRenderer( {
                     }
                   );
                 }
-              }}
+              } }
             />
           </div>
         );
@@ -181,17 +181,17 @@ export default function FieldRenderer( {
       case "textarea":
         return (
           <textarea
-            rows={4}
-            {...commonInputProps}
-            {...register( registeredName )}
+            rows={ 4 }
+            { ...commonInputProps }
+            { ...register( registeredName ) }
           />
         );
 
       case "select":
         return (
           <select
-            {...commonInputProps}
-            {...register(
+            { ...commonInputProps }
+            { ...register(
               registeredName,
               {
                 setValueAs: config.asNumber
@@ -199,14 +199,14 @@ export default function FieldRenderer( {
                     value === "" || value == null ? undefined : Number( value )
                   : undefined
               }
-            )}
+            ) }
           >
             {config.noneLabel ? (
               <option value="">{config.noneLabel || "--"}</option>
             ) : null}
 
             {config.options.map( ( option ) => (
-              <option key={option.value} value={option.value}>
+              <option key={ option.value } value={ option.value }>
                 {option.label}
               </option>
             ) )}
@@ -217,31 +217,31 @@ export default function FieldRenderer( {
         return (
           <ControlledSizePresetSelect
             className="p-1"
-            id={registeredName}
-            options={config.options}
+            id={ registeredName }
+            options={ config.options }
           />
         );
 
       case "nested-object":
         return (
           <CollapsibleItem
-            initialExpandedValue={false}
-            header={( expanded ) => (
+            initialExpandedValue={ false }
+            header={ ( expanded ) => (
               <div
                 className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
                 title="Click to expand/collapse"
               >
                 <ChevronDown
                   className="w-3 h-3 transition-transform"
-                  style={{
+                  style={ {
                     transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
-                  }}
+                  } }
                 />
                 <span>
                   {config.label} ({Object.keys( config.fields ).length} fields)
                 </span>
               </div>
-            )}
+            ) }
           >
             <div className="p-1 border border-theme rounded-xl space-y-1 bg-background/50 ml-2">
               {Object.entries( config.fields ).map( ( [
@@ -249,10 +249,10 @@ export default function FieldRenderer( {
                 subConfig
               ] ) => (
                 <FieldRenderer
-                  key={subFieldName}
-                  fieldBasePath={registeredName}
-                  fieldName={subFieldName}
-                  config={subConfig}
+                  key={ subFieldName }
+                  fieldBasePath={ registeredName }
+                  fieldName={ subFieldName }
+                  config={ subConfig }
                 />
               ) )}
             </div>
@@ -262,46 +262,46 @@ export default function FieldRenderer( {
       case "conditional-group": {
         return (
           <ConditionalGroup
-            basePath={registeredName}
-            selectClassName={commonInputProps.className}
-            config={config}
+            basePath={ registeredName }
+            selectClassName={ commonInputProps.className }
+            config={ config }
           />
         );
       }
 
       case "color":
-        return <ControlledColorInput name={registeredName} />;
+        return <ControlledColorInput name={ registeredName } />;
 
       case "image":
-        return <ControlledImageInput name={registeredName} />;
+        return <ControlledImageInput name={ registeredName } />;
 
       case "images-stack":
-        return <ControlledImagesStackInput name={registeredName} />;
+        return <ControlledImagesStackInput name={ registeredName } />;
 
       case "hidden":
-        return <input type="hidden" {...register( registeredName )} />;
+        return <input type="hidden" { ...register( registeredName ) } />;
 
       case "json":
         return (
           <ControlledJsonInput
-            config={config}
-            name={registeredName}
-            textareaClassName={commonInputProps.className}
+            config={ config }
+            name={ registeredName }
+            textareaClassName={ commonInputProps.className }
           />
         );
 
       case "item-list":
-        return <ItemListRenderer name={registeredName} config={config} />;
+        return <ItemListRenderer name={ registeredName } config={ config } />;
 
       case "easing":
-        return <ControlledEasingInput name={registeredName} />;
+        return <ControlledEasingInput name={ registeredName } />;
 
       default:
         return (
           <input
             type="text"
-            {...commonInputProps}
-            {...register( registeredName )}
+            { ...commonInputProps }
+            { ...register( registeredName ) }
           />
         );
     }
@@ -318,20 +318,20 @@ export default function FieldRenderer( {
         !hideLabel && (
         <div className="flex items-center gap-1">
           <label
-            htmlFor={registeredName}
-            className={`select-none ${
+            htmlFor={ registeredName }
+            className={ `select-none ${
               isModified
                 ? "font-medium"
                 : "text-gray-400"
-            }`}
+            }` }
           >
             {config.label}
           </label>
           {isModified && (
             <button
               type="button"
-              onClick={handleReset}
-              tabIndex={-1}
+              onClick={ handleReset }
+              tabIndex={ -1 }
               title="Reset to saved value"
               className="text-gray-400 hover:text-foreground transition-colors"
             >

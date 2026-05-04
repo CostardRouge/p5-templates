@@ -17,7 +17,7 @@ export const validStatuses = [
   "draft"
 ] as const;
 
-export type JobStatusEnum = ( typeof validStatuses )[number];
+export type JobStatusEnum = ( typeof validStatuses )[ number ];
 
 /**
  * TypeScript type matching the Prisma Job model.
@@ -43,9 +43,9 @@ export type JobModel = {
 export type RecordingProgressionSteps = Record<
   string,
   | {
-      percentage: number;
-      description?: string;
-    }
+    percentage: number;
+    description?: string;
+  }
   | RecordingProgressionNestedSteps
 >;
 
@@ -118,8 +118,8 @@ declare global {
     __blobAssetMap?: BlobMap;
     // Recorder
     startLoopRecording: ( arg?: {
- format: "png" | "webm"
-} ) => Promise<void>;
+      format: "png" | "webm"
+    } ) => Promise<void>;
     stopRecording: () => void;
     // Slides
     slides: {

@@ -70,7 +70,7 @@ export default function useBulkActions() {
             if ( res.ok ) {
               deleted.push( id );
             }
-          } catch ( err ) {
+          } catch( err ) {
             console.error(
               `Failed to delete ${ id }:`,
               err
@@ -114,7 +114,7 @@ export default function useBulkActions() {
             if ( res.ok ) {
               cancelled.push( id );
             }
-          } catch ( err ) {
+          } catch( err ) {
             console.error(
               `Failed to cancel ${ id }:`,
               err
@@ -158,7 +158,7 @@ export default function useBulkActions() {
             if ( res.ok ) {
               retried.push( id );
             }
-          } catch ( err ) {
+          } catch( err ) {
             console.error(
               `Failed to retry ${ id }:`,
               err

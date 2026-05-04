@@ -38,7 +38,7 @@ export default function HistoryVisualizer( {
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">History Debug</h3>
         <button
-          onClick={clear}
+          onClick={ clear }
           className="px-2 py-0.5 text-xs rounded bg-red-500/20 hover:bg-red-500/30 text-red-400"
         >
           Clear
@@ -84,11 +84,11 @@ export default function HistoryVisualizer( {
           <div className="space-y-0.5">
             {displayPast.map( ( item ) => (
               <button
-                key={`past-${ item.index }`}
-                onClick={() => jumpTo(
+                key={ `past-${ item.index }` }
+                onClick={ () => jumpTo(
                   item.index,
                   "past"
-                )}
+                ) }
                 className="w-full text-left p-1.5 rounded hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -129,11 +129,11 @@ export default function HistoryVisualizer( {
           <div className="space-y-0.5">
             {displayFuture.map( ( item ) => (
               <button
-                key={`future-${ item.index }`}
-                onClick={() => jumpTo(
+                key={ `future-${ item.index }` }
+                onClick={ () => jumpTo(
                   item.index,
                   "future"
-                )}
+                ) }
                 className="w-full text-left p-1.5 rounded hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-2">

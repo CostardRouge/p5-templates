@@ -55,7 +55,7 @@ export class NotificationService {
         "[Notification] Subscription stored:",
         subscription.endpoint
       );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[Notification] Error storing subscription:",
         error
@@ -78,7 +78,7 @@ export class NotificationService {
         "[Notification] Subscription removed:",
         endpoint
       );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[Notification] Error removing subscription:",
         error
@@ -110,7 +110,7 @@ export class NotificationService {
         subscription.endpoint
       );
       return true;
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[Notification] Error sending notification:",
         error
@@ -160,7 +160,7 @@ export class NotificationService {
             },
             payload
           );
-        } catch ( error: any ) {
+        } catch( error: any ) {
           // If subscription is invalid (410 Gone), remove it
           if ( error.statusCode === 410 ) {
             console.log( `[Notification] Removing invalid subscription ${ sub.id }` );
@@ -178,7 +178,7 @@ export class NotificationService {
       const successful = results.filter( ( r ) => r.status === "fulfilled" ).length;
 
       console.log( `[Notification] Sent ${ successful }/${ subscriptions.length } notifications` );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[Notification] Error sending notifications to all:",
         error

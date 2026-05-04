@@ -110,7 +110,7 @@ export function useThumbnails( {
                 } );
                 setThumbnails( newThumbnails );
               }
-            } catch ( e ) {
+            } catch( e ) {
               console.warn(
                 "Failed to parse thumbnails string",
                 e
@@ -130,7 +130,7 @@ export function useThumbnails( {
             setThumbnails( newThumbnails );
           }
         }
-      } catch ( e ) {
+      } catch( e ) {
         console.error(
           "Error loading persisted thumbnails:",
           e
@@ -159,7 +159,7 @@ export function useThumbnails( {
       if ( slideIndex !== undefined ) {
         try {
           await waitForSlideRendered( slideIndex );
-        } catch ( error ) {
+        } catch( error ) {
           console.warn(
             `Failed to wait for slide ${ slideIndex } rendering:`,
             error

@@ -57,8 +57,8 @@ export default function BulkActionsToolbar( {
         <div className="flex items-center gap-1.5 sm:gap-2">
           {canCancel && (
             <button
-              onClick={onBulkCancel}
-              disabled={isProcessing}
+              onClick={ onBulkCancel }
+              disabled={ isProcessing }
               className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-2"
             >
               <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -68,8 +68,8 @@ export default function BulkActionsToolbar( {
 
           {canRetry && (
             <button
-              onClick={onBulkRetry}
-              disabled={isProcessing}
+              onClick={ onBulkRetry }
+              disabled={ isProcessing }
               className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-2"
             >
               <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -79,8 +79,8 @@ export default function BulkActionsToolbar( {
 
           {canDelete && (
             <button
-              onClick={onBulkDelete}
-              disabled={isProcessing}
+              onClick={ onBulkDelete }
+              disabled={ isProcessing }
               className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-2"
             >
               <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -93,8 +93,8 @@ export default function BulkActionsToolbar( {
 
         {/* Clear Selection */}
         <button
-          onClick={onClearSelection}
-          disabled={isProcessing}
+          onClick={ onClearSelection }
+          disabled={ isProcessing }
           className="p-1.5 sm:p-2 rounded-lg hover:bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           title="Clear selection"
         >

@@ -41,20 +41,20 @@ export default function GenerateThumbnailsButton( {
     <>
       <button
         type="button"
-        onClick={handleClick}
-        disabled={generating}
+        onClick={ handleClick }
+        disabled={ generating }
         title="Generate missing thumbnails"
-        className={clsx(
+        className={ clsx(
           "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300",
           generating
             ? "opacity-50 cursor-not-allowed text-foreground/70"
             : "text-foreground/70 hover:text-foreground hover:bg-hover/50"
-        )}
+        ) }
       >
-        <ImagePlus className={clsx(
+        <ImagePlus className={ clsx(
           "w-4 h-4",
           generating && "animate-pulse"
-        )} />
+        ) } />
         <span className="hidden sm:inline">
           {generating ? "generating\u2026" : "generate thumbnails"}
         </span>

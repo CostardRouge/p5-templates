@@ -418,31 +418,31 @@ export default function AnimationProgressionBar( {
   const ProgressBar = useMemo(
     () => (
       <div
-        ref={barRef}
+        ref={ barRef }
         role="slider"
         aria-label="Animation progression bar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={currentValues.percentage}
-        tabIndex={0}
-        className={`relative h-4 bg-background border border-theme touch-none ${ isDragging ? "cursor-grabbing" : "cursor-pointer" }`}
-        style={{
+        aria-valuemin={ 0 }
+        aria-valuemax={ 100 }
+        aria-valuenow={ currentValues.percentage }
+        tabIndex={ 0 }
+        className={ `relative h-4 bg-background border border-theme touch-none ${ isDragging ? "cursor-grabbing" : "cursor-pointer" }` }
+        style={ {
           touchAction: "none"
-        }}
-        onClick={handleClick}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={stopDragging}
-        onPointerCancel={stopDragging}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onKeyDown={handleKeyDown}
+        } }
+        onClick={ handleClick }
+        onPointerDown={ handlePointerDown }
+        onPointerMove={ handlePointerMove }
+        onPointerUp={ stopDragging }
+        onPointerCancel={ stopDragging }
+        onMouseMove={ handleMouseMove }
+        onMouseLeave={ handleMouseLeave }
+        onKeyDown={ handleKeyDown }
       >
         <div
           className="absolute inset-y-0 left-0 bg-gradient-to-r from-progress-start to-progress-end"
-          style={{
+          style={ {
             width: `${ progression * 100 }%`
-          }}
+          } }
         >
           {isDragging && (
             <div className="absolute inset-0 bg-foreground/10 animate-pulse" />
@@ -452,9 +452,9 @@ export default function AnimationProgressionBar( {
         {hoverPosition !== null && !isDragging && (
           <div
             className="absolute inset-y-0 w-0.5 bg-foreground pointer-events-none"
-            style={{
+            style={ {
               left: `${ hoverPosition * 100 }%`
-            }}
+            } }
           />
         )}
       </div>
@@ -528,7 +528,7 @@ export default function AnimationProgressionBar( {
   }
 
   return (
-    <div className={`w-full mx-auto px-0 ${ className }`}>
+    <div className={ `w-full mx-auto px-0 ${ className }` }>
       <div className="relative">
         {ProgressBar}
         {ProgressInfo}

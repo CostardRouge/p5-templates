@@ -100,7 +100,7 @@ export class RecordingWorkerService {
       await runRecording( job.id );
 
       console.log( `[Worker] Job completed successfully: ${ job.id }` );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         `[Worker] Job processing failed: ${ job.id }`,
         error
@@ -153,14 +153,14 @@ export class RecordingWorkerService {
         const notificationService = NotificationService.getInstance();
 
         await notificationService.sendJobCompletionNotification( jobId );
-      } catch ( notificationError ) {
+      } catch( notificationError ) {
         console.error(
           `[Worker] Error sending completion notification: ${ jobId }`,
           notificationError
         );
         // Don't fail the job if notification fails
       }
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         `[Worker] Error updating completed job: ${ jobId }`,
         error
@@ -189,14 +189,14 @@ export class RecordingWorkerService {
         const notificationService = NotificationService.getInstance();
 
         await notificationService.sendJobFailureNotification( jobId );
-      } catch ( notificationError ) {
+      } catch( notificationError ) {
         console.error(
           `[Worker] Error sending failure notification: ${ jobId }`,
           notificationError
         );
         // Don't fail the job if notification fails
       }
-    } catch ( updateError ) {
+    } catch( updateError ) {
       console.error(
         `[Worker] Error updating failed job: ${ jobId }`,
         updateError
@@ -248,7 +248,7 @@ export class RecordingWorkerService {
           "queued"
         );
       }
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         `[Worker] Error recovering stalled job: ${ jobId }`,
         error
@@ -268,7 +268,7 @@ export class RecordingWorkerService {
           jobId,
           "failed"
         );
-      } catch ( updateError ) {
+      } catch( updateError ) {
         console.error(
           `[Worker] Error marking stalled job as failed: ${ jobId }`,
           updateError
@@ -291,7 +291,7 @@ export class RecordingWorkerService {
     try {
       await this.worker.close();
       console.log( "[Worker] Closed successfully" );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[Worker] Error closing worker:",
         error

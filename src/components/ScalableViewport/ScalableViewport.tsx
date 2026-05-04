@@ -147,7 +147,7 @@ export default function ScalableViewport( {
   if ( disable ) {
     return (
       <div
-        ref={contentRef}
+        ref={ contentRef }
         className="origin-top-left absolute top-0 left-0 will-change-transform"
       >
         {children}
@@ -157,23 +157,23 @@ export default function ScalableViewport( {
 
   return (
     <div
-      ref={containerRef}
+      ref={ containerRef }
       className="w-full h-full overflow-hidden touch-none relative cursor-grab active:cursor-grabbing"
-      style={{
+      style={ {
         touchAction: "none"
-      }}
+      } }
     >
       {showZoomControls && (
         <ZoomControls
-          onPlus={zoomIn}
-          onMinus={zoomOut}
-          onFit={() => fitToViewport( true )}
-          onReset={() => resetToActualPixels( true )}
+          onPlus={ zoomIn }
+          onMinus={ zoomOut }
+          onFit={ () => fitToViewport( true ) }
+          onReset={ () => resetToActualPixels( true ) }
         />
       )}
 
       <div
-        ref={contentRef}
+        ref={ contentRef }
         className="origin-top-left absolute top-0 left-0 will-change-transform"
       >
         {children}

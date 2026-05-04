@@ -26,8 +26,8 @@ export default function NoJobActions( {
     <div className="flex gap-1">
       <button
         className="rounded-xl px-1 py-2.5 border border-border text-foreground bg-background hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all inline-flex items-center justify-center gap-1 flex-1"
-        onClick={onSaveDraft}
-        disabled={isAnyActionLoading}
+        onClick={ onSaveDraft }
+        disabled={ isAnyActionLoading }
       >
         {saving ? (
           <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
@@ -39,8 +39,8 @@ export default function NoJobActions( {
 
       <button
         className="rounded-xl px-1 py-2.5 border border-border bg-hover hover:bg-hover/70 text-foreground disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 flex-1"
-        onClick={onStart}
-        disabled={isBlockingActionLoading}
+        onClick={ onStart }
+        disabled={ isBlockingActionLoading }
       >
         {isLoading && !saving ? (
           <Loader className="h-4 w-4 animate-spin flex-shrink-0" />

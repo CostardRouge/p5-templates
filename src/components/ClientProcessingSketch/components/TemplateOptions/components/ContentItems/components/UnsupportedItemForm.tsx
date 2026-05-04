@@ -30,18 +30,18 @@ export default function UnsupportedItemForm( {
       <div className="flex justify-between items-center">
         <h4
           className="bg-red-200 px-1 rounded-xl"
-          onClick={() => console.log( data )}
+          onClick={ () => console.log( data ) }
         >
           {data?.type}
         </h4>
 
         <button
           type="button"
-          onClick={onRemove}
+          onClick={ onRemove }
           aria-label="Remove layer"
           className="text-red-500"
         >
-          <X size={16} />
+          <X size={ 16 } />
         </button>
       </div>
     </div>

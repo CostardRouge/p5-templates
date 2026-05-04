@@ -137,7 +137,7 @@ export async function POST(
       success: true,
       jobId: newJobId
     } );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "[API] Error cloning recording:",
       error

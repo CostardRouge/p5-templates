@@ -48,7 +48,7 @@ export function useSorting(
           case "createdAt":
           case "updatedAt":
             comparison =
-            new Date( a[ sortConfig.field ] ).getTime() -
+              new Date( a[ sortConfig.field ] ).getTime() -
             new Date( b[ sortConfig.field ] ).getTime();
             break;
 

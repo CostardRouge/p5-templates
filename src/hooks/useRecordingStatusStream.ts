@@ -38,7 +38,7 @@ function useRecordingStatusStream() {
       source.onmessage = async( event: MessageEvent<string> ): Promise<void> => {
         try {
           const parsedRecordingProgress: RecordingProgressionStream | null =
-          JSON.parse( event.data );
+            JSON.parse( event.data );
 
           setRecordingProgress( parsedRecordingProgress );
 
@@ -53,7 +53,7 @@ function useRecordingStatusStream() {
           if ( parsedRecordingProgress?.status === "completed" ) {
             source.close();
           }
-        } catch ( error ) {
+        } catch( error ) {
           console.error( error );
           source.close();
           onError();

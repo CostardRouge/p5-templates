@@ -11,7 +11,7 @@ async function listDirectory( directoryPath: string ) {
     );
 
     return await readdir( absolutePath );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `Error reading directory "${ directoryPath }":`,
       error

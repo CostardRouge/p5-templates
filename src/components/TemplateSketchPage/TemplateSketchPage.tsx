@@ -78,8 +78,8 @@ export default function TemplateSketchPage() {
           <div className="flex flex-col items-center gap-4">
             {thumbnailUrl && (
               <img
-                src={thumbnailUrl}
-                alt={`${ name } thumbnail`}
+                src={ thumbnailUrl }
+                alt={ `${ name } thumbnail` }
                 className="w-60 h-auto rounded-lg shadow-lg"
               />
             )}
@@ -95,17 +95,17 @@ export default function TemplateSketchPage() {
       {/* Sketch viewport */}
       <div
         className="h-full w-full relative"
-        hidden={!sketchLoaded}
+        hidden={ !sketchLoaded }
       >
         <ScalableViewport
-          disable={capturing}
-          showZoomControls={!capturing && sketchLoaded}
-          resolutionKey={`${ options.size.width }x${ options.size.height }`}
-          isReady={sketchLoaded}
+          disable={ capturing }
+          showZoomControls={ !capturing && sketchLoaded }
+          resolutionKey={ `${ options.size.width }x${ options.size.height }` }
+          isReady={ sketchLoaded }
         >
           {sketchLoaded && !capturing && (
             <div
-              onClick={( e ) => e.stopPropagation()}
+              onClick={ ( e ) => e.stopPropagation() }
               className="flex justify-between font-mono text-sm mt-2"
               style={
                 {
@@ -118,7 +118,7 @@ export default function TemplateSketchPage() {
             >
               <p className="truncate">
                 <Link
-                  href={`/templates/${ engineId }/${ name }`}
+                  href={ `/templates/${ engineId }/${ name }` }
                   target="_blank"
                 >
                   {name}
@@ -160,11 +160,11 @@ export default function TemplateSketchPage() {
           <EngineControls />
 
           <TemplateOptions
-            name={name}
-            options={options}
-            persistedJob={persistedJob}
-            onOptionsChange={handleOptionsChange}
-            onActiveSlideChange={handleActiveSlideChange}
+            name={ name }
+            options={ options }
+            persistedJob={ persistedJob }
+            onOptionsChange={ handleOptionsChange }
+            onActiveSlideChange={ handleActiveSlideChange }
           />
         </>
       ) }

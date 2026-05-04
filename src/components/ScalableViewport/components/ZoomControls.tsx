@@ -19,7 +19,7 @@ const ZoomControls = ( {
     <div className="absolute top-2 right-2 md:top-4 md:right-4 flex items-center gap-2 z-50">
       <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden">
         <button
-          onClick={onMinus}
+          onClick={ onMinus }
           className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center"
           title="Zoom out"
           aria-label="Zoom out"
@@ -28,7 +28,7 @@ const ZoomControls = ( {
         </button>
 
         <button
-          onClick={onReset}
+          onClick={ onReset }
           className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center min-w-[3rem]"
           title="Reset to 100%"
           aria-label="Reset zoom to 100%"
@@ -39,7 +39,7 @@ const ZoomControls = ( {
         </button>
 
         <button
-          onClick={onPlus}
+          onClick={ onPlus }
           className="h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center"
           title="Zoom in"
           aria-label="Zoom in"
@@ -49,7 +49,7 @@ const ZoomControls = ( {
       </div>
 
       <button
-        onClick={onFit}
+        onClick={ onFit }
         className="h-9 px-3 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md hover:bg-hover transition-colors group inline-flex items-center justify-center"
         title="Fit to viewport"
         aria-label="Fit to viewport"

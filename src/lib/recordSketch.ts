@@ -171,7 +171,7 @@ async function recordSketch(
       jobId,
       recordingDuration
     );
-  } catch ( error ) {
+  } catch( error ) {
     await updateJob(
       jobId,
       {

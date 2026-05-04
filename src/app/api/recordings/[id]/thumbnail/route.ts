@@ -68,7 +68,7 @@ export async function GET(
             "0"
           );
           return response;
-        } catch ( error ) {
+        } catch( error ) {
           console.error(
             "Failed to generate signed URL for thumbnail:",
             error
@@ -113,7 +113,7 @@ export async function GET(
       "0"
     );
     return response;
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[GET /api/recordings/${ jobId }/thumbnail]`,
       error

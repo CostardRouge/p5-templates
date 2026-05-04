@@ -48,8 +48,8 @@ export default function ImageAssets( {
   scope:
     | "global"
     | {
-        slide: number;
-      };
+      slide: number;
+    };
   id?: JobId;
 } ) {
   const {
@@ -130,27 +130,27 @@ export default function ImageAssets( {
 
   return (
     <DndContext
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-      sensors={sensors}
+      collisionDetection={ closestCenter }
+      onDragEnd={ handleDragEnd }
+      sensors={ sensors }
     >
       <div
-        onDragOver={( e ) => e.preventDefault()}
-        onDrop={handleExternalDrop}
+        onDragOver={ ( e ) => e.preventDefault() }
+        onDrop={ handleExternalDrop }
         className="p-1 grid grid-cols-3 gap-1 min-h-8"
       >
-        <SortableContext items={imgPaths} strategy={rectSortingStrategy}>
+        <SortableContext items={ imgPaths } strategy={ rectSortingStrategy }>
           {imgPaths.map( (
             path, i
           ) => (
             <SortableThumb
-              key={path}
-              id={path}
-              url={resolveAssetURL(
+              key={ path }
+              id={ path }
+              url={ resolveAssetURL(
                 path,
                 id
-              )}
-              onDelete={() =>
+              ) }
+              onDelete={ () =>
                 removeAsset( {
                   type: "images",
                   index: i,
@@ -163,21 +163,21 @@ export default function ImageAssets( {
 
         <button
           type="button"
-          onClick={( e ) => {
+          onClick={ ( e ) => {
             e.stopPropagation();
             fileInputRef.current?.click();
-          }}
+          } }
           className="flex items-center justify-center h-20 border border-dashed border-theme text-gray-400 "
         >
           <Plus className="h-6 w-6" />
         </button>
 
         <input
-          ref={fileInputRef}
+          ref={ fileInputRef }
           type="file"
           accept="image/*"
           multiple
-          onChange={async( e ) => {
+          onChange={ async( e ) => {
             if ( null === e.target.files ) {
               return;
             }
@@ -189,7 +189,7 @@ export default function ImageAssets( {
             } );
 
             e.target.value = "";
-          }}
+          } }
           className="hidden"
         />
       </div>
@@ -219,22 +219,22 @@ function SortableThumb( {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative h-20 bg-background">
+    <div ref={ setNodeRef } style={ style } className="relative h-20 bg-background">
       <GripVertical
         className="absolute right-1 top-1 h-4 w-4 text-foreground cursor-grab active:cursor-grabbing"
-        {...attributes}
-        {...listeners}
+        { ...attributes }
+        { ...listeners }
       />
 
       <TrashIcon
-        onClick={( e ) => {
+        onClick={ ( e ) => {
           e.stopPropagation();
           onDelete();
-        }}
+        } }
         className="absolute left-1 top-1 h-5 w-5 text-red-500 cursor-pointer bg-background opacity-50 active:opacity-100 hover:opacity-100 rounded-xl p-0.5"
       />
 
-      <img src={url} className="object-cover h-full w-full" alt={id} />
+      <img src={ url } className="object-cover h-full w-full" alt={ id } />
     </div>
   );
 }

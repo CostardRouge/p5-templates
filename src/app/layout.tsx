@@ -128,9 +128,9 @@ export default function RootLayout( {
         <script
           type="application/ld+json"
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{
+          dangerouslySetInnerHTML={ {
             __html: JSON.stringify( jsonLd )
-          }}
+          } }
         />
       </head>
       <body>
@@ -146,8 +146,8 @@ export default function RootLayout( {
 
             <Suspense>
               <MenuBar
-                showRecordings={process.env.BACKEND_RECORDING === "true"}
-                hasMissingThumbnails={hasMissingThumbnails}
+                showRecordings={ process.env.BACKEND_RECORDING === "true" }
+                hasMissingThumbnails={ hasMissingThumbnails }
               />
             </Suspense>
           </div>

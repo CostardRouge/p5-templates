@@ -22,10 +22,10 @@ const CollapsibleItem = ( {
   ] = useState( initialExpandedValue );
 
   return (
-    <div className={className} {...props}>
+    <div className={ className } { ...props }>
       <div
-        className={headerContainerClassName}
-        onClick={() => setExpanded( ( e ) => !e )}
+        className={ headerContainerClassName }
+        onClick={ () => setExpanded( ( e ) => !e ) }
       >
         {header(
           expanded,

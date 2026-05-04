@@ -435,7 +435,7 @@ for ( const file of files ) {
       modified++;
       console.log( `✓ ${ file }` );
     }
-  } catch ( e ) {
+  } catch( e ) {
     console.error( `✗ ${ file }: ${ e.message }` );
   }
 }

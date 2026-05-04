@@ -13,11 +13,11 @@ import deepClone from "@/utils/deepClone";
 import makeDefaultSlide from "../utils/makeDefaultSlide";
 
 type UseSlideManagementProps = {
-  slideFields: UseFieldArrayReturn<SketchOptionInput, "slides", "id">["fields"];
-  appendSlide: UseFieldArrayReturn<SketchOptionInput, "slides", "id">["append"];
-  insertSlide: UseFieldArrayReturn<SketchOptionInput, "slides", "id">["insert"];
-  moveSlide: UseFieldArrayReturn<SketchOptionInput, "slides", "id">["move"];
-  removeSlide: UseFieldArrayReturn<SketchOptionInput, "slides", "id">["remove"];
+  slideFields: UseFieldArrayReturn<SketchOptionInput, "slides", "id">[ "fields" ];
+  appendSlide: UseFieldArrayReturn<SketchOptionInput, "slides", "id">[ "append" ];
+  insertSlide: UseFieldArrayReturn<SketchOptionInput, "slides", "id">[ "insert" ];
+  moveSlide: UseFieldArrayReturn<SketchOptionInput, "slides", "id">[ "move" ];
+  removeSlide: UseFieldArrayReturn<SketchOptionInput, "slides", "id">[ "remove" ];
   getValues: UseFormGetValues<SketchOptionInput>;
   setValue: UseFormSetValue<SketchOptionInput>;
   sketchFormValues: any;

@@ -198,7 +198,7 @@ export default function useRecordings() {
 
               return merged;
             } );
-          } catch ( err ) {
+          } catch( err ) {
             console.warn(
               "Polling error:",
               err

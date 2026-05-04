@@ -3,7 +3,7 @@ import {
 } from "@/engines/metadata";
 
 export function getDevThumbnailStatus(): {
- hasMissingThumbnails: boolean
+  hasMissingThumbnails: boolean
 } {
   if ( process.env.NODE_ENV !== "development" ) {
     return {

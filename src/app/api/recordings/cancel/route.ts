@@ -82,7 +82,7 @@ export async function POST( req: NextRequest ) {
     return NextResponse.json( {
       cancelled
     } );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "[POST /api/recordings/cancel] error:",
       error

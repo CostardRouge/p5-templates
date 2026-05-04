@@ -67,26 +67,26 @@ export default function RecordingThumbnail( {
 
   return (
     <div
-      onClick={onClick}
-      onMouseEnter={() =>
+      onClick={ onClick }
+      onMouseEnter={ () =>
         enableHoverPreview && slideCount > 1 && setShowPreview( true )
       }
-      onMouseLeave={() => setShowPreview( false )}
-      className={clsx(
+      onMouseLeave={ () => setShowPreview( false ) }
+      className={ clsx(
         className,
         "relative overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800",
         {
           "animate-pulse": isQueued,
           "cursor-pointer": !!onClick
         }
-      )}
+      ) }
     >
       {/* Hover Preview Grid (Desktop only, completed jobs only) */}
       {enableHoverPreview && job.status === "completed" && (
         <SlidePreviewGrid
-          jobId={job.id}
-          slideCount={slideCount}
-          isVisible={showPreview}
+          jobId={ job.id }
+          slideCount={ slideCount }
+          isVisible={ showPreview }
         />
       )}
 
@@ -117,17 +117,17 @@ export default function RecordingThumbnail( {
               <div className="relative">
                 <div
                   className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"
-                  style={{
+                  style={ {
                     width: "24px",
                     height: "24px"
-                  }}
+                  } }
                 />
                 <div
                   className="relative rounded-full bg-red-600 shadow-lg"
-                  style={{
+                  style={ {
                     width: "24px",
                     height: "24px"
-                  }}
+                  } }
                 />
               </div>
             </div>
@@ -136,16 +136,16 @@ export default function RecordingThumbnail( {
             <div className="absolute inset-0 bg-red-500/20 z-20 mix-blend-multiply pointer-events-none" />
           )}
           <img
-            src={src}
-            alt={job.template}
+            src={ src }
+            alt={ job.template }
             loading="lazy"
-            onError={() => setImageError( true )}
-            className={clsx(
+            onError={ () => setImageError( true ) }
+            className={ clsx(
               "w-full h-full object-cover transition-all duration-300",
               {
                 grayscale: !isCompleted
               }
-            )}
+            ) }
           />
         </>
       )}

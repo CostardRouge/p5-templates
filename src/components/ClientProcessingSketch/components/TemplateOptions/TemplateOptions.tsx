@@ -282,49 +282,49 @@ export default function TemplateOptions( {
   };
 
   return (
-    <FormProvider {...methods}>
+    <FormProvider { ...methods }>
       <div
         className="w-64 absolute right-2 bottom-2 md:right-4 md:bottom-4 space-y-2"
-        style={{
+        style={ {
           maxWidth: "calc(50% - 0.75rem)"
-        }}
+        } }
       >
         <OptionsPanel
-          methods={methods}
-          name={name}
-          persistedJob={persistedJob}
-          activeSlideIndex={activeSlideIndex}
-          slideFields={slideFields}
-          thumbnails={thumbnails}
-          slides={slides}
-          jobStatus={captureActionsRef.current?.currentStatus}
-          isAdding={isAdding}
-          onAddSlide={handleAddSlide}
-          onSelectSlide={handleSlideSelect}
-          onReorderSlides={handleReorderSlides}
-          onDuplicateSlide={handleDuplicateSlide}
-          onDeleteSlide={handleDeleteSlide}
-          onRenameSlide={handleRenameSlide}
-          onImportOptions={handleImportOptions}
-          enableThumbnails={enableThumbnails}
+          methods={ methods }
+          name={ name }
+          persistedJob={ persistedJob }
+          activeSlideIndex={ activeSlideIndex }
+          slideFields={ slideFields }
+          thumbnails={ thumbnails }
+          slides={ slides }
+          jobStatus={ captureActionsRef.current?.currentStatus }
+          isAdding={ isAdding }
+          onAddSlide={ handleAddSlide }
+          onSelectSlide={ handleSlideSelect }
+          onReorderSlides={ handleReorderSlides }
+          onDuplicateSlide={ handleDuplicateSlide }
+          onDeleteSlide={ handleDeleteSlide }
+          onRenameSlide={ handleRenameSlide }
+          onImportOptions={ handleImportOptions }
+          enableThumbnails={ enableThumbnails }
         />
 
         {( backendRecording || browserRecordingSupported ) && (
           <CaptureActions
-            ref={captureActionsRef}
-            name={name}
-            options={methods.watch()}
-            persistedJob={persistedJob}
-            activeSlideIndex={activeSlideIndex}
-            backendRecording={backendRecording}
-            browserRecordingSupported={browserRecordingSupported}
-            thumbnails={enableThumbnails ? thumbnails : {}}
+            ref={ captureActionsRef }
+            name={ name }
+            options={ methods.watch() }
+            persistedJob={ persistedJob }
+            activeSlideIndex={ activeSlideIndex }
+            backendRecording={ backendRecording }
+            browserRecordingSupported={ browserRecordingSupported }
+            thumbnails={ enableThumbnails ? thumbnails : {} }
           />
         )}
       </div>
 
-      <TemplateAssetsProvider scope="global" assetsName="assets" jobId={jobId}>
-        <SketchSettings activeSlideIndex={activeSlideIndex} />
+      <TemplateAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
+        <SketchSettings activeSlideIndex={ activeSlideIndex } />
       </TemplateAssetsProvider>
     </FormProvider>
   );

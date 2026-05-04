@@ -68,7 +68,7 @@ export async function POST(
       if ( bullJob ) {
         try {
           await bullJob.remove();
-        } catch ( err ) {
+        } catch( err ) {
           console.warn(
             `Could not remove job ${ jobId } from queue:`,
             err
@@ -76,7 +76,7 @@ export async function POST(
           // Continue anyway - we'll mark it cancelled in DB
         }
       }
-    } catch ( err ) {
+    } catch( err ) {
       console.warn(
         `Error accessing queue for job ${ jobId }:`,
         err
@@ -96,7 +96,7 @@ export async function POST(
     return NextResponse.json( {
       cancelled: true
     } );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[POST /api/recordings/${ jobId }/force-cancel]`,
       error

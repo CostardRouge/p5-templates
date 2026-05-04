@@ -30,7 +30,7 @@ export function usePersistedSort<T>(
           key,
           JSON.stringify( value )
         );
-      } catch ( err ) {
+      } catch( err ) {
         console.warn(
           `Failed to persist ${ key }:`,
           err

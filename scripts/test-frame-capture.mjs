@@ -389,7 +389,7 @@ async function runTest() {
       `   To clean up: rm -rf ${ TEST_CONFIG.outputDir }\n`,
       colors.blue
     );
-  } catch ( error ) {
+  } catch( error ) {
     log(
       "\n❌ Test failed with error:",
       colors.red

@@ -12,7 +12,7 @@ export const EASING_FAMILIES = [
   "bounce"
 ] as const;
 
-export type EasingFamily = ( typeof EASING_FAMILIES )[number];
+export type EasingFamily = ( typeof EASING_FAMILIES )[ number ];
 
 export const EASING_DIRECTIONS = [
   {
@@ -29,7 +29,7 @@ export const EASING_DIRECTIONS = [
   }
 ] as const;
 
-export type EasingDirection = ( typeof EASING_DIRECTIONS )[number]["value"];
+export type EasingDirection = ( typeof EASING_DIRECTIONS )[ number ][ "value" ];
 
 function capitalize( s: string ): string {
   return s.charAt( 0 ).toUpperCase() + s.slice( 1 );

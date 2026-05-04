@@ -12,8 +12,8 @@ export async function GET(): Promise<
   NextResponse<
     | QueueHealthResponse
     | {
-        error: string;
-      }
+      error: string;
+    }
   >
 > {
   try {
@@ -21,7 +21,7 @@ export async function GET(): Promise<
     const health = await recordingService.getQueueHealth();
 
     return NextResponse.json( health );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "[API] Error getting queue health:",
       error

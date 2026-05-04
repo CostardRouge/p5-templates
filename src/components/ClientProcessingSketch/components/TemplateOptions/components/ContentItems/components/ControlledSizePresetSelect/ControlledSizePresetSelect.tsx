@@ -55,7 +55,7 @@ export default function ControlledSizePresetSelect( {
             );
           }
 
-        groups.get( option.group )!.push( option );
+          groups.get( option.group )!.push( option );
         } else {
           ungrouped.push( option );
         }
@@ -107,16 +107,16 @@ export default function ControlledSizePresetSelect( {
 
   return (
     <select
-      id={id}
-      className={`w-full border border-theme rounded-lg bg-background text-foreground ${ className }`}
-      value={currentValue}
-      onChange={handleChange}
+      id={ id }
+      className={ `w-full border border-theme rounded-lg bg-background text-foreground ${ className }` }
+      value={ currentValue }
+      onChange={ handleChange }
     >
       {noneLabel ? <option value="">{noneLabel}</option> : null}
 
       {/* Ungrouped options first */}
       {ungrouped.map( ( opt ) => (
-        <option key={String( opt.value )} value={String( opt.value )}>
+        <option key={ String( opt.value ) } value={ String( opt.value ) }>
           {opt.label}
         </option>
       ) )}
@@ -128,9 +128,9 @@ export default function ControlledSizePresetSelect( {
         groupLabel,
         opts
       ] ) => (
-        <optgroup key={groupLabel} label={groupLabel}>
+        <optgroup key={ groupLabel } label={ groupLabel }>
           {opts.map( ( opt ) => (
-            <option key={String( opt.value )} value={String( opt.value )}>
+            <option key={ String( opt.value ) } value={ String( opt.value ) }>
               {opt.label}
             </option>
           ) )}

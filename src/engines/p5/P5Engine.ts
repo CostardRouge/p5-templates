@@ -195,7 +195,7 @@ export class P5Engine implements SketchEngine {
 
   on<E extends EngineEventName>(
     event: E,
-    handler: ( payload: EngineEventMap[E] ) => void
+    handler: ( payload: EngineEventMap[ E ] ) => void
   ): void {
     if ( !this.listeners.has( event ) ) {
       this.listeners.set(
@@ -209,14 +209,14 @@ export class P5Engine implements SketchEngine {
 
   off<E extends EngineEventName>(
     event: E,
-    handler: ( payload: EngineEventMap[E] ) => void
+    handler: ( payload: EngineEventMap[ E ] ) => void
   ): void {
     this.listeners.get( event )?.delete( handler );
   }
 
   private emit<E extends EngineEventName>(
     event: E,
-    payload: EngineEventMap[E]
+    payload: EngineEventMap[ E ]
   ): void {
     this.listeners.get( event )?.forEach( ( h ) => h( payload ) );
   }

@@ -14,9 +14,9 @@ function HardLink( {
 } ) {
   return (
     <a
-      href={href}
-      target={target}
-      className={className}
+      href={ href }
+      target={ target }
+      className={ className }
       rel="noopener noreferrer"
     >
       {children}

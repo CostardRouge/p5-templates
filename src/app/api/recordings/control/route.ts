@@ -42,7 +42,7 @@ export async function POST( request: NextRequest ): Promise<NextResponse> {
       success: true,
       message: `Recording processing ${ body.action }d successfully`
     } );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[API] Error ${ body?.action }ing recordings:`,
       error

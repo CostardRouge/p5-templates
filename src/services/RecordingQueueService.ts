@@ -189,7 +189,7 @@ export class RecordingQueueService {
 
       console.log( `[Queue] Recording job enqueued: ${ jobId }` );
       return jobId;
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         `[Queue] Failed to enqueue job ${ jobId }:`,
         error
@@ -218,7 +218,7 @@ export class RecordingQueueService {
         completed: completed.length,
         failed: failed.length
       };
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[Queue] Error getting health status:",
         error
@@ -241,7 +241,7 @@ export class RecordingQueueService {
     try {
       await this.queue.close();
       console.log( "[Queue] Closed successfully" );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[Queue] Error closing:",
         error

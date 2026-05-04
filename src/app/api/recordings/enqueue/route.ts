@@ -125,7 +125,7 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
       success: true,
       jobId
     } );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "[API] Error enqueuing recording:",
       error

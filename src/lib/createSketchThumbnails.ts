@@ -113,7 +113,7 @@ async function createSketchThumbnails() {
 
       console.log( `💾 ${ name }/thumbnail.jpeg has been generated` );
     }
-  } catch ( error ) {
+  } catch( error ) {
     console.error( error );
   } finally {
     await recordingState?.browser?.close();

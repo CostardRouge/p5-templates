@@ -37,9 +37,9 @@ type ContentItemsProps = {
 };
 
 export type DragBinder = {
-  handleProps: ReturnType<typeof useSortable>["attributes"] &
-    NonNullable<ReturnType<typeof useSortable>["listeners"]>;
-  setHandleRef: ReturnType<typeof useSortable>["setActivatorNodeRef"];
+  handleProps: ReturnType<typeof useSortable>[ "attributes" ] &
+    NonNullable<ReturnType<typeof useSortable>[ "listeners" ]>;
+  setHandleRef: ReturnType<typeof useSortable>[ "setActivatorNodeRef" ];
   isDragging: boolean;
 };
 
@@ -67,18 +67,18 @@ export function SortableRow( props: {
   const handleProps = {
     ...( attributes as object ),
     ...( listeners as object )
-  } as DragBinder["handleProps"];
+  } as DragBinder[ "handleProps" ];
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className={clsx(
+      ref={ setNodeRef }
+      style={ style }
+      className={ clsx(
         "relative",
         "data-[dragging=true]:opacity-70"
         // isDragging && "cursor-grab active:cursor-grabbing",
-      )}
-      data-dragging={isDragging ? "true" : "false"}
+      ) }
+      data-dragging={ isDragging ? "true" : "false" }
     >
       {props.children( {
         handleProps,
@@ -185,28 +185,28 @@ export default function ContentItems( {
       <AddItemControls />
 
       <DndContext
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        sensors={sensors}
-        modifiers={[
+        collisionDetection={ closestCenter }
+        onDragEnd={ handleDragEnd }
+        sensors={ sensors }
+        modifiers={ [
           restrictToVerticalAxis,
           restrictToParentElement
-        ]}
+        ] }
       >
-        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <SortableContext items={ ids } strategy={ verticalListSortingStrategy }>
           {fields.map( (
             field, index
           ) => (
-            <SortableRow key={field.id} id={field.id}>
+            <SortableRow key={ field.id } id={ field.id }>
               {( dragBinder ) => (
                 <GenericItemForm
-                  index={index}
-                  dragBinder={dragBinder}
-                  baseFieldName={baseFieldName}
-                  onRemove={() => remove( index )}
-                  onDuplicate={() => {
+                  index={ index }
+                  dragBinder={ dragBinder }
+                  baseFieldName={ baseFieldName }
+                  onRemove={ () => remove( index ) }
+                  onDuplicate={ () => {
                     duplicateItem( index );
-                  }}
+                  } }
                 />
               )}
             </SortableRow>

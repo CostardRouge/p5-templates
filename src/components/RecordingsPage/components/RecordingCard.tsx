@@ -53,11 +53,11 @@ export default function RecordingCard( {
 
   return (
     <div
-      className={`group bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden ${
+      className={ `group bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5 relative overflow-hidden ${
         isNewlyAdded
           ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]"
           : ""
-      }`}
+      }` }
     >
       {/* Thumbnail Section */}
       <div className="relative overflow-hidden rounded-t-xl sm:rounded-t-2xl">
@@ -65,30 +65,30 @@ export default function RecordingCard( {
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
           <input
             type="checkbox"
-            checked={isSelected}
-            onChange={onToggleSelection}
+            checked={ isSelected }
+            onChange={ onToggleSelection }
             className="w-5 h-5 rounded border-2 border-white shadow-lg text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer bg-white/90 backdrop-blur-sm"
-            onClick={( e ) => e.stopPropagation()}
+            onClick={ ( e ) => e.stopPropagation() }
           />
         </div>
         <RecordingThumbnail
-          job={job}
-          onClick={() => {
+          job={ job }
+          onClick={ () => {
             if ( job.status === "completed" && job.videoUrls ) {
               onPreview();
             }
-          }}
-          className={`w-full aspect-square object-cover ${
+          } }
+          className={ `w-full aspect-square object-cover ${
             job.videoUrls ? "cursor-pointer" : "cursor-default"
-          }`}
-          showEyeInCorner={true}
-          enableHoverPreview={true}
+          }` }
+          showEyeInCorner={ true }
+          enableHoverPreview={ true }
         />
 
         {/* Status Badge Overlay */}
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-40">
           <StatusBadge
-            status={job.status}
+            status={ job.status }
             className="shadow-lg backdrop-blur-sm"
           />
         </div>
@@ -96,13 +96,13 @@ export default function RecordingCard( {
         {/* Actions Menu Overlay */}
         <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-40">
           <ActionsMenu
-            job={job}
-            onCancel={onCancel}
-            onDelete={onDelete}
-            onRetry={onRetry}
-            onStart={onStart}
-            onPreviewModal={onPreview}
-            onClone={onClone}
+            job={ job }
+            onCancel={ onCancel }
+            onDelete={ onDelete }
+            onRetry={ onRetry }
+            onStart={ onStart }
+            onPreviewModal={ onPreview }
+            onClone={ onClone }
           />
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function RecordingCard( {
         {/* Template & ID */}
         <div className="space-y-1 sm:space-y-1.5">
           <HardLink
-            href={`/${ job.template }`}
+            href={ `/${ job.template }` }
             className="block text-xs sm:text-sm font-semibold text-foreground hover:text-foreground/70 transition-colors truncate group/link"
           >
             {job.template}
@@ -122,7 +122,7 @@ export default function RecordingCard( {
           </HardLink>
 
           <HardLink
-            href={`/${ job.template }?id=${ job.id }`}
+            href={ `/${ job.template }?id=${ job.id }` }
             className="block text-[10px] sm:text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors group/link"
           >
             <span className="truncate">
@@ -170,12 +170,12 @@ export default function RecordingCard( {
           job.progress < 100 ) && (
           <div className="pt-0.5 sm:pt-1 min-w-0">
             <CompactProgressBar
-              job={job}
-              steps={job.status === "active" ? getRecordingSteps( job ) : []}
-              recordingSteps={progression?.steps}
-              currentSlideIndex={progression?.currentSlideIndex}
-              slideOptions={slideOptions}
-              startTime={startTime}
+              job={ job }
+              steps={ job.status === "active" ? getRecordingSteps( job ) : [] }
+              recordingSteps={ progression?.steps }
+              currentSlideIndex={ progression?.currentSlideIndex }
+              slideOptions={ slideOptions }
+              startTime={ startTime }
             />
           </div>
         )}

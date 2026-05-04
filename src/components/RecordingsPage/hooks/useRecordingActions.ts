@@ -41,7 +41,7 @@ export default function useRecordingActions() {
 
       alert( "Could not clone recording" );
       return null;
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "Clone error:",
         error

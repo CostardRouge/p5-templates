@@ -31,15 +31,15 @@ const Alert = React.forwardRef<
   }, ref
 ) => (
   <div
-    ref={ref}
+    ref={ ref }
     role="alert"
-    className={cn(
+    className={ cn(
       alertVariants( {
         variant
       } ),
       className
-    )}
-    {...props}
+    ) }
+    { ...props }
   />
 ) );
 
@@ -54,12 +54,12 @@ const AlertTitle = React.forwardRef<
   }, ref
 ) => (
   <h5
-    ref={ref}
-    className={cn(
+    ref={ ref }
+    className={ cn(
       "mb-1 font-medium leading-none tracking-tight",
       className
-    )}
-    {...props}
+    ) }
+    { ...props }
   />
 ) );
 
@@ -74,12 +74,12 @@ const AlertDescription = React.forwardRef<
   }, ref
 ) => (
   <div
-    ref={ref}
-    className={cn(
+    ref={ ref }
+    className={ cn(
       "text-sm [&_p]:leading-relaxed",
       className
-    )}
-    {...props}
+    ) }
+    { ...props }
   />
 ) );
 

@@ -36,7 +36,7 @@ export function useInterval( {
       try {
         isExecutingRef.current = true;
         await callback();
-      } catch ( error ) {
+      } catch( error ) {
         console.error(
           "[useInterval] Callback execution failed:",
           error

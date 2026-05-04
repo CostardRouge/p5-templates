@@ -30,5 +30,5 @@ export default function AddItemControls() {
     ]
   );
 
-  return <ItemPalette onAdd={handleAdd} />;
+  return <ItemPalette onAdd={ handleAdd } />;
 }

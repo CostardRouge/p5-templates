@@ -53,39 +53,39 @@ export default function RecordingRow( {
 
   return (
     <tr
-      className={`group hover:bg-hover/50 transition-colors ${
+      className={ `group hover:bg-hover/50 transition-colors ${
         isNewlyAdded
           ? "animate-[slideInFromTop_0.5s_ease-out,highlightFade_1s_ease-out]"
           : ""
-      }`}
+      }` }
     >
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <input
           type="checkbox"
-          checked={isSelected}
-          onChange={onToggleSelection}
+          checked={ isSelected }
+          onChange={ onToggleSelection }
           className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-          onClick={( e ) => e.stopPropagation()}
+          onClick={ ( e ) => e.stopPropagation() }
         />
       </td>
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <RecordingThumbnail
-          job={job}
-          onClick={() => {
+          job={ job }
+          onClick={ () => {
             if ( job.status === "completed" && job.videoUrls ) {
               onPreview();
             }
-          }}
-          className={`w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl border border-border object-cover ${
+          } }
+          className={ `w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl border border-border object-cover ${
             job.videoUrls ? "cursor-pointer" : "cursor-default"
-          }`}
-          enableHoverPreview={true}
+          }` }
+          enableHoverPreview={ true }
         />
       </td>
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <HardLink
-          href={`/${ job.template }?id=${ job.id }`}
+          href={ `/${ job.template }?id=${ job.id }` }
           className="group/link text-xs sm:text-sm text-foreground hover:text-foreground/70 transition-colors"
         >
           <div className="font-mono truncate">
@@ -107,7 +107,7 @@ export default function RecordingRow( {
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <HardLink
-          href={`/${ job.template }`}
+          href={ `/${ job.template }` }
           className="group/link inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium text-foreground hover:text-foreground/70 transition-colors"
         >
           {job.template}
@@ -144,31 +144,31 @@ export default function RecordingRow( {
       </td>
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">
-        <StatusBadge status={job.status} />
+        <StatusBadge status={ job.status } />
       </td>
 
       <td className="px-2 py-2 sm:px-4 sm:py-3">
         <div className="min-w-[120px] sm:min-w-[200px] max-w-xs">
           <CompactProgressBar
-            job={job}
-            steps={job.status === "active" ? getRecordingSteps( job ) : []}
-            recordingSteps={progression?.steps}
-            currentSlideIndex={progression?.currentSlideIndex}
-            slideOptions={slideOptions}
-            startTime={startTime}
+            job={ job }
+            steps={ job.status === "active" ? getRecordingSteps( job ) : [] }
+            recordingSteps={ progression?.steps }
+            currentSlideIndex={ progression?.currentSlideIndex }
+            slideOptions={ slideOptions }
+            startTime={ startTime }
           />
         </div>
       </td>
 
       <td className="px-2 py-2 sm:px-4 sm:py-3 text-right">
         <ActionsMenu
-          job={job}
-          onCancel={onCancel}
-          onDelete={onDelete}
-          onRetry={onRetry}
-          onStart={onStart}
-          onPreviewModal={onPreview}
-          onClone={onClone}
+          job={ job }
+          onCancel={ onCancel }
+          onDelete={ onDelete }
+          onRetry={ onRetry }
+          onStart={ onStart }
+          onPreviewModal={ onPreview }
+          onClone={ onClone }
         />
       </td>
     </tr>

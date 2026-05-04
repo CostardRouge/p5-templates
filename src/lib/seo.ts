@@ -73,7 +73,8 @@ export function getWebApplicationJsonLd() {
  * Generates a BreadcrumbList JSON-LD structured data object.
  */
 export function getBreadcrumbJsonLd( items: Array<{
- name: string; url: string
+  name: string;
+  url: string
 }> ) {
   return {
     "@context": "https://schema.org",

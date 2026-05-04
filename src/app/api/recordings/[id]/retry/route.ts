@@ -79,7 +79,7 @@ export async function POST(
     return NextResponse.json( {
       retried: true
     } );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[POST /api/recordings/${ jobId }/retry]`,
       error

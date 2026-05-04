@@ -50,7 +50,7 @@ export async function GET(
     const s3DownloadUrl = await getDownloadUrlFromS3Url( s3Url );
 
     return downloadFromUrlResponse( s3DownloadUrl );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[GET /api/recordings/download/${ jobId }]`,
       error

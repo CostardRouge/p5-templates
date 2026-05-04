@@ -78,7 +78,7 @@ export default function ProgressBar( {
 
   if ( variant === "simple" ) {
     return (
-      <div className={`w-full ${ className }`}>
+      <div className={ `w-full ${ className }` }>
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {currentStep?.name || "Processing..."}
@@ -97,9 +97,9 @@ export default function ProgressBar( {
         <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out"
-            style={{
+            style={ {
               width: `${ overallPercentage }%`
-            }}
+            } }
           />
         </div>
       </div>
@@ -107,10 +107,10 @@ export default function ProgressBar( {
   }
 
   return (
-    <div className={`w-full ${ className }`}>
+    <div className={ `w-full ${ className }` }>
       {/* Compact Header */}
       <button
-        onClick={() => setIsExpanded( !isExpanded )}
+        onClick={ () => setIsExpanded( !isExpanded ) }
         className="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
       >
         <div className="flex items-center justify-between mb-3">
@@ -146,9 +146,9 @@ export default function ProgressBar( {
         <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 transition-all duration-500 ease-out relative"
-            style={{
+            style={ {
               width: `${ overallPercentage }%`
-            }}
+            } }
           >
             <div className="absolute inset-0 bg-white/20 animate-pulse" />
           </div>
@@ -168,14 +168,14 @@ export default function ProgressBar( {
             step, index
           ) => (
             <div
-              key={step.id}
-              className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+              key={ step.id }
+              className={ `flex items-center gap-3 p-3 rounded-lg transition-all ${
                 step.status === "active"
                   ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
                   : step.status === "completed"
                     ? "bg-green-50 dark:bg-green-900/20"
                     : "bg-gray-50 dark:bg-gray-900/50"
-              }`}
+              }` }
             >
               {/* Status Icon */}
               <div className="flex-shrink-0">
@@ -207,7 +207,7 @@ export default function ProgressBar( {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className={`text-sm font-medium truncate ${
+                    className={ `text-sm font-medium truncate ${
                       step.status === "active"
                         ? "text-blue-700 dark:text-blue-300"
                         : step.status === "completed"
@@ -215,19 +215,19 @@ export default function ProgressBar( {
                           : step.status === "error"
                             ? "text-red-700 dark:text-red-300"
                             : "text-gray-500 dark:text-gray-400"
-                    }`}
+                    }` }
                   >
                     {step.name}
                   </span>
                   {step.percentage !== undefined && (
                     <span
-                      className={`text-xs font-semibold ${
+                      className={ `text-xs font-semibold ${
                         step.status === "active"
                           ? "text-blue-600 dark:text-blue-400"
                           : step.status === "completed"
                             ? "text-green-600 dark:text-green-400"
                             : "text-gray-400 dark:text-gray-500"
-                      }`}
+                      }` }
                     >
                       {step.percentage}%
                     </span>
@@ -239,9 +239,9 @@ export default function ProgressBar( {
                   <div className="mt-2 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-blue-500 transition-all duration-300"
-                      style={{
+                      style={ {
                         width: `${ step.percentage }%`
-                      }}
+                      } }
                     />
                   </div>
                 )}

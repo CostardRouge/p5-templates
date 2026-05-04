@@ -94,8 +94,8 @@ export interface ConditionalGroupConfig extends BaseConfig {
 type Scope =
   | "global"
   | {
-      slide: number;
-    };
+    slide: number;
+  };
 
 interface HiddenConfig extends BaseConfig {
   component: "hidden";
@@ -257,7 +257,7 @@ const dotsPatternFields: ItemFormConfig = {
 
 // Main configuration object
 // The top-level keys MUST match the 'type' in your Zod discriminated union
-export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
+export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
   meta: {
     fill: {
       label: "Fill",
@@ -686,7 +686,7 @@ export const formConfig: Record<ContentItem["type"], ItemFormConfig> = {
 
           return finalConfigs;
         },
-        {} as ConditionalGroupConfig["configs"]
+        {} as ConditionalGroupConfig[ "configs" ]
       ),
 
       // @ts-expect-error

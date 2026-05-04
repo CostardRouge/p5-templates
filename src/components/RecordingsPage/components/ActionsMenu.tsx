@@ -87,7 +87,7 @@ export default function ActionsMenu( {
           8
         ) }` );
       }
-    } catch ( error ) {
+    } catch( error ) {
       alert( `Failed to ${ action }. Please try again.` );
     }
   };
@@ -140,7 +140,7 @@ export default function ActionsMenu( {
       } else {
         throw new Error( "Failed to import options" );
       }
-    } catch ( error ) {
+    } catch( error ) {
       setImportToast( {
         message:
           error instanceof Error ? error.message : "Failed to import options",
@@ -187,8 +187,8 @@ export default function ActionsMenu( {
                   focus
                 } ) => (
                   <button
-                    onClick={onPreviewModal}
-                    className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                    onClick={ onPreviewModal }
+                    className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
                   >
                     <Eye className="h-4 w-4 text-foreground/70" />
                     <span className="font-medium">Preview Video</span>
@@ -210,8 +210,8 @@ export default function ActionsMenu( {
               focus
             } ) => (
               <HardLink
-                href={`templates/${ job.template }?id=${ job.id }`}
-                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                href={ `templates/${ job.template }?id=${ job.id }` }
+                className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
                 <Link className="h-4 w-4 text-foreground/70" />
                 <div className="flex-1 min-w-0">
@@ -231,8 +231,8 @@ export default function ActionsMenu( {
               focus
             } ) => (
               <HardLink
-                href={`templates/${ job.template }`}
-                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                href={ `templates/${ job.template }` }
+                className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
                 <Clapperboard className="h-4 w-4 text-foreground/70" />
                 <div className="flex-1 min-w-0">
@@ -252,16 +252,16 @@ export default function ActionsMenu( {
               Download
             </p>
           </div>
-          <DownloadMenuItems job={job} />
+          <DownloadMenuItems job={ job } />
           <MenuItem>
             {( {
               focus
             } ) => (
               <button
-                onClick={async() =>
+                onClick={ async() =>
                   await fetchDownload( `/api/options/download/${ job.id }` )
                 }
-                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
                 <Download className="h-4 w-4 text-foreground/70" />
                 <span className="font-medium">Options JSON</span>
@@ -283,10 +283,10 @@ export default function ActionsMenu( {
                 </p>
               </div>
               <input
-                ref={fileInputRef}
+                ref={ fileInputRef }
                 type="file"
                 accept=".json"
-                onChange={handleFileChange}
+                onChange={ handleFileChange }
                 className="hidden"
               />
               <MenuItem>
@@ -294,8 +294,8 @@ export default function ActionsMenu( {
                   focus
                 } ) => (
                   <button
-                    onClick={handleImportClick}
-                    className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                    onClick={ handleImportClick }
+                    className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
                   >
                     <FileUp className="h-4 w-4 text-purple-600" />
                     <div className="flex-1 min-w-0 text-left">
@@ -326,13 +326,13 @@ export default function ActionsMenu( {
                 focus
               } ) => (
                 <button
-                  onClick={() =>
+                  onClick={ () =>
                     handleAction(
                       "start",
                       `/api/recordings/${ job.id }/start`
                     )
                   }
-                  className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                  className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
                 >
                   <Clapperboard className="h-4 w-4 text-green-600" />
                   <span className="font-medium text-green-600">
@@ -352,13 +352,13 @@ export default function ActionsMenu( {
                 focus
               } ) => (
                 <button
-                  onClick={() =>
+                  onClick={ () =>
                     handleAction(
                       "cancel",
                       `/api/recordings/${ job.id }/cancel`
                     )
                   }
-                  className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                  className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
                 >
                   <X className="h-4 w-4 text-orange-600" />
                   <span className="font-medium text-orange-600">Cancel</span>
@@ -376,13 +376,13 @@ export default function ActionsMenu( {
                 focus
               } ) => (
                 <button
-                  onClick={() =>
+                  onClick={ () =>
                     handleAction(
                       "retry",
                       `/api/recordings/${ job.id }/retry`
                     )
                   }
-                  className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                  className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
                 >
                   <RotateCcw className="h-4 w-4 text-blue-600" />
                   <span className="font-medium text-blue-600">
@@ -398,8 +398,8 @@ export default function ActionsMenu( {
               focus
             } ) => (
               <button
-                onClick={() => onClone?.( job )}
-                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                onClick={ () => onClone?.( job ) }
+                className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
                 <Copy className="h-4 w-4 text-purple-600" />
                 <span className="font-medium text-purple-600">
@@ -423,7 +423,7 @@ export default function ActionsMenu( {
                   focus
                 } ) => (
                   <button
-                    onClick={() =>
+                    onClick={ () =>
                       handleAction(
                         "delete",
                         `/api/recordings/${ job.id }`,
@@ -431,7 +431,7 @@ export default function ActionsMenu( {
                         `Delete this ${ job.status } recording? This action cannot be undone.`
                       )
                     }
-                    className={`${ focus ? "bg-red-50 dark:bg-red-950/20" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                    className={ `${ focus ? "bg-red-50 dark:bg-red-950/20" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
                   >
                     <Trash2 className="h-4 w-4 text-red-600" />
                     <span className="font-medium text-red-600">
@@ -447,9 +447,9 @@ export default function ActionsMenu( {
 
       {importToast && (
         <Toast
-          message={importToast.message}
-          type={importToast.type}
-          onClose={() => setImportToast( null )}
+          message={ importToast.message }
+          type={ importToast.type }
+          onClose={ () => setImportToast( null ) }
         />
       )}
     </>

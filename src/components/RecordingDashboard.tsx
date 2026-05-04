@@ -107,15 +107,15 @@ export function RecordingDashboard() {
 
         <div className="mt-6 flex gap-4">
           <button
-            onClick={handlePauseQueue}
-            disabled={isLoading}
+            onClick={ handlePauseQueue }
+            disabled={ isLoading }
             className="px-4 py-2 bg-yellow-500 text-foreground rounded-xl hover:bg-yellow-600 disabled:opacity-50"
           >
             Pause
           </button>
           <button
-            onClick={handleResumeQueue}
-            disabled={isLoading}
+            onClick={ handleResumeQueue }
+            disabled={ isLoading }
             className="px-4 py-2 bg-green-700 text-foreground rounded-xl hover:bg-green-600 disabled:opacity-50"
           >
             Resume

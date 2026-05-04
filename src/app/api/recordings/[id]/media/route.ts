@@ -79,7 +79,7 @@ export async function GET(
           key,
           3600
         );
-      } catch ( error ) {
+      } catch( error ) {
         console.error(
           `Failed to generate signed URL for thumbnail ${ key }:`,
           error
@@ -109,7 +109,7 @@ export async function GET(
           index,
           key
         };
-      } catch ( error ) {
+      } catch( error ) {
         console.error(
           `Failed to generate signed URL for video ${ key }:`,
           error
@@ -143,7 +143,7 @@ export async function GET(
       template: job.template,
       isZipArchive: false
     } );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[GET /api/recordings/${ jobId }/media]`,
       error

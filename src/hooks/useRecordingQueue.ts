@@ -61,7 +61,7 @@ export function useRecordingQueue() {
           data.jobId
         );
         return data.jobId;
-      } catch ( error ) {
+      } catch( error ) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
 
@@ -94,9 +94,9 @@ export function useRecordingQueue() {
           const data: QueueHealthResponse = await response.json();
 
           return data;
-        } catch ( error ) {
+        } catch( error ) {
           const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+            error instanceof Error ? error.message : "Unknown error";
 
           setError( errorMessage );
           return null;
@@ -133,7 +133,7 @@ export function useRecordingQueue() {
         }
 
         return true;
-      } catch ( error ) {
+      } catch( error ) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
 

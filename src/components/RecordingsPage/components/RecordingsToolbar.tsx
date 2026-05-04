@@ -49,16 +49,16 @@ export default function RecordingsToolbar( {
           <input
             type="text"
             placeholder="Search..."
-            value={search}
-            onChange={( e ) => onSearchChange( e.target.value )}
+            value={ search }
+            onChange={ ( e ) => onSearchChange( e.target.value ) }
             className="px-4 py-2.5 rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40"
           />
         </div>
 
         {/* Status Filter */}
         <select
-          value={statusFilter}
-          onChange={( e ) => onStatusFilterChange( e.target.value )}
+          value={ statusFilter }
+          onChange={ ( e ) => onStatusFilterChange( e.target.value ) }
           className="px-4 py-2.5 rounded-xl bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm font-medium cursor-pointer flex-shrink-0"
         >
           <option value="all">All Status</option>
@@ -71,17 +71,17 @@ export default function RecordingsToolbar( {
         </select>
 
         {/* Sort Controls */}
-        <SortControls sortConfig={sortConfig} onSortChange={onSortChange} />
+        <SortControls sortConfig={ sortConfig } onSortChange={ onSortChange } />
 
         {/* View Toggle */}
         <div className="flex items-center bg-background border border-border rounded-xl overflow-hidden flex-shrink-0">
           <button
-            onClick={() => onViewChange( "cards" )}
-            className={`px-3 py-2.5 transition-all duration-200 ${
+            onClick={ () => onViewChange( "cards" ) }
+            className={ `px-3 py-2.5 transition-all duration-200 ${
               view === "cards"
                 ? "bg-hover text-foreground"
                 : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
-            }`}
+            }` }
             title="Card view"
           >
             <Grid className="w-4 h-4" />
@@ -90,12 +90,12 @@ export default function RecordingsToolbar( {
           <div className="w-px h-6 bg-border" />
 
           <button
-            onClick={() => onViewChange( "table" )}
-            className={`px-3 py-2.5 transition-all duration-200 ${
+            onClick={ () => onViewChange( "table" ) }
+            className={ `px-3 py-2.5 transition-all duration-200 ${
               view === "table"
                 ? "bg-hover text-foreground"
                 : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
-            }`}
+            }` }
             title="Table view"
           >
             <List className="w-4 h-4" />
@@ -110,8 +110,8 @@ export default function RecordingsToolbar( {
           <input
             type="text"
             placeholder="Search..."
-            value={search}
-            onChange={( e ) => onSearchChange( e.target.value )}
+            value={ search }
+            onChange={ ( e ) => onSearchChange( e.target.value ) }
             className="px-3 py-2 rounded-lg w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs placeholder:text-foreground/40"
           />
         </div>
@@ -122,8 +122,8 @@ export default function RecordingsToolbar( {
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             {/* Status Filter */}
             <select
-              value={statusFilter}
-              onChange={( e ) => onStatusFilterChange( e.target.value )}
+              value={ statusFilter }
+              onChange={ ( e ) => onStatusFilterChange( e.target.value ) }
               className="px-2.5 py-2 rounded-lg bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs font-medium cursor-pointer flex-shrink-0 min-w-0"
             >
               <option value="all">All Status</option>
@@ -136,18 +136,18 @@ export default function RecordingsToolbar( {
             </select>
 
             {/* Sort Controls */}
-            <SortControls sortConfig={sortConfig} onSortChange={onSortChange} />
+            <SortControls sortConfig={ sortConfig } onSortChange={ onSortChange } />
           </div>
 
           {/* Right: View Toggle */}
           <div className="flex items-center bg-background border border-border rounded-lg overflow-hidden flex-shrink-0">
             <button
-              onClick={() => onViewChange( "cards" )}
-              className={`px-2.5 py-2 transition-all duration-200 ${
+              onClick={ () => onViewChange( "cards" ) }
+              className={ `px-2.5 py-2 transition-all duration-200 ${
                 view === "cards"
                   ? "bg-hover text-foreground"
                   : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
-              }`}
+              }` }
               title="Card view"
             >
               <Grid className="w-3.5 h-3.5" />
@@ -156,12 +156,12 @@ export default function RecordingsToolbar( {
             <div className="w-px h-5 bg-border" />
 
             <button
-              onClick={() => onViewChange( "table" )}
-              className={`px-2.5 py-2 transition-all duration-200 ${
+              onClick={ () => onViewChange( "table" ) }
+              className={ `px-2.5 py-2 transition-all duration-200 ${
                 view === "table"
                   ? "bg-hover text-foreground"
                   : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
-              }`}
+              }` }
               title="Table view"
             >
               <List className="w-3.5 h-3.5" />

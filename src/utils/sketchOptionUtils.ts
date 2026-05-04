@@ -6,7 +6,7 @@ import capitalize from "@/utils/capitalize";
 type FixedOption = {
   mode: "fixed",
   value: number
-}
+};
 
 type VariableOption<T> = {
   mode: "variable",
@@ -16,7 +16,7 @@ type VariableOption<T> = {
   speedMultiplier: number,
   progressionMultiplier: number,
   easingFn: string
-}
+};
 
 export function createFixedOrVariableOption(
   optionName: string, optionConfiguration: Record<string, number>

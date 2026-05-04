@@ -6,7 +6,7 @@ import {
 
 interface SimpleProgressBarProps {
   progress: number;
-  status?: JobModel["status"];
+  status?: JobModel[ "status" ];
 }
 
 export default function SimpleProgressBar( {
@@ -34,9 +34,9 @@ export default function SimpleProgressBar( {
         ) : (
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300 ease-out rounded-full"
-            style={{
+            style={ {
               width: `${ progress }%`
-            }}
+            } }
           />
         )}
       </div>

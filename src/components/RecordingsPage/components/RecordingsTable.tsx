@@ -53,13 +53,13 @@ export default function RecordingsTable( {
               <th className="text-left px-2 py-2 sm:px-4 sm:py-4 w-8 sm:w-12">
                 <input
                   type="checkbox"
-                  checked={allSelected}
-                  ref={( input ) => {
+                  checked={ allSelected }
+                  ref={ ( input ) => {
                     if ( input ) {
                       input.indeterminate = someSelected;
                     }
-                  }}
-                  onChange={onSelectAll}
+                  } }
+                  onChange={ onSelectAll }
                   className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-border text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                 />
               </th>
@@ -90,26 +90,26 @@ export default function RecordingsTable( {
           <tbody className="divide-y divide-border">
             {jobs.map( ( job ) => (
               <RecordingRow
-                key={job.id}
-                job={job}
-                startTime={recordingStartTimes[ job.id ]}
-                progression={jobProgressions?.[ job.id ]}
-                isSelected={selectedIds.has( job.id )}
-                isNewlyAdded={newlyAddedId === job.id}
-                onToggleSelection={() => onToggleSelection( job.id )}
-                onPreview={() => onPreview( job.id )}
-                onCancel={onCancel}
-                onDelete={onDelete}
-                onRetry={onRetry}
-                onStart={onStart}
-                onClone={onClone}
+                key={ job.id }
+                job={ job }
+                startTime={ recordingStartTimes[ job.id ] }
+                progression={ jobProgressions?.[ job.id ] }
+                isSelected={ selectedIds.has( job.id ) }
+                isNewlyAdded={ newlyAddedId === job.id }
+                onToggleSelection={ () => onToggleSelection( job.id ) }
+                onPreview={ () => onPreview( job.id ) }
+                onCancel={ onCancel }
+                onDelete={ onDelete }
+                onRetry={ onRetry }
+                onStart={ onStart }
+                onClone={ onClone }
               />
             ) )}
           </tbody>
         </table>
       </div>
 
-      {jobs.length === 0 && <RecordingsEmptyState hasFilters={hasFilters} />}
+      {jobs.length === 0 && <RecordingsEmptyState hasFilters={ hasFilters } />}
     </div>
   );
 }

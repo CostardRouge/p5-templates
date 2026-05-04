@@ -106,7 +106,7 @@ export async function GET(
             name: filename
           }
         );
-      } catch ( error ) {
+      } catch( error ) {
         console.error(
           `Failed to download video ${ index }:`,
           error
@@ -126,7 +126,7 @@ export async function GET(
         headers
       }
     );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[GET /api/recordings/download/${ jobId }/zip]`,
       error

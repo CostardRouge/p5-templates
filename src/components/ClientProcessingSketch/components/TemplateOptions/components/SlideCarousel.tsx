@@ -105,16 +105,16 @@ export default function SlideCarousel( {
 
   return (
     <DndContext
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-      sensors={sensors}
-      modifiers={[
+      collisionDetection={ closestCenter }
+      onDragEnd={ handleDragEnd }
+      sensors={ sensors }
+      modifiers={ [
         restrictToParentElement
-      ]}
+      ] }
     >
       <div className="flex flex-col gap-2">
         <div className="grid grid-cols-3 gap-2 p-1">
-          <SortableContext items={slideIds} strategy={rectSwappingStrategy}>
+          <SortableContext items={ slideIds } strategy={ rectSwappingStrategy }>
             {slideFields.map( (
               field, index
             ) => {
@@ -126,22 +126,22 @@ export default function SlideCarousel( {
               const name = slide?.name || `Slide ${ index + 1 }`;
 
               return (
-                <SortableRow key={id} id={id}>
+                <SortableRow key={ id } id={ id }>
                   {( dragBinder ) => (
                     <SlideThumbnail
-                      id={id}
-                      name={name}
-                      isActive={index === activeIndex}
-                      thumbnailUrl={thumbnail}
-                      aspectRatio={aspectRatio}
-                      onSelect={() => onSelect( index )}
-                      onRename={( newName ) => onRename(
+                      id={ id }
+                      name={ name }
+                      isActive={ index === activeIndex }
+                      thumbnailUrl={ thumbnail }
+                      aspectRatio={ aspectRatio }
+                      onSelect={ () => onSelect( index ) }
+                      onRename={ ( newName ) => onRename(
                         index,
                         newName
-                      )}
-                      onDelete={() => onDelete( index )}
-                      onDuplicate={() => onDuplicate( index )}
-                      dragBinder={dragBinder}
+                      ) }
+                      onDelete={ () => onDelete( index ) }
+                      onDuplicate={ () => onDuplicate( index ) }
+                      dragBinder={ dragBinder }
                     />
                   )}
                 </SortableRow>
@@ -151,12 +151,12 @@ export default function SlideCarousel( {
 
           <button
             type="button"
-            onClick={onAdd}
-            disabled={isAdding}
+            onClick={ onAdd }
+            disabled={ isAdding }
             className="flex flex-col items-center justify-center border border-dashed border-theme rounded-lg hover:bg-secondary/10 transition-colors text-muted-foreground hover:text-foreground gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
+            style={ {
               aspectRatio
-            }}
+            } }
             aria-label="Add new slide"
             title="Add new slide"
           >

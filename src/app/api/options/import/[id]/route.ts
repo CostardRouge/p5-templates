@@ -72,7 +72,7 @@ export async function POST(
 
     try {
       importedOptions = JSON.parse( fileContent );
-    } catch ( error ) {
+    } catch( error ) {
       return NextResponse.json(
         {
           error: "Invalid JSON file"
@@ -115,7 +115,7 @@ export async function POST(
       success: true,
       jobId
     } );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[POST /api/options/import/${ jobId }]`,
       error

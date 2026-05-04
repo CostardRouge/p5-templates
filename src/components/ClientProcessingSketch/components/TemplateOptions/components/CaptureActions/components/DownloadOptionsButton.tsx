@@ -66,7 +66,7 @@ export default function DownloadOptionsButton( {
 
   return (
     <button
-      onClick={handleDownload}
+      onClick={ handleDownload }
       className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
       title="Download options.json"
     >

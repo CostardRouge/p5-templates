@@ -15,11 +15,11 @@ export default function TemplateAssetsProvider( {
 }: React.PropsWithChildren<TemplateAssetsContextType> ) {
   return (
     <TemplateAssetsContext.Provider
-      value={{
+      value={ {
         scope,
         assetsName,
         jobId
-      }}
+      } }
     >
       {children}
     </TemplateAssetsContext.Provider>

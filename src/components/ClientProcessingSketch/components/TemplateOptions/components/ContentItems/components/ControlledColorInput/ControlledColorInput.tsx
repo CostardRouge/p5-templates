@@ -19,9 +19,9 @@ export default function ControlledColorInput( {
 
   return (
     <Controller
-      control={control}
-      name={name}
-      render={( {
+      control={ control }
+      name={ name }
+      render={ ( {
         field
       } ) => {
         // Ensure we always have a valid RGBA array
@@ -68,11 +68,11 @@ export default function ControlledColorInput( {
           <div className="flex flex-row gap-2 w-full">
             <div className="w-1/4">
               <input
-                id={name}
+                id={ name }
                 type="color"
                 className="h-8 w-full rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
-                onChange={( e ) => handleColorChange( e.target.value )}
-                value={rgbaToHex( currentValue )}
+                onChange={ ( e ) => handleColorChange( e.target.value ) }
+                value={ rgbaToHex( currentValue ) }
                 aria-label="Color picker"
               />
             </div>
@@ -81,29 +81,29 @@ export default function ControlledColorInput( {
             <div className="flex items-center justify-between gap-2 w-3/4">
               <div
                 className="flex-shrink-0 w-8 h-8 rounded-lg border border-theme relative overflow-hidden"
-                style={{
+                style={ {
                   background: `linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), 
                               linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)`,
                   backgroundSize: "8px 8px",
                   backgroundPosition: "0 0, 4px 4px"
-                }}
+                } }
               >
                 <div
                   className="absolute inset-0"
-                  style={{
+                  style={ {
                     backgroundColor: `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`
-                  }}
+                  } }
                 />
               </div>
 
               <input
                 type="range"
                 className="p-1 border border-theme rounded-lg bg-background w-full"
-                min={0}
-                max={255}
-                step={1}
-                value={a}
-                onChange={( e ) => handleAlphaChange( Number( e.target.value ) )}
+                min={ 0 }
+                max={ 255 }
+                step={ 1 }
+                value={ a }
+                onChange={ ( e ) => handleAlphaChange( Number( e.target.value ) ) }
                 aria-label="Alpha transparency"
               />
 
@@ -113,7 +113,7 @@ export default function ControlledColorInput( {
             </div>
           </div>
         );
-      }}
+      } }
     />
   );
 }

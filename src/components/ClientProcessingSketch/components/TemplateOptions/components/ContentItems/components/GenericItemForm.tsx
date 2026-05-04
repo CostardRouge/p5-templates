@@ -38,7 +38,7 @@ export default function GenericItemForm( {
   } = useFormContext<SketchOption>();
 
   // Watch the 'type' field of this specific item to know what to render
-  const itemType = watch( `${ baseFieldName }.${ index }.type` as any ) as ContentItem["type"];
+  const itemType = watch( `${ baseFieldName }.${ index }.type` as any ) as ContentItem[ "type" ];
 
   // Find the Zod schema for this specific item type from the discriminated union
   const itemSchema = ContentItemSchema.options.find( ( schema ) => schema.shape.type.value === itemType );
@@ -59,10 +59,10 @@ export default function GenericItemForm( {
 
   return (
     <ItemFormWrapper
-      dragBinder={dragBinder}
-      onDuplicate={onDuplicate}
-      onRemove={onRemove}
-      itemType={itemType}
+      dragBinder={ dragBinder }
+      onDuplicate={ onDuplicate }
+      onRemove={ onRemove }
+      itemType={ itemType }
     >
       <div className="flex flex-col gap-2">
         {fieldNames.map( ( fieldName ) => {
@@ -81,10 +81,10 @@ export default function GenericItemForm( {
 
           return (
             <FieldRenderer
-              key={fieldName}
-              fieldBasePath={`${ baseFieldName }.${ index }`}
-              fieldName={fieldName}
-              config={fieldConfig}
+              key={ fieldName }
+              fieldBasePath={ `${ baseFieldName }.${ index }` }
+              fieldName={ fieldName }
+              config={ fieldConfig }
             />
           );
         } )}

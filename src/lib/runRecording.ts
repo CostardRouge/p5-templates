@@ -53,7 +53,7 @@ async function runRecording( jobId: string ) {
       options,
       temporaryDirectoryPath
     );
-  } catch ( error ) {
+  } catch( error ) {
     // If anything fails, mark job as failed and rethrow
     await updateJob(
       jobId,

@@ -21,8 +21,8 @@ const ensurePath = (
 type Scope =
   | "global"
   | {
-      slide: number;
-    };
+    slide: number;
+  };
 
 export type AssetType = "images" | "videos" | "audios" | "json";
 

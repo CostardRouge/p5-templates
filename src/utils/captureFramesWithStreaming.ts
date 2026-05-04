@@ -172,7 +172,7 @@ export async function captureFramesWithStreaming( {
         }
       );
     } );
-  } catch ( error ) {
+  } catch( error ) {
     // Kill FFmpeg if still running
     if ( !ffmpegProcess.killed ) {
       ffmpegProcess.kill( "SIGKILL" );

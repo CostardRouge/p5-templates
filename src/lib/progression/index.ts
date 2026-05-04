@@ -120,7 +120,7 @@ export const updateRecordingStepPercentage = async(
         steps: jobRecordingSteps
       } )
     );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "updateRecordingStepPercentage failed:",
       {
@@ -148,7 +148,7 @@ export const updateRecordingStatus = async(
         status
       } )
     );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "updateRecordingStatus failed:",
       {
@@ -174,7 +174,7 @@ export const updateCurrentSlide = async(
         currentSlideIndex: slideIndex
       } )
     );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "updateCurrentSlide failed:",
       {

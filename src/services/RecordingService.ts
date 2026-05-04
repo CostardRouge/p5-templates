@@ -102,7 +102,7 @@ export class RecordingService {
       await Redis.disconnect();
 
       console.log( "[Service] Graceful shutdown completed" );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "[Service] Error during shutdown:",
         error

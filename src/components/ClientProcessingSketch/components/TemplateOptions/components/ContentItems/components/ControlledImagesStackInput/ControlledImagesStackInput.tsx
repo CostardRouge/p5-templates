@@ -207,26 +207,26 @@ export default function ControlledImagesStackInput( {
 
   return (
     <div className="flex flex-col gap-1">
-      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+      <DndContext sensors={ sensors } onDragEnd={ onDragEnd }>
         <div className="grid grid-cols-3 gap-1">
           <SortableContext
-            items={rows.map( ( r ) => r.id )}
-            strategy={rectSortingStrategy}
+            items={ rows.map( ( r ) => r.id ) }
+            strategy={ rectSortingStrategy }
           >
             {rows.map( (
               r, i
             ) => (
               <SortableThumb
-                key={r.id}
-                id={r.id}
-                url={r.url}
-                alt={fileName( r.path )}
-                onDelete={() => onDelete( i )}
+                key={ r.id }
+                id={ r.id }
+                url={ r.url }
+                alt={ fileName( r.path ) }
+                onDelete={ () => onDelete( i ) }
               />
             ) )}
           </SortableContext>
 
-          <DropZoneButton onFiles={onFiles} multiple className="h-20" />
+          <DropZoneButton onFiles={ onFiles } multiple className="h-20" />
         </div>
       </DndContext>
     </div>
@@ -257,25 +257,25 @@ function SortableThumb( {
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
+      ref={ setNodeRef }
+      style={ style }
       className="relative h-20 bg-background rounded-lg border border-theme overflow-hidden"
     >
       <GripVertical
         className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded-md border border-theme"
-        {...attributes}
-        {...listeners}
+        { ...attributes }
+        { ...listeners }
         aria-label="Drag handle"
         role="button"
-        tabIndex={0}
+        tabIndex={ 0 }
       />
 
       <button
         type="button"
-        onClick={( e ) => {
+        onClick={ ( e ) => {
           e.stopPropagation();
           onDelete();
-        }}
+        } }
         className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-md border border-theme p-0.5"
         aria-label="Remove image"
       >
@@ -284,7 +284,7 @@ function SortableThumb( {
 
       {/* Guarded image: url is only built from non-empty path; add fallback UI just in case */}
       {url ? (
-        <img src={url} className="object-cover h-full w-full" alt={alt} />
+        <img src={ url } className="object-cover h-full w-full" alt={ alt } />
       ) : (
         <div className="h-full w-full grid place-items-center text-xs text-gray-400 bg-gray-50">
           Invalid image

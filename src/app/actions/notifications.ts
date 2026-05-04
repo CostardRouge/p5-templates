@@ -16,7 +16,7 @@ export async function subscribeUser( subscription: PushSubscriptionData ) {
     return {
       success: true
     };
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "Error subscribing user:",
       error
@@ -37,7 +37,7 @@ export async function unsubscribeUser( endpoint: string ) {
     return {
       success: true
     };
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "Error unsubscribing user:",
       error
@@ -69,7 +69,7 @@ export async function sendTestNotification(
     return {
       success
     };
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "Error sending test notification:",
       error

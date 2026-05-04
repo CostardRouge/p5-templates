@@ -60,20 +60,20 @@ export default function ControlledJsonInput( {
 
   return (
     <Controller
-      name={name}
-      control={control}
-      render={( {
+      name={ name }
+      control={ control }
+      render={ ( {
         field
       } ) => (
         <textarea
-          className={textareaClassName}
-          rows={config.rows ?? 4}
-          value={formatValue( field.value )}
-          onChange={( e ) => {
+          className={ textareaClassName }
+          rows={ config.rows ?? 4 }
+          value={ formatValue( field.value ) }
+          onChange={ ( e ) => {
             // Store the raw text during editing to allow invalid JSON temporarily
             field.onChange( e.target.value );
-          }}
-          onBlur={( e ) => {
+          } }
+          onBlur={ ( e ) => {
             field.onBlur();
 
             const trimmed = e.target.value.trim();
@@ -92,9 +92,9 @@ export default function ControlledJsonInput( {
                 }
               );
             }
-          }}
+          } }
         />
-      )}
+      ) }
     />
   );
 }

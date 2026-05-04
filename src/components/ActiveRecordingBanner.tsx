@@ -38,13 +38,13 @@ export default function ActiveRecordingBanner( {
   }
 
   return (
-    <div className={`space-y-4 ${ className }`}>
+    <div className={ `space-y-4 ${ className }` }>
       {activeRecordings.map( ( job ) => {
         const steps = getRecordingSteps( job );
         const currentStepIndex = getCurrentStepIndex( steps );
 
         return (
-          <div key={job.id} className="space-y-2">
+          <div key={ job.id } className="space-y-2">
             {/* Recording Header with Live Indicator */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -52,17 +52,17 @@ export default function ActiveRecordingBanner( {
                 <div className="relative">
                   <div
                     className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"
-                    style={{
+                    style={ {
                       width: "12px",
                       height: "12px"
-                    }}
+                    } }
                   />
                   <div
                     className="relative rounded-full bg-red-600"
-                    style={{
+                    style={ {
                       width: "12px",
                       height: "12px"
-                    }}
+                    } }
                   />
                 </div>
                 <div>
@@ -78,7 +78,7 @@ export default function ActiveRecordingBanner( {
                 </div>
               </div>
               <HardLink
-                href={`templates/${ job.template }?id=${ job.id }`}
+                href={ `templates/${ job.template }?id=${ job.id }` }
                 className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors"
               >
                 View Details →
@@ -88,11 +88,11 @@ export default function ActiveRecordingBanner( {
             {/* Detailed Progress Bar with Steps - Click to expand */}
             <ProgressBar
               variant="detailed"
-              steps={steps}
-              currentStepIndex={currentStepIndex}
-              overallPercentage={job.progress || 0}
+              steps={ steps }
+              currentStepIndex={ currentStepIndex }
+              overallPercentage={ job.progress || 0 }
               showElapsedTime
-              startTime={recordingStartTimesRef.current[ job.id ] || Date.now()}
+              startTime={ recordingStartTimesRef.current[ job.id ] || Date.now() }
             />
           </div>
         );

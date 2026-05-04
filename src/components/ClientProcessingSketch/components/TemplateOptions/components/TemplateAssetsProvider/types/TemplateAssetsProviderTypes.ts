@@ -5,8 +5,8 @@ import type {
 type Scope =
   | "global"
   | {
-      slide: number;
-    };
+    slide: number;
+  };
 
 export type TemplateAssetsContextType = {
   assetsName: string;

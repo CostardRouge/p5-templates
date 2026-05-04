@@ -15,7 +15,7 @@ async function getSketchList() {
       category,
       hasSketchForm
     } ) );
-  } catch ( err ) {
+  } catch( err ) {
     console.error(
       "Failed to read sketch metadata:",
       err

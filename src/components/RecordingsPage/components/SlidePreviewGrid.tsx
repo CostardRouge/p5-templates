@@ -59,7 +59,7 @@ export default function SlidePreviewGrid( {
           const data = await response.json();
 
           setThumbnails( data.thumbnails || [] );
-        } catch ( err ) {
+        } catch( err ) {
           console.error(
             "Failed to load slide thumbnails:",
             err
@@ -131,14 +131,14 @@ export default function SlidePreviewGrid( {
         thumb, idx
       ) => (
         <img
-          key={idx}
-          src={thumb}
-          alt={`Slide ${ idx + 1 }`}
+          key={ idx }
+          src={ thumb }
+          alt={ `Slide ${ idx + 1 }` }
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-          style={{
+          style={ {
             opacity: idx === currentIndex ? 1 : 0,
             pointerEvents: idx === currentIndex ? "auto" : "none"
-          }}
+          } }
         />
       ) )}
     </div>

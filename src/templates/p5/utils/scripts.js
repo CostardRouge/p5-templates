@@ -72,7 +72,7 @@ const scripts = {
         if ( !existingScript ) {
           container.appendChild( scriptElement );
         }
-      } catch ( error ) {
+      } catch( error ) {
         reject( error );
       }
     } ).finally( () => {
@@ -94,7 +94,7 @@ window.removeLoadedScripts = () => {
   } ) => {
     try {
       container?.removeChild( scriptElement );
-    } catch ( e ) {}
+    } catch( e ) {}
   } );
 
   scripts.loaded = [];

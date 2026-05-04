@@ -131,8 +131,8 @@ export default function TemplatesList( {
             <input
               type="text"
               placeholder="Search templates..."
-              value={search}
-              onChange={( e ) => setSearch( e.target.value )}
+              value={ search }
+              onChange={ ( e ) => setSearch( e.target.value ) }
               className="pl-9 pr-3 py-2 sm:pl-11 sm:pr-4 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40"
             />
           </div>
@@ -140,12 +140,12 @@ export default function TemplatesList( {
           {/* View Toggle */}
           <div className="flex items-center bg-background border border-border rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
             <button
-              onClick={() => setView( "grid" )}
-              className={`px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
+              onClick={ () => setView( "grid" ) }
+              className={ `px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
                 view === "grid"
                   ? "bg-hover text-foreground"
                   : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
-              }`}
+              }` }
               title="Grid view"
             >
               <Grid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -154,12 +154,12 @@ export default function TemplatesList( {
             <div className="w-px h-5 sm:h-6 bg-border" />
 
             <button
-              onClick={() => setView( "list" )}
-              className={`px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
+              onClick={ () => setView( "list" ) }
+              className={ `px-2.5 py-2 sm:px-3 sm:py-2.5 transition-all duration-200 ${
                 view === "list"
                   ? "bg-hover text-foreground"
                   : "text-foreground/60 hover:text-foreground hover:bg-hover/50"
-              }`}
+              }` }
               title="List view"
             >
               <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -204,7 +204,7 @@ export default function TemplatesList( {
         } );
 
         return (
-          <div key={category} className="space-y-2 sm:space-y-4">
+          <div key={ category } className="space-y-2 sm:space-y-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <h2 className="text-base sm:text-lg font-semibold text-foreground">
                 {category}
@@ -220,7 +220,7 @@ export default function TemplatesList( {
               subCategory,
               subItems
             ] ) => (
-              <div key={subCategory} className="space-y-2 sm:space-y-3">
+              <div key={ subCategory } className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 pl-2 sm:pl-4">
                   <h3 className="text-sm sm:text-base font-medium text-foreground/80">
                     {subCategory}
@@ -243,13 +243,13 @@ export default function TemplatesList( {
                     }, index
                   ) => (
                     <TemplateCard
-                      key={name}
-                      href={href}
-                      name={name}
-                      thumbnail={thumbnail}
-                      hasSketchForm={hasSketchForm}
-                      view={view}
-                      eager={index < 8}
+                      key={ name }
+                      href={ href }
+                      name={ name }
+                      thumbnail={ thumbnail }
+                      hasSketchForm={ hasSketchForm }
+                      view={ view }
+                      eager={ index < 8 }
                     />
                   ) )}
                 </div>
@@ -281,13 +281,13 @@ export default function TemplatesList( {
                     }, index
                   ) => (
                     <TemplateCard
-                      key={name}
-                      href={href}
-                      name={name}
-                      thumbnail={thumbnail}
-                      hasSketchForm={hasSketchForm}
-                      view={view}
-                      eager={index < 8}
+                      key={ name }
+                      href={ href }
+                      name={ name }
+                      thumbnail={ thumbnail }
+                      hasSketchForm={ hasSketchForm }
+                      view={ view }
+                      eager={ index < 8 }
                     />
                   ) )}
                 </div>
@@ -318,15 +318,15 @@ function TemplateCard( {
   if ( view === "grid" ) {
     return (
       <Link
-        href={href}
+        href={ href }
         className="group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5"
       >
         {/* Aspect ratio box for 4:5 (360x450) */}
         <div
           className="w-full relative"
-          style={{
+          style={ {
             paddingTop: "125%"
-          }}
+          } }
         >
           {hasSketchForm && (
             <div
@@ -339,11 +339,11 @@ function TemplateCard( {
             </div>
           )}
           <img
-            alt={name}
-            loading={eager ? "eager" : "lazy"}
-            fetchPriority={eager ? "high" : undefined}
-            decoding={eager ? "sync" : "async"}
-            src={thumbnail}
+            alt={ name }
+            loading={ eager ? "eager" : "lazy" }
+            fetchPriority={ eager ? "high" : undefined }
+            decoding={ eager ? "sync" : "async" }
+            src={ thumbnail }
             className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
           />
 
@@ -366,18 +366,18 @@ function TemplateCard( {
   // list view
   return (
     <Link
-      href={href}
+      href={ href }
       className="group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5"
     >
       <div
         className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border"
       >
         <img
-          alt={name}
-          loading={eager ? "eager" : "lazy"}
-          fetchPriority={eager ? "high" : undefined}
-          decoding={eager ? "sync" : "async"}
-          src={thumbnail}
+          alt={ name }
+          loading={ eager ? "eager" : "lazy" }
+          fetchPriority={ eager ? "high" : undefined }
+          decoding={ eager ? "sync" : "async" }
+          src={ thumbnail }
           className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
         />
       </div>

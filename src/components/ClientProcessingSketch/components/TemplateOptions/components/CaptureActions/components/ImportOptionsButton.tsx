@@ -72,7 +72,7 @@ export default function ImportOptionsButton( {
 
       try {
         importedOptions = JSON.parse( fileContent );
-      } catch ( error ) {
+      } catch( error ) {
         throw new Error( "Invalid JSON file" );
       }
 
@@ -126,7 +126,7 @@ export default function ImportOptionsButton( {
           throw new Error( "Failed to import options" );
         }
       }
-    } catch ( error ) {
+    } catch( error ) {
       setToast( {
         message:
           error instanceof Error ? error.message : "Failed to import options",
@@ -142,15 +142,15 @@ export default function ImportOptionsButton( {
   return (
     <>
       <input
-        ref={fileInputRef}
+        ref={ fileInputRef }
         type="file"
         accept=".json"
-        onChange={handleFileChange}
+        onChange={ handleFileChange }
         className="hidden"
       />
       <button
-        onClick={handleImportClick}
-        disabled={importing}
+        onClick={ handleImportClick }
+        disabled={ importing }
         className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium"
         title={
           persistedJobId
@@ -164,9 +164,9 @@ export default function ImportOptionsButton( {
 
       {toast && (
         <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast( null )}
+          message={ toast.message }
+          type={ toast.type }
+          onClose={ () => setToast( null ) }
         />
       )}
     </>

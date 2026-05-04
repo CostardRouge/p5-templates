@@ -107,7 +107,7 @@ export async function getObjectSize( objectKey: string ): Promise<number | null>
     } ) );
 
     return response.ContentLength ?? null;
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `Failed to get object size for ${ objectKey }:`,
       error
@@ -128,7 +128,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
         Bucket: bucketName,
         Prefix: objectKeyOrPrefix
       } ) );
-    } catch ( err ) {
+    } catch( err ) {
       console.error(
         `Failed to list objects with prefix ${ objectKeyOrPrefix }:`,
         err
@@ -150,7 +150,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
         } );
 
         await s3client.send( deleteCommand );
-      } catch ( err ) {
+      } catch( err ) {
         console.error(
           `Failed to delete multiple objects with prefix ${ objectKeyOrPrefix }:`,
           err
@@ -166,7 +166,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
         } );
 
         await s3client.send( deleteCommand );
-      } catch ( err ) {
+      } catch( err ) {
         console.error(
           `Failed to delete object ${ objectKeyOrPrefix }:`,
           err
@@ -177,7 +177,7 @@ export async function deleteArtifact( objectKeyOrPrefix: string ): Promise<void>
       // No objects found - this is OK, might have been deleted already
       console.warn( `No objects found with prefix ${ objectKeyOrPrefix }, skipping deletion` );
     }
-  } catch ( err ) {
+  } catch( err ) {
     // Re-throw to let caller handle
     throw err;
   }

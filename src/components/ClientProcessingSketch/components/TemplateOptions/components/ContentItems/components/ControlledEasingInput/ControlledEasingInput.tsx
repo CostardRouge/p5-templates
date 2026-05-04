@@ -77,9 +77,9 @@ export default function ControlledEasingInput( {
     <div className="flex items-center gap-2">
       {family !== "linear" && (
         <select
-          className={selectClassName}
-          value={direction}
-          onChange={( e ) => {
+          className={ selectClassName }
+          value={ direction }
+          onChange={ ( e ) => {
             const next = e.target.value as EasingDirection;
 
             setDirection( next );
@@ -87,10 +87,10 @@ export default function ControlledEasingInput( {
               next,
               family
             );
-          }}
+          } }
         >
           {EASING_DIRECTIONS.map( ( d ) => (
-            <option key={d.value} value={d.value}>
+            <option key={ d.value } value={ d.value }>
               {d.label}
             </option>
           ) )}
@@ -98,9 +98,9 @@ export default function ControlledEasingInput( {
       )}
 
       <select
-        className={selectClassName}
-        value={family}
-        onChange={( e ) => {
+        className={ selectClassName }
+        value={ family }
+        onChange={ ( e ) => {
           const next = e.target.value as EasingFamily;
 
           setFamily( next );
@@ -116,10 +116,10 @@ export default function ControlledEasingInput( {
               next
             );
           }
-        }}
+        } }
       >
         {EASING_FAMILIES.map( ( f ) => (
-          <option key={f} value={f}>
+          <option key={ f } value={ f }>
             {f.charAt( 0 ).toUpperCase() + f.slice( 1 )}
           </option>
         ) )}

@@ -221,7 +221,8 @@ function findKeyAtDepth0(
   innerEnd: number,
   key: string
 ): {
- valueStart: number; valueEnd: number
+  valueStart: number;
+  valueEnd: number
 } | null {
   let i = innerStart;
   let depth = 0;
@@ -329,8 +330,10 @@ function applyChanges(
   }
 
   type Replacement = {
- start: number; end: number; text: string
-};
+    start: number;
+    end: number;
+    text: string
+  };
   const replacements: Replacement[] = [];
 
   for ( const change of changes ) {
@@ -516,7 +519,7 @@ export async function POST( request: Request ) {
       content,
       changes
     );
-  } catch ( err ) {
+  } catch( err ) {
     return new Response(
       String( err ),
       {

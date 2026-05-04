@@ -25,12 +25,12 @@ export default function ItemPalette( {
 }: Props ) {
   return (
     <div
-      className={clsx(
+      className={ clsx(
         "grid grid-cols-6",
         gap,
         "rounded-md border border-theme bg-background p-0.5 overflow-hidden",
         className
-      )}
+      ) }
       role="list"
       aria-label="Add item palette"
     >
@@ -39,19 +39,19 @@ export default function ItemPalette( {
 
         return (
           <button
-            key={kind}
+            key={ kind }
             type="button"
-            onClick={() => onAdd( kind )}
-            className={clsx(
+            onClick={ () => onAdd( kind ) }
+            className={ clsx(
               "flex items-center justify-center",
               "p-1 transition",
               "active:scale-[0.98]"
-            )}
+            ) }
             role="listitem"
-            aria-label={meta.label}
-            title={meta.description ?? meta.label}
+            aria-label={ meta.label }
+            title={ meta.description ?? meta.label }
           >
-            <meta.Icon className={size} strokeWidth={1.75} />
+            <meta.Icon className={ size } strokeWidth={ 1.75 } />
           </button>
         );
       } )}

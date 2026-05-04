@@ -43,7 +43,7 @@ export function usePersistedViewMode<T extends ViewMode>(
             setViewModeState( parsed );
           }
         }
-      } catch ( error ) {
+      } catch( error ) {
       // Silently fail and use default if localStorage is unavailable or corrupted
         console.warn(
           `Failed to read ${ storageKey } from localStorage:`,
@@ -64,7 +64,7 @@ export function usePersistedViewMode<T extends ViewMode>(
           storageKey,
           JSON.stringify( viewMode )
         );
-      } catch ( error ) {
+      } catch( error ) {
       // Handle quota exceeded or other localStorage errors
         console.warn(
           `Failed to save ${ storageKey } to localStorage:`,

@@ -27,20 +27,25 @@ export type SketchState = {
 
 export type SketchAction =
   | {
- type: "SET_OPTIONS"; payload: SketchOption
-}
+    type: "SET_OPTIONS";
+    payload: SketchOption
+  }
   | {
- type: "SET_LOADED"; payload: boolean
-}
+    type: "SET_LOADED";
+    payload: boolean
+  }
   | {
- type: "SET_ACTIVE_SLIDE"; payload: number | undefined
-}
+    type: "SET_ACTIVE_SLIDE";
+    payload: number | undefined
+  }
   | {
- type: "SET_ENGINE"; payload: SketchEngine | null
-}
+    type: "SET_ENGINE";
+    payload: SketchEngine | null
+  }
   | {
- type: "SET_CAPTURING"; payload: boolean
-};
+    type: "SET_CAPTURING";
+    payload: boolean
+  };
 
 /** Props accepted by SketchContextProvider (initial values from RSC). */
 export type SketchContextProviderProps = {

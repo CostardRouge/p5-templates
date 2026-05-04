@@ -106,7 +106,7 @@ export default function OptionsImportExport( {
 
       try {
         importedOptions = JSON.parse( fileContent );
-      } catch ( error ) {
+      } catch( error ) {
         throw new Error( "Invalid JSON file" );
       }
 
@@ -157,7 +157,7 @@ export default function OptionsImportExport( {
           throw new Error( "Failed to import options" );
         }
       }
-    } catch ( error ) {
+    } catch( error ) {
       setToast( {
         message:
           error instanceof Error ? error.message : "Failed to import options",
@@ -172,28 +172,28 @@ export default function OptionsImportExport( {
   return (
     <>
       <input
-        ref={fileInputRef}
+        ref={ fileInputRef }
         type="file"
         accept=".json"
-        onChange={handleFileChange}
+        onChange={ handleFileChange }
         className="hidden"
       />
 
       <div className="flex gap-1">
-        <button onClick={handleDownload} className="text-xs flex items-center">
+        <button onClick={ handleDownload } className="text-xs flex items-center">
           <Download className="h-3.5" />
           <span>Export</span>
         </button>
 
         <button
-          onClick={handleImportClick}
-          disabled={importing}
-          className={clsx(
+          onClick={ handleImportClick }
+          disabled={ importing }
+          className={ clsx(
             "disabled:opacity-50 text-xs flex items-center",
             {
               "animate-pulse": importing
             }
-          )}
+          ) }
         >
           <FileUp className="h-3.5" />
           <span>{importing ? "Importing..." : "Import"}</span>
@@ -202,9 +202,9 @@ export default function OptionsImportExport( {
 
       {toast && (
         <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast( null )}
+          message={ toast.message }
+          type={ toast.type }
+          onClose={ () => setToast( null ) }
         />
       )}
     </>

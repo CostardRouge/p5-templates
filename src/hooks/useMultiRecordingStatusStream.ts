@@ -48,7 +48,7 @@ function useMultiRecordingStatusStream() {
           jobId,
           data
         } );
-      } catch ( err ) {
+      } catch( err ) {
         console.error(
           "Invalid SSE data:",
           err

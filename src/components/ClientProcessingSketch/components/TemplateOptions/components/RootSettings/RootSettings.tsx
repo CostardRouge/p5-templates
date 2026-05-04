@@ -12,25 +12,25 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 export default function RootSettings() {
   return (
     <CollapsibleItem
-      initialExpandedValue={false}
+      initialExpandedValue={ false }
       className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
       headerContainerClassName="leading-none"
-      header={( expanded ) => (
+      header={ ( expanded ) => (
         <button
           className="truncate text-foreground text-xs w-full text-left -ml-1 align-text-top"
-          aria-label={expanded ? "Collapse controls" : "Expand controls"}
+          aria-label={ expanded ? "Collapse controls" : "Expand controls" }
         >
           <ListCollapse
             className="inline text-foreground h-3"
-            style={{
+            style={ {
               rotate: expanded ? "180deg" : "0deg"
-            }}
+            } }
           />
           general settings
         </button>
-      )}
+      ) }
     >
-      <GenericObjectForm config={rootFormConfig} />
+      <GenericObjectForm config={ rootFormConfig } />
     </CollapsibleItem>
   );
 }

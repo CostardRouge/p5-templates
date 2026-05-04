@@ -41,9 +41,9 @@ export default function SketchJsonLd( {
     <script
       type="application/ld+json"
       suppressHydrationWarning
-      dangerouslySetInnerHTML={{
+      dangerouslySetInnerHTML={ {
         __html: JSON.stringify( jsonLd )
-      }}
+      } }
     />
   );
 }

@@ -87,12 +87,12 @@ export default function ServiceWorkerUpdateNotifier() {
     <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md mx-auto">
       <div className="glass border border-border rounded-lg shadow-md shadow-active/5 flex items-center gap-3 max-w-md px-4 py-3">
         <RefreshCw
-          className={clsx(
+          className={ clsx(
             "w-5 h-5 flex-shrink-0 text-foreground",
             {
               "animate-spin": updating
             }
-          )}
+          ) }
         />
 
         <div className="flex-1">
@@ -105,14 +105,14 @@ export default function ServiceWorkerUpdateNotifier() {
         </div>
 
         <button
-          onClick={handleUpdate}
+          onClick={ handleUpdate }
           className="px-3 py-1.5 bg-foreground text-background rounded-md font-medium text-sm hover:bg-foreground/90 active:bg-active transition-colors"
         >
           Reload
         </button>
 
         <button
-          onClick={handleDismiss}
+          onClick={ handleDismiss }
           className="p-1 hover:bg-hover rounded transition-colors text-foreground"
           aria-label="Dismiss"
         >

@@ -31,14 +31,14 @@ export default function DraftActions( {
     <>
       <div className="flex gap-1">
         <button
-          className={clsx(
+          className={ clsx(
             "rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5 flex-1",
             {
               "animate-pulse-soft": saving
             }
-          )}
-          onClick={onSave}
-          disabled={isAnyActionLoading}
+          ) }
+          onClick={ onSave }
+          disabled={ isAnyActionLoading }
         >
           {saving ? (
             <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
@@ -50,8 +50,8 @@ export default function DraftActions( {
 
         <button
           className="rounded-xl px-3 py-2.5 border border-border bg-hover hover:bg-hover/70 text-foreground disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 flex-1"
-          onClick={onStart}
-          disabled={isBlockingActionLoading}
+          onClick={ onStart }
+          disabled={ isBlockingActionLoading }
         >
           {isLoading && !saving ? (
             <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
@@ -66,8 +66,8 @@ export default function DraftActions( {
 
       <button
         className="rounded-xl px-3 py-2.5 border border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/5 hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5"
-        onClick={onDelete}
-        disabled={isAnyActionLoading}
+        onClick={ onDelete }
+        disabled={ isAnyActionLoading }
       >
         {deleting ? (
           <Loader className="h-4 w-4 animate-spin flex-shrink-0" />

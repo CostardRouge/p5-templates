@@ -29,7 +29,7 @@ import type {
 
 export type FormUndoRedoProps<T extends FieldValues = FieldValues> =
   FormUndoRedoConfig & {
-    resetOptions?: Parameters<ReturnType<typeof useFormContext>["reset"]>[1];
+    resetOptions?: Parameters<ReturnType<typeof useFormContext>[ "reset" ]>[ 1 ];
     children?: React.ReactNode;
   };
 
@@ -140,7 +140,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
           persistenceKey,
           JSON.stringify( data )
         );
-      } catch ( error ) {
+      } catch( error ) {
         debugLog(
           "Failed to persist history:",
           error
@@ -177,7 +177,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
             );
           }
         }
-      } catch ( error ) {
+      } catch( error ) {
         debugLog(
           "Failed to load persisted history:",
           error
@@ -328,7 +328,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
             duration: `${ duration.toFixed( 2 ) }ms`
           }
         );
-      } catch ( error ) {
+      } catch( error ) {
         console.error(
           "Undo failed:",
           error
@@ -394,7 +394,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
             duration: `${ duration.toFixed( 2 ) }ms`
           }
         );
-      } catch ( error ) {
+      } catch( error ) {
         console.error(
           "Redo failed:",
           error
@@ -471,7 +471,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
             direction
           }
         );
-      } catch ( error ) {
+      } catch( error ) {
         console.error(
           "JumpTo failed:",
           error
@@ -815,7 +815,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   );
 
   return (
-    <FormUndoRedoContext.Provider value={value}>
+    <FormUndoRedoContext.Provider value={ value }>
       {children ?? null}
     </FormUndoRedoContext.Provider>
   );

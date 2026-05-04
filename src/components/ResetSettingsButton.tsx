@@ -36,7 +36,7 @@ export default function ResetSettingsButton( {
 
   return (
     <button
-      onClick={handleReset}
+      onClick={ handleReset }
       className="text-foreground hover:bg-theme/20 rounded transition-colors"
       title="Reset to defaults"
     >

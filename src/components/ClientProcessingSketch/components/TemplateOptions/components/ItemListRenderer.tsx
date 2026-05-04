@@ -110,19 +110,19 @@ function SortableItem( {
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className={clsx(
+      ref={ setNodeRef }
+      style={ style }
+      className={ clsx(
         "relative flex items-center gap-1 p-1 rounded-lg bg-background",
         "data-[dragging=true]:opacity-70"
-      )}
-      data-dragging={isDragging ? "true" : "false"}
+      ) }
+      data-dragging={ isDragging ? "true" : "false" }
     >
       <button
         type="button"
-        ref={setActivatorNodeRef}
-        {...attributes}
-        {...listeners}
+        ref={ setActivatorNodeRef }
+        { ...attributes }
+        { ...listeners }
         className="cursor-grab active:cursor-grabbing"
         aria-label="Drag to reorder"
       >
@@ -131,17 +131,17 @@ function SortableItem( {
 
       <div className="flex-1">
         <FieldRenderer
-          fieldBasePath={fieldPath}
+          fieldBasePath={ fieldPath }
           fieldName=""
-          config={itemConfig}
-          hideLabel={true}
+          config={ itemConfig }
+          hideLabel={ true }
         />
       </div>
 
       {!locked && (
         <button
           type="button"
-          onClick={onRemove}
+          onClick={ onRemove }
           className="text-red-500 hover:text-red-700"
           aria-label="Remove item"
         >
@@ -182,7 +182,7 @@ export default function ItemListRenderer( {
 
       const currentValue = getValues( name );
       const hasExistingValues =
-      Array.isArray( currentValue ) && currentValue.length > 0;
+        Array.isArray( currentValue ) && currentValue.length > 0;
 
       if ( !hasExistingValues ) {
         if ( config.defaultItems && config.defaultItems.length > 0 ) {
@@ -355,50 +355,50 @@ export default function ItemListRenderer( {
   return (
     <div className="text-xs">
       <CollapsibleItem
-        initialExpandedValue={false}
-        header={(
+        initialExpandedValue={ false }
+        header={ (
           expanded, title
         ) => (
           <div
             className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
-            title={title}
+            title={ title }
           >
             <ChevronDown
               className="w-3 h-3 transition-transform"
-              style={{
+              style={ {
                 transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
-              }}
+              } }
             />
             <span>
               {config.label ?? "Items"} ({values.length} items)
             </span>
           </div>
-        )}
+        ) }
       >
         <div className="space-y-1 p-1 border border-theme rounded-xl bg-background/50">
           <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-            modifiers={[
+            sensors={ sensors }
+            collisionDetection={ closestCenter }
+            onDragEnd={ handleDragEnd }
+            modifiers={ [
               restrictToVerticalAxis,
               restrictToParentElement
-            ]}
+            ] }
           >
             <SortableContext
-              items={itemIds}
-              strategy={verticalListSortingStrategy}
+              items={ itemIds }
+              strategy={ verticalListSortingStrategy }
             >
               {itemIds.map( (
                 id, index
               ) => (
                 <SortableItem
-                  key={id}
-                  id={id}
-                  fieldPath={`${ name }.${ index }`}
-                  itemConfig={config.itemConfig}
-                  onRemove={() => handleRemove( index )}
-                  locked={config.locked}
+                  key={ id }
+                  id={ id }
+                  fieldPath={ `${ name }.${ index }` }
+                  itemConfig={ config.itemConfig }
+                  onRemove={ () => handleRemove( index ) }
+                  locked={ config.locked }
                 />
               ) )}
             </SortableContext>
@@ -408,7 +408,7 @@ export default function ItemListRenderer( {
             ( !config.maxItems || values.length < config.maxItems ) && (
             <button
               type="button"
-              onClick={handleAdd}
+              onClick={ handleAdd }
               className="w-full flex items-center gap-1 px-1 py-1 border border-theme rounded-lg bg-background hover:bg-theme/10"
             >
               <Plus className="h-4 w-4" />

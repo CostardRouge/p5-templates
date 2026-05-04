@@ -21,6 +21,11 @@ const compat = new FlatCompat( {
 const eslintConfig = [
   {
     ignores: [
+      ".next/**",
+      "tmp/**",
+      "dist/**",
+      "build/**",
+      "out/**",
       "src/generated/**",
       "node_modules/**",
       "public/assets/libraries/**"

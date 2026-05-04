@@ -129,7 +129,7 @@ async function readExifInfo(
       tags = url.startsWith( "blob:" )
         ? await exif.load( await ( await fetch( url ) ).arrayBuffer() )
         : await exif.load( url );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "readExifInfo error",
         error
@@ -138,7 +138,7 @@ async function readExifInfo(
     }
 
     object.exif = tags;
-  } catch ( e ) {
+  } catch( e ) {
     console.warn(
       "[EXIF] fail",
       object.path,

@@ -236,7 +236,7 @@ sketch.draw( async(
     }, cellIndex
   ) => {
     const circonference =
-        ( cylinderConfig.vertical ? cellHeight : cellWidth ) * images?.length;
+      ( cylinderConfig.vertical ? cellHeight : cellWidth ) * images?.length;
 
     p.push();
     p.translate(

@@ -69,7 +69,7 @@ export async function GET(
         }
       }
     );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       `[GET /api/options/download/${ jobId }]`,
       error

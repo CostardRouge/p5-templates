@@ -41,7 +41,7 @@ export default function RecordingsCards( {
   if ( jobs.length === 0 ) {
     return (
       <div className="col-span-full overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-background shadow-sm">
-        <RecordingsEmptyState hasFilters={hasFilters} />
+        <RecordingsEmptyState hasFilters={ hasFilters } />
       </div>
     );
   }
@@ -50,19 +50,19 @@ export default function RecordingsCards( {
     <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-4">
       {jobs.map( ( job ) => (
         <RecordingCard
-          key={job.id}
-          job={job}
-          startTime={recordingStartTimes[ job.id ]}
-          progression={jobProgressions?.[ job.id ]}
-          isSelected={selectedIds.has( job.id )}
-          isNewlyAdded={newlyAddedId === job.id}
-          onToggleSelection={() => onToggleSelection( job.id )}
-          onPreview={() => onPreview( job.id )}
-          onCancel={onCancel}
-          onDelete={onDelete}
-          onRetry={onRetry}
-          onStart={onStart}
-          onClone={onClone}
+          key={ job.id }
+          job={ job }
+          startTime={ recordingStartTimes[ job.id ] }
+          progression={ jobProgressions?.[ job.id ] }
+          isSelected={ selectedIds.has( job.id ) }
+          isNewlyAdded={ newlyAddedId === job.id }
+          onToggleSelection={ () => onToggleSelection( job.id ) }
+          onPreview={ () => onPreview( job.id ) }
+          onCancel={ onCancel }
+          onDelete={ onDelete }
+          onRetry={ onRetry }
+          onStart={ onStart }
+          onClone={ onClone }
         />
       ) )}
     </div>

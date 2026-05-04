@@ -26,15 +26,15 @@ export default function ContentArrayProvider( {
 
   return (
     <ArrayContentContext.Provider
-      key={name}
-      value={{
+      key={ name }
+      value={ {
         name,
         fields: fieldArray.fields,
         append: fieldArray.append,
         remove: fieldArray.remove,
         insert: fieldArray.insert,
         move: fieldArray.move
-      }}
+      } }
     >
       {children}
     </ArrayContentContext.Provider>

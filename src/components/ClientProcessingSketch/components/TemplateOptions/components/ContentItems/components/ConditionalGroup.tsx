@@ -122,44 +122,44 @@ export default function ConditionalGroup( {
 
   return (
     <CollapsibleItem
-      initialExpandedValue={false}
-      header={( expanded ) => (
+      initialExpandedValue={ false }
+      header={ ( expanded ) => (
         <div
           className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
           title="Click to expand/collapse"
         >
           <ChevronDown
             className="w-3 h-3 transition-transform"
-            style={{
+            style={ {
               transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
-            }}
+            } }
           />
           <span>
             {config.label}
           </span>
         </div>
-      )}
+      ) }
     >
 
       <div className="p-1 border border-theme space-y-2 rounded-xl">
         <div>
           <label
-            htmlFor={conditionalFieldName}
+            htmlFor={ conditionalFieldName }
             className="text-xs text-gray-400"
           >
             {config.typeSelector.label || "Type"}
           </label>
 
           <select
-            id={conditionalFieldName}
-            value={watchedValue ?? ""} // "" shows None when undefined
-            onChange={handleTypeChange}
-            className={selectClassName}
+            id={ conditionalFieldName }
+            value={ watchedValue ?? "" } // "" shows None when undefined
+            onChange={ handleTypeChange }
+            className={ selectClassName }
           >
             <option value="">{config.typeSelector.noneLabel || "--"}</option>
 
             {config.typeSelector.options.map( ( option ) => (
-              <option key={option.value} value={option.value}>
+              <option key={ option.value } value={ option.value }>
                 {option.label}
               </option>
             ) )}
@@ -172,10 +172,10 @@ export default function ConditionalGroup( {
             subConfig
           ] ) => (
             <FieldRenderer
-              key={subFieldName}
-              fieldBasePath={basePath}
-              fieldName={subFieldName}
-              config={subConfig}
+              key={ subFieldName }
+              fieldBasePath={ basePath }
+              fieldName={ subFieldName }
+              config={ subConfig }
             />
           ) )}
       </div>

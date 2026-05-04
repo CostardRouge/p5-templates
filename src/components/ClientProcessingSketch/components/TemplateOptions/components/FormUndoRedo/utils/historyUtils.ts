@@ -14,7 +14,7 @@ enablePatches();
 export function createStateHash( state: any ): string {
   try {
     return JSON.stringify( state );
-  } catch ( error ) {
+  } catch( error ) {
     console.warn(
       "Failed to hash state:",
       error
@@ -34,7 +34,7 @@ export function safeDeepClone<T>( obj: T ): T {
     }
     // Fallback to JSON (loses functions, symbols, etc.)
     return JSON.parse( JSON.stringify( obj ) );
-  } catch ( error ) {
+  } catch( error ) {
     console.warn(
       "Failed to clone state:",
       error
@@ -74,7 +74,7 @@ export function createHistoryEntry<T>(
 
       entry.patches = patches;
       entry.inversePatches = inversePatches;
-    } catch ( error ) {
+    } catch( error ) {
       console.warn(
         "Failed to generate patches:",
         error
@@ -93,10 +93,10 @@ export function applyHistoryPatches<T>(
 ): T {
   try {
     return applyPatches(
- baseState as any,
- patches
+      baseState as any,
+      patches
     ) as T;
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "Failed to apply patches:",
       error

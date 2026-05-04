@@ -71,7 +71,7 @@ export default function PushNotificationManager() {
       const sub = await registration.pushManager.getSubscription();
 
       setSubscription( sub );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "Error registering service worker:",
         error
@@ -113,7 +113,7 @@ export default function PushNotificationManager() {
       await subscribeUser( serializedSub );
 
       console.log( "Successfully subscribed to push notifications" );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "Error subscribing to push:",
         error
@@ -133,7 +133,7 @@ export default function PushNotificationManager() {
         setSubscription( null );
         console.log( "Successfully unsubscribed from push notifications" );
       }
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "Error unsubscribing from push:",
         error
@@ -158,7 +158,7 @@ export default function PushNotificationManager() {
         "This is a test notification!"
       );
       console.log( "Test notification sent" );
-    } catch ( error ) {
+    } catch( error ) {
       console.error(
         "Error sending test notification:",
         error
@@ -178,8 +178,8 @@ export default function PushNotificationManager() {
         <>
           {isDevelopment && (
             <button
-              onClick={sendTest}
-              disabled={isLoading}
+              onClick={ sendTest }
+              disabled={ isLoading }
               className="disabled:opacity-50"
               title="Send test notification"
             >
@@ -187,8 +187,8 @@ export default function PushNotificationManager() {
             </button>
           )}
           <button
-            onClick={unsubscribeFromPush}
-            disabled={isLoading}
+            onClick={ unsubscribeFromPush }
+            disabled={ isLoading }
             className="disabled:opacity-50"
             title="Notifications enabled"
           >
@@ -197,8 +197,8 @@ export default function PushNotificationManager() {
         </>
       ) : (
         <button
-          onClick={subscribeToPush}
-          disabled={isLoading}
+          onClick={ subscribeToPush }
+          disabled={ isLoading }
           className="disabled:opacity-50"
           title="Enable notifications"
         >

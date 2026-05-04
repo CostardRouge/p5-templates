@@ -67,9 +67,9 @@ export default function RecordingActions( {
               } as JobModel )
               : []
           }
-          recordingSteps={recordingProgress?.steps}
-          currentSlideIndex={recordingProgress?.currentSlideIndex}
-          slideOptions={( persistedJob?.options as any )?.slides ?? undefined}
+          recordingSteps={ recordingProgress?.steps }
+          currentSlideIndex={ recordingProgress?.currentSlideIndex }
+          slideOptions={ ( persistedJob?.options as any )?.slides ?? undefined }
           startTime={
             jobId && recordingProgress?.recordingDuration
               ? Date.now() - recordingProgress.recordingDuration
@@ -81,8 +81,8 @@ export default function RecordingActions( {
       <div className="flex gap-1">
         <button
           className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5 flex-1"
-          onClick={onClone}
-          disabled={cloning}
+          onClick={ onClone }
+          disabled={ cloning }
         >
           {cloning ? (
             <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
@@ -94,8 +94,8 @@ export default function RecordingActions( {
 
         <button
           className="rounded-xl px-3 py-2.5 border border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/5 hover:bg-red-500/10 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5 flex-1"
-          onClick={onCancel}
-          disabled={cancelling}
+          onClick={ onCancel }
+          disabled={ cancelling }
         >
           {cancelling ? (
             <Loader className="h-4 w-4 animate-spin flex-shrink-0" />

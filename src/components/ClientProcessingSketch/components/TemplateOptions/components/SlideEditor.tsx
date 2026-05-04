@@ -47,14 +47,14 @@ export default function SlideEditor( {
       </span>
 
       <TemplateAssetsProvider
-        scope={{
+        scope={ {
           slide: activeIndex
-        }}
-        assetsName={`${ slideFieldPath }.assets`}
-        jobId={jobId}
+        } }
+        assetsName={ `${ slideFieldPath }.assets` }
+        jobId={ jobId }
       >
-        <ContentArrayProvider name={slideContentFieldPath}>
-          <ContentItems baseFieldName={slideContentFieldPath} />
+        <ContentArrayProvider name={ slideContentFieldPath }>
+          <ContentItems baseFieldName={ slideContentFieldPath } />
         </ContentArrayProvider>
       </TemplateAssetsProvider>
     </div>

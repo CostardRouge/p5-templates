@@ -112,7 +112,7 @@ export default function VideoPreviewModal( {
           const data = await response.json();
 
           setMedia( data );
-        } catch ( err ) {
+        } catch( err ) {
           console.error(
             "Error fetching media:",
             err
@@ -201,11 +201,11 @@ export default function VideoPreviewModal( {
   const modalContent = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 md:p-8 animate-in fade-in duration-200"
-      onClick={onClose}
+      onClick={ onClose }
     >
       <div
         className="overflow-hidden relative w-full md:w-[90vw] lg:w-[85vw] xl:w-[80vw] max-h-[calc(100vh-1.5rem)] sm:max-h-[calc(100vh-2rem)] md:max-h-[95vh] bg-background rounded-2xl sm:rounded-3xl border border-border shadow-2xl flex flex-col animate-in zoom-in-95 duration-300"
-        onClick={( e ) => e.stopPropagation()}
+        onClick={ ( e ) => e.stopPropagation() }
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5 bg-background border-b border-border flex-shrink-0">
@@ -236,9 +236,9 @@ export default function VideoPreviewModal( {
                 {/* Download All - Only show for multiple videos */}
                 {media.videos.length > 1 && (
                   <button
-                    onClick={handleDownloadAll}
+                    onClick={ handleDownloadAll }
                     className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
-                    title={`Download all as .zip${ media.zipSize ? ` (${ formatFileSize( media.zipSize ) })` : "" }`}
+                    title={ `Download all as .zip${ media.zipSize ? ` (${ formatFileSize( media.zipSize ) })` : "" }` }
                   >
                     <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="hidden sm:inline">Download All</span>
@@ -247,7 +247,7 @@ export default function VideoPreviewModal( {
 
                 {/* Open Recording Link */}
                 <a
-                  href={`templates/${ media.template }?id=${ jobId }`}
+                  href={ `templates/${ media.template }?id=${ jobId }` }
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
                   title="Open recording page"
@@ -259,7 +259,7 @@ export default function VideoPreviewModal( {
                 {/* Open Template Link */}
                 {media.template && (
                   <a
-                    href={`/${ media.template }`}
+                    href={ `/${ media.template }` }
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
                     title="Open template"
@@ -272,7 +272,7 @@ export default function VideoPreviewModal( {
             )}
 
             <button
-              onClick={onClose}
+              onClick={ onClose }
               aria-label="Close"
               className="p-2 rounded-xl hover:bg-hover transition-colors group"
             >
@@ -327,7 +327,7 @@ export default function VideoPreviewModal( {
                       preview is not available for archived recordings.
                     </p>
                     <button
-                      onClick={async() =>
+                      onClick={ async() =>
                         await fetchDownload( `/api/recordings/download/${ jobId }/zip` )
                       }
                       className="inline-flex items-center gap-2 px-5 py-2.5 bg-hover hover:bg-hover/70 border border-border rounded-xl transition-all font-medium text-sm"
@@ -357,7 +357,7 @@ export default function VideoPreviewModal( {
                   {/* Horizontal scroll container for videos */}
                   <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-foreground/20 scrollbar-track-transparent min-h-0 flex items-center">
                     <div
-                      className={`flex gap-4 sm:gap-6 md:gap-8 ${ media.videos.length === 1 ? "justify-center w-full" : "" }`}
+                      className={ `flex gap-4 sm:gap-6 md:gap-8 ${ media.videos.length === 1 ? "justify-center w-full" : "" }` }
                     >
                       {media.videos.map( (
                         {
@@ -365,8 +365,8 @@ export default function VideoPreviewModal( {
                         }, index
                       ) => (
                         <div
-                          key={index}
-                          className={`flex flex-col gap-2 sm:gap-3 md:gap-4 ${ media.videos.length === 1 ? "w-full max-w-5xl mx-auto" : "flex-shrink-0 w-[85vw] sm:w-[80vw] md:w-[650px] lg:w-[750px]" }`}
+                          key={ index }
+                          className={ `flex flex-col gap-2 sm:gap-3 md:gap-4 ${ media.videos.length === 1 ? "w-full max-w-5xl mx-auto" : "flex-shrink-0 w-[85vw] sm:w-[80vw] md:w-[650px] lg:w-[750px]" }` }
                         >
                           {/* Slide header */}
                           {media.videos.length > 1 && (
@@ -383,26 +383,26 @@ export default function VideoPreviewModal( {
                           {/* Video container */}
                           <div className="border border-border rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center bg-black shadow-lg aspect-video flex-shrink-0">
                             <video
-                              ref={( el ) => {
+                              ref={ ( el ) => {
                                 if ( el ) {
                                   videoRefs.current.set(
                                     index,
                                     el
                                   );
                                 }
-                              }}
+                              } }
                               controls
                               className="w-full h-full object-contain"
                               preload="metadata"
-                              poster={media.thumbnails[ index ]}
-                              onLoadedMetadata={( e ) =>
+                              poster={ media.thumbnails[ index ] }
+                              onLoadedMetadata={ ( e ) =>
                                 handleVideoLoadedMetadata(
                                   index,
                                   e.currentTarget
                                 )
                               }
                             >
-                              <source src={url} type="video/mp4" />
+                              <source src={ url } type="video/mp4" />
                               Your browser does not support the video tag.
                             </video>
                           </div>
@@ -434,7 +434,7 @@ export default function VideoPreviewModal( {
                             {/* Download button */}
                             <div className="flex justify-center">
                               <button
-                                onClick={async() =>
+                                onClick={ async() =>
                                   await fetchDownload( `/api/recordings/download/${ jobId }/slide/${ index }` )
                                 }
                                 className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-hover hover:bg-hover/70 border border-border rounded-xl transition-all font-medium text-xs sm:text-sm group"

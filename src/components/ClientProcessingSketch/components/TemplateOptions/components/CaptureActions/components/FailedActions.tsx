@@ -28,8 +28,8 @@ export default function FailedActions( {
     <div className="flex flex-col gap-1">
       <button
         className="rounded-xl px-3 py-2.5 border border-border text-foreground bg-background hover:bg-hover text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5"
-        onClick={onSaveAsDraft}
-        disabled={isAnyActionLoading}
+        onClick={ onSaveAsDraft }
+        disabled={ isAnyActionLoading }
       >
         {saving ? (
           <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
@@ -44,8 +44,8 @@ export default function FailedActions( {
       <div className="grid grid-cols-2 gap-1">
         <button
           className="rounded-xl px-3 py-2.5 border border-border bg-hover hover:bg-hover/70 text-foreground text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5"
-          onClick={onRetry}
-          disabled={isAnyActionLoading}
+          onClick={ onRetry }
+          disabled={ isAnyActionLoading }
         >
           {retrying ? (
             <Loader className="h-4 w-4 animate-spin flex-shrink-0" />
@@ -57,8 +57,8 @@ export default function FailedActions( {
 
         <button
           className="rounded-xl px-3 py-2.5 border border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/5 hover:bg-red-500/10 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-1.5"
-          onClick={onDelete}
-          disabled={isAnyActionLoading}
+          onClick={ onDelete }
+          disabled={ isAnyActionLoading }
         >
           {deleting ? (
             <Loader className="h-4 w-4 animate-spin flex-shrink-0" />

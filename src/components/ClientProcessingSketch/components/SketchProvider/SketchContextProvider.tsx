@@ -111,6 +111,6 @@ export default function SketchContextProvider( {
   );
 
   return (
-    <SketchContext.Provider value={value}>{children}</SketchContext.Provider>
+    <SketchContext.Provider value={ value }>{children}</SketchContext.Provider>
   );
 }

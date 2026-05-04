@@ -124,7 +124,7 @@ export async function captureThumbnailFromCanvas(): Promise<string | null> {
     );
 
     return dataUrl;
-  } catch ( e ) {
+  } catch( e ) {
     console.error(
       "Failed to capture thumbnail",
       e

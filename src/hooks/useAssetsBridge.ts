@@ -47,12 +47,12 @@ export default function useAssetsBridge() {
     ];
 
     setValue(
- `${ assetsName }.images` as any,
- next,
- {
-   shouldDirty: true,
-   shouldTouch: true
- }
+      `${ assetsName }.images` as any,
+      next,
+      {
+        shouldDirty: true,
+        shouldTouch: true
+      }
     );
   }
 
@@ -69,12 +69,12 @@ export default function useAssetsBridge() {
       const filtered = current.filter( ( p ) => p !== path );
 
       setValue(
- `${ assetsName }.images` as any,
- filtered,
- {
-   shouldDirty: true,
-   shouldTouch: true
- }
+        `${ assetsName }.images` as any,
+        filtered,
+        {
+          shouldDirty: true,
+          shouldTouch: true
+        }
       );
     }
   }

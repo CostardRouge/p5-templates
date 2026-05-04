@@ -91,12 +91,12 @@ export interface SketchEngine {
 
   on<E extends EngineEventName>(
     event: E,
-    handler: ( payload: EngineEventMap[E] ) => void,
+    handler: ( payload: EngineEventMap[ E ] ) => void,
   ): void;
 
   off<E extends EngineEventName>(
     event: E,
-    handler: ( payload: EngineEventMap[E] ) => void,
+    handler: ( payload: EngineEventMap[ E ] ) => void,
   ): void;
 }
 

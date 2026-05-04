@@ -196,7 +196,7 @@ export default function RecordingsPage() {
     }
   };
 
-  const onClone = async( job: Parameters<typeof handleClone>[0] ) => {
+  const onClone = async( job: Parameters<typeof handleClone>[ 0 ] ) => {
     const newJob = await handleClone( job );
 
     if ( newJob ) {
@@ -219,18 +219,18 @@ export default function RecordingsPage() {
 
   return (
     <div>
-      <div ref={contentRef} className="space-y-3 p-3 sm:space-y-6 sm:p-6">
+      <div ref={ contentRef } className="space-y-3 p-3 sm:space-y-6 sm:p-6">
         {/* Toolbar */}
         <RecordingsToolbar
-          search={search}
-          onSearchChange={setSearch}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          view={view}
-          onViewChange={setView}
-          recordingsCount={sorted.length}
-          sortConfig={sortConfig}
-          onSortChange={setSortConfig}
+          search={ search }
+          onSearchChange={ setSearch }
+          statusFilter={ statusFilter }
+          onStatusFilterChange={ setStatusFilter }
+          view={ view }
+          onViewChange={ setView }
+          recordingsCount={ sorted.length }
+          sortConfig={ sortConfig }
+          onSortChange={ setSortConfig }
         />
 
         {/* Loading State */}
@@ -253,59 +253,59 @@ export default function RecordingsPage() {
         {/* Table View */}
         {!isLoading && view === "table" && (
           <RecordingsTable
-            jobs={sorted}
-            recordingStartTimes={recordingStartTimesRef.current}
-            jobProgressions={jobProgressions}
-            hasFilters={hasFilters}
-            selectedIds={selectedIds}
-            newlyAddedId={newlyAddedId}
-            onToggleSelection={toggleSelection}
-            onSelectAll={handleToggleSelectAll}
-            onPreview={setPreviewJobId}
-            onCancel={handleCancel}
-            onDelete={handleDelete}
-            onRetry={handleRetry}
-            onStart={handleStart}
-            onClone={onClone}
+            jobs={ sorted }
+            recordingStartTimes={ recordingStartTimesRef.current }
+            jobProgressions={ jobProgressions }
+            hasFilters={ hasFilters }
+            selectedIds={ selectedIds }
+            newlyAddedId={ newlyAddedId }
+            onToggleSelection={ toggleSelection }
+            onSelectAll={ handleToggleSelectAll }
+            onPreview={ setPreviewJobId }
+            onCancel={ handleCancel }
+            onDelete={ handleDelete }
+            onRetry={ handleRetry }
+            onStart={ handleStart }
+            onClone={ onClone }
           />
         )}
 
         {/* Card View */}
         {!isLoading && view === "cards" && (
           <RecordingsCards
-            jobs={sorted}
-            recordingStartTimes={recordingStartTimesRef.current}
-            jobProgressions={jobProgressions}
-            hasFilters={hasFilters}
-            selectedIds={selectedIds}
-            newlyAddedId={newlyAddedId}
-            onToggleSelection={toggleSelection}
-            onPreview={setPreviewJobId}
-            onCancel={handleCancel}
-            onDelete={handleDelete}
-            onRetry={handleRetry}
-            onStart={handleStart}
-            onClone={onClone}
+            jobs={ sorted }
+            recordingStartTimes={ recordingStartTimesRef.current }
+            jobProgressions={ jobProgressions }
+            hasFilters={ hasFilters }
+            selectedIds={ selectedIds }
+            newlyAddedId={ newlyAddedId }
+            onToggleSelection={ toggleSelection }
+            onPreview={ setPreviewJobId }
+            onCancel={ handleCancel }
+            onDelete={ handleDelete }
+            onRetry={ handleRetry }
+            onStart={ handleStart }
+            onClone={ onClone }
           />
         )}
 
         {/* Bulk Actions Toolbar */}
         <BulkActionsToolbar
-          selectedJobs={selectedJobs}
-          isProcessing={isProcessing}
-          onClearSelection={clearSelection}
-          onBulkDelete={handleBulkDelete}
-          onBulkCancel={handleBulkCancel}
-          onBulkRetry={handleBulkRetry}
+          selectedJobs={ selectedJobs }
+          isProcessing={ isProcessing }
+          onClearSelection={ clearSelection }
+          onBulkDelete={ handleBulkDelete }
+          onBulkCancel={ handleBulkCancel }
+          onBulkRetry={ handleBulkRetry }
         />
       </div>
 
       {/* Video Preview Modal */}
       {previewJobId && (
         <VideoPreviewModal
-          jobId={previewJobId}
-          isOpen={!!previewJobId}
-          onClose={() => setPreviewJobId( null )}
+          jobId={ previewJobId }
+          isOpen={ !!previewJobId }
+          onClose={ () => setPreviewJobId( null ) }
         />
       )}
     </div>

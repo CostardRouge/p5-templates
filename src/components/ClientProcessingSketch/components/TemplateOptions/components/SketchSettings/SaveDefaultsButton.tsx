@@ -89,7 +89,7 @@ export default function SaveDefaultsButton() {
         () => setSaveState( "idle" ),
         1500
       );
-    } catch ( err ) {
+    } catch( err ) {
       setErrorMessage( err instanceof Error ? err.message : String( err ) );
       setSaveState( "error" );
       setTimeout(
@@ -107,11 +107,11 @@ export default function SaveDefaultsButton() {
   return (
     <button
       type="button"
-      onClick={handleSave}
-      disabled={saveState === "saving"}
-      title={title}
-      aria-label={title}
-      className={clsx(
+      onClick={ handleSave }
+      disabled={ saveState === "saving" }
+      title={ title }
+      aria-label={ title }
+      className={ clsx(
         "flex items-center rounded  transition-colors",
         {
           "hover:text-yellow-400 cursor-pointer":
@@ -123,7 +123,7 @@ export default function SaveDefaultsButton() {
           "text-red-400":
             saveState === "error"
         }
-      )}
+      ) }
     >
       {saveState === "saving" ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -52,15 +52,15 @@ export default function DownloadMenuItems( {
     <>
       {videos.length > 1 &&
         videos.map( ( video ) => (
-          <MenuItem key={video.index}>
+          <MenuItem key={ video.index }>
             {( {
               focus
             } ) => (
               <button
-                onClick={async() =>
+                onClick={ async() =>
                   await fetchDownload( `/api/recordings/download/${ job.id }/slide/${ video.index }` )
                 }
-                className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+                className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
                 <Video className="h-4 w-4 text-foreground/70" />
                 <div className="flex-1 flex items-center justify-between">
@@ -82,10 +82,10 @@ export default function DownloadMenuItems( {
             focus
           } ) => (
             <button
-              onClick={async() =>
+              onClick={ async() =>
                 await fetchDownload( `/api/recordings/download/${ job.id }/slide/0` )
               }
-              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+              className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
             >
               <Video className="h-4 w-4 text-foreground/70" />
               <div className="flex-1 flex items-center justify-between">
@@ -107,10 +107,10 @@ export default function DownloadMenuItems( {
             focus
           } ) => (
             <button
-              onClick={async() =>
+              onClick={ async() =>
                 await fetchDownload( `/api/recordings/download/${ job.id }/zip` )
               }
-              className={`${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors`}
+              className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
             >
               <FileArchive className="h-4 w-4 text-foreground/70" />
               <div className="flex-1 flex items-center justify-between">

@@ -23,7 +23,7 @@ export async function GET( req: NextRequest ) {
     const jobs = await getAllJobs( statusFilter );
 
     return NextResponse.json( jobs );
-  } catch ( error ) {
+  } catch( error ) {
     console.error(
       "[GET /api/recordings] error fetching jobs",
       error
