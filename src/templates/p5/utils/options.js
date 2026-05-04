@@ -38,16 +38,21 @@ function refreshAssets() {
 
 async function _refreshAssets() {
   const opts = getSketchOptions();
-  const globalImages = opts.assets?.images ?? [
-  ];
-  const slideImages = ( opts.slides ?? [
-  ] ).flatMap( ( slide ) => slide?.assets?.images ?? [
-  ] );
+  const globalImages = opts.assets?.images ?? [];
+  // Also pick up images stored directly in sketch form fields (e.g. images-stack)
+  const sketchImages = opts.sketch?.images ?? [];
+  const slideImages = ( opts.slides ?? [] ).flatMap(
+    ( slide ) => [
+      ...( slide?.assets?.images ?? [] ),
+      ...( slide?.sketch?.images ?? [] ),
+    ]
+  );
 
   const allPaths = [
     ...new Set( [
       ...globalImages,
-      ...slideImages
+      ...sketchImages,
+      ...slideImages,
     ] )
   ];
 
