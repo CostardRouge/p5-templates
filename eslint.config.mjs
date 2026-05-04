@@ -1,3 +1,5 @@
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals.js";
+import nextTypescript from "eslint-config-next/typescript.js";
 import {
   dirname
 } from "path";
@@ -12,7 +14,7 @@ const __filename = fileURLToPath( import.meta.url );
 const __dirname = dirname( __filename );
 
 const compat = new FlatCompat( {
-  baseDirectory: __dirname,
+  baseDirectory: __dirname
 } );
 
 const eslintConfig = [
@@ -22,19 +24,18 @@ const eslintConfig = [
       "public/assets/libraries/**"
     ]
   },
-  ...compat.extends(
-    "next/core-web-vitals",
-    "next/typescript",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended",
-    "plugin:@next/next/recommended",
-  ),
+  ...compat.config( nextCoreWebVitals ),
+  ...compat.config( nextTypescript ),
+  ...compat.extends( "plugin:react/recommended" ),
+  ...compat.extends( "plugin:react-hooks/recommended" ),
+  ...compat.extends( "plugin:@next/next/recommended" ),
   ...compat.config( {
     plugins: [
-      "@stylistic/js",
+      "@stylistic/js"
     ],
+
     rules: {
-      // Overides
+    // Overides
       "react/react-in-jsx-scope": "off",
 
       // Example rules (customize as needed)
@@ -155,10 +156,22 @@ const eslintConfig = [
       "@stylistic/js/object-curly-newline": [
         "error",
         {
-          ObjectExpression: { multiline: true, minProperties: 1 },
-          ObjectPattern: { multiline: true, minProperties: 1 },
-          ImportDeclaration: { multiline: true, minProperties: 1 },
-          ExportDeclaration: { multiline: true, minProperties: 1 }
+          ObjectExpression: {
+            multiline: true,
+            minProperties: 1
+          },
+          ObjectPattern: {
+            multiline: true,
+            minProperties: 1
+          },
+          ImportDeclaration: {
+            multiline: true,
+            minProperties: 1
+          },
+          ExportDeclaration: {
+            multiline: true,
+            minProperties: 1
+          }
         }
       ],
       "@stylistic/js/jsx-curly-spacing": "off",
@@ -178,7 +191,7 @@ const eslintConfig = [
         2,
         {
           SwitchCase: 1,
-          ObjectExpression: 1,
+          ObjectExpression: 1
         }
       ],
 
@@ -201,9 +214,9 @@ const eslintConfig = [
       "@next/next/no-img-element": "off",
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-    },
-  } ),
+      "@typescript-eslint/no-explicit-any": "off"
+    }
+  } )
 ];
 
 export default eslintConfig;

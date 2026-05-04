@@ -56,7 +56,7 @@ function buildEntry(
     ) ),
     hasThumbnail: fs.existsSync( thumbnailPath ),
     mtime: stats.mtime.toISOString(),
-    ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString(),
+    ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString()
   };
 }
 
@@ -64,8 +64,7 @@ function buildEntry(
  * List visible sub-directories of `dir` (skip _ and . prefixed).
  */
 function listSubDirs( dir ) {
-  if ( !fs.existsSync( dir ) ) return [
-  ];
+  if ( !fs.existsSync( dir ) ) return [];
 
   return fs.readdirSync( dir ).filter( ( name ) => {
     if ( name.startsWith( "_" ) || name.startsWith( "." ) ) return false;
@@ -93,8 +92,7 @@ function scanEngine( engineId ) {
     engineId,
     "sketches"
   );
-  const results = [
-  ];
+  const results = [];
 
   for ( const name of listSubDirs( sketchesDir ) ) {
     const fullPath = path.join(
@@ -137,8 +135,7 @@ function scanEngine( engineId ) {
  */
 function generateMetadata() {
   const engineIds = listSubDirs( TEMPLATES_DIR );
-  const allMeta = [
-  ];
+  const allMeta = [];
 
   for ( const engineId of engineIds ) {
     const sketchesDir = path.join(
@@ -219,7 +216,7 @@ if ( process.env.NODE_ENV !== "production" ) {
       awaitWriteFinish: {
         stabilityThreshold: 500,
         pollInterval: 100
-      },
+      }
     }
   );
 

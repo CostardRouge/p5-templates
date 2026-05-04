@@ -3,7 +3,7 @@ import type {
 } from "next";
 
 const nextConfig: NextConfig = {
-  distDir: process.env.NEXT_BUILD_DIR || '.next',
+  distDir: process.env.NEXT_BUILD_DIR || ".next",
   poweredByHeader: false,
   devIndicators: false,
   allowedDevOrigins: [
@@ -14,13 +14,13 @@ const nextConfig: NextConfig = {
   ],
   crossOrigin: "anonymous",
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true
   },
   env: {
     NEXT_PUBLIC_BACKEND_RECORDING: process.env.BACKEND_RECORDING,
     NEXT_PUBLIC_NOTIFICATIONS: process.env.NOTIFICATIONS,
-    NEXT_PUBLIC_LIVE_THUMBNAIL: process.env.LIVE_THUMBNAIL,
-  },
+    NEXT_PUBLIC_LIVE_THUMBNAIL: process.env.LIVE_THUMBNAIL
+  }
 };
 
 export default nextConfig;

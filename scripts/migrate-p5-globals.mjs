@@ -51,7 +51,7 @@ const P5_CONSTANTS = [
   "BLEND",
   "ADD",
   "MULTIPLY",
-  "SCREEN",
+  "SCREEN"
 ];
 
 // p5 properties (read from the instance)
@@ -68,7 +68,7 @@ const P5_PROPERTIES = [
   "keyCode",
   "keyIsPressed",
   "mouseIsPressed",
-  "pixels",
+  "pixels"
 ];
 
 // p5 functions that should become p.function()
@@ -207,7 +207,7 @@ const P5_FUNCTIONS = [
   "saveCanvas",
   "loadJSON",
   "loadFont",
-  "loadStrings",
+  "loadStrings"
 ];
 
 // Build regex patterns

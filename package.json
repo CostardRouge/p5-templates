@@ -8,8 +8,8 @@
     "watch": "node scripts/dev-watch.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "format": "npm run lint:fix",
     "check": "npm run lint",
     "postinstall": "npx prisma generate",
@@ -57,7 +57,6 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@stylistic/eslint-plugin-js": "^4.2.0",
     "@stylistic/eslint-plugin-ts": "^4.2.0",
     "@testing-library/jest-dom": "^6.9.1",
