@@ -30,3 +30,8 @@ jobs:
         with:
           push: true
           tags: containeurrouge/social-templates-renderer:amd64
+          build-args: |
+            BACKEND_RECORDING=true
+            NOTIFICATIONS=false
+            LIVE_THUMBNAIL=true
+            NEXT_PUBLIC_GITHUB_REPO_URL=${{ vars['NEXT_PUBLIC_GITHUB_REPO_URL'] }}

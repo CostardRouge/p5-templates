@@ -110,6 +110,25 @@ DATABASE_URL=postgresql://social-pipeline-user:social-pipeline-pass@localhost:54
 REDIS_URL=redis://localhost:6379
 ```
 
+### Important: Build-Time vs Runtime Variables (Docker/CI)
+
+When using Docker, values used by `NEXT_PUBLIC_*` variables are baked into the frontend bundle during `npm run build`.
+
+- Set these at build time in CI/CD (GitHub Actions `build-args`) and in Portainer stack build args:
+	- `BACKEND_RECORDING`
+	- `NOTIFICATIONS`
+	- `LIVE_THUMBNAIL`
+	- `NEXT_PUBLIC_GITHUB_REPO_URL`
+	- `NEXT_PUBLIC_SITE_URL`
+	- `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+- Also keep runtime env values in the container for server-side logic:
+	- `BACKEND_RECORDING`, `NOTIFICATIONS`, `LIVE_THUMBNAIL`
+	- `DATABASE_URL`, `REDIS_URL`
+	- `S3_*` variables
+	- `VAPID_PRIVATE_KEY`
+
+If build-time values are missing, UI elements controlled by public flags (for example menu links and feature toggles) may disappear even if runtime env values are correct.
+
 ### Important: S3 Endpoint Configuration
 
 - `S3_ENDPOINT`: Used by the server for internal S3 operations

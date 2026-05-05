@@ -1,6 +1,14 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        BACKEND_RECORDING: ${BACKEND_RECORDING:-false}
+        NOTIFICATIONS: ${NOTIFICATIONS:-false}
+        LIVE_THUMBNAIL: ${LIVE_THUMBNAIL:-false}
+        NEXT_PUBLIC_GITHUB_REPO_URL: ${NEXT_PUBLIC_GITHUB_REPO_URL:-}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
     ports:
       - "${APP_PORT:-3000}:3000"
     depends_on:
@@ -19,7 +27,14 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
       - S3_ENDPOINT=http://minio:9000
-      - S3_PUBLIC_ENDPOINT=http://localhost:9000
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      - BACKEND_RECORDING=${BACKEND_RECORDING:-false}
+      - NOTIFICATIONS=${NOTIFICATIONS:-false}
+      - LIVE_THUMBNAIL=${LIVE_THUMBNAIL:-false}
+      - NEXT_PUBLIC_GITHUB_REPO_URL=${NEXT_PUBLIC_GITHUB_REPO_URL:-}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-}
+      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
