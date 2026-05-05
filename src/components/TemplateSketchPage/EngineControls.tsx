@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Camera, Github, Pause, Play
 } from "lucide-react";
@@ -19,13 +18,10 @@ import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks
 export function EngineControls( ) {
   const [
     {
-      engineId, name, engine
-    }
+      engineId, name, engine, looping
+    },
+    dispatch
   ] = useSketch();
-  const [
-    looping,
-    setLooping
-  ] = React.useState( true );
 
   const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
   const sketchPath = githubRepoUrl ? resolveSketchPath(
@@ -60,7 +56,10 @@ export function EngineControls( ) {
               engine?.play();
             }
 
-            setLooping( ( prev ) => !prev );
+            dispatch( {
+              type: "SET_LOOPING",
+              payload: !looping
+            } );
           } }
           title={ looping ? "Pause animation" : "Play animation" }
           aria-label={ looping ? "Pause animation" : "Play animation" }

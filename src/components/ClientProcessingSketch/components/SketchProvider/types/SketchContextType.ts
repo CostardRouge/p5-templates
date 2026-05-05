@@ -23,6 +23,8 @@ export type SketchState = {
   sketchFormConfiguration?: Record<string, FieldConfig>;
   sketchLoaded: boolean;
   engine: SketchEngine | null;
+  /** Whether the engine draw-loop is currently running. */
+  looping: boolean;
 };
 
 export type SketchAction =
@@ -41,6 +43,10 @@ export type SketchAction =
   | {
     type: "SET_ENGINE";
     payload: SketchEngine | null
+  }
+  | {
+    type: "SET_LOOPING";
+    payload: boolean
   }
   | {
     type: "SET_CAPTURING";
