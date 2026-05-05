@@ -21,7 +21,11 @@ export function useSketchThumbnail( {
 }: UseSketchThumbnailProps ) {
   const thumbnailUrl = useMemo(
     () => {
-      if ( persistedJob?.id && persistedJob?.thumbnails ) {
+      if (
+        persistedJob?.id &&
+        persistedJob?.thumbnails &&
+        persistedJob?.status !== "failed"
+      ) {
         const timestamp = (
           updatedAt ||
           ( persistedJob.updatedAt &&
@@ -42,6 +46,7 @@ export function useSketchThumbnail( {
       name,
       persistedJob?.id,
       persistedJob?.thumbnails,
+      persistedJob?.status,
       persistedJob?.updatedAt,
       updatedAt
     ]
