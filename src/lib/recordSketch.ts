@@ -261,11 +261,18 @@ async function recordSingleSketch(
       onProgress: async( percentage: number ) => {
         await updateRecordingStepPercentage(
           jobId,
-          buildRecordingStepPath( RECORDING_STEPS.SAVING_FRAMES.key ),
+          buildRecordingStepPath( RECORDING_STEPS.CAPTURING_FRAMES.key ),
           percentage
         );
       }
     } );
+
+    // Encoding happened in-pipe during capture — mark it complete
+    await updateRecordingStepPercentage(
+      jobId,
+      buildRecordingStepPath( RECORDING_STEPS.ENCODING_FRAMES.key ),
+      100
+    );
 
     await page.close();
 
@@ -305,7 +312,7 @@ async function recordSingleSketch(
       onProgress: async( percentage: number ) => {
         await updateRecordingStepPercentage(
           jobId,
-          buildRecordingStepPath( RECORDING_STEPS.SAVING_FRAMES.key ),
+          buildRecordingStepPath( RECORDING_STEPS.CAPTURING_FRAMES.key ),
           percentage
         );
       }
@@ -504,12 +511,22 @@ async function recordMultipleSlides(
             jobId,
             buildSlideStepPath(
               slideIndex,
-              RECORDING_STEPS.SAVING_FRAMES.key
+              RECORDING_STEPS.CAPTURING_FRAMES.key
             ),
             percentage
           );
         }
       } );
+
+      // Encoding happened in-pipe during capture — mark it complete
+      await updateRecordingStepPercentage(
+        jobId,
+        buildSlideStepPath(
+          slideIndex,
+          RECORDING_STEPS.ENCODING_FRAMES.key
+        ),
+        100
+      );
 
       // Capture thumbnail via canvas screenshot
       await captureCanvasThumbnail(
@@ -532,7 +549,7 @@ async function recordMultipleSlides(
             jobId,
             buildSlideStepPath(
               slideIndex,
-              RECORDING_STEPS.SAVING_FRAMES.key
+              RECORDING_STEPS.CAPTURING_FRAMES.key
             ),
             percentage
           );

@@ -14,7 +14,7 @@ export const recordingSketchSteps: RecordingProgressionSteps = {
       [ RECORDING_STEPS.LAUNCHING_BROWSER.key ]: {
         percentage: 0
       },
-      [ RECORDING_STEPS.SAVING_FRAMES.key ]: {
+      [ RECORDING_STEPS.CAPTURING_FRAMES.key ]: {
         percentage: 0
       },
       [ RECORDING_STEPS.ENCODING_FRAMES.key ]: {
@@ -36,7 +36,7 @@ function createRecordingSketchStepsForSketchSlides( slides: SlideOption[] ) {
         ...acc,
         [ `slide-${ slideIndex }` ]: {
           steps: {
-            [ RECORDING_STEPS.SAVING_FRAMES.key ]: {
+            [ RECORDING_STEPS.CAPTURING_FRAMES.key ]: {
               percentage: 0
             },
             [ RECORDING_STEPS.ENCODING_FRAMES.key ]: {

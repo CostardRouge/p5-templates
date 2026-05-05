@@ -37,8 +37,8 @@ export const RECORDING_STEPS = {
     section: "recording" as const,
     shared: true
   },
-  SAVING_FRAMES: {
-    key: "saving-frames",
+  CAPTURING_FRAMES: {
+    key: "capturing-frames",
     label: "Capturing frames",
     order: 2,
     section: "recording" as const
