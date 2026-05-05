@@ -37,11 +37,11 @@ export default function RecordingThumbnail( {
     setShowPreview
   ] = useState( false );
 
-  const [
-    templateEngine,
-    ...templateNameParts
-  ] = job.template.split( "/" );
-  const templateName = templateNameParts.join( "/" );
+  const templateParts = job.template.split( "/" );
+  // job.template is "templates/{engine}/{optional-category}/{name}"
+  // parts[0] = "templates", parts[1] = engine, last part = sketch name
+  const templateEngine = templateParts[ 1 ] ?? templateParts[ 0 ];
+  const templateName = templateParts[ templateParts.length - 1 ];
   const {
     thumbnailUrl: src
   } = useSketchThumbnail( {

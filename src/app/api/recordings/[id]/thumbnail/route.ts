@@ -79,11 +79,11 @@ export async function GET(
     }
 
     // Fall back to sketch template thumbnail
-    const [
-      templateEngine,
-      ...templateNameParts
-    ] = job.template.split( "/" );
-    const templateName = templateNameParts.join( "/" );
+    // job.template is "templates/{engine}/{optional-category}/{name}"
+    // parts[0] = "templates", parts[1] = engine, last part = sketch name
+    const templateParts = job.template.split( "/" );
+    const templateEngine = templateParts[ 1 ] ?? templateParts[ 0 ];
+    const templateName = templateParts[ templateParts.length - 1 ];
     const templateThumbnailUrl = getSketchThumbnailURL(
       templateEngine,
       templateName
