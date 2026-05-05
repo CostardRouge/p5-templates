@@ -8,6 +8,7 @@ import {
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
+import SketchPerformanceLabel from "@/components/TemplateSketchPage/SketchPerformanceLabel";
 import {
   EngineControls
 } from "@/components/TemplateSketchPage/EngineControls";
@@ -152,7 +153,7 @@ export default function TemplateSketchPage() {
                 </span>
               </p>
 
-              <p id="sketch-fps-counter" />
+              <SketchPerformanceLabel targetFps={ effectiveSettings.animation?.framerate ?? 60 } />
             </div>
           )}
 

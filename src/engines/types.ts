@@ -15,6 +15,14 @@ export type EngineEventMap = {
   complete: void;
   /** Fired on any unrecoverable engine error. */
   error: Error;
+  /** Periodic runtime performance sample for UI overlays/diagnostics. */
+  performance: EnginePerformanceSample;
+};
+
+export type EnginePerformanceSample = {
+  fps: number;
+  paused: boolean;
+  timestamp: number;
 };
 
 export type EngineEventName = keyof EngineEventMap;

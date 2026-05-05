@@ -1,7 +1,8 @@
 import type {
   SketchEngine,
   EngineEventName,
-  EngineEventMap
+  EngineEventMap,
+  EnginePerformanceSample
 } from "@/engines/types";
 import type {
   SketchOption
@@ -36,6 +37,13 @@ export class P5Engine implements SketchEngine {
   private container: HTMLElement | null = null;
   private sketchRuntime: P5SketchRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
+  private perfLoopId: number | null = null;
+  private perfSample = {
+    paused: false,
+    smoothedFps: 0,
+    lastEmitTime: 0,
+    rawSamples: [] as number[]
+  };
 
   get isReady(): boolean {
     return this._isReady;
@@ -91,6 +99,19 @@ export class P5Engine implements SketchEngine {
 
     await this.sketchRuntime.start( container );
 
+    const p = this.sketchRuntime?.getP5();
+
+    this.perfSample = {
+      paused: false,
+      smoothedFps: 0,
+      lastEmitTime: performance.now(),
+      rawSamples: typeof p?.frameRate === "function"
+        ? [
+          p.frameRate()
+        ].filter( ( value ) => Number.isFinite( value ) && value > 0 )
+        : []
+    };
+
     // Wait for the first draw cycle to complete before marking as ready.
     // This ensures the canvas is fully rendered and ready to be measured/centered.
     await new Promise<void>( async( resolve ) => {
@@ -115,6 +136,8 @@ export class P5Engine implements SketchEngine {
   }
 
   destroy(): void {
+    this.stopPerformanceLoop();
+
     // p5 instance cleanup — removes canvas, stops draw, unbinds events.
     this.sketchRuntime?.getP5()?.remove();
     this.sketchRuntime?.reset();
@@ -143,20 +166,29 @@ export class P5Engine implements SketchEngine {
 
   play(): void {
     this.sketchRuntime?.getP5()?.loop();
+    this.perfSample.paused = false;
+    this.emitPerformanceSample();
   }
 
   pause(): void {
     this.sketchRuntime?.getP5()?.noLoop();
+    this.perfSample.paused = true;
+    this.emitPerformanceSample();
   }
 
   stop(): void {
     this.sketchRuntime?.getP5()?.noLoop();
+    this.perfSample.paused = true;
 
     const p = this.sketchRuntime?.getP5();
 
     if ( p ) {
       p.frameCount = 0;
     }
+
+    this.perfSample.rawSamples = [];
+    this.perfSample.smoothedFps = 0;
+    this.emitPerformanceSample();
   }
 
   seek( frame: number ): void {
@@ -238,6 +270,11 @@ export class P5Engine implements SketchEngine {
     }
 
     this.listeners.get( event )!.add( handler );
+
+    if ( event === "performance" ) {
+      this.startPerformanceLoop();
+      this.emitPerformanceSample();
+    }
   }
 
   off<E extends EngineEventName>(
@@ -245,6 +282,10 @@ export class P5Engine implements SketchEngine {
     handler: ( payload: EngineEventMap[ E ] ) => void
   ): void {
     this.listeners.get( event )?.delete( handler );
+
+    if ( event === "performance" && !this.hasPerformanceListeners() ) {
+      this.stopPerformanceLoop();
+    }
   }
 
   private emit<E extends EngineEventName>(
@@ -252,5 +293,103 @@ export class P5Engine implements SketchEngine {
     payload: EngineEventMap[ E ]
   ): void {
     this.listeners.get( event )?.forEach( ( h ) => h( payload ) );
+  }
+
+  private hasPerformanceListeners(): boolean {
+    return ( this.listeners.get( "performance" )?.size ?? 0 ) > 0;
+  }
+
+  private startPerformanceLoop(): void {
+    if ( this.perfLoopId !== null ) {
+      return;
+    }
+
+    const tick = ( now: number ) => {
+      if ( !this.hasPerformanceListeners() ) {
+        this.perfLoopId = null;
+        return;
+      }
+
+      const p = this.sketchRuntime?.getP5();
+
+      if ( p && this._isReady ) {
+        const rawFps = typeof p.frameRate === "function"
+          ? p.frameRate()
+          : 0;
+
+        if ( Number.isFinite( rawFps ) && rawFps > 0 ) {
+          this.perfSample.rawSamples.push( rawFps );
+
+          if ( this.perfSample.rawSamples.length > 20 ) {
+            this.perfSample.rawSamples.shift();
+          }
+        }
+
+        if ( now - this.perfSample.lastEmitTime >= 500 ) {
+          const robustFps = this.getMedian( this.perfSample.rawSamples );
+
+          if ( robustFps > 0 ) {
+            this.perfSample.smoothedFps = this.perfSample.smoothedFps > 0
+              ? this.perfSample.smoothedFps * 0.8 + robustFps * 0.2
+              : robustFps;
+          }
+
+          this.perfSample.lastEmitTime = now;
+          this.emitPerformanceSample();
+        }
+      }
+
+      this.perfLoopId = requestAnimationFrame( tick );
+    };
+
+    this.perfLoopId = requestAnimationFrame( tick );
+  }
+
+  private stopPerformanceLoop(): void {
+    if ( this.perfLoopId === null ) {
+      return;
+    }
+
+    cancelAnimationFrame( this.perfLoopId );
+    this.perfLoopId = null;
+  }
+
+  private emitPerformanceSample(): void {
+    const payload: EnginePerformanceSample = {
+      fps: Number.isFinite( this.perfSample.smoothedFps )
+        ? this.perfSample.smoothedFps
+        : 0,
+      paused: this.perfSample.paused,
+      timestamp: performance.now()
+    };
+
+    this.emit(
+      "performance",
+      payload
+    );
+  }
+
+  private getMedian( values: number[] ): number {
+    if ( values.length === 0 ) {
+      return 0;
+    }
+
+    const sorted = [
+      ...values
+    ].sort( this.compareNumbersAscending );
+    const middle = Math.floor( sorted.length / 2 );
+
+    if ( sorted.length % 2 === 0 ) {
+      return ( sorted[ middle - 1 ] + sorted[ middle ] ) / 2;
+    }
+
+    return sorted[ middle ];
+  }
+
+  private compareNumbersAscending(
+    a: number,
+    b: number
+  ): number {
+    return a - b;
   }
 }
