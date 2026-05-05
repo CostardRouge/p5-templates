@@ -101,14 +101,14 @@ export const formConfiguration: Record<string, any> = {
       meridians: {
         label: "Meridians (longitude)",
         component: "slider",
-        min: 3,
+        min: 1,
         max: 120,
         step: 1
       },
       parallels: {
         label: "Parallels (latitude)",
         component: "slider",
-        min: 3,
+        min: 1,
         max: 60,
         step: 1
       }

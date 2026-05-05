@@ -10,7 +10,12 @@ let VisionManagerClass = null;
 const mediapipe = {
   config: {
     useWorker: false,
-    tasks: []
+    tasks: [],
+    captureSize: {
+      width: 320,
+      height: 240
+    },
+    captureFlip: true
   },
   tasks: {},
   capture: {
@@ -34,6 +39,11 @@ const mediapipe = {
 export async function init( config = {} ) {
   mediapipe.config.useWorker = config.worker ?? false;
   mediapipe.config.tasks = config.tasks ?? [];
+  mediapipe.config.captureSize = config.captureSize ?? {
+    width: 320,
+    height: 240
+  };
+  mediapipe.config.captureFlip = config.captureFlip ?? true;
 
   // Only initialize camera if enableCapture is true (default: true for backward compatibility)
   const enableCapture = config.enableCapture ?? true;
@@ -201,17 +211,26 @@ export function interact(
 
 function createVideoCaptureElements() {
   const p = getP5();
+  const size = mediapipe.config.captureSize;
+  const flip = mediapipe.config.captureFlip;
 
   mediapipe.capture.element = p.createCapture(
     p.VIDEO,
     {
-      flipped: true
+      flipped: flip
     }
   );
   mediapipe.capture.element.size(
-    320,
-    240
+    size.width,
+    size.height
   );
+
+  // Keep capture.size in sync so interaction utilities can read it
+  mediapipe.capture.size = {
+    width: size.width,
+    height: size.height
+  };
+
   mediapipe.capture.element.hide();
   mediapipe.capture.element.elt.addEventListener(
     "loadeddata",

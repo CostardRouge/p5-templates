@@ -97,6 +97,21 @@ export class VisionManager {
       );
     }
 
+    if ( this.state.faces.enabled ) {
+      this.state.faces.task = await FaceDetector.createFromOptions(
+        resolver,
+        {
+          minDetectionConfidence: 0.5,
+          minSuppressionThreshold: 0.3,
+          runningMode: "VIDEO",
+          baseOptions: {
+            delegate: "GPU",
+            modelAssetPath: `${ mediapipeLibraryPath }/blaze_face_short_range.tflite`
+          }
+        }
+      );
+    }
+
     if ( this.state.poses.enabled ) {
       this.state.poses.task = await PoseLandmarker.createFromOptions(
         resolver,
@@ -174,6 +189,18 @@ export class VisionManager {
 
       this.emitResult(
         "poses",
+        result
+      );
+    }
+
+    if ( this.state.faces.enabled ) {
+      const result = this.state.faces.task.detectForVideo(
+        input,
+        timestamp
+      );
+
+      this.emitResult(
+        "faces",
         result
       );
     }
