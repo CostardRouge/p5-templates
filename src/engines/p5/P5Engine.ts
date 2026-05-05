@@ -7,6 +7,9 @@ import type {
   SketchOption
 } from "@/types/sketch.types";
 import {
+  getEffectiveSlideSettings
+} from "@/lib/effectiveSlideSettings";
+import {
   resolveSketchPath
 } from "@/engines/metadata";
 import {
@@ -201,9 +204,18 @@ export class P5Engine implements SketchEngine {
     return canvas.toDataURL( "image/png" );
   }
 
-  getTotalFrames( options: SketchOption ): number {
-    const framerate = options.animation?.framerate ?? 60;
-    const duration = options.animation?.duration ?? 12;
+  getTotalFrames(
+    options: SketchOption,
+    slideIndex?: number
+  ): number {
+    const {
+      animation
+    } = getEffectiveSlideSettings(
+      options,
+      slideIndex
+    );
+    const framerate = animation?.framerate ?? 60;
+    const duration = animation?.duration ?? 12;
 
     return Math.round( duration * framerate );
   }

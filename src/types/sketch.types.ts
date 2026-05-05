@@ -357,16 +357,8 @@ export const Assets = z
   } )
   .default( {} );
 
-/* ---------------- slide schema (with name) ---------------------- */
-export const SlideSchema = z.object( {
-  name: z.string().optional(),
-  content: z.array( ContentItemSchema ).default( [] ),
-  assets: Assets,
-  sketch: z.any().optional()
-} );
-
-/* ---------------- root options.json ----------------------------- */
-const SketchSizeSchema = z.object( {
+/* ----------- shared size / animation schemas -------------------- */
+export const SketchSizeSchema = z.object( {
   width: z.number().min( 50 )
     .max( 8192 )
     .default( 1080 ),
@@ -375,7 +367,7 @@ const SketchSizeSchema = z.object( {
     .default( 1350 )
 } );
 
-const SketchAnimationSchema = z.object( {
+export const SketchAnimationSchema = z.object( {
   framerate: z.number().int()
     .min( 1 )
     .max( 240 )
@@ -384,6 +376,18 @@ const SketchAnimationSchema = z.object( {
     .max( 60 )
     .default( 12 )
 } );
+
+/* ---------------- slide schema (with name) ---------------------- */
+export const SlideSchema = z.object( {
+  name: z.string().optional(),
+  size: SketchSizeSchema.optional(),
+  animation: SketchAnimationSchema.optional(),
+  content: z.array( ContentItemSchema ).default( [] ),
+  assets: Assets,
+  sketch: z.any().optional()
+} );
+
+/* ---------------- root options.json ----------------------------- */
 
 export const OptionsSchema = z.object( {
   id: z.string().default( "" )

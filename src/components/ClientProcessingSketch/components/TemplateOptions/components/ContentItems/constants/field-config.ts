@@ -76,6 +76,8 @@ export interface NestedObjectConfig extends BaseConfig {
   // The 'fields' property contains a map where keys are field names
   // and values are any valid FieldConfig. This enables recursion.
   fields: Record<string, FieldConfig>;
+  /** Whether the nested-object collapsible starts expanded. Default: false. */
+  initialExpanded?: boolean;
 }
 
 // For polymorphic/conditional field groups (the most complex one)

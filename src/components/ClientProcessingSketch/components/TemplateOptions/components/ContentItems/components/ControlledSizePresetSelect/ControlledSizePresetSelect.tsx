@@ -16,26 +16,31 @@ type Props = {
   className?: string;
   noneLabel?: string;
   options: SelectOption[];
+  sizeFieldPrefix?: string;
 };
 
 export default function ControlledSizePresetSelect( {
   id,
   className = "",
   noneLabel,
-  options
+  options,
+  sizeFieldPrefix = ""
 }: Props ) {
   const {
     control, setValue
   } = useFormContext();
 
+  const widthField = `${ sizeFieldPrefix }size.width` as const;
+  const heightField = `${ sizeFieldPrefix }size.height` as const;
+
   // Keep the select in sync with the current size in the form
   const width = useWatch( {
     control,
-    name: "size.width"
+    name: widthField
   } ) as number | undefined;
   const height = useWatch( {
     control,
-    name: "size.height"
+    name: heightField
   } ) as number | undefined;
   const currentValue = width && height ? `${ width }x${ height }` : "";
 
@@ -88,7 +93,7 @@ export default function ControlledSizePresetSelect( {
     } = parsedSizePreset;
 
     setValue(
-      "size.width",
+      widthField,
       width,
       {
         shouldDirty: true,
@@ -96,7 +101,7 @@ export default function ControlledSizePresetSelect( {
       }
     );
     setValue(
-      "size.height",
+      heightField,
       height,
       {
         shouldDirty: true,

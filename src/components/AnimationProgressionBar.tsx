@@ -10,6 +10,10 @@ import {
 import {
   getSketchOptions, subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
+import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import {
+  getEffectiveSlideSettings
+} from "@/lib/effectiveSlideSettings";
 
 interface AnimationProgressionBarProps {
   className?: string;
@@ -32,9 +36,18 @@ function clamp01( value: number ) {
   );
 }
 
-function getAnimationConfigFromSketchOptions( sketchOptions: any ): AnimationConfig {
-  const duration = sketchOptions?.animation?.duration ?? 10;
-  const framerate = sketchOptions?.animation?.framerate ?? 60;
+function getAnimationConfigFromSketchOptions(
+  sketchOptions: any,
+  activeSlideIndex?: number
+): AnimationConfig {
+  const {
+    animation
+  } = getEffectiveSlideSettings(
+    sketchOptions,
+    activeSlideIndex
+  );
+  const duration = animation?.duration ?? 10;
+  const framerate = animation?.framerate ?? 60;
   const totalFrames = Math.max(
     1,
     Math.floor( duration * framerate )
@@ -52,6 +65,15 @@ export default function AnimationProgressionBar( {
   disabled = false
 }: AnimationProgressionBarProps ) {
   const [
+    {
+      activeSlideIndex
+    }
+  ] = useSketch();
+  const activeSlideIndexRef = useRef( activeSlideIndex );
+
+  activeSlideIndexRef.current = activeSlideIndex;
+
+  const [
     progression,
     setProgression
   ] = useState( 0 );
@@ -68,7 +90,10 @@ export default function AnimationProgressionBar( {
     animationConfig,
     setAnimationConfig
   ] = useState<AnimationConfig>( () =>
-    getAnimationConfigFromSketchOptions( getSketchOptions() ) );
+    getAnimationConfigFromSketchOptions(
+      getSketchOptions(),
+      activeSlideIndex
+    ) );
 
   const barRef = useRef<HTMLDivElement | null>( null );
   const dragThrottleRef = useRef<number>( 0 );
@@ -88,10 +113,31 @@ export default function AnimationProgressionBar( {
       }
 
       return subscribeSketchOptions( ( updatedOptions: any ) => {
-        setAnimationConfig( getAnimationConfigFromSketchOptions( updatedOptions ) );
+        setAnimationConfig( getAnimationConfigFromSketchOptions(
+          updatedOptions,
+          activeSlideIndexRef.current
+        ) );
       } );
     },
     [
+      disabled
+    ]
+  );
+
+  // Re-compute animation config when active slide changes.
+  useEffect(
+    () => {
+      if ( disabled ) {
+        return;
+      }
+
+      setAnimationConfig( getAnimationConfigFromSketchOptions(
+        getSketchOptions(),
+        activeSlideIndex
+      ) );
+    },
+    [
+      activeSlideIndex,
       disabled
     ]
   );

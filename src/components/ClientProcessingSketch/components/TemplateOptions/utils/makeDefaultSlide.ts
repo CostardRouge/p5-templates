@@ -4,13 +4,21 @@ import {
 
 export default function makeDefaultSlide( {
   indexForLabel,
-  sketch
+  sketch,
+  size,
+  animation
 }: {
   indexForLabel: number;
   sketch: any; // sschhhhh
+  size?: { width: number;
+    height: number };
+  animation?: { framerate: number;
+    duration: number };
 } ): SlideOption {
   return SlideSchema.parse( {
     name: `Slide ${ indexForLabel + 1 }`,
-    sketch
+    sketch,
+    size,
+    animation
   } );
 }

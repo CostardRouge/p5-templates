@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import type React from "react";
 import {
-  useCallback
+  useCallback, useMemo
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
@@ -15,6 +15,9 @@ import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import type {
   SketchOption
 } from "@/types/sketch.types";
+import {
+  getEffectiveSlideSettings
+} from "@/lib/effectiveSlideSettings";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import {
   useSketchThumbnail
@@ -71,6 +74,17 @@ export default function TemplateSketchPage() {
     ]
   );
 
+  const effectiveSettings = useMemo(
+    () => getEffectiveSlideSettings(
+      options,
+      activeSlideIndex
+    ),
+    [
+      options,
+      activeSlideIndex
+    ]
+  );
+
   return (
     <>
       {/* Loading placeholder */}
@@ -109,7 +123,7 @@ export default function TemplateSketchPage() {
         <ScalableViewport
           disable={ capturing }
           showZoomControls={ !capturing && sketchLoaded }
-          resolutionKey={ `${ options.size.width }x${ options.size.height }` }
+          resolutionKey={ `${ effectiveSettings.size.width }x${ effectiveSettings.size.height }` }
           isReady={ sketchLoaded }
         >
           {sketchLoaded && !capturing && (

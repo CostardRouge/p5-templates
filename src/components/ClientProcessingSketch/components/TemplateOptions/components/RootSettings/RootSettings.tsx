@@ -9,11 +9,28 @@ import {
 } from "lucide-react";
 import CollapsibleItem from "@/components/CollapsibleItem";
 
-export default function RootSettings() {
+type RootSettingsProps = {
+  activeSlideIndex?: number;
+};
+
+export default function RootSettings( {
+  activeSlideIndex
+}: RootSettingsProps ) {
+  const isSlideContext = activeSlideIndex !== undefined;
+  const basePath = isSlideContext ? `slides.${ activeSlideIndex }` : "";
+  const label = isSlideContext
+    ? `slide ${ activeSlideIndex + 1 } settings`
+    : "general settings";
+
   return (
     <CollapsibleItem
-      initialExpandedValue={ false }
-      className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
+      key={ basePath }
+      initialExpandedValue={ isSlideContext }
+      className={ `p-1 border rounded-lg text-foreground bg-background overflow-y-auto ${
+        isSlideContext
+          ? "border-blue-400/60 ring-1 ring-blue-400/30"
+          : "border-theme"
+      }` }
       headerContainerClassName="leading-none"
       header={ ( expanded ) => (
         <button
@@ -26,11 +43,11 @@ export default function RootSettings() {
               rotate: expanded ? "180deg" : "0deg"
             } }
           />
-          general settings
+          {label}
         </button>
       ) }
     >
-      <GenericObjectForm config={ rootFormConfig } />
+      <GenericObjectForm basePath={ basePath } config={ rootFormConfig } />
     </CollapsibleItem>
   );
 }

@@ -219,13 +219,14 @@ export default function FieldRenderer( {
             className="p-1"
             id={ registeredName }
             options={ config.options }
+            sizeFieldPrefix={ fieldBasePath ? `${ fieldBasePath }.` : "" }
           />
         );
 
       case "nested-object":
         return (
           <CollapsibleItem
-            initialExpandedValue={ false }
+            initialExpandedValue={ config.initialExpanded ?? false }
             header={ ( expanded ) => (
               <div
                 className="text-gray-500 cursor-pointer select-none flex items-center gap-1"

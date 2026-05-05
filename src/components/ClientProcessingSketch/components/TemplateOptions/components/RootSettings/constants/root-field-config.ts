@@ -125,6 +125,7 @@ const rootFormConfig: Record<string, FieldConfig> = {
   animation: {
     label: "Animation",
     component: "nested-object",
+    initialExpanded: true,
     fields: {
       duration: {
         label: "Duration",

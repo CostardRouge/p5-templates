@@ -184,7 +184,9 @@ events.register(
 
 let previousOptions = {
   size: null,
-  animation: null
+  animation: null,
+  effectiveSize: null,
+  effectiveAnimation: null
 };
 
 let unsubscribe = null;
@@ -209,6 +211,22 @@ function isEqual(
 }
 
 /**
+ * Resolve the effective size/animation for the current slide.
+ * Per-slide overrides win; otherwise global values are used.
+ */
+function getEffective( opts ) {
+  const slideIndex = typeof window !== "undefined" && window.getCurrentSlide
+    ? window.getCurrentSlide()?.index
+    : undefined;
+  const slide = slideIndex != null ? opts?.slides?.[ slideIndex ] : null;
+
+  return {
+    size: slide?.size ?? opts?.size,
+    animation: slide?.animation ?? opts?.animation
+  };
+}
+
+/**
  * Handle options changes and trigger appropriate events
  */
 function handleOptionsChange(
@@ -221,15 +239,20 @@ function handleOptionsChange(
 
   let hasChanges = false;
 
-  // Check for size changes
-  if ( newOptions?.size && !isEqual(
-    newOptions.size,
-    previousOptions.size
+  const {
+    size: effectiveSize,
+    animation: effectiveAnimation
+  } = getEffective( newOptions );
+
+  // Check for effective size changes (slide override or global)
+  if ( effectiveSize && !isEqual(
+    effectiveSize,
+    previousOptions.effectiveSize
   ) ) {
     const {
       width,
       height
-    } = newOptions.size;
+    } = effectiveSize;
 
     if ( width && height ) {
       events.handle(
@@ -241,23 +264,23 @@ function handleOptionsChange(
       // Update sketch options reference
       if ( sketch.sketchOptions ) {
         sketch.sketchOptions.size = {
-          ...newOptions.size
+          ...effectiveSize
         };
       }
 
-      previousOptions.size = {
-        ...newOptions.size
+      previousOptions.effectiveSize = {
+        ...effectiveSize
       };
       hasChanges = true;
     }
   }
 
-  // Check for animation/framerate changes
-  if ( newOptions?.animation && !isEqual(
-    newOptions.animation,
-    previousOptions.animation
+  // Check for effective animation/framerate changes (slide override or global)
+  if ( effectiveAnimation && !isEqual(
+    effectiveAnimation,
+    previousOptions.effectiveAnimation
   ) ) {
-    const framerate = newOptions.animation?.framerate;
+    const framerate = effectiveAnimation?.framerate;
 
     if ( framerate && typeof framerate === "number" && framerate > 0 ) {
       events.handle(
@@ -268,16 +291,24 @@ function handleOptionsChange(
       // Update sketch options reference
       if ( sketch.sketchOptions ) {
         sketch.sketchOptions.animation = {
-          ...newOptions.animation
+          ...effectiveAnimation
         };
       }
 
-      previousOptions.animation = {
-        ...newOptions.animation
+      previousOptions.effectiveAnimation = {
+        ...effectiveAnimation
       };
       hasChanges = true;
     }
   }
+
+  // Also track raw globals for reference
+  previousOptions.size = newOptions?.size ? {
+    ...newOptions.size
+  } : null;
+  previousOptions.animation = newOptions?.animation ? {
+    ...newOptions.animation
+  } : null;
 
   // Refresh assets if there were any changes or if assets changed
   if ( hasChanges || !isEqual(
@@ -313,6 +344,12 @@ function initializeOptionsSubscription() {
     animation: initialOptions?.animation ? {
       ...initialOptions.animation
     } : null,
+    effectiveSize: initialOptions?.size ? {
+      ...initialOptions.size
+    } : null,
+    effectiveAnimation: initialOptions?.animation ? {
+      ...initialOptions.animation
+    } : null,
     assets: initialOptions?.assets,
     slides: initialOptions?.slides
   };
@@ -331,6 +368,28 @@ events.register(
   "pre-setup",
   initializeOptionsSubscription
 );
+
+/**
+ * Update the previous-options baseline to match the given effective
+ * size/animation.  Called by slides/index.js after a slide switch so
+ * that the next handleOptionsChange comparison starts from the right
+ * baseline and doesn't re-fire events for values that were already applied.
+ */
+export function syncEffectivePrevious(
+  effectiveSize, effectiveAnimation
+) {
+  if ( effectiveSize ) {
+    previousOptions.effectiveSize = {
+      ...effectiveSize
+    };
+  }
+
+  if ( effectiveAnimation ) {
+    previousOptions.effectiveAnimation = {
+      ...effectiveAnimation
+    };
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /*  Proxy — always reads from the live store on every access.         */

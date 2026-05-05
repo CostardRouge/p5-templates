@@ -220,9 +220,19 @@ export function useSlideManagement( {
 
       const nextIndex = slideFields.length;
       const currentGlobalSketch = getValues( "sketch" );
+      const currentGlobalSize = getValues( "size" ) as
+        | { width: number;
+          height: number }
+        | undefined;
+      const currentGlobalAnimation = getValues( "animation" ) as
+        | { framerate: number;
+          duration: number }
+        | undefined;
       const newSlide = makeDefaultSlide( {
         indexForLabel: nextIndex,
-        sketch: nextIndex === 0 ? currentGlobalSketch : sketchFormValues
+        sketch: nextIndex === 0 ? currentGlobalSketch : sketchFormValues,
+        size: currentGlobalSize,
+        animation: currentGlobalAnimation
       } );
 
       appendSlide( newSlide );
@@ -303,6 +313,24 @@ export function useSlideManagement( {
           setValue(
             "sketch",
             deepClone( lastSlideSettings )
+          );
+        }
+
+        const lastSlideSize = getValues( `slides.${ indexToDelete }.size` );
+
+        if ( lastSlideSize ) {
+          setValue(
+            "size",
+            deepClone( lastSlideSize )
+          );
+        }
+
+        const lastSlideAnimation = getValues( `slides.${ indexToDelete }.animation` );
+
+        if ( lastSlideAnimation ) {
+          setValue(
+            "animation",
+            deepClone( lastSlideAnimation )
           );
         }
       }

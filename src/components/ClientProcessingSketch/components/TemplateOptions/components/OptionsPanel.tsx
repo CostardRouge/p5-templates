@@ -130,7 +130,7 @@ export default function OptionsPanel( {
         </div>
       ) }
     >
-      <RootSettings />
+      <RootSettings activeSlideIndex={ activeSlideIndex } />
 
       <CollapsibleItem
         initialExpandedValue={ false }

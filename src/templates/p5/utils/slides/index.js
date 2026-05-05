@@ -1,4 +1,7 @@
 import options from "../options.js";
+import {
+  syncEffectivePrevious
+} from "../options.js";
 import events from "../events.js";
 import {
   getP5, getContainer
@@ -104,6 +107,39 @@ const slides = {
 
   setSlide( index ) {
     this.index = index;
+    this.applyEffectiveSettings();
+  },
+
+  /**
+   * Apply the effective size/animation for the current slide.
+   * Called after switching slides so the engine updates immediately.
+   */
+  applyEffectiveSettings() {
+    const slide = this.current;
+    const effectiveSize = slide?.size ?? options?.size;
+    const effectiveAnimation = slide?.animation ?? options?.animation;
+
+    if ( effectiveSize?.width && effectiveSize?.height ) {
+      events.handle(
+        "engine-resize-canvas",
+        effectiveSize.width,
+        effectiveSize.height
+      );
+    }
+
+    if ( effectiveAnimation?.framerate && effectiveAnimation.framerate > 0 ) {
+      events.handle(
+        "engine-framerate-change",
+        effectiveAnimation.framerate
+      );
+    }
+
+    // Keep previousOptions in options.js in sync so the next
+    // handleOptionsChange comparison doesn't re-fire stale events.
+    syncEffectivePrevious(
+      effectiveSize,
+      effectiveAnimation
+    );
   },
 
   render( {

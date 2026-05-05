@@ -85,8 +85,9 @@ export interface SketchEngine {
 
   /**
    * Calculate the total number of frames for the given options.
+   * When `slideIndex` is provided, per-slide overrides are used.
    */
-  getTotalFrames( options: SketchOption ): number;
+  getTotalFrames( options: SketchOption, slideIndex?: number ): number;
 
   /**
    * Return the underlying `<canvas>` element (if any).
