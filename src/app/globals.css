@@ -83,8 +83,8 @@
 }
 
 canvas#defaultCanvas0:hover {
-    @apply border;
-    @apply border-theme;
+    @apply outline;
+    @apply outline-theme;
 }
 
 .glass {
