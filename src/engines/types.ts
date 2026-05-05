@@ -63,6 +63,12 @@ export interface SketchEngine {
   stop(): void;
 
   /**
+   * Render one frame without advancing time or resuming the loop.
+   * Useful to reflect parameter changes while the loop is paused.
+   */
+  redraw(): void;
+
+  /**
    * Jump to a specific frame index.
    * Mainly useful for timeline-based engines (GSAP, CSS keyframes …)
    * and for server-side frame capture.

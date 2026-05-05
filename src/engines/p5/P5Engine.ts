@@ -9,6 +9,9 @@ import type {
 import {
   resolveSketchPath
 } from "@/engines/metadata";
+import {
+  getAnimationBridge
+} from "@/lib/animationBridge";
 
 type P5SketchRuntime = {
   start: ( container: HTMLElement ) => Promise<any>;
@@ -161,6 +164,24 @@ export class P5Engine implements SketchEngine {
     }
 
     this.sketchRuntime?.getP5()?.redraw();
+  }
+
+  redraw(): void {
+    const p = this.sketchRuntime?.getP5();
+
+    if ( !p ) {
+      return;
+    }
+
+    // Sync the animation bridge so that the time delta on the upcoming
+    // pre-draw is effectively 0 — the sketch stays on the same frame.
+    const bridge = getAnimationBridge();
+
+    if ( bridge ) {
+      bridge.setProgression( bridge.getProgression() );
+    }
+
+    p.redraw();
   }
 
   /* ---- capture --------------------------------------------------- */

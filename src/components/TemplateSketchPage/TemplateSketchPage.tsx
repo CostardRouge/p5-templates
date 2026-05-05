@@ -20,6 +20,7 @@ import {
   useSketchThumbnail
 } from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketchThumbnail";
 import useSketchDevWatch from "@/hooks/useSketchDevWatch";
+import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 
 const TemplateOptions = dynamic( () =>
   import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
@@ -76,13 +77,21 @@ export default function TemplateSketchPage() {
       {!sketchLoaded && (
         <div className="flex items-center justify-center absolute h-full w-full">
           <div className="flex flex-col items-center gap-4">
-            {thumbnailUrl && (
-              <img
-                src={ thumbnailUrl }
-                alt={ `${ name } thumbnail` }
-                className="w-60 h-auto rounded-lg shadow-lg"
-              />
-            )}
+            <img
+              src={ thumbnailUrl }
+              alt={ `${ name } thumbnail` }
+              className="w-60 h-auto rounded-lg shadow-lg"
+              onError={ ( e ) => {
+                const fallback = getSketchThumbnailURL(
+                  engineId,
+                  name
+                );
+
+                if ( e.currentTarget.src !== window.location.origin + fallback ) {
+                  e.currentTarget.src = fallback;
+                }
+              } }
+            />
 
             <p className="text-foreground">
               {" → loading "}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useEffect, useMemo, useReducer
+  useEffect, useMemo, useReducer, useRef
 } from "react";
 import SketchContext from "./contexts/SketchContext";
 import type {
@@ -43,6 +43,11 @@ function sketchReducer(
         ...state,
         engine: action.payload
       };
+    case "SET_LOOPING":
+      return {
+        ...state,
+        looping: action.payload
+      };
     case "SET_CAPTURING":
       return {
         ...state,
@@ -60,7 +65,8 @@ export default function SketchContextProvider( {
   const initialState: SketchState = {
     ...props,
     sketchLoaded: false,
-    engine: null
+    engine: null,
+    looping: true
   };
 
   const [
@@ -72,12 +78,27 @@ export default function SketchContextProvider( {
   );
 
   /* ---- React → p5 sync ------------------------------------------ */
+
+  // Stable refs so the options effect doesn’t re-fire on engine/looping
+  // changes — it only re-fires when options actually change.
+  const engineRef = useRef( state.engine );
+  const loopingRef = useRef( state.looping );
+
+  engineRef.current = state.engine;
+  loopingRef.current = state.looping;
+
   useEffect(
     () => {
       setSketchOptions(
         state.options,
         "react"
       );
+
+      // When the loop is paused, trigger a single redraw so parameter
+      // changes are visible immediately without pressing Play.
+      if ( !loopingRef.current && engineRef.current ) {
+        engineRef.current.redraw();
+      }
     },
     [
       state.options
