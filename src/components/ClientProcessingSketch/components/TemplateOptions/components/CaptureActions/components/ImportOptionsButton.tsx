@@ -111,17 +111,13 @@ export default function ImportOptionsButton( {
         const result = await response.json();
 
         if ( result.success ) {
+          if ( onImportInMemory ) {
+            onImportInMemory( importedOptions );
+          }
           setToast( {
             message: "Options imported successfully",
             type: "success"
           } );
-          // Reload after a short delay to show the toast
-          setTimeout(
-            () => {
-              window.location.reload();
-            },
-            1000
-          );
         } else {
           throw new Error( "Failed to import options" );
         }

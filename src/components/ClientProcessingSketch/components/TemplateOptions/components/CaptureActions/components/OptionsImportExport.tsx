@@ -143,16 +143,13 @@ export default function OptionsImportExport( {
         const result = await response.json();
 
         if ( result.success ) {
+          if ( onImportInMemory ) {
+            onImportInMemory( importedOptions );
+          }
           setToast( {
             message: "Options imported successfully",
             type: "success"
           } );
-          setTimeout(
-            () => {
-              window.location.reload();
-            },
-            1000
-          );
         } else {
           throw new Error( "Failed to import options" );
         }
