@@ -66,8 +66,11 @@ export default function AnimationProgressionBar( {
 }: AnimationProgressionBarProps ) {
   const [
     {
-      activeSlideIndex
-    }
+      activeSlideIndex,
+      engine,
+      looping
+    },
+    dispatch
   ] = useSketch();
   const activeSlideIndexRef = useRef( activeSlideIndex );
 
@@ -236,6 +239,56 @@ export default function AnimationProgressionBar( {
     []
   );
 
+  const pauseLoopForScrubbing = useCallback(
+    () => {
+      if ( !looping ) {
+        return false;
+      }
+
+      if ( engine ) {
+        engine.pause();
+      } else {
+        bridgeRef.current?.pause();
+      }
+
+      dispatch( {
+        type: "SET_LOOPING",
+        payload: false
+      } );
+
+      return true;
+    },
+    [
+      dispatch,
+      engine,
+      looping
+    ]
+  );
+
+  const resumeLoopAfterScrubbing = useCallback(
+    () => {
+      if ( looping ) {
+        return;
+      }
+
+      if ( engine ) {
+        engine.play();
+      } else {
+        bridgeRef.current?.resume();
+      }
+
+      dispatch( {
+        type: "SET_LOOPING",
+        payload: true
+      } );
+    },
+    [
+      dispatch,
+      engine,
+      looping
+    ]
+  );
+
   const handleClick = useCallback(
     ( event: React.MouseEvent ) => {
       if ( disabled || isDraggingRef.current ) {
@@ -266,10 +319,7 @@ export default function AnimationProgressionBar( {
       isDraggingRef.current = true;
       setIsDragging( true );
 
-      if ( bridgeRef.current ) {
-        bridgeRef.current.pause();
-        pausedByDragRef.current = true;
-      }
+      pausedByDragRef.current = pauseLoopForScrubbing();
 
       setAnimationProgression( calculateProgressionFromEvent( event ) );
 
@@ -281,6 +331,7 @@ export default function AnimationProgressionBar( {
     [
       disabled,
       calculateProgressionFromEvent,
+      pauseLoopForScrubbing,
       setAnimationProgression
     ]
   );
@@ -299,7 +350,7 @@ export default function AnimationProgressionBar( {
       // Resume the loop only if we were the ones who paused it.
       if ( pausedByDragRef.current ) {
         pausedByDragRef.current = false;
-        bridgeRef.current?.resume();
+        resumeLoopAfterScrubbing();
       }
 
       try {
@@ -308,7 +359,9 @@ export default function AnimationProgressionBar( {
       // Ignore (can throw if capture already released).
       }
     },
-    []
+    [
+      resumeLoopAfterScrubbing
+    ]
   );
 
   const handlePointerMove = useCallback(
