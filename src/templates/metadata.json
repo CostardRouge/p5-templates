@@ -486,21 +486,30 @@
     "ctime": "2026-05-05T20:57:50.008Z"
   },
   {
-    "name": "text-mask-with-noise-strips",
-    "engine": "p5",
-    "category": "text",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "mtime": "2026-05-05T20:57:50.009Z",
-    "ctime": "2026-05-05T20:57:50.009Z"
-  },
-  {
     "name": "peaks-tunnel",
     "engine": "p5",
     "category": "peaks",
     "hasSketchForm": true,
     "hasThumbnail": false,
-    "mtime": "2026-05-06T10:13:51.818Z",
+    "mtime": "2026-05-06T13:08:11.071Z",
     "ctime": "2026-05-06T10:13:51.815Z"
+  },
+  {
+    "name": "text-mask-with-noise-strips",
+    "engine": "p5",
+    "category": "text",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "mtime": "2026-05-06T13:08:11.071Z",
+    "ctime": "2026-05-05T20:57:50.009Z"
+  },
+  {
+    "name": "peaks-cone",
+    "engine": "p5",
+    "category": "peaks",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "mtime": "2026-05-06T13:15:02.835Z",
+    "ctime": "2026-05-06T13:15:02.833Z"
   }
 ]
