@@ -1,5 +1,7 @@
 import options from "@/p5/utils/options.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5, loadP5Class
+} from "@/p5/utils/sketch.js";
 
 import cache from "@/p5/utils/cache.js";
 import colors from "@/p5/utils/colors.js";
@@ -11,9 +13,6 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
-import {
-  getP5
-} from "@/p5/utils/sketch.js";
 
 const sketchState = {
   interactive: {
@@ -30,14 +29,18 @@ events.register(
   () => {
     const p = getP5();
 
-    sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
+    sketchState.interactive.image = p.loadImage( "/assets/images/handpointing.png" );
   }
 );
+
+let _loadedP5Class = null;
 
 sketch.setup( async( {
   canvas
 } ) => {
   const p = getP5();
+
+  _loadedP5Class = await loadP5Class();
 
   sketchState.shape.graphics = p.createGraphics(
     p.width,
@@ -56,6 +59,8 @@ function getAlphaFromMask( {
   maskPoints,
   distance = options.sketch?.mask?.distance ?? 0.015
 } ) {
+  const p = getP5();
+
   const normalizedPosition = p.createVector(
     p.map(
       x,
@@ -132,7 +137,8 @@ function createGridAlphaPoints(
           }
 
           if ( alphaLayers.length > 0 ) {
-            const randomPosition = getP5().Vector.random3D().mult( options.sketch?.animation?.randomDistance );
+            const randomPosition = _loadedP5Class?.Vector.random3D()
+              .mult( options.sketch?.animation?.randomDistance );
 
             alphaPoints.push( {
               position,

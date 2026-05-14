@@ -1,5 +1,7 @@
 import options from "@/p5/utils/options.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 import cache from "@/p5/utils/cache.js";
 import colors from "@/p5/utils/colors.js";
@@ -11,9 +13,6 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
-import {
-  getP5
-} from "@/p5/utils/sketch.js";
 
 const interactive = {
   currentTimeValue: 0,
@@ -27,7 +26,7 @@ events.register(
   () => {
     const p = getP5();
 
-    interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
+    interactive.image = p.loadImage( "/assets/images/handpointing.png" );
   }
 );
 
@@ -43,6 +42,7 @@ sketch.setup(
     );
 
     p.background( ...getBackgroundColor() );
+
     await addScreenPositionFunction( p );
   },
   {
@@ -57,6 +57,7 @@ function getAlphaFromMask( {
   maskPoints,
   distance = options.sketch?.mask?.distance ?? 0.015
 } ) {
+  const p = getP5();
   const normalizedPosition = p.createVector(
     p.map(
       x,
@@ -343,7 +344,7 @@ sketch.draw( () => {
     const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
     if ( options.sketch.interactive.enabled && interactive.position ) {
-      const screenPos = screenPosition(
+      const screenPos = p.screenPosition(
         0,
         0,
         0
