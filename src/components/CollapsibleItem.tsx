@@ -1,31 +1,51 @@
 import {
-  DetailedHTMLProps, HTMLAttributes, JSX, useState
+  CSSProperties, JSX, useState
 } from "react";
+
+type CollapsibleItemProps = {
+  header: ( expanded: boolean, title: string ) => JSX.Element;
+  initialExpandedValue?: boolean;
+  children: React.ReactNode;
+  className?: string;
+  headerContainerClassName?: string;
+  style?: CSSProperties;
+  expanded?: boolean;
+  onToggle?: ( expanded: boolean ) => void;
+};
 
 const CollapsibleItem = ( {
   header,
   children,
   className,
   headerContainerClassName,
+  style,
   initialExpandedValue = true,
-  ...props
-}: {
-  header: ( expanded: boolean, title: string ) => JSX.Element;
-  initialExpandedValue?: boolean;
-  children: React.ReactNode;
-  className?: string;
-  headerContainerClassName?: string;
-} & DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> ) => {
+  expanded: controlledExpanded,
+  onToggle
+}: CollapsibleItemProps ) => {
   const [
-    expanded,
-    setExpanded
+    internalExpanded,
+    setInternalExpanded
   ] = useState( initialExpandedValue );
 
+  const isControlled = controlledExpanded !== undefined;
+  const expanded = isControlled ? controlledExpanded : internalExpanded;
+
+  const handleToggle = () => {
+    const nextValue = !expanded;
+
+    if ( isControlled ) {
+      onToggle?.( nextValue );
+    } else {
+      setInternalExpanded( nextValue );
+    }
+  };
+
   return (
-    <div className={ className } { ...props }>
+    <div className={ className } style={ style }>
       <div
         className={ headerContainerClassName }
-        onClick={ () => setExpanded( ( e ) => !e ) }
+        onClick={ handleToggle }
       >
         {header(
           expanded,

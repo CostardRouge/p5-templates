@@ -10,6 +10,9 @@ import {
   ChevronDown
 } from "lucide-react";
 import CollapsibleItem from "@/components/CollapsibleItem";
+import {
+  useCollapsibleContext
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/hooks/useCollapsibleStates";
 
 function getDefaultValueForFieldConfig( config: any ): any {
   switch ( config?.component ) {
@@ -61,6 +64,15 @@ export default function ConditionalGroup( {
   const {
     control, setValue, unregister, clearErrors
   } = useFormContext();
+
+  const {
+    getExpanded, setExpanded
+  } = useCollapsibleContext();
+  const collapsibleKey = `conditional-${ basePath }`;
+  const expanded = getExpanded(
+    collapsibleKey,
+    false
+  );
   const {
     conditionalOn, typeSelector, configs, schema
   } = config;
@@ -122,7 +134,11 @@ export default function ConditionalGroup( {
 
   return (
     <CollapsibleItem
-      initialExpandedValue={ false }
+      expanded={ expanded }
+      onToggle={ ( isExpanded ) => setExpanded(
+        collapsibleKey,
+        isExpanded
+      ) }
       header={ ( expanded ) => (
         <div
           className="text-gray-500 cursor-pointer select-none flex items-center gap-1"

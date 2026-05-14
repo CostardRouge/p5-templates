@@ -23,6 +23,9 @@ import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvi
 import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
 import initOptions from "@/utils/initOptions";
+import type {
+  CollapsibleSection, CollapsibleStates
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/hooks/useCollapsibleStates";
 
 type OptionsPanelProps = {
   methods: UseFormReturn<SketchOptionInput>;
@@ -42,6 +45,8 @@ type OptionsPanelProps = {
   onRenameSlide: ( index: number, newName: string ) => void;
   onImportOptions: ( options: SketchOption ) => void;
   enableThumbnails: boolean;
+  collapsibleStates: CollapsibleStates;
+  onCollapsibleToggle: ( section: CollapsibleSection ) => void;
 };
 
 export default function OptionsPanel( {
@@ -61,7 +66,9 @@ export default function OptionsPanel( {
   onDeleteSlide,
   onRenameSlide,
   onImportOptions,
-  enableThumbnails
+  enableThumbnails,
+  collapsibleStates,
+  onCollapsibleToggle
 }: OptionsPanelProps ) {
   const {
     control, watch
@@ -130,10 +137,15 @@ export default function OptionsPanel( {
         </div>
       ) }
     >
-      <RootSettings activeSlideIndex={ activeSlideIndex } />
+      <RootSettings
+        activeSlideIndex={ activeSlideIndex }
+        expanded={ collapsibleStates.rootSettings }
+        onToggle={ () => onCollapsibleToggle( "rootSettings" ) }
+      />
 
       <CollapsibleItem
-        initialExpandedValue={ false }
+        expanded={ collapsibleStates.globalContent }
+        onToggle={ ( expanded ) => onCollapsibleToggle( "globalContent" ) }
         className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
         headerContainerClassName="leading-none"
         header={ ( expanded ) => (
@@ -173,7 +185,8 @@ export default function OptionsPanel( {
       {slides && (
         <Fragment>
           <CollapsibleItem
-            initialExpandedValue={ !!slidesLength }
+            expanded={ collapsibleStates.slides }
+            onToggle={ ( expanded ) => onCollapsibleToggle( "slides" ) }
             className="p-1 border border-theme rounded-lg bg-background overflow-y-auto"
             headerContainerClassName="leading-none"
             header={ ( expanded ) => (

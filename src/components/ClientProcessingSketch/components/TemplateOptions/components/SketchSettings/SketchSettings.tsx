@@ -21,11 +21,15 @@ import {
 type SketchSettingsProps = {
   basePath?: string;
   activeSlideIndex?: number;
+  expanded?: boolean;
+  onToggle?: ( expanded: boolean ) => void;
 };
 
 export default function SketchSettings( {
   basePath,
-  activeSlideIndex
+  activeSlideIndex,
+  expanded,
+  onToggle
 }: SketchSettingsProps ) {
   const [
     {
@@ -63,6 +67,8 @@ export default function SketchSettings( {
 
   return (
     <CollapsibleItem
+      expanded={ expanded }
+      onToggle={ onToggle }
       className="w-64 flex flex-col gap-1 absolute left-2 bottom-2 md:bottom-4 md:left-4 glass p-2 border border-theme z-50 rounded-2xl shadow-lg overflow-y-auto"
       style={ {
         maxHeight: "calc(80svh - 5rem)",

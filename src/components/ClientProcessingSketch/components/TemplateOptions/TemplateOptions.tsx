@@ -29,6 +29,9 @@ import {
 import {
   useThumbnails
 } from "./hooks/useThumbnails";
+import {
+  useCollapsibleStates, CollapsibleProvider
+} from "./hooks/useCollapsibleStates";
 
 type TemplateOptionsProps = {
   name: string;
@@ -149,6 +152,13 @@ export default function TemplateOptions( {
     enableThumbnails,
     pendingThumbnailCaptureRef
   } );
+
+  // Collapsible section states
+  const {
+    states: collapsibleStates,
+    toggleSection,
+    setSection
+  } = useCollapsibleStates();
 
   // Debounce thumbnail capture: refresh the active slide's thumbnail 1 second
   // after the user stops changing form values (e.g., releasing a slider).
@@ -283,49 +293,60 @@ export default function TemplateOptions( {
 
   return (
     <FormProvider { ...methods }>
-      <div
-        className="w-64 absolute right-2 bottom-2 md:right-4 md:bottom-4 space-y-2"
-        style={ {
-          maxWidth: "calc(50% - 0.75rem)"
-        } }
-      >
-        <OptionsPanel
-          methods={ methods }
-          name={ name }
-          persistedJob={ persistedJob }
-          activeSlideIndex={ activeSlideIndex }
-          slideFields={ slideFields }
-          thumbnails={ thumbnails }
-          slides={ slides }
-          jobStatus={ captureActionsRef.current?.currentStatus }
-          isAdding={ isAdding }
-          onAddSlide={ handleAddSlide }
-          onSelectSlide={ handleSlideSelect }
-          onReorderSlides={ handleReorderSlides }
-          onDuplicateSlide={ handleDuplicateSlide }
-          onDeleteSlide={ handleDeleteSlide }
-          onRenameSlide={ handleRenameSlide }
-          onImportOptions={ handleImportOptions }
-          enableThumbnails={ enableThumbnails }
-        />
-
-        {( backendRecording || browserRecordingSupported ) && (
-          <CaptureActions
-            ref={ captureActionsRef }
+      <CollapsibleProvider>
+        <div
+          className="w-64 absolute right-2 bottom-2 md:right-4 md:bottom-4 space-y-2"
+          style={ {
+            maxWidth: "calc(50% - 0.75rem)"
+          } }
+        >
+          <OptionsPanel
+            methods={ methods }
             name={ name }
-            options={ methods.watch() }
             persistedJob={ persistedJob }
             activeSlideIndex={ activeSlideIndex }
-            backendRecording={ backendRecording }
-            browserRecordingSupported={ browserRecordingSupported }
-            thumbnails={ enableThumbnails ? thumbnails : {} }
+            slideFields={ slideFields }
+            thumbnails={ thumbnails }
+            slides={ slides }
+            jobStatus={ captureActionsRef.current?.currentStatus }
+            isAdding={ isAdding }
+            onAddSlide={ handleAddSlide }
+            onSelectSlide={ handleSlideSelect }
+            onReorderSlides={ handleReorderSlides }
+            onDuplicateSlide={ handleDuplicateSlide }
+            onDeleteSlide={ handleDeleteSlide }
+            onRenameSlide={ handleRenameSlide }
+            onImportOptions={ handleImportOptions }
+            enableThumbnails={ enableThumbnails }
+            collapsibleStates={ collapsibleStates }
+            onCollapsibleToggle={ toggleSection }
           />
-        )}
-      </div>
 
-      <TemplateAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
-        <SketchSettings activeSlideIndex={ activeSlideIndex } />
-      </TemplateAssetsProvider>
+          {( backendRecording || browserRecordingSupported ) && (
+            <CaptureActions
+              ref={ captureActionsRef }
+              name={ name }
+              options={ methods.watch() }
+              persistedJob={ persistedJob }
+              activeSlideIndex={ activeSlideIndex }
+              backendRecording={ backendRecording }
+              browserRecordingSupported={ browserRecordingSupported }
+              thumbnails={ enableThumbnails ? thumbnails : {} }
+            />
+          )}
+        </div>
+
+        <TemplateAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
+          <SketchSettings
+            activeSlideIndex={ activeSlideIndex }
+            expanded={ collapsibleStates.sketchSettings }
+            onToggle={ ( expanded ) => setSection(
+              "sketchSettings",
+              expanded
+            ) }
+          />
+        </TemplateAssetsProvider>
+      </CollapsibleProvider>
     </FormProvider>
   );
 }

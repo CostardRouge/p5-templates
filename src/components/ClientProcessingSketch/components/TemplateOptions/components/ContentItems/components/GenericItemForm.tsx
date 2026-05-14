@@ -63,6 +63,7 @@ export default function GenericItemForm( {
       onDuplicate={ onDuplicate }
       onRemove={ onRemove }
       itemType={ itemType }
+      itemPath={ `${ baseFieldName }.${ index }` }
     >
       <div className="flex flex-col gap-2">
         {fieldNames.map( ( fieldName ) => {

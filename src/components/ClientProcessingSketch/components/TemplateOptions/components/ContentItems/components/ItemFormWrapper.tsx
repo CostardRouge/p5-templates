@@ -7,6 +7,9 @@ import clsx from "clsx";
 import {
   DragBinder
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/ContentItems";
+import {
+  useCollapsibleContext
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/hooks/useCollapsibleStates";
 
 export type ItemFormWrapperProps = {
   itemType: string;
@@ -14,6 +17,7 @@ export type ItemFormWrapperProps = {
   onDuplicate: () => void;
   children: React.ReactNode;
   dragBinder?: DragBinder;
+  itemPath?: string;
 };
 
 export default function ItemFormWrapper( {
@@ -21,11 +25,25 @@ export default function ItemFormWrapper( {
   onDuplicate,
   children,
   itemType,
-  dragBinder
+  dragBinder,
+  itemPath
 }: ItemFormWrapperProps ) {
+  const {
+    getExpanded, setExpanded
+  } = useCollapsibleContext();
+  const collapsibleKey = itemPath ? `item-${ itemPath }` : undefined;
+  const expanded = collapsibleKey ? getExpanded(
+    collapsibleKey,
+    false
+  ) : undefined;
+
   return (
     <CollapsibleItem
-      initialExpandedValue={ false }
+      expanded={ expanded }
+      onToggle={ collapsibleKey ? ( isExpanded ) => setExpanded(
+        collapsibleKey,
+        isExpanded
+      ) : undefined }
       className="p-1 border border-theme rounded-lg bg-background "
       header={ ( expanded ) => (
         <div

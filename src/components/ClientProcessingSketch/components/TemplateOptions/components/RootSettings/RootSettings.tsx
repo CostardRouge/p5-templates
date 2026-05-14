@@ -11,10 +11,14 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 
 type RootSettingsProps = {
   activeSlideIndex?: number;
+  expanded?: boolean;
+  onToggle?: ( expanded: boolean ) => void;
 };
 
 export default function RootSettings( {
-  activeSlideIndex
+  activeSlideIndex,
+  expanded,
+  onToggle
 }: RootSettingsProps ) {
   const isSlideContext = activeSlideIndex !== undefined;
   const basePath = isSlideContext ? `slides.${ activeSlideIndex }` : "";
@@ -25,7 +29,8 @@ export default function RootSettings( {
   return (
     <CollapsibleItem
       key={ basePath }
-      initialExpandedValue={ isSlideContext }
+      expanded={ expanded ?? isSlideContext }
+      onToggle={ onToggle }
       className={ `p-1 border rounded-lg text-foreground bg-background overflow-y-auto ${
         isSlideContext
           ? "border-blue-400/60 ring-1 ring-blue-400/30"

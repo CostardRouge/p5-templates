@@ -35,6 +35,9 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
+import {
+  useCollapsibleContext
+} from "../hooks/useCollapsibleStates";
 
 type ItemListRendererProps = {
   name: string;
@@ -159,6 +162,15 @@ export default function ItemListRenderer( {
   const {
     control, getValues, setValue
   } = useFormContext();
+
+  const {
+    getExpanded, setExpanded
+  } = useCollapsibleContext();
+  const collapsibleKey = `list-${ name }`;
+  const expanded = getExpanded(
+    collapsibleKey,
+    false
+  );
 
   const watchedValue = useWatch( {
     control,
@@ -355,7 +367,11 @@ export default function ItemListRenderer( {
   return (
     <div className="text-xs">
       <CollapsibleItem
-        initialExpandedValue={ false }
+        expanded={ expanded }
+        onToggle={ ( isExpanded ) => setExpanded(
+          collapsibleKey,
+          isExpanded
+        ) }
         header={ (
           expanded, title
         ) => (

@@ -26,6 +26,9 @@ import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
 import ItemListRenderer from "./ItemListRenderer";
+import {
+  useCollapsibleContext
+} from "../hooks/useCollapsibleStates";
 
 type FieldRendererProps = {
   fieldBasePath: string;
@@ -84,6 +87,10 @@ export default function FieldRenderer( {
     e.preventDefault();
     resetField( registeredName );
   };
+
+  const {
+    getExpanded, setExpanded
+  } = useCollapsibleContext();
 
   const renderInput = () => {
     const commonInputProps = {
@@ -223,10 +230,20 @@ export default function FieldRenderer( {
           />
         );
 
-      case "nested-object":
+      case "nested-object": {
+        const collapsibleKey = `nested-${ registeredName }`;
+        const expanded = getExpanded(
+          collapsibleKey,
+          config.initialExpanded ?? false
+        );
+
         return (
           <CollapsibleItem
-            initialExpandedValue={ config.initialExpanded ?? false }
+            expanded={ expanded }
+            onToggle={ ( isExpanded ) => setExpanded(
+              collapsibleKey,
+              isExpanded
+            ) }
             header={ ( expanded ) => (
               <div
                 className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
@@ -259,6 +276,7 @@ export default function FieldRenderer( {
             </div>
           </CollapsibleItem>
         );
+      }
 
       case "conditional-group": {
         return (
