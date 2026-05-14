@@ -1,5 +1,7 @@
 import options from "@/p5/utils/options.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
@@ -9,11 +11,6 @@ import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
-
-import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
-import {
-  getP5
-} from "@/p5/utils/sketch.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GLSL vertex shader (GLSL ES 1.00, works in both WebGL1 and WebGL2)
@@ -277,10 +274,6 @@ function buildStaticVBO(
 // ─── Sketch state ─────────────────────────────────────────────────────────────
 const sketchState = {
   threeDimensionGraphics: null,
-  interactive: {
-    position: null,
-    image: null
-  },
   gpu: {
     prog: null,
     staticVBO: null,
@@ -392,14 +385,7 @@ function initGPU(
   return true;
 }
 
-// ─── Events & setup ───────────────────────────────────────────────────────────
-events.register(
-  "engine-window-preload",
-  () => {
-    sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
-  }
-);
-
+// ─── Setup ───────────────────────────────────────────────────────────
 sketch.setup(
   async() => {
     const p = getP5();
@@ -409,8 +395,6 @@ sketch.setup(
       p.height,
       "webgl"
     );
-
-    await addScreenPositionFunction( sketchState.threeDimensionGraphics );
   },
   {}
 );
