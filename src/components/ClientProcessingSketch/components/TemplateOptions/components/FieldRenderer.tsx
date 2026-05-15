@@ -29,6 +29,9 @@ import ItemListRenderer from "./ItemListRenderer";
 import {
   useCollapsibleContext
 } from "../hooks/useCollapsibleStates";
+import {
+  getSharedCollapsibleKey
+} from "../utils/getSharedCollapsibleKey";
 
 type FieldRendererProps = {
   fieldBasePath: string;
@@ -231,7 +234,7 @@ export default function FieldRenderer( {
         );
 
       case "nested-object": {
-        const collapsibleKey = `nested-${ registeredName }`;
+        const collapsibleKey = `nested-${ getSharedCollapsibleKey( registeredName ) }`;
         const expanded = getExpanded(
           collapsibleKey,
           config.initialExpanded ?? false

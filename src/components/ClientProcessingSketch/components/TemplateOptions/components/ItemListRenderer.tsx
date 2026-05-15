@@ -38,6 +38,9 @@ import type {
 import {
   useCollapsibleContext
 } from "../hooks/useCollapsibleStates";
+import {
+  getSharedCollapsibleKey
+} from "../utils/getSharedCollapsibleKey";
 
 type ItemListRendererProps = {
   name: string;
@@ -166,7 +169,8 @@ export default function ItemListRenderer( {
   const {
     getExpanded, setExpanded
   } = useCollapsibleContext();
-  const collapsibleKey = `list-${ name }`;
+
+  const collapsibleKey = `list-${ getSharedCollapsibleKey( name ) }`;
   const expanded = getExpanded(
     collapsibleKey,
     false
