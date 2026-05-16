@@ -5,7 +5,6 @@ import sketch, {
 
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
-import events from "@/p5/utils/events.js";
 
 import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
@@ -827,12 +826,3 @@ sketch.draw( (
 
   renderTitle();
 } );
-
-events.register(
-  "engine-window-preload",
-  () => {
-    const p = getP5();
-
-    sketchState.interactive.image = getP5().loadImage( "/assets/images/handpointing.png" );
-  }
-);

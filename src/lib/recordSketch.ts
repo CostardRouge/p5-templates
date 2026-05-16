@@ -26,17 +26,17 @@ import {
   Browser, Page
 } from "playwright";
 import {
-  addRecordingDuration, updateRecordingStepPercentage, updateCurrentSlide
+  addRecordingDuration, updateCurrentSlide, updateRecordingStepPercentage
 } from "@/lib/progression";
 import {
   NotificationService
 } from "@/services/NotificationService";
 import {
-  RECORDING_STEPS,
-  UPLOAD_STEPS,
   buildRecordingStepPath,
   buildSlideStepPath,
-  buildUploadStepPath
+  buildUploadStepPath,
+  RECORDING_STEPS,
+  UPLOAD_STEPS
 } from "@/lib/progression/stepConfig";
 
 // ═══════════════════════════════════════════════════════════════════════════

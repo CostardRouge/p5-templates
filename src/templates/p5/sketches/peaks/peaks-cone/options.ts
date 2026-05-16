@@ -121,7 +121,7 @@ export const formConfiguration: Record<string, any> = {
         label: "Segments around cone",
         component: "slider",
         min: 1,
-        max: 16,
+        max: 320,
         step: 1
       },
       layers: {
@@ -162,14 +162,14 @@ export const formConfiguration: Record<string, any> = {
         label: "Max spike length",
         component: "slider",
         min: 0,
-        max: 600,
+        max: 1800,
         step: 1
       },
       spikeLengthMin: {
         label: "Min spike length",
         component: "slider",
         min: 0,
-        max: 300,
+        max: 600,
         step: 1
       },
       point: {
