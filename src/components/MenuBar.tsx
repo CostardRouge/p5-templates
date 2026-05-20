@@ -58,7 +58,7 @@ function MenuBar( {
 
   const items: NavItem[] = [
     {
-      href: "/",
+      href: "/templates",
       name: "templates",
       Icon: Paintbrush
     }
