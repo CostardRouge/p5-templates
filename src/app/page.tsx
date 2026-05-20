@@ -11,6 +11,9 @@ import {
 } from "@/lib/seo";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import getSketchList from "@/utils/getSketchList";
+import {
+  listEngines
+} from "@/engines/index";
 
 export const metadata: Metadata = {
   title: "Templates",
@@ -37,31 +40,45 @@ export type TemplateCategory = Array<{
 }>;
 
 export default async function TemplatesPage() {
-  const p5sketches = ( await getSketchList() ) ?? [];
+  const allSketches = ( await getSketchList() ) ?? [];
 
-  const p5sketchNames = p5sketches
-    .map( ( {
+  const templatesByEngine: Record<string, TemplateCategory> = {};
+
+  allSketches
+    .slice()
+    .reverse()
+    .forEach( ( {
       name, engine, category, hasSketchForm
-    } ) => ( {
-      thumbnail: getSketchThumbnailURL(
-        engine,
-        name
-      ),
-      href: category ? `/templates/${ engine }/${ category }/${ name }` : `/templates/${ engine }/${ name }`,
-      hasSketchForm,
-      name,
-      category
-    } ) )
-    .reverse();
+    } ) => {
+      if ( !templatesByEngine[ engine ] ) {
+        templatesByEngine[ engine ] = [];
+      }
 
-  const templates: Record<string, TemplateCategory> = {
-    p5: p5sketchNames
-  };
+      templatesByEngine[ engine ].push( {
+        thumbnail: getSketchThumbnailURL(
+          engine,
+          name
+        ),
+        href: category
+          ? `/templates/${ engine }/${ category }/${ name }`
+          : `/templates/${ engine }/${ name }`,
+        hasSketchForm,
+        name,
+        category
+      } );
+    } );
+
+  const engines = listEngines();
+  const engineLabels: Record<string, string> = {};
+
+  engines.forEach( ( e ) => {
+    engineLabels[ e.id ] = e.label;
+  } );
 
   return (
     <div className="p-3 sm:p-6">
       <Suspense>
-        <TemplatesList templates={ templates } />
+        <TemplatesList templates={ templatesByEngine } engineLabels={ engineLabels } />
       </Suspense>
     </div>
   );
