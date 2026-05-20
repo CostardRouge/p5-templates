@@ -127,6 +127,9 @@ function createGridAlphaPoints(
   );
 }
 
+// 6-step pattern: hold start 3 frames, transition, hold end 2 frames, return.
+const SWAP_VALUES_COUNT = 6;
+
 sketch.draw( () => {
   const p = getP5();
 
@@ -142,6 +145,8 @@ sketch.draw( () => {
   const rows = ( columns * p.height ) / p.width;
   const cellSize = p.width / columns;
   const distance = options.sketch?.mask?.distance ?? 0.025;
+  const cameraPullback =
+    options.sketch?.camera?.pullback ?? p.width / 2;
 
   const gridOptions = {
     topLeft: p.createVector(
@@ -198,6 +203,10 @@ sketch.draw( () => {
     distance
   );
 
+  if ( alphaPoints.length === 0 ) {
+    return;
+  }
+
   const pairedPoints = cache.store(
     `paired-points+${ cacheKey }`,
     () => {
@@ -214,20 +223,34 @@ sketch.draw( () => {
     }
   );
 
-  const depth = options.sketch?.shape?.depth ?? 100;
+  const depth = options.sketch?.shape?.depth ?? 60;
   const rotateAngle = options.sketch?.animation?.rotateAngle ?? p.PI / 12;
+  const swapSpeed = options.sketch?.animation?.swapSpeed ?? 1;
+  const stagger = options.sketch?.animation?.stagger ?? 0.5;
   const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 3;
   const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
   const fillAlpha = options.sketch?.color?.fillAlpha ?? 225;
   const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 100;
 
+  p.translate(
+    0,
+    0,
+    -cameraPullback
+  );
+
   const t = animation.angle;
+  const baseTime = animation.progression * SWAP_VALUES_COUNT * swapSpeed;
 
   pairedPoints.forEach( (
     {
       start, end
     }, index
   ) => {
+    if ( !start?.position || !end?.position ) {
+      return;
+    }
+
+    const perPointOffset = ( index / pairedPoints.length ) * stagger;
     const position = animation.ease( {
       values: [
         start.position,
@@ -237,9 +260,7 @@ sketch.draw( () => {
         end.position,
         end.position
       ],
-      currentTime:
-        animation.progression * pairedPoints.length / 5 +
-        index / pairedPoints.length / 5,
+      currentTime: baseTime + perPointOffset,
       duration: 1,
       lerpFn: mappers.lerpVector,
       easingFn: easing.easeInOutBack
@@ -269,19 +290,6 @@ sketch.draw( () => {
       ]
     } = tint;
 
-    p.fill(
-      red,
-      green,
-      blue,
-      fillAlpha
-    );
-    p.stroke(
-      red,
-      green,
-      blue,
-      strokeAlpha
-    );
-
     p.push();
 
     p.rotateX( p.map(
@@ -296,6 +304,19 @@ sketch.draw( () => {
       position.x,
       position.y,
       depth
+    );
+
+    p.fill(
+      red,
+      green,
+      blue,
+      fillAlpha
+    );
+    p.stroke(
+      red,
+      green,
+      blue,
+      strokeAlpha
     );
 
     p.box(

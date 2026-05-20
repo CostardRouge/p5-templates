@@ -8,7 +8,7 @@ export const formValues = {
     font: "martian",
     size: 1,
     columns: 65,
-    depth: 100,
+    depth: 60,
     sampleFactor: 0.1,
     simplifyThreshold: 0
   },
@@ -16,7 +16,12 @@ export const formValues = {
     distance: 0.025
   },
   animation: {
+    swapSpeed: 1,
+    stagger: 0.5,
     rotateAngle: Math.PI / 12
+  },
+  camera: {
+    pullback: 540
   },
   color: {
     hueMultiplier: 3,
@@ -63,7 +68,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       depth: {
-        label: "Depth",
+        label: "Box depth",
         component: "slider",
         min: 1,
         max: 500,
@@ -102,12 +107,39 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Animation",
     fields: {
+      swapSpeed: {
+        label: "Swap speed (cycles per loop)",
+        component: "slider",
+        min: 0.25,
+        max: 5,
+        step: 0.25
+      },
+      stagger: {
+        label: "Per-point stagger",
+        component: "slider",
+        min: 0,
+        max: 3,
+        step: 0.05
+      },
       rotateAngle: {
         label: "Per-cube rotateX amplitude",
         component: "slider",
         min: 0,
         max: Math.PI,
         step: 0.05
+      }
+    }
+  },
+  camera: {
+    component: "nested-object",
+    label: "Camera",
+    fields: {
+      pullback: {
+        label: "Z pullback (-translate)",
+        component: "slider",
+        min: 0,
+        max: 2000,
+        step: 10
       }
     }
   },
