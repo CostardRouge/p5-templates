@@ -181,7 +181,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     status: JobStatusEnum = "queued",
     persistedJobId?: JobId,
     skipRedirect = false
-  ) => {
+  ): Promise<JobId | null> => {
     if ( status === "draft" ) {
       setSaving( true );
     }
@@ -349,6 +349,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         if ( status === "draft" ) {
           setSaving( false );
         }
+
+        return newJobId;
       } else {
         console.error(
           "[CaptureActions] enqueueRecording returned null",
@@ -362,6 +364,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
         }
         // Optionally show error to user
         alert( "Failed to save draft. Please try again." );
+
+        return null;
       }
     } catch( error ) {
       console.error(
@@ -373,6 +377,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       }
       // Show error to user
       alert( "An error occurred while saving. Please try again." );
+
+      return null;
     }
   };
 
@@ -380,6 +386,42 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     setCloning( true );
     try {
       await handleSubmit( "draft" );
+    } catch( error ) {
+      console.error(
+        "Failed to clone:",
+        error
+      );
+      alert( "Failed to clone. Please try again." );
+    } finally {
+      setCloning( false );
+    }
+  };
+
+  // Clone the current options into a new draft and open it in a new tab.
+  // Keeps the recorded sketch visible in the original tab so the user can
+  // compare or come back to it.
+  const handleCloneAndOpen = async() => {
+    setCloning( true );
+    try {
+      const newJobId = await handleSubmit(
+        "draft",
+        undefined,
+        true // skip in-tab redirect — we open a new tab instead
+      );
+
+      if ( newJobId ) {
+        const currentPath = window.location.pathname.replace(
+          /\?.*$/,
+          ""
+        );
+        const newUrl = `${ currentPath }?id=${ newJobId }`;
+
+        window.open(
+          newUrl,
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }
     } catch( error ) {
       console.error(
         "Failed to clone:",
@@ -402,7 +444,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
           true // skip redirect for auto-save
         );
       },
-      cloneAsDraft: handleRecordAgain,
+      cloneAsDraft: handleCloneAndOpen,
       isSaving: saving,
       isRecording: !!isRecording
     } )
