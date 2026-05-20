@@ -14,9 +14,15 @@ import ServiceWorkerUpdateNotifier from "@/components/ServiceWorkerUpdateNotifie
 import {
   getBaseUrl,
   getWebApplicationJsonLd,
+  OG_IMAGE,
+  SITE_AUTHOR,
+  SITE_CATEGORY,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
-  SITE_NAME
+  SITE_LOCALE,
+  SITE_NAME,
+  THEME_COLOR_DARK,
+  THEME_COLOR_LIGHT
 } from "@/lib/seo";
 import {
   getDevThumbnailStatus
@@ -34,11 +40,11 @@ export const metadata: Metadata = {
   keywords: SITE_KEYWORDS,
   authors: [
     {
-      name: "Steeve Pommier"
+      name: SITE_AUTHOR
     }
   ],
-  creator: "Steeve Pommier",
-  publisher: "Steeve Pommier",
+  creator: SITE_AUTHOR,
+  publisher: SITE_AUTHOR,
   formatDetection: {
     email: false,
     address: false,
@@ -49,17 +55,17 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: SITE_LOCALE,
     url: baseUrl,
     siteName: SITE_NAME,
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/assets/images/icon-512x512.png",
-        width: 512,
-        height: 512,
-        alt: `${ SITE_NAME } - Create social media videos from code templates`
+        url: OG_IMAGE.path,
+        width: OG_IMAGE.width,
+        height: OG_IMAGE.height,
+        alt: OG_IMAGE.alt
       }
     ]
   },
@@ -67,9 +73,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: [
-      "/assets/images/icon-512x512.png"
-    ]
+    images: [ OG_IMAGE.path ]
   },
   robots: {
     index: true,
@@ -86,7 +90,7 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png"
   },
-  category: "technology"
+  category: SITE_CATEGORY
 };
 
 export const viewport: Viewport = {
@@ -97,11 +101,11 @@ export const viewport: Viewport = {
   themeColor: [
     {
       media: "(prefers-color-scheme: light)",
-      color: "#ffffff"
+      color: THEME_COLOR_LIGHT
     },
     {
       media: "(prefers-color-scheme: dark)",
-      color: "#000000"
+      color: THEME_COLOR_DARK
     }
   ]
 };
@@ -119,7 +123,6 @@ export default function RootLayout( {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/site.webmanifest" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link
           rel="preconnect"
