@@ -1,5 +1,5 @@
 import {
-  ChevronDown
+  ChevronDown, RotateCcw
 } from "lucide-react";
 import {
   useRef
@@ -22,6 +22,7 @@ import ControlledSizePresetSelect
 import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import CollapsibleItem from "@/components/CollapsibleItem";
+import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
@@ -250,29 +251,44 @@ export default function FieldRenderer( {
             ) }
             header={ ( expanded ) => (
               <div
-                className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
+                className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full"
                 title="Click to expand/collapse"
               >
-                <ChevronDown
-                  className="w-3 h-3 transition-transform"
-                  style={ {
-                    transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
-                  } }
-                />
-                <span className={ isModified ? "font-medium text-foreground" : undefined }>
-                  {config.label} ({Object.keys( config.fields ).length} fields)
-                </span>
-                {isModified && (
-                  <button
-                    type="button"
-                    onClick={ handleReset }
-                    tabIndex={ -1 }
-                    title="Reset to saved value"
-                    className="text-gray-400 hover:text-foreground transition-colors"
-                  >
-                    · reset
-                  </button>
-                )}
+                <div className="flex items-center gap-1">
+                  <ChevronDown
+                    className="w-3 h-3 transition-transform"
+                    style={ {
+                      transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
+                    } }
+                  />
+                  <span className={ isModified ? "font-medium text-foreground" : undefined }>
+                    {config.label}
+                  </span>
+                </div>
+                <div
+                  className="flex items-center gap-1.5"
+                  onClick={ ( e ) => e.stopPropagation() }
+                >
+                  {isModified && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={ handleReset }
+                        tabIndex={ -1 }
+                        title="Reset to saved value"
+                        className="hover:bg-theme/20 rounded transition-colors"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="leading-none select-none">·</span>
+                    </>
+                  )}
+                  <RandomizeSettingsButton
+                    config={ config.fields }
+                    basePath={ registeredName }
+                    className="hover:bg-theme/20 rounded transition-colors"
+                  />
+                </div>
               </div>
             ) }
           >
