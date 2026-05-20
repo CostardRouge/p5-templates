@@ -10,9 +10,8 @@ import React, {
   useEffect, useState
 } from "react";
 import type {
-  TemplateCategory
-} from "@/app/page";
-// import Link from "next/link";
+  TemplateItem
+} from "@/app/templates/getTemplatesData";
 
 import Link from "@/components/HardLink";
 import {
@@ -23,11 +22,15 @@ import {
 } from "@/utils/fuzzySearch";
 
 interface TemplatesListProps {
-  templates: Record<string, TemplateCategory>;
+  templates: Record<string, TemplateItem[]>;
+  engineLabels: Record<string, string>;
+  activeEngine: string; // "all" | engine id
 }
 
 export default function TemplatesList( {
-  templates
+  templates,
+  engineLabels,
+  activeEngine
 }: TemplatesListProps ) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,23 +47,15 @@ export default function TemplatesList( {
     setSearch
   ] = useState<string>( searchParams.get( "keyword" ) || "" );
 
-  // Update URL when search changes
+  // Keep ?keyword= in sync with the search state
   useEffect(
     () => {
-      const params = new URLSearchParams( searchParams.toString() );
+      const basePath =
+        activeEngine === "all" ? "/templates" : `/templates/${ activeEngine }`;
 
-      if ( search ) {
-        params.set(
-          "keyword",
-          search
-        );
-      } else {
-        params.delete( "keyword" );
-      }
-
-      const newUrl = params.toString()
-        ? `/?${ params.toString() }`
-        : "/";
+      const newUrl = search
+        ? `${ basePath }?keyword=${ encodeURIComponent( search ) }`
+        : basePath;
 
       router.replace(
         newUrl,
@@ -69,18 +64,28 @@ export default function TemplatesList( {
         }
       );
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      search,
-      router,
-      searchParams
+      search
     ]
   );
 
-  // Filter templates based on fuzzy search
+  // Navigate to a different engine tab, preserving the keyword
+  const handleEngineClick = ( engineId: string ) => {
+    const basePath =
+      engineId === "all" ? "/templates" : `/templates/${ engineId }`;
+    const suffix = search
+      ? `?keyword=${ encodeURIComponent( search ) }`
+      : "";
+
+    router.push( `${ basePath }${ suffix }` );
+  };
+
+  // Fuzzy-filter templates per engine
   const filteredTemplates = Object.entries( templates ).reduce(
     (
       acc, [
-        category,
+        engineId,
         items
       ]
     ) => {
@@ -94,15 +99,32 @@ export default function TemplatesList( {
       );
 
       if ( filtered.length > 0 ) {
-        acc[ category ] = filtered;
+        acc[ engineId ] = filtered;
       }
 
       return acc;
     },
-    {} as Record<string, TemplateCategory>
+    {} as Record<string, TemplateItem[]>
   );
 
-  const totalCount = Object.values( filteredTemplates ).reduce(
+  // Narrow to the selected engine tab (or keep all)
+  const displayedTemplates =
+    activeEngine === "all"
+      ? filteredTemplates
+      : Object.fromEntries(
+        Object.entries( filteredTemplates ).filter( ( [ id ] ) => id === activeEngine )
+      );
+
+  const totalCount = Object.values( displayedTemplates ).reduce(
+    (
+      sum, items
+    ) => sum + items.length,
+    0
+  );
+
+  const engineOrder = Object.keys( templates );
+
+  const totalAllCount = Object.values( templates ).reduce(
     (
       sum, items
     ) => sum + items.length,
@@ -113,16 +135,9 @@ export default function TemplatesList( {
     <div className="space-y-3 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:gap-4">
-        <div className="flex flex-col">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Templates
-          </h1>
-
-          {/* <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">*/}
-          {/*  {totalCount} {totalCount === 1 ? "template" : "templates"}*/}
-          {/*  {search && ` matching "${ search }"`}*/}
-          {/* </p>*/}
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+          Templates
+        </h1>
 
         <div className="flex items-center gap-2 w-full">
           {/* Search Input */}
@@ -166,10 +181,64 @@ export default function TemplatesList( {
             </button>
           </div>
         </div>
+
+        {/* Engine Tabs */}
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
+          {/* All engines tab */}
+          <button
+            onClick={ () => handleEngineClick( "all" ) }
+            className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
+              activeEngine === "all"
+                ? "bg-foreground text-background"
+                : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
+            }` }
+          >
+            All engines
+            <span
+              className={ `text-xs px-1.5 py-0.5 rounded-md font-mono ${
+                activeEngine === "all"
+                  ? "bg-background/20 text-background/80"
+                  : "bg-hover text-foreground/50"
+              }` }
+            >
+              { totalAllCount }
+            </span>
+          </button>
+
+          {/* Per-engine tabs */}
+          { engineOrder.map( ( engineId ) => {
+            const label = engineLabels[ engineId ] || engineId;
+            const count = templates[ engineId ]?.length || 0;
+            const isActive = activeEngine === engineId;
+
+            return (
+              <button
+                key={ engineId }
+                onClick={ () => handleEngineClick( engineId ) }
+                className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
+                  isActive
+                    ? "bg-foreground text-background"
+                    : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
+                }` }
+              >
+                { label }
+                <span
+                  className={ `text-xs px-1.5 py-0.5 rounded-md font-mono ${
+                    isActive
+                      ? "bg-background/20 text-background/80"
+                      : "bg-hover text-foreground/50"
+                  }` }
+                >
+                  { count }
+                </span>
+              </button>
+            );
+          } ) }
+        </div>
       </div>
 
       {/* Empty State */}
-      {totalCount === 0 && (
+      { totalCount === 0 && (
         <div className="text-center py-8 sm:py-16">
           <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-hover/50 mb-3 sm:mb-4">
             <Search className="w-6 h-6 sm:w-8 sm:h-8 text-foreground/40" />
@@ -181,121 +250,130 @@ export default function TemplatesList( {
             Try adjusting your search term
           </p>
         </div>
-      )}
+      ) }
 
-      {/* Categories */}
-      {Object.entries( filteredTemplates ).map( ( [
-        category,
-        items
-      ] ) => {
-        // Group items by their category field (for p5 sketches)
-        const groupedItems: Record<string, typeof items> = {};
-        const uncategorized: typeof items = [];
+      {/* Templates grouped by engine */}
+      { Object.entries( displayedTemplates )
+        .sort( ( [ a ], [ b ] ) => engineOrder.indexOf( a ) - engineOrder.indexOf( b ) )
+        .map( ( [ engineId, items ] ) => {
+          const label = engineLabels[ engineId ] || engineId;
 
-        items.forEach( ( item ) => {
-          if ( item.category ) {
-            if ( !groupedItems[ item.category ] ) {
-              groupedItems[ item.category ] = [];
+          const groupedItems: Record<string, typeof items> = {};
+          const uncategorized: typeof items = [];
+
+          items.forEach( ( item ) => {
+            if ( item.category ) {
+              if ( !groupedItems[ item.category ] ) {
+                groupedItems[ item.category ] = [];
+              }
+
+              groupedItems[ item.category ].push( item );
+            } else {
+              uncategorized.push( item );
             }
-            groupedItems[ item.category ].push( item );
-          } else {
-            uncategorized.push( item );
-          }
-        } );
+          } );
 
-        return (
-          <div key={ category } className="space-y-2 sm:space-y-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground">
-                {category}
-              </h2>
-              <span className="text-xs sm:text-sm text-foreground/50 font-medium">
-                {items.length} {items.length === 1 ? "template" : "templates"}
-                {search && ` matching "${ search }"`}
-              </span>
+          const hasCategoryGroups = Object.keys( groupedItems ).length > 0;
+
+          return (
+            <div key={ engineId } className="space-y-2 sm:space-y-4">
+              {/* Engine section header — only in "All engines" view */}
+              { activeEngine === "all" && (
+                <div className="flex items-center gap-2 sm:gap-3 pt-1">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground">
+                    { label }
+                  </h2>
+                  <span className="text-xs sm:text-sm text-foreground/50 font-medium">
+                    { items.length }{ " " }
+                    { items.length === 1 ? "template" : "templates" }
+                    { search && ` matching "${ search }"` }
+                  </span>
+                </div>
+              ) }
+
+              {/* Categorized groups */}
+              { Object.entries( groupedItems ).map( ( [
+                subCategory,
+                subItems
+              ] ) => (
+                <div key={ subCategory } className="space-y-2 sm:space-y-3">
+                  <div className="flex items-center gap-2 pl-2 sm:pl-4">
+                    <h3 className="text-sm sm:text-base font-medium text-foreground/80">
+                      { subCategory }
+                    </h3>
+                    <span className="text-xs text-foreground/40">
+                      { subItems.length }
+                    </span>
+                  </div>
+
+                  <div
+                    className={
+                      view === "grid"
+                        ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
+                        : "space-y-2 sm:space-y-3"
+                    }
+                  >
+                    { subItems.map( (
+                      {
+                        href, name, thumbnail, hasSketchForm
+                      }, index
+                    ) => (
+                      <TemplateCard
+                        key={ name }
+                        href={ href }
+                        name={ name }
+                        thumbnail={ thumbnail }
+                        hasSketchForm={ hasSketchForm }
+                        view={ view }
+                        eager={ index < 8 }
+                      />
+                    ) ) }
+                  </div>
+                </div>
+              ) ) }
+
+              {/* Uncategorized items */}
+              { uncategorized.length > 0 && (
+                <div className="space-y-2 sm:space-y-3">
+                  { hasCategoryGroups && (
+                    <div className="flex items-center gap-2 pl-2 sm:pl-4">
+                      <h3 className="text-sm sm:text-base font-medium text-foreground/80">
+                        Other { label } templates
+                      </h3>
+                      <span className="text-xs text-foreground/40">
+                        { uncategorized.length }
+                      </span>
+                    </div>
+                  ) }
+
+                  <div
+                    className={
+                      view === "grid"
+                        ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
+                        : "space-y-2 sm:space-y-3"
+                    }
+                  >
+                    { uncategorized.map( (
+                      {
+                        href, name, thumbnail, hasSketchForm
+                      }, index
+                    ) => (
+                      <TemplateCard
+                        key={ name }
+                        href={ href }
+                        name={ name }
+                        thumbnail={ thumbnail }
+                        hasSketchForm={ hasSketchForm }
+                        view={ view }
+                        eager={ index < 8 }
+                      />
+                    ) ) }
+                  </div>
+                </div>
+              ) }
             </div>
-
-            {/* Render categorized groups */}
-            {Object.entries( groupedItems ).map( ( [
-              subCategory,
-              subItems
-            ] ) => (
-              <div key={ subCategory } className="space-y-2 sm:space-y-3">
-                <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                  <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                    {subCategory}
-                  </h3>
-                  <span className="text-xs text-foreground/40">
-                    {subItems.length}
-                  </span>
-                </div>
-
-                <div
-                  className={
-                    view === "grid"
-                      ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                      : "space-y-2 sm:space-y-3"
-                  }
-                >
-                  {subItems.map( (
-                    {
-                      href, name, thumbnail, hasSketchForm
-                    }, index
-                  ) => (
-                    <TemplateCard
-                      key={ name }
-                      href={ href }
-                      name={ name }
-                      thumbnail={ thumbnail }
-                      hasSketchForm={ hasSketchForm }
-                      view={ view }
-                      eager={ index < 8 }
-                    />
-                  ) )}
-                </div>
-              </div>
-            ) )}
-
-            {/* Render uncategorized items */}
-            {uncategorized.length > 0 && (
-              <div className="space-y-2 sm:space-y-3">
-                <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                  <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                    Other {category} templates
-                  </h3>
-                  <span className="text-xs text-foreground/40">
-                    {uncategorized.length}
-                  </span>
-                </div>
-
-                <div
-                  className={
-                    view === "grid"
-                      ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                      : "space-y-2 sm:space-y-3"
-                  }
-                >
-                  {uncategorized.map( (
-                    {
-                      href, name, thumbnail, hasSketchForm
-                    }, index
-                  ) => (
-                    <TemplateCard
-                      key={ name }
-                      href={ href }
-                      name={ name }
-                      thumbnail={ thumbnail }
-                      hasSketchForm={ hasSketchForm }
-                      view={ view }
-                      eager={ index < 8 }
-                    />
-                  ) )}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      } )}
+          );
+        } ) }
     </div>
   );
 }
@@ -328,7 +406,7 @@ function TemplateCard( {
             paddingTop: "125%"
           } }
         >
-          {hasSketchForm && (
+          { hasSketchForm && (
             <div
               className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10"
               title="Has a magic form"
@@ -337,7 +415,7 @@ function TemplateCard( {
                 <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
               </div>
             </div>
-          )}
+          ) }
           <img
             alt={ name }
             loading={ eager ? "eager" : "lazy" }
@@ -355,7 +433,7 @@ function TemplateCard( {
         <div className="absolute bottom-0 left-0 right-0 p-1 sm:p-2">
           <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg sm:rounded-xl px-2 py-1.5 shadow-lg">
             <p className="text-xs sm:text-sm font-medium text-foreground text-center">
-              {name}
+              { name }
             </p>
           </div>
         </div>
@@ -384,17 +462,17 @@ function TemplateCard( {
 
       <div className="flex-grow min-w-0">
         <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
-          {name}
+          { name }
         </p>
       </div>
 
-      {hasSketchForm && (
+      { hasSketchForm && (
         <div className="flex-shrink-0" title="Has a magic form">
           <div className="bg-hover/50 rounded-lg border border-border p-1 sm:p-1.5">
             <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
           </div>
         </div>
-      )}
+      ) }
 
       <div className="flex-shrink-0 text-foreground/40 group-hover:text-foreground/60 transition-colors">
         <span className="text-xs sm:text-sm">→</span>
