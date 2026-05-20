@@ -13,6 +13,10 @@ import {
 import {
   p5Registration
 } from "./p5/index";
+import {
+  gsapRegistration
+} from "./gsap/index";
 
 /* ---- register built-in engines ----------------------------------- */
 registerEngine( p5Registration );
+registerEngine( gsapRegistration );

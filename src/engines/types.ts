@@ -2,6 +2,7 @@ import type {
   SketchOption
 } from "@/types/sketch.types";
 import type {
+  CaptureSource,
   RecorderCapabilities
 } from "@/engines/recording/types";
 
@@ -107,9 +108,17 @@ export interface SketchEngine {
   getFrameRate( options: SketchOption, slideIndex?: number ): number;
 
   /**
-   * Return the underlying `<canvas>` element (if any).
+   * Return the underlying `<canvas>` element (if any). For DOM/CSS engines
+   * this is the mirror canvas used for capture, not the rendered surface.
    */
   getCanvas(): HTMLCanvasElement | null;
+
+  /**
+   * Engine-agnostic capture surface consumed by the client-side recorder.
+   * Canvas engines wrap their live canvas; DOM engines return a source that
+   * rasterises the rendered DOM into a mirror canvas on demand.
+   */
+  getCaptureSource(): CaptureSource;
 
   /**
    * Seek to `frame` and render it without producing a data-URL.

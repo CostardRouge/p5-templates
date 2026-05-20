@@ -1,0 +1,405 @@
+import type React from "react";
+import type {
+  SketchEngine,
+  EngineEventName,
+  EngineEventMap,
+  EnginePerformanceSample
+} from "@/engines/types";
+import type {
+  CaptureSource,
+  RecorderCapabilities
+} from "@/engines/recording/types";
+import type {
+  SketchOption
+} from "@/types/sketch.types";
+import {
+  getEffectiveSlideSettings
+} from "@/lib/effectiveSlideSettings";
+import {
+  resolveSketchPath
+} from "@/engines/metadata";
+import {
+  registerServerCaptureController,
+  unregisterServerCaptureController
+} from "@/engines/recording/serverCapture";
+
+// Type-only — does NOT pull the client-only runtime (react-dom/gsap) into the
+// server bundle. The real module is dynamically imported inside `init()`.
+type GsapRuntime = ( typeof import( "@/gsap/utils/runtime" ) )[ "default" ];
+type TemplateComponent = React.ComponentType<{ options: Record<string, any> }>;
+
+/**
+ * GSAP / HTML implementation of `SketchEngine`.
+ *
+ * Templates are `.jsx` React components animated with GSAP. The engine mounts
+ * them via the GSAP runtime, scrubs a paused timeline off a frame clock for
+ * deterministic playback + capture, and exposes a DOM-backed `CaptureSource`
+ * so the same recorder that drives p5 works here unchanged.
+ */
+export class GsapEngine implements SketchEngine {
+  readonly engineId = "gsap";
+
+  private _isReady = false;
+  private container: HTMLElement | null = null;
+  private runtime: GsapRuntime | null = null;
+  private listeners = new Map<string, Set<( payload: any ) => void>>();
+
+  private perfLoopId: number | null = null;
+  private perfSample = {
+    paused: false,
+    smoothedFps: 0,
+    lastEmitTime: 0,
+    lastFrameTime: 0,
+    rawSamples: [] as number[]
+  };
+
+  get isReady(): boolean {
+    return this._isReady;
+  }
+
+  /* ---- lifecycle ------------------------------------------------- */
+
+  async init(
+    container: HTMLElement,
+    templatePath: string,
+    options: SketchOption
+  ): Promise<void> {
+    this.container = container;
+
+    container.querySelectorAll( ".gsap-stage, .gsap-mirror-canvas" )
+      .forEach( ( el ) => el.remove() );
+
+    // Seed the shared options store so the runtime + template read the same
+    // values (the options-sync system, shared with p5).
+    const {
+      setSketchOptions
+    } = await import( "@/lib/syncSketchOptions" );
+
+    setSketchOptions(
+      options,
+      "react"
+    );
+
+    const sketchPath = resolveSketchPath(
+      templatePath,
+      "gsap"
+    );
+
+    const runtimeModule = await import( "@/gsap/utils/runtime" );
+
+    this.runtime = runtimeModule.default;
+
+    const templateModule = await import( `@/gsap/sketches/${ sketchPath }/index.jsx` ).catch( ( error ) => {
+      this.emit(
+        "error",
+        error
+      );
+      throw error;
+    } );
+
+    const component = ( templateModule.default ?? templateModule ) as TemplateComponent;
+
+    await this.runtime.start(
+      container,
+      component
+    );
+
+    this._isReady = true;
+
+    registerServerCaptureController( {
+      captureKind: "dom",
+      surfaceSelector: "[data-capture-surface]",
+      prepare: () => this.runtime?.enterRecordingMode(),
+      renderFrame: ( index: number ) => this.runtime?.seekFrame( index )
+    } );
+
+    this.emit(
+      "ready",
+      undefined as any
+    );
+  }
+
+  destroy(): void {
+    this.stopPerformanceLoop();
+    unregisterServerCaptureController();
+
+    this.runtime?.reset();
+    this.runtime = null;
+
+    this._isReady = false;
+    this.container = null;
+    this.listeners.clear();
+  }
+
+  /* ---- options --------------------------------------------------- */
+
+  updateOptions( partial: Partial<SketchOption> ): void {
+    import( "@/lib/syncSketchOptions" ).then( ( {
+      setSketchOptions
+    } ) => setSketchOptions(
+      partial,
+      "react"
+    ) );
+  }
+
+  /* ---- playback -------------------------------------------------- */
+
+  play(): void {
+    this.runtime?.play();
+    this.perfSample.paused = false;
+    this.emitPerformanceSample();
+  }
+
+  pause(): void {
+    this.runtime?.pause();
+    this.perfSample.paused = true;
+    this.emitPerformanceSample();
+  }
+
+  stop(): void {
+    this.runtime?.stop();
+    this.perfSample.paused = true;
+    this.perfSample.rawSamples = [];
+    this.perfSample.smoothedFps = 0;
+    this.emitPerformanceSample();
+  }
+
+  seek( frame: number ): void {
+    this.runtime?.seekFrame( frame );
+  }
+
+  redraw(): void {
+    this.runtime?.redraw();
+  }
+
+  /* ---- capture --------------------------------------------------- */
+
+  async captureFrame( frame: number ): Promise<string> {
+    await this.seekAndDraw( frame );
+
+    const canvas = await this.runtime?.rasterize();
+
+    if ( !canvas ) {
+      throw new Error( "GsapEngine: no canvas available for capture." );
+    }
+
+    return canvas.toDataURL( "image/png" );
+  }
+
+  async seekAndDraw( frame: number ): Promise<void> {
+    this.runtime?.seekFrame( frame );
+
+    // Allow one rAF for the GSAP-applied inline styles to lay out.
+    await new Promise( ( r ) => requestAnimationFrame( r ) );
+  }
+
+  async resetToStart(): Promise<void> {
+    await this.runtime?.resetToStart();
+  }
+
+  getRecordingCapabilities(
+    _options: SketchOption,
+    _slideIndex?: number
+  ): RecorderCapabilities {
+    return {
+      supportsDeterministicCapture: true,
+      // DOM rasterisation is async, so the deterministic loop is the natural
+      // default for this engine (realtime is still offered).
+      defaultMode: "async-loop",
+      supportedFormats: [
+        "webm",
+        "gif",
+        "mp4"
+      ]
+    };
+  }
+
+  getTotalFrames(
+    options: SketchOption,
+    slideIndex?: number
+  ): number {
+    const {
+      animation
+    } = getEffectiveSlideSettings(
+      options,
+      slideIndex
+    );
+    const framerate = animation?.framerate ?? 60;
+    const duration = animation?.duration ?? 12;
+
+    return Math.round( duration * framerate );
+  }
+
+  getFrameRate(
+    options: SketchOption,
+    slideIndex?: number
+  ): number {
+    const {
+      animation
+    } = getEffectiveSlideSettings(
+      options,
+      slideIndex
+    );
+
+    return animation?.framerate ?? 60;
+  }
+
+  getCanvas(): HTMLCanvasElement | null {
+    return this.runtime?.getMirrorCanvas() ?? null;
+  }
+
+  getCaptureSource(): CaptureSource {
+    const runtime = this.runtime;
+
+    return {
+      get width() {
+        return runtime?.getMirrorCanvas()?.width ?? 0;
+      },
+      get height() {
+        return runtime?.getMirrorCanvas()?.height ?? 0;
+      },
+      getStreamCanvas: () => runtime?.getMirrorCanvas() ?? null,
+      readFrame: async() => {
+        if ( !runtime ) {
+          throw new Error( "GsapEngine: runtime not ready for capture." );
+        }
+
+        return runtime.rasterize();
+      },
+      beginRealtime: () => runtime?.beginRealtimeMirror(),
+      endRealtime: () => runtime?.stopMirrorLoop()
+    };
+  }
+
+  /* ---- events ---------------------------------------------------- */
+
+  on<E extends EngineEventName>(
+    event: E,
+    handler: ( payload: EngineEventMap[ E ] ) => void
+  ): void {
+    if ( !this.listeners.has( event ) ) {
+      this.listeners.set(
+        event,
+        new Set()
+      );
+    }
+
+    this.listeners.get( event )!.add( handler );
+
+    if ( event === "performance" ) {
+      this.startPerformanceLoop();
+      this.emitPerformanceSample();
+    }
+  }
+
+  off<E extends EngineEventName>(
+    event: E,
+    handler: ( payload: EngineEventMap[ E ] ) => void
+  ): void {
+    this.listeners.get( event )?.delete( handler );
+
+    if ( event === "performance" && !this.hasPerformanceListeners() ) {
+      this.stopPerformanceLoop();
+    }
+  }
+
+  private emit<E extends EngineEventName>(
+    event: E,
+    payload: EngineEventMap[ E ]
+  ): void {
+    this.listeners.get( event )?.forEach( ( h ) => h( payload ) );
+  }
+
+  private hasPerformanceListeners(): boolean {
+    return ( this.listeners.get( "performance" )?.size ?? 0 ) > 0;
+  }
+
+  private startPerformanceLoop(): void {
+    if ( this.perfLoopId !== null ) {
+      return;
+    }
+
+    this.perfSample.lastFrameTime = performance.now();
+
+    const tick = ( now: number ) => {
+      if ( !this.hasPerformanceListeners() ) {
+        this.perfLoopId = null;
+        return;
+      }
+
+      if ( this._isReady && !this.perfSample.paused ) {
+        const delta = now - this.perfSample.lastFrameTime;
+        const rawFps = delta > 0 ? 1000 / delta : 0;
+
+        if ( Number.isFinite( rawFps ) && rawFps > 0 && rawFps < 240 ) {
+          this.perfSample.rawSamples.push( rawFps );
+
+          if ( this.perfSample.rawSamples.length > 20 ) {
+            this.perfSample.rawSamples.shift();
+          }
+        }
+
+        if ( now - this.perfSample.lastEmitTime >= 500 ) {
+          const robustFps = this.getMedian( this.perfSample.rawSamples );
+
+          if ( robustFps > 0 ) {
+            this.perfSample.smoothedFps = this.perfSample.smoothedFps > 0
+              ? this.perfSample.smoothedFps * 0.8 + robustFps * 0.2
+              : robustFps;
+          }
+
+          this.perfSample.lastEmitTime = now;
+          this.emitPerformanceSample();
+        }
+      }
+
+      this.perfSample.lastFrameTime = now;
+      this.perfLoopId = requestAnimationFrame( tick );
+    };
+
+    this.perfLoopId = requestAnimationFrame( tick );
+  }
+
+  private stopPerformanceLoop(): void {
+    if ( this.perfLoopId === null ) {
+      return;
+    }
+
+    cancelAnimationFrame( this.perfLoopId );
+    this.perfLoopId = null;
+  }
+
+  private emitPerformanceSample(): void {
+    const payload: EnginePerformanceSample = {
+      fps: Number.isFinite( this.perfSample.smoothedFps )
+        ? this.perfSample.smoothedFps
+        : 0,
+      paused: this.perfSample.paused,
+      timestamp: performance.now()
+    };
+
+    this.emit(
+      "performance",
+      payload
+    );
+  }
+
+  private getMedian( values: number[] ): number {
+    if ( values.length === 0 ) {
+      return 0;
+    }
+
+    const sorted = [
+      ...values
+    ].sort( (
+      a, b
+    ) => a - b );
+    const middle = Math.floor( sorted.length / 2 );
+
+    if ( sorted.length % 2 === 0 ) {
+      return ( sorted[ middle - 1 ] + sorted[ middle ] ) / 2;
+    }
+
+    return sorted[ middle ];
+  }
+}
