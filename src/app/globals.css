@@ -63,6 +63,11 @@
     html {
         /* Make native UI controls match the theme */
         color-scheme: light;
+        /* Prevent document-level scrolling on mobile: the app uses an
+           app-shell layout where only the <main> area scrolls, not the page. */
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
     }
 
     .dark,
@@ -72,6 +77,9 @@
 
     body {
         @apply bg-background text-foreground antialiased;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
     }
 
     /* Optional: make plain `border` pick your token */
