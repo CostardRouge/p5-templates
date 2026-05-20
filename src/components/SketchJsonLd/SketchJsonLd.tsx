@@ -1,10 +1,15 @@
 import {
-  getBaseUrl
+  buildCanonicalPath,
+  buildThumbnailUrl,
+  formatSketchTitle,
+  getBaseUrl,
+  getSketchJsonLd
 } from "@/lib/seo";
 
 interface SketchJsonLdProps {
   sketchName: string;
   engineId: string;
+  engineLabel: string;
   category: string | null;
   hasThumbnail: boolean;
 }
@@ -12,30 +17,23 @@ interface SketchJsonLdProps {
 export default function SketchJsonLd( {
   sketchName,
   engineId,
+  engineLabel,
   category,
   hasThumbnail
 }: SketchJsonLdProps ) {
   const baseUrl = getBaseUrl();
-  const title = sketchName
-    .split( "-" )
-    .map( ( w ) => w.charAt( 0 ).toUpperCase() + w.slice( 1 ) )
-    .join( " " );
-  const canonicalPath = category
-    ? `/templates/${ engineId }/${ category }/${ sketchName }`
-    : `/templates/${ engineId }/${ sketchName }`;
+  const title = formatSketchTitle( sketchName );
+  const canonicalPath = buildCanonicalPath( engineId, sketchName, category );
+  const thumbnailUrl = hasThumbnail
+    ? buildThumbnailUrl( engineId, sketchName, baseUrl )
+    : undefined;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: title,
-    applicationCategory: "DesignApplication",
-    operatingSystem: "Web",
-    description: `Create ${ title } content with ${ engineId }.`,
+  const jsonLd = getSketchJsonLd( {
+    title,
+    engineLabel,
     url: `${ baseUrl }${ canonicalPath }`,
-    ...( hasThumbnail && {
-      screenshot: `${ baseUrl }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.jpeg`
-    } )
-  };
+    thumbnailUrl
+  } );
 
   return (
     <script

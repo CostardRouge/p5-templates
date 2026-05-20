@@ -14,8 +14,9 @@ import {
   hasEngine
 } from "@/engines/registry";
 import {
-  getBaseUrl, SITE_NAME
+  buildOgTitle, getBaseUrl, SITE_NAME
 } from "@/lib/seo";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd/BreadcrumbJsonLd";
 import TemplatesList from "@/components/TemplatesList";
 import {
   getTemplatesData
@@ -35,17 +36,20 @@ export async function generateMetadata( {
   if ( !hasEngine( engine ) ) return {};
 
   const label = ( await getTemplatesData() ).engineLabels[ engine ] || engine;
+  const title = `${ label } Templates`;
+  const description = `Browse all ${ label } templates. Create stunning social media visuals with ${ label }.`;
 
   return {
-    title: `${ label } Templates`,
-    description: `Browse all ${ label } templates.`,
+    title,
+    description,
     alternates: {
       canonical: `/templates/${ engine }`
     },
     openGraph: {
-      title: `${ label } Templates | ${ SITE_NAME }`,
-      description: `Browse all ${ label } templates.`,
-      url: `${ getBaseUrl() }/templates/${ engine }`,
+      title: buildOgTitle( title ),
+      description,
+      url: `/templates/${ engine }`,
+      siteName: SITE_NAME,
       type: "website"
     }
   };
@@ -66,8 +70,18 @@ export default async function EngineTemplatesPage( {
     templatesByEngine, engineLabels
   } = await getTemplatesData();
 
+  const label = engineLabels[ engine ] || engine;
+  const baseUrl = getBaseUrl();
+
+  const breadcrumbItems = [
+    { name: "Home", url: baseUrl },
+    { name: "Templates", url: `${ baseUrl }/templates` },
+    { name: `${ label } Templates`, url: `${ baseUrl }/templates/${ engine }` }
+  ];
+
   return (
     <div className="p-3 sm:p-6">
+      <BreadcrumbJsonLd items={ breadcrumbItems } />
       <Suspense>
         <TemplatesList
           templates={ templatesByEngine }
