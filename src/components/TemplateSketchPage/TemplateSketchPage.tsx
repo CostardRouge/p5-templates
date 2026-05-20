@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import type React from "react";
 import {
-  useCallback, useMemo
+  useCallback, useMemo, useRef
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
@@ -32,10 +32,44 @@ const TemplateOptions = dynamic( () =>
 export default function TemplateSketchPage() {
   const [
     {
-      name, capturing, options, persistedJob, engineId, sketchLoaded, activeSlideIndex
+      name, capturing, options, persistedJob, engineId, sketchLoaded, activeSlideIndex,
+      engine, looping
     },
     dispatch
   ] = useSketch();
+
+  // Capture whether the sketch was looping at the moment a viewport gesture
+  // starts, so we can restore the exact state when the gesture ends.
+  const wasLoopingRef = useRef( false );
+  // Keep a stable ref to the latest engine/looping values to avoid stale closures.
+  const interactionStateRef = useRef( {
+    engine, looping
+  } );
+  interactionStateRef.current = {
+    engine, looping
+  };
+
+  const handleInteractionStart = useCallback( () => {
+    const {
+      engine: e, looping: l
+    } = interactionStateRef.current;
+
+    if ( e && l ) {
+      wasLoopingRef.current = true;
+      e.pause();
+    }
+  }, [] );
+
+  const handleInteractionEnd = useCallback( () => {
+    const {
+      engine: e
+    } = interactionStateRef.current;
+
+    if ( e && wasLoopingRef.current ) {
+      wasLoopingRef.current = false;
+      e.play();
+    }
+  }, [] );
 
   const {
     thumbnailUrl
@@ -126,6 +160,8 @@ export default function TemplateSketchPage() {
           showZoomControls={ !capturing && sketchLoaded }
           resolutionKey={ `${ effectiveSettings.size.width }x${ effectiveSettings.size.height }` }
           isReady={ sketchLoaded }
+          onInteractionStart={ handleInteractionStart }
+          onInteractionEnd={ handleInteractionEnd }
         >
           {sketchLoaded && !capturing && (
             <div
