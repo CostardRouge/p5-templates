@@ -143,7 +143,7 @@ export default function RootLayout( {
           disableTransitionOnChange
         >
           <div className="flex flex-col h-[100svh] bg-hover/50">
-            <main className="flex-1 overflow-auto relative">{children}</main>
+            <main className="flex-1 overflow-auto overscroll-contain relative">{children}</main>
 
             <Suspense>
               <MenuBar
