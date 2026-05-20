@@ -12,13 +12,15 @@ import useSketch from "@/components/ClientProcessingSketch/components/SketchProv
 
 type SketchPerformanceLabelProps = {
   targetFps: number;
+  interactionMode?: "panning" | "zooming" | "seeking" | null;
 };
 
 const RED_THRESHOLD = 0.55;
 const WARNING_THRESHOLD = 0.85;
 
 export default function SketchPerformanceLabel( {
-  targetFps
+  targetFps,
+  interactionMode
 }: SketchPerformanceLabelProps ) {
   const [
     {
@@ -89,6 +91,12 @@ export default function SketchPerformanceLabel( {
       : ratio < WARNING_THRESHOLD
         ? "#f97316"
         : undefined;
+
+  if ( interactionMode ) {
+    return (
+      <p className="opacity-50">{interactionMode}</p>
+    );
+  }
 
   return (
     <p style={ color ? {
