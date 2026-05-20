@@ -15,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Always-present pages
   const staticPages: MetadataRoute.Sitemap = [
     {
-      url: `${ baseUrl }/`,
+      url: `${ baseUrl }/templates`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 1.0

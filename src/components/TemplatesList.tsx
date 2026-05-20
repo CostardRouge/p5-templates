@@ -10,8 +10,8 @@ import React, {
   useEffect, useState
 } from "react";
 import type {
-  TemplateCategory
-} from "@/app/page";
+  TemplateItem
+} from "@/app/templates/getTemplatesData";
 
 import Link from "@/components/HardLink";
 import {
@@ -22,13 +22,15 @@ import {
 } from "@/utils/fuzzySearch";
 
 interface TemplatesListProps {
-  templates: Record<string, TemplateCategory>;
+  templates: Record<string, TemplateItem[]>;
   engineLabels: Record<string, string>;
+  activeEngine: string; // "all" | engine id
 }
 
 export default function TemplatesList( {
   templates,
-  engineLabels
+  engineLabels,
+  activeEngine
 }: TemplatesListProps ) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,37 +46,16 @@ export default function TemplatesList( {
     search,
     setSearch
   ] = useState<string>( searchParams.get( "keyword" ) || "" );
-  const [
-    activeEngine,
-    setActiveEngine
-  ] = useState<string>( searchParams.get( "engine" ) || "all" );
 
-  // Sync URL with search and engine filter state
+  // Keep ?keyword= in sync with the search state
   useEffect(
     () => {
-      const params = new URLSearchParams( searchParams.toString() );
+      const basePath =
+        activeEngine === "all" ? "/templates" : `/templates/${ activeEngine }`;
 
-      if ( search ) {
-        params.set(
-          "keyword",
-          search
-        );
-      } else {
-        params.delete( "keyword" );
-      }
-
-      if ( activeEngine !== "all" ) {
-        params.set(
-          "engine",
-          activeEngine
-        );
-      } else {
-        params.delete( "engine" );
-      }
-
-      const newUrl = params.toString()
-        ? `/?${ params.toString() }`
-        : "/";
+      const newUrl = search
+        ? `${ basePath }?keyword=${ encodeURIComponent( search ) }`
+        : basePath;
 
       router.replace(
         newUrl,
@@ -83,13 +64,22 @@ export default function TemplatesList( {
         }
       );
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      search,
-      activeEngine,
-      router,
-      searchParams
+      search
     ]
   );
+
+  // Navigate to a different engine tab, preserving the keyword
+  const handleEngineClick = ( engineId: string ) => {
+    const basePath =
+      engineId === "all" ? "/templates" : `/templates/${ engineId }`;
+    const suffix = search
+      ? `?keyword=${ encodeURIComponent( search ) }`
+      : "";
+
+    router.push( `${ basePath }${ suffix }` );
+  };
 
   // Fuzzy-filter templates per engine
   const filteredTemplates = Object.entries( templates ).reduce(
@@ -114,7 +104,7 @@ export default function TemplatesList( {
 
       return acc;
     },
-    {} as Record<string, TemplateCategory>
+    {} as Record<string, TemplateItem[]>
   );
 
   // Narrow to the selected engine tab (or keep all)
@@ -196,7 +186,7 @@ export default function TemplatesList( {
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
           {/* All engines tab */}
           <button
-            onClick={ () => setActiveEngine( "all" ) }
+            onClick={ () => handleEngineClick( "all" ) }
             className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
               activeEngine === "all"
                 ? "bg-foreground text-background"
@@ -224,7 +214,7 @@ export default function TemplatesList( {
             return (
               <button
                 key={ engineId }
-                onClick={ () => setActiveEngine( engineId ) }
+                onClick={ () => handleEngineClick( engineId ) }
                 className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
                   isActive
                     ? "bg-foreground text-background"
@@ -268,7 +258,6 @@ export default function TemplatesList( {
         .map( ( [ engineId, items ] ) => {
           const label = engineLabels[ engineId ] || engineId;
 
-          // Group items by category
           const groupedItems: Record<string, typeof items> = {};
           const uncategorized: typeof items = [];
 
@@ -288,7 +277,7 @@ export default function TemplatesList( {
 
           return (
             <div key={ engineId } className="space-y-2 sm:space-y-4">
-              {/* Engine section header — only in "All engines" view */ }
+              {/* Engine section header — only in "All engines" view */}
               { activeEngine === "all" && (
                 <div className="flex items-center gap-2 sm:gap-3 pt-1">
                   <h2 className="text-base sm:text-lg font-semibold text-foreground">
@@ -302,7 +291,7 @@ export default function TemplatesList( {
                 </div>
               ) }
 
-              {/* Categorized groups */ }
+              {/* Categorized groups */}
               { Object.entries( groupedItems ).map( ( [
                 subCategory,
                 subItems
@@ -343,7 +332,7 @@ export default function TemplatesList( {
                 </div>
               ) ) }
 
-              {/* Uncategorized items */ }
+              {/* Uncategorized items */}
               { uncategorized.length > 0 && (
                 <div className="space-y-2 sm:space-y-3">
                   { hasCategoryGroups && (
