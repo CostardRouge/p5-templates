@@ -44,7 +44,7 @@ export function useLiveThumbnail( {
 
         lastTime = time;
 
-        const srcCanvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0" ) as HTMLCanvasElement | null;
+        const srcCanvas = document.querySelector( "canvas.p5Canvas" ) as HTMLCanvasElement | null;
         const thumbCanvas = thumbCanvasRef.current;
 
         if ( !srcCanvas || !thumbCanvas ) {

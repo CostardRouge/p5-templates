@@ -42,7 +42,7 @@ export async function captureCanvasThumbnail(
 
   // Wait for canvas to be loaded
   await page.waitForSelector(
-    "canvas#defaultCanvas0.loaded",
+    "canvas.p5Canvas.loaded",
     {
       timeout: 30000
     }
@@ -53,7 +53,7 @@ export async function captureCanvasThumbnail(
     ( {
       format, quality
     } ) => {
-      const canvas = document.querySelector( "canvas#defaultCanvas0" ) as HTMLCanvasElement;
+      const canvas = document.querySelector( "canvas.p5Canvas" ) as HTMLCanvasElement;
 
       if ( !canvas ) {
         throw new Error( "Canvas element not found" );

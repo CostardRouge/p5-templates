@@ -64,7 +64,7 @@ async function _refreshAssets() {
       []
     );
     const container = getContainer();
-    const canvas = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas#defaultCanvas0" );
+    const canvas = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas.p5Canvas" );
 
     canvas?.classList.add( "loaded" );
     return;
@@ -154,7 +154,7 @@ async function readExifInfo(
 
 function markLoadedWhenExifReady() {
   const container = getContainer();
-  const c = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas#defaultCanvas0" );
+  const c = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas.p5Canvas" );
 
   if ( !c || c.classList.contains( "loaded" ) ) {
     return;

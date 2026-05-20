@@ -82,7 +82,7 @@
     }
 }
 
-canvas#defaultCanvas0:hover {
+.sketch-canvas-container canvas:hover {
     @apply outline;
     @apply outline-theme;
 }
@@ -117,7 +117,7 @@ canvas#defaultCanvas0:hover {
     animation: pulse-soft 2s ease-in-out infinite;
 }
 
-body.recording canvas#defaultCanvas0 {
+body.recording .sketch-canvas-container canvas {
     border-width: 3px;
     animation: pulse-border 1.5s infinite alternate ease-in-out;
 }
@@ -138,12 +138,12 @@ body.recording canvas#defaultCanvas0 {
     /* Disable specific animations */
     .animate-pulse,
     .animate-pulse-soft,
-    body.recording canvas#defaultCanvas0 {
+    body.recording .sketch-canvas-container canvas {
         animation: none !important;
     }
 
     /* Keep essential visual feedback but remove motion */
-    body.recording canvas#defaultCanvas0 {
+    body.recording .sketch-canvas-container canvas {
         border-color: red;
         border-width: 3px;
     }

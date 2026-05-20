@@ -108,5 +108,5 @@ export default function EngineSketchRenderer() {
     ]
   );
 
-  return <div ref={ containerRef } />;
+  return <div ref={ containerRef } className="sketch-canvas-container" />;
 }

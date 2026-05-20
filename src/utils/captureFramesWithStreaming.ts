@@ -107,7 +107,7 @@ export async function captureFramesWithStreaming( {
 
       // Get the canvas frame as base64
       const frameDataUrl = await page.evaluate( () => {
-        const canvas = document.querySelector( "canvas#defaultCanvas0" ) as HTMLCanvasElement;
+        const canvas = document.querySelector( "canvas.p5Canvas" ) as HTMLCanvasElement;
 
         if ( !canvas ) {
           throw new Error( "Canvas element not found" );

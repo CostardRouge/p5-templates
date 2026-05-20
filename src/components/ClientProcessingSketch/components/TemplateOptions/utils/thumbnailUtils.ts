@@ -13,7 +13,7 @@ export function waitForSlideRendered(
     let matchedFrames = 0;
 
     const check = () => {
-      const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0" ) as HTMLCanvasElement | null;
+      const canvas = document.querySelector( "canvas.p5Canvas" ) as HTMLCanvasElement | null;
 
       const dataSlide = canvas?.dataset?.slide;
       const dataSlideIndex =
@@ -73,7 +73,7 @@ export function waitForSlideRendered(
  * Uses native Canvas API for better compatibility with Next.js/Turbopack
  */
 export async function captureThumbnailFromCanvas(): Promise<string | null> {
-  const canvas = document.querySelector( "canvas.p5Canvas, canvas#defaultCanvas0" ) as HTMLCanvasElement;
+  const canvas = document.querySelector( "canvas.p5Canvas" ) as HTMLCanvasElement;
 
   if ( !canvas ) {
     return null;

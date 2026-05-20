@@ -41,7 +41,7 @@ const slides = {
       "post-draw",
       () => {
         const container = getContainer();
-        const canvas = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas#defaultCanvas0, canvas.p5Canvas" );
+        const canvas = container?.querySelector( "canvas" ) ?? document.querySelector( "canvas.p5Canvas" );
 
         if ( !canvas ) {
           return;
