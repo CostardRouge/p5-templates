@@ -15,6 +15,9 @@ import {
 import GenerateThumbnailsButton from "@/components/GenerateThumbnailsButton";
 import PushNotificationManager from "@/components/PushNotificationManager";
 import ThemeToggle from "@/components/ThemeToggle";
+import {
+  pauseSketchForNav
+} from "@/lib/navigationPauseSignal";
 
 type NavItem = {
   href: string;
@@ -127,6 +130,7 @@ function MenuBar( {
               key={ href }
               href={ href }
               target={ target }
+              onClick={ !target ? pauseSketchForNav : undefined }
               className={ clsx(
                 "group relative flex items-center gap-2 rounded-xl px-4 py-2 transition-all duration-300 text-sm font-medium",
                 active

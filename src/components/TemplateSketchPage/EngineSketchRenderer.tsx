@@ -12,6 +12,9 @@ import type {
   SketchEngine
 } from "@/engines/types";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import {
+  registerNavigationPause
+} from "@/lib/navigationPauseSignal";
 
 /**
  * Engine-agnostic sketch renderer.
@@ -43,6 +46,10 @@ export default function EngineSketchRenderer() {
       const instance = registration.createEngine();
 
       engineRef.current = instance;
+
+      const unregisterPause = registerNavigationPause( () => {
+        engineRef.current?.pause();
+      } );
 
       // Listen for the engine's ready event to know when the first frame
       // has been rendered and the canvas is ready to be measured/centered.
@@ -85,6 +92,7 @@ export default function EngineSketchRenderer() {
         } );
 
       return () => {
+        unregisterPause();
         instance.off(
           "ready",
           handleReady
