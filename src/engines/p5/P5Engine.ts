@@ -44,6 +44,16 @@ type P5SketchRuntime = {
 export class P5Engine implements SketchEngine {
   readonly engineId = "p5";
 
+  // ES modules are cached after first import — the module body won't
+  // re-execute on second visit, so _setupFn/_drawFn stay null after reset().
+  // We cache them here and restore on subsequent visits.
+  private static readonly _sketchModuleCache = new Set<string>();
+  private static readonly _sketchFnCache = new Map<string, {
+    setupFn: ( ( ...args: any[] ) => any ) | null;
+    drawFn: ( ( ...args: any[] ) => any ) | null;
+    sketchOptions: any;
+  }>();
+
   private _isReady = false;
   private container: HTMLElement | null = null;
   private sketchRuntime: P5SketchRuntime | null = null;
@@ -107,6 +117,28 @@ export class P5Engine implements SketchEngine {
         );
         throw error;
       } );
+
+    // ES modules are cached — on second visit the module doesn't re-run,
+    // leaving _setupFn/_drawFn null. Restore them from our static cache.
+    // (sketchPath is guaranteed non-null here: the import above would have thrown otherwise.)
+    const runtime = this.sketchRuntime as any;
+    if ( sketchPath && !P5Engine._sketchModuleCache.has( sketchPath ) ) {
+      P5Engine._sketchModuleCache.add( sketchPath );
+      P5Engine._sketchFnCache.set( sketchPath, {
+        setupFn: runtime._setupFn,
+        drawFn: runtime._drawFn,
+        sketchOptions: runtime.sketchOptions
+      } );
+    } else if ( sketchPath ) {
+      const cached = P5Engine._sketchFnCache.get( sketchPath );
+      if ( cached ) {
+        runtime._setupFn = cached.setupFn;
+        runtime._drawFn = cached.drawFn;
+        if ( !runtime.sketchOptions && cached.sketchOptions ) {
+          runtime.sketchOptions = cached.sketchOptions;
+        }
+      }
+    }
 
     await this.sketchRuntime.start( container );
 
