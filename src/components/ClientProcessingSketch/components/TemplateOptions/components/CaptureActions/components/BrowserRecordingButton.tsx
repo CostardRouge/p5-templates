@@ -54,15 +54,18 @@ function decodeChoice( value: string ): Choice {
 
 // Per-mode format availability — gif is async-loop only; webm/mp4 work
 // in both modes via MediaRecorder (realtime) or mediabunny (async-loop).
+// First entry in each group is the default for that mode. mp4 leads
+// because it plays in every consumer (X, Instagram, native browsers)
+// without re-encoding, unlike webm.
 const MODE_FORMATS: Record<RecordingMode, RecordingFormat[]> = {
   "async-loop": [
+    "mp4",
     "webm",
-    "gif",
-    "mp4"
+    "gif"
   ],
   realtime: [
-    "webm",
-    "mp4"
+    "mp4",
+    "webm"
   ]
 };
 
