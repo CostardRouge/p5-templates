@@ -1,4 +1,8 @@
+import getTestImagePaths from "@/utils/getTestImagePaths";
+
 export const formValues = {
+  images: await getTestImagePaths(),
+
   colors: {
     background: [
       246,
@@ -12,6 +16,10 @@ export const formValues = {
 };
 
 export const formConfiguration: Record<string, any> = {
+  images: {
+    component: "images-stack",
+    label: "Images"
+  },
   colors: {
     label: "Colors",
     component: "nested-object",

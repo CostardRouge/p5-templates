@@ -1,5 +1,7 @@
 import options from "@/p5/utils/options.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 import easing from "@/p5/utils/easing.js";
 import grid from "@/p5/utils/grid.js";
 import graphics from "@/p5/utils/graphics.js";
@@ -11,12 +13,8 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 
 import mediapipe, {
-  init as mediapipeInit,
-  setEnabled as setMediapipeEnabled
-} from "@/p5/utils/mediapipe/mediapipe.js";
-import {
-  getP5
-} from "@/p5/utils/sketch.js";
+  init as mediapipeInit, setEnabled as setMediapipeEnabled
+} from "@/p5/utils/mediapipe/mediapipe.js"; // Key landmarks for interaction (fingertips)
 
 // Key landmarks for interaction (fingertips)
 const interactionIndices = [
@@ -51,6 +49,7 @@ sketch.setup( async( {
     p.height,
     "webgl"
   );
+
   addScreenPositionFunction( sketchState.shape.graphics );
 
   sketchState.webcam.graphics = p.createGraphics(
@@ -158,9 +157,21 @@ sketch.draw( () => {
   for ( let i = 0; i < targetsCount; i++ ) {
     const targetProgression = i / targetsCount;
 
-    targetVectors.push( sketchState.shape.graphics.screenPosition( p.createVector(
-      Math.sin( animation.angle + i * 2 ) * W,
-      Math.cos( animation.angle + i * targetProgression ) * H
+    targetVectors.push( ( p.createVector(
+      p.map(
+        Math.sin( animation.angle + i * 2 ),
+        -1,
+        1,
+        -W,
+        W
+      ),
+      p.map(
+        Math.cos( animation.angle + i * targetProgression ),
+        -1,
+        1,
+        -H,
+        H
+      )
     ) ) );
   }
 
