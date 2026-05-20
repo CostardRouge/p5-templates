@@ -14,11 +14,13 @@ import {
 type RandomizeSettingsButtonProps = {
   config: Record<string, FieldConfig>;
   basePath: string;
+  className?: string;
 };
 
 export default function RandomizeSettingsButton( {
   config,
-  basePath
+  basePath,
+  className = "text-foreground hover:bg-theme/20 rounded transition-colors"
 }: RandomizeSettingsButtonProps ) {
   const {
     setValue
@@ -118,7 +120,7 @@ export default function RandomizeSettingsButton( {
   return (
     <button
       onClick={ handleRandomize }
-      className="text-foreground hover:bg-theme/20 rounded transition-colors"
+      className={ className }
       title="Randomize parameters"
     >
       <Shuffle className="w-3.5 h-3.5" />

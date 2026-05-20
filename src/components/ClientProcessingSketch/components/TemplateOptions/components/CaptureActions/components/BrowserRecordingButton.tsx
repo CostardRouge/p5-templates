@@ -4,13 +4,10 @@ import React, {
   useMemo, useState
 } from "react";
 import {
-  Save, StopCircle
+  StopCircle
 } from "lucide-react";
 import type {
-  RecorderCapabilities,
-  RecorderProgress,
-  RecordingFormat,
-  RecordingMode
+  RecorderCapabilities, RecorderProgress, RecordingFormat, RecordingMode
 } from "@/engines/recording";
 
 type BrowserRecordingButtonProps = {
@@ -147,24 +144,38 @@ export default function BrowserRecordingButton( {
 
   if ( isRecording ) {
     const isRealtime = choice.mode === "realtime";
+    // Fill ratio drives the red progress bar inside the button.
+    // Realtime has no frame-based progress so we leave it empty (the
+    // user stops it manually); async-loop hits 100% while encoding +
+    // finalising so the bar reads as "almost done" in those stages.
+    const fillPct = progress
+      ? progress.stage === "capturing"
+        ? progress.percentage
+        : 100
+      : 0;
 
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1">
+        <div className="text-[10px] text-gray-400 text-center min-h-[1em]">
+          {progressLabel ?? ( isRealtime ? "Recording…" : "Starting…" )}
+        </div>
         <button
           type="button"
           onClick={ isRealtime ? onStop : onCancel }
-          className="rounded-xl px-3 py-2.5 border border-red-500/30 text-red-500 bg-background hover:bg-hover text-xs font-medium transition-all inline-flex items-center justify-center gap-1.5"
+          className="relative overflow-hidden rounded-xl px-3 py-2.5 border border-red-500/40 text-red-600 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 bg-background hover:bg-red-500/5"
         >
-          <StopCircle className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-0 left-0 bg-red-500/20 transition-[width] duration-200 ease-out pointer-events-none"
+            style={ {
+              width: `${ fillPct }%`
+            } }
+          />
+          <StopCircle className="relative h-4 w-4 flex-shrink-0" />
+          <span className="relative truncate">
             {isRealtime ? "Stop recording" : "Cancel recording"}
           </span>
         </button>
-        {progressLabel && (
-          <div className="text-[10px] text-gray-400 text-center">
-            {progressLabel}
-          </div>
-        )}
       </div>
     );
   }
@@ -172,13 +183,13 @@ export default function BrowserRecordingButton( {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-stretch gap-1 rounded-xl border border-border overflow-hidden bg-background">
-        <span className="px-1 py-2.5 text-xs text-foreground inline-flex items-center pl-2">
+        <span className="px-2 py-2.5 text-xs text-foreground inline-flex items-center">
           Record in
         </span>
         <select
           value={ encodeChoice( choice ) }
           onChange={ ( e ) => setChoice( decodeChoice( e.target.value ) ) }
-          className="flex-1 px-1 py-2.5 bg-background text-foreground text-xs focus:outline-none"
+          className="flex-1 px-2 py-2 bg-background text-foreground text-xs focus:outline-none border-l mr-1"
           aria-label="Recording format"
         >
           {groups.map( ( group ) => (
@@ -205,9 +216,12 @@ export default function BrowserRecordingButton( {
           ) }
           aria-label="Start recording"
           title="Start recording"
-          className="px-1 py-2.5 pr-2 text-foreground hover:bg-hover transition-colors inline-flex items-center justify-center"
+          className="border-l px-3 py-2.5 pr-2 text-foreground hover:bg-hover transition-colors inline-flex items-center justify-center"
         >
-          <Save className="h-4 w-4 flex-shrink-0" />
+          <span
+            aria-hidden="true"
+            className="block h-3 w-3 rounded-full bg-red-500 ring-1 ring-red-500/40"
+          />
         </button>
       </div>
       {error && (
