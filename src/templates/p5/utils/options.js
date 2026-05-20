@@ -36,15 +36,72 @@ function refreshAssets() {
   );
 }
 
+const IMAGE_PATH_RE = /\.(png|jpe?g|webp|gif|svg|avif|bmp|arw)(\?|#|$)/i;
+
+function isImagePath( value ) {
+  if ( typeof value !== "string" || !value ) {
+    return false;
+  }
+  if ( value.startsWith( "blob:" ) ) {
+    return true;
+  }
+  return IMAGE_PATH_RE.test( value );
+}
+
+function collectImagePathsDeep(
+  node, acc
+) {
+  if ( !node ) {
+    return;
+  }
+  if ( typeof node === "string" ) {
+    if ( isImagePath( node ) ) {
+      acc.push( node );
+    }
+    return;
+  }
+  if ( Array.isArray( node ) ) {
+    for ( const v of node ) {
+      collectImagePathsDeep(
+        v,
+        acc
+      );
+    }
+    return;
+  }
+  if ( typeof node === "object" ) {
+    for ( const k of Object.keys( node ) ) {
+      collectImagePathsDeep(
+        node[ k ],
+        acc
+      );
+    }
+  }
+}
+
 async function _refreshAssets() {
   const opts = getSketchOptions();
   const globalImages = opts.assets?.images ?? [];
-  // Also pick up images stored directly in sketch form fields (e.g. images-stack)
-  const sketchImages = opts.sketch?.images ?? [];
-  const slideImages = ( opts.slides ?? [] ).flatMap( ( slide ) => [
-    ...( slide?.assets?.images ?? [] ),
-    ...( slide?.sketch?.images ?? [] )
-  ] );
+  // Also pick up images stored directly in sketch form fields (e.g. images-stack
+  // arrays at sketch.images, and single `image` component values nested anywhere
+  // under sketch.* such as sketch.photo or sketch.photo.image).
+  const sketchImages = [];
+
+  collectImagePathsDeep(
+    opts.sketch,
+    sketchImages
+  );
+  const slideImages = ( opts.slides ?? [] ).flatMap( ( slide ) => {
+    const fromSlide = [
+      ...( slide?.assets?.images ?? [] )
+    ];
+
+    collectImagePathsDeep(
+      slide?.sketch,
+      fromSlide
+    );
+    return fromSlide;
+  } );
 
   const allPaths = [
     ...new Set( [
