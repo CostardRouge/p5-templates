@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import type React from "react";
 import {
-  useCallback, useMemo, useRef
+  useCallback, useMemo, useRef, useState
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
@@ -38,6 +38,11 @@ export default function TemplateSketchPage() {
     dispatch
   ] = useSketch();
 
+  const [
+    interactionMode,
+    setInteractionMode
+  ] = useState<"panning" | "zooming" | "seeking" | null>( null );
+
   // Capture whether the sketch was looping at the moment a viewport gesture
   // starts, so we can restore the exact state when the gesture ends.
   const wasLoopingRef = useRef( false );
@@ -49,7 +54,9 @@ export default function TemplateSketchPage() {
     engine, looping
   };
 
-  const handleInteractionStart = useCallback( () => {
+  const handleInteractionStart = useCallback( ( mode: "panning" | "zooming" ) => {
+    setInteractionMode( mode );
+
     const {
       engine: e, looping: l
     } = interactionStateRef.current;
@@ -61,6 +68,8 @@ export default function TemplateSketchPage() {
   }, [] );
 
   const handleInteractionEnd = useCallback( () => {
+    setInteractionMode( null );
+
     const {
       engine: e
     } = interactionStateRef.current;
@@ -69,6 +78,14 @@ export default function TemplateSketchPage() {
       wasLoopingRef.current = false;
       e.play();
     }
+  }, [] );
+
+  const handleSeekStart = useCallback( () => {
+    setInteractionMode( "seeking" );
+  }, [] );
+
+  const handleSeekEnd = useCallback( () => {
+    setInteractionMode( null );
   }, [] );
 
   const {
@@ -189,7 +206,10 @@ export default function TemplateSketchPage() {
                 </span>
               </p>
 
-              <SketchPerformanceLabel targetFps={ effectiveSettings.animation?.framerate ?? 60 } />
+              <SketchPerformanceLabel
+                targetFps={ effectiveSettings.animation?.framerate ?? 60 }
+                interactionMode={ interactionMode }
+              />
             </div>
           )}
 
@@ -208,7 +228,10 @@ export default function TemplateSketchPage() {
                 } as React.CSSProperties
               }
             >
-              <AnimationProgressionBar />
+              <AnimationProgressionBar
+                onSeekStart={ handleSeekStart }
+                onSeekEnd={ handleSeekEnd }
+              />
             </div>
           )}
         </ScalableViewport>

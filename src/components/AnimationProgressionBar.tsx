@@ -18,6 +18,8 @@ import {
 interface AnimationProgressionBarProps {
   className?: string;
   disabled?: boolean;
+  onSeekStart?: () => void;
+  onSeekEnd?: () => void;
 }
 
 type AnimationConfig = {
@@ -62,7 +64,9 @@ function getAnimationConfigFromSketchOptions(
 
 export default function AnimationProgressionBar( {
   className = "",
-  disabled = false
+  disabled = false,
+  onSeekStart,
+  onSeekEnd
 }: AnimationProgressionBarProps ) {
   const [
     {
@@ -318,6 +322,7 @@ export default function AnimationProgressionBar( {
 
       isDraggingRef.current = true;
       setIsDragging( true );
+      onSeekStart?.();
 
       pausedByDragRef.current = pauseLoopForScrubbing();
 
@@ -332,7 +337,8 @@ export default function AnimationProgressionBar( {
       disabled,
       calculateProgressionFromEvent,
       pauseLoopForScrubbing,
-      setAnimationProgression
+      setAnimationProgression,
+      onSeekStart
     ]
   );
 
@@ -346,6 +352,7 @@ export default function AnimationProgressionBar( {
 
       isDraggingRef.current = false;
       setIsDragging( false );
+      onSeekEnd?.();
 
       // Resume the loop only if we were the ones who paused it.
       if ( pausedByDragRef.current ) {
@@ -360,7 +367,8 @@ export default function AnimationProgressionBar( {
       }
     },
     [
-      resumeLoopAfterScrubbing
+      resumeLoopAfterScrubbing,
+      onSeekEnd
     ]
   );
 

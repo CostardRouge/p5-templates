@@ -33,7 +33,7 @@ export default function ScalableViewport( {
   showZoomControls?: boolean;
   disable?: boolean;
   isReady?: boolean;
-  onInteractionStart?: () => void;
+  onInteractionStart?: ( mode: "panning" | "zooming" ) => void;
   onInteractionEnd?: () => void;
 } ) {
   const containerRef = useRef<HTMLDivElement | null>( null );

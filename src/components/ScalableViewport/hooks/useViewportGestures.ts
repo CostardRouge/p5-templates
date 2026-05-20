@@ -19,7 +19,7 @@ interface UseViewportGesturesProps {
     contentElement: HTMLDivElement | null
   ) => void;
   cancelAnimation: () => void;
-  onInteractionStart?: () => void;
+  onInteractionStart?: ( mode: "panning" | "zooming" ) => void;
   onInteractionEnd?: () => void;
 }
 
@@ -43,17 +43,17 @@ export function useViewportGestures( {
         }
 
         cancelAnimation();
-        onInteractionStart?.();
+        onInteractionStart?.( "panning" );
       },
       onDragEnd: () => onInteractionEnd?.(),
       onPinchStart: () => {
         cancelAnimation();
-        onInteractionStart?.();
+        onInteractionStart?.( "zooming" );
       },
       onPinchEnd: () => onInteractionEnd?.(),
       onWheelStart: () => {
         cancelAnimation();
-        onInteractionStart?.();
+        onInteractionStart?.( "zooming" );
       },
       onWheelEnd: () => onInteractionEnd?.(),
 
