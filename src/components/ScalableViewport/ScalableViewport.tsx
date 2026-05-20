@@ -48,7 +48,9 @@ export default function ScalableViewport( {
   } = useViewportAnimation(
     setTransform,
     transform,
-    contentRef
+    contentRef,
+    () => onInteractionStart?.( "zooming" ),
+    onInteractionEnd
   );
 
   useViewportGestures( {
