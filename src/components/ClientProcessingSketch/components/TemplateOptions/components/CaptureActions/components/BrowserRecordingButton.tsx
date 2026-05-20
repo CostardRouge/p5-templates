@@ -186,15 +186,15 @@ export default function BrowserRecordingButton( {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-stretch gap-1 rounded-xl border border-border overflow-hidden bg-background">
-        <label htmlFor="recording-format" className="hidden-md px-2 py-2 text-xs text-foreground inline-flex items-center">
-          Record in
-        </label>
+        {/* <label htmlFor="recording-format" className="visibility px-2 py-2 text-xs text-foreground inline-flex items-center">*/}
+        {/*  Record in*/}
+        {/* </label>*/}
 
         <select
           id="recording-format"
           value={ encodeChoice( choice ) }
           onChange={ ( e ) => setChoice( decodeChoice( e.target.value ) ) }
-          className="flex-1 px-2 py-2 bg-background text-foreground text-xs focus:outline-none border-l"
+          className="flex-1 px-2 py-2 bg-background text-foreground text-xs focus:outline-none border-l_"
           aria-label="Recording format"
         >
           {groups.map( ( group ) => (
