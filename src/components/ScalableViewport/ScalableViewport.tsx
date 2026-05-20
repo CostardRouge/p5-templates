@@ -23,7 +23,9 @@ export default function ScalableViewport( {
   showZoomControls = true,
   resolutionKey,
   isReady = true,
-  disable = false
+  disable = false,
+  onInteractionStart,
+  onInteractionEnd
 }: {
   children: ReactNode;
   initialScale?: number;
@@ -31,6 +33,8 @@ export default function ScalableViewport( {
   showZoomControls?: boolean;
   disable?: boolean;
   isReady?: boolean;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 } ) {
   const containerRef = useRef<HTMLDivElement | null>( null );
   const contentRef = useRef<HTMLDivElement | null>( null );
@@ -52,7 +56,9 @@ export default function ScalableViewport( {
     contentRef,
     transform,
     setTransform,
-    cancelAnimation
+    cancelAnimation,
+    onInteractionStart,
+    onInteractionEnd
   } );
 
   const {

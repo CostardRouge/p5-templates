@@ -19,6 +19,8 @@ interface UseViewportGesturesProps {
     contentElement: HTMLDivElement | null
   ) => void;
   cancelAnimation: () => void;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
 
 export function useViewportGestures( {
@@ -26,7 +28,9 @@ export function useViewportGestures( {
   contentRef,
   transform,
   setTransform,
-  cancelAnimation
+  cancelAnimation,
+  onInteractionStart,
+  onInteractionEnd
 }: UseViewportGesturesProps ) {
   useGesture(
     {
@@ -39,9 +43,19 @@ export function useViewportGestures( {
         }
 
         cancelAnimation();
+        onInteractionStart?.();
       },
-      onPinchStart: () => cancelAnimation(),
-      onWheelStart: () => cancelAnimation(),
+      onDragEnd: () => onInteractionEnd?.(),
+      onPinchStart: () => {
+        cancelAnimation();
+        onInteractionStart?.();
+      },
+      onPinchEnd: () => onInteractionEnd?.(),
+      onWheelStart: () => {
+        cancelAnimation();
+        onInteractionStart?.();
+      },
+      onWheelEnd: () => onInteractionEnd?.(),
 
       // One-finger Drag (Pan)
       onDrag: ( {
