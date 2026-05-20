@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  ReactNode, useEffect, useRef
+  ReactNode, useCallback, useEffect, useRef
 } from "react";
 import ZoomControls from "@/components/ScalableViewport/components/ZoomControls";
 import {
@@ -43,13 +43,20 @@ export default function ScalableViewport( {
     transform, setTransform
   } = useTransformState( initialScale || 1 );
 
+  const handleAnimationStart = useCallback(
+    () => onInteractionStart?.( "zooming" ),
+    [
+      onInteractionStart
+    ]
+  );
+
   const {
     animateTo, cancelAnimation
   } = useViewportAnimation(
     setTransform,
     transform,
     contentRef,
-    () => onInteractionStart?.( "zooming" ),
+    handleAnimationStart,
     onInteractionEnd
   );
 
