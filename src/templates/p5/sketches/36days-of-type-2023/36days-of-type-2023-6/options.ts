@@ -6,9 +6,9 @@ export const formValues = {
   shape: {
     text: "6",
     font: "martian",
-    size: 1,
-    columns: 50,
-    sampleFactor: 0.1,
+    size: 0.75,
+    columns: 42,
+    sampleFactor: 0.06,
     simplifyThreshold: 0
   },
   mask: {
