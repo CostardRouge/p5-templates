@@ -92,17 +92,6 @@
     backdrop-filter: blur(0.9rem);
 }
 
-@keyframes pulse-border {
-    0%,
-    100% {
-        border-width: 3px;
-    }
-
-    50% {
-        border-color: red;
-    }
-}
-
 @keyframes pulse-soft {
     0%,
     100% {
@@ -115,11 +104,6 @@
 
 .animate-pulse-soft {
     animation: pulse-soft 2s ease-in-out infinite;
-}
-
-body.recording .sketch-canvas-container canvas {
-    border-width: 3px;
-    animation: pulse-border 1.5s infinite alternate ease-in-out;
 }
 
 /* Respect prefers-reduced-motion accessibility setting */
@@ -137,15 +121,8 @@ body.recording .sketch-canvas-container canvas {
 
     /* Disable specific animations */
     .animate-pulse,
-    .animate-pulse-soft,
-    body.recording .sketch-canvas-container canvas {
+    .animate-pulse-soft {
         animation: none !important;
-    }
-
-    /* Keep essential visual feedback but remove motion */
-    body.recording .sketch-canvas-container canvas {
-        border-color: red;
-        border-width: 3px;
     }
 
     /* Disable transform animations */
