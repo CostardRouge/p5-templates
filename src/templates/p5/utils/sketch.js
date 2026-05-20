@@ -2,7 +2,7 @@ import time from "./time.js";
 import debug from "./debug.js";
 import events from "./events.js";
 import slides from "./slides/index";
-import options from "./options";
+import options, { registerEvents as registerOptionsEvents } from "./options";
 import {
   registerAnimationBridge
 } from "@/lib/animationBridge";
@@ -149,6 +149,10 @@ const sketch = {
       "post-draw",
       debug.fps
     );
+
+    // Re-register options module handlers (they were module-level before,
+    // but reset() clears registeredEvents so they must be re-registered here).
+    registerOptionsEvents();
 
     // Create the p5 instance in instance mode
     new p5(
@@ -385,6 +389,9 @@ const sketch = {
 
     // Clear all registered events so the next sketch starts fresh
     events.registeredEvents = {};
+
+    // Reset animation time so the next sketch starts at t=0
+    time.reset();
   },
 
   // ---- engine methods (backward compat for time.js, debug.js, etc.) ---

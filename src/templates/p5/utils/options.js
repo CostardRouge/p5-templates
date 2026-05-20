@@ -169,15 +169,6 @@ function markLoadedWhenExifReady() {
 /*  Event hooks                                                       */
 /* ------------------------------------------------------------------ */
 
-events.register(
-  "engine-window-preload",
-  refreshAssets
-);
-events.register(
-  "pre-draw",
-  markLoadedWhenExifReady
-);
-
 /* ------------------------------------------------------------------ */
 /*  Options change tracking                                           */
 /* ------------------------------------------------------------------ */
@@ -364,10 +355,22 @@ function initializeOptionsSubscription() {
   );
 }
 
-events.register(
-  "pre-setup",
-  initializeOptionsSubscription
-);
+// Called by sketch.start() on every sketch initialization so that these
+// handlers survive a reset() which clears events.registeredEvents.
+export function registerEvents() {
+  events.register(
+    "engine-window-preload",
+    refreshAssets
+  );
+  events.register(
+    "pre-draw",
+    markLoadedWhenExifReady
+  );
+  events.register(
+    "pre-setup",
+    initializeOptionsSubscription
+  );
+}
 
 /**
  * Update the previous-options baseline to match the given effective
