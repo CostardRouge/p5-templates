@@ -122,7 +122,9 @@ export default function TemplatesList( {
     0
   );
 
-  const engineOrder = Object.keys( templates );
+  const engineOrder = Object.keys( templates ).sort(
+    ( a, b ) => ( templates[ b ]?.length ?? 0 ) - ( templates[ a ]?.length ?? 0 )
+  );
 
   const totalAllCount = Object.values( templates ).reduce(
     (
