@@ -116,11 +116,6 @@ declare global {
 
     // Assets
     __blobAssetMap?: BlobMap;
-    // Recorder
-    startLoopRecording: ( arg?: {
-      format: "png" | "webm"
-    } ) => Promise<void>;
-    stopRecording: () => void;
     // Slides
     slides: {
       index: number;

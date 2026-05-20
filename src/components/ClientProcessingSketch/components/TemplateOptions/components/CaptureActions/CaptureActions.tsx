@@ -30,7 +30,13 @@ import RecordingActions from "./components/RecordingActions";
 import {
   getRecordingStatus
 } from "./utils/getRecordingStatus";
+import {
+  useBrowserRecorder
+} from "./hooks/useBrowserRecorder";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import type {
+  RecorderCapabilities
+} from "@/engines/recording";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
@@ -64,9 +70,23 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
   const router = useRouter();
   const [
     {
-      engineId
+      engineId, engine
     }
   ] = useSketch();
+
+  const recorderCapabilities: RecorderCapabilities | null = engine
+    ? engine.getRecordingCapabilities(
+      options as never,
+      activeSlideIndex
+    )
+    : null;
+
+  const browserRecorder = useBrowserRecorder( {
+    engine,
+    options: options as never,
+    activeSlideIndex,
+    sketchName: name
+  } );
   const {
     enqueueRecording, isLoading
   } = useRecordingQueue();
@@ -517,12 +537,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     }
   };
 
-  const handleBrowserRecord = async() => {
-    await window?.startLoopRecording( {
-      format: "webm"
-    } );
-  };
-
   // Determine UI states
   const {
     isRecording, isCompleted, isFailed, isDraft
@@ -562,8 +576,16 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       <div className="flex flex-col gap-1 glass px-2 py-2 border border-theme rounded-2xl shadow-lg">
         <div className="flex flex-col gap-1 h-auto w-full">
           {/* Browser Recording - Only on Compatible Devices */}
-          {!isRecording && browserRecordingSupported && (
-            <BrowserRecordingButton onRecord={ handleBrowserRecord } />
+          {!isRecording && browserRecordingSupported && recorderCapabilities && (
+            <BrowserRecordingButton
+              capabilities={ recorderCapabilities }
+              isRecording={ browserRecorder.isRecording }
+              progress={ browserRecorder.progress }
+              error={ browserRecorder.error }
+              onStart={ browserRecorder.start }
+              onStop={ browserRecorder.stop }
+              onCancel={ browserRecorder.cancel }
+            />
           )}
 
           {backendRecording && (

@@ -1,17 +1,4 @@
-import animation from "./animation.js";
 import debug from "./debug.js";
-
-let recorderModulePromise;
-
-async function getRecorder() {
-  if ( !recorderModulePromise ) {
-    recorderModulePromise = import( "./recorder-ccapture.js" ).then( ( {
-      default: recorder
-    } ) => recorder );
-  }
-
-  return recorderModulePromise;
-}
 
 const events = {
   lastEventId: 0,
@@ -103,28 +90,6 @@ const events = {
         }
 
         events.handle( "engine-fill-screen" );
-      }
-    );
-  },
-  toggleCanvasRecordingOnKey: function( onKey = "r" ) {
-    events.register(
-      "engine-on-key-typed",
-      async function() {
-        if ( true !== options.get( "press-r-to-record" ) ) {
-          return;
-        }
-
-        if ( !events.handle( "engine-get-key-typed" ).includes( onKey ) ) {
-          return;
-        }
-
-        const recorder = await getRecorder();
-
-        if ( recorder.recording ) {
-          recorder.stop();
-        } else {
-          recorder.start( animation.maximumFramesCount );
-        }
       }
     );
   },

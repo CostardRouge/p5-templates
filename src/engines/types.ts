@@ -1,6 +1,9 @@
 import type {
   SketchOption
 } from "@/types/sketch.types";
+import type {
+  RecorderCapabilities
+} from "@/engines/recording/types";
 
 /* ------------------------------------------------------------------ */
 /*  Engine event system                                                */
@@ -98,9 +101,39 @@ export interface SketchEngine {
   getTotalFrames( options: SketchOption, slideIndex?: number ): number;
 
   /**
+   * Frames-per-second the sketch is rendered at for the given options.
+   * Used by the recorder to set encoder cadence + MediaRecorder timeslice.
+   */
+  getFrameRate( options: SketchOption, slideIndex?: number ): number;
+
+  /**
    * Return the underlying `<canvas>` element (if any).
    */
   getCanvas(): HTMLCanvasElement | null;
+
+  /**
+   * Seek to `frame` and render it without producing a data-URL.
+   * Cheaper than `captureFrame` for client-side async-loop
+   * recording where the encoder reads pixels straight from the canvas.
+   */
+  seekAndDraw( frame: number ): Promise<void>;
+
+  /**
+   * Reset progression to frame 0 — both frame counter and any time
+   * bridge driving the sketch. Used by the recorder so loops start
+   * from the beginning every run, matching server-side capture.
+   */
+  resetToStart(): Promise<void>;
+
+  /**
+   * Declare what client-side recording modes/formats this engine
+   * supports for the given sketch options. Consumed by the browser
+   * recorder UI to pick a sensible default mode and gate formats.
+   */
+  getRecordingCapabilities(
+    options: SketchOption,
+    slideIndex?: number,
+  ): RecorderCapabilities;
 
   /* ---- events ---------------------------------------------------- */
 

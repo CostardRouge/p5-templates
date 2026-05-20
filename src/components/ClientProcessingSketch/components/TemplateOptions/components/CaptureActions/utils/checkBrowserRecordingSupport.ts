@@ -1,35 +1,27 @@
 /**
- * Check if browser supports MediaRecorder for browser recording
+ * Whether the browser can record the canvas in *any* supported format.
+ * Each format then has its own runtime requirements:
+ *   - gif         → always available (gif.js worker)
+ *   - webm/mp4    → realtime needs MediaRecorder + captureStream;
+ *                   deterministic needs WebCodecs.
+ *
+ * The button is shown as long as one path exists; per-format failures
+ * are surfaced when the user actually clicks Record.
  */
 export function checkBrowserRecordingSupport(): boolean {
-  // Check if MediaRecorder is available, canvas.captureStream is supported, and WebM/VP8/VP9 is supported
-  const hasMediaRecorder = typeof MediaRecorder !== "undefined";
-  const hasCaptureStream =
+  if ( typeof window === "undefined" ) {
+    return false;
+  }
+
+  const hasMediaRecorder =
+    typeof MediaRecorder !== "undefined" &&
     typeof HTMLCanvasElement !== "undefined" &&
     "captureStream" in HTMLCanvasElement.prototype;
 
-  // Check if any WebM codec is supported (VP8, VP9, or H264 in WebM container)
-  const webmCodecs = [
-    "video/webm;codecs=vp9",
-    "video/webm;codecs=vp8",
-    "video/webm;codecs=h264",
-    "video/webm"
-  ];
+  const hasWebCodecs =
+    typeof ( window as any ).VideoEncoder === "function";
 
-  const hasWebMSupport =
-    hasMediaRecorder &&
-    webmCodecs.some( ( codec ) => {
-      try {
-        return MediaRecorder.isTypeSupported( codec );
-      } catch {
-        return false;
-      }
-    } );
+  const hasWorker = typeof Worker !== "undefined";
 
-  // Check if device is iOS (iPhone, iPad, iPod)
-  const isIOS =
-    /iPad|iPhone|iPod/.test( navigator.userAgent ) ||
-    ( navigator.userAgent.includes( "Mac" ) && navigator.maxTouchPoints > 1 );
-
-  return hasMediaRecorder && hasCaptureStream && hasWebMSupport && !isIOS;
+  return hasMediaRecorder || hasWebCodecs || hasWorker;
 }

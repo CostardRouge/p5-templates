@@ -5,6 +5,9 @@ import type {
   EnginePerformanceSample
 } from "@/engines/types";
 import type {
+  RecorderCapabilities
+} from "@/engines/recording/types";
+import type {
   SketchOption
 } from "@/types/sketch.types";
 import {
@@ -222,10 +225,7 @@ export class P5Engine implements SketchEngine {
   /* ---- capture --------------------------------------------------- */
 
   async captureFrame( frame: number ): Promise<string> {
-    this.seek( frame );
-
-    // Allow one microtask for the draw cycle to complete.
-    await new Promise( ( r ) => requestAnimationFrame( r ) );
+    await this.seekAndDraw( frame );
 
     const canvas = this.getCanvas();
 
@@ -234,6 +234,36 @@ export class P5Engine implements SketchEngine {
     }
 
     return canvas.toDataURL( "image/png" );
+  }
+
+  async seekAndDraw( frame: number ): Promise<void> {
+    this.seek( frame );
+
+    // Allow one rAF for the draw cycle to complete.
+    await new Promise( ( r ) => requestAnimationFrame( r ) );
+  }
+
+  async resetToStart(): Promise<void> {
+    const bridge = getAnimationBridge();
+
+    bridge?.setProgression( 0 );
+
+    await this.seekAndDraw( 0 );
+  }
+
+  getRecordingCapabilities(
+    _options: SketchOption,
+    _slideIndex?: number
+  ): RecorderCapabilities {
+    return {
+      supportsDeterministicCapture: true,
+      defaultMode: "async-loop",
+      supportedFormats: [
+        "webm",
+        "gif",
+        "mp4"
+      ]
+    };
   }
 
   getTotalFrames(
@@ -250,6 +280,20 @@ export class P5Engine implements SketchEngine {
     const duration = animation?.duration ?? 12;
 
     return Math.round( duration * framerate );
+  }
+
+  getFrameRate(
+    options: SketchOption,
+    slideIndex?: number
+  ): number {
+    const {
+      animation
+    } = getEffectiveSlideSettings(
+      options,
+      slideIndex
+    );
+
+    return animation?.framerate ?? 60;
   }
 
   getCanvas(): HTMLCanvasElement | null {
