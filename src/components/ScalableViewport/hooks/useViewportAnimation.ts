@@ -17,7 +17,9 @@ export function useViewportAnimation(
     contentElement: HTMLDivElement | null
   ) => void,
   transform: React.MutableRefObject<TransformState>,
-  contentRef: React.RefObject<HTMLDivElement | null>
+  contentRef: React.RefObject<HTMLDivElement | null>,
+  onAnimationStart?: () => void,
+  onAnimationEnd?: () => void
 ) {
   const animationFrameRef = useRef<number | null>( null );
 
@@ -26,9 +28,12 @@ export function useViewportAnimation(
       if ( animationFrameRef.current ) {
         cancelAnimationFrame( animationFrameRef.current );
         animationFrameRef.current = null;
+        onAnimationEnd?.();
       }
     },
-    []
+    [
+      onAnimationEnd
+    ]
   );
 
   const animateTo = useCallback(
@@ -36,6 +41,7 @@ export function useViewportAnimation(
       targetX: number, targetY: number, targetScale: number
     ) => {
       cancelAnimation();
+      onAnimationStart?.();
 
       const startX = transform.current.x;
       const startY = transform.current.y;
@@ -68,6 +74,7 @@ export function useViewportAnimation(
           animationFrameRef.current = requestAnimationFrame( animate );
         } else {
           animationFrameRef.current = null;
+          onAnimationEnd?.();
         }
       };
 
@@ -77,7 +84,9 @@ export function useViewportAnimation(
       setTransform,
       cancelAnimation,
       transform,
-      contentRef
+      contentRef,
+      onAnimationStart,
+      onAnimationEnd
     ]
   );
 
