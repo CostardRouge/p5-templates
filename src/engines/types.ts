@@ -211,6 +211,7 @@ export interface SketchMetadata {
   category: string | null;
   hasSketchForm: boolean;
   hasThumbnail: boolean;
+  hasPreview: boolean;
   mtime: string;
   ctime: string;
 }

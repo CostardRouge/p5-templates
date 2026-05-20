@@ -6,7 +6,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.346Z",
-    "ctime": "2026-04-27T16:15:48.275Z"
+    "ctime": "2026-04-27T16:15:48.275Z",
+    "hasPreview": false
   },
   {
     "name": "censored-v9-wave",
@@ -15,7 +16,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.351Z",
-    "ctime": "2026-04-27T16:15:48.281Z"
+    "ctime": "2026-04-27T16:15:48.281Z",
+    "hasPreview": false
   },
   {
     "name": "empty-sketch",
@@ -24,7 +26,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.351Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
+    "ctime": "2026-04-27T16:15:48.282Z",
+    "hasPreview": false
   },
   {
     "name": "hand-tracking-v0-move",
@@ -33,7 +36,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.351Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
+    "ctime": "2026-04-27T16:15:48.282Z",
+    "hasPreview": false
   },
   {
     "name": "hand-tracking-v1-attract",
@@ -42,7 +46,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.351Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
+    "ctime": "2026-04-27T16:15:48.282Z",
+    "hasPreview": false
   },
   {
     "name": "hand-tracking-v2-repulse",
@@ -51,7 +56,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.352Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
+    "ctime": "2026-04-27T16:15:48.282Z",
+    "hasPreview": false
   },
   {
     "name": "hand-tracking-v3-restore",
@@ -60,7 +66,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.352Z",
-    "ctime": "2026-04-27T16:15:48.283Z"
+    "ctime": "2026-04-27T16:15:48.283Z",
+    "hasPreview": false
   },
   {
     "name": "hand-tracking-v4-text",
@@ -69,7 +76,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.352Z",
-    "ctime": "2026-04-27T16:15:48.283Z"
+    "ctime": "2026-04-27T16:15:48.283Z",
+    "hasPreview": false
   },
   {
     "name": "interaction-test",
@@ -78,7 +86,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.353Z",
-    "ctime": "2026-05-05T01:46:31.353Z"
+    "ctime": "2026-05-05T01:46:31.353Z",
+    "hasPreview": false
   },
   {
     "name": "kinetic-grid-spheres",
@@ -87,7 +96,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.353Z",
-    "ctime": "2026-04-27T16:15:48.284Z"
+    "ctime": "2026-04-27T16:15:48.284Z",
+    "hasPreview": false
   },
   {
     "name": "kinetic-letters",
@@ -96,7 +106,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.354Z",
-    "ctime": "2026-04-27T16:15:48.284Z"
+    "ctime": "2026-04-27T16:15:48.284Z",
+    "hasPreview": false
   },
   {
     "name": "kinetic-plane",
@@ -105,7 +116,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.355Z",
-    "ctime": "2026-04-27T16:15:48.284Z"
+    "ctime": "2026-04-27T16:15:48.284Z",
+    "hasPreview": false
   },
   {
     "name": "mask-v1",
@@ -114,7 +126,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.355Z",
-    "ctime": "2026-04-27T16:15:48.285Z"
+    "ctime": "2026-04-27T16:15:48.285Z",
+    "hasPreview": false
   },
   {
     "name": "neon-graffiti",
@@ -123,7 +136,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.355Z",
-    "ctime": "2026-04-27T16:15:48.285Z"
+    "ctime": "2026-04-27T16:15:48.285Z",
+    "hasPreview": false
   },
   {
     "name": "noise-lines-circle",
@@ -132,7 +146,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.356Z",
-    "ctime": "2026-04-27T16:15:48.286Z"
+    "ctime": "2026-04-27T16:15:48.286Z",
+    "hasPreview": false
   },
   {
     "name": "noise-lines-circle-colored",
@@ -141,7 +156,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.356Z",
-    "ctime": "2026-04-27T16:15:48.286Z"
+    "ctime": "2026-04-27T16:15:48.286Z",
+    "hasPreview": false
   },
   {
     "name": "dominant-colors-block-switch",
@@ -150,7 +166,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.359Z",
-    "ctime": "2026-04-27T16:15:48.289Z"
+    "ctime": "2026-04-27T16:15:48.289Z",
+    "hasPreview": false
   },
   {
     "name": "photo-3d-cylinder",
@@ -159,7 +176,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.359Z",
-    "ctime": "2026-04-27T16:15:48.289Z"
+    "ctime": "2026-04-27T16:15:48.289Z",
+    "hasPreview": false
   },
   {
     "name": "photo-3d-sphere",
@@ -168,7 +186,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.360Z",
-    "ctime": "2026-04-27T16:15:48.290Z"
+    "ctime": "2026-04-27T16:15:48.290Z",
+    "hasPreview": false
   },
   {
     "name": "photo-3d-vertical-stack",
@@ -177,7 +196,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.360Z",
-    "ctime": "2026-04-27T16:15:48.290Z"
+    "ctime": "2026-04-27T16:15:48.290Z",
+    "hasPreview": false
   },
   {
     "name": "photo-ballons-collision",
@@ -186,7 +206,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.360Z",
-    "ctime": "2026-04-27T16:15:48.291Z"
+    "ctime": "2026-04-27T16:15:48.291Z",
+    "hasPreview": false
   },
   {
     "name": "photo-balloons",
@@ -195,7 +216,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.361Z",
-    "ctime": "2026-04-27T16:15:48.291Z"
+    "ctime": "2026-04-27T16:15:48.291Z",
+    "hasPreview": false
   },
   {
     "name": "photo-dice",
@@ -204,7 +226,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.361Z",
-    "ctime": "2026-04-27T16:15:48.292Z"
+    "ctime": "2026-04-27T16:15:48.292Z",
+    "hasPreview": false
   },
   {
     "name": "photo-exif",
@@ -213,7 +236,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.362Z",
-    "ctime": "2026-04-27T16:15:48.292Z"
+    "ctime": "2026-04-27T16:15:48.292Z",
+    "hasPreview": false
   },
   {
     "name": "photo-grid-with-blurry-photo-as-background",
@@ -222,7 +246,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.362Z",
-    "ctime": "2026-04-27T16:15:48.292Z"
+    "ctime": "2026-04-27T16:15:48.292Z",
+    "hasPreview": false
   },
   {
     "name": "photo-grid-with-photo-switch-overlay",
@@ -231,7 +256,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.362Z",
-    "ctime": "2026-04-27T16:15:48.293Z"
+    "ctime": "2026-04-27T16:15:48.293Z",
+    "hasPreview": false
   },
   {
     "name": "photo-grid",
@@ -240,7 +266,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.363Z",
-    "ctime": "2026-04-27T16:15:48.294Z"
+    "ctime": "2026-04-27T16:15:48.294Z",
+    "hasPreview": false
   },
   {
     "name": "photo-in-arc",
@@ -249,7 +276,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.363Z",
-    "ctime": "2026-04-27T16:15:48.294Z"
+    "ctime": "2026-04-27T16:15:48.294Z",
+    "hasPreview": false
   },
   {
     "name": "photo-in-circle",
@@ -258,7 +286,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.364Z",
-    "ctime": "2026-04-27T16:15:48.295Z"
+    "ctime": "2026-04-27T16:15:48.295Z",
+    "hasPreview": false
   },
   {
     "name": "photo-segmentation",
@@ -267,7 +296,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.364Z",
-    "ctime": "2026-04-27T16:15:48.295Z"
+    "ctime": "2026-04-27T16:15:48.295Z",
+    "hasPreview": false
   },
   {
     "name": "photo-stack-top-bottom",
@@ -276,7 +306,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.364Z",
-    "ctime": "2026-04-27T16:15:48.296Z"
+    "ctime": "2026-04-27T16:15:48.296Z",
+    "hasPreview": false
   },
   {
     "name": "photo-stack",
@@ -285,7 +316,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.365Z",
-    "ctime": "2026-04-27T16:15:48.296Z"
+    "ctime": "2026-04-27T16:15:48.296Z",
+    "hasPreview": false
   },
   {
     "name": "photo-switch-blurry-background",
@@ -294,7 +326,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.365Z",
-    "ctime": "2026-04-27T16:15:48.296Z"
+    "ctime": "2026-04-27T16:15:48.296Z",
+    "hasPreview": false
   },
   {
     "name": "photo-switch-letter-mask",
@@ -303,7 +336,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.365Z",
-    "ctime": "2026-04-27T16:15:48.297Z"
+    "ctime": "2026-04-27T16:15:48.297Z",
+    "hasPreview": false
   },
   {
     "name": "photo-switch",
@@ -312,7 +346,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.366Z",
-    "ctime": "2026-04-27T16:15:48.298Z"
+    "ctime": "2026-04-27T16:15:48.298Z",
+    "hasPreview": false
   },
   {
     "name": "photo-switch-tiles",
@@ -321,7 +356,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.366Z",
-    "ctime": "2026-04-27T16:15:48.297Z"
+    "ctime": "2026-04-27T16:15:48.297Z",
+    "hasPreview": false
   },
   {
     "name": "photo-unzoom-bounce",
@@ -330,7 +366,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.366Z",
-    "ctime": "2026-04-27T16:15:48.298Z"
+    "ctime": "2026-04-27T16:15:48.298Z",
+    "hasPreview": false
   },
   {
     "name": "photo-zoom-point",
@@ -339,7 +376,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.367Z",
-    "ctime": "2026-04-27T16:15:48.298Z"
+    "ctime": "2026-04-27T16:15:48.298Z",
+    "hasPreview": false
   },
   {
     "name": "text-morphing-capitalize",
@@ -348,7 +386,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.367Z",
-    "ctime": "2026-04-27T16:15:48.299Z"
+    "ctime": "2026-04-27T16:15:48.299Z",
+    "hasPreview": false
   },
   {
     "name": "text-morphing-depth-clock",
@@ -357,7 +396,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.368Z",
-    "ctime": "2026-04-27T16:15:48.299Z"
+    "ctime": "2026-04-27T16:15:48.299Z",
+    "hasPreview": false
   },
   {
     "name": "text-morphing-depth-rising",
@@ -366,7 +406,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.368Z",
-    "ctime": "2026-04-27T16:15:48.299Z"
+    "ctime": "2026-04-27T16:15:48.299Z",
+    "hasPreview": false
   },
   {
     "name": "hello-world",
@@ -375,7 +416,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.369Z",
-    "ctime": "2026-04-27T16:15:48.300Z"
+    "ctime": "2026-04-27T16:15:48.300Z",
+    "hasPreview": false
   },
   {
     "name": "text-morphing-depth",
@@ -384,7 +426,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.369Z",
-    "ctime": "2026-04-27T16:15:48.299Z"
+    "ctime": "2026-04-27T16:15:48.299Z",
+    "hasPreview": false
   },
   {
     "name": "text-morphing-rotating-scene",
@@ -393,7 +436,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.369Z",
-    "ctime": "2026-04-27T16:15:48.300Z"
+    "ctime": "2026-04-27T16:15:48.300Z",
+    "hasPreview": false
   },
   {
     "name": "text-animated-points",
@@ -402,7 +446,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.370Z",
-    "ctime": "2026-04-27T16:15:48.300Z"
+    "ctime": "2026-04-27T16:15:48.300Z",
+    "hasPreview": false
   },
   {
     "name": "text-animation-typein-typeout",
@@ -411,7 +456,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.370Z",
-    "ctime": "2026-04-27T16:15:48.301Z"
+    "ctime": "2026-04-27T16:15:48.301Z",
+    "hasPreview": false
   },
   {
     "name": "text-decomposition",
@@ -420,7 +466,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.370Z",
-    "ctime": "2026-04-27T16:15:48.301Z"
+    "ctime": "2026-04-27T16:15:48.301Z",
+    "hasPreview": false
   },
   {
     "name": "text-mask-with-noise-strips",
@@ -429,7 +476,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-05T01:46:31.371Z",
-    "ctime": "2026-04-27T16:15:48.302Z"
+    "ctime": "2026-04-27T16:15:48.302Z",
+    "hasPreview": false
   },
   {
     "name": "peaks-cylinder",
@@ -438,7 +486,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-07T16:29:35.000Z",
-    "ctime": "2026-04-27T16:15:48.286Z"
+    "ctime": "2026-04-27T16:15:48.286Z",
+    "hasPreview": false
   },
   {
     "name": "peaks-grid",
@@ -447,7 +496,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-07T16:29:43.603Z",
-    "ctime": "2026-04-27T16:15:48.287Z"
+    "ctime": "2026-04-27T16:15:48.287Z",
+    "hasPreview": false
   },
   {
     "name": "peaks-plane",
@@ -456,7 +506,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-07T16:29:53.701Z",
-    "ctime": "2026-04-27T16:15:48.287Z"
+    "ctime": "2026-04-27T16:15:48.287Z",
+    "hasPreview": false
   },
   {
     "name": "peaks-sphere",
@@ -465,7 +516,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-07T16:30:00.258Z",
-    "ctime": "2026-04-27T16:15:48.287Z"
+    "ctime": "2026-04-27T16:15:48.287Z",
+    "hasPreview": false
   },
   {
     "name": "peaks-tunnel",
@@ -474,7 +526,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-07T16:30:09.678Z",
-    "ctime": "2026-05-06T13:30:20.039Z"
+    "ctime": "2026-05-06T13:30:20.039Z",
+    "hasPreview": false
   },
   {
     "name": "36days-of-type-2023-8",
@@ -483,7 +536,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-14T15:59:17.833Z",
-    "ctime": "2026-04-27T16:15:48.278Z"
+    "ctime": "2026-04-27T16:15:48.278Z",
+    "hasPreview": false
   },
   {
     "name": "36days-of-type-2023-5",
@@ -492,7 +546,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-14T16:02:00.832Z",
-    "ctime": "2026-04-27T16:15:48.276Z"
+    "ctime": "2026-04-27T16:15:48.276Z",
+    "hasPreview": false
   },
   {
     "name": "36days-of-type-2023-7",
@@ -501,7 +556,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-14T16:25:13.047Z",
-    "ctime": "2026-04-27T16:15:48.277Z"
+    "ctime": "2026-04-27T16:15:48.277Z",
+    "hasPreview": false
   },
   {
     "name": "peaks-cone",
@@ -510,7 +566,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-16T07:49:18.501Z",
-    "ctime": "2026-05-06T14:36:47.625Z"
+    "ctime": "2026-05-06T14:36:47.625Z",
+    "hasPreview": false
   },
   {
     "name": "peaks-grid-new-colors",
@@ -519,7 +576,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-19T23:15:00.618Z",
-    "ctime": "2026-05-19T22:25:55.582Z"
+    "ctime": "2026-05-19T22:25:55.582Z",
+    "hasPreview": false
   },
   {
     "name": "36days-of-type-2023-0",
@@ -528,7 +586,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-20T04:13:23.682Z",
-    "ctime": "2026-05-20T03:48:13.962Z"
+    "ctime": "2026-05-20T03:48:13.962Z",
+    "hasPreview": false
   },
   {
     "name": "36days-of-type-2023-1",
@@ -537,7 +596,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-20T04:14:54.337Z",
-    "ctime": "2026-05-20T03:48:13.965Z"
+    "ctime": "2026-05-20T03:48:13.965Z",
+    "hasPreview": false
   },
   {
     "name": "36days-of-type-2023-2",
@@ -546,7 +606,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-20T04:16:15.569Z",
-    "ctime": "2026-05-20T03:48:13.968Z"
+    "ctime": "2026-05-20T03:48:13.968Z",
+    "hasPreview": false
   },
   {
     "name": "36days-of-type-2023-3",
@@ -555,7 +616,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-20T04:17:44.267Z",
-    "ctime": "2026-05-20T03:48:13.970Z"
+    "ctime": "2026-05-20T03:48:13.970Z",
+    "hasPreview": false
   },
   {
     "name": "36days-of-type-2023-6",
@@ -564,7 +626,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-20T04:20:05.345Z",
-    "ctime": "2026-05-20T03:48:13.974Z"
+    "ctime": "2026-05-20T03:48:13.974Z",
+    "hasPreview": false
   },
   {
     "name": "hello-gsap",
@@ -573,6 +636,7 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "mtime": "2026-05-20T04:21:08.574Z",
-    "ctime": "2026-05-20T03:52:00.456Z"
+    "ctime": "2026-05-20T03:52:00.456Z",
+    "hasPreview": false
   }
 ]

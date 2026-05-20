@@ -8,12 +8,13 @@ async function getSketchList() {
     const meta = getMetadata();
 
     return meta.map( ( {
-      name, engine, category, hasSketchForm
+      name, engine, category, hasSketchForm, hasPreview
     } ) => ( {
       name,
       engine,
       category,
-      hasSketchForm
+      hasSketchForm,
+      hasPreview: hasPreview ?? false
     } ) );
   } catch( err ) {
     console.error(
