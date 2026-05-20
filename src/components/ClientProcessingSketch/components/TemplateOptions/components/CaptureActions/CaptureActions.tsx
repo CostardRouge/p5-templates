@@ -11,12 +11,11 @@ import VideoPreviewModal from "@/components/VideoPreviewModal";
 import {
   useRecordingQueue
 } from "@/hooks/useRecordingQueue";
-import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import {
   getScopeAssetPath, resolveAssetURL
 } from "@/p5/shared/utils";
 import type {
-  JobId, JobModel, JobStatusEnum
+  JobId, JobModel, JobStatusEnum, RecordingProgressionStream
 } from "@/types/recording.types";
 import type {
   SketchOptionInput, SlideOptionInput
@@ -28,19 +27,19 @@ import FailedActions from "./components/FailedActions";
 import NoJobActions from "./components/NoJobActions";
 import RecordingActions from "./components/RecordingActions";
 import {
-  getRecordingStatus
-} from "./utils/getRecordingStatus";
-import {
   useBrowserRecorder
 } from "./hooks/useBrowserRecorder";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import type {
   RecorderCapabilities
 } from "@/engines/recording";
+import type {
+  RecordingLifecycle
+} from "../../hooks/useRecordingLifecycle";
 
 export type CaptureActionsRef = {
   saveAsDraft: () => Promise<void>;
-  currentStatus?: string;
+  cloneAsDraft: () => Promise<void>;
   isRecording: boolean;
   isSaving: boolean;
 };
@@ -53,6 +52,9 @@ type CaptureActionsProps = {
   backendRecording: boolean;
   browserRecordingSupported: boolean;
   thumbnails?: Record<string, string>;
+  lifecycle: RecordingLifecycle;
+  recordingProgress: RecordingProgressionStream | null;
+  subscribeToRecordingStatus: ( jobId: JobId ) => void;
 };
 
 const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
@@ -63,7 +65,10 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     activeSlideIndex,
     backendRecording,
     browserRecordingSupported,
-    thumbnails
+    thumbnails,
+    lifecycle,
+    recordingProgress,
+    subscribeToRecordingStatus
   },
   ref
 ) => {
@@ -73,6 +78,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       engineId, engine
     }
   ] = useSketch();
+
+  const {
+    state,
+    currentStatus,
+    effectiveJob,
+    isRecording
+  } = lifecycle;
 
   const recorderCapabilities: RecorderCapabilities | null = engine
     ? engine.getRecordingCapabilities(
@@ -123,16 +135,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     cloning,
     setCloning
   ] = useState<boolean>( false );
-
-  const {
-    subscribeToRecordingStatus, recordingProgress
-  } =
-    useRecordingStatusStream();
-
-  // Determine current status
-  const currentStatus = ( recordingProgress?.status || persistedJob?.status ) as
-      | JobStatusEnum
-      | undefined;
 
   // Auto-subscribe to recording status on mount if job is active/queued
   React.useEffect(
@@ -374,7 +376,22 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     }
   };
 
-  // Expose save function to parent via ref
+  const handleRecordAgain = async() => {
+    setCloning( true );
+    try {
+      await handleSubmit( "draft" );
+    } catch( error ) {
+      console.error(
+        "Failed to clone:",
+        error
+      );
+      alert( "Failed to clone. Please try again." );
+    } finally {
+      setCloning( false );
+    }
+  };
+
+  // Expose imperative actions to parent via ref
   useImperativeHandle(
     ref,
     () => ( {
@@ -385,9 +402,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
           true // skip redirect for auto-save
         );
       },
+      cloneAsDraft: handleRecordAgain,
       isSaving: saving,
-      isRecording: !!isRecording,
-      currentStatus
+      isRecording: !!isRecording
     } )
   );
 
@@ -505,21 +522,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     }
   };
 
-  const handleRecordAgain = async() => {
-    setCloning( true );
-    try {
-      await handleSubmit( "draft" );
-    } catch( error ) {
-      console.error(
-        "Failed to clone:",
-        error
-      );
-      alert( "Failed to clone. Please try again." );
-    } finally {
-      setCloning( false );
-    }
-  };
-
   const handleDownload = async() => {
     const jobToDownload = persistedJob?.id || jobId;
 
@@ -537,12 +539,6 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     }
   };
 
-  // Determine UI states
-  const {
-    isRecording, isCompleted, isFailed, isDraft
-  } =
-    getRecordingStatus( currentStatus );
-  const hasNoJob = !persistedJob && !recordingProgress && !jobId;
   const isAnyActionLoading =
     isLoading ||
       saving ||
@@ -551,7 +547,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       retrying ||
       downloading ||
       cloning;
-    // Don't block start button when only saving (isLoading is true during save too)
+  // Don't block start button when only saving (isLoading is true during save too)
   const isBlockingActionLoading =
     ( isLoading && !saving ) ||
       deleting ||
@@ -560,16 +556,101 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
       downloading ||
       cloning;
 
-  // Use persistedJob or construct a minimal job object from recordingProgress/jobId
-  const effectiveJob =
-    persistedJob ||
-      ( jobId
-        ? ( {
-          id: jobId,
-          status: currentStatus || "queued",
-          progress: recordingProgress?.percentage || 0
-        } as JobModel )
-        : undefined );
+  const renderBackendActions = () => {
+    switch ( state ) {
+      case "no-job":
+        return (
+          <NoJobActions
+            onSaveDraft={ () => handleSubmit( "draft" ) }
+            onStart={ () => handleSubmit( "queued" ) }
+            saving={ saving }
+            isLoading={ isLoading }
+            isAnyActionLoading={ isAnyActionLoading }
+            isBlockingActionLoading={ isBlockingActionLoading }
+          />
+        );
+
+      case "draft":
+        if ( !persistedJob ) {
+          return null;
+        }
+        return (
+          <DraftActions
+            onSave={ () => handleSubmit(
+              "draft",
+              persistedJob.id
+            ) }
+            onStart={ () => handleSubmit(
+              "queued",
+              persistedJob.id
+            ) }
+            onDelete={ handleDelete }
+            saving={ saving }
+            isLoading={ isLoading }
+            deleting={ deleting }
+            isAnyActionLoading={ isAnyActionLoading }
+            isBlockingActionLoading={ isBlockingActionLoading }
+          />
+        );
+
+      case "queued":
+      case "active":
+        return (
+          <RecordingActions
+            persistedJob={ persistedJob }
+            jobId={ jobId }
+            recordingProgress={ recordingProgress || undefined }
+            onClone={ handleRecordAgain }
+            onCancel={ handleCancel }
+            cloning={ cloning }
+            cancelling={ cancelling }
+          />
+        );
+
+      case "completed":
+        if ( !effectiveJob ) {
+          return null;
+        }
+        return (
+          <CompletedActions
+            persistedJob={ effectiveJob }
+            activeSlideIndex={ activeSlideIndex }
+            onPreview={ () => setShowPreviewModal( true ) }
+            onRecordAgain={ handleRecordAgain }
+            onDelete={ handleDelete }
+            downloading={ downloading }
+            onDownload={ handleDownload }
+            deleting={ deleting }
+            cloning={ cloning }
+          />
+        );
+
+      case "failed":
+      case "cancelled":
+        if ( !effectiveJob ) {
+          return null;
+        }
+        return (
+          <FailedActions
+            onRetry={ handleRetry }
+            onSaveAsDraft={ async() => {
+              await handleSubmit(
+                "draft",
+                effectiveJob.id
+              );
+            } }
+            onDelete={ handleDelete }
+            retrying={ retrying }
+            saving={ saving }
+            deleting={ deleting }
+            isAnyActionLoading={ isAnyActionLoading }
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <>
@@ -588,87 +669,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
             />
           )}
 
-          {backendRecording && (
-            <>
-              {/* NO JOB - Fresh Start */}
-              {hasNoJob && (
-                <NoJobActions
-                  onSaveDraft={ () => handleSubmit( "draft" ) }
-                  onStart={ () => handleSubmit( "queued" ) }
-                  saving={ saving }
-                  isLoading={ isLoading }
-                  isAnyActionLoading={ isAnyActionLoading }
-                  isBlockingActionLoading={ isBlockingActionLoading }
-                />
-              )}
-
-              {/* DRAFT Status */}
-              {isDraft && !isRecording && persistedJob && (
-                <DraftActions
-                  onSave={ () => handleSubmit(
-                    "draft",
-                    persistedJob.id
-                  ) }
-                  onStart={ () => handleSubmit(
-                    "queued",
-                    persistedJob.id
-                  ) }
-                  onDelete={ handleDelete }
-                  saving={ saving }
-                  isLoading={ isLoading }
-                  deleting={ deleting }
-                  isAnyActionLoading={ isAnyActionLoading }
-                  isBlockingActionLoading={ isBlockingActionLoading }
-                />
-              )}
-
-              {/* RECORDING Status (Queued/Active) */}
-              {isRecording && (
-                <RecordingActions
-                  persistedJob={ persistedJob }
-                  jobId={ jobId }
-                  recordingProgress={ recordingProgress || undefined }
-                  onClone={ handleRecordAgain }
-                  onCancel={ handleCancel }
-                  cloning={ cloning }
-                  cancelling={ cancelling }
-                />
-              )}
-
-              {/* COMPLETED Status */}
-              {isCompleted && effectiveJob && (
-                <CompletedActions
-                  persistedJob={ effectiveJob }
-                  activeSlideIndex={ activeSlideIndex }
-                  onPreview={ () => setShowPreviewModal( true ) }
-                  onRecordAgain={ handleRecordAgain }
-                  onDelete={ handleDelete }
-                  downloading={ downloading }
-                  onDownload={ handleDownload }
-                  deleting={ deleting }
-                  cloning={ cloning }
-                />
-              )}
-
-              {/* FAILED/CANCELLED Status */}
-              {isFailed && effectiveJob && (
-                <FailedActions
-                  onRetry={ handleRetry }
-                  onSaveAsDraft={ async() => {
-                    await handleSubmit(
-                      "draft",
-                      effectiveJob.id
-                    );
-                  } }
-                  onDelete={ handleDelete }
-                  retrying={ retrying }
-                  saving={ saving }
-                  deleting={ deleting }
-                  isAnyActionLoading={ isAnyActionLoading }
-                />
-              )}
-            </>
-          )}
+          {backendRecording && renderBackendActions()}
         </div>
       </div>
 
