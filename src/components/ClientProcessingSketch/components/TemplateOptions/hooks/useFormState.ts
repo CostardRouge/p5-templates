@@ -11,9 +11,6 @@ import initOptions from "@/utils/initOptions";
 import {
   useInterval
 } from "@/hooks/useInterval";
-import type {
-  JobModel
-} from "@/types/recording.types";
 import {
   OptionsSchema,
   type SketchOption,
@@ -25,7 +22,7 @@ import type {
 
 type UseFormStateProps = {
   initialOptions: SketchOption;
-  persistedJob?: JobModel;
+  canAutoSave: boolean;
   onOptionsChange: (
     nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
   ) => void;
@@ -34,7 +31,7 @@ type UseFormStateProps = {
 
 export function useFormState( {
   initialOptions,
-  persistedJob,
+  canAutoSave,
   onOptionsChange,
   captureActionsRef
 }: UseFormStateProps ) {
@@ -88,14 +85,14 @@ export function useFormState( {
     ]
   );
 
-  // Auto-save every 10 seconds when jobId exists and status is draft
+  // Auto-save every 10 seconds when allowed by the lifecycle (draft state)
   useInterval( {
     callback: async() => {
       if ( captureActionsRef.current && !captureActionsRef.current.isSaving ) {
         await captureActionsRef.current.saveAsDraft();
       }
     },
-    enabled: !!jobId && persistedJob?.status === "draft",
+    enabled: !!jobId && canAutoSave,
     intervalMs: 10000 // 10 seconds
   } );
 

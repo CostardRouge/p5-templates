@@ -1,11 +1,12 @@
 import type React from "react";
 import {
-  useEffect, useRef
+  useEffect, useRef, useState
 } from "react";
 import {
   FormProvider, useFieldArray, useWatch
 } from "react-hook-form";
 import initOptions from "@/utils/initOptions";
+import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import type {
   JobModel
 } from "@/types/recording.types";
@@ -18,11 +19,15 @@ import CaptureActions, {
 } from "./components/CaptureActions";
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import OptionsPanel from "./components/OptionsPanel";
+import RecordingLockBanner from "./components/RecordingLockBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
 import {
   useFormState
 } from "./hooks/useFormState";
+import {
+  useRecordingLifecycle
+} from "./hooks/useRecordingLifecycle";
 import {
   useSlideManagement
 } from "./hooks/useSlideManagement";
@@ -56,12 +61,45 @@ export default function TemplateOptions( {
   const captureActionsRef = useRef<CaptureActionsRef>( null );
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
 
+  // Live recording status stream — lifted here so both the banner and
+  // CaptureActions observe the same updates.
+  const {
+    subscribeToRecordingStatus, recordingProgress
+  } = useRecordingStatusStream();
+
+  // Single source of truth for the recording lifecycle. Derived from the
+  // persisted job (server snapshot) and the live status stream.
+  const lifecycle = useRecordingLifecycle( {
+    persistedJob,
+    recordingProgress,
+    jobId: persistedJob?.id
+  } );
+
+  // Loading state for the banner's clone CTA. Kept here (not in CaptureActions)
+  // because the banner is the consumer that needs to reflect it.
+  const [
+    bannerCloning,
+    setBannerCloning
+  ] = useState( false );
+
+  const handleBannerClone = async() => {
+    if ( !captureActionsRef.current ) {
+      return;
+    }
+    setBannerCloning( true );
+    try {
+      await captureActionsRef.current.cloneAsDraft();
+    } finally {
+      setBannerCloning( false );
+    }
+  };
+
   // Form state management
   const {
     methods
   } = useFormState( {
     initialOptions,
-    persistedJob,
+    canAutoSave: lifecycle.canAutoSave,
     onOptionsChange,
     captureActionsRef: captureActionsRef as React.RefObject<CaptureActionsRef>
   } );
@@ -300,6 +338,14 @@ export default function TemplateOptions( {
             maxWidth: "calc(50% - 0.75rem)"
           } }
         >
+          {lifecycle.isLocked && (
+            <RecordingLockBanner
+              state={ lifecycle.state }
+              onClone={ handleBannerClone }
+              cloning={ bannerCloning }
+            />
+          )}
+
           <OptionsPanel
             methods={ methods }
             name={ name }
@@ -308,7 +354,7 @@ export default function TemplateOptions( {
             slideFields={ slideFields }
             thumbnails={ thumbnails }
             slides={ slides }
-            jobStatus={ captureActionsRef.current?.currentStatus }
+            jobStatus={ lifecycle.currentStatus }
             isAdding={ isAdding }
             onAddSlide={ handleAddSlide }
             onSelectSlide={ handleSlideSelect }
@@ -332,6 +378,9 @@ export default function TemplateOptions( {
               backendRecording={ backendRecording }
               browserRecordingSupported={ browserRecordingSupported }
               thumbnails={ enableThumbnails ? thumbnails : {} }
+              lifecycle={ lifecycle }
+              recordingProgress={ recordingProgress }
+              subscribeToRecordingStatus={ subscribeToRecordingStatus }
             />
           )}
         </div>
