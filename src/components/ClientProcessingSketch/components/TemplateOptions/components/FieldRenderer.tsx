@@ -88,6 +88,7 @@ export default function FieldRenderer( {
 
   const handleReset = ( e: React.MouseEvent ) => {
     e.preventDefault();
+    e.stopPropagation();
     resetField( registeredName );
   };
 
@@ -258,9 +259,20 @@ export default function FieldRenderer( {
                     transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
                   } }
                 />
-                <span>
+                <span className={ isModified ? "font-medium text-foreground" : undefined }>
                   {config.label} ({Object.keys( config.fields ).length} fields)
                 </span>
+                {isModified && (
+                  <button
+                    type="button"
+                    onClick={ handleReset }
+                    tabIndex={ -1 }
+                    title="Reset to saved value"
+                    className="text-gray-400 hover:text-foreground transition-colors"
+                  >
+                    · reset
+                  </button>
+                )}
               </div>
             ) }
           >
