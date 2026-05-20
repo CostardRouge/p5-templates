@@ -123,7 +123,6 @@ export default function RootLayout( {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/site.webmanifest" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link
           rel="preconnect"
