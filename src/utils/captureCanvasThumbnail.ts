@@ -4,6 +4,9 @@ import {
 import sharp from "sharp";
 import fs from "node:fs/promises";
 import path from "path";
+import {
+  detectCaptureSurface, readCaptureFrame
+} from "@/utils/captureSurface";
 
 /**
  * Captures a clean thumbnail from a canvas element using Canvas API
@@ -40,47 +43,21 @@ export async function captureCanvasThumbnail(
     quality = 90, format = "jpeg", resize
   } = options ?? {};
 
-  // Wait for canvas to be loaded
+  // Wait for the sketch to be ready — generic engine routes flag readiness
+  // with `[data-engine-ready]`; legacy p5 routes use the loaded canvas class.
   await page.waitForSelector(
-    "canvas.p5Canvas.loaded",
+    "[data-engine-ready], canvas.p5Canvas.loaded",
     {
       timeout: 30000
     }
   );
 
-  // Get image data directly from canvas using Canvas API
-  const imageDataUrl = await page.evaluate(
-    ( {
-      format, quality
-    } ) => {
-      const canvas = document.querySelector( "canvas.p5Canvas" ) as HTMLCanvasElement;
-
-      if ( !canvas ) {
-        throw new Error( "Canvas element not found" );
-      }
-
-      // Use canvas.toDataURL to get image data
-      const mimeType = format === "jpeg" ? "image/jpeg" : "image/png";
-
-      return canvas.toDataURL(
-        mimeType,
-        quality / 100
-      );
-    },
-    {
-      format,
-      quality
-    }
-  );
-
-  // Convert data URL to buffer
-  const base64Data = imageDataUrl.replace(
-    /^data:image\/\w+;base64,/,
-    ""
-  );
-  const buffer = Buffer.from(
-    base64Data,
-    "base64"
+  // Grab a PNG frame using the engine's capture surface (canvas pixels or a
+  // DOM screenshot). sharp re-encodes to the requested format below.
+  const surface = await detectCaptureSurface( page );
+  const buffer = await readCaptureFrame(
+    page,
+    surface
   );
 
   // Ensure directory exists

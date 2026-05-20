@@ -3,6 +3,12 @@ import {
 } from "playwright";
 import fs from "node:fs/promises";
 import path from "path";
+import {
+  detectCaptureSurface,
+  prepareCapture,
+  readCaptureFrame,
+  renderCaptureFrame
+} from "@/utils/captureSurface";
 
 interface CaptureFramesOptions {
   page: Page;
@@ -15,6 +21,9 @@ interface CaptureFramesOptions {
  * Server-side frame capture using Playwright.
  * Captures each frame incrementally and writes directly to disk.
  * This method is more memory-efficient than the tar-based approach.
+ *
+ * Engine-agnostic: it drives whatever capture controller the active engine
+ * registered (p5 canvas, GSAP/HTML DOM, …) instead of hard-coding p5.
  */
 export async function captureFramesServerSide( {
   page,
@@ -32,54 +41,26 @@ export async function captureFramesServerSide( {
 
   let lastReportedPercentage = -1;
 
-  // Initialize the sketch for frame-by-frame capture
-  await page.evaluate( () => {
-    // Stop the normal animation loop
-    // @ts-ignore - p5.js global function
-    if ( typeof window.noLoop === "function" ) {
-      // @ts-ignore
-      window.noLoop();
-    }
-    // Enable recording mode (resets time and enables frame-based timing)
-    // @ts-ignore - global function exposed by time utility
-    if ( typeof window.enableRecordingMode === "function" ) {
-      // @ts-ignore
-      window.enableRecordingMode();
-    }
-  } );
+  // Resolve the capture surface + put the engine into deterministic mode.
+  const surface = await detectCaptureSurface( page );
+
+  await prepareCapture( page );
 
   // Capture frames one by one
   for ( let frameIndex = 0; frameIndex < totalFrames; frameIndex++ ) {
-    // Trigger a single frame draw (time advances automatically via incrementElapsedTime)
-    await page.evaluate( () => {
-      // @ts-ignore - p5.js global function
-      if ( typeof window.redraw === "function" ) {
-        // @ts-ignore
-        window.redraw();
-      }
-    } );
+    // Render this frame deterministically (engine controller advances time).
+    await renderCaptureFrame(
+      page,
+      frameIndex
+    );
 
     // Small delay to ensure frame is rendered
     await page.waitForTimeout( 10 );
 
-    // Get the canvas element and extract frame data
-    const frameDataUrl = await page.evaluate( () => {
-      const canvas = document.querySelector( "canvas.p5Canvas" ) as HTMLCanvasElement;
-
-      if ( !canvas ) {
-        throw new Error( "Canvas element not found" );
-      }
-      return canvas.toDataURL( "image/png" );
-    } );
-
-    // Decode base64 to buffer
-    const base64Data = frameDataUrl.replace(
-      /^data:image\/png;base64,/,
-      ""
-    );
-    const frameBuffer = Buffer.from(
-      base64Data,
-      "base64"
+    // Grab the frame (canvas pixels or DOM screenshot per engine).
+    const frameBuffer = await readCaptureFrame(
+      page,
+      surface
     );
 
     // Write frame to disk with zero-padded filename

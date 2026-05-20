@@ -62,15 +62,66 @@ export type RecorderCapabilities = {
 };
 
 /**
- * Narrow contract a `Recorder` consumes — anything that exposes a canvas
- * and (for deterministic mode) frame controls. Decouples the recorder
- * from `SketchEngine` so it can be reused by non-engine hosts (tests,
- * standalone canvases) without dragging in the full engine interface.
+ * Engine-agnostic capture surface.
+ *
+ * Decouples the recorder from any assumption that a sketch renders into a
+ * `<canvas>`. Canvas engines (p5, three.js) expose their live canvas
+ * directly; DOM/CSS engines (GSAP/HTML) expose a *mirror* canvas that is
+ * (re)painted from the rendered DOM on demand. Either way the recorder
+ * only ever talks to this interface, never a raw canvas.
+ */
+export interface CaptureSource {
+  /** Pixel width of the captured surface. */
+  readonly width: number;
+  /** Pixel height of the captured surface. */
+  readonly height: number;
+
+  /**
+   * A `<canvas>` suitable for `MediaRecorder.captureStream()` (realtime)
+   * and as the backing canvas for WebCodecs encoders. For canvas engines
+   * this is the live canvas; for DOM engines it's the mirror canvas that
+   * `beginRealtime()` keeps continuously repainted.
+   */
+  getStreamCanvas(): HTMLCanvasElement | null;
+
+  /**
+   * Ensure the stream canvas reflects the *current* frame and return a
+   * drawable image source for it. Cheap (identity) for canvas engines;
+   * for DOM engines this rasterises the current DOM into the mirror
+   * canvas. Called by async-loop capture after each `seekAndDraw`.
+   */
+  readFrame(): Promise<CanvasImageSource>;
+
+  /**
+   * Begin continuously mirroring the rendered output into the stream
+   * canvas (DOM engines start a rAF rasterise loop). No-op for canvas
+   * engines whose canvas is already live. Called when realtime capture
+   * starts.
+   */
+  beginRealtime(): void;
+
+  /** Stop the continuous mirror loop started by `beginRealtime()`. */
+  endRealtime(): void;
+}
+
+/**
+ * Narrow contract a `Recorder` consumes — anything that exposes a capture
+ * surface and (for deterministic mode) frame controls. Decouples the
+ * recorder from `SketchEngine` so it can be reused by non-engine hosts
+ * (tests, standalone surfaces) without dragging in the full engine
+ * interface.
  */
 export interface RecorderHost {
+  /** Engine-agnostic capture surface (canvas or DOM-mirror). */
+  getCaptureSource(): CaptureSource;
+  /**
+   * Convenience accessor for the underlying stream canvas. Equivalent to
+   * `getCaptureSource().getStreamCanvas()`; kept for callers that only
+   * need a canvas reference (e.g. saving a still image).
+   */
   getCanvas(): HTMLCanvasElement | null;
   /**
-   * Seek + render one frame synchronously enough that the canvas
+   * Seek + render one frame synchronously enough that the surface
    * reflects frame index by the time the promise resolves.
    * Only required for async-loop mode.
    */
@@ -145,3 +196,40 @@ export type FrameEncoderFactory = ( params: {
   totalFrames: number;
   videoBitsPerSecond?: number;
 } ) => FrameEncoder;
+
+/* ------------------------------------------------------------------ */
+/*  Server-side (Playwright) capture                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * How the headless recorder should grab a frame from the page.
+ *
+ * `canvas` – read `<canvas>.toDataURL()` (fast, exact pixels).
+ * `dom`    – take a Playwright element screenshot of the rendered DOM
+ *            surface (works for CSS/HTML/GSAP engines that have no canvas).
+ */
+export type ServerCaptureKind = "canvas" | "dom";
+
+/**
+ * Registered by the active engine on `window.__sketchCapture` once it is
+ * ready, so the headless recording pipeline can drive *any* engine through
+ * one uniform protocol instead of hard-coding p5 globals + `canvas.p5Canvas`.
+ *
+ * The pipeline calls `prepare()` once, then `renderFrame(i)` per frame, then
+ * screenshots `surfaceSelector` (or reads the canvas) according to
+ * `captureKind`.
+ */
+export interface ServerCaptureController {
+  /** Whether frames are read from a canvas or screenshotted from the DOM. */
+  captureKind: ServerCaptureKind;
+  /** CSS selector of the element to capture (canvas or DOM stage). */
+  surfaceSelector: string;
+  /** Put the engine into deterministic, frame-stepped capture mode. */
+  prepare(): void;
+  /**
+   * Render frame `index` deterministically. May be async (e.g. waiting for
+   * a layout/paint). Implementations that auto-advance time can ignore the
+   * argument.
+   */
+  renderFrame( index: number ): void | Promise<void>;
+}

@@ -1,0 +1,132 @@
+import {
+  Page
+} from "playwright";
+import type {
+  ServerCaptureKind
+} from "@/engines/recording/types";
+
+/**
+ * Engine-agnostic headless capture helpers.
+ *
+ * The recording pipeline used to assume every sketch rendered into
+ * `canvas.p5Canvas` and stepped via p5 globals. Instead it now talks to the
+ * controller each engine registers on `window.__sketchCapture`
+ * (see `@/engines/recording/serverCapture`), falling back to the legacy p5
+ * behaviour when no controller is present.
+ *
+ * Canvas engines (p5) are read fast via `canvas.toDataURL()`; DOM/CSS engines
+ * (GSAP/HTML) are captured with a Playwright element screenshot, which renders
+ * the real DOM in headless Chromium.
+ */
+export type CaptureSurfaceInfo = {
+  kind: ServerCaptureKind;
+  selector: string;
+};
+
+const LEGACY_CANVAS_SELECTOR = "canvas.p5Canvas";
+
+/** Resolve how (and from which element) frames should be grabbed. */
+export async function detectCaptureSurface( page: Page ): Promise<CaptureSurfaceInfo> {
+  return page.evaluate(
+    ( fallbackSelector ) => {
+      const controller = window.__sketchCapture;
+
+      if ( controller?.surfaceSelector ) {
+        return {
+          kind: controller.captureKind ?? "canvas",
+          selector: controller.surfaceSelector
+        };
+      }
+
+      return {
+        kind: "canvas" as const,
+        selector: fallbackSelector
+      };
+    },
+    LEGACY_CANVAS_SELECTOR
+  );
+}
+
+/** Put the active engine into deterministic, frame-stepped capture mode. */
+export async function prepareCapture( page: Page ): Promise<void> {
+  await page.evaluate( () => {
+    const controller = window.__sketchCapture;
+
+    if ( controller?.prepare ) {
+      controller.prepare();
+      return;
+    }
+
+    // Legacy p5 fallback (instance not driven by a controller).
+    if ( typeof window.noLoop === "function" ) {
+      window.noLoop();
+    }
+
+    if ( typeof window.enableRecordingMode === "function" ) {
+      window.enableRecordingMode();
+    }
+  } );
+}
+
+/** Render a single deterministic frame in the page. */
+export async function renderCaptureFrame(
+  page: Page,
+  frameIndex: number
+): Promise<void> {
+  await page.evaluate(
+    async( index ) => {
+      const controller = window.__sketchCapture;
+
+      if ( controller?.renderFrame ) {
+        await controller.renderFrame( index );
+        return;
+      }
+
+      if ( typeof window.redraw === "function" ) {
+        window.redraw();
+      }
+    },
+    frameIndex
+  );
+}
+
+/** Grab the current frame as a PNG buffer using the right strategy. */
+export async function readCaptureFrame(
+  page: Page,
+  info: CaptureSurfaceInfo
+): Promise<Buffer> {
+  if ( info.kind === "dom" ) {
+    const element = await page.$( info.selector );
+
+    if ( !element ) {
+      throw new Error( `Capture surface "${ info.selector }" not found.` );
+    }
+
+    return element.screenshot( {
+      type: "png"
+    } );
+  }
+
+  const dataUrl = await page.evaluate(
+    ( selector ) => {
+      const canvas = document.querySelector( selector ) as HTMLCanvasElement | null;
+
+      if ( !canvas ) {
+        throw new Error( "Canvas element not found" );
+      }
+
+      return canvas.toDataURL( "image/png" );
+    },
+    info.selector
+  );
+
+  const base64Data = dataUrl.replace(
+    /^data:image\/png;base64,/,
+    ""
+  );
+
+  return Buffer.from(
+    base64Data,
+    "base64"
+  );
+}

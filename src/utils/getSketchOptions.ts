@@ -8,6 +8,9 @@ import {
 import {
   findSketchMeta, resolveSketchPath
 } from "@/engines/metadata";
+import {
+  getSketchOptionLoaders
+} from "@/engines/sketchOptionLoaders";
 
 export async function getJSONSketchOptions(
   sketchName: string, engineId: string
@@ -18,13 +21,18 @@ export async function getJSONSketchOptions(
       engineId
     );
 
-    if ( !sketchPath ) {
+    const loaders = getSketchOptionLoaders( engineId );
+
+    if ( !sketchPath || !loaders ) {
       return {};
     }
 
-    const options = await import( `@/p5/sketches/${ sketchPath }/options.json` );
+    // Loading happens in a server-only module: some `options.ts`/`.json`
+    // siblings touch the filesystem at import time, so the dynamic-import
+    // context must never reach the client bundle. See sketchOptionLoaders.ts.
+    const options = await loaders.loadOptionsJson( sketchPath );
 
-    return options.default || options;
+    return ( options as Partial<SketchOption> ) ?? {};
   } catch {
     return {};
   }
@@ -47,8 +55,14 @@ export async function getSketchMeta(
     return {};
   }
 
+  const loaders = getSketchOptionLoaders( engineId );
+
+  if ( !loaders ) {
+    return {};
+  }
+
   try {
-    return await import( `@/p5/sketches/${ meta.sketchPath }/options.ts` );
+    return await loaders.loadSketchForm( meta.sketchPath ) as SketchMeta;
   } catch {
     return {};
   }

@@ -94,7 +94,9 @@ export default function OptionsPanel( {
 
   return (
     <CollapsibleItem
+      swipeToCollapse
       className="flex flex-col gap-1 glass p-2 border border-theme rounded-2xl shadow-lg w-full"
+      contentClassName="flex flex-col gap-1"
       style={ {
         maxHeight: "calc(80svh)"
       } }

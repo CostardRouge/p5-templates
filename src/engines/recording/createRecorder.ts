@@ -50,19 +50,26 @@ export function createRecorder( opts: CreateRecorderOptions ): Recorder {
     );
   }
 
-  const canvas = host.getCanvas();
+  // gif reads the image source handed to `addFrame` each tick, so it needs
+  // no canvas up-front. The WebCodecs (mediabunny) encoder binds to the
+  // stream canvas once and re-reads it per frame — for DOM engines that's
+  // the mirror canvas that `source.readFrame()` repaints before each add.
+  let factory;
 
-  if ( !canvas ) {
-    throw new Error( "createRecorder: host has no canvas." );
+  if ( format === "gif" ) {
+    factory = createGifEncoderFactory();
+  } else {
+    const canvas = host.getCaptureSource().getStreamCanvas();
+
+    if ( !canvas ) {
+      throw new Error( "createRecorder: capture source has no stream canvas." );
+    }
+
+    factory = createMediabunnyEncoderFactory(
+      format,
+      canvas
+    );
   }
-
-  const factory =
-    format === "gif"
-      ? createGifEncoderFactory()
-      : createMediabunnyEncoderFactory(
-        format,
-        canvas
-      );
 
   return new AsyncLoopRecorder(
     host,

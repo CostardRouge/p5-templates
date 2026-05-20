@@ -5,8 +5,16 @@ import type {
   EnginePerformanceSample
 } from "@/engines/types";
 import type {
+  CaptureSource,
   RecorderCapabilities
 } from "@/engines/recording/types";
+import {
+  createCanvasCaptureSource
+} from "@/engines/recording/captureSource";
+import {
+  registerServerCaptureController,
+  unregisterServerCaptureController
+} from "@/engines/recording/serverCapture";
 import type {
   SketchOption
 } from "@/types/sketch.types";
@@ -132,6 +140,25 @@ export class P5Engine implements SketchEngine {
     } );
 
     this._isReady = true;
+
+    // Expose a uniform headless-capture controller. Mirrors the long-standing
+    // server behaviour (frame-based time + redraw stepping) but drives the
+    // real p5 instance instead of relying on p5 global-mode functions that
+    // don't exist in instance mode.
+    registerServerCaptureController( {
+      captureKind: "canvas",
+      surfaceSelector: "canvas.p5Canvas",
+      prepare: () => {
+        window.enableRecordingMode?.();
+        this.sketchRuntime?.getP5()?.noLoop();
+      },
+      renderFrame: () => {
+        // enableRecordingMode makes incrementElapsedTime advance frame-based
+        // time on each pre-draw, so a bare redraw steps exactly one frame.
+        this.sketchRuntime?.getP5()?.redraw();
+      }
+    } );
+
     this.emit(
       "ready",
       undefined as any
@@ -140,6 +167,7 @@ export class P5Engine implements SketchEngine {
 
   destroy(): void {
     this.stopPerformanceLoop();
+    unregisterServerCaptureController();
 
     // p5 instance cleanup — removes canvas, stops draw, unbinds events.
     this.sketchRuntime?.getP5()?.remove();
@@ -298,6 +326,10 @@ export class P5Engine implements SketchEngine {
 
   getCanvas(): HTMLCanvasElement | null {
     return this.container?.querySelector( "canvas" ) ?? null;
+  }
+
+  getCaptureSource(): CaptureSource {
+    return createCanvasCaptureSource( () => this.getCanvas() );
   }
 
   /* ---- events ---------------------------------------------------- */

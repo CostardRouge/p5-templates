@@ -472,8 +472,10 @@ async function recordMultipleSlides(
       slideIndex
     );
 
+    // Engine-agnostic: p5 sets data-slide on its canvas, DOM engines on their
+    // capture surface element.
     await page.waitForSelector(
-      `canvas[data-slide="${ slideIndex }"]`,
+      `[data-slide="${ slideIndex }"]`,
       {
         timeout: 0
       }

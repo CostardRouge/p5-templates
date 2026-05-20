@@ -28,9 +28,11 @@ export function EngineControls( ) {
     name,
     engineId
   ) : undefined;
+  // DOM engines (GSAP/HTML) author templates as React `.jsx`; p5 uses `.js`.
+  const entryExtension = engineId === "gsap" ? "jsx" : "js";
   const githubUrl =
     githubRepoUrl && sketchPath
-      ? `${ githubRepoUrl }/blob/main/src/templates/${ engineId }/sketches/${ sketchPath }/index.js`
+      ? `${ githubRepoUrl }/blob/main/src/templates/${ engineId }/sketches/${ sketchPath }/index.${ entryExtension }`
       : undefined;
 
   return (

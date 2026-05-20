@@ -138,5 +138,9 @@ declare global {
     // P5 animation progression controls
     setAnimationProgression: ( progression: number ) => void;
     getAnimationProgression: () => number;
+
+    // Server-side / deterministic recording controls (time utility)
+    enableRecordingMode?: () => void;
+    disableRecordingMode?: () => void;
   }
 }

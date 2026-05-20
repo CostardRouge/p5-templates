@@ -19,19 +19,19 @@ const META_OUTPUT = path.join(
 /* ---- Scanning ---------------------------------------------------- */
 
 /**
- * Detect whether `dir` is a sketch (has index.js or index.ts).
+ * Detect whether `dir` is a sketch (has an `index.{js,ts,jsx,tsx}` entry).
+ * `.jsx`/`.tsx` support lets DOM engines (e.g. GSAP) author React templates.
  */
 function isSketchDir( dir ) {
-  return (
-    fs.existsSync( path.join(
-      dir,
-      "index.js"
-    ) ) ||
-    fs.existsSync( path.join(
-      dir,
-      "index.ts"
-    ) )
-  );
+  return [
+    "index.js",
+    "index.ts",
+    "index.jsx",
+    "index.tsx"
+  ].some( ( entry ) => fs.existsSync( path.join(
+    dir,
+    entry
+  ) ) );
 }
 
 /**

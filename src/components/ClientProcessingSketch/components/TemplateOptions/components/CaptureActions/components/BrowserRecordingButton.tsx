@@ -186,13 +186,15 @@ export default function BrowserRecordingButton( {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-stretch gap-1 rounded-xl border border-border overflow-hidden bg-background">
-        <span className="px-2 py-2.5 text-xs text-foreground inline-flex items-center">
+        <label htmlFor="recording-format" className="hidden-md px-2 py-2 text-xs text-foreground inline-flex items-center">
           Record in
-        </span>
+        </label>
+
         <select
+          id="recording-format"
           value={ encodeChoice( choice ) }
           onChange={ ( e ) => setChoice( decodeChoice( e.target.value ) ) }
-          className="flex-1 px-2 py-2 bg-background text-foreground text-xs focus:outline-none border-l mr-1"
+          className="flex-1 px-2 py-2 bg-background text-foreground text-xs focus:outline-none border-l"
           aria-label="Recording format"
         >
           {groups.map( ( group ) => (
@@ -211,6 +213,7 @@ export default function BrowserRecordingButton( {
             </optgroup>
           ) )}
         </select>
+
         <button
           type="button"
           onClick={ () => onStart(
@@ -219,7 +222,7 @@ export default function BrowserRecordingButton( {
           ) }
           aria-label="Start recording"
           title="Start recording"
-          className="border-l px-3 py-2.5 pr-2 text-foreground hover:bg-hover transition-colors inline-flex items-center justify-center"
+          className="border-l px-2 text-foreground hover:bg-hover transition-colors inline-flex items-center justify-center"
         >
           <span
             aria-hidden="true"
@@ -227,6 +230,7 @@ export default function BrowserRecordingButton( {
           />
         </button>
       </div>
+
       {error && (
         <div className="text-[10px] text-red-500">
           {error.message}

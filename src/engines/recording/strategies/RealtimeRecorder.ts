@@ -2,6 +2,7 @@ import {
   BaseRecorder
 } from "../BaseRecorder";
 import type {
+  CaptureSource,
   RecorderHost,
   RecorderResult,
   RecorderStartOptions,
@@ -47,6 +48,7 @@ export class RealtimeRecorder extends BaseRecorder {
   readonly mode = "realtime" as const;
 
   private mediaRecorder: MediaRecorder | null = null;
+  private source: CaptureSource | null = null;
   private chunks: Blob[] = [];
   private mimeType = "";
   private resultPromise: Promise<RecorderResult> | null = null;
@@ -66,15 +68,25 @@ export class RealtimeRecorder extends BaseRecorder {
       return;
     }
 
-    const canvas = this.host.getCanvas();
+    const source = this.host.getCaptureSource();
+
+    // Start mirroring the rendered output into the stream canvas before we
+    // grab it — DOM engines only paint their mirror canvas while this loop
+    // is running, so the captured stream would be blank otherwise.
+    source.beginRealtime();
+
+    const canvas = source.getStreamCanvas();
 
     if ( !canvas ) {
-      throw new Error( "RealtimeRecorder: no canvas on host." );
+      source.endRealtime();
+      throw new Error( "RealtimeRecorder: capture source has no stream canvas." );
     }
 
     this.mimeType = pickMimeType( this.format );
 
     const stream = canvas.captureStream( this.host.frameRate );
+
+    this.source = source;
 
     this.mediaRecorder = new MediaRecorder(
       stream,
@@ -113,6 +125,7 @@ export class RealtimeRecorder extends BaseRecorder {
       };
 
       this._isRecording = false;
+      this.source?.endRealtime();
       this.emit(
         "stop",
         result
@@ -124,6 +137,7 @@ export class RealtimeRecorder extends BaseRecorder {
       const error = new Error( `MediaRecorder error: ${ event.type }` );
 
       this._isRecording = false;
+      this.source?.endRealtime();
       this.emit(
         "error",
         error
@@ -186,6 +200,7 @@ export class RealtimeRecorder extends BaseRecorder {
       this.mediaRecorder.stop();
     }
 
+    this.source?.endRealtime();
     this.chunks = [];
     this._isRecording = false;
     this.emit(

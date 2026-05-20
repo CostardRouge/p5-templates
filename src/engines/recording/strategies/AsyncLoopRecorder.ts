@@ -2,6 +2,7 @@ import {
   BaseRecorder
 } from "../BaseRecorder";
 import type {
+  CaptureSource,
   FrameEncoder,
   FrameEncoderFactory,
   RecorderHost,
@@ -43,11 +44,7 @@ export class AsyncLoopRecorder extends BaseRecorder {
       return;
     }
 
-    const canvas = this.host.getCanvas();
-
-    if ( !canvas ) {
-      throw new Error( "AsyncLoopRecorder: no canvas on host." );
-    }
+    const source = this.host.getCaptureSource();
 
     const totalFrames = this.host.totalFrames;
 
@@ -55,15 +52,23 @@ export class AsyncLoopRecorder extends BaseRecorder {
       throw new Error( "AsyncLoopRecorder: host.totalFrames must be a positive number." );
     }
 
-    // Reset progression FIRST so the canvas reflects frame 0 before we
+    // Reset progression FIRST so the surface reflects frame 0 before we
     // snapshot dimensions into the encoder. Otherwise a reset-triggered
     // resize would invalidate the encoder's codec string mid-recording.
     this.host.pause();
     await this.host.resetToStart();
 
+    const {
+      width, height
+    } = source;
+
+    if ( !width || !height ) {
+      throw new Error( "AsyncLoopRecorder: capture source has no dimensions." );
+    }
+
     this.encoder = this.encoderFactory( {
-      width: canvas.width,
-      height: canvas.height,
+      width,
+      height,
       frameRate: this.host.frameRate,
       totalFrames
     } );
@@ -76,13 +81,13 @@ export class AsyncLoopRecorder extends BaseRecorder {
     );
 
     this.runPromise = this.run(
-      canvas,
+      source,
       totalFrames
     );
   }
 
   private async run(
-    canvas: HTMLCanvasElement,
+    source: CaptureSource,
     totalFrames: number
   ): Promise<RecorderResult> {
     try {
@@ -92,7 +97,13 @@ export class AsyncLoopRecorder extends BaseRecorder {
         }
 
         await this.host.seekAndDraw( frame );
-        await this.encoder!.addFrame( canvas );
+
+        // Ensure the surface reflects this frame, then hand the resulting
+        // image source to the encoder. For canvas engines this is the live
+        // canvas; for DOM engines the mirror canvas is rasterised here.
+        const image = await source.readFrame();
+
+        await this.encoder!.addFrame( image );
 
         this.emit(
           "progress",

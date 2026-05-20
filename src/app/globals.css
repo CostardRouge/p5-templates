@@ -82,9 +82,18 @@
     }
 }
 
-.sketch-canvas-container canvas:hover {
+/* Hover affordance for the rendered sketch surface — generic across engines:
+   p5 paints into a <canvas>, DOM/CSS engines (GSAP/HTML) into a stage div. */
+.sketch-canvas-container canvas:hover,
+.sketch-canvas-container .sketch-surface:hover {
     @apply outline;
     @apply outline-theme;
+}
+
+/* GSAP/HTML stage: the fixed-size box the template renders into. The
+   ScalableViewport measures + scales it exactly like the p5 canvas. */
+.sketch-canvas-container .gsap-stage {
+    display: block;
 }
 
 .glass {

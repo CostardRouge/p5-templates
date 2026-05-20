@@ -1,5 +1,8 @@
 export * from "./types";
 export {
+  createCanvasCaptureSource
+} from "./captureSource";
+export {
   createEngineHost
 } from "./createEngineHost";
 export {

@@ -31,6 +31,7 @@ export function createEngineHost(
   );
 
   return {
+    getCaptureSource: () => engine.getCaptureSource(),
     getCanvas: () => engine.getCanvas(),
     seekAndDraw: ( frame ) => engine.seekAndDraw( frame ),
     resetToStart: () => engine.resetToStart(),
