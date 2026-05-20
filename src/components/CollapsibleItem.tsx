@@ -22,19 +22,24 @@ type CollapsibleItemProps = {
   expanded?: boolean;
   onToggle?: ( expanded: boolean ) => void;
   /**
-   * Enable a downward touch swipe on the header to collapse the section.
-   * Intended for bottom-anchored floating panels (mobile bottom-sheet feel).
+   * Enable touch swipe gestures on the header: swipe down to collapse an open
+   * panel, swipe up to expand a closed one. Disabled automatically when the
+   * user has enabled the prefers-reduced-motion system setting.
    * Mouse/pen input is unaffected — only touch pointers trigger the swipe.
    */
   swipeToCollapse?: boolean;
 };
 
 // Keep in sync with the grid-template-rows transition duration below.
-const COLLAPSE_TRANSITION_MS = 300;
+const COLLAPSE_TRANSITION_MS = 200;
 // Distance (px) a downward swipe must travel to commit a collapse.
 const SWIPE_COLLAPSE_THRESHOLD = 56;
 // Flick velocity (px/ms) that commits a collapse even on a short swipe.
 const SWIPE_COLLAPSE_VELOCITY = 0.35;
+// Distance (px) an upward swipe must travel to commit an expand.
+const SWIPE_EXPAND_THRESHOLD = 30;
+// Flick velocity (px/ms) that commits an expand even on a short swipe.
+const SWIPE_EXPAND_VELOCITY = 0.3;
 
 const CollapsibleItem = ( {
   header,
@@ -67,6 +72,24 @@ const CollapsibleItem = ( {
   const handleToggle = () => {
     setExpanded( !expanded );
   };
+
+  // Detect prefers-reduced-motion to disable animations and swipe gestures.
+  const [
+    prefersReducedMotion,
+    setPrefersReducedMotion
+  ] = useState( false );
+
+  useEffect(
+    () => {
+      const mq = window.matchMedia( "(prefers-reduced-motion: reduce)" );
+      setPrefersReducedMotion( mq.matches );
+      const handler = ( e: MediaQueryListEvent ) => setPrefersReducedMotion( e.matches );
+      mq.addEventListener( "change", handler );
+
+      return () => mq.removeEventListener( "change", handler );
+    },
+    []
+  );
 
   // `render` keeps children in the DOM while open and during the closing
   // animation, then unmounts them — preserving the original lazy behaviour
@@ -166,7 +189,7 @@ const CollapsibleItem = ( {
     }
   };
 
-  // --- Swipe-to-collapse (touch only) -------------------------------------
+  // --- Swipe gestures (touch only) ----------------------------------------
   const [
     dragY,
     setDragY
@@ -174,6 +197,9 @@ const CollapsibleItem = ( {
   // Suppresses the synthetic click that follows a real swipe, so the gesture
   // doesn't immediately re-toggle the panel via the header onClick.
   const suppressClickRef = useRef( false );
+
+  // Gestures are disabled when the user prefers reduced motion.
+  const gesturesEnabled = swipeToCollapse && !prefersReducedMotion;
 
   const bindSwipe = useDrag(
     ( state ) => {
@@ -193,40 +219,52 @@ const CollapsibleItem = ( {
         return;
       }
 
-      // Only an expanded panel can be swiped away.
-      if ( !expanded ) {
-        return;
-      }
+      if ( expanded ) {
+        // Swipe down to collapse.
+        const down = Math.max( 0, my );
 
-      const down = Math.max(
-        0,
-        my
-      );
+        if ( !last ) {
+          setDragY( down );
 
-      if ( !last ) {
-        setDragY( down );
+          return;
+        }
 
-        return;
-      }
+        setDragY( 0 );
 
-      // Pointer released.
-      setDragY( 0 );
+        if ( !tap ) {
+          suppressClickRef.current = true;
+        }
 
-      if ( !tap ) {
-        // A real drag occurred — don't let the trailing click re-toggle.
-        suppressClickRef.current = true;
-      }
+        const shouldCollapse =
+          down > SWIPE_COLLAPSE_THRESHOLD ||
+          ( dy > 0 && vy > SWIPE_COLLAPSE_VELOCITY );
 
-      const shouldCollapse =
-        down > SWIPE_COLLAPSE_THRESHOLD ||
-        ( dy > 0 && vy > SWIPE_COLLAPSE_VELOCITY );
+        if ( shouldCollapse ) {
+          setExpanded( false );
+        }
+      } else {
+        // Swipe up to expand.
+        if ( !last ) {
+          return;
+        }
 
-      if ( shouldCollapse ) {
-        setExpanded( false );
+        if ( !tap ) {
+          // Suppress the pointer-up click so it doesn't immediately re-collapse.
+          suppressClickRef.current = true;
+        }
+
+        const up = Math.max( 0, -my );
+        const shouldExpand =
+          up > SWIPE_EXPAND_THRESHOLD ||
+          ( dy < 0 && vy > SWIPE_EXPAND_VELOCITY );
+
+        if ( shouldExpand ) {
+          setExpanded( true );
+        }
       }
     },
     {
-      enabled: swipeToCollapse,
+      enabled: gesturesEnabled,
       axis: "y",
       filterTaps: true,
       pointer: {
@@ -257,16 +295,16 @@ const CollapsibleItem = ( {
       style={ {
         ...style,
         transform: isDragging ? `translateY(${ dragY }px)` : undefined,
-        transition: isDragging ? "none" : "transform 0.25s ease-out"
+        transition: isDragging || prefersReducedMotion ? "none" : "transform 0.15s ease-out"
       } }
     >
       <div
         className={ headerContainerClassName }
         onClick={ handleHeaderClick }
-        style={ swipeToCollapse ? {
+        style={ gesturesEnabled ? {
           touchAction: "pan-x"
         } : undefined }
-        { ...( swipeToCollapse ? bindSwipe() : {} ) }
+        { ...( gesturesEnabled ? bindSwipe() : {} ) }
       >
         {header(
           expanded,
@@ -275,7 +313,7 @@ const CollapsibleItem = ( {
       </div>
 
       <div
-        className="grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none"
+        className="grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none"
         style={ {
           gridTemplateRows: gridOpen ? "1fr" : "0fr"
         } }
@@ -284,7 +322,7 @@ const CollapsibleItem = ( {
       >
         <div
           className={ clsx(
-            "min-h-0 transition-opacity duration-200 ease-out motion-reduce:transition-none",
+            "min-h-0 transition-opacity duration-150 ease-out motion-reduce:transition-none",
             settledOpen ? "overflow-visible" : "overflow-hidden",
             gridOpen ? "opacity-100" : "opacity-0",
             contentClassName
