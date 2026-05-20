@@ -96,8 +96,15 @@ class GsapRuntime {
   /** Wall-clock progression of the timeline, in seconds. */
   private elapsed = 0;
   private lastTick = 0;
+  /** Real-time accumulator for framerate-quantised playback stepping. */
+  private accumulator = 0;
   private rafId: number | null = null;
   private playing = false;
+
+  /** Measured playback fps (actual frame steps per second over a window). */
+  private measuredFps = 0;
+  private fpsFrames = 0;
+  private fpsWindow = 0;
   /** Frame-stepped capture mode → progression must not wrap. */
   private recording = false;
 
@@ -347,17 +354,26 @@ class GsapRuntime {
     this.playing = true;
     this.recording = false;
     this.lastTick = performance.now();
+    this.accumulator = 0;
+    this.fpsFrames = 0;
+    this.fpsWindow = 0;
     this.startRaf();
+  }
+
+  getMeasuredFps(): number {
+    return this.measuredFps;
   }
 
   pause(): void {
     this.playing = false;
     this.stopRaf();
+    this.measuredFps = 0;
   }
 
   stop(): void {
     this.playing = false;
     this.stopRaf();
+    this.measuredFps = 0;
     this.elapsed = 0;
     this.scrub();
     this.notify();
@@ -438,9 +454,47 @@ class GsapRuntime {
       const delta = ( now - this.lastTick ) / 1000;
 
       this.lastTick = now;
-      this.elapsed += delta;
-      this.scrub();
-      this.notify();
+
+      // Advance in framerate-sized steps so the preview honours the configured
+      // framerate (choppy at low fps, smooth at high) and lands on exactly the
+      // frames the recorder will capture. Real-time speed is preserved because
+      // we only step once enough wall-clock time has elapsed per frame.
+      const frameDuration = 1 / Math.max(
+        1,
+        this.framerate
+      );
+
+      this.accumulator += delta;
+
+      // Cap after a stall (e.g. backgrounded tab) to avoid a burst of steps.
+      if ( this.accumulator > 0.25 ) {
+        this.accumulator = frameDuration;
+      }
+
+      let steps = 0;
+
+      while ( this.accumulator >= frameDuration ) {
+        this.elapsed += frameDuration;
+        this.accumulator -= frameDuration;
+        steps += 1;
+      }
+
+      if ( steps > 0 ) {
+        this.scrub();
+        this.notify();
+      }
+
+      // Measure the achieved playback fps (frame steps per second) over a
+      // ~0.5s window so the perf label reflects the real framerate, not the
+      // monitor refresh rate.
+      this.fpsFrames += steps;
+      this.fpsWindow += delta;
+
+      if ( this.fpsWindow >= 0.5 ) {
+        this.measuredFps = this.fpsFrames / this.fpsWindow;
+        this.fpsFrames = 0;
+        this.fpsWindow = 0;
+      }
 
       this.rafId = requestAnimationFrame( tick );
     };

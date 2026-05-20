@@ -48,9 +48,7 @@ export class GsapEngine implements SketchEngine {
   private perfSample = {
     paused: false,
     smoothedFps: 0,
-    lastEmitTime: 0,
-    lastFrameTime: 0,
-    rawSamples: [] as number[]
+    lastEmitTime: 0
   };
 
   get isReady(): boolean {
@@ -159,7 +157,6 @@ export class GsapEngine implements SketchEngine {
   stop(): void {
     this.runtime?.stop();
     this.perfSample.paused = true;
-    this.perfSample.rawSamples = [];
     this.perfSample.smoothedFps = 0;
     this.emitPerformanceSample();
   }
@@ -319,41 +316,26 @@ export class GsapEngine implements SketchEngine {
       return;
     }
 
-    this.perfSample.lastFrameTime = performance.now();
-
     const tick = ( now: number ) => {
       if ( !this.hasPerformanceListeners() ) {
         this.perfLoopId = null;
         return;
       }
 
-      if ( this._isReady && !this.perfSample.paused ) {
-        const delta = now - this.perfSample.lastFrameTime;
-        const rawFps = delta > 0 ? 1000 / delta : 0;
+      // The runtime already measures the achieved playback fps (actual frame
+      // steps per second, which tracks the configured framerate) over a window,
+      // so we just sample + lightly smooth it rather than timing rAF callbacks.
+      if ( now - this.perfSample.lastEmitTime >= 250 ) {
+        const measured = this.runtime?.getMeasuredFps() ?? 0;
 
-        if ( Number.isFinite( rawFps ) && rawFps > 0 && rawFps < 240 ) {
-          this.perfSample.rawSamples.push( rawFps );
+        this.perfSample.smoothedFps = this.perfSample.smoothedFps > 0
+          ? this.perfSample.smoothedFps * 0.6 + measured * 0.4
+          : measured;
 
-          if ( this.perfSample.rawSamples.length > 20 ) {
-            this.perfSample.rawSamples.shift();
-          }
-        }
-
-        if ( now - this.perfSample.lastEmitTime >= 500 ) {
-          const robustFps = this.getMedian( this.perfSample.rawSamples );
-
-          if ( robustFps > 0 ) {
-            this.perfSample.smoothedFps = this.perfSample.smoothedFps > 0
-              ? this.perfSample.smoothedFps * 0.8 + robustFps * 0.2
-              : robustFps;
-          }
-
-          this.perfSample.lastEmitTime = now;
-          this.emitPerformanceSample();
-        }
+        this.perfSample.lastEmitTime = now;
+        this.emitPerformanceSample();
       }
 
-      this.perfSample.lastFrameTime = now;
       this.perfLoopId = requestAnimationFrame( tick );
     };
 
@@ -382,24 +364,5 @@ export class GsapEngine implements SketchEngine {
       "performance",
       payload
     );
-  }
-
-  private getMedian( values: number[] ): number {
-    if ( values.length === 0 ) {
-      return 0;
-    }
-
-    const sorted = [
-      ...values
-    ].sort( (
-      a, b
-    ) => a - b );
-    const middle = Math.floor( sorted.length / 2 );
-
-    if ( sorted.length % 2 === 0 ) {
-      return ( sorted[ middle - 1 ] + sorted[ middle ] ) / 2;
-    }
-
-    return sorted[ middle ];
   }
 }

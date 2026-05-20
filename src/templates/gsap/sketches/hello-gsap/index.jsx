@@ -46,9 +46,17 @@ export default function HelloGsap( {
     ( {
       tl, options: opts
     } ) => {
-      // Loop length == the animation duration, so the ambient orb spin is sized
-      // to exactly one full turn per loop — it wraps seamlessly at the boundary.
+      // Loop length == the animation duration. The intro is sized relative to
+      // it so the whole reveal (orb → words → subtitle) always fits inside the
+      // loop — even at 1s — instead of using hardcoded seconds. `k` keeps the
+      // comfortable ~2.2s design pacing for normal durations and compresses it
+      // proportionally for short ones.
       const loop = opts?.animation?.duration ?? 12;
+      const introSpan = Math.min(
+        loop * 0.85,
+        2.2
+      );
+      const k = introSpan / 2.2;
 
       tl.set(
         ".hg-word",
@@ -72,13 +80,13 @@ export default function HelloGsap( {
         }
       );
 
-      // Intro
+      // Intro (durations + positions scaled by `k` to fit the loop)
       tl.to(
         ".hg-orb",
         {
           scale: 1,
           opacity: 1,
-          duration: 1.2,
+          duration: 1.2 * k,
           ease: "power2.out"
         },
         0
@@ -88,21 +96,21 @@ export default function HelloGsap( {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 0.9,
+          duration: 0.9 * k,
           ease: "power4.out",
-          stagger: 0.12
+          stagger: 0.12 * k
         },
-        0.2
+        0.2 * k
       );
       tl.to(
         ".hg-subtitle",
         {
           opacity: 1,
           y: 0,
-          duration: 0.8,
+          duration: 0.8 * k,
           ease: "power2.out"
         },
-        "-=0.35"
+        0.75 * k
       );
 
       // Ambient: one full orb rotation spread across the whole loop. Ending at
