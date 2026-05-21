@@ -9,6 +9,9 @@ import {
 import type {
   RecorderCapabilities, RecorderProgress, RecordingFormat, RecordingMode
 } from "@/engines/recording";
+import {
+  useSmoothFill
+} from "@/hooks/useSmoothFill";
 
 type BrowserRecordingButtonProps = {
   capabilities: RecorderCapabilities;
@@ -145,17 +148,23 @@ export default function BrowserRecordingButton( {
     ]
   );
 
+  // Target fill % for the red progress bar inside the button. Encoding +
+  // finalising stages park the bar at 100% so the user gets "almost
+  // done" feedback while the encoder finishes. The smooth chase to this
+  // target happens in `useSmoothFill` so React's batching of bursty
+  // progress events can't strand the bar at 0%.
+  const targetFillPct = progress
+    ? progress.stage === "capturing"
+      ? progress.percentage
+      : 100
+    : 0;
+  const fillRef = useSmoothFill<HTMLSpanElement>(
+    isRecording,
+    targetFillPct
+  );
+
   if ( isRecording ) {
     const isRealtime = choice.mode === "realtime";
-    // Fill ratio drives the red progress bar inside the button.
-    // Realtime has no frame-based progress so we leave it empty (the
-    // user stops it manually); async-loop hits 100% while encoding +
-    // finalising so the bar reads as "almost done" in those stages.
-    const fillPct = progress
-      ? progress.stage === "capturing"
-        ? progress.percentage
-        : 100
-      : 0;
 
     return (
       <div className="flex flex-col gap-1">
@@ -168,10 +177,11 @@ export default function BrowserRecordingButton( {
           className="relative overflow-hidden rounded-xl px-3 py-2.5 border border-red-500/40 text-red-600 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 bg-background hover:bg-red-500/5"
         >
           <span
+            ref={ fillRef }
             aria-hidden="true"
-            className="absolute inset-y-0 left-0 bg-red-500/20 transition-[width] duration-200 ease-out pointer-events-none"
+            className="absolute inset-y-0 left-0 bg-red-500/20 pointer-events-none"
             style={ {
-              width: `${ fillPct }%`
+              width: "0%"
             } }
           />
           <StopCircle className="relative h-4 w-4 flex-shrink-0" />
