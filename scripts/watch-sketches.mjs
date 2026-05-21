@@ -56,7 +56,7 @@ function buildEntry(
     ) ),
     hasThumbnail: fs.existsSync( path.join(
       assetsBase,
-      "thumbnail.jpeg"
+      "thumbnail.webp"
     ) ),
     hasPreview: fs.existsSync( path.join(
       assetsBase,

@@ -64,7 +64,7 @@ export function buildThumbnailUrl(
   sketchName: string,
   baseUrl: string
 ): string {
-  return `${ baseUrl }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.jpeg`;
+  return `${ baseUrl }/assets/images/templates/${ engineId }/${ sketchName }/thumbnail.webp`;
 }
 
 /** Builds the meta description for a sketch detail page. */
