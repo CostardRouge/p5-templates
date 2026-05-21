@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import {
-  ExternalLink, Github, Paintbrush, Video
+  ExternalLink, Github, Home, Paintbrush, Video
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -63,6 +63,11 @@ function MenuBar( {
   }
 
   const items: NavItem[] = [
+    {
+      href: "/",
+      name: "home",
+      Icon: Home
+    },
     {
       href: "/templates",
       name: "templates",
