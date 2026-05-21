@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import type React from "react";
 import {
-  useCallback, useMemo, useRef, useState
+  useCallback, useEffect, useMemo, useRef, useState
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
@@ -24,6 +24,7 @@ import {
   useSketchThumbnail
 } from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketchThumbnail";
 import useSketchDevWatch from "@/hooks/useSketchDevWatch";
+import usePageVisibility from "@/hooks/usePageVisibility";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 
 const TemplateOptions = dynamic( () =>
@@ -48,45 +49,85 @@ export default function TemplateSketchPage() {
   const wasLoopingRef = useRef( false );
   // Keep a stable ref to the latest engine/looping values to avoid stale closures.
   const interactionStateRef = useRef( {
-    engine, looping
+    engine,
+    looping
   } );
+
   interactionStateRef.current = {
-    engine, looping
+    engine,
+    looping
   };
 
-  const handleInteractionStart = useCallback( ( mode: "panning" | "zooming" ) => {
-    setInteractionMode( mode );
+  const handleInteractionStart = useCallback(
+    ( mode: "panning" | "zooming" ) => {
+      setInteractionMode( mode );
 
-    const {
-      engine: e, looping: l
-    } = interactionStateRef.current;
+      const {
+        engine: e, looping: l
+      } = interactionStateRef.current;
 
-    if ( e && l ) {
-      wasLoopingRef.current = true;
-      e.pause();
-    }
-  }, [] );
+      if ( e && l ) {
+        wasLoopingRef.current = true;
+        e.pause();
+      }
+    },
+    []
+  );
 
-  const handleInteractionEnd = useCallback( () => {
-    setInteractionMode( null );
+  const handleInteractionEnd = useCallback(
+    () => {
+      setInteractionMode( null );
 
-    const {
-      engine: e
-    } = interactionStateRef.current;
+      const {
+        engine: e
+      } = interactionStateRef.current;
 
-    if ( e && wasLoopingRef.current ) {
-      wasLoopingRef.current = false;
-      e.play();
-    }
-  }, [] );
+      if ( e && wasLoopingRef.current ) {
+        wasLoopingRef.current = false;
+        e.play();
+      }
+    },
+    []
+  );
 
-  const handleSeekStart = useCallback( () => {
-    setInteractionMode( "seeking" );
-  }, [] );
+  // Pause the engine when the tab is hidden, resume it when the tab
+  // comes back — but only if the user actually intended the sketch to
+  // be playing (looping state). This is engine-agnostic: any engine
+  // that implements SketchEngine.play/pause benefits automatically.
+  const isPageVisible = usePageVisibility();
 
-  const handleSeekEnd = useCallback( () => {
-    setInteractionMode( null );
-  }, [] );
+  useEffect(
+    () => {
+      if ( !engine || !looping ) {
+        return;
+      }
+
+      if ( isPageVisible ) {
+        engine.play();
+      } else {
+        engine.pause();
+      }
+    },
+    [
+      engine,
+      looping,
+      isPageVisible
+    ]
+  );
+
+  const handleSeekStart = useCallback(
+    () => {
+      setInteractionMode( "seeking" );
+    },
+    []
+  );
+
+  const handleSeekEnd = useCallback(
+    () => {
+      setInteractionMode( null );
+    },
+    []
+  );
 
   const {
     thumbnailUrl
