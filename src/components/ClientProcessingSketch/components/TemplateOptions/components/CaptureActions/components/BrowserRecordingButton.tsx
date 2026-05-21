@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useEffect, useMemo, useRef, useState
+  useMemo, useState
 } from "react";
 import {
   StopCircle
@@ -9,6 +9,9 @@ import {
 import type {
   RecorderCapabilities, RecorderProgress, RecordingFormat, RecordingMode
 } from "@/engines/recording";
+import {
+  useSmoothFill
+} from "@/hooks/useSmoothFill";
 
 type BrowserRecordingButtonProps = {
   capabilities: RecorderCapabilities;
@@ -145,58 +148,19 @@ export default function BrowserRecordingButton( {
     ]
   );
 
-  // Target fill % for the red progress bar inside the button. Computed
-  // synchronously from `progress` so it tracks the freshest React commit,
-  // but the actual animation is driven imperatively below (see fillRef
-  // effect) to stay smooth even when React batches many progress events
-  // into a single commit on fast captures.
+  // Target fill % for the red progress bar inside the button. Encoding +
+  // finalising stages park the bar at 100% so the user gets "almost
+  // done" feedback while the encoder finishes. The smooth chase to this
+  // target happens in `useSmoothFill` so React's batching of bursty
+  // progress events can't strand the bar at 0%.
   const targetFillPct = progress
     ? progress.stage === "capturing"
       ? progress.percentage
       : 100
     : 0;
-
-  // Imperative rAF tween for the fill bar. The bar always smoothly
-  // catches up to `targetFillPct`, regardless of how often React commits
-  // — fixes "no feedback at all" on very fast recordings (where React
-  // may only commit once) and "jumps unevenly" on bursty progress
-  // streams (where setState calls collapse).
-  const fillRef = useRef<HTMLSpanElement>( null );
-  const targetFillRef = useRef( targetFillPct );
-
-  targetFillRef.current = targetFillPct;
-
-  useEffect(
-    () => {
-      if ( !isRecording ) {
-        return;
-      }
-
-      let rafId = 0;
-      let current = 0;
-
-      const tick = () => {
-        const target = targetFillRef.current;
-        const diff = target - current;
-
-        // ~15% of the gap per frame ⇒ ≈200 ms to converge, matching
-        // the previous CSS transition's feel.
-        current = Math.abs( diff ) < 0.1 ? target : current + diff * 0.15;
-
-        if ( fillRef.current ) {
-          fillRef.current.style.width = `${ current }%`;
-        }
-
-        rafId = requestAnimationFrame( tick );
-      };
-
-      rafId = requestAnimationFrame( tick );
-
-      return () => cancelAnimationFrame( rafId );
-    },
-    [
-      isRecording
-    ]
+  const fillRef = useSmoothFill<HTMLSpanElement>(
+    isRecording,
+    targetFillPct
   );
 
   if ( isRecording ) {
