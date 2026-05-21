@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  FileSliders, Grid, List, Search
+  Grid, List, Search
 } from "lucide-react";
 import {
   useRouter, useSearchParams
@@ -112,9 +112,9 @@ export default function TemplatesList( {
   const displayedTemplates =
     activeEngine === "all"
       ? filteredTemplates
-      : Object.fromEntries(
-        Object.entries( filteredTemplates ).filter( ( [ id ] ) => id === activeEngine )
-      );
+      : Object.fromEntries( Object.entries( filteredTemplates ).filter( ( [
+        id
+      ] ) => id === activeEngine ) );
 
   const totalCount = Object.values( displayedTemplates ).reduce(
     (
@@ -123,9 +123,9 @@ export default function TemplatesList( {
     0
   );
 
-  const engineOrder = Object.keys( templates ).sort(
-    ( a, b ) => ( templates[ b ]?.length ?? 0 ) - ( templates[ a ]?.length ?? 0 )
-  );
+  const engineOrder = Object.keys( templates ).sort( (
+    a, b
+  ) => ( templates[ b ]?.length ?? 0 ) - ( templates[ a ]?.length ?? 0 ) );
 
   const totalAllCount = Object.values( templates ).reduce(
     (
@@ -257,8 +257,17 @@ export default function TemplatesList( {
 
       {/* Templates grouped by engine */}
       { Object.entries( displayedTemplates )
-        .sort( ( [ a ], [ b ] ) => engineOrder.indexOf( a ) - engineOrder.indexOf( b ) )
-        .map( ( [ engineId, items ] ) => {
+        .sort( (
+          [
+            a
+          ], [
+            b
+          ]
+        ) => engineOrder.indexOf( a ) - engineOrder.indexOf( b ) )
+        .map( ( [
+          engineId,
+          items
+        ] ) => {
           const label = engineLabels[ engineId ] || engineId;
 
           const groupedItems: Record<string, typeof items> = {};
@@ -404,7 +413,7 @@ function TemplateCard( {
     return (
       <Link
         href={ href }
-        className="group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:-translate-y-0.5"
+        className="group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5"
       >
         {/* Aspect ratio box for 4:5 (360x450) */}
         <div
@@ -413,16 +422,16 @@ function TemplateCard( {
             paddingTop: "125%"
           } }
         >
-          { hasSketchForm && (
-            <div
-              className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10"
-              title="Has a magic form"
-            >
-              <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg p-1 sm:p-1.5">
-                <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
-              </div>
-            </div>
-          ) }
+          {/* { hasSketchForm && (*/}
+          {/*  <div*/}
+          {/*    className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10"*/}
+          {/*    title="Has a magic form"*/}
+          {/*  >*/}
+          {/*    <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg p-1 sm:p-1.5">*/}
+          {/*      <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/* ) }*/}
 
           { preview ? (
             <AnimatedPreview
@@ -430,7 +439,7 @@ function TemplateCard( {
               thumbnailUrl={ thumbnail }
               name={ name }
               eager={ eager }
-              imgClassName="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+              imgClassName="w-full h-full object-contain transition-transform duration-300"
             />
           ) : (
             <img
@@ -439,21 +448,16 @@ function TemplateCard( {
               fetchPriority={ eager ? "high" : undefined }
               decoding={ eager ? "sync" : "async" }
               src={ thumbnail }
-              className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+              className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 "
             />
           ) }
-
-          {/* Gradient overlay on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
         {/* Template name */}
-        <div className="absolute bottom-0 left-0 right-0 p-1 sm:p-2">
-          <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg sm:rounded-xl px-2 py-1.5 shadow-lg">
-            <p className="text-xs sm:text-sm font-medium text-foreground text-center">
-              { name }
-            </p>
-          </div>
+        <div className="bg-background border-t border-border px-1 py-2 flex">
+          <p className="text-xs sm:text-sm font-medium text-foreground text-center w-full items-center justify-center">
+            { name }
+          </p>
         </div>
       </Link>
     );
@@ -484,13 +488,13 @@ function TemplateCard( {
         </p>
       </div>
 
-      { hasSketchForm && (
-        <div className="flex-shrink-0" title="Has a magic form">
-          <div className="bg-hover/50 rounded-lg border border-border p-1 sm:p-1.5">
-            <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
-          </div>
-        </div>
-      ) }
+      {/* { hasSketchForm && (*/}
+      {/*  <div className="flex-shrink-0" title="Has a magic form">*/}
+      {/*    <div className="bg-hover/50 rounded-lg border border-border p-1 sm:p-1.5">*/}
+      {/*      <FileSliders className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
+      {/* ) }*/}
 
       <div className="flex-shrink-0 text-foreground/40 group-hover:text-foreground/60 transition-colors">
         <span className="text-xs sm:text-sm">→</span>
