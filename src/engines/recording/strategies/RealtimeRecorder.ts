@@ -55,6 +55,7 @@ export class RealtimeRecorder extends BaseRecorder {
   private resolveResult: ( ( r: RecorderResult ) => void ) | null = null;
   private rejectResult: ( ( e: Error ) => void ) | null = null;
   private autoStopTimer: ReturnType<typeof setTimeout> | null = null;
+  private progressRafId: number | null = null;
 
   constructor(
     private host: RecorderHost,
@@ -125,6 +126,7 @@ export class RealtimeRecorder extends BaseRecorder {
       };
 
       this._isRecording = false;
+      this.stopProgressTicker();
       this.source?.endRealtime();
       this.emit(
         "stop",
@@ -137,6 +139,7 @@ export class RealtimeRecorder extends BaseRecorder {
       const error = new Error( `MediaRecorder error: ${ event.type }` );
 
       this._isRecording = false;
+      this.stopProgressTicker();
       this.source?.endRealtime();
       this.emit(
         "error",
@@ -159,11 +162,64 @@ export class RealtimeRecorder extends BaseRecorder {
       undefined as any
     );
 
+    // Wall-clock progress estimate: realtime has no frame counter, so
+    // we tick percentage against the sketch's expected loop duration
+    // (totalFrames / frameRate). Caps at 100% if the user lets the
+    // recording run past one loop. Without this the button's fill bar
+    // would stay at 0% for the whole capture.
+    const expectedDurationMs =
+      this.host.frameRate > 0
+        ? ( this.host.totalFrames / this.host.frameRate ) * 1000
+        : 0;
+
+    if ( expectedDurationMs > 0 ) {
+      const startedAt = performance.now();
+      const totalFrames = this.host.totalFrames;
+      const frameRate = this.host.frameRate;
+
+      const tick = () => {
+        if ( !this._isRecording ) {
+          return;
+        }
+
+        const elapsed = performance.now() - startedAt;
+        const pct = Math.min(
+          100,
+          ( elapsed / expectedDurationMs ) * 100
+        );
+        const frame = Math.min(
+          totalFrames,
+          Math.round( ( elapsed / 1000 ) * frameRate )
+        );
+
+        this.emit(
+          "progress",
+          {
+            frame,
+            totalFrames,
+            percentage: pct,
+            stage: "capturing"
+          }
+        );
+
+        this.progressRafId = requestAnimationFrame( tick );
+      };
+
+      this.progressRafId = requestAnimationFrame( tick );
+    }
+
     if ( options.maxDurationMs && options.maxDurationMs > 0 ) {
       this.autoStopTimer = setTimeout(
         () => this.stop().catch( () => undefined ),
         options.maxDurationMs
       );
+    }
+  }
+
+  private stopProgressTicker(): void {
+    if ( this.progressRafId !== null ) {
+      cancelAnimationFrame( this.progressRafId );
+      this.progressRafId = null;
     }
   }
 
@@ -193,6 +249,8 @@ export class RealtimeRecorder extends BaseRecorder {
       clearTimeout( this.autoStopTimer );
       this.autoStopTimer = null;
     }
+
+    this.stopProgressTicker();
 
     if ( this.mediaRecorder && this.mediaRecorder.state !== "inactive" ) {
       this.mediaRecorder.ondataavailable = null;
