@@ -9,6 +9,9 @@ import {
 import React, {
   useEffect, useState
 } from "react";
+import {
+  flushSync
+} from "react-dom";
 import type {
   TemplateItem
 } from "@/app/templates/getTemplatesData";
@@ -88,9 +91,16 @@ export default function TemplatesList( {
     ]
   );
 
-  // Switch engine tab: update UI instantly, sync the URL in the background
+  // Switch engine tab: animate via View Transitions API, sync the URL in the background
   const handleEngineClick = ( engineId: string ) => {
-    setCurrentEngine( engineId );
+    const doSwitch = () => flushSync( () => setCurrentEngine( engineId ) );
+
+    if ( typeof document !== "undefined" && "startViewTransition" in document ) {
+      ( document as Document & { startViewTransition: ( cb: () => void ) => void } )
+        .startViewTransition( doSwitch );
+    } else {
+      doSwitch();
+    }
 
     const basePath =
       engineId === "all" ? "/templates" : `/templates/${ engineId }`;
@@ -259,6 +269,9 @@ export default function TemplatesList( {
         </div>
       </div>
 
+      {/* Templates content — view-transition-name scopes the VT animation to this area only */}
+      <div style={ { viewTransitionName: "templates-list" } }>
+
       {/* Empty State */}
       { totalCount === 0 && (
         <div className="text-center py-8 sm:py-16">
@@ -407,6 +420,7 @@ export default function TemplatesList( {
             </div>
           );
         } ) }
+      </div>
     </div>
   );
 }
