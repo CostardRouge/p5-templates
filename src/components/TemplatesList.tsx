@@ -240,6 +240,9 @@ export default function TemplatesList( {
         </div>
       </div>
 
+      {/* Templates content — keyed so React remounts it on engine change, triggering the animation */}
+      <div key={ activeEngine } className="animate-tab-fade-in space-y-3 sm:space-y-6">
+
       {/* Empty State */}
       { totalCount === 0 && (
         <div className="text-center py-8 sm:py-16">
@@ -388,6 +391,7 @@ export default function TemplatesList( {
             </div>
           );
         } ) }
+      </div>
     </div>
   );
 }
