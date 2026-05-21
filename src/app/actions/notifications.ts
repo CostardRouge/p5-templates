@@ -62,7 +62,7 @@ export async function sendTestNotification(
       {
         title: "Test Notification",
         body: message,
-        icon: "/icon-192x192.png"
+        icon: "/assets/images/icon-192x192.png"
       }
     );
 

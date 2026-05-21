@@ -199,7 +199,7 @@ export class NotificationService {
       body: jobName
         ? `Your job "${ jobName }" has finished processing.`
         : "Your recording job has finished processing.",
-      icon: "/icon-192x192.png",
+      icon: "/assets/images/icon-192x192.png",
       url: `/recordings/${ jobId }`,
       jobId
     };
@@ -219,7 +219,7 @@ export class NotificationService {
       body: jobName
         ? `Your job "${ jobName }" has failed.`
         : "Your recording job has failed.",
-      icon: "/icon-192x192.png",
+      icon: "/assets/images/icon-192x192.png",
       url: `/recordings/${ jobId }`,
       jobId
     };
