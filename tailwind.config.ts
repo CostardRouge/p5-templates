@@ -122,16 +122,6 @@ export default {
             opacity: "1",
             transform: "translateY(0)"
           }
-        },
-        "tab-fade-in": {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(8px)"
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0)"
-          }
         }
       },
       animation: {
@@ -144,8 +134,7 @@ export default {
         "marquee-reverse": "marquee-reverse 40s linear infinite",
         float: "float 6s ease-in-out infinite",
         blob: "blob 14s ease-in-out infinite",
-        "reveal-up": "reveal-up 0.8s ease-out both",
-        "tab-fade-in": "tab-fade-in 0.25s ease-out both"
+        "reveal-up": "reveal-up 0.8s ease-out both"
       }
     }
   },

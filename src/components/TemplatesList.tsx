@@ -48,11 +48,28 @@ export default function TemplatesList( {
     setSearch
   ] = useState<string>( searchParams.get( "keyword" ) || "" );
 
+  // Local engine state — updates instantly on click so the UI doesn't wait
+  // on route navigation. The URL is kept in sync in the background.
+  const [
+    currentEngine,
+    setCurrentEngine
+  ] = useState<string>( activeEngine );
+
+  // Sync local state when the prop changes (e.g. browser back/forward)
+  useEffect(
+    () => {
+      setCurrentEngine( activeEngine );
+    },
+    [
+      activeEngine
+    ]
+  );
+
   // Keep ?keyword= in sync with the search state
   useEffect(
     () => {
       const basePath =
-        activeEngine === "all" ? "/templates" : `/templates/${ activeEngine }`;
+        currentEngine === "all" ? "/templates" : `/templates/${ currentEngine }`;
 
       const newUrl = search
         ? `${ basePath }?keyword=${ encodeURIComponent( search ) }`
@@ -71,8 +88,10 @@ export default function TemplatesList( {
     ]
   );
 
-  // Navigate to a different engine tab, preserving the keyword
+  // Switch engine tab: update UI instantly, sync the URL in the background
   const handleEngineClick = ( engineId: string ) => {
+    setCurrentEngine( engineId );
+
     const basePath =
       engineId === "all" ? "/templates" : `/templates/${ engineId }`;
     const suffix = search
@@ -110,11 +129,11 @@ export default function TemplatesList( {
 
   // Narrow to the selected engine tab (or keep all)
   const displayedTemplates =
-    activeEngine === "all"
+    currentEngine === "all"
       ? filteredTemplates
       : Object.fromEntries( Object.entries( filteredTemplates ).filter( ( [
         id
-      ] ) => id === activeEngine ) );
+      ] ) => id === currentEngine ) );
 
   const totalCount = Object.values( displayedTemplates ).reduce(
     (
@@ -191,7 +210,7 @@ export default function TemplatesList( {
           <button
             onClick={ () => handleEngineClick( "all" ) }
             className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
-              activeEngine === "all"
+              currentEngine === "all"
                 ? "bg-foreground text-background"
                 : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
             }` }
@@ -199,7 +218,7 @@ export default function TemplatesList( {
             All engines
             <span
               className={ `text-xs px-1.5 py-0.5 rounded-md font-mono ${
-                activeEngine === "all"
+                currentEngine === "all"
                   ? "bg-background/20 text-background/80"
                   : "bg-hover text-foreground/50"
               }` }
@@ -212,7 +231,7 @@ export default function TemplatesList( {
           { engineOrder.map( ( engineId ) => {
             const label = engineLabels[ engineId ] || engineId;
             const count = templates[ engineId ]?.length || 0;
-            const isActive = activeEngine === engineId;
+            const isActive = currentEngine === engineId;
 
             return (
               <button
@@ -239,9 +258,6 @@ export default function TemplatesList( {
           } ) }
         </div>
       </div>
-
-      {/* Templates content — keyed so React remounts it on engine change, triggering the animation */}
-      <div key={ activeEngine } className="animate-tab-fade-in space-y-3 sm:space-y-6">
 
       {/* Empty State */}
       { totalCount === 0 && (
@@ -293,7 +309,7 @@ export default function TemplatesList( {
           return (
             <div key={ engineId } className="space-y-2 sm:space-y-4">
               {/* Engine section header — only in "All engines" view */}
-              { activeEngine === "all" && (
+              { currentEngine === "all" && (
                 <div className="flex items-center gap-2 sm:gap-3 pt-1">
                   <h2 className="text-base sm:text-lg font-semibold text-foreground">
                     { label }
@@ -391,7 +407,6 @@ export default function TemplatesList( {
             </div>
           );
         } ) }
-      </div>
     </div>
   );
 }
