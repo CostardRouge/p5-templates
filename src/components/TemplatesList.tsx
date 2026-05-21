@@ -567,31 +567,22 @@ function Thumbnail( {
   eager?: boolean;
   className?: string;
 } ) {
-  const webp = src.replace(
-    /\.jpeg$/,
-    ".webp"
-  );
-  const webp2x = src.replace(
-    /\.jpeg$/,
+  const src2x = src.replace(
+    /\.webp$/,
     "-2x.webp"
   );
 
   return (
-    <picture className="contents">
-      <source
-        type="image/webp"
-        srcSet={ `${ webp } 1x, ${ webp2x } 2x` }
-      />
-      <img
-        alt={ alt }
-        src={ src }
-        width={ 360 }
-        height={ 450 }
-        loading={ eager ? "eager" : "lazy" }
-        fetchPriority={ eager ? "high" : undefined }
-        decoding={ eager ? "sync" : "async" }
-        className={ className }
-      />
-    </picture>
+    <img
+      alt={ alt }
+      src={ src }
+      srcSet={ `${ src } 1x, ${ src2x } 2x` }
+      width={ 360 }
+      height={ 450 }
+      loading={ eager ? "eager" : "lazy" }
+      fetchPriority={ eager ? "high" : undefined }
+      decoding={ eager ? "sync" : "async" }
+      className={ className }
+    />
   );
 }

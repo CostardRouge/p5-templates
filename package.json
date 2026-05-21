@@ -4,10 +4,8 @@
   "private": true,
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",
-    "thumbnails:generate": "node scripts/generate-thumbnails.mjs",
     "dev": "next dev --turbopack",
     "watch": "node scripts/dev-watch.mjs",
-    "prebuild": "node scripts/generate-thumbnails.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint --cache --cache-location .next/cache/eslint src scripts eslint.config.mjs next.config.ts tailwind.config.ts postcss.config.mjs",
