@@ -118,6 +118,17 @@ export default {
             opacity: "1",
             transform: "translateY(0)"
           }
+        },
+        "marquee-hover": {
+          "0%, 10%": {
+            transform: "translateX(0)"
+          },
+          "45%, 55%": {
+            transform: "translateX(var(--marquee-dx, 0))"
+          },
+          "90%, 100%": {
+            transform: "translateX(0)"
+          }
         }
       },
       animation: {
@@ -130,7 +141,8 @@ export default {
         "marquee-reverse": "marquee-reverse 40s linear infinite",
         float: "float 6s ease-in-out infinite",
         blob: "blob 14s ease-in-out infinite",
-        "reveal-up": "reveal-up 0.8s ease-out both"
+        "reveal-up": "reveal-up 0.8s ease-out both",
+        "marquee-hover": "marquee-hover var(--marquee-duration, 6s) ease-in-out infinite"
       }
     }
   },
