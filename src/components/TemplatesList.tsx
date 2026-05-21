@@ -348,7 +348,7 @@ export default function TemplatesList( {
                     <h3 className="text-sm sm:text-base font-medium text-foreground/80">
                       { subCategory }
                     </h3>
-                    <span className="text-xs text-foreground/40">
+                    <span className="text-xs text-foreground/60">
                       { subItems.length }
                     </span>
                   </div>
@@ -373,7 +373,7 @@ export default function TemplatesList( {
                         preview={ preview }
                         hasSketchForm={ hasSketchForm }
                         view={ view }
-                        eager={ index < 8 }
+                        eager={ index === 0 }
                       />
                     ) ) }
                   </div>
@@ -388,7 +388,7 @@ export default function TemplatesList( {
                       <h3 className="text-sm sm:text-base font-medium text-foreground/80">
                         Other { label } templates
                       </h3>
-                      <span className="text-xs text-foreground/40">
+                      <span className="text-xs text-foreground/60">
                         { uncategorized.length }
                       </span>
                     </div>
@@ -414,7 +414,7 @@ export default function TemplatesList( {
                         preview={ preview }
                         hasSketchForm={ hasSketchForm }
                         view={ view }
-                        eager={ index < 8 }
+                        eager={ index === 0 }
                       />
                     ) ) }
                   </div>
@@ -486,13 +486,11 @@ function TemplateCard( {
               imgClassName="w-full h-full object-contain transition-transform duration-300"
             />
           ) : (
-            <img
-              alt={ name }
-              loading={ eager ? "eager" : "lazy" }
-              fetchPriority={ eager ? "high" : undefined }
-              decoding={ eager ? "sync" : "async" }
+            <Thumbnail
               src={ thumbnail }
-              className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 "
+              alt={ name }
+              eager={ eager }
+              className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300"
             />
           ) }
         </div>
@@ -529,12 +527,10 @@ function TemplateCard( {
       <div
         className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border"
       >
-        <img
-          alt={ name }
-          loading={ eager ? "eager" : "lazy" }
-          fetchPriority={ eager ? "high" : undefined }
-          decoding={ eager ? "sync" : "async" }
+        <Thumbnail
           src={ thumbnail }
+          alt={ name }
+          eager={ eager }
           className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
         />
       </div>
@@ -557,5 +553,45 @@ function TemplateCard( {
         <span className="text-xs sm:text-sm">→</span>
       </div>
     </Link>
+  );
+}
+
+function Thumbnail( {
+  src,
+  alt,
+  eager = false,
+  className
+}: {
+  src: string;
+  alt: string;
+  eager?: boolean;
+  className?: string;
+} ) {
+  const webp = src.replace(
+    /\.jpeg$/,
+    ".webp"
+  );
+  const webp2x = src.replace(
+    /\.jpeg$/,
+    "-2x.webp"
+  );
+
+  return (
+    <picture className="contents">
+      <source
+        type="image/webp"
+        srcSet={ `${ webp } 1x, ${ webp2x } 2x` }
+      />
+      <img
+        alt={ alt }
+        src={ src }
+        width={ 360 }
+        height={ 450 }
+        loading={ eager ? "eager" : "lazy" }
+        fetchPriority={ eager ? "high" : undefined }
+        decoding={ eager ? "sync" : "async" }
+        className={ className }
+      />
+    </picture>
   );
 }

@@ -162,14 +162,28 @@ export default function AnimatedPreview( {
       className="absolute top-0 left-0 w-full h-full"
       { ...hoverHandlers }
     >
-      <img
-        alt={ name }
-        src={ thumbnailUrl }
-        loading={ eager ? "eager" : "lazy" }
-        fetchPriority={ eager ? "high" : undefined }
-        decoding={ eager ? "sync" : "async" }
-        className={ imgClassName }
-      />
+      <picture className="contents">
+        <source
+          type="image/webp"
+          srcSet={ `${ thumbnailUrl.replace(
+            /\.jpeg$/,
+            ".webp"
+          ) } 1x, ${ thumbnailUrl.replace(
+            /\.jpeg$/,
+            "-2x.webp"
+          ) } 2x` }
+        />
+        <img
+          alt={ name }
+          src={ thumbnailUrl }
+          width={ 360 }
+          height={ 450 }
+          loading={ eager ? "eager" : "lazy" }
+          fetchPriority={ eager ? "high" : undefined }
+          decoding={ eager ? "sync" : "async" }
+          className={ imgClassName }
+        />
+      </picture>
       <video
         ref={ videoRef }
         muted
