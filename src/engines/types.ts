@@ -212,6 +212,10 @@ export interface SketchMetadata {
   hasSketchForm: boolean;
   hasThumbnail: boolean;
   hasPreview: boolean;
+  // Visibility markers (driven by `.hidden-home` / `.hidden-template`
+  // files inside a sketch dir — see scripts/watch-sketches.mjs).
+  hiddenFromHome?: boolean;
+  hiddenFromTemplates?: boolean;
   mtime: string;
   ctime: string;
 }

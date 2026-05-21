@@ -6,6 +6,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.346Z",
     "ctime": "2026-04-27T16:15:48.275Z"
   },
@@ -16,18 +18,10 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.351Z",
     "ctime": "2026-04-27T16:15:48.281Z"
-  },
-  {
-    "name": "empty-sketch",
-    "engine": "p5",
-    "category": null,
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "mtime": "2026-05-05T01:46:31.351Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
     "name": "hand-tracking-v0-move",
@@ -36,6 +30,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.351Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
@@ -46,6 +42,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.351Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
@@ -56,6 +54,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.352Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
@@ -66,6 +66,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.352Z",
     "ctime": "2026-04-27T16:15:48.283Z"
   },
@@ -76,6 +78,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.353Z",
     "ctime": "2026-05-05T01:46:31.353Z"
   },
@@ -86,6 +90,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.354Z",
     "ctime": "2026-04-27T16:15:48.284Z"
   },
@@ -96,6 +102,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.355Z",
     "ctime": "2026-04-27T16:15:48.284Z"
   },
@@ -106,6 +114,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.355Z",
     "ctime": "2026-04-27T16:15:48.285Z"
   },
@@ -116,6 +126,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.355Z",
     "ctime": "2026-04-27T16:15:48.285Z"
   },
@@ -126,6 +138,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.356Z",
     "ctime": "2026-04-27T16:15:48.286Z"
   },
@@ -136,6 +150,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.356Z",
     "ctime": "2026-04-27T16:15:48.286Z"
   },
@@ -146,6 +162,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.359Z",
     "ctime": "2026-04-27T16:15:48.289Z"
   },
@@ -156,6 +174,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.359Z",
     "ctime": "2026-04-27T16:15:48.289Z"
   },
@@ -166,6 +186,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.360Z",
     "ctime": "2026-04-27T16:15:48.290Z"
   },
@@ -176,6 +198,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.360Z",
     "ctime": "2026-04-27T16:15:48.290Z"
   },
@@ -186,6 +210,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.360Z",
     "ctime": "2026-04-27T16:15:48.291Z"
   },
@@ -196,6 +222,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.361Z",
     "ctime": "2026-04-27T16:15:48.291Z"
   },
@@ -206,6 +234,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.361Z",
     "ctime": "2026-04-27T16:15:48.292Z"
   },
@@ -216,6 +246,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.362Z",
     "ctime": "2026-04-27T16:15:48.292Z"
   },
@@ -226,6 +258,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.362Z",
     "ctime": "2026-04-27T16:15:48.293Z"
   },
@@ -236,6 +270,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.363Z",
     "ctime": "2026-04-27T16:15:48.294Z"
   },
@@ -246,6 +282,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.363Z",
     "ctime": "2026-04-27T16:15:48.294Z"
   },
@@ -256,6 +294,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.364Z",
     "ctime": "2026-04-27T16:15:48.295Z"
   },
@@ -266,6 +306,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.364Z",
     "ctime": "2026-04-27T16:15:48.296Z"
   },
@@ -276,6 +318,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.365Z",
     "ctime": "2026-04-27T16:15:48.296Z"
   },
@@ -286,6 +330,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.365Z",
     "ctime": "2026-04-27T16:15:48.297Z"
   },
@@ -296,6 +342,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.366Z",
     "ctime": "2026-04-27T16:15:48.298Z"
   },
@@ -306,6 +354,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.366Z",
     "ctime": "2026-04-27T16:15:48.297Z"
   },
@@ -316,6 +366,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.366Z",
     "ctime": "2026-04-27T16:15:48.298Z"
   },
@@ -326,6 +378,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.367Z",
     "ctime": "2026-04-27T16:15:48.299Z"
   },
@@ -336,6 +390,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.368Z",
     "ctime": "2026-04-27T16:15:48.299Z"
   },
@@ -346,6 +402,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.368Z",
     "ctime": "2026-04-27T16:15:48.299Z"
   },
@@ -356,6 +414,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.369Z",
     "ctime": "2026-04-27T16:15:48.300Z"
   },
@@ -366,6 +426,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.369Z",
     "ctime": "2026-04-27T16:15:48.299Z"
   },
@@ -376,6 +438,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.369Z",
     "ctime": "2026-04-27T16:15:48.300Z"
   },
@@ -386,6 +450,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.370Z",
     "ctime": "2026-04-27T16:15:48.300Z"
   },
@@ -396,16 +462,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
-    "mtime": "2026-05-05T01:46:31.370Z",
-    "ctime": "2026-04-27T16:15:48.301Z"
-  },
-  {
-    "name": "text-decomposition",
-    "engine": "p5",
-    "category": "text",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.370Z",
     "ctime": "2026-04-27T16:15:48.301Z"
   },
@@ -416,6 +474,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.371Z",
     "ctime": "2026-04-27T16:15:48.302Z"
   },
@@ -426,6 +486,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-07T16:29:35.000Z",
     "ctime": "2026-04-27T16:15:48.286Z"
   },
@@ -436,6 +498,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-07T16:29:43.603Z",
     "ctime": "2026-04-27T16:15:48.287Z"
   },
@@ -446,6 +510,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-07T16:29:53.701Z",
     "ctime": "2026-04-27T16:15:48.287Z"
   },
@@ -456,6 +522,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-07T16:30:00.258Z",
     "ctime": "2026-04-27T16:15:48.287Z"
   },
@@ -466,6 +534,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-07T16:30:09.678Z",
     "ctime": "2026-05-06T13:30:20.039Z"
   },
@@ -476,6 +546,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-14T15:59:17.833Z",
     "ctime": "2026-04-27T16:15:48.278Z"
   },
@@ -486,6 +558,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-14T16:02:00.832Z",
     "ctime": "2026-04-27T16:15:48.276Z"
   },
@@ -496,6 +570,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-14T16:25:13.047Z",
     "ctime": "2026-04-27T16:15:48.277Z"
   },
@@ -506,6 +582,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-16T07:49:18.501Z",
     "ctime": "2026-05-06T14:36:47.625Z"
   },
@@ -516,6 +594,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-19T23:15:00.618Z",
     "ctime": "2026-05-19T22:25:55.582Z"
   },
@@ -526,6 +606,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-20T04:13:23.682Z",
     "ctime": "2026-05-20T03:48:13.962Z"
   },
@@ -536,6 +618,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-20T04:14:54.337Z",
     "ctime": "2026-05-20T03:48:13.965Z"
   },
@@ -546,6 +630,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-20T04:16:15.569Z",
     "ctime": "2026-05-20T03:48:13.968Z"
   },
@@ -556,6 +642,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-20T23:14:13.443Z",
     "ctime": "2026-05-20T03:52:00.456Z"
   },
@@ -566,6 +654,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-20T23:14:13.445Z",
     "ctime": "2026-05-20T03:48:13.970Z"
   },
@@ -576,6 +666,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-20T23:22:09.387Z",
     "ctime": "2026-05-20T03:48:13.974Z"
   },
@@ -586,6 +678,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-21T00:35:56.976Z",
     "ctime": "2026-04-27T16:15:48.292Z"
   },
@@ -596,6 +690,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-21T00:35:56.976Z",
     "ctime": "2026-04-27T16:15:48.295Z"
   },
@@ -606,6 +702,8 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-21T00:35:57.057Z",
     "ctime": "2026-04-27T16:15:48.283Z"
   },
@@ -616,6 +714,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-21T00:35:57.057Z",
     "ctime": "2026-04-27T16:15:48.284Z"
   },
@@ -626,6 +726,8 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-21T00:35:57.058Z",
     "ctime": "2026-04-27T16:15:48.296Z"
   },
@@ -636,7 +738,33 @@
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
     "mtime": "2026-05-21T00:35:57.059Z",
     "ctime": "2026-04-27T16:15:48.298Z"
+  },
+  {
+    "name": "empty-sketch",
+    "engine": "p5",
+    "category": null,
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T18:22:16.666Z",
+    "ctime": "2026-04-27T16:15:48.282Z"
+  },
+  {
+    "name": "text-decomposition",
+    "engine": "p5",
+    "category": "text",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T18:22:16.666Z",
+    "ctime": "2026-04-27T16:15:48.301Z"
   }
 ]

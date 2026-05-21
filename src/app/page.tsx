@@ -30,7 +30,9 @@ export default async function Home() {
     templatesByEngine, engineLabels
   } = await getTemplatesData();
 
-  const allTemplates = Object.values( templatesByEngine ).flat();
+  const allTemplates = Object.values( templatesByEngine )
+    .flat()
+    .filter( ( t ) => !t.hiddenFromHome );
   const baseUrl = getBaseUrl();
 
   const breadcrumbItems = [

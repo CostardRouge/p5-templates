@@ -36,6 +36,13 @@ function isSketchDir( dir ) {
 
 /**
  * Build a metadata entry for a single sketch directory.
+ *
+ * Visibility markers (touch one of these files inside the sketch dir):
+ *   .hidden-home      → hide from the home page showcase
+ *   .hidden-template  → hide from the /templates gallery (forward-looking)
+ *
+ * Markers are committed to git like any other source file; they survive
+ * metadata regenerations because watch-sketches.mjs reads them on every scan.
  */
 function buildEntry(
   sketchDir, name, engineId, category
@@ -61,6 +68,14 @@ function buildEntry(
     hasPreview: fs.existsSync( path.join(
       assetsBase,
       "preview.webm"
+    ) ),
+    hiddenFromHome: fs.existsSync( path.join(
+      sketchDir,
+      ".hidden-home"
+    ) ),
+    hiddenFromTemplates: fs.existsSync( path.join(
+      sketchDir,
+      ".hidden-template"
     ) ),
     mtime: stats.mtime.toISOString(),
     ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString()
@@ -233,6 +248,11 @@ if ( process.env.NODE_ENV !== "production" ) {
     }
   );
 
+  const VISIBILITY_MARKERS = new Set( [
+    ".hidden-home",
+    ".hidden-template"
+  ] );
+
   watcher
     .on(
       "addDir",
@@ -250,6 +270,24 @@ if ( process.env.NODE_ENV !== "production" ) {
       ( dirPath ) => {
         console.log( `🗑️  Template removed: ${ path.basename( dirPath ) }` );
         generateMetadata();
+      }
+    )
+    .on(
+      "add",
+      ( filePath ) => {
+        if ( VISIBILITY_MARKERS.has( path.basename( filePath ) ) ) {
+          console.log( `🙈 Visibility marker added: ${ filePath }` );
+          generateMetadata();
+        }
+      }
+    )
+    .on(
+      "unlink",
+      ( filePath ) => {
+        if ( VISIBILITY_MARKERS.has( path.basename( filePath ) ) ) {
+          console.log( `👁️  Visibility marker removed: ${ filePath }` );
+          generateMetadata();
+        }
       }
     );
 

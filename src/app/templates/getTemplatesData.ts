@@ -12,6 +12,8 @@ export type TemplateItem = {
   preview: string | null;
   hasSketchForm: boolean;
   category?: string | null;
+  hiddenFromHome?: boolean;
+  hiddenFromTemplates?: boolean;
 };
 
 export async function getTemplatesData() {
@@ -23,7 +25,13 @@ export async function getTemplatesData() {
     .slice()
     .reverse()
     .forEach( ( {
-      name, engine, category, hasSketchForm, hasPreview
+      name,
+      engine,
+      category,
+      hasSketchForm,
+      hasPreview,
+      hiddenFromHome,
+      hiddenFromTemplates
     } ) => {
       if ( !templatesByEngine[ engine ] ) {
         templatesByEngine[ engine ] = [];
@@ -34,13 +42,18 @@ export async function getTemplatesData() {
           engine,
           name
         ),
-        preview: hasPreview ? getSketchPreviewURL( engine, name ) : null,
+        preview: hasPreview ? getSketchPreviewURL(
+          engine,
+          name
+        ) : null,
         href: category
           ? `/templates/${ engine }/${ category }/${ name }`
           : `/templates/${ engine }/${ name }`,
         hasSketchForm,
         name,
-        category
+        category,
+        hiddenFromHome,
+        hiddenFromTemplates
       } );
     } );
 
