@@ -123,6 +123,23 @@
     animation: pulse-soft 2s ease-in-out infinite;
 }
 
+/* View Transitions for engine tab switching */
+@keyframes vt-fade-out {
+    to { opacity: 0; }
+}
+
+@keyframes vt-fade-in {
+    from { opacity: 0; }
+}
+
+::view-transition-old(templates-list) {
+    animation: 120ms ease-in both vt-fade-out;
+}
+
+::view-transition-new(templates-list) {
+    animation: 200ms ease-out 80ms both vt-fade-in;
+}
+
 /* Respect prefers-reduced-motion accessibility setting */
 @media (prefers-reduced-motion: reduce) {
 
