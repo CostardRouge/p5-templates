@@ -129,6 +129,43 @@ export default {
           "90%, 100%": {
             transform: "translateX(0)"
           }
+        },
+        drift: {
+          "0%, 100%": {
+            transform: "translate3d(0, 0, 0) rotate(-1.2deg)"
+          },
+          "50%": {
+            transform: "translate3d(-6px, -12px, 0) rotate(-2.4deg)"
+          }
+        },
+        "drift-reverse": {
+          "0%, 100%": {
+            transform: "translate3d(0, 0, 0) rotate(3deg)"
+          },
+          "50%": {
+            transform: "translate3d(8px, 6px, 0) rotate(4.5deg)"
+          }
+        },
+        "slider-pulse": {
+          "0%, 100%": {
+            transform: "translateX(0%)"
+          },
+          "50%": {
+            transform: "translateX(220%)"
+          }
+        },
+        "scan-line": {
+          "0%": {
+            transform: "translateY(-100%)",
+            opacity: "0"
+          },
+          "10%, 90%": {
+            opacity: "1"
+          },
+          "100%": {
+            transform: "translateY(100%)",
+            opacity: "0"
+          }
         }
       },
       animation: {
@@ -142,7 +179,11 @@ export default {
         float: "float 6s ease-in-out infinite",
         blob: "blob 14s ease-in-out infinite",
         "reveal-up": "reveal-up 0.8s ease-out both",
-        "marquee-hover": "marquee-hover var(--marquee-duration, 6s) ease-in-out infinite"
+        "marquee-hover": "marquee-hover var(--marquee-duration, 6s) ease-in-out infinite",
+        drift: "drift 8s ease-in-out infinite",
+        "drift-reverse": "drift-reverse 9s ease-in-out infinite",
+        "slider-pulse": "slider-pulse 3.2s cubic-bezier(0.65, 0, 0.35, 1) infinite",
+        "scan-line": "scan-line 4s linear infinite"
       }
     }
   },

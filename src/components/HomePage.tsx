@@ -5,17 +5,17 @@ import {
   useEffect, useMemo, useRef, useState
 } from "react";
 import {
-  ArrowRight,
-  Code2,
-  Film,
-  Image as ImageIcon,
-  Layers,
-  Palette,
+  ArrowUpRight,
+  Circle,
+  CornerDownRight,
+  Hash,
+  MousePointer2,
+  Plus,
+  Radio,
   Shuffle,
-  Sliders,
-  Sparkles,
-  Wand2,
-  Zap
+  Slash,
+  Square,
+  Triangle
 } from "lucide-react";
 import AnimatedPreview from "@/components/AnimatedPreview";
 import type {
@@ -28,85 +28,19 @@ type HomePageProps = {
   totalTemplates: number;
 };
 
-const FEATURES = [
-  {
-    icon: Sliders,
-    title: "Live editing",
-    text: "Tweak template options in a side panel and watch the canvas update in real time. Every parameter, every frame.",
-    gradient: "from-fuchsia-500 to-pink-500"
-  },
-  {
-    icon: Layers,
-    title: "Multi-engine",
-    text: "p5.js sketches, GSAP DOM animations, and pure HTML stages share the same recorder, exporter, and form system.",
-    gradient: "from-violet-500 to-indigo-500"
-  },
-  {
-    icon: Film,
-    title: "Front-end recording",
-    text: "Capture frames directly from your browser into MP4 or WebM. No external tools, no screen recording, no quality loss.",
-    gradient: "from-sky-500 to-cyan-400"
-  },
-  {
-    icon: ImageIcon,
-    title: "Image & video export",
-    text: "Save a single frame as PNG or a full animation as video. Pixel-perfect at any aspect ratio for Instagram, TikTok, Reels.",
-    gradient: "from-emerald-500 to-teal-400"
-  },
-  {
-    icon: Zap,
-    title: "Headless backend rendering",
-    text: "Offload long renders to a Playwright + BullMQ queue. Templates render server-side while you keep working.",
-    gradient: "from-amber-500 to-orange-500"
-  },
-  {
-    icon: Sparkles,
-    title: "Animated previews",
-    text: "Every template ships with a generated WebM that plays on hover or scroll — no guessing what a sketch looks like.",
-    gradient: "from-rose-500 to-red-500"
-  },
-  {
-    icon: Wand2,
-    title: "Magic forms",
-    text: "Each sketch exposes a custom options form. Sliders, color pickers, drop-zones, presets — generated per template.",
-    gradient: "from-lime-500 to-green-500"
-  },
-  {
-    icon: Shuffle,
-    title: "Randomize settings",
-    text: "One click rerolls every option to a valid random value. The fastest way to discover a variation you didn't plan.",
-    gradient: "from-purple-500 to-blue-500"
-  }
-];
-
-const MARQUEE_WORDS = [
+const TICKER = [
   "p5.js",
-  "GSAP",
-  "HTML",
-  "Record",
-  "Export",
-  "Animate",
-  "Preview",
-  "Randomize",
-  "Customize",
-  "Render",
-  "MP4",
-  "WebM",
-  "Instagram",
-  "TikTok",
-  "Reels",
-  "Generative"
-];
-
-const MARQUEE_HUES = [
-  "text-fuchsia-500",
-  "text-amber-500",
-  "text-sky-500",
-  "text-emerald-500",
-  "text-rose-500",
-  "text-violet-500",
-  "text-cyan-500",
-  "text-orange-500"
+  "gsap",
+  "html5 stages",
+  "mp4 / webm record",
+  "9:16 · 1:1 · 4:5",
+  "live parameters",
+  "headless renderer",
+  "drop-zone uploads",
+  "randomize",
+  "frame-perfect",
+  "browser-native",
+  "zero install"
 ];
 
 function shuffle<T>( arr: T[] ): T[] {
@@ -196,6 +130,152 @@ function Reveal( {
   );
 }
 
+function useCountUp(
+  target: number, duration = 1200
+) {
+  const ref = useRef<HTMLSpanElement | null>( null );
+  const [
+    val,
+    setVal
+  ] = useState( 0 );
+
+  useEffect(
+    () => {
+      const el = ref.current;
+
+      if ( !el ) {
+        return;
+      }
+
+      const io = new IntersectionObserver(
+        ( entries ) => {
+          if ( !entries[ 0 ].isIntersecting ) {
+            return;
+          }
+          const start = performance.now();
+          let raf = 0;
+          const step = ( t: number ) => {
+            const p = Math.min(
+              1,
+              ( t - start ) / duration
+            );
+            const eased = 1 - Math.pow(
+              1 - p,
+              3
+            );
+
+            setVal( Math.round( target * eased ) );
+            if ( p < 1 ) {
+              raf = requestAnimationFrame( step );
+            }
+          };
+
+          raf = requestAnimationFrame( step );
+          io.disconnect();
+          return () => cancelAnimationFrame( raf );
+        },
+        {
+          threshold: 0.4
+        }
+      );
+
+      io.observe( el );
+      return () => io.disconnect();
+    },
+    [
+      target,
+      duration
+    ]
+  );
+
+  return {
+    ref,
+    val
+  };
+}
+
+function PreviewSurface( {
+  template,
+  eager = false,
+  imgClassName = "w-full h-full object-cover"
+}: {
+  template: TemplateItem;
+  eager?: boolean;
+  imgClassName?: string;
+} ) {
+  if ( template.preview ) {
+    return (
+      <AnimatedPreview
+        previewUrl={ template.preview }
+        thumbnailUrl={ template.thumbnail }
+        name={ template.name }
+        imgClassName={ imgClassName }
+        eager={ eager }
+      />
+    );
+  }
+
+  return (
+    <img
+      alt={ template.name }
+      src={ template.thumbnail }
+      loading={ eager ? "eager" : "lazy" }
+      className={ `absolute inset-0 ${ imgClassName }` }
+    />
+  );
+}
+
+function SpecLabel( {
+  index,
+  label
+}: { index: string;
+  label: string } ) {
+  return (
+    <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-label">
+      <span className="tabular-nums">{index}</span>
+      <span className="h-px w-4 bg-foreground/30" />
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function StatBlock( {
+  value,
+  label,
+  suffix,
+  numeric = true
+}: {
+  value: number | string;
+  label: string;
+  suffix?: string;
+  numeric?: boolean;
+} ) {
+  const numericTarget = typeof value === "number" ? value : 0;
+  const {
+    ref, val
+  } = useCountUp(
+    numericTarget,
+    1400
+  );
+
+  return (
+    <div className="flex flex-col gap-2 py-6 sm:py-8">
+      <span
+        ref={ ref }
+        className="font-black text-5xl sm:text-7xl lg:text-8xl tracking-[-0.04em] leading-[0.85] tabular-nums"
+      >
+        {numeric ? val : value}
+        {suffix ? (
+          <span className="text-foreground/30">{suffix}</span>
+        ) : null}
+      </span>
+      <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-label">
+        {label}
+      </span>
+    </div>
+  );
+}
+
 export default function HomePage( {
   templates,
   engineLabels,
@@ -231,327 +311,684 @@ export default function HomePage( {
     ]
   );
 
+  const heroFront = showcase[ 0 ];
+  const heroBack = showcase[ 1 ];
+
   return (
-    <div className="relative w-full overflow-x-hidden">
-      {/* Animated background blobs */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] h-[40rem] w-[40rem] rounded-full bg-fuchsia-500/20 blur-3xl animate-blob" />
+    <div className="relative w-full overflow-x-hidden bg-background text-foreground">
+      {/* Background system: faint dot-grid + single subtle accent radial + grain */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
         <div
-          className="absolute top-[20%] right-[-15%] h-[36rem] w-[36rem] rounded-full bg-sky-500/20 blur-3xl animate-blob"
+          aria-hidden
+          className="absolute inset-0 opacity-[0.35] dark:opacity-[0.18]"
           style={ {
-            animationDelay: "4s"
+            backgroundImage:
+              "radial-gradient(hsl(var(--foreground) / 0.18) 0.5px, transparent 0.5px)",
+            backgroundSize: "22px 22px"
           } }
         />
         <div
-          className="absolute bottom-[-10%] left-[30%] h-[42rem] w-[42rem] rounded-full bg-amber-400/20 blur-3xl animate-blob"
+          aria-hidden
+          className="absolute -top-[20%] -right-[10%] h-[40rem] w-[40rem] rounded-full"
           style={ {
-            animationDelay: "8s"
+            background:
+              "radial-gradient(closest-side, rgba(236,72,153,0.18), transparent 70%)",
+            filter: "blur(40px)"
           } }
         />
       </div>
 
-      {/* ───── HERO ───── */}
-      <section className="relative px-4 sm:px-8 pt-16 sm:pt-24 pb-12 sm:pb-20 max-w-6xl mx-auto">
-        <div className="flex flex-col items-center text-center gap-6 sm:gap-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 backdrop-blur px-4 py-1.5 text-xs sm:text-sm text-label animate-slideInFromTop">
-            <Sparkles className="w-3.5 h-3.5 text-fuchsia-500" />
-            <span>{totalTemplates} templates · {engineNames.join( " · " )}</span>
+      {/* ============ HERO ============ */}
+      <section className="relative px-4 sm:px-8 lg:px-12 pt-10 sm:pt-16 lg:pt-20 pb-16 sm:pb-24 max-w-[1440px] mx-auto">
+        {/* top metadata bar */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-label mb-10 sm:mb-16">
+          <span className="tabular-nums">v.0.1 · {new Date().getFullYear()}</span>
+          <span className="h-1 w-1 rounded-full bg-fuchsia-500" />
+          <span className="tabular-nums">
+            {totalTemplates.toString().padStart(
+              2,
+              "0"
+            )} templates
+          </span>
+          <span className="h-1 w-1 rounded-full bg-foreground/30" />
+          <span className="tabular-nums">
+            {engineNames.length.toString().padStart(
+              2,
+              "0"
+            )} engines
+          </span>
+          <span className="hidden sm:inline-block h-1 w-1 rounded-full bg-foreground/30" />
+          <span className="hidden sm:inline">browser-native</span>
+          <span className="ml-auto hidden md:inline-flex items-center gap-2 text-foreground/60">
+            <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-500 animate-pulse-soft" />
+            <span>live</span>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10 lg:gap-16 items-start">
+          {/* Headline column */}
+          <div className="md:col-span-7 lg:col-span-8">
+            <h1 className="font-black text-[3.25rem] sm:text-[5.5rem] md:text-[7rem] lg:text-[9.5rem] leading-[0.84] tracking-[-0.045em] [text-wrap:balance]">
+              <span className="block">a studio</span>
+              <span className="block">
+                for{ " " }
+                <span className="italic font-extralight">social</span>
+              </span>
+              <span className="block">
+                visuals<span className="text-fuchsia-500">.</span>
+              </span>
+            </h1>
+
+            <div className="mt-8 sm:mt-12 lg:mt-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+              <p className="md:col-span-7 max-w-[55ch] text-base sm:text-lg text-label leading-relaxed [text-wrap:pretty]">
+                Customizable templates built on{ " " }
+                <span className="text-foreground font-medium">p5.js</span>,{ " " }
+                <span className="text-foreground font-medium">gsap</span>, and{ " " }
+                <span className="text-foreground font-medium">html stages</span>.
+                Tweak parameters in a live editor, then export images or record
+                full animations to video — never leaving the browser.
+              </p>
+
+              <div className="md:col-span-5 flex flex-col sm:flex-row md:flex-col lg:flex-row items-stretch sm:items-center md:items-stretch lg:items-center gap-3 md:gap-4">
+                <Link
+                  href="/templates"
+                  className="group inline-flex items-center justify-between gap-4 rounded-full bg-foreground text-background pl-6 pr-3 py-3 text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                >
+                  <span>Open the library</span>
+                  <span className="grid place-items-center w-8 h-8 rounded-full bg-background/15 group-hover:bg-background/25 transition-colors">
+                    <ArrowUpRight className="w-4 h-4 transition-transform group-hover:rotate-[20deg]" />
+                  </span>
+                </Link>
+                <a
+                  href="#capabilities"
+                  className="group inline-flex items-center gap-2 text-sm text-label hover:text-foreground transition-colors px-2"
+                >
+                  <CornerDownRight className="w-4 h-4" />
+                  <span className="underline-offset-4 group-hover:underline">
+                    or scroll down
+                  </span>
+                </a>
+              </div>
+            </div>
           </div>
 
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black leading-[0.95] tracking-tight">
-            <span className="block">Code</span>
-            <span
-              className="block bg-clip-text text-transparent bg-[linear-gradient(90deg,#ec4899,#f59e0b,#10b981,#06b6d4,#8b5cf6,#ec4899)] bg-[length:300%_300%] animate-gradient-shift"
-            >
-              social visuals.
-            </span>
-            <span className="block">Render. Repeat.</span>
-          </h1>
+          {/* Right: hero spec stack */}
+          <div className="md:col-span-5 lg:col-span-4 relative">
+            <div className="relative mx-auto md:mx-0 w-full max-w-[360px] md:max-w-none aspect-[4/5]">
+              {/* back ghost card */}
+              {heroBack ? (
+                <div className="absolute inset-0 will-change-transform animate-drift-reverse">
+                  <div className="absolute inset-0 translate-x-[4%] translate-y-[5%] rounded-md overflow-hidden border border-border bg-background/60 opacity-60">
+                    <PreviewSurface template={ heroBack } />
+                  </div>
+                </div>
+              ) : null}
 
-          <p className="max-w-2xl text-base sm:text-lg text-label leading-relaxed">
-            A studio for generating Instagram, TikTok, and Reels content from
-            customizable <strong className="text-foreground">p5.js</strong>,{ " " }
-            <strong className="text-foreground">GSAP</strong>, and{ " " }
-            <strong className="text-foreground">HTML</strong> templates. Tweak
-            options in a live editor, then export images or record full
-            animations to video — all from the browser.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2">
-            <Link
-              href="/templates"
-              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg shadow-foreground/10"
-            >
-              <span>Browse {totalTemplates} templates</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-            <a
-              href="#features"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background/60 backdrop-blur px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold hover:bg-hover/60 transition-colors"
-            >
-              See features
-            </a>
+              {/* front featured card */}
+              {heroFront ? (
+                <Link
+                  href={ heroFront.href }
+                  className="absolute inset-0 group will-change-transform animate-drift block"
+                >
+                  <div className="absolute inset-0 rounded-md overflow-hidden border border-foreground/15 bg-background shadow-[0_30px_60px_-30px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]">
+                    {/* scan line micro-interaction */}
+                    <div
+                      aria-hidden
+                      className="absolute inset-x-0 h-px bg-fuchsia-500/40 z-10 animate-scan-line pointer-events-none"
+                    />
+                    <PreviewSurface template={ heroFront } eager />
+                  </div>
+                  {/* corner labels */}
+                  <div className="absolute -top-3 left-2 right-2 flex justify-between items-end font-mono text-[10px] uppercase tracking-[0.16em] text-label">
+                    <span className="bg-background px-1">spec · 4:5</span>
+                    <span className="bg-background px-1 truncate max-w-[55%]">
+                      {heroFront.name}
+                    </span>
+                  </div>
+                  <div className="absolute -bottom-3 left-2 right-2 flex justify-between items-baseline font-mono text-[10px] uppercase tracking-[0.16em] text-label">
+                    <span className="bg-background px-1">live · tap to open</span>
+                    <span className="bg-background px-1 flex items-center gap-1">
+                      <ArrowUpRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                </Link>
+              ) : null}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ───── MARQUEE BAND ───── */}
-      <section className="py-6 sm:py-8 border-y border-border bg-background/40 backdrop-blur-sm overflow-hidden">
-        <div className="flex w-max animate-marquee gap-8 sm:gap-12 will-change-transform">
+      {/* ============ TICKER ============ */}
+      <section className="overflow-hidden border-y border-border bg-background/80 backdrop-blur-sm">
+        <div className="flex w-max animate-marquee-slow gap-10 sm:gap-14 py-4 sm:py-5 will-change-transform">
           {[
-            ...MARQUEE_WORDS,
-            ...MARQUEE_WORDS
+            ...TICKER,
+            ...TICKER
           ].map( (
-            word, i
+            item, i
           ) => (
             <span
-              key={ `${ word }-${ i }` }
-              className={ `text-3xl sm:text-5xl font-black uppercase tracking-tight whitespace-nowrap ${
-                MARQUEE_HUES[ i % MARQUEE_HUES.length ]
-              }` }
+              key={ `${ item }-${ i }` }
+              className="flex items-center gap-3 whitespace-nowrap font-mono text-xs sm:text-sm uppercase tracking-[0.22em] text-foreground/60"
             >
-              {word}
-              <span className="text-foreground/30 ml-8 sm:ml-12">●</span>
+              <span
+                className={ `h-1 w-1 rounded-full ${
+                  i % 4 === 0 ? "bg-fuchsia-500" : "bg-foreground/30"
+                }` }
+              />
+              <span>{item}</span>
             </span>
           ) )}
         </div>
       </section>
 
-      {/* ───── FEATURED SHOWCASE ───── */}
-      <section className="px-4 sm:px-8 py-16 sm:py-24 max-w-7xl mx-auto">
+      {/* ============ SHOWCASE WALL ============ */}
+      <section className="relative px-4 sm:px-8 lg:px-12 py-20 sm:py-28 max-w-[1440px] mx-auto">
         <Reveal>
-          <div className="flex items-end justify-between gap-4 mb-8 sm:mb-12 flex-wrap">
-            <div>
-              <div className="text-xs sm:text-sm uppercase tracking-widest text-fuchsia-500 font-bold mb-2">
-                Featured
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight">
-                A random{ " " }
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-amber-500">
-                  pick
-                </span>{ " " }
-                from the library.
+          <div className="grid grid-cols-12 gap-6 mb-10 sm:mb-14 items-end">
+            <div className="col-span-12 md:col-span-2">
+              <SpecLabel index="01" label="/library" />
+            </div>
+            <div className="col-span-12 md:col-span-7">
+              <h2 className="font-black text-3xl sm:text-5xl lg:text-6xl tracking-tighter leading-[0.95] [text-wrap:balance]">
+                Pull a random{ " " }
+                <span className="italic font-extralight">specimen</span>{ " " }
+                from the shelf.
               </h2>
-              <p className="mt-3 text-sm sm:text-base text-label max-w-xl">
-                Reshuffled on every visit. Click any preview to open the editor
-                and start exporting.
+            </div>
+            <div className="col-span-12 md:col-span-3 md:text-right">
+              <p className="text-sm text-label leading-relaxed max-w-xs md:ml-auto">
+                Reshuffled on every visit. Open one to inspect, tweak, and
+                export.
               </p>
             </div>
-            <Link
-              href="/templates"
-              className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold hover:text-fuchsia-500 transition-colors"
-            >
-              View all <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {showcase.map( (
-            t, i
-          ) => (
-            <Reveal key={ t.href } delay={ i * 60 }>
+        {showcase.length >= 8 ? (
+          <div className="grid grid-cols-12 gap-3 sm:gap-4">
+            {/* Row 1 */}
+            <Reveal className="col-span-12 md:col-span-7">
+              <ShowcaseTile
+                template={ showcase[ 0 ] }
+                index="A.01"
+                aspect="md:aspect-[16/13] aspect-[4/5]"
+                size="lg"
+              />
+            </Reveal>
+            <div className="col-span-12 md:col-span-5 grid grid-cols-1 gap-3 sm:gap-4">
+              <Reveal delay={ 80 }>
+                <ShowcaseTile
+                  template={ showcase[ 1 ] }
+                  index="A.02"
+                  aspect="aspect-[16/9]"
+                />
+              </Reveal>
+              <Reveal delay={ 160 }>
+                <ShowcaseTile
+                  template={ showcase[ 2 ] }
+                  index="A.03"
+                  aspect="aspect-[16/9]"
+                />
+              </Reveal>
+            </div>
+
+            {/* Row 2 */}
+            <Reveal className="col-span-6 md:col-span-3" delay={ 240 }>
+              <ShowcaseTile
+                template={ showcase[ 3 ] }
+                index="B.01"
+                aspect="aspect-[9/16]"
+              />
+            </Reveal>
+            <Reveal className="col-span-6 md:col-span-3" delay={ 300 }>
+              <ShowcaseTile
+                template={ showcase[ 4 ] }
+                index="B.02"
+                aspect="aspect-[9/16]"
+              />
+            </Reveal>
+            <Reveal className="col-span-12 md:col-span-6" delay={ 360 }>
+              <ShowcaseTile
+                template={ showcase[ 5 ] }
+                index="B.03"
+                aspect="aspect-[16/9]"
+              />
+            </Reveal>
+
+            {/* Row 3 */}
+            <Reveal className="col-span-6 md:col-span-4" delay={ 420 }>
+              <ShowcaseTile
+                template={ showcase[ 6 ] }
+                index="C.01"
+                aspect="aspect-square"
+              />
+            </Reveal>
+            <Reveal className="col-span-6 md:col-span-4" delay={ 480 }>
+              <ShowcaseTile
+                template={ showcase[ 7 ] }
+                index="C.02"
+                aspect="aspect-square"
+              />
+            </Reveal>
+            <Reveal className="col-span-12 md:col-span-4" delay={ 540 }>
               <Link
-                href={ t.href }
-                className="group relative block w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/30 transition-all duration-300 hover:shadow-xl hover:shadow-fuchsia-500/10 hover:-translate-y-1"
+                href="/templates"
+                className="group relative block aspect-square rounded-md border border-dashed border-foreground/25 hover:border-foreground/60 transition-colors p-5 flex flex-col justify-between bg-background/40"
               >
-                <div
-                  className="w-full relative"
-                  style={ {
-                    paddingTop: "125%"
-                  } }
-                >
-                  {t.preview ? (
-                    <AnimatedPreview
-                      previewUrl={ t.preview }
-                      thumbnailUrl={ t.thumbnail }
-                      name={ t.name }
-                      imgClassName="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <img
-                      alt={ t.name }
-                      src={ t.thumbnail }
-                      loading="lazy"
-                      className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
-                  )}
-                </div>
-                <div className="bg-background border-t border-border px-2 py-2 flex items-center justify-between">
-                  <p className="text-xs sm:text-sm font-medium text-foreground truncate">
-                    {t.name}
-                  </p>
-                  <ArrowRight className="w-3.5 h-3.5 text-foreground/40 group-hover:text-fuchsia-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                <SpecLabel index="C.03" label="/all" />
+                <div className="flex flex-col gap-2">
+                  <span className="text-2xl sm:text-3xl font-black tracking-tighter leading-none">
+                    View all<br />
+                    <span className="tabular-nums">{totalTemplates}</span>{ " " }
+                    <span className="italic font-extralight">templates</span>
+                  </span>
+                  <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-label group-hover:text-fuchsia-500 transition-colors">
+                    <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    browse
+                  </span>
                 </div>
               </Link>
             </Reveal>
-          ) )}
-        </div>
-
-        <Reveal className="sm:hidden mt-8 text-center">
-          <Link
-            href="/templates"
-            className="inline-flex items-center gap-2 text-sm font-semibold"
-          >
-            View all templates <ArrowRight className="w-4 h-4" />
-          </Link>
-        </Reveal>
+          </div>
+        ) : null}
       </section>
 
-      {/* ───── FEATURES ───── */}
+      {/* ============ NUMBERS STRIP ============ */}
+      <section className="border-y border-border bg-background/60">
+        <div className="px-4 sm:px-8 lg:px-12 max-w-[1440px] mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-border">
+            <div className="px-2 sm:px-6">
+              <StatBlock value={ totalTemplates } label="ready to render" />
+            </div>
+            <div className="px-2 sm:px-6">
+              <StatBlock value={ engineNames.length } label="rendering engines" />
+            </div>
+            <div className="px-2 sm:px-6">
+              <StatBlock value="∞" label="param permutations" numeric={ false } />
+            </div>
+            <div className="px-2 sm:px-6">
+              <StatBlock
+                value="0"
+                suffix=" sec"
+                label="signup · install · upload"
+                numeric={ false }
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============ FEATURES BENTO ============ */}
       <section
-        id="features"
-        className="relative px-4 sm:px-8 py-16 sm:py-24 max-w-7xl mx-auto"
+        id="capabilities"
+        className="relative px-4 sm:px-8 lg:px-12 py-20 sm:py-32 max-w-[1440px] mx-auto"
       >
         <Reveal>
-          <div className="text-center mb-12 sm:mb-16">
-            <div className="text-xs sm:text-sm uppercase tracking-widest text-sky-500 font-bold mb-2">
-              What it does
+          <div className="grid grid-cols-12 gap-6 mb-10 sm:mb-14 items-end">
+            <div className="col-span-12 md:col-span-2">
+              <SpecLabel index="02" label="/capabilities" />
             </div>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight">
-              Every piece of the{ " " }
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-sky-500 via-violet-500 to-fuchsia-500">
-                pipeline
-              </span>
-              , in one place.
-            </h2>
+            <div className="col-span-12 md:col-span-10">
+              <h2 className="font-black text-3xl sm:text-5xl lg:text-7xl tracking-tighter leading-[0.95] [text-wrap:balance]">
+                The whole pipeline,{ " " }
+                <span className="italic font-extralight">end to end</span>.
+              </h2>
+            </div>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {FEATURES.map( (
-            feature, i
-          ) => (
-            <Reveal key={ feature.title } delay={ i * 80 }>
-              <div className="group relative h-full p-5 sm:p-6 rounded-2xl border border-border bg-background/60 backdrop-blur hover:border-foreground/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                <div
-                  className={ `absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br ${ feature.gradient }` }
-                />
-                <div
-                  className={ `inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${ feature.gradient } text-white mb-4 shadow-lg` }
-                >
-                  <feature.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <h3 className="text-base sm:text-lg font-bold mb-2">
-                  {feature.title}
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-3 sm:gap-4 md:auto-rows-[10rem]">
+          {/* Big tile — Live editing demo */}
+          <Reveal className="md:col-span-4 md:row-span-2">
+            <article className="relative h-full p-6 sm:p-8 rounded-md border border-border bg-background overflow-hidden group">
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <SpecLabel index="F.01" label="primary" />
+                <MousePointer2 className="w-5 h-5 text-fuchsia-500" strokeWidth={ 1.5 } />
+              </div>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tighter leading-[1.02] mb-3 [text-wrap:balance]">
+                Live editing.{ " " }
+                <span className="italic font-extralight text-label">
+                  every parameter, every frame.
+                </span>
+              </h3>
+              <p className="text-sm text-label leading-relaxed max-w-md mb-8">
+                Sliders, color pickers, text fields, drop-zones — generated per
+                template. Each change reflects on the canvas instantly.
+              </p>
+
+              {/* Live demo: animated mini-sliders */}
+              <div className="absolute left-6 right-6 bottom-6 sm:left-8 sm:right-8 sm:bottom-8 space-y-3 font-mono text-[10px] uppercase tracking-[0.18em]">
+                {[
+                  {
+                    k: "count",
+                    v: "47",
+                    pos: 0.42
+                  },
+                  {
+                    k: "speed",
+                    v: "1.28",
+                    pos: 0.68
+                  },
+                  {
+                    k: "hue",
+                    v: "312°",
+                    pos: 0.22
+                  },
+                  {
+                    k: "scale",
+                    v: "0.84",
+                    pos: 0.55
+                  }
+                ].map( (
+                  row, i
+                ) => (
+                  <div key={ row.k } className="flex items-center gap-3">
+                    <span className="w-12 text-label">{row.k}</span>
+                    <div className="flex-1 h-px bg-foreground/15 relative">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-foreground/60"
+                        style={ {
+                          width: `${ row.pos * 100 }%`
+                        } }
+                      />
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rounded-full will-change-transform animate-slider-pulse"
+                        style={ {
+                          left: `${ row.pos * 100 }%`,
+                          animationDelay: `${ i * 0.4 }s`
+                        } }
+                      />
+                    </div>
+                    <span className="w-12 text-right tabular-nums text-foreground">
+                      {row.v}
+                    </span>
+                  </div>
+                ) )}
+              </div>
+            </article>
+          </Reveal>
+
+          {/* Multi-engine */}
+          <Reveal className="md:col-span-2" delay={ 80 }>
+            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-4">
+                <SpecLabel index="F.02" label="layer" />
+                <Hash className="w-4 h-4 text-foreground/40" strokeWidth={ 1.5 } />
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
+                  Multi-engine.
                 </h3>
-                <p className="text-sm text-label leading-relaxed">
-                  {feature.text}
+                <p className="text-xs text-label leading-relaxed">
+                  p5 sketches, gsap dom animations, and html stages — one shared
+                  recorder, exporter, and form system.
                 </p>
               </div>
-            </Reveal>
-          ) )}
+            </article>
+          </Reveal>
+
+          {/* Randomize */}
+          <Reveal className="md:col-span-2" delay={ 160 }>
+            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between group hover:border-foreground/40 transition-colors">
+              <div className="flex items-start justify-between gap-4">
+                <SpecLabel index="F.03" label="entropy" />
+                <Shuffle
+                  className="w-4 h-4 text-foreground/40 group-hover:text-fuchsia-500 group-hover:rotate-180 transition-all duration-500"
+                  strokeWidth={ 1.5 }
+                />
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
+                  One-click randomize.
+                </h3>
+                <p className="text-xs text-label leading-relaxed">
+                  Reroll every option to a valid random value. Fastest path to a
+                  variation you didn&apos;t plan.
+                </p>
+              </div>
+            </article>
+          </Reveal>
+
+          {/* Recording */}
+          <Reveal className="md:col-span-2" delay={ 240 }>
+            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-4">
+                <SpecLabel index="F.04" label="capture" />
+                <Radio className="w-4 h-4 text-fuchsia-500 animate-pulse-soft" strokeWidth={ 1.5 } />
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
+                  Frame-perfect record.
+                </h3>
+                <p className="text-xs text-label leading-relaxed">
+                  Capture mp4 or webm directly from the canvas. No screen
+                  recorder, no quality loss.
+                </p>
+              </div>
+            </article>
+          </Reveal>
+
+          {/* Export */}
+          <Reveal className="md:col-span-2" delay={ 320 }>
+            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-4">
+                <SpecLabel index="F.05" label="output" />
+                <div className="flex items-center gap-1.5 text-foreground/40">
+                  <Square className="w-3 h-3" strokeWidth={ 1.5 } />
+                  <Circle className="w-3 h-3" strokeWidth={ 1.5 } />
+                  <Triangle className="w-3 h-3" strokeWidth={ 1.5 } />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
+                  Image · video · loop.
+                </h3>
+                <p className="text-xs text-label leading-relaxed">
+                  Single-frame png, full animation video, or seamless loops. Any
+                  aspect: 9:16, 1:1, 4:5.
+                </p>
+              </div>
+            </article>
+          </Reveal>
+
+          {/* Backend */}
+          <Reveal className="md:col-span-2" delay={ 400 }>
+            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between">
+              <div className="flex items-start justify-between gap-4">
+                <SpecLabel index="F.06" label="queue" />
+                <Plus className="w-4 h-4 text-foreground/40 rotate-45" strokeWidth={ 1.5 } />
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
+                  Headless rendering.
+                </h3>
+                <p className="text-xs text-label leading-relaxed">
+                  Offload long renders to a playwright + bullmq queue. Keep
+                  working while the server cooks.
+                </p>
+              </div>
+            </article>
+          </Reveal>
         </div>
       </section>
 
-      {/* ───── HOW IT WORKS ───── */}
-      <section className="px-4 sm:px-8 py-16 sm:py-24 max-w-6xl mx-auto">
+      {/* ============ WORKFLOW (editorial numbered list) ============ */}
+      <section className="relative px-4 sm:px-8 lg:px-12 py-20 sm:py-28 max-w-[1440px] mx-auto">
         <Reveal>
-          <div className="text-center mb-12 sm:mb-16">
-            <div className="text-xs sm:text-sm uppercase tracking-widest text-emerald-500 font-bold mb-2">
-              Workflow
+          <div className="grid grid-cols-12 gap-6 mb-6 sm:mb-10">
+            <div className="col-span-12 md:col-span-2">
+              <SpecLabel index="03" label="/workflow" />
             </div>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight">
-              Three steps,{ " " }
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-cyan-500">
-                infinite output
-              </span>
-              .
-            </h2>
+            <div className="col-span-12 md:col-span-10">
+              <h2 className="font-black text-3xl sm:text-5xl lg:text-7xl tracking-tighter leading-[0.95] [text-wrap:balance]">
+                Three steps,{ " " }
+                <span className="italic font-extralight">
+                  uncountable outputs
+                </span>
+                .
+              </h2>
+            </div>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-8">
+        <div className="border-t border-border">
           {[
             {
               n: "01",
-              icon: Palette,
+              icon: Slash,
               title: "Pick a template",
-              text: "Browse the gallery, hover for an animated preview, click to open.",
-              color: "from-fuchsia-500 to-rose-500"
+              text: "Scroll the gallery, hover for an animated preview, click to open the editor.",
+              accent: false
             },
             {
               n: "02",
-              icon: Sliders,
-              title: "Customize options",
-              text: "Sliders, colors, text, images. Every change reflects on the canvas instantly.",
-              color: "from-amber-500 to-orange-500"
+              icon: MousePointer2,
+              title: "Tune the parameters",
+              text: "Sliders, colors, copy, images. Every change re-renders on the canvas instantly. Hit randomize when you need a jolt.",
+              accent: true
             },
             {
               n: "03",
-              icon: Film,
+              icon: Radio,
               title: "Export or record",
-              text: "Save a still frame as image. Or hit record and capture the full animation to video.",
-              color: "from-sky-500 to-violet-500"
+              text: "Save a still frame as image, or record the full animation to mp4 / webm. Pixel-perfect at any aspect.",
+              accent: false
             }
           ].map( (
             step, i
           ) => (
             <Reveal key={ step.n } delay={ i * 120 }>
-              <div className="relative h-full p-6 sm:p-8 rounded-2xl border border-border bg-background/60 backdrop-blur">
-                <div
-                  className={ `text-5xl sm:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-br ${ step.color } leading-none mb-4` }
-                >
-                  {step.n}
+              <div className="grid grid-cols-12 gap-4 sm:gap-8 py-8 sm:py-14 border-b border-border group">
+                <div className="col-span-3 md:col-span-2 flex flex-col gap-2">
+                  <span
+                    className={ `font-mono text-xs uppercase tracking-[0.2em] tabular-nums ${
+                      step.accent ? "text-fuchsia-500" : "text-label"
+                    }` }
+                  >
+                    step {step.n}
+                  </span>
+                  <step.icon
+                    className={ `w-5 h-5 ${
+                      step.accent ? "text-fuchsia-500" : "text-foreground/50"
+                    }` }
+                    strokeWidth={ 1.5 }
+                  />
                 </div>
-                <step.icon className="w-6 h-6 mb-3 text-foreground" />
-                <h3 className="text-lg sm:text-xl font-bold mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-sm text-label leading-relaxed">{step.text}</p>
+                <div className="col-span-9 md:col-span-7">
+                  <h3 className="font-black text-2xl sm:text-4xl lg:text-6xl tracking-tighter leading-[1] [text-wrap:balance]">
+                    {step.title}
+                    {step.accent ? (
+                      <span className="text-fuchsia-500">.</span>
+                    ) : null}
+                  </h3>
+                  <p className="mt-4 sm:mt-6 text-sm sm:text-base text-label max-w-[55ch] leading-relaxed">
+                    {step.text}
+                  </p>
+                </div>
+                <div className="hidden md:flex md:col-span-3 items-start justify-end">
+                  <span className="font-black text-[6rem] lg:text-[9rem] leading-[0.8] tabular-nums text-foreground/[0.06] group-hover:text-foreground/[0.12] transition-colors select-none">
+                    {step.n}
+                  </span>
+                </div>
               </div>
             </Reveal>
           ) )}
         </div>
       </section>
 
-      {/* ───── REVERSE MARQUEE ───── */}
-      <section className="py-4 sm:py-6 border-y border-border overflow-hidden bg-background/40">
-        <div className="flex w-max animate-marquee-reverse gap-8 sm:gap-12 will-change-transform">
-          {[
-            ...MARQUEE_WORDS.slice().reverse(),
-            ...MARQUEE_WORDS.slice().reverse()
-          ].map( (
-            word, i
-          ) => (
-            <span
-              key={ `r-${ word }-${ i }` }
-              className="text-2xl sm:text-4xl font-black uppercase tracking-tight whitespace-nowrap text-foreground/20"
-            >
-              {word}
-              <span className="text-foreground/10 ml-8 sm:ml-12">●</span>
-            </span>
-          ) )}
+      {/* ============ FINAL CTA ============ */}
+      <section className="relative px-4 sm:px-8 lg:px-12 py-24 sm:py-40 max-w-[1440px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 items-center">
+          <Reveal className="md:col-span-7 lg:col-span-8">
+            <SpecLabel index="04" label="/open" />
+            <h2 className="mt-6 sm:mt-8 font-black text-[3rem] sm:text-[5.5rem] md:text-[7rem] lg:text-[10rem] leading-[0.84] tracking-[-0.045em] [text-wrap:balance]">
+              start
+              <br />
+              <span className="italic font-extralight">making</span>
+              <br />
+              things<span className="text-fuchsia-500">.</span>
+            </h2>
+            <p className="mt-8 sm:mt-10 max-w-[55ch] text-base sm:text-lg text-label leading-relaxed">
+              <span className="font-mono tabular-nums text-foreground">
+                {totalTemplates}
+              </span>{ " " }
+              templates ready to customize, record, and export. No signup, no
+              upload, no install — everything runs in your browser.
+            </p>
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <Link
+                href="/templates"
+                className="group inline-flex items-center justify-between gap-4 rounded-full bg-foreground text-background pl-7 pr-3 py-4 text-base font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform"
+              >
+                <span>Browse all templates</span>
+                <span className="grid place-items-center w-10 h-10 rounded-full bg-background/15 group-hover:bg-background/25 transition-colors">
+                  <ArrowUpRight className="w-5 h-5 transition-transform group-hover:rotate-[20deg]" />
+                </span>
+              </Link>
+            </div>
+          </Reveal>
+
+          {heroFront ? (
+            <Reveal className="md:col-span-5 lg:col-span-4" delay={ 200 }>
+              <Link
+                href={ heroFront.href }
+                className="relative block aspect-[4/5] w-full max-w-[360px] mx-auto md:mx-0 group"
+              >
+                <div className="absolute inset-0 rounded-md overflow-hidden border border-foreground/15 bg-background">
+                  <PreviewSurface template={ heroFront } />
+                </div>
+                <div className="absolute -top-3 left-2 right-2 flex justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-label">
+                  <span className="bg-background px-1">featured</span>
+                  <span className="bg-background px-1 truncate max-w-[55%]">
+                    {heroFront.name}
+                  </span>
+                </div>
+              </Link>
+            </Reveal>
+          ) : null}
         </div>
       </section>
-
-      {/* ───── FINAL CTA ───── */}
-      <section className="px-4 sm:px-8 py-20 sm:py-32 max-w-4xl mx-auto text-center">
-        <Reveal>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 backdrop-blur px-4 py-1.5 text-xs text-label mb-6">
-            <Code2 className="w-3.5 h-3.5 text-fuchsia-500" />
-            <span>Open the gallery</span>
-          </div>
-          <h2 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[0.95] mb-6">
-            Start{ " " }
-            <span className="bg-clip-text text-transparent bg-[linear-gradient(90deg,#ec4899,#f59e0b,#06b6d4,#8b5cf6)] bg-[length:300%_300%] animate-gradient-shift">
-              creating
-            </span>
-            .
-          </h2>
-          <p className="text-base sm:text-lg text-label mb-8 max-w-xl mx-auto">
-            {totalTemplates} templates ready to customize, record, and export.
-            No signup. No upload. Everything renders in your browser.
-          </p>
-          <Link
-            href="/templates"
-            className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-xl shadow-foreground/10"
-          >
-            <span>Browse all templates</span>
-            <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </Reveal>
-      </section>
     </div>
+  );
+}
+
+function ShowcaseTile( {
+  template,
+  index,
+  aspect,
+  size = "sm"
+}: {
+  template: TemplateItem;
+  index: string;
+  aspect: string;
+  size?: "sm" | "lg";
+} ) {
+  return (
+    <Link
+      href={ template.href }
+      className={ `group relative block w-full ${ aspect } rounded-md overflow-hidden border border-border bg-background hover:border-foreground/40 transition-all duration-300 hover:-translate-y-0.5` }
+    >
+      <PreviewSurface
+        template={ template }
+        imgClassName="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+      />
+      {/* overlay label */}
+      <div className="absolute inset-x-0 top-0 p-3 sm:p-4 flex items-start justify-between gap-2 z-10">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-background bg-foreground/80 backdrop-blur-sm px-1.5 py-0.5 rounded-sm">
+          {index}
+        </span>
+        <ArrowUpRight className="w-4 h-4 text-background bg-foreground/80 rounded-sm p-0.5 opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all" />
+      </div>
+      <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 z-10 bg-gradient-to-t from-background/80 to-transparent">
+        <p
+          className={ `font-semibold tracking-tight text-foreground truncate ${
+            size === "lg" ? "text-base sm:text-lg" : "text-xs sm:text-sm"
+          }` }
+        >
+          {template.name}
+        </p>
+      </div>
+    </Link>
   );
 }
