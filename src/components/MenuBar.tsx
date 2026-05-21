@@ -90,7 +90,7 @@ function MenuBar( {
 
   items.push( ...[
     {
-      href: "instagram.com/costardrouge.jpg",
+      href: "//instagram.com/costardrouge.jpg",
       name: "instagram",
       target: "_blank",
       Icon: ExternalLink
