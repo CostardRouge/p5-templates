@@ -454,8 +454,8 @@ function TemplateCard( {
         </div>
 
         {/* Template name */}
-        <div className="bg-background border-t border-border px-1 py-2 flex">
-          <p className="text-xs sm:text-sm font-medium text-foreground text-center w-full items-center justify-center">
+        <div className="bg-background border-t border-border px-1 py-2 flex items-center justify-center">
+          <p className="text-xs sm:text-sm font-medium text-foreground text-center w-full min-h-[2lh] flex items-center justify-center">
             { name }
           </p>
         </div>

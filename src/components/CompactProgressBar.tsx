@@ -142,9 +142,9 @@ export default function CompactProgressBar( {
       <div className={ `w-full ${ className }` }>
         <div className="flex items-center justify-between text-xs mb-1">
           <span className="text-foreground/50">Completed</span>
-          <span className="text-green-600 dark:text-green-400 font-semibold">100%</span>
+          <span className="text-green-500 font-semibold">100%</span>
         </div>
-        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-hover rounded-full overflow-hidden">
           <div className="h-full bg-gradient-to-r from-green-500 to-green-600 w-full" />
         </div>
       </div>
@@ -159,9 +159,9 @@ export default function CompactProgressBar( {
           <span className="text-foreground/50 capitalize">{job.status}</span>
           <span className="text-foreground/60 font-semibold">{progress}%</span>
         </div>
-        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-hover rounded-full overflow-hidden">
           <div
-            className="h-full bg-gray-400 dark:bg-gray-500 transition-all duration-300"
+            className="h-full bg-label transition-all duration-300"
             style={ {
               width: `${ progress }%`
             } }
@@ -200,7 +200,7 @@ export default function CompactProgressBar( {
                     {formatTime( elapsedTime )}
                   </span>
                 )}
-                <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                <span className="text-blue-500 font-semibold">
                   {progress}%
                 </span>
                 {hasPopover && (
@@ -211,7 +211,7 @@ export default function CompactProgressBar( {
               </div>
             </div>
 
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-hover rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out relative"
                 style={ {
@@ -254,7 +254,7 @@ export default function CompactProgressBar( {
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-xs font-bold text-blue-500">
                     {progress}%
                   </div>
                   {startTime && (
@@ -350,10 +350,10 @@ function SlideRow( {
         type="button"
         className={ `w-full flex items-center gap-2 p-1.5 rounded-lg transition-all text-left ${
           slide.status === "active"
-            ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+            ? "bg-blue-500/10 border border-blue-500/30"
             : slide.status === "completed"
-              ? "bg-green-50 dark:bg-green-900/10"
-              : "bg-gray-50 dark:bg-gray-900/30"
+              ? "bg-green-500/10"
+              : "bg-hover/50"
         }` }
         onClick={ onToggle }
       >
@@ -366,8 +366,8 @@ function SlideRow( {
         {slide.status !== "pending" && (
           <span className={ `text-[10px] font-semibold flex-shrink-0 ${
             slide.status === "completed"
-              ? "text-green-600 dark:text-green-400"
-              : "text-blue-600 dark:text-blue-400"
+              ? "text-green-500"
+              : "text-blue-500"
           }` }>
             {slide.status === "completed" ? "100" : slide.aggregate}%
           </span>
@@ -398,7 +398,7 @@ function SharedStepRow( {
 
   return (
     <div className={ `flex items-center gap-2 p-1.5 rounded-lg ${
-      isDone ? "bg-green-50 dark:bg-green-900/10" : "bg-gray-50 dark:bg-gray-900/30"
+      isDone ? "bg-green-500/10" : "bg-hover/50"
     }` }>
       <div className="w-5 h-5 flex-shrink-0">
         {isDone ? (
@@ -406,16 +406,16 @@ function SharedStepRow( {
             <Check className="w-3 h-3 text-white" />
           </div>
         ) : (
-          <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600" />
+          <div className="w-5 h-5 rounded-full bg-hover" />
         )}
       </div>
       <span className={ `text-xs flex-1 ${
-        isDone ? "text-green-700 dark:text-green-300" : "text-gray-500 dark:text-gray-400"
+        isDone ? "text-green-500" : "text-label"
       }` }>
         {step.label}
       </span>
       {isDone && (
-        <span className="text-[10px] text-green-600 dark:text-green-400 font-semibold">100%</span>
+        <span className="text-[10px] text-green-500 font-semibold">100%</span>
       )}
     </div>
   );
@@ -434,19 +434,19 @@ function SubStepRow( {
   return (
     <div className="flex items-center gap-2">
       <div className={ `w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-        isDone ? "bg-green-500" : isActive ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+        isDone ? "bg-green-500" : isActive ? "bg-blue-500" : "bg-hover"
       }` } />
       <span className={ `text-[11px] flex-1 ${
         isDone
-          ? "text-green-700 dark:text-green-300"
+          ? "text-green-500"
           : isActive
-            ? "text-blue-700 dark:text-blue-300"
-            : "text-gray-500 dark:text-gray-400"
+            ? "text-blue-500"
+            : "text-label"
       }` }>
         {step.label}
       </span>
       {isActive && (
-        <span className="text-[10px] text-blue-600 dark:text-blue-400">
+        <span className="text-[10px] text-blue-500">
           {Math.round( step.percentage )}%
         </span>
       )}
@@ -468,10 +468,10 @@ function FlatStepList( {
           key={ step.id }
           className={ `flex items-start gap-2 p-2 rounded-lg transition-all ${
             step.status === "active"
-              ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+              ? "bg-blue-500/10 border border-blue-500/30"
               : step.status === "completed"
-                ? "bg-green-50 dark:bg-green-900/10"
-                : "bg-gray-50 dark:bg-gray-900/30"
+                ? "bg-green-500/10"
+                : "bg-hover/50"
           }` }
         >
           <div className="flex-shrink-0 mt-0.5">
@@ -486,8 +486,8 @@ function FlatStepList( {
               </div>
             )}
             {step.status === "pending" && (
-              <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                <span className="text-[10px] text-gray-600 dark:text-gray-400 font-medium">
+              <div className="w-5 h-5 rounded-full bg-hover flex items-center justify-center">
+                <span className="text-[10px] text-label font-medium">
                   {index + 1}
                 </span>
               </div>
@@ -503,24 +503,24 @@ function FlatStepList( {
             <div className="flex items-center justify-between gap-2 mb-1">
               <span className={ `text-xs font-medium truncate ${
                 step.status === "active"
-                  ? "text-blue-700 dark:text-blue-300"
+                  ? "text-blue-500"
                   : step.status === "completed"
-                    ? "text-green-700 dark:text-green-300"
+                    ? "text-green-500"
                     : step.status === "error"
-                      ? "text-red-700 dark:text-red-300"
-                      : "text-gray-500 dark:text-gray-400"
+                      ? "text-red-500"
+                      : "text-label"
               }` }>
                 {step.name}
               </span>
               {step.percentage !== undefined && step.status === "active" && (
-                <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                <span className="text-[10px] font-semibold text-blue-500">
                   {step.percentage.toPrecision( 3 )}%
                 </span>
               )}
             </div>
 
             {step.status === "active" && step.percentage !== undefined && (
-              <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-1 bg-hover rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500 transition-all duration-300"
                   style={ {
@@ -559,8 +559,8 @@ function StatusIcon( {
     );
   }
   return (
-    <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-      <span className="text-[10px] text-gray-600 dark:text-gray-400 font-medium">
+    <div className="w-5 h-5 rounded-full bg-hover flex items-center justify-center flex-shrink-0">
+      <span className="text-[10px] text-label font-medium">
         {index + 1}
       </span>
     </div>
@@ -569,10 +569,10 @@ function StatusIcon( {
 
 function statusTextClass( status: StepUIStatus ): string {
   if ( status === "active" ) {
-    return "text-blue-700 dark:text-blue-300";
+    return "text-blue-500";
   }
   if ( status === "completed" ) {
-    return "text-green-700 dark:text-green-300";
+    return "text-green-500";
   }
-  return "text-gray-500 dark:text-gray-400";
+  return "text-label";
 }

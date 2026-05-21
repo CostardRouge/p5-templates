@@ -431,7 +431,7 @@ export default function ActionsMenu( {
                         `Delete this ${ job.status } recording? This action cannot be undone.`
                       )
                     }
-                    className={ `${ focus ? "bg-red-50 dark:bg-red-950/20" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
+                    className={ `${ focus ? "bg-red-500/10" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
                   >
                     <Trash2 className="h-4 w-4 text-red-600" />
                     <span className="font-medium text-red-600">

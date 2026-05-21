@@ -80,21 +80,21 @@ export default function ProgressBar( {
     return (
       <div className={ `w-full ${ className }` }>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-foreground">
             {currentStep?.name || "Processing..."}
           </span>
           <div className="flex items-center gap-3">
             {showElapsedTime && (
-              <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+              <span className="text-sm text-label font-mono">
                 {formatTime( elapsedTime )}
               </span>
             )}
-            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+            <span className="text-sm font-semibold text-blue-500">
               {overallPercentage}%
             </span>
           </div>
         </div>
-        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-hover rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-out"
             style={ {
@@ -111,7 +111,7 @@ export default function ProgressBar( {
       {/* Compact Header */}
       <button
         onClick={ () => setIsExpanded( !isExpanded ) }
-        className="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+        className="w-full bg-background rounded-lg border border-border p-4 hover:border-blue-500/50 transition-colors"
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -121,29 +121,29 @@ export default function ProgressBar( {
             {currentStep?.status === "completed" && (
               <Check className="w-4 h-4 text-green-500" />
             )}
-            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <span className="text-sm font-semibold text-foreground">
               {currentStep?.name || "Processing..."}
             </span>
           </div>
           <div className="flex items-center gap-3">
             {showElapsedTime && (
-              <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+              <span className="text-sm text-label font-mono">
                 {formatTime( elapsedTime )}
               </span>
             )}
-            <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+            <span className="text-sm font-bold text-blue-500">
               {overallPercentage}%
             </span>
             {isExpanded ? (
-              <ChevronUp className="w-4 h-4 text-gray-400" />
+              <ChevronUp className="w-4 h-4 text-label" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className="w-4 h-4 text-label" />
             )}
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-hover rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 transition-all duration-500 ease-out relative"
             style={ {
@@ -155,7 +155,7 @@ export default function ProgressBar( {
         </div>
 
         {/* Step Counter */}
-        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        <div className="mt-2 text-xs text-label">
           Step {currentStepIndex + 1} of {steps.length} • {completedSteps}{" "}
           completed
         </div>
@@ -163,7 +163,7 @@ export default function ProgressBar( {
 
       {/* Expanded Steps List */}
       {isExpanded && (
-        <div className="mt-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+        <div className="mt-2 bg-background rounded-lg border border-border p-4 space-y-3">
           {steps.map( (
             step, index
           ) => (
@@ -171,10 +171,10 @@ export default function ProgressBar( {
               key={ step.id }
               className={ `flex items-center gap-3 p-3 rounded-lg transition-all ${
                 step.status === "active"
-                  ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+                  ? "bg-blue-500/10 border border-blue-500/30"
                   : step.status === "completed"
-                    ? "bg-green-50 dark:bg-green-900/20"
-                    : "bg-gray-50 dark:bg-gray-900/50"
+                    ? "bg-green-500/10"
+                    : "bg-hover/50"
               }` }
             >
               {/* Status Icon */}
@@ -190,8 +190,8 @@ export default function ProgressBar( {
                   </div>
                 )}
                 {step.status === "pending" && (
-                  <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                    <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                  <div className="w-6 h-6 rounded-full bg-hover flex items-center justify-center">
+                    <span className="text-xs text-label font-medium">
                       {index + 1}
                     </span>
                   </div>
@@ -209,12 +209,12 @@ export default function ProgressBar( {
                   <span
                     className={ `text-sm font-medium truncate ${
                       step.status === "active"
-                        ? "text-blue-700 dark:text-blue-300"
+                        ? "text-blue-500"
                         : step.status === "completed"
-                          ? "text-green-700 dark:text-green-300"
+                          ? "text-green-500"
                           : step.status === "error"
-                            ? "text-red-700 dark:text-red-300"
-                            : "text-gray-500 dark:text-gray-400"
+                            ? "text-red-500"
+                            : "text-label"
                     }` }
                   >
                     {step.name}
@@ -223,10 +223,10 @@ export default function ProgressBar( {
                     <span
                       className={ `text-xs font-semibold ${
                         step.status === "active"
-                          ? "text-blue-600 dark:text-blue-400"
+                          ? "text-blue-500"
                           : step.status === "completed"
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-gray-400 dark:text-gray-500"
+                            ? "text-green-500"
+                            : "text-label"
                       }` }
                     >
                       {step.percentage}%
@@ -236,7 +236,7 @@ export default function ProgressBar( {
 
                 {/* Step Progress Bar */}
                 {step.status === "active" && step.percentage !== undefined && (
-                  <div className="mt-2 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="mt-2 h-1 bg-hover rounded-full overflow-hidden">
                     <div
                       className="h-full bg-blue-500 transition-all duration-300"
                       style={ {

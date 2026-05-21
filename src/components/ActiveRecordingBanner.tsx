@@ -79,7 +79,7 @@ export default function ActiveRecordingBanner( {
               </div>
               <HardLink
                 href={ `templates/${ job.template }?id=${ job.id }` }
-                className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors"
+                className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors"
               >
                 View Details →
               </HardLink>

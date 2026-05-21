@@ -70,7 +70,7 @@ export default function RecordingThumbnail( {
       onMouseLeave={ () => setShowPreview( false ) }
       className={ clsx(
         className,
-        "relative overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800",
+        "relative overflow-hidden flex items-center justify-center bg-hover",
         {
           "animate-pulse": isQueued,
           "cursor-pointer": !!onClick
