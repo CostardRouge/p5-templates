@@ -4,6 +4,9 @@ import Link from "next/link";
 import {
   useEffect, useMemo, useRef, useState
 } from "react";
+import type {
+  CSSProperties
+} from "react";
 import {
   ArrowUpRight,
   Circle,
@@ -516,19 +519,19 @@ export default function HomePage( {
                 size="lg"
               />
             </Reveal>
-            <div className="col-span-12 md:col-span-5 grid grid-cols-1 gap-3 sm:gap-4">
-              <Reveal delay={ 80 }>
+            <div className="col-span-12 md:col-span-5 grid grid-cols-1 md:grid-rows-2 gap-3 sm:gap-4 md:h-full">
+              <Reveal delay={ 80 } className="md:h-full min-h-0">
                 <ShowcaseTile
                   template={ showcase[ 1 ] }
                   index="A.02"
-                  aspect="aspect-[16/9]"
+                  aspect="aspect-[16/9] md:aspect-auto md:h-full"
                 />
               </Reveal>
-              <Reveal delay={ 160 }>
+              <Reveal delay={ 160 } className="md:h-full min-h-0">
                 <ShowcaseTile
                   template={ showcase[ 2 ] }
                   index="A.03"
-                  aspect="aspect-[16/9]"
+                  aspect="aspect-[16/9] md:aspect-auto md:h-full"
                 />
               </Reveal>
             </div>
@@ -663,22 +666,26 @@ export default function HomePage( {
                   {
                     k: "count",
                     v: "47",
-                    pos: 0.42
+                    from: 0.42,
+                    to: 0.62
                   },
                   {
                     k: "speed",
                     v: "1.28",
-                    pos: 0.68
+                    from: 0.68,
+                    to: 0.48
                   },
                   {
                     k: "hue",
                     v: "312°",
-                    pos: 0.22
+                    from: 0.22,
+                    to: 0.44
                   },
                   {
                     k: "scale",
                     v: "0.84",
-                    pos: 0.55
+                    from: 0.55,
+                    to: 0.35
                   }
                 ].map( (
                   row, i
@@ -687,18 +694,16 @@ export default function HomePage( {
                     <span className="w-12 text-label">{row.k}</span>
                     <div className="flex-1 h-px bg-foreground/15 relative">
                       <div
-                        className="absolute inset-y-0 left-0 bg-foreground/60"
+                        className="absolute inset-y-0 left-0 animate-slider-pulse"
                         style={ {
-                          width: `${ row.pos * 100 }%`
-                        } }
-                      />
-                      <div
-                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rounded-full will-change-transform animate-slider-pulse"
-                        style={ {
-                          left: `${ row.pos * 100 }%`,
+                          "--slider-from": `${ row.from * 100 }%`,
+                          "--slider-to": `${ row.to * 100 }%`,
                           animationDelay: `${ i * 0.4 }s`
-                        } }
-                      />
+                        } as CSSProperties }
+                      >
+                        <span className="absolute inset-0 bg-foreground/60" />
+                        <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2 h-2 bg-foreground rounded-full" />
+                      </div>
                     </div>
                     <span className="w-12 text-right tabular-nums text-foreground">
                       {row.v}
@@ -967,23 +972,25 @@ function ShowcaseTile( {
   return (
     <Link
       href={ template.href }
-      className={ `group relative block w-full ${ aspect } rounded-md overflow-hidden border border-border bg-background hover:border-foreground/40 transition-all duration-300 hover:-translate-y-0.5` }
+      className={ `group flex flex-col w-full ${ aspect } rounded-md overflow-hidden border border-border bg-background hover:border-foreground/40 transition-all duration-300 hover:-translate-y-0.5` }
     >
-      <PreviewSurface
-        template={ template }
-        imgClassName="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-      />
-      {/* overlay label */}
-      <div className="absolute inset-x-0 top-0 p-3 sm:p-4 flex items-start justify-between gap-2 z-10">
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-background bg-foreground/80 backdrop-blur-sm px-1.5 py-0.5 rounded-sm">
-          {index}
-        </span>
-        <ArrowUpRight className="w-4 h-4 text-background bg-foreground/80 rounded-sm p-0.5 opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all" />
+      <div className="relative flex-1 overflow-hidden">
+        <PreviewSurface
+          template={ template }
+          imgClassName="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+        />
+        <div className="absolute inset-x-0 top-0 p-3 sm:p-4 flex items-start justify-between gap-2 z-10">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-background bg-foreground/80 backdrop-blur-sm px-1.5 py-0.5 rounded-sm">
+            {index}
+          </span>
+          <ArrowUpRight className="w-4 h-4 text-background bg-foreground/80 rounded-sm p-0.5 opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all" />
+        </div>
       </div>
-      <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 z-10 bg-gradient-to-t from-background/80 to-transparent">
+      <div className="flex-shrink-0 bg-background border-t border-border px-3 sm:px-4 py-2">
         <p
-          className={ `font-semibold tracking-tight text-foreground truncate ${
-            size === "lg" ? "text-base sm:text-lg" : "text-xs sm:text-sm"
+          title={ template.name }
+          className={ `font-medium tracking-tight text-foreground truncate ${
+            size === "lg" ? "text-sm sm:text-base" : "text-xs sm:text-sm"
           }` }
         >
           {template.name}

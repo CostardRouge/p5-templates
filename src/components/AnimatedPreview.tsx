@@ -149,6 +149,13 @@ export default function AnimatedPreview( {
     }
     : {};
 
+  // Mirror the caller's object-fit choice on the <video> so the playing
+  // preview fills (or letterboxes) the container the same way the
+  // thumbnail does. Without this, callers that pass `object-cover` would
+  // see the thumbnail bleed around the contained video.
+  const objectFitMatch = imgClassName.match( /object-(cover|contain|fill|none|scale-down)/ );
+  const objectFitClass = objectFitMatch ? objectFitMatch[ 0 ] : "object-contain";
+
   return (
     <div
       ref={ containerRef }
@@ -169,7 +176,7 @@ export default function AnimatedPreview( {
         loop
         playsInline
         preload="none"
-        className={ `absolute top-0 left-0 w-full h-full object-contain transition-opacity duration-500 pointer-events-none ${
+        className={ `absolute top-0 left-0 w-full h-full ${ objectFitClass } transition-opacity duration-500 pointer-events-none ${
           isPlaying ? "opacity-100" : "opacity-0"
         }` }
       />

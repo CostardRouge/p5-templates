@@ -148,10 +148,10 @@ export default {
         },
         "slider-pulse": {
           "0%, 100%": {
-            transform: "translateX(0%)"
+            width: "var(--slider-from, 30%)"
           },
           "50%": {
-            transform: "translateX(220%)"
+            width: "var(--slider-to, 60%)"
           }
         },
         "scan-line": {
