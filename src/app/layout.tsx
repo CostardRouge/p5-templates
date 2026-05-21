@@ -27,6 +27,9 @@ import {
 import {
   getDevThumbnailStatus
 } from "@/utils/getDevThumbnailStatus";
+import {
+  getDevPreviewStatus
+} from "@/utils/getDevPreviewStatus";
 
 const baseUrl = getBaseUrl();
 
@@ -119,6 +122,9 @@ export default function RootLayout( {
   const {
     hasMissingThumbnails
   } = getDevThumbnailStatus();
+  const {
+    hasMissingPreviews
+  } = getDevPreviewStatus();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -152,6 +158,7 @@ export default function RootLayout( {
               <MenuBar
                 showRecordings={ process.env.BACKEND_RECORDING === "true" }
                 hasMissingThumbnails={ hasMissingThumbnails }
+                hasMissingPreviews={ hasMissingPreviews }
               />
             </Suspense>
           </div>

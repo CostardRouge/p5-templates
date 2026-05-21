@@ -1,7 +1,9 @@
 import options from "@/p5/utils/options.js";
 
 import string from "@/p5/utils/string.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 import scripts from "@/p5/utils/scripts.js";
 
 import * as common from "@/p5/utils/common.js";
@@ -14,9 +16,6 @@ import drawHands from "@/p5/utils/mediapipe/drawHands.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 
 import Matter from "@/public/assets/libraries/matter.min.js";
-import {
-  getP5
-} from "@/p5/utils/sketch.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
@@ -138,7 +137,7 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
-  p.background( ...options.colors.background );
+  p.background( ...options?.colors?.background ?? 0 );
 
   if ( mediapipe.idle ) {
     p.background( 90 );

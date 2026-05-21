@@ -15,15 +15,7 @@ import path from "node:path";
 import {
   captureCanvasThumbnail
 } from "@/utils/captureCanvasThumbnail";
-
-async function exists( filePath: string ) {
-  try {
-    await fs.stat( filePath );
-    return true;
-  } catch {
-    return false;
-  }
-}
+import fileExists from "@/utils/fileExists";
 
 async function createSketchThumbnails() {
   const recordingState: {
@@ -59,7 +51,7 @@ async function createSketchThumbnails() {
     } of templates ) {
       const thumbnailPath = `${ ASSETS_DIRECTORY }/images/templates/${ engine }/${ name }/thumbnail.jpeg`;
 
-      if ( await exists( thumbnailPath ) ) {
+      if ( await fileExists( thumbnailPath ) ) {
         console.log( `✅ ${ name }/thumbnail.jpeg already exists!` );
         continue;
       }

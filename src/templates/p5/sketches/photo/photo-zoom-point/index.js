@@ -10,11 +10,10 @@ import events from "@/p5/utils/events.js";
 import graphics from "@/p5/utils/graphics.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import mappers from "@/p5/utils/mappers.js";
-import sketch from "@/p5/utils/sketch.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
-import {
+import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
   photoGraphics: null,
@@ -179,6 +178,8 @@ events.register(
 );
 
 function displayPhoto( img ) {
+  const p = getP5();
+
   sketchState.photoGraphics.clear();
   imageUtils.marginImage( {
     position: p.createVector(

@@ -3,13 +3,12 @@ import options from "@/p5/utils/options.js";
 import exif from "@/p5/utils/exif.js";
 import cache from "@/p5/utils/cache.js";
 import string from "@/p5/utils/string.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import {
-  getP5
-} from "@/p5/utils/sketch.js";
 
 const canvases = {};
 
@@ -21,10 +20,10 @@ sketch.setup( () => {
     p.height
   );
 
-  canvases.blurredLayer.pixelDensity( options.backgroundPixelDensity || 0.055 );
+  canvases.blurredLayer.pixelDensity( options.sketch.backgroundPixelDensity || 0.055 );
   canvases.blurredLayer.drawingContext.filter = "blur(2px)";
 
-  p.background( ...options.colors.background );
+  p.background( ...options.sketch.colors.background );
 } );
 
 sketch.draw( (
@@ -32,8 +31,8 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
-  p.background( ...options.colors.background );
-  canvases.blurredLayer.background( ...options.colors.background );
+  p.background( ...options.sketch.colors.background );
+  canvases.blurredLayer.background( ...options.sketch.colors.background );
 
   const images = cache.get( "images" );
   const imageObjectAtIndex = mappers.circularIndex(
@@ -41,7 +40,11 @@ sketch.draw( (
     images
   );
 
-  const imageAtIndex = imageObjectAtIndex.img;
+  const imageAtIndex = imageObjectAtIndex?.img;
+
+  if ( !imageObjectAtIndex ) {
+    return;
+  }
 
   imageUtils.marginImage( {
     img: imageAtIndex,
@@ -56,7 +59,7 @@ sketch.draw( (
     scale: 1
   } );
 
-  // canvases.background(...options.colors.background, 0);
+  // canvases.background(...options.sketch.colors.background, 0);
   // canvases.background(0, 0 ,0, 90);
   p.image(
     canvases.blurredLayer,
@@ -65,10 +68,10 @@ sketch.draw( (
     p.width,
     p.height
   );
-  // filter(BLUR, options.blur || 2);
-  // filter(POSTERIZE, options.blur || 9, true);
+  // filter(BLUR, options.sketch.blur || 2);
+  // filter(POSTERIZE, options.sketch.blur || 9, true);
 
-  // p.background(...options.colors.background);
+  // p.background(...options.sketch.colors.background);
 
   imageUtils.marginImage( {
     img: imageAtIndex,
@@ -94,9 +97,9 @@ sketch.draw( (
           0,
           255
         ),
-        fill: p.color( ...options.colors.background ),
+        fill: p.color( ...options.sketch.colors.background ),
         // fill: p.color(0, 0, 0, 255),
-        // stroke: p.color(...options.colors.background),
+        // stroke: p.color(...options.sketch.colors.background),
         font: string.fonts.martian
         // blendMode: p.EXCLUSION
       };
@@ -171,30 +174,6 @@ sketch.draw( (
     }
   } );
 
-  const defaultTitle = options?.name?.replaceAll(
-    "-",
-    "\n"
-  );
-
-  if ( animation.progression < 0.2 ) {
-    string.write(
-      options?.texts?.title || defaultTitle,
-      0,
-      p.height / 2,
-      {
-        size: 144,
-        stroke: p.color( ...options.colors.text ),
-        fill: p.color( ...options.colors.background ),
-        font: string.fonts.martian,
-        textAlign: [
-          p.CENTER,
-          p.CENTER
-        ],
-        blendMode: p.EXCLUSION
-      }
-    );
-  }
-
   p.push();
   p.translate(
     0,
@@ -210,8 +189,8 @@ sketch.draw( (
     0,
     {
       size: 24,
-      stroke: p.color( ...options.colors.text ),
-      fill: p.color( ...options.colors.background ),
+      stroke: p.color( ...options.sketch.colors.text ),
+      fill: p.color( ...options.sketch.colors.background ),
       font: string.fonts.martian,
       textAlign: [
         p.CENTER

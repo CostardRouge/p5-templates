@@ -14,6 +14,7 @@ import type {
 } from "@/app/templates/getTemplatesData";
 
 import Link from "@/components/HardLink";
+import AnimatedPreview from "@/components/AnimatedPreview";
 import {
   usePersistedViewMode
 } from "@/hooks/usePersistedViewMode";
@@ -317,7 +318,7 @@ export default function TemplatesList( {
                   >
                     { subItems.map( (
                       {
-                        href, name, thumbnail, hasSketchForm
+                        href, name, thumbnail, preview, hasSketchForm
                       }, index
                     ) => (
                       <TemplateCard
@@ -325,6 +326,7 @@ export default function TemplatesList( {
                         href={ href }
                         name={ name }
                         thumbnail={ thumbnail }
+                        preview={ preview }
                         hasSketchForm={ hasSketchForm }
                         view={ view }
                         eager={ index < 8 }
@@ -357,7 +359,7 @@ export default function TemplatesList( {
                   >
                     { uncategorized.map( (
                       {
-                        href, name, thumbnail, hasSketchForm
+                        href, name, thumbnail, preview, hasSketchForm
                       }, index
                     ) => (
                       <TemplateCard
@@ -365,6 +367,7 @@ export default function TemplatesList( {
                         href={ href }
                         name={ name }
                         thumbnail={ thumbnail }
+                        preview={ preview }
                         hasSketchForm={ hasSketchForm }
                         view={ view }
                         eager={ index < 8 }
@@ -384,6 +387,7 @@ function TemplateCard( {
   href,
   name,
   thumbnail,
+  preview,
   hasSketchForm,
   view,
   eager = false
@@ -391,6 +395,7 @@ function TemplateCard( {
   href: string;
   name: string;
   thumbnail: string;
+  preview: string | null;
   hasSketchForm: boolean;
   view: "grid" | "list";
   eager?: boolean;
@@ -418,14 +423,25 @@ function TemplateCard( {
               </div>
             </div>
           ) }
-          <img
-            alt={ name }
-            loading={ eager ? "eager" : "lazy" }
-            fetchPriority={ eager ? "high" : undefined }
-            decoding={ eager ? "sync" : "async" }
-            src={ thumbnail }
-            className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-          />
+
+          { preview ? (
+            <AnimatedPreview
+              previewUrl={ preview }
+              thumbnailUrl={ thumbnail }
+              name={ name }
+              eager={ eager }
+              imgClassName="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <img
+              alt={ name }
+              loading={ eager ? "eager" : "lazy" }
+              fetchPriority={ eager ? "high" : undefined }
+              decoding={ eager ? "sync" : "async" }
+              src={ thumbnail }
+              className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+          ) }
 
           {/* Gradient overlay on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

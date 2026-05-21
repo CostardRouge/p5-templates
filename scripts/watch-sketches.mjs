@@ -41,9 +41,9 @@ function buildEntry(
   sketchDir, name, engineId, category
 ) {
   const stats = fs.statSync( sketchDir );
-  const thumbnailPath = path.join(
+  const assetsBase = path.join(
     __dirname,
-    `../public/assets/images/templates/${ engineId }/${ name }/thumbnail.jpeg`
+    `../public/assets/images/templates/${ engineId }/${ name }`
   );
 
   return {
@@ -54,7 +54,14 @@ function buildEntry(
       sketchDir,
       "options.ts"
     ) ),
-    hasThumbnail: fs.existsSync( thumbnailPath ),
+    hasThumbnail: fs.existsSync( path.join(
+      assetsBase,
+      "thumbnail.jpeg"
+    ) ),
+    hasPreview: fs.existsSync( path.join(
+      assetsBase,
+      "preview.webm"
+    ) ),
     mtime: stats.mtime.toISOString(),
     ctime: stats.birthtime?.toISOString() || stats.ctime.toISOString()
   };

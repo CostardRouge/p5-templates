@@ -1,10 +1,11 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
   photo: {
-    image: null,
+    image: ( await getTestImagePaths() )[ 0 ],
     margin: 0.1,
     backgroundColor: [
       246,

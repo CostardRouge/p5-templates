@@ -2,121 +2,14 @@ import {
   ChildProcessWithoutNullStreams, spawn
 } from "child_process";
 import fs from "node:fs/promises";
-import path from "node:path";
+import {
+  listPngFramesSorted, writeConcatList
+} from "@/utils/ffmpegFrameHelpers";
 
 type AnimationOptions = {
   framerate?: number; // desired output frames per second (preferred)
   duration?: number; // desired total duration in seconds (fallback if framerate is not provided)
 };
-
-function naturalStringCompare(
-  a: string, b: string
-): number {
-  // Natural order compare so "..._2.png" < "..._10.png"
-  const aParts = a
-    .split( /(\d+)/ )
-    .map( ( part ) => ( /\d+/.test( part ) ? Number( part ) : part ) );
-  const bParts = b
-    .split( /(\d+)/ )
-    .map( ( part ) => ( /\d+/.test( part ) ? Number( part ) : part ) );
-
-  const length = Math.max(
-    aParts.length,
-    bParts.length
-  );
-
-  for ( let index = 0; index < length; index++ ) {
-    const aPart = aParts[ index ];
-    const bPart = bParts[ index ];
-
-    if ( aPart === undefined ) {
-      return -1;
-    }
-    if ( bPart === undefined ) {
-      return 1;
-    }
-    if ( aPart === bPart ) {
-      continue;
-    }
-    if ( typeof aPart === "number" && typeof bPart === "number" ) {
-      return aPart - bPart;
-    }
-    return String( aPart ).localeCompare( String( bPart ) );
-  }
-
-  return 0;
-}
-
-async function listPngFramesSorted( framesDirectoryPath: string ): Promise<string[]> {
-  const directoryEntries = await fs.readdir(
-    framesDirectoryPath,
-    {
-      withFileTypes: true
-    }
-  );
-
-  const fileNames = directoryEntries
-    .filter( ( entry ) => entry.isFile() )
-    .map( ( entry ) => entry.name )
-    .filter( ( name ) => name.toLowerCase().endsWith( ".png" ) )
-    .sort( naturalStringCompare );
-
-  return fileNames;
-}
-
-function escapePathForFfmpegConcat( filePath: string ): string {
-  // Concat demuxer wants: file 'absolute/path.png'
-  // Single-quote and escape any single quotes inside.
-  const escaped = filePath.replace(
-    /'/g,
-    "'\\''"
-  );
-
-  return `'${ escaped }'`;
-}
-
-async function writeConcatListFile(
-  framesDirectoryPath: string,
-  sortedFrameFileNames: string[],
-  secondsPerFrame: number
-): Promise<string> {
-  if ( sortedFrameFileNames.length === 0 ) {
-    throw new Error( "No PNG frames were found to encode." );
-  }
-
-  const lines: string[] = [];
-
-  for ( const fileName of sortedFrameFileNames ) {
-    const absolutePath = path.resolve(
-      framesDirectoryPath,
-      fileName
-    );
-
-    lines.push( `file ${ escapePathForFfmpegConcat( absolutePath ) }` );
-    lines.push( `duration ${ secondsPerFrame }` );
-  }
-
-  // The concat demuxer requires the last file to be repeated once more
-  // so that the final frame duration is honored.
-  const lastAbsolutePath = path.resolve(
-    framesDirectoryPath,
-    sortedFrameFileNames[ sortedFrameFileNames.length - 1 ]
-  );
-
-  lines.push( `file ${ escapePathForFfmpegConcat( lastAbsolutePath ) }` );
-
-  const listFilePath = path.resolve(
-    framesDirectoryPath,
-    ".ffmpeg_concat_list.txt"
-  );
-
-  await fs.writeFile(
-    listFilePath,
-    lines.join( "\n" ),
-    "utf8"
-  );
-  return listFilePath;
-}
 
 /**
  * Encodes a sequence of PNG frames into an MP4 video with deterministic timing.
@@ -165,10 +58,11 @@ export default async function encodeVideoFromFrames(
   const secondsPerFrame = 1 / normalizedFramesPerSecond;
 
   // Build concat list with explicit durations.
-  const concatListFilePath = await writeConcatListFile(
+  const concatListFilePath = await writeConcatList(
     framesDirectoryPath,
     sortedFrameFileNames,
-    secondsPerFrame
+    secondsPerFrame,
+    ".ffmpeg_concat_list.txt"
   );
 
   // Spawn ffmpeg using the concat demuxer with explicit durations.
