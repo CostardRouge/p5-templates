@@ -3,6 +3,7 @@
 import {
   useEffect, useRef, useState
 } from "react";
+import usePageVisibility from "@/hooks/usePageVisibility";
 
 interface AnimatedPreviewProps {
   previewUrl: string;
@@ -24,6 +25,7 @@ const TRIGGER_ON_HOVER =
  * (default) or by hover when NEXT_PUBLIC_PREVIEW_ON_HOVER=true.
  *
  * Respects prefers-reduced-motion: shows the static thumbnail only.
+ * Pauses video playback when the tab is hidden to save CPU/GPU/battery.
  */
 export default function AnimatedPreview( {
   previewUrl,
@@ -36,32 +38,48 @@ export default function AnimatedPreview( {
   const videoRef = useRef<HTMLVideoElement>( null );
   const prefersReducedRef = useRef( false );
   const [
+    wantsToPlay,
+    setWantsToPlay
+  ] = useState( false );
+  const [
     isPlaying,
     setIsPlaying
   ] = useState( false );
+  const isPageVisible = usePageVisibility();
 
   // Track prefers-reduced-motion without causing re-render on each frame
-  useEffect( () => {
-    const mq = window.matchMedia( "(prefers-reduced-motion: reduce)" );
+  useEffect(
+    () => {
+      const mq = window.matchMedia( "(prefers-reduced-motion: reduce)" );
 
-    prefersReducedRef.current = mq.matches;
+      prefersReducedRef.current = mq.matches;
 
-    const handler = ( e: MediaQueryListEvent ) => {
-      prefersReducedRef.current = e.matches;
+      const handler = ( e: MediaQueryListEvent ) => {
+        prefersReducedRef.current = e.matches;
 
-      if ( e.matches ) {
-        stopVideo();
-      }
-    };
+        if ( e.matches ) {
+          stopVideo();
+        }
+      };
 
-    mq.addEventListener( "change", handler );
-    return () => mq.removeEventListener( "change", handler );
-  }, [] );
+      mq.addEventListener(
+        "change",
+        handler
+      );
+      return () => mq.removeEventListener(
+        "change",
+        handler
+      );
+    },
+    []
+  );
 
   function playVideo() {
     const video = videoRef.current;
 
-    if ( !video || prefersReducedRef.current ) return;
+    if ( !video || prefersReducedRef.current ) {
+      return;
+    }
 
     if ( !video.src ) {
       video.src = previewUrl;
@@ -74,41 +92,60 @@ export default function AnimatedPreview( {
   function stopVideo() {
     const video = videoRef.current;
 
-    if ( !video ) return;
+    if ( !video ) {
+      return;
+    }
     video.pause();
     setIsPlaying( false );
   }
 
-  // Viewport-based playback (default mode)
-  useEffect( () => {
-    if ( TRIGGER_ON_HOVER || !containerRef.current ) return;
-
-    const el = containerRef.current;
-
-    const observer = new IntersectionObserver(
-      ( entries ) => {
-        for ( const entry of entries ) {
-          if ( entry.isIntersecting ) {
-            playVideo();
-          } else {
-            stopVideo();
-          }
-        }
-      },
-      {
-        threshold: 0.4
+  // Viewport-based intent (default mode)
+  useEffect(
+    () => {
+      if ( TRIGGER_ON_HOVER || !containerRef.current ) {
+        return;
       }
-    );
 
-    observer.observe( el );
-    return () => observer.disconnect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [] );
+      const el = containerRef.current;
+
+      const observer = new IntersectionObserver(
+        ( entries ) => {
+          for ( const entry of entries ) {
+            setWantsToPlay( entry.isIntersecting );
+          }
+        },
+        {
+          threshold: 0.4
+        }
+      );
+
+      observer.observe( el );
+      return () => observer.disconnect();
+    },
+    []
+  );
+
+  // Combine intent (viewport/hover) with permission (tab visibility).
+  // The video only plays when the user can actually see it.
+  useEffect(
+    () => {
+      if ( wantsToPlay && isPageVisible ) {
+        playVideo();
+      } else {
+        stopVideo();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      wantsToPlay,
+      isPageVisible
+    ]
+  );
 
   const hoverHandlers = TRIGGER_ON_HOVER
     ? {
-      onMouseEnter: playVideo,
-      onMouseLeave: stopVideo
+      onMouseEnter: () => setWantsToPlay( true ),
+      onMouseLeave: () => setWantsToPlay( false )
     }
     : {};
 
