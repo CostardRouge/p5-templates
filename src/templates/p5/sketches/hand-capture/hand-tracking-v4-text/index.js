@@ -3,7 +3,9 @@
 import options from "@/p5/utils/options.js";
 
 import string from "@/p5/utils/string.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 
 import * as common from "@/p5/utils/common.js";
 
@@ -16,15 +18,17 @@ import mediapipe, {
 
 import Matter from "@/public/assets/libraries/matter.min.js";
 import scripts from "@/p5/utils/scripts.js";
-import {
-  getP5
-} from "@/p5/utils/sketch.js";
 
 scripts.load( "/assets/libraries/decomp.min.js" );
 
 const {
   Engine, Bodies, Composite, Vector
 } = Matter;
+
+const size = {
+  width: 1080,
+  height: 1350
+};
 
 // Key landmarks for interaction (palm, fingertips)
 const interactionIndices = [
@@ -39,10 +43,13 @@ const interactionIndices = [
 const BOUNDARY_THICKNESS = 50;
 const BOUNDARY_MARGIN = 50;
 
+// `size` is intentionally NOT captured here. Reading `options.size` at module
+// init time can return `undefined` in production builds where the sketch
+// module is evaluated before the React provider populates the options store.
+// We read `options.size` at runtime inside setup/draw instead.
 const layers = {
   visuals: {
     graphics: undefined,
-    size: options.size,
     background: [
       80
     ],
@@ -50,7 +57,6 @@ const layers = {
   },
   hands: {
     graphics: undefined,
-    size: options.size,
     background: undefined,
     erase: 255
   }
@@ -79,12 +85,12 @@ sketch.setup( async() => {
 
   for ( const layerName in layers ) {
     const {
-      background, size
+      background
     } = layers[ layerName ];
 
     layers[ layerName ].graphics = p.createGraphics(
-      size.width,
-      size.height
+      options.size.width,
+      options.size.height
     );
 
     if ( background ) {
@@ -217,7 +223,7 @@ sketch.draw( (
   for ( const layerName in layers ) {
     const layer = layers[ layerName ];
     const {
-      graphics, background, erase, size
+      graphics, background, erase
     } = layer;
 
     if ( !graphics ) {
@@ -228,8 +234,8 @@ sketch.draw( (
       graphics,
       0,
       0,
-      size.width,
-      size.height
+      options.size.width,
+      options.size.height
     );
 
     if ( background ) {
