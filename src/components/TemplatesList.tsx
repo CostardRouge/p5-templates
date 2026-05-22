@@ -273,156 +273,158 @@ export default function TemplatesList( {
       </div>
 
       {/* Templates content — view-transition-name scopes the VT animation to this area only */}
-      <div style={ { viewTransitionName: "templates-list" } }>
+      <div style={ {
+        viewTransitionName: "templates-list"
+      } }>
 
-      {/* Empty State */}
-      { totalCount === 0 && (
-        <div className="text-center py-8 sm:py-16">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-hover/50 mb-3 sm:mb-4">
-            <Search className="w-6 h-6 sm:w-8 sm:h-8 text-foreground/40" />
+        {/* Empty State */}
+        { totalCount === 0 && (
+          <div className="text-center py-8 sm:py-16">
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-hover/50 mb-3 sm:mb-4">
+              <Search className="w-6 h-6 sm:w-8 sm:h-8 text-foreground/40" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+              No templates found
+            </h3>
+            <p className="text-xs sm:text-sm text-foreground/60">
+              Try adjusting your search term
+            </p>
           </div>
-          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
-            No templates found
-          </h3>
-          <p className="text-xs sm:text-sm text-foreground/60">
-            Try adjusting your search term
-          </p>
-        </div>
-      ) }
+        ) }
 
-      {/* Templates grouped by engine */}
-      { Object.entries( displayedTemplates )
-        .sort( (
-          [
-            a
-          ], [
-            b
-          ]
-        ) => engineOrder.indexOf( a ) - engineOrder.indexOf( b ) )
-        .map( ( [
-          engineId,
-          items
-        ] ) => {
-          const label = engineLabels[ engineId ] || engineId;
+        {/* Templates grouped by engine */}
+        { Object.entries( displayedTemplates )
+          .sort( (
+            [
+              a
+            ], [
+              b
+            ]
+          ) => engineOrder.indexOf( a ) - engineOrder.indexOf( b ) )
+          .map( ( [
+            engineId,
+            items
+          ] ) => {
+            const label = engineLabels[ engineId ] || engineId;
 
-          const groupedItems: Record<string, typeof items> = {};
-          const uncategorized: typeof items = [];
+            const groupedItems: Record<string, typeof items> = {};
+            const uncategorized: typeof items = [];
 
-          items.forEach( ( item ) => {
-            if ( item.category ) {
-              if ( !groupedItems[ item.category ] ) {
-                groupedItems[ item.category ] = [];
+            items.forEach( ( item ) => {
+              if ( item.category ) {
+                if ( !groupedItems[ item.category ] ) {
+                  groupedItems[ item.category ] = [];
+                }
+
+                groupedItems[ item.category ].push( item );
+              } else {
+                uncategorized.push( item );
               }
+            } );
 
-              groupedItems[ item.category ].push( item );
-            } else {
-              uncategorized.push( item );
-            }
-          } );
+            const hasCategoryGroups = Object.keys( groupedItems ).length > 0;
 
-          const hasCategoryGroups = Object.keys( groupedItems ).length > 0;
-
-          return (
-            <div key={ engineId } className="space-y-2 sm:space-y-4">
-              {/* Engine section header — only in "All engines" view */}
-              { currentEngine === "all" && (
-                <div className="flex items-center gap-2 sm:gap-3 pt-1">
-                  <h2 className="text-base sm:text-lg font-semibold text-foreground">
-                    { label }
-                  </h2>
-                  <span className="text-xs sm:text-sm text-foreground/50 font-medium">
-                    { items.length }{ " " }
-                    { items.length === 1 ? "template" : "templates" }
-                    { search && ` matching "${ search }"` }
-                  </span>
-                </div>
-              ) }
-
-              {/* Categorized groups */}
-              { Object.entries( groupedItems ).map( ( [
-                subCategory,
-                subItems
-              ] ) => (
-                <div key={ subCategory } className="space-y-2 sm:space-y-3">
-                  <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                    <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                      { subCategory }
-                    </h3>
-                    <span className="text-xs text-foreground/40">
-                      { subItems.length }
+            return (
+              <div key={ engineId } className="space-y-2 sm:space-y-4">
+                {/* Engine section header — only in "All engines" view */}
+                { currentEngine === "all" && (
+                  <div className="flex items-center gap-2 sm:gap-3 pt-1">
+                    <h2 className="text-base sm:text-lg font-semibold text-foreground">
+                      { label }
+                    </h2>
+                    <span className="text-xs sm:text-sm text-foreground/50 font-medium">
+                      { items.length }{ " " }
+                      { items.length === 1 ? "template" : "templates" }
+                      { search && ` matching "${ search }"` }
                     </span>
                   </div>
+                ) }
 
-                  <div
-                    className={
-                      view === "grid"
-                        ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                        : "space-y-2 sm:space-y-3"
-                    }
-                  >
-                    { subItems.map( (
-                      {
-                        href, name, thumbnail, preview, hasSketchForm
-                      }, index
-                    ) => (
-                      <TemplateCard
-                        key={ name }
-                        href={ href }
-                        name={ name }
-                        thumbnail={ thumbnail }
-                        preview={ preview }
-                        hasSketchForm={ hasSketchForm }
-                        view={ view }
-                        eager={ index < 8 }
-                      />
-                    ) ) }
-                  </div>
-                </div>
-              ) ) }
-
-              {/* Uncategorized items */}
-              { uncategorized.length > 0 && (
-                <div className="space-y-2 sm:space-y-3">
-                  { hasCategoryGroups && (
+                {/* Categorized groups */}
+                { Object.entries( groupedItems ).map( ( [
+                  subCategory,
+                  subItems
+                ] ) => (
+                  <div key={ subCategory } className="space-y-2 sm:space-y-3">
                     <div className="flex items-center gap-2 pl-2 sm:pl-4">
                       <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                        Other { label } templates
+                        { subCategory }
                       </h3>
-                      <span className="text-xs text-foreground/40">
-                        { uncategorized.length }
+                      <span className="text-xs text-foreground/60">
+                        { subItems.length }
                       </span>
                     </div>
-                  ) }
 
-                  <div
-                    className={
-                      view === "grid"
-                        ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                        : "space-y-2 sm:space-y-3"
-                    }
-                  >
-                    { uncategorized.map( (
-                      {
-                        href, name, thumbnail, preview, hasSketchForm
-                      }, index
-                    ) => (
-                      <TemplateCard
-                        key={ name }
-                        href={ href }
-                        name={ name }
-                        thumbnail={ thumbnail }
-                        preview={ preview }
-                        hasSketchForm={ hasSketchForm }
-                        view={ view }
-                        eager={ index < 8 }
-                      />
-                    ) ) }
+                    <div
+                      className={
+                        view === "grid"
+                          ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
+                          : "space-y-2 sm:space-y-3"
+                      }
+                    >
+                      { subItems.map( (
+                        {
+                          href, name, thumbnail, preview, hasSketchForm
+                        }, index
+                      ) => (
+                        <TemplateCard
+                          key={ name }
+                          href={ href }
+                          name={ name }
+                          thumbnail={ thumbnail }
+                          preview={ preview }
+                          hasSketchForm={ hasSketchForm }
+                          view={ view }
+                          eager={ index === 0 }
+                        />
+                      ) ) }
+                    </div>
                   </div>
-                </div>
-              ) }
-            </div>
-          );
-        } ) }
+                ) ) }
+
+                {/* Uncategorized items */}
+                { uncategorized.length > 0 && (
+                  <div className="space-y-2 sm:space-y-3">
+                    { hasCategoryGroups && (
+                      <div className="flex items-center gap-2 pl-2 sm:pl-4">
+                        <h3 className="text-sm sm:text-base font-medium text-foreground/80">
+                          Other { label } templates
+                        </h3>
+                        <span className="text-xs text-foreground/60">
+                          { uncategorized.length }
+                        </span>
+                      </div>
+                    ) }
+
+                    <div
+                      className={
+                        view === "grid"
+                          ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
+                          : "space-y-2 sm:space-y-3"
+                      }
+                    >
+                      { uncategorized.map( (
+                        {
+                          href, name, thumbnail, preview, hasSketchForm
+                        }, index
+                      ) => (
+                        <TemplateCard
+                          key={ name }
+                          href={ href }
+                          name={ name }
+                          thumbnail={ thumbnail }
+                          preview={ preview }
+                          hasSketchForm={ hasSketchForm }
+                          view={ view }
+                          eager={ index === 0 }
+                        />
+                      ) ) }
+                    </div>
+                  </div>
+                ) }
+              </div>
+            );
+          } ) }
       </div>
     </div>
   );
@@ -486,13 +488,11 @@ function TemplateCard( {
               imgClassName="w-full h-full object-contain transition-transform duration-300"
             />
           ) : (
-            <img
-              alt={ name }
-              loading={ eager ? "eager" : "lazy" }
-              fetchPriority={ eager ? "high" : undefined }
-              decoding={ eager ? "sync" : "async" }
+            <Thumbnail
               src={ thumbnail }
-              className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 "
+              alt={ name }
+              eager={ eager }
+              className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300"
             />
           ) }
         </div>
@@ -529,12 +529,10 @@ function TemplateCard( {
       <div
         className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border"
       >
-        <img
-          alt={ name }
-          loading={ eager ? "eager" : "lazy" }
-          fetchPriority={ eager ? "high" : undefined }
-          decoding={ eager ? "sync" : "async" }
+        <Thumbnail
           src={ thumbnail }
+          alt={ name }
+          eager={ eager }
           className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
         />
       </div>
@@ -557,5 +555,36 @@ function TemplateCard( {
         <span className="text-xs sm:text-sm">→</span>
       </div>
     </Link>
+  );
+}
+
+function Thumbnail( {
+  src,
+  alt,
+  eager = false,
+  className
+}: {
+  src: string;
+  alt: string;
+  eager?: boolean;
+  className?: string;
+} ) {
+  const src2x = src.replace(
+    /\.webp$/,
+    "-2x.webp"
+  );
+
+  return (
+    <img
+      alt={ alt }
+      src={ src }
+      srcSet={ `${ src } 1x, ${ src2x } 2x` }
+      width={ 360 }
+      height={ 450 }
+      loading={ eager ? "eager" : "lazy" }
+      fetchPriority={ eager ? "high" : undefined }
+      decoding={ eager ? "sync" : "async" }
+      className={ className }
+    />
   );
 }

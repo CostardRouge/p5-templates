@@ -13,9 +13,23 @@ import {
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-  captureCanvasThumbnail
+  captureCanvasBuffer, writeThumbnail
 } from "@/utils/captureCanvasThumbnail";
 import fileExists from "@/utils/fileExists";
+
+const THUMBNAIL_VARIANTS = [
+  {
+    suffix: "",
+    width: 360,
+    height: 450
+  },
+  {
+    suffix: "-2x",
+    width: 720,
+    height: 900
+  }
+] as const;
+const THUMBNAIL_QUALITY = 80;
 
 async function createSketchThumbnails() {
   const recordingState: {
@@ -49,10 +63,13 @@ async function createSketchThumbnails() {
     for ( const {
       href, name, engine
     } of templates ) {
-      const thumbnailPath = `${ ASSETS_DIRECTORY }/images/templates/${ engine }/${ name }/thumbnail.jpeg`;
+      const thumbnailDir = `${ ASSETS_DIRECTORY }/images/templates/${ engine }/${ name }`;
+      const variantPaths = THUMBNAIL_VARIANTS.map( ( v ) => `${ thumbnailDir }/thumbnail${ v.suffix }.webp` );
 
-      if ( await fileExists( thumbnailPath ) ) {
-        console.log( `✅ ${ name }/thumbnail.jpeg already exists!` );
+      const existing = await Promise.all( variantPaths.map( fileExists ) );
+
+      if ( existing.every( Boolean ) ) {
+        console.log( `✅ ${ name } thumbnails already exist!` );
         continue;
       }
 
@@ -63,20 +80,26 @@ async function createSketchThumbnails() {
         }
       );
 
-      // Capture and resize thumbnail with high-quality interpolation
-      await captureCanvasThumbnail(
-        recordingState.page,
-        thumbnailPath,
-        {
-          resize: {
-            width: 360,
-            height: 450,
-            fit: "cover"
-          },
-          quality: 90,
-          format: "jpeg"
-        }
-      );
+      // Capture once, encode each size with high-quality lanczos3 interpolation
+      const buffer = await captureCanvasBuffer( recordingState.page );
+
+      for ( const {
+        suffix, width, height
+      } of THUMBNAIL_VARIANTS ) {
+        await writeThumbnail(
+          buffer,
+          `${ thumbnailDir }/thumbnail${ suffix }.webp`,
+          {
+            format: "webp",
+            quality: THUMBNAIL_QUALITY,
+            resize: {
+              width,
+              height,
+              fit: "cover"
+            }
+          }
+        );
+      }
 
       // Mark hasThumbnail: true in metadata.json
       const metadataPath = path.join(
@@ -103,7 +126,7 @@ async function createSketchThumbnails() {
         );
       }
 
-      console.log( `💾 ${ name }/thumbnail.jpeg has been generated` );
+      console.log( `💾 ${ name } webp thumbnails generated (1x + 2x)` );
     }
   } catch( error ) {
     console.error( error );
