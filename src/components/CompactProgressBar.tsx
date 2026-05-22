@@ -132,9 +132,23 @@ export default function CompactProgressBar( {
     : ( steps.find( ( s ) => s.status === "active" )?.name ?? "Processing..." );
 
   const isMultiSlide = uiState?.isMultiSlide ?? false;
-  const hasPopover = isMultiSlide || steps.length > 0;
-  const completedSteps = steps.filter( ( s ) => s.status === "completed" ).length;
+  // Show popover whenever we have structured step data (new or legacy)
+  const hasPopover = uiState !== null || steps.length > 0;
   const completedSlideCount = currentSlideIndex ?? 0;
+
+  // Compact subtitle text for single recordings
+  const singleSubtitle = !isMultiSlide
+    ? uiState
+      ? ( () => {
+          const total = uiState.flatSteps.length;
+          const done = uiState.flatSteps.filter( ( s ) => s.status === "completed" ).length;
+
+          return done > 0 ? `${ done } of ${ total } steps done` : `${ total } steps`;
+        } )()
+      : steps.length > 0
+        ? `Step ${ steps.filter( ( s ) => s.status === "completed" ).length + 1 } of ${ steps.length }`
+        : null
+    : null;
 
   // ── Completed ────────────────────────────────────────────────────────────
   if ( job.status === "completed" ) {
@@ -228,9 +242,9 @@ export default function CompactProgressBar( {
                   ? `${ completedSlideCount } of ${ uiState!.slides.length } slides done`
                   : `${ uiState!.slides.length } slides to record`}
               </div>
-            ) : steps.length > 0 && (
+            ) : singleSubtitle && (
               <div className="text-[10px] text-foreground/40 mt-1 truncate">
-                Step {completedSteps + 1} of {steps.length} • {completedSteps} completed
+                {singleSubtitle}
               </div>
             )}
           </PopoverButton>
@@ -266,23 +280,27 @@ export default function CompactProgressBar( {
               </div>
 
               <div className="space-y-1.5 max-h-72 overflow-y-auto">
-                {uiState && isMultiSlide ? (
-                  <MultiSlideStepList
-                    uiState={ uiState }
-                    expandedSlides={ expandedSlides }
-                    onToggleSlide={ ( idx ) =>
-                      setExpandedSlides( ( prev ) => {
-                        const next = new Set( prev );
+                {uiState ? (
+                  isMultiSlide ? (
+                    <MultiSlideStepList
+                      uiState={ uiState }
+                      expandedSlides={ expandedSlides }
+                      onToggleSlide={ ( idx ) =>
+                        setExpandedSlides( ( prev ) => {
+                          const next = new Set( prev );
 
-                        if ( next.has( idx ) ) {
-                          next.delete( idx );
-                        } else {
-                          next.add( idx );
-                        }
-                        return next;
-                      } )
-                    }
-                  />
+                          if ( next.has( idx ) ) {
+                            next.delete( idx );
+                          } else {
+                            next.add( idx );
+                          }
+                          return next;
+                        } )
+                      }
+                    />
+                  ) : (
+                    <RecordingStepList steps={ uiState.flatSteps } />
+                  )
                 ) : (
                   <FlatStepList steps={ steps } />
                 )}
@@ -325,7 +343,7 @@ function MultiSlideStepList( {
 
       {/* Shared trailing steps (e.g. uploading) */}
       {uiState.sharedTrailingSteps.length > 0 && (
-        <div className="pt-1 border-t border-border/50 space-y-1.5">
+        <div className="pt-1.5 border-t border-border/50 space-y-1.5">
           {uiState.sharedTrailingSteps.map( ( step ) => (
             <SharedStepRow key={ step.key } step={ step } />
           ) )}
@@ -359,19 +377,32 @@ function SlideRow( {
       >
         <StatusIcon status={ slide.status } index={ slide.index } />
 
-        <span className={ `flex-1 text-xs font-medium truncate ${ statusTextClass( slide.status ) }` }>
-          {slide.name}
-        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className={ `text-xs font-medium truncate ${ statusTextClass( slide.status ) }` }>
+              {slide.name}
+            </span>
+            {slide.status !== "pending" && (
+              <span className={ `text-[10px] font-semibold flex-shrink-0 ${
+                slide.status === "completed" ? "text-green-500" : "text-blue-500"
+              }` }>
+                {slide.status === "completed" ? "100" : slide.aggregate}%
+              </span>
+            )}
+          </div>
 
-        {slide.status !== "pending" && (
-          <span className={ `text-[10px] font-semibold flex-shrink-0 ${
-            slide.status === "completed"
-              ? "text-green-500"
-              : "text-blue-500"
-          }` }>
-            {slide.status === "completed" ? "100" : slide.aggregate}%
-          </span>
-        )}
+          {/* Aggregate progress bar shown while slide is active */}
+          {slide.status === "active" && slide.aggregate > 0 && (
+            <div className="mt-1 h-1 bg-blue-500/20 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-400 transition-all duration-300"
+                style={ {
+                  width: `${ slide.aggregate }%`
+                } }
+              />
+            </div>
+          )}
+        </div>
 
         <ChevronDown
           className={ `w-3 h-3 text-foreground/40 flex-shrink-0 transition-transform ${ isExpanded ? "rotate-180" : "" }` }
@@ -379,7 +410,7 @@ function SlideRow( {
       </button>
 
       {isExpanded && (
-        <div className="ml-7 mt-1 space-y-1">
+        <div className="ml-3 mt-1.5 pl-3 border-l-2 border-border/40 space-y-2">
           {slide.subSteps.map( ( sub ) => (
             <SubStepRow key={ sub.key } step={ sub } parentStatus={ slide.status } />
           ) )}
@@ -394,28 +425,40 @@ function SharedStepRow( {
 }: {
   step: FlatStepUI
 } ) {
+  const isActive = step.status === "active";
   const isDone = step.status === "completed";
 
   return (
     <div className={ `flex items-center gap-2 p-1.5 rounded-lg ${
-      isDone ? "bg-green-500/10" : "bg-hover/50"
+      isDone
+        ? "bg-green-500/10"
+        : isActive
+          ? "bg-blue-500/10 border border-blue-500/30"
+          : "bg-hover/50"
     }` }>
       <div className="w-5 h-5 flex-shrink-0">
         {isDone ? (
           <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
             <Check className="w-3 h-3 text-white" />
           </div>
+        ) : isActive ? (
+          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+            <Loader2 className="w-3 h-3 text-white animate-spin" />
+          </div>
         ) : (
           <div className="w-5 h-5 rounded-full bg-hover" />
         )}
       </div>
       <span className={ `text-xs flex-1 ${
-        isDone ? "text-green-500" : "text-label"
+        isDone ? "text-green-500" : isActive ? "text-blue-500" : "text-label"
       }` }>
         {step.label}
       </span>
       {isDone && (
         <span className="text-[10px] text-green-500 font-semibold">100%</span>
+      )}
+      {isActive && (
+        <span className="text-[10px] text-blue-500 font-semibold">{Math.round( step.percentage )}%</span>
       )}
     </div>
   );
@@ -432,28 +475,117 @@ function SubStepRow( {
   const isDone = step.percentage >= 100 || parentStatus === "completed";
 
   return (
-    <div className="flex items-center gap-2">
-      <div className={ `w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-        isDone ? "bg-green-500" : isActive ? "bg-blue-500" : "bg-hover"
-      }` } />
-      <span className={ `text-[11px] flex-1 ${
-        isDone
-          ? "text-green-500"
-          : isActive
-            ? "text-blue-500"
-            : "text-label"
-      }` }>
-        {step.label}
-      </span>
-      {isActive && (
-        <span className="text-[10px] text-blue-500">
-          {Math.round( step.percentage )}%
+    <div>
+      <div className="flex items-center gap-2">
+        <div className={ `w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+          isDone ? "bg-green-500" : isActive ? "bg-blue-400 animate-pulse" : "bg-border"
+        }` } />
+        <span className={ `text-[11px] flex-1 ${
+          isDone ? "text-green-500" : isActive ? "text-blue-500" : "text-label"
+        }` }>
+          {step.label}
         </span>
+        {( isActive || isDone ) && (
+          <span className={ `text-[10px] flex-shrink-0 font-medium ${
+            isDone ? "text-green-500" : "text-blue-500"
+          }` }>
+            {isDone ? "100" : Math.round( step.percentage )}%
+          </span>
+        )}
+      </div>
+
+      {isActive && (
+        <div className="mt-1 ml-3.5 h-1 bg-blue-500/20 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-blue-400 transition-all duration-300"
+            style={ {
+              width: `${ step.percentage }%`
+            } }
+          />
+        </div>
       )}
     </div>
   );
 }
 
+/**
+ * Step list driven by the typed UI state from resolveProgressionUIState.
+ * Used for single recordings when recordingSteps data is available.
+ */
+function RecordingStepList( {
+  steps
+}: {
+  steps: FlatStepUI[]
+} ) {
+  return (
+    <>
+      {steps.map( ( step ) => {
+        const isActive = step.status === "active";
+        const isDone = step.status === "completed";
+
+        return (
+          <div
+            key={ step.key }
+            className={ `flex items-start gap-2 p-2 rounded-lg transition-all ${
+              isActive
+                ? "bg-blue-500/10 border border-blue-500/30"
+                : isDone
+                  ? "bg-green-500/10"
+                  : "bg-hover/50"
+            }` }
+          >
+            <div className="flex-shrink-0 mt-0.5">
+              {isDone ? (
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              ) : isActive ? (
+                <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                  <Loader2 className="w-3 h-3 text-white animate-spin" />
+                </div>
+              ) : (
+                <div className="w-5 h-5 rounded-full bg-hover" />
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className={ `text-xs font-medium truncate ${
+                  isActive ? "text-blue-500" : isDone ? "text-green-500" : "text-label"
+                }` }>
+                  {step.label}
+                </span>
+                {( isActive || isDone ) && (
+                  <span className={ `text-[10px] font-semibold flex-shrink-0 ${
+                    isDone ? "text-green-500" : "text-blue-500"
+                  }` }>
+                    {isDone ? "100" : Math.round( step.percentage )}%
+                  </span>
+                )}
+              </div>
+
+              {isActive && (
+                <div className="h-1 bg-hover rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-300"
+                    style={ {
+                      width: `${ step.percentage }%`
+                    } }
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      } )}
+    </>
+  );
+}
+
+/**
+ * Legacy fallback list for when only the ProgressStep[] array is available
+ * (before the first Redis progression update arrives).
+ */
 function FlatStepList( {
   steps
 }: {
@@ -514,7 +646,7 @@ function FlatStepList( {
               </span>
               {step.percentage !== undefined && step.status === "active" && (
                 <span className="text-[10px] font-semibold text-blue-500">
-                  {step.percentage.toPrecision( 3 )}%
+                  {Math.round( step.percentage )}%
                 </span>
               )}
             </div>
