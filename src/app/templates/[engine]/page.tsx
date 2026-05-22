@@ -19,6 +19,7 @@ import {
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd/BreadcrumbJsonLd";
 import TemplatesList from "@/components/TemplatesList";
 import {
+  filterTemplatesForGallery,
   getTemplatesData
 } from "../getTemplatesData";
 
@@ -33,7 +34,9 @@ export async function generateMetadata( {
     engine
   } = await params;
 
-  if ( !hasEngine( engine ) ) return {};
+  if ( !hasEngine( engine ) ) {
+    return {};
+  }
 
   const label = ( await getTemplatesData() ).engineLabels[ engine ] || engine;
   const title = `${ label } Templates`;
@@ -64,7 +67,9 @@ export default async function EngineTemplatesPage( {
     engine
   } = await params;
 
-  if ( !hasEngine( engine ) ) notFound();
+  if ( !hasEngine( engine ) ) {
+    notFound();
+  }
 
   const {
     templatesByEngine, engineLabels
@@ -74,9 +79,18 @@ export default async function EngineTemplatesPage( {
   const baseUrl = getBaseUrl();
 
   const breadcrumbItems = [
-    { name: "Home", url: baseUrl },
-    { name: "Templates", url: `${ baseUrl }/templates` },
-    { name: `${ label } Templates`, url: `${ baseUrl }/templates/${ engine }` }
+    {
+      name: "Home",
+      url: baseUrl
+    },
+    {
+      name: "Templates",
+      url: `${ baseUrl }/templates`
+    },
+    {
+      name: `${ label } Templates`,
+      url: `${ baseUrl }/templates/${ engine }`
+    }
   ];
 
   return (
@@ -84,7 +98,7 @@ export default async function EngineTemplatesPage( {
       <BreadcrumbJsonLd items={ breadcrumbItems } />
       <Suspense>
         <TemplatesList
-          templates={ templatesByEngine }
+          templates={ filterTemplatesForGallery( templatesByEngine ) }
           engineLabels={ engineLabels }
           activeEngine={ engine }
         />

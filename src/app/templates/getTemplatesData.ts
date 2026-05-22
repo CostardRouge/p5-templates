@@ -69,3 +69,22 @@ export async function getTemplatesData() {
     engineLabels
   };
 }
+
+/**
+ * Filter for the /templates page (and engine sub-pages):
+ *   - production → drop entries marked `.hidden-template`
+ *   - development → keep them all so they can be rendered grayed out
+ */
+export function filterTemplatesForGallery( templatesByEngine: Record<string, TemplateItem[]> ): Record<string, TemplateItem[]> {
+  if ( process.env.NODE_ENV !== "production" ) {
+    return templatesByEngine;
+  }
+
+  return Object.fromEntries( Object.entries( templatesByEngine ).map( ( [
+    engine,
+    items
+  ] ) => [
+    engine,
+    items.filter( ( t ) => !t.hiddenFromTemplates )
+  ] ) );
+}

@@ -364,7 +364,7 @@ export default function TemplatesList( {
                     >
                       { subItems.map( (
                         {
-                          href, name, thumbnail, preview, hasSketchForm
+                          href, name, thumbnail, preview, hasSketchForm, hiddenFromTemplates
                         }, index
                       ) => (
                         <TemplateCard
@@ -374,6 +374,7 @@ export default function TemplatesList( {
                           thumbnail={ thumbnail }
                           preview={ preview }
                           hasSketchForm={ hasSketchForm }
+                          hiddenFromTemplates={ hiddenFromTemplates }
                           view={ view }
                           eager={ index === 0 }
                         />
@@ -405,7 +406,7 @@ export default function TemplatesList( {
                     >
                       { uncategorized.map( (
                         {
-                          href, name, thumbnail, preview, hasSketchForm
+                          href, name, thumbnail, preview, hasSketchForm, hiddenFromTemplates
                         }, index
                       ) => (
                         <TemplateCard
@@ -415,6 +416,7 @@ export default function TemplatesList( {
                           thumbnail={ thumbnail }
                           preview={ preview }
                           hasSketchForm={ hasSketchForm }
+                          hiddenFromTemplates={ hiddenFromTemplates }
                           view={ view }
                           eager={ index === 0 }
                         />
@@ -435,7 +437,7 @@ function TemplateCard( {
   name,
   thumbnail,
   preview,
-  hasSketchForm,
+  hiddenFromTemplates = false,
   view,
   eager = false
 }: {
@@ -444,6 +446,7 @@ function TemplateCard( {
   thumbnail: string;
   preview: string | null;
   hasSketchForm: boolean;
+  hiddenFromTemplates?: boolean;
   view: "grid" | "list";
   eager?: boolean;
 } ) {
@@ -459,8 +462,15 @@ function TemplateCard( {
     return (
       <Link
         href={ href }
-        className="group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5"
+        className={ `group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5 ${
+          hiddenFromTemplates ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
+        }` }
       >
+        { hiddenFromTemplates ? (
+          <span className="absolute top-2 right-2 z-20 font-mono text-[9px] uppercase tracking-[0.18em] bg-foreground text-background px-1.5 py-0.5 rounded-sm pointer-events-none">
+            hidden
+          </span>
+        ) : null }
         {/* Aspect ratio box for 4:5 (360x450) */}
         <div
           className="w-full relative"
@@ -524,7 +534,9 @@ function TemplateCard( {
   return (
     <Link
       href={ href }
-      className="group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5"
+      className={ `group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5 ${
+        hiddenFromTemplates ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
+      }` }
     >
       <div
         className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border"
@@ -537,10 +549,15 @@ function TemplateCard( {
         />
       </div>
 
-      <div className="flex-grow min-w-0">
+      <div className="flex-grow min-w-0 flex items-center gap-2">
         <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
           { name }
         </p>
+        { hiddenFromTemplates ? (
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] bg-foreground text-background px-1.5 py-0.5 rounded-sm flex-shrink-0">
+            hidden
+          </span>
+        ) : null }
       </div>
 
       {/* { hasSketchForm && (*/}

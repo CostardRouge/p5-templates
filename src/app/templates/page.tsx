@@ -11,6 +11,7 @@ import {
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd/BreadcrumbJsonLd";
 import TemplatesList from "@/components/TemplatesList";
 import {
+  filterTemplatesForGallery,
   getTemplatesData
 } from "./getTemplatesData";
 
@@ -39,9 +40,20 @@ export default async function TemplatesPage() {
   } = await getTemplatesData();
   const baseUrl = getBaseUrl();
 
+  // In production we hide templates marked `.hidden-template` entirely.
+  // In development they stay visible but are rendered grayed-out + still
+  // clickable (the flag is forwarded so the UI can style them).
+  const filteredByEngine = filterTemplatesForGallery( templatesByEngine );
+
   const breadcrumbItems = [
-    { name: "Home", url: baseUrl },
-    { name: "Templates", url: `${ baseUrl }/templates` }
+    {
+      name: "Home",
+      url: baseUrl
+    },
+    {
+      name: "Templates",
+      url: `${ baseUrl }/templates`
+    }
   ];
 
   return (
@@ -49,7 +61,7 @@ export default async function TemplatesPage() {
       <BreadcrumbJsonLd items={ breadcrumbItems } />
       <Suspense>
         <TemplatesList
-          templates={ templatesByEngine }
+          templates={ filteredByEngine }
           engineLabels={ engineLabels }
           activeEngine="all"
         />

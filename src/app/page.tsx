@@ -30,9 +30,17 @@ export default async function Home() {
     templatesByEngine, engineLabels
   } = await getTemplatesData();
 
-  const allTemplates = Object.values( templatesByEngine )
-    .flat()
-    .filter( ( t ) => !t.hiddenFromHome );
+  const allTemplates = Object.values( templatesByEngine ).flat();
+
+  // `.hidden-template` is the public gate — anything hidden from the gallery
+  // page is also hidden from the home page and excluded from the counter,
+  // so the "ready to render" stat matches the gallery's real count.
+  const galleryTemplates = allTemplates.filter( ( t ) => !t.hiddenFromTemplates );
+
+  // `.hidden-home` additionally narrows the showcase pool — these templates
+  // still exist in the gallery but should never appear on the home page.
+  const homeTemplates = galleryTemplates.filter( ( t ) => !t.hiddenFromHome );
+
   const baseUrl = getBaseUrl();
 
   const breadcrumbItems = [
@@ -46,9 +54,9 @@ export default async function Home() {
     <>
       <BreadcrumbJsonLd items={ breadcrumbItems } />
       <HomePage
-        templates={ allTemplates }
+        templates={ homeTemplates }
         engineLabels={ engineLabels }
-        totalTemplates={ allTemplates.length }
+        totalTemplates={ galleryTemplates.length }
       />
     </>
   );

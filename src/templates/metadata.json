@@ -24,18 +24,6 @@
     "ctime": "2026-04-27T16:15:48.281Z"
   },
   {
-    "name": "hand-tracking-v4-text",
-    "engine": "p5",
-    "category": "hand-capture",
-    "hasSketchForm": false,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.352Z",
-    "ctime": "2026-04-27T16:15:48.283Z"
-  },
-  {
     "name": "kinetic-letters",
     "engine": "p5",
     "category": "kinetic",
@@ -715,8 +703,8 @@
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": true,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T23:59:51.502Z",
+    "hiddenFromTemplates": true,
+    "mtime": "2026-05-22T00:22:39.890Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
@@ -726,9 +714,9 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
-    "hiddenFromHome": false,
+    "hiddenFromHome": true,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T23:59:51.503Z",
+    "mtime": "2026-05-22T00:22:39.891Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
@@ -738,9 +726,9 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
-    "hiddenFromHome": false,
+    "hiddenFromHome": true,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T23:59:51.503Z",
+    "mtime": "2026-05-22T00:22:39.891Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
@@ -750,9 +738,9 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
-    "hiddenFromHome": false,
+    "hiddenFromHome": true,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T23:59:51.503Z",
+    "mtime": "2026-05-22T00:22:39.891Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
@@ -763,8 +751,20 @@
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": true,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T23:59:51.503Z",
+    "hiddenFromTemplates": true,
+    "mtime": "2026-05-22T00:22:39.891Z",
     "ctime": "2026-04-27T16:15:48.301Z"
+  },
+  {
+    "name": "hand-tracking-v4-text",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": false,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-22T00:51:03.494Z",
+    "ctime": "2026-04-27T16:15:48.283Z"
   }
 ]
