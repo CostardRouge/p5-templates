@@ -59,14 +59,14 @@ export const formConfiguration: Record<string, any> = {
         label: "X",
         min: 0,
         max: 1,
-        step: 0.1
+        step: 0.01
       },
       y: {
         component: "slider",
         label: "Y",
         min: 0,
         max: 1,
-        step: 0.1
+        step: 0.01
       }
     }
   },

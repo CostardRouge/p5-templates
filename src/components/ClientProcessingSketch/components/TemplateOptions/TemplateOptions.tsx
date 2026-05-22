@@ -37,6 +37,9 @@ import {
 import {
   useCollapsibleStates, CollapsibleProvider
 } from "./hooks/useCollapsibleStates";
+import {
+  subscribeSketchOptions
+} from "@/lib/syncSketchOptions";
 
 type TemplateOptionsProps = {
   name: string;
@@ -108,23 +111,57 @@ export default function TemplateOptions( {
     control, getValues, setValue, reset
   } = methods;
 
-  // Sync form with external options changes (e.g., from sketch interactions)
-  // useEffect(
-  //   () => {
-  //     const processedOptions = initOptions( initialOptions );
-  //     const currentFormValues = getValues();
-  //
-  //     // Only reset if the options actually changed to avoid unnecessary re-renders
-  //     if ( JSON.stringify( processedOptions ) !== JSON.stringify( currentFormValues ) ) {
-  //       reset( processedOptions );
-  //     }
-  //   },
-  //   [
-  //     initialOptions,
-  //     reset,
-  //     getValues
-  //   ]
-  // );
+  // Sync form with sketch-driven option changes (e.g., clicking the canvas to set a point).
+  // Only fires for non-"react" origins to avoid feedback loops with the form's own watch().
+  useEffect(
+    () => {
+      function syncLeafValues( newObj: unknown, currentObj: unknown, path: string ) {
+        if (
+          newObj === null ||
+          newObj === undefined ||
+          typeof newObj !== "object" ||
+          Array.isArray( newObj )
+        ) {
+          if ( JSON.stringify( newObj ) !== JSON.stringify( currentObj ) ) {
+            setValue(
+              path as any,
+              newObj,
+              {
+                shouldDirty: false,
+                shouldValidate: false
+              }
+            );
+          }
+          return;
+        }
+
+        for ( const key of Object.keys( newObj as Record<string, unknown> ) ) {
+          const childPath = path ? `${ path }.${ key }` : key;
+
+          syncLeafValues(
+            ( newObj as Record<string, unknown> )[ key ],
+            ( currentObj as Record<string, unknown> )?.[ key ],
+            childPath
+          );
+        }
+      }
+
+      return subscribeSketchOptions( ( opts, origin ) => {
+        if ( origin === "react" ) {
+          return;
+        }
+        syncLeafValues(
+          opts,
+          getValues(),
+          ""
+        );
+      } );
+    },
+    [
+      getValues,
+      setValue
+    ]
+  );
 
   const {
     fields: slideFields,
