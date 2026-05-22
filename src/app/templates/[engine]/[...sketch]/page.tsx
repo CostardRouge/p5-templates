@@ -125,7 +125,9 @@ export default async function StudioPage( {
   params: Promise<RouteParams>;
   searchParams: Promise<{
     id?: string;
-    capturing?: string
+    capturing?: string;
+    previewFramerate?: string;
+    previewDuration?: string;
   }>;
 } ) {
   const {
@@ -176,7 +178,8 @@ export default async function StudioPage( {
   }
 
   /* ---- persisted job? -------------------------------------------- */
-  const jobIdSearchParams = ( await searchParams ).id;
+  const resolvedSearchParams = await searchParams;
+  const jobIdSearchParams = resolvedSearchParams.id;
   let persistedJob;
 
   if ( jobIdSearchParams ) {
@@ -194,6 +197,31 @@ export default async function StudioPage( {
   }
 
   sketchOptions.name = sketchName;
+
+  /* ---- preview-capture animation overrides -----------------------
+     When the headless preview generator hits this page with
+     ?capturing&previewFramerate=20&previewDuration=3, force the sketch's
+     animation settings to the override values. time.js reads framerate to
+     advance its clock per captured frame, and getAnimationProgression()
+     divides elapsed seconds by duration — so a 20fps × 3s capture maps
+     one full animation loop into the 60-frame preview, regardless of the
+     sketch's native duration. */
+  const previewFramerateRaw = resolvedSearchParams.previewFramerate;
+  const previewDurationRaw = resolvedSearchParams.previewDuration;
+
+  if ( resolvedSearchParams.capturing === "" && previewFramerateRaw && previewDurationRaw ) {
+    const previewFramerate = Number.parseInt( previewFramerateRaw, 10 );
+    const previewDuration = Number.parseFloat( previewDurationRaw );
+
+    if ( Number.isFinite( previewFramerate ) && previewFramerate > 0
+      && Number.isFinite( previewDuration ) && previewDuration > 0 ) {
+      sketchOptions.animation = {
+        ...sketchOptions.animation,
+        framerate: previewFramerate,
+        duration: previewDuration
+      };
+    }
+  }
 
   /* ---- breadcrumb items ------------------------------------------ */
   const sketchTitle = formatSketchTitle( sketchName );
@@ -226,7 +254,7 @@ export default async function StudioPage( {
         persistedJob={ persistedJob }
         sketchFormValues={ formValues }
         sketchFormConfiguration={ formConfiguration }
-        capturing={ ( await searchParams ).capturing === "" }
+        capturing={ resolvedSearchParams.capturing === "" }
         backendRecording={ process.env.BACKEND_RECORDING === "true" }
         activeSlideIndex={
           sketchOptions.slides?.length > 0 ? 0 : undefined

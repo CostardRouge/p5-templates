@@ -5,9 +5,6 @@ import {
 } from "@/utils/captureFramesServerSide";
 import encodePreviewFromFrames from "@/lib/encodePreviewFromFrames";
 import {
-  getJSONSketchOptions
-} from "@/utils/getSketchOptions";
-import {
   ASSETS_DIRECTORY
 } from "@/constants";
 import fileExists from "@/utils/fileExists";
@@ -19,16 +16,16 @@ import {
   Browser, Page
 } from "playwright";
 
-// Output video: 3 s at 20 fps. All captured frames are spread evenly into this window.
-const PREVIEW_TARGET_SECS = 3;
-const PREVIEW_OUTPUT_FPS = 20;
-
-// Cap capture at this many seconds of animation to avoid recording overly long loops.
-const CAPTURE_MAX_SECS = 3;
-
-// Fallbacks for sketches without options.json
-const DEFAULT_SKETCH_FPS = 60;
-const DEFAULT_SKETCH_DURATION = 3;
+// Preview capture + output. We pass previewFramerate + previewDuration as URL
+// params so the sketch itself is told to run its full animation within this
+// window (see page.tsx — it overrides sketchOptions.animation when these are
+// present). time.js then advances its clock at 1000/PREVIEW_FPS ms per captured
+// frame and getAnimationProgression() divides elapsed time by PREVIEW_SECS, so
+// one full loop fits into the captured frame budget regardless of the sketch's
+// native duration.
+const PREVIEW_FPS = 20;
+const PREVIEW_SECS = 3;
+const TOTAL_FRAMES = PREVIEW_FPS * PREVIEW_SECS;
 
 async function createSketchPreviews() {
   const state: { browser?: Browser;
@@ -77,18 +74,8 @@ async function createSketchPreviews() {
         continue;
       }
 
-      // Read the sketch's own framerate and duration so time.js advances correctly.
-      // time.js uses animation.framerate (not our capture rate) to step elapsed time,
-      // so we must capture framerate × duration frames to cover one full loop.
-      // Cap at CAPTURE_MAX_SECS to keep capture times reasonable.
-      const jsonOptions = await getJSONSketchOptions( name, engine );
-      const sketchFps = ( jsonOptions?.animation as any )?.framerate ?? DEFAULT_SKETCH_FPS;
-      const sketchDuration = ( jsonOptions?.animation as any )?.duration ?? DEFAULT_SKETCH_DURATION;
-      const captureSecs = Math.min( sketchDuration, CAPTURE_MAX_SECS );
-      const totalFrames = Math.round( sketchFps * captureSecs );
-
-      console.log( `🎬 ${ name } — capturing ${ totalFrames } frames` +
-        ` (${ sketchFps }fps × ${ captureSecs }s → ${ PREVIEW_TARGET_SECS }s preview)` );
+      console.log( `🎬 ${ name } — capturing ${ TOTAL_FRAMES } frames` +
+        ` (${ PREVIEW_FPS }fps × ${ PREVIEW_SECS }s, full loop)` );
 
       const tmpDir = await fs.mkdtemp( path.join(
         os.tmpdir(),
@@ -97,7 +84,7 @@ async function createSketchPreviews() {
 
       try {
         await state.page.goto(
-          `http://localhost:3000/${ href }?capturing`,
+          `http://localhost:3000/${ href }?capturing&previewFramerate=${ PREVIEW_FPS }&previewDuration=${ PREVIEW_SECS }`,
           {
             waitUntil: "networkidle"
           }
@@ -113,7 +100,7 @@ async function createSketchPreviews() {
         await captureFramesServerSide( {
           page: state.page,
           framesDirectory: tmpDir,
-          totalFrames
+          totalFrames: TOTAL_FRAMES
         } );
 
         await fs.mkdir(
@@ -126,8 +113,8 @@ async function createSketchPreviews() {
         await encodePreviewFromFrames(
           tmpDir,
           previewPath,
-          PREVIEW_TARGET_SECS,
-          PREVIEW_OUTPUT_FPS
+          PREVIEW_SECS,
+          PREVIEW_FPS
         );
 
         const raw = await fs.readFile(
