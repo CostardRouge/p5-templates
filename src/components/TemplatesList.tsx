@@ -18,9 +18,13 @@ import type {
 
 import Link from "@/components/HardLink";
 import AnimatedPreview from "@/components/AnimatedPreview";
+import AnimationsToggle from "@/components/AnimationsToggle";
 import {
   usePersistedViewMode
 } from "@/hooks/usePersistedViewMode";
+import {
+  useAnimationsEnabled
+} from "@/hooks/useAnimationsEnabled";
 import {
   useMarqueeOnHover
 } from "@/hooks/useMarqueeOnHover";
@@ -49,6 +53,11 @@ export default function TemplatesList( {
     "templates-view-mode",
     "grid"
   );
+  const [
+    animationsEnabled,
+    setAnimationsEnabled,
+    animationsHydrated
+  ] = useAnimationsEnabled();
   const [
     search,
     setSearch
@@ -170,9 +179,16 @@ export default function TemplatesList( {
     <div className="space-y-3 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Templates
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            Templates
+          </h1>
+          <AnimationsToggle
+            enabled={ animationsEnabled }
+            onChange={ setAnimationsEnabled }
+            disabled={ !animationsHydrated }
+          />
+        </div>
 
         <div className="flex items-center gap-2 w-full">
           {/* Search Input */}
@@ -377,6 +393,7 @@ export default function TemplatesList( {
                           hiddenFromTemplates={ hiddenFromTemplates }
                           view={ view }
                           eager={ index === 0 }
+                          animationsEnabled={ animationsEnabled }
                         />
                       ) ) }
                     </div>
@@ -419,6 +436,7 @@ export default function TemplatesList( {
                           hiddenFromTemplates={ hiddenFromTemplates }
                           view={ view }
                           eager={ index === 0 }
+                          animationsEnabled={ animationsEnabled }
                         />
                       ) ) }
                     </div>
@@ -439,7 +457,8 @@ function TemplateCard( {
   preview,
   hiddenFromTemplates = false,
   view,
-  eager = false
+  eager = false,
+  animationsEnabled
 }: {
   href: string;
   name: string;
@@ -449,6 +468,7 @@ function TemplateCard( {
   hiddenFromTemplates?: boolean;
   view: "grid" | "list";
   eager?: boolean;
+  animationsEnabled?: boolean;
 } ) {
   const {
     ref: nameRef,
@@ -495,6 +515,7 @@ function TemplateCard( {
               thumbnailUrl={ thumbnail }
               name={ name }
               eager={ eager }
+              animationsEnabled={ animationsEnabled }
               imgClassName="w-full h-full object-contain transition-transform duration-300"
             />
           ) : (

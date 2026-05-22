@@ -11,6 +11,9 @@ interface AnimatedPreviewProps {
   name: string;
   imgClassName?: string;
   eager?: boolean;
+  // When defined, overrides the OS `prefers-reduced-motion` setting:
+  // `true` forces playback to be allowed, `false` keeps the static thumbnail.
+  animationsEnabled?: boolean;
 }
 
 // Read once at module level — safe in both browser and SSR (defaults to false on server)
@@ -32,11 +35,13 @@ export default function AnimatedPreview( {
   thumbnailUrl,
   name,
   imgClassName = "",
-  eager = false
+  eager = false,
+  animationsEnabled
 }: AnimatedPreviewProps ) {
   const containerRef = useRef<HTMLDivElement>( null );
   const videoRef = useRef<HTMLVideoElement>( null );
   const prefersReducedRef = useRef( false );
+  const animationsEnabledRef = useRef( animationsEnabled );
   const [
     wantsToPlay,
     setWantsToPlay
@@ -57,7 +62,8 @@ export default function AnimatedPreview( {
       const handler = ( e: MediaQueryListEvent ) => {
         prefersReducedRef.current = e.matches;
 
-        if ( e.matches ) {
+        // Only honour OS changes when the parent hasn't opted-in explicitly.
+        if ( e.matches && animationsEnabledRef.current !== true ) {
           stopVideo();
         }
       };
@@ -74,10 +80,36 @@ export default function AnimatedPreview( {
     []
   );
 
+  // Stop or resume when the parent toggles animations on/off.
+  useEffect(
+    () => {
+      animationsEnabledRef.current = animationsEnabled;
+
+      if ( animationsEnabled === false ) {
+        stopVideo();
+      } else if ( animationsEnabled === true && wantsToPlay && isPageVisible ) {
+        playVideo();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      animationsEnabled
+    ]
+  );
+
   function playVideo() {
     const video = videoRef.current;
 
-    if ( !video || prefersReducedRef.current ) {
+    if ( !video ) {
+      return;
+    }
+
+    // Explicit override from the parent wins over the OS preference.
+    if ( animationsEnabledRef.current === false ) {
+      return;
+    }
+
+    if ( animationsEnabledRef.current !== true && prefersReducedRef.current ) {
       return;
     }
 
