@@ -26,6 +26,10 @@ import {
 const PREVIEW_FPS = 20;
 const PREVIEW_SECS = 3;
 const TOTAL_FRAMES = PREVIEW_FPS * PREVIEW_SECS;
+const PREVIEW_SIZE = {
+  width: 360,
+  height: 450
+};
 
 async function createSketchPreviews() {
   const state: { browser?: Browser;
@@ -114,7 +118,8 @@ async function createSketchPreviews() {
           tmpDir,
           previewPath,
           PREVIEW_SECS,
-          PREVIEW_FPS
+          PREVIEW_FPS,
+          PREVIEW_SIZE
         );
 
         const raw = await fs.readFile(

@@ -21,7 +21,8 @@ export default async function encodePreviewFromFrames(
   framesDir: string,
   outputPath: string,
   targetDurationSecs = 2.5,
-  outputFps = 24
+  outputFps = 24,
+  targetSize?: { width: number; height: number }
 ): Promise<void> {
   const files = await listPngFramesSorted( framesDir );
 
@@ -70,6 +71,12 @@ export default async function encodePreviewFromFrames(
       "1",
       "-r",
       String( outputFps ),
+      ...( targetSize
+        ? [
+          "-vf",
+          `scale=${ targetSize.width }:${ targetSize.height }`
+        ]
+        : [] ),
       absoluteOutputPath
     ];
 
