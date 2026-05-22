@@ -3,8 +3,8 @@ import {
   captureFramesWithStreaming
 } from "@/utils/captureFramesWithStreaming";
 import {
-  captureCanvasThumbnail
-} from "@/utils/captureCanvasThumbnail";
+  extractVideoThumbnail
+} from "@/utils/extractVideoThumbnail";
 
 import {
   updateJob
@@ -219,7 +219,7 @@ async function recordSingleSketch(
   );
   const thumbnailPath = path.join(
     temporaryDirectoryPath,
-    `thumbnail-${ jobId }.jpg`
+    `thumbnail-${ jobId }.webp`
   );
 
   await captureFramesWithStreaming( {
@@ -238,28 +238,10 @@ async function recordSingleSketch(
 
   await page.close();
 
-  // Capture thumbnail via canvas screenshot
-  const {
-    createPage: createThumbnailPage
-  } = await createBrowserPage( {
-    headless: true,
-    deviceScaleFactor: 1
-  } );
-  const thumbnailPage = await createThumbnailPage();
-
-  await thumbnailPage.goto(
-    `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
-    {
-      waitUntil: "networkidle"
-    }
-  );
-
-  await captureCanvasThumbnail(
-    thumbnailPage,
+  await extractVideoThumbnail(
+    outputVideoPath,
     thumbnailPath
   );
-
-  await thumbnailPage.close();
 
   // ─── Upload to S3 ─────────────────────────────────────────────────────────
   await updateRecordingStepPercentage(
@@ -273,12 +255,14 @@ async function recordSingleSketch(
 
   const videoS3Url = await uploadArtifact(
     `${ jobId }/${ path.basename( outputVideoPath ) }`,
-    videoBuffer
+    videoBuffer,
+    "video/mp4"
   );
 
   const thumbnailS3Url = await uploadArtifact(
     `${ jobId }/${ path.basename( thumbnailPath ) }`,
-    await fs.readFile( thumbnailPath )
+    await fs.readFile( thumbnailPath ),
+    "image/webp"
   );
 
   await updateRecordingStepPercentage(
@@ -407,7 +391,7 @@ async function recordMultipleSlides(
     );
     const slideThumbnailPath = path.join(
       temporaryDirectoryPath,
-      `thumbnail-slide-${ slideIndex }-${ jobId }.jpg`
+      `thumbnail-slide-${ slideIndex }-${ jobId }.webp`
     );
 
     await captureFramesWithStreaming( {
@@ -427,9 +411,8 @@ async function recordMultipleSlides(
       }
     } );
 
-    // Capture thumbnail via canvas screenshot
-    await captureCanvasThumbnail(
-      page,
+    await extractVideoThumbnail(
+      slideVideoPath,
       slideThumbnailPath
     );
 
@@ -456,7 +439,8 @@ async function recordMultipleSlides(
 
     const videoS3Url = await uploadArtifact(
       `${ jobId }/${ path.basename( videoPath ) }`,
-      videoBuffer
+      videoBuffer,
+      "video/mp4"
     );
 
     videoS3Urls.push( videoS3Url );
@@ -469,7 +453,8 @@ async function recordMultipleSlides(
     const thumbnailPath = slideThumbnailPaths[ i ];
     const thumbnailS3Url = await uploadArtifact(
       `${ jobId }/${ path.basename( thumbnailPath ) }`,
-      await fs.readFile( thumbnailPath )
+      await fs.readFile( thumbnailPath ),
+      "image/webp"
     );
 
     thumbnailS3Urls.push( thumbnailS3Url );

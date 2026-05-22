@@ -37,13 +37,17 @@ const s3clientPublic = new S3Client( {
 
 export async function uploadArtifact(
   objectKey: string,
-  fileStream: Buffer
+  fileStream: Buffer,
+  contentType?: string
 ): Promise<string> {
   await s3client.send( new PutObjectCommand( {
     Bucket: process.env.S3_BUCKET!,
     Key: objectKey,
     Body: fileStream,
-    ACL: ObjectCannedACL.public_read
+    ACL: ObjectCannedACL.public_read,
+    ...(contentType ? {
+      ContentType: contentType
+    } : {})
   } ) );
 
   return objectKey;
