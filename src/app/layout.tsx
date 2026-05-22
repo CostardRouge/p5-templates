@@ -76,7 +76,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: [ OG_IMAGE.path ]
+    images: [
+      OG_IMAGE.path
+    ]
   },
   robots: {
     index: true,
@@ -149,8 +151,8 @@ export default function RootLayout( {
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex flex-col h-[100svh] bg-hover/50">
-            <main className="flex-1 overflow-auto overscroll-contain relative">{children}</main>
+          <div className="h-[100svh] bg-hover/50">
+            <main className="h-full overflow-auto overscroll-contain relative">{children}</main>
 
             <Suspense>
               <MenuBar

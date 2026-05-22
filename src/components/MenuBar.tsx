@@ -1,31 +1,43 @@
 "use client";
 
+import {
+  Menu, MenuButton, MenuItem, MenuItems
+} from "@headlessui/react";
 import clsx from "clsx";
 import {
-  ExternalLink, Github, Home, Paintbrush, Video
+  Bell,
+  BellOff,
+  Check,
+  ExternalLink,
+  Film,
+  Github,
+  Home,
+  ImagePlus,
+  Menu as MenuIcon,
+  Monitor,
+  Moon,
+  Paintbrush,
+  Sun,
+  Video
 } from "lucide-react";
 import Link from "next/link";
 import {
   usePathname, useSearchParams
 } from "next/navigation";
+import {
+  useTheme
+} from "next-themes";
 import type React from "react";
 import {
-  useEffect, useState
+  useCallback, useEffect, useState
 } from "react";
-import GenerateThumbnailsButton from "@/components/GenerateThumbnailsButton";
-import GeneratePreviewsButton from "@/components/GeneratePreviewsButton";
-import PushNotificationManager from "@/components/PushNotificationManager";
-import ThemeToggle from "@/components/ThemeToggle";
+import {
+  subscribeUser, unsubscribeUser
+} from "@/app/actions/notifications";
 import {
   pauseSketchForNav
 } from "@/lib/navigationPauseSignal";
-
-type NavItem = {
-  href: string;
-  name?: string;
-  target?: string;
-  Icon?: React.FC<React.SVGProps<SVGSVGElement>>;
-};
+import sleep from "@/utils/sleep";
 
 type MenuBarProps = {
   showRecordings?: boolean;
@@ -33,10 +45,73 @@ type MenuBarProps = {
   hasMissingPreviews?: boolean;
 };
 
+type NavLink = {
+  href: string;
+  label: string;
+  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  target?: string;
+  external?: boolean;
+};
+
 const BACKEND_RECORDING = process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true";
 const NOTIFICATIONS_ENABLED = process.env.NEXT_PUBLIC_NOTIFICATIONS === "true";
 const SHOW_NOTIFICATIONS = BACKEND_RECORDING && NOTIFICATIONS_ENABLED;
 const GITHUB_REPO_URL = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
+
+const themeOptions = [
+  {
+    value: "light",
+    label: "Light",
+    Icon: Sun
+  },
+  {
+    value: "dark",
+    label: "Dark",
+    Icon: Moon
+  },
+  {
+    value: "system",
+    label: "System",
+    Icon: Monitor
+  }
+] as const;
+
+function urlBase64ToUint8Array( base64String: string ) {
+  const padding = "=".repeat( ( 4 - ( base64String.length % 4 ) ) % 4 );
+  const base64 = ( base64String + padding ).replace(
+    /-/g,
+    "+"
+  ).replace(
+    /_/g,
+    "/"
+  );
+  const rawData = window.atob( base64 );
+  const outputArray = new Uint8Array( rawData.length );
+
+  for ( let i = 0; i < rawData.length; ++i ) {
+    outputArray[ i ] = rawData.charCodeAt( i );
+  }
+
+  return outputArray;
+}
+
+function SectionLabel( {
+  children
+}: { children: React.ReactNode } ) {
+  return (
+    <div className="px-3 py-2 bg-hover/30">
+      <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wider">
+        {children}
+      </p>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="h-px bg-border" />;
+}
+
+const itemClass = "flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors disabled:opacity-50";
 
 function MenuBar( {
   showRecordings = false,
@@ -45,9 +120,34 @@ function MenuBar( {
 }: MenuBarProps ) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const {
+    theme, setTheme
+  } = useTheme();
   const [
     mounted,
     setMounted
+  ] = useState( false );
+
+  const [
+    generatingThumbnails,
+    setGeneratingThumbnails
+  ] = useState( false );
+  const [
+    generatingPreviews,
+    setGeneratingPreviews
+  ] = useState( false );
+
+  const [
+    pushSupported,
+    setPushSupported
+  ] = useState( false );
+  const [
+    pushSubscription,
+    setPushSubscription
+  ] = useState<PushSubscription | null>( null );
+  const [
+    pushLoading,
+    setPushLoading
   ] = useState( false );
 
   useEffect(
@@ -57,122 +157,379 @@ function MenuBar( {
     []
   );
 
-  // Hide menu bar when in capturing mode
+  useEffect(
+    () => {
+      if ( !SHOW_NOTIFICATIONS ) {
+        return;
+      }
+
+      if ( !( "serviceWorker" in navigator ) || !( "PushManager" in window ) ) {
+        return;
+      }
+
+      setPushSupported( true );
+
+      navigator.serviceWorker
+        .register(
+          "/sw.js",
+          {
+            scope: "/",
+            updateViaCache: "none"
+          }
+        )
+        .then( async( registration ) => {
+          const sub = await registration.pushManager.getSubscription();
+
+          setPushSubscription( sub );
+        } )
+        .catch( ( error ) => {
+          console.error(
+            "Error registering service worker:",
+            error
+          );
+        } );
+    },
+    []
+  );
+
+  const handleGenerateThumbnails = useCallback(
+    async() => {
+      setGeneratingThumbnails( true );
+
+      try {
+        await fetch( "/api/thumbnails/generate" );
+        await sleep( 1000 );
+        window.location.reload();
+      } finally {
+        setGeneratingThumbnails( false );
+      }
+    },
+    []
+  );
+
+  const handleGeneratePreviews = useCallback(
+    async() => {
+      setGeneratingPreviews( true );
+
+      try {
+        await fetch( "/api/previews/generate" );
+        await sleep( 1000 );
+        window.location.reload();
+      } finally {
+        setGeneratingPreviews( false );
+      }
+    },
+    []
+  );
+
+  const subscribeToPush = useCallback(
+    async() => {
+      setPushLoading( true );
+
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const permission = await Notification.requestPermission();
+
+        if ( permission !== "granted" ) {
+          alert( "Notification permission denied" );
+          return;
+        }
+
+        const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+        if ( !publicKey ) {
+          alert( "Push notifications are not configured. Please add VAPID keys to .env file." );
+          return;
+        }
+
+        const sub = await registration.pushManager.subscribe( {
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array( publicKey )
+        } );
+
+        setPushSubscription( sub );
+        await subscribeUser( JSON.parse( JSON.stringify( sub ) ) );
+      } catch( error ) {
+        console.error(
+          "Error subscribing to push:",
+          error
+        );
+        alert( "Failed to subscribe to notifications" );
+      } finally {
+        setPushLoading( false );
+      }
+    },
+    []
+  );
+
+  const unsubscribeFromPush = useCallback(
+    async() => {
+      if ( !pushSubscription ) {
+        return;
+      }
+
+      setPushLoading( true );
+
+      try {
+        await pushSubscription.unsubscribe();
+        await unsubscribeUser( pushSubscription.endpoint );
+        setPushSubscription( null );
+      } catch( error ) {
+        console.error(
+          "Error unsubscribing from push:",
+          error
+        );
+      } finally {
+        setPushLoading( false );
+      }
+    },
+    [
+      pushSubscription
+    ]
+  );
+
   if ( searchParams.get( "capturing" ) === "" ) {
     return null;
   }
 
-  const items: NavItem[] = [
+  const navLinks: NavLink[] = [
     {
       href: "/",
-      name: "home",
+      label: "Home",
       Icon: Home
     },
     {
       href: "/templates",
-      name: "templates",
+      label: "Templates",
       Icon: Paintbrush
     }
   ];
 
-  // Only add recordings link after mount to avoid hydration mismatch
   if ( mounted && showRecordings ) {
-    items.push( {
+    navLinks.push( {
       href: "/recordings",
-      name: "recordings",
+      label: "Recordings",
       Icon: Video
     } );
   }
 
   if ( GITHUB_REPO_URL ) {
-    items.push( {
+    navLinks.push( {
       href: GITHUB_REPO_URL,
-      name: "github",
+      label: "GitHub",
       Icon: Github,
-      target: "_blank"
+      target: "_blank",
+      external: true
     } );
   }
 
-  items.push( ...[
-    {
-      href: "//instagram.com/costardrouge.jpg",
-      name: "instagram",
-      target: "_blank",
-      Icon: ExternalLink
-    }
-  ] );
+  navLinks.push( {
+    href: "//instagram.com/costardrouge.jpg",
+    label: "Instagram",
+    Icon: ExternalLink,
+    target: "_blank",
+    external: true
+  } );
 
-  // Get all internal route prefixes except "/"
-  const internalRoutes = items
-    .filter( ( item ) => item.href.startsWith( "/" ) && item.href !== "/" )
-    .map( ( item ) => item.href );
+  const internalRoutes = navLinks
+    .filter( ( link ) => !link.external && link.href !== "/" )
+    .map( ( link ) => link.href );
 
-  const isActive = ( href: string ) => {
-    if ( !href.startsWith( "/" ) ) {
+  const isActive = (
+    href: string, external?: boolean
+  ) => {
+    if ( external ) {
       return false;
     }
 
     if ( href === "/" ) {
-      // Home route is active if pathname is "/" or doesn't match any other internal route
       return (
         pathname === "/" ||
         !internalRoutes.some( ( route ) => pathname.startsWith( route ) )
       );
     }
 
-    // Other routes use standard prefix matching
     return pathname.startsWith( href );
   };
 
+  const hasPendingActions = hasMissingThumbnails || hasMissingPreviews;
+
   return (
-    <nav className="w-full glass px-4 py-3 flex justify-between gap-4 z-50 border-t border-border backdrop-blur-xl bg-background/80">
-      {/* Navigation Items */}
-      <div className="flex items-center gap-2 justify-center">
-        {items.map( ( {
-          href, name, Icon, target
-        } ) => {
-          const active = isActive( href );
+    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-50">
+      <Menu as="div" className="relative">
+        <MenuButton
+          aria-label="Open menu"
+          title="Menu"
+          className="relative h-9 w-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md inline-flex items-center justify-center hover:bg-hover transition-colors group"
+        >
+          <MenuIcon className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
+          {hasPendingActions && (
+            <span
+              aria-hidden
+              className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background animate-pulse-soft"
+            />
+          )}
+        </MenuButton>
 
-          return (
-            <Link
-              key={ href }
-              href={ href }
-              target={ target }
-              onClick={ !target ? pauseSketchForNav : undefined }
-              className={ clsx(
-                "group relative flex items-center gap-2 rounded-xl px-4 py-2 transition-all duration-300 text-sm font-medium",
-                active
-                  ? "bg-hover text-foreground shadow-sm"
-                  : "text-foreground/70 hover:text-foreground hover:bg-hover/50"
-              ) }
-            >
-              {Icon ? (
-                <Icon className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
-              ) : null}
-              <span className="hidden sm:inline">{name ?? href}</span>
+        <MenuItems
+          anchor="bottom start"
+          className="z-50 w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-none [--anchor-gap:0.5rem]"
+        >
+          <SectionLabel>Navigate</SectionLabel>
+          {navLinks.map( ( {
+            href, label, Icon, target, external
+          } ) => {
+            const active = isActive(
+              href,
+              external
+            );
 
-              {/* Active indicator */}
-              {active && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-foreground rounded-full" />
+            return (
+              <MenuItem key={ href }>
+                {( {
+                  focus
+                } ) => (
+                  <Link
+                    href={ href }
+                    target={ target }
+                    onClick={ external ? undefined : pauseSketchForNav }
+                    className={ clsx(
+                      itemClass,
+                      focus && "bg-hover",
+                      active && "font-semibold"
+                    ) }
+                  >
+                    <Icon className="h-4 w-4 text-foreground/70" />
+                    <span className="flex-1">{label}</span>
+                    {active && (
+                      <span
+                        aria-hidden
+                        className="h-1.5 w-1.5 rounded-full bg-foreground"
+                      />
+                    )}
+                  </Link>
+                )}
+              </MenuItem>
+            );
+          } )}
+
+          {hasPendingActions && (
+            <>
+              <Divider />
+              <SectionLabel>Pending</SectionLabel>
+              {hasMissingPreviews && (
+                <MenuItem>
+                  {( {
+                    focus
+                  } ) => (
+                    <button
+                      type="button"
+                      onClick={ handleGeneratePreviews }
+                      disabled={ generatingPreviews }
+                      className={ clsx(
+                        itemClass,
+                        focus && "bg-hover"
+                      ) }
+                    >
+                      <Film className={ clsx(
+                        "h-4 w-4 text-foreground/70",
+                        generatingPreviews && "animate-pulse"
+                      ) } />
+                      <span className="flex-1 text-left">
+                        {generatingPreviews ? "Generating…" : "Generate previews"}
+                      </span>
+                    </button>
+                  )}
+                </MenuItem>
               )}
-            </Link>
-          );
-        } )}
-      </div>
+              {hasMissingThumbnails && (
+                <MenuItem>
+                  {( {
+                    focus
+                  } ) => (
+                    <button
+                      type="button"
+                      onClick={ handleGenerateThumbnails }
+                      disabled={ generatingThumbnails }
+                      className={ clsx(
+                        itemClass,
+                        focus && "bg-hover"
+                      ) }
+                    >
+                      <ImagePlus className={ clsx(
+                        "h-4 w-4 text-foreground/70",
+                        generatingThumbnails && "animate-pulse"
+                      ) } />
+                      <span className="flex-1 text-left">
+                        {generatingThumbnails ? "Generating…" : "Generate thumbnails"}
+                      </span>
+                    </button>
+                  )}
+                </MenuItem>
+              )}
+            </>
+          )}
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <GeneratePreviewsButton hasMissingPreviews={ hasMissingPreviews } />
-        <GenerateThumbnailsButton hasMissingThumbnails={ hasMissingThumbnails } />
-        {SHOW_NOTIFICATIONS && (
-          <>
-            <PushNotificationManager />
-            <div className="w-px h-6 bg-border" />
-          </>
-        )}
-        <ThemeToggle iconClassName="h-4" />
-      </div>
-    </nav>
+          <Divider />
+          <SectionLabel>Theme</SectionLabel>
+          {themeOptions.map( ( {
+            value, label, Icon
+          } ) => (
+            <MenuItem key={ value }>
+              {( {
+                focus
+              } ) => (
+                <button
+                  type="button"
+                  onClick={ () => setTheme( value ) }
+                  className={ clsx(
+                    itemClass,
+                    focus && "bg-hover"
+                  ) }
+                >
+                  <Icon className="h-4 w-4 text-foreground/70" />
+                  <span className="flex-1 text-left">{label}</span>
+                  {mounted && theme === value && (
+                    <Check className="h-4 w-4 text-foreground" />
+                  )}
+                </button>
+              )}
+            </MenuItem>
+          ) )}
+
+          {SHOW_NOTIFICATIONS && pushSupported && (
+            <>
+              <Divider />
+              <SectionLabel>Notifications</SectionLabel>
+              <MenuItem>
+                {( {
+                  focus
+                } ) => (
+                  <button
+                    type="button"
+                    onClick={ pushSubscription ? unsubscribeFromPush : subscribeToPush }
+                    disabled={ pushLoading }
+                    className={ clsx(
+                      itemClass,
+                      focus && "bg-hover"
+                    ) }
+                  >
+                    {pushSubscription ? (
+                      <Bell className="h-4 w-4 text-foreground/70" />
+                    ) : (
+                      <BellOff className="h-4 w-4 text-foreground/70" />
+                    )}
+                    <span className="flex-1 text-left">
+                      {pushSubscription ? "Disable notifications" : "Enable notifications"}
+                    </span>
+                  </button>
+                )}
+              </MenuItem>
+            </>
+          )}
+        </MenuItems>
+      </Menu>
+    </div>
   );
 }
 
