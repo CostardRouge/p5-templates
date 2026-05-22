@@ -324,18 +324,6 @@
     "ctime": "2026-04-27T16:15:48.300Z"
   },
   {
-    "name": "text-animated-points",
-    "engine": "p5",
-    "category": "text",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.370Z",
-    "ctime": "2026-04-27T16:15:48.300Z"
-  },
-  {
     "name": "text-animation-typein-typeout",
     "engine": "p5",
     "category": "text",
@@ -521,7 +509,7 @@
     "category": null,
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "hasPreview": true,
+    "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
     "mtime": "2026-05-20T23:14:13.443Z",
@@ -586,30 +574,6 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-05-21T00:35:57.058Z",
     "ctime": "2026-04-27T16:15:48.296Z"
-  },
-  {
-    "name": "photo-zoom-point",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T00:35:57.059Z",
-    "ctime": "2026-04-27T16:15:48.298Z"
-  },
-  {
-    "name": "interaction-test",
-    "engine": "p5",
-    "category": "kinetic",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": true,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T20:38:08.885Z",
-    "ctime": "2026-05-05T01:46:31.353Z"
   },
   {
     "name": "photo-exif",
@@ -766,5 +730,53 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-05-22T00:51:03.494Z",
     "ctime": "2026-04-27T16:15:48.283Z"
+  },
+  {
+    "name": "interaction-test",
+    "engine": "p5",
+    "category": "kinetic",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-22T12:02:43.295Z",
+    "ctime": "2026-05-05T01:46:31.353Z"
+  },
+  {
+    "name": "photo-zoom-point",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-22T12:02:43.296Z",
+    "ctime": "2026-04-27T16:15:48.298Z"
+  },
+  {
+    "name": "text-animated-points",
+    "engine": "p5",
+    "category": "text",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-22T23:08:42.894Z",
+    "ctime": "2026-04-27T16:15:48.300Z"
+  },
+  {
+    "name": "text-dice",
+    "engine": "p5",
+    "category": "text",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-23T00:00:00.000Z",
+    "ctime": "2026-05-23T00:00:00.000Z"
   }
 ]
