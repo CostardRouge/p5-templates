@@ -38,12 +38,11 @@
 
 ## 🧩 Template Engine
 
-- [ ] **Generic template engine handler** — shared abstract layer (location, screenshot, recorder, options, preview, job) that all engine types implement; common Pause / Stop / Record controls delegated to the active engine
-- [ ] **Meta to enable / disable a sketch** — boolean `enabled` field in template metadata; disabled sketches hidden from picker and cannot be recorded
+- [x] **Generic template engine handler** — shared abstract layer (location, screenshot, recorder, options, preview, job) that all engine types implement; common Pause / Stop / Record controls delegated to the active engine
+- [x] **Meta to enable / disable a sketch** — boolean `enabled` field in template metadata; disabled sketches hidden from picker and cannot be recorded
 - [ ] **Migrate old sketches** — audit legacy sketch files (pre-refactor, `canvasdefault0` refs, old option schemas) and port them to the current template format
 - [ ] **Enhance current sketch settings** — better grouping, collapsible sections, field tooltips, validation feedback (umbrella — file sub-tasks per specific UI issue)
 - [ ] **Component split** — identify remaining large components (>300 lines), split following the TemplateOptions pattern (hooks + small UI); priority: `CaptureActions`, `SketchSettings`
-- [ ] **Ultracite / strict linting** — integrate Ultracite or equivalent strict ESLint/Biome config; run in CI
 - [ ] **Unit tests** — cover form utilities, slide management logic, recording step calculations, thumbnail utils, and API route handlers; start with pure functions then hooks
 
 ---

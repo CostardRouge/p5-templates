@@ -24,7 +24,7 @@ import {
 // one full loop fits into the captured frame budget regardless of the sketch's
 // native duration.
 const PREVIEW_FPS = 20;
-const PREVIEW_SECS = 3;
+const PREVIEW_SECS = 9;
 const TOTAL_FRAMES = PREVIEW_FPS * PREVIEW_SECS;
 const PREVIEW_SIZE = {
   width: 360,
