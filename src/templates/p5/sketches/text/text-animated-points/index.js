@@ -1,7 +1,6 @@
 import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
 import colors from "@/p5/utils/colors.js";
-import mappers from "@/p5/utils/mappers.js";
 import easing from "@/p5/utils/easing.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
@@ -36,17 +35,129 @@ const getBackgroundColor = () =>
     225
   ];
 
+const getEasing = (
+  name, fallback
+) =>
+  easing[ name ] ?? easing[ fallback ] ?? easing.linear;
+
+const getPalette = ( name ) =>
+  colors[ name ] ?? colors.rainbow;
+
+// Split a flat point list into subcontours based on distance jumps.
+// Threshold is relative to the canvas's larger dimension.
+const splitContours = (
+  points, relativeThreshold, canvasSize
+) => {
+  if ( points.length === 0 ) {
+    return [];
+  }
+
+  const breakDistance = relativeThreshold * canvasSize;
+  const contours = [];
+  let current = [
+    points[ 0 ]
+  ];
+
+  for ( let i = 1; i < points.length; i++ ) {
+    const previous = points[ i - 1 ];
+    const point = points[ i ];
+    const dx = point.x - previous.x;
+    const dy = point.y - previous.y;
+    const distance = Math.sqrt( dx * dx + dy * dy );
+
+    if ( distance > breakDistance ) {
+      contours.push( current );
+      current = [];
+    }
+    current.push( point );
+  }
+
+  if ( current.length > 0 ) {
+    contours.push( current );
+  }
+
+  return contours;
+};
+
 sketch.draw( () => {
   const p = getP5();
+  const graphics = sketchState.shape.graphics;
 
   p.background( ...getBackgroundColor() );
 
-  const textToWrite = options.sketch?.shape?.text ?? "x";
-  const fontName = options.sketch?.shape?.font ?? "martian";
+  const shape = options.sketch?.shape ?? {};
+  const render = options.sketch?.render ?? {};
+  const strokeCfg = options.sketch?.stroke ?? {};
+  const displacement = options.sketch?.displacement ?? {};
+  const rotation = options.sketch?.rotation ?? {};
+  const color = options.sketch?.color ?? {};
 
-  const size = options.sketch?.shape?.size * p.width ?? p.width;
-  const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
-  const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
+  const textToWrite = shape.text ?? "x";
+  const fontName = shape.font ?? "martian";
+  const size = ( shape.size ?? 1 ) * p.width;
+  const sampleFactor = shape.sampleFactor ?? 0.1;
+  const simplifyThreshold = shape.simplifyThreshold ?? 0;
+  const closeContours = shape.closeContours ?? false;
+  const contourBreakThreshold = shape.contourBreakThreshold ?? 0.05;
+
+  const renderMode = render.mode ?? "lines";
+  const skipFactor = Math.max(
+    1,
+    Math.floor( render.skipFactor ?? 1 )
+  );
+  const pointSize = render.pointSize ?? 6;
+  const blendModeName = render.blendMode ?? "BLEND";
+
+  const strokeWeightMin = strokeCfg.weightMin ?? 5;
+  const strokeWeightMax = strokeCfg.weightMax ?? strokeWeightMin;
+  const strokeWeightEasingFn = getEasing(
+    strokeCfg.weightEasing,
+    "linear"
+  );
+  const pulseSpeed = strokeCfg.pulseSpeed ?? 1;
+
+  const displacementEnabled = displacement.enabled ?? false;
+  const displacementAmount = ( displacement.amount ?? 0 ) * p.width;
+  const displacementNoiseScale = displacement.noiseScale ?? 2;
+  const displacementAnimSpeed = displacement.animSpeed ?? 1;
+
+  const rotationEnabled = rotation.enabled ?? false;
+  const rotationAngleMax = rotation.angleMax ?? p.TAU;
+  const rotationEasingFn = getEasing(
+    rotation.easing,
+    "easeInOutExpo"
+  );
+
+  const fillAlphaStart = color.fillAlphaStart ?? 240;
+  const fillAlphaEnd = color.fillAlphaEnd ?? 0;
+  const strokeAlpha = color.strokeAlpha ?? 200;
+  const hueMultiplier = color.hueMultiplier ?? 2;
+  const opacityFactor = color.opacityFactor ?? 1.5;
+  const hueOffset = color.hueOffset ?? 0;
+  const hueAnimSpeed = color.hueAnimSpeed ?? 1;
+  const hueNoiseScale = color.hueNoiseScale ?? 1;
+  const fillEasingFn = getEasing(
+    color.fillEasing,
+    "easeInOutElastic"
+  );
+  const paletteFn = getPalette( color.palette );
+
+  // Animation-driven values shared across all points.
+  const pulseProgress = strokeWeightEasingFn( ( Math.sin( animation.angle * pulseSpeed ) + 1 ) / 2 );
+  const animatedStrokeWeight = p.lerp(
+    strokeWeightMin,
+    strokeWeightMax,
+    pulseProgress
+  );
+
+  const fillAlpha = animation.ease( {
+    values: [
+      fillAlphaEnd,
+      fillAlphaStart
+    ],
+    currentTime: animation.progression,
+    easingFn: fillEasingFn
+  } );
 
   const textPoints = string.getTextPoints( {
     text: textToWrite,
@@ -60,156 +171,206 @@ sketch.draw( () => {
     simplifyThreshold
   } );
 
-  textPoints.forEach( (
-    position, index
-  ) => {
-    const nextPosition = textPoints[ index + 1 ];
+  const subsampledPoints = skipFactor > 1
+    ? textPoints.filter( (
+      _, index
+    ) => index % skipFactor === 0 )
+    : textPoints;
 
-    if ( !nextPosition ) {
+  const canvasSize = Math.max(
+    p.width,
+    p.height
+  );
+
+  const contours = splitContours(
+    subsampledPoints,
+    contourBreakThreshold,
+    canvasSize
+  );
+
+  graphics.push();
+  graphics.blendMode( graphics[ blendModeName ] ?? graphics.BLEND );
+
+  if ( rotationEnabled ) {
+    const rotationValue = animation.ease( {
+      values: [
+        0,
+        rotationAngleMax
+      ],
+      currentTime: animation.progression,
+      easingFn: rotationEasingFn
+    } );
+
+    graphics.rotateX( rotationValue * ( rotation.xMultiplier ?? 0 ) );
+    graphics.rotateY( rotationValue * ( rotation.yMultiplier ?? 0 ) );
+    graphics.rotateZ( rotationValue * ( rotation.zMultiplier ?? 0 ) );
+  }
+
+  graphics.strokeWeight( animatedStrokeWeight );
+
+  const drawPoints = renderMode === "points" || renderMode === "lines-and-points";
+  const drawLines = renderMode === "lines" || renderMode === "lines-and-points";
+
+  if ( drawPoints ) {
+    graphics.noStroke();
+  }
+
+  contours.forEach( ( contour ) => {
+    const pointCount = contour.length;
+
+    if ( pointCount === 0 ) {
       return;
     }
 
-    sketchState.shape.graphics.push();
-    sketchState.shape.graphics.strokeWeight( 5 );
-    // sketchState.shape.graphics.translate( position );
-
-    const fillAlphaStart = options.sketch?.color?.fillAlphaStart ?? 240;
-    const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
-    const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
-
-    const rotationMax = p.TAU;
-
-    const rotation = animation.ease( {
-      values: [
-        p.createVector(
-          0,
-          0
-        ),
-        p.createVector(
-          0,
-          rotationMax
-        ),
-        p.createVector(
-          0,
-          rotationMax
-        ),
-        p.createVector(
-          rotationMax,
-          0
-        )
-      ],
-      currentTime: animation.progression,
-      easingFn: easing.easeInOutExpo,
-      lerpFn: mappers.lerpVector
-    } );
-
-    const {
-      x: rX, y: rY, z: rZ
-    } = rotation;
-
-    // sketchState.shape.graphics.rotateX( rX );
-    // sketchState.shape.graphics.rotateY( rY );
-    // sketchState.shape.graphics.rotateZ( rZ );
-
-    const fillAlpha = animation.ease( {
-      values: [
-        fillAlphaEnd,
-        fillAlphaStart
-      ],
-      currentTime: animation.progression,
-      easingFn: easing.easeInOutElastic
-    } );
-
-    const hue = sketchState.shape.graphics.noise(
-      position.x / p.width +
-        +sketchState.shape.graphics.map(
-          Math.sin( animation.angle ),
-          -1,
-          1,
-          0,
-          1
-        ),
-      position.y / p.height +
-        +sketchState.shape.graphics.map(
-          Math.cos( animation.angle ),
-          -1,
-          1,
-          0,
-          1
-        )
-    );
-    const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 2;
-    const opacityFactor = options.sketch?.color?.opacityFactor ?? 1.5;
-
-    const tint = colors.rainbow( {
-      hueOffset: animation.circularProgression,
-      hueIndex:
-        sketchState.shape.graphics.map(
-          hue,
-          0,
-          1,
-          -p.PI,
-          p.PI
-        ) * hueMultiplier,
-      opacityFactor
-    } );
-
-    const {
-      levels: [
-        red,
-        green,
-        blue
+    const drawnPoints = closeContours
+      ? [
+        ...contour,
+        contour[ 0 ]
       ]
-    } = tint;
+      : contour;
 
-    sketchState.shape.graphics.fill(
-      red,
-      green,
-      blue,
-      fillAlpha
-    );
-    sketchState.shape.graphics.stroke(
-      red,
-      green,
-      blue,
-      strokeAlpha
-    );
+    for ( let i = 0; i < drawnPoints.length; i++ ) {
+      const position = drawnPoints[ i ];
+      const nextPosition = drawnPoints[ i + 1 ];
 
-    sketchState.shape.graphics.line(
-      position.x,
-      position.y,
-      nextPosition.x,
-      nextPosition.y
-    );
+      const displacedPosition = displacementEnabled
+        ? applyDisplacement(
+          position,
+          displacementAmount,
+          displacementNoiseScale,
+          displacementAnimSpeed,
+          graphics,
+          p
+        )
+        : position;
 
-    // sketchState.shape.graphics.line(
-    //   position.x,
-    //   position.y,
-    //   nextPosition.x,
-    //   nextPosition.y
-    // );
+      const hue = graphics.noise(
+        ( displacedPosition.x / p.width ) * hueNoiseScale +
+          graphics.map(
+            Math.sin( animation.angle * hueAnimSpeed ),
+            -1,
+            1,
+            0,
+            1
+          ),
+        ( displacedPosition.y / p.height ) * hueNoiseScale +
+          graphics.map(
+            Math.cos( animation.angle * hueAnimSpeed ),
+            -1,
+            1,
+            0,
+            1
+          )
+      );
 
-    // sketchState.shape.graphics.translate(
-    //   position.x,
-    //   position.y,
-    // );
+      const tint = paletteFn( {
+        hueOffset: animation.circularProgression + hueOffset,
+        hueIndex:
+          graphics.map(
+            hue,
+            0,
+            1,
+            -p.PI,
+            p.PI
+          ) * hueMultiplier,
+        opacityFactor
+      } );
 
-    // sketchState.shape.graphics.rotate( p.radians( position.z ) );
-    //
-    // sketchState.shape.graphics.line(
-    //   0,
-    //   0,
-    //   100,
-    //   0
-    // );
+      const {
+        levels: [
+          red,
+          green,
+          blue
+        ]
+      } = tint;
 
-    sketchState.shape.graphics.pop();
+      if ( drawLines && nextPosition ) {
+        const displacedNext = displacementEnabled
+          ? applyDisplacement(
+            nextPosition,
+            displacementAmount,
+            displacementNoiseScale,
+            displacementAnimSpeed,
+            graphics,
+            p
+          )
+          : nextPosition;
+
+        graphics.stroke(
+          red,
+          green,
+          blue,
+          strokeAlpha
+        );
+        graphics.fill(
+          red,
+          green,
+          blue,
+          fillAlpha
+        );
+        graphics.line(
+          displacedPosition.x,
+          displacedPosition.y,
+          displacedNext.x,
+          displacedNext.y
+        );
+      }
+
+      if ( drawPoints ) {
+        graphics.fill(
+          red,
+          green,
+          blue,
+          fillAlpha
+        );
+        graphics.ellipse(
+          displacedPosition.x,
+          displacedPosition.y,
+          pointSize,
+          pointSize
+        );
+      }
+    }
   } );
 
+  graphics.pop();
+
   p.image(
-    sketchState.shape.graphics,
+    graphics,
     0,
     0
   );
-  sketchState.shape.graphics.clear();
+  graphics.clear();
 } );
+
+const applyDisplacement = (
+  position, amount, noiseScale, animSpeed, graphics, p
+) => {
+  const time = animation.angle * animSpeed;
+  const noiseX = graphics.noise(
+    ( position.x / p.width ) * noiseScale + Math.cos( time ),
+    ( position.y / p.height ) * noiseScale + Math.sin( time )
+  );
+  const noiseY = graphics.noise(
+    ( position.x / p.width ) * noiseScale + Math.sin( time ) + 100,
+    ( position.y / p.height ) * noiseScale + Math.cos( time ) + 100
+  );
+
+  return {
+    x: position.x + graphics.map(
+      noiseX,
+      0,
+      1,
+      -amount,
+      amount
+    ),
+    y: position.y + graphics.map(
+      noiseY,
+      0,
+      1,
+      -amount,
+      amount
+    ),
+    z: position.z ?? 0
+  };
+};
