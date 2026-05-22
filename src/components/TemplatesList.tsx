@@ -560,14 +560,25 @@ function TemplateCard( {
       }` }
     >
       <div
-        className="w-12 sm:w-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden border border-border"
+        className="w-12 sm:w-16 aspect-[4/5] flex-shrink-0 relative rounded-lg sm:rounded-xl overflow-hidden border border-border"
       >
-        <Thumbnail
-          src={ thumbnail }
-          alt={ name }
-          eager={ eager }
-          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-        />
+        { preview ? (
+          <AnimatedPreview
+            previewUrl={ preview }
+            thumbnailUrl={ thumbnail }
+            name={ name }
+            eager={ eager }
+            animationsEnabled={ animationsEnabled }
+            imgClassName="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <Thumbnail
+            src={ thumbnail }
+            alt={ name }
+            eager={ eager }
+            className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+        ) }
       </div>
 
       <div className="flex-grow min-w-0 flex items-center gap-2">
