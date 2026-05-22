@@ -247,7 +247,7 @@ export default function VideoPreviewModal( {
 
                 {/* Open Recording Link */}
                 <a
-                  href={ `templates/${ media.template }?id=${ jobId }` }
+                  href={ `${ media.template }?id=${ jobId }` }
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
                   title="Open recording page"
