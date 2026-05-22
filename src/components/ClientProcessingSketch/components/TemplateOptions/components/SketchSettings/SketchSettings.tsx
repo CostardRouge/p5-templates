@@ -11,6 +11,8 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import ResetSettingsButton from "@/components/ResetSettingsButton";
 import SaveDefaultsButton from "./SaveDefaultsButton";
+import GenerateThumbnailButton from "./GenerateThumbnailButton";
+import GeneratePreviewButton from "./GeneratePreviewButton";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
@@ -103,6 +105,10 @@ export default function SketchSettings( {
             />
 
             <SaveDefaultsButton />
+
+            <GenerateThumbnailButton />
+
+            <GeneratePreviewButton />
           </div>
         </div>
       ) }
