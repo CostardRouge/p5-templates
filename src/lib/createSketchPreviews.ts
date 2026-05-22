@@ -5,9 +5,6 @@ import {
 } from "@/utils/captureFramesServerSide";
 import encodePreviewFromFrames from "@/lib/encodePreviewFromFrames";
 import {
-  getJSONSketchOptions
-} from "@/utils/getSketchOptions";
-import {
   ASSETS_DIRECTORY
 } from "@/constants";
 import fileExists from "@/utils/fileExists";
@@ -19,14 +16,13 @@ import {
   Browser, Page
 } from "playwright";
 
-// Preview output: all captured frames are compressed into this duration
-const PREVIEW_TARGET_SECS = 2.5;
-const PREVIEW_OUTPUT_FPS = 24;
+// Preview capture + output: fixed rate so the full animation loop fits in 3 s.
+// 20 fps × 3 s = 60 frames — enough for most sketch loops to complete one full cycle.
+const PREVIEW_TARGET_SECS = 3;
+const PREVIEW_OUTPUT_FPS = 20;
 
-// Fallbacks for sketches without options.json
-// 30 fps × 3 s = 90 frames ≈ 4.5 s capture time per sketch
-const DEFAULT_CAPTURE_FPS = PREVIEW_OUTPUT_FPS;
-const DEFAULT_CAPTURE_DURATION_SECS = PREVIEW_TARGET_SECS;
+const CAPTURE_FPS = PREVIEW_OUTPUT_FPS;
+const CAPTURE_DURATION_SECS = PREVIEW_TARGET_SECS;
 
 async function createSketchPreviews() {
   const state: { browser?: Browser;
@@ -75,19 +71,10 @@ async function createSketchPreviews() {
         continue;
       }
 
-      // Determine animation parameters from options.json; fall back to conservative defaults.
-      const jsonOptions = await getJSONSketchOptions(
-        name,
-        engine
-      );
-      const captureFps =
-        ( jsonOptions?.animation as any )?.framerate ?? DEFAULT_CAPTURE_FPS;
-      const captureDuration =
-        ( jsonOptions?.animation as any )?.duration ?? DEFAULT_CAPTURE_DURATION_SECS;
-      const totalFrames = Math.round( captureFps * captureDuration );
+      const totalFrames = Math.round( CAPTURE_FPS * CAPTURE_DURATION_SECS );
 
       console.log( `🎬 ${ name } — capturing ${ totalFrames } frames` +
-        ` (${ captureFps }fps × ${ captureDuration }s → ${ PREVIEW_TARGET_SECS }s preview)` );
+        ` (${ CAPTURE_FPS }fps × ${ CAPTURE_DURATION_SECS }s preview)` );
 
       const tmpDir = await fs.mkdtemp( path.join(
         os.tmpdir(),
