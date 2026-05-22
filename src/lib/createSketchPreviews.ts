@@ -5,6 +5,9 @@ import {
 } from "@/utils/captureFramesServerSide";
 import encodePreviewFromFrames from "@/lib/encodePreviewFromFrames";
 import {
+  getJSONSketchOptions
+} from "@/utils/getSketchOptions";
+import {
   ASSETS_DIRECTORY
 } from "@/constants";
 import fileExists from "@/utils/fileExists";
@@ -16,13 +19,16 @@ import {
   Browser, Page
 } from "playwright";
 
-// Preview capture + output: fixed rate so the full animation loop fits in 3 s.
-// 20 fps × 3 s = 60 frames — enough for most sketch loops to complete one full cycle.
+// Output video: 3 s at 20 fps. All captured frames are spread evenly into this window.
 const PREVIEW_TARGET_SECS = 3;
 const PREVIEW_OUTPUT_FPS = 20;
 
-const CAPTURE_FPS = PREVIEW_OUTPUT_FPS;
-const CAPTURE_DURATION_SECS = PREVIEW_TARGET_SECS;
+// Cap capture at this many seconds of animation to avoid recording overly long loops.
+const CAPTURE_MAX_SECS = 3;
+
+// Fallbacks for sketches without options.json
+const DEFAULT_SKETCH_FPS = 60;
+const DEFAULT_SKETCH_DURATION = 3;
 
 async function createSketchPreviews() {
   const state: { browser?: Browser;
@@ -71,10 +77,18 @@ async function createSketchPreviews() {
         continue;
       }
 
-      const totalFrames = Math.round( CAPTURE_FPS * CAPTURE_DURATION_SECS );
+      // Read the sketch's own framerate and duration so time.js advances correctly.
+      // time.js uses animation.framerate (not our capture rate) to step elapsed time,
+      // so we must capture framerate × duration frames to cover one full loop.
+      // Cap at CAPTURE_MAX_SECS to keep capture times reasonable.
+      const jsonOptions = await getJSONSketchOptions( name, engine );
+      const sketchFps = ( jsonOptions?.animation as any )?.framerate ?? DEFAULT_SKETCH_FPS;
+      const sketchDuration = ( jsonOptions?.animation as any )?.duration ?? DEFAULT_SKETCH_DURATION;
+      const captureSecs = Math.min( sketchDuration, CAPTURE_MAX_SECS );
+      const totalFrames = Math.round( sketchFps * captureSecs );
 
       console.log( `🎬 ${ name } — capturing ${ totalFrames } frames` +
-        ` (${ CAPTURE_FPS }fps × ${ CAPTURE_DURATION_SECS }s preview)` );
+        ` (${ sketchFps }fps × ${ captureSecs }s → ${ PREVIEW_TARGET_SECS }s preview)` );
 
       const tmpDir = await fs.mkdtemp( path.join(
         os.tmpdir(),
