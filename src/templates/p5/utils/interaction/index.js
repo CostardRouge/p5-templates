@@ -59,6 +59,7 @@ const _gyro = {
 
 // Listeners
 let _gyroListener = null;
+let _gyroPermissionListener = null; // one-shot iOS permission tap handler
 let _pointerMoveListener = null;
 let _touchListeners = null;
 
@@ -72,6 +73,8 @@ let _audioInitialized = false;
 let _audioContext = null;
 let _audioAnalyser = null;
 let _audioFreqData = null;
+let _audioStream = null;   // MediaStream – kept so tracks can be stopped
+let _audioWasEnabled = false; // detect enabled→disabled transitions
 
 // ── Coordinate conversion ──────────────────────────────────────────────────
 
@@ -175,7 +178,7 @@ async function _initAudio( opts ) {
   _audioInitialized = true;
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia( {
+    _audioStream = await navigator.mediaDevices.getUserMedia( {
       audio: true,
       video: false
     } );
@@ -186,12 +189,13 @@ async function _initAudio( opts ) {
     _audioAnalyser.fftSize = opts.audio?.fftSize ?? 1024;
     _audioAnalyser.smoothingTimeConstant = opts.audio?.smoothing ?? 0.8;
 
-    const source = _audioContext.createMediaStreamSource( stream );
+    const source = _audioContext.createMediaStreamSource( _audioStream );
 
     source.connect( _audioAnalyser );
     _audioFreqData = new Uint8Array( _audioAnalyser.frequencyBinCount );
   } catch {
     // Microphone permission denied or not available
+    _audioStream = null;
   }
 }
 
@@ -227,12 +231,22 @@ export async function initInteraction( opts = {} ) {
   _noiseOffset = opts.perlinNoise?.seed ?? 0;
 
   // ── Gyroscope ────────────────────────────────────────────────────────────
-  if ( _gyroListener && typeof window !== "undefined" ) {
-    window.removeEventListener(
-      "deviceorientation",
-      _gyroListener
-    );
-    _gyroListener = null;
+  if ( typeof window !== "undefined" ) {
+    if ( _gyroListener ) {
+      window.removeEventListener(
+        "deviceorientation",
+        _gyroListener
+      );
+      _gyroListener = null;
+    }
+
+    if ( _gyroPermissionListener ) {
+      document.removeEventListener(
+        "pointerdown",
+        _gyroPermissionListener
+      );
+      _gyroPermissionListener = null;
+    }
   }
 
   if ( opts.gyroscope?.enabled && typeof window !== "undefined" ) {
@@ -240,10 +254,45 @@ export async function initInteraction( opts = {} ) {
       _gyro.beta = e.beta ?? 0;
       _gyro.gamma = e.gamma ?? 0;
     };
-    window.addEventListener(
-      "deviceorientation",
-      _gyroListener
-    );
+
+    // iOS 13+ requires DeviceOrientationEvent.requestPermission() called from
+    // a user-gesture handler.  On other platforms the listener works directly.
+    const needsPermission =
+      typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function";
+
+    if ( needsPermission ) {
+      _gyroPermissionListener = async() => {
+        _gyroPermissionListener = null;
+
+        try {
+          const result = await DeviceOrientationEvent.requestPermission();
+
+          if ( result === "granted" ) {
+            window.addEventListener(
+              "deviceorientation",
+              _gyroListener
+            );
+          }
+        } catch {
+          // Permission denied or API unavailable
+        }
+      };
+
+      // Fire once on the first tap/click anywhere on the page
+      document.addEventListener(
+        "pointerdown",
+        _gyroPermissionListener,
+        {
+          once: true
+        }
+      );
+    } else {
+      window.addEventListener(
+        "deviceorientation",
+        _gyroListener
+      );
+    }
   }
 
   // ── Raw mouse / touch tracking ───────────────────────────────────────────
@@ -335,6 +384,11 @@ export async function initInteraction( opts = {} ) {
   _midiNotes.clear();
 
   // ── Audio reset (lazy init triggered by _collectAudio) ───────────────────
+  if ( _audioStream ) {
+    _audioStream.getTracks().forEach( ( t ) => t.stop() );
+    _audioStream = null;
+  }
+
   if ( _audioContext ) {
     _audioContext.close().catch( () => {} );
     _audioContext = null;
@@ -343,6 +397,7 @@ export async function initInteraction( opts = {} ) {
   }
 
   _audioInitialized = false;
+  _audioWasEnabled = false;
 
   // ── MediaPipe ────────────────────────────────────────────────────────────
   if ( tasks.length > 0 ) {
@@ -375,6 +430,14 @@ export function disposeInteraction() {
       _gyroListener
     );
     _gyroListener = null;
+  }
+
+  if ( _gyroPermissionListener ) {
+    document.removeEventListener(
+      "pointerdown",
+      _gyroPermissionListener
+    );
+    _gyroPermissionListener = null;
   }
 
   // Mouse
@@ -419,7 +482,12 @@ export function disposeInteraction() {
   _midiInitialized = false;
   _midiNotes.clear();
 
-  // Audio
+  // Audio — stop mic tracks so the browser microphone indicator clears
+  if ( _audioStream ) {
+    _audioStream.getTracks().forEach( ( t ) => t.stop() );
+    _audioStream = null;
+  }
+
   if ( _audioContext ) {
     _audioContext.close().catch( () => {} );
     _audioContext = null;
@@ -428,6 +496,7 @@ export function disposeInteraction() {
   }
 
   _audioInitialized = false;
+  _audioWasEnabled = false;
 }
 
 /**
@@ -1065,10 +1134,33 @@ function _collectAudio(
   opts, p, out
 ) {
   const audio = opts.audio;
+  const enabled = !!audio?.enabled;
 
-  if ( !audio?.enabled ) {
+  if ( !enabled ) {
+    // Stop mic tracks immediately when audio is disabled so the browser
+    // microphone indicator clears and no audio engine noise lingers.
+    if ( _audioWasEnabled ) {
+      if ( _audioStream ) {
+        _audioStream.getTracks().forEach( ( t ) => t.stop() );
+        _audioStream = null;
+      }
+
+      if ( _audioContext ) {
+        _audioContext.close().catch( () => {} );
+        _audioContext = null;
+        _audioAnalyser = null;
+        _audioFreqData = null;
+      }
+
+      _audioInitialized = false;
+    }
+
+    _audioWasEnabled = false;
+
     return;
   }
+
+  _audioWasEnabled = true;
 
   // Trigger lazy mic request on first call
   if ( !_audioInitialized ) {

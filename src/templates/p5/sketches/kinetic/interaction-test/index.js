@@ -58,8 +58,14 @@ sketch.draw( () => {
 
   const pointers = getPointersDebug( interaction );
 
+  // viz.enabled gates ALL drawing overlays (default: true).
+  // viz.showLines is an independent sub-toggle just for the crosshair lines.
+  const showAll = viz.enabled !== false;
+
   // ── Draw crosshair lines ───────────────────────────────────────────────
-  if ( viz.enabled !== false && viz.showLines ) {
+  // showLines defaults to true; unchecking it hides crosshairs regardless
+  // of the master viz.enabled toggle.
+  if ( showAll && viz.showLines !== false ) {
     const w = viz.linesStrokeWeight ?? 1;
 
     pointers.forEach( ( {
@@ -82,39 +88,41 @@ sketch.draw( () => {
   }
 
   // ── Draw pointer circles ───────────────────────────────────────────────
-  pointers.forEach( ( {
-    vector, source
-  } ) => {
-    const col = SOURCE_COLORS[ source ] ?? [
-      200,
-      200,
-      200
-    ];
-    const x = vector.x;
-    const y = vector.y;
+  if ( showAll ) {
+    pointers.forEach( ( {
+      vector, source
+    } ) => {
+      const col = SOURCE_COLORS[ source ] ?? [
+        200,
+        200,
+        200
+      ];
+      const x = vector.x;
+      const y = vector.y;
 
-    // Outer ring
-    p.noFill();
-    p.stroke(
-      ...col,
-      200
-    );
-    p.strokeWeight( 1.5 );
-    p.circle(
-      x,
-      y,
-      56
-    );
+      // Outer ring
+      p.noFill();
+      p.stroke(
+        ...col,
+        200
+      );
+      p.strokeWeight( 1.5 );
+      p.circle(
+        x,
+        y,
+        56
+      );
 
-    // Center dot
-    p.noStroke();
-    p.fill( ...col );
-    p.circle(
-      x,
-      y,
-      12
-    );
-  } );
+      // Center dot
+      p.noStroke();
+      p.fill( ...col );
+      p.circle(
+        x,
+        y,
+        12
+      );
+    } );
+  }
 
   // ── Webcam preview (top-right) ─────────────────────────────────────────
   const vision = interaction.vision;

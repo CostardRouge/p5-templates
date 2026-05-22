@@ -578,7 +578,7 @@ export const interactionFormConfiguration = {
       fields: {
         enabled: {
           component: "checkbox",
-          label: "Enabled"
+          label: "Show all overlays"
         },
         showImages: {
           component: "checkbox",
