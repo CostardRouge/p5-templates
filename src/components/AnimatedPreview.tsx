@@ -165,6 +165,12 @@ export default function AnimatedPreview( {
       <img
         alt={ name }
         src={ thumbnailUrl }
+        srcSet={ `${ thumbnailUrl } 1x, ${ thumbnailUrl.replace(
+          /\.webp$/,
+          "-2x.webp"
+        ) } 2x` }
+        width={ 360 }
+        height={ 450 }
         loading={ eager ? "eager" : "lazy" }
         fetchPriority={ eager ? "high" : undefined }
         decoding={ eager ? "sync" : "async" }

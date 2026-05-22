@@ -24,42 +24,6 @@
     "ctime": "2026-04-27T16:15:48.281Z"
   },
   {
-    "name": "hand-tracking-v0-move",
-    "engine": "p5",
-    "category": "hand-capture",
-    "hasSketchForm": false,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.351Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
-  },
-  {
-    "name": "hand-tracking-v1-attract",
-    "engine": "p5",
-    "category": "hand-capture",
-    "hasSketchForm": false,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.351Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
-  },
-  {
-    "name": "hand-tracking-v2-repulse",
-    "engine": "p5",
-    "category": "hand-capture",
-    "hasSketchForm": false,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.352Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
-  },
-  {
     "name": "hand-tracking-v4-text",
     "engine": "p5",
     "category": "hand-capture",
@@ -70,18 +34,6 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.352Z",
     "ctime": "2026-04-27T16:15:48.283Z"
-  },
-  {
-    "name": "interaction-test",
-    "engine": "p5",
-    "category": "kinetic",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.353Z",
-    "ctime": "2026-05-05T01:46:31.353Z"
   },
   {
     "name": "kinetic-letters",
@@ -240,54 +192,6 @@
     "ctime": "2026-04-27T16:15:48.292Z"
   },
   {
-    "name": "photo-grid-with-blurry-photo-as-background",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.362Z",
-    "ctime": "2026-04-27T16:15:48.292Z"
-  },
-  {
-    "name": "photo-grid-with-photo-switch-overlay",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.362Z",
-    "ctime": "2026-04-27T16:15:48.293Z"
-  },
-  {
-    "name": "photo-grid",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.363Z",
-    "ctime": "2026-04-27T16:15:48.294Z"
-  },
-  {
-    "name": "photo-in-arc",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.363Z",
-    "ctime": "2026-04-27T16:15:48.294Z"
-  },
-  {
     "name": "photo-in-circle",
     "engine": "p5",
     "category": "photo",
@@ -406,18 +310,6 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-05-05T01:46:31.368Z",
     "ctime": "2026-04-27T16:15:48.299Z"
-  },
-  {
-    "name": "hello-world",
-    "engine": "p5",
-    "category": "text",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.369Z",
-    "ctime": "2026-04-27T16:15:48.300Z"
   },
   {
     "name": "text-morphing-depth",
@@ -672,30 +564,6 @@
     "ctime": "2026-05-20T03:48:13.974Z"
   },
   {
-    "name": "photo-exif",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T00:35:56.976Z",
-    "ctime": "2026-04-27T16:15:48.292Z"
-  },
-  {
-    "name": "photo-segmentation",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T00:35:56.976Z",
-    "ctime": "2026-04-27T16:15:48.295Z"
-  },
-  {
     "name": "hand-tracking-v3-restore",
     "engine": "p5",
     "category": "hand-capture",
@@ -744,6 +612,102 @@
     "ctime": "2026-04-27T16:15:48.298Z"
   },
   {
+    "name": "interaction-test",
+    "engine": "p5",
+    "category": "kinetic",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T20:38:08.885Z",
+    "ctime": "2026-05-05T01:46:31.353Z"
+  },
+  {
+    "name": "photo-exif",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T20:38:08.885Z",
+    "ctime": "2026-04-27T16:15:48.292Z"
+  },
+  {
+    "name": "photo-grid-with-blurry-photo-as-background",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T20:38:08.885Z",
+    "ctime": "2026-04-27T16:15:48.292Z"
+  },
+  {
+    "name": "photo-grid-with-photo-switch-overlay",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T20:38:08.885Z",
+    "ctime": "2026-04-27T16:15:48.293Z"
+  },
+  {
+    "name": "photo-grid",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T20:38:08.886Z",
+    "ctime": "2026-04-27T16:15:48.294Z"
+  },
+  {
+    "name": "photo-in-arc",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T20:38:08.886Z",
+    "ctime": "2026-04-27T16:15:48.294Z"
+  },
+  {
+    "name": "photo-segmentation",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T20:38:08.886Z",
+    "ctime": "2026-04-27T16:15:48.295Z"
+  },
+  {
+    "name": "hello-world",
+    "engine": "p5",
+    "category": "text",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T20:38:08.886Z",
+    "ctime": "2026-04-27T16:15:48.300Z"
+  },
+  {
     "name": "empty-sketch",
     "engine": "p5",
     "category": null,
@@ -752,7 +716,43 @@
     "hasPreview": true,
     "hiddenFromHome": true,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T18:22:16.666Z",
+    "mtime": "2026-05-21T23:59:51.502Z",
+    "ctime": "2026-04-27T16:15:48.282Z"
+  },
+  {
+    "name": "hand-tracking-v0-move",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": false,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T23:59:51.503Z",
+    "ctime": "2026-04-27T16:15:48.282Z"
+  },
+  {
+    "name": "hand-tracking-v1-attract",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": false,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T23:59:51.503Z",
+    "ctime": "2026-04-27T16:15:48.282Z"
+  },
+  {
+    "name": "hand-tracking-v2-repulse",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": false,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T23:59:51.503Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
@@ -764,7 +764,7 @@
     "hasPreview": true,
     "hiddenFromHome": true,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T18:22:16.666Z",
+    "mtime": "2026-05-21T23:59:51.503Z",
     "ctime": "2026-04-27T16:15:48.301Z"
   }
 ]

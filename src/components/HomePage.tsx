@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useEffect, useMemo, useRef, useState
-} from "react";
 import type {
   CSSProperties
+} from "react";
+import {
+  useEffect, useMemo, useRef, useState
 } from "react";
 import {
   ArrowUpRight,
@@ -435,22 +435,22 @@ export default function HomePage( {
                 >
                   <div className="absolute inset-0 rounded-md overflow-hidden border border-foreground/15 bg-background shadow-[0_30px_60px_-30px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]">
                     {/* scan line micro-interaction */}
-                    <div
-                      aria-hidden
-                      className="absolute inset-x-0 h-px bg-fuchsia-500/40 z-10 animate-scan-line pointer-events-none"
-                    />
+                    {/* <div*/}
+                    {/*  aria-hidden*/}
+                    {/*  className="absolute inset-x-0 h-px bg-fuchsia-500/40 z-10 animate-scan-line pointer-events-none"*/}
+                    {/* />*/}
                     <PreviewSurface template={ heroFront } eager />
                   </div>
                   {/* corner labels */}
                   <div className="absolute -top-3 left-2 right-2 flex justify-between items-end font-mono text-[10px] uppercase tracking-[0.16em] text-label">
-                    <span className="bg-background px-1">spec · 4:5</span>
-                    <span className="bg-background px-1 truncate max-w-[55%]">
+                    <span className="bg-background px-1 border">spec · 4:5</span>
+                    <span className="bg-background px-1 truncate max-w-[55%] border">
                       {heroFront.name}
                     </span>
                   </div>
                   <div className="absolute -bottom-3 left-2 right-2 flex justify-between items-baseline font-mono text-[10px] uppercase tracking-[0.16em] text-label">
-                    <span className="bg-background px-1">live · tap to open</span>
-                    <span className="bg-background px-1 flex items-center gap-1">
+                    <span className="bg-background px-1 border">live · tap to open</span>
+                    <span className="bg-background px-1 flex items-center gap-1 border">
                       <ArrowUpRight className="w-3 h-3" />
                     </span>
                   </div>
@@ -661,7 +661,7 @@ export default function HomePage( {
               </p>
 
               {/* Live demo: animated mini-sliders */}
-              <div className="absolute left-6 right-6 bottom-6 sm:left-8 sm:right-8 sm:bottom-8 space-y-3 font-mono text-[10px] uppercase tracking-[0.18em]">
+              <div className="mt-4 md:mt-0 md:absolute md:left-8 md:right-8 md:bottom-8 space-y-3 font-mono text-[10px] uppercase tracking-[0.18em]">
                 {[
                   {
                     k: "count",
@@ -944,8 +944,8 @@ export default function HomePage( {
                   <PreviewSurface template={ heroFront } />
                 </div>
                 <div className="absolute -top-3 left-2 right-2 flex justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-label">
-                  <span className="bg-background px-1">featured</span>
-                  <span className="bg-background px-1 truncate max-w-[55%]">
+                  <span className="bg-background px-1 border">featured</span>
+                  <span className="bg-background px-1 truncate max-w-[55%] border">
                     {heroFront.name}
                   </span>
                 </div>
