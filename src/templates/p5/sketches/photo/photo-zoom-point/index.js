@@ -38,6 +38,7 @@ const sketchState = {
  * Handles the canvas being inside a draggable/zoomable div.
  */
 function getInternalCanvasPoint( event ) {
+  const p = getP5();
   const canvasElement = sketch.engine?.getCanvasElement?.();
 
   if ( !canvasElement ) {
@@ -194,12 +195,15 @@ function displayPhoto( img ) {
     fill: options.sketch?.imageSettings?.fill ?? true,
     img,
     callback: (
-      x, y, w, h
+      cx, cy, w, h
     ) => {
-      // Store the image bounds relative to the UNZOOMED buffer
+      // marginImage passes the anchor point (center when center:true).
+      // Normalize to top-left so collision and UV math are consistent.
+      const isCenter = options.sketch?.imageSettings?.center ?? true;
+
       sketchState.photoRect = {
-        x,
-        y,
+        x: isCenter ? cx - w / 2 : cx,
+        y: isCenter ? cy - h / 2 : cy,
         w,
         h
       };
@@ -287,11 +291,6 @@ sketch.draw( () => {
     y: ty,
     scale: zoomScale
   };
-
-  console.log(
-    uvPoint,
-    options.sketch.point
-  );
 
   // 6. Apply & Draw
   p.push();
