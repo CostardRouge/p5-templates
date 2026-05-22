@@ -1,15 +1,10 @@
-import encodeVideoFromFrames from "@/utils/encodeVideoFromFrames";
 import createBrowserPage from "@/utils/createBrowserPage";
-import captureFirstFrame from "@/utils/captureFirstFrame";
-import {
-  captureFramesServerSide
-} from "@/utils/captureFramesServerSide";
 import {
   captureFramesWithStreaming
 } from "@/utils/captureFramesWithStreaming";
 import {
-  captureCanvasThumbnail
-} from "@/utils/captureCanvasThumbnail";
+  extractVideoThumbnail
+} from "@/utils/extractVideoThumbnail";
 
 import {
   updateJob
@@ -39,30 +34,6 @@ import {
   UPLOAD_STEPS
 } from "@/lib/progression/stepConfig";
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CONFIGURATION: Toggle between capture methods
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * USE_STREAMING_MODE - Toggle between disk-based and streaming capture
- *
- * false (default) - Disk-based capture:
- *   - Captures frames to disk, then encodes with FFmpeg
- *   - Stable and tested
- *   - Easy to debug (frames visible on disk)
- *   - Can extract thumbnail from first frame
- *
- * true - Streaming mode (experimental):
- *   - Streams frames directly to FFmpeg (no disk I/O)
- *   - Lower memory usage (~40% less)
- *   - Faster for long videos (~20% faster)
- *   - Thumbnail captured via screenshot
- *
- * To test streaming mode: Change this to true
- */
-const USE_STREAMING_MODE = process.env.USE_STREAMING_MODE ?? false;
-
-// ═══════════════════════════════════════════════════════════════════════════
 
 /**
  * Wait for the sketch canvas to be ready.
@@ -248,109 +219,29 @@ async function recordSingleSketch(
   );
   const thumbnailPath = path.join(
     temporaryDirectoryPath,
-    `thumbnail-${ jobId }.jpg`
+    `thumbnail-${ jobId }.webp`
   );
 
-  if ( USE_STREAMING_MODE ) {
-    // ─── Streaming mode: Direct to FFmpeg (no disk I/O) ───────────────────
-    await captureFramesWithStreaming( {
-      page,
-      totalFrames,
-      outputVideoPath,
-      framerate,
-      onProgress: async( percentage: number ) => {
-        await updateRecordingStepPercentage(
-          jobId,
-          buildRecordingStepPath( RECORDING_STEPS.CAPTURING_FRAMES.key ),
-          percentage
-        );
-      }
-    } );
+  await captureFramesWithStreaming( {
+    page,
+    totalFrames,
+    outputVideoPath,
+    framerate,
+    onProgress: async( percentage: number ) => {
+      await updateRecordingStepPercentage(
+        jobId,
+        buildRecordingStepPath( RECORDING_STEPS.ENCODING.key ),
+        percentage
+      );
+    }
+  } );
 
-    // Encoding happened in-pipe during capture — mark it complete
-    await updateRecordingStepPercentage(
-      jobId,
-      buildRecordingStepPath( RECORDING_STEPS.ENCODING_FRAMES.key ),
-      100
-    );
+  await page.close();
 
-    await page.close();
-
-    // Capture thumbnail via canvas screenshot
-    const {
-      createPage: createThumbnailPage
-    } = await createBrowserPage( {
-      headless: true,
-      deviceScaleFactor: 1
-    } );
-    const thumbnailPage = await createThumbnailPage();
-
-    await thumbnailPage.goto(
-      `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
-      {
-        waitUntil: "networkidle"
-      }
-    );
-
-    await captureCanvasThumbnail(
-      thumbnailPage,
-      thumbnailPath
-    );
-
-    await thumbnailPage.close();
-  } else {
-    // ─── Disk-based mode: Capture to disk, then encode ────────────────────
-    const framesDirectory = path.join(
-      temporaryDirectoryPath,
-      "frames"
-    );
-
-    await captureFramesServerSide( {
-      page,
-      framesDirectory,
-      totalFrames,
-      onProgress: async( percentage: number ) => {
-        await updateRecordingStepPercentage(
-          jobId,
-          buildRecordingStepPath( RECORDING_STEPS.CAPTURING_FRAMES.key ),
-          percentage
-        );
-      }
-    } );
-
-    await page.close();
-
-    // Capture thumbnail from first frame
-    await captureFirstFrame(
-      framesDirectory,
-      thumbnailPath
-    );
-
-    // Encode video from frames
-    await encodeVideoFromFrames(
-      framesDirectory,
-      outputVideoPath,
-      options.animation,
-      async( percentage ) => {
-        await updateRecordingStepPercentage(
-          jobId,
-          buildRecordingStepPath( RECORDING_STEPS.ENCODING_FRAMES.key ),
-          percentage
-        );
-      }
-    );
-
-    // Cleanup frames
-    await fs
-      .rm(
-        framesDirectory,
-        {
-          recursive: true,
-          force: true
-        }
-      )
-      .catch( () => {} );
-  }
+  await extractVideoThumbnail(
+    outputVideoPath,
+    thumbnailPath
+  );
 
   // ─── Upload to S3 ─────────────────────────────────────────────────────────
   await updateRecordingStepPercentage(
@@ -364,12 +255,14 @@ async function recordSingleSketch(
 
   const videoS3Url = await uploadArtifact(
     `${ jobId }/${ path.basename( outputVideoPath ) }`,
-    videoBuffer
+    videoBuffer,
+    "video/mp4"
   );
 
   const thumbnailS3Url = await uploadArtifact(
     `${ jobId }/${ path.basename( thumbnailPath ) }`,
-    await fs.readFile( thumbnailPath )
+    await fs.readFile( thumbnailPath ),
+    "image/webp"
   );
 
   await updateRecordingStepPercentage(
@@ -498,100 +391,30 @@ async function recordMultipleSlides(
     );
     const slideThumbnailPath = path.join(
       temporaryDirectoryPath,
-      `thumbnail-slide-${ slideIndex }-${ jobId }.jpg`
+      `thumbnail-slide-${ slideIndex }-${ jobId }.webp`
     );
 
-    if ( USE_STREAMING_MODE ) {
-      // ─── Streaming mode: Direct to FFmpeg (no disk I/O) ─────────────────
-      await captureFramesWithStreaming( {
-        page,
-        totalFrames,
-        outputVideoPath: slideVideoPath,
-        framerate,
-        onProgress: async( percentage: number ) => {
-          await updateRecordingStepPercentage(
-            jobId,
-            buildSlideStepPath(
-              slideIndex,
-              RECORDING_STEPS.CAPTURING_FRAMES.key
-            ),
-            percentage
-          );
-        }
-      } );
+    await captureFramesWithStreaming( {
+      page,
+      totalFrames,
+      outputVideoPath: slideVideoPath,
+      framerate,
+      onProgress: async( percentage: number ) => {
+        await updateRecordingStepPercentage(
+          jobId,
+          buildSlideStepPath(
+            slideIndex,
+            RECORDING_STEPS.ENCODING.key
+          ),
+          percentage
+        );
+      }
+    } );
 
-      // Encoding happened in-pipe during capture — mark it complete
-      await updateRecordingStepPercentage(
-        jobId,
-        buildSlideStepPath(
-          slideIndex,
-          RECORDING_STEPS.ENCODING_FRAMES.key
-        ),
-        100
-      );
-
-      // Capture thumbnail via canvas screenshot
-      await captureCanvasThumbnail(
-        page,
-        slideThumbnailPath
-      );
-    } else {
-      // ─── Disk-based mode: Capture to disk, then encode ──────────────────
-      const slideFramesDirectory = path.join(
-        temporaryDirectoryPath,
-        `frames_slide_${ slideIndex }`
-      );
-
-      await captureFramesServerSide( {
-        page,
-        framesDirectory: slideFramesDirectory,
-        totalFrames,
-        onProgress: async( percentage: number ) => {
-          await updateRecordingStepPercentage(
-            jobId,
-            buildSlideStepPath(
-              slideIndex,
-              RECORDING_STEPS.CAPTURING_FRAMES.key
-            ),
-            percentage
-          );
-        }
-      } );
-
-      // Capture thumbnail from first frame
-      await captureFirstFrame(
-        slideFramesDirectory,
-        slideThumbnailPath
-      );
-
-      // Encode video from frames
-      await encodeVideoFromFrames(
-        slideFramesDirectory,
-        slideVideoPath,
-        slideAnimation,
-        async( percentage: number ) => {
-          await updateRecordingStepPercentage(
-            jobId,
-            buildSlideStepPath(
-              slideIndex,
-              RECORDING_STEPS.ENCODING_FRAMES.key
-            ),
-            percentage
-          );
-        }
-      );
-
-      // Cleanup frames
-      await fs
-        .rm(
-          slideFramesDirectory,
-          {
-            recursive: true,
-            force: true
-          }
-        )
-        .catch( () => {} );
-    }
+    await extractVideoThumbnail(
+      slideVideoPath,
+      slideThumbnailPath
+    );
 
     slideVideoPaths.push( slideVideoPath );
     slideThumbnailPaths.push( slideThumbnailPath );
@@ -616,7 +439,8 @@ async function recordMultipleSlides(
 
     const videoS3Url = await uploadArtifact(
       `${ jobId }/${ path.basename( videoPath ) }`,
-      videoBuffer
+      videoBuffer,
+      "video/mp4"
     );
 
     videoS3Urls.push( videoS3Url );
@@ -629,7 +453,8 @@ async function recordMultipleSlides(
     const thumbnailPath = slideThumbnailPaths[ i ];
     const thumbnailS3Url = await uploadArtifact(
       `${ jobId }/${ path.basename( thumbnailPath ) }`,
-      await fs.readFile( thumbnailPath )
+      await fs.readFile( thumbnailPath ),
+      "image/webp"
     );
 
     thumbnailS3Urls.push( thumbnailS3Url );

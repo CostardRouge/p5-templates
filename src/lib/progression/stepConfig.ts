@@ -37,16 +37,10 @@ export const RECORDING_STEPS = {
     section: "recording" as const,
     shared: true
   },
-  CAPTURING_FRAMES: {
-    key: "capturing-frames",
-    label: "Capturing frames",
-    order: 2,
-    section: "recording" as const
-  },
-  ENCODING_FRAMES: {
-    key: "encoding-frames",
+  ENCODING: {
+    key: "encoding",
     label: "Encoding video",
-    order: 3,
+    order: 2,
     section: "recording" as const
   }
 } satisfies Record<string, StepDefinition>;
