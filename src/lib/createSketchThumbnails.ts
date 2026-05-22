@@ -31,7 +31,18 @@ const THUMBNAIL_VARIANTS = [
 ] as const;
 const THUMBNAIL_QUALITY = 80;
 
-async function createSketchThumbnails() {
+type CreateSketchThumbnailsOptions = {
+  targetSketch?: {
+    name: string;
+    engineId: string;
+  };
+  overwrite?: boolean;
+};
+
+async function createSketchThumbnails( options: CreateSketchThumbnailsOptions = {} ) {
+  const {
+    targetSketch, overwrite = false
+  } = options;
   const recordingState: {
     page?: Page;
     browser?: Browser;
@@ -42,7 +53,11 @@ async function createSketchThumbnails() {
   try {
     const sketches = ( await getSketchList() ) ?? [];
 
-    const templates = sketches.map( ( {
+    const filtered = targetSketch
+      ? sketches.filter( ( s ) => s.name === targetSketch.name && s.engine === targetSketch.engineId )
+      : sketches;
+
+    const templates = filtered.map( ( {
       name, engine, category
     } ) => ( {
       href: category ? `templates/${ engine }/${ category }/${ name }` : `templates/${ engine }/${ name }`,
@@ -66,11 +81,13 @@ async function createSketchThumbnails() {
       const thumbnailDir = `${ ASSETS_DIRECTORY }/images/templates/${ engine }/${ name }`;
       const variantPaths = THUMBNAIL_VARIANTS.map( ( v ) => `${ thumbnailDir }/thumbnail${ v.suffix }.webp` );
 
-      const existing = await Promise.all( variantPaths.map( fileExists ) );
+      if ( !overwrite ) {
+        const existing = await Promise.all( variantPaths.map( fileExists ) );
 
-      if ( existing.every( Boolean ) ) {
-        console.log( `✅ ${ name } thumbnails already exist!` );
-        continue;
+        if ( existing.every( Boolean ) ) {
+          console.log( `✅ ${ name } thumbnails already exist!` );
+          continue;
+        }
       }
 
       await recordingState.page.goto(

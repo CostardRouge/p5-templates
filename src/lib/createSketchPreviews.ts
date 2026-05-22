@@ -31,14 +31,29 @@ const PREVIEW_SIZE = {
   height: 450
 };
 
-async function createSketchPreviews() {
+type CreateSketchPreviewsOptions = {
+  targetSketch?: {
+    name: string;
+    engineId: string;
+  };
+  overwrite?: boolean;
+};
+
+async function createSketchPreviews( options: CreateSketchPreviewsOptions = {} ) {
+  const {
+    targetSketch, overwrite = false
+  } = options;
   const state: { browser?: Browser;
     page?: Page } = {};
 
   try {
     const sketches = ( await getSketchList() ) ?? [];
 
-    const templates = sketches.map( ( {
+    const filtered = targetSketch
+      ? sketches.filter( ( s ) => s.name === targetSketch.name && s.engine === targetSketch.engineId )
+      : sketches;
+
+    const templates = filtered.map( ( {
       name, engine, category
     } ) => ( {
       href: category
@@ -73,7 +88,7 @@ async function createSketchPreviews() {
     } of templates ) {
       const previewPath = `${ ASSETS_DIRECTORY }/images/templates/${ engine }/${ name }/preview.webm`;
 
-      if ( await fileExists( previewPath ) ) {
+      if ( !overwrite && await fileExists( previewPath ) ) {
         console.log( `✅ ${ name }/preview.webm already exists` );
         continue;
       }
