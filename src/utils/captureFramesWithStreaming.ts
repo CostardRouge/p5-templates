@@ -20,11 +20,8 @@ interface CaptureFramesWithStreamingOptions {
 }
 
 /**
- * Advanced server-side frame capture that streams directly to FFmpeg.
- * This is the most memory-efficient approach as frames never touch disk.
- *
- * Note: This is an experimental optimization. Use captureFramesServerSide
- * for the stable disk-based approach.
+ * Server-side frame capture that streams directly to FFmpeg stdin.
+ * Frames are encoded in real-time with no intermediate disk I/O.
  */
 export async function captureFramesWithStreaming( {
   page,
