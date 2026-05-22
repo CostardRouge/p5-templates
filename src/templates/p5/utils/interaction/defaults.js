@@ -80,6 +80,25 @@ export const interactionFormValues = {
     clampAngle: 45
   },
 
+  midi: {
+    enabled: false,
+    maxNotes: 10
+  },
+
+  audio: {
+    enabled: false,
+    count: 1,
+    smoothing: 0.8,
+    fftSize: 1024,
+    margin: 50
+  },
+
+  joypad: {
+    enabled: false,
+    count: 1,
+    deadzone: 0.1
+  },
+
   visualization: {
     enabled: true,
     showImages: false,
@@ -455,6 +474,100 @@ export const interactionFormConfiguration = {
           min: 5,
           max: 90,
           step: 5
+        }
+      }
+    },
+
+    midi: {
+      component: "nested-object",
+      label: "MIDI",
+      fields: {
+        enabled: {
+          component: "checkbox",
+          label: "Enabled"
+        },
+        maxNotes: {
+          component: "slider",
+          label: "Max simultaneous notes",
+          min: 1,
+          max: 32,
+          step: 1
+        }
+      }
+    },
+
+    audio: {
+      component: "nested-object",
+      label: "Audio (Microphone)",
+      fields: {
+        enabled: {
+          component: "checkbox",
+          label: "Enabled"
+        },
+        count: {
+          component: "slider",
+          label: "Frequency bands",
+          min: 1,
+          max: 16,
+          step: 1
+        },
+        smoothing: {
+          component: "slider",
+          label: "Smoothing",
+          min: 0,
+          max: 0.99,
+          step: 0.01
+        },
+        fftSize: {
+          component: "select",
+          label: "FFT size",
+          asNumber: true,
+          options: [
+            {
+              label: "512",
+              value: "512"
+            },
+            {
+              label: "1024",
+              value: "1024"
+            },
+            {
+              label: "2048",
+              value: "2048"
+            }
+          ]
+        },
+        margin: {
+          component: "slider",
+          label: "Margin",
+          min: 0,
+          max: 300,
+          step: 1
+        }
+      }
+    },
+
+    joypad: {
+      component: "nested-object",
+      label: "Joypad / Gamepad",
+      fields: {
+        enabled: {
+          component: "checkbox",
+          label: "Enabled"
+        },
+        count: {
+          component: "slider",
+          label: "Max gamepads",
+          min: 1,
+          max: 4,
+          step: 1
+        },
+        deadzone: {
+          component: "slider",
+          label: "Deadzone",
+          min: 0,
+          max: 0.5,
+          step: 0.01
         }
       }
     },

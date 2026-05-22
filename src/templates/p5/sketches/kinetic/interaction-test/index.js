@@ -13,45 +13,31 @@ import {
 
 // Color palette per source (RGB)
 const SOURCE_COLORS = {
-  mouse: [
-    66,
-    133,
-    244
-  ], // blue
-  touch: [
-    52,
-    168,
-    83
-  ], // green
-  vision: [
-    234,
-    67,
-    53
-  ], // red
-  orbit: [
-    251,
-    188,
-    4
-  ], // yellow
-  perlinNoise: [
-    0,
-    188,
-    168
-  ], // teal
-  gyroscope: [
-    156,
-    39,
-    176
-  ] // purple
+  mouse:       [ 66, 133, 244 ],  // blue
+  touch:       [ 52, 168, 83 ],   // green
+  hands:       [ 255, 109, 0 ],   // orange
+  face:        [ 233, 30, 99 ],   // pink
+  body:        [ 0, 188, 212 ],   // cyan
+  orbit:       [ 251, 188, 4 ],   // yellow
+  perlinNoise: [ 0, 150, 136 ],   // teal
+  gyroscope:   [ 96, 125, 139 ],  // blue-grey
+  midi:        [ 156, 39, 176 ],  // purple
+  audio:       [ 244, 67, 54 ],   // red
+  joypad:      [ 77, 182, 172 ]   // teal-green
 };
 
 const SOURCE_LABELS = {
-  mouse: "Mouse",
-  touch: "Touch",
-  vision: "Vision (hands/face/body)",
-  orbit: "Orbit",
+  mouse:       "Mouse",
+  touch:       "Touch",
+  hands:       "Hands (MediaPipe)",
+  face:        "Face (MediaPipe)",
+  body:        "Body (MediaPipe)",
+  orbit:       "Orbit",
   perlinNoise: "Perlin Noise",
-  gyroscope: "Gyroscope"
+  gyroscope:   "Gyroscope",
+  midi:        "MIDI",
+  audio:       "Audio (Mic)",
+  joypad:      "Joypad / Gamepad"
 };
 
 sketch.setup( async() => {
@@ -131,7 +117,9 @@ sketch.draw( () => {
   } );
 
   // ── Webcam preview (top-right) ─────────────────────────────────────────
-  if ( interaction.vision?.camera?.showPreview && mediapipe.capture?.element ) {
+  const vision = interaction.vision;
+
+  if ( vision?.camera?.showPreview && mediapipe.capture?.element ) {
     const previewW = p.width / 5;
     const previewH = p.height / 5;
 
@@ -235,12 +223,12 @@ function _drawLegend(
     y += lineH;
   } );
 
-  // Reload hint when vision enabled but mediapipe not yet running
+  // Camera hint when vision enabled but mediapipe not yet running
   const vision = interaction.vision;
   const needsCamera = vision?.hands?.enabled || vision?.face?.enabled || vision?.body?.enabled;
   const cameraRunning = !!mediapipe.capture?.element;
 
-  if ( needsCamera && !cameraRunning ) {
+  if ( needsCamera && !cameraRunning && vision?.enabled !== false ) {
     p.fill(
       251,
       188,
