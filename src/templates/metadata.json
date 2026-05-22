@@ -612,18 +612,6 @@
     "ctime": "2026-04-27T16:15:48.298Z"
   },
   {
-    "name": "empty-sketch",
-    "engine": "p5",
-    "category": null,
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": true,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T20:38:08.885Z",
-    "ctime": "2026-04-27T16:15:48.282Z"
-  },
-  {
     "name": "interaction-test",
     "engine": "p5",
     "category": "kinetic",
@@ -720,15 +708,27 @@
     "ctime": "2026-04-27T16:15:48.300Z"
   },
   {
+    "name": "empty-sketch",
+    "engine": "p5",
+    "category": null,
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T23:59:51.502Z",
+    "ctime": "2026-04-27T16:15:48.282Z"
+  },
+  {
     "name": "hand-tracking-v0-move",
     "engine": "p5",
     "category": "hand-capture",
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
-    "hiddenFromHome": true,
+    "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T23:10:45.077Z",
+    "mtime": "2026-05-21T23:59:51.503Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
@@ -738,9 +738,9 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
-    "hiddenFromHome": true,
+    "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T23:11:34.022Z",
+    "mtime": "2026-05-21T23:59:51.503Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
@@ -750,9 +750,9 @@
     "hasSketchForm": false,
     "hasThumbnail": true,
     "hasPreview": true,
-    "hiddenFromHome": true,
+    "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-21T23:11:36.119Z",
+    "mtime": "2026-05-21T23:59:51.503Z",
     "ctime": "2026-04-27T16:15:48.282Z"
   },
   {
@@ -763,8 +763,8 @@
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": true,
-    "hiddenFromTemplates": true,
-    "mtime": "2026-05-21T23:13:43.101Z",
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-21T23:59:51.503Z",
     "ctime": "2026-04-27T16:15:48.301Z"
   }
 ]
