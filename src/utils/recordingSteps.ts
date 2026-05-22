@@ -25,29 +25,19 @@ interface StepConfig {
  */
 const DEFAULT_STEP_CONFIG: StepConfig[] = [
   {
-    id: "launch",
+    id: "launching-browser",
     name: "Launching browser",
-    weight: 10
+    weight: 15
   },
   {
-    id: "capture",
-    name: "Capturing frames",
-    weight: 30
-  },
-  {
-    id: "save",
-    name: "Saving frames",
-    weight: 20
-  },
-  {
-    id: "encode",
+    id: "encoding",
     name: "Encoding video",
-    weight: 35
+    weight: 75
   },
   {
-    id: "finalize",
-    name: "Finalizing",
-    weight: 5
+    id: "upload",
+    name: "Uploading",
+    weight: 10
   }
 ];
 
