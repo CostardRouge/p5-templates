@@ -58,8 +58,8 @@ async function createSketchPreviews() {
     state.browser = browser;
     state.page = await createPage( {
       viewportSize: {
-        width: 360,
-        height: 450
+        width: 1080,
+        height: 1350
       }
     } );
 
