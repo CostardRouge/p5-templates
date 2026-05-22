@@ -1,8 +1,9 @@
 // ─── Site Identity ────────────────────────────────────────────────────────────
 export const SITE_NAME = "Coded templates";
 export const SITE_SHORT_NAME = "Coded Templates";
+export const SITE_TAGLINE = "a studio for social visuals.";
 export const SITE_DESCRIPTION =
-  "Create stunning videos and images from customizable p5.js, GSAP, and HTML templates. Record, export, and share animated content for Instagram, TikTok, and more.";
+  "Customizable templates built on p5.js, gsap, and html stages. Tweak parameters in a live editor, then export images or record full animations to video — never leaving the browser.";
 
 // ─── Author / Publisher ───────────────────────────────────────────────────────
 export const SITE_AUTHOR = "Steeve Pommier";
@@ -36,7 +37,7 @@ export const OG_IMAGE = {
   path: "/assets/images/icon-512x512.png",
   width: 512,
   height: 512,
-  alt: `${ SITE_NAME } — Create social media videos from code templates`
+  alt: `${ SITE_NAME } — ${ SITE_TAGLINE }`
 };
 
 // ─── Theme Colors ─────────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ export {
   SITE_LOCALE,
   SITE_NAME,
   SITE_SHORT_NAME,
+  SITE_TAGLINE,
   THEME_COLOR_DARK,
   THEME_COLOR_LIGHT
 } from "@/config/site";
@@ -134,7 +135,10 @@ export function getSketchJsonLd( {
     name: title,
     applicationCategory: "DesignApplication",
     operatingSystem: "Web",
-    description: buildSketchDescription( title, engineLabel ),
+    description: buildSketchDescription(
+      title,
+      engineLabel
+    ),
     url,
     ...( thumbnailUrl && {
       screenshot: thumbnailUrl
@@ -143,13 +147,14 @@ export function getSketchJsonLd( {
 }
 
 /** BreadcrumbList schema for navigation hierarchy. */
-export function getBreadcrumbJsonLd(
-  items: Array<{ name: string; url: string }>
-) {
+export function getBreadcrumbJsonLd( items: Array<{ name: string;
+  url: string }> ) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: items.map( ( item, index ) => ( {
+    itemListElement: items.map( (
+      item, index
+    ) => ( {
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
