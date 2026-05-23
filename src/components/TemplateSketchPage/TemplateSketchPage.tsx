@@ -228,9 +228,10 @@ export default function TemplateSketchPage() {
         </div>
       )}
 
-      {/* Sketch viewport */}
+      {/* Sketch viewport — on mobile, leave room at the bottom for the
+          options sheet's peek bar so the canvas never sits under it. */}
       <div
-        className="h-full w-full relative"
+        className="w-full relative h-[calc(100%-5rem)] md:h-full"
         hidden={ !sketchLoaded }
       >
         <ScalableViewport

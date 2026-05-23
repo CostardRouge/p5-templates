@@ -13,11 +13,13 @@ import type {
 import type {
   SketchOption, SlideOption
 } from "@/types/sketch.types";
+import useIsMobile from "@/hooks/useIsMobile";
 import useSketch from "../SketchProvider/hooks/useSketch";
 import CaptureActions, {
   type CaptureActionsRef
 } from "./components/CaptureActions";
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
+import MobileOptionsSheet from "./components/MobileOptionsSheet/MobileOptionsSheet";
 import OptionsPanel from "./components/OptionsPanel";
 import RecordingLockBanner from "./components/RecordingLockBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
@@ -370,32 +372,21 @@ export default function TemplateOptions( {
     reset( processedOptions );
   };
 
+  const isMobile = useIsMobile();
+
   return (
     <FormProvider { ...methods }>
       <CollapsibleProvider>
-        <div
-          className="w-64 absolute right-2 bottom-2 md:right-4 md:bottom-4 space-y-2"
-          style={ {
-            maxWidth: "calc(50% - 0.75rem)"
-          } }
-        >
-          {lifecycle.isLocked && (
-            <RecordingLockBanner
-              state={ lifecycle.state }
-              onClone={ handleBannerClone }
-              cloning={ bannerCloning }
-            />
-          )}
-
-          <OptionsPanel
+        {isMobile ? (
+          <MobileOptionsSheet
             methods={ methods }
             name={ name }
             persistedJob={ persistedJob }
             activeSlideIndex={ activeSlideIndex }
             slideFields={ slideFields }
-            thumbnails={ thumbnails }
             slides={ slides }
-            jobStatus={ lifecycle.currentStatus }
+            thumbnails={ thumbnails }
+            enableThumbnails={ enableThumbnails }
             isAdding={ isAdding }
             onAddSlide={ handleAddSlide }
             onSelectSlide={ handleSlideSelect }
@@ -404,38 +395,80 @@ export default function TemplateOptions( {
             onDeleteSlide={ handleDeleteSlide }
             onRenameSlide={ handleRenameSlide }
             onImportOptions={ handleImportOptions }
-            enableThumbnails={ enableThumbnails }
-            collapsibleStates={ collapsibleStates }
-            onCollapsibleToggle={ toggleSection }
+            lifecycle={ lifecycle }
+            bannerCloning={ bannerCloning }
+            onBannerClone={ handleBannerClone }
+            captureActionsRef={ captureActionsRef as React.RefObject<CaptureActionsRef> }
+            recordingProgress={ recordingProgress }
+            subscribeToRecordingStatus={ subscribeToRecordingStatus }
           />
+        ) : (
+          <div
+            className="w-64 absolute right-2 bottom-2 md:right-4 md:bottom-4 space-y-2"
+            style={ {
+              maxWidth: "calc(50% - 0.75rem)"
+            } }
+          >
+            {lifecycle.isLocked && (
+              <RecordingLockBanner
+                state={ lifecycle.state }
+                onClone={ handleBannerClone }
+                cloning={ bannerCloning }
+              />
+            )}
 
-          {( backendRecording || browserRecordingSupported ) && (
-            <CaptureActions
-              ref={ captureActionsRef }
+            <OptionsPanel
+              methods={ methods }
               name={ name }
-              options={ methods.watch() }
               persistedJob={ persistedJob }
               activeSlideIndex={ activeSlideIndex }
-              backendRecording={ backendRecording }
-              browserRecordingSupported={ browserRecordingSupported }
-              thumbnails={ enableThumbnails ? thumbnails : {} }
-              lifecycle={ lifecycle }
-              recordingProgress={ recordingProgress }
-              subscribeToRecordingStatus={ subscribeToRecordingStatus }
+              slideFields={ slideFields }
+              thumbnails={ thumbnails }
+              slides={ slides }
+              jobStatus={ lifecycle.currentStatus }
+              isAdding={ isAdding }
+              onAddSlide={ handleAddSlide }
+              onSelectSlide={ handleSlideSelect }
+              onReorderSlides={ handleReorderSlides }
+              onDuplicateSlide={ handleDuplicateSlide }
+              onDeleteSlide={ handleDeleteSlide }
+              onRenameSlide={ handleRenameSlide }
+              onImportOptions={ handleImportOptions }
+              enableThumbnails={ enableThumbnails }
+              collapsibleStates={ collapsibleStates }
+              onCollapsibleToggle={ toggleSection }
             />
-          )}
-        </div>
 
-        <TemplateAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
-          <SketchSettings
-            activeSlideIndex={ activeSlideIndex }
-            expanded={ collapsibleStates.sketchSettings }
-            onToggle={ ( expanded ) => setSection(
-              "sketchSettings",
-              expanded
-            ) }
-          />
-        </TemplateAssetsProvider>
+            {( backendRecording || browserRecordingSupported ) && (
+              <CaptureActions
+                ref={ captureActionsRef }
+                name={ name }
+                options={ methods.watch() }
+                persistedJob={ persistedJob }
+                activeSlideIndex={ activeSlideIndex }
+                backendRecording={ backendRecording }
+                browserRecordingSupported={ browserRecordingSupported }
+                thumbnails={ enableThumbnails ? thumbnails : {} }
+                lifecycle={ lifecycle }
+                recordingProgress={ recordingProgress }
+                subscribeToRecordingStatus={ subscribeToRecordingStatus }
+              />
+            )}
+          </div>
+        ) }
+
+        {!isMobile && (
+          <TemplateAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
+            <SketchSettings
+              activeSlideIndex={ activeSlideIndex }
+              expanded={ collapsibleStates.sketchSettings }
+              onToggle={ ( expanded ) => setSection(
+                "sketchSettings",
+                expanded
+              ) }
+            />
+          </TemplateAssetsProvider>
+        )}
       </CollapsibleProvider>
     </FormProvider>
   );

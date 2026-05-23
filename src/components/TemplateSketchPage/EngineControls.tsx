@@ -173,7 +173,7 @@ export function EngineControls( ) {
       : undefined;
 
   return (
-    <div className="absolute top-2 left-[3.25rem] md:top-4 md:left-[3.75rem] flex items-center gap-2 z-50">
+    <div className="absolute top-2 left-[3.25rem] md:top-4 md:left-[3.75rem] items-center gap-2 z-50 hidden md:flex">
       <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden">
         { githubUrl && (
           <Link
