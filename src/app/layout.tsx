@@ -10,6 +10,9 @@ import {
 } from "react";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import MenuBar from "@/components/MenuBar";
+import {
+  MenuBarSlotProvider
+} from "@/components/MenuBarPortal";
 import ServiceWorkerUpdateNotifier from "@/components/ServiceWorkerUpdateNotifier";
 import {
   getBaseUrl,
@@ -151,17 +154,19 @@ export default function RootLayout( {
           enableSystem
           disableTransitionOnChange
         >
-          <div className="h-[100svh] bg-hover/50">
-            <main className="h-full overflow-auto overscroll-contain relative">{children}</main>
+          <MenuBarSlotProvider>
+            <div className="h-[100svh] bg-hover/50">
+              <main className="h-full overflow-auto overscroll-contain relative">{children}</main>
 
-            <Suspense>
-              <MenuBar
-                showRecordings={ process.env.BACKEND_RECORDING === "true" }
-                hasMissingThumbnails={ hasMissingThumbnails }
-                hasMissingPreviews={ hasMissingPreviews }
-              />
-            </Suspense>
-          </div>
+              <Suspense>
+                <MenuBar
+                  showRecordings={ process.env.BACKEND_RECORDING === "true" }
+                  hasMissingThumbnails={ hasMissingThumbnails }
+                  hasMissingPreviews={ hasMissingPreviews }
+                />
+              </Suspense>
+            </div>
+          </MenuBarSlotProvider>
 
           <ServiceWorkerUpdateNotifier />
         </ThemeProvider>

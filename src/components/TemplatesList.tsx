@@ -20,6 +20,9 @@ import Link from "@/components/HardLink";
 import AnimatedPreview from "@/components/AnimatedPreview";
 import AnimationsToggle from "@/components/AnimationsToggle";
 import {
+  MenuBarSlot
+} from "@/components/MenuBarPortal";
+import {
   usePersistedViewMode
 } from "@/hooks/usePersistedViewMode";
 import {
@@ -180,9 +183,12 @@ export default function TemplatesList( {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:gap-4">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Templates
-          </h1>
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <MenuBarSlot />
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">
+              Templates
+            </h1>
+          </div>
           <AnimationsToggle
             enabled={ animationsEnabled }
             onChange={ setAnimationsEnabled }
