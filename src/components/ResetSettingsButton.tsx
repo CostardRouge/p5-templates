@@ -37,10 +37,11 @@ export default function ResetSettingsButton( {
   return (
     <button
       onClick={ handleReset }
-      className="text-foreground hover:bg-theme/20 rounded transition-colors"
+      className="text-foreground hover:bg-theme/20 rounded transition-colors inline-flex items-center justify-center h-9 w-9 md:h-auto md:w-auto"
       title="Reset to defaults"
+      aria-label="Reset to defaults"
     >
-      <RotateCcw className="w-3.5 h-3.5" />
+      <RotateCcw className="w-4 h-4 md:w-3.5 md:h-3.5" />
     </button>
   );
 }

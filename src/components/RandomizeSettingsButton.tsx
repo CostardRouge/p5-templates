@@ -120,10 +120,11 @@ export default function RandomizeSettingsButton( {
   return (
     <button
       onClick={ handleRandomize }
-      className={ className }
+      className={ `${ className } inline-flex items-center justify-center h-9 w-9 md:h-auto md:w-auto` }
       title="Randomize parameters"
+      aria-label="Randomize parameters"
     >
-      <Shuffle className="w-3.5 h-3.5" />
+      <Shuffle className="w-4 h-4 md:w-3.5 md:h-3.5" />
     </button>
   );
 }

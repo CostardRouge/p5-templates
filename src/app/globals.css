@@ -263,6 +263,112 @@
     }
 }
 
+/* Touch-friendly slider for the sketch options form on mobile.
+   Bigger thumb + thicker track than the browser default so the control is
+   actually grabbable on a phone without a hover state. Scoped to <md so the
+   desktop panel keeps its existing native slider appearance. */
+@media (max-width: 767px) {
+    .slider-touch {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        height: 28px;
+        padding: 0;
+    }
+
+    .slider-touch::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 9999px;
+        background: hsl(var(--border));
+    }
+
+    .slider-touch::-moz-range-track {
+        height: 6px;
+        border-radius: 9999px;
+        background: hsl(var(--border));
+    }
+
+    .slider-touch::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 22px;
+        width: 22px;
+        border-radius: 9999px;
+        background: hsl(var(--foreground));
+        border: 2px solid hsl(var(--background));
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        margin-top: -8px;
+        cursor: pointer;
+    }
+
+    .slider-touch::-moz-range-thumb {
+        height: 22px;
+        width: 22px;
+        border-radius: 9999px;
+        background: hsl(var(--foreground));
+        border: 2px solid hsl(var(--background));
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+    }
+
+    .slider-touch:focus-visible {
+        outline: none;
+    }
+
+    .slider-touch:focus-visible::-webkit-slider-thumb {
+        box-shadow: 0 0 0 3px hsl(var(--focus) / 0.5);
+    }
+
+    .slider-touch:focus-visible::-moz-range-thumb {
+        box-shadow: 0 0 0 3px hsl(var(--focus) / 0.5);
+    }
+}
+
+/* Switch-style checkbox for mobile. Use `.switch-touch` on a native
+   `<input type=checkbox>` to render a touch-friendly pill with an animated
+   thumb. Scoped to <md so desktop keeps the native checkbox appearance. */
+@media (max-width: 767px) {
+    .switch-touch {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 44px;
+        height: 26px;
+        border-radius: 9999px;
+        background: hsl(var(--border));
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    .switch-touch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 9999px;
+        background: hsl(var(--background));
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        transition: transform 0.15s ease;
+    }
+
+    .switch-touch:checked {
+        background: hsl(var(--foreground));
+    }
+
+    .switch-touch:checked::after {
+        transform: translateX(18px);
+    }
+
+    .switch-touch:focus-visible {
+        outline: 2px solid hsl(var(--focus) / 0.6);
+        outline-offset: 2px;
+    }
+}
+
 @keyframes pulse-soft {
     0%,
     100% {

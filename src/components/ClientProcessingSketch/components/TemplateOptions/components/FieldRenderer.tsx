@@ -99,10 +99,16 @@ export default function FieldRenderer( {
   } = useCollapsibleContext();
 
   const renderInput = () => {
+    // Bigger height/padding on mobile (<md), original sizing on desktop (md+).
+    // Keeps desktop visually identical to before, gives mobile real touch targets.
+    const baseInputClassName =
+      "w-full border border-theme rounded-lg bg-background text-foreground "
+      + "h-10 px-2 text-sm md:h-auto md:p-1 md:text-xs";
+
     const commonInputProps = {
       id: registeredName,
       placeholder: config.placeholder,
-      className: "w-full p-1 border border-theme rounded-lg bg-background text-foreground",
+      className: baseInputClassName,
       "aria-invalid": !!error
     };
 
@@ -111,9 +117,13 @@ export default function FieldRenderer( {
         return (
           <input
             type="checkbox"
-            { ...commonInputProps }
+            id={ registeredName }
+            aria-invalid={ !!error }
             { ...register( registeredName ) }
-            className={ `${ commonInputProps.className } block w-fit` }
+            // `switch-touch` is scoped via @media to mobile only; on desktop
+            // the browser renders a native checkbox so the existing panel
+            // layout stays visually unchanged.
+            className="switch-touch md:w-fit md:p-1 md:border md:border-theme md:rounded-lg md:bg-background"
           />
         );
 
@@ -134,12 +144,47 @@ export default function FieldRenderer( {
           />
         );
 
-      case "slider":
+      case "slider": {
+        const displayValue = currentValue != null
+          ? Number( currentValue ).toFixed( config.step && config.step < 1 ? 2 : 0 )
+          : ( config.min ?? 0 );
+
+        const handleNumberChange = ( e: React.ChangeEvent<HTMLInputElement> ) => {
+          const parsed = config.step && config.step < 1
+            ? parseFloat( e.target.value )
+            : parseInt(
+              e.target.value,
+              10
+            );
+
+          if ( !isNaN( parsed ) ) {
+            const clamped =
+              config.min !== undefined && config.max !== undefined
+                ? Math.min(
+                  config.max,
+                  Math.max(
+                    config.min,
+                    parsed
+                  )
+                )
+                : parsed;
+
+            setValue(
+              registeredName,
+              clamped,
+              {
+                shouldDirty: true
+              }
+            );
+          }
+        };
+
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col md:flex-row md:items-center gap-2">
             <input
               type="range"
-              { ...commonInputProps }
+              id={ registeredName }
+              aria-invalid={ !!error }
               { ...register(
                 registeredName,
                 {
@@ -149,53 +194,28 @@ export default function FieldRenderer( {
               step={ config.step }
               min={ config.min }
               max={ config.max }
+              className="slider-touch w-full md:p-1 md:border md:border-theme md:rounded-lg md:bg-background"
             />
             <input
               type="number"
               aria-label={ `${ config.label ?? registeredName } value` }
-              className="text-xs font-mono bg-theme/20 px-1 py-0.5 rounded w-14 text-center border border-theme/30 focus:outline-none focus:ring-1 focus:ring-theme"
-              value={ currentValue != null ? Number( currentValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 ) }
+              className="text-sm md:text-xs font-mono bg-theme/20 px-2 py-1 md:py-0.5 rounded-md md:rounded w-20 md:w-14 text-center border border-theme/30 focus:outline-none focus:ring-1 focus:ring-theme self-end md:self-auto"
+              value={ displayValue }
               step={ config.step }
               min={ config.min }
               max={ config.max }
-              onChange={ ( e ) => {
-                const parsed = config.step && config.step < 1
-                  ? parseFloat( e.target.value )
-                  : parseInt(
-                    e.target.value,
-                    10
-                  );
-
-                if ( !isNaN( parsed ) ) {
-                  const clamped =
-                    config.min !== undefined && config.max !== undefined
-                      ? Math.min(
-                        config.max,
-                        Math.max(
-                          config.min,
-                          parsed
-                        )
-                      )
-                      : parsed;
-
-                  setValue(
-                    registeredName,
-                    clamped,
-                    {
-                      shouldDirty: true
-                    }
-                  );
-                }
-              } }
+              onChange={ handleNumberChange }
             />
           </div>
         );
+      }
 
       case "textarea":
         return (
           <textarea
             rows={ 4 }
             { ...commonInputProps }
+            className={ `${ baseInputClassName } h-auto py-2 md:py-1` }
             { ...register( registeredName ) }
           />
         );
@@ -297,12 +317,12 @@ export default function FieldRenderer( {
             ) }
             header={ ( expanded ) => (
               <div
-                className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full"
+                className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full min-h-[36px] md:min-h-0 py-1 md:py-0"
                 title="Click to expand/collapse"
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5 md:gap-1">
                   <ChevronDown
-                    className="w-3 h-3 transition-transform"
+                    className="w-4 h-4 md:w-3 md:h-3 transition-transform"
                     style={ {
                       transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
                     } }
@@ -322,17 +342,18 @@ export default function FieldRenderer( {
                         onClick={ handleReset }
                         tabIndex={ -1 }
                         title="Reset to saved value"
-                        className="hover:bg-theme/20 rounded transition-colors"
+                        aria-label="Reset to saved value"
+                        className="h-7 w-7 md:h-auto md:w-auto inline-flex items-center justify-center hover:bg-theme/20 rounded transition-colors"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                       </button>
-                      <span className="leading-none select-none">·</span>
+                      <span className="leading-none select-none hidden md:inline">·</span>
                     </>
                   )}
                   <RandomizeSettingsButton
                     config={ config.fields }
                     basePath={ registeredName }
-                    className="hover:bg-theme/20 rounded transition-colors"
+                    className="h-7 w-7 md:h-auto md:w-auto inline-flex items-center justify-center hover:bg-theme/20 rounded transition-colors"
                   />
                 </div>
               </div>
@@ -418,7 +439,7 @@ export default function FieldRenderer( {
   };
 
   return (
-    <div className="text-xs">
+    <div className="text-sm md:text-xs">
       {/* Don't show a label for groups, as they have their own internal labels */}
       {config.component !== "nested-object" &&
         config.component !== "conditional-group" &&
@@ -426,7 +447,7 @@ export default function FieldRenderer( {
         config.component !== "hidden" &&
         config.label &&
         !hideLabel && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between gap-1 mb-1 md:mb-0">
           <label
             htmlFor={ registeredName }
             className={ `select-none ${
@@ -443,9 +464,10 @@ export default function FieldRenderer( {
               onClick={ handleReset }
               tabIndex={ -1 }
               title="Reset to saved value"
-              className="text-gray-400 hover:text-foreground transition-colors"
+              aria-label="Reset to saved value"
+              className="h-7 w-7 md:h-auto md:w-auto inline-flex items-center justify-center text-gray-400 hover:text-foreground hover:bg-foreground/10 rounded-md transition-colors"
             >
-              · reset
+              <RotateCcw className="h-3.5 w-3.5" />
             </button>
           )}
         </div>

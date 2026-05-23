@@ -70,7 +70,7 @@ export default function ControlledColorInput( {
               <input
                 id={ name }
                 type="color"
-                className="h-8 w-full rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
+                className="h-11 md:h-8 w-full rounded-lg border border-theme p-0.5 cursor-pointer flex-shrink-0"
                 onChange={ ( e ) => handleColorChange( e.target.value ) }
                 value={ rgbaToHex( currentValue ) }
                 aria-label="Color picker"
@@ -80,9 +80,9 @@ export default function ControlledColorInput( {
             {/* Alpha control */}
             <div className="flex items-center justify-between gap-2 w-3/4">
               <div
-                className="flex-shrink-0 w-8 h-8 rounded-lg border border-theme relative overflow-hidden"
+                className="flex-shrink-0 w-11 h-11 md:w-8 md:h-8 rounded-lg border border-theme relative overflow-hidden"
                 style={ {
-                  background: `linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), 
+                  background: `linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
                               linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)`,
                   backgroundSize: "8px 8px",
                   backgroundPosition: "0 0, 4px 4px"
@@ -98,7 +98,7 @@ export default function ControlledColorInput( {
 
               <input
                 type="range"
-                className="p-1 border border-theme rounded-lg bg-background w-full"
+                className="slider-touch w-full md:p-1 md:border md:border-theme md:rounded-lg md:bg-background"
                 min={ 0 }
                 max={ 255 }
                 step={ 1 }
@@ -107,7 +107,7 @@ export default function ControlledColorInput( {
                 aria-label="Alpha transparency"
               />
 
-              <span className="text-xs font-mono bg-theme/20 px-2 py-0.5 rounded min-w-[3rem] text-center border border-theme/30">
+              <span className="text-sm md:text-xs font-mono bg-theme/20 px-2 py-1 md:py-0.5 rounded min-w-[3rem] text-center border border-theme/30">
                 {alphaPercent}%
               </span>
             </div>

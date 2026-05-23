@@ -89,7 +89,7 @@ export default function GeneratePreviewButton() {
       title={ title }
       aria-label={ title }
       className={ clsx(
-        "flex items-center rounded transition-colors",
+        "inline-flex items-center justify-center rounded transition-colors h-9 w-9 md:h-auto md:w-auto",
         {
           "hover:text-yellow-400 cursor-pointer":
             state === "idle",
@@ -103,9 +103,9 @@ export default function GeneratePreviewButton() {
       ) }
     >
       {state === "generating" ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        <Loader2 className="h-4 w-4 md:h-3.5 md:w-3.5 animate-spin" />
       ) : (
-        <Film className="h-3.5 w-3.5" />
+        <Film className="h-4 w-4 md:h-3.5 md:w-3.5" />
       )}
     </button>
   );
