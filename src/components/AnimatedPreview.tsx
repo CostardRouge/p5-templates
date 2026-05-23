@@ -7,6 +7,9 @@ import usePageVisibility from "@/hooks/usePageVisibility";
 
 interface AnimatedPreviewProps {
   previewUrl: string;
+  // Higher-res variant to use at the `md` breakpoint and above. When omitted,
+  // `previewUrl` is used at all sizes.
+  previewUrlDesktop?: string;
   thumbnailUrl: string;
   name: string;
   imgClassName?: string;
@@ -21,6 +24,10 @@ const TRIGGER_ON_HOVER =
   typeof process !== "undefined" &&
   process.env.NEXT_PUBLIC_PREVIEW_ON_HOVER === "true";
 
+// Matches Tailwind's `md:` — the breakpoint at which the home page layout
+// switches to multi-column, making the higher-res preview worthwhile.
+const DESKTOP_PREVIEW_QUERY = "(min-width: 768px)";
+
 /**
  * Renders a static thumbnail with an animated WebM overlay.
  *
@@ -32,6 +39,7 @@ const TRIGGER_ON_HOVER =
  */
 export default function AnimatedPreview( {
   previewUrl,
+  previewUrlDesktop,
   thumbnailUrl,
   name,
   imgClassName = "",
@@ -50,7 +58,66 @@ export default function AnimatedPreview( {
     isPlaying,
     setIsPlaying
   ] = useState( false );
+  // Mobile-first: start with the baseline URL so SSR + client hydration match.
+  // If a desktop variant is provided, swap to it after mount when the breakpoint matches.
+  const [
+    effectivePreviewUrl,
+    setEffectivePreviewUrl
+  ] = useState( previewUrl );
   const isPageVisible = usePageVisibility();
+
+  useEffect(
+    () => {
+      if ( !previewUrlDesktop ) {
+        setEffectivePreviewUrl( previewUrl );
+        return;
+      }
+
+      const mq = window.matchMedia( DESKTOP_PREVIEW_QUERY );
+      const pick = () => setEffectivePreviewUrl( mq.matches ? previewUrlDesktop : previewUrl );
+
+      pick();
+      mq.addEventListener(
+        "change",
+        pick
+      );
+      return () => mq.removeEventListener(
+        "change",
+        pick
+      );
+    },
+    [
+      previewUrl,
+      previewUrlDesktop
+    ]
+  );
+
+  // If the chosen URL changes after we've already loaded one, swap the
+  // underlying <video> source so the next play picks it up.
+  useEffect(
+    () => {
+      const video = videoRef.current;
+
+      if ( !video || !video.src ) {
+        return;
+      }
+
+      if ( video.src.endsWith( effectivePreviewUrl ) ) {
+        return;
+      }
+
+      const wasPlaying = !video.paused;
+
+      video.src = effectivePreviewUrl;
+
+      if ( wasPlaying ) {
+        video.play().catch( () => {} );
+      }
+    },
+    [
+      effectivePreviewUrl
+    ]
+  );
 
   // Track prefers-reduced-motion without causing re-render on each frame
   useEffect(
@@ -114,7 +181,7 @@ export default function AnimatedPreview( {
     }
 
     if ( !video.src ) {
-      video.src = previewUrl;
+      video.src = effectivePreviewUrl;
     }
 
     video.play().catch( () => {} );

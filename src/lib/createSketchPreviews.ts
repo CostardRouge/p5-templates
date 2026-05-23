@@ -26,10 +26,25 @@ import {
 const PREVIEW_FPS = 20;
 const PREVIEW_SECS = 9;
 const TOTAL_FRAMES = PREVIEW_FPS * PREVIEW_SECS;
-const PREVIEW_SIZE = {
-  width: 360,
-  height: 450
-};
+// Multiple output sizes, encoded from the same captured frames.
+// `preview.webm` is the baseline used everywhere (incl. mobile);
+// `preview-md.webm` is a higher-res variant served to desktop home-page tiles.
+const PREVIEW_VARIANTS: ReadonlyArray<{
+  filename: string;
+  width: number;
+  height: number;
+}> = [
+  {
+    filename: "preview.webm",
+    width: 360,
+    height: 450
+  },
+  {
+    filename: "preview-md.webm",
+    width: 540,
+    height: 675
+  }
+];
 
 type CreateSketchPreviewsOptions = {
   targetSketch?: {
@@ -86,10 +101,27 @@ async function createSketchPreviews( options: CreateSketchPreviewsOptions = {} )
     for ( const {
       href, name, engine
     } of templates ) {
-      const previewPath = `${ ASSETS_DIRECTORY }/images/templates/${ engine }/${ name }/preview.webm`;
+      const outputDir = `${ ASSETS_DIRECTORY }/images/templates/${ engine }/${ name }`;
+      const variants = PREVIEW_VARIANTS.map( ( v ) => ( {
+        ...v,
+        outputPath: `${ outputDir }/${ v.filename }`
+      } ) );
 
-      if ( !overwrite && await fileExists( previewPath ) ) {
-        console.log( `✅ ${ name }/preview.webm already exists` );
+      const variantsToBuild = overwrite
+        ? variants
+        : ( await Promise.all( variants.map( async( v ) => ( {
+          variant: v,
+          exists: await fileExists( v.outputPath )
+        } ) ) ) )
+          .filter( ( {
+            exists
+          } ) => !exists )
+          .map( ( {
+            variant
+          } ) => variant );
+
+      if ( variantsToBuild.length === 0 ) {
+        console.log( `✅ ${ name } previews already exist` );
         continue;
       }
 
@@ -123,19 +155,25 @@ async function createSketchPreviews( options: CreateSketchPreviewsOptions = {} )
         } );
 
         await fs.mkdir(
-          path.dirname( previewPath ),
+          outputDir,
           {
             recursive: true
           }
         );
 
-        await encodePreviewFromFrames(
-          tmpDir,
-          previewPath,
-          PREVIEW_SECS,
-          PREVIEW_FPS,
-          PREVIEW_SIZE
-        );
+        for ( const v of variantsToBuild ) {
+          await encodePreviewFromFrames(
+            tmpDir,
+            v.outputPath,
+            PREVIEW_SECS,
+            PREVIEW_FPS,
+            {
+              width: v.width,
+              height: v.height
+            }
+          );
+          console.log( `💾 ${ name }/${ v.filename } generated` );
+        }
 
         const raw = await fs.readFile(
           metadataPath,
@@ -156,8 +194,6 @@ async function createSketchPreviews( options: CreateSketchPreviewsOptions = {} )
             "utf-8"
           );
         }
-
-        console.log( `💾 ${ name }/preview.webm generated` );
       } finally {
         await fs.rm(
           tmpDir,

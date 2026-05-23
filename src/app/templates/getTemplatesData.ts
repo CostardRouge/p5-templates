@@ -10,6 +10,7 @@ export type TemplateItem = {
   name: string;
   thumbnail: string;
   preview: string | null;
+  previewMd: string | null;
   hasSketchForm: boolean;
   category?: string | null;
   hiddenFromHome?: boolean;
@@ -45,6 +46,11 @@ export async function getTemplatesData() {
         preview: hasPreview ? getSketchPreviewURL(
           engine,
           name
+        ) : null,
+        previewMd: hasPreview ? getSketchPreviewURL(
+          engine,
+          name,
+          "md"
         ) : null,
         href: category
           ? `/templates/${ engine }/${ category }/${ name }`
