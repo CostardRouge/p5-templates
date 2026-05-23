@@ -210,6 +210,7 @@ function PreviewSurface( {
     return (
       <AnimatedPreview
         previewUrl={ template.preview }
+        previewUrlDesktop={ template.previewMd ?? undefined }
         thumbnailUrl={ template.thumbnail }
         name={ template.name }
         imgClassName={ imgClassName }
