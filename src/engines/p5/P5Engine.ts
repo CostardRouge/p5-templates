@@ -118,19 +118,30 @@ export class P5Engine implements SketchEngine {
         throw error;
       } );
 
+    // destroy() may have run while we were awaiting the dynamic imports
+    // (e.g. React tearing down the tree on a parent error). Bail out
+    // before touching sketchRuntime — otherwise `runtime._setupFn` throws.
+    if ( !this.sketchRuntime || !sketchPath ) {
+      return;
+    }
+
     // ES modules are cached — on second visit the module doesn't re-run,
     // leaving _setupFn/_drawFn null. Restore them from our static cache.
-    // (sketchPath is guaranteed non-null here: the import above would have thrown otherwise.)
     const runtime = this.sketchRuntime as any;
-    if ( sketchPath && !P5Engine._sketchModuleCache.has( sketchPath ) ) {
+
+    if ( !P5Engine._sketchModuleCache.has( sketchPath ) ) {
       P5Engine._sketchModuleCache.add( sketchPath );
-      P5Engine._sketchFnCache.set( sketchPath, {
-        setupFn: runtime._setupFn,
-        drawFn: runtime._drawFn,
-        sketchOptions: runtime.sketchOptions
-      } );
-    } else if ( sketchPath ) {
+      P5Engine._sketchFnCache.set(
+        sketchPath,
+        {
+          setupFn: runtime._setupFn,
+          drawFn: runtime._drawFn,
+          sketchOptions: runtime.sketchOptions
+        }
+      );
+    } else {
       const cached = P5Engine._sketchFnCache.get( sketchPath );
+
       if ( cached ) {
         runtime._setupFn = cached.setupFn;
         runtime._drawFn = cached.drawFn;
@@ -141,6 +152,10 @@ export class P5Engine implements SketchEngine {
     }
 
     await this.sketchRuntime.start( container );
+
+    if ( !this.sketchRuntime ) {
+      return;
+    }
 
     const p = this.sketchRuntime?.getP5();
 
