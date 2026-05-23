@@ -32,11 +32,17 @@ import {
   useCallback, useEffect, useState
 } from "react";
 import {
+  createPortal
+} from "react-dom";
+import {
   subscribeUser, unsubscribeUser
 } from "@/app/actions/notifications";
 import {
   pauseSketchForNav
 } from "@/lib/navigationPauseSignal";
+import {
+  useMenuBarSlot
+} from "@/components/MenuBarPortal";
 import sleep from "@/utils/sleep";
 
 type MenuBarProps = {
@@ -120,6 +126,7 @@ function MenuBar( {
 }: MenuBarProps ) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const slot = useMenuBarSlot();
   const {
     theme, setTheme
   } = useTheme();
@@ -354,181 +361,194 @@ function MenuBar( {
 
   const hasPendingActions = hasMissingThumbnails || hasMissingPreviews;
 
-  return (
-    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-50">
-      <Menu as="div" className="relative">
-        <MenuButton
-          aria-label="Open menu"
-          title="Menu"
-          className="relative h-9 w-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md inline-flex items-center justify-center hover:bg-hover transition-colors group"
-        >
-          <MenuIcon className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
-          {hasPendingActions && (
-            <span
-              aria-hidden
-              className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background animate-pulse-soft"
-            />
-          )}
-        </MenuButton>
+  const renderInline = Boolean( slot?.slotEl && slot.inlineVisible );
 
-        <MenuItems
-          anchor="bottom start"
-          className="z-50 w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-none [--anchor-gap:0.5rem]"
-        >
-          <SectionLabel>Navigate</SectionLabel>
-          {navLinks.map( ( {
-            href, label, Icon, target, external
-          } ) => {
-            const active = isActive(
-              href,
-              external
-            );
+  const menuNode = (
+    <Menu as="div" className="relative">
+      <MenuButton
+        aria-label="Open menu"
+        title="Menu"
+        className="relative h-9 w-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md inline-flex items-center justify-center hover:bg-hover transition-colors group"
+      >
+        <MenuIcon className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
+        {hasPendingActions && (
+          <span
+            aria-hidden
+            className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background animate-pulse-soft"
+          />
+        )}
+      </MenuButton>
 
-            return (
-              <MenuItem key={ href }>
-                {( {
-                  focus
-                } ) => (
-                  <Link
-                    href={ href }
-                    target={ target }
-                    onClick={ external ? undefined : pauseSketchForNav }
-                    className={ clsx(
-                      itemClass,
-                      focus && "bg-hover",
-                      active && "font-semibold"
-                    ) }
-                  >
-                    <Icon className="h-4 w-4 text-foreground/70" />
-                    <span className="flex-1">{label}</span>
-                    {active && (
-                      <span
-                        aria-hidden
-                        className="h-1.5 w-1.5 rounded-full bg-foreground"
-                      />
-                    )}
-                  </Link>
-                )}
-              </MenuItem>
-            );
-          } )}
+      <MenuItems
+        anchor="bottom start"
+        className="z-50 w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-none [--anchor-gap:0.5rem]"
+      >
+        <SectionLabel>Navigate</SectionLabel>
+        {navLinks.map( ( {
+          href, label, Icon, target, external
+        } ) => {
+          const active = isActive(
+            href,
+            external
+          );
 
-          {hasPendingActions && (
-            <>
-              <Divider />
-              <SectionLabel>Pending</SectionLabel>
-              {hasMissingPreviews && (
-                <MenuItem>
-                  {( {
-                    focus
-                  } ) => (
-                    <button
-                      type="button"
-                      onClick={ handleGeneratePreviews }
-                      disabled={ generatingPreviews }
-                      className={ clsx(
-                        itemClass,
-                        focus && "bg-hover"
-                      ) }
-                    >
-                      <Film className={ clsx(
-                        "h-4 w-4 text-foreground/70",
-                        generatingPreviews && "animate-pulse"
-                      ) } />
-                      <span className="flex-1 text-left">
-                        {generatingPreviews ? "Generating…" : "Generate previews"}
-                      </span>
-                    </button>
-                  )}
-                </MenuItem>
-              )}
-              {hasMissingThumbnails && (
-                <MenuItem>
-                  {( {
-                    focus
-                  } ) => (
-                    <button
-                      type="button"
-                      onClick={ handleGenerateThumbnails }
-                      disabled={ generatingThumbnails }
-                      className={ clsx(
-                        itemClass,
-                        focus && "bg-hover"
-                      ) }
-                    >
-                      <ImagePlus className={ clsx(
-                        "h-4 w-4 text-foreground/70",
-                        generatingThumbnails && "animate-pulse"
-                      ) } />
-                      <span className="flex-1 text-left">
-                        {generatingThumbnails ? "Generating…" : "Generate thumbnails"}
-                      </span>
-                    </button>
-                  )}
-                </MenuItem>
-              )}
-            </>
-          )}
-
-          <Divider />
-          <SectionLabel>Theme</SectionLabel>
-          {themeOptions.map( ( {
-            value, label, Icon
-          } ) => (
-            <MenuItem key={ value }>
+          return (
+            <MenuItem key={ href }>
               {( {
                 focus
               } ) => (
-                <button
-                  type="button"
-                  onClick={ () => setTheme( value ) }
+                <Link
+                  href={ href }
+                  target={ target }
+                  onClick={ external ? undefined : pauseSketchForNav }
                   className={ clsx(
                     itemClass,
-                    focus && "bg-hover"
+                    focus && "bg-hover",
+                    active && "font-semibold"
                   ) }
                 >
                   <Icon className="h-4 w-4 text-foreground/70" />
-                  <span className="flex-1 text-left">{label}</span>
-                  {mounted && theme === value && (
-                    <Check className="h-4 w-4 text-foreground" />
+                  <span className="flex-1">{label}</span>
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="h-1.5 w-1.5 rounded-full bg-foreground"
+                    />
                   )}
-                </button>
+                </Link>
               )}
             </MenuItem>
-          ) )}
+          );
+        } )}
 
-          {SHOW_NOTIFICATIONS && pushSupported && (
-            <>
-              <Divider />
-              <SectionLabel>Notifications</SectionLabel>
+        {hasPendingActions && (
+          <>
+            <Divider />
+            <SectionLabel>Pending</SectionLabel>
+            {hasMissingPreviews && (
               <MenuItem>
                 {( {
                   focus
                 } ) => (
                   <button
                     type="button"
-                    onClick={ pushSubscription ? unsubscribeFromPush : subscribeToPush }
-                    disabled={ pushLoading }
+                    onClick={ handleGeneratePreviews }
+                    disabled={ generatingPreviews }
                     className={ clsx(
                       itemClass,
                       focus && "bg-hover"
                     ) }
                   >
-                    {pushSubscription ? (
-                      <Bell className="h-4 w-4 text-foreground/70" />
-                    ) : (
-                      <BellOff className="h-4 w-4 text-foreground/70" />
-                    )}
+                    <Film className={ clsx(
+                      "h-4 w-4 text-foreground/70",
+                      generatingPreviews && "animate-pulse"
+                    ) } />
                     <span className="flex-1 text-left">
-                      {pushSubscription ? "Disable notifications" : "Enable notifications"}
+                      {generatingPreviews ? "Generating…" : "Generate previews"}
                     </span>
                   </button>
                 )}
               </MenuItem>
-            </>
-          )}
-        </MenuItems>
-      </Menu>
+            )}
+            {hasMissingThumbnails && (
+              <MenuItem>
+                {( {
+                  focus
+                } ) => (
+                  <button
+                    type="button"
+                    onClick={ handleGenerateThumbnails }
+                    disabled={ generatingThumbnails }
+                    className={ clsx(
+                      itemClass,
+                      focus && "bg-hover"
+                    ) }
+                  >
+                    <ImagePlus className={ clsx(
+                      "h-4 w-4 text-foreground/70",
+                      generatingThumbnails && "animate-pulse"
+                    ) } />
+                    <span className="flex-1 text-left">
+                      {generatingThumbnails ? "Generating…" : "Generate thumbnails"}
+                    </span>
+                  </button>
+                )}
+              </MenuItem>
+            )}
+          </>
+        )}
+
+        <Divider />
+        <SectionLabel>Theme</SectionLabel>
+        {themeOptions.map( ( {
+          value, label, Icon
+        } ) => (
+          <MenuItem key={ value }>
+            {( {
+              focus
+            } ) => (
+              <button
+                type="button"
+                onClick={ () => setTheme( value ) }
+                className={ clsx(
+                  itemClass,
+                  focus && "bg-hover"
+                ) }
+              >
+                <Icon className="h-4 w-4 text-foreground/70" />
+                <span className="flex-1 text-left">{label}</span>
+                {mounted && theme === value && (
+                  <Check className="h-4 w-4 text-foreground" />
+                )}
+              </button>
+            )}
+          </MenuItem>
+        ) )}
+
+        {SHOW_NOTIFICATIONS && pushSupported && (
+          <>
+            <Divider />
+            <SectionLabel>Notifications</SectionLabel>
+            <MenuItem>
+              {( {
+                focus
+              } ) => (
+                <button
+                  type="button"
+                  onClick={ pushSubscription ? unsubscribeFromPush : subscribeToPush }
+                  disabled={ pushLoading }
+                  className={ clsx(
+                    itemClass,
+                    focus && "bg-hover"
+                  ) }
+                >
+                  {pushSubscription ? (
+                    <Bell className="h-4 w-4 text-foreground/70" />
+                  ) : (
+                    <BellOff className="h-4 w-4 text-foreground/70" />
+                  )}
+                  <span className="flex-1 text-left">
+                    {pushSubscription ? "Disable notifications" : "Enable notifications"}
+                  </span>
+                </button>
+              )}
+            </MenuItem>
+          </>
+        )}
+      </MenuItems>
+    </Menu>
+  );
+
+  if ( renderInline && slot?.slotEl ) {
+    return createPortal(
+      menuNode,
+      slot.slotEl
+    );
+  }
+
+  return (
+    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-50">
+      {menuNode}
     </div>
   );
 }

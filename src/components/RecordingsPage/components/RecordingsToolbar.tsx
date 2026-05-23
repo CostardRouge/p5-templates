@@ -1,6 +1,9 @@
 import {
   Grid, List
 } from "lucide-react";
+import {
+  MenuBarSlot
+} from "@/components/MenuBarPortal";
 import SortControls from "./SortControls";
 import type {
   SortConfig
@@ -32,14 +35,17 @@ export default function RecordingsToolbar( {
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Recordings
-        </h1>
-        <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">
-          {recordingsCount} {recordingsCount === 1 ? "recording" : "recordings"}
-          {statusFilter !== "all" && ` • ${ statusFilter }`}
-        </p>
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <MenuBarSlot />
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">
+            Recordings
+          </h1>
+          <p className="text-xs sm:text-sm text-foreground/60 mt-0.5 sm:mt-1">
+            {recordingsCount} {recordingsCount === 1 ? "recording" : "recordings"}
+            {statusFilter !== "all" && ` • ${ statusFilter }`}
+          </p>
+        </div>
       </div>
 
       {/* Desktop: Single row with all controls */}

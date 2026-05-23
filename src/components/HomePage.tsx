@@ -21,6 +21,7 @@ import {
   Triangle
 } from "lucide-react";
 import AnimatedPreview from "@/components/AnimatedPreview";
+import ScrollToTopButton from "@/components/ScrollToTopButton";
 import type {
   TemplateItem
 } from "@/app/templates/getTemplatesData";
@@ -955,6 +956,8 @@ export default function HomePage( {
           ) : null}
         </div>
       </section>
+
+      <ScrollToTopButton />
     </div>
   );
 }
