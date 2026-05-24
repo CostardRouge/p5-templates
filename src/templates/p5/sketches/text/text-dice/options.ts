@@ -162,7 +162,7 @@ export const formValues = {
         30,
         30
       ],
-      strokeWeight: 2,
+      strokeWeight: 4.5,
       background: [
         230,
         57,
@@ -173,8 +173,8 @@ export const formValues = {
     },
     {
       text: "TWO",
-      font: "stardom",
-      sizeFactor: 1,
+      font: "openSans",
+      sizeFactor: 0.16,
       fill: [
         29,
         53,
@@ -185,7 +185,7 @@ export const formValues = {
         250,
         238
       ],
-      strokeWeight: 2,
+      strokeWeight: 4,
       background: [
         168,
         218,
@@ -197,7 +197,7 @@ export const formValues = {
     {
       text: "THREE",
       font: "sans",
-      sizeFactor: 1,
+      sizeFactor: 0.18,
       fill: [
         255,
         255,
@@ -208,7 +208,7 @@ export const formValues = {
         0,
         0
       ],
-      strokeWeight: 2,
+      strokeWeight: 4.5,
       background: [
         69,
         123,
