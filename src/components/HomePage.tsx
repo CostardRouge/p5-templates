@@ -21,6 +21,9 @@ import {
   Triangle
 } from "lucide-react";
 import AnimatedPreview from "@/components/AnimatedPreview";
+import {
+  MenuBarSlot
+} from "@/components/MenuBarPortal";
 import ScrollToTopButton from "@/components/ScrollToTopButton";
 import type {
   TemplateItem
@@ -344,6 +347,11 @@ export default function HomePage( {
 
       {/* ============ HERO ============ */}
       <section className="relative px-4 sm:px-8 lg:px-12 pt-10 sm:pt-16 lg:pt-20 pb-16 sm:pb-24 max-w-[1440px] mx-auto">
+        {/* Mobile-only inline menubar slot — avoids the floating menu
+            overlapping the metadata strip on narrow viewports. On md+ the
+            slot is hidden and the menu falls back to its floating position. */}
+        <MenuBarSlot className="md:hidden mb-4" />
+
         {/* top metadata bar */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-label mb-10 sm:mb-16">
           <span className="tabular-nums">v.0.1 · {new Date().getFullYear()}</span>

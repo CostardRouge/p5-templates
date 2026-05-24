@@ -93,7 +93,10 @@ export function MenuBarSlotProvider( {
 
       // Seed as visible when a slot mounts so the menu portals immediately
       // instead of briefly flashing in its floating position on first paint.
-      if ( el ) {
+      // Skip the seed when the slot has no layout (e.g. `md:hidden`) so the
+      // menu stays in its floating position on viewports where the slot is
+      // hidden, instead of disappearing into the invisible slot.
+      if ( el && el.getClientRects().length > 0 ) {
         setInlineVisible( true );
       }
     },
