@@ -43,6 +43,10 @@ function pickMimeType( format: RecordingFormat ): string {
  *
  * Only `webm` (always) and `mp4` (Safari 14.1+ / Chromium 105+) are
  * available here — `gif` falls back to the deterministic strategy.
+ *
+ * Realtime has no known end time — the user stops it when they like.
+ * The UI surfaces this with a pulsing button rather than a progress
+ * fill, so we don't bother emitting per-frame progress events.
  */
 export class RealtimeRecorder extends BaseRecorder {
   readonly mode = "realtime" as const;
@@ -55,7 +59,8 @@ export class RealtimeRecorder extends BaseRecorder {
   private resolveResult: ( ( r: RecorderResult ) => void ) | null = null;
   private rejectResult: ( ( e: Error ) => void ) | null = null;
   private autoStopTimer: ReturnType<typeof setTimeout> | null = null;
-  private progressRafId: number | null = null;
+  private hostPaused = false;
+  private mirrorStarted = false;
 
   constructor(
     private host: RecorderHost,
@@ -71,160 +76,117 @@ export class RealtimeRecorder extends BaseRecorder {
 
     const source = this.host.getCaptureSource();
 
-    // Start mirroring the rendered output into the stream canvas before we
-    // grab it — DOM engines only paint their mirror canvas while this loop
-    // is running, so the captured stream would be blank otherwise.
-    source.beginRealtime();
-
-    const canvas = source.getStreamCanvas();
-
-    if ( !canvas ) {
-      source.endRealtime();
-      throw new Error( "RealtimeRecorder: capture source has no stream canvas." );
-    }
-
-    this.mimeType = pickMimeType( this.format );
-
-    const stream = canvas.captureStream( this.host.frameRate );
-
     this.source = source;
 
-    this.mediaRecorder = new MediaRecorder(
-      stream,
-      {
-        mimeType: this.mimeType,
-        videoBitsPerSecond: options.videoBitsPerSecond ?? 15_000_000
+    try {
+      // Start mirroring the rendered output into the stream canvas before
+      // we grab it — DOM engines only paint their mirror canvas while this
+      // loop is running, so the captured stream would be blank otherwise.
+      source.beginRealtime();
+      this.mirrorStarted = true;
+
+      const canvas = source.getStreamCanvas();
+
+      if ( !canvas ) {
+        throw new Error( "RealtimeRecorder: capture source has no stream canvas." );
       }
-    );
 
-    this.chunks = [];
+      this.mimeType = pickMimeType( this.format );
 
-    this.mediaRecorder.ondataavailable = ( event ) => {
-      if ( event.data.size > 0 ) {
-        this.chunks.push( event.data );
-      }
-    };
+      const stream = canvas.captureStream( this.host.frameRate );
 
-    this.resultPromise = new Promise<RecorderResult>( (
-      resolve, reject
-    ) => {
-      this.resolveResult = resolve;
-      this.rejectResult = reject;
-    } );
-
-    this.mediaRecorder.onstop = () => {
-      const blob = new Blob(
-        this.chunks,
+      this.mediaRecorder = new MediaRecorder(
+        stream,
         {
-          type: this.mimeType
+          mimeType: this.mimeType,
+          videoBitsPerSecond: options.videoBitsPerSecond ?? 15_000_000
         }
       );
-      const result: RecorderResult = {
-        blob,
-        mimeType: this.mimeType,
-        fileExtension: this.format === "mp4" ? "mp4" : "webm"
+
+      this.chunks = [];
+
+      this.mediaRecorder.ondataavailable = ( event ) => {
+        if ( event.data.size > 0 ) {
+          this.chunks.push( event.data );
+        }
       };
 
-      this._isRecording = false;
-      this.stopProgressTicker();
-      this.source?.endRealtime();
-      this.emit(
-        "stop",
-        result
-      );
-      this.resolveResult?.( result );
-    };
+      this.resultPromise = new Promise<RecorderResult>( (
+        resolve, reject
+      ) => {
+        this.resolveResult = resolve;
+        this.rejectResult = reject;
+      } );
 
-    this.mediaRecorder.onerror = ( event: Event ) => {
-      const error = new Error( `MediaRecorder error: ${ event.type }` );
-
-      this._isRecording = false;
-      this.stopProgressTicker();
-      this.source?.endRealtime();
-      this.emit(
-        "error",
-        error
-      );
-      this.rejectResult?.( error );
-    };
-
-    // Pause the draw loop, jump to frame 0 + zero the time bridge,
-    // then resume drawing — MediaRecorder captures the canvas stream
-    // from the very first frame of the loop, matching backend behaviour.
-    this.host.pause();
-    await this.host.resetToStart();
-
-    this._isRecording = true;
-    this.mediaRecorder.start( 16 );
-    this.host.resume();
-    this.emit(
-      "start",
-      undefined as any
-    );
-
-    // Wall-clock progress estimate: realtime has no frame counter, so
-    // we tick percentage against the sketch's expected loop duration
-    // (totalFrames / frameRate). Caps at 100% if the user lets the
-    // recording run past one loop. Without this the button's fill bar
-    // would stay at 0% for the whole capture.
-    const expectedDurationMs =
-      this.host.frameRate > 0
-        ? ( this.host.totalFrames / this.host.frameRate ) * 1000
-        : 0;
-
-    if ( expectedDurationMs > 0 ) {
-      const startedAt = performance.now();
-      const totalFrames = this.host.totalFrames;
-      const frameRate = this.host.frameRate;
-
-      const tick = () => {
-        if ( !this._isRecording ) {
-          return;
-        }
-
-        const elapsed = performance.now() - startedAt;
-        const pct = Math.min(
-          100,
-          ( elapsed / expectedDurationMs ) * 100
-        );
-        const frame = Math.min(
-          totalFrames,
-          Math.round( ( elapsed / 1000 ) * frameRate )
-        );
-
-        this.emit(
-          "progress",
+      this.mediaRecorder.onstop = () => {
+        const blob = new Blob(
+          this.chunks,
           {
-            frame,
-            totalFrames,
-            percentage: pct,
-            stage: "capturing"
+            type: this.mimeType
           }
         );
+        const result: RecorderResult = {
+          blob,
+          mimeType: this.mimeType,
+          fileExtension: this.format === "mp4" ? "mp4" : "webm"
+        };
 
-        this.progressRafId = requestAnimationFrame( tick );
+        this.teardown();
+        this.emit(
+          "stop",
+          result
+        );
+        this.resolveResult?.( result );
       };
 
-      this.progressRafId = requestAnimationFrame( tick );
-    }
+      this.mediaRecorder.onerror = ( event: Event ) => {
+        const error = new Error( `MediaRecorder error: ${ event.type }` );
 
-    if ( options.maxDurationMs && options.maxDurationMs > 0 ) {
-      this.autoStopTimer = setTimeout(
-        () => this.stop().catch( () => undefined ),
-        options.maxDurationMs
+        this.teardown();
+        this.emit(
+          "error",
+          error
+        );
+        this.rejectResult?.( error );
+      };
+
+      // Pause the draw loop, jump to frame 0 + zero the time bridge, then
+      // resume — MediaRecorder captures the canvas stream from the very
+      // first frame of the loop, matching backend behaviour.
+      this.host.pause();
+      this.hostPaused = true;
+      await this.host.resetToStart();
+
+      this._isRecording = true;
+      this.mediaRecorder.start( 16 );
+      this.host.resume();
+      this.hostPaused = false;
+      this.emit(
+        "start",
+        undefined as never
       );
-    }
-  }
 
-  private stopProgressTicker(): void {
-    if ( this.progressRafId !== null ) {
-      cancelAnimationFrame( this.progressRafId );
-      this.progressRafId = null;
+      if ( options.maxDurationMs && options.maxDurationMs > 0 ) {
+        this.autoStopTimer = setTimeout(
+          () => this.stop().catch( () => undefined ),
+          options.maxDurationMs
+        );
+      }
+    } catch( error ) {
+      // Any failure during setup must leave the host as we found it: no
+      // mirror loop spinning, no paused engine, no stale MediaRecorder.
+      this.teardown();
+      throw error instanceof Error ? error : new Error( String( error ) );
     }
   }
 
   async stop(): Promise<RecorderResult> {
-    if ( !this._isRecording || !this.mediaRecorder ) {
+    if ( !this._isRecording ) {
+      // Already settled — return the existing promise (or a clean reject).
+      if ( this.resultPromise ) {
+        return this.resultPromise;
+      }
+
       throw new Error( "RealtimeRecorder: not recording." );
     }
 
@@ -233,7 +195,7 @@ export class RealtimeRecorder extends BaseRecorder {
       this.autoStopTimer = null;
     }
 
-    if ( this.mediaRecorder.state !== "inactive" ) {
+    if ( this.mediaRecorder && this.mediaRecorder.state !== "inactive" ) {
       this.mediaRecorder.stop();
     }
 
@@ -245,26 +207,58 @@ export class RealtimeRecorder extends BaseRecorder {
       return;
     }
 
+    const recorder = this.mediaRecorder;
+
+    if ( recorder && recorder.state !== "inactive" ) {
+      // Drop the natural stop path so we don't surface a partial blob to
+      // the caller.
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      try {
+        recorder.stop();
+      } catch {
+        // Ignore — recorder may already be transitioning.
+      }
+    }
+
+    this.chunks = [];
+    this.teardown();
+    this.emit(
+      "cancel",
+      undefined as never
+    );
+    this.rejectResult?.( new Error( "Recording cancelled." ) );
+  }
+
+  /**
+   * Unwind every side effect of {@link start} — mirror loop, paused
+   * engine, pending auto-stop. Safe to call from any code path
+   * (success, failure, cancel) and idempotent.
+   */
+  private teardown(): void {
+    this._isRecording = false;
+
     if ( this.autoStopTimer ) {
       clearTimeout( this.autoStopTimer );
       this.autoStopTimer = null;
     }
 
-    this.stopProgressTicker();
-
-    if ( this.mediaRecorder && this.mediaRecorder.state !== "inactive" ) {
-      this.mediaRecorder.ondataavailable = null;
-      this.mediaRecorder.onstop = null;
-      this.mediaRecorder.stop();
+    if ( this.mirrorStarted ) {
+      try {
+        this.source?.endRealtime();
+      } catch {
+        // Engine teardown shouldn't mask the originating error.
+      }
+      this.mirrorStarted = false;
     }
 
-    this.source?.endRealtime();
-    this.chunks = [];
-    this._isRecording = false;
-    this.emit(
-      "cancel",
-      undefined as any
-    );
-    this.rejectResult?.( new Error( "Recording cancelled." ) );
+    if ( this.hostPaused ) {
+      try {
+        this.host.resume();
+      } catch {
+        // Same — never throw from teardown.
+      }
+      this.hostPaused = false;
+    }
   }
 }
