@@ -109,7 +109,7 @@
 
 ## 🏗️ Rendering Engines
 
-- [ ] **P5 v2 support** — evaluate migration to P5.js v2; audit breaking API changes and update all templates
+- [ ] **P5 v2 support** — bootstrap done (p5@^2.2.3 installed, `loadP5Class()` switched from `p5/lib/p5.js` to the ESM `p5` entry, `@types/p5` removed in favor of v2's bundled types); still TODO: per-sketch migration for `preload()` removal, promise-returning loaders (`loadImage`/`loadFont`/`loadJSON`), and internal `p._renderer.*` access in `src/utils/addScreenPositionFunction.js`
 - [ ] **HTML template engine** — plain HTML/CSS/JS templates as a first-class engine type; same `TemplateOptions` / `CaptureActions` flow, rendered in iframe or headless browser
 - [x] **GSAP integration** — optional GSAP animation library for templates; `useGsap` hook providing a timeline synced to the recording frame clock
 - [ ] **Lottie support** — load and play Lottie JSON animations frame-by-frame in sync with recording; `LottieLayer` component or P5 utility

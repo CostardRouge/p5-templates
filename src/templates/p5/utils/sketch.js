@@ -2,7 +2,9 @@ import time from "./time.js";
 import debug from "./debug.js";
 import events from "./events.js";
 import slides from "./slides/index";
-import options, { registerEvents as registerOptionsEvents } from "./options";
+import options, {
+  registerEvents as registerOptionsEvents
+} from "./options";
 import {
   registerAnimationBridge
 } from "@/lib/animationBridge";
@@ -33,7 +35,9 @@ export async function loadP5Class() {
   }
 
   if ( !_p5ClassPromise ) {
-    _p5ClassPromise = import( "p5/lib/p5.js" ).then( ( module ) => {
+    // p5 v2 is ESM-only. The package's "." export resolves to dist/app.js
+    // which default-exports the p5 constructor.
+    _p5ClassPromise = import( "p5" ).then( ( module ) => {
       const P5 = module?.default ?? globalThis.p5 ?? module;
 
       if ( !P5 ) {
