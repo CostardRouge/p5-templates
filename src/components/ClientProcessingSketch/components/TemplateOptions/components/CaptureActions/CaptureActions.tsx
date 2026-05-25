@@ -13,7 +13,7 @@ import {
 } from "@/hooks/useRecordingQueue";
 import {
   getScopeAssetPath, resolveAssetURL
-} from "@/p5/shared/utils";
+} from "@/lib/assets/registry";
 import type {
   JobId, JobModel, JobStatusEnum, RecordingProgressionStream
 } from "@/types/recording.types";

@@ -1,10 +1,9 @@
 import {
-  registerBlob
-} from "@/p5/shared/blobMap";
-
-import {
-  getScopeAssetPath
-} from "@/p5/shared/utils";
+  registerBlob,
+  unregisterBlob,
+  getScopeAssetPath,
+  type AssetType
+} from "@/lib/assets/registry";
 
 import {
   getSketchOptions,
@@ -24,7 +23,7 @@ type Scope =
     slide: number;
   };
 
-export type AssetType = "images" | "videos" | "audios" | "json";
+export type { AssetType };
 
 export default function useAssetDrop() {
   async function addAssets( {
@@ -91,13 +90,8 @@ export default function useAssetDrop() {
       1
     );
 
-    if ( removed && window.__blobAssetMap?.[ removed ] ) {
-      URL.revokeObjectURL( window.__blobAssetMap[ removed ] );
-      delete window.__blobAssetMap[ removed ];
-    }
-
-    if ( removed && window.__blobAssetFiles?.[ removed ] ) {
-      delete window.__blobAssetFiles[ removed ];
+    if ( removed ) {
+      unregisterBlob( removed );
     }
 
     setSketchOptions(

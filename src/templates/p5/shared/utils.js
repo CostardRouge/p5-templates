@@ -1,45 +1,3 @@
-/* ------------------------------------------------------------------ */
-/*  Helper: resolve a path → URL (prefers local blob URL)             */
-/* ------------------------------------------------------------------ */
-
-/**
- * @param {string} path
- * @param {string} [id]
- * @returns {string}
- */
-export const resolveAssetURL = (
-  path, id
-) => {
-  if ( !path ) {
-    return "";
-  }
-
-  const blobURL = window.__blobAssetMap?.[ path ];
-
-  if ( blobURL ) {
-    return blobURL;
-  }
-
-  // Keep already-resolved remote/blob URLs untouched.
-  if ( /^(https?:|blob:)/.test( path ) ) {
-    return path;
-  }
-
-  const normalizedPath = path.replace(
-    /^\/+/,
-    ""
-  );
-
-  // Public assets must always resolve from /assets (even when an id exists).
-  if ( /^assets\//.test( normalizedPath ) ) {
-    return `${ location.origin }/${ normalizedPath }`;
-  }
-
-  return id
-    ? `${ location.origin }/api/s3/${ id }/assets/${ normalizedPath }`
-    : `${ location.origin }/${ normalizedPath }`;
-};
-
 export function deepMerge(
   targetObject, sourceObject
 ) {
@@ -101,23 +59,3 @@ export function structuredClone( value ) {
   return JSON.parse( JSON.stringify( value ) );
 }
 
-/**
- * @typedef {Object} SlideScope
- * @property {number} slide
- */
-
-/**
- * @param {string} name
- * @param {string} type
- * @param {"global" | SlideScope} [scope="global"]
- * @returns {string}
- */
-export function getScopeAssetPath(
-  name, type, scope = "global"
-) {
-  if ( scope !== "global" && scope?.slide !== undefined ) {
-    return `slide-${ scope.slide }/${ type }/${ name }`;
-  }
-
-  return `global/${ type }/${ name }`;
-}

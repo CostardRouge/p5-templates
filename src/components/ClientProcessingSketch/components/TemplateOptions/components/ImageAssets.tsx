@@ -26,7 +26,7 @@ import {
 
 import {
   resolveAssetURL
-} from "@/p5/shared/utils";
+} from "@/lib/assets/registry";
 import {
   setSketchOptions
 } from "@/lib/syncSketchOptions";

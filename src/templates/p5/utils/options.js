@@ -15,12 +15,9 @@ import {
 } from "../shared/syncSketchOptions.js";
 
 import {
-  resolveAssetURL
-} from "../shared/utils.js";
-
-import {
+  resolveAssetURL,
   getBlobFile
-} from "../shared/blobMap.js";
+} from "@/lib/assets/registry";
 
 /* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
