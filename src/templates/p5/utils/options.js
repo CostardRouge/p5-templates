@@ -18,6 +18,10 @@ import {
   resolveAssetURL
 } from "../shared/utils.js";
 
+import {
+  getBlobFile
+} from "../shared/blobMap.js";
+
 /* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
 /* ------------------------------------------------------------------ */
@@ -148,7 +152,8 @@ async function _refreshAssets() {
 
       readExifInfo(
         obj,
-        url
+        url,
+        path
       );
     }
 
@@ -177,15 +182,22 @@ async function _refreshAssets() {
 }
 
 async function readExifInfo(
-  object, url
+  object, url, path
 ) {
   try {
     let tags;
 
     try {
-      tags = url.startsWith( "blob:" )
-        ? await exif.load( await ( await fetch( url ) ).arrayBuffer() )
-        : await exif.load( url );
+      // Prefer reading bytes from the original File we kept in memory when
+      // the asset was dropped — avoids a second fetch (network or blob)
+      // for an image p5 already loaded from the same source.
+      const cachedFile = path ? getBlobFile( path ) : undefined;
+
+      if ( cachedFile ) {
+        tags = await exif.load( await cachedFile.arrayBuffer() );
+      } else {
+        tags = await exif.load( url );
+      }
     } catch( error ) {
       console.error(
         "readExifInfo error",

@@ -105,6 +105,9 @@ export type RecordingProgressionStream = {
 
 /* Map filename → object-URL   (lives only for the browser session) */
 type BlobMap = Record<string, string>;
+/* Map filename → File reference so we can read the original bytes
+   without going through fetch() on the blob: URL. */
+type BlobFileMap = Record<string, File>;
 
 declare global {
   interface Window {
@@ -116,6 +119,7 @@ declare global {
 
     // Assets
     __blobAssetMap?: BlobMap;
+    __blobAssetFiles?: BlobFileMap;
     // Slides
     slides: {
       index: number;

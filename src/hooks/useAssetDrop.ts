@@ -96,6 +96,10 @@ export default function useAssetDrop() {
       delete window.__blobAssetMap[ removed ];
     }
 
+    if ( removed && window.__blobAssetFiles?.[ removed ] ) {
+      delete window.__blobAssetFiles[ removed ];
+    }
+
     setSketchOptions(
       opts,
       "react"
