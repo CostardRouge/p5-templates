@@ -30,6 +30,7 @@ export class AsyncLoopRecorder extends BaseRecorder {
   private encoder: FrameEncoder | null = null;
   private cancelled = false;
   private runPromise: Promise<RecorderResult> | null = null;
+  private hostPaused = false;
 
   constructor(
     private host: RecorderHost,
@@ -56,34 +57,49 @@ export class AsyncLoopRecorder extends BaseRecorder {
     // snapshot dimensions into the encoder. Otherwise a reset-triggered
     // resize would invalidate the encoder's codec string mid-recording.
     this.host.pause();
-    await this.host.resetToStart();
+    this.hostPaused = true;
 
-    const {
-      width, height
-    } = source;
+    try {
+      await this.host.resetToStart();
 
-    if ( !width || !height ) {
-      throw new Error( "AsyncLoopRecorder: capture source has no dimensions." );
+      const {
+        width, height
+      } = source;
+
+      if ( !width || !height ) {
+        throw new Error( "AsyncLoopRecorder: capture source has no dimensions." );
+      }
+
+      this.encoder = this.encoderFactory( {
+        width,
+        height,
+        frameRate: this.host.frameRate,
+        totalFrames
+      } );
+    } catch( error ) {
+      // Setup failure must not leave the host stuck in paused state.
+      this.resumeHost();
+      this.encoder?.dispose();
+      this.encoder = null;
+      throw error;
     }
-
-    this.encoder = this.encoderFactory( {
-      width,
-      height,
-      frameRate: this.host.frameRate,
-      totalFrames
-    } );
 
     this.cancelled = false;
     this._isRecording = true;
     this.emit(
       "start",
-      undefined as any
+      undefined as never
     );
 
     this.runPromise = this.run(
       source,
       totalFrames
     );
+
+    // Swallow the rejection here — `stop()` is the one that surfaces it
+    // to the caller. Without this, the unhandled rejection from an early
+    // failure (e.g. immediate cancel) would taint the global handler.
+    this.runPromise.catch( () => undefined );
   }
 
   private async run(
@@ -159,7 +175,7 @@ export class AsyncLoopRecorder extends BaseRecorder {
       if ( this.cancelled ) {
         this.emit(
           "cancel",
-          undefined as any
+          undefined as never
         );
       } else {
         this.emit(
@@ -173,13 +189,13 @@ export class AsyncLoopRecorder extends BaseRecorder {
       this._isRecording = false;
       this.encoder?.dispose();
       this.encoder = null;
-      this.host.resume();
+      this.resumeHost();
     }
   }
 
   stop(): Promise<RecorderResult> {
     if ( !this.runPromise ) {
-      throw new Error( "AsyncLoopRecorder: stop() called before start()." );
+      return Promise.reject( new Error( "AsyncLoopRecorder: stop() called before start()." ) );
     }
 
     return this.runPromise;
@@ -191,5 +207,18 @@ export class AsyncLoopRecorder extends BaseRecorder {
     }
 
     this.cancelled = true;
+  }
+
+  private resumeHost(): void {
+    if ( !this.hostPaused ) {
+      return;
+    }
+    this.hostPaused = false;
+    try {
+      this.host.resume();
+    } catch {
+      // Resuming should never throw, but if it does we don't want to
+      // mask the original error from `run`.
+    }
   }
 }

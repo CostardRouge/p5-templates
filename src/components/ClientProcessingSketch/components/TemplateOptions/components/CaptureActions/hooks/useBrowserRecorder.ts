@@ -6,6 +6,7 @@ import {
 import {
   createEngineHost,
   createRecorder,
+  type Recorder,
   type RecorderProgress,
   type RecorderResult,
   type RecordingFormat,
@@ -50,7 +51,7 @@ function triggerDownload(
   a.click();
   setTimeout(
     () => {
-      document.body.removeChild( a );
+      a.remove();
       URL.revokeObjectURL( url );
     },
     100
@@ -62,7 +63,8 @@ function triggerDownload(
  * creates the right strategy, wires progress events into React state,
  * and triggers a download on completion.
  *
- * Re-entering `start()` while a recording is active is a no-op.
+ * Re-entering `start()` while a recording is active is a no-op — clicks
+ * on the start button while a capture is in flight must not abort it.
  */
 export function useBrowserRecorder( {
   engine,
@@ -83,12 +85,20 @@ export function useBrowserRecorder( {
     setError
   ] = useState<Error | null>( null );
 
-  const recorderRef = useRef<ReturnType<typeof createRecorder> | null>( null );
+  const recorderRef = useRef<Recorder | null>( null );
+
+  // Keep mutable refs to the names used in completion handlers so the
+  // download filename always reflects the latest sketch name, even if
+  // the user renames mid-recording.
+  const sketchNameRef = useRef( sketchName );
+
+  sketchNameRef.current = sketchName;
 
   const cleanup = useCallback(
     () => {
       recorderRef.current = null;
       setIsRecording( false );
+      setProgress( null );
     },
     []
   );
@@ -115,7 +125,7 @@ export function useBrowserRecorder( {
         activeSlideIndex
       );
 
-      let recorder: ReturnType<typeof createRecorder>;
+      let recorder: Recorder;
 
       try {
         recorder = createRecorder( {
@@ -124,9 +134,7 @@ export function useBrowserRecorder( {
           mode
         } );
       } catch( e ) {
-        const err = e instanceof Error ? e : new Error( String( e ) );
-
-        setError( err );
+        setError( e instanceof Error ? e : new Error( String( e ) ) );
         return;
       }
 
@@ -137,7 +145,15 @@ export function useBrowserRecorder( {
       recorder.on(
         "stop",
         ( result: RecorderResult ) => {
-          const fileName = `${ sketchName || "sketch" }.${ result.fileExtension }`;
+          // Only the recorder we own should be allowed to trigger a
+          // download — guards against late events from a cancelled
+          // run racing with a new one.
+          if ( recorderRef.current !== recorder ) {
+            return;
+          }
+
+          const safeName = sketchNameRef.current || "sketch";
+          const fileName = `${ safeName }.${ result.fileExtension }`;
 
           triggerDownload(
             result.blob,
@@ -149,6 +165,9 @@ export function useBrowserRecorder( {
       recorder.on(
         "error",
         ( e: Error ) => {
+          if ( recorderRef.current !== recorder ) {
+            return;
+          }
           setError( e );
           cleanup();
         }
@@ -156,6 +175,9 @@ export function useBrowserRecorder( {
       recorder.on(
         "cancel",
         () => {
+          if ( recorderRef.current !== recorder ) {
+            return;
+          }
           cleanup();
         }
       );
@@ -166,17 +188,18 @@ export function useBrowserRecorder( {
       try {
         await recorder.start();
       } catch( e ) {
-        const err = e instanceof Error ? e : new Error( String( e ) );
-
-        setError( err );
-        cleanup();
+        // start() failures emit "error" already — but a synchronous
+        // throw before any listener fires would leave us stuck.
+        if ( recorderRef.current === recorder ) {
+          setError( e instanceof Error ? e : new Error( String( e ) ) );
+          cleanup();
+        }
       }
     },
     [
       engine,
       options,
       activeSlideIndex,
-      sketchName,
       cleanup
     ]
   );
@@ -192,7 +215,7 @@ export function useBrowserRecorder( {
       try {
         await recorder.stop();
       } catch {
-        // already handled via on("error")
+        // Already handled via on("error").
       }
     },
     []
@@ -205,6 +228,8 @@ export function useBrowserRecorder( {
     []
   );
 
+  // On unmount, abort any in-flight capture so the host engine isn't
+  // left paused with a dangling mirror loop.
   useEffect(
     () => () => {
       recorderRef.current?.cancel();
