@@ -31,7 +31,8 @@ sketch.draw( () => {
   const fontName = options.sketch?.shape?.font ?? "sans";
   const font = string.fonts?.[ fontName ];
   const text = options.sketch?.shape?.text ?? "0";
-  const size = ( p.width + p.height ) / 8;
+  const sizeFactor = options.sketch?.shape?.sizeFactor ?? 1;
+  const size = ( ( p.width + p.height ) / 8 ) * sizeFactor;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.25;
   const simplifyThreshold = options.sketch?.shape?.simplifyThreshold ?? 0;
 
@@ -51,6 +52,15 @@ sketch.draw( () => {
     return;
   }
 
+  const rotateYSpeed = options.sketch?.animation?.rotateYSpeed ?? 4;
+  const rotateXSpeed = options.sketch?.animation?.rotateXSpeed ?? 2;
+  const rotateZEnabled = options.sketch?.animation?.rotateZEnabled ?? true;
+  const rotateZSpeed = options.sketch?.animation?.rotateZSpeed ?? 1;
+  const rotateYEasingFn =
+    easing?.[ options.sketch?.animation?.rotateYEasing ] ?? easing.easeInOutCubic;
+  const rotateXEasingFn =
+    easing?.[ options.sketch?.animation?.rotateXEasing ] ?? easing.easeInOutCubic;
+
   p.rotateY( animation.ease( {
     values: [
       p.PI / 2,
@@ -58,22 +68,26 @@ sketch.draw( () => {
       0,
       0
     ],
-    currentTime: animation.progression * 4,
+    currentTime: animation.progression * rotateYSpeed,
     duration: 1,
-    easingFn: easing.easeInOutCubic
+    easingFn: rotateYEasingFn
   } ) );
   p.rotateX( animation.ease( {
     values: [
       0,
       p.PI / 2
     ],
-    currentTime: animation.progression * 2,
+    currentTime: animation.progression * rotateXSpeed,
     duration: 1,
-    easingFn: easing.easeInOutCubic
+    easingFn: rotateXEasingFn
   } ) );
-  p.rotateZ( animation.angle );
 
-  const H = p.height / 4;
+  if ( rotateZEnabled ) {
+    p.rotateZ( animation.angle * rotateZSpeed );
+  }
+
+  const radiusFactor = options.sketch?.cylinder?.radiusFactor ?? 1;
+  const H = ( p.height / 4 ) * radiusFactor;
 
   const count = options.sketch?.cylinder?.count ?? 50;
   const angleStep = p.TAU / count;
@@ -81,8 +95,15 @@ sketch.draw( () => {
   p.strokeWeight( options.sketch?.cylinder?.strokeWeight ?? 6 );
 
   const hueMultiplier = options.sketch?.color?.hueMultiplier ?? 4;
+  const hueOffsetSpeed = options.sketch?.color?.hueOffsetSpeed ?? 1;
+  const opacityMin = options.sketch?.color?.opacityMin ?? 1;
   const darkness = options.sketch?.color?.darkness ?? 25;
   const opacityThreshold = options.sketch?.color?.opacityThreshold ?? 10;
+
+  const waveXDivisor = options.sketch?.wave?.xDivisor ?? 4;
+  const waveYDivisor = options.sketch?.wave?.yDivisor ?? 40;
+  const waveSpeedMultiplier = options.sketch?.wave?.speedMultiplier ?? 8;
+  const waveProgressionMultiplier = options.sketch?.wave?.progressionMultiplier ?? 6;
 
   for ( let angle = 0; angle < p.TAU; angle += angleStep ) {
     const progression = angle / p.TAU;
@@ -99,28 +120,28 @@ sketch.draw( () => {
 
     const xSign = Math.sin( animation.angle );
     const ySign = Math.cos( -animation.angle );
-    const hueOpacitySpeed = -animation.angle * 8;
+    const hueOpacitySpeed = -animation.angle * waveSpeedMultiplier;
 
     letterPoints.forEach( ( {
       x, y
     } ) => {
       const wave =
-        xSign * ( x / ( p.width / 4 ) ) +
-        ySign * ( y / ( p.height / 40 ) ) +
+        xSign * ( x / ( p.width / waveXDivisor ) ) +
+        ySign * ( y / ( p.height / waveYDivisor ) ) +
         hueOpacitySpeed +
-        progression * 6;
+        progression * waveProgressionMultiplier;
       const sineWave = Math.sin( wave );
       const opacityFactor = p.map(
         sineWave,
         -1,
         1,
         darkness,
-        1
+        opacityMin
       );
 
       if ( opacityFactor < opacityThreshold ) {
         const tint = colors.rainbow( {
-          hueOffset: animation.angle,
+          hueOffset: animation.angle * hueOffsetSpeed,
           hueIndex: p.map(
             progression,
             0,
