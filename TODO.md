@@ -1,6 +1,6 @@
 # TODO — social-templates-renderer
 
-> Last cleaned: 2026-05-20
+> Last cleaned: 2026-05-24
 
 ---
 
@@ -111,7 +111,7 @@
 
 - [ ] **P5 v2 support** — evaluate migration to P5.js v2; audit breaking API changes and update all templates
 - [ ] **HTML template engine** — plain HTML/CSS/JS templates as a first-class engine type; same `TemplateOptions` / `CaptureActions` flow, rendered in iframe or headless browser
-- [ ] **GSAP integration** — optional GSAP animation library for templates; `useGsap` hook providing a timeline synced to the recording frame clock
+- [x] **GSAP integration** — optional GSAP animation library for templates; `useGsap` hook providing a timeline synced to the recording frame clock
 - [ ] **Lottie support** — load and play Lottie JSON animations frame-by-frame in sync with recording; `LottieLayer` component or P5 utility
 - [ ] **Animated HTML templates** — templates built with HTML + CSS animations (or GSAP/Lottie) recorded the same way as P5 sketches; requires generic engine handler first
 - [ ] **Cavalry integration** — research spike: can Cavalry export to a web-renderable format the engine can consume?
@@ -134,7 +134,7 @@
 
 - [ ] **Sentry error tracking** — frontend (error boundaries + unhandled rejections) and backend (API routes + BullMQ worker); source maps uploaded in CI
 - [ ] **Secure `.env`** — audit all env vars, ensure no secrets committed, add `.env.example`, document required vs optional; consider secrets manager for production
-- [ ] **Notification settings corner (PWA)** — widget to manage push notification preferences (enable/disable, test notification, permission status); part of PWA install flow
+- [x] **Notification settings corner (PWA)** — widget to manage push notification preferences (enable/disable, test notification, permission status); part of PWA install flow
 - [ ] **Multi-user support** — user accounts with auth (email/password or OAuth); recordings and jobs scoped to `userId` in DB; API auth middleware; break into sub-tasks before starting
 
 ---
