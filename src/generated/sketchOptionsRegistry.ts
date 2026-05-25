@@ -99,6 +99,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v7-echo": () => import( "@/p5/sketches/hand-capture/hand-tracking-v7-echo/options" ),
   "p5:hand-capture/hand-tracking-v8-growing": () => import( "@/p5/sketches/hand-capture/hand-tracking-v8-growing/options" ),
   "p5:hand-capture/hand-tracking-v8-smear": () => import( "@/p5/sketches/hand-capture/hand-tracking-v8-smear/options" ),
+  "p5:kinetic/audio-features": () => import( "@/p5/sketches/kinetic/audio-features/options" ),
   "p5:kinetic/interaction-test": () => import( "@/p5/sketches/kinetic/interaction-test/options" ),
   "p5:kinetic/kinetic-grid-spheres": () => import( "@/p5/sketches/kinetic/kinetic-grid-spheres/options" ),
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/options" ),

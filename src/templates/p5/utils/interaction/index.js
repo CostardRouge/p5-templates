@@ -1,6 +1,15 @@
 import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
 import options from "@/p5/utils/options.js";
+import {
+  detectKick,
+  detectOnset,
+  detectPitch,
+  detectVoice,
+  getNamedBands,
+  instrumentHeuristics,
+  spectralFeatures
+} from "@/p5/utils/interaction/audio.js";
 import mediapipe, {
   init as mediapipeInit,
   setEnabled as setMediapipeEnabled,
@@ -182,6 +191,7 @@ let _audioInitialized = false;
 let _audioContext = null;
 let _audioAnalyser = null;
 let _audioFreqData = null;
+let _audioTimeData = null;
 // The live microphone MediaStream, kept so its tracks can be explicitly
 // stopped — closing the AudioContext alone doesn't release the mic, so the
 // browser microphone indicator stays on and the input engine keeps running.
@@ -189,6 +199,53 @@ let _audioStream = null;
 // The microphone deviceId the live AudioContext was opened with ("" = default).
 // Tracked so changing the picker reopens the mic on the newly selected device.
 let _audioDeviceId = "";
+const _audioFeatures = {
+  enabled: false,
+  bands: null,
+  kick: {
+    hit: false,
+    strength: 0,
+    age: Infinity,
+    energy: 0
+  },
+  onset: {
+    hit: false,
+    strength: 0,
+    age: Infinity,
+    flux: 0
+  },
+  pitch: {
+    hz: 0,
+    midi: 0,
+    confidence: 0
+  },
+  voice: {
+    active: false,
+    confidence: 0,
+    zcr: 0,
+    voiceBand: 0
+  },
+  spectral: {
+    centroid: 0,
+    rolloff: 0,
+    flatness: 0,
+    flux: 0
+  },
+  instruments: {
+    kick: 0,
+    hat: 0,
+    snare: 0,
+    voice: 0,
+    sustained: 0
+  },
+  sampleRate: 0,
+  fftSize: 0
+};
+const _audioKickState = {};
+const _audioOnsetState = {};
+const _audioPitchState = {};
+const _audioVoiceState = {};
+const _audioSpectralState = {};
 
 // Vision lazy-init state: the task/camera signature currently initialized, plus
 // an in-flight guard so we never kick off two mediapipe initializations at once.
@@ -456,7 +513,16 @@ function _closeAudio() {
     _audioContext = null;
     _audioAnalyser = null;
     _audioFreqData = null;
+    _audioTimeData = null;
   }
+
+  // Drop detector running averages so a re-init starts clean.
+  _audioFeatures.enabled = false;
+  delete _audioKickState.initialized;
+  delete _audioOnsetState.initialized;
+  delete _audioPitchState.initialized;
+  delete _audioVoiceState.initialized;
+  delete _audioSpectralState.initialized;
 }
 
 async function _initAudio( opts ) {
@@ -513,6 +579,7 @@ async function _initAudio( opts ) {
 
     source.connect( _audioAnalyser );
     _audioFreqData = new Uint8Array( _audioAnalyser.frequencyBinCount );
+    _audioTimeData = new Uint8Array( _audioAnalyser.fftSize );
   } catch {
     // Microphone permission denied or not available
   }
@@ -2294,6 +2361,108 @@ function _collectAudio(
       )
     ) );
   }
+
+  _runAudioFeatures( audio );
+}
+
+function _runAudioFeatures( audio ) {
+  const features = audio.features;
+
+  if ( !features || !_audioTimeData ) {
+    _audioFeatures.enabled = false;
+
+    return;
+  }
+
+  const engine = audio.engine ?? "dsp";
+
+  if ( engine !== "dsp" ) {
+    // Reserved seam for future ML engines (yamnet / custom TF.js model).
+    _audioFeatures.enabled = false;
+
+    return;
+  }
+
+  _audioAnalyser.getByteTimeDomainData( _audioTimeData );
+
+  const sr = _audioContext.sampleRate;
+  const fft = _audioAnalyser.fftSize;
+
+  _audioFeatures.enabled = true;
+  _audioFeatures.sampleRate = sr;
+  _audioFeatures.fftSize = fft;
+
+  if ( features.bands ) {
+    _audioFeatures.bands = getNamedBands(
+      _audioFreqData,
+      sr,
+      fft,
+      audio.bands
+    );
+  }
+
+  if ( features.spectral ) {
+    _audioFeatures.spectral = spectralFeatures(
+      _audioSpectralState,
+      _audioFreqData,
+      sr,
+      fft
+    );
+  }
+
+  if ( features.kick ) {
+    _audioFeatures.kick = detectKick(
+      _audioKickState,
+      _audioFreqData,
+      sr,
+      fft,
+      audio.kick
+    );
+  }
+
+  if ( features.onset ) {
+    _audioFeatures.onset = detectOnset(
+      _audioOnsetState,
+      _audioFreqData,
+      audio.onset
+    );
+  }
+
+  if ( features.pitch ) {
+    _audioFeatures.pitch = detectPitch(
+      _audioPitchState,
+      _audioTimeData,
+      sr,
+      audio.pitch
+    );
+  }
+
+  if ( features.voice ) {
+    _audioFeatures.voice = detectVoice(
+      _audioVoiceState,
+      _audioFreqData,
+      _audioTimeData,
+      sr,
+      fft,
+      audio.voice
+    );
+  }
+
+  _audioFeatures.instruments = instrumentHeuristics( _audioFeatures );
+}
+
+/**
+ * Snapshot of the latest audio features computed during the most recent
+ * getPointers() / draw frame. Returns the same live object every call
+ * (mutated in place) — safe to read fields directly.
+ *
+ * Fields are only populated when the corresponding entry under
+ * `interaction.audio.features` is enabled in the sketch options.
+ *
+ * @returns {object} { enabled, bands, kick, onset, pitch, voice, spectral, instruments }
+ */
+export function getAudio() {
+  return _audioFeatures;
 }
 
 function _collectJoypad(

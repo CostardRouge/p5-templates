@@ -122,7 +122,29 @@ export const interactionFormValues = {
     count: 1,
     smoothing: 0.8,
     fftSize: 1024,
-    margin: 50
+    margin: 50,
+    engine: "dsp",
+    features: {
+      bands: false,
+      spectral: false,
+      kick: false,
+      onset: false,
+      pitch: false,
+      voice: false
+    },
+    kick: {
+      sensitivity: 1.4,
+      refractoryMs: 100
+    },
+    onset: {
+      sensitivity: 1.5,
+      refractoryMs: 60
+    },
+    pitch: {
+      minHz: 60,
+      maxHz: 1500,
+      everyNFrames: 2
+    }
   },
 
   joypad: {
@@ -728,6 +750,121 @@ export const interactionFormConfiguration = {
           min: 0,
           max: 300,
           step: 1
+        },
+        engine: {
+          component: "select",
+          label: "Recognition engine",
+          options: [
+            {
+              label: "DSP (built-in)",
+              value: "dsp"
+            },
+            {
+              label: "YAMNet (ML, not yet implemented)",
+              value: "ml-yamnet"
+            },
+            {
+              label: "Custom TF.js model (not yet implemented)",
+              value: "ml-custom"
+            }
+          ]
+        },
+        features: {
+          component: "nested-object",
+          label: "Recognition features (DSP)",
+          fields: {
+            bands: {
+              component: "checkbox",
+              label: "Named bands (sub/bass/mid/treble…)"
+            },
+            spectral: {
+              component: "checkbox",
+              label: "Spectral (centroid/rolloff/flatness)"
+            },
+            kick: {
+              component: "checkbox",
+              label: "Kick / bass-drum detection"
+            },
+            onset: {
+              component: "checkbox",
+              label: "Onset detection (spectral flux)"
+            },
+            pitch: {
+              component: "checkbox",
+              label: "Pitch tracking (YIN)"
+            },
+            voice: {
+              component: "checkbox",
+              label: "Voice activity detection"
+            }
+          }
+        },
+        kick: {
+          component: "nested-object",
+          label: "Kick detector",
+          fields: {
+            sensitivity: {
+              component: "slider",
+              label: "Sensitivity",
+              min: 1.05,
+              max: 3,
+              step: 0.05
+            },
+            refractoryMs: {
+              component: "slider",
+              label: "Refractory (ms)",
+              min: 30,
+              max: 500,
+              step: 10
+            }
+          }
+        },
+        onset: {
+          component: "nested-object",
+          label: "Onset detector",
+          fields: {
+            sensitivity: {
+              component: "slider",
+              label: "Sensitivity",
+              min: 1.05,
+              max: 3,
+              step: 0.05
+            },
+            refractoryMs: {
+              component: "slider",
+              label: "Refractory (ms)",
+              min: 20,
+              max: 300,
+              step: 5
+            }
+          }
+        },
+        pitch: {
+          component: "nested-object",
+          label: "Pitch tracker",
+          fields: {
+            minHz: {
+              component: "slider",
+              label: "Min Hz",
+              min: 40,
+              max: 400,
+              step: 5
+            },
+            maxHz: {
+              component: "slider",
+              label: "Max Hz",
+              min: 400,
+              max: 4000,
+              step: 10
+            },
+            everyNFrames: {
+              component: "slider",
+              label: "Run every N frames",
+              min: 1,
+              max: 8,
+              step: 1
+            }
+          }
         }
       }
     },
