@@ -1,41 +1,32 @@
-// ControlledImageInput.tsx
 "use client";
 import React, {
-  useMemo, useRef, useState
+  useRef, useState
 } from "react";
-import {
-  useController, useFormContext
-} from "react-hook-form";
-import {
-  resolveAssetURL
-} from "@/p5/shared/utils";
-import useAssetsBridge from "@/hooks/useAssetsBridge";
-
-import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
-
-import DropZoneButton from "@/components/DropZoneButton";
 import {
   Trash2
 } from "lucide-react";
 
+import useAssetsBridge from "@/hooks/useAssetsBridge";
+import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
+
+import DropZoneButton from "@/components/DropZoneButton";
+import {
+  resolveAssetURL
+} from "@/lib/assets";
+
+import useAssetField from "../hooks/useAssetField";
+
 type Props = {
   name: string;
+  /** Asset kind id (e.g. "images", "videos"). Defaults to "images". */
+  kind?: string;
 };
 
-export default function ControlledImageInput( {
-  name
+export default function ControlledAssetInput( {
+  name, kind: kindId = "images"
 }: Props ) {
   const inputRef = useRef<HTMLInputElement>( null );
 
-  const {
-    control
-  } = useFormContext();
-  const {
-    field, fieldState
-  } = useController( {
-    name,
-    control
-  } );
   const {
     uploadFiles, maybeRemoveFromAssets
   } = useAssetsBridge();
@@ -43,49 +34,59 @@ export default function ControlledImageInput( {
     jobId
   } = useTemplateAssets();
 
+  const {
+    kind, instances, setSinglePath
+  } = useAssetField<unknown>( {
+    name,
+    kindId
+  } );
+
+  const head = instances[ 0 ];
   const [
-    preview,
-    setPreview
+    previewURL,
+    setPreviewURL
   ] = useState<string | null>( null );
 
-  const resolved = useMemo(
-    () => preview || ( field.value ? resolveAssetURL(
-      field.value,
+  const resolved =
+    previewURL ?? ( head?.path ? resolveAssetURL(
+      head.path,
       jobId
-    ) : null ),
-    [
-      preview,
-      field.value,
-      jobId
-    ]
-  );
+    ) : null );
 
   async function onFiles( files: FileList ) {
     if ( !files?.length ) {
       return;
     }
 
-    setPreview( URL.createObjectURL( files[ 0 ] ) );
+    setPreviewURL( URL.createObjectURL( files[ 0 ] ) );
 
-    const paths = await uploadFiles( files );
+    const paths = await uploadFiles(
+      files,
+      kindId as any
+    );
 
     if ( paths.length ) {
-      field.onChange( paths[ 0 ] );
+      setSinglePath( paths[ 0 ] );
     }
   }
 
   function clear( event: React.MouseEvent<HTMLButtonElement, MouseEvent> ) {
     event.stopPropagation();
 
-    const prev = field.value;
+    const prevPath = head?.path;
 
-    field.onChange( "" );
-    setPreview( null );
+    setSinglePath( "" );
+    setPreviewURL( null );
 
-    if ( prev ) {
-      maybeRemoveFromAssets( prev );
+    if ( prevPath ) {
+      maybeRemoveFromAssets(
+        prevPath,
+        kindId as any
+      );
     }
   }
+
+  const Preview = kind.PreviewComponent;
 
   return (
     <div
@@ -97,24 +98,19 @@ export default function ControlledImageInput( {
       onDragOver={ ( e ) => e.preventDefault() }
       onDrop={ async( e ) => {
         e.preventDefault();
-
         if ( e.dataTransfer.files?.length ) {
           await onFiles( e.dataTransfer.files );
         }
       } }
     >
-      <DropZoneButton onFiles={ onFiles } ref={ inputRef } />
+      <DropZoneButton onFiles={ onFiles } ref={ inputRef } accept={ kind.accept } />
 
-      {field.value && (
-        <div className="absolute inset-0 overflow-hidden">
+      {head?.path && (
+        <div className="absolute inset-0 overflow-hidden rounded-lg border border-theme">
           {resolved ? (
-            <img
-              src={ resolved }
-              alt={ field.value }
-              className="w-full h-full object-cover rounded-lg border border-theme"
-            />
+            <Preview url={ resolved } path={ head.path } />
           ) : (
-            <div className="w-full h-full rounded-xl border border-theme bg-gray-100 animate-pulse" />
+            <div className="w-full h-full bg-gray-100 animate-pulse" />
           )}
 
           <button

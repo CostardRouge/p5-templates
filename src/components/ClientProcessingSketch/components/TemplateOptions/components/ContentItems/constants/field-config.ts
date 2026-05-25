@@ -141,6 +141,24 @@ interface EasingConfig extends BaseConfig {
   component: "easing";
 }
 
+interface AssetInputConfig extends BaseConfig {
+  component: "asset";
+  /** Asset kind id, e.g. "images", "videos". */
+  kind: string;
+  assetsName?: string;
+  scope?: Scope;
+  jobId?: string;
+}
+
+interface AssetStackConfig extends BaseConfig {
+  component: "asset-stack";
+  /** Asset kind id, e.g. "images", "videos". */
+  kind: string;
+  assetsName?: string;
+  scope?: Scope;
+  jobId?: string;
+}
+
 // Step 3: Create the master Discriminated Union
 // This tells TypeScript: "If component is 'select', then it MUST have an 'options' property."
 export type FieldConfig =
@@ -159,7 +177,9 @@ export type FieldConfig =
   | JsonConfig
   | ItemListConfig
   | HiddenFieldConfig
-  | EasingConfig;
+  | EasingConfig
+  | AssetInputConfig
+  | AssetStackConfig;
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema

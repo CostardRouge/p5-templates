@@ -10,3 +10,28 @@ export {
 export type {
   AssetScope
 } from "./getScopeAssetPath";
+
+export type {
+  AssetInstance, AssetKind, AssetPreviewProps, AssetParamsEditorProps
+} from "./types";
+export {
+  registerAssetKind, getAssetKind, listAssetKinds
+} from "./registry";
+
+// Side-effect: registers built-in kinds (images, videos, …). Importing
+// `@/lib/assets` anywhere guarantees the registry is populated.
+import "./kinds";
+
+export {
+  default as ControlledAssetInput
+} from "./components/ControlledAssetInput";
+export {
+  default as ControlledAssetStackInput
+} from "./components/ControlledAssetStackInput";
+
+export {
+  defaultVideoParams, computeVideoPhase
+} from "./kinds/videos/types";
+export type {
+  VideoParams, VideoLoopMode
+} from "./kinds/videos/types";

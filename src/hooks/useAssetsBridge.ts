@@ -7,6 +7,15 @@ import useAssetDrop, {
 } from "@/hooks/useAssetDrop";
 import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
 
+/**
+ * Counts how many content items across all slides still reference a given
+ * image path. Used to decide whether removing the path from the global
+ * `assets.images` pool would leave a dangling reference.
+ *
+ * Only images have content-item types (`image`, `images-stack`) today, so
+ * this helper stays image-specific. Other kinds skip pool cleanup until
+ * a generic reference visitor is added.
+ */
 function countImageRefs(
   slides: any[], target: string
 ): number {
@@ -36,9 +45,11 @@ export default function useAssetsBridge() {
     addAssets
   } = useAssetDrop();
 
-  function ensureInAssets( paths: string[] ) {
+  function ensureInAssets(
+    paths: string[], kind: AssetType = "images"
+  ) {
     const assets = getValues( assetsName ) ?? {};
-    const current: string[] = assets?.images ?? [];
+    const current: string[] = assets?.[ kind ] ?? [];
     const next = [
       ...new Set( [
         ...current,
@@ -47,7 +58,7 @@ export default function useAssetsBridge() {
     ];
 
     setValue(
-      `${ assetsName }.images` as any,
+      `${ assetsName }.${ kind }` as any,
       next,
       {
         shouldDirty: true,
@@ -56,27 +67,35 @@ export default function useAssetsBridge() {
     );
   }
 
-  function maybeRemoveFromAssets( path: string ) {
-    const slides = getValues( "slides" ) ?? [];
-    const refs = countImageRefs(
-      slides,
-      path
-    );
-
-    if ( refs <= 1 ) {
-      const assets = getValues( assetsName ) ?? {};
-      const current: string[] = assets?.images ?? [];
-      const filtered = current.filter( ( p ) => p !== path );
-
-      setValue(
-        `${ assetsName }.images` as any,
-        filtered,
-        {
-          shouldDirty: true,
-          shouldTouch: true
-        }
+  function maybeRemoveFromAssets(
+    path: string, kind: AssetType = "images"
+  ) {
+    // Only the images pool has known content-item references to guard
+    // against. Other kinds always remove on request — callers decide.
+    if ( kind === "images" ) {
+      const slides = getValues( "slides" ) ?? [];
+      const refs = countImageRefs(
+        slides,
+        path
       );
+
+      if ( refs > 1 ) {
+        return;
+      }
     }
+
+    const assets = getValues( assetsName ) ?? {};
+    const current: string[] = assets?.[ kind ] ?? [];
+    const filtered = current.filter( ( p ) => p !== path );
+
+    setValue(
+      `${ assetsName }.${ kind }` as any,
+      filtered,
+      {
+        shouldDirty: true,
+        shouldTouch: true
+      }
+    );
   }
 
   async function uploadFiles(
@@ -96,7 +115,10 @@ export default function useAssetsBridge() {
     const paths = newPaths ?? [];
 
     if ( paths.length ) {
-      ensureInAssets( paths );
+      ensureInAssets(
+        paths,
+        type
+      );
     }
     return paths;
   }
