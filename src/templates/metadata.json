@@ -216,18 +216,6 @@
     "ctime": "2026-04-27T16:15:48.296Z"
   },
   {
-    "name": "photo-switch-letter-mask",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-05T01:46:31.365Z",
-    "ctime": "2026-04-27T16:15:48.297Z"
-  },
-  {
     "name": "photo-switch",
     "engine": "p5",
     "category": "photo",
@@ -732,6 +720,18 @@
     "ctime": "2026-04-27T16:15:48.283Z"
   },
   {
+    "name": "photo-switch-letter-mask",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-22T23:47:04.942Z",
+    "ctime": "2026-04-27T16:15:48.297Z"
+  },
+  {
     "name": "interaction-test",
     "engine": "p5",
     "category": "kinetic",
@@ -740,7 +740,7 @@
     "hasPreview": true,
     "hiddenFromHome": true,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-22T12:02:43.295Z",
+    "mtime": "2026-05-23T07:20:29.183Z",
     "ctime": "2026-05-05T01:46:31.353Z"
   },
   {
@@ -752,7 +752,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-22T12:02:43.296Z",
+    "mtime": "2026-05-23T07:20:29.184Z",
     "ctime": "2026-04-27T16:15:48.298Z"
   },
   {
@@ -764,7 +764,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-22T23:08:42.894Z",
+    "mtime": "2026-05-23T07:20:29.185Z",
     "ctime": "2026-04-27T16:15:48.300Z"
   },
   {
@@ -776,7 +776,55 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-05-23T00:00:00.000Z",
-    "ctime": "2026-05-23T00:00:00.000Z"
+    "mtime": "2026-05-24T19:31:47.635Z",
+    "ctime": "2026-05-23T07:20:29.185Z"
+  },
+  {
+    "name": "lines",
+    "engine": "p5",
+    "category": null,
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": true,
+    "mtime": "2026-05-25T21:02:07.979Z",
+    "ctime": "2026-05-25T21:02:07.950Z"
+  },
+  {
+    "name": "noise-strips-v1",
+    "engine": "p5",
+    "category": "noise-strips",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-25T21:26:41.824Z",
+    "ctime": "2026-05-25T21:26:14.825Z"
+  },
+  {
+    "name": "noise-strips-v2",
+    "engine": "p5",
+    "category": "noise-strips",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-25T21:27:38.553Z",
+    "ctime": "2026-05-25T21:27:09.767Z"
+  },
+  {
+    "name": "noise-strips-v3-lava",
+    "engine": "p5",
+    "category": "noise-strips",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-25T21:28:54.559Z",
+    "ctime": "2026-05-25T21:28:30.566Z"
   }
 ]
