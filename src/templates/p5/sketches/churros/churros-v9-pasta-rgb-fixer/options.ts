@@ -1,0 +1,280 @@
+import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
+
+export const formValues = {
+  shape: {
+    quality: 400,
+    angleHalfSpan: Math.PI,
+    horizontalSwing: 300,
+    verticalMargin: 150,
+    lineAngleMax: Math.PI
+  },
+  fixer: {
+    enabled: true,
+    speed: 0.75,
+    color: [
+      128,
+      128,
+      255,
+      255
+    ],
+    markerSize: 250,
+    rotationMultiplier: 4
+  },
+  lines: {
+    maxCount: 2,
+    changeOverTime: false,
+    length: 75,
+    weight: 80
+  },
+  opacity: {
+    pingPong: true,
+    pingPongMax: 15,
+    speed: -2,
+    groupCount: 2,
+    startFactor: 3,
+    endFactor: 1
+  },
+  rotation: {
+    count: 1,
+    speed: 2
+  },
+  colors: {
+    hueSpeed: 2,
+    hueAngleMultiplier: 5,
+    altRed: 128,
+    altBlue: 360,
+    altGreenBoost: 1.5
+  },
+  backgroundColor: [
+    0,
+    0,
+    0,
+    255
+  ],
+  title: {
+    ...titleDefaultValues,
+    show: false
+  }
+};
+
+export const formConfiguration: Record<string, any> = {
+  shape: {
+    component: "nested-object",
+    label: "Shape",
+    fields: {
+      quality: {
+        label: "Quality",
+        component: "slider",
+        min: 1,
+        max: 1600,
+        step: 1
+      },
+      angleHalfSpan: {
+        label: "Angle half-span",
+        component: "slider",
+        min: 0.5,
+        max: 6.28,
+        step: 0.01
+      },
+      horizontalSwing: {
+        label: "Horizontal swing",
+        component: "slider",
+        min: 0,
+        max: 800,
+        step: 1
+      },
+      verticalMargin: {
+        label: "Vertical margin",
+        component: "slider",
+        min: 0,
+        max: 400,
+        step: 1
+      },
+      lineAngleMax: {
+        label: "Line angle max",
+        component: "slider",
+        min: 0.1,
+        max: 6.28,
+        step: 0.01
+      }
+    }
+  },
+  fixer: {
+    component: "nested-object",
+    label: "Fixer (RGB scanner)",
+    fields: {
+      enabled: {
+        label: "Enabled?",
+        component: "checkbox"
+      },
+      speed: {
+        label: "Scan speed",
+        component: "slider",
+        min: 0,
+        max: 5,
+        step: 0.01
+      },
+      color: {
+        label: "Marker color",
+        component: "color"
+      },
+      markerSize: {
+        label: "Marker circle size",
+        component: "slider",
+        min: 0,
+        max: 800,
+        step: 1
+      },
+      rotationMultiplier: {
+        label: "Past-fixer rotation multiplier",
+        component: "slider",
+        min: 0,
+        max: 16,
+        step: 0.1
+      }
+    }
+  },
+  lines: {
+    component: "nested-object",
+    label: "Lines",
+    fields: {
+      maxCount: {
+        label: "Max lines count",
+        component: "slider",
+        min: 1,
+        max: 10,
+        step: 0.1
+      },
+      changeOverTime: {
+        label: "Change lines count over time",
+        component: "checkbox"
+      },
+      length: {
+        label: "Lines length",
+        component: "slider",
+        min: 1,
+        max: 400,
+        step: 1
+      },
+      weight: {
+        label: "Lines weight",
+        component: "slider",
+        min: 1,
+        max: 300,
+        step: 1
+      }
+    }
+  },
+  opacity: {
+    component: "nested-object",
+    label: "Opacity",
+    fields: {
+      pingPong: {
+        label: "Ping-pong opacity",
+        component: "checkbox"
+      },
+      pingPongMax: {
+        label: "Ping-pong max",
+        component: "slider",
+        min: 1,
+        max: 100,
+        step: 1
+      },
+      speed: {
+        label: "Opacity speed",
+        component: "slider",
+        min: -10,
+        max: 10,
+        step: 0.1
+      },
+      groupCount: {
+        label: "Opacity group count",
+        component: "slider",
+        min: 1,
+        max: 10,
+        step: 0.1
+      },
+      startFactor: {
+        label: "Start factor",
+        component: "slider",
+        min: 1,
+        max: 50,
+        step: 0.1
+      },
+      endFactor: {
+        label: "End factor",
+        component: "slider",
+        min: 1,
+        max: 50,
+        step: 0.1
+      }
+    }
+  },
+  rotation: {
+    component: "nested-object",
+    label: "Rotation",
+    fields: {
+      count: {
+        label: "Rotation count",
+        component: "slider",
+        min: -5,
+        max: 5,
+        step: 0.01
+      },
+      speed: {
+        label: "Rotation speed",
+        component: "slider",
+        min: -10,
+        max: 10,
+        step: 0.01
+      }
+    }
+  },
+  colors: {
+    component: "nested-object",
+    label: "Colors",
+    fields: {
+      hueSpeed: {
+        label: "Hue speed",
+        component: "slider",
+        min: -10,
+        max: 10,
+        step: 0.01
+      },
+      hueAngleMultiplier: {
+        label: "Hue angle multiplier",
+        component: "slider",
+        min: 0,
+        max: 20,
+        step: 0.1
+      },
+      altRed: {
+        label: "Alt region · red",
+        component: "slider",
+        min: 0,
+        max: 360,
+        step: 1
+      },
+      altBlue: {
+        label: "Alt region · blue",
+        component: "slider",
+        min: 0,
+        max: 360,
+        step: 1
+      },
+      altGreenBoost: {
+        label: "Alt region · green boost",
+        component: "slider",
+        min: 0,
+        max: 4,
+        step: 0.01
+      }
+    }
+  },
+  title: titleFormConfiguration,
+  backgroundColor: {
+    component: "color",
+    label: "Background color"
+  }
+};

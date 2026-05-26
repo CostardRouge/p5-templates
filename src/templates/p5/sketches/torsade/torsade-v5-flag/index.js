@@ -1,0 +1,189 @@
+import options from "@/p5/utils/options.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
+import mappers from "@/p5/utils/mappers.js";
+import renderTitle from "@/p5/utils/title/renderTitle.js";
+import {
+  SpiralBase, rebuildGrid
+} from "../_shared.js";
+
+const sketchState = {
+  shapes: [],
+  lastLayout: ""
+};
+
+class Spiral extends SpiralBase {
+  draw(
+    time, index
+  ) {
+    const p = getP5();
+    const o = options.sketch ?? {};
+    const spiralOpts = o.spiral ?? {};
+    const motion = o.motion ?? {};
+    const colorOpts = o.colors ?? {};
+
+    const {
+      position, size, start, end
+    } = this;
+
+    const timeSpeed = motion.timeSpeed ?? 1;
+    const hueCadence = index + time * ( colorOpts.hueSpeed ?? 1 );
+    const t = p.sin( time * timeSpeed );
+    const mult = p.map(
+      t,
+      -1,
+      1,
+      spiralOpts.waveMultMin ?? 3,
+      spiralOpts.waveMultMax ?? 8
+    );
+    const waveAmplitude = mult * p.map(
+      t,
+      -1,
+      1,
+      size / 8,
+      size
+    );
+    const angleLimit = -p.PI;
+
+    p.push();
+    p.translate(
+      position.x,
+      position.y
+    );
+
+    const lerpSteps = spiralOpts.lerpSteps ?? 15;
+    const lerpStep = 1 / lerpSteps;
+    const angleScale = spiralOpts.angleScale ?? 3;
+    const indexScale = motion.indexScale ?? 10;
+    const circleSize = spiralOpts.circleSize ?? 100;
+    const invertHue = colorOpts.invertHue ?? true;
+
+    for ( let lerpIndex = 0; lerpIndex < 1; lerpIndex += lerpStep ) {
+      const angle = p.map(
+        lerpIndex,
+        0,
+        angleScale,
+        -angleLimit,
+        angleLimit
+      );
+      const lerpPosition = mappers.lerpVector(
+        start,
+        end,
+        lerpIndex
+      );
+      const tt = p.map(
+        p.sin( time * timeSpeed + lerpIndex + index / indexScale ),
+        -1,
+        1,
+        -4,
+        4
+      );
+      const waveIndex = angle + tt;
+      const xOffset = p.map(
+        p.sin( waveIndex ),
+        -1,
+        1,
+        -waveAmplitude,
+        waveAmplitude
+      );
+      const yOffset = p.map(
+        p.cos( waveIndex ),
+        -1,
+        1,
+        -waveAmplitude,
+        waveAmplitude
+      );
+
+      if ( invertHue ) {
+        p.fill(
+          p.map(
+            p.sin( angle + hueCadence ),
+            1,
+            -1,
+            360,
+            0
+          ),
+          p.map(
+            p.cos( angle + hueCadence ),
+            1,
+            -1,
+            255,
+            0
+          ),
+          p.map(
+            p.sin( angle + hueCadence ),
+            1,
+            -1,
+            0,
+            255
+          )
+        );
+      } else {
+        p.fill(
+          p.map(
+            p.sin( angle + hueCadence ),
+            -1,
+            1,
+            0,
+            360
+          ),
+          p.map(
+            p.cos( angle + hueCadence ),
+            -1,
+            1,
+            0,
+            255
+          ),
+          p.map(
+            p.sin( angle + hueCadence ),
+            -1,
+            1,
+            255,
+            0
+          )
+        );
+      }
+
+      p.circle(
+        lerpPosition.x - xOffset,
+        lerpPosition.y - yOffset,
+        circleSize
+      );
+    }
+
+    p.pop();
+  }
+}
+
+sketch.setup( () => {
+  rebuildGrid( {
+    state: sketchState,
+    options: options.sketch,
+    SpiralClass: Spiral
+  } );
+} );
+
+sketch.draw( ( time ) => {
+  const p = getP5();
+
+  rebuildGrid( {
+    state: sketchState,
+    options: options.sketch,
+    SpiralClass: Spiral
+  } );
+
+  p.noStroke();
+  p.background( ...( options.sketch?.backgroundColor ?? [
+    0
+  ] ) );
+
+  sketchState.shapes.forEach( (
+    shape, index
+  ) => shape.draw(
+    time,
+    index
+  ) );
+
+  renderTitle();
+} );
