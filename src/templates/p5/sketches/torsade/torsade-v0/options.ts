@@ -5,15 +5,15 @@ export const formValues = {
   layout: {
     xCount: 4,
     yCount: 1,
-    sizeDivisor: 3.5,
+    sizeDivisor: 3.2,
     axis: "vertical" as "vertical" | "horizontal"
   },
   spiral: {
-    lerpSteps: 600,
-    strokeWeightMin: 25,
-    strokeWeightMax: 90,
-    weightSpeed: 1,
-    weightWaveScale: 10
+    lerpSteps: 395,
+    strokeWeightMin: 82,
+    strokeWeightMax: 82,
+    weightSpeed: 5,
+    weightWaveScale: 11.3
   },
   motion: {
     timeScale: 1,

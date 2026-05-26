@@ -3,28 +3,42 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   shape: {
-    quality: 435,
-    angleBoundMin: 2.18,
-    angleBoundMax: 4.04,
-    horizontalSwing: 292,
-    horizontalSwingFreq: 2.4,
-    horizontalSwingSpeed: 0,
-    verticalMargin: 0,
-    lineAngleMax: 0.41000000000000003
+    quality: 400,
+    angleMax: Math.PI,
+    horizontalSwing: 200,
+    horizontalSwingSpeed: 2,
+    verticalMargin: 150,
+    lineAngleMin: -Math.PI,
+    lineAngleMax: Math.PI
   },
-  grids: {
-    outerEnabled: true,
-    outerXCount: 1,
-    outerYCount: 1,
-    outerAnimSpeed: 1,
-    innerEnabled: true,
-    innerXCount: 3,
-    innerYCount: 4,
-    innerAnimSpeed: 1
+  scanner: {
+    enabled: true,
+    speed: 200,
+    markerSize: 300,
+    markerColor: [
+      128,
+      128,
+      255,
+      255
+    ],
+    showStartMarker: true,
+    showEndMarker: true,
+    startMarkerColor: [
+      0,
+      0,
+      255,
+      255
+    ],
+    endMarkerColor: [
+      255,
+      0,
+      0,
+      255
+    ]
   },
   lines: {
-    maxCount: 3,
-    changeOverTime: true,
+    maxCount: 2,
+    changeOverTime: false,
     length: 75,
     weight: 80
   },
@@ -39,12 +53,11 @@ export const formValues = {
   rotation: {
     count: 1,
     speed: 2,
-    waveAmplitude: 1.5,
-    waveMultiplier: 2
+    lerpMultiplier: 2
   },
   colors: {
     hueSpeed: 2,
-    hueAngleMultiplier: 7
+    hueAngleMultiplier: 5
   },
   backgroundColor: [
     0,
@@ -70,33 +83,19 @@ export const formConfiguration: Record<string, any> = {
         max: 1600,
         step: 1
       },
-      angleBoundMin: {
-        label: "Angle bound min",
-        component: "slider",
-        min: 0.05,
-        max: 3.14,
-        step: 0.01
-      },
-      angleBoundMax: {
-        label: "Angle bound max",
+      angleMax: {
+        label: "Angle max",
         component: "slider",
         min: 0.5,
         max: 6.28,
         step: 0.01
       },
       horizontalSwing: {
-        label: "Horizontal swing (px)",
+        label: "Horizontal swing",
         component: "slider",
         min: 0,
         max: 600,
         step: 1
-      },
-      horizontalSwingFreq: {
-        label: "Horizontal swing freq",
-        component: "slider",
-        min: 0,
-        max: 8,
-        step: 0.1
       },
       horizontalSwingSpeed: {
         label: "Horizontal swing speed",
@@ -112,68 +111,63 @@ export const formConfiguration: Record<string, any> = {
         max: 400,
         step: 1
       },
+      lineAngleMin: {
+        label: "Line angle min",
+        component: "slider",
+        min: -6.28,
+        max: 0,
+        step: 0.01
+      },
       lineAngleMax: {
         label: "Line angle max",
         component: "slider",
-        min: 0.1,
+        min: 0,
         max: 6.28,
         step: 0.01
       }
     }
   },
-  grids: {
+  scanner: {
     component: "nested-object",
-    label: "Background grids",
+    label: "Scanner",
     fields: {
-      outerEnabled: {
-        label: "Outer grid enabled?",
+      enabled: {
+        label: "Enabled?",
         component: "checkbox"
       },
-      outerXCount: {
-        label: "Outer X count",
+      speed: {
+        label: "Scan speed",
         component: "slider",
-        min: 0,
-        max: 20,
+        min: 1,
+        max: 600,
         step: 1
       },
-      outerYCount: {
-        label: "Outer Y count",
+      markerSize: {
+        label: "Marker circle size",
         component: "slider",
         min: 0,
-        max: 20,
+        max: 800,
         step: 1
       },
-      outerAnimSpeed: {
-        label: "Outer anim speed",
-        component: "slider",
-        min: 0,
-        max: 3,
-        step: 0.01
+      markerColor: {
+        label: "Marker stroke color",
+        component: "color"
       },
-      innerEnabled: {
-        label: "Inner grid enabled?",
+      showStartMarker: {
+        label: "Show start marker",
         component: "checkbox"
       },
-      innerXCount: {
-        label: "Inner X count",
-        component: "slider",
-        min: 0,
-        max: 20,
-        step: 1
+      showEndMarker: {
+        label: "Show end marker",
+        component: "checkbox"
       },
-      innerYCount: {
-        label: "Inner Y count",
-        component: "slider",
-        min: 0,
-        max: 20,
-        step: 1
+      startMarkerColor: {
+        label: "Start marker color",
+        component: "color"
       },
-      innerAnimSpeed: {
-        label: "Inner anim speed",
-        component: "slider",
-        min: 0,
-        max: 3,
-        step: 0.01
+      endMarkerColor: {
+        label: "End marker color",
+        component: "color"
       }
     }
   },
@@ -271,15 +265,8 @@ export const formConfiguration: Record<string, any> = {
         max: 10,
         step: 0.01
       },
-      waveAmplitude: {
-        label: "Wave amplitude",
-        component: "slider",
-        min: 0,
-        max: 5,
-        step: 0.01
-      },
-      waveMultiplier: {
-        label: "Wave multiplier",
+      lerpMultiplier: {
+        label: "Lerp multiplier",
         component: "slider",
         min: 0,
         max: 8,

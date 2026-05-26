@@ -3,30 +3,38 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   shape: {
-    quality: 435,
-    angleBoundMin: 2.18,
-    angleBoundMax: 4.04,
-    horizontalSwing: 292,
-    horizontalSwingFreq: 2.4,
-    horizontalSwingSpeed: 0,
-    verticalMargin: 0,
-    lineAngleMax: 0.41000000000000003
+    quality: 400,
+    angleBoundA: 2 * Math.PI - 0.3,
+    angleBoundB: 0,
+    spiralRadius: -360
   },
-  grids: {
-    outerEnabled: true,
-    outerXCount: 1,
-    outerYCount: 1,
-    outerAnimSpeed: 1,
-    innerEnabled: true,
-    innerXCount: 3,
-    innerYCount: 4,
-    innerAnimSpeed: 1
+  scene: {
+    spinSpeed: 1
+  },
+  grid: {
+    enabled: true,
+    xCount: 3,
+    yCount: 3,
+    animSpeed: 1
+  },
+  guides: {
+    enabled: true,
+    showStart: true,
+    showEnd: true,
+    weight: 4,
+    color: [
+      128,
+      128,
+      255,
+      255
+    ]
   },
   lines: {
-    maxCount: 3,
-    changeOverTime: true,
-    length: 75,
-    weight: 80
+    maxCount: 2,
+    changeOverTime: false,
+    length: 100,
+    weight: 40,
+    angleMax: Math.PI
   },
   opacity: {
     pingPong: false,
@@ -39,12 +47,12 @@ export const formValues = {
   rotation: {
     count: 1,
     speed: 2,
-    waveAmplitude: 1.5,
-    waveMultiplier: 2
+    spinFreq: 3
   },
   colors: {
     hueSpeed: 2,
-    hueAngleMultiplier: 7
+    hueRedAngleMultiplier: 5,
+    hueGreenAngleMultiplier: 3
   },
   backgroundColor: [
     0,
@@ -70,110 +78,99 @@ export const formConfiguration: Record<string, any> = {
         max: 1600,
         step: 1
       },
-      angleBoundMin: {
-        label: "Angle bound min",
-        component: "slider",
-        min: 0.05,
-        max: 3.14,
-        step: 0.01
-      },
-      angleBoundMax: {
-        label: "Angle bound max",
+      angleBoundA: {
+        label: "Angle bound A",
         component: "slider",
         min: 0.5,
-        max: 6.28,
+        max: 12,
         step: 0.01
       },
-      horizontalSwing: {
-        label: "Horizontal swing (px)",
+      angleBoundB: {
+        label: "Angle bound B",
         component: "slider",
-        min: 0,
-        max: 600,
-        step: 1
-      },
-      horizontalSwingFreq: {
-        label: "Horizontal swing freq",
-        component: "slider",
-        min: 0,
-        max: 8,
-        step: 0.1
-      },
-      horizontalSwingSpeed: {
-        label: "Horizontal swing speed",
-        component: "slider",
-        min: 0,
-        max: 6,
+        min: -3,
+        max: 12,
         step: 0.01
       },
-      verticalMargin: {
-        label: "Vertical margin",
+      spiralRadius: {
+        label: "Spiral radius (signed)",
         component: "slider",
-        min: 0,
-        max: 400,
+        min: -800,
+        max: 800,
         step: 1
-      },
-      lineAngleMax: {
-        label: "Line angle max",
+      }
+    }
+  },
+  scene: {
+    component: "nested-object",
+    label: "Scene",
+    fields: {
+      spinSpeed: {
+        label: "Scene spin speed",
         component: "slider",
-        min: 0.1,
-        max: 6.28,
+        min: -3,
+        max: 3,
         step: 0.01
       }
     }
   },
-  grids: {
+  grid: {
     component: "nested-object",
-    label: "Background grids",
+    label: "Background grid",
     fields: {
-      outerEnabled: {
-        label: "Outer grid enabled?",
+      enabled: {
+        label: "Enabled?",
         component: "checkbox"
       },
-      outerXCount: {
-        label: "Outer X count",
+      xCount: {
+        label: "X count",
         component: "slider",
         min: 0,
         max: 20,
         step: 1
       },
-      outerYCount: {
-        label: "Outer Y count",
+      yCount: {
+        label: "Y count",
         component: "slider",
         min: 0,
         max: 20,
         step: 1
       },
-      outerAnimSpeed: {
-        label: "Outer anim speed",
+      animSpeed: {
+        label: "Anim speed",
         component: "slider",
         min: 0,
         max: 3,
         step: 0.01
-      },
-      innerEnabled: {
-        label: "Inner grid enabled?",
+      }
+    }
+  },
+  guides: {
+    component: "nested-object",
+    label: "Endpoint guides",
+    fields: {
+      enabled: {
+        label: "Enabled?",
         component: "checkbox"
       },
-      innerXCount: {
-        label: "Inner X count",
+      showStart: {
+        label: "Show start",
+        component: "checkbox"
+      },
+      showEnd: {
+        label: "Show end",
+        component: "checkbox"
+      },
+      weight: {
+        label: "Guide weight",
         component: "slider",
-        min: 0,
+        min: 1,
         max: 20,
         step: 1
       },
-      innerYCount: {
-        label: "Inner Y count",
-        component: "slider",
-        min: 0,
-        max: 20,
-        step: 1
-      },
-      innerAnimSpeed: {
-        label: "Inner anim speed",
-        component: "slider",
-        min: 0,
-        max: 3,
-        step: 0.01
+      color: {
+        label: "Guide color",
+        component: "color"
       }
     }
   },
@@ -205,6 +202,13 @@ export const formConfiguration: Record<string, any> = {
         min: 1,
         max: 300,
         step: 1
+      },
+      angleMax: {
+        label: "Line angle max",
+        component: "slider",
+        min: 0.1,
+        max: 6.28,
+        step: 0.01
       }
     }
   },
@@ -271,18 +275,11 @@ export const formConfiguration: Record<string, any> = {
         max: 10,
         step: 0.01
       },
-      waveAmplitude: {
-        label: "Wave amplitude",
+      spinFreq: {
+        label: "Spin freq",
         component: "slider",
         min: 0,
-        max: 5,
-        step: 0.01
-      },
-      waveMultiplier: {
-        label: "Wave multiplier",
-        component: "slider",
-        min: 0,
-        max: 8,
+        max: 12,
         step: 0.1
       }
     }
@@ -298,8 +295,15 @@ export const formConfiguration: Record<string, any> = {
         max: 10,
         step: 0.01
       },
-      hueAngleMultiplier: {
-        label: "Hue angle multiplier",
+      hueRedAngleMultiplier: {
+        label: "Red angle multiplier",
+        component: "slider",
+        min: 0,
+        max: 20,
+        step: 0.1
+      },
+      hueGreenAngleMultiplier: {
+        label: "Green angle multiplier",
         component: "slider",
         min: 0,
         max: 20,

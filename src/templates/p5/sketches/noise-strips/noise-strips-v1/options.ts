@@ -34,13 +34,13 @@ export const formValues = {
     columns: 18
   },
   noise: {
-    seed: 629,
+    seed: 0,
     detail: 1,
-    falloff: 0.01,
-    xMultiplier: 0.02,
-    yMultiplier: 0.82,
-    timeYMultiplier: 0.4,
-    timeZMultiplier: 0.32
+    falloff: 0.27,
+    xMultiplier: 0.03,
+    yMultiplier: 0.48,
+    timeYMultiplier: -0.84,
+    timeZMultiplier: -0.33
   },
   angle: {
     cycles: 6
