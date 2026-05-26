@@ -809,7 +809,7 @@
     "category": "noise-strips",
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "hasPreview": false,
+    "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
     "mtime": "2026-05-25T21:27:38.553Z",
@@ -826,5 +826,77 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-05-25T21:28:54.559Z",
     "ctime": "2026-05-25T21:28:30.566Z"
+  },
+  {
+    "name": "flowers-v0-turbine",
+    "engine": "p5",
+    "category": "flowers",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-26T06:45:53.856Z",
+    "ctime": "2026-05-26T06:45:35.198Z"
+  },
+  {
+    "name": "flowers-v1-recursive",
+    "engine": "p5",
+    "category": "flowers",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-26T06:46:44.488Z",
+    "ctime": "2026-05-26T06:46:24.089Z"
+  },
+  {
+    "name": "flowers-v2-triple",
+    "engine": "p5",
+    "category": "flowers",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-26T06:47:35.057Z",
+    "ctime": "2026-05-26T06:47:14.412Z"
+  },
+  {
+    "name": "flowers-v3-petals-flapping",
+    "engine": "p5",
+    "category": "flowers",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-26T06:48:24.605Z",
+    "ctime": "2026-05-26T06:48:02.701Z"
+  },
+  {
+    "name": "flowers-v4-easing-curves",
+    "engine": "p5",
+    "category": "flowers",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-26T06:49:09.267Z",
+    "ctime": "2026-05-26T06:48:49.695Z"
+  },
+  {
+    "name": "flowers-v5-spiral",
+    "engine": "p5",
+    "category": "flowers",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-26T06:49:49.302Z",
+    "ctime": "2026-05-26T06:49:31.352Z"
   }
 ]
