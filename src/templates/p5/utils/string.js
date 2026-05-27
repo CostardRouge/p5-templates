@@ -1,6 +1,3 @@
-import {
-  get
-} from "http";
 import cache from "./cache.js";
 import {
   getP5
@@ -383,17 +380,14 @@ const string = {
 
     // Map the raw points to their final, centered positions.
     // This is a simple, fast operation.
+    // 2D only: textToPoints' alpha is a large value (~90); using it as z
+    // poisons point.dist(cellVector) in the grid sketches, zeroing alpha.
     return data.rawPoints.map( ( {
-      x, y, alpha
-    } ) => {
-      // Create a new vector at the final position
-      // Preserving the original's use of 'alpha' as the z-component
-      return getP5().createVector(
-        x + offsetX,
-        y + offsetY,
-        alpha
-      );
-    } );
+      x, y
+    } ) => getP5().createVector(
+      x + offsetX,
+      y + offsetY
+    ) );
   }
 };
 

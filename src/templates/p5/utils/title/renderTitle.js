@@ -34,7 +34,7 @@ export default function renderTitle(
   fallbackName = options.name
 ) {
   // Check if title should be shown
-  const show = titleConfig.show ?? false;
+  const show = titleConfig?.show ?? false;
 
   if ( !show ) {
     return;

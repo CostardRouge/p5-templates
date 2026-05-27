@@ -1,13 +1,19 @@
 "use client";
 
 import {
-  Camera, Github, Pause, Play
+  Camera, Github, Loader2, Pause, Play
 } from "lucide-react";
 import Link from "next/link";
+import {
+  useRef, useState
+} from "react";
+import clsx from "clsx";
 import {
   resolveSketchPath
 } from "@/engines/metadata";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+
+type ThumbnailSaveState = "idle" | "saving" | "done" | "error";
 
 /**
  * Engine-agnostic playback controls.
@@ -22,6 +28,118 @@ export function EngineControls( ) {
     },
     dispatch
   ] = useSketch();
+
+  const [
+    thumbnailSaveState,
+    setThumbnailSaveState
+  ] = useState<ThumbnailSaveState>( "idle" );
+  const [
+    thumbnailErrorMessage,
+    setThumbnailErrorMessage
+  ] = useState<string | null>( null );
+
+  const isDev = process.env.NODE_ENV === "development";
+  const singleClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
+
+  const downloadCanvasAsPng = () => {
+    const canvas = engine?.getCanvas();
+
+    if ( canvas ) {
+      const link = document.createElement( "a" );
+
+      link.download = `${ name }.png`;
+      link.href = canvas.toDataURL( "image/png" );
+      link.click();
+    }
+  };
+
+  const handleCaptureClick = () => {
+    if ( thumbnailSaveState === "saving" ) {
+      return;
+    }
+
+    // In dev, defer the download so a double-click can cancel it and trigger
+    // thumbnail save instead. Outside dev, download immediately.
+    if ( !isDev ) {
+      downloadCanvasAsPng();
+      return;
+    }
+
+    if ( singleClickTimerRef.current ) {
+      clearTimeout( singleClickTimerRef.current );
+    }
+
+    singleClickTimerRef.current = setTimeout(
+      () => {
+        singleClickTimerRef.current = null;
+        downloadCanvasAsPng();
+      },
+      250
+    );
+  };
+
+  const handleSaveCanvasAsThumbnail = async() => {
+    if ( singleClickTimerRef.current ) {
+      clearTimeout( singleClickTimerRef.current );
+      singleClickTimerRef.current = null;
+    }
+
+    if ( !isDev || thumbnailSaveState === "saving" ) {
+      return;
+    }
+
+    const canvas = engine?.getCanvas();
+
+    if ( !canvas ) {
+      setThumbnailErrorMessage( "No canvas found" );
+      setThumbnailSaveState( "error" );
+      setTimeout(
+        () => setThumbnailSaveState( "idle" ),
+        3000
+      );
+      return;
+    }
+
+    setThumbnailSaveState( "saving" );
+    setThumbnailErrorMessage( null );
+
+    try {
+      const dataUrl = canvas.toDataURL( "image/png" );
+      const res = await fetch(
+        "/api/dev/thumbnails/save-from-canvas",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify( {
+            sketch: name,
+            engineId,
+            imagePngBase64: dataUrl
+          } )
+        }
+      );
+
+      if ( !res.ok ) {
+        const text = await res.text();
+
+        throw new Error( text || `HTTP ${ res.status }` );
+      }
+
+      setThumbnailSaveState( "done" );
+      setTimeout(
+        () => setThumbnailSaveState( "idle" ),
+        1500
+      );
+    } catch( err ) {
+      setThumbnailErrorMessage( err instanceof Error ? err.message : String( err ) );
+      setThumbnailSaveState( "error" );
+      setTimeout(
+        () => setThumbnailSaveState( "idle" ),
+        3000
+      );
+    }
+  };
 
   const githubRepoUrl = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
   const sketchPath = githubRepoUrl ? resolveSketchPath(
@@ -75,22 +193,36 @@ export function EngineControls( ) {
         </button>
 
         <button
-          title="Save canvas as image"
+          title={
+            thumbnailSaveState === "error"
+              ? ( thumbnailErrorMessage ?? "Error" )
+              : isDev
+                ? "Save canvas as image (double-click: save as sketch thumbnail 1x + 2x)"
+                : "Save canvas as image"
+          }
           aria-label="Save canvas as image"
-          onClick={ () => {
-            const canvas = engine?.getCanvas();
-
-            if ( canvas ) {
-              const link = document.createElement( "a" );
-
-              link.download = `${ name }.png`;
-              link.href = canvas.toDataURL( "image/png" );
-              link.click();
-            }
-          } }
+          disabled={ thumbnailSaveState === "saving" }
+          onClick={ handleCaptureClick }
+          onDoubleClick={ handleSaveCanvasAsThumbnail }
           className="h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center"
         >
-          <Camera className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
+          {thumbnailSaveState === "saving" ? (
+            <Loader2 className="h-4 w-4 text-yellow-400/70 animate-spin" />
+          ) : (
+            <Camera
+              className={ clsx(
+                "h-4 w-4 transition-colors",
+                {
+                  "text-foreground/70 group-hover:text-foreground":
+                    thumbnailSaveState === "idle",
+                  "text-green-400":
+                    thumbnailSaveState === "done",
+                  "text-red-400":
+                    thumbnailSaveState === "error"
+                }
+              ) }
+            />
+          )}
         </button>
       </div>
 

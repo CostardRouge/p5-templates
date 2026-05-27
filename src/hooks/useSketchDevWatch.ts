@@ -15,8 +15,7 @@ export default function useSketchDevWatch(
 
       const source = new EventSource( `/api/dev/sketch-watch?sketch=${ encodeURIComponent( name ) }&engine=${ encodeURIComponent( engineId ) }` );
 
-      source.onmessage = () => {
-        window.location.reload();
+      source.onmessage = ( event ) => {
       };
 
       source.onerror = () => {
