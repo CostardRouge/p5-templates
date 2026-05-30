@@ -34,7 +34,6 @@ import {
   UPLOAD_STEPS
 } from "@/lib/progression/stepConfig";
 
-
 /**
  * Wait for the sketch canvas to be ready.
  *

@@ -13,31 +13,75 @@ import {
 
 // Color palette per source (RGB)
 const SOURCE_COLORS = {
-  mouse:       [ 66, 133, 244 ],  // blue
-  touch:       [ 52, 168, 83 ],   // green
-  hands:       [ 255, 109, 0 ],   // orange
-  face:        [ 233, 30, 99 ],   // pink
-  body:        [ 0, 188, 212 ],   // cyan
-  orbit:       [ 251, 188, 4 ],   // yellow
-  perlinNoise: [ 0, 150, 136 ],   // teal
-  gyroscope:   [ 96, 125, 139 ],  // blue-grey
-  midi:        [ 156, 39, 176 ],  // purple
-  audio:       [ 244, 67, 54 ],   // red
-  joypad:      [ 77, 182, 172 ]   // teal-green
+  mouse: [
+    66,
+    133,
+    244
+  ], // blue
+  touch: [
+    52,
+    168,
+    83
+  ], // green
+  hands: [
+    255,
+    109,
+    0
+  ], // orange
+  face: [
+    233,
+    30,
+    99
+  ], // pink
+  body: [
+    0,
+    188,
+    212
+  ], // cyan
+  orbit: [
+    251,
+    188,
+    4
+  ], // yellow
+  perlinNoise: [
+    0,
+    150,
+    136
+  ], // teal
+  gyroscope: [
+    96,
+    125,
+    139
+  ], // blue-grey
+  midi: [
+    156,
+    39,
+    176
+  ], // purple
+  audio: [
+    244,
+    67,
+    54
+  ], // red
+  joypad: [
+    77,
+    182,
+    172
+  ] // teal-green
 };
 
 const SOURCE_LABELS = {
-  mouse:       "Mouse",
-  touch:       "Touch",
-  hands:       "Hands (MediaPipe)",
-  face:        "Face (MediaPipe)",
-  body:        "Body (MediaPipe)",
-  orbit:       "Orbit",
+  mouse: "Mouse",
+  touch: "Touch",
+  hands: "Hands (MediaPipe)",
+  face: "Face (MediaPipe)",
+  body: "Body (MediaPipe)",
+  orbit: "Orbit",
   perlinNoise: "Perlin Noise",
-  gyroscope:   "Gyroscope",
-  midi:        "MIDI",
-  audio:       "Audio (Mic)",
-  joypad:      "Joypad / Gamepad"
+  gyroscope: "Gyroscope",
+  midi: "MIDI",
+  audio: "Audio (Mic)",
+  joypad: "Joypad / Gamepad"
 };
 
 sketch.setup( async() => {

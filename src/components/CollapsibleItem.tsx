@@ -82,11 +82,19 @@ const CollapsibleItem = ( {
   useEffect(
     () => {
       const mq = window.matchMedia( "(prefers-reduced-motion: reduce)" );
+
       setPrefersReducedMotion( mq.matches );
       const handler = ( e: MediaQueryListEvent ) => setPrefersReducedMotion( e.matches );
-      mq.addEventListener( "change", handler );
 
-      return () => mq.removeEventListener( "change", handler );
+      mq.addEventListener(
+        "change",
+        handler
+      );
+
+      return () => mq.removeEventListener(
+        "change",
+        handler
+      );
     },
     []
   );
@@ -221,7 +229,10 @@ const CollapsibleItem = ( {
 
       if ( expanded ) {
         // Swipe down to collapse.
-        const down = Math.max( 0, my );
+        const down = Math.max(
+          0,
+          my
+        );
 
         if ( !last ) {
           setDragY( down );
@@ -253,7 +264,10 @@ const CollapsibleItem = ( {
           suppressClickRef.current = true;
         }
 
-        const up = Math.max( 0, -my );
+        const up = Math.max(
+          0,
+          -my
+        );
         const shouldExpand =
           up > SWIPE_EXPAND_THRESHOLD ||
           ( dy < 0 && vy > SWIPE_EXPAND_VELOCITY );

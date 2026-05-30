@@ -1,0 +1,122 @@
+name: Lint fix on demand
+
+# Triggered by posting `/fix-lint` as a comment on a PR. The workflow checks
+# out the PR's head branch, runs `npm run lint:fix`, and pushes any resulting
+# changes back to the same branch as a single `chore: apply lint --fix`
+# commit. Restricted to repo collaborators so random commenters can't push.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  fix-lint:
+    # Only react to /fix-lint comments on PRs (not plain issues), and only
+    # from people who can already push to the repo.
+    if: >
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/fix-lint') &&
+      (
+        github.event.comment.author_association == 'OWNER' ||
+        github.event.comment.author_association == 'MEMBER' ||
+        github.event.comment.author_association == 'COLLABORATOR'
+      )
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Acknowledge command
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+
+      - name: Resolve PR head ref
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.issue.number
+            });
+            core.setOutput('ref', pr.head.ref);
+            core.setOutput('repo', pr.head.repo.full_name);
+            core.setOutput('same_repo', String(
+              pr.head.repo.full_name === `${context.repo.owner}/${context.repo.repo}`
+            ));
+
+      - name: Refuse to push to a fork
+        if: steps.pr.outputs.same_repo != 'true'
+        run: |
+          echo "::error::Cannot push lint fixes back to a fork (${{ steps.pr.outputs.repo }})."
+          exit 1
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.ref }}
+          # Need a token that can push back to the PR branch.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        # HUSKY=0 disables the pre-push hook during the workflow's own push
+        # step below. The hook runs `next build` and has a known issue with
+        # NEXT_BUILD_DIR resolution that we don't want to fight here.
+        env:
+          HUSKY: 0
+        run: npm ci
+
+      - name: Run lint:fix
+        run: npm run lint:fix
+
+      - name: Commit and push fixes
+        id: push
+        env:
+          HUSKY: 0
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing to fix — lint is already clean."
+            exit 0
+          fi
+
+          git add -A
+          git commit -m "chore: apply lint --fix
+
+          Triggered by /fix-lint on PR #${{ github.event.issue.number }}."
+          git push origin HEAD:${{ steps.pr.outputs.ref }}
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: React to comment with result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ok = '${{ job.status }}' === 'success';
+            const changed = '${{ steps.push.outputs.changed }}' === 'true';
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: ok ? (changed ? 'rocket' : '+1') : '-1'
+            });

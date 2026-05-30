@@ -2,7 +2,9 @@ import time from "./time.js";
 import debug from "./debug.js";
 import events from "./events.js";
 import slides from "./slides/index";
-import options, { registerEvents as registerOptionsEvents } from "./options";
+import options, {
+  registerEvents as registerOptionsEvents
+} from "./options";
 import {
   registerAnimationBridge
 } from "@/lib/animationBridge";

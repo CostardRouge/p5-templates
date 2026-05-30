@@ -23,9 +23,17 @@ export default function SketchJsonLd( {
 }: SketchJsonLdProps ) {
   const baseUrl = getBaseUrl();
   const title = formatSketchTitle( sketchName );
-  const canonicalPath = buildCanonicalPath( engineId, sketchName, category );
+  const canonicalPath = buildCanonicalPath(
+    engineId,
+    sketchName,
+    category
+  );
   const thumbnailUrl = hasThumbnail
-    ? buildThumbnailUrl( engineId, sketchName, baseUrl )
+    ? buildThumbnailUrl(
+      engineId,
+      sketchName,
+      baseUrl
+    )
     : undefined;
 
   const jsonLd = getSketchJsonLd( {
