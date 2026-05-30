@@ -7,7 +7,7 @@ import {
   useRouter, useSearchParams
 } from "next/navigation";
 import React, {
-  useEffect, useState
+  useEffect, useRef, useState
 } from "react";
 import {
   flushSync
@@ -116,9 +116,10 @@ export default function TemplatesList( {
   // so all results are visible regardless of the carousel/expanded state.
   const searchActive = search.trim().length > 0;
 
-  // Expand/collapse a category with a smooth cross-fade.
-  const handleToggleSection = ( id: string ) =>
-    runViewTransition( () => flushSync( () => toggleSection( id ) ) );
+  // Expand/collapse a category. No View Transition here: the cards stay
+  // mounted across the toggle and CategorySection animates only the newly
+  // revealed rows, so the already-visible row never moves or flickers.
+  const handleToggleSection = toggleSection;
 
   // Local engine state — updates instantly on click so the UI doesn't wait
   // on route navigation. The URL is kept in sync in the background.
@@ -515,6 +516,39 @@ function CategorySection( {
   // Below this count the row can't overflow even on the narrowest screen, so
   // there's nothing to scroll and the right-edge fade would dim a real card.
   const canScroll = items.length > MIN_CAROUSEL_COLS;
+  const showGrid = expanded || !canScroll;
+
+  // Animate the newly revealed rows only when the user expands (not on initial
+  // mount, collapse, or a search-forced expand). The first row is kept still
+  // by CSS, so visible cards never move.
+  const [
+    revealing,
+    setRevealing
+  ] = useState( false );
+  const wasExpandedRef = useRef( expanded );
+
+  useEffect(
+    () => {
+      const justExpanded = expanded && !wasExpandedRef.current;
+
+      wasExpandedRef.current = expanded;
+
+      if ( !justExpanded ) {
+        return;
+      }
+
+      setRevealing( true );
+      const timer = setTimeout(
+        () => setRevealing( false ),
+        360
+      );
+
+      return () => clearTimeout( timer );
+    },
+    [
+      expanded
+    ]
+  );
 
   const cards = items.map( (
     item, index
@@ -548,7 +582,7 @@ function CategorySection( {
             className="flex-shrink-0 grid place-items-center w-5 h-5 rounded-md border border-border text-foreground/50 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors"
           >
             <ChevronDown
-              className={ `w-3 h-3 transition-transform duration-200 ${
+              className={ `w-3 h-3 transition-transform duration-300 ease-out ${
                 expanded ? "" : "-rotate-90"
               }` }
             />
@@ -566,13 +600,17 @@ function CategorySection( {
         <div className="space-y-2 sm:space-y-3">
           { cards }
         </div>
-      ) : expanded || !canScroll ? (
-        // Full grid when expanded, or when there are too few cards to scroll.
-        <div className={ GRID_CLASS }>
-          { cards }
-        </div>
       ) : (
-        <div className="category-carousel scrollbar-hide">
+        // One persistent container for both states: switching its class between
+        // grid and carousel keeps the cards mounted (no video reload, the first
+        // row stays put). `is-revealing` triggers the rise-in on expand only.
+        <div
+          className={
+            showGrid
+              ? `category-grid ${ GRID_CLASS }${ revealing ? " is-revealing" : "" }`
+              : "category-carousel scrollbar-hide"
+          }
+        >
           { cards }
         </div>
       ) }
@@ -685,7 +723,7 @@ function TemplateCard( {
   return (
     <Link
       href={ href }
-      className={ `group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5 ${
+      className={ `group flex items-center gap-2 sm:gap-3 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5 ${
         hiddenFromTemplates ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
       }` }
     >
@@ -699,14 +737,14 @@ function TemplateCard( {
             name={ name }
             eager={ eager }
             animationsEnabled={ animationsEnabled }
-            imgClassName="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            imgClassName="w-full h-full object-cover"
           />
         ) : (
           <Thumbnail
             src={ thumbnail }
             alt={ name }
             eager={ eager }
-            className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            className="absolute top-0 left-0 w-full h-full object-cover"
           />
         ) }
       </div>

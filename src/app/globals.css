@@ -181,6 +181,63 @@
     }
 }
 
+/* Expanding a category from carousel to full grid: the cards already visible
+   (the first row) keep their exact position, and only the rows revealed below
+   animate in — a soft rise + fade rather than an abrupt crossfade. The first
+   row is excluded per breakpoint so it never moves. Cards stay mounted across
+   the toggle, so videos don't reload and visible cards don't flicker. */
+@keyframes card-rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.category-grid.is-revealing > * {
+    animation: card-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Keep the already-visible first row perfectly still (column count per
+   breakpoint mirrors --cols above). */
+.category-grid.is-revealing > :nth-child(-n + 3) {
+    animation: none;
+}
+
+@media (min-width: 640px) {
+    .category-grid.is-revealing > :nth-child(-n + 4) {
+        animation: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .category-grid.is-revealing > :nth-child(-n + 5) {
+        animation: none;
+    }
+}
+
+@media (min-width: 1024px) {
+    .category-grid.is-revealing > :nth-child(-n + 6) {
+        animation: none;
+    }
+}
+
+@media (min-width: 1280px) {
+    .category-grid.is-revealing > :nth-child(-n + 7) {
+        animation: none;
+    }
+}
+
+@media (min-width: 1536px) {
+    .category-grid.is-revealing > :nth-child(-n + 8) {
+        animation: none;
+    }
+}
+
 @keyframes pulse-soft {
     0%,
     100% {
