@@ -49,7 +49,9 @@ describe(
             );
             const steps = getRecordingSteps( job );
 
-            expect( steps ).toHaveLength( 5 );
+            // Default config is 3 steps: launching-browser (15%) / encoding
+            // (75%) / upload (10%).
+            expect( steps ).toHaveLength( 3 );
             steps.forEach( ( step ) => {
               expect( step.status ).toBe( "pending" );
               expect( step.percentage ).toBe( 0 );
@@ -94,20 +96,25 @@ describe(
     describe(
       "Progress distribution",
       () => {
+        // Default ranges with the 15/75/10 split:
+        //   launching-browser → 0..15
+        //   encoding          → 15..90
+        //   upload            → 90..100
         it(
-          "should activate first step at 5% progress",
+          "activates the first step inside its range",
           () => {
             const job = createJob( 5 );
             const steps = getRecordingSteps( job );
 
             expect( steps[ 0 ].status ).toBe( "active" );
-            expect( steps[ 0 ].percentage ).toBe( 50 ); // 5% of 10% range = 50%
+            expect( steps[ 0 ].percentage ).toBeCloseTo( 5 / 15 * 100 );
             expect( steps[ 1 ].status ).toBe( "pending" );
+            expect( steps[ 2 ].status ).toBe( "pending" );
           }
         );
 
         it(
-          "should complete first step and activate second at 25%",
+          "completes the first step and activates the second when progress crosses 15%",
           () => {
             const job = createJob( 25 );
             const steps = getRecordingSteps( job );
@@ -115,37 +122,34 @@ describe(
             expect( steps[ 0 ].status ).toBe( "completed" );
             expect( steps[ 0 ].percentage ).toBe( 100 );
             expect( steps[ 1 ].status ).toBe( "active" );
-            expect( steps[ 1 ].percentage ).toBeCloseTo( 50 ); // 15% of 30% range = 50%
+            expect( steps[ 1 ].percentage ).toBeCloseTo( ( 25 - 15 ) / 75 * 100 );
             expect( steps[ 2 ].status ).toBe( "pending" );
           }
         );
 
         it(
-          "should handle mid-recording progress correctly",
+          "keeps the encoding step active mid-recording",
           () => {
             const job = createJob( 50 );
             const steps = getRecordingSteps( job );
 
             expect( steps[ 0 ].status ).toBe( "completed" );
-            expect( steps[ 1 ].status ).toBe( "completed" );
-            expect( steps[ 2 ].status ).toBe( "active" );
-            expect( steps[ 2 ].percentage ).toBe( 50 ); // 10% of 20% range = 50%
-            expect( steps[ 3 ].status ).toBe( "pending" );
+            expect( steps[ 1 ].status ).toBe( "active" );
+            expect( steps[ 1 ].percentage ).toBeCloseTo( ( 50 - 15 ) / 75 * 100 );
+            expect( steps[ 2 ].status ).toBe( "pending" );
           }
         );
 
         it(
-          "should handle near-completion progress",
+          "activates the upload step near completion",
           () => {
             const job = createJob( 97 );
             const steps = getRecordingSteps( job );
 
             expect( steps[ 0 ].status ).toBe( "completed" );
             expect( steps[ 1 ].status ).toBe( "completed" );
-            expect( steps[ 2 ].status ).toBe( "completed" );
-            expect( steps[ 3 ].status ).toBe( "completed" );
-            expect( steps[ 4 ].status ).toBe( "active" );
-            expect( steps[ 4 ].percentage ).toBe( 40 ); // 2% of 5% range = 40%
+            expect( steps[ 2 ].status ).toBe( "active" );
+            expect( steps[ 2 ].percentage ).toBeCloseTo( ( 97 - 90 ) / 10 * 100 );
           }
         );
 
