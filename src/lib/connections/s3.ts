@@ -45,9 +45,9 @@ export async function uploadArtifact(
     Key: objectKey,
     Body: fileStream,
     ACL: ObjectCannedACL.public_read,
-    ...(contentType ? {
+    ...( contentType ? {
       ContentType: contentType
-    } : {})
+    } : {} )
   } ) );
 
   return objectKey;

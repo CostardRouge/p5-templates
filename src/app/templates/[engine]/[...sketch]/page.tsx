@@ -60,26 +60,41 @@ export async function generateMetadata( {
     engine: engineId, sketch
   } = await params;
   const sketchName = sketch[ sketch.length - 1 ];
-  const sketchMeta = findSketchMeta( sketchName, engineId );
+  const sketchMeta = findSketchMeta(
+    sketchName,
+    engineId
+  );
   const baseUrl = getBaseUrl();
 
   const engineLabel = hasEngine( engineId )
     ? getEngine( engineId ).label
     : engineId;
   const title = formatSketchTitle( sketchName );
-  const description = buildSketchDescription( title, engineLabel );
+  const description = buildSketchDescription(
+    title,
+    engineLabel
+  );
   const canonicalPath = buildCanonicalPath(
-    engineId, sketchName, sketchMeta?.category
+    engineId,
+    sketchName,
+    sketchMeta?.category
   );
   const thumbnailUrl = sketchMeta?.hasThumbnail
-    ? buildThumbnailUrl( engineId, sketchName, baseUrl )
+    ? buildThumbnailUrl(
+      engineId,
+      sketchName,
+      baseUrl
+    )
     : undefined;
 
   return {
     // Let the root layout template handle "| SITE_NAME" — only pass the page title
     title,
     description,
-    keywords: buildSketchKeywords( sketchName, engineLabel ),
+    keywords: buildSketchKeywords(
+      sketchName,
+      engineLabel
+    ),
     alternates: {
       canonical: canonicalPath
     },
@@ -106,7 +121,9 @@ export async function generateMetadata( {
       title: buildOgTitle( title ),
       description,
       ...( thumbnailUrl && {
-        images: [ thumbnailUrl ]
+        images: [
+          thumbnailUrl
+        ]
       } )
     }
   };
@@ -143,7 +160,10 @@ export default async function StudioPage( {
   const sketchName = sketchSegments[ sketchSegments.length - 1 ];
 
   /* ---- validate sketch exists in metadata ------------------------ */
-  const sketchMeta = findSketchMeta( sketchName, engineId );
+  const sketchMeta = findSketchMeta(
+    sketchName,
+    engineId
+  );
 
   if ( !sketchMeta ) {
     return notFound();
@@ -163,18 +183,30 @@ export default async function StudioPage( {
 
   const {
     formValues, formConfiguration
-  } = await getSketchMeta( sketchName, engineId );
+  } = await getSketchMeta(
+    sketchName,
+    engineId
+  );
 
-  const jsonOptions = await getJSONSketchOptions( sketchName, engineId );
+  const jsonOptions = await getJSONSketchOptions(
+    sketchName,
+    engineId
+  );
 
   if ( jsonOptions ) {
-    Object.assign( sketchOptions, jsonOptions );
+    Object.assign(
+      sketchOptions,
+      jsonOptions
+    );
   }
 
   if ( formValues ) {
-    Object.assign( sketchOptions, {
-      sketch: structuredClone( formValues )
-    } );
+    Object.assign(
+      sketchOptions,
+      {
+        sketch: structuredClone( formValues )
+      }
+    );
   }
 
   /* ---- persisted job? -------------------------------------------- */
@@ -210,7 +242,10 @@ export default async function StudioPage( {
   const previewDurationRaw = resolvedSearchParams.previewDuration;
 
   if ( resolvedSearchParams.capturing === "" && previewFramerateRaw && previewDurationRaw ) {
-    const previewFramerate = Number.parseInt( previewFramerateRaw, 10 );
+    const previewFramerate = Number.parseInt(
+      previewFramerateRaw,
+      10
+    );
     const previewDuration = Number.parseFloat( previewDurationRaw );
 
     if ( Number.isFinite( previewFramerate ) && previewFramerate > 0
@@ -226,12 +261,25 @@ export default async function StudioPage( {
   /* ---- breadcrumb items ------------------------------------------ */
   const sketchTitle = formatSketchTitle( sketchName );
   const breadcrumbItems = [
-    { name: "Home", url: baseUrl },
-    { name: "Templates", url: `${ baseUrl }/templates` },
-    { name: `${ engineLabel } Templates`, url: `${ baseUrl }/templates/${ engineId }` },
+    {
+      name: "Home",
+      url: baseUrl
+    },
+    {
+      name: "Templates",
+      url: `${ baseUrl }/templates`
+    },
+    {
+      name: `${ engineLabel } Templates`,
+      url: `${ baseUrl }/templates/${ engineId }`
+    },
     {
       name: sketchTitle,
-      url: `${ baseUrl }${ buildCanonicalPath( engineId, sketchName, sketchMeta.category ) }`
+      url: `${ baseUrl }${ buildCanonicalPath(
+        engineId,
+        sketchName,
+        sketchMeta.category
+      ) }`
     }
   ];
 

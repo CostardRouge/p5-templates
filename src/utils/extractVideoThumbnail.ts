@@ -14,16 +14,19 @@ export async function extractVideoThumbnail(
   await new Promise<void>( (
     resolve, reject
   ) => {
-    const ffmpeg = spawn( "ffmpeg", [
-      "-y",
-      "-i",
-      videoPath,
-      "-vframes",
-      "1",
-      "-q:v",
-      String( quality ),
-      thumbnailPath
-    ] );
+    const ffmpeg = spawn(
+      "ffmpeg",
+      [
+        "-y",
+        "-i",
+        videoPath,
+        "-vframes",
+        "1",
+        "-q:v",
+        String( quality ),
+        thumbnailPath
+      ]
+    );
 
     let stderr = "";
 

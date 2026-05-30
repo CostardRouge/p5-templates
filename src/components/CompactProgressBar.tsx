@@ -140,11 +140,11 @@ export default function CompactProgressBar( {
   const singleSubtitle = !isMultiSlide
     ? uiState
       ? ( () => {
-          const total = uiState.flatSteps.length;
-          const done = uiState.flatSteps.filter( ( s ) => s.status === "completed" ).length;
+        const total = uiState.flatSteps.length;
+        const done = uiState.flatSteps.filter( ( s ) => s.status === "completed" ).length;
 
-          return done > 0 ? `${ done } of ${ total } steps done` : `${ total } steps`;
-        } )()
+        return done > 0 ? `${ done } of ${ total } steps done` : `${ total } steps`;
+      } )()
       : steps.length > 0
         ? `Step ${ steps.filter( ( s ) => s.status === "completed" ).length + 1 } of ${ steps.length }`
         : null

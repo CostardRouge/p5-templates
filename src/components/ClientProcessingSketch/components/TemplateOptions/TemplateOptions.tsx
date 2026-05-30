@@ -115,7 +115,9 @@ export default function TemplateOptions( {
   // Only fires for non-"react" origins to avoid feedback loops with the form's own watch().
   useEffect(
     () => {
-      function syncLeafValues( newObj: unknown, currentObj: unknown, path: string ) {
+      function syncLeafValues(
+        newObj: unknown, currentObj: unknown, path: string
+      ) {
         if (
           newObj === null ||
           newObj === undefined ||
@@ -146,7 +148,9 @@ export default function TemplateOptions( {
         }
       }
 
-      return subscribeSketchOptions( ( opts, origin ) => {
+      return subscribeSketchOptions( (
+        opts, origin
+      ) => {
         if ( origin === "react" ) {
           return;
         }

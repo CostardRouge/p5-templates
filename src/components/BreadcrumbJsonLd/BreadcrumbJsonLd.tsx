@@ -3,10 +3,13 @@ import {
 } from "@/lib/seo";
 
 interface BreadcrumbJsonLdProps {
-  items: Array<{ name: string; url: string }>;
+  items: Array<{ name: string;
+    url: string }>;
 }
 
-export default function BreadcrumbJsonLd( { items }: BreadcrumbJsonLdProps ) {
+export default function BreadcrumbJsonLd( {
+  items
+}: BreadcrumbJsonLdProps ) {
   return (
     <script
       type="application/ld+json"

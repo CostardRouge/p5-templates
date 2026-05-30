@@ -1035,7 +1035,10 @@ function _collectMidi(
   const maxNotes = midi.maxNotes ?? 10;
   let count = 0;
 
-  for ( const [ note, velocity ] of _midiNotes ) {
+  for ( const [
+    note,
+    velocity
+  ] of _midiNotes ) {
     if ( count >= maxNotes ) {
       break;
     }
