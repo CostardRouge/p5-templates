@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Grid, List, Search
+  ChevronDown, Grid, List, Search
 } from "lucide-react";
 import {
   useRouter, useSearchParams
@@ -32,8 +32,37 @@ import {
   useMarqueeOnHover
 } from "@/hooks/useMarqueeOnHover";
 import {
+  usePersistedAccordion
+} from "@/hooks/usePersistedAccordion";
+import {
   fuzzyFilter
 } from "@/utils/fuzzySearch";
+
+const OTHER_SECTION = "__other__";
+const PEEK_COUNT = 6;
+const GRID_CLASS =
+  "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4";
+
+function sectionId(
+  engineId: string, category: string
+) {
+  return `${ engineId }::${ category }`;
+}
+
+function hasFeatured( items: TemplateItem[] ) {
+  return items.some( ( item ) => !item.hiddenFromTemplates );
+}
+
+// Run a state update inside a View Transition when the browser supports it,
+// so DOM changes (engine switch, section expand/collapse) cross-fade smoothly.
+function runViewTransition( update: () => void ) {
+  if ( typeof document !== "undefined" && "startViewTransition" in document ) {
+    ( document as Document & { startViewTransition: ( cb: () => void ) => void } )
+      .startViewTransition( update );
+  } else {
+    update();
+  }
+}
 
 interface TemplatesListProps {
   templates: Record<string, TemplateItem[]>;
@@ -65,6 +94,65 @@ export default function TemplatesList( {
     search,
     setSearch
   ] = useState<string>( searchParams.get( "keyword" ) || "" );
+
+  // Accordion open/closed state per category section, persisted across visits.
+  // On first visit, sections containing "featured" (non-hidden) templates are
+  // opened by default; everything else stays collapsed so no preview videos
+  // mount until the user expands a section.
+  const {
+    isOpen: isSectionOpen,
+    toggle: toggleSection
+  } = usePersistedAccordion(
+    "templates-accordion-open",
+    () => {
+      const ids: string[] = [];
+
+      Object.entries( templates ).forEach( ( [
+        engineId,
+        items
+      ] ) => {
+        const byCategory: Record<string, TemplateItem[]> = {};
+        const other: TemplateItem[] = [];
+
+        items.forEach( ( item ) => {
+          if ( item.category ) {
+            ( byCategory[ item.category ] ||= [] ).push( item );
+          } else {
+            other.push( item );
+          }
+        } );
+
+        Object.entries( byCategory ).forEach( ( [
+          category,
+          categoryItems
+        ] ) => {
+          if ( hasFeatured( categoryItems ) ) {
+            ids.push( sectionId(
+              engineId,
+              category
+            ) );
+          }
+        } );
+
+        if ( other.length > 0 && hasFeatured( other ) ) {
+          ids.push( sectionId(
+            engineId,
+            OTHER_SECTION
+          ) );
+        }
+      } );
+
+      return ids;
+    }
+  );
+
+  // While a search is active, every matching section is force-expanded so
+  // results are always visible regardless of stored state.
+  const searchActive = search.trim().length > 0;
+
+  // Expand/collapse a section with a smooth cross-fade.
+  const handleToggleSection = ( id: string ) =>
+    runViewTransition( () => flushSync( () => toggleSection( id ) ) );
 
   // Local engine state — updates instantly on click so the UI doesn't wait
   // on route navigation. The URL is kept in sync in the background.
@@ -108,14 +196,7 @@ export default function TemplatesList( {
 
   // Switch engine tab: animate via View Transitions API, sync the URL in the background
   const handleEngineClick = ( engineId: string ) => {
-    const doSwitch = () => flushSync( () => setCurrentEngine( engineId ) );
-
-    if ( typeof document !== "undefined" && "startViewTransition" in document ) {
-      ( document as Document & { startViewTransition: ( cb: () => void ) => void } )
-        .startViewTransition( doSwitch );
-    } else {
-      doSwitch();
-    }
+    runViewTransition( () => flushSync( () => setCurrentEngine( engineId ) ) );
 
     const basePath =
       engineId === "all" ? "/templates" : `/templates/${ engineId }`;
@@ -362,71 +443,52 @@ export default function TemplatesList( {
                   </div>
                 ) }
 
-                {/* Categorized groups */}
+                {/* Categorized groups — each is a collapsible section */}
                 { Object.entries( groupedItems ).map( ( [
                   subCategory,
                   subItems
-                ] ) => (
-                  <div key={ subCategory } className="space-y-2 sm:space-y-3">
-                    <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                      <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                        { subCategory }
-                      </h3>
-                      <span className="text-xs text-foreground/60">
-                        { subItems.length }
-                      </span>
-                    </div>
+                ] ) => {
+                  const id = sectionId(
+                    engineId,
+                    subCategory
+                  );
 
-                    <div
-                      className={
-                        view === "grid"
-                          ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                          : "space-y-2 sm:space-y-3"
-                      }
-                    >
-                      { subItems.map( (
-                        {
-                          href, name, thumbnail, preview, hasSketchForm, hiddenFromTemplates
-                        }, index
-                      ) => (
-                        <TemplateCard
-                          key={ name }
-                          href={ href }
-                          name={ name }
-                          thumbnail={ thumbnail }
-                          preview={ preview }
-                          hasSketchForm={ hasSketchForm }
-                          hiddenFromTemplates={ hiddenFromTemplates }
-                          view={ view }
-                          eager={ index === 0 }
-                          animationsEnabled={ animationsEnabled }
-                        />
-                      ) ) }
-                    </div>
-                  </div>
-                ) ) }
+                  return (
+                    <CollapsibleSection
+                      key={ subCategory }
+                      title={ subCategory }
+                      count={ subItems.length }
+                      open={ searchActive || isSectionOpen( id ) }
+                      onToggle={ () => handleToggleSection( id ) }
+                      items={ subItems }
+                      view={ view }
+                      animationsEnabled={ animationsEnabled }
+                    />
+                  );
+                } ) }
 
                 {/* Uncategorized items */}
                 { uncategorized.length > 0 && (
-                  <div className="space-y-2 sm:space-y-3">
-                    { hasCategoryGroups && (
-                      <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                        <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                          Other { label } templates
-                        </h3>
-                        <span className="text-xs text-foreground/60">
-                          { uncategorized.length }
-                        </span>
-                      </div>
-                    ) }
-
-                    <div
-                      className={
-                        view === "grid"
-                          ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                          : "space-y-2 sm:space-y-3"
-                      }
-                    >
+                  hasCategoryGroups ? (
+                    <CollapsibleSection
+                      title={ `Other ${ label } templates` }
+                      count={ uncategorized.length }
+                      open={ searchActive || isSectionOpen( sectionId(
+                        engineId,
+                        OTHER_SECTION
+                      ) ) }
+                      onToggle={ () => handleToggleSection( sectionId(
+                        engineId,
+                        OTHER_SECTION
+                      ) ) }
+                      items={ uncategorized }
+                      view={ view }
+                      animationsEnabled={ animationsEnabled }
+                    />
+                  ) : (
+                    // No category groups for this engine — render the grid
+                    // directly without a collapsible header to collapse against.
+                    <div className={ view === "grid" ? GRID_CLASS : "space-y-2 sm:space-y-3" }>
                       { uncategorized.map( (
                         {
                           href, name, thumbnail, preview, hasSketchForm, hiddenFromTemplates
@@ -446,12 +508,105 @@ export default function TemplatesList( {
                         />
                       ) ) }
                     </div>
-                  </div>
+                  )
                 ) }
               </div>
             );
           } ) }
       </div>
+    </div>
+  );
+}
+
+function CollapsibleSection( {
+  title,
+  count,
+  open,
+  onToggle,
+  items,
+  view,
+  animationsEnabled
+}: {
+  title: string;
+  count: number;
+  open: boolean;
+  onToggle: () => void;
+  items: TemplateItem[];
+  view: "grid" | "list";
+  animationsEnabled?: boolean;
+} ) {
+  return (
+    <div className="space-y-2 sm:space-y-3">
+      {/* Header — toggles the section */}
+      <button
+        type="button"
+        onClick={ onToggle }
+        aria-expanded={ open }
+        className="group/section flex items-center gap-2 pl-2 sm:pl-4 w-full text-left"
+      >
+        <ChevronDown
+          className={ `w-3.5 h-3.5 text-foreground/50 transition-transform duration-200 ${
+            open ? "" : "-rotate-90"
+          }` }
+        />
+        <h3 className="text-sm sm:text-base font-medium text-foreground/80 group-hover/section:text-foreground transition-colors">
+          { title }
+        </h3>
+        <span className="text-xs text-foreground/60">
+          { count }
+        </span>
+      </button>
+
+      { open ? (
+        <div className={ view === "grid" ? GRID_CLASS : "space-y-2 sm:space-y-3" }>
+          { items.map( (
+            item, index
+          ) => (
+            <TemplateCard
+              key={ item.name }
+              href={ item.href }
+              name={ item.name }
+              thumbnail={ item.thumbnail }
+              preview={ item.preview }
+              hasSketchForm={ item.hasSketchForm }
+              hiddenFromTemplates={ item.hiddenFromTemplates }
+              view={ view }
+              eager={ index === 0 }
+              animationsEnabled={ animationsEnabled }
+            />
+          ) ) }
+        </div>
+      ) : (
+        // Collapsed peek row — lightweight static thumbnails only, no video
+        // previews are mounted while the section stays closed.
+        <button
+          type="button"
+          onClick={ onToggle }
+          aria-label={ `Expand ${ title }` }
+          className="flex items-center gap-1.5 sm:gap-2 pl-2 sm:pl-4 w-full overflow-hidden"
+        >
+          { items.slice(
+            0,
+            PEEK_COUNT
+          ).map( ( item ) => (
+            <span
+              key={ item.name }
+              className="w-10 sm:w-12 aspect-[4/5] flex-shrink-0 rounded-md sm:rounded-lg overflow-hidden border border-border bg-background opacity-90 hover:opacity-100 transition-opacity"
+            >
+              <Thumbnail
+                src={ item.thumbnail }
+                alt={ item.name }
+                className="w-full h-full object-cover"
+              />
+            </span>
+          ) ) }
+          { items.length > PEEK_COUNT && (
+            <span className="text-xs text-foreground/50 font-mono pl-1 flex-shrink-0">
+              +{ items.length - PEEK_COUNT }
+            </span>
+          ) }
+        </button>
+      ) }
     </div>
   );
 }
