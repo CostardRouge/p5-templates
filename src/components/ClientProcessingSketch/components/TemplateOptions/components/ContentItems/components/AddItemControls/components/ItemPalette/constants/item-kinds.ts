@@ -4,7 +4,8 @@ import {
   Image as ImageIcon,
   Layers as StackIcon,
   PaintBucket as BgIcon,
-  Sparkles as VisualIcon
+  Sparkles as VisualIcon,
+  Terminal as SpecsIcon
 } from "lucide-react";
 import {
   ItemKind,
@@ -17,6 +18,7 @@ export const ITEM_ORDER: ItemKind[] = [
   "image",
   "images-stack",
   "meta",
+  "specs",
   "background"
 ];
 
@@ -30,6 +32,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Meta",
     Icon: MetaIcon,
     description: "Title, author, date, etc."
+  },
+  specs: {
+    label: "Specs",
+    Icon: SpecsIcon,
+    description: "Technical overlay of the sketch settings"
   },
   image: {
     label: "Image",

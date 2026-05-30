@@ -163,6 +163,41 @@ export const MetaItemSchema = z.object( {
     } )
 } );
 
+export const SpecsItemSchema = z.object( {
+  type: z.literal( "specs" ),
+  style: z.enum( [
+    "boot-log",
+    "ticker"
+  ] ).default( "boot-log" ),
+  font: z.string().default( "spaceMonoRegular" ),
+  size: z.number().positive()
+    .default( 22 ),
+  fill: RGBA.default( [
+    0,
+    255,
+    120
+  ] ),
+  blend: Blend.default( "source-over" ),
+  position: Vec2.default( {
+    x: 0.05,
+    y: 0.06
+  } ),
+  lineHeight: z.number().positive()
+    .default( 1.4 ),
+  showCursor: z.boolean().default( true ),
+  includeSketchSettings: z.boolean().default( true ),
+  // timing as a fraction of the animation loop (0..1)
+  revealEnd: z.number().min( 0 )
+    .max( 1 )
+    .default( 0.45 ),
+  holdEnd: z.number().min( 0 )
+    .max( 1 )
+    .default( 0.7 ),
+  fadeEnd: z.number().min( 0 )
+    .max( 1 )
+    .default( 0.8 )
+} );
+
 export const TextItemSchema = z.object( {
   type: z.literal( "text" ),
   content: z.string().default( "" ),
@@ -343,6 +378,7 @@ export const ContentItemSchema = z.discriminatedUnion(
   [
     BackgroundItemSchema,
     MetaItemSchema,
+    SpecsItemSchema,
     TextItemSchema,
     ImagesStackItemSchema,
     ImageItemSchema,
