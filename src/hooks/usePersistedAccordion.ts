@@ -5,21 +5,25 @@ import {
 } from "react";
 
 /**
- * Persists the open/closed state of a set of accordion sections in
- * localStorage, keyed by section id.
+ * Tracks an open/closed set of section ids (e.g. which category rows are
+ * expanded from a horizontal carousel into a full grid), optionally persisted
+ * in localStorage keyed by `storageKey`.
  *
- * On first visit (nothing stored yet) the set returned by `getDefaultOpen`
- * is used — this lets callers auto-open "featured" sections while keeping the
- * rest collapsed for performance.
+ * @param storageKey      localStorage key used when `persist` is true.
+ * @param getDefaultOpen  ids open on first visit (read once on mount).
+ * @param persist         when false, state lives only in memory — nothing is
+ *                        read from or written to localStorage. Flip this to
+ *                        opt out of cross-visit memory without touching the
+ *                        call sites' logic.
  *
- * Mirrors the hydration approach of `usePersistedViewMode`: the server and the
- * first client render share an empty (all-collapsed) state, then the stored /
- * default state is applied once mounted, so there is never a hydration
- * mismatch.
+ * Hydration: server and the first client render share the default set, then
+ * the persisted set (if any) is applied after mount, mirroring
+ * `usePersistedViewMode` so there is never a hydration mismatch.
  */
 export function usePersistedAccordion(
   storageKey: string,
-  getDefaultOpen: () => string[]
+  getDefaultOpen: () => string[],
+  persist = true
 ) {
   const [
     openIds,
@@ -30,23 +34,26 @@ export function usePersistedAccordion(
     setHydrated
   ] = useState( false );
 
-  // Load persisted state (or fall back to the default-open set) once mounted.
+  // Resolve the initial state once mounted: persisted set when available and
+  // enabled, otherwise the caller-provided defaults.
   useEffect(
     () => {
       let initial: string[] | null = null;
 
-      try {
-        const raw = window.localStorage.getItem( storageKey );
+      if ( persist ) {
+        try {
+          const raw = window.localStorage.getItem( storageKey );
 
-        if ( raw ) {
-          const parsed = JSON.parse( raw );
+          if ( raw ) {
+            const parsed = JSON.parse( raw );
 
-          if ( Array.isArray( parsed ) ) {
-            initial = parsed.filter( ( id ) => typeof id === "string" );
+            if ( Array.isArray( parsed ) ) {
+              initial = parsed.filter( ( id ) => typeof id === "string" );
+            }
           }
+        } catch {
+          // Ignore malformed / unavailable storage and use defaults.
         }
-      } catch {
-        // Ignore malformed / unavailable storage and use defaults.
       }
 
       setOpenIds( new Set( initial ?? getDefaultOpen() ) );
@@ -55,15 +62,16 @@ export function usePersistedAccordion(
     // getDefaultOpen is intentionally read once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      storageKey
+      storageKey,
+      persist
     ]
   );
 
-  // Persist on change, but only after the initial hydration read so we never
-  // clobber stored state with the transient empty set.
+  // Persist on change — only when enabled and after the initial hydration read,
+  // so we never clobber stored state with the transient empty set.
   useEffect(
     () => {
-      if ( !hydrated ) {
+      if ( !persist || !hydrated ) {
         return;
       }
 
@@ -81,6 +89,7 @@ export function usePersistedAccordion(
     [
       openIds,
       hydrated,
+      persist,
       storageKey
     ]
   );
