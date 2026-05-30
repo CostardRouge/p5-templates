@@ -1,10 +1,9 @@
-import options from "../options.js";
-import {
+import options, {
   syncEffectivePrevious
 } from "../options.js";
 import events from "../events.js";
 import {
-  getP5, getContainer
+  getContainer, getP5
 } from "../sketch.js";
 
 import {

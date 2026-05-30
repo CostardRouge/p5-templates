@@ -320,6 +320,105 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       }
     }
   },
+  specs: {
+    style: {
+      label: "Style",
+      component: "select",
+      options: [
+        {
+          value: "boot-log",
+          label: "Boot log"
+        },
+        {
+          value: "ticker",
+          label: "Ticker"
+        }
+      ]
+    },
+    fill: {
+      label: "Fill",
+      component: "color"
+    },
+    font: {
+      label: "Font",
+      component: "select",
+      options: fontNames.map( ( fontName ) => ( {
+        value: fontName,
+        label: fontName
+      } ) )
+    },
+    size: {
+      label: "Size",
+      component: "slider",
+      min: 8,
+      max: 96,
+      step: 1
+    },
+    lineHeight: {
+      label: "Line height",
+      component: "slider",
+      min: 1,
+      max: 3,
+      step: 0.05
+    },
+    blend: {
+      label: "Blend",
+      component: "select",
+      options: Blend.options.map( ( blendOption ) => ( {
+        value: blendOption,
+        label: blendOption
+      } ) )
+    },
+    showCursor: {
+      label: "Blinking cursor",
+      component: "checkbox"
+    },
+    includeSketchSettings: {
+      label: "Include sketch settings",
+      component: "checkbox"
+    },
+    position: {
+      label: "Position",
+      component: "nested-object",
+      fields: {
+        x: {
+          label: "x",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.01
+        },
+        y: {
+          label: "y",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.01
+        }
+      }
+    },
+    revealEnd: {
+      label: "Reveal end",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    holdEnd: {
+      label: "Hold end",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    fadeEnd: {
+      label: "Fade end",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.01
+    }
+  },
   text: {
     content: {
       label: "Content",

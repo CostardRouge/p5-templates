@@ -3,6 +3,7 @@ import {
   ImageItemSchema,
   ImagesStackItemSchema,
   MetaItemSchema,
+  SpecsItemSchema,
   TextItemSchema,
   ContentItem,
   VisualItemSchema
@@ -29,6 +30,10 @@ export default function makeDefaultItem( type: ItemKind ): ContentItem {
       } );
     case "meta":
       return MetaItemSchema.parse( {
+        type
+      } );
+    case "specs":
+      return SpecsItemSchema.parse( {
         type
       } );
     case "background":

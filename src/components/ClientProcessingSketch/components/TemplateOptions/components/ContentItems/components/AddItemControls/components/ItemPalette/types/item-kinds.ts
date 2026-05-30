@@ -2,6 +2,7 @@ export type ItemKind =
   | "visual"
   | "text"
   | "meta"
+  | "specs"
   | "image"
   | "images-stack"
   | "background";
