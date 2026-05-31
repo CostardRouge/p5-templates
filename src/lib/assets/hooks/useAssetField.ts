@@ -151,7 +151,9 @@ export default function useAssetField<P>( {
   );
 
   const updateParams = useCallback(
-    ( index: number, params: P ) => {
+    (
+      index: number, params: P
+    ) => {
       if ( index < 0 || index >= instances.length ) {
         return;
       }

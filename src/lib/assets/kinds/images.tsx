@@ -31,7 +31,9 @@ export const imagesKind: AssetKind<ImageParams> = {
   hasParams: false,
   defaultParams: () => ( {} ),
 
-  parseFieldEntry( raw, makeId ): AssetInstance<ImageParams> {
+  parseFieldEntry(
+    raw, makeId
+  ): AssetInstance<ImageParams> {
     if ( typeof raw === "string" ) {
       return {
         id: makeId(),

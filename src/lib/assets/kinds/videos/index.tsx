@@ -55,7 +55,9 @@ export const videosKind: AssetKind<VideoParams> = {
     ...defaultVideoParams
   } ),
 
-  parseFieldEntry( raw, makeId ): AssetInstance<VideoParams> {
+  parseFieldEntry(
+    raw, makeId
+  ): AssetInstance<VideoParams> {
     if ( typeof raw === "string" ) {
       return {
         id: makeId(),
