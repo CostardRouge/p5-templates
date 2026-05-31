@@ -48,7 +48,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( async() => {
+sketch.draw( () => {
   const p = getP5();
 
   p.background( ...( options.sketch?.backgroundColor ?? [
@@ -66,20 +66,23 @@ sketch.draw( async() => {
 
   const progression = animation.progression;
 
-  // Seek every source to the current progression before drawing so the
-  // frame is deterministic (this is also the path used during recording).
-  await Promise.all( sources.map( ( source ) => source.seekToProgression( progression ) ) );
-
+  // Nudge each video toward the target time, then draw whatever frame it
+  // currently holds — both synchronously. The seek is fire-and-forget: p5
+  // does not await an async `draw`, so awaiting here would let the next
+  // rAF clear the canvas before the frame lands, causing a black flash.
+  // For deterministic capture the recorder drains the pending seeks
+  // (trackPendingMedia) before reading the frame.
   drawGrid(
     p,
-    sources
+    sources,
+    progression
   );
 } );
 
 /* ---- drawing helpers ----------------------------------------------------- */
 
 function drawGrid(
-  p, sources
+  p, sources, progression
 ) {
   const count = sources.length;
   const columns = Math.ceil( Math.sqrt( count ) );
@@ -90,6 +93,8 @@ function drawGrid(
   sources.forEach( (
     source, index
   ) => {
+    source.seekToProgression( progression ).catch( () => {} );
+
     const column = index % columns;
     const row = Math.floor( index / columns );
 
