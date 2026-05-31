@@ -18,7 +18,7 @@ import {
   CSS
 } from "@dnd-kit/utilities";
 import {
-  GripVertical, Settings2, Trash2, X
+  GripVertical, Settings2, Trash2
 } from "lucide-react";
 
 import useAssetsBridge from "@/hooks/useAssetsBridge";
@@ -32,14 +32,13 @@ import useAssetField from "../hooks/useAssetField";
 import type {
   AssetInstance, AssetKind
 } from "../types";
+import AssetParamsDialog from "./AssetParamsDialog";
 
 type Props = {
   name: string;
   /** Asset kind id (e.g. "images", "videos"). Defaults to "images". */
   kind?: string;
 };
-
-const fileName = ( p: string ) => p.split( /[\\/]/ ).pop() || p;
 
 export default function ControlledAssetStackInput<P>( {
   name, kind: kindId = "images"
@@ -166,11 +165,15 @@ function SortableThumb<P>( {
   onParamsChange: ( params: P ) => void;
 } ) {
   const {
-    attributes, listeners, setNodeRef, transform, transition
-  } =
-    useSortable( {
-      id: instance.id
-    } );
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition
+  } = useSortable( {
+    id: instance.id
+  } );
   const style = {
     transform: CSS.Transform.toString( transform ),
     transition
@@ -182,72 +185,90 @@ function SortableThumb<P>( {
   ] = useState( false );
 
   const Preview = kind.PreviewComponent;
-  const ParamsEditor = kind.ParamsEditor;
+  const hasParams = Boolean( kind.hasParams && kind.ParamsEditor );
 
   return (
-    <div
-      ref={ setNodeRef }
-      style={ style }
-      className="relative h-20 bg-background rounded-lg border border-theme overflow-hidden"
-    >
-      <GripVertical
-        className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded-md border border-theme z-10"
-        { ...attributes }
-        { ...listeners }
-        aria-label="Drag handle"
-        role="button"
-        tabIndex={ 0 }
-      />
-
-      <button
-        type="button"
-        onClick={ ( e ) => {
-          e.stopPropagation();
-          onDelete();
-        } }
-        className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-md border border-theme p-0.5 z-10"
-        aria-label="Remove"
+    <>
+      <div
+        ref={ setNodeRef }
+        style={ style }
+        className="relative h-20 bg-background rounded-lg border border-theme overflow-hidden"
       >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+        <Preview url={ url } path={ instance.path } />
 
-      {kind.hasParams && ParamsEditor ? (
-        <button
-          type="button"
-          onClick={ ( e ) => {
-            e.stopPropagation();
-            setParamsOpen( ( v ) => !v );
-          } }
-          className="absolute right-1 bottom-1 h-5 w-5 text-foreground bg-background/90 hover:bg-background rounded-md border border-theme p-0.5 z-10"
-          aria-label="Edit params"
-        >
-          <Settings2 className="h-3.5 w-3.5" />
-        </button>
-      ) : null}
+        {/* Action bar above the preview. `pointer-events-none` on the strip
+            keeps the preview's mouseenter/leave reachable; each button
+            re-enables pointer events so its click always lands. */}
+        <div className="absolute inset-x-1 top-1 flex items-center justify-between gap-1 z-10 pointer-events-none">
+          <ThumbButton
+            onClick={ onDelete }
+            ariaLabel="Remove"
+            className="text-red-600"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </ThumbButton>
 
-      <Preview url={ url } path={ instance.path } />
+          <div className="flex items-center gap-1">
+            {hasParams ? (
+              <ThumbButton
+                onClick={ () => setParamsOpen( true ) }
+                ariaLabel="Edit params"
+              >
+                <Settings2 className="h-3.5 w-3.5" />
+              </ThumbButton>
+            ) : null}
 
-      {paramsOpen && ParamsEditor ? (
-        <div
-          className="absolute inset-x-0 bottom-0 z-20 bg-background border-t border-theme p-2 max-h-72 overflow-y-auto"
-          onClick={ ( e ) => e.stopPropagation() }
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-500 truncate" title={ instance.path }>
-              {fileName( instance.path )}
-            </span>
             <button
               type="button"
-              onClick={ () => setParamsOpen( false ) }
-              className="h-5 w-5 text-gray-500 hover:text-foreground"
-              aria-label="Close params"
+              ref={ setActivatorNodeRef }
+              { ...attributes }
+              { ...listeners }
+              aria-label="Drag handle"
+              className="pointer-events-auto h-6 w-6 grid place-items-center text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded-md border border-theme touch-none"
             >
-              <X className="h-3.5 w-3.5" />
+              <GripVertical className="h-3.5 w-3.5" />
             </button>
           </div>
-          <ParamsEditor value={ instance.params } onChange={ onParamsChange } />
         </div>
+      </div>
+
+      {hasParams ? (
+        <AssetParamsDialog
+          open={ paramsOpen }
+          onClose={ () => setParamsOpen( false ) }
+          kind={ kind }
+          instance={ instance }
+          url={ url }
+          onParamsChange={ onParamsChange }
+        />
       ) : null}
-    </div>
+    </>
+  );
+}
+
+function ThumbButton( {
+  onClick,
+  ariaLabel,
+  className,
+  children
+}: {
+  onClick: () => void;
+  ariaLabel: string;
+  className?: string;
+  children: React.ReactNode;
+} ) {
+  return (
+    <button
+      type="button"
+      onClick={ ( e ) => {
+        e.stopPropagation();
+        onClick();
+      } }
+      onPointerDown={ ( e ) => e.stopPropagation() }
+      aria-label={ ariaLabel }
+      className={ `pointer-events-auto h-6 w-6 grid place-items-center bg-background/90 hover:bg-background rounded-md border border-theme text-foreground ${ className ?? "" }` }
+    >
+      {children}
+    </button>
   );
 }
