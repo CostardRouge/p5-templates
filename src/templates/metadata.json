@@ -2470,5 +2470,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-05-27T22:20:13.033Z",
     "ctime": "2026-05-27T14:55:36.677Z"
+  },
+  {
+    "name": "video-player",
+    "engine": "p5",
+    "category": "video",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-31T00:00:00.000Z",
+    "ctime": "2026-05-31T00:00:00.000Z"
   }
 ]
