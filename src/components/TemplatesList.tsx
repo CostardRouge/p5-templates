@@ -526,13 +526,17 @@ function CategorySection( {
   // we keep the toggle visible via `expanded` so the row can be collapsed back.
   const {
     ref: cardsRef,
-    overflowing
+    overflowing,
+    atEnd
   } = useOverflowing<HTMLDivElement>( [
     items.length,
     view,
     showGrid
   ] );
   const canToggle = !isList && !forced && ( overflowing || expanded );
+  // Fade the right edge only while there are cards hidden to the right; drop it
+  // once scrolled to the end so it never lingers over empty space.
+  const showRightFade = overflowing && !atEnd;
 
   // Animate the newly revealed rows only when the user expands (not on initial
   // mount, collapse, or a search-forced expand). The first row is kept still
@@ -628,7 +632,7 @@ function CategorySection( {
           className={
             showGrid
               ? `category-cards category-grid ${ GRID_CLASS }${ revealing ? " is-revealing" : "" }`
-              : `category-cards category-carousel scrollbar-hide${ overflowing ? " has-overflow" : "" }`
+              : `category-cards category-carousel scrollbar-hide${ showRightFade ? " has-overflow" : "" }`
           }
         >
           { cards }
