@@ -568,8 +568,8 @@ function CategorySection( {
   ) );
 
   return (
-    <div className="space-y-2 sm:space-y-3">
-      <div className="flex items-center gap-2 pl-2 sm:pl-4">
+    <div>
+      <div className="flex items-center gap-2 pl-2 sm:pl-4 mb-2 sm:mb-3">
         {/* Square toggle: expand the carousel into the full grid (or back).
             Only shown in grid view when there are enough cards to overflow. */}
         { !isList && canScroll && (
@@ -603,12 +603,13 @@ function CategorySection( {
       ) : (
         // One persistent container for both states: switching its class between
         // grid and carousel keeps the cards mounted (no video reload, the first
-        // row stays put). `is-revealing` triggers the rise-in on expand only.
+        // row stays put). `category-cards` reserves room so hover shadows aren't
+        // clipped; `is-revealing` triggers the rise-in on expand only.
         <div
           className={
             showGrid
-              ? `category-grid ${ GRID_CLASS }${ revealing ? " is-revealing" : "" }`
-              : "category-carousel scrollbar-hide"
+              ? `category-cards category-grid ${ GRID_CLASS }${ revealing ? " is-revealing" : "" }`
+              : "category-cards category-carousel scrollbar-hide"
           }
         >
           { cards }

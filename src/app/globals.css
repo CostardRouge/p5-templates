@@ -123,6 +123,28 @@
     /* Chrome/Safari */
 }
 
+/* Shared geometry for both layouts of a category's cards (carousel + grid).
+   A scroll container clips overflow on every side, so a hovered card's lift +
+   shadow would get sliced off. We reserve room with padding (which sits inside
+   the clip region) and cancel it again with negative *vertical* margins so the
+   surrounding layout is untouched. Horizontally we keep the padding without a
+   negative margin (no page-level horizontal overflow, since the page has no
+   side padding) — this insets the cards just enough for the shadow and happens
+   to align them with the section title. Applying this to BOTH states keeps the
+   first row pixel-identical when expanding, so it never jumps. */
+.category-cards {
+    padding: 0.75rem 0.5rem 1.5rem;
+    margin-top: -0.75rem;
+    margin-bottom: -1.5rem;
+}
+
+@media (min-width: 640px) {
+    .category-cards {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
 /* Horizontal category carousel: shows N cards (matching the grid's column
    count at each breakpoint) and lets the rest be reached by scrolling, with
    no JS measuring. Card width is derived from --cols and --gap so it lines up
@@ -134,10 +156,6 @@
     display: flex;
     gap: var(--gap);
     overflow-x: auto;
-    /* overflow-y becomes "auto" per spec, so reserve a little vertical room
-       for the cards' hover lift + shadow and offset it with a margin. */
-    padding-block: 0.375rem;
-    margin-block: -0.375rem;
     scroll-snap-type: x proximity;
     /* Fade the right edge to hint that more cards are scrollable. */
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
