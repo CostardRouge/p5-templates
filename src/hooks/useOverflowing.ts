@@ -49,10 +49,10 @@ export function useOverflowing<T extends HTMLElement>( deps: unknown[] = [] ) {
       observer.observe( el );
       return () => observer.disconnect();
     },
-    // measure is stable; deps let callers force a re-measure.
-
+    // measure is stable; the spread lets callers force a re-measure.
     [
       measure,
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       ...deps
     ]
   );
