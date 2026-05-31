@@ -146,9 +146,10 @@
 }
 
 /* Horizontal category carousel: shows N cards (matching the grid's column
-   count at each breakpoint) and lets the rest be reached by scrolling, with
-   no JS measuring. Card width is derived from --cols and --gap so it lines up
-   pixel-for-pixel with the full grid. */
+   count at each breakpoint) and lets the rest be reached by scrolling. Card
+   width is derived from --cols and --gap in pure CSS so it lines up
+   pixel-for-pixel with the full grid (JS is used only to detect overflow for
+   the scroll affordance, never to size cards). */
 .category-carousel {
     --gap: 0.5rem;
     /* gap-2 */
@@ -157,7 +158,11 @@
     gap: var(--gap);
     overflow-x: auto;
     scroll-snap-type: x proximity;
-    /* Fade the right edge to hint that more cards are scrollable. */
+}
+
+/* Fade the right edge to hint at more cards — only when the row actually
+   overflows (toggled from JS), so a row that already fits isn't dimmed. */
+.category-carousel.has-overflow {
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
     mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
 }

@@ -35,18 +35,15 @@ import {
   usePersistedAccordion
 } from "@/hooks/usePersistedAccordion";
 import {
+  useOverflowing
+} from "@/hooks/useOverflowing";
+import {
   fuzzyFilter
 } from "@/utils/fuzzySearch";
 
 const OTHER_SECTION = "__other__";
 const GRID_CLASS =
   "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4";
-
-// The carousel shows this many cards at the narrowest breakpoint (matches the
-// grid's mobile column count). A category with this few items or fewer can
-// never overflow on any screen, so it renders as a plain row with no scroll
-// fade — avoids fading a real card when there is nothing to scroll to.
-const MIN_CAROUSEL_COLS = 3;
 
 // Whether the expanded/collapsed state of each category survives reloads.
 // Flip to false to make every category start as a carousel on each visit.
@@ -426,6 +423,7 @@ export default function TemplatesList( {
                       title={ subCategory }
                       count={ subItems.length }
                       expanded={ searchActive || isSectionExpanded( id ) }
+                      forced={ searchActive }
                       onToggle={ () => handleToggleSection( id ) }
                       items={ subItems }
                       view={ view }
@@ -444,6 +442,7 @@ export default function TemplatesList( {
                         engineId,
                         OTHER_SECTION
                       ) ) }
+                      forced={ searchActive }
                       onToggle={ () => handleToggleSection( sectionId(
                         engineId,
                         OTHER_SECTION
@@ -499,6 +498,7 @@ function CategorySection( {
   title,
   count,
   expanded,
+  forced = false,
   onToggle,
   items,
   view,
@@ -507,16 +507,32 @@ function CategorySection( {
   title: string;
   count: number;
   expanded: boolean;
+  // True when the expansion is forced by an active search rather than the
+  // user. The toggle is hidden in that case — collapsing is a no-op while the
+  // search keeps the section open, which would be a dead click.
+  forced?: boolean;
   onToggle: () => void;
   items: TemplateItem[];
   view: "grid" | "list";
   animationsEnabled?: boolean;
 } ) {
   const isList = view === "list";
-  // Below this count the row can't overflow even on the narrowest screen, so
-  // there's nothing to scroll and the right-edge fade would dim a real card.
-  const canScroll = items.length > MIN_CAROUSEL_COLS;
-  const showGrid = expanded || !canScroll;
+  const showGrid = expanded;
+
+  // Measure whether the carousel row actually overflows on the current screen,
+  // so the toggle + right-edge fade only appear when there's really something
+  // to scroll to. Re-measures on resize and when the item count or mode change.
+  // In grid mode there is no horizontal overflow, so `overflowing` is false;
+  // we keep the toggle visible via `expanded` so the row can be collapsed back.
+  const {
+    ref: cardsRef,
+    overflowing
+  } = useOverflowing<HTMLDivElement>( [
+    items.length,
+    view,
+    showGrid
+  ] );
+  const canToggle = !isList && !forced && ( overflowing || expanded );
 
   // Animate the newly revealed rows only when the user expands (not on initial
   // mount, collapse, or a search-forced expand). The first row is kept still
@@ -571,8 +587,9 @@ function CategorySection( {
     <div>
       <div className="flex items-center gap-2 pl-2 sm:pl-4 mb-2 sm:mb-3">
         {/* Square toggle: expand the carousel into the full grid (or back).
-            Only shown in grid view when there are enough cards to overflow. */}
-        { !isList && canScroll && (
+            Only shown when the row actually overflows (or is already expanded),
+            so it never appears as a dead control when everything already fits. */}
+        { canToggle && (
           <button
             type="button"
             onClick={ onToggle }
@@ -604,12 +621,14 @@ function CategorySection( {
         // One persistent container for both states: switching its class between
         // grid and carousel keeps the cards mounted (no video reload, the first
         // row stays put). `category-cards` reserves room so hover shadows aren't
-        // clipped; `is-revealing` triggers the rise-in on expand only.
+        // clipped; `is-revealing` triggers the rise-in on expand only; the fade
+        // is added only when the row truly overflows.
         <div
+          ref={ cardsRef }
           className={
             showGrid
               ? `category-cards category-grid ${ GRID_CLASS }${ revealing ? " is-revealing" : "" }`
-              : "category-cards category-carousel scrollbar-hide"
+              : `category-cards category-carousel scrollbar-hide${ overflowing ? " has-overflow" : "" }`
           }
         >
           { cards }
@@ -651,7 +670,7 @@ function TemplateCard( {
     return (
       <Link
         href={ href }
-        className={ `group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5 ${
+        className={ `group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5 ${
           hiddenFromTemplates ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
         }` }
       >
@@ -724,7 +743,7 @@ function TemplateCard( {
   return (
     <Link
       href={ href }
-      className={ `group flex items-center gap-2 sm:gap-3 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5 ${
+      className={ `group flex items-center gap-2 sm:gap-3 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 hover:bg-hover/50 transition duration-300 hover:shadow-md hover:shadow-foreground/5 ${
         hiddenFromTemplates ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
       }` }
     >
