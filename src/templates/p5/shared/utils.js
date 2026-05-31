@@ -1,44 +1,18 @@
-/* ------------------------------------------------------------------ */
-/*  Helper: resolve a path → URL (prefers local blob URL)             */
-/* ------------------------------------------------------------------ */
-
 /**
- * @param {string} path
- * @param {string} [id]
- * @returns {string}
+ * Asset-related helpers (`resolveAssetURL`, `getScopeAssetPath`) have moved
+ * to `@/lib/assets` so they can be consumed by any rendering engine. They
+ * are re-exported here only to keep existing imports working — prefer
+ * importing from `@/lib/assets` in new code.
+ *
+ * `deepMerge` and `structuredClone` remain here for now: they are not
+ * asset-specific and only used by the option-sync layer.
  */
-export const resolveAssetURL = (
-  path, id
-) => {
-  if ( !path ) {
-    return "";
-  }
-
-  const blobURL = window.__blobAssetMap?.[ path ];
-
-  if ( blobURL ) {
-    return blobURL;
-  }
-
-  // Keep already-resolved remote/blob URLs untouched.
-  if ( /^(https?:|blob:)/.test( path ) ) {
-    return path;
-  }
-
-  const normalizedPath = path.replace(
-    /^\/+/,
-    ""
-  );
-
-  // Public assets must always resolve from /assets (even when an id exists).
-  if ( /^assets\//.test( normalizedPath ) ) {
-    return `${ location.origin }/${ normalizedPath }`;
-  }
-
-  return id
-    ? `${ location.origin }/api/s3/${ id }/assets/${ normalizedPath }`
-    : `${ location.origin }/${ normalizedPath }`;
-};
+export {
+  resolveAssetURL
+} from "@/lib/assets/resolveAssetURL";
+export {
+  getScopeAssetPath
+} from "@/lib/assets/getScopeAssetPath";
 
 export function deepMerge(
   targetObject, sourceObject
@@ -99,25 +73,4 @@ export function structuredClone( value ) {
   } catch {}
 
   return JSON.parse( JSON.stringify( value ) );
-}
-
-/**
- * @typedef {Object} SlideScope
- * @property {number} slide
- */
-
-/**
- * @param {string} name
- * @param {string} type
- * @param {"global" | SlideScope} [scope="global"]
- * @returns {string}
- */
-export function getScopeAssetPath(
-  name, type, scope = "global"
-) {
-  if ( scope !== "global" && scope?.slide !== undefined ) {
-    return `slide-${ scope.slide }/${ type }/${ name }`;
-  }
-
-  return `global/${ type }/${ name }`;
 }
