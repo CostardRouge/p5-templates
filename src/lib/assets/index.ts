@@ -35,3 +35,13 @@ export {
 export type {
   VideoParams, VideoLoopMode
 } from "./kinds/videos/types";
+export {
+  loadVideoAsset
+} from "./kinds/videos/loadVideoAsset";
+export type {
+  VideoSource, LoadVideoOptions
+} from "./kinds/videos/loadVideoAsset";
+
+export {
+  trackPendingMedia, awaitPendingMedia
+} from "./pendingMedia";
