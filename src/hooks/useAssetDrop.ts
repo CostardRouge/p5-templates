@@ -1,10 +1,6 @@
 import {
-  registerBlob
-} from "@/p5/shared/blobMap";
-
-import {
-  getScopeAssetPath
-} from "@/p5/shared/utils";
+  getScopeAssetPath, registerBlob, revokeBlob
+} from "@/lib/assets";
 
 import {
   getSketchOptions,
@@ -91,9 +87,8 @@ export default function useAssetDrop() {
       1
     );
 
-    if ( removed && window.__blobAssetMap?.[ removed ] ) {
-      URL.revokeObjectURL( window.__blobAssetMap[ removed ] );
-      delete window.__blobAssetMap[ removed ];
+    if ( removed ) {
+      revokeBlob( removed );
     }
 
     setSketchOptions(

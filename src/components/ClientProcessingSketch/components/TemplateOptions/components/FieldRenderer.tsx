@@ -13,10 +13,9 @@ import ControlledColorInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledColorInput/ControlledColorInput";
 import ControlledJsonInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledJsonInput";
-import ControlledImageInput
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImageInput/ControlledImageInput";
-import ControlledImagesStackInput
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledImagesStackInput/ControlledImagesStackInput";
+import {
+  ControlledAssetInput, ControlledAssetStackInput
+} from "@/lib/assets";
 import ControlledSizePresetSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSizePresetSelect/ControlledSizePresetSelect";
 import ControlledEasingInput
@@ -323,10 +322,16 @@ export default function FieldRenderer( {
         return <ControlledColorInput name={ registeredName } />;
 
       case "image":
-        return <ControlledImageInput name={ registeredName } />;
+        return <ControlledAssetInput name={ registeredName } kind="images" />;
 
       case "images-stack":
-        return <ControlledImagesStackInput name={ registeredName } />;
+        return <ControlledAssetStackInput name={ registeredName } kind="images" />;
+
+      case "asset":
+        return <ControlledAssetInput name={ registeredName } kind={ config.kind } />;
+
+      case "asset-stack":
+        return <ControlledAssetStackInput name={ registeredName } kind={ config.kind } />;
 
       case "hidden":
         return <input type="hidden" { ...register( registeredName ) } />;
