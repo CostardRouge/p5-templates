@@ -39,8 +39,6 @@ export type VideoSyncOptions = {
 export type VideoSync = {
   /** Live sources, in the same order as the option instances. */
   sources(): VideoSource[];
-  /** The first source, or `undefined` when none. Convenience for single-video sketches. */
-  first(): VideoSource | undefined;
   /** Re-diff against the current instances. Called automatically on change. */
   refresh(): void;
   /** Dispose every source and unsubscribe. */
@@ -113,12 +111,6 @@ export function createVideoSync( options: VideoSyncOptions ): VideoSync {
       return order
         .map( ( id ) => byId.get( id ) )
         .filter( ( source ): source is VideoSource => Boolean( source ) );
-    },
-
-    first() {
-      const id = order[ 0 ];
-
-      return id ? byId.get( id ) : undefined;
     },
 
     refresh,

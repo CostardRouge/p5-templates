@@ -138,7 +138,9 @@ export function loadVideoAsset(
   document.body.appendChild( element );
 
   let currentPath = "";
-  let params = normalizeSource( source ).params;
+  let params: VideoParams = {
+    ...defaultVideoParams
+  };
   let ready: Promise<void> = Promise.resolve();
   let lastTarget = -1;
   let activeSeek: Promise<void> | null = null;
@@ -249,10 +251,14 @@ export function loadVideoAsset(
       return;
     }
 
+    // Capture the path at entry: `load()` may swap the underlying video
+    // while we await `ready`, in which case the seek we were about to
+    // issue no longer applies.
+    const expectedPath = currentPath;
+
     await ready;
 
-    // A `load("")` may have cleared the video while we awaited `ready`.
-    if ( !currentPath ) {
+    if ( expectedPath !== currentPath ) {
       return;
     }
 
