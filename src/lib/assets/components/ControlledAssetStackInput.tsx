@@ -32,7 +32,7 @@ import useAssetField from "../hooks/useAssetField";
 import type {
   AssetInstance, AssetKind
 } from "../types";
-import AssetParamsDialog from "./AssetParamsDialog";
+import AssetDialog from "./AssetDialog";
 
 type Props = {
   name: string;
@@ -151,6 +151,27 @@ export default function ControlledAssetStackInput<P>( {
   );
 }
 
+/**
+ * A single asset tile with one control per corner — no overlap, legible
+ * even on a ~50 px mobile cell:
+ *
+ *   ┌─────────────┐
+ *   │           ⠿ │  drag (sole dnd-kit activator)
+ *   │   preview   │
+ *   │ 🗑       ⚙ │  delete (bottom-left) · settings (bottom-right)
+ *   └─────────────┘
+ *
+ * No overlay button: the preview keeps `mouseenter` reachable (so the video
+ * preview can hover-play), and clicks on the corner buttons route directly
+ * to their handlers — they explicitly `stopPropagation` on `pointerdown` so
+ * dnd-kit's PointerSensor (attached to the drag handle only) cannot
+ * pre-empt them.
+ *
+ * The settings button opens an `AssetDialog` — portaled at the top of the
+ * tree, so its own controls (Remove, ParamsEditor) cannot be clipped by the
+ * tile or captured by the options panel. Kinds without params hide the
+ * settings button: images get Delete + Drag, videos get the full set.
+ */
 function SortableThumb<P>( {
   kind,
   instance,
@@ -170,18 +191,21 @@ function SortableThumb<P>( {
     setNodeRef,
     setActivatorNodeRef,
     transform,
-    transition
+    transition,
+    isDragging
   } = useSortable( {
     id: instance.id
   } );
+
   const style = {
     transform: CSS.Transform.toString( transform ),
-    transition
+    transition,
+    opacity: isDragging ? 0.5 : 1
   };
 
   const [
-    paramsOpen,
-    setParamsOpen
+    dialogOpen,
+    setDialogOpen
   ] = useState( false );
 
   const Preview = kind.PreviewComponent;
@@ -196,65 +220,70 @@ function SortableThumb<P>( {
       >
         <Preview url={ url } path={ instance.path } />
 
-        {/* Action bar above the preview. `pointer-events-none` on the strip
-            keeps the preview's mouseenter/leave reachable; each button
-            re-enables pointer events so its click always lands. */}
-        <div className="absolute inset-x-1 top-1 flex items-center justify-between gap-1 z-10 pointer-events-none">
-          <ThumbButton
-            onClick={ onDelete }
-            ariaLabel="Remove"
-            className="text-red-600"
+        {/* Top-right: drag handle. Sole dnd-kit activator. `touch-none`
+            lets it own touch gestures without blocking panel scroll
+            elsewhere on the tile. */}
+        <button
+          type="button"
+          ref={ setActivatorNodeRef }
+          { ...attributes }
+          { ...listeners }
+          aria-label="Drag to reorder"
+          className="absolute right-1 top-1 z-10 h-6 w-6 grid place-items-center rounded-md text-white bg-black/55 hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+
+        <CornerButton
+          ariaLabel="Remove"
+          onClick={ onDelete }
+          tone="danger"
+          className="left-1 bottom-1"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </CornerButton>
+
+        {hasParams ? (
+          <CornerButton
+            ariaLabel="Open settings"
+            onClick={ () => setDialogOpen( true ) }
+            className="right-1 bottom-1"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-          </ThumbButton>
-
-          <div className="flex items-center gap-1">
-            {hasParams ? (
-              <ThumbButton
-                onClick={ () => setParamsOpen( true ) }
-                ariaLabel="Edit params"
-              >
-                <Settings2 className="h-3.5 w-3.5" />
-              </ThumbButton>
-            ) : null}
-
-            <button
-              type="button"
-              ref={ setActivatorNodeRef }
-              { ...attributes }
-              { ...listeners }
-              aria-label="Drag handle"
-              className="pointer-events-auto h-6 w-6 grid place-items-center text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded-md border border-theme touch-none"
-            >
-              <GripVertical className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
+            <Settings2 className="h-3.5 w-3.5" />
+          </CornerButton>
+        ) : null}
       </div>
 
       {hasParams ? (
-        <AssetParamsDialog
-          open={ paramsOpen }
-          onClose={ () => setParamsOpen( false ) }
+        <AssetDialog
+          open={ dialogOpen }
+          onClose={ () => setDialogOpen( false ) }
           kind={ kind }
           instance={ instance }
           url={ url }
           onParamsChange={ onParamsChange }
+          onRemove={ onDelete }
         />
       ) : null}
     </>
   );
 }
 
-function ThumbButton( {
+/**
+ * Compact corner action button. Stops pointer-down propagation so that
+ * dnd-kit's PointerSensor cannot intercept the gesture as a potential drag.
+ */
+function CornerButton( {
   onClick,
   ariaLabel,
   className,
+  tone,
   children
 }: {
   onClick: () => void;
   ariaLabel: string;
-  className?: string;
+  className: string;
+  tone?: "danger";
   children: React.ReactNode;
 } ) {
   return (
@@ -266,7 +295,9 @@ function ThumbButton( {
       } }
       onPointerDown={ ( e ) => e.stopPropagation() }
       aria-label={ ariaLabel }
-      className={ `pointer-events-auto h-6 w-6 grid place-items-center bg-background/90 hover:bg-background rounded-md border border-theme text-foreground ${ className ?? "" }` }
+      className={ `absolute z-10 h-6 w-6 grid place-items-center rounded-md bg-black/55 hover:bg-black/75 ${
+        tone === "danger" ? "text-red-300 hover:text-red-200" : "text-white"
+      } ${ className }` }
     >
       {children}
     </button>
