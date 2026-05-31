@@ -3,7 +3,7 @@ import {
   Dialog, DialogBackdrop, DialogPanel, DialogTitle
 } from "@headlessui/react";
 import {
-  X
+  Trash2, X
 } from "lucide-react";
 
 import type {
@@ -17,32 +17,37 @@ type Props<P> = {
   instance: AssetInstance<P>;
   url: string;
   onParamsChange: ( params: P ) => void;
+  onRemove: () => void;
 };
 
 const fileName = ( p: string ) => p.split( /[\\/]/ ).pop() || p;
 
 /**
- * Centered, focus-trapped modal that hosts a kind's `ParamsEditor`
- * alongside a large preview of the asset. Works on desktop (max-w-md)
- * and mobile (full-width with margin), with the native dismiss behaviour
- * Headless UI gives us (overlay click, Escape, focus restore).
+ * Asset detail modal: a large preview plus the kind's optional
+ * `ParamsEditor` and a Remove action. Tapping a thumbnail opens it, so all
+ * per-asset controls live here instead of being crammed onto a small tile.
  *
- * Rendered for any kind that opts in via `hasParams` and ships a
- * `ParamsEditor` — videos today, audios / json / future kinds tomorrow.
+ * Rendered in a portal at the top of the tree (Headless UI `Dialog`), so its
+ * controls are never clipped by the thumbnail's `overflow-hidden` nor
+ * captured by the options panel — which is exactly what broke the previous
+ * on-tile buttons. Centered on desktop, bottom-anchored full-width on mobile,
+ * with focus trap, Escape, and overlay-click to close.
  */
-export default function AssetParamsDialog<P>( {
+export default function AssetDialog<P>( {
   open,
   onClose,
   kind,
   instance,
   url,
-  onParamsChange
+  onParamsChange,
+  onRemove
 }: Props<P> ) {
   const Preview = kind.PreviewComponent;
   const ParamsEditor = kind.ParamsEditor;
 
-  if ( !ParamsEditor ) {
-    return null;
+  function handleRemove() {
+    onRemove();
+    onClose();
   }
 
   return (
@@ -69,8 +74,19 @@ export default function AssetParamsDialog<P>( {
             <Preview url={ url } path={ instance.path } />
           </div>
 
-          <div className="p-3 overflow-y-auto">
-            <ParamsEditor value={ instance.params } onChange={ onParamsChange } />
+          <div className="p-3 overflow-y-auto flex flex-col gap-3">
+            {ParamsEditor ? (
+              <ParamsEditor value={ instance.params } onChange={ onParamsChange } />
+            ) : null}
+
+            <button
+              type="button"
+              onClick={ handleRemove }
+              className="flex items-center justify-center gap-2 h-10 rounded-lg border border-red-500/40 text-red-600 hover:bg-red-500/10 text-sm font-medium"
+            >
+              <Trash2 className="h-4 w-4" />
+              Remove
+            </button>
           </div>
         </DialogPanel>
       </div>

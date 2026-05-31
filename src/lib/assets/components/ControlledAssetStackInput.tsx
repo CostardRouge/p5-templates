@@ -18,7 +18,7 @@ import {
   CSS
 } from "@dnd-kit/utilities";
 import {
-  GripVertical, Settings2, Trash2
+  GripVertical
 } from "lucide-react";
 
 import useAssetsBridge from "@/hooks/useAssetsBridge";
@@ -32,7 +32,7 @@ import useAssetField from "../hooks/useAssetField";
 import type {
   AssetInstance, AssetKind
 } from "../types";
-import AssetParamsDialog from "./AssetParamsDialog";
+import AssetDialog from "./AssetDialog";
 
 type Props = {
   name: string;
@@ -151,6 +151,12 @@ export default function ControlledAssetStackInput<P>( {
   );
 }
 
+/**
+ * A single asset tile. The tile body is a tap target that opens the detail
+ * dialog (preview + params + remove). Reordering is driven by one small drag
+ * handle in the corner — the only dnd-kit activator — so the rest of the tile
+ * stays scroll-friendly on touch and nothing competes for the tap.
+ */
 function SortableThumb<P>( {
   kind,
   instance,
@@ -170,22 +176,24 @@ function SortableThumb<P>( {
     setNodeRef,
     setActivatorNodeRef,
     transform,
-    transition
+    transition,
+    isDragging
   } = useSortable( {
     id: instance.id
   } );
+
   const style = {
     transform: CSS.Transform.toString( transform ),
-    transition
+    transition,
+    opacity: isDragging ? 0.5 : 1
   };
 
   const [
-    paramsOpen,
-    setParamsOpen
+    open,
+    setOpen
   ] = useState( false );
 
   const Preview = kind.PreviewComponent;
-  const hasParams = Boolean( kind.hasParams && kind.ParamsEditor );
 
   return (
     <>
@@ -194,81 +202,40 @@ function SortableThumb<P>( {
         style={ style }
         className="relative h-20 bg-background rounded-lg border border-theme overflow-hidden"
       >
+        {/* Tap target: opens the detail dialog. Covers the whole tile and
+            sits above the preview so the tap is reliable everywhere. */}
+        <button
+          type="button"
+          onClick={ () => setOpen( true ) }
+          aria-label={ `Edit ${ kind.label }` }
+          className="absolute inset-0 z-10 cursor-pointer bg-transparent"
+        />
+
         <Preview url={ url } path={ instance.path } />
 
-        {/* Action bar above the preview. `pointer-events-none` on the strip
-            keeps the preview's mouseenter/leave reachable; each button
-            re-enables pointer events so its click always lands. */}
-        <div className="absolute inset-x-1 top-1 flex items-center justify-between gap-1 z-10 pointer-events-none">
-          <ThumbButton
-            onClick={ onDelete }
-            ariaLabel="Remove"
-            className="text-red-600"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </ThumbButton>
-
-          <div className="flex items-center gap-1">
-            {hasParams ? (
-              <ThumbButton
-                onClick={ () => setParamsOpen( true ) }
-                ariaLabel="Edit params"
-              >
-                <Settings2 className="h-3.5 w-3.5" />
-              </ThumbButton>
-            ) : null}
-
-            <button
-              type="button"
-              ref={ setActivatorNodeRef }
-              { ...attributes }
-              { ...listeners }
-              aria-label="Drag handle"
-              className="pointer-events-auto h-6 w-6 grid place-items-center text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded-md border border-theme touch-none"
-            >
-              <GripVertical className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
+        {/* Sole drag activator. `touch-none` lets it own touch gestures
+            without blocking panel scroll elsewhere on the tile. */}
+        <button
+          type="button"
+          ref={ setActivatorNodeRef }
+          { ...attributes }
+          { ...listeners }
+          aria-label="Drag to reorder"
+          className="absolute right-1 top-1 z-20 h-6 w-6 grid place-items-center text-gray-200 bg-black/45 hover:bg-black/65 rounded-md cursor-grab active:cursor-grabbing touch-none"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
       </div>
 
-      {hasParams ? (
-        <AssetParamsDialog
-          open={ paramsOpen }
-          onClose={ () => setParamsOpen( false ) }
-          kind={ kind }
-          instance={ instance }
-          url={ url }
-          onParamsChange={ onParamsChange }
-        />
-      ) : null}
+      <AssetDialog
+        open={ open }
+        onClose={ () => setOpen( false ) }
+        kind={ kind }
+        instance={ instance }
+        url={ url }
+        onParamsChange={ onParamsChange }
+        onRemove={ onDelete }
+      />
     </>
-  );
-}
-
-function ThumbButton( {
-  onClick,
-  ariaLabel,
-  className,
-  children
-}: {
-  onClick: () => void;
-  ariaLabel: string;
-  className?: string;
-  children: React.ReactNode;
-} ) {
-  return (
-    <button
-      type="button"
-      onClick={ ( e ) => {
-        e.stopPropagation();
-        onClick();
-      } }
-      onPointerDown={ ( e ) => e.stopPropagation() }
-      aria-label={ ariaLabel }
-      className={ `pointer-events-auto h-6 w-6 grid place-items-center bg-background/90 hover:bg-background rounded-md border border-theme text-foreground ${ className ?? "" }` }
-    >
-      {children}
-    </button>
   );
 }
