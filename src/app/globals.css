@@ -157,7 +157,10 @@
     display: flex;
     gap: var(--gap);
     overflow-x: auto;
-    scroll-snap-type: x proximity;
+    /* Keep the rubber-band from chaining to the page, but no scroll-snap:
+       snapping fought the left inset (shifting scrollable rows out of line
+       with static ones) and bounced back on a leftward swipe. */
+    overscroll-behavior-x: contain;
 }
 
 /* Fade the right edge to hint at more cards — only when the row actually
@@ -169,7 +172,6 @@
 
 .category-carousel > * {
     flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
-    scroll-snap-align: start;
 }
 
 @media (min-width: 640px) {

@@ -454,7 +454,16 @@ export default function TemplatesList( {
                   ) : (
                     // No category groups for this engine — render the grid
                     // directly without a collapsible header to collapse against.
-                    <div className={ view === "grid" ? GRID_CLASS : "space-y-2 sm:space-y-3" }>
+                    // Still wrap in `category-cards` so its cards share the exact
+                    // same inset (and shadow room) as every CategorySection row,
+                    // keeping the left edge aligned across the whole gallery.
+                    <div
+                      className={
+                        view === "grid"
+                          ? `category-cards ${ GRID_CLASS }`
+                          : "space-y-2 sm:space-y-3"
+                      }
+                    >
                       { uncategorized.map( (
                         {
                           href, name, thumbnail, preview, hasSketchForm, hiddenFromTemplates
