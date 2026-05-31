@@ -109,6 +109,158 @@
     backdrop-filter: blur(0.9rem);
 }
 
+/* Hide scrollbars while keeping the element scrollable (engine tabs, the
+   horizontal category carousels). Pure CSS, no JS. */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE/legacy Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+/* Shared geometry for both layouts of a category's cards (carousel + grid).
+   A scroll container clips overflow on every side, so a hovered card's lift +
+   shadow would get sliced off. We reserve room with padding (which sits inside
+   the clip region) and cancel it again with negative *vertical* margins so the
+   surrounding layout is untouched. Horizontally we keep the padding without a
+   negative margin (no page-level horizontal overflow, since the page has no
+   side padding) — this insets the cards just enough for the shadow and happens
+   to align them with the section title. Applying this to BOTH states keeps the
+   first row pixel-identical when expanding, so it never jumps. */
+.category-cards {
+    padding: 0.75rem 0.5rem 1.5rem;
+    margin-top: -0.75rem;
+    margin-bottom: -1.5rem;
+}
+
+@media (min-width: 640px) {
+    .category-cards {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Horizontal category carousel: shows N cards (matching the grid's column
+   count at each breakpoint) and lets the rest be reached by scrolling. Card
+   width is derived from --cols and --gap in pure CSS so it lines up
+   pixel-for-pixel with the full grid (JS is used only to detect overflow for
+   the scroll affordance, never to size cards). */
+.category-carousel {
+    --gap: 0.5rem;
+    /* gap-2 */
+    --cols: 3;
+    display: flex;
+    gap: var(--gap);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+}
+
+/* Fade the right edge to hint at more cards — only when the row actually
+   overflows (toggled from JS), so a row that already fits isn't dimmed. */
+.category-carousel.has-overflow {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+.category-carousel > * {
+    flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+    scroll-snap-align: start;
+}
+
+@media (min-width: 640px) {
+    .category-carousel {
+        --gap: 1rem;
+        /* sm:gap-4 */
+        --cols: 4;
+    }
+}
+
+@media (min-width: 768px) {
+    .category-carousel {
+        --cols: 5;
+    }
+}
+
+@media (min-width: 1024px) {
+    .category-carousel {
+        --cols: 6;
+    }
+}
+
+@media (min-width: 1280px) {
+    .category-carousel {
+        --cols: 7;
+    }
+}
+
+@media (min-width: 1536px) {
+    .category-carousel {
+        --cols: 8;
+    }
+}
+
+/* Expanding a category from carousel to full grid: the cards already visible
+   (the first row) keep their exact position, and only the rows revealed below
+   animate in — a soft rise + fade rather than an abrupt crossfade. The first
+   row is excluded per breakpoint so it never moves. Cards stay mounted across
+   the toggle, so videos don't reload and visible cards don't flicker. */
+@keyframes card-rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.category-grid.is-revealing > * {
+    animation: card-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Keep the already-visible first row perfectly still (column count per
+   breakpoint mirrors --cols above). */
+.category-grid.is-revealing > :nth-child(-n + 3) {
+    animation: none;
+}
+
+@media (min-width: 640px) {
+    .category-grid.is-revealing > :nth-child(-n + 4) {
+        animation: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .category-grid.is-revealing > :nth-child(-n + 5) {
+        animation: none;
+    }
+}
+
+@media (min-width: 1024px) {
+    .category-grid.is-revealing > :nth-child(-n + 6) {
+        animation: none;
+    }
+}
+
+@media (min-width: 1280px) {
+    .category-grid.is-revealing > :nth-child(-n + 7) {
+        animation: none;
+    }
+}
+
+@media (min-width: 1536px) {
+    .category-grid.is-revealing > :nth-child(-n + 8) {
+        animation: none;
+    }
+}
+
 @keyframes pulse-soft {
     0%,
     100% {

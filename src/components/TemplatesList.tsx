@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  Grid, List, Search
+  ChevronDown, Grid, List, Search
 } from "lucide-react";
 import {
   useRouter, useSearchParams
 } from "next/navigation";
 import React, {
-  useEffect, useState
+  useEffect, useRef, useState
 } from "react";
 import {
   flushSync
@@ -32,8 +32,39 @@ import {
   useMarqueeOnHover
 } from "@/hooks/useMarqueeOnHover";
 import {
+  usePersistedAccordion
+} from "@/hooks/usePersistedAccordion";
+import {
+  useOverflowing
+} from "@/hooks/useOverflowing";
+import {
   fuzzyFilter
 } from "@/utils/fuzzySearch";
+
+const OTHER_SECTION = "__other__";
+const GRID_CLASS =
+  "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4";
+
+// Whether the expanded/collapsed state of each category survives reloads.
+// Flip to false to make every category start as a carousel on each visit.
+const PERSIST_EXPANDED = true;
+
+function sectionId(
+  engineId: string, category: string
+) {
+  return `${ engineId }::${ category }`;
+}
+
+// Run a state update inside a View Transition when the browser supports it,
+// so DOM changes (engine switch, section expand/collapse) cross-fade smoothly.
+function runViewTransition( update: () => void ) {
+  if ( typeof document !== "undefined" && "startViewTransition" in document ) {
+    ( document as Document & { startViewTransition: ( cb: () => void ) => void } )
+      .startViewTransition( update );
+  } else {
+    update();
+  }
+}
 
 interface TemplatesListProps {
   templates: Record<string, TemplateItem[]>;
@@ -65,6 +96,27 @@ export default function TemplatesList( {
     search,
     setSearch
   ] = useState<string>( searchParams.get( "keyword" ) || "" );
+
+  // Per-category expansion state. By default every category renders as a
+  // horizontal carousel (no ids open); expanding one swaps it to the full
+  // grid. Persisted across visits unless PERSIST_EXPANDED is false.
+  const {
+    isOpen: isSectionExpanded,
+    toggle: toggleSection
+  } = usePersistedAccordion(
+    "templates-expanded-categories",
+    () => [],
+    PERSIST_EXPANDED
+  );
+
+  // While a search is active, every matching section is shown as a full grid
+  // so all results are visible regardless of the carousel/expanded state.
+  const searchActive = search.trim().length > 0;
+
+  // Expand/collapse a category. No View Transition here: the cards stay
+  // mounted across the toggle and CategorySection animates only the newly
+  // revealed rows, so the already-visible row never moves or flickers.
+  const handleToggleSection = toggleSection;
 
   // Local engine state — updates instantly on click so the UI doesn't wait
   // on route navigation. The URL is kept in sync in the background.
@@ -108,14 +160,7 @@ export default function TemplatesList( {
 
   // Switch engine tab: animate via View Transitions API, sync the URL in the background
   const handleEngineClick = ( engineId: string ) => {
-    const doSwitch = () => flushSync( () => setCurrentEngine( engineId ) );
-
-    if ( typeof document !== "undefined" && "startViewTransition" in document ) {
-      ( document as Document & { startViewTransition: ( cb: () => void ) => void } )
-        .startViewTransition( doSwitch );
-    } else {
-      doSwitch();
-    }
+    runViewTransition( () => flushSync( () => setCurrentEngine( engineId ) ) );
 
     const basePath =
       engineId === "all" ? "/templates" : `/templates/${ engineId }`;
@@ -362,71 +407,54 @@ export default function TemplatesList( {
                   </div>
                 ) }
 
-                {/* Categorized groups */}
+                {/* Categorized groups — each is a carousel that expands to a grid */}
                 { Object.entries( groupedItems ).map( ( [
                   subCategory,
                   subItems
-                ] ) => (
-                  <div key={ subCategory } className="space-y-2 sm:space-y-3">
-                    <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                      <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                        { subCategory }
-                      </h3>
-                      <span className="text-xs text-foreground/60">
-                        { subItems.length }
-                      </span>
-                    </div>
+                ] ) => {
+                  const id = sectionId(
+                    engineId,
+                    subCategory
+                  );
 
-                    <div
-                      className={
-                        view === "grid"
-                          ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                          : "space-y-2 sm:space-y-3"
-                      }
-                    >
-                      { subItems.map( (
-                        {
-                          href, name, thumbnail, preview, hasSketchForm, hiddenFromTemplates
-                        }, index
-                      ) => (
-                        <TemplateCard
-                          key={ name }
-                          href={ href }
-                          name={ name }
-                          thumbnail={ thumbnail }
-                          preview={ preview }
-                          hasSketchForm={ hasSketchForm }
-                          hiddenFromTemplates={ hiddenFromTemplates }
-                          view={ view }
-                          eager={ index === 0 }
-                          animationsEnabled={ animationsEnabled }
-                        />
-                      ) ) }
-                    </div>
-                  </div>
-                ) ) }
+                  return (
+                    <CategorySection
+                      key={ subCategory }
+                      title={ subCategory }
+                      count={ subItems.length }
+                      expanded={ searchActive || isSectionExpanded( id ) }
+                      forced={ searchActive }
+                      onToggle={ () => handleToggleSection( id ) }
+                      items={ subItems }
+                      view={ view }
+                      animationsEnabled={ animationsEnabled }
+                    />
+                  );
+                } ) }
 
                 {/* Uncategorized items */}
                 { uncategorized.length > 0 && (
-                  <div className="space-y-2 sm:space-y-3">
-                    { hasCategoryGroups && (
-                      <div className="flex items-center gap-2 pl-2 sm:pl-4">
-                        <h3 className="text-sm sm:text-base font-medium text-foreground/80">
-                          Other { label } templates
-                        </h3>
-                        <span className="text-xs text-foreground/60">
-                          { uncategorized.length }
-                        </span>
-                      </div>
-                    ) }
-
-                    <div
-                      className={
-                        view === "grid"
-                          ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-4"
-                          : "space-y-2 sm:space-y-3"
-                      }
-                    >
+                  hasCategoryGroups ? (
+                    <CategorySection
+                      title={ `Other ${ label } templates` }
+                      count={ uncategorized.length }
+                      expanded={ searchActive || isSectionExpanded( sectionId(
+                        engineId,
+                        OTHER_SECTION
+                      ) ) }
+                      forced={ searchActive }
+                      onToggle={ () => handleToggleSection( sectionId(
+                        engineId,
+                        OTHER_SECTION
+                      ) ) }
+                      items={ uncategorized }
+                      view={ view }
+                      animationsEnabled={ animationsEnabled }
+                    />
+                  ) : (
+                    // No category groups for this engine — render the grid
+                    // directly without a collapsible header to collapse against.
+                    <div className={ view === "grid" ? GRID_CLASS : "space-y-2 sm:space-y-3" }>
                       { uncategorized.map( (
                         {
                           href, name, thumbnail, preview, hasSketchForm, hiddenFromTemplates
@@ -446,12 +474,170 @@ export default function TemplatesList( {
                         />
                       ) ) }
                     </div>
-                  </div>
+                  )
                 ) }
               </div>
             );
           } ) }
       </div>
+    </div>
+  );
+}
+
+/**
+ * A category block. Templates render at full size with live previews, just
+ * like the rest of the gallery. By default a grid-view category lays its cards
+ * out in a single horizontal, scrollable row (showing as many as fit the
+ * viewport — same column counts as the full grid) so the page stays short.
+ * The square toggle next to the title expands the row into the full grid.
+ *
+ * List view ignores the carousel and always renders the full vertical stack,
+ * since a horizontal row of list rows makes no sense.
+ */
+function CategorySection( {
+  title,
+  count,
+  expanded,
+  forced = false,
+  onToggle,
+  items,
+  view,
+  animationsEnabled
+}: {
+  title: string;
+  count: number;
+  expanded: boolean;
+  // True when the expansion is forced by an active search rather than the
+  // user. The toggle is hidden in that case — collapsing is a no-op while the
+  // search keeps the section open, which would be a dead click.
+  forced?: boolean;
+  onToggle: () => void;
+  items: TemplateItem[];
+  view: "grid" | "list";
+  animationsEnabled?: boolean;
+} ) {
+  const isList = view === "list";
+  const showGrid = expanded;
+
+  // Measure whether the carousel row actually overflows on the current screen,
+  // so the toggle + right-edge fade only appear when there's really something
+  // to scroll to. Re-measures on resize and when the item count or mode change.
+  // In grid mode there is no horizontal overflow, so `overflowing` is false;
+  // we keep the toggle visible via `expanded` so the row can be collapsed back.
+  const {
+    ref: cardsRef,
+    overflowing,
+    atEnd
+  } = useOverflowing<HTMLDivElement>( [
+    items.length,
+    view,
+    showGrid
+  ] );
+  const canToggle = !isList && !forced && ( overflowing || expanded );
+  // Fade the right edge only while there are cards hidden to the right; drop it
+  // once scrolled to the end so it never lingers over empty space.
+  const showRightFade = overflowing && !atEnd;
+
+  // Animate the newly revealed rows only when the user expands (not on initial
+  // mount, collapse, or a search-forced expand). The first row is kept still
+  // by CSS, so visible cards never move.
+  const [
+    revealing,
+    setRevealing
+  ] = useState( false );
+  const wasExpandedRef = useRef( expanded );
+
+  useEffect(
+    () => {
+      const justExpanded = expanded && !wasExpandedRef.current;
+
+      wasExpandedRef.current = expanded;
+
+      if ( !justExpanded ) {
+        return;
+      }
+
+      setRevealing( true );
+      const timer = setTimeout(
+        () => setRevealing( false ),
+        360
+      );
+
+      return () => clearTimeout( timer );
+    },
+    [
+      expanded
+    ]
+  );
+
+  const cards = items.map( (
+    item, index
+  ) => (
+    <TemplateCard
+      key={ item.name }
+      href={ item.href }
+      name={ item.name }
+      thumbnail={ item.thumbnail }
+      preview={ item.preview }
+      hasSketchForm={ item.hasSketchForm }
+      hiddenFromTemplates={ item.hiddenFromTemplates }
+      view={ view }
+      eager={ index === 0 }
+      animationsEnabled={ animationsEnabled }
+    />
+  ) );
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 pl-2 sm:pl-4 mb-2 sm:mb-3">
+        {/* Square toggle: expand the carousel into the full grid (or back).
+            Only shown when the row actually overflows (or is already expanded),
+            so it never appears as a dead control when everything already fits. */}
+        { canToggle && (
+          <button
+            type="button"
+            onClick={ onToggle }
+            aria-expanded={ expanded }
+            aria-label={ expanded ? `Collapse ${ title }` : `Show all ${ title } templates` }
+            title={ expanded ? "Collapse" : "Show all" }
+            className="flex-shrink-0 grid place-items-center w-5 h-5 rounded-md border border-border text-foreground/50 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors"
+          >
+            <ChevronDown
+              className={ `w-3 h-3 transition-transform duration-300 ease-out ${
+                expanded ? "" : "-rotate-90"
+              }` }
+            />
+          </button>
+        ) }
+        <h3 className="text-sm sm:text-base font-medium text-foreground/80">
+          { title }
+        </h3>
+        <span className="text-xs text-foreground/60">
+          { count }
+        </span>
+      </div>
+
+      { isList ? (
+        <div className="space-y-2 sm:space-y-3">
+          { cards }
+        </div>
+      ) : (
+        // One persistent container for both states: switching its class between
+        // grid and carousel keeps the cards mounted (no video reload, the first
+        // row stays put). `category-cards` reserves room so hover shadows aren't
+        // clipped; `is-revealing` triggers the rise-in on expand only; the fade
+        // is added only when the row truly overflows.
+        <div
+          ref={ cardsRef }
+          className={
+            showGrid
+              ? `category-cards category-grid ${ GRID_CLASS }${ revealing ? " is-revealing" : "" }`
+              : `category-cards category-carousel scrollbar-hide${ showRightFade ? " has-overflow" : "" }`
+          }
+        >
+          { cards }
+        </div>
+      ) }
     </div>
   );
 }
@@ -488,7 +674,7 @@ function TemplateCard( {
     return (
       <Link
         href={ href }
-        className={ `group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition-all duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5 ${
+        className={ `group relative w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5 ${
           hiddenFromTemplates ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
         }` }
       >
@@ -561,7 +747,7 @@ function TemplateCard( {
   return (
     <Link
       href={ href }
-      className={ `group flex items-center gap-2 sm:gap-4 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-2 sm:p-4 hover:bg-hover/50 transition-all duration-300 hover:shadow-md hover:shadow-foreground/5 ${
+      className={ `group flex items-center gap-2 sm:gap-3 bg-background border border-border hover:border-foreground/20 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 hover:bg-hover/50 transition duration-300 hover:shadow-md hover:shadow-foreground/5 ${
         hiddenFromTemplates ? "opacity-40 grayscale hover:opacity-100 hover:grayscale-0" : ""
       }` }
     >
@@ -575,14 +761,14 @@ function TemplateCard( {
             name={ name }
             eager={ eager }
             animationsEnabled={ animationsEnabled }
-            imgClassName="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            imgClassName="w-full h-full object-cover"
           />
         ) : (
           <Thumbnail
             src={ thumbnail }
             alt={ name }
             eager={ eager }
-            className="absolute top-0 left-0 w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+            className="absolute top-0 left-0 w-full h-full object-cover"
           />
         ) }
       </div>
