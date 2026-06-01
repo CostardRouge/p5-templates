@@ -117,7 +117,7 @@ export default function ControlledAssetStackInput<P>( {
   return (
     <div className="flex flex-col gap-1">
       <DndContext sensors={ sensors } onDragEnd={ onDragEnd }>
-        <div className="grid grid-cols-3 gap-1">
+        <div className="grid grid-cols-2 gap-1.5">
           <SortableContext
             items={ rows.map( ( r ) => r.instance.id ) }
             strategy={ rectSortingStrategy }
@@ -142,7 +142,7 @@ export default function ControlledAssetStackInput<P>( {
           <DropZoneButton
             onFiles={ onFiles }
             multiple
-            className="h-20"
+            className="h-24"
             accept={ kind.accept }
           />
         </div>
@@ -216,31 +216,35 @@ function SortableThumb<P>( {
       <div
         ref={ setNodeRef }
         style={ style }
-        className="relative h-20 bg-background rounded-lg border border-theme overflow-hidden"
+        className="relative h-24 rounded-lg border border-theme overflow-hidden bg-background"
       >
-        <Preview url={ url } path={ instance.path } />
+        {/* Preview as a background layer: absolutely filling the tile so it
+            can never push the layout or shift the overlaid controls out of
+            bounds, whatever the asset's intrinsic size. */}
+        <div className="absolute inset-0">
+          <Preview url={ url } path={ instance.path } />
+        </div>
 
         {/* Top-right: drag handle. Sole dnd-kit activator. `touch-none`
-            lets it own touch gestures without blocking panel scroll
-            elsewhere on the tile. */}
+            lets it own touch gestures without blocking panel scroll. */}
         <button
           type="button"
           ref={ setActivatorNodeRef }
           { ...attributes }
           { ...listeners }
           aria-label="Drag to reorder"
-          className="absolute right-1 top-1 z-10 h-6 w-6 grid place-items-center rounded-md text-white bg-black/55 hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
+          className="absolute right-1 top-1 z-10 h-7 w-7 grid place-items-center rounded-md text-white bg-black/55 hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
         >
-          <GripVertical className="h-3.5 w-3.5" />
+          <GripVertical className="h-4 w-4" />
         </button>
 
         <CornerButton
           ariaLabel="Remove"
           onClick={ onDelete }
           tone="danger"
-          className="left-1 bottom-1"
+          className="left-1 top-1"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-4 w-4" />
         </CornerButton>
 
         {hasParams ? (
@@ -249,7 +253,7 @@ function SortableThumb<P>( {
             onClick={ () => setDialogOpen( true ) }
             className="right-1 bottom-1"
           >
-            <Settings2 className="h-3.5 w-3.5" />
+            <Settings2 className="h-4 w-4" />
           </CornerButton>
         ) : null}
       </div>
@@ -295,7 +299,7 @@ function CornerButton( {
       } }
       onPointerDown={ ( e ) => e.stopPropagation() }
       aria-label={ ariaLabel }
-      className={ `absolute z-10 h-6 w-6 grid place-items-center rounded-md bg-black/55 hover:bg-black/75 ${
+      className={ `absolute z-10 h-7 w-7 grid place-items-center rounded-md bg-black/55 hover:bg-black/75 ${
         tone === "danger" ? "text-red-300 hover:text-red-200" : "text-white"
       } ${ className }` }
     >

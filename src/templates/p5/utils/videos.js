@@ -45,6 +45,15 @@ function attach( getInstances ) {
   /** @type {Map<import("@/lib/assets").VideoSource, { graphics: any, sw: number, sh: number }>} */
   const buffers = new Map();
 
+  // p5.Graphics.remove() can throw if the buffer's renderer was already torn
+  // down (hot reload, rapid delete). Dispose defensively so a stray failure
+  // never crashes the draw loop.
+  function disposeBuffer( buffer ) {
+    try {
+      buffer?.graphics?.remove?.();
+    } catch {}
+  }
+
   function syncBuffer( source ) {
     source.seekToProgression( animation.progression ).catch( () => {} );
 
@@ -64,7 +73,7 @@ function attach( getInstances ) {
         return null;
       }
 
-      buffer?.graphics.remove?.();
+      disposeBuffer( buffer );
       buffer = {
         graphics: p.createGraphics(
           sw,
@@ -104,7 +113,7 @@ function attach( getInstances ) {
       buffer
     ] of buffers ) {
       if ( !alive.has( source ) ) {
-        buffer.graphics.remove?.();
+        disposeBuffer( buffer );
         buffers.delete( source );
       }
     }
@@ -145,7 +154,7 @@ function attach( getInstances ) {
       unregisterPreDraw();
       sync.dispose();
       for ( const buffer of buffers.values() ) {
-        buffer.graphics.remove?.();
+        disposeBuffer( buffer );
       }
       buffers.clear();
     }
