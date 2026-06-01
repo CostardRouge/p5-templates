@@ -86,11 +86,12 @@ export default function AssetDialog<P>( {
               md+ so it is unambiguous, and `min-h-0` lets both panes shrink
               within the panel's viewport-bound height. */}
           <div className="flex flex-1 min-h-0 flex-col md:flex-row">
-            {/* Preview pane: black background fills the left side on
-                desktop and lets the video sit at any aspect ratio centered
-                inside, without stretching. */}
-            <div className="flex items-center justify-center bg-black md:flex-1 md:min-w-0 p-3 sm:p-4 md:p-6">
-              <div className="w-full aspect-video grid place-items-center overflow-hidden rounded-xl">
+            {/* Preview pane: the preview owns its own background (e.g. the
+                <video> element); the pane just centers it and gives it room
+                to breathe. The aspect-video wrapper constrains the preview
+                so it does not stretch arbitrarily inside the flex pane. */}
+            <div className="flex items-center justify-center md:flex-1 md:min-w-0 p-3 sm:p-4 md:p-6">
+              <div className="w-full aspect-video overflow-hidden rounded-xl">
                 <Preview url={ url } path={ instance.path } />
               </div>
             </div>

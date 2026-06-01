@@ -260,7 +260,7 @@ function SortableThumb<P>( {
             { ...attributes }
             { ...listeners }
             aria-label="Drag to reorder"
-            className="absolute right-1 top-1 z-10 h-7 w-7 grid place-items-center rounded-md text-white bg-black/55 hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
+            className="absolute right-1 top-1 z-10 h-7 w-7 grid place-items-center rounded-md text-foreground/70 hover:text-foreground bg-background/90 hover:bg-background border border-theme cursor-grab active:cursor-grabbing touch-none"
           >
             <GripVertical className="h-4 w-4" />
           </button>
@@ -279,7 +279,7 @@ function SortableThumb<P>( {
             } }
             onPointerDown={ ( e ) => e.stopPropagation() }
             aria-label="Open settings"
-            className="flex h-7 flex-shrink-0 items-center justify-center gap-1.5 border-t border-theme bg-foreground/85 text-xs font-medium text-background hover:bg-foreground"
+            className="flex h-7 flex-shrink-0 items-center justify-center gap-1.5 border-t border-theme bg-background text-xs font-medium text-foreground hover:bg-hover"
           >
             <Settings2 className="h-3.5 w-3.5" />
             Settings
@@ -328,8 +328,8 @@ function CornerButton( {
       } }
       onPointerDown={ ( e ) => e.stopPropagation() }
       aria-label={ ariaLabel }
-      className={ `absolute z-10 h-7 w-7 grid place-items-center rounded-md bg-black/55 hover:bg-black/75 ${
-        tone === "danger" ? "text-red-300 hover:text-red-200" : "text-white"
+      className={ `absolute z-10 h-7 w-7 grid place-items-center rounded-md bg-background/90 hover:bg-background border border-theme ${
+        tone === "danger" ? "text-red-600 hover:text-red-700" : "text-foreground/70 hover:text-foreground"
       } ${ className }` }
     >
       {children}
