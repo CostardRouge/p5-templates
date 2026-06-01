@@ -152,25 +152,26 @@ export default function ControlledAssetStackInput<P>( {
 }
 
 /**
- * A single asset tile with one control per corner — no overlap, legible
- * even on a ~50 px mobile cell:
+ * A single asset tile: delete and drag in the top corners (matching the
+ * image tiles), and — for kinds with params — a full-width "Settings" banner
+ * along the bottom. Legible even on a ~50 px mobile cell:
  *
  *   ┌─────────────┐
- *   │           ⠿ │  drag (sole dnd-kit activator)
+ *   │ 🗑        ⠿ │  delete (top-left) · drag (top-right, sole dnd-kit activator)
  *   │   preview   │
- *   │ 🗑       ⚙ │  delete (bottom-left) · settings (bottom-right)
+ *   │ ⚙ Settings  │  settings banner (full-width bottom)
  *   └─────────────┘
  *
  * No overlay button: the preview keeps `mouseenter` reachable (so the video
- * preview can hover-play), and clicks on the corner buttons route directly
- * to their handlers — they explicitly `stopPropagation` on `pointerdown` so
- * dnd-kit's PointerSensor (attached to the drag handle only) cannot
- * pre-empt them.
+ * preview can hover-play), and clicks on the corner buttons and banner route
+ * directly to their handlers — they explicitly `stopPropagation` on
+ * `pointerdown` so dnd-kit's PointerSensor (attached to the drag handle only)
+ * cannot pre-empt them.
  *
- * The settings button opens an `AssetDialog` — portaled at the top of the
+ * The settings banner opens an `AssetDialog` — portaled at the top of the
  * tree, so its own controls (Remove, ParamsEditor) cannot be clipped by the
  * tile or captured by the options panel. Kinds without params hide the
- * settings button: images get Delete + Drag, videos get the full set.
+ * banner: images get Delete + Drag, videos add the bottom Settings banner.
  */
 function SortableThumb<P>( {
   kind,
@@ -247,14 +248,24 @@ function SortableThumb<P>( {
           <Trash2 className="h-4 w-4" />
         </CornerButton>
 
+        {/* Bottom: full-width "Settings" banner. Opens the AssetDialog where
+            the preview and params editor have room to breathe. Same
+            stopPropagation guard as the corner buttons so dnd-kit's
+            PointerSensor (on the drag handle) cannot read a tap as a drag. */}
         {hasParams ? (
-          <CornerButton
-            ariaLabel="Open settings"
-            onClick={ () => setDialogOpen( true ) }
-            className="right-1 bottom-1"
+          <button
+            type="button"
+            onClick={ ( e ) => {
+              e.stopPropagation();
+              setDialogOpen( true );
+            } }
+            onPointerDown={ ( e ) => e.stopPropagation() }
+            aria-label="Open settings"
+            className="absolute inset-x-0 bottom-0 z-10 flex h-7 items-center justify-center gap-1.5 bg-black/55 text-xs font-medium text-white hover:bg-black/75"
           >
-            <Settings2 className="h-4 w-4" />
-          </CornerButton>
+            <Settings2 className="h-3.5 w-3.5" />
+            Settings
+          </button>
         ) : null}
       </div>
 
