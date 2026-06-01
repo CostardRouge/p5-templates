@@ -11,7 +11,7 @@ const config = {
     "**/__tests__/**/*.test.tsx"
   ],
   transform: {
-    "^.+\\.(ts|tsx)$": [
+    "^.+\\.(ts|tsx|js|jsx)$": [
       "ts-jest",
       {
         tsconfig: {

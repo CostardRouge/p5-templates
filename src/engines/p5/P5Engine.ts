@@ -27,6 +27,9 @@ import {
 import {
   getAnimationBridge
 } from "@/lib/animationBridge";
+import {
+  pauseLoop, resumeLoop
+} from "@/p5/utils/loopControl.js";
 
 type P5SketchRuntime = {
   start: ( container: HTMLElement ) => Promise<any>;
@@ -197,7 +200,7 @@ export class P5Engine implements SketchEngine {
       surfaceSelector: "canvas.p5Canvas",
       prepare: () => {
         window.enableRecordingMode?.();
-        this.sketchRuntime?.getP5()?.noLoop();
+        pauseLoop( this.sketchRuntime?.getP5() );
       },
       renderFrame: () => {
         // enableRecordingMode makes incrementElapsedTime advance frame-based
@@ -254,19 +257,19 @@ export class P5Engine implements SketchEngine {
       bridge.setProgression( bridge.getProgression() );
     }
 
-    this.sketchRuntime?.getP5()?.loop();
+    resumeLoop( this.sketchRuntime?.getP5() );
     this.perfSample.paused = false;
     this.emitPerformanceSample();
   }
 
   pause(): void {
-    this.sketchRuntime?.getP5()?.noLoop();
+    pauseLoop( this.sketchRuntime?.getP5() );
     this.perfSample.paused = true;
     this.emitPerformanceSample();
   }
 
   stop(): void {
-    this.sketchRuntime?.getP5()?.noLoop();
+    pauseLoop( this.sketchRuntime?.getP5() );
     this.perfSample.paused = true;
 
     const p = this.sketchRuntime?.getP5();

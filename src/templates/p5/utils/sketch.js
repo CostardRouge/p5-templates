@@ -8,6 +8,9 @@ import options, {
 import {
   registerAnimationBridge
 } from "@/lib/animationBridge";
+import {
+  pauseLoop, resumeLoop
+} from "./loopControl.js";
 
 let _p5 = null;
 let _container = null;
@@ -515,9 +518,9 @@ const sketch = {
       sketch.paused = !sketch.paused;
 
       if ( sketch.paused ) {
-        getP5()?.noLoop();
+        pauseLoop( getP5() );
       } else {
-        getP5()?.loop();
+        resumeLoop( getP5() );
       }
     },
     "engine-get-key-typed": () => getP5()?.key,
@@ -553,8 +556,8 @@ const sketch = {
 
       p?.fullscreen( !p?.fullscreen() );
     },
-    "engine-pause": () => getP5()?.noLoop(),
-    "engine-resume": () => getP5()?.loop(),
+    "engine-pause": () => pauseLoop( getP5() ),
+    "engine-resume": () => resumeLoop( getP5() ),
     "engine-redraw": () => getP5()?.redraw(),
     "engine-canvas-save": (
       name, type
