@@ -33,13 +33,29 @@ function VideoPreview( {
       preload="metadata"
       className="object-cover h-full w-full bg-black"
       title={ path }
+      // Force a first-frame paint as soon as metadata is available.
+      // Without this nudge, some browsers (Chrome especially) leave the
+      // video element rendering its black background until the user
+      // interacts with it — which made existing thumbnails appear to
+      // "vanish" when a sibling tile was added and the grid re-rendered.
+      onLoadedMetadata={ () => {
+        const el = ref.current;
+
+        if ( el && el.currentTime === 0 ) {
+          try {
+            el.currentTime = 0.001;
+          } catch {
+            /* noop */
+          }
+        }
+      } }
       onMouseEnter={ () => ref.current?.play().catch( () => {} ) }
       onMouseLeave={ () => {
         const el = ref.current;
 
         if ( el ) {
           el.pause();
-          el.currentTime = 0;
+          el.currentTime = 0.001;
         }
       } }
     />

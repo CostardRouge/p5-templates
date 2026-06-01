@@ -74,6 +74,12 @@ export default function ControlledAssetStackInput<P>( {
     )
   } ) );
 
+  /** Kinds with params get a "Settings" banner at the bottom of each tile, so
+   *  their tiles (and the matching DropZone slot) need extra height to keep
+   *  the preview area readable. */
+  const hasParams = Boolean( kind.hasParams && kind.ParamsEditor );
+  const tileHeightClass = hasParams ? "h-32" : "h-24";
+
   async function onFiles( files: FileList ) {
     const paths = await uploadFiles(
       files,
@@ -130,6 +136,7 @@ export default function ControlledAssetStackInput<P>( {
                 kind={ kind }
                 instance={ row.instance }
                 url={ row.url }
+                heightClass={ tileHeightClass }
                 onDelete={ () => onDelete( index ) }
                 onParamsChange={ ( params ) => updateParams(
                   index,
@@ -142,7 +149,7 @@ export default function ControlledAssetStackInput<P>( {
           <DropZoneButton
             onFiles={ onFiles }
             multiple
-            className="h-24"
+            className={ tileHeightClass }
             accept={ kind.accept }
           />
         </div>
@@ -177,12 +184,14 @@ function SortableThumb<P>( {
   kind,
   instance,
   url,
+  heightClass,
   onDelete,
   onParamsChange
 }: {
   kind: AssetKind<P>;
   instance: AssetInstance<P>;
   url: string;
+  heightClass: string;
   onDelete: () => void;
   onParamsChange: ( params: P ) => void;
 } ) {
@@ -214,44 +223,53 @@ function SortableThumb<P>( {
 
   return (
     <>
+      {/* Vertical layout: preview area (flex-1) on top, optional "Settings"
+          banner in normal flow at the bottom. Using flex-col rather than
+          absolute positioning for the banner makes its position unambiguous
+          — it is always the last child, always at the bottom, regardless of
+          transforms or stacking. */}
       <div
         ref={ setNodeRef }
         style={ style }
-        className="relative h-24 rounded-lg border border-theme overflow-hidden bg-background"
+        className={ `relative ${ heightClass } rounded-lg border border-theme overflow-hidden bg-background flex flex-col` }
       >
-        {/* Preview as a background layer: absolutely filling the tile so it
-            can never push the layout or shift the overlaid controls out of
-            bounds, whatever the asset's intrinsic size. */}
-        <div className="absolute inset-0">
-          <Preview url={ url } path={ instance.path } />
+        {/* Preview area: takes all remaining space above the banner. The
+            preview itself absolutely fills it so it can never push the
+            layout or shift the overlaid corner controls out of bounds,
+            whatever the asset's intrinsic size. */}
+        <div className="relative flex-1 min-h-0">
+          <div className="absolute inset-0">
+            <Preview url={ url } path={ instance.path } />
+          </div>
+
+          {/* Top-left: delete. Matches the image stack design. */}
+          <CornerButton
+            ariaLabel="Remove"
+            onClick={ onDelete }
+            tone="danger"
+            className="left-1 top-1"
+          >
+            <Trash2 className="h-4 w-4" />
+          </CornerButton>
+
+          {/* Top-right: drag handle. Sole dnd-kit activator. `touch-none`
+              lets it own touch gestures without blocking panel scroll. */}
+          <button
+            type="button"
+            ref={ setActivatorNodeRef }
+            { ...attributes }
+            { ...listeners }
+            aria-label="Drag to reorder"
+            className="absolute right-1 top-1 z-10 h-7 w-7 grid place-items-center rounded-md text-white bg-black/55 hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* Top-right: drag handle. Sole dnd-kit activator. `touch-none`
-            lets it own touch gestures without blocking panel scroll. */}
-        <button
-          type="button"
-          ref={ setActivatorNodeRef }
-          { ...attributes }
-          { ...listeners }
-          aria-label="Drag to reorder"
-          className="absolute right-1 top-1 z-10 h-7 w-7 grid place-items-center rounded-md text-white bg-black/55 hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-
-        <CornerButton
-          ariaLabel="Remove"
-          onClick={ onDelete }
-          tone="danger"
-          className="left-1 top-1"
-        >
-          <Trash2 className="h-4 w-4" />
-        </CornerButton>
-
-        {/* Bottom: full-width "Settings" banner. Opens the AssetDialog where
-            the preview and params editor have room to breathe. Same
-            stopPropagation guard as the corner buttons so dnd-kit's
-            PointerSensor (on the drag handle) cannot read a tap as a drag. */}
+        {/* Bottom banner: opens the AssetDialog where the preview and params
+            editor have room to breathe. Same stopPropagation guard as the
+            corner buttons so dnd-kit's PointerSensor (on the drag handle)
+            cannot read a tap as a drag. */}
         {hasParams ? (
           <button
             type="button"
@@ -261,7 +279,7 @@ function SortableThumb<P>( {
             } }
             onPointerDown={ ( e ) => e.stopPropagation() }
             aria-label="Open settings"
-            className="absolute inset-x-0 bottom-0 z-10 flex h-7 items-center justify-center gap-1.5 bg-black/55 text-xs font-medium text-white hover:bg-black/75"
+            className="flex h-7 flex-shrink-0 items-center justify-center gap-1.5 border-t border-theme bg-foreground/85 text-xs font-medium text-background hover:bg-foreground"
           >
             <Settings2 className="h-3.5 w-3.5" />
             Settings

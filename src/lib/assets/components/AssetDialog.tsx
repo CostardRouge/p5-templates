@@ -30,10 +30,11 @@ const fileName = ( p: string ) => p.split( /[\\/]/ ).pop() || p;
  *
  * Full-screen layout (inspired by the recordings `VideoPreviewModal`): a
  * blurred backdrop with a near-viewport panel that always fits the screen.
- * The preview and the options sit side-by-side on desktop and stack
- * vertically on mobile; the body scrolls internally so the panel never grows
- * past the viewport — which is exactly what made the previous small dialog
- * unusable once the params editor and timeline were added.
+ * On desktop (md+) the preview sits on the left and the params editor on
+ * the right; on mobile they stack vertically and the body scrolls
+ * internally so the panel never grows past the viewport — fixing the
+ * previous small dialog that became unusable once the params editor and
+ * mini timeline were added.
  *
  * Rendered in a portal at the top of the tree (Headless UI `Dialog`), so its
  * controls are never clipped by the thumbnail's `overflow-hidden` nor
@@ -62,7 +63,7 @@ export default function AssetDialog<P>( {
       <DialogBackdrop className="fixed inset-0 bg-black/80 backdrop-blur-md" />
 
       <div className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 md:p-8">
-        <DialogPanel className="w-full md:w-[90vw] lg:w-[85vw] xl:w-[80vw] max-h-[calc(100vh-1.5rem)] sm:max-h-[calc(100vh-2rem)] md:max-h-[95vh] bg-background border border-theme rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        <DialogPanel className="w-full md:w-[92vw] lg:w-[88vw] xl:w-[80vw] max-w-[1400px] max-h-[calc(100vh-1.5rem)] sm:max-h-[calc(100vh-2rem)] md:max-h-[95vh] bg-background border border-theme rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col">
           <header className="flex items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4 border-b border-theme flex-shrink-0">
             <DialogTitle
               className="text-sm sm:text-base font-bold text-foreground truncate"
@@ -80,16 +81,24 @@ export default function AssetDialog<P>( {
             </button>
           </header>
 
-          {/* Body: preview + options side-by-side on desktop, stacked on
-              mobile. Scrolls internally so the panel always fits the screen. */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 md:p-6 flex flex-col md:flex-row gap-4 md:gap-6">
-            <div className="md:flex-1 md:min-w-0 flex items-start justify-center">
-              <div className="w-full aspect-video bg-black rounded-xl sm:rounded-2xl border border-theme overflow-hidden grid place-items-center shadow-lg">
+          {/* Body: side-by-side on desktop (preview left, options right),
+              stacked on mobile. The flex direction is set explicitly on
+              md+ so it is unambiguous, and `min-h-0` lets both panes shrink
+              within the panel's viewport-bound height. */}
+          <div className="flex flex-1 min-h-0 flex-col md:flex-row">
+            {/* Preview pane: black background fills the left side on
+                desktop and lets the video sit at any aspect ratio centered
+                inside, without stretching. */}
+            <div className="flex items-center justify-center bg-black md:flex-1 md:min-w-0 p-3 sm:p-4 md:p-6">
+              <div className="w-full aspect-video grid place-items-center overflow-hidden rounded-xl">
                 <Preview url={ url } path={ instance.path } />
               </div>
             </div>
 
-            <div className="md:w-80 lg:w-96 flex-shrink-0 flex flex-col gap-4">
+            {/* Options pane: fixed width on desktop, full width on mobile.
+                Scrolls vertically when its content overflows so the modal
+                never grows past the viewport. */}
+            <div className="md:w-80 lg:w-96 flex-shrink-0 flex flex-col gap-4 p-3 sm:p-4 md:p-6 overflow-y-auto border-t border-theme md:border-t-0 md:border-l">
               {ParamsEditor ? (
                 <ParamsEditor value={ instance.params } onChange={ onParamsChange } />
               ) : null}
