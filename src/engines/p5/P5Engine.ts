@@ -243,6 +243,17 @@ export class P5Engine implements SketchEngine {
   /* ---- playback -------------------------------------------------- */
 
   play(): void {
+    // Re-anchor the animation clock before resuming the draw loop.
+    // Elapsed time is derived from p5 `millis()`, which keeps advancing
+    // while the loop is stopped (tab hidden, viewport gesture, …). Without
+    // this, the first pre-draw after resume would add the entire paused
+    // duration in one jump and the animation would "teleport" forward.
+    const bridge = getAnimationBridge();
+
+    if ( bridge ) {
+      bridge.setProgression( bridge.getProgression() );
+    }
+
     this.sketchRuntime?.getP5()?.loop();
     this.perfSample.paused = false;
     this.emitPerformanceSample();

@@ -14,6 +14,7 @@ import useSketch from "@/components/ClientProcessingSketch/components/SketchProv
 import {
   getEffectiveSlideSettings
 } from "@/lib/effectiveSlideSettings";
+import usePageVisibility from "@/hooks/usePageVisibility";
 
 interface AnimationProgressionBarProps {
   className?: string;
@@ -79,6 +80,10 @@ export default function AnimationProgressionBar( {
   const activeSlideIndexRef = useRef( activeSlideIndex );
 
   activeSlideIndexRef.current = activeSlideIndex;
+
+  // While the tab is hidden the engine is paused and progression can't
+  // change, so there's no point spinning our polling RAF.
+  const isPageVisible = usePageVisibility();
 
   const [
     progression,
@@ -179,7 +184,7 @@ export default function AnimationProgressionBar( {
   // originating from an effect context, which triggers "maximum update depth".
   useEffect(
     () => {
-      if ( disabled ) {
+      if ( disabled || !isPageVisible ) {
         return;
       }
 
@@ -208,7 +213,8 @@ export default function AnimationProgressionBar( {
       return () => cancelAnimationFrame( rafId );
     },
     [
-      disabled
+      disabled,
+      isPageVisible
     ]
   );
 
