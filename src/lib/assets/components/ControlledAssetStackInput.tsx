@@ -18,7 +18,7 @@ import {
   CSS
 } from "@dnd-kit/utilities";
 import {
-  GripVertical, Settings2, Trash2, X
+  GripVertical, Settings2, Trash2
 } from "lucide-react";
 
 import useAssetsBridge from "@/hooks/useAssetsBridge";
@@ -32,14 +32,13 @@ import useAssetField from "../hooks/useAssetField";
 import type {
   AssetInstance, AssetKind
 } from "../types";
+import AssetDialog from "./AssetDialog";
 
 type Props = {
   name: string;
   /** Asset kind id (e.g. "images", "videos"). Defaults to "images". */
   kind?: string;
 };
-
-const fileName = ( p: string ) => p.split( /[\\/]/ ).pop() || p;
 
 export default function ControlledAssetStackInput<P>( {
   name, kind: kindId = "images"
@@ -118,7 +117,7 @@ export default function ControlledAssetStackInput<P>( {
   return (
     <div className="flex flex-col gap-1">
       <DndContext sensors={ sensors } onDragEnd={ onDragEnd }>
-        <div className="grid grid-cols-3 gap-1">
+        <div className="grid grid-cols-2 gap-1.5">
           <SortableContext
             items={ rows.map( ( r ) => r.instance.id ) }
             strategy={ rectSortingStrategy }
@@ -143,7 +142,7 @@ export default function ControlledAssetStackInput<P>( {
           <DropZoneButton
             onFiles={ onFiles }
             multiple
-            className="h-20"
+            className="h-24"
             accept={ kind.accept }
           />
         </div>
@@ -152,6 +151,27 @@ export default function ControlledAssetStackInput<P>( {
   );
 }
 
+/**
+ * A single asset tile with one control per corner — no overlap, legible
+ * even on a ~50 px mobile cell:
+ *
+ *   ┌─────────────┐
+ *   │           ⠿ │  drag (sole dnd-kit activator)
+ *   │   preview   │
+ *   │ 🗑       ⚙ │  delete (bottom-left) · settings (bottom-right)
+ *   └─────────────┘
+ *
+ * No overlay button: the preview keeps `mouseenter` reachable (so the video
+ * preview can hover-play), and clicks on the corner buttons route directly
+ * to their handlers — they explicitly `stopPropagation` on `pointerdown` so
+ * dnd-kit's PointerSensor (attached to the drag handle only) cannot
+ * pre-empt them.
+ *
+ * The settings button opens an `AssetDialog` — portaled at the top of the
+ * tree, so its own controls (Remove, ParamsEditor) cannot be clipped by the
+ * tile or captured by the options panel. Kinds without params hide the
+ * settings button: images get Delete + Drag, videos get the full set.
+ */
 function SortableThumb<P>( {
   kind,
   instance,
@@ -166,88 +186,124 @@ function SortableThumb<P>( {
   onParamsChange: ( params: P ) => void;
 } ) {
   const {
-    attributes, listeners, setNodeRef, transform, transition
-  } =
-    useSortable( {
-      id: instance.id
-    } );
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable( {
+    id: instance.id
+  } );
+
   const style = {
     transform: CSS.Transform.toString( transform ),
-    transition
+    transition,
+    opacity: isDragging ? 0.5 : 1
   };
 
   const [
-    paramsOpen,
-    setParamsOpen
+    dialogOpen,
+    setDialogOpen
   ] = useState( false );
 
   const Preview = kind.PreviewComponent;
-  const ParamsEditor = kind.ParamsEditor;
+  const hasParams = Boolean( kind.hasParams && kind.ParamsEditor );
 
   return (
-    <div
-      ref={ setNodeRef }
-      style={ style }
-      className="relative h-20 bg-background rounded-lg border border-theme overflow-hidden"
-    >
-      <GripVertical
-        className="absolute right-1 top-1 h-5 w-5 text-gray-600 cursor-grab active:cursor-grabbing bg-background/90 hover:bg-background rounded-md border border-theme z-10"
-        { ...attributes }
-        { ...listeners }
-        aria-label="Drag handle"
-        role="button"
-        tabIndex={ 0 }
-      />
-
-      <button
-        type="button"
-        onClick={ ( e ) => {
-          e.stopPropagation();
-          onDelete();
-        } }
-        className="absolute left-1 top-1 h-5 w-5 text-center text-red-600 bg-background/90 hover:bg-background rounded-md border border-theme p-0.5 z-10"
-        aria-label="Remove"
+    <>
+      <div
+        ref={ setNodeRef }
+        style={ style }
+        className="relative h-24 rounded-lg border border-theme overflow-hidden bg-background"
       >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+        {/* Preview as a background layer: absolutely filling the tile so it
+            can never push the layout or shift the overlaid controls out of
+            bounds, whatever the asset's intrinsic size. */}
+        <div className="absolute inset-0">
+          <Preview url={ url } path={ instance.path } />
+        </div>
 
-      {kind.hasParams && ParamsEditor ? (
+        {/* Top-right: drag handle. Sole dnd-kit activator. `touch-none`
+            lets it own touch gestures without blocking panel scroll. */}
         <button
           type="button"
-          onClick={ ( e ) => {
-            e.stopPropagation();
-            setParamsOpen( ( v ) => !v );
-          } }
-          className="absolute right-1 bottom-1 h-5 w-5 text-foreground bg-background/90 hover:bg-background rounded-md border border-theme p-0.5 z-10"
-          aria-label="Edit params"
+          ref={ setActivatorNodeRef }
+          { ...attributes }
+          { ...listeners }
+          aria-label="Drag to reorder"
+          className="absolute right-1 top-1 z-10 h-7 w-7 grid place-items-center rounded-md text-white bg-black/55 hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
         >
-          <Settings2 className="h-3.5 w-3.5" />
+          <GripVertical className="h-4 w-4" />
         </button>
-      ) : null}
 
-      <Preview url={ url } path={ instance.path } />
-
-      {paramsOpen && ParamsEditor ? (
-        <div
-          className="absolute inset-x-0 bottom-0 z-20 bg-background border-t border-theme p-2 max-h-72 overflow-y-auto"
-          onClick={ ( e ) => e.stopPropagation() }
+        <CornerButton
+          ariaLabel="Remove"
+          onClick={ onDelete }
+          tone="danger"
+          className="left-1 top-1"
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-500 truncate" title={ instance.path }>
-              {fileName( instance.path )}
-            </span>
-            <button
-              type="button"
-              onClick={ () => setParamsOpen( false ) }
-              className="h-5 w-5 text-gray-500 hover:text-foreground"
-              aria-label="Close params"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <ParamsEditor value={ instance.params } onChange={ onParamsChange } />
-        </div>
+          <Trash2 className="h-4 w-4" />
+        </CornerButton>
+
+        {hasParams ? (
+          <CornerButton
+            ariaLabel="Open settings"
+            onClick={ () => setDialogOpen( true ) }
+            className="right-1 bottom-1"
+          >
+            <Settings2 className="h-4 w-4" />
+          </CornerButton>
+        ) : null}
+      </div>
+
+      {hasParams ? (
+        <AssetDialog
+          open={ dialogOpen }
+          onClose={ () => setDialogOpen( false ) }
+          kind={ kind }
+          instance={ instance }
+          url={ url }
+          onParamsChange={ onParamsChange }
+          onRemove={ onDelete }
+        />
       ) : null}
-    </div>
+    </>
+  );
+}
+
+/**
+ * Compact corner action button. Stops pointer-down propagation so that
+ * dnd-kit's PointerSensor cannot intercept the gesture as a potential drag.
+ */
+function CornerButton( {
+  onClick,
+  ariaLabel,
+  className,
+  tone,
+  children
+}: {
+  onClick: () => void;
+  ariaLabel: string;
+  className: string;
+  tone?: "danger";
+  children: React.ReactNode;
+} ) {
+  return (
+    <button
+      type="button"
+      onClick={ ( e ) => {
+        e.stopPropagation();
+        onClick();
+      } }
+      onPointerDown={ ( e ) => e.stopPropagation() }
+      aria-label={ ariaLabel }
+      className={ `absolute z-10 h-7 w-7 grid place-items-center rounded-md bg-black/55 hover:bg-black/75 ${
+        tone === "danger" ? "text-red-300 hover:text-red-200" : "text-white"
+      } ${ className }` }
+    >
+      {children}
+    </button>
   );
 }
