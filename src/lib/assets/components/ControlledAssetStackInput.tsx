@@ -74,6 +74,12 @@ export default function ControlledAssetStackInput<P>( {
     )
   } ) );
 
+  /** Kinds with params get a "Settings" banner at the bottom of each tile, so
+   *  their tiles (and the matching DropZone slot) need extra height to keep
+   *  the preview area readable. */
+  const hasParams = Boolean( kind.hasParams && kind.ParamsEditor );
+  const tileHeightClass = hasParams ? "h-32" : "h-24";
+
   async function onFiles( files: FileList ) {
     const paths = await uploadFiles(
       files,
@@ -130,6 +136,7 @@ export default function ControlledAssetStackInput<P>( {
                 kind={ kind }
                 instance={ row.instance }
                 url={ row.url }
+                heightClass={ tileHeightClass }
                 onDelete={ () => onDelete( index ) }
                 onParamsChange={ ( params ) => updateParams(
                   index,
@@ -142,7 +149,7 @@ export default function ControlledAssetStackInput<P>( {
           <DropZoneButton
             onFiles={ onFiles }
             multiple
-            className="h-24"
+            className={ tileHeightClass }
             accept={ kind.accept }
           />
         </div>
@@ -152,36 +159,39 @@ export default function ControlledAssetStackInput<P>( {
 }
 
 /**
- * A single asset tile with one control per corner — no overlap, legible
- * even on a ~50 px mobile cell:
+ * A single asset tile: delete and drag in the top corners (matching the
+ * image tiles), and — for kinds with params — a full-width "Settings" banner
+ * along the bottom. Legible even on a ~50 px mobile cell:
  *
  *   ┌─────────────┐
- *   │           ⠿ │  drag (sole dnd-kit activator)
+ *   │ 🗑        ⠿ │  delete (top-left) · drag (top-right, sole dnd-kit activator)
  *   │   preview   │
- *   │ 🗑       ⚙ │  delete (bottom-left) · settings (bottom-right)
+ *   │ ⚙ Settings  │  settings banner (full-width bottom)
  *   └─────────────┘
  *
  * No overlay button: the preview keeps `mouseenter` reachable (so the video
- * preview can hover-play), and clicks on the corner buttons route directly
- * to their handlers — they explicitly `stopPropagation` on `pointerdown` so
- * dnd-kit's PointerSensor (attached to the drag handle only) cannot
- * pre-empt them.
+ * preview can hover-play), and clicks on the corner buttons and banner route
+ * directly to their handlers — they explicitly `stopPropagation` on
+ * `pointerdown` so dnd-kit's PointerSensor (attached to the drag handle only)
+ * cannot pre-empt them.
  *
- * The settings button opens an `AssetDialog` — portaled at the top of the
+ * The settings banner opens an `AssetDialog` — portaled at the top of the
  * tree, so its own controls (Remove, ParamsEditor) cannot be clipped by the
  * tile or captured by the options panel. Kinds without params hide the
- * settings button: images get Delete + Drag, videos get the full set.
+ * banner: images get Delete + Drag, videos add the bottom Settings banner.
  */
 function SortableThumb<P>( {
   kind,
   instance,
   url,
+  heightClass,
   onDelete,
   onParamsChange
 }: {
   kind: AssetKind<P>;
   instance: AssetInstance<P>;
   url: string;
+  heightClass: string;
   onDelete: () => void;
   onParamsChange: ( params: P ) => void;
 } ) {
@@ -213,48 +223,67 @@ function SortableThumb<P>( {
 
   return (
     <>
+      {/* Vertical layout: preview area (flex-1) on top, optional "Settings"
+          banner in normal flow at the bottom. Using flex-col rather than
+          absolute positioning for the banner makes its position unambiguous
+          — it is always the last child, always at the bottom, regardless of
+          transforms or stacking. */}
       <div
         ref={ setNodeRef }
         style={ style }
-        className="relative h-24 rounded-lg border border-theme overflow-hidden bg-background"
+        className={ `relative ${ heightClass } rounded-lg border border-theme overflow-hidden bg-background flex flex-col` }
       >
-        {/* Preview as a background layer: absolutely filling the tile so it
-            can never push the layout or shift the overlaid controls out of
-            bounds, whatever the asset's intrinsic size. */}
-        <div className="absolute inset-0">
-          <Preview url={ url } path={ instance.path } />
+        {/* Preview area: takes all remaining space above the banner. The
+            preview itself absolutely fills it so it can never push the
+            layout or shift the overlaid corner controls out of bounds,
+            whatever the asset's intrinsic size. */}
+        <div className="relative flex-1 min-h-0">
+          <div className="absolute inset-0">
+            <Preview url={ url } path={ instance.path } />
+          </div>
+
+          {/* Top-left: delete. Matches the image stack design. */}
+          <CornerButton
+            ariaLabel="Remove"
+            onClick={ onDelete }
+            tone="danger"
+            className="left-1 top-1"
+          >
+            <Trash2 className="h-4 w-4" />
+          </CornerButton>
+
+          {/* Top-right: drag handle. Sole dnd-kit activator. `touch-none`
+              lets it own touch gestures without blocking panel scroll. */}
+          <button
+            type="button"
+            ref={ setActivatorNodeRef }
+            { ...attributes }
+            { ...listeners }
+            aria-label="Drag to reorder"
+            className="absolute right-1 top-1 z-10 h-7 w-7 grid place-items-center rounded-md text-foreground/70 hover:text-foreground bg-background/90 hover:bg-background border border-theme cursor-grab active:cursor-grabbing touch-none"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* Top-right: drag handle. Sole dnd-kit activator. `touch-none`
-            lets it own touch gestures without blocking panel scroll. */}
-        <button
-          type="button"
-          ref={ setActivatorNodeRef }
-          { ...attributes }
-          { ...listeners }
-          aria-label="Drag to reorder"
-          className="absolute right-1 top-1 z-10 h-7 w-7 grid place-items-center rounded-md text-white bg-black/55 hover:bg-black/75 cursor-grab active:cursor-grabbing touch-none"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-
-        <CornerButton
-          ariaLabel="Remove"
-          onClick={ onDelete }
-          tone="danger"
-          className="left-1 top-1"
-        >
-          <Trash2 className="h-4 w-4" />
-        </CornerButton>
-
+        {/* Bottom banner: opens the AssetDialog where the preview and params
+            editor have room to breathe. Same stopPropagation guard as the
+            corner buttons so dnd-kit's PointerSensor (on the drag handle)
+            cannot read a tap as a drag. */}
         {hasParams ? (
-          <CornerButton
-            ariaLabel="Open settings"
-            onClick={ () => setDialogOpen( true ) }
-            className="right-1 bottom-1"
+          <button
+            type="button"
+            onClick={ ( e ) => {
+              e.stopPropagation();
+              setDialogOpen( true );
+            } }
+            onPointerDown={ ( e ) => e.stopPropagation() }
+            aria-label="Open settings"
+            className="flex h-7 flex-shrink-0 items-center justify-center gap-1.5 border-t border-theme bg-background text-xs font-medium text-foreground hover:bg-hover"
           >
-            <Settings2 className="h-4 w-4" />
-          </CornerButton>
+            <Settings2 className="h-3.5 w-3.5" />
+            Settings
+          </button>
         ) : null}
       </div>
 
@@ -299,8 +328,8 @@ function CornerButton( {
       } }
       onPointerDown={ ( e ) => e.stopPropagation() }
       aria-label={ ariaLabel }
-      className={ `absolute z-10 h-7 w-7 grid place-items-center rounded-md bg-black/55 hover:bg-black/75 ${
-        tone === "danger" ? "text-red-300 hover:text-red-200" : "text-white"
+      className={ `absolute z-10 h-7 w-7 grid place-items-center rounded-md bg-background/90 hover:bg-background border border-theme ${
+        tone === "danger" ? "text-red-600 hover:text-red-700" : "text-foreground/70 hover:text-foreground"
       } ${ className }` }
     >
       {children}
