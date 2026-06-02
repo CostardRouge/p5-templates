@@ -47,6 +47,12 @@ export default function TemplateSketchPage() {
   // Capture whether the sketch was looping at the moment a viewport gesture
   // starts, so we can restore the exact state when the gesture ends.
   const wasLoopingRef = useRef( false );
+  // True while the user is scrubbing the progression bar. `interactionMode` is
+  // shared with the viewport pan/zoom gestures, and those gestures still fire
+  // (and get cancelled) when the pointer goes down on the progression bar —
+  // their trailing onInteractionEnd would otherwise clobber the "seeking"
+  // label mid-scrub. This flag lets seeking take priority over pan/zoom.
+  const isSeekingRef = useRef( false );
   // Keep a stable ref to the latest engine/looping values to avoid stale closures.
   const interactionStateRef = useRef( {
     engine,
@@ -60,6 +66,12 @@ export default function TemplateSketchPage() {
 
   const handleInteractionStart = useCallback(
     ( mode: "panning" | "zooming" ) => {
+      // A scrub in progress owns the label; don't let a stray viewport
+      // gesture (e.g. a wheel event while holding the bar) override it.
+      if ( isSeekingRef.current ) {
+        return;
+      }
+
       setInteractionMode( mode );
 
       const {
@@ -76,6 +88,12 @@ export default function TemplateSketchPage() {
 
   const handleInteractionEnd = useCallback(
     () => {
+      // While scrubbing, the cancelled viewport drag still emits a drag-end.
+      // Ignore it so the "seeking" label survives until the scrub really ends.
+      if ( isSeekingRef.current ) {
+        return;
+      }
+
       setInteractionMode( null );
 
       const {
@@ -117,6 +135,7 @@ export default function TemplateSketchPage() {
 
   const handleSeekStart = useCallback(
     () => {
+      isSeekingRef.current = true;
       setInteractionMode( "seeking" );
     },
     []
@@ -124,6 +143,7 @@ export default function TemplateSketchPage() {
 
   const handleSeekEnd = useCallback(
     () => {
+      isSeekingRef.current = false;
       setInteractionMode( null );
     },
     []
