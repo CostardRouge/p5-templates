@@ -1661,7 +1661,7 @@
     "category": "noise-grid",
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "hasPreview": false,
+    "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
     "mtime": "2026-05-31T02:34:29.950Z",
