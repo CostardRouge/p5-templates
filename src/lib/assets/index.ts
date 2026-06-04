@@ -12,7 +12,11 @@ export type {
 } from "./getScopeAssetPath";
 
 export type {
-  AssetInstance, AssetKind, AssetPreviewProps, AssetParamsEditorProps
+  AssetInstance,
+  AssetKind,
+  AssetPreviewProps,
+  AssetLayoutPreviewProps,
+  AssetParamsEditorProps
 } from "./types";
 export {
   registerAssetKind, getAssetKind, listAssetKinds

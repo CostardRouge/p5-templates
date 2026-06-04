@@ -56,6 +56,14 @@ export type AssetKind<P = unknown> = {
   /** Square thumbnail rendered in stacks and single-asset inputs. */
   PreviewComponent: ComponentType<AssetPreviewProps>;
 
+  /**
+   * Optional params-aware preview shown in the asset dialog instead of the
+   * plain {@link PreviewComponent}. Lets a kind reflect its parameters in the
+   * preview — e.g. a video drawn at its configured scale/position inside a
+   * box matching the canvas aspect ratio. Falls back to `PreviewComponent`.
+   */
+  LayoutPreviewComponent?: ComponentType<AssetLayoutPreviewProps<P>>;
+
   /** Per-instance parameter editor (popover). Omit for kinds without params. */
   ParamsEditor?: ComponentType<AssetParamsEditorProps<P>>;
 };
@@ -65,6 +73,15 @@ export type AssetPreviewProps = {
   path: string;
   className?: string;
   children?: ReactNode;
+};
+
+export type AssetLayoutPreviewProps<P> = {
+  url: string;
+  path: string;
+  /** Current per-instance params, so the preview can reflect them live. */
+  params: P;
+  /** width / height of the target canvas, for the preview's aspect ratio. */
+  canvasAspectRatio?: number;
 };
 
 export type AssetParamsEditorProps<P> = {

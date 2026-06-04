@@ -44,10 +44,10 @@ export const defaultVideoParams: VideoParams = {
   speed: 1,
   offset: 0,
   loopMode: "loop",
-  scale: 1,
+  scale: 0.5,
   posX: 0,
   posY: 0,
-  fit: "stretch"
+  fit: "contain"
 };
 
 /**

@@ -5,6 +5,9 @@ import {
 import {
   Trash2, X
 } from "lucide-react";
+import {
+  useFormContext, useWatch
+} from "react-hook-form";
 
 import type {
   AssetInstance, AssetKind
@@ -51,7 +54,25 @@ export default function AssetDialog<P>( {
   onRemove
 }: Props<P> ) {
   const Preview = kind.PreviewComponent;
+  const LayoutPreview = kind.LayoutPreviewComponent;
   const ParamsEditor = kind.ParamsEditor;
+
+  // Mirror the target canvas aspect ratio so the layout preview shows the
+  // video where it will actually land on the final render. Read straight
+  // from the options form (same field the "Canvas size" select writes).
+  const {
+    control
+  } = useFormContext();
+  const sizeWidth = useWatch( {
+    control,
+    name: "size.width"
+  } ) as number | undefined;
+  const sizeHeight = useWatch( {
+    control,
+    name: "size.height"
+  } ) as number | undefined;
+  const canvasAspectRatio =
+    sizeWidth && sizeHeight ? sizeWidth / sizeHeight : undefined;
 
   function handleRemove() {
     onRemove();
@@ -88,12 +109,24 @@ export default function AssetDialog<P>( {
           <div className="flex flex-1 min-h-0 flex-col md:flex-row">
             {/* Preview pane: the preview owns its own background (e.g. the
                 <video> element); the pane just centers it and gives it room
-                to breathe. The aspect-video wrapper constrains the preview
-                so it does not stretch arbitrarily inside the flex pane. */}
+                to breathe. When the kind ships a params-aware layout preview
+                (videos), it renders a canvas-ratio box with the asset placed
+                exactly where it will land; otherwise we fall back to the plain
+                preview in an aspect-video wrapper. No rounded corners — the
+                real canvas has none. */}
             <div className="flex items-center justify-center md:flex-1 md:min-w-0 p-3 sm:p-4 md:p-6">
-              <div className="w-full aspect-video overflow-hidden rounded-xl">
-                <Preview url={ url } path={ instance.path } />
-              </div>
+              {LayoutPreview ? (
+                <LayoutPreview
+                  url={ url }
+                  path={ instance.path }
+                  params={ instance.params }
+                  canvasAspectRatio={ canvasAspectRatio }
+                />
+              ) : (
+                <div className="w-full aspect-video overflow-hidden">
+                  <Preview url={ url } path={ instance.path } />
+                </div>
+              )}
             </div>
 
             {/* Options pane: fixed width on desktop, full width on mobile.

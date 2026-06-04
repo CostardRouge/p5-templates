@@ -6,6 +6,7 @@ import {
 import type {
   AssetInstance, AssetKind, AssetPreviewProps
 } from "../../types";
+import VideoLayoutPreview from "./VideoLayoutPreview";
 import VideoParamsEditor from "./VideoParamsEditor";
 import {
   defaultVideoParams, type VideoParams
@@ -101,5 +102,6 @@ export const videosKind: AssetKind<VideoParams> = {
   },
 
   PreviewComponent: VideoPreview,
+  LayoutPreviewComponent: VideoLayoutPreview,
   ParamsEditor: VideoParamsEditor
 };
