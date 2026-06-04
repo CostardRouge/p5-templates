@@ -7,26 +7,22 @@ import type {
   AssetLayoutPreviewProps
 } from "../../types";
 import {
-  computeVideoPhase, type VideoFit, type VideoParams
+  computeVideoLayout, computeVideoPhase, type VideoFit, type VideoParams
 } from "./types";
 
 /**
  * Preview that shows *where*, *how big*, and *how* the video plays on the
  * final canvas. The outer box mirrors the canvas aspect ratio; the `<video>`
- * fills that box and is framed by the *browser* via `object-fit`, then sized
- * and positioned with a CSS transform.
+ * is positioned inside it with the same {@link computeVideoLayout} the sketch
+ * uses, expressed in percentages of the box.
  *
- * Why not reproduce {@link computeVideoLayout} in CSS here? Because computing a
- * rectangle and stretching the video into it with `object-fit: fill` distorts
- * the moment that rectangle's ratio is even slightly off (e.g. before the
- * clip's intrinsic size has loaded). Letting the browser apply `object-fit`
- * makes the aspect ratio *impossible* to distort, and `transform: scale()` is a
- * uniform scale — it cannot squish an axis. The result is the same framing as
- * the sketch's `contain` / `cover` / `stretch`, but provably non-distorting:
- *   - `contain`/`cover`/`stretch`  → `object-fit: contain`/`cover`/`fill`
- *   - `scale`                      → `transform: scale()` (uniform)
- *   - `posX`/`posY`                → `transform: translate(%, %)` of the box,
- *                                    matching the sketch's `posX * box.width`.
+ * The clip's aspect ratio is preserved by the *browser* via `object-fit`
+ * (`contain` / `cover` / `fill`), not by stretching the video into the
+ * computed rectangle. That matters: if the rectangle's ratio is ever momentarily
+ * off — e.g. before the clip's intrinsic size has loaded, when `contain` falls
+ * back to `stretch` and the box takes the canvas ratio — `object-fit: fill`
+ * would squish the pixels (a 16:9 clip turning tall in a portrait canvas).
+ * `object-fit: contain` letterboxes instead, so the ratio can never distort.
  *
  * The video is not left to play on its own — its `currentTime` is driven each
  * frame through {@link computeVideoPhase}, sweeping the sketch progression
@@ -94,6 +90,13 @@ export default function VideoLayoutPreview( {
   // A free-running clock that survives param edits, so changing scale or
   // position never resets the playback progression.
   const startRef = useRef<number | null>( null );
+  const [
+    natural,
+    setNatural
+  ] = useState( {
+    width: 0,
+    height: 0
+  } );
 
   const {
     repeat, speed, offset, loopMode
@@ -223,12 +226,20 @@ export default function VideoLayoutPreview( {
   };
 
   const ratio = canvasAspectRatio && canvasAspectRatio > 0 ? canvasAspectRatio : 1;
-  const scale = params.scale > 0 ? params.scale : 1;
-  // `scale()` runs first (about the centre), then `translate()` shifts by a
-  // fraction of the *un-scaled* box — i.e. `posX * boxWidth` / `posY *
-  // boxHeight`, matching the sketch's offset exactly and independent of scale.
-  const transform =
-    `translate(${ params.posX * 100 }%, ${ params.posY * 100 }%) scale(${ scale })`;
+  // Box shaped like the canvas (not a square), so the layout matches what the
+  // sketch computes from the real cell. Each axis is then turned into a
+  // percentage of its own box dimension to land correctly in the CSS box.
+  const box = {
+    x: 0,
+    y: 0,
+    width: ratio,
+    height: 1
+  };
+  const layout = computeVideoLayout(
+    params,
+    box,
+    natural
+  );
 
   return (
     <div
@@ -251,18 +262,30 @@ export default function VideoLayoutPreview( {
           muted
           playsInline
           draggable={ false }
+          onLoadedMetadata={ () => {
+            const el = videoRef.current;
+
+            if ( el?.videoWidth && el.videoHeight ) {
+              setNatural( {
+                width: el.videoWidth,
+                height: el.videoHeight
+              } );
+            }
+          } }
           onPointerDown={ interactive ? handlePointerDown : undefined }
           onPointerMove={ interactive ? handlePointerMove : undefined }
           onPointerUp={ interactive ? endDrag : undefined }
           onPointerCancel={ interactive ? endDrag : undefined }
           title={ interactive ? "Drag to reposition" : path }
-          // Fill the canvas-ratio box; the browser frames the clip with
-          // `object-fit` (ratio-safe) and the transform sizes / positions it.
-          className="absolute inset-0 h-full w-full"
+          // Positioned to the computed rectangle; `object-fit` (not `fill`)
+          // keeps the clip's real aspect ratio so it can never be squished.
+          className="absolute bg-black"
           style={ {
+            left: `${ ( layout.x / box.width ) * 100 }%`,
+            top: `${ ( layout.y / box.height ) * 100 }%`,
+            width: `${ ( layout.width / box.width ) * 100 }%`,
+            height: `${ ( layout.height / box.height ) * 100 }%`,
             objectFit: OBJECT_FIT[ params.fit ] ?? "contain",
-            transform,
-            transformOrigin: "center",
             cursor: interactive ? ( dragging ? "grabbing" : "grab" ) : "default",
             touchAction: interactive ? "none" : undefined,
             userSelect: "none"
