@@ -123,16 +123,20 @@ export default function VideoLayoutPreview( {
 
   const ratio = canvasAspectRatio && canvasAspectRatio > 0 ? canvasAspectRatio : 1;
 
-  // Lay the frame out within a normalized 100×100 box, then express the
-  // result as percentages so it scales with whatever size the box renders at.
+  // Lay the frame out in a box that has the *real* canvas aspect ratio — not a
+  // square — exactly like the sketch passes the real cell pixel size. Feeding
+  // a square box here made `contain`/`cover` preserve the wrong ratio, so the
+  // video got stretched by the canvas ratio. Each axis is then converted to a
+  // percentage of its own box dimension so it lands right in the CSS box.
+  const box = {
+    x: 0,
+    y: 0,
+    width: ratio,
+    height: 1
+  };
   const layout = computeVideoLayout(
     params,
-    {
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100
-    },
+    box,
     natural
   );
 
@@ -168,10 +172,10 @@ export default function VideoLayoutPreview( {
           } }
           className="absolute bg-black"
           style={ {
-            left: `${ layout.x }%`,
-            top: `${ layout.y }%`,
-            width: `${ layout.width }%`,
-            height: `${ layout.height }%`,
+            left: `${ ( layout.x / box.width ) * 100 }%`,
+            top: `${ ( layout.y / box.height ) * 100 }%`,
+            width: `${ ( layout.width / box.width ) * 100 }%`,
+            height: `${ ( layout.height / box.height ) * 100 }%`,
             objectFit: "fill"
           } }
         />
