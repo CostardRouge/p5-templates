@@ -21,9 +21,14 @@ const SQUARE = {
   height: 50
 };
 
+// Neutral baseline (scale 1, stretch) so each test exercises a single param
+// in isolation, independent of the shipped defaults. The shipped defaults get
+// their own dedicated test below.
 function params( patch: Partial<VideoParams> = {} ): VideoParams {
   return {
     ...defaultVideoParams,
+    scale: 1,
+    fit: "stretch",
     ...patch
   };
 }
@@ -32,10 +37,13 @@ describe(
   "computeVideoLayout",
   () => {
     it(
-      "fills the box exactly with default params (stretch, scale 1)",
+      "fills the box exactly with stretch + scale 1",
       () => {
         expect( computeVideoLayout(
-          params(),
+          params( {
+            scale: 1,
+            fit: "stretch"
+          } ),
           BOX,
           SQUARE
         ) ).toEqual( {
@@ -43,6 +51,24 @@ describe(
           y: 0,
           width: 200,
           height: 100
+        } );
+      }
+    );
+
+    it(
+      "applies the shipped defaults (scale 0.5, contain)",
+      () => {
+        // Square contained in the 2:1 box → 100×100, then halved → 50×50,
+        // centered in the 200×100 box.
+        expect( computeVideoLayout(
+          defaultVideoParams,
+          BOX,
+          SQUARE
+        ) ).toEqual( {
+          x: 75,
+          y: 25,
+          width: 50,
+          height: 50
         } );
       }
     );
@@ -189,21 +215,23 @@ describe(
     it(
       "tolerates missing / partial params via defaults",
       () => {
+        // No params → shipped defaults (scale 0.5, contain): 50×50 centered.
         expect( computeVideoLayout(
           undefined,
           BOX,
           SQUARE
         ) ).toEqual( {
-          x: 0,
-          y: 0,
-          width: 200,
-          height: 100
+          x: 75,
+          y: 25,
+          width: 50,
+          height: 50
         } );
 
         // A non-positive scale is treated as 1 rather than vanishing the frame.
         expect( computeVideoLayout(
           {
-            scale: 0
+            scale: 0,
+            fit: "stretch"
           } as Partial<VideoParams>,
           BOX,
           SQUARE
