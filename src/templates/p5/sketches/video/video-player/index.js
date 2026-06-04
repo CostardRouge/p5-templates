@@ -29,25 +29,22 @@ sketch.draw( () => {
     return;
   }
 
-  const columns = Math.ceil( Math.sqrt( items.length ) );
-  const rows = Math.ceil( items.length / columns );
-  const cellWidth = p.width / columns;
-  const cellHeight = p.height / rows;
+  // Free layout: every video is laid out against the *whole* canvas using its
+  // own scale / position / fit, independent of how many videos there are. They
+  // simply stack in option order — no grid carving up the canvas (a dedicated
+  // `video-grid` template can own that behavior later).
+  const canvas = {
+    x: 0,
+    y: 0,
+    width: p.width,
+    height: p.height
+  };
 
-  items.forEach( (
-    item, index
-  ) => {
-    const cell = {
-      x: ( index % columns ) * cellWidth,
-      y: Math.floor( index / columns ) * cellHeight,
-      width: cellWidth,
-      height: cellHeight
-    };
-
+  items.forEach( ( item ) => {
     const element = item.source?.element;
     const layout = computeVideoLayout(
       item.source?.params,
-      cell,
+      canvas,
       {
         width: element?.videoWidth ?? 0,
         height: element?.videoHeight ?? 0
