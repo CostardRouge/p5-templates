@@ -259,5 +259,48 @@ describe(
         expect( layout.y ).toBe( 500 + 25 );
       }
     );
+
+    // Contract relied on by the video-player sketch *and* the settings
+    // preview: when the box is given its true (non-square) aspect ratio, the
+    // drawn rectangle must keep the video's native ratio at every scale. This
+    // is exactly why the preview must pass a ratio-shaped box, not a square
+    // one — a square box silently distorts contain/cover by the canvas ratio.
+    it(
+      "preserves the native ratio in contain at any scale and box shape",
+      () => {
+        // Portrait canvas (1080×1350) with a landscape clip (1920×1080).
+        const portraitCanvas = {
+          x: 0,
+          y: 0,
+          width: 1080,
+          height: 1350
+        };
+        const landscape = {
+          width: 1920,
+          height: 1080
+        };
+        const nativeRatio = landscape.width / landscape.height;
+
+        for ( const scale of [
+          0.5,
+          1,
+          2
+        ] ) {
+          const layout = computeVideoLayout(
+            params( {
+              fit: "contain",
+              scale
+            } ),
+            portraitCanvas,
+            landscape
+          );
+
+          expect( layout.width / layout.height ).toBeCloseTo(
+            nativeRatio,
+            10
+          );
+        }
+      }
+    );
   }
 );
