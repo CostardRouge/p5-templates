@@ -82,6 +82,13 @@ export type AssetLayoutPreviewProps<P> = {
   params: P;
   /** width / height of the target canvas, for the preview's aspect ratio. */
   canvasAspectRatio?: number;
+  /**
+   * Optional write-back so the preview can be interactive — e.g. dragging the
+   * video thumbnail to set its position. When omitted the preview is
+   * read-only. Mirrors {@link AssetParamsEditorProps.onChange}, so dragging and
+   * the params editor stay in sync on the same instance params.
+   */
+  onParamsChange?: ( params: P ) => void;
 };
 
 export type AssetParamsEditorProps<P> = {
