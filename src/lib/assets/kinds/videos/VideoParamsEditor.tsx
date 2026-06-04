@@ -1,7 +1,7 @@
 "use client";
 import MiniTimeline from "./MiniTimeline";
 import type {
-  VideoLoopMode, VideoParams
+  VideoFit, VideoLoopMode, VideoParams
 } from "./types";
 import type {
   AssetParamsEditorProps
@@ -101,6 +101,74 @@ export default function VideoParamsEditor( {
         <MiniTimeline params={ value } />
         <span className="text-[10px] text-gray-400">video time over sketch progression</span>
       </div>
+
+      <div className="mt-2 border-t border-theme pt-2 text-[10px] uppercase tracking-wide text-gray-400">
+        Layout
+      </div>
+
+      <Row label="Size" hint={ `${ value.scale.toFixed( 2 ) }×` }>
+        <input
+          type="range"
+          min={ 0.1 }
+          max={ 3 }
+          step={ 0.05 }
+          value={ value.scale }
+          onChange={ ( e ) =>
+            update( {
+              scale: parseFloat( e.target.value )
+            } )
+          }
+          className="w-full"
+        />
+      </Row>
+
+      <Row label="Position X" hint={ value.posX.toFixed( 2 ) }>
+        <input
+          type="range"
+          min={ -1 }
+          max={ 1 }
+          step={ 0.01 }
+          value={ value.posX }
+          onChange={ ( e ) =>
+            update( {
+              posX: parseFloat( e.target.value )
+            } )
+          }
+          className="w-full"
+        />
+      </Row>
+
+      <Row label="Position Y" hint={ value.posY.toFixed( 2 ) }>
+        <input
+          type="range"
+          min={ -1 }
+          max={ 1 }
+          step={ 0.01 }
+          value={ value.posY }
+          onChange={ ( e ) =>
+            update( {
+              posY: parseFloat( e.target.value )
+            } )
+          }
+          className="w-full"
+        />
+      </Row>
+
+      <Row label="Aspect ratio">
+        <select
+          value={ value.fit }
+          onChange={ ( e ) =>
+            update( {
+              fit: e.target.value as VideoFit
+            } )
+          }
+          className="w-full p-1 border border-theme rounded bg-background text-foreground"
+        >
+          <option value="stretch">stretch (fill box)</option>
+          <option value="contain">contain (fit inside)</option>
+          <option value="cover">cover (fill &amp; crop)</option>
+        </select>
+      </Row>
     </div>
   );
 }

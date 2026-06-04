@@ -30,10 +30,10 @@ export {
 } from "./components/ControlledAssetStackInput";
 
 export {
-  defaultVideoParams, computeVideoPhase
+  defaultVideoParams, computeVideoPhase, computeVideoLayout
 } from "./kinds/videos/types";
 export type {
-  VideoParams, VideoLoopMode
+  VideoParams, VideoLoopMode, VideoFit, Rect
 } from "./kinds/videos/types";
 export {
   loadVideoAsset

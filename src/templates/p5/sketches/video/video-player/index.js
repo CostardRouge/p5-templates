@@ -1,3 +1,7 @@
+import {
+  computeVideoLayout
+} from "@/lib/assets/kinds/videos/types";
+
 import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
@@ -33,12 +37,29 @@ sketch.draw( () => {
   items.forEach( (
     item, index
   ) => {
+    const cell = {
+      x: ( index % columns ) * cellWidth,
+      y: Math.floor( index / columns ) * cellHeight,
+      width: cellWidth,
+      height: cellHeight
+    };
+
+    const element = item.source?.element;
+    const layout = computeVideoLayout(
+      item.source?.params,
+      cell,
+      {
+        width: element?.videoWidth ?? 0,
+        height: element?.videoHeight ?? 0
+      }
+    );
+
     p.image(
       item.graphics,
-      ( index % columns ) * cellWidth,
-      Math.floor( index / columns ) * cellHeight,
-      cellWidth,
-      cellHeight
+      layout.x,
+      layout.y,
+      layout.width,
+      layout.height
     );
   } );
 } );
