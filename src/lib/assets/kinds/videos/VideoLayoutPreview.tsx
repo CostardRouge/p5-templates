@@ -1,6 +1,6 @@
 "use client";
 import {
-  useEffect, useRef, useState
+  useEffect, useRef, useState, type PointerEvent as ReactPointerEvent
 } from "react";
 
 import type {
@@ -24,6 +24,10 @@ import {
  * This is deliberately a representative container — not a real p5 canvas — so
  * editing any param gives immediate, cheap visual feedback. No rounded
  * corners: the canvas has none either.
+ *
+ * When an `onParamsChange` is supplied the thumbnail is draggable: grabbing it
+ * sets `posX` / `posY` directly, staying perfectly in sync with the position
+ * sliders since both write the same instance params.
  */
 
 // One full sketch progression takes this long in the preview. Fixed (rather
@@ -31,13 +35,41 @@ import {
 // and very long clips while still showing the param relationships.
 const PREVIEW_CYCLE_SECONDS = 4;
 
+const clampOffset = ( value: number ) => Math.min(
+  1,
+  Math.max(
+    -1,
+    value
+  )
+);
+
 export default function VideoLayoutPreview( {
   url,
   path,
   params,
-  canvasAspectRatio = 1
+  canvasAspectRatio = 1,
+  onParamsChange
 }: AssetLayoutPreviewProps<VideoParams> ) {
   const videoRef = useRef<HTMLVideoElement>( null );
+  // The canvas-ratio box the video is positioned within; measured in pixels at
+  // drag time to translate a pointer delta into `posX` / `posY` (which are
+  // fractions of the box, matching the sketch's `posX * box.width` offset).
+  const boxRef = useRef<HTMLDivElement>( null );
+  // Snapshot taken on pointer-down: the pointer origin plus the position at
+  // that instant, so each move applies an absolute delta (immune to the
+  // re-renders our own onParamsChange triggers).
+  const dragOriginRef = useRef<{
+    x: number;
+    y: number;
+    posX: number;
+    posY: number;
+  } | null>( null );
+  const [
+    dragging,
+    setDragging
+  ] = useState( false );
+
+  const interactive = Boolean( onParamsChange );
   // A free-running clock that survives param edits, so changing scale or
   // position never resets the playback progression.
   const startRef = useRef<number | null>( null );
@@ -121,6 +153,61 @@ export default function VideoLayoutPreview( {
     ]
   );
 
+  // Drag-to-position: grab the video thumbnail and slide it inside the box.
+  // A pointer delta in pixels maps directly to a `posX` / `posY` delta because
+  // the box's full pixel width/height represents one unit of the offset (the
+  // sketch nudges by `posX * box.width` / `posY * box.height`). Clamped to the
+  // same [-1, 1] range as the position sliders so the two stay interchangeable.
+  const handlePointerDown = ( event: ReactPointerEvent<HTMLVideoElement> ) => {
+    if ( !onParamsChange ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture( event.pointerId );
+    dragOriginRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      posX: params.posX,
+      posY: params.posY
+    };
+    setDragging( true );
+  };
+
+  const handlePointerMove = ( event: ReactPointerEvent<HTMLVideoElement> ) => {
+    const origin = dragOriginRef.current;
+    const box = boxRef.current;
+
+    if ( !origin || !box || !onParamsChange ) {
+      return;
+    }
+
+    const rect = box.getBoundingClientRect();
+
+    if ( rect.width === 0 || rect.height === 0 ) {
+      return;
+    }
+
+    onParamsChange( {
+      ...params,
+      posX: clampOffset( origin.posX + ( event.clientX - origin.x ) / rect.width ),
+      posY: clampOffset( origin.posY + ( event.clientY - origin.y ) / rect.height )
+    } );
+  };
+
+  const endDrag = ( event: ReactPointerEvent<HTMLVideoElement> ) => {
+    if ( !dragOriginRef.current ) {
+      return;
+    }
+
+    dragOriginRef.current = null;
+    setDragging( false );
+
+    if ( event.currentTarget.hasPointerCapture( event.pointerId ) ) {
+      event.currentTarget.releasePointerCapture( event.pointerId );
+    }
+  };
+
   const ratio = canvasAspectRatio && canvasAspectRatio > 0 ? canvasAspectRatio : 1;
 
   // Lay the frame out in a box that has the *real* canvas aspect ratio — not a
@@ -142,6 +229,7 @@ export default function VideoLayoutPreview( {
 
   return (
     <div
+      ref={ boxRef }
       // `--cap` is the most height the box may take; it shrinks on small
       // screens so the preview never crowds out the scrollable settings.
       className="relative mx-auto overflow-hidden border border-theme bg-foreground/[0.06] [--cap:34vh] sm:[--cap:48vh] md:[--cap:72vh]"
@@ -157,9 +245,9 @@ export default function VideoLayoutPreview( {
         <video
           ref={ videoRef }
           src={ url }
-          title={ path }
           muted
           playsInline
+          draggable={ false }
           onLoadedMetadata={ () => {
             const el = videoRef.current;
 
@@ -170,13 +258,21 @@ export default function VideoLayoutPreview( {
               } );
             }
           } }
+          onPointerDown={ interactive ? handlePointerDown : undefined }
+          onPointerMove={ interactive ? handlePointerMove : undefined }
+          onPointerUp={ interactive ? endDrag : undefined }
+          onPointerCancel={ interactive ? endDrag : undefined }
+          title={ interactive ? "Drag to reposition" : path }
           className="absolute bg-black"
           style={ {
             left: `${ ( layout.x / box.width ) * 100 }%`,
             top: `${ ( layout.y / box.height ) * 100 }%`,
             width: `${ ( layout.width / box.width ) * 100 }%`,
             height: `${ ( layout.height / box.height ) * 100 }%`,
-            objectFit: "fill"
+            objectFit: "fill",
+            cursor: interactive ? ( dragging ? "grabbing" : "grab" ) : "default",
+            touchAction: interactive ? "none" : undefined,
+            userSelect: "none"
           } }
         />
       ) : (

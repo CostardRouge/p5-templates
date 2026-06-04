@@ -115,6 +115,7 @@ export default function AssetDialog<P>( {
                   path={ instance.path }
                   params={ instance.params }
                   canvasAspectRatio={ canvasAspectRatio }
+                  onParamsChange={ onParamsChange }
                 />
               ) : (
                 <div className="w-full aspect-video overflow-hidden">
