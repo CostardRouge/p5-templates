@@ -17,7 +17,12 @@ function ensure(
   p, name, w, h
 ) {
   if ( !buffers[ name ] || buffers[ name ].width !== w || buffers[ name ].height !== h ) {
-    buffers[ name ]?.remove?.();
+    // remove() can throw if the old renderer was already torn down — dispose
+    // defensively so a stray failure never crashes the draw loop.
+    try {
+      buffers[ name ]?.remove?.();
+    } catch {}
+
     buffers[ name ] = p.createGraphics(
       w,
       h
@@ -29,6 +34,16 @@ function ensure(
 
 sketch.setup( () => {
   pool = videos.attach( () => options.sketch?.videos );
+
+  // Drop buffers left over from a previous mount / hot reload so we never
+  // draw onto a torn-down renderer.
+  for ( const key of Object.keys( buffers ) ) {
+    try {
+      buffers[ key ]?.remove?.();
+    } catch {}
+
+    delete buffers[ key ];
+  }
 } );
 
 sketch.draw( () => {

@@ -12,6 +12,14 @@ const ASCII_RAMP = " .:-=+*#%@";
 
 sketch.setup( () => {
   pool = videos.attach( () => options.sketch?.videos );
+
+  // Drop any buffer left over from a previous mount / hot reload so we never
+  // draw onto a torn-down renderer.
+  try {
+    sampleBuffer?.remove?.();
+  } catch {}
+
+  sampleBuffer = null;
 } );
 
 sketch.draw( () => {
@@ -59,7 +67,12 @@ sketch.draw( () => {
   // One sampling pixel per cell: drawing the native-res frame into a tiny
   // buffer averages each cell's color for free. Cache it across frames.
   if ( !sampleBuffer || sampleBuffer.width !== columns || sampleBuffer.height !== rows ) {
-    sampleBuffer?.remove?.();
+    // remove() can throw if the previous buffer's renderer was already torn
+    // down (rapid slider changes / hot reload) — dispose defensively.
+    try {
+      sampleBuffer?.remove?.();
+    } catch {}
+
     sampleBuffer = p.createGraphics(
       columns,
       rows

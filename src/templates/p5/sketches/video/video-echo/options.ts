@@ -16,6 +16,21 @@ export const formValues = {
 };
 
 // UI configuration only
+const blendModeOptions = [
+  "BLEND",
+  "ADD",
+  "DARKEST",
+  "LIGHTEST",
+  "DIFFERENCE",
+  "EXCLUSION",
+  "MULTIPLY",
+  "SCREEN",
+  "REPLACE"
+].map( ( value ) => ( {
+  value,
+  label: value
+} ) );
+
 export const formConfiguration: Record<string, any> = {
   videos: {
     component: "asset-stack",
@@ -58,28 +73,7 @@ export const formConfiguration: Record<string, any> = {
   blendMode: {
     component: "select",
     label: "Blend mode",
-    options: [
-      {
-        label: "Normal",
-        value: "BLEND"
-      },
-      {
-        label: "Add",
-        value: "ADD"
-      },
-      {
-        label: "Screen",
-        value: "SCREEN"
-      },
-      {
-        label: "Lightest",
-        value: "LIGHTEST"
-      },
-      {
-        label: "Difference",
-        value: "DIFFERENCE"
-      }
-    ]
+    options: blendModeOptions
   },
 
   backgroundColor: {
