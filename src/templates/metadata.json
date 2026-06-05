@@ -2494,5 +2494,53 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-04T23:30:35.098Z",
     "ctime": "2026-06-04T23:30:16.190Z"
+  },
+  {
+    "name": "video-text",
+    "engine": "p5",
+    "category": "video",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-05T00:00:00.000Z",
+    "ctime": "2026-06-05T00:00:00.000Z"
+  },
+  {
+    "name": "video-halftone",
+    "engine": "p5",
+    "category": "video",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-05T00:00:01.000Z",
+    "ctime": "2026-06-05T00:00:01.000Z"
+  },
+  {
+    "name": "video-echo",
+    "engine": "p5",
+    "category": "video",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-05T00:00:02.000Z",
+    "ctime": "2026-06-05T00:00:02.000Z"
+  },
+  {
+    "name": "video-kaleidoscope",
+    "engine": "p5",
+    "category": "video",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-05T00:00:03.000Z",
+    "ctime": "2026-06-05T00:00:03.000Z"
   }
 ]
