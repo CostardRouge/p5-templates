@@ -30,7 +30,7 @@ const PALETTE_OPTIONS = [
 
 export const formValues = {
   grid: {
-    rows: 229,
+    rows: 189,
     columns: 119
   },
   noise: {

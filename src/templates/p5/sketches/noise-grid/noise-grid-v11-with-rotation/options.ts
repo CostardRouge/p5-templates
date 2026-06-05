@@ -3,8 +3,8 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   grid: {
-    rows: 40,
-    columns: 40
+    rows: 74,
+    columns: 72
   },
   noise: {
     seed: 42,
