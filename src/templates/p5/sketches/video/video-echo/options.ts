@@ -1,11 +1,26 @@
 // Default values only
 export const formValues = {
-  videos: [],
+  videos: [
+    {
+      id: "a_mq0fm1wm_64iow7",
+      path: "global/videos/DJI_20260530003110_0157_D_lut_20260530.mp4",
+      params: {
+        repeat: 1,
+        speed: 1,
+        offset: 0,
+        loopMode: "loop",
+        scale: 0.5,
+        posX: 0,
+        posY: 0,
+        fit: "contain"
+      }
+    }
+  ],
 
-  decay: 0.9,
-  zoom: 1,
+  decay: 0.87,
+  zoom: 1.1,
   rotation: 0,
-  blur: 0,
+  blur: 5,
   blendMode: "BLEND",
 
   backgroundColor: [

@@ -5,7 +5,7 @@ export const formValues = {
   segments: 8,
   autoSpin: true,
   rotation: 0,
-  sourceZoom: 1,
+  sourceZoom: 0.5,
   sourceOffsetX: 0,
   sourceOffsetY: 0,
 
