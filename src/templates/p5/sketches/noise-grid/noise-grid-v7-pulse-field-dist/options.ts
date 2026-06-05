@@ -3,24 +3,24 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   grid: {
-    rows: 40,
-    columns: 40
+    rows: 113,
+    columns: 97
   },
   noise: {
-    seed: 42,
-    detailLod: 6,
-    falloffMin: 0.2,
-    falloffMax: 0.8,
+    seed: 0,
+    detailLod: 23,
+    falloffMin: 0.21,
+    falloffMax: 0.44,
     xTimeMultiplier: 0.16,
     yTimeMultiplier: 0.33,
     zTimeMultiplier: 0.1
   },
   angle: {
-    cycles: 4
+    cycles: 8.8
   },
   pulse: {
-    speed: 2,
-    weightBoost: 0.5
+    speed: 3.08,
+    weightBoost: 1.82
   },
   colors: {
     hueRange: Math.PI / 2,

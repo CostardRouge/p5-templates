@@ -3,26 +3,26 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   grid: {
-    rows: 40,
-    columns: 40
+    rows: 137,
+    columns: 119
   },
   noise: {
     seed: 42,
-    detail: 4,
+    detail: 2,
     falloff: 0.5,
     xTimeMultiplier: 0.25,
     yTimeMultiplier: 0.125,
     zTimeMultiplier: 0.16
   },
   angle: {
-    cycles: 4
+    cycles: 4.6
   },
   distance: {
-    falloffEasing: "easeInQuad",
+    falloffEasing: "easeOutQuart",
     waveEasing: "easeOutQuad",
-    waveMin: 0.5,
-    waveMax: 1,
-    waveSpeed: 1
+    waveMin: 0.64,
+    waveMax: 0.25,
+    waveSpeed: 0
   },
   colors: {
     hueRange: Math.PI / 4,

@@ -69,23 +69,23 @@ const EASING_OPTIONS = [
 ];
 
 export const formValues = {
-  timeScale: 1,
+  timeScale: 2.2,
   path: {
-    boundary: 150,
+    boundary: 147,
     step: 1 / 250,
     anchorTimeScale: 0.25,
-    easing: "easeOutBounce"
+    easing: "linear"
   },
   foreground: {
-    sides: 3,
+    sides: 2,
     flowerPetals: 5,
-    sizeMin: 1,
-    sizeMax: 500,
+    sizeMin: 99,
+    sizeMax: 293,
     borderColor: "#000000",
     fillColor: "#ffffff",
-    borderWidth: 4,
-    rotationSpeed: 0.5,
-    innerRotationGain: 10
+    borderWidth: 3,
+    rotationSpeed: 0.39,
+    innerRotationGain: 9.8
   },
   backgroundColor: [
     255,
