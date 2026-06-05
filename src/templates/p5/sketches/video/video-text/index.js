@@ -18,6 +18,12 @@ const getFont = () => {
   return ( string.fonts && string.fonts[ key ] ) || string.fonts.martian;
 };
 
+const ALIGN = {
+  left: "LEFT",
+  center: "CENTER",
+  right: "RIGHT"
+};
+
 // (Re)create a buffer when missing or when the canvas was resized.
 function ensure(
   p, name, w, h
@@ -68,6 +74,29 @@ sketch.draw( () => {
     return;
   }
 
+  const font = getFont();
+
+  // Font may still be loading on the first frames.
+  if ( !font?.font ) {
+    return;
+  }
+
+  const text = cfg.text ?? "VIDEO";
+  // Intuitive size: a percentage of the canvas height (bigger = bigger).
+  const fontSize = p.height * ( ( cfg.fontSize ?? 60 ) / 100 );
+  const align = p[ ALIGN[ cfg.align ?? "center" ] ?? "CENTER" ];
+  const lineHeight = cfg.lineHeight ?? 1;
+  const margin = Math.max(
+    0,
+    cfg.margin ?? 0
+  );
+  const style = cfg.style ?? "fill";
+  const outlineWeight = Math.max(
+    1,
+    cfg.outlineWeight ?? 8
+  );
+  const invert = Boolean( cfg.invert );
+
   const mask = ensure(
     p,
     "mask",
@@ -81,39 +110,55 @@ sketch.draw( () => {
     p.height
   );
 
-  const divisor = Math.max(
-    0.5,
-    cfg.textSizeDivisor ?? 2.3
-  );
-  const fontSize = ( p.width + p.height ) / divisor;
+  // Paint the title (fill or outline) into a graphics, in white/opaque so its
+  // alpha defines where the video shows.
+  const paintText = ( g ) => {
+    g.push();
+    g.textFont( font );
+    g.textSize( fontSize );
+    g.textAlign(
+      align,
+      g.CENTER
+    );
+    g.textLeading( fontSize * lineHeight );
 
-  // Render the title into the mask buffer. Opaque glyphs (alpha 255) become
-  // the only place the video will show through.
+    if ( style === "outline" ) {
+      g.noFill();
+      g.stroke( 255 );
+      g.strokeWeight( outlineWeight );
+    } else {
+      g.noStroke();
+      g.fill( 255 );
+    }
+
+    g.text(
+      text,
+      margin,
+      margin,
+      g.width - margin * 2,
+      g.height - margin * 2
+    );
+    g.pop();
+  };
+
+  // Build the mask. Normally the glyphs are the opaque area; when inverted we
+  // fill everything and cut the glyphs out, so the video shows *around* them.
   mask.clear();
 
-  const textBox = string.write(
-    cfg.text ?? "VIDEO",
-    0,
-    p.height / 2 - fontSize / 8,
-    {
-      size: fontSize,
-      font: getFont(),
-      fill: 255,
-      stroke: 255,
-      strokeWeight: 0,
-      textWidth: p.width,
-      textAlign: [
-        p.CENTER,
-        p.CENTER
-      ],
-      graphics: mask,
-      popPush: false
-    }
-  );
-
-  // Font may still be loading on the first frames.
-  if ( !textBox ) {
-    return;
+  if ( invert ) {
+    mask.noStroke();
+    mask.fill( 255 );
+    mask.rect(
+      0,
+      0,
+      mask.width,
+      mask.height
+    );
+    mask.erase();
+    paintText( mask );
+    mask.noErase();
+  } else {
+    paintText( mask );
   }
 
   // Composite every video full-canvas into the frame buffer (each honors its
@@ -147,7 +192,7 @@ sketch.draw( () => {
     );
   } );
 
-  // Keep the video only inside the glyphs.
+  // Keep the video only where the mask is opaque.
   const masked = frame.get();
 
   masked.mask( mask );
