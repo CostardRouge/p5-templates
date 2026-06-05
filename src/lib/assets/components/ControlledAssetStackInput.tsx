@@ -295,7 +295,6 @@ function SortableThumb<P>( {
           instance={ instance }
           url={ url }
           onParamsChange={ onParamsChange }
-          onRemove={ onDelete }
         />
       ) : null}
     </>

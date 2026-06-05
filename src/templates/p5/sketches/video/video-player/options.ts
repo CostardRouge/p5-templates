@@ -1,6 +1,7 @@
 // Default values only
 export const formValues = {
-  // Assets — each entry is { id, path, params: { repeat, speed, offset, loopMode } }
+  // Assets — each entry is { id, path, params: { repeat, speed, offset,
+  // loopMode, scale, posX, posY, fit } }
   videos: [],
 
   // Colors

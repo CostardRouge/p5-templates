@@ -1,6 +1,6 @@
 "use client";
 import {
-  useEffect, useRef
+  useMemo
 } from "react";
 
 import {
@@ -18,6 +18,13 @@ type Props = {
  * Plots `videoPhase(p)` for p ∈ [0, 1] so the user sees how repeat /
  * speed / offset / loopMode combine into the actual playback curve.
  * The X axis is sketch progression, Y is the normalized video time.
+ *
+ * Rendered as SVG (not canvas) on purpose: the stroke uses `currentColor`,
+ * which inherits the theme's `--foreground` via the `text-foreground` class.
+ * That keeps the curve readable in both light and dark themes — and flips
+ * automatically when the theme changes — with zero JS theme logic. (A canvas
+ * 2D context silently ignores `currentColor`, falling back to black, which
+ * is why the curve used to disappear on the dark theme.)
  */
 export default function MiniTimeline( {
   params,
@@ -25,52 +32,10 @@ export default function MiniTimeline( {
   height = 56,
   samples = 200
 }: Props ) {
-  const canvasRef = useRef<HTMLCanvasElement>( null );
-
-  useEffect(
+  const points = useMemo(
     () => {
-      const canvas = canvasRef.current;
+      const coords: string[] = [];
 
-      if ( !canvas ) {
-        return;
-      }
-
-      const dpr = window.devicePixelRatio || 1;
-
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.width = `${ width }px`;
-      canvas.style.height = `${ height }px`;
-
-      const ctx = canvas.getContext( "2d" );
-
-      if ( !ctx ) {
-        return;
-      }
-
-      ctx.scale(
-        dpr,
-        dpr
-      );
-      ctx.clearRect(
-        0,
-        0,
-        width,
-        height
-      );
-
-      // Frame
-      ctx.strokeStyle = "rgba(127,127,127,0.3)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(
-        0.5,
-        0.5,
-        width - 1,
-        height - 1
-      );
-
-      // Curve
-      ctx.beginPath();
       for ( let i = 0; i <= samples; i++ ) {
         const p = i / samples;
         const phase = computeVideoPhase(
@@ -80,21 +45,10 @@ export default function MiniTimeline( {
         const x = p * ( width - 2 ) + 1;
         const y = ( 1 - phase ) * ( height - 2 ) + 1;
 
-        if ( i === 0 ) {
-          ctx.moveTo(
-            x,
-            y
-          );
-        } else {
-          ctx.lineTo(
-            x,
-            y
-          );
-        }
+        coords.push( `${ x.toFixed( 2 ) },${ y.toFixed( 2 ) }` );
       }
-      ctx.strokeStyle = "currentColor";
-      ctx.lineWidth = 1.25;
-      ctx.stroke();
+
+      return coords.join( " " );
     },
     [
       params,
@@ -105,10 +59,34 @@ export default function MiniTimeline( {
   );
 
   return (
-    <canvas
-      ref={ canvasRef }
+    <svg
+      width={ width }
+      height={ height }
+      viewBox={ `0 0 ${ width } ${ height }` }
       className="text-foreground block"
+      role="img"
       aria-label="Video time mapping preview"
-    />
+    >
+      {/* Frame: muted version of the same theme colour. */}
+      <rect
+        x={ 0.5 }
+        y={ 0.5 }
+        width={ width - 1 }
+        height={ height - 1 }
+        fill="none"
+        stroke="currentColor"
+        strokeOpacity={ 0.3 }
+        strokeWidth={ 1 }
+      />
+      {/* Curve: full-strength theme foreground. */}
+      <polyline
+        points={ points }
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={ 1.25 }
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
