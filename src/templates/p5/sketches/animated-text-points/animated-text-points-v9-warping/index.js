@@ -7,8 +7,7 @@ import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import cache from "@/p5/utils/cache.js";
-import grid from "@/p5/utils/grid.js";
+import gridMask from "@/p5/utils/gridMask.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup(
@@ -49,7 +48,6 @@ sketch.draw( async() => {
   const columns = gridOpts.columns ?? 30;
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
-  const fontFamily = font.font?.names?.fontFamily?.en ?? "unknown";
 
   const gridOptions = {
     topLeft: p.createVector(
@@ -89,145 +87,144 @@ sketch.draw( async() => {
   const opacityMax = color.opacityMax ?? 2.1;
   const opacityMin = color.opacityMin ?? 1;
 
-  await grid.draw(
-    gridOptions,
-    (
-      cellVector, {
-        x, y
-      }
-    ) => {
-      const xSign = p.sin( animation.angle );
-      const ySign = p.cos( animation.angle );
-      const switchingIndex = xSign * ( x / columns ) + ySign * ( y / rows ) + animation.angle;
-      const currentLetter = mappers.circularIndex(
-        switchingIndex,
-        word
-      );
+  // Each cell can mask a different letter, so precompute one alpha field per
+  // distinct letter of the word (each cached + spatial-hash accelerated) and
+  // look up the cell's alpha by index. Identical to the previous per-cell
+  // reduction, without recomputing distances every frame.
+  const uniqueLetters = Array.from( new Set( word ) );
+  const fieldByLetter = new Map();
 
-      const points = string.getTextPoints( {
-        text: currentLetter,
-        position: p.createVector(
+  for ( const letter of uniqueLetters ) {
+    const letterPoints = string.getTextPoints( {
+      text: letter,
+      position: p.createVector(
+        0,
+        0
+      ),
+      size,
+      font,
+      sampleFactor,
+      simplifyThreshold
+    } );
+
+    fieldByLetter.set(
+      letter,
+      await gridMask.field( {
+        gridOptions,
+        points: letterPoints,
+        signature: string.textPointsSignature( {
+          text: letter,
+          font,
+          size,
+          sampleFactor,
+          simplifyThreshold
+        } ),
+        distance: cellSize,
+        space: "pixel",
+        output: "falloff",
+        alphaRange: [
           0,
-          0
-        ),
-        size,
-        font,
-        sampleFactor,
-        simplifyThreshold
-      } );
-
-      const alphaKey = cache.key(
-        x,
-        y,
-        columns,
-        rows,
-        fontFamily,
-        currentLetter,
-        sampleFactor,
-        "alpha"
-      );
-      const alpha = cache.store(
-        alphaKey,
-        () => points.reduce(
-          (
-            result, point
-          ) => {
-            if ( result >= 255 ) {
-              return result;
-            }
-
-            return Math.max(
-              result,
-              ~~p.map(
-                point.dist( cellVector ),
-                0,
-                cellSize,
-                255,
-                0,
-                true
-              )
-            );
-          },
-          0
-        )
-      );
-
-      if ( !alpha ) {
-        return;
-      }
-
-      const hue = p.noise(
-        x / columns,
-        y / rows + animation.angle / 4
-      );
-      const tint = colorFunction( {
-        hueOffset,
-        hueIndex: p.map(
-          hue,
-          0,
-          1,
-          -p.PI,
-          p.PI
-        ) * hueIndexMultiplier,
-        opacityFactor: p.map(
-          hue,
-          0,
-          1,
-          opacityMax,
-          opacityMin
-        )
-      } );
-      const {
-        levels: [
-          r,
-          g,
-          b
+          255
         ]
-      } = tint;
+      } )
+    );
+  }
 
-      if ( useNormalMaterial ) {
-        p.normalMaterial();
-      }
-      p.stroke(
-        r,
-        g,
-        b,
-        230
-      );
-      p.fill(
+  const cells = fieldByLetter.get( uniqueLetters[ 0 ] ).cells;
+
+  cells.forEach( (
+    cell, cellIndex
+  ) => {
+    const cellVector = cell.position;
+    const {
+      x, y
+    } = cell;
+
+    const xSign = p.sin( animation.angle );
+    const ySign = p.cos( animation.angle );
+    const switchingIndex = xSign * ( x / columns ) + ySign * ( y / rows ) + animation.angle;
+    const currentLetter = mappers.circularIndex(
+      switchingIndex,
+      word
+    );
+
+    const alpha = fieldByLetter.get( currentLetter ).alpha[ cellIndex ];
+
+    if ( !alpha ) {
+      return;
+    }
+
+    const hue = p.noise(
+      x / columns,
+      y / rows + animation.angle / 4
+    );
+    const tint = colorFunction( {
+      hueOffset,
+      hueIndex: p.map(
+        hue,
+        0,
+        1,
+        -p.PI,
+        p.PI
+      ) * hueIndexMultiplier,
+      opacityFactor: p.map(
+        hue,
+        0,
+        1,
+        opacityMax,
+        opacityMin
+      )
+    } );
+    const {
+      levels: [
         r,
         g,
         b
-      );
+      ]
+    } = tint;
 
-      p.push();
-      p.rotateX( p.map(
-        p.sin( animation.angle * warpSpeed - y / warpRowDivisor ),
-        -1,
-        1,
-        -p.PI,
-        p.PI
-      ) * warpAmount );
-      p.rotateY( p.map(
-        p.cos( animation.angle * warpSpeed + x / warpColDivisor ),
-        -1,
-        1,
-        -p.PI,
-        p.PI
-      ) * warpAmount );
-      p.translate(
-        cellVector.x,
-        cellVector.y,
-        -boxDepth / 2
-      );
-      p.box(
-        boxWidth,
-        boxWidth,
-        -boxDepth
-      );
-      p.pop();
+    if ( useNormalMaterial ) {
+      p.normalMaterial();
     }
-  );
+    p.stroke(
+      r,
+      g,
+      b,
+      230
+    );
+    p.fill(
+      r,
+      g,
+      b
+    );
+
+    p.push();
+    p.rotateX( p.map(
+      p.sin( animation.angle * warpSpeed - y / warpRowDivisor ),
+      -1,
+      1,
+      -p.PI,
+      p.PI
+    ) * warpAmount );
+    p.rotateY( p.map(
+      p.cos( animation.angle * warpSpeed + x / warpColDivisor ),
+      -1,
+      1,
+      -p.PI,
+      p.PI
+    ) * warpAmount );
+    p.translate(
+      cellVector.x,
+      cellVector.y,
+      -boxDepth / 2
+    );
+    p.box(
+      boxWidth,
+      boxWidth,
+      -boxDepth
+    );
+    p.pop();
+  } );
 
   renderTitle();
 } );
