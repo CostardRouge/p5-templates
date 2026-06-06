@@ -219,16 +219,36 @@ const MAPPERS_GLSL = `
   float easeOutSine(float x) { return sin((x * PI) / 2.0); }
   float easeInOutSine(float x) { return -(cos(PI * x) - 1.0) / 2.0; }
 
+  // Polynomial easings use multiplication rather than pow(): mappers.fn feeds
+  // unclamped inputs, so the base can be negative — pow(negative, n) is
+  // undefined in GLSL, whereas Math.pow (real, integer exponent) is what the JS
+  // originals use. Multiplying reproduces that exactly for any input.
   float easeInQuad(float x) { return x * x; }
-  float easeOutQuad(float x) { return 1.0 - (1.0 - x) * (1.0 - x); }
+  float easeOutQuad(float x) { float u = 1.0 - x; return 1.0 - u * u; }
   float easeInOutQuad(float x) {
-    return x < 0.5 ? 2.0 * x * x : 1.0 - pow(-2.0 * x + 2.0, 2.0) / 2.0;
+    if (x < 0.5) { return 2.0 * x * x; }
+    float u = -2.0 * x + 2.0;
+    return 1.0 - (u * u) / 2.0;
   }
 
   float easeInCubic(float x) { return x * x * x; }
-  float easeOutCubic(float x) { return 1.0 - pow(1.0 - x, 3.0); }
+  float easeOutCubic(float x) { float u = 1.0 - x; return 1.0 - u * u * u; }
   float easeInOutCubic(float x) {
-    return x < 0.5 ? 4.0 * x * x * x : 1.0 - pow(-2.0 * x + 2.0, 3.0) / 2.0;
+    if (x < 0.5) { return 4.0 * x * x * x; }
+    float u = -2.0 * x + 2.0;
+    return 1.0 - (u * u * u) / 2.0;
+  }
+
+  float easeInBack(float x) {
+    float c1 = 1.70158;
+    float c3 = c1 + 1.0;
+    return c3 * x * x * x - c1 * x * x;
+  }
+  float easeOutBack(float x) {
+    float c1 = 1.70158;
+    float c3 = c1 + 1.0;
+    float u = x - 1.0;
+    return 1.0 + c3 * u * u * u + c1 * u * u;
   }
 `;
 
@@ -244,6 +264,19 @@ const PALETTES_GLSL = `
     float blue  = (1.0 - sin(a)) * 0.5 * 360.0 / opacityFactor;
 
     return clamp(vec3(red, green, blue) / 255.0, 0.0, 1.0);
+  }
+`;
+
+// SDF helpers for the primitives the sketches draw.
+const SHAPES_GLSL = `
+  // Distance from point p to the segment a→b (round caps, i.e. a capsule axis),
+  // matching p5's default ROUND strokeCap for line().
+  float segmentDistance(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a;
+    vec2 ba = b - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+
+    return length(pa - ba * h);
   }
 `;
 
@@ -431,7 +464,7 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     state.program = buildProgram(
       gl,
       VERT_SRC,
-      COMMON_GLSL + MAPPERS_GLSL + PALETTES_GLSL + fragmentSource
+      COMMON_GLSL + MAPPERS_GLSL + PALETTES_GLSL + SHAPES_GLSL + fragmentSource
     );
 
     state.locs = {};
