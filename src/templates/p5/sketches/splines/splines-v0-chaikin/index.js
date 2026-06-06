@@ -9,7 +9,8 @@ import {
   animatePoints,
   chaikin,
   emitCatmullRom,
-  emitQuadraticMidpoint
+  emitQuadraticMidpoint,
+  dashedLine
 } from "../_shared.js";
 
 // Base (un-animated) point layout is only rebuilt when the relevant options or
@@ -38,49 +39,83 @@ function ensureBasePoints( pointsOptions ) {
   return seed;
 }
 
-// The faint angular polygon + the raw points: the "before" half of the demo,
-// so the rounded curve has something obvious to be compared against.
-function drawProof(
-  points, closed, showPolygon, showPoints
+// The faint angular polygon: the "before" half of the demo, so the rounded
+// curve has something obvious to be compared against. Solid or dashed.
+function drawPolygonOverlay(
+  points, closed, cfg
 ) {
   const p = getP5();
 
-  if ( showPolygon ) {
-    p.noFill();
-    p.strokeWeight( 1.5 );
-    p.stroke(
-      255,
-      70
-    );
-    p.beginShape();
-    points.forEach( ( v ) => p.vertex(
-      v.x,
-      v.y
-    ) );
-    p.endShape( closed ? p.CLOSE : undefined );
+  p.noFill();
+  p.strokeWeight( cfg.weight ?? 2 );
+  p.stroke( ...( cfg.color ?? [
+    255,
+    255,
+    255,
+    70
+  ] ) );
+
+  if ( cfg.dashed ) {
+    const count = points.length;
+    const edges = closed ? count : count - 1;
+
+    for ( let i = 0; i < edges; i++ ) {
+      dashedLine(
+        points[ i ],
+        points[ ( i + 1 ) % count ],
+        cfg.dash ?? 18,
+        cfg.gap ?? 12
+      );
+    }
+
+    return;
   }
 
-  if ( showPoints ) {
-    p.noStroke();
-    points.forEach( ( v ) => {
-      p.fill( 255 );
+  p.beginShape();
+  points.forEach( ( v ) => p.vertex(
+    v.x,
+    v.y
+  ) );
+  p.endShape( closed ? p.CLOSE : undefined );
+}
+
+// The original points as markers (outer disc + inner core), kept on top of the
+// glowing curve. `size` is the general point diameter in pixels.
+function drawPointMarkers(
+  points, cfg
+) {
+  const p = getP5();
+  const size = cfg.size ?? 14;
+  const coreRatio = cfg.coreRatio ?? 0.36;
+
+  p.noStroke();
+  points.forEach( ( v ) => {
+    p.fill( ...( cfg.color ?? [
+      255,
+      255,
+      255,
+      255
+    ] ) );
+    p.circle(
+      v.x,
+      v.y,
+      size
+    );
+
+    if ( coreRatio > 0 ) {
+      p.fill( ...( cfg.coreColor ?? [
+        10,
+        10,
+        14,
+        255
+      ] ) );
       p.circle(
         v.x,
         v.y,
-        13
+        size * coreRatio
       );
-      p.fill(
-        10,
-        10,
-        14
-      );
-      p.circle(
-        v.x,
-        v.y,
-        5
-      );
-    } );
-  }
+    }
+  } );
 }
 
 // Chaikin gives us a dense polyline, so we can stroke it segment by segment and
@@ -234,7 +269,9 @@ sketch.draw( () => {
   const closed = curve.closed ?? true;
 
   const stroke = o.stroke ?? {};
-  const show = o.show ?? {};
+  const overlay = o.overlay ?? {};
+  const polygonCfg = overlay.polygon ?? {};
+  const pointsCfg = overlay.points ?? {};
 
   const curveOptions = {
     iterations: curve.iterations ?? 4,
@@ -245,12 +282,13 @@ sketch.draw( () => {
     hueSpeed: stroke.hueSpeed ?? 1
   };
 
-  drawProof(
-    points,
-    closed,
-    show.polygon ?? true,
-    false
-  );
+  if ( polygonCfg.show ?? true ) {
+    drawPolygonOverlay(
+      points,
+      closed,
+      polygonCfg
+    );
+  }
 
   if ( method === "chaikin" && ( stroke.gradient ?? true ) ) {
     drawChaikinGradient(
@@ -266,10 +304,10 @@ sketch.draw( () => {
   }
 
   // Points drawn last so the markers stay on top of the glowing curve.
-  drawProof(
-    points,
-    false,
-    false,
-    show.points ?? true
-  );
+  if ( pointsCfg.show ?? true ) {
+    drawPointMarkers(
+      points,
+      pointsCfg
+    );
+  }
 } );
