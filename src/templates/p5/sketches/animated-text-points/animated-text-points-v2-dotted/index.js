@@ -69,6 +69,7 @@ sketch.draw( async() => {
   const columns = gridOpts.columns ?? 30;
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
+  const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
 
   // Per-cell rotation precomputed once per frame (uniform across cells but applied before translate, creating a wobble)
   const cellRotEnabled = sceneRot.enabled ?? true;
@@ -139,7 +140,7 @@ sketch.draw( async() => {
       sampleFactor,
       simplifyThreshold
     } ),
-    distance: cellSize,
+    distance: maskDistance,
     space: "pixel",
     output: "falloff",
     alphaRange: [

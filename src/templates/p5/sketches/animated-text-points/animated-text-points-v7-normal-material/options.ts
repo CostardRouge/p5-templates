@@ -5,6 +5,9 @@ import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
+  mask: {
+    distance: 1
+  },
   shape: {
     text: "abcdefgh",
     font: "sans",
@@ -64,6 +67,19 @@ const paletteOptions = [
 } ) );
 
 export const formConfiguration: Record<string, any> = {
+  mask: {
+    component: "nested-object",
+    label: "Mask (gridMask)",
+    fields: {
+      distance: {
+        label: "Mask radius (× cell size)",
+        component: "slider",
+        min: 0.1,
+        max: 5,
+        step: 0.05
+      }
+    }
+  },
   shape: {
     component: "nested-object",
     label: "Shape",

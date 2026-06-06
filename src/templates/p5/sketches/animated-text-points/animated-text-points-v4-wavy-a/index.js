@@ -50,6 +50,7 @@ sketch.draw( async() => {
   const columns = gridOpts.columns ?? 30;
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
+  const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
 
   if ( sceneRot.enabled ?? true ) {
     p.rotateY( mappers.fn(
@@ -128,7 +129,7 @@ sketch.draw( async() => {
           sampleFactor,
           simplifyThreshold
         } ),
-        distance: cellSize,
+        distance: maskDistance,
         space: "pixel",
         output: "falloff",
         alphaRange: [
