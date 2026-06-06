@@ -15,7 +15,7 @@ export const formValues = {
   },
   grid: {
     proportional: true,
-    columns: 30,
+    columns: 47,
     rows: 50
   },
   cell: {

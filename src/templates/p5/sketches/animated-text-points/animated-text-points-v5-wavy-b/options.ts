@@ -8,20 +8,20 @@ export const formValues = {
   shape: {
     text: "#test!",
     font: "serif",
-    size: 1.11,
-    sampleFactor: 0.5,
+    size: 1.08,
+    sampleFactor: 0.16,
     simplifyThreshold: 0,
     morphSpeed: 1
   },
   grid: {
     proportional: true,
-    columns: 30,
+    columns: 58,
     rows: 50
   },
   cell: {
     chanceThreshold: 0.5,
     sphereSize: 30,
-    crossSize: 40,
+    crossSize: 36,
     crossColor: [
       32,
       32,
@@ -38,7 +38,7 @@ export const formValues = {
   wobble: {
     amplitude: 100,
     speed: 5,
-    rowMultiplier: 4
+    rowMultiplier: 36.5
   },
   sceneRotation: {
     enabled: true,
