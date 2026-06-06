@@ -516,18 +516,6 @@
     "ctime": "2026-06-06T02:13:34.431Z"
   },
   {
-    "name": "noise-grid-v12-field-on-fire",
-    "engine": "p5",
-    "category": "noise-grid",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-06T02:13:34.432Z",
-    "ctime": "2026-06-06T02:13:34.432Z"
-  },
-  {
     "name": "noise-grid-v2-basic-with-easing",
     "engine": "p5",
     "category": "noise-grid",
@@ -562,42 +550,6 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-06T02:13:34.434Z",
     "ctime": "2026-06-06T02:13:34.433Z"
-  },
-  {
-    "name": "noise-grid-v6-field-with-dist-check",
-    "engine": "p5",
-    "category": "noise-grid",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-06T02:13:34.434Z",
-    "ctime": "2026-06-06T02:13:34.434Z"
-  },
-  {
-    "name": "noise-grid-v7-pulse-field-dist",
-    "engine": "p5",
-    "category": "noise-grid",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-06T02:13:34.435Z",
-    "ctime": "2026-06-06T02:13:34.434Z"
-  },
-  {
-    "name": "noise-grid-v8-pulse-easing",
-    "engine": "p5",
-    "category": "noise-grid",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-06T02:13:34.435Z",
-    "ctime": "2026-06-06T02:13:34.435Z"
   },
   {
     "name": "noise-grid-v9-drifting",
@@ -2528,55 +2480,55 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-06T13:21:38.184Z",
+    "mtime": "2026-06-06T15:02:31.798Z",
     "ctime": "2026-06-06T02:13:34.432Z"
   },
   {
-    "name": "splines-v0-chaikin",
+    "name": "noise-grid-v12-field-on-fire",
     "engine": "p5",
-    "category": "splines",
+    "category": "noise-grid",
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-05T05:31:06.977Z",
-    "ctime": "2026-05-30T21:00:36.480Z"
+    "mtime": "2026-06-06T15:02:31.799Z",
+    "ctime": "2026-06-06T02:13:34.432Z"
   },
   {
-    "name": "grid-cascade",
-    "engine": "gsap",
-    "category": "photo",
+    "name": "noise-grid-v6-field-with-dist-check",
+    "engine": "p5",
+    "category": "noise-grid",
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-06T06:42:47.904Z",
-    "ctime": "2026-06-06T06:42:47.904Z"
+    "mtime": "2026-06-06T15:02:31.799Z",
+    "ctime": "2026-06-06T02:13:34.434Z"
   },
   {
-    "name": "coverflow-3d",
-    "engine": "gsap",
-    "category": "photo",
+    "name": "noise-grid-v7-pulse-field-dist",
+    "engine": "p5",
+    "category": "noise-grid",
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-06T06:42:47.904Z",
-    "ctime": "2026-06-06T06:42:47.904Z"
+    "mtime": "2026-06-06T15:02:31.799Z",
+    "ctime": "2026-06-06T02:13:34.434Z"
   },
   {
-    "name": "stack-shuffle",
-    "engine": "gsap",
-    "category": "photo",
+    "name": "noise-grid-v8-pulse-easing",
+    "engine": "p5",
+    "category": "noise-grid",
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-06T06:42:47.904Z",
-    "ctime": "2026-06-06T06:42:47.904Z"
+    "mtime": "2026-06-06T15:02:31.800Z",
+    "ctime": "2026-06-06T02:13:34.435Z"
   }
 ]
