@@ -240,6 +240,19 @@ const MAPPERS_GLSL = `
     return 1.0 - (u * u * u) / 2.0;
   }
 
+  float easeInOutQuart(float x) {
+    if (x < 0.5) { return 8.0 * x * x * x * x; }
+    float u = -2.0 * x + 2.0;
+    return 1.0 - (u * u * u * u) / 2.0;
+  }
+
+  // exp2(n) == Math.pow(2, n) for all n, so this matches the JS easing exactly
+  // (bar the x == 0 / x == 1 short-circuits, which are negligible here).
+  float easeInOutExpo(float x) {
+    if (x < 0.5) { return exp2(20.0 * x - 10.0) * 0.5; }
+    return (2.0 - exp2(-20.0 * x + 10.0)) * 0.5;
+  }
+
   float easeInBack(float x) {
     float c1 = 1.70158;
     float c3 = c1 + 1.0;
@@ -266,6 +279,36 @@ const PALETTES_GLSL = `
 
     return clamp(vec3(red, green, blue) / 255.0, 0.0, 1.0);
   }
+
+  // colors.darkBlueYellow: R and G share cos(hueOffset+hueIndex), B is sin().
+  vec3 paletteDarkBlueYellow(float hueOffset, float hueIndex, float opacityFactor) {
+    float c = hueOffset + hueIndex;
+
+    float rg   = (cos(c) * 0.5 + 0.5) * 360.0 / opacityFactor;
+    float blue = (1.0 - sin(c)) * 0.5 * 360.0 / opacityFactor;
+
+    return clamp(vec3(rg, rg, blue) / 255.0, 0.0, 1.0);
+  }
+
+  // colors.purple: fixed-ish red/blue, green breathes with sin(hueOffset-hueIndex).
+  vec3 palettePurple(float hueOffset, float hueIndex, float opacityFactor) {
+    float d = hueOffset - hueIndex;
+
+    float red   = 90.0 / opacityFactor;
+    float green = (1.0 - sin(d)) * 90.0 / opacityFactor;
+    float blue  = 360.0 / opacityFactor;
+
+    return clamp(vec3(red, green, blue) / 255.0, 0.0, 1.0);
+  }
+
+  // Runtime palette pick (matches the sketches' selectable palette option).
+  //   0 = rainbow, 1 = purple, 2 = darkBlueYellow (fallback: rainbow)
+  vec3 paletteColor(int id, float hueOffset, float hueIndex, float opacityFactor) {
+    if (id == 1) { return palettePurple(hueOffset, hueIndex, opacityFactor); }
+    if (id == 2) { return paletteDarkBlueYellow(hueOffset, hueIndex, opacityFactor); }
+
+    return paletteRainbow(hueOffset, hueIndex, opacityFactor);
+  }
 `;
 
 // SDF helpers for the primitives the sketches draw.
@@ -278,6 +321,19 @@ const SHAPES_GLSL = `
     float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
 
     return length(pa - ba * h);
+  }
+
+  // Filled disc (p5 point with strokeWeight = 2*radius), 1px antialiased rim.
+  float discMask(vec2 local, float radius) {
+    return 1.0 - smoothstep(radius - 1.0, radius + 1.0, length(local));
+  }
+
+  // Stroked ring (p5 circle(0,0,2*radius) with a given strokeWeight); the outline
+  // straddles the radius, so coverage falls off halfStroke either side of it.
+  float ringMask(vec2 local, float radius, float halfStroke) {
+    float d = abs(length(local) - radius);
+
+    return 1.0 - smoothstep(halfStroke - 1.0, halfStroke + 1.0, d);
   }
 `;
 

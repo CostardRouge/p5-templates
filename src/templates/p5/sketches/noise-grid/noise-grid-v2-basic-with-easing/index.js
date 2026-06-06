@@ -2,24 +2,90 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
-import grid from "@/p5/utils/grid.js";
-import colors from "@/p5/utils/colors.js";
-import easing from "@/p5/utils/easing.js";
-import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
+import {
+  createInstancedFieldRenderer,
+  computeFieldRange
+} from "@/p5/utils/noiseFieldGpu.js";
 
-const sketchState = {
-  min: Math.PI,
-  max: 0
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// GPU port of "noise grid v2 — basic with easing" (instanced).
+//
+// One dot per cell, displaced by (sin, cos) of the noise angle and sized by an
+// easeInOutExpo mapping of the angle over the converged min..TAU range. Dots
+// cross cell borders, so each is drawn as its own instance in grid order.
+//
+// NOTE: the weight easing is baked to the preset's easeInOutExpo; the easing
+// dropdown isn't wired through to the shader (same as the other GPU ports).
+// ─────────────────────────────────────────────────────────────────────────────
 
-sketch.setup( () => {
-  sketchState.min = Math.PI;
-  sketchState.max = 0;
+const VERTEX = `
+  uniform float uXOff;
+  uniform float uYOff;
+  uniform float uZOff;
+  uniform float uAngleCycles;
+  uniform float uMin;
+  uniform float uWeightMin;
+  uniform float uWeightMax;
+  uniform float uTranslateXMult;
+  uniform float uTranslateYMult;
+  uniform float uHueRange;
+  uniform float uHueOffset;
+  uniform float uOpacityFactor;
+
+  void computeInstance(
+    float col, float row,
+    out vec2 center, out vec2 halfSize, out vec3 color, out vec4 params
+  ) {
+    float cellSize = (uCellWidth + uCellHeight) * 0.5;
+
+    float angle = perlinNoise(vec3(
+      col / uColumns + uXOff,
+      row / uRows + uYOff,
+      uZOff
+    )) * TAU * uAngleCycles;
+
+    float weight = remap(
+      easeInOutExpo(remap(angle, uMin, TAU, 0.0, 1.0)),
+      0.0,
+      1.0,
+      uWeightMin,
+      uWeightMax
+    );
+    float radius = max(weight * 0.5, 0.0);
+
+    vec2 cellCenter = vec2(
+      col * uCellWidth + uCellWidth * 0.5,
+      row * uCellHeight + uCellHeight * 0.5
+    );
+    center = cellCenter + vec2(
+      cellSize * sin(angle) * uTranslateXMult,
+      cellSize * cos(angle) * uTranslateYMult
+    );
+
+    halfSize = vec2(radius + 1.0);
+    params = vec4(radius, 0.0, 0.0, 0.0);
+
+    float hueIndex = remap(angle, uMin, TAU, -uHueRange, uHueRange);
+    color = paletteRainbow(uHueOffset, hueIndex, uOpacityFactor);
+  }
+`;
+
+const FRAGMENT = `
+  float coverage(vec2 local, vec4 params) {
+    return discMask(local, params.x);
+  }
+`;
+
+const field = createInstancedFieldRenderer( {
+  vertexBody: VERTEX,
+  fragmentBody: FRAGMENT
 } );
 
-sketch.draw( async() => {
+sketch.setup( () => {} );
+
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
@@ -32,61 +98,18 @@ sketch.draw( async() => {
   const rows = options.sketch.grid?.rows ?? 80;
   const columns = options.sketch.grid?.columns ?? 50;
 
-  const gridOptions = {
-    topLeft: p.createVector(
-      0,
-      0
-    ),
-    topRight: p.createVector(
-      p.width,
-      0
-    ),
-    bottomLeft: p.createVector(
-      0,
-      p.height
-    ),
-    bottomRight: p.createVector(
-      p.width,
-      p.height
-    ),
-    rows,
-    columns
-  };
+  const seed = options.sketch.noise?.seed ?? 42;
+  const detail = options.sketch.noise?.detail ?? 4;
+  const falloff = options.sketch.noise?.falloff ?? 0.5;
 
-  const cellWidth = p.width / columns;
-  const cellHeight = p.height / rows;
-  const cellSize = ( cellWidth + cellHeight ) / 2;
-
-  p.noiseSeed( options.sketch.noise?.seed ?? 42 );
-  p.noiseDetail(
-    options.sketch.noise?.detail ?? 4,
-    options.sketch.noise?.falloff ?? 0.5
-  );
-
-  const xOff = p.map(
-    p.sin( t * ( options.sketch.offsets?.xSpeed ?? 1 ) ),
-    -1,
-    1,
-    0,
-    1
-  ) / ( options.sketch.offsets?.xRangeDivisor ?? 2 );
-  const yOff = p.map(
-    p.cos( t * ( options.sketch.offsets?.ySpeed ?? 2 ) ),
-    -1,
-    1,
-    0,
-    1
-  ) / ( options.sketch.offsets?.yRangeDivisor ?? 2 );
-  const zOff = p.map(
-    p.cos( t * ( options.sketch.offsets?.zSpeed ?? 0.5 ) ),
-    -1,
-    1,
-    0,
-    1
-  ) / ( options.sketch.offsets?.zRangeDivisor ?? 2 );
+  const xSpeed = options.sketch.offsets?.xSpeed ?? 1;
+  const ySpeed = options.sketch.offsets?.ySpeed ?? 2;
+  const zSpeed = options.sketch.offsets?.zSpeed ?? 0.5;
+  const xRangeDivisor = options.sketch.offsets?.xRangeDivisor ?? 2;
+  const yRangeDivisor = options.sketch.offsets?.yRangeDivisor ?? 2;
+  const zRangeDivisor = options.sketch.offsets?.zRangeDivisor ?? 2;
 
   const angleCycles = options.sketch.angle?.cycles ?? 4;
-  const weightEasingFn = easing?.[ options.sketch.stroke?.weightEasing ] ?? easing.easeInOutCubic;
   const weightMin = options.sketch.stroke?.weightMin ?? 1;
   const weightMaxScale = options.sketch.stroke?.weightMaxScale ?? 1;
   const hueRange = options.sketch.colors?.hueRange ?? p.PI / 2;
@@ -95,68 +118,104 @@ sketch.draw( async() => {
   const translateXMult = options.sketch.translation?.xMultiplier ?? 1;
   const translateYMult = options.sketch.translation?.yMultiplier ?? 1;
 
-  p.noFill();
+  const cellWidth = p.width / columns;
+  const cellHeight = p.height / rows;
+  const cellSize = ( cellWidth + cellHeight ) / 2;
 
-  await grid.draw(
-    gridOptions,
-    (
-      position, {
-        x, y
-      }
-    ) => {
-      const angle = p.noise(
-        x / columns + xOff,
-        y / rows + yOff,
-        zOff
-      ) * ( p.TAU * angleCycles );
+  const offsetAt = (
+    speed, divisor, useCos, frameT
+  ) => p.map(
+    useCos ? p.cos( frameT * speed ) : p.sin( frameT * speed ),
+    -1,
+    1,
+    0,
+    1
+  ) / divisor;
 
-      sketchState.min = Math.min(
-        sketchState.min,
-        angle
-      );
-      sketchState.max = Math.max(
-        sketchState.max,
-        angle
-      );
-
-      const weight = mappers.fn(
-        angle,
-        sketchState.min,
-        p.TAU,
-        weightMin,
-        cellSize * weightMaxScale,
-        weightEasingFn
-      );
-
-      p.stroke( colors.rainbow( {
-        hueOffset,
-        hueIndex: p.map(
-          angle,
-          sketchState.min,
-          p.TAU,
-          -hueRange,
-          hueRange
-        ),
-        opacityFactor
-      } ) );
-
-      p.push();
-      p.translate(
-        position.x + cellWidth / 2,
-        position.y + cellHeight / 2
-      );
-      p.strokeWeight( weight );
-      p.translate(
-        cellSize * p.sin( angle ) * translateXMult,
-        cellSize * p.cos( angle ) * translateYMult
-      );
-      p.point(
-        0,
-        0
-      );
-      p.pop();
-    }
+  const xOff = offsetAt(
+    xSpeed,
+    xRangeDivisor,
+    false,
+    t
   );
+  const yOff = offsetAt(
+    ySpeed,
+    yRangeDivisor,
+    true,
+    t
+  );
+  const zOff = offsetAt(
+    zSpeed,
+    zRangeDivisor,
+    true,
+    t
+  );
+
+  const range = computeFieldRange( {
+    key: `v2-${ seed }-${ detail }-${ falloff }-${ columns }-${ rows }-${ angleCycles }-${ xSpeed }-${ ySpeed }-${ zSpeed }-${ xRangeDivisor }-${ yRangeDivisor }-${ zRangeDivisor }-${ p.width }-${ p.height }`,
+    columns,
+    rows,
+    prepareFrame: () => {
+      p.noiseSeed( seed );
+      p.noiseDetail(
+        detail,
+        falloff
+      );
+    },
+    sampleAt: (
+      col, row, u
+    ) => {
+      const frameT = u * p.TAU;
+
+      return p.noise(
+        col / columns + offsetAt(
+          xSpeed,
+          xRangeDivisor,
+          false,
+          frameT
+        ),
+        row / rows + offsetAt(
+          ySpeed,
+          yRangeDivisor,
+          true,
+          frameT
+        ),
+        offsetAt(
+          zSpeed,
+          zRangeDivisor,
+          true,
+          frameT
+        )
+      ) * ( p.TAU * angleCycles );
+    }
+  } );
+
+  field.render( {
+    seed,
+    octaves: detail,
+    falloff,
+    columns,
+    rows,
+    background: options.sketch.backgroundColor ?? [
+      0,
+      0,
+      0
+    ],
+    uniforms: {
+      uXOff: xOff,
+      uYOff: yOff,
+      uZOff: zOff,
+      uAngleCycles: angleCycles,
+      uMin: range.min,
+      uWeightMin: weightMin,
+      uWeightMax: cellSize * weightMaxScale,
+      uTranslateXMult: translateXMult,
+      uTranslateYMult: translateYMult,
+      uHueRange: hueRange,
+      uHueOffset: hueOffset,
+      uOpacityFactor: opacityFactor
+    }
+  } );
 
   renderTitle();
 } );
