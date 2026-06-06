@@ -16,8 +16,15 @@ import createNoiseFieldRenderer, {
 // Dots at each cell centre; the weight is an eased mapping of the noise angle
 // and the noise falloff pulses with a bass-like sine. The original normalised
 // against a min accumulated across frames; here it's pre-computed once over the
-// loop (see computeFieldRange) so there's no warm-up. Dots never overlap at the
-// default sizes, so each pixel shades its own cell.
+// loop (see computeFieldRange) so there's no warm-up.
+//
+// NOTE: the original's weight mapping is unclamped, and on the pulse the noise
+// falloff hits 1.0 so the Perlin sum (and thus the angle) explodes far past
+// TAU; easeInOutCubic then extrapolates the weight to canvas-filling sizes.
+// That can't be reproduced by a bounded full-screen pass, so here the angle is
+// clamped into range before easing — the weight stays within [weightMin,
+// weightMax] and dots never overlap. A faithful blown-up version is planned on
+// the instanced-geometry path.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FRAGMENT = `
@@ -48,7 +55,7 @@ const FRAGMENT = `
     float angle = perlinNoise(vec3(nx, ny, uT * uZTimeMult)) * TAU * uAngleCycles;
 
     float weight = remap(
-      easeInOutCubic(remap(angle, uMin, TAU, 0.0, 1.0)),
+      easeInOutCubic(clamp(remap(angle, uMin, TAU, 0.0, 1.0), 0.0, 1.0)),
       0.0,
       1.0,
       uWeightMin,
