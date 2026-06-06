@@ -327,3 +327,47 @@ export function emitQuadraticMidpoint(
     p.endShape();
   }
 }
+
+/**
+ * Draw a single dashed segment between two points. Used by the demonstration
+ * overlay to render the raw polygon as a dashed outline.
+ */
+export function dashedLine(
+  a, b, dash, gap
+) {
+  const p = getP5();
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const length = Math.hypot(
+    dx,
+    dy
+  );
+
+  if ( length === 0 ) {
+    return;
+  }
+
+  const step = Math.max(
+    0.001,
+    dash + Math.max(
+      0,
+      gap
+    )
+  );
+  const ux = dx / length;
+  const uy = dy / length;
+
+  for ( let travelled = 0; travelled < length; travelled += step ) {
+    const end = Math.min(
+      travelled + dash,
+      length
+    );
+
+    p.line(
+      a.x + ux * travelled,
+      a.y + uy * travelled,
+      a.x + ux * end,
+      a.y + uy * end
+    );
+  }
+}

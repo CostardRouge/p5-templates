@@ -18,9 +18,37 @@ export const formValues = {
     hueSpeed: 3.3,
     gradient: true
   },
-  show: {
-    polygon: true,
-    points: true
+  overlay: {
+    polygon: {
+      show: true,
+      weight: 2,
+      color: [
+        255,
+        255,
+        255,
+        70
+      ] as number[],
+      dashed: false,
+      dash: 18,
+      gap: 12
+    },
+    points: {
+      show: true,
+      size: 14,
+      coreRatio: 0.36,
+      color: [
+        255,
+        255,
+        255,
+        255
+      ] as number[],
+      coreColor: [
+        10,
+        10,
+        14,
+        255
+      ] as number[]
+    }
   },
   backgroundColor: [
     0,
@@ -156,17 +184,80 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  show: {
+  overlay: {
     label: "Demonstration overlay",
     component: "nested-object",
     fields: {
       polygon: {
-        label: "Show raw polygon",
-        component: "checkbox"
+        label: "Raw polygon",
+        component: "nested-object",
+        fields: {
+          show: {
+            label: "Show raw polygon",
+            component: "checkbox"
+          },
+          weight: {
+            label: "Weight",
+            component: "slider",
+            min: 0.5,
+            max: 12,
+            step: 0.5
+          },
+          color: {
+            label: "Color",
+            component: "color"
+          },
+          dashed: {
+            label: "Dashed?",
+            component: "checkbox"
+          },
+          dash: {
+            label: "Dash length",
+            component: "slider",
+            min: 1,
+            max: 80,
+            step: 1
+          },
+          gap: {
+            label: "Gap length",
+            component: "slider",
+            min: 0,
+            max: 80,
+            step: 1
+          }
+        }
       },
       points: {
-        label: "Show points",
-        component: "checkbox"
+        label: "Points",
+        component: "nested-object",
+        fields: {
+          show: {
+            label: "Show points",
+            component: "checkbox"
+          },
+          size: {
+            label: "Size (diameter)",
+            component: "slider",
+            min: 0,
+            max: 60,
+            step: 0.5
+          },
+          coreRatio: {
+            label: "Inner core ratio",
+            component: "slider",
+            min: 0,
+            max: 1,
+            step: 0.02
+          },
+          color: {
+            label: "Color",
+            component: "color"
+          },
+          coreColor: {
+            label: "Inner core color",
+            component: "color"
+          }
+        }
       }
     }
   },
