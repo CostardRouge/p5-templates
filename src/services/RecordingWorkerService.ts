@@ -65,6 +65,9 @@ export class RecordingWorkerService {
       this.processRecordingJob.bind( this ),
       {
         connection: Redis.getInstance(),
+        // Must match RecordingQueueService's prefix so the worker consumes from
+        // the same namespaced queue (lets PR previews share one Redis instance).
+        prefix: process.env.BULLMQ_PREFIX || "bull",
         concurrency: this.concurrency,
         stalledInterval: 10_000, // Check for stalled jobs every 10 seconds (more aggressive)
         maxStalledCount: 2, // Allow 2 stalls before giving up

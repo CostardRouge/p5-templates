@@ -1,0 +1,74 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Ephemeral per-PR preview environment (NAS, full fidelity).
+#
+# Launches ONLY the Next.js app container. PostgreSQL, Redis and MinIO are the
+# shared infrastructure already running on the NAS (started by the main
+# docker-compose.yml). Each preview gets its own:
+#   - Postgres database  : pr_${PR_NUMBER}      (created by scripts/preview-up.sh)
+#   - MinIO bucket        : pr-${PR_NUMBER}      (created by scripts/preview-up.sh)
+#   - BullMQ key prefix   : pr-${PR_NUMBER}      (Redis isolation, no extra server)
+#   - Traefik host route  : pr-${PR_NUMBER}.${PREVIEW_DOMAIN}
+#
+# Driven by scripts/preview-up.sh / preview-down.sh. All ${VARS} below are
+# supplied via the environment (see .env.preview.example). Always run with a
+# per-PR project name:  docker compose -p pr-${PR_NUMBER} -f docker-compose.preview.yml up -d --build
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        BACKEND_RECORDING: "true"
+        LIVE_THUMBNAIL: "true"
+        NOTIFICATIONS: "false"
+        NEXT_PUBLIC_GITHUB_REPO_URL: ${NEXT_PUBLIC_GITHUB_REPO_URL:-}
+        NEXT_PUBLIC_SITE_URL: https://pr-${PR_NUMBER}.${PREVIEW_DOMAIN}
+    image: p5-templates-preview:pr-${PR_NUMBER}
+    container_name: p5-preview-pr-${PR_NUMBER}
+    restart: unless-stopped
+    networks:
+      - shared-infra
+      - traefik
+    environment:
+      # ── Per-PR isolated state on shared infrastructure ──────────────────────
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:5432/pr_${PR_NUMBER}
+      - REDIS_URL=redis://${REDIS_HOST:-redis}:6379
+      - BULLMQ_PREFIX=pr-${PR_NUMBER}
+      - S3_ENDPOINT=http://${MINIO_HOST:-minio}:9000
+      - S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT}
+      - S3_BUCKET=pr-${PR_NUMBER}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      # ── App config ──────────────────────────────────────────────────────────
+      - BACKEND_RECORDING=true
+      - LIVE_THUMBNAIL=true
+      - NOTIFICATIONS=false
+      - WORKER_CONCURRENCY=${PREVIEW_WORKER_CONCURRENCY:-1}
+      - NEXT_PUBLIC_SITE_URL=https://pr-${PR_NUMBER}.${PREVIEW_DOMAIN}
+      - NEXT_PUBLIC_GITHUB_REPO_URL=${NEXT_PUBLIC_GITHUB_REPO_URL:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK}
+      - traefik.http.routers.pr-${PR_NUMBER}.rule=Host(`pr-${PR_NUMBER}.${PREVIEW_DOMAIN}`)
+      - traefik.http.routers.pr-${PR_NUMBER}.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}
+      - traefik.http.routers.pr-${PR_NUMBER}.tls=true
+      - traefik.http.services.pr-${PR_NUMBER}.loadbalancer.server.port=3000
+
+networks:
+  # Network shared with the main stack so the app reaches postgres/redis/minio
+  # by their service names. Defaults to the main compose project's network.
+  shared-infra:
+    external: true
+    name: ${SHARED_INFRA_NETWORK}
+  # Traefik's network, so the reverse proxy can route to this container.
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK}

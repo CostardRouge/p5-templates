@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "build": {
+    "env": {
+      "BACKEND_RECORDING": "false",
+      "NOTIFICATIONS": "false",
+      "LIVE_THUMBNAIL": "false",
+      "PREVIEW_ON_HOVER": "false"
+    }
+  }
+}
