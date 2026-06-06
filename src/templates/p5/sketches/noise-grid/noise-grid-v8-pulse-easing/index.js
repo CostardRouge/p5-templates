@@ -6,28 +6,23 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
-import createNoiseFieldRenderer, {
+import {
+  createInstancedFieldRenderer,
   computeFieldRange
 } from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GPU port of "noise grid v8 — pulse easing".
+// GPU port of "noise grid v8 — pulse easing" (instanced).
 //
-// Dots at each cell centre; the weight is an eased mapping of the noise angle
-// and the noise falloff pulses with a bass-like sine. The original normalised
-// against a min accumulated across frames; here it's pre-computed once over the
-// loop (see computeFieldRange) so there's no warm-up.
-//
-// NOTE: the original's weight mapping is unclamped, and on the pulse the noise
-// falloff hits 1.0 so the Perlin sum (and thus the angle) explodes far past
-// TAU; easeInOutCubic then extrapolates the weight to canvas-filling sizes.
-// That can't be reproduced by a bounded full-screen pass, so here the angle is
-// clamped into range before easing — the weight stays within [weightMin,
-// weightMax] and dots never overlap. A faithful blown-up version is planned on
-// the instanced-geometry path.
+// One dot per cell. The weight is an UNCLAMPED eased mapping of the noise angle,
+// and the noise falloff pulses with a bass-like sine — on the pulse the falloff
+// reaches 1.0, the Perlin sum (and the angle) shoots far past TAU, and
+// easeInOutCubic extrapolates the dot to canvas-filling sizes. The instanced
+// renderer draws each cell as its own quad in grid order with alpha blending, so
+// the blown-up discs stack in the original's draw order at any size.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const FRAGMENT = `
+const VERTEX = `
   uniform float uAngleCycles;
   uniform float uYTimeMult;
   uniform float uZTimeMult;
@@ -39,13 +34,11 @@ const FRAGMENT = `
   uniform float uWeightMin;
   uniform float uWeightMax;
 
-  void main() {
-    vec2 frag = vec2(vUv.x * uResolution.x, (1.0 - vUv.y) * uResolution.y);
-
-    float col = floor(frag.x / uCellWidth);
-    float row = floor(frag.y / uCellHeight);
-
-    vec2 cellCenter = vec2(
+  void computeInstance(
+    float col, float row,
+    out vec2 center, out vec2 halfSize, out vec3 color, out vec4 params
+  ) {
+    center = vec2(
       col * uCellWidth + uCellWidth * 0.5,
       row * uCellHeight + uCellHeight * 0.5
     );
@@ -54,30 +47,37 @@ const FRAGMENT = `
     float ny = (row * uCellHeight) / uRows + uT * uYTimeMult;
     float angle = perlinNoise(vec3(nx, ny, uT * uZTimeMult)) * TAU * uAngleCycles;
 
+    // Unclamped, exactly like the original — extrapolates on the pulse.
     float weight = remap(
-      easeInOutCubic(clamp(remap(angle, uMin, TAU, 0.0, 1.0), 0.0, 1.0)),
+      easeInOutCubic(remap(angle, uMin, TAU, 0.0, 1.0)),
       0.0,
       1.0,
       uWeightMin,
       uWeightMax
     );
-    float radius = weight * 0.5;
+    float radius = max(weight * 0.5, 0.0);
 
-    float dist = distance(frag, cellCenter);
-    float mask = 1.0 - smoothstep(radius - 1.0, radius + 1.0, dist);
-
-    if (mask <= 0.0) {
-      gl_FragColor = vec4(0.0);
-      return;
-    }
+    halfSize = vec2(radius + 1.0);
+    params = vec4(radius, 0.0, 0.0, 0.0);
 
     float hueIndex = remap(angle, uMin, TAU, -uHueRange, uHueRange);
-
-    gl_FragColor = vec4(paletteRainbow(uHueOffset, hueIndex, uOpacityFactor), mask);
+    color = paletteRainbow(uHueOffset, hueIndex, uOpacityFactor);
   }
 `;
 
-const field = createNoiseFieldRenderer( FRAGMENT );
+const FRAGMENT = `
+  float coverage(vec2 local, vec4 params) {
+    float radius = params.x;
+    float dist = length(local);
+
+    return 1.0 - smoothstep(radius - 1.0, radius + 1.0, dist);
+  }
+`;
+
+const field = createInstancedFieldRenderer( {
+  vertexBody: VERTEX,
+  fragmentBody: FRAGMENT
+} );
 
 sketch.setup(
   () => {},
@@ -112,7 +112,6 @@ sketch.draw( () => {
   const cellWidth = p.width / columns;
   const cellHeight = p.height / rows;
 
-  // Bass-like pulse drives the noise falloff (per frame).
   const bass = mappers.fn(
     p.sin( t * pulseSpeed ),
     -1,
@@ -122,7 +121,6 @@ sketch.draw( () => {
     easing.easeInOutSine
   );
 
-  // Converged angle range over the whole loop (falloff varies with the pulse).
   const range = computeFieldRange( {
     key: `v8-${ seed }-${ detailLod }-${ columns }-${ rows }-${ angleCycles }-${ yTimeMult }-${ zTimeMult }-${ pulseSpeed }-${ p.width }-${ p.height }`,
     columns,
@@ -162,6 +160,11 @@ sketch.draw( () => {
     falloff: bass,
     columns,
     rows,
+    background: options.sketch.backgroundColor ?? [
+      0,
+      0,
+      0
+    ],
     uniforms: {
       uAngleCycles: angleCycles,
       uYTimeMult: yTimeMult,

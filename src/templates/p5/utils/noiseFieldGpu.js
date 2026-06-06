@@ -416,6 +416,170 @@ function buildProgram(
   return program;
 }
 
+// Cache + fetch a uniform location on the given program.
+function getLocationOn(
+  gl, program, locs, name
+) {
+  if ( !( name in locs ) ) {
+    locs[ name ] = gl.getUniformLocation(
+      program,
+      name
+    );
+  }
+
+  return locs[ name ];
+}
+
+// Set a uniform, inferring its kind from the JS value:
+//   number          -> float
+//   { int: n }       -> int / sampler
+//   [a, b] / [a,b,c] -> vec2 / vec3 / vec4
+function setUniformOn(
+  gl, program, locs, name, value
+) {
+  const loc = getLocationOn(
+    gl,
+    program,
+    locs,
+    name
+  );
+
+  if ( loc === null ) {
+    return;
+  }
+
+  if ( Array.isArray( value ) ) {
+    if ( value.length === 2 ) {
+      gl.uniform2f(
+        loc,
+        value[ 0 ],
+        value[ 1 ]
+      );
+    } else if ( value.length === 3 ) {
+      gl.uniform3f(
+        loc,
+        value[ 0 ],
+        value[ 1 ],
+        value[ 2 ]
+      );
+    } else if ( value.length === 4 ) {
+      gl.uniform4f(
+        loc,
+        value[ 0 ],
+        value[ 1 ],
+        value[ 2 ],
+        value[ 3 ]
+      );
+    }
+
+    return;
+  }
+
+  if ( value !== null && typeof value === "object" && "int" in value ) {
+    gl.uniform1i(
+      loc,
+      value.int
+    );
+
+    return;
+  }
+
+  gl.uniform1f(
+    loc,
+    value
+  );
+}
+
+// (Re)upload the packed permutation table into an existing texture, with
+// NEAREST + CLAMP so each entry is read exactly, never blended.
+function writePerlinTexture(
+  gl, texture, seed
+) {
+  gl.bindTexture(
+    gl.TEXTURE_2D,
+    texture
+  );
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    64,
+    64,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    buildPerlinBytes( seed )
+  );
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MIN_FILTER,
+    gl.NEAREST
+  );
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MAG_FILTER,
+    gl.NEAREST
+  );
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_WRAP_S,
+    gl.CLAMP_TO_EDGE
+  );
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_WRAP_T,
+    gl.CLAMP_TO_EDGE
+  );
+}
+
+// Instancing works natively in WebGL2 and via ANGLE_instanced_arrays in WebGL1.
+function isWebGL2( gl ) {
+  return typeof WebGL2RenderingContext !== "undefined"
+    && gl instanceof WebGL2RenderingContext;
+}
+
+function getInstancingExt( gl ) {
+  return isWebGL2( gl )
+    ? null
+    : gl.getExtension( "ANGLE_instanced_arrays" );
+}
+
+function setDivisor(
+  gl, ext, loc, divisor
+) {
+  if ( ext ) {
+    ext.vertexAttribDivisorANGLE(
+      loc,
+      divisor
+    );
+  } else {
+    gl.vertexAttribDivisor(
+      loc,
+      divisor
+    );
+  }
+}
+
+function drawArraysInstanced(
+  gl, ext, mode, first, count, primCount
+) {
+  if ( ext ) {
+    ext.drawArraysInstancedANGLE(
+      mode,
+      first,
+      count,
+      primCount
+    );
+  } else {
+    gl.drawArraysInstanced(
+      mode,
+      first,
+      count,
+      primCount
+    );
+  }
+}
+
 /**
  * Create a GPU noise-field renderer for one sketch.
  *
@@ -521,114 +685,23 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       state.perlinTexture = gl.createTexture();
     }
 
-    gl.bindTexture(
-      gl.TEXTURE_2D,
-      state.perlinTexture
-    );
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      64,
-      64,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      buildPerlinBytes( seed )
-    );
-
-    // NEAREST + CLAMP so each permutation entry is read exactly, never blended.
-    gl.texParameteri(
-      gl.TEXTURE_2D,
-      gl.TEXTURE_MIN_FILTER,
-      gl.NEAREST
-    );
-    gl.texParameteri(
-      gl.TEXTURE_2D,
-      gl.TEXTURE_MAG_FILTER,
-      gl.NEAREST
-    );
-    gl.texParameteri(
-      gl.TEXTURE_2D,
-      gl.TEXTURE_WRAP_S,
-      gl.CLAMP_TO_EDGE
-    );
-    gl.texParameteri(
-      gl.TEXTURE_2D,
-      gl.TEXTURE_WRAP_T,
-      gl.CLAMP_TO_EDGE
+    writePerlinTexture(
+      gl,
+      state.perlinTexture,
+      seed
     );
 
     state.perlinSeed = seed;
   }
 
-  function location(
-    gl, name
-  ) {
-    if ( !( name in state.locs ) ) {
-      state.locs[ name ] = gl.getUniformLocation(
-        state.program,
-        name
-      );
-    }
-
-    return state.locs[ name ];
-  }
-
-  // Set a uniform, inferring its kind from the JS value:
-  //   number          -> float
-  //   { int: n }       -> int / sampler
-  //   [a, b] / [a,b,c] -> vec2 / vec3 / vec4
   function setUniform(
     gl, name, value
   ) {
-    const loc = location(
+    setUniformOn(
       gl,
-      name
-    );
-
-    if ( loc === null ) {
-      return;
-    }
-
-    if ( Array.isArray( value ) ) {
-      if ( value.length === 2 ) {
-        gl.uniform2f(
-          loc,
-          value[ 0 ],
-          value[ 1 ]
-        );
-      } else if ( value.length === 3 ) {
-        gl.uniform3f(
-          loc,
-          value[ 0 ],
-          value[ 1 ],
-          value[ 2 ]
-        );
-      } else if ( value.length === 4 ) {
-        gl.uniform4f(
-          loc,
-          value[ 0 ],
-          value[ 1 ],
-          value[ 2 ],
-          value[ 3 ]
-        );
-      }
-
-      return;
-    }
-
-    if ( value !== null && typeof value === "object" && "int" in value ) {
-      gl.uniform1i(
-        loc,
-        value.int
-      );
-
-      return;
-    }
-
-    gl.uniform1f(
-      loc,
+      state.program,
+      state.locs,
+      name,
       value
     );
   }
@@ -886,4 +959,467 @@ export function computeFieldRange( {
       };
     }
   );
+}
+
+// ─── Instanced renderer ───────────────────────────────────────────────────────
+// One screen-aligned quad per cell, drawn in grid order with alpha blending, so
+// overlap and painter's-order come for free and primitives can be any size
+// (even canvas-filling). The sketch supplies two GLSL functions:
+//
+//   vertex:   void computeInstance(float col, float row,
+//               out vec2 center, out vec2 halfSize, out vec3 color, out vec4 params)
+//   fragment: float coverage(vec2 local, vec4 params)   // local in pixels, 0..1 mask
+//
+// The GLSL stdlib (perlinNoise, palettes, easings, shapes) is injected into both
+// stages, so computeInstance can sample the noise in the vertex shader.
+
+const INSTANCED_VARYINGS = `
+  varying vec2 vLocal;
+  varying vec3 vColor;
+  varying vec4 vParams;
+`;
+
+const INSTANCED_VERT_HEADER = `
+  attribute vec2 aCorner; // unit quad corner in [-1, 1]
+  attribute vec2 aCell;   // (col, row) per instance
+`;
+
+const INSTANCED_VERT_MAIN = `
+  void main() {
+    vec2 center;
+    vec2 halfSize;
+    vec3 color;
+    vec4 params;
+
+    computeInstance(aCell.x, aCell.y, center, halfSize, color, params);
+
+    vec2 pos = center + aCorner * halfSize;
+
+    vLocal = aCorner * halfSize;
+    vColor = color;
+    vParams = params;
+
+    vec2 ndc = vec2(
+      (pos.x / uResolution.x) * 2.0 - 1.0,
+      1.0 - (pos.y / uResolution.y) * 2.0
+    );
+    gl_Position = vec4(ndc, 0.0, 1.0);
+  }
+`;
+
+const INSTANCED_FRAG_MAIN = `
+  void main() {
+    float m = coverage(vLocal, vParams);
+
+    if (m <= 0.0) {
+      discard;
+    }
+
+    gl_FragColor = vec4(vColor, m);
+  }
+`;
+
+/**
+ * Create an instanced GPU noise-field renderer for one sketch.
+ *
+ * @param {object} sources
+ * @param {string} sources.vertexBody   GLSL defining computeInstance() (+ uniforms)
+ * @param {string} sources.fragmentBody GLSL defining coverage() (+ uniforms)
+ * @returns {{ render: Function }}
+ */
+export function createInstancedFieldRenderer( {
+  vertexBody, fragmentBody
+} ) {
+  const state = {
+    graphics: null,
+    program: null,
+    quadVBO: null,
+    cellVBO: null,
+    cellCount: 0,
+    gridKey: null,
+    perlinTexture: null,
+    perlinSeed: null,
+    locs: {},
+    ctxRef: null,
+    ext: null,
+    aCornerLoc: -1,
+    aCellLoc: -1
+  };
+
+  function ensureGraphics() {
+    if ( !state.graphics ) {
+      const p = getP5();
+
+      state.graphics = graphics.createAutoResizableGraphics(
+        p.width,
+        p.height,
+        "webgl"
+      );
+    }
+
+    return state.graphics;
+  }
+
+  function ensureProgram( gl ) {
+    if ( state.ctxRef === gl && state.program ) {
+      return true;
+    }
+
+    if ( state.program ) {
+      gl.deleteProgram( state.program );
+    }
+
+    const stdlib = COMMON_GLSL + MAPPERS_GLSL + PALETTES_GLSL + SHAPES_GLSL;
+
+    state.program = buildProgram(
+      gl,
+      stdlib + INSTANCED_VARYINGS + INSTANCED_VERT_HEADER + vertexBody + INSTANCED_VERT_MAIN,
+      stdlib + INSTANCED_VARYINGS + fragmentBody + INSTANCED_FRAG_MAIN
+    );
+
+    state.locs = {};
+    state.perlinTexture = null;
+    state.perlinSeed = null;
+    state.cellVBO = null;
+    state.gridKey = null;
+    state.quadVBO = null;
+    state.ctxRef = gl;
+    state.ext = getInstancingExt( gl );
+
+    if ( !state.program ) {
+      return false;
+    }
+
+    if ( !isWebGL2( gl ) && !state.ext ) {
+      console.error( "Instanced rendering needs WebGL2 or ANGLE_instanced_arrays." );
+      return false;
+    }
+
+    state.aCornerLoc = gl.getAttribLocation(
+      state.program,
+      "aCorner"
+    );
+    state.aCellLoc = gl.getAttribLocation(
+      state.program,
+      "aCell"
+    );
+
+    state.quadVBO = gl.createBuffer();
+
+    const quad = new Float32Array( [
+      -1,
+      -1,
+      1,
+      -1,
+      -1,
+      1,
+      -1,
+      1,
+      1,
+      -1,
+      1,
+      1
+    ] );
+
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      state.quadVBO
+    );
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      quad,
+      gl.STATIC_DRAW
+    );
+
+    return true;
+  }
+
+  function ensureCells(
+    gl, columns, rows
+  ) {
+    const key = `${ columns }x${ rows }`;
+
+    if ( state.gridKey === key && state.cellVBO ) {
+      return;
+    }
+
+    const count = columns * rows;
+    const data = new Float32Array( count * 2 );
+    let i = 0;
+
+    for ( let row = 0; row < rows; row++ ) {
+      for ( let col = 0; col < columns; col++ ) {
+        data[ i++ ] = col;
+        data[ i++ ] = row;
+      }
+    }
+
+    if ( !state.cellVBO ) {
+      state.cellVBO = gl.createBuffer();
+    }
+
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      state.cellVBO
+    );
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      data,
+      gl.STATIC_DRAW
+    );
+
+    state.cellCount = count;
+    state.gridKey = key;
+  }
+
+  function uploadPerlinTexture(
+    gl, seed
+  ) {
+    if ( !state.perlinTexture ) {
+      state.perlinTexture = gl.createTexture();
+    }
+
+    writePerlinTexture(
+      gl,
+      state.perlinTexture,
+      seed
+    );
+
+    state.perlinSeed = seed;
+  }
+
+  function setUniform(
+    gl, name, value
+  ) {
+    setUniformOn(
+      gl,
+      state.program,
+      state.locs,
+      name,
+      value
+    );
+  }
+
+  /**
+   * Render one frame and composite it onto the main canvas.
+   *
+   * @param {object} params  same as createNoiseFieldRenderer().render, plus:
+   * @param {number[]} [params.background]  opaque [r,g,b] (0-255) the buffer is
+   *   cleared to, so blended dots composite correctly. Defaults to black.
+   */
+  function render( params ) {
+    const {
+      seed = 42,
+      octaves = 4,
+      falloff = 0.5,
+      columns,
+      rows,
+      center,
+      background = [
+        0,
+        0,
+        0
+      ],
+      uniforms = {}
+    } = params;
+
+    const p = getP5();
+    const g = ensureGraphics();
+    const gl = g.drawingContext;
+
+    if ( !ensureProgram( gl ) ) {
+      return;
+    }
+
+    ensureCells(
+      gl,
+      columns,
+      rows
+    );
+
+    if ( state.perlinSeed !== seed ) {
+      uploadPerlinTexture(
+        gl,
+        seed
+      );
+    }
+
+    const width = g.width;
+    const height = g.height;
+
+    gl.viewport(
+      0,
+      0,
+      gl.drawingBufferWidth,
+      gl.drawingBufferHeight
+    );
+    gl.disable( gl.DEPTH_TEST );
+    gl.enable( gl.BLEND );
+    gl.blendFunc(
+      gl.SRC_ALPHA,
+      gl.ONE_MINUS_SRC_ALPHA
+    );
+
+    // Clear to the opaque background so blended dots composite correctly
+    // (blending over a transparent buffer would premultiply the colours).
+    gl.clearColor(
+      ( background[ 0 ] ?? 0 ) / 255,
+      ( background[ 1 ] ?? 0 ) / 255,
+      ( background[ 2 ] ?? 0 ) / 255,
+      1
+    );
+    gl.clear( gl.COLOR_BUFFER_BIT );
+
+    gl.useProgram( state.program );
+
+    setUniform(
+      gl,
+      "uResolution",
+      [
+        width,
+        height
+      ]
+    );
+    setUniform(
+      gl,
+      "uCenter",
+      center ?? [
+        width / 2,
+        height / 2
+      ]
+    );
+    setUniform(
+      gl,
+      "uColumns",
+      columns
+    );
+    setUniform(
+      gl,
+      "uRows",
+      rows
+    );
+    setUniform(
+      gl,
+      "uCellWidth",
+      width / columns
+    );
+    setUniform(
+      gl,
+      "uCellHeight",
+      height / rows
+    );
+    setUniform(
+      gl,
+      "uOctaves",
+      {
+        int: Math.min(
+          octaves,
+          MAX_OCTAVES
+        )
+      }
+    );
+    setUniform(
+      gl,
+      "uFalloff",
+      falloff
+    );
+
+    gl.activeTexture( gl.TEXTURE0 );
+    gl.bindTexture(
+      gl.TEXTURE_2D,
+      state.perlinTexture
+    );
+    setUniform(
+      gl,
+      "uPerlin",
+      {
+        int: 0
+      }
+    );
+
+    for ( const [
+      name,
+      value
+    ] of Object.entries( uniforms ) ) {
+      setUniform(
+        gl,
+        name,
+        value
+      );
+    }
+
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      state.quadVBO
+    );
+    gl.enableVertexAttribArray( state.aCornerLoc );
+    gl.vertexAttribPointer(
+      state.aCornerLoc,
+      2,
+      gl.FLOAT,
+      false,
+      0,
+      0
+    );
+    setDivisor(
+      gl,
+      state.ext,
+      state.aCornerLoc,
+      0
+    );
+
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      state.cellVBO
+    );
+    gl.enableVertexAttribArray( state.aCellLoc );
+    gl.vertexAttribPointer(
+      state.aCellLoc,
+      2,
+      gl.FLOAT,
+      false,
+      0,
+      0
+    );
+    setDivisor(
+      gl,
+      state.ext,
+      state.aCellLoc,
+      1
+    );
+
+    drawArraysInstanced(
+      gl,
+      state.ext,
+      gl.TRIANGLES,
+      0,
+      6,
+      state.cellCount
+    );
+
+    // Restore GL state so p5 keeps working with the buffer.
+    gl.disableVertexAttribArray( state.aCornerLoc );
+    gl.disableVertexAttribArray( state.aCellLoc );
+    setDivisor(
+      gl,
+      state.ext,
+      state.aCellLoc,
+      0
+    );
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      null
+    );
+    g.resetShader();
+
+    p.image(
+      g,
+      0,
+      0
+    );
+  }
+
+  return {
+    render
+  };
 }
