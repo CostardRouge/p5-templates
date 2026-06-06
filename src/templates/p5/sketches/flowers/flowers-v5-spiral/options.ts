@@ -1,73 +1,6 @@
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
-const EASING_OPTIONS = [
-  {
-    label: "Linear",
-    value: "linear"
-  },
-  {
-    label: "Ease in quad",
-    value: "easeInQuad"
-  },
-  {
-    label: "Ease out quad",
-    value: "easeOutQuad"
-  },
-  {
-    label: "Ease in/out quad",
-    value: "easeInOutQuad"
-  },
-  {
-    label: "Ease in cubic",
-    value: "easeInCubic"
-  },
-  {
-    label: "Ease out cubic",
-    value: "easeOutCubic"
-  },
-  {
-    label: "Ease in/out cubic",
-    value: "easeInOutCubic"
-  },
-  {
-    label: "Ease in expo",
-    value: "easeInExpo"
-  },
-  {
-    label: "Ease out expo",
-    value: "easeOutExpo"
-  },
-  {
-    label: "Ease in/out expo",
-    value: "easeInOutExpo"
-  },
-  {
-    label: "Ease in elastic",
-    value: "easeInElastic"
-  },
-  {
-    label: "Ease out elastic",
-    value: "easeOutElastic"
-  },
-  {
-    label: "Ease in/out elastic",
-    value: "easeInOutElastic"
-  },
-  {
-    label: "Ease in bounce",
-    value: "easeInBounce"
-  },
-  {
-    label: "Ease out bounce",
-    value: "easeOutBounce"
-  },
-  {
-    label: "Ease in/out bounce",
-    value: "easeInOutBounce"
-  }
-];
-
 export const formValues = {
   timeScale: 2.2,
   path: {
@@ -134,8 +67,7 @@ export const formConfiguration: Record<string, any> = {
       },
       easing: {
         label: "Anchor easing",
-        component: "select",
-        options: EASING_OPTIONS
+        component: "easing"
       }
     }
   },

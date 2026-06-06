@@ -204,6 +204,20 @@ export const fontNames = [
   "waverseVariable"
 ];
 
+// Reusable select options derived from the canonical sources above.
+// Import these in template options.ts files instead of hardcoding arrays.
+export const fontSelectOptions: SelectOption[] = fontNames.map( ( fontName ) => ( {
+  value: fontName,
+  label: fontName
+} ) );
+
+// Blend modes come from the `Blend` zod enum (single source of truth in
+// sketch.types.ts). This exposes them as ready-to-use select options.
+export const blendSelectOptions: SelectOption[] = Blend.options.map( ( blendOption ) => ( {
+  value: blendOption,
+  label: blendOption
+} ) );
+
 const visualSelectOptions = [
   {
     label: "Neon graffiti",
@@ -292,18 +306,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     blend: {
       label: "Blend",
       component: "select",
-      options: Blend.options.map( ( blendOption ) => ( {
-        value: blendOption,
-        label: blendOption
-      } ) )
+      options: blendSelectOptions
     },
     font: {
       label: "font",
       component: "select",
-      options: fontNames.map( ( fontName ) => ( {
-        value: fontName,
-        label: fontName
-      } ) )
+      options: fontSelectOptions
     },
     topLeft: {
       label: "Top left",
@@ -362,10 +370,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     font: {
       label: "Font",
       component: "select",
-      options: fontNames.map( ( fontName ) => ( {
-        value: fontName,
-        label: fontName
-      } ) )
+      options: fontSelectOptions
     },
     size: {
       label: "Size",
@@ -384,10 +389,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     blend: {
       label: "Blend",
       component: "select",
-      options: Blend.options.map( ( blendOption ) => ( {
-        value: blendOption,
-        label: blendOption
-      } ) )
+      options: blendSelectOptions
     },
     showCursor: {
       label: "Blinking cursor",
@@ -462,10 +464,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     font: {
       label: "font",
       component: "select",
-      options: fontNames.map( ( fontName ) => ( {
-        value: fontName,
-        label: fontName
-      } ) )
+      options: fontSelectOptions
     },
     strokeWeight: {
       label: "Stroke weight",
@@ -539,10 +538,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     blend: {
       label: "Blend",
       component: "select",
-      options: Blend.options.map( ( blendOption ) => ( {
-        value: blendOption,
-        label: blendOption
-      } ) )
+      options: blendSelectOptions
     }
     // We can add more fields here and they will auto-generate
   },

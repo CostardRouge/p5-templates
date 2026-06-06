@@ -9,22 +9,22 @@ export const formValues = {
   noise: {
     seed: 3437,
     detail: 1,
-    falloff: 1,
+    falloff: 0,
     yTimeMultiplier: 0.75,
     zSpeed: 0.698
   },
   angle: {
-    cycles: 1.8
+    cycles: 3.5
   },
   stick: {
-    lengthScaleMin: 5,
-    lengthScaleMax: 5,
-    strokeWeight: 11
+    lengthScaleMin: 1.88,
+    lengthScaleMax: 3.31,
+    strokeWeight: 5.5
   },
   colors: {
-    hueRange: 3.14,
+    hueRange: 2.4,
     hueOffset: -0.171592653589793,
-    opacityMax: 1.7,
+    opacityMax: 2.2,
     opacityMin: 0.1
   },
   backgroundColor: [

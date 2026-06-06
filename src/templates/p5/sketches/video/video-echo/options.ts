@@ -1,3 +1,7 @@
+import {
+  blendSelectOptions
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+
 // Default values only
 export const formValues = {
   videos: [
@@ -21,7 +25,7 @@ export const formValues = {
   zoom: 1.1,
   rotation: 0,
   blur: 5,
-  blendMode: "BLEND",
+  blendMode: "source-over",
 
   backgroundColor: [
     10,
@@ -31,21 +35,6 @@ export const formValues = {
 };
 
 // UI configuration only
-const blendModeOptions = [
-  "BLEND",
-  "ADD",
-  "DARKEST",
-  "LIGHTEST",
-  "DIFFERENCE",
-  "EXCLUSION",
-  "MULTIPLY",
-  "SCREEN",
-  "REPLACE"
-].map( ( value ) => ( {
-  value,
-  label: value
-} ) );
-
 export const formConfiguration: Record<string, any> = {
   videos: {
     component: "asset-stack",
@@ -88,7 +77,7 @@ export const formConfiguration: Record<string, any> = {
   blendMode: {
     component: "select",
     label: "Blend mode",
-    options: blendModeOptions
+    options: blendSelectOptions
   },
 
   backgroundColor: {

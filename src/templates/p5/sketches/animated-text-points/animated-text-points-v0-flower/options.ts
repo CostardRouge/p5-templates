@@ -6,10 +6,10 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   shape: {
-    text: "*+",
-    font: "serif",
-    size: 0.88,
-    sampleFactor: 0.5,
+    text: "flowers",
+    font: "martian",
+    size: 0.64,
+    sampleFactor: 0.33,
     simplifyThreshold: 0
   },
   morph: {
@@ -17,15 +17,15 @@ export const formValues = {
     easing: "easeInOutExpo"
   },
   flower: {
-    petals: 7,
-    size: 40,
-    positionScale: 2,
+    petals: 4,
+    size: 36,
+    positionScale: 1.7,
     rotationSpeed: 1,
-    rotationPerPoint: 7,
+    rotationPerPoint: 20,
     keepSize: false
   },
   grid: {
-    show: false,
+    show: true,
     columns: 10,
     rows: 10,
     depth: -120
@@ -39,7 +39,7 @@ export const formValues = {
     opacityFrequency: 100,
     opacitySpeed: 5
   },
-  strokeWeight: 2,
+  strokeWeight: 12,
   backgroundColor: [
     0,
     0,

@@ -1,4 +1,5 @@
 import {
+  blendSelectOptions,
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 
@@ -16,7 +17,7 @@ export const formValues = {
     mode: "lines-and-points",
     skipFactor: 9,
     pointSize: 56,
-    blendMode: "BLEND"
+    blendMode: "source-over"
   },
   stroke: {
     weightMin: 7.5,
@@ -66,21 +67,6 @@ const paletteOptions = [
   "purpleSimple",
   "green",
   "black"
-].map( ( value ) => ( {
-  value,
-  label: value
-} ) );
-
-const blendModeOptions = [
-  "BLEND",
-  "ADD",
-  "DARKEST",
-  "LIGHTEST",
-  "DIFFERENCE",
-  "EXCLUSION",
-  "MULTIPLY",
-  "SCREEN",
-  "REPLACE"
 ].map( ( value ) => ( {
   value,
   label: value
@@ -179,7 +165,7 @@ export const formConfiguration: Record<string, any> = {
       blendMode: {
         label: "Blend mode",
         component: "select",
-        options: blendModeOptions
+        options: blendSelectOptions
       }
     }
   },

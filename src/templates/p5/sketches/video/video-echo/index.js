@@ -75,7 +75,7 @@ sketch.draw( () => {
     0,
     cfg.blur ?? 0
   );
-  const blendName = cfg.blendMode ?? "BLEND";
+  const blendName = cfg.blendMode ?? p.BLEND;
 
   // Snapshot the previous accumulation, then re-inject it transformed and
   // dimmed by `decay`. The ping-pong avoids drawing a buffer onto itself.
@@ -126,7 +126,7 @@ sketch.draw( () => {
     };
 
     trail.push();
-    trail.blendMode( p[ blendName ] ?? p.BLEND );
+    trail.blendMode( blendName );
 
     items.forEach( ( item ) => {
       const element = item.source?.element;
