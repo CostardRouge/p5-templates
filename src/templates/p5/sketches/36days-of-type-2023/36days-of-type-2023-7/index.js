@@ -7,7 +7,7 @@ import cache from "@/p5/utils/cache.js";
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import events from "@/p5/utils/events.js";
-import grid from "@/p5/utils/grid.js";
+import gridMask from "@/p5/utils/gridMask.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
@@ -52,106 +52,55 @@ sketch.setup( async( {
   await addScreenPositionFunction( sketchState.shape.graphics );
 } );
 
-function getAlphaFromMask( {
-  position: {
-    x, y
-  },
-  maskPoints,
-  distance = options.sketch?.mask?.distance ?? 0.015
-} ) {
-  const p = getP5();
-
-  const normalizedPosition = p.createVector(
-    p.map(
-      x,
-      -p.width / 2,
-      p.width / 2,
-      0,
-      1
-    ),
-    p.map(
-      y,
-      -p.height / 2,
-      p.height / 2,
-      0,
-      1
-    )
-  );
-
-  return maskPoints.reduce(
-    (
-      result, pointPosition
-    ) => {
-      if ( true === result ) {
-        return result;
-      }
-
-      const normalizedPointPosition = p.createVector(
-        p.map(
-          pointPosition.x,
-          -p.width / 2,
-          p.width / 2,
-          0,
-          1
-        ),
-        p.map(
-          pointPosition.y,
-          -p.height / 2,
-          p.height / 2,
-          0,
-          1
-        )
-      );
-
-      const d = normalizedPointPosition.dist( normalizedPosition );
-
-      return Math.max(
-        result,
-        d > 0 && d < distance
-      );
-    },
-    0
-  );
-}
-
-function createGridAlphaPoints(
+// Multi-layer boolean mask delegated to the shared gridMask utility. Each font
+// layer's per-cell field is computed once (spatial-hash accelerated) and
+// cached; the assembled point list (including the per-cell random offset) is
+// cached too so it stays stable across frames. Behaviour is identical to the
+// previous inline reduction.
+async function createGridAlphaPoints(
   gridOptions, textPointsMatrix, cacheKey
 ) {
-  return cache.store(
-    `alpha-points-matrix+${ cacheKey }`,
-    () => {
-      const alphaPoints = [];
+  const storeKey = `alpha-points-matrix+${ cacheKey }`;
+  const cached = cache.get( storeKey );
 
-      grid.draw(
-        gridOptions,
-        ( position ) => {
-          const alphaLayers = [];
+  if ( cached !== undefined ) {
+    return cached;
+  }
 
-          for ( const points of textPointsMatrix ) {
-            const alpha = getAlphaFromMask( {
-              position,
-              maskPoints: points
-            } );
+  const distance = options.sketch?.mask?.distance ?? 0.015;
+  const fields = [];
 
-            alphaLayers.push( alpha );
-          }
+  for ( let i = 0; i < textPointsMatrix.length; i++ ) {
+    fields.push( await gridMask.field( {
+      gridOptions,
+      points: textPointsMatrix[ i ],
+      signature: `${ cacheKey }+${ i }`,
+      distance,
+      space: "normalized",
+      output: "boolean",
+      excludeZeroDistance: true
+    } ) );
+  }
 
-          if ( alphaLayers.length > 0 ) {
-            const randomPosition = _loadedP5Class?.Vector.random3D()
-              .mult( options.sketch?.animation?.randomDistance );
+  const {
+    cells
+  } = fields[ 0 ];
 
-            alphaPoints.push( {
-              position,
-              randomPosition,
-              layers: alphaLayers
-            } );
-          }
-        }
-      );
+  const alphaPoints = cells.map( (
+    cell, index
+  ) => ( {
+    position: cell.position,
+    randomPosition: _loadedP5Class?.Vector.random3D()
+      .mult( options.sketch?.animation?.randomDistance ),
+    layers: fields.map( ( field ) => field.alpha[ index ] )
+  } ) );
 
-      return alphaPoints;
-    }
+  cache.set(
+    storeKey,
+    alphaPoints
   );
+
+  return alphaPoints;
 }
 
 const getBackgroundColor = () =>
@@ -161,7 +110,7 @@ const getBackgroundColor = () =>
     225
   ];
 
-sketch.draw( () => {
+sketch.draw( async() => {
   const p = getP5();
 
   p.background( ...getBackgroundColor() );
@@ -227,7 +176,7 @@ sketch.draw( () => {
 
   const randomDistance = options.sketch?.animation?.randomDistance ?? 1500;
 
-  const alphaPoints = createGridAlphaPoints(
+  const alphaPoints = await createGridAlphaPoints(
     gridOptions,
     textPointsMatrix,
     cache.key(

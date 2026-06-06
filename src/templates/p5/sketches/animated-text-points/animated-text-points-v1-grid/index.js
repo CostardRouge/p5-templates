@@ -7,8 +7,7 @@ import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import cache from "@/p5/utils/cache.js";
-import grid from "@/p5/utils/grid.js";
+import gridMask from "@/p5/utils/gridMask.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup(
@@ -92,91 +91,66 @@ sketch.draw( async() => {
   const palette = color.palette ?? "purpleSimple";
   const colorFunction = colors?.[ palette ] ?? colors.purpleSimple;
 
-  const fontFamily = font.font?.names?.fontFamily?.en ?? "unknown";
-
   p.noStroke();
 
-  await grid.draw(
+  // Per-cell alpha field computed once (spatial-hash accelerated) and cached
+  // per letter via the shared gridMask utility. Pixel-space falloff, identical
+  // to the previous inline reduction.
+  const field = await gridMask.field( {
     gridOptions,
-    (
-      cellVector, {
-        x, y
-      }
-    ) => {
-      const alphaKey = cache.key(
-        x,
-        y,
-        columns,
-        rows,
-        fontFamily,
-        currentLetter,
-        sampleFactor,
-        Math.round( distanceThreshold ),
-        "alpha"
-      );
-      const alpha = cache.store(
-        alphaKey,
-        () => points.reduce(
-          (
-            result, point
-          ) => {
-            if ( result >= 255 ) {
-              return result;
-            }
+    points,
+    signature: string.textPointsSignature( {
+      text: currentLetter,
+      font,
+      size,
+      sampleFactor,
+      simplifyThreshold
+    } ),
+    distance: distanceThreshold,
+    space: "pixel",
+    output: "falloff",
+    alphaRange: [
+      0,
+      255
+    ]
+  } );
 
-            return Math.max(
-              result,
-              ~~p.map(
-                point.dist( cellVector ),
-                0,
-                distanceThreshold,
-                255,
-                0,
-                true
-              )
-            );
-          },
-          0
-        )
-      );
+  for ( const index of field.nonZero ) {
+    const cellVector = field.cells[ index ].position;
+    const alpha = field.alpha[ index ];
 
-      if ( !alpha ) {
-        return;
-      }
+    const tint = colorFunction( {
+      hueOffset: animation.angle * ( color.hueOffsetSpeed ?? 0 ),
+      hueIndex: mappers.fn(
+        cellVector.x / columns + cellVector.y / rows,
+        0,
+        2,
+        -p.PI,
+        p.PI
+      ) * ( color.hueMultiplier ?? 0 ),
+      opacityFactor: color.opacityFactor ?? 1
+    } );
 
-      const tint = colorFunction( {
-        hueOffset: animation.angle * ( color.hueOffsetSpeed ?? 0 ),
-        hueIndex: mappers.fn(
-          x / columns + y / rows,
-          0,
-          2,
-          -p.PI,
-          p.PI
-        ) * ( color.hueMultiplier ?? 0 ),
-        opacityFactor: color.opacityFactor ?? 1
-      } );
-
-      const {
-        levels: [
-          r,
-          g,
-          b
-        ]
-      } = tint;
-
-      p.fill(
+    const {
+      levels: [
         r,
         g,
-        b,
-        alpha
-      );
-      p.circle(
-        cellVector.x,
-        cellVector.y,
-        dotSize
-      );
-    }
-  );
+        b
+      ]
+    } = tint;
+
+    p.fill(
+      r,
+      g,
+      b,
+      alpha
+    );
+    p.circle(
+      cellVector.x,
+      cellVector.y,
+      dotSize
+    );
+  }
 
   renderTitle();
 } );

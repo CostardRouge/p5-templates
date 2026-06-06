@@ -265,6 +265,27 @@ const string = {
 
     return box;
   },
+  // Stable signature for a set of text points, independent of `position`.
+  // Mirrors the raw-points cache key used by getTextPoints so callers (e.g.
+  // gridMask) can key their own caches on the same geometry without drift.
+  textPointsSignature: ( {
+    text,
+    size,
+    font,
+    sampleFactor = 1,
+    simplifyThreshold = 0
+  } ) => {
+    const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
+
+    return cache.key(
+      text,
+      fontFamily,
+      "text-points-raw",
+      sampleFactor,
+      size,
+      simplifyThreshold
+    );
+  },
   getTextPoints: ( {
     text,
     size,
@@ -281,19 +302,16 @@ const string = {
       return [];
     }
 
-    const fontFamily = font.font?.names?.fontFamily?.en || "unknown";
-
     // This cache key is for the RAW, (0,0)-based points.
     // It now correctly includes *all* parameters that define the geometry.
     // 'position' is intentionally EXCLUDED from this key.
-    const rawPointsCacheKey = cache.key(
+    const rawPointsCacheKey = string.textPointsSignature( {
       text,
-      fontFamily,
-      "text-points-raw", // More specific key name
-      sampleFactor,
       size,
-      simplifyThreshold // BUG FIX: Added missing parameter
-    );
+      font,
+      sampleFactor,
+      simplifyThreshold
+    } );
 
     // Get or create the raw points and their center.
     // This is the computationally expensive part, so we cache it.
