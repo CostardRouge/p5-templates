@@ -33,6 +33,10 @@ import runtime, {
 import GridCascade from "@/gsap/sketches/photo/grid-cascade/index.jsx";
 import Coverflow3d from "@/gsap/sketches/photo/coverflow-3d/index.jsx";
 import StackShuffle from "@/gsap/sketches/photo/stack-shuffle/index.jsx";
+import MarqueeRows from "@/gsap/sketches/photo/marquee-rows/index.jsx";
+import SplitColumns from "@/gsap/sketches/photo/split-columns/index.jsx";
+import GridWave from "@/gsap/sketches/photo/grid-wave/index.jsx";
+import MosaicMorph from "@/gsap/sketches/photo/mosaic-morph/index.jsx";
 
 const DURATION = 6;
 
@@ -160,6 +164,48 @@ function snapshot( elements: Element[] ) {
   } );
 }
 
+/**
+ * Seamless check for continuously-scrolling tracks: the net travel over a loop
+ * must be a whole number of content copies (`data-loop-distance`), so the wrap
+ * is visually identical even though the transform string differs.
+ */
+function trackScrollSeamless(
+  selector: string,
+  axis: "x" | "y"
+) {
+  return (
+    stage: HTMLElement, tl: gsap.core.Timeline
+  ) => {
+    const tracks = Array.from( stage.querySelectorAll<HTMLElement>( selector ) );
+
+    expect( tracks.length ).toBeGreaterThan( 0 );
+
+    tracks.forEach( ( track ) => {
+      const distance = Number( track.dataset.loopDistance );
+
+      tl.time( tl.duration() );
+      const end = gsap.getProperty(
+        track,
+        axis
+      ) as number;
+
+      tl.time( 0 );
+      const start = gsap.getProperty(
+        track,
+        axis
+      ) as number;
+
+      const mod = ( ( ( end - start ) % distance ) + distance ) % distance;
+      const wrapDelta = Math.min(
+        mod,
+        distance - mod
+      );
+
+      expect( wrapDelta ).toBeLessThan( 0.5 );
+    } );
+  };
+}
+
 afterEach( () => {
   cleanup();
   document.body.innerHTML = "";
@@ -227,6 +273,56 @@ describe(
           maxCards: 5
         } ),
         selector: ".ss-card"
+      },
+      {
+        name: "marquee-rows",
+        Component: MarqueeRows,
+        options: baseOptions( {
+          rows: 3,
+          baseSpeed: 1,
+          speedStep: 1
+        } ),
+        selector: ".mr-track",
+        seamless: trackScrollSeamless(
+          ".mr-track",
+          "x"
+        )
+      },
+      {
+        name: "split-columns",
+        Component: SplitColumns,
+        options: baseOptions( {
+          columns: 3,
+          baseSpeed: 1,
+          speedStep: 1
+        } ),
+        selector: ".sc-track",
+        seamless: trackScrollSeamless(
+          ".sc-track",
+          "y"
+        )
+      },
+      {
+        name: "grid-wave",
+        Component: GridWave,
+        options: baseOptions( {
+          grid: {
+            rows: 3,
+            columns: 3
+          }
+        } ),
+        selector: ".gw-cell"
+      },
+      {
+        name: "mosaic-morph",
+        Component: MosaicMorph,
+        options: baseOptions( {
+          grid: {
+            rows: 3,
+            columns: 3
+          }
+        } ),
+        selector: ".mm-tile"
       }
     ];
 
@@ -268,8 +364,9 @@ describe(
         expect( targets.length ).toBeGreaterThan( 0 );
 
         // Render mid first, then start: GSAP only flushes styles when the
-        // playhead time actually changes, so going 0.5 → 0 forces both renders.
-        tl.time( DURATION * 0.5 );
+        // playhead time actually changes, so going mid → 0 forces both renders.
+        // 0.3 (rather than 0.5) avoids sampling a sine wave exactly on a node.
+        tl.time( DURATION * 0.3 );
         const atMid = snapshot( targets );
 
         tl.time( 0 );

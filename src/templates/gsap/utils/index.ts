@@ -19,3 +19,4 @@ export * from "./easing";
 export * from "./images";
 export * from "./style";
 export * from "./random";
+export * from "./motion";
