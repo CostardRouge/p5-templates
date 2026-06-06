@@ -2530,5 +2530,41 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-05T05:31:06.977Z",
     "ctime": "2026-05-30T21:00:36.480Z"
+  },
+  {
+    "name": "grid-cascade",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-06T06:42:47.904Z",
+    "ctime": "2026-06-06T06:42:47.904Z"
+  },
+  {
+    "name": "coverflow-3d",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-06T06:42:47.904Z",
+    "ctime": "2026-06-06T06:42:47.904Z"
+  },
+  {
+    "name": "stack-shuffle",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-06T06:42:47.904Z",
+    "ctime": "2026-06-06T06:42:47.904Z"
   }
 ]
