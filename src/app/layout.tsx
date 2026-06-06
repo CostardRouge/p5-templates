@@ -9,6 +9,7 @@ import {
   Suspense
 } from "react";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
 import MenuBar from "@/components/MenuBar";
 import {
   MenuBarSlotProvider
@@ -148,6 +149,9 @@ export default function RootLayout( {
       </head>
       <body>
         <GoogleAnalytics />
+        <Suspense>
+          <GoogleAnalyticsTracker />
+        </Suspense>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
