@@ -6,21 +6,21 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   shape: {
-    text: "*text-points-on-grid-cells",
-    font: "serif",
-    size: 0.92,
-    sampleFactor: 0.1,
+    text: "xyz",
+    font: "waverseVariable",
+    size: 1.1,
+    sampleFactor: 0.23,
     simplifyThreshold: 0,
     morphSpeed: 2
   },
   grid: {
     proportional: true,
-    columns: 30,
-    rows: 50
+    columns: 54,
+    rows: 75
   },
   dot: {
-    size: 20,
-    distanceThreshold: 0.037
+    size: 17,
+    distanceThreshold: 0.041
   },
   color: {
     palette: "purpleSimple",

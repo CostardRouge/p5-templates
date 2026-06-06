@@ -8,8 +8,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import cache from "@/p5/utils/cache.js";
-import grid from "@/p5/utils/grid.js";
+import gridMask from "@/p5/utils/gridMask.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup(
@@ -50,7 +49,9 @@ sketch.draw( async() => {
   const columns = gridOpts.columns ?? 40;
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
-  const fontFamily = font.font?.names?.fontFamily?.en ?? "unknown";
+  const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
+  const letterSpeed = options.sketch?.letters?.speed ?? 1;
+  const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
 
   const gridOptions = {
     topLeft: p.createVector(
@@ -92,147 +93,148 @@ sketch.draw( async() => {
   const opacityMax = color.opacityMax ?? 2.1;
   const opacityMin = color.opacityMin ?? 1;
 
-  await grid.draw(
-    gridOptions,
-    (
-      cellVector, {
-        x, y
-      }
-    ) => {
-      const xSign = p.sin( animation.angle );
-      const ySign = p.cos( animation.angle );
-      const switchingIndex = xSign * ( x / columns ) + ySign * ( y / rows ) + animation.angle;
-      const currentLetter = mappers.circularIndex(
-        switchingIndex,
-        word
-      );
+  // Each cell can mask a different letter, so precompute one alpha field per
+  // distinct letter of the word (each cached + spatial-hash accelerated) and
+  // look up the cell's alpha by index. Identical to the previous per-cell
+  // reduction, without recomputing distances every frame.
+  const uniqueLetters = Array.from( new Set( word ) );
+  const fieldByLetter = new Map();
 
-      const points = string.getTextPoints( {
-        text: currentLetter,
-        position: p.createVector(
+  for ( const letter of uniqueLetters ) {
+    const letterPoints = string.getTextPoints( {
+      text: letter,
+      position: p.createVector(
+        0,
+        0
+      ),
+      size: letterSize,
+      font,
+      sampleFactor,
+      simplifyThreshold
+    } );
+
+    fieldByLetter.set(
+      letter,
+      await gridMask.field( {
+        gridOptions,
+        points: letterPoints,
+        signature: string.textPointsSignature( {
+          text: letter,
+          font,
+          size: letterSize,
+          sampleFactor,
+          simplifyThreshold
+        } ),
+        distance: maskDistance,
+        space: "pixel",
+        output: "falloff",
+        alphaRange: [
           0,
-          0
-        ),
-        size: letterSize,
-        font,
-        sampleFactor,
-        simplifyThreshold
-      } );
+          255
+        ]
+      } )
+    );
+  }
 
-      const alphaKey = cache.key(
-        x,
-        y,
-        columns,
-        rows,
-        fontFamily,
-        currentLetter,
-        sampleFactor,
-        "alpha"
-      );
-      const alpha = cache.store(
-        alphaKey,
-        () => points.reduce(
-          (
-            result, point
-          ) => {
-            if ( result >= 255 ) {
-              return result;
-            }
+  const cells = fieldByLetter.get( uniqueLetters[ 0 ] ).cells;
 
-            return Math.max(
-              result,
-              ~~p.map(
-                point.dist( cellVector ),
-                0,
-                cellSize,
-                255,
-                0,
-                true
-              )
-            );
-          },
-          0
-        )
-      );
+  cells.forEach( (
+    cell, cellIndex
+  ) => {
+    const cellVector = cell.position;
+    const {
+      x, y
+    } = cell;
 
-      if ( !alpha ) {
-        return;
-      }
+    const xSign = p.sin( animation.angle );
+    const ySign = p.cos( animation.angle );
+    const spatialTerm = xSign * ( x / columns ) + ySign * ( y / rows );
+    const switchingIndex =
+      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
+    const currentLetter = mappers.circularIndex(
+      switchingIndex,
+      word
+    );
 
-      const hue = p.noise(
-        x / columns,
-        y / rows + animation.angle / 4
-      );
-      const tint = colorFunction( {
-        hueOffset: 0,
-        hueIndex: p.map(
-          hue,
-          0,
-          1,
-          -p.PI,
-          p.PI
-        ) * hueIndexMultiplier,
-        opacityFactor: p.map(
-          hue,
-          0,
-          1,
-          opacityMax,
-          opacityMin
-        )
-      } );
+    const alpha = fieldByLetter.get( currentLetter ).alpha[ cellIndex ];
 
-      if ( useNormalMaterial ) {
-        p.normalMaterial();
-      }
-      p.stroke( tint );
-
-      p.push();
-
-      p.rotateX( p.map(
-        p.sin( animation.angle * warpSpeed - y / warpRowDivisorA ),
-        -1,
-        1,
-        -p.PI,
-        p.PI
-      ) * warpAmount );
-      p.rotateY( p.map(
-        p.cos( animation.angle * warpSpeed + x / warpColDivisorA ),
-        -1,
-        1,
-        -p.PI,
-        p.PI
-      ) * warpAmount );
-
-      p.rotateX( mappers.fn(
-        p.cos( animation.angle * warpSpeed - y / warpRowDivisorB ),
-        -1,
-        1,
-        -p.PI,
-        p.PI,
-        easing.easeInOutQuart
-      ) * warpInnerAmount );
-      p.rotateY( mappers.fn(
-        p.sin( animation.angle * warpSpeed + x / warpColDivisorB ),
-        -1,
-        1,
-        -p.PI,
-        p.PI,
-        easing.easeInOutExpo
-      ) * warpInnerAmount );
-
-      p.translate(
-        cellVector.x,
-        cellVector.y * screenRatio,
-        -boxDepth / 2
-      );
-      p.box(
-        boxWidth,
-        boxWidth * screenRatio,
-        -boxDepth
-      );
-      p.pop();
+    if ( !alpha ) {
+      return;
     }
-  );
+
+    const hue = p.noise(
+      x / columns,
+      y / rows + animation.angle / 4
+    );
+    const tint = colorFunction( {
+      hueOffset: 0,
+      hueIndex: p.map(
+        hue,
+        0,
+        1,
+        -p.PI,
+        p.PI
+      ) * hueIndexMultiplier,
+      opacityFactor: p.map(
+        hue,
+        0,
+        1,
+        opacityMax,
+        opacityMin
+      )
+    } );
+
+    if ( useNormalMaterial ) {
+      p.normalMaterial();
+    }
+    p.stroke( tint );
+
+    p.push();
+
+    p.rotateX( p.map(
+      p.sin( animation.angle * warpSpeed - y / warpRowDivisorA ),
+      -1,
+      1,
+      -p.PI,
+      p.PI
+    ) * warpAmount );
+    p.rotateY( p.map(
+      p.cos( animation.angle * warpSpeed + x / warpColDivisorA ),
+      -1,
+      1,
+      -p.PI,
+      p.PI
+    ) * warpAmount );
+
+    p.rotateX( mappers.fn(
+      p.cos( animation.angle * warpSpeed - y / warpRowDivisorB ),
+      -1,
+      1,
+      -p.PI,
+      p.PI,
+      easing.easeInOutQuart
+    ) * warpInnerAmount );
+    p.rotateY( mappers.fn(
+      p.sin( animation.angle * warpSpeed + x / warpColDivisorB ),
+      -1,
+      1,
+      -p.PI,
+      p.PI,
+      easing.easeInOutExpo
+    ) * warpInnerAmount );
+
+    p.translate(
+      cellVector.x,
+      cellVector.y * screenRatio,
+      -boxDepth / 2
+    );
+    p.box(
+      boxWidth,
+      boxWidth * screenRatio,
+      -boxDepth
+    );
+    p.pop();
+  } );
 
   renderTitle();
 } );

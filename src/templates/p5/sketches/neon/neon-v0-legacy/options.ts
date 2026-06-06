@@ -4,16 +4,16 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 export const formValues = {
   layout: {
     xCount: 1,
-    yCount: 3,
-    sizeDivisor: 3.5,
+    yCount: 1,
+    sizeDivisor: 5.2,
     axis: "vertical" as "vertical" | "horizontal" | "diagonal"
   },
   spiral: {
-    lerpStepsMin: 75,
-    lerpStepsMax: 200,
+    lerpStepsMin: 373,
+    lerpStepsMax: 684,
     weight: 75,
-    opacityFactor: 2,
-    waveAmpRange: 1.5
+    opacityFactor: 1.7,
+    waveAmpRange: 1.48
   },
   motion: {
     timeSpeed: 1,

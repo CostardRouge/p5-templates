@@ -5,26 +5,33 @@ import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
+  mask: {
+    distance: 1
+  },
+  letters: {
+    speed: 1,
+    spatialFactor: 0
+  },
   shape: {
     text: " sunday bloody sunday",
     font: "serif",
-    size: 0.83,
-    sampleFactor: 0.5,
+    size: 1.05,
+    sampleFactor: 0.27,
     simplifyThreshold: 0
   },
   grid: {
     proportional: true,
-    columns: 30,
+    columns: 45,
     rows: 50
   },
   cell: {
-    boxSize: 32,
-    boxDepth: 150
+    boxSize: 23,
+    boxDepth: 155
   },
   warp: {
-    amount: 0.16,
-    rowDivisor: 10,
-    colDivisor: 10,
+    amount: 0.05,
+    rowDivisor: 26.5,
+    colDivisor: 50,
     speed: 1
   },
   color: {
@@ -35,7 +42,7 @@ export const formValues = {
     opacityMax: 2.1,
     opacityMin: 1
   },
-  strokeWeight: 2,
+  strokeWeight: 0,
   backgroundColor: [
     0,
     0,
@@ -62,6 +69,39 @@ const paletteOptions = [
 } ) );
 
 export const formConfiguration: Record<string, any> = {
+  mask: {
+    component: "nested-object",
+    label: "Mask (gridMask)",
+    fields: {
+      distance: {
+        label: "Mask radius (× cell size)",
+        component: "slider",
+        min: 0.1,
+        max: 5,
+        step: 0.05
+      }
+    }
+  },
+  letters: {
+    component: "nested-object",
+    label: "Letters",
+    fields: {
+      speed: {
+        label: "Word cycles / loop",
+        component: "slider",
+        min: 0.1,
+        max: 10,
+        step: 0.1
+      },
+      spatialFactor: {
+        label: "Spatial scramble (0 = single letter)",
+        component: "slider",
+        min: 0,
+        max: 5,
+        step: 0.05
+      }
+    }
+  },
   shape: {
     component: "nested-object",
     label: "Shape",

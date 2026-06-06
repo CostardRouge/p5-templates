@@ -8,8 +8,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import cache from "@/p5/utils/cache.js";
-import grid from "@/p5/utils/grid.js";
+import gridMask from "@/p5/utils/gridMask.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup(
@@ -51,7 +50,9 @@ sketch.draw( async() => {
   const columns = gridOpts.columns ?? 30;
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
-  const fontFamily = font.font?.names?.fontFamily?.en ?? "unknown";
+  const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
+  const letterSpeed = options.sketch?.letters?.speed ?? 1;
+  const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
 
   if ( sceneRot.enabled ?? true ) {
     p.rotateY( mappers.fn(
@@ -98,119 +99,118 @@ sketch.draw( async() => {
   const colorFunction = colors?.[ palette ] ?? colors.rainbowCrazy;
   const hueOffsetSpeed = color.hueOffsetSpeed ?? 1;
 
-  await grid.draw(
-    gridOptions,
-    (
-      cellVector, {
-        x, y
-      }
-    ) => {
-      const xSign = p.sin( animation.angle );
-      const ySign = p.cos( animation.angle );
-      const chance = p.noise( xSign * ( x / columns ) + ySign * ( y / rows ) + animation.angle );
+  // Each cell can mask a different letter, so precompute one alpha field per
+  // distinct letter of the word (each cached + spatial-hash accelerated) and
+  // look up the cell's alpha by index. Identical to the previous per-cell
+  // reduction, without recomputing distances every frame.
+  const uniqueLetters = Array.from( new Set( word ) );
+  const fieldByLetter = new Map();
 
-      const currentLetter = mappers.circularIndex(
-        chance + animation.angle / 2,
-        word
-      );
+  for ( const letter of uniqueLetters ) {
+    const letterPoints = string.getTextPoints( {
+      text: letter,
+      position: p.createVector(
+        0,
+        0
+      ),
+      size,
+      font,
+      sampleFactor,
+      simplifyThreshold
+    } );
 
-      const points = string.getTextPoints( {
-        text: currentLetter,
-        position: p.createVector(
+    fieldByLetter.set(
+      letter,
+      await gridMask.field( {
+        gridOptions,
+        points: letterPoints,
+        signature: string.textPointsSignature( {
+          text: letter,
+          font,
+          size,
+          sampleFactor,
+          simplifyThreshold
+        } ),
+        distance: maskDistance,
+        space: "pixel",
+        output: "falloff",
+        alphaRange: [
           0,
-          0
-        ),
-        size,
-        font,
-        sampleFactor,
-        simplifyThreshold
-      } );
-
-      const alphaKey = cache.key(
-        x,
-        y,
-        columns,
-        rows,
-        fontFamily,
-        currentLetter,
-        sampleFactor,
-        "alpha"
-      );
-      const alpha = cache.store(
-        alphaKey,
-        () => points.reduce(
-          (
-            result, point
-          ) => {
-            if ( result >= 255 ) {
-              return result;
-            }
-
-            return Math.max(
-              result,
-              ~~p.map(
-                point.dist( cellVector ),
-                0,
-                cellSize,
-                255,
-                0,
-                true
-              )
-            );
-          },
-          0
-        )
-      );
-
-      if ( !alpha ) {
-        return;
-      }
-
-      const tint = colorFunction( {
-        hueOffset: animation.angle * hueOffsetSpeed,
-        hueIndex: cellVector.x + cellVector.y
-      } );
-      const {
-        levels: [
-          r,
-          g,
-          b
+          255
         ]
-      } = tint;
+      } )
+    );
+  }
 
-      p.stroke( tint );
-      p.fill(
+  const cells = fieldByLetter.get( uniqueLetters[ 0 ] ).cells;
+
+  cells.forEach( (
+    cell, cellIndex
+  ) => {
+    const cellVector = cell.position;
+    const {
+      x, y
+    } = cell;
+
+    const xSign = p.sin( animation.angle );
+    const ySign = p.cos( animation.angle );
+    const chance = p.noise( xSign * ( x / columns ) + ySign * ( y / rows ) + animation.angle );
+
+    const currentLetter = mappers.circularIndex(
+      animation.progression * word.length * letterSpeed + spatialFactor * chance,
+      word
+    );
+
+    const alpha = fieldByLetter.get( currentLetter ).alpha[ cellIndex ];
+
+    if ( !alpha ) {
+      return;
+    }
+
+    const tint = colorFunction( {
+      hueOffset: animation.angle * hueOffsetSpeed,
+      hueIndex: cellVector.x + cellVector.y
+    } );
+    const {
+      levels: [
         r,
         g,
-        b,
-        alpha
-      );
+        b
+      ]
+    } = tint;
 
-      if ( chance > chanceThreshold ) {
-        p.push();
-        p.translate(
-          cellVector.x,
-          cellVector.y,
-          wobbleAmplitude * p.sin( animation.angle * wobbleCircleSpeed + ( y / rows ) * wobbleRowMultiplier )
-        );
-        p.circle(
-          0,
-          0,
-          circleSize
-        );
-        p.pop();
-      } else {
-        p.push();
-        p.translate(
-          cellVector.x,
-          cellVector.y,
-          wobbleAmplitude * p.sin( animation.angle * wobbleSphereSpeed + ( y / rows ) * wobbleRowMultiplier )
-        );
-        p.sphere( sphereSize );
-        p.pop();
-      }
+    p.stroke( tint );
+    p.fill(
+      r,
+      g,
+      b,
+      alpha
+    );
+
+    if ( chance > chanceThreshold ) {
+      p.push();
+      p.translate(
+        cellVector.x,
+        cellVector.y,
+        wobbleAmplitude * p.sin( animation.angle * wobbleCircleSpeed + ( y / rows ) * wobbleRowMultiplier )
+      );
+      p.circle(
+        0,
+        0,
+        circleSize
+      );
+      p.pop();
+    } else {
+      p.push();
+      p.translate(
+        cellVector.x,
+        cellVector.y,
+        wobbleAmplitude * p.sin( animation.angle * wobbleSphereSpeed + ( y / rows ) * wobbleRowMultiplier )
+      );
+      p.sphere( sphereSize );
+      p.pop();
     }
-  );
+  } );
 
   renderTitle();
 } );

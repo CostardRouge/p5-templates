@@ -8,8 +8,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import cache from "@/p5/utils/cache.js";
-import grid from "@/p5/utils/grid.js";
+import gridMask from "@/p5/utils/gridMask.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup(
@@ -58,6 +57,9 @@ sketch.draw( async() => {
   const columns = gridOpts.columns ?? 30;
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
+  const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
+  const letterSpeed = options.sketch?.letters?.speed ?? 1;
+  const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
 
   if ( sceneRot.enabled ?? true ) {
     p.rotateY( mappers.fn(
@@ -117,28 +119,22 @@ sketch.draw( async() => {
   const hueOffsetSpeed = color.hueOffsetSpeed ?? 2;
   const hueIndexMultiplier = color.hueIndexMultiplier ?? 16;
 
-  await grid.draw(
-    gridOptions,
-    (
-      cellVector, {
-        x, y
-      }
-    ) => {
-      const xx = p.sin( animation.angle );
-      const yy = p.cos( animation.angle );
-      const switchingIndex = xx * ( x / columns ) + yy * ( y / rows ) + animation.angle;
-      const currentLetter = mappers.circularIndex(
-        switchingIndex,
-        word
-      );
-      const currentFont = mappers.circularIndex(
-        switchingIndex,
-        fonts
-      );
-      const fontFamily = currentFont.font?.names?.fontFamily?.en ?? "unknown";
+  // Each cell can mask a different (letter, font) pair, so precompute one alpha
+  // field per distinct letter x font combination (each cached + spatial-hash
+  // accelerated) and look up the cell's alpha by index. Identical to the
+  // previous per-cell reduction, without recomputing distances every frame.
+  const uniqueLetters = Array.from( new Set( word ) );
+  const fieldByKey = new Map();
+  const maskKey = (
+    letter, fontIndex
+  ) => letter + "@" + fontIndex;
 
-      const points = string.getTextPoints( {
-        text: currentLetter,
+  for ( let fontIndex = 0; fontIndex < fonts.length; fontIndex++ ) {
+    const currentFont = fonts[ fontIndex ];
+
+    for ( const letter of uniqueLetters ) {
+      const letterPoints = string.getTextPoints( {
+        text: letter,
         position: p.createVector(
           0,
           0
@@ -149,83 +145,106 @@ sketch.draw( async() => {
         simplifyThreshold
       } );
 
-      const alphaKey = cache.key(
-        x,
-        y,
-        columns,
-        rows,
-        fontFamily,
-        currentLetter,
-        sampleFactor,
-        "alpha"
+      fieldByKey.set(
+        maskKey(
+          letter,
+          fontIndex
+        ),
+        await gridMask.field( {
+          gridOptions,
+          points: letterPoints,
+          signature: string.textPointsSignature( {
+            text: letter,
+            font: currentFont,
+            size,
+            sampleFactor,
+            simplifyThreshold
+          } ),
+          distance: maskDistance,
+          space: "pixel",
+          output: "falloff",
+          alphaRange: [
+            0,
+            255
+          ]
+        } )
       );
-      const alpha = cache.store(
-        alphaKey,
-        () => points.reduce(
-          (
-            result, point
-          ) => {
-            if ( result >= 255 ) {
-              return result;
-            }
-
-            return Math.max(
-              result,
-              ~~p.map(
-                point.dist( cellVector ),
-                0,
-                cellSize,
-                255,
-                0,
-                true
-              )
-            );
-          },
-          0
-        )
-      );
-
-      if ( !alpha ) {
-        return;
-      }
-
-      const chance = p.noise( xx * ( x / columns ) + animation.angle / 3 + yy * ( y / rows ) + animation.angle );
-
-      const tint = colorFunction( {
-        hueOffset: animation.angle * hueOffsetSpeed,
-        hueIndex: ( x / columns + y / rows ) * hueIndexMultiplier
-      } );
-
-      p.stroke( tint );
-      p.noFill();
-
-      p.push();
-      p.translate(
-        cellVector.x,
-        cellVector.y,
-        -boxDepth / 2
-      );
-      p.box(
-        boxWidth,
-        boxWidth,
-        boxDepth
-      );
-
-      if ( showFrontCircle && chance > frontCircleChance ) {
-        p.translate(
-          0,
-          0,
-          boxDepth / 2
-        );
-        p.circle(
-          0,
-          0,
-          frontCircleSize
-        );
-      }
-      p.pop();
     }
-  );
+  }
+
+  const cells = fieldByKey.get( maskKey(
+    uniqueLetters[ 0 ],
+    0
+  ) ).cells;
+
+  cells.forEach( (
+    cell, cellIndex
+  ) => {
+    const cellVector = cell.position;
+    const {
+      x, y
+    } = cell;
+
+    const xx = p.sin( animation.angle );
+    const yy = p.cos( animation.angle );
+    const spatialTerm = xx * ( x / columns ) + yy * ( y / rows );
+    const switchingIndex =
+      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
+    const currentLetter = mappers.circularIndex(
+      switchingIndex,
+      word
+    );
+    const currentFont = mappers.circularIndex(
+      switchingIndex,
+      fonts
+    );
+    const fontIndex = fonts.indexOf( currentFont );
+
+    const alpha = fieldByKey.get( maskKey(
+      currentLetter,
+      fontIndex
+    ) ).alpha[ cellIndex ];
+
+    if ( !alpha ) {
+      return;
+    }
+
+    const chance = p.noise( xx * ( x / columns ) + animation.angle / 3 + yy * ( y / rows ) + animation.angle );
+
+    const tint = colorFunction( {
+      hueOffset: animation.angle * hueOffsetSpeed,
+      hueIndex: ( x / columns + y / rows ) * hueIndexMultiplier
+    } );
+
+    p.stroke( tint );
+    p.noFill();
+
+    p.push();
+    p.translate(
+      cellVector.x,
+      cellVector.y,
+      -boxDepth / 2
+    );
+    p.box(
+      boxWidth,
+      boxWidth,
+      boxDepth
+    );
+
+    if ( showFrontCircle && chance > frontCircleChance ) {
+      p.translate(
+        0,
+        0,
+        boxDepth / 2
+      );
+      p.circle(
+        0,
+        0,
+        frontCircleSize
+      );
+    }
+    p.pop();
+  } );
 
   renderTitle();
 } );

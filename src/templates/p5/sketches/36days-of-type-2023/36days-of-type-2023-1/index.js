@@ -3,10 +3,9 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 
-import cache from "@/p5/utils/cache.js";
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
-import grid from "@/p5/utils/grid.js";
+import gridMask from "@/p5/utils/gridMask.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
@@ -25,109 +24,32 @@ const getBackgroundColor = () =>
     0
   ];
 
-function getAlphaFromMask( {
-  position,
-  maskPoints,
-  distance
-} ) {
-  const p = getP5();
-  const {
-    x, y
-  } = position;
-
-  const normalizedPosition = p.createVector(
-    p.map(
-      x,
-      -p.width / 2,
-      p.width / 2,
-      0,
-      1
-    ),
-    p.map(
-      y,
-      -p.height / 2,
-      p.height / 2,
-      0,
-      1
-    )
-  );
-
-  return maskPoints.reduce(
-    (
-      result, pointPosition
-    ) => {
-      if ( 255 <= result ) {
-        return result;
-      }
-
-      const normalizedPointPosition = p.createVector(
-        p.map(
-          pointPosition.x,
-          -p.width / 2,
-          p.width / 2,
-          0,
-          1
-        ),
-        p.map(
-          pointPosition.y,
-          -p.height / 2,
-          p.height / 2,
-          0,
-          1
-        )
-      );
-
-      const d = normalizedPointPosition.dist( normalizedPosition );
-      const mapped = ~~p.map(
-        d,
-        0,
-        distance,
-        255,
-        0,
-        true
-      );
-
-      return Math.max(
-        result,
-        mapped
-      );
-    },
-    0
-  );
-}
-
-function createGridAlphaPoints(
+// Single-layer falloff mask delegated to the shared gridMask utility, which
+// computes the per-cell alpha field once (spatial-hash accelerated) and caches
+// it. Behaviour is identical to the previous inline reduction.
+async function createGridAlphaPoints(
   gridOptions, maskPoints, cacheKey, distance
 ) {
-  return cache.store(
-    `alpha-points+${ cacheKey }`,
-    () => {
-      const alphaPoints = [];
+  const field = await gridMask.field( {
+    gridOptions,
+    points: maskPoints,
+    signature: cacheKey,
+    distance,
+    space: "normalized",
+    output: "falloff",
+    alphaRange: [
+      0,
+      255
+    ]
+  } );
 
-      grid.draw(
-        gridOptions,
-        ( position ) => {
-          const alpha = getAlphaFromMask( {
-            position,
-            maskPoints,
-            distance
-          } );
-
-          if ( alpha ) {
-            alphaPoints.push( {
-              position,
-              alpha
-            } );
-          }
-        }
-      );
-
-      return alphaPoints;
-    }
-  );
+  return field.nonZero.map( ( index ) => ( {
+    position: field.cells[ index ].position,
+    alpha: field.alpha[ index ]
+  } ) );
 }
 
-sketch.draw( () => {
+sketch.draw( async() => {
   const p = getP5();
 
   p.background( ...getBackgroundColor() );
@@ -191,7 +113,7 @@ sketch.draw( () => {
     distance
   ].join( "+" );
 
-  const alphaPoints = createGridAlphaPoints(
+  const alphaPoints = await createGridAlphaPoints(
     gridOptions,
     letterPoints,
     cacheKey,

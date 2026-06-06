@@ -5,28 +5,35 @@ import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
+  mask: {
+    distance: 1
+  },
+  letters: {
+    speed: 1,
+    spatialFactor: 0
+  },
   shape: {
     text: "0123456789 ",
-    font: "sans",
-    letterSize: 1000,
+    font: "waverseVariable",
+    letterSize: 1470,
     sampleFactor: 0.15,
     simplifyThreshold: 0
   },
   grid: {
     proportional: true,
-    columns: 30,
+    columns: 50,
     rows: 50
   },
   cell: {
-    boxSize: 36,
-    boxDepth: 150,
-    screenRatio: 1.5,
-    microRotAmount: 0.16,
-    ringRotMultiplier: 2
+    boxSize: 16,
+    boxDepth: 113,
+    screenRatio: 0.9,
+    microRotAmount: 0.02,
+    ringRotMultiplier: 0.1
   },
   bgPattern: {
     enabled: true,
-    weight: 3,
+    weight: 0,
     easing: "easeInOutExpo",
     color: [
       255,
@@ -68,6 +75,39 @@ const paletteOptions = [
 } ) );
 
 export const formConfiguration: Record<string, any> = {
+  mask: {
+    component: "nested-object",
+    label: "Mask (gridMask)",
+    fields: {
+      distance: {
+        label: "Mask radius (× cell size)",
+        component: "slider",
+        min: 0.1,
+        max: 5,
+        step: 0.05
+      }
+    }
+  },
+  letters: {
+    component: "nested-object",
+    label: "Letters",
+    fields: {
+      speed: {
+        label: "Word cycles / loop",
+        component: "slider",
+        min: 0.1,
+        max: 10,
+        step: 0.1
+      },
+      spatialFactor: {
+        label: "Spatial scramble (0 = single letter)",
+        component: "slider",
+        min: 0,
+        max: 5,
+        step: 0.05
+      }
+    }
+  },
   shape: {
     component: "nested-object",
     label: "Shape",

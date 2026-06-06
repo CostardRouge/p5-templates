@@ -5,23 +5,29 @@ import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
+  mask: {
+    distance: 1
+  },
+  letters: {
+    speed: 1
+  },
   shape: {
     text: "#test!",
     font: "serif",
-    size: 1.11,
-    sampleFactor: 0.5,
+    size: 1.08,
+    sampleFactor: 0.16,
     simplifyThreshold: 0,
     morphSpeed: 1
   },
   grid: {
     proportional: true,
-    columns: 30,
+    columns: 58,
     rows: 50
   },
   cell: {
     chanceThreshold: 0.5,
     sphereSize: 30,
-    crossSize: 40,
+    crossSize: 36,
     crossColor: [
       32,
       32,
@@ -38,7 +44,7 @@ export const formValues = {
   wobble: {
     amplitude: 100,
     speed: 5,
-    rowMultiplier: 4
+    rowMultiplier: 36.5
   },
   sceneRotation: {
     enabled: true,
@@ -76,6 +82,32 @@ const paletteOptions = [
 } ) );
 
 export const formConfiguration: Record<string, any> = {
+  mask: {
+    component: "nested-object",
+    label: "Mask (gridMask)",
+    fields: {
+      distance: {
+        label: "Mask radius (× cell size)",
+        component: "slider",
+        min: 0.1,
+        max: 5,
+        step: 0.05
+      }
+    }
+  },
+  letters: {
+    component: "nested-object",
+    label: "Letters",
+    fields: {
+      speed: {
+        label: "Word cycles / loop",
+        component: "slider",
+        min: 0.1,
+        max: 10,
+        step: 0.1
+      }
+    }
+  },
   shape: {
     component: "nested-object",
     label: "Shape",
