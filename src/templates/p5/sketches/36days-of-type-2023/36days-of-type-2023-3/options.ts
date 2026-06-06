@@ -5,26 +5,26 @@ import {
 export const formValues = {
   shape: {
     text: "3",
-    font: "martian",
-    size: 1,
-    columns: 65,
+    font: "waverseVariable",
+    size: 1.3,
+    columns: 44,
     depth: 60,
     sampleFactor: 0.1,
     simplifyThreshold: 0
   },
   mask: {
-    distance: 0.025
+    distance: 0.024
   },
   animation: {
     swapSpeed: 1,
     stagger: 0.5,
-    rotateAngle: Math.PI / 12
+    rotateAngle: 0.2
   },
   camera: {
-    pullback: 540
+    pullback: 200
   },
   color: {
-    hueMultiplier: 3,
+    hueMultiplier: 2.2,
     opacityFactor: 1.5,
     fillAlpha: 225,
     strokeAlpha: 100
