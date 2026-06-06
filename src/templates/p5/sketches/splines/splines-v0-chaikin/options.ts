@@ -1,21 +1,21 @@
 export const formValues = {
   points: {
-    count: 6,
-    seed: 1,
+    count: 10,
+    seed: 2,
     layout: "random" as "random" | "corners" | "ring",
-    motion: 0.05,
+    motion: 0.075,
     speed: 1
   },
   curve: {
     method: "chaikin" as "chaikin" | "catmull-rom" | "quadratic",
-    iterations: 4,
+    iterations: 6,
     closed: true,
-    tension: 0
+    tension: -2.2
   },
   stroke: {
-    weight: 6,
-    glow: 3,
-    hueSpeed: 1,
+    weight: 40,
+    glow: 2,
+    hueSpeed: 3.3,
     gradient: true
   },
   show: {
