@@ -5,8 +5,8 @@ import sketch, {
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
-import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
+import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
@@ -80,9 +80,18 @@ sketch.draw( (
 
   let sampleFactor;
 
+  const letterValues = traceLetters.points( {
+    texts: alphabet,
+    size: letterSize,
+    position: center,
+    sampleFactor: options.sketch.textStyle?.sampleFactor ?? 0.1,
+    font
+  } );
+
   mappers.traceVectors(
     steps,
     ( progression ) => {
+      // keep updating the outer sampleFactor — onColor reads it for the hue
       sampleFactor = animation.ease( {
         values: sampleValues,
         duration: 1,
@@ -90,16 +99,9 @@ sketch.draw( (
         currentTime: time
       } );
 
-      return animation.ease( {
-        values: alphabet.map( ( text ) => string.getTextPoints( {
-          text,
-          size: letterSize,
-          position: center,
-          sampleFactor: options.sketch.textStyle?.sampleFactor ?? 0.1,
-          font
-        } ) ),
+      return traceLetters.morph( {
+        values: letterValues,
         duration: 1,
-        lerpFn: mappers.lerpPoints,
         easingFn: easing.easeInOutExpo,
         currentTime: mappers.fn(
           progression,
