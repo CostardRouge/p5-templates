@@ -111,6 +111,14 @@ class GsapRuntime {
   private subscribers = new Set<( progression: number ) => void>();
   private mirrorLoopId: number | null = null;
 
+  /**
+   * Cache of `image/background-image URL → data-URL` used when rasterising.
+   * An SVG `<foreignObject>` loaded as an image cannot fetch external
+   * resources, so media has to be embedded as data-URLs; caching avoids
+   * re-fetching + re-encoding the same photo on every captured frame.
+   */
+  private mediaCache = new Map<string, Promise<string | null>>();
+
   /* ---- derived settings ---------------------------------------- */
 
   get size() {
@@ -280,6 +288,7 @@ class GsapRuntime {
     unregisterAnimationBridge();
 
     this.subscribers.clear();
+    this.mediaCache.clear();
     this.elapsed = 0;
     this.playing = false;
     this.recording = false;
@@ -629,6 +638,11 @@ class GsapRuntime {
       clone
     );
 
+    // An SVG `<foreignObject>` rendered as an image cannot fetch external
+    // resources, so any `<img>`/`background-image` would otherwise show the
+    // browser's broken-image glyph. Embed them as data-URLs first.
+    await this.inlineMedia( clone );
+
     // Neutralise the layout transforms applied to the live stage so the
     // clone renders at native resolution inside the SVG.
     clone.style.transform = "none";
@@ -643,11 +657,125 @@ class GsapRuntime {
 
     return `data:image/svg+xml;charset=utf-8,${ encodeURIComponent( svg ) }`;
   }
+
+  /**
+   * Replace `<img src>` and inline `background-image: url(…)` references in the
+   * clone with embedded data-URLs so they survive the SVG-image rasterisation.
+   * Conversions are cached per URL across frames.
+   */
+  private async inlineMedia( root: HTMLElement ): Promise<void> {
+    await inlineMediaInto(
+      root,
+      ( url ) => {
+        let pending = this.mediaCache.get( url );
+
+        if ( !pending ) {
+          pending = urlToDataUrl( url );
+          this.mediaCache.set(
+            url,
+            pending
+          );
+        }
+
+        return pending;
+      }
+    );
+  }
 }
 
 /* ------------------------------------------------------------------ */
 /*  Rasterisation helpers                                              */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Rewrite every `<img src>` and inline `background-image: url(…)` under `root`
+ * to the data-URL produced by `load(url)`. URLs that already are data-URLs (or
+ * fail to load) are left untouched. Exported for testing the rasterisation fix.
+ */
+export async function inlineMediaInto(
+  root: HTMLElement,
+  load: ( url: string ) => Promise<string | null>
+): Promise<void> {
+  const tasks: Promise<void>[] = [];
+
+  root.querySelectorAll( "img" ).forEach( ( img ) => {
+    const src = img.getAttribute( "src" );
+
+    if ( !src || src.startsWith( "data:" ) ) {
+      return;
+    }
+
+    tasks.push( load( src ).then( ( dataUrl ) => {
+      if ( dataUrl ) {
+        img.setAttribute(
+          "src",
+          dataUrl
+        );
+      }
+    } ) );
+  } );
+
+  const withBackgrounds = [
+    root,
+    ...Array.from( root.querySelectorAll<HTMLElement>( "*" ) )
+  ];
+
+  withBackgrounds.forEach( ( el ) => {
+    const backgroundImage = el.style?.backgroundImage;
+
+    if ( !backgroundImage || backgroundImage === "none" ) {
+      return;
+    }
+
+    const match = backgroundImage.match( /url\((['"]?)(.*?)\1\)/ );
+    const url = match?.[ 2 ];
+
+    if ( !url || url.startsWith( "data:" ) ) {
+      return;
+    }
+
+    tasks.push( load( url ).then( ( dataUrl ) => {
+      if ( dataUrl ) {
+        el.style.backgroundImage = `url("${ dataUrl }")`;
+      }
+    } ) );
+  } );
+
+  await Promise.all( tasks );
+}
+
+/**
+ * Fetch a (same-origin) media URL and return it as a data-URL, preserving the
+ * original bytes/encoding. Resolves to `null` on any failure so rasterisation
+ * can fall back gracefully rather than throwing.
+ */
+async function urlToDataUrl( url: string ): Promise<string | null> {
+  try {
+    const response = await fetch(
+      url,
+      {
+        cache: "force-cache"
+      }
+    );
+
+    if ( !response.ok ) {
+      return null;
+    }
+
+    const blob = await response.blob();
+
+    return await new Promise<string | null>( ( resolve ) => {
+      const reader = new FileReader();
+
+      reader.onload = () =>
+        resolve( typeof reader.result === "string" ? reader.result : null );
+      reader.onerror = () => resolve( null );
+      reader.readAsDataURL( blob );
+    } );
+  } catch {
+    return null;
+  }
+}
 
 function inlineComputedStyles(
   source: Element,

@@ -15,3 +15,7 @@ export {
 
 export * from "./options";
 export * from "./dom";
+export * from "./easing";
+export * from "./images";
+export * from "./style";
+export * from "./random";
