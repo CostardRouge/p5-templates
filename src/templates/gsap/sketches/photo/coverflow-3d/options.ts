@@ -6,15 +6,15 @@ import {
 export const formValues = {
   ...( await getCommonPhotoValues() ),
 
-  count: 7,
-  cardWidthRatio: 0.42,
-  cardAspect: 1.35,
-  radiusFactor: 1,
-  perspective: 1600,
-  tilt: 0,
+  count: 8,
+  cardWidthRatio: 0.22,
+  cardAspect: 2,
+  radiusFactor: 0.89,
+  perspective: 1630,
+  tilt: -13,
   spinMode: "continuous",
   spins: 1,
-  direction: "left"
+  direction: "right"
 };
 
 export const formConfiguration: Record<string, any> = {
