@@ -106,7 +106,7 @@ sketch.draw( () => {
     Math.floor( render.skipFactor ?? 1 )
   );
   const pointSize = render.pointSize ?? 6;
-  const blendModeName = render.blendMode ?? "BLEND";
+  const blendModeName = render.blendMode ?? graphics.BLEND;
 
   const strokeWeightMin = strokeCfg.weightMin ?? 5;
   const strokeWeightMax = strokeCfg.weightMax ?? strokeWeightMin;
@@ -189,7 +189,7 @@ sketch.draw( () => {
   );
 
   graphics.push();
-  graphics.blendMode( graphics[ blendModeName ] ?? graphics.BLEND );
+  graphics.blendMode( blendModeName );
 
   if ( rotationEnabled ) {
     const rotationValue = animation.ease( {
