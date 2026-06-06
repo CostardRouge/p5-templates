@@ -1,41 +1,41 @@
 export const formValues = {
   points: {
-    count: 10,
+    count: 11,
     seed: 2,
     layout: "random" as "random" | "corners" | "ring",
-    motion: 0.075,
+    motion: 0.095,
     speed: 1
   },
   curve: {
     method: "chaikin" as "chaikin" | "catmull-rom" | "quadratic",
     iterations: 6,
     closed: true,
-    tension: -2.2
+    tension: 1.5
   },
   stroke: {
-    weight: 40,
+    weight: 27,
     glow: 2,
-    hueSpeed: 3.3,
+    hueSpeed: 2,
     gradient: true
   },
   overlay: {
     polygon: {
       show: true,
-      weight: 2,
+      weight: 4.5,
       color: [
         255,
         255,
         255,
-        70
+        181
       ] as number[],
-      dashed: false,
-      dash: 18,
-      gap: 12
+      dashed: true,
+      dash: 17,
+      gap: 10
     },
     points: {
       show: true,
-      size: 14,
-      coreRatio: 0.36,
+      size: 38.5,
+      coreRatio: 0.88,
       color: [
         255,
         255,
