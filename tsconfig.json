@@ -48,8 +48,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+    "/tmp/p5-templates-build/types/**/*.ts",
     "next-env.d.ts",
-    "/tmp/p5-templates-build/types/**/*.ts"
+    "/tmp/p5b/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

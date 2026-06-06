@@ -5,8 +5,8 @@ import sketch, {
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
-import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
+import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
@@ -66,6 +66,9 @@ sketch.draw( (
   mappers.traceVectors(
     steps,
     ( progression ) => {
+      // sampleFactor is animated per step, so the clouds cannot be hoisted;
+      // routing through traceLetters.points keeps them in the bounded memo
+      // (pixel-identical, no unbounded cache growth).
       const sampleFactor = animation.ease( {
         values: sampleValues,
         duration: 1,
@@ -73,16 +76,15 @@ sketch.draw( (
         currentTime: progression / 2 + time
       } );
 
-      return animation.ease( {
-        values: alphabet.map( ( text ) => string.getTextPoints( {
-          text,
+      return traceLetters.morph( {
+        values: traceLetters.points( {
+          texts: alphabet,
           size: letterSize,
           position: center,
           sampleFactor,
           font
-        } ) ),
+        } ),
         duration: 1,
-        lerpFn: mappers.lerpPoints,
         currentTime: p.map(
           progression,
           0,
