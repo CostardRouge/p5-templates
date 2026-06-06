@@ -152,6 +152,7 @@ série « build in public ».
 - **F3** — `object-fit` + transform pour rendre une preview vidéo impossible à distordre (`99a5605`). 🟡
 - **F4** — Idle d'un `requestAnimationFrame` quand l'onglet est caché (`6bc2a4e`). 🟡
 - **F5** — Extraire un thumbnail WebP depuis la première frame d'une vidéo (`51dfd7b`). 🟡
+- **F6** — Tracker les pageviews sur changement de route client-side dans le Next.js App Router (GA4 sans rechargement) — `3eca276`/`2b82093` (PR #68), `src/components/GoogleAnalyticsTracker.tsx`, `src/lib/analytics/gtag.ts`. 🟡
 
 ---
 
