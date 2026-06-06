@@ -109,6 +109,8 @@ sketch.draw( async() => {
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
   const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
+  const letterSpeed = options.sketch?.letters?.speed ?? 1;
+  const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
 
   // Background drifting column pattern
   if ( bgPattern.enabled ?? true ) {
@@ -239,9 +241,11 @@ sketch.draw( async() => {
       x, y
     } = cell;
 
-    const commonSwitchingIndex = x / columns - y / rows;
+    const spatialTerm = x / columns - y / rows;
+    const switchingIndex =
+      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
     const currentLetter = mappers.circularIndex(
-      commonSwitchingIndex + animation.angle,
+      switchingIndex,
       word
     );
 

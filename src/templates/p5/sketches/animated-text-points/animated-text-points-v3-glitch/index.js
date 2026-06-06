@@ -41,7 +41,7 @@ sketch.draw( async() => {
   const size = ( shape.size ?? 1.11 ) * p.width;
   const sampleFactor = shape.sampleFactor ?? 0.5;
   const simplifyThreshold = shape.simplifyThreshold ?? 0;
-  const morphSpeed = shape.morphSpeed ?? 1.5;
+  const letterSpeed = options.sketch?.letters?.speed ?? 1;
 
   if ( word.length === 0 || !font?.font ) {
     return;
@@ -58,7 +58,7 @@ sketch.draw( async() => {
     ) );
   }
 
-  const phase = animation.angle * morphSpeed / p.TAU;
+  const phase = animation.progression * word.length * letterSpeed;
   const currentLetter = mappers.circularIndex(
     phase,
     word

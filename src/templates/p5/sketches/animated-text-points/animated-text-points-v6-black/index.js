@@ -58,6 +58,8 @@ sketch.draw( async() => {
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
   const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
+  const letterSpeed = options.sketch?.letters?.speed ?? 1;
+  const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
 
   if ( sceneRot.enabled ?? true ) {
     p.rotateY( mappers.fn(
@@ -185,7 +187,9 @@ sketch.draw( async() => {
 
     const xx = p.sin( animation.angle );
     const yy = p.cos( animation.angle );
-    const switchingIndex = xx * ( x / columns ) + yy * ( y / rows ) + animation.angle;
+    const spatialTerm = xx * ( x / columns ) + yy * ( y / rows );
+    const switchingIndex =
+      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
     const currentLetter = mappers.circularIndex(
       switchingIndex,
       word

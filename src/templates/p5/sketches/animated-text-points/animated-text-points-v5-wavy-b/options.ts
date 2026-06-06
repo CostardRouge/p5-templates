@@ -8,6 +8,9 @@ export const formValues = {
   mask: {
     distance: 1
   },
+  letters: {
+    speed: 1
+  },
   shape: {
     text: "#test!",
     font: "serif",
@@ -89,6 +92,19 @@ export const formConfiguration: Record<string, any> = {
         min: 0.1,
         max: 5,
         step: 0.05
+      }
+    }
+  },
+  letters: {
+    component: "nested-object",
+    label: "Letters",
+    fields: {
+      speed: {
+        label: "Word cycles / loop",
+        component: "slider",
+        min: 0.1,
+        max: 10,
+        step: 0.1
       }
     }
   },

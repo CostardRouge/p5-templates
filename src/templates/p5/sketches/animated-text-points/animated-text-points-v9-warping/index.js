@@ -49,6 +49,8 @@ sketch.draw( async() => {
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
   const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
+  const letterSpeed = options.sketch?.letters?.speed ?? 1;
+  const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
 
   const gridOptions = {
     topLeft: p.createVector(
@@ -143,7 +145,9 @@ sketch.draw( async() => {
 
     const xSign = p.sin( animation.angle );
     const ySign = p.cos( animation.angle );
-    const switchingIndex = xSign * ( x / columns ) + ySign * ( y / rows ) + animation.angle;
+    const spatialTerm = xSign * ( x / columns ) + ySign * ( y / rows );
+    const switchingIndex =
+      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
     const currentLetter = mappers.circularIndex(
       switchingIndex,
       word

@@ -51,6 +51,8 @@ sketch.draw( async() => {
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
   const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
+  const letterSpeed = options.sketch?.letters?.speed ?? 1;
+  const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
 
   if ( sceneRot.enabled ?? true ) {
     p.rotateY( mappers.fn(
@@ -155,7 +157,7 @@ sketch.draw( async() => {
     const chance = p.noise( xSign * ( x / columns ) + ySign * ( y / rows ) + animation.angle );
 
     const currentLetter = mappers.circularIndex(
-      chance + animation.angle / 2,
+      animation.progression * word.length * letterSpeed + spatialFactor * chance,
       word
     );
 
