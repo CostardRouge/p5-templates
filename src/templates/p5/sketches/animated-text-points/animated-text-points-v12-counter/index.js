@@ -27,7 +27,7 @@ const drawBackgroundPattern = (
   p.stroke( ...strokeColor );
   p.strokeWeight( weight );
   p.translate(
-    -p.width,
+    -p.width / 2,
     -p.height / 2,
     -200
   );
@@ -131,7 +131,7 @@ sketch.draw( async() => {
       1,
       ~~animation.ease( {
         values: counterValues,
-        currentTime: animation.angle,
+        currentTime: animation.progression * counterValues.length,
         duration: 1,
         easingFn: easing[ bgPattern.easing ] ?? easing.easeInOutExpo
       } )
