@@ -8,8 +8,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import cache from "@/p5/utils/cache.js";
-import grid from "@/p5/utils/grid.js";
+import gridMask from "@/p5/utils/gridMask.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup(
@@ -70,7 +69,6 @@ sketch.draw( async() => {
   const columns = gridOpts.columns ?? 30;
   const rows = proportional ? Math.round( columns * p.height / p.width ) : gridOpts.rows ?? 50;
   const cellSize = p.width / columns;
-  const fontFamily = font.font?.names?.fontFamily?.en ?? "unknown";
 
   // Per-cell rotation precomputed once per frame (uniform across cells but applied before translate, creating a wobble)
   const cellRotEnabled = sceneRot.enabled ?? true;
@@ -131,111 +129,95 @@ sketch.draw( async() => {
   const colorFunction = colors?.[ palette ] ?? colors.rainbow;
   const hueOffsetSpeed = color.hueOffsetSpeed ?? 1;
 
-  await grid.draw(
+  const field = await gridMask.field( {
     gridOptions,
-    (
-      cellVector, {
-        x, y
-      }
-    ) => {
-      const alphaKey = cache.key(
-        x,
-        y,
-        columns,
-        rows,
-        fontFamily,
-        currentLetter,
-        sampleFactor,
-        "alpha"
-      );
-      const alpha = cache.store(
-        alphaKey,
-        () => points.reduce(
-          (
-            result, point
-          ) => {
-            if ( result >= 255 ) {
-              return result;
-            }
+    points,
+    signature: string.textPointsSignature( {
+      text: currentLetter,
+      font,
+      size,
+      sampleFactor,
+      simplifyThreshold
+    } ),
+    distance: cellSize,
+    space: "pixel",
+    output: "falloff",
+    alphaRange: [
+      0,
+      255
+    ]
+  } );
 
-            return Math.max(
-              result,
-              ~~p.map(
-                point.dist( cellVector ),
-                0,
-                cellSize,
-                255,
-                0,
-                true
-              )
-            );
-          },
-          0
-        )
-      );
+  field.cells.forEach( (
+    cell, cellIndex
+  ) => {
+    const cellVector = cell.position;
+    const {
+      x, y
+    } = cell;
+    const alpha = field.alpha[ cellIndex ];
 
-      const t = animation.angle;
-      const ww = p.noise( cellVector.x + t ) > noiseThresholdW;
-      const hh = p.noise( cellVector.y + t ) > noiseThresholdH;
-      const extraLines = ww && hh;
+    const t = animation.angle;
+    const ww = p.noise( cellVector.x + t ) > noiseThresholdW;
+    const hh = p.noise( cellVector.y + t ) > noiseThresholdH;
+    const extraLines = ww && hh;
 
-      if ( noiseGateEnabled && !alpha && extraLines ) {
-        return;
-      }
+    if ( noiseGateEnabled && !alpha && extraLines ) {
+      return;
+    }
 
-      const chance = p.noise( x / columns + y / rows + t );
+    const chance = p.noise( x / columns + y / rows + t );
 
-      const tint = colorFunction( {
-        hueOffset: animation.angle * hueOffsetSpeed,
-        hueIndex: cellVector.x + cellVector.y
-      } );
-      const {
-        levels: [
-          r,
-          g,
-          b
-        ]
-      } = tint;
-
-      p.stroke( tint );
-      p.fill(
+    const tint = colorFunction( {
+      hueOffset: animation.angle * hueOffsetSpeed,
+      hueIndex: cellVector.x + cellVector.y
+    } );
+    const {
+      levels: [
         r,
         g,
-        b,
-        alpha
-      );
+        b
+      ]
+    } = tint;
 
-      if ( chance > chanceThreshold ) {
-        p.push();
-        p.translate(
-          cellVector.x,
-          cellVector.y,
-          0
-        );
-        p.circle(
-          0,
-          0,
-          circleSize
-        );
-        p.pop();
-      } else {
-        p.push();
-        p.rotateY( cellRotY );
-        p.rotateX( cellRotX );
-        p.translate(
-          cellVector.x,
-          cellVector.y,
-          boxDepth / 2
-        );
-        p.box(
-          boxWidth,
-          boxWidth,
-          boxDepth
-        );
-        p.pop();
-      }
+    p.stroke( tint );
+    p.fill(
+      r,
+      g,
+      b,
+      alpha
+    );
+
+    if ( chance > chanceThreshold ) {
+      p.push();
+      p.translate(
+        cellVector.x,
+        cellVector.y,
+        0
+      );
+      p.circle(
+        0,
+        0,
+        circleSize
+      );
+      p.pop();
+    } else {
+      p.push();
+      p.rotateY( cellRotY );
+      p.rotateX( cellRotX );
+      p.translate(
+        cellVector.x,
+        cellVector.y,
+        boxDepth / 2
+      );
+      p.box(
+        boxWidth,
+        boxWidth,
+        boxDepth
+      );
+      p.pop();
     }
-  );
+  } );
 
   renderTitle();
 } );
