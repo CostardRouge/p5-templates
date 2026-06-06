@@ -8,10 +8,10 @@ export const formValues = {
 
   columns: 4,
   margin: 0,
-  colGap: 16,
+  colGap: 0,
   itemAspect: 0.75,
-  baseSpeed: 1,
-  speedStep: 1,
+  baseSpeed: 2,
+  speedStep: 0,
   alternate: true,
   reverseAll: false,
   parallax: 0.12

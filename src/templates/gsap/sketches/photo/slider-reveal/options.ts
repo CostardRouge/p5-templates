@@ -9,7 +9,7 @@ export const formValues = {
   cornerRadius: 0,
   maxSlides: 8,
   margin: 0,
-  transition: "fade",
+  transition: "slide",
   direction: "left",
   transitionPortion: 0.4,
   breathing: 0.05

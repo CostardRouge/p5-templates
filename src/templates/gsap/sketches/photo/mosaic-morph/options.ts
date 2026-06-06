@@ -8,12 +8,12 @@ export const formValues = {
 
   cornerRadius: 0,
   grid: {
-    rows: 5,
-    columns: 5
+    rows: 16,
+    columns: 15
   },
-  margin: 64,
-  scatter: 0.35,
-  rotate: 35,
+  margin: 0,
+  scatter: 0.13,
+  rotate: 21,
   scaleVar: 0.35,
   seed: 11
 };

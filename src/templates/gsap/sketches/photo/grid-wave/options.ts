@@ -15,9 +15,9 @@ export const formValues = {
   depth: 80,
   shade: 0.35,
   cycles: 1,
-  freqRow: 0.5,
-  freqCol: 0.5,
-  perspective: 1400
+  freqRow: 0.1,
+  freqCol: 0.85,
+  perspective: 600
 };
 
 export const formConfiguration: Record<string, any> = {
