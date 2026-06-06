@@ -85,6 +85,21 @@ const themeOptions = [
   }
 ] as const;
 
+// Dev-only diagnostic pages. Each route 404s in production (see the
+// notFound() guard inside the pages), so the section is gated the same way.
+const DEBUG_LINKS: NavLink[] = [
+  {
+    href: "/debug/icons",
+    label: "Icons",
+    Icon: ImageIcon
+  },
+  {
+    href: "/debug/opengraph",
+    label: "OpenGraph",
+    Icon: Share2
+  }
+];
+
 function urlBase64ToUint8Array( base64String: string ) {
   const padding = "=".repeat( ( 4 - ( base64String.length % 4 ) ) % 4 );
   const base64 = ( base64String + padding ).replace(
@@ -323,22 +338,6 @@ function MenuBar( {
     } );
   }
 
-  // Dev-only diagnostics — match the gating used inside each /debug page
-  if ( IS_DEV ) {
-    navLinks.push(
-      {
-        href: "/debug/icons",
-        label: "Icons",
-        Icon: ImageIcon
-      },
-      {
-        href: "/debug/opengraph",
-        label: "OpenGraph",
-        Icon: Share2
-      }
-    );
-  }
-
   if ( GITHUB_REPO_URL ) {
     navLinks.push( {
       href: GITHUB_REPO_URL,
@@ -357,7 +356,10 @@ function MenuBar( {
     external: true
   } );
 
-  const internalRoutes = navLinks
+  const internalRoutes = [
+    ...navLinks,
+    ...( IS_DEV ? DEBUG_LINKS : [] )
+  ]
     .filter( ( link ) => !link.external && link.href !== "/" )
     .map( ( link ) => link.href );
 
@@ -439,6 +441,45 @@ function MenuBar( {
             </MenuItem>
           );
         } )}
+
+        {IS_DEV && (
+          <>
+            <Divider />
+            <SectionLabel>Debug</SectionLabel>
+            {DEBUG_LINKS.map( ( {
+              href, label, Icon
+            } ) => {
+              const active = isActive( href );
+
+              return (
+                <MenuItem key={ href }>
+                  {( {
+                    focus
+                  } ) => (
+                    <Link
+                      href={ href }
+                      onClick={ pauseSketchForNav }
+                      className={ clsx(
+                        itemClass,
+                        focus && "bg-hover",
+                        active && "font-semibold"
+                      ) }
+                    >
+                      <Icon className="h-4 w-4 text-foreground/70" />
+                      <span className="flex-1">{label}</span>
+                      {active && (
+                        <span
+                          aria-hidden
+                          className="h-1.5 w-1.5 rounded-full bg-foreground"
+                        />
+                      )}
+                    </Link>
+                  )}
+                </MenuItem>
+              );
+            } )}
+          </>
+        )}
 
         {hasPendingActions && (
           <>
