@@ -1,3 +1,4 @@
+import cache from "./cache.js";
 import graphics from "./graphics.js";
 import {
   getP5
@@ -196,6 +197,38 @@ const COMMON_GLSL = `
     vec2 d = v - uCenter;
 
     return vec2(c * d.x + s * d.y, c * d.y - s * d.x) + uCenter;
+  }
+`;
+
+// GLSL ports of utils/mappers.js + utils/easing.js.
+//   remap        == p5.map (unclamped)
+//   remapClamp   == p5.map(..., true)
+//   ease helpers mirror easing.js; mappers.fn(v,min,max,a,b,ease) is
+//   remap(ease(remap(v, min, max, 0.0, 1.0)), 0.0, 1.0, a, b).
+const MAPPERS_GLSL = `
+  float remap(float v, float a, float b, float c, float d) {
+    return c + (v - a) / (b - a) * (d - c);
+  }
+
+  float remapClamp(float v, float a, float b, float c, float d) {
+    float t = clamp((v - a) / (b - a), 0.0, 1.0);
+    return c + t * (d - c);
+  }
+
+  float easeInSine(float x) { return 1.0 - cos((x * PI) / 2.0); }
+  float easeOutSine(float x) { return sin((x * PI) / 2.0); }
+  float easeInOutSine(float x) { return -(cos(PI * x) - 1.0) / 2.0; }
+
+  float easeInQuad(float x) { return x * x; }
+  float easeOutQuad(float x) { return 1.0 - (1.0 - x) * (1.0 - x); }
+  float easeInOutQuad(float x) {
+    return x < 0.5 ? 2.0 * x * x : 1.0 - pow(-2.0 * x + 2.0, 2.0) / 2.0;
+  }
+
+  float easeInCubic(float x) { return x * x * x; }
+  float easeOutCubic(float x) { return 1.0 - pow(1.0 - x, 3.0); }
+  float easeInOutCubic(float x) {
+    return x < 0.5 ? 4.0 * x * x * x : 1.0 - pow(-2.0 * x + 2.0, 3.0) / 2.0;
   }
 `;
 
@@ -398,7 +431,7 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     state.program = buildProgram(
       gl,
       VERT_SRC,
-      COMMON_GLSL + PALETTES_GLSL + fragmentSource
+      COMMON_GLSL + MAPPERS_GLSL + PALETTES_GLSL + fragmentSource
     );
 
     state.locs = {};
@@ -740,4 +773,84 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
   return {
     render
   };
+}
+
+/**
+ * Pre-compute the converged min/max of a per-cell scalar over the animation
+ * loop, on the CPU, cached by `key`.
+ *
+ * Several sketches normalise colour/weight against a min/max of the noise angle
+ * that the originals accumulate across frames (the look "warms up" over the
+ * first seconds). A pixel-parallel shader can't reduce that cheaply, so instead
+ * we sample the field once across the whole loop to get the steady-state range
+ * and feed it in as uniforms. Recomputes only when `key` changes (so live form
+ * edits to seed/detail/grid stay correct), and subsamples large grids to keep
+ * the cost to a few milliseconds.
+ *
+ * @param {object} args
+ * @param {string} args.key            cache key built from every field param
+ * @param {number} args.columns
+ * @param {number} args.rows
+ * @param {number} [args.frames=30]    time samples across the loop
+ * @param {number} [args.maxCols=64]   cap on sampled columns
+ * @param {number} [args.maxRows=64]   cap on sampled rows
+ * @param {Function} [args.prepareFrame] (u) => void — set noiseSeed/noiseDetail for loop position u in [0,1)
+ * @param {Function} args.sampleAt     (col, row, u) => number
+ * @returns {{ min: number, max: number }}
+ */
+export function computeFieldRange( {
+  key,
+  columns,
+  rows,
+  frames = 30,
+  maxCols = 64,
+  maxRows = 64,
+  prepareFrame,
+  sampleAt
+} ) {
+  return cache.store(
+    `noise-field-range-${ key }`,
+    () => {
+      const colStep = Math.max(
+        1,
+        Math.ceil( columns / maxCols )
+      );
+      const rowStep = Math.max(
+        1,
+        Math.ceil( rows / maxRows )
+      );
+
+      let min = Infinity;
+      let max = -Infinity;
+
+      for ( let f = 0; f < frames; f++ ) {
+        const u = f / frames;
+
+        prepareFrame?.( u );
+
+        for ( let row = 0; row < rows; row += rowStep ) {
+          for ( let col = 0; col < columns; col += colStep ) {
+            const value = sampleAt(
+              col,
+              row,
+              u
+            );
+
+            if ( value < min ) {
+              min = value;
+            }
+
+            if ( value > max ) {
+              max = value;
+            }
+          }
+        }
+      }
+
+      return {
+        min,
+        max
+      };
+    }
+  );
 }
