@@ -75,9 +75,9 @@ const FRAG_SRC = `
     float u = mod(wrapped, 64.0);
     float v = floor(wrapped / 64.0);
     vec2 uv = (vec2(u, v) + 0.5) / 64.0;
-    vec4 packed = texture2D(uPerlin, uv);
+    vec4 texel = texture2D(uPerlin, uv);
 
-    return dot(packed, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
+    return dot(texel, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
   }
 
   float scaledCosine(float i) {
