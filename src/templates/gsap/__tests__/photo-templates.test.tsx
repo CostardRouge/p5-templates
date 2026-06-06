@@ -37,6 +37,11 @@ import MarqueeRows from "@/gsap/sketches/photo/marquee-rows/index.jsx";
 import SplitColumns from "@/gsap/sketches/photo/split-columns/index.jsx";
 import GridWave from "@/gsap/sketches/photo/grid-wave/index.jsx";
 import MosaicMorph from "@/gsap/sketches/photo/mosaic-morph/index.jsx";
+import StackFan from "@/gsap/sketches/photo/stack-fan/index.jsx";
+import StackPeel from "@/gsap/sketches/photo/stack-peel/index.jsx";
+import OrbitRing from "@/gsap/sketches/photo/orbit-ring/index.jsx";
+import SliderReveal from "@/gsap/sketches/photo/slider-reveal/index.jsx";
+import KenBurnsFrame from "@/gsap/sketches/photo/ken-burns-frame/index.jsx";
 
 const DURATION = 6;
 
@@ -323,6 +328,70 @@ describe(
           }
         } ),
         selector: ".mm-tile"
+      },
+      {
+        name: "stack-fan",
+        Component: StackFan,
+        options: baseOptions( {
+          maxCards: 5
+        } ),
+        selector: ".sf-card"
+      },
+      {
+        name: "stack-peel",
+        Component: StackPeel,
+        options: baseOptions( {
+          maxCards: 4
+        } ),
+        selector: ".sp-card"
+      },
+      {
+        name: "orbit-ring",
+        Component: OrbitRing,
+        options: baseOptions( {
+          count: 6
+        } ),
+        selector: ".or-ring",
+        seamless: (
+          stage, tl
+        ) => {
+          const ring = stage.querySelector( ".or-ring" ) as HTMLElement;
+
+          tl.time( tl.duration() * 0.5 );
+          const midRotation = gsap.getProperty(
+            ring,
+            "rotation"
+          ) as number;
+
+          tl.time( tl.duration() );
+          const endRotation = gsap.getProperty(
+            ring,
+            "rotation"
+          ) as number;
+
+          expect( Math.abs( midRotation ) ).toBeGreaterThan( 0 );
+          expect( ( ( endRotation % 360 ) + 360 ) % 360 ).toBeCloseTo(
+            0,
+            3
+          );
+        }
+      },
+      {
+        name: "slider-reveal",
+        Component: SliderReveal,
+        options: baseOptions( {
+          maxSlides: 6,
+          transition: "fade"
+        } ),
+        selector: ".sr-slide"
+      },
+      {
+        name: "ken-burns-frame",
+        Component: KenBurnsFrame,
+        options: baseOptions( {
+          caption: "Hello"
+        } ),
+        selector: ".kb-image"
       }
     ];
 

@@ -2614,5 +2614,65 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-06T17:34:06.675Z",
     "ctime": "2026-06-06T17:34:06.675Z"
+  },
+  {
+    "name": "stack-fan",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-06T17:51:46.349Z",
+    "ctime": "2026-06-06T17:51:46.349Z"
+  },
+  {
+    "name": "stack-peel",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-06T17:51:46.349Z",
+    "ctime": "2026-06-06T17:51:46.349Z"
+  },
+  {
+    "name": "orbit-ring",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-06T17:51:46.349Z",
+    "ctime": "2026-06-06T17:51:46.349Z"
+  },
+  {
+    "name": "slider-reveal",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-06T17:51:46.349Z",
+    "ctime": "2026-06-06T17:51:46.349Z"
+  },
+  {
+    "name": "ken-burns-frame",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-06T17:51:46.349Z",
+    "ctime": "2026-06-06T17:51:46.349Z"
   }
 ]
