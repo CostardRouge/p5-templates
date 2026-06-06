@@ -45,6 +45,7 @@ const VERT_SRC = `
 // Pixel coordinates use the same top-left origin p5 uses in 2D.
 const COMMON_GLSL = `
   precision highp float;
+  precision highp int;
 
   #define MAX_OCT ${ MAX_OCTAVES }
 
