@@ -329,6 +329,29 @@ export function emitQuadraticMidpoint(
 }
 
 /**
+ * Uniformly scale a list of points about the canvas center. Used as the sketch's
+ * "general size" control: factor < 1 shrinks the whole curve toward the centre,
+ * factor > 1 grows it. Stroke weights and marker sizes are untouched.
+ */
+export function scaleAboutCenter(
+  points, factor
+) {
+  const p = getP5();
+
+  if ( factor === 1 ) {
+    return points;
+  }
+
+  const cx = p.width / 2;
+  const cy = p.height / 2;
+
+  return points.map( ( v ) => p.createVector(
+    cx + ( v.x - cx ) * factor,
+    cy + ( v.y - cy ) * factor
+  ) );
+}
+
+/**
  * Draw a single dashed segment between two points. Used by the demonstration
  * overlay to render the raw polygon as a dashed outline.
  */

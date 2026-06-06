@@ -4,7 +4,8 @@ export const formValues = {
     seed: 2,
     layout: "random" as "random" | "corners" | "ring",
     motion: 0.095,
-    speed: 1
+    speed: 1,
+    scale: 1
   },
   curve: {
     method: "chaikin" as "chaikin" | "catmull-rom" | "quadratic",
@@ -108,6 +109,13 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 5,
         step: 0.1
+      },
+      scale: {
+        label: "Scale (general size)",
+        component: "slider",
+        min: 0.1,
+        max: 2,
+        step: 0.05
       }
     }
   },

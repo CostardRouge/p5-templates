@@ -10,7 +10,8 @@ import {
   chaikin,
   emitCatmullRom,
   emitQuadraticMidpoint,
-  dashedLine
+  dashedLine,
+  scaleAboutCenter
 } from "../_shared.js";
 
 // Base (un-animated) point layout is only rebuilt when the relevant options or
@@ -250,14 +251,17 @@ sketch.draw( () => {
 
   const pointsOptions = o.points ?? {};
   const seed = ensureBasePoints( pointsOptions );
-  const points = animatePoints(
-    state.basePoints,
-    {
-      motion: pointsOptions.motion ?? 0.05,
-      speed: pointsOptions.speed ?? 1,
-      seed,
-      angle: animation.angle
-    }
+  const points = scaleAboutCenter(
+    animatePoints(
+      state.basePoints,
+      {
+        motion: pointsOptions.motion ?? 0.05,
+        speed: pointsOptions.speed ?? 1,
+        seed,
+        angle: animation.angle
+      }
+    ),
+    pointsOptions.scale ?? 1
   );
 
   if ( points.length < 2 ) {
