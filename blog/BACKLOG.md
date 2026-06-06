@@ -4,9 +4,9 @@
 > (git log + diffs + dossier `docs/`). Voir [`README.md`](./README.md) pour le
 > fonctionnement de la loop qui maintient ce fichier.
 
-**Dernier scan :** 2026-06-06
-**Commit de référence (HEAD scanné) :** `2b82093`
-**Périmètre :** 159 commits · 34 PRs · ~70 notes dans `docs/`
+**Dernier scan :** 2026-06-06 (màj)
+**Commit de référence (HEAD scanné) :** `91430de`
+**Périmètre :** 172 commits · 35 PRs · ~70 notes dans `docs/`
 
 Légende statut : 🟡 idée · 🔵 prêt à rédiger (matière abondante) · ✍️ en cours · ✅ publié
 
@@ -73,6 +73,26 @@ série « build in public ».
   des options, config de champs centralisée.
 - **Sources :** commit `abedc8c`/`abd206e` (PR #67), `docs/OPTIONS_IMPORT_EXPORT.md`,
   `src/components/.../ContentItems/constants/field-config.ts`.
+
+### B5 — « Un spatial hash pour un alpha-mask de grille : −510 lignes, prouvé pixel-identique » 🔵
+- **Angle :** étude de cas perf **+** refacto, idéale pour un article technique pointu.
+  - **Problème :** 8 sketches (`36days-of-type-2023`, `animated-text-points`) reconstruisaient
+    un champ alpha par cellule en réduisant sur **tous** les points du contour de texte pour
+    **chaque** cellule → O(cells × points), ~**1M appels `dist()`/frame**. Helper copié-collé
+    en 2 variantes divergentes.
+  - **Solution :** un seul `gridMask.field()` qui calcule le champ une fois par
+    (grid, points, distance, mode), le **cache**, et accélère via un **uniform spatial hash**
+    (bucket = distance, voisinage 3×3 par cellule).
+  - **Le point fort de l'article :** la correction est **prouvée pixel-identique** à la
+    réduction naïve — au-delà de `distance` un point contribue toujours le plancher d'alpha (0)
+    au `max`, donc l'ignorer ne change jamais le résultat. Un test unitaire vérifie l'identité
+    (pixel/falloff, normalized/falloff, normalized/boolean anisotrope).
+  - **Bonus :** `string.textPointsSignature()` pour keyer les caches sur la même signature
+    géométrique que `getTextPoints`, helper de morph `lerpField`, rayon de gridMask configurable,
+    pilotage du switch de lettre par la progression du loop.
+- **Sources :** `src/templates/p5/utils/gridMask.js` (+ son test), commits `7931e41` (fondateur),
+  `15517a9`/`dd745c9` (extension per-letter), `fc64f4b` (rayon configurable),
+  `8b70f7f` (loop-driven), PR #69. Répond directement au sujet « gridmasques ».
 
 ### B4 — « Le système de titre & de "specs overlay" » 🟡
 - **Angle :** rendu de titres riches paramétrables (`utils/title/`) et overlay
