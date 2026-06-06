@@ -33,6 +33,9 @@ import {
 import {
   getSketchOptions, setSketchOptions, subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
+import {
+  toCssColor
+} from "./dom";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -263,6 +266,16 @@ class GsapRuntime {
     stage.style.width = `${ width }px`;
     stage.style.height = `${ height }px`;
     stage.style.overflow = "hidden";
+
+    // Give the capture surface itself an opaque background derived from the
+    // sketch. Templates paint their own background on top, so this is invisible
+    // in normal display — but it guarantees the headless DOM capture
+    // (Playwright `element.screenshot`, which preserves alpha) is never
+    // transparent, even before the template has committed its first frame.
+    stage.style.background = toCssColor(
+      this.options?.sketch?.backgroundColor,
+      "#0a0a0c"
+    );
   }
 
   reset(): void {
