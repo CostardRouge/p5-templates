@@ -12,11 +12,13 @@ import {
   Film,
   Github,
   Home,
+  ImageIcon,
   ImagePlus,
   Menu as MenuIcon,
   Monitor,
   Moon,
   Paintbrush,
+  Share2,
   Sun,
   Video
 } from "lucide-react";
@@ -63,6 +65,7 @@ const BACKEND_RECORDING = process.env.NEXT_PUBLIC_BACKEND_RECORDING === "true";
 const NOTIFICATIONS_ENABLED = process.env.NEXT_PUBLIC_NOTIFICATIONS === "true";
 const SHOW_NOTIFICATIONS = BACKEND_RECORDING && NOTIFICATIONS_ENABLED;
 const GITHUB_REPO_URL = process.env.NEXT_PUBLIC_GITHUB_REPO_URL;
+const IS_DEV = process.env.NODE_ENV === "development";
 
 const themeOptions = [
   {
@@ -318,6 +321,22 @@ function MenuBar( {
       label: "Recordings",
       Icon: Video
     } );
+  }
+
+  // Dev-only diagnostics — match the gating used inside each /debug page
+  if ( IS_DEV ) {
+    navLinks.push(
+      {
+        href: "/debug/icons",
+        label: "Icons",
+        Icon: ImageIcon
+      },
+      {
+        href: "/debug/opengraph",
+        label: "OpenGraph",
+        Icon: Share2
+      }
+    );
   }
 
   if ( GITHUB_REPO_URL ) {
