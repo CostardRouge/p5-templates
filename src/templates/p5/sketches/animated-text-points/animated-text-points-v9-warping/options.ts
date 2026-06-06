@@ -8,23 +8,23 @@ export const formValues = {
   shape: {
     text: " sunday bloody sunday",
     font: "serif",
-    size: 0.83,
-    sampleFactor: 0.5,
+    size: 1.05,
+    sampleFactor: 0.27,
     simplifyThreshold: 0
   },
   grid: {
     proportional: true,
-    columns: 30,
+    columns: 45,
     rows: 50
   },
   cell: {
-    boxSize: 32,
-    boxDepth: 150
+    boxSize: 23,
+    boxDepth: 155
   },
   warp: {
-    amount: 0.16,
-    rowDivisor: 10,
-    colDivisor: 10,
+    amount: 0.05,
+    rowDivisor: 26.5,
+    colDivisor: 50,
     speed: 1
   },
   color: {
@@ -35,7 +35,7 @@ export const formValues = {
     opacityMax: 2.1,
     opacityMin: 1
   },
-  strokeWeight: 2,
+  strokeWeight: 0,
   backgroundColor: [
     0,
     0,

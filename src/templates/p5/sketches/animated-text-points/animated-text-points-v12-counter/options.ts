@@ -7,26 +7,26 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 export const formValues = {
   shape: {
     text: "0123456789 ",
-    font: "sans",
-    letterSize: 1000,
+    font: "waverseVariable",
+    letterSize: 1470,
     sampleFactor: 0.15,
     simplifyThreshold: 0
   },
   grid: {
     proportional: true,
-    columns: 30,
+    columns: 50,
     rows: 50
   },
   cell: {
-    boxSize: 36,
-    boxDepth: 150,
-    screenRatio: 1.5,
-    microRotAmount: 0.16,
-    ringRotMultiplier: 2
+    boxSize: 16,
+    boxDepth: 113,
+    screenRatio: 0.9,
+    microRotAmount: 0.02,
+    ringRotMultiplier: 0.1
   },
   bgPattern: {
     enabled: true,
-    weight: 3,
+    weight: 0,
     easing: "easeInOutExpo",
     color: [
       255,

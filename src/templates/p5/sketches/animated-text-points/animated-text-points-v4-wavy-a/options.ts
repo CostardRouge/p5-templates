@@ -35,7 +35,7 @@ export const formValues = {
     tiltX: Math.PI / 6
   },
   color: {
-    palette: "rainbowCrazy",
+    palette: "rainbow",
     hueOffsetSpeed: 1
   },
   strokeWeight: 2,

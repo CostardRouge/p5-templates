@@ -8,27 +8,27 @@ export const formValues = {
   shape: {
     text: "Turbulence ",
     font: "serif",
-    letterSize: 900,
-    sampleFactor: 0.15,
+    letterSize: 870,
+    sampleFactor: 0.13,
     simplifyThreshold: 0
   },
   grid: {
     proportional: true,
-    columns: 40,
+    columns: 46,
     rows: 50
   },
   cell: {
-    boxSize: 27,
-    boxDepth: 150,
-    screenRatio: 1.5
+    boxSize: 23,
+    boxDepth: 263,
+    screenRatio: 1.55
   },
   warp: {
-    amount: 0.166,
-    innerAmount: 0.166,
-    rowDivisorA: 10,
-    colDivisorA: 20,
+    amount: 0.03,
+    innerAmount: 0,
+    rowDivisorA: 6,
+    colDivisorA: 17.5,
     rowDivisorB: 20,
-    colDivisorB: 15,
+    colDivisorB: 22.5,
     speed: 1
   },
   color: {
