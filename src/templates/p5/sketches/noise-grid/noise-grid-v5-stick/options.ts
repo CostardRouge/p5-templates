@@ -8,13 +8,13 @@ export const formValues = {
   },
   noise: {
     seed: 4572,
-    detail: 32,
-    falloff: 0.05,
-    yTimeMultiplier: 0.75,
-    zSpeed: 0.698
+    detail: 1,
+    falloff: 0,
+    yTimeMultiplier: -0.82,
+    zSpeed: 0.348
   },
   angle: {
-    cycles: 3.6
+    cycles: 3.7
   },
   stick: {
     lengthScaleMin: 2.14,
