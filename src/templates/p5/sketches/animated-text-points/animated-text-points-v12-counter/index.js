@@ -9,7 +9,7 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
-import iterators from "@/p5/utils/iterators.js";
+import drawBackgroundPattern from "@/p5/utils/backgroundPattern.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup(
@@ -18,64 +18,6 @@ sketch.setup(
     type: "webgl"
   }
 );
-
-const drawBackgroundPattern = (
-  p, columns, time, weight, strokeColor
-) => {
-  p.push();
-  p.noFill();
-  p.stroke( ...strokeColor );
-  p.strokeWeight( weight );
-  p.translate(
-    -p.width / 2,
-    -p.height / 2,
-    -200
-  );
-
-  const columnSize = p.width / columns;
-  const halfColumnSize = columnSize / 2;
-  const columnPadding = weight + halfColumnSize;
-  const precision = 0.04;
-
-  for ( let i = 0; i < columns; i++ ) {
-    const x = i * columnSize + halfColumnSize;
-    const top = p.createVector(
-      x,
-      -200
-    );
-    const bottom = p.createVector(
-      x,
-      p.height + 200
-    );
-
-    p.beginShape();
-    iterators.vector(
-      top,
-      bottom,
-      precision,
-      (
-        position, lerpIndex
-      ) => {
-        const driftBound = ( halfColumnSize + columnPadding ) * p.sin( time + i );
-        const driftX = p.map(
-          easing.easeInOutBack( lerpIndex % 1 ),
-          0,
-          1,
-          -driftBound,
-          driftBound
-        );
-
-        p.vertex(
-          position.x + driftX,
-          position.y
-        );
-      }
-    );
-    p.endShape();
-  }
-
-  p.pop();
-};
 
 sketch.draw( async() => {
   const p = getP5();
@@ -127,9 +69,11 @@ sketch.draw( async() => {
       9,
       0
     ];
+    // Keep the count fractional so a new line fades/slides in progressively
+    // instead of snapping into place when the counter ticks over.
     const n = Math.max(
       1,
-      ~~animation.ease( {
+      animation.ease( {
         values: counterValues,
         currentTime: animation.progression * counterValues.length,
         duration: 1,
@@ -137,17 +81,19 @@ sketch.draw( async() => {
       } )
     );
 
-    drawBackgroundPattern(
-      p,
-      n,
-      animation.angle,
-      bgPattern.weight ?? 3,
-      bgPattern.color ?? [
+    drawBackgroundPattern( {
+      columns: n,
+      time: animation.angle,
+      weight: bgPattern.weight ?? 3,
+      color: bgPattern.color ?? [
         255,
         255,
         255
-      ]
-    );
+      ],
+      overshoot: bgPattern.overshoot ?? 200,
+      depth: bgPattern.depth ?? -200,
+      centered: true
+    } );
   }
 
   // return;
