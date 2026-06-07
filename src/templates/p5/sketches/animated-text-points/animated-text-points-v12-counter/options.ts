@@ -6,34 +6,34 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   mask: {
-    distance: 1
+    distance: 1.1
   },
   letters: {
     speed: 1,
     spatialFactor: 0
   },
   shape: {
-    text: "0123456789 ",
+    text: "0123456789",
     font: "waverseVariable",
-    letterSize: 1470,
+    letterSize: 1430,
     sampleFactor: 0.15,
     simplifyThreshold: 0
   },
   grid: {
     proportional: true,
-    columns: 50,
+    columns: 30,
     rows: 50
   },
   cell: {
-    boxSize: 16,
-    boxDepth: 113,
-    screenRatio: 0.9,
-    microRotAmount: 0.02,
-    ringRotMultiplier: 0.1
+    boxSize: 26,
+    boxDepth: 181,
+    screenRatio: 1,
+    microRotAmount: 0.01,
+    ringRotMultiplier: 0
   },
   bgPattern: {
     enabled: true,
-    weight: 0,
+    weight: 1.5,
     easing: "easeInOutExpo",
     color: [
       255,
@@ -43,10 +43,10 @@ export const formValues = {
   },
   color: {
     palette: "rainbow",
-    hueIndexMultiplier: 4,
+    hueIndexMultiplier: 0.9,
     opacityMax: 2.1,
     opacityMin: 1,
-    fillAlpha: 230
+    fillAlpha: 89
   },
   strokeWeight: 2,
   backgroundColor: [

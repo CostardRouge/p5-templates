@@ -6,38 +6,38 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   mask: {
-    distance: 1
+    distance: 0.55
   },
   letters: {
     speed: 1,
     spatialFactor: 0
   },
   shape: {
-    text: " sunday bloody sunday",
-    font: "serif",
-    size: 1.05,
-    sampleFactor: 0.27,
+    text: " warp",
+    font: "martian",
+    size: 1.01,
+    sampleFactor: 0.15,
     simplifyThreshold: 0
   },
   grid: {
     proportional: true,
-    columns: 45,
-    rows: 50
+    columns: 43,
+    rows: 60
   },
   cell: {
-    boxSize: 23,
-    boxDepth: 155
+    boxSize: 27,
+    boxDepth: 397
   },
   warp: {
-    amount: 0.05,
-    rowDivisor: 26.5,
-    colDivisor: 50,
-    speed: 1
+    amount: 0.11,
+    rowDivisor: 1,
+    colDivisor: 2,
+    speed: 3
   },
   color: {
     palette: "rainbow",
-    useNormalMaterial: true,
-    hueIndexMultiplier: 4,
+    useNormalMaterial: false,
+    hueIndexMultiplier: 6,
     hueOffset: 0,
     opacityMax: 2.1,
     opacityMin: 1
@@ -46,7 +46,8 @@ export const formValues = {
   backgroundColor: [
     0,
     0,
-    0
+    0,
+    255
   ],
   title: {
     ...titleDefaultValues,
