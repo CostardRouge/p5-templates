@@ -37,6 +37,31 @@ export const BODY_HIP_INDICES = [
   24
 ];
 
+// Anatomical order so a per-pose group draws as one connected ribbon: down the
+// left arm, across the torso and back up the right arm.
+const BODY_CHAIN = [
+  15, // left wrist
+  13, // left elbow
+  11, // left shoulder
+  23, // left hip
+  24, // right hip
+  12, // right shoulder
+  14, // right elbow
+  16 // right wrist
+];
+
+// Which landmark toggle each chain index belongs to.
+const BODY_CHAIN_GROUP = {
+  11: "shoulders",
+  12: "shoulders",
+  13: "elbows",
+  14: "elbows",
+  15: "wrists",
+  16: "wrists",
+  23: "hips",
+  24: "hips"
+};
+
 // ── Module-level state ─────────────────────────────────────────────────────
 
 // Raw mouse/touch: tracked via window listeners so coordinates are correct
@@ -72,6 +97,14 @@ let _audioInitialized = false;
 let _audioContext = null;
 let _audioAnalyser = null;
 let _audioFreqData = null;
+
+// Vision lazy-init state: the task/camera signature currently initialized, plus
+// an in-flight guard so we never kick off two mediapipe initializations at once.
+let _visionSignature = "";
+let _visionInitInFlight = null;
+
+// Temporal smoothing state for getPointerGroups, keyed by `${groupId}:${index}`.
+const _groupSmoothing = new Map();
 
 // ── Coordinate conversion ──────────────────────────────────────────────────
 
@@ -205,25 +238,6 @@ async function _initAudio( opts ) {
  * @param {object} opts - The `interaction` section of sketch options
  */
 export async function initInteraction( opts = {} ) {
-  const vision = opts.vision ?? {};
-  const interactionEnabled = opts.enabled !== false;
-  const visionEnabled = interactionEnabled && vision.enabled !== false;
-  const tasks = [];
-
-  if ( visionEnabled ) {
-    if ( vision.hands?.enabled ) {
-      tasks.push( "hands" );
-    }
-
-    if ( vision.body?.enabled ) {
-      tasks.push( "poses" );
-    }
-
-    if ( vision.face?.enabled ) {
-      tasks.push( "faces" );
-    }
-  }
-
   _noiseOffset = opts.perlinNoise?.seed ?? 0;
 
   // ── Gyroscope ────────────────────────────────────────────────────────────
@@ -345,19 +359,10 @@ export async function initInteraction( opts = {} ) {
   _audioInitialized = false;
 
   // ── MediaPipe ────────────────────────────────────────────────────────────
-  if ( tasks.length > 0 ) {
-    const cam = vision.camera ?? {};
-
-    await mediapipeInit( {
-      worker: false,
-      tasks,
-      captureSize: {
-        width: cam.width ?? 320,
-        height: cam.height ?? 240
-      },
-      captureFlip: cam.flip ?? true
-    } );
-  }
+  // Pre-warm vision when a camera tracker is already enabled at setup. The same
+  // routine also runs every frame from getPointers()/getPointerGroups(), so
+  // toggling a tracker on at runtime now starts the camera without a reload.
+  await _ensureVision( opts );
 }
 
 /**
@@ -428,6 +433,12 @@ export function disposeInteraction() {
   }
 
   _audioInitialized = false;
+
+  // Vision / webcam
+  setMediapipeEnabled( false );
+  _visionSignature = "";
+  _visionInitInFlight = null;
+  _groupSmoothing.clear();
 }
 
 /**
@@ -456,7 +467,7 @@ export function getPointers( opts ) {
     p,
     vectors
   );
-  _syncVisionEnabled( opts );
+  _ensureVision( opts );
   _collectHands(
     opts,
     p,
@@ -552,7 +563,7 @@ export function getPointersDebug( opts ) {
     t
   );
 
-  _syncVisionEnabled( opts );
+  _ensureVision( opts );
 
   const h = [];
 
@@ -656,6 +667,105 @@ export function getPointersDebug( opts ) {
   return tagged;
 }
 
+/**
+ * Like getPointers() but returns ORDERED, per-entity groups instead of one flat
+ * list — each group is meant to become a single continuous stroke/spline.
+ *
+ *   - hands  → one group per detected hand  (palm → fingertips, thumb→pinky)
+ *   - body   → one group per detected pose  (wrist→elbow→shoulder→…→wrist)
+ *   - orbit / perlinNoise / audio / touch / midi / joypad / mouse / gyroscope
+ *            → one group holding that source's points
+ *   - face is intentionally omitted (a single point has no useful ordering)
+ *
+ * Set `opts.smoothing` (0..1) to temporally smooth each group/point so jittery
+ * camera landmarks produce calm curves.
+ *
+ * @param {object} opts - The `interaction` section of sketch options
+ * @returns {Array<{ source: string, id: string, points: import("p5").Vector[] }>}
+ */
+export function getPointerGroups( opts ) {
+  const p = getP5();
+
+  if ( !opts || opts.enabled === false ) {
+    return [];
+  }
+
+  _ensureVision( opts );
+
+  const groups = [];
+
+  const addFlat = (
+    source, collector
+  ) => {
+    const points = [];
+
+    collector(
+      opts,
+      p,
+      points
+    );
+
+    if ( points.length > 0 ) {
+      groups.push( {
+        source,
+        id: source,
+        points
+      } );
+    }
+  };
+
+  addFlat(
+    "mouse",
+    _collectMouse
+  );
+  addFlat(
+    "touch",
+    _collectTouch
+  );
+
+  // Vision: one ordered group per detected entity.
+  _collectHandGroups(
+    opts,
+    p,
+    groups
+  );
+  _collectBodyGroups(
+    opts,
+    p,
+    groups
+  );
+
+  addFlat(
+    "orbit",
+    _collectOrbit
+  );
+  addFlat(
+    "perlinNoise",
+    _collectPerlinNoise
+  );
+  addFlat(
+    "gyroscope",
+    _collectGyroscope
+  );
+  addFlat(
+    "midi",
+    _collectMidi
+  );
+  addFlat(
+    "audio",
+    _collectAudio
+  );
+  addFlat(
+    "joypad",
+    _collectJoypad
+  );
+
+  return _smoothGroups(
+    groups,
+    opts.smoothing ?? 0
+  );
+}
+
 // ── Private source collectors ──────────────────────────────────────────────
 
 function _collectMouse(
@@ -745,14 +855,128 @@ function _collectTouch(
   }
 }
 
-// Sync the mediapipe enabled state based on current options.
-// Must be called once per frame before the vision collectors.
-function _syncVisionEnabled( opts ) {
+// The MediaPipe task names wanted by the current options.
+function _desiredVisionTasks( opts ) {
   const vision = opts.vision;
-  const anyVision = vision?.enabled !== false &&
-    ( vision?.hands?.enabled || vision?.face?.enabled || vision?.body?.enabled );
 
-  setMediapipeEnabled( !!anyVision );
+  if ( !vision || vision.enabled === false ) {
+    return [];
+  }
+
+  const tasks = [];
+
+  if ( vision.hands?.enabled ) {
+    tasks.push( "hands" );
+  }
+
+  if ( vision.body?.enabled ) {
+    tasks.push( "poses" );
+  }
+
+  if ( vision.face?.enabled ) {
+    tasks.push( "faces" );
+  }
+
+  return tasks;
+}
+
+// A stable key describing the vision configuration. Re-initialization is needed
+// whenever this changes (different trackers, camera size or mirror setting).
+function _visionSignatureFor(
+  opts, tasks
+) {
+  const cam = opts.vision?.camera ?? {};
+
+  return [
+    tasks.join( "+" ),
+    cam.width ?? 320,
+    cam.height ?? 240,
+    cam.flip ?? true
+  ].join( ":" );
+}
+
+// Lazily (re)initialize MediaPipe to match the current vision options.
+//
+// The previous implementation only ever called mediapipeInit() from setup(), so
+// enabling a camera tracker at runtime never created the VisionManager and
+// nothing was detected (only setEnabled() ran, which can't bootstrap the
+// processor). Running this cheaply every frame fixes that: it boots the
+// processor the first time a tracker is switched on, re-inits when the task set
+// or camera changes, and releases the webcam once every tracker is off.
+// Safe to call each frame — it no-ops while the requested configuration is live.
+function _ensureVision( opts ) {
+  // An init is already running — let it settle; we reconcile next frame.
+  if ( _visionInitInFlight ) {
+    return _visionInitInFlight;
+  }
+
+  const tasks = _desiredVisionTasks( opts );
+
+  // Nothing requested → release the webcam if we currently hold it.
+  if ( tasks.length === 0 ) {
+    if ( _visionSignature !== "" ) {
+      setMediapipeEnabled( false );
+      _visionSignature = "";
+    }
+
+    return Promise.resolve();
+  }
+
+  const signature = _visionSignatureFor(
+    opts,
+    tasks
+  );
+
+  // Already live for this exact configuration → keep it enabled (idempotent).
+  if ( signature === _visionSignature && mediapipe.processor.ready ) {
+    setMediapipeEnabled( true );
+
+    return Promise.resolve();
+  }
+
+  // (Re)initialize. Release any previous webcam first so switching task sets
+  // (e.g. hands → hands + body) doesn't leak the old <video> element.
+  if ( mediapipe.capture.element ) {
+    setMediapipeEnabled( false );
+  }
+
+  _visionSignature = signature;
+
+  const cam = opts.vision?.camera ?? {};
+
+  _visionInitInFlight = mediapipeInit( {
+    worker: false,
+    tasks,
+    captureSize: {
+      width: cam.width ?? 320,
+      height: cam.height ?? 240
+    },
+    captureFlip: cam.flip ?? true
+  } )
+    .then( () =>
+      // init() doesn't restore mediapipe.enabled after a prior deallocate, so
+      // flip it back on explicitly to make sure frames actually get sent.
+      setMediapipeEnabled( true ) )
+    .catch( () => {
+      // Allow a later retry (e.g. if the camera permission was denied).
+      _visionSignature = "";
+    } )
+    .finally( () => {
+      _visionInitInFlight = null;
+    } );
+
+  return _visionInitInFlight;
+}
+
+// Convert a MediaPipe normalized landmark (0..1) to p5 canvas space, honouring
+// the camera mirror setting. Shared by the hand/body collectors and groups.
+function _normToCanvas(
+  pt, flip, p
+) {
+  return p.createVector(
+    ( flip ? common.inverseX( pt.x ) : pt.x ) * p.width,
+    pt.y * p.height
+  );
 }
 
 function _collectHands(
@@ -778,14 +1002,13 @@ function _collectHands(
       HAND_FINGERTIP_INDICES.forEach( ( i ) => {
         const pt = hand[ i ];
 
-        if ( !pt ) {
-          return;
+        if ( pt ) {
+          out.push( _normToCanvas(
+            pt,
+            flip,
+            p
+          ) );
         }
-
-        out.push( p.createVector(
-          ( flip ? common.inverseX( pt.x ) : pt.x ) * p.width,
-          pt.y * p.height
-        ) );
       } );
     }
 
@@ -793,9 +1016,10 @@ function _collectHands(
       const pt = hand[ HAND_PALM_INDEX ];
 
       if ( pt ) {
-        out.push( p.createVector(
-          ( flip ? common.inverseX( pt.x ) : pt.x ) * p.width,
-          pt.y * p.height
+        out.push( _normToCanvas(
+          pt,
+          flip,
+          p
         ) );
       }
     }
@@ -880,20 +1104,202 @@ function _collectBody(
     indices.forEach( ( i ) => {
       const pt = pose[ i ];
 
-      if ( !pt ) {
+      if ( !pt || ( pt.visibility ?? 1 ) < minConf ) {
         return;
       }
 
-      if ( ( pt.visibility ?? 1 ) < minConf ) {
-        return;
-      }
-
-      out.push( p.createVector(
-        ( flip ? common.inverseX( pt.x ) : pt.x ) * p.width,
-        pt.y * p.height
+      out.push( _normToCanvas(
+        pt,
+        flip,
+        p
       ) );
     } );
   } );
+}
+
+// One ordered group per detected hand: palm (if enabled) then the fingertips in
+// thumb→pinky order, so the group strokes as a single fan across the hand.
+function _collectHandGroups(
+  opts, p, groups
+) {
+  const vision = opts.vision;
+  const hands = vision?.hands;
+
+  if ( vision?.enabled === false || !hands?.enabled ) {
+    return;
+  }
+
+  const flip = vision?.camera?.flip ?? true;
+  const lm = hands.landmarks ?? {};
+  const maxHands = hands.maxHands ?? 2;
+  const results = mediapipe.tasks?.hands?.result?.landmarks ?? [];
+
+  results.slice(
+    0,
+    maxHands
+  ).forEach( (
+    hand, handIndex
+  ) => {
+    const points = [];
+
+    if ( lm.palm ) {
+      const pt = hand[ HAND_PALM_INDEX ];
+
+      if ( pt ) {
+        points.push( _normToCanvas(
+          pt,
+          flip,
+          p
+        ) );
+      }
+    }
+
+    if ( lm.fingertips !== false ) {
+      HAND_FINGERTIP_INDICES.forEach( ( i ) => {
+        const pt = hand[ i ];
+
+        if ( pt ) {
+          points.push( _normToCanvas(
+            pt,
+            flip,
+            p
+          ) );
+        }
+      } );
+    }
+
+    if ( points.length > 0 ) {
+      groups.push( {
+        source: "hands",
+        id: `hand-${ handIndex }`,
+        points
+      } );
+    }
+  } );
+}
+
+// One ordered group per detected pose, walking BODY_CHAIN and keeping only the
+// landmark groups the caller enabled (and points above the confidence floor).
+function _collectBodyGroups(
+  opts, p, groups
+) {
+  const vision = opts.vision;
+  const body = vision?.body;
+
+  if ( vision?.enabled === false || !body?.enabled ) {
+    return;
+  }
+
+  const flip = vision?.camera?.flip ?? true;
+  const lm = body.landmarks ?? {};
+  const maxPoses = body.maxPoses ?? 1;
+  const minConf = body.confidence ?? 0.3;
+  const results = mediapipe.tasks?.poses?.result?.landmarks ?? [];
+
+  const enabledGroups = {
+    wrists: lm.wrists !== false,
+    elbows: !!lm.elbows,
+    shoulders: !!lm.shoulders,
+    hips: !!lm.hips
+  };
+
+  results.slice(
+    0,
+    maxPoses
+  ).forEach( (
+    pose, poseIndex
+  ) => {
+    const points = [];
+
+    BODY_CHAIN.forEach( ( i ) => {
+      if ( !enabledGroups[ BODY_CHAIN_GROUP[ i ] ] ) {
+        return;
+      }
+
+      const pt = pose[ i ];
+
+      if ( !pt || ( pt.visibility ?? 1 ) < minConf ) {
+        return;
+      }
+
+      points.push( _normToCanvas(
+        pt,
+        flip,
+        p
+      ) );
+    } );
+
+    if ( points.length > 0 ) {
+      groups.push( {
+        source: "body",
+        id: `pose-${ poseIndex }`,
+        points
+      } );
+    }
+  } );
+}
+
+// Temporal smoothing per group/point (lerp toward the new position). `amount` is
+// 0..1 where 0 disables it and higher values lag more (calmer, less responsive).
+function _smoothGroups(
+  groups, amount
+) {
+  if ( !( amount > 0 ) ) {
+    return groups;
+  }
+
+  const p = getP5();
+  const seen = new Set();
+
+  groups.forEach( ( group ) => {
+    group.points = group.points.map( (
+      v, index
+    ) => {
+      const key = `${ group.id }:${ index }`;
+
+      seen.add( key );
+
+      const prev = _groupSmoothing.get( key );
+
+      if ( !prev ) {
+        _groupSmoothing.set(
+          key,
+          {
+            x: v.x,
+            y: v.y
+          }
+        );
+
+        return v;
+      }
+
+      prev.x = p.lerp(
+        prev.x,
+        v.x,
+        1 - amount
+      );
+      prev.y = p.lerp(
+        prev.y,
+        v.y,
+        1 - amount
+      );
+
+      return p.createVector(
+        prev.x,
+        prev.y
+      );
+    } );
+  } );
+
+  // Drop state for points that vanished (e.g. a hand left the frame) so they
+  // don't snap from a stale position when they reappear.
+  for ( const key of _groupSmoothing.keys() ) {
+    if ( !seen.has( key ) ) {
+      _groupSmoothing.delete( key );
+    }
+  }
+
+  return groups;
 }
 
 function _collectOrbit(
