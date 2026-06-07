@@ -19,7 +19,7 @@ export const formValues = {
     ...interactionFormValues,
     vision: {
       ...interactionFormValues.vision,
-      enabled: true,
+      enabled: false,
       hands: {
         ...interactionFormValues.vision.hands,
         landmarks: {
@@ -30,20 +30,20 @@ export const formValues = {
     },
     orbit: {
       ...interactionFormValues.orbit,
-      enabled: true,
+      enabled: false,
       count: 6
     }
   },
 
   curve: {
     method: "chaikin" as "chaikin" | "catmull-rom" | "quadratic",
-    iterations: 4,
+    iterations: 6,
     closed: false,
-    tension: 0
+    tension: 5
   },
 
   stroke: {
-    weight: 14,
+    weight: 19.5,
     glow: 2,
     hueSpeed: 1.5,
     gradient: true
@@ -64,7 +64,7 @@ export const formValues = {
       gap: 10
     },
     points: {
-      show: true,
+      show: false,
       size: 16,
       coreRatio: 0.5,
       color: [
