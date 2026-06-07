@@ -85,7 +85,7 @@ export default function drawSlideSpecs( specsOption ) {
   const cursor = cursorVisible ? "_" : "";
 
   p.push();
-  if ( sketch.sketchOptions.type === "webgl" ) {
+  if ( sketch.sketchOptions?.type === "webgl" ) {
     p.translate(
       -p.width / 2,
       -p.height / 2
