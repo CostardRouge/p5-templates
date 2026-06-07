@@ -18,7 +18,7 @@ export const formValues = {
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.66,
+    size: 0.37,
     sampleFactor: 0.5
   },
   grid: {
@@ -28,7 +28,7 @@ export const formValues = {
     weight: 0.5
   },
   traced: {
-    steps: 1,
+    steps: 31,
     weight: 2
   },
   colors: {
@@ -38,7 +38,7 @@ export const formValues = {
     opacityMax: 5
   },
   loop: {
-    timeScale: 1,
+    timeScale: 6.7,
     timeOffset: 0
   },
   title: {

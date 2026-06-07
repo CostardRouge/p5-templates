@@ -14,12 +14,12 @@ export const formValues = {
   ...baseDefaults,
   text: {
     mode: "single",
-    value: "123"
+    value: "xy"
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.66,
-    sampleFactor: 0.2
+    size: 0.54,
+    sampleFactor: 0.15
   },
   grid: {
     show: true,
@@ -28,9 +28,9 @@ export const formValues = {
     weight: 0.5
   },
   traced: {
-    steps: 9,
-    weight: 2,
-    endpointWeight: 3
+    steps: 21,
+    weight: 1,
+    endpointWeight: 5
   },
   sampleFactor: {
     values: [
@@ -42,9 +42,9 @@ export const formValues = {
     ]
   },
   wave: {
-    applyY: false,
-    applyZ: false,
-    zAmplitude: 0.5
+    applyY: true,
+    applyZ: true,
+    zAmplitude: 1.43
   },
   colors: {
     hueIndexMultiplier: 8,

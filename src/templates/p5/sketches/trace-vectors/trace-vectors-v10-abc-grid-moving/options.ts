@@ -18,7 +18,7 @@ export const formValues = {
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.66,
+    size: 0.32,
     sampleFactor: 0.3
   },
   grid: {
@@ -33,21 +33,21 @@ export const formValues = {
     dotInterval: 0.05
   },
   traced: {
-    steps: 3,
-    weight: 5
+    steps: 13,
+    weight: 3.9
   },
   extremes: {
     show: true,
-    weight: 4
+    weight: 6.2
   },
   colors: {
-    hueIndexMultiplier: 8,
-    hueOffset: 0,
-    opacityMin: 1.5,
+    hueIndexMultiplier: 13.5,
+    hueOffset: -1.93159265358979,
+    opacityMin: 1.2,
     opacityMax: 5
   },
   loop: {
-    timeScale: 1,
+    timeScale: 10,
     timeOffset: 0
   },
   title: {
