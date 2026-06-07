@@ -239,13 +239,24 @@ export function renderGridTraceCommon( {
     font: textFont
   } );
 
+  // Loop-safe letter sweep: drive the morph by animation.progression so the
+  // WHOLE text is traversed `lettersSpeed` times per loop and returns exactly to
+  // its start at the seam (advancing by an integer multiple of the list length).
+  // The old `progression + time` only advanced by loop.timeScale (≈1) per loop,
+  // so a 10-letter word showed only its first ~2 glyphs.
+  const lettersSpeed = opts.letters?.speed ?? 1;
+
   mappers.traceVectors(
     steps,
     ( progression ) => traceLetters.morph( {
       values: letterValues,
       duration: 1,
       easingFn: textEasingFn,
-      currentTime: progression + time
+      currentTime: progression + traceLetters.sweep(
+        animation.progression,
+        morphTexts.length,
+        lettersSpeed
+      )
     } ),
     () => p.beginShape(),
     (
