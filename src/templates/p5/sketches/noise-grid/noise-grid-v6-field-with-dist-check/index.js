@@ -5,7 +5,7 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import createNoiseFieldRenderer, {
-  computeFieldRange
+  computeFieldRange, easingId
 } from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,6 +31,8 @@ const FRAGMENT = `
   uniform float uWaveSpeed;
   uniform float uOpacityMax;
   uniform float uOpacityMin;
+  uniform int uWaveEasing;
+  uniform int uFalloffEasing;
 
   void main() {
     vec2 frag = vec2(vUv.x * uResolution.x, (1.0 - vUv.y) * uResolution.y);
@@ -62,10 +64,10 @@ const FRAGMENT = `
 
     float hueIndex = remap(angle, uMin, TAU, -uHueRange, uHueRange);
 
-    float waveT = easeOutQuad(remap(sin(uT * uWaveSpeed + angle), -1.0, 1.0, 0.0, 1.0));
+    float waveT = applyEasing(uWaveEasing, remap(sin(uT * uWaveSpeed + angle), -1.0, 1.0, 0.0, 1.0));
     float w = remap(waveT, 0.0, 1.0, uResolution.x * uWaveMin, uResolution.x * uWaveMax);
     float opacityFactor = remap(
-      easeInQuad(remap(distToCenter, 0.0, w, 0.0, 1.0)),
+      applyEasing(uFalloffEasing, remap(distToCenter, 0.0, w, 0.0, 1.0)),
       0.0,
       1.0,
       uOpacityMax,
@@ -108,6 +110,8 @@ sketch.draw( (
   const waveMin = options.sketch.distance?.waveMin ?? 0.5;
   const waveMax = options.sketch.distance?.waveMax ?? 1;
   const waveSpeed = options.sketch.distance?.waveSpeed ?? 1;
+  const waveEasing = options.sketch.distance?.waveEasing ?? "easeOutQuad";
+  const falloffEasing = options.sketch.distance?.falloffEasing ?? "easeInQuad";
   const opacityMax = options.sketch.colors?.opacityMax ?? 100;
   const opacityMin = options.sketch.colors?.opacityMin ?? 1;
   const hueRange = options.sketch.colors?.hueRange ?? p.PI / 4;
@@ -163,7 +167,9 @@ sketch.draw( (
       uWaveMax: waveMax,
       uWaveSpeed: waveSpeed,
       uOpacityMax: opacityMax,
-      uOpacityMin: opacityMin
+      uOpacityMin: opacityMin,
+      uWaveEasing: easingId( waveEasing ),
+      uFalloffEasing: easingId( falloffEasing )
     }
   } );
 
