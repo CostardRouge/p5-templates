@@ -75,6 +75,8 @@ sketch.draw( (
   const start = [];
   const end = [];
 
+  const lettersSpeed = options.sketch.letters?.speed ?? 1;
+
   const letterValues = traceLetters.points( {
     texts: alphabet,
     size: letterSize,
@@ -89,13 +91,19 @@ sketch.draw( (
       values: letterValues,
       duration: 1,
       easingFn: easing.easeInOutQuart,
+      // loop-safe: sweep the whole text once (× speed) per loop, instead of
+      // `+ time` which only advanced ~1 glyph per loop
       currentTime: p.map(
         progression,
         0,
         1,
         0,
         ( alphabet.length - 1 ) / alphabet.length
-      ) + time
+      ) + traceLetters.sweep(
+        animation.progression,
+        alphabet.length,
+        lettersSpeed
+      )
     } ),
     () => p.beginShape( p.TRIANGLE_FAN ),
     (

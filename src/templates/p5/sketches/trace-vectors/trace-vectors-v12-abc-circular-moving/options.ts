@@ -6,6 +6,7 @@ import {
   tracedForm,
   colorsForm,
   loopForm,
+  lettersForm,
   baseDefaults
 } from "../_form";
 
@@ -63,6 +64,7 @@ export const formValues = {
 
 export const formConfiguration: Record<string, any> = {
   text: textForm,
+  letters: lettersForm,
   textStyle: textStyleForm,
   grid: {
     component: "nested-object",

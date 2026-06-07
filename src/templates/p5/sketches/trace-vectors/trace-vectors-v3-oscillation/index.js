@@ -76,17 +76,26 @@ sketch.draw( (
       _, index
     ) => index );
 
+  const lettersSpeed = options.sketch.letters?.speed ?? 1;
+  // loop-safe: slide the letter window through the whole alphabet once
+  // (× speed) per loop and return exactly to the start at the seam
+  const letterTime = traceLetters.sweep(
+    animation.progression,
+    indexValues.length,
+    lettersSpeed
+  );
+
   const letterStartIndex = animation.ease( {
     values: indexValues,
     duration: 1,
-    currentTime: time,
+    currentTime: letterTime,
     easingFn: easing.easeInOutExpo
   } );
 
   const letterEndIndex = animation.ease( {
     values: indexValues.map( ( idx ) => idx + letterRange ),
     duration: 1,
-    currentTime: time,
+    currentTime: letterTime,
     easingFn: easing.easeInOutExpo
   } );
 
