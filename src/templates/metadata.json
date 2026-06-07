@@ -2321,7 +2321,7 @@
     "category": "animated-text-points",
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "hasPreview": false,
+    "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
     "mtime": "2026-06-07T01:16:19.690Z",

@@ -76,6 +76,21 @@ function isPublicSubdir( name: string ): boolean {
   return !name.startsWith( "_" ) && !name.startsWith( "." );
 }
 
+/**
+ * Fail a "metadata is in sync with disk" check with an actionable message.
+ * Every such drift is fixed by regenerating metadata.json from disk, so point
+ * the developer straight at the command instead of just dumping a diff.
+ */
+function expectInSync( problems: string[] ): void {
+  if ( problems.length > 0 ) {
+    throw new Error( `${ problems.join( "\n" ) }`
+      + "\n\nmetadata.json is out of sync with the filesystem."
+      + "\nRun `npm run sketch:meta:write` and commit the regenerated files."
+      + "\n(The pre-commit hook runs this automatically when a sketch or a"
+      + " template asset changes.)" );
+  }
+}
+
 const entries = metadata as SketchMetadata[];
 
 describe(
@@ -288,7 +303,7 @@ describe(
           .map( ( s ) => `${ s.engine }/${ s.name }` )
           .filter( ( key ) => !metaKeys.has( key ) );
 
-        expect( missing ).toEqual( [] );
+        expectInSync( missing );
       }
     );
 
@@ -300,7 +315,7 @@ describe(
           .map( ( e ) => `${ e.engine }/${ e.name }` )
           .filter( ( key ) => !diskKeys.has( key ) );
 
-        expect( orphans ).toEqual( [] );
+        expectInSync( orphans );
       }
     );
 
@@ -321,7 +336,7 @@ describe(
           }
         }
 
-        expect( mismatches ).toEqual( [] );
+        expectInSync( mismatches );
       }
     );
 
@@ -365,7 +380,7 @@ describe(
           }
         }
 
-        expect( drift ).toEqual( [] );
+        expectInSync( drift );
       }
     );
   }

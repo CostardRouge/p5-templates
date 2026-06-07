@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",
+    "sketch:meta:write": "node scripts/watch-sketches.mjs --once",
     "dev": "next dev --turbopack",
     "watch": "node scripts/dev-watch.mjs",
     "build": "next build",

@@ -25,6 +25,9 @@ import {
   resolveSketchPath
 } from "@/engines/metadata";
 import {
+  loadSketchModule
+} from "@/generated/sketchModuleRegistry";
+import {
   getAnimationBridge
 } from "@/lib/animationBridge";
 import {
@@ -112,7 +115,14 @@ export class P5Engine implements SketchEngine {
 
     this.sketchRuntime = sketch as P5SketchRuntime;
 
-    await import( `@/p5/sketches/${ sketchPath }/index.js` )
+    // Loaded from the generated registry of literal dynamic imports — see
+    // src/generated/sketchModuleRegistry.ts. A variable-path import here would
+    // make the bundler build a context module over every sketch, compiling the
+    // whole catalogue on each page in dev.
+    await loadSketchModule(
+      "p5",
+      sketchPath
+    )
       .catch( ( error ) => {
         this.emit(
           "error",
