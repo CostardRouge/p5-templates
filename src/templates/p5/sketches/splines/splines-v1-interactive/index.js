@@ -13,8 +13,8 @@ import {
 // ── What this sketch demonstrates ──────────────────────────────────────────
 // The same control-point-free splines as v0, but the points come from the live
 // interaction layer instead of a procedural layout. Each detected entity (a
-// hand, a body pose, or a virtual source like orbit) becomes ONE ordered group,
-// and every group is drawn as its own spline.
+// hand, a body pose, a face, or a virtual source like orbit) becomes ONE ordered
+// group, and every group is drawn as its own spline.
 //
 // Two modes:
 //   - live  → re-fit a spline through each group's current points every frame
@@ -23,7 +23,7 @@ import {
 //             so moving a hand/pointer draws a ribbon in the air.
 //
 // It works with no webcam out of the box because the orbit source is enabled by
-// default; turn on Vision → Hands (or Body) to drive it with the camera.
+// default; turn on Vision → Hands / Body / Face to drive it with the camera.
 
 // Per-entity trail history for "trail" mode, keyed by group id so each hand /
 // pose / source keeps its own ribbon.
