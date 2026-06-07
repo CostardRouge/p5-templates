@@ -329,11 +329,63 @@ ${ renderLoaderEntries( formEntries ) }
 
 /* ---- Output ------------------------------------------------------ */
 
+/**
+ * Read the `mtime`/`ctime` already recorded in metadata.json, keyed by
+ * `<engine>:<name>`.
+ *
+ * These timestamps come from the filesystem, which resets them on every fresh
+ * clone/checkout — so regenerating from raw `fs.stat` would rewrite every entry
+ * and produce a huge, meaningless diff. Reusing the committed values keeps
+ * regeneration idempotent: only entries whose *derived* data actually changed
+ * show up in the diff. New sketches (absent here) fall back to `fs.stat`.
+ */
+function readExistingTimestamps() {
+  const map = new Map();
+
+  if ( !fs.existsSync( META_OUTPUT ) ) {
+    return map;
+  }
+
+  try {
+    const existing = JSON.parse( fs.readFileSync(
+      META_OUTPUT,
+      "utf-8"
+    ) );
+
+    for ( const entry of existing ) {
+      if ( entry?.engine && entry?.name && entry?.mtime ) {
+        map.set(
+          `${ entry.engine }:${ entry.name }`,
+          {
+            mtime: entry.mtime,
+            ctime: entry.ctime
+          }
+        );
+      }
+    }
+  } catch {
+    // Malformed/old metadata.json — fall back to filesystem timestamps.
+  }
+
+  return map;
+}
+
 function generate() {
   const records = scanAll();
+  const preserved = readExistingTimestamps();
 
   const meta = records
-    .map( ( record ) => record.meta )
+    .map( ( record ) => {
+      const prev = preserved.get( `${ record.meta.engine }:${ record.meta.name }` );
+
+      return prev
+        ? {
+          ...record.meta,
+          mtime: prev.mtime,
+          ctime: prev.ctime
+        }
+        : record.meta;
+    } )
     .sort( (
       a, b
     ) =>
@@ -391,9 +443,14 @@ function writeIfChanged(
 
 /* ---- Run --------------------------------------------------------- */
 
+// One-shot (no watcher) for builds, CI, the pre-commit hook, and
+// `npm run sketch:meta:write`. The watcher is the default for local dev.
+const ONCE = process.argv.includes( "--once" )
+  || process.env.NODE_ENV === "production";
+
 generate();
 
-if ( process.env.NODE_ENV !== "production" ) {
+if ( !ONCE ) {
   // Watch every engine's sketches/ directory
   const watchPaths = listSubDirs( TEMPLATES_DIR )
     .map( ( id ) => path.join(
