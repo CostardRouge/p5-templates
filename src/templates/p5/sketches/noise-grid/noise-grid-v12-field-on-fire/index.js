@@ -4,7 +4,9 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
-import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import createNoiseFieldRenderer, {
+  easingId
+} from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v12 — field on fire".
@@ -29,6 +31,8 @@ const FRAGMENT = `
   uniform float uWaveSpeed;
   uniform float uOpacityMax;
   uniform float uOpacityMin;
+  uniform int uWaveEasing;
+  uniform int uFalloffEasing;
 
   float cellAngle(float c, float r) {
     float nx = (c * uCellWidth) / uColumns + uT * uXTimeMult;
@@ -41,12 +45,12 @@ const FRAGMENT = `
     float z = uZMax * cos(angle);
     float distToCenter = distance(cellCenter, uCenter);
 
-    float waveT = easeOutQuad(remap(sin(uT * uWaveSpeed + angle), -1.0, 1.0, 0.0, 1.0));
+    float waveT = applyEasing(uWaveEasing, remap(sin(uT * uWaveSpeed + angle), -1.0, 1.0, 0.0, 1.0));
     float w = remap(waveT, 0.0, 1.0, -uResolution.x * 0.5, uResolution.x * 0.5);
     float safeW = abs(w) < 0.001 ? (w < 0.0 ? -0.001 : 0.001) : w;
 
     float opacityFactor = remap(
-      easeOutQuad(remap(distToCenter, 0.0, safeW, 0.0, 1.0)),
+      applyEasing(uFalloffEasing, remap(distToCenter, 0.0, safeW, 0.0, 1.0)),
       0.0,
       1.0,
       uOpacityMax,
@@ -139,6 +143,8 @@ sketch.draw( (
   const yTimeMult = options.sketch.noise?.yTimeMultiplier ?? 0.125;
   const zTimeMult = options.sketch.noise?.zTimeMultiplier ?? 0.05;
   const waveSpeed = options.sketch.distance?.waveSpeed ?? 1;
+  const waveEasing = options.sketch.distance?.waveEasing ?? "easeOutQuad";
+  const falloffEasing = options.sketch.distance?.falloffEasing ?? "easeOutQuad";
   const hueOffsetSpeed = options.sketch.colors?.hueOffsetSpeed ?? 1;
   const hueIndexMultiplier = options.sketch.colors?.hueIndexMultiplier ?? 2;
   const opacityMax = options.sketch.colors?.opacityMax ?? 10;
@@ -169,7 +175,9 @@ sketch.draw( (
       uHueIndexMult: hueIndexMultiplier,
       uWaveSpeed: waveSpeed,
       uOpacityMax: opacityMax,
-      uOpacityMin: opacityMin
+      uOpacityMin: opacityMin,
+      uWaveEasing: easingId( waveEasing ),
+      uFalloffEasing: easingId( falloffEasing )
     }
   } );
 
