@@ -13,8 +13,8 @@ export const formValues = {
 
   // A virtual orbit source is on by default so the sketch animates immediately
   // (and previews) without a webcam or a camera-permission prompt. Vision is
-  // armed but its trackers start OFF — flip Vision → Hands / Body on to drive
-  // the splines live; the hand landmarks are pre-set for a nice fingertip fan.
+  // armed but its trackers start OFF — flip Vision → Hands / Body / Face on to
+  // drive the splines live; the hand landmarks are pre-set for a fingertip fan.
   interaction: {
     ...interactionFormValues,
     vision: {

@@ -62,6 +62,18 @@ const BODY_CHAIN_GROUP = {
   24: "hips"
 };
 
+// BlazeFace returns 6 keypoints per face. Walk them as an arc that reads like a
+// face sweep rather than the raw detector order.
+//   0 right eye · 1 left eye · 2 nose tip · 3 mouth · 4 right ear · 5 left ear
+const FACE_KEYPOINT_ORDER = [
+  4, // right ear
+  0, // right eye
+  2, // nose tip
+  3, // mouth
+  1, // left eye
+  5 // left ear
+];
+
 // ── Module-level state ─────────────────────────────────────────────────────
 
 // Raw mouse/touch: tracked via window listeners so coordinates are correct
@@ -673,9 +685,9 @@ export function getPointersDebug( opts ) {
  *
  *   - hands  → one group per detected hand  (palm → fingertips, thumb→pinky)
  *   - body   → one group per detected pose  (wrist→elbow→shoulder→…→wrist)
+ *   - face   → one group per detected face  (ear→eye→nose→mouth→eye→ear arc)
  *   - orbit / perlinNoise / audio / touch / midi / joypad / mouse / gyroscope
  *            → one group holding that source's points
- *   - face is intentionally omitted (a single point has no useful ordering)
  *
  * Set `opts.smoothing` (0..1) to temporally smooth each group/point so jittery
  * camera landmarks produce calm curves.
@@ -730,6 +742,11 @@ export function getPointerGroups( opts ) {
     groups
   );
   _collectBodyGroups(
+    opts,
+    p,
+    groups
+  );
+  _collectFaceGroups(
     opts,
     p,
     groups
@@ -1233,6 +1250,72 @@ function _collectBodyGroups(
       groups.push( {
         source: "body",
         id: `pose-${ poseIndex }`,
+        points
+      } );
+    }
+  } );
+}
+
+// One ordered group per detected face, built from BlazeFace's 6 keypoints
+// (eyes, nose, mouth, ears). Falls back to the bounding-box centre if a detector
+// variant returns no keypoints, so a face always yields at least one point.
+function _collectFaceGroups(
+  opts, p, groups
+) {
+  const vision = opts.vision;
+  const face = vision?.face;
+
+  if ( vision?.enabled === false || !face?.enabled ) {
+    return;
+  }
+
+  const flip = vision?.camera?.flip ?? true;
+  const maxFaces = face.maxFaces ?? 1;
+  const minConf = face.confidence ?? 0.5;
+  const detections = mediapipe.tasks?.faces?.result?.detections ?? [];
+
+  detections.slice(
+    0,
+    maxFaces
+  ).forEach( (
+    det, faceIndex
+  ) => {
+    if ( ( det.categories?.[ 0 ]?.score ?? 1 ) < minConf ) {
+      return;
+    }
+
+    const keypoints = det.keypoints ?? [];
+    const points = [];
+
+    FACE_KEYPOINT_ORDER.forEach( ( i ) => {
+      const kp = keypoints[ i ];
+
+      if ( kp ) {
+        points.push( _normToCanvas(
+          kp,
+          flip,
+          p
+        ) );
+      }
+    } );
+
+    // Fallback: a single point at the bounding-box centre (pixel-space bbox).
+    if ( points.length === 0 && det.boundingBox ) {
+      const capW = mediapipe.capture?.size?.width ?? 320;
+      const capH = mediapipe.capture?.size?.height ?? 240;
+      const cx = ( det.boundingBox.originX + det.boundingBox.width / 2 ) / capW;
+      const cy = ( det.boundingBox.originY + det.boundingBox.height / 2 ) / capH;
+
+      points.push( p.createVector(
+        ( flip ? 1 - cx : cx ) * p.width,
+        cy * p.height
+      ) );
+    }
+
+    if ( points.length > 0 ) {
+      groups.push( {
+        source: "face",
+        id: `face-${ faceIndex }`,
         points
       } );
     }
