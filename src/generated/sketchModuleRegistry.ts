@@ -204,7 +204,6 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:torsade/torsade-v7-melted": () => import( "@/p5/sketches/torsade/torsade-v7-melted/index.js" ),
   "p5:torsade/torsade-v8-chain": () => import( "@/p5/sketches/torsade/torsade-v8-chain/index.js" ),
   "p5:torsade/torsade-v9-dna-spiral": () => import( "@/p5/sketches/torsade/torsade-v9-dna-spiral/index.js" ),
-  "p5:trace-vectors/trace-vectors-intp": () => import( "@/p5/sketches/trace-vectors/trace-vectors-intp/index.js" ),
   "p5:trace-vectors/trace-vectors-sf-height": () => import( "@/p5/sketches/trace-vectors/trace-vectors-sf-height/index.js" ),
   "p5:trace-vectors/trace-vectors-sf-height-2": () => import( "@/p5/sketches/trace-vectors/trace-vectors-sf-height-2/index.js" ),
   "p5:trace-vectors/trace-vectors-v1-infinite": () => import( "@/p5/sketches/trace-vectors/trace-vectors-v1-infinite/index.js" ),
