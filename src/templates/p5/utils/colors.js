@@ -59,7 +59,7 @@ const colors = {
 
     return p.color(
       p.map(
-        ( easingFunction ?? p.cos )( hueOffset - hueIndex ),
+        ( easingFunction ?? Math.cos )( hueOffset - hueIndex ),
         -1,
         1,
         min,
@@ -67,7 +67,7 @@ const colors = {
       ) /
         opacityFactor,
       p.map(
-        ( easingFunction ?? p.sin )( hueOffset + hueIndex ),
+        ( easingFunction ?? Math.sin )( hueOffset + hueIndex ),
         -1,
         1,
         max,
@@ -75,7 +75,7 @@ const colors = {
       ) /
         opacityFactor,
       p.map(
-        ( easingFunction ?? p.cos )( hueOffset - hueIndex ),
+        ( easingFunction ?? Math.cos )( hueOffset - hueIndex ),
         -1,
         1,
         max,
