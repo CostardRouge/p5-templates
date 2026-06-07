@@ -136,7 +136,23 @@ The previous `concurrently` setup didn't properly restore terminal state when in
 
 ### `watch-sketches.mjs`
 
-Watches sketch files for changes and regenerates metadata.
+Watches sketch files for changes and regenerates, in one pass:
+
+- `src/templates/metadata.json` — the sketch catalogue used for routing/listing.
+- `src/generated/sketchModuleRegistry.ts` — client+server map of `"<engine>:<sketchPath>" → () => import(".../index.js")` thunks.
+- `src/generated/sketchOptionsRegistry.ts` — `server-only` map of `options.ts` / `options.json` loaders.
+
+The registries exist so engines load a sketch through a **literal** dynamic
+import (one code-split point per sketch) instead of a variable-path
+`import("@/p5/sketches/${path}/index.js")`. A variable path forces the bundler
+to build a context module over *every* sketch, which made the dev server
+compile the whole catalogue (and balloon RAM) on each page. With the registry,
+Turbopack compiles only the sketch you actually open.
+
+All three outputs are committed (like `metadata.json`) and regenerated whenever
+a sketch directory, an `index.*`, an `options.*`, or a visibility marker is
+added/removed. Run a one-shot generation (no watcher, no `chokidar` needed)
+with `NODE_ENV=production node scripts/watch-sketches.mjs`.
 
 ### `watch-gsap-templates.mjs`
 
