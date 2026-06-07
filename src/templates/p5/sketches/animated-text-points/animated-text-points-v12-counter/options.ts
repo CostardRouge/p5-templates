@@ -35,6 +35,8 @@ export const formValues = {
     enabled: true,
     weight: 0,
     easing: "easeInOutExpo",
+    overshoot: 200,
+    depth: -200,
     color: [
       255,
       255,
@@ -230,6 +232,20 @@ export const formConfiguration: Record<string, any> = {
       easing: {
         component: "easing",
         label: "Counter easing"
+      },
+      overshoot: {
+        label: "Line overshoot (px past edges)",
+        component: "slider",
+        min: 0,
+        max: 600,
+        step: 10
+      },
+      depth: {
+        label: "Pattern depth (z)",
+        component: "slider",
+        min: -1000,
+        max: 0,
+        step: 10
       },
       color: {
         component: "color",
