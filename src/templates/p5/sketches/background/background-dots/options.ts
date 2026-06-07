@@ -12,7 +12,7 @@ export const formValues = {
   columns: 24,
   proportional: true,
   rows: 24,
-  dotSize: 6,
+  dotSize: 9,
   pulse: 0,
   border: false
 };

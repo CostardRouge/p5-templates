@@ -10,9 +10,9 @@ export const formValues = {
     255
   ],
   columnsMin: 2,
-  columnsMax: 8,
-  weight: 6,
-  overshoot: 0,
+  columnsMax: 12,
+  weight: 6.5,
+  overshoot: 320,
   easing: "easeInOutBack"
 };
 

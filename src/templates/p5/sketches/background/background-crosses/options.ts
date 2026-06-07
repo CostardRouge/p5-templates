@@ -21,11 +21,11 @@ export const formValues = {
   columns: 9,
   proportional: true,
   rows: 9,
-  size: 18,
-  amount: 2,
-  strokeWeight: 3,
+  size: 41,
+  amount: 4,
+  strokeWeight: 4.4,
   opacityFactor: 1.5,
-  hueMultiplier: 3,
+  hueMultiplier: 5.9,
   rotationSpeed: 1
 };
 
