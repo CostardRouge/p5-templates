@@ -34,24 +34,24 @@ export const formValues = {
     columns: 119
   },
   noise: {
-    seed: 49,
-    detail: 3,
-    falloff: 0.06,
-    xMultiplier: 1,
-    yMultiplier: 1,
+    seed: 6636,
+    detail: 4,
+    falloff: 0.61,
+    xMultiplier: 1.34,
+    yMultiplier: 2.08,
     timeXMultiplier: -1,
     timeYMultiplier: 0.2,
-    timeZMultiplier: 0.07
+    timeZMultiplier: 0.22
   },
   angle: {
-    cycles: 4
+    cycles: 11.6
   },
   displacement: {
-    zScale: 10
+    zScale: 0
   },
   translation: {
-    scale: 1,
-    yMultiplier: 2
+    scale: 0.96,
+    yMultiplier: -2.03
   },
   stroke: {
     weightMin: 25,

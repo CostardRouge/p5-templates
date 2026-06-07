@@ -3,29 +3,29 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   grid: {
-    rows: 113,
-    columns: 87
+    rows: 137,
+    columns: 147
   },
   noise: {
     seed: 42,
-    detail: 1,
-    falloff: 0.01
+    detail: 4,
+    falloff: 0.59
   },
   offsets: {
-    xSpeed: 1,
-    ySpeed: 2,
+    xSpeed: 0.08,
+    ySpeed: 0.95,
     zSpeed: 0.5,
-    xRangeDivisor: 2,
-    yRangeDivisor: 2,
-    zRangeDivisor: 2
+    xRangeDivisor: 0.5,
+    yRangeDivisor: 1.4,
+    zRangeDivisor: 0.5
   },
   angle: {
-    cycles: 2.8
+    cycles: 7
   },
   stroke: {
     weightEasing: "easeInOutExpo",
-    weightMin: 4,
-    weightMaxScale: 0.87
+    weightMin: 7,
+    weightMaxScale: 0.35
   },
   translation: {
     xMultiplier: 1,

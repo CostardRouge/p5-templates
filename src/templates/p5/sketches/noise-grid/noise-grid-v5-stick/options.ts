@@ -7,24 +7,24 @@ export const formValues = {
     columns: 90
   },
   noise: {
-    seed: 3437,
+    seed: 4572,
     detail: 1,
     falloff: 0,
-    yTimeMultiplier: 0.75,
-    zSpeed: 0.698
+    yTimeMultiplier: -0.82,
+    zSpeed: 0.348
   },
   angle: {
-    cycles: 3.5
+    cycles: 3.7
   },
   stick: {
-    lengthScaleMin: 1.88,
-    lengthScaleMax: 3.31,
-    strokeWeight: 5.5
+    lengthScaleMin: 2.14,
+    lengthScaleMax: 5,
+    strokeWeight: 3.5
   },
   colors: {
-    hueRange: 2.4,
-    hueOffset: -0.171592653589793,
-    opacityMax: 2.2,
+    hueRange: 2.59,
+    hueOffset: -1.46159265358979,
+    opacityMax: 3.2,
     opacityMin: 0.1
   },
   backgroundColor: [

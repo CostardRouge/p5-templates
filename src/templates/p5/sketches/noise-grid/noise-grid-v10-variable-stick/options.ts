@@ -7,20 +7,20 @@ export const formValues = {
     columns: 102
   },
   noise: {
-    seed: 42,
+    seed: 0,
     detail: 1,
-    falloff: 0.84,
-    yTimeMultiplier: -0.18,
+    falloff: 1,
+    yTimeMultiplier: -0.24,
     zSpeed: 0.265
   },
   angle: {
-    cycles: 3.2
+    cycles: 2.6
   },
   stick: {
-    strokeWeight: 8,
-    lengthMin: 0,
-    lengthMax: 67,
-    lengthSpeed: 0.76
+    strokeWeight: 1,
+    lengthMin: 14,
+    lengthMax: 214.5,
+    lengthSpeed: 2
   },
   colors: {
     hueEasing: "easeOutQuad",
