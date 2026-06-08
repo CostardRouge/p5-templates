@@ -37,6 +37,13 @@ const FONT_STACKS = {
   mono: "'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace"
 };
 
+/**
+ * Constant scale the photo is held at so it always slightly overflows its
+ * frame — its edge never lands on the frame border (no gap / no shimmer). The
+ * Ken Burns zoom is added on top of this.
+ */
+const PHOTO_OVERSCAN = 1.08;
+
 function fontFamily( key ) {
   return FONT_STACKS[ key ] ?? FONT_STACKS.sans;
 }
@@ -551,15 +558,15 @@ export default function PhotoExif( {
     minWidth: 78 * unit
   };
 
-  // The image is held a touch larger than its frame (a constant overscan) so
-  // its edge never lands exactly on the frame border — that subpixel coincidence
-  // is what makes a 1px border shimmer while the Ken Burns scale animates.
+  // The image fills its frame exactly; the overscan that keeps its edge off
+  // the frame border (no gap, no subpixel shimmer) is applied as a transform
+  // scale in the timeline below — NOT via width/offset, which Tailwind's base
+  // `img { max-width: 100% }` would clamp (leaving a gap on the right).
   const imageStyle = {
     position: "absolute",
-    top: "-3%",
-    left: "-3%",
-    width: "106%",
-    height: "106%",
+    inset: 0,
+    width: "100%",
+    height: "100%",
     objectFit: fit,
     filter,
     transformOrigin: "center",
@@ -677,40 +684,47 @@ export default function PhotoExif( {
           );
         }
 
-        // Ken Burns drift on the inner image — a yoyo within the slot, so it
-        // returns to its start (seamless even with hard cuts).
-        if ( img && photoEnabled ) {
+        // The image is held a touch larger than its frame (a constant scale
+        // overscan) so its edge never coincides with the frame border — that is
+        // what causes the gap / subpixel shimmer. The Ken Burns drift is a yoyo
+        // within the slot on top of that base, returning to its start (seamless
+        // even with hard cuts). The base is set even when motion is off, so the
+        // overscan always holds.
+        if ( img ) {
           tl.set(
             img,
             {
-              scale: 1,
+              scale: PHOTO_OVERSCAN,
               x: 0,
               y: 0
             },
             0
           );
-          tl.to(
-            img,
-            {
-              scale: 1 + zoom,
-              x: panX * size.width,
-              y: panY * size.height,
-              duration: half,
-              ease
-            },
-            winStart
-          );
-          tl.to(
-            img,
-            {
-              scale: 1,
-              x: 0,
-              y: 0,
-              duration: half,
-              ease
-            },
-            winStart + half
-          );
+
+          if ( photoEnabled ) {
+            tl.to(
+              img,
+              {
+                scale: PHOTO_OVERSCAN + zoom,
+                x: panX * size.width,
+                y: panY * size.height,
+                duration: half,
+                ease
+              },
+              winStart
+            );
+            tl.to(
+              img,
+              {
+                scale: PHOTO_OVERSCAN,
+                x: 0,
+                y: 0,
+                duration: half,
+                ease
+              },
+              winStart + half
+            );
+          }
         }
 
         // Metadata lines — staggered reveal in / out within the slot.
