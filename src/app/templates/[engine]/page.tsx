@@ -8,11 +8,9 @@ import {
   Suspense
 } from "react";
 
-import "@/engines/index";
-
 import {
-  hasEngine
-} from "@/engines/registry";
+  isKnownEngine
+} from "@/engines/engineCatalog";
 import {
   buildOgTitle, getBaseUrl, SITE_NAME
 } from "@/lib/seo";
@@ -34,7 +32,7 @@ export async function generateMetadata( {
     engine
   } = await params;
 
-  if ( !hasEngine( engine ) ) {
+  if ( !isKnownEngine( engine ) ) {
     return {};
   }
 
@@ -67,7 +65,7 @@ export default async function EngineTemplatesPage( {
     engine
   } = await params;
 
-  if ( !hasEngine( engine ) ) {
+  if ( !isKnownEngine( engine ) ) {
     notFound();
   }
 

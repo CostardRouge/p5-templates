@@ -5,12 +5,15 @@ import {
   GsapEngine
 } from "./GsapEngine";
 import {
+  getEngineLabel
+} from "@/engines/engineCatalog";
+import {
   findSketchMeta, listTemplatesForEngine
 } from "@/engines/metadata";
 
 export const gsapRegistration: EngineRegistration = {
   id: "gsap",
-  label: "GSAP",
+  label: getEngineLabel( "gsap" ),
 
   createEngine: () => new GsapEngine(),
 
