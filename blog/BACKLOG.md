@@ -4,9 +4,9 @@
 > (git log + diffs + dossier `docs/`). Voir [`README.md`](./README.md) pour le
 > fonctionnement de la loop qui maintient ce fichier.
 
-**Dernier scan :** 2026-06-06 (màj)
-**Commit de référence (HEAD scanné) :** `91430de`
-**Périmètre :** 172 commits · 35 PRs · ~70 notes dans `docs/`
+**Dernier scan :** 2026-06-08
+**Commit de référence (HEAD scanné) :** `81d5178`
+**Périmètre :** 233 commits · 45 PRs · ~70 notes dans `docs/`
 
 Légende statut : 🟡 idée · 🔵 prêt à rédiger (matière abondante) · ✍️ en cours · ✅ publié
 
@@ -94,6 +94,11 @@ série « build in public ».
   `15517a9`/`dd745c9` (extension per-letter), `fc64f4b` (rayon configurable),
   `8b70f7f` (loop-driven), PR #69. Répond directement au sujet « gridmasques ».
 
+### B6 — « Une catégorie "background" : factoriser les techniques de fond réutilisables » 🟡
+- **Angle :** util de background-pattern partagé (lignes fractionnaires, fix full-height)
+  + une nouvelle catégorie `background` qui rassemble les techniques de fond réutilisables.
+- **Sources :** commits `1661edd` (PR #78), `fc0a806`/`3527088` (PR #80).
+
 ### B4 — « Le système de titre & de "specs overlay" » 🟡
 - **Angle :** rendu de titres riches paramétrables (`utils/title/`) et overlay
   technique animé affichant les réglages du sketch (`drawSlideSpecs`, `specsData`).
@@ -124,6 +129,25 @@ série « build in public ».
 
 ---
 
+## 🖥️ GPU / WebGL (nouvel axe — scan 2026-06-08)
+
+### G1 — « Porter une grille de bruit de Perlin sur le GPU : instanced rendering + GLSL » 🔵
+- **Angle :** la story perf majeure de cette vague. Toute la famille `noise-grid`
+  (CPU, une `dist()`/cellule) est portée sur un **moteur de champ de bruit partagé en GLSL**
+  avec **rendu instancié** (un seul draw call pour des milliers de cellules). Migration
+  faithful v1, v2, v5, v6, v7, v8, v10, v11, v12 — en gardant le rendu identique.
+- **Pièges concrets à raconter :** pin de la précision `int` pour que le programme linke
+  (`b154624`), renommer une variable GLSL qui tombait sur le mot réservé `packed` (`188d021`),
+  clamp du poids easé pour rester borné (`09d6236`).
+- **Sources :** commits `f21ed8e` (extraction du moteur GPU partagé), `1605cc2` (renderer
+  instancié + v8), `f45c503`/`e32406b`/`56ae560` (ports v5/v6/v7/v8/v10/v12), `a3ffca9`/`87d30f1`
+  (v11 GPU, PR #71), `81d5178` (fix easing GPU v2/v6/v8/v12, PR #81).
+
+### G2 — « Charger N sketches sans tout bundler : un registre de literal-imports généré » 🔵
+- **Angle :** perf de chargement — au lieu d'imports dynamiques opaques, **générer** un
+  registre d'imports littéraux que le bundler peut analyser et code-splitter proprement.
+- **Sources :** commits `50e758e`/`7aa7947` (PR #82), à croiser avec `scripts/` de génération.
+
 ## 🎨 Templates créatifs (angle « making-of »)
 
 ### D1 — « La famille noise-grid : 13 variations d'un même champ de bruit » 🟡
@@ -139,6 +163,23 @@ série « build in public ».
   commits `b458caf`, `3ef6ba6` (PR #65), `5a1f606` (buffered graphics), `146925a` (PR #59).
 
 ---
+
+### D3 — « Splines lissées : corner-cutting de Chaikin sur des points » 🟡
+- **Angle :** algo créatif simple et visuel — courbes arrondies par découpe de coins
+  itérative (Chaikin) ; nouvelle catégorie `splines`, scale de taille générale.
+- **Sources :** commits `17f52d7`/`e8e828e` (PR #72), `9d706b5`, `src/templates/p5/sketches/splines/`.
+
+### D4 — « Splines pilotées par la caméra : face capture en groupes ordonnés » 🟡
+- **Angle :** interaction temps réel — vision/MediaPipe qui capture les points du visage
+  en **groupes ordonnés** pour alimenter des splines vivantes ; activation runtime de la vision.
+- **Sources :** commits `aff6151`/`e7fcba3` (camera-driven splines), `d6b39f3`/`03c2bd1`
+  (face capture ordered groups), `src/templates/p5/utils/mediapipe/`.
+
+### D5 — « Templates photo GSAP : Grid Cascade, Coverflow 3D, Stack Shuffle » 🟡
+- **Angle :** côté moteur GSAP (pas p5) — 3 templates animés sur une base de paramètres
+  riche partagée ; astuce capture : **embarquer les images en data-URL** lors de la
+  rastérisation pour l'enregistrement (`e68818e`).
+- **Sources :** commits `53dcd7c`/`36089d3` (PR #73), `src/templates/gsap/sketches/`.
 
 ## 🛠️ Plateforme & outillage
 
@@ -173,6 +214,7 @@ série « build in public ».
 - **F4** — Idle d'un `requestAnimationFrame` quand l'onglet est caché (`6bc2a4e`). 🟡
 - **F5** — Extraire un thumbnail WebP depuis la première frame d'une vidéo (`51dfd7b`). 🟡
 - **F6** — Tracker les pageviews sur changement de route client-side dans le Next.js App Router (GA4 sans rechargement) — `3eca276`/`2b82093` (PR #68), `src/components/GoogleAnalyticsTracker.tsx`, `src/lib/analytics/gtag.ts`. 🟡
+- **F7** — Quand une palette de couleurs fait planter la draw-loop : le fix `rainbowCrazy` (`6b8966c`, PR #77). 🟡
 
 ---
 
@@ -181,5 +223,8 @@ série « build in public ».
 À surveiller dans les futurs commits pour de nouveaux articles :
 - finalisation de l'encodeur Mediabunny in-browser (remplace-t-il FFmpeg ?) ;
 - nettoyage des libs legacy (`tar.js`, `CCapture`) — clôt la série A1 ;
-- nouveaux templates → alimente la section D ;
-- métriques de perf chiffrées → renforce la section C.
+- **branches non-mergées prometteuses** repérées au scan du 2026-06-08 (à miner une fois sur `main`) :
+  `ephemeral-pr-deployments` (preview Vercel + NAS → article DevOps), `shader-learning-p5js`
+  (cours shaders M0-M1 + playground), migration `p5.js v2`, `audio-instrument-recognition` (DSP) ;
+- suite du portage GPU (section G) → métriques chiffrées avant/après ;
+- nouveaux templates → alimente la section D.
