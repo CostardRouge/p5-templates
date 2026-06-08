@@ -9,18 +9,38 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      # Optional: set this repo secret to trigger an instant redeploy on your
+      # NAS. Leave it unset and the build still publishes — only the redeploy
+      # step is skipped.
+      PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Docker metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          # `main` + `latest` are moving tags (what Portainer re-pulls);
+          # `sha-<short>` is immutable and what you pin to for a rollback.
+          tags: |
+            type=raw,value=main
+            type=raw,value=latest
+            type=sha,format=short
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -28,10 +48,22 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          context: .
           push: true
-          tags: containeurrouge/social-templates-renderer:amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Registry-side layer cache keyed on the workflow run, so unchanged
+          # layers (base image, deps) aren't rebuilt every push.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             BACKEND_RECORDING=true
             NOTIFICATIONS=false
             LIVE_THUMBNAIL=true
             NEXT_PUBLIC_GITHUB_REPO_URL=${{ vars['NEXT_PUBLIC_GITHUB_REPO_URL'] }}
+
+      - name: Trigger Portainer redeploy
+        if: env.PORTAINER_WEBHOOK_URL != ''
+        run: |
+          echo "Triggering Portainer stack redeploy…"
+          curl -fsS -X POST "$PORTAINER_WEBHOOK_URL"
