@@ -275,7 +275,7 @@ export default function ControlledVector2DInput( {
     "w-full text-center text-xs font-mono px-1 py-0.5 rounded border border-theme/30 bg-theme/20 focus:outline-none focus:ring-1 focus:ring-theme";
 
   return (
-    <div className="flex w-full max-w-[120px] flex-col gap-1">
+    <div className="flex w-full max-w-[100px] flex-col gap-1">
       <div className="flex items-center gap-1">
         <input
           type="number"
