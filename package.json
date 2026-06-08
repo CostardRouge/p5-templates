@@ -17,7 +17,7 @@
     "test:watch": "jest --watch",
     "postinstall": "npx prisma generate",
     "setup:notifications": "node scripts/generate-vapid-keys.mjs",
-    "prepare": "husky"
+    "prepare": "husky && node scripts/setup-git-merge-drivers.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.825.0",

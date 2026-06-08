@@ -1,2 +1,15 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Generated sketch catalogue — these files are produced by watch-sketches.mjs, so
+# textual 3-way merges are meaningless and conflict whenever two branches each add
+# a sketch. Resolve those conflicts automatically instead of by hand:
+#
+#   - the registries are append-style maps → git's built-in line "union" merge
+#     keeps every entry from both sides (and GitHub honours this too);
+#   - metadata.json is a JSON array → a small custom driver unions it by sketch
+#     identity (see scripts/git-merge-metadata.mjs), wired up per-clone by
+#     scripts/setup-git-merge-drivers.mjs (run from `npm install`).
+src/templates/metadata.json            merge=sketch-metadata
+src/generated/sketchModuleRegistry.ts  merge=union
+src/generated/sketchOptionsRegistry.ts merge=union
