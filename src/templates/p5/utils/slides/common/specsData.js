@@ -2,6 +2,14 @@ import options from "../../options.js";
 
 const MAX_LINES = 40;
 
+// Top-level sketch keys that hold overlay configuration rather than sketch
+// parameters — excluded from the flattened spec dump so the boot-log/ticker
+// don't list their own (and the title's) settings.
+const EXCLUDED_TOP_LEVEL = new Set( [
+  "hud",
+  "title"
+] );
+
 function formatNumber( value ) {
   if ( Number.isInteger( value ) ) {
     return String( value );
@@ -56,6 +64,10 @@ function flatten(
   for ( const key of Object.keys( obj ) ) {
     if ( out.length >= MAX_LINES ) {
       return;
+    }
+
+    if ( !prefix && EXCLUDED_TOP_LEVEL.has( key ) ) {
+      continue;
     }
 
     const value = obj[ key ];

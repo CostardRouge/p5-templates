@@ -1,6 +1,7 @@
 import time from "./time.js";
 import debug from "./debug.js";
 import events from "./events.js";
+import hud from "./hud/index.js";
 import slides from "./slides/index";
 import options, {
   registerEvents as registerOptionsEvents
@@ -400,6 +401,10 @@ const sketch = {
 
     slides.registerEvents();
 
+    // Telemetry HUD overlay (drawn above slide overlays, on the canvas so it is
+    // captured by recordings). No-op unless a sketch opts in via options.hud.
+    hud.registerEvents();
+
     // register engine-agnostic animation bridge
     sketch.registerBridge();
 
@@ -421,6 +426,9 @@ const sketch = {
 
     // Clear all registered events so the next sketch starts fresh
     events.registeredEvents = {};
+
+    // Clear HUD probe state so values don't leak between sketches
+    hud.reset();
 
     // Reset animation time so the next sketch starts at t=0
     time.reset();
