@@ -396,6 +396,18 @@
     "ctime": "2026-06-06T17:12:53.059Z"
   },
   {
+    "name": "photo-exif",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T08:12:34.933Z",
+    "ctime": "2026-06-08T08:04:51.753Z"
+  },
+  {
     "name": "noise-grid-v3-basic-with-holes",
     "engine": "p5",
     "category": "noise-grid",

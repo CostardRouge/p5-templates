@@ -31,6 +31,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "gsap:photo/marquee-rows": () => import( "@/gsap/sketches/photo/marquee-rows/options" ),
   "gsap:photo/mosaic-morph": () => import( "@/gsap/sketches/photo/mosaic-morph/options" ),
   "gsap:photo/orbit-ring": () => import( "@/gsap/sketches/photo/orbit-ring/options" ),
+  "gsap:photo/photo-exif": () => import( "@/gsap/sketches/photo/photo-exif/options" ),
   "gsap:photo/slider-reveal": () => import( "@/gsap/sketches/photo/slider-reveal/options" ),
   "gsap:photo/split-columns": () => import( "@/gsap/sketches/photo/split-columns/options" ),
   "gsap:photo/stack-fan": () => import( "@/gsap/sketches/photo/stack-fan/options" ),

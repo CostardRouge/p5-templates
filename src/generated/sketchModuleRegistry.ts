@@ -18,6 +18,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "gsap:photo/marquee-rows": () => import( "@/gsap/sketches/photo/marquee-rows/index.jsx" ),
   "gsap:photo/mosaic-morph": () => import( "@/gsap/sketches/photo/mosaic-morph/index.jsx" ),
   "gsap:photo/orbit-ring": () => import( "@/gsap/sketches/photo/orbit-ring/index.jsx" ),
+  "gsap:photo/photo-exif": () => import( "@/gsap/sketches/photo/photo-exif/index.jsx" ),
   "gsap:photo/slider-reveal": () => import( "@/gsap/sketches/photo/slider-reveal/index.jsx" ),
   "gsap:photo/split-columns": () => import( "@/gsap/sketches/photo/split-columns/index.jsx" ),
   "gsap:photo/stack-fan": () => import( "@/gsap/sketches/photo/stack-fan/index.jsx" ),
