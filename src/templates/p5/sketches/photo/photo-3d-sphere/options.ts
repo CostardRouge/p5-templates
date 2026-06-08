@@ -1,6 +1,3 @@
-import {
-  fontNames
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import getTestImagePaths from "@/utils/getTestImagePaths";
@@ -10,69 +7,195 @@ export const formValues = {
   // Assets
   images: await getTestImagePaths(),
 
-  // Colors (sketch-level overrides; falls back to global options.colors if unset)
-  backgroundColor: [
-    0,
-    0,
-    0
-  ],
-  textColor: [
-    128,
-    128,
-    255
-  ],
+  // Where the photos sit on the invisible sphere
+  layout: {
+    distribution: "sphere",
+    faceCount: 0,
+    sphereRadius: 600,
+    photoSize: 0.82,
+    photoShape: "auto",
+    zoom: -1200
+  },
 
-  title: titleDefaultValues,
+  // How the tour travels from one photo to the next
+  motion: {
+    tourSpeed: 1,
+    holdRatio: 0.45,
+    easing: "easeInOutCubic"
+  },
 
-  // Behavior
-  rotateX: false,
-  rotateZ: false,
-  variableBackgroundColor: false,
-  variableZoom: false,
-  zoom: -2000
+  // Look & feel
+  style: {
+    focusDim: 0.55,
+    hideBackFaces: true,
+    photoFrame: false,
+    frameColor: [
+      255,
+      255,
+      255
+    ],
+    frameThickness: 0.06,
+    backgroundColor: [
+      8,
+      8,
+      12
+    ],
+    variableBackgroundColor: false
+  },
+
+  title: titleDefaultValues
 };
 
 // UI configuration only
 export const formConfiguration: Record<string, any> = {
-  // Assets
   images: {
     component: "images-stack",
     label: "Images"
   },
 
-  // Colors
-  backgroundColor: {
-    component: "color",
-    label: "Background color"
-  },
-  textColor: {
-    component: "color",
-    label: "Text color"
+  layout: {
+    label: "Sphere layout",
+    component: "nested-object",
+    fields: {
+      distribution: {
+        label: "Distribution",
+        component: "select",
+        options: [
+          {
+            label: "Sphere (even spread)",
+            value: "sphere"
+          },
+          {
+            label: "Ring (carousel)",
+            value: "ring"
+          },
+          {
+            label: "Vertical ring (wheel)",
+            value: "vertical-ring"
+          },
+          {
+            label: "Spiral",
+            value: "spiral"
+          }
+        ]
+      },
+      faceCount: {
+        label: "Face count (0 = one per photo)",
+        component: "slider",
+        min: 0,
+        max: 48,
+        step: 1
+      },
+      sphereRadius: {
+        label: "Sphere radius",
+        component: "slider",
+        min: 200,
+        max: 1500,
+        step: 10
+      },
+      photoSize: {
+        label: "Photo size",
+        component: "slider",
+        min: 0.2,
+        max: 1.5,
+        step: 0.01
+      },
+      photoShape: {
+        label: "Photo shape",
+        component: "select",
+        options: [
+          {
+            label: "Auto (canvas)",
+            value: "auto"
+          },
+          {
+            label: "Portrait",
+            value: "portrait"
+          },
+          {
+            label: "Square",
+            value: "square"
+          },
+          {
+            label: "Landscape",
+            value: "landscape"
+          }
+        ]
+      },
+      zoom: {
+        label: "Zoom (Z translate)",
+        component: "slider",
+        min: -5000,
+        max: 0,
+        step: 10
+      }
+    }
   },
 
-  // Behavior
-  rotateX: {
-    component: "checkbox",
-    label: "Rotate X"
+  motion: {
+    label: "Motion",
+    component: "nested-object",
+    fields: {
+      tourSpeed: {
+        label: "Tour speed (loops per cycle)",
+        component: "slider",
+        min: 0.25,
+        max: 4,
+        step: 0.05
+      },
+      holdRatio: {
+        label: "Hold on each photo",
+        component: "slider",
+        min: 0,
+        max: 0.95,
+        step: 0.01
+      },
+      easing: {
+        label: "Transition easing",
+        component: "easing"
+      }
+    }
   },
-  rotateZ: {
-    component: "checkbox",
-    label: "Rotate Z"
-  },
-  variableBackgroundColor: {
-    component: "checkbox",
-    label: "Animated background color"
-  },
-  variableZoom: {
-    component: "checkbox",
-    label: "Animated zoom"
-  },
-  zoom: {
-    component: "slider",
-    label: "Zoom (Z translate)",
-    min: -10000,
-    max: 1000,
-    step: 10
+
+  style: {
+    label: "Style",
+    component: "nested-object",
+    fields: {
+      focusDim: {
+        label: "Dim distant photos",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      hideBackFaces: {
+        label: "Hide back faces",
+        component: "checkbox"
+      },
+      photoFrame: {
+        label: "Photo frame",
+        component: "checkbox"
+      },
+      frameColor: {
+        label: "Frame color",
+        component: "color"
+      },
+      frameThickness: {
+        label: "Frame thickness",
+        component: "slider",
+        min: 0,
+        max: 0.45,
+        step: 0.01
+      },
+      backgroundColor: {
+        label: "Background color",
+        component: "color"
+      },
+      variableBackgroundColor: {
+        label: "Animated background color",
+        component: "checkbox"
+      }
+    }
   },
 
   title: titleFormConfiguration
