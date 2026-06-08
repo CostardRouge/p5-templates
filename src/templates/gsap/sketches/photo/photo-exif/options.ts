@@ -35,17 +35,20 @@ export const formValues = {
   textColor: [
     237,
     234,
-    226
+    226,
+    255
   ],
   labelColor: [
     146,
     146,
-    152
+    152,
+    255
   ],
   accentColor: [
     216,
     92,
-    58
+    58,
+    255
   ],
 
   typography: {
@@ -73,7 +76,7 @@ export const formValues = {
     aperture: true,
     shutter: true,
     iso: true,
-    lens: false,
+    lens: true,
     gps: false,
     filename: false
   },
