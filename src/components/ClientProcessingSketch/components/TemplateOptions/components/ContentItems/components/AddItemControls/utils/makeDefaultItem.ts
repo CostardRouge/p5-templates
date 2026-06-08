@@ -6,7 +6,8 @@ import {
   SpecsItemSchema,
   TextItemSchema,
   ContentItem,
-  VisualItemSchema
+  VisualItemSchema,
+  QrCodeItemSchema
 } from "@/types/sketch.types";
 
 import {
@@ -42,6 +43,10 @@ export default function makeDefaultItem( type: ItemKind ): ContentItem {
       } );
     case "visual":
       return VisualItemSchema.parse( {
+        type
+      } );
+    case "qrcode":
+      return QrCodeItemSchema.parse( {
         type
       } );
     default:

@@ -809,5 +809,101 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       // @ts-expect-error
       schema: VisualOptions
     }
+  },
+  qrcode: {
+    url: {
+      label: "URL",
+      component: "text",
+      placeholder: "Leave empty to use the current page URL"
+    },
+    size: {
+      label: "Size",
+      component: "slider",
+      min: 0.02,
+      max: 1,
+      step: 0.01
+    },
+    position: {
+      label: "Position",
+      component: "nested-object",
+      fields: {
+        x: {
+          label: "x",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.01
+        },
+        y: {
+          label: "y",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.01
+        }
+      }
+    },
+    errorCorrection: {
+      label: "Error correction",
+      component: "select",
+      options: [
+        {
+          value: "L",
+          label: "L — Low (7%)"
+        },
+        {
+          value: "M",
+          label: "M — Medium (15%)"
+        },
+        {
+          value: "Q",
+          label: "Q — Quartile (25%)"
+        },
+        {
+          value: "H",
+          label: "H — High (30%)"
+        }
+      ]
+    },
+    quietZone: {
+      label: "Quiet zone",
+      component: "slider",
+      min: 0,
+      max: 8,
+      step: 1
+    },
+    foreground: {
+      label: "Foreground",
+      component: "color"
+    },
+    background: {
+      label: "Background",
+      component: "color"
+    },
+    blend: {
+      label: "Blend",
+      component: "select",
+      options: blendSelectOptions
+    },
+    showUrl: {
+      label: "Show URL caption",
+      component: "checkbox"
+    },
+    urlFont: {
+      label: "URL font",
+      component: "select",
+      options: fontSelectOptions
+    },
+    urlSize: {
+      label: "URL size",
+      component: "slider",
+      min: 6,
+      max: 96,
+      step: 1
+    },
+    urlFill: {
+      label: "URL color",
+      component: "color"
+    }
   }
 };
