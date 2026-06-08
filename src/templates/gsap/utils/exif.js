@@ -84,7 +84,9 @@ export function useExif( url ) {
         cancelled = true;
       };
     },
-    [ url ]
+    [
+      url
+    ]
   );
 
   return data;
@@ -141,7 +143,9 @@ export function useExifList( urls ) {
     // Re-run only when the *set* of URLs changes (the joined key is stable
     // across renders, unlike the freshly-built `urls` array).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ key ]
+    [
+      key
+    ]
   );
 
   return map;
