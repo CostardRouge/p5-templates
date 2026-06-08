@@ -224,6 +224,51 @@ export default function FieldRenderer( {
           </select>
         );
 
+      case "multi-select": {
+        const selected: string[] = Array.isArray( currentValue )
+          ? ( currentValue as string[] )
+          : [];
+
+        return (
+          <div className="flex flex-col gap-1">
+            {config.options.map( ( option ) => {
+              const value = String( option.value );
+              const checked = selected.includes( value );
+
+              return (
+                <label
+                  key={ value }
+                  className="flex items-center gap-2 select-none"
+                >
+                  <input
+                    type="checkbox"
+                    checked={ checked }
+                    onChange={ ( e ) => {
+                      const next = e.target.checked
+                        ? [
+                          ...selected,
+                          value
+                        ]
+                        : selected.filter( ( v ) => v !== value );
+
+                      setValue(
+                        registeredName,
+                        next,
+                        {
+                          shouldDirty: true
+                        }
+                      );
+                    } }
+                    className="block w-fit"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              );
+            } )}
+          </div>
+        );
+      }
+
       case "size-preset":
         return (
           <ControlledSizePresetSelect

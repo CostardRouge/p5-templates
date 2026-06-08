@@ -230,7 +230,8 @@ export default function drawSlideSpecs( specsOption ) {
 
       case "blink": {
         // Square-wave flash on the real clock, so frequency is a true Hz value
-        // independent of the loop length (macOS menu-bar style).
+        // independent of the loop length (macOS menu-bar style). Full strength,
+        // no fade: the change window (heat > 0) just gates how long it blinks.
         const frequency = highlight.frequency ?? 6;
         const on = ( performance.now() / 1000 * frequency ) % 1 < 0.5;
 
@@ -239,7 +240,7 @@ export default function drawSlideSpecs( specsOption ) {
             text,
             x,
             y,
-            heat
+            1
           );
         } else {
           writeLine(

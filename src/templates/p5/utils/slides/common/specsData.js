@@ -88,27 +88,21 @@ function flatten(
 /**
  * Build the list of { label, value } lines displayed by the specs overlay.
  *
- * `specsOption.content` selects which groups are listed:
- *   - "general": render options only (resolution, framerate, duration, slides)
- *   - "sketch": the flattened sketch settings only
- *   - "general-and-sketch": both (default)
- *
- * Sketch settings come from options.sketch, already merged with per-slide
- * overrides via the options proxy.
+ * `specsOption.content` is a list ticked in any combination:
+ *   - "general": render options (resolution, framerate, duration, slides)
+ *   - "sketch": the flattened sketch settings (options.sketch, already merged
+ *     with per-slide overrides via the options proxy)
  */
 export default function buildSpecsLines( specsOption ) {
-  // Resolve content, falling back to the legacy includeSketchSettings boolean.
-  let content = specsOption?.content;
+  const content = Array.isArray( specsOption?.content )
+    ? specsOption.content
+    : [
+      "general",
+      "sketch"
+    ];
 
-  if ( content === undefined ) {
-    content =
-      specsOption?.includeSketchSettings === false
-        ? "general"
-        : "general-and-sketch";
-  }
-
-  const includeGeneral = content !== "sketch";
-  const includeSketch = content !== "general";
+  const includeGeneral = content.includes( "general" );
+  const includeSketch = content.includes( "sketch" );
 
   const lines = [];
 

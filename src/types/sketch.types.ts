@@ -186,10 +186,7 @@ export const SpecsVisibilitySchema = z
     ]
   )
   .default( {
-    mode: "fade",
-    revealEnd: 0.45,
-    holdEnd: 0.7,
-    fadeEnd: 0.8
+    mode: "permanent"
   } );
 
 // Each highlight style only carries the parameters it actually uses, so the UI
@@ -235,8 +232,8 @@ export const SpecsHighlightSchema = z
       } ),
       z.object( {
         style: z.literal( "blink" ),
-        duration: highlightDuration,
-        // blinks per second (Hz) of the inverted-bar flash
+        // blinks per second (Hz) of the inverted-bar flash. No fade and no
+        // duration: it flashes at full strength for the change window, then stops
         frequency: z.number().positive()
           .default( 6 ),
         background: RGBA.default( [
@@ -279,15 +276,40 @@ export const SpecsItemSchema = z.object( {
   lineHeight: z.number().positive()
     .default( 1.4 ),
   showCursor: z.boolean().default( true ),
-  // which parameter groups to list: the general render options, the sketch
-  // settings, or both
+  // which parameter groups to list, ticked in any combination. Preprocess keeps
+  // older items working: the previous single-enum selector and the original
+  // includeSketchSettings boolean both map onto the new string array.
   content: z
-    .enum( [
+    .preprocess(
+      ( value ) => {
+        if ( Array.isArray( value ) ) {
+          return value;
+        }
+
+        if ( value === "general" || value === "sketch" ) {
+          return [
+            value
+          ];
+        }
+
+        if ( value === "general-and-sketch" ) {
+          return [
+            "general",
+            "sketch"
+          ];
+        }
+
+        return undefined; // fall through to .default
+      },
+      z.array( z.enum( [
+        "general",
+        "sketch"
+      ] ) )
+    )
+    .default( [
       "general",
-      "general-and-sketch",
       "sketch"
-    ] )
-    .default( "general-and-sketch" ),
+    ] ),
   visibility: SpecsVisibilitySchema,
   highlight: SpecsHighlightSchema
 } );

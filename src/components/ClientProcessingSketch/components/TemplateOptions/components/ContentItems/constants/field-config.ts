@@ -72,6 +72,13 @@ interface SelectConfig extends BaseConfig {
   options: SelectOption[];
 }
 
+// For 'multi-select' inputs: a checkbox list bound to a string[] value, letting
+// the user tick any combination of the options.
+interface MultiSelectConfig extends BaseConfig {
+  component: "multi-select";
+  options: SelectOption[];
+}
+
 // For static, non-conditional nested objects
 export interface NestedObjectConfig extends BaseConfig {
   component: "nested-object";
@@ -173,6 +180,7 @@ export type FieldConfig =
   | NumberInputConfig
   | ColorInputConfig
   | SelectConfig
+  | MultiSelectConfig
   | NestedObjectConfig
   | ConditionalGroupConfig
   | ImagesStackConfig
@@ -402,15 +410,11 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     content: {
       label: "Content",
-      component: "select",
+      component: "multi-select",
       options: [
         {
           value: "general",
           label: "General options"
-        },
-        {
-          value: "general-and-sketch",
-          label: "General + sketch options"
         },
         {
           value: "sketch",
@@ -577,13 +581,6 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
           }
         },
         blink: {
-          duration: {
-            label: "Duration (s)",
-            component: "slider",
-            min: 0.1,
-            max: 5,
-            step: 0.1
-          },
           frequency: {
             label: "Frequency (Hz)",
             component: "slider",
