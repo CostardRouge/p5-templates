@@ -6,6 +6,7 @@ import {
   tracedForm,
   colorsForm,
   loopForm,
+  lettersForm,
   baseDefaults
 } from "../_form";
 
@@ -18,7 +19,7 @@ export const formValues = {
   textStyle: {
     ...baseDefaults.textStyle,
     size: 0.66,
-    sampleFactor: 0.5
+    sampleFactor: 0.18
   },
   grid: {
     show: true,
@@ -38,7 +39,7 @@ export const formValues = {
     ]
   },
   traced: {
-    steps: 33,
+    steps: 12,
     weight: 4
   },
   extremes: {
@@ -52,7 +53,7 @@ export const formValues = {
     opacityMax: 2.5
   },
   loop: {
-    timeScale: 1,
+    timeScale: 6.6,
     timeOffset: 0
   },
   title: {
@@ -63,6 +64,7 @@ export const formValues = {
 
 export const formConfiguration: Record<string, any> = {
   text: textForm,
+  letters: lettersForm,
   textStyle: textStyleForm,
   grid: {
     component: "nested-object",

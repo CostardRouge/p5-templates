@@ -18,7 +18,7 @@ export const formValues = {
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.66,
+    size: 0.34,
     sampleFactor: 0.15
   },
   grid: {

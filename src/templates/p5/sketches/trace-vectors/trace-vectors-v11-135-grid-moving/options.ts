@@ -17,7 +17,7 @@ export const formValues = {
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.66,
+    size: 0.34,
     sampleFactor: 0.5
   },
   grid: {
@@ -42,13 +42,13 @@ export const formValues = {
   },
   extremes: {
     show: true,
-    weight: 2
+    weight: 4.4
   },
   colors: {
     hueIndexMultiplier: 16,
     hueOffset: 0,
-    opacityMin: 1.5,
-    opacityMax: 4
+    opacityMin: 1.7,
+    opacityMax: 2.1
   },
   loop: {
     timeScale: 1,

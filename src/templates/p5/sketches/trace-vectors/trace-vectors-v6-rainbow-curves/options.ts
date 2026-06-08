@@ -15,17 +15,17 @@ export const formValues = {
   text: {
     mode: "multiple",
     value: [
-      "rainbow",
-      "curves"
+      "up",
+      "down"
     ]
   },
   textStyle: {
     ...baseDefaults.textStyle,
     size: 0.28,
-    sampleFactor: 0.1
+    sampleFactor: 0.12
   },
   layout: {
-    marginDivisor: 1.5
+    marginDivisor: 1.3
   },
   grid: {
     show: true,
@@ -38,7 +38,7 @@ export const formValues = {
     weight: 2
   },
   traced: {
-    steps: 20,
+    steps: 111,
     weight: 3
   },
   wave: {

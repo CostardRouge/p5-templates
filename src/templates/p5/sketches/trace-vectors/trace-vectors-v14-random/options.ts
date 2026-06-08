@@ -16,7 +16,7 @@ export const formValues = {
   },
   trajectory: {
     ...gridTraceFormValuesBase.trajectory,
-    random: true
+    random: false
   }
 };
 

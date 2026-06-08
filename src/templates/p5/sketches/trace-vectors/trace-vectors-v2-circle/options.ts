@@ -18,26 +18,26 @@ export const formValues = {
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.66,
+    size: 0.28,
     sampleFactor: 0.1
   },
   circle: {
-    radius: 150,
-    scale: 1.5
+    radius: 81,
+    scale: 2.33
   },
   traced: {
-    steps: 20,
-    weight: 4
+    steps: 72,
+    weight: 8.7
   },
   colors: {
-    hueIndexMultiplier: 6,
+    hueIndexMultiplier: 14,
     hueOffset: 0,
     opacityMin: 1.5,
     opacityMax: 5
   },
   loop: {
-    timeScale: 2,
-    timeOffset: 0
+    timeScale: 0,
+    timeOffset: 0.38
   },
   title: {
     ...titleDefaultValues,

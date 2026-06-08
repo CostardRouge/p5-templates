@@ -133,11 +133,26 @@ export const extremesPointsForm = {
   }
 };
 
+export const lettersForm = {
+  component: "nested-object",
+  label: "Letters",
+  fields: {
+    speed: {
+      label: "Text sweeps per loop",
+      component: "slider",
+      min: 1,
+      max: 8,
+      step: 1
+    }
+  }
+};
+
 export const gridTraceFormConfiguration: Record<string, any> = {
   text: textForm,
   textStyle: textStyleForm,
   grid: gridSectionForm,
   trajectory: trajectoryForm,
+  letters: lettersForm,
   traced: tracedAdvancedForm,
   extremes: extremesPointsForm,
   colors: colorsForm,
@@ -164,6 +179,9 @@ export const gridTraceFormValuesBase = {
     linesWeight: 1,
     pointsWeight: 3,
     pointsInterval: 0.05
+  },
+  letters: {
+    speed: 1
   },
   traced: {
     steps: 33,

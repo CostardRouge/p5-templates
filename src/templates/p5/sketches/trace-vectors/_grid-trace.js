@@ -8,6 +8,7 @@ import mappers from "@/p5/utils/mappers.js";
 import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
 import iterators from "@/p5/utils/iterators.js";
+import traceLetters from "@/p5/utils/traceLetters.js";
 
 import {
   drawGrid, drawShape
@@ -222,30 +223,40 @@ export function renderGridTraceCommon( {
   const letterSize = ( opts.textStyle?.size ?? 0.66 ) * p.width;
 
   const textFont = letterFont ?? font;
-  const valuesFn = () => ( opts.trajectory?.random
-    ? order.map( ( letterIndex ) => string.getTextPoints( {
-      text: text[ letterIndex % text.length ],
-      size: letterSize,
-      position: center,
-      sampleFactor,
-      font: textFont
-    } ) )
-    : text.map( ( letter ) => string.getTextPoints( {
-      text: letter,
-      size: letterSize,
-      position: center,
-      sampleFactor,
-      font: textFont
-    } ) ) );
+
+  // The glyph clouds do not depend on the per-step `progression`, so build them
+  // ONCE per frame (and memoise across frames) instead of rebuilding inside the
+  // generator `steps` times. Pixel-identical — see traceLetters.test.ts.
+  const morphTexts = opts.trajectory?.random
+    ? order.map( ( letterIndex ) => text[ letterIndex % text.length ] )
+    : text;
+
+  const letterValues = traceLetters.points( {
+    texts: morphTexts,
+    size: letterSize,
+    position: center,
+    sampleFactor,
+    font: textFont
+  } );
+
+  // Loop-safe letter sweep: drive the morph by animation.progression so the
+  // WHOLE text is traversed `lettersSpeed` times per loop and returns exactly to
+  // its start at the seam (advancing by an integer multiple of the list length).
+  // The old `progression + time` only advanced by loop.timeScale (≈1) per loop,
+  // so a 10-letter word showed only its first ~2 glyphs.
+  const lettersSpeed = opts.letters?.speed ?? 1;
 
   mappers.traceVectors(
     steps,
-    ( progression ) => animation.ease( {
-      values: valuesFn(),
+    ( progression ) => traceLetters.morph( {
+      values: letterValues,
       duration: 1,
-      lerpFn: mappers.lerpPoints,
       easingFn: textEasingFn,
-      currentTime: progression + time
+      currentTime: progression + traceLetters.sweep(
+        animation.progression,
+        morphTexts.length,
+        lettersSpeed
+      )
     } ),
     () => p.beginShape(),
     (

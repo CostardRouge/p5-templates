@@ -7,6 +7,7 @@ import {
   tracedForm,
   colorsForm,
   loopForm,
+  lettersForm,
   baseDefaults
 } from "../_form";
 
@@ -23,7 +24,7 @@ export const formValues = {
   },
   traced: {
     steps: 16,
-    weight: 4
+    weight: 16.3
   },
   colors: {
     hueIndexMultiplier: 6,
@@ -32,7 +33,7 @@ export const formValues = {
     opacityMax: 3.5
   },
   loop: {
-    timeScale: 1.5,
+    timeScale: 2.2,
     timeOffset: 0
   },
   title: {
@@ -43,6 +44,7 @@ export const formValues = {
 
 export const formConfiguration: Record<string, any> = {
   text: textForm,
+  letters: lettersForm,
   textStyle: textStyleForm,
   grid: gridForm,
   traced: tracedForm,

@@ -14,12 +14,12 @@ export const formValues = {
   ...baseDefaults,
   text: {
     mode: "single",
-    value: "123"
+    value: "xyz"
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.66,
-    sampleFactor: 0.15
+    size: 0.4,
+    sampleFactor: 0.34
   },
   grid: {
     show: true,
@@ -28,12 +28,12 @@ export const formValues = {
     weight: 0.5
   },
   traced: {
-    steps: 27,
-    weight: 3
+    steps: 73,
+    weight: 4
   },
   extremes: {
     show: true,
-    weight: 3
+    weight: 5.1
   },
   colors: {
     hueIndexMultiplier: 8,

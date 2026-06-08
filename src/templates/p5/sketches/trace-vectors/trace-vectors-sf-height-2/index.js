@@ -7,6 +7,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
+import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
@@ -58,17 +59,26 @@ sketch.draw( (
       _, index
     ) => index );
 
+  const lettersSpeed = options.sketch.letters?.speed ?? 1;
+  // loop-safe: slide the letter window through the whole alphabet once
+  // (× speed) per loop and return exactly to the start at the seam
+  const letterTime = traceLetters.sweep(
+    animation.progression,
+    indexValues.length,
+    lettersSpeed
+  );
+
   const letterStartIndex = animation.ease( {
     values: indexValues,
     duration: 1,
-    currentTime: time / 2,
+    currentTime: letterTime,
     easingFn: easing.easeInOutSine
   } );
 
   const letterEndIndex = animation.ease( {
     values: indexValues.map( ( idx ) => idx + letterRange ),
     duration: 1,
-    currentTime: time / 2,
+    currentTime: letterTime,
     easingFn: easing.easeInOutSine
   } );
 
@@ -130,37 +140,39 @@ sketch.draw( (
   const steps = options.sketch.traced?.steps ?? alphabet.length;
   const zAmp = options.sketch.wave?.amplitude ?? 0.5;
 
+  // sampleFactor is animated but depends only on `time` (constant within a
+  // frame), so it is the same for every step — build the clouds once. The
+  // bounded memo in traceLetters stops the per-frame key churn from leaking.
+  const sampleFactor = mappers.fn(
+    p.sin( time ),
+    -1,
+    1,
+    options.sketch.textStyle?.sampleFactorMin ?? 0.025,
+    options.sketch.textStyle?.sampleFactor ?? 0.1
+  );
+
+  const letterValues = traceLetters.points( {
+    texts: alphabet,
+    size: letterSize,
+    position: center,
+    sampleFactor,
+    font
+  } );
+
   mappers.traceVectors(
     steps,
-    ( progression ) => {
-      const sampleFactor = mappers.fn(
-        p.sin( time ),
-        -1,
+    ( progression ) => traceLetters.morph( {
+      values: letterValues,
+      duration: 1,
+      easingFn: easing.easeInOutExpo,
+      currentTime: p.map(
+        progression,
+        0,
         1,
-        options.sketch.textStyle?.sampleFactorMin ?? 0.025,
-        options.sketch.textStyle?.sampleFactor ?? 0.1
-      );
-
-      return animation.ease( {
-        values: alphabet.map( ( text ) => string.getTextPoints( {
-          text,
-          size: letterSize,
-          position: center,
-          sampleFactor,
-          font
-        } ) ),
-        duration: 1,
-        lerpFn: mappers.lerpPoints,
-        easingFn: easing.easeInOutExpo,
-        currentTime: p.map(
-          progression,
-          0,
-          1,
-          letterStartIndex,
-          letterEndIndex
-        )
-      } );
-    },
+        letterStartIndex,
+        letterEndIndex
+      )
+    } ),
     () => p.beginShape(),
     (
       vector, vectorsListProgression, vectorIndexProgression

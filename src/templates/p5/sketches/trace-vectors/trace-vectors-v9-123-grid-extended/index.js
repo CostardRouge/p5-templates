@@ -5,8 +5,8 @@ import sketch, {
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
-import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
+import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
@@ -80,18 +80,19 @@ sketch.draw( (
   const swayAmp = options.sketch.sway?.amplitude ?? W / 1.5;
   const chunkCount = options.sketch.chunks?.count ?? 10;
 
+  const letterValues = traceLetters.points( {
+    texts: alphabet,
+    size: letterSize,
+    position: center,
+    sampleFactor,
+    font
+  } );
+
   mappers.traceVectors(
     steps,
-    ( progression ) => animation.ease( {
-      values: alphabet.map( ( text ) => string.getTextPoints( {
-        text,
-        size: letterSize,
-        position: center,
-        sampleFactor,
-        font
-      } ) ),
+    ( progression ) => traceLetters.morph( {
+      values: letterValues,
       duration: 1 + progression / 5,
-      lerpFn: mappers.lerpPoints,
       easingFn: easing.easeInOutCubic,
       currentTime: p.map(
         progression,

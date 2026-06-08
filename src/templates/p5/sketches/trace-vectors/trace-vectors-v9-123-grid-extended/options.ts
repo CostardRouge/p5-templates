@@ -18,8 +18,8 @@ export const formValues = {
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.66,
-    sampleFactor: 0.5
+    size: 0.3,
+    sampleFactor: 0.19
   },
   grid: {
     show: true,
@@ -28,24 +28,24 @@ export const formValues = {
     weight: 0.5
   },
   traced: {
-    steps: 23,
-    weight: 10
+    steps: 41,
+    weight: 4.3
   },
   chunks: {
-    count: 10
+    count: 17
   },
   sway: {
-    amplitude: 360
+    amplitude: 384
   },
   extremes: {
     show: true,
-    weight: 4
+    weight: 5.1
   },
   colors: {
-    hueIndexMultiplier: 8,
+    hueIndexMultiplier: 21.5,
     hueOffset: 0,
-    opacityMin: 1.5,
-    opacityMax: 5
+    opacityMin: 2.9,
+    opacityMax: 4.6
   },
   loop: {
     timeScale: 1,

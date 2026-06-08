@@ -17,15 +17,15 @@ export const formValues = {
   },
   textStyle: {
     ...baseDefaults.textStyle,
-    size: 0.45,
-    sampleFactor: 0.1
+    size: 0.42,
+    sampleFactor: 0.2
   },
   layout: {
-    marginPx: 200
+    marginPx: 384
   },
   traced: {
-    steps: 3,
-    weight: 3
+    steps: 11,
+    weight: 9.2
   },
   sampleFactor: {
     values: [
@@ -34,13 +34,13 @@ export const formValues = {
       0.065,
       0.05,
       0.045,
-      0.03,
+      "0.03",
       0.025
     ]
   },
   extremes: {
     show: true,
-    weight: 3
+    weight: 4.6
   },
   colors: {
     hueIndexMultiplier: 8,
@@ -49,7 +49,7 @@ export const formValues = {
     opacityMax: 4
   },
   loop: {
-    timeScale: 1.5,
+    timeScale: 7.8,
     timeOffset: 0
   },
   title: {

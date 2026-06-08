@@ -5,8 +5,8 @@ import sketch, {
 import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
-import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
+import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
@@ -87,18 +87,19 @@ sketch.draw( (
   const textSampleFactor = options.sketch.textStyle?.sampleFactor ?? 0.2;
   const steps = options.sketch.traced?.steps ?? alphabet.length * 3;
 
+  const letterValues = traceLetters.points( {
+    texts: alphabet,
+    size: letterSize,
+    position: center,
+    sampleFactor: textSampleFactor,
+    font
+  } );
+
   mappers.traceVectors(
     steps,
-    ( progression ) => animation.ease( {
-      values: alphabet.map( ( text ) => string.getTextPoints( {
-        text,
-        size: letterSize,
-        position: center,
-        sampleFactor: textSampleFactor,
-        font
-      } ) ),
+    ( progression ) => traceLetters.morph( {
+      values: letterValues,
       duration: 1,
-      lerpFn: mappers.lerpPoints,
       currentTime: p.map(
         progression,
         0,

@@ -8,6 +8,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
+import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
@@ -149,26 +150,35 @@ sketch.draw( (
   const steps = options.sketch.traced?.steps ?? 33;
   const sampleFactor = options.sketch.textStyle?.sampleFactor ?? 0.5;
 
+  const lettersSpeed = options.sketch.letters?.speed ?? 1;
+
+  const letterValues = traceLetters.points( {
+    texts: alphabet,
+    size: letterSize,
+    position: center,
+    sampleFactor,
+    font
+  } );
+
   mappers.traceVectors(
     steps,
-    ( progression ) => animation.ease( {
-      values: alphabet.map( ( text ) => string.getTextPoints( {
-        text,
-        size: letterSize,
-        position: center,
-        sampleFactor,
-        font
-      } ) ),
+    ( progression ) => traceLetters.morph( {
+      values: letterValues,
       duration: 1,
-      lerpFn: mappers.lerpPoints,
       easingFn: easing.easeInOutExpo,
+      // loop-safe: the morph window slides through the whole text once (× speed)
+      // per loop instead of being nudged ~1 glyph by `+ time`
       currentTime: p.map(
         progression,
         0,
         1,
         0,
         2
-      ) + time
+      ) + traceLetters.sweep(
+        animation.progression,
+        alphabet.length,
+        lettersSpeed
+      )
     } ),
     () => p.beginShape(),
     (

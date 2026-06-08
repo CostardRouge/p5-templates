@@ -145,6 +145,20 @@ export const loopForm = {
   }
 };
 
+export const lettersForm = {
+  component: "nested-object",
+  label: "Letters",
+  fields: {
+    speed: {
+      label: "Text sweeps per loop",
+      component: "slider",
+      min: 1,
+      max: 8,
+      step: 1
+    }
+  }
+};
+
 export const baseDefaults = {
   textStyle: {
     font: "martian",
@@ -170,6 +184,9 @@ export const baseDefaults = {
   loop: {
     timeScale: 2,
     timeOffset: 0
+  },
+  letters: {
+    speed: 1
   },
   backgroundColor: [
     0,
