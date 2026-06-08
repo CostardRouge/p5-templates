@@ -262,23 +262,20 @@ export default function ControlledVector2DInput( {
       } );
   };
 
-  // Positions expressed as percentages within the pad (top-left origin).
+  // Handle position as a percentage within the pad (top-left origin). The
+  // guide line always emanates from the geometric centre so the pad reads
+  // like a small graph, whatever the axis ranges.
   const pointLeft = valueToFraction(
     value.x,
     xAxis
   ) * 100;
   const pointTop = valueYToFraction( value.y ) * 100;
-  const originLeft = valueToFraction(
-    0,
-    xAxis
-  ) * 100;
-  const originTop = valueYToFraction( 0 ) * 100;
 
   const numberInputClassName =
     "w-full text-center text-xs font-mono px-1 py-0.5 rounded border border-theme/30 bg-theme/20 focus:outline-none focus:ring-1 focus:ring-theme";
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex w-full max-w-[120px] flex-col gap-1">
       <div className="flex items-center gap-1">
         <input
           type="number"
@@ -316,7 +313,7 @@ export default function ControlledVector2DInput( {
         onPointerDown={ handlePointerDown }
         onPointerMove={ handlePointerMove }
         onKeyDown={ handleKeyDown }
-        className="relative aspect-square w-full max-w-[160px] self-start cursor-crosshair touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-none focus:ring-1 focus:ring-theme"
+        className="relative aspect-square w-full cursor-crosshair touch-none select-none overflow-hidden rounded-lg border border-theme bg-background/50 focus:outline-none focus:ring-1 focus:ring-theme"
       >
         <svg
           className="absolute inset-0 h-full w-full"
@@ -330,7 +327,7 @@ export default function ControlledVector2DInput( {
             y1="0"
             x2="50"
             y2="100"
-            className="stroke-theme/30"
+            className="stroke-theme/40"
             strokeWidth={ 0.5 }
             strokeDasharray="2 2"
             vectorEffect="non-scaling-stroke"
@@ -340,16 +337,16 @@ export default function ControlledVector2DInput( {
             y1="50"
             x2="100"
             y2="50"
-            className="stroke-theme/30"
+            className="stroke-theme/40"
             strokeWidth={ 0.5 }
             strokeDasharray="2 2"
             vectorEffect="non-scaling-stroke"
           />
 
-          {/* Vector from the origin (value 0,0) to the current value. */}
+          {/* Guide line from the centre of the pad to the current value. */}
           <line
-            x1={ originLeft }
-            y1={ originTop }
+            x1={ 50 }
+            y1={ 50 }
             x2={ pointLeft }
             y2={ pointTop }
             className="stroke-foreground/60"
@@ -358,6 +355,14 @@ export default function ControlledVector2DInput( {
             vectorEffect="non-scaling-stroke"
           />
         </svg>
+
+        {/* Tiny axis labels so the active axis stays obvious. */}
+        <span className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 bg-background/70 px-px font-mono text-[7px] leading-none text-gray-400">
+          x
+        </span>
+        <span className="pointer-events-none absolute left-1/2 top-0.5 -translate-x-1/2 bg-background/70 px-px font-mono text-[7px] leading-none text-gray-400">
+          y
+        </span>
 
         <span
           className="pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background bg-foreground shadow"
