@@ -51,24 +51,13 @@ export const formConfiguration: Record<string, any> = {
   },
 
   point: {
-    component: "nested-object",
+    component: "vector2d",
     label: "Point",
-    fields: {
-      x: {
-        component: "slider",
-        label: "X",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      y: {
-        component: "slider",
-        label: "Y",
-        min: 0,
-        max: 1,
-        step: 0.01
-      }
-    }
+    allowNegative: false,
+    min: 0,
+    max: 1,
+    step: 0.01,
+    yDown: true
   },
 
   zoom: {

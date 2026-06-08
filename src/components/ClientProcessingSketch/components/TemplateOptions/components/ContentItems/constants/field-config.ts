@@ -153,6 +153,41 @@ interface EasingConfig extends BaseConfig {
   component: "easing";
 }
 
+// For 2D vector inputs: a draggable pad that edits an { x, y } pair at once,
+// instead of two separate text/slider fields. The pad's Y axis points up, so
+// dragging the handle to the top yields the max value.
+export interface Vector2DConfig extends BaseConfig {
+  component: "vector2d";
+  /**
+   * When false, both axes are constrained to non-negative values ([0, max]) so
+   * the vector can only point up/right (useful for scaling strength down to 0
+   * without flipping direction). Defaults to true: a centered [min, max] pad.
+   */
+  allowNegative?: boolean;
+  /** Shared lower bound. Defaults to -1 (or 0 when `allowNegative` is false). */
+  min?: number;
+  /** Shared upper bound. Defaults to 1. */
+  max?: number;
+  /** Shared snapping increment. Defaults to 0.01. */
+  step?: number;
+  /** Per-axis overrides, merged over the shared min/max/step. */
+  xAxis?: {
+    min?: number;
+    max?: number;
+    step?: number;
+  };
+  yAxis?: {
+    min?: number;
+    max?: number;
+    step?: number;
+  };
+  /**
+   * Invert the vertical axis so the top of the pad is the minimum value — use
+   * for screen-space positions where dragging up should move toward the top.
+   */
+  yDown?: boolean;
+}
+
 interface AssetInputConfig extends BaseConfig {
   component: "asset";
   /** Asset kind id, e.g. "images", "videos". */
@@ -191,6 +226,7 @@ export type FieldConfig =
   | ItemListConfig
   | HiddenFieldConfig
   | EasingConfig
+  | Vector2DConfig
   | AssetInputConfig
   | AssetStackConfig;
 
@@ -424,23 +460,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.01
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.01
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     visibility: {
       label: "Visibility",
@@ -640,23 +665,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     alignment: {
       label: "Alignment",
@@ -768,23 +782,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     animation: {
       label: "Animation",
@@ -851,23 +854,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     rotation: {
       label: "Rotation",
@@ -917,23 +909,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
   visual: {
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     scale: {
       label: "Scale",
@@ -990,23 +971,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.01
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.01
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     errorCorrection: {
       label: "Error correction",

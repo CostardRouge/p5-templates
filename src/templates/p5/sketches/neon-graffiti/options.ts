@@ -187,43 +187,21 @@ export const formConfiguration: Record<string, any> = {
   },
   start: {
     label: "Start position",
-    component: "nested-object",
-    fields: {
-      x: {
-        label: "X (0-1)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      y: {
-        label: "Y (0-1)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      }
-    }
+    component: "vector2d",
+    allowNegative: false,
+    min: 0,
+    max: 1,
+    step: 0.01,
+    yDown: true
   },
   end: {
     label: "End position",
-    component: "nested-object",
-    fields: {
-      x: {
-        label: "X (0-1)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      y: {
-        label: "Y (0-1)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      }
-    }
+    component: "vector2d",
+    allowNegative: false,
+    min: 0,
+    max: 1,
+    step: 0.01,
+    yDown: true
   },
   backgroundColor: {
     component: "color",
