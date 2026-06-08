@@ -21,6 +21,12 @@ export const formValues = {
     16,
     18
   ],
+  shadow: {
+    enabled: false,
+    blur: 40,
+    opacity: 0.35,
+    y: 24
+  },
 
   maxImages: 24,
   layout: "editorial",
@@ -87,7 +93,8 @@ export const formValues = {
   transition: {
     enabled: true,
     style: "fade",
-    direction: "left"
+    direction: "left",
+    portion: 0.3
   },
 
   photoMotion: {
@@ -400,6 +407,13 @@ export const formConfiguration: Record<string, any> = {
             value: "down"
           }
         ]
+      },
+      portion: {
+        component: "slider",
+        label: "Crossfade length",
+        min: 0.1,
+        max: 0.6,
+        step: 0.01
       }
     }
   },

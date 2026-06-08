@@ -396,6 +396,13 @@ export default function PhotoExif( {
   const transitionEnabled = transition.enabled ?? true;
   const transitionStyle = transition.style ?? "fade";
   const transitionDirection = transition.direction ?? "left";
+  const transitionPortion = Math.max(
+    0.1,
+    Math.min(
+      0.6,
+      transition.portion ?? 0.3
+    )
+  );
 
   const photoMotion = sketch.photoMotion ?? {};
   const photoEnabled = photoMotion.enabled ?? true;
@@ -472,21 +479,27 @@ export default function PhotoExif( {
 
   const titleStyle = {
     margin: 0,
+    minWidth: 0,
     fontFamily: displayFamily,
     fontSize: titleSize,
     fontWeight: 600,
     lineHeight: 1.02,
     letterSpacing: "-0.01em",
-    color: text
+    color: text,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis"
   };
 
   const dateStyle = {
     margin: 0,
+    flexShrink: 0,
     fontFamily: valueFamily,
     fontSize: dateSize,
     fontWeight: 500,
     letterSpacing: `${ tracking * 0.5 }em`,
     textTransform: uppercaseLabels ? "uppercase" : "none",
+    whiteSpace: "nowrap",
     color: label
   };
 
@@ -497,6 +510,7 @@ export default function PhotoExif( {
     fontWeight: 600,
     letterSpacing: `${ tracking }em`,
     textTransform: uppercaseLabels ? "uppercase" : "none",
+    whiteSpace: "nowrap",
     color: label
   };
 
@@ -506,16 +520,21 @@ export default function PhotoExif( {
     fontSize: valueSize,
     fontWeight: 500,
     lineHeight: 1.1,
+    whiteSpace: "nowrap",
     color: text
   };
 
   const captionStyle = {
     margin: 0,
+    minWidth: 0,
     fontFamily: displayFamily,
     fontSize: captionSize,
     fontStyle: "italic",
     lineHeight: 1.2,
-    color: text
+    color: text,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis"
   };
 
   const footStyle = {
@@ -530,6 +549,7 @@ export default function PhotoExif( {
 
   const cellStyle = {
     display: "flex",
+    flexShrink: 0,
     flexDirection: "column",
     gap: cellGap,
     paddingTop: cellPadTop,
@@ -537,20 +557,26 @@ export default function PhotoExif( {
     minWidth: 78 * unit
   };
 
+  // The image is held a touch larger than its frame (a constant overscan) so
+  // its edge never lands exactly on the frame border — that subpixel coincidence
+  // is what makes a 1px border shimmer while the Ken Burns scale animates.
   const imageStyle = {
     position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
+    top: "-3%",
+    left: "-3%",
+    width: "106%",
+    height: "106%",
     objectFit: fit,
     filter,
     transformOrigin: "center",
+    backfaceVisibility: "hidden",
     willChange: "transform"
   };
 
   const photoFxStyle = {
     position: "absolute",
     inset: 0,
+    backfaceVisibility: "hidden",
     willChange: "transform, opacity, clip-path"
   };
 
@@ -622,6 +648,7 @@ export default function PhotoExif( {
       const slot = duration / n;
       const edge = ( slot * ( 1 - holdFraction ) ) / 2;
       const half = slot / 2;
+      const tDur = slot * transitionPortion;
 
       slideEls.forEach( (
         slide, k
@@ -633,53 +660,18 @@ export default function PhotoExif( {
         const img = slide.querySelector( ".px-photo" );
         const lines = gsap.utils.toArray( slide.querySelectorAll( ".px-line" ) );
 
-        // Photo in / out (on the fx wrapper, never the image itself).
-        // A single photo just stays on screen (only the Ken Burns drift moves);
-        // with several, each transitions in for its slot and out again.
-        if ( fx && n === 1 ) {
+        // Photo frame-0 state: only the first slide starts visible. The
+        // crossfades scheduled after this loop hand one photo to the next
+        // (overlapping, so the frame never goes blank between images).
+        if ( fx ) {
           tl.set(
             fx,
-            photoTx.shown,
+            {
+              ...photoTx.shown,
+              opacity: k === 0 ? 1 : 0
+            },
             0
           );
-        } else if ( fx ) {
-          tl.set(
-            fx,
-            photoTx.hidden,
-            0
-          );
-
-          if ( transitionEnabled ) {
-            tl.to(
-              fx,
-              {
-                ...photoTx.shown,
-                duration: edge,
-                ease
-              },
-              winStart
-            );
-            tl.to(
-              fx,
-              {
-                ...photoTx.hidden,
-                duration: edge,
-                ease
-              },
-              closeBase
-            );
-          } else {
-            tl.set(
-              fx,
-              photoTx.shown,
-              winStart
-            );
-            tl.set(
-              fx,
-              photoTx.hidden,
-              winEnd
-            );
-          }
         }
 
         // Ken Burns drift on the inner image — a yoyo within the slot, so it
@@ -773,6 +765,66 @@ export default function PhotoExif( {
           } );
         }
       } );
+
+      // Photo crossfades: hand each photo over to the next over the last
+      // `tDur` of its slot (the next one fades in as this one fades out, so
+      // there is never a blank frame). The last hands back to the first, so
+      // the loop wraps seamlessly. Only runs with more than one photo.
+      const fxEls = slideEls
+        .map( ( slide ) => slide.querySelector( ".px-photo-fx" ) )
+        .filter( Boolean );
+
+      if ( n > 1 && fxEls.length === n ) {
+        for ( let i = 0; i < n; i++ ) {
+          const fromFx = fxEls[ i ];
+          const toFx = fxEls[ ( i + 1 ) % n ];
+          const at = i * slot + ( slot - tDur );
+
+          if ( transitionEnabled ) {
+            tl.to(
+              fromFx,
+              {
+                opacity: 0,
+                duration: tDur,
+                ease,
+                immediateRender: false
+              },
+              at
+            );
+            tl.fromTo(
+              toFx,
+              {
+                ...photoTx.hidden,
+                opacity: 0
+              },
+              {
+                ...photoTx.shown,
+                opacity: 1,
+                duration: tDur,
+                ease,
+                immediateRender: false
+              },
+              at
+            );
+          } else {
+            tl.set(
+              fromFx,
+              {
+                opacity: 0
+              },
+              at + tDur
+            );
+            tl.set(
+              toFx,
+              {
+                ...photoTx.shown,
+                opacity: 1
+              },
+              at + tDur
+            );
+          }
+        }
+      }
     },
     [
       count,
@@ -789,6 +841,7 @@ export default function PhotoExif( {
       transitionEnabled,
       transitionStyle,
       transitionDirection,
+      transitionPortion,
       photoEnabled,
       zoom,
       panX,
@@ -1017,6 +1070,7 @@ export default function PhotoExif( {
               className="px-header"
               style={ {
                 display: "flex",
+                flexShrink: 0,
                 justifyContent: headerJustify,
                 alignItems: "flex-end",
                 gap: headerGap
@@ -1046,6 +1100,7 @@ export default function PhotoExif( {
             <div
               style={ {
                 display: "flex",
+                flexShrink: 0,
                 flexDirection: "column",
                 gap: 20 * unit
               } }
@@ -1056,7 +1111,8 @@ export default function PhotoExif( {
                     className="px-strip"
                     style={ {
                       display: "flex",
-                      flexWrap: "wrap",
+                      flexWrap: "nowrap",
+                      overflow: "hidden",
                       gap: `${ stripGapRow }px ${ stripGapCol }px`
                     } }
                   >
