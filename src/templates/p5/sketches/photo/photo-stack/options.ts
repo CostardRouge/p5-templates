@@ -45,23 +45,12 @@ export const formConfiguration: Record<string, any> = {
   },
   randomPosition: {
     label: "Random position",
-    component: "nested-object",
-    fields: {
-      x: {
-        label: "X",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.1
-      },
-      y: {
-        label: "Y",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.1
-      }
-    }
+    component: "vector2d",
+    allowNegative: false,
+    min: 0,
+    max: 1,
+    step: 0.1,
+    yDown: true
   },
   imageStyle: {
     label: "Image style",
