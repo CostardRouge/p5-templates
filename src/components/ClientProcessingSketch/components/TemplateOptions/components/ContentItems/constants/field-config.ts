@@ -971,23 +971,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.01
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.01
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     errorCorrection: {
       label: "Error correction",
