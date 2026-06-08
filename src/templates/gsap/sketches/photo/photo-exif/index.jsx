@@ -168,9 +168,11 @@ function revealVars(
 }
 
 /**
- * Hidden / shown GSAP vars for the photo transition between images. Applied to
- * a wrapper around the image so it never fights the Ken Burns transform on the
- * image itself.
+ * Hidden / shown GSAP vars for the photo transition flourish. These are pure
+ * transform / clip — NO opacity. Visibility is owned by the slide's own opacity
+ * (the crossfade), so a flourish like a zoom or a slide layers on top of the
+ * fade without two opacities fighting, and the wrapper never fights the Ken
+ * Burns transform on the image itself. "fade" returns empty (no flourish).
  */
 function photoTransitionVars(
   style, direction, radius
@@ -178,11 +180,9 @@ function photoTransitionVars(
   if ( style === "zoom" ) {
     return {
       hidden: {
-        opacity: 0,
         scale: 1.12
       },
       shown: {
-        opacity: 1,
         scale: 1
       }
     };
@@ -196,11 +196,9 @@ function photoTransitionVars(
 
     return {
       hidden: {
-        opacity: 0,
         [ axis ]: 100 * sign
       },
       shown: {
-        opacity: 1,
         xPercent: 0,
         yPercent: 0
       }
@@ -226,14 +224,10 @@ function photoTransitionVars(
     };
   }
 
-  // "fade" (default)
+  // "fade" (default) — no flourish; the slide opacity does all the work.
   return {
-    hidden: {
-      opacity: 0
-    },
-    shown: {
-      opacity: 1
-    }
+    hidden: {},
+    shown: {}
   };
 }
 
@@ -623,6 +617,7 @@ export default function PhotoExif( {
     transitionDirection,
     radius
   );
+  const hasFlair = Object.keys( photoTx.hidden ).length > 0;
 
   useTimeline(
     ( {
@@ -660,16 +655,24 @@ export default function PhotoExif( {
         const img = slide.querySelector( ".px-photo" );
         const lines = gsap.utils.toArray( slide.querySelectorAll( ".px-line" ) );
 
-        // Photo frame-0 state: only the first slide starts visible. The
-        // crossfades scheduled after this loop hand one photo to the next
-        // (overlapping, so the frame never goes blank between images).
-        if ( fx ) {
+        // Slide visibility frame-0: only the first slide starts visible. The
+        // crossfades after this loop fade whole slides over one another, so an
+        // inactive slide is fully transparent and never covers the active one
+        // with its opaque frame background.
+        tl.set(
+          slide,
+          {
+            opacity: k === 0 ? 1 : 0
+          },
+          0
+        );
+
+        // Photo flourish baseline (transform / clip only — opacity is the
+        // slide's job). Skipped for the plain "fade" transition.
+        if ( fx && hasFlair ) {
           tl.set(
             fx,
-            {
-              ...photoTx.shown,
-              opacity: k === 0 ? 1 : 0
-            },
+            photoTx.shown,
             0
           );
         }
@@ -766,23 +769,21 @@ export default function PhotoExif( {
         }
       } );
 
-      // Photo crossfades: hand each photo over to the next over the last
-      // `tDur` of its slot (the next one fades in as this one fades out, so
-      // there is never a blank frame). The last hands back to the first, so
-      // the loop wraps seamlessly. Only runs with more than one photo.
-      const fxEls = slideEls
-        .map( ( slide ) => slide.querySelector( ".px-photo-fx" ) )
-        .filter( Boolean );
-
-      if ( n > 1 && fxEls.length === n ) {
+      // Crossfade whole slides: the next fades in as the current fades out
+      // (over the last `tDur` of the slot), so the frame is never blank and an
+      // inactive slide's opaque background never covers the active one. The
+      // last slide hands back to the first, so the loop wraps seamlessly. The
+      // chosen flourish (zoom / slide / wipe) rides in on the incoming photo.
+      if ( n > 1 ) {
         for ( let i = 0; i < n; i++ ) {
-          const fromFx = fxEls[ i ];
-          const toFx = fxEls[ ( i + 1 ) % n ];
+          const fromSlide = slideEls[ i ];
+          const toSlide = slideEls[ ( i + 1 ) % n ];
+          const toFx = toSlide.querySelector( ".px-photo-fx" );
           const at = i * slot + ( slot - tDur );
 
           if ( transitionEnabled ) {
             tl.to(
-              fromFx,
+              fromSlide,
               {
                 opacity: 0,
                 duration: tDur,
@@ -792,13 +793,11 @@ export default function PhotoExif( {
               at
             );
             tl.fromTo(
-              toFx,
+              toSlide,
               {
-                ...photoTx.hidden,
                 opacity: 0
               },
               {
-                ...photoTx.shown,
                 opacity: 1,
                 duration: tDur,
                 ease,
@@ -806,18 +805,33 @@ export default function PhotoExif( {
               },
               at
             );
+
+            if ( hasFlair && toFx ) {
+              tl.fromTo(
+                toFx,
+                {
+                  ...photoTx.hidden
+                },
+                {
+                  ...photoTx.shown,
+                  duration: tDur,
+                  ease,
+                  immediateRender: false
+                },
+                at
+              );
+            }
           } else {
             tl.set(
-              fromFx,
+              fromSlide,
               {
                 opacity: 0
               },
               at + tDur
             );
             tl.set(
-              toFx,
+              toSlide,
               {
-                ...photoTx.shown,
                 opacity: 1
               },
               at + tDur
