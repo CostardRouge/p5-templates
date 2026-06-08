@@ -5,7 +5,8 @@ export type ItemKind =
   | "specs"
   | "image"
   | "images-stack"
-  | "background";
+  | "background"
+  | "qrcode";
 
 export type ItemKindMeta = {
   label: string;

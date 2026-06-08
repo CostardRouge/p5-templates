@@ -6,6 +6,7 @@ import drawSlideImage from "../common/drawSlideImage.js";
 import drawSlideImages from "../common/drawSlideImages.js";
 import drawSlideBackground from "../common/drawSlideBackground.js";
 import drawSlideImagesStack from "../common/drawSlideImagesStack.js";
+import drawSlideQrCode from "../common/drawSlideQrCode.js";
 
 export default function freeLayout( options ) {
   options?.content?.forEach( ( item ) => {
@@ -42,6 +43,12 @@ export default function freeLayout( options ) {
         break;
       case "visual":
         drawSlideVisual(
+          item,
+          options
+        );
+        break;
+      case "qrcode":
+        drawSlideQrCode(
           item,
           options
         );

@@ -5,7 +5,8 @@ import {
   Layers as StackIcon,
   PaintBucket as BgIcon,
   Sparkles as VisualIcon,
-  Terminal as SpecsIcon
+  Terminal as SpecsIcon,
+  QrCode as QrCodeIcon
 } from "lucide-react";
 import {
   ItemKind,
@@ -19,7 +20,8 @@ export const ITEM_ORDER: ItemKind[] = [
   "images-stack",
   "meta",
   "specs",
-  "background"
+  "background",
+  "qrcode"
 ];
 
 export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
@@ -57,5 +59,10 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Visual",
     Icon: VisualIcon,
     description: "2D/3D visual"
+  },
+  qrcode: {
+    label: "QR code",
+    Icon: QrCodeIcon,
+    description: "Scannable link to the current URL"
   }
 };

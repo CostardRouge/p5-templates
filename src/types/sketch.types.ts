@@ -491,6 +491,57 @@ export const VisualItemSchema = z.object( {
   rotation: z.number().default( 0 )
 } );
 
+export const QrCodeItemSchema = z.object( {
+  type: z.literal( "qrcode" ),
+  // Origin to encode. Empty -> NEXT_PUBLIC_SITE_URL (the production domain),
+  // falling back to the live page origin. Set it to point at the public
+  // domain when generating content from a localhost / capture URL. A bare
+  // host ("mysite.com") is assumed https; include a scheme to override that.
+  // The path is always taken from the live page.
+  domainOverride: z.string().default( "" ),
+  position: Vec2.default( {
+    x: 0.5,
+    y: 0.82
+  } ),
+  // QR side length as a fraction of min( canvas width, canvas height ).
+  size: z.number().min( 0.02 )
+    .max( 1 )
+    .default( 0.22 ),
+  // Quiet-zone border thickness, in modules (the spec recommends >= 4).
+  quietZone: z.number().int()
+    .min( 0 )
+    .max( 8 )
+    .default( 4 ),
+  errorCorrection: z.enum( [
+    "L",
+    "M",
+    "Q",
+    "H"
+  ] ).default( "M" ),
+  foreground: RGBA.default( [
+    0,
+    0,
+    0
+  ] ),
+  background: RGBA.default( [
+    255,
+    255,
+    255,
+    255
+  ] ),
+  blend: Blend.default( "source-over" ),
+  // Caption: print the encoded URL underneath the code.
+  showUrl: z.boolean().default( true ),
+  urlFont: z.string().default( "spaceMonoRegular" ),
+  urlSize: z.number().positive()
+    .default( 20 ),
+  urlFill: RGBA.default( [
+    0,
+    0,
+    0
+  ] )
+} );
+
 export const ContentItemSchema = z.discriminatedUnion(
   "type",
   [
@@ -500,7 +551,8 @@ export const ContentItemSchema = z.discriminatedUnion(
     TextItemSchema,
     ImagesStackItemSchema,
     ImageItemSchema,
-    VisualItemSchema
+    VisualItemSchema,
+    QrCodeItemSchema
   ]
 );
 
