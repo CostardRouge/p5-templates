@@ -22,7 +22,7 @@ export const formValues = {
     18
   ],
 
-  imageIndex: 0,
+  maxImages: 24,
   layout: "editorial",
   margin: 80,
 
@@ -84,6 +84,12 @@ export const formValues = {
     stagger: 0.12
   },
 
+  transition: {
+    enabled: true,
+    style: "fade",
+    direction: "left"
+  },
+
   photoMotion: {
     enabled: true,
     zoom: 0.1,
@@ -95,11 +101,11 @@ export const formValues = {
 export const formConfiguration: Record<string, any> = {
   ...commonPhotoConfig,
 
-  imageIndex: {
+  maxImages: {
     component: "slider",
-    label: "Image index",
-    min: 0,
-    max: 50,
+    label: "Max images",
+    min: 1,
+    max: 60,
     step: 1
   },
   layout: {
@@ -329,7 +335,7 @@ export const formConfiguration: Record<string, any> = {
       },
       hold: {
         component: "slider",
-        label: "Hold",
+        label: "Hold (per image)",
         min: 0,
         max: 0.9,
         step: 0.01
@@ -340,6 +346,60 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 0.6,
         step: 0.01
+      }
+    }
+  },
+  transition: {
+    component: "nested-object",
+    label: "Image transition",
+    fields: {
+      enabled: {
+        component: "checkbox",
+        label: "Animated (off = hard cut)"
+      },
+      style: {
+        component: "select",
+        label: "Style",
+        options: [
+          {
+            label: "Fade",
+            value: "fade"
+          },
+          {
+            label: "Zoom",
+            value: "zoom"
+          },
+          {
+            label: "Slide",
+            value: "slide"
+          },
+          {
+            label: "Wipe",
+            value: "wipe"
+          }
+        ]
+      },
+      direction: {
+        component: "select",
+        label: "Direction (slide / wipe)",
+        options: [
+          {
+            label: "Left",
+            value: "left"
+          },
+          {
+            label: "Right",
+            value: "right"
+          },
+          {
+            label: "Up",
+            value: "up"
+          },
+          {
+            label: "Down",
+            value: "down"
+          }
+        ]
       }
     }
   },
