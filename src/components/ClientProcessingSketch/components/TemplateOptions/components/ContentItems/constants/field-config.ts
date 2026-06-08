@@ -507,6 +507,24 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
           min: 0.1,
           max: 5,
           step: 0.1
+        },
+        background: {
+          label: "Inverted bar color",
+          component: "color"
+        },
+        pastilleOffset: {
+          label: "Pastille offset",
+          component: "slider",
+          min: -1,
+          max: 1,
+          step: 0.01
+        },
+        underlineOffset: {
+          label: "Underline offset",
+          component: "slider",
+          min: -1,
+          max: 1,
+          step: 0.01
         }
       }
     }

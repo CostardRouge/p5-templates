@@ -77,7 +77,10 @@ export default function drawSlideSpecs( specsOption ) {
   // Per-line change heat (0..1), only when a highlight effect is active.
   const highlight = specsOption.highlight ?? {
     style: "invert",
-    duration: 0.9
+    duration: 0.9,
+    background: specsOption.fill,
+    pastilleOffset: 0,
+    underlineOffset: 0
   };
   const heats =
     highlight.style && highlight.style !== "off"
@@ -150,11 +153,37 @@ export default function drawSlideSpecs( specsOption ) {
 
     const accent = () => p.color( ...specsOption.fill );
 
+    // Black or white, whichever reads best on top of the given colour.
+    const contrastOf = ( color ) => {
+      const luminance =
+        0.299 * p.red( color ) +
+        0.587 * p.green( color ) +
+        0.114 * p.blue( color );
+
+      return luminance > 140 ? p.color(
+        0,
+        0,
+        0
+      ) : p.color(
+        255,
+        255,
+        255
+      );
+    };
+
     switch ( highlight.style ) {
       case "invert": {
         const w = measureWidth( text );
-        const pad = size * 0.18;
-        const bar = accent();
+        const padX = size * 0.18;
+        const padTop = size * 0.15;
+        // Extra room below so descenders (g, p, y, ...) stay inside the bar.
+        const padBottom = size * 0.4;
+        const background = p.color( ...( highlight.background ?? specsOption.fill ) );
+        const bar = p.color(
+          p.red( background ),
+          p.green( background ),
+          p.blue( background )
+        );
 
         bar.setAlpha( heat * alpha );
 
@@ -163,21 +192,17 @@ export default function drawSlideSpecs( specsOption ) {
         p.noStroke();
         p.fill( bar );
         p.rect(
-          x - pad,
-          y - pad * 0.6,
-          w + pad * 2,
-          size + pad * 1.2
+          x - padX,
+          y - padTop,
+          w + padX * 2,
+          size + padTop + padBottom
         );
         p.pop();
 
-        // Text inverts toward the "paper" colour as heat rises.
+        // Text crossfades from its normal fill to whatever reads on the bar.
         const txt = p.lerpColor(
           accent(),
-          p.color(
-            0,
-            0,
-            0
-          ),
+          contrastOf( background ),
           heat
         );
 
@@ -225,13 +250,15 @@ export default function drawSlideSpecs( specsOption ) {
 
         dot.setAlpha( heat * alpha );
 
+        const dotY = y + size * 0.5 + ( highlight.pastilleOffset ?? 0 ) * size;
+
         p.push();
         p.blendMode( p.BLEND );
         p.noStroke();
         p.fill( dot );
         p.circle(
           x - size * 0.45,
-          y + size * 0.5,
+          dotY,
           size * 0.32
         );
         p.pop();
@@ -251,6 +278,10 @@ export default function drawSlideSpecs( specsOption ) {
 
         ul.setAlpha( heat * alpha );
 
+        // Base sits just under the text; a negative offset walks it up onto the
+        // glyphs for a strike-through look.
+        const lineY = y + size + ( highlight.underlineOffset ?? 0 ) * size;
+
         p.push();
         p.blendMode( p.BLEND );
         p.stroke( ul );
@@ -260,9 +291,9 @@ export default function drawSlideSpecs( specsOption ) {
         ) );
         p.line(
           x,
-          y + size * 1.04,
+          lineY,
           x + w,
-          y + size * 1.04
+          lineY
         );
         p.pop();
 

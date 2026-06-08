@@ -205,11 +205,29 @@ export const SpecsHighlightSchema = z
       .default( "invert" ),
     // seconds the changed-line highlight takes to fade back to normal
     duration: z.number().positive()
-      .default( 0.9 )
+      .default( 0.9 ),
+    // colour of the inverted bar behind a changed line ("invert" style); the
+    // text auto-contrasts against it so it stays readable for any text fill
+    background: RGBA.default( [
+      0,
+      255,
+      120
+    ] ),
+    // vertical offsets as a fraction of font size ( + = downwards ) to fine-tune
+    // placement that font metrics can't infer automatically
+    pastilleOffset: z.number().default( 0 ),
+    underlineOffset: z.number().default( 0 )
   } )
   .default( {
     style: "invert",
-    duration: 0.9
+    duration: 0.9,
+    background: [
+      0,
+      255,
+      120
+    ],
+    pastilleOffset: 0,
+    underlineOffset: 0
   } );
 
 export const SpecsItemSchema = z.object( {
