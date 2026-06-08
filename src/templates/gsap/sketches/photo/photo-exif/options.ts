@@ -57,13 +57,13 @@ export const formValues = {
   },
 
   frame: {
-    showBorder: true,
+    showBorder: false,
     borderColor: [
       72,
       72,
       78
     ],
-    borderWidth: 1
+    borderWidth: 3
   },
 
   show: {
@@ -84,22 +84,22 @@ export const formValues = {
 
   reveal: {
     enabled: true,
-    style: "rise",
-    distance: 40,
+    style: "fade",
+    distance: 90,
     hold: 0.34,
-    stagger: 0.12
+    stagger: 0.29
   },
 
   transition: {
     enabled: true,
     style: "fade",
-    direction: "left",
+    direction: "up",
     portion: 0.3
   },
 
   photoMotion: {
-    enabled: true,
-    zoom: 0.1,
+    enabled: false,
+    zoom: 0.05,
     panX: 0.03,
     panY: -0.02
   }
