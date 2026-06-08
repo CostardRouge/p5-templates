@@ -1,6 +1,7 @@
 import React, {
   Fragment
 } from "react";
+import dynamic from "next/dynamic";
 import {
   UseFormReturn, useWatch
 } from "react-hook-form";
@@ -16,10 +17,19 @@ import {
 } from "@/types/recording.types";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RootSettings from "./RootSettings/RootSettings";
-import ContentItems from "./ContentItems/ContentItems";
-import SlideCarousel from "./SlideCarousel";
-import SlideEditor from "./SlideEditor";
 import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvider";
+
+// The "global content" and "slides" sections start collapsed (see
+// useCollapsibleStates DEFAULT_STATES), so CollapsibleItem never mounts their
+// content until the user expands them. Loading them as separate chunks means
+// the dev server doesn't compile this whole subtree — the recursive content
+// editor and its dnd-kit deps (~2.6k LOC) — just to open a sketch page; it
+// compiles only when a section is actually opened. The collapsible headers live
+// here in OptionsPanel and stay static, so there is no loading flash.
+const ContentItems = dynamic( () => import( "./ContentItems/ContentItems" ) );
+const SlideCarousel = dynamic( () => import( "./SlideCarousel" ) );
+const SlideEditor = dynamic( () => import( "./SlideEditor" ) );
+
 import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
 import initOptions from "@/utils/initOptions";
