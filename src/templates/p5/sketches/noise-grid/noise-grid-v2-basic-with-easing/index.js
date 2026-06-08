@@ -6,18 +6,18 @@ import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   createInstancedFieldRenderer,
-  computeFieldRange
+  computeFieldRange,
+  easingId
 } from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU port of "noise grid v2 — basic with easing" (instanced).
 //
 // One dot per cell, displaced by (sin, cos) of the noise angle and sized by an
-// easeInOutExpo mapping of the angle over the converged min..TAU range. Dots
-// cross cell borders, so each is drawn as its own instance in grid order.
-//
-// NOTE: the weight easing is baked to the preset's easeInOutExpo; the easing
-// dropdown isn't wired through to the shader (same as the other GPU ports).
+// eased mapping of the angle over the converged min..TAU range. Dots cross cell
+// borders, so each is drawn as its own instance in grid order. The weight easing
+// is selectable: the "Weight easing" control feeds applyEasing() in the vertex
+// shader (defaults to the preset's easeInOutExpo).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const VERTEX = `
@@ -33,6 +33,7 @@ const VERTEX = `
   uniform float uHueRange;
   uniform float uHueOffset;
   uniform float uOpacityFactor;
+  uniform int uWeightEasing;
 
   void computeInstance(
     float col, float row,
@@ -47,7 +48,7 @@ const VERTEX = `
     )) * TAU * uAngleCycles;
 
     float weight = remap(
-      easeInOutExpo(remap(angle, uMin, TAU, 0.0, 1.0)),
+      applyEasing(uWeightEasing, remap(angle, uMin, TAU, 0.0, 1.0)),
       0.0,
       1.0,
       uWeightMin,
@@ -112,6 +113,7 @@ sketch.draw( () => {
   const angleCycles = options.sketch.angle?.cycles ?? 4;
   const weightMin = options.sketch.stroke?.weightMin ?? 1;
   const weightMaxScale = options.sketch.stroke?.weightMaxScale ?? 1;
+  const weightEasing = options.sketch.stroke?.weightEasing ?? "easeInOutExpo";
   const hueRange = options.sketch.colors?.hueRange ?? p.PI / 2;
   const hueOffset = options.sketch.colors?.hueOffset ?? 0;
   const opacityFactor = options.sketch.colors?.opacityFactor ?? 1.5;
@@ -213,7 +215,8 @@ sketch.draw( () => {
       uTranslateYMult: translateYMult,
       uHueRange: hueRange,
       uHueOffset: hueOffset,
-      uOpacityFactor: opacityFactor
+      uOpacityFactor: opacityFactor,
+      uWeightEasing: easingId( weightEasing )
     }
   } );
 

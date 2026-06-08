@@ -3,6 +3,15 @@ import graphics from "./graphics.js";
 import {
   getP5
 } from "./sketch.js";
+import {
+  EASINGS_GLSL, easingId
+} from "./easingGlsl.js";
+
+// Re-exported so sketches can grab the renderer and the easing-uniform helper
+// from one place.
+export {
+  easingId
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared GPU engine for the noise-grid family.
@@ -685,7 +694,7 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     state.program = buildProgram(
       gl,
       VERT_SRC,
-      COMMON_GLSL + MAPPERS_GLSL + PALETTES_GLSL + SHAPES_GLSL + fragmentSource
+      COMMON_GLSL + MAPPERS_GLSL + EASINGS_GLSL + PALETTES_GLSL + SHAPES_GLSL + fragmentSource
     );
 
     state.locs = {};
@@ -1126,7 +1135,7 @@ export function createInstancedFieldRenderer( {
       gl.deleteProgram( state.program );
     }
 
-    const stdlib = COMMON_GLSL + MAPPERS_GLSL + PALETTES_GLSL + SHAPES_GLSL;
+    const stdlib = COMMON_GLSL + MAPPERS_GLSL + EASINGS_GLSL + PALETTES_GLSL + SHAPES_GLSL;
 
     state.program = buildProgram(
       gl,

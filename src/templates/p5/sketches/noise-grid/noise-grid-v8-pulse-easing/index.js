@@ -8,7 +8,8 @@ import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   createInstancedFieldRenderer,
-  computeFieldRange
+  computeFieldRange,
+  easingId
 } from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -33,6 +34,7 @@ const VERTEX = `
   uniform float uOpacityFactor;
   uniform float uWeightMin;
   uniform float uWeightMax;
+  uniform int uWeightEasing;
 
   void computeInstance(
     float col, float row,
@@ -49,7 +51,7 @@ const VERTEX = `
 
     // Unclamped, exactly like the original — extrapolates on the pulse.
     float weight = remap(
-      easeInOutCubic(remap(angle, uMin, TAU, 0.0, 1.0)),
+      applyEasing(uWeightEasing, remap(angle, uMin, TAU, 0.0, 1.0)),
       0.0,
       1.0,
       uWeightMin,
@@ -105,6 +107,7 @@ sketch.draw( () => {
   const zTimeMult = options.sketch.noise?.zTimeMultiplier ?? 0.1;
   const weightMin = options.sketch.stroke?.weightMin ?? 1;
   const weightMax = options.sketch.stroke?.weightMax ?? 10;
+  const weightEasing = options.sketch.stroke?.weightEasing ?? "easeInOutCubic";
   const hueRange = options.sketch.colors?.hueRange ?? p.PI / 2;
   const hueOffset = options.sketch.colors?.hueOffset ?? 0;
   const opacityFactor = options.sketch.colors?.opacityFactor ?? 1.5;
@@ -175,7 +178,8 @@ sketch.draw( () => {
       uHueOffset: hueOffset,
       uOpacityFactor: opacityFactor,
       uWeightMin: weightMin,
-      uWeightMax: weightMax
+      uWeightMax: weightMax,
+      uWeightEasing: easingId( weightEasing )
     }
   } );
 
