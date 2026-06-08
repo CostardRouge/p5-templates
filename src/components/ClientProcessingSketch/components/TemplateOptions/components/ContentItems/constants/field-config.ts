@@ -811,10 +811,10 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
   },
   qrcode: {
-    url: {
-      label: "URL",
+    domainOverride: {
+      label: "Domain override",
       component: "text",
-      placeholder: "Leave empty to use the current page URL"
+      placeholder: "e.g. mysite.com — empty uses NEXT_PUBLIC_SITE_URL"
     },
     size: {
       label: "Size",

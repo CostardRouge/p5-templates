@@ -30,7 +30,7 @@ describe(
 
         expect( item ).toMatchObject( {
           type: "qrcode",
-          url: "",
+          domainOverride: "",
           size: 0.22,
           quietZone: 4,
           errorCorrection: "M",
@@ -60,13 +60,13 @@ describe(
       () => {
         const parsed = ContentItemSchema.parse( {
           type: "qrcode",
-          url: "https://example.com"
+          domainOverride: "https://example.com"
         } );
 
         expect( parsed.type ).toBe( "qrcode" );
 
         if ( parsed.type === "qrcode" ) {
-          expect( parsed.url ).toBe( "https://example.com" );
+          expect( parsed.domainOverride ).toBe( "https://example.com" );
         }
       }
     );

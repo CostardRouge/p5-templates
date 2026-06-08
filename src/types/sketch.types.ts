@@ -375,10 +375,12 @@ export const VisualItemSchema = z.object( {
 
 export const QrCodeItemSchema = z.object( {
   type: z.literal( "qrcode" ),
-  // Empty -> encode the current page URL (auto-detected at draw time).
-  // Non-empty -> encode this value verbatim. Use it to point at the public
-  // URL when the live page URL is a localhost / headless-capture URL.
-  url: z.string().default( "" ),
+  // Origin to encode. Empty -> NEXT_PUBLIC_SITE_URL (the production domain),
+  // falling back to the live page origin. Set it to point at the public
+  // domain when generating content from a localhost / capture URL. A bare
+  // host ("mysite.com") is assumed https; include a scheme to override that.
+  // The path is always taken from the live page.
+  domainOverride: z.string().default( "" ),
   position: Vec2.default( {
     x: 0.5,
     y: 0.82

@@ -4,34 +4,24 @@ import string from "../../string.js";
 import sketch, {
   getP5
 } from "../../sketch.js";
+import {
+  buildQrUrl, stripScheme
+} from "./qrCodeUrl.js";
 
-// Query params injected by the headless capture pipeline (see the studio
-// route). They are stripped from the auto-detected URL so a recorded or
-// thumbnailed QR still points at the real experience, not the capture URL.
-const CAPTURE_PARAMS = [
-  "capturing",
-  "previewFramerate",
-  "previewDuration"
-];
+// Inlined at build time by Next for NEXT_PUBLIC_* vars, so it is readable in
+// the client/headless sketch bundle. Lets a localhost dev machine encode the
+// production domain instead of "localhost".
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "";
 
-function resolveUrl( explicit ) {
-  if ( typeof explicit === "string" && explicit.trim() ) {
-    return explicit.trim();
-  }
-
-  if ( typeof window === "undefined" || !window?.location?.href ) {
-    return "";
-  }
-
-  try {
-    const url = new URL( window.location.href );
-
-    CAPTURE_PARAMS.forEach( ( param ) => url.searchParams.delete( param ) );
-
-    return url.toString();
-  } catch {
-    return window.location.href;
-  }
+function resolveUrl( domainOverride ) {
+  return buildQrUrl( {
+    domainOverride,
+    siteUrl: SITE_URL,
+    href:
+      typeof window !== "undefined" && window.location
+        ? window.location.href
+        : ""
+  } );
 }
 
 // Encoding a QR matrix is comparatively expensive, so memoise the last few
@@ -73,7 +63,7 @@ function getMatrix(
 
 export default function drawSlideQrCode( qrCodeOption ) {
   const p = getP5();
-  const text = resolveUrl( qrCodeOption.url );
+  const text = resolveUrl( qrCodeOption.domainOverride );
 
   if ( !text ) {
     return;
@@ -174,7 +164,7 @@ export default function drawSlideQrCode( qrCodeOption ) {
     const urlSize = Number( qrCodeOption.urlSize ?? 20 );
 
     string.write(
-      text,
+      stripScheme( text ),
       centerX - captionWidth / 2,
       top + side + urlSize,
       {
