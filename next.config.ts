@@ -16,17 +16,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true
   },
-  // Keep heavy, server-only binaries out of serverless function bundles on
-  // Vercel preview deployments (they'd blow the function size limit). These
-  // packages are only used by the backend-recording pipeline, which is disabled
-  // on Vercel previews anyway. This is a no-op for the NAS deployment, which
-  // runs `next start` with the full node_modules (no output tracing).
-  outputFileTracingExcludes: {
-    "*": [
-      "node_modules/playwright/**",
-      "node_modules/playwright-core/**"
-    ]
-  },
   env: {
     NEXT_PUBLIC_BACKEND_RECORDING: process.env.BACKEND_RECORDING,
     NEXT_PUBLIC_NOTIFICATIONS: process.env.NOTIFICATIONS,

@@ -1,56 +1,29 @@
-# Ephemeral Preview Environments
+# Ephemeral Preview Environments (NAS)
 
-Two complementary ways to look at a PR without pulling it locally.
+Look at a PR without checking it out locally — a **full-fidelity** environment
+on the NAS, on demand.
 
-| | **Vercel** (auto, every PR) | **NAS** (on-demand, `preview` label) |
-|---|---|---|
-| Trigger | Push to any PR | Add the `preview` label to the PR |
-| Fidelity | Front-end only — sketches & UI | **Full**: backend recording, BullMQ queue, live thumbnails, S3 |
-| Backend deps | Disabled (flags off) | Real Postgres / Redis / MinIO (shared) |
-| URL | Vercel comments it automatically | `https://pr-<n>.<PREVIEW_DOMAIN>` |
-| Cost | Free (Hobby, non-commercial) | Free (your hardware) |
-| Use it to… | Quickly eyeball the look & feel | Test the real pipeline end-to-end |
+| | **NAS preview** (`preview` label) |
+|---|---|
+| Trigger | Add the `preview` label to a PR |
+| Fidelity | **Full**: backend recording, BullMQ queue, live thumbnails, S3 |
+| Backend deps | Real Postgres / Redis / MinIO (shared with the main stack) |
+| URL | `https://pr-<n>.<PREVIEW_DOMAIN>` |
+| Cost | Free (your hardware), no external build-minute quota |
 
-> Why not Vercel for the full app? It's serverless: no long-running BullMQ
-> workers, 60 s function cap, and Playwright + Chromium + ffmpeg blow the
-> bundle-size limit. The recording pipeline fundamentally can't run there — so
-> Vercel is intentionally the *degraded, fast* preview, and the NAS is the
-> *full-fidelity* one.
-
----
-
-## 1. Vercel — fast front-only preview
-
-### How it works
-- `vercel.json` forces the backend feature flags **off** at build
-  (`BACKEND_RECORDING/NOTIFICATIONS/LIVE_THUMBNAIL=false`). The UI already hides
-  recording/queue/notification features when these are off, so the preview
-  degrades cleanly to "browse the sketches".
-- `next.config.ts` → `outputFileTracingExcludes` keeps `playwright` out of the
-  serverless function bundles so deploys don't exceed Vercel's size limit. (This
-  is a **no-op for the NAS**, which runs `next start` with full `node_modules`.)
-
-### One-time setup
-1. Create a Vercel project linked to this GitHub repo (Framework: **Next.js**).
-   Vercel then auto-creates a Preview Deployment + PR comment for every push.
-2. In **Project → Settings → Environment Variables**, add for the **Preview**
-   environment:
-   - `DATABASE_URL` — any syntactically valid Postgres URL (e.g. a free Neon
-     instance, or a dummy `postgresql://u:p@localhost:5432/db`). Prisma needs it
-     present to instantiate; front pages never query it.
-   - Optionally `NEXT_PUBLIC_GITHUB_REPO_URL`.
-3. Done. The flags in `vercel.json` handle the rest.
-
-> First deploy may need a small iteration if a route statically reads a missing
-> env at build — the fix is always "provide a dummy value" or guard that read.
-> Recording/queue API routes will return errors on Vercel by design; the UI
-> doesn't surface them.
+> **Why not a static host (Vercel / GitHub Pages / Cloudflare Pages)?**
+> This app is a stateful Next.js server: long-running BullMQ workers, SSR/API
+> routes, Postgres, and a Playwright + ffmpeg recording pipeline. None of that
+> runs on a static or serverless host. On top of that, `public/assets` is
+> ~285 MB of images/video — which blows past GitHub Pages' ~1 GB site cap after
+> a few PRs and Cloudflare Pages' 25 MiB-per-file limit. The NAS has none of
+> these limits and gives a true-to-prod preview, so it's the single source of
+> truth here.
 
 ---
 
-## 2. NAS — full-fidelity, on-demand
+## Architecture
 
-### Architecture
 One **shared** infrastructure (the existing `docker-compose.yml`: Postgres,
 Redis, MinIO) + **one app container per PR**. Each preview is isolated by:
 
@@ -64,7 +37,8 @@ Redis, MinIO) + **one app container per PR**. Each preview is isolated by:
 Migrations run automatically on container start (`docker-entrypoint.sh` →
 `prisma migrate deploy`) against the fresh `pr_<n>` database.
 
-### Flow
+## Flow
+
 ```
 add `preview` label ─▶ preview-deploy.yml (self-hosted NAS runner)
                          └─ preview-up.sh: create db + bucket, compose up --build,
@@ -73,7 +47,7 @@ push more commits     ─▶ redeploys (same env, label still present)
 remove label / close  ─▶ preview-teardown.yml → preview-down.sh: down + drop db + rm bucket
 ```
 
-### One-time setup on the NAS
+## One-time setup on the NAS
 
 **a) Self-hosted GitHub Actions runner**
 Install a runner on the NAS with labels `self-hosted` **and** `nas`, with access
@@ -99,7 +73,7 @@ The scripts call `mc` via `docker exec <minio>`. The official `minio/minio`
 image ships `mc`. If yours doesn't, install it or adapt `preview-up.sh`/`down.sh`
 to use the AWS CLI.
 
-### GitHub configuration
+## GitHub configuration
 
 **Repository → Settings → Secrets and variables → Actions**
 
@@ -127,14 +101,16 @@ Secrets (`secrets.*`):
 | `PREVIEW_S3_ACCESS_KEY` |
 | `PREVIEW_S3_SECRET_KEY` |
 
-### Day-to-day use
+## Day-to-day use
+
 1. Open a PR.
 2. Add the **`preview`** label → wait for the workflow → click the URL in the
    bot comment.
 3. Push more commits → the preview updates in place.
 4. Remove the label (or close the PR) → everything is cleaned up.
 
-### Manual run (debugging on the NAS)
+## Manual run (debugging on the NAS)
+
 ```bash
 cp .env.preview.example .env.preview     # fill in values
 set -a; . .env.preview; set +a
@@ -142,7 +118,8 @@ PR_NUMBER=123 bash scripts/preview-up.sh
 PR_NUMBER=123 bash scripts/preview-down.sh
 ```
 
-### Troubleshooting
+## Troubleshooting
+
 - **404 from Traefik** → wildcard route not reaching Traefik, or the container
   isn't on `TRAEFIK_NETWORK`. Check `docker inspect p5-preview-pr-<n>`.
 - **App crashes on boot** → usually `DATABASE_URL`; confirm `pr_<n>` exists and
