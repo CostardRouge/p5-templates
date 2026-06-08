@@ -1,0 +1,49 @@
+# Watchtower — event-driven redeploy for the social-templates app.
+#
+# Deploy this as its OWN stack on the NAS (separate from the app stack): it is
+# infrastructure that watches the app container and re-pulls its image on demand.
+#
+#   docker compose -f watchtower.compose.yml up -d
+#
+# Flow:
+#   push main
+#     → GitHub Actions builds & pushes ghcr.io/costardrouge/p5-templates:main
+#     → Actions POSTs /v1/update  (Authorization: Bearer $WATCHTOWER_TOKEN)
+#     → Watchtower re-pulls the image and recreates ONLY the app container
+#
+# Note: the original containrrr/watchtower was archived in Dec 2025 and is
+# unmaintained; this uses the maintained nickfedor fork (drop-in compatible).
+
+services:
+  watchtower:
+    image: nickfedor/watchtower:latest
+    restart: unless-stopped
+    ports:
+      # HTTP API. Do NOT expose this raw to the internet — front it with a
+      # Cloudflare Tunnel / reverse proxy (TLS), or reach it over Tailscale.
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # If the GHCR package is PRIVATE, `docker login ghcr.io` on the host first,
+      # then uncomment so Watchtower can authenticate the pull:
+      # - /root/.docker/config.json:/config.json:ro
+    environment:
+      # ── Event-driven trigger ────────────────────────────────────────────────
+      # Enable the HTTP API and require this bearer token on every request.
+      WATCHTOWER_HTTP_API_UPDATE: "true"
+      WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_TOKEN:?set WATCHTOWER_TOKEN in this stack's env}
+
+      # ── Safety net ──────────────────────────────────────────────────────────
+      # Also poll on a slow interval so a missed webhook self-heals (without this,
+      # enabling the API disables polling entirely).
+      WATCHTOWER_HTTP_API_PERIODIC_POLLS: "true"
+      WATCHTOWER_POLL_INTERVAL: "1800" # 30 min
+
+      # ── Scope & hygiene ─────────────────────────────────────────────────────
+      # Only touch containers carrying com.centurylinklabs.watchtower.enable=true
+      # (i.e. the app) — never redis / postgres / minio.
+      WATCHTOWER_LABEL_ENABLE: "true"
+      # Delete the previous image after a successful update so disk stays lean.
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_RESTARTING: "true"
+      TZ: ${TZ:-Europe/Paris}

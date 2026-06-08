@@ -14,10 +14,13 @@ jobs:
       packages: write
 
     env:
-      # Optional: set this repo secret to trigger an instant redeploy on your
-      # NAS. Leave it unset and the build still publishes — only the redeploy
-      # step is skipped.
-      PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
+      # Optional: point this at the Watchtower HTTP API on your NAS to trigger an
+      # instant redeploy after each push (see deploy/README.md). Leave the secret
+      # unset and the build still publishes — only the redeploy step is skipped.
+      #   DEPLOY_WEBHOOK_URL   e.g. https://watchtower.example.com/v1/update?image=ghcr.io/costardrouge/p5-templates
+      #   DEPLOY_WEBHOOK_TOKEN matches WATCHTOWER_HTTP_API_TOKEN on the NAS
+      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+      DEPLOY_WEBHOOK_TOKEN: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
 
     steps:
       - name: Checkout Code
@@ -35,7 +38,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
-          # `main` + `latest` are moving tags (what Portainer re-pulls);
+          # `main` + `latest` are moving tags (what Watchtower re-pulls);
           # `sha-<short>` is immutable and what you pin to for a rollback.
           tags: |
             type=raw,value=main
@@ -62,8 +65,10 @@ jobs:
             LIVE_THUMBNAIL=true
             NEXT_PUBLIC_GITHUB_REPO_URL=${{ vars['NEXT_PUBLIC_GITHUB_REPO_URL'] }}
 
-      - name: Trigger Portainer redeploy
-        if: env.PORTAINER_WEBHOOK_URL != ''
+      - name: Trigger redeploy (Watchtower HTTP API)
+        if: env.DEPLOY_WEBHOOK_URL != ''
         run: |
-          echo "Triggering Portainer stack redeploy…"
-          curl -fsS -X POST "$PORTAINER_WEBHOOK_URL"
+          echo "Triggering Watchtower update…"
+          curl -fsS --retry 3 --retry-delay 5 -X POST \
+            -H "Authorization: Bearer ${DEPLOY_WEBHOOK_TOKEN}" \
+            "${DEPLOY_WEBHOOK_URL}"

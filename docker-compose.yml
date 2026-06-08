@@ -23,6 +23,11 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    labels:
+      # Opt this container in to Watchtower updates (see deploy/watchtower.compose.yml).
+      # With WATCHTOWER_LABEL_ENABLE=true only labelled containers are touched, so
+      # redis / postgres / minio are never auto-updated.
+      com.centurylinklabs.watchtower.enable: "true"
     networks:
       - pipeline
     env_file:
