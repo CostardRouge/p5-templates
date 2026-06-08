@@ -2746,5 +2746,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-08T05:13:43.758Z",
     "ctime": "2026-06-08T05:13:43.758Z"
+  },
+  {
+    "name": "photo-exif",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T08:12:34.933Z",
+    "ctime": "2026-06-08T08:04:51.753Z"
   }
 ]

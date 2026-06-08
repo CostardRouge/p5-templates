@@ -42,6 +42,7 @@ import StackPeel from "@/gsap/sketches/photo/stack-peel/index.jsx";
 import OrbitRing from "@/gsap/sketches/photo/orbit-ring/index.jsx";
 import SliderReveal from "@/gsap/sketches/photo/slider-reveal/index.jsx";
 import KenBurnsFrame from "@/gsap/sketches/photo/ken-burns-frame/index.jsx";
+import PhotoExif from "@/gsap/sketches/photo/photo-exif/index.jsx";
 
 const DURATION = 6;
 
@@ -392,6 +393,35 @@ describe(
           caption: "Hello"
         } ),
         selector: ".kb-image"
+      },
+      {
+        name: "photo-exif",
+        Component: PhotoExif,
+        options: baseOptions( {
+          layout: "editorial",
+          show: {
+            camera: true,
+            date: true,
+            focal: true,
+            aperture: true,
+            shutter: true,
+            iso: true
+          },
+          reveal: {
+            enabled: true,
+            style: "rise",
+            distance: 40,
+            hold: 0.34,
+            stagger: 0.12
+          },
+          photoMotion: {
+            enabled: true,
+            zoom: 0.1,
+            panX: 0.03,
+            panY: -0.02
+          }
+        } ),
+        selector: ".px-line"
       }
     ];
 
