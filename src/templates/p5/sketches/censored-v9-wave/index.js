@@ -194,6 +194,7 @@ sketch.draw( (
 
   p.noSmooth();
 
+  p.clear();
   p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );

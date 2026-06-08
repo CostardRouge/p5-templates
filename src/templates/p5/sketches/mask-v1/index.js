@@ -245,6 +245,7 @@ sketch.draw( () => {
 
   p.noStroke();
   p.noSmooth();
+  p.clear();
   p.background( 0 );
 
   shapes[ 0 ].draw(

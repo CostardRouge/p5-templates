@@ -98,6 +98,7 @@ sketch.draw( () => {
     20
   ];
 
+  p.clear();
   p.background( ...bg );
 
   const pointers = getPointersDebug( interaction );

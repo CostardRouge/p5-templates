@@ -209,6 +209,7 @@ sketch.draw( ( time ) => {
   rebuildHorn();
 
   p.noStroke();
+  p.clear();
   p.background( ...( options.sketch?.backgroundColor ?? [
     0
   ] ) );

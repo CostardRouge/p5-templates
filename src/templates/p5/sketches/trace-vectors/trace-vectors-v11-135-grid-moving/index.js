@@ -29,6 +29,7 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
+  p.clear();
   p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );

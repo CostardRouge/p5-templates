@@ -30,6 +30,7 @@ sketch.setup( () => {} );
 sketch.draw( async() => {
   const p = getP5();
 
+  p.clear();
   p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );

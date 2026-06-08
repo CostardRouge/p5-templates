@@ -44,6 +44,7 @@ sketch.draw( async() => {
     255
   ];
 
+  p.clear();
   p.background( ...bg );
 
   const t = animation.angle * ( options.sketch.timeScale ?? 1 );

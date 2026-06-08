@@ -84,6 +84,7 @@ sketch.draw( async(
 ) => {
   const p = getP5();
 
+  p.clear();
   p.background(
     ...getBg(),
     20

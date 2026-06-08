@@ -22,6 +22,7 @@ sketch.draw( ( time ) => {
     255
   ];
 
+  p.clear();
   p.background( ...bg );
   p.translate(
     p.width / 2,

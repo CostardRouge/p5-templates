@@ -185,6 +185,7 @@ function renderFace( {
 sketch.draw( async() => {
   const p = getP5();
 
+  p.clear();
   p.background( ...getBackgroundColor() );
 
   const fontName = options.sketch?.shape?.font ?? "martian";

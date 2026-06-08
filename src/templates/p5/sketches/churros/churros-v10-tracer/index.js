@@ -13,6 +13,7 @@ sketch.draw( ( time ) => {
   const p = getP5();
   const o = options.sketch;
 
+  p.clear();
   p.background( ...( o.backgroundColor ?? [
     0
   ] ) );

@@ -83,6 +83,7 @@ sketch.draw( () => {
   const p = getP5();
   const graphics = sketchState.shape.graphics;
 
+  p.clear();
   p.background( ...getBackgroundColor() );
 
   const shape = options.sketch?.shape ?? {};

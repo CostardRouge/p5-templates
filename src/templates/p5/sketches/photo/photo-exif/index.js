@@ -23,6 +23,7 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
+  p.clear();
   p.background( ...( options.sketch?.photo?.backgroundColor ?? [
     246,
     235,

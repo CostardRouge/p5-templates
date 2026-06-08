@@ -31,6 +31,7 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
+  p.clear();
   p.background( ...options.sketch.colors.background );
   canvases.blurredLayer.background( ...options.sketch.colors.background );
 

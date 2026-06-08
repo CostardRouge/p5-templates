@@ -17,6 +17,7 @@ sketch.setup( () => {
 sketch.draw( () => {
   const p = getP5();
 
+  p.clear();
   p.background( ...( options.sketch?.backgroundColor ?? [
     10,
     10,

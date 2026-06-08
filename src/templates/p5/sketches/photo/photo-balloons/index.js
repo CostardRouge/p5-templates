@@ -143,6 +143,7 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
+  p.clear();
   p.background( ...getBg() );
 
   const images = getImages();
