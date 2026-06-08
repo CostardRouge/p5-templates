@@ -514,6 +514,7 @@ sketch.draw( (
   const faceLong = radius * photoSize;
   const faceWidth = aspect >= 1 ? faceLong : faceLong * aspect;
   const faceHeight = aspect >= 1 ? faceLong / aspect : faceLong;
+  const zoom = layout.zoom ?? -1200;
 
   /* -- where is the tour right now? ------------------------------- */
 
@@ -611,11 +612,40 @@ sketch.draw( (
 
   /* -- render ----------------------------------------------------- */
 
+  // p5's default camera sits at z = 800 with near/far clip planes of
+  // 80 / 8000. A large radius or a strong zoom pushes the back faces past
+  // the far plane (they wink out mid-rotation) or the near faces behind the
+  // eye, so fit the frustum snugly around the sphere instead. The near plane
+  // is kept in front of the title plane (z = 0, i.e. distance = eye) so the
+  // overlay never gets clipped.
+  const eyeZ = 800;
+  const fov = 2 * Math.atan( ( p.height / 2 ) / eyeZ );
+  const centerDistance = eyeZ - zoom;
+  const bound = radius + 0.5 * Math.hypot(
+    faceWidth,
+    faceHeight
+  );
+  const near = Math.max(
+    1,
+    Math.min(
+      centerDistance - bound,
+      eyeZ
+    ) - 50
+  );
+  const far = centerDistance + bound + 50;
+
+  p.perspective(
+    fov,
+    p.width / p.height,
+    near,
+    far
+  );
+
   p.push();
   p.translate(
     0,
     0,
-    layout.zoom ?? -1200
+    zoom
   );
 
   if ( globalRotation.angle > EPSILON ) {
