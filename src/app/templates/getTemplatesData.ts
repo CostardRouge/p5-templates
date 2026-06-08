@@ -1,6 +1,6 @@
 import {
-  listEngines
-} from "@/engines/index";
+  ENGINE_LABELS
+} from "@/engines/engineCatalog";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import getSketchPreviewURL from "@/utils/getSketchPreviewURL";
 import getSketchList from "@/utils/getSketchList";
@@ -63,16 +63,12 @@ export async function getTemplatesData() {
       } );
     } );
 
-  const engines = listEngines();
-  const engineLabels: Record<string, string> = {};
-
-  engines.forEach( ( e ) => {
-    engineLabels[ e.id ] = e.label;
-  } );
-
+  // Labels come from the static catalogue rather than the engine runtime, so
+  // the gallery/home/listing pages don't compile the whole engine graph (and
+  // the generated sketch registry) just to render "p5.js" / "GSAP".
   return {
     templatesByEngine,
-    engineLabels
+    engineLabels: ENGINE_LABELS
   };
 }
 

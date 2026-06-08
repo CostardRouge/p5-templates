@@ -5,12 +5,15 @@ import {
   P5Engine
 } from "./P5Engine";
 import {
+  getEngineLabel
+} from "@/engines/engineCatalog";
+import {
   findSketchMeta, listTemplatesForEngine
 } from "@/engines/metadata";
 
 export const p5Registration: EngineRegistration = {
   id: "p5",
-  label: "p5.js",
+  label: getEngineLabel( "p5" ),
 
   createEngine: () => new P5Engine(),
 
