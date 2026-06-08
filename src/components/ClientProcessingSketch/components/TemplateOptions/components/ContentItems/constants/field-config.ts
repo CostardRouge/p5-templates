@@ -437,23 +437,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.01
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.01
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     revealEnd: {
       label: "Reveal end",
@@ -628,23 +617,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     animation: {
       label: "Animation",
@@ -711,23 +689,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     rotation: {
       label: "Rotation",
@@ -777,23 +744,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
   visual: {
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     scale: {
       label: "Scale",
