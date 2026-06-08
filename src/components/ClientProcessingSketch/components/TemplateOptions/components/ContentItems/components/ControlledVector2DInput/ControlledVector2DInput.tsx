@@ -36,6 +36,13 @@ export interface Vector2DInputConfig {
   /** Per-axis overrides, merged over the shared min/max/step. */
   xAxis?: Partial<AxisRange>;
   yAxis?: Partial<AxisRange>;
+  /**
+   * Invert the vertical axis so the top of the pad maps to the *minimum* value.
+   * Use it for screen-space positions (where y grows downward): dragging the
+   * handle up then moves the point toward the top of the canvas. Defaults to
+   * false (top = max), matching the "Y points up" convention used for vectors.
+   */
+  yDown?: boolean;
 }
 
 type Vector2DValue = {
@@ -91,6 +98,25 @@ export default function ControlledVector2DInput( {
     xAxis, yAxis
   } = resolveAxes( config );
 
+  const yDown = config.yDown ?? false;
+
+  // Convert between a Y value and its vertical position in the pad (a 0..1
+  // fraction where 0 is the top). Unless yDown is set, the axis is flipped so
+  // the top of the pad represents the maximum value.
+  const valueYToFraction = ( y: number ) => {
+    const fraction = valueToFraction(
+      y,
+      yAxis
+    );
+
+    return yDown ? fraction : 1 - fraction;
+  };
+
+  const fractionToValueY = ( fraction: number ) => fractionToValue(
+    yDown ? fraction : 1 - fraction,
+    yAxis
+  );
+
   const raw = field.value as Partial<Vector2DValue> | undefined;
   const value: Vector2DValue = {
     x: typeof raw?.x === "number" ? raw.x : xAxis.min,
@@ -124,11 +150,7 @@ export default function ControlledVector2DInput( {
         fractionX,
         xAxis
       ),
-      // Screen Y grows downward; flip it so the top of the pad is the max value.
-      y: fractionToValue(
-        1 - fractionY,
-        yAxis
-      )
+      y: fractionToValueY( fractionY )
     } );
   };
 
@@ -158,6 +180,10 @@ export default function ControlledVector2DInput( {
       v: number, step: number | undefined
     ) => Number( v.toFixed( stepDecimals( step ) ) );
 
+    // `dy` is expressed in screen terms (+1 = up). Flip it for a non-inverted
+    // axis so pressing "up" increases the value.
+    const valueDy = yDown ? -dy : dy;
+
     commit( {
       x: clamp(
         round(
@@ -169,7 +195,7 @@ export default function ControlledVector2DInput( {
       ),
       y: clamp(
         round(
-          value.y + dy * ( yAxis.step ?? 0.01 ),
+          value.y + valueDy * ( yAxis.step ?? 0.01 ),
           yAxis.step
         ),
         yAxis.min,
@@ -241,18 +267,12 @@ export default function ControlledVector2DInput( {
     value.x,
     xAxis
   ) * 100;
-  const pointTop = ( 1 - valueToFraction(
-    value.y,
-    yAxis
-  ) ) * 100;
+  const pointTop = valueYToFraction( value.y ) * 100;
   const originLeft = valueToFraction(
     0,
     xAxis
   ) * 100;
-  const originTop = ( 1 - valueToFraction(
-    0,
-    yAxis
-  ) ) * 100;
+  const originTop = valueYToFraction( 0 ) * 100;
 
   const numberInputClassName =
     "w-full text-center text-xs font-mono px-1 py-0.5 rounded border border-theme/30 bg-theme/20 focus:outline-none focus:ring-1 focus:ring-theme";

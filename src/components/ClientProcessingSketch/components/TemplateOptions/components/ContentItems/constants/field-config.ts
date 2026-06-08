@@ -169,6 +169,11 @@ export interface Vector2DConfig extends BaseConfig {
     max?: number;
     step?: number;
   };
+  /**
+   * Invert the vertical axis so the top of the pad is the minimum value — use
+   * for screen-space positions where dragging up should move toward the top.
+   */
+  yDown?: boolean;
 }
 
 interface AssetInputConfig extends BaseConfig {
@@ -506,23 +511,12 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     position: {
       label: "Position",
-      component: "nested-object",
-      fields: {
-        x: {
-          label: "x",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        },
-        y: {
-          label: "y",
-          component: "slider",
-          step: 0.01,
-          min: 0,
-          max: 1
-        }
-      }
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
     },
     alignment: {
       label: "Alignment",
