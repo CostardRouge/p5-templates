@@ -53,23 +53,27 @@ jobs:
 
       - name: Ouvrir / mettre à jour la PR de tri
         if: steps.scan.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: blog/backlog-inbox
-          base: main
-          add-paths: |
-            blog/INBOX.md
-            blog/.last-scan
-          commit-message: "blog: scan auto des nouveaux milestones"
-          title: "🤖 Blog — nouveaux milestones à trier"
-          body: |
-            Détection automatique de nouveaux milestones (push sur `main`).
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH=blog/backlog-inbox
 
-            Les entrées brutes sont dans `blog/INBOX.md` : trie-les vers `blog/BACKLOG.md`
-            (en leur donnant un angle d'article), puis vide la section correspondante de l'INBOX.
-            Le merge de cette PR fait avancer le curseur `blog/.last-scan`.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            _PR roulante mise à jour à chaque push sur `main` par `.github/workflows/blog-scan.yml`._
-          draft: true
-          delete-branch: false
+          # Branche roulante recréée depuis le main courant : l'INBOX est régénérée
+          # en entier à chaque scan, donc un force-push reflète l'état complet.
+          git checkout -B "$BRANCH"
+          git add blog/INBOX.md blog/.last-scan
+          git commit -m "blog: scan auto des nouveaux milestones"
+          git push -f origin "$BRANCH"
+
+          OPEN=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')
+          if [ "$OPEN" != "0" ]; then
+            echo "PR déjà ouverte — mise à jour par le force-push."
+          else
+            gh pr create --draft --base main --head "$BRANCH" \
+              --title "🤖 Blog — nouveaux milestones à trier" \
+              --body $'Détection automatique de nouveaux milestones (push sur `main`).\n\nLes entrées brutes sont dans `blog/INBOX.md` : trie-les vers `blog/BACKLOG.md` (en leur donnant un angle d\'article), puis vide la section correspondante de l\'INBOX. Le merge de cette PR fait avancer le curseur `blog/.last-scan`.\n\n_PR roulante mise à jour à chaque push sur `main` par `.github/workflows/blog-scan.yml`._'
+          fi
