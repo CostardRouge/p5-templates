@@ -89,3 +89,60 @@ export function useExif( url ) {
 
   return data;
 }
+
+/**
+ * React hook: load the EXIF of every URL in `urls` and return a `url → tags`
+ * map, filling in as each read resolves. Used by templates that cycle through
+ * several photos and need each one's own capture settings.
+ *
+ * Keyed off the joined URL list so it only re-loads when the set of images
+ * actually changes — not on every render (a fresh `urls` array each time).
+ */
+export function useExifList( urls ) {
+  const key = ( Array.isArray( urls ) ? urls : [] ).join( "|" );
+
+  const [
+    map,
+    setMap
+  ] = useState( {} );
+
+  useEffect(
+    () => {
+      let cancelled = false;
+      const list = Array.isArray( urls ) ? urls : [];
+
+      list.forEach( ( url ) => {
+        if ( !url ) {
+          return;
+        }
+
+        loadExifFromUrl( url ).then( ( tags ) => {
+          if ( cancelled || !tags ) {
+            return;
+          }
+
+          setMap( ( prev ) => {
+            if ( prev[ url ] ) {
+              return prev;
+            }
+
+            return {
+              ...prev,
+              [ url ]: tags
+            };
+          } );
+        } );
+      } );
+
+      return () => {
+        cancelled = true;
+      };
+    },
+    // Re-run only when the *set* of URLs changes (the joined key is stable
+    // across renders, unlike the freshly-built `urls` array).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ key ]
+  );
+
+  return map;
+}

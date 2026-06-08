@@ -1,34 +1,33 @@
 "use client";
 
 /**
- * Photo EXIF — an editorial "spec sheet" for a single photograph.
+ * Photo EXIF — an editorial "spec sheet" slideshow.
  *
- * The photo is presented with the camera settings it was actually shot with —
- * ISO, shutter speed, aperture, focal length, lens and the friendly camera
- * name — read straight from the file's EXIF metadata (reusing the shared
- * reader + friendly-name maps from the p5 engine).
+ * Every photo is shown in turn with the camera settings it was actually shot
+ * with — ISO, shutter speed, aperture, focal length, lens and the friendly
+ * camera name — read straight from each file's EXIF metadata (reusing the
+ * shared reader + friendly-name maps from the p5 engine).
  *
- * Three editorial layouts arrange the same building blocks differently:
- *   • editorial — header + photo + a ruled spec strip on a paper margin,
- *   • overlay   — full-bleed photo with the type laid over scrims,
- *   • minimal   — full-bleed photo with one stacked block in the corner.
+ * All images are laid out as stacked slides and given an equal share of the
+ * loop: 6 photos over a 12s sketch ⇒ 2s each. Within its slot a slide's photo
+ * transitions in, its metadata reveals (staggered), both hold, then they exit
+ * again before the next photo enters — so the EXIF on screen always belongs to
+ * the photo on screen, and the reveal replays for every image.
  *
- * Motion is a parametrable, staggered reveal of the metadata plus a slow Ken
- * Burns drift on the photo. Both are built as "in → hold → out" tweens that
- * fill the whole loop and end where they start, so playback wraps seamlessly
- * (the same model the other GSAP templates use).
+ * Three editorial layouts arrange the same building blocks (editorial /
+ * overlay / minimal). Everything ends where it starts, so playback wraps
+ * seamlessly like the other GSAP templates.
  */
 import {
   useTimeline,
   toCssColor,
   toGsapEase,
   resolveImages,
-  imageAt,
   imageFilterCss,
   boxShadowCss
 } from "@/gsap/utils";
 import {
-  exif, useExif
+  exif, useExifList
 } from "@/gsap/utils/exif";
 
 /** System font stacks — kept generic so they survive the DOM→canvas capture. */
@@ -61,9 +60,9 @@ function imagePathAt(
 }
 
 /**
- * The hidden / shown GSAP vars for a reveal style. Each pair is symmetric — the
- * "hidden" state is used at both ends of the loop — so the reveal is seamless
- * whatever style is picked.
+ * Hidden / shown GSAP vars for a metadata reveal style. Each pair is symmetric
+ * — the "hidden" state is used at both ends of a slot — so the reveal is
+ * seamless whatever style is picked.
  */
 function revealVars(
   style, distance
@@ -168,6 +167,76 @@ function revealVars(
   };
 }
 
+/**
+ * Hidden / shown GSAP vars for the photo transition between images. Applied to
+ * a wrapper around the image so it never fights the Ken Burns transform on the
+ * image itself.
+ */
+function photoTransitionVars(
+  style, direction, radius
+) {
+  if ( style === "zoom" ) {
+    return {
+      hidden: {
+        opacity: 0,
+        scale: 1.12
+      },
+      shown: {
+        opacity: 1,
+        scale: 1
+      }
+    };
+  }
+
+  if ( style === "slide" ) {
+    const axis = direction === "up" || direction === "down"
+      ? "yPercent"
+      : "xPercent";
+    const sign = direction === "down" || direction === "right" ? -1 : 1;
+
+    return {
+      hidden: {
+        opacity: 0,
+        [ axis ]: 100 * sign
+      },
+      shown: {
+        opacity: 1,
+        xPercent: 0,
+        yPercent: 0
+      }
+    };
+  }
+
+  if ( style === "wipe" ) {
+    const round = `round ${ radius }px`;
+    const hidden = {
+      up: `inset(100% 0% 0% 0% ${ round })`,
+      down: `inset(0% 0% 100% 0% ${ round })`,
+      left: `inset(0% 0% 0% 100% ${ round })`,
+      right: `inset(0% 100% 0% 0% ${ round })`
+    };
+
+    return {
+      hidden: {
+        clipPath: hidden[ direction ] ?? hidden.left
+      },
+      shown: {
+        clipPath: `inset(0% 0% 0% 0% ${ round })`
+      }
+    };
+  }
+
+  // "fade" (default)
+  return {
+    hidden: {
+      opacity: 0
+    },
+    shown: {
+      opacity: 1
+    }
+  };
+}
+
 /** Build the bottom-strip specs (everything but the camera/date header). */
 function buildStripSpecs(
   data, show
@@ -238,13 +307,25 @@ export default function PhotoExif( {
   };
 
   const urls = resolveImages( options );
-  const imageIndex = Math.round( sketch.imageIndex ?? 0 );
-  const imageUrl = imageAt(
-    urls,
-    imageIndex
+  const maxImages = Math.max(
+    1,
+    Math.min(
+      60,
+      Math.round( sketch.maxImages ?? 24 )
+    )
+  );
+  const count = urls.length
+    ? Math.min(
+      maxImages,
+      urls.length
+    )
+    : 1;
+  const cycledUrls = urls.slice(
+    0,
+    count
   );
 
-  const data = useExif( imageUrl );
+  const exifMap = useExifList( cycledUrls );
 
   const layout = sketch.layout ?? "editorial";
   const margin = sketch.margin ?? 80;
@@ -311,6 +392,11 @@ export default function PhotoExif( {
     )
   );
 
+  const transition = sketch.transition ?? {};
+  const transitionEnabled = transition.enabled ?? true;
+  const transitionStyle = transition.style ?? "fade";
+  const transitionDirection = transition.direction ?? "left";
+
   const photoMotion = sketch.photoMotion ?? {};
   const photoEnabled = photoMotion.enabled ?? true;
   const zoom = Math.max(
@@ -320,21 +406,35 @@ export default function PhotoExif( {
   const panX = photoMotion.panX ?? 0.03;
   const panY = photoMotion.panY ?? -0.02;
 
-  const imagePath = imagePathAt(
-    sketch.images,
-    imageIndex
-  );
-  const filename = imagePath
-    ? decodeURIComponent( String( imagePath ).split( "/" ).pop() )
-    : "";
+  const slides = Array.from(
+    {
+      length: count
+    },
+    (
+      _, i
+    ) => {
+      const url = cycledUrls[ i ];
+      const data = url ? exifMap[ url ] : null;
+      const path = imagePathAt(
+        sketch.images,
+        i
+      );
 
-  const cameraValue = cameraOverride
-    || exif.formatCameraModel( data?.camera )
-    || "";
-  const dateValue = exif.formatPhotoDate( data?.date ) || "";
-  const stripSpecs = buildStripSpecs(
-    data,
-    show
+      return {
+        url,
+        cameraValue: cameraOverride
+          || exif.formatCameraModel( data?.camera )
+          || "",
+        dateValue: exif.formatPhotoDate( data?.date ) || "",
+        stripSpecs: buildStripSpecs(
+          data,
+          show
+        ),
+        filename: path
+          ? decodeURIComponent( String( path ).split( "/" ).pop() )
+          : ""
+      };
+    }
   );
 
   /* ---- derived geometry + type scale ----------------------------- */
@@ -359,8 +459,14 @@ export default function PhotoExif( {
 
   const headerJustify = show.camera ? "space-between" : "flex-end";
   const hasHeader = Boolean( show.camera || show.date );
-  const hasCaptionRow = Boolean( caption || credit || ( show.filename && filename ) );
-  const hasFooterBlock = stripSpecs.length > 0 || hasCaptionRow;
+  const stripKey = [
+    show.focal,
+    show.aperture,
+    show.shutter,
+    show.iso,
+    show.lens,
+    show.gps
+  ].join( "," );
 
   /* ---- shared styles --------------------------------------------- */
 
@@ -442,6 +548,12 @@ export default function PhotoExif( {
     willChange: "transform"
   };
 
+  const photoFxStyle = {
+    position: "absolute",
+    inset: 0,
+    willChange: "transform, opacity, clip-path"
+  };
+
   const frameStyle = {
     position: "relative",
     width: "100%",
@@ -461,11 +573,29 @@ export default function PhotoExif( {
     background: "#15151a"
   };
 
-  /* ---- timeline (reveal + Ken Burns), seamless by construction ---- */
+  const placeholderStyle = {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: sansFamily,
+    fontSize: 18 * unit,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: label
+  };
+
+  /* ---- timeline: per-slot transition + reveal + Ken Burns -------- */
 
   const motion = revealVars(
     revealStyle,
     revealDistance
+  );
+  const photoTx = photoTransitionVars(
+    transitionStyle,
+    transitionDirection,
+    radius
   );
 
   useTimeline(
@@ -474,87 +604,10 @@ export default function PhotoExif( {
     } ) => {
       const duration = opts?.animation?.duration ?? 12;
       const ease = toGsapEase( opts?.sketch?.ease );
+      const slideEls = gsap.utils.toArray( ".px-slide" );
+      const n = slideEls.length;
 
-      if ( photoEnabled ) {
-        const half = duration / 2;
-
-        tl.set(
-          ".px-photo",
-          {
-            scale: 1,
-            x: 0,
-            y: 0
-          },
-          0
-        );
-        tl.to(
-          ".px-photo",
-          {
-            scale: 1 + zoom,
-            x: panX * size.width,
-            y: panY * size.height,
-            duration: half,
-            ease
-          },
-          0
-        );
-        tl.to(
-          ".px-photo",
-          {
-            scale: 1,
-            x: 0,
-            y: 0,
-            duration: half,
-            ease
-          },
-          half
-        );
-      }
-
-      if ( revealEnabled ) {
-        const lineEls = gsap.utils.toArray( ".px-line" );
-        const count = lineEls.length;
-
-        if ( count > 0 ) {
-          const span = ( duration * ( 1 - holdFraction ) ) / 2;
-          const ramp = span * ( 1 - staggerFraction );
-          const stride = count > 1 ? ( span * staggerFraction ) / ( count - 1 ) : 0;
-          const closeBase = duration - span;
-
-          lineEls.forEach( (
-            el, index
-          ) => {
-            const openAt = index * stride;
-            const closeAt = closeBase + index * stride;
-
-            tl.set(
-              el,
-              motion.hidden,
-              0
-            );
-            tl.to(
-              el,
-              {
-                ...motion.shown,
-                duration: ramp,
-                ease
-              },
-              openAt
-            );
-            tl.to(
-              el,
-              {
-                ...motion.hidden,
-                duration: ramp,
-                ease
-              },
-              closeAt
-            );
-          } );
-        }
-      }
-
-      if ( tl.getChildren().length === 0 ) {
+      if ( n === 0 ) {
         tl.to(
           {},
           {
@@ -562,24 +615,188 @@ export default function PhotoExif( {
           },
           0
         );
+
+        return;
       }
+
+      const slot = duration / n;
+      const edge = ( slot * ( 1 - holdFraction ) ) / 2;
+      const half = slot / 2;
+
+      slideEls.forEach( (
+        slide, k
+      ) => {
+        const winStart = k * slot;
+        const winEnd = winStart + slot;
+        const closeBase = winEnd - edge;
+        const fx = slide.querySelector( ".px-photo-fx" );
+        const img = slide.querySelector( ".px-photo" );
+        const lines = gsap.utils.toArray( slide.querySelectorAll( ".px-line" ) );
+
+        // Photo in / out (on the fx wrapper, never the image itself).
+        // A single photo just stays on screen (only the Ken Burns drift moves);
+        // with several, each transitions in for its slot and out again.
+        if ( fx && n === 1 ) {
+          tl.set(
+            fx,
+            photoTx.shown,
+            0
+          );
+        } else if ( fx ) {
+          tl.set(
+            fx,
+            photoTx.hidden,
+            0
+          );
+
+          if ( transitionEnabled ) {
+            tl.to(
+              fx,
+              {
+                ...photoTx.shown,
+                duration: edge,
+                ease
+              },
+              winStart
+            );
+            tl.to(
+              fx,
+              {
+                ...photoTx.hidden,
+                duration: edge,
+                ease
+              },
+              closeBase
+            );
+          } else {
+            tl.set(
+              fx,
+              photoTx.shown,
+              winStart
+            );
+            tl.set(
+              fx,
+              photoTx.hidden,
+              winEnd
+            );
+          }
+        }
+
+        // Ken Burns drift on the inner image — a yoyo within the slot, so it
+        // returns to its start (seamless even with hard cuts).
+        if ( img && photoEnabled ) {
+          tl.set(
+            img,
+            {
+              scale: 1,
+              x: 0,
+              y: 0
+            },
+            0
+          );
+          tl.to(
+            img,
+            {
+              scale: 1 + zoom,
+              x: panX * size.width,
+              y: panY * size.height,
+              duration: half,
+              ease
+            },
+            winStart
+          );
+          tl.to(
+            img,
+            {
+              scale: 1,
+              x: 0,
+              y: 0,
+              duration: half,
+              ease
+            },
+            winStart + half
+          );
+        }
+
+        // Metadata lines — staggered reveal in / out within the slot.
+        const lineCount = lines.length;
+
+        if ( lineCount > 0 ) {
+          const ramp = edge * ( 1 - staggerFraction );
+          const stride = lineCount > 1
+            ? ( edge * staggerFraction ) / ( lineCount - 1 )
+            : 0;
+
+          lines.forEach( (
+            el, j
+          ) => {
+            const openAt = winStart + j * stride;
+            const closeAt = closeBase + j * stride;
+
+            tl.set(
+              el,
+              motion.hidden,
+              0
+            );
+
+            if ( revealEnabled ) {
+              tl.to(
+                el,
+                {
+                  ...motion.shown,
+                  duration: ramp,
+                  ease
+                },
+                openAt
+              );
+              tl.to(
+                el,
+                {
+                  ...motion.hidden,
+                  duration: ramp,
+                  ease
+                },
+                closeAt
+              );
+            } else {
+              tl.set(
+                el,
+                motion.shown,
+                winStart
+              );
+              tl.set(
+                el,
+                motion.hidden,
+                winEnd
+              );
+            }
+          } );
+        }
+      } );
     },
     [
+      count,
       layout,
-      imageUrl,
+      margin,
+      size.width,
+      size.height,
+      radius,
       revealEnabled,
       revealStyle,
       revealDistance,
       holdFraction,
       staggerFraction,
+      transitionEnabled,
+      transitionStyle,
+      transitionDirection,
       photoEnabled,
       zoom,
       panX,
       panY,
-      stripSpecs.length,
       show.camera,
       show.date,
       show.filename,
+      stripKey,
       Boolean( caption ),
       Boolean( credit )
     ]
@@ -587,210 +804,295 @@ export default function PhotoExif( {
 
   /* ---- render helpers -------------------------------------------- */
 
-  const renderImage = () => {
-    if ( !imageUrl ) {
-      return (
+  const renderImage = (
+    url, full
+  ) => (
+    <div
+      className="px-frame"
+      style={ full ? fullFrameStyle : frameStyle }
+    >
+      <div
+        className="px-photo-fx"
+        style={ photoFxStyle }
+      >
+        { url
+          ? (
+            <img
+              className="px-photo"
+              src={ url }
+              alt=""
+              style={ imageStyle }
+            />
+          )
+          : (
+            <div style={ placeholderStyle }>add a photo</div>
+          ) }
+      </div>
+    </div>
+  );
+
+  const renderSlide = (
+    slide, index
+  ) => {
+    const titleEl = show.camera
+      ? (
+        <h1
+          className="px-line"
+          style={ titleStyle }
+        >
+          { slide.cameraValue || "—" }
+        </h1>
+      )
+      : null;
+    const dateEl = show.date
+      ? (
+        <span
+          className="px-line"
+          style={ dateStyle }
+        >
+          { slide.dateValue || "—" }
+        </span>
+      )
+      : null;
+    const cells = slide.stripSpecs.map( ( spec ) => (
+      <div
+        key={ spec.id }
+        className="px-line"
+        style={ cellStyle }
+      >
+        <span style={ labelStyle }>{ spec.label }</span>
+        <span style={ valueStyle }>{ spec.value || "—" }</span>
+      </div>
+    ) );
+    const captionEl = caption
+      ? (
+        <span
+          className="px-line"
+          style={ captionStyle }
+        >
+          { caption }
+        </span>
+      )
+      : null;
+    const creditEl = credit
+      ? (
+        <span
+          className="px-line"
+          style={ footStyle }
+        >
+          { credit }
+        </span>
+      )
+      : null;
+    const filenameEl = ( show.filename && slide.filename )
+      ? (
+        <span
+          className="px-line"
+          style={ footStyle }
+        >
+          { slide.filename }
+        </span>
+      )
+      : null;
+    const hasCaptionRow = Boolean( captionEl || creditEl || filenameEl );
+
+    if ( layout === "overlay" || layout === "minimal" ) {
+      const bottom = (
         <div
           style={ {
-            position: "absolute",
-            inset: 0,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: sansFamily,
-            fontSize: 18 * unit,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: label
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 14 * unit,
+            textShadow: "0 2px 22px rgba(0, 0, 0, 0.55)"
           } }
         >
-          add a photo
+          { ( layout === "minimal" && dateEl ) ? dateEl : null }
+          { titleEl }
+          { cells.length
+            ? (
+              <div
+                className="px-strip"
+                style={ {
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: `${ stripGapRow }px ${ stripGapCol }px`
+                } }
+              >
+                { cells }
+              </div>
+            )
+            : null }
+          { captionEl }
+          { ( creditEl || filenameEl )
+            ? (
+              <div
+                style={ {
+                  display: "flex",
+                  gap: headerGap
+                } }
+              >
+                { filenameEl }
+                { creditEl }
+              </div>
+            )
+            : null }
+        </div>
+      );
+
+      return (
+        <div
+          // eslint-disable-next-line react/no-array-index-key
+          key={ index }
+          className="px-slide"
+          style={ {
+            position: "absolute",
+            inset: 0
+          } }
+        >
+          { renderImage(
+            slide.url,
+            true
+          ) }
+          <div
+            style={ {
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              background:
+                "linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 26%, rgba(0, 0, 0, 0) 52%, rgba(0, 0, 0, 0.78) 100%)"
+            } }
+          />
+          <div
+            style={ {
+              position: "absolute",
+              inset: 0,
+              padding: margin,
+              boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: layout === "minimal" ? "flex-end" : "space-between"
+            } }
+          >
+            { layout === "overlay"
+              ? (
+                <div
+                  style={ {
+                    display: "flex",
+                    justifyContent: headerJustify,
+                    alignItems: "flex-end",
+                    gap: headerGap,
+                    textShadow: "0 2px 22px rgba(0, 0, 0, 0.55)"
+                  } }
+                >
+                  { titleEl }
+                  { dateEl }
+                </div>
+              )
+              : null }
+            { bottom }
+          </div>
         </div>
       );
     }
 
     return (
-      <img
-        className="px-photo"
-        src={ imageUrl }
-        alt=""
-        style={ imageStyle }
-      />
-    );
-  };
-
-  const stripCells = stripSpecs.map( ( spec ) => (
-    <div
-      key={ spec.id }
-      className="px-line"
-      style={ cellStyle }
-    >
-      <span style={ labelStyle }>{ spec.label }</span>
-      <span style={ valueStyle }>{ spec.value || "—" }</span>
-    </div>
-  ) );
-
-  const captionEl = caption
-    ? (
-      <span
-        className="px-line"
-        style={ captionStyle }
-      >
-        { caption }
-      </span>
-    )
-    : null;
-
-  const creditEl = credit
-    ? (
-      <span
-        className="px-line"
-        style={ footStyle }
-      >
-        { credit }
-      </span>
-    )
-    : null;
-
-  const filenameEl = ( show.filename && filename )
-    ? (
-      <span
-        className="px-line"
-        style={ footStyle }
-      >
-        { filename }
-      </span>
-    )
-    : null;
-
-  const titleEl = show.camera
-    ? (
-      <h1
-        className="px-line"
-        style={ titleStyle }
-      >
-        { cameraValue || "—" }
-      </h1>
-    )
-    : null;
-
-  const dateEl = show.date
-    ? (
-      <span
-        className="px-line"
-        style={ dateStyle }
-      >
-        { dateValue || "—" }
-      </span>
-    )
-    : null;
-
-  /* ---- editorial layout ------------------------------------------ */
-
-  if ( layout === "overlay" || layout === "minimal" ) {
-    const overlayBottom = (
       <div
+        // eslint-disable-next-line react/no-array-index-key
+        key={ index }
+        className="px-slide"
         style={ {
+          position: "absolute",
+          inset: 0,
+          boxSizing: "border-box",
+          padding: margin,
           display: "flex",
           flexDirection: "column",
-          alignItems: "flex-start",
-          gap: 14 * unit,
-          textShadow: "0 2px 22px rgba(0, 0, 0, 0.55)"
+          gap: stageGap
         } }
       >
-        { ( layout === "minimal" && dateEl ) ? dateEl : null }
-        { titleEl }
-        { stripCells.length
+        { hasHeader
           ? (
             <div
-              className="px-strip"
+              className="px-header"
               style={ {
                 display: "flex",
-                flexWrap: "wrap",
-                gap: `${ stripGapRow }px ${ stripGapCol }px`
-              } }
-            >
-              { stripCells }
-            </div>
-          )
-          : null }
-        { captionEl }
-        { ( creditEl || filenameEl )
-          ? (
-            <div
-              style={ {
-                display: "flex",
+                justifyContent: headerJustify,
+                alignItems: "flex-end",
                 gap: headerGap
               } }
             >
-              { filenameEl }
-              { creditEl }
+              { titleEl }
+              { dateEl }
+            </div>
+          )
+          : null }
+
+        <div
+          style={ {
+            position: "relative",
+            flex: "1 1 auto",
+            minHeight: 0
+          } }
+        >
+          { renderImage(
+            slide.url,
+            false
+          ) }
+        </div>
+
+        { ( cells.length > 0 || hasCaptionRow )
+          ? (
+            <div
+              style={ {
+                display: "flex",
+                flexDirection: "column",
+                gap: 20 * unit
+              } }
+            >
+              { cells.length
+                ? (
+                  <div
+                    className="px-strip"
+                    style={ {
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: `${ stripGapRow }px ${ stripGapCol }px`
+                    } }
+                  >
+                    { cells }
+                  </div>
+                )
+                : null }
+              { hasCaptionRow
+                ? (
+                  <div
+                    style={ {
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "baseline",
+                      gap: headerGap
+                    } }
+                  >
+                    { captionEl || <span /> }
+                    <div
+                      style={ {
+                        display: "flex",
+                        gap: headerGap
+                      } }
+                    >
+                      { filenameEl }
+                      { creditEl }
+                    </div>
+                  </div>
+                )
+                : null }
             </div>
           )
           : null }
       </div>
     );
-
-    return (
-      <div
-        className="px-stage"
-        style={ {
-          position: "relative",
-          width: "100%",
-          height: "100%",
-          background,
-          overflow: "hidden"
-        } }
-      >
-        <div
-          className="px-frame"
-          style={ fullFrameStyle }
-        >
-          { renderImage() }
-        </div>
-
-        <div
-          style={ {
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            background:
-              "linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 26%, rgba(0, 0, 0, 0) 52%, rgba(0, 0, 0, 0.78) 100%)"
-          } }
-        />
-
-        <div
-          style={ {
-            position: "absolute",
-            inset: 0,
-            padding: margin,
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: layout === "minimal" ? "flex-end" : "space-between"
-          } }
-        >
-          { layout === "overlay"
-            ? (
-              <div
-                style={ {
-                  display: "flex",
-                  justifyContent: headerJustify,
-                  alignItems: "flex-end",
-                  gap: headerGap,
-                  textShadow: "0 2px 22px rgba(0, 0, 0, 0.55)"
-                } }
-              >
-                { titleEl }
-                { dateEl }
-              </div>
-            )
-            : null }
-          { overlayBottom }
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
     <div
@@ -800,95 +1102,15 @@ export default function PhotoExif( {
         width: "100%",
         height: "100%",
         background,
-        boxSizing: "border-box",
-        padding: margin,
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        gap: stageGap
+        overflow: "hidden"
       } }
     >
-      { hasHeader
-        ? (
-          <div
-            className="px-header"
-            style={ {
-              display: "flex",
-              justifyContent: headerJustify,
-              alignItems: "flex-end",
-              gap: headerGap
-            } }
-          >
-            { titleEl }
-            { dateEl }
-          </div>
-        )
-        : null }
-
-      <div
-        style={ {
-          position: "relative",
-          flex: "1 1 auto",
-          minHeight: 0
-        } }
-      >
-        <div
-          className="px-frame"
-          style={ frameStyle }
-        >
-          { renderImage() }
-        </div>
-      </div>
-
-      { hasFooterBlock
-        ? (
-          <div
-            style={ {
-              display: "flex",
-              flexDirection: "column",
-              gap: 20 * unit
-            } }
-          >
-            { stripCells.length
-              ? (
-                <div
-                  className="px-strip"
-                  style={ {
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: `${ stripGapRow }px ${ stripGapCol }px`
-                  } }
-                >
-                  { stripCells }
-                </div>
-              )
-              : null }
-            { hasCaptionRow
-              ? (
-                <div
-                  style={ {
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "baseline",
-                    gap: headerGap
-                  } }
-                >
-                  { captionEl || <span /> }
-                  <div
-                    style={ {
-                      display: "flex",
-                      gap: headerGap
-                    } }
-                  >
-                    { filenameEl }
-                    { creditEl }
-                  </div>
-                </div>
-              )
-              : null }
-          </div>
-        )
-        : null }
+      { slides.map( (
+        slide, index
+      ) => renderSlide(
+        slide,
+        index
+      ) ) }
     </div>
   );
 }
