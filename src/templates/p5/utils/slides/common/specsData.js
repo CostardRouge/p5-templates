@@ -87,42 +87,64 @@ function flatten(
 
 /**
  * Build the list of { label, value } lines displayed by the specs overlay.
- * Reads the live options store (resolution, framerate, duration, slides) and,
- * optionally, flattens the current sketch settings (options.sketch, already
- * merged with per-slide overrides via the options proxy).
+ *
+ * `specsOption.content` selects which groups are listed:
+ *   - "general": render options only (resolution, framerate, duration, slides)
+ *   - "sketch": the flattened sketch settings only
+ *   - "general-and-sketch": both (default)
+ *
+ * Sketch settings come from options.sketch, already merged with per-slide
+ * overrides via the options proxy.
  */
 export default function buildSpecsLines( specsOption ) {
-  const size = options.size || {};
-  const animation = options.animation || {};
-  const slides = options.slides || [];
+  // Resolve content, falling back to the legacy includeSketchSettings boolean.
+  let content = specsOption?.content;
 
-  const framerate = animation.framerate || 0;
-  const duration = animation.duration || 0;
+  if ( content === undefined ) {
+    content =
+      specsOption?.includeSketchSettings === false
+        ? "general"
+        : "general-and-sketch";
+  }
 
-  const lines = [
-    {
-      label: "RESOLUTION",
-      value: `${ size.width || 0 }x${ size.height || 0 }`
-    },
-    {
-      label: "FRAMERATE",
-      value: `${ framerate } fps`
-    },
-    {
-      label: "DURATION",
-      value: `${ duration }s`
-    },
-    {
-      label: "FRAMES",
-      value: String( Math.round( duration * framerate ) )
-    },
-    {
-      label: "SLIDES",
-      value: String( slides.length || 1 )
-    }
-  ];
+  const includeGeneral = content !== "sketch";
+  const includeSketch = content !== "general";
 
-  if ( specsOption?.includeSketchSettings ) {
+  const lines = [];
+
+  if ( includeGeneral ) {
+    const size = options.size || {};
+    const animation = options.animation || {};
+    const slides = options.slides || [];
+
+    const framerate = animation.framerate || 0;
+    const duration = animation.duration || 0;
+
+    lines.push(
+      {
+        label: "RESOLUTION",
+        value: `${ size.width || 0 }x${ size.height || 0 }`
+      },
+      {
+        label: "FRAMERATE",
+        value: `${ framerate } fps`
+      },
+      {
+        label: "DURATION",
+        value: `${ duration }s`
+      },
+      {
+        label: "FRAMES",
+        value: String( Math.round( duration * framerate ) )
+      },
+      {
+        label: "SLIDES",
+        value: String( slides.length || 1 )
+      }
+    );
+  }
+
+  if ( includeSketch ) {
     flatten(
       options.sketch || {},
       "",

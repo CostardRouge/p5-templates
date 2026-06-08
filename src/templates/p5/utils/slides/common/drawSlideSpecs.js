@@ -78,9 +78,7 @@ export default function drawSlideSpecs( specsOption ) {
   const highlight = specsOption.highlight ?? {
     style: "invert",
     duration: 0.9,
-    background: specsOption.fill,
-    pastilleOffset: 0,
-    underlineOffset: 0
+    background: specsOption.fill
   };
   const heats =
     highlight.style && highlight.style !== "off"
@@ -171,48 +169,85 @@ export default function drawSlideSpecs( specsOption ) {
       );
     };
 
+    // Inverted-bar flash: a coloured bar behind the line with auto-contrasting
+    // text. Shared by the "invert" and "blink" styles.
+    const drawInvertedFlash = (
+      flashText, flashX, flashY, intensity
+    ) => {
+      const w = measureWidth( flashText );
+      const padX = size * 0.18;
+      const padTop = size * 0.15;
+      // Extra room below so descenders (g, p, y, ...) stay inside the bar.
+      const padBottom = size * 0.4;
+      const background = p.color( ...( highlight.background ?? specsOption.fill ) );
+      const bar = p.color(
+        p.red( background ),
+        p.green( background ),
+        p.blue( background )
+      );
+
+      bar.setAlpha( intensity * alpha );
+
+      p.push();
+      p.blendMode( p.BLEND );
+      p.noStroke();
+      p.fill( bar );
+      p.rect(
+        flashX - padX,
+        flashY - padTop,
+        w + padX * 2,
+        size + padTop + padBottom
+      );
+      p.pop();
+
+      // Text crossfades from its normal fill to whatever reads on the bar.
+      const txt = p.lerpColor(
+        accent(),
+        contrastOf( background ),
+        intensity
+      );
+
+      txt.setAlpha( alpha );
+      writeLine(
+        flashText,
+        flashX,
+        flashY,
+        txt
+      );
+    };
+
     switch ( highlight.style ) {
       case "invert": {
-        const w = measureWidth( text );
-        const padX = size * 0.18;
-        const padTop = size * 0.15;
-        // Extra room below so descenders (g, p, y, ...) stay inside the bar.
-        const padBottom = size * 0.4;
-        const background = p.color( ...( highlight.background ?? specsOption.fill ) );
-        const bar = p.color(
-          p.red( background ),
-          p.green( background ),
-          p.blue( background )
-        );
-
-        bar.setAlpha( heat * alpha );
-
-        p.push();
-        p.blendMode( p.BLEND );
-        p.noStroke();
-        p.fill( bar );
-        p.rect(
-          x - padX,
-          y - padTop,
-          w + padX * 2,
-          size + padTop + padBottom
-        );
-        p.pop();
-
-        // Text crossfades from its normal fill to whatever reads on the bar.
-        const txt = p.lerpColor(
-          accent(),
-          contrastOf( background ),
-          heat
-        );
-
-        txt.setAlpha( alpha );
-        writeLine(
+        drawInvertedFlash(
           text,
           x,
           y,
-          txt
+          heat
         );
+
+        return;
+      }
+
+      case "blink": {
+        // Square-wave flash on the real clock, so frequency is a true Hz value
+        // independent of the loop length (macOS menu-bar style).
+        const frequency = highlight.frequency ?? 6;
+        const on = ( performance.now() / 1000 * frequency ) % 1 < 0.5;
+
+        if ( on ) {
+          drawInvertedFlash(
+            text,
+            x,
+            y,
+            heat
+          );
+        } else {
+          writeLine(
+            text,
+            x,
+            y
+          );
+        }
 
         return;
       }

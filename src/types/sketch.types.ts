@@ -192,32 +192,61 @@ export const SpecsVisibilitySchema = z
     fadeEnd: 0.8
   } );
 
+// Each highlight style only carries the parameters it actually uses, so the UI
+// can show a dedicated set of controls per style (via a conditional group).
+const highlightDuration = z.number().positive()
+  .default( 0.9 );
+
 export const SpecsHighlightSchema = z
-  .object( {
-    style: z
-      .enum( [
-        "off",
-        "invert",
-        "pulse",
-        "pastille",
-        "underline"
-      ] )
-      .default( "invert" ),
-    // seconds the changed-line highlight takes to fade back to normal
-    duration: z.number().positive()
-      .default( 0.9 ),
-    // colour of the inverted bar behind a changed line ("invert" style); the
-    // text auto-contrasts against it so it stays readable for any text fill
-    background: RGBA.default( [
-      0,
-      255,
-      120
-    ] ),
-    // vertical offsets as a fraction of font size ( + = downwards ) to fine-tune
-    // placement that font metrics can't infer automatically
-    pastilleOffset: z.number().default( 0 ),
-    underlineOffset: z.number().default( 0 )
-  } )
+  .discriminatedUnion(
+    "style",
+    [
+      z.object( {
+        style: z.literal( "off" )
+      } ),
+      z.object( {
+        style: z.literal( "invert" ),
+        // seconds the highlight takes to fade back to normal
+        duration: highlightDuration,
+        // colour of the inverted bar; the text auto-contrasts against it so it
+        // stays readable for any text fill
+        background: RGBA.default( [
+          0,
+          255,
+          120
+        ] )
+      } ),
+      z.object( {
+        style: z.literal( "pulse" ),
+        duration: highlightDuration
+      } ),
+      z.object( {
+        style: z.literal( "pastille" ),
+        duration: highlightDuration,
+        // vertical offset as a fraction of font size ( + = downwards )
+        pastilleOffset: z.number().default( 0 )
+      } ),
+      z.object( {
+        style: z.literal( "underline" ),
+        duration: highlightDuration,
+        // vertical offset as a fraction of font size ( + = downwards ); a
+        // negative value walks the rule onto the glyphs for a strike-through
+        underlineOffset: z.number().default( 0 )
+      } ),
+      z.object( {
+        style: z.literal( "blink" ),
+        duration: highlightDuration,
+        // blinks per second (Hz) of the inverted-bar flash
+        frequency: z.number().positive()
+          .default( 6 ),
+        background: RGBA.default( [
+          0,
+          255,
+          120
+        ] )
+      } )
+    ]
+  )
   .default( {
     style: "invert",
     duration: 0.9,
@@ -225,9 +254,7 @@ export const SpecsHighlightSchema = z
       0,
       255,
       120
-    ],
-    pastilleOffset: 0,
-    underlineOffset: 0
+    ]
   } );
 
 export const SpecsItemSchema = z.object( {
@@ -252,7 +279,15 @@ export const SpecsItemSchema = z.object( {
   lineHeight: z.number().positive()
     .default( 1.4 ),
   showCursor: z.boolean().default( true ),
-  includeSketchSettings: z.boolean().default( true ),
+  // which parameter groups to list: the general render options, the sketch
+  // settings, or both
+  content: z
+    .enum( [
+      "general",
+      "general-and-sketch",
+      "sketch"
+    ] )
+    .default( "general-and-sketch" ),
   visibility: SpecsVisibilitySchema,
   highlight: SpecsHighlightSchema
 } );

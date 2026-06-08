@@ -8,6 +8,7 @@ import {
   ImageItemAnimations,
   ImagesStackAnimations,
   PatternSchema,
+  SpecsHighlightSchema,
   SpecsVisibilitySchema,
   VerticalAlign,
   VisualOptions
@@ -399,9 +400,23 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       label: "Blinking cursor",
       component: "checkbox"
     },
-    includeSketchSettings: {
-      label: "Include sketch settings",
-      component: "checkbox"
+    content: {
+      label: "Content",
+      component: "select",
+      options: [
+        {
+          value: "general",
+          label: "General options"
+        },
+        {
+          value: "general-and-sketch",
+          label: "General + sketch options"
+        },
+        {
+          value: "sketch",
+          label: "Sketch options"
+        }
+      ]
     },
     position: {
       label: "Position",
@@ -473,60 +488,118 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     highlight: {
       label: "Highlight on change",
-      component: "nested-object",
-      fields: {
-        style: {
-          label: "Effect",
-          component: "select",
-          options: [
-            {
-              value: "off",
-              label: "Off"
-            },
-            {
-              value: "invert",
-              label: "Inverted bar (NGE)"
-            },
-            {
-              value: "pulse",
-              label: "Pulse / glow"
-            },
-            {
-              value: "pastille",
-              label: "Pastille / marker"
-            },
-            {
-              value: "underline",
-              label: "Underline"
-            }
-          ]
+      component: "conditional-group",
+      conditionalOn: "style",
+      hideNone: true,
+      typeSelector: {
+        label: "Effect",
+        options: [
+          {
+            value: "off",
+            label: "Off"
+          },
+          {
+            value: "invert",
+            label: "Inverted bar (NGE)"
+          },
+          {
+            value: "pulse",
+            label: "Pulse / glow"
+          },
+          {
+            value: "pastille",
+            label: "Pastille / marker"
+          },
+          {
+            value: "underline",
+            label: "Underline"
+          },
+          {
+            value: "blink",
+            label: "Blink"
+          }
+        ]
+      },
+      configs: {
+        off: {},
+        invert: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          },
+          background: {
+            label: "Inverted bar color",
+            component: "color"
+          }
         },
-        duration: {
-          label: "Duration (s)",
-          component: "slider",
-          min: 0.1,
-          max: 5,
-          step: 0.1
+        pulse: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          }
         },
-        background: {
-          label: "Inverted bar color",
-          component: "color"
+        pastille: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          },
+          pastilleOffset: {
+            label: "Pastille offset",
+            component: "slider",
+            min: -1,
+            max: 1,
+            step: 0.01
+          }
         },
-        pastilleOffset: {
-          label: "Pastille offset",
-          component: "slider",
-          min: -1,
-          max: 1,
-          step: 0.01
+        underline: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          },
+          underlineOffset: {
+            label: "Underline offset",
+            component: "slider",
+            min: -1,
+            max: 1,
+            step: 0.01
+          }
         },
-        underlineOffset: {
-          label: "Underline offset",
-          component: "slider",
-          min: -1,
-          max: 1,
-          step: 0.01
+        blink: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          },
+          frequency: {
+            label: "Frequency (Hz)",
+            component: "slider",
+            min: 1,
+            max: 20,
+            step: 0.5
+          },
+          background: {
+            label: "Inverted bar color",
+            component: "color"
+          }
         }
-      }
+      },
+
+      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      schema: SpecsHighlightSchema
     }
   },
   text: {
