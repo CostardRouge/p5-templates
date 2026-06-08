@@ -232,8 +232,10 @@ export const SpecsHighlightSchema = z
       } ),
       z.object( {
         style: z.literal( "blink" ),
-        // blinks per second (Hz) of the inverted-bar flash. No fade and no
-        // duration: it flashes at full strength for the change window, then stops
+        // how long the changed line keeps blinking, at full strength (no fade)
+        duration: z.number().positive()
+          .default( 0.5 ),
+        // blinks per second (Hz) of the inverted-bar flash
         frequency: z.number().positive()
           .default( 6 ),
         background: RGBA.default( [

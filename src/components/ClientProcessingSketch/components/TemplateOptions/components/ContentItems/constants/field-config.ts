@@ -581,6 +581,13 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
           }
         },
         blink: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 3,
+            step: 0.1
+          },
           frequency: {
             label: "Frequency (Hz)",
             component: "slider",
