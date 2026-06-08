@@ -2420,8 +2420,116 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:37.753Z",
+    "mtime": "2026-06-08T05:05:13.743Z",
     "ctime": "2026-06-07T02:52:17.654Z"
+  },
+  {
+    "name": "grid-wave",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.744Z",
+    "ctime": "2026-06-08T05:05:13.743Z"
+  },
+  {
+    "name": "ken-burns-frame",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.747Z",
+    "ctime": "2026-06-08T05:05:13.744Z"
+  },
+  {
+    "name": "marquee-rows",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.749Z",
+    "ctime": "2026-06-08T05:05:13.747Z"
+  },
+  {
+    "name": "mosaic-morph",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.750Z",
+    "ctime": "2026-06-08T05:05:13.749Z"
+  },
+  {
+    "name": "orbit-ring",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.751Z",
+    "ctime": "2026-06-08T05:05:13.750Z"
+  },
+  {
+    "name": "slider-reveal",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.752Z",
+    "ctime": "2026-06-08T05:05:13.751Z"
+  },
+  {
+    "name": "split-columns",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.753Z",
+    "ctime": "2026-06-08T05:05:13.752Z"
+  },
+  {
+    "name": "stack-fan",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.755Z",
+    "ctime": "2026-06-08T05:05:13.753Z"
+  },
+  {
+    "name": "stack-peel",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:05:13.755Z",
+    "ctime": "2026-06-08T05:05:13.755Z"
   },
   {
     "name": "stack-shuffle",
@@ -2432,7 +2540,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:37.753Z",
+    "mtime": "2026-06-08T05:05:13.756Z",
     "ctime": "2026-06-07T02:52:17.656Z"
   },
   {
@@ -2444,7 +2552,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.936Z",
+    "mtime": "2026-06-08T05:05:13.760Z",
     "ctime": "2026-06-06T17:12:52.949Z"
   },
   {
@@ -2456,56 +2564,8 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.937Z",
+    "mtime": "2026-06-08T05:05:13.760Z",
     "ctime": "2026-06-06T17:12:52.962Z"
-  },
-  {
-    "name": "background-crosses",
-    "engine": "p5",
-    "category": "background",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.937Z",
-    "ctime": "2026-06-07T04:01:56.937Z"
-  },
-  {
-    "name": "background-dots",
-    "engine": "p5",
-    "category": "background",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.937Z",
-    "ctime": "2026-06-07T04:01:56.937Z"
-  },
-  {
-    "name": "background-grid",
-    "engine": "p5",
-    "category": "background",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.938Z",
-    "ctime": "2026-06-07T04:01:56.937Z"
-  },
-  {
-    "name": "background-lines",
-    "engine": "p5",
-    "category": "background",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.938Z",
-    "ctime": "2026-06-07T04:01:56.938Z"
   },
   {
     "name": "noise-grid-v1-basic",
@@ -2516,7 +2576,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.939Z",
+    "mtime": "2026-06-08T05:05:13.761Z",
     "ctime": "2026-06-06T17:12:52.987Z"
   },
   {
@@ -2528,7 +2588,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.939Z",
+    "mtime": "2026-06-08T05:05:13.762Z",
     "ctime": "2026-06-06T17:12:52.994Z"
   },
   {
@@ -2540,7 +2600,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.939Z",
+    "mtime": "2026-06-08T05:05:13.762Z",
     "ctime": "2026-06-06T17:12:52.996Z"
   },
   {
@@ -2552,7 +2612,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.940Z",
+    "mtime": "2026-06-08T05:05:13.763Z",
     "ctime": "2026-06-06T17:12:53.001Z"
   },
   {
@@ -2564,7 +2624,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.940Z",
+    "mtime": "2026-06-08T05:05:13.763Z",
     "ctime": "2026-06-06T17:12:53.002Z"
   },
   {
@@ -2576,7 +2636,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.941Z",
+    "mtime": "2026-06-08T05:05:13.764Z",
     "ctime": "2026-06-06T17:12:53.006Z"
   },
   {
@@ -2588,7 +2648,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.941Z",
+    "mtime": "2026-06-08T05:05:13.765Z",
     "ctime": "2026-06-06T17:12:53.007Z"
   },
   {
@@ -2600,7 +2660,7 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.942Z",
+    "mtime": "2026-06-08T05:05:13.765Z",
     "ctime": "2026-06-06T17:12:53.007Z"
   },
   {
@@ -2612,8 +2672,56 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-07T04:01:56.942Z",
+    "mtime": "2026-06-08T05:05:13.766Z",
     "ctime": "2026-06-06T17:12:53.008Z"
+  },
+  {
+    "name": "background-crosses",
+    "engine": "p5",
+    "category": "background",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:13:43.752Z",
+    "ctime": "2026-06-08T05:13:43.752Z"
+  },
+  {
+    "name": "background-dots",
+    "engine": "p5",
+    "category": "background",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:13:43.753Z",
+    "ctime": "2026-06-08T05:13:43.752Z"
+  },
+  {
+    "name": "background-grid",
+    "engine": "p5",
+    "category": "background",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:13:43.753Z",
+    "ctime": "2026-06-08T05:13:43.753Z"
+  },
+  {
+    "name": "background-lines",
+    "engine": "p5",
+    "category": "background",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-08T05:13:43.753Z",
+    "ctime": "2026-06-08T05:13:43.753Z"
   },
   {
     "name": "splines-v0-chaikin",
@@ -2624,8 +2732,8 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-08T03:14:17.069Z",
-    "ctime": "2026-06-07T04:01:37.755Z"
+    "mtime": "2026-06-08T05:13:43.758Z",
+    "ctime": "2026-06-08T05:13:43.758Z"
   },
   {
     "name": "splines-v1-interactive",
@@ -2636,7 +2744,7 @@
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-08T03:14:17.070Z",
-    "ctime": "2026-06-08T03:14:17.069Z"
+    "mtime": "2026-06-08T05:13:43.758Z",
+    "ctime": "2026-06-08T05:13:43.758Z"
   }
 ]

@@ -33,6 +33,15 @@ import runtime, {
 import GridCascade from "@/gsap/sketches/photo/grid-cascade/index.jsx";
 import Coverflow3d from "@/gsap/sketches/photo/coverflow-3d/index.jsx";
 import StackShuffle from "@/gsap/sketches/photo/stack-shuffle/index.jsx";
+import MarqueeRows from "@/gsap/sketches/photo/marquee-rows/index.jsx";
+import SplitColumns from "@/gsap/sketches/photo/split-columns/index.jsx";
+import GridWave from "@/gsap/sketches/photo/grid-wave/index.jsx";
+import MosaicMorph from "@/gsap/sketches/photo/mosaic-morph/index.jsx";
+import StackFan from "@/gsap/sketches/photo/stack-fan/index.jsx";
+import StackPeel from "@/gsap/sketches/photo/stack-peel/index.jsx";
+import OrbitRing from "@/gsap/sketches/photo/orbit-ring/index.jsx";
+import SliderReveal from "@/gsap/sketches/photo/slider-reveal/index.jsx";
+import KenBurnsFrame from "@/gsap/sketches/photo/ken-burns-frame/index.jsx";
 
 const DURATION = 6;
 
@@ -160,6 +169,48 @@ function snapshot( elements: Element[] ) {
   } );
 }
 
+/**
+ * Seamless check for continuously-scrolling tracks: the net travel over a loop
+ * must be a whole number of content copies (`data-loop-distance`), so the wrap
+ * is visually identical even though the transform string differs.
+ */
+function trackScrollSeamless(
+  selector: string,
+  axis: "x" | "y"
+) {
+  return (
+    stage: HTMLElement, tl: gsap.core.Timeline
+  ) => {
+    const tracks = Array.from( stage.querySelectorAll<HTMLElement>( selector ) );
+
+    expect( tracks.length ).toBeGreaterThan( 0 );
+
+    tracks.forEach( ( track ) => {
+      const distance = Number( track.dataset.loopDistance );
+
+      tl.time( tl.duration() );
+      const end = gsap.getProperty(
+        track,
+        axis
+      ) as number;
+
+      tl.time( 0 );
+      const start = gsap.getProperty(
+        track,
+        axis
+      ) as number;
+
+      const mod = ( ( ( end - start ) % distance ) + distance ) % distance;
+      const wrapDelta = Math.min(
+        mod,
+        distance - mod
+      );
+
+      expect( wrapDelta ).toBeLessThan( 0.5 );
+    } );
+  };
+}
+
 afterEach( () => {
   cleanup();
   document.body.innerHTML = "";
@@ -227,6 +278,120 @@ describe(
           maxCards: 5
         } ),
         selector: ".ss-card"
+      },
+      {
+        name: "marquee-rows",
+        Component: MarqueeRows,
+        options: baseOptions( {
+          rows: 3,
+          baseSpeed: 1,
+          speedStep: 1
+        } ),
+        selector: ".mr-track",
+        seamless: trackScrollSeamless(
+          ".mr-track",
+          "x"
+        )
+      },
+      {
+        name: "split-columns",
+        Component: SplitColumns,
+        options: baseOptions( {
+          columns: 3,
+          baseSpeed: 1,
+          speedStep: 1
+        } ),
+        selector: ".sc-track",
+        seamless: trackScrollSeamless(
+          ".sc-track",
+          "y"
+        )
+      },
+      {
+        name: "grid-wave",
+        Component: GridWave,
+        options: baseOptions( {
+          grid: {
+            rows: 3,
+            columns: 3
+          }
+        } ),
+        selector: ".gw-cell"
+      },
+      {
+        name: "mosaic-morph",
+        Component: MosaicMorph,
+        options: baseOptions( {
+          grid: {
+            rows: 3,
+            columns: 3
+          }
+        } ),
+        selector: ".mm-tile"
+      },
+      {
+        name: "stack-fan",
+        Component: StackFan,
+        options: baseOptions( {
+          maxCards: 5
+        } ),
+        selector: ".sf-card"
+      },
+      {
+        name: "stack-peel",
+        Component: StackPeel,
+        options: baseOptions( {
+          maxCards: 4
+        } ),
+        selector: ".sp-card"
+      },
+      {
+        name: "orbit-ring",
+        Component: OrbitRing,
+        options: baseOptions( {
+          count: 6
+        } ),
+        selector: ".or-ring",
+        seamless: (
+          stage, tl
+        ) => {
+          const ring = stage.querySelector( ".or-ring" ) as HTMLElement;
+
+          tl.time( tl.duration() * 0.5 );
+          const midRotation = gsap.getProperty(
+            ring,
+            "rotation"
+          ) as number;
+
+          tl.time( tl.duration() );
+          const endRotation = gsap.getProperty(
+            ring,
+            "rotation"
+          ) as number;
+
+          expect( Math.abs( midRotation ) ).toBeGreaterThan( 0 );
+          expect( ( ( endRotation % 360 ) + 360 ) % 360 ).toBeCloseTo(
+            0,
+            3
+          );
+        }
+      },
+      {
+        name: "slider-reveal",
+        Component: SliderReveal,
+        options: baseOptions( {
+          maxSlides: 6,
+          transition: "fade"
+        } ),
+        selector: ".sr-slide"
+      },
+      {
+        name: "ken-burns-frame",
+        Component: KenBurnsFrame,
+        options: baseOptions( {
+          caption: "Hello"
+        } ),
+        selector: ".kb-image"
       }
     ];
 
@@ -268,8 +433,9 @@ describe(
         expect( targets.length ).toBeGreaterThan( 0 );
 
         // Render mid first, then start: GSAP only flushes styles when the
-        // playhead time actually changes, so going 0.5 → 0 forces both renders.
-        tl.time( DURATION * 0.5 );
+        // playhead time actually changes, so going mid → 0 forces both renders.
+        // 0.3 (rather than 0.5) avoids sampling a sine wave exactly on a node.
+        tl.time( DURATION * 0.3 );
         const atMid = snapshot( targets );
 
         tl.time( 0 );

@@ -41,14 +41,40 @@ export function EngineControls( ) {
   const isDev = process.env.NODE_ENV === "development";
   const singleClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
 
-  const downloadCanvasAsPng = () => {
-    const canvas = engine?.getCanvas();
+  /**
+   * Grab the current frame as a PNG data-URL. Uses the engine's capture source
+   * so DOM engines (GSAP/HTML) re-rasterise the live DOM on demand — the mirror
+   * canvas returned by `getCanvas()` is only refreshed on redraw, so reading it
+   * straight during playback yields a stale (or blank/transparent) frame.
+   */
+  const captureFreshPng = async(): Promise<string | null> => {
+    if ( !engine ) {
+      return null;
+    }
 
-    if ( canvas ) {
+    try {
+      const frame = await engine.getCaptureSource().readFrame();
+
+      if ( frame instanceof HTMLCanvasElement ) {
+        return frame.toDataURL( "image/png" );
+      }
+    } catch {
+      // Fall through to the live canvas below.
+    }
+
+    const canvas = engine.getCanvas();
+
+    return canvas ? canvas.toDataURL( "image/png" ) : null;
+  };
+
+  const downloadCanvasAsPng = async() => {
+    const dataUrl = await captureFreshPng();
+
+    if ( dataUrl ) {
       const link = document.createElement( "a" );
 
       link.download = `${ name }.png`;
-      link.href = canvas.toDataURL( "image/png" );
+      link.href = dataUrl;
       link.click();
     }
   };
@@ -88,23 +114,16 @@ export function EngineControls( ) {
       return;
     }
 
-    const canvas = engine?.getCanvas();
-
-    if ( !canvas ) {
-      setThumbnailErrorMessage( "No canvas found" );
-      setThumbnailSaveState( "error" );
-      setTimeout(
-        () => setThumbnailSaveState( "idle" ),
-        3000
-      );
-      return;
-    }
-
     setThumbnailSaveState( "saving" );
     setThumbnailErrorMessage( null );
 
     try {
-      const dataUrl = canvas.toDataURL( "image/png" );
+      const dataUrl = await captureFreshPng();
+
+      if ( !dataUrl ) {
+        throw new Error( "No canvas found" );
+      }
+
       const res = await fetch(
         "/api/dev/thumbnails/save-from-canvas",
         {

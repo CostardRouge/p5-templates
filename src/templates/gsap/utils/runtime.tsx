@@ -33,6 +33,9 @@ import {
 import {
   getSketchOptions, setSketchOptions, subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
+import {
+  toCssColor
+} from "./dom";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -195,6 +198,12 @@ class GsapRuntime {
     await new Promise<void>( ( resolve ) =>
       requestAnimationFrame( () => requestAnimationFrame( () => resolve() ) ) );
 
+    // Wait for the template's images to finish loading before we report ready /
+    // prime the mirror. Otherwise the first capture (and the headless recorder,
+    // which waits on `data-engine-ready`) can grab a frame with half-loaded or
+    // missing photos. Capped so a stuck asset never blocks startup forever.
+    await this.waitForImages( 5000 );
+
     this.scrub();
 
     // Prime the mirror canvas so `getCanvas()` (e.g. the save-frame button)
@@ -205,6 +214,49 @@ class GsapRuntime {
     // expects the engine to be animating already (p5 auto-loops on creation).
     // The headless recorder calls `prepare()` first, which pauses this loop.
     this.play();
+  }
+
+  /** Resolve once every `<img>` in the stage has loaded (or `timeoutMs` lapses). */
+  private async waitForImages( timeoutMs: number ): Promise<void> {
+    const stage = this.stage;
+
+    if ( !stage ) {
+      return;
+    }
+
+    const images = Array.from( stage.querySelectorAll( "img" ) );
+    const pending = images
+      .filter( ( img ) => !( img.complete && img.naturalWidth > 0 ) )
+      .map( ( img ) => new Promise<void>( ( resolve ) => {
+        const done = () => resolve();
+
+        img.addEventListener(
+          "load",
+          done,
+          {
+            once: true
+          }
+        );
+        img.addEventListener(
+          "error",
+          done,
+          {
+            once: true
+          }
+        );
+      } ) );
+
+    if ( pending.length === 0 ) {
+      return;
+    }
+
+    await Promise.race( [
+      Promise.all( pending ),
+      new Promise<void>( ( resolve ) => setTimeout(
+        resolve,
+        timeoutMs
+      ) )
+    ] );
   }
 
   private currentComponent:
@@ -263,6 +315,16 @@ class GsapRuntime {
     stage.style.width = `${ width }px`;
     stage.style.height = `${ height }px`;
     stage.style.overflow = "hidden";
+
+    // Give the capture surface itself an opaque background derived from the
+    // sketch. Templates paint their own background on top, so this is invisible
+    // in normal display — but it guarantees the headless DOM capture
+    // (Playwright `element.screenshot`, which preserves alpha) is never
+    // transparent, even before the template has committed its first frame.
+    stage.style.background = toCssColor(
+      this.options?.sketch?.backgroundColor,
+      "#0a0a0c"
+    );
   }
 
   reset(): void {
