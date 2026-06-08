@@ -190,6 +190,7 @@ sketch.draw( ( time ) => {
     SpiralClass: Spiral
   } );
 
+  p.clear();
   p.background( ...( options.sketch?.background?.color ?? [
     0
   ] ) );

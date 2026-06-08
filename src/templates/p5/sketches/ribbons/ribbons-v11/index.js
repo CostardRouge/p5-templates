@@ -34,6 +34,7 @@ sketch.draw( ( time ) => {
   const o = options.sketch ?? {};
   const buffer = sketchState.pixilatedCanvas;
 
+  p.clear();
   p.background( ...( o.backgroundColor ?? [
     0,
     0,

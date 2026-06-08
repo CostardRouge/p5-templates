@@ -8,6 +8,7 @@ import neonGraffiti from "@/p5/utils/visuals/neonGraffiti.js";
 sketch.draw( ( _time ) => {
   const p = getP5();
 
+  p.clear();
   p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );

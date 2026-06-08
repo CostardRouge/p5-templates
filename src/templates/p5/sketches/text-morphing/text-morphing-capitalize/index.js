@@ -122,6 +122,7 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
+  p.clear();
   p.background( 0 );
 
   const W = p.width / 2;

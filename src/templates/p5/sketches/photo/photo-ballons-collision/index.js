@@ -251,6 +251,7 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
+  p.clear();
   p.background( ...getBg() );
 
   // if (p.frameCount === 1) {

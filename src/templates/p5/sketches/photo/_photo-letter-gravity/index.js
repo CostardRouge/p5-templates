@@ -228,6 +228,7 @@ sketch.draw( (
 ) => {
   const p = getP5();
 
+  p.clear();
   p.background( ...options.colors.background );
 
   Engine.update( matter.engine );

@@ -56,6 +56,8 @@ sketch.draw( async(
 ) => {
   const p = getP5();
 
+  p.clear();
+
   if ( options.sketch?.variableBackgroundColor ) {
     const backgroundColor = p.lerpColor(
       p.color( ...getBg() ),

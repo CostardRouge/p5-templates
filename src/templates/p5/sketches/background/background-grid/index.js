@@ -10,6 +10,7 @@ sketch.draw( () => {
   const p = getP5();
   const cfg = options.sketch ?? {};
 
+  p.clear();
   p.background( ...( cfg.backgroundColor ?? [
     0,
     0,

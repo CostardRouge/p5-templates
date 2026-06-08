@@ -37,6 +37,7 @@ sketch.setup( () => {
 sketch.draw( async( time ) => {
   const p = getP5();
 
+  p.clear();
   p.background( ...getBg() );
 
   // Controls

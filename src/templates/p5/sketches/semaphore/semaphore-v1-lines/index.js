@@ -163,6 +163,7 @@ sketch.draw( ( time ) => {
     0
   ];
 
+  p.clear();
   p.background( ...bg );
 
   sketchState.shapes.forEach( (

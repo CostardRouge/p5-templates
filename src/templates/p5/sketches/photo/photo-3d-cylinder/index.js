@@ -58,6 +58,8 @@ sketch.draw( async(
   const cylinderConfig = options.sketch?.cylinder ?? {};
   const animationConfig = options.sketch?.animation ?? {};
 
+  p.clear();
+
   if ( animationConfig.variableBackgroundColor ) {
     const backgroundColor = p.lerpColor(
       p.color( ...getBg() ),

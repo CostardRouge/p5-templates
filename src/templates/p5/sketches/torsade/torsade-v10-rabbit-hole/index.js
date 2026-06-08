@@ -182,6 +182,7 @@ sketch.draw( ( time ) => {
   const p = getP5();
 
   rebuildShapes();
+  p.clear();
   p.background( ...( options.sketch?.backgroundColor ?? [
     0
   ] ) );

@@ -179,6 +179,7 @@ sketch.draw( ( time ) => {
     SpiralClass: GroundLine
   } );
 
+  p.clear();
   p.background( ...( options.sketch?.background?.color ?? [
     0
   ] ) );

@@ -225,6 +225,7 @@ sketch.draw( ( time ) => {
 
   rebuildShapes();
 
+  p.clear();
   p.background( ...( options.sketch?.backgroundColor ?? [
     0
   ] ) );

@@ -149,6 +149,7 @@ sketch.draw( ( time ) => {
   } );
 
   p.noStroke();
+  p.clear();
   p.background( ...( options.sketch?.backgroundColor ?? [
     0
   ] ) );

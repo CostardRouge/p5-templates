@@ -25,6 +25,7 @@ const getBackgroundColor = () =>
 sketch.draw( () => {
   const p = getP5();
 
+  p.clear();
   p.background( ...getBackgroundColor() );
   p.noFill();
 

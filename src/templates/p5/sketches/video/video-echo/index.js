@@ -152,6 +152,7 @@ sketch.draw( () => {
     trail.pop();
   }
 
+  p.clear();
   p.background( ...( cfg.backgroundColor ?? [
     10,
     10,

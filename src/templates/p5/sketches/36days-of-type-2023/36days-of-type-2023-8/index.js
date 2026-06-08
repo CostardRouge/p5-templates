@@ -108,6 +108,7 @@ const getBackgroundColor = () =>
 sketch.draw( async() => {
   const p = getP5();
 
+  p.clear();
   p.background( ...getBackgroundColor() );
 
   const size = options.sketch?.shape?.size * p.width ?? p.width;

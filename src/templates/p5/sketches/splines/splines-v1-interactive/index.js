@@ -141,6 +141,7 @@ sketch.draw( () => {
   const mode = o.mode ?? {};
   const modeType = mode.type ?? "live";
 
+  p.clear();
   p.background( ...( o.backgroundColor ?? [
     0,
     0,
