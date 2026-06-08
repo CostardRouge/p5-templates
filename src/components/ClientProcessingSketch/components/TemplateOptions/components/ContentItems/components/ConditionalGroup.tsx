@@ -172,7 +172,9 @@ export default function ConditionalGroup( {
             onChange={ handleTypeChange }
             className={ selectClassName }
           >
-            <option value="">{config.typeSelector.noneLabel || "--"}</option>
+            {!config.hideNone && (
+              <option value="">{config.typeSelector.noneLabel || "--"}</option>
+            )}
 
             {config.typeSelector.options.map( ( option ) => (
               <option key={ option.value } value={ option.value }>

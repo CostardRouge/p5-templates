@@ -8,6 +8,7 @@ import {
   ImageItemAnimations,
   ImagesStackAnimations,
   PatternSchema,
+  SpecsVisibilitySchema,
   VerticalAlign,
   VisualOptions
 } from "@/types/sketch.types";
@@ -91,6 +92,9 @@ export interface ConditionalGroupConfig extends BaseConfig {
   configs: Record<string, Record<string, FieldConfig>>;
   // The Zod schema is crucial for creating default objects when the type changes
   schema: ZodDiscriminatedUnion<any, any> | ZodObject<any>;
+  // When true, omit the empty "--" (None) option from the selector. Use it for
+  // required discriminators that should always resolve to a concrete variant.
+  hideNone?: boolean;
 }
 
 type Scope =
@@ -419,26 +423,92 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         }
       }
     },
-    revealEnd: {
-      label: "Reveal end",
-      component: "slider",
-      min: 0,
-      max: 1,
-      step: 0.01
+    visibility: {
+      label: "Visibility",
+      component: "conditional-group",
+      conditionalOn: "mode",
+      hideNone: true,
+      typeSelector: {
+        label: "Mode",
+        options: [
+          {
+            value: "fade",
+            label: "Fade (boot + disappear)"
+          },
+          {
+            value: "permanent",
+            label: "Permanent"
+          }
+        ]
+      },
+      configs: {
+        fade: {
+          revealEnd: {
+            label: "Reveal end",
+            component: "slider",
+            min: 0,
+            max: 1,
+            step: 0.01
+          },
+          holdEnd: {
+            label: "Hold end",
+            component: "slider",
+            min: 0,
+            max: 1,
+            step: 0.01
+          },
+          fadeEnd: {
+            label: "Fade end",
+            component: "slider",
+            min: 0,
+            max: 1,
+            step: 0.01
+          }
+        },
+        permanent: {}
+      },
+
+      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      schema: SpecsVisibilitySchema
     },
-    holdEnd: {
-      label: "Hold end",
-      component: "slider",
-      min: 0,
-      max: 1,
-      step: 0.01
-    },
-    fadeEnd: {
-      label: "Fade end",
-      component: "slider",
-      min: 0,
-      max: 1,
-      step: 0.01
+    highlight: {
+      label: "Highlight on change",
+      component: "nested-object",
+      fields: {
+        style: {
+          label: "Effect",
+          component: "select",
+          options: [
+            {
+              value: "off",
+              label: "Off"
+            },
+            {
+              value: "invert",
+              label: "Inverted bar (NGE)"
+            },
+            {
+              value: "pulse",
+              label: "Pulse / glow"
+            },
+            {
+              value: "pastille",
+              label: "Pastille / marker"
+            },
+            {
+              value: "underline",
+              label: "Underline"
+            }
+          ]
+        },
+        duration: {
+          label: "Duration (s)",
+          component: "slider",
+          min: 0.1,
+          max: 5,
+          step: 0.1
+        }
+      }
     }
   },
   text: {

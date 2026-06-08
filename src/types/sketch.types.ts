@@ -163,6 +163,55 @@ export const MetaItemSchema = z.object( {
     } )
 } );
 
+export const SpecsVisibilitySchema = z
+  .discriminatedUnion(
+    "mode",
+    [
+      z.object( {
+        mode: z.literal( "fade" ),
+        // timing as a fraction of the animation loop (0..1)
+        revealEnd: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.45 ),
+        holdEnd: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.7 ),
+        fadeEnd: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.8 )
+      } ),
+      z.object( {
+        mode: z.literal( "permanent" )
+      } )
+    ]
+  )
+  .default( {
+    mode: "fade",
+    revealEnd: 0.45,
+    holdEnd: 0.7,
+    fadeEnd: 0.8
+  } );
+
+export const SpecsHighlightSchema = z
+  .object( {
+    style: z
+      .enum( [
+        "off",
+        "invert",
+        "pulse",
+        "pastille",
+        "underline"
+      ] )
+      .default( "invert" ),
+    // seconds the changed-line highlight takes to fade back to normal
+    duration: z.number().positive()
+      .default( 0.9 )
+  } )
+  .default( {
+    style: "invert",
+    duration: 0.9
+  } );
+
 export const SpecsItemSchema = z.object( {
   type: z.literal( "specs" ),
   style: z.enum( [
@@ -186,16 +235,8 @@ export const SpecsItemSchema = z.object( {
     .default( 1.4 ),
   showCursor: z.boolean().default( true ),
   includeSketchSettings: z.boolean().default( true ),
-  // timing as a fraction of the animation loop (0..1)
-  revealEnd: z.number().min( 0 )
-    .max( 1 )
-    .default( 0.45 ),
-  holdEnd: z.number().min( 0 )
-    .max( 1 )
-    .default( 0.7 ),
-  fadeEnd: z.number().min( 0 )
-    .max( 1 )
-    .default( 0.8 )
+  visibility: SpecsVisibilitySchema,
+  highlight: SpecsHighlightSchema
 } );
 
 export const TextItemSchema = z.object( {
