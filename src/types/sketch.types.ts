@@ -163,6 +163,99 @@ export const MetaItemSchema = z.object( {
     } )
 } );
 
+export const SpecsVisibilitySchema = z
+  .discriminatedUnion(
+    "mode",
+    [
+      z.object( {
+        mode: z.literal( "fade" ),
+        // timing as a fraction of the animation loop (0..1)
+        revealEnd: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.45 ),
+        holdEnd: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.7 ),
+        fadeEnd: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.8 )
+      } ),
+      z.object( {
+        mode: z.literal( "permanent" )
+      } )
+    ]
+  )
+  .default( {
+    mode: "permanent"
+  } );
+
+// Each highlight style only carries the parameters it actually uses, so the UI
+// can show a dedicated set of controls per style (via a conditional group).
+const highlightDuration = z.number().positive()
+  .default( 0.9 );
+
+export const SpecsHighlightSchema = z
+  .discriminatedUnion(
+    "style",
+    [
+      z.object( {
+        style: z.literal( "off" )
+      } ),
+      z.object( {
+        style: z.literal( "invert" ),
+        // seconds the highlight takes to fade back to normal
+        duration: highlightDuration,
+        // colour of the inverted bar; the text auto-contrasts against it so it
+        // stays readable for any text fill
+        background: RGBA.default( [
+          0,
+          255,
+          120
+        ] )
+      } ),
+      z.object( {
+        style: z.literal( "pulse" ),
+        duration: highlightDuration
+      } ),
+      z.object( {
+        style: z.literal( "pastille" ),
+        duration: highlightDuration,
+        // vertical offset as a fraction of font size ( + = downwards )
+        pastilleOffset: z.number().default( 0 )
+      } ),
+      z.object( {
+        style: z.literal( "underline" ),
+        duration: highlightDuration,
+        // vertical offset as a fraction of font size ( + = downwards ); a
+        // negative value walks the rule onto the glyphs for a strike-through
+        underlineOffset: z.number().default( 0 )
+      } ),
+      z.object( {
+        style: z.literal( "blink" ),
+        // how long the changed line keeps blinking, at full strength (no fade)
+        duration: z.number().positive()
+          .default( 0.5 ),
+        // blinks per second (Hz) of the inverted-bar flash
+        frequency: z.number().positive()
+          .default( 6 ),
+        background: RGBA.default( [
+          0,
+          255,
+          120
+        ] )
+      } )
+    ]
+  )
+  .default( {
+    style: "invert",
+    duration: 0.9,
+    background: [
+      0,
+      255,
+      120
+    ]
+  } );
+
 export const SpecsItemSchema = z.object( {
   type: z.literal( "specs" ),
   style: z.enum( [
@@ -185,17 +278,42 @@ export const SpecsItemSchema = z.object( {
   lineHeight: z.number().positive()
     .default( 1.4 ),
   showCursor: z.boolean().default( true ),
-  includeSketchSettings: z.boolean().default( true ),
-  // timing as a fraction of the animation loop (0..1)
-  revealEnd: z.number().min( 0 )
-    .max( 1 )
-    .default( 0.45 ),
-  holdEnd: z.number().min( 0 )
-    .max( 1 )
-    .default( 0.7 ),
-  fadeEnd: z.number().min( 0 )
-    .max( 1 )
-    .default( 0.8 )
+  // which parameter groups to list, ticked in any combination. Preprocess keeps
+  // older items working: the previous single-enum selector and the original
+  // includeSketchSettings boolean both map onto the new string array.
+  content: z
+    .preprocess(
+      ( value ) => {
+        if ( Array.isArray( value ) ) {
+          return value;
+        }
+
+        if ( value === "general" || value === "sketch" ) {
+          return [
+            value
+          ];
+        }
+
+        if ( value === "general-and-sketch" ) {
+          return [
+            "general",
+            "sketch"
+          ];
+        }
+
+        return undefined; // fall through to .default
+      },
+      z.array( z.enum( [
+        "general",
+        "sketch"
+      ] ) )
+    )
+    .default( [
+      "general",
+      "sketch"
+    ] ),
+  visibility: SpecsVisibilitySchema,
+  highlight: SpecsHighlightSchema
 } );
 
 export const TextItemSchema = z.object( {

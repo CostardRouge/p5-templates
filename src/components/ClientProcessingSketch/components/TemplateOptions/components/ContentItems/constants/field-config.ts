@@ -8,6 +8,8 @@ import {
   ImageItemAnimations,
   ImagesStackAnimations,
   PatternSchema,
+  SpecsHighlightSchema,
+  SpecsVisibilitySchema,
   VerticalAlign,
   VisualOptions
 } from "@/types/sketch.types";
@@ -70,6 +72,13 @@ interface SelectConfig extends BaseConfig {
   options: SelectOption[];
 }
 
+// For 'multi-select' inputs: a checkbox list bound to a string[] value, letting
+// the user tick any combination of the options.
+interface MultiSelectConfig extends BaseConfig {
+  component: "multi-select";
+  options: SelectOption[];
+}
+
 // For static, non-conditional nested objects
 export interface NestedObjectConfig extends BaseConfig {
   component: "nested-object";
@@ -91,6 +100,9 @@ export interface ConditionalGroupConfig extends BaseConfig {
   configs: Record<string, Record<string, FieldConfig>>;
   // The Zod schema is crucial for creating default objects when the type changes
   schema: ZodDiscriminatedUnion<any, any> | ZodObject<any>;
+  // When true, omit the empty "--" (None) option from the selector. Use it for
+  // required discriminators that should always resolve to a concrete variant.
+  hideNone?: boolean;
 }
 
 type Scope =
@@ -168,6 +180,7 @@ export type FieldConfig =
   | NumberInputConfig
   | ColorInputConfig
   | SelectConfig
+  | MultiSelectConfig
   | NestedObjectConfig
   | ConditionalGroupConfig
   | ImagesStackConfig
@@ -395,9 +408,19 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       label: "Blinking cursor",
       component: "checkbox"
     },
-    includeSketchSettings: {
-      label: "Include sketch settings",
-      component: "checkbox"
+    content: {
+      label: "Content",
+      component: "multi-select",
+      options: [
+        {
+          value: "general",
+          label: "General options"
+        },
+        {
+          value: "sketch",
+          label: "Sketch options"
+        }
+      ]
     },
     position: {
       label: "Position",
@@ -419,26 +442,168 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         }
       }
     },
-    revealEnd: {
-      label: "Reveal end",
-      component: "slider",
-      min: 0,
-      max: 1,
-      step: 0.01
+    visibility: {
+      label: "Visibility",
+      component: "conditional-group",
+      conditionalOn: "mode",
+      hideNone: true,
+      typeSelector: {
+        label: "Mode",
+        options: [
+          {
+            value: "fade",
+            label: "Fade (boot + disappear)"
+          },
+          {
+            value: "permanent",
+            label: "Permanent"
+          }
+        ]
+      },
+      configs: {
+        fade: {
+          revealEnd: {
+            label: "Reveal end",
+            component: "slider",
+            min: 0,
+            max: 1,
+            step: 0.01
+          },
+          holdEnd: {
+            label: "Hold end",
+            component: "slider",
+            min: 0,
+            max: 1,
+            step: 0.01
+          },
+          fadeEnd: {
+            label: "Fade end",
+            component: "slider",
+            min: 0,
+            max: 1,
+            step: 0.01
+          }
+        },
+        permanent: {}
+      },
+
+      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      schema: SpecsVisibilitySchema
     },
-    holdEnd: {
-      label: "Hold end",
-      component: "slider",
-      min: 0,
-      max: 1,
-      step: 0.01
-    },
-    fadeEnd: {
-      label: "Fade end",
-      component: "slider",
-      min: 0,
-      max: 1,
-      step: 0.01
+    highlight: {
+      label: "Highlight on change",
+      component: "conditional-group",
+      conditionalOn: "style",
+      hideNone: true,
+      typeSelector: {
+        label: "Effect",
+        options: [
+          {
+            value: "off",
+            label: "Off"
+          },
+          {
+            value: "invert",
+            label: "Inverted bar (NGE)"
+          },
+          {
+            value: "pulse",
+            label: "Pulse / glow"
+          },
+          {
+            value: "pastille",
+            label: "Pastille / marker"
+          },
+          {
+            value: "underline",
+            label: "Underline"
+          },
+          {
+            value: "blink",
+            label: "Blink"
+          }
+        ]
+      },
+      configs: {
+        off: {},
+        invert: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          },
+          background: {
+            label: "Inverted bar color",
+            component: "color"
+          }
+        },
+        pulse: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          }
+        },
+        pastille: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          },
+          pastilleOffset: {
+            label: "Pastille offset",
+            component: "slider",
+            min: -1,
+            max: 1,
+            step: 0.01
+          }
+        },
+        underline: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 5,
+            step: 0.1
+          },
+          underlineOffset: {
+            label: "Underline offset",
+            component: "slider",
+            min: -1,
+            max: 1,
+            step: 0.01
+          }
+        },
+        blink: {
+          duration: {
+            label: "Duration (s)",
+            component: "slider",
+            min: 0.1,
+            max: 3,
+            step: 0.1
+          },
+          frequency: {
+            label: "Frequency (Hz)",
+            component: "slider",
+            min: 1,
+            max: 20,
+            step: 0.5
+          },
+          background: {
+            label: "Inverted bar color",
+            component: "color"
+          }
+        }
+      },
+
+      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      schema: SpecsHighlightSchema
     }
   },
   text: {
