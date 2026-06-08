@@ -20,6 +20,8 @@ import ControlledSizePresetSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSizePresetSelect/ControlledSizePresetSelect";
 import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
+import ControlledVector2DInput
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledVector2DInput/ControlledVector2DInput";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import type {
@@ -395,6 +397,14 @@ export default function FieldRenderer( {
 
       case "easing":
         return <ControlledEasingInput name={ registeredName } />;
+
+      case "vector2d":
+        return (
+          <ControlledVector2DInput
+            name={ registeredName }
+            config={ config }
+          />
+        );
 
       default:
         return (
