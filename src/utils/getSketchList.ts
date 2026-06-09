@@ -14,7 +14,8 @@ async function getSketchList() {
       hasSketchForm,
       hasPreview,
       hiddenFromHome,
-      hiddenFromTemplates
+      hiddenFromTemplates,
+      ctime
     } ) => ( {
       name,
       engine,
@@ -22,7 +23,8 @@ async function getSketchList() {
       hasSketchForm,
       hasPreview: hasPreview ?? false,
       hiddenFromHome: hiddenFromHome ?? false,
-      hiddenFromTemplates: hiddenFromTemplates ?? false
+      hiddenFromTemplates: hiddenFromTemplates ?? false,
+      ctime
     } ) );
   } catch( err ) {
     console.error(

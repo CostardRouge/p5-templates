@@ -54,7 +54,8 @@ export default async function Home() {
     <>
       <BreadcrumbJsonLd items={ breadcrumbItems } />
       <HomePage
-        templates={ homeTemplates }
+        templates={ galleryTemplates }
+        showcaseTemplates={ homeTemplates }
         engineLabels={ engineLabels }
         totalTemplates={ galleryTemplates.length }
       />

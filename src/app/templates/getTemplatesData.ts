@@ -8,6 +8,7 @@ import getSketchList from "@/utils/getSketchList";
 export type TemplateItem = {
   href: string;
   name: string;
+  engine: string;
   thumbnail: string;
   preview: string | null;
   previewMd: string | null;
@@ -15,6 +16,9 @@ export type TemplateItem = {
   category?: string | null;
   hiddenFromHome?: boolean;
   hiddenFromTemplates?: boolean;
+  // ISO creation date from the sketch registry — lets the home page
+  // surface the most recently added templates.
+  ctime: string;
 };
 
 export async function getTemplatesData() {
@@ -32,7 +36,8 @@ export async function getTemplatesData() {
       hasSketchForm,
       hasPreview,
       hiddenFromHome,
-      hiddenFromTemplates
+      hiddenFromTemplates,
+      ctime
     } ) => {
       if ( !templatesByEngine[ engine ] ) {
         templatesByEngine[ engine ] = [];
@@ -57,9 +62,11 @@ export async function getTemplatesData() {
           : `/templates/${ engine }/${ name }`,
         hasSketchForm,
         name,
+        engine,
         category,
         hiddenFromHome,
-        hiddenFromTemplates
+        hiddenFromTemplates,
+        ctime
       } );
     } );
 
