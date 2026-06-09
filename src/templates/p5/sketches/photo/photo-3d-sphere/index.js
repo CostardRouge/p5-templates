@@ -1,13 +1,12 @@
 import options from "@/p5/utils/options.js";
 import cache from "@/p5/utils/cache.js";
 import easing from "@/p5/utils/easing.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
-import {
-  getP5
-} from "@/p5/utils/sketch.js";
 
 /* ------------------------------------------------------------------ */
 /*  Photo sphere carousel                                             */

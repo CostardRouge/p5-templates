@@ -11,7 +11,7 @@ export const formValues = {
   layout: {
     distribution: "sphere",
     faceCount: 0,
-    sphereRadius: 600,
+    sphereRadius: 920,
     photoSize: 0.82,
     photoShape: "auto",
     zoom: -1200
@@ -26,15 +26,16 @@ export const formValues = {
 
   // Look & feel
   style: {
-    focusDim: 0.55,
-    hideBackFaces: true,
-    photoFrame: false,
+    focusDim: 0.65,
+    hideBackFaces: false,
+    photoFrame: true,
     frameColor: [
+      255,
       255,
       255,
       255
     ],
-    frameThickness: 0.06,
+    frameThickness: 0.03,
     backgroundColor: [
       8,
       8,
