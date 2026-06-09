@@ -1,6 +1,25 @@
+import {
+  getTestVideoPath
+} from "@/utils/getTestVideoPaths";
+
 // Default values only
 export const formValues = {
-  videos: [],
+  videos: [
+    {
+      id: "test-photos-zoom",
+      path: await getTestVideoPath( "photos-zoom" ),
+      params: {
+        repeat: 1,
+        speed: 1,
+        offset: 0,
+        loopMode: "loop",
+        scale: 1,
+        posX: 0,
+        posY: 0,
+        fit: "cover"
+      }
+    }
+  ],
 
   cellSize: 12,
   glyph: "dot",

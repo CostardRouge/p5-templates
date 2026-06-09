@@ -1,13 +1,16 @@
 import {
   blendSelectOptions
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import {
+  getTestVideoPath
+} from "@/utils/getTestVideoPaths";
 
 // Default values only
 export const formValues = {
   videos: [
     {
-      id: "a_mq0fm1wm_64iow7",
-      path: "global/videos/DJI_20260530003110_0157_D_lut_20260530.mp4",
+      id: "test-shapes-orbit",
+      path: await getTestVideoPath( "shapes-orbit" ),
       params: {
         repeat: 1,
         speed: 1,

@@ -1,9 +1,26 @@
+import getTestVideoPaths from "@/utils/getTestVideoPaths";
+
 // Default values only
 export const formValues = {
   // Assets — each entry is { id, path, params: { repeat, speed, offset,
   // loopMode, scale, posX, posY, fit } }. In the grid, each video's
   // scale / position / fit apply *within its own cell*.
-  videos: [],
+  videos: ( await getTestVideoPaths() ).map( (
+    path, index
+  ) => ( {
+    id: `test-grid-${ index }`,
+    path,
+    params: {
+      repeat: 1,
+      speed: 1,
+      offset: 0,
+      loopMode: "loop",
+      scale: 1,
+      posX: 0,
+      posY: 0,
+      fit: "cover"
+    }
+  } ) ),
 
   // Grid layout
   autoColumns: false,

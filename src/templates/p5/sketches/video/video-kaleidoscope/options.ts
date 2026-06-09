@@ -1,6 +1,25 @@
+import {
+  getTestVideoPath
+} from "@/utils/getTestVideoPaths";
+
 // Default values only
 export const formValues = {
-  videos: [],
+  videos: [
+    {
+      id: "test-gradient-flow",
+      path: await getTestVideoPath( "gradient-flow" ),
+      params: {
+        repeat: 1,
+        speed: 1,
+        offset: 0,
+        loopMode: "loop",
+        scale: 1,
+        posX: 0,
+        posY: 0,
+        fit: "cover"
+      }
+    }
+  ],
 
   segments: 8,
   autoSpin: true,
