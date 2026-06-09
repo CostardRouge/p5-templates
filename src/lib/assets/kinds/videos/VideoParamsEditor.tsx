@@ -6,6 +6,19 @@ import type {
 import type {
   AssetParamsEditorProps
 } from "../../types";
+import Vector2DPad, {
+  type Vector2DInputConfig
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledVector2DInput/Vector2DPad";
+
+// Screen-space position pad: centered [-1, 1] on both axes (0 = centered in the
+// draw box), with the Y axis pointing down so dragging the handle up moves the
+// video toward the top of the frame, matching `computeVideoLayout`'s offsets.
+const POSITION_PAD_CONFIG: Vector2DInputConfig = {
+  min: -1,
+  max: 1,
+  step: 0.01,
+  yDown: true
+};
 
 const SPEED_MIN = 0.1;
 const SPEED_MAX = 4;
@@ -122,37 +135,32 @@ export default function VideoParamsEditor( {
         />
       </Row>
 
-      <Row label="Position X" hint={ value.posX.toFixed( 2 ) }>
-        <input
-          type="range"
-          min={ -1 }
-          max={ 1 }
-          step={ 0.01 }
-          value={ value.posX }
-          onChange={ ( e ) =>
+      {/* Position is a single { x, y } pad rather than two sliders: the
+          AssetDialog's layout preview can be dragged for coarse placement, and
+          this pad gives precise numeric control over the same posX/posY. Not
+          wrapped in a `Row` <label> since the pad is a composite widget. */}
+      <div className="flex flex-col gap-0.5">
+        <span className="flex justify-between text-gray-500">
+          <span>Position</span>
+          <span className="font-mono text-foreground/80">
+            {value.posX.toFixed( 2 )}, {value.posY.toFixed( 2 )}
+          </span>
+        </span>
+        <Vector2DPad
+          ariaLabel="Position"
+          config={ POSITION_PAD_CONFIG }
+          value={ {
+            x: value.posX,
+            y: value.posY
+          } }
+          onChange={ ( next ) =>
             update( {
-              posX: parseFloat( e.target.value )
+              posX: next.x,
+              posY: next.y
             } )
           }
-          className="w-full"
         />
-      </Row>
-
-      <Row label="Position Y" hint={ value.posY.toFixed( 2 ) }>
-        <input
-          type="range"
-          min={ -1 }
-          max={ 1 }
-          step={ 0.01 }
-          value={ value.posY }
-          onChange={ ( e ) =>
-            update( {
-              posY: parseFloat( e.target.value )
-            } )
-          }
-          className="w-full"
-        />
-      </Row>
+      </div>
 
       <Row label="Aspect ratio">
         <select
