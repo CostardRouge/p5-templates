@@ -542,6 +542,222 @@ export const QrCodeItemSchema = z.object( {
   ] )
 } );
 
+/* ---------------- HUD / telemetry content-item ------------------ */
+// A single "hud" content-item holds one slot per telemetry widget. Each widget
+// binds to a `source`: a built-in live key (fps / frame / progression …) or a
+// dotted key-path into the sketch settings ("magnitude.start").
+
+const HudAnchor = z.enum( [
+  "top-left",
+  "top-right",
+  "bottom-left",
+  "bottom-right",
+  "center"
+] );
+
+const hudOffset = (
+  x: number, y: number
+) =>
+  z
+    .object( {
+      x: z.number().min( 0 )
+        .max( 1 )
+        .default( x ),
+      y: z.number().min( 0 )
+        .max( 1 )
+        .default( y )
+    } )
+    .default( {
+      x,
+      y
+    } );
+
+const hudWindow = {
+  displayFrom: z.number().min( 0 )
+    .max( 1 )
+    .default( 0 ),
+  displayTo: z.number().min( 0 )
+    .max( 1 )
+    .default( 1 )
+};
+
+export const HudBadgeSchema = z
+  .object( {
+    enabled: z.boolean().default( true ),
+    anchor: HudAnchor.default( "top-right" ),
+    offset: hudOffset(
+      0.95,
+      0.06
+    ),
+    size: z.number().positive()
+      .default( 20 ),
+    fill: RGBA.optional(),
+    font: z.string().optional(),
+    blend: Blend.optional()
+  } )
+  .default( {} );
+
+export const HudGaugeSchema = z
+  .object( {
+    enabled: z.boolean().default( false ),
+    source: z.string().default( "progress%" ),
+    anchor: HudAnchor.default( "bottom-left" ),
+    offset: hudOffset(
+      0.05,
+      0.9
+    ),
+    size: z.number().positive()
+      .default( 18 ),
+    min: z.number().default( 0 ),
+    max: z.number().default( 100 ),
+    label: z.string().default( "" ),
+    unit: z.string().default( "" ),
+    decimals: z.number().int()
+      .min( 0 )
+      .max( 4 )
+      .default( 0 ),
+    easingFn: z.string().default( "linear" ),
+    fill: RGBA.optional(),
+    blend: Blend.optional(),
+    ...hudWindow
+  } )
+  .default( {} );
+
+export const HudSparklineSchema = z
+  .object( {
+    enabled: z.boolean().default( false ),
+    source: z.string().default( "progress%" ),
+    anchor: HudAnchor.default( "bottom-right" ),
+    offset: hudOffset(
+      0.95,
+      0.9
+    ),
+    size: z.number().positive()
+      .default( 16 ),
+    min: z.number().default( 0 ),
+    max: z.number().default( 100 ),
+    historySize: z.number().int()
+      .min( 8 )
+      .max( 180 )
+      .default( 120 ),
+    decimals: z.number().int()
+      .min( 0 )
+      .max( 4 )
+      .default( 0 ),
+    unit: z.string().default( "" ),
+    fill: RGBA.optional(),
+    blend: Blend.optional(),
+    ...hudWindow
+  } )
+  .default( {} );
+
+export const HudCounterSchema = z
+  .object( {
+    enabled: z.boolean().default( false ),
+    source: z.string().default( "frame" ),
+    anchor: HudAnchor.default( "top-left" ),
+    offset: hudOffset(
+      0.05,
+      0.85
+    ),
+    size: z.number().positive()
+      .default( 28 ),
+    label: z.string().default( "" ),
+    unit: z.string().default( "" ),
+    decimals: z.number().int()
+      .min( 0 )
+      .max( 4 )
+      .default( 0 ),
+    fill: RGBA.optional(),
+    blend: Blend.optional(),
+    ...hudWindow
+  } )
+  .default( {} );
+
+export const HudCrosshairsSchema = z
+  .object( {
+    enabled: z.boolean().default( false ),
+    source: z.string().default( "center" ),
+    size: z.number().positive()
+      .default( 16 ),
+    fill: RGBA.optional(),
+    blend: Blend.optional(),
+    ...hudWindow
+  } )
+  .default( {} );
+
+export const HudSwatchSchema = z
+  .object( {
+    enabled: z.boolean().default( false ),
+    source: z.string().default( "" ),
+    anchor: HudAnchor.default( "top-right" ),
+    offset: hudOffset(
+      0.95,
+      0.2
+    ),
+    size: z.number().positive()
+      .default( 18 ),
+    label: z.string().default( "COLOR" ),
+    fill: RGBA.optional(),
+    font: z.string().optional(),
+    blend: Blend.optional(),
+    ...hudWindow
+  } )
+  .default( {} );
+
+export const HudBoundingBoxSchema = z
+  .object( {
+    enabled: z.boolean().default( false ),
+    source: z.string().default( "" ),
+    size: z.number().positive()
+      .default( 14 ),
+    region: z
+      .object( {
+        x: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.2 ),
+        y: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.2 ),
+        w: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.6 ),
+        h: z.number().min( 0 )
+          .max( 1 )
+          .default( 0.6 )
+      } )
+      .default( {
+        x: 0.2,
+        y: 0.2,
+        w: 0.6,
+        h: 0.6
+      } ),
+    label: z.string().default( "ROI" ),
+    fill: RGBA.optional(),
+    blend: Blend.optional(),
+    ...hudWindow
+  } )
+  .default( {} );
+
+export const HudItemSchema = z.object( {
+  type: z.literal( "hud" ),
+  fill: RGBA.default( [
+    0,
+    255,
+    120,
+    255
+  ] ),
+  font: z.string().default( "spaceMonoRegular" ),
+  blend: Blend.default( "source-over" ),
+  badge: HudBadgeSchema,
+  gauge: HudGaugeSchema,
+  sparkline: HudSparklineSchema,
+  counter: HudCounterSchema,
+  crosshairs: HudCrosshairsSchema,
+  swatch: HudSwatchSchema,
+  boundingBox: HudBoundingBoxSchema
+} );
+
 export const ContentItemSchema = z.discriminatedUnion(
   "type",
   [
@@ -552,7 +768,8 @@ export const ContentItemSchema = z.discriminatedUnion(
     ImagesStackItemSchema,
     ImageItemSchema,
     VisualItemSchema,
-    QrCodeItemSchema
+    QrCodeItemSchema,
+    HudItemSchema
   ]
 );
 

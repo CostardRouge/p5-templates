@@ -4,22 +4,19 @@ import time from "../time.js";
 import {
   getP5
 } from "../sketch.js";
-import probes from "./probes.js";
+import {
+  getByPath
+} from "./keyPaths.js";
 
 /**
- * Built-in data sources for HUD widgets. A widget's `source` field is either
- * one of these keys, or the name of a probe the sketch pushed via hud.push().
+ * Resolve a HUD widget's data source. A `source` is either a built-in live key
+ * (fps / frame / progression / resolution …) or a dotted key-path into the live
+ * sketch settings ("magnitude.start"), read exactly like the specs overlay
+ * enumerates them — no probe registry required.
  *
- * Recording determinism: every built-in below reads only deterministic state
- * (options, frameCount, animation.progression, frame-based time). The "fps"
- * source falls back to the *target* framerate during recording so captures are
- * reproducible — the measured frameRate() (wall-clock) is used only for live
- * preview.
- *
- * Future (kept out of v1): live inputs such as audio bands or pointers from
- * interaction/index.js could be exposed here behind an "audio:N" / "pointer:N"
- * prefix. They are non-deterministic (live mic/camera) and must be skipped
- * while time.isRecording, so they are intentionally not wired yet.
+ * Recording determinism: built-ins read only deterministic state (frameCount,
+ * animation.progression, target framerate during capture). Key-path values come
+ * straight from the (deterministic) sketch settings.
  */
 
 const BUILTINS = {
@@ -112,8 +109,6 @@ const BUILTIN_META = {
   }
 };
 
-export const BUILTIN_KEYS = Object.keys( BUILTINS );
-
 export function isBuiltin( source ) {
   return Object.prototype.hasOwnProperty.call(
     BUILTINS,
@@ -123,24 +118,34 @@ export function isBuiltin( source ) {
 
 /**
  * Resolve a binding to its current value. May be a number, string, a point
- * ({ x, y }), or a color (rgb/rgba array), depending on the source.
+ * ({ x, y }) or a colour array, depending on the source.
  */
 export function resolveValue( source ) {
+  if ( !source ) {
+    return undefined;
+  }
+
   if ( isBuiltin( source ) ) {
     return BUILTINS[ source ]();
   }
 
-  return probes.get( source );
+  return getByPath(
+    options.sketch,
+    source
+  );
 }
 
 /**
- * Resolve display metadata ({ label, unit, color }) for a binding, merging
- * built-in defaults or probe meta.
+ * Resolve display metadata ({ label, unit }) for a binding: built-in defaults,
+ * else the last key-path segment as a label.
  */
 export function resolveMeta( source ) {
   if ( isBuiltin( source ) ) {
     return BUILTIN_META[ source ] ?? {};
   }
 
-  return probes.getMeta( source ) ?? {};
+  return {
+    label: String( source ?? "" ).split( "." )
+      .pop()
+  };
 }

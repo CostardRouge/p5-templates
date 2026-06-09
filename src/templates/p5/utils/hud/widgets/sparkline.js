@@ -1,5 +1,8 @@
 import string from "../../string.js";
-import probes from "../probes.js";
+import {
+  pushHistory,
+  series
+} from "../history.js";
 import {
   resolveMeta,
   resolveValue
@@ -13,8 +16,8 @@ import {
 } from "./common.js";
 
 /**
- * Sparkline widget: plots a numeric probe's recent history (from the frame-keyed
- * ring buffer) as a polyline, with the label + current value above it.
+ * Sparkline widget: plots a source's recent history (from the frame-keyed ring
+ * buffer it feeds itself) as a polyline, with the label + current value above.
  */
 export default function sparkline(
   cfg, style
@@ -23,6 +26,12 @@ export default function sparkline(
     const meta = resolveMeta( cfg.source );
     const label = String( cfg.label || meta.label || cfg.source || "" ).toUpperCase();
     const current = resolveValue( cfg.source );
+
+    // Feed our own history buffer (frame-keyed, recording-safe).
+    pushHistory(
+      cfg.source,
+      current
+    );
 
     const s = cfg.size ?? 16;
     const boxW = s * 11;
@@ -98,11 +107,11 @@ export default function sparkline(
     }
 
     const plotY = blockY + s + s * 0.4;
-    const series = probes.series( cfg.source );
-    const limit = cfg.historySize ?? series.length;
-    const data = series.slice( Math.max(
+    const points = series( cfg.source );
+    const limit = cfg.historySize ?? points.length;
+    const data = points.slice( Math.max(
       0,
-      series.length - limit
+      points.length - limit
     ) );
 
     p.push();

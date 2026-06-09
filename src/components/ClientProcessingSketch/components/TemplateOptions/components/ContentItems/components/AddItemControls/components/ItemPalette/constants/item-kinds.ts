@@ -6,7 +6,8 @@ import {
   PaintBucket as BgIcon,
   Sparkles as VisualIcon,
   Terminal as SpecsIcon,
-  QrCode as QrCodeIcon
+  QrCode as QrCodeIcon,
+  Gauge as HudIcon
 } from "lucide-react";
 import {
   ItemKind,
@@ -20,6 +21,7 @@ export const ITEM_ORDER: ItemKind[] = [
   "images-stack",
   "meta",
   "specs",
+  "hud",
   "background",
   "qrcode"
 ];
@@ -39,6 +41,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Specs",
     Icon: SpecsIcon,
     description: "Technical overlay of the sketch settings"
+  },
+  hud: {
+    label: "HUD",
+    Icon: HudIcon,
+    description: "Telemetry widgets (gauge, sparkline, badge…)"
   },
   image: {
     label: "Image",

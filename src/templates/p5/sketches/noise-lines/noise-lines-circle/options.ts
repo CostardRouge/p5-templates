@@ -1,7 +1,5 @@
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import hudFormConfiguration from "@/p5/utils/hud/hudFormConfiguration";
-import hudDefaultValues from "@/p5/utils/hud/hudDefaultValues";
 
 import {
   createFixedOrVariableOption
@@ -61,37 +59,7 @@ export const formValues = {
     235,
     225
   ],
-  title: titleDefaultValues,
-  // Showcase the telemetry HUD on this sketch (per-sketch override only —
-  // the shared hudDefaultValues stay OFF so other sketches are unaffected).
-  hud: {
-    ...hudDefaultValues,
-    enabled: true,
-    badge: {
-      ...hudDefaultValues.badge,
-      enabled: true
-    },
-    bootLog: {
-      ...hudDefaultValues.bootLog,
-      enabled: true
-    },
-    gauge: {
-      ...hudDefaultValues.gauge,
-      enabled: true,
-      source: "blob.r",
-      min: 150,
-      max: 450,
-      label: "BLOB R",
-      unit: "px"
-    },
-    sparkline: {
-      ...hudDefaultValues.sparkline,
-      enabled: true,
-      source: "blob.r",
-      min: 150,
-      max: 450
-    }
-  }
+  title: titleDefaultValues
 };
 
 // UI configuration only
@@ -169,7 +137,6 @@ export const formConfiguration: Record<string, any> = {
   ),
 
   title: titleFormConfiguration,
-  hud: hudFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

@@ -3,6 +3,7 @@ export type ItemKind =
   | "text"
   | "meta"
   | "specs"
+  | "hud"
   | "image"
   | "images-stack"
   | "background"

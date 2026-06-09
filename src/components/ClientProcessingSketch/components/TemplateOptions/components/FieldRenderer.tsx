@@ -19,6 +19,8 @@ import {
 } from "@/lib/assets";
 import ControlledSizePresetSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSizePresetSelect/ControlledSizePresetSelect";
+import ControlledSourceSelect
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSourceSelect/ControlledSourceSelect";
 import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledVector2DInput
@@ -516,6 +518,14 @@ export default function FieldRenderer( {
           <ControlledVector2DInput
             name={ registeredName }
             config={ config }
+          />
+        );
+
+      case "source-select":
+        return (
+          <ControlledSourceSelect
+            name={ registeredName }
+            className={ commonInputProps.className }
           />
         );
 

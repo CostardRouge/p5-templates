@@ -184,11 +184,13 @@ const slides = {
     );
   },
 
-  render( {
-    layout, ...opts
-  } ) {
-    // ( _layouts[ layout ] ?? _layouts.auto )( opts );
-    _layouts.free( opts );
+  render( source ) {
+    // Pass the source straight through. For global content `source` is the
+    // live options proxy; destructuring/spreading it would drop every key
+    // (its target is empty and it has only a get trap), silently discarding
+    // global `content`. freeLayout reads `.content` via the get trap instead.
+    // ( _layouts[ source?.layout ] ?? _layouts.auto )( source );
+    _layouts.free( source );
   },
 
   renderCurrentSlide() {

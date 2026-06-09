@@ -1,7 +1,6 @@
 import options from "@/p5/utils/options.js";
 import animation from "@/p5/utils/animation.js";
 import sketch from "@/p5/utils/sketch.js";
-import hud from "@/p5/utils/hud/index.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getFixedOrVariableOption
@@ -113,26 +112,6 @@ sketch.draw( () => {
     1,
     0,
     timeRadius
-  );
-
-  // Expose sketch-internal values to the telemetry HUD.
-  hud.push(
-    "blob.r",
-    getFixedOrVariableOption(
-      "baseRadius",
-      0.5
-    ),
-    {
-      label: "BLOB R",
-      unit: "px"
-    }
-  );
-  hud.push(
-    "zLoop",
-    zLoop,
-    {
-      label: "Z LOOP"
-    }
   );
 
   for ( let i = 0; i < linesCount; i++ ) {
