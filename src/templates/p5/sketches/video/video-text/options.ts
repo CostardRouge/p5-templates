@@ -5,6 +5,7 @@ import {
 // Default values only
 export const formValues = {
   videos: [],
+  blur: 0,
 
   text: "VIDEO",
   font: "martian",
@@ -12,6 +13,10 @@ export const formValues = {
   align: "center",
   lineHeight: 1,
   margin: 0,
+  textPosition: {
+    x: 0.5,
+    y: 0.5
+  },
   style: "fill",
   outlineWeight: 8,
   invert: false,
@@ -29,6 +34,14 @@ export const formConfiguration: Record<string, any> = {
     component: "asset-stack",
     kind: "videos",
     label: "Videos"
+  },
+
+  blur: {
+    component: "slider",
+    label: "Video blur",
+    min: 0,
+    max: 20,
+    step: 1
   },
 
   text: {
@@ -83,6 +96,16 @@ export const formConfiguration: Record<string, any> = {
     min: 0,
     max: 400,
     step: 1
+  },
+
+  textPosition: {
+    component: "vector2d",
+    label: "Text position",
+    allowNegative: false,
+    min: 0,
+    max: 1,
+    step: 0.01,
+    yDown: true
   },
 
   style: {

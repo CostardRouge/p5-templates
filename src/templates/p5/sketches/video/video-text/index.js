@@ -97,6 +97,18 @@ sketch.draw( () => {
     cfg.outlineWeight ?? 8
   );
   const invert = Boolean( cfg.invert );
+  const blur = Math.max(
+    0,
+    cfg.blur ?? 0
+  );
+
+  // Where the masking text sits, as a fraction of the canvas (0.5 = centered,
+  // matching the previous always-centered behaviour). Y points down.
+  const textPosition = cfg.textPosition ?? {};
+  const textPosX =
+    typeof textPosition.x === "number" ? textPosition.x : 0.5;
+  const textPosY =
+    typeof textPosition.y === "number" ? textPosition.y : 0.5;
 
   const mask = ensure(
     p,
@@ -122,6 +134,13 @@ sketch.draw( () => {
       g.CENTER
     );
     g.textLeading( fontSize * lineHeight );
+
+    // Shift the whole (centered) text block by the configured position. At
+    // 0.5/0.5 the offset is zero, preserving the original centered layout.
+    g.translate(
+      ( textPosX - 0.5 ) * ( g.width - margin * 2 ),
+      ( textPosY - 0.5 ) * ( g.height - margin * 2 )
+    );
 
     if ( style === "outline" ) {
       g.noFill();
@@ -192,6 +211,15 @@ sketch.draw( () => {
       layout.height
     );
   } );
+
+  // Blur the composited video layer; the text mask stays sharp so the video
+  // shows softly through crisp glyphs.
+  if ( blur > 0 ) {
+    frame.filter(
+      p.BLUR,
+      blur
+    );
+  }
 
   // Keep the video only where the mask is opaque.
   const masked = frame.get();
