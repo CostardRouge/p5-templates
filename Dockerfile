@@ -44,10 +44,26 @@ COPY scripts ./scripts
 ENV NODE_ENV=production
 RUN npm run build
 
-# ─── Stage 2: runtime ────────────────────────────────────────────────────────
+# ─── Stage 2: prisma CLI ─────────────────────────────────────────────────────
+# A clean, isolated install of the Prisma CLI pinned to the lockfile version,
+# with its FULL dependency closure (@prisma/*, effect, c12, deepmerge-ts, …).
+# The runtime runs `migrate deploy` on startup; cherry-picking node_modules
+# subtrees misses transitive deps, so install the CLI properly instead.
+FROM mcr.microsoft.com/playwright:v1.59.1-jammy AS prisma-deps
+
+WORKDIR /prisma-cli
+
+COPY package-lock.json ./lock.json
+RUN PRISMA_VERSION="$(node -p "require('./lock.json').packages['node_modules/prisma'].version")" \
+ && rm -f lock.json \
+ && npm init -y >/dev/null 2>&1 \
+ && npm install "prisma@${PRISMA_VERSION}" \
+ && npm cache clean --force
+
+# ─── Stage 3: runtime ────────────────────────────────────────────────────────
 # Slim runtime: Playwright base (browsers + Node already present) + ffmpeg.
-# Only the standalone server, static assets, public files and the Prisma CLI
-# (needed for `migrate deploy` on startup) are copied over — no dev deps.
+# Only the standalone server, static assets, public files and an isolated Prisma
+# CLI (for `migrate deploy` on startup) are copied over — no dev deps.
 FROM mcr.microsoft.com/playwright:v1.59.1-jammy AS runner
 
 WORKDIR /app
@@ -69,15 +85,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Prisma: schema + migrations for `migrate deploy`, the generated client (with
-# its native query engine) and the CLI used by the entrypoint at startup. The
-# whole prisma/ + @prisma/ trees are copied so the CLI finds its bundled WASM
-# (build/*.wasm) and engines; it is invoked via build/index.js directly — NOT
-# via .bin/prisma, whose symlink Docker dereferences, breaking __dirname.
+# Prisma schema + migrations (read by `migrate deploy`) and the generated client
+# with its native query engine (used by the app server).
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# The isolated Prisma CLI + its full dependency closure, kept out of the app's
+# own node_modules to avoid version clashes. Invoked from here by the entrypoint.
+COPY --from=prisma-deps /prisma-cli/node_modules ./prisma-cli/node_modules
 
 # Entrypoint: runs migrations then starts the standalone server.
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
