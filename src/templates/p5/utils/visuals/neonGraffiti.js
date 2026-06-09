@@ -6,6 +6,16 @@ import converters from "@/p5/utils/converters.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import createGlowBatchRenderer, {
+  colorLevels
+} from "@/p5/utils/glowBatchGpu.js";
+
+// The visual repeatedly painted shadowsCount × stepsCount filled circles with a
+// p5 fill()/circle() pair each, which is what slowed the draw loop once those
+// counts climbed. The generative math below is untouched; only the rendering
+// moved to a single instanced GPU draw (see utils/glowBatchGpu.js), so the look
+// is identical but thousands of discs cost one draw call instead of thousands.
+const batch = createGlowBatchRenderer();
 
 function getCircleSize(
   circleSizeOption = {
@@ -90,7 +100,7 @@ export default function neonGraffiti( {
     );
   }
 
-  _p.noStroke();
+  batch.begin();
 
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
     const shadowProgression = shadowIndex / shadowsCount;
@@ -160,7 +170,12 @@ export default function neonGraffiti( {
 
       const hueEasingFn = easing?.[ hueEasing ] ?? easing.easeInOutSine;
 
-      _p.fill( colors.rainbow( {
+      const [
+        red,
+        green,
+        blue,
+        alpha
+      ] = colorLevels( colors.rainbow( {
         opacityFactor: _p.map(
           shadowIndex,
           0,
@@ -182,22 +197,30 @@ export default function neonGraffiti( {
             ) * hueIndexMultiplier
       } ) );
 
-      _p.circle(
+      const diameter = getCircleSize(
+        size,
+        {
+          shadowProgression,
+          shadowIndex,
+          shadowsCount,
+          stepAngle,
+          step,
+          stepsCount,
+          stepProgression
+        }
+      );
+
+      batch.disc(
         position.x,
         position.y,
-        getCircleSize(
-          size,
-          {
-            shadowProgression,
-            shadowIndex,
-            shadowsCount,
-            stepAngle,
-            step,
-            stepsCount,
-            stepProgression
-          }
-        )
+        diameter / 2,
+        red,
+        green,
+        blue,
+        alpha
       );
     }
   }
+
+  batch.end();
 }

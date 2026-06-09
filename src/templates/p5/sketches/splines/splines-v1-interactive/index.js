@@ -7,7 +7,7 @@ import {
   getPointerGroups
 } from "@/p5/utils/interaction/index.js";
 import {
-  renderSpline
+  renderSplines
 } from "../_shared.js";
 
 // ── What this sketch demonstrates ──────────────────────────────────────────
@@ -80,18 +80,14 @@ function pushTrailPoint(
   }
 }
 
-function drawLive(
-  groups, render
-) {
-  groups.forEach( ( group ) => {
-    if ( group.points.length >= 2 ) {
-      render( group.points );
-    }
-  } );
+// One ordered point list per live entity, so every spline in the frame can be
+// drawn in a single batched pass.
+function collectLive( groups ) {
+  return groups.map( ( group ) => group.points );
 }
 
-function drawTrails(
-  groups, mode, render
+function collectTrails(
+  groups, mode
 ) {
   const maxPoints = mode.maxPoints ?? 90;
   const minDistance = mode.minDistance ?? 6;
@@ -108,8 +104,10 @@ function drawTrails(
     );
   } );
 
-  // Render every ribbon; entities that disappeared retract from the tail until
+  // Collect every ribbon; entities that disappeared retract from the tail until
   // empty so the trail gracefully shrinks away instead of vanishing instantly.
+  const lists = [];
+
   for ( const [
     id,
     entry
@@ -124,10 +122,10 @@ function drawTrails(
       }
     }
 
-    if ( entry.points.length >= 2 ) {
-      render( entry.points );
-    }
+    lists.push( entry.points );
   }
+
+  return lists;
 }
 
 sketch.setup( async() => {
@@ -164,8 +162,11 @@ sketch.draw( () => {
   if ( modeType === "trail" ) {
     // Trails are time-series ribbons, so the raw-polygon / point markers overlay
     // (which annotates the source points) is intentionally suppressed.
-    const render = ( points ) => renderSpline(
-      points,
+    renderSplines(
+      collectTrails(
+        groups,
+        mode
+      ),
       {
         curve,
         stroke,
@@ -180,27 +181,17 @@ sketch.draw( () => {
       }
     );
 
-    drawTrails(
-      groups,
-      mode,
-      render
-    );
-
     return;
   }
 
   const overlay = o.overlay ?? {};
-  const render = ( points ) => renderSpline(
-    points,
+
+  renderSplines(
+    collectLive( groups ),
     {
       curve,
       stroke,
       overlay
     }
-  );
-
-  drawLive(
-    groups,
-    render
   );
 } );
