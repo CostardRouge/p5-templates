@@ -25,8 +25,12 @@ ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 
-# Install dependencies (runs postinstall → prisma generate).
-RUN npm ci
+# Strip the dev-only `prepare` script (husky hooks + git merge-driver setup): it
+# needs a .git work tree and scripts/ that aren't in the build context, and has
+# no purpose in an image. postinstall (prisma generate) and dependency lifecycle
+# scripts still run.
+RUN npm pkg delete scripts.prepare \
+ && npm ci
 
 # Copy configuration files.
 COPY next.config.ts tsconfig.json tailwind.config.ts postcss.config.mjs ./
