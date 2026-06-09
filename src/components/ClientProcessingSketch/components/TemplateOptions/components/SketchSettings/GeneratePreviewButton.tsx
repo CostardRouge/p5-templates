@@ -89,7 +89,7 @@ export default function GeneratePreviewButton() {
       title={ title }
       aria-label={ title }
       className={ clsx(
-        "flex items-center rounded transition-colors",
+        "flex items-center rounded-lg p-2 md:p-1 hover:bg-hover transition-colors",
         {
           "hover:text-yellow-400 cursor-pointer":
             state === "idle",

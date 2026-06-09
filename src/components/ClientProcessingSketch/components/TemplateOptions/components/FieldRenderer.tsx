@@ -22,6 +22,8 @@ import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledVector2DInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledVector2DInput/ControlledVector2DInput";
+import ControlledSliderInput
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSliderInput/ControlledSliderInput";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import type {
@@ -102,19 +104,28 @@ export default function FieldRenderer( {
     const commonInputProps = {
       id: registeredName,
       placeholder: config.placeholder,
-      className: "w-full p-1 border border-theme rounded-lg bg-background text-foreground",
+      // 16px font on mobile prevents iOS from zooming into focused inputs;
+      // taller padding gives finger-sized targets, back to compact on md+.
+      className: "w-full px-2.5 py-2 md:px-1.5 md:py-1 border border-theme rounded-lg bg-background text-foreground text-base md:text-xs",
       "aria-invalid": !!error
     };
 
     switch ( config.component ) {
       case "checkbox":
+        // Toggle switch: the visually-hidden checkbox keeps the RHF register
+        // semantics, the two sibling spans render the track and the knob.
         return (
-          <input
-            type="checkbox"
-            { ...commonInputProps }
-            { ...register( registeredName ) }
-            className={ `${ commonInputProps.className } block w-fit` }
-          />
+          <span className="relative inline-flex shrink-0 items-center">
+            <input
+              type="checkbox"
+              id={ registeredName }
+              aria-invalid={ !!error }
+              { ...register( registeredName ) }
+              className="peer sr-only"
+            />
+            <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
+            <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
+          </span>
         );
 
       case "number":
@@ -135,60 +146,18 @@ export default function FieldRenderer( {
         );
 
       case "slider":
+        // Full-bar slider with the label rendered inside the control, so it
+        // doesn't need the outer label row (skipped in the wrapper below).
         return (
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              { ...commonInputProps }
-              { ...register(
-                registeredName,
-                {
-                  valueAsNumber: true
-                }
-              ) }
-              step={ config.step }
-              min={ config.min }
-              max={ config.max }
-            />
-            <input
-              type="number"
-              aria-label={ `${ config.label ?? registeredName } value` }
-              className="text-xs font-mono bg-theme/20 px-1 py-0.5 rounded w-14 text-center border border-theme/30 focus:outline-none focus:ring-1 focus:ring-theme"
-              value={ currentValue != null ? Number( currentValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 ) }
-              step={ config.step }
-              min={ config.min }
-              max={ config.max }
-              onChange={ ( e ) => {
-                const parsed = config.step && config.step < 1
-                  ? parseFloat( e.target.value )
-                  : parseInt(
-                    e.target.value,
-                    10
-                  );
-
-                if ( !isNaN( parsed ) ) {
-                  const clamped =
-                    config.min !== undefined && config.max !== undefined
-                      ? Math.min(
-                        config.max,
-                        Math.max(
-                          config.min,
-                          parsed
-                        )
-                      )
-                      : parsed;
-
-                  setValue(
-                    registeredName,
-                    clamped,
-                    {
-                      shouldDirty: true
-                    }
-                  );
-                }
-              } }
-            />
-          </div>
+          <ControlledSliderInput
+            name={ registeredName }
+            label={ config.label ?? fieldName }
+            min={ config.min }
+            max={ config.max }
+            step={ config.step }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
         );
 
       case "textarea":
@@ -202,28 +171,32 @@ export default function FieldRenderer( {
 
       case "select":
         return (
-          <select
-            { ...commonInputProps }
-            { ...register(
-              registeredName,
-              {
-                setValueAs: config.asNumber
-                  ? ( value: unknown ) =>
-                    value === "" || value == null ? undefined : Number( value )
-                  : undefined
-              }
-            ) }
-          >
-            {config.noneLabel ? (
-              <option value="">{config.noneLabel || "--"}</option>
-            ) : null}
+          <div className="relative">
+            <select
+              { ...commonInputProps }
+              className={ `${ commonInputProps.className } appearance-none pr-8` }
+              { ...register(
+                registeredName,
+                {
+                  setValueAs: config.asNumber
+                    ? ( value: unknown ) =>
+                      value === "" || value == null ? undefined : Number( value )
+                    : undefined
+                }
+              ) }
+            >
+              {config.noneLabel ? (
+                <option value="">{config.noneLabel || "--"}</option>
+              ) : null}
 
-            {config.options.map( ( option ) => (
-              <option key={ option.value } value={ option.value }>
-                {option.label}
-              </option>
-            ) )}
-          </select>
+              {config.options.map( ( option ) => (
+                <option key={ option.value } value={ option.value }>
+                  {option.label}
+                </option>
+              ) )}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 md:h-3 md:w-3 -translate-y-1/2 text-label" />
+          </div>
         );
 
       case "multi-select": {
@@ -240,7 +213,7 @@ export default function FieldRenderer( {
               return (
                 <label
                   key={ value }
-                  className="flex items-center gap-2 select-none"
+                  className="flex min-h-[2.25rem] md:min-h-0 cursor-pointer items-center gap-2 py-1 md:py-0.5 select-none"
                 >
                   <input
                     type="checkbox"
@@ -261,7 +234,7 @@ export default function FieldRenderer( {
                         }
                       );
                     } }
-                    className="block w-fit"
+                    className="block h-4 w-4 md:h-3.5 md:w-3.5 accent-foreground"
                   />
                   <span>{option.label}</span>
                 </label>
@@ -417,13 +390,53 @@ export default function FieldRenderer( {
     }
   };
 
+  // Checkbox: label and switch share a single row — denser, and the whole
+  // row is a finger-sized tap target.
+  if ( config.component === "checkbox" ) {
+    return (
+      <div className="text-sm md:text-xs">
+        <label
+          htmlFor={ registeredName }
+          className="flex min-h-[2.5rem] md:min-h-0 cursor-pointer select-none items-center justify-between gap-2 py-1 md:py-0.5"
+        >
+          {config.label && !hideLabel && (
+            <span className="flex items-center gap-1">
+              <span className={ isModified ? "font-medium" : "text-gray-400" }>
+                {config.label}
+              </span>
+              {isModified && (
+                <button
+                  type="button"
+                  onClick={ handleReset }
+                  tabIndex={ -1 }
+                  title="Reset to saved value"
+                  className="text-gray-400 hover:text-foreground transition-colors"
+                >
+                  · reset
+                </button>
+              )}
+            </span>
+          )}
+
+          {renderInput()}
+        </label>
+
+        {error && (
+          <p className="text-red-500 mt-1">{error.message?.toString()}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="text-xs">
-      {/* Don't show a label for groups, as they have their own internal labels */}
+    <div className="text-sm md:text-xs">
+      {/* Don't show a label for groups (they have their own internal labels)
+          or sliders (the label is rendered inside the bar) */}
       {config.component !== "nested-object" &&
         config.component !== "conditional-group" &&
         config.component !== "item-list" &&
         config.component !== "hidden" &&
+        config.component !== "slider" &&
         config.label &&
         !hideLabel && (
         <div className="flex items-center gap-1">

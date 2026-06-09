@@ -4,8 +4,9 @@ import React, {
   useMemo
 } from "react";
 import {
-  ArrowDownFromLine
+  ChevronDown, SlidersHorizontal
 } from "lucide-react";
+import clsx from "clsx";
 
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
@@ -26,6 +27,9 @@ type SketchSettingsProps = {
   expanded?: boolean;
   onToggle?: ( expanded: boolean ) => void;
 };
+
+const HEADER_ACTION_CLASS =
+  "p-2 md:p-1 text-foreground hover:bg-hover rounded-lg transition-colors";
 
 export default function SketchSettings( {
   basePath,
@@ -71,49 +75,84 @@ export default function SketchSettings( {
     <CollapsibleItem
       expanded={ expanded }
       onToggle={ onToggle }
-      className="w-64 flex flex-col gap-1 absolute left-2 bottom-2 md:bottom-4 md:left-4 glass p-2 border border-theme z-50 rounded-2xl shadow-lg overflow-y-auto"
-      style={ {
-        maxHeight: "calc(80svh - 5rem)",
-        maxWidth: "calc(50% - 0.75rem)"
-      } }
-      header={ ( expanded ) => (
-        <div className="flex items-center justify-between w-full">
-          <button
-            className="text-foreground text-xs flex items-center"
-            aria-label={ expanded ? "Collapse controls" : "Expand controls" }
+      swipeToCollapse
+      className={ clsx(
+        "absolute flex flex-col glass shadow-lg overflow-y-auto",
+        expanded
+          ? [
+            // Mobile: full-width bottom sheet docked to the bottom edge,
+            // above the other floating panels.
+            "inset-x-0 bottom-0 z-[60] max-h-[70svh] rounded-t-2xl border-t border-theme",
+            // Desktop: left sidebar docked to the edge, below the engine
+            // controls (top-2 + h-9 ≈ 3.25rem).
+            "md:inset-x-auto md:left-0 md:top-14 md:bottom-0 md:z-50 md:w-80 md:max-h-none md:rounded-none md:rounded-tr-2xl md:border md:border-b-0 md:border-l-0"
+          ]
+          : "left-2 bottom-2 md:left-4 md:bottom-4 z-50 w-fit rounded-full border border-theme"
+      ) }
+      headerContainerClassName={ clsx( expanded && "glass sticky top-0 z-10" ) }
+      header={ ( isExpanded ) => (
+        <div className="flex w-full flex-col">
+          {/* Drag handle, mobile sheet only (swipe down to close) */}
+          {isExpanded && (
+            <div className="flex justify-center pt-2 md:hidden">
+              <div className="h-1 w-10 rounded-full bg-foreground/20" />
+            </div>
+          )}
+
+          <div
+            className={ clsx(
+              "flex w-full items-center justify-between gap-2",
+              isExpanded ? "px-3 py-2" : "px-3.5 py-2.5 md:px-3 md:py-2"
+            ) }
           >
-            <ArrowDownFromLine
-              className="text-foreground h-3 w-3 mr-1"
-              style={ {
-                rotate: expanded ? "0deg" : "180deg"
-              } }
-            />
-            <span>
-              {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`}{" "}
-              options
-              {activeSlideIndex !== undefined &&
-                ` (slide ${ activeSlideIndex + 1 })`}
-            </span>
-          </button>
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-sm text-foreground md:text-xs"
+              aria-label={ isExpanded ? "Collapse controls" : "Expand controls" }
+            >
+              <SlidersHorizontal className="h-4 w-4 md:h-3.5 md:w-3.5" />
+              <span>
+                {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`}{" "}
+                options
+                {activeSlideIndex !== undefined &&
+                  ` (slide ${ activeSlideIndex + 1 })`}
+              </span>
+              <ChevronDown
+                className="h-3.5 w-3.5 transition-transform"
+                style={ {
+                  transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
+                } }
+              />
+            </button>
 
-          <div className="flex items-center gap-2">
-            <ResetSettingsButton basePath={ effectiveBasePath } />
+            {isExpanded && (
+              <div
+                className="flex items-center gap-0.5"
+                onClick={ ( e ) => e.stopPropagation() }
+              >
+                <ResetSettingsButton
+                  basePath={ effectiveBasePath }
+                  className={ HEADER_ACTION_CLASS }
+                />
 
-            <RandomizeSettingsButton
-              config={ configWithSchemas }
-              basePath={ effectiveBasePath }
-            />
+                <RandomizeSettingsButton
+                  config={ configWithSchemas }
+                  basePath={ effectiveBasePath }
+                  className={ HEADER_ACTION_CLASS }
+                />
 
-            <SaveDefaultsButton />
+                <SaveDefaultsButton />
 
-            <GenerateThumbnailButton />
+                <GenerateThumbnailButton />
 
-            <GeneratePreviewButton />
+                <GeneratePreviewButton />
+              </div>
+            )}
           </div>
         </div>
       ) }
     >
-      <div className="overflow-y-auto">
+      <div className="px-3 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
         <GenericObjectForm
           key={ effectiveBasePath }
           basePath={ effectiveBasePath }

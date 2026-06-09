@@ -88,6 +88,12 @@
     ::after {
         border-color: hsl(var(--border));
     }
+
+    /* Remaining native range inputs (e.g. the color picker's alpha slider)
+       follow the monochrome theme instead of the platform's accent blue. */
+    input[type="range"] {
+        accent-color: hsl(var(--foreground));
+    }
 }
 
 /* Hover affordance for the rendered sketch surface — generic across engines:
