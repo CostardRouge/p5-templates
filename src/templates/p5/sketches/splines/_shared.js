@@ -3,17 +3,18 @@ import {
 } from "@/p5/utils/sketch.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
-import createGlowBatchRenderer, {
-  colorLevels
-} from "@/p5/utils/glowBatchGpu.js";
+import createGlowBatchRenderer from "@/p5/utils/glowBatchGpu.js";
 
 // The glowing curve used to be stroked segment-by-segment on the CPU, once per
 // glow layer, once per spline — fine for one procedural curve, but the cost
-// scaled with the number of live entities and dragged the draw loop down. The
-// dense Chaikin segments are now batched into a single instanced GPU draw (see
-// utils/glowBatchGpu.js) shared across every spline in the frame. The geometry
-// and colours are computed exactly as before, so the look is unchanged.
+// scaled with the number of live entities and dragged the draw loop down. Now the
+// dense Chaikin geometry is built once on flat typed arrays (no p5.Vector churn),
+// uploaded once, and the GPU re-draws it per glow layer while computing the
+// rainbow colour in the shader (see utils/glowBatchGpu.js). The geometry and
+// colours match the originals exactly, so the look is unchanged.
 const batch = createGlowBatchRenderer();
+
+const TWO_PI = Math.PI * 2;
 
 /**
  * Shared geometry for the `splines` category.
@@ -216,6 +217,71 @@ function chaikinStep(
   if ( !closed ) {
     out.unshift( points[ 0 ].copy() );
     out.push( points[ count - 1 ].copy() );
+  }
+
+  return out;
+}
+
+/**
+ * Same corner-cutting as `chaikin`, but on flat [x0, y0, x1, y1, …] Float32Arrays
+ * instead of p5.Vector objects. The GPU path only needs the coordinates, and the
+ * dense polyline can reach thousands of points per spline, so avoiding the vector
+ * allocations removes a big chunk of per-frame GC. Input is the sketch's vectors;
+ * output is a packed Float32Array of the dense vertices.
+ */
+export function chaikinFlat(
+  points, iterations, closed
+) {
+  let flat = new Float32Array( points.length * 2 );
+
+  for ( let i = 0; i < points.length; i++ ) {
+    flat[ i * 2 ] = points[ i ].x;
+    flat[ i * 2 + 1 ] = points[ i ].y;
+  }
+
+  for ( let i = 0; i < iterations; i++ ) {
+    flat = chaikinStepFlat(
+      flat,
+      closed
+    );
+  }
+
+  return flat;
+}
+
+function chaikinStepFlat(
+  flat, closed
+) {
+  const count = flat.length / 2;
+  const limit = closed ? count : count - 1;
+  const cutCount = limit * 2;
+  const outCount = closed ? cutCount : cutCount + 2;
+  const out = new Float32Array( outCount * 2 );
+  let o = 0;
+
+  // Open polylines keep their original endpoints (Chaikin only cuts corners).
+  if ( !closed ) {
+    out[ o++ ] = flat[ 0 ];
+    out[ o++ ] = flat[ 1 ];
+  }
+
+  for ( let i = 0; i < limit; i++ ) {
+    const ai = i * 2;
+    const bi = ( ( i + 1 ) % count ) * 2;
+    const ax = flat[ ai ];
+    const ay = flat[ ai + 1 ];
+    const bx = flat[ bi ];
+    const by = flat[ bi + 1 ];
+
+    out[ o++ ] = 0.75 * ax + 0.25 * bx;
+    out[ o++ ] = 0.75 * ay + 0.25 * by;
+    out[ o++ ] = 0.25 * ax + 0.75 * bx;
+    out[ o++ ] = 0.25 * ay + 0.75 * by;
+  }
+
+  if ( !closed ) {
+    out[ o++ ] = flat[ ( count - 1 ) * 2 ];
+    out[ o++ ] = flat[ ( count - 1 ) * 2 + 1 ];
   }
 
   return out;
@@ -496,135 +562,54 @@ export function drawPointMarkers(
 }
 
 /**
- * Chaikin gives us a dense polyline, so we get a free neon-style gradient running
- * along the path: one capsule per dense segment, hue swept along the curve, every
- * glow layer stacked widest-and-dimmest first. The capsules are queued on the
- * shared GPU batch (round caps reproduce p5's ROUND strokeCap/Join) and drawn by
- * the caller's `batch.end()`.
+ * Queue one spline's dense Chaikin polyline onto the GPU stroke batch: open a new
+ * stroke group, then push one segment per dense edge with its hue. The hue is the
+ * only thing that varies along the curve — the per-layer thickness and opacity are
+ * applied by the GPU when `drawStrokes` re-draws the geometry — so each segment is
+ * emitted ONCE here instead of once per glow layer.
+ *
+ *   gradient → hue swept along the path (a free neon gradient).
+ *   uniform  → a single hue for the whole stroke (still drifts with time).
  */
-function emitChaikinGradient(
+function emitStroke(
   points, {
     iterations,
     closed,
-    weight,
-    glow,
-    hueSpeed
+    hueSpeed,
+    gradient
   }
 ) {
-  const p = getP5();
-  const dense = chaikin(
+  const dense = chaikinFlat(
     points,
     iterations,
     closed
   );
-  const total = dense.length;
+  const total = dense.length / 2;
   const segments = closed ? total : total - 1;
 
-  for ( let shadow = glow; shadow >= 0; shadow-- ) {
-    const layerWeight = weight * ( 1 + shadow * 1.3 );
-    const opacityFactor = p.map(
-      shadow,
-      0,
-      Math.max(
-        1,
-        glow
-      ),
-      1,
-      4
-    );
-    const halfWidth = layerWeight / 2;
-
-    for ( let i = 0; i < segments; i++ ) {
-      const a = dense[ i ];
-      const b = dense[ ( i + 1 ) % total ];
-      const progression = i / segments;
-      const [
-        red,
-        green,
-        blue,
-        alpha
-      ] = colorLevels( colors.rainbow( {
-        hueIndex: Math.sin( progression * p.TAU + animation.angle * hueSpeed ) * p.PI * 2,
-        opacityFactor
-      } ) );
-
-      batch.capsule(
-        a.x,
-        a.y,
-        b.x,
-        b.y,
-        halfWidth,
-        red,
-        green,
-        blue,
-        alpha
-      );
-    }
+  if ( segments < 1 ) {
+    return;
   }
-}
 
-/**
- * The non-gradient Chaikin look: the same dense polyline, but a single hue per
- * glow layer (it still drifts with time). Emitted as capsules onto the shared GPU
- * batch, matching what the uniform p5 stroke produced segment for segment.
- */
-function emitChaikinUniform(
-  points, {
-    iterations,
-    closed,
-    weight,
-    glow,
-    hueSpeed
-  }
-) {
-  const p = getP5();
-  const dense = chaikin(
-    points,
-    iterations,
-    closed
-  );
-  const total = dense.length;
-  const segments = closed ? total : total - 1;
+  const angle = animation.angle;
+  const uniformHue = Math.sin( angle * hueSpeed ) * TWO_PI;
 
-  for ( let shadow = glow; shadow >= 0; shadow-- ) {
-    const layerWeight = weight * ( 1 + shadow * 1.3 );
-    const opacityFactor = p.map(
-      shadow,
-      0,
-      Math.max(
-        1,
-        glow
-      ),
-      1,
-      4
+  batch.openStroke();
+
+  for ( let i = 0; i < segments; i++ ) {
+    const ai = i * 2;
+    const bi = ( ( i + 1 ) % total ) * 2;
+    const hueIndex = gradient
+      ? Math.sin( ( i / segments ) * TWO_PI + angle * hueSpeed ) * TWO_PI
+      : uniformHue;
+
+    batch.strokeSegment(
+      dense[ ai ],
+      dense[ ai + 1 ],
+      dense[ bi ],
+      dense[ bi + 1 ],
+      hueIndex
     );
-    const halfWidth = layerWeight / 2;
-    const [
-      red,
-      green,
-      blue,
-      alpha
-    ] = colorLevels( colors.rainbow( {
-      hueIndex: Math.sin( animation.angle * hueSpeed ) * p.PI * 2,
-      opacityFactor
-    } ) );
-
-    for ( let i = 0; i < segments; i++ ) {
-      const a = dense[ i ];
-      const b = dense[ ( i + 1 ) % total ];
-
-      batch.capsule(
-        a.x,
-        a.y,
-        b.x,
-        b.y,
-        halfWidth,
-        red,
-        green,
-        blue,
-        alpha
-      );
-    }
   }
 }
 
@@ -743,22 +728,29 @@ export function renderSplines(
     ) );
   }
 
-  // The rounded glowing curve is the per-frame hotspot, so the Chaikin methods
-  // are queued onto one shared GPU batch across every spline and drawn in a single
-  // composite. The p5-native curve primitives (catmull-rom / quadratic) stay on the
-  // CPU — they already emit one shape per glow layer, so they were never the
-  // bottleneck and tessellating them would risk changing their look.
+  // The rounded glowing curve is the per-frame hotspot, so for the Chaikin methods
+  // every spline's geometry is uploaded once and the GPU re-draws it per glow layer
+  // (rainbow colour computed in the shader). The p5-native curve primitives
+  // (catmull-rom / quadratic) stay on the CPU — they already emit one shape per glow
+  // layer, so they were never the bottleneck and tessellating them would risk
+  // changing their look.
   if ( method === "chaikin" ) {
-    const emit = ( stroke.gradient ?? true )
-      ? emitChaikinGradient
-      : emitChaikinUniform;
+    const gradient = stroke.gradient ?? true;
 
-    batch.begin();
-    splines.forEach( ( points ) => emit(
+    batch.beginStrokes();
+    splines.forEach( ( points ) => emitStroke(
       points,
-      curveOptions
+      {
+        iterations: curveOptions.iterations,
+        closed,
+        hueSpeed: curveOptions.hueSpeed,
+        gradient
+      }
     ) );
-    batch.end();
+    batch.drawStrokes( {
+      weight: curveOptions.weight,
+      glow: curveOptions.glow
+    } );
   } else {
     splines.forEach( ( points ) => drawUniformCurve(
       points,

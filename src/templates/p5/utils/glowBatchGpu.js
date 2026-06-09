@@ -4,40 +4,56 @@ import {
 } from "./sketch.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shared GPU batch for 2D "glow" primitives (capsules / discs).
+// Shared GPU batch for 2D "glow" primitives (capsules / discs), rainbow-shaded
+// on the GPU.
 //
-// Several sketches paint the same shape thousands of times per frame on the CPU:
-//   - neonGraffiti draws shadowsCount × stepsCount filled circles (fill + circle
-//     immediate-mode call each);
+// Several sketches paint the same shape thousands of times per frame:
+//   - neonGraffiti draws shadowsCount × stepsCount filled circles;
 //   - the spline family strokes a dense Chaikin polyline segment-by-segment,
 //     once per glow layer, once per detected entity.
 //
-// The generative MATH stays on the CPU (so the look is bit-for-bit identical to
-// the originals), but the RENDERING — the part that actually slows the draw loop
-// — moves to a single instanced draw call. Every primitive is expressed as ONE
-// unified shape: a capsule (a round-capped segment from A to B with a given half
-// thickness). A disc is just a capsule with A == B, so the same shader covers
-// circles, glow strokes and point markers.
+// The generative MATH stays on the CPU (so the look matches the originals), but
+// the RENDERING and the COLOUR move to the GPU. Every primitive is a capsule (a
+// round-capped segment A→B with a half thickness; a disc is a zero-length
+// capsule), and the fragment shader computes the rainbow palette itself — a GLSL
+// port of utils/colors.js `rainbow`, identical to the CPU version. Sketches pass
+// the palette inputs (hueOffset, hueIndex, opacityFactor) instead of building a
+// p5.Color per primitive, which removes the per-segment colour allocation that
+// dominated the CPU cost once the work moved off the draw calls.
 //
-// Usage:
-//   const batch = createGlowBatchRenderer();
-//   batch.begin();                                   // start a frame
-//   batch.disc(x, y, radius, r, g, b, a);            // colours in 0..1
-//   batch.capsule(ax, ay, bx, by, halfWidth, r, g, b, a);
-//   batch.end();                                     // draw + composite onto p2d
+// Two ways to feed it:
 //
-// Instances are drawn in submission order with premultiplied "over" blending, so
-// painter's order (and overlap) matches the CPU originals exactly. The batch
-// renders into an off-screen WebGL buffer cleared to transparent and composites
-// it over whatever is already on the p2d canvas (background, overlays, …), so it
-// can be dropped into an existing sketch without owning the whole frame.
+//   Mode A — per-instance primitives (every disc independent), one draw call:
+//     batch.begin();
+//     batch.disc(x, y, radius, hueOffset, hueIndex, opacityFactor);
+//     batch.end();
+//
+//   Mode B — stroke layers (one polyline drawn once, re-drawn per glow layer):
+//     batch.beginStrokes();
+//     batch.openStroke();                                  // one per spline
+//     batch.strokeSegment(ax, ay, bx, by, hueIndex);       // per dense segment
+//     batch.drawStrokes({ weight, glow });                 // hueOffset defaults 0
+//
+//   In Mode B the geometry is uploaded once and re-drawn `glow + 1` times with
+//   the per-layer half-thickness and opacityFactor supplied as constants, so the
+//   CPU emits each segment once instead of once per layer. Strokes are drawn in
+//   submission order, spline by spline, layer widest-and-dimmest first, matching
+//   the CPU stacking exactly.
+//
+// Both modes render into an off-screen WebGL buffer cleared to transparent and
+// composite it over the p2d canvas with premultiplied "over" blending, so they
+// drop into an existing sketch (background, overlays, …) with no edge fringing.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// 9 floats per instance: vec4 segment (ax, ay, bx, by), vec4 colour (r,g,b,a),
-// float half-thickness.
-const FLOATS_PER_INSTANCE = 9;
+// Mode A instance: vec4 segment, half-thickness, hueOffset, hueIndex, opacity.
+const FLOATS_A = 8;
+
+// Mode B segment: vec4 segment + hueIndex (half/hueOffset/opacity are constants).
+const FLOATS_B = 5;
+
 const BYTES_PER_FLOAT = 4;
-const INSTANCE_STRIDE = FLOATS_PER_INSTANCE * BYTES_PER_FLOAT; // 36
+const STRIDE_A = FLOATS_A * BYTES_PER_FLOAT; // 32
+const STRIDE_B = FLOATS_B * BYTES_PER_FLOAT; // 20
 
 // Antialiasing half-band, in pixels, applied around every capsule edge.
 const EDGE_PAD = 1.0;
@@ -45,10 +61,12 @@ const EDGE_PAD = 1.0;
 const VERT_SRC = `
   precision highp float;
 
-  attribute vec2  aCorner; // unit quad: x in [0,1] along the segment, y in [-1,1] across
-  attribute vec4  aSeg;    // (ax, ay, bx, by) in pixels, top-left origin
-  attribute vec4  aColor;  // straight-alpha rgba, 0..1
-  attribute float aHalf;   // half thickness in pixels
+  attribute vec2  aCorner;    // unit quad: x in [0,1] along the segment, y in [-1,1] across
+  attribute vec4  aSeg;       // (ax, ay, bx, by) in pixels, top-left origin
+  attribute float aHalf;      // half thickness in pixels
+  attribute float aHueOffset;
+  attribute float aHueIndex;
+  attribute float aOpacity;   // opacityFactor for the rainbow palette
 
   uniform vec2  uResolution;
   uniform float uPad;
@@ -56,8 +74,10 @@ const VERT_SRC = `
   varying vec2  vPos;
   varying vec2  vA;
   varying vec2  vB;
-  varying vec4  vColor;
   varying float vHalf;
+  varying float vHueOffset;
+  varying float vHueIndex;
+  varying float vOpacity;
 
   void main() {
     vec2 a = aSeg.xy;
@@ -74,11 +94,13 @@ const VERT_SRC = `
     vec2  along = mix(a - dir * ext, b + dir * ext, aCorner.x);
     vec2  pos   = along + nrm * (aCorner.y * ext);
 
-    vPos   = pos;
-    vA     = a;
-    vB     = b;
-    vColor = aColor;
-    vHalf  = aHalf;
+    vPos       = pos;
+    vA         = a;
+    vB         = b;
+    vHalf      = aHalf;
+    vHueOffset = aHueOffset;
+    vHueIndex  = aHueIndex;
+    vOpacity   = aOpacity;
 
     vec2 ndc = vec2(
       (pos.x / uResolution.x) * 2.0 - 1.0,
@@ -96,8 +118,10 @@ const FRAG_SRC = `
   varying vec2  vPos;
   varying vec2  vA;
   varying vec2  vB;
-  varying vec4  vColor;
   varying float vHalf;
+  varying float vHueOffset;
+  varying float vHueIndex;
+  varying float vOpacity;
 
   // Distance from p to the segment a→b (round caps), i.e. the capsule axis.
   float segmentDistance(vec2 p, vec2 a, vec2 b) {
@@ -108,6 +132,20 @@ const FRAG_SRC = `
     return length(pa - ba * h);
   }
 
+  // GLSL port of utils/colors.js rainbow() (default Math.sin/cos easing), bit-for
+  // -bit with the CPU version: p5 builds each channel in 0..360 then divides by
+  // opacityFactor, clamped to 0..255.
+  vec3 paletteRainbow(float hueOffset, float hueIndex, float opacityFactor) {
+    float a = hueOffset + hueIndex;
+    float b = hueOffset - hueIndex;
+
+    float red   = (sin(a) * 0.5 + 0.5) * 360.0 / opacityFactor;
+    float green = (1.0 - cos(b)) * 0.5 * 360.0 / opacityFactor;
+    float blue  = (1.0 - sin(a)) * 0.5 * 360.0 / opacityFactor;
+
+    return clamp(vec3(red, green, blue) / 255.0, 0.0, 1.0);
+  }
+
   void main() {
     float d   = segmentDistance(vPos, vA, vB) - vHalf;
     float cov = 1.0 - smoothstep(-uPad, uPad, d);
@@ -116,12 +154,12 @@ const FRAG_SRC = `
       discard;
     }
 
-    // Premultiplied "over": the p5.Graphics WebGL canvas is premultipliedAlpha,
-    // so emitting premultiplied colour lets p.image() composite the buffer onto
-    // the p2d canvas with no dark edge fringing.
-    float alpha = vColor.a * cov;
+    // The rainbow palette is opaque (alpha 255), so coverage IS the alpha. Emit
+    // premultiplied colour: the p5.Graphics WebGL canvas is premultipliedAlpha,
+    // so p.image() composites the buffer onto the p2d canvas with no fringing.
+    vec3 rgb = paletteRainbow(vHueOffset, vHueIndex, vOpacity);
 
-    gl_FragColor = vec4(vColor.rgb * alpha, alpha);
+    gl_FragColor = vec4(rgb * cov, cov);
   }
 `;
 
@@ -213,6 +251,10 @@ function getInstancingExt( gl ) {
 function setDivisor(
   gl, ext, loc, divisor
 ) {
+  if ( loc < 0 ) {
+    return;
+  }
+
   if ( ext ) {
     ext.vertexAttribDivisorANGLE(
       loc,
@@ -247,32 +289,13 @@ function drawArraysInstanced(
 }
 
 /**
- * Extract a p5.Color's channels as 0..1 floats, so a colour built by the usual
- * `colors.*` helpers can be fed straight into the batch.
+ * Create a GPU batch renderer for rainbow-shaded round-capped 2D primitives.
  *
- * @param {object} c p5.Color (or anything exposing a `levels` [r,g,b,a] 0..255)
- * @returns {[number, number, number, number]}
- */
-export function colorLevels( c ) {
-  const levels = c?.levels ?? [
-    255,
-    255,
-    255,
-    255
-  ];
-
-  return [
-    levels[ 0 ] / 255,
-    ( levels[ 1 ] ?? 255 ) / 255,
-    ( levels[ 2 ] ?? 255 ) / 255,
-    ( levels[ 3 ] ?? 255 ) / 255
-  ];
-}
-
-/**
- * Create a GPU batch renderer for round-capped 2D primitives.
- *
- * @returns {{ begin: Function, capsule: Function, disc: Function, end: Function }}
+ * @returns {{
+ *   begin: Function, disc: Function, capsule: Function, end: Function,
+ *   beginStrokes: Function, openStroke: Function, strokeSegment: Function,
+ *   drawStrokes: Function
+ * }}
  */
 export default function createGlowBatchRenderer() {
   const state = {
@@ -281,17 +304,21 @@ export default function createGlowBatchRenderer() {
     quadVBO: null,
     instanceVBO: null,
     locs: {},
-    aCornerLoc: -1,
-    aSegLoc: -1,
-    aColorLoc: -1,
-    aHalfLoc: -1,
     ext: null,
     ctxRef: null,
     p5Ref: null,
-    data: new Float32Array( 1024 * FLOATS_PER_INSTANCE ),
-    capacity: 1024,
-    count: 0,
-    additive: false
+
+    // Mode A — per-instance primitives.
+    dataA: new Float32Array( 1024 * FLOATS_A ),
+    capacityA: 1024,
+    countA: 0,
+
+    // Mode B — stroke layers.
+    dataB: new Float32Array( 1024 * FLOATS_B ),
+    capacityB: 1024,
+    countB: 0,
+    groups: [],
+    currentGroup: null
   };
 
   function ensureGraphics() {
@@ -344,22 +371,29 @@ export default function createGlowBatchRenderer() {
       return false;
     }
 
-    state.aCornerLoc = gl.getAttribLocation(
-      state.program,
-      "aCorner"
-    );
-    state.aSegLoc = gl.getAttribLocation(
-      state.program,
-      "aSeg"
-    );
-    state.aColorLoc = gl.getAttribLocation(
-      state.program,
-      "aColor"
-    );
-    state.aHalfLoc = gl.getAttribLocation(
-      state.program,
-      "aHalf"
-    );
+    [
+      "aCorner",
+      "aSeg",
+      "aHalf",
+      "aHueOffset",
+      "aHueIndex",
+      "aOpacity"
+    ].forEach( ( name ) => {
+      state.locs[ name ] = gl.getAttribLocation(
+        state.program,
+        name
+      );
+    } );
+
+    [
+      "uResolution",
+      "uPad"
+    ].forEach( ( name ) => {
+      state.locs[ name ] = gl.getUniformLocation(
+        state.program,
+        name
+      );
+    } );
 
     state.quadVBO = gl.createBuffer();
 
@@ -394,169 +428,11 @@ export default function createGlowBatchRenderer() {
     return true;
   }
 
-  function ensureCapacity( needed ) {
-    if ( needed <= state.capacity ) {
-      return;
-    }
-
-    let capacity = state.capacity;
-
-    while ( capacity < needed ) {
-      capacity *= 2;
-    }
-
-    const grown = new Float32Array( capacity * FLOATS_PER_INSTANCE );
-
-    grown.set( state.data.subarray(
-      0,
-      state.count * FLOATS_PER_INSTANCE
-    ) );
-
-    state.data = grown;
-    state.capacity = capacity;
-  }
-
-  function setUniform(
-    gl, name, value
+  // Common per-frame GL setup: viewport, premultiplied "over" blend, clear to
+  // transparent, activate the program and its shared uniforms, bind the quad.
+  function beginPass(
+    gl, g
   ) {
-    if ( !( name in state.locs ) ) {
-      state.locs[ name ] = gl.getUniformLocation(
-        state.program,
-        name
-      );
-    }
-
-    const loc = state.locs[ name ];
-
-    if ( loc === null ) {
-      return;
-    }
-
-    if ( Array.isArray( value ) ) {
-      gl.uniform2f(
-        loc,
-        value[ 0 ],
-        value[ 1 ]
-      );
-
-      return;
-    }
-
-    gl.uniform1f(
-      loc,
-      value
-    );
-  }
-
-  /**
-   * Start a new batch. Discards any primitives left over from a previous frame.
-   *
-   * @param {object} [opts]
-   * @param {boolean} [opts.additive=false] add colours instead of "over" blending
-   */
-  function begin( opts = {} ) {
-    state.count = 0;
-    state.additive = opts.additive ?? false;
-  }
-
-  /**
-   * Queue a round-capped segment from (ax, ay) to (bx, by). Colours are 0..1.
-   */
-  function capsule(
-    ax, ay, bx, by, halfWidth, r, g, b, a = 1
-  ) {
-    ensureCapacity( state.count + 1 );
-
-    const base = state.count * FLOATS_PER_INSTANCE;
-    const out = state.data;
-
-    out[ base ] = ax;
-    out[ base + 1 ] = ay;
-    out[ base + 2 ] = bx;
-    out[ base + 3 ] = by;
-    out[ base + 4 ] = r;
-    out[ base + 5 ] = g;
-    out[ base + 6 ] = b;
-    out[ base + 7 ] = a;
-    out[ base + 8 ] = halfWidth;
-
-    state.count++;
-  }
-
-  /**
-   * Queue a filled disc (a capsule whose endpoints coincide). Colours are 0..1.
-   */
-  function disc(
-    x, y, radius, r, g, b, a = 1
-  ) {
-    capsule(
-      x,
-      y,
-      x,
-      y,
-      radius,
-      r,
-      g,
-      b,
-      a
-    );
-  }
-
-  // Bind a float attribute from the currently-bound ARRAY_BUFFER.
-  function bindAttrib(
-    gl, loc, size, offset
-  ) {
-    if ( loc < 0 ) {
-      return;
-    }
-
-    gl.enableVertexAttribArray( loc );
-    gl.vertexAttribPointer(
-      loc,
-      size,
-      gl.FLOAT,
-      false,
-      INSTANCE_STRIDE,
-      offset
-    );
-    setDivisor(
-      gl,
-      state.ext,
-      loc,
-      1
-    );
-  }
-
-  /**
-   * Draw every queued primitive in one instanced call and composite the result
-   * onto the main p2d canvas.
-   */
-  function end() {
-    if ( state.count === 0 ) {
-      return;
-    }
-
-    const p = getP5();
-    const g = ensureGraphics();
-    const gl = g.drawingContext;
-
-    if ( !ensureProgram( gl ) ) {
-      return;
-    }
-
-    gl.bindBuffer(
-      gl.ARRAY_BUFFER,
-      state.instanceVBO
-    );
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      state.data.subarray(
-        0,
-        state.count * FLOATS_PER_INSTANCE
-      ),
-      gl.DYNAMIC_DRAW
-    );
-
     gl.viewport(
       0,
       0,
@@ -567,9 +443,7 @@ export default function createGlowBatchRenderer() {
     gl.enable( gl.BLEND );
     gl.blendFunc(
       gl.ONE,
-      state.additive
-        ? gl.ONE
-        : gl.ONE_MINUS_SRC_ALPHA
+      gl.ONE_MINUS_SRC_ALPHA
     );
     gl.clearColor(
       0,
@@ -581,17 +455,13 @@ export default function createGlowBatchRenderer() {
 
     gl.useProgram( state.program );
 
-    setUniform(
-      gl,
-      "uResolution",
-      [
-        g.width,
-        g.height
-      ]
+    gl.uniform2f(
+      state.locs.uResolution,
+      g.width,
+      g.height
     );
-    setUniform(
-      gl,
-      "uPad",
+    gl.uniform1f(
+      state.locs.uPad,
       EDGE_PAD
     );
 
@@ -599,9 +469,9 @@ export default function createGlowBatchRenderer() {
       gl.ARRAY_BUFFER,
       state.quadVBO
     );
-    gl.enableVertexAttribArray( state.aCornerLoc );
+    gl.enableVertexAttribArray( state.locs.aCorner );
     gl.vertexAttribPointer(
-      state.aCornerLoc,
+      state.locs.aCorner,
       2,
       gl.FLOAT,
       false,
@@ -611,50 +481,26 @@ export default function createGlowBatchRenderer() {
     setDivisor(
       gl,
       state.ext,
-      state.aCornerLoc,
+      state.locs.aCorner,
       0
     );
+  }
 
-    gl.bindBuffer(
-      gl.ARRAY_BUFFER,
-      state.instanceVBO
-    );
-    bindAttrib(
-      gl,
-      state.aSegLoc,
-      4,
-      0
-    );
-    bindAttrib(
-      gl,
-      state.aColorLoc,
-      4,
-      16
-    );
-    bindAttrib(
-      gl,
-      state.aHalfLoc,
-      1,
-      32
-    );
-
-    drawArraysInstanced(
-      gl,
-      state.ext,
-      gl.TRIANGLES,
-      0,
-      6,
-      state.count
-    );
-
-    // Restore GL state so p5 keeps working with the buffer.
-    gl.disableVertexAttribArray( state.aCornerLoc );
-
+  // Restore GL state so p5 keeps working with the buffer, then composite onto the
+  // main p2d canvas.
+  function endPass(
+    gl, g, p
+  ) {
     [
-      state.aSegLoc,
-      state.aColorLoc,
-      state.aHalfLoc
-    ].forEach( ( loc ) => {
+      "aCorner",
+      "aSeg",
+      "aHalf",
+      "aHueOffset",
+      "aHueIndex",
+      "aOpacity"
+    ].forEach( ( name ) => {
+      const loc = state.locs[ name ];
+
       if ( loc < 0 ) {
         return;
       }
@@ -681,10 +527,414 @@ export default function createGlowBatchRenderer() {
     );
   }
 
+  // ── Mode A: per-instance primitives ───────────────────────────────────────
+
+  function ensureCapacityA( needed ) {
+    if ( needed <= state.capacityA ) {
+      return;
+    }
+
+    let capacity = state.capacityA;
+
+    while ( capacity < needed ) {
+      capacity *= 2;
+    }
+
+    const grown = new Float32Array( capacity * FLOATS_A );
+
+    grown.set( state.dataA.subarray(
+      0,
+      state.countA * FLOATS_A
+    ) );
+
+    state.dataA = grown;
+    state.capacityA = capacity;
+  }
+
+  /**
+   * Start a per-instance batch. Discards primitives left over from a prior frame.
+   */
+  function begin() {
+    state.countA = 0;
+  }
+
+  /**
+   * Queue a round-capped segment from (ax, ay) to (bx, by), rainbow-shaded by
+   * (hueOffset, hueIndex, opacityFactor) on the GPU.
+   */
+  function capsule(
+    ax, ay, bx, by, halfWidth, hueOffset, hueIndex, opacityFactor
+  ) {
+    ensureCapacityA( state.countA + 1 );
+
+    const base = state.countA * FLOATS_A;
+    const out = state.dataA;
+
+    out[ base ] = ax;
+    out[ base + 1 ] = ay;
+    out[ base + 2 ] = bx;
+    out[ base + 3 ] = by;
+    out[ base + 4 ] = halfWidth;
+    out[ base + 5 ] = hueOffset;
+    out[ base + 6 ] = hueIndex;
+    out[ base + 7 ] = opacityFactor;
+
+    state.countA++;
+  }
+
+  /**
+   * Queue a filled disc (a zero-length capsule), rainbow-shaded on the GPU.
+   */
+  function disc(
+    x, y, radius, hueOffset, hueIndex, opacityFactor
+  ) {
+    capsule(
+      x,
+      y,
+      x,
+      y,
+      radius,
+      hueOffset,
+      hueIndex,
+      opacityFactor
+    );
+  }
+
+  /**
+   * Draw every queued per-instance primitive in one instanced call and composite.
+   */
+  function end() {
+    if ( state.countA === 0 ) {
+      return;
+    }
+
+    const p = getP5();
+    const g = ensureGraphics();
+    const gl = g.drawingContext;
+
+    if ( !ensureProgram( gl ) ) {
+      return;
+    }
+
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      state.instanceVBO
+    );
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      state.dataA.subarray(
+        0,
+        state.countA * FLOATS_A
+      ),
+      gl.DYNAMIC_DRAW
+    );
+
+    beginPass(
+      gl,
+      g
+    );
+
+    // beginPass leaves the quad bound (for aCorner); rebind the instance buffer so
+    // the per-instance attribute pointers below capture it.
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      state.instanceVBO
+    );
+
+    // All eight inputs vary per instance.
+    const perInstance = [
+      [
+        "aSeg",
+        4,
+        0
+      ],
+      [
+        "aHalf",
+        1,
+        16
+      ],
+      [
+        "aHueOffset",
+        1,
+        20
+      ],
+      [
+        "aHueIndex",
+        1,
+        24
+      ],
+      [
+        "aOpacity",
+        1,
+        28
+      ]
+    ];
+
+    perInstance.forEach( ( [
+      name,
+      size,
+      offset
+    ] ) => {
+      const loc = state.locs[ name ];
+
+      if ( loc < 0 ) {
+        return;
+      }
+
+      gl.enableVertexAttribArray( loc );
+      gl.vertexAttribPointer(
+        loc,
+        size,
+        gl.FLOAT,
+        false,
+        STRIDE_A,
+        offset
+      );
+      setDivisor(
+        gl,
+        state.ext,
+        loc,
+        1
+      );
+    } );
+
+    drawArraysInstanced(
+      gl,
+      state.ext,
+      gl.TRIANGLES,
+      0,
+      6,
+      state.countA
+    );
+
+    endPass(
+      gl,
+      g,
+      p
+    );
+  }
+
+  // ── Mode B: stroke layers ─────────────────────────────────────────────────
+
+  function ensureCapacityB( needed ) {
+    if ( needed <= state.capacityB ) {
+      return;
+    }
+
+    let capacity = state.capacityB;
+
+    while ( capacity < needed ) {
+      capacity *= 2;
+    }
+
+    const grown = new Float32Array( capacity * FLOATS_B );
+
+    grown.set( state.dataB.subarray(
+      0,
+      state.countB * FLOATS_B
+    ) );
+
+    state.dataB = grown;
+    state.capacityB = capacity;
+  }
+
+  /**
+   * Start a stroke-layer batch. Discards strokes left over from a prior frame.
+   */
+  function beginStrokes() {
+    state.countB = 0;
+    state.groups = [];
+    state.currentGroup = null;
+  }
+
+  /**
+   * Begin a new spline. Its segments are drawn together, in submission order,
+   * before the next spline — so per-spline layer stacking is preserved.
+   */
+  function openStroke() {
+    state.currentGroup = {
+      offset: state.countB,
+      count: 0
+    };
+    state.groups.push( state.currentGroup );
+  }
+
+  /**
+   * Queue one dense segment of the current spline, hued by `hueIndex` on the GPU.
+   */
+  function strokeSegment(
+    ax, ay, bx, by, hueIndex
+  ) {
+    if ( !state.currentGroup ) {
+      openStroke();
+    }
+
+    ensureCapacityB( state.countB + 1 );
+
+    const base = state.countB * FLOATS_B;
+    const out = state.dataB;
+
+    out[ base ] = ax;
+    out[ base + 1 ] = ay;
+    out[ base + 2 ] = bx;
+    out[ base + 3 ] = by;
+    out[ base + 4 ] = hueIndex;
+
+    state.countB++;
+    state.currentGroup.count++;
+  }
+
+  /**
+   * Draw every queued spline, each re-drawn once per glow layer (widest and
+   * dimmest first) with the layer half-thickness and opacityFactor supplied as
+   * constants, then composite once.
+   *
+   * @param {object} params
+   * @param {number} params.weight    base stroke weight (px)
+   * @param {number} params.glow      extra glow layers below the core
+   * @param {number} [params.hueOffset=0]
+   */
+  function drawStrokes( {
+    weight, glow, hueOffset = 0
+  } ) {
+    if ( state.countB === 0 ) {
+      return;
+    }
+
+    const p = getP5();
+    const g = ensureGraphics();
+    const gl = g.drawingContext;
+
+    if ( !ensureProgram( gl ) ) {
+      return;
+    }
+
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      state.instanceVBO
+    );
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      state.dataB.subarray(
+        0,
+        state.countB * FLOATS_B
+      ),
+      gl.DYNAMIC_DRAW
+    );
+
+    beginPass(
+      gl,
+      g
+    );
+
+    // beginPass leaves the quad bound (for aCorner); rebind the instance buffer so
+    // the per-group attribute pointers below capture it.
+    gl.bindBuffer(
+      gl.ARRAY_BUFFER,
+      state.instanceVBO
+    );
+
+    // hueIndex varies per segment; half-thickness, opacityFactor and hueOffset are
+    // constant within a layer, so they ride on disabled attributes set per pass.
+    const aSeg = state.locs.aSeg;
+    const aHueIndex = state.locs.aHueIndex;
+
+    gl.disableVertexAttribArray( state.locs.aHalf );
+    gl.disableVertexAttribArray( state.locs.aOpacity );
+    gl.disableVertexAttribArray( state.locs.aHueOffset );
+    gl.vertexAttrib1f(
+      state.locs.aHueOffset,
+      hueOffset
+    );
+
+    const layers = Math.max(
+      0,
+      Math.floor( glow )
+    );
+    const denom = Math.max(
+      1,
+      layers
+    );
+
+    for ( const group of state.groups ) {
+      if ( group.count === 0 ) {
+        continue;
+      }
+
+      const byteOffset = group.offset * STRIDE_B;
+
+      gl.enableVertexAttribArray( aSeg );
+      gl.vertexAttribPointer(
+        aSeg,
+        4,
+        gl.FLOAT,
+        false,
+        STRIDE_B,
+        byteOffset
+      );
+      setDivisor(
+        gl,
+        state.ext,
+        aSeg,
+        1
+      );
+
+      gl.enableVertexAttribArray( aHueIndex );
+      gl.vertexAttribPointer(
+        aHueIndex,
+        1,
+        gl.FLOAT,
+        false,
+        STRIDE_B,
+        byteOffset + 16
+      );
+      setDivisor(
+        gl,
+        state.ext,
+        aHueIndex,
+        1
+      );
+
+      // Widest, dimmest layer first; the bright core lands on top.
+      for ( let shadow = layers; shadow >= 0; shadow-- ) {
+        const layerWeight = weight * ( 1 + shadow * 1.3 );
+        const opacityFactor = 1 + ( shadow / denom ) * 3;
+
+        gl.vertexAttrib1f(
+          state.locs.aHalf,
+          layerWeight / 2
+        );
+        gl.vertexAttrib1f(
+          state.locs.aOpacity,
+          opacityFactor
+        );
+
+        drawArraysInstanced(
+          gl,
+          state.ext,
+          gl.TRIANGLES,
+          0,
+          6,
+          group.count
+        );
+      }
+    }
+
+    endPass(
+      gl,
+      g,
+      p
+    );
+  }
+
   return {
     begin,
-    capsule,
     disc,
-    end
+    capsule,
+    end,
+    beginStrokes,
+    openStroke,
+    strokeSegment,
+    drawStrokes
   };
 }
