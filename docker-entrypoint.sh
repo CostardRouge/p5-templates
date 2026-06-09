@@ -13,10 +13,10 @@ else
 fi
 
 echo "Running database migrations..."
-# Invoke the CLI's real entrypoint (not node_modules/.bin/prisma): Docker
-# dereferences that symlink into a plain file, which puts __dirname in .bin/ and
-# the bundled WASM (prisma_schema_build_bg.wasm, schema_engine_bg.wasm) out of reach.
-node /app/node_modules/prisma/build/index.js migrate deploy
+# Run the isolated Prisma CLI (full dependency closure under prisma-cli/) via its
+# real entrypoint — not node_modules/.bin/prisma, whose symlink Docker
+# dereferences, which breaks __dirname-relative WASM loading.
+node /app/prisma-cli/node_modules/prisma/build/index.js migrate deploy --schema /app/prisma/schema.prisma
 
 echo "Starting application..."
 exec node server.js
