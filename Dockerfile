@@ -70,12 +70,14 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Prisma: schema + migrations for `migrate deploy`, the generated client (with
-# its native query engine) and the CLI used by the entrypoint at startup.
+# its native query engine) and the CLI used by the entrypoint at startup. The
+# whole prisma/ + @prisma/ trees are copied so the CLI finds its bundled WASM
+# (build/*.wasm) and engines; it is invoked via build/index.js directly — NOT
+# via .bin/prisma, whose symlink Docker dereferences, breaking __dirname.
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 
 # Entrypoint: runs migrations then starts the standalone server.
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh

@@ -13,7 +13,10 @@ else
 fi
 
 echo "Running database migrations..."
-npx prisma migrate deploy
+# Invoke the CLI's real entrypoint (not node_modules/.bin/prisma): Docker
+# dereferences that symlink into a plain file, which puts __dirname in .bin/ and
+# the bundled WASM (prisma_schema_build_bg.wasm, schema_engine_bg.wasm) out of reach.
+node /app/node_modules/prisma/build/index.js migrate deploy
 
 echo "Starting application..."
 exec node server.js
