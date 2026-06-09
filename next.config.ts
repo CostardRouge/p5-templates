@@ -3,6 +3,10 @@ import type {
 } from "next";
 
 const nextConfig: NextConfig = {
+  // Emit a self-contained server bundle (.next/standalone) so the runtime
+  // image only ships the modules actually traced by the build instead of the
+  // whole node_modules tree. Started with `node server.js`.
+  output: "standalone",
   distDir: process.env.NEXT_BUILD_DIR || ".next",
   poweredByHeader: false,
   devIndicators: false,
