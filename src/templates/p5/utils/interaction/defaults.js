@@ -54,6 +54,7 @@ export const interactionFormValues = {
     body: {
       enabled: false,
       maxPoses: 1,
+      model: "lite",
       landmarks: {
         wrists: true,
         elbows: false,
@@ -62,6 +63,12 @@ export const interactionFormValues = {
       },
       confidence: 0.3,
       drawOverlay: false
+    },
+    performance: {
+      useWorker: true,
+      inferenceInterval: 20,
+      idleInterval: 280,
+      idleAfter: 3000
     }
   },
 
@@ -370,6 +377,20 @@ export const interactionFormConfiguration = {
               max: 2,
               step: 1
             },
+            model: {
+              component: "select",
+              label: "Model",
+              options: [
+                {
+                  label: "Lite (fast)",
+                  value: "lite"
+                },
+                {
+                  label: "Heavy (accurate)",
+                  value: "heavy"
+                }
+              ]
+            },
             landmarks: {
               component: "nested-object",
               label: "Landmarks",
@@ -402,6 +423,38 @@ export const interactionFormConfiguration = {
             drawOverlay: {
               component: "checkbox",
               label: "Draw skeleton"
+            }
+          }
+        },
+
+        performance: {
+          component: "nested-object",
+          label: "Performance",
+          fields: {
+            useWorker: {
+              component: "checkbox",
+              label: "Run inference in a worker"
+            },
+            inferenceInterval: {
+              component: "slider",
+              label: "Inference interval (ms)",
+              min: 10,
+              max: 200,
+              step: 5
+            },
+            idleInterval: {
+              component: "slider",
+              label: "Idle interval (ms)",
+              min: 50,
+              max: 1000,
+              step: 10
+            },
+            idleAfter: {
+              component: "slider",
+              label: "Idle after (ms)",
+              min: 500,
+              max: 10000,
+              step: 100
             }
           }
         }

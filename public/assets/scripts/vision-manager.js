@@ -1,3 +1,11 @@
+const TASK_NAMES = [
+  "segmenter",
+  "interactive",
+  "poses",
+  "hands",
+  "faces"
+];
+
 export class VisionManager {
   constructor() {
     this.state = {
@@ -25,6 +33,7 @@ export class VisionManager {
       runningMode: "VIDEO" // Default
     };
     this.onResultCallback = null;
+    this.lastDetectError = {};
   }
 
   setResultCallback( fn ) {
@@ -33,7 +42,9 @@ export class VisionManager {
 
   async initialize( config ) {
     const {
-      tasks, mediapipeLibraryPath
+      tasks,
+      mediapipeLibraryPath,
+      taskOptions = {}
     } = config;
 
     tasks.forEach( ( task ) => {
@@ -52,77 +63,123 @@ export class VisionManager {
     } = await import( "../../assets/libraries/mediapipe/vision_bundle.js" );
 
     const resolver = await FilesetResolver.forVisionTasks( `${ mediapipeLibraryPath }/wasm` );
+    const errors = [];
 
-    if ( this.state.segmenter.enabled ) {
-      this.state.segmenter.task = await ImageSegmenter.createFromOptions(
-        resolver,
-        {
-          baseOptions: {
-            delegate: "GPU",
-            modelAssetPath: `${ mediapipeLibraryPath }/deeplabv3.tflite`
-          },
-          outputCategoryMask: true,
-          outputConfidenceMasks: false,
-          runningMode: this.state.runningMode
+    // Try the GPU delegate first, then CPU, so one bad driver or a worker
+    // without WebGL doesn't take the whole task down.
+    const create = async(
+      name, factory
+    ) => {
+      if ( !this.state[ name ].enabled ) {
+        return;
+      }
+
+      try {
+        this.state[ name ].task = await factory( "GPU" );
+      } catch( gpuError ) {
+        try {
+          this.state[ name ].task = await factory( "CPU" );
+        } catch( cpuError ) {
+          this.state[ name ].enabled = false;
+          errors.push( `${ name }: ${ cpuError?.message ?? cpuError }` );
         }
-      );
-    }
+      }
+    };
 
-    if ( this.state.interactive.enabled ) {
-      this.state.interactive.task =
-        await InteractiveSegmenter.createFromOptions(
+    await create(
+      "segmenter",
+      ( delegate ) =>
+        ImageSegmenter.createFromOptions(
           resolver,
           {
             baseOptions: {
-              delegate: "GPU",
+              delegate,
+              modelAssetPath: `${ mediapipeLibraryPath }/deeplabv3.tflite`
+            },
+            outputCategoryMask: true,
+            outputConfidenceMasks: false,
+            runningMode: this.state.runningMode
+          }
+        )
+    );
+
+    await create(
+      "interactive",
+      ( delegate ) =>
+        InteractiveSegmenter.createFromOptions(
+          resolver,
+          {
+            baseOptions: {
+              delegate,
               modelAssetPath: `${ mediapipeLibraryPath }/magic_touch.tflite` // Needs specific model!
             },
             outputCategoryMask: true,
             outputConfidenceMasks: false
           }
-        );
+        )
+    );
+
+    await create(
+      "hands",
+      ( delegate ) =>
+        HandLandmarker.createFromOptions(
+          resolver,
+          {
+            numHands: taskOptions.hands?.numHands ?? 2,
+            minHandDetectionConfidence: taskOptions.hands?.minConfidence ?? 0.5,
+            runningMode: "VIDEO",
+            baseOptions: {
+              delegate,
+              modelAssetPath: `${ mediapipeLibraryPath }/hand_landmarker.task`
+            }
+          }
+        )
+    );
+
+    await create(
+      "faces",
+      ( delegate ) =>
+        FaceDetector.createFromOptions(
+          resolver,
+          {
+            minDetectionConfidence: taskOptions.faces?.minConfidence ?? 0.5,
+            minSuppressionThreshold: 0.3,
+            runningMode: "VIDEO",
+            baseOptions: {
+              delegate,
+              modelAssetPath: `${ mediapipeLibraryPath }/blaze_face_short_range.tflite`
+            }
+          }
+        )
+    );
+
+    await create(
+      "poses",
+      ( delegate ) =>
+        PoseLandmarker.createFromOptions(
+          resolver,
+          {
+            numPoses: taskOptions.poses?.numPoses ?? 2,
+            runningMode: "VIDEO",
+            baseOptions: {
+              delegate,
+              // "lite" is ~5× faster than "heavy" and plenty for interaction.
+              modelAssetPath: `${ mediapipeLibraryPath }/pose_landmarker_${ taskOptions.poses?.model ?? "heavy" }.task`
+            }
+          }
+        )
+    );
+
+    const anyTaskAlive = tasks.some( ( name ) => this.state[ name ]?.task );
+
+    if ( tasks.length > 0 && !anyTaskAlive ) {
+      throw new Error( `VisionManager: all tasks failed to initialize (${ errors.join( "; " ) })` );
     }
 
-    if ( this.state.hands.enabled ) {
-      this.state.hands.task = await HandLandmarker.createFromOptions(
-        resolver,
-        {
-          numHands: 2,
-          runningMode: "VIDEO",
-          baseOptions: {
-            delegate: "GPU",
-            modelAssetPath: `${ mediapipeLibraryPath }/hand_landmarker.task`
-          }
-        }
-      );
-    }
-
-    if ( this.state.faces.enabled ) {
-      this.state.faces.task = await FaceDetector.createFromOptions(
-        resolver,
-        {
-          minDetectionConfidence: 0.5,
-          minSuppressionThreshold: 0.3,
-          runningMode: "VIDEO",
-          baseOptions: {
-            delegate: "GPU",
-            modelAssetPath: `${ mediapipeLibraryPath }/blaze_face_short_range.tflite`
-          }
-        }
-      );
-    }
-
-    if ( this.state.poses.enabled ) {
-      this.state.poses.task = await PoseLandmarker.createFromOptions(
-        resolver,
-        {
-          numPoses: 2,
-          runningMode: "VIDEO",
-          baseOptions: {
-            delegate: "GPU",
-            modelAssetPath: `${ mediapipeLibraryPath }/pose_landmarker_heavy.task`
-          }
-        }
+    if ( errors.length > 0 ) {
+      console.warn(
+        "VisionManager: some tasks failed to initialize:",
+        errors
       );
     }
 
@@ -144,6 +201,24 @@ export class VisionManager {
     // Note: Other tasks might need re-initialization if they don't support setOptions
   }
 
+  // Logs a detect error only when its message changes, so a recurring
+  // per-frame failure doesn't flood the console.
+  warnOnce(
+    name, error
+  ) {
+    const message = error?.message ?? String( error );
+
+    if ( this.lastDetectError[ name ] === message ) {
+      return;
+    }
+
+    this.lastDetectError[ name ] = message;
+    console.warn(
+      `VisionManager: ${ name } detect failed:`,
+      message
+    );
+  }
+
   detect(
     input, timestamp
   ) {
@@ -151,58 +226,86 @@ export class VisionManager {
       return;
     }
 
-    if ( this.state.segmenter.enabled ) {
-      // Handle different modes
-      if ( this.state.runningMode === "IMAGE" ) {
-        this.state.segmenter.task.segment(
-          input,
-          ( result ) =>
-            this.processSegmenterResult( result )
-        );
-      } else {
-        this.state.segmenter.task.segmentForVideo(
-          input,
-          timestamp,
-          ( result ) =>
-            this.processSegmenterResult( result )
+    if ( this.state.segmenter.enabled && this.state.segmenter.task ) {
+      try {
+        // Handle different modes
+        if ( this.state.runningMode === "IMAGE" ) {
+          this.state.segmenter.task.segment(
+            input,
+            ( result ) =>
+              this.processSegmenterResult( result )
+          );
+        } else {
+          this.state.segmenter.task.segmentForVideo(
+            input,
+            timestamp,
+            ( result ) =>
+              this.processSegmenterResult( result )
+          );
+        }
+      } catch( error ) {
+        this.warnOnce(
+          "segmenter",
+          error
         );
       }
     }
 
-    if ( this.state.hands.enabled ) {
-      const result = this.state.hands.task.detectForVideo(
-        input,
-        timestamp
-      );
+    if ( this.state.hands.enabled && this.state.hands.task ) {
+      try {
+        const result = this.state.hands.task.detectForVideo(
+          input,
+          timestamp
+        );
 
-      this.emitResult(
-        "hands",
-        result
-      );
+        this.emitResult(
+          "hands",
+          result
+        );
+      } catch( error ) {
+        this.warnOnce(
+          "hands",
+          error
+        );
+      }
     }
 
-    if ( this.state.poses.enabled ) {
-      const result = this.state.poses.task.detectForVideo(
-        input,
-        timestamp
-      );
+    if ( this.state.poses.enabled && this.state.poses.task ) {
+      try {
+        const result = this.state.poses.task.detectForVideo(
+          input,
+          timestamp
+        );
 
-      this.emitResult(
-        "poses",
-        result
-      );
+        this.emitResult(
+          "poses",
+          result
+        );
+      } catch( error ) {
+        this.warnOnce(
+          "poses",
+          error
+        );
+      }
     }
 
-    if ( this.state.faces.enabled ) {
-      const result = this.state.faces.task.detectForVideo(
-        input,
-        timestamp
-      );
+    if ( this.state.faces.enabled && this.state.faces.task ) {
+      try {
+        const result = this.state.faces.task.detectForVideo(
+          input,
+          timestamp
+        );
 
-      this.emitResult(
-        "faces",
-        result
-      );
+        this.emitResult(
+          "faces",
+          result
+        );
+      } catch( error ) {
+        this.warnOnce(
+          "faces",
+          error
+        );
+      }
     }
   }
 
@@ -219,9 +322,6 @@ export class VisionManager {
       input,
       roi,
       ( result ) => {
-        console.log( {
-          result
-        } );
         // We reuse the same processor because the result format is identical
         this.processSegmenterResult(
           result,
@@ -270,5 +370,24 @@ export class VisionManager {
         result
       } );
     }
+  }
+
+  // Frees the WASM/GPU memory held by every task so the manager can be
+  // discarded without leaking across sketch switches.
+  close() {
+    TASK_NAMES.forEach( ( name ) => {
+      const entry = this.state[ name ];
+
+      try {
+        entry.task?.close?.();
+      } catch {
+        // Already closed or never fully initialized.
+      }
+
+      entry.task = null;
+      entry.enabled = false;
+    } );
+
+    this.state.ready = false;
   }
 }
