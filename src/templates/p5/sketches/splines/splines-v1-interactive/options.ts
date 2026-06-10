@@ -13,8 +13,10 @@ export const formValues = {
 
   // A virtual orbit source is on by default so the sketch animates immediately
   // (and previews) without a webcam or a camera-permission prompt. Vision is
-  // armed but its trackers start OFF — flip Vision → Hands / Body / Face on to
-  // drive the splines live; the hand landmarks are pre-set for a fingertip fan.
+  // armed but starts OFF — the Fingers tracker is pre-enabled, so flipping
+  // Vision → Enabled immediately lets each finger trace its own line (use
+  // trail mode to draw in the air with your fingertips). Hands / Body / Face
+  // can be toggled too; the hand landmarks are pre-set for a fingertip fan.
   interaction: {
     ...interactionFormValues,
     vision: {
@@ -26,6 +28,10 @@ export const formValues = {
           fingertips: true,
           palm: true
         }
+      },
+      fingers: {
+        ...interactionFormValues.vision.fingers,
+        enabled: true
       }
     },
     orbit: {

@@ -8,7 +8,8 @@ import {
 import {
   initInteraction,
   disposeInteraction,
-  getPointersDebug
+  getPointersDebug,
+  getPointerGroups
 } from "@/p5/utils/interaction/index.js";
 
 // Color palette per source (RGB)
@@ -28,6 +29,11 @@ const SOURCE_COLORS = {
     109,
     0
   ], // orange
+  fingers: [
+    139,
+    195,
+    74
+  ], // light green
   face: [
     233,
     30,
@@ -74,6 +80,7 @@ const SOURCE_LABELS = {
   mouse: "Mouse",
   touch: "Touch",
   hands: "Hands (MediaPipe)",
+  fingers: "Fingers (MediaPipe)",
   face: "Face (MediaPipe)",
   body: "Body (MediaPipe)",
   orbit: "Orbit",
@@ -126,6 +133,28 @@ sketch.draw( () => {
     } );
   }
 
+  // ── Draw finger chains ─────────────────────────────────────────────────
+  // Each detected finger is one ordered group (base → tip); draw it as a
+  // polyline so the per-finger ordering is visible, not just the joints.
+  if ( interaction.vision?.enabled !== false && interaction.vision?.fingers?.enabled ) {
+    getPointerGroups( interaction )
+      .filter( ( group ) => group.source === "fingers" )
+      .forEach( ( group ) => {
+        p.noFill();
+        p.stroke(
+          ...SOURCE_COLORS.fingers,
+          160
+        );
+        p.strokeWeight( 3 );
+        p.beginShape();
+        group.points.forEach( ( v ) => p.vertex(
+          v.x,
+          v.y
+        ) );
+        p.endShape();
+      } );
+  }
+
   // ── Draw pointer circles ───────────────────────────────────────────────
   pointers.forEach( ( {
     vector, source
@@ -138,6 +167,10 @@ sketch.draw( () => {
     const x = vector.x;
     const y = vector.y;
 
+    // Finger joints come 21 per hand — draw them smaller to stay readable.
+    const ringSize = source === "fingers" ? 22 : 56;
+    const dotSize = source === "fingers" ? 5 : 12;
+
     // Outer ring
     p.noFill();
     p.stroke(
@@ -148,7 +181,7 @@ sketch.draw( () => {
     p.circle(
       x,
       y,
-      56
+      ringSize
     );
 
     // Center dot
@@ -157,7 +190,7 @@ sketch.draw( () => {
     p.circle(
       x,
       y,
-      12
+      dotSize
     );
   } );
 
@@ -270,7 +303,7 @@ function _drawLegend(
 
   // Camera hint when vision enabled but mediapipe not yet running
   const vision = interaction.vision;
-  const needsCamera = vision?.hands?.enabled || vision?.face?.enabled || vision?.body?.enabled;
+  const needsCamera = vision?.hands?.enabled || vision?.fingers?.enabled || vision?.face?.enabled || vision?.body?.enabled;
   const cameraRunning = !!mediapipe.capture?.element;
 
   if ( needsCamera && !cameraRunning && vision?.enabled !== false ) {
