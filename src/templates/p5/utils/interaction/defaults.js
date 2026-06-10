@@ -36,6 +36,15 @@ export const interactionFormValues = {
       confidence: 0.5,
       drawOverlay: false
     },
+    fingers: {
+      enabled: false,
+      maxHands: 2,
+      thumb: true,
+      index: true,
+      middle: true,
+      ring: true,
+      pinky: true
+    },
     face: {
       enabled: false,
       maxFaces: 1,
@@ -275,6 +284,44 @@ export const interactionFormConfiguration = {
             drawOverlay: {
               component: "checkbox",
               label: "Draw skeleton"
+            }
+          }
+        },
+
+        fingers: {
+          component: "nested-object",
+          label: "Fingers (per-finger joint chains)",
+          fields: {
+            enabled: {
+              component: "checkbox",
+              label: "Enabled"
+            },
+            maxHands: {
+              component: "slider",
+              label: "Max hands",
+              min: 1,
+              max: 2,
+              step: 1
+            },
+            thumb: {
+              component: "checkbox",
+              label: "Thumb"
+            },
+            index: {
+              component: "checkbox",
+              label: "Index"
+            },
+            middle: {
+              component: "checkbox",
+              label: "Middle"
+            },
+            ring: {
+              component: "checkbox",
+              label: "Ring"
+            },
+            pinky: {
+              component: "checkbox",
+              label: "Pinky"
             }
           }
         },

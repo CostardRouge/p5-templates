@@ -18,9 +18,12 @@ import {
 //
 // Two modes:
 //   - live  → re-fit a spline through each group's current points every frame
-//             (e.g. a fan across the fingertips, an arc across the body).
-//   - trail → track each group's centroid over time and spline that history,
-//             so moving a hand/pointer draws a ribbon in the air.
+//             (e.g. a fan across the fingertips, an arc across the body, or —
+//             with Vision → Fingers — one spline along each finger's joints).
+//   - trail → track each group's anchor over time and spline that history,
+//             so moving a hand/pointer draws a ribbon in the air. Most groups
+//             anchor at their centroid; finger groups anchor at the FINGERTIP,
+//             so each finger acts as a pen and traces its own line.
 //
 // It works with no webcam out of the box because the orbit source is enabled by
 // default; turn on Vision → Hands / Body / Face to drive it with the camera.
@@ -97,12 +100,19 @@ function drawTrails(
   const minDistance = mode.minDistance ?? 6;
   const present = new Set();
 
-  // Grow the history of every entity present this frame.
+  // Grow the history of every entity present this frame. Finger groups are
+  // ordered base → tip, so their last point is the fingertip — the natural
+  // pen point — while other groups trail their centroid.
   groups.forEach( ( group ) => {
     present.add( group.id );
+
+    const anchor = group.source === "fingers"
+      ? group.points[ group.points.length - 1 ]
+      : centroid( group.points );
+
     pushTrailPoint(
       group.id,
-      centroid( group.points ),
+      anchor,
       maxPoints,
       minDistance
     );

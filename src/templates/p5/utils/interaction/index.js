@@ -19,6 +19,51 @@ export const HAND_FINGERTIP_INDICES = [
 ];
 export const HAND_PALM_INDEX = 0;
 
+// Per-finger joint chains (base → tip), as traced in the hand-capture series
+// (hand-tracking v0..v4 via drawHands.js). The thumb is "extended": it is
+// rooted at the wrist so its stroke sweeps across the palm like in those
+// sketches instead of floating from the thumb base.
+export const HAND_FINGER_NAMES = [
+  "thumb",
+  "index",
+  "middle",
+  "ring",
+  "pinky"
+];
+export const HAND_FINGER_JOINT_INDICES = {
+  thumb: [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  index: [
+    5,
+    6,
+    7,
+    8
+  ],
+  middle: [
+    9,
+    10,
+    11,
+    12
+  ],
+  ring: [
+    13,
+    14,
+    15,
+    16
+  ],
+  pinky: [
+    17,
+    18,
+    19,
+    20
+  ]
+};
+
 // ── Body pose landmark indices (MediaPipe Pose) ────────────────────────────
 export const BODY_WRIST_INDICES = [
   15,
@@ -485,6 +530,11 @@ export function getPointers( opts ) {
     p,
     vectors
   );
+  _collectFingers(
+    opts,
+    p,
+    vectors
+  );
   _collectFace(
     opts,
     p,
@@ -588,6 +638,17 @@ export function getPointersDebug( opts ) {
     h
   );
 
+  const fi = [];
+
+  _collectFingers(
+    opts,
+    p,
+    fi
+  ); push(
+    "fingers",
+    fi
+  );
+
   const f = [];
 
   _collectFace(
@@ -684,6 +745,7 @@ export function getPointersDebug( opts ) {
  * list — each group is meant to become a single continuous stroke/spline.
  *
  *   - hands  → one group per detected hand  (palm → fingertips, thumb→pinky)
+ *   - fingers→ one group per detected finger (joint chain, base → fingertip)
  *   - body   → one group per detected pose  (wrist→elbow→shoulder→…→wrist)
  *   - face   → one group per detected face  (ear→eye→nose→mouth→eye→ear arc)
  *   - orbit / perlinNoise / audio / touch / midi / joypad / mouse / gyroscope
@@ -737,6 +799,11 @@ export function getPointerGroups( opts ) {
 
   // Vision: one ordered group per detected entity.
   _collectHandGroups(
+    opts,
+    p,
+    groups
+  );
+  _collectFingerGroups(
     opts,
     p,
     groups
@@ -882,7 +949,7 @@ function _desiredVisionTasks( opts ) {
 
   const tasks = [];
 
-  if ( vision.hands?.enabled ) {
+  if ( vision.hands?.enabled || vision.fingers?.enabled ) {
     tasks.push( "hands" );
   }
 
@@ -1041,6 +1108,92 @@ function _collectHands(
       }
     }
   } );
+}
+
+// Iterate every enabled finger of every detected hand, invoking
+// cb( points, handIndex, fingerName ) with the finger's joint chain converted
+// to canvas space (base → tip). Shared by the flat and grouped finger collectors.
+function _eachDetectedFinger(
+  opts, p, cb
+) {
+  const vision = opts.vision;
+  const fingers = vision?.fingers;
+
+  if ( vision?.enabled === false || !fingers?.enabled ) {
+    return;
+  }
+
+  const flip = vision?.camera?.flip ?? true;
+  const maxHands = fingers.maxHands ?? 2;
+  const results = mediapipe.tasks?.hands?.result?.landmarks ?? [];
+
+  results.slice(
+    0,
+    maxHands
+  ).forEach( (
+    hand, handIndex
+  ) => {
+    HAND_FINGER_NAMES.forEach( ( fingerName ) => {
+      if ( fingers[ fingerName ] === false ) {
+        return;
+      }
+
+      const points = [];
+
+      HAND_FINGER_JOINT_INDICES[ fingerName ].forEach( ( i ) => {
+        const pt = hand[ i ];
+
+        if ( pt ) {
+          points.push( _normToCanvas(
+            pt,
+            flip,
+            p
+          ) );
+        }
+      } );
+
+      if ( points.length > 0 ) {
+        cb(
+          points,
+          handIndex,
+          fingerName
+        );
+      }
+    } );
+  } );
+}
+
+function _collectFingers(
+  opts, p, out
+) {
+  _eachDetectedFinger(
+    opts,
+    p,
+    ( points ) => {
+      out.push( ...points );
+    }
+  );
+}
+
+// One ordered group per detected finger (per hand), so each finger strokes as
+// its own continuous line — like the per-finger neon traces of the
+// hand-capture series.
+function _collectFingerGroups(
+  opts, p, groups
+) {
+  _eachDetectedFinger(
+    opts,
+    p,
+    (
+      points, handIndex, fingerName
+    ) => {
+      groups.push( {
+        source: "fingers",
+        id: `hand-${ handIndex }-${ fingerName }`,
+        points
+      } );
+    }
+  );
 }
 
 function _collectFace(
