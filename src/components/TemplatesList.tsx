@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ChevronDown, Grid, List, Search
+  ChevronDown, Grid, List, Search, X
 } from "lucide-react";
 import {
   useRouter, useSearchParams
@@ -96,6 +96,22 @@ export default function TemplatesList( {
     search,
     setSearch
   ] = useState<string>( searchParams.get( "keyword" ) || "" );
+  const [
+    categoryFilter,
+    setCategoryFilter
+  ] = useState<string>( searchParams.get( "category" ) || "" );
+
+  // Keep category in sync with the URL so back/forward or external links
+  // (e.g. the sketch breadcrumb opening /templates/<engine>?category=...)
+  // update the active filter without a full reload.
+  useEffect(
+    () => {
+      setCategoryFilter( searchParams.get( "category" ) || "" );
+    },
+    [
+      searchParams
+    ]
+  );
 
   // Per-category expansion state. By default every category renders as a
   // horizontal carousel (no ids open); expanding one swaps it to the full
@@ -109,9 +125,10 @@ export default function TemplatesList( {
     PERSIST_EXPANDED
   );
 
-  // While a search is active, every matching section is shown as a full grid
-  // so all results are visible regardless of the carousel/expanded state.
-  const searchActive = search.trim().length > 0;
+  // While a search or category filter is active, every matching section is
+  // shown as a full grid so all results are visible regardless of the
+  // carousel/expanded state.
+  const searchActive = search.trim().length > 0 || categoryFilter.length > 0;
 
   // Expand/collapse a category. No View Transition here: the cards stay
   // mounted across the toggle and CategorySection animates only the newly
@@ -135,18 +152,42 @@ export default function TemplatesList( {
     ]
   );
 
-  // Keep ?keyword= in sync with the search state
+  // Build a `?keyword=…&category=…` suffix from the current filter state.
+  const buildQuerySuffix = (
+    keyword: string, category: string
+  ) => {
+    const params = new URLSearchParams();
+
+    if ( category ) {
+      params.set(
+        "category",
+        category
+      );
+    }
+
+    if ( keyword ) {
+      params.set(
+        "keyword",
+        keyword
+      );
+    }
+
+    const qs = params.toString();
+
+    return qs ? `?${ qs }` : "";
+  };
+
+  // Keep ?keyword= / ?category= in sync with the filter state.
   useEffect(
     () => {
       const basePath =
         currentEngine === "all" ? "/templates" : `/templates/${ currentEngine }`;
 
-      const newUrl = search
-        ? `${ basePath }?keyword=${ encodeURIComponent( search ) }`
-        : basePath;
-
       router.replace(
-        newUrl,
+        `${ basePath }${ buildQuerySuffix(
+          search,
+          categoryFilter
+        ) }`,
         {
           scroll: false
         }
@@ -154,7 +195,8 @@ export default function TemplatesList( {
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      search
+      search,
+      categoryFilter
     ]
   );
 
@@ -164,14 +206,15 @@ export default function TemplatesList( {
 
     const basePath =
       engineId === "all" ? "/templates" : `/templates/${ engineId }`;
-    const suffix = search
-      ? `?keyword=${ encodeURIComponent( search ) }`
-      : "";
 
-    router.push( `${ basePath }${ suffix }` );
+    router.push( `${ basePath }${ buildQuerySuffix(
+      search,
+      categoryFilter
+    ) }` );
   };
 
-  // Fuzzy-filter templates per engine
+  // Filter per engine: exact category match first (when active), then
+  // fuzzy keyword over the remaining items.
   const filteredTemplates = Object.entries( templates ).reduce(
     (
       acc, [
@@ -179,8 +222,12 @@ export default function TemplatesList( {
         items
       ]
     ) => {
+      const byCategory = categoryFilter
+        ? items.filter( ( item ) => item.category === categoryFilter )
+        : items;
+
       const filtered = fuzzyFilter(
-        items,
+        byCategory,
         search,
         ( item ) => [
           item.name,
@@ -250,8 +297,23 @@ export default function TemplatesList( {
               placeholder="Search templates..."
               value={ search }
               onChange={ ( e ) => setSearch( e.target.value ) }
-              className="pl-9 pr-3 py-2 sm:pl-11 sm:pr-4 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40"
+              className={ `pl-9 py-2 sm:pl-11 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40 ${
+                search
+                  ? "pr-9 sm:pr-11"
+                  : "pr-3 sm:pr-4"
+              }` }
             />
+            { search && (
+              <button
+                type="button"
+                onClick={ () => setSearch( "" ) }
+                aria-label="Clear search"
+                title="Clear search"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 grid place-items-center w-6 h-6 sm:w-7 sm:h-7 rounded-md text-foreground/50 hover:text-foreground hover:bg-hover/50 transition-colors"
+              >
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+            ) }
           </div>
 
           {/* View Toggle */}
@@ -283,6 +345,28 @@ export default function TemplatesList( {
             </button>
           </div>
         </div>
+
+        {/* Active filters — currently only the category chip */}
+        { categoryFilter && (
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="text-xs text-foreground/50 font-medium">
+              Filters:
+            </span>
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 pl-2 pr-1 sm:pl-2.5 sm:pr-1.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg bg-hover/60 border border-border text-xs sm:text-sm text-foreground">
+              <span className="text-foreground/60">Category:</span>
+              <span className="font-medium">{ categoryFilter }</span>
+              <button
+                type="button"
+                onClick={ () => setCategoryFilter( "" ) }
+                aria-label={ `Remove ${ categoryFilter } category filter` }
+                title="Clear category filter"
+                className="grid place-items-center w-4 h-4 sm:w-5 sm:h-5 rounded-md text-foreground/50 hover:text-foreground hover:bg-hover transition-colors"
+              >
+                <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </button>
+            </span>
+          </div>
+        ) }
 
         {/* Engine Tabs */}
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 scrollbar-hide">

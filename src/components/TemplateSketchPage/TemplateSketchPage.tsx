@@ -1,13 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import type React from "react";
 import {
   useCallback, useEffect, useMemo, useRef, useState
 } from "react";
 import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
+import SketchBreadcrumb from "@/components/TemplateSketchPage/SketchBreadcrumb";
 import SketchPerformanceLabel from "@/components/TemplateSketchPage/SketchPerformanceLabel";
 import {
   EngineControls
@@ -33,7 +33,7 @@ const TemplateOptions = dynamic( () =>
 export default function TemplateSketchPage() {
   const [
     {
-      name, capturing, options, persistedJob, engineId, sketchLoaded, activeSlideIndex,
+      name, capturing, options, persistedJob, engineId, category, sketchLoaded, activeSlideIndex,
       engine, looping
     },
     dispatch
@@ -254,25 +254,12 @@ export default function TemplateSketchPage() {
                 } as React.CSSProperties
               }
             >
-              <p className="truncate">
-                <Link
-                  href={ `/templates/${ engineId }` }
-                  target="_blank"
-                >
-                  {engineId}
-                </Link>
-                <span className="text-xs">{" · "}</span>
-                <Link
-                  href={ `/templates/${ engineId }/${ name }` }
-                  target="_blank"
-                >
-                  {name}
-                </Link>
-
-                <span>
-                  {activeSlideIndex !== undefined && ` · slide ${ activeSlideIndex + 1 }`}
-                </span>
-              </p>
+              <SketchBreadcrumb
+                engineId={ engineId }
+                name={ name }
+                category={ category }
+                activeSlideIndex={ activeSlideIndex }
+              />
 
               <SketchPerformanceLabel
                 targetFps={ effectiveSettings.animation?.framerate ?? 60 }
