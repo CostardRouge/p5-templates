@@ -142,7 +142,9 @@ const _gyro = {
 };
 
 // Listeners
+let _gyroInitialized = false;
 let _gyroListener = null;
+let _gyroPermissionListener = null;
 let _pointerMoveListener = null;
 let _touchListeners = null;
 
@@ -226,6 +228,99 @@ function _clientToCanvas(
     x: ( clientX - rect.left ) * ( p.width / rect.width ),
     y: ( clientY - rect.top ) * ( p.height / rect.height )
   };
+}
+
+// ── Gyroscope helpers ──────────────────────────────────────────────────────
+
+function _wireGyroListener() {
+  _gyroListener = ( e ) => {
+    _gyro.beta = e.beta ?? 0;
+    _gyro.gamma = e.gamma ?? 0;
+  };
+  window.addEventListener(
+    "deviceorientation",
+    _gyroListener
+  );
+}
+
+function _removeGyroPermissionListener() {
+  if ( !_gyroPermissionListener ) {
+    return;
+  }
+
+  window.removeEventListener(
+    "click",
+    _gyroPermissionListener
+  );
+  window.removeEventListener(
+    "touchend",
+    _gyroPermissionListener
+  );
+  _gyroPermissionListener = null;
+}
+
+// Lazily wire the deviceorientation listener the first time the gyroscope
+// collector runs. The listener used to be wired only from initInteraction()
+// when gyroscope.enabled was already true at setup, so toggling it on at
+// runtime never attached anything and the pointer stayed glued to the canvas
+// centre (beta/gamma stuck at 0). iOS 13+ additionally gates the events behind
+// DeviceOrientationEvent.requestPermission(), which must be called from a user
+// gesture — so there we arm a one-shot tap/click handler that requests it.
+function _initGyro() {
+  if ( _gyroInitialized || typeof window === "undefined" ) {
+    return;
+  }
+
+  _gyroInitialized = true;
+
+  const OrientationEvent = window.DeviceOrientationEvent;
+
+  if ( OrientationEvent && typeof OrientationEvent.requestPermission === "function" ) {
+    const requestOnGesture = () => {
+      _removeGyroPermissionListener();
+      OrientationEvent.requestPermission()
+        .then( ( state ) => {
+          if ( state === "granted" ) {
+            _wireGyroListener();
+          }
+        } )
+        .catch( () => {
+          // Permission denied — leave beta/gamma at 0
+        } );
+    };
+
+    _gyroPermissionListener = requestOnGesture;
+    window.addEventListener(
+      "click",
+      requestOnGesture
+    );
+    window.addEventListener(
+      "touchend",
+      requestOnGesture
+    );
+  } else {
+    _wireGyroListener();
+  }
+}
+
+function _disposeGyro() {
+  if ( typeof window === "undefined" ) {
+    return;
+  }
+
+  _removeGyroPermissionListener();
+
+  if ( _gyroListener ) {
+    window.removeEventListener(
+      "deviceorientation",
+      _gyroListener
+    );
+    _gyroListener = null;
+  }
+
+  _gyroInitialized = false;
+  _gyro.beta = 0;
+  _gyro.gamma = 0;
 }
 
 // ── MIDI helpers ───────────────────────────────────────────────────────────
@@ -321,25 +416,8 @@ async function _initAudio( opts ) {
 export async function initInteraction( opts = {} ) {
   _noiseOffset = opts.perlinNoise?.seed ?? 0;
 
-  // ── Gyroscope ────────────────────────────────────────────────────────────
-  if ( _gyroListener && typeof window !== "undefined" ) {
-    window.removeEventListener(
-      "deviceorientation",
-      _gyroListener
-    );
-    _gyroListener = null;
-  }
-
-  if ( opts.gyroscope?.enabled && typeof window !== "undefined" ) {
-    _gyroListener = ( e ) => {
-      _gyro.beta = e.beta ?? 0;
-      _gyro.gamma = e.gamma ?? 0;
-    };
-    window.addEventListener(
-      "deviceorientation",
-      _gyroListener
-    );
-  }
+  // ── Gyroscope reset (lazy init triggered by _collectGyroscope) ───────────
+  _disposeGyro();
 
   // ── Raw mouse / touch tracking ───────────────────────────────────────────
   // We track raw clientX/Y ourselves so _clientToCanvas() can give correct
@@ -455,13 +533,7 @@ export function disposeInteraction() {
   }
 
   // Gyroscope
-  if ( _gyroListener ) {
-    window.removeEventListener(
-      "deviceorientation",
-      _gyroListener
-    );
-    _gyroListener = null;
-  }
+  _disposeGyro();
 
   // Mouse
   if ( _pointerMoveListener ) {
@@ -773,8 +845,10 @@ function _collectMouse(
     return;
   }
 
-  const ox = mouse.offsetX ?? 0;
-  const oy = mouse.offsetY ?? 0;
+  // `offset` is the vector2d pad value; offsetX/offsetY are kept as a fallback
+  // for options saved before the two sliders were merged into one pad.
+  const ox = mouse.offset?.x ?? mouse.offsetX ?? 0;
+  const oy = mouse.offset?.y ?? mouse.offsetY ?? 0;
   const smoothing = mouse.smoothing ?? 0;
 
   // Use raw client coordinates converted through getBoundingClientRect() so
@@ -1599,7 +1673,14 @@ function _collectGyroscope(
     return;
   }
 
+  // Trigger lazy listener wiring on first call (see _initGyro)
+  if ( !_gyroInitialized ) {
+    _initGyro();
+  }
+
   const clamp = gyro.clampAngle ?? 45;
+  const ox = gyro.offset?.x ?? 0;
+  const oy = gyro.offset?.y ?? 0;
 
   out.push( p.createVector(
     p.constrain(
@@ -1612,7 +1693,7 @@ function _collectGyroscope(
       ),
       0,
       p.width
-    ),
+    ) + ox,
     p.constrain(
       p.map(
         _gyro.beta,
@@ -1623,7 +1704,7 @@ function _collectGyroscope(
       ),
       0,
       p.height
-    )
+    ) + oy
   ) );
 }
 
