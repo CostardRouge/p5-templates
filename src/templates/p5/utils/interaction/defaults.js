@@ -9,8 +9,10 @@ export const interactionFormValues = {
   mouse: {
     enabled: false,
     smoothing: 0,
-    offsetX: 0,
-    offsetY: 0
+    offset: {
+      x: 0,
+      y: 0
+    }
   },
 
   touch: {
@@ -93,7 +95,11 @@ export const interactionFormValues = {
 
   gyroscope: {
     enabled: false,
-    clampAngle: 45
+    clampAngle: 45,
+    offset: {
+      x: 0,
+      y: 0
+    }
   },
 
   midi: {
@@ -155,19 +161,13 @@ export const interactionFormConfiguration = {
           max: 0.99,
           step: 0.01
         },
-        offsetX: {
-          component: "slider",
-          label: "Offset X",
+        offset: {
+          component: "vector2d",
+          label: "Offset",
           min: -500,
           max: 500,
-          step: 1
-        },
-        offsetY: {
-          component: "slider",
-          label: "Offset Y",
-          min: -500,
-          max: 500,
-          step: 1
+          step: 1,
+          yDown: true
         }
       }
     },
@@ -574,6 +574,14 @@ export const interactionFormConfiguration = {
           min: 5,
           max: 90,
           step: 5
+        },
+        offset: {
+          component: "vector2d",
+          label: "Offset",
+          min: -500,
+          max: 500,
+          step: 1,
+          yDown: true
         }
       }
     },
