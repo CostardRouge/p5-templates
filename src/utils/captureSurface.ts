@@ -50,6 +50,12 @@ export async function detectCaptureSurface( page: Page ): Promise<CaptureSurface
 /** Put the active engine into deterministic, frame-stepped capture mode. */
 export async function prepareCapture( page: Page ): Promise<void> {
   await page.evaluate( () => {
+    // Sound-producing sketches register an audio bridge; switch it to
+    // capture mode so triggers are logged against the deterministic
+    // timeline instead of played. The log is rendered offline + muxed
+    // after the frame loop (see muxSketchAudio).
+    window.__sketchAudio?.beginCapture();
+
     const controller = window.__sketchCapture;
 
     if ( controller?.prepare ) {

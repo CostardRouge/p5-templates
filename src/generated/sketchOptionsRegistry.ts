@@ -58,6 +58,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:animated-text-points/animated-text-points-v6-black": () => import( "@/p5/sketches/animated-text-points/animated-text-points-v6-black/options" ),
   "p5:animated-text-points/animated-text-points-v7-normal-material": () => import( "@/p5/sketches/animated-text-points/animated-text-points-v7-normal-material/options" ),
   "p5:animated-text-points/animated-text-points-v9-warping": () => import( "@/p5/sketches/animated-text-points/animated-text-points-v9-warping/options" ),
+  "p5:audio/ping-pong": () => import( "@/p5/sketches/audio/ping-pong/options" ),
   "p5:background/background-crosses": () => import( "@/p5/sketches/background/background-crosses/options" ),
   "p5:background/background-dots": () => import( "@/p5/sketches/background/background-dots/options" ),
   "p5:background/background-grid": () => import( "@/p5/sketches/background/background-grid/options" ),

@@ -2746,5 +2746,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-08T17:04:21.361Z",
     "ctime": "2026-06-08T16:22:10.726Z"
+  },
+  {
+    "name": "ping-pong",
+    "engine": "p5",
+    "category": "audio",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-11T12:53:58.551Z",
+    "ctime": "2026-06-11T12:53:49.391Z"
   }
 ]

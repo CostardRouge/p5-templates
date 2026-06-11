@@ -45,6 +45,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:animated-text-points/animated-text-points-v6-black": () => import( "@/p5/sketches/animated-text-points/animated-text-points-v6-black/index.js" ),
   "p5:animated-text-points/animated-text-points-v7-normal-material": () => import( "@/p5/sketches/animated-text-points/animated-text-points-v7-normal-material/index.js" ),
   "p5:animated-text-points/animated-text-points-v9-warping": () => import( "@/p5/sketches/animated-text-points/animated-text-points-v9-warping/index.js" ),
+  "p5:audio/ping-pong": () => import( "@/p5/sketches/audio/ping-pong/index.js" ),
   "p5:background/background-crosses": () => import( "@/p5/sketches/background/background-crosses/index.js" ),
   "p5:background/background-dots": () => import( "@/p5/sketches/background/background-dots/index.js" ),
   "p5:background/background-grid": () => import( "@/p5/sketches/background/background-grid/index.js" ),

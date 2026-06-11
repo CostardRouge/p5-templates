@@ -1,6 +1,9 @@
 import {
   BaseRecorder
 } from "../BaseRecorder";
+import {
+  getAudioBridge
+} from "@/lib/audioBridge";
 import type {
   CaptureSource,
   FrameEncoder,
@@ -31,6 +34,7 @@ export class AsyncLoopRecorder extends BaseRecorder {
   private cancelled = false;
   private runPromise: Promise<RecorderResult> | null = null;
   private hostPaused = false;
+  private audioCaptureActive = false;
 
   constructor(
     private host: RecorderHost,
@@ -82,6 +86,18 @@ export class AsyncLoopRecorder extends BaseRecorder {
       this.encoder?.dispose();
       this.encoder = null;
       throw error;
+    }
+
+    // Switch the audio engine into capture mode *before* the frame loop
+    // starts. Subsequent `audio.trigger()` calls log events with the
+    // sketch's deterministic time instead of producing sound, so we can
+    // render them offline once every frame has been drawn. Skipped if the
+    // encoder has no audio track (gif, audio codec unavailable).
+    const audioBridge = getAudioBridge();
+
+    if ( audioBridge && this.encoder?.hasAudioTrack ) {
+      audioBridge.beginCapture();
+      this.audioCaptureActive = true;
     }
 
     this.cancelled = false;
@@ -142,6 +158,31 @@ export class AsyncLoopRecorder extends BaseRecorder {
         }
       );
 
+      // Render the logged audio events into a single AudioBuffer aligned
+      // with the frame loop (events past the clip duration are dropped)
+      // and hand it to the encoder before finalize. Same audio voice
+      // routines as live playback, so the muxed sound matches what
+      // realtime recording would have captured — only now sample-accurate.
+      if (
+        this.audioCaptureActive &&
+        this.encoder?.hasAudioTrack &&
+        this.encoder.addAudioBuffer
+      ) {
+        const audioBridge = getAudioBridge();
+
+        if ( audioBridge ) {
+          const duration = totalFrames / this.host.frameRate;
+          const audioBuffer = await audioBridge.renderOffline( {
+            duration
+          } );
+
+          audioBridge.endCapture();
+          this.audioCaptureActive = false;
+
+          await this.encoder.addAudioBuffer( audioBuffer );
+        }
+      }
+
       const blob = await this.encoder!.finalize();
 
       if ( this.cancelled ) {
@@ -186,6 +227,14 @@ export class AsyncLoopRecorder extends BaseRecorder {
 
       throw err;
     } finally {
+      // Always exit capture mode — leaving it on would silence the next
+      // interactive session as `trigger()` would keep logging instead of
+      // playing.
+      if ( this.audioCaptureActive ) {
+        getAudioBridge()?.endCapture();
+        this.audioCaptureActive = false;
+      }
+
       this._isRecording = false;
       this.encoder?.dispose();
       this.encoder = null;

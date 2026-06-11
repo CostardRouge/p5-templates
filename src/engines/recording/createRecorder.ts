@@ -10,12 +10,18 @@ import {
 import {
   createMediabunnyEncoderFactory
 } from "./encoders/MediabunnyEncoder";
+import {
+  getAudioBridge
+} from "@/lib/audioBridge";
 import type {
   Recorder,
   RecorderHost,
   RecordingFormat,
   RecordingMode
 } from "./types";
+
+const DEFAULT_AUDIO_SAMPLE_RATE = 48_000;
+const DEFAULT_AUDIO_CHANNELS = 1;
 
 export type CreateRecorderOptions = {
   host: RecorderHost;
@@ -65,9 +71,22 @@ export function createRecorder( opts: CreateRecorderOptions ): Recorder {
       throw new Error( "createRecorder: capture source has no stream canvas." );
     }
 
+    // If a sketch audio engine has registered a bridge, wire an audio
+    // track into the encoder so the recorder can mux the offline-rendered
+    // buffer once the frame loop ends. Video-only sketches register no
+    // bridge — no audio track is added and the output is identical to
+    // before.
+    const audioOpts = getAudioBridge()
+      ? {
+        sampleRate: DEFAULT_AUDIO_SAMPLE_RATE,
+        numberOfChannels: DEFAULT_AUDIO_CHANNELS
+      }
+      : undefined;
+
     factory = createMediabunnyEncoderFactory(
       format,
-      canvas
+      canvas,
+      audioOpts
     );
   }
 
