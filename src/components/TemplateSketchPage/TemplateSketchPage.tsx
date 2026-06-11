@@ -256,6 +256,13 @@ export default function TemplateSketchPage() {
             >
               <p className="truncate">
                 <Link
+                  href={ `/templates/${ engineId }` }
+                  target="_blank"
+                >
+                  {engineId}
+                </Link>
+                <span className="text-xs">{" · "}</span>
+                <Link
                   href={ `/templates/${ engineId }/${ name }` }
                   target="_blank"
                 >

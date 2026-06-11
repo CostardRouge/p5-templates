@@ -244,8 +244,6 @@ export function EngineControls( ) {
           )}
         </button>
       </div>
-
-      <span className="text-xs text-foreground/50 font-mono">{engineId}</span>
     </div>
   );
 }
