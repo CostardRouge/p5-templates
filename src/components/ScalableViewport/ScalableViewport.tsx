@@ -24,6 +24,7 @@ export default function ScalableViewport( {
   resolutionKey,
   isReady = true,
   disable = false,
+  disableTouchGestures = false,
   onInteractionStart,
   onInteractionEnd
 }: {
@@ -32,6 +33,9 @@ export default function ScalableViewport( {
   resolutionKey?: string;
   showZoomControls?: boolean;
   disable?: boolean;
+  // Ignore touchscreen pan/pinch so fingers reach the content instead of
+  // moving the viewport (mouse drag, wheel and zoom controls still work).
+  disableTouchGestures?: boolean;
   isReady?: boolean;
   onInteractionStart?: ( mode: "panning" | "zooming" ) => void;
   onInteractionEnd?: () => void;
@@ -66,6 +70,7 @@ export default function ScalableViewport( {
     transform,
     setTransform,
     cancelAnimation,
+    disableTouchGestures,
     onInteractionStart,
     onInteractionEnd
   } );
