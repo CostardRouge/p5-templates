@@ -37,7 +37,7 @@ export default function AnimationsToggle( {
       >
         <span
           className={ `inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-background shadow-sm transition-transform duration-200 ${
-            enabled ? "translate-x-4 sm:translate-x-5" : "translate-x-0.5"
+            enabled ? "translate-x-[18px] sm:translate-x-[22px]" : "translate-x-0.5"
           }` }
         />
       </button>
