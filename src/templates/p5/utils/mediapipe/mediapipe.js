@@ -11,6 +11,13 @@ let VisionManagerClass = null;
 // Timestamp of the previous completed inference, used for the rate stat.
 let lastFrameDoneTime = 0;
 
+// If the worker doesn't answer INIT within this, fall back to the main thread.
+const WORKER_INIT_TIMEOUT_MS = 15000;
+
+// If requestVideoFrameCallback stops ticking for this long while the video is
+// ready (some browsers never fire it for hidden videos), stop gating on it.
+const FRAME_CALLBACK_FALLBACK_MS = 1000;
+
 const mediapipe = {
   config: {
     useWorker: false,
@@ -70,7 +77,8 @@ const mediapipe = {
 
     lastDetectionTime: 0,
     usingFrameCallback: false,
-    freshFrame: true
+    freshFrame: true,
+    lastFrameCallbackTime: 0
   },
 
   stats: {
@@ -150,10 +158,18 @@ function setupWorker() {
 
     mediapipe.processor.instance = worker;
 
+    // If the worker never answers (script failed to evaluate, message lost…),
+    // reject so init() can fall back to main-thread inference.
+    const initTimeout = setTimeout(
+      () => reject( new Error( "vision worker init timed out" ) ),
+      WORKER_INIT_TIMEOUT_MS
+    );
+
     worker.onerror = ( event ) => {
       mediapipe.stats.lastError = event.message ?? "vision worker error";
       // Recover the frame loop if the worker dies mid-inference.
       mediapipe.processor.busy = false;
+      clearTimeout( initTimeout );
       reject( new Error( mediapipe.stats.lastError ) );
     };
 
@@ -164,8 +180,10 @@ function setupWorker() {
 
       if ( type === "READY" ) {
         mediapipe.processor.ready = true;
+        clearTimeout( initTimeout );
         resolve();
       } else if ( type === "INIT_ERROR" ) {
+        clearTimeout( initTimeout );
         reject( new Error( e.data.message ) );
       } else if ( type === "LIB_RESULT" ) {
         handleResult( e.data.payload );
@@ -450,6 +468,7 @@ function armFrameCallback( videoEl ) {
 
   mediapipe.scheduler.usingFrameCallback = true;
   mediapipe.scheduler.freshFrame = false;
+  mediapipe.scheduler.lastFrameCallbackTime = performance.now();
 
   const onFrame = () => {
     // Stop re-arming once the capture element was replaced or removed.
@@ -458,6 +477,7 @@ function armFrameCallback( videoEl ) {
     }
 
     mediapipe.scheduler.freshFrame = true;
+    mediapipe.scheduler.lastFrameCallbackTime = performance.now();
     videoEl.requestVideoFrameCallback( onFrame );
   };
 
@@ -512,11 +532,6 @@ function sendFrameIfDue() {
     return;
   }
 
-  // Don't re-infer a frame the camera hasn't refreshed yet.
-  if ( scheduler.usingFrameCallback && !scheduler.freshFrame ) {
-    return;
-  }
-
   if ( mediapipe.processor.busy ) {
     // Watchdog: a crashed worker or a dropped message would otherwise freeze
     // detection forever — recover after a generous timeout.
@@ -533,7 +548,23 @@ function sendFrameIfDue() {
   const videoEl = mediapipe.capture.element.elt;
 
   if ( !videoEl || videoEl.readyState < 2 ) {
+    // Anchor the frame-callback fallback latch to when the video gets ready,
+    // so a slow camera-permission prompt can't trip it prematurely.
+    scheduler.lastFrameCallbackTime = now;
+
     return;
+  }
+
+  // Don't re-infer a frame the camera hasn't refreshed yet.
+  if ( scheduler.usingFrameCallback && !scheduler.freshFrame ) {
+    // Some browsers never fire requestVideoFrameCallback for hidden
+    // (display:none) videos. The video is ready but no tick has arrived for
+    // a while → stop gating on it and rely on time-based throttling alone.
+    if ( now - scheduler.lastFrameCallbackTime > FRAME_CALLBACK_FALLBACK_MS ) {
+      scheduler.usingFrameCallback = false;
+    } else {
+      return;
+    }
   }
 
   mediapipe.processor.busy = true;

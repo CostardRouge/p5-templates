@@ -1,3 +1,12 @@
+// Buffer messages synchronously: INIT can arrive while vision-manager.js is
+// still being fetched, and a message dispatched with no listener attached is
+// silently dropped — which would leave the main thread waiting forever.
+const pendingMessages = [];
+
+self.onmessage = ( event ) => {
+  pendingMessages.push( event );
+};
+
 import( "./vision-manager.js" ).then( ( module ) => {
   const {
     VisionManager
@@ -23,7 +32,7 @@ import( "./vision-manager.js" ).then( ( module ) => {
     );
   } );
 
-  self.onmessage = async( event ) => {
+  const handleMessage = async( event ) => {
     const message = event.data;
 
     if ( message.type === "INIT" ) {
@@ -94,4 +103,9 @@ import( "./vision-manager.js" ).then( ( module ) => {
       self.close();
     }
   };
+
+  self.onmessage = handleMessage;
+
+  // Replay anything that arrived while the manager module was loading.
+  pendingMessages.splice( 0 ).forEach( handleMessage );
 } );
