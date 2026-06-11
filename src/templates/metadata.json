@@ -2750,7 +2750,7 @@
   {
     "name": "ping-pong",
     "engine": "p5",
-    "category": null,
+    "category": "audio",
     "hasSketchForm": true,
     "hasThumbnail": false,
     "hasPreview": false,

@@ -116,13 +116,18 @@ export class RealtimeRecorder extends BaseRecorder {
       // bridge is only registered once a sketch actually produces sound,
       // so video-only sketches keep the exact previous behaviour.
       const audioBridge = getAudioBridge();
-      const audioStream = audioBridge?.getRecordingStream() ?? null;
-      const audioTracks = audioStream?.getAudioTracks() ?? [];
+      let audioTracks: MediaStreamTrack[] = [];
 
-      if ( audioTracks.length > 0 ) {
-        // We're inside the user's "record" gesture — resume a suspended
-        // AudioContext now or the captured track stays silent.
-        await audioBridge?.ensureRunning();
+      if ( audioBridge ) {
+        // Resume *before* grabbing the stream — a track created on a
+        // suspended context anchors its timestamps wrong and the whole
+        // recording ends up with a constant A/V offset. We're inside the
+        // user's "record" gesture, so resume is allowed here.
+        await audioBridge.ensureRunning();
+
+        const audioStream = audioBridge.getRecordingStream();
+
+        audioTracks = audioStream?.getAudioTracks() ?? [];
 
         for ( const track of audioTracks ) {
           stream.addTrack( track );

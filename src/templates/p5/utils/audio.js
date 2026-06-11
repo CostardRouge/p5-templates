@@ -24,6 +24,7 @@ import {
 let _context = null;
 let _masterGain = null;
 let _recordingDestination = null;
+let _recordingKeepAlive = null;
 let _unlockAttached = false;
 
 const _samples = new Map(); // name → AudioBuffer
@@ -338,8 +339,16 @@ const audio = {
   },
 
   /**
-   * Master output as a MediaStream for the realtime recorder. Created
-   * lazily and connected once; `null` until a context exists.
+   * Master output as a MediaStream for the realtime recorder.
+   *
+   * A *fresh* destination is built on every call (i.e. per recording):
+   * a reused node can carry samples buffered before the recording
+   * started, which MediaRecorder muxes as a constant A/V offset.
+   *
+   * A silent constant source is also kept running into the destination
+   * so the track delivers data continuously from t=0 — without an active
+   * source the track can go idle between sparse bips, and the muxer
+   * compacts those gaps, shifting every later sound.
    */
   getRecordingStream: () => {
     const ctx = ensureContext();
@@ -348,10 +357,23 @@ const audio = {
       return null;
     }
 
-    if ( !_recordingDestination ) {
-      _recordingDestination = ctx.createMediaStreamDestination();
-      _masterGain.connect( _recordingDestination );
+    if ( _recordingDestination ) {
+      try {
+        _masterGain.disconnect( _recordingDestination );
+        _recordingKeepAlive?.stop();
+        _recordingKeepAlive?.disconnect();
+      } catch {
+        // Stale graph teardown must never block a new recording.
+      }
     }
+
+    _recordingDestination = ctx.createMediaStreamDestination();
+    _masterGain.connect( _recordingDestination );
+
+    _recordingKeepAlive = ctx.createConstantSource();
+    _recordingKeepAlive.offset.value = 0;
+    _recordingKeepAlive.connect( _recordingDestination );
+    _recordingKeepAlive.start();
 
     return _recordingDestination.stream;
   }
