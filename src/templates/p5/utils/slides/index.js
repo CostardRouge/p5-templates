@@ -2,7 +2,7 @@ import options, {
   syncEffectivePrevious
 } from "../options.js";
 import events from "../events.js";
-import {
+import sketch, {
   getContainer, getP5
 } from "../sketch.js";
 
@@ -48,6 +48,14 @@ const slides = {
 
         if ( !slides.hasSlides ) {
           slides.index = null;
+        } else if ( slides.index == null ) {
+          // Recover from the add-first-slide race: React calls setSlide(0)
+          // before the new slide reaches the option store, so the very next
+          // post-draw (store still slide-less) nulled the index. Rendering
+          // coerces null→0 so it looks fine, but the effective-settings
+          // resolution (per-slide animation/size overrides) stays stuck on
+          // the globals until the index is restored.
+          slides.setSlide( 0 );
         }
 
         if ( canvas.dataset.slide !== slides.index ) {
@@ -131,6 +139,19 @@ const slides = {
         "engine-framerate-change",
         effectiveAnimation.framerate
       );
+    }
+
+    // The engine clock (animation.progression, the animation bridge,
+    // window.get/setAnimationProgression) reads duration from
+    // sketch.sketchOptions.animation — not from the option store. Without
+    // this write a per-slide duration override would never reach the
+    // running sketch: syncEffectivePrevious below updates the comparison
+    // baseline, so the next handleOptionsChange wouldn't apply it either.
+    if ( effectiveAnimation && sketch.sketchOptions ) {
+      sketch.sketchOptions.animation = {
+        ...sketch.sketchOptions.animation,
+        ...effectiveAnimation
+      };
     }
 
     // Keep previousOptions in options.js in sync so the next
