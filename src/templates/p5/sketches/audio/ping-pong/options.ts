@@ -15,9 +15,9 @@ const SOUND_OPTIONS = [
 
 export const formValues = {
   ball: {
-    radius: 40,
-    speedX: 420,
-    speedY: 333,
+    radius: 186,
+    speedX: 666,
+    speedY: 666,
     color: [
       255,
       255,
@@ -33,10 +33,10 @@ export const formValues = {
   audio: {
     enabled: true,
     volume: 0.8,
-    sound: "bounce",
+    sound: "beep",
     freqMin: 220,
-    freqMax: 880,
-    duration: 0.15
+    freqMax: 819,
+    duration: 0.55
   },
   background: {
     color: [
