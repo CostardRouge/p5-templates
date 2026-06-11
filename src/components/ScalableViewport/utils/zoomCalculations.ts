@@ -5,7 +5,10 @@ import type {
 
 export const MIN_SCALE = 0.1;
 export const MAX_SCALE = 6;
-export const ZOOM_STEP = 0.2;
+
+// Multiplicative step so +/- buttons feel uniform at every zoom level,
+// matching the exponential factor used by wheel zoom.
+export const ZOOM_STEP_FACTOR = 1.25;
 
 export function calculateZoomTarget(
   newScale: number,

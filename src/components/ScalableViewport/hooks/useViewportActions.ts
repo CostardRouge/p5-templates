@@ -8,8 +8,15 @@ import {
   calculateFitToViewport,
   calculateActualPixels,
   calculateZoomTarget,
-  ZOOM_STEP
+  ZOOM_STEP_FACTOR
 } from "../utils/zoomCalculations";
+
+type LayoutCalculation = (
+  contentWidth: number,
+  contentHeight: number,
+  viewportWidth: number,
+  viewportHeight: number
+) => TransformState;
 
 interface UseViewportActionsProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -29,8 +36,10 @@ export function useViewportActions( {
   setTransform,
   animateTo
 }: UseViewportActionsProps ) {
-  const fitToViewport = useCallback(
-    ( animate = false ) => {
+  const applyLayout = useCallback(
+    (
+      calculate: LayoutCalculation, animate: boolean
+    ) => {
       const viewport = containerRef.current;
       const canvas = contentRef.current;
 
@@ -38,18 +47,13 @@ export function useViewportActions( {
         return;
       }
 
-      const contentWidth = canvas.offsetWidth;
-      const contentHeight = canvas.offsetHeight;
-      const viewportWidth = viewport.clientWidth;
-      const viewportHeight = viewport.clientHeight;
-
       const {
         x, y, scale
-      } = calculateFitToViewport(
-        contentWidth,
-        contentHeight,
-        viewportWidth,
-        viewportHeight
+      } = calculate(
+        canvas.offsetWidth,
+        canvas.offsetHeight,
+        viewport.clientWidth,
+        viewport.clientHeight
       );
 
       if ( animate ) {
@@ -65,7 +69,7 @@ export function useViewportActions( {
             y,
             scale
           },
-          contentRef.current
+          canvas
         );
       }
     },
@@ -77,113 +81,67 @@ export function useViewportActions( {
     ]
   );
 
-  const resetToActualPixels = useCallback(
-    ( animate = false ) => {
-      const viewport = containerRef.current;
-      const canvas = contentRef.current;
+  const fitToViewport = useCallback(
+    ( animate = false ) => applyLayout(
+      calculateFitToViewport,
+      animate
+    ),
+    [
+      applyLayout
+    ]
+  );
 
-      if ( !viewport || !canvas ) {
+  const resetToActualPixels = useCallback(
+    ( animate = false ) => applyLayout(
+      calculateActualPixels,
+      animate
+    ),
+    [
+      applyLayout
+    ]
+  );
+
+  const zoomBy = useCallback(
+    ( factor: number ) => {
+      const container = containerRef.current;
+
+      if ( !container ) {
         return;
       }
 
-      const contentWidth = canvas.offsetWidth;
-      const contentHeight = canvas.offsetHeight;
-      const viewportWidth = viewport.clientWidth;
-      const viewportHeight = viewport.clientHeight;
-
-      const {
-        x, y, scale
-      } = calculateActualPixels(
-        contentWidth,
-        contentHeight,
-        viewportWidth,
-        viewportHeight
+      const rect = container.getBoundingClientRect();
+      const target = calculateZoomTarget(
+        transform.current.scale * factor,
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+        rect,
+        transform.current
       );
 
-      if ( animate ) {
-        animateTo(
-          x,
-          y,
-          scale
-        );
-      } else {
-        setTransform(
-          {
-            x,
-            y,
-            scale
-          },
-          contentRef.current
-        );
-      }
+      animateTo(
+        target.x,
+        target.y,
+        target.scale
+      );
     },
     [
       containerRef,
-      contentRef,
-      setTransform,
+      transform,
       animateTo
     ]
   );
 
   const zoomIn = useCallback(
-    () => {
-      const {
-        scale
-      } = transform.current;
-      const container = containerRef.current;
-
-      if ( container ) {
-        const rect = container.getBoundingClientRect();
-        const target = calculateZoomTarget(
-          scale + ZOOM_STEP,
-          rect.left + rect.width / 2,
-          rect.top + rect.height / 2,
-          rect,
-          transform.current
-        );
-
-        animateTo(
-          target.x,
-          target.y,
-          target.scale
-        );
-      }
-    },
+    () => zoomBy( ZOOM_STEP_FACTOR ),
     [
-      containerRef,
-      transform,
-      animateTo
+      zoomBy
     ]
   );
 
   const zoomOut = useCallback(
-    () => {
-      const {
-        scale
-      } = transform.current;
-      const container = containerRef.current;
-
-      if ( container ) {
-        const rect = container.getBoundingClientRect();
-        const target = calculateZoomTarget(
-          scale - ZOOM_STEP,
-          rect.left + rect.width / 2,
-          rect.top + rect.height / 2,
-          rect,
-          transform.current
-        );
-
-        animateTo(
-          target.x,
-          target.y,
-          target.scale
-        );
-      }
-    },
+    () => zoomBy( 1 / ZOOM_STEP_FACTOR ),
     [
-      containerRef,
-      transform,
-      animateTo
+      zoomBy
     ]
   );
 

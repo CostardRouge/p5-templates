@@ -40,7 +40,7 @@ export default function ScalableViewport( {
   const contentRef = useRef<HTMLDivElement | null>( null );
 
   const {
-    transform, setTransform
+    transform, displayScale, setTransform
   } = useTransformState( initialScale || 1 );
 
   const handleAnimationStart = useCallback(
@@ -180,6 +180,7 @@ export default function ScalableViewport( {
     >
       {showZoomControls && (
         <ZoomControls
+          scale={ displayScale }
           onPlus={ zoomIn }
           onMinus={ zoomOut }
           onFit={ () => fitToViewport( true ) }

@@ -48,7 +48,9 @@ export function useTransformState( initialScale: number = 1 ) {
       };
       updateDom( contentElement );
       if ( newValues.scale !== undefined ) {
-        setDisplayScale( newValues.scale );
+        // Quantize to whole percents so consumers only re-render when the
+        // displayed zoom level changes, not on every animation frame.
+        setDisplayScale( Math.round( newValues.scale * 100 ) / 100 );
       }
     },
     [
