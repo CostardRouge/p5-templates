@@ -2,7 +2,9 @@ import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
 import mediapipe, {
   init as mediapipeInit,
-  setEnabled as setMediapipeEnabled
+  setEnabled as setMediapipeEnabled,
+  dispose as disposeMediapipe,
+  getTaskResult
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   getP5
@@ -160,10 +162,48 @@ let _audioFreqData = null;
 let _visionSignature = "";
 let _visionInitInFlight = null;
 
+// Vision results older than this read as "nothing detected", so a stalled
+// pipeline never leaves a frozen hand/face on screen.
+const VISION_RESULT_TTL_MS = 1500;
+
 // Temporal smoothing state for getPointerGroups, keyed by `${groupId}:${index}`.
 const _groupSmoothing = new Map();
 
 // ── Coordinate conversion ──────────────────────────────────────────────────
+
+// querySelector + getBoundingClientRect can force a layout pass, so the rect
+// is resolved at most once per frame and shared by every mouse/touch pointer.
+const _canvasRectCache = {
+  frame: -1,
+  canvas: null,
+  rect: null
+};
+
+function _getCanvasRect( p ) {
+  if ( _canvasRectCache.frame === p.frameCount && _canvasRectCache.rect ) {
+    return _canvasRectCache.rect;
+  }
+
+  if ( typeof document === "undefined" ) {
+    return null;
+  }
+
+  let canvas = _canvasRectCache.canvas;
+
+  if ( !canvas || !canvas.isConnected ) {
+    canvas = document.querySelector( "canvas.p5Canvas" );
+    _canvasRectCache.canvas = canvas;
+  }
+
+  if ( !canvas ) {
+    return null;
+  }
+
+  _canvasRectCache.frame = p.frameCount;
+  _canvasRectCache.rect = canvas.getBoundingClientRect();
+
+  return _canvasRectCache.rect;
+}
 
 /**
  * Convert viewport-space clientX/clientY to p5 canvas-space coordinates.
@@ -173,25 +213,9 @@ const _groupSmoothing = new Map();
 function _clientToCanvas(
   clientX, clientY, p
 ) {
-  if ( typeof document === "undefined" ) {
-    return {
-      x: 0,
-      y: 0
-    };
-  }
+  const rect = _getCanvasRect( p );
 
-  const canvas = document.querySelector( "canvas.p5Canvas" );
-
-  if ( !canvas ) {
-    return {
-      x: 0,
-      y: 0
-    };
-  }
-
-  const rect = canvas.getBoundingClientRect();
-
-  if ( rect.width === 0 || rect.height === 0 ) {
+  if ( !rect || rect.width === 0 || rect.height === 0 ) {
     return {
       x: 0,
       y: 0
@@ -491,12 +515,69 @@ export function disposeInteraction() {
 
   _audioInitialized = false;
 
-  // Vision / webcam
-  setMediapipeEnabled( false );
+  // Vision / webcam / inference processor. Full dispose (not just the webcam)
+  // so MediaPipe task memory and the worker don't leak across sketch switches.
+  disposeMediapipe();
   _visionSignature = "";
   _visionInitInFlight = null;
   _groupSmoothing.clear();
+  _canvasRectCache.frame = -1;
+  _canvasRectCache.canvas = null;
+  _canvasRectCache.rect = null;
 }
+
+// Ordered registry of flat collectors. getPointers() and getPointersDebug()
+// both iterate it, so adding a source means adding exactly one entry here.
+const _FLAT_COLLECTORS = [
+  [
+    "mouse",
+    _collectMouse
+  ],
+  [
+    "touch",
+    _collectTouch
+  ],
+  [
+    "hands",
+    _collectHands
+  ],
+  [
+    "fingers",
+    _collectFingers
+  ],
+  [
+    "face",
+    _collectFace
+  ],
+  [
+    "body",
+    _collectBody
+  ],
+  [
+    "orbit",
+    _collectOrbit
+  ],
+  [
+    "perlinNoise",
+    _collectPerlinNoise
+  ],
+  [
+    "gyroscope",
+    _collectGyroscope
+  ],
+  [
+    "midi",
+    _collectMidi
+  ],
+  [
+    "audio",
+    _collectAudio
+  ],
+  [
+    "joypad",
+    _collectJoypad
+  ]
+];
 
 /**
  * Returns all active pointer vectors for this frame, merged from all
@@ -512,69 +593,20 @@ export function getPointers( opts ) {
     return [];
   }
 
+  _ensureVision( opts );
+
   const vectors = [];
 
-  _collectMouse(
-    opts,
-    p,
-    vectors
-  );
-  _collectTouch(
-    opts,
-    p,
-    vectors
-  );
-  _ensureVision( opts );
-  _collectHands(
-    opts,
-    p,
-    vectors
-  );
-  _collectFingers(
-    opts,
-    p,
-    vectors
-  );
-  _collectFace(
-    opts,
-    p,
-    vectors
-  );
-  _collectBody(
-    opts,
-    p,
-    vectors
-  );
-  _collectOrbit(
-    opts,
-    p,
-    vectors
-  );
-  _collectPerlinNoise(
-    opts,
-    p,
-    vectors
-  );
-  _collectGyroscope(
-    opts,
-    p,
-    vectors
-  );
-  _collectMidi(
-    opts,
-    p,
-    vectors
-  );
-  _collectAudio(
-    opts,
-    p,
-    vectors
-  );
-  _collectJoypad(
-    opts,
-    p,
-    vectors
-  );
+  for ( const [
+    ,
+    collect
+  ] of _FLAT_COLLECTORS ) {
+    collect(
+      opts,
+      p,
+      vectors
+    );
+  }
 
   return vectors;
 }
@@ -593,149 +625,29 @@ export function getPointersDebug( opts ) {
     return [];
   }
 
-  const tagged = [];
-
-  const push = (
-    source, arr
-  ) =>
-    arr.forEach( ( v ) => tagged.push( {
-      vector: v,
-      source
-    } ) );
-
-  const m = [];
-
-  _collectMouse(
-    opts,
-    p,
-    m
-  ); push(
-    "mouse",
-    m
-  );
-
-  const t = [];
-
-  _collectTouch(
-    opts,
-    p,
-    t
-  ); push(
-    "touch",
-    t
-  );
-
   _ensureVision( opts );
 
-  const h = [];
+  const tagged = [];
 
-  _collectHands(
-    opts,
-    p,
-    h
-  ); push(
-    "hands",
-    h
-  );
+  for ( const [
+    source,
+    collect
+  ] of _FLAT_COLLECTORS ) {
+    const points = [];
 
-  const fi = [];
+    collect(
+      opts,
+      p,
+      points
+    );
 
-  _collectFingers(
-    opts,
-    p,
-    fi
-  ); push(
-    "fingers",
-    fi
-  );
-
-  const f = [];
-
-  _collectFace(
-    opts,
-    p,
-    f
-  ); push(
-    "face",
-    f
-  );
-
-  const b = [];
-
-  _collectBody(
-    opts,
-    p,
-    b
-  ); push(
-    "body",
-    b
-  );
-
-  const o = [];
-
-  _collectOrbit(
-    opts,
-    p,
-    o
-  ); push(
-    "orbit",
-    o
-  );
-
-  const n = [];
-
-  _collectPerlinNoise(
-    opts,
-    p,
-    n
-  ); push(
-    "perlinNoise",
-    n
-  );
-
-  const g = [];
-
-  _collectGyroscope(
-    opts,
-    p,
-    g
-  ); push(
-    "gyroscope",
-    g
-  );
-
-  const mid = [];
-
-  _collectMidi(
-    opts,
-    p,
-    mid
-  ); push(
-    "midi",
-    mid
-  );
-
-  const aud = [];
-
-  _collectAudio(
-    opts,
-    p,
-    aud
-  ); push(
-    "audio",
-    aud
-  );
-
-  const joy = [];
-
-  _collectJoypad(
-    opts,
-    p,
-    joy
-  ); push(
-    "joypad",
-    joy
-  );
+    for ( const vector of points ) {
+      tagged.push( {
+        vector,
+        source
+      } );
+    }
+  }
 
   return tagged;
 }
@@ -964,19 +876,59 @@ function _desiredVisionTasks( opts ) {
   return tasks;
 }
 
-// A stable key describing the vision configuration. Re-initialization is needed
-// whenever this changes (different trackers, camera size or mirror setting).
-function _visionSignatureFor(
+// The full mediapipe init config for the current options: trackers, camera,
+// per-task model options and scheduling knobs.
+function _visionConfigFor(
   opts, tasks
 ) {
-  const cam = opts.vision?.camera ?? {};
+  const vision = opts.vision ?? {};
+  const cam = vision.camera ?? {};
+  const perf = vision.performance ?? {};
 
-  return [
-    tasks.join( "+" ),
-    cam.width ?? 320,
-    cam.height ?? 240,
-    cam.flip ?? true
-  ].join( ":" );
+  return {
+    // The worker keeps inference off the draw loop entirely; mediapipe falls
+    // back to main-thread inference automatically when it can't start.
+    worker: perf.useWorker ?? true,
+    tasks,
+    captureSize: {
+      width: cam.width ?? 320,
+      height: cam.height ?? 240
+    },
+    captureFlip: cam.flip ?? true,
+    inferenceInterval: perf.inferenceInterval ?? 20,
+    idleInterval: perf.idleInterval ?? 280,
+    idleAfter: perf.idleAfter ?? 3000,
+    taskOptions: {
+      hands: {
+        // One HandLandmarker serves both the hands and fingers trackers, so
+        // it must detect enough hands for whichever asks for more.
+        numHands: Math.max(
+          vision.hands?.maxHands ?? 2,
+          vision.fingers?.maxHands ?? 2
+        ),
+        minConfidence: vision.hands?.confidence ?? 0.5
+      },
+      poses: {
+        numPoses: vision.body?.maxPoses ?? 1,
+        model: vision.body?.model ?? "lite"
+      },
+      faces: {
+        minConfidence: vision.face?.confidence ?? 0.5
+      }
+    }
+  };
+}
+
+// A stable key for the parts of the configuration that require re-initializing
+// MediaPipe when they change. Scheduling knobs are applied live and left out.
+function _visionSignatureFor( config ) {
+  return JSON.stringify( [
+    config.worker,
+    config.tasks,
+    config.captureSize,
+    config.captureFlip,
+    config.taskOptions
+  ] );
 }
 
 // Lazily (re)initialize MediaPipe to match the current vision options.
@@ -1006,14 +958,20 @@ function _ensureVision( opts ) {
     return Promise.resolve();
   }
 
-  const signature = _visionSignatureFor(
+  const config = _visionConfigFor(
     opts,
     tasks
   );
+  const signature = _visionSignatureFor( config );
 
   // Already live for this exact configuration → keep it enabled (idempotent).
   if ( signature === _visionSignature && mediapipe.processor.ready ) {
     setMediapipeEnabled( true );
+
+    // Scheduling knobs apply live — no re-init needed when a slider moves.
+    mediapipe.inferenceIntervalMilliseconds = config.inferenceInterval;
+    mediapipe.scheduler.idleIntervalMilliseconds = config.idleInterval;
+    mediapipe.scheduler.idleAfterMilliseconds = config.idleAfter;
 
     return Promise.resolve();
   }
@@ -1026,17 +984,7 @@ function _ensureVision( opts ) {
 
   _visionSignature = signature;
 
-  const cam = opts.vision?.camera ?? {};
-
-  _visionInitInFlight = mediapipeInit( {
-    worker: false,
-    tasks,
-    captureSize: {
-      width: cam.width ?? 320,
-      height: cam.height ?? 240
-    },
-    captureFlip: cam.flip ?? true
-  } )
+  _visionInitInFlight = mediapipeInit( config )
     .then( () =>
       // init() doesn't restore mediapipe.enabled after a prior deallocate, so
       // flip it back on explicitly to make sure frames actually get sent.
@@ -1076,7 +1024,10 @@ function _collectHands(
   const flip = vision?.camera?.flip ?? true;
   const lm = hands.landmarks ?? {};
   const maxHands = hands.maxHands ?? 2;
-  const results = mediapipe.tasks?.hands?.result?.landmarks ?? [];
+  const results = getTaskResult(
+    "hands",
+    VISION_RESULT_TTL_MS
+  )?.landmarks ?? [];
 
   results.slice(
     0,
@@ -1125,7 +1076,10 @@ function _eachDetectedFinger(
 
   const flip = vision?.camera?.flip ?? true;
   const maxHands = fingers.maxHands ?? 2;
-  const results = mediapipe.tasks?.hands?.result?.landmarks ?? [];
+  const results = getTaskResult(
+    "hands",
+    VISION_RESULT_TTL_MS
+  )?.landmarks ?? [];
 
   results.slice(
     0,
@@ -1207,7 +1161,10 @@ function _collectFace(
   }
 
   const flip = vision?.camera?.flip ?? true;
-  const detections = mediapipe.tasks?.faces?.result?.detections ?? [];
+  const detections = getTaskResult(
+    "faces",
+    VISION_RESULT_TTL_MS
+  )?.detections ?? [];
   const maxFaces = face.maxFaces ?? 1;
   const capW = mediapipe.capture?.size?.width ?? 320;
   const capH = mediapipe.capture?.size?.height ?? 240;
@@ -1247,7 +1204,10 @@ function _collectBody(
   const lm = body.landmarks ?? {};
   const maxPoses = body.maxPoses ?? 1;
   const minConf = body.confidence ?? 0.3;
-  const results = mediapipe.tasks?.poses?.result?.landmarks ?? [];
+  const results = getTaskResult(
+    "poses",
+    VISION_RESULT_TTL_MS
+  )?.landmarks ?? [];
 
   results.slice(
     0,
@@ -1302,7 +1262,10 @@ function _collectHandGroups(
   const flip = vision?.camera?.flip ?? true;
   const lm = hands.landmarks ?? {};
   const maxHands = hands.maxHands ?? 2;
-  const results = mediapipe.tasks?.hands?.result?.landmarks ?? [];
+  const results = getTaskResult(
+    "hands",
+    VISION_RESULT_TTL_MS
+  )?.landmarks ?? [];
 
   results.slice(
     0,
@@ -1364,7 +1327,10 @@ function _collectBodyGroups(
   const lm = body.landmarks ?? {};
   const maxPoses = body.maxPoses ?? 1;
   const minConf = body.confidence ?? 0.3;
-  const results = mediapipe.tasks?.poses?.result?.landmarks ?? [];
+  const results = getTaskResult(
+    "poses",
+    VISION_RESULT_TTL_MS
+  )?.landmarks ?? [];
 
   const enabledGroups = {
     wrists: lm.wrists !== false,
@@ -1425,7 +1391,10 @@ function _collectFaceGroups(
   const flip = vision?.camera?.flip ?? true;
   const maxFaces = face.maxFaces ?? 1;
   const minConf = face.confidence ?? 0.5;
-  const detections = mediapipe.tasks?.faces?.result?.detections ?? [];
+  const detections = getTaskResult(
+    "faces",
+    VISION_RESULT_TTL_MS
+  )?.detections ?? [];
 
   detections.slice(
     0,

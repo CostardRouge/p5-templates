@@ -7,7 +7,7 @@ export const formValues = {
   mode: {
     type: "live" as "live" | "trail",
     smoothing: 0.35,
-    maxPoints: 90,
+    maxPoints: 25,
     minDistance: 6
   },
 
@@ -21,7 +21,7 @@ export const formValues = {
     ...interactionFormValues,
     vision: {
       ...interactionFormValues.vision,
-      enabled: false,
+      enabled: true,
       hands: {
         ...interactionFormValues.vision.hands,
         landmarks: {

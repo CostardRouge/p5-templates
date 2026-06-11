@@ -301,23 +301,43 @@ function _drawLegend(
     y += lineH;
   } );
 
-  // Camera hint when vision enabled but mediapipe not yet running
+  // Vision status: starting hint, then live inference stats once running
   const vision = interaction.vision;
   const needsCamera = vision?.hands?.enabled || vision?.fingers?.enabled || vision?.face?.enabled || vision?.body?.enabled;
-  const cameraRunning = !!mediapipe.capture?.element;
 
-  if ( needsCamera && !cameraRunning && vision?.enabled !== false ) {
+  if ( !needsCamera || vision?.enabled === false ) {
+    return;
+  }
+
+  p.textSize( 11 );
+
+  if ( !mediapipe.capture?.element || !mediapipe.processor.ready ) {
     p.fill(
       251,
       188,
       4,
       180
     );
-    p.textSize( 11 );
     p.text(
-      "⚠ Reload to start camera",
+      "Starting camera…",
       startX,
       y + 8
     );
+
+    return;
   }
+
+  const stats = mediapipe.stats;
+  const thread = mediapipe.config.useWorker ? "worker" : "main";
+  const state = mediapipe.idle ? " · idle" : "";
+
+  p.fill(
+    255,
+    140
+  );
+  p.text(
+    `vision: ${ thread } · ${ stats.inferenceMilliseconds.toFixed( 1 ) } ms · ${ stats.inferencesPerSecond.toFixed( 0 ) }/s${ state }`,
+    startX,
+    y + 8
+  );
 }

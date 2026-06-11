@@ -1,3 +1,12 @@
+// Buffer messages synchronously: INIT can arrive while vision-manager.js is
+// still being fetched, and a message dispatched with no listener attached is
+// silently dropped — which would leave the main thread waiting forever.
+const pendingMessages = [];
+
+self.onmessage = ( event ) => {
+  pendingMessages.push( event );
+};
+
 import( "./vision-manager.js" ).then( ( module ) => {
   const {
     VisionManager
@@ -6,18 +15,12 @@ import( "./vision-manager.js" ).then( ( module ) => {
   const manager = new VisionManager();
 
   manager.setResultCallback( ( payload ) => {
-    const {
-      lib, result
-    } = payload;
     const transferables = [];
+    const buffer = payload.result?.data?.buffer;
 
-    // Detect if we have a transferable buffer
-    if ( lib === "segmenter" && result.data && result.data.buffer ) {
-      transferables.push( result.data.buffer );
-    }
-
-    if ( lib === "interactive" && result.data && result.data.buffer ) {
-      transferables.push( result.data.buffer );
+    // Segmentation masks carry a large buffer — transfer instead of copying.
+    if ( buffer ) {
+      transferables.push( buffer );
     }
 
     postMessage(
@@ -29,17 +32,25 @@ import( "./vision-manager.js" ).then( ( module ) => {
     );
   } );
 
-  self.onmessage = async( event ) => {
+  const handleMessage = async( event ) => {
     const message = event.data;
 
     if ( message.type === "INIT" ) {
-      await manager.initialize( {
-        tasks: message.tasks,
-        mediapipeLibraryPath: message.mediapipeLibraryPath
-      } );
-      postMessage( {
-        type: "READY"
-      } );
+      try {
+        await manager.initialize( {
+          tasks: message.tasks,
+          taskOptions: message.taskOptions ?? {},
+          mediapipeLibraryPath: message.mediapipeLibraryPath
+        } );
+        postMessage( {
+          type: "READY"
+        } );
+      } catch( error ) {
+        postMessage( {
+          type: "INIT_ERROR",
+          message: error?.message ?? String( error )
+        } );
+      }
     }
 
     if ( message.type === "SET_MODE" ) {
@@ -47,28 +58,54 @@ import( "./vision-manager.js" ).then( ( module ) => {
     }
 
     if ( message.type === "FRAME" ) {
-      manager.detect(
-        message.bitmap,
-        message.timestamp
-      );
+      try {
+        manager.detect(
+          message.bitmap,
+          message.timestamp
+        );
 
-      // Important: Close bitmap in worker to prevent memory leak
-      if ( message.bitmap.close ) {
-        message.bitmap.close();
+        // Lets the main thread clear its busy flag deterministically, even
+        // when several tasks each emitted (or none emitted) a LIB_RESULT.
+        postMessage( {
+          type: "FRAME_DONE",
+          timestamp: message.timestamp
+        } );
+      } catch( error ) {
+        postMessage( {
+          type: "FRAME_ERROR",
+          message: error?.message ?? String( error )
+        } );
+      } finally {
+        // Important: Close bitmap in worker to prevent memory leak
+        if ( message.bitmap?.close ) {
+          message.bitmap.close();
+        }
       }
     }
 
     if ( message.type === "INTERACT" ) {
-      // Run the interactive segmenter
-      manager.interact(
-        message.bitmap,
-        message.roi
-      );
-
-      // Cleanup
-      if ( message.bitmap.close ) {
-        message.bitmap.close();
+      try {
+        // Run the interactive segmenter
+        manager.interact(
+          message.bitmap,
+          message.roi
+        );
+      } finally {
+        // Cleanup
+        if ( message.bitmap?.close ) {
+          message.bitmap.close();
+        }
       }
     }
+
+    if ( message.type === "CLOSE" ) {
+      manager.close();
+      self.close();
+    }
   };
+
+  self.onmessage = handleMessage;
+
+  // Replay anything that arrived while the manager module was loading.
+  pendingMessages.splice( 0 ).forEach( handleMessage );
 } );
