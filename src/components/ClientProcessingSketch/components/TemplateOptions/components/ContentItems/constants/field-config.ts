@@ -325,25 +325,16 @@ const hudAnchorField: FieldConfig = {
   } ) )
 };
 
+// Single draggable pad in place of two x/y sliders. Stores the same { x, y }
+// shape; yDown keeps screen-space orientation (top of the pad = top of canvas).
 const hudOffsetField: FieldConfig = {
-  label: "Offset (0-1)",
-  component: "nested-object",
-  fields: {
-    x: {
-      label: "x",
-      component: "slider",
-      min: 0,
-      max: 1,
-      step: 0.01
-    },
-    y: {
-      label: "y",
-      component: "slider",
-      min: 0,
-      max: 1,
-      step: 0.01
-    }
-  }
+  label: "Offset",
+  component: "vector2d",
+  allowNegative: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+  yDown: true
 };
 
 const hudSourceField: FieldConfig = {
