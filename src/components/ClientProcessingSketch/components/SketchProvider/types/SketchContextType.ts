@@ -26,6 +26,12 @@ export type SketchState = {
   engine: SketchEngine | null;
   /** Whether the engine draw-loop is currently running. */
   looping: boolean;
+  /**
+   * True while a browser-side (frontend) recording is in progress. Used to
+   * lock playback controls (Play/Pause, progression scrub) so the user
+   * can't corrupt the in-flight capture or desync engine vs. looping state.
+   */
+  browserRecording: boolean;
 };
 
 export type SketchAction =
@@ -51,6 +57,10 @@ export type SketchAction =
   }
   | {
     type: "SET_CAPTURING";
+    payload: boolean
+  }
+  | {
+    type: "SET_BROWSER_RECORDING";
     payload: boolean
   };
 

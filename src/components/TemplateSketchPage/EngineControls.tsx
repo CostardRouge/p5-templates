@@ -24,7 +24,7 @@ type ThumbnailSaveState = "idle" | "saving" | "done" | "error";
 export function EngineControls( ) {
   const [
     {
-      engineId, name, engine, looping
+      engineId, name, engine, looping, browserRecording
     },
     dispatch
   ] = useSketch();
@@ -200,9 +200,16 @@ export function EngineControls( ) {
               payload: !looping
             } );
           } }
-          title={ looping ? "Pause animation" : "Play animation" }
+          disabled={ browserRecording }
+          title={
+            browserRecording
+              ? "Locked while recording"
+              : looping
+                ? "Pause animation"
+                : "Play animation"
+          }
           aria-label={ looping ? "Pause animation" : "Play animation" }
-          className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center"
+          className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
         >
           {looping ? (
             <Pause className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />

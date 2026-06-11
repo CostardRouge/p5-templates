@@ -261,12 +261,17 @@ function isEqual(
 /**
  * Resolve the effective size/animation for the current slide.
  * Per-slide overrides win; otherwise global values are used.
+ *
+ * Uses the resolved `slide` object (not the raw index): rendering coerces
+ * a null/out-of-range index to slide 0, so the effective settings must
+ * follow the slide that is actually drawn — otherwise a transiently null
+ * index would silently mask every per-slide override.
  */
 function getEffective( opts ) {
-  const slideIndex = typeof window !== "undefined" && window.getCurrentSlide
-    ? window.getCurrentSlide()?.index
-    : undefined;
-  const slide = slideIndex != null ? opts?.slides?.[ slideIndex ] : null;
+  const current = typeof window !== "undefined" && window.getCurrentSlide
+    ? window.getCurrentSlide()
+    : null;
+  const slide = current?.slide ?? null;
 
   return {
     size: slide?.size ?? opts?.size,
@@ -323,31 +328,43 @@ function handleOptionsChange(
     }
   }
 
-  // Check for effective animation/framerate changes (slide override or global)
+  // Check for effective animation changes (slide override or global).
+  // Duration and framerate are decoupled: the engine clock must pick up a
+  // duration change even when the framerate is untouched (or missing from
+  // a partial per-slide override), so the sketchOptions update is never
+  // gated behind framerate validity.
   if ( effectiveAnimation && !isEqual(
     effectiveAnimation,
     previousOptions.effectiveAnimation
   ) ) {
     const framerate = effectiveAnimation?.framerate;
+    const previousFramerate = previousOptions.effectiveAnimation?.framerate;
 
-    if ( framerate && typeof framerate === "number" && framerate > 0 ) {
+    if (
+      framerate &&
+      typeof framerate === "number" &&
+      framerate > 0 &&
+      framerate !== previousFramerate
+    ) {
       events.handle(
         "engine-framerate-change",
         framerate
       );
+    }
 
-      // Update sketch options reference
-      if ( sketch.sketchOptions ) {
-        sketch.sketchOptions.animation = {
-          ...effectiveAnimation
-        };
-      }
-
-      previousOptions.effectiveAnimation = {
+    // Update sketch options reference — merge so a partial override
+    // (e.g. duration-only) doesn't drop the other animation keys.
+    if ( sketch.sketchOptions ) {
+      sketch.sketchOptions.animation = {
+        ...sketch.sketchOptions.animation,
         ...effectiveAnimation
       };
-      hasChanges = true;
     }
+
+    previousOptions.effectiveAnimation = {
+      ...effectiveAnimation
+    };
+    hasChanges = true;
   }
 
   // Also track raw globals for reference
@@ -385,6 +402,22 @@ function initializeOptionsSubscription() {
   // Get initial options and store them
   const initialOptions = getSketchOptions();
 
+  // Baseline on the *effective* values (per-slide overrides included) so
+  // a deck loaded with a slide whose animation differs from the globals
+  // starts from the right comparison point — and the engine clock starts
+  // on the slide's duration, not the global one.
+  const {
+    size: initialEffectiveSize,
+    animation: initialEffectiveAnimation
+  } = getEffective( initialOptions );
+
+  if ( initialEffectiveAnimation && sketch.sketchOptions ) {
+    sketch.sketchOptions.animation = {
+      ...sketch.sketchOptions.animation,
+      ...initialEffectiveAnimation
+    };
+  }
+
   previousOptions = {
     size: initialOptions?.size ? {
       ...initialOptions.size
@@ -392,11 +425,11 @@ function initializeOptionsSubscription() {
     animation: initialOptions?.animation ? {
       ...initialOptions.animation
     } : null,
-    effectiveSize: initialOptions?.size ? {
-      ...initialOptions.size
+    effectiveSize: initialEffectiveSize ? {
+      ...initialEffectiveSize
     } : null,
-    effectiveAnimation: initialOptions?.animation ? {
-      ...initialOptions.animation
+    effectiveAnimation: initialEffectiveAnimation ? {
+      ...initialEffectiveAnimation
     } : null,
     assets: initialOptions?.assets,
     slides: initialOptions?.slides
