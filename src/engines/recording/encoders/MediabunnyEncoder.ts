@@ -2,9 +2,11 @@ import {
   Output,
   BufferTarget,
   CanvasSource,
+  AudioBufferSource,
   Mp4OutputFormat,
   WebMOutputFormat,
-  getFirstEncodableVideoCodec
+  getFirstEncodableVideoCodec,
+  getFirstEncodableAudioCodec
 } from "mediabunny";
 import type {
   FrameEncoder,
@@ -20,6 +22,20 @@ const WEBM_CODEC_CANDIDATES = [
 const MP4_CODEC_CANDIDATES = [
   "avc"
 ] as const;
+
+// Default per container — kept aligned with what each muxer accepts.
+const WEBM_AUDIO_CODEC_CANDIDATES = [
+  "opus"
+] as const;
+const MP4_AUDIO_CODEC_CANDIDATES = [
+  "aac"
+] as const;
+
+export type MediabunnyAudioOptions = {
+  sampleRate: number;
+  numberOfChannels: number;
+  bitrate?: number;
+};
 
 async function pickCodec(
   format: RecordingFormat, width: number, height: number
@@ -42,6 +58,25 @@ async function pickCodec(
   return codec;
 }
 
+async function pickAudioCodec(
+  format: RecordingFormat,
+  numberOfChannels: number,
+  sampleRate: number
+) {
+  const candidates =
+    format === "mp4"
+      ? MP4_AUDIO_CODEC_CANDIDATES
+      : WEBM_AUDIO_CODEC_CANDIDATES;
+
+  return getFirstEncodableAudioCodec(
+    candidates as unknown as Parameters<typeof getFirstEncodableAudioCodec>[ 0 ],
+    {
+      numberOfChannels,
+      sampleRate
+    }
+  );
+}
+
 /**
  * Mediabunny-backed encoder for webm + mp4. Uses WebCodecs under the
  * hood via `CanvasSource` — requires Chrome 94+, Edge 94+, Safari 16.4+.
@@ -49,9 +84,12 @@ async function pickCodec(
 class MediabunnyEncoder implements FrameEncoder {
   readonly mimeType: string;
   readonly fileExtension: string;
+  /** True if an audio track was added at init time. */
+  readonly hasAudioTrack: boolean;
 
   private output: Output | null = null;
   private source: CanvasSource | null = null;
+  private audioSource: AudioBufferSource | null = null;
   private frameIndex = 0;
   private frameDuration: number;
   private initPromise: Promise<void>;
@@ -64,10 +102,12 @@ class MediabunnyEncoder implements FrameEncoder {
       height: number;
       frameRate: number;
       videoBitsPerSecond?: number;
+      audio?: MediabunnyAudioOptions;
     }
   ) {
     this.mimeType = format === "mp4" ? "video/mp4" : "video/webm";
     this.fileExtension = format === "mp4" ? "mp4" : "webm";
+    this.hasAudioTrack = Boolean( params.audio );
     this.frameDuration = 1 / this.params.frameRate;
     this.initPromise = this.initOutput();
   }
@@ -101,7 +141,39 @@ class MediabunnyEncoder implements FrameEncoder {
     );
 
     this.output.addVideoTrack( this.source );
+
+    if ( this.params.audio ) {
+      const audioCodec = await pickAudioCodec(
+        this.format,
+        this.params.audio.numberOfChannels,
+        this.params.audio.sampleRate
+      );
+
+      // If the browser can't encode the requested container's audio codec
+      // we keep going video-only rather than failing the recording —
+      // mediabunny rejects empty audio tracks at finalize.
+      if ( audioCodec ) {
+        this.audioSource = new AudioBufferSource( {
+          codec: audioCodec,
+          bitrate: this.params.audio.bitrate ?? 128_000
+        } );
+        this.output.addAudioTrack( this.audioSource );
+      } else {
+        ( this as { hasAudioTrack: boolean } ).hasAudioTrack = false;
+      }
+    }
+
     await this.output.start();
+  }
+
+  async addAudioBuffer( buffer: AudioBuffer ): Promise<void> {
+    await this.initPromise;
+
+    if ( !this.audioSource ) {
+      return;
+    }
+
+    await this.audioSource.add( buffer );
   }
 
   async addFrame( _source: CanvasImageSource ): Promise<void> {
@@ -150,12 +222,14 @@ class MediabunnyEncoder implements FrameEncoder {
     this.output?.cancel().catch( () => undefined );
     this.output = null;
     this.source = null;
+    this.audioSource = null;
   }
 }
 
 export const createMediabunnyEncoderFactory = (
   format: RecordingFormat,
-  canvas: HTMLCanvasElement
+  canvas: HTMLCanvasElement,
+  audio?: MediabunnyAudioOptions
 ): FrameEncoderFactory => {
   return ( params ) =>
     new MediabunnyEncoder(
@@ -165,7 +239,8 @@ export const createMediabunnyEncoderFactory = (
         width: params.width,
         height: params.height,
         frameRate: params.frameRate,
-        videoBitsPerSecond: params.videoBitsPerSecond
+        videoBitsPerSecond: params.videoBitsPerSecond,
+        audio
       }
     );
 };

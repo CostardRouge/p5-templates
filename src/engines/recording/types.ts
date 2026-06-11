@@ -181,8 +181,20 @@ export interface FrameEncoder {
   readonly format: RecordingFormat;
   readonly mimeType: string;
   readonly fileExtension: string;
+  /**
+   * True if the encoder was built with an audio track wired in. The
+   * deterministic recorder only renders + adds an audio buffer when this
+   * is true; encoders without audio support (gif, fallback paths) keep
+   * the previous video-only behaviour.
+   */
+  readonly hasAudioTrack?: boolean;
   /** Push one frame in deterministic mode. No-op in realtime mode. */
   addFrame( source: CanvasImageSource ): Promise<void>;
+  /**
+   * Add the pre-rendered audio buffer. Called once between the last
+   * frame and `finalize()`. No-op if the encoder has no audio track.
+   */
+  addAudioBuffer?( buffer: AudioBuffer ): Promise<void>;
   /** Finalize and return the produced blob. */
   finalize(): Promise<Blob>;
   /** Discard buffered data + free workers. */

@@ -1,6 +1,7 @@
 import {
   registerAudioBridge
 } from "@/lib/audioBridge";
+import time from "./time.js";
 
 /**
  * Code-driven sound engine for sketches (raw Web Audio, no p5.sound).
@@ -16,9 +17,13 @@ import {
  * suspended under autoplay policy; any pointer/key gesture resumes it, and
  * the recorder also calls `ensureRunning()` from its own start gesture.
  *
- * The master gain feeds both the speakers and a MediaStreamAudioDestination
- * exposed through the audio bridge, so realtime recordings capture exactly
- * what is heard, in sync, with no extra wiring in sketches.
+ * Two recording paths:
+ *   - Realtime: the master gain feeds a MediaStreamAudioDestination that
+ *     MediaRecorder mixes into the captured video.
+ *   - Deterministic (async-loop / server): `beginCapture()` swaps live
+ *     playback for an event log; `renderOffline()` then replays the log
+ *     through an OfflineAudioContext at sample-accurate timestamps, so
+ *     the muxed audio matches the rendered frames exactly.
  */
 
 let _context = null;
@@ -29,6 +34,9 @@ let _unlockAttached = false;
 
 const _samples = new Map(); // name → AudioBuffer
 const _samplePromises = new Map(); // url → Promise (dedupe concurrent loads)
+
+let _captureMode = false;
+let _capturedEvents = []; // { t, name, params }
 
 const MIN_GAIN = 0.0001; // exponentialRamp target — can't reach true zero
 
@@ -88,31 +96,29 @@ function ensureContext() {
 
   registerAudioBridge( {
     getRecordingStream: () => audio.getRecordingStream(),
-    ensureRunning: resume
+    ensureRunning: resume,
+    beginCapture: () => audio.beginCapture(),
+    endCapture: () => audio.endCapture(),
+    renderOffline: ( opts ) => audio.renderOffline( opts )
   } );
 
   return _context;
 }
 
-/**
- * One synthesised voice: oscillator → envelope gain → master.
- * Returns immediately; the voice frees itself when the envelope ends.
- */
-function playVoice( {
-  freq = 440,
-  endFreq = null,
-  type = "sine",
-  duration = 0.15,
-  attack = 0.002,
-  gain = 0.5
-} = {} ) {
-  const ctx = ensureContext();
+/* ------------------------------------------------------------------ */
+/*  Voice routines (context-agnostic so the offline render uses them)  */
+/* ------------------------------------------------------------------ */
 
-  if ( !ctx ) {
-    return;
-  }
-
-  const now = ctx.currentTime;
+function playVoiceOn(
+  ctx, destination, startTime, {
+    freq = 440,
+    endFreq = null,
+    type = "sine",
+    duration = 0.15,
+    attack = 0.002,
+    gain = 0.5
+  } = {}
+) {
   const osc = ctx.createOscillator();
   const envelope = ctx.createGain();
 
@@ -122,56 +128,51 @@ function playVoice( {
       1,
       freq
     ),
-    now
+    startTime
   );
 
   if ( endFreq && endFreq > 0 ) {
     osc.frequency.exponentialRampToValueAtTime(
       endFreq,
-      now + duration
+      startTime + duration
     );
   }
 
   envelope.gain.setValueAtTime(
     MIN_GAIN,
-    now
+    startTime
   );
   envelope.gain.exponentialRampToValueAtTime(
     Math.max(
       MIN_GAIN,
       gain
     ),
-    now + attack
+    startTime + attack
   );
   envelope.gain.exponentialRampToValueAtTime(
     MIN_GAIN,
-    now + duration
+    startTime + duration
   );
 
   osc.connect( envelope );
-  envelope.connect( _masterGain );
+  envelope.connect( destination );
 
-  osc.start( now );
-  osc.stop( now + duration + 0.05 );
-  osc.onended = () => {
-    osc.disconnect();
-    envelope.disconnect();
+  osc.start( startTime );
+  osc.stop( startTime + duration + 0.05 );
+
+  return {
+    osc,
+    envelope
   };
 }
 
-/** Short filtered-noise burst — typewriter ticks, UI clicks. */
-function playTick( {
-  duration = 0.03,
-  freq = 3000,
-  gain = 0.3
-} = {} ) {
-  const ctx = ensureContext();
-
-  if ( !ctx ) {
-    return;
-  }
-
-  const now = ctx.currentTime;
+function playTickOn(
+  ctx, destination, startTime, {
+    duration = 0.03,
+    freq = 3000,
+    gain = 0.3
+  } = {}
+) {
   const frameCount = Math.max(
     1,
     Math.floor( ctx.sampleRate * duration )
@@ -199,28 +200,23 @@ function playTick( {
 
   source.connect( filter );
   filter.connect( envelope );
-  envelope.connect( _masterGain );
+  envelope.connect( destination );
 
-  source.start( now );
-  source.onended = () => {
-    source.disconnect();
-    filter.disconnect();
-    envelope.disconnect();
+  source.start( startTime );
+
+  return {
+    source,
+    filter,
+    envelope
   };
 }
 
-function playSample(
-  buffer, {
+function playSampleOn(
+  ctx, destination, startTime, buffer, {
     gain = 1,
     playbackRate = 1
   } = {}
 ) {
-  const ctx = ensureContext();
-
-  if ( !ctx ) {
-    return;
-  }
-
   const source = ctx.createBufferSource();
   const envelope = ctx.createGain();
 
@@ -229,24 +225,138 @@ function playSample(
   envelope.gain.value = gain;
 
   source.connect( envelope );
-  envelope.connect( _masterGain );
+  envelope.connect( destination );
 
-  source.start( ctx.currentTime );
-  source.onended = () => {
-    source.disconnect();
-    envelope.disconnect();
+  source.start( startTime );
+
+  return {
+    source,
+    envelope
   };
 }
 
-const SYNTH_PRESETS = {
-  beep: playVoice,
-  bounce: ( params ) => playVoice( {
-    type: "triangle",
-    endFreq: ( params?.freq ?? 440 ) * 0.5,
-    ...params
-  } ),
-  tick: playTick
-};
+/**
+ * Single dispatch shared by live playback and offline rendering, so a
+ * named sound produces identical audio in both paths. Sample registry
+ * wins over synth presets (the audio-asset hook for later).
+ */
+function scheduleOn(
+  ctx, destination, startTime, name, params
+) {
+  const sample = _samples.get( name );
+
+  if ( sample ) {
+    playSampleOn(
+      ctx,
+      destination,
+      startTime,
+      sample,
+      params
+    );
+
+    return;
+  }
+
+  switch ( name ) {
+    case "tick":
+      playTickOn(
+        ctx,
+        destination,
+        startTime,
+        params
+      );
+      break;
+    case "bounce":
+      playVoiceOn(
+        ctx,
+        destination,
+        startTime,
+        {
+          type: "triangle",
+          endFreq: ( params?.freq ?? 440 ) * 0.5,
+          ...params
+        }
+      );
+      break;
+    case "beep":
+    default:
+      playVoiceOn(
+        ctx,
+        destination,
+        startTime,
+        params
+      );
+      break;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Live playback wrappers                                            */
+/* ------------------------------------------------------------------ */
+
+function playVoiceLive( params ) {
+  const ctx = ensureContext();
+
+  if ( !ctx ) {
+    return;
+  }
+
+  const handles = playVoiceOn(
+    ctx,
+    _masterGain,
+    ctx.currentTime,
+    params
+  );
+
+  handles.osc.onended = () => {
+    handles.osc.disconnect();
+    handles.envelope.disconnect();
+  };
+}
+
+function playTickLive( params ) {
+  const ctx = ensureContext();
+
+  if ( !ctx ) {
+    return;
+  }
+
+  const handles = playTickOn(
+    ctx,
+    _masterGain,
+    ctx.currentTime,
+    params
+  );
+
+  handles.source.onended = () => {
+    handles.source.disconnect();
+    handles.filter.disconnect();
+    handles.envelope.disconnect();
+  };
+}
+
+function playSampleLive(
+  buffer, params
+) {
+  const ctx = ensureContext();
+
+  if ( !ctx ) {
+    return;
+  }
+
+  const handles = playSampleOn(
+    ctx,
+    _masterGain,
+    ctx.currentTime,
+    buffer,
+    params
+  );
+
+  handles.source.onended = () => {
+    handles.source.disconnect();
+    handles.envelope.disconnect();
+  };
+}
 
 const audio = {
   /** True once a context exists (i.e. something already made sound). */
@@ -267,16 +377,29 @@ const audio = {
   },
 
   /**
-   * Fire a named sound. Registered samples win over synth presets, so an
-   * uploaded "bounce" asset transparently replaces the coded one.
+   * Fire a named sound. In capture mode the call is logged instead of
+   * played, so the deterministic recorder can render the audio offline
+   * after the frame loop.
    */
   trigger: (
     name, params
   ) => {
+    if ( _captureMode ) {
+      _capturedEvents.push( {
+        t: time.seconds(),
+        name,
+        params: params ? {
+          ...params
+        } : undefined
+      } );
+
+      return;
+    }
+
     const sample = _samples.get( name );
 
     if ( sample ) {
-      playSample(
+      playSampleLive(
         sample,
         params
       );
@@ -284,15 +407,26 @@ const audio = {
       return;
     }
 
-    const preset = SYNTH_PRESETS[ name ];
-
-    if ( preset ) {
-      preset( params );
+    switch ( name ) {
+      case "tick":
+        playTickLive( params );
+        break;
+      case "bounce":
+        playVoiceLive( {
+          type: "triangle",
+          endFreq: ( params?.freq ?? 440 ) * 0.5,
+          ...params
+        } );
+        break;
+      case "beep":
+      default:
+        playVoiceLive( params );
+        break;
     }
   },
 
-  beep: playVoice,
-  tick: playTick,
+  beep: playVoiceLive,
+  tick: playTickLive,
 
   registerSample: (
     name, buffer
@@ -376,6 +510,68 @@ const audio = {
     _recordingKeepAlive.start();
 
     return _recordingDestination.stream;
+  },
+
+  /* ---------------------------------------------------------------- */
+  /*  Deterministic capture                                           */
+  /* ---------------------------------------------------------------- */
+
+  beginCapture: () => {
+    _captureMode = true;
+    _capturedEvents = [];
+  },
+
+  endCapture: () => {
+    _captureMode = false;
+    const events = _capturedEvents;
+
+    _capturedEvents = [];
+
+    return events;
+  },
+
+  /**
+   * Replay the logged events into an OfflineAudioContext and return the
+   * rendered AudioBuffer. Events past `duration` are dropped so a stray
+   * tail-end bip never extends the muxed audio beyond the video.
+   */
+  renderOffline: async( {
+    duration,
+    sampleRate = 48000,
+    numberOfChannels = 1,
+    events = _capturedEvents
+  } = {} ) => {
+    if ( !duration || duration <= 0 ) {
+      throw new Error( "audio.renderOffline: duration must be a positive number." );
+    }
+
+    const length = Math.ceil( duration * sampleRate );
+    const offlineCtx = new OfflineAudioContext( {
+      numberOfChannels,
+      sampleRate,
+      length
+    } );
+
+    const masterGain = offlineCtx.createGain();
+
+    masterGain.gain.value = 0.8;
+    masterGain.connect( offlineCtx.destination );
+
+    for ( const event of events ) {
+      if ( event.t < 0 || event.t >= duration ) {
+        continue;
+      }
+
+      scheduleOn(
+        offlineCtx,
+        masterGain,
+        event.t,
+        event.name,
+        event.params
+      );
+    }
+
+    return offlineCtx.startRendering();
   }
 };
 

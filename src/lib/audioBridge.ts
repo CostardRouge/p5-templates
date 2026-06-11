@@ -10,8 +10,20 @@
  *   1. Audio engine calls `registerAudioBridge(bridge)` once initialised.
  *   2. RealtimeRecorder calls `getAudioBridge()` when capture starts and,
  *      if a bridge exists, mixes its stream tracks into the MediaRecorder.
+ *      AsyncLoopRecorder uses `beginCapture()` / `endCapture()` /
+ *      `renderOffline()` to bake an AudioBuffer aligned with its frame
+ *      loop, then muxes it into the encoder output.
  *   3. Engine calls `unregisterAudioBridge()` on teardown (optional).
  */
+
+export interface AudioOfflineRenderOptions {
+  /** Total clip duration in seconds. Events past it are dropped. */
+  duration: number;
+  /** Defaults to 48 kHz. */
+  sampleRate?: number;
+  /** Defaults to mono. */
+  numberOfChannels?: number;
+}
 
 export interface AudioBridge {
   /**
@@ -27,6 +39,26 @@ export interface AudioBridge {
    * recording, so captured audio is never silently muted.
    */
   ensureRunning(): Promise<void>;
+
+  /**
+   * Swap live playback for event logging — every subsequent `trigger()`
+   * is queued with its sketch-time timestamp instead of producing sound.
+   * The async-loop recorder calls this before stepping the first frame.
+   */
+  beginCapture(): void;
+
+  /**
+   * Stop logging and clear the queue. Returned for symmetry but the
+   * recorder does not depend on the payload — `renderOffline()` reads
+   * the same queue internally.
+   */
+  endCapture(): unknown;
+
+  /**
+   * Render the logged events into an `AudioBuffer` via OfflineAudioContext,
+   * sample-accurate against the frame-stepped timeline.
+   */
+  renderOffline( opts: AudioOfflineRenderOptions ): Promise<AudioBuffer>;
 }
 
 let current: AudioBridge | null = null;
