@@ -3,6 +3,18 @@ import {
 } from "@/p5/utils/sketch.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
+import createGlowBatchRenderer from "@/p5/utils/glowBatchGpu.js";
+
+// The glowing curve used to be stroked segment-by-segment on the CPU, once per
+// glow layer, once per spline — fine for one procedural curve, but the cost
+// scaled with the number of live entities and dragged the draw loop down. Now the
+// dense Chaikin geometry is built once on flat typed arrays (no p5.Vector churn),
+// uploaded once, and the GPU re-draws it per glow layer while computing the
+// rainbow colour in the shader (see utils/glowBatchGpu.js). The geometry and
+// colours match the originals exactly, so the look is unchanged.
+const batch = createGlowBatchRenderer();
+
+const TWO_PI = Math.PI * 2;
 
 /**
  * Shared geometry for the `splines` category.
@@ -205,6 +217,71 @@ function chaikinStep(
   if ( !closed ) {
     out.unshift( points[ 0 ].copy() );
     out.push( points[ count - 1 ].copy() );
+  }
+
+  return out;
+}
+
+/**
+ * Same corner-cutting as `chaikin`, but on flat [x0, y0, x1, y1, …] Float32Arrays
+ * instead of p5.Vector objects. The GPU path only needs the coordinates, and the
+ * dense polyline can reach thousands of points per spline, so avoiding the vector
+ * allocations removes a big chunk of per-frame GC. Input is the sketch's vectors;
+ * output is a packed Float32Array of the dense vertices.
+ */
+export function chaikinFlat(
+  points, iterations, closed
+) {
+  let flat = new Float32Array( points.length * 2 );
+
+  for ( let i = 0; i < points.length; i++ ) {
+    flat[ i * 2 ] = points[ i ].x;
+    flat[ i * 2 + 1 ] = points[ i ].y;
+  }
+
+  for ( let i = 0; i < iterations; i++ ) {
+    flat = chaikinStepFlat(
+      flat,
+      closed
+    );
+  }
+
+  return flat;
+}
+
+function chaikinStepFlat(
+  flat, closed
+) {
+  const count = flat.length / 2;
+  const limit = closed ? count : count - 1;
+  const cutCount = limit * 2;
+  const outCount = closed ? cutCount : cutCount + 2;
+  const out = new Float32Array( outCount * 2 );
+  let o = 0;
+
+  // Open polylines keep their original endpoints (Chaikin only cuts corners).
+  if ( !closed ) {
+    out[ o++ ] = flat[ 0 ];
+    out[ o++ ] = flat[ 1 ];
+  }
+
+  for ( let i = 0; i < limit; i++ ) {
+    const ai = i * 2;
+    const bi = ( ( i + 1 ) % count ) * 2;
+    const ax = flat[ ai ];
+    const ay = flat[ ai + 1 ];
+    const bx = flat[ bi ];
+    const by = flat[ bi + 1 ];
+
+    out[ o++ ] = 0.75 * ax + 0.25 * bx;
+    out[ o++ ] = 0.75 * ay + 0.25 * by;
+    out[ o++ ] = 0.25 * ax + 0.75 * bx;
+    out[ o++ ] = 0.25 * ay + 0.75 * by;
+  }
+
+  if ( !closed ) {
+    out[ o++ ] = flat[ ( count - 1 ) * 2 ];
+    out[ o++ ] = flat[ ( count - 1 ) * 2 + 1 ];
   }
 
   return out;
@@ -485,58 +562,54 @@ export function drawPointMarkers(
 }
 
 /**
- * Chaikin gives us a dense polyline, so we can stroke it segment by segment and
- * get a free neon-style gradient running along the path.
+ * Queue one spline's dense Chaikin polyline onto the GPU stroke batch: open a new
+ * stroke group, then push one segment per dense edge with its hue. The hue is the
+ * only thing that varies along the curve — the per-layer thickness and opacity are
+ * applied by the GPU when `drawStrokes` re-draws the geometry — so each segment is
+ * emitted ONCE here instead of once per glow layer.
+ *
+ *   gradient → hue swept along the path (a free neon gradient).
+ *   uniform  → a single hue for the whole stroke (still drifts with time).
  */
-export function drawChaikinGradient(
+function emitStroke(
   points, {
     iterations,
     closed,
-    weight,
-    glow,
-    hueSpeed
+    hueSpeed,
+    gradient
   }
 ) {
-  const p = getP5();
-  const dense = chaikin(
+  const dense = chaikinFlat(
     points,
     iterations,
     closed
   );
-  const total = dense.length;
+  const total = dense.length / 2;
   const segments = closed ? total : total - 1;
 
-  for ( let shadow = glow; shadow >= 0; shadow-- ) {
-    const layerWeight = weight * ( 1 + shadow * 1.3 );
-    const opacityFactor = p.map(
-      shadow,
-      0,
-      Math.max(
-        1,
-        glow
-      ),
-      1,
-      4
+  if ( segments < 1 ) {
+    return;
+  }
+
+  const angle = animation.angle;
+  const uniformHue = Math.sin( angle * hueSpeed ) * TWO_PI;
+
+  batch.openStroke();
+
+  for ( let i = 0; i < segments; i++ ) {
+    const ai = i * 2;
+    const bi = ( ( i + 1 ) % total ) * 2;
+    const hueIndex = gradient
+      ? Math.sin( ( i / segments ) * TWO_PI + angle * hueSpeed ) * TWO_PI
+      : uniformHue;
+
+    batch.strokeSegment(
+      dense[ ai ],
+      dense[ ai + 1 ],
+      dense[ bi ],
+      dense[ bi + 1 ],
+      hueIndex
     );
-
-    p.strokeWeight( layerWeight );
-
-    for ( let i = 0; i < segments; i++ ) {
-      const a = dense[ i ];
-      const b = dense[ ( i + 1 ) % total ];
-      const progression = i / segments;
-
-      p.stroke( colors.rainbow( {
-        hueIndex: Math.sin( progression * p.TAU + animation.angle * hueSpeed ) * p.PI * 2,
-        opacityFactor
-      } ) );
-      p.line(
-        a.x,
-        a.y,
-        b.x,
-        b.y
-      );
-    }
   }
 }
 
@@ -606,21 +679,29 @@ export function drawUniformCurve(
 }
 
 /**
- * Render one spline through `points` with the splines look: optional raw-polygon
- * overlay, the rounded curve (gradient Chaikin or uniform stroke), then optional
- * point markers on top. `cfg` mirrors the sketch option blocks:
- *   { curve, stroke, overlay }
- * Callers pass already-positioned points, so this works for both the procedural
- * v0 layout and live interaction-driven groups.
+ * Render a batch of splines with the splines look: optional raw-polygon overlays,
+ * the rounded glowing curves, then optional point markers on top. `cfg` mirrors
+ * the sketch option blocks ({ curve, stroke, overlay }) and applies to every
+ * spline in `list` (the rounding method and styling are shared options).
+ *
+ * Batching matters for the live/interactive variant: every detected entity is one
+ * spline, so the per-frame glow is drawn for all of them in a single instanced GPU
+ * pass instead of one CPU stroke loop per entity. Overlays and markers stay on the
+ * p2d canvas (they are cheap, proportional to the original point count) and the
+ * glow composites between them, preserving the overlay→curve→markers stacking.
+ *
+ * @param {Array<Array>} list array of point lists (each an ordered set of vectors)
  */
-export function renderSpline(
-  points, {
+export function renderSplines(
+  list, {
     curve = {},
     stroke = {},
     overlay = {}
   } = {}
 ) {
-  if ( !points || points.length < 2 ) {
+  const splines = ( list ?? [] ).filter( ( points ) => points && points.length >= 2 );
+
+  if ( splines.length === 0 ) {
     return;
   }
 
@@ -638,32 +719,66 @@ export function renderSpline(
     hueSpeed: stroke.hueSpeed ?? 1
   };
 
+  // Raw polygon overlay (behind the curve), straight onto the p2d canvas.
   if ( polygonCfg.show ?? true ) {
-    drawPolygonOverlay(
+    splines.forEach( ( points ) => drawPolygonOverlay(
       points,
       closed,
       polygonCfg
-    );
+    ) );
   }
 
-  if ( method === "chaikin" && ( stroke.gradient ?? true ) ) {
-    drawChaikinGradient(
+  // The rounded glowing curve is the per-frame hotspot, so for the Chaikin methods
+  // every spline's geometry is uploaded once and the GPU re-draws it per glow layer
+  // (rainbow colour computed in the shader). The p5-native curve primitives
+  // (catmull-rom / quadratic) stay on the CPU — they already emit one shape per glow
+  // layer, so they were never the bottleneck and tessellating them would risk
+  // changing their look.
+  if ( method === "chaikin" ) {
+    const gradient = stroke.gradient ?? true;
+
+    batch.beginStrokes();
+    splines.forEach( ( points ) => emitStroke(
       points,
-      curveOptions
-    );
+      {
+        iterations: curveOptions.iterations,
+        closed,
+        hueSpeed: curveOptions.hueSpeed,
+        gradient
+      }
+    ) );
+    batch.drawStrokes( {
+      weight: curveOptions.weight,
+      glow: curveOptions.glow
+    } );
   } else {
-    drawUniformCurve(
+    splines.forEach( ( points ) => drawUniformCurve(
       points,
       method,
       curveOptions
-    );
+    ) );
   }
 
-  // Points drawn last so the markers stay on top of the glowing curve.
+  // Markers drawn last so they stay on top of the glowing curve.
   if ( pointsCfg.show ?? true ) {
-    drawPointMarkers(
+    splines.forEach( ( points ) => drawPointMarkers(
       points,
       pointsCfg
-    );
+    ) );
   }
+}
+
+/**
+ * Render a single spline. Thin wrapper over `renderSplines` so existing callers
+ * (and the procedural v0 layout) keep working unchanged.
+ */
+export function renderSpline(
+  points, cfg
+) {
+  renderSplines(
+    points ? [
+      points
+    ] : [],
+    cfg
+  );
 }

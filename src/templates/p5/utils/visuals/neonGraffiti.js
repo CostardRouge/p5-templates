@@ -1,11 +1,19 @@
 import easing from "@/p5/utils/easing.js";
-import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import createGlowBatchRenderer from "@/p5/utils/glowBatchGpu.js";
+
+// The visual repeatedly painted shadowsCount × stepsCount filled circles with a
+// p5 fill()/circle() pair each, then allocated a p5.Color per disc — both costs
+// that scaled badly. The generative math below is untouched, but rendering moved
+// to one instanced GPU draw and the rainbow colour is computed in the shader (see
+// utils/glowBatchGpu.js), so the look is identical with neither the per-disc draw
+// call nor the per-disc colour allocation.
+const batch = createGlowBatchRenderer();
 
 function getCircleSize(
   circleSizeOption = {
@@ -90,7 +98,7 @@ export default function neonGraffiti( {
     );
   }
 
-  _p.noStroke();
+  batch.begin();
 
   for ( let shadowIndex = 0; shadowIndex < shadowsCount; shadowIndex++ ) {
     const shadowProgression = shadowIndex / shadowsCount;
@@ -160,44 +168,50 @@ export default function neonGraffiti( {
 
       const hueEasingFn = easing?.[ hueEasing ] ?? easing.easeInOutSine;
 
-      _p.fill( colors.rainbow( {
-        opacityFactor: _p.map(
-          shadowIndex,
-          0,
-          shadowsCount,
-          opacityStart,
-          opacityEnd
-        ),
-        hueOffset: hueEasingFn( shadowProgression + stepProgression / hueIndexMultiplier ),
-        hueIndex:
-            _p.map(
-              Math.sin( animation.angle +
-                  hueEasingFn( stepAngle ) * -3 +
-                  shadowProgression +
-                  stepProgression ),
-              -1,
-              1,
-              -hueAmplitude,
-              hueAmplitude
-            ) * hueIndexMultiplier
-      } ) );
+      // The same rainbow inputs as before, passed straight to the GPU palette
+      // instead of building a p5.Color.
+      const opacityFactor = _p.map(
+        shadowIndex,
+        0,
+        shadowsCount,
+        opacityStart,
+        opacityEnd
+      );
+      const hueOffset = hueEasingFn( shadowProgression + stepProgression / hueIndexMultiplier );
+      const hueIndex = _p.map(
+        Math.sin( animation.angle +
+            hueEasingFn( stepAngle ) * -3 +
+            shadowProgression +
+            stepProgression ),
+        -1,
+        1,
+        -hueAmplitude,
+        hueAmplitude
+      ) * hueIndexMultiplier;
 
-      _p.circle(
+      const diameter = getCircleSize(
+        size,
+        {
+          shadowProgression,
+          shadowIndex,
+          shadowsCount,
+          stepAngle,
+          step,
+          stepsCount,
+          stepProgression
+        }
+      );
+
+      batch.disc(
         position.x,
         position.y,
-        getCircleSize(
-          size,
-          {
-            shadowProgression,
-            shadowIndex,
-            shadowsCount,
-            stepAngle,
-            step,
-            stepsCount,
-            stepProgression
-          }
-        )
+        diameter / 2,
+        hueOffset,
+        hueIndex,
+        opacityFactor
       );
     }
   }
+
+  batch.end();
 }
