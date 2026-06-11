@@ -25,3 +25,22 @@ export const CONTROL_EDIT_INPUT_CLASS =
 /** Chevron displayed in select-like controls. */
 export const CONTROL_CHEVRON_CLASS =
   "h-4 w-4 md:h-3 md:w-3 shrink-0 text-label";
+
+/** Borderless input filling the free segment of a control bar. */
+export const CONTROL_BAR_INPUT_CLASS =
+  "h-full min-w-0 flex-1 bg-transparent px-2.5 text-base md:text-xs text-foreground placeholder:text-label/70 focus:outline-none";
+
+/**
+ * Card chrome for multi-line controls (textarea, json, multi-select): same
+ * border/radius as the bars, with a label header strip on top.
+ */
+export const CONTROL_CARD_CLASS =
+  "overflow-hidden rounded-lg border border-theme bg-background focus-within:ring-1 focus-within:ring-focus";
+
+/** Header strip of a control card, mirroring the bar label segment. */
+export const CONTROL_CARD_HEADER_CLASS =
+  "flex items-center justify-between gap-1 border-b border-theme bg-foreground/5 px-2.5 py-1.5 md:py-1";
+
+/** Borderless textarea body inside a control card. */
+export const CONTROL_CARD_TEXTAREA_CLASS =
+  "block w-full resize-y bg-transparent px-2.5 py-2 md:px-1.5 md:py-1 text-base md:text-xs text-foreground placeholder:text-label/70 focus:outline-none";

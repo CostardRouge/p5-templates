@@ -4,16 +4,26 @@ import React, {
   useMemo
 } from "react";
 import {
+  ChevronDown
+} from "lucide-react";
+import {
   useFormContext, useWatch
 } from "react-hook-form";
 import parseSizePreset from "./utils/parsePreset";
 import {
   SelectOption
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import {
+  CONTROL_BAR_CLASS,
+  CONTROL_CHEVRON_CLASS
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/control-bar";
+import {
+  BarLabelSegment
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlChrome";
 
 type Props = {
   id: string;
-  className?: string;
+  label?: string;
   noneLabel?: string;
   options: SelectOption[];
   sizeFieldPrefix?: string;
@@ -21,7 +31,7 @@ type Props = {
 
 export default function ControlledSizePresetSelect( {
   id,
-  className = "",
+  label,
   noneLabel,
   options,
   sizeFieldPrefix = ""
@@ -110,37 +120,61 @@ export default function ControlledSizePresetSelect( {
     );
   };
 
+  const matchedOption = options.find( ( option ) => String( option.value ) === currentValue );
+  // A size set by hand may match no preset: surface it as "W × H".
+  const displayLabel =
+    matchedOption?.label ??
+    ( currentValue ? `${ width } × ${ height }` : ( noneLabel ?? "--" ) );
+
   return (
-    <select
-      id={ id }
-      className={ `w-full border border-theme rounded-lg bg-background text-foreground ${ className }` }
-      value={ currentValue }
-      onChange={ handleChange }
-    >
-      {noneLabel ? <option value="">{noneLabel}</option> : null}
+    <div className={ CONTROL_BAR_CLASS }>
+      <BarLabelSegment label={ label } />
 
-      {/* Ungrouped options first */}
-      {ungrouped.map( ( opt ) => (
-        <option key={ String( opt.value ) } value={ String( opt.value ) }>
-          {opt.label}
-        </option>
-      ) )}
+      <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
+        <span className="truncate">{displayLabel}</span>
+        <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+      </span>
 
-      {/* Then grouped options as <optgroup> */}
-      {[
-        ...groups.entries()
-      ].map( ( [
-        groupLabel,
-        opts
-      ] ) => (
-        <optgroup key={ groupLabel } label={ groupLabel }>
-          {opts.map( ( opt ) => (
-            <option key={ String( opt.value ) } value={ String( opt.value ) }>
-              {opt.label}
-            </option>
-          ) )}
-        </optgroup>
-      ) )}
-    </select>
+      <select
+        id={ id }
+        aria-label={ label ?? "Size preset" }
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        value={ currentValue }
+        onChange={ handleChange }
+      >
+        {noneLabel ? <option value="">{noneLabel}</option> : null}
+
+        {/* Keep the native select consistent when the current size matches
+            no preset. */}
+        {currentValue && !matchedOption && (
+          <option value={ currentValue } hidden>
+            {displayLabel}
+          </option>
+        )}
+
+        {/* Ungrouped options first */}
+        {ungrouped.map( ( opt ) => (
+          <option key={ String( opt.value ) } value={ String( opt.value ) }>
+            {opt.label}
+          </option>
+        ) )}
+
+        {/* Then grouped options as <optgroup> */}
+        {[
+          ...groups.entries()
+        ].map( ( [
+          groupLabel,
+          opts
+        ] ) => (
+          <optgroup key={ groupLabel } label={ groupLabel }>
+            {opts.map( ( opt ) => (
+              <option key={ String( opt.value ) } value={ String( opt.value ) }>
+                {opt.label}
+              </option>
+            ) )}
+          </optgroup>
+        ) )}
+      </select>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import {
   useCallback, useEffect, useState
 } from "react";
 import {
-  ChevronDown, RotateCcw, Spline
+  ChevronDown, Spline
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -20,10 +20,11 @@ import {
 } from "../../constants/easing-options";
 import {
   CONTROL_BAR_CLASS,
-  CONTROL_CHEVRON_CLASS,
-  CONTROL_LABEL_SEGMENT_CLASS,
-  CONTROL_RESET_BUTTON_CLASS
+  CONTROL_CHEVRON_CLASS
 } from "../../constants/control-bar";
+import {
+  BarLabelSegment
+} from "../ControlChrome";
 
 type Props = {
   name: string;
@@ -98,30 +99,12 @@ export default function ControlledEasingInput( {
 
   return (
     <div className={ CONTROL_BAR_CLASS }>
-      {label && (
-        <span className={ CONTROL_LABEL_SEGMENT_CLASS }>
-          <Spline className="h-4 w-4 md:h-3 md:w-3 shrink-0 text-label" />
-          <span
-            className={ clsx(
-              "truncate",
-              isModified ? "font-medium text-foreground" : "text-label"
-            ) }
-          >
-            {label}
-          </span>
-          {isModified && onReset && (
-            <button
-              type="button"
-              tabIndex={ -1 }
-              title="Reset to saved value"
-              onClick={ onReset }
-              className={ `relative z-10 shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
-            >
-              <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
-            </button>
-          )}
-        </span>
-      )}
+      <BarLabelSegment
+        label={ label }
+        icon={ <Spline className="h-4 w-4 md:h-3 md:w-3 shrink-0 text-label" /> }
+        isModified={ isModified }
+        onReset={ onReset }
+      />
 
       {family !== "linear" && (
         <span className="relative flex h-full min-w-0 flex-1 items-center">

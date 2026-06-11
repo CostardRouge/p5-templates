@@ -13,6 +13,13 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 import {
   useCollapsibleContext
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/hooks/useCollapsibleStates";
+import {
+  CONTROL_BAR_CLASS,
+  CONTROL_CHEVRON_CLASS
+} from "../constants/control-bar";
+import {
+  BarLabelSegment
+} from "./ControlChrome";
 
 function getDefaultValueForFieldConfig( config: any ): any {
   switch ( config?.component ) {
@@ -52,14 +59,12 @@ function getDefaultValueForFieldConfig( config: any ): any {
 
 type ConditionalGroupProps = {
   basePath: string;
-  selectClassName: string;
   config: ConditionalGroupConfig;
 };
 
 export default function ConditionalGroup( {
   basePath,
-  config,
-  selectClassName
+  config
 }: ConditionalGroupProps ) {
   const {
     control, setValue, unregister, clearErrors
@@ -141,16 +146,16 @@ export default function ConditionalGroup( {
       ) }
       header={ ( expanded ) => (
         <div
-          className="text-gray-500 cursor-pointer select-none flex items-center gap-1"
+          className="text-gray-500 cursor-pointer select-none flex min-w-0 items-center gap-1"
           title="Click to expand/collapse"
         >
           <ChevronDown
-            className="w-3 h-3 transition-transform"
+            className="w-3 h-3 shrink-0 transition-transform"
             style={ {
               transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
             } }
           />
-          <span>
+          <span className="truncate">
             {config.label}
           </span>
         </div>
@@ -158,19 +163,24 @@ export default function ConditionalGroup( {
     >
 
       <div className="p-1 border border-theme space-y-2 rounded-xl">
-        <div>
-          <label
-            htmlFor={ conditionalFieldName }
-            className="text-xs text-gray-400"
-          >
-            {config.typeSelector.label || "Type"}
-          </label>
+        {/* Type selector: segmented bar [ label | current type ], the
+            invisible native select covers the whole bar. */}
+        <div className={ CONTROL_BAR_CLASS }>
+          <BarLabelSegment label={ config.typeSelector.label || "Type" } />
+
+          <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
+            <span className="truncate">
+              {config.typeSelector.options.find( ( option ) => option.value === watchedValue )?.label ?? ( config.typeSelector.noneLabel || "--" )}
+            </span>
+            <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+          </span>
 
           <select
             id={ conditionalFieldName }
+            aria-label={ config.typeSelector.label || "Type" }
             value={ watchedValue ?? "" } // "" shows None when undefined
             onChange={ handleTypeChange }
-            className={ selectClassName }
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           >
             {!config.hideNone && (
               <option value="">{config.typeSelector.noneLabel || "--"}</option>
