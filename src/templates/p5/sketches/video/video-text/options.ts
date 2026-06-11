@@ -1,15 +1,33 @@
 import {
   fontSelectOptions
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import {
+  getTestVideoPath
+} from "@/utils/getTestVideoPaths";
 
 // Default values only
 export const formValues = {
-  videos: [],
+  videos: [
+    {
+      id: "test-gradient-flow",
+      path: await getTestVideoPath( "gradient-flow" ),
+      params: {
+        repeat: 1,
+        speed: 1,
+        offset: 0,
+        loopMode: "loop",
+        scale: 1,
+        posX: 0,
+        posY: 0,
+        fit: "cover"
+      }
+    }
+  ],
   blur: 0,
 
   text: "VIDEO",
   font: "martian",
-  fontSize: 60,
+  fontSize: 17,
   align: "center",
   lineHeight: 1,
   margin: 0,
