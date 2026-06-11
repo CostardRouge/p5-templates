@@ -1,6 +1,7 @@
 import {
   ChevronDown, RotateCcw
 } from "lucide-react";
+import clsx from "clsx";
 import {
   useRef
 } from "react";
@@ -22,11 +23,24 @@ import ControlledEasingInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledVector2DInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledVector2DInput/ControlledVector2DInput";
+import ControlledSliderInput
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSliderInput/ControlledSliderInput";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
+import {
+  CONTROL_BAR_CLASS,
+  CONTROL_BAR_INPUT_CLASS,
+  CONTROL_CARD_CLASS,
+  CONTROL_CARD_TEXTAREA_CLASS,
+  CONTROL_CHEVRON_CLASS,
+  CONTROL_RESET_BUTTON_CLASS
+} from "./ContentItems/constants/control-bar";
+import {
+  BarLabelSegment, CardLabelHeader
+} from "./ContentItems/components/ControlChrome";
 import ItemListRenderer from "./ItemListRenderer";
 import {
   useCollapsibleContext
@@ -99,47 +113,41 @@ export default function FieldRenderer( {
   } = useCollapsibleContext();
 
   const renderInput = () => {
-    const commonInputProps = {
-      id: registeredName,
-      placeholder: config.placeholder,
-      className: "w-full p-1 border border-theme rounded-lg bg-background text-foreground",
-      "aria-invalid": !!error
-    };
+    // Inline label shared by all one-line bar controls (label inside the bar
+    // instead of an outer label row).
+    const inlineLabel = !hideLabel ? config.label : undefined;
 
     switch ( config.component ) {
       case "checkbox":
+        // Toggle switch: the visually-hidden checkbox keeps the RHF register
+        // semantics, the two sibling spans render the track and the knob.
         return (
-          <input
-            type="checkbox"
-            { ...commonInputProps }
-            { ...register( registeredName ) }
-            className={ `${ commonInputProps.className } block w-fit` }
-          />
+          <span className="relative inline-flex shrink-0 items-center">
+            <input
+              type="checkbox"
+              id={ registeredName }
+              aria-invalid={ !!error }
+              { ...register( registeredName ) }
+              className="peer sr-only"
+            />
+            <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
+            <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
+          </span>
         );
 
       case "number":
         return (
-          <input
-            type="number"
-            { ...commonInputProps }
-            { ...register(
-              registeredName,
-              {
-                valueAsNumber: true
-              }
-            ) }
-            step={ config.step }
-            min={ config.min }
-            max={ config.max }
-          />
-        );
-
-      case "slider":
-        return (
-          <div className="flex items-center gap-2">
+          <div className={ `${ CONTROL_BAR_CLASS } focus-within:ring-1 focus-within:ring-focus` }>
+            <BarLabelSegment
+              label={ inlineLabel }
+              isModified={ isModified }
+              onReset={ handleReset }
+            />
             <input
-              type="range"
-              { ...commonInputProps }
+              type="number"
+              id={ registeredName }
+              placeholder={ config.placeholder }
+              aria-invalid={ !!error }
               { ...register(
                 registeredName,
                 {
@@ -149,82 +157,95 @@ export default function FieldRenderer( {
               step={ config.step }
               min={ config.min }
               max={ config.max }
-            />
-            <input
-              type="number"
-              aria-label={ `${ config.label ?? registeredName } value` }
-              className="text-xs font-mono bg-theme/20 px-1 py-0.5 rounded w-14 text-center border border-theme/30 focus:outline-none focus:ring-1 focus:ring-theme"
-              value={ currentValue != null ? Number( currentValue ).toFixed( config.step && config.step < 1 ? 2 : 0 ) : ( config.min ?? 0 ) }
-              step={ config.step }
-              min={ config.min }
-              max={ config.max }
-              onChange={ ( e ) => {
-                const parsed = config.step && config.step < 1
-                  ? parseFloat( e.target.value )
-                  : parseInt(
-                    e.target.value,
-                    10
-                  );
-
-                if ( !isNaN( parsed ) ) {
-                  const clamped =
-                    config.min !== undefined && config.max !== undefined
-                      ? Math.min(
-                        config.max,
-                        Math.max(
-                          config.min,
-                          parsed
-                        )
-                      )
-                      : parsed;
-
-                  setValue(
-                    registeredName,
-                    clamped,
-                    {
-                      shouldDirty: true
-                    }
-                  );
-                }
-              } }
+              className={ `${ CONTROL_BAR_INPUT_CLASS } text-right font-mono tabular-nums` }
             />
           </div>
         );
 
-      case "textarea":
+      case "slider":
+        // Full-bar slider with the label rendered inside the control, so it
+        // doesn't need the outer label row (skipped in the wrapper below).
         return (
-          <textarea
-            rows={ 4 }
-            { ...commonInputProps }
-            { ...register( registeredName ) }
+          <ControlledSliderInput
+            name={ registeredName }
+            label={ config.label ?? fieldName }
+            min={ config.min }
+            max={ config.max }
+            step={ config.step }
+            isModified={ isModified }
+            onReset={ handleReset }
           />
         );
 
-      case "select":
+      case "textarea":
         return (
-          <select
-            { ...commonInputProps }
-            { ...register(
-              registeredName,
-              {
-                setValueAs: config.asNumber
-                  ? ( value: unknown ) =>
-                    value === "" || value == null ? undefined : Number( value )
-                  : undefined
-              }
-            ) }
-          >
-            {config.noneLabel ? (
-              <option value="">{config.noneLabel || "--"}</option>
-            ) : null}
-
-            {config.options.map( ( option ) => (
-              <option key={ option.value } value={ option.value }>
-                {option.label}
-              </option>
-            ) )}
-          </select>
+          <div className={ CONTROL_CARD_CLASS }>
+            <CardLabelHeader
+              label={ inlineLabel }
+              isModified={ isModified }
+              onReset={ handleReset }
+            />
+            <textarea
+              rows={ 4 }
+              id={ registeredName }
+              placeholder={ config.placeholder }
+              aria-invalid={ !!error }
+              { ...register( registeredName ) }
+              className={ CONTROL_CARD_TEXTAREA_CLASS }
+            />
+          </div>
         );
+
+      case "select": {
+        // Segmented one-liner sharing the slider bar chrome: label segment on
+        // the left, current value + chevron on the right. The invisible
+        // native <select> covers the whole bar so any tap opens the platform
+        // picker.
+        const selectedOption = config.options.find( ( option ) => String( option.value ) === String( currentValue ?? "" ) );
+        const selectedLabel =
+          selectedOption?.label ?? ( config.noneLabel || "--" );
+
+        return (
+          <div className={ CONTROL_BAR_CLASS }>
+            <BarLabelSegment
+              label={ inlineLabel }
+              isModified={ isModified }
+              onReset={ handleReset }
+            />
+
+            <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
+              <span className="truncate">{selectedLabel}</span>
+              <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+            </span>
+
+            <select
+              id={ registeredName }
+              aria-label={ config.label ?? registeredName }
+              aria-invalid={ !!error }
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              { ...register(
+                registeredName,
+                {
+                  setValueAs: config.asNumber
+                    ? ( value: unknown ) =>
+                      value === "" || value == null ? undefined : Number( value )
+                    : undefined
+                }
+              ) }
+            >
+              {config.noneLabel ? (
+                <option value="">{config.noneLabel || "--"}</option>
+              ) : null}
+
+              {config.options.map( ( option ) => (
+                <option key={ option.value } value={ option.value }>
+                  {option.label}
+                </option>
+              ) )}
+            </select>
+          </div>
+        );
+      }
 
       case "multi-select": {
         const selected: string[] = Array.isArray( currentValue )
@@ -232,41 +253,48 @@ export default function FieldRenderer( {
           : [];
 
         return (
-          <div className="flex flex-col gap-1">
-            {config.options.map( ( option ) => {
-              const value = String( option.value );
-              const checked = selected.includes( value );
+          <div className={ CONTROL_CARD_CLASS }>
+            <CardLabelHeader
+              label={ inlineLabel }
+              isModified={ isModified }
+              onReset={ handleReset }
+            />
+            <div className="flex flex-col divide-y divide-theme/60">
+              {config.options.map( ( option ) => {
+                const value = String( option.value );
+                const checked = selected.includes( value );
 
-              return (
-                <label
-                  key={ value }
-                  className="flex items-center gap-2 select-none"
-                >
-                  <input
-                    type="checkbox"
-                    checked={ checked }
-                    onChange={ ( e ) => {
-                      const next = e.target.checked
-                        ? [
-                          ...selected,
-                          value
-                        ]
-                        : selected.filter( ( v ) => v !== value );
+                return (
+                  <label
+                    key={ value }
+                    className="flex min-h-[2.5rem] md:min-h-0 cursor-pointer items-center justify-between gap-2 px-2.5 py-1.5 md:py-1 select-none transition-colors hover:bg-hover/50"
+                  >
+                    <span className="min-w-0 truncate">{option.label}</span>
+                    <input
+                      type="checkbox"
+                      checked={ checked }
+                      onChange={ ( e ) => {
+                        const next = e.target.checked
+                          ? [
+                            ...selected,
+                            value
+                          ]
+                          : selected.filter( ( v ) => v !== value );
 
-                      setValue(
-                        registeredName,
-                        next,
-                        {
-                          shouldDirty: true
-                        }
-                      );
-                    } }
-                    className="block w-fit"
-                  />
-                  <span>{option.label}</span>
-                </label>
-              );
-            } )}
+                        setValue(
+                          registeredName,
+                          next,
+                          {
+                            shouldDirty: true
+                          }
+                        );
+                      } }
+                      className="block h-4 w-4 md:h-3.5 md:w-3.5 shrink-0 accent-foreground"
+                    />
+                  </label>
+                );
+              } )}
+            </div>
           </div>
         );
       }
@@ -274,8 +302,8 @@ export default function FieldRenderer( {
       case "size-preset":
         return (
           <ControlledSizePresetSelect
-            className="p-1"
             id={ registeredName }
+            label={ inlineLabel }
             options={ config.options }
             sizeFieldPrefix={ fieldBasePath ? `${ fieldBasePath }.` : "" }
           />
@@ -300,14 +328,19 @@ export default function FieldRenderer( {
                 className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full"
                 title="Click to expand/collapse"
               >
-                <div className="flex items-center gap-1">
+                <div className="flex min-w-0 items-center gap-1">
                   <ChevronDown
-                    className="w-3 h-3 transition-transform"
+                    className="w-3 h-3 shrink-0 transition-transform"
                     style={ {
                       transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
                     } }
                   />
-                  <span className={ isModified ? "font-medium text-foreground" : undefined }>
+                  <span
+                    className={ clsx(
+                      "truncate",
+                      isModified && "font-medium text-foreground"
+                    ) }
+                  >
                     {config.label}
                   </span>
                 </div>
@@ -359,14 +392,20 @@ export default function FieldRenderer( {
         return (
           <ConditionalGroup
             basePath={ registeredName }
-            selectClassName={ commonInputProps.className }
             config={ config }
           />
         );
       }
 
       case "color":
-        return <ControlledColorInput name={ registeredName } />;
+        return (
+          <ControlledColorInput
+            name={ registeredName }
+            label={ config.label ?? fieldName }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
 
       case "image":
         return <ControlledAssetInput name={ registeredName } kind="images" />;
@@ -385,18 +424,32 @@ export default function FieldRenderer( {
 
       case "json":
         return (
-          <ControlledJsonInput
-            config={ config }
-            name={ registeredName }
-            textareaClassName={ commonInputProps.className }
-          />
+          <div className={ CONTROL_CARD_CLASS }>
+            <CardLabelHeader
+              label={ inlineLabel }
+              isModified={ isModified }
+              onReset={ handleReset }
+            />
+            <ControlledJsonInput
+              config={ config }
+              name={ registeredName }
+              textareaClassName={ `${ CONTROL_CARD_TEXTAREA_CLASS } font-mono` }
+            />
+          </div>
         );
 
       case "item-list":
         return <ItemListRenderer name={ registeredName } config={ config } />;
 
       case "easing":
-        return <ControlledEasingInput name={ registeredName } />;
+        return (
+          <ControlledEasingInput
+            name={ registeredName }
+            label={ config.label ?? fieldName }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
 
       case "vector2d":
         return (
@@ -408,28 +461,89 @@ export default function FieldRenderer( {
 
       default:
         return (
-          <input
-            type="text"
-            { ...commonInputProps }
-            { ...register( registeredName ) }
-          />
+          <div className={ `${ CONTROL_BAR_CLASS } focus-within:ring-1 focus-within:ring-focus` }>
+            <BarLabelSegment
+              label={ inlineLabel }
+              isModified={ isModified }
+              onReset={ handleReset }
+            />
+            <input
+              type="text"
+              id={ registeredName }
+              placeholder={ config.placeholder }
+              aria-invalid={ !!error }
+              { ...register( registeredName ) }
+              className={ CONTROL_BAR_INPUT_CLASS }
+            />
+          </div>
         );
     }
   };
 
+  // Checkbox: label and switch share a single row — denser, and the whole
+  // row is a finger-sized tap target. The reset button lives outside the
+  // <label> elements so its clicks never race the label→checkbox activation.
+  if ( config.component === "checkbox" ) {
+    return (
+      <div className="text-sm md:text-xs">
+        <div className="flex min-h-[2.5rem] md:min-h-0 items-center justify-between gap-2 py-1 md:py-0.5">
+          {config.label && !hideLabel && (
+            <label
+              htmlFor={ registeredName }
+              className={ clsx(
+                "min-w-0 flex-1 cursor-pointer select-none truncate",
+                isModified ? "font-medium" : "text-gray-400"
+              ) }
+            >
+              {config.label}
+            </label>
+          )}
+
+          <span className="flex shrink-0 items-center gap-1">
+            {isModified && (
+              <button
+                type="button"
+                onClick={ handleReset }
+                tabIndex={ -1 }
+                title="Reset to saved value"
+                className={ CONTROL_RESET_BUTTON_CLASS }
+              >
+                <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
+              </button>
+            )}
+
+            <label htmlFor={ registeredName } className="cursor-pointer">
+              {renderInput()}
+            </label>
+          </span>
+        </div>
+
+        {error && (
+          <p className="text-red-500 mt-1">{error.message?.toString()}</p>
+        )}
+      </div>
+    );
+  }
+
+  // Components whose label can't live inside the control itself: the 2D pad
+  // and the asset pickers keep the classic label row above. Everything else
+  // renders its label inline (bar segment or card header).
+  const needsOuterLabel =
+    config.component === "vector2d" ||
+    config.component === "image" ||
+    config.component === "images-stack" ||
+    config.component === "asset" ||
+    config.component === "asset-stack";
+
   return (
-    <div className="text-xs">
-      {/* Don't show a label for groups, as they have their own internal labels */}
-      {config.component !== "nested-object" &&
-        config.component !== "conditional-group" &&
-        config.component !== "item-list" &&
-        config.component !== "hidden" &&
+    <div className="text-sm md:text-xs">
+      {needsOuterLabel &&
         config.label &&
         !hideLabel && (
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
           <label
             htmlFor={ registeredName }
-            className={ `select-none ${
+            className={ `select-none truncate ${
               isModified
                 ? "font-medium"
                 : "text-gray-400"
@@ -443,9 +557,9 @@ export default function FieldRenderer( {
               onClick={ handleReset }
               tabIndex={ -1 }
               title="Reset to saved value"
-              className="text-gray-400 hover:text-foreground transition-colors"
+              className={ `shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
             >
-              · reset
+              <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
             </button>
           )}
         </div>

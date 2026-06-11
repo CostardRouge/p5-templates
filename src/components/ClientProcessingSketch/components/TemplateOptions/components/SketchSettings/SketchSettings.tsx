@@ -4,8 +4,9 @@ import React, {
   useMemo
 } from "react";
 import {
-  ArrowDownFromLine
+  ChevronDown, SlidersHorizontal
 } from "lucide-react";
+import clsx from "clsx";
 
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
@@ -16,6 +17,9 @@ import GeneratePreviewButton from "./GeneratePreviewButton";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import type {
+  FieldConfig
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import {
   injectSketchSchemas
 } from "./utils/injectSketchSchemas";
@@ -27,6 +31,91 @@ type SketchSettingsProps = {
   onToggle?: ( expanded: boolean ) => void;
 };
 
+const HEADER_ACTION_CLASS =
+  "p-2 md:p-1 text-foreground hover:bg-hover rounded-lg transition-colors";
+
+/**
+ * Resolves the sketch's form configuration (with schemas injected) and the
+ * form path it edits — the global sketch settings, or the active slide's
+ * overrides. Shared by the desktop panel and the mobile drawer tab.
+ */
+export function useSketchSettings(
+  basePath?: string,
+  activeSlideIndex?: number
+): {
+  config: Record<string, FieldConfig> | undefined;
+  effectiveBasePath: string;
+} {
+  const [
+    {
+      sketchFormConfiguration, name
+    }
+  ] = useSketch();
+
+  // Inject schemas on the client side
+  const config = useMemo(
+    () => {
+      if ( !sketchFormConfiguration ) {
+        return undefined;
+      }
+
+      const withSchemas = injectSketchSchemas(
+        name,
+        sketchFormConfiguration
+      );
+
+      return Object.keys( withSchemas ).length > 0 ? withSchemas : undefined;
+    },
+    [
+      name,
+      sketchFormConfiguration
+    ]
+  );
+
+  // Use slide-specific basePath if a slide is active, otherwise use global sketch settings
+  const effectiveBasePath =
+    activeSlideIndex !== undefined
+      ? `slides.${ activeSlideIndex }.sketch`
+      : ( basePath ?? "sketch" );
+
+  return {
+    config,
+    effectiveBasePath
+  };
+}
+
+/** Reset / randomize / dev action buttons shared by panel and drawer. */
+export function SketchSettingsActions( {
+  config,
+  basePath
+}: {
+  config: Record<string, FieldConfig>;
+  basePath: string;
+} ) {
+  return (
+    <>
+      <ResetSettingsButton
+        basePath={ basePath }
+        className={ HEADER_ACTION_CLASS }
+      />
+
+      <RandomizeSettingsButton
+        config={ config }
+        basePath={ basePath }
+        className={ HEADER_ACTION_CLASS }
+      />
+
+      <SaveDefaultsButton />
+
+      <GenerateThumbnailButton />
+
+      <GeneratePreviewButton />
+    </>
+  );
+}
+
+/** Desktop floating panel (bottom-left). The mobile drawer hosts the same
+ * form through {@link useSketchSettings}. */
 export default function SketchSettings( {
   basePath,
   activeSlideIndex,
@@ -35,89 +124,79 @@ export default function SketchSettings( {
 }: SketchSettingsProps ) {
   const [
     {
-      sketchFormConfiguration, sketchFormValues, name
+      sketchFormValues
     }
   ] = useSketch();
 
-  // Inject schemas on the client side
-  const configWithSchemas = useMemo(
-    () => {
-      if ( !sketchFormConfiguration ) {
-        return undefined;
-      }
-
-      return injectSketchSchemas(
-        name,
-        sketchFormConfiguration
-      );
-    },
-    [
-      name,
-      sketchFormConfiguration
-    ]
+  const {
+    config, effectiveBasePath
+  } = useSketchSettings(
+    basePath,
+    activeSlideIndex
   );
 
-  if ( !configWithSchemas || Object.keys( configWithSchemas ).length === 0 ) {
+  if ( !config ) {
     return null;
   }
-
-  // Use slide-specific basePath if a slide is active, otherwise use global sketch settings
-  const effectiveBasePath =
-    activeSlideIndex !== undefined
-      ? `slides.${ activeSlideIndex }.sketch`
-      : ( basePath ?? "sketch" );
 
   return (
     <CollapsibleItem
       expanded={ expanded }
       onToggle={ onToggle }
-      className="w-64 flex flex-col gap-1 absolute left-2 bottom-2 md:bottom-4 md:left-4 glass p-2 border border-theme z-50 rounded-2xl shadow-lg overflow-y-auto"
-      style={ {
-        maxHeight: "calc(80svh - 5rem)",
-        maxWidth: "calc(50% - 0.75rem)"
-      } }
-      header={ ( expanded ) => (
-        <div className="flex items-center justify-between w-full">
+      swipeToCollapse
+      className={ clsx(
+        "absolute flex flex-col glass shadow-lg overflow-y-auto",
+        expanded
+          ? "left-4 bottom-4 z-50 w-80 max-h-[calc(80svh-5rem)] rounded-2xl border border-theme"
+          : "left-4 bottom-4 z-50 w-fit rounded-full border border-theme"
+      ) }
+      headerContainerClassName={ clsx( expanded && "glass sticky top-0 z-10" ) }
+      header={ ( isExpanded ) => (
+        <div
+          className={ clsx(
+            "flex w-full items-center justify-between gap-2",
+            isExpanded ? "px-3 py-2" : "px-3 py-2"
+          ) }
+        >
           <button
-            className="text-foreground text-xs flex items-center"
-            aria-label={ expanded ? "Collapse controls" : "Expand controls" }
+            type="button"
+            className="flex items-center gap-1.5 text-xs text-foreground"
+            aria-label={ isExpanded ? "Collapse controls" : "Expand controls" }
           >
-            <ArrowDownFromLine
-              className="text-foreground h-3 w-3 mr-1"
-              style={ {
-                rotate: expanded ? "0deg" : "180deg"
-              } }
-            />
+            <SlidersHorizontal className="h-3.5 w-3.5" />
             <span>
               {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`}{" "}
               options
               {activeSlideIndex !== undefined &&
                 ` (slide ${ activeSlideIndex + 1 })`}
             </span>
+            <ChevronDown
+              className="h-3.5 w-3.5 transition-transform"
+              style={ {
+                transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
+              } }
+            />
           </button>
 
-          <div className="flex items-center gap-2">
-            <ResetSettingsButton basePath={ effectiveBasePath } />
-
-            <RandomizeSettingsButton
-              config={ configWithSchemas }
-              basePath={ effectiveBasePath }
-            />
-
-            <SaveDefaultsButton />
-
-            <GenerateThumbnailButton />
-
-            <GeneratePreviewButton />
-          </div>
+          {isExpanded && (
+            <div
+              className="flex items-center gap-0.5"
+              onClick={ ( e ) => e.stopPropagation() }
+            >
+              <SketchSettingsActions
+                config={ config }
+                basePath={ effectiveBasePath }
+              />
+            </div>
+          )}
         </div>
       ) }
     >
-      <div className="overflow-y-auto">
+      <div className="px-3 pt-1 pb-4">
         <GenericObjectForm
           key={ effectiveBasePath }
           basePath={ effectiveBasePath }
-          config={ configWithSchemas }
+          config={ config }
         />
       </div>
     </CollapsibleItem>

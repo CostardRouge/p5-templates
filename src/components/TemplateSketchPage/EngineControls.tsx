@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Camera, Github, Loader2, Pause, Play
+  Camera, Circle, Github, Loader2, Pause, Play
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -12,6 +12,9 @@ import {
   resolveSketchPath
 } from "@/engines/metadata";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import {
+  OPEN_EXPORT_DRAWER_EVENT
+} from "../ClientProcessingSketch/components/TemplateOptions/constants/drawer-events";
 
 type ThumbnailSaveState = "idle" | "saving" | "done" | "error";
 
@@ -249,6 +252,17 @@ export function EngineControls( ) {
               ) }
             />
           )}
+        </button>
+
+        {/* Mobile shortcut: opens the studio drawer on its Export tab. */}
+        <button
+          title="Record / export"
+          aria-label="Open recording and export options"
+          onClick={ () =>
+            window.dispatchEvent( new CustomEvent( OPEN_EXPORT_DRAWER_EVENT ) ) }
+          className="h-full px-3 hover:bg-hover transition-colors border-l border-border group inline-flex items-center justify-center md:hidden"
+        >
+          <Circle className="h-4 w-4 fill-red-500/80 text-red-500/80 transition-colors group-hover:fill-red-500 group-hover:text-red-500" />
         </button>
       </div>
     </div>

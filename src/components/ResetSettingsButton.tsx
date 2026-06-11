@@ -11,10 +11,12 @@ import useSketch from "@/components/ClientProcessingSketch/components/SketchProv
 
 type ResetSettingsButtonProps = {
   basePath: string;
+  className?: string;
 };
 
 export default function ResetSettingsButton( {
-  basePath
+  basePath,
+  className = "text-foreground hover:bg-theme/20 rounded transition-colors"
 }: ResetSettingsButtonProps ) {
   const [
     {
@@ -37,7 +39,7 @@ export default function ResetSettingsButton( {
   return (
     <button
       onClick={ handleReset }
-      className="text-foreground hover:bg-theme/20 rounded transition-colors"
+      className={ className }
       title="Reset to defaults"
     >
       <RotateCcw className="w-3.5 h-3.5" />

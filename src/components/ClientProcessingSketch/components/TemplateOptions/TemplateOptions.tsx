@@ -19,9 +19,11 @@ import CaptureActions, {
 } from "./components/CaptureActions";
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import OptionsPanel from "./components/OptionsPanel";
+import MobileStudioDrawer from "./components/MobileStudioDrawer";
 import RecordingLockBanner from "./components/RecordingLockBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import {
   useFormState
 } from "./hooks/useFormState";
@@ -370,72 +372,109 @@ export default function TemplateOptions( {
     reset( processedOptions );
   };
 
+  // ≥ md: separate floating panels (template right, sketch settings left).
+  // Below: a single bottom drawer with Sketch / Template / Export tabs.
+  // The form context above is shared either way — only the layout changes.
+  const isDesktop = useMediaQuery( "(min-width: 768px)" );
+
+  const bodyProps = {
+    activeSlideIndex,
+    slideFields,
+    thumbnails,
+    slides,
+    isAdding,
+    onAddSlide: handleAddSlide,
+    onSelectSlide: handleSlideSelect,
+    onReorderSlides: handleReorderSlides,
+    onDuplicateSlide: handleDuplicateSlide,
+    onDeleteSlide: handleDeleteSlide,
+    onRenameSlide: handleRenameSlide,
+    enableThumbnails,
+    collapsibleStates,
+    onCollapsibleToggle: toggleSection
+  };
+
+  const captureProps = {
+    name,
+    options: methods.watch(),
+    persistedJob,
+    backendRecording,
+    browserRecordingSupported,
+    thumbnails: enableThumbnails ? thumbnails : {},
+    lifecycle,
+    recordingProgress,
+    subscribeToRecordingStatus
+  };
+
+  const recordingSupported = Boolean( backendRecording || browserRecordingSupported );
+
   return (
     <FormProvider { ...methods }>
       <CollapsibleProvider>
-        <div
-          className="w-64 absolute right-2 bottom-2 md:right-4 md:bottom-4 space-y-2"
-          style={ {
-            maxWidth: "calc(50% - 0.75rem)"
-          } }
-        >
-          {lifecycle.isLocked && (
-            <RecordingLockBanner
-              state={ lifecycle.state }
-              onClone={ handleBannerClone }
-              cloning={ bannerCloning }
-            />
-          )}
+        {isDesktop ? (
+          <>
+            <div
+              className="w-64 absolute right-4 bottom-4 space-y-2"
+              style={ {
+                maxWidth: "calc(50% - 0.75rem)"
+              } }
+            >
+              {lifecycle.isLocked && (
+                <RecordingLockBanner
+                  state={ lifecycle.state }
+                  onClone={ handleBannerClone }
+                  cloning={ bannerCloning }
+                />
+              )}
 
-          <OptionsPanel
-            methods={ methods }
-            name={ name }
-            persistedJob={ persistedJob }
-            activeSlideIndex={ activeSlideIndex }
-            slideFields={ slideFields }
-            thumbnails={ thumbnails }
-            slides={ slides }
-            jobStatus={ lifecycle.currentStatus }
-            isAdding={ isAdding }
-            onAddSlide={ handleAddSlide }
-            onSelectSlide={ handleSlideSelect }
-            onReorderSlides={ handleReorderSlides }
-            onDuplicateSlide={ handleDuplicateSlide }
-            onDeleteSlide={ handleDeleteSlide }
-            onRenameSlide={ handleRenameSlide }
-            onImportOptions={ handleImportOptions }
-            enableThumbnails={ enableThumbnails }
-            collapsibleStates={ collapsibleStates }
-            onCollapsibleToggle={ toggleSection }
-          />
+              <OptionsPanel
+                methods={ methods }
+                name={ name }
+                persistedJob={ persistedJob }
+                jobStatus={ lifecycle.currentStatus }
+                onImportOptions={ handleImportOptions }
+                { ...bodyProps }
+              />
 
-          {( backendRecording || browserRecordingSupported ) && (
-            <CaptureActions
-              ref={ captureActionsRef }
-              name={ name }
-              options={ methods.watch() }
-              persistedJob={ persistedJob }
-              activeSlideIndex={ activeSlideIndex }
-              backendRecording={ backendRecording }
-              browserRecordingSupported={ browserRecordingSupported }
-              thumbnails={ enableThumbnails ? thumbnails : {} }
-              lifecycle={ lifecycle }
-              recordingProgress={ recordingProgress }
-              subscribeToRecordingStatus={ subscribeToRecordingStatus }
-            />
-          )}
-        </div>
+              {recordingSupported && (
+                <CaptureActions
+                  ref={ captureActionsRef }
+                  activeSlideIndex={ activeSlideIndex }
+                  { ...captureProps }
+                />
+              )}
+            </div>
 
-        <TemplateAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
-          <SketchSettings
-            activeSlideIndex={ activeSlideIndex }
+            <TemplateAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
+              <SketchSettings
+                activeSlideIndex={ activeSlideIndex }
+                expanded={ collapsibleStates.sketchSettings }
+                onToggle={ ( expanded ) => setSection(
+                  "sketchSettings",
+                  expanded
+                ) }
+              />
+            </TemplateAssetsProvider>
+          </>
+        ) : (
+          <MobileStudioDrawer
             expanded={ collapsibleStates.sketchSettings }
             onToggle={ ( expanded ) => setSection(
               "sketchSettings",
               expanded
             ) }
+            activeSlideIndex={ activeSlideIndex }
+            jobId={ jobId }
+            body={ bodyProps }
+            capture={ captureProps }
+            captureActionsRef={ captureActionsRef }
+            recordingSupported={ recordingSupported }
+            jobStatus={ lifecycle.currentStatus }
+            onImportOptions={ handleImportOptions }
+            bannerCloning={ bannerCloning }
+            onBannerClone={ handleBannerClone }
           />
-        </TemplateAssetsProvider>
+        )}
       </CollapsibleProvider>
     </FormProvider>
   );
