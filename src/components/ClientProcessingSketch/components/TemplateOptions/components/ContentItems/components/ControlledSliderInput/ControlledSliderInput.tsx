@@ -11,6 +11,12 @@ import clsx from "clsx";
 import {
   useController
 } from "react-hook-form";
+import {
+  CONTROL_BAR_CLASS,
+  CONTROL_EDIT_INPUT_CLASS,
+  CONTROL_RESET_BUTTON_CLASS,
+  CONTROL_VALUE_BUTTON_CLASS
+} from "../../constants/control-bar";
 
 type ControlledSliderInputProps = {
   name: string;
@@ -87,7 +93,7 @@ export default function ControlledSliderInput( {
         max={ max }
         inputMode={ decimals > 0 ? "decimal" : "numeric" }
         aria-label={ `${ label ?? name } value` }
-        className="w-full h-10 md:h-7 px-2.5 border border-theme rounded-lg bg-background text-foreground text-center font-mono text-base md:text-xs focus:outline-none focus:ring-1 focus:ring-focus"
+        className={ CONTROL_EDIT_INPUT_CLASS }
         onBlur={ ( e ) => commitEdit( e.target.value ) }
         onKeyDown={ ( e ) => {
           if ( e.key === "Enter" ) {
@@ -112,7 +118,7 @@ export default function ControlledSliderInput( {
         next
       ] ) => field.onChange( next ) }
       onBlur={ field.onBlur }
-      className="group relative flex h-10 md:h-7 w-full touch-none select-none items-center overflow-hidden rounded-lg border border-theme bg-background cursor-ew-resize"
+      className={ `group touch-none select-none cursor-ew-resize ${ CONTROL_BAR_CLASS }` }
     >
       <SliderPrimitive.Track className="relative h-full w-full grow">
         <SliderPrimitive.Range className="absolute h-full bg-foreground/10 transition-colors group-hover:bg-foreground/15" />
@@ -141,7 +147,7 @@ export default function ControlledSliderInput( {
               title="Reset to saved value"
               onClick={ onReset }
               onPointerDown={ ( e ) => e.stopPropagation() }
-              className="pointer-events-auto p-1.5 md:p-0.5 rounded-md text-label hover:text-foreground hover:bg-hover transition-colors"
+              className={ CONTROL_RESET_BUTTON_CLASS }
             >
               <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
             </button>
@@ -152,7 +158,7 @@ export default function ControlledSliderInput( {
             title="Tap to type a value"
             onClick={ () => setEditing( true ) }
             onPointerDown={ ( e ) => e.stopPropagation() }
-            className="pointer-events-auto px-1.5 py-1 md:py-0.5 rounded-md font-mono tabular-nums text-foreground/80 hover:text-foreground hover:bg-hover transition-colors"
+            className={ CONTROL_VALUE_BUTTON_CLASS }
           >
             {value.toFixed( decimals )}
           </button>

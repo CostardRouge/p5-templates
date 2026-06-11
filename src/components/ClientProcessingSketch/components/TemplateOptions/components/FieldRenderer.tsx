@@ -1,6 +1,7 @@
 import {
   ChevronDown, RotateCcw
 } from "lucide-react";
+import clsx from "clsx";
 import {
   useRef
 } from "react";
@@ -29,6 +30,12 @@ import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
+import {
+  CONTROL_BAR_CLASS,
+  CONTROL_CHEVRON_CLASS,
+  CONTROL_LABEL_SEGMENT_CLASS,
+  CONTROL_RESET_BUTTON_CLASS
+} from "./ContentItems/constants/control-bar";
 import ItemListRenderer from "./ItemListRenderer";
 import {
   useCollapsibleContext
@@ -169,12 +176,51 @@ export default function FieldRenderer( {
           />
         );
 
-      case "select":
+      case "select": {
+        // Segmented one-liner sharing the slider bar chrome: label segment on
+        // the left, current value + chevron on the right. The invisible
+        // native <select> covers the whole bar so any tap opens the platform
+        // picker.
+        const selectedOption = config.options.find( ( option ) => String( option.value ) === String( currentValue ?? "" ) );
+        const selectedLabel =
+          selectedOption?.label ?? ( config.noneLabel || "--" );
+
         return (
-          <div className="relative">
+          <div className={ CONTROL_BAR_CLASS }>
+            {config.label && !hideLabel && (
+              <span className={ CONTROL_LABEL_SEGMENT_CLASS }>
+                <span
+                  className={ clsx(
+                    "truncate",
+                    isModified ? "font-medium text-foreground" : "text-label"
+                  ) }
+                >
+                  {config.label}
+                </span>
+                {isModified && (
+                  <button
+                    type="button"
+                    tabIndex={ -1 }
+                    title="Reset to saved value"
+                    onClick={ handleReset }
+                    className={ `relative z-10 shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
+                  </button>
+                )}
+              </span>
+            )}
+
+            <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
+              <span className="truncate">{selectedLabel}</span>
+              <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+            </span>
+
             <select
-              { ...commonInputProps }
-              className={ `${ commonInputProps.className } appearance-none pr-8` }
+              id={ registeredName }
+              aria-label={ config.label ?? registeredName }
+              aria-invalid={ !!error }
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
               { ...register(
                 registeredName,
                 {
@@ -195,9 +241,9 @@ export default function FieldRenderer( {
                 </option>
               ) )}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 md:h-3 md:w-3 -translate-y-1/2 text-label" />
           </div>
         );
+      }
 
       case "multi-select": {
         const selected: string[] = Array.isArray( currentValue )
@@ -273,14 +319,19 @@ export default function FieldRenderer( {
                 className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full"
                 title="Click to expand/collapse"
               >
-                <div className="flex items-center gap-1">
+                <div className="flex min-w-0 items-center gap-1">
                   <ChevronDown
-                    className="w-3 h-3 transition-transform"
+                    className="w-3 h-3 shrink-0 transition-transform"
                     style={ {
                       transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
                     } }
                   />
-                  <span className={ isModified ? "font-medium text-foreground" : undefined }>
+                  <span
+                    className={ clsx(
+                      "truncate",
+                      isModified && "font-medium text-foreground"
+                    ) }
+                  >
                     {config.label}
                   </span>
                 </div>
@@ -339,7 +390,14 @@ export default function FieldRenderer( {
       }
 
       case "color":
-        return <ControlledColorInput name={ registeredName } />;
+        return (
+          <ControlledColorInput
+            name={ registeredName }
+            label={ config.label ?? fieldName }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
 
       case "image":
         return <ControlledAssetInput name={ registeredName } kind="images" />;
@@ -369,7 +427,14 @@ export default function FieldRenderer( {
         return <ItemListRenderer name={ registeredName } config={ config } />;
 
       case "easing":
-        return <ControlledEasingInput name={ registeredName } />;
+        return (
+          <ControlledEasingInput
+            name={ registeredName }
+            label={ config.label ?? fieldName }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
 
       case "vector2d":
         return (
@@ -400,25 +465,31 @@ export default function FieldRenderer( {
           className="flex min-h-[2.5rem] md:min-h-0 cursor-pointer select-none items-center justify-between gap-2 py-1 md:py-0.5"
         >
           {config.label && !hideLabel && (
-            <span className="flex items-center gap-1">
-              <span className={ isModified ? "font-medium" : "text-gray-400" }>
-                {config.label}
-              </span>
-              {isModified && (
-                <button
-                  type="button"
-                  onClick={ handleReset }
-                  tabIndex={ -1 }
-                  title="Reset to saved value"
-                  className="text-gray-400 hover:text-foreground transition-colors"
-                >
-                  · reset
-                </button>
-              )}
+            <span
+              className={ clsx(
+                "min-w-0 truncate",
+                isModified ? "font-medium" : "text-gray-400"
+              ) }
+            >
+              {config.label}
             </span>
           )}
 
-          {renderInput()}
+          <span className="flex shrink-0 items-center gap-1">
+            {isModified && (
+              <button
+                type="button"
+                onClick={ handleReset }
+                tabIndex={ -1 }
+                title="Reset to saved value"
+                className={ CONTROL_RESET_BUTTON_CLASS }
+              >
+                <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
+              </button>
+            )}
+
+            {renderInput()}
+          </span>
         </label>
 
         {error && (
@@ -431,18 +502,22 @@ export default function FieldRenderer( {
   return (
     <div className="text-sm md:text-xs">
       {/* Don't show a label for groups (they have their own internal labels)
-          or sliders (the label is rendered inside the bar) */}
+          or one-line bar controls (slider, select, color, easing render the
+          label inside the bar) */}
       {config.component !== "nested-object" &&
         config.component !== "conditional-group" &&
         config.component !== "item-list" &&
         config.component !== "hidden" &&
         config.component !== "slider" &&
+        config.component !== "select" &&
+        config.component !== "color" &&
+        config.component !== "easing" &&
         config.label &&
         !hideLabel && (
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
           <label
             htmlFor={ registeredName }
-            className={ `select-none ${
+            className={ `select-none truncate ${
               isModified
                 ? "font-medium"
                 : "text-gray-400"
@@ -456,9 +531,9 @@ export default function FieldRenderer( {
               onClick={ handleReset }
               tabIndex={ -1 }
               title="Reset to saved value"
-              className="text-gray-400 hover:text-foreground transition-colors"
+              className={ `shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
             >
-              · reset
+              <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
             </button>
           )}
         </div>
