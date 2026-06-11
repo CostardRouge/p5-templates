@@ -1,12 +1,13 @@
 name: Blog backlog scan
 
-# Détection fiable des nouveaux milestones pour le blog : à chaque push sur main,
-# scripts/scan-blog-milestones.mjs compare HEAD au dernier commit scanné
-# (blog/.last-scan), classe les nouveaux commits de code et alimente blog/INBOX.md.
-# Les changements sont proposés via une PR roulante à trier vers blog/BACKLOG.md.
+# Reliable detection of new blog milestones: on every push to main,
+# scripts/scan-blog-milestones.mjs compares HEAD against the last scanned
+# commit (blog/.last-scan), classifies the new code commits and feeds
+# blog/INBOX.md. Changes are proposed via a rolling PR to triage into
+# blog/BACKLOG.md.
 #
-# Remplace le Monitor in-session (non fiable dans l'environnement éphémère).
-# Déterministe : aucune clé d'API requise.
+# Replaces the in-session monitor (unreliable in the ephemeral environment).
+# Deterministic: no API key required.
 
 on:
   push:
@@ -15,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       since:
-        description: "SHA de départ (override de blog/.last-scan)"
+        description: "Starting SHA (overrides blog/.last-scan)"
         required: false
 
 permissions:
@@ -30,28 +31,28 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (historique complet)
+      - name: Checkout (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Scan des nouveaux milestones
+      - name: Scan for new milestones
         id: scan
         run: |
           if [ -n "${{ github.event.inputs.since }}" ]; then
             printf '%s\n' "${{ github.event.inputs.since }}" > blog/.last-scan
           fi
           node scripts/scan-blog-milestones.mjs
-          # On ne propose une PR que s'il y a vraiment de nouveaux milestones (INBOX modifié).
-          # Le curseur (.last-scan) n'avance dans le repo qu'au merge de cette PR : tant
-          # qu'aucun milestone n'apparaît, rien n'est commit (pas de PR vide).
+          # Only propose a PR when there really are new milestones (INBOX modified).
+          # The cursor (.last-scan) only advances in the repo when that PR merges:
+          # as long as no milestone shows up, nothing is committed (no empty PR).
           if git diff --quiet -- blog/INBOX.md; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Ouvrir / mettre à jour la PR de tri
+      - name: Open / update the triage PR
         if: steps.scan.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,18 +63,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Branche roulante recréée depuis le main courant : l'INBOX est régénérée
-          # en entier à chaque scan, donc un force-push reflète l'état complet.
+          # Rolling branch recreated from current main: the INBOX is fully
+          # regenerated on each scan, so a force-push reflects the complete state.
           git checkout -B "$BRANCH"
           git add blog/INBOX.md blog/.last-scan
-          git commit -m "blog: scan auto des nouveaux milestones"
+          git commit -m "blog: auto-scan of new milestones"
           git push -f origin "$BRANCH"
 
           OPEN=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')
           if [ "$OPEN" != "0" ]; then
-            echo "PR déjà ouverte — mise à jour par le force-push."
+            echo "PR already open — updated by the force-push."
           else
             gh pr create --draft --base main --head "$BRANCH" \
-              --title "🤖 Blog — nouveaux milestones à trier" \
-              --body $'Détection automatique de nouveaux milestones (push sur `main`).\n\nLes entrées brutes sont dans `blog/INBOX.md` : trie-les vers `blog/BACKLOG.md` (en leur donnant un angle d\'article), puis vide la section correspondante de l\'INBOX. Le merge de cette PR fait avancer le curseur `blog/.last-scan`.\n\n_PR roulante mise à jour à chaque push sur `main` par `.github/workflows/blog-scan.yml`._'
+              --title "🤖 Blog — new milestones to triage" \
+              --body $'Automatic detection of new milestones (push to `main`).\n\nThe raw entries live in `blog/INBOX.md`: triage them into `blog/BACKLOG.md` (giving each an article angle), then clear the corresponding INBOX section. Merging this PR advances the `blog/.last-scan` cursor.\n\n_Rolling PR updated on every push to `main` by `.github/workflows/blog-scan.yml`._'
           fi
