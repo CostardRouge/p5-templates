@@ -80,12 +80,12 @@ export default function SketchSettings( {
         "absolute flex flex-col glass shadow-lg overflow-y-auto",
         expanded
           ? [
-            // Mobile: full-width bottom sheet docked to the bottom edge,
-            // above the other floating panels.
-            "inset-x-0 bottom-0 z-[60] max-h-[70svh] rounded-t-2xl border-t border-theme",
-            // Desktop: left sidebar docked to the edge, below the engine
-            // controls (top-2 + h-9 ≈ 3.25rem).
-            "md:inset-x-auto md:left-0 md:top-14 md:bottom-0 md:z-50 md:w-80 md:max-h-none md:rounded-none md:rounded-tr-2xl md:border md:border-b-0 md:border-l-0"
+            // Mobile: full-width bottom drawer docked to the bottom edge,
+            // above the other floating panels, capped at half the screen so
+            // the sketch keeps the other half.
+            "inset-x-0 bottom-0 z-[60] max-h-[50svh] rounded-t-2xl border-t border-theme",
+            // Desktop: floating bottom-left panel.
+            "md:inset-x-auto md:left-4 md:bottom-4 md:top-auto md:z-50 md:w-80 md:max-h-[calc(80svh-5rem)] md:rounded-2xl md:border"
           ]
           : "left-2 bottom-2 md:left-4 md:bottom-4 z-50 w-fit rounded-full border border-theme"
       ) }

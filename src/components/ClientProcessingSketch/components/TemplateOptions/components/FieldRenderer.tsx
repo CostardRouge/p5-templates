@@ -481,23 +481,22 @@ export default function FieldRenderer( {
   };
 
   // Checkbox: label and switch share a single row — denser, and the whole
-  // row is a finger-sized tap target.
+  // row is a finger-sized tap target. The reset button lives outside the
+  // <label> elements so its clicks never race the label→checkbox activation.
   if ( config.component === "checkbox" ) {
     return (
       <div className="text-sm md:text-xs">
-        <label
-          htmlFor={ registeredName }
-          className="flex min-h-[2.5rem] md:min-h-0 cursor-pointer select-none items-center justify-between gap-2 py-1 md:py-0.5"
-        >
+        <div className="flex min-h-[2.5rem] md:min-h-0 items-center justify-between gap-2 py-1 md:py-0.5">
           {config.label && !hideLabel && (
-            <span
+            <label
+              htmlFor={ registeredName }
               className={ clsx(
-                "min-w-0 truncate",
+                "min-w-0 flex-1 cursor-pointer select-none truncate",
                 isModified ? "font-medium" : "text-gray-400"
               ) }
             >
               {config.label}
-            </span>
+            </label>
           )}
 
           <span className="flex shrink-0 items-center gap-1">
@@ -513,9 +512,11 @@ export default function FieldRenderer( {
               </button>
             )}
 
-            {renderInput()}
+            <label htmlFor={ registeredName } className="cursor-pointer">
+              {renderInput()}
+            </label>
           </span>
-        </label>
+        </div>
 
         {error && (
           <p className="text-red-500 mt-1">{error.message?.toString()}</p>

@@ -336,7 +336,10 @@ const CollapsibleItem = ( {
       >
         <div
           className={ clsx(
-            "min-h-0 transition-opacity duration-150 ease-out motion-reduce:transition-none",
+            // min-w-0 matters as much as min-h-0: grid items default to
+            // min-width auto, letting wide content (long select labels…)
+            // stretch the panel instead of truncating.
+            "min-h-0 min-w-0 transition-opacity duration-150 ease-out motion-reduce:transition-none",
             settledOpen ? "overflow-visible" : "overflow-hidden",
             gridOpen ? "opacity-100" : "opacity-0",
             contentClassName
