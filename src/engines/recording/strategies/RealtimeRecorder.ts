@@ -1,6 +1,9 @@
 import {
   BaseRecorder
 } from "../BaseRecorder";
+import {
+  getAudioBridge
+} from "@/lib/audioBridge";
 import type {
   CaptureSource,
   RecorderHost,
@@ -15,23 +18,37 @@ const WEBM_CODECS = [
   "video/webm"
 ];
 
+const WEBM_AV_CODECS = [
+  "video/webm;codecs=vp9,opus",
+  "video/webm;codecs=vp8,opus",
+  ...WEBM_CODECS
+];
+
 const MP4_CODECS = [
   "video/mp4;codecs=avc1.42E01E",
   "video/mp4"
 ];
 
-function pickMimeType( format: RecordingFormat ): string {
+const MP4_AV_CODECS = [
+  "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+  ...MP4_CODECS
+];
+
+function pickMimeType(
+  format: RecordingFormat, withAudio: boolean
+): string {
   if ( format === "mp4" ) {
-    const supported = MP4_CODECS.find( ( type ) =>
-      MediaRecorder.isTypeSupported( type ) );
+    const supported = ( withAudio ? MP4_AV_CODECS : MP4_CODECS ).find( ( type ) => MediaRecorder.isTypeSupported( type ) );
 
     if ( supported ) {
       return supported;
     }
   }
 
+  const webmCodecs = withAudio ? WEBM_AV_CODECS : WEBM_CODECS;
+
   return (
-    WEBM_CODECS.find( ( type ) => MediaRecorder.isTypeSupported( type ) ) ||
+    webmCodecs.find( ( type ) => MediaRecorder.isTypeSupported( type ) ) ||
       "video/webm"
   );
 }
@@ -40,6 +57,8 @@ function pickMimeType( format: RecordingFormat ): string {
  * Wall-clock recording strategy. Pipes the canvas captureStream into
  * MediaRecorder and assembles chunks on stop. Used for interactive /
  * non-deterministic sketches where stepping frames isn't reproducible.
+ * If the sketch produces sound (audio bridge registered), its output
+ * stream is mixed in so the recording carries what was heard live.
  *
  * Only `webm` (always) and `mp4` (Safari 14.1+ / Chromium 105+) are
  * available here — `gif` falls back to the deterministic strategy.
@@ -91,9 +110,29 @@ export class RealtimeRecorder extends BaseRecorder {
         throw new Error( "RealtimeRecorder: capture source has no stream canvas." );
       }
 
-      this.mimeType = pickMimeType( this.format );
-
       const stream = canvas.captureStream( this.host.frameRate );
+
+      // Mix the sketch's audio output (if any) into the recording. The
+      // bridge is only registered once a sketch actually produces sound,
+      // so video-only sketches keep the exact previous behaviour.
+      const audioBridge = getAudioBridge();
+      const audioStream = audioBridge?.getRecordingStream() ?? null;
+      const audioTracks = audioStream?.getAudioTracks() ?? [];
+
+      if ( audioTracks.length > 0 ) {
+        // We're inside the user's "record" gesture — resume a suspended
+        // AudioContext now or the captured track stays silent.
+        await audioBridge?.ensureRunning();
+
+        for ( const track of audioTracks ) {
+          stream.addTrack( track );
+        }
+      }
+
+      this.mimeType = pickMimeType(
+        this.format,
+        audioTracks.length > 0
+      );
 
       this.mediaRecorder = new MediaRecorder(
         stream,

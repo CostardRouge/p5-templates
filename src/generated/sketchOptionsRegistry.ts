@@ -143,6 +143,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:photo/photo-switch-tiles": () => import( "@/p5/sketches/photo/photo-switch-tiles/options" ),
   "p5:photo/photo-unzoom-bounce": () => import( "@/p5/sketches/photo/photo-unzoom-bounce/options" ),
   "p5:photo/photo-zoom-point": () => import( "@/p5/sketches/photo/photo-zoom-point/options" ),
+  "p5:ping-pong": () => import( "@/p5/sketches/ping-pong/options" ),
   "p5:pulse/pulse-v1-guts": () => import( "@/p5/sketches/pulse/pulse-v1-guts/options" ),
   "p5:pulse/pulse-v2-kraken": () => import( "@/p5/sketches/pulse/pulse-v2-kraken/options" ),
   "p5:pulse/pulse-v3-asterix": () => import( "@/p5/sketches/pulse/pulse-v3-asterix/options" ),
