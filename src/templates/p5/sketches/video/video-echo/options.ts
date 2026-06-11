@@ -1,19 +1,16 @@
 import {
   blendSelectOptions
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-import {
-  getTestVideoPath
-} from "@/utils/getTestVideoPaths";
 
 // Default values only
 export const formValues = {
   videos: [
     {
-      id: "test-shapes-orbit",
-      path: await getTestVideoPath( "shapes-orbit" ),
+      id: "test-gradient-flow",
+      path: "/assets/videos/test/gradient-flow.mp4",
       params: {
         repeat: 1,
-        speed: 1,
+        speed: 4,
         offset: 0,
         loopMode: "loop",
         scale: 0.5,
@@ -24,10 +21,10 @@ export const formValues = {
     }
   ],
 
-  decay: 0.87,
+  decay: 0.71,
   zoom: 1.1,
-  rotation: 0,
-  blur: 5,
+  rotation: -2,
+  blur: 1,
   blendMode: "source-over",
 
   backgroundColor: [

@@ -21,7 +21,7 @@ export const formValues = {
     }
   ],
 
-  cellSize: 12,
+  cellSize: 8,
   glyph: "dot",
   colorMode: "mono",
   monoColor: [
@@ -29,7 +29,7 @@ export const formValues = {
     235,
     240
   ],
-  dotScale: 0.9,
+  dotScale: 0.6,
   invert: false,
 
   backgroundColor: [

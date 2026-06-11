@@ -27,7 +27,7 @@ export const formValues = {
 
   text: "VIDEO",
   font: "martian",
-  fontSize: 60,
+  fontSize: 17,
   align: "center",
   lineHeight: 1,
   margin: 0,
