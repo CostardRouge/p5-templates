@@ -17,6 +17,9 @@ import GeneratePreviewButton from "./GeneratePreviewButton";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import type {
+  FieldConfig
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import {
   injectSketchSchemas
 } from "./utils/injectSketchSchemas";
@@ -31,6 +34,88 @@ type SketchSettingsProps = {
 const HEADER_ACTION_CLASS =
   "p-2 md:p-1 text-foreground hover:bg-hover rounded-lg transition-colors";
 
+/**
+ * Resolves the sketch's form configuration (with schemas injected) and the
+ * form path it edits — the global sketch settings, or the active slide's
+ * overrides. Shared by the desktop panel and the mobile drawer tab.
+ */
+export function useSketchSettings(
+  basePath?: string,
+  activeSlideIndex?: number
+): {
+  config: Record<string, FieldConfig> | undefined;
+  effectiveBasePath: string;
+} {
+  const [
+    {
+      sketchFormConfiguration, name
+    }
+  ] = useSketch();
+
+  // Inject schemas on the client side
+  const config = useMemo(
+    () => {
+      if ( !sketchFormConfiguration ) {
+        return undefined;
+      }
+
+      const withSchemas = injectSketchSchemas(
+        name,
+        sketchFormConfiguration
+      );
+
+      return Object.keys( withSchemas ).length > 0 ? withSchemas : undefined;
+    },
+    [
+      name,
+      sketchFormConfiguration
+    ]
+  );
+
+  // Use slide-specific basePath if a slide is active, otherwise use global sketch settings
+  const effectiveBasePath =
+    activeSlideIndex !== undefined
+      ? `slides.${ activeSlideIndex }.sketch`
+      : ( basePath ?? "sketch" );
+
+  return {
+    config,
+    effectiveBasePath
+  };
+}
+
+/** Reset / randomize / dev action buttons shared by panel and drawer. */
+export function SketchSettingsActions( {
+  config,
+  basePath
+}: {
+  config: Record<string, FieldConfig>;
+  basePath: string;
+} ) {
+  return (
+    <>
+      <ResetSettingsButton
+        basePath={ basePath }
+        className={ HEADER_ACTION_CLASS }
+      />
+
+      <RandomizeSettingsButton
+        config={ config }
+        basePath={ basePath }
+        className={ HEADER_ACTION_CLASS }
+      />
+
+      <SaveDefaultsButton />
+
+      <GenerateThumbnailButton />
+
+      <GeneratePreviewButton />
+    </>
+  );
+}
+
+/** Desktop floating panel (bottom-left). The mobile drawer hosts the same
+ * form through {@link useSketchSettings}. */
 export default function SketchSettings( {
   basePath,
   activeSlideIndex,
@@ -39,37 +124,20 @@ export default function SketchSettings( {
 }: SketchSettingsProps ) {
   const [
     {
-      sketchFormConfiguration, sketchFormValues, name
+      sketchFormValues
     }
   ] = useSketch();
 
-  // Inject schemas on the client side
-  const configWithSchemas = useMemo(
-    () => {
-      if ( !sketchFormConfiguration ) {
-        return undefined;
-      }
-
-      return injectSketchSchemas(
-        name,
-        sketchFormConfiguration
-      );
-    },
-    [
-      name,
-      sketchFormConfiguration
-    ]
+  const {
+    config, effectiveBasePath
+  } = useSketchSettings(
+    basePath,
+    activeSlideIndex
   );
 
-  if ( !configWithSchemas || Object.keys( configWithSchemas ).length === 0 ) {
+  if ( !config ) {
     return null;
   }
-
-  // Use slide-specific basePath if a slide is active, otherwise use global sketch settings
-  const effectiveBasePath =
-    activeSlideIndex !== undefined
-      ? `slides.${ activeSlideIndex }.sketch`
-      : ( basePath ?? "sketch" );
 
   return (
     <CollapsibleItem
@@ -79,84 +147,56 @@ export default function SketchSettings( {
       className={ clsx(
         "absolute flex flex-col glass shadow-lg overflow-y-auto",
         expanded
-          ? [
-            // Mobile: full-width bottom drawer docked to the bottom edge,
-            // above the other floating panels, capped at half the screen so
-            // the sketch keeps the other half.
-            "inset-x-0 bottom-0 z-[60] max-h-[50svh] rounded-t-2xl border-t border-theme",
-            // Desktop: floating bottom-left panel.
-            "md:inset-x-auto md:left-4 md:bottom-4 md:top-auto md:z-50 md:w-80 md:max-h-[calc(80svh-5rem)] md:rounded-2xl md:border"
-          ]
-          : "left-2 bottom-2 md:left-4 md:bottom-4 z-50 w-fit rounded-full border border-theme"
+          ? "left-4 bottom-4 z-50 w-80 max-h-[calc(80svh-5rem)] rounded-2xl border border-theme"
+          : "left-4 bottom-4 z-50 w-fit rounded-full border border-theme"
       ) }
       headerContainerClassName={ clsx( expanded && "glass sticky top-0 z-10" ) }
       header={ ( isExpanded ) => (
-        <div className="flex w-full flex-col">
-          {/* Drag handle, mobile sheet only (swipe down to close) */}
+        <div
+          className={ clsx(
+            "flex w-full items-center justify-between gap-2",
+            isExpanded ? "px-3 py-2" : "px-3 py-2"
+          ) }
+        >
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-xs text-foreground"
+            aria-label={ isExpanded ? "Collapse controls" : "Expand controls" }
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span>
+              {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`}{" "}
+              options
+              {activeSlideIndex !== undefined &&
+                ` (slide ${ activeSlideIndex + 1 })`}
+            </span>
+            <ChevronDown
+              className="h-3.5 w-3.5 transition-transform"
+              style={ {
+                transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
+              } }
+            />
+          </button>
+
           {isExpanded && (
-            <div className="flex justify-center pt-2 md:hidden">
-              <div className="h-1 w-10 rounded-full bg-foreground/20" />
+            <div
+              className="flex items-center gap-0.5"
+              onClick={ ( e ) => e.stopPropagation() }
+            >
+              <SketchSettingsActions
+                config={ config }
+                basePath={ effectiveBasePath }
+              />
             </div>
           )}
-
-          <div
-            className={ clsx(
-              "flex w-full items-center justify-between gap-2",
-              isExpanded ? "px-3 py-2" : "px-3.5 py-2.5 md:px-3 md:py-2"
-            ) }
-          >
-            <button
-              type="button"
-              className="flex items-center gap-1.5 text-sm text-foreground md:text-xs"
-              aria-label={ isExpanded ? "Collapse controls" : "Expand controls" }
-            >
-              <SlidersHorizontal className="h-4 w-4 md:h-3.5 md:w-3.5" />
-              <span>
-                {sketchFormValues && `${ Object.keys( sketchFormValues ).length }`}{" "}
-                options
-                {activeSlideIndex !== undefined &&
-                  ` (slide ${ activeSlideIndex + 1 })`}
-              </span>
-              <ChevronDown
-                className="h-3.5 w-3.5 transition-transform"
-                style={ {
-                  transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
-                } }
-              />
-            </button>
-
-            {isExpanded && (
-              <div
-                className="flex items-center gap-0.5"
-                onClick={ ( e ) => e.stopPropagation() }
-              >
-                <ResetSettingsButton
-                  basePath={ effectiveBasePath }
-                  className={ HEADER_ACTION_CLASS }
-                />
-
-                <RandomizeSettingsButton
-                  config={ configWithSchemas }
-                  basePath={ effectiveBasePath }
-                  className={ HEADER_ACTION_CLASS }
-                />
-
-                <SaveDefaultsButton />
-
-                <GenerateThumbnailButton />
-
-                <GeneratePreviewButton />
-              </div>
-            )}
-          </div>
         </div>
       ) }
     >
-      <div className="px-3 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-4">
+      <div className="px-3 pt-1 pb-4">
         <GenericObjectForm
           key={ effectiveBasePath }
           basePath={ effectiveBasePath }
-          config={ configWithSchemas }
+          config={ config }
         />
       </div>
     </CollapsibleItem>

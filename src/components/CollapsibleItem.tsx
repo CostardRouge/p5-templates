@@ -28,6 +28,13 @@ type CollapsibleItemProps = {
    * Mouse/pen input is unaffected — only touch pointers trigger the swipe.
    */
   swipeToCollapse?: boolean;
+  /**
+   * Keep children mounted while collapsed (hidden via the 0fr grid row +
+   * visibility) instead of the default lazy unmount. Use when the content
+   * holds state or refs that must survive collapsing (e.g. the capture
+   * actions autosave handle in the mobile drawer).
+   */
+  keepMounted?: boolean;
 };
 
 // Keep in sync with the grid-template-rows transition duration below.
@@ -51,7 +58,8 @@ const CollapsibleItem = ( {
   initialExpandedValue = true,
   expanded: controlledExpanded,
   onToggle,
-  swipeToCollapse = false
+  swipeToCollapse = false,
+  keepMounted = false
 }: CollapsibleItemProps ) => {
   const [
     internalExpanded,
@@ -342,10 +350,13 @@ const CollapsibleItem = ( {
             "min-h-0 min-w-0 transition-opacity duration-150 ease-out motion-reduce:transition-none",
             settledOpen ? "overflow-visible" : "overflow-hidden",
             gridOpen ? "opacity-100" : "opacity-0",
+            // Kept-mounted content must also drop out of the focus order
+            // while collapsed.
+            keepMounted && !gridOpen && "invisible",
             contentClassName
           ) }
         >
-          {render ? children : null}
+          {render || keepMounted ? children : null}
         </div>
       </div>
     </div>
