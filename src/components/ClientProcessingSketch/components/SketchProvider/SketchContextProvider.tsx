@@ -53,6 +53,11 @@ function sketchReducer(
         ...state,
         capturing: action.payload
       };
+    case "SET_BROWSER_RECORDING":
+      return {
+        ...state,
+        browserRecording: action.payload
+      };
     default:
       return state;
   }
@@ -66,7 +71,8 @@ export default function SketchContextProvider( {
     ...props,
     sketchLoaded: false,
     engine: null,
-    looping: true
+    looping: true,
+    browserRecording: false
   };
 
   const [

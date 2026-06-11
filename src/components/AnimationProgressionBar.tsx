@@ -73,10 +73,17 @@ export default function AnimationProgressionBar( {
     {
       activeSlideIndex,
       engine,
-      looping
+      looping,
+      browserRecording
     },
     dispatch
   ] = useSketch();
+
+  // A browser-side recording owns the engine clock; let the user scrub
+  // mid-recording and the captured frames jump backwards (async-loop) or
+  // the live stream pauses (realtime). Lock interactions while a capture
+  // is in flight.
+  const interactionsLocked = disabled || browserRecording;
   const activeSlideIndexRef = useRef( activeSlideIndex );
 
   activeSlideIndexRef.current = activeSlideIndex;
@@ -301,7 +308,7 @@ export default function AnimationProgressionBar( {
 
   const handleClick = useCallback(
     ( event: React.MouseEvent ) => {
-      if ( disabled || isDraggingRef.current ) {
+      if ( interactionsLocked || isDraggingRef.current ) {
         return;
       }
 
@@ -311,7 +318,7 @@ export default function AnimationProgressionBar( {
       setAnimationProgression( calculateProgressionFromEvent( event ) );
     },
     [
-      disabled,
+      interactionsLocked,
       calculateProgressionFromEvent,
       setAnimationProgression
     ]
@@ -319,7 +326,7 @@ export default function AnimationProgressionBar( {
 
   const handlePointerDown = useCallback(
     ( event: React.PointerEvent ) => {
-      if ( disabled ) {
+      if ( interactionsLocked ) {
         return;
       }
 
@@ -340,7 +347,7 @@ export default function AnimationProgressionBar( {
       event.currentTarget.setPointerCapture( event.pointerId );
     },
     [
-      disabled,
+      interactionsLocked,
       calculateProgressionFromEvent,
       pauseLoopForScrubbing,
       setAnimationProgression,
@@ -409,7 +416,7 @@ export default function AnimationProgressionBar( {
 
   const handleMouseMove = useCallback(
     ( event: React.MouseEvent ) => {
-      if ( disabled || isDraggingRef.current ) {
+      if ( interactionsLocked || isDraggingRef.current ) {
         return;
       }
 
@@ -418,7 +425,7 @@ export default function AnimationProgressionBar( {
       setHoverPosition( calculateProgressionFromEvent( event ) );
     },
     [
-      disabled,
+      interactionsLocked,
       calculateProgressionFromEvent
     ]
   );
@@ -432,7 +439,7 @@ export default function AnimationProgressionBar( {
 
   const handleKeyDown = useCallback(
     ( event: React.KeyboardEvent ) => {
-      if ( disabled ) {
+      if ( interactionsLocked ) {
         return;
       }
 
@@ -462,7 +469,7 @@ export default function AnimationProgressionBar( {
       setAnimationProgression( next );
     },
     [
-      disabled,
+      interactionsLocked,
       progression,
       setAnimationProgression
     ]
