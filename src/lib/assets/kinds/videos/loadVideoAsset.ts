@@ -130,10 +130,35 @@ export function loadVideoAsset(
   const element = document.createElement( "video" );
 
   element.muted = true;
+  // WebKit checks the *attribute* (and `defaultMuted`) when deciding whether
+  // a programmatic play() counts as muted autoplay — the property alone is
+  // not enough on iOS.
+  element.defaultMuted = true;
+  element.setAttribute(
+    "muted",
+    ""
+  );
   element.playsInline = true;
+  element.setAttribute(
+    "webkit-playsinline",
+    ""
+  );
   element.preload = "auto";
   element.crossOrigin = "anonymous";
-  element.style.display = options.hidden === false ? "" : "none";
+
+  if ( options.hidden === false ) {
+    element.style.display = "";
+  } else {
+    // Hide off-screen instead of `display: none`: WebKit stops decoding (and
+    // never presents frames to canvas drawImage) for display:none videos.
+    element.style.position = "fixed";
+    element.style.left = "-99999px";
+    element.style.top = "0";
+    element.style.width = "2px";
+    element.style.height = "2px";
+    element.style.opacity = "0";
+    element.style.pointerEvents = "none";
+  }
 
   document.body.appendChild( element );
 
@@ -215,11 +240,52 @@ export function loadVideoAsset(
       );
     } );
 
+    // iOS ignores `preload="auto"` in several situations (Low Power Mode,
+    // cellular); an explicit load() reliably kicks off the metadata fetch.
+    element.load();
+
     // Surface load failures without leaving an unhandled rejection.
     ready.catch( ( error ) => {
       console.warn(
         "[loadVideoAsset]",
         error
+      );
+    } );
+
+    const expectedPath = currentPath;
+
+    ready.then( () => {
+      if ( expectedPath === currentPath ) {
+        primeDecode();
+      }
+    } ).catch( () => {} );
+  }
+
+  /**
+   * WebKit won't decode frames for a video that has never played:
+   * `drawImage(video)` silently paints nothing, and seeks alone don't start
+   * the decoder. A muted inline play() — allowed without a user gesture —
+   * followed by a pause on the first `timeupdate` (first decoded frame)
+   * spins the decoder up so subsequent seeked frames reach the canvas.
+   */
+  function primeDecode(): void {
+    const stop = () => {
+      element.removeEventListener(
+        "timeupdate",
+        stop
+      );
+      element.pause();
+    };
+
+    element.addEventListener(
+      "timeupdate",
+      stop
+    );
+
+    element.play().catch( () => {
+      element.removeEventListener(
+        "timeupdate",
+        stop
       );
     } );
   }
@@ -280,29 +346,67 @@ export function loadVideoAsset(
     }
 
     activeSeek = trackPendingMedia( new Promise<void>( ( resolve ) => {
-      const onSeeked = () => {
+      let pollId: ReturnType<typeof setInterval> | null = null;
+
+      const settle = () => {
         element.removeEventListener(
           "seeked",
-          onSeeked
+          settle
         );
+        element.removeEventListener(
+          "error",
+          settle
+        );
+        if ( pollId !== null ) {
+          clearInterval( pollId );
+        }
         activeSeek = null;
         resolve();
       };
 
       element.addEventListener(
         "seeked",
-        onSeeked
+        settle
       );
+      element.addEventListener(
+        "error",
+        settle
+      );
+
+      // WebKit occasionally drops the `seeked` event for hidden videos /
+      // sub-frame deltas, which would leave this promise (and every
+      // coalesced caller) hanging forever. Poll `seeking` as a fallback:
+      // while it's `true` the seek is genuinely in flight and waiting is
+      // correct; once it's `false` the seek finished even if no event fired.
+      pollId = setInterval(
+        () => {
+          if ( !element.seeking ) {
+            settle();
+          }
+        },
+        500
+      );
+
       element.currentTime = lastTarget;
     } ) );
 
     await activeSeek;
 
     // `requestVideoFrameCallback` is frame-accurate; await one tick so the
-    // pixels visible to p5 actually match the seeked time.
+    // pixels visible to p5 actually match the seeked time. WebKit only fires
+    // it when a frame is *composited*, which never happens for off-screen
+    // videos — race a short timeout so iOS doesn't hang here.
     if ( typeof ( element as any ).requestVideoFrameCallback === "function" ) {
       await trackPendingMedia( new Promise<void>( ( resolve ) => {
-        ( element as any ).requestVideoFrameCallback( () => resolve() );
+        const timeoutId = setTimeout(
+          resolve,
+          250
+        );
+
+        ( element as any ).requestVideoFrameCallback( () => {
+          clearTimeout( timeoutId );
+          resolve();
+        } );
       } ) );
     }
   }
