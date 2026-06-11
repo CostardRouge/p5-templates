@@ -298,6 +298,7 @@ export default async function StudioPage( {
       <SketchContextProvider
         name={ sketchName }
         engineId={ engineId }
+        category={ sketchMeta.category }
         options={ sketchOptions }
         persistedJob={ persistedJob }
         sketchFormValues={ formValues }

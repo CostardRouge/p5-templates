@@ -14,6 +14,7 @@ import type {
 export type SketchState = {
   name: string;
   engineId: string;
+  category?: string | null;
   capturing: boolean;
   options: SketchOption;
   persistedJob?: JobModel;
@@ -57,6 +58,7 @@ export type SketchAction =
 export type SketchContextProviderProps = {
   name: string;
   engineId: string;
+  category?: string | null;
   capturing: boolean;
   options: SketchOption;
   persistedJob?: JobModel;
