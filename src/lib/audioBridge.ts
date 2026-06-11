@@ -59,16 +59,45 @@ export interface AudioBridge {
    * sample-accurate against the frame-stepped timeline.
    */
   renderOffline( opts: AudioOfflineRenderOptions ): Promise<AudioBuffer>;
+
+  /**
+   * Headless variant for the server pipeline: render the logged events
+   * and return them as a base64-encoded 16-bit PCM WAV, or `null` when
+   * nothing was triggered (the server then skips audio muxing entirely).
+   * Playwright can't transfer an AudioBuffer out of the page; a WAV
+   * string crosses the bridge and FFmpeg muxes it without re-encoding
+   * the video.
+   */
+  renderOfflineWav?( opts: AudioOfflineRenderOptions ): Promise<string | null>;
+}
+
+declare global {
+  interface Window {
+    /**
+     * Same bridge, exposed for the headless (Playwright) pipeline which
+     * can only reach the page through `page.evaluate`. Mirrors the
+     * `window.__sketchCapture` pattern used for frame capture.
+     */
+    __sketchAudio?: AudioBridge;
+  }
 }
 
 let current: AudioBridge | null = null;
 
 export function registerAudioBridge( bridge: AudioBridge ): void {
   current = bridge;
+
+  if ( typeof window !== "undefined" ) {
+    window.__sketchAudio = bridge;
+  }
 }
 
 export function unregisterAudioBridge(): void {
   current = null;
+
+  if ( typeof window !== "undefined" ) {
+    delete window.__sketchAudio;
+  }
 }
 
 export function getAudioBridge(): AudioBridge | null {

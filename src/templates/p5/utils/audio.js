@@ -94,14 +94,6 @@ function ensureContext() {
 
   attachUnlockListeners();
 
-  registerAudioBridge( {
-    getRecordingStream: () => audio.getRecordingStream(),
-    ensureRunning: resume,
-    beginCapture: () => audio.beginCapture(),
-    endCapture: () => audio.endCapture(),
-    renderOffline: ( opts ) => audio.renderOffline( opts )
-  } );
-
   return _context;
 }
 
@@ -358,6 +350,128 @@ function playSampleLive(
   };
 }
 
+/**
+ * Serialise an AudioBuffer to a base64-encoded 16-bit PCM WAV. Used by the
+ * server pipeline: Playwright can only move strings/JSON out of the page,
+ * and FFmpeg muxes a WAV without re-encoding the already-finished video.
+ */
+function audioBufferToWavBase64( buffer ) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const numFrames = buffer.length;
+  const bytesPerSample = 2;
+  const dataSize = numFrames * numChannels * bytesPerSample;
+  const arrayBuffer = new ArrayBuffer( 44 + dataSize );
+  const view = new DataView( arrayBuffer );
+
+  const writeString = (
+    offset, value
+  ) => {
+    for ( let i = 0; i < value.length; i++ ) {
+      view.setUint8(
+        offset + i,
+        value.charCodeAt( i )
+      );
+    }
+  };
+
+  writeString(
+    0,
+    "RIFF"
+  );
+  view.setUint32(
+    4,
+    36 + dataSize,
+    true
+  );
+  writeString(
+    8,
+    "WAVE"
+  );
+  writeString(
+    12,
+    "fmt "
+  );
+  view.setUint32(
+    16,
+    16,
+    true
+  );
+  view.setUint16(
+    20,
+    1, // PCM
+    true
+  );
+  view.setUint16(
+    22,
+    numChannels,
+    true
+  );
+  view.setUint32(
+    24,
+    sampleRate,
+    true
+  );
+  view.setUint32(
+    28,
+    sampleRate * numChannels * bytesPerSample,
+    true
+  );
+  view.setUint16(
+    32,
+    numChannels * bytesPerSample,
+    true
+  );
+  view.setUint16(
+    34,
+    16,
+    true
+  );
+  writeString(
+    36,
+    "data"
+  );
+  view.setUint32(
+    40,
+    dataSize,
+    true
+  );
+
+  let offset = 44;
+
+  for ( let i = 0; i < numFrames; i++ ) {
+    for ( let channel = 0; channel < numChannels; channel++ ) {
+      const sample = Math.max(
+        -1,
+        Math.min(
+          1,
+          buffer.getChannelData( channel )[ i ]
+        )
+      );
+
+      view.setInt16(
+        offset,
+        sample < 0 ? sample * 0x8000 : sample * 0x7fff,
+        true
+      );
+      offset += 2;
+    }
+  }
+
+  const bytes = new Uint8Array( arrayBuffer );
+  const CHUNK = 0x8000;
+  let binary = "";
+
+  for ( let i = 0; i < bytes.length; i += CHUNK ) {
+    binary += String.fromCharCode( ...bytes.subarray(
+      i,
+      i + CHUNK
+    ) );
+  }
+
+  return btoa( binary );
+}
+
 const audio = {
   /** True once a context exists (i.e. something already made sound). */
   isActive: () => _context !== null,
@@ -572,7 +686,37 @@ const audio = {
     }
 
     return offlineCtx.startRendering();
+  },
+
+  /**
+   * Server-pipeline variant of `renderOffline`: returns base64 WAV, or
+   * `null` when no event was captured so the server skips muxing.
+   */
+  renderOfflineWav: async( opts = {} ) => {
+    if ( _capturedEvents.length === 0 ) {
+      return null;
+    }
+
+    const buffer = await audio.renderOffline( opts );
+
+    return audioBufferToWavBase64( buffer );
   }
 };
+
+// Register at module scope, not on first sound: the headless pipeline
+// never plays live audio (capture mode logs events without a context),
+// yet it still needs `window.__sketchAudio` to exist to collect + render
+// them. Video-only sketches never import this module, so they register
+// no bridge and the recording paths stay video-only.
+if ( typeof window !== "undefined" ) {
+  registerAudioBridge( {
+    getRecordingStream: () => audio.getRecordingStream(),
+    ensureRunning: resume,
+    beginCapture: () => audio.beginCapture(),
+    endCapture: () => audio.endCapture(),
+    renderOffline: ( opts ) => audio.renderOffline( opts ),
+    renderOfflineWav: ( opts ) => audio.renderOfflineWav( opts )
+  } );
+}
 
 export default audio;

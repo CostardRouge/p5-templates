@@ -10,6 +10,9 @@ import {
   readCaptureFrame,
   renderCaptureFrame
 } from "@/utils/captureSurface";
+import {
+  muxSketchAudio
+} from "@/utils/muxSketchAudio";
 
 interface CaptureFramesWithStreamingOptions {
   page: Page;
@@ -145,6 +148,16 @@ export async function captureFramesWithStreaming( {
           reject( error );
         }
       );
+    } );
+
+    // Video is done — if the sketch logged audio events during the frame
+    // loop (capture mode is armed by prepareCapture), render them offline
+    // in the page and mux the result into the file. No-op for sketches
+    // without an audio bridge; never fails the recording.
+    await muxSketchAudio( {
+      page,
+      outputVideoPath,
+      durationSeconds: totalFrames / framerate
     } );
   } catch( error ) {
     // Kill FFmpeg if still running
