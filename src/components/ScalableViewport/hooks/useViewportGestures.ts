@@ -19,8 +19,23 @@ interface UseViewportGesturesProps {
     contentElement: HTMLDivElement | null
   ) => void;
   cancelAnimation: () => void;
+  disableTouchGestures?: boolean;
   onInteractionStart?: ( mode: "panning" | "zooming" ) => void;
   onInteractionEnd?: () => void;
+}
+
+// True when the gesture originates from a touchscreen (finger on the canvas),
+// as opposed to a mouse drag or a trackpad wheel/pinch.
+function isTouchGesture( event: Event | undefined ): boolean {
+  if ( !event ) {
+    return false;
+  }
+
+  if ( "pointerType" in event ) {
+    return ( event as PointerEvent ).pointerType === "touch";
+  }
+
+  return event.type.startsWith( "touch" );
 }
 
 export function useViewportGestures( {
@@ -29,6 +44,7 @@ export function useViewportGestures( {
   transform,
   setTransform,
   cancelAnimation,
+  disableTouchGestures = false,
   onInteractionStart,
   onInteractionEnd
 }: UseViewportGesturesProps ) {
@@ -42,11 +58,26 @@ export function useViewportGestures( {
           return;
         }
 
+        // Fingers belong to the sketch (touch interaction source) — leave
+        // panning to the mouse / zoom controls so touching never moves the
+        // canvas nor pauses the loop.
+        if ( disableTouchGestures && isTouchGesture( event ) ) {
+          cancel();
+          return;
+        }
+
         cancelAnimation();
         onInteractionStart?.( "panning" );
       },
       onDragEnd: () => onInteractionEnd?.(),
-      onPinchStart: () => {
+      onPinchStart: ( {
+        event, cancel
+      } ) => {
+        if ( disableTouchGestures && isTouchGesture( event ) ) {
+          cancel();
+          return;
+        }
+
         cancelAnimation();
         onInteractionStart?.( "zooming" );
       },
@@ -84,6 +115,7 @@ export function useViewportGestures( {
 
       // Two-finger Pinch (Zoom + Pan)
       onPinch: ( {
+        event,
         origin: [
           originX,
           originY
@@ -92,11 +124,12 @@ export function useViewportGestures( {
           scale
         ],
         first,
-        memo
+        memo,
+        canceled
       } ) => {
         const container = containerRef.current;
 
-        if ( !container ) {
+        if ( !container || canceled || ( disableTouchGestures && isTouchGesture( event ) ) ) {
           return;
         }
 
