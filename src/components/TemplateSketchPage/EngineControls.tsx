@@ -185,7 +185,7 @@ export function EngineControls( ) {
             rel="noopener noreferrer"
             title="View source code on GitHub"
             aria-label="View source code on GitHub"
-            className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center"
+            className="hidden md:inline-flex h-full px-3 hover:bg-hover transition-colors border-r border-border group items-center justify-center"
           >
             <Github className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
           </Link>
@@ -233,7 +233,7 @@ export function EngineControls( ) {
           disabled={ thumbnailSaveState === "saving" }
           onClick={ handleCaptureClick }
           onDoubleClick={ handleSaveCanvasAsThumbnail }
-          className="h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center"
+          className="hidden md:inline-flex h-full px-3 hover:bg-hover transition-colors group items-center justify-center"
         >
           {thumbnailSaveState === "saving" ? (
             <Loader2 className="h-4 w-4 text-yellow-400/70 animate-spin" />
@@ -260,7 +260,7 @@ export function EngineControls( ) {
           aria-label="Open recording and export options"
           onClick={ () =>
             window.dispatchEvent( new CustomEvent( OPEN_EXPORT_DRAWER_EVENT ) ) }
-          className="h-full px-3 hover:bg-hover transition-colors border-l border-border group inline-flex items-center justify-center md:hidden"
+          className="h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center md:hidden"
         >
           <Circle className="h-4 w-4 fill-red-500/80 text-red-500/80 transition-colors group-hover:fill-red-500 group-hover:text-red-500" />
         </button>
