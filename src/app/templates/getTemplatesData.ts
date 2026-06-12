@@ -15,6 +15,7 @@ export type TemplateItem = {
   category?: string | null;
   hiddenFromHome?: boolean;
   hiddenFromTemplates?: boolean;
+  mtime?: string;
 };
 
 export async function getTemplatesData() {
@@ -32,7 +33,8 @@ export async function getTemplatesData() {
       hasSketchForm,
       hasPreview,
       hiddenFromHome,
-      hiddenFromTemplates
+      hiddenFromTemplates,
+      mtime
     } ) => {
       if ( !templatesByEngine[ engine ] ) {
         templatesByEngine[ engine ] = [];
@@ -59,7 +61,8 @@ export async function getTemplatesData() {
         name,
         category,
         hiddenFromHome,
-        hiddenFromTemplates
+        hiddenFromTemplates,
+        mtime
       } );
     } );
 
