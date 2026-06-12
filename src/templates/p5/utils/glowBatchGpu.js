@@ -30,9 +30,13 @@ import {
 //
 //   Mode B — stroke layers (one polyline drawn once, re-drawn per glow layer):
 //     batch.beginStrokes();
-//     batch.openStroke();                                  // one per spline
-//     batch.strokeSegment(ax, ay, bx, by, hueIndex);       // per dense segment
-//     batch.drawStrokes({ weight, glow });                 // hueOffset defaults 0
+//     batch.openStroke();                                              // one per spline
+//     batch.strokeSegment(ax, ay, bx, by, hueIndex, halfFactor);       // per dense segment
+//     batch.drawStrokes({ weight, glow });                             // hueOffset defaults 0
+//
+//   `halfFactor` is an optional per-segment multiplier on the per-layer half
+//   thickness (defaults to 1.0 — uniform stroke). Pass a 0..1 factor that varies
+//   along the polyline to taper the ends to a point, swell the middle, etc.
 //
 //   In Mode B the geometry is uploaded once and re-drawn `glow + 1` times with
 //   the per-layer half-thickness and opacityFactor supplied as constants, so the
@@ -48,12 +52,13 @@ import {
 // Mode A instance: vec4 segment, half-thickness, hueOffset, hueIndex, opacity.
 const FLOATS_A = 8;
 
-// Mode B segment: vec4 segment + hueIndex (half/hueOffset/opacity are constants).
-const FLOATS_B = 5;
+// Mode B segment: vec4 segment + hueIndex + halfFactor (per-segment thickness
+// multiplier; half/hueOffset/opacity remain per-layer constants).
+const FLOATS_B = 6;
 
 const BYTES_PER_FLOAT = 4;
 const STRIDE_A = FLOATS_A * BYTES_PER_FLOAT; // 32
-const STRIDE_B = FLOATS_B * BYTES_PER_FLOAT; // 20
+const STRIDE_B = FLOATS_B * BYTES_PER_FLOAT; // 24
 
 // Antialiasing half-band, in pixels, applied around every capsule edge.
 const EDGE_PAD = 1.0;
@@ -61,12 +66,13 @@ const EDGE_PAD = 1.0;
 const VERT_SRC = `
   precision highp float;
 
-  attribute vec2  aCorner;    // unit quad: x in [0,1] along the segment, y in [-1,1] across
-  attribute vec4  aSeg;       // (ax, ay, bx, by) in pixels, top-left origin
-  attribute float aHalf;      // half thickness in pixels
+  attribute vec2  aCorner;     // unit quad: x in [0,1] along the segment, y in [-1,1] across
+  attribute vec4  aSeg;        // (ax, ay, bx, by) in pixels, top-left origin
+  attribute float aHalf;       // base half thickness in pixels (per-layer constant)
+  attribute float aHalfFactor; // per-segment multiplier for variable thickness; 1.0 = uniform
   attribute float aHueOffset;
   attribute float aHueIndex;
-  attribute float aOpacity;   // opacityFactor for the rainbow palette
+  attribute float aOpacity;    // opacityFactor for the rainbow palette
 
   uniform vec2  uResolution;
   uniform float uPad;
@@ -88,16 +94,18 @@ const VERT_SRC = `
     vec2  dir  = len > 1e-4 ? axis / len : vec2(1.0, 0.0);
     vec2  nrm  = vec2(-dir.y, dir.x);
 
+    float halfWidth = aHalf * aHalfFactor;
+
     // Expand the quad past both ends and both sides by half-thickness + AA pad so
     // the round caps and antialiased rim always fall inside the rasterised area.
-    float ext   = aHalf + uPad;
+    float ext   = halfWidth + uPad;
     vec2  along = mix(a - dir * ext, b + dir * ext, aCorner.x);
     vec2  pos   = along + nrm * (aCorner.y * ext);
 
     vPos       = pos;
     vA         = a;
     vB         = b;
-    vHalf      = aHalf;
+    vHalf      = halfWidth;
     vHueOffset = aHueOffset;
     vHueIndex  = aHueIndex;
     vOpacity   = aOpacity;
@@ -375,6 +383,7 @@ export default function createGlowBatchRenderer() {
       "aCorner",
       "aSeg",
       "aHalf",
+      "aHalfFactor",
       "aHueOffset",
       "aHueIndex",
       "aOpacity"
@@ -495,6 +504,7 @@ export default function createGlowBatchRenderer() {
       "aCorner",
       "aSeg",
       "aHalf",
+      "aHalfFactor",
       "aHueOffset",
       "aHueIndex",
       "aOpacity"
@@ -641,7 +651,9 @@ export default function createGlowBatchRenderer() {
       state.instanceVBO
     );
 
-    // All eight inputs vary per instance.
+    // Per-instance attributes. aHalfFactor is a Mode B knob (variable thickness
+    // along a polyline) and stays at 1.0 here so Mode A discs/capsules use aHalf
+    // verbatim.
     const perInstance = [
       [
         "aSeg",
@@ -697,6 +709,14 @@ export default function createGlowBatchRenderer() {
         1
       );
     } );
+
+    if ( state.locs.aHalfFactor >= 0 ) {
+      gl.disableVertexAttribArray( state.locs.aHalfFactor );
+      gl.vertexAttrib1f(
+        state.locs.aHalfFactor,
+        1.0
+      );
+    }
 
     drawArraysInstanced(
       gl,
@@ -760,10 +780,14 @@ export default function createGlowBatchRenderer() {
   }
 
   /**
-   * Queue one dense segment of the current spline, hued by `hueIndex` on the GPU.
+   * Queue one dense segment of the current spline, hued by `hueIndex` on the GPU
+   * and optionally tapered: `halfFactor` is a 0..N multiplier on the per-layer
+   * half-thickness, so 1 keeps the segment at the base weight, 0 collapses it to
+   * nothing (a pointy cap), and >1 swells it past the base weight. Defaults to 1
+   * for callers that don't care about variable thickness.
    */
   function strokeSegment(
-    ax, ay, bx, by, hueIndex
+    ax, ay, bx, by, hueIndex, halfFactor = 1.0
   ) {
     if ( !state.currentGroup ) {
       openStroke();
@@ -779,6 +803,7 @@ export default function createGlowBatchRenderer() {
     out[ base + 2 ] = bx;
     out[ base + 3 ] = by;
     out[ base + 4 ] = hueIndex;
+    out[ base + 5 ] = halfFactor;
 
     state.countB++;
     state.currentGroup.count++;
@@ -834,10 +859,12 @@ export default function createGlowBatchRenderer() {
       state.instanceVBO
     );
 
-    // hueIndex varies per segment; half-thickness, opacityFactor and hueOffset are
-    // constant within a layer, so they ride on disabled attributes set per pass.
+    // hueIndex and halfFactor vary per segment; the base half-thickness,
+    // opacityFactor and hueOffset are constant within a layer, so they ride on
+    // disabled attributes set per pass.
     const aSeg = state.locs.aSeg;
     const aHueIndex = state.locs.aHueIndex;
+    const aHalfFactor = state.locs.aHalfFactor;
 
     gl.disableVertexAttribArray( state.locs.aHalf );
     gl.disableVertexAttribArray( state.locs.aOpacity );
@@ -894,6 +921,24 @@ export default function createGlowBatchRenderer() {
         aHueIndex,
         1
       );
+
+      if ( aHalfFactor >= 0 ) {
+        gl.enableVertexAttribArray( aHalfFactor );
+        gl.vertexAttribPointer(
+          aHalfFactor,
+          1,
+          gl.FLOAT,
+          false,
+          STRIDE_B,
+          byteOffset + 20
+        );
+        setDivisor(
+          gl,
+          state.ext,
+          aHalfFactor,
+          1
+        );
+      }
 
       // Widest, dimmest layer first; the bright core lands on top.
       for ( let shadow = layers; shadow >= 0; shadow-- ) {

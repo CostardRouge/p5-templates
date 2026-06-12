@@ -31,8 +31,8 @@ import {
 // It works with no webcam out of the box because the orbit source is enabled by
 // default; turn on Vision → Hands / Body / Face to drive it with the camera.
 
-// Per-entity trail history for "trail" mode, keyed by group id so each hand /
-// pose / source keeps its own ribbon.
+// Per-entity trail history for "trail" / "recall" modes, keyed by group id so
+// each hand / pose / source keeps its own ribbon.
 const trails = new Map();
 
 function centroid( points ) {
@@ -93,8 +93,9 @@ function collectLive( groups ) {
 }
 
 function collectTrails(
-  groups, mode
+  groups, mode, recallSpeed = 0
 ) {
+  const p = getP5();
   const maxPoints = mode.maxPoints ?? 90;
   const minDistance = mode.minDistance ?? 6;
   const present = new Set();
@@ -108,6 +109,22 @@ function collectTrails(
     const anchor = group.source === "fingers"
       ? group.points[ group.points.length - 1 ]
       : centroid( group.points );
+
+    // In `recall` mode every existing trail point lerps a step toward the live
+    // anchor each frame, so the moment the entity stops feeding new points the
+    // tail visibly collapses back into the anchor — turning the trail into an
+    // elastic ribbon instead of a static drawing. When recallSpeed is 0 this is
+    // a no-op so the classic `trail` mode is unchanged.
+    if ( recallSpeed > 0 ) {
+      const entry = trails.get( group.id );
+
+      if ( entry ) {
+        entry.points = entry.points.map( ( pt ) => p.createVector(
+          pt.x + ( anchor.x - pt.x ) * recallSpeed,
+          pt.y + ( anchor.y - pt.y ) * recallSpeed
+        ) );
+      }
+    }
 
     pushTrailPoint(
       group.id,
@@ -172,13 +189,18 @@ sketch.draw( () => {
   const curve = o.curve ?? {};
   const stroke = o.stroke ?? {};
 
-  if ( modeType === "trail" ) {
+  if ( modeType === "trail" || modeType === "recall" ) {
     // Trails are time-series ribbons, so the raw-polygon / point markers overlay
-    // (which annotates the source points) is intentionally suppressed.
+    // (which annotates the source points) is intentionally suppressed. `recall`
+    // is `trail` with a non-zero pull-back factor so the tail gathers when the
+    // entity stops moving — same renderer, same overlay rules.
+    const recallSpeed = modeType === "recall" ? ( mode.recallSpeed ?? 0.08 ) : 0;
+
     renderSplines(
       collectTrails(
         groups,
-        mode
+        mode,
+        recallSpeed
       ),
       {
         curve,

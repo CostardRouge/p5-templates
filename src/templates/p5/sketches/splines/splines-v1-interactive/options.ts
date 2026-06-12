@@ -5,10 +5,14 @@ import {
 
 export const formValues = {
   mode: {
-    type: "live" as "live" | "trail",
+    type: "live" as "live" | "trail" | "recall",
     smoothing: 0.35,
     maxPoints: 25,
-    minDistance: 6
+    minDistance: 6,
+    // How fast each trail point is pulled back toward the current anchor every
+    // frame in `recall` mode (0 = stays put like classic trail, 1 = collapses
+    // instantly). Ignored in `live` and `trail`.
+    recallSpeed: 0.08
   },
 
   // A virtual orbit source is on by default so the sketch animates immediately
@@ -51,7 +55,20 @@ export const formValues = {
   stroke: {
     weight: 19.5,
     glow: 2,
+    // Variable thickness profile: 0..2 multipliers on `weight` at each end of the
+    // open spline, with an easing for the transition. Both at 1 = uniform thickness
+    // (the classic tube). Both at 0 = both ends taper to a pointy nib.
+    weightStart: 0,
+    weightEnd: 0,
+    weightEasing: "easeOutQuad",
     hueSpeed: 1.5,
+    // Colour spread along the curve: hueSpread scales how many rainbow cycles
+    // fit between the ends (>1 = several cycles, <1 = a calmer band), hueOffset
+    // shifts the starting colour, and hueEasing reshapes the distribution so the
+    // user can move the colour density toward either tip.
+    hueSpread: 2,
+    hueOffset: 0,
+    hueEasing: "linear",
     gradient: true
   },
 
@@ -112,6 +129,10 @@ export const formConfiguration: Record<string, any> = {
           {
             label: "Trail (draw in the air)",
             value: "trail"
+          },
+          {
+            label: "Recall (trail that gathers back when still)",
+            value: "recall"
           }
         ]
       },
@@ -135,6 +156,13 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 40,
         step: 1
+      },
+      recallSpeed: {
+        label: "Recall speed (recall mode)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
       }
     }
   },
@@ -189,11 +217,29 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     fields: {
       weight: {
-        label: "Weight",
+        label: "Weight (middle of the curve)",
         component: "slider",
         min: 1,
         max: 40,
         step: 0.5
+      },
+      weightStart: {
+        label: "Weight × at start (Chaikin only)",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.05
+      },
+      weightEnd: {
+        label: "Weight × at end (Chaikin only)",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.05
+      },
+      weightEasing: {
+        label: "Weight taper easing",
+        component: "easing"
       },
       glow: {
         label: "Glow layers",
@@ -203,11 +249,29 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       hueSpeed: {
-        label: "Hue speed",
+        label: "Hue speed (over time)",
         component: "slider",
         min: 0,
         max: 5,
         step: 0.1
+      },
+      hueSpread: {
+        label: "Hue spread along path (Chaikin only)",
+        component: "slider",
+        min: 0,
+        max: 8,
+        step: 0.05
+      },
+      hueOffset: {
+        label: "Hue offset",
+        component: "slider",
+        min: -Math.PI,
+        max: Math.PI,
+        step: 0.01
+      },
+      hueEasing: {
+        label: "Hue spread easing",
+        component: "easing"
       },
       gradient: {
         label: "Gradient along path (Chaikin only)",
