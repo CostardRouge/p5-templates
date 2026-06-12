@@ -57,7 +57,7 @@ export const formValues = {
 
   overlay: {
     polygon: {
-      show: false,
+      show: true,
       weight: 2,
       color: [
         255,
@@ -70,7 +70,7 @@ export const formValues = {
       gap: 10
     },
     points: {
-      show: false,
+      show: true,
       size: 16,
       coreRatio: 0.5,
       color: [

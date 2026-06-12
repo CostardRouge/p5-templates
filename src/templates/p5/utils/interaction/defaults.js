@@ -125,6 +125,8 @@ export const interactionFormValues = {
     enabled: true,
     showImages: false,
     showLines: true,
+    showPointers: true,
+    showLegend: true,
     linesStroke: [
       200,
       200,
@@ -695,6 +697,14 @@ export const interactionFormConfiguration = {
         showLines: {
           component: "checkbox",
           label: "Show crosshair lines"
+        },
+        showPointers: {
+          component: "checkbox",
+          label: "Show pointer markers"
+        },
+        showLegend: {
+          component: "checkbox",
+          label: "Show source legend"
         },
         linesStroke: {
           component: "color",
