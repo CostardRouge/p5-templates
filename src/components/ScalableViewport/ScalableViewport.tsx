@@ -176,13 +176,11 @@ export default function ScalableViewport( {
   }
 
   return (
-    <div
-      ref={ containerRef }
-      className="w-full h-full overflow-hidden touch-none relative cursor-grab active:cursor-grabbing"
-      style={ {
-        touchAction: "none"
-      } }
-    >
+    <>
+      {/* Outside the overflow-hidden container so the controls can sit in
+          the top strip the page reserves for the floating bars on mobile —
+          they position against the page wrapper, whose origin stays at the
+          top of the screen regardless of that padding. */}
       {showZoomControls && (
         <ZoomControls
           scale={ displayScale }
@@ -194,11 +192,19 @@ export default function ScalableViewport( {
       )}
 
       <div
-        ref={ contentRef }
-        className="origin-top-left absolute top-0 left-0 will-change-transform"
+        ref={ containerRef }
+        className="w-full h-full overflow-hidden touch-none relative cursor-grab active:cursor-grabbing"
+        style={ {
+          touchAction: "none"
+        } }
       >
-        {children}
+        <div
+          ref={ contentRef }
+          className="origin-top-left absolute top-0 left-0 will-change-transform"
+        >
+          {children}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
