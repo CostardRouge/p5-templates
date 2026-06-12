@@ -16,7 +16,20 @@ export const formValues = {
   stroke: {
     weight: 27,
     glow: 2,
+    // Variable thickness profile: 0..2 multipliers on `weight` at each end of the
+    // (open) spline with an easing for the transition. Both at 1 = uniform tube.
+    // Only applies to open curves — a closed loop has no start/end to taper.
+    weightStart: 1,
+    weightEnd: 1,
+    weightEasing: "linear",
     hueSpeed: 2,
+    // Colour spread along the curve: hueSpread scales how many rainbow cycles
+    // fit between the ends, hueOffset shifts the starting colour and hueEasing
+    // reshapes the distribution so the user can move the colour density toward
+    // either tip. Default = one cycle spread evenly across the curve.
+    hueSpread: 1,
+    hueOffset: 0,
+    hueEasing: "linear",
     gradient: true
   },
   overlay: {
@@ -166,11 +179,29 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     fields: {
       weight: {
-        label: "Weight",
+        label: "Weight (middle of the curve)",
         component: "slider",
         min: 1,
         max: 40,
         step: 0.5
+      },
+      weightStart: {
+        label: "Weight × at start (open curves only)",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.05
+      },
+      weightEnd: {
+        label: "Weight × at end (open curves only)",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.05
+      },
+      weightEasing: {
+        label: "Weight taper easing",
+        component: "easing"
       },
       glow: {
         label: "Glow layers",
@@ -180,11 +211,29 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       hueSpeed: {
-        label: "Hue speed",
+        label: "Hue speed (over time)",
         component: "slider",
         min: 0,
         max: 5,
         step: 0.1
+      },
+      hueSpread: {
+        label: "Hue spread along path (Chaikin only)",
+        component: "slider",
+        min: 0,
+        max: 8,
+        step: 0.05
+      },
+      hueOffset: {
+        label: "Hue offset",
+        component: "slider",
+        min: -Math.PI,
+        max: Math.PI,
+        step: 0.01
+      },
+      hueEasing: {
+        label: "Hue spread easing",
+        component: "easing"
       },
       gradient: {
         label: "Gradient along path (Chaikin only)",

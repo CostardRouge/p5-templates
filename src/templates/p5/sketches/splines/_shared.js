@@ -3,6 +3,7 @@ import {
 } from "@/p5/utils/sketch.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
+import easing from "@/p5/utils/easing.js";
 import createGlowBatchRenderer from "@/p5/utils/glowBatchGpu.js";
 
 // The glowing curve used to be stroked segment-by-segment on the CPU, once per
@@ -562,21 +563,53 @@ export function drawPointMarkers(
 }
 
 /**
+ * Per-segment half-thickness factor for the variable-thickness stroke profile.
+ * t is the segment midpoint along the curve, 0..1. Returns 1.0 for closed curves
+ * (no start/end to taper) and lerps between startFactor → 1 → endFactor with the
+ * chosen easing for open curves, so the user can independently dial the start
+ * thickness, the end thickness, and how aggressive the transition is.
+ */
+function _thicknessProfile(
+  t, startFactor, endFactor, easeFn, closed
+) {
+  if ( closed || ( startFactor === 1 && endFactor === 1 ) ) {
+    return 1;
+  }
+
+  if ( t <= 0.5 ) {
+    return startFactor + ( 1 - startFactor ) * easeFn( t * 2 );
+  }
+
+  return 1 + ( endFactor - 1 ) * easeFn( ( t - 0.5 ) * 2 );
+}
+
+/**
  * Queue one spline's dense Chaikin polyline onto the GPU stroke batch: open a new
- * stroke group, then push one segment per dense edge with its hue. The hue is the
- * only thing that varies along the curve — the per-layer thickness and opacity are
- * applied by the GPU when `drawStrokes` re-draws the geometry — so each segment is
- * emitted ONCE here instead of once per glow layer.
+ * stroke group, then push one segment per dense edge with its hue + half-thickness
+ * factor. Per-layer thickness and opacity are still applied by the GPU when
+ * `drawStrokes` re-draws the geometry — so each segment is emitted ONCE here
+ * instead of once per glow layer.
  *
  *   gradient → hue swept along the path (a free neon gradient).
  *   uniform  → a single hue for the whole stroke (still drifts with time).
+ *
+ * `hueSpread` stretches the gradient across more of the rainbow (>1 = several
+ * cycles along the curve, <1 = a calmer band), `hueOffset` shifts the starting
+ * colour, and `hueEasing` reshapes the distribution so the user can move the
+ * colour density toward either end of the spline.
  */
 function emitStroke(
   points, {
     iterations,
     closed,
     hueSpeed,
-    gradient
+    hueSpread,
+    hueOffset,
+    hueEaseFn,
+    gradient,
+    weightStart,
+    weightEnd,
+    weightEaseFn
   }
 ) {
   const dense = chaikinFlat(
@@ -592,23 +625,37 @@ function emitStroke(
   }
 
   const angle = animation.angle;
-  const uniformHue = Math.sin( angle * hueSpeed ) * TWO_PI;
+  const timeHue = angle * hueSpeed;
+  const uniformHue = timeHue + hueOffset;
+  const denom = Math.max(
+    1,
+    segments - ( closed ? 0 : 1 )
+  );
 
   batch.openStroke();
 
   for ( let i = 0; i < segments; i++ ) {
     const ai = i * 2;
     const bi = ( ( i + 1 ) % total ) * 2;
+    const t = i / denom;
     const hueIndex = gradient
-      ? Math.sin( ( i / segments ) * TWO_PI + angle * hueSpeed ) * TWO_PI
+      ? hueOffset + timeHue + hueEaseFn( t ) * TWO_PI * hueSpread
       : uniformHue;
+    const halfFactor = _thicknessProfile(
+      ( i + 0.5 ) / segments,
+      weightStart,
+      weightEnd,
+      weightEaseFn,
+      closed
+    );
 
     batch.strokeSegment(
       dense[ ai ],
       dense[ ai + 1 ],
       dense[ bi ],
       dense[ bi + 1 ],
-      hueIndex
+      hueIndex,
+      halfFactor
     );
   }
 }
@@ -716,7 +763,13 @@ export function renderSplines(
     tension: curve.tension ?? 0,
     weight: stroke.weight ?? 6,
     glow: stroke.glow ?? 3,
-    hueSpeed: stroke.hueSpeed ?? 1
+    hueSpeed: stroke.hueSpeed ?? 1,
+    hueSpread: stroke.hueSpread ?? 1,
+    hueOffset: stroke.hueOffset ?? 0,
+    hueEaseFn: easing[ stroke.hueEasing ] ?? easing.linear,
+    weightStart: stroke.weightStart ?? 1,
+    weightEnd: stroke.weightEnd ?? 1,
+    weightEaseFn: easing[ stroke.weightEasing ] ?? easing.linear
   };
 
   // Raw polygon overlay (behind the curve), straight onto the p2d canvas.
@@ -744,7 +797,13 @@ export function renderSplines(
         iterations: curveOptions.iterations,
         closed,
         hueSpeed: curveOptions.hueSpeed,
-        gradient
+        hueSpread: curveOptions.hueSpread,
+        hueOffset: curveOptions.hueOffset,
+        hueEaseFn: curveOptions.hueEaseFn,
+        gradient,
+        weightStart: curveOptions.weightStart,
+        weightEnd: curveOptions.weightEnd,
+        weightEaseFn: curveOptions.weightEaseFn
       }
     ) );
     batch.drawStrokes( {
