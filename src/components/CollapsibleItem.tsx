@@ -11,6 +11,8 @@ type CollapsibleItemProps = {
   initialExpandedValue?: boolean;
   children: React.ReactNode;
   className?: string;
+  /** Exposes the root element, e.g. to observe the rendered panel size. */
+  rootRef?: React.Ref<HTMLDivElement>;
   headerContainerClassName?: string;
   /**
    * Applied to the inner wrapper that holds the children. Use it to restore
@@ -59,7 +61,8 @@ const CollapsibleItem = ( {
   expanded: controlledExpanded,
   onToggle,
   swipeToCollapse = false,
-  keepMounted = false
+  keepMounted = false,
+  rootRef
 }: CollapsibleItemProps ) => {
   const [
     internalExpanded,
@@ -313,6 +316,7 @@ const CollapsibleItem = ( {
 
   return (
     <div
+      ref={ rootRef }
       className={ className }
       style={ {
         ...style,

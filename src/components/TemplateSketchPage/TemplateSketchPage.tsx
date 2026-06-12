@@ -26,6 +26,9 @@ import {
 import useSketchDevWatch from "@/hooks/useSketchDevWatch";
 import usePageVisibility from "@/hooks/usePageVisibility";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
+import {
+  STUDIO_DRAWER_HEIGHT_VAR
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/constants/drawer-events";
 
 const TemplateOptions = dynamic( () =>
   import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
@@ -252,9 +255,14 @@ export default function TemplateSketchPage() {
         </div>
       )}
 
-      {/* Sketch viewport */}
+      {/* Sketch viewport — shrinks above the open mobile drawer so
+          fit-to-viewport targets the visible area (the container resize
+          triggers ScalableViewport's own refit observer). */}
       <div
-        className="h-full w-full relative"
+        className="w-full relative"
+        style={ {
+          height: `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
+        } }
         hidden={ !sketchLoaded }
       >
         <ScalableViewport

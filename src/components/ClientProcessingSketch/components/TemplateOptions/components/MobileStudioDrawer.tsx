@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useEffect, useState
+  useEffect, useRef, useState
 } from "react";
 import clsx from "clsx";
 import {
@@ -25,7 +25,7 @@ import {
   useSketchSettings, SketchSettingsActions
 } from "./SketchSettings/SketchSettings";
 import {
-  OPEN_EXPORT_DRAWER_EVENT
+  OPEN_EXPORT_DRAWER_EVENT, STUDIO_DRAWER_HEIGHT_VAR
 } from "../constants/drawer-events";
 import type {
   SketchOption
@@ -93,6 +93,50 @@ export default function MobileStudioDrawer( {
     setActiveTab
   ] = useState<Tab>( sketchConfig ? "sketch" : "template" );
 
+  // Publish the drawer's rendered height so the sketch viewport can shrink
+  // to the area above it (and fit-to-viewport targets the visible half).
+  // The ResizeObserver tracks the open/close animation and any future height
+  // changes; collapsed (pill) reserves nothing.
+  const rootRef = useRef<HTMLDivElement | null>( null );
+
+  useEffect(
+    () => {
+      const setHeightVar = ( px: number ) =>
+        document.documentElement.style.setProperty(
+          STUDIO_DRAWER_HEIGHT_VAR,
+          `${ Math.round( px ) }px`
+        );
+
+      const root = rootRef.current;
+
+      if ( !expanded || !root ) {
+        setHeightVar( 0 );
+
+        return;
+      }
+
+      const observer = new ResizeObserver( () => {
+        setHeightVar( root.getBoundingClientRect().height );
+      } );
+
+      observer.observe( root );
+
+      return () => observer.disconnect();
+    },
+    [
+      expanded
+    ]
+  );
+
+  // Release the reserved space entirely when the drawer leaves the tree
+  // (e.g. rotating into the desktop layout).
+  useEffect(
+    () => () => {
+      document.documentElement.style.removeProperty( STUDIO_DRAWER_HEIGHT_VAR );
+    },
+    []
+  );
+
   // The engine controls' record shortcut opens the drawer on the Export tab.
   useEffect(
     () => {
@@ -136,6 +180,7 @@ export default function MobileStudioDrawer( {
 
   return (
     <CollapsibleItem
+      rootRef={ rootRef }
       expanded={ expanded }
       onToggle={ onToggle }
       swipeToCollapse
