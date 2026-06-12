@@ -257,9 +257,12 @@ export default function TemplateSketchPage() {
 
       {/* Sketch viewport — shrinks above the open mobile drawer so
           fit-to-viewport targets the visible area (the container resize
-          triggers ScalableViewport's own refit observer). */}
+          triggers ScalableViewport's own refit observer). On mobile we
+          also reserve the top strip occupied by the engine and zoom
+          controls so the sketch header (engine · name · perf) never
+          slides under them when the drawer compresses the viewport. */}
       <div
-        className="w-full relative"
+        className="w-full relative pt-12 md:pt-0"
         style={ {
           height: `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
         } }
