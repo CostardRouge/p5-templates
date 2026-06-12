@@ -752,7 +752,16 @@ export function getPointerGroups( opts ) {
 
   const groups = [];
 
-  const addFlat = (
+  // Vision sources already split their points into per-entity groups (one hand,
+  // one finger, one pose, one face). The flat sources used to bundle every
+  // point they produced into a single group (one "orbit" group with N orbit
+  // points, one "perlinNoise" group with N noise points, …), so downstream
+  // sketches saw them as ONE moving polyline / ONE averaged trail no matter
+  // how many points were visible. Splitting per-point here matches the vision
+  // behaviour: 6 orbits → 6 entities → 6 trails / 6 ribbons, and the demo
+  // overlay still shows 6 markers because the underlying point count never
+  // changed. Single-point sources (mouse, gyroscope) come out unchanged.
+  const addPerPoint = (
     source, collector
   ) => {
     const points = [];
@@ -763,20 +772,24 @@ export function getPointerGroups( opts ) {
       points
     );
 
-    if ( points.length > 0 ) {
+    points.forEach( (
+      point, index
+    ) => {
       groups.push( {
         source,
-        id: source,
-        points
+        id: `${ source }-${ index }`,
+        points: [
+          point
+        ]
       } );
-    }
+    } );
   };
 
-  addFlat(
+  addPerPoint(
     "mouse",
     _collectMouse
   );
-  addFlat(
+  addPerPoint(
     "touch",
     _collectTouch
   );
@@ -803,27 +816,27 @@ export function getPointerGroups( opts ) {
     groups
   );
 
-  addFlat(
+  addPerPoint(
     "orbit",
     _collectOrbit
   );
-  addFlat(
+  addPerPoint(
     "perlinNoise",
     _collectPerlinNoise
   );
-  addFlat(
+  addPerPoint(
     "gyroscope",
     _collectGyroscope
   );
-  addFlat(
+  addPerPoint(
     "midi",
     _collectMidi
   );
-  addFlat(
+  addPerPoint(
     "audio",
     _collectAudio
   );
-  addFlat(
+  addPerPoint(
     "joypad",
     _collectJoypad
   );

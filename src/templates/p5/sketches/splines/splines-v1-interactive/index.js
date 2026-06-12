@@ -87,9 +87,41 @@ function pushTrailPoint(
 }
 
 // One ordered point list per live entity, so every spline in the frame can be
-// drawn in a single batched pass.
+// drawn in a single batched pass. Multi-point flat sources (orbit, perlinNoise,
+// audio, …) now arrive as one group per point — great for trail/recall mode
+// where each point gets its own ribbon, but useless on its own for a LIVE
+// spline (a single point can't form a curve). Re-aggregate same-source
+// singletons here so the source still draws as one connected polyline in live
+// mode, matching the prior look while keeping trail/recall split per-point.
 function collectLive( groups ) {
-  return groups.map( ( group ) => group.points );
+  const lists = [];
+  const singletonsBySource = new Map();
+
+  groups.forEach( ( group ) => {
+    if ( group.points.length >= 2 ) {
+      lists.push( group.points );
+
+      return;
+    }
+
+    if ( group.points.length === 1 ) {
+      const accumulator = singletonsBySource.get( group.source ) ?? [];
+
+      accumulator.push( group.points[ 0 ] );
+      singletonsBySource.set(
+        group.source,
+        accumulator
+      );
+    }
+  } );
+
+  for ( const points of singletonsBySource.values() ) {
+    if ( points.length >= 2 ) {
+      lists.push( points );
+    }
+  }
+
+  return lists;
 }
 
 function collectTrails(
