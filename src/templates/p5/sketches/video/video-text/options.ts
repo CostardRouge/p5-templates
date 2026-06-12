@@ -25,9 +25,9 @@ export const formValues = {
   ],
   blur: 0,
 
-  text: "VIDEO",
-  font: "martian",
-  fontSize: 17,
+  text: "video\ntext\nmask",
+  font: "waverseVariable",
+  fontSize: 24,
   align: "center",
   lineHeight: 1,
   margin: 0,
