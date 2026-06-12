@@ -125,9 +125,8 @@ function collectLive( groups ) {
 }
 
 function collectTrails(
-  groups, mode, recallSpeed = 0
+  groups, mode, behaviour = "trail", pullSpeed = 0
 ) {
-  const p = getP5();
   const maxPoints = mode.maxPoints ?? 90;
   const minDistance = mode.minDistance ?? 6;
   const present = new Set();
@@ -142,19 +141,49 @@ function collectTrails(
       ? group.points[ group.points.length - 1 ]
       : centroid( group.points );
 
-    // In `recall` mode every existing trail point lerps a step toward the live
-    // anchor each frame, so the moment the entity stops feeding new points the
-    // tail visibly collapses back into the anchor — turning the trail into an
-    // elastic ribbon instead of a static drawing. When recallSpeed is 0 this is
-    // a no-op so the classic `trail` mode is unchanged.
-    if ( recallSpeed > 0 ) {
-      const entry = trails.get( group.id );
+    const entry = trails.get( group.id );
 
-      if ( entry ) {
-        entry.points = entry.points.map( ( pt ) => p.createVector(
-          pt.x + ( anchor.x - pt.x ) * recallSpeed,
-          pt.y + ( anchor.y - pt.y ) * recallSpeed
-        ) );
+    // Both `recall` and `chase` retract the existing trail toward the live
+    // anchor each frame; what differs is how the points get there.
+    //
+    //   recall → every point lerps directly at `pullSpeed` toward the anchor,
+    //            so the whole tail collapses along the straight line between
+    //            it and the anchor.
+    //   chase  → every point lerps toward its SUCCESSOR (the newer neighbour),
+    //            and the newest point lerps toward the anchor — so the chain
+    //            collapses by following the path that earlier points carved.
+    //
+    // Both branches mutate the existing vectors in place instead of replacing
+    // them with new ones, because the per-frame allocation churn ( N points ×
+    // M entities × hundreds of frames ) was triggering enough GC to slow the
+    // sketch down by itself in long recall sessions.
+    if ( entry && entry.points.length > 0 && pullSpeed > 0 ) {
+      const points = entry.points;
+      const n = points.length;
+
+      if ( behaviour === "chase" ) {
+        // Older first: each point's new target is the NEWER neighbour BEFORE
+        // we mutate it, so the chain shifts smoothly along the recorded path
+        // instead of compressing in a single frame.
+        for ( let i = 0; i < n - 1; i++ ) {
+          const target = points[ i + 1 ];
+
+          points[ i ].x += ( target.x - points[ i ].x ) * pullSpeed;
+          points[ i ].y += ( target.y - points[ i ].y ) * pullSpeed;
+        }
+
+        const head = points[ n - 1 ];
+
+        head.x += ( anchor.x - head.x ) * pullSpeed;
+        head.y += ( anchor.y - head.y ) * pullSpeed;
+      } else {
+        // recall: straight pull toward the anchor.
+        for ( let i = 0; i < n; i++ ) {
+          const pt = points[ i ];
+
+          pt.x += ( anchor.x - pt.x ) * pullSpeed;
+          pt.y += ( anchor.y - pt.y ) * pullSpeed;
+        }
       }
     }
 
@@ -221,18 +250,30 @@ sketch.draw( () => {
   const curve = o.curve ?? {};
   const stroke = o.stroke ?? {};
 
-  if ( modeType === "trail" || modeType === "recall" ) {
+  if ( modeType === "trail" || modeType === "recall" || modeType === "chase" ) {
     // Trails are time-series ribbons, so the raw-polygon / point markers overlay
     // (which annotates the source points) is intentionally suppressed. `recall`
-    // is `trail` with a non-zero pull-back factor so the tail gathers when the
-    // entity stops moving — same renderer, same overlay rules.
-    const recallSpeed = modeType === "recall" ? ( mode.recallSpeed ?? 0.08 ) : 0;
+    // and `chase` are `trail` with non-zero pull-back factors — recall pulls
+    // every point straight toward the anchor (collapses along the line),
+    // chase makes each point follow its newer neighbour (collapses along the
+    // recorded path). Same renderer, same overlay rules.
+    let behaviour = "trail";
+    let pullSpeed = 0;
+
+    if ( modeType === "recall" ) {
+      behaviour = "recall";
+      pullSpeed = mode.recallSpeed ?? 0.08;
+    } else if ( modeType === "chase" ) {
+      behaviour = "chase";
+      pullSpeed = mode.chaseSpeed ?? 0.12;
+    }
 
     renderSplines(
       collectTrails(
         groups,
         mode,
-        recallSpeed
+        behaviour,
+        pullSpeed
       ),
       {
         curve,

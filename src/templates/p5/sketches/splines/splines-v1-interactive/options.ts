@@ -5,14 +5,18 @@ import {
 
 export const formValues = {
   mode: {
-    type: "live" as "live" | "trail" | "recall",
+    type: "live" as "live" | "trail" | "recall" | "chase",
     smoothing: 0.35,
     maxPoints: 25,
     minDistance: 6,
     // How fast each trail point is pulled back toward the current anchor every
     // frame in `recall` mode (0 = stays put like classic trail, 1 = collapses
-    // instantly). Ignored in `live` and `trail`.
-    recallSpeed: 0.08
+    // instantly). Ignored in `live` / `trail` / `chase`.
+    recallSpeed: 0.08,
+    // Same idea for `chase` mode, but each point lerps toward its NEWER
+    // neighbour (the newest follows the live anchor) so the chain collapses
+    // ALONG the recorded path instead of jumping straight to the anchor.
+    chaseSpeed: 0.12
   },
 
   // A virtual orbit source is on by default so the sketch animates immediately
@@ -133,6 +137,10 @@ export const formConfiguration: Record<string, any> = {
           {
             label: "Recall (trail that gathers back when still)",
             value: "recall"
+          },
+          {
+            label: "Chase (trail that retracts along its own path)",
+            value: "chase"
           }
         ]
       },
@@ -159,6 +167,13 @@ export const formConfiguration: Record<string, any> = {
       },
       recallSpeed: {
         label: "Recall speed (recall mode)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      chaseSpeed: {
+        label: "Chase speed (chase mode)",
         component: "slider",
         min: 0,
         max: 1,

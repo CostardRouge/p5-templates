@@ -132,10 +132,20 @@ const _rawMouse = {
 let _rawTouches = []; // Array of { clientX, clientY }
 
 let _noiseOffset = 0;
+// Frame guards for collectors that mutate global state. Without them, every
+// extra call inside the same frame (e.g. the debug overlay running
+// getPointersDebug for the legend AND for the crosshairs AND for the pointer
+// markers, plus the main sketch calling getPointerGroups) would advance the
+// state again — so Perlin noise visibly accelerated when the visualization was
+// enabled, and mouse smoothing converged faster too. Tracking the last frame
+// that updated each piece of state keeps the rate independent of how many
+// times the collector runs per frame.
+let _noiseFrame = -1;
 const _smoothedMouse = {
   x: 0,
   y: 0
 };
+let _smoothedMouseFrame = -1;
 const _gyro = {
   beta: 0,
   gamma: 0
@@ -415,6 +425,8 @@ async function _initAudio( opts ) {
  */
 export async function initInteraction( opts = {} ) {
   _noiseOffset = opts.perlinNoise?.seed ?? 0;
+  _noiseFrame = -1;
+  _smoothedMouseFrame = -1;
 
   // ── Gyroscope reset (lazy init triggered by _collectGyroscope) ───────────
   _disposeGyro();
@@ -885,16 +897,23 @@ function _collectMouse(
   }
 
   if ( smoothing > 0 ) {
-    _smoothedMouse.x = p.lerp(
-      _smoothedMouse.x,
-      rawX,
-      1 - smoothing
-    );
-    _smoothedMouse.y = p.lerp(
-      _smoothedMouse.y,
-      rawY,
-      1 - smoothing
-    );
+    // Step the smoothing filter at most once per frame so its convergence rate
+    // doesn't speed up when the debug overlay also reads pointers (see
+    // _smoothedMouseFrame above).
+    if ( _smoothedMouseFrame !== p.frameCount ) {
+      _smoothedMouse.x = p.lerp(
+        _smoothedMouse.x,
+        rawX,
+        1 - smoothing
+      );
+      _smoothedMouse.y = p.lerp(
+        _smoothedMouse.y,
+        rawY,
+        1 - smoothing
+      );
+      _smoothedMouseFrame = p.frameCount;
+    }
+
     out.push( p.createVector(
       _smoothedMouse.x + ox,
       _smoothedMouse.y + oy
@@ -1649,7 +1668,12 @@ function _collectPerlinNoise(
   const speed = noise.speed ?? 0.005;
   const margin = noise.margin ?? 50;
 
-  _noiseOffset += speed;
+  // Advance the noise offset at most once per frame so the scroll rate stays
+  // independent of how many times this collector runs (see _noiseFrame above).
+  if ( _noiseFrame !== p.frameCount ) {
+    _noiseOffset += speed;
+    _noiseFrame = p.frameCount;
+  }
 
   for ( let i = 0; i < count; i++ ) {
     out.push( p.createVector(
