@@ -27,7 +27,15 @@ const mediapipe = {
       width: 320,
       height: 240
     },
-    captureFlip: true
+    captureFlip: true,
+
+    // Where frames come from:
+    //   { type: "webcam", deviceId? }          → p5 createCapture (owned)
+    //   { type: "video" | "image", element }   → adopted external element
+    //     (a video/image asset; its owner keeps loading/seeking/disposing it)
+    source: {
+      type: "webcam"
+    }
   },
 
   // Latest result per task: mediapipe.tasks[ lib ] = { result, updatedAt }.
@@ -35,6 +43,9 @@ const mediapipe = {
 
   capture: {
     element: null,
+    // False when the element is adopted from outside (video/image source):
+    // teardown must not stop tracks or remove an element it doesn't own.
+    owned: true,
     size: {
       width: 320,
       height: 240
@@ -103,6 +114,9 @@ export async function init( config = {} ) {
     height: 240
   };
   mediapipe.config.captureFlip = config.captureFlip ?? true;
+  mediapipe.config.source = config.source ?? {
+    type: "webcam"
+  };
 
   mediapipe.inferenceIntervalMilliseconds =
     config.inferenceInterval ?? mediapipe.inferenceIntervalMilliseconds;
@@ -123,7 +137,7 @@ export async function init( config = {} ) {
   const enableCapture = config.enableCapture ?? true;
 
   if ( enableCapture ) {
-    createVideoCaptureElements();
+    setupCaptureSource();
   }
 
   if ( mediapipe.config.useWorker ) {
@@ -421,14 +435,58 @@ export function interact(
   }
 }
 
+// Creates or adopts the element frames are read from, according to
+// config.source. Webcam sources own a fresh p5 capture; video/image sources
+// borrow an element whose lifecycle (loading, seeking, disposal) belongs to
+// the caller — typically a video/image asset from the sketch options.
+function setupCaptureSource() {
+  const source = mediapipe.config.source ?? {
+    type: "webcam"
+  };
+
+  if (
+    ( source.type === "video" || source.type === "image" ) &&
+    source.element
+  ) {
+    adoptCaptureElement(
+      source.element,
+      source.type
+    );
+  } else {
+    createVideoCaptureElements();
+  }
+}
+
 function createVideoCaptureElements() {
   const p = getP5();
   const size = mediapipe.config.captureSize;
   const flip = mediapipe.config.captureFlip;
+  const deviceId = mediapipe.config.source?.deviceId;
 
   mediapipe.videoReady = false;
+  mediapipe.capture.owned = true;
+
+  // A specific camera was requested → pass full getUserMedia constraints
+  // (p5 accepts a constraints object in place of the VIDEO constant).
+  const constraints = deviceId
+    ? {
+      audio: false,
+      video: {
+        deviceId: {
+          exact: deviceId
+        },
+        width: {
+          ideal: size.width
+        },
+        height: {
+          ideal: size.height
+        }
+      }
+    }
+    : p.VIDEO;
+
   mediapipe.capture.element = p.createCapture(
-    p.VIDEO,
+    constraints,
     {
       flipped: flip
     }
@@ -453,6 +511,78 @@ function createVideoCaptureElements() {
   );
 
   armFrameCallback( mediapipe.capture.element.elt );
+}
+
+// Borrows an external <video> or <img> as the inference source. Only a thin
+// wrapper is stored ({ elt }) so every consumer that reads capture.element.elt
+// keeps working; capture.owned = false tells teardown to leave it alone.
+function adoptCaptureElement(
+  element, type
+) {
+  mediapipe.videoReady = false;
+  mediapipe.capture.owned = false;
+  mediapipe.capture.element = {
+    elt: element
+  };
+
+  const applySize = () => {
+    mediapipe.capture.size = {
+      width:
+        element.videoWidth ||
+        element.naturalWidth ||
+        mediapipe.config.captureSize.width,
+      height:
+        element.videoHeight ||
+        element.naturalHeight ||
+        mediapipe.config.captureSize.height
+    };
+  };
+
+  applySize();
+
+  if ( type === "video" ) {
+    if ( element.readyState >= 2 ) {
+      mediapipe.videoReady = true;
+    } else {
+      element.addEventListener(
+        "loadeddata",
+        () => {
+          // Bail if the source changed while the video was still loading.
+          if ( mediapipe.capture.element?.elt === element ) {
+            mediapipe.videoReady = true;
+            applySize();
+          }
+        },
+        {
+          once: true
+        }
+      );
+    }
+
+    armFrameCallback( element );
+  } else {
+    // Images have no frame stream: the post-draw loop re-detects them at the
+    // idle interval instead (see sendImageIfDue).
+    if ( element.complete && element.naturalWidth > 0 ) {
+      mediapipe.videoReady = true;
+    } else {
+      element.addEventListener(
+        "load",
+        () => {
+          if ( mediapipe.capture.element?.elt === element ) {
+            mediapipe.videoReady = true;
+            applySize();
+          }
+        },
+        {
+          once: true
+        }
+      );
+    }
+
+    mediapipe.scheduler.usingFrameCallback = false;
+    mediapipe.scheduler.freshFrame = true;
+  }
 }
 
 // With requestVideoFrameCallback support we know exactly when the camera
@@ -487,12 +617,61 @@ function armFrameCallback( videoEl ) {
 events.register(
   "post-draw",
   () => {
-  // Only run automatic video loop if we are in VIDEO mode
+    // Image sources have no frame stream: re-detect at a slow fixed pace so
+    // results stay fresher than the interaction layer's staleness TTL.
+    if ( mediapipe.config.source?.type === "image" ) {
+      sendImageIfDue();
+
+      return;
+    }
+
+    // Only run automatic video loop if we are in VIDEO mode
     if ( mediapipe.mode === "VIDEO" ) {
       sendFrameIfDue();
     }
   }
 );
+
+function sendImageIfDue() {
+  if ( !mediapipe.enabled || !mediapipe.processor.ready ) {
+    return;
+  }
+
+  const element = mediapipe.capture.element?.elt;
+
+  if ( !element || !element.complete || !element.naturalWidth ) {
+    return;
+  }
+
+  const now = performance.now();
+
+  // A static image never changes, so the active-rate interval is pointless:
+  // always pace at the (slower) idle interval.
+  const interval = Math.max(
+    mediapipe.inferenceIntervalMilliseconds,
+    mediapipe.scheduler.idleIntervalMilliseconds
+  );
+
+  if ( now - mediapipe.previousFrameSentTime < interval ) {
+    return;
+  }
+
+  if ( mediapipe.processor.busy ) {
+    // Same watchdog as the video loop: never stay stuck on a lost frame.
+    if (
+      now - mediapipe.processor.busySince >
+      mediapipe.scheduler.busyTimeoutMilliseconds
+    ) {
+      mediapipe.processor.busy = false;
+      mediapipe.stats.watchdogRecoveries++;
+    } else {
+      return;
+    }
+  }
+
+  mediapipe.previousFrameSentTime = now;
+  predictImage( element );
+}
 
 function sendFrameIfDue() {
   if ( !mediapipe.enabled || !mediapipe.processor.ready ) {
@@ -608,9 +787,9 @@ function sendFrameIfDue() {
 export function enable() {
   mediapipe.enabled = true;
 
-  // If capture element doesn't exist, create it
+  // If capture element doesn't exist, create (or re-adopt) it
   if ( !mediapipe.capture.element ) {
-    createVideoCaptureElements();
+    setupCaptureSource();
   }
 }
 
@@ -631,21 +810,25 @@ export function disable() {
 export function deallocateWebcam() {
   disable();
 
-  // Stop and remove webcam stream
-  if ( mediapipe.capture.element?.elt?.srcObject ) {
-    const stream = mediapipe.capture.element.elt.srcObject;
-    const tracks = stream.getTracks();
+  // Adopted elements (video/image assets) belong to their loader: just drop
+  // the reference. Only an owned webcam capture gets stopped and removed.
+  if ( mediapipe.capture.owned ) {
+    // Stop and remove webcam stream
+    if ( mediapipe.capture.element?.elt?.srcObject ) {
+      const stream = mediapipe.capture.element.elt.srcObject;
+      const tracks = stream.getTracks();
 
-    tracks.forEach( ( track ) => track.stop() );
-    mediapipe.capture.element.elt.srcObject = null;
+      tracks.forEach( ( track ) => track.stop() );
+      mediapipe.capture.element.elt.srcObject = null;
+    }
+
+    // Remove the video element
+    if ( mediapipe.capture.element ) {
+      mediapipe.capture.element.remove();
+    }
   }
 
-  // Remove the video element
-  if ( mediapipe.capture.element ) {
-    mediapipe.capture.element.remove();
-    mediapipe.capture.element = null;
-  }
-
+  mediapipe.capture.element = null;
   mediapipe.videoReady = false;
 }
 

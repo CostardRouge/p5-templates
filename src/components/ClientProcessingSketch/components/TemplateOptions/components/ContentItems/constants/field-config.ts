@@ -18,6 +18,12 @@ import {
 interface BaseConfig {
   label?: string; // Label is often optional (e.g., inside a group)
   placeholder?: string;
+  /**
+   * Default value used when a conditional-group branch is (re)selected and
+   * builds a fresh object for its fields. Optional; each component otherwise
+   * falls back to a sensible zero value.
+   */
+  default?: unknown;
 }
 
 // Step 2: Define the config shape for each component type
@@ -98,8 +104,9 @@ export interface ConditionalGroupConfig extends BaseConfig {
   typeSelector: Omit<SelectConfig, "component">; // It's a select, but we don't need the 'component' key here
   // A map of type names to their corresponding field configurations
   configs: Record<string, Record<string, FieldConfig>>;
-  // The Zod schema is crucial for creating default objects when the type changes
-  schema: ZodDiscriminatedUnion<any, any> | ZodObject<any>;
+  // Zod schema used to create default objects when the type changes. Optional:
+  // without one, defaults are derived per-field from the branch's configs.
+  schema?: ZodDiscriminatedUnion<any, any> | ZodObject<any>;
   // When true, omit the empty "--" (None) option from the selector. Use it for
   // required discriminators that should always resolve to a concrete variant.
   hideNone?: boolean;
@@ -206,6 +213,12 @@ interface AssetStackConfig extends BaseConfig {
   jobId?: string;
 }
 
+// A select listing the machine's video input devices (webcams), bound to a
+// deviceId string. "" means the browser's default camera.
+interface WebcamDeviceSelectConfig extends BaseConfig {
+  component: "webcam-device-select";
+}
+
 // Step 3: Create the master Discriminated Union
 // This tells TypeScript: "If component is 'select', then it MUST have an 'options' property."
 export type FieldConfig =
@@ -228,7 +241,8 @@ export type FieldConfig =
   | EasingConfig
   | Vector2DConfig
   | AssetInputConfig
-  | AssetStackConfig;
+  | AssetStackConfig
+  | WebcamDeviceSelectConfig;
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema

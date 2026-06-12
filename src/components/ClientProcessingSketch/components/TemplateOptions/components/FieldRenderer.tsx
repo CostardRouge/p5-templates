@@ -25,6 +25,8 @@ import ControlledVector2DInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledVector2DInput/ControlledVector2DInput";
 import ControlledSliderInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSliderInput/ControlledSliderInput";
+import ControlledWebcamDeviceSelect
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledWebcamDeviceSelect";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import type {
@@ -415,6 +417,16 @@ export default function FieldRenderer( {
 
       case "asset":
         return <ControlledAssetInput name={ registeredName } kind={ config.kind } />;
+
+      case "webcam-device-select":
+        return (
+          <ControlledWebcamDeviceSelect
+            name={ registeredName }
+            label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
 
       case "asset-stack":
         return <ControlledAssetStackInput name={ registeredName } kind={ config.kind } />;

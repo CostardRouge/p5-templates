@@ -1,5 +1,6 @@
 import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
+import options from "@/p5/utils/options.js";
 import mediapipe, {
   init as mediapipeInit,
   setEnabled as setMediapipeEnabled,
@@ -9,6 +10,15 @@ import mediapipe, {
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  createVideoSync
+} from "@/lib/assets/kinds/videos/createVideoSync";
+import {
+  defaultVideoParams
+} from "@/lib/assets/kinds/videos/types";
+import {
+  resolveAssetURL
+} from "@/lib/assets/resolveAssetURL";
 
 // ── Hand landmark indices ──────────────────────────────────────────────────
 // Fingertip indices: thumb, index, middle, ring, pinky
@@ -173,6 +183,17 @@ let _audioFreqData = null;
 // an in-flight guard so we never kick off two mediapipe initializations at once.
 let _visionSignature = "";
 let _visionInitInFlight = null;
+
+// Vision source media state (vision.source mode "video" / "image"): the video
+// sync pool that loads/seeks the selected video asset, and the image element
+// inference runs on. Owned here — mediapipe only borrows the elements.
+let _visionVideoSync = null;
+let _visionVideoKey = "";
+let _visionVideoInstances = [];
+let _visionImage = {
+  path: "",
+  element: null
+};
 
 // Vision results older than this read as "nothing detected", so a stalled
 // pipeline never leaves a frozen hand/face on screen.
@@ -478,8 +499,7 @@ export async function initInteraction( opts = {} ) {
     const _onTouch = ( e ) => {
       _rawTouches = Array.from( e.touches ).map( ( t ) => ( {
         clientX: t.clientX,
-        clientY: t.clientY,
-        identifier: t.identifier
+        clientY: t.clientY
       } ) );
     };
 
@@ -603,6 +623,7 @@ export function disposeInteraction() {
   // Vision / webcam / inference processor. Full dispose (not just the webcam)
   // so MediaPipe task memory and the worker don't leak across sketch switches.
   disposeMediapipe();
+  _releaseVisionMedia();
   _visionSignature = "";
   _visionInitInFlight = null;
   _groupSmoothing.clear();
@@ -802,15 +823,9 @@ export function getPointerGroups( opts ) {
     "mouse",
     _collectMouse
   );
-
-  // Touch is grouped per FINGER with a stable id (the browser touch identifier),
-  // not the array index — so a sketch tracking which finger drags which thing
-  // (and the per-group temporal smoothing) stays correct even when a finger in
-  // the middle of the list lifts and the remaining touches reindex.
-  _collectTouchGroups(
-    opts,
-    p,
-    groups
+  addPerPoint(
+    "touch",
+    _collectTouch
   );
 
   // Vision: one ordered group per detected entity.
@@ -964,45 +979,173 @@ function _collectTouch(
   }
 }
 
-// One ordered group per active finger, keyed by the browser touch identifier so
-// the id follows a physical finger across frames (see the getPointerGroups call
-// site). Each group holds that finger's single point.
-function _collectTouchGroups(
-  opts, p, groups
-) {
-  const touch = opts.touch;
+// ── Vision source (webcam / video asset / image asset) ────────────────────
+// vision.source selects what inference runs on: the webcam (with an optional
+// deviceId), a video asset (driven by the sketch progression through its own
+// repeat/speed/offset/loopMode params) or a still image asset. Older saved
+// options only have vision.camera — that reads as webcam mode.
 
-  if ( !touch?.enabled ) {
-    return;
+function _visionSourceMode( vision ) {
+  return vision?.source?.mode || "webcam";
+}
+
+// Mirror handling depends on the source: webcams are mirrored by default,
+// recorded videos and images are not (a right hand must stay a right hand).
+function _visionFlip( vision ) {
+  const mode = _visionSourceMode( vision );
+
+  if ( mode === "video" || mode === "image" ) {
+    return vision?.source?.flip ?? false;
   }
 
-  const maxTouches = touch.maxTouches ?? 5;
-  const count = Math.min(
-    _rawTouches.length,
-    maxTouches
-  );
+  return vision?.source?.flip ?? vision?.camera?.flip ?? true;
+}
 
-  for ( let i = 0; i < count; i++ ) {
-    const raw = _rawTouches[ i ];
-    const {
-      x, y
-    } = _clientToCanvas(
-      raw.clientX,
-      raw.clientY,
-      p
-    );
-
-    groups.push( {
-      source: "touch",
-      id: `touch-${ raw.identifier ?? i }`,
-      points: [
-        p.createVector(
-          x,
-          y
-        )
-      ]
-    } );
+// The videos field stores serialized AssetInstances but tolerates bare path
+// strings — normalize to full instances for the video sync pool.
+function _normalizeVisionVideoInstances( raw ) {
+  if ( !Array.isArray( raw ) ) {
+    return [];
   }
+
+  return raw
+    .filter( ( entry ) => entry )
+    .map( ( entry ) => ( typeof entry === "string"
+      ? {
+        id: `vision-${ entry }`,
+        path: entry,
+        params: {
+          ...defaultVideoParams
+        }
+      }
+      : {
+        id: entry.id ?? `vision-${ entry.path }`,
+        path: entry.path ?? "",
+        params: {
+          ...defaultVideoParams,
+          ...( entry.params ?? {} )
+        }
+      } ) )
+    .filter( ( instance ) => instance.path );
+}
+
+function _releaseVisionVideo() {
+  if ( _visionVideoSync ) {
+    _visionVideoSync.dispose();
+    _visionVideoSync = null;
+  }
+
+  _visionVideoKey = "";
+  _visionVideoInstances = [];
+}
+
+function _releaseVisionImage() {
+  _visionImage = {
+    path: "",
+    element: null
+  };
+}
+
+function _releaseVisionMedia() {
+  _releaseVisionVideo();
+  _releaseVisionImage();
+}
+
+// Per-frame upkeep of the vision source media. Returns the mediapipe `source`
+// config (with a stable `key` for the re-init signature), or null while there
+// is nothing to run inference on yet (e.g. video mode with no video picked).
+function _ensureVisionSourceMedia( opts ) {
+  const vision = opts.vision ?? {};
+  const src = vision.source ?? {};
+  const mode = _visionSourceMode( vision );
+
+  if ( mode === "video" ) {
+    _releaseVisionImage();
+
+    const instances = _normalizeVisionVideoInstances( src.videos );
+    const key = JSON.stringify( instances );
+
+    _visionVideoInstances = instances;
+
+    if ( !instances.length ) {
+      _releaseVisionVideo();
+
+      return null;
+    }
+
+    if ( !_visionVideoSync ) {
+      _visionVideoSync = createVideoSync( {
+        getInstances: () => _visionVideoInstances,
+        jobId: () => options.id
+      } );
+      _visionVideoKey = key;
+    } else if ( key !== _visionVideoKey ) {
+      _visionVideoSync.refresh();
+      _visionVideoKey = key;
+    }
+
+    // Inference runs on the first video of the stack.
+    const source = _visionVideoSync.sources()[ 0 ];
+
+    if ( !source ) {
+      return null;
+    }
+
+    // Playback follows the sketch progression through the asset's own params
+    // — the same time-stretch behaviour as a video drawn by the videos pool,
+    // which keeps live preview and recordings consistent.
+    source.seekToProgression( animation.progression ).catch( () => {} );
+
+    return {
+      type: "video",
+      element: source.element,
+      // The instance id is part of the key: removing a video and re-adding
+      // the same file swaps the element, so mediapipe must re-adopt it.
+      key: `video:${ instances[ 0 ].id }:${ source.path }`
+    };
+  }
+
+  if ( mode === "image" ) {
+    _releaseVisionVideo();
+
+    const raw = Array.isArray( src.image ) ? src.image[ 0 ] : src.image;
+    const path = typeof raw === "string" ? raw : raw?.path ?? "";
+
+    if ( !path ) {
+      _releaseVisionImage();
+
+      return null;
+    }
+
+    if ( _visionImage.path !== path ) {
+      const element = document.createElement( "img" );
+
+      element.crossOrigin = "anonymous";
+      element.src = resolveAssetURL(
+        path,
+        options.id
+      );
+      _visionImage = {
+        path,
+        element
+      };
+    }
+
+    return {
+      type: "image",
+      element: _visionImage.element,
+      key: `image:${ path }`
+    };
+  }
+
+  // Webcam (default), incl. legacy options without a vision.source block.
+  _releaseVisionMedia();
+
+  return {
+    type: "webcam",
+    deviceId: src.deviceId || "",
+    key: `webcam:${ src.deviceId || "" }`
+  };
 }
 
 // The MediaPipe task names wanted by the current options.
@@ -1030,13 +1173,14 @@ function _desiredVisionTasks( opts ) {
   return tasks;
 }
 
-// The full mediapipe init config for the current options: trackers, camera,
+// The full mediapipe init config for the current options: source, trackers,
 // per-task model options and scheduling knobs.
 function _visionConfigFor(
-  opts, tasks
+  opts, tasks, source
 ) {
   const vision = opts.vision ?? {};
   const cam = vision.camera ?? {};
+  const src = vision.source ?? {};
   const perf = vision.performance ?? {};
 
   return {
@@ -1044,11 +1188,12 @@ function _visionConfigFor(
     // back to main-thread inference automatically when it can't start.
     worker: perf.useWorker ?? true,
     tasks,
+    source,
     captureSize: {
-      width: cam.width ?? 320,
-      height: cam.height ?? 240
+      width: src.width ?? cam.width ?? 320,
+      height: src.height ?? cam.height ?? 240
     },
-    captureFlip: cam.flip ?? true,
+    captureFlip: _visionFlip( vision ),
     inferenceInterval: perf.inferenceInterval ?? 20,
     idleInterval: perf.idleInterval ?? 280,
     idleAfter: perf.idleAfter ?? 3000,
@@ -1081,7 +1226,9 @@ function _visionSignatureFor( config ) {
     config.tasks,
     config.captureSize,
     config.captureFlip,
-    config.taskOptions
+    config.taskOptions,
+    // Only the stable key — the source element itself can't be stringified.
+    config.source?.key ?? ""
   ] );
 }
 
@@ -1109,12 +1256,28 @@ function _ensureVision( opts ) {
       _visionSignature = "";
     }
 
+    _releaseVisionMedia();
+
+    return Promise.resolve();
+  }
+
+  // Per-frame upkeep of the source media (video seek, asset changes). Null
+  // means the selected source has nothing to infer on yet (no asset picked).
+  const source = _ensureVisionSourceMedia( opts );
+
+  if ( !source ) {
+    if ( _visionSignature !== "" ) {
+      setMediapipeEnabled( false );
+      _visionSignature = "";
+    }
+
     return Promise.resolve();
   }
 
   const config = _visionConfigFor(
     opts,
-    tasks
+    tasks,
+    source
   );
   const signature = _visionSignatureFor( config );
 
@@ -1175,7 +1338,7 @@ function _collectHands(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const lm = hands.landmarks ?? {};
   const maxHands = hands.maxHands ?? 2;
   const results = getTaskResult(
@@ -1228,7 +1391,7 @@ function _eachDetectedFinger(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const maxHands = fingers.maxHands ?? 2;
   const results = getTaskResult(
     "hands",
@@ -1314,7 +1477,7 @@ function _collectFace(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const detections = getTaskResult(
     "faces",
     VISION_RESULT_TTL_MS
@@ -1354,7 +1517,7 @@ function _collectBody(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const lm = body.landmarks ?? {};
   const maxPoses = body.maxPoses ?? 1;
   const minConf = body.confidence ?? 0.3;
@@ -1413,7 +1576,7 @@ function _collectHandGroups(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const lm = hands.landmarks ?? {};
   const maxHands = hands.maxHands ?? 2;
   const results = getTaskResult(
@@ -1477,7 +1640,7 @@ function _collectBodyGroups(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const lm = body.landmarks ?? {};
   const maxPoses = body.maxPoses ?? 1;
   const minConf = body.confidence ?? 0.3;
@@ -1542,7 +1705,7 @@ function _collectFaceGroups(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const maxFaces = face.maxFaces ?? 1;
   const minConf = face.confidence ?? 0.5;
   const detections = getTaskResult(

@@ -222,13 +222,16 @@ export function drawInteractionPointers( opts ) {
 }
 
 /**
- * Webcam preview in the top-right corner. Gated by `vision.camera.showPreview`
- * — works exactly the same in any sketch that has the camera running.
+ * Vision-source preview in the top-right corner (webcam, or the video/image
+ * asset inference runs on). Gated by `vision.source.showPreview` — with a
+ * fallback to the legacy `vision.camera.showPreview`.
  */
 export function drawInteractionCameraPreview( opts ) {
   const vision = opts?.vision;
+  const showPreview =
+    vision?.source?.showPreview ?? vision?.camera?.showPreview;
 
-  if ( !vision?.camera?.showPreview || !mediapipe.capture?.element ) {
+  if ( !showPreview || !mediapipe.capture?.element ) {
     return;
   }
 
@@ -236,19 +239,40 @@ export function drawInteractionCameraPreview( opts ) {
   const previewW = p.width / 5;
   const previewH = p.height / 5;
 
-  p.push();
-  p.tint(
-    255,
-    160
-  );
-  p.image(
-    mediapipe.capture.element,
-    p.width - previewW - 8,
-    8,
-    previewW,
-    previewH
-  );
-  p.pop();
+  if ( mediapipe.capture.owned ) {
+    p.push();
+    p.tint(
+      255,
+      160
+    );
+    p.image(
+      mediapipe.capture.element,
+      p.width - previewW - 8,
+      8,
+      previewW,
+      previewH
+    );
+    p.pop();
+  } else {
+    // Adopted video/image source: capture holds a bare { elt } wrapper, not
+    // a p5.MediaElement, so p.image() can't draw it — blit the raw element
+    // instead (2D renderer only; WEBGL has no drawImage on its context).
+    const elt = mediapipe.capture.element.elt;
+
+    if ( elt && typeof p.drawingContext?.drawImage === "function" ) {
+      try {
+        p.drawingContext.drawImage(
+          elt,
+          p.width - previewW - 8,
+          8,
+          previewW,
+          previewH
+        );
+      } catch {
+        // Frame not decodable yet — skip this frame's preview.
+      }
+    }
+  }
 
   p.push();
   p.noFill();
