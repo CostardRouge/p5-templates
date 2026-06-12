@@ -7,6 +7,9 @@ import {
   getPointerGroups
 } from "@/p5/utils/interaction/index.js";
 import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
+import {
   renderSplines
 } from "../_shared.js";
 
@@ -190,18 +193,22 @@ sketch.draw( () => {
         }
       }
     );
+  } else {
+    const overlay = o.overlay ?? {};
 
-    return;
+    renderSplines(
+      collectLive( groups ),
+      {
+        curve,
+        stroke,
+        overlay
+      }
+    );
   }
 
-  const overlay = o.overlay ?? {};
-
-  renderSplines(
-    collectLive( groups ),
-    {
-      curve,
-      stroke,
-      overlay
-    }
-  );
+  // The shared debug overlay (crosshairs, pointer markers, finger chains,
+  // camera preview, legend) is drawn LAST so it stacks on top of the splines.
+  // Every piece is gated by the form's Interaction → Visualization and
+  // Vision → Camera options, so it only shows up when the user asks for it.
+  drawInteractionOverlay( interaction );
 } );
