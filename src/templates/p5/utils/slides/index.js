@@ -10,6 +10,14 @@ import {
   _layouts
 } from "./layouts";
 
+import {
+  coerceFramerate
+} from "../framerate.js";
+
+import {
+  mergeSlideOverride
+} from "@/lib/effectiveSlideSettings";
+
 // Safe modulo that wraps negatives too
 const wrap = (
   i, n
@@ -58,8 +66,12 @@ const slides = {
           slides.setSlide( 0 );
         }
 
-        if ( canvas.dataset.slide !== slides.index ) {
-          canvas.dataset.slide = slides.index;
+        // dataset values are strings — compare like-for-like or the guard
+        // never matches and the attribute is rewritten every frame.
+        const datasetIndex = String( slides.index );
+
+        if ( canvas.dataset.slide !== datasetIndex ) {
+          canvas.dataset.slide = datasetIndex;
         }
       }
     );
@@ -123,8 +135,14 @@ const slides = {
    */
   applyEffectiveSettings() {
     const slide = this.current;
-    const effectiveSize = slide?.size ?? options?.size;
-    const effectiveAnimation = slide?.animation ?? options?.animation;
+    const effectiveSize = mergeSlideOverride(
+      options?.size,
+      slide?.size
+    );
+    const effectiveAnimation = mergeSlideOverride(
+      options?.animation,
+      slide?.animation
+    );
 
     if ( effectiveSize?.width && effectiveSize?.height ) {
       events.handle(
@@ -134,10 +152,14 @@ const slides = {
       );
     }
 
-    if ( effectiveAnimation?.framerate && effectiveAnimation.framerate > 0 ) {
+    // Coerced: a string framerate would pass a bare `> 0` check and then be
+    // silently ignored by p5's frameRate(), leaving the loop on the old rate.
+    const framerate = coerceFramerate( effectiveAnimation?.framerate );
+
+    if ( framerate !== null ) {
       events.handle(
         "engine-framerate-change",
-        effectiveAnimation.framerate
+        framerate
       );
     }
 

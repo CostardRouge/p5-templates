@@ -574,7 +574,7 @@ export const SketchSizeSchema = z.object( {
 } );
 
 export const SketchAnimationSchema = z.object( {
-  framerate: z.number().int()
+  framerate: z.coerce.number().int()
     .min( 1 )
     .max( 240 )
     .default( 60 ),

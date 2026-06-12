@@ -18,6 +18,14 @@ import {
   resolveAssetURL
 } from "../shared/utils.js";
 
+import {
+  coerceFramerate
+} from "./framerate.js";
+
+import {
+  mergeSlideOverride
+} from "@/lib/effectiveSlideSettings";
+
 /* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
 /* ------------------------------------------------------------------ */
@@ -274,8 +282,14 @@ function getEffective( opts ) {
   const slide = current?.slide ?? null;
 
   return {
-    size: slide?.size ?? opts?.size,
-    animation: slide?.animation ?? opts?.animation
+    size: mergeSlideOverride(
+      opts?.size,
+      slide?.size
+    ),
+    animation: mergeSlideOverride(
+      opts?.animation,
+      slide?.animation
+    )
   };
 }
 
@@ -337,15 +351,13 @@ function handleOptionsChange(
     effectiveAnimation,
     previousOptions.effectiveAnimation
   ) ) {
-    const framerate = effectiveAnimation?.framerate;
-    const previousFramerate = previousOptions.effectiveAnimation?.framerate;
+    // Coerce both sides: a framerate may arrive as a numeric string
+    // (imported options, persisted job) and must still apply — p5 would
+    // silently ignore it otherwise.
+    const framerate = coerceFramerate( effectiveAnimation?.framerate );
+    const previousFramerate = coerceFramerate( previousOptions.effectiveAnimation?.framerate );
 
-    if (
-      framerate &&
-      typeof framerate === "number" &&
-      framerate > 0 &&
-      framerate !== previousFramerate
-    ) {
+    if ( framerate !== null && framerate !== previousFramerate ) {
       events.handle(
         "engine-framerate-change",
         framerate
