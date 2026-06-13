@@ -26,6 +26,27 @@ const DEFAULTS: EffectiveSlideSettings = {
 };
 
 /**
+ * Merge a per-slide override over the global value.
+ *
+ * Overrides can be partial — a slide form may have set only the framerate —
+ * so a plain `override ?? global` would drop the global duration entirely.
+ * Merging keeps every unset key on the global value.
+ */
+export function mergeSlideOverride<T extends object>(
+  globalValue: T | undefined,
+  override: Partial<T> | null | undefined
+): T | undefined {
+  if ( !override ) {
+    return globalValue;
+  }
+
+  return {
+    ...( globalValue ?? {} ),
+    ...override
+  } as T;
+}
+
+/**
  * Return the effective size + animation for `slideIndex`.
  *
  * - `slideIndex === undefined` → global settings.
@@ -56,7 +77,13 @@ export function getEffectiveSlideSettings(
   }
 
   return {
-    size: slide.size ?? globalSize,
-    animation: slide.animation ?? globalAnimation
+    size: mergeSlideOverride(
+      globalSize,
+      slide.size
+    ) as Size,
+    animation: mergeSlideOverride(
+      globalAnimation,
+      slide.animation
+    ) as Animation
   };
 }

@@ -33,6 +33,9 @@ import {
 import {
   pauseLoop, resumeLoop
 } from "@/p5/utils/loopControl.js";
+import {
+  FrameRateMeter
+} from "@/engines/frameRateMeter";
 
 type P5SketchRuntime = {
   start: ( container: HTMLElement ) => Promise<any>;
@@ -65,11 +68,15 @@ export class P5Engine implements SketchEngine {
   private sketchRuntime: P5SketchRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
   private perfLoopId: number | null = null;
+  // Measures the real draw rate from p5's frameCount: counter deltas over a
+  // sliding window converge within ~1s of a framerate change, where sampling
+  // p5's instantaneous frameRate() (display-rate aliased, then smoothed)
+  // lagged the true rate by several seconds.
+  private perfMeter = new FrameRateMeter();
   private perfSample = {
     paused: false,
-    smoothedFps: 0,
-    lastEmitTime: 0,
-    rawSamples: [] as number[]
+    fps: 0,
+    lastEmitTime: 0
   };
 
   get isReady(): boolean {
@@ -170,17 +177,11 @@ export class P5Engine implements SketchEngine {
       return;
     }
 
-    const p = this.sketchRuntime?.getP5();
-
+    this.perfMeter.reset();
     this.perfSample = {
       paused: false,
-      smoothedFps: 0,
-      lastEmitTime: performance.now(),
-      rawSamples: typeof p?.frameRate === "function"
-        ? [
-          p.frameRate()
-        ].filter( ( value ) => Number.isFinite( value ) && value > 0 )
-        : []
+      fps: 0,
+      lastEmitTime: performance.now()
     };
 
     // Wait for the first draw cycle to complete before marking as ready.
@@ -268,6 +269,9 @@ export class P5Engine implements SketchEngine {
     }
 
     resumeLoop( this.sketchRuntime?.getP5() );
+    // Restart the measurement window: frameCount stood still while paused
+    // and averaging across the gap would report a stale, too-low rate.
+    this.perfMeter.reset();
     this.perfSample.paused = false;
     this.emitPerformanceSample();
   }
@@ -288,8 +292,8 @@ export class P5Engine implements SketchEngine {
       p.frameCount = 0;
     }
 
-    this.perfSample.rawSamples = [];
-    this.perfSample.smoothedFps = 0;
+    this.perfMeter.reset();
+    this.perfSample.fps = 0;
     this.emitPerformanceSample();
   }
 
@@ -460,27 +464,17 @@ export class P5Engine implements SketchEngine {
       const p = this.sketchRuntime?.getP5();
 
       if ( p && this._isReady ) {
-        const rawFps = typeof p.frameRate === "function"
-          ? p.frameRate()
+        const frameCount = typeof p.frameCount === "number"
+          ? p.frameCount
           : 0;
 
-        if ( Number.isFinite( rawFps ) && rawFps > 0 ) {
-          this.perfSample.rawSamples.push( rawFps );
-
-          if ( this.perfSample.rawSamples.length > 20 ) {
-            this.perfSample.rawSamples.shift();
-          }
-        }
+        const fps = this.perfMeter.sample(
+          now,
+          frameCount
+        );
 
         if ( now - this.perfSample.lastEmitTime >= 500 ) {
-          const robustFps = this.getMedian( this.perfSample.rawSamples );
-
-          if ( robustFps > 0 ) {
-            this.perfSample.smoothedFps = this.perfSample.smoothedFps > 0
-              ? this.perfSample.smoothedFps * 0.8 + robustFps * 0.2
-              : robustFps;
-          }
-
+          this.perfSample.fps = fps;
           this.perfSample.lastEmitTime = now;
           this.emitPerformanceSample();
         }
@@ -503,8 +497,8 @@ export class P5Engine implements SketchEngine {
 
   private emitPerformanceSample(): void {
     const payload: EnginePerformanceSample = {
-      fps: Number.isFinite( this.perfSample.smoothedFps )
-        ? this.perfSample.smoothedFps
+      fps: Number.isFinite( this.perfSample.fps )
+        ? this.perfSample.fps
         : 0,
       paused: this.perfSample.paused,
       timestamp: performance.now()
@@ -514,29 +508,5 @@ export class P5Engine implements SketchEngine {
       "performance",
       payload
     );
-  }
-
-  private getMedian( values: number[] ): number {
-    if ( values.length === 0 ) {
-      return 0;
-    }
-
-    const sorted = [
-      ...values
-    ].sort( this.compareNumbersAscending );
-    const middle = Math.floor( sorted.length / 2 );
-
-    if ( sorted.length % 2 === 0 ) {
-      return ( sorted[ middle - 1 ] + sorted[ middle ] ) / 2;
-    }
-
-    return sorted[ middle ];
-  }
-
-  private compareNumbersAscending(
-    a: number,
-    b: number
-  ): number {
-    return a - b;
   }
 }

@@ -11,6 +11,9 @@ import {
 import {
   pauseLoop, resumeLoop
 } from "./loopControl.js";
+import {
+  coerceFramerate
+} from "./framerate.js";
 
 let _p5 = null;
 let _container = null;
@@ -196,7 +199,7 @@ const sketch = {
             p.setCamera( sketch.camera );
           }
 
-          p.frameRate( sketchOptions?.animation?.framerate );
+          p.frameRate( coerceFramerate( sketchOptions?.animation?.framerate ) ?? 60 );
           p.smooth();
 
           // Canvas-level event handlers
@@ -248,6 +251,17 @@ const sketch = {
           );
 
           events.handle( "pre-setup" );
+
+          // pre-setup ran initializeOptionsSubscription, which resolved the
+          // *effective* animation (per-slide override, persisted job) into
+          // sketch.sketchOptions — the frameRate call above only saw the
+          // module snapshot. Re-apply so the loop boots on the effective
+          // rate instead of waiting for the next framerate-change event.
+          const effectiveFramerate = coerceFramerate( sketch.sketchOptions?.animation?.framerate );
+
+          if ( effectiveFramerate !== null ) {
+            p.frameRate( effectiveFramerate );
+          }
 
           // -- setup (user function) ------------------------------------
           p.noStroke();
@@ -573,7 +587,11 @@ const sketch = {
     "engine-smooth-pixel-change": ( checked ) =>
       checked ? getP5()?.smooth() : getP5()?.noSmooth(),
     "engine-framerate-change": ( value ) => {
-      getP5()?.frameRate( value );
+      const framerate = coerceFramerate( value );
+
+      if ( framerate !== null ) {
+        getP5()?.frameRate( framerate );
+      }
     }
   }
 };
