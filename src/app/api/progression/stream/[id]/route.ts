@@ -14,7 +14,7 @@ import {
  * GET /api/progression/stream/[id]
  */
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   {
     params
   }: {
@@ -36,58 +36,90 @@ export async function GET(
   }
 
   let intervalId: NodeJS.Timeout | undefined = undefined;
+  // The status query (DB) can outlast the 250ms tick, so the client may
+  // disconnect mid-poll; enqueuing/closing the controller afterwards would
+  // throw an unhandled ERR_INVALID_STATE. Guard with a closed flag, prevent
+  // overlapping polls, and make stop() idempotent.
+  let closed = false;
+  let polling = false;
+
+  const stop = () => {
+    closed = true;
+
+    if ( intervalId ) {
+      clearInterval( intervalId );
+      intervalId = undefined;
+    }
+  };
 
   const stream = new ReadableStream( {
     async start( controller ) {
       controller.enqueue( "retry: 250\n\n" );
 
-      const sendUpdate = async() => {
-        const jobCurrentStepAndPercentage =
-          await getRecordingStatusAndTotalPercentage( id );
+      req.signal.addEventListener(
+        "abort",
+        stop
+      );
 
-        if ( !jobCurrentStepAndPercentage ) {
-          if ( intervalId ) {
-            clearInterval( intervalId );
-          }
+      const finish = () => {
+        stop();
 
+        try {
           controller.close();
+        } catch {
+          // Already closed by the client — nothing to do.
+        }
+      };
+
+      const sendUpdate = async() => {
+        if ( closed || polling ) {
           return;
         }
 
-        if (
-          jobCurrentStepAndPercentage.percentage === 100 ||
-          [
-            "completed",
-            "failed",
-            "cancelled"
-          ].includes( jobCurrentStepAndPercentage.status )
-        ) {
+        polling = true;
+
+        try {
+          const jobCurrentStepAndPercentage =
+            await getRecordingStatusAndTotalPercentage( id );
+
+          if ( closed ) {
+            return;
+          }
+
+          if ( !jobCurrentStepAndPercentage ) {
+            finish();
+            return;
+          }
+
           controller.enqueue( `data: ${ JSON.stringify( jobCurrentStepAndPercentage ) }\n\n` );
 
-          if ( intervalId ) {
-            clearInterval( intervalId );
+          if (
+            jobCurrentStepAndPercentage.percentage === 100 ||
+            [
+              "completed",
+              "failed",
+              "cancelled"
+            ].includes( jobCurrentStepAndPercentage.status )
+          ) {
+            finish();
           }
-
-          controller.close();
-          return;
+        } catch {
+          // Controller closed mid-poll or the query failed — stop streaming.
+          finish();
+        } finally {
+          polling = false;
         }
-
-        controller.enqueue( `data: ${ JSON.stringify( jobCurrentStepAndPercentage ) }\n\n` );
       };
 
       intervalId = setInterval(
-        async() => {
-          await sendUpdate();
-        },
+        sendUpdate,
         250
       );
 
       await sendUpdate();
     },
     cancel() {
-      if ( intervalId ) {
-        clearInterval( intervalId );
-      }
+      stop();
     }
   } );
 
