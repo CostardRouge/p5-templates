@@ -1117,48 +1117,24 @@ function _ensureVisionSourceMedia( opts ) {
       return null;
     }
 
-    // Live preview: let the video play at its natural rate so
-    // requestVideoFrameCallback delivers every decoded frame to MediaPipe.
-    // Per-frame seekToProgression would constantly reset currentTime — the
-    // frame stream would never advance, only the seeked-to frame would
-    // reach inference, and the video would stutter in every preview. The
-    // playback params we can honour cheaply (speed, loop) are mirrored to
-    // the element; the full repeat/offset/loopMode time-stretch curve is
-    // reserved for the recording pipeline, which frame-steps the video
-    // deterministically.
-    const element = source.element;
-
-    if ( element ) {
-      const speed = Number( source.params?.speed ) || 1;
-      // Clamp to the range every browser supports.
-      const rate = Math.min(
-        16,
-        Math.max(
-          0.0625,
-          speed
-        )
-      );
-
-      if ( element.playbackRate !== rate ) {
-        element.playbackRate = rate;
-      }
-
-      // "clamp" stops at the end, everything else loops in live preview
-      // (ping-pong reverse playback isn't supported natively).
-      const shouldLoop = ( source.params?.loopMode ?? "loop" ) !== "clamp";
-
-      if ( element.loop !== shouldLoop ) {
-        element.loop = shouldLoop;
-      }
-
-      if ( element.paused && element.readyState >= 2 ) {
-        element.play().catch( () => {} );
-      }
-    }
+    // Drive the video off the sketch progression — exactly like a video drawn
+    // by the videos pool — so scrubbing the timeline moves the video (and the
+    // landmarks) with it, honouring the asset's repeat/speed/offset/loopMode
+    // params via seekToProgression. seekToProgression dedupes repeat calls in
+    // the same frame (the interaction layer calls this several times per
+    // frame), so this issues at most one seek per progression value.
+    //
+    // MediaPipe must NOT gate inference on requestVideoFrameCallback for this
+    // element (see adoptCaptureElement): the seek uses rVFC internally for
+    // frame-accurate stepping, and a second rVFC consumer made the frame
+    // stream erratic — only the seeked-to frame reached inference and the
+    // preview stuttered. With rVFC gating off, mediapipe samples whatever
+    // frame the seek last settled on at its inference interval.
+    source.seekToProgression( animation.progression ).catch( () => {} );
 
     return {
       type: "video",
-      element,
+      element: source.element,
       // The instance id is part of the key: removing a video and re-adding
       // the same file swaps the element, so mediapipe must re-adopt it.
       key: `video:${ instances[ 0 ].id }:${ source.path }`

@@ -585,7 +585,14 @@ function adoptCaptureElement(
       );
     }
 
-    armFrameCallback( element );
+    // Don't gate inference on requestVideoFrameCallback: this adopted video is
+    // driven by the owner seeking it to the sketch progression, and that seek
+    // uses rVFC internally for frame-accurate stepping. A second rVFC consumer
+    // here made the frame stream erratic (only seeked-to frames reached
+    // inference, the preview stuttered). Instead sample whatever frame the seek
+    // settled on at the inference interval, like the image path.
+    mediapipe.scheduler.usingFrameCallback = false;
+    mediapipe.scheduler.freshFrame = true;
   } else {
     // Images have no frame stream: the post-draw loop re-detects them at the
     // idle interval instead (see sendImageIfDue).
