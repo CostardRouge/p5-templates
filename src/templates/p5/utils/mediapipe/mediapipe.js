@@ -257,6 +257,13 @@ function handleResult( {
   entry.result = result;
   entry.updatedAt = performance.now();
 
+  // One-way warm-up latch: the first result a task ever emits means its model
+  // is loaded, its GPU shaders are compiled and the source delivered a frame.
+  // Never cleared (unlike `result`), so isWarmedUp() reflects "has run once".
+  if ( entry.firstResultAt === undefined ) {
+    entry.firstResultAt = entry.updatedAt;
+  }
+
   if ( resultHasDetections( result ) ) {
     mediapipe.scheduler.lastDetectionTime = entry.updatedAt;
     mediapipe.idle = false;
@@ -298,6 +305,25 @@ function resetStats() {
   mediapipe.stats.droppedFrames = 0;
   mediapipe.stats.watchdogRecoveries = 0;
   mediapipe.stats.lastError = null;
+}
+
+/**
+ * True once the pipeline has fully warmed up: the processor is ready, the
+ * source has delivered a frame (`videoReady`) and every configured task has
+ * produced at least one result — i.e. each model's first, shader-compiling
+ * inference has completed. This is the signal a warm-up gate waits on before
+ * starting the timeline or a recording, so the visible animation never plays
+ * through the first-inference jank. With no tasks configured it reads as
+ * warm (nothing to wait for).
+ */
+export function isWarmedUp() {
+  if ( !mediapipe.processor.ready || !mediapipe.videoReady ) {
+    return false;
+  }
+
+  const tasks = mediapipe.config.tasks ?? [];
+
+  return tasks.every( ( lib ) => mediapipe.tasks[ lib ]?.firstResultAt !== undefined );
 }
 
 /**

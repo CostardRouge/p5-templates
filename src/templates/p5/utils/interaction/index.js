@@ -5,7 +5,8 @@ import mediapipe, {
   init as mediapipeInit,
   setEnabled as setMediapipeEnabled,
   dispose as disposeMediapipe,
-  getTaskResult
+  getTaskResult,
+  isWarmedUp as isVisionWarmedUp
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   getP5
@@ -183,6 +184,15 @@ let _audioFreqData = null;
 // an in-flight guard so we never kick off two mediapipe initializations at once.
 let _visionSignature = "";
 let _visionInitInFlight = null;
+
+// Warm-up gate state. `_lastVisionOpts` is the most recent interaction options
+// seen by _ensureVision, so the no-arg readiness helpers (consumed by the
+// clock hold and the capture hook) know which tasks to wait for. The deadline
+// is a safety valve: if a camera is denied or a model fails, warm-up never
+// completes, so the gate gives up after this long and lets the sketch run.
+let _lastVisionOpts = null;
+let _visionWarmupDeadline = 0;
+const VISION_WARMUP_TIMEOUT_MS = 8000;
 
 // Vision source media state (vision.source mode "video" / "image"): the video
 // sync pool that loads/seeks the selected video asset, and the image element
@@ -550,6 +560,15 @@ export async function initInteraction( opts = {} ) {
 
   _audioInitialized = false;
 
+  // ── Vision warm-up gate ──────────────────────────────────────────────────
+  // Publish the readiness signal so the timeline clock can freeze the animation
+  // while vision warms up (hiding the first-inference jank) and so the headless
+  // capture pipeline can await it before frame 0. Both are no-ops once warm.
+  if ( typeof window !== "undefined" ) {
+    window.__visionWarmupHold = _isVisionWarmupHolding;
+    window.isInteractionVisionReady = () => isVisionReady();
+  }
+
   // ── MediaPipe ────────────────────────────────────────────────────────────
   // Pre-warm vision when a camera tracker is already enabled at setup. The same
   // routine also runs every frame from getPointers()/getPointerGroups(), so
@@ -626,6 +645,13 @@ export function disposeInteraction() {
   _releaseVisionMedia();
   _visionSignature = "";
   _visionInitInFlight = null;
+  _lastVisionOpts = null;
+  _visionWarmupDeadline = 0;
+
+  // Stop holding the next sketch's clock on this sketch's warm-up state.
+  delete window.__visionWarmupHold;
+  delete window.isInteractionVisionReady;
+
   _groupSmoothing.clear();
   _canvasRectCache.frame = -1;
   _canvasRectCache.canvas = null;
@@ -1276,6 +1302,10 @@ function _visionSignatureFor( config ) {
 // or camera changes, and releases the webcam once every tracker is off.
 // Safe to call each frame — it no-ops while the requested configuration is live.
 function _ensureVision( opts ) {
+  // Remember the live options so the no-arg readiness helpers (clock hold,
+  // capture hook) know which tasks the warm-up gate is waiting on.
+  _lastVisionOpts = opts;
+
   // An init is already running — let it settle; we reconcile next frame.
   if ( _visionInitInFlight ) {
     return _visionInitInFlight;
@@ -1335,6 +1365,11 @@ function _ensureVision( opts ) {
 
   _visionSignature = signature;
 
+  // Arm the warm-up safety deadline from the moment a (re)init starts.
+  _visionWarmupDeadline = ( typeof performance !== "undefined"
+    ? performance.now()
+    : Date.now() ) + VISION_WARMUP_TIMEOUT_MS;
+
   _visionInitInFlight = mediapipeInit( config )
     .then( () =>
       // init() doesn't restore mediapipe.enabled after a prior deallocate, so
@@ -1349,6 +1384,40 @@ function _ensureVision( opts ) {
     } );
 
   return _visionInitInFlight;
+}
+
+/**
+ * Whether the vision pipeline for the given options has warmed up enough to
+ * start the visible timeline / a recording: true when vision isn't needed,
+ * when every requested task has produced its first result, or when the warm-up
+ * safety deadline has passed (so a denied camera never blocks forever).
+ *
+ * Defaults to the last options _ensureVision saw, so the clock hold and the
+ * `window.isInteractionVisionReady` capture hook can call it with no args.
+ */
+export function isVisionReady( opts = _lastVisionOpts ) {
+  if ( !opts || opts.enabled === false ) {
+    return true;
+  }
+
+  if ( _desiredVisionTasks( opts ).length === 0 ) {
+    return true;
+  }
+
+  if ( isVisionWarmedUp() ) {
+    return true;
+  }
+
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+
+  return _visionWarmupDeadline > 0 && now > _visionWarmupDeadline;
+}
+
+// Predicate published on window so the timeline clock (time.js) can freeze the
+// animation while vision warms up — without time.js importing this heavy
+// module. Returns true only while a hold is warranted.
+function _isVisionWarmupHolding() {
+  return _lastVisionOpts != null && !isVisionReady( _lastVisionOpts );
 }
 
 // Convert a MediaPipe normalized landmark (0..1) to p5 canvas space, honouring

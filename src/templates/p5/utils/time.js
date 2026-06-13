@@ -35,6 +35,25 @@ const time = {
     // Normal operation: use p5.js millis()
     const now = sketch?.engine?.getElapsedTime();
 
+    // Freeze the timeline while the interaction layer warms up its vision
+    // pipeline (set via window.__visionWarmupHold), so the visible animation
+    // doesn't play through the first-inference / shader-compile jank. Keep
+    // lastUpdate current so the resumed delta doesn't jump by the held span.
+    // No-op when nothing registered the hold or vision is already warm. Never
+    // applies during recording (handled above) — capture awaits readiness
+    // separately before stepping frame 0.
+    if (
+      typeof window !== "undefined" &&
+      typeof window.__visionWarmupHold === "function" &&
+      window.__visionWarmupHold()
+    ) {
+      if ( typeof now === "number" ) {
+        time.lastUpdate = now;
+      }
+
+      return;
+    }
+
     if ( typeof now === "number" ) {
       const delta = now - time.lastUpdate;
 
