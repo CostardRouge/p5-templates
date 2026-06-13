@@ -1,30 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import type {
-  CSSProperties
-} from "react";
 import {
   useEffect, useMemo, useRef, useState
 } from "react";
 import {
   ArrowUpRight,
-  Circle,
-  CornerDownRight,
-  Hash,
-  MousePointer2,
-  Plus,
+  Github,
+  Layers,
   Radio,
+  Search,
+  Server,
   Shuffle,
-  Slash,
-  Square,
-  Triangle
+  SlidersHorizontal,
+  X
 } from "lucide-react";
 import AnimatedPreview from "@/components/AnimatedPreview";
+import HardLink from "@/components/HardLink";
 import {
   MenuBarSlot
 } from "@/components/MenuBarPortal";
-import ScrollToTopButton from "@/components/ScrollToTopButton";
+import {
+  fuzzyFilter
+} from "@/utils/fuzzySearch";
 import type {
   TemplateItem
 } from "@/app/templates/getTemplatesData";
@@ -32,22 +30,50 @@ import type {
 type HomePageProps = {
   templates: TemplateItem[];
   engineLabels: Record<string, string>;
-  totalTemplates: number;
 };
 
-const TICKER = [
-  "p5.js",
-  "gsap",
-  "html5 stages",
-  "mp4 / webm record",
-  "9:16 · 1:1 · 4:5",
-  "live parameters",
-  "headless renderer",
-  "drop-zone uploads",
-  "randomize",
-  "frame-perfect",
-  "browser-native",
-  "zero install"
+const GITHUB_URL = "https://github.com/CostardRouge/p5-templates";
+const LATEST_COUNT = 8;
+const RANDOM_COUNT = 4;
+
+// Inline search shows at most this many cards; the library link picks up the
+// keyword for the full result set.
+const MAX_RESULTS = 24;
+
+const CARD_GRID =
+  "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4";
+
+const FEATURES = [
+  {
+    icon: SlidersHorizontal,
+    title: "Live parameters",
+    text: "Sliders, colors, text fields and image drop-zones — generated per template. Every change re-renders on the canvas instantly."
+  },
+  {
+    icon: Shuffle,
+    title: "One-click randomize",
+    text: "Reroll every setting to a valid random value — the fastest way to a variant you didn't plan."
+  },
+  {
+    icon: Radio,
+    title: "Record in the browser",
+    text: "Capture mp4 or webm straight from the canvas, or save a still frame as an image. 9:16, 1:1, 4:5."
+  },
+  {
+    icon: Server,
+    title: "Headless rendering",
+    text: "Offload long renders to the built-in server queue and keep working while it cooks."
+  },
+  {
+    icon: Layers,
+    title: "Multi-engine",
+    text: "p5.js sketches, gsap animations and html stages share one editor, recorder and exporter."
+  },
+  {
+    icon: Github,
+    title: "Open source",
+    text: "MIT-licensed and reusable — fork it, add your own templates, run it anywhere."
+  }
 ];
 
 function shuffle<T>( arr: T[] ): T[] {
@@ -93,7 +119,7 @@ function useReveal<T extends HTMLElement>() {
           }
         },
         {
-          threshold: 0.15
+          threshold: 0.1
         }
       );
 
@@ -111,11 +137,9 @@ function useReveal<T extends HTMLElement>() {
 
 function Reveal( {
   children,
-  delay = 0,
   className = ""
 }: {
   children: React.ReactNode;
-  delay?: number;
   className?: string;
 } ) {
   const {
@@ -125,9 +149,6 @@ function Reveal( {
   return (
     <div
       ref={ ref }
-      style={ {
-        animationDelay: visible ? `${ delay }ms` : undefined
-      } }
       className={ `${ className } ${
         visible ? "animate-reveal-up" : "opacity-0 translate-y-10"
       } transition-all` }
@@ -137,197 +158,198 @@ function Reveal( {
   );
 }
 
-function useCountUp(
-  target: number, duration = 1200
-) {
-  const ref = useRef<HTMLSpanElement | null>( null );
-  const [
-    val,
-    setVal
-  ] = useState( 0 );
-
-  useEffect(
-    () => {
-      const el = ref.current;
-
-      if ( !el ) {
-        return;
-      }
-
-      const io = new IntersectionObserver(
-        ( entries ) => {
-          if ( !entries[ 0 ].isIntersecting ) {
-            return;
-          }
-          const start = performance.now();
-          let raf = 0;
-          const step = ( t: number ) => {
-            const p = Math.min(
-              1,
-              ( t - start ) / duration
-            );
-            const eased = 1 - Math.pow(
-              1 - p,
-              3
-            );
-
-            setVal( Math.round( target * eased ) );
-            if ( p < 1 ) {
-              raf = requestAnimationFrame( step );
-            }
-          };
-
-          raf = requestAnimationFrame( step );
-          io.disconnect();
-          return () => cancelAnimationFrame( raf );
-        },
-        {
-          threshold: 0.4
-        }
-      );
-
-      io.observe( el );
-      return () => io.disconnect();
-    },
-    [
-      target,
-      duration
-    ]
+function SectionHeader( {
+  label,
+  title,
+  children
+}: {
+  label: string;
+  title: string;
+  children?: React.ReactNode;
+} ) {
+  return (
+    <div className="flex items-end justify-between gap-4 mb-4 sm:mb-6">
+      <div className="min-w-0">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-label mb-1.5">
+          { label }
+        </p>
+        <h2 className="text-xl sm:text-2xl font-black tracking-tight truncate">
+          { title }
+        </h2>
+      </div>
+      { children }
+    </div>
   );
-
-  return {
-    ref,
-    val
-  };
 }
 
-function PreviewSurface( {
+function TemplateCard( {
   template,
-  eager = false,
-  imgClassName = "w-full h-full object-cover"
+  eager = false
 }: {
   template: TemplateItem;
   eager?: boolean;
-  imgClassName?: string;
 } ) {
-  if ( template.preview ) {
-    return (
-      <AnimatedPreview
-        previewUrl={ template.preview }
-        previewUrlDesktop={ template.previewMd ?? undefined }
-        thumbnailUrl={ template.thumbnail }
-        name={ template.name }
-        imgClassName={ imgClassName }
-        eager={ eager }
-      />
-    );
-  }
-
   return (
-    <img
-      alt={ template.name }
-      src={ template.thumbnail }
-      loading={ eager ? "eager" : "lazy" }
-      className={ `absolute inset-0 ${ imgClassName }` }
-    />
-  );
-}
-
-function SpecLabel( {
-  index,
-  label
-}: { index: string;
-  label: string } ) {
-  return (
-    <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-label">
-      <span className="tabular-nums">{index}</span>
-      <span className="h-px w-4 bg-foreground/30" />
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function StatBlock( {
-  value,
-  label,
-  suffix,
-  numeric = true
-}: {
-  value: number | string;
-  label: string;
-  suffix?: string;
-  numeric?: boolean;
-} ) {
-  const numericTarget = typeof value === "number" ? value : 0;
-  const {
-    ref, val
-  } = useCountUp(
-    numericTarget,
-    1400
-  );
-
-  return (
-    <div className="flex flex-col gap-2 py-6 sm:py-8">
-      <span
-        ref={ ref }
-        className="font-black text-5xl sm:text-7xl lg:text-8xl tracking-[-0.04em] leading-[0.85] tabular-nums"
+    <HardLink
+      href={ template.href }
+      className="group relative block w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5"
+    >
+      {/* 4:5 aspect box — same ratio as the gallery cards */}
+      <div
+        className="w-full relative"
+        style={ {
+          paddingTop: "125%"
+        } }
       >
-        {numeric ? val : value}
-        {suffix ? (
-          <span className="text-foreground/30">{suffix}</span>
-        ) : null}
-      </span>
-      <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-label">
-        {label}
-      </span>
-    </div>
+        { template.preview ? (
+          <AnimatedPreview
+            previewUrl={ template.preview }
+            previewUrlDesktop={ template.previewMd ?? undefined }
+            thumbnailUrl={ template.thumbnail }
+            name={ template.name }
+            eager={ eager }
+            imgClassName="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            alt={ template.name }
+            src={ template.thumbnail }
+            srcSet={ `${ template.thumbnail } 1x, ${ template.thumbnail.replace(
+              /\.webp$/,
+              "-2x.webp"
+            ) } 2x` }
+            loading={ eager ? "eager" : "lazy" }
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) }
+      </div>
+      <div className="bg-background border-t border-border px-2 py-2">
+        <p
+          title={ template.name }
+          className="text-xs sm:text-sm font-medium text-foreground text-center truncate"
+        >
+          { template.name }
+        </p>
+      </div>
+    </HardLink>
   );
 }
 
 export default function HomePage( {
   templates,
-  engineLabels,
-  totalTemplates
+  engineLabels
 }: HomePageProps ) {
   const [
-    showcase,
-    setShowcase
-  ] = useState<TemplateItem[]>( () => templates.slice(
-    0,
-    8
-  ) );
+    query,
+    setQuery
+  ] = useState( "" );
 
-  useEffect(
-    () => {
-      const withPreview = templates.filter( ( t ) => t.preview );
-      const pool = withPreview.length >= 8 ? withPreview : templates;
-
-      setShowcase( shuffle( pool ).slice(
-        0,
-        8
-      ) );
-    },
+  // `.hidden-home` entries stay searchable but never appear in the
+  // latest/random sections.
+  const homePool = useMemo(
+    () => templates.filter( ( t ) => !t.hiddenFromHome ),
     [
       templates
     ]
   );
 
-  const engineNames = useMemo(
-    () => Object.values( engineLabels ),
+  const latest = useMemo(
+    () => homePool
+      .slice()
+      .sort( (
+        a, b
+      ) =>
+        new Date( b.mtime ?? 0 ).getTime() - new Date( a.mtime ?? 0 ).getTime() )
+      .slice(
+        0,
+        LATEST_COUNT
+      ),
     [
-      engineLabels
+      homePool
     ]
   );
 
-  const heroFront = showcase[ 0 ];
-  const heroBack = showcase[ 1 ];
+  // Random picks avoid duplicating the latest row and prefer templates with
+  // an animated preview when enough are available.
+  const randomPool = useMemo(
+    () => {
+      const latestHrefs = new Set( latest.map( ( t ) => t.href ) );
+      const rest = homePool.filter( ( t ) => !latestHrefs.has( t.href ) );
+      const withPreview = rest.filter( ( t ) => t.preview );
+
+      if ( withPreview.length >= RANDOM_COUNT ) {
+        return withPreview;
+      }
+
+      if ( rest.length >= RANDOM_COUNT ) {
+        return rest;
+      }
+
+      return homePool;
+    },
+    [
+      homePool,
+      latest
+    ]
+  );
+
+  // First paint is deterministic so SSR markup and hydration match; the real
+  // shuffle happens after mount (and on every "Shuffle" click).
+  const [
+    randomPicks,
+    setRandomPicks
+  ] = useState( () => randomPool.slice(
+    0,
+    RANDOM_COUNT
+  ) );
+
+  useEffect(
+    () => {
+      setRandomPicks( shuffle( randomPool ).slice(
+        0,
+        RANDOM_COUNT
+      ) );
+    },
+    [
+      randomPool
+    ]
+  );
+
+  const reroll = () => setRandomPicks( shuffle( randomPool ).slice(
+    0,
+    RANDOM_COUNT
+  ) );
+
+  const searchActive = query.trim().length > 0;
+
+  const results = useMemo(
+    () => ( searchActive
+      ? fuzzyFilter(
+        templates,
+        query,
+        ( t ) => [
+          t.name,
+          t.category || ""
+        ]
+      )
+      : [] ),
+    [
+      templates,
+      query,
+      searchActive
+    ]
+  );
+
+  const engineCount = Object.keys( engineLabels ).length;
+  const libraryHref = searchActive
+    ? `/templates?keyword=${ encodeURIComponent( query.trim() ) }`
+    : "/templates";
 
   return (
-    <div className="relative w-full overflow-x-hidden bg-background text-foreground">
-      {/* Background system: faint dot-grid + single subtle accent radial + grain */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
+    <div className="relative w-full bg-background text-foreground">
+      {/* Faint dot-grid backdrop */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
         <div
-          aria-hidden
           className="absolute inset-0 opacity-[0.35] dark:opacity-[0.18]"
           style={ {
             backgroundImage:
@@ -335,679 +357,260 @@ export default function HomePage( {
             backgroundSize: "22px 22px"
           } }
         />
-        <div
-          aria-hidden
-          className="absolute -top-[20%] -right-[10%] h-[40rem] w-[40rem] rounded-full"
-          style={ {
-            background:
-              "radial-gradient(closest-side, rgba(236,72,153,0.18), transparent 70%)",
-            filter: "blur(40px)"
-          } }
-        />
       </div>
 
-      {/* ============ HERO ============ */}
-      <section className="relative px-4 sm:px-8 lg:px-12 pt-10 sm:pt-16 lg:pt-20 pb-16 sm:pb-24 max-w-[1440px] mx-auto">
-        {/* Mobile-only inline menubar slot — avoids the floating menu
-            overlapping the metadata strip on narrow viewports. On md+ the
-            slot is hidden and the menu falls back to its floating position. */}
-        <MenuBarSlot className="md:hidden mb-4" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 pb-16 sm:pb-20">
+        {/* ============ HERO ============ */}
+        <header className="pt-8 sm:pt-16 pb-10 sm:pb-16">
+          {/* Mobile-only inline menubar slot — avoids the floating menu
+              overlapping the hero on narrow viewports. On md+ the slot is
+              hidden and the menu falls back to its floating position. */}
+          <MenuBarSlot className="md:hidden mb-6" />
 
-        {/* top metadata bar */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-label mb-10 sm:mb-16">
-          <span className="tabular-nums">v.0.1 · {new Date().getFullYear()}</span>
-          <span className="h-1 w-1 rounded-full bg-fuchsia-500" />
-          <span className="tabular-nums">
-            {totalTemplates.toString().padStart(
-              2,
-              "0"
-            )} templates
-          </span>
-          <span className="h-1 w-1 rounded-full bg-foreground/30" />
-          <span className="tabular-nums">
-            {engineNames.length.toString().padStart(
-              2,
-              "0"
-            )} engines
-          </span>
-          <span className="hidden sm:inline-block h-1 w-1 rounded-full bg-foreground/30" />
-          <span className="hidden sm:inline">browser-native</span>
-          <span className="ml-auto hidden md:inline-flex items-center gap-2 text-foreground/60">
-            <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-500 animate-pulse-soft" />
-            <span>live</span>
-          </span>
-        </div>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-label mb-6 sm:mb-8">
+            <span className="tabular-nums">{ templates.length } templates</span>
+            <span className="h-1 w-1 rounded-full bg-fuchsia-500" />
+            <span className="tabular-nums">{ engineCount } engines</span>
+            <span className="h-1 w-1 rounded-full bg-foreground/30" />
+            <span>open source</span>
+          </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10 lg:gap-16 items-start">
-          {/* Headline column */}
-          <div className="md:col-span-7 lg:col-span-8">
-            <h1 className="font-black text-[3.25rem] sm:text-[5.5rem] md:text-[7rem] lg:text-[9.5rem] leading-[0.84] tracking-[-0.045em] [text-wrap:balance]">
-              <span className="block">a studio</span>
-              <span className="block">
-                for{ " " }
-                <span className="italic font-extralight">social</span>
-              </span>
-              <span className="block">
-                visuals<span className="text-fuchsia-500">.</span>
-              </span>
-            </h1>
+          <h1 className="font-black text-4xl sm:text-6xl lg:text-7xl tracking-[-0.04em] leading-[0.95] [text-wrap:balance]">
+            a studio for{ " " }
+            <span className="italic font-extralight">social</span>{ " " }
+            visuals<span className="text-fuchsia-500">.</span>
+          </h1>
 
-            <div className="mt-8 sm:mt-12 lg:mt-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
-              <p className="md:col-span-7 max-w-[55ch] text-base sm:text-lg text-label leading-relaxed [text-wrap:pretty]">
-                Customizable templates built on{ " " }
-                <span className="text-foreground font-medium">p5.js</span>,{ " " }
-                <span className="text-foreground font-medium">gsap</span>, and{ " " }
-                <span className="text-foreground font-medium">html stages</span>.
-                Tweak parameters in a live editor, then export images or record
-                full animations to video — never leaving the browser.
-              </p>
+          <p className="mt-5 sm:mt-6 max-w-[60ch] text-sm sm:text-base text-label leading-relaxed [text-wrap:pretty]">
+            Customizable templates built on{ " " }
+            <span className="text-foreground font-medium">p5.js</span>,{ " " }
+            <span className="text-foreground font-medium">gsap</span> and{ " " }
+            <span className="text-foreground font-medium">html stages</span>.
+            Tweak parameters live, randomize, then export images or record
+            video — in the browser or on the server.
+          </p>
 
-              <div className="md:col-span-5 flex flex-col sm:flex-row md:flex-col lg:flex-row items-stretch sm:items-center md:items-stretch lg:items-center gap-3 md:gap-4">
-                <Link
-                  href="/templates"
-                  className="group inline-flex items-center justify-between gap-4 rounded-full bg-foreground text-background pl-6 pr-3 py-3 text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform"
-                >
-                  <span>Open the library</span>
-                  <span className="grid place-items-center w-8 h-8 rounded-full bg-background/15 group-hover:bg-background/25 transition-colors">
-                    <ArrowUpRight className="w-4 h-4 transition-transform group-hover:rotate-[20deg]" />
-                  </span>
-                </Link>
-                <a
-                  href="#capabilities"
-                  className="group inline-flex items-center gap-2 text-sm text-label hover:text-foreground transition-colors px-2"
-                >
-                  <CornerDownRight className="w-4 h-4" />
-                  <span className="underline-offset-4 group-hover:underline">
-                    or scroll down
-                  </span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: hero spec stack */}
-          <div className="md:col-span-5 lg:col-span-4 relative">
-            <div className="relative mx-auto md:mx-0 w-full max-w-[360px] md:max-w-none aspect-[4/5]">
-              {/* back ghost card */}
-              {heroBack ? (
-                <div className="absolute inset-0 will-change-transform animate-drift-reverse">
-                  <div className="absolute inset-0 translate-x-[4%] translate-y-[5%] rounded-md overflow-hidden border border-border bg-background/60 opacity-60">
-                    <PreviewSurface template={ heroBack } />
-                  </div>
-                </div>
-              ) : null}
-
-              {/* front featured card */}
-              {heroFront ? (
-                <Link
-                  href={ heroFront.href }
-                  className="absolute inset-0 group will-change-transform animate-drift block"
-                >
-                  <div className="absolute inset-0 rounded-md overflow-hidden border border-foreground/15 bg-background shadow-[0_30px_60px_-30px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]">
-                    {/* scan line micro-interaction */}
-                    {/* <div*/}
-                    {/*  aria-hidden*/}
-                    {/*  className="absolute inset-x-0 h-px bg-fuchsia-500/40 z-10 animate-scan-line pointer-events-none"*/}
-                    {/* />*/}
-                    <PreviewSurface template={ heroFront } eager />
-                  </div>
-                  {/* corner labels */}
-                  <div className="absolute -top-3 left-2 right-2 flex justify-between items-end font-mono text-[10px] uppercase tracking-[0.16em] text-label">
-                    <span className="bg-background px-1 border">spec · 4:5</span>
-                    <span className="bg-background px-1 truncate max-w-[55%] border">
-                      {heroFront.name}
-                    </span>
-                  </div>
-                  <div className="absolute -bottom-3 left-2 right-2 flex justify-between items-baseline font-mono text-[10px] uppercase tracking-[0.16em] text-label">
-                    <span className="bg-background px-1 border">live · tap to open</span>
-                    <span className="bg-background px-1 flex items-center gap-1 border">
-                      <ArrowUpRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </Link>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============ TICKER ============ */}
-      <section className="overflow-hidden border-y border-border bg-background/80 backdrop-blur-sm">
-        <div className="flex w-max animate-marquee-slow gap-10 sm:gap-14 py-4 sm:py-5 will-change-transform">
-          {[
-            ...TICKER,
-            ...TICKER
-          ].map( (
-            item, i
-          ) => (
-            <span
-              key={ `${ item }-${ i }` }
-              className="flex items-center gap-3 whitespace-nowrap font-mono text-xs sm:text-sm uppercase tracking-[0.22em] text-foreground/60"
-            >
-              <span
-                className={ `h-1 w-1 rounded-full ${
-                  i % 4 === 0 ? "bg-fuchsia-500" : "bg-foreground/30"
+          {/* Search + primary CTA */}
+          <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-2xl">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+              <input
+                type="text"
+                value={ query }
+                onChange={ ( e ) => setQuery( e.target.value ) }
+                placeholder={ `Search ${ templates.length } templates...` }
+                autoComplete="off"
+                className={ `pl-11 py-3 rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40 ${
+                  query ? "pr-11" : "pr-4"
                 }` }
               />
-              <span>{item}</span>
-            </span>
-          ) )}
-        </div>
-      </section>
+              { query && (
+                <button
+                  type="button"
+                  onClick={ () => setQuery( "" ) }
+                  aria-label="Clear search"
+                  title="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 grid place-items-center w-7 h-7 rounded-md text-foreground/50 hover:text-foreground hover:bg-hover/50 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              ) }
+            </div>
 
-      {/* ============ SHOWCASE WALL ============ */}
-      <section className="relative px-4 sm:px-8 lg:px-12 py-20 sm:py-28 max-w-[1440px] mx-auto">
-        <Reveal>
-          <div className="grid grid-cols-12 gap-6 mb-10 sm:mb-14 items-end">
-            <div className="col-span-12 md:col-span-2">
-              <SpecLabel index="01" label="/library" />
-            </div>
-            <div className="col-span-12 md:col-span-7">
-              <h2 className="font-black text-3xl sm:text-5xl lg:text-6xl tracking-tighter leading-[0.95] [text-wrap:balance]">
-                Pull a random{ " " }
-                <span className="italic font-extralight">specimen</span>{ " " }
-                from the shelf.
-              </h2>
-            </div>
-            <div className="col-span-12 md:col-span-3 md:text-right">
-              <p className="text-sm text-label leading-relaxed max-w-xs md:ml-auto">
-                Reshuffled on every visit. Open one to inspect, tweak, and
-                export.
-              </p>
-            </div>
+            <Link
+              href="/templates"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform flex-shrink-0"
+            >
+              <span>Open the library</span>
+              <ArrowUpRight className="w-4 h-4" />
+            </Link>
           </div>
-        </Reveal>
+        </header>
 
-        {showcase.length >= 8 ? (
-          <div className="grid grid-cols-12 gap-3 sm:gap-4">
-            {/* Row 1 */}
-            <Reveal className="col-span-12 md:col-span-7">
-              <ShowcaseTile
-                template={ showcase[ 0 ] }
-                index="A.01"
-                aspect="md:aspect-[16/13] aspect-[4/5]"
-                size="lg"
-              />
-            </Reveal>
-            <div className="col-span-12 md:col-span-5 grid grid-cols-1 md:grid-rows-2 gap-3 sm:gap-4 md:h-full">
-              <Reveal delay={ 80 } className="md:h-full min-h-0">
-                <ShowcaseTile
-                  template={ showcase[ 1 ] }
-                  index="A.02"
-                  aspect="aspect-[16/9] md:aspect-auto md:h-full"
-                />
-              </Reveal>
-              <Reveal delay={ 160 } className="md:h-full min-h-0">
-                <ShowcaseTile
-                  template={ showcase[ 2 ] }
-                  index="A.03"
-                  aspect="aspect-[16/9] md:aspect-auto md:h-full"
-                />
-              </Reveal>
-            </div>
-
-            {/* Row 2 */}
-            <Reveal className="col-span-6 md:col-span-3" delay={ 240 }>
-              <ShowcaseTile
-                template={ showcase[ 3 ] }
-                index="B.01"
-                aspect="aspect-[9/16]"
-              />
-            </Reveal>
-            <Reveal className="col-span-6 md:col-span-3" delay={ 300 }>
-              <ShowcaseTile
-                template={ showcase[ 4 ] }
-                index="B.02"
-                aspect="aspect-[9/16]"
-              />
-            </Reveal>
-            <Reveal className="col-span-12 md:col-span-6" delay={ 360 }>
-              <ShowcaseTile
-                template={ showcase[ 5 ] }
-                index="B.03"
-                aspect="aspect-[16/9]"
-              />
-            </Reveal>
-
-            {/* Row 3 */}
-            <Reveal className="col-span-6 md:col-span-4" delay={ 420 }>
-              <ShowcaseTile
-                template={ showcase[ 6 ] }
-                index="C.01"
-                aspect="aspect-square"
-              />
-            </Reveal>
-            <Reveal className="col-span-6 md:col-span-4" delay={ 480 }>
-              <ShowcaseTile
-                template={ showcase[ 7 ] }
-                index="C.02"
-                aspect="aspect-square"
-              />
-            </Reveal>
-            <Reveal className="col-span-12 md:col-span-4" delay={ 540 }>
+        { searchActive ? (
+          /* ============ SEARCH RESULTS ============ */
+          <section className="pb-12 sm:pb-16">
+            <SectionHeader
+              label="/search"
+              title={
+                results.length === 0
+                  ? "No matches"
+                  : `${ results.length } ${ results.length === 1 ? "match" : "matches" }`
+              }
+            >
               <Link
-                href="/templates"
-                className="group relative block aspect-square rounded-md border border-dashed border-foreground/25 hover:border-foreground/60 transition-colors p-5 flex flex-col justify-between bg-background/40"
+                href={ libraryHref }
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-label hover:text-foreground transition-colors flex-shrink-0"
               >
-                <SpecLabel index="C.03" label="/all" />
-                <div className="flex flex-col gap-2">
-                  <span className="text-2xl sm:text-3xl font-black tracking-tighter leading-none">
-                    View all<br />
-                    <span className="tabular-nums">{totalTemplates}</span>{ " " }
-                    <span className="italic font-extralight">templates</span>
-                  </span>
-                  <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-label group-hover:text-fuchsia-500 transition-colors">
-                    <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    browse
-                  </span>
-                </div>
+                <span>Open in library</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
               </Link>
-            </Reveal>
-          </div>
-        ) : null}
-      </section>
+            </SectionHeader>
 
-      {/* ============ NUMBERS STRIP ============ */}
-      <section className="border-y border-border bg-background/60">
-        <div className="px-4 sm:px-8 lg:px-12 max-w-[1440px] mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-border">
-            <div className="px-2 sm:px-6">
-              <StatBlock value={ totalTemplates } label="ready to render" />
-            </div>
-            <div className="px-2 sm:px-6">
-              <StatBlock value={ engineNames.length } label="rendering engines" />
-            </div>
-            <div className="px-2 sm:px-6">
-              <StatBlock value="∞" label="param permutations" numeric={ false } />
-            </div>
-            <div className="px-2 sm:px-6">
-              <StatBlock
-                value="0"
-                suffix=" sec"
-                label="signup · install · upload"
-                numeric={ false }
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============ FEATURES BENTO ============ */}
-      <section
-        id="capabilities"
-        className="relative px-4 sm:px-8 lg:px-12 py-20 sm:py-32 max-w-[1440px] mx-auto"
-      >
-        <Reveal>
-          <div className="grid grid-cols-12 gap-6 mb-10 sm:mb-14 items-end">
-            <div className="col-span-12 md:col-span-2">
-              <SpecLabel index="02" label="/capabilities" />
-            </div>
-            <div className="col-span-12 md:col-span-10">
-              <h2 className="font-black text-3xl sm:text-5xl lg:text-7xl tracking-tighter leading-[0.95] [text-wrap:balance]">
-                The whole pipeline,{ " " }
-                <span className="italic font-extralight">end to end</span>.
-              </h2>
-            </div>
-          </div>
-        </Reveal>
-
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-3 sm:gap-4 md:auto-rows-[10rem]">
-          {/* Big tile — Live editing demo */}
-          <Reveal className="md:col-span-4 md:row-span-2">
-            <article className="relative h-full p-6 sm:p-8 rounded-md border border-border bg-background overflow-hidden group">
-              <div className="flex items-start justify-between gap-4 mb-5">
-                <SpecLabel index="F.01" label="primary" />
-                <MousePointer2 className="w-5 h-5 text-fuchsia-500" strokeWidth={ 1.5 } />
-              </div>
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tighter leading-[1.02] mb-3 [text-wrap:balance]">
-                Live editing.{ " " }
-                <span className="italic font-extralight text-label">
-                  every parameter, every frame.
-                </span>
-              </h3>
-              <p className="text-sm text-label leading-relaxed max-w-md mb-8">
-                Sliders, color pickers, text fields, drop-zones — generated per
-                template. Each change reflects on the canvas instantly.
-              </p>
-
-              {/* Live demo: animated mini-sliders */}
-              <div className="mt-4 md:mt-0 md:absolute md:left-8 md:right-8 md:bottom-8 space-y-3 font-mono text-[10px] uppercase tracking-[0.18em]">
-                {[
-                  {
-                    k: "count",
-                    v: "47",
-                    from: 0.42,
-                    to: 0.62
-                  },
-                  {
-                    k: "speed",
-                    v: "1.28",
-                    from: 0.68,
-                    to: 0.48
-                  },
-                  {
-                    k: "hue",
-                    v: "312°",
-                    from: 0.22,
-                    to: 0.44
-                  },
-                  {
-                    k: "scale",
-                    v: "0.84",
-                    from: 0.55,
-                    to: 0.35
-                  }
-                ].map( (
-                  row, i
-                ) => (
-                  <div key={ row.k } className="flex items-center gap-3">
-                    <span className="w-12 text-label">{row.k}</span>
-                    <div className="flex-1 h-px bg-foreground/15 relative">
-                      <div
-                        className="absolute inset-y-0 left-0 animate-slider-pulse"
-                        style={ {
-                          "--slider-from": `${ row.from * 100 }%`,
-                          "--slider-to": `${ row.to * 100 }%`,
-                          animationDelay: `${ i * 0.4 }s`
-                        } as CSSProperties }
-                      >
-                        <span className="absolute inset-0 bg-foreground/60" />
-                        <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2 h-2 bg-foreground rounded-full" />
-                      </div>
-                    </div>
-                    <span className="w-12 text-right tabular-nums text-foreground">
-                      {row.v}
-                    </span>
-                  </div>
-                ) )}
-              </div>
-            </article>
-          </Reveal>
-
-          {/* Multi-engine */}
-          <Reveal className="md:col-span-2" delay={ 80 }>
-            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between">
-              <div className="flex items-start justify-between gap-4">
-                <SpecLabel index="F.02" label="layer" />
-                <Hash className="w-4 h-4 text-foreground/40" strokeWidth={ 1.5 } />
-              </div>
-              <div>
-                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
-                  Multi-engine.
-                </h3>
-                <p className="text-xs text-label leading-relaxed">
-                  p5 sketches, gsap dom animations, and html stages — one shared
-                  recorder, exporter, and form system.
-                </p>
-              </div>
-            </article>
-          </Reveal>
-
-          {/* Randomize */}
-          <Reveal className="md:col-span-2" delay={ 160 }>
-            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between group hover:border-foreground/40 transition-colors">
-              <div className="flex items-start justify-between gap-4">
-                <SpecLabel index="F.03" label="entropy" />
-                <Shuffle
-                  className="w-4 h-4 text-foreground/40 group-hover:text-fuchsia-500 group-hover:rotate-180 transition-all duration-500"
-                  strokeWidth={ 1.5 }
-                />
-              </div>
-              <div>
-                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
-                  One-click randomize.
-                </h3>
-                <p className="text-xs text-label leading-relaxed">
-                  Reroll every option to a valid random value. Fastest path to a
-                  variation you didn&apos;t plan.
-                </p>
-              </div>
-            </article>
-          </Reveal>
-
-          {/* Recording */}
-          <Reveal className="md:col-span-2" delay={ 240 }>
-            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between">
-              <div className="flex items-start justify-between gap-4">
-                <SpecLabel index="F.04" label="capture" />
-                <Radio className="w-4 h-4 text-fuchsia-500 animate-pulse-soft" strokeWidth={ 1.5 } />
-              </div>
-              <div>
-                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
-                  Frame-perfect record.
-                </h3>
-                <p className="text-xs text-label leading-relaxed">
-                  Capture mp4 or webm directly from the canvas. No screen
-                  recorder, no quality loss.
-                </p>
-              </div>
-            </article>
-          </Reveal>
-
-          {/* Export */}
-          <Reveal className="md:col-span-2" delay={ 320 }>
-            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between">
-              <div className="flex items-start justify-between gap-4">
-                <SpecLabel index="F.05" label="output" />
-                <div className="flex items-center gap-1.5 text-foreground/40">
-                  <Square className="w-3 h-3" strokeWidth={ 1.5 } />
-                  <Circle className="w-3 h-3" strokeWidth={ 1.5 } />
-                  <Triangle className="w-3 h-3" strokeWidth={ 1.5 } />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
-                  Image · video · loop.
-                </h3>
-                <p className="text-xs text-label leading-relaxed">
-                  Single-frame png, full animation video, or seamless loops. Any
-                  aspect: 9:16, 1:1, 4:5.
-                </p>
-              </div>
-            </article>
-          </Reveal>
-
-          {/* Backend */}
-          <Reveal className="md:col-span-2" delay={ 400 }>
-            <article className="h-full p-5 sm:p-6 rounded-md border border-border bg-background flex flex-col justify-between">
-              <div className="flex items-start justify-between gap-4">
-                <SpecLabel index="F.06" label="queue" />
-                <Plus className="w-4 h-4 text-foreground/40 rotate-45" strokeWidth={ 1.5 } />
-              </div>
-              <div>
-                <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">
-                  Headless rendering.
-                </h3>
-                <p className="text-xs text-label leading-relaxed">
-                  Offload long renders to a playwright + bullmq queue. Keep
-                  working while the server cooks.
-                </p>
-              </div>
-            </article>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ============ WORKFLOW (editorial numbered list) ============ */}
-      <section className="relative px-4 sm:px-8 lg:px-12 py-20 sm:py-28 max-w-[1440px] mx-auto">
-        <Reveal>
-          <div className="grid grid-cols-12 gap-6 mb-6 sm:mb-10">
-            <div className="col-span-12 md:col-span-2">
-              <SpecLabel index="03" label="/workflow" />
-            </div>
-            <div className="col-span-12 md:col-span-10">
-              <h2 className="font-black text-3xl sm:text-5xl lg:text-7xl tracking-tighter leading-[0.95] [text-wrap:balance]">
-                Three steps,{ " " }
-                <span className="italic font-extralight">
-                  uncountable outputs
-                </span>
+            { results.length === 0 ? (
+              <p className="text-sm text-label">
+                Nothing matches &ldquo;{ query.trim() }&rdquo;. Try a shorter
+                keyword, or{ " " }
+                <button
+                  type="button"
+                  onClick={ () => setQuery( "" ) }
+                  className="underline underline-offset-4 hover:text-foreground transition-colors"
+                >
+                  clear the search
+                </button>
                 .
-              </h2>
-            </div>
-          </div>
-        </Reveal>
+              </p>
+            ) : (
+              <>
+                <div className={ CARD_GRID }>
+                  { results
+                    .slice(
+                      0,
+                      MAX_RESULTS
+                    )
+                    .map( (
+                      template, index
+                    ) => (
+                      <TemplateCard
+                        key={ template.href }
+                        template={ template }
+                        eager={ index === 0 }
+                      />
+                    ) ) }
+                </div>
 
-        <div className="border-t border-border">
-          {[
-            {
-              n: "01",
-              icon: Slash,
-              title: "Pick a template",
-              text: "Scroll the gallery, hover for an animated preview, click to open the editor.",
-              accent: false
-            },
-            {
-              n: "02",
-              icon: MousePointer2,
-              title: "Tune the parameters",
-              text: "Sliders, colors, copy, images. Every change re-renders on the canvas instantly. Hit randomize when you need a jolt.",
-              accent: true
-            },
-            {
-              n: "03",
-              icon: Radio,
-              title: "Export or record",
-              text: "Save a still frame as image, or record the full animation to mp4 / webm. Pixel-perfect at any aspect.",
-              accent: false
-            }
-          ].map( (
-            step, i
-          ) => (
-            <Reveal key={ step.n } delay={ i * 120 }>
-              <div className="grid grid-cols-12 gap-4 sm:gap-8 py-8 sm:py-14 border-b border-border group">
-                <div className="col-span-3 md:col-span-2 flex flex-col gap-2">
-                  <span
-                    className={ `font-mono text-xs uppercase tracking-[0.2em] tabular-nums ${
-                      step.accent ? "text-fuchsia-500" : "text-label"
-                    }` }
+                { results.length > MAX_RESULTS && (
+                  <div className="mt-5 sm:mt-6">
+                    <Link
+                      href={ libraryHref }
+                      className="inline-flex items-center gap-2 text-sm text-label hover:text-foreground transition-colors"
+                    >
+                      <span>
+                        See all { results.length } results in the library
+                      </span>
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                ) }
+              </>
+            ) }
+          </section>
+        ) : (
+          <>
+            {/* ============ LATEST ============ */}
+            <Reveal>
+              <section className="pb-12 sm:pb-16">
+                <SectionHeader label="/latest" title="Recently added">
+                  <Link
+                    href="/templates"
+                    className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-label hover:text-foreground transition-colors flex-shrink-0"
                   >
-                    step {step.n}
-                  </span>
-                  <step.icon
-                    className={ `w-5 h-5 ${
-                      step.accent ? "text-fuchsia-500" : "text-foreground/50"
-                    }` }
+                    <span>View all { templates.length }</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </Link>
+                </SectionHeader>
+
+                <div className={ CARD_GRID }>
+                  { latest.map( (
+                    template, index
+                  ) => (
+                    <TemplateCard
+                      key={ template.href }
+                      template={ template }
+                      eager={ index === 0 }
+                    />
+                  ) ) }
+                </div>
+              </section>
+            </Reveal>
+
+            {/* ============ RANDOM PICKS ============ */}
+            <Reveal>
+              <section className="pb-12 sm:pb-16">
+                <SectionHeader label="/random" title="Random picks">
+                  <button
+                    type="button"
+                    onClick={ reroll }
+                    className="group inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors flex-shrink-0"
+                  >
+                    <Shuffle className="w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-180" />
+                    <span>Shuffle</span>
+                  </button>
+                </SectionHeader>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  { randomPicks.map( ( template ) => (
+                    <TemplateCard key={ template.href } template={ template } />
+                  ) ) }
+                </div>
+              </section>
+            </Reveal>
+          </>
+        ) }
+
+        {/* ============ CAPABILITIES ============ */}
+        <Reveal>
+          <section id="capabilities" className="pb-12 sm:pb-16">
+            <SectionHeader label="/capabilities" title="What you can do" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              { FEATURES.map( ( feature ) => (
+                <article
+                  key={ feature.title }
+                  className="p-5 rounded-xl sm:rounded-2xl border border-border bg-background"
+                >
+                  <feature.icon
+                    className="w-4 h-4 text-fuchsia-500 mb-3"
                     strokeWidth={ 1.5 }
                   />
-                </div>
-                <div className="col-span-9 md:col-span-7">
-                  <h3 className="font-black text-2xl sm:text-4xl lg:text-6xl tracking-tighter leading-[1] [text-wrap:balance]">
-                    {step.title}
-                    {step.accent ? (
-                      <span className="text-fuchsia-500">.</span>
-                    ) : null}
+                  <h3 className="text-sm sm:text-base font-bold tracking-tight mb-1.5">
+                    { feature.title }
                   </h3>
-                  <p className="mt-4 sm:mt-6 text-sm sm:text-base text-label max-w-[55ch] leading-relaxed">
-                    {step.text}
+                  <p className="text-xs sm:text-sm text-label leading-relaxed">
+                    { feature.text }
                   </p>
-                </div>
-                <div className="hidden md:flex md:col-span-3 items-start justify-end">
-                  <span className="font-black text-[6rem] lg:text-[9rem] leading-[0.8] tabular-nums text-foreground/[0.06] group-hover:text-foreground/[0.12] transition-colors select-none">
-                    {step.n}
-                  </span>
-                </div>
-              </div>
-            </Reveal>
-          ) )}
-        </div>
-      </section>
+                </article>
+              ) ) }
+            </div>
+          </section>
+        </Reveal>
 
-      {/* ============ FINAL CTA ============ */}
-      <section className="relative px-4 sm:px-8 lg:px-12 py-24 sm:py-40 max-w-[1440px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 items-center">
-          <Reveal className="md:col-span-7 lg:col-span-8">
-            <SpecLabel index="04" label="/open" />
-            <h2 className="mt-6 sm:mt-8 font-black text-[3rem] sm:text-[5.5rem] md:text-[7rem] lg:text-[10rem] leading-[0.84] tracking-[-0.045em] [text-wrap:balance]">
-              start
-              <br />
-              <span className="italic font-extralight">making</span>
-              <br />
-              things<span className="text-fuchsia-500">.</span>
-            </h2>
-            <p className="mt-8 sm:mt-10 max-w-[55ch] text-base sm:text-lg text-label leading-relaxed">
+        {/* ============ FOOTER CTA ============ */}
+        <Reveal>
+          <footer className="border-t border-border pt-10 sm:pt-14 flex flex-col items-center text-center gap-5 sm:gap-6">
+            <p className="max-w-[48ch] text-sm sm:text-base text-label leading-relaxed">
               <span className="font-mono tabular-nums text-foreground">
-                {totalTemplates}
+                { templates.length }
               </span>{ " " }
-              templates ready to customize, record, and export. No signup, no
-              upload, no install — everything runs in your browser.
+              templates ready to customize, record and export. No signup, no
+              install — everything runs in your browser.
             </p>
-            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+
+            <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/templates"
-                className="group inline-flex items-center justify-between gap-4 rounded-full bg-foreground text-background pl-7 pr-3 py-4 text-base font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground text-background px-6 py-3 text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform"
               >
-                <span>Browse all templates</span>
-                <span className="grid place-items-center w-10 h-10 rounded-full bg-background/15 group-hover:bg-background/25 transition-colors">
-                  <ArrowUpRight className="w-5 h-5 transition-transform group-hover:rotate-[20deg]" />
-                </span>
+                <span>Open the library</span>
+                <ArrowUpRight className="w-4 h-4" />
               </Link>
+              <a
+                href={ GITHUB_URL }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-6 py-3 text-sm font-semibold text-foreground/80 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors"
+              >
+                <Github className="w-4 h-4" />
+                <span>Star on GitHub</span>
+              </a>
             </div>
-          </Reveal>
 
-          {heroFront ? (
-            <Reveal className="md:col-span-5 lg:col-span-4" delay={ 200 }>
-              <Link
-                href={ heroFront.href }
-                className="relative block aspect-[4/5] w-full max-w-[360px] mx-auto md:mx-0 group"
-              >
-                <div className="absolute inset-0 rounded-md overflow-hidden border border-foreground/15 bg-background">
-                  <PreviewSurface template={ heroFront } />
-                </div>
-                <div className="absolute -top-3 left-2 right-2 flex justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-label">
-                  <span className="bg-background px-1 border">featured</span>
-                  <span className="bg-background px-1 truncate max-w-[55%] border">
-                    {heroFront.name}
-                  </span>
-                </div>
-              </Link>
-            </Reveal>
-          ) : null}
-        </div>
-      </section>
-
-      <ScrollToTopButton />
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-label">
+              mit license · { new Date().getFullYear() }
+            </p>
+          </footer>
+        </Reveal>
+      </div>
     </div>
-  );
-}
-
-function ShowcaseTile( {
-  template,
-  index,
-  aspect,
-  size = "sm"
-}: {
-  template: TemplateItem;
-  index: string;
-  aspect: string;
-  size?: "sm" | "lg";
-} ) {
-  return (
-    <Link
-      href={ template.href }
-      className={ `group flex flex-col w-full ${ aspect } rounded-md overflow-hidden border border-border bg-background hover:border-foreground/40 transition-all duration-300 hover:-translate-y-0.5` }
-    >
-      <div className="relative flex-1 overflow-hidden">
-        <PreviewSurface
-          template={ template }
-          imgClassName="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-        />
-        <div className="absolute inset-x-0 top-0 p-3 sm:p-4 flex items-start justify-between gap-2 z-10">
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-background bg-foreground/80 backdrop-blur-sm px-1.5 py-0.5 rounded-sm">
-            {index}
-          </span>
-          <ArrowUpRight className="w-4 h-4 text-background bg-foreground/80 rounded-sm p-0.5 opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all" />
-        </div>
-      </div>
-      <div className="flex-shrink-0 bg-background border-t border-border px-3 sm:px-4 py-2">
-        <p
-          title={ template.name }
-          className={ `font-medium tracking-tight text-foreground truncate ${
-            size === "lg" ? "text-sm sm:text-base" : "text-xs sm:text-sm"
-          }` }
-        >
-          {template.name}
-        </p>
-      </div>
-    </Link>
   );
 }
