@@ -6,7 +6,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// torsade v14 — shaders.
+// torsade-shaders v1 — melted.
 //
 // A GPU re-imagining of "torsade v7 — melted" (which stays untouched). The CPU
 // original walked each spiral with hundreds of lerp steps and stamped two

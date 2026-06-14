@@ -2806,5 +2806,29 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-14T21:08:08.451Z",
     "ctime": "2026-06-14T21:07:22.867Z"
+  },
+  {
+    "name": "torsade-shaders-v1-melted",
+    "engine": "p5",
+    "category": "torsade-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-14T21:08:16.511Z",
+    "ctime": "2026-06-14T16:06:59.530Z"
+  },
+  {
+    "name": "torsade-shaders-v2-rabbit-hole",
+    "engine": "p5",
+    "category": "torsade-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-14T21:08:17.827Z",
+    "ctime": "2026-06-14T17:31:05.902Z"
   }
 ]

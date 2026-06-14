@@ -8,7 +8,7 @@ import {
 } from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// torsade v15 — shaders.
+// torsade-shaders v2 — rabbit hole.
 //
 // A GPU re-imagining of "torsade v10 — rabbit hole" (which stays untouched). The
 // CPU original drew a deep tunnel of concentric rings of round dots: each ring
