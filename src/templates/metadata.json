@@ -2776,7 +2776,7 @@
     "engine": "p5",
     "category": "torsade",
     "hasSketchForm": true,
-    "hasThumbnail": false,
+    "hasThumbnail": true,
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
