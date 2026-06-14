@@ -200,6 +200,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:torsade/torsade-v12-gradient-worms": () => import( "@/p5/sketches/torsade/torsade-v12-gradient-worms/index.js" ),
   "p5:torsade/torsade-v13-medusa": () => import( "@/p5/sketches/torsade/torsade-v13-medusa/index.js" ),
   "p5:torsade/torsade-v14-shaders": () => import( "@/p5/sketches/torsade/torsade-v14-shaders/index.js" ),
+  "p5:torsade/torsade-v15-shaders": () => import( "@/p5/sketches/torsade/torsade-v15-shaders/index.js" ),
   "p5:torsade/torsade-v2-chain": () => import( "@/p5/sketches/torsade/torsade-v2-chain/index.js" ),
   "p5:torsade/torsade-v3-leaping-over": () => import( "@/p5/sketches/torsade/torsade-v3-leaping-over/index.js" ),
   "p5:torsade/torsade-v4-calm": () => import( "@/p5/sketches/torsade/torsade-v4-calm/index.js" ),
