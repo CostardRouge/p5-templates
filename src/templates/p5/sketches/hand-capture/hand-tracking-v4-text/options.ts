@@ -1,5 +1,12 @@
 // Default values only — exposed at runtime as `options.sketch.*`
 export const formValues = {
+  // Background
+  backgroundColor: [
+    246,
+    235,
+    225
+  ],
+
   // Each character becomes a draggable physics box. Edit the string to scatter
   // your own word, alphabet or set of glyphs across the canvas.
   text: {
@@ -26,6 +33,11 @@ export const formValues = {
 };
 
 export const formConfiguration: Record<string, any> = {
+  backgroundColor: {
+    component: "color",
+    label: "Background color"
+  },
+
   text: {
     component: "nested-object",
     label: "Text",

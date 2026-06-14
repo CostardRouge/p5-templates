@@ -399,6 +399,82 @@ export class HandCaptureScene {
     Engine.update( this.engine );
   }
 
+  /**
+   * Clamp bodies back inside the playable area. Matter lets fast bodies tunnel
+   * through the static walls (especially under strong repulsion or a hand push),
+   * so this hard guarantee keeps everything on-screen. Position is snapped to
+   * the inner edge and the offending velocity component is reflected with light
+   * damping so the body bounces back in rather than sticking to the wall.
+   */
+  containBodies( bodies ) {
+    const p = getP5();
+    const minX = this.boundaryMargin;
+    const minY = this.boundaryMargin;
+    const maxX = p.width - this.boundaryMargin;
+    const maxY = p.height - this.boundaryMargin;
+
+    for ( const body of bodies ) {
+      const radius = body.circleRadius ?? 0;
+      const left = minX + radius;
+      const right = maxX - radius;
+      const top = minY + radius;
+      const bottom = maxY - radius;
+
+      let x = body.position.x;
+      let y = body.position.y;
+      let vx = body.velocity.x;
+      let vy = body.velocity.y;
+      let changed = false;
+
+      if ( x < left ) {
+        x = left;
+        vx = Math.abs( vx ) * 0.5;
+        changed = true;
+      } else if ( x > right ) {
+        x = right;
+        vx = -Math.abs( vx ) * 0.5;
+        changed = true;
+      }
+
+      if ( y < top ) {
+        y = top;
+        vy = Math.abs( vy ) * 0.5;
+        changed = true;
+      } else if ( y > bottom ) {
+        y = bottom;
+        vy = -Math.abs( vy ) * 0.5;
+        changed = true;
+      }
+
+      if ( !changed ) {
+        continue;
+      }
+
+      Body.setPosition(
+        body,
+        {
+          x,
+          y
+        }
+      );
+      Body.setVelocity(
+        body,
+        {
+          x: vx,
+          y: vy
+        }
+      );
+    }
+  }
+
+  containBalls() {
+    this.containBodies( this.balls );
+  }
+
+  containLetters() {
+    this.containBodies( this.letters );
+  }
+
   renderBalls( {
     shadowsCount = 3, dotScale = 1
   } = {} ) {

@@ -21,7 +21,7 @@ sketch.draw( () => {
   const physics = options.sketch?.physics ?? {};
   const letters = options.sketch?.letters ?? {};
   const visuals = options.sketch?.visuals ?? {};
-  const background = options.colors?.background ?? [
+  const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
 
@@ -40,6 +40,7 @@ sketch.draw( () => {
     letters.restoreMaxForce ?? 0.003
   );
   scene.update();
+  scene.containLetters();
 
   scene.renderBalls( {
     shadowsCount: visuals.shadowsCount ?? 3,

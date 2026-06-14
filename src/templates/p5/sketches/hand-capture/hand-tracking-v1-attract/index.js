@@ -21,7 +21,7 @@ sketch.draw( () => {
   const visuals = options.sketch?.visuals ?? {};
   const attract = options.sketch?.attract ?? {};
   const text = options.sketch?.text ?? {};
-  const background = options.colors?.background ?? [
+  const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
 
@@ -40,6 +40,7 @@ sketch.draw( () => {
     attract.maxForce ?? 0.002
   );
   scene.update();
+  scene.containBalls();
 
   scene.setTrail( visuals.trail ?? 10 );
   scene.renderBalls( {

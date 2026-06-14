@@ -21,7 +21,7 @@ sketch.draw( () => {
   const visuals = options.sketch?.visuals ?? {};
   const repulse = options.sketch?.repulse ?? {};
   const text = options.sketch?.text ?? {};
-  const background = options.colors?.background ?? [
+  const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
 
@@ -41,6 +41,7 @@ sketch.draw( () => {
     repulse.distance ?? 600
   );
   scene.update();
+  scene.containBalls();
 
   scene.setTrail( visuals.trail ?? 10 );
   scene.renderBalls( {

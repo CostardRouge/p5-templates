@@ -1,5 +1,12 @@
 // Default values only — exposed at runtime as `options.sketch.*`
 export const formValues = {
+  // Background
+  backgroundColor: [
+    246,
+    235,
+    225
+  ],
+
   // Physics playground
   physics: {
     ballCount: 26,
@@ -32,6 +39,11 @@ export const formValues = {
 
 // UI configuration only
 export const formConfiguration: Record<string, any> = {
+  backgroundColor: {
+    component: "color",
+    label: "Background color"
+  },
+
   physics: {
     component: "nested-object",
     label: "Physics",

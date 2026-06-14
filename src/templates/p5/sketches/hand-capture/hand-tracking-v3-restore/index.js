@@ -21,7 +21,7 @@ sketch.draw( () => {
   const visuals = options.sketch?.visuals ?? {};
   const restore = options.sketch?.restore ?? {};
   const text = options.sketch?.text ?? {};
-  const background = options.colors?.background ?? [
+  const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
 
@@ -40,6 +40,7 @@ sketch.draw( () => {
     restore.maxForce ?? 0.003
   );
   scene.update();
+  scene.containBalls();
 
   scene.renderBalls( {
     shadowsCount: visuals.shadowsCount ?? 3,

@@ -20,7 +20,7 @@ sketch.draw( () => {
   const physics = options.sketch?.physics ?? {};
   const visuals = options.sketch?.visuals ?? {};
   const text = options.sketch?.text ?? {};
-  const background = options.colors?.background ?? [
+  const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
 
@@ -39,6 +39,7 @@ sketch.draw( () => {
     y: physics.gravity?.y ?? 0
   } );
   scene.update();
+  scene.containBalls();
 
   scene.setTrail( visuals.trail ?? 10 );
   scene.renderBalls( {
