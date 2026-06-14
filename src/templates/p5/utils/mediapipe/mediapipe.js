@@ -556,10 +556,12 @@ function adoptCaptureElement(
       width:
         element.videoWidth ||
         element.naturalWidth ||
+        element.width ||
         mediapipe.config.captureSize.width,
       height:
         element.videoHeight ||
         element.naturalHeight ||
+        element.height ||
         mediapipe.config.captureSize.height
     };
   };
@@ -567,7 +569,15 @@ function adoptCaptureElement(
   applySize();
 
   if ( type === "video" ) {
-    if ( element.readyState >= 2 ) {
+    // The "video" source is adopted as an offscreen <canvas> the owner blits
+    // the seeked video frame into (see the interaction layer): a canvas is a
+    // stable, always-valid inference source, unlike a paused+re-seeked <video>
+    // read directly. A bare <video> is still tolerated as a fallback.
+    const isCanvas = typeof element.getContext === "function";
+
+    if ( isCanvas || element.readyState >= 2 ) {
+      // The owner only hands over the canvas once it has drawn into it, so it
+      // is drawable immediately.
       mediapipe.videoReady = true;
     } else {
       element.addEventListener(
@@ -585,12 +595,10 @@ function adoptCaptureElement(
       );
     }
 
-    // Don't gate inference on requestVideoFrameCallback: this adopted video is
-    // driven by the owner seeking it to the sketch progression, and that seek
-    // uses rVFC internally for frame-accurate stepping. A second rVFC consumer
-    // here made the frame stream erratic (only seeked-to frames reached
-    // inference, the preview stuttered). Instead sample whatever frame the seek
-    // settled on at the inference interval, like the image path.
+    // Don't gate inference on requestVideoFrameCallback: a canvas has none, and
+    // even a raw video here is driven by the owner seeking it, whose seek uses
+    // rVFC internally — a second consumer made the frame stream erratic. Sample
+    // the current frame at the inference interval instead, like the image path.
     mediapipe.scheduler.usingFrameCallback = false;
     mediapipe.scheduler.freshFrame = true;
   } else {

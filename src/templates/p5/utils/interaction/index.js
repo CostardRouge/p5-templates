@@ -200,6 +200,15 @@ const VISION_WARMUP_TIMEOUT_MS = 8000;
 let _visionVideoSync = null;
 let _visionVideoKey = "";
 let _visionVideoInstances = [];
+// Offscreen canvas the seeked video frame is blitted into each frame. MediaPipe
+// infers on this canvas, never the raw <video>: a video that is paused and
+// re-seeked every frame is an unreliable createImageBitmap/detectForVideo
+// source (only the seeked-to frame lands, the rest read back black/stale),
+// whereas a canvas drawn via drawImage is always a valid, stable frame — the
+// exact pattern the videos pool uses to render seeked video reliably.
+let _visionVideoCanvas = null;
+let _visionVideoCtx = null;
+let _visionVideoCanvasFrame = -1;
 let _visionImage = {
   path: "",
   element: null
@@ -1063,6 +1072,10 @@ function _releaseVisionVideo() {
 
   _visionVideoKey = "";
   _visionVideoInstances = [];
+  // The detached canvas is GC'd once dereferenced.
+  _visionVideoCanvas = null;
+  _visionVideoCtx = null;
+  _visionVideoCanvasFrame = -1;
 }
 
 function _releaseVisionImage() {
@@ -1119,22 +1132,57 @@ function _ensureVisionSourceMedia( opts ) {
 
     // Drive the video off the sketch progression — exactly like a video drawn
     // by the videos pool — so scrubbing the timeline moves the video (and the
-    // landmarks) with it, honouring the asset's repeat/speed/offset/loopMode
-    // params via seekToProgression. seekToProgression dedupes repeat calls in
-    // the same frame (the interaction layer calls this several times per
-    // frame), so this issues at most one seek per progression value.
-    //
-    // MediaPipe must NOT gate inference on requestVideoFrameCallback for this
-    // element (see adoptCaptureElement): the seek uses rVFC internally for
-    // frame-accurate stepping, and a second rVFC consumer made the frame
-    // stream erratic — only the seeked-to frame reached inference and the
-    // preview stuttered. With rVFC gating off, mediapipe samples whatever
-    // frame the seek last settled on at its inference interval.
+    // landmarks it produces) with it, honouring the asset's
+    // repeat/speed/offset/loopMode params via seekToProgression.
+    // seekToProgression dedupes repeat calls with the same target, so the
+    // several calls per frame issue at most one seek per progression value.
     source.seekToProgression( animation.progression ).catch( () => {} );
+
+    const video = source.element;
+    const vw = video?.videoWidth ?? 0;
+    const vh = video?.videoHeight ?? 0;
+
+    // Metadata not decoded yet → nothing to infer on. The warm-up gate keeps
+    // the loading mask up until the first frame is available.
+    if ( !vw || !vh ) {
+      return null;
+    }
+
+    if ( !_visionVideoCanvas ) {
+      _visionVideoCanvas = document.createElement( "canvas" );
+      _visionVideoCtx = _visionVideoCanvas.getContext( "2d" );
+    }
+
+    if ( _visionVideoCanvas.width !== vw || _visionVideoCanvas.height !== vh ) {
+      _visionVideoCanvas.width = vw;
+      _visionVideoCanvas.height = vh;
+    }
+
+    // Blit the video's current frame into the canvas once per draw frame (the
+    // interaction layer calls this several times per frame). drawImage grabs
+    // whatever the seek last settled on — forgiving where createImageBitmap on
+    // the live <video> was not.
+    const frame = getP5()?.frameCount ?? 0;
+
+    if ( frame !== _visionVideoCanvasFrame && _visionVideoCtx ) {
+      _visionVideoCanvasFrame = frame;
+
+      try {
+        _visionVideoCtx.drawImage(
+          video,
+          0,
+          0,
+          vw,
+          vh
+        );
+      } catch {
+        // Frame not decodable this tick — keep the previous canvas contents.
+      }
+    }
 
     return {
       type: "video",
-      element: source.element,
+      element: _visionVideoCanvas,
       // The instance id is part of the key: removing a video and re-adding
       // the same file swaps the element, so mediapipe must re-adopt it.
       key: `video:${ instances[ 0 ].id }:${ source.path }`
@@ -1297,8 +1345,20 @@ function _ensureVision( opts ) {
     }
 
     _releaseVisionMedia();
+    // Reset the warm-up deadline so a later re-enable arms a fresh window.
+    _visionWarmupDeadline = 0;
 
     return Promise.resolve();
+  }
+
+  // Arm the warm-up safety deadline as soon as a tracker is wanted — even
+  // before a source is ready — so the clock-hold mask can never get stuck
+  // (e.g. a video whose metadata never loads, a denied camera). Re-init below
+  // refreshes it; this only seeds it when nothing has started the window yet.
+  if ( _visionWarmupDeadline === 0 ) {
+    _visionWarmupDeadline = ( typeof performance !== "undefined"
+      ? performance.now()
+      : Date.now() ) + VISION_WARMUP_TIMEOUT_MS;
   }
 
   // Per-frame upkeep of the source media (video seek, asset changes). Null
