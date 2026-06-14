@@ -4,10 +4,10 @@ import {
 
 export const formValues = {
   text: {
-    content: "WEAVE",
-    font: "martian",
-    size: 240,
-    letterSpacing: 8,
+    content: "1234567",
+    font: "agiro",
+    size: 173,
+    letterSpacing: 11,
     fill: [
       235,
       235,
@@ -20,7 +20,7 @@ export const formValues = {
       0,
       255
     ] as number[],
-    strokeWeight: 0
+    strokeWeight: 6
   },
   // Normalised screen position of the word's centre. { x: 0.5, y: 0.5 } is the
   // middle of the canvas (the pad's Y axis points down to match screen space).
@@ -39,7 +39,7 @@ export const formValues = {
   },
   spiral: {
     // How many full loops the coil makes across the word.
-    turns: 7,
+    turns: 2.5,
     // Vertical reach of the coil as a fraction of the text size (controls how
     // far above / below the letters' centre the loops swing).
     heightRatio: 0.62,
