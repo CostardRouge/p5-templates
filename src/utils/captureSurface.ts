@@ -49,6 +49,28 @@ export async function detectCaptureSurface( page: Page ): Promise<CaptureSurface
 
 /** Put the active engine into deterministic, frame-stepped capture mode. */
 export async function prepareCapture( page: Page ): Promise<void> {
+  // Let the interaction layer's vision pipeline warm up before we freeze the
+  // timeline: load the video/image source, compile the first inference, emit a
+  // first result. Otherwise the recording frame-steps from frame 0 while the
+  // source is still loading and captures the "preparing vision" pre-roll for
+  // the whole clip. The gate resolves true when ready, when no vision is
+  // needed, or after its own safety deadline; the catch keeps a stuck gate
+  // from failing the whole job (it just proceeds, as before).
+  await page
+    .waitForFunction(
+      () => {
+        const ready = window.isInteractionVisionReady;
+
+        return typeof ready !== "function" || ready() === true;
+      },
+      undefined,
+      {
+        timeout: 20000,
+        polling: 100
+      }
+    )
+    .catch( () => {} );
+
   await page.evaluate( () => {
     // Sound-producing sketches register an audio bridge; switch it to
     // capture mode so triggers are logged against the deterministic

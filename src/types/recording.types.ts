@@ -142,5 +142,13 @@ declare global {
     // Server-side / deterministic recording controls (time utility)
     enableRecordingMode?: () => void;
     disableRecordingMode?: () => void;
+
+    // Interaction vision warm-up gate (set by the interaction layer). Returns
+    // true once the vision source has loaded and produced a first result, or
+    // when no vision is needed. Awaited before capture so a recording never
+    // starts mid warm-up. __visionWarmupHold is its inverse, read by the
+    // timeline clock to freeze live preview during warm-up.
+    isInteractionVisionReady?: () => boolean;
+    __visionWarmupHold?: () => boolean;
   }
 }
