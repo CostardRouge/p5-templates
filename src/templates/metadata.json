@@ -2782,5 +2782,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-14T16:07:33.102Z",
     "ctime": "2026-06-14T16:06:59.530Z"
+  },
+  {
+    "name": "torsade-v15-shaders",
+    "engine": "p5",
+    "category": "torsade",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-14T17:31:25.330Z",
+    "ctime": "2026-06-14T17:31:05.902Z"
   }
 ]
