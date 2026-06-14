@@ -2758,5 +2758,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-11T12:53:58.551Z",
     "ctime": "2026-06-11T12:53:49.391Z"
+  },
+  {
+    "name": "text-layered-spline",
+    "engine": "p5",
+    "category": "text",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-14T03:36:39.389Z",
+    "ctime": "2026-06-14T03:35:33.673Z"
   }
 ]

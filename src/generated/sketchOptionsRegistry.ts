@@ -197,6 +197,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:text/text-animated-points": () => import( "@/p5/sketches/text/text-animated-points/options" ),
   "p5:text/text-decomposition": () => import( "@/p5/sketches/text/text-decomposition/options" ),
   "p5:text/text-dice": () => import( "@/p5/sketches/text/text-dice/options" ),
+  "p5:text/text-layered-spline": () => import( "@/p5/sketches/text/text-layered-spline/options" ),
   "p5:text/text-mask-with-noise-strips": () => import( "@/p5/sketches/text/text-mask-with-noise-strips/options" ),
   "p5:torsade/torsade-juggle": () => import( "@/p5/sketches/torsade/torsade-juggle/options" ),
   "p5:torsade/torsade-v0": () => import( "@/p5/sketches/torsade/torsade-v0/options" ),
