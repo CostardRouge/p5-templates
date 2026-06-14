@@ -141,7 +141,9 @@ sketch.setup( async() => {
   //   );
   // }
 
-  matter.letterBodies = addLetterBoxes( "abcdefghijklmnopqrstuvwxyz0123456789" );
+  matter.letterBodies = addLetterBoxes(
+    options.sketch?.text?.content ?? "abcdefghijklmnopqrstuvwxyz0123456789"
+  );
   // matter.letterBodies = addLetterBoxes( Array.from(
   //   {
   //     length: 128
@@ -186,10 +188,23 @@ sketch.draw( (
     matter.letterBodies
   );
 
+  const visuals = options.sketch?.visuals ?? {};
+  const letters = options.sketch?.letters ?? {};
+  const shadowsCount = visuals.shadowsCount ?? 3;
+  const dotScale = visuals.dotScale ?? 1;
+
   // Update hand physics bodies
   updateHandBodies();
-  applyRestoringForcesTo( matter.balls );
-  applyRestoringForcesTo( matter.letterBodies );
+  applyRestoringForcesTo(
+    matter.balls,
+    letters.restoreStrength ?? 0.0001,
+    letters.restoreMaxForce ?? 0.003
+  );
+  applyRestoringForcesTo(
+    matter.letterBodies,
+    letters.restoreStrength ?? 0.0001,
+    letters.restoreMaxForce ?? 0.003
+  );
 
   Engine.update( matter.engine );
 
@@ -200,20 +215,12 @@ sketch.draw( (
       position, initialPosition, circleRadius
     } = ball;
 
-    // p.stroke( 0 );
-    // p.line(
-    //   position.x,
-    //   position.y,
-    //   initialPosition.x,
-    //   initialPosition.y
-    // );
-
     neonDot( {
       sizeRange: [
-        circleRadius * 2,
-        ( circleRadius * 2 ) / 3
+        circleRadius * 2 * dotScale,
+        ( circleRadius * 2 * dotScale ) / 3
       ],
-      shadowsCount: 3,
+      shadowsCount,
       graphics: layers.visuals.graphics,
       position,
       index: index / matter.balls.length
@@ -312,7 +319,7 @@ function createHandInteractionBodies( hand ) {
       const handBody = Matter.Bodies.circle(
         x,
         y,
-        75,
+        options.sketch?.physics?.handRadius ?? 75,
         {
           isStatic: true, // Static so it doesn't fall
           isSensor: false // Can interact with other bodies
@@ -425,8 +432,8 @@ function addLetterBoxes( text ) {
       w,
       h,
       {
-        restitution: 0.4,
-        friction: 0.1
+        restitution: options.sketch?.letters?.restitution ?? 0.4,
+        friction: options.sketch?.letters?.friction ?? 0.1
       // isStatic: true, // Static so it doesn't fall
       // isSensor: false, // Can interact with other bodies
       }
@@ -470,7 +477,7 @@ function drawLetterBodies(
     graphics.fill( 0 );
     graphics.noStroke();
     graphics.textFont( string.fonts.martian );
-    graphics.textSize( 144 );
+    graphics.textSize( options.sketch?.text?.letterSize ?? 144 );
     graphics.textAlign(
       p.CENTER,
       p.CENTER

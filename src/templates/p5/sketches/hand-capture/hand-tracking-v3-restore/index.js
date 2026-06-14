@@ -112,7 +112,12 @@ sketch.setup( async() => {
     p.height
   );
 
-  for ( let i = 0; i < BALLS_COUNT; i++ ) {
+  const physics = options.sketch?.physics ?? {};
+  const ballCount = physics.ballCount ?? BALLS_COUNT;
+  const ballSizeMin = physics.ballSizeMin ?? BALLS_SIZE[ 0 ];
+  const ballSizeMax = physics.ballSizeMax ?? BALLS_SIZE[ 1 ];
+
+  for ( let i = 0; i < ballCount; i++ ) {
     addBall(
       p.random(
         thickness,
@@ -122,7 +127,10 @@ sketch.setup( async() => {
         thickness,
         p.height - thickness
       ),
-      p.random( ...BALLS_SIZE )
+      p.random(
+        ballSizeMin,
+        ballSizeMax
+      )
     );
   }
 } );
@@ -143,6 +151,11 @@ sketch.draw( (
     p.background( 90 );
   }
 
+  const visuals = options.sketch?.visuals ?? {};
+  const restore = options.sketch?.restore ?? {};
+  const shadowsCount = visuals.shadowsCount ?? 3;
+  const dotScale = visuals.dotScale ?? 1;
+
   drawHands(
     mediapipe.tasks?.hands?.result,
     layers.hands.graphics
@@ -150,7 +163,10 @@ sketch.draw( (
 
   // Update hand physics bodies
   updateHandBodies();
-  applyRestoringForces( 0.01 );
+  applyRestoringForces(
+    restore.strength ?? 0.01,
+    restore.maxForce ?? 0.003
+  );
 
   Engine.update( matter.engine );
 
@@ -161,20 +177,12 @@ sketch.draw( (
       position, initialPosition, circleRadius
     } = ball;
 
-    // p.stroke( 0 );
-    // p.line(
-    //   position.x,
-    //   position.y,
-    //   initialPosition.x,
-    //   initialPosition.y
-    // );
-
     neonDot( {
       sizeRange: [
-        circleRadius * 2,
-        ( circleRadius * 2 ) / 3
+        circleRadius * 2 * dotScale,
+        ( circleRadius * 2 * dotScale ) / 3
       ],
-      shadowsCount: 3,
+      shadowsCount,
       graphics: layers.visuals.graphics,
       position,
       index: index / matter.balls.length
@@ -208,41 +216,45 @@ sketch.draw( (
     }
   }
 
-  string.write(
-    "restore",
-    0,
-    p.height / 2,
-    {
-      size: 172,
-      strokeWeight: 0,
-      stroke: p.color( ...options.colors.background ),
-      fill: p.color( ...options.colors.background ),
-      font: string.fonts.martian,
-      textAlign: [
-        p.CENTER,
-        p.CENTER
-      ],
-      blendMode: p.EXCLUSION
-    }
-  );
+  const text = options.sketch?.text ?? {};
 
-  string.write(
-    "hand tracking v3",
-    0,
-    ( p.height * 6 ) / 10,
-    {
-      size: 32,
-      strokeWeight: 0,
-      stroke: p.color( ...options.colors.background ),
-      fill: p.color( ...options.colors.background ),
-      font: string.fonts.loraItalic,
-      textAlign: [
-        p.CENTER,
-        p.CENTER
-      ],
-      blendMode: p.EXCLUSION
-    }
-  );
+  if ( text.show ?? true ) {
+    string.write(
+      text.title ?? "restore",
+      0,
+      p.height / 2,
+      {
+        size: 172,
+        strokeWeight: 0,
+        stroke: p.color( ...options.colors.background ),
+        fill: p.color( ...options.colors.background ),
+        font: string.fonts.martian,
+        textAlign: [
+          p.CENTER,
+          p.CENTER
+        ],
+        blendMode: p.EXCLUSION
+      }
+    );
+
+    string.write(
+      text.subtitle ?? "hand tracking v3",
+      0,
+      ( p.height * 6 ) / 10,
+      {
+        size: 32,
+        strokeWeight: 0,
+        stroke: p.color( ...options.colors.background ),
+        fill: p.color( ...options.colors.background ),
+        font: string.fonts.loraItalic,
+        textAlign: [
+          p.CENTER,
+          p.CENTER
+        ],
+        blendMode: p.EXCLUSION
+      }
+    );
+  }
 } );
 
 function updateHandBodies() {
@@ -284,7 +296,7 @@ function createHandInteractionBodies( hand ) {
       const handBody = Matter.Bodies.circle(
         x,
         y,
-        75,
+        options.sketch?.physics?.handRadius ?? 75,
         {
           isStatic: true, // Static so it doesn't fall
           isSensor: false // Can interact with other bodies

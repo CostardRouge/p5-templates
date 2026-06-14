@@ -110,7 +110,12 @@ sketch.setup( async() => {
     p.height
   );
 
-  for ( let i = 0; i <= 25; i++ ) {
+  const physics = options.sketch?.physics ?? {};
+  const ballCount = physics.ballCount ?? 26;
+  const ballSizeMin = physics.ballSizeMin ?? 50;
+  const ballSizeMax = physics.ballSizeMax ?? 80;
+
+  for ( let i = 0; i < ballCount; i++ ) {
     addBall(
       p.random(
         thickness,
@@ -121,8 +126,8 @@ sketch.setup( async() => {
         p.height - thickness
       ),
       p.random(
-        50,
-        80
+        ballSizeMin,
+        ballSizeMax
       )
     );
   }
@@ -144,6 +149,25 @@ sketch.draw( (
     p.background( 90 );
   }
 
+  const physics = options.sketch?.physics ?? {};
+  const visuals = options.sketch?.visuals ?? {};
+  const shadowsCount = visuals.shadowsCount ?? 3;
+  const dotScale = visuals.dotScale ?? 1;
+
+  // Live trail length: lower alpha erases less each frame.
+  layers.visuals.background = [
+    0,
+    0,
+    0,
+    visuals.trail ?? 10
+  ];
+
+  // Ambient drift driven by the "Ambient drift" pad.
+  matter.engine.gravity = {
+    x: physics.gravity?.x ?? 0,
+    y: physics.gravity?.y ?? 0
+  };
+
   drawHands(
     mediapipe.tasks?.hands?.result,
     layers.hands.graphics
@@ -154,25 +178,6 @@ sketch.draw( (
 
   Engine.update( matter.engine );
 
-  // matter.engine.gravity = Vector.create(
-  //   mappers.fn(
-  //     Math.sin( animation.angle ),
-  //     -1,
-  //     1,
-  //     -1,
-  //     1,
-  //     // easing.easeInOutExpo
-  //   ),
-  //   mappers.fn(
-  //     Math.cos( animation.angle * 1.5 ),
-  //     -1,
-  //     1,
-  //     -1,
-  //     1,
-  //     // easing.easeInOutExpo
-  //   ),
-  // );
-
   matter.balls.forEach( (
     ball, index
   ) => {
@@ -180,18 +185,12 @@ sketch.draw( (
       position, circleRadius
     } = ball;
 
-    // layers.visuals.graphics.circle(
-    //   position.x,
-    //   position.y,
-    //   circleRadius * 2
-    // );
-
     neonDot( {
       sizeRange: [
-        circleRadius * 2,
-        ( circleRadius * 2 ) / 3
+        circleRadius * 2 * dotScale,
+        ( circleRadius * 2 * dotScale ) / 3
       ],
-      shadowsCount: 3,
+      shadowsCount,
       graphics: layers.visuals.graphics,
       position,
       index: index / matter.balls.length
@@ -225,41 +224,45 @@ sketch.draw( (
     }
   }
 
-  string.write(
-    "move",
-    0,
-    p.height / 2,
-    {
-      size: 172,
-      strokeWeight: 0,
-      stroke: p.color( ...options.colors.background ),
-      fill: p.color( ...options.colors.background ),
-      font: string.fonts.martian,
-      textAlign: [
-        p.CENTER,
-        p.CENTER
-      ],
-      blendMode: p.EXCLUSION
-    }
-  );
+  const text = options.sketch?.text ?? {};
 
-  string.write(
-    "hand tracking v0",
-    0,
-    ( p.height * 6 ) / 10,
-    {
-      size: 32,
-      strokeWeight: 0,
-      stroke: p.color( ...options.colors.background ),
-      fill: p.color( ...options.colors.background ),
-      font: string.fonts.loraItalic,
-      textAlign: [
-        p.CENTER,
-        p.CENTER
-      ],
-      blendMode: p.EXCLUSION
-    }
-  );
+  if ( text.show ?? true ) {
+    string.write(
+      text.title ?? "move",
+      0,
+      p.height / 2,
+      {
+        size: 172,
+        strokeWeight: 0,
+        stroke: p.color( ...options.colors.background ),
+        fill: p.color( ...options.colors.background ),
+        font: string.fonts.martian,
+        textAlign: [
+          p.CENTER,
+          p.CENTER
+        ],
+        blendMode: p.EXCLUSION
+      }
+    );
+
+    string.write(
+      text.subtitle ?? "hand tracking v0",
+      0,
+      ( p.height * 6 ) / 10,
+      {
+        size: 32,
+        strokeWeight: 0,
+        stroke: p.color( ...options.colors.background ),
+        fill: p.color( ...options.colors.background ),
+        font: string.fonts.loraItalic,
+        textAlign: [
+          p.CENTER,
+          p.CENTER
+        ],
+        blendMode: p.EXCLUSION
+      }
+    );
+  }
 } );
 
 function updateHandBodies() {
@@ -301,7 +304,7 @@ function createHandInteractionBodies( hand ) {
       const handBody = Matter.Bodies.circle(
         x,
         y,
-        75,
+        options.sketch?.physics?.handRadius ?? 75,
         {
           isStatic: true, // Static so it doesn't fall
           isSensor: false // Can interact with other bodies
