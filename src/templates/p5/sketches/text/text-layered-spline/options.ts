@@ -7,19 +7,14 @@ export const formValues = {
     content: "WEAVE",
     font: "martian",
     size: 200,
+    // Letter colour. The glyph mask is cached white and tinted to this, so the
+    // colour can change every frame without re-rasterising the font.
     fill: [
       235,
       235,
       240,
       255
-    ] as number[],
-    stroke: [
-      0,
-      0,
-      0,
-      255
-    ] as number[],
-    strokeWeight: 0
+    ] as number[]
   },
   // Normalised screen position of the word's centre. { x: 0.5, y: 0.5 } is the
   // middle of the canvas (the pad's Y axis points down to match screen space).
@@ -33,11 +28,9 @@ export const formValues = {
     // Vertical reach of the coil (rise / fall on screen), as a fraction of size.
     radiusY: 0.6,
     // Depth reach of the coil (how far it swings in front of / behind the text),
-    // as a fraction of size. This is what drives the front/back occlusion; set
-    // it to 0 for a perfectly flat ribbon (no weave).
+    // as a fraction of size. This is what drives the front/back weave; set it to
+    // 0 for a perfectly flat ribbon (no weave).
     radiusZ: 0.6,
-    // Stroke thickness of the coil.
-    thickness: 16,
     // How far the coil overshoots the word on each side, in units of text size.
     extend: 0.4,
     // Resolution of the helix — more points = a smoother curve through the loops.
@@ -51,21 +44,33 @@ export const formValues = {
     direction: 1 as 1 | -1
   },
   camera: {
-    // Orthographic = flat, even weave. Off = perspective (the far side recedes).
-    orthographic: false,
-    // Tilt the whole scene to expose the coil's depth as a real spiral in space.
-    // A small default tilt reads as a 3D coil even on a still frame; set both to
-    // 0 for a dead-on view where only the occlusion gives the weave away.
+    // Perspective makes the far side of the coil recede (the round-spiral look);
+    // off = orthographic (a flat, even projection — the weave still reads via the
+    // front/back layering).
+    perspective: true,
+    // Tilt the coil so its depth reads as a real spiral in space.
     tiltX: 0.3,
     tiltY: 0
   },
+  curve: {
+    // Chaikin corner-cutting passes applied by the shared splines renderer.
+    iterations: 4
+  },
   stroke: {
-    // Off = one uniform hue (shifts over time) so the coil reads as a single
-    // continuous wire. On = a rainbow swept along the coil.
-    gradient: false,
+    weight: 16,
+    glow: 3,
+    // Variable thickness along the (open) arcs — both at 1 = a uniform tube.
+    weightStart: 1,
+    weightEnd: 1,
+    weightEasing: "linear",
     hueSpeed: 1,
+    // Rainbow swept along the coil. The hue can restart at a front/back crossing,
+    // but those mostly fall over the letters where they're hidden; turn gradient
+    // off for one uniform hue if you want a single continuous wire.
     hueSpread: 1.5,
-    hueOffset: 0
+    hueOffset: 0,
+    hueEasing: "linear",
+    gradient: true
   },
   backgroundColor: [
     8,
@@ -100,17 +105,6 @@ export const formConfiguration: Record<string, any> = {
       fill: {
         label: "Fill",
         component: "color"
-      },
-      stroke: {
-        label: "Stroke",
-        component: "color"
-      },
-      strokeWeight: {
-        label: "Stroke weight",
-        component: "slider",
-        min: 0,
-        max: 20,
-        step: 0.5
       }
     }
   },
@@ -148,13 +142,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 1.5,
         step: 0.01
-      },
-      thickness: {
-        label: "Thickness",
-        component: "slider",
-        min: 1,
-        max: 80,
-        step: 0.5
       },
       extend: {
         label: "Overshoot × size",
@@ -205,8 +192,8 @@ export const formConfiguration: Record<string, any> = {
     label: "Camera",
     component: "nested-object",
     fields: {
-      orthographic: {
-        label: "Orthographic (flat)",
+      perspective: {
+        label: "Perspective",
         component: "checkbox"
       },
       tiltX: {
@@ -225,13 +212,54 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  stroke: {
-    label: "Stroke",
+  curve: {
+    label: "Curve",
     component: "nested-object",
     fields: {
-      gradient: {
-        label: "Gradient along path",
-        component: "checkbox"
+      iterations: {
+        label: "Chaikin iterations",
+        component: "slider",
+        min: 0,
+        max: 6,
+        step: 1
+      }
+    }
+  },
+  stroke: {
+    label: "Stroke (spline)",
+    component: "nested-object",
+    fields: {
+      weight: {
+        label: "Weight (middle of the curve)",
+        component: "slider",
+        min: 1,
+        max: 40,
+        step: 0.5
+      },
+      weightStart: {
+        label: "Weight × at start",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.05
+      },
+      weightEnd: {
+        label: "Weight × at end",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.05
+      },
+      weightEasing: {
+        label: "Weight taper easing",
+        component: "easing"
+      },
+      glow: {
+        label: "Glow layers",
+        component: "slider",
+        min: 0,
+        max: 8,
+        step: 1
       },
       hueSpeed: {
         label: "Hue speed (over time)",
@@ -253,6 +281,14 @@ export const formConfiguration: Record<string, any> = {
         min: -Math.PI,
         max: Math.PI,
         step: 0.01
+      },
+      hueEasing: {
+        label: "Hue spread easing",
+        component: "easing"
+      },
+      gradient: {
+        label: "Gradient along path",
+        component: "checkbox"
       }
     }
   },
