@@ -37,6 +37,13 @@ export const formValues = {
     225
   ],
 
+  // How the tracked hands / pointers are drawn (neon strokes + dots)
+  hands: {
+    size: 30,
+    glow: 2,
+    resolution: 0.08
+  },
+
   // Each character becomes a draggable physics box. Edit the string to scatter
   // your own word, alphabet or set of glyphs across the canvas.
   text: {
@@ -68,6 +75,34 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
+  },
+
+  hands: {
+    component: "nested-object",
+    label: "Hand drawing",
+    fields: {
+      size: {
+        label: "Stroke / dot size",
+        component: "slider",
+        min: 5,
+        max: 200,
+        step: 1
+      },
+      glow: {
+        label: "Glow layers",
+        component: "slider",
+        min: 1,
+        max: 12,
+        step: 1
+      },
+      resolution: {
+        label: "Stroke resolution (lower = denser)",
+        component: "slider",
+        min: 0.01,
+        max: 0.3,
+        step: 0.01
+      }
+    }
   },
 
   text: {

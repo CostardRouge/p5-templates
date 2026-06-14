@@ -20,6 +20,7 @@ sketch.draw( () => {
   const interaction = options.sketch?.interaction ?? {};
   const physics = options.sketch?.physics ?? {};
   const visuals = options.sketch?.visuals ?? {};
+  const hands = options.sketch?.hands ?? {};
   const text = options.sketch?.text ?? {};
   const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
@@ -34,7 +35,11 @@ sketch.draw( () => {
     sizeMax: physics.ballSizeMax ?? 80
   } );
 
-  scene.drawInteraction();
+  scene.drawInteraction( {
+    innerCircleSize: hands.size ?? 50,
+    shadowsCount: hands.glow ?? 3,
+    vectorsStep: hands.resolution ?? 0.05
+  } );
   scene.syncHandBodies( physics.handRadius ?? 75 );
   scene.setGravity( {
     x: physics.gravity?.x ?? 0,

@@ -258,7 +258,7 @@ export class HandCaptureScene {
    * mouse, orbit, …) as neon dots.
    */
   drawInteraction( {
-    innerCircleSize = 50, shadowsCount = 3
+    innerCircleSize = 50, shadowsCount = 3, vectorsStep = 0.05
   } = {} ) {
     const graphics = this.layers.hands?.graphics;
 
@@ -280,6 +280,7 @@ export class HandCaptureScene {
         neonLine( {
           innerCircleSize,
           shadowsCount,
+          vectorsStep,
           vectors: group.points,
           index,
           graphics

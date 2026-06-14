@@ -22,6 +22,7 @@ sketch.draw( () => {
   const physics = options.sketch?.physics ?? {};
   const letters = options.sketch?.letters ?? {};
   const visuals = options.sketch?.visuals ?? {};
+  const hands = options.sketch?.hands ?? {};
   const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
@@ -35,7 +36,11 @@ sketch.draw( () => {
     friction: letters.friction ?? 0.1
   } );
 
-  scene.drawInteraction();
+  scene.drawInteraction( {
+    innerCircleSize: hands.size ?? 50,
+    shadowsCount: hands.glow ?? 3,
+    vectorsStep: hands.resolution ?? 0.05
+  } );
   scene.syncHandBodies( physics.handRadius ?? 75 );
   scene.restoreLetters(
     letters.restoreStrength ?? 0.0001,
