@@ -55,6 +55,11 @@ ton repo. Garde ces fichiers ouverts pendant le cours :
 > **Toutes les leçons sont déjà écrites** (lecture hors-ligne possible), chacune avec ses
 > exercices et leurs **corrigés en `<details>`** pour t'auto-évaluer sans connexion.
 
+**Transversal**
+- 📌 [Pièges, astuces, perf & bonus](REFERENCE-traps-tips-perf.md) — la fiche de référence à
+  garder sous la main : bugs sournois (NaN, types, précision), tweaks de perf (branches,
+  raymarch, full-screen vs instancing), boucles seamless pour les réseaux, et tours en bonus.
+
 ## Le playground
 
 `playground/index.html` — un éditeur de fragment shader **en direct**. Ouvre-le dans
