@@ -28,16 +28,10 @@ export const formValues = {
     x: 0.5,
     y: 0.5
   },
-  layering: {
-    // alternate → the coil weaves in front of / behind every other letter.
-    // front     → the whole word sits in front of the coil.
-    // back      → the whole word sits behind the coil.
-    mode: "alternate" as "alternate" | "front" | "back",
-    // Flip which letters lead the weave (front vs back) without re-typing the
-    // word — handy to find the most pleasing over/under pattern.
-    offset: 0
-  },
   spiral: {
+    // When true the coil dives behind and surfaces in front of the letters
+    // (the weave). When false it is a flat ribbon drawn entirely in front.
+    weave: true,
     // How many full loops the coil makes across the word.
     turns: 2.5,
     // Vertical reach of the coil as a fraction of the text size (controls how
@@ -46,6 +40,9 @@ export const formValues = {
     // Horizontal "fold" of each loop as a fraction of the text size. Larger
     // values make the coil fold back on itself into rounder loops.
     loopWidthRatio: 0.3,
+    // Shifts where along each loop the coil crosses from behind to in front,
+    // so you can tune which strands read as over vs under.
+    depthPhase: 0,
     // How far the coil overshoots the word on each side, in units of text size.
     extend: 0.6,
     // Resolution of the coil before the spline smoothing — more points = a
@@ -70,7 +67,10 @@ export const formValues = {
     hueSpread: 1.5,
     hueOffset: 0,
     hueEasing: "linear",
-    gradient: true
+    // Off by default so the behind and in-front passes share one uniform hue and
+    // the weave reads as a single continuous wire. Turn on for a rainbow coil
+    // (the gradient restarts at each over/under crossing).
+    gradient: false
   },
   backgroundColor: [
     8,
@@ -135,48 +135,28 @@ export const formConfiguration: Record<string, any> = {
     step: 0.01,
     yDown: true
   },
-  layering: {
-    label: "Layering (weave)",
+  spiral: {
+    label: "Spiral (weave)",
     component: "nested-object",
     initialExpanded: true,
     fields: {
-      mode: {
-        label: "Mode",
-        component: "select",
-        options: [
-          {
-            label: "Alternate (weave)",
-            value: "alternate"
-          },
-          {
-            label: "Word in front",
-            value: "front"
-          },
-          {
-            label: "Word behind",
-            value: "back"
-          }
-        ]
+      weave: {
+        label: "Weave through letters",
+        component: "checkbox"
       },
-      offset: {
-        label: "Weave offset (0/1)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 1
-      }
-    }
-  },
-  spiral: {
-    label: "Spiral",
-    component: "nested-object",
-    fields: {
       turns: {
         label: "Turns (loops across word)",
         component: "slider",
         min: 1,
         max: 24,
         step: 0.5
+      },
+      depthPhase: {
+        label: "Over/under crossing phase",
+        component: "slider",
+        min: -Math.PI,
+        max: Math.PI,
+        step: 0.01
       },
       heightRatio: {
         label: "Height × text size",

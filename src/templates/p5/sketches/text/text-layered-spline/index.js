@@ -9,25 +9,27 @@ import {
 } from "../../splines/_shared.js";
 
 // ── What this sketch is ──────────────────────────────────────────────────────
-// A word, centred on the canvas, is decomposed into its individual letters so
-// each glyph becomes its own layer. A single glowing spline — the exact
-// "control-point-free" curve shared by the `splines` v0 / v1 sketches — coils
-// horizontally across the word like a helix seen from the side, making several
-// small loops as it travels from left to right.
+// A word, centred on the canvas, is decomposed into its individual glyphs. A
+// single glowing spline winds across the word like a coil / bobbin: it is built
+// as a 3D helix (it advances horizontally, oscillates vertically, and carries a
+// DEPTH given by the cosine of its winding angle) and then projected to 2D.
 //
-// The trick that makes the spline weave *through* the word is purely about
-// draw order. Because every letter occupies its own horizontal slice, we split
-// the glyphs into two layers:
+// The realism comes from the depth. Wherever the helix is on the *far* side of
+// the text plane (depth < 0) the coil must read as passing BEHIND the letters;
+// wherever it is on the *near* side (depth >= 0) it passes IN FRONT. We get that
+// — properly clipped to the glyph outlines, with several strands crossing one
+// letter — purely through draw order:
 //
 //   1. background
-//   2. the "back" letters          → the coil is drawn ON TOP of these
-//   3. the coil (renderSplines)
-//   4. the "front" letters         → these are drawn ON TOP of the coil
+//   2. the BEHIND arcs of the coil
+//   3. the letters, drawn opaque        → they hide the behind arcs they cover
+//   4. the IN-FRONT arcs of the coil    → these are painted over the letters
 //
-// Where the coil overlaps a back letter it passes in front; where it overlaps a
-// front letter the letter hides it. With the layers alternating letter by letter
-// (en quinconce) the coil appears to dive behind one glyph and surface in front
-// of the next as it spirals along the word.
+// Because the letters are opaque, step 3 clips every behind arc to the glyph
+// silhouette for free, and step 4 lays the near strands back on top. The coil
+// dives in and out of each letter in quinconce, exactly like a thread wound
+// around the word. The coil reuses the shared `splines` renderer (v0 / v1), so
+// it keeps the same neon glow and Chaikin smoothing.
 
 const TAU = Math.PI * 2;
 
@@ -45,9 +47,7 @@ const state = {
 /**
  * Decompose `text` into a list of placed glyphs. Each entry carries the glyph's
  * centre (x, y) and advance width so it can be both drawn (textAlign CENTER) and
- * used to bound the coil. Spaces advance the cursor but emit no drawable glyph,
- * and only visible glyphs receive a weave parity so the front/back alternation
- * isn't broken by gaps.
+ * used to bound the coil. Spaces advance the cursor but emit no drawable glyph.
  */
 function layoutLetters( {
   text,
@@ -83,7 +83,6 @@ function layoutLetters( {
   const centerY = p.height * position.y;
 
   let cursor = centerX - totalWidth / 2;
-  let visibleIndex = 0;
   const letters = [];
 
   chars.forEach( (
@@ -96,8 +95,7 @@ function layoutLetters( {
         char,
         x: cursor + advance / 2,
         y: centerY,
-        width: advance,
-        visibleIndex: visibleIndex++
+        width: advance
       } );
     }
 
@@ -106,7 +104,6 @@ function layoutLetters( {
 
   return {
     letters,
-    centerX,
     centerY,
     startX: centerX - totalWidth / 2,
     endX: centerX + totalWidth / 2
@@ -159,13 +156,17 @@ function ensureLayout(
 }
 
 /**
- * Build the travelling coil. As `t` sweeps 0→1 the curve advances horizontally
+ * Sample the travelling helix. As `t` sweeps 0→1 the curve advances horizontally
  * across (and slightly beyond) the word while `angle` winds it round `turns`
- * times: sin drives the vertical oscillation, cos pushes the horizontal "loop
- * width" so the coil folds back on itself into proper little loops instead of a
- * flat wave. `phase` is animated so the whole helix drifts over time.
+ * times: sin drives the vertical oscillation, cos folds it horizontally into
+ * rounded loops. A separate `depth = cos(angle + depthPhase)` tags each point as
+ * near (>= 0, in front of the text) or far (< 0, behind it). `phase` is animated
+ * so the whole coil drifts over time.
+ *
+ * Returns the flat point list plus the matching depth list, ready to be split
+ * into front / behind arcs.
  */
-function buildCoil( {
+function sampleCoil( {
   size,
   spiral,
   centerY,
@@ -180,15 +181,17 @@ function buildCoil( {
   const span = right - left;
 
   const radiusY = size * ( spiral.heightRatio ?? 0.62 );
-  const loopWidth = size * ( spiral.loopWidthRatio ?? 0.28 );
-  const turns = spiral.turns ?? 6;
+  const loopWidth = size * ( spiral.loopWidthRatio ?? 0.3 );
+  const turns = spiral.turns ?? 7;
   const direction = spiral.direction ?? 1;
+  const depthPhase = spiral.depthPhase ?? 0;
   const count = Math.max(
     8,
-    Math.round( spiral.pointCount ?? 220 )
+    Math.round( spiral.pointCount ?? 240 )
   );
 
   const points = [];
+  const depths = [];
 
   for ( let i = 0; i < count; i++ ) {
     const t = i / ( count - 1 );
@@ -198,15 +201,59 @@ function buildCoil( {
       left + t * span + Math.cos( angle ) * loopWidth,
       centerY + Math.sin( angle ) * radiusY
     ) );
+    depths.push( Math.cos( angle + depthPhase ) );
   }
 
-  return points;
+  return {
+    points,
+    depths
+  };
 }
 
 /**
- * Draw a subset of the decomposed glyphs. Kept in its own helper so the back
- * layer and the front layer share identical styling and only differ by which
- * letters they receive.
+ * Split the sampled helix into contiguous runs of the same side (front vs
+ * behind the text plane). Each time the depth sign flips we start a new run,
+ * seeding it with the previous point so neighbouring arcs overlap by one vertex
+ * and join seamlessly once smoothed. Runs shorter than two points are useless to
+ * the spline renderer and dropped.
+ */
+function splitCoilByDepth(
+  points, depths
+) {
+  const front = [];
+  const back = [];
+  let current = null;
+  let currentIsFront = null;
+
+  for ( let i = 0; i < points.length; i++ ) {
+    const isFront = depths[ i ] >= 0;
+
+    if ( current === null || isFront !== currentIsFront ) {
+      const seed = current && current.length
+        ? [
+          current[ current.length - 1 ]
+        ]
+        : [];
+
+      current = seed;
+      currentIsFront = isFront;
+      ( isFront ? front : back ).push( current );
+    }
+
+    current.push( points[ i ] );
+  }
+
+  const usable = ( runs ) => runs.filter( ( run ) => run.length >= 2 );
+
+  return {
+    front: usable( front ),
+    back: usable( back )
+  };
+}
+
+/**
+ * Draw the decomposed glyphs in a single opaque pass. Opaqueness is what clips
+ * the behind arcs to the glyph silhouette, so the fill alpha is forced to 255.
  */
 function drawLetters(
   letters, textOptions
@@ -219,11 +266,14 @@ function drawLetters(
   const fontKey = textOptions.font ?? "martian";
   const font = string.fonts[ fontKey ] ?? string.fonts.martian;
   const size = textOptions.size ?? 220;
-  const fill = textOptions.fill ?? [
+  const [
+    fr,
+    fg,
+    fb
+  ] = textOptions.fill ?? [
     235,
     235,
-    240,
-    255
+    240
   ];
   const strokeColor = textOptions.stroke ?? [
     0,
@@ -240,7 +290,12 @@ function drawLetters(
     p.CENTER,
     p.CENTER
   );
-  p.fill( ...fill );
+  p.fill(
+    fr,
+    fg,
+    fb,
+    255
+  );
 
   if ( strokeWeight > 0 ) {
     p.stroke( ...strokeColor );
@@ -256,49 +311,6 @@ function drawLetters(
   ) );
 
   p.pop();
-}
-
-/**
- * Split the glyphs into the layer drawn behind the coil and the layer drawn in
- * front of it. `alternate` is the weave: every other (visible) glyph swaps side,
- * `offset` flips which side leads. `front` / `back` push the whole word to one
- * side of the coil for the non-woven looks.
- */
-function partitionLetters(
-  letters, layering
-) {
-  const mode = layering.mode ?? "alternate";
-  const offset = layering.offset ?? 0;
-
-  if ( mode === "front" ) {
-    return {
-      back: [],
-      front: letters
-    };
-  }
-
-  if ( mode === "back" ) {
-    return {
-      back: letters,
-      front: []
-    };
-  }
-
-  const back = [];
-  const front = [];
-
-  letters.forEach( ( letter ) => {
-    if ( ( letter.visibleIndex + offset ) % 2 === 0 ) {
-      back.push( letter );
-    } else {
-      front.push( letter );
-    }
-  } );
-
-  return {
-    back,
-    front
-  };
 }
 
 sketch.draw( () => {
@@ -329,23 +341,11 @@ sketch.draw( () => {
     return;
   }
 
-  const {
-    back,
-    front
-  } = partitionLetters(
-    state.letters,
-    o.layering ?? {}
-  );
-
-  // 1. Letters that the coil passes in front of.
-  drawLetters(
-    back,
-    textOptions
-  );
-
-  // 2. The coil itself, rendered with the shared splines look (v0 / v1).
   const spiral = o.spiral ?? {};
-  const coil = buildCoil( {
+  const {
+    points,
+    depths
+  } = sampleCoil( {
     size: textOptions.size ?? 220,
     spiral,
     centerY: state.centerY,
@@ -354,33 +354,66 @@ sketch.draw( () => {
     phase: animation.angle * ( spiral.speed ?? 1 )
   } );
 
-  renderSplines(
-    [
-      coil
-    ],
-    {
-      curve: {
-        method: "chaikin",
-        closed: false,
-        iterations: o.curve?.iterations ?? 4
+  const renderConfig = {
+    curve: {
+      method: "chaikin",
+      closed: false,
+      iterations: o.curve?.iterations ?? 4
+    },
+    stroke: o.stroke ?? {},
+    // The point markers / raw polygon are a demonstration overlay in the splines
+    // sketches; here the coil is the subject, so keep them off.
+    overlay: {
+      polygon: {
+        show: false
       },
-      stroke: o.stroke ?? {},
-      // The point markers / raw polygon are a demonstration overlay in the
-      // splines sketches; here the coil is the subject, so keep them off.
-      overlay: {
-        polygon: {
-          show: false
-        },
-        points: {
-          show: false
-        }
+      points: {
+        show: false
       }
     }
+  };
+
+  // When the weave is off the coil is a flat ribbon entirely in front of the
+  // word — useful to preview the raw curve. Otherwise the depth split is what
+  // makes it dive behind and surface in front of the letters in quinconce.
+  if ( spiral.weave === false ) {
+    drawLetters(
+      state.letters,
+      textOptions
+    );
+    renderSplines(
+      [
+        points
+      ],
+      renderConfig
+    );
+
+    return;
+  }
+
+  const {
+    front,
+    back
+  } = splitCoilByDepth(
+    points,
+    depths
   );
 
-  // 3. Letters that hide the coil, completing the weave.
+  // 1. arcs that pass behind the word.
+  renderSplines(
+    back,
+    renderConfig
+  );
+
+  // 2. the opaque word clips those behind arcs to the glyph outlines.
   drawLetters(
-    front,
+    state.letters,
     textOptions
+  );
+
+  // 3. arcs that pass in front, painted on top to complete the weave.
+  renderSplines(
+    front,
+    renderConfig
   );
 } );
