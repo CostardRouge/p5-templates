@@ -190,6 +190,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:text/text-animation-typein-typeout": () => import( "@/p5/sketches/text/text-animation-typein-typeout/index.js" ),
   "p5:text/text-decomposition": () => import( "@/p5/sketches/text/text-decomposition/index.js" ),
   "p5:text/text-dice": () => import( "@/p5/sketches/text/text-dice/index.js" ),
+  "p5:text/text-layered-spline": () => import( "@/p5/sketches/text/text-layered-spline/index.js" ),
   "p5:text/text-mask-with-noise-strips": () => import( "@/p5/sketches/text/text-mask-with-noise-strips/index.js" ),
   "p5:torsade/torsade-juggle": () => import( "@/p5/sketches/torsade/torsade-juggle/index.js" ),
   "p5:torsade/torsade-v0": () => import( "@/p5/sketches/torsade/torsade-v0/index.js" ),
