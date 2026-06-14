@@ -180,6 +180,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:semaphore/semaphore-v1-lines": () => import( "@/p5/sketches/semaphore/semaphore-v1-lines/index.js" ),
   "p5:splines/splines-v0-chaikin": () => import( "@/p5/sketches/splines/splines-v0-chaikin/index.js" ),
   "p5:splines/splines-v1-interactive": () => import( "@/p5/sketches/splines/splines-v1-interactive/index.js" ),
+  "p5:splines/splines-v2-draggable": () => import( "@/p5/sketches/splines/splines-v2-draggable/index.js" ),
   "p5:text-morphing/text-morphing-capitalize": () => import( "@/p5/sketches/text-morphing/text-morphing-capitalize/index.js" ),
   "p5:text-morphing/text-morphing-depth": () => import( "@/p5/sketches/text-morphing/text-morphing-depth/index.js" ),
   "p5:text-morphing/text-morphing-depth-clock": () => import( "@/p5/sketches/text-morphing/text-morphing-depth-clock/index.js" ),
