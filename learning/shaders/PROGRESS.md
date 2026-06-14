@@ -35,6 +35,11 @@
 | Date | Ce qui a été fait | Prochaine étape |
 |---|---|---|
 | 2026-06-07 | Mise en place du cours. Démarrage M0–M1 (lecture + exercices à faire). | L'élève fait les exos M0–M1 dans le playground ; corriger, puis M2. |
+| 2026-06-14 | **Toutes** les leçons M2→M10 rédigées d'avance (lecture hors-ligne, corrigés inclus) avant un vol sans internet. | À son retour : corriger les exos faits hors-ligne (M0→…), valider la progression, caler la répétition espacée. |
+
+> Note : les fichiers de leçon existent tous, mais le **statut** ci-dessus reste « à voir » tant
+> que l'élève n'a pas fait les exos + memory checks de chaque module. Ne pas confondre « écrit »
+> et « acquis ».
 
 ## Carnet d'erreurs récurrentes
 

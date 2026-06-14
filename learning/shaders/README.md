@@ -39,19 +39,21 @@ ton repo. Garde ces fichiers ouverts pendant le cours :
 ## Le programme
 
 **Piste A — Fragment / 2D** (la majorité de tes sketchs)
-- **M0** Le mental model — chaque pixel se pose une question
-- **M1** L'espace du pixel — les UV (= l'équivalent de translate/scale)
-- **M2** Dessiner = SDF : le cercle (`discMask`)
-- **M3** Lignes & segments (`segmentDistance`)
-- **M4** Grilles & répétition SANS boucle (`fract`, `mod`)
-- **M5** map & easing en GLSL
-- **M6** Le bruit de Perlin sur GPU (cœur de `noise-grid`)
-- **M7** Couleur & palettes
-- **M8** Composition, ordre de dessin, blending
+- **M0–M1** [Le mental model & les UV](lessons/M0-M1-mental-model-and-uv.md) — chaque pixel se pose une question ; se repérer (= translate/scale)
+- **M2** [Dessiner = SDF : le cercle](lessons/M2-sdf-circle.md) (`discMask`)
+- **M3** [Lignes & segments](lessons/M3-lines-segments.md) (`segmentDistance`)
+- **M4** [Grilles & répétition SANS boucle](lessons/M4-grids-repetition.md) (`fract`, `mod`)
+- **M5** [map & easing en GLSL](lessons/M5-map-easing.md)
+- **M6** [Le bruit de Perlin sur GPU](lessons/M6-perlin-noise-gpu.md) (cœur de `noise-grid`)
+- **M7** [Couleur & palettes](lessons/M7-color-palettes.md)
+- **M8** [Composition, ordre de dessin, blending](lessons/M8-composition-blending.md)
 
 **Piste B — 3D / Vertex**
-- **M9** Vertex shader & matrices (dissection de `peaks-cone`)
-- **M10** Raymarching (avancé, optionnel)
+- **M9** [Vertex shader & matrices](lessons/M9-vertex-shader-3d.md) (dissection de `peaks-cone`)
+- **M10** [Raymarching](lessons/M10-raymarching.md) (avancé, optionnel)
+
+> **Toutes les leçons sont déjà écrites** (lecture hors-ligne possible), chacune avec ses
+> exercices et leurs **corrigés en `<details>`** pour t'auto-évaluer sans connexion.
 
 ## Le playground
 
