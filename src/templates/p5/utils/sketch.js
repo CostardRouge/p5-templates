@@ -412,12 +412,9 @@ const sketch = {
     // Reset animation time so the next sketch starts at t=0
     time.reset();
 
-    // Drop the interaction warm-up gate hooks so a sketch interrupted mid
-    // warm-up can't freeze the next sketch's clock. Interaction sketches
-    // re-publish them from initInteraction(); non-interaction sketches leave
-    // them cleared so time.js never holds.
+    // Drop the interaction vision-readiness hook between sketches; interaction
+    // sketches re-publish it from initInteraction().
     if ( typeof window !== "undefined" ) {
-      delete window.__visionWarmupHold;
       delete window.isInteractionVisionReady;
     }
   },

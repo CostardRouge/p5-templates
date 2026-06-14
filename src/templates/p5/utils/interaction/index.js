@@ -569,12 +569,12 @@ export async function initInteraction( opts = {} ) {
 
   _audioInitialized = false;
 
-  // ── Vision warm-up gate ──────────────────────────────────────────────────
-  // Publish the readiness signal so the timeline clock can freeze the animation
-  // while vision warms up (hiding the first-inference jank) and so the headless
-  // capture pipeline can await it before frame 0. Both are no-ops once warm.
+  // ── Vision readiness signal ──────────────────────────────────────────────
+  // Published so the headless capture pipeline can await a warmed-up vision
+  // source before frame 0 (see prepareCapture). Live preview deliberately does
+  // NOT block on this — the sketch animates from the start; freezing it while
+  // MediaPipe warmed up read as startup stutter, so that hold was removed.
   if ( typeof window !== "undefined" ) {
-    window.__visionWarmupHold = _isVisionWarmupHolding;
     window.isInteractionVisionReady = () => isVisionReady();
   }
 
@@ -657,8 +657,6 @@ export function disposeInteraction() {
   _lastVisionOpts = null;
   _visionWarmupDeadline = 0;
 
-  // Stop holding the next sketch's clock on this sketch's warm-up state.
-  delete window.__visionWarmupHold;
   delete window.isInteractionVisionReady;
 
   _groupSmoothing.clear();
@@ -1090,10 +1088,31 @@ function _releaseVisionMedia() {
   _releaseVisionImage();
 }
 
+// Per-frame source-media result cache. _ensureVision runs ~5× per draw frame
+// (the sketch's getPointerGroups plus the debug-overlay collectors), and the
+// upkeep below allocates + JSON.stringifies the video instances and reconciles
+// the source every call. Compute it once per frame and reuse it for the rest.
+let _visionSourceFrame = -1;
+let _visionSourceCache = null;
+
 // Per-frame upkeep of the vision source media. Returns the mediapipe `source`
 // config (with a stable `key` for the re-init signature), or null while there
 // is nothing to run inference on yet (e.g. video mode with no video picked).
 function _ensureVisionSourceMedia( opts ) {
+  const frame = getP5()?.frameCount ?? -1;
+
+  // -1 means no p5 yet (pre-first-draw) — don't cache, just recompute.
+  if ( frame !== -1 && frame === _visionSourceFrame ) {
+    return _visionSourceCache;
+  }
+
+  _visionSourceFrame = frame;
+  _visionSourceCache = _computeVisionSourceMedia( opts );
+
+  return _visionSourceCache;
+}
+
+function _computeVisionSourceMedia( opts ) {
   const vision = opts.vision ?? {};
   const src = vision.source ?? {};
   const mode = _visionSourceMode( vision );
@@ -1447,13 +1466,6 @@ export function isVisionReady( opts = _lastVisionOpts ) {
   const now = typeof performance !== "undefined" ? performance.now() : Date.now();
 
   return _visionWarmupDeadline > 0 && now > _visionWarmupDeadline;
-}
-
-// Predicate published on window so the timeline clock (time.js) can freeze the
-// animation while vision warms up — without time.js importing this heavy
-// module. Returns true only while a hold is warranted.
-function _isVisionWarmupHolding() {
-  return _lastVisionOpts != null && !isVisionReady( _lastVisionOpts );
 }
 
 // Convert a MediaPipe normalized landmark (0..1) to p5 canvas space, honouring

@@ -16,8 +16,7 @@ import {
 } from "@/p5/utils/sketch.js";
 import {
   getPointersDebug,
-  getPointerGroups,
-  isVisionReady
+  getPointerGroups
 } from "./index.js";
 
 // Per-source colour palette (RGB). Shared so the legend dot, the crosshair,
@@ -423,13 +422,6 @@ export function drawInteractionOverlay( opts ) {
     return;
   }
 
-  // While the vision pipeline warms up, the timeline is frozen at frame 0 (see
-  // time.js): cover the held first frame with a loading mask and skip the debug
-  // overlays, which would only show empty data. Lifts itself once warm.
-  if ( drawInteractionWarmupOverlay( opts ) ) {
-    return;
-  }
-
   const viz = opts.visualization ?? {};
 
   // The camera preview lives under `vision.camera`, so it stays available even
@@ -445,82 +437,4 @@ export function drawInteractionOverlay( opts ) {
   drawInteractionFingerChains( opts );
   drawInteractionPointers( opts );
   drawInteractionLegend( opts );
-}
-
-/**
- * Loading mask shown while the vision pipeline warms up (model load, first
- * shader-compiling inference, first camera/video frame). The timeline is held
- * at frame 0 during this window (time.js), so this covers the static first
- * frame with a dimmed veil + a "preparing vision" label and three pulsing
- * dots. Returns true while it is masking, so the caller skips the rest of the
- * overlay. No-op (returns false) when vision isn't used or is already warm.
- *
- * 2D-canvas sketches only (like the rest of this overlay): positions use
- * top-left canvas coordinates.
- */
-export function drawInteractionWarmupOverlay( opts ) {
-  const vision = opts?.vision;
-
-  if ( !vision || vision.enabled === false ) {
-    return false;
-  }
-
-  if ( isVisionReady( opts ) ) {
-    return false;
-  }
-
-  const p = getP5();
-
-  p.push();
-
-  // Dimmed veil over the held frame.
-  p.noStroke();
-  p.fill(
-    0,
-    150
-  );
-  p.rect(
-    0,
-    0,
-    p.width,
-    p.height
-  );
-
-  const cx = p.width / 2;
-  const cy = p.height / 2;
-
-  p.textAlign(
-    p.CENTER,
-    p.CENTER
-  );
-  p.textSize( 14 );
-  p.fill(
-    255,
-    230
-  );
-  p.text(
-    "Preparing vision…",
-    cx,
-    cy - 14
-  );
-
-  // Three dots pulsing in sequence as a lightweight activity indicator.
-  const frame = p.frameCount ?? 0;
-  const active = Math.floor( frame / 12 ) % 3;
-
-  for ( let i = 0; i < 3; i++ ) {
-    p.fill(
-      255,
-      i === active ? 230 : 90
-    );
-    p.circle(
-      cx + ( i - 1 ) * 16,
-      cy + 12,
-      6
-    );
-  }
-
-  p.pop();
-
-  return true;
 }
