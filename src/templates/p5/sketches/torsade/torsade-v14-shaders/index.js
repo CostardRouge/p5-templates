@@ -6,10 +6,11 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GPU port of "torsade v7 — melted".
+// torsade v14 — shaders.
 //
-// The CPU original walked each spiral with hundreds of lerp steps and stamped
-// two large, heavily overlapping circles per step (a mirrored pair offset by a
+// A GPU re-imagining of "torsade v7 — melted" (which stays untouched). The CPU
+// original walked each spiral with hundreds of lerp steps and stamped two
+// large, heavily overlapping circles per step (a mirrored pair offset by a
 // sin/cos wave). The overlap is what gives the "melted" look — a thick, molten
 // double strand rather than discrete dots. Doing that per circle on the CPU is
 // the slow part, so here the whole grid of spirals is evaluated in a single

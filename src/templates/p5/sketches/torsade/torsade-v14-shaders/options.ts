@@ -3,28 +3,28 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   layout: {
-    xCount: 1,
+    xCount: 5,
     yCount: 1,
-    sizeDivisor: 3.5,
+    sizeDivisor: 2.1,
     axis: "vertical" as "vertical" | "horizontal"
   },
   spiral: {
-    lerpSteps: 200,
+    lerpSteps: 218,
     waveAmplitudeDivisor: 3.5,
-    circleSize: 200,
+    circleSize: 76,
     cadenceMin: -4,
     cadenceMax: 4
   },
   motion: {
     cadenceSpeed: 1,
-    cadenceIndexScale: 0
+    cadenceIndexScale: 5
   },
   colors: {
     hueSpeed: 1,
-    hueSpread: 1,
-    huePhase: 0,
-    indexHueShift: 1,
-    shimmer: 1.5,
+    hueSpread: 2.19,
+    huePhase: 2.46,
+    indexHueShift: 3.68,
+    shimmer: 2.95,
     saturation: 1,
     brightness: 1
   },
