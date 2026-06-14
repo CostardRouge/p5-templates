@@ -9,7 +9,7 @@ export const formValues = {
     axis: "vertical" as "vertical" | "horizontal"
   },
   spiral: {
-    lerpSteps: 300,
+    lerpSteps: 200,
     waveAmplitudeDivisor: 3.5,
     circleSize: 200,
     cadenceMin: -4,
@@ -20,7 +20,13 @@ export const formValues = {
     cadenceIndexScale: 0
   },
   colors: {
-    hueSpeed: 1
+    hueSpeed: 1,
+    hueSpread: 1,
+    huePhase: 0,
+    indexHueShift: 1,
+    shimmer: 1.5,
+    saturation: 1,
+    brightness: 1
   },
   backgroundColor: [
     0,
@@ -83,7 +89,7 @@ export const formConfiguration: Record<string, any> = {
         label: "Lerp steps",
         component: "slider",
         min: 20,
-        max: 2000,
+        max: 320,
         step: 1
       },
       waveAmplitudeDivisor: {
@@ -138,13 +144,55 @@ export const formConfiguration: Record<string, any> = {
   },
   colors: {
     component: "nested-object",
-    label: "Colors",
+    label: "Iridescent",
     fields: {
       hueSpeed: {
         label: "Hue speed",
         component: "slider",
         min: -10,
         max: 10,
+        step: 0.01
+      },
+      hueSpread: {
+        label: "Hue spread",
+        component: "slider",
+        min: 0.1,
+        max: 6,
+        step: 0.01
+      },
+      huePhase: {
+        label: "Hue phase",
+        component: "slider",
+        min: 0,
+        max: 6.2832,
+        step: 0.01
+      },
+      indexHueShift: {
+        label: "Grid hue shift",
+        component: "slider",
+        min: 0,
+        max: 6.2832,
+        step: 0.01
+      },
+      shimmer: {
+        label: "Shimmer",
+        component: "slider",
+        min: 0,
+        max: 6,
+        step: 0.01
+      },
+      saturation: {
+        label: "Saturation",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      brightness: {
+        label: "Brightness",
+        component: "slider",
+        min: 0,
+        max: 2,
         step: 0.01
       }
     }
