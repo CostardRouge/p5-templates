@@ -25,6 +25,40 @@ const {
   Body
 } = Matter;
 
+// Shortest distance from a point to a line segment — used for blade hit-tests.
+function _segmentDistance(
+  px, py, x1, y1, x2, y2
+) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lengthSquared = dx * dx + dy * dy;
+
+  if ( lengthSquared === 0 ) {
+    return Math.hypot(
+      px - x1,
+      py - y1
+    );
+  }
+
+  let t = ( ( px - x1 ) * dx + ( py - y1 ) * dy ) / lengthSquared;
+
+  t = Math.max(
+    0,
+    Math.min(
+      1,
+      t
+    )
+  );
+
+  const projectionX = x1 + t * dx;
+  const projectionY = y1 + t * dy;
+
+  return Math.hypot(
+    px - projectionX,
+    py - projectionY
+  );
+}
+
 /**
  * Shared physics + rendering controller for the hand-capture sketches.
  *
@@ -70,6 +104,8 @@ export class HandCaptureScene {
     this._ballSizeKey = null;
     this._letterKey = null;
     this._rainAccumulator = 0;
+    this._tossAccumulator = 0;
+    this._prevPoints = new Map();
   }
 
   /** One-time setup: pre-warm the shared interaction module + layer buffers. */
@@ -330,6 +366,199 @@ export class HandCaptureScene {
     }
 
     return missed;
+  }
+
+  /**
+   * Lob balls up from below the bottom edge at `rate` per second, like tossed
+   * fruit. Gravity (set by the sketch) pulls them back into an arc.
+   */
+  tossBalls( {
+    rate = 1.2, sizeMin = 45, sizeMax = 75, speed = 30, spread = 6
+  } = {} ) {
+    const p = getP5();
+    const dt = Math.min(
+      p.deltaTime,
+      100
+    ) / 1000;
+
+    this._tossAccumulator += rate * dt;
+
+    while ( this._tossAccumulator >= 1 ) {
+      this._tossAccumulator -= 1;
+
+      const radius = p.random(
+        sizeMin,
+        sizeMax
+      );
+
+      const ball = this.addBall( {
+        x: p.random(
+          p.width * 0.2,
+          p.width * 0.8
+        ),
+        y: p.height + radius,
+        radius
+      } );
+
+      Body.setVelocity(
+        ball,
+        {
+          x: p.random(
+            -spread,
+            spread
+          ),
+          y: -speed
+        }
+      );
+    }
+  }
+
+  /**
+   * Slice balls crossed by a fast pointer swipe. A blade is the segment a
+   * tracked point travelled since last frame; only swipes faster than
+   * `minSpeed` cut. A sliced ball splits into two smaller halves flying apart,
+   * down to `minRadius` (below which it is destroyed). Returns the slice count.
+   */
+  sliceBalls( {
+    minSpeed = 25, bladeWidth = 20, minRadius = 16, splitSpeed = 6
+  } = {} ) {
+    const current = new Map();
+    const blades = [];
+
+    for ( const group of this.groups ) {
+      group.points.forEach( (
+        point, pointIndex
+      ) => {
+        const key = `${ group.id }:${ pointIndex }`;
+
+        current.set(
+          key,
+          {
+            x: point.x,
+            y: point.y
+          }
+        );
+
+        const previous = this._prevPoints.get( key );
+
+        if ( !previous ) {
+          return;
+        }
+
+        const dx = point.x - previous.x;
+        const dy = point.y - previous.y;
+        const length = Math.hypot(
+          dx,
+          dy
+        );
+
+        if ( length >= minSpeed ) {
+          blades.push( {
+            x1: previous.x,
+            y1: previous.y,
+            x2: point.x,
+            y2: point.y,
+            dx,
+            dy,
+            length
+          } );
+        }
+      } );
+    }
+
+    this._prevPoints = current;
+
+    if ( blades.length === 0 ) {
+      return 0;
+    }
+
+    const children = [];
+    let sliced = 0;
+
+    for ( let i = this.balls.length - 1; i >= 0; i-- ) {
+      const ball = this.balls[ i ];
+      const radius = ball.circleRadius ?? 0;
+      const blade = this._bladeHitting(
+        ball,
+        radius,
+        blades,
+        bladeWidth
+      );
+
+      if ( !blade ) {
+        continue;
+      }
+
+      Composite.remove(
+        this.engine.world,
+        ball
+      );
+      this.balls.splice(
+        i,
+        1
+      );
+      sliced++;
+
+      if ( radius <= minRadius ) {
+        continue;
+      }
+
+      const perpX = -blade.dy / blade.length;
+      const perpY = blade.dx / blade.length;
+      const childRadius = radius * 0.62;
+
+      for ( const sign of [
+        1,
+        -1
+      ] ) {
+        children.push( {
+          x: ball.position.x + perpX * childRadius * sign,
+          y: ball.position.y + perpY * childRadius * sign,
+          radius: childRadius,
+          vx: ball.velocity.x + perpX * splitSpeed * sign,
+          vy: ball.velocity.y + perpY * splitSpeed * sign
+        } );
+      }
+    }
+
+    for ( const child of children ) {
+      const body = this.addBall( {
+        x: child.x,
+        y: child.y,
+        radius: child.radius
+      } );
+
+      Body.setVelocity(
+        body,
+        {
+          x: child.vx,
+          y: child.vy
+        }
+      );
+    }
+
+    return sliced;
+  }
+
+  _bladeHitting(
+    ball, radius, blades, bladeWidth
+  ) {
+    for ( const blade of blades ) {
+      const distance = _segmentDistance(
+        ball.position.x,
+        ball.position.y,
+        blade.x1,
+        blade.y1,
+        blade.x2,
+        blade.y2
+      );
+
+      if ( distance <= bladeWidth + radius ) {
+        return blade;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -691,6 +920,13 @@ export class HandCaptureScene {
   setTrail( amount ) {
     if ( this.layers.visuals ) {
       this.layers.visuals.fade = amount;
+    }
+  }
+
+  /** Trail length for the hands layer — gives the blade a Fruit-Ninja streak. */
+  setHandTrail( amount ) {
+    if ( this.layers.hands ) {
+      this.layers.hands.fade = amount;
     }
   }
 
