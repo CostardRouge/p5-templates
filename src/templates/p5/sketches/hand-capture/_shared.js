@@ -2,14 +2,14 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 
-import * as common from "@/p5/utils/common.js";
 import string from "@/p5/utils/string.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
-import drawHands from "@/p5/utils/mediapipe/drawHands.js";
+import neonLine from "@/p5/utils/visuals/neonLine.js";
 
-import mediapipe, {
-  init as mediapipeInit
-} from "@/p5/utils/mediapipe/mediapipe.js";
+import {
+  initInteraction,
+  getPointerGroups
+} from "@/p5/utils/interaction/index.js";
 
 import scripts from "@/p5/utils/scripts.js";
 import Matter from "@/public/assets/libraries/matter.min.js";
@@ -25,37 +25,27 @@ const {
   Body
 } = Matter;
 
-// Palm + fingertip landmarks used as interaction points.
-export const HAND_INTERACTION_INDICES = [
-  0,
-  4,
-  8,
-  12,
-  16,
-  20,
-  9
-];
-
 /**
  * Shared physics + rendering controller for the hand-capture sketches.
  *
+ * Vision runs through the shared `@/p5/utils/interaction` module — the same one
+ * the interaction-test sketch uses — so inference happens in a Web Worker off
+ * the draw loop (the old per-sketch `mediapipeInit({ worker: false })` blocked
+ * rendering and capped the sketches around 30-40 fps). Any enabled interaction
+ * source (camera hands/fingers, mouse, orbit, …) becomes both a physics
+ * interactor and a drawn neon stroke.
+ *
  * Everything that depends on a tweakable option is (re)built lazily from the
  * draw loop via `sync*` methods, so sliders react live without restarting the
- * sketch. The one-time cost — MediaPipe init and the off-screen layers — lives
- * in `init()`, which a sketch awaits from `setup()`.
- *
- * Reactivity strategy: each `sync*` method holds a signature of the inputs it
- * last built from and rebuilds only when that signature changes (the same
- * cheap change-detection the pulse/_shared grid uses). Ball count is
- * reconciled incrementally so balls already in flight keep their positions;
- * only a size-range change rebuilds the whole pool.
+ * sketch. Each `sync*` method holds a signature of its last inputs and rebuilds
+ * only when that signature changes; ball count is reconciled incrementally so
+ * balls already in flight keep their positions.
  */
 export class HandCaptureScene {
   constructor( {
     layers = {},
     boundaryThickness = 50,
-    boundaryMargin = 50,
-    interactionIndices = HAND_INTERACTION_INDICES
+    boundaryMargin = 50
   } = {} ) {
     this.engine = Engine.create();
     this.engine.gravity = {
@@ -66,30 +56,26 @@ export class HandCaptureScene {
     this.layers = layers;
     this.boundaryThickness = boundaryThickness;
     this.boundaryMargin = boundaryMargin;
-    this.interactionIndices = interactionIndices;
 
     this.balls = [];
     this.letters = [];
     this.handBodies = [];
     this.boundaries = [];
 
+    // Latest interaction data for the frame, refreshed by readInteraction().
+    this.groups = [];
+    this.pointers = [];
+
     this._stageKey = null;
     this._ballSizeKey = null;
     this._letterKey = null;
   }
 
-  /** One-time setup: MediaPipe tasks + off-screen graphics buffers. */
-  async init( {
-    tasks = [
-      "hands"
-    ]
-  } = {} ) {
+  /** One-time setup: pre-warm the shared interaction module + layer buffers. */
+  async init( interaction = {} ) {
     const p = getP5();
 
-    await mediapipeInit( {
-      worker: false,
-      tasks
-    } );
+    await initInteraction( interaction );
 
     for ( const name in this.layers ) {
       this.layers[ name ].graphics = p.createGraphics(
@@ -99,16 +85,28 @@ export class HandCaptureScene {
     }
   }
 
-  /** Clear the canvas for a new frame and flag the idle (no-camera) state. */
+  /** Clear the canvas for a new frame. */
   beginFrame( background ) {
     const p = getP5();
 
     if ( background ) {
       p.background( ...background );
     }
+  }
 
-    if ( mediapipe.idle ) {
-      p.background( 90 );
+  /**
+   * Pull this frame's interaction data once: ordered groups (for drawing) and a
+   * flat list of every point (for physics). Reading the grouped form means the
+   * points are temporally smoothed and cover every enabled source.
+   */
+  readInteraction( interaction = {} ) {
+    this.groups = getPointerGroups( interaction );
+    this.pointers = [];
+
+    for ( const group of this.groups ) {
+      for ( const point of group.points ) {
+        this.pointers.push( point );
+      }
     }
   }
 
@@ -254,20 +252,59 @@ export class HandCaptureScene {
     }
   }
 
-  /** Paint the tracked hands into the hands layer. */
-  traceHands() {
-    drawHands(
-      mediapipe.tasks?.hands?.result,
-      this.layers.hands?.graphics
+  /**
+   * Draw every interaction group into the hands layer: multi-point groups
+   * (finger chains, body, face) as neon ribbons, single points (fingertips,
+   * mouse, orbit, …) as neon dots.
+   */
+  drawInteraction( {
+    innerCircleSize = 50, shadowsCount = 3
+  } = {} ) {
+    const graphics = this.layers.hands?.graphics;
+
+    if ( !graphics ) {
+      return;
+    }
+
+    const total = Math.max(
+      this.groups.length - 1,
+      1
     );
+
+    this.groups.forEach( (
+      group, groupIndex
+    ) => {
+      const index = groupIndex / total;
+
+      if ( group.points.length >= 2 ) {
+        neonLine( {
+          innerCircleSize,
+          shadowsCount,
+          vectors: group.points,
+          index,
+          graphics
+        } );
+      } else if ( group.points.length === 1 ) {
+        neonDot( {
+          sizeRange: [
+            innerCircleSize,
+            innerCircleSize / 3
+          ],
+          shadowsCount,
+          graphics,
+          position: group.points[ 0 ],
+          index
+        } );
+      }
+    } );
   }
 
-  /** Rebuild the invisible static bodies the hands collide with each frame. */
+  /** Rebuild the invisible static bodies the balls/letters collide with. */
   syncHandBodies( radius = 75 ) {
     this._clearBodies( this.handBodies );
     this.handBodies = [];
 
-    for ( const point of this.handPoints() ) {
+    for ( const point of this.pointers ) {
       const body = Bodies.circle(
         point.x,
         point.y,
@@ -287,40 +324,14 @@ export class HandCaptureScene {
     }
   }
 
-  /** Canvas-space interaction points for the currently tracked hands. */
-  handPoints() {
-    const p = getP5();
-    const landmarks = mediapipe.tasks?.hands?.result?.landmarks ?? [];
-    const points = [];
-
-    for ( const hand of landmarks ) {
-      for ( const index of this.interactionIndices ) {
-        const point = hand[ index ];
-
-        if ( !point ) {
-          continue;
-        }
-
-        points.push( {
-          x: common.inverseX( point.x ) * p.width,
-          y: point.y * p.height
-        } );
-      }
-    }
-
-    return points;
-  }
-
   attract(
     strength = 0.0005, maxForce = 0.002
   ) {
-    const points = this.handPoints();
-
-    if ( points.length === 0 ) {
+    if ( this.pointers.length === 0 ) {
       return;
     }
 
-    for ( const point of points ) {
+    for ( const point of this.pointers ) {
       for ( const ball of this.balls ) {
         this._applyClampedForce(
           ball,
@@ -335,15 +346,13 @@ export class HandCaptureScene {
   repulse(
     strength = 0.5, maxForce = 0.02, distance = 600
   ) {
-    const points = this.handPoints();
-
-    if ( points.length === 0 ) {
+    if ( this.pointers.length === 0 ) {
       return;
     }
 
     const maxDistanceSquared = distance * distance;
 
-    for ( const point of points ) {
+    for ( const point of this.pointers ) {
       for ( const ball of this.balls ) {
         const dx = ball.position.x - point.x;
         const dy = ball.position.y - point.y;

@@ -1,5 +1,35 @@
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
 // Default values only — exposed at runtime as `options.sketch.*`
 export const formValues = {
+  // Camera / pointer interaction (hands, fingers, mouse, orbit, …)
+  interaction: {
+    ...interactionFormValues,
+    orbit: {
+      ...interactionFormValues.orbit,
+      enabled: false
+    },
+    vision: {
+      ...interactionFormValues.vision,
+      enabled: true,
+      hands: {
+        ...interactionFormValues.vision.hands,
+        enabled: true,
+        landmarks: {
+          fingertips: true,
+          palm: true
+        }
+      },
+      fingers: {
+        ...interactionFormValues.vision.fingers,
+        enabled: true
+      }
+    }
+  },
+
   // Background
   backgroundColor: [
     246,
@@ -39,6 +69,8 @@ export const formValues = {
 
 // UI configuration only
 export const formConfiguration: Record<string, any> = {
+  interaction: interactionFormConfiguration,
+
   backgroundColor: {
     component: "color",
     label: "Background color"

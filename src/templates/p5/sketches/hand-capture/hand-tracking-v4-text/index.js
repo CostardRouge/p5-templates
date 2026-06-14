@@ -13,10 +13,11 @@ const scene = new HandCaptureScene( {
 } );
 
 sketch.setup( async() => {
-  await scene.init();
+  await scene.init( options.sketch?.interaction ?? {} );
 } );
 
 sketch.draw( () => {
+  const interaction = options.sketch?.interaction ?? {};
   const text = options.sketch?.text ?? {};
   const physics = options.sketch?.physics ?? {};
   const letters = options.sketch?.letters ?? {};
@@ -26,6 +27,7 @@ sketch.draw( () => {
   ];
 
   scene.beginFrame( background );
+  scene.readInteraction( interaction );
   scene.syncBoundaries();
   scene.syncLetters( {
     text: text.content ?? "abcdefghijklmnopqrstuvwxyz0123456789",
@@ -33,7 +35,7 @@ sketch.draw( () => {
     friction: letters.friction ?? 0.1
   } );
 
-  scene.traceHands();
+  scene.drawInteraction();
   scene.syncHandBodies( physics.handRadius ?? 75 );
   scene.restoreLetters(
     letters.restoreStrength ?? 0.0001,

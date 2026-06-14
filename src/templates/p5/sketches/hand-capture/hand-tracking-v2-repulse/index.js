@@ -13,10 +13,11 @@ const scene = new HandCaptureScene( {
 } );
 
 sketch.setup( async() => {
-  await scene.init();
+  await scene.init( options.sketch?.interaction ?? {} );
 } );
 
 sketch.draw( () => {
+  const interaction = options.sketch?.interaction ?? {};
   const physics = options.sketch?.physics ?? {};
   const visuals = options.sketch?.visuals ?? {};
   const repulse = options.sketch?.repulse ?? {};
@@ -26,6 +27,7 @@ sketch.draw( () => {
   ];
 
   scene.beginFrame( background );
+  scene.readInteraction( interaction );
   scene.syncBoundaries();
   scene.syncBalls( {
     count: physics.ballCount ?? 51,
@@ -33,7 +35,7 @@ sketch.draw( () => {
     sizeMax: physics.ballSizeMax ?? 50
   } );
 
-  scene.traceHands();
+  scene.drawInteraction();
   scene.syncHandBodies( physics.handRadius ?? 75 );
   scene.repulse(
     repulse.strength ?? 0.5,
