@@ -1,423 +1,57 @@
 import options from "@/p5/utils/options.js";
-
-import string from "@/p5/utils/string.js";
 import sketch from "@/p5/utils/sketch.js";
 
-import * as common from "@/p5/utils/common.js";
-
-import mediapipe, {
-  init as mediapipeInit
-} from "@/p5/utils/mediapipe/mediapipe.js";
-
-import drawHands from "@/p5/utils/mediapipe/drawHands.js";
-import neonDot from "@/p5/utils/visuals/neonDot.js";
-
-import Matter from "@/public/assets/libraries/matter.min.js";
-
-import scripts from "@/p5/utils/scripts.js";
 import {
-  getP5
-} from "@/p5/utils/sketch.js";
+  HandCaptureScene
+} from "../_shared.js";
 
-scripts.load( "/assets/libraries/decomp.min.js" );
-
-const {
-  Engine, Bodies, Composite, Vector
-} = Matter;
-
-const layers = {
-  visuals: {
-    graphics: undefined,
-    size: options.size,
-    background: [
-      0,
-      0,
-      0,
-      10
-    ],
-    erase: 255
-  },
-  hands: {
-    graphics: undefined,
-    size: options.size,
-    background: [
-      230
-    ],
-    erase: 255
-  }
-};
-
-const matter = {
-  engine: Engine.create(),
-  bottom: undefined,
-  balls: [],
-  handBodies: [],
-  boundaries: []
-};
-
-sketch.setup( async() => {
-  const p = getP5();
-
-  p.background( ...options.colors.background );
-
-  await mediapipeInit( {
-    worker: false,
-    tasks: [
-      "hands"
-    ]
-  } );
-
-  for ( const layerName in layers ) {
-    const {
-      background, size
-    } = layers[ layerName ];
-
-    layers[ layerName ].graphics = p.createGraphics(
-      size.width,
-      size.height
-    );
-
-    if ( background ) {
-      layers[ layerName ].graphics.background( ...background );
-    }
-  }
-
-  // / MATTER
-  const margin = 50;
-  const thickness = 50;
-
-  addBoundary(
-    p.width / 2,
-    p.height + thickness / 2 - margin,
-    p.width,
-    thickness
-  );
-  addBoundary(
-    p.width / 2,
-    -thickness / 2 + margin,
-    p.width,
-    thickness
-  );
-  addBoundary(
-    -thickness / 2 + margin,
-    p.height / 2,
-    thickness,
-    p.height
-  );
-  addBoundary(
-    p.width + thickness / 2 - margin,
-    p.height / 2,
-    thickness,
-    p.height
-  );
-
-  const physics = options.sketch?.physics ?? {};
-  const ballCount = physics.ballCount ?? 51;
-  const ballSizeMin = physics.ballSizeMin ?? 20;
-  const ballSizeMax = physics.ballSizeMax ?? 50;
-
-  for ( let i = 0; i < ballCount; i++ ) {
-    addBall(
-      p.random(
-        thickness,
-        p.width - thickness
-      ),
-      p.random(
-        thickness,
-        p.height - thickness
-      ),
-      p.random(
-        ballSizeMin,
-        ballSizeMax
-      )
-    );
+const scene = new HandCaptureScene( {
+  layers: {
+    visuals: {},
+    hands: {}
   }
 } );
 
-matter.engine.gravity = {
-  x: 0,
-  y: 0
-};
+sketch.setup( async() => {
+  await scene.init();
+} );
 
-sketch.draw( (
-  time, center, favouriteColour
-) => {
-  const p = getP5();
-
-  p.background( ...options.colors.background );
-
-  if ( mediapipe.idle ) {
-    p.background( 90 );
-  }
-
+sketch.draw( () => {
+  const physics = options.sketch?.physics ?? {};
   const visuals = options.sketch?.visuals ?? {};
   const attract = options.sketch?.attract ?? {};
-  const shadowsCount = visuals.shadowsCount ?? 3;
-  const dotScale = visuals.dotScale ?? 1;
-
-  // Live trail length: lower alpha erases less each frame.
-  layers.visuals.background = [
-    0,
-    0,
-    0,
-    visuals.trail ?? 10
+  const text = options.sketch?.text ?? {};
+  const background = options.colors?.background ?? [
+    0
   ];
 
-  drawHands(
-    mediapipe.tasks?.hands?.result,
-    layers.hands.graphics
-  );
+  scene.beginFrame( background );
+  scene.syncBoundaries();
+  scene.syncBalls( {
+    count: physics.ballCount ?? 51,
+    sizeMin: physics.ballSizeMin ?? 20,
+    sizeMax: physics.ballSizeMax ?? 50
+  } );
 
-  // Update hand physics bodies
-  updateHandBodies();
-
-  applyAttractionFromHands(
+  scene.traceHands();
+  scene.syncHandBodies( physics.handRadius ?? 75 );
+  scene.attract(
     attract.strength ?? 0.0005,
     attract.maxForce ?? 0.002
   );
+  scene.update();
 
-  Engine.update( matter.engine );
-
-  matter.balls.forEach( (
-    ball, index
-  ) => {
-    const {
-      position, circleRadius
-    } = ball;
-
-    neonDot( {
-      sizeRange: [
-        circleRadius * 2 * dotScale,
-        ( circleRadius * 2 * dotScale ) / 3
-      ],
-      shadowsCount,
-      graphics: layers.visuals.graphics,
-      position,
-      index: index / matter.balls.length
-    } );
+  scene.setTrail( visuals.trail ?? 10 );
+  scene.renderBalls( {
+    shadowsCount: visuals.shadowsCount ?? 3,
+    dotScale: visuals.dotScale ?? 1
   } );
+  scene.compose();
 
-  for ( const layerName in layers ) {
-    const layer = layers[ layerName ];
-    const {
-      graphics, background, erase, size
-    } = layer;
-
-    if ( !graphics ) {
-      continue;
-    }
-
-    p.image(
-      graphics,
-      0,
-      0,
-      size.width,
-      size.height
-    );
-
-    if ( background ) {
-      graphics.background( ...background );
-    }
-
-    if ( erase ) {
-      layer.graphics.clear();
-    }
-  }
-
-  const text = options.sketch?.text ?? {};
-
-  if ( text.show ?? true ) {
-    string.write(
-      text.title ?? "attract",
-      0,
-      p.height / 2,
-      {
-        size: 172,
-        strokeWeight: 0,
-        stroke: p.color( ...options.colors.background ),
-        fill: p.color( ...options.colors.background ),
-        font: string.fonts.martian,
-        textAlign: [
-          p.CENTER,
-          p.CENTER
-        ],
-        blendMode: p.EXCLUSION
-      }
-    );
-
-    string.write(
-      text.subtitle ?? "hand tracking v1",
-      0,
-      ( p.height * 6 ) / 10,
-      {
-        size: 32,
-        strokeWeight: 0,
-        stroke: p.color( ...options.colors.background ),
-        fill: p.color( ...options.colors.background ),
-        font: string.fonts.loraItalic,
-        textAlign: [
-          p.CENTER,
-          p.CENTER
-        ],
-        blendMode: p.EXCLUSION
-      }
-    );
-  }
+  scene.drawTitle( {
+    title: text.title ?? "attract",
+    subtitle: text.subtitle ?? "hand tracking v1",
+    show: text.show ?? true,
+    color: background
+  } );
 } );
-
-function updateHandBodies() {
-  // Remove old hand bodies
-  for ( let handBody of matter.handBodies ) {
-    Composite.remove(
-      matter.engine.world,
-      handBody
-    );
-  }
-  matter.handBodies = [];
-
-  mediapipe.tasks?.hands?.result?.landmarks?.forEach?.( createHandInteractionBodies );
-}
-
-// Key landmarks for interaction (palm, fingertips)
-const interactionIndices = [
-  0,
-  4,
-  8,
-  12,
-  16,
-  20,
-  9
-];
-
-function createHandInteractionBodies( hand ) {
-  const p = getP5();
-  const interactionPoints = interactionIndices
-    .map( ( i ) => hand[ i ] )
-    .filter( Boolean );
-
-  interactionPoints.forEach( ( point ) => {
-    if ( point ) {
-      const x = common.inverseX( point.x ) * p.width;
-      const y = point.y * p.height;
-
-      // Create invisible circular body
-      const handBody = Matter.Bodies.circle(
-        x,
-        y,
-        options.sketch?.physics?.handRadius ?? 75,
-        {
-          isStatic: true, // Static so it doesn't fall
-          isSensor: false // Can interact with other bodies
-        }
-      );
-
-      matter.handBodies.push( handBody );
-
-      Composite.add(
-        matter.engine.world,
-        handBody
-      );
-    }
-  } );
-}
-
-function addBall(
-  x, y, radius
-) {
-  const newBall = Bodies.circle(
-    x,
-    y,
-    radius
-    // {
-    //   friction: .001,
-    //   frictionAir: 0.9,
-    //   restitution: 9,
-    // }
-  );
-
-  matter.balls.unshift( newBall );
-  Composite.add(
-    matter.engine.world,
-    newBall
-  );
-}
-
-function addBoundary(
-  x, y, w, h
-) {
-  const newBoundary = Bodies.rectangle(
-    x,
-    y,
-    w,
-    h,
-    {
-      isStatic: true
-    }
-  );
-
-  matter.boundaries.unshift( newBoundary );
-  Composite.add(
-    matter.engine.world,
-    newBoundary
-  );
-}
-
-function applyAttractionFromHands(
-  strength = 0.0005, maxForce = 0.002
-) {
-  const p = getP5();
-  const hands = mediapipe.tasks?.hands?.result?.landmarks ?? [];
-
-  if ( hands.length === 0 || matter.balls.length === 0 ) {
-    return;
-  }
-
-  for ( const hand of hands ) {
-    const attractPoints = interactionIndices
-      .map( ( i ) => hand[ i ] )
-      .filter( Boolean );
-
-    for ( const point of attractPoints ) {
-      const target = {
-        x: common.inverseX( point.x ) * p.width,
-        y: point.y * p.height
-      };
-
-      for ( const ball of matter.balls ) {
-        attractBallToPoint(
-          ball,
-          target,
-          strength,
-          maxForce
-        );
-      }
-    }
-  }
-}
-
-function attractBallToPoint(
-  ballBody,
-  target,
-  strength = 0.0005,
-  maxForce = 0.002
-) {
-  const pos = ballBody.position;
-  let force = {
-    x: ( target.x - pos.x ) * strength,
-    y: ( target.y - pos.y ) * strength
-  };
-
-  // Clamp force magnitude
-  const mag = Math.sqrt( force.x ** 2 + force.y ** 2 );
-
-  if ( mag > maxForce ) {
-    force.x = ( force.x / mag ) * maxForce;
-    force.y = ( force.y / mag ) * maxForce;
-  }
-
-  Matter.Body.applyForce(
-    ballBody,
-    pos,
-    force
-  );
-}
