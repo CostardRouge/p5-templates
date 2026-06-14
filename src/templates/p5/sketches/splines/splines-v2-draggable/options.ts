@@ -60,13 +60,20 @@ export const formValues = {
   },
 
   grab: {
-    // Pick-up radius (px) around a point: a press/touch within it grabs it.
-    radius: 44
+    // Pick-up radius (px) around a point: a press/touch/pinch within it grabs it.
+    radius: 44,
+    // Camera pinch: the thumb and index tips must be closer than this (px) to
+    // count as "pressed". Released at 1.6× this (hysteresis).
+    pinch: 70,
+    // EMA lag on the pinch midpoint to calm jittery hand landmarks (0 = none,
+    // higher = smoother but laggier). Mouse / touch stay unsmoothed.
+    cameraSmoothing: 0.4
   },
 
-  // Mouse + touch drive the dragging; touch MUST stay enabled so the viewport
-  // hands the touchscreen to the sketch instead of panning. The camera (pinch
-  // to grab) is wired in a follow-up — vision is left armed but off here.
+  // Mouse + touch + camera drive the dragging. Touch MUST stay enabled so the
+  // viewport hands the touchscreen to the sketch instead of panning. Vision is
+  // armed (Hands pre-selected for the pinch) but starts OFF — flip Vision →
+  // Enabled to grab points by pinching thumb + index.
   interaction: {
     ...interactionFormValues,
     mouse: {
@@ -76,6 +83,17 @@ export const formValues = {
     touch: {
       ...interactionFormValues.touch,
       enabled: true
+    },
+    vision: {
+      ...interactionFormValues.vision,
+      hands: {
+        ...interactionFormValues.vision.hands,
+        enabled: true,
+        landmarks: {
+          fingertips: true,
+          palm: false
+        }
+      }
     },
     orbit: {
       ...interactionFormValues.orbit,
@@ -185,7 +203,7 @@ export const formConfiguration: Record<string, any> = {
   },
 
   grab: {
-    label: "Interaction",
+    label: "Grab",
     component: "nested-object",
     fields: {
       radius: {
@@ -194,20 +212,35 @@ export const formConfiguration: Record<string, any> = {
         min: 10,
         max: 120,
         step: 1
+      },
+      pinch: {
+        label: "Camera pinch distance (px)",
+        component: "slider",
+        min: 20,
+        max: 200,
+        step: 1
+      },
+      cameraSmoothing: {
+        label: "Camera smoothing",
+        component: "slider",
+        min: 0,
+        max: 0.95,
+        step: 0.05
       }
     }
   },
 
   // Focused subset of the shared interaction form: only the modalities this
-  // sketch reads. Keep Touch enabled so dragging works on phones without the
-  // viewport stealing the gesture.
+  // sketch reads (mouse, touch, camera). Keep Touch enabled so dragging works on
+  // phones without the viewport stealing the gesture; enable Vision to pinch.
   interaction: {
     component: "nested-object",
     label: "Input sources",
     fields: {
       enabled: interactionFormConfiguration.fields.enabled,
       mouse: interactionFormConfiguration.fields.mouse,
-      touch: interactionFormConfiguration.fields.touch
+      touch: interactionFormConfiguration.fields.touch,
+      vision: interactionFormConfiguration.fields.vision
     }
   },
 

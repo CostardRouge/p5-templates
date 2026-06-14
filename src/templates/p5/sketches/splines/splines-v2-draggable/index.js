@@ -11,6 +11,9 @@ import {
   getPointerGroups
 } from "@/p5/utils/interaction/index.js";
 import {
+  drawInteractionCameraPreview
+} from "@/p5/utils/interaction/overlay.js";
+import {
   renderSplines
 } from "../_shared.js";
 
@@ -31,9 +34,15 @@ import {
 //      when the viewport is zoomed/panned. Mouse press state comes from the
 //      engine's wired canvas events; a touch counts as "pressed" while present.
 //
-// The grab → move → release state machine is source-agnostic, so the camera
-// (pinch the thumb + index over a point to grab) plugs into the same path in a
-// follow-up — it would just feed in another { x, y, pressed } pointer.
+// The grab → move → release state machine is source-agnostic, so all three
+// inputs feed the same path as one { x, y, pressed } pointer:
+//   - touch  → present finger, always "pressed"
+//   - camera → enable Vision → Hands; the thumb+index midpoint is the pointer
+//              and a PINCH (the two tips closer than the threshold) is "pressed",
+//              so you literally pinch a point and move it. No viewport conflict —
+//              the camera emits no pointer events.
+//   - mouse  → cursor position + button state.
+// Priority is touch > camera (when a hand is visible) > mouse.
 
 const state = {
   // Working copy of the control points, normalized [0..1].
@@ -51,7 +60,14 @@ const state = {
     index: -1
   },
   // Whether the canvas currently carries the `data-no-drag` attribute.
-  noDrag: false
+  noDrag: false,
+  // Latest camera hand for feedback drawing: { thumb, index, mid, pinching }.
+  camera: null,
+  // EMA-smoothed pinch midpoint (camera landmarks are jittery), kept separate
+  // so mouse/touch stay perfectly crisp.
+  cameraSmooth: null,
+  // Pinch latch (hysteresis) so a borderline gap doesn't flicker the grab.
+  pinching: false
 };
 
 function clamp01( value ) {
@@ -322,10 +338,94 @@ function drawHighlight(
   p.pop();
 }
 
-// Resolve the active pointer for this frame: a present touch wins (and counts as
-// pressed), otherwise the mouse with its button state.
-function resolvePointer( interaction ) {
-  const groups = getPointerGroups( interaction );
+// The thumb + index pinch as a pointer. Returns null (and clears the camera
+// feedback) when Vision → Hands is off or no hand is visible.
+//
+// The hands group is ordered [palm?, thumb, index, middle, ring, pinky]; the
+// fingertips are always the trailing five, so the thumb is points[len-5] and
+// the index points[len-4] whether or not the palm landmark is included. The
+// pointer is their midpoint (EMA-smoothed); "pressed" is true while the two tips
+// are closer than `grab.pinch`, with a wider release threshold (hysteresis).
+function resolveCameraPointer(
+  o, groups
+) {
+  const vision = o.interaction?.vision;
+
+  if ( !vision?.enabled || !vision.hands?.enabled ) {
+    state.camera = null;
+    state.cameraSmooth = null;
+    state.pinching = false;
+
+    return null;
+  }
+
+  const hand = groups.find( ( group ) => group.source === "hands" );
+
+  if ( !hand || hand.points.length < 5 ) {
+    state.camera = null;
+    state.cameraSmooth = null;
+    state.pinching = false;
+
+    return null;
+  }
+
+  const points = hand.points;
+  const thumb = points[ points.length - 5 ];
+  const index = points[ points.length - 4 ];
+
+  const rawMidX = ( thumb.x + index.x ) / 2;
+  const rawMidY = ( thumb.y + index.y ) / 2;
+  const lag = Math.min(
+    0.95,
+    Math.max(
+      0,
+      o.grab?.cameraSmoothing ?? 0.4
+    )
+  );
+
+  if ( !state.cameraSmooth ) {
+    state.cameraSmooth = {
+      x: rawMidX,
+      y: rawMidY
+    };
+  }
+
+  state.cameraSmooth.x += ( rawMidX - state.cameraSmooth.x ) * ( 1 - lag );
+  state.cameraSmooth.y += ( rawMidY - state.cameraSmooth.y ) * ( 1 - lag );
+
+  const distance = Math.hypot(
+    thumb.x - index.x,
+    thumb.y - index.y
+  );
+  const pinchOn = o.grab?.pinch ?? 70;
+  const pinching = state.pinching ? distance < pinchOn * 1.6 : distance < pinchOn;
+
+  state.pinching = pinching;
+  state.camera = {
+    thumb,
+    index,
+    mid: {
+      x: state.cameraSmooth.x,
+      y: state.cameraSmooth.y
+    },
+    pinching
+  };
+
+  return {
+    point: {
+      x: state.cameraSmooth.x,
+      y: state.cameraSmooth.y
+    },
+    pressed: pinching,
+    kind: "camera"
+  };
+}
+
+// Resolve the active pointer for this frame. A present touch wins (always
+// pressed), then a visible camera hand (pressed while pinching), then the mouse
+// with its button state.
+function resolvePointer( o ) {
+  const groups = getPointerGroups( o.interaction );
   const touch = groups.find( ( group ) => group.source === "touch" );
 
   if ( touch ) {
@@ -334,6 +434,15 @@ function resolvePointer( interaction ) {
       pressed: true,
       kind: "touch"
     };
+  }
+
+  const camera = resolveCameraPointer(
+    o,
+    groups
+  );
+
+  if ( camera ) {
+    return camera;
   }
 
   const mouse = groups.find( ( group ) => group.source === "mouse" );
@@ -353,6 +462,65 @@ function resolvePointer( interaction ) {
   };
 }
 
+// Thumb + index markers and the connector between them, accented while pinching,
+// so the user can see what the camera tracks and when a grab will trigger.
+function drawCameraFeedback(
+  p, camera
+) {
+  if ( !camera ) {
+    return;
+  }
+
+  const color = camera.pinching ? [
+    120,
+    200,
+    255
+  ] : [
+    255,
+    255,
+    255
+  ];
+
+  p.push();
+  p.stroke(
+    ...color,
+    camera.pinching ? 230 : 120
+  );
+  p.strokeWeight( camera.pinching ? 4 : 2 );
+  p.line(
+    camera.thumb.x,
+    camera.thumb.y,
+    camera.index.x,
+    camera.index.y
+  );
+
+  p.noStroke();
+  p.fill(
+    ...color,
+    220
+  );
+  p.circle(
+    camera.thumb.x,
+    camera.thumb.y,
+    16
+  );
+  p.circle(
+    camera.index.x,
+    camera.index.y,
+    16
+  );
+  p.fill(
+    ...color,
+    camera.pinching ? 255 : 120
+  );
+  p.circle(
+    camera.mid.x,
+    camera.mid.y,
+    camera.pinching ? 14 : 8
+  );
+  p.pop();
+}
+
 sketch.setup( async() => {
   state.points = [];
   state.signature = null;
@@ -364,6 +532,9 @@ sketch.setup( async() => {
     index: -1
   };
   state.noDrag = false;
+  state.camera = null;
+  state.cameraSmooth = null;
+  state.pinching = false;
 
   // Press / release of the mouse button. Press is canvas-scoped (don't grab when
   // clicking UI); release is global so letting go off-canvas still ends a drag.
@@ -411,7 +582,7 @@ sketch.draw( () => {
 
   const {
     point, pressed, kind
-  } = resolvePointer( interaction );
+  } = resolvePointer( o );
 
   const hit = point
     ? nearestIndex(
@@ -422,7 +593,7 @@ sketch.draw( () => {
     )
     : -1;
 
-  state.hover = !state.drag.active && kind === "mouse" ? hit : -1;
+  state.hover = !state.drag.active && ( kind === "mouse" || kind === "camera" ) ? hit : -1;
 
   // Grab on the press edge.
   if ( !state.drag.active && pressed && hit !== -1 ) {
@@ -475,4 +646,12 @@ sketch.draw( () => {
     state.drag.active ? state.drag.index : -1,
     o.overlay?.points?.size ?? 16
   );
+
+  // Camera feedback (thumb/index + pinch) and the optional webcam preview, drawn
+  // last so they stack on top. Both no-op unless Vision is on / a hand is seen.
+  drawCameraFeedback(
+    p,
+    state.camera
+  );
+  drawInteractionCameraPreview( interaction );
 } );
