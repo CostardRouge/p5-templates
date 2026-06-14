@@ -17,7 +17,7 @@ export const formValues = {
       enabled: true,
       hands: {
         ...interactionFormValues.vision.hands,
-        enabled: true,
+        enabled: false,
         landmarks: {
           fingertips: true,
           palm: true
@@ -56,7 +56,7 @@ export const formValues = {
     shadowsCount: 3,
     dotScale: 1,
     // Lower = longer light trails (less is erased each frame).
-    trail: 10
+    trail: 255
   },
 
   // Overlay text
