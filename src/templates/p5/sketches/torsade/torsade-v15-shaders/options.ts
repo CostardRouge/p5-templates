@@ -5,37 +5,38 @@ export const formValues = {
   layout: {
     xCount: 1,
     yCount: 1,
-    sizeDivisor: 3
+    sizeDivisor: 3.1
   },
   rings: {
-    shadowsCount: 30,
+    shadowsCount: 54,
     shadowIndexStep: 0.05,
-    angleSubdivisions: 14,
+    angleSubdivisions: 38,
     radiusDivisorMin: 0.2,
-    radiusDivisorMax: 5,
-    weightMin: 20,
-    weightMax: 75,
-    shadowRotationRadians: 7
+    radiusDivisorMax: 3.3,
+    weightMin: 39,
+    weightMax: 164,
+    shadowRotationRadians: 3.4
   },
   motion: {
-    spinSpeed: 1,
-    jitterAmount: 0.33
+    spinSpeed: -1.18,
+    jitterAmount: 0.31
   },
   colors: {
     hueSpeed: 1,
-    hueSpread: 1,
+    hueSpread: 2.17,
     huePhase: 0,
     depthHue: 1,
     saturation: 1,
     brightness: 1,
-    opacityCurveSpeed: 5,
+    opacityCurveSpeed: 2.5,
     opacityMin: 1,
-    opacityMax: 15
+    opacityMax: 8.6
   },
   backgroundColor: [
     0,
     0,
-    0
+    0,
+    255
   ],
   title: {
     ...titleDefaultValues,
