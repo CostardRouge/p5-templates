@@ -69,6 +69,7 @@ export class HandCaptureScene {
     this._stageKey = null;
     this._ballSizeKey = null;
     this._letterKey = null;
+    this._rainAccumulator = 0;
   }
 
   /** One-time setup: pre-warm the shared interaction module + layer buffers. */
@@ -192,6 +193,143 @@ export class HandCaptureScene {
         this.balls.pop()
       );
     }
+  }
+
+  /** Add a single ball at an explicit position (used by the spawners). */
+  addBall( {
+    x = 0, y = 0, radius = 30
+  } = {} ) {
+    const ball = Bodies.circle(
+      x,
+      y,
+      radius
+    );
+
+    ball.initialPosition = {
+      x,
+      y
+    };
+
+    this.balls.unshift( ball );
+
+    Composite.add(
+      this.engine.world,
+      ball
+    );
+
+    return ball;
+  }
+
+  /**
+   * Spawn falling balls from just above the top edge at `rate` per second. The
+   * accumulator keeps the rate frame-rate independent.
+   */
+  spawnRain( {
+    rate = 6, sizeMin = 20, sizeMax = 40
+  } = {} ) {
+    const p = getP5();
+    const margin = this.boundaryMargin;
+    const dt = Math.min(
+      p.deltaTime,
+      100
+    ) / 1000;
+
+    this._rainAccumulator += rate * dt;
+
+    while ( this._rainAccumulator >= 1 ) {
+      this._rainAccumulator -= 1;
+
+      const radius = p.random(
+        sizeMin,
+        sizeMax
+      );
+
+      this.addBall( {
+        x: p.random(
+          margin,
+          p.width - margin
+        ),
+        y: -radius * 2,
+        radius
+      } );
+    }
+  }
+
+  /**
+   * Remove every ball within `radius` of any interaction pointer. Returns the
+   * number caught this frame.
+   */
+  catchNearPointers( {
+    radius = 80
+  } = {} ) {
+    if ( this.pointers.length === 0 ) {
+      return 0;
+    }
+
+    const radiusSquared = radius * radius;
+    let caught = 0;
+
+    for ( let i = this.balls.length - 1; i >= 0; i-- ) {
+      const ball = this.balls[ i ];
+
+      for ( const point of this.pointers ) {
+        const dx = ball.position.x - point.x;
+        const dy = ball.position.y - point.y;
+
+        if ( dx * dx + dy * dy > radiusSquared ) {
+          continue;
+        }
+
+        Composite.remove(
+          this.engine.world,
+          ball
+        );
+        this.balls.splice(
+          i,
+          1
+        );
+        caught++;
+        break;
+      }
+    }
+
+    return caught;
+  }
+
+  /**
+   * Remove balls that have left the canvas. Returns how many fell past the
+   * bottom edge (a "missed" count); side exits are cleaned up silently.
+   */
+  cullOffscreen( {
+    margin = 100
+  } = {} ) {
+    const p = getP5();
+    let missed = 0;
+
+    for ( let i = this.balls.length - 1; i >= 0; i-- ) {
+      const ball = this.balls[ i ];
+      const belowBottom = ball.position.y > p.height + margin;
+      const offSide = ball.position.x < -margin || ball.position.x > p.width + margin;
+
+      if ( !belowBottom && !offSide ) {
+        continue;
+      }
+
+      Composite.remove(
+        this.engine.world,
+        ball
+      );
+      this.balls.splice(
+        i,
+        1
+      );
+
+      if ( belowBottom ) {
+        missed++;
+      }
+    }
+
+    return missed;
   }
 
   /**
@@ -640,44 +778,76 @@ export class HandCaptureScene {
     }
   }
 
+  /** Big centered counter near the top — an implicit score for game variants. */
+  drawScore( {
+    value = 0, label = "", show = true, color
+  } = {} ) {
+    if ( !show ) {
+      return;
+    }
+
+    const p = getP5();
+    const fill = color ? p.color( ...color ) : p.color( 0 );
+
+    string.write(
+      `${ value }`,
+      0,
+      p.height * 0.16,
+      {
+        size: 240,
+        strokeWeight: 0,
+        stroke: fill,
+        fill,
+        font: string.fonts.martian,
+        textAlign: [
+          p.CENTER,
+          p.CENTER
+        ],
+        blendMode: p.EXCLUSION
+      }
+    );
+
+    if ( label ) {
+      string.write(
+        label,
+        0,
+        p.height * 0.16 + 150,
+        {
+          size: 40,
+          strokeWeight: 0,
+          stroke: fill,
+          fill,
+          font: string.fonts.loraItalic,
+          textAlign: [
+            p.CENTER,
+            p.CENTER
+          ],
+          blendMode: p.EXCLUSION
+        }
+      );
+    }
+  }
+
   _spawnBall(
     sizeMin, sizeMax
   ) {
     const p = getP5();
     const margin = this.boundaryThickness;
 
-    const x = p.random(
-      margin,
-      p.width - margin
-    );
-
-    const y = p.random(
-      margin,
-      p.height - margin
-    );
-
-    const ball = Bodies.circle(
-      x,
-      y,
-      p.random(
+    return this.addBall( {
+      x: p.random(
+        margin,
+        p.width - margin
+      ),
+      y: p.random(
+        margin,
+        p.height - margin
+      ),
+      radius: p.random(
         sizeMin,
         sizeMax
       )
-    );
-
-    ball.initialPosition = {
-      x,
-      y
-    };
-
-    this.balls.unshift( ball );
-
-    Composite.add(
-      this.engine.world,
-      ball
-    );
-
-    return ball;
+    } );
   }
 
   _addBoundary(

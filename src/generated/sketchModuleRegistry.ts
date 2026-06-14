@@ -76,6 +76,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v2-repulse": () => import( "@/p5/sketches/hand-capture/hand-tracking-v2-repulse/index.js" ),
   "p5:hand-capture/hand-tracking-v3-restore": () => import( "@/p5/sketches/hand-capture/hand-tracking-v3-restore/index.js" ),
   "p5:hand-capture/hand-tracking-v4-text": () => import( "@/p5/sketches/hand-capture/hand-tracking-v4-text/index.js" ),
+  "p5:hand-capture/hand-tracking-v5-catch": () => import( "@/p5/sketches/hand-capture/hand-tracking-v5-catch/index.js" ),
   "p5:kinetic/interaction-test": () => import( "@/p5/sketches/kinetic/interaction-test/index.js" ),
   "p5:kinetic/kinetic-grid-spheres": () => import( "@/p5/sketches/kinetic/kinetic-grid-spheres/index.js" ),
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/index.js" ),

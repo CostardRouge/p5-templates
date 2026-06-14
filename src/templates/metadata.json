@@ -2794,5 +2794,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-14T17:31:25.330Z",
     "ctime": "2026-06-14T17:31:05.902Z"
+  },
+  {
+    "name": "hand-tracking-v5-catch",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-14T18:05:38.135Z",
+    "ctime": "2026-06-14T18:05:16.283Z"
   }
 ]
