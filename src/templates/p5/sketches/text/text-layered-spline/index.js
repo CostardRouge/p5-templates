@@ -4,268 +4,58 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import {
-  renderSplines
-} from "../../splines/_shared.js";
+import colors from "@/p5/utils/colors.js";
 
 // ── What this sketch is ──────────────────────────────────────────────────────
-// A word, centred on the canvas, is decomposed into its individual glyphs. A
-// single glowing spline winds across the word like a coil / bobbin: it is built
-// as a 3D helix (it advances horizontally, oscillates vertically, and carries a
-// DEPTH given by the cosine of its winding angle) and then projected to 2D.
+// A word, centred on the canvas, with a spiral wound around it like a thread on
+// a bobbin. The scene is genuinely 3D: it is drawn into an offscreen WEBGL
+// graphics buffer and composited back onto the main canvas.
 //
-// The realism comes from the depth. Wherever the helix is on the *far* side of
-// the text plane (depth < 0) the coil must read as passing BEHIND the letters;
-// wherever it is on the *near* side (depth >= 0) it passes IN FRONT. We get that
-// — properly clipped to the glyph outlines, with several strands crossing one
-// letter — purely through draw order:
+// The word is filled, opaque text sitting on the z = 0 plane. The spiral is a
+// real helix wound around the screen's HORIZONTAL (X) axis: as it advances from
+// left to right it rises and falls in Y and — crucially — swings toward and away
+// from the viewer in Z:
 //
-//   1. background
-//   2. the BEHIND arcs of the coil
-//   3. the letters, drawn opaque        → they hide the behind arcs they cover
-//   4. the IN-FRONT arcs of the coil    → these are painted over the letters
+//     x = left → right across the word
+//     y = sin(angle) · radiusY      (rises / falls on screen)
+//     z = cos(angle) · radiusZ      (comes in front of / goes behind the text)
 //
-// Because the letters are opaque, step 3 clips every behind arc to the glyph
-// silhouette for free, and step 4 lays the near strands back on top. The coil
-// dives in and out of each letter in quinconce, exactly like a thread wound
-// around the word. The coil reuses the shared `splines` renderer (v0 / v1), so
-// it keeps the same neon glow and Chaikin smoothing.
+// Because everything shares one depth buffer, the parts of the helix with z > 0
+// are drawn in front of the letters and the parts with z < 0 are hidden behind
+// them — no manual clipping, the GPU's z-test does it. Animating the helix phase
+// slides those front/back crossings along the word, so each letter is alternately
+// revealed and swallowed by the coil in quinconce.
+//
+// Orthographic projection (the default) keeps the weave flat and even; switch to
+// perspective for the receding "round spiral" look where the far side of the coil
+// shrinks into the distance.
 
 const TAU = Math.PI * 2;
 
-// Per-letter geometry, rebuilt only when the text / font / size / position or
-// the canvas dimensions actually change — measuring glyph advances every frame
-// is wasteful and the layout is otherwise static.
 const state = {
-  key: "",
-  letters: [],
-  centerY: 0,
-  startX: 0,
-  endX: 0
+  buffer: null
 };
 
-/**
- * Decompose `text` into a list of placed glyphs. Each entry carries the glyph's
- * centre (x, y) and advance width so it can be both drawn (textAlign CENTER) and
- * used to bound the coil. Spaces advance the cursor but emit no drawable glyph.
- */
-function layoutLetters( {
-  text,
-  font,
-  size,
-  letterSpacing,
-  position
-} ) {
+sketch.setup( ( {
+  canvas
+} ) => {
   const p = getP5();
 
-  p.push();
-  p.textFont( font );
-  p.textSize( size );
-
-  const chars = Array.from( text );
-  const advances = chars.map( ( char ) =>
-    char === " " ? size * 0.4 : p.textWidth( char ) );
-
-  p.pop();
-
-  const totalWidth =
-    advances.reduce(
-      (
-        sum, w
-      ) => sum + w,
-      0
-    ) + letterSpacing * Math.max(
-      0,
-      chars.length - 1
-    );
-
-  const centerX = p.width * position.x;
-  const centerY = p.height * position.y;
-
-  let cursor = centerX - totalWidth / 2;
-  const letters = [];
-
-  chars.forEach( (
-    char, index
-  ) => {
-    const advance = advances[ index ];
-
-    if ( char !== " " ) {
-      letters.push( {
-        char,
-        x: cursor + advance / 2,
-        y: centerY,
-        width: advance
-      } );
-    }
-
-    cursor += advance + letterSpacing;
-  } );
-
-  return {
-    letters,
-    centerY,
-    startX: centerX - totalWidth / 2,
-    endX: centerX + totalWidth / 2
-  };
-}
-
-function ensureLayout(
-  textOptions, position
-) {
-  const p = getP5();
-  const fontKey = textOptions.font ?? "martian";
-  const font = string.fonts[ fontKey ] ?? string.fonts.martian;
-
-  if ( !font?.font ) {
-    return null;
-  }
-
-  const content = ( textOptions.content ?? "" ).toString();
-  const size = textOptions.size ?? 220;
-  const letterSpacing = textOptions.letterSpacing ?? 8;
-
-  const key = [
-    content,
-    fontKey,
-    size,
-    letterSpacing,
-    position.x,
-    position.y,
-    p.width,
-    p.height
-  ].join( "|" );
-
-  if ( key !== state.key ) {
-    const layout = layoutLetters( {
-      text: content,
-      font,
-      size,
-      letterSpacing,
-      position
-    } );
-
-    state.key = key;
-    state.letters = layout.letters;
-    state.centerY = layout.centerY;
-    state.startX = layout.startX;
-    state.endX = layout.endX;
-  }
-
-  return font;
-}
-
-/**
- * Sample the travelling helix. As `t` sweeps 0→1 the curve advances horizontally
- * across (and slightly beyond) the word while `angle` winds it round `turns`
- * times: sin drives the vertical oscillation, cos folds it horizontally into
- * rounded loops. A separate `depth = cos(angle + depthPhase)` tags each point as
- * near (>= 0, in front of the text) or far (< 0, behind it). `phase` is animated
- * so the whole coil drifts over time.
- *
- * Returns the flat point list plus the matching depth list, ready to be split
- * into front / behind arcs.
- */
-function sampleCoil( {
-  size,
-  spiral,
-  centerY,
-  startX,
-  endX,
-  phase
-} ) {
-  const p = getP5();
-  const extend = ( spiral.extend ?? 0.6 ) * size;
-  const left = startX - extend;
-  const right = endX + extend;
-  const span = right - left;
-
-  const radiusY = size * ( spiral.heightRatio ?? 0.62 );
-  const loopWidth = size * ( spiral.loopWidthRatio ?? 0.3 );
-  const turns = spiral.turns ?? 7;
-  const direction = spiral.direction ?? 1;
-  const depthPhase = spiral.depthPhase ?? 0;
-  const count = Math.max(
-    8,
-    Math.round( spiral.pointCount ?? 240 )
+  state.buffer = p.createGraphics(
+    canvas.width,
+    canvas.height,
+    p.WEBGL
   );
-
-  const points = [];
-  const depths = [];
-
-  for ( let i = 0; i < count; i++ ) {
-    const t = i / ( count - 1 );
-    const angle = phase + t * turns * TAU * direction;
-
-    points.push( p.createVector(
-      left + t * span + Math.cos( angle ) * loopWidth,
-      centerY + Math.sin( angle ) * radiusY
-    ) );
-    depths.push( Math.cos( angle + depthPhase ) );
-  }
-
-  return {
-    points,
-    depths
-  };
-}
+} );
 
 /**
- * Split the sampled helix into contiguous runs of the same side (front vs
- * behind the text plane). Each time the depth sign flips we start a new run,
- * seeding it with the previous point so neighbouring arcs overlap by one vertex
- * and join seamlessly once smoothed. Runs shorter than two points are useless to
- * the spline renderer and dropped.
+ * Draw the word as opaque filled text on the z = 0 plane. Opaqueness is what
+ * lets the depth buffer hide the helix segments that pass behind it. Returns the
+ * half-width of the word so the helix knows how far to span.
  */
-function splitCoilByDepth(
-  points, depths
+function drawWord(
+  g, textOptions, font, size
 ) {
-  const front = [];
-  const back = [];
-  let current = null;
-  let currentIsFront = null;
-
-  for ( let i = 0; i < points.length; i++ ) {
-    const isFront = depths[ i ] >= 0;
-
-    if ( current === null || isFront !== currentIsFront ) {
-      const seed = current && current.length
-        ? [
-          current[ current.length - 1 ]
-        ]
-        : [];
-
-      current = seed;
-      currentIsFront = isFront;
-      ( isFront ? front : back ).push( current );
-    }
-
-    current.push( points[ i ] );
-  }
-
-  const usable = ( runs ) => runs.filter( ( run ) => run.length >= 2 );
-
-  return {
-    front: usable( front ),
-    back: usable( back )
-  };
-}
-
-/**
- * Draw the decomposed glyphs in a single opaque pass. Opaqueness is what clips
- * the behind arcs to the glyph silhouette, so the fill alpha is forced to 255.
- */
-function drawLetters(
-  letters, textOptions
-) {
-  if ( letters.length === 0 ) {
-    return;
-  }
-
-  const p = getP5();
-  const fontKey = textOptions.font ?? "martian";
-  const font = string.fonts[ fontKey ] ?? string.fonts.martian;
-  const size = textOptions.size ?? 220;
   const [
     fr,
     fg,
@@ -282,15 +72,16 @@ function drawLetters(
     255
   ];
   const strokeWeight = textOptions.strokeWeight ?? 0;
+  const content = ( textOptions.content ?? "" ).toString();
 
-  p.push();
-  p.textFont( font );
-  p.textSize( size );
-  p.textAlign(
-    p.CENTER,
-    p.CENTER
+  g.push();
+  g.textFont( font );
+  g.textSize( size );
+  g.textAlign(
+    g.CENTER,
+    g.CENTER
   );
-  p.fill(
+  g.fill(
     fr,
     fg,
     fb,
@@ -298,25 +89,117 @@ function drawLetters(
   );
 
   if ( strokeWeight > 0 ) {
-    p.stroke( ...strokeColor );
-    p.strokeWeight( strokeWeight );
+    g.stroke( ...strokeColor );
+    g.strokeWeight( strokeWeight );
   } else {
-    p.noStroke();
+    g.noStroke();
   }
 
-  letters.forEach( ( letter ) => p.text(
-    letter.char,
-    letter.x,
-    letter.y
-  ) );
+  g.text(
+    content,
+    0,
+    0
+  );
+  g.pop();
 
-  p.pop();
+  // The opentype bounds are a far more reliable measure of the rendered width
+  // than WEBGL's textWidth(), which under-reports for some fonts and would leave
+  // the coil short of the word.
+  const bounds = font.textBounds(
+    content,
+    0,
+    0,
+    size
+  );
+
+  return ( bounds?.w ?? size * content.length * 0.6 ) / 2;
+}
+
+/**
+ * Draw the helix wound around the X axis, segment by segment so each piece can be
+ * hued individually and depth-tested on its own. Segments are short lines in 3D
+ * space; the WEBGL depth buffer resolves which ones land in front of the letters.
+ */
+function drawHelix( {
+  g,
+  helix,
+  stroke,
+  halfSpan,
+  size,
+  phase
+} ) {
+  const extend = ( helix.extend ?? 0.5 ) * size;
+  const left = -halfSpan - extend;
+  const right = halfSpan + extend;
+  const span = right - left;
+
+  const radiusY = size * ( helix.radiusY ?? 0.6 );
+  const radiusZ = size * ( helix.radiusZ ?? 0.6 );
+  const turns = helix.turns ?? 7;
+  const direction = helix.direction ?? 1;
+  const phaseOffset = helix.phaseOffset ?? 0;
+  const count = Math.max(
+    8,
+    Math.round( helix.pointCount ?? 260 )
+  );
+
+  const gradient = stroke.gradient ?? false;
+  const hueSpeed = stroke.hueSpeed ?? 1;
+  const hueSpread = stroke.hueSpread ?? 1.5;
+  const hueOffset = stroke.hueOffset ?? 0;
+  const timeHue = animation.angle * hueSpeed;
+
+  // When the hue is uniform it only depends on time, so compute it once.
+  const uniformColor = colors.rainbow( {
+    hueIndex: timeHue + hueOffset
+  } );
+
+  g.push();
+  g.noFill();
+  g.strokeWeight( helix.thickness ?? 16 );
+
+  let prevX = 0;
+  let prevY = 0;
+  let prevZ = 0;
+
+  for ( let i = 0; i < count; i++ ) {
+    const t = i / ( count - 1 );
+    const angle = phase + phaseOffset + t * turns * TAU * direction;
+    const x = left + t * span;
+    const y = Math.sin( angle ) * radiusY;
+    const z = Math.cos( angle ) * radiusZ;
+
+    if ( i > 0 ) {
+      g.stroke( gradient
+        ? colors.rainbow( {
+          hueIndex: hueOffset + timeHue + t * TAU * hueSpread
+        } )
+        : uniformColor );
+      g.line(
+        prevX,
+        prevY,
+        prevZ,
+        x,
+        y,
+        z
+      );
+    }
+
+    prevX = x;
+    prevY = y;
+    prevZ = z;
+  }
+
+  g.pop();
 }
 
 sketch.draw( () => {
   const p = getP5();
+  const g = state.buffer;
   const o = options.sketch ?? {};
   const textOptions = o.text ?? {};
+  const helix = o.helix ?? {};
+  const cameraOptions = o.camera ?? {};
   const position = o.position ?? {
     x: 0.5,
     y: 0.5
@@ -329,91 +212,84 @@ sketch.draw( () => {
     12,
     255
   ] ) );
-  p.strokeCap( p.ROUND );
-  p.strokeJoin( p.ROUND );
 
-  const font = ensureLayout(
-    textOptions,
-    position
-  );
-
-  if ( !font || state.letters.length === 0 ) {
+  if ( !g ) {
     return;
   }
 
-  const spiral = o.spiral ?? {};
-  const {
-    points,
-    depths
-  } = sampleCoil( {
-    size: textOptions.size ?? 220,
-    spiral,
-    centerY: state.centerY,
-    startX: state.startX,
-    endX: state.endX,
-    phase: animation.angle * ( spiral.speed ?? 1 )
+  const fontKey = textOptions.font ?? "martian";
+  const font = string.fonts[ fontKey ] ?? string.fonts.martian;
+
+  if ( !font?.font ) {
+    return;
+  }
+
+  const size = textOptions.size ?? 240;
+
+  // Fresh colour + depth buffer every frame (transparent, so the p2d background
+  // shows through once composited).
+  g.clear();
+  g.push();
+
+  // Orthographic keeps the weave flat and even; perspective makes the far side of
+  // the coil recede. Either way the depth buffer drives the front/back occlusion.
+  // The projection persists on the graphics buffer between frames, so it is set
+  // explicitly every frame (with arguments — the no-arg perspective() throws on a
+  // p5.Graphics) to honour live toggling of the mode.
+  if ( cameraOptions.orthographic ?? true ) {
+    const halfW = g.width / 2;
+    const halfH = g.height / 2;
+
+    g.ortho(
+      -halfW,
+      halfW,
+      -halfH,
+      halfH,
+      -( g.width + g.height ),
+      g.width + g.height
+    );
+  } else {
+    g.perspective(
+      Math.PI / 3,
+      g.width / g.height,
+      1,
+      10000
+    );
+  }
+
+  // Move the whole scene to the requested screen position (WEBGL origin is the
+  // centre; position is normalised with y pointing down like screen space).
+  g.translate(
+    ( position.x - 0.5 ) * g.width,
+    ( position.y - 0.5 ) * g.height,
+    0
+  );
+
+  // Optional tilt to expose the depth of the coil as an actual spiral in space.
+  g.rotateX( cameraOptions.tiltX ?? 0 );
+  g.rotateY( cameraOptions.tiltY ?? 0 );
+
+  const halfSpan = drawWord(
+    g,
+    textOptions,
+    font,
+    size
+  );
+
+  drawHelix( {
+    g,
+    helix,
+    stroke: o.stroke ?? {},
+    halfSpan,
+    size,
+    phase: animation.angle * ( helix.speed ?? 1 )
   } );
 
-  const renderConfig = {
-    curve: {
-      method: "chaikin",
-      closed: false,
-      iterations: o.curve?.iterations ?? 4
-    },
-    stroke: o.stroke ?? {},
-    // The point markers / raw polygon are a demonstration overlay in the splines
-    // sketches; here the coil is the subject, so keep them off.
-    overlay: {
-      polygon: {
-        show: false
-      },
-      points: {
-        show: false
-      }
-    }
-  };
+  g.pop();
 
-  // When the weave is off the coil is a flat ribbon entirely in front of the
-  // word — useful to preview the raw curve. Otherwise the depth split is what
-  // makes it dive behind and surface in front of the letters in quinconce.
-  if ( spiral.weave === false ) {
-    drawLetters(
-      state.letters,
-      textOptions
-    );
-    renderSplines(
-      [
-        points
-      ],
-      renderConfig
-    );
-
-    return;
-  }
-
-  const {
-    front,
-    back
-  } = splitCoilByDepth(
-    points,
-    depths
-  );
-
-  // 1. arcs that pass behind the word.
-  renderSplines(
-    back,
-    renderConfig
-  );
-
-  // 2. the opaque word clips those behind arcs to the glyph outlines.
-  drawLetters(
-    state.letters,
-    textOptions
-  );
-
-  // 3. arcs that pass in front, painted on top to complete the weave.
-  renderSplines(
-    front,
-    renderConfig
+  p.image(
+    g,
+    0,
+    0
   );
 } );
