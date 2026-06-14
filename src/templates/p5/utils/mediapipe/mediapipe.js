@@ -98,6 +98,20 @@ const mediapipe = {
     droppedFrames: 0, // frames due but skipped because inference was busy
     watchdogRecoveries: 0,
     lastError: null
+  },
+
+  // One-shot diagnostic for the startup jank: times the warm-up phase (worker
+  // + model load, first shader-compiling inference) and the worst main-thread
+  // frame gap seen while it ran, then logs a single breakdown so the cause of
+  // the init stutter is measured, not guessed. Reset on every init().
+  warmup: {
+    initStartedAt: 0,
+    readyAt: 0,
+    firstFrameSentAt: 0,
+    firstResultAt: 0,
+    lastPostDrawAt: 0,
+    worstFrameGapMs: 0,
+    logged: false
   }
 };
 
@@ -131,6 +145,15 @@ export async function init( config = {} ) {
   mediapipe.idle = false;
   mediapipe.previousFrameSentTime = 0;
   mediapipe.scheduler.lastDetectionTime = performance.now();
+  mediapipe.warmup = {
+    initStartedAt: performance.now(),
+    readyAt: 0,
+    firstFrameSentAt: 0,
+    firstResultAt: 0,
+    lastPostDrawAt: 0,
+    worstFrameGapMs: 0,
+    logged: false
+  };
   resetStats();
 
   // Only initialize camera if enableCapture is true (default: true for backward compatibility)
@@ -194,6 +217,7 @@ function setupWorker() {
 
       if ( type === "READY" ) {
         mediapipe.processor.ready = true;
+        mediapipe.warmup.readyAt = performance.now();
         clearTimeout( initTimeout );
         resolve();
       } else if ( type === "INIT_ERROR" ) {
@@ -230,6 +254,7 @@ async function setupMainThread() {
     mediapipeLibraryPath: "/assets/libraries/mediapipe"
   } );
   mediapipe.processor.ready = true;
+  mediapipe.warmup.readyAt = performance.now();
 }
 
 function resultHasDetections( result ) {
@@ -262,6 +287,12 @@ function handleResult( {
   // Never cleared (unlike `result`), so isWarmedUp() reflects "has run once".
   if ( entry.firstResultAt === undefined ) {
     entry.firstResultAt = entry.updatedAt;
+
+    if ( !mediapipe.warmup.firstResultAt ) {
+      mediapipe.warmup.firstResultAt = entry.updatedAt;
+    }
+
+    maybeLogWarmup();
   }
 
   if ( resultHasDetections( result ) ) {
@@ -326,6 +357,37 @@ export function isWarmedUp() {
   return tasks.every( ( lib ) => mediapipe.tasks[ lib ]?.firstResultAt !== undefined );
 }
 
+// Logs a one-shot breakdown of the warm-up phase the first time every task is
+// warm, so the cause of the init stutter is measured: how long the worker +
+// model took to load, how long the first (shader-compiling) inference ran, and
+// the worst gap between consecutive frames the main thread saw while it all
+// happened (a large gap = the render loop was starved → the visible stutter).
+function maybeLogWarmup() {
+  const w = mediapipe.warmup;
+
+  if ( w.logged || !isWarmedUp() ) {
+    return;
+  }
+
+  w.logged = true;
+
+  const round = ( value ) => Math.round( value );
+  const completedAt = performance.now();
+  const total = w.initStartedAt ? round( completedAt - w.initStartedAt ) : -1;
+  const modelLoad =
+    w.readyAt && w.initStartedAt ? round( w.readyAt - w.initStartedAt ) : -1;
+  const firstInference =
+    w.firstResultAt && w.firstFrameSentAt
+      ? round( w.firstResultAt - w.firstFrameSentAt )
+      : -1;
+
+  console.info( `[vision warmup] total ${ total }ms — worker+model load ${ modelLoad }ms, ` +
+      `first inference ${ firstInference }ms; worst main-thread frame gap during ` +
+      `warm-up ${ round( w.worstFrameGapMs ) }ms (smooth 60fps ≈ 16.7ms); ` +
+      `worker=${ mediapipe.config.useWorker }, source=${ mediapipe.config.source?.type }, ` +
+      `dropped ${ mediapipe.stats.droppedFrames }, watchdog ${ mediapipe.stats.watchdogRecoveries }` );
+}
+
 /**
  * Returns the latest result for a task, or null when there is none or it is
  * older than maxAgeMilliseconds — so a stalled pipeline reads as "nothing
@@ -368,6 +430,10 @@ export async function predictImage( imageSource ) {
 
   mediapipe.processor.busy = true;
   mediapipe.processor.busySince = performance.now();
+
+  if ( !mediapipe.warmup.firstFrameSentAt ) {
+    mediapipe.warmup.firstFrameSentAt = mediapipe.processor.busySince;
+  }
 
   // 2. Send Data
   if ( mediapipe.config.useWorker ) {
@@ -658,6 +724,21 @@ function armFrameCallback( videoEl ) {
 events.register(
   "post-draw",
   () => {
+    // Diagnostic: record the worst gap between consecutive frames while the
+    // warm-up is still running — a big gap means the render loop was starved
+    // (the visible init stutter). Stops once the breakdown has been logged.
+    const w = mediapipe.warmup;
+
+    if ( !w.logged ) {
+      const tick = performance.now();
+
+      if ( w.lastPostDrawAt && tick - w.lastPostDrawAt > w.worstFrameGapMs ) {
+        w.worstFrameGapMs = tick - w.lastPostDrawAt;
+      }
+
+      w.lastPostDrawAt = tick;
+    }
+
     // Image sources have no frame stream: re-detect at a slow fixed pace so
     // results stay fresher than the interaction layer's staleness TTL.
     if ( mediapipe.config.source?.type === "image" ) {
@@ -791,6 +872,10 @@ function sendFrameIfDue() {
   mediapipe.processor.busySince = now;
   mediapipe.previousFrameSentTime = now;
   scheduler.freshFrame = false;
+
+  if ( !mediapipe.warmup.firstFrameSentAt ) {
+    mediapipe.warmup.firstFrameSentAt = now;
+  }
 
   if ( mediapipe.config.useWorker ) {
     createImageBitmap( videoEl )
