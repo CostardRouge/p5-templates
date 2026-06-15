@@ -2772,30 +2772,6 @@
     "ctime": "2026-06-14T03:35:33.673Z"
   },
   {
-    "name": "torsade-v14-shaders",
-    "engine": "p5",
-    "category": "torsade",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-14T16:07:33.102Z",
-    "ctime": "2026-06-14T16:06:59.530Z"
-  },
-  {
-    "name": "torsade-v15-shaders",
-    "engine": "p5",
-    "category": "torsade",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-14T17:31:25.330Z",
-    "ctime": "2026-06-14T17:31:05.902Z"
-  },
-  {
     "name": "splines-v2-draggable",
     "engine": "p5",
     "category": "splines",
@@ -2825,7 +2801,7 @@
     "category": "torsade-shaders",
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "hasPreview": false,
+    "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
     "mtime": "2026-06-14T21:08:17.827Z",
