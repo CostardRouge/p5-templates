@@ -199,12 +199,13 @@ function setupWorker() {
   return new Promise( (
     resolve, reject
   ) => {
-    const worker = new Worker(
-      "/assets/scripts/vision-worker.js",
-      {
-        type: "module"
-      }
-    );
+    // A CLASSIC worker, deliberately NOT { type: "module" }. The worker script
+    // and vision-manager use only dynamic import(), which works in classic
+    // workers — while MediaPipe's WASM glue calls importScripts(), which exists
+    // ONLY in classic workers. As a module worker the init always threw
+    // ("Module scripts don't support importScripts()") and silently fell back
+    // to MAIN-THREAD inference, stalling the render loop on every frame.
+    const worker = new Worker( "/assets/scripts/vision-worker.js" );
 
     mediapipe.processor.instance = worker;
 

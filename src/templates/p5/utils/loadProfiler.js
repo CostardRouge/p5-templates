@@ -140,32 +140,9 @@ function frameAnalysis() {
   const median = sorted.length ? sorted[ Math.floor( sorted.length / 2 ) ] : 0;
   const slow = frames.filter( ( f ) => f.index > 0 && f.gap > SLOW_FRAME_MS );
 
-  // When did it settle? First frame after which 10 consecutive frames are all
-  // under the slow threshold.
-  let settledIndex = -1;
-
-  for ( let i = 1; i < frames.length; i++ ) {
-    let ok = true;
-
-    for ( let j = i; j < Math.min(
-      i + 10,
-      frames.length
-    ); j++ ) {
-      if ( frames[ j ].gap > SLOW_FRAME_MS ) {
-        ok = false;
-        break;
-      }
-    }
-
-    if ( ok ) {
-      settledIndex = i;
-      break;
-    }
-  }
-
-  const settledAtMs = settledIndex >= 0
-    ? round( settledIndexTimeMs( settledIndex ) )
-    : -1;
+  // When did the jank stop? The last frame whose gap exceeded the threshold.
+  const lastSlow = slow.length ? slow[ slow.length - 1 ] : null;
+  const lastSlowAt = lastSlow ? round( frameTimeMs( lastSlow.index ) ) : 0;
 
   // Top 6 worst frames, each with work-vs-gap so main-thread jank (work≈gap)
   // is distinguishable from GPU/contention jank (work≪gap).
@@ -186,12 +163,14 @@ function frameAnalysis() {
     summary:
       `${ frames.length } frames in first ${ FRAME_WINDOW_MS / 1000 }s, ` +
       `median gap ${ median }ms, ${ slow.length } slow (>${ SLOW_FRAME_MS }ms), ` +
-      `settled at frame ${ settledIndex } (${ settledAtMs }ms after first draw)`,
+      ( lastSlow
+        ? `last jank at frame ${ lastSlow.index } (~${ lastSlowAt }ms after first draw)`
+        : "no jank after the first frame" ),
     worst
   };
 }
 
-function settledIndexTimeMs( index ) {
+function frameTimeMs( index ) {
   // Approx time-after-first-draw by summing gaps up to `index`.
   let total = 0;
 
@@ -211,16 +190,22 @@ function logProfile() {
   const setup = profile.setupEndAt && profile.setupBeginAt
     ? round( profile.setupEndAt - profile.setupBeginAt )
     : -1;
-  const setupToDraw = profile.firstDrawAt && profile.setupEndAt
-    ? round( profile.firstDrawAt - profile.setupEndAt )
+  const startToDraw = profile.firstDrawAt
+    ? round( profile.firstDrawAt - profile.startedAt )
     : -1;
+  // p5 starts the draw loop without awaiting the async setup(), so the first
+  // animated frame usually lands before setup (incl. the vision load) finishes
+  // — i.e. the sketch animates *concurrently* with MediaPipe loading.
+  const overlap = profile.setupEndAt && profile.firstDrawAt &&
+    profile.setupEndAt > profile.firstDrawAt;
 
   const analysis = frameAnalysis();
 
   console.info( `[load profile] ${ profile.name }\n` +
       `  page:   ${ pageMilestones() || "n/a" }\n` +
       `  engine: p5 load + canvas ${ p5Load }ms, setup (incl. vision) ${ setup }ms, ` +
-      `setup → first draw ${ setupToDraw }ms\n` +
+      `first draw ${ startToDraw }ms after engine start` +
+      ( overlap ? " (draw loop runs during async setup)" : "" ) + "\n" +
       `  frames: ${ analysis.summary }\n` +
       ( analysis.worst ? `  worst:  ${ analysis.worst }\n` : "" ) +
       "  (see [vision warmup] for the MediaPipe worker+model+shader breakdown)" );
