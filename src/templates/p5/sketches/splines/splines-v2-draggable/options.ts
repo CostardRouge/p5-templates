@@ -14,7 +14,7 @@ import {
 export const formValues = {
   points: {
     count: 9,
-    seed: 3,
+    seed: 15,
     // Normalized [0..1] control points. Drag on the canvas updates these; the
     // form's list edits them too. `count` / `seed` only regenerate the random
     // layout (overwriting the list) when either changes.
