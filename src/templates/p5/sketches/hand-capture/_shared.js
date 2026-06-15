@@ -106,6 +106,8 @@ export class HandCaptureScene {
     this._rainAccumulator = 0;
     this._tossAccumulator = 0;
     this._prevPoints = new Map();
+    this._echoHistory = [];
+    this._echoFrame = 0;
   }
 
   /** One-time setup: pre-warm the shared interaction module + layer buffers. */
@@ -633,12 +635,99 @@ export class HandCaptureScene {
       return;
     }
 
-    const total = Math.max(
-      this.groups.length - 1,
+    this._drawGroupsTo(
+      graphics,
+      this.groups,
+      1,
+      {
+        innerCircleSize,
+        shadowsCount,
+        vectorsStep
+      }
+    );
+  }
+
+  /**
+   * Onion-skin "echo": redraw the last `count` hand poses (sampled every
+   * `spacing` frames) with rising opacity, then the live hand on top — each
+   * hand leaves a fading ghost of itself.
+   */
+  drawEchoes( {
+    count = 6,
+    spacing = 4,
+    innerCircleSize = 30,
+    shadowsCount = 2,
+    vectorsStep = 0.08,
+    minAlpha = 0.1,
+    ghostAlpha = 0.55
+  } = {} ) {
+    const graphics = this.layers.hands?.graphics;
+
+    if ( !graphics ) {
+      return;
+    }
+
+    this._echoFrame += 1;
+
+    if ( this._echoFrame % Math.max(
+      spacing,
+      1
+    ) === 0 ) {
+      this._echoHistory.push( this._snapshotGroups() );
+
+      while ( this._echoHistory.length > count ) {
+        this._echoHistory.shift();
+      }
+    }
+
+    const drawOptions = {
+      innerCircleSize,
+      shadowsCount,
+      vectorsStep
+    };
+    const last = Math.max(
+      this._echoHistory.length - 1,
       1
     );
 
-    this.groups.forEach( (
+    this._echoHistory.forEach( (
+      snapshot, i
+    ) => {
+      const alpha = minAlpha + ( ghostAlpha - minAlpha ) * ( i / last );
+
+      this._drawGroupsTo(
+        graphics,
+        snapshot,
+        alpha,
+        drawOptions
+      );
+    } );
+
+    this._drawGroupsTo(
+      graphics,
+      this.groups,
+      1,
+      drawOptions
+    );
+  }
+
+  _drawGroupsTo(
+    graphics, groups, alpha, drawOptions = {}
+  ) {
+    const {
+      innerCircleSize = 50, shadowsCount = 3, vectorsStep = 0.05
+    } = drawOptions;
+    const context = graphics.drawingContext;
+    const previousAlpha = context.globalAlpha;
+
+    context.globalAlpha = alpha;
+
+    const total = Math.max(
+      groups.length - 1,
+      1
+    );
+
+    groups.forEach( (
       group, groupIndex
     ) => {
       const index = groupIndex / total;
@@ -665,6 +754,20 @@ export class HandCaptureScene {
         } );
       }
     } );
+
+    context.globalAlpha = previousAlpha;
+  }
+
+  _snapshotGroups() {
+    const p = getP5();
+
+    return this.groups.map( ( group ) => ( {
+      id: group.id,
+      points: group.points.map( ( point ) => p.createVector(
+        point.x,
+        point.y
+      ) )
+    } ) );
   }
 
   /** Rebuild the invisible static bodies the balls/letters collide with. */
