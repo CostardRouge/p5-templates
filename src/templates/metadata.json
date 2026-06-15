@@ -2794,5 +2794,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-14T17:31:25.330Z",
     "ctime": "2026-06-14T17:31:05.902Z"
+  },
+  {
+    "name": "splines-v2-draggable",
+    "engine": "p5",
+    "category": "splines",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-14T21:08:08.451Z",
+    "ctime": "2026-06-14T21:07:22.867Z"
   }
 ]

@@ -193,6 +193,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:semaphore/semaphore-v1-lines": () => import( "@/p5/sketches/semaphore/semaphore-v1-lines/options" ),
   "p5:splines/splines-v0-chaikin": () => import( "@/p5/sketches/splines/splines-v0-chaikin/options" ),
   "p5:splines/splines-v1-interactive": () => import( "@/p5/sketches/splines/splines-v1-interactive/options" ),
+  "p5:splines/splines-v2-draggable": () => import( "@/p5/sketches/splines/splines-v2-draggable/options" ),
   "p5:text-morphing/text-morphing-capitalize": () => import( "@/p5/sketches/text-morphing/text-morphing-capitalize/options" ),
   "p5:text-morphing/text-morphing-depth": () => import( "@/p5/sketches/text-morphing/text-morphing-depth/options" ),
   "p5:text-morphing/text-morphing-depth-clock": () => import( "@/p5/sketches/text-morphing/text-morphing-depth-clock/options" ),
