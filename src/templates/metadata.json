@@ -2806,5 +2806,41 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-14T21:08:17.827Z",
     "ctime": "2026-06-14T17:31:05.902Z"
+  },
+  {
+    "name": "hand-tracking-v5-catch",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-14T18:05:38.135Z",
+    "ctime": "2026-06-14T18:05:16.283Z"
+  },
+  {
+    "name": "hand-tracking-v6-slice",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-14T21:10:00.093Z",
+    "ctime": "2026-06-14T21:09:35.477Z"
+  },
+  {
+    "name": "hand-tracking-v7-echo",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-15T18:47:33.833Z",
+    "ctime": "2026-06-15T18:47:18.345Z"
   }
 ]

@@ -25,6 +25,40 @@ const {
   Body
 } = Matter;
 
+// Shortest distance from a point to a line segment — used for blade hit-tests.
+function _segmentDistance(
+  px, py, x1, y1, x2, y2
+) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lengthSquared = dx * dx + dy * dy;
+
+  if ( lengthSquared === 0 ) {
+    return Math.hypot(
+      px - x1,
+      py - y1
+    );
+  }
+
+  let t = ( ( px - x1 ) * dx + ( py - y1 ) * dy ) / lengthSquared;
+
+  t = Math.max(
+    0,
+    Math.min(
+      1,
+      t
+    )
+  );
+
+  const projectionX = x1 + t * dx;
+  const projectionY = y1 + t * dy;
+
+  return Math.hypot(
+    px - projectionX,
+    py - projectionY
+  );
+}
+
 /**
  * Shared physics + rendering controller for the hand-capture sketches.
  *
@@ -69,6 +103,11 @@ export class HandCaptureScene {
     this._stageKey = null;
     this._ballSizeKey = null;
     this._letterKey = null;
+    this._rainAccumulator = 0;
+    this._tossAccumulator = 0;
+    this._prevPoints = new Map();
+    this._echoHistory = [];
+    this._echoFrame = 0;
   }
 
   /** One-time setup: pre-warm the shared interaction module + layer buffers. */
@@ -194,6 +233,336 @@ export class HandCaptureScene {
     }
   }
 
+  /** Add a single ball at an explicit position (used by the spawners). */
+  addBall( {
+    x = 0, y = 0, radius = 30
+  } = {} ) {
+    const ball = Bodies.circle(
+      x,
+      y,
+      radius
+    );
+
+    ball.initialPosition = {
+      x,
+      y
+    };
+
+    this.balls.unshift( ball );
+
+    Composite.add(
+      this.engine.world,
+      ball
+    );
+
+    return ball;
+  }
+
+  /**
+   * Spawn falling balls from just above the top edge at `rate` per second. The
+   * accumulator keeps the rate frame-rate independent.
+   */
+  spawnRain( {
+    rate = 6, sizeMin = 20, sizeMax = 40
+  } = {} ) {
+    const p = getP5();
+    const margin = this.boundaryMargin;
+    const dt = Math.min(
+      p.deltaTime,
+      100
+    ) / 1000;
+
+    this._rainAccumulator += rate * dt;
+
+    while ( this._rainAccumulator >= 1 ) {
+      this._rainAccumulator -= 1;
+
+      const radius = p.random(
+        sizeMin,
+        sizeMax
+      );
+
+      this.addBall( {
+        x: p.random(
+          margin,
+          p.width - margin
+        ),
+        y: -radius * 2,
+        radius
+      } );
+    }
+  }
+
+  /**
+   * Remove every ball within `radius` of any interaction pointer. Returns the
+   * number caught this frame.
+   */
+  catchNearPointers( {
+    radius = 80
+  } = {} ) {
+    if ( this.pointers.length === 0 ) {
+      return 0;
+    }
+
+    const radiusSquared = radius * radius;
+    let caught = 0;
+
+    for ( let i = this.balls.length - 1; i >= 0; i-- ) {
+      const ball = this.balls[ i ];
+
+      for ( const point of this.pointers ) {
+        const dx = ball.position.x - point.x;
+        const dy = ball.position.y - point.y;
+
+        if ( dx * dx + dy * dy > radiusSquared ) {
+          continue;
+        }
+
+        Composite.remove(
+          this.engine.world,
+          ball
+        );
+        this.balls.splice(
+          i,
+          1
+        );
+        caught++;
+        break;
+      }
+    }
+
+    return caught;
+  }
+
+  /**
+   * Remove balls that have left the canvas. Returns how many fell past the
+   * bottom edge (a "missed" count); side exits are cleaned up silently.
+   */
+  cullOffscreen( {
+    margin = 100
+  } = {} ) {
+    const p = getP5();
+    let missed = 0;
+
+    for ( let i = this.balls.length - 1; i >= 0; i-- ) {
+      const ball = this.balls[ i ];
+      const belowBottom = ball.position.y > p.height + margin;
+      const offSide = ball.position.x < -margin || ball.position.x > p.width + margin;
+
+      if ( !belowBottom && !offSide ) {
+        continue;
+      }
+
+      Composite.remove(
+        this.engine.world,
+        ball
+      );
+      this.balls.splice(
+        i,
+        1
+      );
+
+      if ( belowBottom ) {
+        missed++;
+      }
+    }
+
+    return missed;
+  }
+
+  /**
+   * Lob balls up from below the bottom edge at `rate` per second, like tossed
+   * fruit. Gravity (set by the sketch) pulls them back into an arc.
+   */
+  tossBalls( {
+    rate = 1.2, sizeMin = 45, sizeMax = 75, speed = 30, spread = 6
+  } = {} ) {
+    const p = getP5();
+    const dt = Math.min(
+      p.deltaTime,
+      100
+    ) / 1000;
+
+    this._tossAccumulator += rate * dt;
+
+    while ( this._tossAccumulator >= 1 ) {
+      this._tossAccumulator -= 1;
+
+      const radius = p.random(
+        sizeMin,
+        sizeMax
+      );
+
+      const ball = this.addBall( {
+        x: p.random(
+          p.width * 0.2,
+          p.width * 0.8
+        ),
+        y: p.height + radius,
+        radius
+      } );
+
+      Body.setVelocity(
+        ball,
+        {
+          x: p.random(
+            -spread,
+            spread
+          ),
+          y: -speed
+        }
+      );
+    }
+  }
+
+  /**
+   * Slice balls crossed by a fast pointer swipe. A blade is the segment a
+   * tracked point travelled since last frame; only swipes faster than
+   * `minSpeed` cut. A sliced ball splits into two smaller halves flying apart,
+   * down to `minRadius` (below which it is destroyed). Returns the slice count.
+   */
+  sliceBalls( {
+    minSpeed = 25, bladeWidth = 20, minRadius = 16, splitSpeed = 6
+  } = {} ) {
+    const current = new Map();
+    const blades = [];
+
+    for ( const group of this.groups ) {
+      group.points.forEach( (
+        point, pointIndex
+      ) => {
+        const key = `${ group.id }:${ pointIndex }`;
+
+        current.set(
+          key,
+          {
+            x: point.x,
+            y: point.y
+          }
+        );
+
+        const previous = this._prevPoints.get( key );
+
+        if ( !previous ) {
+          return;
+        }
+
+        const dx = point.x - previous.x;
+        const dy = point.y - previous.y;
+        const length = Math.hypot(
+          dx,
+          dy
+        );
+
+        if ( length >= minSpeed ) {
+          blades.push( {
+            x1: previous.x,
+            y1: previous.y,
+            x2: point.x,
+            y2: point.y,
+            dx,
+            dy,
+            length
+          } );
+        }
+      } );
+    }
+
+    this._prevPoints = current;
+
+    if ( blades.length === 0 ) {
+      return 0;
+    }
+
+    const children = [];
+    let sliced = 0;
+
+    for ( let i = this.balls.length - 1; i >= 0; i-- ) {
+      const ball = this.balls[ i ];
+      const radius = ball.circleRadius ?? 0;
+      const blade = this._bladeHitting(
+        ball,
+        radius,
+        blades,
+        bladeWidth
+      );
+
+      if ( !blade ) {
+        continue;
+      }
+
+      Composite.remove(
+        this.engine.world,
+        ball
+      );
+      this.balls.splice(
+        i,
+        1
+      );
+      sliced++;
+
+      if ( radius <= minRadius ) {
+        continue;
+      }
+
+      const perpX = -blade.dy / blade.length;
+      const perpY = blade.dx / blade.length;
+      const childRadius = radius * 0.62;
+
+      for ( const sign of [
+        1,
+        -1
+      ] ) {
+        children.push( {
+          x: ball.position.x + perpX * childRadius * sign,
+          y: ball.position.y + perpY * childRadius * sign,
+          radius: childRadius,
+          vx: ball.velocity.x + perpX * splitSpeed * sign,
+          vy: ball.velocity.y + perpY * splitSpeed * sign
+        } );
+      }
+    }
+
+    for ( const child of children ) {
+      const body = this.addBall( {
+        x: child.x,
+        y: child.y,
+        radius: child.radius
+      } );
+
+      Body.setVelocity(
+        body,
+        {
+          x: child.vx,
+          y: child.vy
+        }
+      );
+    }
+
+    return sliced;
+  }
+
+  _bladeHitting(
+    ball, radius, blades, bladeWidth
+  ) {
+    for ( const blade of blades ) {
+      const distance = _segmentDistance(
+        ball.position.x,
+        ball.position.y,
+        blade.x1,
+        blade.y1,
+        blade.x2,
+        blade.y2
+      );
+
+      if ( distance <= bladeWidth + radius ) {
+        return blade;
+      }
+    }
+
+    return null;
+  }
+
   /**
    * Turn a string into a pool of letter boxes. Rebuilt when the text or the
    * baked-in body settings (bounciness/friction/size) change.
@@ -266,12 +635,99 @@ export class HandCaptureScene {
       return;
     }
 
-    const total = Math.max(
-      this.groups.length - 1,
+    this._drawGroupsTo(
+      graphics,
+      this.groups,
+      1,
+      {
+        innerCircleSize,
+        shadowsCount,
+        vectorsStep
+      }
+    );
+  }
+
+  /**
+   * Onion-skin "echo": redraw the last `count` hand poses (sampled every
+   * `spacing` frames) with rising opacity, then the live hand on top — each
+   * hand leaves a fading ghost of itself.
+   */
+  drawEchoes( {
+    count = 6,
+    spacing = 4,
+    innerCircleSize = 30,
+    shadowsCount = 2,
+    vectorsStep = 0.08,
+    minAlpha = 0.1,
+    ghostAlpha = 0.55
+  } = {} ) {
+    const graphics = this.layers.hands?.graphics;
+
+    if ( !graphics ) {
+      return;
+    }
+
+    this._echoFrame += 1;
+
+    if ( this._echoFrame % Math.max(
+      spacing,
+      1
+    ) === 0 ) {
+      this._echoHistory.push( this._snapshotGroups() );
+
+      while ( this._echoHistory.length > count ) {
+        this._echoHistory.shift();
+      }
+    }
+
+    const drawOptions = {
+      innerCircleSize,
+      shadowsCount,
+      vectorsStep
+    };
+    const last = Math.max(
+      this._echoHistory.length - 1,
       1
     );
 
-    this.groups.forEach( (
+    this._echoHistory.forEach( (
+      snapshot, i
+    ) => {
+      const alpha = minAlpha + ( ghostAlpha - minAlpha ) * ( i / last );
+
+      this._drawGroupsTo(
+        graphics,
+        snapshot,
+        alpha,
+        drawOptions
+      );
+    } );
+
+    this._drawGroupsTo(
+      graphics,
+      this.groups,
+      1,
+      drawOptions
+    );
+  }
+
+  _drawGroupsTo(
+    graphics, groups, alpha, drawOptions = {}
+  ) {
+    const {
+      innerCircleSize = 50, shadowsCount = 3, vectorsStep = 0.05
+    } = drawOptions;
+    const context = graphics.drawingContext;
+    const previousAlpha = context.globalAlpha;
+
+    context.globalAlpha = alpha;
+
+    const total = Math.max(
+      groups.length - 1,
+      1
+    );
+
+    groups.forEach( (
       group, groupIndex
     ) => {
       const index = groupIndex / total;
@@ -298,6 +754,20 @@ export class HandCaptureScene {
         } );
       }
     } );
+
+    context.globalAlpha = previousAlpha;
+  }
+
+  _snapshotGroups() {
+    const p = getP5();
+
+    return this.groups.map( ( group ) => ( {
+      id: group.id,
+      points: group.points.map( ( point ) => p.createVector(
+        point.x,
+        point.y
+      ) )
+    } ) );
   }
 
   /** Rebuild the invisible static bodies the balls/letters collide with. */
@@ -556,6 +1026,13 @@ export class HandCaptureScene {
     }
   }
 
+  /** Trail length for the hands layer — gives the blade a Fruit-Ninja streak. */
+  setHandTrail( amount ) {
+    if ( this.layers.hands ) {
+      this.layers.hands.fade = amount;
+    }
+  }
+
   /** Blit every layer to the canvas, then fade or clear its buffer. */
   compose() {
     const p = getP5();
@@ -640,44 +1117,76 @@ export class HandCaptureScene {
     }
   }
 
+  /** Big centered counter near the top — an implicit score for game variants. */
+  drawScore( {
+    value = 0, label = "", show = true, color
+  } = {} ) {
+    if ( !show ) {
+      return;
+    }
+
+    const p = getP5();
+    const fill = color ? p.color( ...color ) : p.color( 0 );
+
+    string.write(
+      `${ value }`,
+      0,
+      p.height * 0.16,
+      {
+        size: 240,
+        strokeWeight: 0,
+        stroke: fill,
+        fill,
+        font: string.fonts.martian,
+        textAlign: [
+          p.CENTER,
+          p.CENTER
+        ],
+        blendMode: p.EXCLUSION
+      }
+    );
+
+    if ( label ) {
+      string.write(
+        label,
+        0,
+        p.height * 0.16 + 150,
+        {
+          size: 40,
+          strokeWeight: 0,
+          stroke: fill,
+          fill,
+          font: string.fonts.loraItalic,
+          textAlign: [
+            p.CENTER,
+            p.CENTER
+          ],
+          blendMode: p.EXCLUSION
+        }
+      );
+    }
+  }
+
   _spawnBall(
     sizeMin, sizeMax
   ) {
     const p = getP5();
     const margin = this.boundaryThickness;
 
-    const x = p.random(
-      margin,
-      p.width - margin
-    );
-
-    const y = p.random(
-      margin,
-      p.height - margin
-    );
-
-    const ball = Bodies.circle(
-      x,
-      y,
-      p.random(
+    return this.addBall( {
+      x: p.random(
+        margin,
+        p.width - margin
+      ),
+      y: p.random(
+        margin,
+        p.height - margin
+      ),
+      radius: p.random(
         sizeMin,
         sizeMax
       )
-    );
-
-    ball.initialPosition = {
-      x,
-      y
-    };
-
-    this.balls.unshift( ball );
-
-    Composite.add(
-      this.engine.world,
-      ball
-    );
-
-    return ball;
+    } );
   }
 
   _addBoundary(
