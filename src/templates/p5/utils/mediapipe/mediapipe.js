@@ -68,6 +68,12 @@ const mediapipe = {
   enabled: true, // Dynamic enable/disable flag
   videoReady: false,
 
+  // True while prewarm() is running its synthetic warm-up inference. Real
+  // frames are held back during this window so the slow first (shader-
+  // compiling) inference always lands on the throwaway frame, not the sketch's
+  // first real one.
+  warming: false,
+
   // True once no task has produced a detection for idleAfterMilliseconds.
   // Sketches can read this to dim/skip work while nobody is interacting.
   idle: false,
@@ -142,6 +148,7 @@ export async function init( config = {} ) {
   mediapipe.tasks = {};
   mediapipe.mode = "VIDEO";
   mediapipe.enabled = true;
+  mediapipe.warming = false;
   mediapipe.idle = false;
   mediapipe.previousFrameSentTime = 0;
   mediapipe.scheduler.lastDetectionTime = performance.now();
@@ -180,6 +187,12 @@ export async function init( config = {} ) {
   } else {
     await setupMainThread();
   }
+
+  // Pre-warm the task graph on a synthetic frame so the first, shader-compiling
+  // inference happens here — during setup, before the sketch animates — instead
+  // of stalling the render loop on its first real frame (the visible init
+  // stutter). Bounded + best-effort: never blocks init for long, never throws.
+  await prewarm();
 }
 
 function setupWorker() {
@@ -281,6 +294,19 @@ function handleResult( {
 
   entry.result = result;
   entry.updatedAt = performance.now();
+
+  if ( mediapipe.warming ) {
+    // Synthetic prewarm frame: it compiled the task's GPU shaders, but it's a
+    // throwaway image — it must NOT satisfy `firstResultAt` (the source-ready
+    // latch the recording waits on, which has to mean "the real source
+    // produced a frame"). Record graph warmth separately so prewarm() knows
+    // when to stop, then bail before the real-result bookkeeping.
+    if ( entry.prewarmedAt === undefined ) {
+      entry.prewarmedAt = entry.updatedAt;
+    }
+
+    return;
+  }
 
   // One-way warm-up latch: the first result a task ever emits means its model
   // is loaded, its GPU shaders are compiled and the source delivered a frame.
@@ -386,6 +412,131 @@ function maybeLogWarmup() {
       `warm-up ${ round( w.worstFrameGapMs ) }ms (smooth 60fps ≈ 16.7ms); ` +
       `worker=${ mediapipe.config.useWorker }, source=${ mediapipe.config.source?.type }, ` +
       `dropped ${ mediapipe.stats.droppedFrames }, watchdog ${ mediapipe.stats.watchdogRecoveries }` );
+}
+
+function _delay( milliseconds ) {
+  return new Promise( ( resolve ) => setTimeout(
+    resolve,
+    milliseconds
+  ) );
+}
+
+// Every configured task has run its first (shader-compiling) inference on the
+// synthetic prewarm frame.
+function _allPrewarmed() {
+  const tasks = mediapipe.config.tasks ?? [];
+
+  return tasks.length > 0 &&
+    tasks.every( ( lib ) => mediapipe.tasks[ lib ]?.prewarmedAt !== undefined );
+}
+
+// Sends one synthetic frame straight to the processor (bypassing the
+// scheduler/draw loop), reusing the normal FRAME path so it compiles the same
+// shaders a real frame would. Best-effort: swallows transfer errors.
+async function _sendWarmupFrame( source ) {
+  if ( mediapipe.processor.busy ) {
+    return;
+  }
+
+  const now = performance.now();
+
+  mediapipe.processor.busy = true;
+  mediapipe.processor.busySince = now;
+
+  if ( mediapipe.config.useWorker ) {
+    try {
+      const bitmap = await createImageBitmap( source );
+
+      mediapipe.processor.instance.postMessage(
+        {
+          type: "FRAME",
+          bitmap,
+          timestamp: now
+        },
+        [
+          bitmap
+        ]
+      );
+    } catch( error ) {
+      mediapipe.stats.lastError = error?.message ?? String( error );
+      mediapipe.processor.busy = false;
+    }
+  } else {
+    try {
+      mediapipe.processor.instance.detect(
+        source,
+        now
+      );
+    } catch( error ) {
+      mediapipe.stats.lastError = error?.message ?? String( error );
+    } finally {
+      markFrameDone();
+    }
+  }
+}
+
+/**
+ * Pre-compiles the task graph on a throwaway neutral frame so the first
+ * shader-compiling inference happens here (during init, before the sketch's
+ * real animation) rather than stalling the render loop on the first real
+ * frame. Bounded by `timeoutMs` and never throws — a broken processor just
+ * falls through and the sketch runs as before.
+ *
+ * The synthetic results are flagged (mediapipe.warming) so they don't satisfy
+ * the real source-ready latch the recording pipeline waits on.
+ */
+export async function prewarm( timeoutMs = 4000 ) {
+  const tasks = mediapipe.config.tasks ?? [];
+
+  if (
+    !mediapipe.processor.ready ||
+    tasks.length === 0 ||
+    typeof document === "undefined"
+  ) {
+    return;
+  }
+
+  const size = mediapipe.config.captureSize ?? {
+    width: 256,
+    height: 256
+  };
+  const canvas = document.createElement( "canvas" );
+
+  canvas.width = size.width || 256;
+  canvas.height = size.height || 256;
+
+  const context = canvas.getContext( "2d" );
+
+  if ( context ) {
+    // A flat mid-grey is enough to build + compile the graph; we don't need a
+    // real detection, only the shaders.
+    context.fillStyle = "#808080";
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+  }
+
+  mediapipe.warming = true;
+
+  const startedAt = performance.now();
+
+  try {
+    while (
+      !_allPrewarmed() &&
+      performance.now() - startedAt < timeoutMs
+    ) {
+      await _sendWarmupFrame( canvas );
+      // Let the worker round-trip (or the next main-thread slot) before the
+      // next probe; detectForVideo also needs strictly increasing timestamps.
+      await _delay( 40 );
+    }
+  } finally {
+    mediapipe.warming = false;
+    mediapipe.processor.busy = false;
+  }
 }
 
 /**
@@ -755,7 +906,7 @@ events.register(
 );
 
 function sendImageIfDue() {
-  if ( !mediapipe.enabled || !mediapipe.processor.ready ) {
+  if ( !mediapipe.enabled || !mediapipe.processor.ready || mediapipe.warming ) {
     return;
   }
 
@@ -796,7 +947,7 @@ function sendImageIfDue() {
 }
 
 function sendFrameIfDue() {
-  if ( !mediapipe.enabled || !mediapipe.processor.ready ) {
+  if ( !mediapipe.enabled || !mediapipe.processor.ready || mediapipe.warming ) {
     return;
   }
 
