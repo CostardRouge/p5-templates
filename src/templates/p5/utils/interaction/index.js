@@ -478,7 +478,8 @@ export async function initInteraction( opts = {} ) {
     const _onTouch = ( e ) => {
       _rawTouches = Array.from( e.touches ).map( ( t ) => ( {
         clientX: t.clientX,
-        clientY: t.clientY
+        clientY: t.clientY,
+        identifier: t.identifier
       } ) );
     };
 
@@ -801,9 +802,15 @@ export function getPointerGroups( opts ) {
     "mouse",
     _collectMouse
   );
-  addPerPoint(
-    "touch",
-    _collectTouch
+
+  // Touch is grouped per FINGER with a stable id (the browser touch identifier),
+  // not the array index — so a sketch tracking which finger drags which thing
+  // (and the per-group temporal smoothing) stays correct even when a finger in
+  // the middle of the list lifts and the remaining touches reindex.
+  _collectTouchGroups(
+    opts,
+    p,
+    groups
   );
 
   // Vision: one ordered group per detected entity.
@@ -954,6 +961,47 @@ function _collectTouch(
       x,
       y
     ) );
+  }
+}
+
+// One ordered group per active finger, keyed by the browser touch identifier so
+// the id follows a physical finger across frames (see the getPointerGroups call
+// site). Each group holds that finger's single point.
+function _collectTouchGroups(
+  opts, p, groups
+) {
+  const touch = opts.touch;
+
+  if ( !touch?.enabled ) {
+    return;
+  }
+
+  const maxTouches = touch.maxTouches ?? 5;
+  const count = Math.min(
+    _rawTouches.length,
+    maxTouches
+  );
+
+  for ( let i = 0; i < count; i++ ) {
+    const raw = _rawTouches[ i ];
+    const {
+      x, y
+    } = _clientToCanvas(
+      raw.clientX,
+      raw.clientY,
+      p
+    );
+
+    groups.push( {
+      source: "touch",
+      id: `touch-${ raw.identifier ?? i }`,
+      points: [
+        p.createVector(
+          x,
+          y
+        )
+      ]
+    } );
   }
 }
 
