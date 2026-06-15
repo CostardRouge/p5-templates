@@ -142,5 +142,11 @@ declare global {
     // Server-side / deterministic recording controls (time utility)
     enableRecordingMode?: () => void;
     disableRecordingMode?: () => void;
+
+    // Interaction vision readiness (set by the interaction layer). Returns true
+    // once the vision source has loaded and produced a first result, or when no
+    // vision is needed. Awaited before capture so a recording never starts mid
+    // warm-up.
+    isInteractionVisionReady?: () => boolean;
   }
 }

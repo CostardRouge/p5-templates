@@ -27,7 +27,15 @@ const mediapipe = {
       width: 320,
       height: 240
     },
-    captureFlip: true
+    captureFlip: true,
+
+    // Where frames come from:
+    //   { type: "webcam", deviceId? }          → p5 createCapture (owned)
+    //   { type: "video" | "image", element }   → adopted external element
+    //     (a video/image asset; its owner keeps loading/seeking/disposing it)
+    source: {
+      type: "webcam"
+    }
   },
 
   // Latest result per task: mediapipe.tasks[ lib ] = { result, updatedAt }.
@@ -35,6 +43,9 @@ const mediapipe = {
 
   capture: {
     element: null,
+    // False when the element is adopted from outside (video/image source):
+    // teardown must not stop tracks or remove an element it doesn't own.
+    owned: true,
     size: {
       width: 320,
       height: 240
@@ -56,6 +67,12 @@ const mediapipe = {
 
   enabled: true, // Dynamic enable/disable flag
   videoReady: false,
+
+  // True while prewarm() is running its synthetic warm-up inference. Real
+  // frames are held back during this window so the slow first (shader-
+  // compiling) inference always lands on the throwaway frame, not the sketch's
+  // first real one.
+  warming: false,
 
   // True once no task has produced a detection for idleAfterMilliseconds.
   // Sketches can read this to dim/skip work while nobody is interacting.
@@ -87,6 +104,20 @@ const mediapipe = {
     droppedFrames: 0, // frames due but skipped because inference was busy
     watchdogRecoveries: 0,
     lastError: null
+  },
+
+  // One-shot diagnostic for the startup jank: times the warm-up phase (worker
+  // + model load, first shader-compiling inference) and the worst main-thread
+  // frame gap seen while it ran, then logs a single breakdown so the cause of
+  // the init stutter is measured, not guessed. Reset on every init().
+  warmup: {
+    initStartedAt: 0,
+    readyAt: 0,
+    firstFrameSentAt: 0,
+    firstResultAt: 0,
+    lastPostDrawAt: 0,
+    worstFrameGapMs: 0,
+    logged: false
   }
 };
 
@@ -103,6 +134,9 @@ export async function init( config = {} ) {
     height: 240
   };
   mediapipe.config.captureFlip = config.captureFlip ?? true;
+  mediapipe.config.source = config.source ?? {
+    type: "webcam"
+  };
 
   mediapipe.inferenceIntervalMilliseconds =
     config.inferenceInterval ?? mediapipe.inferenceIntervalMilliseconds;
@@ -114,16 +148,26 @@ export async function init( config = {} ) {
   mediapipe.tasks = {};
   mediapipe.mode = "VIDEO";
   mediapipe.enabled = true;
+  mediapipe.warming = false;
   mediapipe.idle = false;
   mediapipe.previousFrameSentTime = 0;
   mediapipe.scheduler.lastDetectionTime = performance.now();
+  mediapipe.warmup = {
+    initStartedAt: performance.now(),
+    readyAt: 0,
+    firstFrameSentAt: 0,
+    firstResultAt: 0,
+    lastPostDrawAt: 0,
+    worstFrameGapMs: 0,
+    logged: false
+  };
   resetStats();
 
   // Only initialize camera if enableCapture is true (default: true for backward compatibility)
   const enableCapture = config.enableCapture ?? true;
 
   if ( enableCapture ) {
-    createVideoCaptureElements();
+    setupCaptureSource();
   }
 
   if ( mediapipe.config.useWorker ) {
@@ -143,18 +187,25 @@ export async function init( config = {} ) {
   } else {
     await setupMainThread();
   }
+
+  // Pre-warm the task graph on a synthetic frame so the first, shader-compiling
+  // inference happens here — during setup, before the sketch animates — instead
+  // of stalling the render loop on its first real frame (the visible init
+  // stutter). Bounded + best-effort: never blocks init for long, never throws.
+  await prewarm();
 }
 
 function setupWorker() {
   return new Promise( (
     resolve, reject
   ) => {
-    const worker = new Worker(
-      "/assets/scripts/vision-worker.js",
-      {
-        type: "module"
-      }
-    );
+    // A CLASSIC worker, deliberately NOT { type: "module" }. The worker script
+    // and vision-manager use only dynamic import(), which works in classic
+    // workers — while MediaPipe's WASM glue calls importScripts(), which exists
+    // ONLY in classic workers. As a module worker the init always threw
+    // ("Module scripts don't support importScripts()") and silently fell back
+    // to MAIN-THREAD inference, stalling the render loop on every frame.
+    const worker = new Worker( "/assets/scripts/vision-worker.js" );
 
     mediapipe.processor.instance = worker;
 
@@ -180,6 +231,7 @@ function setupWorker() {
 
       if ( type === "READY" ) {
         mediapipe.processor.ready = true;
+        mediapipe.warmup.readyAt = performance.now();
         clearTimeout( initTimeout );
         resolve();
       } else if ( type === "INIT_ERROR" ) {
@@ -216,6 +268,7 @@ async function setupMainThread() {
     mediapipeLibraryPath: "/assets/libraries/mediapipe"
   } );
   mediapipe.processor.ready = true;
+  mediapipe.warmup.readyAt = performance.now();
 }
 
 function resultHasDetections( result ) {
@@ -242,6 +295,32 @@ function handleResult( {
 
   entry.result = result;
   entry.updatedAt = performance.now();
+
+  if ( mediapipe.warming ) {
+    // Synthetic prewarm frame: it compiled the task's GPU shaders, but it's a
+    // throwaway image — it must NOT satisfy `firstResultAt` (the source-ready
+    // latch the recording waits on, which has to mean "the real source
+    // produced a frame"). Record graph warmth separately so prewarm() knows
+    // when to stop, then bail before the real-result bookkeeping.
+    if ( entry.prewarmedAt === undefined ) {
+      entry.prewarmedAt = entry.updatedAt;
+    }
+
+    return;
+  }
+
+  // One-way warm-up latch: the first result a task ever emits means its model
+  // is loaded, its GPU shaders are compiled and the source delivered a frame.
+  // Never cleared (unlike `result`), so isWarmedUp() reflects "has run once".
+  if ( entry.firstResultAt === undefined ) {
+    entry.firstResultAt = entry.updatedAt;
+
+    if ( !mediapipe.warmup.firstResultAt ) {
+      mediapipe.warmup.firstResultAt = entry.updatedAt;
+    }
+
+    maybeLogWarmup();
+  }
 
   if ( resultHasDetections( result ) ) {
     mediapipe.scheduler.lastDetectionTime = entry.updatedAt;
@@ -287,6 +366,181 @@ function resetStats() {
 }
 
 /**
+ * True once the pipeline has fully warmed up: the processor is ready, the
+ * source has delivered a frame (`videoReady`) and every configured task has
+ * produced at least one result — i.e. each model's first, shader-compiling
+ * inference has completed. This is the signal a warm-up gate waits on before
+ * starting the timeline or a recording, so the visible animation never plays
+ * through the first-inference jank. With no tasks configured it reads as
+ * warm (nothing to wait for).
+ */
+export function isWarmedUp() {
+  if ( !mediapipe.processor.ready || !mediapipe.videoReady ) {
+    return false;
+  }
+
+  const tasks = mediapipe.config.tasks ?? [];
+
+  return tasks.every( ( lib ) => mediapipe.tasks[ lib ]?.firstResultAt !== undefined );
+}
+
+// Logs a one-shot breakdown of the warm-up phase the first time every task is
+// warm, so the cause of the init stutter is measured: how long the worker +
+// model took to load, how long the first (shader-compiling) inference ran, and
+// the worst gap between consecutive frames the main thread saw while it all
+// happened (a large gap = the render loop was starved → the visible stutter).
+function maybeLogWarmup() {
+  const w = mediapipe.warmup;
+
+  if ( w.logged || !isWarmedUp() ) {
+    return;
+  }
+
+  w.logged = true;
+
+  const round = ( value ) => Math.round( value );
+  const completedAt = performance.now();
+  const total = w.initStartedAt ? round( completedAt - w.initStartedAt ) : -1;
+  const modelLoad =
+    w.readyAt && w.initStartedAt ? round( w.readyAt - w.initStartedAt ) : -1;
+  const firstInference =
+    w.firstResultAt && w.firstFrameSentAt
+      ? round( w.firstResultAt - w.firstFrameSentAt )
+      : -1;
+
+  console.info( `[vision warmup] total ${ total }ms — worker+model load ${ modelLoad }ms, ` +
+      `first inference ${ firstInference }ms; worst main-thread frame gap during ` +
+      `warm-up ${ round( w.worstFrameGapMs ) }ms (smooth 60fps ≈ 16.7ms); ` +
+      `worker=${ mediapipe.config.useWorker }, source=${ mediapipe.config.source?.type }, ` +
+      `dropped ${ mediapipe.stats.droppedFrames }, watchdog ${ mediapipe.stats.watchdogRecoveries }` );
+}
+
+function _delay( milliseconds ) {
+  return new Promise( ( resolve ) => setTimeout(
+    resolve,
+    milliseconds
+  ) );
+}
+
+// Every configured task has run its first (shader-compiling) inference on the
+// synthetic prewarm frame.
+function _allPrewarmed() {
+  const tasks = mediapipe.config.tasks ?? [];
+
+  return tasks.length > 0 &&
+    tasks.every( ( lib ) => mediapipe.tasks[ lib ]?.prewarmedAt !== undefined );
+}
+
+// Sends one synthetic frame straight to the processor (bypassing the
+// scheduler/draw loop), reusing the normal FRAME path so it compiles the same
+// shaders a real frame would. Best-effort: swallows transfer errors.
+async function _sendWarmupFrame( source ) {
+  if ( mediapipe.processor.busy ) {
+    return;
+  }
+
+  const now = performance.now();
+
+  mediapipe.processor.busy = true;
+  mediapipe.processor.busySince = now;
+
+  if ( mediapipe.config.useWorker ) {
+    try {
+      const bitmap = await createImageBitmap( source );
+
+      mediapipe.processor.instance.postMessage(
+        {
+          type: "FRAME",
+          bitmap,
+          timestamp: now
+        },
+        [
+          bitmap
+        ]
+      );
+    } catch( error ) {
+      mediapipe.stats.lastError = error?.message ?? String( error );
+      mediapipe.processor.busy = false;
+    }
+  } else {
+    try {
+      mediapipe.processor.instance.detect(
+        source,
+        now
+      );
+    } catch( error ) {
+      mediapipe.stats.lastError = error?.message ?? String( error );
+    } finally {
+      markFrameDone();
+    }
+  }
+}
+
+/**
+ * Pre-compiles the task graph on a throwaway neutral frame so the first
+ * shader-compiling inference happens here (during init, before the sketch's
+ * real animation) rather than stalling the render loop on the first real
+ * frame. Bounded by `timeoutMs` and never throws — a broken processor just
+ * falls through and the sketch runs as before.
+ *
+ * The synthetic results are flagged (mediapipe.warming) so they don't satisfy
+ * the real source-ready latch the recording pipeline waits on.
+ */
+export async function prewarm( timeoutMs = 4000 ) {
+  const tasks = mediapipe.config.tasks ?? [];
+
+  if (
+    !mediapipe.processor.ready ||
+    tasks.length === 0 ||
+    typeof document === "undefined"
+  ) {
+    return;
+  }
+
+  const size = mediapipe.config.captureSize ?? {
+    width: 256,
+    height: 256
+  };
+  const canvas = document.createElement( "canvas" );
+
+  canvas.width = size.width || 256;
+  canvas.height = size.height || 256;
+
+  const context = canvas.getContext( "2d" );
+
+  if ( context ) {
+    // A flat mid-grey is enough to build + compile the graph; we don't need a
+    // real detection, only the shaders.
+    context.fillStyle = "#808080";
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+  }
+
+  mediapipe.warming = true;
+
+  const startedAt = performance.now();
+
+  try {
+    while (
+      !_allPrewarmed() &&
+      performance.now() - startedAt < timeoutMs
+    ) {
+      await _sendWarmupFrame( canvas );
+      // Let the worker round-trip (or the next main-thread slot) before the
+      // next probe; detectForVideo also needs strictly increasing timestamps.
+      await _delay( 40 );
+    }
+  } finally {
+    mediapipe.warming = false;
+    mediapipe.processor.busy = false;
+  }
+}
+
+/**
  * Returns the latest result for a task, or null when there is none or it is
  * older than maxAgeMilliseconds — so a stalled pipeline reads as "nothing
  * detected" instead of replaying a frozen result forever.
@@ -328,6 +582,10 @@ export async function predictImage( imageSource ) {
 
   mediapipe.processor.busy = true;
   mediapipe.processor.busySince = performance.now();
+
+  if ( !mediapipe.warmup.firstFrameSentAt ) {
+    mediapipe.warmup.firstFrameSentAt = mediapipe.processor.busySince;
+  }
 
   // 2. Send Data
   if ( mediapipe.config.useWorker ) {
@@ -421,14 +679,58 @@ export function interact(
   }
 }
 
+// Creates or adopts the element frames are read from, according to
+// config.source. Webcam sources own a fresh p5 capture; video/image sources
+// borrow an element whose lifecycle (loading, seeking, disposal) belongs to
+// the caller — typically a video/image asset from the sketch options.
+function setupCaptureSource() {
+  const source = mediapipe.config.source ?? {
+    type: "webcam"
+  };
+
+  if (
+    ( source.type === "video" || source.type === "image" ) &&
+    source.element
+  ) {
+    adoptCaptureElement(
+      source.element,
+      source.type
+    );
+  } else {
+    createVideoCaptureElements();
+  }
+}
+
 function createVideoCaptureElements() {
   const p = getP5();
   const size = mediapipe.config.captureSize;
   const flip = mediapipe.config.captureFlip;
+  const deviceId = mediapipe.config.source?.deviceId;
 
   mediapipe.videoReady = false;
+  mediapipe.capture.owned = true;
+
+  // A specific camera was requested → pass full getUserMedia constraints
+  // (p5 accepts a constraints object in place of the VIDEO constant).
+  const constraints = deviceId
+    ? {
+      audio: false,
+      video: {
+        deviceId: {
+          exact: deviceId
+        },
+        width: {
+          ideal: size.width
+        },
+        height: {
+          ideal: size.height
+        }
+      }
+    }
+    : p.VIDEO;
+
   mediapipe.capture.element = p.createCapture(
-    p.VIDEO,
+    constraints,
     {
       flipped: flip
     }
@@ -453,6 +755,93 @@ function createVideoCaptureElements() {
   );
 
   armFrameCallback( mediapipe.capture.element.elt );
+}
+
+// Borrows an external <video> or <img> as the inference source. Only a thin
+// wrapper is stored ({ elt }) so every consumer that reads capture.element.elt
+// keeps working; capture.owned = false tells teardown to leave it alone.
+function adoptCaptureElement(
+  element, type
+) {
+  mediapipe.videoReady = false;
+  mediapipe.capture.owned = false;
+  mediapipe.capture.element = {
+    elt: element
+  };
+
+  const applySize = () => {
+    mediapipe.capture.size = {
+      width:
+        element.videoWidth ||
+        element.naturalWidth ||
+        element.width ||
+        mediapipe.config.captureSize.width,
+      height:
+        element.videoHeight ||
+        element.naturalHeight ||
+        element.height ||
+        mediapipe.config.captureSize.height
+    };
+  };
+
+  applySize();
+
+  if ( type === "video" ) {
+    // The "video" source is adopted as an offscreen <canvas> the owner blits
+    // the seeked video frame into (see the interaction layer): a canvas is a
+    // stable, always-valid inference source, unlike a paused+re-seeked <video>
+    // read directly. A bare <video> is still tolerated as a fallback.
+    const isCanvas = typeof element.getContext === "function";
+
+    if ( isCanvas || element.readyState >= 2 ) {
+      // The owner only hands over the canvas once it has drawn into it, so it
+      // is drawable immediately.
+      mediapipe.videoReady = true;
+    } else {
+      element.addEventListener(
+        "loadeddata",
+        () => {
+          // Bail if the source changed while the video was still loading.
+          if ( mediapipe.capture.element?.elt === element ) {
+            mediapipe.videoReady = true;
+            applySize();
+          }
+        },
+        {
+          once: true
+        }
+      );
+    }
+
+    // Don't gate inference on requestVideoFrameCallback: a canvas has none, and
+    // even a raw video here is driven by the owner seeking it, whose seek uses
+    // rVFC internally — a second consumer made the frame stream erratic. Sample
+    // the current frame at the inference interval instead, like the image path.
+    mediapipe.scheduler.usingFrameCallback = false;
+    mediapipe.scheduler.freshFrame = true;
+  } else {
+    // Images have no frame stream: the post-draw loop re-detects them at the
+    // idle interval instead (see sendImageIfDue).
+    if ( element.complete && element.naturalWidth > 0 ) {
+      mediapipe.videoReady = true;
+    } else {
+      element.addEventListener(
+        "load",
+        () => {
+          if ( mediapipe.capture.element?.elt === element ) {
+            mediapipe.videoReady = true;
+            applySize();
+          }
+        },
+        {
+          once: true
+        }
+      );
+    }
+
+    mediapipe.scheduler.usingFrameCallback = false;
+    mediapipe.scheduler.freshFrame = true;
+  }
 }
 
 // With requestVideoFrameCallback support we know exactly when the camera
@@ -487,15 +876,79 @@ function armFrameCallback( videoEl ) {
 events.register(
   "post-draw",
   () => {
-  // Only run automatic video loop if we are in VIDEO mode
+    // Diagnostic: record the worst gap between consecutive frames while the
+    // warm-up is still running — a big gap means the render loop was starved
+    // (the visible init stutter). Stops once the breakdown has been logged.
+    const w = mediapipe.warmup;
+
+    if ( !w.logged ) {
+      const tick = performance.now();
+
+      if ( w.lastPostDrawAt && tick - w.lastPostDrawAt > w.worstFrameGapMs ) {
+        w.worstFrameGapMs = tick - w.lastPostDrawAt;
+      }
+
+      w.lastPostDrawAt = tick;
+    }
+
+    // Image sources have no frame stream: re-detect at a slow fixed pace so
+    // results stay fresher than the interaction layer's staleness TTL.
+    if ( mediapipe.config.source?.type === "image" ) {
+      sendImageIfDue();
+
+      return;
+    }
+
+    // Only run automatic video loop if we are in VIDEO mode
     if ( mediapipe.mode === "VIDEO" ) {
       sendFrameIfDue();
     }
   }
 );
 
+function sendImageIfDue() {
+  if ( !mediapipe.enabled || !mediapipe.processor.ready || mediapipe.warming ) {
+    return;
+  }
+
+  const element = mediapipe.capture.element?.elt;
+
+  if ( !element || !element.complete || !element.naturalWidth ) {
+    return;
+  }
+
+  const now = performance.now();
+
+  // A static image never changes, so the active-rate interval is pointless:
+  // always pace at the (slower) idle interval.
+  const interval = Math.max(
+    mediapipe.inferenceIntervalMilliseconds,
+    mediapipe.scheduler.idleIntervalMilliseconds
+  );
+
+  if ( now - mediapipe.previousFrameSentTime < interval ) {
+    return;
+  }
+
+  if ( mediapipe.processor.busy ) {
+    // Same watchdog as the video loop: never stay stuck on a lost frame.
+    if (
+      now - mediapipe.processor.busySince >
+      mediapipe.scheduler.busyTimeoutMilliseconds
+    ) {
+      mediapipe.processor.busy = false;
+      mediapipe.stats.watchdogRecoveries++;
+    } else {
+      return;
+    }
+  }
+
+  mediapipe.previousFrameSentTime = now;
+  predictImage( element );
+}
+
 function sendFrameIfDue() {
-  if ( !mediapipe.enabled || !mediapipe.processor.ready ) {
+  if ( !mediapipe.enabled || !mediapipe.processor.ready || mediapipe.warming ) {
     return;
   }
 
@@ -572,6 +1025,10 @@ function sendFrameIfDue() {
   mediapipe.previousFrameSentTime = now;
   scheduler.freshFrame = false;
 
+  if ( !mediapipe.warmup.firstFrameSentAt ) {
+    mediapipe.warmup.firstFrameSentAt = now;
+  }
+
   if ( mediapipe.config.useWorker ) {
     createImageBitmap( videoEl )
       .then( ( bmp ) => {
@@ -608,9 +1065,9 @@ function sendFrameIfDue() {
 export function enable() {
   mediapipe.enabled = true;
 
-  // If capture element doesn't exist, create it
+  // If capture element doesn't exist, create (or re-adopt) it
   if ( !mediapipe.capture.element ) {
-    createVideoCaptureElements();
+    setupCaptureSource();
   }
 }
 
@@ -631,21 +1088,25 @@ export function disable() {
 export function deallocateWebcam() {
   disable();
 
-  // Stop and remove webcam stream
-  if ( mediapipe.capture.element?.elt?.srcObject ) {
-    const stream = mediapipe.capture.element.elt.srcObject;
-    const tracks = stream.getTracks();
+  // Adopted elements (video/image assets) belong to their loader: just drop
+  // the reference. Only an owned webcam capture gets stopped and removed.
+  if ( mediapipe.capture.owned ) {
+    // Stop and remove webcam stream
+    if ( mediapipe.capture.element?.elt?.srcObject ) {
+      const stream = mediapipe.capture.element.elt.srcObject;
+      const tracks = stream.getTracks();
 
-    tracks.forEach( ( track ) => track.stop() );
-    mediapipe.capture.element.elt.srcObject = null;
+      tracks.forEach( ( track ) => track.stop() );
+      mediapipe.capture.element.elt.srcObject = null;
+    }
+
+    // Remove the video element
+    if ( mediapipe.capture.element ) {
+      mediapipe.capture.element.remove();
+    }
   }
 
-  // Remove the video element
-  if ( mediapipe.capture.element ) {
-    mediapipe.capture.element.remove();
-    mediapipe.capture.element = null;
-  }
-
+  mediapipe.capture.element = null;
   mediapipe.videoReady = false;
 }
 

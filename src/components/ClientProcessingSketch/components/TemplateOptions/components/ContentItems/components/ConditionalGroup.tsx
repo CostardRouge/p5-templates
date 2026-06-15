@@ -22,6 +22,12 @@ import {
 } from "./ControlChrome";
 
 function getDefaultValueForFieldConfig( config: any ): any {
+  // A field config can pin its own default (e.g. a checkbox that should
+  // start checked when its branch is selected).
+  if ( config?.default !== undefined ) {
+    return config.default;
+  }
+
   switch ( config?.component ) {
     case "text":
     case "textarea":
@@ -37,8 +43,18 @@ function getDefaultValueForFieldConfig( config: any ): any {
         255,
         255
       ];
-    case "select":
-      return config.options?.[ 0 ]?.value ?? "";
+    case "select": {
+      const value = config.options?.[ 0 ]?.value ?? "";
+
+      return config.asNumber && value !== "" ? Number( value ) : value;
+    }
+    case "webcam-device-select":
+      return "";
+    case "asset":
+    case "asset-stack":
+    case "image":
+    case "images-stack":
+      return [];
     case "nested-object": {
       const result: Record<string, any> = {};
 

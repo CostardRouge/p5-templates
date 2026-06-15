@@ -11,6 +11,7 @@ import {
 import {
   pauseLoop, resumeLoop
 } from "./loopControl.js";
+import loadProfiler from "./loadProfiler.js";
 import {
   coerceFramerate
 } from "./framerate.js";
@@ -118,6 +119,8 @@ const sketch = {
   // ---- start (called by P5Engine.ts after sketch module import) -------
 
   start: async( container ) => {
+    loadProfiler.markSketchStart( sketch.name );
+
     const p5 = await loadP5Class();
 
     setContainer( container );
@@ -172,6 +175,8 @@ const sketch = {
         };
 
         p.setup = async() => {
+          loadProfiler.markSetupBegin();
+
           // -- pre-setup ------------------------------------------------
           sketch.favoriteColors.purple = p.color(
             128,
@@ -276,9 +281,13 @@ const sketch = {
 
           // -- post-setup -----------------------------------------------
           events.handle( "post-setup" );
+
+          loadProfiler.markSetupEnd();
         };
 
         p.draw = async() => {
+          const drawStartedAt = performance.now();
+
           events.handle( "pre-draw" );
 
           // Call the user's draw function with the same args as before
@@ -290,6 +299,10 @@ const sketch = {
           );
 
           events.handle( "post-draw" );
+
+          // Diagnostic: per-frame main-thread work + frame gap over the first
+          // couple of seconds, logged once (see loadProfiler).
+          loadProfiler.recordFrame( performance.now() - drawStartedAt );
         };
 
         // Keyboard
@@ -411,6 +424,12 @@ const sketch = {
 
     // Reset animation time so the next sketch starts at t=0
     time.reset();
+
+    // Drop the interaction vision-readiness hook between sketches; interaction
+    // sketches re-publish it from initInteraction().
+    if ( typeof window !== "undefined" ) {
+      delete window.isInteractionVisionReady;
+    }
   },
 
   // ---- engine methods (backward compat for time.js, debug.js, etc.) ---

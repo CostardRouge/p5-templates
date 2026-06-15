@@ -22,7 +22,12 @@ export const interactionFormValues = {
 
   vision: {
     enabled: false,
-    camera: {
+    // What inference runs on. mode "webcam" uses the camera (deviceId picks
+    // one of several attached cameras); mode "video" / "image" runs the same
+    // trackers on a video or image asset instead — no webcam involved.
+    source: {
+      mode: "webcam",
+      deviceId: "",
       width: 320,
       height: 240,
       flip: true,
@@ -201,55 +206,110 @@ export const interactionFormConfiguration = {
           label: "Enabled"
         },
 
-        camera: {
-          component: "nested-object",
-          label: "Camera",
-          fields: {
-            width: {
-              component: "select",
-              label: "Width",
-              asNumber: true,
-              options: [
-                {
-                  label: "320",
-                  value: "320"
-                },
-                {
-                  label: "640",
-                  value: "640"
-                },
-                {
-                  label: "1280",
-                  value: "1280"
-                }
-              ]
+        source: {
+          component: "conditional-group",
+          label: "Source",
+          conditionalOn: "mode",
+          hideNone: true,
+          typeSelector: {
+            label: "Source",
+            options: [
+              {
+                label: "Webcam",
+                value: "webcam"
+              },
+              {
+                label: "Video asset",
+                value: "video"
+              },
+              {
+                label: "Image asset",
+                value: "image"
+              }
+            ]
+          },
+          configs: {
+            webcam: {
+              deviceId: {
+                component: "webcam-device-select",
+                label: "Camera"
+              },
+              width: {
+                component: "select",
+                label: "Width",
+                asNumber: true,
+                options: [
+                  {
+                    label: "320",
+                    value: "320"
+                  },
+                  {
+                    label: "640",
+                    value: "640"
+                  },
+                  {
+                    label: "1280",
+                    value: "1280"
+                  }
+                ]
+              },
+              height: {
+                component: "select",
+                label: "Height",
+                asNumber: true,
+                options: [
+                  {
+                    label: "240",
+                    value: "240"
+                  },
+                  {
+                    label: "480",
+                    value: "480"
+                  },
+                  {
+                    label: "720",
+                    value: "720"
+                  }
+                ]
+              },
+              flip: {
+                component: "checkbox",
+                label: "Flip (mirror)",
+                default: true
+              },
+              showPreview: {
+                component: "checkbox",
+                label: "Show preview"
+              }
             },
-            height: {
-              component: "select",
-              label: "Height",
-              asNumber: true,
-              options: [
-                {
-                  label: "240",
-                  value: "240"
-                },
-                {
-                  label: "480",
-                  value: "480"
-                },
-                {
-                  label: "720",
-                  value: "720"
-                }
-              ]
+            video: {
+              videos: {
+                component: "asset-stack",
+                kind: "videos",
+                label: "Video (first one drives inference)"
+              },
+              flip: {
+                component: "checkbox",
+                label: "Flip (mirror)"
+              },
+              showPreview: {
+                component: "checkbox",
+                label: "Show preview"
+              }
             },
-            flip: {
-              component: "checkbox",
-              label: "Flip (mirror)"
-            },
-            showPreview: {
-              component: "checkbox",
-              label: "Show preview"
+            image: {
+              image: {
+                component: "image",
+                label: "Image"
+              },
+              flip: {
+                component: "checkbox",
+                label: "Flip (mirror)"
+              },
+              showPreview: {
+                component: "checkbox",
+                label: "Show preview"
+              }
             }
           }
         },

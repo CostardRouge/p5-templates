@@ -53,6 +53,97 @@ async function waitForSketchReady(
 }
 
 /**
+ * Navigate to a capture page, waiting for `networkidle` exactly as before.
+ *
+ * Diagnostic only: this is behaviour-preserving (same wait condition, same
+ * timeout, the original error is re-thrown). The single addition is that, when
+ * the navigation times out waiting for the network to settle, it logs the
+ * requests still in flight — the ones keeping the page from reaching
+ * `networkidle`. That pinpoints the culprit (a never-finishing fetch, a
+ * long-poll, a heavy asset still downloading on a slow dev server, …) so we can
+ * decide the real fix from evidence instead of guessing.
+ */
+async function gotoSketchPage(
+  page: Page,
+  url: string
+): Promise<void> {
+  // Track requests that started but haven't completed yet.
+  const inFlight = new Map<unknown, { url: string;
+    method: string;
+    startedAt: number }>();
+
+  const onRequest = ( request: { url(): string;
+    method(): string } ) => {
+    inFlight.set(
+      request,
+      {
+        url: request.url(),
+        method: request.method(),
+        startedAt: Date.now()
+      }
+    );
+  };
+  const onSettled = ( request: unknown ) => {
+    inFlight.delete( request );
+  };
+
+  page.on(
+    "request",
+    onRequest
+  );
+  page.on(
+    "requestfinished",
+    onSettled
+  );
+  page.on(
+    "requestfailed",
+    onSettled
+  );
+
+  try {
+    await page.goto(
+      url,
+      {
+        waitUntil: "networkidle"
+      }
+    );
+  } catch( error ) {
+    const isTimeout =
+      error instanceof Error &&
+      ( error.name === "TimeoutError" || /Timeout/.test( error.message ) );
+
+    if ( isTimeout ) {
+      const now = Date.now();
+      const pending = Array.from( inFlight.values() )
+        .sort( (
+          a, b
+        ) => a.startedAt - b.startedAt )
+        .map( ( request ) =>
+          `  ${ now - request.startedAt }ms  ${ request.method }  ${ request.url }` );
+
+      console.error( `[recordSketch] networkidle timeout for ${ url }\n` +
+          `${ pending.length } request(s) still in flight (kept the page from going idle):\n` +
+          ( pending.length ? pending.join( "\n" ) : "  (none — the wait timed out with no pending requests)" ) );
+    }
+
+    throw error;
+  } finally {
+    page.off(
+      "request",
+      onRequest
+    );
+    page.off(
+      "requestfinished",
+      onSettled
+    );
+    page.off(
+      "requestfailed",
+      onSettled
+    );
+  }
+}
+
+/**
  * Calculate total frames from animation options
  */
 function calculateTotalFrames( animationOptions: any ): number {
@@ -191,11 +282,9 @@ async function recordSingleSketch(
     0
   );
 
-  await page.goto(
-    `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
-    {
-      waitUntil: "networkidle"
-    }
+  await gotoSketchPage(
+    page,
+    `http://localhost:3000/${ template }?id=${ jobId }&capturing`
   );
 
   await waitForSketchReady(
@@ -319,11 +408,9 @@ async function recordMultipleSlides(
     0
   );
 
-  await page.goto(
-    `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
-    {
-      waitUntil: "networkidle"
-    }
+  await gotoSketchPage(
+    page,
+    `http://localhost:3000/${ template }?id=${ jobId }&capturing`
   );
 
   await waitForSketchReady(
@@ -346,11 +433,9 @@ async function recordMultipleSlides(
 
     if ( slideIndex > 0 ) {
       // Re-navigate for subsequent slides (no dedicated step)
-      await page.goto(
-        `http://localhost:3000/${ template }?id=${ jobId }&capturing`,
-        {
-          waitUntil: "networkidle"
-        }
+      await gotoSketchPage(
+        page,
+        `http://localhost:3000/${ template }?id=${ jobId }&capturing`
       );
 
       await waitForSketchReady(

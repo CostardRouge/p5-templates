@@ -1,14 +1,25 @@
 import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
+import options from "@/p5/utils/options.js";
 import mediapipe, {
   init as mediapipeInit,
   setEnabled as setMediapipeEnabled,
   dispose as disposeMediapipe,
-  getTaskResult
+  getTaskResult,
+  isWarmedUp as isVisionWarmedUp
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  createVideoSync
+} from "@/lib/assets/kinds/videos/createVideoSync";
+import {
+  defaultVideoParams
+} from "@/lib/assets/kinds/videos/types";
+import {
+  resolveAssetURL
+} from "@/lib/assets/resolveAssetURL";
 
 // ── Hand landmark indices ──────────────────────────────────────────────────
 // Fingertip indices: thumb, index, middle, ring, pinky
@@ -173,6 +184,35 @@ let _audioFreqData = null;
 // an in-flight guard so we never kick off two mediapipe initializations at once.
 let _visionSignature = "";
 let _visionInitInFlight = null;
+
+// Warm-up gate state. `_lastVisionOpts` is the most recent interaction options
+// seen by _ensureVision, so the no-arg readiness helpers (consumed by the
+// clock hold and the capture hook) know which tasks to wait for. The deadline
+// is a safety valve: if a camera is denied or a model fails, warm-up never
+// completes, so the gate gives up after this long and lets the sketch run.
+let _lastVisionOpts = null;
+let _visionWarmupDeadline = 0;
+const VISION_WARMUP_TIMEOUT_MS = 8000;
+
+// Vision source media state (vision.source mode "video" / "image"): the video
+// sync pool that loads/seeks the selected video asset, and the image element
+// inference runs on. Owned here — mediapipe only borrows the elements.
+let _visionVideoSync = null;
+let _visionVideoKey = "";
+let _visionVideoInstances = [];
+// Offscreen canvas the seeked video frame is blitted into each frame. MediaPipe
+// infers on this canvas, never the raw <video>: a video that is paused and
+// re-seeked every frame is an unreliable createImageBitmap/detectForVideo
+// source (only the seeked-to frame lands, the rest read back black/stale),
+// whereas a canvas drawn via drawImage is always a valid, stable frame — the
+// exact pattern the videos pool uses to render seeked video reliably.
+let _visionVideoCanvas = null;
+let _visionVideoCtx = null;
+let _visionVideoCanvasFrame = -1;
+let _visionImage = {
+  path: "",
+  element: null
+};
 
 // Vision results older than this read as "nothing detected", so a stalled
 // pipeline never leaves a frozen hand/face on screen.
@@ -478,8 +518,7 @@ export async function initInteraction( opts = {} ) {
     const _onTouch = ( e ) => {
       _rawTouches = Array.from( e.touches ).map( ( t ) => ( {
         clientX: t.clientX,
-        clientY: t.clientY,
-        identifier: t.identifier
+        clientY: t.clientY
       } ) );
     };
 
@@ -529,6 +568,15 @@ export async function initInteraction( opts = {} ) {
   }
 
   _audioInitialized = false;
+
+  // ── Vision readiness signal ──────────────────────────────────────────────
+  // Published so the headless capture pipeline can await a warmed-up vision
+  // source before frame 0 (see prepareCapture). Live preview deliberately does
+  // NOT block on this — the sketch animates from the start; freezing it while
+  // MediaPipe warmed up read as startup stutter, so that hold was removed.
+  if ( typeof window !== "undefined" ) {
+    window.isInteractionVisionReady = () => isVisionReady();
+  }
 
   // ── MediaPipe ────────────────────────────────────────────────────────────
   // Pre-warm vision when a camera tracker is already enabled at setup. The same
@@ -603,8 +651,14 @@ export function disposeInteraction() {
   // Vision / webcam / inference processor. Full dispose (not just the webcam)
   // so MediaPipe task memory and the worker don't leak across sketch switches.
   disposeMediapipe();
+  _releaseVisionMedia();
   _visionSignature = "";
   _visionInitInFlight = null;
+  _lastVisionOpts = null;
+  _visionWarmupDeadline = 0;
+
+  delete window.isInteractionVisionReady;
+
   _groupSmoothing.clear();
   _canvasRectCache.frame = -1;
   _canvasRectCache.canvas = null;
@@ -802,15 +856,9 @@ export function getPointerGroups( opts ) {
     "mouse",
     _collectMouse
   );
-
-  // Touch is grouped per FINGER with a stable id (the browser touch identifier),
-  // not the array index — so a sketch tracking which finger drags which thing
-  // (and the per-group temporal smoothing) stays correct even when a finger in
-  // the middle of the list lifts and the remaining touches reindex.
-  _collectTouchGroups(
-    opts,
-    p,
-    groups
+  addPerPoint(
+    "touch",
+    _collectTouch
   );
 
   // Vision: one ordered group per detected entity.
@@ -964,45 +1012,243 @@ function _collectTouch(
   }
 }
 
-// One ordered group per active finger, keyed by the browser touch identifier so
-// the id follows a physical finger across frames (see the getPointerGroups call
-// site). Each group holds that finger's single point.
-function _collectTouchGroups(
-  opts, p, groups
-) {
-  const touch = opts.touch;
+// ── Vision source (webcam / video asset / image asset) ────────────────────
+// vision.source selects what inference runs on: the webcam (with an optional
+// deviceId), a video asset (driven by the sketch progression through its own
+// repeat/speed/offset/loopMode params) or a still image asset. Older saved
+// options only have vision.camera — that reads as webcam mode.
 
-  if ( !touch?.enabled ) {
-    return;
+function _visionSourceMode( vision ) {
+  return vision?.source?.mode || "webcam";
+}
+
+// Mirror handling depends on the source: webcams are mirrored by default,
+// recorded videos and images are not (a right hand must stay a right hand).
+function _visionFlip( vision ) {
+  const mode = _visionSourceMode( vision );
+
+  if ( mode === "video" || mode === "image" ) {
+    return vision?.source?.flip ?? false;
   }
 
-  const maxTouches = touch.maxTouches ?? 5;
-  const count = Math.min(
-    _rawTouches.length,
-    maxTouches
-  );
+  return vision?.source?.flip ?? vision?.camera?.flip ?? true;
+}
 
-  for ( let i = 0; i < count; i++ ) {
-    const raw = _rawTouches[ i ];
-    const {
-      x, y
-    } = _clientToCanvas(
-      raw.clientX,
-      raw.clientY,
-      p
-    );
-
-    groups.push( {
-      source: "touch",
-      id: `touch-${ raw.identifier ?? i }`,
-      points: [
-        p.createVector(
-          x,
-          y
-        )
-      ]
-    } );
+// The videos field stores serialized AssetInstances but tolerates bare path
+// strings — normalize to full instances for the video sync pool.
+function _normalizeVisionVideoInstances( raw ) {
+  if ( !Array.isArray( raw ) ) {
+    return [];
   }
+
+  return raw
+    .filter( ( entry ) => entry )
+    .map( ( entry ) => ( typeof entry === "string"
+      ? {
+        id: `vision-${ entry }`,
+        path: entry,
+        params: {
+          ...defaultVideoParams
+        }
+      }
+      : {
+        id: entry.id ?? `vision-${ entry.path }`,
+        path: entry.path ?? "",
+        params: {
+          ...defaultVideoParams,
+          ...( entry.params ?? {} )
+        }
+      } ) )
+    .filter( ( instance ) => instance.path );
+}
+
+function _releaseVisionVideo() {
+  if ( _visionVideoSync ) {
+    _visionVideoSync.dispose();
+    _visionVideoSync = null;
+  }
+
+  _visionVideoKey = "";
+  _visionVideoInstances = [];
+  // The detached canvas is GC'd once dereferenced.
+  _visionVideoCanvas = null;
+  _visionVideoCtx = null;
+  _visionVideoCanvasFrame = -1;
+}
+
+function _releaseVisionImage() {
+  _visionImage = {
+    path: "",
+    element: null
+  };
+}
+
+function _releaseVisionMedia() {
+  _releaseVisionVideo();
+  _releaseVisionImage();
+}
+
+// Per-frame source-media result cache. _ensureVision runs ~5× per draw frame
+// (the sketch's getPointerGroups plus the debug-overlay collectors), and the
+// upkeep below allocates + JSON.stringifies the video instances and reconciles
+// the source every call. Compute it once per frame and reuse it for the rest.
+let _visionSourceFrame = -1;
+let _visionSourceCache = null;
+
+// Per-frame upkeep of the vision source media. Returns the mediapipe `source`
+// config (with a stable `key` for the re-init signature), or null while there
+// is nothing to run inference on yet (e.g. video mode with no video picked).
+function _ensureVisionSourceMedia( opts ) {
+  const frame = getP5()?.frameCount ?? -1;
+
+  // -1 means no p5 yet (pre-first-draw) — don't cache, just recompute.
+  if ( frame !== -1 && frame === _visionSourceFrame ) {
+    return _visionSourceCache;
+  }
+
+  _visionSourceFrame = frame;
+  _visionSourceCache = _computeVisionSourceMedia( opts );
+
+  return _visionSourceCache;
+}
+
+function _computeVisionSourceMedia( opts ) {
+  const vision = opts.vision ?? {};
+  const src = vision.source ?? {};
+  const mode = _visionSourceMode( vision );
+
+  if ( mode === "video" ) {
+    _releaseVisionImage();
+
+    const instances = _normalizeVisionVideoInstances( src.videos );
+    const key = JSON.stringify( instances );
+
+    _visionVideoInstances = instances;
+
+    if ( !instances.length ) {
+      _releaseVisionVideo();
+
+      return null;
+    }
+
+    if ( !_visionVideoSync ) {
+      _visionVideoSync = createVideoSync( {
+        getInstances: () => _visionVideoInstances,
+        jobId: () => options.id
+      } );
+      _visionVideoKey = key;
+    } else if ( key !== _visionVideoKey ) {
+      _visionVideoSync.refresh();
+      _visionVideoKey = key;
+    }
+
+    // Inference runs on the first video of the stack.
+    const source = _visionVideoSync.sources()[ 0 ];
+
+    if ( !source ) {
+      return null;
+    }
+
+    // Drive the video off the sketch progression — exactly like a video drawn
+    // by the videos pool — so scrubbing the timeline moves the video (and the
+    // landmarks it produces) with it, honouring the asset's
+    // repeat/speed/offset/loopMode params via seekToProgression.
+    // seekToProgression dedupes repeat calls with the same target, so the
+    // several calls per frame issue at most one seek per progression value.
+    source.seekToProgression( animation.progression ).catch( () => {} );
+
+    const video = source.element;
+    const vw = video?.videoWidth ?? 0;
+    const vh = video?.videoHeight ?? 0;
+
+    // Metadata not decoded yet → nothing to infer on. The warm-up gate keeps
+    // the loading mask up until the first frame is available.
+    if ( !vw || !vh ) {
+      return null;
+    }
+
+    if ( !_visionVideoCanvas ) {
+      _visionVideoCanvas = document.createElement( "canvas" );
+      _visionVideoCtx = _visionVideoCanvas.getContext( "2d" );
+    }
+
+    if ( _visionVideoCanvas.width !== vw || _visionVideoCanvas.height !== vh ) {
+      _visionVideoCanvas.width = vw;
+      _visionVideoCanvas.height = vh;
+    }
+
+    // Blit the video's current frame into the canvas once per draw frame (the
+    // interaction layer calls this several times per frame). drawImage grabs
+    // whatever the seek last settled on — forgiving where createImageBitmap on
+    // the live <video> was not.
+    const frame = getP5()?.frameCount ?? 0;
+
+    if ( frame !== _visionVideoCanvasFrame && _visionVideoCtx ) {
+      _visionVideoCanvasFrame = frame;
+
+      try {
+        _visionVideoCtx.drawImage(
+          video,
+          0,
+          0,
+          vw,
+          vh
+        );
+      } catch {
+        // Frame not decodable this tick — keep the previous canvas contents.
+      }
+    }
+
+    return {
+      type: "video",
+      element: _visionVideoCanvas,
+      // The instance id is part of the key: removing a video and re-adding
+      // the same file swaps the element, so mediapipe must re-adopt it.
+      key: `video:${ instances[ 0 ].id }:${ source.path }`
+    };
+  }
+
+  if ( mode === "image" ) {
+    _releaseVisionVideo();
+
+    const raw = Array.isArray( src.image ) ? src.image[ 0 ] : src.image;
+    const path = typeof raw === "string" ? raw : raw?.path ?? "";
+
+    if ( !path ) {
+      _releaseVisionImage();
+
+      return null;
+    }
+
+    if ( _visionImage.path !== path ) {
+      const element = document.createElement( "img" );
+
+      element.crossOrigin = "anonymous";
+      element.src = resolveAssetURL(
+        path,
+        options.id
+      );
+      _visionImage = {
+        path,
+        element
+      };
+    }
+
+    return {
+      type: "image",
+      element: _visionImage.element,
+      key: `image:${ path }`
+    };
+  }
+
+  // Webcam (default), incl. legacy options without a vision.source block.
+  _releaseVisionMedia();
+
+  return {
+    type: "webcam",
+    deviceId: src.deviceId || "",
+    key: `webcam:${ src.deviceId || "" }`
+  };
 }
 
 // The MediaPipe task names wanted by the current options.
@@ -1030,13 +1276,14 @@ function _desiredVisionTasks( opts ) {
   return tasks;
 }
 
-// The full mediapipe init config for the current options: trackers, camera,
+// The full mediapipe init config for the current options: source, trackers,
 // per-task model options and scheduling knobs.
 function _visionConfigFor(
-  opts, tasks
+  opts, tasks, source
 ) {
   const vision = opts.vision ?? {};
   const cam = vision.camera ?? {};
+  const src = vision.source ?? {};
   const perf = vision.performance ?? {};
 
   return {
@@ -1044,11 +1291,12 @@ function _visionConfigFor(
     // back to main-thread inference automatically when it can't start.
     worker: perf.useWorker ?? true,
     tasks,
+    source,
     captureSize: {
-      width: cam.width ?? 320,
-      height: cam.height ?? 240
+      width: src.width ?? cam.width ?? 320,
+      height: src.height ?? cam.height ?? 240
     },
-    captureFlip: cam.flip ?? true,
+    captureFlip: _visionFlip( vision ),
     inferenceInterval: perf.inferenceInterval ?? 20,
     idleInterval: perf.idleInterval ?? 280,
     idleAfter: perf.idleAfter ?? 3000,
@@ -1081,7 +1329,9 @@ function _visionSignatureFor( config ) {
     config.tasks,
     config.captureSize,
     config.captureFlip,
-    config.taskOptions
+    config.taskOptions,
+    // Only the stable key — the source element itself can't be stringified.
+    config.source?.key ?? ""
   ] );
 }
 
@@ -1095,6 +1345,10 @@ function _visionSignatureFor( config ) {
 // or camera changes, and releases the webcam once every tracker is off.
 // Safe to call each frame — it no-ops while the requested configuration is live.
 function _ensureVision( opts ) {
+  // Remember the live options so the no-arg readiness helpers (clock hold,
+  // capture hook) know which tasks the warm-up gate is waiting on.
+  _lastVisionOpts = opts;
+
   // An init is already running — let it settle; we reconcile next frame.
   if ( _visionInitInFlight ) {
     return _visionInitInFlight;
@@ -1109,12 +1363,40 @@ function _ensureVision( opts ) {
       _visionSignature = "";
     }
 
+    _releaseVisionMedia();
+    // Reset the warm-up deadline so a later re-enable arms a fresh window.
+    _visionWarmupDeadline = 0;
+
+    return Promise.resolve();
+  }
+
+  // Arm the warm-up safety deadline as soon as a tracker is wanted — even
+  // before a source is ready — so the clock-hold mask can never get stuck
+  // (e.g. a video whose metadata never loads, a denied camera). Re-init below
+  // refreshes it; this only seeds it when nothing has started the window yet.
+  if ( _visionWarmupDeadline === 0 ) {
+    _visionWarmupDeadline = ( typeof performance !== "undefined"
+      ? performance.now()
+      : Date.now() ) + VISION_WARMUP_TIMEOUT_MS;
+  }
+
+  // Per-frame upkeep of the source media (video seek, asset changes). Null
+  // means the selected source has nothing to infer on yet (no asset picked).
+  const source = _ensureVisionSourceMedia( opts );
+
+  if ( !source ) {
+    if ( _visionSignature !== "" ) {
+      setMediapipeEnabled( false );
+      _visionSignature = "";
+    }
+
     return Promise.resolve();
   }
 
   const config = _visionConfigFor(
     opts,
-    tasks
+    tasks,
+    source
   );
   const signature = _visionSignatureFor( config );
 
@@ -1138,6 +1420,11 @@ function _ensureVision( opts ) {
 
   _visionSignature = signature;
 
+  // Arm the warm-up safety deadline from the moment a (re)init starts.
+  _visionWarmupDeadline = ( typeof performance !== "undefined"
+    ? performance.now()
+    : Date.now() ) + VISION_WARMUP_TIMEOUT_MS;
+
   _visionInitInFlight = mediapipeInit( config )
     .then( () =>
       // init() doesn't restore mediapipe.enabled after a prior deallocate, so
@@ -1152,6 +1439,33 @@ function _ensureVision( opts ) {
     } );
 
   return _visionInitInFlight;
+}
+
+/**
+ * Whether the vision pipeline for the given options has warmed up enough to
+ * start the visible timeline / a recording: true when vision isn't needed,
+ * when every requested task has produced its first result, or when the warm-up
+ * safety deadline has passed (so a denied camera never blocks forever).
+ *
+ * Defaults to the last options _ensureVision saw, so the clock hold and the
+ * `window.isInteractionVisionReady` capture hook can call it with no args.
+ */
+export function isVisionReady( opts = _lastVisionOpts ) {
+  if ( !opts || opts.enabled === false ) {
+    return true;
+  }
+
+  if ( _desiredVisionTasks( opts ).length === 0 ) {
+    return true;
+  }
+
+  if ( isVisionWarmedUp() ) {
+    return true;
+  }
+
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+
+  return _visionWarmupDeadline > 0 && now > _visionWarmupDeadline;
 }
 
 // Convert a MediaPipe normalized landmark (0..1) to p5 canvas space, honouring
@@ -1175,7 +1489,7 @@ function _collectHands(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const lm = hands.landmarks ?? {};
   const maxHands = hands.maxHands ?? 2;
   const results = getTaskResult(
@@ -1228,7 +1542,7 @@ function _eachDetectedFinger(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const maxHands = fingers.maxHands ?? 2;
   const results = getTaskResult(
     "hands",
@@ -1314,7 +1628,7 @@ function _collectFace(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const detections = getTaskResult(
     "faces",
     VISION_RESULT_TTL_MS
@@ -1354,7 +1668,7 @@ function _collectBody(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const lm = body.landmarks ?? {};
   const maxPoses = body.maxPoses ?? 1;
   const minConf = body.confidence ?? 0.3;
@@ -1413,7 +1727,7 @@ function _collectHandGroups(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const lm = hands.landmarks ?? {};
   const maxHands = hands.maxHands ?? 2;
   const results = getTaskResult(
@@ -1477,7 +1791,7 @@ function _collectBodyGroups(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const lm = body.landmarks ?? {};
   const maxPoses = body.maxPoses ?? 1;
   const minConf = body.confidence ?? 0.3;
@@ -1542,7 +1856,7 @@ function _collectFaceGroups(
     return;
   }
 
-  const flip = vision?.camera?.flip ?? true;
+  const flip = _visionFlip( vision );
   const maxFaces = face.maxFaces ?? 1;
   const minConf = face.confidence ?? 0.5;
   const detections = getTaskResult(
