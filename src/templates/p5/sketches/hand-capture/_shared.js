@@ -673,6 +673,72 @@ export class HandCaptureScene {
   }
 
   /**
+   * Onion-skin "echo": redraw the last `count` hand poses (sampled every
+   * `spacing` frames) with rising opacity, then the live hand on top — each
+   * hand leaves a fading ghost of itself. This is the original CPU `neonLine`
+   * renderer used by `hand-tracking-v7-echo`; the GPU spline variant lives in
+   * `drawEchoSplines` (see `hand-tracking-v8-growing`).
+   */
+  drawEchoes( {
+    count = 6,
+    spacing = 4,
+    innerCircleSize = 30,
+    shadowsCount = 2,
+    vectorsStep = 0.08,
+    minAlpha = 0.1,
+    ghostAlpha = 0.55
+  } = {} ) {
+    const graphics = this.layers.hands?.graphics;
+
+    if ( !graphics ) {
+      return;
+    }
+
+    this._echoFrame += 1;
+
+    if ( this._echoFrame % Math.max(
+      spacing,
+      1
+    ) === 0 ) {
+      this._echoHistory.push( this._snapshotGroups() );
+
+      while ( this._echoHistory.length > count ) {
+        this._echoHistory.shift();
+      }
+    }
+
+    const drawOptions = {
+      innerCircleSize,
+      shadowsCount,
+      vectorsStep
+    };
+    const last = Math.max(
+      this._echoHistory.length - 1,
+      1
+    );
+
+    this._echoHistory.forEach( (
+      snapshot, i
+    ) => {
+      const alpha = minAlpha + ( ghostAlpha - minAlpha ) * ( i / last );
+
+      this._drawGroupsTo(
+        graphics,
+        snapshot,
+        alpha,
+        drawOptions
+      );
+    } );
+
+    this._drawGroupsTo(
+      graphics,
+      this.groups,
+      1,
+      drawOptions
+    );
+  }
+
+  /**
    * Onion-skin "echo", rendered with the shader-based spline pipeline borrowed
    * from the `splines` family (GPU glow, rainbow gradient computed in the
    * fragment shader) instead of the legacy CPU `neonLine`. The last `count` hand

@@ -20,6 +20,7 @@ export const sketchOptionsJsonLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v5-catch": () => import( "@/p5/sketches/hand-capture/hand-tracking-v5-catch/options.json" ),
   "p5:hand-capture/hand-tracking-v6-slice": () => import( "@/p5/sketches/hand-capture/hand-tracking-v6-slice/options.json" ),
   "p5:hand-capture/hand-tracking-v7-echo": () => import( "@/p5/sketches/hand-capture/hand-tracking-v7-echo/options.json" ),
+  "p5:hand-capture/hand-tracking-v8-growing": () => import( "@/p5/sketches/hand-capture/hand-tracking-v8-growing/options.json" ),
   "p5:photo/photo-3d-cylinder": () => import( "@/p5/sketches/photo/photo-3d-cylinder/options.json" ),
   "p5:text/text-animation-typein-typeout": () => import( "@/p5/sketches/text/text-animation-typein-typeout/options.json" ),
 };
@@ -95,6 +96,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v5-catch": () => import( "@/p5/sketches/hand-capture/hand-tracking-v5-catch/options" ),
   "p5:hand-capture/hand-tracking-v6-slice": () => import( "@/p5/sketches/hand-capture/hand-tracking-v6-slice/options" ),
   "p5:hand-capture/hand-tracking-v7-echo": () => import( "@/p5/sketches/hand-capture/hand-tracking-v7-echo/options" ),
+  "p5:hand-capture/hand-tracking-v8-growing": () => import( "@/p5/sketches/hand-capture/hand-tracking-v8-growing/options" ),
   "p5:kinetic/interaction-test": () => import( "@/p5/sketches/kinetic/interaction-test/options" ),
   "p5:kinetic/kinetic-grid-spheres": () => import( "@/p5/sketches/kinetic/kinetic-grid-spheres/options" ),
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/options" ),

@@ -37,11 +37,15 @@ export const formValues = {
     20
   ],
 
-  // How the live hand (and each ghost) is drawn
-  hands: {
-    size: 30,
+  // How the live hand (and each ghost) is drawn — a shader-based neon spline
+  // through each finger/hand chain (the same GPU glow pipeline as the
+  // `splines · interactive` sketch), replacing the legacy CPU neon line.
+  spline: {
+    weight: 18,
     glow: 2,
-    resolution: 0.08
+    iterations: 6,
+    hueSpeed: 1.5,
+    hueSpread: 2
   },
 
   // Trailing ghosts of the hand
@@ -52,11 +56,20 @@ export const formValues = {
     ghostAlpha: 0.55
   },
 
+  // Let the echo trail grow in a direction — each older ghost is pushed further
+  // along the chosen edge, ramped through the easing, for a comet-like streak.
+  extend: {
+    enabled: true,
+    direction: "up" as "up" | "down" | "left" | "right",
+    distance: 220,
+    easing: "easeOutCubic"
+  },
+
   // Overlay text — centered title (like the move / attract / restore sketches)
   text: {
     show: true,
-    title: "echo",
-    subtitle: "hand tracking v7"
+    title: "growing",
+    subtitle: "hand tracking v8"
   }
 };
 
@@ -69,30 +82,44 @@ export const formConfiguration: Record<string, any> = {
     label: "Background color"
   },
 
-  hands: {
+  spline: {
     component: "nested-object",
-    label: "Hand drawing",
+    label: "Spline stroke",
     fields: {
-      size: {
-        label: "Stroke / dot size",
+      weight: {
+        label: "Stroke weight",
         component: "slider",
-        min: 5,
-        max: 200,
-        step: 1
+        min: 1,
+        max: 40,
+        step: 0.5
       },
       glow: {
         label: "Glow layers",
         component: "slider",
-        min: 1,
-        max: 12,
+        min: 0,
+        max: 8,
         step: 1
       },
-      resolution: {
-        label: "Stroke resolution (lower = denser)",
+      iterations: {
+        label: "Smoothing (Chaikin iterations)",
         component: "slider",
-        min: 0.01,
-        max: 0.3,
-        step: 0.01
+        min: 0,
+        max: 6,
+        step: 1
+      },
+      hueSpeed: {
+        label: "Hue speed (over time)",
+        component: "slider",
+        min: 0,
+        max: 5,
+        step: 0.1
+      },
+      hueSpread: {
+        label: "Hue spread along path",
+        component: "slider",
+        min: 0,
+        max: 8,
+        step: 0.05
       }
     }
   },
@@ -129,6 +156,51 @@ export const formConfiguration: Record<string, any> = {
         min: 0.1,
         max: 1,
         step: 0.01
+      }
+    }
+  },
+
+  extend: {
+    component: "nested-object",
+    label: "Echo growth",
+    initialExpanded: true,
+    fields: {
+      enabled: {
+        label: "Grow the echo trail",
+        component: "checkbox"
+      },
+      direction: {
+        label: "Direction",
+        component: "select",
+        options: [
+          {
+            label: "Up",
+            value: "up"
+          },
+          {
+            label: "Down",
+            value: "down"
+          },
+          {
+            label: "Left",
+            value: "left"
+          },
+          {
+            label: "Right",
+            value: "right"
+          }
+        ]
+      },
+      distance: {
+        label: "Growth distance (px)",
+        component: "slider",
+        min: 0,
+        max: 600,
+        step: 5
+      },
+      easing: {
+        label: "Growth easing",
+        component: "easing"
       }
     }
   },
