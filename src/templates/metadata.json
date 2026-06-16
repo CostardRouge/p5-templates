@@ -2854,5 +2854,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-16T20:53:01.155Z",
     "ctime": "2026-06-16T20:51:51.535Z"
+  },
+  {
+    "name": "video-mosaic",
+    "engine": "p5",
+    "category": "video",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-16T21:07:00.049Z",
+    "ctime": "2026-06-16T21:06:35.521Z"
   }
 ]

@@ -261,6 +261,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:video/video-grid": () => import( "@/p5/sketches/video/video-grid/options" ),
   "p5:video/video-halftone": () => import( "@/p5/sketches/video/video-halftone/options" ),
   "p5:video/video-kaleidoscope": () => import( "@/p5/sketches/video/video-kaleidoscope/options" ),
+  "p5:video/video-mosaic": () => import( "@/p5/sketches/video/video-mosaic/options" ),
   "p5:video/video-player": () => import( "@/p5/sketches/video/video-player/options" ),
   "p5:video/video-text": () => import( "@/p5/sketches/video/video-text/options" ),
 };
