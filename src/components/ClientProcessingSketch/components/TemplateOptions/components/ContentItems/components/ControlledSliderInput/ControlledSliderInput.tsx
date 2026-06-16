@@ -1,6 +1,5 @@
 "use client";
 
-import * as SliderPrimitive from "@radix-ui/react-slider";
 import {
   RotateCcw
 } from "lucide-react";
@@ -11,7 +10,7 @@ import clsx from "clsx";
 import {
   useController
 } from "react-hook-form";
-import usePreventTouchScroll from "@/hooks/usePreventTouchScroll";
+import useDragSlider from "@/hooks/useDragSlider";
 import {
   CONTROL_BAR_CLASS,
   CONTROL_EDIT_INPUT_CLASS,
@@ -35,6 +34,10 @@ type ControlledSliderInputProps = {
  * shows the current value, and the label lives inside the bar so the control
  * doesn't need its own label row. Tapping the value switches the bar to a
  * number input for precise entry.
+ *
+ * The drag is handled by {@link useDragSlider} with `touch-action: pan-y`, so a
+ * horizontal drag adjusts the value while a vertical drag scrolls the panel the
+ * bar lives in.
  */
 export default function ControlledSliderInput( {
   name,
@@ -51,8 +54,6 @@ export default function ControlledSliderInput( {
     name
   } );
 
-  const sliderRef = usePreventTouchScroll<HTMLSpanElement>();
-
   const [
     editing,
     setEditing
@@ -61,6 +62,19 @@ export default function ControlledSliderInput( {
   const decimals = step < 1 ? 2 : 0;
   const numericValue = Number( field.value );
   const value = Number.isFinite( numericValue ) ? numericValue : min;
+
+  const {
+    ref, handlers
+  } = useDragSlider( {
+    min,
+    max,
+    step,
+    value,
+    onChange: field.onChange
+  } );
+
+  const fraction =
+    max > min ? clampFraction( ( value - min ) / ( max - min ) ) : 0;
 
   const commitEdit = ( raw: string ) => {
     setEditing( false );
@@ -110,27 +124,30 @@ export default function ControlledSliderInput( {
   }
 
   return (
-    <SliderPrimitive.Root
-      ref={ sliderRef }
-      min={ min }
-      max={ max }
-      step={ step }
-      value={ [
-        value
-      ] }
-      onValueChange={ ( [
-        next
-      ] ) => field.onChange( next ) }
+    <div
+      ref={ ref }
+      role="slider"
+      tabIndex={ 0 }
+      aria-label={ label ?? name }
+      aria-valuemin={ min }
+      aria-valuemax={ max }
+      aria-valuenow={ value }
       onBlur={ field.onBlur }
-      className={ `group touch-none select-none cursor-ew-resize ${ CONTROL_BAR_CLASS }` }
+      { ...handlers }
+      className={ `group touch-pan-y select-none cursor-ew-resize outline-none focus-visible:ring-1 focus-visible:ring-focus ${ CONTROL_BAR_CLASS }` }
     >
-      <SliderPrimitive.Track className="relative h-full w-full grow">
-        <SliderPrimitive.Range className="absolute h-full bg-foreground/10 transition-colors group-hover:bg-foreground/15" />
-      </SliderPrimitive.Track>
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 bg-foreground/10 transition-colors group-hover:bg-foreground/15"
+        style={ {
+          width: `${ fraction * 100 }%`
+        } }
+      />
 
-      <SliderPrimitive.Thumb
-        aria-label={ label ?? name }
-        className="block h-6 md:h-4 w-1 rounded-full bg-foreground/30 focus-visible:outline-none focus-visible:bg-foreground"
+      <div
+        className="pointer-events-none absolute top-1/2 h-6 md:h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/30"
+        style={ {
+          left: `${ fraction * 100 }%`
+        } }
       />
 
       <div className="pointer-events-none absolute inset-0 flex items-center justify-between gap-2 px-2.5">
@@ -168,6 +185,16 @@ export default function ControlledSliderInput( {
           </button>
         </span>
       </div>
-    </SliderPrimitive.Root>
+    </div>
+  );
+}
+
+function clampFraction( fraction: number ): number {
+  return Math.min(
+    1,
+    Math.max(
+      0,
+      fraction
+    )
   );
 }
