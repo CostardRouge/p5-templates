@@ -37,9 +37,9 @@ export const formValues = {
     20
   ],
 
-  // How the live hand (and each ghost) is drawn — a shader-based neon spline
-  // through each finger/hand chain (the same GPU glow pipeline as the
-  // `splines · interactive` sketch), replacing the legacy CPU neon line.
+  // How the live hand is drawn — a shader-based neon spline through each
+  // finger/hand chain (the same GPU glow pipeline as the `splines · interactive`
+  // sketch), replacing the legacy CPU neon line.
   spline: {
     weight: 18,
     glow: 2,
@@ -48,21 +48,20 @@ export const formValues = {
     hueSpread: 2
   },
 
-  // Trailing ghosts of the hand
+  // The echo is a feedback buffer rather than discrete ghosts, so only the live
+  // hand is re-drawn each frame. `decay` is how much of the trail survives every
+  // frame (higher = longer trail).
   echo: {
-    count: 6,
-    spacing: 4,
-    minAlpha: 0.1,
-    ghostAlpha: 0.55
+    decay: 0.9
   },
 
-  // Let the echo trail grow in a direction — each older ghost is pushed further
-  // along the chosen edge, ramped through the easing, for a comet-like streak.
-  extend: {
-    enabled: true,
-    direction: "up" as "up" | "down" | "left" | "right",
-    distance: 220,
-    easing: "easeOutCubic"
+  // How the trail is aged each frame: drift toward an edge for a comet streak,
+  // or "grow" to bloom each copy bigger + darker behind the hand.
+  effect: {
+    type: "up" as "up" | "down" | "left" | "right" | "grow",
+    speed: 8,
+    scale: 1.03,
+    darken: 0.12
   },
 
   // Overlay text — centered title (like the move / attract / restore sketches)
@@ -129,78 +128,67 @@ export const formConfiguration: Record<string, any> = {
     label: "Echo",
     initialExpanded: true,
     fields: {
-      count: {
-        label: "Ghost count",
+      decay: {
+        label: "Trail persistence (higher = longer)",
         component: "slider",
-        min: 1,
-        max: 20,
-        step: 1
-      },
-      spacing: {
-        label: "Frames between ghosts",
-        component: "slider",
-        min: 1,
-        max: 20,
-        step: 1
-      },
-      minAlpha: {
-        label: "Oldest ghost opacity",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      ghostAlpha: {
-        label: "Newest ghost opacity",
-        component: "slider",
-        min: 0.1,
-        max: 1,
+        min: 0.5,
+        max: 0.99,
         step: 0.01
       }
     }
   },
 
-  extend: {
+  effect: {
     component: "nested-object",
     label: "Echo growth",
     initialExpanded: true,
     fields: {
-      enabled: {
-        label: "Grow the echo trail",
-        component: "checkbox"
-      },
-      direction: {
-        label: "Direction",
+      type: {
+        label: "Effect",
         component: "select",
         options: [
           {
-            label: "Up",
+            label: "Drift up",
             value: "up"
           },
           {
-            label: "Down",
+            label: "Drift down",
             value: "down"
           },
           {
-            label: "Left",
+            label: "Drift left",
             value: "left"
           },
           {
-            label: "Right",
+            label: "Drift right",
             value: "right"
+          },
+          {
+            label: "Grow (bigger + darker)",
+            value: "grow"
           }
         ]
       },
-      distance: {
-        label: "Growth distance (px)",
+      speed: {
+        label: "Drift speed (px / frame)",
         component: "slider",
         min: 0,
-        max: 600,
-        step: 5
+        max: 30,
+        step: 0.5
       },
-      easing: {
-        label: "Growth easing",
-        component: "easing"
+      scale: {
+        label: "Grow scale (per frame)",
+        component: "slider",
+        min: 1,
+        max: 1.1,
+        step: 0.005
+      },
+      darken: {
+        label: "Grow darken (per frame)",
+        component: "slider",
+        min: 0,
+        max: 0.4,
+        step: 0.01
       }
     }
   },

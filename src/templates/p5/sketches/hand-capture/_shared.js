@@ -3,33 +3,12 @@ import {
 } from "@/p5/utils/sketch.js";
 
 import string from "@/p5/utils/string.js";
-import easing from "@/p5/utils/easing.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 import neonLine from "@/p5/utils/visuals/neonLine.js";
 
 import {
   renderSplines
 } from "../splines/_shared.js";
-
-// Unit vectors for the directions the echo trail can grow toward.
-const ECHO_DIRECTIONS = {
-  up: {
-    x: 0,
-    y: -1
-  },
-  down: {
-    x: 0,
-    y: 1
-  },
-  left: {
-    x: -1,
-    y: 0
-  },
-  right: {
-    x: 1,
-    y: 0
-  }
-};
 
 import {
   initInteraction,
@@ -133,6 +112,7 @@ export class HandCaptureScene {
     this._prevPoints = new Map();
     this._echoHistory = [];
     this._echoFrame = 0;
+    this._echoLayer = null;
   }
 
   /** One-time setup: pre-warm the shared interaction module + layer buffers. */
@@ -676,8 +656,8 @@ export class HandCaptureScene {
    * Onion-skin "echo": redraw the last `count` hand poses (sampled every
    * `spacing` frames) with rising opacity, then the live hand on top — each
    * hand leaves a fading ghost of itself. This is the original CPU `neonLine`
-   * renderer used by `hand-tracking-v7-echo`; the GPU spline variant lives in
-   * `drawEchoSplines` (see `hand-tracking-v8-growing`).
+   * renderer used by `hand-tracking-v7-echo`; the GPU spline + feedback variant
+   * lives in `drawGrowingEcho` (see `hand-tracking-v8-growing`).
    */
   drawEchoes( {
     count = 6,
@@ -739,119 +719,182 @@ export class HandCaptureScene {
   }
 
   /**
-   * Onion-skin "echo", rendered with the shader-based spline pipeline borrowed
-   * from the `splines` family (GPU glow, rainbow gradient computed in the
-   * fragment shader) instead of the legacy CPU `neonLine`. The last `count` hand
-   * poses (sampled every `spacing` frames) are redrawn with rising opacity, then
-   * the live hand on top — each hand leaves a fading ghost of itself.
+   * Feedback "growing echo": the live hand is drawn ONCE per frame with the
+   * shader-based spline pipeline (GPU glow, rainbow gradient computed in the
+   * fragment shader), and the trail is produced by a single canvas-to-canvas
+   * copy of a persistent buffer rather than by re-stroking every past pose.
    *
-   * The whole trail can also "extend" in a direction: each older ghost is pushed
-   * further along `extend.direction` (up / down / left / right) so the echo grows
-   * into a comet-like streak. The push distance ramps from the live pose (no
-   * offset) to the oldest ghost (full `extend.distance`) through the chosen
-   * `extend.easing`, and the growth is gated by `extend.enabled`.
+   * That is the key difference from the discrete onion-skin: re-running Chaikin
+   * + a GPU pass for every ghost made the cost scale with the ghost count. Here
+   * each frame ages the accumulator with one `drawImage` (fade + transform),
+   * stamps the freshly drawn hand into it, and blits it — O(1) in trail length.
+   *
+   * The `effect` shapes how the accumulator is transformed every frame:
+   *   - up / down / left / right → drift the whole trail `speed` px that way, so
+   *     the echo stretches into a comet streak toward that edge.
+   *   - grow → scale the trail up by `scale` about the centre and darken it by
+   *     `darken`, so each copy blooms slightly bigger and dimmer behind the hand.
+   *
+   * `decay` (0..1) is how much of the buffer survives each frame — higher keeps a
+   * longer trail. Lower `decay` fades the echo away faster.
    */
-  drawEchoSplines( {
-    count = 6,
-    spacing = 4,
-    minAlpha = 0.1,
-    ghostAlpha = 0.55,
+  drawGrowingEcho( {
+    background = [
+      0
+    ],
     weight = 18,
     glow = 2,
     iterations = 6,
     hueSpeed = 1.5,
     hueSpread = 2,
-    extend = {}
+    decay = 0.9,
+    effect = "up",
+    speed = 8,
+    scale = 1.03,
+    darken = 0.12
   } = {} ) {
     const p = getP5();
+    const layer = this._ensureEchoLayer();
+    const ctx = layer.drawingContext;
 
-    this._echoFrame += 1;
+    // 1. Age the existing echoes with a single self-copy: fade by `decay` and
+    //    push them along the effect, so every past frame drifts/zooms a little
+    //    further out and dimmer. One canvas blit, independent of trail length.
+    ctx.save();
+    ctx.globalCompositeOperation = "copy";
+    ctx.globalAlpha = decay;
+    this._applyEchoTransform(
+      ctx,
+      effect,
+      speed,
+      scale
+    );
+    ctx.drawImage(
+      ctx.canvas,
+      0,
+      0
+    );
+    ctx.restore();
 
-    if ( this._echoFrame % Math.max(
-      spacing,
-      1
-    ) === 0 ) {
-      this._echoHistory.push( this._snapshotGroups() );
-
-      while ( this._echoHistory.length > count ) {
-        this._echoHistory.shift();
-      }
+    // The "grow" effect also darkens each generation (source-atop only touches
+    // the pixels that are already there, so the trail's shape/alpha is kept).
+    if ( effect === "grow" && darken > 0 ) {
+      ctx.save();
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.fillStyle = `rgba(0, 0, 0, ${ darken })`;
+      ctx.fillRect(
+        0,
+        0,
+        layer.width,
+        layer.height
+      );
+      ctx.restore();
     }
 
-    const stroke = {
-      weight,
-      glow,
-      hueSpeed,
-      hueSpread,
-      gradient: true
-    };
-    const curve = {
-      method: "chaikin",
-      closed: false,
-      iterations
-    };
-
-    const direction = ECHO_DIRECTIONS[ extend.direction ] ?? ECHO_DIRECTIONS.up;
-    const extendEnabled = extend.enabled ?? false;
-    const distance = extend.distance ?? 0;
-    const easeFn = easing[ extend.easing ] ?? easing.linear;
-
-    const context = p.drawingContext;
-    const previousAlpha = context.globalAlpha;
-    const last = Math.max(
-      this._echoHistory.length - 1,
-      1
-    );
-
-    // Oldest → newest, so the bright recent ghosts composite over the dim ones.
-    this._echoHistory.forEach( (
-      snapshot, i
-    ) => {
-      const age = i / last; // 0 = oldest ghost, 1 = newest ghost
-      const alpha = minAlpha + ( ghostAlpha - minAlpha ) * age;
-      const reach = extendEnabled ? easeFn( 1 - age ) : 0;
-
-      context.globalAlpha = alpha;
-      this._renderEchoSnapshot(
-        snapshot,
-        direction.x * distance * reach,
-        direction.y * distance * reach,
-        {
-          curve,
-          stroke,
-          weight,
-          glow
-        }
-      );
-    } );
-
-    // The live pose sits on top at full opacity with no directional offset.
-    context.globalAlpha = 1;
-    this._renderEchoSnapshot(
+    // 2. Draw the live hand fresh onto the (cleared) main canvas with the GPU
+    //    spline pipeline, then stamp it into the accumulator at full brightness
+    //    so it becomes next frame's newest — and brightest — echo.
+    p.clear();
+    this._renderHandSplines(
       this.groups,
-      0,
-      0,
       {
-        curve,
-        stroke,
         weight,
-        glow
+        glow,
+        iterations,
+        hueSpeed,
+        hueSpread
       }
     );
 
-    context.globalAlpha = previousAlpha;
+    ctx.drawImage(
+      p.drawingContext.canvas,
+      0,
+      0
+    );
+
+    // 3. Final frame: repaint the background (the live-hand pass cleared it) and
+    //    lay the accumulator — aged echoes plus the crisp live hand — on top.
+    p.background( ...background );
+    p.image(
+      layer,
+      0,
+      0
+    );
+  }
+
+  /** Lazily build / resize the persistent buffer the growing echo accumulates into. */
+  _ensureEchoLayer() {
+    const p = getP5();
+
+    if ( !this._echoLayer
+      || this._echoLayer.width !== p.width
+      || this._echoLayer.height !== p.height ) {
+      this._echoLayer = p.createGraphics(
+        p.width,
+        p.height
+      );
+    }
+
+    return this._echoLayer;
+  }
+
+  /** Transform the accumulator for one ageing step, per the chosen effect. */
+  _applyEchoTransform(
+    ctx, effect, speed, scale
+  ) {
+    const p = getP5();
+
+    if ( effect === "grow" ) {
+      const cx = p.width / 2;
+      const cy = p.height / 2;
+
+      ctx.translate(
+        cx,
+        cy
+      );
+      ctx.scale(
+        scale,
+        scale
+      );
+      ctx.translate(
+        -cx,
+        -cy
+      );
+
+      return;
+    }
+
+    if ( effect === "up" ) {
+      ctx.translate(
+        0,
+        -speed
+      );
+    } else if ( effect === "down" ) {
+      ctx.translate(
+        0,
+        speed
+      );
+    } else if ( effect === "left" ) {
+      ctx.translate(
+        -speed,
+        0
+      );
+    } else if ( effect === "right" ) {
+      ctx.translate(
+        speed,
+        0
+      );
+    }
   }
 
   /**
-   * Draw one echo frame: every multi-point group (finger chains, body, …) as a
-   * glowing spline through the (optionally offset) points, and every single
-   * point (a lone fingertip / mouse / orbit) as a neon dot. Splines are batched
-   * into one GPU pass; the composite respects the caller's `globalAlpha`, which
-   * is how each ghost fades.
+   * Draw the live hand once onto the main canvas: every multi-point group
+   * (finger chains, body, …) as a glowing spline, every lone point (a single
+   * fingertip / mouse / orbit) as a neon dot. Batched into one GPU pass.
    */
-  _renderEchoSnapshot(
-    groups, offsetX, offsetY, {
-      curve, stroke, weight, glow
+  _renderHandSplines(
+    groups, {
+      weight, glow, iterations, hueSpeed, hueSpread
     }
   ) {
     const lists = [];
@@ -862,10 +905,7 @@ export class HandCaptureScene {
       } = group;
 
       if ( points.length >= 2 ) {
-        lists.push( points.map( ( point ) => ( {
-          x: point.x + offsetX,
-          y: point.y + offsetY
-        } ) ) );
+        lists.push( points );
       } else if ( points.length === 1 ) {
         neonDot( {
           sizeRange: [
@@ -876,10 +916,7 @@ export class HandCaptureScene {
             1,
             glow + 1
           ),
-          position: {
-            x: points[ 0 ].x + offsetX,
-            y: points[ 0 ].y + offsetY
-          },
+          position: points[ 0 ],
           index: 0
         } );
       }
@@ -892,8 +929,18 @@ export class HandCaptureScene {
     renderSplines(
       lists,
       {
-        curve,
-        stroke,
+        curve: {
+          method: "chaikin",
+          closed: false,
+          iterations
+        },
+        stroke: {
+          weight,
+          glow,
+          hueSpeed,
+          hueSpread,
+          gradient: true
+        },
         overlay: {
           polygon: {
             show: false

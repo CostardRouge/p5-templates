@@ -6,9 +6,10 @@ import {
 } from "../_shared.js";
 
 // v8 "growing" is v7's echo rebuilt on the shader-based spline pipeline (the
-// same GPU glow as `splines · interactive`) instead of the legacy CPU neonLine,
-// with a directional growth that lets the whole echo trail extend toward an edge
-// of the canvas like a comet streak. v7 keeps the original CPU renderer.
+// same GPU glow as `splines · interactive`) instead of the legacy CPU neonLine.
+// The trail itself is a cheap canvas-feedback buffer: only the live hand is
+// re-tessellated each frame, while past frames are aged with a single canvas
+// copy that can drift toward an edge or bloom bigger + darker behind the hand.
 const scene = new HandCaptureScene();
 
 sketch.setup( async() => {
@@ -19,31 +20,26 @@ sketch.draw( () => {
   const interaction = options.sketch?.interaction ?? {};
   const spline = options.sketch?.spline ?? {};
   const echo = options.sketch?.echo ?? {};
-  const extend = options.sketch?.extend ?? {};
+  const effect = options.sketch?.effect ?? {};
   const text = options.sketch?.text ?? {};
   const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
 
-  scene.beginFrame( background );
   scene.readInteraction( interaction );
 
-  scene.drawEchoSplines( {
-    count: echo.count ?? 6,
-    spacing: echo.spacing ?? 4,
-    minAlpha: echo.minAlpha ?? 0.1,
-    ghostAlpha: echo.ghostAlpha ?? 0.55,
+  scene.drawGrowingEcho( {
+    background,
     weight: spline.weight ?? 18,
     glow: spline.glow ?? 2,
     iterations: spline.iterations ?? 6,
     hueSpeed: spline.hueSpeed ?? 1.5,
     hueSpread: spline.hueSpread ?? 2,
-    extend: {
-      enabled: extend.enabled ?? true,
-      direction: extend.direction ?? "up",
-      distance: extend.distance ?? 220,
-      easing: extend.easing ?? "easeOutCubic"
-    }
+    decay: echo.decay ?? 0.9,
+    effect: effect.type ?? "up",
+    speed: effect.speed ?? 8,
+    scale: effect.scale ?? 1.03,
+    darken: effect.darken ?? 0.12
   } );
 
   scene.drawTitle( {
