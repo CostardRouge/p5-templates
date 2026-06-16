@@ -35,11 +35,11 @@ export const formValues = {
     mode: "alternate" as "alternate" | "front" | "back",
     // Flip which letters lead the weave (front vs back) without re-typing the
     // word — handy to find the most pleasing over/under pattern.
-    offset: 0
+    offset: 1
   },
   spiral: {
     // How many full loops the coil makes across the word.
-    turns: 2.5,
+    turns: 11.5,
     // Vertical reach of the coil as a fraction of the text size (controls how
     // far above / below the letters' centre the loops swing).
     heightRatio: 0.62,
