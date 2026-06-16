@@ -511,6 +511,16 @@ class GsapRuntime {
     this.scrub();
   }
 
+  /**
+   * Leave deterministic capture mode so the progression bar wraps again. The
+   * recorder calls this on teardown; without it a sketch that was paused
+   * before recording (so teardown calls `pause()`, not `play()`) would stay
+   * stuck in clamped-progression mode.
+   */
+  exitRecordingMode(): void {
+    this.recording = false;
+  }
+
   private startRaf(): void {
     if ( this.rafId !== null ) {
       return;

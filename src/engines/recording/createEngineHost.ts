@@ -37,6 +37,8 @@ export function createEngineHost(
     resetToStart: () => engine.resetToStart(),
     pause: () => engine.pause(),
     resume: () => engine.play(),
+    beginDeterministicCapture: () => engine.beginDeterministicCapture(),
+    endDeterministicCapture: () => engine.endDeterministicCapture(),
     totalFrames,
     frameRate
   };

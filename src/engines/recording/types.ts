@@ -134,6 +134,16 @@ export interface RecorderHost {
   /** Stop the host's own draw loop during async-loop capture. */
   pause(): void;
   resume(): void;
+  /**
+   * Enter deterministic, frame-stepped capture mode: the sketch clock is
+   * driven by the frame index passed to `seekAndDraw` (t = frame / frameRate)
+   * instead of wall-clock, so async-loop capture stays in lock-step with the
+   * encoder's frame timestamps no matter how fast/slow frames render. Called
+   * once before `resetToStart()` and paired with `endDeterministicCapture()`.
+   */
+  beginDeterministicCapture(): void;
+  /** Leave deterministic capture mode, restoring normal wall-clock time. */
+  endDeterministicCapture(): void;
   /** Resolved frame count for the active sketch. */
   readonly totalFrames: number;
   /** Resolved frames-per-second for the active sketch. */

@@ -54,6 +54,22 @@ window.disableRecordingMode = function() {
   time.isRecording = false;
 };
 
+// Pin the deterministic recording clock to an explicit frame index. The client
+// async-loop recorder and the server capture controller both call this before
+// each redraw, so `incrementElapsedTime` derives `elapsed` from this frame
+// (frame * millisecondsPerFrame) instead of letting it free-run on the
+// auto-incrementing counter. Without an explicit pin the index only
+// auto-advances, which silently drifts whenever a frame is drawn more than once
+// (reset-to-start, a stray resize/redraw, a re-entered capture) — leaving the
+// captured animation out of sync with the encoder's frame timestamps.
+window.setRecordingFrame = function( frameIndex ) {
+  const index = Math.floor( Number( frameIndex ) );
+
+  time.recordingFrameIndex = Number.isFinite( index ) && index >= 0
+    ? index
+    : 0;
+};
+
 // Expose global functions for animation progression control
 window.setAnimationProgression = function( progression ) {
   // Clamp progression to valid range [0, 1]
