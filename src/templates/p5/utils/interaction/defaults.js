@@ -109,11 +109,16 @@ export const interactionFormValues = {
 
   midi: {
     enabled: false,
+    // "" listens to every MIDI input; a specific input id restricts it to one.
+    deviceId: "",
     maxNotes: 10
   },
 
   audio: {
     enabled: false,
+    // "" uses the browser's default microphone; a deviceId picks one of
+    // several attached audio inputs.
+    deviceId: "",
     count: 1,
     smoothing: 0.8,
     fftSize: 1024,
@@ -122,6 +127,8 @@ export const interactionFormValues = {
 
   joypad: {
     enabled: false,
+    // "" reads any connected gamepad; a specific gamepad id restricts it.
+    deviceId: "",
     count: 1,
     deadzone: 0.1
   },
@@ -656,6 +663,10 @@ export const interactionFormConfiguration = {
           component: "checkbox",
           label: "Enabled"
         },
+        deviceId: {
+          component: "midi-input-device-select",
+          label: "Input device"
+        },
         maxNotes: {
           component: "slider",
           label: "Max simultaneous notes",
@@ -673,6 +684,10 @@ export const interactionFormConfiguration = {
         enabled: {
           component: "checkbox",
           label: "Enabled"
+        },
+        deviceId: {
+          component: "audio-input-device-select",
+          label: "Input device"
         },
         count: {
           component: "slider",
@@ -724,6 +739,10 @@ export const interactionFormConfiguration = {
         enabled: {
           component: "checkbox",
           label: "Enabled"
+        },
+        deviceId: {
+          component: "joypad-device-select",
+          label: "Device"
         },
         count: {
           component: "slider",

@@ -219,6 +219,24 @@ interface WebcamDeviceSelectConfig extends BaseConfig {
   component: "webcam-device-select";
 }
 
+// A select listing the machine's audio input devices (microphones), bound to a
+// deviceId string. "" means the browser's default microphone.
+interface AudioInputDeviceSelectConfig extends BaseConfig {
+  component: "audio-input-device-select";
+}
+
+// A select listing the Web MIDI input devices, bound to an input id string.
+// "" means every input is listened to.
+interface MidiInputDeviceSelectConfig extends BaseConfig {
+  component: "midi-input-device-select";
+}
+
+// A select listing the connected gamepads, bound to a gamepad id string.
+// "" means any connected gamepad.
+interface JoypadDeviceSelectConfig extends BaseConfig {
+  component: "joypad-device-select";
+}
+
 // Step 3: Create the master Discriminated Union
 // This tells TypeScript: "If component is 'select', then it MUST have an 'options' property."
 export type FieldConfig =
@@ -242,7 +260,10 @@ export type FieldConfig =
   | Vector2DConfig
   | AssetInputConfig
   | AssetStackConfig
-  | WebcamDeviceSelectConfig;
+  | WebcamDeviceSelectConfig
+  | AudioInputDeviceSelectConfig
+  | MidiInputDeviceSelectConfig
+  | JoypadDeviceSelectConfig;
 
 // Define the configuration for an entire item type (e.g., 'meta' or 'text')
 // The keys of this record must match the field names in the Zod schema
