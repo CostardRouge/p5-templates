@@ -127,11 +127,10 @@ export function OptionsPanelBody( {
         expanded={ collapsibleStates.globalContent }
         onToggle={ ( expanded ) => onCollapsibleToggle( "globalContent" ) }
         className="p-1 border border-theme rounded-lg text-foreground bg-background overflow-y-auto"
-        headerContainerClassName="leading-none"
         header={ ( expanded ) => (
           <button
             className={ clsx(
-              "truncate text-foreground text-xs w-full text-left -ml-1 align-text-top",
+              "flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-0",
               {
                 "mb-1": expanded
               }
@@ -139,12 +138,12 @@ export function OptionsPanelBody( {
             aria-label={ expanded ? "Collapse" : "Expand" }
           >
             <ListCollapse
-              className="inline text-foreground h-3"
+              className="shrink-0 text-foreground h-4 w-4 md:h-3 md:w-3"
               style={ {
                 rotate: expanded ? "180deg" : "0deg"
               } }
             />
-            <span>
+            <span className="truncate">
               global content{" "}
               {rootContentLength ? `(${ rootContentLength })` : null}
             </span>
@@ -168,11 +167,10 @@ export function OptionsPanelBody( {
             expanded={ collapsibleStates.slides }
             onToggle={ ( expanded ) => onCollapsibleToggle( "slides" ) }
             className="p-1 border border-theme rounded-lg bg-background overflow-y-auto"
-            headerContainerClassName="leading-none"
             header={ ( expanded ) => (
               <button
                 className={ clsx(
-                  "text-foreground text-xs w-full text-left -ml-1 align-text-top",
+                  "flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-0",
                   {
                     "mb-1": expanded
                   }
@@ -180,12 +178,12 @@ export function OptionsPanelBody( {
                 aria-label={ expanded ? "Collapse" : "Expand" }
               >
                 <ListCollapse
-                  className="inline text-foreground h-3"
+                  className="shrink-0 text-foreground h-4 w-4 md:h-3 md:w-3"
                   style={ {
                     rotate: expanded ? "180deg" : "0deg"
                   } }
                 />
-                <span>slides {slidesLength ? `(${ slidesLength })` : null}</span>
+                <span className="truncate">slides {slidesLength ? `(${ slidesLength })` : null}</span>
               </button>
             ) }
           >

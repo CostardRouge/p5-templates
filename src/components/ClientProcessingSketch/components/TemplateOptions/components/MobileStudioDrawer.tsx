@@ -5,7 +5,7 @@ import React, {
 } from "react";
 import clsx from "clsx";
 import {
-  ChevronDown, SlidersHorizontal
+  ChevronDown, ChevronUp, SlidersHorizontal
 } from "lucide-react";
 
 import CollapsibleItem from "@/components/CollapsibleItem";
@@ -42,6 +42,8 @@ type MobileStudioDrawerProps = {
   expanded?: boolean;
   onToggle?: ( expanded: boolean ) => void;
   activeSlideIndex?: number;
+  /** Stable id of the active slide; remounts the form on identity changes. */
+  activeSlideId?: string;
   jobId?: string;
   /** Template tab: the options panel sections. */
   body: Omit<OptionsPanelBodyProps, "scrollable">;
@@ -65,6 +67,7 @@ export default function MobileStudioDrawer( {
   expanded,
   onToggle,
   activeSlideIndex,
+  activeSlideId,
   jobId,
   body,
   capture,
@@ -187,11 +190,17 @@ export default function MobileStudioDrawer( {
       keepMounted
       className={ clsx(
         "absolute flex flex-col glass shadow-lg",
+        // Float like the app menu / zoom controls: matching side + bottom
+        // margins, full border and corner radius (rounded-xl, not a pill or a
+        // flush bottom sheet). Collapsed spans the full width too, with the
+        // expand chevron pinned right like the collapse one when open.
         expanded
-          ? "inset-x-0 bottom-0 z-[60] max-h-[50svh] rounded-t-2xl border-t border-theme overflow-y-auto"
-          : "left-2 bottom-2 z-50 w-fit rounded-full border border-theme overflow-hidden"
+          ? "left-2 right-2 bottom-2 z-[60] max-h-[50svh] rounded-xl border border-theme overflow-y-auto overscroll-contain"
+          : "left-2 right-2 bottom-2 z-50 rounded-xl border border-theme overflow-hidden"
       ) }
-      headerContainerClassName={ clsx( expanded && "glass sticky top-0 z-10" ) }
+      // Opaque (not glass) so scrolled content can't bleed through the sticky
+      // tabs / drag handle, and above the form fields in the stacking order.
+      headerContainerClassName={ clsx( expanded && "bg-background sticky top-0 z-20" ) }
       header={ ( isExpanded ) => (
         <div className="flex w-full flex-col">
           {/* Drag handle (swipe down to close) */}
@@ -237,12 +246,12 @@ export default function MobileStudioDrawer( {
           ) : (
             <button
               type="button"
-              className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm text-foreground"
+              className="flex w-full items-center gap-1.5 px-3.5 py-2.5 text-sm text-foreground"
               aria-label="Expand panel"
             >
-              <SlidersHorizontal className="h-4 w-4" />
+              <SlidersHorizontal className="h-4 w-4 shrink-0" />
               <span>Settings</span>
-              <ChevronDown className="h-3.5 w-3.5 rotate-180" />
+              <ChevronUp className="ml-auto h-4 w-4 shrink-0 text-label" />
             </button>
           )}
         </div>
@@ -284,7 +293,7 @@ export default function MobileStudioDrawer( {
               jobId={ jobId }
             >
               <GenericObjectForm
-                key={ effectiveBasePath }
+                key={ activeSlideId ?? effectiveBasePath }
                 basePath={ effectiveBasePath }
                 config={ sketchConfig }
               />

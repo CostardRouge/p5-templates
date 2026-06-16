@@ -128,12 +128,11 @@ const rootFormConfig: Record<string, FieldConfig> = {
     initialExpanded: true,
     fields: {
       duration: {
-        label: "Duration",
-        component: "number",
+        label: "Duration (s)",
+        component: "slider",
         step: 1,
         min: 0,
-        max: 60,
-        placeholder: "x seconds"
+        max: 60
       },
       framerate: {
         label: "Framerate",

@@ -1,6 +1,5 @@
 "use client";
 
-import * as SliderPrimitive from "@radix-ui/react-slider";
 import {
   RotateCcw
 } from "lucide-react";
@@ -9,9 +8,10 @@ import React, {
 } from "react";
 import clsx from "clsx";
 import {
-  Controller, useFormContext
+  useController, useFormContext
 } from "react-hook-form";
 
+import useDragSlider from "@/hooks/useDragSlider";
 import rgbaToHex from "./utils/rgbaToHex";
 import hexToRgba from "./utils/hexToRgba";
 import {
@@ -41,6 +41,9 @@ const CHECKERBOARD_STYLE: React.CSSProperties = {
  * color at its current alpha over a checkerboard). The swatch on the left
  * opens the native color picker; tapping the percentage switches the bar to
  * numeric alpha entry.
+ *
+ * The alpha drag is handled by {@link useDragSlider} with `touch-action: pan-y`,
+ * so a horizontal drag adjusts alpha while a vertical drag scrolls the panel.
  */
 export default function ControlledColorInput( {
   name,
@@ -52,202 +55,207 @@ export default function ControlledColorInput( {
     control
   } = useFormContext();
 
+  const {
+    field
+  } = useController( {
+    name,
+    control
+  } );
+
   const [
     editing,
     setEditing
   ] = useState( false );
 
-  return (
-    <Controller
-      control={ control }
-      name={ name }
-      render={ ( {
-        field
-      } ) => {
-        // Ensure we always have a valid RGBA array
-        const currentValue =
-          Array.isArray( field.value ) && field.value.length >= 3
-            ? field.value
-            : [
-              0,
-              0,
-              0,
-              255
-            ];
-        const r = currentValue[ 0 ] ?? 0;
-        const g = currentValue[ 1 ] ?? 0;
-        const b = currentValue[ 2 ] ?? 0;
-        const a = currentValue[ 3 ] ?? 255;
-        const alphaPercent = Math.round( ( a / 255 ) * 100 );
-        const hex = rgbaToHex( currentValue );
+  // Ensure we always have a valid RGBA array
+  const currentValue =
+    Array.isArray( field.value ) && field.value.length >= 3
+      ? field.value
+      : [
+        0,
+        0,
+        0,
+        255
+      ];
+  const r = currentValue[ 0 ] ?? 0;
+  const g = currentValue[ 1 ] ?? 0;
+  const b = currentValue[ 2 ] ?? 0;
+  const a = currentValue[ 3 ] ?? 255;
+  const alphaPercent = Math.round( ( a / 255 ) * 100 );
+  const hex = rgbaToHex( currentValue );
 
-        const handleColorChange = ( nextHex: string ) => {
-          const [
-            newR,
-            newG,
-            newB
-          ] = hexToRgba( nextHex );
+  const handleColorChange = ( nextHex: string ) => {
+    const [
+      newR,
+      newG,
+      newB
+    ] = hexToRgba( nextHex );
 
-          field.onChange( [
-            newR,
-            newG,
-            newB,
-            a
-          ] ); // Preserve alpha
-        };
+    field.onChange( [
+      newR,
+      newG,
+      newB,
+      a
+    ] ); // Preserve alpha
+  };
 
-        const handleAlphaChange = ( newAlpha: number ) => {
-          field.onChange( [
-            r,
-            g,
-            b,
-            Math.min(
-              255,
-              Math.max(
-                0,
-                Math.round( newAlpha )
-              )
-            )
-          ] );
-        };
+  const handleAlphaChange = ( newAlpha: number ) => {
+    field.onChange( [
+      r,
+      g,
+      b,
+      Math.min(
+        255,
+        Math.max(
+          0,
+          Math.round( newAlpha )
+        )
+      )
+    ] );
+  };
 
-        const commitEdit = ( raw: string ) => {
-          setEditing( false );
+  const {
+    ref, handlers
+  } = useDragSlider( {
+    min: 0,
+    max: 255,
+    step: 1,
+    value: a,
+    onChange: handleAlphaChange
+  } );
 
-          const parsed = parseInt(
-            raw,
-            10
-          );
+  const commitEdit = ( raw: string ) => {
+    setEditing( false );
 
-          if ( Number.isNaN( parsed ) ) {
-            return;
+    const parsed = parseInt(
+      raw,
+      10
+    );
+
+    if ( Number.isNaN( parsed ) ) {
+      return;
+    }
+
+    handleAlphaChange( ( Math.min(
+      100,
+      Math.max(
+        0,
+        parsed
+      )
+    ) / 100 ) * 255 );
+  };
+
+  if ( editing ) {
+    return (
+      <input
+        type="number"
+        autoFocus
+        defaultValue={ alphaPercent }
+        step={ 1 }
+        min={ 0 }
+        max={ 100 }
+        inputMode="numeric"
+        aria-label={ `${ label ?? name } alpha percentage` }
+        className={ CONTROL_EDIT_INPUT_CLASS }
+        onBlur={ ( e ) => commitEdit( e.target.value ) }
+        onKeyDown={ ( e ) => {
+          if ( e.key === "Enter" ) {
+            commitEdit( ( e.target as HTMLInputElement ).value );
+          } else if ( e.key === "Escape" ) {
+            setEditing( false );
           }
+        } }
+      />
+    );
+  }
 
-          handleAlphaChange( ( Math.min(
-            100,
-            Math.max(
-              0,
-              parsed
-            )
-          ) / 100 ) * 255 );
-        };
+  return (
+    <div
+      ref={ ref }
+      role="slider"
+      tabIndex={ 0 }
+      aria-label={ `${ label ?? name } alpha` }
+      aria-valuemin={ 0 }
+      aria-valuemax={ 255 }
+      aria-valuenow={ a }
+      onBlur={ field.onBlur }
+      { ...handlers }
+      className={ `group touch-pan-y select-none cursor-ew-resize outline-none focus-visible:ring-1 focus-visible:ring-focus ${ CONTROL_BAR_CLASS }` }
+      style={ CHECKERBOARD_STYLE }
+    >
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0"
+        style={ {
+          width: `${ ( a / 255 ) * 100 }%`,
+          backgroundColor: `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`
+        } }
+      />
 
-        if ( editing ) {
-          return (
-            <input
-              type="number"
-              autoFocus
-              defaultValue={ alphaPercent }
-              step={ 1 }
-              min={ 0 }
-              max={ 100 }
-              inputMode="numeric"
-              aria-label={ `${ label ?? name } alpha percentage` }
-              className={ CONTROL_EDIT_INPUT_CLASS }
-              onBlur={ ( e ) => commitEdit( e.target.value ) }
-              onKeyDown={ ( e ) => {
-                if ( e.key === "Enter" ) {
-                  commitEdit( ( e.target as HTMLInputElement ).value );
-                } else if ( e.key === "Escape" ) {
-                  setEditing( false );
-                }
-              } }
-            />
-          );
-        }
+      <div
+        className="pointer-events-none absolute top-1/2 h-6 md:h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/60 ring-1 ring-background/80"
+        style={ {
+          left: `${ ( a / 255 ) * 100 }%`
+        } }
+      />
 
-        return (
-          <SliderPrimitive.Root
-            min={ 0 }
-            max={ 255 }
-            step={ 1 }
-            value={ [
-              a
-            ] }
-            onValueChange={ ( [
-              next
-            ] ) => handleAlphaChange( next ) }
-            onBlur={ field.onBlur }
-            className={ `group touch-none select-none cursor-ew-resize ${ CONTROL_BAR_CLASS }` }
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-between gap-2 px-2">
+        <span className="flex min-w-0 items-center gap-1.5">
+          {/* Swatch: opens the native color picker (opaque so the hue
+              stays visible even at alpha 0). */}
+          <span
+            className="pointer-events-auto relative h-6 w-6 md:h-4 md:w-4 shrink-0 cursor-pointer overflow-hidden rounded-md border border-theme shadow-sm"
+            style={ {
+              backgroundColor: hex
+            } }
+            onPointerDown={ ( e ) => e.stopPropagation() }
           >
-            <SliderPrimitive.Track
-              className="relative h-full w-full grow"
-              style={ CHECKERBOARD_STYLE }
-            >
-              <SliderPrimitive.Range
-                className="absolute h-full"
-                style={ {
-                  backgroundColor: `rgba(${ r }, ${ g }, ${ b }, ${ a / 255 })`
-                } }
-              />
-            </SliderPrimitive.Track>
-
-            <SliderPrimitive.Thumb
-              aria-label={ `${ label ?? name } alpha` }
-              className="block h-6 md:h-4 w-1 rounded-full bg-foreground/60 ring-1 ring-background/80 focus-visible:outline-none focus-visible:bg-foreground"
+            <input
+              id={ name }
+              type="color"
+              value={ hex }
+              onChange={ ( e ) => handleColorChange( e.target.value ) }
+              aria-label={ `${ label ?? name } color picker` }
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
+          </span>
 
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-between gap-2 px-2">
-              <span className="flex min-w-0 items-center gap-1.5">
-                {/* Swatch: opens the native color picker (opaque so the hue
-                    stays visible even at alpha 0). */}
-                <span
-                  className="pointer-events-auto relative h-6 w-6 md:h-4 md:w-4 shrink-0 cursor-pointer overflow-hidden rounded-md border border-theme shadow-sm"
-                  style={ {
-                    backgroundColor: hex
-                  } }
-                  onPointerDown={ ( e ) => e.stopPropagation() }
-                >
-                  <input
-                    id={ name }
-                    type="color"
-                    value={ hex }
-                    onChange={ ( e ) => handleColorChange( e.target.value ) }
-                    aria-label={ `${ label ?? name } color picker` }
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  />
-                </span>
+          {label && (
+            <span
+              className={ clsx(
+                "truncate rounded bg-background/70 px-1 backdrop-blur-sm",
+                isModified ? "font-medium text-foreground" : "text-label"
+              ) }
+            >
+              {label}
+            </span>
+          )}
+        </span>
 
-                {label && (
-                  <span
-                    className={ clsx(
-                      "truncate rounded bg-background/70 px-1 backdrop-blur-sm",
-                      isModified ? "font-medium text-foreground" : "text-label"
-                    ) }
-                  >
-                    {label}
-                  </span>
-                )}
-              </span>
+        <span className="flex shrink-0 items-center gap-1">
+          {isModified && onReset && (
+            <button
+              type="button"
+              tabIndex={ -1 }
+              title="Reset to saved value"
+              onClick={ onReset }
+              onPointerDown={ ( e ) => e.stopPropagation() }
+              className={ `${ CONTROL_RESET_BUTTON_CLASS } bg-background/70 backdrop-blur-sm` }
+            >
+              <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
+            </button>
+          )}
 
-              <span className="flex shrink-0 items-center gap-1">
-                {isModified && onReset && (
-                  <button
-                    type="button"
-                    tabIndex={ -1 }
-                    title="Reset to saved value"
-                    onClick={ onReset }
-                    onPointerDown={ ( e ) => e.stopPropagation() }
-                    className={ `${ CONTROL_RESET_BUTTON_CLASS } bg-background/70 backdrop-blur-sm` }
-                  >
-                    <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  title="Tap to type an alpha percentage"
-                  onClick={ () => setEditing( true ) }
-                  onPointerDown={ ( e ) => e.stopPropagation() }
-                  className={ `${ CONTROL_VALUE_BUTTON_CLASS } bg-background/70 backdrop-blur-sm` }
-                >
-                  {alphaPercent}%
-                </button>
-              </span>
-            </div>
-          </SliderPrimitive.Root>
-        );
-      } }
-    />
+          <button
+            type="button"
+            title="Tap to type an alpha percentage"
+            onClick={ () => setEditing( true ) }
+            onPointerDown={ ( e ) => e.stopPropagation() }
+            className={ `${ CONTROL_VALUE_BUTTON_CLASS } bg-background/70 backdrop-blur-sm` }
+          >
+            {alphaPercent}%
+          </button>
+        </span>
+      </div>
+    </div>
   );
 }

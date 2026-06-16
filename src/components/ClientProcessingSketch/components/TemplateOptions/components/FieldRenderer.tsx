@@ -35,6 +35,7 @@ import ControlledJoypadDeviceSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
+import deepClone from "@/utils/deepClone";
 import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
@@ -73,7 +74,6 @@ export default function FieldRenderer( {
   const {
     register,
     setValue,
-    resetField,
     getValues,
     formState: {
       errors
@@ -90,9 +90,11 @@ export default function FieldRenderer( {
     registeredName
   );
 
-  // Capture the initial (DB-loaded) value once on mount via a ref.
-  // Using getValues() is more reliable than formState.defaultValues
-  // which can behave unexpectedly through RHF's proxy.
+  // Capture the value the field was loaded with once on mount via a ref. We
+  // clone it so a later in-place mutation of the form value can't drift our
+  // baseline. Using getValues() is more reliable than formState.defaultValues,
+  // which can behave unexpectedly through RHF's proxy — and, crucially, is not
+  // kept in sync for dynamically inserted slides (duplicate).
   const initialValueRef = useRef<unknown>( undefined );
   const isInitializedRef = useRef( false );
 
@@ -104,16 +106,29 @@ export default function FieldRenderer( {
 
   if ( !isInitializedRef.current ) {
     isInitializedRef.current = true;
-    initialValueRef.current = getValues( registeredName );
+    initialValueRef.current = deepClone( getValues( registeredName ) );
   }
 
   const isModified =
     JSON.stringify( currentValue ) !== JSON.stringify( initialValueRef.current );
 
+  // Reset restores the value the field was loaded with — exactly what
+  // `isModified` compares against — so the reset indicator reliably clears.
+  // We deliberately avoid resetField(), which resets to RHF's defaultValues:
+  // those have no entry for a freshly duplicated slide, so resetField would
+  // wipe the field to undefined and leave the reset icon stuck on.
   const handleReset = ( e: React.MouseEvent ) => {
     e.preventDefault();
     e.stopPropagation();
-    resetField( registeredName );
+    setValue(
+      registeredName,
+      deepClone( initialValueRef.current ),
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      }
+    );
   };
 
   const {
@@ -333,12 +348,12 @@ export default function FieldRenderer( {
             ) }
             header={ ( expanded ) => (
               <div
-                className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full"
+                className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full min-h-[2.5rem] md:min-h-0"
                 title="Click to expand/collapse"
               >
                 <div className="flex min-w-0 items-center gap-1">
                   <ChevronDown
-                    className="w-3 h-3 shrink-0 transition-transform"
+                    className="w-4 h-4 md:w-3 md:h-3 shrink-0 transition-transform"
                     style={ {
                       transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
                     } }
@@ -353,27 +368,24 @@ export default function FieldRenderer( {
                   </span>
                 </div>
                 <div
-                  className="flex items-center gap-1.5"
+                  className="flex items-center gap-0.5"
                   onClick={ ( e ) => e.stopPropagation() }
                 >
                   {isModified && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={ handleReset }
-                        tabIndex={ -1 }
-                        title="Reset to saved value"
-                        className="hover:bg-theme/20 rounded transition-colors"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="leading-none select-none">·</span>
-                    </>
+                    <button
+                      type="button"
+                      onClick={ handleReset }
+                      tabIndex={ -1 }
+                      title="Reset to saved value"
+                      className="p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
+                    >
+                      <RotateCcw className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                    </button>
                   )}
                   <RandomizeSettingsButton
                     config={ config.fields }
                     basePath={ registeredName }
-                    className="hover:bg-theme/20 rounded transition-colors"
+                    className="text-foreground p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
                   />
                 </div>
               </div>

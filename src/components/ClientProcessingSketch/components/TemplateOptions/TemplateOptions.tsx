@@ -234,6 +234,18 @@ export default function TemplateOptions( {
     pendingThumbnailCaptureRef
   } );
 
+  // Stable identity of the active slide. The sketch settings form edits a
+  // positional path (`slides.N.sketch`), so when a structural change — e.g.
+  // duplicating an earlier slide — swaps which slide sits at the active index
+  // without changing the index itself, the path stays the same and the form
+  // would keep each field's stale "saved value" baseline from the previously
+  // shown slide. Keying the form by the slide id remounts it on identity
+  // changes so the baseline always reflects the slide on screen.
+  const activeSlideId =
+    activeSlideIndex !== undefined
+      ? slideFields[ activeSlideIndex ]?.id
+      : undefined;
+
   // Collapsible section states
   const {
     states: collapsibleStates,
@@ -448,6 +460,7 @@ export default function TemplateOptions( {
             <TemplateAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
               <SketchSettings
                 activeSlideIndex={ activeSlideIndex }
+                activeSlideId={ activeSlideId }
                 expanded={ collapsibleStates.sketchSettings }
                 onToggle={ ( expanded ) => setSection(
                   "sketchSettings",
@@ -464,6 +477,7 @@ export default function TemplateOptions( {
               expanded
             ) }
             activeSlideIndex={ activeSlideIndex }
+            activeSlideId={ activeSlideId }
             jobId={ jobId }
             body={ bodyProps }
             capture={ captureProps }
