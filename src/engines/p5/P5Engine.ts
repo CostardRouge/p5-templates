@@ -209,13 +209,14 @@ export class P5Engine implements SketchEngine {
     registerServerCaptureController( {
       captureKind: "canvas",
       surfaceSelector: "canvas.p5Canvas",
-      prepare: () => {
-        window.enableRecordingMode?.();
-        pauseLoop( this.sketchRuntime?.getP5() );
-      },
-      renderFrame: () => {
-        // enableRecordingMode makes incrementElapsedTime advance frame-based
-        // time on each pre-draw, so a bare redraw steps exactly one frame.
+      prepare: () => this.beginDeterministicCapture(),
+      renderFrame: ( index ) => {
+        // Pin the deterministic clock to this frame, then step exactly one
+        // redraw. enableRecordingMode makes incrementElapsedTime derive time
+        // from the pinned index, so each redraw advances by exactly one frame
+        // — and an out-of-order or repeated request still renders the right
+        // frame rather than drifting.
+        window.setRecordingFrame?.( index );
         this.sketchRuntime?.getP5()?.redraw();
       }
     } );
@@ -304,6 +305,11 @@ export class P5Engine implements SketchEngine {
       p.frameCount = frame;
     }
 
+    // Pin the deterministic recording clock to this frame so the upcoming
+    // redraw renders at t = frame / frameRate. No-op during normal playback —
+    // the sketch only consults the pinned index while in recording mode.
+    window.setRecordingFrame?.( frame );
+
     this.sketchRuntime?.getP5()?.redraw();
   }
 
@@ -352,6 +358,20 @@ export class P5Engine implements SketchEngine {
     bridge?.setProgression( 0 );
 
     await this.seekAndDraw( 0 );
+  }
+
+  beginDeterministicCapture(): void {
+    // Stop the live draw loop and switch the time utility to frame-based time.
+    // From here `incrementElapsedTime` derives `elapsed` from the pinned
+    // recording frame index (see `window.setRecordingFrame`, set inside
+    // `seek()`) instead of p5 `millis()`, so every captured frame lands at
+    // exactly t = frame / frameRate — identical to the server pipeline.
+    pauseLoop( this.sketchRuntime?.getP5() );
+    window.enableRecordingMode?.();
+  }
+
+  endDeterministicCapture(): void {
+    window.disableRecordingMode?.();
   }
 
   getRecordingCapabilities(

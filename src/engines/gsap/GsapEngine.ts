@@ -116,7 +116,7 @@ export class GsapEngine implements SketchEngine {
     registerServerCaptureController( {
       captureKind: "dom",
       surfaceSelector: "[data-capture-surface]",
-      prepare: () => this.runtime?.enterRecordingMode(),
+      prepare: () => this.beginDeterministicCapture(),
       renderFrame: ( index: number ) => this.runtime?.seekFrame( index )
     } );
 
@@ -201,6 +201,17 @@ export class GsapEngine implements SketchEngine {
 
   async resetToStart(): Promise<void> {
     await this.runtime?.resetToStart();
+  }
+
+  beginDeterministicCapture(): void {
+    // The GSAP timeline is already scrubbed off a frame clock, so the only
+    // thing recording mode changes here is that progression stops wrapping
+    // (clamped to [0, 1]) for the duration of the capture.
+    this.runtime?.enterRecordingMode();
+  }
+
+  endDeterministicCapture(): void {
+    this.runtime?.exitRecordingMode();
   }
 
   getRecordingCapabilities(

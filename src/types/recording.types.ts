@@ -142,6 +142,12 @@ declare global {
     // Server-side / deterministic recording controls (time utility)
     enableRecordingMode?: () => void;
     disableRecordingMode?: () => void;
+    // Pin the deterministic recording clock to an explicit frame index so the
+    // next redraw renders at exactly frame / framerate seconds. Set before
+    // every captured frame by both the client async-loop recorder and the
+    // server capture controller, keeping the sketch clock in lock-step with
+    // the encoder's frame timestamps regardless of wall-clock render speed.
+    setRecordingFrame?: ( frame: number ) => void;
 
     // Interaction vision readiness (set by the interaction layer). Returns true
     // once the vision source has loaded and produced a first result, or when no

@@ -34,6 +34,7 @@ export class AsyncLoopRecorder extends BaseRecorder {
   private cancelled = false;
   private runPromise: Promise<RecorderResult> | null = null;
   private hostPaused = false;
+  private deterministicActive = false;
   private audioCaptureActive = false;
 
   constructor(
@@ -57,12 +58,19 @@ export class AsyncLoopRecorder extends BaseRecorder {
       throw new Error( "AsyncLoopRecorder: host.totalFrames must be a positive number." );
     }
 
+    // Put the host into deterministic, frame-stepped time BEFORE anything
+    // draws, so `resetToStart()` and every `seekAndDraw(i)` render at exactly
+    // t = i / frameRate instead of advancing on wall-clock. This is the fix
+    // for the loop-desync: without it the captured animation progresses at
+    // whatever rate the machine happens to draw frames, so the recording ends
+    // before (fast) or after (slow) the loop completes.
+    this.host.pause();
+    this.hostPaused = true;
+    this.enterDeterministic();
+
     // Reset progression FIRST so the surface reflects frame 0 before we
     // snapshot dimensions into the encoder. Otherwise a reset-triggered
     // resize would invalidate the encoder's codec string mid-recording.
-    this.host.pause();
-    this.hostPaused = true;
-
     try {
       await this.host.resetToStart();
 
@@ -81,7 +89,8 @@ export class AsyncLoopRecorder extends BaseRecorder {
         totalFrames
       } );
     } catch( error ) {
-      // Setup failure must not leave the host stuck in paused state.
+      // Setup failure must not leave the host stuck in paused/recording state.
+      this.exitDeterministic();
       this.resumeHost();
       this.encoder?.dispose();
       this.encoder = null;
@@ -238,6 +247,7 @@ export class AsyncLoopRecorder extends BaseRecorder {
       this._isRecording = false;
       this.encoder?.dispose();
       this.encoder = null;
+      this.exitDeterministic();
       this.resumeHost();
     }
   }
@@ -268,6 +278,32 @@ export class AsyncLoopRecorder extends BaseRecorder {
     } catch {
       // Resuming should never throw, but if it does we don't want to
       // mask the original error from `run`.
+    }
+  }
+
+  private enterDeterministic(): void {
+    if ( this.deterministicActive ) {
+      return;
+    }
+    this.deterministicActive = true;
+    try {
+      this.host.beginDeterministicCapture();
+    } catch {
+      // Entering deterministic mode must never abort the recording — fall
+      // back to the host's default timing rather than throwing here.
+    }
+  }
+
+  private exitDeterministic(): void {
+    if ( !this.deterministicActive ) {
+      return;
+    }
+    this.deterministicActive = false;
+    try {
+      this.host.endDeterministicCapture();
+    } catch {
+      // Teardown must never throw — leaving the host in recording mode is
+      // recoverable on the next play()/record, an exception here is not.
     }
   }
 }

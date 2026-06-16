@@ -135,6 +135,19 @@ export interface SketchEngine {
   resetToStart(): Promise<void>;
 
   /**
+   * Enter deterministic, frame-stepped capture mode for client-side
+   * async-loop recording: subsequent `seekAndDraw(frame)` calls render the
+   * sketch at t = frame / frameRate instead of advancing on wall-clock. This
+   * is what keeps the captured clip in sync with the loop (and with the
+   * server-side pipeline). Paired with `endDeterministicCapture()` in the
+   * recorder's teardown.
+   */
+  beginDeterministicCapture(): void;
+
+  /** Leave deterministic capture mode and restore wall-clock timing. */
+  endDeterministicCapture(): void;
+
+  /**
    * Declare what client-side recording modes/formats this engine
    * supports for the given sketch options. Consumed by the browser
    * recorder UI to pick a sensible default mode and gate formats.
