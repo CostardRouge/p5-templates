@@ -37,7 +37,7 @@ export default function TemplateSketchPage() {
   const [
     {
       name, capturing, options, persistedJob, engineId, category, sketchLoaded, activeSlideIndex,
-      engine, looping
+      engine, looping, browserRecording
     },
     dispatch
   ] = useSketch();
@@ -274,6 +274,7 @@ export default function TemplateSketchPage() {
           resolutionKey={ `${ effectiveSettings.size.width }x${ effectiveSettings.size.height }` }
           isReady={ sketchLoaded }
           disableTouchGestures={ disableTouchGestures }
+          lockInteractions={ browserRecording }
           onInteractionStart={ handleInteractionStart }
           onInteractionEnd={ handleInteractionEnd }
         >

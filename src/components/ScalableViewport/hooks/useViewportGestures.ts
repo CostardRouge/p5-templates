@@ -20,6 +20,10 @@ interface UseViewportGesturesProps {
   ) => void;
   cancelAnimation: () => void;
   disableTouchGestures?: boolean;
+  // Freeze every pan/pinch/wheel gesture (used while a browser recording
+  // owns the engine clock — panning would otherwise pause the engine and
+  // desync the capture).
+  lockInteractions?: boolean;
   onInteractionStart?: ( mode: "panning" | "zooming" ) => void;
   onInteractionEnd?: () => void;
 }
@@ -45,6 +49,7 @@ export function useViewportGestures( {
   setTransform,
   cancelAnimation,
   disableTouchGestures = false,
+  lockInteractions = false,
   onInteractionStart,
   onInteractionEnd
 }: UseViewportGesturesProps ) {
@@ -228,6 +233,9 @@ export function useViewportGestures( {
     },
     {
       target: containerRef,
+      // Disabling at the shared-config level tears down every gesture
+      // recogniser, so no drag/pinch/wheel can fire while locked.
+      enabled: !lockInteractions,
       drag: {
         from: () => [
           transform.current.x,

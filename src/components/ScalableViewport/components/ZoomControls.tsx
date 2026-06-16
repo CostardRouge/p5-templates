@@ -12,22 +12,30 @@ const ZoomControls = ( {
   onPlus,
   onMinus,
   onFit,
-  onReset
+  onReset,
+  disabled = false
 }: {
   scale: number;
   onPlus: () => void;
   onMinus: () => void;
   onReset: () => void;
   onFit: () => void;
+  // Recording owns the engine clock — surface the controls as inert so a
+  // stray zoom can't disturb an in-flight capture.
+  disabled?: boolean;
 } ) => {
   return (
     <div
       className="absolute top-2 right-2 md:top-4 md:right-4 z-50"
       data-no-drag="true"
     >
-      <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden divide-x divide-border">
+      <div
+        className={ `flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden divide-x divide-border transition-opacity ${ disabled ? "opacity-40 pointer-events-none" : "" }` }
+        aria-hidden={ disabled }
+      >
         <button
           onClick={ onMinus }
+          disabled={ disabled }
           className={ buttonClassName }
           title="Zoom out"
           aria-label="Zoom out"
@@ -37,6 +45,7 @@ const ZoomControls = ( {
 
         <button
           onClick={ onReset }
+          disabled={ disabled }
           className={ `${ buttonClassName } min-w-[3.5rem]` }
           title="Zoom to 100% (actual size)"
           aria-label="Zoom to 100% (actual size)"
@@ -48,6 +57,7 @@ const ZoomControls = ( {
 
         <button
           onClick={ onPlus }
+          disabled={ disabled }
           className={ buttonClassName }
           title="Zoom in"
           aria-label="Zoom in"
@@ -57,6 +67,7 @@ const ZoomControls = ( {
 
         <button
           onClick={ onFit }
+          disabled={ disabled }
           className={ buttonClassName }
           title="Fit to viewport"
           aria-label="Fit to viewport"

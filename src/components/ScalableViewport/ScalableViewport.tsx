@@ -25,6 +25,7 @@ export default function ScalableViewport( {
   isReady = true,
   disable = false,
   disableTouchGestures = false,
+  lockInteractions = false,
   onInteractionStart,
   onInteractionEnd
 }: {
@@ -36,6 +37,10 @@ export default function ScalableViewport( {
   // Ignore touchscreen pan/pinch so fingers reach the content instead of
   // moving the viewport (mouse drag, wheel and zoom controls still work).
   disableTouchGestures?: boolean;
+  // Freeze all pan/zoom (gestures + zoom controls) while keeping the
+  // current transform on screen — used during a browser recording so the
+  // viewport can't disturb the in-flight capture.
+  lockInteractions?: boolean;
   isReady?: boolean;
   onInteractionStart?: ( mode: "panning" | "zooming" ) => void;
   onInteractionEnd?: () => void;
@@ -71,6 +76,7 @@ export default function ScalableViewport( {
     setTransform,
     cancelAnimation,
     disableTouchGestures,
+    lockInteractions,
     onInteractionStart,
     onInteractionEnd
   } );
@@ -188,12 +194,13 @@ export default function ScalableViewport( {
           onMinus={ zoomOut }
           onFit={ () => fitToViewport( true ) }
           onReset={ () => resetToActualPixels( true ) }
+          disabled={ lockInteractions }
         />
       )}
 
       <div
         ref={ containerRef }
-        className="w-full h-full overflow-hidden touch-none relative cursor-grab active:cursor-grabbing"
+        className={ `w-full h-full overflow-hidden touch-none relative ${ lockInteractions ? "cursor-default" : "cursor-grab active:cursor-grabbing" }` }
         style={ {
           touchAction: "none"
         } }
