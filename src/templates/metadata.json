@@ -2872,7 +2872,7 @@
     "engine": "p5",
     "category": "video",
     "hasSketchForm": true,
-    "hasThumbnail": false,
+    "hasThumbnail": true,
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
