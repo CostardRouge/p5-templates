@@ -5,7 +5,7 @@ import React, {
 } from "react";
 import clsx from "clsx";
 import {
-  ChevronDown, SlidersHorizontal
+  ChevronDown, ChevronUp, SlidersHorizontal
 } from "lucide-react";
 
 import CollapsibleItem from "@/components/CollapsibleItem";
@@ -190,11 +190,13 @@ export default function MobileStudioDrawer( {
       keepMounted
       className={ clsx(
         "absolute flex flex-col glass shadow-lg",
+        // Float like the app menu / zoom controls: matching side + bottom
+        // margins, full border and corner radius (rounded-xl, not a pill or a
+        // flush bottom sheet). Collapsed spans the full width too, with the
+        // expand chevron pinned right like the collapse one when open.
         expanded
-          // Float like the app menu / zoom controls: matching side+bottom
-          // margins, full border and corner radius (not a flush bottom sheet).
           ? "left-2 right-2 bottom-2 z-[60] max-h-[50svh] rounded-xl border border-theme overflow-y-auto overscroll-contain"
-          : "left-2 bottom-2 z-50 w-fit rounded-full border border-theme overflow-hidden"
+          : "left-2 right-2 bottom-2 z-50 rounded-xl border border-theme overflow-hidden"
       ) }
       // Opaque (not glass) so scrolled content can't bleed through the sticky
       // tabs / drag handle, and above the form fields in the stacking order.
@@ -244,12 +246,12 @@ export default function MobileStudioDrawer( {
           ) : (
             <button
               type="button"
-              className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm text-foreground"
+              className="flex w-full items-center gap-1.5 px-3.5 py-2.5 text-sm text-foreground"
               aria-label="Expand panel"
             >
-              <SlidersHorizontal className="h-4 w-4" />
+              <SlidersHorizontal className="h-4 w-4 shrink-0" />
               <span>Settings</span>
-              <ChevronDown className="h-3.5 w-3.5 rotate-180" />
+              <ChevronUp className="ml-auto h-4 w-4 shrink-0 text-label" />
             </button>
           )}
         </div>
