@@ -198,6 +198,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:text/text-mask-with-noise-strips": () => import( "@/p5/sketches/text/text-mask-with-noise-strips/index.js" ),
   "p5:torsade-shaders/torsade-shaders-v1-melted": () => import( "@/p5/sketches/torsade-shaders/torsade-shaders-v1-melted/index.js" ),
   "p5:torsade-shaders/torsade-shaders-v2-rabbit-hole": () => import( "@/p5/sketches/torsade-shaders/torsade-shaders-v2-rabbit-hole/index.js" ),
+  "p5:torsade-shaders/torsade-shaders-v3-medusa": () => import( "@/p5/sketches/torsade-shaders/torsade-shaders-v3-medusa/index.js" ),
   "p5:torsade/torsade-juggle": () => import( "@/p5/sketches/torsade/torsade-juggle/index.js" ),
   "p5:torsade/torsade-v0": () => import( "@/p5/sketches/torsade/torsade-v0/index.js" ),
   "p5:torsade/torsade-v1-unmelted": () => import( "@/p5/sketches/torsade/torsade-v1-unmelted/index.js" ),

@@ -1272,6 +1272,8 @@ export function createInstancedFieldRenderer( {
    * @param {object} params  same as createNoiseFieldRenderer().render, plus:
    * @param {number[]} [params.background]  opaque [r,g,b] (0-255) the buffer is
    *   cleared to, so blended dots composite correctly. Defaults to black.
+   * @param {number} [params.clearAlpha=1]  clear alpha; pass 0 to composite the
+   *   dots over whatever is already on the main canvas (e.g. a glow underneath).
    */
   function render( params ) {
     const {
@@ -1286,6 +1288,7 @@ export function createInstancedFieldRenderer( {
         0,
         0
       ],
+      clearAlpha = 1,
       uniforms = {}
     } = params;
 
@@ -1328,11 +1331,14 @@ export function createInstancedFieldRenderer( {
 
     // Clear to the opaque background so blended dots composite correctly
     // (blending over a transparent buffer would premultiply the colours).
+    // Sketches that want the dots to sit over content already on the main
+    // canvas (e.g. a glow drawn underneath) can pass clearAlpha: 0 — the WebGL
+    // canvas is premultiplied, so standard src-over blending stays correct.
     gl.clearColor(
       ( background[ 0 ] ?? 0 ) / 255,
       ( background[ 1 ] ?? 0 ) / 255,
       ( background[ 2 ] ?? 0 ) / 255,
-      1
+      clearAlpha
     );
     gl.clear( gl.COLOR_BUFFER_BIT );
 
