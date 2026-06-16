@@ -151,7 +151,7 @@ export const formValues = {
   autoFitText: true,
   textPadding: 0.12,
 
-  rotateSpeed: 0.3,
+  spinsPerLoop: 1,
   easing: "easeInOutExpo",
 
   rollMode: false,
@@ -259,16 +259,16 @@ export const formConfiguration: Record<string, any> = {
     step: 0.01
   },
 
-  rotateSpeed: {
+  spinsPerLoop: {
     component: "slider",
-    label: "Rotation speed",
+    label: "Spins per loop (0 = hold front face)",
     min: 0,
-    max: 3,
-    step: 0.01
+    max: 5,
+    step: 1
   },
   easing: {
     component: "easing",
-    label: "Rotation easing"
+    label: "Roll easing"
   },
 
   rollMode: {
