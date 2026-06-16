@@ -23,11 +23,34 @@ const iconMap = {
   warning: AlertTriangle
 };
 
-const iconColorMap = {
-  success: "text-green-600",
-  error: "text-red-600",
-  info: "text-blue-600",
-  warning: "text-orange-600"
+// Each toast type carries the same modern, frosted-glass treatment as the
+// recording-lock banner — a faint accent tint behind the glass, an accent
+// border and a matching icon. Full class literals so Tailwind keeps them.
+const accentMap: Record<ToastType, {
+  icon: string;
+  border: string;
+  tint: string;
+}> = {
+  success: {
+    icon: "text-green-500",
+    border: "border-green-500/40",
+    tint: "bg-green-500/10"
+  },
+  error: {
+    icon: "text-red-500",
+    border: "border-red-500/40",
+    tint: "bg-red-500/10"
+  },
+  info: {
+    icon: "text-blue-500",
+    border: "border-blue-500/40",
+    tint: "bg-blue-500/10"
+  },
+  warning: {
+    icon: "text-amber-500",
+    border: "border-amber-500/40",
+    tint: "bg-amber-500/10"
+  }
 };
 
 export default function Toast( {
@@ -66,6 +89,7 @@ export default function Toast( {
   );
 
   const Icon = iconMap[ type ];
+  const accent = accentMap[ type ];
 
   return (
     <div
@@ -73,29 +97,38 @@ export default function Toast( {
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       }` }
     >
-      <div className="bg-background border border-border rounded-xl sm:rounded-2xl shadow-xl px-3 py-2.5 sm:px-6 sm:py-4 flex items-center gap-2 sm:gap-4">
-        <Icon
-          className={ `w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${ iconColorMap[ type ] }` }
+      <div
+        className={ `relative overflow-hidden glass border ${ accent.border } rounded-2xl shadow-lg` }
+      >
+        {/* Faint accent wash layered over the frosted glass. */}
+        <div
+          className={ `absolute inset-0 ${ accent.tint } pointer-events-none` }
+          aria-hidden="true"
         />
-        <span className="text-sm sm:text-base font-medium text-foreground">
-          {message}
-        </span>
 
-        <div className="w-px h-5 sm:h-6 bg-border ml-2" />
+        <div className="relative flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-5 sm:py-3.5">
+          <Icon
+            className={ `w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${ accent.icon }` }
+          />
+          <span className="text-sm sm:text-base font-medium text-foreground">
+            {message}
+          </span>
 
-        <button
-          onClick={ () => {
-            setIsVisible( false );
-            setTimeout(
-              onClose,
-              300
-            );
-          } }
-          className="p-1.5 sm:p-2 rounded-lg hover:bg-hover transition-colors"
-          title="Dismiss"
-        >
-          <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </button>
+          <button
+            onClick={ () => {
+              setIsVisible( false );
+              setTimeout(
+                onClose,
+                300
+              );
+            } }
+            className="ml-1 sm:ml-2 p-1.5 rounded-lg text-foreground/60 hover:text-foreground hover:bg-hover transition-colors"
+            title="Dismiss"
+            aria-label="Dismiss"
+          >
+            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

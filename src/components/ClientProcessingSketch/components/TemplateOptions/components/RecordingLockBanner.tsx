@@ -29,7 +29,7 @@ export default function RecordingLockBanner( {
   const subtitle = "Edits to this sketch won't be saved.";
 
   return (
-    <div className="flex flex-col gap-2 px-2 py-2 border border-amber-500/40 bg-amber-500/10 rounded-2xl shadow-lg">
+    <div className="flex flex-col gap-2 px-2 py-2 border border-amber-500/40 bg-amber-500/10 backdrop-blur-xl rounded-2xl shadow-lg">
       <div className="flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0 text-amber-500" />
         <div className="flex flex-col min-w-0">
