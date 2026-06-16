@@ -35,6 +35,7 @@ import ControlledJoypadDeviceSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
+import deepClone from "@/utils/deepClone";
 import type {
   FieldConfig
 } from "./ContentItems/constants/field-config";
@@ -73,7 +74,6 @@ export default function FieldRenderer( {
   const {
     register,
     setValue,
-    resetField,
     getValues,
     formState: {
       errors
@@ -90,9 +90,11 @@ export default function FieldRenderer( {
     registeredName
   );
 
-  // Capture the initial (DB-loaded) value once on mount via a ref.
-  // Using getValues() is more reliable than formState.defaultValues
-  // which can behave unexpectedly through RHF's proxy.
+  // Capture the value the field was loaded with once on mount via a ref. We
+  // clone it so a later in-place mutation of the form value can't drift our
+  // baseline. Using getValues() is more reliable than formState.defaultValues,
+  // which can behave unexpectedly through RHF's proxy — and, crucially, is not
+  // kept in sync for dynamically inserted slides (duplicate).
   const initialValueRef = useRef<unknown>( undefined );
   const isInitializedRef = useRef( false );
 
@@ -104,16 +106,29 @@ export default function FieldRenderer( {
 
   if ( !isInitializedRef.current ) {
     isInitializedRef.current = true;
-    initialValueRef.current = getValues( registeredName );
+    initialValueRef.current = deepClone( getValues( registeredName ) );
   }
 
   const isModified =
     JSON.stringify( currentValue ) !== JSON.stringify( initialValueRef.current );
 
+  // Reset restores the value the field was loaded with — exactly what
+  // `isModified` compares against — so the reset indicator reliably clears.
+  // We deliberately avoid resetField(), which resets to RHF's defaultValues:
+  // those have no entry for a freshly duplicated slide, so resetField would
+  // wipe the field to undefined and leave the reset icon stuck on.
   const handleReset = ( e: React.MouseEvent ) => {
     e.preventDefault();
     e.stopPropagation();
-    resetField( registeredName );
+    setValue(
+      registeredName,
+      deepClone( initialValueRef.current ),
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      }
+    );
   };
 
   const {

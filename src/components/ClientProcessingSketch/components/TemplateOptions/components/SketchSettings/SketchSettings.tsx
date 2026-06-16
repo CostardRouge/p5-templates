@@ -27,6 +27,8 @@ import {
 type SketchSettingsProps = {
   basePath?: string;
   activeSlideIndex?: number;
+  /** Stable id of the active slide; remounts the form on identity changes. */
+  activeSlideId?: string;
   expanded?: boolean;
   onToggle?: ( expanded: boolean ) => void;
 };
@@ -119,6 +121,7 @@ export function SketchSettingsActions( {
 export default function SketchSettings( {
   basePath,
   activeSlideIndex,
+  activeSlideId,
   expanded,
   onToggle
 }: SketchSettingsProps ) {
@@ -194,7 +197,7 @@ export default function SketchSettings( {
     >
       <div className="px-3 pt-1 pb-4">
         <GenericObjectForm
-          key={ effectiveBasePath }
+          key={ activeSlideId ?? effectiveBasePath }
           basePath={ effectiveBasePath }
           config={ config }
         />

@@ -12,6 +12,7 @@ import {
   Controller, useFormContext
 } from "react-hook-form";
 
+import usePreventTouchScroll from "@/hooks/usePreventTouchScroll";
 import rgbaToHex from "./utils/rgbaToHex";
 import hexToRgba from "./utils/hexToRgba";
 import {
@@ -51,6 +52,8 @@ export default function ControlledColorInput( {
   const {
     control
   } = useFormContext();
+
+  const sliderRef = usePreventTouchScroll<HTMLSpanElement>();
 
   const [
     editing,
@@ -158,6 +161,7 @@ export default function ControlledColorInput( {
 
         return (
           <SliderPrimitive.Root
+            ref={ sliderRef }
             min={ 0 }
             max={ 255 }
             step={ 1 }

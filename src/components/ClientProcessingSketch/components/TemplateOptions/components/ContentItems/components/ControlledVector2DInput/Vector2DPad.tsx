@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  useRef
-} from "react";
-
 import clamp from "@/utils/clamp";
+import usePreventTouchScroll from "@/hooks/usePreventTouchScroll";
 import {
   fractionToValue,
   stepDecimals,
@@ -95,7 +92,7 @@ function resolveAxes( config: Vector2DInputConfig ): {
 export default function Vector2DPad( {
   value, onChange, config = {}, ariaLabel = "vector", className
 }: Props ) {
-  const padRef = useRef<HTMLDivElement>( null );
+  const padRef = usePreventTouchScroll<HTMLDivElement>();
 
   const {
     xAxis, yAxis

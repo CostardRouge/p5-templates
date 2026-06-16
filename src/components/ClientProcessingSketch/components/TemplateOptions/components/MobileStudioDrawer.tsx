@@ -42,6 +42,8 @@ type MobileStudioDrawerProps = {
   expanded?: boolean;
   onToggle?: ( expanded: boolean ) => void;
   activeSlideIndex?: number;
+  /** Stable id of the active slide; remounts the form on identity changes. */
+  activeSlideId?: string;
   jobId?: string;
   /** Template tab: the options panel sections. */
   body: Omit<OptionsPanelBodyProps, "scrollable">;
@@ -65,6 +67,7 @@ export default function MobileStudioDrawer( {
   expanded,
   onToggle,
   activeSlideIndex,
+  activeSlideId,
   jobId,
   body,
   capture,
@@ -188,10 +191,14 @@ export default function MobileStudioDrawer( {
       className={ clsx(
         "absolute flex flex-col glass shadow-lg",
         expanded
-          ? "inset-x-0 bottom-0 z-[60] max-h-[50svh] rounded-t-2xl border-t border-theme overflow-y-auto"
+          // Float like the app menu / zoom controls: matching side+bottom
+          // margins, full border and corner radius (not a flush bottom sheet).
+          ? "left-2 right-2 bottom-2 z-[60] max-h-[50svh] rounded-xl border border-theme overflow-y-auto overscroll-contain"
           : "left-2 bottom-2 z-50 w-fit rounded-full border border-theme overflow-hidden"
       ) }
-      headerContainerClassName={ clsx( expanded && "glass sticky top-0 z-10" ) }
+      // Opaque (not glass) so scrolled content can't bleed through the sticky
+      // tabs / drag handle, and above the form fields in the stacking order.
+      headerContainerClassName={ clsx( expanded && "bg-background sticky top-0 z-20" ) }
       header={ ( isExpanded ) => (
         <div className="flex w-full flex-col">
           {/* Drag handle (swipe down to close) */}
@@ -284,7 +291,7 @@ export default function MobileStudioDrawer( {
               jobId={ jobId }
             >
               <GenericObjectForm
-                key={ effectiveBasePath }
+                key={ activeSlideId ?? effectiveBasePath }
                 basePath={ effectiveBasePath }
                 config={ sketchConfig }
               />

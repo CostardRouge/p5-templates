@@ -11,6 +11,7 @@ import clsx from "clsx";
 import {
   useController
 } from "react-hook-form";
+import usePreventTouchScroll from "@/hooks/usePreventTouchScroll";
 import {
   CONTROL_BAR_CLASS,
   CONTROL_EDIT_INPUT_CLASS,
@@ -49,6 +50,8 @@ export default function ControlledSliderInput( {
   } = useController( {
     name
   } );
+
+  const sliderRef = usePreventTouchScroll<HTMLSpanElement>();
 
   const [
     editing,
@@ -108,6 +111,7 @@ export default function ControlledSliderInput( {
 
   return (
     <SliderPrimitive.Root
+      ref={ sliderRef }
       min={ min }
       max={ max }
       step={ step }
