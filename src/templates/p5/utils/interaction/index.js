@@ -173,12 +173,18 @@ let _touchListeners = null;
 let _midiInitialized = false;
 let _midiAccess = null;
 const _midiNotes = new Map(); // noteNumber → velocity
+// The input id the layer currently listens to ("" = every input). Tracked so a
+// runtime change of the picker re-wires the message handlers without a reload.
+let _midiDeviceId = "";
 
 // Audio state
 let _audioInitialized = false;
 let _audioContext = null;
 let _audioAnalyser = null;
 let _audioFreqData = null;
+// The microphone deviceId the live AudioContext was opened with ("" = default).
+// Tracked so changing the picker reopens the mic on the newly selected device.
+let _audioDeviceId = "";
 
 // Vision lazy-init state: the task/camera signature currently initialized, plus
 // an in-flight guard so we never kick off two mediapipe initializations at once.
@@ -380,8 +386,11 @@ function _wireMidiInputs() {
     return;
   }
 
+  // With no device picked ("") listen to every input; otherwise only the
+  // selected one fires, so the other controllers are ignored.
   _midiAccess.inputs.forEach( ( input ) => {
-    input.onmidimessage = _onMidiMessage;
+    input.onmidimessage =
+      !_midiDeviceId || input.id === _midiDeviceId ? _onMidiMessage : null;
   } );
 }
 
@@ -404,12 +413,15 @@ function _onMidiMessage( msg ) {
   }
 }
 
-async function _initMidi() {
+async function _initMidi( opts ) {
   if ( _midiInitialized ) {
     return;
   }
 
   _midiInitialized = true;
+  // Seed the selected input before the first wire so it is honoured from the
+  // start (the picker may already point at a specific device).
+  _midiDeviceId = opts?.midi?.deviceId || "";
 
   if ( typeof navigator === "undefined" || typeof navigator.requestMIDIAccess !== "function" ) {
     return;
@@ -427,17 +439,50 @@ async function _initMidi() {
 // ── Audio helpers ──────────────────────────────────────────────────────────
 
 async function _initAudio( opts ) {
-  if ( _audioInitialized ) {
+  const deviceId = opts.audio?.deviceId || "";
+
+  // Already streaming from the requested microphone → nothing to do.
+  if ( _audioInitialized && _audioDeviceId === deviceId ) {
     return;
   }
 
+  // Reopening on a different device: drop the previous context first so we
+  // don't leak it (changing the picker at runtime swaps the input).
+  if ( _audioContext ) {
+    _audioContext.close().catch( () => {} );
+    _audioContext = null;
+    _audioAnalyser = null;
+    _audioFreqData = null;
+  }
+
+  // Claim the device synchronously (before awaiting) so the per-frame collector
+  // doesn't kick off a second init while getUserMedia is still resolving.
   _audioInitialized = true;
+  _audioDeviceId = deviceId;
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia( {
-      audio: true,
+      // A specific microphone was requested → constrain to it (mirrors the
+      // webcam picker); "" lets the browser pick its default input.
+      audio: deviceId
+        ? {
+          deviceId: {
+            exact: deviceId
+          }
+        }
+        : true,
       video: false
     } );
+
+    // A newer init, or a dispose, superseded this one while getUserMedia was
+    // resolving (dispose clears _audioInitialized; a re-init changes the device)
+    // — abandon this stream so it doesn't leak or clobber the live one.
+    if ( !_audioInitialized || _audioDeviceId !== deviceId ) {
+      stream.getTracks().forEach( ( track ) => track.stop() );
+
+      return;
+    }
+
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
 
     _audioContext = new AudioCtx();
@@ -557,6 +602,7 @@ export async function initInteraction( opts = {} ) {
 
   _midiAccess = null;
   _midiInitialized = false;
+  _midiDeviceId = "";
   _midiNotes.clear();
 
   // ── Audio reset (lazy init triggered by _collectAudio) ───────────────────
@@ -568,6 +614,7 @@ export async function initInteraction( opts = {} ) {
   }
 
   _audioInitialized = false;
+  _audioDeviceId = "";
 
   // ── Vision readiness signal ──────────────────────────────────────────────
   // Published so the headless capture pipeline can await a warmed-up vision
@@ -636,6 +683,7 @@ export function disposeInteraction() {
   }
 
   _midiInitialized = false;
+  _midiDeviceId = "";
   _midiNotes.clear();
 
   // Audio
@@ -647,6 +695,7 @@ export function disposeInteraction() {
   }
 
   _audioInitialized = false;
+  _audioDeviceId = "";
 
   // Vision / webcam / inference processor. Full dispose (not just the webcam)
   // so MediaPipe task memory and the worker don't leak across sketch switches.
@@ -2118,9 +2167,19 @@ function _collectMidi(
 
   // Trigger lazy MIDI access request on first call
   if ( !_midiInitialized ) {
-    _initMidi();
+    _initMidi( opts );
 
     return;
+  }
+
+  // Re-wire when the picker changes input at runtime, dropping notes still held
+  // on the previously-selected device so they don't linger.
+  const desiredDevice = midi.deviceId || "";
+
+  if ( _midiDeviceId !== desiredDevice ) {
+    _midiDeviceId = desiredDevice;
+    _midiNotes.clear();
+    _wireMidiInputs();
   }
 
   const maxNotes = midi.maxNotes ?? 10;
@@ -2164,8 +2223,9 @@ function _collectAudio(
     return;
   }
 
-  // Trigger lazy mic request on first call
-  if ( !_audioInitialized ) {
+  // Trigger lazy mic request on first call, and reopen the stream if the picker
+  // switched to a different input device since the context was created.
+  if ( !_audioInitialized || _audioDeviceId !== ( audio.deviceId || "" ) ) {
     _initAudio( opts );
 
     return;
@@ -2236,12 +2296,19 @@ function _collectJoypad(
   const gamepads = navigator.getGamepads();
   const maxCount = joypad.count ?? 1;
   const deadzone = joypad.deadzone ?? 0.1;
+  // "" reads any connected pad; a specific id restricts to matching pads
+  // (identical controllers share an id, so several may still match).
+  const deviceId = joypad.deviceId || "";
   let added = 0;
 
   for ( let i = 0; i < gamepads.length && added < maxCount; i++ ) {
     const gp = gamepads[ i ];
 
     if ( !gp || !gp.connected ) {
+      continue;
+    }
+
+    if ( deviceId && gp.id !== deviceId ) {
       continue;
     }
 

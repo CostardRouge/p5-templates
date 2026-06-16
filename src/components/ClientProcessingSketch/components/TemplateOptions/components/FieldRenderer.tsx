@@ -27,6 +27,12 @@ import ControlledSliderInput
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledSliderInput/ControlledSliderInput";
 import ControlledWebcamDeviceSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledWebcamDeviceSelect";
+import ControlledAudioInputDeviceSelect
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledAudioInputDeviceSelect";
+import ControlledMidiInputDeviceSelect
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledMidiInputDeviceSelect";
+import ControlledJoypadDeviceSelect
+  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import type {
@@ -421,6 +427,36 @@ export default function FieldRenderer( {
       case "webcam-device-select":
         return (
           <ControlledWebcamDeviceSelect
+            name={ registeredName }
+            label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
+
+      case "audio-input-device-select":
+        return (
+          <ControlledAudioInputDeviceSelect
+            name={ registeredName }
+            label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
+
+      case "midi-input-device-select":
+        return (
+          <ControlledMidiInputDeviceSelect
+            name={ registeredName }
+            label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
+          />
+        );
+
+      case "joypad-device-select":
+        return (
+          <ControlledJoypadDeviceSelect
             name={ registeredName }
             label={ inlineLabel }
             isModified={ isModified }
