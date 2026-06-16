@@ -16,7 +16,7 @@ type Props = {
 };
 
 const gap = "gap-1";
-const size = "h-3 w-3";
+const size = "h-4 w-4 md:h-3 md:w-3";
 
 export default function ItemPalette( {
   onAdd,
@@ -43,8 +43,8 @@ export default function ItemPalette( {
             type="button"
             onClick={ () => onAdd( kind ) }
             className={ clsx(
-              "flex items-center justify-center",
-              "p-1 transition",
+              "flex items-center justify-center rounded",
+              "min-h-[2.5rem] md:min-h-0 p-1 transition hover:bg-hover",
               "active:scale-[0.98]"
             ) }
             role="listitem"

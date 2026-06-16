@@ -348,12 +348,12 @@ export default function FieldRenderer( {
             ) }
             header={ ( expanded ) => (
               <div
-                className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full"
+                className="text-gray-500 cursor-pointer select-none flex items-center justify-between w-full min-h-[2.5rem] md:min-h-0"
                 title="Click to expand/collapse"
               >
                 <div className="flex min-w-0 items-center gap-1">
                   <ChevronDown
-                    className="w-3 h-3 shrink-0 transition-transform"
+                    className="w-4 h-4 md:w-3 md:h-3 shrink-0 transition-transform"
                     style={ {
                       transform: expanded ? "rotate(0deg)" : "rotate(-90deg)"
                     } }
@@ -368,27 +368,24 @@ export default function FieldRenderer( {
                   </span>
                 </div>
                 <div
-                  className="flex items-center gap-1.5"
+                  className="flex items-center gap-0.5"
                   onClick={ ( e ) => e.stopPropagation() }
                 >
                   {isModified && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={ handleReset }
-                        tabIndex={ -1 }
-                        title="Reset to saved value"
-                        className="hover:bg-theme/20 rounded transition-colors"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="leading-none select-none">·</span>
-                    </>
+                    <button
+                      type="button"
+                      onClick={ handleReset }
+                      tabIndex={ -1 }
+                      title="Reset to saved value"
+                      className="p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
+                    >
+                      <RotateCcw className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                    </button>
                   )}
                   <RandomizeSettingsButton
                     config={ config.fields }
                     basePath={ registeredName }
-                    className="hover:bg-theme/20 rounded transition-colors"
+                    className="text-foreground p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
                   />
                 </div>
               </div>

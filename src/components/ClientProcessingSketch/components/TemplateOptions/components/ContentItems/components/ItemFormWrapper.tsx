@@ -50,7 +50,7 @@ export default function ItemFormWrapper( {
           ref={ dragBinder?.setHandleRef }
           { ...( dragBinder?.handleProps ?? {} ) }
           className={ clsx(
-            "flex items-center",
+            "flex items-center gap-1 min-h-[2.5rem] md:min-h-0",
             {
               "mb-2": expanded,
               "active:cursor-grabbing": dragBinder?.isDragging
@@ -61,7 +61,7 @@ export default function ItemFormWrapper( {
             {itemType}
           </h4>
 
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-0.5">
             <button
               type="button"
               onClick={ ( event ) => {
@@ -69,13 +69,21 @@ export default function ItemFormWrapper( {
                 onDuplicate();
               } }
               aria-label="Duplicate item"
-              className="cursor-copy"
+              className="cursor-copy rounded-md p-2 md:p-1 hover:bg-hover transition-colors"
             >
-              <Copy className="h-3.5 w-3.5 text-foreground" />
+              <Copy className="h-4 w-4 md:h-3.5 md:w-3.5 text-foreground" />
             </button>
 
-            <button type="button" onClick={ onRemove } aria-label="Remove layer">
-              <Trash2 className="h-3.5 w-3.5 text-red-500" />
+            <button
+              type="button"
+              onClick={ ( event ) => {
+                event.stopPropagation();
+                onRemove();
+              } }
+              aria-label="Remove layer"
+              className="rounded-md p-2 md:p-1 hover:bg-hover transition-colors"
+            >
+              <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5 text-red-500" />
             </button>
           </div>
         </div>

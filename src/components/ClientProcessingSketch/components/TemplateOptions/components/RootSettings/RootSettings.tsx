@@ -36,19 +36,18 @@ export default function RootSettings( {
           ? "border-blue-400/60 ring-1 ring-blue-400/30"
           : "border-theme"
       }` }
-      headerContainerClassName="leading-none"
       header={ ( expanded ) => (
         <button
-          className="truncate text-foreground text-xs w-full text-left -ml-1 align-text-top"
+          className="flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-0"
           aria-label={ expanded ? "Collapse controls" : "Expand controls" }
         >
           <ListCollapse
-            className="inline text-foreground h-3"
+            className="shrink-0 text-foreground h-4 w-4 md:h-3 md:w-3"
             style={ {
               rotate: expanded ? "180deg" : "0deg"
             } }
           />
-          {label}
+          <span className="truncate">{label}</span>
         </button>
       ) }
     >
