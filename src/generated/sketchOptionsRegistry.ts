@@ -257,6 +257,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:tree-2d/tree-2d-v5-cords": () => import( "@/p5/sketches/tree-2d/tree-2d-v5-cords/options" ),
   "p5:tree-2d/tree-2d-v5-sphere": () => import( "@/p5/sketches/tree-2d/tree-2d-v5-sphere/options" ),
   "p5:tree-2d/tree-2d-v6-walking": () => import( "@/p5/sketches/tree-2d/tree-2d-v6-walking/options" ),
+  "p5:video/video-atlas": () => import( "@/p5/sketches/video/video-atlas/options" ),
   "p5:video/video-echo": () => import( "@/p5/sketches/video/video-echo/options" ),
   "p5:video/video-grid": () => import( "@/p5/sketches/video/video-grid/options" ),
   "p5:video/video-halftone": () => import( "@/p5/sketches/video/video-halftone/options" ),
