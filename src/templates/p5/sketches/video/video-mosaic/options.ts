@@ -1,6 +1,5 @@
 import {
-  webcamSourceFormConfiguration,
-  webcamSourceFormValues
+  webcamSourceFormConfiguration, webcamSourceFormValues
 } from "@/p5/utils/webcam/defaults.js";
 
 // Default values only
@@ -11,13 +10,13 @@ export const formValues = {
   },
 
   // Grid layout
-  rows: 3,
-  columns: 9,
+  rows: 32,
+  columns: 6,
 
   // Per-cell effects
-  blur: 6,
-  displacement: 0.4,
-  colorShift: 0.4,
+  blur: 20,
+  displacement: 1,
+  colorShift: 0.54,
 
   // Colors
   backgroundColor: [
@@ -35,7 +34,7 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     label: "Rows",
     min: 1,
-    max: 12,
+    max: 32,
     step: 1
   },
 
@@ -43,7 +42,7 @@ export const formConfiguration: Record<string, any> = {
     component: "slider",
     label: "Columns",
     min: 1,
-    max: 12,
+    max: 32,
     step: 1
   },
 

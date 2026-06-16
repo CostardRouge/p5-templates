@@ -139,12 +139,12 @@ sketch.draw( () => {
   const columns = Math.round( clamp(
     cfg.columns ?? 9,
     1,
-    12
+    32
   ) );
   const rows = Math.round( clamp(
     cfg.rows ?? 3,
     1,
-    12
+    32
   ) );
 
   // ── 1. Blit the (optionally mirrored) cover-fit frame into the work buffer ──
