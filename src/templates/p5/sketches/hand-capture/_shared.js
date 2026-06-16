@@ -3,8 +3,33 @@ import {
 } from "@/p5/utils/sketch.js";
 
 import string from "@/p5/utils/string.js";
+import easing from "@/p5/utils/easing.js";
 import neonDot from "@/p5/utils/visuals/neonDot.js";
 import neonLine from "@/p5/utils/visuals/neonLine.js";
+
+import {
+  renderSplines
+} from "../splines/_shared.js";
+
+// Unit vectors for the directions the echo trail can grow toward.
+const ECHO_DIRECTIONS = {
+  up: {
+    x: 0,
+    y: -1
+  },
+  down: {
+    x: 0,
+    y: 1
+  },
+  left: {
+    x: -1,
+    y: 0
+  },
+  right: {
+    x: 1,
+    y: 0
+  }
+};
 
 import {
   initInteraction,
@@ -648,24 +673,31 @@ export class HandCaptureScene {
   }
 
   /**
-   * Onion-skin "echo": redraw the last `count` hand poses (sampled every
-   * `spacing` frames) with rising opacity, then the live hand on top — each
-   * hand leaves a fading ghost of itself.
+   * Onion-skin "echo", rendered with the shader-based spline pipeline borrowed
+   * from the `splines` family (GPU glow, rainbow gradient computed in the
+   * fragment shader) instead of the legacy CPU `neonLine`. The last `count` hand
+   * poses (sampled every `spacing` frames) are redrawn with rising opacity, then
+   * the live hand on top — each hand leaves a fading ghost of itself.
+   *
+   * The whole trail can also "extend" in a direction: each older ghost is pushed
+   * further along `extend.direction` (up / down / left / right) so the echo grows
+   * into a comet-like streak. The push distance ramps from the live pose (no
+   * offset) to the oldest ghost (full `extend.distance`) through the chosen
+   * `extend.easing`, and the growth is gated by `extend.enabled`.
    */
-  drawEchoes( {
+  drawEchoSplines( {
     count = 6,
     spacing = 4,
-    innerCircleSize = 30,
-    shadowsCount = 2,
-    vectorsStep = 0.08,
     minAlpha = 0.1,
-    ghostAlpha = 0.55
+    ghostAlpha = 0.55,
+    weight = 18,
+    glow = 2,
+    iterations = 6,
+    hueSpeed = 1.5,
+    hueSpread = 2,
+    extend = {}
   } = {} ) {
-    const graphics = this.layers.hands?.graphics;
-
-    if ( !graphics ) {
-      return;
-    }
+    const p = getP5();
 
     this._echoFrame += 1;
 
@@ -680,34 +712,131 @@ export class HandCaptureScene {
       }
     }
 
-    const drawOptions = {
-      innerCircleSize,
-      shadowsCount,
-      vectorsStep
+    const stroke = {
+      weight,
+      glow,
+      hueSpeed,
+      hueSpread,
+      gradient: true
     };
+    const curve = {
+      method: "chaikin",
+      closed: false,
+      iterations
+    };
+
+    const direction = ECHO_DIRECTIONS[ extend.direction ] ?? ECHO_DIRECTIONS.up;
+    const extendEnabled = extend.enabled ?? false;
+    const distance = extend.distance ?? 0;
+    const easeFn = easing[ extend.easing ] ?? easing.linear;
+
+    const context = p.drawingContext;
+    const previousAlpha = context.globalAlpha;
     const last = Math.max(
       this._echoHistory.length - 1,
       1
     );
 
+    // Oldest → newest, so the bright recent ghosts composite over the dim ones.
     this._echoHistory.forEach( (
       snapshot, i
     ) => {
-      const alpha = minAlpha + ( ghostAlpha - minAlpha ) * ( i / last );
+      const age = i / last; // 0 = oldest ghost, 1 = newest ghost
+      const alpha = minAlpha + ( ghostAlpha - minAlpha ) * age;
+      const reach = extendEnabled ? easeFn( 1 - age ) : 0;
 
-      this._drawGroupsTo(
-        graphics,
+      context.globalAlpha = alpha;
+      this._renderEchoSnapshot(
         snapshot,
-        alpha,
-        drawOptions
+        direction.x * distance * reach,
+        direction.y * distance * reach,
+        {
+          curve,
+          stroke,
+          weight,
+          glow
+        }
       );
     } );
 
-    this._drawGroupsTo(
-      graphics,
+    // The live pose sits on top at full opacity with no directional offset.
+    context.globalAlpha = 1;
+    this._renderEchoSnapshot(
       this.groups,
-      1,
-      drawOptions
+      0,
+      0,
+      {
+        curve,
+        stroke,
+        weight,
+        glow
+      }
+    );
+
+    context.globalAlpha = previousAlpha;
+  }
+
+  /**
+   * Draw one echo frame: every multi-point group (finger chains, body, …) as a
+   * glowing spline through the (optionally offset) points, and every single
+   * point (a lone fingertip / mouse / orbit) as a neon dot. Splines are batched
+   * into one GPU pass; the composite respects the caller's `globalAlpha`, which
+   * is how each ghost fades.
+   */
+  _renderEchoSnapshot(
+    groups, offsetX, offsetY, {
+      curve, stroke, weight, glow
+    }
+  ) {
+    const lists = [];
+
+    for ( const group of groups ) {
+      const {
+        points
+      } = group;
+
+      if ( points.length >= 2 ) {
+        lists.push( points.map( ( point ) => ( {
+          x: point.x + offsetX,
+          y: point.y + offsetY
+        } ) ) );
+      } else if ( points.length === 1 ) {
+        neonDot( {
+          sizeRange: [
+            weight * 1.6,
+            weight * 0.5
+          ],
+          shadowsCount: Math.max(
+            1,
+            glow + 1
+          ),
+          position: {
+            x: points[ 0 ].x + offsetX,
+            y: points[ 0 ].y + offsetY
+          },
+          index: 0
+        } );
+      }
+    }
+
+    if ( lists.length === 0 ) {
+      return;
+    }
+
+    renderSplines(
+      lists,
+      {
+        curve,
+        stroke,
+        overlay: {
+          polygon: {
+            show: false
+          },
+          points: {
+            show: false
+          }
+        }
+      }
     );
   }
 
