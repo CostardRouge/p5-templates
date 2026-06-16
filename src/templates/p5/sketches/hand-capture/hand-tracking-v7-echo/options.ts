@@ -52,10 +52,11 @@ export const formValues = {
     ghostAlpha: 0.55
   },
 
-  // Overlay text
+  // Overlay text — centered title (like the move / attract / restore sketches)
   text: {
     show: true,
-    subtitle: "echo · hand tracking v7"
+    title: "echo",
+    subtitle: "hand tracking v7"
   }
 };
 
@@ -139,6 +140,10 @@ export const formConfiguration: Record<string, any> = {
       show: {
         label: "Show text",
         component: "checkbox"
+      },
+      title: {
+        label: "Title",
+        component: "text"
       },
       subtitle: {
         label: "Subtitle",

@@ -2868,6 +2868,18 @@
     "ctime": "2026-06-16T21:06:35.521Z"
   },
   {
+    "name": "hand-tracking-v8-growing",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-16T21:29:05.915Z",
+    "ctime": "2026-06-16T21:28:46.175Z"
+  },
+  {
     "name": "video-atlas",
     "engine": "p5",
     "category": "video",

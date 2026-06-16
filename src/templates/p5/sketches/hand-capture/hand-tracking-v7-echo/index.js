@@ -39,7 +39,8 @@ sketch.draw( () => {
   scene.compose();
 
   scene.drawTitle( {
-    subtitle: text.subtitle ?? "echo · hand tracking v7",
+    title: text.title ?? "echo",
+    subtitle: text.subtitle ?? "hand tracking v7",
     show: text.show ?? true,
     color: background
   } );
