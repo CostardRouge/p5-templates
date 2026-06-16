@@ -15,20 +15,20 @@
   - [ ] Force Redis queue flush (admin/CLI, protected)
   - [ ] Force start a specific stale job (admin action, re-dispatch to worker)
 - [ ] **Prevent re-submitting the same assets** — compare by hash or existing S3 key before uploading; skip upload if already present
-- [ ] **Fix recording step coherence** — steps (launching browser → capturing → saving → encoding) sometimes appear out of order; audit worker SSE emissions, clearly show slide #/total per step
+- [x] **Fix recording step coherence** — steps (launching browser → capturing → saving → encoding) sometimes appear out of order; audit worker SSE emissions, clearly show slide #/total per step
 
 ---
 
 ## 🖼️ Sketch / Canvas
 
-- [ ] **Sketch duration control** — top-level global duration field (per-slide values override it); needs UI input and schema update
+- [x] **Sketch duration control** — top-level global duration field (per-slide values override it); needs UI input and schema update
 - [ ] **Full screen button** — Fullscreen API toggle on the canvas viewport; must account for scalable viewport dimensions on resize
-- [ ] **Sketch preview page** — `/sketch/:id/preview` route showing canvas only (no settings, no header); accept query params to override options
+- [x] **Sketch preview page** — `/sketch/:id/preview` route showing canvas only (no settings, no header); accept query params to override options
 - [ ] **Sketch layout uses full window height** — fix flex/grid so canvas fills all available vertical space on desktop
 - [ ] **Lazy slide rendering** — only the active slide's P5 sketch runs; inactive slides show their saved thumbnail to save memory and CPU
   - [ ] Swap active sketch in/out without losing form state
   - [ ] Display other slides as page indicators or a static thumbnail strip
-- [ ] **Revamp slide carousel** — show current slide large in viewport, others as a horizontal strip of static thumbnails; non-active slides must not run the sketch
+- [x] **Revamp slide carousel** — show current slide large in viewport, others as a horizontal strip of static thumbnails; non-active slides must not run the sketch
 - [ ] **Drag items on canvas** — pick up content items by position and update their x/y in form values in real time (decision: P5 events vs React overlay — see bug B4)
 - [ ] **Copy / paste items** — Ctrl+C / Ctrl+V to deep-clone a selected item and append it to the slide's content array
 - [ ] **Resize guide** — alignment snap lines / rulers overlay when resizing or moving items, implemented as a second canvas layer
@@ -41,7 +41,7 @@
 - [x] **Generic template engine handler** — shared abstract layer (location, screenshot, recorder, options, preview, job) that all engine types implement; common Pause / Stop / Record controls delegated to the active engine
 - [x] **Meta to enable / disable a sketch** — boolean `enabled` field in template metadata; disabled sketches hidden from picker and cannot be recorded
 - [ ] **Migrate old sketches** — audit legacy sketch files (pre-refactor, `canvasdefault0` refs, old option schemas) and port them to the current template format
-- [ ] **Enhance current sketch settings** — better grouping, collapsible sections, field tooltips, validation feedback (umbrella — file sub-tasks per specific UI issue)
+- [x] **Enhance current sketch settings** — better grouping, collapsible sections, field tooltips, validation feedback (umbrella — file sub-tasks per specific UI issue)
 - [ ] **Component split** — identify remaining large components (>300 lines), split following the TemplateOptions pattern (hooks + small UI); priority: `CaptureActions`, `SketchSettings`
 - [ ] **Unit tests** — cover form utilities, slide management logic, recording step calculations, thumbnail utils, and API route handlers; start with pure functions then hooks
 
@@ -70,7 +70,7 @@
   - [ ] Animation value visualizer — small sparkline showing an animated value over time
 - [ ] **Readonly mode** — `readOnly` prop on `TemplateOptions` that disables all fields; useful for share/embed views
 - [ ] **Tags** — free-form labels on sketches and recordings; stored in DB, displayed as pills, filterable on recordings page
-- [ ] **Same line design** — `layout: "inline"` hint in field config so label and input render on the same row
+- [x] **Same line design** — `layout: "inline"` hint in field config so label and input render on the same row
 - [ ] **Collapsible groups without schema** — make collapsible sections work in sketch settings (which have no explicit schema) via heuristic grouping or a lightweight auto-generated schema
 
 ---
