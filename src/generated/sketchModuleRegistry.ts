@@ -119,6 +119,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:peaks/peaks-grid-new-colors": () => import( "@/p5/sketches/peaks/peaks-grid-new-colors/index.js" ),
   "p5:peaks/peaks-plane": () => import( "@/p5/sketches/peaks/peaks-plane/index.js" ),
   "p5:peaks/peaks-sphere": () => import( "@/p5/sketches/peaks/peaks-sphere/index.js" ),
+  "p5:peaks/peaks-sphere-shaders": () => import( "@/p5/sketches/peaks/peaks-sphere-shaders/index.js" ),
   "p5:peaks/peaks-tunnel": () => import( "@/p5/sketches/peaks/peaks-tunnel/index.js" ),
   "p5:photo/dominant-colors-block-switch": () => import( "@/p5/sketches/photo/dominant-colors-block-switch/index.js" ),
   "p5:photo/photo-3d-cylinder": () => import( "@/p5/sketches/photo/photo-3d-cylinder/index.js" ),
