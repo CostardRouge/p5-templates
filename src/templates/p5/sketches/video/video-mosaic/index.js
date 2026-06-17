@@ -129,7 +129,7 @@ sketch.draw( () => {
   const displacement = clamp(
     cfg.displacement ?? 0.4,
     0,
-    1
+    10
   );
   const colorShift = clamp(
     cfg.colorShift ?? 0.4,
