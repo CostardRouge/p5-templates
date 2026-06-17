@@ -10,42 +10,42 @@ import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
 import mediapipe from "@/p5/utils/mediapipe/mediapipe.js";
+import {
+  renderSplines
+} from "../../splines/_shared.js";
 
 // ── video-finger-echo ──────────────────────────────────────────────────────
 // A POV-camera sketch built for the "first-person hands" footage you get from
 // smart glasses (Meta Ray-Ban) or any webcam: the full source video plays, and
-// the hands MediaPipe detects in it leave a fading, drifting ECHO of their own
-// pixels — a trail cut straight out of the footage that follows the movement
-// and melts away.
+// the hands MediaPipe detects in it are drawn as glowing splines that leave a
+// fading, drifting ECHO — a trail that follows the movement and melts away.
 //
-// It reuses the shared interaction layer, so the SAME options as the
-// splines-v1-interactive sketch drive it: pick the source under Vision → Source
-// (webcam by default, or a recorded video / image asset), and inference runs on
-// whatever you choose. Turn on Vision → Fingers (default) and/or Hands to feed
-// the mask.
+// The hand is drawn with the SAME GPU spline pipeline as the splines-v1-
+// interactive sketch (renderSplines → utils/glowBatchGpu): every detected
+// finger / hand becomes one ordered point list, rounded with Chaikin and glowed
+// in a single instanced shader pass. That is far cheaper than stroking the trail
+// on the CPU, and the trail itself is an O(1) feedback buffer (one self-blit per
+// frame to fade + drift it), not N redrawn poses.
 //
-// How a frame is built:
-//   1. paintCutout — draw a soft mask over every detected finger/hand and keep
-//      only the live footage inside it → the hand region of THIS frame.
-//   2. advanceEcho — age a persistent feedback buffer (fade + optional drift)
-//      with a single self-blit, then stamp the fresh cutout on top. This is
-//      O(1) in trail length: the trail is one accumulator, not N redrawn poses.
-//   3. compose   — full video underneath (optional / dimmable), the fading hand
-//      trail on top.
+// It reuses the shared interaction layer, so the SAME options as splines-v1-
+// interactive pick the source under Vision → Source (webcam by default, or a
+// recorded video / image asset); inference runs on whatever you choose. Turn on
+// Vision → Fingers (default) and/or Hands to feed the splines.
+//
+// Per frame:
+//   1. ageEcho     — fade + drift the persistent trail buffer (one blit).
+//   2. renderSplines — draw the live hand onto the cleared main canvas, then
+//                      stamp it into the trail (newest = brightest echo).
+//   3. compose     — background, the full source frame (optional / dimmable),
+//                    then the glowing trail on top.
 //
 // Alignment: the interaction layer maps normalized landmarks straight onto
 // 0..width / 0..height, so the source frame is stretched to fill the canvas
-// (not cover-cropped) — that is the only fit that keeps the cutout glued to the
-// fingers it traces. The mask + trail buffers live at a fraction of the canvas
-// resolution (performance.bufferScale) to keep the per-frame fill cheap; a
-// future GPU/shader feedback pass could replace the canvas compositing here.
+// (not cover-cropped) — that keeps the splines glued to the fingers they trace.
 
-const TAU = Math.PI * 2;
-
-// Interaction groups whose points sit on the body in the frame, so masking the
-// video at them carves out a real piece of the footage. Pointer-only sources
-// (mouse, orbit, …) are excluded from the default "vision" region but can be
-// opted back in with the "all" region for camera-less previewing.
+// Camera-sourced interaction groups that sit on the body in the frame. Pointer
+// sources (mouse, orbit, …) are excluded from the default "vision" region but
+// can be opted back in with the "all" region for camera-less previewing.
 const VISION_SOURCES = new Set( [
   "fingers",
   "hands",
@@ -53,14 +53,13 @@ const VISION_SOURCES = new Set( [
   "face"
 ] );
 
-// Persistent feedback buffer the masked cutouts accumulate into (the trail) and
-// a scratch buffer holding only the current frame's cutout. Both live at
-// performance.bufferScale of the canvas size.
-let echoBuffer = null;
-let maskBuffer = null;
-let bufferSignature = "";
+// Persistent feedback buffer the glowing hand accumulates into (the trail), at
+// full canvas resolution — the spline pass is GPU, so a full-res self-blit per
+// frame stays cheap.
+let echoLayer = null;
+let echoSignature = "";
 
-// Previous centroid of the masked points, for the motion-follow drift mode.
+// Previous centroid of the tracked points, for the motion-follow drift mode.
 let prevCentroid = null;
 
 function clamp(
@@ -148,49 +147,30 @@ function drawSourceFill(
   ctx.restore();
 }
 
-// (Re)allocate the work buffers when the canvas size or the buffer scale
-// changes. Recreating drops the current trail, which is acceptable for a live
-// slider change and keeps the per-frame path branch-free.
-function ensureBuffers(
-  p, scale
-) {
-  const w = Math.max(
-    1,
-    Math.round( p.width * scale )
-  );
-  const h = Math.max(
-    1,
-    Math.round( p.height * scale )
-  );
-  const signature = `${ w }x${ h }`;
+// (Re)allocate the trail buffer when the canvas size changes.
+function ensureEchoLayer( p ) {
+  const signature = `${ p.width }x${ p.height }`;
 
-  if ( signature === bufferSignature && echoBuffer && maskBuffer ) {
+  if ( signature === echoSignature && echoLayer ) {
     return;
   }
 
-  bufferSignature = signature;
+  echoSignature = signature;
 
-  echoBuffer?.remove?.();
-  maskBuffer?.remove?.();
+  echoLayer?.remove?.();
 
-  echoBuffer = p.createGraphics(
-    w,
-    h
+  echoLayer = p.createGraphics(
+    p.width,
+    p.height
   );
-  echoBuffer.pixelDensity( 1 );
-
-  maskBuffer = p.createGraphics(
-    w,
-    h
-  );
-  maskBuffer.pixelDensity( 1 );
+  echoLayer.pixelDensity( 1 );
 }
 
-// The interaction groups that should carve into the video this frame, filtered
-// by the chosen region. "vision" keeps every camera-detected entity; "fingers"
-// / "hands" isolate one tracker; "all" also lets pointer sources (mouse, orbit,
-// …) drive the mask — handy for previewing over a video asset with no camera.
-function maskGroups(
+// The interaction groups that should be drawn this frame, filtered by region.
+// "vision" keeps every camera-detected entity; "fingers" / "hands" isolate one
+// tracker; "all" also lets pointer sources (mouse, orbit, …) drive the splines
+// — handy for previewing over a video asset with no camera.
+function selectGroups(
   groups, region
 ) {
   if ( region === "all" ) {
@@ -202,6 +182,41 @@ function maskGroups(
   }
 
   return groups.filter( ( group ) => VISION_SOURCES.has( group.source ) );
+}
+
+// One ordered point list per spline. Multi-point groups (finger chains, the
+// hand fan, body) pass through as their own spline; same-source single points
+// (e.g. fingertip-only, orbit) are re-aggregated into one polyline so they can
+// still form a curve — matching splines-v1-interactive's live collector.
+function collectLive( groups ) {
+  const lists = [];
+  const singletonsBySource = new Map();
+
+  groups.forEach( ( group ) => {
+    if ( group.points.length >= 2 ) {
+      lists.push( group.points );
+
+      return;
+    }
+
+    if ( group.points.length === 1 ) {
+      const accumulator = singletonsBySource.get( group.source ) ?? [];
+
+      accumulator.push( group.points[ 0 ] );
+      singletonsBySource.set(
+        group.source,
+        accumulator
+      );
+    }
+  } );
+
+  for ( const points of singletonsBySource.values() ) {
+    if ( points.length >= 2 ) {
+      lists.push( points );
+    }
+  }
+
+  return lists;
 }
 
 function groupsCentroid(
@@ -229,178 +244,9 @@ function groupsCentroid(
   );
 }
 
-// One soft, radial-falloff brush stamp in buffer space. `feather` 0 → hard
-// disk, 1 → a barely-there gradient, so the cutout edges can be crisp or melt
-// into the footage.
-function stampBrush(
-  ctx, x, y, radius, feather
-) {
-  if ( radius <= 0 ) {
-    return;
-  }
-
-  const gradient = ctx.createRadialGradient(
-    x,
-    y,
-    0,
-    x,
-    y,
-    radius
-  );
-  const core = clamp(
-    1 - feather,
-    0,
-    0.99
-  );
-
-  gradient.addColorStop(
-    0,
-    "rgba(255, 255, 255, 1)"
-  );
-  gradient.addColorStop(
-    core,
-    "rgba(255, 255, 255, 1)"
-  );
-  gradient.addColorStop(
-    1,
-    "rgba(255, 255, 255, 0)"
-  );
-
-  ctx.fillStyle = gradient;
-  ctx.beginPath();
-  ctx.arc(
-    x,
-    y,
-    radius,
-    0,
-    TAU
-  );
-  ctx.fill();
-}
-
-// Walk a finger/hand chain (base → tip) and lay overlapping brush stamps along
-// it, so the cutout reads as one continuous soft capsule rather than separate
-// dots at each joint.
-function paintCapsule(
-  ctx, points, sx, sy, radius, feather, spacing
-) {
-  let previous = null;
-
-  for ( const point of points ) {
-    const x = point.x * sx;
-    const y = point.y * sy;
-
-    if ( previous ) {
-      const dx = x - previous.x;
-      const dy = y - previous.y;
-      const distance = Math.hypot(
-        dx,
-        dy
-      );
-      const steps = Math.max(
-        1,
-        Math.floor( distance / spacing )
-      );
-
-      for ( let i = 1; i <= steps; i++ ) {
-        const t = i / steps;
-
-        stampBrush(
-          ctx,
-          previous.x + dx * t,
-          previous.y + dy * t,
-          radius,
-          feather
-        );
-      }
-    } else {
-      stampBrush(
-        ctx,
-        x,
-        y,
-        radius,
-        feather
-      );
-    }
-
-    previous = {
-      x,
-      y
-    };
-  }
-}
-
-// Build this frame's hand cutout into maskBuffer: paint the soft mask over the
-// detected points, then keep only the live footage inside it.
-function paintCutout(
-  groups, opts, sx, sy, flip, elt
-) {
-  const ctx = maskBuffer.drawingContext;
-  const radius = Math.max(
-    1,
-    opts.brushSize * sx
-  );
-  const feather = clamp(
-    opts.feather,
-    0,
-    1
-  );
-  const spacing = Math.max(
-    2,
-    radius * 0.5
-  );
-
-  maskBuffer.clear();
-
-  ctx.save();
-  // Overlapping stamps fuse into one region instead of seaming where two soft
-  // edges meet — additive blending unions their alpha cleanly.
-  ctx.globalCompositeOperation = "lighter";
-
-  for ( const group of groups ) {
-    const points = group.points;
-
-    if ( opts.shape === "capsule" && points.length >= 2 ) {
-      paintCapsule(
-        ctx,
-        points,
-        sx,
-        sy,
-        radius,
-        feather,
-        spacing
-      );
-    } else {
-      for ( const point of points ) {
-        stampBrush(
-          ctx,
-          point.x * sx,
-          point.y * sy,
-          radius,
-          feather
-        );
-      }
-    }
-  }
-
-  // Keep the footage only inside the painted mask: source-in weights the video
-  // by the mask's alpha, so soft edges yield soft-edged cutouts.
-  ctx.globalCompositeOperation = "source-in";
-  drawSourceFill(
-    ctx,
-    elt,
-    maskBuffer.width,
-    maskBuffer.height,
-    flip
-  );
-
-  ctx.restore();
-  ctx.globalCompositeOperation = "source-over";
-}
-
 // Transform the accumulator for one ageing step, per the chosen drift mode.
 function applyDriftTransform(
-  ctx, opts, w, h, sx, sy, velocity
+  ctx, opts, w, h, velocity
 ) {
   const mode = opts.mode;
 
@@ -429,47 +275,44 @@ function applyDriftTransform(
     // Push the trail a fraction of the hand's per-frame travel, so the echoes
     // smear toward where the hand is heading.
     ctx.translate(
-      velocity.x * sx * opts.amount * 0.1,
-      velocity.y * sy * opts.amount * 0.1
+      velocity.x * opts.amount * 0.1,
+      velocity.y * opts.amount * 0.1
     );
 
     return;
   }
 
-  const shiftX = opts.amount * sx;
-  const shiftY = opts.amount * sy;
-
   if ( mode === "up" ) {
     ctx.translate(
       0,
-      -shiftY
+      -opts.amount
     );
   } else if ( mode === "down" ) {
     ctx.translate(
       0,
-      shiftY
+      opts.amount
     );
   } else if ( mode === "left" ) {
     ctx.translate(
-      -shiftX,
+      -opts.amount,
       0
     );
   } else if ( mode === "right" ) {
     ctx.translate(
-      shiftX,
+      opts.amount,
       0
     );
   }
 }
 
-// Age the trail (fade + drift) with a single self-copy, optionally bleed it
-// toward a colour as it ages, then stamp the fresh cutout on top.
-function advanceEcho(
-  opts, velocity, sx, sy
+// Age the trail (fade + drift) with a single self-copy, then optionally bleed it
+// toward a colour as it ages. The fresh hand is stamped in by the draw loop.
+function ageEcho(
+  opts, velocity
 ) {
-  const ctx = echoBuffer.drawingContext;
-  const w = echoBuffer.width;
-  const h = echoBuffer.height;
+  const ctx = echoLayer.drawingContext;
+  const w = echoLayer.width;
+  const h = echoLayer.height;
 
   ctx.save();
   ctx.globalCompositeOperation = "copy";
@@ -483,8 +326,6 @@ function advanceEcho(
     opts,
     w,
     h,
-    sx,
-    sy,
     velocity
   );
   ctx.drawImage(
@@ -513,16 +354,6 @@ function advanceEcho(
     );
     ctx.restore();
   }
-
-  ctx.save();
-  ctx.globalCompositeOperation = "source-over";
-  ctx.globalAlpha = 1;
-  ctx.drawImage(
-    maskBuffer.canvas,
-    0,
-    0
-  );
-  ctx.restore();
 }
 
 sketch.setup( async() => {
@@ -530,7 +361,7 @@ sketch.setup( async() => {
 
   p.clear();
   prevCentroid = null;
-  bufferSignature = "";
+  echoSignature = "";
 
   await initInteraction( options.sketch?.interaction ?? {} );
 } );
@@ -540,56 +371,30 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
   const interaction = o.interaction ?? {};
   const display = o.display ?? {};
-  const mask = o.mask ?? {};
+  const hand = o.hand ?? {};
+  const stroke = o.stroke ?? {};
+  const curve = o.curve ?? {};
   const echo = o.echo ?? {};
-  const perf = o.performance ?? {};
   const background = display.backgroundColor ?? [
     0,
     0,
     0
   ];
-  const scale = clamp(
-    perf.bufferScale ?? 0.5,
-    0.2,
-    1
-  );
 
-  ensureBuffers(
-    p,
-    scale
-  );
+  ensureEchoLayer( p );
 
   const groups = getPointerGroups( {
     ...interaction,
-    smoothing: mask.smoothing ?? 0
+    smoothing: hand.smoothing ?? 0
   } );
-  const selected = maskGroups(
+  const selected = selectGroups(
     groups,
-    mask.region ?? "vision"
+    hand.region ?? "vision"
   );
+  const lists = collectLive( selected );
   const flip = visionFlip( interaction.vision ?? {} );
   const elt = sourceElement();
   const ready = sourceReady( elt );
-  const sx = echoBuffer.width / p.width;
-  const sy = echoBuffer.height / p.height;
-
-  if ( ready && selected.length > 0 ) {
-    paintCutout(
-      selected,
-      {
-        brushSize: mask.brushSize ?? 45,
-        feather: mask.feather ?? 0.6,
-        shape: mask.shape ?? "capsule"
-      },
-      sx,
-      sy,
-      flip,
-      elt
-    );
-  } else {
-    maskBuffer.clear();
-  }
-
   const centroid = groupsCentroid(
     selected,
     p
@@ -605,9 +410,10 @@ sketch.draw( () => {
 
   prevCentroid = centroid;
 
-  advanceEcho(
+  // 1. Age the trail (fade + drift), independent of how long it is.
+  ageEcho(
     {
-      decay: echo.decay ?? 0.92,
+      decay: echo.decay ?? 0.9,
       mode: echo.mode ?? "fade",
       amount: echo.amount ?? 8,
       grow: echo.grow ?? 0.02,
@@ -618,19 +424,52 @@ sketch.draw( () => {
       ],
       tintAmount: echo.tintAmount ?? 0
     },
-    velocity,
-    sx,
-    sy
+    velocity
   );
 
-  // ── Compose to the canvas ────────────────────────────────────────────────
+  // 2. Draw the live hand as glowing GPU splines onto the cleared main canvas,
+  //    then stamp it into the trail so it becomes the newest, brightest echo.
+  p.clear();
+
+  if ( lists.length > 0 ) {
+    renderSplines(
+      lists,
+      {
+        curve: {
+          method: "chaikin",
+          closed: curve.closed ?? false,
+          iterations: curve.iterations ?? 5
+        },
+        stroke: {
+          weight: stroke.weight ?? 16,
+          glow: stroke.glow ?? 2,
+          hueSpeed: stroke.hueSpeed ?? 1.5,
+          hueSpread: stroke.hueSpread ?? 2,
+          gradient: stroke.gradient ?? true
+        },
+        overlay: {
+          polygon: {
+            show: false
+          },
+          points: {
+            show: false
+          }
+        }
+      }
+    );
+    echoLayer.drawingContext.drawImage(
+      p.drawingContext.canvas,
+      0,
+      0
+    );
+  }
+
+  // 3. Compose: background, the full source frame, then the glowing trail.
   p.clear();
   p.background( ...background );
 
   const ctx = p.drawingContext;
 
-  // Full source frame underneath (optional / dimmable) so the trail reads as
-  // ghosts of the hands over the live footage.
   if ( ready && display.showVideo !== false ) {
     ctx.save();
     ctx.globalAlpha = clamp(
@@ -648,8 +487,6 @@ sketch.draw( () => {
     ctx.restore();
   }
 
-  // The accumulated, fading hand trail, scaled from the work buffer back up to
-  // full canvas size.
   ctx.save();
   ctx.globalAlpha = clamp(
     echo.opacity ?? 1,
@@ -657,15 +494,13 @@ sketch.draw( () => {
     1
   );
   ctx.drawImage(
-    echoBuffer.canvas,
+    echoLayer.canvas,
     0,
-    0,
-    p.width,
-    p.height
+    0
   );
   ctx.restore();
 
   // Optional debug overlay (finger chains, camera preview, legend), gated by
-  // the interaction → Visualization options just like the other vision sketches.
+  // the interaction → Visualization options like the other vision sketches.
   drawInteractionOverlay( interaction );
 } );

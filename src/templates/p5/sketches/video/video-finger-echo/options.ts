@@ -8,7 +8,7 @@ export const formValues = {
   // Source + tracking. Same block as splines-v1-interactive: switch Vision →
   // Source between the webcam and a recorded video / image asset (the same
   // footage drives both the picture AND the inference). Fingers tracking is on
-  // by default; turn on Hands for a fuller palm cutout.
+  // by default; turn on Hands for a fuller palm fan.
   interaction: {
     ...interactionFormValues,
     orbit: {
@@ -41,7 +41,7 @@ export const formValues = {
     }
   },
 
-  // The picture behind the trail.
+  // The picture behind the glowing trail.
   display: {
     backgroundColor: [
       8,
@@ -52,19 +52,31 @@ export const formValues = {
     videoOpacity: 1
   },
 
-  // Which part of the hand is cut out of the footage, and how soft the cut is.
-  mask: {
+  // Which detected entities become splines, and how calm the tracking is.
+  hand: {
     region: "vision",
-    shape: "capsule",
-    brushSize: 45,
-    feather: 0.6,
-    smoothing: 0.3
+    smoothing: 0.35
   },
 
-  // How the cutout trail ages: how long it lingers, whether it drifts, and an
+  // The glowing spline look (GPU shader pipeline, like splines-v1-interactive).
+  stroke: {
+    weight: 16,
+    glow: 2,
+    gradient: true,
+    hueSpeed: 1.5,
+    hueSpread: 2
+  },
+
+  // Chaikin rounding of the finger/hand chains.
+  curve: {
+    iterations: 5,
+    closed: false
+  },
+
+  // How the glowing trail ages: how long it lingers, whether it drifts, and an
   // optional colour it bleeds toward as it fades.
   echo: {
-    decay: 0.92,
+    decay: 0.9,
     mode: "fade",
     amount: 8,
     grow: 0.02,
@@ -75,11 +87,6 @@ export const formValues = {
       255
     ],
     tintAmount: 0
-  },
-
-  // Trail/mask buffers render at this fraction of the canvas — lower is faster.
-  performance: {
-    bufferScale: 0.5
   }
 };
 
@@ -110,14 +117,14 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  mask: {
+  hand: {
     component: "nested-object",
-    label: "Finger mask",
+    label: "Hand",
     initialExpanded: true,
     fields: {
       region: {
         component: "select",
-        label: "Masked source",
+        label: "Drawn source",
         options: [
           {
             label: "Vision (all cameras)",
@@ -137,40 +144,70 @@ export const formConfiguration: Record<string, any> = {
           }
         ]
       },
-      shape: {
-        component: "select",
-        label: "Brush shape",
-        options: [
-          {
-            label: "Capsule (along fingers)",
-            value: "capsule"
-          },
-          {
-            label: "Blobs (per joint)",
-            value: "blobs"
-          }
-        ]
-      },
-      brushSize: {
-        component: "slider",
-        label: "Brush size",
-        min: 5,
-        max: 200,
-        step: 1
-      },
-      feather: {
-        component: "slider",
-        label: "Edge softness",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
       smoothing: {
         component: "slider",
         label: "Tracking smoothing",
         min: 0,
         max: 0.95,
         step: 0.01
+      }
+    }
+  },
+
+  stroke: {
+    component: "nested-object",
+    label: "Stroke",
+    initialExpanded: true,
+    fields: {
+      weight: {
+        component: "slider",
+        label: "Weight",
+        min: 1,
+        max: 40,
+        step: 0.5
+      },
+      glow: {
+        component: "slider",
+        label: "Glow layers",
+        min: 0,
+        max: 8,
+        step: 1
+      },
+      gradient: {
+        component: "checkbox",
+        label: "Rainbow gradient along path"
+      },
+      hueSpeed: {
+        component: "slider",
+        label: "Hue speed (over time)",
+        min: 0,
+        max: 5,
+        step: 0.1
+      },
+      hueSpread: {
+        component: "slider",
+        label: "Hue spread along path",
+        min: 0,
+        max: 8,
+        step: 0.05
+      }
+    }
+  },
+
+  curve: {
+    component: "nested-object",
+    label: "Curve",
+    fields: {
+      iterations: {
+        component: "slider",
+        label: "Chaikin iterations",
+        min: 0,
+        max: 6,
+        step: 1
+      },
+      closed: {
+        component: "checkbox",
+        label: "Closed loop?"
       }
     }
   },
@@ -252,20 +289,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 0.5,
         step: 0.01
-      }
-    }
-  },
-
-  performance: {
-    component: "nested-object",
-    label: "Performance",
-    fields: {
-      bufferScale: {
-        component: "slider",
-        label: "Buffer scale",
-        min: 0.2,
-        max: 1,
-        step: 0.05
       }
     }
   }
