@@ -157,7 +157,14 @@ function ensureEchoLayer( p ) {
 
   echoSignature = signature;
 
-  echoLayer?.remove?.();
+  if ( echoLayer ) {
+    try {
+      echoLayer.remove();
+    } catch {
+      // p5.Graphics.remove() throws on some builds (indexOf on an undefined
+      // internal list) — ignore and reallocate; GC reclaims the old canvas.
+    }
+  }
 
   echoLayer = p.createGraphics(
     p.width,
