@@ -333,7 +333,12 @@ function rampColor(
 
 function disposeRing() {
   for ( const buffer of ring ) {
-    buffer?.remove?.();
+    try {
+      buffer?.remove?.();
+    } catch {
+      // p5.Graphics.remove() throws on some builds (indexOf on an undefined
+      // internal list) — drop the reference and let GC reclaim the canvas.
+    }
   }
 
   ring = [];
