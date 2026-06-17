@@ -329,7 +329,14 @@ export default function PhotoExif( {
   const exifMap = useExifList( cycledUrls );
 
   const layout = sketch.layout ?? "editorial";
-  const margin = sketch.margin ?? 80;
+
+  // Horizontal / vertical margins are independent so the safe area can dodge
+  // social-media dead zones (e.g. extra vertical room for the caption/profile
+  // overlays on Reels & TikTok). The legacy single `margin` is still honoured
+  // as the fallback for both axes, so older presets keep their even inset.
+  const marginX = sketch.marginX ?? sketch.margin ?? 80;
+  const marginY = sketch.marginY ?? sketch.margin ?? 80;
+  const framePadding = `${ marginY }px ${ marginX }px`;
   const radius = sketch.cornerRadius ?? 16;
   const fit = sketch.imageFit ?? "cover";
 
@@ -857,7 +864,8 @@ export default function PhotoExif( {
     [
       count,
       layout,
-      margin,
+      marginX,
+      marginY,
       size.width,
       size.height,
       radius,
@@ -1048,7 +1056,7 @@ export default function PhotoExif( {
             style={ {
               position: "absolute",
               inset: 0,
-              padding: margin,
+              padding: framePadding,
               boxSizing: "border-box",
               display: "flex",
               flexDirection: "column",
@@ -1086,7 +1094,7 @@ export default function PhotoExif( {
           position: "absolute",
           inset: 0,
           boxSizing: "border-box",
-          padding: margin,
+          padding: framePadding,
           display: "flex",
           flexDirection: "column",
           gap: stageGap

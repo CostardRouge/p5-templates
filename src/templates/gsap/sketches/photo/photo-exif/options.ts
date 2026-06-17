@@ -30,7 +30,8 @@ export const formValues = {
 
   maxImages: 24,
   layout: "editorial",
-  margin: 80,
+  marginX: 80,
+  marginY: 80,
 
   textColor: [
     237,
@@ -136,9 +137,16 @@ export const formConfiguration: Record<string, any> = {
       }
     ]
   },
-  margin: {
+  marginX: {
     component: "slider",
-    label: "Margin",
+    label: "Horizontal margin",
+    min: 0,
+    max: 320,
+    step: 1
+  },
+  marginY: {
+    component: "slider",
+    label: "Vertical margin",
     min: 0,
     max: 320,
     step: 1
