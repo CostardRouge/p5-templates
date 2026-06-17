@@ -182,6 +182,10 @@ let _audioInitialized = false;
 let _audioContext = null;
 let _audioAnalyser = null;
 let _audioFreqData = null;
+// The live microphone MediaStream, kept so its tracks can be explicitly
+// stopped — closing the AudioContext alone doesn't release the mic, so the
+// browser microphone indicator stays on and the input engine keeps running.
+let _audioStream = null;
 // The microphone deviceId the live AudioContext was opened with ("" = default).
 // Tracked so changing the picker reopens the mic on the newly selected device.
 let _audioDeviceId = "";
@@ -438,6 +442,23 @@ async function _initMidi( opts ) {
 
 // ── Audio helpers ──────────────────────────────────────────────────────────
 
+// Tear down the live audio graph and release the microphone. Stopping the
+// MediaStream tracks is what clears the browser mic indicator and stops the
+// input engine; closing the AudioContext alone leaves the mic "live".
+function _closeAudio() {
+  if ( _audioStream ) {
+    _audioStream.getTracks().forEach( ( track ) => track.stop() );
+    _audioStream = null;
+  }
+
+  if ( _audioContext ) {
+    _audioContext.close().catch( () => {} );
+    _audioContext = null;
+    _audioAnalyser = null;
+    _audioFreqData = null;
+  }
+}
+
 async function _initAudio( opts ) {
   const deviceId = opts.audio?.deviceId || "";
 
@@ -446,14 +467,9 @@ async function _initAudio( opts ) {
     return;
   }
 
-  // Reopening on a different device: drop the previous context first so we
-  // don't leak it (changing the picker at runtime swaps the input).
-  if ( _audioContext ) {
-    _audioContext.close().catch( () => {} );
-    _audioContext = null;
-    _audioAnalyser = null;
-    _audioFreqData = null;
-  }
+  // Reopening on a different device: release the previous mic + context first so
+  // we don't leak it (changing the picker at runtime swaps the input).
+  _closeAudio();
 
   // Claim the device synchronously (before awaiting) so the per-frame collector
   // doesn't kick off a second init while getUserMedia is still resolving.
@@ -482,6 +498,9 @@ async function _initAudio( opts ) {
 
       return;
     }
+
+    // Hold onto the stream so its tracks can be stopped on disable/dispose.
+    _audioStream = stream;
 
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
 
@@ -606,13 +625,7 @@ export async function initInteraction( opts = {} ) {
   _midiNotes.clear();
 
   // ── Audio reset (lazy init triggered by _collectAudio) ───────────────────
-  if ( _audioContext ) {
-    _audioContext.close().catch( () => {} );
-    _audioContext = null;
-    _audioAnalyser = null;
-    _audioFreqData = null;
-  }
-
+  _closeAudio();
   _audioInitialized = false;
   _audioDeviceId = "";
 
@@ -686,14 +699,9 @@ export function disposeInteraction() {
   _midiDeviceId = "";
   _midiNotes.clear();
 
-  // Audio
-  if ( _audioContext ) {
-    _audioContext.close().catch( () => {} );
-    _audioContext = null;
-    _audioAnalyser = null;
-    _audioFreqData = null;
-  }
-
+  // Audio — stop the mic tracks (not just close the context) so the browser
+  // microphone indicator clears when the sketch is torn down.
+  _closeAudio();
   _audioInitialized = false;
   _audioDeviceId = "";
 
@@ -2220,6 +2228,14 @@ function _collectAudio(
   const audio = opts.audio;
 
   if ( !audio?.enabled ) {
+    // Toggled off in the form: release the mic right away so the browser
+    // microphone indicator clears instead of lingering until dispose.
+    if ( _audioInitialized ) {
+      _closeAudio();
+      _audioInitialized = false;
+      _audioDeviceId = "";
+    }
+
     return;
   }
 
