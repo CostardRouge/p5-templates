@@ -386,6 +386,7 @@ export default function PhotoExif( {
   const framePadding = `${ marginY }px ${ marginX }px`;
   const radius = sketch.cornerRadius ?? 16;
   const fit = sketch.imageFit ?? "cover";
+  const specSpread = sketch.specSpread ?? "between";
 
   const background = toCssColor(
     sketch.backgroundColor,
@@ -527,6 +528,11 @@ export default function PhotoExif( {
   const cellPadTop = 10 * unit;
 
   const headerJustify = show.camera ? "space-between" : "flex-end";
+  // How the spec cells fill the strip's full width so it lines up with the
+  // photo edges: spread to the edges ("between"), equal-width columns
+  // ("stretch") or natural width packed left ("packed").
+  const stripJustify = specSpread === "between" ? "space-between" : "flex-start";
+  const cellFlex = specSpread === "stretch" ? "1 1 0" : "0 0 auto";
   const hasHeader = Boolean( show.camera || show.date );
   const stripKey = [
     show.focal,
@@ -611,7 +617,7 @@ export default function PhotoExif( {
 
   const cellStyle = {
     display: "flex",
-    flexShrink: 0,
+    flex: cellFlex,
     flexDirection: "column",
     gap: cellGap,
     paddingTop: showLabelLine ? cellPadTop : 0,
@@ -1061,6 +1067,7 @@ export default function PhotoExif( {
                 style={ {
                   display: "flex",
                   flexWrap: "wrap",
+                  justifyContent: stripJustify,
                   gap: `${ stripGapRow }px ${ stripGapCol }px`
                 } }
               >
@@ -1205,6 +1212,7 @@ export default function PhotoExif( {
                       display: "flex",
                       flexWrap: "nowrap",
                       overflow: "hidden",
+                      justifyContent: stripJustify,
                       gap: `${ stripGapRow }px ${ stripGapCol }px`
                     } }
                   >
