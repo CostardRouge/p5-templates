@@ -24,6 +24,9 @@ ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
 # Copy dependency files first for better layer caching.
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
+# Prisma 7 reads the datasource URL from prisma.config.ts (no longer from the
+# schema), and the CLI loads it for `prisma generate` (postinstall) below.
+COPY prisma.config.ts ./
 
 # Strip the dev-only `prepare` script (husky hooks + git merge-driver setup): it
 # needs a .git work tree and scripts/ that aren't in the build context, and has
@@ -85,9 +88,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Prisma schema + migrations (read by `migrate deploy`) and the generated client
-# with its native query engine (used by the app server).
+# Prisma schema + migrations (read by `migrate deploy`) and the generated
+# Rust-free client (the app server queries through the @prisma/adapter-pg driver
+# adapter bundled into the standalone output). prisma.config.ts carries the
+# datasource URL that both `migrate deploy` and the client rely on in Prisma 7.
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
 # The isolated Prisma CLI + its full dependency closure, kept out of the app's
