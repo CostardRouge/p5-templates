@@ -144,18 +144,18 @@ export const formValues = {
     225
   ],
 
-  diceSizeFactor: 1.5,
+  diceSizeFactor: 2.5,
   faceScale: 1,
 
   baseTextSize: 280,
   autoFitText: true,
-  textPadding: 0.12,
+  textPadding: 0.13,
 
-  spinsPerLoop: 1,
+  spinsPerLoop: 2,
   easing: "easeInOutExpo",
 
-  rollMode: false,
-  rollSeed: 1,
+  rollMode: true,
+  rollSeed: 275,
 
   title: titleDefaultValues
 };
