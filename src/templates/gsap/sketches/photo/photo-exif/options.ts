@@ -33,6 +33,7 @@ export const formValues = {
   layout: "editorial",
   marginX: 80,
   marginY: 80,
+  specSpread: "between",
 
   textColor: [
     0,
@@ -154,6 +155,24 @@ export const formConfiguration: Record<string, any> = {
     min: 0,
     max: 320,
     step: 1
+  },
+  specSpread: {
+    component: "select",
+    label: "Spec distribution",
+    options: [
+      {
+        label: "Space between",
+        value: "between"
+      },
+      {
+        label: "Stretch (equal width)",
+        value: "stretch"
+      },
+      {
+        label: "Packed (left)",
+        value: "packed"
+      }
+    ]
   },
   textColor: {
     component: "color",
