@@ -414,6 +414,21 @@ function faceSignature(
   ].join( "|" );
 }
 
+// Free a face/buffer graphic. p5's Graphics.remove() throws if its parent
+// instance was already torn down (stale _pInst._elements), so guard it and
+// fall back to just detaching the canvas — either way our reference is dropped.
+function disposeGraphics( graphics ) {
+  if ( !graphics ) {
+    return;
+  }
+
+  try {
+    graphics.remove();
+  } catch {
+    graphics.canvas?.remove?.();
+  }
+}
+
 // Bounded cache: editing options in the UI would otherwise leak a new
 // p5.Graphics on every keystroke. Six live faces always survive because they
 // are the most-recently inserted; only stale generations get freed.
@@ -452,8 +467,8 @@ function getFaceTexture(
 
       const stale = textureCache.get( staleKey );
 
-      stale?.remove?.();
       textureCache.delete( staleKey );
+      disposeGraphics( stale );
     }
   }
 
@@ -544,15 +559,22 @@ function renderDiceFaces(
   }
 }
 
-// Recreate the offscreen WEBGL buffer only when the canvas size changes, so a
-// resize doesn't leave us drawing into a stale, wrongly-sized graphic.
+// Recreate the offscreen WEBGL buffer when the canvas size changes — or when it
+// belongs to a previous p5 instance (a re-mount/HMR), since drawing with or
+// removing a torn-down instance's graphic is what triggers the _elements crash.
 function ensureDiceGraphics( p ) {
+  const sameInstance = state.dice?._pInst === p;
+
   if (
     !state.dice ||
+    !sameInstance ||
     state.dice.width !== p.width ||
     state.dice.height !== p.height
   ) {
-    state.dice?.remove?.();
+    if ( sameInstance ) {
+      disposeGraphics( state.dice );
+    }
+
     state.dice = p.createGraphics(
       p.width,
       p.height,
@@ -561,6 +583,16 @@ function ensureDiceGraphics( p ) {
   }
 
   return state.dice;
+}
+
+// Drop every graphic cached from a previous mount. The textures and buffer are
+// module-level and outlive a single p5 instance, so a fresh setup must forget
+// them rather than reuse/remove() graphics whose instance is already gone.
+function resetGraphicsState() {
+  textureCache.clear();
+  state.dice = null;
+  state.rollOrder = null;
+  state.rollSeed = null;
 }
 
 function readSettings( sketchOptions ) {
@@ -586,6 +618,7 @@ function readSettings( sketchOptions ) {
 sketch.setup( () => {
   const p = getP5();
 
+  resetGraphicsState();
   ensureDiceGraphics( p );
   p.background( ...readSettings( options.sketch ).backgroundColor );
 } );
