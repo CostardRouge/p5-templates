@@ -16,10 +16,11 @@ import {
 export const formValues = {
   ...( await getCommonPhotoValues() ),
 
+  cornerRadius: 0,
   backgroundColor: [
-    16,
-    16,
-    18
+    255,
+    255,
+    255
   ],
   shadow: {
     enabled: false,
@@ -30,12 +31,14 @@ export const formValues = {
 
   maxImages: 24,
   layout: "editorial",
-  margin: 80,
+  marginX: 80,
+  marginY: 80,
+  specSpread: "between",
 
   textColor: [
-    237,
-    234,
-    226,
+    0,
+    0,
+    0,
     255
   ],
   labelColor: [
@@ -55,6 +58,8 @@ export const formValues = {
     displayFamily: "serif",
     valueFamily: "mono",
     uppercaseLabels: true,
+    showLabels: true,
+    showLabelLine: true,
     letterSpacing: 0.14,
     sizeScale: 1
   },
@@ -84,6 +89,7 @@ export const formValues = {
   caption: "",
   credit: "",
   cameraOverride: "",
+  cameraSource: "camera",
 
   reveal: {
     enabled: true,
@@ -136,12 +142,37 @@ export const formConfiguration: Record<string, any> = {
       }
     ]
   },
-  margin: {
+  marginX: {
     component: "slider",
-    label: "Margin",
+    label: "Horizontal margin",
     min: 0,
     max: 320,
     step: 1
+  },
+  marginY: {
+    component: "slider",
+    label: "Vertical margin",
+    min: 0,
+    max: 320,
+    step: 1
+  },
+  specSpread: {
+    component: "select",
+    label: "Spec distribution",
+    options: [
+      {
+        label: "Space between",
+        value: "between"
+      },
+      {
+        label: "Stretch (equal width)",
+        value: "stretch"
+      },
+      {
+        label: "Packed (left)",
+        value: "packed"
+      }
+    ]
   },
   textColor: {
     component: "color",
@@ -198,6 +229,14 @@ export const formConfiguration: Record<string, any> = {
       uppercaseLabels: {
         component: "checkbox",
         label: "Uppercase labels"
+      },
+      showLabels: {
+        component: "checkbox",
+        label: "Show labels"
+      },
+      showLabelLine: {
+        component: "checkbox",
+        label: "Show label line"
       },
       letterSpacing: {
         component: "slider",
@@ -289,6 +328,48 @@ export const formConfiguration: Record<string, any> = {
   cameraOverride: {
     component: "text",
     label: "Camera name override"
+  },
+  cameraSource: {
+    component: "select",
+    label: "Camera name source",
+    options: [
+      {
+        label: "Camera",
+        value: "camera"
+      },
+      {
+        label: "Focal length",
+        value: "focal"
+      },
+      {
+        label: "Aperture",
+        value: "aperture"
+      },
+      {
+        label: "Shutter speed",
+        value: "shutter"
+      },
+      {
+        label: "ISO",
+        value: "iso"
+      },
+      {
+        label: "Lens",
+        value: "lens"
+      },
+      {
+        label: "Date",
+        value: "date"
+      },
+      {
+        label: "Coordinates",
+        value: "gps"
+      },
+      {
+        label: "Filename",
+        value: "filename"
+      }
+    ]
   },
   reveal: {
     component: "nested-object",

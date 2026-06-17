@@ -298,6 +298,53 @@ function buildStripSpecs(
   return specs;
 }
 
+/**
+ * Resolve the value shown in the camera-name slot. The manual override always
+ * wins (handled by the caller); otherwise the chosen EXIF field is used so the
+ * headline can read e.g. the lens or focal length instead of the body name.
+ */
+function resolveCameraSource(
+  source, data, filename
+) {
+  if ( source === "focal" ) {
+    return exif.formatFocalLength( data?.focalLength ) || "";
+  }
+
+  if ( source === "aperture" ) {
+    return exif.formatAperture( data?.aperture ) || "";
+  }
+
+  if ( source === "shutter" ) {
+    return exif.formatShutterSpeed( data?.shutterSpeed ) || "";
+  }
+
+  if ( source === "iso" ) {
+    return data?.iso ? String( data.iso ) : "";
+  }
+
+  if ( source === "lens" ) {
+    return exif.formatLensModel( data?.lens ) || "";
+  }
+
+  if ( source === "date" ) {
+    return exif.formatPhotoDate( data?.date ) || "";
+  }
+
+  if ( source === "gps" ) {
+    return exif.formatGPSCoordinates(
+      data?.gps?.latitude,
+      data?.gps?.longitude
+    ) || "";
+  }
+
+  if ( source === "filename" ) {
+    return filename || "";
+  }
+
+  // "camera" (default)
+  return exif.formatCameraModel( data?.camera ) || "";
+}
+
 export default function PhotoExif( {
   options
 } ) {
@@ -329,9 +376,17 @@ export default function PhotoExif( {
   const exifMap = useExifList( cycledUrls );
 
   const layout = sketch.layout ?? "editorial";
-  const margin = sketch.margin ?? 80;
+
+  // Horizontal / vertical margins are independent so the safe area can dodge
+  // social-media dead zones (e.g. extra vertical room for the caption/profile
+  // overlays on Reels & TikTok). The legacy single `margin` is still honoured
+  // as the fallback for both axes, so older presets keep their even inset.
+  const marginX = sketch.marginX ?? sketch.margin ?? 80;
+  const marginY = sketch.marginY ?? sketch.margin ?? 80;
+  const framePadding = `${ marginY }px ${ marginX }px`;
   const radius = sketch.cornerRadius ?? 16;
   const fit = sketch.imageFit ?? "cover";
+  const specSpread = sketch.specSpread ?? "between";
 
   const background = toCssColor(
     sketch.backgroundColor,
@@ -358,6 +413,8 @@ export default function PhotoExif( {
   const valueFamily = fontFamily( typography.valueFamily ?? "mono" );
   const sansFamily = fontFamily( "sans" );
   const uppercaseLabels = typography.uppercaseLabels ?? true;
+  const showLabels = typography.showLabels ?? true;
+  const showLabelLine = typography.showLabelLine ?? true;
   const tracking = typography.letterSpacing ?? 0.14;
   const textScale = typography.sizeScale ?? 1;
 
@@ -373,6 +430,7 @@ export default function PhotoExif( {
   const caption = sketch.caption ?? "";
   const credit = sketch.credit ?? "";
   const cameraOverride = sketch.cameraOverride ?? "";
+  const cameraSource = sketch.cameraSource ?? "camera";
 
   const reveal = sketch.reveal ?? {};
   const revealEnabled = reveal.enabled ?? true;
@@ -427,20 +485,24 @@ export default function PhotoExif( {
         sketch.images,
         i
       );
+      const filename = path
+        ? decodeURIComponent( String( path ).split( "/" ).pop() )
+        : "";
 
       return {
         url,
         cameraValue: cameraOverride
-          || exif.formatCameraModel( data?.camera )
-          || "",
+          || resolveCameraSource(
+            cameraSource,
+            data,
+            filename
+          ),
         dateValue: exif.formatPhotoDate( data?.date ) || "",
         stripSpecs: buildStripSpecs(
           data,
           show
         ),
-        filename: path
-          ? decodeURIComponent( String( path ).split( "/" ).pop() )
-          : ""
+        filename
       };
     }
   );
@@ -466,6 +528,11 @@ export default function PhotoExif( {
   const cellPadTop = 10 * unit;
 
   const headerJustify = show.camera ? "space-between" : "flex-end";
+  // How the spec cells fill the strip's full width so it lines up with the
+  // photo edges: spread to the edges ("between"), equal-width columns
+  // ("stretch") or natural width packed left ("packed").
+  const stripJustify = specSpread === "between" ? "space-between" : "flex-start";
+  const cellFlex = specSpread === "stretch" ? "1 1 0" : "0 0 auto";
   const hasHeader = Boolean( show.camera || show.date );
   const stripKey = [
     show.focal,
@@ -550,11 +617,11 @@ export default function PhotoExif( {
 
   const cellStyle = {
     display: "flex",
-    flexShrink: 0,
+    flex: cellFlex,
     flexDirection: "column",
     gap: cellGap,
-    paddingTop: cellPadTop,
-    borderTop: `2px solid ${ accent }`,
+    paddingTop: showLabelLine ? cellPadTop : 0,
+    borderTop: showLabelLine ? `2px solid ${ accent }` : "none",
     minWidth: 78 * unit
   };
 
@@ -857,7 +924,8 @@ export default function PhotoExif( {
     [
       count,
       layout,
-      margin,
+      marginX,
+      marginY,
       size.width,
       size.height,
       radius,
@@ -941,7 +1009,9 @@ export default function PhotoExif( {
         className="px-line"
         style={ cellStyle }
       >
-        <span style={ labelStyle }>{ spec.label }</span>
+        { showLabels
+          ? <span style={ labelStyle }>{ spec.label }</span>
+          : null }
         <span style={ valueStyle }>{ spec.value || "—" }</span>
       </div>
     ) );
@@ -997,6 +1067,7 @@ export default function PhotoExif( {
                 style={ {
                   display: "flex",
                   flexWrap: "wrap",
+                  justifyContent: stripJustify,
                   gap: `${ stripGapRow }px ${ stripGapCol }px`
                 } }
               >
@@ -1048,7 +1119,7 @@ export default function PhotoExif( {
             style={ {
               position: "absolute",
               inset: 0,
-              padding: margin,
+              padding: framePadding,
               boxSizing: "border-box",
               display: "flex",
               flexDirection: "column",
@@ -1086,7 +1157,7 @@ export default function PhotoExif( {
           position: "absolute",
           inset: 0,
           boxSizing: "border-box",
-          padding: margin,
+          padding: framePadding,
           display: "flex",
           flexDirection: "column",
           gap: stageGap
@@ -1141,6 +1212,7 @@ export default function PhotoExif( {
                       display: "flex",
                       flexWrap: "nowrap",
                       overflow: "hidden",
+                      justifyContent: stripJustify,
                       gap: `${ stripGapRow }px ${ stripGapCol }px`
                     } }
                   >
