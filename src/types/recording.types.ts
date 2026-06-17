@@ -1,6 +1,6 @@
-import {
-  InputJsonValue, JsonValue
-} from "@prisma/client/runtime/edge";
+import type {
+  Prisma
+} from "@/generated/prisma";
 
 import type {
   SlideOption
@@ -29,13 +29,13 @@ export type JobModel = {
   status: JobStatusEnum;
   progress: number; // 0–100
   resultUrl: string | null;
-  thumbnails: JsonValue; // Array of thumbnail URLs stored as JSON
-  videoUrls: JsonValue; // Array of video URLs for multi-slide recordings stored as JSON
-  videoSizes: JsonValue; // Array of video file sizes in bytes stored as JSON
+  thumbnails: Prisma.JsonValue; // Array of thumbnail URLs stored as JSON
+  videoUrls: Prisma.JsonValue; // Array of video URLs for multi-slide recordings stored as JSON
+  videoSizes: Prisma.JsonValue; // Array of video file sizes in bytes stored as JSON
   recordingStartAt: Date | null; // When recording processing started
   recordingEndAt: Date | null; // When recording processing completed
   recordingDuration: number | null; // Recording duration in milliseconds
-  options: JsonValue;
+  options: Prisma.JsonValue;
   createdAt: Date;
   updatedAt: Date;
 };
