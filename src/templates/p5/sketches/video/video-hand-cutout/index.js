@@ -45,6 +45,17 @@ const VISION_SOURCES = new Set( [
   "face"
 ] );
 
+// Finger order within a hand, matching the interaction layer's finger groups.
+// The thumb chain starts at the wrist (landmark 0); every other finger starts
+// at its MCP knuckle — the points the "hand" brush fills the palm from.
+const FINGER_NAMES = [
+  "thumb",
+  "index",
+  "middle",
+  "ring",
+  "pinky"
+];
+
 // Ring of recent cutout frames (2D buffers) — the time axis of the echo — at a
 // fraction of the canvas resolution (performance.bufferScale).
 let ring = [];
@@ -283,6 +294,224 @@ function paintCapsule(
   }
 }
 
+// Paint one group: a soft capsule along its chain (capsule mode), or a soft
+// blob at each point (blobs mode, or any single-point group).
+function paintGroup(
+  ctx, group, shape, sx, sy, radius, feather, step
+) {
+  const points = group.points;
+
+  if ( shape !== "blobs" && points.length >= 2 ) {
+    paintCapsule(
+      ctx,
+      points,
+      sx,
+      sy,
+      radius,
+      feather,
+      step
+    );
+
+    return;
+  }
+
+  for ( const point of points ) {
+    stampBrush(
+      ctx,
+      point.x * sx,
+      point.y * sy,
+      radius,
+      feather
+    );
+  }
+}
+
+// Order the available base landmarks around the palm boundary (wrist → pinky →
+// ring → middle → index → thumb base) so they fill as one simple, non-self-
+// intersecting polygon. Needs the wrist (only the thumb chain carries it).
+function palmPolygon( fingers ) {
+  const wrist = fingers.thumb?.[ 0 ];
+
+  if ( !wrist ) {
+    return [];
+  }
+
+  const ordered = [
+    wrist,
+    fingers.pinky?.[ 0 ],
+    fingers.ring?.[ 0 ],
+    fingers.middle?.[ 0 ],
+    fingers.index?.[ 0 ],
+    fingers.thumb?.[ 2 ] ?? fingers.thumb?.[ 1 ]
+  ];
+
+  return ordered.filter( ( point ) => point );
+}
+
+// Fill the palm polygon (hard interior) and feather only its perimeter with
+// brush stamps, so the filled palm keeps the same soft edge as the capsules.
+function paintPalm(
+  ctx, polygon, sx, sy, radius, feather, step
+) {
+  if ( polygon.length < 3 ) {
+    return;
+  }
+
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 255, 255, 1)";
+  ctx.beginPath();
+
+  polygon.forEach( (
+    point, index
+  ) => {
+    const x = point.x * sx;
+    const y = point.y * sy;
+
+    if ( index === 0 ) {
+      ctx.moveTo(
+        x,
+        y
+      );
+    } else {
+      ctx.lineTo(
+        x,
+        y
+      );
+    }
+  } );
+
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  paintCapsule(
+    ctx,
+    [
+      ...polygon,
+      polygon[ 0 ]
+    ],
+    sx,
+    sy,
+    radius,
+    feather,
+    step
+  );
+}
+
+// "hand" brush: each detected hand's finger chains as soft capsules PLUS a
+// filled palm polygon, so the whole hand surface is copied — including the
+// thumb webbing and the pinky-to-wrist edge the per-finger capsules miss.
+// Needs the Fingers tracker (joint chains); other sources fall back to capsules.
+function paintHands(
+  ctx, groups, sx, sy, radius, feather, step
+) {
+  const hands = new Map();
+
+  for ( const group of groups ) {
+    if ( group.source !== "fingers" ) {
+      paintGroup(
+        ctx,
+        group,
+        "capsule",
+        sx,
+        sy,
+        radius,
+        feather,
+        step
+      );
+
+      continue;
+    }
+
+    const parts = group.id.split( "-" );
+    const handKey = parts[ 1 ];
+    const fingerName = parts[ 2 ];
+    let entry = hands.get( handKey );
+
+    if ( !entry ) {
+      entry = {};
+      hands.set(
+        handKey,
+        entry
+      );
+    }
+
+    entry[ fingerName ] = group.points;
+  }
+
+  for ( const fingers of hands.values() ) {
+    for ( const name of FINGER_NAMES ) {
+      const chain = fingers[ name ];
+
+      if ( !chain ) {
+        continue;
+      }
+
+      if ( chain.length >= 2 ) {
+        paintCapsule(
+          ctx,
+          chain,
+          sx,
+          sy,
+          radius,
+          feather,
+          step
+        );
+      } else {
+        stampBrush(
+          ctx,
+          chain[ 0 ].x * sx,
+          chain[ 0 ].y * sy,
+          radius,
+          feather
+        );
+      }
+    }
+
+    paintPalm(
+      ctx,
+      palmPolygon( fingers ),
+      sx,
+      sy,
+      radius,
+      feather,
+      step
+    );
+  }
+}
+
+// Paint every selected group into the mask, dispatching on the brush shape.
+function paintMask(
+  ctx, groups, shape, sx, sy, radius, feather, step
+) {
+  if ( shape === "hand" ) {
+    paintHands(
+      ctx,
+      groups,
+      sx,
+      sy,
+      radius,
+      feather,
+      step
+    );
+
+    return;
+  }
+
+  for ( const group of groups ) {
+    paintGroup(
+      ctx,
+      group,
+      shape,
+      sx,
+      sy,
+      radius,
+      feather,
+      step
+    );
+  }
+}
+
 // Three-stop colour ramp (front → mid → back) sampled at t ∈ [0, 1], for the
 // depth tint of the echo layers (same shape as video-atlas).
 function rampColor(
@@ -433,31 +662,16 @@ function writeCutout(
   // edges meet — additive blending unions their alpha cleanly.
   ctx.globalCompositeOperation = "lighter";
 
-  for ( const group of groups ) {
-    const points = group.points;
-
-    if ( shape === "capsule" && points.length >= 2 ) {
-      paintCapsule(
-        ctx,
-        points,
-        sx,
-        sy,
-        radius,
-        feather,
-        step
-      );
-    } else {
-      for ( const point of points ) {
-        stampBrush(
-          ctx,
-          point.x * sx,
-          point.y * sy,
-          radius,
-          feather
-        );
-      }
-    }
-  }
+  paintMask(
+    ctx,
+    groups,
+    shape,
+    sx,
+    sy,
+    radius,
+    feather,
+    step
+  );
 
   // Keep the footage only inside the painted mask: source-in weights the video
   // by the mask's alpha, so soft edges yield soft-edged cutouts.

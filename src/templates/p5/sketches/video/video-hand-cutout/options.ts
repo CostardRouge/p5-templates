@@ -55,7 +55,7 @@ export const formValues = {
   // and tracking smoothing.
   mask: {
     region: "vision",
-    shape: "capsule",
+    shape: "hand",
     brushSize: 55,
     feather: 0.55,
     smoothing: 0.3
@@ -168,6 +168,10 @@ export const formConfiguration: Record<string, any> = {
         component: "select",
         label: "Brush shape",
         options: [
+          {
+            label: "Hand (fingers + filled palm)",
+            value: "hand"
+          },
           {
             label: "Capsule (along fingers)",
             value: "capsule"
