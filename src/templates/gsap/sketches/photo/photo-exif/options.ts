@@ -58,6 +58,7 @@ export const formValues = {
     valueFamily: "mono",
     uppercaseLabels: true,
     showLabels: true,
+    showLabelLine: true,
     letterSpacing: 0.14,
     sizeScale: 1
   },
@@ -213,6 +214,10 @@ export const formConfiguration: Record<string, any> = {
       showLabels: {
         component: "checkbox",
         label: "Show labels"
+      },
+      showLabelLine: {
+        component: "checkbox",
+        label: "Show label line"
       },
       letterSpacing: {
         component: "slider",

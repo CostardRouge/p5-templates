@@ -413,6 +413,7 @@ export default function PhotoExif( {
   const sansFamily = fontFamily( "sans" );
   const uppercaseLabels = typography.uppercaseLabels ?? true;
   const showLabels = typography.showLabels ?? true;
+  const showLabelLine = typography.showLabelLine ?? true;
   const tracking = typography.letterSpacing ?? 0.14;
   const textScale = typography.sizeScale ?? 1;
 
@@ -613,8 +614,8 @@ export default function PhotoExif( {
     flexShrink: 0,
     flexDirection: "column",
     gap: cellGap,
-    paddingTop: cellPadTop,
-    borderTop: `2px solid ${ accent }`,
+    paddingTop: showLabelLine ? cellPadTop : 0,
+    borderTop: showLabelLine ? `2px solid ${ accent }` : "none",
     minWidth: 78 * unit
   };
 
