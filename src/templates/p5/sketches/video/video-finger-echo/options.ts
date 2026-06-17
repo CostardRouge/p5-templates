@@ -49,19 +49,19 @@ export const formValues = {
       10
     ],
     showVideo: true,
-    videoOpacity: 1
+    videoOpacity: 0
   },
 
   // Which detected entities become splines, and how calm the tracking is.
   hand: {
     region: "vision",
-    smoothing: 0.35
+    smoothing: 0.23
   },
 
   // The glowing spline look (GPU shader pipeline, like splines-v1-interactive).
   stroke: {
-    weight: 16,
-    glow: 2,
+    weight: 9,
+    glow: 3,
     gradient: true,
     hueSpeed: 1.5,
     hueSpread: 2
@@ -76,8 +76,8 @@ export const formValues = {
   // How the glowing trail ages: how long it lingers, whether it drifts, and an
   // optional colour it bleeds toward as it fades.
   echo: {
-    decay: 0.9,
-    mode: "fade",
+    decay: 0.99,
+    mode: "right",
     amount: 8,
     grow: 0.02,
     opacity: 1,
