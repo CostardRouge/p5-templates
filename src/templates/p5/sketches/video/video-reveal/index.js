@@ -2,18 +2,23 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
-import graphics from "@/p5/utils/graphics.js";
 import * as common from "@/p5/utils/common.js";
 import mediapipe, {
   init as mediapipeInit,
   dispose as mediapipeDispose,
   setEnabled as setMediapipeEnabled
 } from "@/p5/utils/mediapipe/mediapipe.js";
+import createRevealRenderer from "./revealGpu.js";
 
-// video-reveal — see options.ts for the concept. The webcam is hidden under a
-// grid of "hidden"-colour cells; hands (via MediaPipe) wipe cells open to expose
-// the video, which fades back to the hidden colour when the hand leaves. The
-// blob of currently-open cells is outlined in white on its outer edge only.
+// video-reveal — see options.ts for the concept. The webcam hides under a grid
+// of "hidden"-colour cells; hands (via MediaPipe) wipe cells open to expose the
+// video, which fades back to the hidden colour when the hand leaves. The blob of
+// currently-open cells is outlined in white on its outer edge only.
+//
+// Hot path is on the GPU: a single full-screen shader (revealGpu.js) does the
+// per-pixel composite + cut-out outline + camera cover-fit/flip/grayscale. The
+// CPU only marks which cells a finger touches and eases each cell's fade value,
+// then hands the grid to the shader as a small texture.
 
 // Fingertip landmark indices (thumb, index, middle, ring, pinky tips).
 const FINGERTIP_INDICES = [
@@ -24,13 +29,11 @@ const FINGERTIP_INDICES = [
   20
 ];
 
-// Cover-fit frame buffer (flipped, canvas-sized) we sample each revealed cell
-// from, so the cell→source mapping is a 1:1 identity crop.
-let frame;
+const reveal = createRevealRenderer();
 
-// Per-cell reveal state, laid out row-major (index = row * columns + column).
+// Per-cell reveal state, row-major (index = row * columns + column).
 let revealValues = new Float32Array( 0 );
-let revealActive = new Uint8Array( 0 );
+let revealBytes = new Uint8Array( 0 ); // = revealValues × 255, uploaded to the GPU
 let touched = new Uint8Array( 0 );
 let gridColumns = 0;
 let gridRows = 0;
@@ -51,25 +54,6 @@ function clamp(
   );
 }
 
-// Cover-fit a (sw × sh) source into a (dw × dh) box, centered.
-function coverRect(
-  sw, sh, dw, dh
-) {
-  const scale = Math.max(
-    dw / sw,
-    dh / sh
-  );
-  const w = sw * scale;
-  const h = sh * scale;
-
-  return {
-    x: ( dw - w ) / 2,
-    y: ( dh - h ) / 2,
-    w,
-    h
-  };
-}
-
 function cameraConfig( cfg ) {
   const camera = cfg.camera ?? {};
 
@@ -87,8 +71,8 @@ function cameraConfig( cfg ) {
 }
 
 // Open (or reopen) the webcam + hand tracker when the picked device / resolution
-// changes. captureFlip stays false — we mirror at draw time so the revealed
-// pixels and the hand landmarks come from the same unflipped source.
+// changes. captureFlip stays false — the frame is mirrored on the GPU and the
+// landmarks via common.inverseX, so pixels and hands come from the same source.
 async function ensureCamera( cfg ) {
   const camera = cameraConfig( cfg );
   const signature = `${ camera.deviceId }|${ camera.width }|${ camera.height }`;
@@ -144,7 +128,7 @@ function ensureGrid(
   const count = columns * rows;
 
   revealValues = new Float32Array( count );
-  revealActive = new Uint8Array( count );
+  revealBytes = new Uint8Array( count );
   touched = new Uint8Array( count );
 }
 
@@ -174,25 +158,26 @@ function stampPoint(
   );
 
   // radius 0 → just the cell under the point; otherwise a filled disc.
+  if ( radius <= 0 ) {
+    const column = Math.floor( centerColumn );
+    const row = Math.floor( centerRow );
+
+    if (
+      column >= 0 && column < gridColumns &&
+      row >= 0 && row < gridRows
+    ) {
+      touched[ row * gridColumns + column ] = 1;
+    }
+
+    return;
+  }
+
   const radiusSquared = ( radius + 0.001 ) * ( radius + 0.001 );
 
   for ( let row = rowStart; row <= rowEnd; row++ ) {
     for ( let column = columnStart; column <= columnEnd; column++ ) {
-      const cellCenterColumn = column + 0.5;
-      const cellCenterRow = row + 0.5;
-      const dColumn = cellCenterColumn - centerColumn;
-      const dRow = cellCenterRow - centerRow;
-
-      if ( radius <= 0 ) {
-        if (
-          Math.floor( centerColumn ) === column &&
-          Math.floor( centerRow ) === row
-        ) {
-          touched[ row * gridColumns + column ] = 1;
-        }
-
-        continue;
-      }
+      const dColumn = column + 0.5 - centerColumn;
+      const dRow = row + 0.5 - centerRow;
 
       if ( dColumn * dColumn + dRow * dRow <= radiusSquared ) {
         touched[ row * gridColumns + column ] = 1;
@@ -242,16 +227,16 @@ function stampHands(
     return;
   }
 
-  const reveal = cfg.reveal ?? {};
-  const fingertipsOnly = Boolean( reveal.fingertipsOnly ?? false );
+  const revealCfg = cfg.reveal ?? {};
+  const fingertipsOnly = Boolean( revealCfg.fingertipsOnly ?? false );
   const maxHands = Math.round( clamp(
-    reveal.maxHands ?? 2,
+    revealCfg.maxHands ?? 2,
     1,
     2
   ) );
   const radius = Math.max(
     0,
-    reveal.brushRadius ?? 1.2
+    revealCfg.brushRadius ?? 1.2
   );
 
   for (
@@ -381,224 +366,10 @@ function stampDemo(
   }
 }
 
-// Blit the (optionally mirrored, optionally desaturated) cover-fit webcam frame
-// into the sampling buffer. Returns whether a decodable frame was available.
-function updateFrame( cfg ) {
-  const p = getP5();
-  const captureElement = mediapipe.capture?.element;
-  const video = captureElement?.elt;
-
-  if ( !video?.videoWidth || !video?.videoHeight ) {
-    return false;
-  }
-
-  const flip = Boolean( cfg.camera?.flip ?? true );
-  const cover = coverRect(
-    video.videoWidth,
-    video.videoHeight,
-    frame.width,
-    frame.height
-  );
-
-  frame.clear();
-  frame.push();
-  frame.imageMode( p.CORNER );
-
-  if ( flip ) {
-    frame.translate(
-      frame.width,
-      0
-    );
-    frame.scale(
-      -1,
-      1
-    );
-  }
-
-  frame.image(
-    captureElement,
-    cover.x,
-    cover.y,
-    cover.w,
-    cover.h
-  );
-  frame.pop();
-
-  if ( cfg.look?.grayscale ) {
-    frame.filter( p.GRAY );
-  }
-
-  return true;
-}
-
-// Draw the revealed video (per cell, opacity = fade value) over the hidden bg.
-function drawReveal(
-  cfg, cellWidth, cellHeight, hasFrame
-) {
-  const p = getP5();
-  const gap = clamp(
-    cfg.look?.cellGap ?? 0,
-    0,
-    0.9
-  );
-  const insetX = cellWidth * gap * 0.5;
-  const insetY = cellHeight * gap * 0.5;
-  const innerWidth = cellWidth - insetX * 2;
-  const innerHeight = cellHeight - insetY * 2;
-
-  if ( !hasFrame || innerWidth <= 0 || innerHeight <= 0 ) {
-    return;
-  }
-
-  p.push();
-  p.imageMode( p.CORNER );
-  p.noStroke();
-
-  for ( let row = 0; row < gridRows; row++ ) {
-    for ( let column = 0; column < gridColumns; column++ ) {
-      const value = revealValues[ row * gridColumns + column ];
-
-      if ( value <= 0.01 ) {
-        continue;
-      }
-
-      const x = column * cellWidth;
-      const y = row * cellHeight;
-
-      p.tint(
-        255,
-        value * 255
-      );
-      p.image(
-        frame,
-        x + insetX,
-        y + insetY,
-        innerWidth,
-        innerHeight,
-        x + insetX,
-        y + insetY,
-        innerWidth,
-        innerHeight
-      );
-    }
-  }
-
-  p.pop();
-  p.noTint();
-}
-
-// Outline the OUTER boundary of the revealed blob: for each active cell, draw
-// only the edges whose neighbour is inactive (or off-grid). Shared internal
-// edges are never drawn, so the cluster reads as one clean cut-out.
-function drawOutline(
-  cfg, cellWidth, cellHeight
-) {
-  const p = getP5();
-  const outline = cfg.outline ?? {};
-
-  if ( !( outline.show ?? true ) ) {
-    return;
-  }
-
-  const color = outline.color ?? [
-    255,
-    255,
-    255,
-    255
-  ];
-  const softEdge = Boolean( outline.softEdge ?? true );
-  const baseAlpha = color[ 3 ] ?? 255;
-
-  p.push();
-  p.strokeWeight( outline.weight ?? 2 );
-  p.strokeCap( p.SQUARE );
-  p.noFill();
-
-  if ( !softEdge ) {
-    p.stroke(
-      color[ 0 ],
-      color[ 1 ],
-      color[ 2 ],
-      baseAlpha
-    );
-  }
-
-  for ( let row = 0; row < gridRows; row++ ) {
-    for ( let column = 0; column < gridColumns; column++ ) {
-      const index = row * gridColumns + column;
-
-      if ( !revealActive[ index ] ) {
-        continue;
-      }
-
-      if ( softEdge ) {
-        p.stroke(
-          color[ 0 ],
-          color[ 1 ],
-          color[ 2 ],
-          baseAlpha * revealValues[ index ]
-        );
-      }
-
-      const x = column * cellWidth;
-      const y = row * cellHeight;
-      const right = x + cellWidth;
-      const bottom = y + cellHeight;
-
-      // top
-      if ( row === 0 || !revealActive[ index - gridColumns ] ) {
-        p.line(
-          x,
-          y,
-          right,
-          y
-        );
-      }
-
-      // bottom
-      if ( row === gridRows - 1 || !revealActive[ index + gridColumns ] ) {
-        p.line(
-          x,
-          bottom,
-          right,
-          bottom
-        );
-      }
-
-      // left
-      if ( column === 0 || !revealActive[ index - 1 ] ) {
-        p.line(
-          x,
-          y,
-          x,
-          bottom
-        );
-      }
-
-      // right
-      if ( column === gridColumns - 1 || !revealActive[ index + 1 ] ) {
-        p.line(
-          right,
-          y,
-          right,
-          bottom
-        );
-      }
-    }
-  }
-
-  p.pop();
-}
-
 sketch.setup( async() => {
   const p = getP5();
 
   p.clear();
-
-  frame = graphics.createAutoResizableGraphics(
-    p.width,
-    p.height
-  );
 
   // Force a fresh camera / hand tracker for this mount.
   cameraSignature = "";
@@ -614,7 +385,7 @@ sketch.draw( () => {
 
   const useHands = Boolean( cfg.reveal?.useHands ?? true );
 
-  // Pause inference (and the camera light's work) when hands aren't driving it.
+  // Pause inference when hands aren't driving the reveal.
   setMediapipeEnabled( useHands );
 
   const columns = Math.round( clamp(
@@ -653,7 +424,8 @@ sketch.draw( () => {
     cellHeight
   );
 
-  // ── 2. Integrate each cell toward its target (attack on reveal, slow release)
+  // ── 2. Ease each cell toward its target (attack on reveal, slow release) and
+  //       pack the 0..1 value into the byte grid the shader samples ────────────
   const revealSpeed = clamp(
     cfg.reveal?.revealSpeed ?? 0.4,
     0.02,
@@ -664,41 +436,58 @@ sketch.draw( () => {
     0.01,
     1
   );
-  const threshold = clamp(
-    cfg.outline?.threshold ?? 0.18,
-    0.01,
-    0.95
-  );
 
   for ( let index = 0; index < revealValues.length; index++ ) {
     const target = touched[ index ] ? 1 : 0;
     const speed = target > revealValues[ index ] ? revealSpeed : fadeSpeed;
+    const value = revealValues[ index ] + ( target - revealValues[ index ] ) * speed;
 
-    revealValues[ index ] += ( target - revealValues[ index ] ) * speed;
-    revealActive[ index ] = revealValues[ index ] > threshold ? 1 : 0;
+    revealValues[ index ] = value;
+    revealBytes[ index ] = value <= 0
+      ? 0
+      : value >= 1
+        ? 255
+        : ( value * 255 ) | 0;
   }
 
-  // ── 3. Render: hidden background, revealed video, cut-out outline ───────────
-  const hasFrame = updateFrame( cfg );
+  // ── 3. GPU composite: hidden bg, revealed video, cut-out outline ────────────
+  const captureElement = mediapipe.capture?.element;
+  const video = captureElement?.elt ?? null;
+  const videoReady = Boolean( video?.videoWidth && video?.videoHeight && video.readyState >= 2 );
 
   p.clear();
-  p.background( ...( cfg.look?.hiddenColor ?? [
-    0,
-    0,
-    0,
-    255
-  ] ) );
 
-  drawReveal(
-    cfg,
-    cellWidth,
-    cellHeight,
-    hasFrame
-  );
-
-  drawOutline(
-    cfg,
-    cellWidth,
-    cellHeight
-  );
+  reveal.render( {
+    columns,
+    rows,
+    revealData: revealBytes,
+    video: videoReady ? video : null,
+    videoWidth: video?.videoWidth ?? 1,
+    videoHeight: video?.videoHeight ?? 1,
+    flip: Boolean( cfg.camera?.flip ?? true ),
+    hiddenColor: cfg.look?.hiddenColor ?? [
+      0,
+      0,
+      0,
+      255
+    ],
+    grayscale: Boolean( cfg.look?.grayscale ?? false ),
+    cellGap: cfg.look?.cellGap ?? 0,
+    outline: {
+      show: cfg.outline?.show ?? true,
+      weight: cfg.outline?.weight ?? 2,
+      color: cfg.outline?.color ?? [
+        255,
+        255,
+        255,
+        255
+      ],
+      threshold: clamp(
+        cfg.outline?.threshold ?? 0.18,
+        0.01,
+        0.95
+      ),
+      softEdge: cfg.outline?.softEdge ?? true
+    }
+  } );
 } );
