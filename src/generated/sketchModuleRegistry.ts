@@ -245,6 +245,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:tree-2d/tree-2d-v6-walking": () => import( "@/p5/sketches/tree-2d/tree-2d-v6-walking/index.js" ),
   "p5:video/video-atlas": () => import( "@/p5/sketches/video/video-atlas/index.js" ),
   "p5:video/video-echo": () => import( "@/p5/sketches/video/video-echo/index.js" ),
+  "p5:video/video-finger-echo": () => import( "@/p5/sketches/video/video-finger-echo/index.js" ),
   "p5:video/video-grid": () => import( "@/p5/sketches/video/video-grid/index.js" ),
   "p5:video/video-halftone": () => import( "@/p5/sketches/video/video-halftone/index.js" ),
   "p5:video/video-kaleidoscope": () => import( "@/p5/sketches/video/video-kaleidoscope/index.js" ),

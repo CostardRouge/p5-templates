@@ -2890,5 +2890,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-16T22:39:24.214Z",
     "ctime": "2026-06-16T22:39:11.554Z"
+  },
+  {
+    "name": "video-finger-echo",
+    "engine": "p5",
+    "category": "video",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-17T16:48:29.939Z",
+    "ctime": "2026-06-17T16:48:07.179Z"
   }
 ]
