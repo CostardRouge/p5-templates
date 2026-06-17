@@ -264,6 +264,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:video/video-finger-echo": () => import( "@/p5/sketches/video/video-finger-echo/options" ),
   "p5:video/video-grid": () => import( "@/p5/sketches/video/video-grid/options" ),
   "p5:video/video-halftone": () => import( "@/p5/sketches/video/video-halftone/options" ),
+  "p5:video/video-hand-cutout": () => import( "@/p5/sketches/video/video-hand-cutout/options" ),
   "p5:video/video-kaleidoscope": () => import( "@/p5/sketches/video/video-kaleidoscope/options" ),
   "p5:video/video-mosaic": () => import( "@/p5/sketches/video/video-mosaic/options" ),
   "p5:video/video-player": () => import( "@/p5/sketches/video/video-player/options" ),
