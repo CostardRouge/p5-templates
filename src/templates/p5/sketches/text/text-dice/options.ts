@@ -1,16 +1,15 @@
 import {
-  fontNames
+  fontSelectOptions
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
-const fontOptions = fontNames.map( ( fontName ) => ( {
-  value: fontName,
-  label: fontName
-} ) );
-
-const palette = [
+// Six bold, high-contrast face presets. Text fill reads against its own face
+// background; the stroke gives the lettering a clean outline on every face.
+const facePresets = [
   {
+    text: "ONE",
+    font: "martian",
     fill: [
       246,
       235,
@@ -28,32 +27,17 @@ const palette = [
     ]
   },
   {
+    text: "TWO",
+    font: "stardom",
     fill: [
-      29,
-      53,
-      87
-    ],
-    stroke: [
       241,
       250,
       238
     ],
-    background: [
-      168,
-      218,
-      220
-    ]
-  },
-  {
-    fill: [
-      255,
-      255,
-      255
-    ],
     stroke: [
-      0,
-      0,
-      0
+      29,
+      53,
+      87
     ],
     background: [
       69,
@@ -62,6 +46,8 @@ const palette = [
     ]
   },
   {
+    text: "THREE",
+    font: "sans",
     fill: [
       33,
       37,
@@ -69,33 +55,56 @@ const palette = [
     ],
     stroke: [
       255,
-      214,
-      10
-    ],
-    background: [
-      255,
-      214,
-      10
-    ]
-  },
-  {
-    fill: [
-      255,
-      0,
-      110
-    ],
-    stroke: [
-      255,
       255,
       255
     ],
     background: [
-      58,
-      12,
-      163
+      168,
+      218,
+      220
     ]
   },
   {
+    text: "FOUR",
+    font: "agiro",
+    fill: [
+      33,
+      37,
+      41
+    ],
+    stroke: [
+      33,
+      37,
+      41
+    ],
+    background: [
+      255,
+      214,
+      10
+    ]
+  },
+  {
+    text: "FIVE",
+    font: "waverseVariable",
+    fill: [
+      255,
+      255,
+      255
+    ],
+    stroke: [
+      58,
+      12,
+      163
+    ],
+    background: [
+      131,
+      56,
+      236
+    ]
+  },
+  {
+    text: "SIX",
+    font: "tilt",
     fill: [
       8,
       217,
@@ -114,179 +123,20 @@ const palette = [
   }
 ];
 
-const defaultTexts = [
-  "ONE",
-  "TWO",
-  "THREE",
-  "FOUR",
-  "FIVE",
-  "SIX"
-];
-
-const defaultFaceFonts = [
-  "martian",
-  "stardom",
-  "sans",
-  "agiro",
-  "waverseVariable",
-  "tilt"
-];
-
-const defaultFaces = defaultTexts.map( (
-  text, index
-) => ( {
-  text,
-  font: defaultFaceFonts[ index ],
+const faces = facePresets.map( ( preset ) => ( {
+  text: preset.text,
+  font: preset.font,
   sizeFactor: 1,
-  fill: palette[ index ].fill,
-  stroke: palette[ index ].stroke,
-  strokeWeight: 2,
-  background: palette[ index ].background,
+  fill: preset.fill,
+  stroke: preset.stroke,
+  strokeWeight: 3,
+  background: preset.background,
   jitter: 0,
   outlineOnly: false
 } ) );
 
 export const formValues = {
-  faces: [
-    {
-      text: "ONE",
-      font: "martian",
-      sizeFactor: 0.14,
-      fill: [
-        246,
-        235,
-        225
-      ],
-      stroke: [
-        30,
-        30,
-        30
-      ],
-      strokeWeight: 4.5,
-      background: [
-        230,
-        57,
-        70
-      ],
-      jitter: 0,
-      outlineOnly: false
-    },
-    {
-      text: "TWO",
-      font: "openSans",
-      sizeFactor: 0.16,
-      fill: [
-        29,
-        53,
-        87
-      ],
-      stroke: [
-        241,
-        250,
-        238
-      ],
-      strokeWeight: 4,
-      background: [
-        168,
-        218,
-        220
-      ],
-      jitter: 0,
-      outlineOnly: false
-    },
-    {
-      text: "THREE",
-      font: "sans",
-      sizeFactor: 0.18,
-      fill: [
-        255,
-        255,
-        255
-      ],
-      stroke: [
-        0,
-        0,
-        0
-      ],
-      strokeWeight: 4.5,
-      background: [
-        69,
-        123,
-        157
-      ],
-      jitter: 0,
-      outlineOnly: false
-    },
-    {
-      text: "FOUR",
-      font: "agiro",
-      sizeFactor: 1,
-      fill: [
-        33,
-        37,
-        41
-      ],
-      stroke: [
-        255,
-        214,
-        10
-      ],
-      strokeWeight: 2,
-      background: [
-        255,
-        214,
-        10
-      ],
-      jitter: 0,
-      outlineOnly: false
-    },
-    {
-      text: "FIVE",
-      font: "waverseVariable",
-      sizeFactor: 1,
-      fill: [
-        255,
-        0,
-        110
-      ],
-      stroke: [
-        255,
-        255,
-        255
-      ],
-      strokeWeight: 2,
-      background: [
-        58,
-        12,
-        163
-      ],
-      jitter: 0,
-      outlineOnly: false
-    },
-    {
-      text: "SIX",
-      font: "tilt",
-      sizeFactor: 1,
-      fill: [
-        8,
-        217,
-        214
-      ],
-      stroke: [
-        8,
-        28,
-        21
-      ],
-      strokeWeight: 2,
-      background: [
-        8,
-        28,
-        21
-      ],
-      jitter: 0,
-      outlineOnly: false
-    }
-  ],
+  faces,
 
   backgroundColor: [
     246,
@@ -294,16 +144,18 @@ export const formValues = {
     225
   ],
 
-  diceSizeFactor: 1.5,
-  faceScale: 0.58,
+  diceSizeFactor: 2.5,
+  faceScale: 1,
 
-  rotateSpeed: 0.29,
+  baseTextSize: 280,
+  autoFitText: true,
+  textPadding: 0.13,
+
+  spinsPerLoop: 2,
   easing: "easeInOutExpo",
 
-  rollMode: false,
-  autoFitText: true,
-
-  baseTextSize: 285,
+  rollMode: true,
+  rollSeed: 275,
 
   title: titleDefaultValues
 };
@@ -325,7 +177,7 @@ export const formConfiguration: Record<string, any> = {
         font: {
           component: "select",
           label: "Font",
-          options: fontOptions
+          options: fontSelectOptions
         },
         sizeFactor: {
           component: "slider",
@@ -382,9 +234,9 @@ export const formConfiguration: Record<string, any> = {
   },
   faceScale: {
     component: "slider",
-    label: "Face content scale",
+    label: "Face fill (1 = full face)",
     min: 0.1,
-    max: 2,
+    max: 1,
     step: 0.01
   },
 
@@ -395,27 +247,40 @@ export const formConfiguration: Record<string, any> = {
     max: 600,
     step: 1
   },
-
   autoFitText: {
     component: "checkbox",
     label: "Auto-fit text to face"
   },
-
-  rotateSpeed: {
+  textPadding: {
     component: "slider",
-    label: "Rotation speed",
+    label: "Text padding",
     min: 0,
-    max: 3,
+    max: 0.4,
     step: 0.01
+  },
+
+  spinsPerLoop: {
+    component: "slider",
+    label: "Spins per loop (0 = hold front face)",
+    min: 0,
+    max: 5,
+    step: 1
   },
   easing: {
     component: "easing",
-    label: "Rotation easing"
+    label: "Roll easing"
   },
 
   rollMode: {
     component: "checkbox",
-    label: "Roll mode (random face order)"
+    label: "Roll mode (shuffled face order)"
+  },
+  rollSeed: {
+    component: "slider",
+    label: "Roll seed",
+    min: 0,
+    max: 999,
+    step: 1
   },
 
   title: titleFormConfiguration
