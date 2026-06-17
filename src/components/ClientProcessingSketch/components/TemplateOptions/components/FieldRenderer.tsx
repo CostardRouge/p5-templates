@@ -525,7 +525,9 @@ export default function FieldRenderer( {
         return (
           <ControlledSourceSelect
             name={ registeredName }
-            className={ commonInputProps.className }
+            label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
           />
         );
 
