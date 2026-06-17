@@ -782,7 +782,7 @@
   {
     "name": "audio-features",
     "engine": "p5",
-    "category": "kinetic",
+    "category": "audio",
     "hasSketchForm": true,
     "hasThumbnail": false,
     "hasPreview": false,
