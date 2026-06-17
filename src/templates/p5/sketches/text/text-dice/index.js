@@ -304,7 +304,7 @@ function fitTextSize(
 }
 
 function buildFaceTexture(
-  face, size, settings
+  face, size, settings, fontEntry
 ) {
   const p = getP5();
   const g = p.createGraphics(
@@ -318,7 +318,6 @@ function buildFaceTexture(
     0
   ] ) );
 
-  const fontEntry = resolveFontEntry( face );
   const text = face.text ?? "";
 
   if ( !fontEntry?.font || !text ) {
@@ -394,14 +393,19 @@ function buildFaceTexture(
   return g;
 }
 
+// fontReady is part of the signature on purpose: fonts load asynchronously, so
+// the first frames bake a textless face. Including readiness gives that a
+// distinct key, so the moment the font resolves we build a fresh, lettered
+// texture instead of being stuck with the cached blank until a param changes.
 function faceSignature(
-  face, size, settings
+  face, size, settings, fontReady
 ) {
   return [
     size,
     settings.baseTextSize,
     settings.autoFitText,
     settings.textPadding,
+    fontReady,
     face.text,
     face.font,
     face.sizeFactor,
@@ -435,10 +439,12 @@ function disposeGraphics( graphics ) {
 function getFaceTexture(
   face, size, settings
 ) {
+  const fontEntry = resolveFontEntry( face );
   const key = faceSignature(
     face,
     size,
-    settings
+    settings,
+    !!fontEntry?.font
   );
   const cached = textureCache.get( key );
 
@@ -449,7 +455,8 @@ function getFaceTexture(
   const texture = buildFaceTexture(
     face,
     size,
-    settings
+    settings,
+    fontEntry
   );
 
   textureCache.set(

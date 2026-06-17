@@ -144,10 +144,10 @@ export const formValues = {
     225
   ],
 
-  diceSizeFactor: 1.5,
+  diceSizeFactor: 2.7,
   faceScale: 1,
 
-  baseTextSize: 280,
+  baseTextSize: 107,
   autoFitText: true,
   textPadding: 0.12,
 
@@ -157,7 +157,10 @@ export const formValues = {
   rollMode: false,
   rollSeed: 1,
 
-  title: titleDefaultValues
+  title: {
+    ...titleDefaultValues,
+    show: false
+  }
 };
 
 export const formConfiguration: Record<string, any> = {
