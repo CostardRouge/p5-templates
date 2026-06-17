@@ -48,7 +48,7 @@ export const formValues = {
       10
     ],
     showVideo: true,
-    videoOpacity: 1
+    videoOpacity: 0
   },
 
   // How much of the footage is copied: which entities, the brush size/softness,
@@ -56,24 +56,24 @@ export const formValues = {
   mask: {
     region: "vision",
     shape: "capsule",
-    brushSize: 55,
-    feather: 0.55,
-    smoothing: 0.3
+    brushSize: 29,
+    feather: 0.47,
+    smoothing: 0
   },
 
   // The repeated cutouts: ring depth, how each older layer is offset / grown /
   // twisted, a depth colour tint and how far it fades.
   echo: {
-    layers: 24,
+    layers: 48,
     spacing: 1,
     offset: {
-      x: 6,
-      y: -8
+      x: 14,
+      y: -7
     },
-    scaleStep: 0.006,
-    rotateStep: 0.4,
+    scaleStep: 0,
+    rotateStep: 2,
     minAlpha: 0,
-    colorMix: 0.3,
+    colorMix: 0.24,
     opacity: 1,
     frontColor: [
       255,
