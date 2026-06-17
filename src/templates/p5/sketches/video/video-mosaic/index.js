@@ -4,21 +4,29 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import mediapipe, {
   init as mediapipeInit,
-  dispose as mediapipeDispose
+  dispose as mediapipeDispose,
+  setEnabled as mediapipeSetEnabled
 } from "@/p5/utils/mediapipe/mediapipe.js";
+import {
+  initInteraction,
+  getPointerGroups
+} from "@/p5/utils/interaction/index.js";
 
 // video-mosaic — the live webcam, carved into a rows × columns grid. Each cell
 // samples a (slightly displaced) crop of the same blurred frame and is tinted
 // with a chromatic-aberration colour shift, so the feed reads as a drifting,
-// smeared mosaic of itself. The per-cell displacement is either automatic
-// (drifting noise) or interactive — pulled toward the mouse and the fingertips
-// detected on the *same* camera (MediaPipe hand tracking, enabled only in
-// interactive mode).
+// smeared mosaic of itself.
+//
+// The per-cell displacement is driven by whichever interaction handlers are
+// enabled — Mouse, Touch, Microphone, or Hands (fingertips on the webcam).
+// Mouse / touch / audio come from the shared interaction module; hands run
+// MediaPipe on this sketch's own camera (the same one being displayed), so the
+// shared module never touches the MediaPipe singleton. With no handler active
+// the cells fall back to a drifting noise offset.
 
 const buffers = {};
 let cameraSignature = "";
 let initializing = false;
-let mouseActive = false;
 
 // Fingertip landmark indices: thumb, index, middle, ring, pinky.
 const FINGERTIP_INDICES = [
@@ -82,6 +90,13 @@ function coverRect(
   };
 }
 
+// Whether the Hands handler wants MediaPipe hand tracking on the camera.
+function handsEnabled( cfg ) {
+  const interaction = cfg.interaction ?? {};
+
+  return interaction.enabled !== false && Boolean( interaction.hands?.enabled );
+}
+
 function cameraConfig( cfg ) {
   const camera = cfg.camera ?? {};
 
@@ -95,20 +110,25 @@ function cameraConfig( cfg ) {
       1,
       Math.round( camera.height ?? 720 )
     ),
-    // Hand tracking only runs in interactive mode, so automatic mode never
-    // pays for inference.
-    interactive: ( cfg.displacementMode ?? "auto" ) === "interactive"
+    // The displayed feed is always on; hand tracking is added only when the
+    // Hands handler is enabled, so the other modes never pay for inference.
+    hands: handsEnabled( cfg ),
+    maxHands: Math.round( clamp(
+      cfg.interaction?.hands?.maxHands ?? 2,
+      1,
+      2
+    ) )
   };
 }
 
 // Open (or reopen) the single camera. The hands task is added/removed with the
-// displacement mode; switching mode reinitialises (a brief camera blink).
+// Hands handler; toggling it reinitialises (a brief camera blink).
 // captureFlip stays false — the sketch mirrors the feed itself so the drawn
 // pixels and the fingertip coordinates share one orientation.
 async function ensureCamera( cfg ) {
   const camera = cameraConfig( cfg );
   const signature =
-    `${ camera.deviceId }|${ camera.width }|${ camera.height }|${ camera.interactive }`;
+    `${ camera.deviceId }|${ camera.width }|${ camera.height }|${ camera.hands }|${ camera.maxHands }`;
 
   if ( initializing || signature === cameraSignature ) {
     return;
@@ -131,10 +151,18 @@ async function ensureCamera( cfg ) {
         type: "webcam",
         deviceId: camera.deviceId
       },
-      tasks: camera.interactive ? [
+      tasks: camera.hands ? [
         "hands"
-      ] : []
+      ] : [],
+      taskOptions: camera.hands ? {
+        hands: {
+          numHands: camera.maxHands
+        }
+      } : {}
     } );
+    // init() doesn't restore mediapipe.enabled if a previously-mounted sketch
+    // left the singleton disabled, so flip it back on explicitly.
+    mediapipeSetEnabled( true );
   } catch( error ) {
     // Let a later frame retry if init failed (permission prompt, device busy…).
     cameraSignature = "";
@@ -147,40 +175,57 @@ async function ensureCamera( cfg ) {
   }
 }
 
-// Active pointers this frame, in canvas space: the mouse (once it has moved and
-// while it is over the canvas) plus every detected fingertip.
+// Append every detected fingertip (canvas space) to the pointer list. Hands run
+// on this sketch's own camera, so x is mirrored to match the displayed feed.
+function collectHandPointers(
+  p, flip, out
+) {
+  const hands = mediapipe.tasks?.hands?.result?.landmarks;
+
+  if ( !Array.isArray( hands ) ) {
+    return;
+  }
+
+  for ( const hand of hands ) {
+    for ( const index of FINGERTIP_INDICES ) {
+      const point = hand[ index ];
+
+      if ( point ) {
+        out.push( {
+          x: ( flip ? 1 - point.x : point.x ) * p.width,
+          y: point.y * p.height
+        } );
+      }
+    }
+  }
+}
+
+// All active pointers this frame, in canvas space. Mouse / touch / audio come
+// from the shared interaction module (vision intentionally left untouched, so
+// it never grabs the MediaPipe singleton this sketch owns); fingertips come
+// from this sketch's own hand tracking.
 function collectPointers(
-  p, flip
+  p, interaction, flip
 ) {
   const pointers = [];
 
-  const inside =
-    p.mouseX >= 0 && p.mouseX <= p.width &&
-    p.mouseY >= 0 && p.mouseY <= p.height;
+  const groups = getPointerGroups( interaction );
 
-  if ( mouseActive && inside ) {
-    pointers.push( {
-      x: p.mouseX,
-      y: p.mouseY
-    } );
+  for ( const group of groups ) {
+    for ( const point of group.points ) {
+      pointers.push( {
+        x: point.x,
+        y: point.y
+      } );
+    }
   }
 
-  const hands = mediapipe.tasks?.hands?.result?.landmarks;
-
-  if ( Array.isArray( hands ) ) {
-    for ( const hand of hands ) {
-      for ( const index of FINGERTIP_INDICES ) {
-        const point = hand[ index ];
-
-        if ( point ) {
-          // Mirror x to match the (mirrored) display when flip is on.
-          pointers.push( {
-            x: ( flip ? 1 - point.x : point.x ) * p.width,
-            y: point.y * p.height
-          } );
-        }
-      }
-    }
+  if ( interaction.hands?.enabled ) {
+    collectHandPointers(
+      p,
+      flip,
+      pointers
+    );
   }
 
   return pointers;
@@ -201,23 +246,24 @@ sketch.setup( async() => {
     delete buffers[ key ];
   }
 
-  mouseActive = false;
+  const cfg = options.sketch ?? {};
+
+  // Set up mouse / touch / audio listeners first. With no `vision` key this
+  // also clears any stale vision state a previously-mounted sketch left in the
+  // shared module, so it won't disable the camera we open next.
+  await initInteraction( cfg.interaction ?? {} );
 
   // Force a fresh camera for this mount.
   cameraSignature = "";
-  await ensureCamera( options.sketch ?? {} );
+  await ensureCamera( cfg );
 } );
 
 sketch.draw( () => {
   const p = getP5();
   const cfg = options.sketch ?? {};
 
-  // Reconcile the camera with the picker / mode (no-op unless one changed).
+  // Reconcile the camera with the picker / hands handler (no-op unless changed).
   ensureCamera( cfg );
-
-  if ( p.mouseX !== p.pmouseX || p.mouseY !== p.pmouseY ) {
-    mouseActive = true;
-  }
 
   p.clear();
   p.background( ...( cfg.backgroundColor ?? [
@@ -388,13 +434,16 @@ sketch.draw( () => {
   const cellBH = bh / rows;
   const time = p.frameCount * 0.01;
 
-  // Interactive mode pulls each cell toward nearby pointers (mouse + detected
-  // fingertips); automatic mode drifts on noise. Pointers are canvas-space.
-  const interactive = ( cfg.displacementMode ?? "auto" ) === "interactive";
-  const pointers = interactive ? collectPointers(
+  // Gather the enabled handlers' pointers; a cell is pulled toward nearby ones.
+  // With no handler producing a pointer, fall back to drifting noise. Pointers
+  // are canvas-space.
+  const interaction = cfg.interaction ?? {};
+  const pointers = interaction.enabled !== false ? collectPointers(
     p,
+    interaction,
     flip
-  ) : null;
+  ) : [];
+  const interactive = pointers.length > 0;
   const reach = clamp(
     cfg.reach ?? 0.5,
     0.05,

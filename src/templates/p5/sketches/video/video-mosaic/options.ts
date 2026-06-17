@@ -2,12 +2,17 @@ import {
   webcamSourceFormConfiguration,
   webcamSourceFormValues
 } from "@/p5/utils/webcam/defaults.js";
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
 
 // Default values only
 export const formValues = {
   // Live camera source — the shared webcam-device-select picker. The camera is
-  // owned by MediaPipe (it also runs the optional hand tracking), so flip is
-  // applied by the sketch rather than the capture.
+  // owned by the sketch (MediaPipe): it is always on for the displayed feed and
+  // also runs hand tracking when the Hands interaction handler is enabled, so
+  // the fingertips line up with the pixels on screen.
   camera: {
     ...webcamSourceFormValues
   },
@@ -21,11 +26,29 @@ export const formValues = {
   displacement: 0.4,
   colorShift: 0.4,
 
-  // How the per-cell displacement is driven: "auto" (drifting noise) or
-  // "interactive" (pulled toward the mouse + detected fingertips on the same
-  // camera).
-  displacementMode: "auto",
-  // How far a pointer's pull reaches, as a fraction of the canvas (interactive).
+  // Which handler drives the per-cell displacement. Pick any combination —
+  // Mouse, Touch, Microphone (audio level), Hands (fingertips on the webcam).
+  // Mouse / touch / audio reuse the shared interaction sources; hands run
+  // MediaPipe on this sketch's own camera. With the block disabled, or with no
+  // enabled handler producing a pointer, the cells fall back to a drifting
+  // noise offset (the original automatic look).
+  interaction: {
+    enabled: true,
+    mouse: {
+      ...interactionFormValues.mouse
+    },
+    touch: {
+      ...interactionFormValues.touch
+    },
+    audio: {
+      ...interactionFormValues.audio
+    },
+    hands: {
+      enabled: false,
+      maxHands: 2
+    }
+  },
+  // How far a pointer's pull reaches, as a fraction of the canvas.
   reach: 0.5,
 
   // Colors
@@ -80,19 +103,38 @@ export const formConfiguration: Record<string, any> = {
     step: 0.01
   },
 
-  displacementMode: {
-    component: "select",
-    label: "Displacement",
-    options: [
-      {
-        label: "Automatic (drift)",
-        value: "auto"
+  // Explicit per-handler toggles, mirroring the shared interaction panel. Mouse,
+  // touch and audio reuse the shared sources verbatim; hands is sketch-owned
+  // (it adds MediaPipe hand tracking to the displayed camera).
+  interaction: {
+    component: "nested-object",
+    label: "Interaction",
+    fields: {
+      enabled: {
+        component: "checkbox",
+        label: "Enabled"
       },
-      {
-        label: "Interactive (mouse + fingers)",
-        value: "interactive"
+      mouse: interactionFormConfiguration.fields.mouse,
+      touch: interactionFormConfiguration.fields.touch,
+      audio: interactionFormConfiguration.fields.audio,
+      hands: {
+        component: "nested-object",
+        label: "Hands (webcam)",
+        fields: {
+          enabled: {
+            component: "checkbox",
+            label: "Enabled"
+          },
+          maxHands: {
+            component: "slider",
+            label: "Max hands",
+            min: 1,
+            max: 2,
+            step: 1
+          }
+        }
       }
-    ]
+    }
   },
 
   reach: {
