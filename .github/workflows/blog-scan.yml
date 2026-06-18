@@ -1,0 +1,80 @@
+name: Blog backlog scan
+
+# Reliable detection of new blog milestones: on every push to main,
+# scripts/scan-blog-milestones.mjs compares HEAD against the last scanned
+# commit (blog/.last-scan), classifies the new code commits and feeds
+# blog/INBOX.md. Changes are proposed via a rolling PR to triage into
+# blog/BACKLOG.md.
+#
+# Replaces the in-session monitor (unreliable in the ephemeral environment).
+# Deterministic: no API key required.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "Starting SHA (overrides blog/.last-scan)"
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: blog-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for new milestones
+        id: scan
+        run: |
+          if [ -n "${{ github.event.inputs.since }}" ]; then
+            printf '%s\n' "${{ github.event.inputs.since }}" > blog/.last-scan
+          fi
+          node scripts/scan-blog-milestones.mjs
+          # Only propose a PR when there really are new milestones (INBOX modified).
+          # The cursor (.last-scan) only advances in the repo when that PR merges:
+          # as long as no milestone shows up, nothing is committed (no empty PR).
+          if git diff --quiet -- blog/INBOX.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open / update the triage PR
+        if: steps.scan.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH=blog/backlog-inbox
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Rolling branch recreated from current main: the INBOX is fully
+          # regenerated on each scan, so a force-push reflects the complete state.
+          git checkout -B "$BRANCH"
+          git add blog/INBOX.md blog/.last-scan
+          git commit -m "blog: auto-scan of new milestones"
+          git push -f origin "$BRANCH"
+
+          OPEN=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')
+          if [ "$OPEN" != "0" ]; then
+            echo "PR already open — updated by the force-push."
+          else
+            gh pr create --draft --base main --head "$BRANCH" \
+              --title "🤖 Blog — new milestones to triage" \
+              --body $'Automatic detection of new milestones (push to `main`).\n\nThe raw entries live in `blog/INBOX.md`: triage them into `blog/BACKLOG.md` (giving each an article angle), then clear the corresponding INBOX section. Merging this PR advances the `blog/.last-scan` cursor.\n\n_Rolling PR updated on every push to `main` by `.github/workflows/blog-scan.yml`._'
+          fi
