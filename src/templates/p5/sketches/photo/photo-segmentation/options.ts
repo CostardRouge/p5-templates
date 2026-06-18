@@ -4,9 +4,9 @@ import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
   photo: {
-    image: ( await getTestImagePaths() )[ 0 ],
+    image: "global/images/DSC02455.jpg",
     margin: 0.1,
-    scale: 1,
+    scale: 1.1,
     center: true,
     clip: false,
     fill: false
@@ -15,8 +15,8 @@ export const formValues = {
     // Normalized (0-1) focus point fed to the interactive segmenter. Click the
     // canvas to move it; it is also editable from the 2D pad below.
     roi: {
-      x: 0.5,
-      y: 0.5
+      x: 0.44326979424839197,
+      y: 0.5386447230522758
     },
     inverse: true,
     // Feather the cut-out border so the mask blends instead of showing the hard,
@@ -34,12 +34,12 @@ export const formValues = {
       235,
       225
     ],
-    blur: 16,
+    blur: 12,
     dim: 0.45
   },
   subject: {
     // Pop the cut-out subject out of its frame.
-    scale: 1,
+    scale: 0.99,
     shadow: {
       enabled: true,
       blur: 28,
@@ -54,19 +54,22 @@ export const formValues = {
     }
   },
   marker: {
-    show: false,
+    show: true,
     color: [
       255,
       255,
       255
     ],
-    radius: 16,
+    radius: 61,
     weight: 3
   },
   title: {
     ...titleDefaultValues,
     blend: "source-over",
     fill: [
+      255,
+      255,
+      255,
       255
     ],
     stroke: [

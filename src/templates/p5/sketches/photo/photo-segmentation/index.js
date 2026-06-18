@@ -626,22 +626,13 @@ function drawMarker( p ) {
 /*  Lifecycle                                                           */
 /* ------------------------------------------------------------------ */
 
-sketch.setup( async() => {
+sketch.setup( () => {
   const p = getP5();
 
   p.background( ...options.sketch.backgroundColor );
 
   state.imagePath = resolveImagePath( options.sketch?.photo?.image );
   state.roi = currentRoi();
-
-  await mediapipeInit( {
-    enableIdle: false,
-    worker: false,
-    enableCapture: false, // image-based interactive segmentation: no camera
-    tasks: [
-      "interactive"
-    ]
-  } );
 
   subscribeSketchOptions( (
     newOptions, origin
@@ -689,8 +680,25 @@ sketch.setup( async() => {
     }
   } );
 
-  // Segment the default focus point as soon as the photo is ready.
+  // Segment the default focus point as soon as the photo + processor are ready.
   state.pendingSegment = true;
+
+  // Fire-and-forget: awaiting init would block setup (and therefore the first
+  // draw) on the ~4s model-load + prewarm. Instead the photo renders right away
+  // and the draw loop kicks off segmentation the moment the processor is ready.
+  mediapipeInit( {
+    enableIdle: false,
+    worker: false,
+    enableCapture: false, // image-based interactive segmentation: no camera
+    tasks: [
+      "interactive"
+    ]
+  } ).catch( ( error ) => {
+    console.error(
+      "[photo-segmentation] mediapipe init failed",
+      error
+    );
+  } );
 } );
 
 events.register(
@@ -761,7 +769,10 @@ sketch.draw( () => {
     p,
     photo
   );
+
+  // Title sits behind the cut-out subject: backdrop → title → subject.
+  renderTitle();
+
   drawSubject( p );
   drawMarker( p );
-  renderTitle();
 } );
