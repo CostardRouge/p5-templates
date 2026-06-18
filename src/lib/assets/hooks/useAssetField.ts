@@ -45,10 +45,20 @@ export default function useAssetField<P>( {
 
   const instances: AssetInstance<P>[] = useMemo(
     () => {
-      if ( !Array.isArray( rawValue ) ) {
-        return [];
-      }
-      return rawValue
+      // Single-asset fields (the `image`/`asset` components) seed their option
+      // as a bare value — a string path for images, an object for richer kinds
+      // — rather than the canonical array. Accept both shapes so the picker
+      // preview reflects a value that was set as a bare scalar, instead of
+      // silently rendering an empty drop zone over an already-selected asset.
+      const entries = Array.isArray( rawValue )
+        ? rawValue
+        : rawValue === null || rawValue === undefined || rawValue === ""
+          ? []
+          : [
+            rawValue
+          ];
+
+      return entries
         .filter( ( entry ) => entry !== null && entry !== undefined && entry !== "" )
         .map( ( entry ) => kind.parseFieldEntry(
           entry,
@@ -172,36 +182,39 @@ export default function useAssetField<P>( {
     ]
   );
 
-  /** Single-asset variant: replace the (sole) instance's path. */
+  /**
+   * Single-asset variant: replace the (sole) instance's path.
+   *
+   * Writes back a bare scalar (the serialized entry — a string for images)
+   * rather than a one-element array, so a single-asset field keeps the same
+   * shape it was seeded with. Otherwise the first edit would silently promote
+   * `photo.image` from `"…": string` to `["…"]: string[]`, which the sketches
+   * that read the value as a plain path then fail to resolve.
+   */
   const setSinglePath = useCallback(
     ( path: string ) => {
-      const head = instances[ 0 ];
-
       if ( !path ) {
         field.onChange( "" );
         return;
       }
-      if ( head ) {
-        writeInstances( [
-          {
-            ...head,
-            path
-          }
-        ] );
-      } else {
-        writeInstances( [
-          {
-            id: makeAssetId(),
-            path,
-            params: kind.defaultParams()
-          }
-        ] );
-      }
+
+      const head = instances[ 0 ];
+      const entry: AssetInstance<P> = head
+        ? {
+          ...head,
+          path
+        }
+        : {
+          id: makeAssetId(),
+          path,
+          params: kind.defaultParams()
+        };
+
+      field.onChange( kind.serializeFieldEntry( entry ) );
     },
     [
       field,
       instances,
-      writeInstances,
       kind
     ]
   );
