@@ -131,6 +131,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:noise-strips/noise-strips-v1": () => import( "@/p5/sketches/noise-strips/noise-strips-v1/options" ),
   "p5:noise-strips/noise-strips-v2": () => import( "@/p5/sketches/noise-strips/noise-strips-v2/options" ),
   "p5:noise-strips/noise-strips-v3-lava": () => import( "@/p5/sketches/noise-strips/noise-strips-v3-lava/options" ),
+  "p5:peaks-shaders/peaks-shaders-sphere": () => import( "@/p5/sketches/peaks-shaders/peaks-shaders-sphere/options" ),
   "p5:peaks/peaks-cone": () => import( "@/p5/sketches/peaks/peaks-cone/options" ),
   "p5:peaks/peaks-cylinder": () => import( "@/p5/sketches/peaks/peaks-cylinder/options" ),
   "p5:peaks/peaks-grid": () => import( "@/p5/sketches/peaks/peaks-grid/options" ),
