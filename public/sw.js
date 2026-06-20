@@ -1,7 +1,7 @@
 // Service worker for PWA installation, push notifications, and thumbnail caching
 // Caches thumbnail images for better performance on slow NAS storage
 
-const SW_VERSION = "0.2.0-thumbnail-cache";
+const SW_VERSION = "0.3.0-thumbnail-cache-webp";
 const THUMBNAIL_CACHE = "thumbnail-cache-v1";
 
 // Push notification handler
@@ -109,10 +109,16 @@ function isThumbnailImage( url ) {
   const urlObj = new URL( url );
   const pathname = urlObj.pathname;
 
-  // Template thumbnails: assets/images/templates/**/*.{jpeg,jpg}
+  // Template thumbnails: assets/images/templates/**/*.{webp,jpeg,jpg}
+  // Thumbnails are now generated as WebP (see src/lib/createSketchThumbnails.ts);
+  // .jpeg/.jpg are kept for backwards compatibility with any legacy stills.
   if (
     pathname.startsWith( "/assets/images/templates/" ) &&
-    ( pathname.endsWith( ".jpeg" ) || pathname.endsWith( ".jpg" ) )
+    (
+      pathname.endsWith( ".webp" ) ||
+      pathname.endsWith( ".jpeg" ) ||
+      pathname.endsWith( ".jpg" )
+    )
   ) {
     return true;
   }
