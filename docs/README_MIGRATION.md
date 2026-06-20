@@ -11,7 +11,7 @@ The recording system has been successfully migrated from browser-based tar archi
 - ✅ **Unified recording function** - Single function handles both single and multi-slide recordings
 - ✅ **Correct video speed** - Respects framerate and duration settings
 - ✅ **Updated progress tracking** - Removed obsolete steps
-- 🧪 **Streaming mode** - Experimental zero-disk-I/O mode (commented out)
+- ✅ **Streaming capture** - Frames are streamed straight to FFmpeg with zero disk I/O (the only capture path)
 
 ### Documentation
 - 📖 **FRAME_CAPTURE_MIGRATION.md** - Detailed architecture and migration guide
@@ -19,7 +19,6 @@ The recording system has been successfully migrated from browser-based tar archi
 - 📖 **MIGRATION_SUMMARY.md** - High-level overview
 - 📖 **DEPLOYMENT_CHECKLIST.md** - Deployment and testing checklist
 - 📖 **FINAL_CHANGES.md** - Summary of all fixes
-- 📖 **STREAMING_MODE_TESTING.md** - Guide for testing streaming mode
 - 📖 **QUICK_START_SERVER_SIDE_CAPTURE.md** - Quick start guide
 
 ### Testing
@@ -87,23 +86,17 @@ Browser → CCapture.js → Tar.js → Download → Extract → FFmpeg
          (500MB RAM)   (slow)    (network)  (disk)
 ```
 
-### After (Server-Side)
-```
-Playwright → Node.js → Disk → FFmpeg
-           (50MB RAM) (fast)
-```
-
-### Future (Streaming Mode)
+### After (Server-Side Streaming)
 ```
 Playwright → Node.js → FFmpeg (stdin)
-           (30MB RAM) (fastest, no disk)
+           (30MB RAM) (PNG frames streamed, no disk)
 ```
 
 ## 🔧 Files Changed
 
 ### New Files
-- `src/utils/captureFramesServerSide.ts` - Core server-side capture
-- `src/utils/captureFramesWithStreaming.ts` - Streaming mode (experimental)
+- `src/utils/captureFramesServerSide.ts` - Disk-based capture (used for sketch preview thumbnails)
+- `src/utils/captureFramesWithStreaming.ts` - Streaming capture (the recording worker path)
 - `scripts/test-frame-capture.mjs` - Test script
 - Multiple documentation files
 
@@ -125,22 +118,11 @@ Playwright → Node.js → FFmpeg (stdin)
 
 ### For Testing
 - **Test script**: `scripts/test-frame-capture.mjs`
-- **Streaming mode**: `STREAMING_MODE_TESTING.md`
 - **Scripts guide**: `scripts/README.md`
 
 ### For Deployment
 - **Checklist**: `DEPLOYMENT_CHECKLIST.md`
 - **Summary**: `MIGRATION_SUMMARY.md`
-
-## 🧪 Testing Streaming Mode
-
-Streaming mode can be enabled with a single boolean flag:
-
-1. Open `src/lib/recordSketch.ts`
-2. Change `const USE_STREAMING_MODE = false;` to `true`
-3. Test and compare performance
-
-See `STREAMING_MODE_TESTING.md` for detailed instructions.
 
 ## 🎯 Animation Settings
 
@@ -175,13 +157,13 @@ See `STREAMING_MODE_TESTING.md` for detailed instructions.
 
 ## 📈 Performance Comparison
 
-| Metric | Old (Tar) | New (Disk) | New (Stream) |
-|--------|-----------|------------|--------------|
-| Memory | 500MB | 50MB | 30MB |
-| Time | 45s | 30s | 25s |
-| Disk I/O | High | Medium | None |
-| Max frames | 1000 | Unlimited | Unlimited |
-| Stability | Crashes | Stable | Stable |
+| Metric | Old (Tar) | New (Streaming) |
+|--------|-----------|-----------------|
+| Memory | 500MB | 30MB |
+| Time | 45s | 25s |
+| Disk I/O | High | None |
+| Max frames | 1000 | Unlimited |
+| Stability | Crashes | Stable |
 
 ## ✅ Testing Checklist
 
@@ -194,7 +176,6 @@ See `STREAMING_MODE_TESTING.md` for detailed instructions.
 - [ ] Verify thumbnails are generated
 - [ ] Test with different framerates (30, 60, 120)
 - [ ] Test with different durations (1s, 5s, 30s)
-- [ ] Test streaming mode (optional)
 
 ## 🐛 Troubleshooting
 
@@ -248,7 +229,7 @@ For issues or questions:
 ✅ **Correct video speed**  
 ✅ **Unified codebase**  
 ✅ **Updated progress tracking**  
-🧪 **Streaming mode ready for testing**  
+✅ **Streaming capture (PNG frames piped to FFmpeg, zero disk I/O)**  
 
 **Status**: Ready for production testing  
 **Version**: 2.0.0  

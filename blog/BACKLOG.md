@@ -29,7 +29,7 @@ série « build in public ».
 - **Chiffres clés (déjà mesurés) :** mémoire 500 MB → 50 MB (−90 %), temps 45 s → 30 s
   (−33 %), stabilité « crash > 1000 frames » → « testé jusqu'à 10 000 frames ».
 - **Sources :** `docs/FRAME_CAPTURE_MIGRATION.md`, `docs/GLOBAL_RECORDING_API.md`,
-  `docs/QUICK_START_SERVER_SIDE_CAPTURE.md`, `docs/STREAMING_MODE_TESTING.md`,
+  `docs/QUICK_START_SERVER_SIDE_CAPTURE.md`,
   commits `e94d12c` (suppression du disk-based), `f25b5b5` (UI streaming), PR #36/#38.
 
 ### A2 — « Pourquoi le temps de p5.js ment quand on enregistre frame par frame » 🔵

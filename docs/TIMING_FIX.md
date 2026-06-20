@@ -314,5 +314,5 @@ The fix ensures that time advances correctly during server-side frame capture by
 ---
 
 **Status**: ✅ Fixed  
-**Applies to**: Both disk-based and streaming capture modes  
+**Applies to**: Both capture utilities — `captureFramesServerSide.ts` (preview thumbnails) and `captureFramesWithStreaming.ts` (recording worker)  
 **Impact**: All sketches now loop correctly

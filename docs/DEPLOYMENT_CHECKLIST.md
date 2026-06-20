@@ -155,7 +155,6 @@
 
 #### Optimization
 - [ ] Identify optimization opportunities
-- [ ] Test streaming mode (if needed)
 - [ ] Adjust frame capture delay (if needed)
 - [ ] Optimize FFmpeg settings (if needed)
 
@@ -174,7 +173,6 @@
 - [ ] Check for edge cases
 
 #### Optimization
-- [ ] Consider implementing streaming mode
 - [ ] Consider parallel frame capture
 - [ ] Consider GPU acceleration
 - [ ] Consider resume capability
@@ -276,7 +274,6 @@
 - FFmpeg must be installed on server
 
 ### Future Enhancements
-- Streaming mode for zero disk I/O
 - Parallel frame capture
 - GPU-accelerated encoding
 - Resume capability for interrupted recordings
