@@ -727,6 +727,11 @@ class GsapRuntime {
       `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${ width }px;height:${ height }px;">${ xhtml }</div>` +
       "</foreignObject></svg>";
 
+    // Must be a `data:` URL, NOT a blob object-URL: Chromium taints the canvas
+    // when an SVG-with-foreignObject image is loaded from a blob URL, and the
+    // WebCodecs encoder can't read a tainted canvas (recording would fail). The
+    // style-diff + media de-dup above keep this string small enough that the
+    // `encodeURIComponent` cost is negligible.
     return `data:image/svg+xml;charset=utf-8,${ encodeURIComponent( svg ) }`;
   }
 
@@ -763,36 +768,33 @@ class GsapRuntime {
  * Rewrite every `<img src>` and inline `background-image: url(…)` under `root`
  * to the data-URL produced by `load(url)`. URLs that already are data-URLs (or
  * fail to load) are left untouched. Exported for testing the rasterisation fix.
+ *
+ * A `background-image` URL referenced by two or more elements is hoisted into a
+ * single CSS custom property on `root` and referenced via `var(…)`, instead of
+ * duplicating the (multi-hundred-KB) data-URL on every element. Grid/mosaic
+ * templates fill hundreds of tiles from one photo, and inlining it per tile
+ * ballooned the serialised SVG to tens of MB — the dominant per-frame cost.
  */
 export async function inlineMediaInto(
   root: HTMLElement,
   load: ( url: string ) => Promise<string | null>
 ): Promise<void> {
-  const tasks: Promise<void>[] = [];
-
-  root.querySelectorAll( "img" ).forEach( ( img ) => {
+  const imgs = Array.from( root.querySelectorAll( "img" ) ).filter( ( img ) => {
     const src = img.getAttribute( "src" );
 
-    if ( !src || src.startsWith( "data:" ) ) {
-      return;
-    }
-
-    tasks.push( load( src ).then( ( dataUrl ) => {
-      if ( dataUrl ) {
-        img.setAttribute(
-          "src",
-          dataUrl
-        );
-      }
-    } ) );
+    return Boolean( src && !src.startsWith( "data:" ) );
   } );
 
-  const withBackgrounds = [
+  // Collect `background-image: url(…)` references (root included) up front so
+  // we can count how many elements share each URL before rewriting.
+  const backgrounds: { el: HTMLElement;
+    url: string }[] = [];
+  const candidates = [
     root,
     ...Array.from( root.querySelectorAll<HTMLElement>( "*" ) )
   ];
 
-  withBackgrounds.forEach( ( el ) => {
+  candidates.forEach( ( el ) => {
     const backgroundImage = el.style?.backgroundImage;
 
     if ( !backgroundImage || backgroundImage === "none" ) {
@@ -806,14 +808,84 @@ export async function inlineMediaInto(
       return;
     }
 
-    tasks.push( load( url ).then( ( dataUrl ) => {
-      if ( dataUrl ) {
-        el.style.backgroundImage = `url("${ dataUrl }")`;
-      }
-    } ) );
+    backgrounds.push( {
+      el,
+      url
+    } );
   } );
 
-  await Promise.all( tasks );
+  // Resolve every unique URL once (the upstream `load` is itself cached across
+  // frames, so this only fans out the first time a photo is seen).
+  const uniqueUrls = new Set<string>( [
+    ...imgs.map( ( img ) => img.getAttribute( "src" )! ),
+    ...backgrounds.map( ( b ) => b.url )
+  ] );
+  const dataUrlByUrl = new Map<string, string | null>();
+
+  await Promise.all( Array.from( uniqueUrls ).map( async( url ) => {
+    dataUrlByUrl.set(
+      url,
+      await load( url )
+    );
+  } ) );
+
+  imgs.forEach( ( img ) => {
+    const dataUrl = dataUrlByUrl.get( img.getAttribute( "src" )! );
+
+    if ( dataUrl ) {
+      img.setAttribute(
+        "src",
+        dataUrl
+      );
+    }
+  } );
+
+  // Tally background usages so repeated photos can be hoisted to a custom prop.
+  const usage = new Map<string, number>();
+
+  backgrounds.forEach( ( {
+    url
+  } ) => usage.set(
+    url,
+    ( usage.get( url ) ?? 0 ) + 1
+  ) );
+
+  const varNameByUrl = new Map<string, string>();
+
+  backgrounds.forEach( ( {
+    el, url
+  } ) => {
+    const dataUrl = dataUrlByUrl.get( url );
+
+    if ( !dataUrl ) {
+      return;
+    }
+
+    // Single-use background → inline the data-URL directly (no var overhead).
+    if ( ( usage.get( url ) ?? 0 ) < 2 ) {
+      el.style.backgroundImage = `url("${ dataUrl }")`;
+
+      return;
+    }
+
+    let varName = varNameByUrl.get( url );
+
+    if ( !varName ) {
+      varName = `--media-${ varNameByUrl.size }`;
+      varNameByUrl.set(
+        url,
+        varName
+      );
+      // Custom properties inherit, so defining it once on `root` puts it in
+      // scope for every descendant tile that references it.
+      root.style.setProperty(
+        varName,
+        `url("${ dataUrl }")`
+      );
+    }
+
+    el.style.backgroundImage = `var(${ varName })`;
+  } );
 }
 
 /**
@@ -849,17 +921,175 @@ async function urlToDataUrl( url: string ): Promise<string | null> {
   }
 }
 
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
+
+/**
+ * CSS properties that inherit and affect pixels. They are always written out
+ * (never dropped as "equal to default"): inside the foreignObject a dropped
+ * inherited property would resolve to the ancestor's value rather than the UA
+ * default, so an element deliberately reset to a default-looking value under a
+ * non-default ancestor would otherwise render wrong. Non-inherited properties
+ * have no such hazard — dropping them falls back to the initial value, which is
+ * exactly what `===` against the UA default guarantees.
+ */
+const INHERITED_VISUAL_PROPS = new Set( [
+  "color",
+  "direction",
+  "font-family",
+  "font-size",
+  "font-stretch",
+  "font-style",
+  "font-variant",
+  "font-weight",
+  "font-feature-settings",
+  "font-kerning",
+  "font-optical-sizing",
+  "font-variation-settings",
+  "letter-spacing",
+  "line-height",
+  "list-style-image",
+  "list-style-position",
+  "list-style-type",
+  "quotes",
+  "tab-size",
+  "text-align",
+  "text-align-last",
+  "text-indent",
+  "text-justify",
+  "text-orientation",
+  "text-rendering",
+  "text-shadow",
+  "text-transform",
+  "visibility",
+  "white-space",
+  "word-break",
+  "word-spacing",
+  "overflow-wrap",
+  "writing-mode",
+  "hyphens",
+  "caret-color",
+  "color-scheme",
+  "accent-color",
+  "-webkit-font-smoothing",
+  "-webkit-text-size-adjust",
+  "-webkit-text-stroke-color",
+  "-webkit-text-stroke-width"
+] );
+
+/**
+ * Per-tag cache of the browser's *default* computed style, measured in an
+ * isolated blank iframe (no author stylesheet). Used to emit only the
+ * properties that actually differ from the UA default when inlining styles.
+ *
+ * Why: the SVG `<foreignObject>` has no stylesheet cascade, so every element
+ * must carry its style inline. Dumping all ~350 computed properties per node
+ * inflated the serialised SVG to tens of MB on dense templates (e.g. 242 nodes
+ * → ~43 MB), and the per-frame SVG-image decode of that blob was the recording
+ * bottleneck (~1 fps). Diffing against the UA defaults drops the inline style
+ * to the handful of properties that matter, shrinking the SVG ~10x and the
+ * decode + serialise time with it — computed values are already absolute
+ * (resolved px/rgb), so the diff stays correct inside the foreignObject.
+ */
+let defaultsFrame: HTMLIFrameElement | null = null;
+const defaultStyleCache = new Map<string, Record<string, string>>();
+
+function getDefaultsDocument(): Document | null {
+  if ( defaultsFrame?.contentDocument?.body ) {
+    return defaultsFrame.contentDocument;
+  }
+
+  const frame = document.createElement( "iframe" );
+
+  frame.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+  frame.style.cssText =
+    "position:fixed;top:-10000px;left:-10000px;width:0;height:0;border:0;";
+  document.body.appendChild( frame );
+
+  const doc = frame.contentDocument;
+
+  if ( !doc ) {
+    frame.remove();
+
+    return null;
+  }
+
+  doc.open();
+  doc.write( "<!DOCTYPE html><html><head></head><body></body></html>" );
+  doc.close();
+  defaultsFrame = frame;
+
+  return doc;
+}
+
+/** UA default computed style for `tagName`, cached + measured in isolation. */
+function getDefaultStyleFor( tagName: string ): Record<string, string> | null {
+  const key = tagName.toLowerCase();
+  const cached = defaultStyleCache.get( key );
+
+  if ( cached ) {
+    return cached;
+  }
+
+  const doc = getDefaultsDocument();
+
+  if ( !doc?.defaultView ) {
+    return null;
+  }
+
+  const element = doc.createElement( key );
+
+  doc.body.appendChild( element );
+
+  const computed = doc.defaultView.getComputedStyle( element );
+  const map: Record<string, string> = {};
+
+  for ( let i = 0; i < computed.length; i++ ) {
+    const property = computed[ i ];
+
+    map[ property ] = computed.getPropertyValue( property );
+  }
+
+  element.remove();
+  defaultStyleCache.set(
+    key,
+    map
+  );
+
+  return map;
+}
+
 function inlineComputedStyles(
   source: Element,
   target: Element
 ): void {
   const computed = window.getComputedStyle( source );
+
+  // Only HTML elements are default-diffed; foreign (SVG/MathML) elements have
+  // namespace-specific UA defaults, so they keep the full dump to stay safe.
+  const isHtml = !source.namespaceURI || source.namespaceURI === XHTML_NS;
+  const defaults = isHtml ? getDefaultStyleFor( source.tagName ) : null;
+
   let cssText = "";
 
   for ( let i = 0; i < computed.length; i++ ) {
     const property = computed[ i ];
+    const value = computed.getPropertyValue( property );
 
-    cssText += `${ property }:${ computed.getPropertyValue( property ) };`;
+    // Skip non-inherited properties already at their UA default — they render
+    // identically inside the foreignObject without being spelled out. Inherited
+    // visual properties are always emitted (see INHERITED_VISUAL_PROPS).
+    if (
+      defaults &&
+      defaults[ property ] === value &&
+      !INHERITED_VISUAL_PROPS.has( property )
+    ) {
+      continue;
+    }
+
+    cssText += `${ property }:${ value };`;
   }
 
   ( target as HTMLElement ).setAttribute(
