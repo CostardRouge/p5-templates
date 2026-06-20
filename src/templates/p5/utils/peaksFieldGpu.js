@@ -48,7 +48,7 @@ export {
 //     p5's internal, version-specific matrix objects.
 //
 // A sketch supplies only the GLSL that maps one (col, row, layer) index to a
-// point — see peaks-sphere-shaders for a minimal consumer.
+// point — see peaks-shaders-sphere for a minimal consumer.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Up to this many noise octaves on the GPU (the detail slider maxes at 8).

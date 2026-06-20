@@ -2962,5 +2962,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-17T20:11:33.098Z",
     "ctime": "2026-06-17T20:11:27.094Z"
+  },
+  {
+    "name": "peaks-shaders-sphere",
+    "engine": "p5",
+    "category": "peaks-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-17T20:12:46.394Z",
+    "ctime": "2026-06-17T20:11:27.094Z"
   }
 ]
