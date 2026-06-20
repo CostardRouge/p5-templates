@@ -115,5 +115,41 @@ describe(
         expect( root.querySelector( "img" )?.getAttribute( "src" ) ).toBe( url );
       }
     );
+
+    it(
+      "hoists a background-image shared by 2+ elements into one CSS variable",
+      async() => {
+        const root = document.createElement( "div" );
+        const url = "http://localhost/assets/images/test/grid.jpg";
+
+        // Three tiles all painted from the same photo (the mosaic/grid case).
+        for ( let i = 0; i < 3; i++ ) {
+          const tile = document.createElement( "div" );
+
+          tile.style.backgroundImage = `url("${ url }")`;
+          root.appendChild( tile );
+        }
+
+        const load = fakeLoader( {} );
+
+        await inlineMediaInto(
+          root,
+          load
+        );
+
+        // The photo is fetched once, not once per tile.
+        expect( load ).toHaveBeenCalledTimes( 1 );
+
+        // Its data-URL lives in a single custom property on the root…
+        expect( root.style.getPropertyValue( "--media-0" ) ).toBe( `url("${ DATA_URL }")` );
+
+        // …and every tile references it via var() instead of duplicating it.
+        const tiles = Array.from( root.children ) as HTMLElement[];
+
+        for ( const tile of tiles ) {
+          expect( tile.style.backgroundImage ).toBe( "var(--media-0)" );
+        }
+      }
+    );
   }
 );
