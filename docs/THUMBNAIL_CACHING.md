@@ -9,9 +9,11 @@ The PWA service worker now caches thumbnail images to improve loading performanc
 The service worker caches the following thumbnail images:
 
 1. **Template Thumbnails**
-   - Path: `/assets/images/templates/**/*.{jpeg,jpg}`
+   - Path: `/assets/images/templates/**/*.{webp,jpeg,jpg}`
    - Used in: Templates page (`/templates`)
-   - Example: `/assets/images/templates/p5/sketch-name/thumbnail.jpeg`
+   - Example: `/assets/images/templates/p5/sketch-name/thumbnail.webp`
+   - Thumbnails are generated as WebP (quality 80) by sharp; `.jpeg`/`.jpg`
+     remain matched for backwards compatibility with legacy stills.
 
 2. **Recording Thumbnails**
    - API: `/api/recordings/[id]/thumbnail`
@@ -71,6 +73,6 @@ To clear cache:
 
 ## Service Worker Version
 
-Current version: `0.2.0-thumbnail-cache`
+Current version: `0.3.0-thumbnail-cache-webp`
 
 When updating the service worker, increment the version to trigger cache cleanup.
