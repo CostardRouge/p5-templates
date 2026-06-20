@@ -9,16 +9,16 @@ The recording system has been successfully migrated from browser-based tar archi
 ### New Files Created
 
 1. **`src/utils/captureFramesServerSide.ts`**
-   - Core server-side frame capture implementation
+   - Disk-based frame capture (used for sketch preview thumbnails, not recordings)
    - Captures frames one-by-one from Playwright page
    - Writes PNG files directly to disk
    - Reports progress in real-time
 
 2. **`src/utils/captureFramesWithStreaming.ts`**
-   - Advanced streaming implementation (experimental)
-   - Streams frames directly to FFmpeg stdin
+   - Streaming capture used by the recording worker
+   - Streams PNG frames directly to FFmpeg stdin
    - No disk I/O for maximum efficiency
-   - Future optimization path
+   - The sole capture path for recordings
 
 3. **`FRAME_CAPTURE_MIGRATION.md`**
    - Detailed migration documentation
@@ -148,11 +148,10 @@ frame_00300.png
 4. Gather feedback from test recordings
 
 ### Future Enhancements
-1. **Streaming Mode**: Use `captureFramesWithStreaming()` for long videos
-2. **Parallel Capture**: Capture multiple frames simultaneously
-3. **GPU Acceleration**: Use hardware encoding (h264_videotoolbox)
-4. **Resume Capability**: Save checkpoints for interrupted recordings
-5. **Real-time Preview**: Stream frames to client during capture
+1. **Parallel Capture**: Capture multiple frames simultaneously
+2. **GPU Acceleration**: Use hardware encoding (h264_videotoolbox)
+3. **Resume Capability**: Save checkpoints for interrupted recordings
+4. **Real-time Preview**: Stream frames to client during capture
 
 ## 📝 Configuration
 
@@ -193,7 +192,7 @@ All frames show the same content
 ```
 Frame capture takes too long
 ```
-**Solution**: Reduce `waitForTimeout` delay or use streaming mode
+**Solution**: Reduce the `waitForTimeout` delay in `captureFramesWithStreaming.ts`
 
 ## 📚 Documentation
 

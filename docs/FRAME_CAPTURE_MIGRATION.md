@@ -71,7 +71,7 @@ await captureFramesServerSide({
 
 #### `src/lib/recordSketch.ts`
 - Removed tar import and download event handling
-- Added `captureFramesServerSide()` call
+- Streams frames to FFmpeg via `captureFramesWithStreaming()` (no frames written to disk)
 - Removed tar extraction step
 - Simplified progress tracking
 
@@ -89,9 +89,9 @@ await captureFramesServerSide({
 - These steps are removed
 - `recording.saving-frames` now represents actual frame capture progress
 
-## Advanced Optimization: Streaming to FFmpeg
+## Capture Path: Streaming to FFmpeg
 
-For future optimization, `src/utils/captureFramesWithStreaming.ts` provides a streaming approach:
+The recording worker (`src/lib/recordSketch.ts`) captures via `src/utils/captureFramesWithStreaming.ts` exclusively — PNG frames are streamed straight to FFmpeg's stdin and never written to disk. The disk-based `captureFramesServerSide.ts` described above is retained only for sketch preview thumbnails (`src/lib/createSketchPreviews.ts`), not for recordings.
 
 ```typescript
 await captureFramesWithStreaming({

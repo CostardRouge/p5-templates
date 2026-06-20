@@ -7,8 +7,8 @@ The recording system has been migrated from browser-based tar archive capture to
 ## 📦 What's New
 
 ### New Files
-1. **`src/utils/captureFramesServerSide.ts`** - Core server-side capture
-2. **`src/utils/captureFramesWithStreaming.ts`** - Advanced streaming mode
+1. **`src/utils/captureFramesServerSide.ts`** - Disk-based capture (sketch preview thumbnails)
+2. **`src/utils/captureFramesWithStreaming.ts`** - Streaming capture (recording worker; PNG frames piped to FFmpeg, no disk)
 3. **`scripts/test-frame-capture.mjs`** - Test script
 
 ### Modified Files
@@ -150,8 +150,7 @@ await page.waitForTimeout(5); // Instead of 10
 4. Deploy to staging
 
 ### Future Enhancements
-1. Implement streaming mode (no disk I/O)
-2. Add parallel frame capture
+1. Add parallel frame capture
 3. Add GPU acceleration
 4. Add resume capability
 
