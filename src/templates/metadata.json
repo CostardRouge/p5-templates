@@ -3094,5 +3094,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-21T19:44:10.197Z",
     "ctime": "2026-06-21T19:43:01.869Z"
+  },
+  {
+    "name": "text-morphing-iris-mask",
+    "engine": "p5",
+    "category": "text-morphing",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T19:45:54.448Z",
+    "ctime": "2026-06-21T19:45:01.644Z"
   }
 ]
