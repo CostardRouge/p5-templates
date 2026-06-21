@@ -3070,5 +3070,29 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-21T18:30:45.130Z",
     "ctime": "2026-06-21T18:29:44.670Z"
+  },
+  {
+    "name": "spline-text-v2-reading",
+    "engine": "p5",
+    "category": "spline-text",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T19:43:38.469Z",
+    "ctime": "2026-06-21T19:42:56.901Z"
+  },
+  {
+    "name": "spline-text-v3-reading-instant",
+    "engine": "p5",
+    "category": "spline-text",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T19:44:10.197Z",
+    "ctime": "2026-06-21T19:43:01.869Z"
   }
 ]

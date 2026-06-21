@@ -78,7 +78,7 @@ function ensureBasePoints(
  * glyph by glyph in reading order, so an evenly indexed subsample keeps the
  * left-to-right letter ordering the progressive reveal relies on.
  */
-function resampleOrdered(
+export function resampleOrdered(
   points, count
 ) {
   const n = points.length;
