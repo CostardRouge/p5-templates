@@ -5,10 +5,10 @@ import {
 export const formValues = {
   text: {
     value: "word by word the spline jumps across the page",
-    font: "sans",
-    size: 120,
-    lineHeight: 1.25,
-    maxWidth: 0.8,
+    font: "martian",
+    size: 135,
+    lineHeight: 1.15,
+    maxWidth: 1,
     sampleFactor: 0.2,
     simplifyThreshold: 0,
     visible: true,
@@ -30,12 +30,12 @@ export const formValues = {
     y: 0.5
   },
   points: {
-    count: 55
+    count: 175
   },
   flow: {
     // "instant" snaps the cluster onto each word (a jump per word); "progressive"
     // morphs it from word to word.
-    mode: "instant" as "progressive" | "instant",
+    mode: "progressive" as "progressive" | "instant",
     dwell: 0.45,
     spread: 0.6,
     direction: "start" as "start" | "end",
@@ -43,7 +43,7 @@ export const formValues = {
   },
   curve: {
     method: "chaikin" as "chaikin" | "catmull-rom" | "quadratic",
-    iterations: 4,
+    iterations: 6,
     closed: false,
     tension: 0
   },
