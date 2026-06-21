@@ -88,6 +88,10 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:kinetic/kinetic-plane": () => import( "@/p5/sketches/kinetic/kinetic-plane/index.js" ),
   "p5:lines": () => import( "@/p5/sketches/lines/index.js" ),
   "p5:mask-v1": () => import( "@/p5/sketches/mask-v1/index.js" ),
+  "p5:metaballs/metaballs-v1-field": () => import( "@/p5/sketches/metaballs/metaballs-v1-field/index.js" ),
+  "p5:metaballs/metaballs-v2-marching-squares": () => import( "@/p5/sketches/metaballs/metaballs-v2-marching-squares/index.js" ),
+  "p5:metaballs/metaballs-v3-blobs": () => import( "@/p5/sketches/metaballs/metaballs-v3-blobs/index.js" ),
+  "p5:metaballs/metaballs-v4-contours": () => import( "@/p5/sketches/metaballs/metaballs-v4-contours/index.js" ),
   "p5:neon-graffiti": () => import( "@/p5/sketches/neon-graffiti/index.js" ),
   "p5:neon/neon-v0-legacy": () => import( "@/p5/sketches/neon/neon-v0-legacy/index.js" ),
   "p5:neon/neon-v1-graffiti": () => import( "@/p5/sketches/neon/neon-v1-graffiti/index.js" ),
@@ -257,6 +261,9 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:video/video-player": () => import( "@/p5/sketches/video/video-player/index.js" ),
   "p5:video/video-reveal": () => import( "@/p5/sketches/video/video-reveal/index.js" ),
   "p5:video/video-text": () => import( "@/p5/sketches/video/video-text/index.js" ),
+  "p5:voronoi/voronoi-v1-cells": () => import( "@/p5/sketches/voronoi/voronoi-v1-cells/index.js" ),
+  "p5:voronoi/voronoi-v2-worley": () => import( "@/p5/sketches/voronoi/voronoi-v2-worley/index.js" ),
+  "p5:voronoi/voronoi-v3-mosaic": () => import( "@/p5/sketches/voronoi/voronoi-v3-mosaic/index.js" ),
 };
 
 /**
