@@ -2962,5 +2962,89 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-17T20:12:46.394Z",
     "ctime": "2026-06-17T20:11:27.094Z"
+  },
+  {
+    "name": "metaballs-v1-field",
+    "engine": "p5",
+    "category": "metaballs",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T17:20:37.227Z",
+    "ctime": "2026-06-21T17:20:27.699Z"
+  },
+  {
+    "name": "metaballs-v2-marching-squares",
+    "engine": "p5",
+    "category": "metaballs",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T17:21:16.795Z",
+    "ctime": "2026-06-21T17:21:08.123Z"
+  },
+  {
+    "name": "metaballs-v3-blobs",
+    "engine": "p5",
+    "category": "metaballs",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T17:21:59.523Z",
+    "ctime": "2026-06-21T17:21:49.695Z"
+  },
+  {
+    "name": "metaballs-v4-contours",
+    "engine": "p5",
+    "category": "metaballs",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T17:22:43.475Z",
+    "ctime": "2026-06-21T17:22:33.607Z"
+  },
+  {
+    "name": "voronoi-v1-cells",
+    "engine": "p5",
+    "category": "voronoi",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T17:25:38.519Z",
+    "ctime": "2026-06-21T17:25:30.067Z"
+  },
+  {
+    "name": "voronoi-v2-worley",
+    "engine": "p5",
+    "category": "voronoi",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T17:26:19.359Z",
+    "ctime": "2026-06-21T17:26:08.351Z"
+  },
+  {
+    "name": "voronoi-v3-mosaic",
+    "engine": "p5",
+    "category": "voronoi",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T17:27:24.479Z",
+    "ctime": "2026-06-21T17:27:05.111Z"
   }
 ]
