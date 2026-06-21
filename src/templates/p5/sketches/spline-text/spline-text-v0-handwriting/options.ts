@@ -5,7 +5,7 @@ import {
 export const formValues = {
   text: {
     value: "HELLO",
-    font: "sans",
+    font: "waverseVariable",
     size: 0.2,
     sampleFactor: 0.2,
     simplifyThreshold: 0,
@@ -19,18 +19,18 @@ export const formValues = {
     ] as number[]
   },
   points: {
-    count: 55,
-    seed: 7,
+    count: 149,
+    seed: 0,
     motion: 0.08,
     speed: 1
   },
   morph: {
     // "progressive" reveals the points left → right (letter by letter); "instant"
     // morphs them all together.
-    mode: "progressive" as "progressive" | "instant",
+    mode: "instant" as "progressive" | "instant",
     assemble: 0.35,
     hold: 0.2,
-    spread: 0.6,
+    spread: 0.56,
     easing: "easeInOutCubic"
   },
   curve: {

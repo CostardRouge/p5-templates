@@ -5,7 +5,7 @@ import {
 export const formValues = {
   text: {
     value: "WORLD",
-    font: "sans",
+    font: "onlysansVariable",
     size: 0.2,
     sampleFactor: 0.2,
     simplifyThreshold: 0,
@@ -19,31 +19,31 @@ export const formValues = {
     ] as number[]
   },
   points: {
-    count: 55,
-    seed: 7,
+    count: 200,
+    seed: 50,
     motion: 0.08,
     speed: 1
   },
   morph: {
     // "instant" morphs every control point onto the word together; "progressive"
     // reveals them left → right (letter by letter).
-    mode: "instant" as "progressive" | "instant",
-    assemble: 0.4,
+    mode: "progressive" as "progressive" | "instant",
+    assemble: 0.5,
     hold: 0.2,
     spread: 0.6,
     easing: "easeInOutExpo"
   },
   curve: {
     method: "chaikin" as "chaikin" | "catmull-rom" | "quadratic",
-    iterations: 4,
+    iterations: 6,
     closed: false,
-    tension: 0
+    tension: 5
   },
   stroke: {
-    weight: 8,
-    glow: 2,
-    weightStart: 1,
-    weightEnd: 1,
+    weight: 11.5,
+    glow: 3,
+    weightStart: 0.55,
+    weightEnd: 0.6,
     weightEasing: "linear",
     hueSpeed: 1,
     hueSpread: 1.5,
