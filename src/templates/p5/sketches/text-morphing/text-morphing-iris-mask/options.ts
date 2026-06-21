@@ -22,7 +22,7 @@ export const formValues = {
   },
   textStyle: {
     font: "waverseVariable",
-    size: 360,
+    size: 248,
     fill: [
       245,
       235,
@@ -45,7 +45,7 @@ export const formValues = {
   circle: {
     show: true,
     behindLetters: true,
-    maxRadius: 0.55,
+    maxRadius: 0.21,
     easing: "easeInOutCubic",
     stroke: [
       246,
@@ -61,9 +61,10 @@ export const formValues = {
     fillAlpha: 0
   },
   backgroundColor: [
-    12,
-    12,
-    16
+    0,
+    0,
+    0,
+    255
   ],
   title: {
     ...titleDefaultValues,
