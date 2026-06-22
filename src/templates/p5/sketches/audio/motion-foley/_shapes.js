@@ -18,11 +18,14 @@
  *   - `color`     [ r, g, b ] base color
  *   - `seed`      deterministic per-item seed
  *
+ * `progress` is already eased by the engine with the globally-chosen tension /
+ * release easing, and the audio onsets are scheduled against that very same
+ * curve — so the shape is seen in the same proportions as the sound is heard.
+ * Shapes therefore consume `progress` directly and add no easing of their own.
+ *
  * Everything is a pure function of these inputs, so the visual stays locked to
  * the scheduled audio and a recording reproduces the live preview exactly.
  */
-
-import easing from "@/p5/utils/easing.js";
 
 const TAU = Math.PI * 2;
 
@@ -51,14 +54,13 @@ function polygon(
 }
 
 const SHAPE_LIBRARY = {
-  // A dot that springs into being, then shrinks away on release.
+  // A dot that grows into being, then shrinks away on release.
   appearing: (
     p, a
   ) => {
-    const e = easing.easeOutBack( a.progress );
     const diameter = Math.max(
       0,
-      a.size * e
+      a.size * a.progress
     );
 
     p.noStroke();
@@ -82,8 +84,7 @@ const SHAPE_LIBRARY = {
   growing: (
     p, a
   ) => {
-    const e = easing.easeOutCubic( a.progress );
-    const side = a.size * e;
+    const side = a.size * a.progress;
 
     p.noStroke();
     p.fill(
@@ -106,8 +107,7 @@ const SHAPE_LIBRARY = {
   reducing: (
     p, a
   ) => {
-    const e = easing.easeInCubic( a.progress );
-    const side = a.size * ( 1 - e );
+    const side = a.size * ( 1 - a.progress );
 
     p.noStroke();
     p.fill(
@@ -164,9 +164,8 @@ const SHAPE_LIBRARY = {
   sliding: (
     p, a
   ) => {
-    const e = easing.easeInOutCubic( a.progress );
     const travel = a.size * 1.1;
-    const x = a.cx - travel / 2 + travel * e;
+    const x = a.cx - travel / 2 + travel * a.progress;
     const w = a.size * 1.1;
     const h = a.size * 0.5;
 
@@ -209,7 +208,7 @@ const SHAPE_LIBRARY = {
   fading: (
     p, a
   ) => {
-    const alpha = easing.easeInOutSine( a.progress ) * 255;
+    const alpha = a.progress * 255;
 
     p.noStroke();
     p.fill(
@@ -316,8 +315,7 @@ const SHAPE_LIBRARY = {
   stretching: (
     p, a
   ) => {
-    const pull = easing.easeOutElastic( a.progress );
-    const sx = 1 + pull * 1.1;
+    const sx = 1 + a.progress * 1.1;
     const sy = 1 / sx;
 
     p.push();

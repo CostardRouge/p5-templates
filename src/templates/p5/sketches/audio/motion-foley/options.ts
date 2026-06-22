@@ -1,8 +1,10 @@
+import easing from "@/p5/utils/easing.js";
 import {
   categoryLabel,
   CATEGORY_LIST,
+  customReleaseVariants,
+  defaultRelease,
   defaultVariant,
-  hasRelease,
   listVariants
 } from "./_soundDesign.js";
 
@@ -10,22 +12,44 @@ import {
  * The form mirrors the sketch's two halves: a block of global controls (layout,
  * timing, tension/release, grouping, audio, appearance) followed by one
  * collapsible block per gesture so each shape can be toggled, re-voiced,
- * re-pitched and given its own resolving (release) sound.
+ * re-pitched and given its own resolution.
+ *
+ * The per-gesture "Release" select carries the resolution model: "none" (no
+ * resolution), "reverse" (the tension sound played backwards — a matched pair)
+ * or a hand-authored custom release.
  */
 
 const titleCase = ( value: string ): string =>
   value.charAt( 0 ).toUpperCase() + value.slice( 1 );
 
-const variantOptions = (
-  category: string, phase: "tension" | "release"
-) =>
+const tensionOptions = ( category: string ) =>
   listVariants(
     category,
-    phase
+    "tension"
   ).map( ( variant ) => ( {
     label: titleCase( variant ),
     value: variant
   } ) );
+
+const releaseSelectOptions = ( category: string ) => [
+  {
+    label: "— none —",
+    value: "none"
+  },
+  {
+    label: "↺ Reverse (matched)",
+    value: "reverse"
+  },
+  ...customReleaseVariants( category ).map( ( variant ) => ( {
+    label: `${ titleCase( variant ) } (custom)`,
+    value: variant
+  } ) )
+];
+
+const easingOptions = Object.keys( easing ).map( ( name ) => ( {
+  label: name,
+  value: name
+} ) );
 
 const categoryValues = Object.fromEntries( CATEGORY_LIST.map( (
   category, index
@@ -39,11 +63,7 @@ const categoryValues = Object.fromEntries( CATEGORY_LIST.map( (
       category,
       "tension"
     ),
-    release: hasRelease( category ),
-    releaseVariant: defaultVariant(
-      category,
-      "release"
-    ),
+    release: defaultRelease( category ),
     pitch: 1,
     volume: 1
   }
@@ -62,22 +82,12 @@ const categoryConfiguration = Object.fromEntries( CATEGORY_LIST.map( ( category 
       variant: {
         label: "Tension sound",
         component: "select",
-        options: variantOptions(
-          category,
-          "tension"
-        )
+        options: tensionOptions( category )
       },
       release: {
-        label: "Release (resolve)",
-        component: "checkbox"
-      },
-      releaseVariant: {
-        label: "Release sound",
+        label: "Release",
         component: "select",
-        options: variantOptions(
-          category,
-          "release"
-        )
+        options: releaseSelectOptions( category )
       },
       pitch: {
         label: "Pitch",
@@ -112,7 +122,9 @@ export const formValues = {
   tensionRelease: {
     enabled: true,
     hold: 0.25,
-    releaseDuration: 1
+    releaseRatio: 0.8,
+    tensionEasing: "easeOutCubic",
+    releaseEasing: "easeInOutCubic"
   },
   group: {
     count: 1,
@@ -213,12 +225,22 @@ export const formConfiguration: Record<string, any> = {
         max: 1.5,
         step: 0.05
       },
-      releaseDuration: {
-        label: "Release duration (s)",
+      releaseRatio: {
+        label: "Release length (× tension)",
         component: "slider",
         min: 0.1,
-        max: 3,
-        step: 0.1
+        max: 2,
+        step: 0.05
+      },
+      tensionEasing: {
+        label: "Tension easing",
+        component: "select",
+        options: easingOptions
+      },
+      releaseEasing: {
+        label: "Release easing",
+        component: "select",
+        options: easingOptions
       }
     }
   },

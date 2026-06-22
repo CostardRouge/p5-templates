@@ -3,15 +3,17 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import audio from "@/p5/utils/audio.js";
+import easing from "@/p5/utils/easing.js";
 import SHAPE_LIBRARY from "./_shapes.js";
 import {
-  buildSchedule,
+  buildRelease,
+  buildTension,
   categoryBase,
   categoryLabel,
   CATEGORY_LIST,
+  defaultRelease,
   defaultVariant,
-  expandForGroup,
-  hasRelease
+  expandForGroup
 } from "./_soundDesign.js";
 
 /**
@@ -21,12 +23,15 @@ import {
  * Each tile runs a tension → release cycle:
  *
  *   rest → TENSION (the action + its sound) → hold → RELEASE (the resolution +
- *   a distinct, settling sound) → rest → …
+ *   a distinct sound) → rest → …
  *
- * The shape deforms 0→1 during tension and 1→0 during release, so the gesture
- * physically returns to rest while a *different* sound signals that it has
- * resolved. Release can be switched off per gesture (or globally), for actions
- * that are not meant to resolve. Tiles are staggered around the loop so the
+ * One shared easing (tension + release, chosen globally) drives BOTH the shape
+ * deformation and the timing of the audio onsets, so a sound is heard in the
+ * same proportions as the shape is seen. The release is, by default, the
+ * tension sound played backwards (a guaranteed matching pair); a gesture can
+ * also resolve with a custom sound, or not resolve at all ("none"). Symmetric
+ * gestures with no release instead pulse 0→1→0 within the tension phase, so
+ * they still return to rest. Tiles are staggered around the loop so the
  * gestures answer one another rather than firing all at once.
  */
 
@@ -50,6 +55,10 @@ function positiveMod(
   value, modulus
 ) {
   return ( ( value % modulus ) + modulus ) % modulus;
+}
+
+function easingFn( name ) {
+  return easing[ name ] ?? easing.linear;
 }
 
 /** Minimal HSL → [ r, g, b ] (0..255) so spectrum coloring needs no p5 state. */
@@ -118,18 +127,26 @@ function tileColor(
   );
 }
 
-/** Deformation (0..1) at `local`, with an optional per-item `delay` (seconds). */
+/**
+ * Deformation (0..1) at `local`, with an optional per-item `delay` (seconds).
+ * Round-trip gestures ease up over the tension phase and ease back down over
+ * the release phase; gestures without a release phase pulse smoothly 0→1→0.
+ */
 function deformAt(
-  local, delay, tDur, hold, rDur
+  local, delay, ctx
 ) {
-  const rStart = tDur + hold;
-
-  if ( local < rStart ) {
-    return clamp01( ( local - delay ) / tDur );
+  if ( !ctx.hasRelease ) {
+    return Math.sin( clamp01( ( local - delay ) / ctx.tDur ) * Math.PI );
   }
 
-  if ( rDur > 0 && local < rStart + rDur ) {
-    return 1 - clamp01( ( local - rStart - delay ) / rDur );
+  const rStart = ctx.tDur + ctx.hold;
+
+  if ( local < rStart ) {
+    return ctx.tEasing( clamp01( ( local - delay ) / ctx.tDur ) );
+  }
+
+  if ( ctx.rDur > 0 && local < rStart + ctx.rDur ) {
+    return 1 - ctx.rEasing( clamp01( ( local - rStart - delay ) / ctx.rDur ) );
   }
 
   return 0;
@@ -162,10 +179,12 @@ sketch.draw( ( time ) => {
     0,
     tensionRelease.hold ?? 0.25
   );
-  const releaseDurationOpt = Math.max(
+  const releaseRatio = Math.max(
     0.1,
-    tensionRelease.releaseDuration ?? 1
+    tensionRelease.releaseRatio ?? 0.8
   );
+  const tEasing = easingFn( tensionRelease.tensionEasing ?? "easeOutCubic" );
+  const rEasing = easingFn( tensionRelease.releaseEasing ?? "easeInOutCubic" );
   const count = Math.max(
     1,
     Math.round( group.count ?? 1 )
@@ -219,19 +238,15 @@ sketch.draw( ( time ) => {
       category,
       "tension"
     );
-    const releaseVariant = tileOptions.releaseVariant ?? defaultVariant(
-      category,
-      "release"
-    );
+    const releaseSelection = tileOptions.release ?? defaultRelease( category );
     const pitch = tileOptions.pitch ?? 1;
     const tileVolume = tileOptions.volume ?? 1;
 
-    const releaseActive = trEnabled
-      && tileOptions.release !== false
-      && hasRelease( category );
-    const hold = releaseActive ? holdOpt : 0;
-    const rDur = releaseActive ? releaseDurationOpt : 0;
+    const hasRelease = trEnabled && releaseSelection !== "none";
+    const hold = hasRelease ? holdOpt : 0;
+    const rDur = hasRelease ? tDur * releaseRatio : 0;
     const period = tDur + hold + rDur + restDuration;
+    const rStart = tDur + hold;
 
     // ── Playhead for this tile ───────────────────────────────────────────────
     const offset = ( index / tiles.length ) * period * staggerSpread;
@@ -241,36 +256,37 @@ sketch.draw( ( time ) => {
       shifted,
       period
     );
-    const rStart = tDur + hold;
-    const phase = local < tDur
-      ? "tension"
-      : local < rStart
-        ? "hold"
-        : ( rDur > 0 && local < rStart + rDur ) ? "release" : "rest";
+    const phase = !hasRelease
+      ? ( local < tDur ? "tension" : "rest" )
+      : local < tDur
+        ? "tension"
+        : local < rStart
+          ? "hold"
+          : ( local < rStart + rDur ) ? "release" : "rest";
 
-    // ── Audio: build the two schedules once, fire each event as it is crossed ─
+    // ── Audio: build both schedules, fire each event as the eased playhead ────
+    //    crosses it (so onset timing matches the shape's eased deformation).
     const tuning = {
       base: categoryBase( category ) * pitch,
       gain: audioOptions.gain ?? 0.5
     };
     const tensionSchedule = expandForGroup(
-      buildSchedule(
+      buildTension(
         category,
-        "tension",
         variant,
         tDur,
         tuning
       ),
       groupSettings
     );
-    const releaseSchedule = releaseActive
+    const releaseSchedule = hasRelease
       ? expandForGroup(
-        buildSchedule(
+        buildRelease(
           category,
-          "release",
-          releaseVariant,
+          releaseSelection,
           rDur,
-          tuning
+          tuning,
+          variant
         ),
         groupSettings
       )
@@ -288,9 +304,11 @@ sketch.draw( ( time ) => {
       fireState.rNext = 0;
     }
 
+    const tensionPlayhead = tEasing( clamp01( local / tDur ) );
+
     while (
       fireState.tNext < tensionSchedule.length
-      && tensionSchedule[ fireState.tNext ].at * tDur <= local
+      && tensionSchedule[ fireState.tNext ].at <= tensionPlayhead
     ) {
       const event = tensionSchedule[ fireState.tNext ];
 
@@ -308,11 +326,12 @@ sketch.draw( ( time ) => {
     }
 
     const releaseLocal = local - rStart;
+    const releasePlayhead = rDur > 0 ? rEasing( clamp01( releaseLocal / rDur ) ) : 0;
 
     while (
       fireState.rNext < releaseSchedule.length
       && releaseLocal >= 0
-      && releaseSchedule[ fireState.rNext ].at * rDur <= releaseLocal
+      && releaseSchedule[ fireState.rNext ].at <= releasePlayhead
     ) {
       const event = releaseSchedule[ fireState.rNext ];
 
@@ -332,6 +351,14 @@ sketch.draw( ( time ) => {
     state.fire[ category ] = fireState;
 
     // ── Visuals ──────────────────────────────────────────────────────────────
+    const deformCtx = {
+      hasRelease,
+      tDur,
+      hold,
+      rDur,
+      tEasing,
+      rEasing
+    };
     const col = index % columns;
     const row = Math.floor( index / columns );
     const cx = ( col + 0.5 ) * cellW;
@@ -349,9 +376,7 @@ sketch.draw( ( time ) => {
       const itemProgress = deformAt(
         local,
         delay,
-        tDur,
-        hold,
-        rDur
+        deformCtx
       );
 
       p.push();

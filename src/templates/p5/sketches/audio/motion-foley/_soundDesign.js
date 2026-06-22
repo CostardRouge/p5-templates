@@ -989,21 +989,54 @@ export function defaultVariant(
   )?.defaultVariant;
 }
 
-/** Whether a gesture offers a resolving release sound at all. */
-export function hasRelease( category ) {
-  return Boolean( SOUND_LIBRARY[ category ]?.release );
+/**
+ * Default release selection per gesture. Beyond a custom variant name, two
+ * special values drive the resolution:
+ *
+ *   - "none"     the gesture does not resolve (symmetric gestures such as
+ *                shaking, which already returns to where it started).
+ *   - "reverse"  the release is auto-derived from the chosen tension sound by
+ *                playing it backwards — a guaranteed matching pair, and the
+ *                filmic "rewind" that makes breaking read as a reassembly.
+ */
+const DEFAULT_RELEASE = {
+  appearing: "reverse",
+  growing: "reverse",
+  reducing: "reverse",
+  shaking: "none",
+  sliding: "reverse",
+  fading: "reverse",
+  flashing: "resolve",
+  twisting: "reverse",
+  stretching: "reverse",
+  breaking: "reverse"
+};
+
+export function defaultRelease( category ) {
+  return DEFAULT_RELEASE[ category ] ?? "reverse";
 }
 
-/**
- * Resolve a gesture + phase + variant into a time-sorted schedule for one
- * shape. `tuning` carries `{ base, gain, flashes, shards }`.
- */
-export function buildSchedule(
-  category, phase, variant, duration, tuning
+/** Hand-authored release variant names available for a gesture (may be empty). */
+export function customReleaseVariants( category ) {
+  return Object.keys( bankOf(
+    category,
+    "release"
+  )?.variants ?? {} );
+}
+
+function sortByAt( events ) {
+  return events.slice().sort( (
+    a, b
+  ) => a.at - b.at );
+}
+
+/** Build a tension schedule for one shape (time-sorted). */
+export function buildTension(
+  category, variant, duration, tuning
 ) {
   const bank = bankOf(
     category,
-    phase
+    "tension"
   );
 
   if ( !bank ) {
@@ -1012,18 +1045,89 @@ export function buildSchedule(
 
   const make = bank.variants[ variant ] ?? bank.variants[ bank.defaultVariant ];
 
-  if ( !make ) {
+  return make ? sortByAt( make(
+    duration,
+    tuning
+  ) ) : [];
+}
+
+/**
+ * Time-reverse a schedule into its matching release: each event is mirrored to
+ * the far end of the timeline (so a rising sequence plays as a falling one) and
+ * any pitch sweep is flipped (start ↔ end frequency). The result is the same
+ * gesture "rewound", which is exactly what a release should feel like.
+ */
+function reverseSchedule(
+  events, duration
+) {
+  const reversed = events.map( ( event ) => {
+    const durationFraction = duration > 0
+      ? Math.min(
+        1,
+        ( event.params.duration ?? 0 ) / duration
+      )
+      : 0;
+    const at = Math.max(
+      0,
+      Math.min(
+        0.999,
+        1 - event.at - durationFraction
+      )
+    );
+    const params = {
+      ...event.params
+    };
+
+    if ( typeof params.freq === "number" && typeof params.endFreq === "number" ) {
+      const swap = params.freq;
+
+      params.freq = params.endFreq;
+      params.endFreq = swap;
+    }
+
+    return {
+      at,
+      name: event.name,
+      params
+    };
+  } );
+
+  return sortByAt( reversed );
+}
+
+/**
+ * Build a release schedule. `selection` is "none", "reverse" (mirror of the
+ * given `tensionVariant`) or a custom release variant name.
+ */
+export function buildRelease(
+  category, selection, duration, tuning, tensionVariant
+) {
+  if ( !selection || selection === "none" ) {
     return [];
   }
 
-  const events = make(
+  if ( selection === "reverse" ) {
+    return reverseSchedule(
+      buildTension(
+        category,
+        tensionVariant,
+        duration,
+        tuning
+      ),
+      duration
+    );
+  }
+
+  const bank = bankOf(
+    category,
+    "release"
+  );
+  const make = bank?.variants[ selection ];
+
+  return make ? sortByAt( make(
     duration,
     tuning
-  );
-
-  return events.slice().sort( (
-    a, b
-  ) => a.at - b.at );
+  ) ) : [];
 }
 
 function applyPitch(
