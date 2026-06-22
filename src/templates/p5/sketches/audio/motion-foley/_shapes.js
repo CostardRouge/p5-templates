@@ -1,20 +1,25 @@
 /**
  * Shape library — the visual half of the motion-foley demo.
  *
- * Each category draws the single shape that best reads the gesture its sound
+ * Each gesture draws the single shape that best reads the action its sound
  * describes. A draw function receives the p5 instance and an `a` (animation)
  * bag:
  *
- *   - `progress`  0..1 over the active phase ( 0 while the tile is resting )
+ *   - `progress`  the *deformation* amount, 0..1. It rises 0→1 while the gesture
+ *                 happens (tension) and falls 1→0 as it resolves (release), so a
+ *                 shape simply reads `progress` to know how far it is bent out of
+ *                 its rest pose — the same value drives the round-trip.
+ *   - `phase`     "tension" | "hold" | "release" | "rest" — for the few shapes
+ *                 whose look differs on the way back (e.g. flashing settles).
+ *   - `time`      sketch seconds, for continuous oscillation (shake / strobe)
+ *                 that must keep a steady rate independent of `progress`.
  *   - `cx, cy`    item center in canvas pixels
  *   - `size`      nominal item diameter in pixels
  *   - `color`     [ r, g, b ] base color
- *   - `stroke`    stroke weight in pixels
- *   - `seed`      deterministic per-item seed ( for shake / shatter scatter )
+ *   - `seed`      deterministic per-item seed
  *
- * Shapes never read the clock directly: everything is a pure function of
- * `progress`, so the visual and the scheduled audio stay locked together and a
- * recording reproduces the live preview exactly.
+ * Everything is a pure function of these inputs, so the visual stays locked to
+ * the scheduled audio and a recording reproduces the live preview exactly.
  */
 
 import easing from "@/p5/utils/easing.js";
@@ -46,7 +51,7 @@ function polygon(
 }
 
 const SHAPE_LIBRARY = {
-  // A dot that springs into being with a soft overshoot.
+  // A dot that springs into being, then shrinks away on release.
   appearing: (
     p, a
   ) => {
@@ -73,7 +78,7 @@ const SHAPE_LIBRARY = {
     );
   },
 
-  // A square that scales up from nothing.
+  // A square that scales up, then back down on release.
   growing: (
     p, a
   ) => {
@@ -97,7 +102,7 @@ const SHAPE_LIBRARY = {
     );
   },
 
-  // A square that collapses inward, fading as it goes.
+  // A square that collapses inward, then grows back on release.
   reducing: (
     p, a
   ) => {
@@ -121,15 +126,15 @@ const SHAPE_LIBRARY = {
     );
   },
 
-  // A square that rattles in place, hardest in the middle of the gesture.
+  // A square that rattles in place; the amplitude follows `progress` so it
+  // builds up and then damps down as the gesture resolves.
   shaking: (
     p, a
   ) => {
-    const envelope = Math.sin( a.progress * Math.PI );
-    const amp = a.size * 0.28 * envelope;
-    const dx = Math.sin( a.progress * TAU * 9 + a.seed * 6.28 ) * amp;
-    const dy = Math.cos( a.progress * TAU * 11 + a.seed * 3.14 ) * amp;
-    const wobble = Math.sin( a.progress * TAU * 13 ) * 0.12 * envelope;
+    const amp = a.size * 0.28 * a.progress;
+    const dx = Math.sin( a.time * 38 + a.seed * 6.28 ) * amp;
+    const dy = Math.cos( a.time * 44 + a.seed * 3.14 ) * amp;
+    const wobble = Math.sin( a.time * 30 ) * 0.12 * a.progress;
 
     p.push();
     p.translate(
@@ -155,7 +160,7 @@ const SHAPE_LIBRARY = {
     p.pop();
   },
 
-  // A rounded bar that slides across the tile, with a motion-trail ghost.
+  // A rounded bar that slides across the tile, then slides home on release.
   sliding: (
     p, a
   ) => {
@@ -199,11 +204,12 @@ const SHAPE_LIBRARY = {
     );
   },
 
-  // A disc that breathes in and back out of visibility.
+  // A disc whose opacity follows `progress`: it fades in on tension and fades
+  // out on release.
   fading: (
     p, a
   ) => {
-    const alpha = Math.sin( a.progress * Math.PI ) * 255;
+    const alpha = easing.easeInOutSine( a.progress ) * 255;
 
     p.noStroke();
     p.fill(
@@ -219,14 +225,26 @@ const SHAPE_LIBRARY = {
     );
   },
 
-  // A star that strobes between a bright and a dim state.
+  // A star that strobes during the action, then settles to a steady glow that
+  // fades out as it resolves.
   flashing: (
     p, a
   ) => {
-    const flashes = 4;
-    const on = a.progress > 0 && ( a.progress * flashes ) % 1 < 0.5;
-    const alpha = on ? 255 : 45;
     const radius = a.size * 0.5;
+    let alpha;
+
+    if ( a.phase === "release" ) {
+      alpha = a.progress * 255;
+    } else {
+      const on = a.progress > 0.08 && Math.sin( a.time * 42 ) > 0;
+
+      alpha = on
+        ? 255 * Math.min(
+          1,
+          a.progress * 1.5
+        )
+        : 45;
+    }
 
     p.push();
     p.translate(
@@ -258,12 +276,13 @@ const SHAPE_LIBRARY = {
     p.pop();
   },
 
-  // A hexagon that twists, with a counter-rotating squash wobble.
+  // A hexagon that twists; `progress` drives the twist, so it winds up and then
+  // unwinds back to rest on release.
   twisting: (
     p, a
   ) => {
-    const rotation = a.progress * TAU + Math.sin( a.progress * Math.PI * 4 ) * 0.5;
-    const squash = 1 + Math.sin( a.progress * Math.PI * 4 ) * 0.18;
+    const rotation = a.progress * TAU * 0.75 + Math.sin( a.time * 8 ) * 0.1 * a.progress;
+    const squash = 1 + Math.sin( a.progress * Math.PI ) * 0.18;
 
     p.push();
     p.translate(
@@ -293,7 +312,7 @@ const SHAPE_LIBRARY = {
     p.pop();
   },
 
-  // An ellipse pulled wide then snapped back, volume-preserving.
+  // An ellipse pulled wide, then snapped back to a circle on release.
   stretching: (
     p, a
   ) => {
@@ -325,7 +344,8 @@ const SHAPE_LIBRARY = {
     p.pop();
   },
 
-  // A disc that bursts into wedge shards flying outward.
+  // A disc that bursts into wedge shards, then draws them back together on
+  // release — the object reassembles itself.
   breaking: (
     p, a
   ) => {
@@ -344,7 +364,7 @@ const SHAPE_LIBRARY = {
       const angle = ( i / shards ) * TAU;
       const fly = a.progress * a.size * ( 0.4 + j * 0.8 );
       const spin = a.progress * ( j - 0.5 ) * 3;
-      const alpha = 255 * ( 1 - a.progress );
+      const alpha = 255 * ( 1 - a.progress * 0.7 );
 
       p.push();
       p.translate(

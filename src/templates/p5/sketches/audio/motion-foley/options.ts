@@ -2,34 +2,48 @@ import {
   categoryLabel,
   CATEGORY_LIST,
   defaultVariant,
+  hasRelease,
   listVariants
 } from "./_soundDesign.js";
 
 /**
  * The form mirrors the sketch's two halves: a block of global controls (layout,
- * timing, grouping, audio, appearance) followed by one collapsible block per
- * gesture so each shape can be toggled, re-voiced and re-pitched on its own.
+ * timing, tension/release, grouping, audio, appearance) followed by one
+ * collapsible block per gesture so each shape can be toggled, re-voiced,
+ * re-pitched and given its own resolving (release) sound.
  */
 
 const titleCase = ( value: string ): string =>
   value.charAt( 0 ).toUpperCase() + value.slice( 1 );
 
-const variantOptions = ( category: string ) =>
-  listVariants( category ).map( ( variant ) => ( {
+const variantOptions = (
+  category: string, phase: "tension" | "release"
+) =>
+  listVariants(
+    category,
+    phase
+  ).map( ( variant ) => ( {
     label: titleCase( variant ),
     value: variant
   } ) );
 
-// Only the first gesture is enabled by default — every other one can be
-// switched on from its block in the options, so the demo starts with a single
-// clean sound instead of all ten firing at once.
 const categoryValues = Object.fromEntries( CATEGORY_LIST.map( (
   category, index
 ) => [
   category,
   {
+    // Only the first gesture is enabled by default, so the demo starts with a
+    // single clean sound instead of all ten firing at once.
     enabled: index === 0,
-    variant: defaultVariant( category ),
+    variant: defaultVariant(
+      category,
+      "tension"
+    ),
+    release: hasRelease( category ),
+    releaseVariant: defaultVariant(
+      category,
+      "release"
+    ),
     pitch: 1,
     volume: 1
   }
@@ -46,9 +60,24 @@ const categoryConfiguration = Object.fromEntries( CATEGORY_LIST.map( ( category 
         component: "checkbox"
       },
       variant: {
-        label: "Sound variant",
+        label: "Tension sound",
         component: "select",
-        options: variantOptions( category )
+        options: variantOptions(
+          category,
+          "tension"
+        )
+      },
+      release: {
+        label: "Release (resolve)",
+        component: "checkbox"
+      },
+      releaseVariant: {
+        label: "Release sound",
+        component: "select",
+        options: variantOptions(
+          category,
+          "release"
+        )
       },
       pitch: {
         label: "Pitch",
@@ -80,6 +109,11 @@ export const formValues = {
     stagger: true,
     staggerSpread: 1
   },
+  tensionRelease: {
+    enabled: true,
+    hold: 0.25,
+    releaseDuration: 1
+  },
   group: {
     count: 1,
     mode: "unison",
@@ -103,8 +137,7 @@ export const formValues = {
       10,
       16,
       255
-    ] as number[],
-    strokeWeight: 0
+    ] as number[]
   },
   ...categoryValues
 };
@@ -139,7 +172,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Timing",
     fields: {
       animationDuration: {
-        label: "Animation duration (s)",
+        label: "Tension duration (s)",
         component: "slider",
         min: 0.2,
         max: 4,
@@ -162,6 +195,30 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 1,
         step: 0.05
+      }
+    }
+  },
+  tensionRelease: {
+    component: "nested-object",
+    label: "Tension / release",
+    fields: {
+      enabled: {
+        label: "Resolve gestures",
+        component: "checkbox"
+      },
+      hold: {
+        label: "Hold at peak (s)",
+        component: "slider",
+        min: 0,
+        max: 1.5,
+        step: 0.05
+      },
+      releaseDuration: {
+        label: "Release duration (s)",
+        component: "slider",
+        min: 0.1,
+        max: 3,
+        step: 0.1
       }
     }
   },
@@ -263,13 +320,6 @@ export const formConfiguration: Record<string, any> = {
       background: {
         label: "Background",
         component: "color"
-      },
-      strokeWeight: {
-        label: "Stroke weight",
-        component: "slider",
-        min: 0,
-        max: 8,
-        step: 1
       }
     }
   },

@@ -10,23 +10,41 @@ import {
   categoryLabel,
   CATEGORY_LIST,
   defaultVariant,
-  expandForGroup
+  expandForGroup,
+  hasRelease
 } from "./_soundDesign.js";
 
 /**
  * Motion-foley — a demo gallery that pairs ten shape-animation gestures with
- * reusable, code-synthesised sound effects (see `_soundDesign.js`). Every tile
- * loops its gesture; the matching sound fires as the playhead crosses each
- * scheduled event, so audio and motion stay locked even across recording. Tiles
- * are staggered around the loop so the gestures answer one another like a little
- * orchestra rather than firing all at once.
+ * reusable, code-synthesised sound effects (see `_soundDesign.js`).
+ *
+ * Each tile runs a tension → release cycle:
+ *
+ *   rest → TENSION (the action + its sound) → hold → RELEASE (the resolution +
+ *   a distinct, settling sound) → rest → …
+ *
+ * The shape deforms 0→1 during tension and 1→0 during release, so the gesture
+ * physically returns to rest while a *different* sound signals that it has
+ * resolved. Release can be switched off per gesture (or globally), for actions
+ * that are not meant to resolve. Tiles are staggered around the loop so the
+ * gestures answer one another rather than firing all at once.
  */
 
 const state = {
-  // category → { cycle, next } — per-tile playhead bookkeeping so each
-  // scheduled sound fires exactly once per loop (mirrors the ping-pong sketch).
+  // category → { cycle, tNext, rNext } — per-tile playhead bookkeeping so each
+  // scheduled tension/release event fires exactly once per loop.
   fire: {}
 };
+
+function clamp01( value ) {
+  return Math.max(
+    0,
+    Math.min(
+      1,
+      value
+    )
+  );
+}
 
 function positiveMod(
   value, modulus
@@ -100,6 +118,23 @@ function tileColor(
   );
 }
 
+/** Deformation (0..1) at `local`, with an optional per-item `delay` (seconds). */
+function deformAt(
+  local, delay, tDur, hold, rDur
+) {
+  const rStart = tDur + hold;
+
+  if ( local < rStart ) {
+    return clamp01( ( local - delay ) / tDur );
+  }
+
+  if ( rDur > 0 && local < rStart + rDur ) {
+    return 1 - clamp01( ( local - rStart - delay ) / rDur );
+  }
+
+  return 0;
+}
+
 sketch.setup( () => {
   state.fire = {};
 } );
@@ -112,8 +147,9 @@ sketch.draw( ( time ) => {
   const group = o.group ?? {};
   const audioOptions = o.audio ?? {};
   const appearance = o.appearance ?? {};
+  const tensionRelease = o.tensionRelease ?? {};
 
-  const animDuration = Math.max(
+  const tDur = Math.max(
     0.2,
     timing.animationDuration ?? 1.4
   );
@@ -121,11 +157,25 @@ sketch.draw( ( time ) => {
     0,
     timing.restDuration ?? 0.6
   );
-  const period = animDuration + restDuration;
+  const trEnabled = tensionRelease.enabled !== false;
+  const holdOpt = Math.max(
+    0,
+    tensionRelease.hold ?? 0.25
+  );
+  const releaseDurationOpt = Math.max(
+    0.1,
+    tensionRelease.releaseDuration ?? 1
+  );
   const count = Math.max(
     1,
     Math.round( group.count ?? 1 )
   );
+  const groupSettings = {
+    count,
+    mode: group.mode ?? "unison",
+    spread: group.spread ?? 0.5,
+    sequenceSpread: group.sequenceSpread ?? 0.5
+  };
 
   const tiles = CATEGORY_LIST.filter( ( category ) => ( o[ category ]?.enabled ?? true ) );
 
@@ -158,13 +208,30 @@ sketch.draw( ( time ) => {
   const staggerSpread = timing.stagger === false
     ? 0
     : ( timing.staggerSpread ?? 1 );
+  const audioEnabled = audioOptions.enabled !== false;
+  const arpeggio = groupSettings.mode === "arpeggio";
 
   tiles.forEach( (
     category, index
   ) => {
     const tileOptions = o[ category ] ?? {};
-    const variant = tileOptions.variant ?? defaultVariant( category );
+    const variant = tileOptions.variant ?? defaultVariant(
+      category,
+      "tension"
+    );
+    const releaseVariant = tileOptions.releaseVariant ?? defaultVariant(
+      category,
+      "release"
+    );
     const pitch = tileOptions.pitch ?? 1;
+    const tileVolume = tileOptions.volume ?? 1;
+
+    const releaseActive = trEnabled
+      && tileOptions.release !== false
+      && hasRelease( category );
+    const hold = releaseActive ? holdOpt : 0;
+    const rDur = releaseActive ? releaseDurationOpt : 0;
+    const period = tDur + hold + rDur + restDuration;
 
     // ── Playhead for this tile ───────────────────────────────────────────────
     const offset = ( index / tiles.length ) * period * staggerSpread;
@@ -174,60 +241,92 @@ sketch.draw( ( time ) => {
       shifted,
       period
     );
-    const active = local <= animDuration;
-    const progress = active
-      ? Math.min(
-        1,
-        local / animDuration
-      )
-      : 0;
+    const rStart = tDur + hold;
+    const phase = local < tDur
+      ? "tension"
+      : local < rStart
+        ? "hold"
+        : ( rDur > 0 && local < rStart + rDur ) ? "release" : "rest";
 
-    // ── Audio: fire each scheduled event once as the playhead crosses it ──────
-    const schedule = expandForGroup(
+    // ── Audio: build the two schedules once, fire each event as it is crossed ─
+    const tuning = {
+      base: categoryBase( category ) * pitch,
+      gain: audioOptions.gain ?? 0.5
+    };
+    const tensionSchedule = expandForGroup(
       buildSchedule(
         category,
+        "tension",
         variant,
-        animDuration,
-        {
-          base: categoryBase( category ) * pitch,
-          gain: audioOptions.gain ?? 0.5
-        }
+        tDur,
+        tuning
       ),
-      {
-        count,
-        mode: group.mode ?? "unison",
-        spread: group.spread ?? 0.5,
-        sequenceSpread: group.sequenceSpread ?? 0.5
-      }
+      groupSettings
     );
+    const releaseSchedule = releaseActive
+      ? expandForGroup(
+        buildSchedule(
+          category,
+          "release",
+          releaseVariant,
+          rDur,
+          tuning
+        ),
+        groupSettings
+      )
+      : [];
 
     const fireState = state.fire[ category ] ?? {
       cycle: null,
-      next: 0
+      tNext: 0,
+      rNext: 0
     };
 
     if ( fireState.cycle !== cycle ) {
       fireState.cycle = cycle;
-      fireState.next = 0;
+      fireState.tNext = 0;
+      fireState.rNext = 0;
     }
 
     while (
-      fireState.next < schedule.length
-      && schedule[ fireState.next ].at * animDuration <= local
+      fireState.tNext < tensionSchedule.length
+      && tensionSchedule[ fireState.tNext ].at * tDur <= local
     ) {
-      const event = schedule[ fireState.next ];
+      const event = tensionSchedule[ fireState.tNext ];
 
-      if ( audioOptions.enabled !== false && local <= animDuration + 0.06 ) {
+      if ( audioEnabled && local <= tDur + 0.06 ) {
         audio.trigger(
           event.name,
           {
             ...event.params,
-            gain: ( event.params.gain ?? 0.5 ) * ( tileOptions.volume ?? 1 )
+            gain: ( event.params.gain ?? 0.5 ) * tileVolume
           }
         );
       }
 
-      fireState.next++;
+      fireState.tNext++;
+    }
+
+    const releaseLocal = local - rStart;
+
+    while (
+      fireState.rNext < releaseSchedule.length
+      && releaseLocal >= 0
+      && releaseSchedule[ fireState.rNext ].at * rDur <= releaseLocal
+    ) {
+      const event = releaseSchedule[ fireState.rNext ];
+
+      if ( audioEnabled && releaseLocal <= rDur + 0.06 ) {
+        audio.trigger(
+          event.name,
+          {
+            ...event.params,
+            gain: ( event.params.gain ?? 0.5 ) * tileVolume
+          }
+        );
+      }
+
+      fireState.rNext++;
     }
 
     state.fire[ category ] = fireState;
@@ -240,28 +339,28 @@ sketch.draw( ( time ) => {
     const draw = SHAPE_LIBRARY[ category ];
     const itemSize = count > 1 ? baseSize * 0.62 : baseSize;
     const gap = itemSize * 1.2;
-    const arpeggio = ( group.mode ?? "unison" ) === "arpeggio";
-    const sequenceSpread = group.sequenceSpread ?? 0.5;
 
     for ( let k = 0; k < count; k++ ) {
       const spreadT = count > 1 ? k / ( count - 1 ) : 0;
       const itemCx = cx + ( k - ( count - 1 ) / 2 ) * gap;
-      const delay = arpeggio ? spreadT * sequenceSpread * animDuration : 0;
-      const itemProgress = active
-        ? Math.max(
-          0,
-          Math.min(
-            1,
-            ( local - delay ) / animDuration
-          )
-        )
+      const delay = arpeggio
+        ? spreadT * groupSettings.sequenceSpread * tDur
         : 0;
+      const itemProgress = deformAt(
+        local,
+        delay,
+        tDur,
+        hold,
+        rDur
+      );
 
       p.push();
       draw(
         p,
         {
           progress: itemProgress,
+          phase,
+          time,
           cx: itemCx,
           cy,
           size: itemSize,
@@ -271,7 +370,6 @@ sketch.draw( ( time ) => {
             tiles.length,
             spreadT
           ),
-          stroke: appearance.strokeWeight ?? 0,
           seed: index * 7 + k
         }
       );
@@ -286,7 +384,7 @@ sketch.draw( ( time ) => {
         220,
         220,
         230,
-        active ? 235 : 120
+        phase === "rest" ? 120 : 235
       );
       p.textAlign(
         p.CENTER,
