@@ -214,6 +214,55 @@ export function animateSites(
   }
 }
 
+/**
+ * Turn live interaction pointers (from `getPointers`) into Voronoi sites. Each
+ * pointer becomes a site at its position; `startIndex` offsets the colour hash
+ * so injected sites keep distinct, stable hues next to the procedural ones.
+ */
+export function pointersToSites(
+  pointers, startIndex = 0
+) {
+  const sites = [];
+
+  for ( let i = 0; i < pointers.length; i++ ) {
+    const pt = pointers[ i ];
+
+    sites.push( {
+      x: pt.x,
+      y: pt.y,
+      // Golden-ratio hash → well-spread, deterministic hues per pointer.
+      colorT: ( ( startIndex + i ) * 0.6180339887 ) % 1
+    } );
+  }
+
+  return sites;
+}
+
+/**
+ * Combine procedural sites with interaction pointers per mix mode: "add" appends
+ * pointer sites, "replace" uses only pointer sites, "off" (or no pointers) keeps
+ * the procedural set.
+ */
+export function combineSites(
+  procedural, pointers, mode
+) {
+  if ( mode === "replace" ) {
+    return pointersToSites(
+      pointers,
+      0
+    );
+  }
+
+  if ( mode === "off" || !pointers || pointers.length === 0 ) {
+    return procedural;
+  }
+
+  return procedural.concat( pointersToSites(
+    pointers,
+    procedural.length
+  ) );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Nearest-site query                                                */
 /* ------------------------------------------------------------------ */

@@ -5,8 +5,16 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
+  initInteraction,
+  getPointers
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
+import {
   createBalls,
   animateBalls,
+  combineBalls,
   buildFieldGrid,
   marchingSquaresFill,
   marchingSquaresContour,
@@ -52,7 +60,9 @@ function ensureBalls( o ) {
   }
 }
 
-sketch.setup( () => {} );
+sketch.setup( async() => {
+  await initInteraction( options.sketch?.interaction ?? {} );
+} );
 
 sketch.draw( () => {
   const p = getP5();
@@ -83,6 +93,24 @@ sketch.draw( () => {
     }
   );
 
+  const interaction = o.interaction ?? {};
+  const mix = o.interactionMix ?? {};
+  const mixMode = mix.mode ?? "add";
+  const pointers = mixMode === "off" ? [] : getPointers( interaction );
+  const balls = combineBalls(
+    state.balls,
+    pointers,
+    mix.pointerRadius ?? 130,
+    mixMode
+  );
+
+  if ( balls.length === 0 ) {
+    drawInteractionOverlay( interaction );
+    renderTitle();
+
+    return;
+  }
+
   const gridOpts = o.grid ?? {};
   const cellSize = Math.max(
     4,
@@ -103,7 +131,7 @@ sketch.draw( () => {
   const cellH = p.height / rows;
 
   state.field = buildFieldGrid(
-    state.balls,
+    balls,
     cols,
     rows,
     cellW,
@@ -251,5 +279,6 @@ sketch.draw( () => {
     }
   }
 
+  drawInteractionOverlay( interaction );
   renderTitle();
 } );

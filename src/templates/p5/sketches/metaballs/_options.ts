@@ -1,6 +1,67 @@
 // Shared form fragments for the "metaballs" category so every variant exposes
 // the same ball-simulation, grid and palette controls without duplication.
 
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
+export {
+  interactionFormConfiguration
+};
+
+// Interaction defaults tuned for these sketches: every source starts OFF (so the
+// procedural look is preserved until the user opts in) and the debug overlay is
+// muted. Flip on Mouse / Vision / Audio / Orbit / Gyroscope to push the field.
+export const interactionDefaults = {
+  ...interactionFormValues,
+  orbit: {
+    ...interactionFormValues.orbit,
+    enabled: false
+  },
+  visualization: {
+    ...interactionFormValues.visualization,
+    enabled: false
+  }
+};
+
+export const interactionMixValues = {
+  mode: "add",
+  pointerRadius: 130
+};
+
+export const interactionMixConfig = {
+  label: "Interaction → metaballs",
+  component: "nested-object",
+  fields: {
+    mode: {
+      label: "Mix mode",
+      component: "select",
+      options: [
+        {
+          label: "Add (pointers become extra balls)",
+          value: "add"
+        },
+        {
+          label: "Replace (only pointer balls)",
+          value: "replace"
+        },
+        {
+          label: "Off (ignore pointers)",
+          value: "off"
+        }
+      ]
+    },
+    pointerRadius: {
+      label: "Pointer ball radius",
+      component: "slider",
+      min: 10,
+      max: 400,
+      step: 5
+    }
+  }
+};
+
 export const PALETTE_OPTIONS = [
   {
     label: "Rainbow",

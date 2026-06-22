@@ -5,8 +5,16 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
+  initInteraction,
+  getPointers
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
+import {
   createSites,
   animateSites,
+  combineSites,
   nearestTwo,
   palette,
   METRICS
@@ -83,7 +91,9 @@ const result = {
   d2: 0
 };
 
-sketch.setup( () => {} );
+sketch.setup( async() => {
+  await initInteraction( options.sketch?.interaction ?? {} );
+} );
 
 sketch.draw( () => {
   const p = getP5();
@@ -113,6 +123,23 @@ sketch.draw( () => {
     }
   );
 
+  const interaction = o.interaction ?? {};
+  const mix = o.interactionMix ?? {};
+  const mixMode = mix.mode ?? "add";
+  const pointers = mixMode === "off" ? [] : getPointers( interaction );
+  const sites = combineSites(
+    state.sites,
+    pointers,
+    mixMode
+  );
+
+  if ( sites.length === 0 ) {
+    drawInteractionOverlay( interaction );
+    renderTitle();
+
+    return;
+  }
+
   const quality = o.quality ?? {};
   const metricFn = METRICS[ quality.metric ?? "euclidean" ] ?? METRICS.euclidean;
   const pexp = quality.minkowskiP ?? 3;
@@ -131,7 +158,7 @@ sketch.draw( () => {
   ];
 
   // Per-site flat colours (cheap: one per site, recomputed each frame).
-  const siteColors = state.sites.map( ( site ) =>
+  const siteColors = sites.map( ( site ) =>
     palette(
       paletteName,
       ( site.colorT + hueShift ) % 1
@@ -158,7 +185,7 @@ sketch.draw( () => {
 
     for ( let x = 0; x < bufW; x++ ) {
       nearestTwo(
-        state.sites,
+        sites,
         x * scaleX,
         wy,
         metricFn,
@@ -228,7 +255,7 @@ sketch.draw( () => {
       230
     );
 
-    for ( const site of state.sites ) {
+    for ( const site of sites ) {
       p.circle(
         site.x,
         site.y,
@@ -237,5 +264,6 @@ sketch.draw( () => {
     }
   }
 
+  drawInteractionOverlay( interaction );
   renderTitle();
 } );

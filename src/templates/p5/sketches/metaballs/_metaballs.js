@@ -160,6 +160,54 @@ export function animateBalls(
   }
 }
 
+/**
+ * Turn live interaction pointers (from `getPointers`) into metaballs. Each
+ * pointer becomes a ball at its position with a uniform radius, so a mouse,
+ * fingertip, audio band, orbit source, … all push the field around.
+ */
+export function pointersToBalls(
+  pointers, radius
+) {
+  const balls = [];
+
+  for ( let i = 0; i < pointers.length; i++ ) {
+    const pt = pointers[ i ];
+
+    balls.push( {
+      x: pt.x,
+      y: pt.y,
+      r: radius
+    } );
+  }
+
+  return balls;
+}
+
+/**
+ * Combine the procedural balls with interaction pointers according to the mix
+ * mode: "add" appends pointer balls, "replace" uses only pointer balls, "off"
+ * (or no pointers) keeps the procedural set untouched.
+ */
+export function combineBalls(
+  procedural, pointers, radius, mode
+) {
+  if ( mode === "replace" ) {
+    return pointersToBalls(
+      pointers,
+      radius
+    );
+  }
+
+  if ( mode === "off" || !pointers || pointers.length === 0 ) {
+    return procedural;
+  }
+
+  return procedural.concat( pointersToBalls(
+    pointers,
+    radius
+  ) );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Scalar field                                                      */
 /* ------------------------------------------------------------------ */

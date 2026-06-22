@@ -29,7 +29,9 @@ import {
   buildFieldGrid,
   marchingSquaresContour,
   palette,
-  fieldToUnit
+  fieldToUnit,
+  pointersToBalls,
+  combineBalls
 } from "@/p5/sketches/metaballs/_metaballs.js";
 
 type Ball = { x: number;
@@ -195,6 +197,95 @@ describe(
         );
 
         expect( segments ).toBe( 1 );
+      }
+    );
+  }
+);
+
+describe(
+  "interaction → balls",
+  () => {
+    it(
+      "pointersToBalls maps each pointer to a ball with the given radius",
+      () => {
+        const balls = pointersToBalls(
+          [
+            {
+              x: 10,
+              y: 20
+            },
+            {
+              x: 30,
+              y: 40
+            }
+          ],
+          50
+        );
+
+        expect( balls ).toEqual( [
+          {
+            x: 10,
+            y: 20,
+            r: 50
+          },
+          {
+            x: 30,
+            y: 40,
+            r: 50
+          }
+        ] );
+      }
+    );
+
+    it(
+      "combineBalls honours add / replace / off",
+      () => {
+        const proc = [
+          {
+            x: 0,
+            y: 0,
+            r: 5
+          }
+        ];
+        const pointers = [
+          {
+            x: 1,
+            y: 1
+          }
+        ];
+
+        expect( combineBalls(
+          proc,
+          pointers,
+          9,
+          "add"
+        ) ).toHaveLength( 2 );
+        expect( combineBalls(
+          proc,
+          pointers,
+          9,
+          "replace"
+        ) ).toEqual( [
+          {
+            x: 1,
+            y: 1,
+            r: 9
+          }
+        ] );
+
+        // "off" and "add with no pointers" both return the procedural set as-is.
+        expect( combineBalls(
+          proc,
+          pointers,
+          9,
+          "off"
+        ) ).toBe( proc );
+        expect( combineBalls(
+          proc,
+          [],
+          9,
+          "add"
+        ) ).toBe( proc );
       }
     );
   }
