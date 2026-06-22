@@ -20,10 +20,15 @@ const variantOptions = ( category: string ) =>
     value: variant
   } ) );
 
-const categoryValues = Object.fromEntries( CATEGORY_LIST.map( ( category ) => [
+// Only the first gesture is enabled by default — every other one can be
+// switched on from its block in the options, so the demo starts with a single
+// clean sound instead of all ten firing at once.
+const categoryValues = Object.fromEntries( CATEGORY_LIST.map( (
+  category, index
+) => [
   category,
   {
-    enabled: true,
+    enabled: index === 0,
     variant: defaultVariant( category ),
     pitch: 1,
     volume: 1
