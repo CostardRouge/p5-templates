@@ -5,8 +5,16 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
+  initInteraction,
+  getPointers
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
+import {
   createSites,
   animateSites,
+  combineSites,
   nearestTwo,
   palette,
   METRICS
@@ -82,7 +90,9 @@ const result = {
   d2: 0
 };
 
-sketch.setup( () => {} );
+sketch.setup( async() => {
+  await initInteraction( options.sketch?.interaction ?? {} );
+} );
 
 sketch.draw( () => {
   const p = getP5();
@@ -112,6 +122,23 @@ sketch.draw( () => {
     }
   );
 
+  const interaction = o.interaction ?? {};
+  const mix = o.interactionMix ?? {};
+  const mixMode = mix.mode ?? "add";
+  const pointers = mixMode === "off" ? [] : getPointers( interaction );
+  const sites = combineSites(
+    state.sites,
+    pointers,
+    mixMode
+  );
+
+  if ( sites.length === 0 ) {
+    drawInteractionOverlay( interaction );
+    renderTitle();
+
+    return;
+  }
+
   const quality = o.quality ?? {};
   const metric = quality.metric ?? "euclidean";
   const metricFn = METRICS[ metric ] ?? METRICS.euclidean;
@@ -133,7 +160,7 @@ sketch.draw( () => {
     8
   ];
 
-  const siteColors = state.sites.map( ( site ) =>
+  const siteColors = sites.map( ( site ) =>
     palette(
       paletteName,
       ( site.colorT + hueShift ) % 1
@@ -161,7 +188,7 @@ sketch.draw( () => {
 
     for ( let x = 0; x < bufW; x++ ) {
       nearestTwo(
-        state.sites,
+        sites,
         x * scaleX,
         wy,
         metricFn,
@@ -253,8 +280,8 @@ sketch.draw( () => {
     p.blendMode( p.ADD );
     p.noStroke();
 
-    for ( let si = 0; si < state.sites.length; si++ ) {
-      const site = state.sites[ si ];
+    for ( let si = 0; si < sites.length; si++ ) {
+      const site = sites[ si ];
       const rgb = siteColors[ si ] ?? [
         255,
         255,
@@ -282,5 +309,6 @@ sketch.draw( () => {
     p.pop();
   }
 
+  drawInteractionOverlay( interaction );
   renderTitle();
 } );

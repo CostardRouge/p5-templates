@@ -5,8 +5,16 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
+  initInteraction,
+  getPointers
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
+import {
   createSites,
   animateSites,
+  combineSites,
   nearestTwo,
   palette,
   METRICS
@@ -83,7 +91,9 @@ const result = {
   d2: 0
 };
 
-sketch.setup( () => {} );
+sketch.setup( async() => {
+  await initInteraction( options.sketch?.interaction ?? {} );
+} );
 
 sketch.draw( () => {
   const p = getP5();
@@ -113,6 +123,23 @@ sketch.draw( () => {
     }
   );
 
+  const interaction = o.interaction ?? {};
+  const mix = o.interactionMix ?? {};
+  const mixMode = mix.mode ?? "add";
+  const pointers = mixMode === "off" ? [] : getPointers( interaction );
+  const sites = combineSites(
+    state.sites,
+    pointers,
+    mixMode
+  );
+
+  if ( sites.length === 0 ) {
+    drawInteractionOverlay( interaction );
+    renderTitle();
+
+    return;
+  }
+
   const quality = o.quality ?? {};
   const metric = quality.metric ?? "euclidean";
   const metricFn = METRICS[ metric ] ?? METRICS.euclidean;
@@ -130,7 +157,7 @@ sketch.draw( () => {
   const scale = render.scale ?? 1;
 
   // Normalise distances so a typical cell radius maps to ≈1.
-  const norm = ( Math.sqrt( state.sites.length ) / Math.min(
+  const norm = ( Math.sqrt( sites.length ) / Math.min(
     p.width,
     p.height
   ) ) * 2 * scale;
@@ -166,7 +193,7 @@ sketch.draw( () => {
 
     for ( let x = 0; x < bufW; x++ ) {
       nearestTwo(
-        state.sites,
+        sites,
         x * scaleX,
         wy,
         metricFn,
@@ -243,5 +270,6 @@ sketch.draw( () => {
   );
   p.pop();
 
+  drawInteractionOverlay( interaction );
   renderTitle();
 } );

@@ -5,8 +5,16 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
+  initInteraction,
+  getPointers
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
+import {
   createBalls,
   animateBalls,
+  combineBalls,
   sampleField,
   palette,
   fieldToUnit
@@ -75,7 +83,9 @@ function ensureBuffer( cols ) {
   }
 }
 
-sketch.setup( () => {} );
+sketch.setup( async() => {
+  await initInteraction( options.sketch?.interaction ?? {} );
+} );
 
 sketch.draw( () => {
   const p = getP5();
@@ -106,6 +116,24 @@ sketch.draw( () => {
     }
   );
 
+  const interaction = o.interaction ?? {};
+  const mix = o.interactionMix ?? {};
+  const mixMode = mix.mode ?? "add";
+  const pointers = mixMode === "off" ? [] : getPointers( interaction );
+  const balls = combineBalls(
+    state.balls,
+    pointers,
+    mix.pointerRadius ?? 130,
+    mixMode
+  );
+
+  if ( balls.length === 0 ) {
+    drawInteractionOverlay( interaction );
+    renderTitle();
+
+    return;
+  }
+
   const render = o.render ?? {};
   const threshold = o.grid?.threshold ?? 1;
   const gamma = render.gamma ?? 1;
@@ -130,7 +158,7 @@ sketch.draw( () => {
 
     for ( let x = 0; x < bufW; x++ ) {
       const value = sampleField(
-        state.balls,
+        balls,
         x * scaleX,
         wy
       );
@@ -176,7 +204,7 @@ sketch.draw( () => {
     );
     p.strokeWeight( 1.5 );
 
-    for ( const ball of state.balls ) {
+    for ( const ball of balls ) {
       p.circle(
         ball.x,
         ball.y,
@@ -189,5 +217,6 @@ sketch.draw( () => {
     }
   }
 
+  drawInteractionOverlay( interaction );
   renderTitle();
 } );

@@ -5,7 +5,11 @@ import {
   ballsValues,
   ballsConfig,
   gridValues,
-  gridConfig
+  gridConfig,
+  interactionDefaults,
+  interactionMixValues,
+  interactionMixConfig,
+  interactionFormConfiguration
 } from "../_options";
 
 export const formValues = {
@@ -24,6 +28,8 @@ export const formValues = {
     lines: true,
     lineWeight: 1.5
   },
+  interactionMix: interactionMixValues,
+  interaction: interactionDefaults,
   backgroundColor: [
     4,
     6,
@@ -100,6 +106,8 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
+  interactionMix: interactionMixConfig,
+  interaction: interactionFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

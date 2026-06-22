@@ -5,7 +5,11 @@ import {
   sitesValues,
   sitesConfig,
   metricValues,
-  metricConfig
+  metricConfig,
+  interactionDefaults,
+  interactionMixValues,
+  interactionMixConfig,
+  interactionFormConfiguration
 } from "../_options";
 
 export const formValues = {
@@ -23,6 +27,8 @@ export const formValues = {
     ],
     showSites: false
   },
+  interactionMix: interactionMixValues,
+  interaction: interactionDefaults,
   backgroundColor: [
     0,
     0,
@@ -78,6 +84,8 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
+  interactionMix: interactionMixConfig,
+  interaction: interactionFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

@@ -1,5 +1,58 @@
 // Shared form fragments for the "voronoi" category.
 
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
+export {
+  interactionFormConfiguration
+};
+
+// Interaction defaults: every source starts OFF and the debug overlay is muted,
+// so the procedural diagram is unchanged until the user enables a source. Then
+// each pointer (Mouse / Vision / Audio / Orbit / Gyroscope) becomes a live site.
+export const interactionDefaults = {
+  ...interactionFormValues,
+  orbit: {
+    ...interactionFormValues.orbit,
+    enabled: false
+  },
+  visualization: {
+    ...interactionFormValues.visualization,
+    enabled: false
+  }
+};
+
+export const interactionMixValues = {
+  mode: "add"
+};
+
+export const interactionMixConfig = {
+  label: "Interaction → sites",
+  component: "nested-object",
+  fields: {
+    mode: {
+      label: "Mix mode",
+      component: "select",
+      options: [
+        {
+          label: "Add (pointers become extra sites)",
+          value: "add"
+        },
+        {
+          label: "Replace (only pointer sites)",
+          value: "replace"
+        },
+        {
+          label: "Off (ignore pointers)",
+          value: "off"
+        }
+      ]
+    }
+  }
+};
+
 export const PALETTE_OPTIONS = [
   {
     label: "Rainbow",
