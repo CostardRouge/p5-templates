@@ -114,15 +114,15 @@ export const formValues = {
     showLabels: true
   },
   timing: {
-    animationDuration: 1.4,
+    animationDuration: 0.7,
     restDuration: 0.6,
     stagger: true,
-    staggerSpread: 1
+    staggerSpread: 0.35
   },
   tensionRelease: {
     enabled: true,
     hold: 0.25,
-    releaseRatio: 0.8,
+    releaseRatio: 0.5,
     tensionEasing: "easeOutCubic",
     releaseEasing: "easeInOutCubic"
   },
