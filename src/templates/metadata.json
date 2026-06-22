@@ -784,7 +784,7 @@
     "engine": "p5",
     "category": "audio",
     "hasSketchForm": true,
-    "hasThumbnail": false,
+    "hasThumbnail": true,
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
@@ -3106,5 +3106,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-21T19:45:54.448Z",
     "ctime": "2026-06-21T19:45:01.644Z"
+  },
+  {
+    "name": "motion-foley",
+    "engine": "p5",
+    "category": "audio",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-21T23:27:47.860Z",
+    "ctime": "2026-06-21T23:25:47.360Z"
   }
 ]
