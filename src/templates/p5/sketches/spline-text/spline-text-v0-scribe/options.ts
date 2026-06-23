@@ -20,6 +20,7 @@ export const formValues = {
   },
   points: {
     count: 149,
+    travelDetail: 0.2,
     seed: 0,
     motion: 0.08,
     speed: 1
@@ -150,6 +151,13 @@ export const formConfiguration: Record<string, any> = {
         min: 3,
         max: 200,
         step: 1
+      },
+      travelDetail: {
+        label: "Detail away from the word (× points)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
       },
       seed: {
         label: "Random seed",
