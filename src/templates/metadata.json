@@ -170,7 +170,7 @@
   {
     "name": "peaks-cone",
     "engine": "p5",
-    "category": "peaks",
+    "category": "peaks-shaders",
     "hasSketchForm": true,
     "hasThumbnail": true,
     "hasPreview": true,
