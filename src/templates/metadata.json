@@ -180,6 +180,18 @@
     "ctime": "2026-05-20T12:32:21.521Z"
   },
   {
+    "name": "peaks-cone",
+    "engine": "p5",
+    "category": "peaks",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-20T12:32:21.521Z",
+    "ctime": "2026-05-20T12:32:21.521Z"
+  },
+  {
     "name": "peaks-cylinder",
     "engine": "p5",
     "category": "peaks",
