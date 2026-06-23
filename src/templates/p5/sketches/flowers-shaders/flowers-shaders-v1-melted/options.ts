@@ -67,7 +67,7 @@ export const formConfiguration: Record<string, any> = {
       step: {
         label: "Step (smaller = denser)",
         component: "slider",
-        min: 0.003,
+        min: 0.002,
         max: 0.05,
         step: 0.0005
       },
@@ -92,14 +92,14 @@ export const formConfiguration: Record<string, any> = {
         label: "Cluster flowers (sides)",
         component: "slider",
         min: 1,
-        max: 12,
+        max: 16,
         step: 1
       },
       flowerPetals: {
         label: "Petals per flower",
         component: "slider",
         min: 3,
-        max: 24,
+        max: 32,
         step: 1
       },
       sizeMin: {
