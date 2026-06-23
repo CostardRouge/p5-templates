@@ -6,10 +6,11 @@ import {
   renderReadingSplineText
 } from "../_reading.js";
 
-// A spline cluster that reads a paragraph: it rests on a word, then morphs onto
-// the next (the points unrolling from one end of the curve), travelling word by
-// word over the full background text. Behaviour lives in _reading.js; this
-// variant only sets the progressive defaults.
+// A spline cluster that reads a paragraph, resting on a word then travelling to
+// the next, word by word over the full background text. The transition is chosen
+// at runtime via `flow.mode`: "progressive" morphs the cluster from word to word
+// while "instant" snaps it onto each word (a jump per word). Behaviour lives in
+// _reading.js; this entry only wires options into the engine.
 sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};

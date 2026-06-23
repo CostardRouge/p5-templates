@@ -4,46 +4,39 @@ import {
 
 export const formValues = {
   text: {
-    value: "word by word the spline jumps across the page",
-    font: "martian",
-    size: 135,
-    lineHeight: 1.15,
-    maxWidth: 1,
+    value: "HELLO",
+    font: "waverseVariable",
+    size: 0.2,
     sampleFactor: 0.2,
     simplifyThreshold: 0,
     visible: true,
+    fade: true,
     color: [
       255,
       255,
       255,
-      40
-    ] as number[],
-    activeColor: [
-      255,
-      255,
-      255,
-      230
+      70
     ] as number[]
   },
-  position: {
-    x: 0.5,
-    y: 0.5
-  },
   points: {
-    count: 175
+    count: 149,
+    travelDetail: 0.2,
+    seed: 0,
+    motion: 0.08,
+    speed: 1
   },
-  flow: {
-    // "instant" snaps the cluster onto each word (a jump per word); "progressive"
-    // morphs it from word to word.
-    mode: "progressive" as "progressive" | "instant",
-    dwell: 0.45,
-    spread: 0.6,
-    direction: "start" as "start" | "end",
+  morph: {
+    // "progressive" reveals the points left → right (letter by letter); "instant"
+    // morphs them all together.
+    mode: "instant" as "progressive" | "instant",
+    assemble: 0.35,
+    hold: 0.2,
+    spread: 0.56,
     easing: "easeInOutCubic"
   },
   curve: {
     method: "chaikin" as "chaikin" | "catmull-rom" | "quadratic",
-    iterations: 6,
+    iterations: 4,
     closed: false,
     tension: 0
   },
@@ -101,13 +94,12 @@ export const formValues = {
 
 export const formConfiguration: Record<string, any> = {
   text: {
-    label: "Text (background paragraph)",
+    label: "Text",
     component: "nested-object",
-    initialExpanded: true,
     fields: {
       value: {
         label: "Text",
-        component: "textarea"
+        component: "text"
       },
       font: {
         label: "Font",
@@ -115,23 +107,9 @@ export const formConfiguration: Record<string, any> = {
         options: fontSelectOptions
       },
       size: {
-        label: "Size",
+        label: "Size (× smallest canvas side)",
         component: "slider",
-        min: 40,
-        max: 400,
-        step: 1
-      },
-      lineHeight: {
-        label: "Line height × size",
-        component: "slider",
-        min: 0.8,
-        max: 2.5,
-        step: 0.05
-      },
-      maxWidth: {
-        label: "Wrap width (× canvas width)",
-        component: "slider",
-        min: 0.3,
+        min: 0.05,
         max: 1,
         step: 0.01
       },
@@ -150,27 +128,18 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       visible: {
-        label: "Show the background text?",
+        label: "Show the text underneath?",
+        component: "checkbox"
+      },
+      fade: {
+        label: "Fade text in with the morph?",
         component: "checkbox"
       },
       color: {
         label: "Text color",
         component: "color"
-      },
-      activeColor: {
-        label: "Active word color",
-        component: "color"
       }
     }
-  },
-  position: {
-    label: "Position",
-    component: "vector2d",
-    allowNegative: false,
-    min: 0,
-    max: 1,
-    step: 0.01,
-    yDown: true
   },
   points: {
     label: "Spline points",
@@ -182,33 +151,67 @@ export const formConfiguration: Record<string, any> = {
         min: 3,
         max: 200,
         step: 1
+      },
+      travelDetail: {
+        label: "Detail away from the word (× points)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      seed: {
+        label: "Random seed",
+        component: "slider",
+        min: 0,
+        max: 100,
+        step: 1
+      },
+      motion: {
+        label: "Random drift amount",
+        component: "slider",
+        min: 0,
+        max: 0.25,
+        step: 0.005
+      },
+      speed: {
+        label: "Random drift speed",
+        component: "slider",
+        min: 0,
+        max: 5,
+        step: 0.1
       }
     }
   },
-  flow: {
-    label: "Word-to-word flow",
+  morph: {
+    label: "Morph animation",
     component: "nested-object",
-    initialExpanded: true,
     fields: {
       mode: {
-        label: "Transition mode",
+        label: "Assembly mode",
         component: "select",
         options: [
           {
-            label: "Progressive (morph)",
+            label: "Progressive (letter by letter)",
             value: "progressive"
           },
           {
-            label: "Instant (jump)",
+            label: "Instant (all at once)",
             value: "instant"
           }
         ]
       },
-      dwell: {
-        label: "Dwell on word (fraction of step)",
+      assemble: {
+        label: "Assemble (fraction of loop)",
+        component: "slider",
+        min: 0.05,
+        max: 0.9,
+        step: 0.01
+      },
+      hold: {
+        label: "Hold on text (fraction of loop)",
         component: "slider",
         min: 0,
-        max: 0.95,
+        max: 0.8,
         step: 0.01
       },
       spread: {
@@ -217,20 +220,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 0.95,
         step: 0.01
-      },
-      direction: {
-        label: "Morph from",
-        component: "select",
-        options: [
-          {
-            label: "Start of the curve",
-            value: "start"
-          },
-          {
-            label: "End of the curve",
-            value: "end"
-          }
-        ]
       },
       easing: {
         label: "Morph easing",

@@ -6,9 +6,11 @@ import {
   renderSplineText
 } from "../_shared.js";
 
-// A random, drifting spline that gathers letter by letter onto the word (the
-// progressive "handwriting" reveal) and then releases back to the cloud. All of
-// the behaviour lives in _shared.js; this variant only sets the defaults.
+// A random, drifting spline that gathers onto a single word and then releases
+// back to the cloud. The reveal mode is chosen at runtime via `morph.mode`:
+// "progressive" writes it letter by letter (the handwriting look) while
+// "instant" snaps every control point onto the word at once. All of the
+// behaviour lives in _shared.js; this entry only wires options into the engine.
 sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};

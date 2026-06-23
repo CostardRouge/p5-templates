@@ -304,6 +304,119 @@ function drawText( {
   p.pop();
 }
 
+// Cache of the "travelling detail" decimation, shared by both spline-text
+// engines. Away from the word (the random cloud here, the word-to-word crossing
+// in the reading engine) the curve should read as a much simpler, lower-point
+// spline so the canvas isn't filled with strands ("spaghetti") — yet the moment
+// it settles on a word it must show the full glyph outline. We never change the
+// vertex count (that would pop): an evenly spaced subset stays "structural" while
+// the rest collapse onto the chord between their two structural neighbours when
+// off the word, then ease back to their real outline position as it arrives.
+// Rebuilt only when the point count or the detail ratio change.
+const detailState = {
+  key: "",
+  structural: null,
+  prev: null,
+  next: null,
+  t: null
+};
+
+export function ensureDetailMap(
+  count, detail
+) {
+  const key = `${ count }|${ detail }`;
+
+  if ( key === detailState.key ) {
+    return detailState;
+  }
+
+  // How many points stay structural off the word (always at least the two
+  // endpoints, at most every point — in which case nothing collapses).
+  const kept = clamp(
+    Math.round( count * detail ),
+    2,
+    count
+  );
+  const structural = new Uint8Array( count );
+
+  for ( let s = 0; s < kept; s++ ) {
+    structural[ Math.round( s * ( count - 1 ) / ( kept - 1 ) ) ] = 1;
+  }
+
+  structural[ 0 ] = 1;
+  structural[ count - 1 ] = 1;
+
+  // For every point: the nearest structural index at or before it, the nearest at
+  // or after it, and where it sits between the two (so fillers land on the chord).
+  const prev = new Int32Array( count );
+  const next = new Int32Array( count );
+  const t = new Float32Array( count );
+
+  for ( let i = 0, last = 0; i < count; i++ ) {
+    if ( structural[ i ] ) {
+      last = i;
+    }
+
+    prev[ i ] = last;
+  }
+
+  for ( let i = count - 1, upcoming = count - 1; i >= 0; i-- ) {
+    if ( structural[ i ] ) {
+      upcoming = i;
+    }
+
+    next[ i ] = upcoming;
+  }
+
+  for ( let i = 0; i < count; i++ ) {
+    const span = next[ i ] - prev[ i ];
+
+    t[ i ] = span > 0 ? ( i - prev[ i ] ) / span : 0;
+  }
+
+  detailState.key = key;
+  detailState.structural = structural;
+  detailState.prev = prev;
+  detailState.next = next;
+  detailState.t = t;
+
+  return detailState;
+}
+
+/**
+ * Collapse the "filler" control points onto the chord between their structural
+ * neighbours by `amount` (0 = untouched full detail, 1 = fully simplified), using
+ * a map from `ensureDetailMap`. Returns a new point list; structural points pass
+ * through unchanged so the curve keeps its overall shape and never pops.
+ */
+export function applyTravelDetail(
+  points, map, amount
+) {
+  if ( amount <= 0 ) {
+    return points;
+  }
+
+  return points.map( (
+    point, i
+  ) => {
+    if ( map.structural[ i ] ) {
+      return point;
+    }
+
+    const chord = mappers.lerpVector(
+      points[ map.prev[ i ] ],
+      points[ map.next[ i ] ],
+      map.t[ i ]
+    );
+
+    return mappers.lerpVector(
+      point,
+      chord,
+      amount
+    );
+  } );
+}
+
 /**
  * Draw one frame of the spline-text sketch from a resolved `sketch` options
  * object. Both category variants (instant / progressive defaults) call this so
@@ -388,7 +501,7 @@ export function renderSplineText( o = {} ) {
     : 0;
   const keys = spread > 0 ? staggerKeys( targets ) : null;
 
-  const current = anchors.map( (
+  let current = anchors.map( (
     anchor, index
   ) => {
     const target = targets[ index ];
@@ -409,6 +522,27 @@ export function renderSplineText( o = {} ) {
       progress
     );
   } );
+
+  // Declutter the cloud: `travelDetail` is the fraction of points kept away from
+  // the word (1 = the full, busy cloud; small = a clean, sparse strand). The word
+  // is always traced at full detail — `envelope` is 1 there, so the simplification
+  // (driven by 1 − envelope) fades fully out as the spline gathers onto the glyph.
+  const detail = clamp(
+    pointsCfg.travelDetail ?? 0.2,
+    0,
+    1
+  );
+
+  if ( detail < 1 && count > 2 ) {
+    current = applyTravelDetail(
+      current,
+      ensureDetailMap(
+        count,
+        detail
+      ),
+      1 - envelope
+    );
+  }
 
   // 4. The literal word underneath (optional / fades with the morph).
   if ( textCfg.visible ?? true ) {

@@ -10,7 +10,9 @@ import {
 } from "../splines/_shared.js";
 import {
   resampleOrdered,
-  staggeredProgress
+  staggeredProgress,
+  ensureDetailMap,
+  applyTravelDetail
 } from "./_shared.js";
 
 /**
@@ -448,6 +450,28 @@ export function renderReadingSplineText( o = {} ) {
         progress
       );
     } );
+
+    // Declutter the crossing: `travelDetail` is the fraction of points kept while
+    // the cluster is off the word (1 = the full, busy crossing; small = a clean,
+    // sparse strand). `offWord` is 0 while resting on either word and peaks halfway
+    // between them, so the simplification fades fully in mid-travel and fully out
+    // as the cluster lands — the glyph is always traced at full detail at rest.
+    const detail = clamp(
+      pointsCfg.travelDetail ?? 0.2,
+      0,
+      1
+    );
+
+    if ( detail < 1 && count > 2 ) {
+      current = applyTravelDetail(
+        current,
+        ensureDetailMap(
+          count,
+          detail
+        ),
+        Math.sin( Math.PI * local )
+      );
+    }
   }
 
   if ( current.length >= 2 ) {
