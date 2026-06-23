@@ -30,7 +30,8 @@ export const formValues = {
     y: 0.5
   },
   points: {
-    count: 175
+    count: 175,
+    travelDetail: 0.2
   },
   flow: {
     // "instant" snaps the cluster onto each word (a jump per word); "progressive"
@@ -182,6 +183,13 @@ export const formConfiguration: Record<string, any> = {
         min: 3,
         max: 200,
         step: 1
+      },
+      travelDetail: {
+        label: "Travelling detail (× points, off the word)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
       }
     }
   },
