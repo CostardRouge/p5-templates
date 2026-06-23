@@ -32,11 +32,27 @@ import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 // All anchor/easing/path maths that depend only on time (not on the pixel) are
 // evaluated on the CPU and handed to the shader as uniforms — so the path
 // easing dropdown keeps working bit-for-bit with the original.
+//
+// ── Performance ──────────────────────────────────────────────────────────────
+// A full-screen scan is O(pixels × discs), and the naive version paid two
+// trig-heavy rotations per disc per pixel — even for discs on the far side of
+// the screen. The hot loop is kept lean without changing a single output pixel:
+//
+//   • Cluster cull — every disc a path sample stamps lives within a known radius
+//     of that sample's path point, so one squared-distance test skips the whole
+//     sides×petals inner scan when the pixel is out of range. At typical
+//     densities a pixel is near only a handful of the hundreds of samples.
+//   • Hoisted trig — the per-frame rotations (outer spin, petal step, ring step)
+//     are evaluated once, above the loops, not per disc.
+//   • Incremental rotation — the petal ring and the cluster fan are advanced by
+//     angle-addition recurrences (pure multiplies), so the inner loops call no
+//     sin/cos at all.
+//   • Squared-distance reject — discs are rejected on dot(d,d) before the sqrt.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MAX_SAMPLES = 320; // upper bound on path lerp samples (matches the slider)
-const MAX_SIDES = 12; // matches the "sides" slider max
-const MAX_PETALS = 24; // matches the "flower petals" slider max
+const MAX_SAMPLES = 512; // upper bound on path lerp samples (matches the slider)
+const MAX_SIDES = 16; // matches the "sides" slider max
+const MAX_PETALS = 32; // matches the "flower petals" slider max
 
 const FRAGMENT = `
   uniform float uT;
@@ -82,20 +98,34 @@ const FRAGMENT = `
     return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
   }
 
-  // p5 rotate(): standard rotation matrix (visually clockwise since +y is down).
-  vec2 rot(vec2 v, float a) {
-    float c = cos(a);
-    float s = sin(a);
-
-    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
-  }
-
   // Re-stamp every circle the CPU sketch would have drawn and keep the one drawn
   // last (highest painter order) that covers frag — the loops iterate in the
   // original's exact draw order, so "last writer wins" reproduces the overlap.
+  //
+  // The disc centres are the original's nested transforms, re-associated so the
+  // rotations factor out of the inner loops. The CPU stack was
+  //   center = vpos + rot(petalOffset + rot(m, flowerRot), outerRot)
+  // and since rotation is linear and composes, that is exactly
+  //   center = vpos + rot(petalOffset, outerRot) + rot(m, outerRot + flowerRot).
+  // The two rotated unit vectors are then swept by angle-addition recurrences.
   vec4 sampleScene(vec2 frag) {
     vec3  bestColor = vec3(0.0);
     float bestMask = 0.0;
+
+    // Per-frame trig, hoisted above every loop (none of it depends on i/s/k).
+    float outerRot = -uT * uRotationSpeed;
+    float co = cos(outerRot);            // cluster-fan start direction (s = 0)
+    float so = sin(outerRot);
+
+    float inc = TAU / uPetals;           // angle between a flower's petals
+    float ci = cos(inc);                 // ring-step rotation (advance per k)
+    float si = sin(inc);
+    float ringSin = sin(inc * 0.5);      // ring start direction = (sin θ, cos θ)
+    float ringCos = cos(inc * 0.5);
+
+    float fanStep = TAU / uSides;        // angle between the cluster's flowers
+    float cfs = cos(fanStep);            // fan-step rotation (advance per s)
+    float sfs = sin(fanStep);
 
     for (int i = 0; i < ${ MAX_SAMPLES }; i++) {
       if (float(i) >= uSamples) { break; }
@@ -106,51 +136,85 @@ const FRAGMENT = `
       vec2 vpos = mix(uStart, uEnd, li);
       float sizeRatio = remap(easeInOutExpo(li), 0.0, 1.0, PI, -PI);
       float crossSize = remap(cos(sizeRatio), -1.0, 1.0, uSizeMin, uSizeMax);
-
-      float outerRot = -uT * uRotationSpeed;
-      float flowerRot = li * PI - uT + li * uInnerRotationGain;
-
-      float inc = TAU / uPetals;
       float innerSize = crossSize / uSides;
-      float radius = innerSize * sin(inc * 0.5);
+      float radius = innerSize * ringSin;
 
       // Discs this small never cover a pixel — skip the whole cluster.
       if (radius < 0.25) { continue; }
 
+      // Cluster bounding-sphere cull: every disc this sample draws lies within
+      // (crossSize + innerSize + radius) of vpos, so a pixel farther than that
+      // can't be touched — skip the entire s×k scan (and its trig) for it.
+      float reach = crossSize + innerSize + radius + 1.0;
+      vec2 toV = frag - vpos;
+
+      if (dot(toV, toV) > reach * reach) { continue; }
+
+      // Combined rotation for the petal ring (outer spin + the original's
+      // per-step wind-up), evaluated once per surviving sample.
+      float totalRot = outerRot + li * PI - uT + li * uInnerRotationGain;
+      float ct = cos(totalRot);
+      float st = sin(totalRot);
+
+      // Cluster-fan unit direction, swept by fanStep across s.
+      float fx = co;
+      float fy = so;
+
       for (int s = 0; s < ${ MAX_SIDES }; s++) {
         if (float(s) >= uSides) { break; }
 
-        float petalAngle = TAU / uSides * float(s);
-        vec2 petalOffset = crossSize * vec2(cos(petalAngle), sin(petalAngle));
+        vec2 base = vpos + crossSize * vec2(fx, fy);
+
+        // Ring unit direction (sin θ, cos θ), swept by inc across k.
+        float rx = ringSin;
+        float ry = ringCos;
 
         for (int k = 0; k < ${ MAX_PETALS }; k++) {
           if (float(k) >= uPetals) { break; }
 
-          float aMid = float(k) * inc + inc * 0.5;
-          vec2 m = innerSize * vec2(sin(aMid), cos(aMid));
-          vec2 center = vpos + rot(petalOffset + rot(m, flowerRot), outerRot);
+          // rot((rx, ry), totalRot) * innerSize — pure multiplies, no trig.
+          vec2 local = frag - base - innerSize * vec2(
+            rx * ct - ry * st,
+            rx * st + ry * ct
+          );
 
-          vec2 local = frag - center;
-          float mask = discMask(local, radius);
+          float dd = dot(local, local);
+          float rim = radius + 1.0;
 
-          if (mask <= 0.001) { continue; }
+          if (dd <= rim * rim) {
+            float d = sqrt(dd);
+            float mask = 1.0 - smoothstep(radius - 1.0, radius + 1.0, d);
 
-          float d = length(local);
-          float phase = (li * TAU + uT * uHueSpeed
-            + li * uPathHueShift
-            + float(s) * uSideHueShift
-            + float(k) * uPetalHueShift) / TAU;
+            if (mask > 0.001) {
+              float phase = (li * TAU + uT * uHueSpeed
+                + li * uPathHueShift
+                + float(s) * uSideHueShift
+                + float(k) * uPetalHueShift) / TAU;
 
-          vec3 col = iridescent(phase + uShimmer * (d / radius));
+              vec3 col = iridescent(phase + uShimmer * (d / radius));
 
-          // Darkened rim reproduces the original's black flower outline.
-          if (uBorderWidth > 0.0 && radius - d < uBorderWidth) {
-            col *= uBorderDarken;
+              // Darkened rim reproduces the original's black flower outline.
+              if (uBorderWidth > 0.0 && radius - d < uBorderWidth) {
+                col *= uBorderDarken;
+              }
+
+              bestMask = mask;
+              bestColor = col;
+            }
           }
 
-          bestMask = mask;
-          bestColor = col;
+          // Advance the ring direction by inc (angle-addition, no trig).
+          float nrx = rx * ci + ry * si;
+          float nry = ry * ci - rx * si;
+          rx = nrx;
+          ry = nry;
         }
+
+        // Advance the cluster-fan direction by fanStep (angle-addition).
+        float nfx = fx * cfs - fy * sfs;
+        float nfy = fy * cfs + fx * sfs;
+        fx = nfx;
+        fy = nfy;
       }
     }
 
