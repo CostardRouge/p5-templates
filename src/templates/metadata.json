@@ -3118,5 +3118,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-21T23:27:47.860Z",
     "ctime": "2026-06-21T23:25:47.360Z"
+  },
+  {
+    "name": "flowers-shaders-v1-melted",
+    "engine": "p5",
+    "category": "flowers-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-23T20:02:42.833Z",
+    "ctime": "2026-06-23T20:02:23.797Z"
   }
 ]
