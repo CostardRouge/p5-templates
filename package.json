@@ -5,6 +5,7 @@
   "scripts": {
     "sketch:meta": "node scripts/watch-sketches.mjs",
     "sketch:meta:write": "node scripts/watch-sketches.mjs --once",
+    "sketch:clean-assets": "node scripts/remove-orphan-thumbnails.mjs",
     "dev": "next dev --turbopack",
     "watch": "node scripts/dev-watch.mjs",
     "build": "next build",
