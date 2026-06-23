@@ -10,25 +10,25 @@ export const formValues = {
     easing: "linear"
   },
   flower: {
-    sides: 2,
-    flowerPetals: 5,
-    sizeMin: 99,
-    sizeMax: 293,
+    sides: 3,
+    flowerPetals: 4,
+    sizeMin: 68,
+    sizeMax: 213,
     rotationSpeed: 0.39,
-    innerRotationGain: 9.8,
-    borderWidth: 2,
-    borderDarken: 0
+    innerRotationGain: 17.9,
+    borderWidth: 1.5,
+    borderDarken: 0.07
   },
   colors: {
-    hueSpeed: 1,
-    hueSpread: 1.5,
+    hueSpeed: -5.68,
+    hueSpread: 1.78,
     huePhase: 0,
-    pathHueShift: 1.5,
-    sideHueShift: 0.6,
-    petalHueShift: 0.25,
-    shimmer: 1.8,
-    saturation: 1,
-    brightness: 1
+    pathHueShift: -6.28,
+    sideHueShift: 3.56,
+    petalHueShift: 1.32,
+    shimmer: 1.94,
+    saturation: 0.82,
+    brightness: 1.01
   },
   aberration: {
     amount: 0,
