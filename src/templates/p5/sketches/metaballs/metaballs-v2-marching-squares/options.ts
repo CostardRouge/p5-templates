@@ -16,7 +16,7 @@ export const formValues = {
   balls: ballsValues,
   grid: gridValues,
   stroke: {
-    weight: 5,
+    weight: 5.5,
     rainbow: true,
     palette: "rainbow",
     hueSpeed: 1,

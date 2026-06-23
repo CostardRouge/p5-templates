@@ -15,18 +15,18 @@ import {
 export const formValues = {
   balls: ballsValues,
   grid: {
-    cellSize: 16,
+    cellSize: 4,
     interpolate: gridValues.interpolate
   },
   bands: {
     count: 8,
-    minLevel: 0.35,
-    maxLevel: 4,
-    palette: "viridis",
+    minLevel: 1.05,
+    maxLevel: 12,
+    palette: "rainbow",
     hueSpeed: 0,
-    fill: true,
+    fill: false,
     lines: true,
-    lineWeight: 1.5
+    lineWeight: 5
   },
   interactionMix: interactionMixValues,
   interaction: interactionDefaults,

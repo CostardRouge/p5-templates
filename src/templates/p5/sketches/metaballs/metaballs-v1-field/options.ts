@@ -15,15 +15,15 @@ import {
 export const formValues = {
   balls: ballsValues,
   grid: {
-    threshold: gridValues.threshold
+    threshold: 1.35
   },
   render: {
     palette: "magma",
-    resolution: 220,
-    gamma: 1.1,
+    resolution: 300,
+    gamma: 1.45,
     insideBoost: 0.25,
-    outsideDim: 0.6,
-    showBalls: false
+    outsideDim: 0.55,
+    showBalls: true
   },
   interactionMix: interactionMixValues,
   interaction: interactionDefaults,

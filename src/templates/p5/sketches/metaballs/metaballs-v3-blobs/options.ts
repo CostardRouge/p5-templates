@@ -15,15 +15,15 @@ import {
 export const formValues = {
   balls: {
     ...ballsValues,
-    radiusPulse: 0.18
+    radiusPulse: 0.2
   },
   grid: {
     ...gridValues,
-    cellSize: 38
+    cellSize: 12
   },
   fill: {
     gradient: true,
-    palette: "rainbow",
+    palette: "sunset",
     hueSpeed: 0.5,
     color: [
       120,
@@ -33,8 +33,8 @@ export const formValues = {
     ]
   },
   outline: {
-    weight: 2,
-    glow: 3,
+    weight: 5.5,
+    glow: 0,
     color: [
       255,
       255,
