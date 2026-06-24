@@ -3106,5 +3106,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-23T20:02:42.833Z",
     "ctime": "2026-06-23T20:02:23.797Z"
+  },
+  {
+    "name": "text-morphing-letter-mask",
+    "engine": "p5",
+    "category": "text-morphing",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-24T00:47:10.062Z",
+    "ctime": "2026-06-24T00:47:10.054Z"
   }
 ]
