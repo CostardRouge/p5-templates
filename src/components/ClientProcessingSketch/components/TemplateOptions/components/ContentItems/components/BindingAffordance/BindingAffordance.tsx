@@ -15,6 +15,10 @@ import type {
   FieldConfig
 } from "../../constants/field-config";
 import ChannelMeter from "./ChannelMeter";
+import ControlledSliderInput from "../ControlledSliderInput/ControlledSliderInput";
+import {
+  ToggleSwitch
+} from "../ControlChrome";
 import {
   type Binding,
   type BindingKind,
@@ -34,6 +38,27 @@ type Props = {
   config: FieldConfig;
 };
 
+// Resolve the slider domain for the mapping-range controls from the field's
+// own config, so a modulation range is dragged within the parameter's real
+// domain. Falls back to a 0..1 fractional range.
+function fieldDomain( config: FieldConfig ) {
+  const anyConfig = config as any;
+  const min = typeof anyConfig.min === "number" ? anyConfig.min : 0;
+  const max = typeof anyConfig.max === "number" ? anyConfig.max : 1;
+  const step =
+    typeof anyConfig.step === "number"
+      ? anyConfig.step
+      : max - min <= 2
+        ? 0.01
+        : 1;
+
+  return {
+    min,
+    max,
+    step
+  };
+}
+
 /**
  * The per-field modulation control. A small pastille sits beside a bindable
  * field (slider / number / vector2d). Bound, it is a live VU meter glowing with
@@ -41,9 +66,10 @@ type Props = {
  * range, curve and smoothing — or to remove the binding.
  *
  * Bindings are stored as data at `<scope>.bindings` (an array on the sketch
- * settings), resolved at read time by the options proxy. This component is the
- * only thing that writes that array for now; the future "Interactive" matrix
- * panel edits the same data.
+ * settings), resolved at read time by the options proxy. The mapping-range and
+ * smoothing controls are real `ControlledSliderInput`s and the enable/invert
+ * toggles are the shared `ToggleSwitch`, both bound to the binding's path in
+ * the form so they behave exactly like every other control in the panel.
  */
 export default function BindingAffordance( {
   fieldPath,
@@ -51,7 +77,7 @@ export default function BindingAffordance( {
   config
 }: Props ) {
   const {
-    setValue
+    setValue, register
   } = useFormContext();
 
   const scope = getSketchScope( fieldPath );
@@ -69,9 +95,15 @@ export default function BindingAffordance( {
 
   const kind: BindingKind = component === "vector2d" ? "vector2d" : "continuous";
   const list: Binding[] = Array.isArray( bindings ) ? bindings : [];
-  const binding = list.find( ( b ) => b && b.target === target );
+  const index = list.findIndex( ( b ) => b && b.target === target );
+  const binding = index >= 0 ? list[ index ] : undefined;
   const bound = !!binding;
   const sourceOptions = channelSourceOptions( kind );
+  const domain = fieldDomain( config );
+
+  // Path of the binding object in the form; sub-fields (mapping.min, smoothing,
+  // enabled…) are edited in place so they round-trip like any other control.
+  const bindingPath = `${ bindingsPath }.${ index }`;
 
   const writeBindings = ( next: Binding[] ) => {
     setValue(
@@ -83,60 +115,37 @@ export default function BindingAffordance( {
     );
   };
 
-  const createBinding = () => {
-    const next = makeDefaultBinding(
-      target,
-      kind,
-      sourceOptions[ 0 ],
-      config
+  const setField = (
+    subPath: string, value: unknown
+  ) => {
+    setValue(
+      `${ bindingPath }.${ subPath }`,
+      value,
+      {
+        shouldDirty: true
+      }
     );
+  };
 
+  const createBinding = () => {
     writeBindings( [
       ...list,
-      next
+      makeDefaultBinding(
+        target,
+        kind,
+        sourceOptions[ 0 ],
+        config
+      )
     ] );
-  };
-
-  const updateBinding = ( patch: Partial<Binding> ) => {
-    writeBindings( list.map( ( b ) =>
-      b.target === target
-        ? {
-          ...b,
-          ...patch
-        }
-        : b ) );
-  };
-
-  const updateMapping = ( patch: Record<string, unknown> ) => {
-    updateBinding( {
-      mapping: {
-        ...( binding?.mapping ?? {} ),
-        ...patch
-      }
-    } );
-  };
-
-  const updateAxis = (
-    axis: "x" | "y", patch: Record<string, unknown>
-  ) => {
-    const mapping = binding?.mapping ?? {};
-
-    updateBinding( {
-      mapping: {
-        ...mapping,
-        [ axis ]: {
-          ...( mapping[ axis ] ?? {} ),
-          ...patch
-        }
-      }
-    } );
   };
 
   const removeBinding = () => {
     writeBindings( list.filter( ( b ) => b.target !== target ) );
   };
 
-  const varName = binding ? bindingVarName( binding ) : sourceOptions[ 0 ]?.varName;
+  const varName = binding
+    ? bindingVarName( binding )
+    : sourceOptions[ 0 ]?.varName;
   const enabled = binding?.enabled !== false;
 
   return (
@@ -179,18 +188,13 @@ export default function BindingAffordance( {
       >
         {binding && (
           <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <span className="font-medium text-foreground">Modulation</span>
-              <label className="flex items-center gap-1.5 text-label">
-                <input
-                  type="checkbox"
-                  checked={ enabled }
-                  onChange={ ( e ) => updateBinding( {
-                    enabled: e.target.checked
-                  } ) }
-                  className="h-3.5 w-3.5 accent-foreground"
+              <label className="flex cursor-pointer items-center gap-2 text-label">
+                <span>Enabled</span>
+                <ToggleSwitch
+                  inputProps={ register( `${ bindingPath }.enabled` ) }
                 />
-                Enabled
               </label>
             </div>
 
@@ -207,10 +211,14 @@ export default function BindingAffordance( {
                     source, project
                   } = decodeSource( e.target.value );
 
-                  updateBinding( {
-                    source,
-                    project
-                  } );
+                  setField(
+                    "source",
+                    source
+                  );
+                  setField(
+                    "project",
+                    project ?? null
+                  );
                 } }
                 className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
               >
@@ -223,69 +231,54 @@ export default function BindingAffordance( {
               <ChannelMeter varName={ varName } />
             </div>
 
-            {/* Range */}
+            {/* Mapping range — real sliders over the parameter's own domain */}
             {kind === "continuous" ? (
-              <div className="flex items-end gap-2">
-                <label className="flex flex-1 flex-col gap-1">
-                  <span className="text-label">Min</span>
-                  <input
-                    type="number"
-                    value={ binding.mapping?.min ?? 0 }
-                    onChange={ ( e ) => updateMapping( {
-                      min: parseFloat( e.target.value )
-                    } ) }
-                    className="h-8 w-full rounded-md border border-theme bg-background px-2 text-right font-mono text-foreground"
-                  />
-                </label>
-                <label className="flex flex-1 flex-col gap-1">
-                  <span className="text-label">Max</span>
-                  <input
-                    type="number"
-                    value={ binding.mapping?.max ?? 1 }
-                    onChange={ ( e ) => updateMapping( {
-                      max: parseFloat( e.target.value )
-                    } ) }
-                    className="h-8 w-full rounded-md border border-theme bg-background px-2 text-right font-mono text-foreground"
-                  />
-                </label>
+              <div className="flex flex-col gap-1">
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.mapping.min` }
+                  label="Min"
+                  min={ domain.min }
+                  max={ domain.max }
+                  step={ domain.step }
+                />
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.mapping.max` }
+                  label="Max"
+                  min={ domain.min }
+                  max={ domain.max }
+                  step={ domain.step }
+                />
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {( [
-                  "x",
-                  "y"
-                ] as const ).map( ( axis ) => (
-                  <React.Fragment key={ axis }>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-label">{axis.toUpperCase()} min</span>
-                      <input
-                        type="number"
-                        value={ binding.mapping?.[ axis ]?.min ?? 0 }
-                        onChange={ ( e ) => updateAxis(
-                          axis,
-                          {
-                            min: parseFloat( e.target.value )
-                          }
-                        ) }
-                        className="h-8 w-full rounded-md border border-theme bg-background px-2 text-right font-mono text-foreground"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-label">{axis.toUpperCase()} max</span>
-                      <input
-                        type="number"
-                        value={ binding.mapping?.[ axis ]?.max ?? 1 }
-                        onChange={ ( e ) => updateAxis(
-                          axis,
-                          {
-                            max: parseFloat( e.target.value )
-                          }
-                        ) }
-                        className="h-8 w-full rounded-md border border-theme bg-background px-2 text-right font-mono text-foreground"
-                      />
-                    </label>
-                  </React.Fragment>
-                ) )}
+              <div className="flex flex-col gap-1">
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.mapping.x.min` }
+                  label="X min"
+                  min={ domain.min }
+                  max={ domain.max }
+                  step={ domain.step }
+                />
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.mapping.x.max` }
+                  label="X max"
+                  min={ domain.min }
+                  max={ domain.max }
+                  step={ domain.step }
+                />
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.mapping.y.min` }
+                  label="Y min"
+                  min={ domain.min }
+                  max={ domain.max }
+                  step={ domain.step }
+                />
+                <ControlledSliderInput
+                  name={ `${ bindingPath }.mapping.y.max` }
+                  label="Y max"
+                  min={ domain.min }
+                  max={ domain.max }
+                  step={ domain.step }
+                />
               </div>
             )}
 
@@ -294,9 +287,10 @@ export default function BindingAffordance( {
               <div className="flex items-center gap-2">
                 <select
                   value={ binding.mapping?.curve ?? "linear" }
-                  onChange={ ( e ) => updateMapping( {
-                    curve: e.target.value
-                  } ) }
+                  onChange={ ( e ) => setField(
+                    "mapping.curve",
+                    e.target.value
+                  ) }
                   className="h-8 flex-1 rounded-md border border-theme bg-background px-2 text-foreground"
                 >
                   {CURVE_OPTIONS.map( ( option ) => (
@@ -305,38 +299,23 @@ export default function BindingAffordance( {
                     </option>
                   ) )}
                 </select>
-                <label className="flex items-center gap-1.5 text-label">
-                  <input
-                    type="checkbox"
-                    checked={ !!binding.mapping?.invert }
-                    onChange={ ( e ) => updateMapping( {
-                      invert: e.target.checked
-                    } ) }
-                    className="h-3.5 w-3.5 accent-foreground"
+                <label className="flex cursor-pointer items-center gap-2 text-label">
+                  <span>Invert</span>
+                  <ToggleSwitch
+                    inputProps={ register( `${ bindingPath }.mapping.invert` ) }
                   />
-                  Invert
                 </label>
               </div>
             )}
 
             {/* Smoothing */}
-            <label className="flex flex-col gap-1">
-              <span className="flex items-center justify-between text-label">
-                <span>Smoothing</span>
-                <span className="font-mono">{( binding.smoothing ?? 0 ).toFixed( 2 )}</span>
-              </span>
-              <input
-                type="range"
-                min={ 0 }
-                max={ 0.95 }
-                step={ 0.05 }
-                value={ binding.smoothing ?? 0 }
-                onChange={ ( e ) => updateBinding( {
-                  smoothing: parseFloat( e.target.value )
-                } ) }
-                className="w-full accent-foreground"
-              />
-            </label>
+            <ControlledSliderInput
+              name={ `${ bindingPath }.smoothing` }
+              label="Smoothing"
+              min={ 0 }
+              max={ 0.95 }
+              step={ 0.05 }
+            />
 
             <button
               type="button"
