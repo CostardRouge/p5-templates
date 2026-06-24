@@ -5,7 +5,6 @@ import type React from "react";
 import {
   useCallback, useEffect, useMemo, useRef, useState
 } from "react";
-import AnimationProgressionBar from "@/components/AnimationProgressionBar";
 import EngineSketchRenderer from "@/components/TemplateSketchPage/EngineSketchRenderer";
 import SketchBreadcrumb from "@/components/TemplateSketchPage/SketchBreadcrumb";
 import SketchPerformanceLabel from "@/components/TemplateSketchPage/SketchPerformanceLabel";
@@ -32,6 +31,13 @@ import {
 
 const TemplateOptions = dynamic( () =>
   import( "@/components/ClientProcessingSketch/components/TemplateOptions/TemplateOptions" ) );
+
+// AnimationProgressionBar is a self-contained scrubber subtree (RAF polling,
+// pointer/scrub handlers, animationBridge/syncSketchOptions wiring) that only
+// renders once `sketchLoaded && !capturing`. Load it as a separate chunk so it
+// stays out of the sketch page's initial compile.
+const AnimationProgressionBar = dynamic( () =>
+  import( "@/components/AnimationProgressionBar" ) );
 
 export default function TemplateSketchPage() {
   const [
