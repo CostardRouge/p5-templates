@@ -5,41 +5,41 @@ export const formValues = {
   timeScale: 1,
   braid: {
     pipeCount: 3,
-    pipeRadius: 0.28,
-    braidRadius: 0.85,
-    twist: 2.2,
-    spin: 0.6,
-    radiusPulse: 0.18,
-    pulseFreq: 0.8,
-    pulseSpeed: 1
+    pipeRadius: 0.18,
+    braidRadius: 0.42,
+    twist: 2.77,
+    spin: -1.31,
+    radiusPulse: 0,
+    pulseFreq: 1.38,
+    pulseSpeed: 1.59
   },
   camera: {
     distance: 4.2,
-    fov: 45,
-    pitch: 0.18,
-    yaw: 0.5,
-    orbitSpeed: 0.15,
-    fogDensity: 0.14
+    fov: 51,
+    pitch: -0.03,
+    yaw: 0.72,
+    orbitSpeed: -0.67,
+    fogDensity: 0.6
   },
   colors: {
     hueSpeed: 0.05,
-    hueSpread: 1.4,
+    hueSpread: 3.9,
     huePhase: 0,
-    lengthHueShift: 0.2,
-    pipeHueShift: 0.33,
-    shimmer: 0.6,
-    saturation: 1,
+    lengthHueShift: -0.49,
+    pipeHueShift: -0.96,
+    shimmer: 1.44,
+    saturation: 0.88,
     brightness: 1.3
   },
   light: {
-    azimuth: -0.6,
-    elevation: 0.8,
-    ambient: 0.18,
-    diffuse: 0.9,
-    specular: 0.5,
-    specPower: 40,
-    fresnelPower: 2.5,
-    rimStrength: 0.7
+    azimuth: 1.84,
+    elevation: 0.1,
+    ambient: 0.14,
+    diffuse: 0.26,
+    specular: 1.25,
+    specPower: 90,
+    fresnelPower: 1.05,
+    rimStrength: 1.29
   },
   aberration: {
     amount: 0,
