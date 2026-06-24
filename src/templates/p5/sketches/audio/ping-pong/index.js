@@ -3,18 +3,37 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import audio from "@/p5/utils/audio.js";
+import {
+  initInteraction,
+  getPointers,
+  disposeInteraction
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
 
 /**
  * Audio demo sketch: a ball bounces around the canvas and every wall hit
  * triggers a synthesised bip (see utils/audio.js). The trajectory is a pure
  * function of time, so the same beat plays in preview, realtime recording
  * and (later) deterministic offline audio rendering.
+ *
+ * On top of that deterministic beat sits an optional interactive layer: each
+ * live pointer from the shared interaction module — fingers (camera), mouse,
+ * touch and gyroscope tilt — becomes a circular bumper. The ball keeps its
+ * time-based path, but the frame it enters a bumper it plays a bip (pitch
+ * mapped to height) and emits a flash, so you can "play" the ball by hand.
+ * Every interaction source defaults OFF, so until one is enabled the sketch
+ * renders exactly as before.
  */
 
 const state = {
   bouncesX: null,
   bouncesY: null,
-  flashes: [] // { x, y, at } — wall-hit ripples, `at` in sketch seconds
+  flashes: [], // { x, y, at } — wall-hit + bumper ripples, `at` in sketch seconds
+  // Per-pointer "ball was inside this bumper last frame", indexed to match the
+  // getPointers() order, so a bumper bips once on entry instead of every frame.
+  bumperInside: []
 };
 
 /**
@@ -61,10 +80,13 @@ function triggerBounce(
   );
 }
 
-sketch.setup( () => {
+sketch.setup( async() => {
   state.bouncesX = null;
   state.bouncesY = null;
   state.flashes = [];
+  state.bumperInside = [];
+
+  await initInteraction( options.sketch?.interaction ?? {} );
 } );
 
 sketch.draw( ( time ) => {
@@ -120,6 +142,50 @@ sketch.draw( ( time ) => {
   state.bouncesX = xState.bounces;
   state.bouncesY = yState.bounces;
 
+  // ── Interactive bumpers ──────────────────────────────────────────────────
+  // Each live pointer (finger / mouse / touch / gyro tilt) is a circular
+  // bumper. The ball keeps its deterministic path; the frame it crosses into a
+  // bumper we play a bip (pitch from the bumper's height) and emit a flash.
+  // Edge-triggered per pointer index so holding the ball inside a bumper
+  // doesn't machine-gun the sound.
+  const interaction = o.interaction ?? {};
+  const bumperOptions = o.bumpers ?? {};
+  const bumperRadius = bumperOptions.radius ?? 80;
+  const pointers = getPointers( interaction );
+
+  pointers.forEach( (
+    pointer, index
+  ) => {
+    const inside = p.dist(
+      x,
+      y,
+      pointer.x,
+      pointer.y
+    ) <= radius + bumperRadius;
+
+    if ( inside && !state.bumperInside[ index ] ) {
+      triggerBounce(
+        audioOptions,
+        p.constrain(
+          pointer.y / p.height,
+          0,
+          1
+        )
+      );
+      state.flashes.push( {
+        x: pointer.x,
+        y: pointer.y,
+        at: time
+      } );
+    }
+
+    state.bumperInside[ index ] = inside;
+  } );
+
+  // Drop stale flags once pointers disappear so a new pointer reusing that
+  // index starts fresh and can bip immediately on entry.
+  state.bumperInside.length = pointers.length;
+
   p.clear();
   p.background( ...( o.background?.color ?? [
     0,
@@ -163,6 +229,38 @@ sketch.draw( ( time ) => {
     }
   }
 
+  // Bumper rings: where each pointer is, brighter while the ball is inside it.
+  if ( bumperOptions.show !== false && pointers.length > 0 ) {
+    const ballColor = ballOptions.color ?? [
+      255,
+      255,
+      255
+    ];
+
+    pointers.forEach( (
+      pointer, index
+    ) => {
+      const hit = state.bumperInside[ index ];
+
+      p.push();
+      p.noFill();
+      p.stroke(
+        ...ballColor.slice(
+          0,
+          3
+        ),
+        hit ? 230 : 90
+      );
+      p.strokeWeight( hit ? 4 : 2 );
+      p.circle(
+        pointer.x,
+        pointer.y,
+        bumperRadius * 2
+      );
+      p.pop();
+    } );
+  }
+
   p.push();
   p.noStroke();
   p.fill( ...( ballOptions.color ?? [
@@ -176,4 +274,12 @@ sketch.draw( ( time ) => {
     radius * 2
   );
   p.pop();
+
+  // Debug overlay (crosshairs / pointer markers / finger chains / webcam
+  // preview / legend) — all gated by interaction.visualization, off by default.
+  drawInteractionOverlay( interaction );
+} );
+
+sketch.cleanup?.( () => {
+  disposeInteraction();
 } );

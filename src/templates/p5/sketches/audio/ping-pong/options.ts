@@ -1,3 +1,68 @@
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
+// ── Interaction (fingers / mouse / touch / gyroscope) ──────────────────────
+// Reuse the shared interaction layer but expose only the four sources this
+// sketch reacts to. Every source starts OFF so the deterministic ball + beat
+// are byte-for-byte identical until the user opts in; flip one on and its live
+// pointers become bumpers the ball plays a bip off of.
+
+const interactionDefaults = {
+  enabled: interactionFormValues.enabled,
+  mouse: {
+    ...interactionFormValues.mouse,
+    enabled: false
+  },
+  touch: {
+    ...interactionFormValues.touch,
+    enabled: false
+  },
+  vision: {
+    ...interactionFormValues.vision,
+    enabled: false,
+    // When the camera is switched on, track fingers (not the whole hand).
+    fingers: {
+      ...interactionFormValues.vision.fingers,
+      enabled: true
+    }
+  },
+  gyroscope: {
+    ...interactionFormValues.gyroscope,
+    enabled: false
+  },
+  visualization: {
+    ...interactionFormValues.visualization,
+    enabled: false
+  }
+};
+
+// A fingers-focused slice of the shared Vision panel (drop hands/face/body).
+const visionFingersConfiguration = {
+  component: "nested-object",
+  label: "Vision (Camera) — fingers",
+  fields: {
+    enabled: interactionFormConfiguration.fields.vision.fields.enabled,
+    source: interactionFormConfiguration.fields.vision.fields.source,
+    fingers: interactionFormConfiguration.fields.vision.fields.fingers,
+    performance: interactionFormConfiguration.fields.vision.fields.performance
+  }
+};
+
+const interactionConfiguration = {
+  component: "nested-object",
+  label: "Interaction",
+  fields: {
+    enabled: interactionFormConfiguration.fields.enabled,
+    mouse: interactionFormConfiguration.fields.mouse,
+    touch: interactionFormConfiguration.fields.touch,
+    vision: visionFingersConfiguration,
+    gyroscope: interactionFormConfiguration.fields.gyroscope,
+    visualization: interactionFormConfiguration.fields.visualization
+  }
+};
+
 const SOUND_OPTIONS = [
   {
     label: "Bounce (triangle, pitch drop)",
@@ -45,7 +110,12 @@ export const formValues = {
       0,
       255
     ] as number[]
-  }
+  },
+  bumpers: {
+    show: true,
+    radius: 80
+  },
+  interaction: interactionDefaults
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -156,5 +226,23 @@ export const formConfiguration: Record<string, any> = {
         label: "Background color"
       }
     }
-  }
+  },
+  bumpers: {
+    component: "nested-object",
+    label: "Interactive bumpers",
+    fields: {
+      show: {
+        label: "Show bumper rings",
+        component: "checkbox"
+      },
+      radius: {
+        label: "Bumper radius (px)",
+        component: "slider",
+        min: 10,
+        max: 300,
+        step: 1
+      }
+    }
+  },
+  interaction: interactionConfiguration
 };
