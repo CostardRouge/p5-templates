@@ -16,6 +16,10 @@
 // "vector2d" passthrough. The boolean / enum families (threshold, hysteresis,
 // edge-toggle) extend `applyBinding` later via new `kind` branches.
 
+// The shared easing set (pure math, no p5/DOM) — used to shape the 0..1 signal
+// by the same easing keys the form's easing control produces.
+import easing from "@/p5/utils/easing.js";
+
 // ── Small numeric helpers ───────────────────────────────────────────────────
 
 function clamp01( v ) {
@@ -98,21 +102,16 @@ export function projectChannel(
 }
 
 // ── Curve shaping ───────────────────────────────────────────────────────────
+// `curve` is an easing key from the shared easing set (utils/easing.js) — the
+// same keys the form's easing control stores ("linear", "smoothstep",
+// "easeOutQuad", …). Unknown/missing keys fall through to the identity.
 
 export function applyCurve(
   s, curve
 ) {
-  switch ( curve ) {
-    case "easeIn":
-      return s * s;
-    case "easeOut":
-      return 1 - ( 1 - s ) * ( 1 - s );
-    case "smoothstep":
-      return s * s * ( 3 - 2 * s );
-    case "linear":
-    default:
-      return s;
-  }
+  const fn = curve && easing[ curve ];
+
+  return typeof fn === "function" ? fn( s ) : s;
 }
 
 // ── Mapping families ────────────────────────────────────────────────────────

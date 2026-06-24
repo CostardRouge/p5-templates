@@ -263,22 +263,3 @@ export function makeDefaultBinding(
     enabled: true
   };
 }
-
-export const CURVE_OPTIONS = [
-  {
-    value: "linear",
-    label: "Linear"
-  },
-  {
-    value: "easeIn",
-    label: "Ease in"
-  },
-  {
-    value: "easeOut",
-    label: "Ease out"
-  },
-  {
-    value: "smoothstep",
-    label: "Smoothstep"
-  }
-];
