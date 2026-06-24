@@ -168,7 +168,13 @@ class GsapRuntime {
     return {
       ...this.options,
       size,
-      animation,
+      // Resolve before the template's timeline builder sees it: builders read
+      // `opts.animation.duration ?? 12`, and `0 ?? 12 === 0` — so an explicit
+      // 0/NaN duration from an un-validated persisted/imported job would build
+      // a zero-length timeline while the clock + recorder span the resolved
+      // default. Resolving here keeps the builder, the clock and the encoder
+      // on the exact same positive duration.
+      animation: resolveAnimation( animation ),
       sketch
     };
   }

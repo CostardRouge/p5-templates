@@ -158,6 +158,38 @@ describe(
         expect( runtime.totalFrames ).toBe( 360 );
       }
     );
+
+    test(
+      "REGRESSION: an explicit 0 duration reaches the timeline builder as the resolved default, not 0",
+      async() => {
+        // An un-validated persisted/imported job can carry duration: 0. The
+        // builders read `opts.animation.duration ?? 12` and `0 ?? 12 === 0`,
+        // so without resolving in effectiveOptions the builder would make a
+        // zero-length timeline while the clock/recorder span 12s (frozen clip).
+        builtDurations.length = 0;
+
+        await mount( {
+          size: {
+            width: 1080,
+            height: 1350
+          },
+          animation: {
+            duration: 0,
+            framerate: 30
+          },
+          slides: []
+        } );
+
+        // The clock + recorder resolve 0 → 12.
+        expect( runtime.duration ).toBe( 12 );
+        expect( runtime.totalFrames ).toBe( 360 );
+
+        // The builder must have seen the SAME resolved 12, never the raw 0.
+        expect( builtDurations.length ).toBeGreaterThan( 0 );
+        expect( builtDurations ).not.toContain( 0 );
+        expect( builtDurations[ builtDurations.length - 1 ] ).toBe( 12 );
+      }
+    );
   }
 );
 
