@@ -18,22 +18,31 @@ import {
  * function of time, so the same beat plays in preview, realtime recording
  * and (later) deterministic offline audio rendering.
  *
- * On top of that deterministic beat sits an optional interactive layer: each
- * live pointer from the shared interaction module — fingers (camera), mouse,
- * touch and gyroscope tilt — becomes a circular bumper. The ball keeps its
- * time-based path, but the frame it enters a bumper it plays a bip (pitch
- * mapped to height) and emits a flash, so you can "play" the ball by hand.
- * Every interaction source defaults OFF, so until one is enabled the sketch
- * renders exactly as before.
+ * Interactive layer: each live pointer from the shared interaction module —
+ * fingers (camera), mouse, touch and gyroscope tilt — drives an extra ball
+ * that simply tracks the pointer. The canvas boundary is the only thing that
+ * makes a sound: whenever any ball (auto or interactive) reaches a wall it
+ * plays a bip (pitch mapped to where it hit) and emits a flash. Optionally,
+ * ball-to-ball contact can play a bip too (see the "Balls" options).
+ *
+ * The "Balls" mode select decides which balls exist — only the automatic ball
+ * (default), the automatic ball plus interactive ones, or interactive only.
+ * In "auto" mode the pointers are ignored, so the sketch renders exactly as
+ * before until the user opts in.
  */
 
 const state = {
   bouncesX: null,
   bouncesY: null,
-  flashes: [], // { x, y, at } — wall-hit + bumper ripples, `at` in sketch seconds
-  // Per-pointer "ball was inside this bumper last frame", indexed to match the
-  // getPointers() order, so a bumper bips once on entry instead of every frame.
-  bumperInside: []
+  flashes: [], // { x, y, at } — wall-hit + collision ripples, `at` in sketch seconds
+  // Per-pointer "was the interactive ball touching a wall last frame", indexed
+  // to match getPointers() order, so a wall bips once on contact (edge trigger)
+  // rather than every frame the pointer is held against the edge.
+  // Each entry: { x: bool (left/right walls), y: bool (top/bottom walls) }.
+  interactiveWalls: [],
+  // Keys of the ball pairs currently overlapping, so a ball-to-ball collision
+  // bips once on contact instead of every frame the balls stay overlapped.
+  collidingPairs: new Set()
 };
 
 /**
@@ -84,7 +93,8 @@ sketch.setup( async() => {
   state.bouncesX = null;
   state.bouncesY = null;
   state.flashes = [];
-  state.bumperInside = [];
+  state.interactiveWalls = [];
+  state.collidingPairs = new Set();
 
   await initInteraction( options.sketch?.interaction ?? {} );
 } );
@@ -95,11 +105,23 @@ sketch.draw( ( time ) => {
   const ballOptions = o.ball ?? {};
   const flashOptions = o.flash ?? {};
   const audioOptions = o.audio ?? {};
+  const modeOptions = o.mode ?? {};
+  const interaction = o.interaction ?? {};
+
+  const composition = modeOptions.composition ?? "auto";
+  const showAuto = composition !== "interactive";
+  const showInteractive = composition !== "auto";
+  const ballCollisions = modeOptions.ballCollisions === true;
 
   const radius = ballOptions.radius ?? 40;
   const rangeX = p.width - radius * 2;
   const rangeY = p.height - radius * 2;
 
+  // The balls drawn this frame. Each carries a stable `key` so ball-to-ball
+  // collisions can be edge-triggered: "auto" plus one "p<index>" per pointer.
+  const balls = [];
+
+  // ── Automatic ball (deterministic, time-based) ───────────────────────────
   const xState = pingPong(
     ( ballOptions.speedX ?? 420 ) * time,
     rangeX
@@ -109,83 +131,167 @@ sketch.draw( ( time ) => {
     rangeY
   );
 
-  const x = radius + xState.pos;
-  const y = radius + yState.pos;
+  const autoX = radius + xState.pos;
+  const autoY = radius + yState.pos;
 
-  // A bounce happened when the traversal count increased since last frame.
-  // Counts also *drop* when the preview loop wraps back to t=0 — resync
-  // silently in that case instead of firing a phantom bip.
-  if ( state.bouncesX !== null && xState.bounces > state.bouncesX ) {
-    triggerBounce(
-      audioOptions,
-      yState.pos / rangeY
-    );
-    state.flashes.push( {
-      x,
-      y,
-      at: time
+  if ( showAuto ) {
+    balls.push( {
+      key: "auto",
+      x: autoX,
+      y: autoY,
+      r: radius
     } );
-  }
 
-  if ( state.bouncesY !== null && yState.bounces > state.bouncesY ) {
-    triggerBounce(
-      audioOptions,
-      xState.pos / rangeX
-    );
-    state.flashes.push( {
-      x,
-      y,
-      at: time
-    } );
-  }
-
-  state.bouncesX = xState.bounces;
-  state.bouncesY = yState.bounces;
-
-  // ── Interactive bumpers ──────────────────────────────────────────────────
-  // Each live pointer (finger / mouse / touch / gyro tilt) is a circular
-  // bumper. The ball keeps its deterministic path; the frame it crosses into a
-  // bumper we play a bip (pitch from the bumper's height) and emit a flash.
-  // Edge-triggered per pointer index so holding the ball inside a bumper
-  // doesn't machine-gun the sound.
-  const interaction = o.interaction ?? {};
-  const bumperOptions = o.bumpers ?? {};
-  const bumperRadius = bumperOptions.radius ?? 80;
-  const pointers = getPointers( interaction );
-
-  pointers.forEach( (
-    pointer, index
-  ) => {
-    const inside = p.dist(
-      x,
-      y,
-      pointer.x,
-      pointer.y
-    ) <= radius + bumperRadius;
-
-    if ( inside && !state.bumperInside[ index ] ) {
+    // A wall hit happened when the traversal count increased since last frame.
+    // Counts also *drop* when the preview loop wraps back to t=0 — resync
+    // silently in that case instead of firing a phantom bip.
+    if ( state.bouncesX !== null && xState.bounces > state.bouncesX ) {
       triggerBounce(
         audioOptions,
-        p.constrain(
-          pointer.y / p.height,
-          0,
-          1
-        )
+        yState.pos / rangeY
       );
       state.flashes.push( {
-        x: pointer.x,
-        y: pointer.y,
+        x: autoX,
+        y: autoY,
         at: time
       } );
     }
 
-    state.bumperInside[ index ] = inside;
+    if ( state.bouncesY !== null && yState.bounces > state.bouncesY ) {
+      triggerBounce(
+        audioOptions,
+        xState.pos / rangeX
+      );
+      state.flashes.push( {
+        x: autoX,
+        y: autoY,
+        at: time
+      } );
+    }
+  }
+
+  // Keep the deterministic counters advancing even while the auto ball is
+  // hidden, so switching back to it doesn't fire a phantom bip.
+  state.bouncesX = xState.bounces;
+  state.bouncesY = yState.bounces;
+
+  // ── Interactive balls (one per live pointer) ─────────────────────────────
+  // Each pointer (finger / mouse / touch / gyro tilt) becomes an extra ball
+  // that tracks it, clamped to stay fully on the canvas. The clamp is what
+  // makes the boundary a collision: when the pointer reaches an edge the ball
+  // touches the wall and bips (pitch from where along the wall it landed).
+  const pointers = showInteractive ? getPointers( interaction ) : [];
+  const walls = state.interactiveWalls;
+
+  pointers.forEach( (
+    pointer, index
+  ) => {
+    const cx = p.constrain(
+      pointer.x,
+      radius,
+      p.width - radius
+    );
+    const cy = p.constrain(
+      pointer.y,
+      radius,
+      p.height - radius
+    );
+
+    balls.push( {
+      key: `p${ index }`,
+      x: cx,
+      y: cy,
+      r: radius
+    } );
+
+    const onVertWall = pointer.x <= radius || pointer.x >= p.width - radius;
+    const onHorizWall = pointer.y <= radius || pointer.y >= p.height - radius;
+    const prev = walls[ index ] ?? {
+      x: false,
+      y: false
+    };
+
+    if ( onVertWall && !prev.x ) {
+      triggerBounce(
+        audioOptions,
+        cy / p.height
+      );
+      state.flashes.push( {
+        x: cx,
+        y: cy,
+        at: time
+      } );
+    }
+
+    if ( onHorizWall && !prev.y ) {
+      triggerBounce(
+        audioOptions,
+        cx / p.width
+      );
+      state.flashes.push( {
+        x: cx,
+        y: cy,
+        at: time
+      } );
+    }
+
+    walls[ index ] = {
+      x: onVertWall,
+      y: onHorizWall
+    };
   } );
 
-  // Drop stale flags once pointers disappear so a new pointer reusing that
-  // index starts fresh and can bip immediately on entry.
-  state.bumperInside.length = pointers.length;
+  // Drop stale wall memory once pointers disappear so a reused index starts
+  // fresh (and can bip immediately if it spawns against an edge).
+  walls.length = pointers.length;
 
+  // ── Ball-to-ball collisions (optional sound) ─────────────────────────────
+  // Balls pass through each other — the only effect is an optional bip when two
+  // first overlap, edge-triggered via the set of currently-colliding pairs.
+  if ( ballCollisions ) {
+    const colliding = new Set();
+
+    for ( let i = 0; i < balls.length; i++ ) {
+      for ( let j = i + 1; j < balls.length; j++ ) {
+        const a = balls[ i ];
+        const b = balls[ j ];
+
+        if ( p.dist(
+          a.x,
+          a.y,
+          b.x,
+          b.y
+        ) > a.r + b.r ) {
+          continue;
+        }
+
+        const pairKey = `${ a.key }|${ b.key }`;
+
+        colliding.add( pairKey );
+
+        if ( !state.collidingPairs.has( pairKey ) ) {
+          const mx = ( a.x + b.x ) / 2;
+          const my = ( a.y + b.y ) / 2;
+
+          triggerBounce(
+            audioOptions,
+            my / p.height
+          );
+          state.flashes.push( {
+            x: mx,
+            y: my,
+            at: time
+          } );
+        }
+      }
+    }
+
+    state.collidingPairs = colliding;
+  } else if ( state.collidingPairs.size > 0 ) {
+    state.collidingPairs.clear();
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
   p.clear();
   p.background( ...( o.background?.color ?? [
     0,
@@ -193,7 +299,7 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
-  // Wall-hit ripples: expanding, fading rings.
+  // Collision ripples: expanding, fading rings (walls + ball-to-ball).
   if ( flashOptions.show !== false ) {
     const flashDuration = flashOptions.duration ?? 0.35;
 
@@ -229,38 +335,7 @@ sketch.draw( ( time ) => {
     }
   }
 
-  // Bumper rings: where each pointer is, brighter while the ball is inside it.
-  if ( bumperOptions.show !== false && pointers.length > 0 ) {
-    const ballColor = ballOptions.color ?? [
-      255,
-      255,
-      255
-    ];
-
-    pointers.forEach( (
-      pointer, index
-    ) => {
-      const hit = state.bumperInside[ index ];
-
-      p.push();
-      p.noFill();
-      p.stroke(
-        ...ballColor.slice(
-          0,
-          3
-        ),
-        hit ? 230 : 90
-      );
-      p.strokeWeight( hit ? 4 : 2 );
-      p.circle(
-        pointer.x,
-        pointer.y,
-        bumperRadius * 2
-      );
-      p.pop();
-    } );
-  }
-
+  // Every ball (auto + interactive) drawn the same.
   p.push();
   p.noStroke();
   p.fill( ...( ballOptions.color ?? [
@@ -268,11 +343,15 @@ sketch.draw( ( time ) => {
     255,
     255
   ] ) );
-  p.circle(
-    x,
-    y,
-    radius * 2
-  );
+
+  for ( const ball of balls ) {
+    p.circle(
+      ball.x,
+      ball.y,
+      ball.r * 2
+    );
+  }
+
   p.pop();
 
   // Debug overlay (crosshairs / pointer markers / finger chains / webcam

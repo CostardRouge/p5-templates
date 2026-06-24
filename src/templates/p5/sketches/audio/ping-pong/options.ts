@@ -5,19 +5,21 @@ import {
 
 // ── Interaction (fingers / mouse / touch / gyroscope) ──────────────────────
 // Reuse the shared interaction layer but expose only the four sources this
-// sketch reacts to. Every source starts OFF so the deterministic ball + beat
-// are byte-for-byte identical until the user opts in; flip one on and its live
-// pointers become bumpers the ball plays a bip off of.
+// sketch reacts to. Each live pointer drives an extra ball (see the "Balls"
+// mode select). Mouse + touch are on so switching the mode to interactive
+// works instantly; vision (camera) and gyro stay off until granted. While the
+// mode is "auto" (default) the pointers are ignored, so the deterministic ball
+// and beat are byte-for-byte identical until the user opts in.
 
 const interactionDefaults = {
   enabled: interactionFormValues.enabled,
   mouse: {
     ...interactionFormValues.mouse,
-    enabled: false
+    enabled: true
   },
   touch: {
     ...interactionFormValues.touch,
-    enabled: false
+    enabled: true
   },
   vision: {
     ...interactionFormValues.vision,
@@ -78,6 +80,21 @@ const SOUND_OPTIONS = [
   }
 ];
 
+const BALL_MODE_OPTIONS = [
+  {
+    label: "Only automatic ball",
+    value: "auto"
+  },
+  {
+    label: "Auto ball + interactive",
+    value: "both"
+  },
+  {
+    label: "Interactive only",
+    value: "interactive"
+  }
+];
+
 export const formValues = {
   ball: {
     radius: 186,
@@ -111,9 +128,9 @@ export const formValues = {
       255
     ] as number[]
   },
-  bumpers: {
-    show: true,
-    radius: 80
+  mode: {
+    composition: "auto",
+    ballCollisions: false
   },
   interaction: interactionDefaults
 };
@@ -227,20 +244,18 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  bumpers: {
+  mode: {
     component: "nested-object",
-    label: "Interactive bumpers",
+    label: "Balls",
     fields: {
-      show: {
-        label: "Show bumper rings",
-        component: "checkbox"
+      composition: {
+        label: "Mode",
+        component: "select",
+        options: BALL_MODE_OPTIONS
       },
-      radius: {
-        label: "Bumper radius (px)",
-        component: "slider",
-        min: 10,
-        max: 300,
-        step: 1
+      ballCollisions: {
+        label: "Ball-to-ball collision sound",
+        component: "checkbox"
       }
     }
   },
