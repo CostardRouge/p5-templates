@@ -22,6 +22,9 @@ import {
   getEffectiveSlideSettings
 } from "@/lib/effectiveSlideSettings";
 import {
+  resolveAnimation, totalFramesFor
+} from "@/lib/animationConfig";
+import {
   resolveSketchPath
 } from "@/engines/metadata";
 import {
@@ -399,10 +402,8 @@ export class P5Engine implements SketchEngine {
       options,
       slideIndex
     );
-    const framerate = animation?.framerate ?? 60;
-    const duration = animation?.duration ?? 12;
 
-    return Math.round( duration * framerate );
+    return totalFramesFor( animation );
   }
 
   getFrameRate(
@@ -416,7 +417,7 @@ export class P5Engine implements SketchEngine {
       slideIndex
     );
 
-    return animation?.framerate ?? 60;
+    return resolveAnimation( animation ).framerate;
   }
 
   getCanvas(): HTMLCanvasElement | null {

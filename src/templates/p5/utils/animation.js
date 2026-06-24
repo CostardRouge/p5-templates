@@ -4,6 +4,9 @@ import time from "./time.js";
 import {
   getP5
 } from "./sketch.js";
+import {
+  resolveAnimation, totalFramesFor
+} from "@/lib/animationConfig";
 
 const animation = {
   animate: (
@@ -28,14 +31,13 @@ const animation = {
   },
 
   get maximumFramesCount() {
-    return (
-      sketch.sketchOptions?.animation?.duration *
-      sketch.sketchOptions?.animation?.framerate
-    );
+    return totalFramesFor( sketch.sketchOptions?.animation );
   },
 
   get progression() {
-    const duration = sketch.sketchOptions?.animation?.duration || 10;
+    const {
+      duration
+    } = resolveAnimation( sketch.sketchOptions?.animation );
     const seconds = time.seconds();
 
     // During recording, don't wrap and don't cap - progression should match frame count

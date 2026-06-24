@@ -2,6 +2,9 @@
 import {
   z
 } from "zod";
+import {
+  DURATION_DEFAULT, FRAMERATE_DEFAULT
+} from "@/lib/animationConfig";
 
 const RGB = z.tuple( [
   z.number(),
@@ -790,14 +793,20 @@ export const SketchSizeSchema = z.object( {
     .default( 1350 )
 } );
 
+// `.catch` on each leaf so one invalid value (e.g. a 0 duration) heals to the
+// shared default WITHOUT taking its sibling — or the whole options object via
+// the top-level catch in initOptions — down with it. `framerate` and
+// `duration` are independent, so a bad duration must not also reset framerate.
 export const SketchAnimationSchema = z.object( {
   framerate: z.coerce.number().int()
     .min( 1 )
     .max( 240 )
-    .default( 60 ),
+    .default( FRAMERATE_DEFAULT )
+    .catch( FRAMERATE_DEFAULT ),
   duration: z.coerce.number().min( 1 )
     .max( 60 )
-    .default( 12 )
+    .default( DURATION_DEFAULT )
+    .catch( DURATION_DEFAULT )
 } );
 
 /* ---------------- slide schema (with name) ---------------------- */
@@ -822,8 +831,8 @@ export const OptionsSchema = z.object( {
     height: 1350
   } ),
   animation: SketchAnimationSchema.default( {
-    framerate: 60,
-    duration: 12
+    framerate: FRAMERATE_DEFAULT,
+    duration: DURATION_DEFAULT
   } ),
   content: z.array( ContentItemSchema ).default( [] ),
   assets: Assets,
