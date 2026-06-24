@@ -27,6 +27,9 @@ import {
   NotificationService
 } from "@/services/NotificationService";
 import {
+  getRecordingFramePlan
+} from "@/lib/effectiveSlideSettings";
+import {
   buildRecordingStepPath,
   buildSlideStepPath,
   buildUploadStepPath,
@@ -141,16 +144,6 @@ async function gotoSketchPage(
       onSettled
     );
   }
-}
-
-/**
- * Calculate total frames from animation options
- */
-function calculateTotalFrames( animationOptions: any ): number {
-  const framerate = animationOptions?.framerate || 60;
-  const duration = animationOptions?.duration || 5;
-
-  return Math.round( duration * framerate );
 }
 
 /**
@@ -299,8 +292,11 @@ async function recordSingleSketch(
   );
 
   // ─── Capture frames and encode video ──────────────────────────────────────
-  const totalFrames = calculateTotalFrames( options.animation );
-  const framerate = options.animation?.framerate || 60;
+  // Resolve via the shared plan so the server records exactly what the browser
+  // recorder (engine.getTotalFrames) would — same duration × framerate.
+  const {
+    totalFrames, framerate
+  } = getRecordingFramePlan( options );
   const outputVideoPath = path.join(
     temporaryDirectoryPath,
     `${ path.basename( template ) }-${ jobId }.mp4`
@@ -459,15 +455,17 @@ async function recordMultipleSlides(
     );
 
     // ─── Capture frames and encode video ────────────────────────────────────
-    const slideOptions = slides[ slideIndex ];
-    const slideAnimation = slideOptions?.animation || options.animation;
-    const totalFrames = calculateTotalFrames( slideAnimation );
-    const framerate = slideAnimation?.framerate || 60;
-
-    console.log( {
-      totalFrames,
-      framerate
-    } );
+    // Per-slide effective settings, merged over the globals exactly like the
+    // browser path (getEffectiveSlideSettings). A partial per-slide override
+    // (e.g. framerate only) keeps the global duration instead of silently
+    // collapsing to a hard-coded default — the front/back length mismatch that
+    // made per-slide durations "not work" in server recordings.
+    const {
+      totalFrames, framerate
+    } = getRecordingFramePlan(
+      options,
+      slideIndex
+    );
 
     const slideVideoPath = path.join(
       temporaryDirectoryPath,

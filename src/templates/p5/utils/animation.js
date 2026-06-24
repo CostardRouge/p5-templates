@@ -4,6 +4,9 @@ import time from "./time.js";
 import {
   getP5
 } from "./sketch.js";
+import {
+  DEFAULT_DURATION
+} from "@/lib/effectiveSlideSettings";
 
 const animation = {
   animate: (
@@ -35,7 +38,7 @@ const animation = {
   },
 
   get progression() {
-    const duration = sketch.sketchOptions?.animation?.duration || 10;
+    const duration = sketch.sketchOptions?.animation?.duration || DEFAULT_DURATION;
     const seconds = time.seconds();
 
     // During recording, don't wrap and don't cap - progression should match frame count

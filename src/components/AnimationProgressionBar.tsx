@@ -12,7 +12,7 @@ import {
 } from "@/lib/syncSketchOptions";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import {
-  getEffectiveSlideSettings
+  getRecordingFramePlan
 } from "@/lib/effectiveSlideSettings";
 import usePageVisibility from "@/hooks/usePageVisibility";
 
@@ -43,24 +43,12 @@ function getAnimationConfigFromSketchOptions(
   sketchOptions: any,
   activeSlideIndex?: number
 ): AnimationConfig {
-  const {
-    animation
-  } = getEffectiveSlideSettings(
+  // Same resolver the recorders use, so the scrubber's frame count matches
+  // exactly what a recording of this slide would contain.
+  return getRecordingFramePlan(
     sketchOptions,
     activeSlideIndex
   );
-  const duration = animation?.duration ?? 10;
-  const framerate = animation?.framerate ?? 60;
-  const totalFrames = Math.max(
-    1,
-    Math.floor( duration * framerate )
-  );
-
-  return {
-    duration,
-    framerate,
-    totalFrames
-  };
 }
 
 export default function AnimationProgressionBar( {

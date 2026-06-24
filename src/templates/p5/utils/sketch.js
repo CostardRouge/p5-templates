@@ -15,6 +15,9 @@ import loadProfiler from "./loadProfiler.js";
 import {
   coerceFramerate
 } from "./framerate.js";
+import {
+  DEFAULT_DURATION
+} from "@/lib/effectiveSlideSettings";
 
 let _p5 = null;
 let _container = null;
@@ -482,7 +485,7 @@ const sketch = {
           return;
         }
 
-        const duration = sketch.sketchOptions?.animation?.duration || 10;
+        const duration = sketch.sketchOptions?.animation?.duration || DEFAULT_DURATION;
         const seconds = time.seconds();
         const progression = time.isRecording
           ? Math.min(
@@ -497,7 +500,7 @@ const sketch = {
 
     registerAnimationBridge( {
       getProgression: () => {
-        const duration = sketch.sketchOptions?.animation?.duration || 10;
+        const duration = sketch.sketchOptions?.animation?.duration || DEFAULT_DURATION;
         const seconds = time.seconds();
 
         return time.isRecording
@@ -516,7 +519,7 @@ const sketch = {
             value
           )
         );
-        const duration = sketch.sketchOptions?.animation?.duration || 10;
+        const duration = sketch.sketchOptions?.animation?.duration || DEFAULT_DURATION;
 
         time.elapsed = clamped * duration * 1000;
 

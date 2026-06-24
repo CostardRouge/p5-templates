@@ -13,7 +13,7 @@ import type {
   SketchOption
 } from "@/types/sketch.types";
 import {
-  getEffectiveSlideSettings
+  getRecordingFramePlan
 } from "@/lib/effectiveSlideSettings";
 import {
   resolveSketchPath
@@ -235,30 +235,20 @@ export class GsapEngine implements SketchEngine {
     options: SketchOption,
     slideIndex?: number
   ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
+    return getRecordingFramePlan(
       options,
       slideIndex
-    );
-    const framerate = animation?.framerate ?? 60;
-    const duration = animation?.duration ?? 12;
-
-    return Math.round( duration * framerate );
+    ).totalFrames;
   }
 
   getFrameRate(
     options: SketchOption,
     slideIndex?: number
   ): number {
-    const {
-      animation
-    } = getEffectiveSlideSettings(
+    return getRecordingFramePlan(
       options,
       slideIndex
-    );
-
-    return animation?.framerate ?? 60;
+    ).framerate;
   }
 
   getCanvas(): HTMLCanvasElement | null {

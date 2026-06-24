@@ -131,7 +131,10 @@ const rootFormConfig: Record<string, FieldConfig> = {
         label: "Duration (s)",
         component: "slider",
         step: 1,
-        min: 0,
+        // Floor matches SketchAnimationSchema.duration.min(1): a 0s duration
+        // makes the loop length zero, which divides the progression clock by
+        // zero and records a single frozen frame.
+        min: 1,
         max: 60
       },
       framerate: {

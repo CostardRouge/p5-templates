@@ -34,6 +34,9 @@ import {
   getSketchOptions, setSketchOptions, subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
 import {
+  resolveAnimation, framesForAnimation
+} from "@/lib/effectiveSlideSettings";
+import {
   toCssColor
 } from "./dom";
 
@@ -63,10 +66,6 @@ type RuntimeContextValue = {
 const DEFAULT_SIZE = {
   width: 1080,
   height: 1350
-};
-const DEFAULT_ANIMATION = {
-  framerate: 60,
-  duration: 12
 };
 
 /* ------------------------------------------------------------------ */
@@ -129,18 +128,15 @@ class GsapRuntime {
   }
 
   get framerate(): number {
-    return this.options.animation?.framerate ?? DEFAULT_ANIMATION.framerate;
+    return resolveAnimation( this.options.animation ).framerate;
   }
 
   get duration(): number {
-    return this.options.animation?.duration ?? DEFAULT_ANIMATION.duration;
+    return resolveAnimation( this.options.animation ).duration;
   }
 
   get totalFrames(): number {
-    return Math.max(
-      1,
-      Math.round( this.duration * this.framerate )
-    );
+    return framesForAnimation( this.options.animation );
   }
 
   /* ---- lifecycle ------------------------------------------------- */

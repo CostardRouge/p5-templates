@@ -1,4 +1,7 @@
 import sketch from "./sketch.js";
+import {
+  DEFAULT_DURATION
+} from "@/lib/effectiveSlideSettings";
 
 const time = {
   elapsed: 0,
@@ -81,8 +84,8 @@ window.setAnimationProgression = function( progression ) {
     )
   );
 
-  // Get animation duration, default to 10 seconds if undefined
-  const duration = sketch?.sketchOptions?.animation?.duration || 10;
+  // Get animation duration, falling back to the canonical default if unset.
+  const duration = sketch?.sketchOptions?.animation?.duration || DEFAULT_DURATION;
 
   // Convert progression (0-1) to elapsed time in milliseconds
   time.elapsed = clampedProgression * duration * 1000;
@@ -109,8 +112,8 @@ window.setAnimationProgression = function( progression ) {
 let lastDispatchedProgression = -1;
 
 window.getAnimationProgression = function() {
-  // Get animation duration, default to 10 seconds if undefined
-  const duration = sketch?.sketchOptions?.animation?.duration || 10;
+  // Get animation duration, falling back to the canonical default if unset.
+  const duration = sketch?.sketchOptions?.animation?.duration || DEFAULT_DURATION;
   const seconds = time.seconds();
 
   // During recording, don't wrap and don't cap - progression should match frame count
