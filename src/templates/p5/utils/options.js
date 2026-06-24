@@ -26,6 +26,13 @@ import {
   mergeSlideOverride
 } from "@/lib/effectiveSlideSettings";
 
+import {
+  resolveBindings
+} from "./interaction/bindings.js";
+import {
+  sampleChannels
+} from "./interaction/channels.js";
+
 /* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
 /* ------------------------------------------------------------------ */
@@ -501,8 +508,46 @@ export function syncEffectivePrevious(
 /*                                                                    */
 /*  .sketch  returns base sketch options merged with per-slide        */
 /*           overrides via window.getSketchSettings when registered.  */
-/*           Falls back to the raw store value for simple sketches.   */
+/*           Falls back to the raw store value for simple sketches.    */
+/*           Interactive bindings are then resolved on top, so any     */
+/*           parameter the user has bound to a live input (mouse,      */
+/*           oscillator, …) reads its modulated value here — with no   */
+/*           per-sketch code and zero overhead when no binding exists. */
 /* ------------------------------------------------------------------ */
+
+// Resolve the per-slide-merged sketch object, then layer interactive bindings
+// over it. `resolveBindings` returns the same object untouched when the sketch
+// declares no bindings, so non-interactive sketches pay nothing.
+function resolveSketch( live ) {
+  let base;
+
+  if ( typeof window !== "undefined" && window.getSketchSettings ) {
+    try {
+      base = window.getSketchSettings( live );
+    } catch {
+      base = live.sketch ?? {};
+    }
+  } else {
+    base = live.sketch ?? {};
+  }
+
+  if ( !base || !Array.isArray( base.bindings ) || base.bindings.length === 0 ) {
+    return base;
+  }
+
+  try {
+    const frame = getP5()?.frameCount;
+
+    return resolveBindings(
+      base,
+      sampleChannels(),
+      frame
+    );
+  } catch {
+    // Binding resolution must never break a sketch — fall back to base values.
+    return base;
+  }
+}
 
 const optionsProxy = new Proxy(
   {},
@@ -512,12 +557,8 @@ const optionsProxy = new Proxy(
     ) {
       const live = getSketchOptions();
 
-      if ( prop === "sketch" && typeof window !== "undefined" && window.getSketchSettings ) {
-        try {
-          return window.getSketchSettings( live );
-        } catch {
-          return live[ prop ] ?? {};
-        }
+      if ( prop === "sketch" ) {
+        return resolveSketch( live );
       }
 
       return live[ prop ];

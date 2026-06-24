@@ -85,6 +85,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v8-growing": () => import( "@/p5/sketches/hand-capture/hand-tracking-v8-growing/index.js" ),
   "p5:hand-capture/hand-tracking-v8-smear": () => import( "@/p5/sketches/hand-capture/hand-tracking-v8-smear/index.js" ),
   "p5:kinetic/interaction-test": () => import( "@/p5/sketches/kinetic/interaction-test/index.js" ),
+  "p5:kinetic/interactive-binding-demo": () => import( "@/p5/sketches/kinetic/interactive-binding-demo/index.js" ),
   "p5:kinetic/kinetic-grid-spheres": () => import( "@/p5/sketches/kinetic/kinetic-grid-spheres/index.js" ),
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/index.js" ),
   "p5:kinetic/kinetic-plane": () => import( "@/p5/sketches/kinetic/kinetic-plane/index.js" ),

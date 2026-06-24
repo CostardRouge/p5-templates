@@ -3118,5 +3118,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-24T00:47:10.062Z",
     "ctime": "2026-06-24T00:47:10.054Z"
+  },
+  {
+    "name": "interactive-binding-demo",
+    "engine": "p5",
+    "category": "kinetic",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-24T15:50:05.988Z",
+    "ctime": "2026-06-24T15:50:05.983Z"
   }
 ]

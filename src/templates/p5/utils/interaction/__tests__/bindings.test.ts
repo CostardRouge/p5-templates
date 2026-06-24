@@ -1,0 +1,482 @@
+/**
+ * Unit tests for the interactive-bindings mapping pipeline.
+ *
+ * These cover the PURE resolver (`bindings.js`) in isolation — channel
+ * projection, curve shaping, the continuous + vector2d mapping families, the
+ * dotted-path writer, and the top-level `resolveBindings` (clone, multi-binding,
+ * graceful handling of missing channels / no bindings).
+ */
+import {
+  projectChannel,
+  applyCurve,
+  mapContinuous,
+  mapVector,
+  setPath,
+  resolveBindings
+} from "../bindings.js";
+
+const vec = (
+  x: number, y: number
+) => ( {
+  type: "vector2d" as const,
+  x,
+  y
+} );
+const scalar = ( value: number ) => ( {
+  type: "scalar" as const,
+  value
+} );
+
+describe(
+  "projectChannel",
+  () => {
+    it(
+      "passes a scalar channel through, clamped to 0..1",
+      () => {
+        expect( projectChannel(
+          scalar( 0.4 ),
+          undefined
+        ) ).toBeCloseTo( 0.4 );
+        expect( projectChannel(
+          scalar( 2 ),
+          undefined
+        ) ).toBe( 1 );
+        expect( projectChannel(
+          scalar( -1 ),
+          undefined
+        ) ).toBe( 0 );
+      }
+    );
+
+    it(
+      "projects vector x / y",
+      () => {
+        expect( projectChannel(
+          vec(
+            0.3,
+            0.8
+          ),
+          "x"
+        ) ).toBeCloseTo( 0.3 );
+        expect( projectChannel(
+          vec(
+            0.3,
+            0.8
+          ),
+          "y"
+        ) ).toBeCloseTo( 0.8 );
+      }
+    );
+
+    it(
+      "defaults to x projection when none is given",
+      () => {
+        expect( projectChannel(
+          vec(
+            0.25,
+            0.9
+          ),
+          undefined
+        ) ).toBeCloseTo( 0.25 );
+      }
+    );
+
+    it(
+      "projects magnitude from the center, normalized to 0..1",
+      () => {
+        // Center → 0
+        expect( projectChannel(
+          vec(
+            0.5,
+            0.5
+          ),
+          "mag"
+        ) ).toBeCloseTo( 0 );
+        // Corner → 1 (max distance √0.5)
+        expect( projectChannel(
+          vec(
+            1,
+            1
+          ),
+          "mag"
+        ) ).toBeCloseTo( 1 );
+      }
+    );
+
+    it(
+      "projects angle into 0..1",
+      () => {
+        // Pointing left of center → atan2(0, -0.5) = π → (π+π)/2π = 1
+        expect( projectChannel(
+          vec(
+            0,
+            0.5
+          ),
+          "angle"
+        ) ).toBeCloseTo( 1 );
+        // Pointing right of center → atan2(0, +0.5) = 0 → 0.5
+        expect( projectChannel(
+          vec(
+            1,
+            0.5
+          ),
+          "angle"
+        ) ).toBeCloseTo( 0.5 );
+      }
+    );
+
+    it(
+      "returns 0 for a missing channel",
+      () => {
+        expect( projectChannel(
+          undefined,
+          "x"
+        ) ).toBe( 0 );
+      }
+    );
+  }
+);
+
+describe(
+  "applyCurve",
+  () => {
+    it(
+      "linear is identity",
+      () => {
+        expect( applyCurve(
+          0.3,
+          "linear"
+        ) ).toBeCloseTo( 0.3 );
+        expect( applyCurve(
+          0.3,
+          undefined
+        ) ).toBeCloseTo( 0.3 );
+      }
+    );
+
+    it(
+      "easeIn / easeOut / smoothstep bend the response",
+      () => {
+        expect( applyCurve(
+          0.5,
+          "easeIn"
+        ) ).toBeCloseTo( 0.25 );
+        expect( applyCurve(
+          0.5,
+          "easeOut"
+        ) ).toBeCloseTo( 0.75 );
+        expect( applyCurve(
+          0.5,
+          "smoothstep"
+        ) ).toBeCloseTo( 0.5 );
+        expect( applyCurve(
+          0,
+          "smoothstep"
+        ) ).toBeCloseTo( 0 );
+        expect( applyCurve(
+          1,
+          "smoothstep"
+        ) ).toBeCloseTo( 1 );
+      }
+    );
+  }
+);
+
+describe(
+  "mapContinuous",
+  () => {
+    it(
+      "maps a projected 0..1 signal onto [min, max]",
+      () => {
+        const value = mapContinuous(
+          vec(
+            0.5,
+            0
+          ),
+          {
+            source: "mouse",
+            project: "x",
+            target: "radius",
+            mapping: {
+              min: 40,
+              max: 360
+            }
+          } as any
+        );
+
+        expect( value ).toBeCloseTo( 200 ); // 0.5 across [40, 360]
+      }
+    );
+
+    it(
+      "honors invert",
+      () => {
+        const value = mapContinuous(
+          vec(
+            0,
+            0.25
+          ),
+          {
+            source: "mouse",
+            project: "y",
+            target: "w",
+            mapping: {
+              min: 0,
+              max: 100,
+              invert: true
+            }
+          } as any
+        );
+
+        expect( value ).toBeCloseTo( 75 ); // (1 - 0.25) * 100
+      }
+    );
+
+    it(
+      "defaults to a 0..1 range when mapping is omitted",
+      () => {
+        expect( mapContinuous(
+          scalar( 0.6 ),
+          {
+            source: "osc",
+            target: "x"
+          } as any
+        ) ).toBeCloseTo( 0.6 );
+      }
+    );
+  }
+);
+
+describe(
+  "mapVector",
+  () => {
+    it(
+      "passes a vector2d channel through each axis range",
+      () => {
+        const value = mapVector(
+          vec(
+            0.25,
+            0.75
+          ),
+          {
+            source: "mouse",
+            target: "pos",
+            kind: "vector2d",
+            mapping: {
+              x: {
+                min: 0,
+                max: 200
+              },
+              y: {
+                min: 0,
+                max: 400
+              }
+            }
+          } as any
+        );
+
+        expect( value.x ).toBeCloseTo( 50 );
+        expect( value.y ).toBeCloseTo( 300 );
+      }
+    );
+
+    it(
+      "defaults to a 0..1 identity passthrough",
+      () => {
+        const value = mapVector(
+          vec(
+            0.4,
+            0.6
+          ),
+          {
+            source: "mouse",
+            target: "pos",
+            kind: "vector2d"
+          } as any
+        );
+
+        expect( value.x ).toBeCloseTo( 0.4 );
+        expect( value.y ).toBeCloseTo( 0.6 );
+      }
+    );
+  }
+);
+
+describe(
+  "setPath",
+  () => {
+    it(
+      "writes a top-level key",
+      () => {
+        const obj: any = {};
+
+        setPath(
+          obj,
+          "radius",
+          12
+        );
+        expect( obj.radius ).toBe( 12 );
+      }
+    );
+
+    it(
+      "writes a nested key, creating intermediates",
+      () => {
+        const obj: any = {};
+
+        setPath(
+          obj,
+          "ring.inner.radius",
+          5
+        );
+        expect( obj.ring.inner.radius ).toBe( 5 );
+      }
+    );
+  }
+);
+
+describe(
+  "resolveBindings",
+  () => {
+    const channels = {
+      mouse: vec(
+        0.25,
+        0.75
+      ),
+      osc: scalar( 1 )
+    };
+
+    it(
+      "returns the base object untouched when there are no bindings",
+      () => {
+        const base = {
+          radius: 100
+        };
+
+        expect( resolveBindings(
+          base,
+          channels,
+          0
+        ) ).toBe( base );
+      }
+    );
+
+    it(
+      "produces a modulated clone without mutating the base",
+      () => {
+        const base = {
+          radius: 100,
+          strokeWeight: 1,
+          position: {
+            x: 0.5,
+            y: 0.5
+          },
+          bindings: [
+            {
+              source: "mouse",
+              project: "x",
+              target: "radius",
+              kind: "continuous",
+              mapping: {
+                min: 0,
+                max: 400
+              }
+            },
+            {
+              source: "osc",
+              target: "strokeWeight",
+              kind: "continuous",
+              mapping: {
+                min: 0,
+                max: 10
+              }
+            },
+            {
+              source: "mouse",
+              target: "position",
+              kind: "vector2d"
+            }
+          ]
+        };
+
+        const out: any = resolveBindings(
+          base,
+          channels,
+          1
+        );
+
+        // Modulated values
+        expect( out.radius ).toBeCloseTo( 100 ); // 0.25 across [0, 400]
+        expect( out.strokeWeight ).toBeCloseTo( 10 ); // osc = 1 across [0, 10]
+        expect( out.position.x ).toBeCloseTo( 0.25 );
+        expect( out.position.y ).toBeCloseTo( 0.75 );
+
+        // Base is never mutated
+        expect( base.radius ).toBe( 100 );
+        expect( base.strokeWeight ).toBe( 1 );
+        expect( base.position ).toEqual( {
+          x: 0.5,
+          y: 0.5
+        } );
+      }
+    );
+
+    it(
+      "skips a binding whose channel is missing, keeping the base value",
+      () => {
+        const base = {
+          radius: 42,
+          bindings: [
+            {
+              source: "gyro",
+              target: "radius",
+              kind: "continuous",
+              mapping: {
+                min: 0,
+                max: 1
+              }
+            }
+          ]
+        };
+
+        const out: any = resolveBindings(
+          base,
+          channels,
+          2
+        );
+
+        expect( out.radius ).toBe( 42 );
+      }
+    );
+
+    it(
+      "ignores disabled bindings",
+      () => {
+        const base = {
+          radius: 7,
+          bindings: [
+            {
+              source: "mouse",
+              project: "x",
+              target: "radius",
+              kind: "continuous",
+              enabled: false,
+              mapping: {
+                min: 0,
+                max: 400
+              }
+            }
+          ]
+        };
+
+        const out: any = resolveBindings(
+          base,
+          channels,
+          3
+        );
+
+        expect( out.radius ).toBe( 7 );
+      }
+    );
+  }
+);
