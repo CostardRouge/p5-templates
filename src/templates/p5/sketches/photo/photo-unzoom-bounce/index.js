@@ -4,6 +4,7 @@ import sketch from "@/p5/utils/sketch.js";
 
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
+import oscillator from "@/p5/utils/oscillator/oscillator.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import {
   getP5
@@ -48,16 +49,9 @@ sketch.draw( ( _time ) => {
     img, filename
   } = images[ imageIndex ];
 
-  const imageStepAnimationProgression = options.sketch.animationProgression;
-  const imageStepAnimationProgressionComponent =
-    animation?.[ imageStepAnimationProgression ];
-  const isImageStepAnimationProgressionComponentFunction =
-    typeof imageStepAnimationProgressionComponent === "function";
-
-  const imageStepIndexMapValue =
-    isImageStepAnimationProgressionComponentFunction
-      ? imageStepAnimationProgressionComponent( images.length )
-      : imageStepAnimationProgressionComponent;
+  // Shared oscillation: waveform + cycles (1-9) + phase offset + amplitude,
+  // driven off the global loop progression. Returns 0..1.
+  const imageStepIndexMapValue = oscillator.value( options.sketch.oscillation );
   const imageStepMin = options.sketch.zoom ? 1 : 0;
   const imageStepMax = options.sketch.zoom ? 0 : 1;
   const imageStepIndex = p.map(

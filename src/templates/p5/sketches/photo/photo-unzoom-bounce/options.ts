@@ -1,4 +1,6 @@
 import getTestImagePaths from "@/utils/getTestImagePaths";
+import oscillationDefaultValues from "@/p5/utils/oscillator/oscillatorDefaultValues";
+import oscillationFormConfiguration from "@/p5/utils/oscillator/oscillatorFormConfiguration";
 
 export const formValues = {
   images: await getTestImagePaths(),
@@ -8,7 +10,11 @@ export const formValues = {
   scaleStart: 0,
   scaleEnd: 0.3,
   scaleEasingFunctionName: "easeInQuint",
-  animationProgression: "linearProgression",
+  oscillation: {
+    ...oscillationDefaultValues,
+    // A "bounce" reads best as a linear ping-pong.
+    waveform: "triangle"
+  },
   backgroundColor: [
     255,
     255,
@@ -54,20 +60,7 @@ export const formConfiguration: Record<string, any> = {
     component: "easing",
     label: "Scale easing"
   },
-  animationProgression: {
-    component: "select",
-    label: "Animation progression",
-    options: [
-      {
-        label: "Triangle progression",
-        value: "triangleProgression"
-      },
-      {
-        label: "Linear progression",
-        value: "linearProgression"
-      }
-    ]
-  },
+  oscillation: oscillationFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"
