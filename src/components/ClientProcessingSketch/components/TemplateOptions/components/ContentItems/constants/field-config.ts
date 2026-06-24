@@ -195,6 +195,12 @@ export interface Vector2DConfig extends BaseConfig {
   yDown?: boolean;
 }
 
+// Source picker for HUD widgets: options are derived at render time from the
+// live sketch settings + built-in keys (see ControlledSourceSelect).
+interface SourceSelectConfig extends BaseConfig {
+  component: "source-select";
+}
+
 interface AssetInputConfig extends BaseConfig {
   component: "asset";
   /** Asset kind id, e.g. "images", "videos". */
@@ -258,6 +264,7 @@ export type FieldConfig =
   | HiddenFieldConfig
   | EasingConfig
   | Vector2DConfig
+  | SourceSelectConfig
   | AssetInputConfig
   | AssetStackConfig
   | WebcamDeviceSelectConfig
@@ -301,6 +308,121 @@ export const blendSelectOptions: SelectOption[] = Blend.options.map( ( blendOpti
   value: blendOption,
   label: blendOption
 } ) );
+
+/* ---------------- HUD widget field fragments -------------------- */
+const hudAnchorField: FieldConfig = {
+  label: "Anchor",
+  component: "select",
+  options: [
+    "top-left",
+    "top-right",
+    "bottom-left",
+    "bottom-right",
+    "center"
+  ].map( ( value ) => ( {
+    value,
+    label: value
+  } ) )
+};
+
+// Single draggable pad in place of two x/y sliders. Stores the same { x, y }
+// shape; yDown keeps screen-space orientation (top of the pad = top of canvas).
+const hudOffsetField: FieldConfig = {
+  label: "Offset",
+  component: "vector2d",
+  allowNegative: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+  yDown: true
+};
+
+const hudSourceField: FieldConfig = {
+  label: "Source",
+  component: "source-select"
+};
+
+const hudFillField: FieldConfig = {
+  label: "Fill",
+  component: "color"
+};
+
+const hudFontField: FieldConfig = {
+  label: "Font",
+  component: "select",
+  options: fontNames.map( ( fontName ) => ( {
+    value: fontName,
+    label: fontName
+  } ) )
+};
+
+const hudBlendField: FieldConfig = {
+  label: "Blend",
+  component: "select",
+  options: Blend.options.map( ( blendOption ) => ( {
+    value: blendOption,
+    label: blendOption
+  } ) )
+};
+
+const hudEnabledField: FieldConfig = {
+  label: "Enabled",
+  component: "checkbox"
+};
+
+const hudLabelField: FieldConfig = {
+  label: "Label override",
+  component: "text"
+};
+
+const hudUnitField: FieldConfig = {
+  label: "Unit",
+  component: "text"
+};
+
+const hudDecimalsField: FieldConfig = {
+  label: "Decimals",
+  component: "slider",
+  min: 0,
+  max: 4,
+  step: 1
+};
+
+const hudSizeField = ( max = 96 ): FieldConfig => ( {
+  label: "Size",
+  component: "slider",
+  min: 8,
+  max,
+  step: 1
+} );
+
+const hudWindowFields: Record<string, FieldConfig> = {
+  displayFrom: {
+    label: "Display from (0-1)",
+    component: "slider",
+    min: 0,
+    max: 1,
+    step: 0.01
+  },
+  displayTo: {
+    label: "Display to (0-1)",
+    component: "slider",
+    min: 0,
+    max: 1,
+    step: 0.01
+  }
+};
+
+const hudRangeFields: Record<string, FieldConfig> = {
+  min: {
+    label: "Min",
+    component: "number"
+  },
+  max: {
+    label: "Max",
+    component: "number"
+  }
+};
 
 const visualSelectOptions = [
   {
@@ -664,6 +786,165 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
 
       // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
       schema: SpecsHighlightSchema
+    }
+  },
+  hud: {
+    fill: {
+      label: "Default fill",
+      component: "color"
+    },
+    font: hudFontField,
+    blend: hudBlendField,
+    badge: {
+      label: "Badge (resolution · fps)",
+      component: "nested-object",
+      fields: {
+        enabled: hudEnabledField,
+        anchor: hudAnchorField,
+        offset: hudOffsetField,
+        size: hudSizeField(),
+        fill: hudFillField,
+        font: hudFontField,
+        blend: hudBlendField
+      }
+    },
+    gauge: {
+      label: "Gauge",
+      component: "nested-object",
+      fields: {
+        enabled: hudEnabledField,
+        source: hudSourceField,
+        anchor: hudAnchorField,
+        offset: hudOffsetField,
+        size: hudSizeField( 48 ),
+        ...hudRangeFields,
+        label: hudLabelField,
+        unit: hudUnitField,
+        decimals: hudDecimalsField,
+        easingFn: {
+          label: "Fill easing",
+          component: "easing"
+        },
+        fill: hudFillField,
+        blend: hudBlendField,
+        ...hudWindowFields
+      }
+    },
+    sparkline: {
+      label: "Sparkline",
+      component: "nested-object",
+      fields: {
+        enabled: hudEnabledField,
+        source: hudSourceField,
+        anchor: hudAnchorField,
+        offset: hudOffsetField,
+        size: hudSizeField( 48 ),
+        ...hudRangeFields,
+        historySize: {
+          label: "History points",
+          component: "slider",
+          min: 8,
+          max: 180,
+          step: 1
+        },
+        decimals: hudDecimalsField,
+        unit: hudUnitField,
+        fill: hudFillField,
+        blend: hudBlendField,
+        ...hudWindowFields
+      }
+    },
+    counter: {
+      label: "Counter",
+      component: "nested-object",
+      fields: {
+        enabled: hudEnabledField,
+        source: hudSourceField,
+        anchor: hudAnchorField,
+        offset: hudOffsetField,
+        size: hudSizeField( 160 ),
+        label: hudLabelField,
+        unit: hudUnitField,
+        decimals: hudDecimalsField,
+        fill: hudFillField,
+        blend: hudBlendField,
+        ...hudWindowFields
+      }
+    },
+    crosshairs: {
+      label: "Crosshairs",
+      component: "nested-object",
+      fields: {
+        enabled: hudEnabledField,
+        source: hudSourceField,
+        size: hudSizeField( 48 ),
+        fill: hudFillField,
+        blend: hudBlendField,
+        ...hudWindowFields
+      }
+    },
+    swatch: {
+      label: "Color swatch",
+      component: "nested-object",
+      fields: {
+        enabled: hudEnabledField,
+        source: hudSourceField,
+        anchor: hudAnchorField,
+        offset: hudOffsetField,
+        size: hudSizeField( 48 ),
+        label: hudLabelField,
+        fill: hudFillField,
+        font: hudFontField,
+        blend: hudBlendField,
+        ...hudWindowFields
+      }
+    },
+    boundingBox: {
+      label: "Bounding box",
+      component: "nested-object",
+      fields: {
+        enabled: hudEnabledField,
+        source: hudSourceField,
+        size: hudSizeField( 48 ),
+        region: {
+          label: "Region (0-1)",
+          component: "nested-object",
+          fields: {
+            x: {
+              label: "x",
+              component: "slider",
+              min: 0,
+              max: 1,
+              step: 0.01
+            },
+            y: {
+              label: "y",
+              component: "slider",
+              min: 0,
+              max: 1,
+              step: 0.01
+            },
+            w: {
+              label: "w",
+              component: "slider",
+              min: 0,
+              max: 1,
+              step: 0.01
+            },
+            h: {
+              label: "h",
+              component: "slider",
+              min: 0,
+              max: 1,
+              step: 0.01
+            }
+          }
+        },
+        label: hudLabelField,
+        fill: hudFillField,
+        blend: hudBlendField,
+        ...hudWindowFields
+      }
     }
   },
   text: {

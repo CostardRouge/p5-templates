@@ -1,5 +1,6 @@
 import {
   BackgroundItemSchema,
+  HudItemSchema,
   ImageItemSchema,
   ImagesStackItemSchema,
   MetaItemSchema,
@@ -35,6 +36,10 @@ export default function makeDefaultItem( type: ItemKind ): ContentItem {
       } );
     case "specs":
       return SpecsItemSchema.parse( {
+        type
+      } );
+    case "hud":
+      return HudItemSchema.parse( {
         type
       } );
     case "background":
