@@ -14,15 +14,13 @@ export const formValues = {
   text: {
     mode: "multiple",
     value: [
-      "DREAM",
-      "DREAD",
-      "BREAD",
-      "BREAK"
+      "HELLO",
+      "WORLD"
     ]
   },
   textStyle: {
     font: "waverseVariable",
-    size: 360,
+    size: 238,
     fill: [
       245,
       235,
@@ -34,12 +32,12 @@ export const formValues = {
       225
     ],
     strokeWeight: 0,
-    letterSpacing: 0.62
+    letterSpacing: 0.65
   },
   transition: {
-    easing: "easeInOutCubic",
-    overlap: 0.35,
-    pauseRatio: 0.15,
+    easing: "easeInOutExpo",
+    overlap: 0.89,
+    pauseRatio: 0,
     onlyChanged: false
   },
   // The mask is the *next* letter's silhouette. It scales the current letter
@@ -48,7 +46,7 @@ export const formValues = {
   mask: {
     show: true,
     behindLetters: true,
-    maxScale: 6,
+    maxScale: 3.2,
     easing: "easeInOutCubic",
     stroke: [
       246,
@@ -57,9 +55,10 @@ export const formValues = {
     ],
     strokeWeight: 2,
     fill: [
-      0,
-      0,
-      0
+      255,
+      255,
+      255,
+      255
     ],
     fillAlpha: 0
   },
