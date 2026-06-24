@@ -219,6 +219,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:text-morphing/text-morphing-depth-clock": () => import( "@/p5/sketches/text-morphing/text-morphing-depth-clock/options" ),
   "p5:text-morphing/text-morphing-depth-rising": () => import( "@/p5/sketches/text-morphing/text-morphing-depth-rising/options" ),
   "p5:text-morphing/text-morphing-iris-mask": () => import( "@/p5/sketches/text-morphing/text-morphing-iris-mask/options" ),
+  "p5:text-morphing/text-morphing-letter-mask": () => import( "@/p5/sketches/text-morphing/text-morphing-letter-mask/options" ),
   "p5:text-morphing/text-morphing-rotating-scene": () => import( "@/p5/sketches/text-morphing/text-morphing-rotating-scene/options" ),
   "p5:text/hello-world": () => import( "@/p5/sketches/text/hello-world/options" ),
   "p5:text/text-animated-points": () => import( "@/p5/sketches/text/text-animated-points/options" ),

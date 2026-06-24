@@ -201,6 +201,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:text-morphing/text-morphing-depth-clock": () => import( "@/p5/sketches/text-morphing/text-morphing-depth-clock/index.js" ),
   "p5:text-morphing/text-morphing-depth-rising": () => import( "@/p5/sketches/text-morphing/text-morphing-depth-rising/index.js" ),
   "p5:text-morphing/text-morphing-iris-mask": () => import( "@/p5/sketches/text-morphing/text-morphing-iris-mask/index.js" ),
+  "p5:text-morphing/text-morphing-letter-mask": () => import( "@/p5/sketches/text-morphing/text-morphing-letter-mask/index.js" ),
   "p5:text-morphing/text-morphing-rotating-scene": () => import( "@/p5/sketches/text-morphing/text-morphing-rotating-scene/index.js" ),
   "p5:text/hello-world": () => import( "@/p5/sketches/text/hello-world/index.js" ),
   "p5:text/text-animated-points": () => import( "@/p5/sketches/text/text-animated-points/index.js" ),
