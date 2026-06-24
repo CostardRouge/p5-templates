@@ -3118,5 +3118,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-24T00:47:10.062Z",
     "ctime": "2026-06-24T00:47:10.054Z"
+  },
+  {
+    "name": "flowers-shaders-v2-pipes",
+    "engine": "p5",
+    "category": "flowers-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-24T23:43:29.366Z",
+    "ctime": "2026-06-24T23:42:18.282Z"
   }
 ]
