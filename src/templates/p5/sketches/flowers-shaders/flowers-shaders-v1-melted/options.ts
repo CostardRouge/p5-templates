@@ -4,31 +4,31 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 export const formValues = {
   timeScale: 2.2,
   path: {
-    boundary: 147,
-    step: 1 / 250,
+    boundary: 263,
+    step: 0.003 / 250,
     anchorTimeScale: 0.25,
     easing: "linear"
   },
   flower: {
     sides: 3,
-    flowerPetals: 4,
-    sizeMin: 68,
-    sizeMax: 213,
-    rotationSpeed: 0.39,
-    innerRotationGain: 17.9,
-    borderWidth: 1.5,
-    borderDarken: 0.07
+    flowerPetals: 5,
+    sizeMin: 113,
+    sizeMax: 310,
+    rotationSpeed: -0.98,
+    innerRotationGain: 16.2,
+    borderWidth: 0,
+    borderDarken: 0
   },
   colors: {
-    hueSpeed: -5.68,
-    hueSpread: 1.78,
+    hueSpeed: 0.02,
+    hueSpread: 3.48,
     huePhase: 0,
     pathHueShift: -6.28,
     sideHueShift: 3.56,
     petalHueShift: 1.32,
-    shimmer: 1.94,
-    saturation: 0.82,
-    brightness: 1.01
+    shimmer: 2.5,
+    saturation: 1,
+    brightness: 2
   },
   aberration: {
     amount: 0,
