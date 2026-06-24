@@ -32,6 +32,9 @@ import {
 import {
   sampleChannels
 } from "./interaction/channels.js";
+import {
+  publishChannels
+} from "@/lib/channelBridge";
 
 /* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
@@ -476,9 +479,26 @@ export function registerEvents() {
     markLoadedWhenExifReady
   );
   events.register(
+    "pre-draw",
+    publishChannelsFrame
+  );
+  events.register(
     "pre-setup",
     initializeOptionsSubscription
   );
+}
+
+// Sample the interaction channels once per frame and publish them to the
+// channel bridge (CSS vars + subscribers). This runs for every sketch — even
+// ones with no bindings — so the binding UI's VU meters show live activity
+// before anything is wired up. Cost is a pointer read, a sine, and a handful
+// of CSS-var writes; `sampleChannels` is itself memoized per frame.
+function publishChannelsFrame() {
+  try {
+    publishChannels( sampleChannels() );
+  } catch {
+    // Never let telemetry break the draw loop.
+  }
 }
 
 /**
