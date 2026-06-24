@@ -12,7 +12,13 @@ import {
   mapContinuous,
   mapVector,
   setPath,
-  resolveBindings
+  resolveBindings,
+  waveValue,
+  oscillatorValue,
+  rampValue,
+  shapedScalar,
+  computeBindingSignals,
+  isGenerator
 } from "../bindings.js";
 
 const vec = (
@@ -488,6 +494,243 @@ describe(
         );
 
         expect( out.radius ).toBe( 7 );
+      }
+    );
+  }
+);
+
+describe(
+  "generators",
+  () => {
+    it(
+      "flags oscillator / ramp as generators, inputs as not",
+      () => {
+        expect( isGenerator( "oscillator" ) ).toBe( true );
+        expect( isGenerator( "ramp" ) ).toBe( true );
+        expect( isGenerator( "mouse" ) ).toBe( false );
+      }
+    );
+
+    it(
+      "waveValue shapes one cycle per wave type",
+      () => {
+        // sine sweeps 0→1→0
+        expect( waveValue(
+          "sine",
+          0
+        ) ).toBeCloseTo( 0 );
+        expect( waveValue(
+          "sine",
+          0.5
+        ) ).toBeCloseTo( 1 );
+        expect( waveValue(
+          "sine",
+          1
+        ) ).toBeCloseTo( 0 );
+
+        // triangle 0→1→0
+        expect( waveValue(
+          "triangle",
+          0
+        ) ).toBeCloseTo( 0 );
+        expect( waveValue(
+          "triangle",
+          0.5
+        ) ).toBeCloseTo( 1 );
+
+        // square: low then high
+        expect( waveValue(
+          "square",
+          0.25
+        ) ).toBe( 0 );
+        expect( waveValue(
+          "square",
+          0.75
+        ) ).toBe( 1 );
+
+        // sawtooth ramps with phase
+        expect( waveValue(
+          "sawtooth",
+          0.3
+        ) ).toBeCloseTo( 0.3 );
+      }
+    );
+
+    it(
+      "oscillatorValue applies cycles and phase against progression",
+      () => {
+        // sine, 1 cycle, progression 0.5 → peak
+        expect( oscillatorValue(
+          {
+            wave: "sine",
+            cycles: 1
+          },
+          {
+            progression: 0.5
+          }
+        ) ).toBeCloseTo( 1 );
+
+        // 2 cycles: progression 0.25 lands on the first peak
+        expect( oscillatorValue(
+          {
+            wave: "sine",
+            cycles: 2
+          },
+          {
+            progression: 0.25
+          }
+        ) ).toBeCloseTo( 1 );
+
+        // phase shifts the waveform
+        expect( oscillatorValue(
+          {
+            wave: "sawtooth",
+            cycles: 1,
+            phase: 0.25
+          },
+          {
+            progression: 0
+          }
+        ) ).toBeCloseTo( 0.25 );
+      }
+    );
+
+    it(
+      "rampValue eases a repeating sweep, optionally yoyo",
+      () => {
+        // linear ramp, count 1 → equals progression
+        expect( rampValue(
+          {
+            easing: "linear",
+            count: 1
+          },
+          {
+            progression: 0.4
+          }
+        ) ).toBeCloseTo( 0.4 );
+
+        // count 2 wraps
+        expect( rampValue(
+          {
+            easing: "linear",
+            count: 2
+          },
+          {
+            progression: 0.75
+          }
+        ) ).toBeCloseTo( 0.5 );
+
+        // yoyo folds 0→1→0: progression 0.5 → peak
+        expect( rampValue(
+          {
+            easing: "linear",
+            count: 1,
+            yoyo: true
+          },
+          {
+            progression: 0.5
+          }
+        ) ).toBeCloseTo( 1 );
+      }
+    );
+
+    it(
+      "resolves an oscillator binding from progression (no channel needed)",
+      () => {
+        const base = {
+          radius: 0,
+          bindings: [
+            {
+              source: "oscillator",
+              target: "radius",
+              kind: "continuous",
+              oscillator: {
+                wave: "sine",
+                cycles: 1
+              },
+              mapping: {
+                min: 0,
+                max: 200
+              }
+            }
+          ]
+        };
+
+        const out: any = resolveBindings(
+          base,
+          {},
+          10,
+          {
+            progression: 0.5
+          }
+        );
+
+        expect( out.radius ).toBeCloseTo( 200 ); // sine peak across [0, 200]
+      }
+    );
+
+    it(
+      "shapedScalar applies invert + curve on top of the generator",
+      () => {
+        const s = shapedScalar(
+          {
+            source: "oscillator",
+            oscillator: {
+              wave: "sawtooth",
+              cycles: 1
+            },
+            mapping: {
+              invert: true
+            }
+          },
+          undefined,
+          {
+            progression: 0.25
+          }
+        );
+
+        expect( s ).toBeCloseTo( 0.75 ); // 1 - 0.25
+      }
+    );
+
+    it(
+      "computeBindingSignals reports each binding's normalized signal by target",
+      () => {
+        const base = {
+          bindings: [
+            {
+              source: "oscillator",
+              target: "radius",
+              kind: "continuous",
+              oscillator: {
+                wave: "sine",
+                cycles: 1
+              }
+            },
+            {
+              source: "mouse",
+              project: "x",
+              target: "weight",
+              kind: "continuous"
+            }
+          ]
+        };
+
+        const signals = computeBindingSignals(
+          base,
+          {
+            mouse: vec(
+              0.3,
+              0.6
+            )
+          },
+          {
+            progression: 0.5
+          }
+        );
+
+        expect( signals.radius ).toBeCloseTo( 1 ); // sine peak
+        expect( signals.weight ).toBeCloseTo( 0.3 ); // mouse.x
       }
     );
   }

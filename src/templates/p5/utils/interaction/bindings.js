@@ -114,27 +114,161 @@ export function applyCurve(
   return typeof fn === "function" ? fn( s ) : s;
 }
 
-// ── Mapping families ────────────────────────────────────────────────────────
+// ── Generators (computed sources) ───────────────────────────────────────────
+// Unlike input channels (sampled from the world), generators compute their 0..1
+// value from the sketch's animation progression plus the binding's own params,
+// so they are deterministic and recording-safe. `context.progression` is the
+// loop-normalized 0..1 position; `context.frame` is a fallback for sketches
+// with no loop.
 
-// Continuous: project → invert → curve → range-map. Returns a single number.
-export function mapContinuous(
-  channel, binding
+const GENERATOR_SOURCES = new Set( [
+  "oscillator",
+  "ramp"
+] );
+
+export function isGenerator( source ) {
+  return GENERATOR_SOURCES.has( source );
+}
+
+function frac( x ) {
+  return x - Math.floor( x );
+}
+
+// Wave shapes over one cycle (phase → 0..1). sine/triangle sweep 0→1→0; square
+// is a 50% duty low/high; sawtooth ramps 0→1 then resets.
+export function waveValue(
+  wave, phase
+) {
+  const p = frac( phase );
+
+  switch ( wave ) {
+    case "triangle":
+      return 1 - 2 * Math.abs( p - 0.5 );
+    case "square":
+      return p < 0.5 ? 0 : 1;
+    case "sawtooth":
+      return p;
+    case "sine":
+    default:
+      return ( Math.sin( 2 * Math.PI * p - Math.PI / 2 ) + 1 ) / 2;
+  }
+}
+
+function progressionOf( context ) {
+  if ( context && typeof context.progression === "number" ) {
+    return context.progression;
+  }
+
+  // Fallback for non-looping sketches: a slow drift derived from the frame.
+  if ( context && typeof context.frame === "number" ) {
+    return context.frame * 0.01;
+  }
+
+  return 0;
+}
+
+// Oscillator: `cycles` full waves across the loop, shifted by `phase` (0..1).
+export function oscillatorValue(
+  osc, context
+) {
+  const o = osc ?? {};
+
+  return waveValue(
+    o.wave ?? "sine",
+    progressionOf( context ) * num(
+      o.cycles,
+      1
+    ) + num(
+      o.phase,
+      0
+    )
+  );
+}
+
+// Ramp: an eased 0→1 sweep repeated `count` times across the loop. `yoyo` folds
+// each sweep into 0→1→0 before easing (an eased ping-pong).
+export function rampValue(
+  ramp, context
+) {
+  const r = ramp ?? {};
+
+  let p = frac( progressionOf( context ) * num(
+    r.count,
+    1
+  ) + num(
+    r.phase,
+    0
+  ) );
+
+  if ( r.yoyo ) {
+    p = 1 - 2 * Math.abs( p - 0.5 );
+  }
+
+  const fn = r.easing && easing[ r.easing ];
+
+  return clamp01( typeof fn === "function" ? fn( p ) : p );
+}
+
+// ── Scalar resolution (input projection or generator) ───────────────────────
+
+// The raw 0..1 signal for a continuous binding, before invert/curve. For input
+// sources it projects the (already looked-up) channel; for generators it
+// computes from the binding's own params + context.
+function rawScalar(
+  binding, channel, context
+) {
+  if ( binding.source === "oscillator" ) {
+    return oscillatorValue(
+      binding.oscillator,
+      context
+    );
+  }
+
+  if ( binding.source === "ramp" ) {
+    return rampValue(
+      binding.ramp,
+      context
+    );
+  }
+
+  return projectChannel(
+    channel,
+    binding.project
+  );
+}
+
+// The shaped 0..1 signal: raw → invert → curve. This is both the value that
+// maps to the output range and the "tension" the VU meter (and future audio)
+// reads.
+export function shapedScalar(
+  binding, channel, context
 ) {
   const mapping = binding.mapping ?? {};
 
-  let s = projectChannel(
+  let s = rawScalar(
+    binding,
     channel,
-    binding.project
+    context
   );
 
   if ( mapping.invert ) {
     s = 1 - s;
   }
 
-  s = applyCurve(
+  return applyCurve(
     s,
     mapping.curve
   );
+}
+
+// ── Mapping families ────────────────────────────────────────────────────────
+
+// Continuous: shaped scalar → range-map. Returns a single number. `channel` is
+// the looked-up channel for input sources (ignored for generators).
+export function mapContinuous(
+  channel, binding, context
+) {
+  const mapping = binding.mapping ?? {};
 
   return lerp(
     num(
@@ -145,7 +279,11 @@ export function mapContinuous(
       mapping.max,
       1
     ),
-    s
+    shapedScalar(
+      binding,
+      channel,
+      context
+    )
   );
 }
 
@@ -313,7 +451,7 @@ export function setPath(
 // ── Single-binding application ──────────────────────────────────────────────
 
 export function applyBinding(
-  targetObj, binding, channels
+  targetObj, binding, channels, context
 ) {
   if (
     !binding ||
@@ -324,9 +462,11 @@ export function applyBinding(
     return;
   }
 
+  const generator = isGenerator( binding.source );
   const channel = channels[ binding.source ];
 
-  if ( !channel ) {
+  // Input sources need a live channel; generators compute from context.
+  if ( !generator && !channel ) {
     return;
   }
 
@@ -353,7 +493,8 @@ export function applyBinding(
       key,
       mapContinuous(
         channel,
-        binding
+        binding,
+        context
       ),
       amount
     );
@@ -380,7 +521,7 @@ let _resolveCache = {
 };
 
 export function resolveBindings(
-  base, channels, frame
+  base, channels, frame, context
 ) {
   const bindings = Array.isArray( base?.bindings )
     ? base.bindings.filter( ( b ) => b && b.enabled !== false )
@@ -411,7 +552,8 @@ export function resolveBindings(
       applyBinding(
         out,
         binding,
-        ch
+        ch,
+        context
       );
     } catch {
       // A single malformed binding must never break the whole sketch.
@@ -423,6 +565,67 @@ export function resolveBindings(
       frame,
       result: out
     };
+  }
+
+  return out;
+}
+
+// ── Per-binding meter signals ───────────────────────────────────────────────
+// The normalized 0..1 "tension" of each active binding, keyed by target. The
+// impure layer (options.js) publishes these to CSS vars each frame so the UI's
+// VU meters reflect the resolved signal regardless of source type (input OR
+// generator). Pure so it can be unit-tested.
+
+function vectorMeter( channel ) {
+  if ( !channel || channel.type !== "vector2d" ) {
+    return 0;
+  }
+
+  const x = clamp01( num(
+    channel.x,
+    0.5
+  ) );
+  const y = clamp01( num(
+    channel.y,
+    0.5
+  ) );
+
+  return clamp01( Math.hypot(
+    x - 0.5,
+    y - 0.5
+  ) / Math.SQRT1_2 );
+}
+
+export function computeBindingSignals(
+  base, channels, context
+) {
+  const out = {};
+  const list = Array.isArray( base?.bindings ) ? base.bindings : [];
+  const ch = channels ?? {};
+
+  for ( const binding of list ) {
+    if (
+      !binding ||
+      binding.enabled === false ||
+      !binding.target ||
+      !binding.source
+    ) {
+      continue;
+    }
+
+    try {
+      if ( ( binding.kind ?? "continuous" ) === "vector2d" ) {
+        out[ binding.target ] = vectorMeter( ch[ binding.source ] );
+      } else {
+        out[ binding.target ] = clamp01( shapedScalar(
+          binding,
+          ch[ binding.source ],
+          context
+        ) );
+      }
+    } catch {
+      // Skip a malformed binding's meter.
+    }
   }
 
   return out;

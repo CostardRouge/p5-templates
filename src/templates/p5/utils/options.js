@@ -26,14 +26,16 @@ import {
   mergeSlideOverride
 } from "@/lib/effectiveSlideSettings";
 
+import animation from "./animation.js";
+
 import {
-  resolveBindings
+  resolveBindings, computeBindingSignals
 } from "./interaction/bindings.js";
 import {
   sampleChannels
 } from "./interaction/channels.js";
 import {
-  publishChannels
+  publishChannels, publishBindingSignals
 } from "@/lib/channelBridge";
 
 /* ------------------------------------------------------------------ */
@@ -488,14 +490,55 @@ export function registerEvents() {
   );
 }
 
-// Sample the interaction channels once per frame and publish them to the
-// channel bridge (CSS vars + subscribers). This runs for every sketch — even
-// ones with no bindings — so the binding UI's VU meters show live activity
-// before anything is wired up. Cost is a pointer read, a sine, and a handful
-// of CSS-var writes; `sampleChannels` is itself memoized per frame.
+// The per-slide-merged sketch settings object the bindings live on.
+function liveSketchBase( live ) {
+  if ( typeof window !== "undefined" && window.getSketchSettings ) {
+    try {
+      return window.getSketchSettings( live );
+    } catch {
+      return live.sketch ?? {};
+    }
+  }
+
+  return live.sketch ?? {};
+}
+
+// The generator context: the loop-normalized progression (deterministic during
+// recording) plus the frame as a fallback for non-looping sketches.
+function bindingContext() {
+  let progression;
+
+  try {
+    progression = animation.progression;
+  } catch {
+    progression = undefined;
+  }
+
+  return {
+    progression,
+    frame: getP5()?.frameCount
+  };
+}
+
+// Sample the interaction channels once per frame and publish them, plus each
+// active binding's resolved 0..1 signal (keyed by target) for the UI's VU
+// meters. Runs for every sketch; `sampleChannels` is memoized per frame and the
+// binding-signal pass is skipped entirely when a sketch has no bindings.
 function publishChannelsFrame() {
   try {
-    publishChannels( sampleChannels() );
+    const channels = sampleChannels();
+
+    publishChannels( channels );
+
+    const base = liveSketchBase( getSketchOptions() );
+
+    if ( base && Array.isArray( base.bindings ) && base.bindings.length > 0 ) {
+      publishBindingSignals( computeBindingSignals(
+        base,
+        channels,
+        bindingContext()
+      ) );
+    }
   } catch {
     // Never let telemetry break the draw loop.
   }
@@ -539,29 +582,20 @@ export function syncEffectivePrevious(
 // over it. `resolveBindings` returns the same object untouched when the sketch
 // declares no bindings, so non-interactive sketches pay nothing.
 function resolveSketch( live ) {
-  let base;
-
-  if ( typeof window !== "undefined" && window.getSketchSettings ) {
-    try {
-      base = window.getSketchSettings( live );
-    } catch {
-      base = live.sketch ?? {};
-    }
-  } else {
-    base = live.sketch ?? {};
-  }
+  const base = liveSketchBase( live );
 
   if ( !base || !Array.isArray( base.bindings ) || base.bindings.length === 0 ) {
     return base;
   }
 
   try {
-    const frame = getP5()?.frameCount;
+    const context = bindingContext();
 
     return resolveBindings(
       base,
       sampleChannels(),
-      frame
+      context.frame,
+      context
     );
   } catch {
     // Binding resolution must never break a sketch — fall back to base values.

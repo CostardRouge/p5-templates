@@ -134,6 +134,39 @@ export function getChannelsSnapshot(): ChannelSnapshot {
   return latest;
 }
 
+// ── Per-binding resolved signals ────────────────────────────────────────────
+// The resolver publishes each active binding's normalized 0..1 "tension" keyed
+// by its target. The UI's VU meters read `--bind-<target>`, so a meter reflects
+// the resolved signal whatever the source is (input channel OR generator) — CSS
+// can't compute a sine, but the resolver already has the number.
+
+/** CSS variable name for a binding's resolved signal, by its target path. */
+export function bindingSignalVarName( target: string ): string {
+  return `--bind-${ String( target ).replace(
+    /[^a-zA-Z0-9_-]/g,
+    "-"
+  ) }`;
+}
+
+/** Write each binding's resolved 0..1 signal to its CSS var on `:root`. */
+export function publishBindingSignals( signals: Record<string, number> ): void {
+  if ( typeof document === "undefined" || !signals ) {
+    return;
+  }
+
+  const root = document.documentElement.style;
+
+  for ( const [
+    target,
+    value
+  ] of Object.entries( signals ) ) {
+    root.setProperty(
+      bindingSignalVarName( target ),
+      String( clamp01( value ) )
+    );
+  }
+}
+
 /** Subscribe to per-frame channel snapshots. Returns an unsubscribe function. */
 export function subscribeChannels( cb: Subscriber ): () => void {
   subscribers.add( cb );

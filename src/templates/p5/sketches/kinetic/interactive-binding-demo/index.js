@@ -7,8 +7,8 @@
 //   position     ← mouse           (vector2d passthrough — ring follows cursor)
 //   strokeWeight ← mouse.y         (thicker toward the bottom)
 //   count        ← mouse.x         (more dots toward the right)
-//   radius       ← osc             (pulses on its own, no input needed)
-//   spin         ← osc             (always rotating)
+//   radius       ← oscillator      (sine; pulses on its own, no input needed)
+//   spin         ← oscillator      (sawtooth; always rotating)
 //
 // Move the mouse over the canvas to drive it; leave it idle and the oscillator
 // keeps the ring breathing and spinning.
@@ -130,8 +130,8 @@ sketch.draw( () => {
     ).toFixed( 2 ) }   ← mouse`,
     `strokeWeight  ${ strokeWeight.toFixed( 1 ) }   ← mouse.y`,
     `count         ${ count }   ← mouse.x`,
-    `radius        ${ radius.toFixed( 0 ) }   ← osc`,
-    `spin          ${ spin.toFixed( 2 ) }   ← osc`
+    `radius        ${ radius.toFixed( 0 ) }   ← oscillator (sine)`,
+    `spin          ${ spin.toFixed( 2 ) }   ← oscillator (saw)`
   ];
 
   p.push();

@@ -73,22 +73,31 @@ export const formValues = {
       enabled: true
     },
     {
-      // oscillator → radius (pulses with no input).
-      source: "osc",
+      // Sine oscillator → radius (pulses 0→max→0 once per loop).
+      source: "oscillator",
       target: "radius",
       kind: "continuous",
+      oscillator: {
+        wave: "sine",
+        cycles: 1,
+        phase: 0
+      },
       mapping: {
         min: 80,
-        max: 260,
-        curve: "smoothstep"
+        max: 260
       },
       enabled: true
     },
     {
-      // oscillator → rotation (always spinning).
-      source: "osc",
+      // Sawtooth oscillator → rotation (continuous spin, one turn per loop).
+      source: "oscillator",
       target: "spin",
       kind: "continuous",
+      oscillator: {
+        wave: "sawtooth",
+        cycles: 1,
+        phase: 0
+      },
       mapping: {
         min: 0,
         max: 6.2832
