@@ -14,6 +14,7 @@ import {
   buildEasingKey,
   EASING_DIRECTIONS,
   EASING_FAMILIES,
+  isDirectionlessFamily,
   parseEasingKey,
   type EasingDirection,
   type EasingFamily
@@ -106,7 +107,7 @@ export default function ControlledEasingInput( {
         onReset={ onReset }
       />
 
-      {family !== "linear" && (
+      {!isDirectionlessFamily( family ) && (
         <span className="relative flex h-full min-w-0 flex-1 items-center">
           <span className="pointer-events-none flex w-full items-center justify-between gap-1 px-2.5">
             <span className="truncate">{directionLabel}</span>
@@ -138,7 +139,7 @@ export default function ControlledEasingInput( {
       <span
         className={ clsx(
           "relative flex h-full min-w-0 flex-1 items-center",
-          family !== "linear" && "border-l border-theme"
+          !isDirectionlessFamily( family ) && "border-l border-theme"
         ) }
       >
         <span className="pointer-events-none flex w-full items-center justify-between gap-1 px-2.5">
@@ -154,7 +155,7 @@ export default function ControlledEasingInput( {
 
             setFamily( next );
 
-            if ( next === "linear" ) {
+            if ( isDirectionlessFamily( next ) ) {
               propagate(
                 "In",
                 next

@@ -16,6 +16,7 @@ import type {
 } from "../../constants/field-config";
 import ChannelMeter from "./ChannelMeter";
 import ControlledSliderInput from "../ControlledSliderInput/ControlledSliderInput";
+import ControlledEasingInput from "../ControlledEasingInput/ControlledEasingInput";
 import {
   ToggleSwitch
 } from "../ControlChrome";
@@ -24,7 +25,6 @@ import {
   type BindingKind,
   bindingVarName,
   channelSourceOptions,
-  CURVE_OPTIONS,
   decodeSource,
   encodeSource,
   getSketchScope,
@@ -152,10 +152,10 @@ export default function BindingAffordance( {
     <Popover className="relative shrink-0">
       <PopoverButton
         title={ bound ? "Edit modulation" : "Bind to an interactive input" }
-        onClick={ ( e: React.MouseEvent ) => {
-          // Creating on first open makes the pastille a one-tap bind.
+        onClick={ () => {
+          // First click on an unbound field creates the binding AND opens the
+          // popover (no preventDefault) so it can be configured immediately.
           if ( !bound ) {
-            e.preventDefault();
             createBinding();
           }
         } }
@@ -186,7 +186,9 @@ export default function BindingAffordance( {
         anchor="bottom end"
         className="z-[60] w-72 max-w-[calc(100vw-1rem)] rounded-xl border border-theme bg-background p-3 text-xs shadow-xl [--anchor-gap:0.4rem] [--anchor-padding:0.5rem]"
       >
-        {binding && (
+        {( {
+          close
+        }: { close: () => void } ) => ( binding ? (
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium text-foreground">Modulation</span>
@@ -282,30 +284,21 @@ export default function BindingAffordance( {
               </div>
             )}
 
-            {/* Curve + invert (continuous only) */}
+            {/* Easing + invert (continuous only) — same easing control as the
+                rest of the form */}
             {kind === "continuous" && (
-              <div className="flex items-center gap-2">
-                <select
-                  value={ binding.mapping?.curve ?? "linear" }
-                  onChange={ ( e ) => setField(
-                    "mapping.curve",
-                    e.target.value
-                  ) }
-                  className="h-8 flex-1 rounded-md border border-theme bg-background px-2 text-foreground"
-                >
-                  {CURVE_OPTIONS.map( ( option ) => (
-                    <option key={ option.value } value={ option.value }>
-                      {option.label}
-                    </option>
-                  ) )}
-                </select>
-                <label className="flex cursor-pointer items-center gap-2 text-label">
+              <>
+                <ControlledEasingInput
+                  name={ `${ bindingPath }.mapping.curve` }
+                  label="Easing"
+                />
+                <label className="flex cursor-pointer items-center justify-between gap-2 text-label">
                   <span>Invert</span>
                   <ToggleSwitch
                     inputProps={ register( `${ bindingPath }.mapping.invert` ) }
                   />
                 </label>
-              </div>
+              </>
             )}
 
             {/* Smoothing */}
@@ -319,14 +312,21 @@ export default function BindingAffordance( {
 
             <button
               type="button"
-              onClick={ removeBinding }
+              onClick={ () => {
+                // Close first so Headless UI tears the panel down cleanly,
+                // then drop the binding from the array.
+                close();
+                removeBinding();
+              } }
               className="flex items-center justify-center gap-1.5 rounded-md border border-theme px-2 py-1.5 text-label transition-colors hover:bg-hover hover:text-foreground"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Remove binding
             </button>
           </div>
-        )}
+        ) : (
+          <></>
+        ) )}
       </PopoverPanel>
     </Popover>
   );

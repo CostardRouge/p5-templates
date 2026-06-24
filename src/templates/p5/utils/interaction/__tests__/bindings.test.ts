@@ -155,16 +155,18 @@ describe(
     );
 
     it(
-      "easeIn / easeOut / smoothstep bend the response",
+      "applies easing keys from the shared easing set",
       () => {
+        // easeInQuad(0.5) = 0.25, easeOutQuad(0.5) = 0.75
         expect( applyCurve(
           0.5,
-          "easeIn"
+          "easeInQuad"
         ) ).toBeCloseTo( 0.25 );
         expect( applyCurve(
           0.5,
-          "easeOut"
+          "easeOutQuad"
         ) ).toBeCloseTo( 0.75 );
+        // smoothstep(x) = x²(3 - 2x)
         expect( applyCurve(
           0.5,
           "smoothstep"
@@ -177,6 +179,16 @@ describe(
           1,
           "smoothstep"
         ) ).toBeCloseTo( 1 );
+      }
+    );
+
+    it(
+      "falls through to identity for an unknown easing key",
+      () => {
+        expect( applyCurve(
+          0.42,
+          "not-an-easing"
+        ) ).toBeCloseTo( 0.42 );
       }
     );
   }

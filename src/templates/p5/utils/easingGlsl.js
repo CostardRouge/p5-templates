@@ -48,7 +48,8 @@ export const EASING_IDS = {
   easeInOutElastic: 27,
   easeInBounce: 28,
   easeOutBounce: 29,
-  easeInOutBounce: 30
+  easeInOutBounce: 30,
+  smoothstep: 31
 };
 
 /**
@@ -172,6 +173,7 @@ export const EASINGS_GLSL = `
     if (id == 28) { return easeInBounce(x); }
     if (id == 29) { return easeOutBounce(x); }
     if (id == 30) { return easeInOutBounce(x); }
+    if (id == 31) { return x * x * (3.0 - 2.0 * x); }
     return x;
   }
 `;
