@@ -16,6 +16,9 @@ import {
   getEffectiveSlideSettings
 } from "@/lib/effectiveSlideSettings";
 import {
+  resolveAnimation, totalFramesFor
+} from "@/lib/animationConfig";
+import {
   resolveSketchPath
 } from "@/engines/metadata";
 import {
@@ -46,6 +49,9 @@ export class GsapEngine implements SketchEngine {
   private container: HTMLElement | null = null;
   private runtime: GsapRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
+  // Saved `window.setSlide` so switching back to a p5 sketch restores its
+  // binding (p5 registers the global once at module load and never re-sets it).
+  private previousSetSlide: ( ( index: number ) => void ) | undefined;
 
   private perfLoopId: number | null = null;
   private perfSample = {
@@ -120,6 +126,15 @@ export class GsapEngine implements SketchEngine {
       renderFrame: ( index: number ) => this.runtime?.seekFrame( index )
     } );
 
+    // Expose the slide switch the shared UI + headless recorder call. p5 sets
+    // this from its `slides` module; the GSAP runtime is the equivalent here.
+    // Without it, multi-slide GSAP recordings hung on `[data-slide="N"]` and
+    // played only a fraction of each slide's animation.
+    if ( typeof window !== "undefined" ) {
+      this.previousSetSlide = window.setSlide;
+      window.setSlide = ( index: number ) => this.runtime?.setSlide( index );
+    }
+
     this.emit(
       "ready",
       undefined as any
@@ -129,6 +144,12 @@ export class GsapEngine implements SketchEngine {
   destroy(): void {
     this.stopPerformanceLoop();
     unregisterServerCaptureController();
+
+    if ( typeof window !== "undefined" &&
+      window.setSlide !== this.previousSetSlide ) {
+      window.setSlide = this.previousSetSlide as ( index: number ) => void;
+    }
+    this.previousSetSlide = undefined;
 
     this.runtime?.reset();
     this.runtime = null;
@@ -241,10 +262,8 @@ export class GsapEngine implements SketchEngine {
       options,
       slideIndex
     );
-    const framerate = animation?.framerate ?? 60;
-    const duration = animation?.duration ?? 12;
 
-    return Math.round( duration * framerate );
+    return totalFramesFor( animation );
   }
 
   getFrameRate(
@@ -258,7 +277,7 @@ export class GsapEngine implements SketchEngine {
       slideIndex
     );
 
-    return animation?.framerate ?? 60;
+    return resolveAnimation( animation ).framerate;
   }
 
   getCanvas(): HTMLCanvasElement | null {

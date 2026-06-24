@@ -14,6 +14,9 @@ import useSketch from "@/components/ClientProcessingSketch/components/SketchProv
 import {
   getEffectiveSlideSettings
 } from "@/lib/effectiveSlideSettings";
+import {
+  resolveAnimation, totalFramesFor
+} from "@/lib/animationConfig";
 import usePageVisibility from "@/hooks/usePageVisibility";
 
 interface AnimationProgressionBarProps {
@@ -49,12 +52,13 @@ function getAnimationConfigFromSketchOptions(
     sketchOptions,
     activeSlideIndex
   );
-  const duration = animation?.duration ?? 10;
-  const framerate = animation?.framerate ?? 60;
-  const totalFrames = Math.max(
-    1,
-    Math.floor( duration * framerate )
-  );
+  // Resolve through the shared helper so the frame readout matches the engine
+  // and the recorder exactly (same default, same Math.round) — the bar used to
+  // default to 10 and Math.floor, so its frame count disagreed with the clip.
+  const {
+    duration, framerate
+  } = resolveAnimation( animation );
+  const totalFrames = totalFramesFor( animation );
 
   return {
     duration,

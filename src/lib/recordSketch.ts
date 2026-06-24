@@ -33,6 +33,12 @@ import {
   RECORDING_STEPS,
   UPLOAD_STEPS
 } from "@/lib/progression/stepConfig";
+import {
+  getEffectiveSlideSettings
+} from "@/lib/effectiveSlideSettings";
+import {
+  resolveAnimation, totalFramesFor
+} from "@/lib/animationConfig";
 
 /**
  * Wait for the sketch canvas to be ready.
@@ -144,13 +150,16 @@ async function gotoSketchPage(
 }
 
 /**
- * Calculate total frames from animation options
+ * Calculate total frames from animation options.
+ *
+ * Delegates to the shared `totalFramesFor` so the server encode loop counts
+ * the exact same number of frames the engines + in-page clock derive from the
+ * same animation — no more `duration || 5` here vs `duration || 10` in the
+ * sketch clock, which used to make a missing/zero duration record a wrong
+ * length, cut-off clip.
  */
 function calculateTotalFrames( animationOptions: any ): number {
-  const framerate = animationOptions?.framerate || 60;
-  const duration = animationOptions?.duration || 5;
-
-  return Math.round( duration * framerate );
+  return totalFramesFor( animationOptions );
 }
 
 /**
@@ -300,7 +309,7 @@ async function recordSingleSketch(
 
   // ─── Capture frames and encode video ──────────────────────────────────────
   const totalFrames = calculateTotalFrames( options.animation );
-  const framerate = options.animation?.framerate || 60;
+  const framerate = resolveAnimation( options.animation ).framerate;
   const outputVideoPath = path.join(
     temporaryDirectoryPath,
     `${ path.basename( template ) }-${ jobId }.mp4`
@@ -459,15 +468,16 @@ async function recordMultipleSlides(
     );
 
     // ─── Capture frames and encode video ────────────────────────────────────
-    const slideOptions = slides[ slideIndex ];
-    const slideAnimation = slideOptions?.animation || options.animation;
+    // Resolve the slide's *effective* animation (per-slide override merged
+    // over the global) the same way the engines do, so a partial override
+    // (e.g. framerate-only) keeps the global duration instead of dropping it —
+    // and the frame count matches what the in-page clock loops over.
+    const slideAnimation = getEffectiveSlideSettings(
+      options,
+      slideIndex
+    ).animation;
     const totalFrames = calculateTotalFrames( slideAnimation );
-    const framerate = slideAnimation?.framerate || 60;
-
-    console.log( {
-      totalFrames,
-      framerate
-    } );
+    const framerate = resolveAnimation( slideAnimation ).framerate;
 
     const slideVideoPath = path.join(
       temporaryDirectoryPath,

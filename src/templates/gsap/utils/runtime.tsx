@@ -34,6 +34,12 @@ import {
   getSketchOptions, setSketchOptions, subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
 import {
+  getEffectiveSlideSettings
+} from "@/lib/effectiveSlideSettings";
+import {
+  resolveAnimation, totalFramesFor
+} from "@/lib/animationConfig";
+import {
   toCssColor
 } from "./dom";
 
@@ -64,10 +70,6 @@ const DEFAULT_SIZE = {
   width: 1080,
   height: 1350
 };
-const DEFAULT_ANIMATION = {
-  framerate: 60,
-  duration: 12
-};
 
 /* ------------------------------------------------------------------ */
 /*  React context (connects templates' `useTimeline` to the runtime)   */
@@ -95,6 +97,14 @@ class GsapRuntime {
   private options: Record<string, any> = {};
   private optionsVersion = 0;
   private unsubscribeOptions: ( () => void ) | null = null;
+
+  /**
+   * Active slide index, or `undefined` for a single (slide-less) template.
+   * Per-slide `size`/`animation` overrides are resolved against this so the
+   * timeline span, the recorded frame count and the progression clock all
+   * follow the slide actually on screen — mirrors the p5 `slides` module.
+   */
+  private activeSlideIndex: number | undefined = undefined;
 
   /** Wall-clock progression of the timeline, in seconds. */
   private elapsed = 0;
@@ -124,23 +134,59 @@ class GsapRuntime {
 
   /* ---- derived settings ---------------------------------------- */
 
+  /**
+   * Size + animation for the active slide (per-slide override merged over the
+   * global), resolved the same way the engine's `getTotalFrames` does so the
+   * recorder and the runtime can never disagree.
+   */
+  private get effectiveSettings() {
+    return getEffectiveSlideSettings(
+      this.options,
+      this.activeSlideIndex
+    );
+  }
+
+  /**
+   * Options handed to the template: the live store plus the slide-effective
+   * `size`/`animation`/`sketch`, so `opts.animation.duration` inside a
+   * timeline builder is the active slide's duration, not the global one.
+   */
+  private get effectiveOptions(): Record<string, any> {
+    const {
+      size, animation
+    } = this.effectiveSettings;
+    const slide = this.activeSlideIndex !== undefined
+      ? this.options?.slides?.[ this.activeSlideIndex ]
+      : undefined;
+    const sketch = slide?.sketch
+      ? {
+        ...( this.options.sketch ?? {} ),
+        ...slide.sketch
+      }
+      : this.options.sketch;
+
+    return {
+      ...this.options,
+      size,
+      animation,
+      sketch
+    };
+  }
+
   get size() {
-    return this.options.size ?? DEFAULT_SIZE;
+    return this.effectiveSettings.size ?? DEFAULT_SIZE;
   }
 
   get framerate(): number {
-    return this.options.animation?.framerate ?? DEFAULT_ANIMATION.framerate;
+    return resolveAnimation( this.effectiveSettings.animation ).framerate;
   }
 
   get duration(): number {
-    return this.options.animation?.duration ?? DEFAULT_ANIMATION.duration;
+    return resolveAnimation( this.effectiveSettings.animation ).duration;
   }
 
   get totalFrames(): number {
-    return Math.max(
-      1,
-      Math.round( this.duration * this.framerate )
-    );
+    return totalFramesFor( this.effectiveSettings.animation );
   }
 
   /* ---- lifecycle ------------------------------------------------- */
@@ -266,16 +312,18 @@ class GsapRuntime {
   private renderTree( component: React.ComponentType<{ options: Record<string, any> }> ): void {
     this.currentComponent = component;
 
+    const options = this.effectiveOptions;
+
     const value: RuntimeContextValue = {
       version: this.optionsVersion,
-      options: this.options
+      options
     };
 
     this.root?.render( <RuntimeContext.Provider value={ value }>
       { React.createElement(
         component,
         {
-          options: this.options
+          options
         }
       ) }
     </RuntimeContext.Provider> );
@@ -356,6 +404,53 @@ class GsapRuntime {
     this.recording = false;
     this.optionsVersion = 0;
     this.currentComponent = null;
+    this.activeSlideIndex = undefined;
+  }
+
+  /* ---- slides ---------------------------------------------------- */
+
+  /**
+   * Switch to a slide (per-slide `size`/`animation`/`sketch` overrides).
+   *
+   * The p5 engine exposes this via `window.setSlide`; the GSAP engine wires
+   * the same global to here so the shared studio UI (slide carousel) and the
+   * server multi-slide recorder drive both engines identically. Crucially:
+   *   • the stage's `data-slide` attribute is updated synchronously, which is
+   *     what the headless recorder waits on (`[data-slide="N"]`) — without it
+   *     the server hung forever for slide indices > 0;
+   *   • the timeline is rebuilt against the slide's effective duration, so the
+   *     clip plays the whole slide animation instead of a fraction of it.
+   */
+  setSlide( index: number ): void {
+    const next =
+      typeof index === "number" && Number.isFinite( index ) && index >= 0
+        ? Math.floor( index )
+        : 0;
+
+    this.activeSlideIndex = next;
+
+    if ( this.stage ) {
+      this.stage.setAttribute(
+        "data-slide",
+        String( next )
+      );
+      this.applyStageSize( this.stage );
+    }
+
+    if ( this.mirror ) {
+      this.mirror.width = this.size.width;
+      this.mirror.height = this.size.height;
+    }
+
+    // Re-render with the slide's effective options + bump the version so the
+    // template's `useTimeline` rebuilds the timeline at the new duration.
+    this.optionsVersion += 1;
+
+    if ( this.currentComponent ) {
+      this.renderTree( this.currentComponent );
+    }
+
+    this.scrub();
   }
 
   /* ---- timeline -------------------------------------------------- */
@@ -377,7 +472,7 @@ class GsapRuntime {
 
     const stage = this.stage;
     const builder = this.builder;
-    const options = this.options;
+    const options = this.effectiveOptions;
 
     this.ctx = gsap.context(
       () => {
