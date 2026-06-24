@@ -14,6 +14,9 @@ import {
 import type {
   FieldConfig
 } from "../../constants/field-config";
+import {
+  bindingSignalVarName
+} from "@/lib/channelBridge";
 import ChannelMeter from "./ChannelMeter";
 import ControlledSliderInput from "../ControlledSliderInput/ControlledSliderInput";
 import ControlledEasingInput from "../ControlledEasingInput/ControlledEasingInput";
@@ -23,13 +26,18 @@ import {
 import {
   type Binding,
   type BindingKind,
-  bindingVarName,
+  type SourceCategory,
   channelSourceOptions,
   decodeSource,
+  DEFAULT_OSCILLATOR,
+  DEFAULT_RAMP,
   encodeSource,
   getSketchScope,
   makeDefaultBinding,
-  toSketchRelativePath
+  SOURCE_CATEGORIES,
+  sourceCategory,
+  toSketchRelativePath,
+  WAVE_OPTIONS
 } from "./bindingUtils";
 
 type Props = {
@@ -143,9 +151,55 @@ export default function BindingAffordance( {
     writeBindings( list.filter( ( b ) => b.target !== target ) );
   };
 
-  const varName = binding
-    ? bindingVarName( binding )
-    : sourceOptions[ 0 ]?.varName;
+  // Switch the binding between source categories (input / oscillator / ramp),
+  // seeding the generator's default params the first time it is selected.
+  const switchCategory = ( next: SourceCategory ) => {
+    if ( next === "oscillator" ) {
+      setField(
+        "source",
+        "oscillator"
+      );
+
+      if ( !binding?.oscillator ) {
+        setField(
+          "oscillator",
+          {
+            ...DEFAULT_OSCILLATOR
+          }
+        );
+      }
+    } else if ( next === "ramp" ) {
+      setField(
+        "source",
+        "ramp"
+      );
+
+      if ( !binding?.ramp ) {
+        setField(
+          "ramp",
+          {
+            ...DEFAULT_RAMP
+          }
+        );
+      }
+    } else {
+      const first = sourceOptions[ 0 ];
+
+      setField(
+        "source",
+        first.source
+      );
+      setField(
+        "project",
+        first.project ?? null
+      );
+    }
+  };
+
+  // The VU meter reads the binding's resolved 0..1 signal, published per-target
+  // by the resolver — so it works for input channels AND generators alike.
+  const meterVar = bindingSignalVarName( target );
+  const category = sourceCategory( binding?.source );
   const enabled = binding?.enabled !== false;
 
   return (
@@ -168,14 +222,14 @@ export default function BindingAffordance( {
               : "border-theme text-label/60 hover:text-foreground hover:bg-hover"
         ) }
       >
-        {/* Live VU glow behind the icon, driven purely by the channel CSS var. */}
+        {/* Live VU glow behind the icon, driven purely by the binding's CSS var. */}
         {bound && enabled && (
           <span
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-md bg-focus/30"
             style={ {
-              opacity: `var(${ varName }, 0)`,
-              transform: `scale(calc(0.4 + 0.6 * var(${ varName }, 0)))`
+              opacity: `var(${ meterVar }, 0)`,
+              transform: `scale(calc(0.4 + 0.6 * var(${ meterVar }, 0)))`
             } }
           />
         )}
@@ -200,37 +254,121 @@ export default function BindingAffordance( {
               </label>
             </div>
 
-            {/* Source picker + live meter */}
+            {/* Source — a conditional group: pick a category, then its options.
+                Input channels are sampled from the world; generators compute
+                from the sketch's animation progression. */}
             <div className="flex flex-col gap-1.5">
               <span className="text-label">Source</span>
-              <select
-                value={ encodeSource(
-                  binding.source,
-                  binding.project
-                ) }
-                onChange={ ( e ) => {
-                  const {
-                    source, project
-                  } = decodeSource( e.target.value );
 
-                  setField(
-                    "source",
-                    source
-                  );
-                  setField(
-                    "project",
-                    project ?? null
-                  );
-                } }
-                className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
-              >
-                {sourceOptions.map( ( option ) => (
-                  <option key={ option.value } value={ option.value }>
-                    {option.label}
-                  </option>
-                ) )}
-              </select>
-              <ChannelMeter varName={ varName } />
+              {/* Category selector (generators are continuous-only) */}
+              {kind === "continuous" && (
+                <select
+                  value={ category }
+                  onChange={ ( e ) =>
+                    switchCategory( e.target.value as SourceCategory ) }
+                  className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
+                >
+                  {SOURCE_CATEGORIES.map( ( option ) => (
+                    <option key={ option.value } value={ option.value }>
+                      {option.label}
+                    </option>
+                  ) )}
+                </select>
+              )}
+
+              {category === "input" && (
+                <select
+                  value={ encodeSource(
+                    binding.source,
+                    binding.project
+                  ) }
+                  onChange={ ( e ) => {
+                    const {
+                      source, project
+                    } = decodeSource( e.target.value );
+
+                    setField(
+                      "source",
+                      source
+                    );
+                    setField(
+                      "project",
+                      project ?? null
+                    );
+                  } }
+                  className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
+                >
+                  {sourceOptions.map( ( option ) => (
+                    <option key={ option.value } value={ option.value }>
+                      {option.label}
+                    </option>
+                  ) )}
+                </select>
+              )}
+
+              {category === "oscillator" && (
+                <>
+                  <select
+                    value={ binding.oscillator?.wave ?? "sine" }
+                    onChange={ ( e ) => setField(
+                      "oscillator.wave",
+                      e.target.value
+                    ) }
+                    className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
+                  >
+                    {WAVE_OPTIONS.map( ( option ) => (
+                      <option key={ option.value } value={ option.value }>
+                        {option.label}
+                      </option>
+                    ) )}
+                  </select>
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.oscillator.cycles` }
+                    label="Cycles"
+                    min={ 1 }
+                    max={ 9 }
+                    step={ 1 }
+                  />
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.oscillator.phase` }
+                    label="Phase"
+                    min={ 0 }
+                    max={ 1 }
+                    step={ 0.01 }
+                  />
+                </>
+              )}
+
+              {category === "ramp" && (
+                <>
+                  <ControlledEasingInput
+                    name={ `${ bindingPath }.ramp.easing` }
+                    label="Easing"
+                  />
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.ramp.count` }
+                    label="Count"
+                    min={ 1 }
+                    max={ 9 }
+                    step={ 1 }
+                  />
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.ramp.phase` }
+                    label="Phase"
+                    min={ 0 }
+                    max={ 1 }
+                    step={ 0.01 }
+                  />
+                  <label className="flex cursor-pointer items-center justify-between gap-2 text-label">
+                    <span>Yoyo (ping-pong)</span>
+                    <ToggleSwitch
+                      inputProps={ register( `${ bindingPath }.ramp.yoyo` ) }
+                    />
+                  </label>
+                </>
+              )}
+
+              <ChannelMeter varName={ meterVar } />
             </div>
 
             {/* Mapping range — real sliders over the parameter's own domain */}

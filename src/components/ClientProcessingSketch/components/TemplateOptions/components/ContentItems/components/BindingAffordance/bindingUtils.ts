@@ -30,6 +30,18 @@ export type Binding = {
   mapping?: any;
   smoothing?: number;
   enabled?: boolean;
+  // Generator params, present when `source` is the matching generator.
+  oscillator?: {
+    wave?: string;
+    cycles?: number;
+    phase?: number;
+  };
+  ramp?: {
+    easing?: string;
+    count?: number;
+    phase?: number;
+    yoyo?: boolean;
+  };
 };
 
 type ChannelDescriptor = {
@@ -263,3 +275,72 @@ export function makeDefaultBinding(
     enabled: true
   };
 }
+
+// ── Source categories (the popover's conditional group) ─────────────────────
+// Inputs are sampled from the world (mouse, …); generators compute from the
+// sketch's animation progression (oscillator, ramp). New categories — API,
+// date, … — slot in here as another branch.
+
+export type SourceCategory = "input" | "oscillator" | "ramp";
+
+export const SOURCE_CATEGORIES: Array<{
+  value: SourceCategory;
+  label: string;
+}> = [
+  {
+    value: "input",
+    label: "Input"
+  },
+  {
+    value: "oscillator",
+    label: "Oscillator"
+  },
+  {
+    value: "ramp",
+    label: "Ramp"
+  }
+];
+
+export function sourceCategory( source: string | undefined ): SourceCategory {
+  if ( source === "oscillator" ) {
+    return "oscillator";
+  }
+
+  if ( source === "ramp" ) {
+    return "ramp";
+  }
+
+  return "input";
+}
+
+export const WAVE_OPTIONS = [
+  {
+    value: "sine",
+    label: "Sine"
+  },
+  {
+    value: "triangle",
+    label: "Triangle"
+  },
+  {
+    value: "square",
+    label: "Square"
+  },
+  {
+    value: "sawtooth",
+    label: "Sawtooth"
+  }
+];
+
+export const DEFAULT_OSCILLATOR = {
+  wave: "sine",
+  cycles: 1,
+  phase: 0
+};
+
+export const DEFAULT_RAMP = {
+  easing: "linear",
+  count: 1,
+  phase: 0,
+  yoyo: false
+};
