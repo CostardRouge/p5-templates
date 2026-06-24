@@ -37,6 +37,8 @@ import ControlledJoypadDeviceSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
+import BindingAffordance
+  from "./ContentItems/components/BindingAffordance/BindingAffordance";
 import deepClone from "@/utils/deepClone";
 import type {
   FieldConfig
@@ -607,37 +609,61 @@ export default function FieldRenderer( {
     config.component === "asset" ||
     config.component === "asset-stack";
 
+  // Interactive-binding affordance: slider/number get it inline (beside the
+  // bar); the vector2d pad gets it in its outer label row. The affordance
+  // hides itself for non-sketch fields.
+  const inlineBinding =
+    config.component === "slider" || config.component === "number";
+  const bindable = inlineBinding || config.component === "vector2d";
+  const bindingAffordance = bindable ? (
+    <BindingAffordance
+      fieldPath={ registeredName }
+      component={ config.component }
+      config={ config }
+    />
+  ) : null;
+
   return (
     <div className="text-sm md:text-xs">
       {needsOuterLabel &&
         config.label &&
         !hideLabel && (
-        <div className="flex min-w-0 items-center gap-1">
-          <label
-            htmlFor={ registeredName }
-            className={ `select-none truncate ${
-              isModified
-                ? "font-medium"
-                : "text-gray-400"
-            }` }
-          >
-            {config.label}
-          </label>
-          {isModified && (
-            <button
-              type="button"
-              onClick={ handleReset }
-              tabIndex={ -1 }
-              title="Reset to saved value"
-              className={ `shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
+        <div className="flex min-w-0 items-center justify-between gap-1">
+          <div className="flex min-w-0 items-center gap-1">
+            <label
+              htmlFor={ registeredName }
+              className={ `select-none truncate ${
+                isModified
+                  ? "font-medium"
+                  : "text-gray-400"
+              }` }
             >
-              <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
-            </button>
-          )}
+              {config.label}
+            </label>
+            {isModified && (
+              <button
+                type="button"
+                onClick={ handleReset }
+                tabIndex={ -1 }
+                title="Reset to saved value"
+                className={ `shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
+              >
+                <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
+              </button>
+            )}
+          </div>
+          {config.component === "vector2d" && bindingAffordance}
         </div>
       )}
 
-      {renderInput()}
+      {inlineBinding ? (
+        <div className="flex items-center gap-1.5">
+          <div className="min-w-0 flex-1">{renderInput()}</div>
+          {bindingAffordance}
+        </div>
+      ) : (
+        renderInput()
+      )}
 
       {/* Display validation errors */}
       {error && (
