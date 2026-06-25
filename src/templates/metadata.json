@@ -3130,5 +3130,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-25T07:01:49.613Z",
     "ctime": "2026-06-25T07:01:49.609Z"
+  },
+  {
+    "name": "video-point-cloud",
+    "engine": "p5",
+    "category": "video",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-25T17:12:01.104Z",
+    "ctime": "2026-06-25T17:08:23.512Z"
   }
 ]
