@@ -86,6 +86,13 @@ export const formValues = {
       fixedLow: 0,
       fixedHigh: 1
     },
+    depth: {
+      minDepth: 0,
+      maxDepth: 1,
+      intervalMs: 120,
+      depthModelUrl: "",
+      segmentationModelUrl: ""
+    },
     wave: {
       freqX: 3,
       freqY: 3,
@@ -148,6 +155,10 @@ export const formConfiguration: Record<string, any> = {
       {
         label: "Couleur → profondeur",
         value: "color"
+      },
+      {
+        label: "Depth map (IA)",
+        value: "depth"
       },
       {
         label: "Vague / ondulation",
@@ -424,6 +435,41 @@ export const formConfiguration: Record<string, any> = {
             min: 0,
             max: 1,
             step: 0.01
+          }
+        }
+      },
+      depth: {
+        component: "nested-object",
+        label: "Depth map (IA)",
+        fields: {
+          minDepth: {
+            component: "slider",
+            label: "Model min depth",
+            min: 0,
+            max: 1,
+            step: 0.01
+          },
+          maxDepth: {
+            component: "slider",
+            label: "Model max depth",
+            min: 0,
+            max: 1,
+            step: 0.01
+          },
+          intervalMs: {
+            component: "slider",
+            label: "Inference interval (ms)",
+            min: 40,
+            max: 500,
+            step: 10
+          },
+          depthModelUrl: {
+            component: "text",
+            label: "Depth model URL (blank = TF Hub default)"
+          },
+          segmentationModelUrl: {
+            component: "text",
+            label: "Segmentation model URL (blank = default)"
           }
         }
       },

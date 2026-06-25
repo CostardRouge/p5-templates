@@ -251,11 +251,69 @@ function computeMotion( ctx ) {
   }
 }
 
+// ── depth: sample a real depth map from an in-browser model (ARPortraitDepth) ─
+// The async model keeps the latest map in ctx.depthMap; here we just look it up
+// per cell. Until the (lazily loaded) model produces its first map, every point
+// rests on a flat mid-plane.
+function computeDepthMap( ctx ) {
+  const {
+    columns, rows, mask, target, depthMap
+  } = ctx;
+
+  if ( !depthMap || !depthMap.data || !depthMap.width || !depthMap.height ) {
+    for ( let i = 0; i < target.length; i++ ) {
+      target[ i ] = mask[ i ] ? 0.5 : 0;
+    }
+
+    return;
+  }
+
+  const data = depthMap.data;
+  const width = depthMap.width;
+  const height = depthMap.height;
+
+  for ( let cy = 0; cy < rows; cy++ ) {
+    const v = rows > 1 ? cy / ( rows - 1 ) : 0;
+    const my = Math.min(
+      height - 1,
+      Math.floor( v * height )
+    );
+
+    for ( let cx = 0; cx < columns; cx++ ) {
+      const i = cy * columns + cx;
+
+      if ( !mask[ i ] ) {
+        target[ i ] = 0;
+        continue;
+      }
+
+      const u = columns > 1 ? cx / ( columns - 1 ) : 0;
+      const mx = Math.min(
+        width - 1,
+        Math.floor( u * width )
+      );
+
+      let d = data[ my * width + mx ];
+
+      if ( !( d >= 0 ) ) {
+        d = 0;
+      }
+
+      target[ i ] = d > 1 ? 1 : d;
+    }
+  }
+}
+
 export const MODES = {
   color: {
     id: "color",
     label: "Couleur → profondeur",
     compute: computeColor
+  },
+  depth: {
+    id: "depth",
+    label: "Depth map (IA)",
+    compute: computeDepthMap
   },
   wave: {
     id: "wave",

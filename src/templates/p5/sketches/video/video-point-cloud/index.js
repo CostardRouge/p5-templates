@@ -12,6 +12,10 @@ import mediapipe, {
   init as mediapipeInit,
   dispose as mediapipeDispose
 } from "@/p5/utils/mediapipe/mediapipe.js";
+import depthManager, {
+  initDepth,
+  detectDepth
+} from "@/p5/utils/depth/index.js";
 import {
   channelValue,
   computeDepth
@@ -363,6 +367,33 @@ sketch.draw( ( time ) => {
     modeState[ mode ] = {};
   }
 
+  // Depth-map mode drives the lazily-loaded ARPortraitDepth model. The heavy
+  // inference is throttled and async — we just hand it the raw source element
+  // and read whatever map it last produced.
+  let depthMap = null;
+
+  if ( mode === "depth" ) {
+    const depthParams = cfg.modes?.depth ?? {};
+    const inferenceElement = input === "video"
+      ? poolItem?.graphics?.canvas ?? null
+      : mediapipe.capture?.element?.elt ?? null;
+
+    initDepth( {
+      depthModelUrl: depthParams.depthModelUrl,
+      segmentationModelUrl: depthParams.segmentationModelUrl
+    } );
+    detectDepth(
+      inferenceElement,
+      {
+        minDepth: depthParams.minDepth ?? 0,
+        maxDepth: depthParams.maxDepth ?? 1,
+        intervalMs: depthParams.intervalMs ?? 120
+      }
+    );
+
+    depthMap = depthManager.latest;
+  }
+
   computeDepth(
     mode,
     {
@@ -373,6 +404,7 @@ sketch.draw( ( time ) => {
       target: cellTarget,
       params: cfg.modes?.[ mode ] ?? {},
       state: modeState[ mode ],
+      depthMap,
       p,
       time,
       noiseTime: animation.angle
