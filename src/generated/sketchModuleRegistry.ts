@@ -266,6 +266,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:video/video-kaleidoscope": () => import( "@/p5/sketches/video/video-kaleidoscope/index.js" ),
   "p5:video/video-mosaic": () => import( "@/p5/sketches/video/video-mosaic/index.js" ),
   "p5:video/video-player": () => import( "@/p5/sketches/video/video-player/index.js" ),
+  "p5:video/video-point-cloud": () => import( "@/p5/sketches/video/video-point-cloud/index.js" ),
   "p5:video/video-reveal": () => import( "@/p5/sketches/video/video-reveal/index.js" ),
   "p5:video/video-text": () => import( "@/p5/sketches/video/video-text/index.js" ),
   "p5:voronoi/voronoi-v1-cells": () => import( "@/p5/sketches/voronoi/voronoi-v1-cells/index.js" ),
