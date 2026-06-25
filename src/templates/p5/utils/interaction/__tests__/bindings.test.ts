@@ -817,6 +817,66 @@ describe(
     );
 
     it(
+      "eases each transition when smooth mode has an easing",
+      () => {
+        // easeInQuad at the segment midpoint (0.5) → 0.25
+        const value = sequenceValue(
+          {
+            stops: [
+              0,
+              100
+            ],
+            cycles: 1,
+            mode: "smooth",
+            easing: "easeInQuad"
+          },
+          {
+            progression: 0.25
+          },
+          0,
+          100
+        );
+
+        expect( value ).toBeCloseTo( 0.25 ); // lerp(0,100, easeInQuad(0.5)) / 100
+      }
+    );
+
+    it(
+      "dwells on a stop for `hold` before transitioning",
+      () => {
+        const seq = {
+          stops: [
+            0,
+            100
+          ],
+          cycles: 1,
+          mode: "smooth",
+          hold: 0.5
+        };
+
+        // Within the hold window (segment fraction 0.25 ≤ 0.5) → still stop 0
+        expect( sequenceValue(
+          seq,
+          {
+            progression: 0.125
+          },
+          0,
+          100
+        ) ).toBeCloseTo( 0 );
+
+        // Past the hold: fraction 0.75 → remapped (0.75-0.5)/0.5 = 0.5 → 50
+        expect( sequenceValue(
+          seq,
+          {
+            progression: 0.375
+          },
+          0,
+          100
+        ) ).toBeCloseTo( 0.5 );
+      }
+    );
+
+    it(
       "returns 0 with no stops",
       () => {
         expect( sequenceValue(

@@ -241,7 +241,26 @@ export function sequenceValue(
   let value;
 
   if ( s.mode === "smooth" ) {
+    // Animated transition between consecutive stops — mirrors animation.ease:
+    // dwell at the current stop for `hold` of the segment, then ease across to
+    // the next stop. With hold 0 and linear easing this is a plain glide.
     const i1 = ( i0 + 1 ) % n;
+    const hold = Math.min(
+      clamp01( num(
+        s.hold,
+        0
+      ) ),
+      0.99
+    );
+
+    let f = pos - Math.floor( pos );
+
+    if ( hold > 0 ) {
+      f = f <= hold ? 0 : ( f - hold ) / ( 1 - hold );
+    }
+
+    const fn = s.easing && easing[ s.easing ];
+    const eased = typeof fn === "function" ? fn( f ) : f;
 
     value = lerp(
       num(
@@ -252,7 +271,7 @@ export function sequenceValue(
         stops[ i1 ],
         0
       ),
-      pos - Math.floor( pos )
+      eased
     );
   } else {
     value = num(

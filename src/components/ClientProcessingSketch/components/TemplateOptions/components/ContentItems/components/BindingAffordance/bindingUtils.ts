@@ -47,6 +47,8 @@ export type Binding = {
     cycles?: number;
     phase?: number;
     mode?: string;
+    easing?: string;
+    hold?: number;
   };
 };
 
@@ -377,6 +379,8 @@ export function defaultSequence( stops: number[] ) {
     stops,
     cycles: 1,
     phase: 0,
-    mode: "step"
+    mode: "step",
+    easing: "linear",
+    hold: 0
   };
 }
