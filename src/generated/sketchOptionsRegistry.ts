@@ -283,6 +283,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:video/video-kaleidoscope": () => import( "@/p5/sketches/video/video-kaleidoscope/options" ),
   "p5:video/video-mosaic": () => import( "@/p5/sketches/video/video-mosaic/options" ),
   "p5:video/video-player": () => import( "@/p5/sketches/video/video-player/options" ),
+  "p5:video/video-point-cloud": () => import( "@/p5/sketches/video/video-point-cloud/options" ),
   "p5:video/video-reveal": () => import( "@/p5/sketches/video/video-reveal/options" ),
   "p5:video/video-text": () => import( "@/p5/sketches/video/video-text/options" ),
   "p5:voronoi/voronoi-v1-cells": () => import( "@/p5/sketches/voronoi/voronoi-v1-cells/options" ),
