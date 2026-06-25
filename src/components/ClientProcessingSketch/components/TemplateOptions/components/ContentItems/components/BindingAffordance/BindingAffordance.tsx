@@ -5,7 +5,7 @@ import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
 import {
-  Activity, Trash2
+  Activity, Plus, Trash2, X
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -29,11 +29,13 @@ import {
   type SourceCategory,
   channelSourceOptions,
   decodeSource,
+  defaultSequence,
   DEFAULT_OSCILLATOR,
   DEFAULT_RAMP,
   encodeSource,
   getSketchScope,
   makeDefaultBinding,
+  SEQUENCE_MODE_OPTIONS,
   SOURCE_CATEGORIES,
   sourceCategory,
   toSketchRelativePath,
@@ -182,6 +184,22 @@ export default function BindingAffordance( {
           }
         );
       }
+    } else if ( next === "sequence" ) {
+      setField(
+        "source",
+        "sequence"
+      );
+
+      if ( !binding?.sequence ) {
+        // Seed two stops from the field's domain so it does something at once.
+        setField(
+          "sequence",
+          defaultSequence( [
+            domain.min,
+            domain.max
+          ] )
+        );
+      }
     } else {
       const first = sourceOptions[ 0 ];
 
@@ -194,6 +212,50 @@ export default function BindingAffordance( {
         first.project ?? null
       );
     }
+  };
+
+  // Reset a sub-field to its default, mirroring the form's per-control revert.
+  // Shows the revert icon only when the value differs from the default.
+  const resetFor = (
+    subPath: string, current: unknown, defaultValue: unknown
+  ) => ( {
+    isModified: JSON.stringify( current ) !== JSON.stringify( defaultValue ),
+    onReset: ( e: React.MouseEvent ) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setField(
+        subPath,
+        defaultValue
+      );
+    }
+  } );
+
+  // Sequence stop list helpers (a simple scalable list of field-domain values).
+  const stops: number[] = Array.isArray( binding?.sequence?.stops )
+    ? ( binding!.sequence!.stops as number[] )
+    : [];
+
+  const addStop = () => {
+    const mid = domain.step >= 1
+      ? Math.round( ( domain.min + domain.max ) / 2 )
+      : ( domain.min + domain.max ) / 2;
+
+    setField(
+      "sequence.stops",
+      [
+        ...stops,
+        mid
+      ]
+    );
+  };
+
+  const removeStop = ( i: number ) => {
+    setField(
+      "sequence.stops",
+      stops.filter( (
+        _, j
+      ) => j !== i )
+    );
   };
 
   // The VU meter reads the binding's resolved 0..1 signal, published per-target
@@ -328,6 +390,11 @@ export default function BindingAffordance( {
                     min={ 1 }
                     max={ 9 }
                     step={ 1 }
+                    { ...resetFor(
+                      "oscillator.cycles",
+                      binding.oscillator?.cycles,
+                      DEFAULT_OSCILLATOR.cycles
+                    ) }
                   />
                   <ControlledSliderInput
                     name={ `${ bindingPath }.oscillator.phase` }
@@ -335,6 +402,11 @@ export default function BindingAffordance( {
                     min={ 0 }
                     max={ 1 }
                     step={ 0.01 }
+                    { ...resetFor(
+                      "oscillator.phase",
+                      binding.oscillator?.phase,
+                      DEFAULT_OSCILLATOR.phase
+                    ) }
                   />
                 </>
               )}
@@ -344,6 +416,11 @@ export default function BindingAffordance( {
                   <ControlledEasingInput
                     name={ `${ bindingPath }.ramp.easing` }
                     label="Easing"
+                    { ...resetFor(
+                      "ramp.easing",
+                      binding.ramp?.easing,
+                      DEFAULT_RAMP.easing
+                    ) }
                   />
                   <ControlledSliderInput
                     name={ `${ bindingPath }.ramp.count` }
@@ -351,6 +428,11 @@ export default function BindingAffordance( {
                     min={ 1 }
                     max={ 9 }
                     step={ 1 }
+                    { ...resetFor(
+                      "ramp.count",
+                      binding.ramp?.count,
+                      DEFAULT_RAMP.count
+                    ) }
                   />
                   <ControlledSliderInput
                     name={ `${ bindingPath }.ramp.phase` }
@@ -358,6 +440,11 @@ export default function BindingAffordance( {
                     min={ 0 }
                     max={ 1 }
                     step={ 0.01 }
+                    { ...resetFor(
+                      "ramp.phase",
+                      binding.ramp?.phase,
+                      DEFAULT_RAMP.phase
+                    ) }
                   />
                   <label className="flex cursor-pointer items-center justify-between gap-2 text-label">
                     <span>Yoyo (ping-pong)</span>
@@ -365,6 +452,87 @@ export default function BindingAffordance( {
                       inputProps={ register( `${ bindingPath }.ramp.yoyo` ) }
                     />
                   </label>
+                </>
+              )}
+
+              {category === "sequence" && (
+                <>
+                  {/* A simple scalable list: each stop is the field's own slider,
+                      in the parameter's units. */}
+                  <div className="flex flex-col gap-1">
+                    {stops.map( (
+                      _, i
+                    ) => (
+                      <div
+                        key={ i }
+                        className="flex items-center gap-1"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <ControlledSliderInput
+                            name={ `${ bindingPath }.sequence.stops.${ i }` }
+                            label={ `#${ i + 1 }` }
+                            min={ domain.min }
+                            max={ domain.max }
+                            step={ domain.step }
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          title="Remove stop"
+                          onClick={ () => removeStop( i ) }
+                          className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-theme text-label transition-colors hover:bg-hover hover:text-foreground"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) )}
+                    <button
+                      type="button"
+                      onClick={ addStop }
+                      className="flex items-center justify-center gap-1.5 rounded-md border border-dashed border-theme px-2 py-1.5 text-label transition-colors hover:bg-hover hover:text-foreground"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add stop
+                    </button>
+                  </div>
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.sequence.cycles` }
+                    label="Cycles"
+                    min={ 1 }
+                    max={ 9 }
+                    step={ 1 }
+                    { ...resetFor(
+                      "sequence.cycles",
+                      binding.sequence?.cycles,
+                      1
+                    ) }
+                  />
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.sequence.phase` }
+                    label="Phase"
+                    min={ 0 }
+                    max={ 1 }
+                    step={ 0.01 }
+                    { ...resetFor(
+                      "sequence.phase",
+                      binding.sequence?.phase,
+                      0
+                    ) }
+                  />
+                  <select
+                    value={ binding.sequence?.mode ?? "step" }
+                    onChange={ ( e ) => setField(
+                      "sequence.mode",
+                      e.target.value
+                    ) }
+                    className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
+                  >
+                    {SEQUENCE_MODE_OPTIONS.map( ( option ) => (
+                      <option key={ option.value } value={ option.value }>
+                        {option.label}
+                      </option>
+                    ) )}
+                  </select>
                 </>
               )}
 
@@ -380,6 +548,11 @@ export default function BindingAffordance( {
                   min={ domain.min }
                   max={ domain.max }
                   step={ domain.step }
+                  { ...resetFor(
+                    "mapping.min",
+                    binding.mapping?.min,
+                    domain.min
+                  ) }
                 />
                 <ControlledSliderInput
                   name={ `${ bindingPath }.mapping.max` }
@@ -387,6 +560,11 @@ export default function BindingAffordance( {
                   min={ domain.min }
                   max={ domain.max }
                   step={ domain.step }
+                  { ...resetFor(
+                    "mapping.max",
+                    binding.mapping?.max,
+                    domain.max
+                  ) }
                 />
               </div>
             ) : (
@@ -397,6 +575,11 @@ export default function BindingAffordance( {
                   min={ domain.min }
                   max={ domain.max }
                   step={ domain.step }
+                  { ...resetFor(
+                    "mapping.x.min",
+                    binding.mapping?.x?.min,
+                    domain.min
+                  ) }
                 />
                 <ControlledSliderInput
                   name={ `${ bindingPath }.mapping.x.max` }
@@ -404,6 +587,11 @@ export default function BindingAffordance( {
                   min={ domain.min }
                   max={ domain.max }
                   step={ domain.step }
+                  { ...resetFor(
+                    "mapping.x.max",
+                    binding.mapping?.x?.max,
+                    domain.max
+                  ) }
                 />
                 <ControlledSliderInput
                   name={ `${ bindingPath }.mapping.y.min` }
@@ -411,6 +599,11 @@ export default function BindingAffordance( {
                   min={ domain.min }
                   max={ domain.max }
                   step={ domain.step }
+                  { ...resetFor(
+                    "mapping.y.min",
+                    binding.mapping?.y?.min,
+                    domain.min
+                  ) }
                 />
                 <ControlledSliderInput
                   name={ `${ bindingPath }.mapping.y.max` }
@@ -418,6 +611,11 @@ export default function BindingAffordance( {
                   min={ domain.min }
                   max={ domain.max }
                   step={ domain.step }
+                  { ...resetFor(
+                    "mapping.y.max",
+                    binding.mapping?.y?.max,
+                    domain.max
+                  ) }
                 />
               </div>
             )}
@@ -429,6 +627,11 @@ export default function BindingAffordance( {
                 <ControlledEasingInput
                   name={ `${ bindingPath }.mapping.curve` }
                   label="Easing"
+                  { ...resetFor(
+                    "mapping.curve",
+                    binding.mapping?.curve,
+                    "linear"
+                  ) }
                 />
                 <label className="flex cursor-pointer items-center justify-between gap-2 text-label">
                   <span>Invert</span>
@@ -446,6 +649,11 @@ export default function BindingAffordance( {
               min={ 0 }
               max={ 0.95 }
               step={ 0.05 }
+              { ...resetFor(
+                "smoothing",
+                binding.smoothing,
+                kind === "vector2d" ? 0.15 : 0.2
+              ) }
             />
 
             <button

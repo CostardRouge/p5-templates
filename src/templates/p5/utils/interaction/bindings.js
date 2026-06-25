@@ -123,7 +123,8 @@ export function applyCurve(
 
 const GENERATOR_SOURCES = new Set( [
   "oscillator",
-  "ramp"
+  "ramp",
+  "sequence"
 ] );
 
 export function isGenerator( source ) {
@@ -209,8 +210,61 @@ export function rampValue(
   return clamp01( typeof fn === "function" ? fn( p ) : p );
 }
 
-// ── Scalar resolution (input projection or generator) ───────────────────────
+// Sequence: step (or smoothly interpolate) through a list of stop VALUES across
+// the loop, `cycles` times. Stops are stored in the target parameter's own
+// units (e.g. radius 10, 50, 10); they are normalized here against the binding's
+// [min, max] so the standard range-map turns them back into the stop value —
+// which makes min/max act as a clamp/window on the sequence, like every other
+// source. With no stops it returns 0 (a no-op).
+export function sequenceValue(
+  seq, context, min, max
+) {
+  const s = seq ?? {};
+  const stops = Array.isArray( s.stops ) ? s.stops : [];
 
+  if ( stops.length === 0 ) {
+    return 0;
+  }
+
+  const t = frac( progressionOf( context ) * num(
+    s.cycles,
+    1
+  ) + num(
+    s.phase,
+    0
+  ) );
+
+  const n = stops.length;
+  const pos = t * n;
+  const i0 = Math.floor( pos ) % n;
+
+  let value;
+
+  if ( s.mode === "smooth" ) {
+    const i1 = ( i0 + 1 ) % n;
+
+    value = lerp(
+      num(
+        stops[ i0 ],
+        0
+      ),
+      num(
+        stops[ i1 ],
+        0
+      ),
+      pos - Math.floor( pos )
+    );
+  } else {
+    value = num(
+      stops[ i0 ],
+      0
+    );
+  }
+
+  return max === min ? 0 : clamp01( ( value - min ) / ( max - min ) );
+}
+
+// ── Scalar resolution (input projection or generator) ───────────────────────
 // The raw 0..1 signal for a continuous binding, before invert/curve. For input
 // sources it projects the (already looked-up) channel; for generators it
 // computes from the binding's own params + context.
@@ -228,6 +282,23 @@ function rawScalar(
     return rampValue(
       binding.ramp,
       context
+    );
+  }
+
+  if ( binding.source === "sequence" ) {
+    const mapping = binding.mapping ?? {};
+
+    return sequenceValue(
+      binding.sequence,
+      context,
+      num(
+        mapping.min,
+        0
+      ),
+      num(
+        mapping.max,
+        1
+      )
     );
   }
 
