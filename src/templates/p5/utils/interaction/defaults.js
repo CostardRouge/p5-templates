@@ -155,6 +155,32 @@ export const interactionFormValues = {
     deadzone: 0.1
   },
 
+  // Remote iPhone LiDAR depth received over a WebSocket. The capture happens in
+  // a native source (iOS app or USB/desktop bridge); this only consumes the
+  // stream. `url` points at that source (ws://phone-ip:port — note: an https://
+  // page cannot open ws://, so use http://localhost in dev or wss:// in prod).
+  lidar: {
+    enabled: false,
+    url: "ws://192.168.1.50:8765",
+    count: 5,
+    near: 0.2,
+    far: 4,
+    minConfidence: 0,
+    flip: true
+  },
+
+  // Mac screen-hinge angle via WebHID (Chrome/Edge desktop, Apple Silicon).
+  lidAngle: {
+    enabled: false,
+    minAngle: 0,
+    maxAngle: 135,
+    axis: "x",
+    offset: {
+      x: 0,
+      y: 0
+    }
+  },
+
   visualization: {
     enabled: true,
     showImages: false,
@@ -894,6 +920,101 @@ export const interactionFormConfiguration = {
           min: 0,
           max: 0.5,
           step: 0.01
+        }
+      }
+    },
+
+    lidar: {
+      component: "nested-object",
+      label: "LiDAR (iPhone depth, remote)",
+      fields: {
+        enabled: {
+          component: "checkbox",
+          label: "Enabled"
+        },
+        url: {
+          component: "text",
+          label: "WebSocket URL",
+          placeholder: "ws://192.168.1.50:8765"
+        },
+        count: {
+          component: "slider",
+          label: "Nearest points",
+          min: 1,
+          max: 32,
+          step: 1
+        },
+        near: {
+          component: "slider",
+          label: "Near (m)",
+          min: 0.1,
+          max: 5,
+          step: 0.1
+        },
+        far: {
+          component: "slider",
+          label: "Far (m)",
+          min: 0.2,
+          max: 10,
+          step: 0.1
+        },
+        minConfidence: {
+          component: "slider",
+          label: "Min confidence (0–2)",
+          min: 0,
+          max: 2,
+          step: 1
+        },
+        flip: {
+          component: "checkbox",
+          label: "Flip (mirror)"
+        }
+      }
+    },
+
+    lidAngle: {
+      component: "nested-object",
+      label: "Mac Lid Angle (WebHID)",
+      fields: {
+        enabled: {
+          component: "checkbox",
+          label: "Enabled"
+        },
+        minAngle: {
+          component: "slider",
+          label: "Min angle (°)",
+          min: 0,
+          max: 180,
+          step: 1
+        },
+        maxAngle: {
+          component: "slider",
+          label: "Max angle (°)",
+          min: 0,
+          max: 180,
+          step: 1
+        },
+        axis: {
+          component: "select",
+          label: "Drives axis",
+          options: [
+            {
+              label: "X",
+              value: "x"
+            },
+            {
+              label: "Y",
+              value: "y"
+            }
+          ]
+        },
+        offset: {
+          component: "vector2d",
+          label: "Offset",
+          min: -500,
+          max: 500,
+          step: 1,
+          yDown: true
         }
       }
     },
