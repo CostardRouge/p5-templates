@@ -16,6 +16,7 @@ import {
   waveValue,
   oscillatorValue,
   rampValue,
+  sequenceValue,
   shapedScalar,
   computeBindingSignals,
   isGenerator
@@ -716,7 +717,7 @@ describe(
           ]
         };
 
-        const signals = computeBindingSignals(
+        const signals: any = computeBindingSignals(
           base,
           {
             mouse: vec(
@@ -731,6 +732,151 @@ describe(
 
         expect( signals.radius ).toBeCloseTo( 1 ); // sine peak
         expect( signals.weight ).toBeCloseTo( 0.3 ); // mouse.x
+      }
+    );
+  }
+);
+
+describe(
+  "sequence generator",
+  () => {
+    it(
+      "is registered as a generator",
+      () => {
+        expect( isGenerator( "sequence" ) ).toBe( true );
+      }
+    );
+
+    it(
+      "steps through stops, normalized against [min, max]",
+      () => {
+        const seq = {
+          stops: [
+            0,
+            50,
+            100
+          ],
+          cycles: 1,
+          mode: "step"
+        };
+
+        // progression 0 → first stop (0) → normalized 0
+        expect( sequenceValue(
+          seq,
+          {
+            progression: 0
+          },
+          0,
+          100
+        ) ).toBeCloseTo( 0 );
+
+        // progression 0.5 → middle stop (50) → normalized 0.5
+        expect( sequenceValue(
+          seq,
+          {
+            progression: 0.5
+          },
+          0,
+          100
+        ) ).toBeCloseTo( 0.5 );
+
+        // just past 2/3 → last stop (100) → normalized 1
+        expect( sequenceValue(
+          seq,
+          {
+            progression: 0.7
+          },
+          0,
+          100
+        ) ).toBeCloseTo( 1 );
+      }
+    );
+
+    it(
+      "interpolates between stops in smooth mode",
+      () => {
+        const value = sequenceValue(
+          {
+            stops: [
+              0,
+              100
+            ],
+            cycles: 1,
+            mode: "smooth"
+          },
+          {
+            progression: 0.25
+          },
+          0,
+          100
+        );
+
+        // pos 0.5 between stop 0 (0) and stop 1 (100) → 50 → normalized 0.5
+        expect( value ).toBeCloseTo( 0.5 );
+      }
+    );
+
+    it(
+      "returns 0 with no stops",
+      () => {
+        expect( sequenceValue(
+          {
+            stops: []
+          },
+          {
+            progression: 0.5
+          },
+          0,
+          100
+        ) ).toBe( 0 );
+      }
+    );
+
+    it(
+      "resolves a sequence binding back to the stop value (min/max = domain)",
+      () => {
+        const base = {
+          radius: 0,
+          bindings: [
+            {
+              source: "sequence",
+              target: "radius",
+              kind: "continuous",
+              sequence: {
+                stops: [
+                  10,
+                  90
+                ],
+                cycles: 1,
+                mode: "step"
+              },
+              mapping: {
+                min: 10,
+                max: 90
+              }
+            }
+          ]
+        };
+
+        // progression 0 → stop 10; the round-trip through min/max yields 10.
+        expect( ( resolveBindings(
+          base,
+          {},
+          1,
+          {
+            progression: 0
+          }
+        ) as any ).radius ).toBeCloseTo( 10 );
+
+        // progression 0.5 → stop 90 → yields 90.
+        expect( ( resolveBindings(
+          base,
+          {},
+          2,
+          {
+            progression: 0.5
+          }
+        ) as any ).radius ).toBeCloseTo( 90 );
       }
     );
   }

@@ -42,6 +42,12 @@ export type Binding = {
     phase?: number;
     yoyo?: boolean;
   };
+  sequence?: {
+    stops?: number[];
+    cycles?: number;
+    phase?: number;
+    mode?: string;
+  };
 };
 
 type ChannelDescriptor = {
@@ -281,7 +287,7 @@ export function makeDefaultBinding(
 // sketch's animation progression (oscillator, ramp). New categories — API,
 // date, … — slot in here as another branch.
 
-export type SourceCategory = "input" | "oscillator" | "ramp";
+export type SourceCategory = "input" | "oscillator" | "ramp" | "sequence";
 
 export const SOURCE_CATEGORIES: Array<{
   value: SourceCategory;
@@ -298,6 +304,10 @@ export const SOURCE_CATEGORIES: Array<{
   {
     value: "ramp",
     label: "Ramp"
+  },
+  {
+    value: "sequence",
+    label: "Sequence"
   }
 ];
 
@@ -310,8 +320,23 @@ export function sourceCategory( source: string | undefined ): SourceCategory {
     return "ramp";
   }
 
+  if ( source === "sequence" ) {
+    return "sequence";
+  }
+
   return "input";
 }
+
+export const SEQUENCE_MODE_OPTIONS = [
+  {
+    value: "step",
+    label: "Step"
+  },
+  {
+    value: "smooth",
+    label: "Smooth"
+  }
+];
 
 export const WAVE_OPTIONS = [
   {
@@ -344,3 +369,14 @@ export const DEFAULT_RAMP = {
   phase: 0,
   yoyo: false
 };
+
+// Stops are seeded by the caller from the field's own domain (e.g. [min, max]),
+// since they live in the target parameter's units.
+export function defaultSequence( stops: number[] ) {
+  return {
+    stops,
+    cycles: 1,
+    phase: 0,
+    mode: "step"
+  };
+}
