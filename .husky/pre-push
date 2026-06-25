@@ -1,1 +1,1 @@
-NEXT_BUILD_DIR=/tmp/p5-templates-build npm run build && rm -rf /tmp/p5-templates-build
+#NEXT_BUILD_DIR=/tmp/p5-templates-build npm run build && rm -rf /tmp/p5-templates-build

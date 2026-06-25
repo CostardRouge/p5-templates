@@ -4,45 +4,45 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 export const formValues = {
   timeScale: 1,
   braid: {
-    pipeCount: 3,
-    pipeRadius: 0.18,
-    braidRadius: 0.42,
-    twist: 2.77,
-    spin: -1.31,
-    radiusPulse: 0,
+    pipeCount: 4,
+    pipeRadius: 0.21,
+    braidRadius: 0.56,
+    twist: 2.08,
+    spin: -0.77,
+    radiusPulse: 0.47,
     pulseFreq: 1.38,
-    pulseSpeed: 1.59
+    pulseSpeed: 2.12
   },
   camera: {
-    distance: 4.2,
-    fov: 51,
+    distance: 5.1,
+    fov: 58,
     pitch: -0.03,
-    yaw: 0.72,
-    orbitSpeed: -0.67,
-    fogDensity: 0.6
+    yaw: -0.4,
+    orbitSpeed: 0.21,
+    fogDensity: 0.21
   },
   colors: {
-    hueSpeed: 0.05,
-    hueSpread: 3.9,
-    huePhase: 0,
-    lengthHueShift: -0.49,
+    hueSpeed: 1.15,
+    hueSpread: 2.03,
+    huePhase: 2.63,
+    lengthHueShift: -0.36,
     pipeHueShift: -0.96,
-    shimmer: 1.44,
+    shimmer: 2.82,
     saturation: 0.88,
     brightness: 1.3
   },
   light: {
-    azimuth: 1.84,
-    elevation: 0.1,
-    ambient: 0.14,
-    diffuse: 0.26,
-    specular: 1.25,
-    specPower: 90,
-    fresnelPower: 1.05,
-    rimStrength: 1.29
+    azimuth: -1.29,
+    elevation: -0.6,
+    ambient: 0.34,
+    diffuse: 0.66,
+    specular: 0.99,
+    specPower: 24,
+    fresnelPower: 3.3,
+    rimStrength: 0.87
   },
   aberration: {
-    amount: 0,
+    amount: 3,
     mode: "radial" as "radial" | "horizontal"
   },
   backgroundColor: [

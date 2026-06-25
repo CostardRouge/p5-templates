@@ -468,18 +468,6 @@
     "ctime": "2026-05-20T12:32:21.536Z"
   },
   {
-    "name": "text-morphing-rotating-scene",
-    "engine": "p5",
-    "category": "text-morphing",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-05-20T12:32:21.537Z",
-    "ctime": "2026-05-20T12:32:21.537Z"
-  },
-  {
     "name": "text-animation-typein-typeout",
     "engine": "p5",
     "category": "text",
@@ -2268,42 +2256,6 @@
     "ctime": "2026-06-17T19:40:45.263Z"
   },
   {
-    "name": "torsade-shaders-v1-melted",
-    "engine": "p5",
-    "category": "torsade-shaders",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-17T19:40:45.265Z",
-    "ctime": "2026-06-17T19:40:45.264Z"
-  },
-  {
-    "name": "torsade-shaders-v2-rabbit-hole",
-    "engine": "p5",
-    "category": "torsade-shaders",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-17T19:40:45.265Z",
-    "ctime": "2026-06-17T19:40:45.265Z"
-  },
-  {
-    "name": "torsade-shaders-v3-medusa",
-    "engine": "p5",
-    "category": "torsade-shaders",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-17T19:40:45.265Z",
-    "ctime": "2026-06-17T19:40:45.265Z"
-  },
-  {
     "name": "torsade-juggle",
     "engine": "p5",
     "category": "torsade",
@@ -3048,18 +3000,6 @@
     "ctime": "2026-06-21T17:27:05.111Z"
   },
   {
-    "name": "text-morphing-iris-mask",
-    "engine": "p5",
-    "category": "text-morphing",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-21T19:45:54.448Z",
-    "ctime": "2026-06-21T19:45:01.644Z"
-  },
-  {
     "name": "motion-foley",
     "engine": "p5",
     "category": "audio",
@@ -3096,19 +3036,7 @@
     "ctime": "2026-06-23T19:51:39.332Z"
   },
   {
-    "name": "flowers-shaders-v1-melted",
-    "engine": "p5",
-    "category": "flowers-shaders",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-23T20:02:42.833Z",
-    "ctime": "2026-06-23T20:02:23.797Z"
-  },
-  {
-    "name": "text-morphing-letter-mask",
+    "name": "text-morphing-rotating-scene",
     "engine": "p5",
     "category": "text-morphing",
     "hasSketchForm": true,
@@ -3116,8 +3044,68 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-24T00:47:10.062Z",
-    "ctime": "2026-06-24T00:47:10.054Z"
+    "mtime": "2026-06-25T07:00:55.591Z",
+    "ctime": "2026-06-25T07:00:55.576Z"
+  },
+  {
+    "name": "text-morphing-letter-mask",
+    "engine": "p5",
+    "category": "text-morphing-mask",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-25T07:01:12.714Z",
+    "ctime": "2026-06-25T07:01:12.707Z"
+  },
+  {
+    "name": "text-morphing-iris-mask",
+    "engine": "p5",
+    "category": "text-morphing-mask",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-25T07:01:12.728Z",
+    "ctime": "2026-06-25T07:01:12.723Z"
+  },
+  {
+    "name": "torsade-shaders-v1-melted",
+    "engine": "p5",
+    "category": "torsade-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-25T07:01:29.740Z",
+    "ctime": "2026-06-25T07:01:29.736Z"
+  },
+  {
+    "name": "torsade-shaders-v3-medusa",
+    "engine": "p5",
+    "category": "torsade-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-25T07:01:29.744Z",
+    "ctime": "2026-06-25T07:01:29.741Z"
+  },
+  {
+    "name": "torsade-shaders-v2-rabbit-hole",
+    "engine": "p5",
+    "category": "torsade-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-25T07:01:29.749Z",
+    "ctime": "2026-06-25T07:01:29.746Z"
   },
   {
     "name": "flowers-shaders-v2-pipes",
@@ -3128,7 +3116,19 @@
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-24T23:43:29.366Z",
-    "ctime": "2026-06-24T23:42:18.282Z"
+    "mtime": "2026-06-25T07:01:49.608Z",
+    "ctime": "2026-06-25T07:01:49.602Z"
+  },
+  {
+    "name": "flowers-shaders-v1-melted",
+    "engine": "p5",
+    "category": "flowers-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-25T07:01:49.613Z",
+    "ctime": "2026-06-25T07:01:49.609Z"
   }
 ]
