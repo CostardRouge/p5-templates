@@ -5,7 +5,7 @@ import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
 import {
-  Activity, Plus, Trash2, X
+  Activity, Plus, RotateCcw, Trash2, X
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -151,6 +151,58 @@ export default function BindingAffordance( {
 
   const removeBinding = () => {
     writeBindings( list.filter( ( b ) => b.target !== target ) );
+  };
+
+  // Reset every modulation OPTION to its default, keeping the binding's source /
+  // category choice (and id/target). Wipes range, easing, smoothing and the
+  // active generator's params in one click.
+  const resetAll = () => {
+    if ( !binding ) {
+      return;
+    }
+
+    const next: Binding = {
+      id: binding.id,
+      source: binding.source,
+      project: binding.project,
+      target: binding.target,
+      kind: binding.kind,
+      enabled: binding.enabled,
+      smoothing: kind === "vector2d" ? 0.15 : 0.2,
+      mapping: kind === "vector2d"
+        ? {
+          x: {
+            min: domain.min,
+            max: domain.max
+          },
+          y: {
+            min: domain.min,
+            max: domain.max
+          }
+        }
+        : {
+          min: domain.min,
+          max: domain.max,
+          curve: "linear"
+        }
+    };
+
+    if ( binding.source === "oscillator" ) {
+      next.oscillator = {
+        ...DEFAULT_OSCILLATOR
+      };
+    } else if ( binding.source === "ramp" ) {
+      next.ramp = {
+        ...DEFAULT_RAMP
+      };
+    } else if ( binding.source === "sequence" ) {
+      next.sequence = defaultSequence( [
+        domain.min,
+        domain.max
+      ] );
+    }
+
+    writeBindings( list.map( ( b ) => ( b.target === target ? next : b ) ) );
   };
 
   // Switch the binding between source categories (input / oscillator / ramp),
@@ -307,7 +359,17 @@ export default function BindingAffordance( {
         }: { close: () => void } ) => ( binding ? (
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-medium text-foreground">Modulation</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium text-foreground">Modulation</span>
+                <button
+                  type="button"
+                  title="Reset all modulation settings"
+                  onClick={ resetAll }
+                  className="grid h-5 w-5 place-items-center rounded text-label transition-colors hover:bg-hover hover:text-foreground"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </button>
+              </div>
               <label className="flex cursor-pointer items-center gap-2 text-label">
                 <span>Enabled</span>
                 <ToggleSwitch
@@ -533,6 +595,34 @@ export default function BindingAffordance( {
                       </option>
                     ) )}
                   </select>
+
+                  {/* Smooth mode animates between stops: ease each transition,
+                      and dwell on a stop for `hold` before moving on. */}
+                  {binding.sequence?.mode === "smooth" && (
+                    <>
+                      <ControlledEasingInput
+                        name={ `${ bindingPath }.sequence.easing` }
+                        label="Transition"
+                        { ...resetFor(
+                          "sequence.easing",
+                          binding.sequence?.easing,
+                          "linear"
+                        ) }
+                      />
+                      <ControlledSliderInput
+                        name={ `${ bindingPath }.sequence.hold` }
+                        label="Hold"
+                        min={ 0 }
+                        max={ 0.95 }
+                        step={ 0.05 }
+                        { ...resetFor(
+                          "sequence.hold",
+                          binding.sequence?.hold,
+                          0
+                        ) }
+                      />
+                    </>
+                  )}
                 </>
               )}
 
