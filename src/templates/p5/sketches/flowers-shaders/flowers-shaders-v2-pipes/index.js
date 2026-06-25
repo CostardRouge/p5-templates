@@ -328,9 +328,7 @@ sketch.draw( () => {
   // (braidRadius·pulse·pulseFreq). A 10% margin keeps the march from overshooting.
   const maxR = braidRadius * ( 1 + radiusPulse ) + pipeRadius;
   const pulseSlope = braidRadius * radiusPulse * pulseFreq;
-  const twistLipschitz = Math.sqrt(
-    1 + ( maxR * twist + pulseSlope ) ** 2
-  ) * 1.1;
+  const twistLipschitz = Math.sqrt( 1 + ( maxR * twist + pulseSlope ) ** 2 ) * 1.1;
 
   // Field of view (degrees) → focal length of the pinhole camera.
   const fov = camera.fov ?? 45;
