@@ -3178,5 +3178,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-26T22:54:26.636Z",
     "ctime": "2026-06-26T22:53:14.200Z"
+  },
+  {
+    "name": "signals-02-braid",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-26T23:24:59.337Z",
+    "ctime": "2026-06-26T23:24:07.045Z"
   }
 ]
