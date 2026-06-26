@@ -5,7 +5,7 @@ import {
 export const formValues = {
   text: {
     value: "HELLO",
-    font: "sans",
+    font: "waverseVariable",
     size: 0.4,
     sampleFactor: 0.15,
     simplifyThreshold: 0,
@@ -19,27 +19,27 @@ export const formValues = {
     // "progressive" draws the outline as the pen passes; "predrawn" shows the
     // whole outline already there and just travels the camera over it.
     reveal: "progressive" as "progressive" | "predrawn",
-    easing: "easeInOutSine"
+    easing: "linear"
   },
   camera: {
-    followZoom: 2.6,
-    zoomPunch: 0.25,
+    followZoom: 3.3,
+    zoomPunch: 0,
     reveal: true
   },
   stroke: {
-    weight: 3,
+    weight: 8,
     color: [
       255,
       255,
       255
     ] as number[],
-    rainbow: false,
-    palette: "rainbow",
-    hueSpread: 0.6,
+    rainbow: true,
+    palette: "purple",
+    hueSpread: 0,
     hueSpeed: 0,
-    hueOffset: 0,
+    hueOffset: 3.14,
     penDot: true,
-    penDotSize: 7
+    penDotSize: 21
   },
   fill: {
     // "none" never fills; "onComplete" drops the fill in once a letter is fully
@@ -60,7 +60,7 @@ export const formValues = {
     0,
     0,
     0,
-    255
+    173
   ] as number[]
 };
 

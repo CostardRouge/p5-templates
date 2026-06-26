@@ -5,7 +5,7 @@ import {
 export const formValues = {
   text: {
     value: "TRACE",
-    font: "sans",
+    font: "tilt",
     size: 0.2,
     sampleFactor: 0.15,
     simplifyThreshold: 0,
