@@ -194,6 +194,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:ribbons/ribbons-v9-atom": () => import( "@/p5/sketches/ribbons/ribbons-v9-atom/index.js" ),
   "p5:semaphore/semaphore-v0-dots": () => import( "@/p5/sketches/semaphore/semaphore-v0-dots/index.js" ),
   "p5:semaphore/semaphore-v1-lines": () => import( "@/p5/sketches/semaphore/semaphore-v1-lines/index.js" ),
+  "p5:signals/signals-01-serpent": () => import( "@/p5/sketches/signals/signals-01-serpent/index.js" ),
   "p5:spline-text/spline-text-v0-scribe": () => import( "@/p5/sketches/spline-text/spline-text-v0-scribe/index.js" ),
   "p5:spline-text/spline-text-v1-saccade": () => import( "@/p5/sketches/spline-text/spline-text-v1-saccade/index.js" ),
   "p5:splines/splines-v0-chaikin": () => import( "@/p5/sketches/splines/splines-v0-chaikin/index.js" ),

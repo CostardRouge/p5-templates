@@ -3166,5 +3166,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-26T17:27:35.606Z",
     "ctime": "2026-06-26T17:27:14.602Z"
+  },
+  {
+    "name": "signals-01-serpent",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-26T22:54:26.636Z",
+    "ctime": "2026-06-26T22:53:14.200Z"
   }
 ]
