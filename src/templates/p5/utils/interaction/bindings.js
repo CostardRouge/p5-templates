@@ -124,7 +124,9 @@ export function applyCurve(
 const GENERATOR_SOURCES = new Set( [
   "oscillator",
   "ramp",
-  "sequence"
+  "sequence",
+  "noise",
+  "random"
 ] );
 
 export function isGenerator( source ) {
@@ -133,6 +135,15 @@ export function isGenerator( source ) {
 
 function frac( x ) {
   return x - Math.floor( x );
+}
+
+// Deterministic pseudo-random in [0, 1) from a number — the classic sin-hash.
+// Pure (no Math.random) so noise/random generators stay recording-safe: the
+// same progression always yields the same value.
+function hash01( n ) {
+  const s = Math.sin( n * 127.1 + 311.7 ) * 43758.5453123;
+
+  return s - Math.floor( s );
 }
 
 // Wave shapes over one cycle (phase → 0..1). sine/triangle sweep 0→1→0; square
@@ -283,6 +294,56 @@ export function sequenceValue(
   return max === min ? 0 : clamp01( ( value - min ) / ( max - min ) );
 }
 
+// Noise: smooth 1-D value noise over progression — an organic wander, the
+// classic alternative to an oscillator. `speed` sets the wander rate, `seed`
+// offsets into the noise field. Smoothstep-interpolated for a calm curve.
+export function noiseValue(
+  noise, context
+) {
+  const o = noise ?? {};
+  const x = progressionOf( context ) * num(
+    o.speed,
+    1
+  ) + num(
+    o.seed,
+    0
+  );
+  const i = Math.floor( x );
+  const f = x - i;
+  const u = f * f * ( 3 - 2 * f );
+
+  return clamp01( lerp(
+    hash01( i ),
+    hash01( i + 1 ),
+    u
+  ) );
+}
+
+// Random: sample-and-hold. The loop is divided into `steps` slots; each slot
+// holds a stable pseudo-random value (deterministic from its index + `seed`),
+// giving stepped generative variation. `phase` shifts the slot boundaries.
+export function randomValue(
+  rnd, context
+) {
+  const o = rnd ?? {};
+  const steps = Math.max(
+    1,
+    Math.round( num(
+      o.steps,
+      4
+    ) )
+  );
+  const index = Math.floor( progressionOf( context ) * steps + num(
+    o.phase,
+    0
+  ) );
+
+  return clamp01( hash01( index + num(
+    o.seed,
+    0
+  ) * 1000 + 0.5 ) );
+}
+
 // ── Scalar resolution (input projection or generator) ───────────────────────
 // The raw 0..1 signal for a continuous binding, before invert/curve. For input
 // sources it projects the (already looked-up) channel; for generators it
@@ -318,6 +379,20 @@ function rawScalar(
         mapping.max,
         1
       )
+    );
+  }
+
+  if ( binding.source === "noise" ) {
+    return noiseValue(
+      binding.noise,
+      context
+    );
+  }
+
+  if ( binding.source === "random" ) {
+    return randomValue(
+      binding.random,
+      context
     );
   }
 

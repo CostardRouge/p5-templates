@@ -17,6 +17,8 @@ import {
   oscillatorValue,
   rampValue,
   sequenceValue,
+  noiseValue,
+  randomValue,
   shapedScalar,
   computeBindingSignals,
   isGenerator
@@ -889,6 +891,100 @@ describe(
           0,
           100
         ) ).toBe( 0 );
+      }
+    );
+
+    it(
+      "noise is deterministic, in 0..1, and smooth",
+      () => {
+        const a = noiseValue(
+          {
+            speed: 2,
+            seed: 5
+          },
+          {
+            progression: 0.3
+          }
+        );
+        const aAgain = noiseValue(
+          {
+            speed: 2,
+            seed: 5
+          },
+          {
+            progression: 0.3
+          }
+        );
+
+        expect( a ).toBe( aAgain ); // deterministic
+        expect( a ).toBeGreaterThanOrEqual( 0 );
+        expect( a ).toBeLessThanOrEqual( 1 );
+
+        // A tiny progression step moves the value only a little (smooth).
+        const b = noiseValue(
+          {
+            speed: 2,
+            seed: 5
+          },
+          {
+            progression: 0.301
+          }
+        );
+
+        expect( Math.abs( b - a ) ).toBeLessThan( 0.1 );
+      }
+    );
+
+    it(
+      "random holds within a step and is deterministic",
+      () => {
+        const rnd = {
+          steps: 4,
+          seed: 1
+        };
+
+        // progression 0.1 and 0.2 are both in slot 0 → identical (held)
+        expect( randomValue(
+          rnd,
+          {
+            progression: 0.1
+          }
+        ) ).toBe( randomValue(
+          rnd,
+          {
+            progression: 0.2
+          }
+        ) );
+
+        // a value in 0..1
+        const v = randomValue(
+          rnd,
+          {
+            progression: 0.1
+          }
+        );
+
+        expect( v ).toBeGreaterThanOrEqual( 0 );
+        expect( v ).toBeLessThanOrEqual( 1 );
+
+        // different seed → (almost surely) different value in the same slot
+        expect( randomValue(
+          {
+            steps: 4,
+            seed: 2
+          },
+          {
+            progression: 0.1
+          }
+        ) ).not.toBe( v );
+      }
+    );
+
+    it(
+      "noise / random are registered as generators",
+      () => {
+        expect( isGenerator( "noise" ) ).toBe( true );
+        expect( isGenerator( "random" ) ).toBe( true );
       }
     );
 
