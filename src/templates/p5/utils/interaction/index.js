@@ -247,6 +247,53 @@ const _audioPitchState = {};
 const _audioVoiceState = {};
 const _audioSpectralState = {};
 
+// ── LiDAR (remote iPhone depth over WebSocket) state ───────────────────────
+// iOS Safari cannot read the LiDAR itself, so capture always happens in a
+// native source (an iOS app, or a USB/desktop bridge); this layer is only the
+// receiver. The sketch's browser opens a WebSocket to that source and decodes
+// downsampled depth frames. The wire format is source-agnostic — a compact
+// binary frame (preferred) or a JSON grid (easy to emit / debug); see the
+// _parseLidar* helpers. Reduced to "nearest point" pointers for the pointer
+// API, with the full grid exposed via getLidar().
+let _lidarInitialized = false;
+let _lidarSocket = null;
+let _lidarUrl = "";
+let _lidarReconnectTimer = null;
+const _lidar = {
+  enabled: false,
+  connected: false,
+  width: 0,
+  height: 0,
+  min: 0,
+  max: 0,
+  depth: null, // Float32Array, row-major, metres (0 / NaN = no reading)
+  confidence: null, // Uint8Array (0..2) or null
+  nearest: null, // { x, y, z, depth } — closest in-band cell, canvas space + m
+  frames: 0,
+  receivedAt: 0
+};
+
+// ── Mac lid-angle sensor (WebHID) state ────────────────────────────────────
+// Apple ships a hidden HID sensor reporting the screen-hinge angle. It is
+// readable straight from the browser via WebHID (Chrome/Edge desktop, Apple
+// Silicon) — no native helper. Vendor 0x05AC, product 0x8104, usagePage 0x20,
+// usage 0x8A; the angle is a uint16 LE in degrees inside Feature Report 1
+// (after the report-id byte). requestDevice() needs a user gesture, so the
+// first grant is armed on a one-shot tap like the iOS gyroscope permission.
+const LID_ANGLE_VENDOR = 0x05ac;
+const LID_ANGLE_USAGE_PAGE = 0x20;
+const LID_ANGLE_USAGE = 0x8a;
+const LID_ANGLE_REPORT_ID = 1;
+const LID_ANGLE_POLL_MS = 60;
+let _lidAngleInitialized = false;
+let _lidAngleDevice = null;
+let _lidAnglePollTimer = null;
+let _lidAnglePermissionListener = null;
+const _lidAngle = {
+  degrees: null,
+  connected: false
+};
+
 // Vision lazy-init state: the task/camera signature currently initialized, plus
 // an in-flight guard so we never kick off two mediapipe initializations at once.
 let _visionSignature = "";
@@ -585,6 +632,409 @@ async function _initAudio( opts ) {
   }
 }
 
+// ── LiDAR helpers ──────────────────────────────────────────────────────────
+
+function _resetLidarState() {
+  _lidar.connected = false;
+  _lidar.width = 0;
+  _lidar.height = 0;
+  _lidar.min = 0;
+  _lidar.max = 0;
+  _lidar.depth = null;
+  _lidar.confidence = null;
+  _lidar.nearest = null;
+  _lidar.frames = 0;
+  _lidar.receivedAt = 0;
+}
+
+function _closeLidar() {
+  if ( _lidarReconnectTimer ) {
+    clearTimeout( _lidarReconnectTimer );
+    _lidarReconnectTimer = null;
+  }
+
+  if ( _lidarSocket ) {
+    // Drop handlers first so closing doesn't schedule a reconnect.
+    _lidarSocket.onopen = null;
+    _lidarSocket.onmessage = null;
+    _lidarSocket.onerror = null;
+    _lidarSocket.onclose = null;
+
+    try {
+      _lidarSocket.close();
+    } catch {
+      // already closing / closed
+    }
+
+    _lidarSocket = null;
+  }
+
+  _resetLidarState();
+}
+
+function _storeLidarFrame(
+  width, height, min, max, depth, confidence
+) {
+  _lidar.width = width;
+  _lidar.height = height;
+  _lidar.min = min;
+  _lidar.max = max;
+  _lidar.depth = depth;
+  _lidar.confidence = confidence;
+  _lidar.frames++;
+  _lidar.receivedAt = typeof performance !== "undefined"
+    ? performance.now()
+    : Date.now();
+}
+
+// Decode a binary depth frame:
+//   uint16 magic 0x4C44 ("LD") · uint8 version · uint8 flags (bit0 = confidence)
+//   uint16 width · uint16 height · float32 min · float32 max
+//   float32[w*h] depth (metres) · uint8[w*h] confidence (when the flag is set)
+// All little-endian. Returns true on a valid frame.
+function _parseLidarBinary( buffer ) {
+  const view = new DataView( buffer );
+
+  if ( view.byteLength < 16 || view.getUint16(
+    0,
+    true
+  ) !== 0x4c44 ) {
+    return false;
+  }
+
+  const flags = view.getUint8( 3 );
+  const width = view.getUint16(
+    4,
+    true
+  );
+  const height = view.getUint16(
+    6,
+    true
+  );
+  const min = view.getFloat32(
+    8,
+    true
+  );
+  const max = view.getFloat32(
+    12,
+    true
+  );
+  const count = width * height;
+  const depthOffset = 16;
+  const needed = depthOffset + count * 4 + ( flags & 1 ? count : 0 );
+
+  if ( !count || view.byteLength < needed ) {
+    return false;
+  }
+
+  const depth = new Float32Array( count );
+
+  for ( let i = 0; i < count; i++ ) {
+    depth[ i ] = view.getFloat32(
+      depthOffset + i * 4,
+      true
+    );
+  }
+
+  let confidence = null;
+
+  if ( flags & 1 ) {
+    confidence = new Uint8Array( count );
+
+    const confOffset = depthOffset + count * 4;
+
+    for ( let i = 0; i < count; i++ ) {
+      confidence[ i ] = view.getUint8( confOffset + i );
+    }
+  }
+
+  _storeLidarFrame(
+    width,
+    height,
+    min,
+    max,
+    depth,
+    confidence
+  );
+
+  return true;
+}
+
+// Decode a JSON depth frame: { width, height, min?, max?, data:[…], confidence?:[…] }.
+function _parseLidarJson( text ) {
+  let msg;
+
+  try {
+    msg = JSON.parse( text );
+  } catch {
+    return false;
+  }
+
+  const data = msg?.data ?? msg?.depth;
+
+  if ( !Array.isArray( data ) || !msg.width || !msg.height ) {
+    return false;
+  }
+
+  const count = msg.width * msg.height;
+
+  if ( data.length < count ) {
+    return false;
+  }
+
+  const depth = Float32Array.from( data.slice(
+    0,
+    count
+  ) );
+  const confidence = Array.isArray( msg.confidence )
+    ? Uint8Array.from( msg.confidence.slice(
+      0,
+      count
+    ) )
+    : null;
+
+  _storeLidarFrame(
+    msg.width,
+    msg.height,
+    msg.min ?? 0,
+    msg.max ?? 0,
+    depth,
+    confidence
+  );
+
+  return true;
+}
+
+function _onLidarMessage( event ) {
+  if ( typeof event.data === "string" ) {
+    _parseLidarJson( event.data );
+  } else if ( event.data instanceof ArrayBuffer ) {
+    _parseLidarBinary( event.data );
+  }
+}
+
+// Open (or reopen) the WebSocket to the depth source. Safe to call every frame:
+// it no-ops while already connected to the requested url. Mixed-content note:
+// an https:// page cannot open a ws:// socket — view the sketch over
+// http://localhost (dev) or expose the source over wss:// for production.
+function _initLidar( opts ) {
+  const url = opts.lidar?.url || "";
+
+  // Already settled for this endpoint (connected, or intentionally empty).
+  if ( _lidarInitialized && _lidarUrl === url && ( _lidarSocket || !url ) ) {
+    return;
+  }
+
+  // URL changed at runtime → drop the previous socket before opening a new one.
+  _closeLidar();
+
+  _lidarInitialized = true;
+  _lidarUrl = url;
+
+  if ( !url || typeof WebSocket === "undefined" ) {
+    return;
+  }
+
+  let socket;
+
+  try {
+    socket = new WebSocket( url );
+  } catch {
+    // Malformed url or blocked (e.g. ws:// from https://) — wait for a url
+    // change rather than spinning a reconnect loop that can never succeed.
+    return;
+  }
+
+  socket.binaryType = "arraybuffer";
+  _lidarSocket = socket;
+
+  socket.onopen = () => {
+    _lidar.connected = true;
+  };
+
+  socket.onmessage = _onLidarMessage;
+
+  socket.onerror = () => {
+    // onclose fires next and owns the reconnect.
+  };
+
+  socket.onclose = () => {
+    _lidar.connected = false;
+
+    // Reconnect only while this is still the active socket (dispose / url change
+    // nulls _lidarSocket first, which suppresses the retry).
+    if ( _lidarSocket === socket && _lidarInitialized ) {
+      _lidarSocket = null;
+      _lidarReconnectTimer = setTimeout(
+        () => {
+          _lidarReconnectTimer = null;
+
+          if ( _lidarInitialized && _lidarUrl === url ) {
+            _initLidar( {
+              lidar: {
+                url
+              }
+            } );
+          }
+        },
+        2000
+      );
+    }
+  };
+}
+
+// ── Mac lid-angle (WebHID) helpers ─────────────────────────────────────────
+
+// Read Feature Report 1 and cache the hinge angle. WebHID hands back a DataView
+// whose first byte is the report id, so the uint16 LE angle sits at offset 1.
+async function _pollLidAngle() {
+  if ( !_lidAngleDevice || !_lidAngleDevice.opened ) {
+    return;
+  }
+
+  try {
+    const report = await _lidAngleDevice.receiveFeatureReport( LID_ANGLE_REPORT_ID );
+
+    if ( report && report.byteLength >= 3 ) {
+      _lidAngle.degrees = report.getUint16(
+        1,
+        true
+      );
+      _lidAngle.connected = true;
+    }
+  } catch {
+    // Transient read failure — keep the last angle and try again next tick.
+  }
+}
+
+function _startLidAnglePolling() {
+  if ( _lidAnglePollTimer || typeof window === "undefined" ) {
+    return;
+  }
+
+  _lidAnglePollTimer = window.setInterval(
+    _pollLidAngle,
+    LID_ANGLE_POLL_MS
+  );
+}
+
+async function _openLidAngleDevice( device ) {
+  if ( !device ) {
+    return;
+  }
+
+  try {
+    if ( !device.opened ) {
+      await device.open();
+    }
+
+    _lidAngleDevice = device;
+    _startLidAnglePolling();
+  } catch {
+    // Could not open (already claimed, permission revoked) — stay disconnected.
+  }
+}
+
+function _removeLidAnglePermissionListener() {
+  if ( !_lidAnglePermissionListener || typeof window === "undefined" ) {
+    return;
+  }
+
+  window.removeEventListener(
+    "click",
+    _lidAnglePermissionListener
+  );
+  window.removeEventListener(
+    "touchend",
+    _lidAnglePermissionListener
+  );
+  _lidAnglePermissionListener = null;
+}
+
+function _lidAngleMatches( device ) {
+  return device.vendorId === LID_ANGLE_VENDOR &&
+    ( device.collections ?? [] ).some( ( c ) =>
+      c.usagePage === LID_ANGLE_USAGE_PAGE && c.usage === LID_ANGLE_USAGE );
+}
+
+// Lazily wire WebHID the first time the collector runs. Already-granted devices
+// (navigator.hid.getDevices) open immediately; otherwise requestDevice() must
+// run from a user gesture, so arm a one-shot tap/click that prompts for it.
+function _initLidAngle() {
+  if ( _lidAngleInitialized ) {
+    return;
+  }
+
+  _lidAngleInitialized = true;
+
+  if ( typeof navigator === "undefined" || !navigator.hid ) {
+    return; // WebHID unavailable (non-Chromium / insecure context)
+  }
+
+  const filters = [
+    {
+      vendorId: LID_ANGLE_VENDOR,
+      usagePage: LID_ANGLE_USAGE_PAGE,
+      usage: LID_ANGLE_USAGE
+    }
+  ];
+
+  navigator.hid.getDevices()
+    .then( ( devices ) => {
+      const granted = devices.find( _lidAngleMatches );
+
+      if ( granted ) {
+        _openLidAngleDevice( granted );
+
+        return;
+      }
+
+      // Not granted yet — prompt on the next user gesture.
+      const requestOnGesture = () => {
+        _removeLidAnglePermissionListener();
+        navigator.hid.requestDevice( {
+          filters
+        } )
+          .then( ( picked ) => _openLidAngleDevice( picked?.[ 0 ] ) )
+          .catch( () => {} );
+      };
+
+      _lidAnglePermissionListener = requestOnGesture;
+      window.addEventListener(
+        "click",
+        requestOnGesture
+      );
+      window.addEventListener(
+        "touchend",
+        requestOnGesture
+      );
+    } )
+    .catch( () => {} );
+}
+
+function _disposeLidAngle() {
+  _removeLidAnglePermissionListener();
+
+  if ( _lidAnglePollTimer && typeof window !== "undefined" ) {
+    window.clearInterval( _lidAnglePollTimer );
+    _lidAnglePollTimer = null;
+  }
+
+  if ( _lidAngleDevice ) {
+    try {
+      _lidAngleDevice.close();
+    } catch {
+      // ignore close failures on teardown
+    }
+
+    _lidAngleDevice = null;
+  }
+
+  _lidAngleInitialized = false;
+  _lidAngle.degrees = null;
+  _lidAngle.connected = false;
+}
+
 // ── Public API ─────────────────────────────────────────────────────────────
 
 /**
@@ -696,6 +1146,14 @@ export async function initInteraction( opts = {} ) {
   _audioInitialized = false;
   _audioDeviceId = "";
 
+  // ── LiDAR reset (lazy connect triggered by _collectLidar) ────────────────
+  _closeLidar();
+  _lidarInitialized = false;
+  _lidarUrl = "";
+
+  // ── Mac lid-angle reset (lazy init triggered by _collectLidAngle) ────────
+  _disposeLidAngle();
+
   // ── Vision readiness signal ──────────────────────────────────────────────
   // Published so the headless capture pipeline can await a warmed-up vision
   // source before frame 0 (see prepareCapture). Live preview deliberately does
@@ -772,6 +1230,14 @@ export function disposeInteraction() {
   _audioInitialized = false;
   _audioDeviceId = "";
 
+  // LiDAR — close the WebSocket so we stop receiving depth frames.
+  _closeLidar();
+  _lidarInitialized = false;
+  _lidarUrl = "";
+
+  // Mac lid-angle — stop polling and release the HID device.
+  _disposeLidAngle();
+
   // Vision / webcam / inference processor. Full dispose (not just the webcam)
   // so MediaPipe task memory and the worker don't leak across sketch switches.
   disposeMediapipe();
@@ -839,6 +1305,14 @@ const _FLAT_COLLECTORS = [
   [
     "joypad",
     _collectJoypad
+  ],
+  [
+    "lidar",
+    _collectLidar
+  ],
+  [
+    "lidAngle",
+    _collectLidAngle
   ]
 ];
 
@@ -1030,6 +1504,14 @@ export function getPointerGroups( opts ) {
   addPerPoint(
     "joypad",
     _collectJoypad
+  );
+  addPerPoint(
+    "lidar",
+    _collectLidar
+  );
+  addPerPoint(
+    "lidAngle",
+    _collectLidAngle
   );
 
   return _smoothGroups(
@@ -2465,6 +2947,29 @@ export function getAudio() {
   return _audioFeatures;
 }
 
+/**
+ * Snapshot of the latest LiDAR depth frame received over WebSocket. Returns the
+ * same live object every call (mutated in place). `depth` is a row-major
+ * Float32Array of metres (0 = no reading); `nearest` is the closest in-band
+ * cell mapped to canvas space + metres. Empty until a source connects.
+ *
+ * @returns {object} { enabled, connected, width, height, min, max, depth, confidence, nearest, frames, receivedAt }
+ */
+export function getLidar() {
+  return _lidar;
+}
+
+/**
+ * Latest Mac lid (screen-hinge) angle in degrees, read over WebHID, or
+ * `degrees: null` until a device is granted and opened. Chrome/Edge desktop on
+ * Apple Silicon only.
+ *
+ * @returns {object} { degrees, connected }
+ */
+export function getLidAngle() {
+  return _lidAngle;
+}
+
 function _collectJoypad(
   opts, p, out
 ) {
@@ -2527,4 +3032,161 @@ function _collectJoypad(
     ) );
     added++;
   }
+}
+
+// The remote depth grid is camera-space (column → x, row → y). Keep the
+// `count` nearest valid cells inside the [near, far] band and emit them as
+// pointers — like fingertips, but driven by whatever is closest to the phone.
+// z carries the normalised depth (0 = near, 1 = far) so 3D-aware sketches can
+// read v.z while the x/y still drive the standard 2D pointer overlay.
+function _collectLidar(
+  opts, p, out
+) {
+  const lidar = opts.lidar;
+
+  if ( !lidar?.enabled ) {
+    // Toggled off: release the socket so we stop holding the LAN connection.
+    if ( _lidarInitialized ) {
+      _closeLidar();
+      _lidarInitialized = false;
+      _lidarUrl = "";
+    }
+
+    _lidar.enabled = false;
+
+    return;
+  }
+
+  _lidar.enabled = true;
+
+  // Lazy connect, and reconnect when the url changes at runtime.
+  if ( !_lidarInitialized || _lidarUrl !== ( lidar.url || "" ) ) {
+    _initLidar( opts );
+  }
+
+  const depth = _lidar.depth;
+
+  if ( !depth || !_lidar.width || !_lidar.height ) {
+    _lidar.nearest = null;
+
+    return;
+  }
+
+  const w = _lidar.width;
+  const h = _lidar.height;
+  const flip = lidar.flip ?? true;
+  const count = Math.max(
+    1,
+    lidar.count ?? 5
+  );
+  const near = lidar.near ?? ( _lidar.min || 0.2 );
+  const far = lidar.far ?? ( _lidar.max || 4 );
+  const minConf = lidar.minConfidence ?? 0;
+  const conf = _lidar.confidence;
+
+  // Collect valid in-band cells, then keep the nearest `count`. A small grid
+  // (e.g. 32×24 ≈ 768 cells) keeps this comfortably under one frame.
+  const cells = [];
+
+  for ( let i = 0; i < depth.length; i++ ) {
+    const d = depth[ i ];
+
+    if ( !( d > 0 ) || d < near || d > far ) {
+      continue;
+    }
+
+    if ( conf && conf[ i ] < minConf ) {
+      continue;
+    }
+
+    cells.push( {
+      i,
+      d
+    } );
+  }
+
+  cells.sort( (
+    a, b
+  ) => a.d - b.d );
+
+  const limit = Math.min(
+    count,
+    cells.length
+  );
+  let nearest = null;
+
+  for ( let n = 0; n < limit; n++ ) {
+    const {
+      i, d
+    } = cells[ n ];
+    const col = i % w;
+    const row = Math.floor( i / w );
+    const nx = ( col + 0.5 ) / w;
+    const z = far > near
+      ? p.constrain(
+        ( d - near ) / ( far - near ),
+        0,
+        1
+      )
+      : 0;
+    const vector = p.createVector(
+      ( flip ? 1 - nx : nx ) * p.width,
+      ( ( row + 0.5 ) / h ) * p.height,
+      z
+    );
+
+    out.push( vector );
+
+    if ( n === 0 ) {
+      nearest = {
+        x: vector.x,
+        y: vector.y,
+        z,
+        depth: d
+      };
+    }
+  }
+
+  _lidar.nearest = nearest;
+}
+
+// The lid (screen-hinge) angle is a single scalar; map it onto the chosen axis
+// while the other axis stays centred — same spirit as the gyroscope collector.
+function _collectLidAngle(
+  opts, p, out
+) {
+  const lid = opts.lidAngle;
+
+  if ( !lid?.enabled ) {
+    return;
+  }
+
+  if ( !_lidAngleInitialized ) {
+    _initLidAngle();
+  }
+
+  if ( _lidAngle.degrees === null ) {
+    return;
+  }
+
+  const minAngle = lid.minAngle ?? 0;
+  const maxAngle = lid.maxAngle ?? 135;
+  const ox = lid.offset?.x ?? 0;
+  const oy = lid.offset?.y ?? 0;
+  const t = p.constrain(
+    p.map(
+      _lidAngle.degrees,
+      minAngle,
+      maxAngle,
+      0,
+      1
+    ),
+    0,
+    1
+  );
+
+  out.push( p.createVector(
+    ( lid.axis === "y" ? 0.5 : t ) * p.width + ox,
+    ( lid.axis === "y" ? t : 0.5 ) * p.height + oy
+  ) );
 }

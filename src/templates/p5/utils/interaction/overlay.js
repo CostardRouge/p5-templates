@@ -81,7 +81,17 @@ export const INTERACTION_SOURCE_COLORS = {
     77,
     182,
     172
-  ] // teal-green
+  ], // teal-green
+  lidar: [
+    124,
+    77,
+    255
+  ], // deep purple
+  lidAngle: [
+    255,
+    171,
+    64
+  ] // amber
 };
 
 export const INTERACTION_SOURCE_LABELS = {
@@ -96,7 +106,9 @@ export const INTERACTION_SOURCE_LABELS = {
   gyroscope: "Gyroscope",
   midi: "MIDI",
   audio: "Audio (Mic)",
-  joypad: "Joypad / Gamepad"
+  joypad: "Joypad / Gamepad",
+  lidar: "LiDAR (iPhone)",
+  lidAngle: "Mac Lid Angle"
 };
 
 const DEFAULT_COLOR = [
