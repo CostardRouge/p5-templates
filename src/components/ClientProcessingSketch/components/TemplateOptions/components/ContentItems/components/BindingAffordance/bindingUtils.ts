@@ -50,6 +50,15 @@ export type Binding = {
     easing?: string;
     hold?: number;
   };
+  noise?: {
+    speed?: number;
+    seed?: number;
+  };
+  random?: {
+    steps?: number;
+    seed?: number;
+    phase?: number;
+  };
 };
 
 type ChannelDescriptor = {
@@ -289,7 +298,13 @@ export function makeDefaultBinding(
 // sketch's animation progression (oscillator, ramp). New categories — API,
 // date, … — slot in here as another branch.
 
-export type SourceCategory = "input" | "oscillator" | "ramp" | "sequence";
+export type SourceCategory =
+  | "input"
+  | "oscillator"
+  | "ramp"
+  | "sequence"
+  | "noise"
+  | "random";
 
 export const SOURCE_CATEGORIES: Array<{
   value: SourceCategory;
@@ -310,20 +325,26 @@ export const SOURCE_CATEGORIES: Array<{
   {
     value: "sequence",
     label: "Sequence"
+  },
+  {
+    value: "noise",
+    label: "Noise"
+  },
+  {
+    value: "random",
+    label: "Random"
   }
 ];
 
 export function sourceCategory( source: string | undefined ): SourceCategory {
-  if ( source === "oscillator" ) {
-    return "oscillator";
-  }
-
-  if ( source === "ramp" ) {
-    return "ramp";
-  }
-
-  if ( source === "sequence" ) {
-    return "sequence";
+  if (
+    source === "oscillator" ||
+    source === "ramp" ||
+    source === "sequence" ||
+    source === "noise" ||
+    source === "random"
+  ) {
+    return source;
   }
 
   return "input";
@@ -384,3 +405,14 @@ export function defaultSequence( stops: number[] ) {
     hold: 0
   };
 }
+
+export const DEFAULT_NOISE = {
+  speed: 1,
+  seed: 0
+};
+
+export const DEFAULT_RANDOM = {
+  steps: 4,
+  seed: 0,
+  phase: 0
+};

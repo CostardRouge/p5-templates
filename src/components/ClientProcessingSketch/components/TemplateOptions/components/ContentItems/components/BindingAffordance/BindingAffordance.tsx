@@ -30,8 +30,10 @@ import {
   channelSourceOptions,
   decodeSource,
   defaultSequence,
+  DEFAULT_NOISE,
   DEFAULT_OSCILLATOR,
   DEFAULT_RAMP,
+  DEFAULT_RANDOM,
   encodeSource,
   getSketchScope,
   makeDefaultBinding,
@@ -200,6 +202,14 @@ export default function BindingAffordance( {
         domain.min,
         domain.max
       ] );
+    } else if ( binding.source === "noise" ) {
+      next.noise = {
+        ...DEFAULT_NOISE
+      };
+    } else if ( binding.source === "random" ) {
+      next.random = {
+        ...DEFAULT_RANDOM
+      };
     }
 
     writeBindings( list.map( ( b ) => ( b.target === target ? next : b ) ) );
@@ -250,6 +260,34 @@ export default function BindingAffordance( {
             domain.min,
             domain.max
           ] )
+        );
+      }
+    } else if ( next === "noise" ) {
+      setField(
+        "source",
+        "noise"
+      );
+
+      if ( !binding?.noise ) {
+        setField(
+          "noise",
+          {
+            ...DEFAULT_NOISE
+          }
+        );
+      }
+    } else if ( next === "random" ) {
+      setField(
+        "source",
+        "random"
+      );
+
+      if ( !binding?.random ) {
+        setField(
+          "random",
+          {
+            ...DEFAULT_RANDOM
+          }
         );
       }
     } else {
@@ -623,6 +661,76 @@ export default function BindingAffordance( {
                       />
                     </>
                   )}
+                </>
+              )}
+
+              {category === "noise" && (
+                <>
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.noise.speed` }
+                    label="Speed"
+                    min={ 0.1 }
+                    max={ 8 }
+                    step={ 0.1 }
+                    { ...resetFor(
+                      "noise.speed",
+                      binding.noise?.speed,
+                      DEFAULT_NOISE.speed
+                    ) }
+                  />
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.noise.seed` }
+                    label="Seed"
+                    min={ 0 }
+                    max={ 999 }
+                    step={ 1 }
+                    { ...resetFor(
+                      "noise.seed",
+                      binding.noise?.seed,
+                      DEFAULT_NOISE.seed
+                    ) }
+                  />
+                </>
+              )}
+
+              {category === "random" && (
+                <>
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.random.steps` }
+                    label="Steps"
+                    min={ 1 }
+                    max={ 16 }
+                    step={ 1 }
+                    { ...resetFor(
+                      "random.steps",
+                      binding.random?.steps,
+                      DEFAULT_RANDOM.steps
+                    ) }
+                  />
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.random.seed` }
+                    label="Seed"
+                    min={ 0 }
+                    max={ 999 }
+                    step={ 1 }
+                    { ...resetFor(
+                      "random.seed",
+                      binding.random?.seed,
+                      DEFAULT_RANDOM.seed
+                    ) }
+                  />
+                  <ControlledSliderInput
+                    name={ `${ bindingPath }.random.phase` }
+                    label="Phase"
+                    min={ 0 }
+                    max={ 1 }
+                    step={ 0.01 }
+                    { ...resetFor(
+                      "random.phase",
+                      binding.random?.phase,
+                      DEFAULT_RANDOM.phase
+                    ) }
+                  />
                 </>
               )}
 
