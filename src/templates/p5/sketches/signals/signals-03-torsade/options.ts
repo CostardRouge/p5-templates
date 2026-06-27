@@ -21,15 +21,15 @@ export const formValues = {
     axis: "vertical"
   },
   spiral: {
-    lerpSteps: 220,
-    waveAmplitudeDivisor: 3.0,
-    circleSize: 180,
-    cadenceMin: -3,
-    cadenceMax: 3
+    lerpSteps: 110,
+    waveAmplitudeDivisor: 8.9,
+    circleSize: 122,
+    cadenceMin: -6.1000000000000005,
+    cadenceMax: 6.300000000000001
   },
   motion: {
     cadenceSpeed: 1,
-    cadenceIndexScale: 0
+    cadenceIndexScale: 1.1500000000000001
   },
   colors: {
     hueSpeed: 1,
