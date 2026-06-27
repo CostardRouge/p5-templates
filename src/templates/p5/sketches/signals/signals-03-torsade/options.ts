@@ -15,17 +15,17 @@ const AXIS_OPTIONS = [
 export const formValues = {
   timeScale: 1,
   layout: {
-    xCount: 1,
+    xCount: 3,
     yCount: 1,
     sizeDivisor: 3.5,
     axis: "vertical"
   },
   spiral: {
-    lerpSteps: 110,
-    waveAmplitudeDivisor: 8.9,
+    lerpSteps: 320,
+    waveAmplitudeDivisor: 3.8,
     circleSize: 122,
-    cadenceMin: -6.1000000000000005,
-    cadenceMax: 6.300000000000001
+    cadenceMin: -5.9,
+    cadenceMax: 5
   },
   motion: {
     cadenceSpeed: 1,
@@ -33,12 +33,12 @@ export const formValues = {
   },
   colors: {
     hueSpeed: 1,
-    hueSpread: 1,
-    huePhase: 0,
+    hueSpread: 2,
+    huePhase: 0.05,
     indexHueShift: 1,
-    shimmer: 0.25,
-    saturation: 0.24,
-    brightness: 1.1
+    shimmer: 3.6,
+    saturation: 0.31,
+    brightness: 1.21
   },
   hud: {
     show: true,
