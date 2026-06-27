@@ -3,27 +3,27 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   shape: {
-    quality: 520,
-    verticalMargin: 0.12,
-    amplitude: 0.30,
+    quality: 1172,
+    verticalMargin: 0.19,
+    amplitude: 0.205,
     frequency: 2,
-    breath: 0.18
+    breath: 0.06
   },
   lines: {
-    maxCount: 3,
-    changeOverTime: true,
-    length: 0.07,
-    weight: 0.022,
-    angleSpan: Math.PI
+    maxCount: 4.3,
+    changeOverTime: false,
+    length: 0.091,
+    weight: 0.038,
+    angleSpan: 3.78
   },
   palette: {
-    saturation: 0.38,
-    hueSpeed: 1,
-    hueSpread: 1.4
+    saturation: 0.75,
+    hueSpeed: 5,
+    hueSpread: 2.25
   },
   rotation: {
-    count: 1,
-    speed: 1
+    count: -3.15,
+    speed: 0
   },
   hud: {
     show: true,

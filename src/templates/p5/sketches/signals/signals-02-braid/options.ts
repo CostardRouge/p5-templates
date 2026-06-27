@@ -4,10 +4,10 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 export const formValues = {
   timeScale: 1,
   braid: {
-    pipeCount: 3,
-    pipeRadius: 0.13,
+    pipeCount: 6,
+    pipeRadius: 0.32,
     braidRadius: 0.58,
-    twist: 4.0,
+    twist: 0.49,
     spin: 1,
     radiusPulse: 0.16,
     pulseFreq: 0.8,
