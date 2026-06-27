@@ -10,6 +10,8 @@ import {
   _layouts
 } from "./layouts";
 
+import getMontageSketch from "./morph/index.js";
+
 import {
   coerceFramerate
 } from "../framerate.js";
@@ -211,6 +213,22 @@ const slides = {
   getSketchSettings( optionsTarget ) {
     const globalSketch = optionsTarget?.sketch || {};
     const currentSlide = this.current;
+
+    // Montage slide: morph the OTHER slides' params instead of using this
+    // slide's own. Single injection point — the running sketch and any
+    // specs/HUD overlay that reads options.sketch both see interpolated values.
+    if ( currentSlide?.transition?.enabled ) {
+      const montage = getMontageSketch(
+        globalSketch,
+        currentSlide,
+        optionsTarget?.slides || []
+      );
+
+      if ( montage ) {
+        return montage;
+      }
+    }
+
     const slideSketch = currentSlide?.sketch || {};
 
     return {

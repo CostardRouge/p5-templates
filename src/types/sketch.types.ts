@@ -5,6 +5,7 @@ import {
 import {
   DURATION_DEFAULT, FRAMERATE_DEFAULT
 } from "@/lib/animationConfig";
+import makeSlideId from "@/utils/makeSlideId";
 
 const RGB = z.tuple( [
   z.number(),
@@ -809,14 +810,67 @@ export const SketchAnimationSchema = z.object( {
     .catch( DURATION_DEFAULT )
 } );
 
+/* ---------------- montage / transition slide -------------------- */
+
+export const TRANSITION_SOURCE_MODES = [
+  "all",
+  "selected"
+] as const;
+
+export const TRANSITION_LOOP_MODES = [
+  "cyclic",
+  "pingpong",
+  "once"
+] as const;
+
+// A "montage" slide morphs the sketch parameters of several OTHER slides into
+// one another over its own duration, in a loop. Only the sources' `sketch`
+// params are interpolated — the montage keeps its own size/animation, so source
+// slides are assumed canvas-compatible.
+export const SlideTransitionSchema = z.object( {
+  // Master switch. A slide behaves as a montage only when enabled === true.
+  enabled: z.boolean().default( false ),
+
+  // "all" = every other (non-montage) slide in deck order.
+  // "selected" = only the slides in `slideIds`, in that order.
+  sources: z.enum( TRANSITION_SOURCE_MODES ).default( "all" ),
+
+  // Persisted SlideSchema.id values; order = montage order. Self / unknown ids
+  // are filtered at runtime. Ignored when sources === "all".
+  slideIds: z.array( z.string() ).default( [] ),
+
+  // Easing key from easing.js (e.g. "linear", "easeInOutCubic").
+  easing: z.string().default( "easeInOutCubic" ),
+
+  // Auto-fit hold: fraction [0..0.9] of each segment spent static on the source
+  // before the morph to the next begins. 0 = continuous morph.
+  holdRatio: z.number().min( 0 )
+    .max( 0.9 )
+    .default( 0.3 ),
+
+  loop: z.enum( TRANSITION_LOOP_MODES ).default( "cyclic" ),
+
+  // Param paths (dotted, or a leaf name like "seed") that SNAP at the segment
+  // boundary instead of interpolating — for discrete params (random seeds,
+  // enums, integer counts) or params that invalidate a heavy per-frame cache.
+  snapKeys: z.array( z.string() ).default( [
+    "seed"
+  ] )
+} );
+
 /* ---------------- slide schema (with name) ---------------------- */
 export const SlideSchema = z.object( {
+  // Persisted, durable id (see makeSlideId). Backfilled on every parse when
+  // absent, so existing decks heal automatically and montage references survive
+  // reorder / duplicate / reload.
+  id: z.string().default( () => makeSlideId() ),
   name: z.string().optional(),
   size: SketchSizeSchema.optional(),
   animation: SketchAnimationSchema.optional(),
   content: z.array( ContentItemSchema ).default( [] ),
   assets: Assets,
-  sketch: z.any().optional()
+  sketch: z.any().optional(),
+  transition: SlideTransitionSchema.optional()
 } );
 
 /* ---------------- root options.json ----------------------------- */
@@ -842,6 +896,7 @@ export const OptionsSchema = z.object( {
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type SlideOption = z.infer<typeof SlideSchema>;
+export type SlideTransitionOption = z.infer<typeof SlideTransitionSchema>;
 export type AssetsOption = z.infer<typeof Assets>;
 
 export type SketchOption = z.infer<typeof OptionsSchema>;
