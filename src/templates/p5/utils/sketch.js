@@ -3,7 +3,8 @@ import debug from "./debug.js";
 import events from "./events.js";
 import slides from "./slides/index";
 import options, {
-  registerEvents as registerOptionsEvents
+  registerEvents as registerOptionsEvents,
+  disposeInteractionOnReset
 } from "./options";
 import {
   registerAnimationBridge
@@ -424,6 +425,11 @@ const sketch = {
 
     // Reset animation time so the next sketch starts at t=0
     time.reset();
+
+    // Release the interaction handler's camera/mic/listeners before the next
+    // sketch loads (engine-managed teardown; fixes a pre-existing leak where
+    // reset never disposed interaction).
+    disposeInteractionOnReset();
 
     // Drop the interaction vision-readiness hook between sketches; interaction
     // sketches re-publish it from initInteraction().

@@ -9,9 +9,12 @@
  * vector2d channel to a scalar target.
  */
 
+// The Input source list is data-driven from the interaction handler's manifest
+// (a pure module — importing it does NOT pull the handler/MediaPipe into the
+// editor bundle). Adding a source there makes it bindable here automatically.
 import {
-  CHANNEL_DESCRIPTORS
-} from "@/p5/utils/interaction/channels.js";
+  INTERACTION_SOURCES
+} from "@/p5/utils/interaction/sources.js";
 import {
   channelVarName
 } from "@/lib/channelBridge";
@@ -77,7 +80,7 @@ export type SourceOption = {
   varName: string;
 };
 
-const DESCRIPTORS = CHANNEL_DESCRIPTORS as ChannelDescriptor[];
+const DESCRIPTORS = INTERACTION_SOURCES as ChannelDescriptor[];
 
 const PROJECTIONS = [
   {

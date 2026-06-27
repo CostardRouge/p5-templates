@@ -488,6 +488,51 @@ export function registerEvents() {
     "pre-setup",
     initializeOptionsSubscription
   );
+  events.register(
+    "pre-setup",
+    initInteractionForOptions
+  );
+}
+
+// Tracks whether the interaction handler was booted for the current sketch, so
+// dispose-on-reset only loads the (lazy) module when there's something to free.
+let _interactionInited = false;
+
+// Engine-managed interaction init: when a sketch's options carry an enabled
+// `interaction` block, boot the handler once at setup so its sources (webcam,
+// audio, gyro, touch, …) are available as binding channels with no per-sketch
+// code. The handler is imported LAZILY (never statically) to keep MediaPipe out
+// of the core module-eval chain. `initInteraction` is idempotent (re-arms
+// listeners), so it's safe alongside sketches that still call it themselves;
+// fire-and-forget so vision warm-up doesn't block setup.
+function initInteractionForOptions() {
+  try {
+    const interaction = liveSketchBase( getSketchOptions() )?.interaction;
+
+    if ( interaction && interaction.enabled !== false ) {
+      _interactionInited = true;
+      import( "./interaction/index.js" )
+        .then( ( mod ) => mod.initInteraction( interaction ) )
+        .catch( () => {} );
+    }
+  } catch {
+    // Never let interaction init break setup.
+  }
+}
+
+// Release the camera/mic/listeners held by the interaction handler. Called from
+// sketch.reset() so resources are freed before the next sketch loads (also
+// fixes a pre-existing leak — reset never disposed interaction). Only loads the
+// module when it was actually booted (so the dynamic import resolves from cache).
+export function disposeInteractionOnReset() {
+  if ( !_interactionInited ) {
+    return;
+  }
+
+  _interactionInited = false;
+  import( "./interaction/index.js" )
+    .then( ( mod ) => mod.disposeInteraction() )
+    .catch( () => {} );
 }
 
 // The per-slide-merged sketch settings object the bindings live on.
@@ -526,11 +571,10 @@ function bindingContext() {
 // binding-signal pass is skipped entirely when a sketch has no bindings.
 function publishChannelsFrame() {
   try {
-    const channels = sampleChannels();
+    const base = liveSketchBase( getSketchOptions() );
+    const channels = sampleChannels( base?.interaction );
 
     publishChannels( channels );
-
-    const base = liveSketchBase( getSketchOptions() );
 
     if ( base && Array.isArray( base.bindings ) && base.bindings.length > 0 ) {
       publishBindingSignals( computeBindingSignals(
@@ -593,7 +637,7 @@ function resolveSketch( live ) {
 
     return resolveBindings(
       base,
-      sampleChannels(),
+      sampleChannels( base.interaction ),
       context.frame,
       context
     );

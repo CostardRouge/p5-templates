@@ -1,36 +1,67 @@
-// ── Interaction channels (MVP) ──────────────────────────────────────────────
+// ── Interaction channels (the binding system's input layer) ─────────────────
 // A "channel" is the addressable unit a binding can read from. Each channel
 // publishes a NORMALIZED value (0..1, or an {x,y} both in 0..1) so the binding
-// mapping pipeline can map it onto any target range uniformly, regardless of
-// the source's native units.
+// mapping pipeline can map it onto any target range uniformly.
 //
-// This intentionally ships a tiny, dependency-light INPUT channel set (just the
-// mouse for now) so the binding mechanism stays off the camera / MediaPipe
-// stack on the global options hot path. Richer input channels (audio, gyro,
-// hands.pinch, midi.cc, …) plug in here by extending `sampleChannels` and
-// `CHANNEL_DESCRIPTORS`.
+// Sources are NOT hardcoded here — they are reused from the interaction handler
+// module (`index.js`): `getPointersDebug(opts.interaction)` already samples every
+// enabled source (mouse, touch, hands, face, body, orbit, perlinNoise,
+// gyroscope, midi, audio, joypad) and tags each with its source name. We just
+// normalize those canvas-space vectors to 0..1 and expose them by source id, so
+// enhancing a handler automatically makes it bindable. Semantic audio scalars
+// (level/bass/treble) come from `getAudio()`.
 //
-// Generators (oscillator, ramp) are NOT sampled here — they are computed from
-// the sketch's animation progression + per-binding params in the resolver
-// (bindings.js), so they live with the binding, not as a global channel.
+// A lightweight baseline `mouse` channel is always present (its own pointer
+// listener) so sketches WITHOUT an interaction block can still bind the mouse.
+//
+// Generators (oscillator, ramp, sequence, noise, random) are NOT sampled here —
+// they are computed from the sketch's animation progression in the resolver.
+//
+// Determinism: live channels (camera/mic/mouse/gyro) don't reproduce in a
+// server render — the same pre-existing caveat as the mouse binding and the live
+// HUD. Generators remain the recording-safe path.
 
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  AUDIO_BANDS
+} from "./sources.js";
+import {
+  clamp01, buildChannelsFromDebug
+} from "./channelsAdapter.js";
 
-// ── Static manifest (for the future binding UI catalogue) ───────────────────
-// `type` drives which projections / mappings the binding UI offers:
-//   vector2d → projections x | y | mag | angle, or whole-vector passthrough
-//   scalar   → used directly by the continuous mapping family
-export const CHANNEL_DESCRIPTORS = [
-  {
-    id: "mouse",
-    type: "vector2d",
-    label: "Mouse"
+// Re-export so consumers (and tests) can reach the pure adapter via channels.js.
+export {
+  buildChannelsFromDebug
+};
+
+// The interaction handler (index.js → MediaPipe/audio) is loaded LAZILY, never
+// statically: a static import would pull MediaPipe into the core module-eval
+// chain (events → … → options → channels), where mediapipe.js's top-level
+// `events.register` runs before `events` is initialized. Loading on first use
+// (when a sketch actually has an interaction block) also keeps non-interaction
+// sketches off the MediaPipe bundle entirely.
+let _interaction = null;
+let _interactionLoading = false;
+
+function _ensureInteractionModule() {
+  if ( _interaction || _interactionLoading ) {
+    return;
   }
-];
 
-// ── Raw pointer tracking ────────────────────────────────────────────────────
+  _interactionLoading = true;
+  import( "./index.js" )
+    .then( ( mod ) => {
+      _interaction = mod;
+    } )
+    .catch( () => {} )
+    .finally( () => {
+      _interactionLoading = false;
+    } );
+}
+
+// ── Raw pointer tracking (baseline mouse) ───────────────────────────────────
 // Tracked via a window listener so coordinates stay correct even when the
 // canvas is panned/zoomed inside ScalableViewport (CSS transform on a parent).
 let _listening = false;
@@ -89,27 +120,53 @@ function _pointerFraction() {
   }
 
   return {
-    x: _clamp01( ( _rawPointer.clientX - rect.left ) / rect.width ),
-    y: _clamp01( ( _rawPointer.clientY - rect.top ) / rect.height )
+    x: clamp01( ( _rawPointer.clientX - rect.left ) / rect.width ),
+    y: clamp01( ( _rawPointer.clientY - rect.top ) / rect.height )
   };
 }
 
-function _clamp01( v ) {
-  if ( v < 0 ) {
-    return 0;
+// Semantic audio scalar channels from getAudio().bands (each already 0..1).
+// `audio.level` is the mean of the available bands. Populated only when the
+// sketch enabled `interaction.audio` with band features.
+function _collectAudioChannels(
+  interactionOpts, channels
+) {
+  if ( !interactionOpts.audio?.enabled || !_interaction ) {
+    return;
   }
 
-  if ( v > 1 ) {
-    return 1;
+  const bands = _interaction.getAudio()?.bands;
+
+  if ( !bands ) {
+    return;
   }
 
-  return v;
+  let sum = 0;
+  let count = 0;
+
+  for ( const name of AUDIO_BANDS ) {
+    const value = bands[ name ];
+
+    if ( typeof value === "number" ) {
+      channels[ `audio.${ name }` ] = {
+        type: "scalar",
+        value: clamp01( value )
+      };
+      sum += value;
+      count += 1;
+    }
+  }
+
+  channels[ "audio.level" ] = {
+    type: "scalar",
+    value: count > 0 ? clamp01( sum / count ) : 0
+  };
 }
 
 // ── Per-frame sampling ──────────────────────────────────────────────────────
 // Channels are sampled at most once per rendered frame and cached, so multiple
-// binding reads in the same draw() see a consistent snapshot (and any future
-// stateful channel — e.g. perlin — only advances once per frame).
+// binding reads in the same draw() see a consistent snapshot (and stateful
+// collectors like perlin only advance once per frame).
 let _cache = {
   frame: -1,
   channels: null
@@ -118,10 +175,13 @@ let _cache = {
 /**
  * Sample every channel for the current frame.
  *
+ * @param {object} [interactionOpts] - the sketch's `interaction` options block;
+ *   when present and enabled, the handler's sources are overlaid onto the
+ *   baseline mouse channel.
  * @returns {Record<string, { type: "vector2d", x: number, y: number }
  *                          | { type: "scalar", value: number }>}
  */
-export function sampleChannels() {
+export function sampleChannels( interactionOpts ) {
   _ensurePointerListener();
 
   const p = getP5();
@@ -133,6 +193,7 @@ export function sampleChannels() {
 
   const pointer = _pointerFraction();
 
+  // Baseline mouse — always available, no interaction block required.
   const channels = {
     mouse: {
       type: "vector2d",
@@ -140,6 +201,32 @@ export function sampleChannels() {
       y: pointer.y
     }
   };
+
+  // Overlay the interaction handler's sources when the sketch opts in. The
+  // module loads lazily on first use, so the first few interaction frames fall
+  // back to the baseline mouse until it's ready.
+  if ( interactionOpts && interactionOpts.enabled !== false && p ) {
+    _ensureInteractionModule();
+
+    if ( _interaction ) {
+      try {
+        Object.assign(
+          channels,
+          buildChannelsFromDebug(
+            _interaction.getPointersDebug( interactionOpts ),
+            p.width,
+            p.height
+          )
+        );
+        _collectAudioChannels(
+          interactionOpts,
+          channels
+        );
+      } catch {
+        // A misbehaving source must never break the sketch.
+      }
+    }
+  }
 
   _cache = {
     frame,
