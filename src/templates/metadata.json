@@ -3173,7 +3173,7 @@
     "category": "signals",
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "hasPreview": true,
+    "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
     "mtime": "2026-06-26T22:54:26.636Z",
@@ -3226,5 +3226,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-27T19:10:12.399Z",
     "ctime": "2026-06-27T19:07:19.279Z"
+  },
+  {
+    "name": "signals-06-scribe",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-27T19:52:38.595Z",
+    "ctime": "2026-06-27T19:51:50.819Z"
   }
 ]

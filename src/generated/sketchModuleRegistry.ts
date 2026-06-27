@@ -199,6 +199,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:signals/signals-03-torsade": () => import( "@/p5/sketches/signals/signals-03-torsade/index.js" ),
   "p5:signals/signals-04-decode": () => import( "@/p5/sketches/signals/signals-04-decode/index.js" ),
   "p5:signals/signals-05-field": () => import( "@/p5/sketches/signals/signals-05-field/index.js" ),
+  "p5:signals/signals-06-scribe": () => import( "@/p5/sketches/signals/signals-06-scribe/index.js" ),
   "p5:spline-text/spline-text-v0-scribe": () => import( "@/p5/sketches/spline-text/spline-text-v0-scribe/index.js" ),
   "p5:spline-text/spline-text-v1-saccade": () => import( "@/p5/sketches/spline-text/spline-text-v1-saccade/index.js" ),
   "p5:splines/splines-v0-chaikin": () => import( "@/p5/sketches/splines/splines-v0-chaikin/index.js" ),
