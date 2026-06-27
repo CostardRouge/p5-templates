@@ -9,6 +9,7 @@ import {
 import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvider";
 import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
 import ContentItems from "./ContentItems/ContentItems";
+import SlideTransitionSettings from "./SlideTransitionSettings";
 
 type SlideEditorProps = {
   activeIndex: number;
@@ -45,6 +46,8 @@ export default function SlideEditor( {
         root.slides[{activeIndex}].content{" "}
         {slideContentLength ? `(${ slideContentLength })` : null}
       </span>
+
+      <SlideTransitionSettings activeIndex={ activeIndex } />
 
       <TemplateAssetsProvider
         scope={ {

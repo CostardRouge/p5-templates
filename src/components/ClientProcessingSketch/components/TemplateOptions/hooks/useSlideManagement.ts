@@ -10,6 +10,7 @@ import {
   SketchOptionInput
 } from "@/types/sketch.types";
 import deepClone from "@/utils/deepClone";
+import makeSlideId from "@/utils/makeSlideId";
 import makeDefaultSlide from "../utils/makeDefaultSlide";
 
 type UseSlideManagementProps = {
@@ -268,6 +269,10 @@ export function useSlideManagement( {
       }
 
       const duplicated = deepClone( original );
+
+      // A fresh persisted id — cloning would otherwise make two slides share an
+      // id, breaking montage `selected` references and per-slide thumbnails.
+      duplicated.id = makeSlideId();
 
       if ( duplicated?.name ) {
         duplicated.name = `${ duplicated.name } (copy)`;
