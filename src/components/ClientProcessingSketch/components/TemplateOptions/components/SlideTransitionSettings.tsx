@@ -182,8 +182,8 @@ export default function SlideTransitionSettings( {
   };
 
   return (
-    <div className="m-1 p-1 border border-purple-400/50 ring-1 ring-purple-400/20 rounded-lg bg-background">
-      <label className="flex cursor-pointer items-center justify-between gap-2 px-1 py-1.5 md:py-1 select-none text-xs text-foreground">
+    <div className="mb-1 p-1 border border-theme rounded-lg bg-background text-sm md:text-xs">
+      <label className="flex cursor-pointer items-center justify-between gap-2 px-1 py-1.5 md:py-1 select-none text-foreground">
         <span className="truncate">Montage / transition</span>
         <span className="relative inline-flex shrink-0 items-center">
           <input
