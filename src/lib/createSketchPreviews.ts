@@ -7,6 +7,9 @@ import encodePreviewFromFrames from "@/lib/encodePreviewFromFrames";
 import {
   ASSETS_DIRECTORY
 } from "@/constants";
+import {
+  PREVIEW_FPS, PREVIEW_SECS, PREVIEW_VARIANTS
+} from "@/lib/previewConfig";
 import fileExists from "@/utils/fileExists";
 
 import fs from "node:fs/promises";
@@ -23,28 +26,7 @@ import {
 // frame and getAnimationProgression() divides elapsed time by PREVIEW_SECS, so
 // one full loop fits into the captured frame budget regardless of the sketch's
 // native duration.
-const PREVIEW_FPS = 20;
-const PREVIEW_SECS = 9;
 const TOTAL_FRAMES = PREVIEW_FPS * PREVIEW_SECS;
-// Multiple output sizes, encoded from the same captured frames.
-// `preview.webm` is the baseline used everywhere (incl. mobile);
-// `preview-md.webm` is a higher-res variant served to desktop home-page tiles.
-const PREVIEW_VARIANTS: ReadonlyArray<{
-  filename: string;
-  width: number;
-  height: number;
-}> = [
-  {
-    filename: "preview.webm",
-    width: 360,
-    height: 450
-  },
-  {
-    filename: "preview-md.webm",
-    width: 540,
-    height: 675
-  }
-];
 
 type CreateSketchPreviewsOptions = {
   targetSketch?: {

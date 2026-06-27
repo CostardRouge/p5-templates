@@ -19,6 +19,24 @@ import type {
   SketchOption
 } from "@/types/sketch.types";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import {
+  PREVIEW_COUNTDOWN_SECS, PREVIEW_SECS
+} from "@/lib/previewConfig";
+
+/**
+ * `download` – the default browser recording: capture, then hand the file
+ *              to the user via a download.
+ * `preview`  – dev-only. After a 3-2-1 countdown, capture a fixed-length
+ *              realtime clip and POST it back to the dev server, which
+ *              re-encodes it into the sketch's committed `preview.webm`
+ *              variants instead of downloading anything. Lets interactive
+ *              sketches (webcam / mic / hand tracking) get a real preview
+ *              that the headless generator can't produce.
+ */
+export type RecordingIntent = "download" | "preview";
+
+/** UI phase of a dev "Record preview" run. */
+export type PreviewPhase = "countdown" | "recording" | "saving";
 
 export type UseBrowserRecorderArgs = {
   engine: SketchEngine | null;
@@ -31,9 +49,16 @@ export type UseBrowserRecorderReturn = {
   isRecording: boolean;
   progress: RecorderProgress | null;
   error: Error | null;
+  /** Non-null while a dev "Record preview" run is in flight. */
+  previewPhase: PreviewPhase | null;
+  /** Remaining whole seconds during the `countdown` phase. */
+  countdown: number;
+  /** Briefly true after a preview was written to the source tree. */
+  previewSaved: boolean;
   start: (
     format: RecordingFormat,
-    mode: RecordingMode
+    mode: RecordingMode,
+    intent?: RecordingIntent
   ) => Promise<void>;
   stop: () => Promise<void>;
   cancel: () => void;
@@ -60,12 +85,54 @@ function triggerDownload(
 }
 
 /**
+ * POST a recorded preview clip back to the dev server, which re-encodes it
+ * into the sketch's committed preview variants. Throws on a non-2xx so the
+ * caller can surface the message.
+ */
+async function savePreviewBlob(
+  blob: Blob, sketchName: string, engineId: string
+): Promise<void> {
+  const form = new FormData();
+
+  form.append(
+    "video",
+    blob,
+    `${ sketchName || "sketch" }.webm`
+  );
+  form.append(
+    "sketch",
+    sketchName
+  );
+  form.append(
+    "engineId",
+    engineId
+  );
+
+  const res = await fetch(
+    "/api/dev/previews/save-from-blob",
+    {
+      method: "POST",
+      body: form
+    }
+  );
+
+  if ( !res.ok ) {
+    const text = await res.text();
+
+    throw new Error( text || `HTTP ${ res.status }` );
+  }
+}
+
+/**
  * Orchestrates a single browser-side recording: builds an engine host,
- * creates the right strategy, wires progress events into React state,
- * and triggers a download on completion.
+ * creates the right strategy, wires progress events into React state, and
+ * either triggers a download (`download` intent) or — dev-only, after a
+ * lead-in countdown — saves the clip back to the source tree as the
+ * sketch's preview (`preview` intent).
  *
- * Re-entering `start()` while a recording is active is a no-op — clicks
- * on the start button while a capture is in flight must not abort it.
+ * Re-entering `start()` while a recording (or its countdown) is active is a
+ * no-op — clicks on the start button while a capture is in flight must not
+ * abort it.
  */
 export function useBrowserRecorder( {
   engine,
@@ -85,12 +152,24 @@ export function useBrowserRecorder( {
     error,
     setError
   ] = useState<Error | null>( null );
+  const [
+    previewPhase,
+    setPreviewPhase
+  ] = useState<PreviewPhase | null>( null );
+  const [
+    countdown,
+    setCountdown
+  ] = useState( 0 );
+  const [
+    previewSaved,
+    setPreviewSaved
+  ] = useState( false );
 
   const recorderRef = useRef<Recorder | null>( null );
 
   // Keep mutable refs to the names used in completion handlers so the
-  // download filename always reflects the latest sketch name, even if
-  // the user renames mid-recording.
+  // download filename / preview target always reflect the latest values,
+  // even if the user renames mid-recording.
   const sketchNameRef = useRef( sketchName );
 
   sketchNameRef.current = sketchName;
@@ -102,21 +181,54 @@ export function useBrowserRecorder( {
   // so the Play/Pause button matches reality after every recording.
   const [
     {
-      looping
+      looping, engineId
     },
     dispatch
   ] = useSketch();
   const loopingRef = useRef( looping );
 
   loopingRef.current = looping;
+  const engineIdRef = useRef( engineId );
+
+  engineIdRef.current = engineId;
   const loopingAtStartRef = useRef<boolean>( true );
   const engineAtStartRef = useRef<SketchEngine | null>( null );
+
+  // Lead-in countdown bookkeeping. `previewActiveRef` is set the instant a
+  // preview run begins (before any recorder exists) so `cancel()` can abort
+  // a run that's still counting down. `countdownRejectRef` settles the
+  // pending countdown promise when that happens so `start()` doesn't hang.
+  const previewActiveRef = useRef( false );
+  const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
+  const countdownRejectRef = useRef<( () => void ) | null>( null );
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>( null );
+
+  const clearCountdown = useCallback(
+    () => {
+      if ( countdownTimerRef.current ) {
+        clearTimeout( countdownTimerRef.current );
+        countdownTimerRef.current = null;
+      }
+
+      if ( countdownRejectRef.current ) {
+        const reject = countdownRejectRef.current;
+
+        countdownRejectRef.current = null;
+        reject();
+      }
+    },
+    []
+  );
 
   const cleanup = useCallback(
     () => {
       recorderRef.current = null;
+      previewActiveRef.current = false;
+      clearCountdown();
       setIsRecording( false );
       setProgress( null );
+      setPreviewPhase( null );
+      setCountdown( 0 );
 
       // Restore engine playback to what it was before recording started.
       // The strategies always leave the engine resumed in teardown, so a
@@ -150,15 +262,87 @@ export function useBrowserRecorder( {
       } );
     },
     [
-      dispatch
+      dispatch,
+      clearCountdown
+    ]
+  );
+
+  // Resolve after `seconds` whole-second ticks (showing seconds, …, 1),
+  // or reject if the run is cancelled mid-countdown.
+  const runCountdown = useCallback(
+    ( seconds: number ): Promise<void> => new Promise<void>( (
+      resolve, reject
+    ) => {
+      let remaining = seconds;
+
+      setCountdown( remaining );
+      countdownRejectRef.current = () => reject( new Error( "Countdown cancelled." ) );
+
+      const tick = () => {
+        remaining -= 1;
+
+        if ( remaining <= 0 ) {
+          countdownRejectRef.current = null;
+          setCountdown( 0 );
+          resolve();
+
+          return;
+        }
+
+        setCountdown( remaining );
+        countdownTimerRef.current = setTimeout(
+          tick,
+          1000
+        );
+      };
+
+      countdownTimerRef.current = setTimeout(
+        tick,
+        1000
+      );
+    } ),
+    []
+  );
+
+  // Persist a finished preview clip instead of downloading it.
+  const handlePreviewStop = useCallback(
+    async( blob: Blob ) => {
+      setPreviewPhase( "saving" );
+
+      try {
+        await savePreviewBlob(
+          blob,
+          sketchNameRef.current,
+          engineIdRef.current
+        );
+        cleanup();
+        setPreviewSaved( true );
+
+        if ( savedTimerRef.current ) {
+          clearTimeout( savedTimerRef.current );
+        }
+
+        savedTimerRef.current = setTimeout(
+          () => setPreviewSaved( false ),
+          2500
+        );
+      } catch( e ) {
+        setError( e instanceof Error ? e : new Error( String( e ) ) );
+        cleanup();
+      }
+    },
+    [
+      cleanup
     ]
   );
 
   const start = useCallback(
     async(
-      format: RecordingFormat, mode: RecordingMode
+      format: RecordingFormat,
+      mode: RecordingMode,
+      intent: RecordingIntent = "download"
     ) => {
-      if ( recorderRef.current ) {
+      if ( recorderRef.current || previewActiveRef.current ) {
         return;
       }
 
@@ -169,6 +353,45 @@ export function useBrowserRecorder( {
 
       setError( null );
       setProgress( null );
+      setPreviewSaved( false );
+
+      if ( savedTimerRef.current ) {
+        clearTimeout( savedTimerRef.current );
+        savedTimerRef.current = null;
+      }
+
+      const isPreview = intent === "preview";
+
+      // Preview runs lock controls + count down *before* a recorder exists
+      // so the author can get an interaction ready and still cancel cleanly.
+      // The download path keeps the original ordering (lock only once the
+      // recorder is built) so a failed `createRecorder` can't leave the
+      // controls stuck — there's nothing to clean up there yet.
+      if ( isPreview ) {
+        previewActiveRef.current = true;
+        // Snapshot the engine + intended playback state before anything
+        // takes over. The strategies always end with `host.resume()`, so
+        // without this snapshot a sketch that was paused before recording
+        // would come back playing with a stale Pause icon.
+        engineAtStartRef.current = engine;
+        loopingAtStartRef.current = loopingRef.current;
+        dispatch( {
+          type: "SET_BROWSER_RECORDING",
+          payload: true
+        } );
+        setPreviewPhase( "countdown" );
+
+        try {
+          await runCountdown( PREVIEW_COUNTDOWN_SECS );
+        } catch {
+          // Cancelled during the countdown — `cancel()` already cleaned up.
+          return;
+        }
+
+        if ( !previewActiveRef.current ) {
+          return;
+        }
+      }
 
       const host = createEngineHost(
         engine,
@@ -186,6 +409,11 @@ export function useBrowserRecorder( {
         } );
       } catch( e ) {
         setError( e instanceof Error ? e : new Error( String( e ) ) );
+
+        if ( isPreview ) {
+          cleanup();
+        }
+
         return;
       }
 
@@ -196,10 +424,15 @@ export function useBrowserRecorder( {
       recorder.on(
         "stop",
         ( result: RecorderResult ) => {
-          // Only the recorder we own should be allowed to trigger a
-          // download — guards against late events from a cancelled
-          // run racing with a new one.
+          // Only the recorder we own should be allowed to finish — guards
+          // against late events from a cancelled run racing with a new one.
           if ( recorderRef.current !== recorder ) {
+            return;
+          }
+
+          if ( isPreview ) {
+            void handlePreviewStop( result.blob );
+
             return;
           }
 
@@ -234,20 +467,29 @@ export function useBrowserRecorder( {
       );
 
       recorderRef.current = recorder;
-      // Snapshot the engine + intended playback state before the recorder
-      // takes over. The strategies always end with `host.resume()`, so
-      // without this snapshot a sketch that was paused before recording
-      // would come back playing with a stale Pause icon.
+      // Snapshot + lock now for the download path (idempotent for preview,
+      // which already did both before the countdown).
       engineAtStartRef.current = engine;
       loopingAtStartRef.current = loopingRef.current;
       setIsRecording( true );
+
+      if ( isPreview ) {
+        setPreviewPhase( "recording" );
+      }
+
       dispatch( {
         type: "SET_BROWSER_RECORDING",
         payload: true
       } );
 
       try {
-        await recorder.start();
+        // Preview captures auto-stop after the canonical preview length so
+        // every committed loop is the same duration.
+        await recorder.start( isPreview
+          ? {
+            maxDurationMs: PREVIEW_SECS * 1000
+          }
+          : undefined );
       } catch( e ) {
         // start() failures emit "error" already — but a synchronous
         // throw before any listener fires would leave us stuck.
@@ -262,7 +504,9 @@ export function useBrowserRecorder( {
       options,
       activeSlideIndex,
       cleanup,
-      dispatch
+      dispatch,
+      runCountdown,
+      handlePreviewStop
     ]
   );
 
@@ -285,17 +529,38 @@ export function useBrowserRecorder( {
 
   const cancel = useCallback(
     () => {
-      recorderRef.current?.cancel();
+      // An active recorder cancels through its own lifecycle (→ cleanup).
+      if ( recorderRef.current ) {
+        recorderRef.current.cancel();
+
+        return;
+      }
+
+      // Otherwise we may still be in a preview lead-in countdown that hasn't
+      // created a recorder yet — tear that down directly.
+      if ( previewActiveRef.current ) {
+        cleanup();
+      }
     },
-    []
+    [
+      cleanup
+    ]
   );
 
   // On unmount, abort any in-flight capture so the host engine isn't
-  // left paused with a dangling mirror loop.
+  // left paused with a dangling mirror loop, and drop pending timers.
   useEffect(
     () => () => {
       recorderRef.current?.cancel();
       recorderRef.current = null;
+
+      if ( countdownTimerRef.current ) {
+        clearTimeout( countdownTimerRef.current );
+      }
+
+      if ( savedTimerRef.current ) {
+        clearTimeout( savedTimerRef.current );
+      }
     },
     []
   );
@@ -304,6 +569,9 @@ export function useBrowserRecorder( {
     isRecording,
     progress,
     error,
+    previewPhase,
+    countdown,
+    previewSaved,
     start,
     stop,
     cancel
