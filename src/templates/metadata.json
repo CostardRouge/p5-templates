@@ -3202,5 +3202,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-27T15:38:05.961Z",
     "ctime": "2026-06-27T15:36:48.073Z"
+  },
+  {
+    "name": "signals-04-decode",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-27T18:39:34.648Z",
+    "ctime": "2026-06-27T18:39:34.588Z"
   }
 ]
