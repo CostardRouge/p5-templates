@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useState
+  Fragment, useState
 } from "react";
 import {
   ChevronDown
@@ -13,10 +13,12 @@ import {
   SketchOptionInput,
   SlideTransitionSchema,
   TRANSITION_LOOP_MODES,
-  TRANSITION_SOURCE_MODES
+  TRANSITION_SOURCE_MODES,
+  TRANSITION_STYLES
 } from "@/types/sketch.types";
 import ControlledEasingInput from "./ContentItems/components/ControlledEasingInput/ControlledEasingInput";
 import ControlledSliderInput from "./ContentItems/components/ControlledSliderInput/ControlledSliderInput";
+import ControlledColorInput from "./ContentItems/components/ControlledColorInput/ControlledColorInput";
 import ControlledSlideMultiSelect from "./ContentItems/components/ControlledSlideMultiSelect/ControlledSlideMultiSelect";
 import {
   BarLabelSegment
@@ -36,6 +38,11 @@ const LOOP_LABELS: Record<( typeof TRANSITION_LOOP_MODES )[ number ], string> = 
   cyclic: "Cyclic (loops)",
   pingpong: "Ping-pong",
   once: "Once (hold last)"
+};
+
+const STYLE_LABELS: Record<( typeof TRANSITION_STYLES )[ number ], string> = {
+  morph: "Morph (interpolate)",
+  dip: "Dip (fade + snap)"
 };
 
 /** One-line native <select> sharing the control-bar chrome. */
@@ -156,6 +163,7 @@ export default function SlideTransitionSettings( {
 
   const enabled = Boolean( transition?.enabled );
   const sources = ( transition?.sources as string ) ?? "all";
+  const style = ( transition?.style as string ) ?? "morph";
 
   const handleToggle = ( on: boolean ) => {
     if ( on ) {
@@ -216,6 +224,15 @@ export default function SlideTransitionSettings( {
             />
           )}
 
+          <BarSelect
+            name={ `${ base }.style` }
+            label="Style"
+            options={ TRANSITION_STYLES.map( ( value ) => ( {
+              value,
+              label: STYLE_LABELS[ value ]
+            } ) ) }
+          />
+
           <ControlledEasingInput name={ `${ base }.easing` } label="Easing" />
 
           <ControlledSliderInput
@@ -235,13 +252,39 @@ export default function SlideTransitionSettings( {
             } ) ) }
           />
 
-          <SnapKeysInput name={ `${ base }.snapKeys` } />
+          {style === "morph" ? (
+            <Fragment>
+              <ControlledSliderInput
+                name={ `${ base }.stagger` }
+                label="Stagger"
+                min={ 0 }
+                max={ 0.9 }
+                step={ 0.05 }
+              />
 
-          <p className="px-1 pt-0.5 text-[0.65rem] leading-snug text-label">
-            Morphs the source slides&apos; parameters over this slide&apos;s
-            duration. Numbers &amp; colours interpolate; discrete params (seed,
-            modes) should be listed under Snap.
-          </p>
+              <SnapKeysInput name={ `${ base }.snapKeys` } />
+
+              <p className="px-1 pt-0.5 text-[0.65rem] leading-snug text-label">
+                Morphs the source slides&apos; parameters over this slide&apos;s
+                duration. Numbers &amp; colours interpolate; discrete params
+                (seed, modes) should be listed under Snap. Stagger offsets each
+                param group so they don&apos;t all move at once.
+              </p>
+            </Fragment>
+          ) : (
+            <Fragment>
+              <ControlledColorInput
+                name={ `${ base }.dipColor` }
+                label="Dip color"
+              />
+
+              <p className="px-1 pt-0.5 text-[0.65rem] leading-snug text-label">
+                Snaps between source slides, fading through the dip colour at
+                each switch. Use for variants too different to interpolate
+                (seed, layout).
+              </p>
+            </Fragment>
+          )}
         </div>
       )}
     </div>

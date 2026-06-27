@@ -3,7 +3,9 @@ import resolveMontageSources from "./resolveMontageSources.js";
 import {
   mapProgressionToSegment
 } from "./segmentMapper.js";
-import lerpParams from "./lerpParams.js";
+import lerpParams, {
+  lerpParamsStaggered
+} from "./lerpParams.js";
 
 /**
  * Compute the effective sketch settings for a montage (transition) slide at the
@@ -65,10 +67,30 @@ export default function getMontageSketch(
     ...( sources[ toIndex ].sketch ?? {} )
   };
 
+  // Dip style: don't interpolate — snap at the segment midpoint (where the fade
+  // to dipColor peaks, drawn separately by drawMontageDip). Robust for variants
+  // whose structure is too different to morph.
+  if ( transition.style === "dip" ) {
+    return localT < 0.5 ? fromSketch : toSketch;
+  }
+
+  const snapKeys = Array.isArray( transition.snapKeys ) ? transition.snapKeys : [];
+  const stagger = transition.stagger ?? 0;
+
+  if ( stagger > 0 ) {
+    return lerpParamsStaggered(
+      fromSketch,
+      toSketch,
+      localT,
+      snapKeys,
+      stagger
+    );
+  }
+
   return lerpParams(
     fromSketch,
     toSketch,
     localT,
-    Array.isArray( transition.snapKeys ) ? transition.snapKeys : []
+    snapKeys
   );
 }

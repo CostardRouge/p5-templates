@@ -1,4 +1,6 @@
-import lerpParamsImpl from "@/p5/utils/slides/morph/lerpParams.js";
+import lerpParamsImpl, {
+  lerpParamsStaggered as lerpParamsStaggeredImpl
+} from "@/p5/utils/slides/morph/lerpParams.js";
 
 // The util is untyped JS; give it a call signature so the assertions below can
 // read the dynamic result shape.
@@ -7,6 +9,14 @@ const lerpParams = lerpParamsImpl as (
   to: Record<string, unknown>,
   t: number,
   snapKeys?: string[]
+) => any;
+
+const lerpParamsStaggered = lerpParamsStaggeredImpl as (
+  from: Record<string, unknown>,
+  to: Record<string, unknown>,
+  t: number,
+  snapKeys?: string[],
+  spread?: number
 ) => any;
 
 describe(
@@ -296,6 +306,136 @@ describe(
 
         expect( out.only ).toBe( 5 );
         expect( out.other ).toBe( 9 );
+      }
+    );
+  }
+);
+
+describe(
+  "lerpParamsStaggered",
+  () => {
+    test(
+      "matches a plain lerp when spread is 0",
+      () => {
+        expect( lerpParamsStaggered(
+          {
+            a: 0,
+            b: 0
+          },
+          {
+            a: 10,
+            b: 10
+          },
+          0.5,
+          [],
+          0
+        ) ).toEqual( {
+          a: 5,
+          b: 5
+        } );
+      }
+    );
+
+    test(
+      "falls back to a plain lerp with a single group",
+      () => {
+        expect( lerpParamsStaggered(
+          {
+            a: 0
+          },
+          {
+            a: 10
+          },
+          0.5,
+          [],
+          0.5
+        ) ).toEqual( {
+          a: 5
+        } );
+      }
+    );
+
+    test(
+      "offsets groups so the leading one is ahead of the trailing one",
+      () => {
+        // keys [a, b], spread 0.5, global 0.5 → a done, b not started.
+        expect( lerpParamsStaggered(
+          {
+            a: 0,
+            b: 0
+          },
+          {
+            a: 10,
+            b: 10
+          },
+          0.5,
+          [],
+          0.5
+        ) ).toEqual( {
+          a: 10,
+          b: 0
+        } );
+      }
+    );
+
+    test(
+      "all groups settle at the segment endpoints",
+      () => {
+        const from = {
+          a: 0,
+          b: 0
+        };
+        const to = {
+          a: 10,
+          b: 10
+        };
+
+        expect( lerpParamsStaggered(
+          from,
+          to,
+          0,
+          [],
+          0.5
+        ) ).toEqual( {
+          a: 0,
+          b: 0
+        } );
+        expect( lerpParamsStaggered(
+          from,
+          to,
+          1,
+          [],
+          0.5
+        ) ).toEqual( {
+          a: 10,
+          b: 10
+        } );
+      }
+    );
+
+    test(
+      "still honours snapKeys within a staggered group",
+      () => {
+        // keys [x, seed]; at global 0.6 the trailing seed group is < 0.5 so it
+        // snaps to `from`, while x has already completed.
+        const out = lerpParamsStaggered(
+          {
+            x: 0,
+            seed: 1
+          },
+          {
+            x: 10,
+            seed: 9
+          },
+          0.6,
+          [
+            "seed"
+          ],
+          0.5
+        );
+
+        expect( out.x ).toBe( 10 );
+        expect( out.seed ).toBe( 1 );
       }
     );
   }
