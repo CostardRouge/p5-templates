@@ -52,15 +52,25 @@ function clamp01( v: number ): number {
   return v;
 }
 
+// Sanitize a channel id for use inside a CSS custom-property name. Ids can be
+// dotted/structured (e.g. "audio.level", later "audio.band.0") which isn't a
+// valid custom-property ident, so non [A-Za-z0-9_-] chars become "-".
+function cssId( id: string ): string {
+  return String( id ).replace(
+    /[^a-zA-Z0-9_-]/g,
+    "-"
+  );
+}
+
 /** CSS variable name for a (source, projection) pair, matching a binding. */
 export function channelVarName(
   source: string, project?: string
 ): string {
   if ( project ) {
-    return `--ch-${ source }-${ project }`;
+    return `--ch-${ cssId( source ) }-${ project }`;
   }
 
-  return `--ch-${ source }`;
+  return `--ch-${ cssId( source ) }`;
 }
 
 function writeCssVars( snapshot: ChannelSnapshot ): void {
@@ -71,9 +81,11 @@ function writeCssVars( snapshot: ChannelSnapshot ): void {
   const root = document.documentElement.style;
 
   for ( const [
-    id,
+    rawId,
     channel
   ] of Object.entries( snapshot ) ) {
+    const id = cssId( rawId );
+
     if ( channel.type === "scalar" ) {
       root.setProperty(
         `--ch-${ id }`,
