@@ -3214,5 +3214,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-27T18:39:34.648Z",
     "ctime": "2026-06-27T18:39:34.588Z"
+  },
+  {
+    "name": "signals-05-field",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-27T19:10:12.399Z",
+    "ctime": "2026-06-27T19:07:19.279Z"
   }
 ]
