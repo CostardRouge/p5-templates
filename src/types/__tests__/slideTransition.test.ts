@@ -40,10 +40,17 @@ describe(
         expect( t.enabled ).toBe( false );
         expect( t.sources ).toBe( "all" );
         expect( t.slideIds ).toEqual( [] );
+        expect( t.style ).toBe( "morph" );
         expect( t.loop ).toBe( "cyclic" );
         expect( t.holdRatio ).toBeGreaterThanOrEqual( 0 );
+        expect( t.stagger ).toBe( 0 );
         expect( t.snapKeys ).toEqual( [
           "seed"
+        ] );
+        expect( t.dipColor ).toEqual( [
+          0,
+          0,
+          0
         ] );
       }
     );

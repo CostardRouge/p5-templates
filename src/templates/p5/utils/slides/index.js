@@ -11,6 +11,7 @@ import {
 } from "./layouts";
 
 import getMontageSketch from "./morph/index.js";
+import drawMontageDip from "./morph/drawMontageDip.js";
 
 import {
   coerceFramerate
@@ -43,6 +44,7 @@ const slides = {
       () => {
         slides.renderCurrentSlide();
         slides.render( options );
+        slides.renderMontageOverlay();
       }
     );
 
@@ -202,6 +204,19 @@ const slides = {
       return;
     }
     this.render( slide );
+  },
+
+  // Draw the montage "dip" fade on top of everything when the current slide is
+  // a dip-style montage. Morph-style montages need no overlay.
+  renderMontageOverlay() {
+    const slide = this.current;
+
+    if ( slide?.transition?.enabled && slide.transition.style === "dip" ) {
+      drawMontageDip(
+        slide,
+        options?.slides || []
+      );
+    }
   },
 
   /**

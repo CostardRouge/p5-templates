@@ -823,6 +823,11 @@ export const TRANSITION_LOOP_MODES = [
   "once"
 ] as const;
 
+export const TRANSITION_STYLES = [
+  "morph",
+  "dip"
+] as const;
+
 // A "montage" slide morphs the sketch parameters of several OTHER slides into
 // one another over its own duration, in a loop. Only the sources' `sketch`
 // params are interpolated — the montage keeps its own size/animation, so source
@@ -839,6 +844,12 @@ export const SlideTransitionSchema = z.object( {
   // are filtered at runtime. Ignored when sources === "all".
   slideIds: z.array( z.string() ).default( [] ),
 
+  // "morph" = interpolate params between sources (numbers/colours lerp).
+  // "dip"   = snap params at the segment midpoint, hidden behind a fade to
+  //           dipColor — the robust choice for non-morphable variants whose
+  //           seed/layout/structure differ too much to interpolate.
+  style: z.enum( TRANSITION_STYLES ).default( "morph" ),
+
   // Easing key from easing.js (e.g. "linear", "easeInOutCubic").
   easing: z.string().default( "easeInOutCubic" ),
 
@@ -850,11 +861,26 @@ export const SlideTransitionSchema = z.object( {
 
   loop: z.enum( TRANSITION_LOOP_MODES ).default( "cyclic" ),
 
-  // Param paths (dotted, or a leaf name like "seed") that SNAP at the segment
-  // boundary instead of interpolating — for discrete params (random seeds,
-  // enums, integer counts) or params that invalidate a heavy per-frame cache.
+  // morph only — spread [0..0.9] of the per-group phase offset, so top-level
+  // param groups don't all morph in lockstep (e.g. colours lead, geometry
+  // follows). 0 = every group morphs together.
+  stagger: z.number().min( 0 )
+    .max( 0.9 )
+    .default( 0 ),
+
+  // morph only — param paths (dotted, or a leaf name like "seed") that SNAP at
+  // the segment boundary instead of interpolating: discrete params (random
+  // seeds, enums, integer counts) or params that invalidate a heavy per-frame
+  // cache.
   snapKeys: z.array( z.string() ).default( [
     "seed"
+  ] ),
+
+  // dip only — the colour the canvas fades through while params switch.
+  dipColor: RGBA.default( [
+    0,
+    0,
+    0
   ] )
 } );
 

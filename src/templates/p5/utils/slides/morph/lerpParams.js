@@ -17,6 +17,8 @@
  * Pure: no p5 / DOM dependency, so it is unit-testable in node.
  */
 
+import staggeredProgress from "./staggeredProgress.js";
+
 function isPlainObject( value ) {
   return value != null && typeof value === "object" && !Array.isArray( value );
 }
@@ -125,6 +127,60 @@ export default function lerpParams(
       snapKeys
     );
   }
+
+  return out;
+}
+
+/**
+ * Like lerpParams, but each TOP-LEVEL param group gets its own phase-shifted
+ * progress so groups don't morph in lockstep (`spread` 0..~0.9). Group order
+ * follows key order: the first leads, the last trails. Falls back to a plain
+ * lerp when there is nothing to stagger.
+ */
+export function lerpParamsStaggered(
+  from, to, t, snapKeys = [], spread = 0
+) {
+  const source = from ?? {};
+  const target = to ?? {};
+  const keys = [
+    ...new Set( [
+      ...Object.keys( source ),
+      ...Object.keys( target )
+    ] )
+  ];
+
+  if ( spread <= 0 || keys.length <= 1 ) {
+    return lerpParams(
+      source,
+      target,
+      t,
+      snapKeys
+    );
+  }
+
+  const denom = keys.length - 1;
+  const out = {};
+
+  keys.forEach( (
+    key, index
+  ) => {
+    const groupT = staggeredProgress(
+      t,
+      index / denom,
+      spread
+    );
+
+    out[ key ] = lerpParams(
+      {
+        [ key ]: source[ key ]
+      },
+      {
+        [ key ]: target[ key ]
+      },
+      groupT,
+      snapKeys
+    )[ key ];
+  } );
 
   return out;
 }
