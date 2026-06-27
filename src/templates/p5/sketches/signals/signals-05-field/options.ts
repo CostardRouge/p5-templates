@@ -3,15 +3,15 @@ import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   field: {
-    rows: 56,
-    cols: 160,
-    verticalMargin: 0.14,
-    horizontalMargin: 0.08,
-    amplitude: 0.12,
-    colFreq: 0.03,
+    rows: 140,
+    cols: 134,
+    verticalMargin: 0.185,
+    horizontalMargin: 0,
+    amplitude: 0.115,
+    colFreq: 0.05,
     rowFreq: 0.12,
     morphRadius: 0.6,
-    ridge: 1.0,
+    ridge: 3,
     octaves: 3
   },
   palette: {
