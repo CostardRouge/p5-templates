@@ -3166,5 +3166,77 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-26T17:27:35.606Z",
     "ctime": "2026-06-26T17:27:14.602Z"
+  },
+  {
+    "name": "signals-01-serpent",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-26T22:54:26.636Z",
+    "ctime": "2026-06-26T22:53:14.200Z"
+  },
+  {
+    "name": "signals-02-braid",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-26T23:24:59.337Z",
+    "ctime": "2026-06-26T23:24:07.045Z"
+  },
+  {
+    "name": "signals-03-torsade",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-27T15:38:05.961Z",
+    "ctime": "2026-06-27T15:36:48.073Z"
+  },
+  {
+    "name": "signals-04-decode",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-27T18:39:34.648Z",
+    "ctime": "2026-06-27T18:39:34.588Z"
+  },
+  {
+    "name": "signals-05-field",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-27T19:10:12.399Z",
+    "ctime": "2026-06-27T19:07:19.279Z"
+  },
+  {
+    "name": "signals-06-scribe",
+    "engine": "p5",
+    "category": "signals",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-27T19:52:38.595Z",
+    "ctime": "2026-06-27T19:51:50.819Z"
   }
 ]
