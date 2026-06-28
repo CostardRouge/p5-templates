@@ -108,6 +108,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:kinetic/kinetic-letters": () => import( "@/p5/sketches/kinetic/kinetic-letters/options" ),
   "p5:kinetic/kinetic-plane": () => import( "@/p5/sketches/kinetic/kinetic-plane/options" ),
   "p5:letter-grid/letter-grid-v1-spell": () => import( "@/p5/sketches/letter-grid/letter-grid-v1-spell/options" ),
+  "p5:letter-grid/letter-grid-v2-extrude": () => import( "@/p5/sketches/letter-grid/letter-grid-v2-extrude/options" ),
   "p5:letter-trace/letter-trace-v0-scribe": () => import( "@/p5/sketches/letter-trace/letter-trace-v0-scribe/options" ),
   "p5:letter-trace/letter-trace-v1-reveal": () => import( "@/p5/sketches/letter-trace/letter-trace-v1-reveal/options" ),
   "p5:lines": () => import( "@/p5/sketches/lines/options" ),
