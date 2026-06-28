@@ -67,6 +67,22 @@ BACKEND_RECORDING=true
 
 > **Docker note:** `NEXT_PUBLIC_*` variables are baked in at build time. Set `BACKEND_RECORDING`, `NOTIFICATIONS`, `LIVE_THUMBNAIL`, and `NEXT_PUBLIC_*` vars as build args in CI/CD, not just runtime env vars.
 
+### Feature flags
+
+Optional features, each gated by an env var (mapped to a `NEXT_PUBLIC_*` build
+flag in `next.config.ts`). All default **off** — set the var to `true` to enable.
+
+| Var | Enables |
+|---|---|
+| `PREVIEW_ON_HOVER` | Animated template previews on hover |
+| `LIVE_THUMBNAIL` | Live thumbnail mirroring of the main canvas |
+| `NOTIFICATIONS` | Push notifications |
+| `INTERACTION_BINDINGS` | **Interaction bindings plugin** — the per-field modulation pastilles + the Interaction settings panel on every sketch (webcam, mic, orbit, perlin noise, gyroscope…). Off by default because it boots interaction handlers and samples channels every frame; turn it on to bind parameters to live inputs. |
+
+```bash
+INTERACTION_BINDINGS=true   # in .env / .env.local, then restart the dev server
+```
+
 ## Useful Commands
 
 ```bash
