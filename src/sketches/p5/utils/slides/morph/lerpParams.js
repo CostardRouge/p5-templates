@@ -17,7 +17,7 @@
  * Pure: no p5 / DOM dependency, so it is unit-testable in node.
  */
 
-import staggeredProgress from "./staggeredProgress.js";
+import sequenceProgress from "./sequenceProgress.js";
 
 function isPlainObject( value ) {
   return value != null && typeof value === "object" && !Array.isArray( value );
@@ -51,50 +51,29 @@ function shouldSnap(
   );
 }
 
-function lerpValue(
-  a, b, t, path, snapKeys
+// A leaf morphs when the two sides differ. Arrays compare component-wise so an
+// unchanged colour doesn't register as a change.
+function leafChanges(
+  a, b
 ) {
-  if ( shouldSnap(
-    a,
-    b,
-    path,
-    snapKeys
-  ) ) {
-    return t < 0.5 ? a : b;
-  }
-
-  if ( typeof a === "number" && typeof b === "number" ) {
-    return a + ( b - a ) * t;
+  if ( a === b ) {
+    return false;
   }
 
   if ( Array.isArray( a ) && Array.isArray( b ) ) {
-    if ( isEqualLengthNumericArray(
-      a,
-      b
-    ) ) {
-      return a.map( (
-        v, i
-      ) => v + ( b[ i ] - v ) * t );
-    }
-
-    return t < 0.5 ? a : b;
+    return a.length !== b.length || a.some( (
+      v, i
+    ) => v !== b[ i ] );
   }
 
-  if ( isPlainObject( a ) && isPlainObject( b ) ) {
-    return lerpParams(
-      a,
-      b,
-      t,
-      snapKeys,
-      path
-    );
-  }
-
-  return t < 0.5 ? a : b;
+  return true;
 }
 
-export default function lerpParams(
-  from, to, t, snapKeys = [], prefix = ""
+// `resolveT( path )` returns the morph progress for the leaf at `path`, so the
+// same walk serves both a uniform morph (constant t) and a per-parameter
+// sequenced one (a different slice of t per changing leaf).
+function lerpNode(
+  from, to, resolveT, snapKeys, prefix
 ) {
   const source = from ?? {};
   const target = to ?? {};
@@ -122,7 +101,7 @@ export default function lerpParams(
     out[ key ] = lerpValue(
       a,
       b,
-      t,
+      resolveT,
       path,
       snapKeys
     );
@@ -131,25 +110,130 @@ export default function lerpParams(
   return out;
 }
 
+function lerpValue(
+  a, b, resolveT, path, snapKeys
+) {
+  if ( shouldSnap(
+    a,
+    b,
+    path,
+    snapKeys
+  ) ) {
+    return resolveT( path ) < 0.5 ? a : b;
+  }
+
+  if ( typeof a === "number" && typeof b === "number" ) {
+    return a + ( b - a ) * resolveT( path );
+  }
+
+  if ( Array.isArray( a ) && Array.isArray( b ) ) {
+    if ( isEqualLengthNumericArray(
+      a,
+      b
+    ) ) {
+      const t = resolveT( path );
+
+      return a.map( (
+        v, i
+      ) => v + ( b[ i ] - v ) * t );
+    }
+
+    return resolveT( path ) < 0.5 ? a : b;
+  }
+
+  if ( isPlainObject( a ) && isPlainObject( b ) ) {
+    return lerpNode(
+      a,
+      b,
+      resolveT,
+      snapKeys,
+      path
+    );
+  }
+
+  return resolveT( path ) < 0.5 ? a : b;
+}
+
+// Ordered list of leaf paths that actually change between `from` and `to`,
+// following the exact traversal order of lerpNode so indices line up.
+function collectChangingLeaves(
+  from, to, prefix, snapKeys, out
+) {
+  const source = from ?? {};
+  const target = to ?? {};
+  const keys = new Set( [
+    ...Object.keys( source ),
+    ...Object.keys( target )
+  ] );
+
+  for ( const key of keys ) {
+    const path = prefix ? `${ prefix }.${ key }` : key;
+    const a = source[ key ];
+    const b = target[ key ];
+
+    if ( a === undefined || b === undefined ) {
+      continue;
+    }
+
+    if (
+      !shouldSnap(
+        a,
+        b,
+        path,
+        snapKeys
+      ) &&
+      isPlainObject( a ) &&
+      isPlainObject( b )
+    ) {
+      collectChangingLeaves(
+        a,
+        b,
+        path,
+        snapKeys,
+        out
+      );
+      continue;
+    }
+
+    if ( leafChanges(
+      a,
+      b
+    ) ) {
+      out.push( path );
+    }
+  }
+
+  return out;
+}
+
+export default function lerpParams(
+  from, to, t, snapKeys = [], prefix = ""
+) {
+  return lerpNode(
+    from,
+    to,
+    () => t,
+    snapKeys,
+    prefix
+  );
+}
+
 /**
- * Like lerpParams, but each TOP-LEVEL param group gets its own phase-shifted
- * progress so groups don't morph in lockstep (`spread` 0..~0.9). Group order
- * follows key order: the first leads, the last trails. Falls back to a plain
- * lerp when there is nothing to stagger.
+ * Like lerpParams, but SEQUENCES the individual parameters that change: each
+ * differing leaf (e.g. `sites.count`, `backgroundColor`, `speed`) gets its own
+ * slice of the morph window, so they change one after another instead of all at
+ * once. `spread` (0..1) sizes the slices — 0 = every changing param moves
+ * together (plain lerp); 1 = strictly one param at a time, each over 1/N of the
+ * window. Only leaves that actually differ count toward N. Falls back to a plain
+ * lerp when 0 or 1 params change.
  */
-export function lerpParamsStaggered(
+export function lerpParamsSequenced(
   from, to, t, snapKeys = [], spread = 0
 ) {
   const source = from ?? {};
   const target = to ?? {};
-  const keys = [
-    ...new Set( [
-      ...Object.keys( source ),
-      ...Object.keys( target )
-    ] )
-  ];
 
-  if ( spread <= 0 || keys.length <= 1 ) {
+  if ( spread <= 0 ) {
     return lerpParams(
       source,
       target,
@@ -158,29 +242,49 @@ export function lerpParamsStaggered(
     );
   }
 
-  const denom = keys.length - 1;
-  const out = {};
+  const order = collectChangingLeaves(
+    source,
+    target,
+    "",
+    snapKeys,
+    []
+  );
 
-  keys.forEach( (
-    key, index
-  ) => {
-    const groupT = staggeredProgress(
+  if ( order.length <= 1 ) {
+    return lerpParams(
+      source,
+      target,
       t,
-      index / denom,
+      snapKeys
+    );
+  }
+
+  const indexOf = new Map( order.map( (
+    path, index
+  ) => [
+    path,
+    index
+  ] ) );
+  const resolveT = ( path ) => {
+    const index = indexOf.get( path );
+
+    if ( index === undefined ) {
+      return t;
+    }
+
+    return sequenceProgress(
+      t,
+      index,
+      order.length,
       spread
     );
+  };
 
-    out[ key ] = lerpParams(
-      {
-        [ key ]: source[ key ]
-      },
-      {
-        [ key ]: target[ key ]
-      },
-      groupT,
-      snapKeys
-    )[ key ];
-  } );
-
-  return out;
+  return lerpNode(
+    source,
+    target,
+    resolveT,
+    snapKeys,
+    ""
+  );
 }

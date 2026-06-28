@@ -939,8 +939,8 @@ export default function SlideTransitionSettings( {
                 name={ `${ base }.stagger` }
                 label="Stagger"
                 min={ 0 }
-                max={ 0.9 }
-                step={ 0.05 }
+                max={ 1 }
+                step={ 0.1 }
               />
 
               <SnapKeysInput name={ `${ base }.snapKeys` } />
@@ -948,8 +948,9 @@ export default function SlideTransitionSettings( {
               <p className="px-1 pt-0.5 text-[0.65rem] leading-snug text-label">
                 Morphs the source slides&apos; parameters over this slide&apos;s
                 duration. Numbers &amp; colours interpolate; discrete params
-                (seed, modes) should be listed under Snap. Stagger offsets each
-                param group so they don&apos;t all move at once.
+                (seed, modes) should be listed under Snap. Stagger 0 = every
+                changing param moves together; 1 = they change one at a time,
+                each over its own slice of the transition.
               </p>
             </Fragment>
           ) : (

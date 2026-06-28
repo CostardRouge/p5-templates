@@ -1,5 +1,5 @@
 import lerpParamsImpl, {
-  lerpParamsStaggered as lerpParamsStaggeredImpl
+  lerpParamsSequenced as lerpParamsSequencedImpl
 } from "@/p5/utils/slides/morph/lerpParams.js";
 
 // The util is untyped JS; give it a call signature so the assertions below can
@@ -11,7 +11,7 @@ const lerpParams = lerpParamsImpl as (
   snapKeys?: string[]
 ) => any;
 
-const lerpParamsStaggered = lerpParamsStaggeredImpl as (
+const lerpParamsSequenced = lerpParamsSequencedImpl as (
   from: Record<string, unknown>,
   to: Record<string, unknown>,
   t: number,
@@ -312,12 +312,12 @@ describe(
 );
 
 describe(
-  "lerpParamsStaggered",
+  "lerpParamsSequenced",
   () => {
     test(
       "matches a plain lerp when spread is 0",
       () => {
-        expect( lerpParamsStaggered(
+        expect( lerpParamsSequenced(
           {
             a: 0,
             b: 0
@@ -337,29 +337,35 @@ describe(
     );
 
     test(
-      "falls back to a plain lerp with a single group",
+      "falls back to a plain lerp when only one param changes",
       () => {
-        expect( lerpParamsStaggered(
+        // `b` is identical on both sides, so only `a` changes → nothing to
+        // sequence, `a` morphs across the whole window.
+        expect( lerpParamsSequenced(
           {
-            a: 0
+            a: 0,
+            b: 5
           },
           {
-            a: 10
+            a: 10,
+            b: 5
           },
           0.5,
           [],
-          0.5
+          1
         ) ).toEqual( {
-          a: 5
+          a: 5,
+          b: 5
         } );
       }
     );
 
     test(
-      "offsets groups so the leading one is ahead of the trailing one",
+      "spread 1 changes params one at a time: the first finishes before the next starts",
       () => {
-        // keys [a, b], spread 0.5, global 0.5 → a done, b not started.
-        expect( lerpParamsStaggered(
+        // changing leaves [a, b], spread 1, t 0.5 → a's [0,0.5] slice is done,
+        // b's [0.5,1] slice hasn't started.
+        expect( lerpParamsSequenced(
           {
             a: 0,
             b: 0
@@ -370,7 +376,7 @@ describe(
           },
           0.5,
           [],
-          0.5
+          1
         ) ).toEqual( {
           a: 10,
           b: 0
@@ -379,7 +385,63 @@ describe(
     );
 
     test(
-      "all groups settle at the segment endpoints",
+      "sequences leaves nested in the same group independently",
+      () => {
+        // The case top-level grouping missed: two leaves under one object still
+        // change one after another.
+        const out = lerpParamsSequenced(
+          {
+            sites: {
+              count: 0,
+              speed: 0
+            }
+          },
+          {
+            sites: {
+              count: 10,
+              speed: 10
+            }
+          },
+          0.5,
+          [],
+          1
+        );
+
+        expect( out.sites.count ).toBe( 10 );
+        expect( out.sites.speed ).toBe( 0 );
+      }
+    );
+
+    test(
+      "only counts leaves that actually differ toward the slice count",
+      () => {
+        // `b` is unchanged, so a and c split the window in half (not thirds).
+        const out = lerpParamsSequenced(
+          {
+            a: 0,
+            b: 5,
+            c: 0
+          },
+          {
+            a: 10,
+            b: 5,
+            c: 10
+          },
+          0.5,
+          [],
+          1
+        );
+
+        expect( out ).toEqual( {
+          a: 10,
+          b: 5,
+          c: 0
+        } );
+      }
+    );
+
+    test(
+      "every param settles at the transition endpoints",
       () => {
         const from = {
           a: 0,
@@ -390,22 +452,22 @@ describe(
           b: 10
         };
 
-        expect( lerpParamsStaggered(
+        expect( lerpParamsSequenced(
           from,
           to,
           0,
           [],
-          0.5
+          1
         ) ).toEqual( {
           a: 0,
           b: 0
         } );
-        expect( lerpParamsStaggered(
+        expect( lerpParamsSequenced(
           from,
           to,
           1,
           [],
-          0.5
+          1
         ) ).toEqual( {
           a: 10,
           b: 10
@@ -414,11 +476,11 @@ describe(
     );
 
     test(
-      "still honours snapKeys within a staggered group",
+      "still honours snapKeys within the sequence",
       () => {
-        // keys [x, seed]; at global 0.6 the trailing seed group is < 0.5 so it
-        // snaps to `from`, while x has already completed.
-        const out = lerpParamsStaggered(
+        // changing leaves [x, seed]; at t 0.6 the seed slice [0.5,1] is < 0.5 so
+        // it snaps to `from`, while x has already completed.
+        const out = lerpParamsSequenced(
           {
             x: 0,
             seed: 1
@@ -431,7 +493,7 @@ describe(
           [
             "seed"
           ],
-          0.5
+          1
         );
 
         expect( out.x ).toBe( 10 );
