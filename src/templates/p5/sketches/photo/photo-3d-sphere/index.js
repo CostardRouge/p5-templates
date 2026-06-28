@@ -1,5 +1,4 @@
 import options from "@/p5/utils/options.js";
-import cache from "@/p5/utils/cache.js";
 import easing from "@/p5/utils/easing.js";
 import sketch, {
   getP5
@@ -7,6 +6,10 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
+import {
+  shapeAspect,
+  getCoverTexture
+} from "@/p5/utils/photo/coverTexture.js";
 
 /* ------------------------------------------------------------------ */
 /*  Photo sphere carousel                                             */
@@ -285,135 +288,10 @@ function distribute(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Photo shape + texture baking (cover-crop, optional polaroid frame) */
+/*  Photo textures (cover-crop + optional polaroid frame) live in the */
+/*  shared @/p5/utils/photo/coverTexture helper, used here and by the */
+/*  photo stack so the baking/caching logic is written once.          */
 /* ------------------------------------------------------------------ */
-
-function shapeAspect( shape ) {
-  const p = getP5();
-
-  switch ( shape ) {
-    case "square":
-      return 1;
-    case "landscape":
-      return 4 / 3;
-    case "portrait":
-      return 3 / 4;
-    default:
-      return p.width / p.height;
-  }
-}
-
-function textureResolution( aspect ) {
-  const long = 512;
-
-  if ( aspect >= 1 ) {
-    return {
-      width: long,
-      height: Math.round( long / aspect )
-    };
-  }
-
-  return {
-    width: Math.round( long * aspect ),
-    height: long
-  };
-}
-
-function bakePhoto(
-  img, aspect, frame
-) {
-  const p = getP5();
-  const {
-    width,
-    height
-  } = textureResolution( aspect );
-  const graphics = p.createGraphics(
-    width,
-    height
-  );
-
-  graphics.pixelDensity( 1 );
-  graphics.clear();
-
-  const inset = frame.enabled
-    ? Math.round( Math.min(
-      width,
-      height
-    ) * frame.thickness )
-    : 0;
-
-  if ( frame.enabled ) {
-    graphics.noStroke();
-    graphics.fill( ...frame.color );
-    graphics.rect(
-      0,
-      0,
-      width,
-      height
-    );
-  }
-
-  const innerWidth = width - 2 * inset;
-  const innerHeight = height - 2 * inset;
-  const scale = Math.max(
-    innerWidth / img.width,
-    innerHeight / img.height
-  );
-  const drawWidth = img.width * scale;
-  const drawHeight = img.height * scale;
-  const context = graphics.drawingContext;
-
-  context.save();
-  context.beginPath();
-  context.rect(
-    inset,
-    inset,
-    innerWidth,
-    innerHeight
-  );
-  context.clip();
-  graphics.image(
-    img,
-    inset + ( innerWidth - drawWidth ) / 2,
-    inset + ( innerHeight - drawHeight ) / 2,
-    drawWidth,
-    drawHeight
-  );
-  context.restore();
-
-  return graphics;
-}
-
-/**
- * Cover-cropped, cached texture for one photo. Returns null while the
- * underlying image is still loading so the slot is skipped for now.
- */
-function getPhotoTexture(
-  asset, aspect, frame
-) {
-  const img = asset?.img;
-
-  if ( !img || !img.width ) {
-    return null;
-  }
-
-  const key = `photo-sphere-tex|${ asset.path }|${ aspect.toFixed( 4 ) }`
-    + `|frame:${ frame.enabled ? 1 : 0 }-${ frame.color.join( "_" ) }-${ frame.thickness }`;
-  const cached = cache.get( key );
-
-  if ( cached ) {
-    return cached;
-  }
-
-  return cache.set(
-    key,
-    bakePhoto(
-      img,
-      aspect,
-      frame
-    )
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Option readers                                                    */
@@ -563,11 +441,12 @@ sketch.draw( (
   const faces = [];
 
   for ( let i = 0; i < filledCount; i++ ) {
-    const texture = getPhotoTexture(
-      images[ i ],
+    const texture = getCoverTexture( {
+      asset: images[ i ],
       aspect,
-      frame
-    );
+      frame,
+      keyPrefix: "photo-sphere-tex"
+    } );
 
     if ( !texture ) {
       continue;
