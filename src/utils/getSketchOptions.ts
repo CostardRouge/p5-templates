@@ -11,6 +11,9 @@ import {
 import {
   getSketchOptionLoaders
 } from "@/engines/sketchOptionLoaders";
+import {
+  interactionFormValues, interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
 
 export async function getJSONSketchOptions(
   sketchName: string, engineId: string
@@ -62,7 +65,32 @@ export async function getSketchMeta(
   }
 
   try {
-    return await loaders.loadSketchForm( meta.sketchPath ) as SketchMeta;
+    const loaded = await loaders.loadSketchForm( meta.sketchPath ) as SketchMeta;
+
+    // Surface the shared Interaction block on every sketch that doesn't declare
+    // its own. This seeds `sketch.interaction` (so the channel sampler can read
+    // hands / audio / orbit / … live) AND adds the classic Interaction settings
+    // panel to the form. Each sketch gets its own clone of the values so runtime
+    // edits never leak across sketches; the config is static and shared.
+    // Sketches that declare their own `interaction` (e.g. interaction-test) are
+    // left untouched.
+    if ( loaded.formValues && !loaded.formValues.interaction ) {
+      loaded.formValues = {
+        ...loaded.formValues,
+        interaction: structuredClone( interactionFormValues )
+      };
+    }
+
+    if ( loaded.formConfiguration && !loaded.formConfiguration.interaction ) {
+      loaded.formConfiguration = {
+        ...loaded.formConfiguration,
+        // `defaults.js` is untyped (component fields widen to `string`); the
+        // config is the canonical interaction panel, so assert the shape.
+        interaction: interactionFormConfiguration as unknown as FieldConfig
+      };
+    }
+
+    return loaded;
   } catch {
     return {};
   }
