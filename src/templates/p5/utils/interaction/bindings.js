@@ -613,7 +613,81 @@ export function setPath(
   node[ keys[ keys.length - 1 ] ] = value;
 }
 
+// Reads `value` at a dotted path; returns undefined when any segment is missing.
+export function getPath(
+  obj, path
+) {
+  if ( !obj || !path ) {
+    return undefined;
+  }
+
+  let node = obj;
+
+  for ( const key of String( path ).split( "." ) ) {
+    if ( node == null || typeof node !== "object" ) {
+      return undefined;
+    }
+
+    node = node[ key ];
+  }
+
+  return node;
+}
+
+// ── Per-binding value (pre-blend) ───────────────────────────────────────────
+// The binding's absolute target value before layering: a number (continuous) or
+// an {x,y} (vector2d), or null when an input source has no live channel yet.
+// Smoothing is keyed by the binding's id so layered bindings on one target lag
+// independently (falling back to the source/target signature for legacy data
+// that predates ids).
+
+function bindingValue(
+  binding, channels, context
+) {
+  const generator = isGenerator( binding.source );
+  const channel = channels[ binding.source ];
+
+  if ( !generator && !channel ) {
+    return null;
+  }
+
+  return ( binding.kind ?? "continuous" ) === "vector2d"
+    ? mapVector(
+      channel,
+      binding
+    )
+    : mapContinuous(
+      channel,
+      binding,
+      context
+    );
+}
+
+function smoothBindingValue(
+  binding, value, kind
+) {
+  const key = binding.id ?? bindingKey( binding );
+  const amount = num(
+    binding.smoothing,
+    0
+  );
+
+  return kind === "vector2d"
+    ? smoothVector(
+      key,
+      value,
+      amount
+    )
+    : smoothNumber(
+      key,
+      value,
+      amount
+    );
+}
+
 // ── Single-binding application ──────────────────────────────────────────────
+// Overwrites the target with this one binding's value. Retained for callers
+// that drive a single binding; the layered resolver uses `foldTarget` instead.
 
 export function applyBinding(
   targetObj, binding, channels, context
@@ -627,49 +701,189 @@ export function applyBinding(
     return;
   }
 
-  const generator = isGenerator( binding.source );
-  const channel = channels[ binding.source ];
+  const raw = bindingValue(
+    binding,
+    channels,
+    context
+  );
 
-  // Input sources need a live channel; generators compute from context.
-  if ( !generator && !channel ) {
+  if ( raw === null ) {
     return;
   }
 
   const kind = binding.kind ?? "continuous";
-  const key = bindingKey( binding );
-  const amount = num(
-    binding.smoothing,
-    0
-  );
-
-  let value;
-
-  if ( kind === "vector2d" ) {
-    value = smoothVector(
-      key,
-      mapVector(
-        channel,
-        binding
-      ),
-      amount
-    );
-  } else {
-    value = smoothNumber(
-      key,
-      mapContinuous(
-        channel,
-        binding,
-        context
-      ),
-      amount
-    );
-  }
 
   setPath(
     targetObj,
     binding.target,
-    value
+    smoothBindingValue(
+      binding,
+      raw,
+      kind
+    )
   );
+}
+
+// ── Layering ─────────────────────────────────────────────────────────────────
+// Multiple bindings can drive ONE parameter. They are folded in array order
+// (later = on top) into an accumulator seeded from the parameter's base value.
+// Each layer combines via its `blend` mode (default "replace") and `weight`
+// (0..1 opacity / dry-wet): the blended result is crossfaded against the running
+// accumulator by the weight, so `replace` at weight 1 fully overrides — exactly
+// the pre-layering behavior for a lone binding.
+
+const BLEND_MODES = new Set( [
+  "replace",
+  "add",
+  "multiply",
+  "max",
+  "min",
+  "average"
+] );
+
+export function isBlendMode( mode ) {
+  return BLEND_MODES.has( mode );
+}
+
+function blendAxis(
+  prev, layer, mode, weight
+) {
+  let blended;
+
+  switch ( mode ) {
+    case "add":
+      blended = prev + layer;
+      break;
+    case "multiply":
+      blended = prev * layer;
+      break;
+    case "max":
+      blended = Math.max(
+        prev,
+        layer
+      );
+      break;
+    case "min":
+      blended = Math.min(
+        prev,
+        layer
+      );
+      break;
+    case "average":
+      blended = ( prev + layer ) / 2;
+      break;
+    case "replace":
+    default:
+      blended = layer;
+      break;
+  }
+
+  return lerp(
+    prev,
+    blended,
+    weight
+  );
+}
+
+// Fold one target's layers over its base value. Returns the base value untouched
+// when no layer produced a value (e.g. all input channels missing).
+function foldTarget(
+  baseValue, layers, channels, context
+) {
+  let acc = baseValue;
+  let started = false;
+
+  for ( const binding of layers ) {
+    const raw = bindingValue(
+      binding,
+      channels,
+      context
+    );
+
+    if ( raw === null ) {
+      continue;
+    }
+
+    const kind = binding.kind ?? "continuous";
+    const value = smoothBindingValue(
+      binding,
+      raw,
+      kind
+    );
+    const weight = clamp01( num(
+      binding.weight,
+      1
+    ) );
+    const mode = binding.blend ?? "replace";
+
+    if ( kind === "vector2d" ) {
+      const prev = started && acc && typeof acc === "object"
+        ? acc
+        : ( baseValue && typeof baseValue === "object"
+          ? baseValue
+          : {
+            x: 0,
+            y: 0
+          } );
+
+      acc = {
+        x: blendAxis(
+          num(
+            prev.x,
+            0
+          ),
+          num(
+            value.x,
+            0
+          ),
+          mode,
+          weight
+        ),
+        y: blendAxis(
+          num(
+            prev.y,
+            0
+          ),
+          num(
+            value.y,
+            0
+          ),
+          mode,
+          weight
+        )
+      };
+    } else {
+      acc = blendAxis(
+        started ? num(
+          acc,
+          0
+        ) : num(
+          baseValue,
+          0
+        ),
+        num(
+          value,
+          0
+        ),
+        mode,
+        weight
+      );
+    }
+
+    started = true;
+  }
+
+  return started ? acc : baseValue;
+}
+
+// The bindings that actually play, honoring the mixer's enable + solo state:
+// disabled (enabled === false / muted) drop out; if ANY binding is soloed,
+// only soloed bindings remain.
+export function selectActiveBindings( list ) {
+  const enabled = ( Array.isArray( list ) ? list : [] ).filter( ( b ) => b && b.enabled !== false );
+  const soloed = enabled.filter( ( b ) => b.solo );
+
+  return soloed.length > 0 ? soloed : enabled;
 }
 
 // ── Top-level resolver ──────────────────────────────────────────────────────
@@ -688,11 +902,9 @@ let _resolveCache = {
 export function resolveBindings(
   base, channels, frame, context
 ) {
-  const bindings = Array.isArray( base?.bindings )
-    ? base.bindings.filter( ( b ) => b && b.enabled !== false )
-    : [];
+  const active = selectActiveBindings( base?.bindings );
 
-  if ( bindings.length === 0 ) {
+  if ( active.length === 0 ) {
     return base;
   }
 
@@ -712,16 +924,45 @@ export function resolveBindings(
 
   const ch = channels ?? {};
 
-  for ( const binding of bindings ) {
+  // Group the active bindings by target so multiple layers on one parameter are
+  // folded together (in array order) rather than overwriting each other.
+  const groups = new Map();
+
+  for ( const binding of active ) {
+    if ( !binding.target || !binding.source ) {
+      continue;
+    }
+
+    if ( !groups.has( binding.target ) ) {
+      groups.set(
+        binding.target,
+        []
+      );
+    }
+
+    groups.get( binding.target ).push( binding );
+  }
+
+  for ( const [
+    target,
+    layers
+  ] of groups ) {
     try {
-      applyBinding(
+      setPath(
         out,
-        binding,
-        ch,
-        context
+        target,
+        foldTarget(
+          getPath(
+            base,
+            target
+          ),
+          layers,
+          ch,
+          context
+        )
       );
     } catch {
-      // A single malformed binding must never break the whole sketch.
+      // A single malformed target must never break the whole sketch.
     }
   }
 
@@ -767,31 +1008,49 @@ export function computeBindingSignals(
   const out = {};
   const list = Array.isArray( base?.bindings ) ? base.bindings : [];
   const ch = channels ?? {};
+  // The bindings that actually play — only their signals contribute to a
+  // target's aggregate meter (the field pastille). Per-binding meters (the
+  // matrix rows) are emitted for every binding so a soloed-out / disabled layer
+  // still shows what it would do.
+  const active = new Set( selectActiveBindings( list ) );
+  const targetMax = {};
 
   for ( const binding of list ) {
-    if (
-      !binding ||
-      binding.enabled === false ||
-      !binding.target ||
-      !binding.source
-    ) {
+    if ( !binding || !binding.target || !binding.source ) {
       continue;
     }
 
+    let signal;
+
     try {
-      if ( ( binding.kind ?? "continuous" ) === "vector2d" ) {
-        out[ binding.target ] = vectorMeter( ch[ binding.source ] );
-      } else {
-        out[ binding.target ] = clamp01( shapedScalar(
+      signal = ( binding.kind ?? "continuous" ) === "vector2d"
+        ? vectorMeter( ch[ binding.source ] )
+        : clamp01( shapedScalar(
           binding,
           ch[ binding.source ],
           context
         ) );
-      }
     } catch {
       // Skip a malformed binding's meter.
+      continue;
+    }
+
+    // Per-binding signal, keyed by id (ids are uuids — no collision with the
+    // dotted target paths used for the aggregate keys below).
+    if ( binding.id ) {
+      out[ binding.id ] = signal;
+    }
+
+    if ( active.has( binding ) ) {
+      targetMax[ binding.target ] = Math.max(
+        targetMax[ binding.target ] ?? 0,
+        signal
+      );
     }
   }
 
-  return out;
+  return Object.assign(
+    out,
+    targetMax
+  );
 }

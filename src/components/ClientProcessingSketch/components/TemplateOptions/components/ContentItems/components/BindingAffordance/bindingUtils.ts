@@ -24,6 +24,14 @@ import type {
 
 export type BindingKind = "continuous" | "vector2d";
 
+export type BlendMode =
+  | "replace"
+  | "add"
+  | "multiply"
+  | "max"
+  | "min"
+  | "average";
+
 export type Binding = {
   id?: string;
   source: string;
@@ -33,6 +41,13 @@ export type Binding = {
   mapping?: any;
   smoothing?: number;
   enabled?: boolean;
+  // ── Layering (multiple bindings per parameter) ──
+  /** Layer opacity / dry-wet, 0..1 (default 1). */
+  weight?: number;
+  /** How this layer combines with the ones beneath it (default "replace"). */
+  blend?: BlendMode;
+  /** Mixer solo: when any binding is soloed, only soloed ones play. */
+  solo?: boolean;
   // Generator params, present when `source` is the matching generator.
   oscillator?: {
     wave?: string;
@@ -338,7 +353,9 @@ export function makeDefaultBinding(
         }
       },
       smoothing: 0.15,
-      enabled: true
+      enabled: true,
+      weight: 1,
+      blend: "replace"
     };
   }
 
@@ -354,7 +371,9 @@ export function makeDefaultBinding(
       curve: "linear"
     },
     smoothing: 0.2,
-    enabled: true
+    enabled: true,
+    weight: 1,
+    blend: "replace"
   };
 }
 
@@ -539,3 +558,75 @@ export const DEFAULT_RANDOM = {
   seed: 0,
   phase: 0
 };
+
+// ── Layering UI ──────────────────────────────────────────────────────────────
+
+export const DEFAULT_WEIGHT = 1;
+
+export const BLEND_OPTIONS: Array<{
+  value: BlendMode;
+  label: string;
+}> = [
+  {
+    value: "replace",
+    label: "Replace"
+  },
+  {
+    value: "add",
+    label: "Add"
+  },
+  {
+    value: "multiply",
+    label: "Multiply"
+  },
+  {
+    value: "max",
+    label: "Max"
+  },
+  {
+    value: "min",
+    label: "Min"
+  },
+  {
+    value: "average",
+    label: "Average"
+  }
+];
+
+/** A short, human label for a binding's source — for the matrix / layer rows. */
+export function bindingSourceLabel( binding: Binding ): string {
+  if ( sourceCategory( binding.source ) !== "input" ) {
+    return binding.source.charAt( 0 ).toUpperCase() + binding.source.slice( 1 );
+  }
+
+  const base = String( binding.source ).split( "." )[ 0 ];
+  const descriptor =
+    DESCRIPTORS.find( ( d ) => d.id === binding.source ) ??
+    DESCRIPTORS.find( ( d ) => d.id === base );
+  const familyLabel = descriptor ? descriptor.label : binding.source;
+
+  if ( binding.project ) {
+    const suffix =
+      PROJECTIONS.find( ( p ) => p.project === binding.project )?.suffix ??
+      binding.project;
+
+    return `${ familyLabel } · ${ suffix }`;
+  }
+
+  return familyLabel;
+}
+
+/** A human label for a sketch-relative target path: "ring.radius" → "Ring radius". */
+export function humanizeTarget( target: string ): string {
+  const words = String( target )
+    .split( "." )
+    .join( " " )
+    .replace(
+      /([a-z0-9])([A-Z])/g,
+      "$1 $2"
+    )
+    .toLowerCase()
+    .trim();
+
+  return words.charAt( 0 ).toUpperCase() + words.slice( 1 );
+}

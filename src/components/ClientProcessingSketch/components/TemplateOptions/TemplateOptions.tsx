@@ -22,6 +22,7 @@ import OptionsPanel from "./components/OptionsPanel";
 import MobileStudioDrawer from "./components/MobileStudioDrawer";
 import RecordingLockBanner from "./components/RecordingLockBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
+import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import {
@@ -420,6 +421,13 @@ export default function TemplateOptions( {
 
   const recordingSupported = Boolean( backendRecording || browserRecordingSupported );
 
+  // The sketch-settings scope the Interactive mixer manages — the active slide's
+  // overrides when a slide is selected, otherwise the global sketch settings.
+  const sketchBasePath =
+    activeSlideIndex !== undefined
+      ? `slides.${ activeSlideIndex }.sketch`
+      : "sketch";
+
   return (
     <FormProvider { ...methods }>
       <CollapsibleProvider>
@@ -489,6 +497,12 @@ export default function TemplateOptions( {
             onBannerClone={ handleBannerClone }
           />
         )}
+
+        {/* The central Interactive mixer — one overview of every binding, with
+            per-layer solo / mute / weight. Floats bottom-center (desktop only,
+            where it doesn't collide with the mobile drawer); hidden unless the
+            plugin is on and the scope has bindings. */}
+        {isDesktop && <InteractivePanel basePath={ sketchBasePath } />}
       </CollapsibleProvider>
     </FormProvider>
   );
