@@ -27,18 +27,18 @@ export const formValues = {
   word: {
     value: "RISE",
     seed: 1,
-    alphabet: "lettersDigits" as "letters" | "lettersDigits" | "digits" | "custom",
+    alphabet: "letters" as "letters" | "lettersDigits" | "digits" | "custom",
     customAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   },
   grid: {
-    font: "waverseVariable",
-    letterScale: 0.73,
+    font: "spaceMonoRegular",
+    letterScale: 0.7,
     // Outline sampling precision for the extruded glyphs (lower = smoother caps).
-    sampleFactor: 0.38,
+    sampleFactor: 0.18,
     // How many cells around the reading head are kept in the terrain / liftable.
-    gridRadius: 12,
+    gridRadius: 6,
     // The next letter is searched for beyond this many cells (off-screen).
-    searchViewRadius: 4
+    searchViewRadius: 5
   },
   motion: {
     dwell: 0.45,
@@ -47,15 +47,15 @@ export const formValues = {
   },
   extrude: {
     // Extrusion height of a fully-raised letter, in cells.
-    height: 3
+    height: 1.1
   },
   elevation: {
     // Scales the lift height of the targeted letter(s).
-    multiplier: 3,
+    multiplier: 1,
     // Reach of the lift, in cells: ~0 raises only the centred letter, larger
     // values raise neighbours then cells further out.
-    spread: 4.8,
-    falloff: "easeInSine",
+    spread: 0.6,
+    falloff: "easeInOutSine",
     // Safety cap on simultaneously extruded cells (performance).
     maxCells: 36
   },
@@ -73,8 +73,8 @@ export const formValues = {
     ] as number[]
   },
   shadow: {
-    opacity: 0,
-    softness: 0.35,
+    opacity: 0.6,
+    softness: 0.5,
     color: [
       0,
       0,
@@ -83,11 +83,11 @@ export const formValues = {
   },
   camera: {
     // Camera pitch below the horizon, degrees (89 = nearly top-down).
-    tilt: 89,
-    distance: 1290,
+    tilt: 52,
+    distance: 1100,
     // Vertical framing offset of the look-at point.
-    lift: -600,
-    fov: 62
+    lift: 0,
+    fov: 38
   },
   colors: {
     // Raised-letter material.
