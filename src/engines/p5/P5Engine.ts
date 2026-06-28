@@ -28,9 +28,6 @@ import {
   resolveSketchPath
 } from "@/engines/metadata";
 import {
-  loadSketchModule
-} from "@/generated/sketchModuleRegistry";
-import {
   getAnimationBridge
 } from "@/lib/animationBridge";
 import {
@@ -128,7 +125,15 @@ export class P5Engine implements SketchEngine {
     // Loaded from the generated registry of literal dynamic imports — see
     // src/generated/sketchModuleRegistry.ts. A variable-path import here would
     // make the bundler build a context module over every sketch, compiling the
-    // whole catalogue on each page in dev.
+    // whole catalogue on each page in dev. The registry module is imported
+    // dynamically (rather than at the top of the file) so its ~270 literal
+    // import() code-split points are NOT registered on the sketch page's
+    // initial compile — they only cost compile time once a sketch actually
+    // mounts and calls init(), shaving that work off the page's first paint.
+    const {
+      loadSketchModule
+    } = await import( "@/generated/sketchModuleRegistry" );
+
     await loadSketchModule(
       "p5",
       sketchPath

@@ -22,9 +22,6 @@ import {
   resolveSketchPath
 } from "@/engines/metadata";
 import {
-  loadSketchModule
-} from "@/generated/sketchModuleRegistry";
-import {
   registerServerCaptureController,
   unregisterServerCaptureController
 } from "@/engines/recording/serverCapture";
@@ -98,7 +95,15 @@ export class GsapEngine implements SketchEngine {
 
     // Loaded from the generated registry of literal dynamic imports — see
     // src/generated/sketchModuleRegistry.ts. A variable-path import here would
-    // make the bundler build a context module over every sketch.
+    // make the bundler build a context module over every sketch. The registry
+    // module is imported dynamically (rather than at the top of the file) so
+    // its ~270 literal import() code-split points are NOT registered on the
+    // sketch page's initial compile — they only cost compile time once a sketch
+    // actually mounts and calls init().
+    const {
+      loadSketchModule
+    } = await import( "@/generated/sketchModuleRegistry" );
+
     const templateModule = await loadSketchModule(
       "gsap",
       sketchPath
