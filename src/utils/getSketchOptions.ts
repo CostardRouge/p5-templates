@@ -12,8 +12,8 @@ import {
   getSketchOptionLoaders
 } from "@/engines/sketchOptionLoaders";
 import {
-  interactionFormValues, interactionFormConfiguration
-} from "@/p5/utils/interaction/defaults.js";
+  interactionBindingsEnabled
+} from "@/lib/interactionBindings";
 
 export async function getJSONSketchOptions(
   sketchName: string, engineId: string
@@ -67,35 +67,50 @@ export async function getSketchMeta(
   try {
     const loaded = await loaders.loadSketchForm( meta.sketchPath ) as SketchMeta;
 
+    // The interaction-bindings plugin is off by default — most sketches pay
+    // nothing, and we never even load the defaults module.
+    if ( !interactionBindingsEnabled() ) {
+      return loaded;
+    }
+
+    const needValues = !!loaded.formValues && !loaded.formValues.interaction;
+    const needConfig = !!loaded.formConfiguration && !loaded.formConfiguration.interaction;
+
+    if ( !needValues && !needConfig ) {
+      return loaded;
+    }
+
     // Surface the shared Interaction block on every sketch that doesn't declare
-    // its own. This seeds `sketch.interaction` (so the channel sampler can read
-    // hands / audio / orbit / … live) AND adds the classic Interaction settings
-    // panel to the form. Each sketch gets its own clone of the values so runtime
-    // edits never leak across sketches; the config is static and shared.
-    // Sketches that declare their own `interaction` (e.g. interaction-test) are
-    // left untouched.
+    // its own: seed `sketch.interaction` (so the channel sampler can read
+    // hands / audio / orbit / … live) AND add the classic Interaction settings
+    // panel to the form. Loaded lazily so a plugin-off build never pulls it in.
+    // Each sketch gets its own clone of the values so runtime edits never leak
+    // across sketches; the config is static and shared. Sketches that declare
+    // their own `interaction` (e.g. interaction-test) are left untouched.
     //
     // `loaded` is the dynamic-import module namespace — its exports are
     // read-only getters, so we build a fresh meta object rather than assigning
     // onto it (assigning throws, which the catch below would turn into a sketch
     // with no form at all).
+    const {
+      interactionFormValues, interactionFormConfiguration
+    } = await import( "@/p5/utils/interaction/defaults.js" );
+
     return {
-      formValues:
-        loaded.formValues && !loaded.formValues.interaction
-          ? {
-            ...loaded.formValues,
-            interaction: structuredClone( interactionFormValues )
-          }
-          : loaded.formValues,
-      formConfiguration:
-        loaded.formConfiguration && !loaded.formConfiguration.interaction
-          ? {
-            ...loaded.formConfiguration,
-            // `defaults.js` is untyped (component fields widen to `string`);
-            // the config is the canonical interaction panel, so assert the shape.
-            interaction: interactionFormConfiguration as unknown as FieldConfig
-          }
-          : loaded.formConfiguration
+      formValues: needValues
+        ? {
+          ...loaded.formValues,
+          interaction: structuredClone( interactionFormValues )
+        }
+        : loaded.formValues,
+      formConfiguration: needConfig
+        ? {
+          ...loaded.formConfiguration,
+          // `defaults.js` is untyped (component fields widen to `string`); the
+          // config is the canonical interaction panel, so assert the shape.
+          interaction: interactionFormConfiguration as unknown as FieldConfig
+        }
+        : loaded.formConfiguration
     };
   } catch {
     return {};

@@ -38,6 +38,15 @@ import {
   publishChannels, publishBindingSignals
 } from "@/lib/channelBridge";
 
+import {
+  interactionBindingsEnabled
+} from "@/lib/interactionBindings";
+
+// The interaction-bindings plugin gate. Read once — it's a build-time flag, so
+// when off the per-frame channel sampling/publishing and binding resolution are
+// skipped entirely and a normal sketch pays nothing for the feature.
+const BINDINGS_ENABLED = interactionBindingsEnabled();
+
 /* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
 /* ------------------------------------------------------------------ */
@@ -570,6 +579,10 @@ function bindingContext() {
 // meters. Runs for every sketch; `sampleChannels` is memoized per frame and the
 // binding-signal pass is skipped entirely when a sketch has no bindings.
 function publishChannelsFrame() {
+  if ( !BINDINGS_ENABLED ) {
+    return;
+  }
+
   try {
     const base = liveSketchBase( getSketchOptions() );
     const channels = sampleChannels( base?.interaction );
@@ -628,7 +641,12 @@ export function syncEffectivePrevious(
 function resolveSketch( live ) {
   const base = liveSketchBase( live );
 
-  if ( !base || !Array.isArray( base.bindings ) || base.bindings.length === 0 ) {
+  if (
+    !BINDINGS_ENABLED ||
+    !base ||
+    !Array.isArray( base.bindings ) ||
+    base.bindings.length === 0
+  ) {
     return base;
   }
 

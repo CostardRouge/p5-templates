@@ -4,9 +4,6 @@ import {
 import {
   WaveConfigSchema
 } from "@/p5/sketches/36days-of-type-2023/36days-of-type-2023-5/schemas";
-import {
-  interactionFormConfiguration
-} from "@/p5/utils/interaction/defaults.js";
 
 /**
  * Injects Zod schemas into sketch configurations on the client side.
@@ -25,14 +22,6 @@ export function injectSketchSchemas(
     if ( clonedConfig.animation?.fields?.wave ) {
       clonedConfig.animation.fields.wave.schema = WaveConfigSchema;
     }
-  }
-
-  // Guarantee every sketch surfaces the shared Interaction panel. The server
-  // (getSketchMeta) already seeds this for form sketches; this is the client
-  // safety net so the panel renders regardless of how the config arrived.
-  // Sketches that declare their own interaction block keep it.
-  if ( !clonedConfig.interaction ) {
-    clonedConfig.interaction = interactionFormConfiguration;
   }
 
   return clonedConfig;

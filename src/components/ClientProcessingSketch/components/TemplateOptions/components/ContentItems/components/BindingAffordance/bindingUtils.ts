@@ -182,6 +182,68 @@ export function channelSourceOptions( kind: BindingKind ): SourceOption[] {
   return options;
 }
 
+export type SourceGroup = {
+  /** Stable group key (the family base id, e.g. "mouse", "audio"). */
+  key: string;
+  /** Heading shown on the native <optgroup>. */
+  label: string;
+  options: SourceOption[];
+};
+
+/** Family label for a (possibly dotted) source id — "audio.bass" → "Audio". */
+function sourceFamilyLabel( sourceId: string ): string {
+  const base = String( sourceId ).split( "." )[ 0 ];
+  const descriptor = DESCRIPTORS.find( ( d ) => d.id === base );
+
+  return descriptor ? descriptor.label : base;
+}
+
+/**
+ * The same options as {@link channelSourceOptions}, bucketed by family for a
+ * native `<optgroup>` picker. A vector2d source's four projections
+ * (X / Y / Magnitude / Angle) and audio's semantic scalars (level / bass / …)
+ * sit under one heading instead of flooding a flat list. Group order follows
+ * the source manifest; option order within a group is preserved.
+ */
+export function channelSourceGroups( kind: BindingKind ): SourceGroup[] {
+  const groups: SourceGroup[] = [];
+  const byKey = new Map<string, SourceGroup>();
+
+  for ( const option of channelSourceOptions( kind ) ) {
+    const key = String( option.source ).split( "." )[ 0 ];
+
+    let group = byKey.get( key );
+
+    if ( !group ) {
+      group = {
+        key,
+        label: sourceFamilyLabel( option.source ),
+        options: []
+      };
+      byKey.set(
+        key,
+        group
+      );
+      groups.push( group );
+    }
+
+    group.options.push( option );
+  }
+
+  return groups;
+}
+
+/**
+ * The option's label with its family prefix stripped ("Audio · Bass" → "Bass"),
+ * for display under an `<optgroup>` whose heading already names the family.
+ * Falls back to the full label when there is no projection/scalar suffix.
+ */
+export function sourceOptionShortLabel( option: SourceOption ): string {
+  const idx = option.label.lastIndexOf( " · " );
+
+  return idx >= 0 ? option.label.slice( idx + 3 ) : option.label;
+}
+
 /** CSS var the VU meter should read for a given binding. */
 export function bindingVarName( binding: Binding ): string {
   if ( binding.kind === "vector2d" ) {
