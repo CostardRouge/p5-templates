@@ -353,6 +353,64 @@ export function sourceCategory( source: string | undefined ): SourceCategory {
   return "input";
 }
 
+/**
+ * The `interaction.*` boolean flag paths (relative to a sketch's `interaction`
+ * object) to switch ON so a freshly-picked input source actually produces a
+ * channel — "pick a source → it works". Vision sources (hands / face / …) need
+ * the camera AND their tracker; the semantic audio scalars (audio.bass,
+ * audio.level, …) need the mic AND the named-bands feature; the rest just need
+ * their own `enabled` flag. Generators and unknown ids have no source to enable
+ * and return an empty list.
+ *
+ * Mirrors the per-source `enabled` guards the interaction handler's collectors
+ * check (see the `_collect*` functions in `@/p5/utils/interaction/index.js`).
+ */
+export function interactionEnablePaths( source: string ): string[] {
+  // Semantic audio scalars: mic on + named-bands feature computed.
+  if ( source.startsWith( "audio." ) ) {
+    return [
+      "enabled",
+      "audio.enabled",
+      "audio.features.bands"
+    ];
+  }
+
+  switch ( source ) {
+    case "hands":
+    case "fingers":
+    case "face":
+    case "body":
+      return [
+        "enabled",
+        "vision.enabled",
+        `vision.${ source }.enabled`
+      ];
+
+    case "audio":
+      return [
+        "enabled",
+        "audio.enabled"
+      ];
+
+    case "mouse":
+    case "touch":
+    case "orbit":
+    case "perlinNoise":
+    case "gyroscope":
+    case "midi":
+    case "joypad":
+      return [
+        "enabled",
+        `${ source }.enabled`
+      ];
+
+    default:
+      // Generators (oscillator / ramp / sequence / noise / random) and unknown
+      // ids have no interaction source to enable.
+      return [];
+  }
+}
+
 export const SEQUENCE_MODE_OPTIONS = [
   {
     value: "step",

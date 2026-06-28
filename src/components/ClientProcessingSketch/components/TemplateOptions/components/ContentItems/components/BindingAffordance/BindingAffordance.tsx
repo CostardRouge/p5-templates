@@ -36,6 +36,7 @@ import {
   DEFAULT_RANDOM,
   encodeSource,
   getSketchScope,
+  interactionEnablePaths,
   makeDefaultBinding,
   SEQUENCE_MODE_OPTIONS,
   SOURCE_CATEGORIES,
@@ -137,6 +138,23 @@ export default function BindingAffordance( {
         shouldDirty: true
       }
     );
+  };
+
+  // Picking an interaction input source should make it actually produce a
+  // channel — flip the matching `interaction.*` enable flags on so the camera /
+  // mic / sensor for that source boots immediately. `sketch.interaction` exists
+  // on every sketch (seeded in getSketchMeta), so these writes land and the
+  // Interaction panel's own toggles reflect them.
+  const enableSourceInputs = ( source: string ) => {
+    for ( const path of interactionEnablePaths( source ) ) {
+      setValue(
+        `${ scope }.interaction.${ path }`,
+        true,
+        {
+          shouldDirty: true
+        }
+      );
+    }
   };
 
   const createBinding = () => {
@@ -301,6 +319,7 @@ export default function BindingAffordance( {
         "project",
         first.project ?? null
       );
+      enableSourceInputs( first.source );
     }
   };
 
@@ -457,6 +476,7 @@ export default function BindingAffordance( {
                       "project",
                       project ?? null
                     );
+                    enableSourceInputs( source );
                   } }
                   className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
                 >
