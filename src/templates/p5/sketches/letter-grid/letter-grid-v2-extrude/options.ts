@@ -47,23 +47,23 @@ export const formValues = {
   },
   extrude: {
     // Extrusion height of a fully-raised letter, in cells.
-    height: 2.35
+    height: 0.7
   },
   elevation: {
     // Scales the lift height of the targeted letter(s).
-    multiplier: 2,
+    multiplier: 1.15,
     // Reach of the lift, in cells: ~0 raises only the centred letter, larger
     // values raise neighbours then cells further out.
-    spread: 2.2,
+    spread: 4.4,
     falloff: "easeInCirc",
     // Safety cap on simultaneously extruded cells (performance).
     maxCells: 66
   },
   light: {
     // Compass direction the light comes from, degrees.
-    azimuth: 235,
+    azimuth: 59,
     // Height above the horizon, degrees (drives how long the shadows are).
-    elevation: 42,
+    elevation: 28,
     intensity: 0.85,
     ambient: 0.35,
     color: [
@@ -84,9 +84,9 @@ export const formValues = {
   camera: {
     // Scene rotation around each axis, degrees (full 0–360 turn on every axis).
     // rotateX pitches the ground into view, rotateY spins it, rotateZ rolls it.
-    rotateX: 89,
-    rotateY: 0,
-    rotateZ: 0,
+    rotateX: 121,
+    rotateY: 19,
+    rotateZ: 6,
     distance: 1260,
     // Vertical framing offset of the look-at point.
     lift: 230,
