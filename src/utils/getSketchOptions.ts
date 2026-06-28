@@ -74,23 +74,29 @@ export async function getSketchMeta(
     // edits never leak across sketches; the config is static and shared.
     // Sketches that declare their own `interaction` (e.g. interaction-test) are
     // left untouched.
-    if ( loaded.formValues && !loaded.formValues.interaction ) {
-      loaded.formValues = {
-        ...loaded.formValues,
-        interaction: structuredClone( interactionFormValues )
-      };
-    }
-
-    if ( loaded.formConfiguration && !loaded.formConfiguration.interaction ) {
-      loaded.formConfiguration = {
-        ...loaded.formConfiguration,
-        // `defaults.js` is untyped (component fields widen to `string`); the
-        // config is the canonical interaction panel, so assert the shape.
-        interaction: interactionFormConfiguration as unknown as FieldConfig
-      };
-    }
-
-    return loaded;
+    //
+    // `loaded` is the dynamic-import module namespace — its exports are
+    // read-only getters, so we build a fresh meta object rather than assigning
+    // onto it (assigning throws, which the catch below would turn into a sketch
+    // with no form at all).
+    return {
+      formValues:
+        loaded.formValues && !loaded.formValues.interaction
+          ? {
+            ...loaded.formValues,
+            interaction: structuredClone( interactionFormValues )
+          }
+          : loaded.formValues,
+      formConfiguration:
+        loaded.formConfiguration && !loaded.formConfiguration.interaction
+          ? {
+            ...loaded.formConfiguration,
+            // `defaults.js` is untyped (component fields widen to `string`);
+            // the config is the canonical interaction panel, so assert the shape.
+            interaction: interactionFormConfiguration as unknown as FieldConfig
+          }
+          : loaded.formConfiguration
+    };
   } catch {
     return {};
   }
