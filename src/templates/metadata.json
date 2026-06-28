@@ -3048,18 +3048,6 @@
     "ctime": "2026-06-25T07:00:55.576Z"
   },
   {
-    "name": "text-morphing-letter-mask",
-    "engine": "p5",
-    "category": "text-morphing-mask",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-25T07:01:12.714Z",
-    "ctime": "2026-06-25T07:01:12.707Z"
-  },
-  {
     "name": "text-morphing-iris-mask",
     "engine": "p5",
     "category": "text-morphing-mask",
@@ -3250,5 +3238,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-28T09:43:57.577Z",
     "ctime": "2026-06-28T09:43:30.865Z"
+  },
+  {
+    "name": "text-morphing-letter-mask",
+    "engine": "p5",
+    "category": "text-morphing-mask",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-28T12:15:44.469Z",
+    "ctime": "2026-06-28T12:15:44.468Z"
   }
 ]

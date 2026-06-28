@@ -26,15 +26,6 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_LIVE_THUMBNAIL: process.env.LIVE_THUMBNAIL,
     NEXT_PUBLIC_PREVIEW_ON_HOVER: process.env.PREVIEW_ON_HOVER
   }
-  // async redirects() {
-  //   return [
-  //     {
-  //       source: "/",
-  //       destination: "/templates",
-  //       permanent: false
-  //     }
-  //   ];
-  // }
 };
 
 export default nextConfig;
