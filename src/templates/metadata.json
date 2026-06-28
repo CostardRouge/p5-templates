@@ -3238,5 +3238,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-27T19:52:38.595Z",
     "ctime": "2026-06-27T19:51:50.819Z"
+  },
+  {
+    "name": "letter-grid-v1-spell",
+    "engine": "p5",
+    "category": "letter-grid",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-28T09:43:57.577Z",
+    "ctime": "2026-06-28T09:43:30.865Z"
   }
 ]
