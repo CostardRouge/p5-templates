@@ -82,8 +82,11 @@ export const formValues = {
     ] as number[]
   },
   camera: {
-    // Camera pitch below the horizon, degrees (89 = nearly top-down).
-    tilt: 89,
+    // Scene rotation around each axis, degrees (full 0–360 turn on every axis).
+    // rotateX pitches the ground into view, rotateY spins it, rotateZ rolls it.
+    rotateX: 89,
+    rotateY: 0,
+    rotateZ: 0,
     distance: 1260,
     // Vertical framing offset of the look-at point.
     lift: 230,
@@ -354,11 +357,25 @@ export const formConfiguration: Record<string, any> = {
     label: "Camera",
     component: "nested-object",
     fields: {
-      tilt: {
-        label: "Tilt (°)",
+      rotateX: {
+        label: "Rotate X / tilt (°)",
         component: "slider",
         min: 0,
-        max: 89,
+        max: 360,
+        step: 1
+      },
+      rotateY: {
+        label: "Rotate Y / spin (°)",
+        component: "slider",
+        min: 0,
+        max: 360,
+        step: 1
+      },
+      rotateZ: {
+        label: "Rotate Z / roll (°)",
+        component: "slider",
+        min: 0,
+        max: 360,
         step: 1
       },
       distance: {

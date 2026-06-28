@@ -880,17 +880,16 @@ sketch.draw( () => {
   );
 
   // ── Camera ────────────────────────────────────────────────────────────────
-  // Explicit camera — a Graphics has its own default eye ~1.2k units back, so a
-  // plain translate would stack on it. `tilt` is the pitch below the horizon
-  // (89° ≈ straight down).
-  const pitch = p.radians( clamp(
-    cameraCfg.tilt ?? 52,
-    5,
-    89
-  ) );
+  // Full 0–360 on every axis. rotateX is the eye's pitch as it orbits the reading
+  // head (0° = horizon / edge-on, 90° = straight down, and on round the back) —
+  // expressed as an orbit so it stays well-defined at every angle. rotateY then
+  // spins the grid on the ground and rotateZ rolls the frame.
   const distance = cameraCfg.distance ?? 1300;
-  const sinPitch = Math.sin( pitch );
-  const cosPitch = Math.cos( pitch );
+  const rotX = p.radians( cameraCfg.rotateX ?? 58 );
+  const rotY = p.radians( cameraCfg.rotateY ?? 0 );
+  const rotZ = p.radians( cameraCfg.rotateZ ?? 0 );
+  const sinX = Math.sin( rotX );
+  const cosX = Math.cos( rotX );
 
   const colC = Math.round( camCol );
   const rowC = Math.round( camRow );
@@ -931,22 +930,26 @@ sketch.draw( () => {
   );
   g.camera(
     0,
-    -distance * sinPitch,
-    distance * cosPitch,
+    -distance * sinX,
+    distance * cosX,
     0,
     cameraCfg.lift ?? 0,
     0,
     0,
-    -cosPitch,
-    -sinPitch
+    -cosX,
+    -sinX
   );
-  // Un-mirror screen-X (this camera basis flips it); the glyph's depth is
-  // pre-flipped in getGlyphGeometry so letters read upright on the ground.
+  // Un-mirror screen-X; the glyph's depth is pre-flipped in getGlyphGeometry so
+  // letters read upright on the ground at the default orientation.
   g.scale(
     -1,
     1,
     1
   );
+  // Spin the grid on the ground (Y) and roll the frame (Z) — applied within the
+  // pitched view so they compose intuitively on top of the tilt.
+  g.rotateY( rotY );
+  g.rotateZ( rotZ );
 
   // ── Ground plane (unlit, so the printed letters read flatly) ──────────────
   const half = ( radius + 1 ) * CELL;
