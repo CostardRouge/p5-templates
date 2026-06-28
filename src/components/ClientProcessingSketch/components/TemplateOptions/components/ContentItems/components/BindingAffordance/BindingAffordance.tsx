@@ -30,6 +30,9 @@ import {
   type Binding,
   type BindingKind,
   type SourceCategory,
+  BLEND_OPTIONS,
+  DEFAULT_WEIGHT,
+  bindingSourceLabel,
   channelSourceGroups,
   channelSourceOptions,
   sourceOptionShortLabel,
@@ -106,6 +109,12 @@ export default function BindingAffordance( {
     name: bindingsPath || "__no_bindings__"
   } ) as Binding[] | undefined;
 
+  // Which layer (binding) on this target the popover is currently editing.
+  const [
+    selLayer,
+    setSelLayer
+  ] = React.useState( 0 );
+
   // Off unless the interaction-bindings plugin is enabled, and only for sketch
   // parameters (so non-bindable panels — size, animation, … — show nothing).
   if ( !interactionBindingsEnabled() || !scope || !target ) {
@@ -114,14 +123,34 @@ export default function BindingAffordance( {
 
   const kind: BindingKind = component === "vector2d" ? "vector2d" : "continuous";
   const list: Binding[] = Array.isArray( bindings ) ? bindings : [];
-  const index = list.findIndex( ( b ) => b && b.target === target );
-  const binding = index >= 0 ? list[ index ] : undefined;
-  const bound = !!binding;
+
+  // Every binding driving THIS parameter, with its index in the bindings array —
+  // a parameter can be driven by multiple layered bindings.
+  const layers = list
+    .map( (
+      b, i
+    ) => ( {
+      binding: b,
+      index: i
+    } ) )
+    .filter( ( entry ) => entry.binding && entry.binding.target === target );
+  const layerPos = Math.min(
+    selLayer,
+    Math.max(
+      0,
+      layers.length - 1
+    )
+  );
+  const activeLayer = layers[ layerPos ];
+  const index = activeLayer ? activeLayer.index : -1;
+  const binding = activeLayer ? activeLayer.binding : undefined;
+  const bound = layers.length > 0;
   const sourceOptions = channelSourceOptions( kind );
   const domain = fieldDomain( config );
 
-  // Path of the binding object in the form; sub-fields (mapping.min, smoothing,
-  // enabled…) are edited in place so they round-trip like any other control.
+  // Path of the selected binding object in the form; sub-fields (mapping.min,
+  // smoothing, enabled…) are edited in place so they round-trip like any other
+  // control.
   const bindingPath = `${ bindingsPath }.${ index }`;
 
   const writeBindings = ( next: Binding[] ) => {
@@ -163,7 +192,8 @@ export default function BindingAffordance( {
     }
   };
 
-  const createBinding = () => {
+  // Append a new layer (binding) for this parameter and select it.
+  const addLayer = () => {
     writeBindings( [
       ...list,
       makeDefaultBinding(
@@ -173,10 +203,22 @@ export default function BindingAffordance( {
         config
       )
     ] );
+    setSelLayer( layers.length );
   };
 
-  const removeBinding = () => {
-    writeBindings( list.filter( ( b ) => b.target !== target ) );
+  // Remove the selected layer, then select a remaining one.
+  const removeLayer = () => {
+    if ( index < 0 ) {
+      return;
+    }
+
+    writeBindings( list.filter( (
+      _, i
+    ) => i !== index ) );
+    setSelLayer( Math.max(
+      0,
+      layerPos - 1
+    ) );
   };
 
   // Reset every modulation OPTION to its default, keeping the binding's source /
@@ -194,6 +236,10 @@ export default function BindingAffordance( {
       target: binding.target,
       kind: binding.kind,
       enabled: binding.enabled,
+      // Layer identity (weight / blend / solo) survives a modulation reset.
+      weight: binding.weight,
+      blend: binding.blend,
+      solo: binding.solo,
       smoothing: kind === "vector2d" ? 0.15 : 0.2,
       mapping: kind === "vector2d"
         ? {
@@ -236,7 +282,9 @@ export default function BindingAffordance( {
       };
     }
 
-    writeBindings( list.map( ( b ) => ( b.target === target ? next : b ) ) );
+    writeBindings( list.map( (
+      b, i
+    ) => ( i === index ? next : b ) ) );
   };
 
   // Switch the binding between source categories (input / oscillator / ramp),
@@ -384,10 +432,10 @@ export default function BindingAffordance( {
       <PopoverButton
         title={ bound ? "Edit modulation" : "Bind to an interactive input" }
         onClick={ () => {
-          // First click on an unbound field creates the binding AND opens the
-          // popover (no preventDefault) so it can be configured immediately.
+          // First click on an unbound field creates the first layer AND opens
+          // the popover (no preventDefault) so it can be configured immediately.
           if ( !bound ) {
-            createBinding();
+            addLayer();
           }
         } }
         className={ clsx(
@@ -439,6 +487,45 @@ export default function BindingAffordance( {
                   inputProps={ register( `${ bindingPath }.enabled` ) }
                 />
               </label>
+            </div>
+
+            {/* Layers — one chip per binding driving this parameter; the editor
+                below configures the selected one. "+" stacks another layer. */}
+            <div className="flex flex-wrap items-center gap-1">
+              {layers.map( (
+                entry, i
+              ) => (
+                <button
+                  key={ entry.binding.id ?? i }
+                  type="button"
+                  onClick={ () => setSelLayer( i ) }
+                  title={ bindingSourceLabel( entry.binding ) }
+                  className={ clsx(
+                    "flex items-center gap-1 rounded-md border px-1.5 py-1 transition-colors",
+                    i === layerPos
+                      ? "border-focus/60 text-focus"
+                      : "border-theme text-label hover:text-foreground",
+                    entry.binding.enabled === false && "opacity-50"
+                  ) }
+                >
+                  <span className="max-w-[6rem] truncate">
+                    {bindingSourceLabel( entry.binding )}
+                  </span>
+                  {entry.binding.solo && (
+                    <span className="text-[0.65rem] font-bold text-amber-400">
+                      S
+                    </span>
+                  )}
+                </button>
+              ) )}
+              <button
+                type="button"
+                onClick={ addLayer }
+                title="Add a layer"
+                className="grid h-7 w-7 place-items-center rounded-md border border-dashed border-theme text-label transition-colors hover:bg-hover hover:text-foreground"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
             </div>
 
             {/* Source — a conditional group: pick a category, then its options.
@@ -767,6 +854,48 @@ export default function BindingAffordance( {
               <ChannelMeter varName={ meterVar } />
             </div>
 
+            {/* Layer — how this binding stacks with the other layers on the same
+                parameter (blend mode appears once a second layer exists). */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-label">Layer</span>
+                <label className="flex cursor-pointer items-center gap-2 text-label">
+                  <span>Solo</span>
+                  <ToggleSwitch
+                    inputProps={ register( `${ bindingPath }.solo` ) }
+                  />
+                </label>
+              </div>
+              {layers.length > 1 && (
+                <select
+                  value={ binding.blend ?? "replace" }
+                  onChange={ ( e ) => setField(
+                    "blend",
+                    e.target.value
+                  ) }
+                  className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
+                >
+                  {BLEND_OPTIONS.map( ( option ) => (
+                    <option key={ option.value } value={ option.value }>
+                      {option.label}
+                    </option>
+                  ) )}
+                </select>
+              )}
+              <ControlledSliderInput
+                name={ `${ bindingPath }.weight` }
+                label="Weight"
+                min={ 0 }
+                max={ 1 }
+                step={ 0.05 }
+                { ...resetFor(
+                  "weight",
+                  binding.weight,
+                  DEFAULT_WEIGHT
+                ) }
+              />
+            </div>
+
             {/* Mapping range — real sliders over the parameter's own domain */}
             {kind === "continuous" ? (
               <div className="flex flex-col gap-1">
@@ -887,15 +1016,18 @@ export default function BindingAffordance( {
             <button
               type="button"
               onClick={ () => {
-                // Close first so Headless UI tears the panel down cleanly,
-                // then drop the binding from the array.
-                close();
-                removeBinding();
+                // Removing the last layer unbinds the field — close first so
+                // Headless UI tears the panel down cleanly. Otherwise keep the
+                // popover open on the next layer.
+                if ( layers.length <= 1 ) {
+                  close();
+                }
+                removeLayer();
               } }
               className="flex items-center justify-center gap-1.5 rounded-md border border-theme px-2 py-1.5 text-label transition-colors hover:bg-hover hover:text-foreground"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Remove binding
+              {layers.length > 1 ? "Remove layer" : "Remove binding"}
             </button>
           </div>
         ) : (

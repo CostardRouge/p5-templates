@@ -44,7 +44,8 @@ export const formValues = {
         }
       },
       smoothing: 0.15,
-      enabled: true
+      enabled: true,
+      weight: 1
     },
     {
       // mouse.y → thickness (inverted: thicker toward the bottom).
@@ -57,7 +58,8 @@ export const formValues = {
         max: 26
       },
       smoothing: 0.25,
-      enabled: true
+      enabled: true,
+      weight: 1
     },
     {
       // mouse.x → number of dots.
@@ -70,7 +72,8 @@ export const formValues = {
         max: 18
       },
       smoothing: 0.2,
-      enabled: true
+      enabled: true,
+      weight: 1
     },
     {
       // Sine oscillator → radius (pulses 0→max→0 once per loop).
@@ -86,7 +89,8 @@ export const formValues = {
         min: 80,
         max: 260
       },
-      enabled: true
+      enabled: true,
+      weight: 1
     },
     {
       // Sawtooth oscillator → rotation (continuous spin, one turn per loop).
@@ -102,7 +106,8 @@ export const formValues = {
         min: 0,
         max: 6.2832
       },
-      enabled: true
+      enabled: true,
+      weight: 1
     }
   ]
 };

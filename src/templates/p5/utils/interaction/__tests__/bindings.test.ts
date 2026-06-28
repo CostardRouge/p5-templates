@@ -21,7 +21,10 @@ import {
   randomValue,
   shapedScalar,
   computeBindingSignals,
-  isGenerator
+  isGenerator,
+  selectActiveBindings,
+  getPath,
+  isBlendMode
 } from "../bindings.js";
 
 const vec = (
@@ -734,6 +737,304 @@ describe(
 
         expect( signals.radius ).toBeCloseTo( 1 ); // sine peak
         expect( signals.weight ).toBeCloseTo( 0.3 ); // mouse.x
+      }
+    );
+  }
+);
+
+describe(
+  "layering (multiple bindings per target)",
+  () => {
+    const channels = {
+      half: scalar( 0.5 ),
+      full: scalar( 1 ),
+      none: scalar( 0 ),
+      low: scalar( 0.2 ),
+      high: scalar( 0.8 )
+    };
+
+    it(
+      "folds layers in order: a later 'replace' wins, 'add' sums on top",
+      () => {
+        const base: any = {
+          radius: 100,
+          bindings: [
+            {
+              id: "a",
+              source: "half",
+              target: "radius",
+              kind: "continuous",
+              mapping: {
+                min: 0,
+                max: 100
+              }
+            },
+            {
+              id: "b",
+              source: "full",
+              target: "radius",
+              kind: "continuous",
+              blend: "add",
+              mapping: {
+                min: 0,
+                max: 10
+              }
+            }
+          ]
+        };
+
+        // layer a (replace, w1): base 100 → 50; layer b (add, w1): 50 + 10 = 60
+        expect( ( resolveBindings(
+          base,
+          channels,
+          101
+        ) as any ).radius ).toBeCloseTo( 60 );
+      }
+    );
+
+    it(
+      "averages two layers",
+      () => {
+        const base: any = {
+          v: 0,
+          bindings: [
+            {
+              id: "a",
+              source: "low",
+              target: "v",
+              kind: "continuous",
+              mapping: {
+                min: 0,
+                max: 100
+              }
+            },
+            {
+              id: "b",
+              source: "high",
+              target: "v",
+              kind: "continuous",
+              blend: "average",
+              mapping: {
+                min: 0,
+                max: 100
+              }
+            }
+          ]
+        };
+
+        // a → 20, b average → (20 + 80) / 2 = 50
+        expect( ( resolveBindings(
+          base,
+          channels,
+          102
+        ) as any ).v ).toBeCloseTo( 50 );
+      }
+    );
+
+    it(
+      "weight crossfades a single layer against the base value (dry/wet)",
+      () => {
+        const base: any = {
+          radius: 100,
+          bindings: [
+            {
+              id: "a",
+              source: "full",
+              target: "radius",
+              kind: "continuous",
+              weight: 0.5,
+              mapping: {
+                min: 0,
+                max: 200
+              }
+            }
+          ]
+        };
+
+        // layer value 200, weight 0.5 → lerp(base 100, 200, 0.5) = 150
+        expect( ( resolveBindings(
+          base,
+          channels,
+          103
+        ) as any ).radius ).toBeCloseTo( 150 );
+      }
+    );
+
+    it(
+      "solo isolates: only soloed bindings play, others fall back to base",
+      () => {
+        const base: any = {
+          radius: 5,
+          weight: 5,
+          bindings: [
+            {
+              id: "a",
+              source: "full",
+              target: "radius",
+              kind: "continuous",
+              mapping: {
+                min: 0,
+                max: 100
+              }
+            },
+            {
+              id: "b",
+              source: "full",
+              target: "weight",
+              kind: "continuous",
+              solo: true,
+              mapping: {
+                min: 0,
+                max: 50
+              }
+            }
+          ]
+        };
+
+        const out: any = resolveBindings(
+          base,
+          channels,
+          104
+        );
+
+        expect( out.radius ).toBe( 5 ); // not soloed → untouched
+        expect( out.weight ).toBeCloseTo( 50 ); // soloed → plays
+      }
+    );
+
+    it(
+      "computeBindingSignals emits a per-binding-id signal plus a per-target max",
+      () => {
+        const base: any = {
+          bindings: [
+            {
+              id: "a1",
+              source: "full",
+              target: "radius",
+              kind: "continuous"
+            },
+            {
+              id: "b1",
+              source: "low",
+              target: "radius",
+              kind: "continuous"
+            }
+          ]
+        };
+
+        const signals: any = computeBindingSignals(
+          base,
+          channels,
+          {}
+        );
+
+        expect( signals.a1 ).toBeCloseTo( 1 );
+        expect( signals.b1 ).toBeCloseTo( 0.2 );
+        // The field pastille reads the aggregate (max of the active layers).
+        expect( signals.radius ).toBeCloseTo( 1 );
+      }
+    );
+  }
+);
+
+describe(
+  "selectActiveBindings",
+  () => {
+    it(
+      "drops disabled bindings",
+      () => {
+        const list = [
+          {
+            id: "a",
+            enabled: true
+          },
+          {
+            id: "b",
+            enabled: false
+          }
+        ];
+
+        expect( selectActiveBindings( list ).map( ( b ) => b.id ) ).toEqual( [
+          "a"
+        ] );
+      }
+    );
+
+    it(
+      "keeps only soloed bindings when any are soloed",
+      () => {
+        const list = [
+          {
+            id: "a"
+          },
+          {
+            id: "b",
+            solo: true
+          },
+          {
+            id: "c",
+            solo: true,
+            enabled: false
+          }
+        ];
+
+        // c is soloed but disabled — disabled wins, it drops first.
+        expect( selectActiveBindings( list ).map( ( b ) => b.id ) ).toEqual( [
+          "b"
+        ] );
+      }
+    );
+
+    it(
+      "returns all enabled bindings when none are soloed",
+      () => {
+        const list = [
+          {
+            id: "a"
+          },
+          {
+            id: "b"
+          }
+        ];
+
+        expect( selectActiveBindings( list ) ).toHaveLength( 2 );
+      }
+    );
+  }
+);
+
+describe(
+  "getPath / isBlendMode",
+  () => {
+    it(
+      "reads nested dotted paths and returns undefined for missing segments",
+      () => {
+        const obj = {
+          ring: {
+            inner: {
+              radius: 7
+            }
+          }
+        };
+
+        expect( getPath(
+          obj,
+          "ring.inner.radius"
+        ) ).toBe( 7 );
+        expect( getPath(
+          obj,
+          "ring.outer.radius"
+        ) ).toBeUndefined();
+      }
+    );
+
+    it(
+      "recognizes the supported blend modes",
+      () => {
+        expect( isBlendMode( "replace" ) ).toBe( true );
+        expect( isBlendMode( "add" ) ).toBe( true );
+        expect( isBlendMode( "average" ) ).toBe( true );
+        expect( isBlendMode( "nonsense" ) ).toBe( false );
       }
     );
   }
