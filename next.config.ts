@@ -10,6 +10,26 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_BUILD_DIR || ".next",
   poweredByHeader: false,
   devIndicators: false,
+
+  // Node-only server dependencies that must never reach the browser. Marking
+  // them external stops Turbopack (and webpack) from parsing/transforming them
+  // into the module graph on every server compile — they are `require()`d
+  // straight from node_modules at runtime instead. This trims the dev-compile
+  // cost of the recording/API routes and the sketch-studio server route that
+  // pull these in. Next already ships @aws-sdk/client-s3, sharp, prisma and
+  // playwright in its default external list, so only the deps NOT covered by
+  // that list are added here (see node_modules/next/dist/lib/
+  // server-external-packages.json). Browser deps used for client-side recording
+  // (mediabunny, gif.js) are deliberately NOT listed — they must stay bundled.
+  serverExternalPackages: [
+    "@aws-sdk/s3-request-presigner",
+    "archiver",
+    "tar",
+    "bullmq",
+    "ioredis",
+    "web-push"
+  ],
+
   allowedDevOrigins: [
     "*",
     "192.168.1.161",

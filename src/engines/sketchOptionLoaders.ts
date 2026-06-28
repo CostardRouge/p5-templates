@@ -1,10 +1,5 @@
 import "server-only";
 
-import {
-  sketchOptionsJsonLoaders,
-  sketchFormLoaders
-} from "@/generated/sketchOptionsRegistry";
-
 /**
  * Server-only loaders for a template's filesystem-backed option files
  * (`options.json` / `options.ts`).
@@ -41,6 +36,9 @@ export type SketchOptionLoaders = {
 function buildLoaders( engineId: string ): SketchOptionLoaders {
   return {
     async loadOptionsJson( sketchPath: string ) {
+      const {
+        sketchOptionsJsonLoaders
+      } = await import( "@/generated/sketchOptionsRegistry" );
       const loader = sketchOptionsJsonLoaders[ `${ engineId }:${ sketchPath }` ];
 
       if ( !loader ) {
@@ -53,6 +51,9 @@ function buildLoaders( engineId: string ): SketchOptionLoaders {
     },
 
     async loadSketchForm( sketchPath: string ) {
+      const {
+        sketchFormLoaders
+      } = await import( "@/generated/sketchOptionsRegistry" );
       const loader = sketchFormLoaders[ `${ engineId }:${ sketchPath }` ];
 
       if ( !loader ) {
@@ -65,25 +66,16 @@ function buildLoaders( engineId: string ): SketchOptionLoaders {
 }
 
 /**
- * The set of engines that ship at least one option file, derived from the
- * generated registry keys (`<engineId>:<sketchPath>`).
+ * Return the server-only option loaders for `engineId`.
+ *
+ * Always returns a loader pair: each loader resolves to `{}` when the generated
+ * registry has no entry for the key, so callers don't need a separate
+ * "does this engine ship option files?" guard. The registry (`@/generated/
+ * sketchOptionsRegistry`, ~280 literal import() code-split points) is imported
+ * *inside* the loaders rather than at module top level, so those split points
+ * stay off the sketch route's initial server compile — they are only paid once
+ * a loader actually runs while rendering a sketch that has options.
  */
-const enginesWithOptions = new Set( [
-  ...Object.keys( sketchOptionsJsonLoaders ),
-  ...Object.keys( sketchFormLoaders )
-].map( ( key ) => key.slice(
-  0,
-  key.indexOf( ":" )
-) ) );
-
-/**
- * Return the server-only option loaders for `engineId`, or `undefined`
- * when the engine has no template option files.
- */
-export function getSketchOptionLoaders( engineId: string ): SketchOptionLoaders | undefined {
-  if ( !enginesWithOptions.has( engineId ) ) {
-    return undefined;
-  }
-
+export function getSketchOptionLoaders( engineId: string ): SketchOptionLoaders {
   return buildLoaders( engineId );
 }
