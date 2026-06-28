@@ -29,14 +29,14 @@ export const formValues = {
     value: "HELLO",
     // Seeds both the random grid and the path of cells visited.
     seed: 1,
-    alphabet: "letters" as "letters" | "lettersDigits" | "digits" | "custom",
+    alphabet: "lettersDigits" as "letters" | "lettersDigits" | "digits" | "custom",
     // Used only when alphabet = "custom".
     customAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   },
   grid: {
     // How many cells span the shorter canvas edge. A fractional value leaves the
     // centre glyph large while neighbours peek in at the edges (the soft margin).
-    cellsAcross: 3.4,
+    cellsAcross: 5.4,
     font: "spaceMonoRegular",
     // Glyph size relative to a cell.
     letterScale: 0.62,
