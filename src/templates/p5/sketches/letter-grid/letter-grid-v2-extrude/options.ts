@@ -27,43 +27,43 @@ export const formValues = {
   word: {
     value: "RISE",
     seed: 1,
-    alphabet: "lettersDigits" as "letters" | "lettersDigits" | "digits" | "custom",
+    alphabet: "letters" as "letters" | "lettersDigits" | "digits" | "custom",
     customAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   },
   grid: {
-    font: "waverseVariable",
-    letterScale: 0.73,
+    font: "martian",
+    letterScale: 0.77,
     // Outline sampling precision for the extruded glyphs (lower = smoother caps).
-    sampleFactor: 0.38,
+    sampleFactor: 0.22,
     // How many cells around the reading head are kept in the terrain / liftable.
-    gridRadius: 12,
+    gridRadius: 7,
     // The next letter is searched for beyond this many cells (off-screen).
-    searchViewRadius: 4
+    searchViewRadius: 4.5
   },
   motion: {
-    dwell: 0.45,
+    dwell: 0.37,
     easing: "easeInOutCubic",
-    searchSpread: 0.6
+    searchSpread: 0.01
   },
   extrude: {
     // Extrusion height of a fully-raised letter, in cells.
-    height: 3
+    height: 0.7
   },
   elevation: {
     // Scales the lift height of the targeted letter(s).
-    multiplier: 3,
+    multiplier: 1.15,
     // Reach of the lift, in cells: ~0 raises only the centred letter, larger
     // values raise neighbours then cells further out.
-    spread: 4.8,
-    falloff: "easeInSine",
+    spread: 4.4,
+    falloff: "easeInCirc",
     // Safety cap on simultaneously extruded cells (performance).
-    maxCells: 36
+    maxCells: 66
   },
   light: {
     // Compass direction the light comes from, degrees.
-    azimuth: 235,
+    azimuth: 59,
     // Height above the horizon, degrees (drives how long the shadows are).
-    elevation: 42,
+    elevation: 28,
     intensity: 0.85,
     ambient: 0.35,
     color: [
@@ -73,8 +73,8 @@ export const formValues = {
     ] as number[]
   },
   shadow: {
-    opacity: 0,
-    softness: 0.35,
+    opacity: 0.27,
+    softness: 0,
     color: [
       0,
       0,
@@ -82,19 +82,22 @@ export const formValues = {
     ] as number[]
   },
   camera: {
-    // Camera pitch below the horizon, degrees (89 = nearly top-down).
-    tilt: 89,
-    distance: 1290,
+    // Scene rotation around each axis, degrees (full 0–360 turn on every axis).
+    // rotateX pitches the ground into view, rotateY spins it, rotateZ rolls it.
+    rotateX: 121,
+    rotateY: 19,
+    rotateZ: 6,
+    distance: 1260,
     // Vertical framing offset of the look-at point.
-    lift: -600,
-    fov: 62
+    lift: 230,
+    fov: 36
   },
   colors: {
     // Raised-letter material.
     letter: [
-      225,
-      225,
-      235,
+      98,
+      244,
+      227,
       255
     ] as number[],
     // The spelled word's letters glow this colour.
@@ -354,11 +357,25 @@ export const formConfiguration: Record<string, any> = {
     label: "Camera",
     component: "nested-object",
     fields: {
-      tilt: {
-        label: "Tilt (°)",
+      rotateX: {
+        label: "Rotate X / tilt (°)",
         component: "slider",
         min: 0,
-        max: 89,
+        max: 360,
+        step: 1
+      },
+      rotateY: {
+        label: "Rotate Y / spin (°)",
+        component: "slider",
+        min: 0,
+        max: 360,
+        step: 1
+      },
+      rotateZ: {
+        label: "Rotate Z / roll (°)",
+        component: "slider",
+        min: 0,
+        max: 360,
         step: 1
       },
       distance: {

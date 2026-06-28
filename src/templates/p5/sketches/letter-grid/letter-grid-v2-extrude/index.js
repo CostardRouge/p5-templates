@@ -392,12 +392,19 @@ function getCapMesh(
   return mesh;
 }
 
-// One letter-shaped shadow: the glyph outline projected from its top rim onto the
-// ground along the light direction, filled dark (a soft second pass widens it).
+// The cast shadow as a building-like TRAIL on the ground: the glyph footprint at
+// the feet, its silhouette projected along the light, and the swept band joining
+// them — so the shadow streaks out from the base instead of floating as a detached
+// copy. The trail's length grows with the letter's height (t = height / light.y).
+//
+// Drawn OPAQUE (a colour pre-blended toward the shadow tint), which is what lets
+// the footprint + band + projected cap overlap freely — even on concave glyphs —
+// without the double-darkening translucent fills would give. `softness` lays down
+// a wider, translucent halo first that the opaque core then covers bar its rim.
 function drawShadow(
-  g, p, geometry, k, height, light, color, opacity, softness
+  g, p, geometry, k, height, light, fill, softness
 ) {
-  if ( !geometry.contours.length || opacity <= 0 ) {
+  if ( !geometry.contours.length ) {
     return;
   }
 
@@ -405,56 +412,111 @@ function drawShadow(
     0.06,
     light.y
   );
+  const ox = light.x * t;
+  const oz = light.z * t;
+  const outer = geometry.contours[ 0 ];
+  const n = outer.length;
 
-  const emit = (
-    scale, alpha
+  const cap = (
+    offX, offZ, scale, alpha
   ) => {
     g.fill(
-      color[ 0 ],
-      color[ 1 ],
-      color[ 2 ],
+      fill[ 0 ],
+      fill[ 1 ],
+      fill[ 2 ],
       alpha
     );
     g.beginShape( p.TESS );
 
-    const outer = geometry.contours[ 0 ];
-
     for ( const pt of outer ) {
       g.vertex(
-        pt.x * k * scale + light.x * t,
+        pt.x * k * scale + offX,
         SHADOW_Y,
-        pt.y * k * scale + light.z * t
+        pt.y * k * scale + offZ
       );
-    }
-
-    for ( let c = 1; c < geometry.contours.length; c++ ) {
-      g.beginContour();
-
-      for ( const pt of geometry.contours[ c ] ) {
-        g.vertex(
-          pt.x * k * scale + light.x * t,
-          SHADOW_Y,
-          pt.y * k * scale + light.z * t
-        );
-      }
-
-      g.endContour();
     }
 
     g.endShape( p.CLOSE );
   };
 
-  emit(
-    1,
-    opacity * 255
-  );
+  const sweep = (
+    scale, alpha
+  ) => {
+    cap(
+      0,
+      0,
+      scale,
+      alpha
+    );
+    cap(
+      ox,
+      oz,
+      scale,
+      alpha
+    );
+
+    g.fill(
+      fill[ 0 ],
+      fill[ 1 ],
+      fill[ 2 ],
+      alpha
+    );
+    g.beginShape( p.TRIANGLES );
+
+    for ( let i = 0; i < n; i++ ) {
+      const a = outer[ i ];
+      const b = outer[ ( i + 1 ) % n ];
+      const ax = a.x * k * scale;
+      const az = a.y * k * scale;
+      const bx = b.x * k * scale;
+      const bz = b.y * k * scale;
+
+      g.vertex(
+        ax,
+        SHADOW_Y,
+        az
+      );
+      g.vertex(
+        bx,
+        SHADOW_Y,
+        bz
+      );
+      g.vertex(
+        bx + ox,
+        SHADOW_Y,
+        bz + oz
+      );
+      g.vertex(
+        ax,
+        SHADOW_Y,
+        az
+      );
+      g.vertex(
+        bx + ox,
+        SHADOW_Y,
+        bz + oz
+      );
+      g.vertex(
+        ax + ox,
+        SHADOW_Y,
+        az + oz
+      );
+    }
+
+    g.endShape();
+  };
 
   if ( softness > 0 ) {
-    emit(
-      1 + 0.18 * softness,
-      opacity * 0.5 * 255
+    sweep(
+      1 + 0.14 * softness,
+      110
     );
   }
+
+  sweep(
+    1,
+    255
+  );
 }
 
 // The extruded glyph: a tessellated top cap at -height plus quad side walls down to
@@ -818,17 +880,16 @@ sketch.draw( () => {
   );
 
   // ── Camera ────────────────────────────────────────────────────────────────
-  // Explicit camera — a Graphics has its own default eye ~1.2k units back, so a
-  // plain translate would stack on it. `tilt` is the pitch below the horizon
-  // (89° ≈ straight down).
-  const pitch = p.radians( clamp(
-    cameraCfg.tilt ?? 52,
-    5,
-    89
-  ) );
+  // Full 0–360 on every axis. rotateX is the eye's pitch as it orbits the reading
+  // head (0° = horizon / edge-on, 90° = straight down, and on round the back) —
+  // expressed as an orbit so it stays well-defined at every angle. rotateY then
+  // spins the grid on the ground and rotateZ rolls the frame.
   const distance = cameraCfg.distance ?? 1300;
-  const sinPitch = Math.sin( pitch );
-  const cosPitch = Math.cos( pitch );
+  const rotX = p.radians( cameraCfg.rotateX ?? 58 );
+  const rotY = p.radians( cameraCfg.rotateY ?? 0 );
+  const rotZ = p.radians( cameraCfg.rotateZ ?? 0 );
+  const sinX = Math.sin( rotX );
+  const cosX = Math.cos( rotX );
 
   const colC = Math.round( camCol );
   const rowC = Math.round( camRow );
@@ -869,22 +930,26 @@ sketch.draw( () => {
   );
   g.camera(
     0,
-    -distance * sinPitch,
-    distance * cosPitch,
+    -distance * sinX,
+    distance * cosX,
     0,
     cameraCfg.lift ?? 0,
     0,
     0,
-    -cosPitch,
-    -sinPitch
+    -cosX,
+    -sinX
   );
-  // Un-mirror screen-X (this camera basis flips it); the glyph's depth is
-  // pre-flipped in getGlyphGeometry so letters read upright on the ground.
+  // Un-mirror screen-X; the glyph's depth is pre-flipped in getGlyphGeometry so
+  // letters read upright on the ground at the default orientation.
   g.scale(
     -1,
     1,
     1
   );
+  // Spin the grid on the ground (Y) and roll the frame (Z) — applied within the
+  // pitched view so they compose intuitively on top of the tilt.
+  g.rotateY( rotY );
+  g.rotateZ( rotZ );
 
   // ── Ground plane (unlit, so the printed letters read flatly) ──────────────
   const half = ( radius + 1 ) * CELL;
@@ -967,7 +1032,7 @@ sketch.draw( () => {
     }
   }
 
-  // ── Shadows (still unlit → literal dark, alpha-blended onto the terrain) ───
+  // ── Cast shadows (unlit; opaque trail pre-blended over the ground tint) ────
   const shadowColor = shadowCfg.color ?? [
     0,
     0,
@@ -982,35 +1047,43 @@ sketch.draw( () => {
     0,
     shadowCfg.softness ?? 0.5
   );
+  // Opaque fill = the ground darkened toward the shadow tint by `opacity`. Keeping
+  // it opaque is what lets the trail's overlapping parts stack without darkening.
+  const shadowFill = lerpColor(
+    groundColor,
+    shadowColor,
+    shadowOpacity
+  );
 
-  for ( const cell of lifted ) {
-    g.push();
-    g.translate(
-      ( cell.col - camCol ) * CELL,
-      0,
-      ( cell.row - camRow ) * CELL
-    );
-    drawShadow(
-      g,
-      p,
-      getGlyphGeometry(
-        cellChar(
-          cell.col,
-          cell.row,
-          seed,
-          alphabet
+  if ( shadowOpacity > 0 ) {
+    for ( const cell of lifted ) {
+      g.push();
+      g.translate(
+        ( cell.col - camCol ) * CELL,
+        0,
+        ( cell.row - camRow ) * CELL
+      );
+      drawShadow(
+        g,
+        p,
+        getGlyphGeometry(
+          cellChar(
+            cell.col,
+            cell.row,
+            seed,
+            alphabet
+          ),
+          font,
+          sampleFactor
         ),
-        font,
-        sampleFactor
-      ),
-      k,
-      cell.height,
-      light,
-      shadowColor,
-      shadowOpacity,
-      shadowSoftness
-    );
-    g.pop();
+        k,
+        cell.height,
+        light,
+        shadowFill,
+        shadowSoftness
+      );
+      g.pop();
+    }
   }
 
   // ── Lights on for the raised letters ──────────────────────────────────────
