@@ -3250,5 +3250,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-28T12:15:44.469Z",
     "ctime": "2026-06-28T12:15:44.468Z"
+  },
+  {
+    "name": "letter-grid-v2-extrude",
+    "engine": "p5",
+    "category": "letter-grid",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-28T13:10:47.333Z",
+    "ctime": "2026-06-28T13:10:12.453Z"
   }
 ]
