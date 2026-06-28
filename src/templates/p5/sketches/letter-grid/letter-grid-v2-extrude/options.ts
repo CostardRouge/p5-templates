@@ -31,33 +31,33 @@ export const formValues = {
     customAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   },
   grid: {
-    font: "spaceMonoRegular",
-    letterScale: 0.7,
+    font: "martian",
+    letterScale: 0.77,
     // Outline sampling precision for the extruded glyphs (lower = smoother caps).
-    sampleFactor: 0.18,
+    sampleFactor: 0.22,
     // How many cells around the reading head are kept in the terrain / liftable.
-    gridRadius: 6,
+    gridRadius: 7,
     // The next letter is searched for beyond this many cells (off-screen).
-    searchViewRadius: 5
+    searchViewRadius: 4.5
   },
   motion: {
-    dwell: 0.45,
+    dwell: 0.37,
     easing: "easeInOutCubic",
-    searchSpread: 0.6
+    searchSpread: 0.01
   },
   extrude: {
     // Extrusion height of a fully-raised letter, in cells.
-    height: 1.1
+    height: 2.35
   },
   elevation: {
     // Scales the lift height of the targeted letter(s).
-    multiplier: 1,
+    multiplier: 2,
     // Reach of the lift, in cells: ~0 raises only the centred letter, larger
     // values raise neighbours then cells further out.
-    spread: 0.6,
-    falloff: "easeInOutSine",
+    spread: 2.2,
+    falloff: "easeInCirc",
     // Safety cap on simultaneously extruded cells (performance).
-    maxCells: 36
+    maxCells: 66
   },
   light: {
     // Compass direction the light comes from, degrees.
@@ -73,8 +73,8 @@ export const formValues = {
     ] as number[]
   },
   shadow: {
-    opacity: 0.6,
-    softness: 0.5,
+    opacity: 0.27,
+    softness: 0,
     color: [
       0,
       0,
@@ -83,18 +83,18 @@ export const formValues = {
   },
   camera: {
     // Camera pitch below the horizon, degrees (89 = nearly top-down).
-    tilt: 52,
-    distance: 1100,
+    tilt: 89,
+    distance: 1260,
     // Vertical framing offset of the look-at point.
-    lift: 0,
-    fov: 38
+    lift: 230,
+    fov: 36
   },
   colors: {
     // Raised-letter material.
     letter: [
-      225,
-      225,
-      235,
+      98,
+      244,
+      227,
       255
     ] as number[],
     // The spelled word's letters glow this colour.
