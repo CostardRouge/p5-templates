@@ -12,17 +12,17 @@ export const formValues = {
 
   // Where the cards sit and how big they are
   layout: {
-    shape: "helix",
-    count: 60,
-    radius: 320,
-    turns: 1.4,
-    depth: 1100,
-    rise: 1500,
-    waves: 2,
-    amplitude: 260,
+    shape: "tower",
+    count: 12,
+    radius: 290,
+    turns: 0.25,
+    depth: 2170,
+    rise: 3000,
+    waves: 1,
+    amplitude: 0,
     photoSize: 0.6,
     photoShape: "auto",
-    zoom: -1150
+    zoom: -1810
   },
 
   // How the stack scrolls and rotates
@@ -31,8 +31,8 @@ export const formValues = {
     direction: "down",
     spin: 1,
     sway: 0.12,
-    tilt: -0.15,
-    cardSpin: 0,
+    tilt: -0.42,
+    cardSpin: -0.4,
     easing: "linear"
   },
 
@@ -45,8 +45,8 @@ export const formValues = {
       245,
       255
     ],
-    frameThickness: 0.035,
-    fadeDepth: 0.7,
+    frameThickness: 0.065,
+    fadeDepth: 0,
     fadeEdges: true,
     backgroundColor: [
       14,
@@ -59,7 +59,7 @@ export const formValues = {
   // EXIF read-out for the front photo
   info: {
     show: true,
-    placement: "left",
+    placement: "bottom",
     showFilename: false,
     size: 22,
     color: [
@@ -73,7 +73,7 @@ export const formValues = {
   // Loop
   animation: {
     duration: 10,
-    framerate: 60
+    framerate: 37
   },
 
   title: titleDefaultValues
