@@ -24,10 +24,15 @@ import {
   ToggleSwitch
 } from "../ControlChrome";
 import {
+  interactionBindingsEnabled
+} from "@/lib/interactionBindings";
+import {
   type Binding,
   type BindingKind,
   type SourceCategory,
+  channelSourceGroups,
   channelSourceOptions,
+  sourceOptionShortLabel,
   decodeSource,
   defaultSequence,
   DEFAULT_NOISE,
@@ -101,8 +106,9 @@ export default function BindingAffordance( {
     name: bindingsPath || "__no_bindings__"
   } ) as Binding[] | undefined;
 
-  // Not a sketch parameter → no affordance.
-  if ( !scope || !target ) {
+  // Off unless the interaction-bindings plugin is enabled, and only for sketch
+  // parameters (so non-bindable panels — size, animation, … — show nothing).
+  if ( !interactionBindingsEnabled() || !scope || !target ) {
     return null;
   }
 
@@ -480,10 +486,14 @@ export default function BindingAffordance( {
                   } }
                   className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
                 >
-                  {sourceOptions.map( ( option ) => (
-                    <option key={ option.value } value={ option.value }>
-                      {option.label}
-                    </option>
+                  {channelSourceGroups( kind ).map( ( group ) => (
+                    <optgroup key={ group.key } label={ group.label }>
+                      {group.options.map( ( option ) => (
+                        <option key={ option.value } value={ option.value }>
+                          {sourceOptionShortLabel( option )}
+                        </option>
+                      ) )}
+                    </optgroup>
                   ) )}
                 </select>
               )}

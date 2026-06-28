@@ -39,6 +39,9 @@ import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import BindingAffordance
   from "./ContentItems/components/BindingAffordance/BindingAffordance";
+import {
+  interactionBindingsEnabled
+} from "@/lib/interactionBindings";
 import deepClone from "@/utils/deepClone";
 import type {
   FieldConfig
@@ -610,7 +613,11 @@ export default function FieldRenderer( {
   // hides itself for non-sketch fields.
   const inlineBinding =
     config.component === "slider" || config.component === "number";
-  const bindable = inlineBinding || config.component === "vector2d";
+  // Gated by the interaction-bindings plugin so a field doesn't even mount the
+  // affordance (and its per-field useWatch) when the feature is off.
+  const bindable =
+    ( inlineBinding || config.component === "vector2d" ) &&
+    interactionBindingsEnabled();
   const bindingAffordance = bindable ? (
     <BindingAffordance
       fieldPath={ registeredName }
