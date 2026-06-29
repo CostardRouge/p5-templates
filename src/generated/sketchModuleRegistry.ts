@@ -98,6 +98,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:letter-grid/letter-grid-v1-spell": () => import( "@/p5/sketches/letter-grid/letter-grid-v1-spell/index.js" ),
   "p5:letter-grid/letter-grid-v2-extrude": () => import( "@/p5/sketches/letter-grid/letter-grid-v2-extrude/index.js" ),
   "p5:letter-grid/letter-grid-v3-leap": () => import( "@/p5/sketches/letter-grid/letter-grid-v3-leap/index.js" ),
+  "p5:letter-grid/letter-grid-v4-trail": () => import( "@/p5/sketches/letter-grid/letter-grid-v4-trail/index.js" ),
   "p5:letter-trace/letter-trace-v0-scribe": () => import( "@/p5/sketches/letter-trace/letter-trace-v0-scribe/index.js" ),
   "p5:letter-trace/letter-trace-v1-reveal": () => import( "@/p5/sketches/letter-trace/letter-trace-v1-reveal/index.js" ),
   "p5:lines": () => import( "@/p5/sketches/lines/index.js" ),
