@@ -1428,18 +1428,6 @@
     "ctime": "2026-06-17T19:40:45.241Z"
   },
   {
-    "name": "hand-tracking-v8-smear",
-    "engine": "p5",
-    "category": "hand-capture",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-17T19:40:45.242Z",
-    "ctime": "2026-06-17T19:40:45.242Z"
-  },
-  {
     "name": "lines",
     "engine": "p5",
     "category": null,
@@ -3216,7 +3204,7 @@
     "ctime": "2026-06-28T13:10:12.453Z"
   },
   {
-    "name": "finger-echo",
+    "name": "hand-tracking-v9-smear",
     "engine": "p5",
     "category": "hand-capture",
     "hasSketchForm": true,
@@ -3224,11 +3212,11 @@
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-29T13:52:23.059Z",
-    "ctime": "2026-06-29T13:52:23.058Z"
+    "mtime": "2026-06-29T13:52:23.003Z",
+    "ctime": "2026-06-29T13:52:23.003Z"
   },
   {
-    "name": "hand-cutout",
+    "name": "hand-tracking-v10-finger-echo",
     "engine": "p5",
     "category": "hand-capture",
     "hasSketchForm": true,
@@ -3236,11 +3224,11 @@
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-29T13:52:23.060Z",
-    "ctime": "2026-06-29T13:52:23.060Z"
+    "mtime": "2026-06-29T15:26:45.175Z",
+    "ctime": "2026-06-29T15:26:45.175Z"
   },
   {
-    "name": "mosaic",
+    "name": "hand-tracking-v11-hand-cutout",
     "engine": "p5",
     "category": "hand-capture",
     "hasSketchForm": true,
@@ -3248,11 +3236,11 @@
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-29T13:52:23.061Z",
-    "ctime": "2026-06-29T13:52:23.061Z"
+    "mtime": "2026-06-29T15:26:45.175Z",
+    "ctime": "2026-06-29T15:26:45.175Z"
   },
   {
-    "name": "point-cloud",
+    "name": "hand-tracking-v12-mosaic",
     "engine": "p5",
     "category": "hand-capture",
     "hasSketchForm": true,
@@ -3260,11 +3248,11 @@
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-29T13:52:23.062Z",
-    "ctime": "2026-06-29T13:52:23.061Z"
+    "mtime": "2026-06-29T15:26:45.176Z",
+    "ctime": "2026-06-29T15:26:45.175Z"
   },
   {
-    "name": "reveal",
+    "name": "hand-tracking-v13-point-cloud",
     "engine": "p5",
     "category": "hand-capture",
     "hasSketchForm": true,
@@ -3272,7 +3260,19 @@
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-29T13:52:23.063Z",
-    "ctime": "2026-06-29T13:52:23.062Z"
+    "mtime": "2026-06-29T15:26:45.176Z",
+    "ctime": "2026-06-29T15:26:45.176Z"
+  },
+  {
+    "name": "hand-tracking-v14-reveal",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-29T15:26:45.176Z",
+    "ctime": "2026-06-29T15:26:45.176Z"
   }
 ]
