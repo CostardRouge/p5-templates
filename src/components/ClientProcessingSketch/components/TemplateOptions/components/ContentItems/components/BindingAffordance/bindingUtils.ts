@@ -456,6 +456,25 @@ export function interactionEnablePaths( source: string ): string[] {
     ];
   }
 
+  // Semantic hand gesture scalars (hands.openness, hands.fingers, hands.pinch …):
+  // camera on + the hand tracker (the gesture metrics read its landmarks).
+  if ( source.startsWith( "hands." ) ) {
+    return [
+      "enabled",
+      "vision.enabled",
+      "vision.hands.enabled"
+    ];
+  }
+
+  // Semantic face gesture scalars (face.count, face.depth): camera + face tracker.
+  if ( source.startsWith( "face." ) ) {
+    return [
+      "enabled",
+      "vision.enabled",
+      "vision.face.enabled"
+    ];
+  }
+
   switch ( source ) {
     case "hands":
     case "fingers":

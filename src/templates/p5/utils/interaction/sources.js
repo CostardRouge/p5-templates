@@ -117,6 +117,59 @@ export const INTERACTION_SOURCES = [
     id: "audio.presence",
     type: "scalar",
     label: "Audio · Presence"
+  },
+
+  // ── Semantic hand/face gesture scalars (from getInteractionMetrics()) ──────
+  // Derived, intuitive values about what the camera sees — open vs closed hand,
+  // fingers/hands raised, suggested depth (nearness), pinch, spread, face
+  // presence/depth. Each is published 0..1 by channels.js (gestureChannelValues)
+  // and grouped under the existing "Hands" / "Face" families in the picker. The
+  // canonical id list + normalization live in ./gestureMath.js (GESTURE_SOURCES)
+  // — kept in sync by a parity test.
+  {
+    id: "hands.count",
+    type: "scalar",
+    label: "Hands · Count"
+  },
+  {
+    id: "hands.open",
+    type: "scalar",
+    label: "Hands · Open count"
+  },
+  {
+    id: "hands.openness",
+    type: "scalar",
+    label: "Hands · Openness"
+  },
+  {
+    id: "hands.fingers",
+    type: "scalar",
+    label: "Hands · Fingers up"
+  },
+  {
+    id: "hands.depth",
+    type: "scalar",
+    label: "Hands · Depth (near)"
+  },
+  {
+    id: "hands.pinch",
+    type: "scalar",
+    label: "Hands · Pinch"
+  },
+  {
+    id: "hands.spread",
+    type: "scalar",
+    label: "Hands · Spread"
+  },
+  {
+    id: "face.count",
+    type: "scalar",
+    label: "Face · Count"
+  },
+  {
+    id: "face.depth",
+    type: "scalar",
+    label: "Face · Depth (near)"
   }
 ];
 
