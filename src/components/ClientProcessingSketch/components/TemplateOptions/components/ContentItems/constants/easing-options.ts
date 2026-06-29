@@ -1,5 +1,6 @@
 export const EASING_FAMILIES = [
   "linear",
+  "smoothstep",
   "sine",
   "quad",
   "cubic",
@@ -13,6 +14,17 @@ export const EASING_FAMILIES = [
 ] as const;
 
 export type EasingFamily = ( typeof EASING_FAMILIES )[ number ];
+
+// Families with no In/Out/InOut variants — their key is just the family name and
+// the direction picker is hidden for them.
+const DIRECTIONLESS_FAMILIES = new Set( [
+  "linear",
+  "smoothstep"
+] );
+
+export function isDirectionlessFamily( family: string ): boolean {
+  return DIRECTIONLESS_FAMILIES.has( family );
+}
 
 export const EASING_DIRECTIONS = [
   {
@@ -38,8 +50,8 @@ function capitalize( s: string ): string {
 export function buildEasingKey(
   direction: string, family: string
 ): string {
-  if ( family === "linear" ) {
-    return "linear";
+  if ( isDirectionlessFamily( family ) ) {
+    return family;
   }
   return `ease${ direction }${ capitalize( family ) }`;
 }
@@ -48,10 +60,10 @@ export function parseEasingKey( key: string ): {
   direction: EasingDirection;
   family: EasingFamily;
 } {
-  if ( !key || key === "linear" ) {
+  if ( !key || isDirectionlessFamily( key ) ) {
     return {
       direction: "In",
-      family: "linear"
+      family: ( key || "linear" ) as EasingFamily
     };
   }
 

@@ -468,6 +468,18 @@
     "ctime": "2026-05-20T12:32:21.536Z"
   },
   {
+    "name": "text-morphing-rotating-scene",
+    "engine": "p5",
+    "category": "text-morphing",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-05-20T12:32:21.537Z",
+    "ctime": "2026-05-20T12:32:21.537Z"
+  },
+  {
     "name": "text-animation-typein-typeout",
     "engine": "p5",
     "category": "text",
@@ -2256,6 +2268,42 @@
     "ctime": "2026-06-17T19:40:45.263Z"
   },
   {
+    "name": "torsade-shaders-v1-melted",
+    "engine": "p5",
+    "category": "torsade-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-17T19:40:45.265Z",
+    "ctime": "2026-06-17T19:40:45.264Z"
+  },
+  {
+    "name": "torsade-shaders-v2-rabbit-hole",
+    "engine": "p5",
+    "category": "torsade-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-17T19:40:45.265Z",
+    "ctime": "2026-06-17T19:40:45.265Z"
+  },
+  {
+    "name": "torsade-shaders-v3-medusa",
+    "engine": "p5",
+    "category": "torsade-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-17T19:40:45.265Z",
+    "ctime": "2026-06-17T19:40:45.265Z"
+  },
+  {
     "name": "torsade-juggle",
     "engine": "p5",
     "category": "torsade",
@@ -3036,16 +3084,28 @@
     "ctime": "2026-06-23T19:51:39.332Z"
   },
   {
-    "name": "text-morphing-rotating-scene",
+    "name": "flowers-shaders-v1-melted",
     "engine": "p5",
-    "category": "text-morphing",
+    "category": "flowers-shaders",
     "hasSketchForm": true,
     "hasThumbnail": true,
-    "hasPreview": true,
+    "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
-    "mtime": "2026-06-25T07:00:55.591Z",
-    "ctime": "2026-06-25T07:00:55.576Z"
+    "mtime": "2026-06-23T20:02:42.833Z",
+    "ctime": "2026-06-23T20:02:23.797Z"
+  },
+  {
+    "name": "interactive-binding-demo",
+    "engine": "p5",
+    "category": "kinetic",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-24T15:50:05.988Z",
+    "ctime": "2026-06-24T15:50:05.983Z"
   },
   {
     "name": "text-morphing-iris-mask",
@@ -3060,42 +3120,6 @@
     "ctime": "2026-06-25T07:01:12.723Z"
   },
   {
-    "name": "torsade-shaders-v1-melted",
-    "engine": "p5",
-    "category": "torsade-shaders",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-25T07:01:29.740Z",
-    "ctime": "2026-06-25T07:01:29.736Z"
-  },
-  {
-    "name": "torsade-shaders-v3-medusa",
-    "engine": "p5",
-    "category": "torsade-shaders",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-25T07:01:29.744Z",
-    "ctime": "2026-06-25T07:01:29.741Z"
-  },
-  {
-    "name": "torsade-shaders-v2-rabbit-hole",
-    "engine": "p5",
-    "category": "torsade-shaders",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-25T07:01:29.749Z",
-    "ctime": "2026-06-25T07:01:29.746Z"
-  },
-  {
     "name": "flowers-shaders-v2-pipes",
     "engine": "p5",
     "category": "flowers-shaders",
@@ -3106,18 +3130,6 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-25T07:01:49.608Z",
     "ctime": "2026-06-25T07:01:49.602Z"
-  },
-  {
-    "name": "flowers-shaders-v1-melted",
-    "engine": "p5",
-    "category": "flowers-shaders",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-25T07:01:49.613Z",
-    "ctime": "2026-06-25T07:01:49.609Z"
   },
   {
     "name": "video-point-cloud",

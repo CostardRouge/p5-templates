@@ -37,6 +37,11 @@ import ControlledJoypadDeviceSelect
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
+import BindingAffordance
+  from "./ContentItems/components/BindingAffordance/BindingAffordance";
+import {
+  interactionBindingsEnabled
+} from "@/lib/interactionBindings";
 import deepClone from "@/utils/deepClone";
 import type {
   FieldConfig
@@ -50,7 +55,7 @@ import {
   CONTROL_RESET_BUTTON_CLASS
 } from "./ContentItems/constants/control-bar";
 import {
-  BarLabelSegment, CardLabelHeader
+  BarLabelSegment, CardLabelHeader, ToggleSwitch
 } from "./ContentItems/components/ControlChrome";
 import ItemListRenderer from "./ItemListRenderer";
 import {
@@ -147,17 +152,13 @@ export default function FieldRenderer( {
         // Toggle switch: the visually-hidden checkbox keeps the RHF register
         // semantics, the two sibling spans render the track and the knob.
         return (
-          <span className="relative inline-flex shrink-0 items-center">
-            <input
-              type="checkbox"
-              id={ registeredName }
-              aria-invalid={ !!error }
-              { ...register( registeredName ) }
-              className="peer sr-only"
-            />
-            <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
-            <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
-          </span>
+          <ToggleSwitch
+            inputProps={ {
+              id: registeredName,
+              "aria-invalid": !!error,
+              ...register( registeredName )
+            } }
+          />
         );
 
       case "number":
@@ -607,37 +608,65 @@ export default function FieldRenderer( {
     config.component === "asset" ||
     config.component === "asset-stack";
 
+  // Interactive-binding affordance: slider/number get it inline (beside the
+  // bar); the vector2d pad gets it in its outer label row. The affordance
+  // hides itself for non-sketch fields.
+  const inlineBinding =
+    config.component === "slider" || config.component === "number";
+  // Gated by the interaction-bindings plugin so a field doesn't even mount the
+  // affordance (and its per-field useWatch) when the feature is off.
+  const bindable =
+    ( inlineBinding || config.component === "vector2d" ) &&
+    interactionBindingsEnabled();
+  const bindingAffordance = bindable ? (
+    <BindingAffordance
+      fieldPath={ registeredName }
+      component={ config.component }
+      config={ config }
+    />
+  ) : null;
+
   return (
     <div className="text-sm md:text-xs">
       {needsOuterLabel &&
         config.label &&
         !hideLabel && (
-        <div className="flex min-w-0 items-center gap-1">
-          <label
-            htmlFor={ registeredName }
-            className={ `select-none truncate ${
-              isModified
-                ? "font-medium"
-                : "text-gray-400"
-            }` }
-          >
-            {config.label}
-          </label>
-          {isModified && (
-            <button
-              type="button"
-              onClick={ handleReset }
-              tabIndex={ -1 }
-              title="Reset to saved value"
-              className={ `shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
+        <div className="flex min-w-0 items-center justify-between gap-1">
+          <div className="flex min-w-0 items-center gap-1">
+            <label
+              htmlFor={ registeredName }
+              className={ `select-none truncate ${
+                isModified
+                  ? "font-medium"
+                  : "text-gray-400"
+              }` }
             >
-              <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
-            </button>
-          )}
+              {config.label}
+            </label>
+            {isModified && (
+              <button
+                type="button"
+                onClick={ handleReset }
+                tabIndex={ -1 }
+                title="Reset to saved value"
+                className={ `shrink-0 ${ CONTROL_RESET_BUTTON_CLASS }` }
+              >
+                <RotateCcw className="h-3.5 w-3.5 md:h-3 md:w-3" />
+              </button>
+            )}
+          </div>
+          {config.component === "vector2d" && bindingAffordance}
         </div>
       )}
 
-      {renderInput()}
+      {inlineBinding ? (
+        <div className="flex items-center gap-1.5">
+          <div className="min-w-0 flex-1">{renderInput()}</div>
+          {bindingAffordance}
+        </div>
+      ) : (
+        renderInput()
+      )}
 
       {/* Display validation errors */}
       {error && (

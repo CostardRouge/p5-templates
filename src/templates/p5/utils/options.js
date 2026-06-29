@@ -26,6 +26,27 @@ import {
   mergeSlideOverride
 } from "@/lib/effectiveSlideSettings";
 
+import animation from "./animation.js";
+
+import {
+  resolveBindings, computeBindingSignals
+} from "./interaction/bindings.js";
+import {
+  sampleChannels
+} from "./interaction/channels.js";
+import {
+  publishChannels, publishBindingSignals
+} from "@/lib/channelBridge";
+
+import {
+  interactionBindingsEnabled
+} from "@/lib/interactionBindings";
+
+// The interaction-bindings plugin gate. Read once — it's a build-time flag, so
+// when off the per-frame channel sampling/publishing and binding resolution are
+// skipped entirely and a normal sketch pays nothing for the feature.
+const BINDINGS_ENABLED = interactionBindingsEnabled();
+
 /* ------------------------------------------------------------------ */
 /*  Debounced, de-duplicated asset refresher                          */
 /* ------------------------------------------------------------------ */
@@ -469,9 +490,115 @@ export function registerEvents() {
     markLoadedWhenExifReady
   );
   events.register(
+    "pre-draw",
+    publishChannelsFrame
+  );
+  events.register(
     "pre-setup",
     initializeOptionsSubscription
   );
+  events.register(
+    "pre-setup",
+    initInteractionForOptions
+  );
+}
+
+// Tracks whether the interaction handler was booted for the current sketch, so
+// dispose-on-reset only loads the (lazy) module when there's something to free.
+let _interactionInited = false;
+
+// Engine-managed interaction init: when a sketch's options carry an enabled
+// `interaction` block, boot the handler once at setup so its sources (webcam,
+// audio, gyro, touch, …) are available as binding channels with no per-sketch
+// code. The handler is imported LAZILY (never statically) to keep MediaPipe out
+// of the core module-eval chain. `initInteraction` is idempotent (re-arms
+// listeners), so it's safe alongside sketches that still call it themselves;
+// fire-and-forget so vision warm-up doesn't block setup.
+function initInteractionForOptions() {
+  try {
+    const interaction = liveSketchBase( getSketchOptions() )?.interaction;
+
+    if ( interaction && interaction.enabled !== false ) {
+      _interactionInited = true;
+      import( "./interaction/index.js" )
+        .then( ( mod ) => mod.initInteraction( interaction ) )
+        .catch( () => {} );
+    }
+  } catch {
+    // Never let interaction init break setup.
+  }
+}
+
+// Release the camera/mic/listeners held by the interaction handler. Called from
+// sketch.reset() so resources are freed before the next sketch loads (also
+// fixes a pre-existing leak — reset never disposed interaction). Only loads the
+// module when it was actually booted (so the dynamic import resolves from cache).
+export function disposeInteractionOnReset() {
+  if ( !_interactionInited ) {
+    return;
+  }
+
+  _interactionInited = false;
+  import( "./interaction/index.js" )
+    .then( ( mod ) => mod.disposeInteraction() )
+    .catch( () => {} );
+}
+
+// The per-slide-merged sketch settings object the bindings live on.
+function liveSketchBase( live ) {
+  if ( typeof window !== "undefined" && window.getSketchSettings ) {
+    try {
+      return window.getSketchSettings( live );
+    } catch {
+      return live.sketch ?? {};
+    }
+  }
+
+  return live.sketch ?? {};
+}
+
+// The generator context: the loop-normalized progression (deterministic during
+// recording) plus the frame as a fallback for non-looping sketches.
+function bindingContext() {
+  let progression;
+
+  try {
+    progression = animation.progression;
+  } catch {
+    progression = undefined;
+  }
+
+  return {
+    progression,
+    frame: getP5()?.frameCount
+  };
+}
+
+// Sample the interaction channels once per frame and publish them, plus each
+// active binding's resolved 0..1 signal (keyed by target) for the UI's VU
+// meters. Runs for every sketch; `sampleChannels` is memoized per frame and the
+// binding-signal pass is skipped entirely when a sketch has no bindings.
+function publishChannelsFrame() {
+  if ( !BINDINGS_ENABLED ) {
+    return;
+  }
+
+  try {
+    const base = liveSketchBase( getSketchOptions() );
+    const channels = sampleChannels( base?.interaction );
+
+    publishChannels( channels );
+
+    if ( base && Array.isArray( base.bindings ) && base.bindings.length > 0 ) {
+      publishBindingSignals( computeBindingSignals(
+        base,
+        channels,
+        bindingContext()
+      ) );
+    }
+  } catch {
+    // Never let telemetry break the draw loop.
+  }
 }
 
 /**
@@ -501,8 +628,42 @@ export function syncEffectivePrevious(
 /*                                                                    */
 /*  .sketch  returns base sketch options merged with per-slide        */
 /*           overrides via window.getSketchSettings when registered.  */
-/*           Falls back to the raw store value for simple sketches.   */
+/*           Falls back to the raw store value for simple sketches.    */
+/*           Interactive bindings are then resolved on top, so any     */
+/*           parameter the user has bound to a live input (mouse,      */
+/*           oscillator, …) reads its modulated value here — with no   */
+/*           per-sketch code and zero overhead when no binding exists. */
 /* ------------------------------------------------------------------ */
+
+// Resolve the per-slide-merged sketch object, then layer interactive bindings
+// over it. `resolveBindings` returns the same object untouched when the sketch
+// declares no bindings, so non-interactive sketches pay nothing.
+function resolveSketch( live ) {
+  const base = liveSketchBase( live );
+
+  if (
+    !BINDINGS_ENABLED ||
+    !base ||
+    !Array.isArray( base.bindings ) ||
+    base.bindings.length === 0
+  ) {
+    return base;
+  }
+
+  try {
+    const context = bindingContext();
+
+    return resolveBindings(
+      base,
+      sampleChannels( base.interaction ),
+      context.frame,
+      context
+    );
+  } catch {
+    // Binding resolution must never break a sketch — fall back to base values.
+    return base;
+  }
+}
 
 const optionsProxy = new Proxy(
   {},
@@ -512,12 +673,8 @@ const optionsProxy = new Proxy(
     ) {
       const live = getSketchOptions();
 
-      if ( prop === "sketch" && typeof window !== "undefined" && window.getSketchSettings ) {
-        try {
-          return window.getSketchSettings( live );
-        } catch {
-          return live[ prop ] ?? {};
-        }
+      if ( prop === "sketch" ) {
+        return resolveSketch( live );
       }
 
       return live[ prop ];

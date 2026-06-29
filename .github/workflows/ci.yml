@@ -96,4 +96,7 @@ jobs:
           NOTIFICATIONS: "false"
           LIVE_THUMBNAIL: "false"
           PREVIEW_ON_HOVER: "false"
+          # On so the build compiles the interaction-bindings plugin path
+          # (matches the deployed image, which enables it).
+          INTERACTION_BINDINGS: "true"
           NODE_ENV: production
