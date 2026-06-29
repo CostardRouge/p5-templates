@@ -1,4 +1,7 @@
 import sketch from "./sketch.js";
+import {
+  resolveAnimation
+} from "@/lib/animationConfig";
 
 const time = {
   elapsed: 0,
@@ -24,7 +27,9 @@ const time = {
   incrementElapsedTime() {
     // During server-side recording, use frame-based time
     if ( time.isRecording ) {
-      const framerate = sketch?.sketchOptions?.animation?.framerate || 60;
+      const {
+        framerate
+      } = resolveAnimation( sketch?.sketchOptions?.animation );
       const millisecondsPerFrame = 1000 / framerate;
 
       time.elapsed = time.recordingFrameIndex * millisecondsPerFrame;
@@ -81,8 +86,11 @@ window.setAnimationProgression = function( progression ) {
     )
   );
 
-  // Get animation duration, default to 10 seconds if undefined
-  const duration = sketch?.sketchOptions?.animation?.duration || 10;
+  // Resolve the loop length through the shared resolver so a missing/zero
+  // duration uses the same default everywhere (encode loop + clock).
+  const {
+    duration
+  } = resolveAnimation( sketch?.sketchOptions?.animation );
 
   // Convert progression (0-1) to elapsed time in milliseconds
   time.elapsed = clampedProgression * duration * 1000;
@@ -109,8 +117,11 @@ window.setAnimationProgression = function( progression ) {
 let lastDispatchedProgression = -1;
 
 window.getAnimationProgression = function() {
-  // Get animation duration, default to 10 seconds if undefined
-  const duration = sketch?.sketchOptions?.animation?.duration || 10;
+  // Resolve the loop length through the shared resolver (same default as the
+  // encode loop) so progression and the recorded frame count never disagree.
+  const {
+    duration
+  } = resolveAnimation( sketch?.sketchOptions?.animation );
   const seconds = time.seconds();
 
   // During recording, don't wrap and don't cap - progression should match frame count

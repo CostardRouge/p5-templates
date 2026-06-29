@@ -1,7 +1,6 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-
 import {
   createSingleOrMultipleTextOption
 } from "@/utils/sketchOptionUtils";
@@ -9,68 +8,56 @@ import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
-  // The word(s) to morph through. "multiple" cycles word → word; "single"
-  // splits the entered string on whitespace into the same word sequence.
   text: {
-    mode: "multiple",
-    value: [
-      "HELLO",
-      "WORLD"
-    ]
+    mode: "single",
+    value: "hello world"
   },
   textStyle: {
     font: "waverseVariable",
-    size: 238,
+    size: 320,
+    letterSpacing: 0.62,
     fill: [
-      245,
-      235,
-      225
-    ],
-    stroke: [
-      245,
-      235,
-      225
-    ],
-    strokeWeight: 0,
-    letterSpacing: 0.65
-  },
-  transition: {
-    easing: "easeInOutExpo",
-    overlap: 0.89,
-    pauseRatio: 0,
-    onlyChanged: false
-  },
-  // The mask is the *next* letter's silhouette. It scales the current letter
-  // down to a point in the next letter's shape, then grows the next letter
-  // back out of that same shape.
-  mask: {
-    show: true,
-    behindLetters: true,
-    maxScale: 3.2,
-    easing: "easeInOutCubic",
-    stroke: [
-      246,
-      130,
-      80
-    ],
-    strokeWeight: 2,
-    fill: [
-      255,
       255,
       255,
       255
     ],
-    fillAlpha: 0
+    stroke: [
+      0,
+      0,
+      0
+    ],
+    strokeWeight: 0
+  },
+  transition: {
+    easing: "easeInOutCubic",
+    pauseRatio: 0.2,
+    overlap: 0.3,
+    onlyChanged: false
+  },
+  mask: {
+    show: true,
+    easing: "easeInOutCubic",
+    maxScale: 6,
+    behindLetters: true,
+    fill: [
+      255,
+      255,
+      255
+    ],
+    fillAlpha: 0,
+    stroke: [
+      255,
+      255,
+      255
+    ],
+    strokeWeight: 2
   },
   backgroundColor: [
-    12,
-    12,
-    16
+    0,
+    0,
+    0
   ],
-  title: {
-    ...titleDefaultValues,
-    show: false
-  }
+  title: titleDefaultValues
 };
 
 // UI configuration only
@@ -89,33 +76,33 @@ export const formConfiguration: Record<string, any> = {
         } ) )
       },
       size: {
+        label: "Size (px)",
         component: "slider",
-        label: "Letter size",
-        min: 20,
-        max: 1000,
-        step: 1
-      },
-      fill: {
-        component: "color",
-        label: "Letter fill color"
-      },
-      stroke: {
-        component: "color",
-        label: "Letter outline color"
-      },
-      strokeWeight: {
-        component: "slider",
-        label: "Letter outline weight",
-        min: 0,
-        max: 60,
+        min: 40,
+        max: 800,
         step: 1
       },
       letterSpacing: {
-        component: "slider",
         label: "Letter spacing",
-        min: 0.2,
-        max: 1.5,
+        component: "slider",
+        min: 0,
+        max: 2,
         step: 0.01
+      },
+      fill: {
+        label: "Fill",
+        component: "color"
+      },
+      stroke: {
+        label: "Stroke",
+        component: "color"
+      },
+      strokeWeight: {
+        label: "Stroke weight",
+        component: "slider",
+        min: 0,
+        max: 50,
+        step: 0.5
       }
     }
   },
@@ -125,25 +112,25 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       easing: {
         component: "easing",
-        label: "Mask easing function"
+        label: "Transition easing function"
       },
-      overlap: {
+      pauseRatio: {
+        label: "Pause ratio",
         component: "slider",
-        label: "Letters overlap",
         min: 0,
         max: 1,
         step: 0.01
       },
-      pauseRatio: {
+      overlap: {
+        label: "Letter overlap",
         component: "slider",
-        label: "Pause on full word",
         min: 0,
-        max: 0.8,
+        max: 1,
         step: 0.01
       },
       onlyChanged: {
-        component: "checkbox",
-        label: "Animate only changed letters"
+        label: "Only animate changed letters?",
+        component: "checkbox"
       }
     }
   },
@@ -152,45 +139,45 @@ export const formConfiguration: Record<string, any> = {
     label: "Letter mask",
     fields: {
       show: {
-        component: "checkbox",
-        label: "Show mask letter"
-      },
-      behindLetters: {
-        component: "checkbox",
-        label: "Draw behind letters"
-      },
-      maxScale: {
-        component: "slider",
-        label: "Max scale",
-        min: 1,
-        max: 12,
-        step: 0.1
+        label: "Show mask letter?",
+        component: "checkbox"
       },
       easing: {
         component: "easing",
         label: "Mask easing function"
       },
-      stroke: {
-        component: "color",
-        label: "Mask outline color"
-      },
-      strokeWeight: {
+      maxScale: {
+        label: "Max scale",
         component: "slider",
-        label: "Mask outline weight",
-        min: 0,
-        max: 40,
+        min: 1,
+        max: 12,
         step: 0.5
       },
+      behindLetters: {
+        label: "Draw behind letters?",
+        component: "checkbox"
+      },
       fill: {
-        component: "color",
-        label: "Mask fill color"
+        label: "Fill",
+        component: "color"
       },
       fillAlpha: {
+        label: "Fill alpha",
         component: "slider",
-        label: "Mask fill alpha",
         min: 0,
         max: 255,
         step: 1
+      },
+      stroke: {
+        label: "Stroke",
+        component: "color"
+      },
+      strokeWeight: {
+        label: "Stroke weight",
+        component: "slider",
+        min: 0,
+        max: 50,
+        step: 0.5
       }
     }
   },

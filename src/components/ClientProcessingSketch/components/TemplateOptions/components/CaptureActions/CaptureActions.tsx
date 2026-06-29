@@ -55,6 +55,10 @@ type CaptureActionsProps = {
   lifecycle: RecordingLifecycle;
   recordingProgress: RecordingProgressionStream | null;
   subscribeToRecordingStatus: ( jobId: JobId ) => void;
+  // next/dynamic does not forward refs, so when CaptureActions is loaded as a
+  // lazy chunk the parent passes its imperative-handle ref through this prop
+  // instead of `ref`. The native `ref` still works for static call sites.
+  forwardedRef?: React.Ref<CaptureActionsRef>;
 };
 
 const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
@@ -68,7 +72,8 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     thumbnails,
     lifecycle,
     recordingProgress,
-    subscribeToRecordingStatus
+    subscribeToRecordingStatus,
+    forwardedRef
   },
   ref
 ) => {
@@ -433,9 +438,11 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     }
   };
 
-  // Expose imperative actions to parent via ref
+  // Expose imperative actions to parent via ref. Prefer the prop-forwarded ref
+  // (used when CaptureActions is mounted through next/dynamic, which drops the
+  // native `ref`); fall back to the native ref for static call sites.
   useImperativeHandle(
-    ref,
+    forwardedRef ?? ref,
     () => ( {
       saveAsDraft: async() => {
         await handleSubmit(
@@ -705,6 +712,9 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
               isRecording={ browserRecorder.isRecording }
               progress={ browserRecorder.progress }
               error={ browserRecorder.error }
+              previewPhase={ browserRecorder.previewPhase }
+              countdown={ browserRecorder.countdown }
+              previewSaved={ browserRecorder.previewSaved }
               onStart={ browserRecorder.start }
               onStop={ browserRecorder.stop }
               onCancel={ browserRecorder.cancel }

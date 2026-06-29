@@ -4,6 +4,10 @@
  * is used as the fallback.
  */
 
+import {
+  DURATION_DEFAULT, FRAMERATE_DEFAULT
+} from "@/lib/animationConfig";
+
 type Size = { width: number;
   height: number };
 type Animation = { framerate: number;
@@ -20,8 +24,8 @@ const DEFAULTS: EffectiveSlideSettings = {
     height: 1350
   },
   animation: {
-    framerate: 60,
-    duration: 12
+    framerate: FRAMERATE_DEFAULT,
+    duration: DURATION_DEFAULT
   }
 };
 

@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import type React from "react";
 import {
   useEffect, useRef, useState
@@ -14,12 +15,11 @@ import type {
   SketchOption, SlideOption
 } from "@/types/sketch.types";
 import useSketch from "../SketchProvider/hooks/useSketch";
-import CaptureActions, {
-  type CaptureActionsRef
+import type {
+  CaptureActionsRef
 } from "./components/CaptureActions";
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import OptionsPanel from "./components/OptionsPanel";
-import MobileStudioDrawer from "./components/MobileStudioDrawer";
 import RecordingLockBanner from "./components/RecordingLockBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
@@ -43,6 +43,21 @@ import {
 import {
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
+
+// CaptureActions drags the whole recording subtree into the sketch page's
+// initial compile: useBrowserRecorder -> @/engines/recording -> createRecorder
+// pulls in the mediabunny + gif.js encoders, plus the action buttons and
+// VideoPreviewModal. It only renders behind `recordingSupported &&`, so load it
+// as a separate chunk. next/dynamic does not forward refs, so the imperative
+// handle (auto-save / clone-as-draft) is wired through a `forwardedRef` prop.
+const CaptureActions = dynamic( () => import( "./components/CaptureActions" ) );
+
+// MobileStudioDrawer is a full mobile-only duplicate of the panel/settings/
+// capture UI (its own CaptureActions, GenericObjectForm, asset providers). It
+// renders only on the mobile media-query branch, so desktop should never
+// compile it — and the desktop panels are never compiled for mobile. Code-split
+// it so each layout's initial compile only covers what it actually shows.
+const MobileStudioDrawer = dynamic( () => import( "./components/MobileStudioDrawer" ) );
 
 type TemplateOptionsProps = {
   name: string;
@@ -458,7 +473,7 @@ export default function TemplateOptions( {
 
               {recordingSupported && (
                 <CaptureActions
-                  ref={ captureActionsRef }
+                  forwardedRef={ captureActionsRef }
                   activeSlideIndex={ activeSlideIndex }
                   { ...captureProps }
                 />

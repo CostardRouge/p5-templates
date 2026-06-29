@@ -6,11 +6,9 @@ import {
 } from "next/navigation";
 import React from "react";
 
-import "@/engines/index"; // register all engines
-
 import {
-  hasEngine, getEngine
-} from "@/engines/registry";
+  isKnownEngine, getEngineLabel
+} from "@/engines/engineCatalog";
 import {
   findSketchMeta
 } from "@/engines/metadata";
@@ -66,9 +64,7 @@ export async function generateMetadata( {
   );
   const baseUrl = getBaseUrl();
 
-  const engineLabel = hasEngine( engineId )
-    ? getEngine( engineId ).label
-    : engineId;
+  const engineLabel = getEngineLabel( engineId );
   const title = formatSketchTitle( sketchName );
   const description = buildSketchDescription(
     title,
@@ -152,7 +148,7 @@ export default async function StudioPage( {
   } = await params;
 
   /* ---- validate engine ------------------------------------------- */
-  if ( !hasEngine( engineId ) ) {
+  if ( !isKnownEngine( engineId ) ) {
     return notFound();
   }
 
@@ -175,7 +171,7 @@ export default async function StudioPage( {
   }
 
   /* ---- engine label for structured data -------------------------- */
-  const engineLabel = getEngine( engineId ).label;
+  const engineLabel = getEngineLabel( engineId );
   const baseUrl = getBaseUrl();
 
   /* ---- load options & form meta ---------------------------------- */

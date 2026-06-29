@@ -1,30 +1,41 @@
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
+const AXIS_OPTIONS = [
+  {
+    label: "Vertical",
+    value: "vertical"
+  },
+  {
+    label: "Horizontal",
+    value: "horizontal"
+  }
+];
+
 export const formValues = {
   layout: {
-    xCount: 5,
+    xCount: 1,
     yCount: 1,
-    sizeDivisor: 2.1,
-    axis: "vertical" as "vertical" | "horizontal"
+    sizeDivisor: 3.5,
+    axis: "vertical"
   },
   spiral: {
-    lerpSteps: 218,
+    lerpSteps: 200,
     waveAmplitudeDivisor: 3.5,
-    circleSize: 76,
+    circleSize: 200,
     cadenceMin: -4,
     cadenceMax: 4
   },
   motion: {
     cadenceSpeed: 1,
-    cadenceIndexScale: 5
+    cadenceIndexScale: 0
   },
   colors: {
     hueSpeed: 1,
-    hueSpread: 2.19,
-    huePhase: 2.46,
-    indexHueShift: 3.68,
-    shimmer: 2.95,
+    hueSpread: 1,
+    huePhase: 0,
+    indexHueShift: 1,
+    shimmer: 1.5,
     saturation: 1,
     brightness: 1
   },
@@ -39,45 +50,37 @@ export const formValues = {
   }
 };
 
+// UI configuration only
 export const formConfiguration: Record<string, any> = {
   layout: {
     component: "nested-object",
     label: "Layout",
     fields: {
       xCount: {
-        label: "X count",
+        label: "Columns",
         component: "slider",
         min: 1,
         max: 20,
         step: 1
       },
       yCount: {
-        label: "Y count",
+        label: "Rows",
         component: "slider",
         min: 1,
         max: 20,
         step: 1
       },
       sizeDivisor: {
-        label: "Size divisor",
+        label: "Cell size divisor",
         component: "slider",
-        min: 1,
-        max: 12,
+        min: 0.5,
+        max: 20,
         step: 0.1
       },
       axis: {
-        label: "Axis",
+        label: "Spiral axis",
         component: "select",
-        options: [
-          {
-            label: "Vertical",
-            value: "vertical"
-          },
-          {
-            label: "Horizontal",
-            value: "horizontal"
-          }
-        ]
+        options: AXIS_OPTIONS
       }
     }
   },
@@ -86,24 +89,24 @@ export const formConfiguration: Record<string, any> = {
     label: "Spiral",
     fields: {
       lerpSteps: {
-        label: "Lerp steps",
+        label: "Samples",
         component: "slider",
-        min: 20,
+        min: 1,
         max: 320,
         step: 1
       },
       waveAmplitudeDivisor: {
         label: "Wave amplitude divisor",
         component: "slider",
-        min: 0.5,
+        min: 0.1,
         max: 20,
         step: 0.1
       },
       circleSize: {
-        label: "Circle size",
+        label: "Disc size",
         component: "slider",
-        min: 1,
-        max: 500,
+        min: 10,
+        max: 600,
         step: 1
       },
       cadenceMin: {
@@ -130,8 +133,8 @@ export const formConfiguration: Record<string, any> = {
         label: "Cadence speed",
         component: "slider",
         min: 0,
-        max: 5,
-        step: 0.01
+        max: 10,
+        step: 0.1
       },
       cadenceIndexScale: {
         label: "Cadence index scale",
@@ -144,48 +147,48 @@ export const formConfiguration: Record<string, any> = {
   },
   colors: {
     component: "nested-object",
-    label: "Iridescent",
+    label: "Colors",
     fields: {
       hueSpeed: {
         label: "Hue speed",
         component: "slider",
-        min: -10,
+        min: 0,
         max: 10,
-        step: 0.01
+        step: 0.1
       },
       hueSpread: {
         label: "Hue spread",
         component: "slider",
-        min: 0.1,
-        max: 6,
-        step: 0.01
+        min: 0,
+        max: 10,
+        step: 0.1
       },
       huePhase: {
         label: "Hue phase",
         component: "slider",
         min: 0,
-        max: 6.2832,
+        max: 1,
         step: 0.01
       },
       indexHueShift: {
-        label: "Grid hue shift",
+        label: "Index hue shift",
         component: "slider",
         min: 0,
-        max: 6.2832,
-        step: 0.01
+        max: 10,
+        step: 0.1
       },
       shimmer: {
         label: "Shimmer",
         component: "slider",
         min: 0,
-        max: 6,
-        step: 0.01
+        max: 5,
+        step: 0.1
       },
       saturation: {
         label: "Saturation",
         component: "slider",
         min: 0,
-        max: 1,
+        max: 2,
         step: 0.01
       },
       brightness: {

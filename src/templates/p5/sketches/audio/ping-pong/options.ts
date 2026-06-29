@@ -1,3 +1,70 @@
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
+// ── Interaction (fingers / mouse / touch / gyroscope) ──────────────────────
+// Reuse the shared interaction layer but expose only the four sources this
+// sketch reacts to. Each live pointer drives an extra ball (see the "Balls"
+// mode select). Mouse + touch are on so switching the mode to interactive
+// works instantly; vision (camera) and gyro stay off until granted. While the
+// mode is "auto" (default) the pointers are ignored, so the deterministic ball
+// and beat are byte-for-byte identical until the user opts in.
+
+const interactionDefaults = {
+  enabled: interactionFormValues.enabled,
+  mouse: {
+    ...interactionFormValues.mouse,
+    enabled: true
+  },
+  touch: {
+    ...interactionFormValues.touch,
+    enabled: true
+  },
+  vision: {
+    ...interactionFormValues.vision,
+    enabled: false,
+    // When the camera is switched on, track fingers (not the whole hand).
+    fingers: {
+      ...interactionFormValues.vision.fingers,
+      enabled: true
+    }
+  },
+  gyroscope: {
+    ...interactionFormValues.gyroscope,
+    enabled: false
+  },
+  visualization: {
+    ...interactionFormValues.visualization,
+    enabled: false
+  }
+};
+
+// A fingers-focused slice of the shared Vision panel (drop hands/face/body).
+const visionFingersConfiguration = {
+  component: "nested-object",
+  label: "Vision (Camera) — fingers",
+  fields: {
+    enabled: interactionFormConfiguration.fields.vision.fields.enabled,
+    source: interactionFormConfiguration.fields.vision.fields.source,
+    fingers: interactionFormConfiguration.fields.vision.fields.fingers,
+    performance: interactionFormConfiguration.fields.vision.fields.performance
+  }
+};
+
+const interactionConfiguration = {
+  component: "nested-object",
+  label: "Interaction",
+  fields: {
+    enabled: interactionFormConfiguration.fields.enabled,
+    mouse: interactionFormConfiguration.fields.mouse,
+    touch: interactionFormConfiguration.fields.touch,
+    vision: visionFingersConfiguration,
+    gyroscope: interactionFormConfiguration.fields.gyroscope,
+    visualization: interactionFormConfiguration.fields.visualization
+  }
+};
+
 const SOUND_OPTIONS = [
   {
     label: "Bounce (triangle, pitch drop)",
@@ -10,6 +77,21 @@ const SOUND_OPTIONS = [
   {
     label: "Tick (noise click)",
     value: "tick"
+  }
+];
+
+const BALL_MODE_OPTIONS = [
+  {
+    label: "Only automatic ball",
+    value: "auto"
+  },
+  {
+    label: "Auto ball + interactive",
+    value: "both"
+  },
+  {
+    label: "Interactive only",
+    value: "interactive"
   }
 ];
 
@@ -45,7 +127,12 @@ export const formValues = {
       0,
       255
     ] as number[]
-  }
+  },
+  mode: {
+    composition: "auto",
+    ballCollisions: false
+  },
+  interaction: interactionDefaults
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -156,5 +243,21 @@ export const formConfiguration: Record<string, any> = {
         label: "Background color"
       }
     }
-  }
+  },
+  mode: {
+    component: "nested-object",
+    label: "Balls",
+    fields: {
+      composition: {
+        label: "Mode",
+        component: "select",
+        options: BALL_MODE_OPTIONS
+      },
+      ballCollisions: {
+        label: "Ball-to-ball collision sound",
+        component: "checkbox"
+      }
+    }
+  },
+  interaction: interactionConfiguration
 };

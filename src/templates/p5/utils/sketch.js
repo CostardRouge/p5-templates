@@ -16,6 +16,9 @@ import loadProfiler from "./loadProfiler.js";
 import {
   coerceFramerate
 } from "./framerate.js";
+import {
+  resolveAnimation
+} from "@/lib/animationConfig";
 
 let _p5 = null;
 let _container = null;
@@ -488,7 +491,9 @@ const sketch = {
           return;
         }
 
-        const duration = sketch.sketchOptions?.animation?.duration || 10;
+        const {
+          duration
+        } = resolveAnimation( sketch.sketchOptions?.animation );
         const seconds = time.seconds();
         const progression = time.isRecording
           ? Math.min(
@@ -503,7 +508,9 @@ const sketch = {
 
     registerAnimationBridge( {
       getProgression: () => {
-        const duration = sketch.sketchOptions?.animation?.duration || 10;
+        const {
+          duration
+        } = resolveAnimation( sketch.sketchOptions?.animation );
         const seconds = time.seconds();
 
         return time.isRecording
@@ -522,7 +529,9 @@ const sketch = {
             value
           )
         );
-        const duration = sketch.sketchOptions?.animation?.duration || 10;
+        const {
+          duration
+        } = resolveAnimation( sketch.sketchOptions?.animation );
 
         time.elapsed = clamped * duration * 1000;
 

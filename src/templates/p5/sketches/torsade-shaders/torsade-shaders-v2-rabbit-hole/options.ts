@@ -5,38 +5,37 @@ export const formValues = {
   layout: {
     xCount: 1,
     yCount: 1,
-    sizeDivisor: 3.1
+    sizeDivisor: 3
   },
   rings: {
-    shadowsCount: 54,
+    angleSubdivisions: 14,
+    shadowsCount: 30,
     shadowIndexStep: 0.05,
-    angleSubdivisions: 38,
     radiusDivisorMin: 0.2,
-    radiusDivisorMax: 3.3,
-    weightMin: 39,
-    weightMax: 164,
-    shadowRotationRadians: 3.4
+    radiusDivisorMax: 5,
+    weightMin: 20,
+    weightMax: 75,
+    shadowRotationRadians: 7
   },
   motion: {
-    spinSpeed: -1.18,
-    jitterAmount: 0.31
+    spinSpeed: 1,
+    jitterAmount: 0.33
   },
   colors: {
     hueSpeed: 1,
-    hueSpread: 2.17,
+    hueSpread: 1,
     huePhase: 0,
     depthHue: 1,
     saturation: 1,
     brightness: 1,
-    opacityCurveSpeed: 2.5,
+    opacityCurveSpeed: 5,
     opacityMin: 1,
-    opacityMax: 8.6
+    opacityMax: 15
   },
   backgroundColor: [
     0,
     0,
-    0,
-    255
+    0
   ],
   title: {
     ...titleDefaultValues,
@@ -44,30 +43,31 @@ export const formValues = {
   }
 };
 
+// UI configuration only
 export const formConfiguration: Record<string, any> = {
   layout: {
     component: "nested-object",
     label: "Layout",
     fields: {
       xCount: {
-        label: "X count",
+        label: "Columns",
         component: "slider",
         min: 1,
-        max: 10,
+        max: 20,
         step: 1
       },
       yCount: {
-        label: "Y count",
+        label: "Rows",
         component: "slider",
         min: 1,
-        max: 10,
+        max: 20,
         step: 1
       },
       sizeDivisor: {
-        label: "Size divisor",
+        label: "Cell size divisor",
         component: "slider",
-        min: 1,
-        max: 12,
+        min: 0.5,
+        max: 20,
         step: 0.1
       }
     }
@@ -76,60 +76,60 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Rings",
     fields: {
-      shadowsCount: {
-        label: "Shadows count",
+      angleSubdivisions: {
+        label: "Angle subdivisions",
         component: "slider",
         min: 1,
+        max: 64,
+        step: 1
+      },
+      shadowsCount: {
+        label: "Depth (shadows count)",
+        component: "slider",
+        min: 0,
         max: 200,
         step: 1
       },
       shadowIndexStep: {
-        label: "Shadow step",
+        label: "Shadow index step",
         component: "slider",
         min: 0.01,
-        max: 1,
+        max: 0.5,
         step: 0.01
-      },
-      angleSubdivisions: {
-        label: "Angle subdivisions",
-        component: "slider",
-        min: 2,
-        max: 64,
-        step: 1
       },
       radiusDivisorMin: {
         label: "Radius divisor min",
         component: "slider",
         min: 0.05,
-        max: 5,
-        step: 0.01
+        max: 10,
+        step: 0.05
       },
       radiusDivisorMax: {
         label: "Radius divisor max",
         component: "slider",
-        min: 0.5,
-        max: 30,
+        min: 0.1,
+        max: 20,
         step: 0.1
       },
       weightMin: {
-        label: "Weight min",
+        label: "Dot weight min",
         component: "slider",
         min: 1,
         max: 200,
         step: 1
       },
       weightMax: {
-        label: "Weight max",
+        label: "Dot weight max",
         component: "slider",
         min: 1,
-        max: 200,
+        max: 300,
         step: 1
       },
       shadowRotationRadians: {
-        label: "Shadow rotation radians",
+        label: "Shadow rotation",
         component: "slider",
-        min: 0,
-        max: 30,
+        min: -20,
+        max: 20,
         step: 0.1
       }
     }
@@ -141,56 +141,56 @@ export const formConfiguration: Record<string, any> = {
       spinSpeed: {
         label: "Spin speed",
         component: "slider",
-        min: -5,
-        max: 5,
-        step: 0.01
+        min: -10,
+        max: 10,
+        step: 0.1
       },
       jitterAmount: {
         label: "Jitter amount",
         component: "slider",
         min: 0,
-        max: 5,
+        max: 2,
         step: 0.01
       }
     }
   },
   colors: {
     component: "nested-object",
-    label: "Iridescent",
+    label: "Colors",
     fields: {
       hueSpeed: {
         label: "Hue speed",
         component: "slider",
-        min: -10,
+        min: 0,
         max: 10,
-        step: 0.01
+        step: 0.1
       },
       hueSpread: {
         label: "Hue spread",
         component: "slider",
-        min: 0.1,
-        max: 6,
-        step: 0.01
+        min: 0,
+        max: 10,
+        step: 0.1
       },
       huePhase: {
         label: "Hue phase",
         component: "slider",
         min: 0,
-        max: 6.2832,
+        max: 1,
         step: 0.01
       },
       depthHue: {
         label: "Depth hue shift",
         component: "slider",
         min: 0,
-        max: 6,
-        step: 0.01
+        max: 10,
+        step: 0.1
       },
       saturation: {
         label: "Saturation",
         component: "slider",
         min: 0,
-        max: 1,
+        max: 2,
         step: 0.01
       },
       brightness: {
@@ -204,20 +204,20 @@ export const formConfiguration: Record<string, any> = {
         label: "Opacity curve speed",
         component: "slider",
         min: 0,
-        max: 50,
+        max: 20,
         step: 0.1
       },
       opacityMin: {
         label: "Opacity min",
         component: "slider",
-        min: 1,
-        max: 10,
+        min: 0,
+        max: 50,
         step: 0.1
       },
       opacityMax: {
         label: "Opacity max",
         component: "slider",
-        min: 1,
+        min: 0,
         max: 50,
         step: 0.1
       }

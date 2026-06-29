@@ -22,11 +22,11 @@ import {
   getEffectiveSlideSettings
 } from "@/lib/effectiveSlideSettings";
 import {
+  resolveAnimation, totalFramesFor
+} from "@/lib/animationConfig";
+import {
   resolveSketchPath
 } from "@/engines/metadata";
-import {
-  loadSketchModule
-} from "@/generated/sketchModuleRegistry";
 import {
   getAnimationBridge
 } from "@/lib/animationBridge";
@@ -125,7 +125,15 @@ export class P5Engine implements SketchEngine {
     // Loaded from the generated registry of literal dynamic imports — see
     // src/generated/sketchModuleRegistry.ts. A variable-path import here would
     // make the bundler build a context module over every sketch, compiling the
-    // whole catalogue on each page in dev.
+    // whole catalogue on each page in dev. The registry module is imported
+    // dynamically (rather than at the top of the file) so its ~270 literal
+    // import() code-split points are NOT registered on the sketch page's
+    // initial compile — they only cost compile time once a sketch actually
+    // mounts and calls init(), shaving that work off the page's first paint.
+    const {
+      loadSketchModule
+    } = await import( "@/generated/sketchModuleRegistry" );
+
     await loadSketchModule(
       "p5",
       sketchPath
@@ -399,10 +407,8 @@ export class P5Engine implements SketchEngine {
       options,
       slideIndex
     );
-    const framerate = animation?.framerate ?? 60;
-    const duration = animation?.duration ?? 12;
 
-    return Math.round( duration * framerate );
+    return totalFramesFor( animation );
   }
 
   getFrameRate(
@@ -416,7 +422,7 @@ export class P5Engine implements SketchEngine {
       slideIndex
     );
 
-    return animation?.framerate ?? 60;
+    return resolveAnimation( animation ).framerate;
   }
 
   getCanvas(): HTMLCanvasElement | null {

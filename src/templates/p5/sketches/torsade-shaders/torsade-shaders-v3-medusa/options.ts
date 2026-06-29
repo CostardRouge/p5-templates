@@ -8,12 +8,12 @@ export const formValues = {
     sizeDivisor: 3
   },
   rings: {
+    angleSubdivisions: 6,
+    linesCount: 3,
     shadowsCount: 10,
     shadowIndexStep: 0.03,
-    angleSubdivisions: 6,
     radiusDivisorMin: 1,
     radiusDivisorMax: 5,
-    linesCount: 3,
     lineSizeMin: 50,
     lineSizeMax: 150
   },
@@ -23,25 +23,9 @@ export const formValues = {
     rotationMaxMin: 1,
     rotationMaxMax: 5
   },
-  glow: {
-    enabled: true,
-    ringsCount: 15,
-    strokeWeight: 4,
-    sizeMin: 0.166,
-    sizeMax: 1,
-    color: [
-      128,
-      128,
-      255
-    ] as number[],
-    orbitRadius: 30,
-    orbitSpeed: 5
-  },
-  endcap: {
-    weight: 4,
-    darken: 32
-  },
   colors: {
+    weightMaxMin: 50,
+    weightMaxMax: 100,
     hueSpeed: 1,
     hueSpread: 1,
     huePhase: 0,
@@ -49,9 +33,25 @@ export const formValues = {
     saturation: 1,
     brightness: 1,
     opacityFalloffMin: 1,
-    opacityFalloffMax: 5,
-    weightMaxMin: 50,
-    weightMaxMax: 100
+    opacityFalloffMax: 5
+  },
+  endcap: {
+    weight: 4,
+    darken: 32
+  },
+  glow: {
+    enabled: true,
+    ringsCount: 15,
+    sizeMin: 0.166,
+    sizeMax: 1,
+    orbitRadius: 30,
+    orbitSpeed: 5,
+    color: [
+      128,
+      128,
+      255
+    ],
+    strokeWeight: 4
   },
   backgroundColor: [
     0,
@@ -64,30 +64,31 @@ export const formValues = {
   }
 };
 
+// UI configuration only
 export const formConfiguration: Record<string, any> = {
   layout: {
     component: "nested-object",
     label: "Layout",
     fields: {
       xCount: {
-        label: "X count",
+        label: "Columns",
         component: "slider",
         min: 1,
-        max: 10,
+        max: 20,
         step: 1
       },
       yCount: {
-        label: "Y count",
+        label: "Rows",
         component: "slider",
         min: 1,
-        max: 10,
+        max: 20,
         step: 1
       },
       sizeDivisor: {
-        label: "Size divisor",
+        label: "Cell size divisor",
         component: "slider",
-        min: 1,
-        max: 12,
+        min: 0.5,
+        max: 20,
         step: 0.1
       }
     }
@@ -96,60 +97,60 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Rings",
     fields: {
-      shadowsCount: {
-        label: "Shadows count",
+      angleSubdivisions: {
+        label: "Tentacle directions",
         component: "slider",
         min: 1,
-        max: 100,
+        max: 64,
+        step: 1
+      },
+      linesCount: {
+        label: "Dots per cluster",
+        component: "slider",
+        min: 1,
+        max: 32,
+        step: 1
+      },
+      shadowsCount: {
+        label: "Depth (shadows count)",
+        component: "slider",
+        min: 0,
+        max: 200,
         step: 1
       },
       shadowIndexStep: {
-        label: "Shadow step",
+        label: "Shadow index step",
         component: "slider",
-        min: 0.005,
-        max: 1,
-        step: 0.005
-      },
-      angleSubdivisions: {
-        label: "Angle subdivisions",
-        component: "slider",
-        min: 2,
-        max: 64,
-        step: 1
+        min: 0.01,
+        max: 0.5,
+        step: 0.01
       },
       radiusDivisorMin: {
         label: "Radius divisor min",
         component: "slider",
-        min: 0.1,
-        max: 5,
+        min: 0.05,
+        max: 10,
         step: 0.05
       },
       radiusDivisorMax: {
         label: "Radius divisor max",
         component: "slider",
-        min: 0.5,
-        max: 30,
+        min: 0.1,
+        max: 20,
         step: 0.1
-      },
-      linesCount: {
-        label: "Lines per node",
-        component: "slider",
-        min: 1,
-        max: 12,
-        step: 1
       },
       lineSizeMin: {
         label: "Line size min",
         component: "slider",
         min: 1,
-        max: 500,
+        max: 400,
         step: 1
       },
       lineSizeMax: {
         label: "Line size max",
         component: "slider",
         min: 1,
-        max: 500,
+        max: 600,
         step: 1
       }
     }
@@ -161,146 +162,84 @@ export const formConfiguration: Record<string, any> = {
       spinSpeed: {
         label: "Spin speed",
         component: "slider",
-        min: -5,
-        max: 5,
-        step: 0.01
+        min: -10,
+        max: 10,
+        step: 0.1
       },
       rotationSpeed: {
         label: "Rotation speed",
         component: "slider",
         min: -10,
         max: 10,
-        step: 0.01
+        step: 0.1
       },
       rotationMaxMin: {
-        label: "Rotation max min",
+        label: "Rotation depth min",
         component: "slider",
         min: 0,
-        max: 10,
+        max: 20,
         step: 0.1
       },
       rotationMaxMax: {
-        label: "Rotation max max",
+        label: "Rotation depth max",
         component: "slider",
         min: 0,
         max: 20,
         step: 0.1
-      }
-    }
-  },
-  glow: {
-    component: "nested-object",
-    label: "Glow rings",
-    fields: {
-      enabled: {
-        label: "Enabled",
-        component: "checkbox"
-      },
-      ringsCount: {
-        label: "Rings count",
-        component: "slider",
-        min: 0,
-        max: 50,
-        step: 1
-      },
-      strokeWeight: {
-        label: "Stroke weight",
-        component: "slider",
-        min: 1,
-        max: 30,
-        step: 1
-      },
-      sizeMin: {
-        label: "Size min",
-        component: "slider",
-        min: 0.05,
-        max: 2,
-        step: 0.01
-      },
-      sizeMax: {
-        label: "Size max",
-        component: "slider",
-        min: 0.1,
-        max: 5,
-        step: 0.01
-      },
-      color: {
-        component: "color",
-        label: "Color"
-      },
-      orbitRadius: {
-        label: "Orbit radius",
-        component: "slider",
-        min: 0,
-        max: 200,
-        step: 1
-      },
-      orbitSpeed: {
-        label: "Orbit speed",
-        component: "slider",
-        min: -20,
-        max: 20,
-        step: 0.1
-      }
-    }
-  },
-  endcap: {
-    component: "nested-object",
-    label: "Endcap",
-    fields: {
-      weight: {
-        label: "Weight",
-        component: "slider",
-        min: 1,
-        max: 30,
-        step: 1
-      },
-      darken: {
-        label: "Darken amount",
-        component: "slider",
-        min: 0,
-        max: 200,
-        step: 1
       }
     }
   },
   colors: {
     component: "nested-object",
-    label: "Iridescent",
+    label: "Colors",
     fields: {
+      weightMaxMin: {
+        label: "Base weight min",
+        component: "slider",
+        min: 1,
+        max: 300,
+        step: 1
+      },
+      weightMaxMax: {
+        label: "Base weight max",
+        component: "slider",
+        min: 1,
+        max: 400,
+        step: 1
+      },
       hueSpeed: {
         label: "Hue speed",
         component: "slider",
-        min: -10,
+        min: 0,
         max: 10,
-        step: 0.01
+        step: 0.1
       },
       hueSpread: {
         label: "Hue spread",
         component: "slider",
-        min: 0.1,
-        max: 6,
-        step: 0.01
+        min: 0,
+        max: 10,
+        step: 0.1
       },
       huePhase: {
         label: "Hue phase",
         component: "slider",
         min: 0,
-        max: 6.2832,
+        max: 1,
         step: 0.01
       },
       depthHue: {
         label: "Depth hue shift",
         component: "slider",
         min: 0,
-        max: 6,
-        step: 0.01
+        max: 10,
+        step: 0.1
       },
       saturation: {
         label: "Saturation",
         component: "slider",
         min: 0,
-        max: 1,
+        max: 2,
         step: 0.01
       },
       brightness: {
@@ -313,30 +252,92 @@ export const formConfiguration: Record<string, any> = {
       opacityFalloffMin: {
         label: "Opacity falloff min",
         component: "slider",
-        min: 1,
-        max: 10,
+        min: 0,
+        max: 20,
         step: 0.1
       },
       opacityFalloffMax: {
         label: "Opacity falloff max",
         component: "slider",
-        min: 1,
-        max: 30,
+        min: 0,
+        max: 20,
         step: 0.1
+      }
+    }
+  },
+  endcap: {
+    component: "nested-object",
+    label: "Endcap",
+    fields: {
+      weight: {
+        label: "Endcap weight",
+        component: "slider",
+        min: 0,
+        max: 50,
+        step: 0.5
       },
-      weightMaxMin: {
-        label: "Weight max min",
+      darken: {
+        label: "Endcap darken",
+        component: "slider",
+        min: 0,
+        max: 255,
+        step: 1
+      }
+    }
+  },
+  glow: {
+    component: "nested-object",
+    label: "Glow",
+    fields: {
+      enabled: {
+        label: "Enable glow?",
+        component: "checkbox"
+      },
+      ringsCount: {
+        label: "Glow rings count",
         component: "slider",
         min: 1,
-        max: 200,
+        max: 64,
         step: 1
       },
-      weightMaxMax: {
-        label: "Weight max max",
+      sizeMin: {
+        label: "Glow size min",
         component: "slider",
-        min: 1,
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      sizeMax: {
+        label: "Glow size max",
+        component: "slider",
+        min: 0,
+        max: 3,
+        step: 0.01
+      },
+      orbitRadius: {
+        label: "Orbit radius (px)",
+        component: "slider",
+        min: 0,
         max: 300,
         step: 1
+      },
+      orbitSpeed: {
+        label: "Orbit speed",
+        component: "slider",
+        min: 0,
+        max: 20,
+        step: 0.1
+      },
+      color: {
+        label: "Glow color",
+        component: "color"
+      },
+      strokeWeight: {
+        label: "Glow stroke weight",
+        component: "slider",
+        min: 0,
+        max: 50,
+        step: 0.5
       }
     }
   },

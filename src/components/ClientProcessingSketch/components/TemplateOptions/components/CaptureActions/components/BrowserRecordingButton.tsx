@@ -4,7 +4,7 @@ import React, {
   useMemo, useState
 } from "react";
 import {
-  StopCircle
+  Loader2, StopCircle
 } from "lucide-react";
 import type {
   RecorderCapabilities, RecorderProgress, RecordingFormat, RecordingMode
@@ -12,15 +12,22 @@ import type {
 import {
   useSmoothFill
 } from "@/hooks/useSmoothFill";
+import type {
+  PreviewPhase, RecordingIntent
+} from "../hooks/useBrowserRecorder";
 
 type BrowserRecordingButtonProps = {
   capabilities: RecorderCapabilities;
   isRecording: boolean;
   progress: RecorderProgress | null;
   error: Error | null;
+  previewPhase: PreviewPhase | null;
+  countdown: number;
+  previewSaved: boolean;
   onStart: (
     format: RecordingFormat,
-    mode: RecordingMode
+    mode: RecordingMode,
+    intent: RecordingIntent
   ) => void;
   onStop: () => void;
   onCancel: () => void;
@@ -59,35 +66,52 @@ const MODE_ORDER: ReadonlyArray<RecordingMode> = [
   "realtime"
 ];
 
-// Composite value encoded in <option value=...>. One option per
-// (format, mode) pair, grouped by mode via <optgroup>. Including the
-// mode in the visible label too — "Realtime: .mp4" — keeps the active
-// choice readable without re-opening the dropdown.
+// Dev-only group: a realtime webm capture that, instead of downloading,
+// is saved back over the sketch's committed preview after a 3-2-1 lead-in.
+// Lets interactive sketches (webcam / mic / hand tracking) get a real
+// preview the headless generator can't produce.
+const PREVIEW_GROUP_LABEL = "Record preview (dev)";
+const IS_DEV = process.env.NODE_ENV === "development";
+
+// One <option> per group entry. The composite value carries everything
+// `start()` needs; including the group label in the visible text keeps the
+// active choice readable without re-opening the dropdown.
 type Choice = {
   format: RecordingFormat;
   mode: RecordingMode;
+  intent: RecordingIntent;
+};
+
+type RecordingGroup = {
+  key: string;
+  label: string;
+  mode: RecordingMode;
+  intent: RecordingIntent;
+  formats: RecordingFormat[];
 };
 
 function encodeChoice( c: Choice ): string {
-  return `${ c.format }|${ c.mode }`;
+  return `${ c.format }|${ c.mode }|${ c.intent }`;
 }
 
 function decodeChoice( value: string ): Choice {
   const [
     format,
-    mode
-  ] = value.split( "|" ) as [ RecordingFormat, RecordingMode ];
+    mode,
+    intent
+  ] = value.split( "|" ) as [ RecordingFormat, RecordingMode, RecordingIntent ];
 
   return {
     format,
-    mode
+    mode,
+    intent: intent ?? "download"
   };
 }
 
 function formatChoiceLabel(
-  mode: RecordingMode, format: RecordingFormat
+  groupLabel: string, format: RecordingFormat
 ): string {
-  return `${ MODE_LABEL[ mode ] }: ${ FORMAT_LABEL[ format ] }`;
+  return `${ groupLabel }: ${ FORMAT_LABEL[ format ] }`;
 }
 
 export default function BrowserRecordingButton( {
@@ -95,21 +119,40 @@ export default function BrowserRecordingButton( {
   isRecording,
   progress,
   error,
+  previewPhase,
+  countdown,
+  previewSaved,
   onStart,
   onStop,
   onCancel
 }: BrowserRecordingButtonProps ) {
-  const groups = useMemo<{ mode: RecordingMode;
-    formats: RecordingFormat[] }[]>(
+  const groups = useMemo<RecordingGroup[]>(
     () => {
       const supported = new Set( capabilities.supportedFormats );
 
-      return MODE_ORDER
+      const modeGroups: RecordingGroup[] = MODE_ORDER
         .map( ( mode ) => ( {
+          key: mode,
+          label: MODE_LABEL[ mode ],
           mode,
+          intent: "download" as RecordingIntent,
           formats: MODE_FORMATS[ mode ].filter( ( f ) => supported.has( f ) )
         } ) )
         .filter( ( g ) => g.formats.length > 0 );
+
+      if ( IS_DEV && supported.has( "webm" ) ) {
+        modeGroups.push( {
+          key: "preview",
+          label: PREVIEW_GROUP_LABEL,
+          mode: "realtime",
+          intent: "preview",
+          formats: [
+            "webm"
+          ]
+        } );
+      }
+
+      return modeGroups;
     },
     [
       capabilities.supportedFormats
@@ -119,11 +162,15 @@ export default function BrowserRecordingButton( {
   const defaultChoice: Choice = useMemo(
     () => {
       const preferredMode = capabilities.defaultMode;
-      const group = groups.find( ( g ) => g.mode === preferredMode ) ?? groups[ 0 ];
+      const group =
+        groups.find( ( g ) => g.intent === "download" && g.mode === preferredMode ) ??
+          groups.find( ( g ) => g.intent === "download" ) ??
+          groups[ 0 ];
 
       return {
         mode: group?.mode ?? "async-loop",
-        format: group?.formats[ 0 ] ?? "webm"
+        format: group?.formats[ 0 ] ?? "webm",
+        intent: group?.intent ?? "download"
       };
     },
     [
@@ -136,6 +183,19 @@ export default function BrowserRecordingButton( {
     choice,
     setChoice
   ] = useState<Choice>( defaultChoice );
+
+  // A dev "Record preview" run drives its own countdown → recording →
+  // saving controls, distinct from the regular realtime / async-loop UI.
+  if ( previewPhase ) {
+    return (
+      <PreviewRecordingControls
+        phase={ previewPhase }
+        countdown={ countdown }
+        onStop={ onStop }
+        onCancel={ onCancel }
+      />
+    );
+  }
 
   if ( isRecording ) {
     const isRealtime = choice.mode === "realtime";
@@ -165,17 +225,18 @@ export default function BrowserRecordingButton( {
           aria-label="Recording format"
         >
           {groups.map( ( group ) => (
-            <optgroup key={ group.mode } label={ MODE_LABEL[ group.mode ] }>
+            <optgroup key={ group.key } label={ group.label }>
               {group.formats.map( ( f ) => (
                 <option
-                  key={ `${ group.mode }-${ f }` }
+                  key={ `${ group.key }-${ f }` }
                   value={ encodeChoice( {
                     format: f,
-                    mode: group.mode
+                    mode: group.mode,
+                    intent: group.intent
                   } ) }
                 >
                   {formatChoiceLabel(
-                    group.mode,
+                    group.label,
                     f
                   )}
                 </option>
@@ -188,7 +249,8 @@ export default function BrowserRecordingButton( {
           type="button"
           onClick={ () => onStart(
             choice.format,
-            choice.mode
+            choice.mode,
+            choice.intent
           ) }
           aria-label="Start recording"
           title="Start recording"
@@ -200,6 +262,12 @@ export default function BrowserRecordingButton( {
           />
         </button>
       </div>
+
+      {previewSaved && (
+        <div className="text-[10px] text-green-500">
+          Preview saved — review the files before committing.
+        </div>
+      )}
 
       {error && (
         <div className="text-[10px] text-red-500">
@@ -234,6 +302,79 @@ function RealtimeRecordingControls( {
           className="block h-2.5 w-2.5 rounded-full bg-red-500 ring-1 ring-red-500/40 animate-pulse-soft"
         />
         <span className="truncate">Stop recording</span>
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Dev "Record preview" lifecycle. A lead-in countdown gives the author
+ * time to get an interaction (webcam / mic / hand tracking) ready; the
+ * capture then runs for a fixed length and auto-stops; finally the clip is
+ * re-encoded server-side into the committed preview variants.
+ */
+function PreviewRecordingControls( {
+  phase,
+  countdown,
+  onStop,
+  onCancel
+}: {
+  phase: PreviewPhase;
+  countdown: number;
+  onStop: () => void;
+  onCancel: () => void;
+} ) {
+  if ( phase === "countdown" ) {
+    return (
+      <div className="flex flex-col gap-1">
+        <div className="text-[10px] text-gray-400 text-center min-h-[1em]">
+          Get ready…
+        </div>
+        <button
+          type="button"
+          onClick={ onCancel }
+          aria-label="Cancel preview recording"
+          className="rounded-xl px-3 py-2.5 border border-border text-foreground text-xs font-medium transition-colors inline-flex items-center justify-center gap-2 bg-background hover:bg-hover"
+        >
+          <span className="text-base font-semibold tabular-nums">
+            {countdown}
+          </span>
+          <span className="truncate">Cancel</span>
+        </button>
+      </div>
+    );
+  }
+
+  if ( phase === "saving" ) {
+    return (
+      <div className="flex flex-col gap-1">
+        <div className="text-[10px] text-gray-400 text-center min-h-[1em]">
+          Saving preview…
+        </div>
+        <div className="rounded-xl px-3 py-2.5 border border-border text-foreground text-xs font-medium inline-flex items-center justify-center gap-1.5 bg-background">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="truncate">Encoding…</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-[10px] text-gray-400 text-center min-h-[1em]">
+        Recording preview…
+      </div>
+      <button
+        type="button"
+        onClick={ onStop }
+        aria-label="Stop preview recording"
+        className="relative rounded-xl px-3 py-2.5 border border-red-500/40 text-red-600 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 bg-background hover:bg-red-500/5"
+      >
+        <span
+          aria-hidden="true"
+          className="block h-2.5 w-2.5 rounded-full bg-red-500 ring-1 ring-red-500/40 animate-pulse-soft"
+        />
+        <span className="truncate">Stop preview</span>
       </button>
     </div>
   );

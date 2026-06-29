@@ -10,6 +10,9 @@ import {
   _layouts
 } from "./layouts";
 
+import getMontageSketch from "./morph/index.js";
+import drawMontageDip from "./morph/drawMontageDip.js";
+
 import {
   coerceFramerate
 } from "../framerate.js";
@@ -41,6 +44,7 @@ const slides = {
       () => {
         slides.renderCurrentSlide();
         slides.render( options );
+        slides.renderMontageOverlay();
       }
     );
 
@@ -202,6 +206,19 @@ const slides = {
     this.render( slide );
   },
 
+  // Draw the montage "dip" fade on top of everything when the current slide is
+  // a dip-style montage. Morph-style montages need no overlay.
+  renderMontageOverlay() {
+    const slide = this.current;
+
+    if ( slide?.transition?.enabled && slide.transition.style === "dip" ) {
+      drawMontageDip(
+        slide,
+        options?.slides || []
+      );
+    }
+  },
+
   /**
    * Get merged sketch settings for the current slide
    * Merges global sketch settings with slide-specific settings
@@ -211,6 +228,22 @@ const slides = {
   getSketchSettings( optionsTarget ) {
     const globalSketch = optionsTarget?.sketch || {};
     const currentSlide = this.current;
+
+    // Montage slide: morph the OTHER slides' params instead of using this
+    // slide's own. Single injection point — the running sketch and any
+    // specs/HUD overlay that reads options.sketch both see interpolated values.
+    if ( currentSlide?.transition?.enabled ) {
+      const montage = getMontageSketch(
+        globalSketch,
+        currentSlide,
+        optionsTarget?.slides || []
+      );
+
+      if ( montage ) {
+        return montage;
+      }
+    }
+
     const slideSketch = currentSlide?.sketch || {};
 
     return {

@@ -131,7 +131,10 @@ const rootFormConfig: Record<string, FieldConfig> = {
         label: "Duration (s)",
         component: "slider",
         step: 1,
-        min: 0,
+        // Floor at 1 to match SketchAnimationSchema (`duration.min(1)`): a 0 here
+        // is schema-invalid and used to slip through `watch()` un-clamped and
+        // trip the `duration || default` fallbacks downstream.
+        min: 1,
         max: 60
       },
       framerate: {
