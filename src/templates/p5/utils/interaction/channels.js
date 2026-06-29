@@ -9,7 +9,8 @@
 // gyroscope, midi, audio, joypad) and tags each with its source name. We just
 // normalize those canvas-space vectors to 0..1 and expose them by source id, so
 // enhancing a handler automatically makes it bindable. Semantic audio scalars
-// (level/bass/treble) come from `getAudio()`.
+// (level/bass/treble) come from `getAudio()`; semantic hand/face gesture scalars
+// (hands.openness/fingers/depth …, face.depth) come from `getInteractionMetrics()`.
 //
 // A lightweight baseline `mouse` channel is always present (its own pointer
 // listener) so sketches WITHOUT an interaction block can still bind the mouse.
@@ -30,6 +31,9 @@ import {
 import {
   clamp01, buildChannelsFromDebug
 } from "./channelsAdapter.js";
+import {
+  gestureChannelValues
+} from "./gestureMath.js";
 
 // Re-export so consumers (and tests) can reach the pure adapter via channels.js.
 export {
@@ -163,6 +167,38 @@ function _collectAudioChannels(
   };
 }
 
+// Semantic hand/face gesture scalar channels from getInteractionMetrics()
+// (each already normalized 0..1 by gestureChannelValues). The metrics read the
+// same MediaPipe results the pointer collectors already drive, so this only
+// adds the open/closed · fingers · depth · pinch · spread derivation on top —
+// no extra inference. Populated when the sketch enabled a hand tracker
+// (hands / fingers) or the face tracker.
+function _collectGestureChannels(
+  interactionOpts, channels
+) {
+  const vision = interactionOpts.vision;
+
+  if ( vision?.enabled === false || !_interaction ) {
+    return;
+  }
+
+  const wantsHands = vision?.hands?.enabled || vision?.fingers?.enabled;
+  const wantsFace = vision?.face?.enabled;
+
+  if ( !wantsHands && !wantsFace ) {
+    return;
+  }
+
+  const values = gestureChannelValues( _interaction.getInteractionMetrics( interactionOpts ) );
+
+  for ( const id in values ) {
+    channels[ id ] = {
+      type: "scalar",
+      value: clamp01( values[ id ] )
+    };
+  }
+}
+
 // ── Per-frame sampling ──────────────────────────────────────────────────────
 // Channels are sampled at most once per rendered frame and cached, so multiple
 // binding reads in the same draw() see a consistent snapshot (and stateful
@@ -219,6 +255,10 @@ export function sampleChannels( interactionOpts ) {
           )
         );
         _collectAudioChannels(
+          interactionOpts,
+          channels
+        );
+        _collectGestureChannels(
           interactionOpts,
           channels
         );

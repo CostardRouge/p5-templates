@@ -21,6 +21,9 @@ import {
   getP5
 } from "@/p5/utils/sketch.js";
 import {
+  computeInteractionMetrics
+} from "@/p5/utils/interaction/gestures.js";
+import {
   createVideoSync
 } from "@/lib/assets/kinds/videos/createVideoSync";
 import {
@@ -2463,6 +2466,31 @@ function _runAudioFeatures( audio ) {
  */
 export function getAudio() {
   return _audioFeatures;
+}
+
+/**
+ * Live "gesture" snapshot derived from the vision pipeline — the semantic view
+ * of what the camera sees this frame:
+ *
+ *   hands: { count, open, closed, openness, fingers, depth }  // all hands
+ *   hand:  { present, openness, fingers, depth, pinch, spread } // closest hand
+ *   face:  { count, present, depth }
+ *
+ * Openness/depth/pinch/spread are 0..1; counts are integers; `depth` rises as a
+ * hand nears the camera (apparent size grows). Values are smoothed and cached
+ * per frame. Ensures the vision pipeline is running, then delegates the math to
+ * gestures.js. The binding system reads this through channels.js, which
+ * normalizes it into `hands.*` / `face.*` scalar channels.
+ *
+ * @param {object} [opts] - the `interaction` section of sketch options
+ * @returns {ReturnType<typeof computeInteractionMetrics>}
+ */
+export function getInteractionMetrics( opts = options.sketch?.interaction ?? {} ) {
+  if ( opts && opts.enabled !== false ) {
+    _ensureVision( opts );
+  }
+
+  return computeInteractionMetrics( opts );
 }
 
 function _collectJoypad(
