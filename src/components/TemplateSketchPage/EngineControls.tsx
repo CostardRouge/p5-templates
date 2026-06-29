@@ -233,7 +233,7 @@ export function EngineControls( ) {
           disabled={ thumbnailSaveState === "saving" }
           onClick={ handleCaptureClick }
           onDoubleClick={ handleSaveCanvasAsThumbnail }
-          className="hidden md:inline-flex h-full px-3 hover:bg-hover transition-colors group items-center justify-center"
+          className="inline-flex h-full px-3 hover:bg-hover transition-colors border-r border-border md:border-r-0 group items-center justify-center"
         >
           {thumbnailSaveState === "saving" ? (
             <Loader2 className="h-4 w-4 text-yellow-400/70 animate-spin" />
