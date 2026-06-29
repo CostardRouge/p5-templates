@@ -31,9 +31,9 @@ export const formValues = {
     customAlphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   },
   grid: {
-    font: "spaceMonoRegular",
-    letterScale: 0.7,
-    sampleFactor: 0.18,
+    font: "martian",
+    letterScale: 0.71,
+    sampleFactor: 0.24,
     // How many cells of terrain are kept around the hero.
     gridRadius: 6,
     // The next letter is searched for ~this many cells away — small = short hops.
@@ -50,6 +50,11 @@ export const formValues = {
     // Whole turns the letter tumbles per leap (lands flat in the same orientation).
     spins: 1,
     tumbleEasing: "easeInOutCubic",
+    // Fraction of the step by which the tumble + morph finish — the rest of the
+    // descent is flat, so the letter lands cleanly instead of mid-spin.
+    settle: 0.85,
+    // Easing of the from→to letter morph.
+    morphEasing: "easeInOutCubic",
     // Thickness of the extruded letter, in cells.
     extrudeHeight: 0.35,
     // Hero size relative to the terrain letters.
@@ -78,7 +83,7 @@ export const formValues = {
   },
   camera: {
     // Scene rotation around each axis, degrees (full 0–360 turn on every axis).
-    rotateX: 50,
+    rotateX: 108,
     rotateY: 0,
     rotateZ: 0,
     distance: 1300,
@@ -245,6 +250,17 @@ export const formConfiguration: Record<string, any> = {
       },
       tumbleEasing: {
         label: "Tumble easing",
+        component: "easing"
+      },
+      settle: {
+        label: "Settle (finish before landing)",
+        component: "slider",
+        min: 0.3,
+        max: 1,
+        step: 0.01
+      },
+      morphEasing: {
+        label: "Morph easing",
         component: "easing"
       },
       extrudeHeight: {

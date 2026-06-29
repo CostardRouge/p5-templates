@@ -18,6 +18,7 @@ import {
 } from "../_grid.js";
 import {
   getGlyphGeometry,
+  geometryFromContours,
   drawExtrudedGlyph,
   fillOutline
 } from "../_extrude3d.js";
@@ -41,6 +42,10 @@ import {
 const CELL = 100;
 const FLAT_Y = -0.4;
 const SHADOW_Y = -0.8;
+// Fixed point counts the morph resamples each glyph's outer outline / holes to, so
+// corresponding points can be lerped between two different letters.
+const N_OUTER = 80;
+const N_HOLE = 28;
 
 const state = {
   scene: null,
@@ -51,6 +56,254 @@ const state = {
     seed: 1
   }
 };
+
+// char|sampleFactor → { outer, holes } resampled rings for morphing. Renderer-free.
+const morphSources = new Map();
+
+// Resample a closed contour to exactly N points, evenly by arc length.
+function ringResample(
+  points, n
+) {
+  const len = points.length;
+
+  if ( len === 0 ) {
+    return Array.from(
+      {
+        length: n
+      },
+      () => ( {
+        x: 0,
+        y: 0
+      } )
+    );
+  }
+
+  if ( len < 2 ) {
+    return Array.from(
+      {
+        length: n
+      },
+      () => ( {
+        x: points[ 0 ].x,
+        y: points[ 0 ].y
+      } )
+    );
+  }
+
+  const cum = [
+    0
+  ];
+
+  for ( let i = 1; i <= len; i++ ) {
+    const a = points[ ( i - 1 ) % len ];
+    const b = points[ i % len ];
+
+    cum.push( cum[ i - 1 ] + Math.hypot(
+      b.x - a.x,
+      b.y - a.y
+    ) );
+  }
+
+  const total = cum[ len ] || 1;
+  const out = [];
+  let seg = 0;
+
+  for ( let i = 0; i < n; i++ ) {
+    const target = ( total * i ) / n;
+
+    while ( seg < len - 1 && cum[ seg + 1 ] < target ) {
+      seg++;
+    }
+
+    const a = points[ seg ];
+    const b = points[ ( seg + 1 ) % len ];
+    const segLen = cum[ seg + 1 ] - cum[ seg ] || 1;
+    const t = ( target - cum[ seg ] ) / segLen;
+
+    out.push( {
+      x: a.x + ( b.x - a.x ) * t,
+      y: a.y + ( b.y - a.y ) * t
+    } );
+  }
+
+  return out;
+}
+
+function ringSignedArea( ring ) {
+  let area = 0;
+
+  for ( let i = 0; i < ring.length; i++ ) {
+    const a = ring[ i ];
+    const b = ring[ ( i + 1 ) % ring.length ];
+
+    area += a.x * b.y - b.x * a.y;
+  }
+
+  return area / 2;
+}
+
+// Force a known winding so two letters' rings never lerp "inside-out".
+function ringWithWinding(
+  ring, positive
+) {
+  const area = ringSignedArea( ring );
+
+  if ( ( area < 0 && positive ) || ( area > 0 && !positive ) ) {
+    return ring.slice().reverse();
+  }
+
+  return ring;
+}
+
+// Rotate a ring so index 0 is its topmost point — a cheap, stable correspondence
+// so the two letters' points line up the same way before lerping.
+function ringRotateTop( ring ) {
+  let mi = 0;
+
+  for ( let i = 1; i < ring.length; i++ ) {
+    if ( ring[ i ].y < ring[ mi ].y ) {
+      mi = i;
+    }
+  }
+
+  return ring.slice( mi ).concat( ring.slice(
+    0,
+    mi
+  ) );
+}
+
+function ringCentroid( points ) {
+  let x = 0;
+  let y = 0;
+
+  for ( const p of points ) {
+    x += p.x;
+    y += p.y;
+  }
+
+  return {
+    x: x / points.length,
+    y: y / points.length
+  };
+}
+
+// Resampled, winding-normalised, top-aligned rings for one glyph, cached.
+function getMorphSource(
+  char, font, sampleFactor
+) {
+  const key = `${ char }|${ sampleFactor }`;
+  const cached = morphSources.get( key );
+
+  if ( cached ) {
+    return cached;
+  }
+
+  const contours = getGlyphGeometry(
+    char,
+    font,
+    sampleFactor
+  ).contours;
+  const outer = ringRotateTop( ringWithWinding(
+    ringResample(
+      contours[ 0 ] ?? [],
+      N_OUTER
+    ),
+    true
+  ) );
+  const holes = [];
+
+  for ( let h = 1; h < contours.length; h++ ) {
+    holes.push( ringRotateTop( ringWithWinding(
+      ringResample(
+        contours[ h ],
+        N_HOLE
+      ),
+      false
+    ) ) );
+  }
+
+  const src = {
+    outer,
+    holes
+  };
+
+  morphSources.set(
+    key,
+    src
+  );
+
+  return src;
+}
+
+function lerpRing(
+  a, b, t
+) {
+  return a.map( (
+    pa, i
+  ) => ( {
+    x: pa.x + ( b[ i ].x - pa.x ) * t,
+    y: pa.y + ( b[ i ].y - pa.y ) * t
+  } ) );
+}
+
+// A hole that only exists on one side morphs to/from its own centroid, so it grows
+// in or shrinks away as the letters cross-fade.
+function towardCentroid(
+  ring, t
+) {
+  const c = ringCentroid( ring );
+
+  return ring.map( ( p ) => ( {
+    x: p.x + ( c.x - p.x ) * t,
+    y: p.y + ( c.y - p.y ) * t
+  } ) );
+}
+
+// Contours of glyph A morphed toward glyph B at t∈[0,1]. Outer outlines lerp point
+// for point; holes pair up by index, and any unmatched hole grows from / shrinks
+// to a point.
+function morphContours(
+  a, b, t
+) {
+  const outer = lerpRing(
+    a.outer,
+    b.outer,
+    t
+  );
+  const holeCount = Math.max(
+    a.holes.length,
+    b.holes.length
+  );
+  const holes = [];
+
+  for ( let h = 0; h < holeCount; h++ ) {
+    const ha = a.holes[ h ];
+    const hb = b.holes[ h ];
+
+    if ( ha && hb ) {
+      holes.push( lerpRing(
+        ha,
+        hb,
+        t
+      ) );
+    } else if ( ha ) {
+      holes.push( towardCentroid(
+        ha,
+        t
+      ) );
+    } else {
+      holes.push( towardCentroid(
+        hb,
+        1 - t
+      ) );
+    }
+  }
+
+  return [
+    outer,
+    ...holes
+  ];
+}
 
 function drawVignette( {
   amount,
@@ -277,7 +530,22 @@ sketch.draw( () => {
   const height = arcHeight * Math.sin( Math.PI * local );
   const spins = leapCfg.spins ?? 1;
   const tumbleEase = easing[ leapCfg.tumbleEasing ] ?? easing.easeInOutCubic;
-  const tumble = Math.PI * 2 * spins * tumbleEase( local );
+  // Rotation and morph complete by `settle` of the step — still slightly airborne —
+  // so the last bit of the descent is flat and the letter lands cleanly in the
+  // target's orientation rather than touching down mid-spin.
+  const settle = clamp(
+    leapCfg.settle ?? 0.85,
+    0.3,
+    1
+  );
+  const air = clamp(
+    local / settle,
+    0,
+    1
+  );
+  const tumble = Math.PI * 2 * spins * tumbleEase( air );
+  const morphEase = easing[ leapCfg.morphEasing ] ?? easing.easeInOutCubic;
+  const morphT = morphEase( air );
   const extrudeHeight = CELL * Math.max(
     0.02,
     leapCfg.extrudeHeight ?? 0.35
@@ -313,14 +581,31 @@ sketch.draw( () => {
     axisZ = 0;
   }
 
-  // The flying glyph is the word's first letter (identical for now).
-  const glyphs = wordGlyphs( wordCfg.value );
-  const flyChar = glyphs[ 0 ] ?? "A";
-  const flyGeometry = getGlyphGeometry(
-    flyChar,
-    font,
-    sampleFactor
-  );
+  // The flying glyph STARTS as the letter it leaps from (the cell at the centre)
+  // and MORPHS into the letter it lands on, so it spells the word and settles
+  // exactly onto each target. (from/to carry the word's letters along the path.)
+  const fallbackChar = wordGlyphs( wordCfg.value )[ 0 ] ?? "A";
+  const fromChar = from?.char ?? fallbackChar;
+  const toChar = to?.char ?? fromChar;
+  const flyGeometry = fromChar === toChar
+    ? getGlyphGeometry(
+      fromChar,
+      font,
+      sampleFactor
+    )
+    : geometryFromContours( morphContours(
+      getMorphSource(
+        fromChar,
+        font,
+        sampleFactor
+      ),
+      getMorphSource(
+        toChar,
+        font,
+        sampleFactor
+      ),
+      morphT
+    ) );
 
   // ── Camera (shared with v2: 3-axis, full 0–360) ───────────────────────────
   const distance = cameraCfg.distance ?? 1300;

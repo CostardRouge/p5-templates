@@ -190,6 +190,19 @@ export function getGlyphGeometry(
   return geometry;
 }
 
+// Build a drawable geometry { contours, normals } from arbitrary contour rings
+// (outer first, then holes) — e.g. contours produced by morphing one glyph into
+// another. Normals are recomputed so the side walls still shade correctly.
+export function geometryFromContours( contours ) {
+  return {
+    contours,
+    normals: contours.map( ( c ) => outwardNormals(
+      c,
+      contours
+    ) )
+  };
+}
+
 // The flat glyph cap, tessellated ONCE per character into a retained geometry
 // (in glyph units, at y = 0) and cached. Re-tessellating a cap every frame is the
 // cost that matters when many are drawn; with a cached mesh the per-frame work is
