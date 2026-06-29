@@ -3000,18 +3000,6 @@
     "ctime": "2026-06-21T17:27:05.111Z"
   },
   {
-    "name": "text-morphing-iris-mask",
-    "engine": "p5",
-    "category": "text-morphing",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": false,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-21T19:45:54.448Z",
-    "ctime": "2026-06-21T19:45:01.644Z"
-  },
-  {
     "name": "motion-foley",
     "engine": "p5",
     "category": "audio",
@@ -3048,23 +3036,11 @@
     "ctime": "2026-06-23T19:51:39.332Z"
   },
   {
-    "name": "text-morphing-letter-mask",
-    "engine": "p5",
-    "category": "text-morphing",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": false,
-    "hiddenFromTemplates": false,
-    "mtime": "2026-06-24T00:47:10.062Z",
-    "ctime": "2026-06-24T00:47:10.054Z"
-  },
-  {
     "name": "interactive-binding-demo",
     "engine": "p5",
     "category": "kinetic",
     "hasSketchForm": true,
-    "hasThumbnail": false,
+    "hasThumbnail": true,
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
