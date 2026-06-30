@@ -120,6 +120,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:letter-grid/letter-grid-v4-trail": () => import( "@/p5/sketches/letter-grid/letter-grid-v4-trail/options" ),
   "p5:letter-trace/letter-trace-v0-scribe": () => import( "@/p5/sketches/letter-trace/letter-trace-v0-scribe/options" ),
   "p5:letter-trace/letter-trace-v1-reveal": () => import( "@/p5/sketches/letter-trace/letter-trace-v1-reveal/options" ),
+  "p5:letter-trace/letter-trace-v2-current": () => import( "@/p5/sketches/letter-trace/letter-trace-v2-current/options" ),
   "p5:lines": () => import( "@/p5/sketches/lines/options" ),
   "p5:mask-v1": () => import( "@/p5/sketches/mask-v1/options" ),
   "p5:metaballs/metaballs-v1-field": () => import( "@/p5/sketches/metaballs/metaballs-v1-field/options" ),

@@ -102,6 +102,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:letter-grid/letter-grid-v4-trail": () => import( "@/p5/sketches/letter-grid/letter-grid-v4-trail/index.js" ),
   "p5:letter-trace/letter-trace-v0-scribe": () => import( "@/p5/sketches/letter-trace/letter-trace-v0-scribe/index.js" ),
   "p5:letter-trace/letter-trace-v1-reveal": () => import( "@/p5/sketches/letter-trace/letter-trace-v1-reveal/index.js" ),
+  "p5:letter-trace/letter-trace-v2-current": () => import( "@/p5/sketches/letter-trace/letter-trace-v2-current/index.js" ),
   "p5:lines": () => import( "@/p5/sketches/lines/index.js" ),
   "p5:mask-v1": () => import( "@/p5/sketches/mask-v1/index.js" ),
   "p5:metaballs/metaballs-v1-field": () => import( "@/p5/sketches/metaballs/metaballs-v1-field/index.js" ),

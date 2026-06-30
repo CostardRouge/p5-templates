@@ -212,3 +212,162 @@ export function hashedRandom( seed ) {
 
   return h / 4294967296;
 }
+
+/**
+ * Shortest-arc interpolation between two angles. Plain lerp on raw radians jumps
+ * by 2π when the two angles straddle ±π; this wraps the delta into [-π, π] first
+ * so the result always takes the short way round (used to ease the heading across
+ * a pen-lift, where the two contour ends point in unrelated directions).
+ */
+export function lerpAngle(
+  a, b, t
+) {
+  let d = b - a;
+
+  while ( d > Math.PI ) {
+    d -= 2 * Math.PI;
+  }
+  while ( d < -Math.PI ) {
+    d += 2 * Math.PI;
+  }
+
+  return a + d * t;
+}
+
+/**
+ * Box-blur a series of angles `passes` times, keeping the two endpoints fixed.
+ * The input is expected to be ALREADY UNWRAPPED (continuous, no ±π jumps) so a
+ * plain average is meaningful — see `tangentHeadings`. A little smoothing rounds
+ * the violent heading snap a glyph's sharp corners would otherwise produce when
+ * the world is rotated to follow the pen.
+ */
+export function smoothAngles(
+  values, passes = 1
+) {
+  const n = values.length;
+
+  if ( n < 3 || passes < 1 ) {
+    return Array.from( values );
+  }
+
+  let cur = Array.from( values );
+
+  for ( let pass = 0; pass < passes; pass++ ) {
+    const out = new Array( n );
+
+    out[ 0 ] = cur[ 0 ];
+    out[ n - 1 ] = cur[ n - 1 ];
+
+    for ( let i = 1; i < n - 1; i++ ) {
+      out[ i ] = ( cur[ i - 1 ] + cur[ i ] + cur[ i + 1 ] ) / 3;
+    }
+
+    cur = out;
+  }
+
+  return cur;
+}
+
+/**
+ * The continuous heading (tangent angle) at every sample of a closed contour.
+ *
+ * Each entry is the direction of the segment leaving sample i (i → i+1, wrapping
+ * at the seam), but instead of raw `atan2` values — which flip by 2π whenever the
+ * tangent crosses ±π — the series is UNWRAPPED into one continuous run by adding
+ * the minimal signed step each time. So as the pen walks a closed ring the
+ * heading drifts smoothly by ~±2π over the loop (the winding), which is exactly
+ * what lets the camera rotate the world to keep the trace pointing one way
+ * without snapping. The result is then lightly smoothed (`smoothAngles`) to take
+ * the edge off sharp corners. Pure geometry: translation-invariant, so it can be
+ * computed after the word is centred.
+ */
+export function tangentHeadings(
+  contour, smoothingPasses = 2
+) {
+  const n = contour ? contour.length : 0;
+
+  if ( n === 0 ) {
+    return [];
+  }
+
+  if ( n === 1 ) {
+    return [
+      0
+    ];
+  }
+
+  const headings = new Array( n );
+  let prev = Math.atan2(
+    contour[ 1 % n ].y - contour[ 0 ].y,
+    contour[ 1 % n ].x - contour[ 0 ].x
+  );
+
+  headings[ 0 ] = prev;
+  let acc = prev;
+
+  for ( let i = 1; i < n; i++ ) {
+    const a = contour[ ( i + 1 ) % n ];
+    const b = contour[ i ];
+    const raw = Math.atan2(
+      a.y - b.y,
+      a.x - b.x
+    );
+    let delta = raw - prev;
+
+    while ( delta > Math.PI ) {
+      delta -= 2 * Math.PI;
+    }
+    while ( delta < -Math.PI ) {
+      delta += 2 * Math.PI;
+    }
+
+    acc += delta;
+    headings[ i ] = acc;
+    prev = raw;
+  }
+
+  return smoothAngles(
+    headings,
+    smoothingPasses
+  );
+}
+
+/**
+ * Read the unwrapped heading at arc fraction `t` (0..1) of a contour, optionally
+ * aiming `lookahead` samples further along so the camera anticipates a curve
+ * before reaching it. Because `tangentHeadings` is continuous, neighbouring
+ * entries are close and a plain lerp between them is safe (no ±π special-casing).
+ */
+export function sampleHeading(
+  headings, t, lookahead = 0
+) {
+  const n = headings.length;
+
+  if ( n === 0 ) {
+    return 0;
+  }
+
+  if ( n === 1 ) {
+    return headings[ 0 ];
+  }
+
+  const clamped = t < 0 ? 0 : t > 1 ? 1 : t;
+  let pos = clamped * ( n - 1 ) + lookahead;
+
+  if ( pos < 0 ) {
+    pos = 0;
+  }
+  if ( pos > n - 1 ) {
+    pos = n - 1;
+  }
+
+  const i = Math.floor( pos );
+  const frac = pos - i;
+  const a = headings[ i ];
+  const b = headings[ Math.min(
+    i + 1,
+    n - 1
+  ) ];
+
+  return a + ( b - a ) * frac;
+}

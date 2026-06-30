@@ -11,7 +11,11 @@ import {
   splitContours,
   resampleContour,
   rotateContour,
-  hashedRandom
+  hashedRandom,
+  tangentHeadings,
+  sampleHeading,
+  lerpAngle,
+  smoothAngles
 } from "../letterPaths.js";
 
 type Point = { x: number;
@@ -305,6 +309,227 @@ describe(
 
         // Not all clustered in one bucket.
         expect( unique.size ).toBeGreaterThan( 4 );
+      }
+    );
+  }
+);
+
+describe(
+  "tangentHeadings",
+  () => {
+    function circle( n: number ): Point[] {
+      return Array.from(
+        {
+          length: n
+        },
+        (
+          _, i
+        ) => ( {
+          x: Math.cos( 2 * Math.PI * i / n ),
+          y: Math.sin( 2 * Math.PI * i / n )
+        } )
+      );
+    }
+
+    it(
+      "degrades gracefully for trivial input",
+      () => {
+        expect( tangentHeadings(
+          [],
+          0
+        ) ).toEqual( [] );
+        expect( tangentHeadings(
+          [
+            {
+              x: 1,
+              y: 2
+            }
+          ],
+          0
+        ) ).toEqual( [
+          0
+        ] );
+      }
+    );
+
+    it(
+      "unwraps into a continuous run with no ±π flips around a ring",
+      () => {
+        const headings = tangentHeadings(
+          circle( 48 ),
+          0
+        );
+
+        // No raw atan2 wrap survives: every neighbour step stays well under π.
+        for ( let i = 1; i < headings.length; i++ ) {
+          expect( Math.abs( headings[ i ] - headings[ i - 1 ] ) )
+            .toBeLessThan( Math.PI );
+        }
+
+        // One full turn of winding is accumulated over the loop (the property
+        // that lets the world rotate smoothly to follow the pen).
+        const total = headings[ headings.length - 1 ] - headings[ 0 ];
+
+        expect( Math.abs( total ) ).toBeCloseTo(
+          2 * Math.PI * 47 / 48,
+          1
+        );
+      }
+    );
+
+    it(
+      "smoothing keeps the series continuous and endpoints fixed",
+      () => {
+        const raw = tangentHeadings(
+          circle( 48 ),
+          0
+        );
+        const smooth = tangentHeadings(
+          circle( 48 ),
+          2
+        );
+
+        expect( smooth[ 0 ] ).toBeCloseTo( raw[ 0 ] );
+        expect( smooth[ smooth.length - 1 ] )
+          .toBeCloseTo( raw[ raw.length - 1 ] );
+
+        for ( let i = 1; i < smooth.length; i++ ) {
+          expect( Math.abs( smooth[ i ] - smooth[ i - 1 ] ) )
+            .toBeLessThan( Math.PI );
+        }
+      }
+    );
+  }
+);
+
+describe(
+  "sampleHeading",
+  () => {
+    const headings = [
+      0,
+      1,
+      2,
+      3
+    ];
+
+    it(
+      "reads the endpoints and lerps between samples",
+      () => {
+        expect( sampleHeading(
+          headings,
+          0
+        ) ).toBeCloseTo( 0 );
+        expect( sampleHeading(
+          headings,
+          1
+        ) ).toBeCloseTo( 3 );
+        // pos = 0.5 × (4 - 1) = 1.5 → halfway between headings[1] and headings[2].
+        expect( sampleHeading(
+          headings,
+          0.5
+        ) ).toBeCloseTo( 1.5 );
+      }
+    );
+
+    it(
+      "aims look-ahead samples further along and clamps at the end",
+      () => {
+        expect( sampleHeading(
+          headings,
+          0,
+          1
+        ) ).toBeCloseTo( 1 );
+        // Look-ahead past the final sample clamps rather than running off.
+        expect( sampleHeading(
+          headings,
+          1,
+          5
+        ) ).toBeCloseTo( 3 );
+      }
+    );
+
+    it(
+      "degrades gracefully for trivial input",
+      () => {
+        expect( sampleHeading(
+          [],
+          0.5
+        ) ).toBe( 0 );
+        expect( sampleHeading(
+          [
+            7
+          ],
+          0.5
+        ) ).toBe( 7 );
+      }
+    );
+  }
+);
+
+describe(
+  "lerpAngle",
+  () => {
+    it(
+      "interpolates the short way when angles straddle ±π",
+      () => {
+        // 3.0 → -3.0 the naive way sweeps -6 rad; the short way is +0.28 across
+        // the seam, landing near ±π at the midpoint.
+        expect( Math.abs( lerpAngle(
+          3,
+          -3,
+          0.5
+        ) ) ).toBeCloseTo( Math.PI );
+      }
+    );
+
+    it(
+      "is a plain lerp well away from the seam",
+      () => {
+        expect( lerpAngle(
+          0,
+          Math.PI / 2,
+          0.5
+        ) ).toBeCloseTo( Math.PI / 4 );
+      }
+    );
+  }
+);
+
+describe(
+  "smoothAngles",
+  () => {
+    it(
+      "returns a copy untouched when there is nothing to smooth",
+      () => {
+        const values = [
+          1,
+          2
+        ];
+        const out = smoothAngles(
+          values,
+          3
+        );
+
+        expect( out ).toEqual( values );
+        expect( out ).not.toBe( values );
+      }
+    );
+
+    it(
+      "averages interior values while pinning the endpoints",
+      () => {
+        const out = smoothAngles(
+          [
+            0,
+            9,
+            0
+          ],
+          1
+        );
+
+        expect( out[ 0 ] ).toBe( 0 );
+        expect( out[ 2 ] ).toBe( 0 );
+        expect( out[ 1 ] ).toBeCloseTo( 3 );
       }
     );
   }
