@@ -130,24 +130,15 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   direction: {
-    label: "Flow direction (2D vector)",
-    component: "nested-object",
-    fields: {
-      x: {
-        label: "Direction X",
-        component: "slider",
-        min: -1,
-        max: 1,
-        step: 0.01
-      },
-      y: {
-        label: "Direction Y (negative = up)",
-        component: "slider",
-        min: -1,
-        max: 1,
-        step: 0.01
-      }
-    }
+    label: "Flow direction",
+    component: "vector2d",
+    allowNegative: true,
+    min: -1,
+    max: 1,
+    step: 0.01,
+    // Match screen / p5 axes: dragging the handle up gives a negative y, which
+    // sends the trace up the screen. Only the direction matters, not length.
+    yDown: true
   },
   draw: {
     label: "Drawing",
