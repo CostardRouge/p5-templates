@@ -14,7 +14,7 @@ export const formValues = {
     thickness: 19,
     // Extra radius added per pixel of finger length, so a finger held closer to
     // the camera (longer on screen) grows a chunkier pipe.
-    thicknessByLength: 0.055,
+    thicknessByLength: 0.04,
     // Chromatic twist: -0.55, no twist (the shape never
     // ripples — this only rotates the colour).
     twist: 1
@@ -29,7 +29,7 @@ export const formValues = {
   // Finger tracking behaviour.
   finger: {
     // Temporal smoothing of the landmarks (0 = raw, jittery; higher = calmer).
-    smoothing: 0.4,
+    smoothing: 0.2,
     // Draw a waving fan of pipes when no hand is detected (keeps the preview and
     // the first seconds before a hand appears alive).
     idleDemo: true
@@ -41,35 +41,35 @@ export const formValues = {
     // Render the pipes into a buffer this fraction of the canvas, then upscale.
     // Lower = much faster (this is the main lever for the two-hands case); the
     // glossy tubes upscale cleanly so the quality cost is small. 1 = full res.
-    renderScale: 0.7
+    renderScale: 0.55
   },
 
   colors: {
     hueSpeed: 0.6,
-    hueSpread: 1.6,
-    huePhase: 0,
-    lengthHueShift: 1.1,
-    aroundHueShift: 0.7,
-    fingerHueShift: 0.3,
-    shimmer: 1.2,
-    saturation: 0.9,
-    brightness: 1.3
+    hueSpread: 1.38,
+    huePhase: 1.41,
+    lengthHueShift: -1.07,
+    aroundHueShift: -0.44,
+    fingerHueShift: 0.23,
+    shimmer: 1.61,
+    saturation: 0.21,
+    brightness: 1.12
   },
 
   light: {
-    azimuth: -1.29,
-    elevation: -0.6,
+    azimuth: 0.2,
+    elevation: -0.96,
     ambient: 0.3,
-    diffuse: 0.75,
+    diffuse: 0.27,
     specular: 0.85,
     specPower: 28,
-    fresnelPower: 3,
-    rimStrength: 0.8,
+    fresnelPower: 1.35,
+    rimStrength: 0,
     occlusion: 0.5
   },
 
   aberration: {
-    amount: 2,
+    amount: 0,
     mode: "radial" as "radial" | "horizontal"
   },
 
