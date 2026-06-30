@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  Fragment, useState
+  Fragment, useEffect, useRef, useState
 } from "react";
 import {
   ChevronDown
@@ -9,6 +9,7 @@ import {
 import {
   useController, useFormContext, useWatch
 } from "react-hook-form";
+import deepClone from "@/utils/deepClone";
 import {
   SketchOptionInput,
   SlideTitleSchema,
@@ -27,7 +28,7 @@ import ControlledColorInput from "./ContentItems/components/ControlledColorInput
 import ControlledSlideMultiSelect from "./ContentItems/components/ControlledSlideMultiSelect/ControlledSlideMultiSelect";
 import ControlledVector2DInput from "./ContentItems/components/ControlledVector2DInput/ControlledVector2DInput";
 import {
-  BarLabelSegment
+  BarLabelSegment, ToggleSwitch
 } from "./ContentItems/components/ControlChrome";
 import {
   fontSelectOptions
@@ -82,6 +83,101 @@ const TITLE_ALIGN_LABELS: Record<( typeof TITLE_ALIGNMENTS )[ number ], string> 
   right: "Right"
 };
 
+/**
+ * Reset affordance for a single field, mirroring the one in FieldRenderer:
+ * the value the field was loaded with is captured once on mount, `isModified`
+ * compares the live value against it, and `handleReset` restores it. Lets the
+ * bespoke montage/title controls offer the same "reset to saved value" button
+ * the regular form controls have.
+ */
+function useFieldReset( name: string ) {
+  const {
+    control, setValue, getValues
+  } = useFormContext();
+
+  const currentValue = useWatch( {
+    control,
+    name
+  } );
+
+  const initialRef = useRef<unknown>( undefined );
+  const initializedRef = useRef( false );
+
+  if ( !initializedRef.current ) {
+    initializedRef.current = true;
+    initialRef.current = deepClone( getValues( name ) );
+  }
+
+  const isModified =
+    JSON.stringify( currentValue ) !== JSON.stringify( initialRef.current );
+
+  const handleReset = ( event: React.MouseEvent ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setValue(
+      name,
+      deepClone( initialRef.current ),
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true
+      }
+    );
+  };
+
+  return {
+    isModified,
+    handleReset
+  };
+}
+
+/**
+ * Thin wrappers that give the shared slider / color / easing controls the same
+ * mount-baseline reset the bar controls get, without threading the props
+ * through every call site.
+ */
+function ResettableSlider( props: React.ComponentProps<typeof ControlledSliderInput> ) {
+  const {
+    isModified, handleReset
+  } = useFieldReset( props.name );
+
+  return (
+    <ControlledSliderInput
+      { ...props }
+      isModified={ isModified }
+      onReset={ handleReset }
+    />
+  );
+}
+
+function ResettableColor( props: React.ComponentProps<typeof ControlledColorInput> ) {
+  const {
+    isModified, handleReset
+  } = useFieldReset( props.name );
+
+  return (
+    <ControlledColorInput
+      { ...props }
+      isModified={ isModified }
+      onReset={ handleReset }
+    />
+  );
+}
+
+function ResettableEasing( props: React.ComponentProps<typeof ControlledEasingInput> ) {
+  const {
+    isModified, handleReset
+  } = useFieldReset( props.name );
+
+  return (
+    <ControlledEasingInput
+      { ...props }
+      isModified={ isModified }
+      onReset={ handleReset }
+    />
+  );
+}
+
 /** One-line native <select> sharing the control-bar chrome. */
 function BarSelect( {
   name,
@@ -102,12 +198,19 @@ function BarSelect( {
     name,
     control
   } );
+  const {
+    isModified, handleReset
+  } = useFieldReset( name );
   const current = typeof field.value === "string" ? field.value : options[ 0 ]?.value;
   const display = options.find( ( option ) => option.value === current )?.label ?? current;
 
   return (
     <div className={ CONTROL_BAR_CLASS }>
-      <BarLabelSegment label={ label } />
+      <BarLabelSegment
+        label={ label }
+        isModified={ isModified }
+        onReset={ handleReset }
+      />
 
       <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
         <span className="truncate">{display}</span>
@@ -146,15 +249,43 @@ function SnapKeysInput( {
     name,
     control
   } );
-  const initial = Array.isArray( field.value ) ? field.value.join( ", " ) : "";
+  const {
+    isModified, handleReset
+  } = useFieldReset( name );
+  const joined = Array.isArray( field.value ) ? field.value.join( ", " ) : "";
   const [
     text,
     setText
-  ] = useState( initial );
+  ] = useState( joined );
+
+  // Resync the visible text when the field value changes from the outside (a
+  // reset): only when it no longer matches what the current text parses to, so
+  // mid-typing punctuation (a trailing comma) is preserved.
+  useEffect(
+    () => {
+      const fromText = text
+        .split( "," )
+        .map( ( key ) => key.trim() )
+        .filter( ( key ) => key.length > 0 )
+        .join( ", " );
+
+      if ( joined !== fromText ) {
+        setText( joined );
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      joined
+    ]
+  );
 
   return (
     <div className={ CONTROL_BAR_CLASS }>
-      <BarLabelSegment label="Snap" />
+      <BarLabelSegment
+        label="Snap"
+        isModified={ isModified }
+        onReset={ handleReset }
+      />
       <input
         type="text"
         value={ text }
@@ -191,24 +322,27 @@ function BarToggle( {
     name,
     control
   } );
+  const {
+    isModified, handleReset
+  } = useFieldReset( name );
   const checked = Boolean( field.value );
 
   return (
     <label className={ `${ CONTROL_BAR_CLASS } cursor-pointer select-none` }>
-      <BarLabelSegment label={ label } />
+      <BarLabelSegment
+        label={ label }
+        isModified={ isModified }
+        onReset={ handleReset }
+      />
       <span className="flex min-w-0 flex-1 items-center justify-end px-2.5">
-        <span className="relative inline-flex shrink-0 items-center">
-          <input
-            type="checkbox"
-            checked={ checked }
-            aria-label={ label }
-            onChange={ ( e ) => field.onChange( e.target.checked ) }
-            onBlur={ field.onBlur }
-            className="peer sr-only"
-          />
-          <span className="h-5 w-9 md:h-4 md:w-7 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
-          <span className="pointer-events-none absolute left-0.5 top-1/2 h-4 w-4 md:h-3 md:w-3 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4 md:peer-checked:translate-x-3" />
-        </span>
+        <ToggleSwitch
+          inputProps={ {
+            checked,
+            "aria-label": label,
+            onChange: ( e ) => field.onChange( e.target.checked ),
+            onBlur: field.onBlur
+          } }
+        />
       </span>
     </label>
   );
@@ -233,10 +367,17 @@ function BarText( {
     name,
     control
   } );
+  const {
+    isModified, handleReset
+  } = useFieldReset( name );
 
   return (
     <div className={ CONTROL_BAR_CLASS }>
-      <BarLabelSegment label={ label } />
+      <BarLabelSegment
+        label={ label }
+        isModified={ isModified }
+        onReset={ handleReset }
+      />
       <input
         type="text"
         value={ typeof field.value === "string" ? field.value : "" }
@@ -335,14 +476,14 @@ function SlideTitleControls( {
 
           {mode === "number" && (
             <Fragment>
-              <ControlledSliderInput
+              <ResettableSlider
                 name={ `${ titleBase }.numberStart` }
                 label="Start at"
                 min={ 0 }
                 max={ 99 }
                 step={ 1 }
               />
-              <ControlledSliderInput
+              <ResettableSlider
                 name={ `${ titleBase }.numberPadding` }
                 label="Pad"
                 min={ 0 }
@@ -353,7 +494,7 @@ function SlideTitleControls( {
           )}
 
           {mode === "id" && (
-            <ControlledSliderInput
+            <ResettableSlider
               name={ `${ titleBase }.idLength` }
               label="Id length"
               min={ 2 }
@@ -368,7 +509,7 @@ function SlideTitleControls( {
             <BarText
               name={ `${ titleBase }.prefix` }
               label="Prefix text"
-              placeholder="variante"
+              placeholder="VARIANT"
             />
           )}
 
@@ -404,7 +545,7 @@ function SlideTitleControls( {
             } ) ) }
           />
 
-          <ControlledSliderInput
+          <ResettableSlider
             name={ `${ titleBase }.size` }
             label="Size"
             min={ 6 }
@@ -412,7 +553,7 @@ function SlideTitleControls( {
             step={ 1 }
           />
 
-          <ControlledColorInput name={ `${ titleBase }.fill` } label="Fill" />
+          <ResettableColor name={ `${ titleBase }.fill` } label="Fill" />
 
           <BarSelect
             name={ `${ titleBase }.style` }
@@ -433,7 +574,7 @@ function SlideTitleControls( {
           />
 
           {changeAnimation !== "none" && (
-            <ControlledEasingInput
+            <ResettableEasing
               name={ `${ titleBase }.changeEasing` }
               label="Change easing"
             />
@@ -545,9 +686,9 @@ export default function SlideTransitionSettings( {
             } ) ) }
           />
 
-          <ControlledEasingInput name={ `${ base }.easing` } label="Easing" />
+          <ResettableEasing name={ `${ base }.easing` } label="Easing" />
 
-          <ControlledSliderInput
+          <ResettableSlider
             name={ `${ base }.holdRatio` }
             label="Hold"
             min={ 0 }
@@ -566,7 +707,7 @@ export default function SlideTransitionSettings( {
 
           {style === "morph" ? (
             <Fragment>
-              <ControlledSliderInput
+              <ResettableSlider
                 name={ `${ base }.stagger` }
                 label="Stagger"
                 min={ 0 }
@@ -585,7 +726,7 @@ export default function SlideTransitionSettings( {
             </Fragment>
           ) : (
             <Fragment>
-              <ControlledColorInput
+              <ResettableColor
                 name={ `${ base }.dipColor` }
                 label="Dip color"
               />

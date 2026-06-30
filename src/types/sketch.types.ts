@@ -883,7 +883,7 @@ export const SlideTitleSchema = z.object( {
   enabled: z.boolean().default( false ),
 
   // Which identifier to print for the current variant.
-  mode: z.enum( TITLE_MODES ).default( "name" ),
+  mode: z.enum( TITLE_MODES ).default( "id" ),
 
   // "name" / "alphabet" only — render the label in upper case.
   uppercase: z.boolean().default( true ),
@@ -900,17 +900,17 @@ export const SlideTitleSchema = z.object( {
   idLength: z.number().int()
     .min( 2 )
     .max( 36 )
-    .default( 6 ),
+    .default( 8 ),
 
-  // Prefix printed before the identifier (e.g. "variante 3"). Toggleable, and
+  // Prefix printed before the identifier (e.g. "VARIANT 3"). Toggleable, and
   // the word itself is overridable ("version", "slide", …).
   showPrefix: z.boolean().default( true ),
-  prefix: z.string().default( "variante" ),
+  prefix: z.string().default( "VARIANT" ),
 
-  // Placement — defaults to the top-right corner.
+  // Placement — top-right, aligned with the specs overlay's default height.
   position: Vec2.default( {
     x: 0.95,
-    y: 0.08
+    y: 0.06
   } ),
   align: z.enum( TITLE_ALIGNMENTS ).default( "right" ),
 
@@ -925,7 +925,7 @@ export const SlideTitleSchema = z.object( {
     120
   ] ),
   blend: Blend.default( "source-over" ),
-  style: z.enum( TITLE_DISPLAY_STYLES ).default( "plain" ),
+  style: z.enum( TITLE_DISPLAY_STYLES ).default( "bracket" ),
 
   // Transition played each time the shown variant changes.
   changeAnimation: z.enum( TITLE_CHANGE_ANIMATIONS ).default( "fade" ),
