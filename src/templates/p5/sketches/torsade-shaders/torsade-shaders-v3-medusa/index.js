@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   createInstancedFieldRenderer
@@ -219,8 +220,12 @@ sketch.setup(
   {}
 );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
+  // Duration-driven loop clock (canonical), replacing the legacy `draw(time)`
+  // argument. Same value as before at the default duration, but now the whole
+  // animation rescales with the sketch duration.
+  const time = animation.loopTime;
   const o = options.sketch ?? {};
   const layout = o.layout ?? {};
   const rings = o.rings ?? {};

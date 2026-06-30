@@ -40,6 +40,17 @@ const animation = {
     // derives from one source and can never drift apart.
     return time.phase();
   },
+  // Duration-driven loop seconds — the canonical replacement for the legacy
+  // `draw(time, …)` first argument. It is the loop phase scaled so one whole
+  // loop spans the baseline duration (`progression × DURATION_DEFAULT`), so a
+  // sketch that thinks in seconds (e.g. feeds a shader `uT`) reads this instead
+  // of the draw argument: it stays duration-driven AND stops depending on the
+  // draw signature. New sketches should prefer `animation.progression` directly;
+  // this exists so the seconds-based sketches migrate as a one-line change with
+  // no visual difference. Backed by the same `time.phase()` as everything else.
+  get loopTime() {
+    return time.drawSeconds();
+  },
   get circularProgression() {
     return mappers.circular(
       animation.progression,
