@@ -65,8 +65,6 @@ const FRAGMENT = `
   uniform int   uPointCount[${ MAX_FINGERS }];      // valid points per finger
   uniform float uFingerRadius[${ MAX_FINGERS }];    // tube radius (px)
   uniform float uFingerHue[${ MAX_FINGERS }];       // stable per-finger hue id
-  uniform vec2  uFingerCenter[${ MAX_FINGERS }];    // bounding-sphere centre (px)
-  uniform float uFingerBound[${ MAX_FINGERS }];     // bounding-sphere radius (px)
   uniform float uMaxDepth;                          // half depth (px) of the ray span
 
   // ── Surface twist (chromatic only — no geometry) ──
@@ -119,22 +117,11 @@ const FRAGMENT = `
   }
 
   // Union of every finger's tube (exact Euclidean SDF → safe full-length steps).
-  //
-  // Broad phase: each finger carries a bounding sphere that encloses its whole
-  // tube, so distance(p, sphere) is a true LOWER BOUND on the distance to that
-  // finger. When that bound can't beat the running minimum the finger's segment
-  // loop is skipped entirely — so a pixel only pays for the one or two fingers
-  // actually near it, instead of all of them. This is what keeps two hands from
-  // costing twice as much per pixel as one (the inner loops dominated the cost).
   float mapScene(vec3 p) {
     float best = 1e9;
 
     for (int f = 0; f < ${ MAX_FINGERS }; f++) {
       if (f >= uFingerCount) { break; }
-
-      float bound = distance(p, vec3(uFingerCenter[f], 0.0)) - uFingerBound[f];
-
-      if (bound >= best) { continue; }
 
       float r = uFingerRadius[f];
       int cnt = uPointCount[f];
@@ -164,10 +151,6 @@ const FRAGMENT = `
 
     for (int f = 0; f < ${ MAX_FINGERS }; f++) {
       if (f >= uFingerCount) { break; }
-
-      float bound = distance(p, vec3(uFingerCenter[f], 0.0)) - uFingerBound[f];
-
-      if (bound >= best) { continue; }
 
       float r = uFingerRadius[f];
       int cnt = uPointCount[f];
@@ -519,6 +502,7 @@ sketch.draw( () => {
   const tube = o.tube ?? {};
   const curve = o.curve ?? {};
   const finger = o.finger ?? {};
+  const quality = o.quality ?? {};
   const colors = o.colors ?? {};
   const light = o.light ?? {};
   const aberration = o.aberration ?? {};
@@ -564,8 +548,6 @@ sketch.draw( () => {
   const counts = new Int32Array( MAX_FINGERS );
   const radii = new Float32Array( MAX_FINGERS );
   const hues = new Float32Array( MAX_FINGERS );
-  const centers = new Float32Array( MAX_FINGERS * 2 );
-  const bounds = new Float32Array( MAX_FINGERS );
   let maxRadiusPx = 1;
 
   fingerInputs.forEach( (
@@ -583,34 +565,9 @@ sketch.draw( () => {
       STRIDE
     );
 
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
     for ( let j = 0; j < count; j++ ) {
-      const x = centreline[ j ].x;
-      const y = centreline[ j ].y;
-
-      points[ ( i * STRIDE + j ) * 2 ] = x;
-      points[ ( i * STRIDE + j ) * 2 + 1 ] = y;
-
-      minX = Math.min(
-        minX,
-        x
-      );
-      minY = Math.min(
-        minY,
-        y
-      );
-      maxX = Math.max(
-        maxX,
-        x
-      );
-      maxY = Math.max(
-        maxY,
-        y
-      );
+      points[ ( i * STRIDE + j ) * 2 ] = centreline[ j ].x;
+      points[ ( i * STRIDE + j ) * 2 + 1 ] = centreline[ j ].y;
     }
 
     counts[ i ] = count;
@@ -623,27 +580,6 @@ sketch.draw( () => {
       maxRadiusPx,
       radiusPx
     );
-
-    // Bounding sphere enclosing the whole tube: bbox centre + farthest
-    // centreline point + tube radius. distance(p, this sphere) is a valid lower
-    // bound on the distance to the tube, so the shader can cull far fingers.
-    const cx = ( minX + maxX ) / 2;
-    const cy = ( minY + maxY ) / 2;
-    let reach = 0;
-
-    for ( let j = 0; j < count; j++ ) {
-      reach = Math.max(
-        reach,
-        Math.hypot(
-          centreline[ j ].x - cx,
-          centreline[ j ].y - cy
-        )
-      );
-    }
-
-    centers[ i * 2 ] = cx;
-    centers[ i * 2 + 1 ] = cy;
-    bounds[ i ] = reach + radiusPx + 1;
   } );
 
   // Light direction from azimuth/elevation sliders (kept off the GLSL form).
@@ -658,6 +594,7 @@ sketch.draw( () => {
   pipes.render( {
     columns: 1,
     rows: 1,
+    resolutionScale: quality.renderScale ?? 0.7,
     uniforms: {
       uT: t,
       uFingerCount: {
@@ -674,12 +611,6 @@ sketch.draw( () => {
       },
       uFingerHue: {
         floatv: hues
-      },
-      uFingerCenter: {
-        vec2v: centers
-      },
-      uFingerBound: {
-        floatv: bounds
       },
       uMaxDepth: maxRadiusPx + 4,
       uTwist: tube.twist ?? 1,

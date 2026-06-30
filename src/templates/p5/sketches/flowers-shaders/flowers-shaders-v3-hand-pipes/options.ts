@@ -35,6 +35,15 @@ export const formValues = {
     idleDemo: true
   },
 
+  // Performance. The pipes are sphere-traced per pixel, so the cost is dominated
+  // by how many pixels are shaded — independent of how many fingers/hands are up.
+  quality: {
+    // Render the pipes into a buffer this fraction of the canvas, then upscale.
+    // Lower = much faster (this is the main lever for the two-hands case); the
+    // glossy tubes upscale cleanly so the quality cost is small. 1 = full res.
+    renderScale: 0.7
+  },
+
   colors: {
     hueSpeed: 0.6,
     hueSpread: 1.6,
@@ -156,6 +165,19 @@ export const formConfiguration: Record<string, any> = {
       idleDemo: {
         label: "Idle demo (no hand)",
         component: "checkbox"
+      }
+    }
+  },
+  quality: {
+    component: "nested-object",
+    label: "Performance",
+    fields: {
+      renderScale: {
+        label: "Render scale (lower = faster)",
+        component: "slider",
+        min: 0.4,
+        max: 1,
+        step: 0.05
       }
     }
   },

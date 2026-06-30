@@ -817,6 +817,11 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
    * @param {number} params.rows           grid rows
    * @param {number[]} [params.center]     [x, y] rotation/distance centre (defaults to canvas centre)
    * @param {object} [params.uniforms]     sketch-specific uniforms (see setUniform)
+   * @param {number} [params.resolutionScale=1] render the field into a buffer this
+   *   fraction of the canvas size, then upscale on composite. <1 trades sharpness
+   *   for a large, divergence-free speed-up on heavy per-pixel shaders (the
+   *   coordinate space the shader sees stays the full canvas, so pixel-space
+   *   uniforms are unaffected). 1 = render at full canvas resolution (default).
    */
   function render( params ) {
     const {
@@ -826,11 +831,44 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       columns,
       rows,
       center,
+      resolutionScale = 1,
       uniforms = {}
     } = params;
 
     const p = getP5();
     const g = ensureGraphics();
+
+    // The shader always reasons in full canvas pixels (so pixel-space uniforms
+    // like landmark coordinates need no rescaling); only the buffer it rasterises
+    // into shrinks. Resizing here overrides the auto-resize size for this frame;
+    // a canvas-resize event just costs one full-res frame before this re-applies.
+    const width = p.width;
+    const height = p.height;
+    const scale = Math.min(
+      1,
+      Math.max(
+        0.1,
+        resolutionScale
+      )
+    );
+    const bufferWidth = Math.max(
+      1,
+      Math.round( width * scale )
+    );
+    const bufferHeight = Math.max(
+      1,
+      Math.round( height * scale )
+    );
+
+    if ( g.width !== bufferWidth || g.height !== bufferHeight ) {
+      g.resizeCanvas(
+        bufferWidth,
+        bufferHeight
+      );
+      g.width = bufferWidth;
+      g.height = bufferHeight;
+    }
+
     const gl = g.drawingContext;
 
     if ( !ensureProgram( gl ) ) {
@@ -843,9 +881,6 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
         seed
       );
     }
-
-    const width = g.width;
-    const height = g.height;
 
     gl.viewport(
       0,
@@ -969,10 +1004,14 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     );
     g.resetShader();
 
+    // Stretch the (possibly reduced-resolution) buffer back to the full canvas.
+    // When resolutionScale is 1 the buffer already matches, so this is a 1:1 blit.
     p.image(
       g,
       0,
-      0
+      0,
+      width,
+      height
     );
   }
 
