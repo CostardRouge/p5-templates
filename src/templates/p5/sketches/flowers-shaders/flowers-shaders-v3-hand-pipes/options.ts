@@ -1,0 +1,367 @@
+import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
+import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
+export const formValues = {
+  timeScale: 1,
+
+  braid: {
+    pipeCount: 4,
+    pipeRadius: 0.21,
+    braidRadius: 0.56,
+    twist: 2.08,
+    spin: -0.77,
+    radiusPulse: 0.47,
+    pulseFreq: 1.38,
+    pulseSpeed: 2.12
+  },
+
+  // How the braid is laid along each detected finger.
+  layout: {
+    // Braid radius in pixels (the thickest the bundle gets on screen).
+    thickness: 26,
+    // Extra radius added per pixel of finger length, so longer fingers (a hand
+    // held closer to the camera) grow a chunkier braid.
+    thicknessByLength: 0.06,
+    // Temporal smoothing of the landmarks (0 = raw, jittery; higher = calmer).
+    smoothing: 0.4,
+    // Draw a waving fan of braids when no hand is detected (keeps the preview
+    // and the first seconds before a hand appears alive).
+    idleDemo: true
+  },
+
+  colors: {
+    hueSpeed: 1.15,
+    hueSpread: 2.03,
+    huePhase: 2.63,
+    lengthHueShift: -0.36,
+    pipeHueShift: -0.96,
+    fingerHueShift: 0.4,
+    shimmer: 2.82,
+    saturation: 0.88,
+    brightness: 1.3
+  },
+
+  light: {
+    azimuth: -1.29,
+    elevation: -0.6,
+    ambient: 0.34,
+    diffuse: 0.66,
+    specular: 0.99,
+    specPower: 24,
+    fresnelPower: 3.3,
+    rimStrength: 0.87,
+    occlusion: 0.6
+  },
+
+  aberration: {
+    amount: 3,
+    mode: "radial" as "radial" | "horizontal"
+  },
+
+  // Vision is armed with the per-finger tracker so showing a hand immediately
+  // grows a braid on every finger. Orbit is off — this sketch is hand-driven.
+  interaction: {
+    ...interactionFormValues,
+    vision: {
+      ...interactionFormValues.vision,
+      enabled: true,
+      fingers: {
+        ...interactionFormValues.vision.fingers,
+        enabled: true
+      }
+    },
+    orbit: {
+      ...interactionFormValues.orbit,
+      enabled: false
+    }
+  },
+
+  backgroundColor: [
+    0,
+    0,
+    0
+  ],
+
+  title: {
+    ...titleDefaultValues,
+    show: false
+  }
+};
+
+export const formConfiguration: Record<string, any> = {
+  timeScale: {
+    label: "Time scale",
+    component: "slider",
+    min: 0,
+    max: 5,
+    step: 0.01
+  },
+  braid: {
+    component: "nested-object",
+    label: "Braid (3D pipes)",
+    fields: {
+      pipeCount: {
+        label: "Pipes",
+        component: "slider",
+        min: 1,
+        max: 12,
+        step: 1
+      },
+      pipeRadius: {
+        label: "Pipe radius",
+        component: "slider",
+        min: 0.05,
+        max: 0.8,
+        step: 0.01
+      },
+      braidRadius: {
+        label: "Braid radius (orbit)",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      twist: {
+        label: "Twist (winding)",
+        component: "slider",
+        min: 0,
+        max: 8,
+        step: 0.01
+      },
+      spin: {
+        label: "Spin speed",
+        component: "slider",
+        min: -3,
+        max: 3,
+        step: 0.01
+      },
+      radiusPulse: {
+        label: "Radius pulse",
+        component: "slider",
+        min: 0,
+        max: 0.9,
+        step: 0.01
+      },
+      pulseFreq: {
+        label: "Pulse frequency",
+        component: "slider",
+        min: 0,
+        max: 4,
+        step: 0.01
+      },
+      pulseSpeed: {
+        label: "Pulse speed",
+        component: "slider",
+        min: 0,
+        max: 4,
+        step: 0.01
+      }
+    }
+  },
+  layout: {
+    component: "nested-object",
+    label: "Finger layout",
+    fields: {
+      thickness: {
+        label: "Thickness (px)",
+        component: "slider",
+        min: 6,
+        max: 90,
+        step: 1
+      },
+      thicknessByLength: {
+        label: "Thickness × finger length",
+        component: "slider",
+        min: 0,
+        max: 0.3,
+        step: 0.005
+      },
+      smoothing: {
+        label: "Smoothing (anti-jitter)",
+        component: "slider",
+        min: 0,
+        max: 0.95,
+        step: 0.05
+      },
+      idleDemo: {
+        label: "Idle demo (no hand)",
+        component: "checkbox"
+      }
+    }
+  },
+  colors: {
+    component: "nested-object",
+    label: "Iridescent",
+    fields: {
+      hueSpeed: {
+        label: "Hue speed",
+        component: "slider",
+        min: -5,
+        max: 5,
+        step: 0.01
+      },
+      hueSpread: {
+        label: "Hue spread",
+        component: "slider",
+        min: 0.1,
+        max: 6,
+        step: 0.01
+      },
+      huePhase: {
+        label: "Hue phase",
+        component: "slider",
+        min: 0,
+        max: 6.2832,
+        step: 0.01
+      },
+      lengthHueShift: {
+        label: "Length hue shift",
+        component: "slider",
+        min: -2,
+        max: 2,
+        step: 0.01
+      },
+      pipeHueShift: {
+        label: "Pipe hue shift",
+        component: "slider",
+        min: -2,
+        max: 2,
+        step: 0.01
+      },
+      fingerHueShift: {
+        label: "Finger hue shift",
+        component: "slider",
+        min: -2,
+        max: 2,
+        step: 0.01
+      },
+      shimmer: {
+        label: "Shimmer (oil-slick)",
+        component: "slider",
+        min: 0,
+        max: 3,
+        step: 0.01
+      },
+      saturation: {
+        label: "Saturation",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      brightness: {
+        label: "Brightness",
+        component: "slider",
+        min: 0,
+        max: 3,
+        step: 0.01
+      }
+    }
+  },
+  light: {
+    component: "nested-object",
+    label: "Lighting",
+    fields: {
+      azimuth: {
+        label: "Light azimuth",
+        component: "slider",
+        min: -3.1416,
+        max: 3.1416,
+        step: 0.01
+      },
+      elevation: {
+        label: "Light elevation",
+        component: "slider",
+        min: -1.5708,
+        max: 1.5708,
+        step: 0.01
+      },
+      ambient: {
+        label: "Ambient",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      diffuse: {
+        label: "Diffuse",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      specular: {
+        label: "Specular",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      specPower: {
+        label: "Specular sharpness",
+        component: "slider",
+        min: 1,
+        max: 128,
+        step: 1
+      },
+      fresnelPower: {
+        label: "Fresnel power",
+        component: "slider",
+        min: 0.5,
+        max: 6,
+        step: 0.01
+      },
+      rimStrength: {
+        label: "Rim glow",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      occlusion: {
+        label: "Ambient occlusion",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      }
+    }
+  },
+  aberration: {
+    component: "nested-object",
+    label: "Chromatic aberration",
+    fields: {
+      amount: {
+        label: "Amount px (0 = off)",
+        component: "slider",
+        min: 0,
+        max: 40,
+        step: 0.5
+      },
+      mode: {
+        label: "Direction",
+        component: "select",
+        options: [
+          {
+            label: "Radial",
+            value: "radial"
+          },
+          {
+            label: "Horizontal",
+            value: "horizontal"
+          }
+        ]
+      }
+    }
+  },
+  interaction: interactionFormConfiguration,
+  backgroundColor: {
+    component: "color",
+    label: "Background color"
+  },
+  title: titleFormConfiguration
+};

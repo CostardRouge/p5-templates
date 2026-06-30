@@ -497,9 +497,14 @@ function getLocationOn(
 }
 
 // Set a uniform, inferring its kind from the JS value:
-//   number          -> float
-//   { int: n }       -> int / sampler
-//   [a, b] / [a,b,c] -> vec2 / vec3 / vec4
+//   number              -> float
+//   { int: n }          -> int / sampler
+//   [a, b] / [a,b,c]    -> vec2 / vec3 / vec4
+//   { floatv: [...] }   -> float[]  uniform1fv  (a `uniform float u[N]`)
+//   { vec2v:  [...] }   -> vec2[]   uniform2fv  (flattened x0,y0,x1,y1,…)
+//   { intv:   [...] }   -> int[]    uniform1iv
+// The *v forms upload a whole GLSL uniform array in one call; query the array's
+// base name (e.g. "uPoints", not "uPoints[0]") for its location.
 function setUniformOn(
   gl, program, locs, name, value
 ) {
@@ -512,6 +517,35 @@ function setUniformOn(
 
   if ( loc === null ) {
     return;
+  }
+
+  if ( value !== null && typeof value === "object" && !Array.isArray( value ) ) {
+    if ( "floatv" in value ) {
+      gl.uniform1fv(
+        loc,
+        value.floatv
+      );
+
+      return;
+    }
+
+    if ( "vec2v" in value ) {
+      gl.uniform2fv(
+        loc,
+        value.vec2v
+      );
+
+      return;
+    }
+
+    if ( "intv" in value ) {
+      gl.uniform1iv(
+        loc,
+        value.intv
+      );
+
+      return;
+    }
   }
 
   if ( Array.isArray( value ) ) {

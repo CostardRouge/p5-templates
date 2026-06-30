@@ -3298,5 +3298,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-29T16:53:41.070Z",
     "ctime": "2026-06-29T16:53:00.130Z"
+  },
+  {
+    "name": "flowers-shaders-v3-hand-pipes",
+    "engine": "p5",
+    "category": "flowers-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-30T11:39:20.946Z",
+    "ctime": "2026-06-30T11:38:45.050Z"
   }
 ]

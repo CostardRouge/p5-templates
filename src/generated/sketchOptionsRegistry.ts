@@ -87,6 +87,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:empty-sketch": () => import( "@/p5/sketches/empty-sketch/options" ),
   "p5:flowers-shaders/flowers-shaders-v1-melted": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v1-melted/options" ),
   "p5:flowers-shaders/flowers-shaders-v2-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v2-pipes/options" ),
+  "p5:flowers-shaders/flowers-shaders-v3-hand-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v3-hand-pipes/options" ),
   "p5:flowers/flowers-v0-turbine": () => import( "@/p5/sketches/flowers/flowers-v0-turbine/options" ),
   "p5:flowers/flowers-v1-recursive": () => import( "@/p5/sketches/flowers/flowers-v1-recursive/options" ),
   "p5:flowers/flowers-v2-triple": () => import( "@/p5/sketches/flowers/flowers-v2-triple/options" ),
