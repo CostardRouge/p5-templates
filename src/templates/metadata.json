@@ -3293,7 +3293,7 @@
     "category": "letter-grid",
     "hasSketchForm": true,
     "hasThumbnail": false,
-    "hasPreview": false,
+    "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
     "mtime": "2026-06-29T16:53:41.070Z",

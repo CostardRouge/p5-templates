@@ -65,17 +65,17 @@ export const formValues = {
   },
   trail: {
     // How many steps (letters) the trail persists before fully fading.
-    lifetime: 1.8,
+    lifetime: 0.8,
     // Cross-sections lofted per step — higher = smoother ribbon, heavier.
-    samples: 22,
+    samples: 48,
     // Fade curve from the head (opaque) to the tail (transparent).
     fadeEasing: "easeInQuad",
     // Opacity of the trail at the head.
-    opacity: 0.85,
+    opacity: 0.44,
     // Self-lit glow that keeps the ribbon vivid as it thins.
-    glow: 0.5,
+    glow: 0,
     // How much the ribbon narrows toward the tail (0 = constant width).
-    taper: 0.3,
+    taper: 1,
     // Ribbon tint.
     color: [
       90,
@@ -105,7 +105,7 @@ export const formValues = {
   },
   camera: {
     // Scene rotation around each axis, degrees (full 0–360 turn on every axis).
-    rotateX: 50,
+    rotateX: 113,
     rotateY: 0,
     rotateZ: 0,
     distance: 1300,
