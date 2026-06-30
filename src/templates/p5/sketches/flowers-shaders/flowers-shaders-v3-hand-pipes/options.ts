@@ -11,12 +11,11 @@ export const formValues = {
   // The single tube drawn along each finger.
   tube: {
     // Tube radius in pixels.
-    thickness: 22,
+    thickness: 19,
     // Extra radius added per pixel of finger length, so a finger held closer to
     // the camera (longer on screen) grows a chunkier pipe.
-    thicknessByLength: 0.04,
-    // Chromatic twist: how many turns the iridescent bands spiral around the
-    // tube along its length. 0 = straight bands, no twist (the shape never
+    thicknessByLength: 0.055,
+    // Chromatic twist: -0.55, no twist (the shape never
     // ripples — this only rotates the colour).
     twist: 1
   },
