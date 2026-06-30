@@ -8,62 +8,65 @@ import {
 export const formValues = {
   timeScale: 1,
 
-  braid: {
-    pipeCount: 4,
-    pipeRadius: 0.21,
-    braidRadius: 0.56,
-    twist: 2.08,
-    spin: -0.77,
-    radiusPulse: 0.47,
-    pulseFreq: 1.38,
-    pulseSpeed: 2.12
+  // The single tube drawn along each finger.
+  tube: {
+    // Tube radius in pixels.
+    thickness: 22,
+    // Extra radius added per pixel of finger length, so a finger held closer to
+    // the camera (longer on screen) grows a chunkier pipe.
+    thicknessByLength: 0.04,
+    // Chromatic twist: how many turns the iridescent bands spiral around the
+    // tube along its length. 0 = straight bands, no twist (the shape never
+    // ripples — this only rotates the colour).
+    twist: 1
   },
 
-  // How the braid is laid along each detected finger.
-  layout: {
-    // Braid radius in pixels (the thickest the bundle gets on screen).
-    thickness: 26,
-    // Extra radius added per pixel of finger length, so longer fingers (a hand
-    // held closer to the camera) grow a chunkier braid.
-    thicknessByLength: 0.06,
+  // How the finger's joints are rounded into the pipe centreline (Chaikin
+  // corner-cutting, the same control-point-free rounding as the splines sketch).
+  curve: {
+    iterations: 3
+  },
+
+  // Finger tracking behaviour.
+  finger: {
     // Temporal smoothing of the landmarks (0 = raw, jittery; higher = calmer).
     smoothing: 0.4,
-    // Draw a waving fan of braids when no hand is detected (keeps the preview
-    // and the first seconds before a hand appears alive).
+    // Draw a waving fan of pipes when no hand is detected (keeps the preview and
+    // the first seconds before a hand appears alive).
     idleDemo: true
   },
 
   colors: {
-    hueSpeed: 1.15,
-    hueSpread: 2.03,
-    huePhase: 2.63,
-    lengthHueShift: -0.36,
-    pipeHueShift: -0.96,
-    fingerHueShift: 0.4,
-    shimmer: 2.82,
-    saturation: 0.88,
+    hueSpeed: 0.6,
+    hueSpread: 1.6,
+    huePhase: 0,
+    lengthHueShift: 1.1,
+    aroundHueShift: 0.7,
+    fingerHueShift: 0.3,
+    shimmer: 1.2,
+    saturation: 0.9,
     brightness: 1.3
   },
 
   light: {
     azimuth: -1.29,
     elevation: -0.6,
-    ambient: 0.34,
-    diffuse: 0.66,
-    specular: 0.99,
-    specPower: 24,
-    fresnelPower: 3.3,
-    rimStrength: 0.87,
-    occlusion: 0.6
+    ambient: 0.3,
+    diffuse: 0.75,
+    specular: 0.85,
+    specPower: 28,
+    fresnelPower: 3,
+    rimStrength: 0.8,
+    occlusion: 0.5
   },
 
   aberration: {
-    amount: 3,
+    amount: 2,
     mode: "radial" as "radial" | "horizontal"
   },
 
   // Vision is armed with the per-finger tracker so showing a hand immediately
-  // grows a braid on every finger. Orbit is off — this sketch is hand-driven.
+  // grows a pipe on every finger. Orbit is off — this sketch is hand-driven.
   interaction: {
     ...interactionFormValues,
     vision: {
@@ -100,76 +103,14 @@ export const formConfiguration: Record<string, any> = {
     max: 5,
     step: 0.01
   },
-  braid: {
+  tube: {
     component: "nested-object",
-    label: "Braid (3D pipes)",
-    fields: {
-      pipeCount: {
-        label: "Pipes",
-        component: "slider",
-        min: 1,
-        max: 12,
-        step: 1
-      },
-      pipeRadius: {
-        label: "Pipe radius",
-        component: "slider",
-        min: 0.05,
-        max: 0.8,
-        step: 0.01
-      },
-      braidRadius: {
-        label: "Braid radius (orbit)",
-        component: "slider",
-        min: 0,
-        max: 2,
-        step: 0.01
-      },
-      twist: {
-        label: "Twist (winding)",
-        component: "slider",
-        min: 0,
-        max: 8,
-        step: 0.01
-      },
-      spin: {
-        label: "Spin speed",
-        component: "slider",
-        min: -3,
-        max: 3,
-        step: 0.01
-      },
-      radiusPulse: {
-        label: "Radius pulse",
-        component: "slider",
-        min: 0,
-        max: 0.9,
-        step: 0.01
-      },
-      pulseFreq: {
-        label: "Pulse frequency",
-        component: "slider",
-        min: 0,
-        max: 4,
-        step: 0.01
-      },
-      pulseSpeed: {
-        label: "Pulse speed",
-        component: "slider",
-        min: 0,
-        max: 4,
-        step: 0.01
-      }
-    }
-  },
-  layout: {
-    component: "nested-object",
-    label: "Finger layout",
+    label: "Tube",
     fields: {
       thickness: {
         label: "Thickness (px)",
         component: "slider",
-        min: 6,
+        min: 4,
         max: 90,
         step: 1
       },
@@ -180,6 +121,32 @@ export const formConfiguration: Record<string, any> = {
         max: 0.3,
         step: 0.005
       },
+      twist: {
+        label: "Colour twist (turns)",
+        component: "slider",
+        min: -6,
+        max: 6,
+        step: 0.05
+      }
+    }
+  },
+  curve: {
+    component: "nested-object",
+    label: "Curve (joint rounding)",
+    fields: {
+      iterations: {
+        label: "Chaikin iterations",
+        component: "slider",
+        min: 0,
+        max: 5,
+        step: 1
+      }
+    }
+  },
+  finger: {
+    component: "nested-object",
+    label: "Finger tracking",
+    fields: {
       smoothing: {
         label: "Smoothing (anti-jitter)",
         component: "slider",
@@ -221,15 +188,15 @@ export const formConfiguration: Record<string, any> = {
       lengthHueShift: {
         label: "Length hue shift",
         component: "slider",
-        min: -2,
-        max: 2,
+        min: -4,
+        max: 4,
         step: 0.01
       },
-      pipeHueShift: {
-        label: "Pipe hue shift",
+      aroundHueShift: {
+        label: "Around-tube hue shift",
         component: "slider",
-        min: -2,
-        max: 2,
+        min: -3,
+        max: 3,
         step: 0.01
       },
       fingerHueShift: {
