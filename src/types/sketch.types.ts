@@ -22,14 +22,21 @@ const RGBA = z.union( [
   ] )
 ] );
 
+// Leaf-level `.catch` heals each coordinate independently: a present-but-out-of
+// -range value (e.g. a position dragged negative) snaps back to centre instead
+// of throwing. Without it, `initOptions`' single top-level `OptionsSchema.catch`
+// would reset the WHOLE deck on one bad coordinate (same hazard the duration
+// leaf-catch fixed — see durationBoundary.test.ts).
 const Vec2 = z
   .object( {
     x: z.number().min( 0 )
       .max( 1 )
-      .default( 0.5 ),
+      .default( 0.5 )
+      .catch( 0.5 ),
     y: z.number().min( 0 )
       .max( 1 )
       .default( 0.5 )
+      .catch( 0.5 )
   } )
   .default( {
     x: 0.5,
@@ -828,6 +835,103 @@ export const TRANSITION_STYLES = [
   "dip"
 ] as const;
 
+/* ---------------- montage slide-title overlay ------------------- */
+
+// How the current variant is identified in the title.
+export const TITLE_MODES = [
+  "name",
+  "alphabet",
+  "number",
+  "id"
+] as const;
+
+// Visual chrome around the label — duplicated in spirit from the specs
+// overlay's highlight styles so a title can match the on-screen specs look.
+export const TITLE_DISPLAY_STYLES = [
+  "plain",
+  "bracket",
+  "pill",
+  "underline"
+] as const;
+
+// How the label transitions when the montage advances to the next variant.
+// "roll" is the per-character odometer (bonus): digits / letters slide in the
+// increment direction.
+export const TITLE_CHANGE_ANIMATIONS = [
+  "none",
+  "fade",
+  "rise",
+  "scale",
+  "roll"
+] as const;
+
+export const TITLE_ALIGNMENTS = [
+  "left",
+  "center",
+  "right"
+] as const;
+
+// Overlay that names the variant a montage slide is currently showing. It
+// rides on the same segment clock as the morph (see segmentMapper), so the
+// label tracks — and animates between — the source slides as they cycle.
+//
+// Flat (not a discriminated union) on purpose: the panel toggles the
+// mode-specific controls with conditional groups, mirroring how the rest of
+// the montage panel reveals style-specific options.
+export const SlideTitleSchema = z.object( {
+  // Master switch (independent from the montage master switch).
+  enabled: z.boolean().default( false ),
+
+  // Which identifier to print for the current variant.
+  mode: z.enum( TITLE_MODES ).default( "alphabet" ),
+
+  // "name" / "alphabet" only — render the label in upper case.
+  uppercase: z.boolean().default( true ),
+
+  // "number" only — first index value and zero-padding width.
+  numberStart: z.number().int()
+    .default( 1 ),
+  numberPadding: z.number().int()
+    .min( 0 )
+    .max( 6 )
+    .default( 0 ),
+
+  // "id" only — the slide id is long, so keep this many trailing characters.
+  idLength: z.number().int()
+    .min( 2 )
+    .max( 36 )
+    .default( 8 ),
+
+  // Prefix printed before the identifier (e.g. "VARIANT 3"). Toggleable, and
+  // the word itself is overridable ("version", "slide", …).
+  showPrefix: z.boolean().default( true ),
+  prefix: z.string().default( "VARIANT" ),
+
+  // Placement — top-right, aligned with the specs overlay's default height.
+  position: Vec2.default( {
+    x: 0.95,
+    y: 0.06
+  } ),
+  align: z.enum( TITLE_ALIGNMENTS ).default( "right" ),
+
+  // Styling — defaults duplicated from the specs overlay (same green, same
+  // mono font, same size) so a title reads as part of the same HUD.
+  font: z.string().default( "spaceMonoRegular" ),
+  size: z.number().positive()
+    .default( 22 ),
+  fill: RGBA.default( [
+    0,
+    255,
+    120
+  ] ),
+  blend: Blend.default( "source-over" ),
+  style: z.enum( TITLE_DISPLAY_STYLES ).default( "bracket" ),
+
+  // Transition played each time the shown variant changes.
+  changeAnimation: z.enum( TITLE_CHANGE_ANIMATIONS ).default( "roll" ),
+  changeEasing: z.string().default( "easeOutCubic" )
+} );
+
 // A "montage" slide morphs the sketch parameters of several OTHER slides into
 // one another over its own duration, in a loop. Only the sources' `sketch`
 // params are interpolated — the montage keeps its own size/animation, so source
@@ -881,7 +985,11 @@ export const SlideTransitionSchema = z.object( {
     0,
     0,
     0
-  ] )
+  ] ),
+
+  // Overlay naming the variant currently on screen. Always present after parse
+  // (its own `enabled` gates rendering) so existing montage decks heal in.
+  title: SlideTitleSchema.default( {} )
 } );
 
 /* ---------------- slide schema (with name) ---------------------- */
@@ -923,6 +1031,7 @@ export const OptionsSchema = z.object( {
 export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type SlideOption = z.infer<typeof SlideSchema>;
 export type SlideTransitionOption = z.infer<typeof SlideTransitionSchema>;
+export type SlideTitleOption = z.infer<typeof SlideTitleSchema>;
 export type AssetsOption = z.infer<typeof Assets>;
 
 export type SketchOption = z.infer<typeof OptionsSchema>;
