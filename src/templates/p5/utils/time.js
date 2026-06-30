@@ -1,6 +1,6 @@
 import sketch from "./sketch.js";
 import {
-  resolveAnimation
+  resolveAnimation, DURATION_DEFAULT
 } from "@/lib/animationConfig";
 
 const time = {
@@ -13,6 +13,36 @@ const time = {
   },
   milliSeconds: function() {
     return time.elapsed;
+  },
+  // The canonical loop phase in [0, 1): how far through one `duration`-long loop
+  // we are. This is THE single value the engine derives looping motion from —
+  // `animation.progression`, the animation bridge and the per-frame
+  // `draw(time, …)` clock all read it, so the live preview, the progression bar
+  // and the recorded file can never resolve a different loop position. During
+  // deterministic capture `elapsed` is pinned to frame / framerate, so this is
+  // exactly frame / totalFrames.
+  phase: function() {
+    const {
+      duration
+    } = resolveAnimation( sketch?.sketchOptions?.animation );
+    const seconds = time.seconds();
+
+    // During recording we must NOT wrap: progression climbs monotonically with
+    // the frame index so the final frame sits just under a full loop.
+    return time.isRecording
+      ? seconds / duration
+      : ( seconds % duration ) / duration;
+  },
+  // The seconds value handed to every sketch's `draw(time, …)`. It is the loop
+  // phase scaled by the baseline duration, so a sketch authored against it
+  // completes its WHOLE animation within `duration` — i.e. the duration is the
+  // loop's period. Changing the duration therefore rescales the live preview and
+  // the recorded clip identically (WYSIWYG). Scaled by DURATION_DEFAULT so that
+  // at the default duration this equals the historical real-seconds clock: every
+  // existing sketch looks unchanged at the default duration and simply runs
+  // faster at a shorter duration / slower at a longer one.
+  drawSeconds: function() {
+    return time.phase() * DURATION_DEFAULT;
   },
   every: function(
     second, callback
@@ -117,37 +147,13 @@ window.setAnimationProgression = function( progression ) {
 let lastDispatchedProgression = -1;
 
 window.getAnimationProgression = function() {
-  // Resolve the loop length through the shared resolver (same default as the
-  // encode loop) so progression and the recorded frame count never disagree.
-  const {
-    duration
-  } = resolveAnimation( sketch?.sketchOptions?.animation );
-  const seconds = time.seconds();
+  // Read the canonical loop phase — the same value `animation.progression`, the
+  // bridge and the per-frame draw clock use — so every consumer agrees and the
+  // recorded frame count can never disagree with the live position. `phase()`
+  // already handles the recording branch (no wrap, matches the frame index).
+  const progression = time.phase();
 
-  // During recording, don't wrap and don't cap - progression should match frame count
-  if ( time.isRecording ) {
-    const progression = seconds / duration;
-
-    // Dispatch event only when progression changes significantly (every 0.01 or so)
-    if ( Math.abs( progression - lastDispatchedProgression ) > 0.01 ) {
-      lastDispatchedProgression = progression;
-      window.dispatchEvent( new CustomEvent(
-        "animation-progression-changed",
-        {
-          detail: {
-            progression
-          }
-        }
-      ) );
-    }
-
-    return progression;
-  }
-
-  // Normal playback: wrap around for continuous loop
-  const progression = ( seconds % duration ) / duration;
-
-  // Dispatch event only when progression changes significantly
+  // Dispatch event only when progression changes significantly (every 0.01 or so)
   if ( Math.abs( progression - lastDispatchedProgression ) > 0.01 ) {
     lastDispatchedProgression = progression;
     window.dispatchEvent( new CustomEvent(

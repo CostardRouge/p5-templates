@@ -5,7 +5,7 @@ import {
   getP5
 } from "./sketch.js";
 import {
-  resolveAnimation, totalFramesFor
+  totalFramesFor
 } from "@/lib/animationConfig";
 
 const animation = {
@@ -35,18 +35,10 @@ const animation = {
   },
 
   get progression() {
-    const {
-      duration
-    } = resolveAnimation( sketch.sketchOptions?.animation );
-    const seconds = time.seconds();
-
-    // During recording, don't wrap and don't cap - progression should match frame count
-    if ( time.isRecording ) {
-      return seconds / duration;
-    }
-
-    // Normal playback: wrap around for continuous loop
-    return ( seconds % duration ) / duration;
+    // Delegate to the single canonical loop phase so every progression reader
+    // (this getter, the bridge, the per-frame draw clock, the progression bar)
+    // derives from one source and can never drift apart.
+    return time.phase();
   },
   get circularProgression() {
     return mappers.circular(
