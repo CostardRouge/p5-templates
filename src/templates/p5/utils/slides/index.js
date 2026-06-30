@@ -12,6 +12,7 @@ import {
 
 import getMontageSketch from "./morph/index.js";
 import drawMontageDip from "./morph/drawMontageDip.js";
+import drawMontageTitle from "./montageTitle/index.js";
 
 import {
   coerceFramerate
@@ -45,6 +46,7 @@ const slides = {
         slides.renderCurrentSlide();
         slides.render( options );
         slides.renderMontageOverlay();
+        slides.renderMontageTitle();
       }
     );
 
@@ -213,6 +215,19 @@ const slides = {
 
     if ( slide?.transition?.enabled && slide.transition.style === "dip" ) {
       drawMontageDip(
+        slide,
+        options?.slides || []
+      );
+    }
+  },
+
+  // Draw the variant-title overlay on top of everything (including the dip
+  // fade) when the current montage slide opts into it.
+  renderMontageTitle() {
+    const slide = this.current;
+
+    if ( slide?.transition?.enabled && slide.transition.title?.enabled ) {
+      drawMontageTitle(
         slide,
         options?.slides || []
       );

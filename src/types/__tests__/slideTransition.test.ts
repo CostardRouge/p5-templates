@@ -1,5 +1,5 @@
 import {
-  SlideSchema, SlideTransitionSchema
+  SlideSchema, SlideTitleSchema, SlideTransitionSchema
 } from "@/types/sketch.types";
 
 describe(
@@ -52,6 +52,10 @@ describe(
           0,
           0
         ] );
+        // The title overlay is always materialised (its own switch gates it).
+        expect( t.title.enabled ).toBe( false );
+        expect( t.title.mode ).toBe( "name" );
+        expect( t.title.prefix ).toBe( "variante" );
       }
     );
 
@@ -72,6 +76,49 @@ describe(
         } ).success ).toBe( false );
         expect( SlideTransitionSchema.safeParse( {
           sources: "everything"
+        } ).success ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "SlideTitleSchema",
+  () => {
+    test(
+      "applies sensible defaults mirroring the specs overlay",
+      () => {
+        const title = SlideTitleSchema.parse( {} );
+
+        expect( title.enabled ).toBe( false );
+        expect( title.mode ).toBe( "name" );
+        expect( title.uppercase ).toBe( true );
+        expect( title.showPrefix ).toBe( true );
+        expect( title.prefix ).toBe( "variante" );
+        expect( title.align ).toBe( "right" );
+        expect( title.font ).toBe( "spaceMonoRegular" );
+        expect( title.size ).toBe( 22 );
+        expect( title.fill ).toEqual( [
+          0,
+          255,
+          120
+        ] );
+        expect( title.style ).toBe( "plain" );
+        expect( title.changeAnimation ).toBe( "fade" );
+        // Defaults to the top-right corner.
+        expect( title.position.x ).toBeGreaterThan( 0.5 );
+        expect( title.position.y ).toBeLessThan( 0.5 );
+      }
+    );
+
+    test(
+      "rejects unknown mode / change-animation enums",
+      () => {
+        expect( SlideTitleSchema.safeParse( {
+          mode: "roman"
+        } ).success ).toBe( false );
+        expect( SlideTitleSchema.safeParse( {
+          changeAnimation: "explode"
         } ).success ).toBe( false );
       }
     );

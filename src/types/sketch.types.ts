@@ -828,6 +828,103 @@ export const TRANSITION_STYLES = [
   "dip"
 ] as const;
 
+/* ---------------- montage slide-title overlay ------------------- */
+
+// How the current variant is identified in the title.
+export const TITLE_MODES = [
+  "name",
+  "alphabet",
+  "number",
+  "id"
+] as const;
+
+// Visual chrome around the label — duplicated in spirit from the specs
+// overlay's highlight styles so a title can match the on-screen specs look.
+export const TITLE_DISPLAY_STYLES = [
+  "plain",
+  "bracket",
+  "pill",
+  "underline"
+] as const;
+
+// How the label transitions when the montage advances to the next variant.
+// "roll" is the per-character odometer (bonus): digits / letters slide in the
+// increment direction.
+export const TITLE_CHANGE_ANIMATIONS = [
+  "none",
+  "fade",
+  "rise",
+  "scale",
+  "roll"
+] as const;
+
+export const TITLE_ALIGNMENTS = [
+  "left",
+  "center",
+  "right"
+] as const;
+
+// Overlay that names the variant a montage slide is currently showing. It
+// rides on the same segment clock as the morph (see segmentMapper), so the
+// label tracks — and animates between — the source slides as they cycle.
+//
+// Flat (not a discriminated union) on purpose: the panel toggles the
+// mode-specific controls with conditional groups, mirroring how the rest of
+// the montage panel reveals style-specific options.
+export const SlideTitleSchema = z.object( {
+  // Master switch (independent from the montage master switch).
+  enabled: z.boolean().default( false ),
+
+  // Which identifier to print for the current variant.
+  mode: z.enum( TITLE_MODES ).default( "name" ),
+
+  // "name" / "alphabet" only — render the label in upper case.
+  uppercase: z.boolean().default( true ),
+
+  // "number" only — first index value and zero-padding width.
+  numberStart: z.number().int()
+    .default( 1 ),
+  numberPadding: z.number().int()
+    .min( 0 )
+    .max( 6 )
+    .default( 0 ),
+
+  // "id" only — the slide id is long, so keep this many trailing characters.
+  idLength: z.number().int()
+    .min( 2 )
+    .max( 36 )
+    .default( 6 ),
+
+  // Prefix printed before the identifier (e.g. "variante 3"). Toggleable, and
+  // the word itself is overridable ("version", "slide", …).
+  showPrefix: z.boolean().default( true ),
+  prefix: z.string().default( "variante" ),
+
+  // Placement — defaults to the top-right corner.
+  position: Vec2.default( {
+    x: 0.95,
+    y: 0.08
+  } ),
+  align: z.enum( TITLE_ALIGNMENTS ).default( "right" ),
+
+  // Styling — defaults duplicated from the specs overlay (same green, same
+  // mono font, same size) so a title reads as part of the same HUD.
+  font: z.string().default( "spaceMonoRegular" ),
+  size: z.number().positive()
+    .default( 22 ),
+  fill: RGBA.default( [
+    0,
+    255,
+    120
+  ] ),
+  blend: Blend.default( "source-over" ),
+  style: z.enum( TITLE_DISPLAY_STYLES ).default( "plain" ),
+
+  // Transition played each time the shown variant changes.
+  changeAnimation: z.enum( TITLE_CHANGE_ANIMATIONS ).default( "fade" ),
+  changeEasing: z.string().default( "easeOutCubic" )
+} );
+
 // A "montage" slide morphs the sketch parameters of several OTHER slides into
 // one another over its own duration, in a loop. Only the sources' `sketch`
 // params are interpolated — the montage keeps its own size/animation, so source
@@ -881,7 +978,11 @@ export const SlideTransitionSchema = z.object( {
     0,
     0,
     0
-  ] )
+  ] ),
+
+  // Overlay naming the variant currently on screen. Always present after parse
+  // (its own `enabled` gates rendering) so existing montage decks heal in.
+  title: SlideTitleSchema.default( {} )
 } );
 
 /* ---------------- slide schema (with name) ---------------------- */
@@ -923,6 +1024,7 @@ export const OptionsSchema = z.object( {
 export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type SlideOption = z.infer<typeof SlideSchema>;
 export type SlideTransitionOption = z.infer<typeof SlideTransitionSchema>;
+export type SlideTitleOption = z.infer<typeof SlideTitleSchema>;
 export type AssetsOption = z.infer<typeof Assets>;
 
 export type SketchOption = z.infer<typeof OptionsSchema>;
