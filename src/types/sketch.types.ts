@@ -883,7 +883,7 @@ export const SlideTitleSchema = z.object( {
   enabled: z.boolean().default( false ),
 
   // Which identifier to print for the current variant.
-  mode: z.enum( TITLE_MODES ).default( "id" ),
+  mode: z.enum( TITLE_MODES ).default( "alphabet" ),
 
   // "name" / "alphabet" only — render the label in upper case.
   uppercase: z.boolean().default( true ),
@@ -928,7 +928,7 @@ export const SlideTitleSchema = z.object( {
   style: z.enum( TITLE_DISPLAY_STYLES ).default( "bracket" ),
 
   // Transition played each time the shown variant changes.
-  changeAnimation: z.enum( TITLE_CHANGE_ANIMATIONS ).default( "fade" ),
+  changeAnimation: z.enum( TITLE_CHANGE_ANIMATIONS ).default( "roll" ),
   changeEasing: z.string().default( "easeOutCubic" )
 } );
 

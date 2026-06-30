@@ -54,7 +54,7 @@ describe(
         ] );
         // The title overlay is always materialised (its own switch gates it).
         expect( t.title.enabled ).toBe( false );
-        expect( t.title.mode ).toBe( "id" );
+        expect( t.title.mode ).toBe( "alphabet" );
         expect( t.title.prefix ).toBe( "VARIANT" );
       }
     );
@@ -91,7 +91,7 @@ describe(
         const title = SlideTitleSchema.parse( {} );
 
         expect( title.enabled ).toBe( false );
-        expect( title.mode ).toBe( "id" );
+        expect( title.mode ).toBe( "alphabet" );
         expect( title.idLength ).toBe( 8 );
         expect( title.uppercase ).toBe( true );
         expect( title.showPrefix ).toBe( true );
@@ -105,7 +105,7 @@ describe(
           120
         ] );
         expect( title.style ).toBe( "bracket" );
-        expect( title.changeAnimation ).toBe( "fade" );
+        expect( title.changeAnimation ).toBe( "roll" );
         // Top-right corner, aligned with the specs overlay's default height.
         expect( title.position.x ).toBeGreaterThan( 0.5 );
         expect( title.position.y ).toBe( 0.06 );
