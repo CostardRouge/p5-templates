@@ -22,14 +22,21 @@ const RGBA = z.union( [
   ] )
 ] );
 
+// Leaf-level `.catch` heals each coordinate independently: a present-but-out-of
+// -range value (e.g. a position dragged negative) snaps back to centre instead
+// of throwing. Without it, `initOptions`' single top-level `OptionsSchema.catch`
+// would reset the WHOLE deck on one bad coordinate (same hazard the duration
+// leaf-catch fixed — see durationBoundary.test.ts).
 const Vec2 = z
   .object( {
     x: z.number().min( 0 )
       .max( 1 )
-      .default( 0.5 ),
+      .default( 0.5 )
+      .catch( 0.5 ),
     y: z.number().min( 0 )
       .max( 1 )
       .default( 0.5 )
+      .catch( 0.5 )
   } )
   .default( {
     x: 0.5,

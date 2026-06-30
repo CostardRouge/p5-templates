@@ -122,5 +122,28 @@ describe(
         } ).success ).toBe( false );
       }
     );
+
+    test(
+      "heals an out-of-range position instead of failing the parse",
+      () => {
+        // A negative coordinate must NOT throw: initOptions wraps the whole
+        // deck in a single top-level catch, so a throw here would wipe every
+        // slide. The Vec2 leaf-catch snaps the bad axis back to centre.
+        const parsed = SlideTitleSchema.safeParse( {
+          enabled: true,
+          position: {
+            x: -0.4,
+            y: 0.08
+          }
+        } );
+
+        expect( parsed.success ).toBe( true );
+
+        if ( parsed.success ) {
+          expect( parsed.data.position.x ).toBe( 0.5 );
+          expect( parsed.data.position.y ).toBe( 0.08 );
+        }
+      }
+    );
   }
 );
