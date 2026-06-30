@@ -3300,6 +3300,18 @@
     "ctime": "2026-06-29T16:53:00.130Z"
   },
   {
+    "name": "letter-trace-v2-current",
+    "engine": "p5",
+    "category": "letter-trace",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-06-30T11:20:39.073Z",
+    "ctime": "2026-06-30T11:20:08.441Z"
+  },
+  {
     "name": "flowers-shaders-v3-hand-pipes",
     "engine": "p5",
     "category": "flowers-shaders",

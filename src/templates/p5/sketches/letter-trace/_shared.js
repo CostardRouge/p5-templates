@@ -9,7 +9,10 @@ import {
   splitContours,
   resampleContour,
   rotateContour,
-  hashedRandom
+  hashedRandom,
+  tangentHeadings,
+  sampleHeading,
+  lerpAngle
 } from "@/p5/utils/letterPaths.js";
 
 /**
@@ -30,10 +33,17 @@ import {
  *     contour reveal the outlines at once, optionally from chaotic start points,
  *     so the word materialises out of nothing (the "completion" effect).
  *
- * Both share: glyph geometry, an assemble→hold→dissolve loop envelope (so the
- * sketch is a perfect loop), the stroke styling, and the optional letter fill.
- * The two `index.js` entries are thin — they only pick defaults and call one of
- * these two functions.
+ *   - renderCurrent — like the scribe, ONE pen follows the outline, but instead
+ *     of the camera only sliding to keep the tip centred, it also ROTATES the
+ *     whole world so the pen's direction of travel always points along a fixed
+ *     screen vector. The pen sits still on an "on-rails" anchor and the glyph
+ *     streams and swivels past it (the cinematic "driving through the letter"
+ *     POV), then at the end it un-rotates and pulls back to the upright word.
+ *
+ * All three share: glyph geometry, an assemble→hold→dissolve loop envelope (so
+ * the sketch is a perfect loop), the stroke styling, and the optional letter
+ * fill. The `index.js` entries are thin — they only pick defaults and call one
+ * of these functions.
  */
 
 function clamp(
@@ -969,6 +979,418 @@ export function renderReveal( o = {} ) {
       } );
     } );
   } );
+
+  p.pop();
+}
+
+// ---------------------------------------------------------------------------
+// Current: one pen on a fixed on-rails anchor, the world rotates so the trace
+// always flows toward one screen direction, then un-rotates to reveal the word.
+// ---------------------------------------------------------------------------
+
+/**
+ * Flatten the word's letters into one ordered list of contours and attach a
+ * continuous heading array to each. The pen walks this list end to end, so the
+ * structure also carries every contour's place on a single "travel timeline"
+ * (its arc length plus a short pen-lift gap to the next). Computed once and
+ * memoised on the word so per-frame work is pure sampling.
+ */
+function ensureFlow(
+  word, liftSamples
+) {
+  const lift = Math.max(
+    0,
+    Math.round( liftSamples )
+  );
+
+  if ( word._flow && word._flow.lift === lift ) {
+    return word._flow;
+  }
+
+  const contours = [];
+  let cursor = 0;
+
+  word.letters.forEach( (
+    letter, letterIndex
+  ) => {
+    letter.contours.forEach( (
+      points, contourIndex
+    ) => {
+      const count = points.length;
+      const start = cursor;
+
+      contours.push( {
+        letterIndex,
+        contourIndex,
+        points,
+        count,
+        headings: tangentHeadings( points ),
+        start
+      } );
+      cursor += count;
+
+      // A pen-lift gap follows every contour but the last: the pen "lifts",
+      // re-orients toward the next contour and sets back down.
+      cursor += lift;
+    } );
+  } );
+
+  // The last contour needs no trailing lift — reclaim it so the timeline ends
+  // exactly when the pen finishes the final outline.
+  const total = Math.max(
+    1,
+    cursor - lift
+  );
+
+  // Per letter, the timeline position at which its last contour finishes, so a
+  // fill can drop in the moment a letter is fully traced.
+  const letterEnd = word.letters.map( () => 0 );
+
+  contours.forEach( ( c ) => {
+    letterEnd[ c.letterIndex ] = Math.max(
+      letterEnd[ c.letterIndex ],
+      c.start + c.count
+    );
+  } );
+
+  word._flow = {
+    lift,
+    contours,
+    total,
+    letterEnd
+  };
+
+  return word._flow;
+}
+
+export function renderCurrent( o = {} ) {
+  const p = getP5();
+  const textCfg = o.text ?? {};
+  const drawCfg = o.draw ?? {};
+  const cameraCfg = o.camera ?? {};
+  const strokeCfg = o.stroke ?? {};
+  const fillCfg = o.fill ?? {};
+  const loopCfg = o.loop ?? {};
+  const dirCfg = o.direction ?? {};
+
+  const word = getWord( textCfg );
+
+  if ( !word ) {
+    return;
+  }
+
+  const liftSamples = Math.max(
+    0,
+    drawCfg.lift ?? 8
+  );
+  const flow = ensureFlow(
+    word,
+    liftSamples
+  );
+  const contours = flow.contours;
+
+  if ( !contours.length ) {
+    return;
+  }
+
+  const envelope = loopEnvelope(
+    animation.progression,
+    loopCfg.assemble ?? 0.7,
+    loopCfg.hold ?? 0.2
+  );
+  const predrawn = ( drawCfg.reveal ?? "predrawn" ) === "predrawn";
+  const startEase = easeFn( drawCfg.easing ?? "easeInOutSine" );
+  const rotationAmount = clamp(
+    drawCfg.rotationAmount ?? 1,
+    0,
+    1
+  );
+  const banking = drawCfg.banking ?? 0.15;
+  const ghostAlpha = clamp(
+    drawCfg.ghostAlpha ?? 40,
+    0,
+    255
+  );
+  const anticipation = Math.max(
+    0,
+    drawCfg.anticipation ?? 6
+  );
+
+  // The fixed screen direction the trace is rotated to flow along. (0,-1) — the
+  // default — sends it up the screen ("the road ahead"); magnitude is ignored.
+  const desiredAngle = Math.atan2(
+    dirCfg.y ?? -1,
+    dirCfg.x ?? 0
+  );
+
+  // How far along the travel timeline the pen has reached.
+  const writeAmount = envelope.phase === "assemble" ? envelope.amount : 1;
+  const head = startEase( writeAmount ) * flow.total;
+
+  // Locate the pen: inside a contour (drawing) or in the gap between two
+  // (lifting). Walk the same timeline ensureFlow laid out.
+  let penPos = contours[ 0 ].points[ 0 ];
+  let penHeading = desiredAngle;
+  let penAlpha = 1;
+  let bank = 0;
+
+  for ( let i = 0; i < contours.length; i++ ) {
+    const c = contours[ i ];
+    const localCount = c.count;
+
+    if ( head <= c.start + localCount || i === contours.length - 1 ) {
+      // Drawing this contour.
+      const localT = clamp(
+        ( head - c.start ) / Math.max(
+          1,
+          localCount
+        ),
+        0,
+        1
+      );
+      const idx = clamp(
+        Math.round( localT * ( c.count - 1 ) ),
+        0,
+        c.count - 1
+      );
+
+      penPos = c.points[ idx ];
+      penHeading = sampleHeading(
+        c.headings,
+        localT,
+        anticipation
+      );
+
+      if ( banking !== 0 ) {
+        const ahead = sampleHeading(
+          c.headings,
+          clamp(
+            localT + 0.05,
+            0,
+            1
+          ),
+          anticipation
+        );
+        const behind = sampleHeading(
+          c.headings,
+          clamp(
+            localT - 0.05,
+            0,
+            1
+          ),
+          anticipation
+        );
+
+        bank = banking * clamp(
+          ahead - behind,
+          -1,
+          1
+        );
+      }
+
+      break;
+    }
+
+    if ( head < c.start + localCount + flow.lift ) {
+      // Lifting from this contour to the next: bridge position and heading so
+      // the camera never teleports, and dip the pen so it reads as a lift.
+      const next = contours[ i + 1 ];
+      const tl = clamp(
+        ( head - ( c.start + localCount ) ) / Math.max(
+          1,
+          flow.lift
+        ),
+        0,
+        1
+      );
+      const s = easing.easeInOutCubic( tl );
+      const from = c.points[ c.count - 1 ];
+      const to = next.points[ 0 ];
+
+      penPos = {
+        x: from.x + ( to.x - from.x ) * s,
+        y: from.y + ( to.y - from.y ) * s
+      };
+      penHeading = lerpAngle(
+        sampleHeading(
+          c.headings,
+          1,
+          anticipation
+        ),
+        sampleHeading(
+          next.headings,
+          0,
+          anticipation
+        ),
+        s
+      );
+      penAlpha = 1 - Math.sin( tl * Math.PI ) * 0.85;
+
+      break;
+    }
+  }
+
+  // Camera. Same reveal envelope as the scribe (ease back to the upright word
+  // over the first half of the hold), with the rotation unwound to 0 alongside.
+  const followZoom = cameraCfg.followZoom ?? 3;
+  const overviewZoom = fitZoom( word );
+  const anchorY = clamp(
+    cameraCfg.anchorY ?? 0.62,
+    0.1,
+    0.9
+  );
+  const a = clamp(
+    loopCfg.assemble ?? 0.7,
+    0.01,
+    1
+  );
+  const h = clamp(
+    loopCfg.hold ?? 0.2,
+    0,
+    Math.max(
+      0,
+      1 - a
+    )
+  );
+  const progression = animation.progression;
+  let revealRaw;
+
+  if ( envelope.phase === "dissolve" ) {
+    revealRaw = 1;
+  } else if ( envelope.phase === "hold" && ( cameraCfg.reveal ?? true ) ) {
+    revealRaw = h > 0 ? clamp(
+      ( progression - a ) / ( h * 0.5 ),
+      0,
+      1
+    ) : 1;
+  } else {
+    revealRaw = 0;
+  }
+
+  const revealT = easing.easeInOutCubic( revealRaw );
+
+  // On-rails rotation: align the pen heading to the desired screen direction
+  // (scaled by rotationAmount so 0 falls back to the scribe's upright follow),
+  // plus a little banking into curves. Unwound to 0 as the word is revealed.
+  const railAngle = ( rotationAmount * ( desiredAngle - penHeading ) + bank )
+    * ( 1 - revealT );
+  const camTarget = {
+    x: penPos.x * ( 1 - revealT ),
+    y: penPos.y * ( 1 - revealT )
+  };
+  const zoom = followZoom * ( 1 - revealT ) + overviewZoom * revealT;
+  const anchor = {
+    x: p.width / 2,
+    y: p.height * anchorY + ( p.height / 2 - p.height * anchorY ) * revealT
+  };
+  const globalAlpha = envelope.phase === "dissolve"
+    ? easing.easeInOutCubic( envelope.amount )
+    : 1;
+
+  p.push();
+  p.translate(
+    anchor.x,
+    anchor.y
+  );
+  p.scale( zoom );
+  p.rotate( railAngle );
+  p.translate(
+    -camTarget.x,
+    -camTarget.y
+  );
+  p.noFill();
+  p.strokeCap( p.ROUND );
+  p.strokeJoin( p.ROUND );
+
+  const baseWeight = ( strokeCfg.weight ?? 3 ) / zoom;
+  const fillMode = fillCfg.mode ?? "none";
+  const fillColor = fillCfg.color ?? [
+    255,
+    255,
+    255
+  ];
+
+  // Optional letter fill, dropped in as each letter is fully traced.
+  if ( fillMode !== "none" ) {
+    word.letters.forEach( (
+      letter, letterIndex
+    ) => {
+      const complete = head >= flow.letterEnd[ letterIndex ];
+      const fillAlpha = ( fillCfg.alpha ?? 255 ) * globalAlpha * (
+        fillMode === "always" ? 1 : complete ? 1 : 0
+      );
+
+      drawLetterFill( {
+        word,
+        letter,
+        charIndex: letterIndex,
+        alpha: fillAlpha,
+        color: fillColor
+      } );
+    } );
+  }
+
+  p.noFill();
+  p.strokeWeight( baseWeight );
+
+  // Draw each contour: the traveled arc bright, and — in predrawn mode — the
+  // road still ahead as a faint ghost so the larger structure stays legible.
+  contours.forEach( ( c ) => {
+    const traveled = clamp(
+      Math.round( head - c.start ),
+      0,
+      c.count
+    );
+    const hueIndex = ( c.letterIndex + c.contourIndex )
+      * ( strokeCfg.hueSpread ?? 0.6 );
+
+    if ( predrawn && ghostAlpha > 0 && traveled < c.count ) {
+      p.strokeWeight( baseWeight * 0.8 );
+      p.stroke( strokeColor( {
+        cfg: strokeCfg,
+        hueIndex,
+        alpha: ghostAlpha * globalAlpha
+      } ) );
+      drawPolyline(
+        c.points,
+        true
+      );
+      p.strokeWeight( baseWeight );
+    }
+
+    if ( traveled < 1 ) {
+      return;
+    }
+
+    p.stroke( strokeColor( {
+      cfg: strokeCfg,
+      hueIndex,
+      alpha: 255 * globalAlpha
+    } ) );
+    drawPolyline(
+      c.points.slice(
+        0,
+        traveled + 1
+      ),
+      traveled >= c.count
+    );
+  } );
+
+  // The pen tip, riding the on-rails anchor while writing.
+  if ( ( strokeCfg.penDot ?? true ) && envelope.phase === "assemble" ) {
+    p.noStroke();
+    p.fill(
+      255,
+      255,
+      255,
+      255 * globalAlpha * penAlpha
+    );
+    p.circle(
+      penPos.x,
+      penPos.y,
+      ( strokeCfg.penDotSize ?? 6 ) / zoom
+    );
+  }
 
   p.pop();
 }
