@@ -86,13 +86,80 @@ function deepDiff(
 // File-text navigation helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * If a string literal or a `//` / block comment starts at `pos`, return the
+ * index just past it; otherwise return `pos` unchanged. Every text scanner below
+ * uses this so braces, brackets, commas and `key:` patterns that appear inside
+ * strings or comments are ignored — e.g. a `// Chromatic twist: -0.55` doc
+ * comment must not shadow the real `twist:` property when it is rewritten.
+ */
+function skipStringOrComment(
+  content: string, pos: number
+): number {
+  const ch = content[ pos ];
+
+  // Line comment
+  if ( ch === "/" && content[ pos + 1 ] === "/" ) {
+    let i = pos + 2;
+
+    while ( i < content.length && content[ i ] !== "\n" ) {
+      i++;
+    }
+
+    return i;
+  }
+
+  // Block comment
+  if ( ch === "/" && content[ pos + 1 ] === "*" ) {
+    let i = pos + 2;
+
+    while ( i < content.length && !( content[ i ] === "*" && content[ i + 1 ] === "/" ) ) {
+      i++;
+    }
+
+    return Math.min(
+      content.length,
+      i + 2
+    );
+  }
+
+  // String / template literal
+  if ( ch === "\"" || ch === "'" || ch === "`" ) {
+    let i = pos + 1;
+
+    while ( i < content.length ) {
+      if ( content[ i ] === "\\" ) {
+        i += 2; continue;
+      }
+      if ( content[ i ] === ch ) {
+        return i + 1;
+      }
+      i++;
+    }
+
+    return content.length;
+  }
+
+  return pos;
+}
+
 /** Find the position of the matching closing `}` for the `{` at openBracePos. */
 function findObjectClose(
   content: string, openBracePos: number
 ): number {
   let depth = 0;
+  let i = openBracePos;
 
-  for ( let i = openBracePos; i < content.length; i++ ) {
+  while ( i < content.length ) {
+    const skipped = skipStringOrComment(
+      content,
+      i
+    );
+
+    if ( skipped !== i ) {
+      i = skipped; continue;
+    }
+
     if ( content[ i ] === "{" ) {
       depth++;
     } else if ( content[ i ] === "}" ) {
@@ -101,6 +168,8 @@ function findObjectClose(
         return i;
       }
     }
+
+    i++;
   }
 
   return -1;
@@ -129,8 +198,18 @@ function findValueEnd(
   // Array
   if ( ch === "[" ) {
     let depth = 0;
+    let i = pos;
 
-    for ( let i = pos; i < content.length; i++ ) {
+    while ( i < content.length ) {
+      const skipped = skipStringOrComment(
+        content,
+        i
+      );
+
+      if ( skipped !== i ) {
+        i = skipped; continue;
+      }
+
       if ( content[ i ] === "[" ) {
         depth++;
       } else if ( content[ i ] === "]" ) {
@@ -139,6 +218,8 @@ function findValueEnd(
           return i + 1;
         }
       }
+
+      i++;
     }
 
     return content.length;
@@ -178,8 +259,18 @@ function findValueEnd(
 
   // Fallback: arbitrary expression – scan to the next unmatched , } ] )
   let depth = 0;
+  let i = pos;
 
-  for ( let i = pos; i < content.length; i++ ) {
+  while ( i < content.length ) {
+    const skipped = skipStringOrComment(
+      content,
+      i
+    );
+
+    if ( skipped !== i ) {
+      i = skipped; continue;
+    }
+
     const c = content[ i ];
 
     if ( c === "{" || c === "[" || c === "(" ) {
@@ -205,6 +296,8 @@ function findValueEnd(
 
       return end;
     }
+
+    i++;
   }
 
   return content.length;
@@ -228,26 +321,18 @@ function findKeyAtDepth0(
   let depth = 0;
 
   while ( i < innerEnd ) {
-    const ch = content[ i ];
+    // Skip string literals and comments entirely, so a `key:` that only appears
+    // inside one is never mistaken for the real property.
+    const skipped = skipStringOrComment(
+      content,
+      i
+    );
 
-    // Skip string literals entirely
-    if ( ch === "\"" || ch === "'" || ch === "`" ) {
-      const quote = ch;
-
-      i++;
-
-      while ( i < innerEnd ) {
-        if ( content[ i ] === "\\" ) {
-          i += 2; continue;
-        }
-        if ( content[ i ] === quote ) {
-          i++; break;
-        }
-        i++;
-      }
-
-      continue;
+    if ( skipped !== i ) {
+      i = skipped; continue;
     }
+
+    const ch = content[ i ];
 
     if ( ch === "{" || ch === "[" ) {
       depth++; i++; continue;

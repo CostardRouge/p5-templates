@@ -497,9 +497,14 @@ function getLocationOn(
 }
 
 // Set a uniform, inferring its kind from the JS value:
-//   number          -> float
-//   { int: n }       -> int / sampler
-//   [a, b] / [a,b,c] -> vec2 / vec3 / vec4
+//   number              -> float
+//   { int: n }          -> int / sampler
+//   [a, b] / [a,b,c]    -> vec2 / vec3 / vec4
+//   { floatv: [...] }   -> float[]  uniform1fv  (a `uniform float u[N]`)
+//   { vec2v:  [...] }   -> vec2[]   uniform2fv  (flattened x0,y0,x1,y1,…)
+//   { intv:   [...] }   -> int[]    uniform1iv
+// The *v forms upload a whole GLSL uniform array in one call; query the array's
+// base name (e.g. "uPoints", not "uPoints[0]") for its location.
 function setUniformOn(
   gl, program, locs, name, value
 ) {
@@ -512,6 +517,35 @@ function setUniformOn(
 
   if ( loc === null ) {
     return;
+  }
+
+  if ( value !== null && typeof value === "object" && !Array.isArray( value ) ) {
+    if ( "floatv" in value ) {
+      gl.uniform1fv(
+        loc,
+        value.floatv
+      );
+
+      return;
+    }
+
+    if ( "vec2v" in value ) {
+      gl.uniform2fv(
+        loc,
+        value.vec2v
+      );
+
+      return;
+    }
+
+    if ( "intv" in value ) {
+      gl.uniform1iv(
+        loc,
+        value.intv
+      );
+
+      return;
+    }
   }
 
   if ( Array.isArray( value ) ) {
@@ -783,6 +817,11 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
    * @param {number} params.rows           grid rows
    * @param {number[]} [params.center]     [x, y] rotation/distance centre (defaults to canvas centre)
    * @param {object} [params.uniforms]     sketch-specific uniforms (see setUniform)
+   * @param {number} [params.resolutionScale=1] render the field into a buffer this
+   *   fraction of the canvas size, then upscale on composite. <1 trades sharpness
+   *   for a large, divergence-free speed-up on heavy per-pixel shaders (the
+   *   coordinate space the shader sees stays the full canvas, so pixel-space
+   *   uniforms are unaffected). 1 = render at full canvas resolution (default).
    */
   function render( params ) {
     const {
@@ -792,11 +831,44 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
       columns,
       rows,
       center,
+      resolutionScale = 1,
       uniforms = {}
     } = params;
 
     const p = getP5();
     const g = ensureGraphics();
+
+    // The shader always reasons in full canvas pixels (so pixel-space uniforms
+    // like landmark coordinates need no rescaling); only the buffer it rasterises
+    // into shrinks. Resizing here overrides the auto-resize size for this frame;
+    // a canvas-resize event just costs one full-res frame before this re-applies.
+    const width = p.width;
+    const height = p.height;
+    const scale = Math.min(
+      1,
+      Math.max(
+        0.1,
+        resolutionScale
+      )
+    );
+    const bufferWidth = Math.max(
+      1,
+      Math.round( width * scale )
+    );
+    const bufferHeight = Math.max(
+      1,
+      Math.round( height * scale )
+    );
+
+    if ( g.width !== bufferWidth || g.height !== bufferHeight ) {
+      g.resizeCanvas(
+        bufferWidth,
+        bufferHeight
+      );
+      g.width = bufferWidth;
+      g.height = bufferHeight;
+    }
+
     const gl = g.drawingContext;
 
     if ( !ensureProgram( gl ) ) {
@@ -809,9 +881,6 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
         seed
       );
     }
-
-    const width = g.width;
-    const height = g.height;
 
     gl.viewport(
       0,
@@ -935,10 +1004,14 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     );
     g.resetShader();
 
+    // Stretch the (possibly reduced-resolution) buffer back to the full canvas.
+    // When resolutionScale is 1 the buffer already matches, so this is a 1:1 blit.
     p.image(
       g,
       0,
-      0
+      0,
+      width,
+      height
     );
   }
 
