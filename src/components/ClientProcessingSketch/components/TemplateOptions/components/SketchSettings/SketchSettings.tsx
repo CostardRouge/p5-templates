@@ -14,6 +14,10 @@ import ResetSettingsButton from "@/components/ResetSettingsButton";
 import SaveDefaultsButton from "./SaveDefaultsButton";
 import GenerateThumbnailButton from "./GenerateThumbnailButton";
 import GeneratePreviewButton from "./GeneratePreviewButton";
+import UiSoundSettingsButton from "./UiSoundSettingsButton";
+import {
+  playAction
+} from "@/lib/uiSound";
 import GenericObjectForm
   from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/components/GenericObjectForm/GenericObjectForm";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
@@ -96,22 +100,35 @@ export function SketchSettingsActions( {
 } ) {
   return (
     <>
-      <ResetSettingsButton
-        basePath={ basePath }
-        className={ HEADER_ACTION_CLASS }
-      />
+      {/* Outside the capture wrapper below so tweaking sound settings doesn't
+          itself fire action clicks. */}
+      <UiSoundSettingsButton className={ HEADER_ACTION_CLASS } />
 
-      <RandomizeSettingsButton
-        config={ config }
-        basePath={ basePath }
-        className={ HEADER_ACTION_CLASS }
-      />
+      {/* display:contents keeps the row layout untouched while catching every
+          action click for the audible confirmation (see @/lib/uiSound). */}
+      <span
+        style={ {
+          display: "contents"
+        } }
+        onClickCapture={ () => playAction() }
+      >
+        <ResetSettingsButton
+          basePath={ basePath }
+          className={ HEADER_ACTION_CLASS }
+        />
 
-      <SaveDefaultsButton />
+        <RandomizeSettingsButton
+          config={ config }
+          basePath={ basePath }
+          className={ HEADER_ACTION_CLASS }
+        />
 
-      <GenerateThumbnailButton />
+        <SaveDefaultsButton />
 
-      <GeneratePreviewButton />
+        <GenerateThumbnailButton />
+
+        <GeneratePreviewButton />
+      </span>
     </>
   );
 }

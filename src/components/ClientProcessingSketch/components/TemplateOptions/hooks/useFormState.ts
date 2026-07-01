@@ -9,6 +9,9 @@ import {
 } from "react-hook-form";
 import initOptions from "@/utils/initOptions";
 import {
+  playValueChange
+} from "@/lib/uiSound";
+import {
   useInterval
 } from "@/hooks/useInterval";
 import {
@@ -56,7 +59,16 @@ export function useFormState( {
 
   useEffect(
     () => {
-      const subscription = watch( ( value ) => {
+      const subscription = watch( (
+        value, info
+      ) => {
+        // Audible tick on real value edits (sliders, inputs, action buttons).
+        // Form-level events (reset, initial populate) carry no field name and
+        // stay silent. Muting/throttling lives inside the sound module.
+        if ( info?.name ) {
+          playValueChange( info.name );
+        }
+
         latestValueRef.current = value as SketchOption;
 
         if ( rafRef.current === null ) {

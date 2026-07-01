@@ -1,6 +1,9 @@
 import {
   registerAudioBridge
 } from "@/lib/audioBridge";
+import {
+  scheduleClick
+} from "@/lib/clickSynth";
 import time from "./time.js";
 
 /**
@@ -250,6 +253,18 @@ function scheduleOn(
   }
 
   switch ( name ) {
+    // UI-style click presets (specs overlay, value-change feedback). The
+    // concrete voice is picked by `params.preset` inside the shared synth so
+    // live playback and offline capture render the exact same sound.
+    case "click":
+      scheduleClick(
+        ctx,
+        destination,
+        startTime,
+        params?.preset ?? "click",
+        params
+      );
+      break;
     case "tick":
       playTickOn(
         ctx,
@@ -325,6 +340,23 @@ function playTickLive( params ) {
     handles.filter.disconnect();
     handles.envelope.disconnect();
   };
+}
+
+function playClickLive( params ) {
+  const ctx = ensureContext();
+
+  if ( !ctx ) {
+    return;
+  }
+
+  // The shared synth cleans its own nodes up via onended.
+  scheduleClick(
+    ctx,
+    _masterGain,
+    ctx.currentTime,
+    params?.preset ?? "click",
+    params
+  );
 }
 
 function playSampleLive(
@@ -522,6 +554,9 @@ const audio = {
     }
 
     switch ( name ) {
+      case "click":
+        playClickLive( params );
+        break;
       case "tick":
         playTickLive( params );
         break;
