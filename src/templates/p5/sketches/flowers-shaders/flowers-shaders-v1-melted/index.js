@@ -65,6 +65,7 @@ const FRAGMENT = `
   uniform float uSizeMin;
   uniform float uSizeMax;
   uniform float uRotationSpeed;
+  uniform float uWind;            // petal wind-up rate (whole turns per loop)
   uniform float uInnerRotationGain;
   uniform float uBorderWidth;
   uniform float uBorderDarken;
@@ -152,7 +153,7 @@ const FRAGMENT = `
 
       // Combined rotation for the petal ring (outer spin + the original's
       // per-step wind-up), evaluated once per surviving sample.
-      float totalRot = outerRot + li * PI - uT + li * uInnerRotationGain;
+      float totalRot = outerRot + li * PI - uT * uWind + li * uInnerRotationGain;
       float ct = cos(totalRot);
       float st = sin(totalRot);
 
@@ -267,13 +268,36 @@ sketch.draw( () => {
     0
   ] ) );
 
-  const t = animation.angle * ( o.timeScale ?? 1 );
+  const timeScale = o.timeScale ?? 1;
+
+  // ── Loop-exact clock ──────────────────────────────────────────────────────
+  // animation.angle sweeps exactly TAU per loop, so the loop seam is invisible
+  // only when every time-driven rate completes a WHOLE number of cycles per
+  // loop. Each raw slider rate (× time scale) is therefore rounded to whole
+  // cycles below — fractional rates are what made the last frame disagree with
+  // the first.
+  const t = animation.angle;
+
+  // Outer cluster spin, and the petal wind-up the original advanced at the raw
+  // clock rate — snapped to whole turns per loop.
+  const rotationTurns = Math.round( ( flower.rotationSpeed ?? 0.5 ) * timeScale );
+  const windTurns = Math.round( timeScale );
+
+  // Hue scroll — whole palette periods (one period = 1 / hueSpread) per loop.
+  const hueSpread = colors.hueSpread ?? 1;
+  const hueCycles = Math.round( ( colors.hueSpeed ?? 1 ) * timeScale * hueSpread );
 
   // ── Animated start/end anchors — computed on the CPU exactly as flowers v5,
   // so the path easing dropdown keeps behaving identically. ────────────────
   const boundary = path.boundary ?? 150;
   const anchorTimeScale = path.anchorTimeScale ?? 0.25;
   const easingFn = resolveEasing( path.easing ?? "linear" );
+
+  // The ease walks its 3 anchors circularly, so it only returns to the start
+  // pose after a whole number of 3-anchor cycles — snap the anchor clock to
+  // complete exactly that many per loop.
+  const anchorCycles = Math.round( ( p.TAU * timeScale * anchorTimeScale ) / 3 );
+  const anchorTime = animation.progression * anchorCycles * 3;
 
   const start = animation.ease( {
     values: [
@@ -290,7 +314,7 @@ sketch.draw( () => {
         boundary
       )
     ],
-    currentTime: t * anchorTimeScale,
+    currentTime: anchorTime,
     duration: 1,
     easingFn,
     lerpFn: mappers.lerpVector
@@ -311,7 +335,7 @@ sketch.draw( () => {
         p.height - boundary
       )
     ],
-    currentTime: t * anchorTimeScale,
+    currentTime: anchorTime,
     duration: 1,
     easingFn,
     lerpFn: mappers.lerpVector
@@ -356,12 +380,13 @@ sketch.draw( () => {
       uPetals: petals,
       uSizeMin: flower.sizeMin ?? 1,
       uSizeMax: flower.sizeMax ?? 500,
-      uRotationSpeed: flower.rotationSpeed ?? 0.5,
+      uRotationSpeed: rotationTurns,
+      uWind: windTurns,
       uInnerRotationGain: flower.innerRotationGain ?? 10,
       uBorderWidth: flower.borderWidth ?? 0,
       uBorderDarken: flower.borderDarken ?? 0,
-      uHueSpeed: colors.hueSpeed ?? 1,
-      uHueSpread: colors.hueSpread ?? 1,
+      uHueSpeed: hueSpread ? hueCycles / hueSpread : 0,
+      uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uPathHueShift: colors.pathHueShift ?? 1,
       uSideHueShift: colors.sideHueShift ?? 0,

@@ -311,7 +311,23 @@ sketch.draw( () => {
     0
   ] ) );
 
-  const t = animation.angle * ( o.timeScale ?? 1 );
+  const timeScale = o.timeScale ?? 1;
+
+  // ── Loop-exact clock ──────────────────────────────────────────────────────
+  // animation.angle sweeps exactly TAU per loop, so the loop seam is invisible
+  // only when every time-driven rate completes a WHOLE number of cycles per
+  // loop. Each raw slider rate (× time scale) is therefore rounded to whole
+  // cycles below — fractional rates are what made the last frame disagree with
+  // the first.
+  const t = animation.angle;
+
+  const spinTurns = Math.round( ( braid.spin ?? 0.6 ) * timeScale );
+  const pulseCycles = Math.round( ( braid.pulseSpeed ?? 1 ) * timeScale );
+  const orbitTurns = Math.round( ( camera.orbitSpeed ?? 0.15 ) * timeScale );
+
+  // Hue scroll — whole palette periods (one period = 1 / hueSpread) per loop.
+  const hueSpread = colors.hueSpread ?? 1.4;
+  const hueCycles = Math.round( ( colors.hueSpeed ?? 0.05 ) * timeScale * p.TAU * hueSpread );
 
   const pipeCount = Math.min(
     braid.pipeCount ?? 3,
@@ -353,17 +369,17 @@ sketch.draw( () => {
       uPipeRadius: pipeRadius,
       uBraidRadius: braidRadius,
       uTwist: twist,
-      uSpin: braid.spin ?? 0.6,
+      uSpin: spinTurns,
       uRadiusPulse: radiusPulse,
       uPulseFreq: pulseFreq,
-      uPulseSpeed: braid.pulseSpeed ?? 1,
+      uPulseSpeed: pulseCycles,
       uTwistLipschitz: twistLipschitz,
       uCamDist: camDist,
       uFocal: focal,
       uPitch: camera.pitch ?? 0.18,
-      uYaw: ( camera.yaw ?? 0.5 ) + t * ( camera.orbitSpeed ?? 0.15 ),
-      uHueSpeed: colors.hueSpeed ?? 0.05,
-      uHueSpread: colors.hueSpread ?? 1.4,
+      uYaw: ( camera.yaw ?? 0.5 ) + t * orbitTurns,
+      uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uLengthHueShift: colors.lengthHueShift ?? 0.2,
       uPipeHueShift: colors.pipeHueShift ?? 0.33,
