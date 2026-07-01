@@ -19,6 +19,7 @@ import {
 import {
   resolveAnimation
 } from "@/lib/animationConfig";
+import * as backgroundLayer from "./backgroundLayer.js";
 
 let _p5 = null;
 let _container = null;
@@ -208,6 +209,10 @@ const sketch = {
             p.setCamera( sketch.camera );
           }
 
+          // Wrap p.background so templates with sketch.delegateBackground can
+          // let back-phase content items show under the sketch.
+          backgroundLayer.install( p );
+
           p.frameRate( coerceFramerate( sketchOptions?.animation?.framerate ) ?? 60 );
           p.smooth();
 
@@ -294,18 +299,28 @@ const sketch = {
 
           events.handle( "pre-draw" );
 
-          // Call the user's draw function. The first arg is the duration-scaled
-          // loop clock (time.drawSeconds), NOT raw elapsed seconds: a sketch
-          // that animates off it completes its whole loop within `duration`, so
-          // changing the duration rescales the live preview and the recording
-          // identically. At the default duration it equals the old real-seconds
-          // value, so existing sketches are unchanged there.
-          await sketch._drawFn?.(
-            time.drawSeconds(),
-            sketch.getCanvasCenter(),
-            sketch.favoriteColors.purple,
-            p
-          );
+          // The sketch-draw window scopes the delegated-background capture to
+          // the user's own background() calls — content items (e.g. the
+          // background item) paint through untouched. finally: a throwing
+          // sketch must not leave the window open.
+          backgroundLayer.beginSketchDraw();
+
+          try {
+            // Call the user's draw function. The first arg is the duration-scaled
+            // loop clock (time.drawSeconds), NOT raw elapsed seconds: a sketch
+            // that animates off it completes its whole loop within `duration`, so
+            // changing the duration rescales the live preview and the recording
+            // identically. At the default duration it equals the old real-seconds
+            // value, so existing sketches are unchanged there.
+            await sketch._drawFn?.(
+              time.drawSeconds(),
+              sketch.getCanvasCenter(),
+              sketch.favoriteColors.purple,
+              p
+            );
+          } finally {
+            backgroundLayer.endSketchDraw();
+          }
 
           events.handle( "post-draw" );
 

@@ -311,6 +311,26 @@ export const blendSelectOptions: SelectOption[] = Blend.options.map( ( blendOpti
   label: blendOption
 } ) );
 
+// Shared render-phase selector (schema: RenderPhase in sketch.types.ts).
+// Every content-item type carries it, so it must appear in every formConfig
+// entry below or GenericItemForm hides the field with a console warning.
+// "Behind" only shows through where the sketch leaves transparency, unless
+// the template sets sketch.delegateBackground.
+const phaseField: FieldConfig = {
+  label: "Layer",
+  component: "select",
+  options: [
+    {
+      value: "front",
+      label: "In front of the sketch"
+    },
+    {
+      value: "back",
+      label: "Behind the sketch"
+    }
+  ]
+};
+
 /* ---------------- HUD widget field fragments -------------------- */
 const hudAnchorField: FieldConfig = {
   label: "Anchor",
@@ -532,6 +552,7 @@ const dotsPatternFields: ItemFormConfig = {
 // The top-level keys MUST match the 'type' in your Zod discriminated union
 export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
   meta: {
+    phase: phaseField,
     fill: {
       label: "Fill",
       component: "color"
@@ -586,6 +607,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
   },
   specs: {
+    phase: phaseField,
     style: {
       label: "Style",
       component: "select",
@@ -948,6 +970,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
   },
   hud: {
+    phase: phaseField,
     fill: {
       label: "Default fill",
       component: "color"
@@ -1123,6 +1146,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
   },
   text: {
+    phase: phaseField,
     content: {
       label: "Content",
       component: "textarea"
@@ -1213,6 +1237,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     // We can add more fields here and they will auto-generate
   },
   background: {
+    phase: phaseField,
     background: {
       label: "Background color",
       component: "color"
@@ -1249,6 +1274,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
   },
   image: {
+    phase: phaseField,
     source: {
       label: "Source",
       component: "image"
@@ -1328,6 +1354,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
   },
   "images-stack": {
+    phase: phaseField,
     sources: {
       label: "Sources",
       component: "images-stack"
@@ -1398,6 +1425,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
   },
   visual: {
+    phase: phaseField,
     position: {
       label: "Position",
       component: "vector2d",
@@ -1448,6 +1476,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
   },
   qrcode: {
+    phase: phaseField,
     domainOverride: {
       label: "Domain override",
       component: "text",

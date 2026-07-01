@@ -10,7 +10,10 @@ import {
  * gauge, sparkline, counter, crosshairs, swatch, boundingBox), each toggled and
  * configured independently. Widgets bind to a data source (a built-in live key
  * or a sketch-settings key-path) — see hud/sources.js. Drawn on the canvas via
- * freeLayout's post-draw pass, so it is captured by recordings.
+ * freeLayout (post-draw for "front" items, pre-draw for "back" items placed
+ * behind the sketch), so it is captured by recordings either way. Note a
+ * "back" HUD only shows where the sketch leaves transparency, unless the
+ * template sets sketch.delegateBackground.
  */
 
 // Draw order (later = on top).

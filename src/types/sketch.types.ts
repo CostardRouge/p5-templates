@@ -127,8 +127,20 @@ export const PatternSchema = z
     borders: false
   } );
 
+// Render phase of a content item relative to the sketch draw. "front" items
+// render after the sketch (on top — the historical behavior, hence the
+// default), "back" items render before it (behind). A "back" item only shows
+// through where the sketch leaves transparency, unless the template delegates
+// its background to the engine (options.sketch.delegateBackground — see
+// templates/p5/utils/backgroundLayer.js).
+export const RenderPhase = z.enum( [
+  "back",
+  "front"
+] ).default( "front" );
+
 export const BackgroundItemSchema = z.object( {
   type: z.literal( "background" ),
+  phase: RenderPhase,
   background: RGBA.default( [
     246,
     235,
@@ -139,6 +151,7 @@ export const BackgroundItemSchema = z.object( {
 
 export const MetaItemSchema = z.object( {
   type: z.literal( "meta" ),
+  phase: RenderPhase,
   topLeft: z.string().default( "@costardrouge.jpg" ),
   topRight: z.string().default( "" ),
   bottomLeft: z.string().default( "" ),
@@ -365,6 +378,7 @@ export const SpecsSoundSchema = z
 
 export const SpecsItemSchema = z.object( {
   type: z.literal( "specs" ),
+  phase: RenderPhase,
   style: z.enum( [
     "boot-log",
     "ticker"
@@ -426,6 +440,7 @@ export const SpecsItemSchema = z.object( {
 
 export const TextItemSchema = z.object( {
   type: z.literal( "text" ),
+  phase: RenderPhase,
   content: z.string().default( "" ),
 
   size: z.number().positive()
@@ -503,6 +518,7 @@ export const ImagesStackAnimations = z.discriminatedUnion(
 
 export const ImageItemSchema = z.object( {
   type: z.literal( "image" ),
+  phase: RenderPhase,
   source: z.string().default( "" ),
   margin: z.number().min( 0 )
     .max( 1000 )
@@ -537,6 +553,7 @@ const NonEmptyPath = z.string().trim()
 
 export const ImagesStackItemSchema = z.object( {
   type: z.literal( "images-stack" ),
+  phase: RenderPhase,
   sources: z.preprocess(
     ( v ) =>
       Array.isArray( v )
@@ -589,6 +606,7 @@ export const VisualOptions = z
 
 export const VisualItemSchema = z.object( {
   type: z.literal( "visual" ),
+  phase: RenderPhase,
   visual: VisualOptions.optional(),
 
   position: Vec2.default( {
@@ -601,6 +619,7 @@ export const VisualItemSchema = z.object( {
 
 export const QrCodeItemSchema = z.object( {
   type: z.literal( "qrcode" ),
+  phase: RenderPhase,
   // Origin to encode. Empty -> NEXT_PUBLIC_SITE_URL (the production domain),
   // falling back to the live page origin. Set it to point at the public
   // domain when generating content from a localhost / capture URL. A bare
@@ -882,6 +901,7 @@ export const HudBoundingBoxSchema = z
 
 export const HudItemSchema = z.object( {
   type: z.literal( "hud" ),
+  phase: RenderPhase,
   fill: RGBA.default( [
     0,
     255,
