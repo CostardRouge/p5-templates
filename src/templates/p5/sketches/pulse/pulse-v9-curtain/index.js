@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
@@ -37,7 +38,6 @@ class GroundLine extends SpiralBase {
     const sizeDivisorFar = lineOpts.sizeDivisorFar ?? 1;
     const heightFactor = lineOpts.heightFactor ?? 2;
     const yAnchorOffset = lineOpts.yAnchorOffset ?? -15;
-    const driftSpeed = motion.driftSpeed ?? 1.5;
     const driftIndexDivisor = motion.driftIndexDivisor ?? 10;
     const driftShadowDivisor = motion.driftShadowDivisor ?? 5;
     const driftIndexPhase = motion.driftIndexPhase ?? 4;
@@ -45,10 +45,16 @@ class GroundLine extends SpiralBase {
     const opacityPulseMax = colorOpts.opacityPulseMax ?? 15;
     const opacityFalloffMin = colorOpts.opacityFalloffMin ?? 1;
     const opacityFalloffMax = colorOpts.opacityFalloffMax ?? 5;
-    const opacityPulseSpeed = colorOpts.opacityPulseSpeed ?? 3;
-    const hueSpeed = colorOpts.hueSpeed ?? 1;
-    const weightPulseSpeed = lineOpts.weightPulseSpeed ?? 1;
     const weightPulseShadowDivisor = lineOpts.weightPulseShadowDivisor ?? 3;
+
+    // `time` is the loop-exact clock (animation.angle), which sweeps exactly
+    // TAU per loop — every rate multiplying it below is snapped to a whole
+    // number of cycles per loop so sin()/cos() land back on their start value
+    // at the seam.
+    const driftSpeed = Math.round( motion.driftSpeed ?? 1.5 );
+    const opacityPulseSpeed = Math.round( colorOpts.opacityPulseSpeed ?? 3 );
+    const hueSpeed = Math.round( colorOpts.hueSpeed ?? 1 );
+    const weightPulseSpeed = Math.round( lineOpts.weightPulseSpeed ?? 1 );
 
     const hueCadence = index + time * hueSpeed;
 
@@ -170,7 +176,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -184,10 +190,16 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop, unlike the
+  // raw, non-wrapping time.seconds() this sketch used to pass down — the
+  // whole-cycle rates snapped in GroundLine.draw only close the loop when
+  // driven by this clock.
+  const t = animation.angle;
+
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

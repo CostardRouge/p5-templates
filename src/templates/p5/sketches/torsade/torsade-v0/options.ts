@@ -126,7 +126,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       weightSpeed: {
-        label: "Weight speed",
+        label: "Weight speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 5,
@@ -153,14 +153,14 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       xWaveSpeed: {
-        label: "X wave speed",
+        label: "X wave speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 8,
         step: 0.01
       },
       yWaveSpeed: {
-        label: "Y wave speed",
+        label: "Y wave speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 8,
@@ -180,7 +180,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Colors",
     fields: {
       hueSpeed: {
-        label: "Hue speed",
+        label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,

@@ -36,7 +36,11 @@ sketch.draw( (
 
   const images = imageUtils.getImages();
 
-  const imageSwitchSpeed = 3 / 2; // images.length;
+  // Loop-exact clock: circularIndex hard-cuts through the image list, so the
+  // cut at the wrap only matches the cadence of every other cut in the loop
+  // when imageSwitchSpeed completes a whole number of passes through the
+  // list per loop — 3/2 left a partial pass that echoed at the seam.
+  const imageSwitchSpeed = Math.round( 3 / 2 ); // snapped to whole cycles per loop
   const imageObject = mappers.circularIndex(
     imageSwitchSpeed * animation.progression * images.length,
     images

@@ -3,6 +3,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import converters from "@/p5/utils/converters.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   SpiralBase, rebuildGrid
@@ -15,7 +16,7 @@ const sketchState = {
 
 class Spiral extends SpiralBase {
   draw(
-    time, index
+    t, index
   ) {
     const p = getP5();
     const o = options.sketch ?? {};
@@ -46,7 +47,16 @@ class Spiral extends SpiralBase {
     const opacityPulseFreq = colorOpts.opacityPulseFreq ?? 4;
     const strokeAlpha = colorOpts.strokeAlpha ?? 10;
 
-    const hueCadence = index + time * hueSpeed;
+    // t sweeps exactly TAU per loop, so every rate multiplying it must
+    // complete a WHOLE number of turns per loop to land back on its start
+    // value — snapped to whole turns per loop.
+    const xTurns = Math.round( xSpeed );
+    const yTurns = Math.round( ySpeed );
+    const rotateTurns = Math.round( rotateSpeed );
+    const hueTurns = Math.round( hueSpeed );
+    const opacityPulseTurns = Math.round( opacityPulseSpeed );
+
+    const hueCadence = index + t * hueTurns;
 
     p.push();
     p.translate(
@@ -72,7 +82,7 @@ class Spiral extends SpiralBase {
         0,
         shadowsCount,
         p.map(
-          p.sin( -time * opacityPulseSpeed + shadowIndex * opacityPulseFreq ),
+          p.sin( -t * opacityPulseTurns + shadowIndex * opacityPulseFreq ),
           -1,
           1,
           opacityStart,
@@ -83,14 +93,14 @@ class Spiral extends SpiralBase {
 
       const l = shadowIndex / driftDivisor;
       const x = p.map(
-        p.sin( time * xSpeed + shadowIndex ),
+        p.sin( t * xTurns + shadowIndex ),
         -1,
         1,
         -l,
         l
       );
       const y = p.map(
-        p.cos( time * ySpeed + shadowIndex ),
+        p.cos( t * yTurns + shadowIndex ),
         -1,
         1,
         -l,
@@ -114,7 +124,7 @@ class Spiral extends SpiralBase {
         p.beginShape();
         p.strokeWeight( weight );
 
-        p.rotate( p.sin( time * rotateSpeed + shadowIndex ) * rotateAmp );
+        p.rotate( p.sin( t * rotateTurns + shadowIndex ) * rotateAmp );
 
         p.stroke( p.color(
           p.map(
@@ -167,8 +177,13 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (instead of
+  // the raw, non-wrapping seconds clock previously passed in here), so the
+  // rates snapped above land back on their start value.
+  const t = animation.angle;
 
   rebuildGrid( {
     state: sketchState,
@@ -184,7 +199,7 @@ sketch.draw( ( time ) => {
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

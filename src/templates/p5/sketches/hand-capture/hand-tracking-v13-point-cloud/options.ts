@@ -356,21 +356,21 @@ export const formConfiguration: Record<string, any> = {
       },
       xMultiplier: {
         component: "slider",
-        label: "X wobble speed",
+        label: "X wobble speed (snaps to whole turns/loop)",
         min: -9,
         max: 9,
         step: 0.1
       },
       yMultiplier: {
         component: "slider",
-        label: "Y wobble speed",
+        label: "Y wobble speed (snaps to whole turns/loop)",
         min: -9,
         max: 9,
         step: 0.1
       },
       zMultiplier: {
         component: "slider",
-        label: "Z wobble speed",
+        label: "Z wobble speed (snaps to whole turns/loop)",
         min: -9,
         max: 9,
         step: 0.1

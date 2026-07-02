@@ -5,7 +5,7 @@ import sketch, {
 import mappers from "@/p5/utils/mappers.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  SpiralBase, rebuildGrid
+  SpiralBase, rebuildGrid, snapLoopRate
 } from "../_shared.js";
 
 const sketchState = {
@@ -27,7 +27,10 @@ class Spiral extends SpiralBase {
       position, size, start, end
     } = this;
 
-    const hueCadence = index + time * ( colorOpts.hueSpeed ?? 1 );
+    // Loop-exact rates: raw time is the sketch's non-wrapping clock, so every
+    // rate multiplying it is snapped to whole cycles per loop (see
+    // ../_shared.js#snapLoopRate).
+    const hueCadence = index + time * snapLoopRate( colorOpts.hueSpeed ?? 1 );
     const waveAmplitude = size / ( spiralOpts.waveAmplitudeDivisor ?? 2.5 );
 
     p.push();
@@ -38,7 +41,7 @@ class Spiral extends SpiralBase {
 
     const lerpSteps = spiralOpts.lerpSteps ?? 300;
     const lerpStep = 1 / lerpSteps;
-    const cadenceSpeed = motion.cadenceSpeed ?? 1;
+    const cadenceSpeed = snapLoopRate( motion.cadenceSpeed ?? 1 );
     const cadenceIndexScale = motion.cadenceIndexScale ?? 1;
     const cadenceMin = spiralOpts.cadenceMin ?? -4;
     const cadenceMax = spiralOpts.cadenceMax ?? 4;

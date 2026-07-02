@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import colors from "@/p5/utils/colors.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
@@ -44,7 +45,15 @@ class Spiral extends SpiralBase {
     const opacityPulseMaxFactor = colorOpts.opacityPulseMaxFactor ?? 25;
     const opacityEndDivisor = colorOpts.opacityEndDivisor ?? 2;
 
-    const hueCadence = index + time * hueSpeed;
+    // Loop-exact clock: `time` is animation.angle, which sweeps exactly TAU
+    // per loop, so every oscillator driven by it only returns to its start
+    // value when its rate is a WHOLE number of cycles per loop — snap each
+    // raw slider rate to the nearest whole cycle below.
+    const hueCycles = Math.round( hueSpeed );
+    const opacityPulseCycles = Math.round( opacityPulseSpeed );
+    const offsetMultCycles = Math.round( offsetMultSpeed );
+
+    const hueCadence = index + time * hueCycles;
 
     p.push();
     p.translate(
@@ -70,7 +79,7 @@ class Spiral extends SpiralBase {
         0,
         shadowsCount,
         p.map(
-          p.sin( shadowIndex + time * opacityPulseSpeed ),
+          p.sin( shadowIndex + time * opacityPulseCycles ),
           -1,
           1,
           opacityStart,
@@ -80,7 +89,7 @@ class Spiral extends SpiralBase {
       );
 
       const offsetMult = p.map(
-        p.sin( time * offsetMultSpeed + index ),
+        p.sin( time * offsetMultCycles + index ),
         -1,
         1,
         0,
@@ -135,7 +144,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -149,10 +158,15 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` the draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam).
+  const t = animation.angle;
+
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

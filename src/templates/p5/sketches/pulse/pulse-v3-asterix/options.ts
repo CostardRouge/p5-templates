@@ -117,14 +117,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Colors",
     fields: {
       hueSpeed: {
-        label: "Hue speed",
+        label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,
         step: 0.01
       },
       opacityPulseSpeed: {
-        label: "Opacity pulse speed",
+        label: "Opacity pulse speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 20,

@@ -11,7 +11,7 @@ import iterators from "@/p5/utils/iterators.js";
 import traceLetters from "@/p5/utils/traceLetters.js";
 
 import {
-  drawGrid, drawShape
+  drawGrid, drawShape, loopedPhase
 } from "./_shared.js";
 
 export function buildCases( {

@@ -8,6 +8,7 @@ import mediapipe, {
   dispose as mediapipeDispose,
   setEnabled as setMediapipeEnabled
 } from "@/p5/utils/mediapipe/mediapipe.js";
+import animation from "@/p5/utils/animation.js";
 import createRevealRenderer from "./revealGpu.js";
 
 // video-reveal — see options.ts for the concept. The webcam hides under a grid
@@ -335,21 +336,27 @@ function stampDemo(
     0.6,
     cfg.reveal?.brushRadius ?? 1.2
   );
-  const time = p.frameCount * 0.02 * speed;
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop, so the two
+  // Lissajous rates (x and y × 1.3) are snapped to whole wave cycles per loop —
+  // otherwise the demo pointer path didn't land back on its start position.
+  const t = animation.angle;
+  const xCycles = Math.round( speed );
+  const yCycles = Math.round( speed * 1.3 );
   const marginX = p.width * 0.12;
   const marginY = p.height * 0.12;
 
   for ( let pointer = 0; pointer < pointers; pointer++ ) {
     const phase = ( pointer / pointers ) * Math.PI * 2;
     const x = p.map(
-      Math.sin( time + phase ),
+      Math.sin( t * xCycles + phase ),
       -1,
       1,
       marginX,
       p.width - marginX
     );
     const y = p.map(
-      Math.cos( time * 1.3 + phase * 1.7 ),
+      Math.cos( t * yCycles + phase * 1.7 ),
       -1,
       1,
       marginY,

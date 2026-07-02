@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
@@ -56,8 +57,15 @@ class Spiral extends SpiralBase {
       position.y
     );
 
+    // Rates that multiply the loop-exact clock (see sketch.draw below) are
+    // snapped to whole cycles per loop so the last frame matches the first.
+    const shadowsCountSpeedATurns = Math.round( shadowsCountSpeedA );
+    const shadowsCountSpeedBTurns = Math.round( shadowsCountSpeedB );
+    const opacityPulseSpeedTurns = Math.round( opacityPulseSpeed );
+    const rotateSpinSpeedTurns = Math.round( rotateSpinSpeed );
+
     const shadowsCount = p.map(
-      p.cos( index + time * shadowsCountSpeedA ) + p.sin( -time * shadowsCountSpeedB + index ),
+      p.cos( index + time * shadowsCountSpeedATurns ) + p.sin( -time * shadowsCountSpeedBTurns + index ),
       -1,
       1,
       shadowsCountMin,
@@ -83,7 +91,7 @@ class Spiral extends SpiralBase {
         0,
         shadowsCount,
         p.map(
-          p.sin( index - time * opacityPulseSpeed + shadowIndex * opacityPulseFreq ),
+          p.sin( index - time * opacityPulseSpeedTurns + shadowIndex * opacityPulseFreq ),
           -1,
           1,
           opacityStart,
@@ -156,7 +164,7 @@ class Spiral extends SpiralBase {
         p.beginShape();
         p.strokeWeight( size );
 
-        p.rotate( p.radians( time * rotateSpinSpeed + angle * xSpeed ) );
+        p.rotate( p.radians( time * rotateSpinSpeedTurns + angle * xSpeed ) );
 
         p.stroke( p.color(
           p.map(
@@ -237,8 +245,19 @@ function drawGrid( time ) {
   );
 
   const offset = -4;
-  const xx = driftSpeed * time;
-  const yy = driftSpeed * time;
+
+  // The scroll pattern is a repeating grid of identical lines spaced xSize /
+  // ySize apart, so it redraws bit-for-bit identical once it has scrolled a
+  // WHOLE number of cell-widths — snap the drift to complete exactly that
+  // many per loop instead of the raw (never-wrapping) rate.
+  const xCellsPerLoop = xSize > 0
+    ? Math.round( driftSpeed * p.TAU / xSize )
+    : 0;
+  const yCellsPerLoop = ySize > 0
+    ? Math.round( driftSpeed * p.TAU / ySize )
+    : 0;
+  const xx = xCellsPerLoop * xSize * animation.progression;
+  const yy = yCellsPerLoop * ySize * animation.progression;
 
   for ( let x = offset; x <= xCount - offset; x++ ) {
     for ( let y = offset; y <= yCount - offset; y++ ) {
@@ -267,7 +286,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -280,6 +299,12 @@ sketch.draw( ( time ) => {
   p.background( ...( options.sketch?.background?.color ?? [
     0
   ] ) );
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop, unlike the
+  // raw time.seconds() clock previously passed in here (it never wrapped, so
+  // the last frame never matched the first). Rates that scale it are snapped
+  // to whole cycles per loop inside drawGrid / Spiral.draw.
+  const time = animation.angle;
 
   drawGrid( time );
 

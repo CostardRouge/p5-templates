@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import colors from "@/p5/utils/colors.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
@@ -39,9 +40,14 @@ class Spiral extends SpiralBase {
     const angleSubdivisions = spiralOpts.angleSubdivisions ?? 4;
     const shadowOffsetAmp = motion.shadowOffsetAmp ?? 50;
     const shadowOffsetSpeed = motion.shadowOffsetSpeed ?? 1;
-    const angleDriftSpeed = motion.angleDriftSpeed ?? 1;
-    const hueSpeed = colorOpts.hueSpeed ?? 1;
-    const opacityPulseSpeed = colorOpts.opacityPulseSpeed ?? 3;
+
+    // `time` is the loop-exact clock (animation.angle), which sweeps exactly
+    // TAU per loop — every rate multiplying it below is snapped to a whole
+    // number of cycles per loop so sin()/cos() land back on their start value
+    // at the seam.
+    const angleDriftSpeed = Math.round( motion.angleDriftSpeed ?? 1 );
+    const hueSpeed = Math.round( colorOpts.hueSpeed ?? 1 );
+    const opacityPulseSpeed = Math.round( colorOpts.opacityPulseSpeed ?? 3 );
     const opacityPulseMaxFactor = colorOpts.opacityPulseMaxFactor ?? 100;
     const opacityDivisor = colorOpts.opacityDivisor ?? 2;
 
@@ -156,7 +162,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -170,10 +176,16 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop, unlike the
+  // raw, non-wrapping time.seconds() this sketch used to pass down — the
+  // whole-cycle rates snapped in Spiral.draw only close the loop when driven
+  // by this clock.
+  const t = animation.angle;
+
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

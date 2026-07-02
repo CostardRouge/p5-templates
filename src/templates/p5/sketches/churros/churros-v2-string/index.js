@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 
 import converters from "@/p5/utils/converters.js";
 import mappers from "@/p5/utils/mappers.js";
@@ -10,7 +11,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 sketch.setup( () => {} );
 
 function drawGrid(
-  p, xCount, yCount, time, animSpeed
+  p, xCount, yCount, t, animSpeed
 ) {
   const xSize = p.width / xCount;
   const ySize = p.height / yCount;
@@ -21,7 +22,7 @@ function drawGrid(
     128,
     255,
     p.map(
-      p.sin( time ),
+      p.sin( t ),
       -1,
       1,
       0,
@@ -29,8 +30,17 @@ function drawGrid(
     )
   );
 
-  const xx = 100 * p.sin( time ) * 2 * animSpeed;
-  const yy = 100 * time * animSpeed;
+  // The vertical scroll (yy) accumulates linearly and wraps via `% p.height`,
+  // so it only lands on the same wrapped position at the seam when it covers
+  // a WHOLE number of screen-heights per loop — snap its rate accordingly.
+  // (The horizontal xx term is a bounded sin() oscillation with a coefficient
+  // of 1 on t, so it is already exactly one whole cycle per loop.)
+  const yySpeed = 100 * animSpeed;
+  const yyCycles = Math.round( yySpeed * p.TAU / p.height );
+  const yySnapped = p.height ? yyCycles * p.height / p.TAU : 0;
+
+  const xx = 100 * p.sin( t ) * 2 * animSpeed;
+  const yy = yySnapped * t;
 
   for ( let x = 0; x <= xCount; x++ ) {
     for ( let y = 0; y <= yCount; y++ ) {
@@ -50,7 +60,7 @@ function drawGrid(
   }
 }
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch;
 
@@ -59,12 +69,18 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop.
+  const t = animation.angle;
+
   if ( o.grid?.enabled ?? true ) {
     drawGrid(
       p,
       o.grid?.xCount ?? 2,
       o.grid?.yCount ?? 3,
-      time,
+      t,
       o.grid?.animSpeed ?? 1
     );
   }

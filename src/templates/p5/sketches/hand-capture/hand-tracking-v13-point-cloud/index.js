@@ -444,9 +444,15 @@ sketch.draw( ( time ) => {
   const yMultiplier = cfg.rotation?.yMultiplier ?? 0.5;
   const zMultiplier = cfg.rotation?.zMultiplier ?? 0;
 
+  // sin( angle * k ) only returns to its start value when k is a WHOLE number
+  // of turns per loop — snap each wobble multiplier so the seam is invisible.
+  const xTurns = Math.round( xMultiplier );
+  const yTurns = Math.round( yMultiplier );
+  const zTurns = Math.round( zMultiplier );
+
   const rX = xBase + ( rotationEnabled
     ? mappers.fn(
-      p.sin( animation.angle * xMultiplier ),
+      p.sin( animation.angle * xTurns ),
       -1,
       1,
       -angleMax,
@@ -455,7 +461,7 @@ sketch.draw( ( time ) => {
     : 0 );
   const rY = yBase + ( rotationEnabled
     ? mappers.fn(
-      p.sin( animation.angle * yMultiplier ),
+      p.sin( animation.angle * yTurns ),
       -1,
       1,
       -angleMax,
@@ -464,7 +470,7 @@ sketch.draw( ( time ) => {
     : 0 );
   const rZ = rotationEnabled
     ? mappers.fn(
-      p.sin( animation.angle * zMultiplier ),
+      p.sin( animation.angle * zTurns ),
       -1,
       1,
       -angleMax,

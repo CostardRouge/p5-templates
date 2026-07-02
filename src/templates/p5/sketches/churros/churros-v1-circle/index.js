@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 
 import converters from "@/p5/utils/converters.js";
 import mappers from "@/p5/utils/mappers.js";
@@ -9,7 +10,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup( () => {} );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch;
 
@@ -54,6 +55,15 @@ sketch.draw( ( time ) => {
   const hueGreenMult = o.colors?.greenAngleMultiplier ?? 1;
   const hueBlueMult = o.colors?.blueAngleMultiplier ?? 1;
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop.
+  const t = animation.angle;
+  const rotationCycles = Math.round( rotationSpeed );
+  const opacityCycles = Math.round( opacitySpeed );
+  const hueCycles = Math.round( hueSpeedOption );
+
   for ( let angle = angleMin; angle <= angleMax; angle += angleStep ) {
     p.push();
     p.translate(
@@ -71,13 +81,13 @@ sketch.draw( ( time ) => {
       )
     );
 
-    p.rotate( time * rotationSpeed + angle * rotationCount );
+    p.rotate( t * rotationCycles + angle * rotationCount );
 
     let opacityFactor = mappers.circularMap(
       angle,
       angleMax * 4,
       p.map(
-        p.sin( -time * opacitySpeed + angle * opacityCount ),
+        p.sin( -t * opacityCycles + angle * opacityCount ),
         -1,
         1,
         endOpacity,
@@ -89,7 +99,7 @@ sketch.draw( ( time ) => {
     if ( pingPong ) {
       opacityFactor = p.map(
         p.map(
-          p.sin( angle * opacityCount - time * opacitySpeed ),
+          p.sin( angle * opacityCount - t * opacityCycles ),
           -1,
           1,
           -1,
@@ -98,7 +108,7 @@ sketch.draw( ( time ) => {
         -1,
         1,
         p.map(
-          p.cos( angle * opacityCount + time * opacitySpeed ),
+          p.cos( angle * opacityCount + t * opacityCycles ),
           -1,
           1,
           1,
@@ -112,7 +122,7 @@ sketch.draw( ( time ) => {
 
     if ( changeLinesCount ) {
       linesCount = p.map(
-        p.cos( angle + time * 2 ),
+        p.cos( angle + t * 2 ),
         -1,
         1,
         1,
@@ -124,7 +134,7 @@ sketch.draw( ( time ) => {
     const lineMax = p.TAU;
     const lineStep = lineMax / linesCount;
 
-    const hueSpeed = -time * hueSpeedOption;
+    const hueSpeed = -t * hueCycles;
 
     for ( let lineIndex = lineMin; lineIndex < lineMax; lineIndex += lineStep ) {
       const vector = converters.polar.vector(

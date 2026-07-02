@@ -232,7 +232,7 @@ export const formConfiguration: Record<string, any> = {
       },
       speed: {
         component: "slider",
-        label: "Speed",
+        label: "Speed (snaps to whole cycles/loop)",
         min: 0,
         max: 3,
         step: 0.1

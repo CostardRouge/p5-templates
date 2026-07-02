@@ -57,7 +57,7 @@ export const formConfiguration: Record<string, any> = {
   // Motion
   rotateSpeed: {
     component: "slider",
-    label: "Rotation speed",
+    label: "Rotation speed (snaps to whole cycles/loop)",
     min: 0,
     max: 3,
     step: 0.01

@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
@@ -46,7 +47,18 @@ class Spiral extends SpiralBase {
     const opacityPulseSpeed = colorOpts.opacityPulseSpeed ?? 3;
     const opacityPulseMaxFactor = colorOpts.opacityPulseMaxFactor ?? 10;
 
-    const hueCadence = index + time * hueSpeed;
+    // Loop-exact clock: `time` is animation.angle, which sweeps exactly TAU
+    // per loop, so every oscillator driven by it only returns to its start
+    // value when its rate is a WHOLE number of cycles per loop — snap each
+    // raw slider rate to the nearest whole cycle below.
+    const opacityPulseCycles = Math.round( opacityPulseSpeed );
+    const xCycles = Math.round( xSpeed );
+    const yCycles = Math.round( ySpeed );
+    const offsetMultCycles = Math.round( offsetMultSpeed );
+    const angleSpinCycles = Math.round( angleSpinSpeed );
+    const hueCycles = Math.round( hueSpeed );
+
+    const hueCadence = index + time * hueCycles;
 
     p.push();
     p.translate(
@@ -72,7 +84,7 @@ class Spiral extends SpiralBase {
         0,
         shadowsCount,
         p.map(
-          p.sin( time * opacityPulseSpeed + shadowIndex ),
+          p.sin( time * opacityPulseCycles + shadowIndex ),
           -1,
           1,
           opacityStart,
@@ -82,14 +94,14 @@ class Spiral extends SpiralBase {
       );
 
       const x = p.map(
-        p.sin( time * xSpeed + shadowIndex ),
+        p.sin( time * xCycles + shadowIndex ),
         -1,
         1,
         -drift,
         drift
       );
       const y = p.map(
-        p.cos( time * ySpeed + shadowIndex ),
+        p.cos( time * yCycles + shadowIndex ),
         -1,
         1,
         -drift,
@@ -102,7 +114,7 @@ class Spiral extends SpiralBase {
       );
 
       const offsetMult = p.map(
-        p.sin( time * offsetMultSpeed ),
+        p.sin( time * offsetMultCycles ),
         -1,
         1,
         0,
@@ -114,7 +126,7 @@ class Spiral extends SpiralBase {
       for ( let angle = 0; angle < p.TAU; angle += angleStep ) {
         p.push();
         const vector = converters.polar.vector(
-          angle + ( index % 2 ? -time : time ) * angleSpinSpeed + shadowOffset,
+          angle + ( index % 2 ? -time : time ) * angleSpinCycles + shadowOffset,
           p.map(
             p.cos( time + shadowIndex ),
             -1,
@@ -176,7 +188,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -190,10 +202,15 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` the draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam).
+  const t = animation.angle;
+
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

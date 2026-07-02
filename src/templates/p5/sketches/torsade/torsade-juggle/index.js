@@ -6,7 +6,7 @@ import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  SpiralBase, rebuildGrid
+  SpiralBase, rebuildGrid, snapLoopRate, snapLoopIndexRate
 } from "../_shared.js";
 
 const sketchState = {
@@ -28,12 +28,33 @@ class Spiral extends SpiralBase {
       position, size, start, end, weight, opacityFactor
     } = this;
 
-    const timeSpeed = motion.timeSpeed ?? 1;
-    const hueCadence = index + time * ( colorOpts.hueSpeed ?? 1 );
+    // Loop-exact rates: raw time is the sketch's non-wrapping clock (see
+    // ../_shared.js#snapLoopRate). `timeSpeed` feeds both a continuous
+    // sin/cos wave (needs whole TURNS per loop) and the discrete
+    // `lerpStepsCycle` walk below (needs whole WALKS through that array per
+    // loop) — two different periodicities, so it's snapped separately for
+    // each role.
+    const rawTimeSpeed = motion.timeSpeed ?? 1;
+    const timeSpeed = snapLoopRate( rawTimeSpeed );
+    const hueCadence = index + time * snapLoopRate( colorOpts.hueSpeed ?? 1 );
+    const lerpStepsCycle = motion.lerpStepsCycle ?? [
+      5,
+      10,
+      20,
+      40,
+      80,
+      100,
+      150,
+      150,
+      150
+    ];
     const cadence = index / Math.max(
       1,
       total
-    ) + time * timeSpeed;
+    ) + time * snapLoopIndexRate(
+      rawTimeSpeed,
+      lerpStepsCycle.length
+    );
 
     const waveAmpRange = spiralOpts.waveAmpRange ?? 1.5;
     const waveAmplitude = size * p.map(
@@ -56,17 +77,7 @@ class Spiral extends SpiralBase {
     if ( index === 0 ) {
       lerpStep = 1 / mappers.circularIndex(
         cadence,
-        motion.lerpStepsCycle ?? [
-          5,
-          10,
-          20,
-          40,
-          80,
-          100,
-          150,
-          150,
-          150
-        ]
+        lerpStepsCycle
       );
     }
 

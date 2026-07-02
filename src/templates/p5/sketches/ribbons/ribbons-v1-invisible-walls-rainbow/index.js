@@ -3,6 +3,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import converters from "@/p5/utils/converters.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   drawer,
@@ -11,9 +12,15 @@ import {
   paletteStroke
 } from "../_shared.js";
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` this draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam). Every rate multiplying it below
+  // is rounded to a whole number of cycles per loop.
+  const time = animation.angle;
 
   const bg = o.backgroundColor ?? [
     0,
@@ -57,12 +64,17 @@ sketch.draw( ( time ) => {
   } );
   p.pop();
 
+  // The growing-line curve completes a WHOLE number of sin() cycles per loop
+  // (previously half a cycle, which left the drawn length mismatched at the
+  // seam) — snapped to whole cycles per loop.
+  const growCycles = Math.round( 0.5 );
+
   drawer(
     ( t ) => {
       const lerpMin = 0;
       const lerpMax = o.lines?.growing
         ? p.map(
-          p.sin( t / 2 ),
+          p.sin( t * growCycles ),
           -1,
           1,
           0,
@@ -122,20 +134,26 @@ sketch.draw( ( time ) => {
       );
 
       const rotationCount = o.rotation?.count ?? 1;
-      const rotationSpeed = o.rotation?.speed ?? 2;
+      // Rotation speed only returns to its start angle once per loop when it
+      // is a WHOLE number of turns — snapped to whole turns per loop.
+      const rotationTurns = Math.round( o.rotation?.speed ?? 2 );
       const rotationIndexMult = o.rotation?.indexMultiplier ?? 2;
 
-      p.rotate( t * rotationSpeed + lerpIndex * rotationIndexMult * rotationCount );
+      p.rotate( t * rotationTurns + lerpIndex * rotationIndexMult * rotationCount );
     },
     (
       lerpIndex, _lMin, lerpMax, t
     ) => {
+      // Opacity oscillation only returns to its start value once per loop
+      // when it completes a WHOLE number of cycles — snapped to whole
+      // cycles per loop.
+      const opacityCycles = Math.round( o.opacity?.speed ?? -2 );
       const opacityFactor = computeOpacityFactor( {
         lerpIndex,
         lerpMax,
         time: t,
         opacityCount: o.opacity?.groupCount ?? 2,
-        opacitySpeed: o.opacity?.speed ?? -2,
+        opacitySpeed: opacityCycles,
         startOpacity: o.opacity?.startFactor ?? 3,
         endOpacity: o.opacity?.endFactor ?? 1,
         pingPong: o.opacity?.pingPong ?? true
@@ -156,7 +174,11 @@ sketch.draw( ( time ) => {
 
       const lineMax = p.PI;
       const lineStep = lineMax / linesCount;
-      const hueSpeed = -t * ( o.colors?.hueSpeed ?? 2 );
+      // Hue scroll only returns to its start hue once per loop when it
+      // completes a WHOLE number of cycles — snapped to whole cycles per
+      // loop.
+      const hueCycles = Math.round( o.colors?.hueSpeed ?? 2 );
+      const hueSpeed = -t * hueCycles;
       const palette = o.colors?.palette ?? "rainbow";
 
       for ( let lineIndex = 0; lineIndex < lineMax; lineIndex += lineStep ) {

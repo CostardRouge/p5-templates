@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
@@ -60,8 +61,18 @@ class Spiral extends SpiralBase {
       position.y
     );
 
+    // Rates that multiply the loop-exact clock (see sketch.draw below) are
+    // snapped to whole cycles per loop so the last frame matches the first.
+    const shadowsCountSpeedATurns = Math.round( shadowsCountSpeedA );
+    const shadowsCountSpeedBTurns = Math.round( shadowsCountSpeedB );
+    const opacityPulseSpeedTurns = Math.round( opacityPulseSpeed );
+    const xWaveSpeedTurns = Math.round( xWaveSpeed );
+    const xWaveAmpSpeedTurns = Math.round( xWaveAmpSpeed );
+    const ySpeedTurns = Math.round( ySpeed );
+    const rotateSpeedTurns = Math.round( rotateSpeed );
+
     const shadowsCount = p.map(
-      p.cos( index + time * shadowsCountSpeedA ) + p.sin( -time * shadowsCountSpeedB + index ),
+      p.cos( index + time * shadowsCountSpeedATurns ) + p.sin( -time * shadowsCountSpeedBTurns + index ),
       -1,
       1,
       shadowsCountMin,
@@ -87,7 +98,7 @@ class Spiral extends SpiralBase {
         0,
         shadowsCount,
         p.map(
-          p.sin( index - time * opacityPulseSpeed + shadowIndex * opacityPulseFreq ),
+          p.sin( index - time * opacityPulseSpeedTurns + shadowIndex * opacityPulseFreq ),
           -1,
           1,
           opacityStart,
@@ -99,14 +110,14 @@ class Spiral extends SpiralBase {
       const l = shadowIndex / driftDivisor;
       const indexCoefficient = shadowIndex + index;
       const x = p.map(
-        p.sin( time * xWaveSpeed + p.sin( time * xWaveAmpSpeed ) - indexCoefficient ),
+        p.sin( time * xWaveSpeedTurns + p.sin( time * xWaveAmpSpeedTurns ) - indexCoefficient ),
         -1,
         1,
         -l,
         l
       );
       const y = p.map(
-        p.cos( time * ySpeed - indexCoefficient ),
+        p.cos( time * ySpeedTurns - indexCoefficient ),
         -1,
         1,
         -l,
@@ -138,7 +149,7 @@ class Spiral extends SpiralBase {
         p.beginShape();
         p.strokeWeight( size );
 
-        p.rotate( p.sin( time * rotateSpeed + shadowIndex ) * rotateAmp );
+        p.rotate( p.sin( time * rotateSpeedTurns + shadowIndex ) * rotateAmp );
 
         p.stroke( p.color(
           p.map(
@@ -190,7 +201,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -203,6 +214,12 @@ sketch.draw( ( time ) => {
   p.background( ...( options.sketch?.background?.color ?? [
     0
   ] ) );
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop, unlike the
+  // raw time.seconds() clock previously passed in here (it never wrapped, so
+  // the last frame never matched the first). Rates that scale it are snapped
+  // to whole cycles per loop inside Spiral.draw.
+  const time = animation.angle;
 
   sketchState.shapes.forEach( (
     shape, index

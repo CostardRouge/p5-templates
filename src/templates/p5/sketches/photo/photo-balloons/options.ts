@@ -84,7 +84,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       angleSpeed: {
         component: "slider",
-        label: "Angle speed",
+        label: "Angle speed (snaps to whole turns/loop)",
         min: 0,
         max: 3,
         step: 0.01

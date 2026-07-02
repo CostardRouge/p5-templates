@@ -90,6 +90,24 @@ export function loopedTime() {
   return animation.progression * scale + offset;
 }
 
+// Loop-exact scroll: `loopedTime() * multiplier` only returns to its start
+// value at the seam when the total sweep advances a WHOLE number of
+// `period`s per loop (2π for a raw sin/cos argument, or `values.length` for
+// an animation.ease list of that length). Snap the number of periods
+// completed per loop to the nearest whole number — same cycles-per-loop
+// idiom as flowers-shaders — so every trig/ease term driven by the shared
+// clock returns exactly to its start at the seam.
+export function loopedPhase(
+  multiplier = 1, period = getP5().TAU
+) {
+  const loop = options.sketch?.loop ?? {};
+  const scale = loop.timeScale ?? 1;
+  const offset = loop.timeOffset ?? 0;
+  const cycles = Math.round( ( scale * multiplier ) / period );
+
+  return animation.progression * cycles * period + offset * multiplier;
+}
+
 export function getColorFunction( name ) {
   return name ?? "rainbow";
 }

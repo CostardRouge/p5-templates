@@ -3,6 +3,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import converters from "@/p5/utils/converters.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   SpiralBase, rebuildGrid
@@ -15,7 +16,7 @@ const sketchState = {
 
 class Spiral extends SpiralBase {
   draw(
-    time, index
+    t, index
   ) {
     const p = getP5();
     const o = options.sketch ?? {};
@@ -51,6 +52,15 @@ class Spiral extends SpiralBase {
     const hueShadowMixB = colorOpts.hueShadowMixB ?? 2;
     const hueShadowMixC = colorOpts.hueShadowMixC ?? 1;
 
+    // t sweeps exactly TAU per loop, so every rate multiplying it must
+    // complete a WHOLE number of turns per loop to land back on its start
+    // value — snapped to whole turns per loop.
+    const opacityPulseTurns = Math.round( opacityPulseSpeed );
+    const xWaveTurns = Math.round( xWaveSpeed );
+    const xWaveAmpTurns = Math.round( xWaveAmpSpeed );
+    const yTurns = Math.round( ySpeed );
+    const rotateTurns = Math.round( rotateSpeed );
+
     p.push();
     p.translate(
       position.x,
@@ -75,7 +85,7 @@ class Spiral extends SpiralBase {
         0,
         shadowsCount,
         p.map(
-          p.sin( index - time * opacityPulseSpeed + shadowIndex * opacityPulseFreq ),
+          p.sin( index - t * opacityPulseTurns + shadowIndex * opacityPulseFreq ),
           -1,
           1,
           opacityStart,
@@ -87,14 +97,14 @@ class Spiral extends SpiralBase {
       const l = shadowIndex / driftDivisor;
       const indexCoefficient = shadowIndex + index;
       const x = p.map(
-        p.sin( time * xWaveSpeed + p.sin( time * xWaveAmpSpeed ) - indexCoefficient ),
+        p.sin( t * xWaveTurns + p.sin( t * xWaveAmpTurns ) - indexCoefficient ),
         -1,
         1,
         -l,
         l
       );
       const y = p.map(
-        p.cos( time * ySpeed - indexCoefficient ),
+        p.cos( t * yTurns - indexCoefficient ),
         -1,
         1,
         -l,
@@ -119,25 +129,25 @@ class Spiral extends SpiralBase {
         p.beginShape();
         p.strokeWeight( size * strokeWeightFactor );
 
-        p.rotate( p.sin( time * rotateSpeed + shadowIndex ) * rotateAmp );
+        p.rotate( p.sin( t * rotateTurns + shadowIndex ) * rotateAmp );
 
         p.stroke( p.color(
           p.map(
-            p.sin( -time + shadowIndex + index + shadowIndex * hueShadowMixA ),
+            p.sin( -t + shadowIndex + index + shadowIndex * hueShadowMixA ),
             -1,
             1,
             0,
             360
           ) / opacityFactor,
           p.map(
-            p.cos( -time - shadowIndex + index - shadowIndex * hueShadowMixB ),
+            p.cos( -t - shadowIndex + index - shadowIndex * hueShadowMixB ),
             -1,
             1,
             360,
             0
           ) / opacityFactor,
           p.map(
-            p.sin( -time + shadowIndex + index + shadowIndex * hueShadowMixC ),
+            p.sin( -t + shadowIndex + index + shadowIndex * hueShadowMixC ),
             -1,
             1,
             360,
@@ -171,8 +181,13 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (instead of
+  // the raw, non-wrapping seconds clock previously passed in here), so the
+  // rates snapped above land back on their start value.
+  const t = animation.angle;
 
   rebuildGrid( {
     state: sketchState,
@@ -188,7 +203,7 @@ sketch.draw( ( time ) => {
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

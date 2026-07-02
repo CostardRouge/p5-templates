@@ -7,7 +7,7 @@ import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  SpiralBase, rebuildGrid
+  SpiralBase, rebuildGrid, snapLoopRate
 } from "../_shared.js";
 
 const sketchState = {
@@ -29,7 +29,11 @@ class Spiral extends SpiralBase {
       position, size, start, end
     } = this;
 
-    const hueCadence = index + time * ( colorOpts.hueSpeed ?? 3 );
+    // Loop-exact rates: raw time is the sketch's non-wrapping clock, so every
+    // rate multiplying it is snapped to whole cycles per loop (see
+    // ../_shared.js#snapLoopRate) — otherwise the last frame disagrees with
+    // the first.
+    const hueCadence = index + time * snapLoopRate( colorOpts.hueSpeed ?? 3 );
     const waveAmplitude = size;
 
     p.push();
@@ -67,9 +71,9 @@ class Spiral extends SpiralBase {
 
     const lerpSteps = spiralOpts.lerpSteps ?? 600;
     const lerpStep = 1 / lerpSteps;
-    const xWaveSpeed = motion.xWaveSpeed ?? 2;
-    const yWaveSpeed = motion.yWaveSpeed ?? 1;
-    const weightSpeed = spiralOpts.weightSpeed ?? 1;
+    const xWaveSpeed = snapLoopRate( motion.xWaveSpeed ?? 2 );
+    const yWaveSpeed = snapLoopRate( motion.yWaveSpeed ?? 1 );
+    const weightSpeed = snapLoopRate( spiralOpts.weightSpeed ?? 1 );
     const weightWaveScale = spiralOpts.weightWaveScale ?? 10;
     const strokeWeightMin = spiralOpts.strokeWeightMin ?? 25;
     const strokeWeightMax = spiralOpts.strokeWeightMax ?? 90;
@@ -77,6 +81,9 @@ class Spiral extends SpiralBase {
     const opacityMin = colorOpts.opacityMin ?? 1;
     const opacityMax = colorOpts.opacityMax ?? 7;
     const alphaScale = colorOpts.alphaScale ?? 15;
+    // The opacity curve's own time rate (2) is a fixed literal, not a
+    // slider, but it still needs snapping to close the loop.
+    const opacityTimeRate = snapLoopRate( 2 );
 
     for ( let lerpIndex = 0; lerpIndex < 1; lerpIndex += lerpStep ) {
       const lerpPosition = mappers.lerpVector(
@@ -151,7 +158,7 @@ class Spiral extends SpiralBase {
         0,
         5,
         p.map(
-          p.sin( -time * ( index % 2 === 0 ? -1 : 1 ) * 2 + lerpIndex * opacityCurveSpeed ),
+          p.sin( -time * ( index % 2 === 0 ? -1 : 1 ) * opacityTimeRate + lerpIndex * opacityCurveSpeed ),
           -1,
           1,
           opacityMin,

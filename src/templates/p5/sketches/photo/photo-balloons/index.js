@@ -160,7 +160,10 @@ sketch.draw( (
   const w = p.width / 2;
   const h = p.height / 2;
 
-  const angleSpeed = motionConfig.angleSpeed ?? 1;
+  // animation.angle sweeps exactly TAU per loop, so sin/cos of angle*angleSpeed
+  // only return to their start value when angleSpeed is a whole number of
+  // turns per loop — snap it so the balloon orbit closes seamlessly.
+  const angleSpeed = Math.round( motionConfig.angleSpeed ?? 1 );
 
   const showLines = linesConfig.show ?? true;
   const lineColor = linesConfig.color ?? [

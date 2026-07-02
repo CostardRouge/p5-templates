@@ -1,6 +1,55 @@
-import {
+import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  resolveAnimation
+} from "@/lib/animationConfig";
+
+const TAU = Math.PI * 2;
+
+// ── Loop-exact rate snapping ────────────────────────────────────────────────
+// Every torsade variant drives its motion straight off the raw, non-wrapping
+// `time.seconds()` clock handed to `sketch.draw` (not `animation.angle`),
+// multiplying it by a rate before feeding it into sin/cos (or into a
+// circularIndex() array walk). That only closes the loop when the rate
+// completes a WHOLE number of cycles over the resolved loop duration, so raw
+// slider/literal rates are rounded here — snapped to whole cycles per loop,
+// staying as close as possible to the tuned speed.
+function snapToWholeCycles(
+  rawRate, cycleLength
+) {
+  const {
+    duration
+  } = resolveAnimation( sketch.sketchOptions?.animation );
+
+  if ( !( duration > 0 ) || !( cycleLength > 0 ) ) {
+    return rawRate;
+  }
+
+  const cycles = Math.round( rawRate * duration / cycleLength );
+
+  return cycles * cycleLength / duration;
+}
+
+// For a rate (radians/sec) that feeds sin()/cos() directly: snap so it
+// completes whole turns per loop.
+export function snapLoopRate( rawRate ) {
+  return snapToWholeCycles(
+    rawRate,
+    TAU
+  );
+}
+
+// For a rate that feeds a circularIndex()/animation.ease() array walk: snap
+// so it completes whole walks through `valuesLength` entries per loop.
+export function snapLoopIndexRate(
+  rawRate, valuesLength
+) {
+  return snapToWholeCycles(
+    rawRate,
+    valuesLength
+  );
+}
 
 export class SpiralBase {
   constructor( opts ) {

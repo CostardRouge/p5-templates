@@ -58,6 +58,11 @@ sketch.draw( async(
   const cylinderConfig = options.sketch?.cylinder ?? {};
   const animationConfig = options.sketch?.animation ?? {};
 
+  // Same duration fallback chain used to build the animation config passed to
+  // sketch.setup(), so this matches the denominator animation.progression
+  // actually loops over.
+  const loopDuration = animationConfig.duration ?? options.animation?.duration ?? 8;
+
   p.clear();
 
   if ( animationConfig.variableBackgroundColor ) {
@@ -114,12 +119,21 @@ sketch.draw( async(
   }
 
   if ( cylinderConfig.rotateZ ) {
+    const rotateZValues = [
+      0,
+      p.PI / 2
+    ];
+
+    // The original drove this off the raw (non-wrapping) seconds clock, one
+    // anchor step per second — a rate unrelated to the loop's own duration,
+    // so it only closed the loop when the duration happened to be an even
+    // number of seconds. Snap to the nearest whole number of anchor cycles
+    // per loop, walked by the periodic progression clock instead.
+    const rotateZCycles = Math.round( loopDuration / rotateZValues.length );
+
     p.rotateZ( animation.ease( {
-      values: [
-        0,
-        p.PI / 2
-      ],
-      currentTime: +time,
+      values: rotateZValues,
+      currentTime: animation.progression * rotateZCycles * rotateZValues.length,
       easingFn: easing.easeInOutExpo
     } ) );
   }

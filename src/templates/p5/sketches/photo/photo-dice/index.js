@@ -87,6 +87,12 @@ sketch.draw( (
   const rotateSpeed = options.sketch?.rotateSpeed ?? 1;
   const easeFn = easing?.[ options.sketch?.easing ] || easing.easeInOutExpo;
 
+  // The face-cycle position advances 6 * rotateSpeed per loop, so it only
+  // returns to the same face + blend at the seam when rotateSpeed is a whole
+  // number of full 6-face cycles — snapped here (same cycles-per-loop idiom
+  // text-dice uses for its seamless spin).
+  const rotateCycles = Math.round( rotateSpeed );
+
   // Calculate current rotation target (6 faces in cycle)
   const {
     x: rX, y: rY, z: rZ
@@ -108,7 +114,7 @@ sketch.draw( (
       ), // back
       canvases.dice.createVector( p.HALF_PI ) // bottom
     ],
-    currentTime: animation.progression * 6 * rotateSpeed,
+    currentTime: animation.progression * 6 * rotateCycles,
     lerpFn: mappers.lerpVector,
     easingFn: easeFn
   } );
