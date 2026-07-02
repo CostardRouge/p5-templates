@@ -1,6 +1,27 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
+// Shared interaction defaults, tuned for kinetic-letters: one orbiting virtual
+// pointer drives the letters out of the box (matching the sketch's original
+// behaviour), with a thin black crosshair through each pointer. Mouse and
+// vision stay opt-in; the user can flip on any source from the form.
+const interactionDefaults = {
+  ...interactionFormValues,
+  visualization: {
+    ...interactionFormValues.visualization,
+    showPointers: false,
+    showLegend: false,
+    linesStroke: [
+      0
+    ],
+    linesStrokeWeight: 2
+  }
+};
 
 export const formValues = {
   text: "abcdefghijklmnopqrstuvwxyz0123456789",
@@ -17,26 +38,14 @@ export const formValues = {
   minLetterSize: 24,
   maxLetterSize: 512,
   letterPositionMargin: 100,
-  interactive: {
+  // How each letter reacts to the nearest interaction pointer.
+  response: {
     varySize: true,
     varyAngle: true,
     maxInfluenceDistance: 250,
-    easing: "easeOutSine",
-    useMouse: false,
-    useHands: false,
-    pointersCount: 1,
-    pointersMargin: 150,
-    pointersSinAngleMultiplier: 2,
-    pointersCosAngleMultiplier: 1,
-    pointersSinProgressionMultiplier: 1,
-    pointersCosProgressionMultiplier: 4,
-    pointersImageShow: true,
-    pointersLinesShow: true,
-    pointersLinesStroke: [
-      0
-    ],
-    pointersLinesStrokeWeight: 2
+    easing: "easeOutSine"
   },
+  interaction: interactionDefaults,
   // title: titleDefaultValues,
   backgroundColor: [
     246,
@@ -95,9 +104,9 @@ export const formConfiguration: Record<string, any> = {
     max: 500,
     step: 1
   },
-  interactive: {
+  response: {
     component: "nested-object",
-    label: "Interactive",
+    label: "Letter response",
     fields: {
       varySize: {
         component: "checkbox",
@@ -117,78 +126,10 @@ export const formConfiguration: Record<string, any> = {
       easing: {
         component: "easing",
         label: "Easing function"
-      },
-      useMouse: {
-        component: "checkbox",
-        label: "Use mouse"
-      },
-      useHands: {
-        component: "checkbox",
-        label: "Use hands"
-      },
-      pointersCount: {
-        component: "slider",
-        label: "Pointers count",
-        min: 0,
-        max: 24,
-        step: 1
-      },
-      pointersMargin: {
-        component: "slider",
-        label: "Pointers margin",
-        min: 0,
-        max: 500,
-        step: 1
-      },
-      pointersSinAngleMultiplier: {
-        component: "slider",
-        label: "Sin angle multiplier",
-        min: 0.1,
-        max: 10,
-        step: 0.1
-      },
-      pointersCosAngleMultiplier: {
-        component: "slider",
-        label: "Cos angle multiplier",
-        min: 0.1,
-        max: 10,
-        step: 0.1
-      },
-      pointersSinProgressionMultiplier: {
-        component: "slider",
-        label: "Sin progression multiplier",
-        min: 0.1,
-        max: 10,
-        step: 0.1
-      },
-      pointersCosProgressionMultiplier: {
-        component: "slider",
-        label: "Cos progression multiplier",
-        min: 0.1,
-        max: 10,
-        step: 0.1
-      },
-      pointersImageShow: {
-        component: "checkbox",
-        label: "Show pointer images"
-      },
-      pointersLinesShow: {
-        component: "checkbox",
-        label: "Show pointer lines"
-      },
-      pointersLinesStroke: {
-        component: "color",
-        label: "Pointer lines stroke"
-      },
-      pointersLinesStrokeWeight: {
-        component: "slider",
-        label: "Pointer lines stroke weight",
-        min: 0.5,
-        max: 10,
-        step: 0.5
       }
     }
   },
+  interaction: interactionFormConfiguration,
   // title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
