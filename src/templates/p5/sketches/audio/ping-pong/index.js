@@ -11,6 +11,9 @@ import {
 import {
   drawInteractionOverlay
 } from "@/p5/utils/interaction/overlay.js";
+import {
+  resolveAnimation
+} from "@/lib/animationConfig";
 
 /**
  * Audio demo sketch: a ball bounces around the canvas and every wall hit
@@ -70,6 +73,26 @@ function pingPong(
   };
 }
 
+// Loop-exact speed: `pingPong()` folds `speed * time` (raw, non-wrapping
+// sketch seconds) into [0, range] with reflections, so its position is only
+// periodic with the loop's duration when the ball completes a WHOLE, EVEN
+// number of wall-to-wall crossings per loop (even, not just whole, because an
+// odd crossing count ends the loop at the far wall instead of back where it
+// started). Snapped here, closest to the tuned speed, so the last frame's
+// ball position (and the bounce/bip schedule built on top of it) agrees with
+// the first.
+function snapPingPongSpeed(
+  rawSpeed, range, loopDuration
+) {
+  if ( !( range > 0 ) || !( loopDuration > 0 ) ) {
+    return rawSpeed;
+  }
+
+  const crossings = Math.round( ( rawSpeed * loopDuration ) / range / 2 ) * 2;
+
+  return ( crossings * range ) / loopDuration;
+}
+
 function triggerBounce(
   audioOptions, freqPosition
 ) {
@@ -117,17 +140,31 @@ sketch.draw( ( time ) => {
   const rangeX = p.width - radius * 2;
   const rangeY = p.height - radius * 2;
 
+  const {
+    duration: loopDuration
+  } = resolveAnimation( sketch.sketchOptions?.animation );
+  const speedX = snapPingPongSpeed(
+    ballOptions.speedX ?? 420,
+    rangeX,
+    loopDuration
+  );
+  const speedY = snapPingPongSpeed(
+    ballOptions.speedY ?? 333,
+    rangeY,
+    loopDuration
+  );
+
   // The balls drawn this frame. Each carries a stable `key` so ball-to-ball
   // collisions can be edge-triggered: "auto" plus one "p<index>" per pointer.
   const balls = [];
 
   // ── Automatic ball (deterministic, time-based) ───────────────────────────
   const xState = pingPong(
-    ( ballOptions.speedX ?? 420 ) * time,
+    speedX * time,
     rangeX
   );
   const yState = pingPong(
-    ( ballOptions.speedY ?? 333 ) * time,
+    speedY * time,
     rangeY
   );
 

@@ -124,7 +124,7 @@ function drawGrid(
 }
 
 sketch.draw( (
-  time, center, favoriteColor
+  _time, center, favoriteColor
 ) => {
   const p = getP5();
 
@@ -191,6 +191,29 @@ sketch.draw( (
   const hueIndexEasing = easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.easeInOutSine;
   const hueOffsetTimeMix = options.sketch.colors?.hueOffsetTimeMix ?? 1;
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop.
+  const t = animation.angle;
+  const rotationTurns = Math.round( rotationSpeed );
+  const opacityTurns = Math.round( opacitySpeed );
+  const hueTurns = Math.round( hueOffsetTimeMix );
+  const hueTimeTurns = Math.round( hueTimeSpeed );
+  // The wave offset's raw rate was an implicit 1/2 (no user-facing speed
+  // control) — rounds to 1 whole cycle per loop.
+  const halfCycles = Math.round( 1 / 2 );
+
+  // The wave-bundle ease walks its `easedWaveStrengths.length`-entry array
+  // circularly, so it only returns to its start pose after a whole number of
+  // full walks — snap the anchor clock to complete exactly that many per
+  // loop. The raw currentTime used to advance `waveTimeSpeed` per second, so
+  // over one loop (of `duration` seconds) it spanned `waveTimeSpeed *
+  // duration` — round that span to a whole multiple of the array length.
+  const loopDuration = sketch.sketchOptions.animation.duration;
+  const waveValuesLength = easingValues.length;
+  const waveCycles = Math.round( ( waveTimeSpeed * loopDuration ) / waveValuesLength );
+
   for ( let i = 0; i < steps; i++ ) {
     const stepsProgression = i / steps;
     const circularStepsProgression = mappers.circular(
@@ -222,7 +245,7 @@ sketch.draw( (
         values: easedWaveStrengths,
         duration: 1,
         easingFn: waveBundleEasing,
-        currentTime: time * waveTimeSpeed
+        currentTime: animation.progression * waveCycles * waveValuesLength
       } );
 
       const wavesOffset = p.map(
@@ -231,7 +254,7 @@ sketch.draw( (
         branchCount,
         -p.PI,
         p.PI
-      ) - time / 2;
+      ) - t * halfCycles;
 
       const ampX = p.width / waveAmpXDivider;
       const ampY = p.width / waveAmpYDivider;
@@ -270,7 +293,7 @@ sketch.draw( (
           position.y
         );
 
-        p.rotate( time * rotationSpeed
+        p.rotate( t * rotationTurns
           + b
           + ( i / rotationStepDivider ) * rotationCount );
 
@@ -294,7 +317,7 @@ sketch.draw( (
         if ( pingPongOpacity ) {
           opacityFactor = p.map(
             p.map(
-              p.sin( stepsProgression * opacityGroupCount - time * opacitySpeed ),
+              p.sin( stepsProgression * opacityGroupCount - t * opacityTurns ),
               -1,
               1,
               -1,
@@ -303,7 +326,7 @@ sketch.draw( (
             -1,
             1,
             p.map(
-              p.cos( stepsProgression * opacityGroupCount + time * opacitySpeed ),
+              p.cos( stepsProgression * opacityGroupCount + t * opacityTurns ),
               -1,
               1,
               1,
@@ -314,9 +337,9 @@ sketch.draw( (
         }
 
         p.stroke( palette( {
-          hueOffset: time * hueOffsetTimeMix,
+          hueOffset: t * hueTurns,
           hueIndex: mappers.fn(
-            p.sin( time * hueTimeSpeed + circularStepsProgression ),
+            p.sin( t * hueTimeTurns + circularStepsProgression ),
             -1,
             1,
             -p.PI / 2,

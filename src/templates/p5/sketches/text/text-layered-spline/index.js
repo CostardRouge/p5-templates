@@ -344,14 +344,21 @@ sketch.draw( () => {
   );
 
   // 2. The coil itself, rendered with the shared splines look (v0 / v1).
+  // Loop-exact clock: `phase` and the shared renderer's hue scroll both close
+  // only when their rate is a WHOLE number of turns/cycles per loop, so both
+  // raw slider rates are rounded here (splines/_shared.js is off-limits, so
+  // the hue rate is snapped at the call site before it's handed over).
   const spiral = o.spiral ?? {};
+  const spiralTurns = Math.round( spiral.speed ?? 1 );
+  const strokeOptions = o.stroke ?? {};
+  const hueCycles = Math.round( strokeOptions.hueSpeed ?? 1 );
   const coil = buildCoil( {
     size: textOptions.size ?? 220,
     spiral,
     centerY: state.centerY,
     startX: state.startX,
     endX: state.endX,
-    phase: animation.angle * ( spiral.speed ?? 1 )
+    phase: animation.angle * spiralTurns
   } );
 
   renderSplines(
@@ -364,7 +371,10 @@ sketch.draw( () => {
         closed: false,
         iterations: o.curve?.iterations ?? 4
       },
-      stroke: o.stroke ?? {},
+      stroke: {
+        ...strokeOptions,
+        hueSpeed: hueCycles
+      },
       // The point markers / raw polygon are a demonstration overlay in the
       // splines sketches; here the coil is the subject, so keep them off.
       overlay: {

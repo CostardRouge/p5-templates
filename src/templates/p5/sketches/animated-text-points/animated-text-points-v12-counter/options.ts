@@ -95,7 +95,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Letters",
     fields: {
       speed: {
-        label: "Word cycles / loop",
+        label: "Word cycles / loop (snaps to whole cycles/loop)",
         component: "slider",
         min: 0.1,
         max: 10,

@@ -143,20 +143,32 @@ sketch.draw( () => {
   );
   const paletteFn = getPalette( color.palette );
 
+  // Loop-exact clock: sin/cos and the circular noise sampling below only close
+  // when their rate is a WHOLE number of turns per loop, so every raw slider
+  // rate is rounded before it multiplies animation.angle.
+  const pulseCycles = Math.round( pulseSpeed );
+  const hueCycles = Math.round( hueAnimSpeed );
+  const displacementCycles = Math.round( displacementAnimSpeed );
+
   // Animation-driven values shared across all points.
-  const pulseProgress = strokeWeightEasingFn( ( Math.sin( animation.angle * pulseSpeed ) + 1 ) / 2 );
+  const pulseProgress = strokeWeightEasingFn( ( Math.sin( animation.angle * pulseCycles ) + 1 ) / 2 );
   const animatedStrokeWeight = p.lerp(
     strokeWeightMin,
     strokeWeightMax,
     pulseProgress
   );
 
+  // animation.ease walks its 2 values circularly once every 2 units of
+  // currentTime; with currentTime tied straight to progression (1 unit per
+  // loop) it only ever covered half that walk, so it snapped back to
+  // fillAlphaEnd at the seam instead of returning to it smoothly. Doubling
+  // currentTime completes exactly one whole anchor cycle per loop.
   const fillAlpha = animation.ease( {
     values: [
       fillAlphaEnd,
       fillAlphaStart
     ],
-    currentTime: animation.progression,
+    currentTime: animation.progression * 2,
     easingFn: fillEasingFn
   } );
 
@@ -193,12 +205,14 @@ sketch.draw( () => {
   graphics.blendMode( blendModeName );
 
   if ( rotationEnabled ) {
+    // Same anchor-cycle fix as fillAlpha above — a 2-value ease needs
+    // currentTime to sweep 2 units per loop to close.
     const rotationValue = animation.ease( {
       values: [
         0,
         rotationAngleMax
       ],
-      currentTime: animation.progression,
+      currentTime: animation.progression * 2,
       easingFn: rotationEasingFn
     } );
 
@@ -239,7 +253,7 @@ sketch.draw( () => {
           position,
           displacementAmount,
           displacementNoiseScale,
-          displacementAnimSpeed,
+          displacementCycles,
           graphics,
           p
         )
@@ -248,7 +262,7 @@ sketch.draw( () => {
       const hue = graphics.noise(
         ( displacedPosition.x / p.width ) * hueNoiseScale +
           graphics.map(
-            Math.sin( animation.angle * hueAnimSpeed ),
+            Math.sin( animation.angle * hueCycles ),
             -1,
             1,
             0,
@@ -256,7 +270,7 @@ sketch.draw( () => {
           ),
         ( displacedPosition.y / p.height ) * hueNoiseScale +
           graphics.map(
-            Math.cos( animation.angle * hueAnimSpeed ),
+            Math.cos( animation.angle * hueCycles ),
             -1,
             1,
             0,
@@ -291,7 +305,7 @@ sketch.draw( () => {
             nextPosition,
             displacementAmount,
             displacementNoiseScale,
-            displacementAnimSpeed,
+            displacementCycles,
             graphics,
             p
           )

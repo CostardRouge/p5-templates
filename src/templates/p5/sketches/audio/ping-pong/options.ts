@@ -148,14 +148,14 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       speedX: {
-        label: "Speed X (px/s)",
+        label: "Speed X (px/s, snaps to whole bounces/loop)",
         component: "slider",
         min: 0,
         max: 2000,
         step: 1
       },
       speedY: {
-        label: "Speed Y (px/s)",
+        label: "Speed Y (px/s, snaps to whole bounces/loop)",
         component: "slider",
         min: 0,
         max: 2000,

@@ -8,6 +8,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const PALETTES = {
@@ -109,7 +110,7 @@ function drawGrid(
 }
 
 sketch.draw( (
-  time, center, favoriteColor
+  _time, center, favoriteColor
 ) => {
   const p = getP5();
 
@@ -118,12 +119,22 @@ sketch.draw( (
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop. The branch-count and wave-strength
+  // oscillators below have an implicit rate of 1 (no user-facing speed
+  // control), so they already complete a whole turn per loop once `t` is
+  // used.
+  const t = animation.angle;
+
   const beatMin = options.sketch.beat?.min ?? 3;
   const beatMax = options.sketch.beat?.max ?? 6;
   const beatEasing = easing?.[ options.sketch.beat?.easing ] ?? easing.easeInQuad;
   const beatTimeSign = options.sketch.beat?.timeSign ?? 1;
+  const beatTurns = Math.round( beatTimeSign );
   const bbb = mappers.fn(
-    p.sin( time * beatTimeSign ),
+    p.sin( t * beatTurns ),
     -1,
     1,
     beatMin,
@@ -189,6 +200,13 @@ sketch.draw( (
   const hueIndexEasing = easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.easeInOutSine;
   const hueOffsetTimeMix = options.sketch.colors?.hueOffsetTimeMix ?? 1;
 
+  const rotationTurns = Math.round( rotationSpeed );
+  const opacityTurns = Math.round( opacitySpeed );
+  const hueTurns = Math.round( hueOffsetTimeMix );
+  // The wave offset's raw rate was an implicit 1/2 (no user-facing speed
+  // control) — rounds to 1 whole cycle per loop.
+  const halfCycles = Math.round( 1 / 2 );
+
   for ( let i = 0; i < steps; i++ ) {
     const stepsProgression = i / steps;
     const polarStepsProgression = p.map(
@@ -207,7 +225,7 @@ sketch.draw( (
     );
 
     const branchCount = mappers.fn(
-      p.cos( time + polarStepsProgression / 2 ),
+      p.cos( t + polarStepsProgression / 2 ),
       -1,
       1,
       branchBase,
@@ -225,7 +243,7 @@ sketch.draw( (
       );
 
       const wavesStrength = p.map(
-        p.sin( time + polarStepsProgression ),
+        p.sin( t + polarStepsProgression ),
         -1,
         1,
         0,
@@ -237,7 +255,7 @@ sketch.draw( (
         branchCount,
         -p.PI,
         p.PI
-      ) - time / 2;
+      ) - t * halfCycles;
 
       const ampX = p.width / waveAmpXDivider;
       const ampY = p.width / waveAmpYDivider;
@@ -280,7 +298,7 @@ sketch.draw( (
           position.y
         );
 
-        p.rotate( time * rotationSpeed
+        p.rotate( t * rotationTurns
           + b
           + ( i / rotationStepDivider ) * rotationCount );
 
@@ -304,7 +322,7 @@ sketch.draw( (
         if ( pingPongOpacity ) {
           opacityFactor = p.map(
             p.map(
-              p.sin( stepsProgression * opacityGroupCount - time * opacitySpeed ),
+              p.sin( stepsProgression * opacityGroupCount - t * opacityTurns ),
               -1,
               1,
               -1,
@@ -313,7 +331,7 @@ sketch.draw( (
             -1,
             1,
             p.map(
-              p.cos( stepsProgression * opacityGroupCount + time * opacitySpeed ),
+              p.cos( stepsProgression * opacityGroupCount + t * opacityTurns ),
               -1,
               1,
               1,
@@ -324,7 +342,7 @@ sketch.draw( (
         }
 
         p.stroke( palette( {
-          hueOffset: time * hueOffsetTimeMix,
+          hueOffset: t * hueTurns,
           hueIndex: mappers.fn(
             p.sin( circularStepsProgression ),
             -1,

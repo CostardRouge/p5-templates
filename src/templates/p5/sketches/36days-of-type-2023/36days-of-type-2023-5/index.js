@@ -283,6 +283,11 @@ sketch.draw( async() => {
     const waveSpeed = options.sketch?.animation?.waveSpeed ?? 1;
     const waveSpread = options.sketch?.animation?.waveSpread ?? 0.3;
 
+    // switchIndex is a raw progress*waveSpeed value wrapped mod 1, so it only
+    // lands back on its start value when waveSpeed completes a WHOLE number
+    // of wraps per loop — snapped to whole cycles per loop.
+    const waveTurns = Math.round( waveSpeed );
+
     let switchIndex;
 
     if ( waveConfig.mode === "interactive" ) {
@@ -314,7 +319,7 @@ sketch.draw( async() => {
 
         // Apply wave speed and spread like other modes
         switchIndex =
-          ( animation.progression * waveSpeed +
+          ( animation.progression * waveTurns +
             normalizedDistance * waveSpread ) %
           1;
       } else {
@@ -347,7 +352,7 @@ sketch.draw( async() => {
       }
 
       switchIndex =
-        ( animation.progression * waveSpeed + waveOffset * waveSpread ) % 1;
+        ( animation.progression * waveTurns + waveOffset * waveSpread ) % 1;
     }
 
     const fractionalPart = Math.abs( switchIndex - Math.round( switchIndex ) );
@@ -397,7 +402,11 @@ sketch.draw( async() => {
     );
 
     if ( options.sketch?.animation?.rotate ?? true ) {
-      const rotationMax = p.PI * ( options.sketch?.animation?.rotationCount ?? 2 );
+      // rotationMax is expressed in half-turns (× PI), so rotateY below only
+      // wraps back to its start orientation once it sweeps a WHOLE number of
+      // full 2*PI turns per loop — snapped to whole turns per loop.
+      const rotationTurns = Math.round( ( options.sketch?.animation?.rotationCount ?? 2 ) / 2 );
+      const rotationMax = p.TAU * rotationTurns;
 
       // Calculate radial rotation for radial mode
       let radialAngle = 0;
@@ -483,19 +492,22 @@ sketch.draw( async() => {
         p.mouseY
       );
     } else {
-      const sinMult = waveConfig.sinMultiplier ?? 3;
-      const cosMult = waveConfig.cosMultiplier ?? 1;
+      // Idle-demo animated point (not live input) — sin/cos only return to
+      // their start value when their multiplier is a WHOLE number of turns
+      // per loop, so the raw sliders are snapped to whole turns per loop.
+      const sinTurns = Math.round( waveConfig.sinMultiplier ?? 3 );
+      const cosTurns = Math.round( waveConfig.cosMultiplier ?? 1 );
 
       sketchState.interactive.position = p.createVector(
         p.map(
-          Math.sin( animation.angle * sinMult ),
+          Math.sin( animation.angle * sinTurns ),
           -1,
           1,
           0,
           p.width
         ),
         p.map(
-          Math.cos( animation.angle * cosMult ),
+          Math.cos( animation.angle * cosTurns ),
           -1,
           1,
           0,

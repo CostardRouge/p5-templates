@@ -4,6 +4,10 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import audio from "@/p5/utils/audio.js";
 import easing from "@/p5/utils/easing.js";
+import animation from "@/p5/utils/animation.js";
+import {
+  resolveAnimation
+} from "@/lib/animationConfig";
 import SHAPE_LIBRARY from "./_shapes.js";
 import {
   buildRelease,
@@ -185,6 +189,9 @@ sketch.draw( ( time ) => {
   );
   const tEasing = easingFn( tensionRelease.tensionEasing ?? "easeOutCubic" );
   const rEasing = easingFn( tensionRelease.releaseEasing ?? "easeInOutCubic" );
+  const {
+    duration: loopDuration
+  } = resolveAnimation( sketch.sketchOptions?.animation );
   const count = Math.max(
     1,
     Math.round( group.count ?? 1 )
@@ -249,8 +256,20 @@ sketch.draw( ( time ) => {
     const rStart = tDur + hold;
 
     // ── Playhead for this tile ───────────────────────────────────────────────
+    // `time` is the sketch's raw, non-wrapping clock, so a tile's own
+    // rest → tension → hold → release cycle only closes the loop when a WHOLE
+    // number of its `period`-long cycles fit the loop's duration. Snap the
+    // cycle count (closest to the tuned pace) and drive the playhead off that
+    // snapped span instead of raw elapsed time.
+    const cycles = period > 0
+      ? Math.max(
+        1,
+        Math.round( loopDuration / period )
+      )
+      : 1;
+    const loopTime = animation.progression * cycles * period;
     const offset = ( index / tiles.length ) * period * staggerSpread;
-    const shifted = time - offset;
+    const shifted = loopTime - offset;
     const cycle = Math.floor( shifted / period );
     const local = positiveMod(
       shifted,

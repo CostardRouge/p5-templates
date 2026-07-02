@@ -27,7 +27,35 @@
  * the scheduled audio and a recording reproduces the live preview exactly.
  */
 
+import sketch from "@/p5/utils/sketch.js";
+import {
+  resolveAnimation
+} from "@/lib/animationConfig";
+
 const TAU = Math.PI * 2;
+
+// ── Loop-exact literal rates ────────────────────────────────────────────────
+// `shaking`, `flashing` and `twisting` layer a continuous oscillation on top
+// of `progress` (which the caller already keeps loop-exact — see
+// motion-foley/index.js), driven by `a.time`: the sketch's raw, non-wrapping
+// clock. Because `progress` gates each oscillation's amplitude to the same
+// value at both loop endpoints, the ONLY thing that can still disagree
+// between the first and last frame is the oscillator's own phase — so each
+// literal Hz-ish rate below is snapped to complete a WHOLE number of turns
+// over the loop's duration, closest to the tuned rate.
+function snapLoopRate( rawRate ) {
+  const {
+    duration
+  } = resolveAnimation( sketch.sketchOptions?.animation );
+
+  if ( !( duration > 0 ) ) {
+    return rawRate;
+  }
+
+  const cycles = Math.round( ( rawRate * duration ) / TAU );
+
+  return ( cycles * TAU ) / duration;
+}
 
 function rng( seed ) {
   const x = Math.sin( seed * 91.731 + 17.31 ) * 43758.5453;
@@ -132,9 +160,9 @@ const SHAPE_LIBRARY = {
     p, a
   ) => {
     const amp = a.size * 0.28 * a.progress;
-    const dx = Math.sin( a.time * 38 + a.seed * 6.28 ) * amp;
-    const dy = Math.cos( a.time * 44 + a.seed * 3.14 ) * amp;
-    const wobble = Math.sin( a.time * 30 ) * 0.12 * a.progress;
+    const dx = Math.sin( a.time * snapLoopRate( 38 ) + a.seed * 6.28 ) * amp;
+    const dy = Math.cos( a.time * snapLoopRate( 44 ) + a.seed * 3.14 ) * amp;
+    const wobble = Math.sin( a.time * snapLoopRate( 30 ) ) * 0.12 * a.progress;
 
     p.push();
     p.translate(
@@ -235,7 +263,7 @@ const SHAPE_LIBRARY = {
     if ( a.phase === "release" ) {
       alpha = a.progress * 255;
     } else {
-      const on = a.progress > 0.08 && Math.sin( a.time * 42 ) > 0;
+      const on = a.progress > 0.08 && Math.sin( a.time * snapLoopRate( 42 ) ) > 0;
 
       alpha = on
         ? 255 * Math.min(
@@ -280,7 +308,7 @@ const SHAPE_LIBRARY = {
   twisting: (
     p, a
   ) => {
-    const rotation = a.progress * TAU * 0.75 + Math.sin( a.time * 8 ) * 0.1 * a.progress;
+    const rotation = a.progress * TAU * 0.75 + Math.sin( a.time * snapLoopRate( 8 ) ) * 0.1 * a.progress;
     const squash = 1 + Math.sin( a.progress * Math.PI ) * 0.18;
 
     p.push();

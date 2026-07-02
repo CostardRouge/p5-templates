@@ -164,13 +164,20 @@ sketch.draw( () => {
   const W = p.width - margin;
   const H = p.height - margin;
 
+  // Loop-exact clock: sin/cos only close when the multiplier on
+  // animation.angle is a WHOLE number of turns per loop (the progression
+  // multipliers below are a static per-pointer phase offset, not a time
+  // rate, so they don't need snapping).
+  const pointersSinAngleTurns = Math.round( options.sketch.interactive.pointersSinAngleMultiplier );
+  const pointersCosAngleTurns = Math.round( options.sketch.interactive.pointersCosAngleMultiplier );
+
   for ( let pointerIndex = 0; pointerIndex < pointersCount; pointerIndex++ ) {
     const handProgression = pointerIndex / pointersCount;
 
     const pointerPosition = p.createVector(
       p.map(
         Math.sin( animation.angle *
-            options.sketch.interactive.pointersSinAngleMultiplier +
+            pointersSinAngleTurns +
             handProgression *
               options.sketch.interactive.pointersSinProgressionMultiplier ),
         -1,
@@ -180,7 +187,7 @@ sketch.draw( () => {
       ),
       p.map(
         Math.cos( animation.angle *
-            options.sketch.interactive.pointersCosAngleMultiplier +
+            pointersCosAngleTurns +
             handProgression *
               options.sketch.interactive.pointersCosProgressionMultiplier ),
         -1,

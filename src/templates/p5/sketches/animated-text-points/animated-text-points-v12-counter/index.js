@@ -133,6 +133,17 @@ sketch.draw( async() => {
   const microRotAmount = cellCfg.microRotAmount ?? 1 / 6;
   const ringRotMultiplier = cellCfg.ringRotMultiplier ?? 2;
 
+  // The per-cell letter switch walks the word circularly, so it only returns
+  // to its start letter after a whole number of word cycles per loop —
+  // snapped to whole cycles per loop.
+  const letterCycles = Math.round( letterSpeed );
+
+  // angleY below walks a 2-value list ([-PI, PI]) off the raw `animation.angle`
+  // (an implicit rate of 1 turn/loop, not a slider), so it only returns to its
+  // start pose after a whole number of 2-value cycles per loop — snapped here
+  // the same way as a slider-driven rate would be.
+  const angleYCycles = Math.round( p.TAU / 2 );
+
   // Each cell can mask a different letter, so precompute one alpha field per
   // distinct letter of the word (each cached + spatial-hash accelerated) and
   // look up the cell's alpha by index. Identical to the previous per-cell
@@ -190,7 +201,7 @@ sketch.draw( async() => {
 
     const spatialTerm = x / columns - y / rows;
     const switchingIndex =
-      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
+      animation.progression * word.length * letterCycles + spatialFactor * spatialTerm;
     const currentLetter = mappers.circularIndex(
       switchingIndex,
       word
@@ -244,7 +255,7 @@ sketch.draw( async() => {
         -p.PI,
         p.PI
       ],
-      currentTime: animation.angle - y / rows,
+      currentTime: animation.progression * angleYCycles * 2 - y / rows,
       duration: 1,
       easingFn: easing.easeInOutElastic
     } );

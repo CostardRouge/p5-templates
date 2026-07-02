@@ -192,7 +192,7 @@ export const formConfiguration: Record<string, any> = {
         component: "easing"
       },
       pulseSpeed: {
-        label: "Stroke pulse speed",
+        label: "Stroke pulse speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,
@@ -223,7 +223,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       animSpeed: {
-        label: "Animation speed",
+        label: "Animation speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,
@@ -329,7 +329,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       hueAnimSpeed: {
-        label: "Hue animation speed",
+        label: "Hue animation speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,

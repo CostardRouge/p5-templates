@@ -54,10 +54,18 @@ sketch.draw( async() => {
   const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
   const letterSpeed = options.sketch?.letters?.speed ?? 1;
   const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
+  // The letter walk only returns to its start letter after a whole number of
+  // word cycles per loop — snapped to whole cycles per loop.
+  const letterCycles = Math.round( letterSpeed );
 
   if ( sceneRot.enabled ?? true ) {
+    // animation.angle sweeps exactly TAU per loop, so the rotation rate must
+    // complete a WHOLE number of turns per loop to land back on its start
+    // pose — snapped to whole turns per loop.
+    const sceneRotTurns = Math.round( sceneRot.speed ?? 1 );
+
     p.rotateY( mappers.fn(
-      p.sin( animation.angle * ( sceneRot.speed ?? 1 ) ),
+      p.sin( animation.angle * sceneRotTurns ),
       -1,
       1,
       -( sceneRot.amount ?? p.PI / 6 ),
@@ -92,13 +100,15 @@ sketch.draw( async() => {
   const circleSize = cellCfg.circleSize ?? 20;
   const sphereSize = cellCfg.sphereSize ?? cellSize - 1;
   const wobbleAmplitude = wobble.amplitude ?? 50;
-  const wobbleCircleSpeed = wobble.circleSpeed ?? 1;
-  const wobbleSphereSpeed = wobble.sphereSpeed ?? 5;
+  // The wobble oscillations and the hue scroll all key off animation.angle
+  // (whole TAU per loop), so their rates must be whole turns/loop too.
+  const wobbleCircleSpeed = Math.round( wobble.circleSpeed ?? 1 );
+  const wobbleSphereSpeed = Math.round( wobble.sphereSpeed ?? 5 );
   const wobbleRowMultiplier = wobble.rowMultiplier ?? 10;
 
   const palette = color.palette ?? "rainbowCrazy";
   const colorFunction = colors?.[ palette ] ?? colors.rainbowCrazy;
-  const hueOffsetSpeed = color.hueOffsetSpeed ?? 1;
+  const hueOffsetSpeed = Math.round( color.hueOffsetSpeed ?? 1 );
 
   // Each cell can mask a different letter, so precompute one alpha field per
   // distinct letter of the word (each cached + spatial-hash accelerated) and
@@ -157,8 +167,11 @@ sketch.draw( async() => {
     const ySign = p.cos( animation.angle );
     const chance = p.noise( xSign * ( x / columns ) + ySign * ( y / rows ) + animation.angle );
 
+    // Note: `chance` is noise-driven (see p.noise() above) and not itself
+    // loop-exact when spatialFactor > 0 — only the letterCycles term here is
+    // fixable by snapping.
     const currentLetter = mappers.circularIndex(
-      animation.progression * word.length * letterSpeed + spatialFactor * chance,
+      animation.progression * word.length * letterCycles + spatialFactor * chance,
       word
     );
 

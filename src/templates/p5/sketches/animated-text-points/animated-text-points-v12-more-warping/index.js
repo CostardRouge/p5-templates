@@ -85,7 +85,15 @@ sketch.draw( async() => {
   const warpColDivisorA = warp.colDivisorA ?? 20;
   const warpRowDivisorB = warp.rowDivisorB ?? 20;
   const warpColDivisorB = warp.colDivisorB ?? 15;
-  const warpSpeed = warp.speed ?? 1;
+  // animation.angle sweeps exactly TAU per loop, so the warp rate must
+  // complete a WHOLE number of turns per loop to land back on its start pose
+  // — snapped to whole turns per loop.
+  const warpSpeed = Math.round( warp.speed ?? 1 );
+
+  // The per-cell letter switch walks the word circularly, so it only returns
+  // to its start letter after a whole number of word cycles per loop —
+  // snapped to whole cycles per loop.
+  const letterCycles = Math.round( letterSpeed );
 
   const useNormalMaterial = color.useNormalMaterial ?? true;
   const palette = color.palette ?? "rainbow";
@@ -151,7 +159,7 @@ sketch.draw( async() => {
     const ySign = p.cos( animation.angle );
     const spatialTerm = xSign * ( x / columns ) + ySign * ( y / rows );
     const switchingIndex =
-      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
+      animation.progression * word.length * letterCycles + spatialFactor * spatialTerm;
     const currentLetter = mappers.circularIndex(
       switchingIndex,
       word

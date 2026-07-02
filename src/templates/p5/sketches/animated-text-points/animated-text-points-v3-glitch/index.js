@@ -49,8 +49,13 @@ sketch.draw( async() => {
   }
 
   if ( sceneRot.enabled ?? false ) {
+    // animation.angle sweeps exactly TAU per loop, so the rotation rate must
+    // complete a WHOLE number of turns per loop to land back on its start
+    // pose — snapped to whole turns per loop.
+    const sceneRotTurns = Math.round( sceneRot.speed ?? 1 );
+
     p.rotateY( mappers.fn(
-      p.sin( animation.angle * ( sceneRot.speed ?? 1 ) ),
+      p.sin( animation.angle * sceneRotTurns ),
       -1,
       1,
       -( sceneRot.amount ?? p.PI / 12 ),
@@ -59,7 +64,10 @@ sketch.draw( async() => {
     ) );
   }
 
-  const phase = animation.progression * word.length * letterSpeed;
+  // The letter walk only returns to its start letter after a whole number of
+  // word cycles per loop — snapped to whole cycles per loop.
+  const letterCycles = Math.round( letterSpeed );
+  const phase = animation.progression * word.length * letterCycles;
   const currentLetter = mappers.circularIndex(
     phase,
     word
@@ -113,7 +121,8 @@ sketch.draw( async() => {
 
   const palette = color.palette ?? "rainbow";
   const colorFunction = colors?.[ palette ] ?? colors.rainbow;
-  const hueOffsetSpeed = color.hueOffsetSpeed ?? 1;
+  // Whole turns per loop so the hue scroll lands back on its start hue.
+  const hueOffsetSpeed = Math.round( color.hueOffsetSpeed ?? 1 );
 
   const field = await gridMask.field( {
     gridOptions,
