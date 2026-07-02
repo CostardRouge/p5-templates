@@ -6,40 +6,31 @@ import easing from "@/p5/utils/easing.js";
 import grid from "@/p5/utils/grid.js";
 import graphics from "@/p5/utils/graphics.js";
 import colors from "@/p5/utils/colors.js";
-import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
-import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
-
-import mediapipe, {
-  init as mediapipeInit, setEnabled as setMediapipeEnabled
-} from "@/p5/utils/mediapipe/mediapipe.js"; // Key landmarks for interaction (fingertips)
-
-// Key landmarks for interaction (fingertips)
-const interactionIndices = [
-  4,
-  8,
-  12,
-  16,
-  20
-];
+import {
+  initInteraction,
+  getPointers
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
 
 const sketchState = {
-  interactive: {
-    image: null
-  },
   shape: {
-    graphics: null
-  },
-  webcam: {
     graphics: null
   }
 };
 
-sketch.setup( async( {
-  canvas
-} ) => {
+const getBackgroundColor = () =>
+  options.sketch?.backgroundColor ?? [
+    246,
+    235,
+    225
+  ];
+
+sketch.setup( async() => {
   const p = getP5();
 
   p.background( ...getBackgroundColor() );
@@ -50,40 +41,35 @@ sketch.setup( async( {
     "webgl"
   );
 
-  addScreenPositionFunction( sketchState.shape.graphics );
-
-  sketchState.webcam.graphics = p.createGraphics(
-    p.width,
-    p.height
-  );
-
-  await mediapipeInit( {
-    worker: false,
-    tasks: [
-      "hands"
-    ]
-  } );
+  // One call boots every enabled interaction source (mouse, vision, orbit…)
+  // declared in the shared `interaction` options.
+  await initInteraction( options.sketch?.interaction ?? {} );
 } );
 
-const getBackgroundColor = () =>
-  options.sketch?.backgroundColor ?? [
-    246,
-    235,
-    225
-  ];
+// Interaction pointers arrive in top-left canvas space; the grid lives in
+// centered WEBGL model space, so shift each pointer by half the canvas. This
+// replaces the old per-source screenPosition round-trip (≈ identity at the base
+// camera) with a deterministic, camera-independent conversion.
+const toModelSpace = ( pointers ) => {
+  const p = getP5();
+
+  return pointers.map( ( v ) =>
+    p.createVector(
+      v.x - p.width / 2,
+      v.y - p.height / 2
+    ) );
+};
 
 sketch.draw( () => {
   const p = getP5();
+  const g = sketchState.shape.graphics;
+  const interaction = options.sketch?.interaction ?? {};
+  const render = options.sketch?.animation ?? {};
 
   p.clear();
   p.background( ...getBackgroundColor() );
 
   renderTitle( options.sketch?.title );
-
-  // Dynamically enable/disable mediapipe based on useHands option
-  const useHands = options.sketch.animation.useHands ?? true;
-
-  setMediapipeEnabled( useHands );
 
   const columns = options.sketch?.grid?.columns ?? 65;
   const rows = ( columns * p.height ) / p.width;
@@ -118,83 +104,31 @@ sketch.draw( () => {
   const fillAlphaEnd = options.sketch?.color?.fillAlphaEnd ?? 0;
   const strokeAlpha = options.sketch?.color?.strokeAlpha ?? 200;
 
-  const maxInfluenceDistance =
-    options.sketch.animation.maxInfluenceDistance ?? 150;
+  const maxInfluenceDistance = render.maxInfluenceDistance ?? 150;
 
-  const targetVectors = [];
+  // Every enabled source — mouse, hands, orbit, … — merged into one flat list
+  // and mapped into the grid's centered coordinate space.
+  const targetVectors = toModelSpace( getPointers( interaction ) );
 
-  if ( options.sketch.animation.useMouse ?? true ) {
-    sketchState.shape.graphics.screenPosition( p.createVector(
-      p.mouseX - p.width / 2,
-      p.mouseY - p.height / 2
-    ) );
-  }
-
-  if ( options.sketch.animation.useHands ?? true ) {
-    mediapipe.tasks?.hands?.result?.landmarks?.forEach( ( hand ) => {
-      const interactionPoints = interactionIndices
-        .map( ( i ) => hand[ i ] )
-        .filter( Boolean );
-
-      interactionPoints.forEach( ( point ) => {
-        if ( point ) {
-          const x = common.inverseX( point.x ) * p.width;
-          const y = point.y * p.height;
-
-          targetVectors.push( sketchState.shape.graphics.screenPosition( p.createVector(
-            x - p.width / 2,
-            y - p.height / 2
-          ) ) );
-        }
-      } );
-    } );
-  }
-
-  const margin = 150;
-  const W = p.width / 2 - margin;
-  const H = p.height / 2 - margin;
-  const targetsCount = options.sketch.animation.spheresCount ?? 3;
-
-  for ( let i = 0; i < targetsCount; i++ ) {
-    const targetProgression = i / targetsCount;
-
-    targetVectors.push( ( p.createVector(
-      p.map(
-        Math.sin( animation.angle + i * 2 ),
-        -1,
-        1,
-        -W,
-        W
-      ),
-      p.map(
-        Math.cos( animation.angle + i * targetProgression ),
-        -1,
-        1,
-        -H,
-        H
-      )
-    ) ) );
-  }
-
-  if ( options.sketch.animation.showSpheres ?? true ) {
+  if ( render.showSpheres ?? true ) {
     targetVectors.forEach( ( vector ) => {
-      sketchState.shape.graphics.push();
-      sketchState.shape.graphics.translate(
+      g.push();
+      g.translate(
         vector.x,
         vector.y,
         50
       );
-      sketchState.shape.graphics.normalMaterial( vector );
-      sketchState.shape.graphics.sphere( options.sketch.animation.sphereSize ?? 30 );
-      sketchState.shape.graphics.pop();
+      g.normalMaterial( vector );
+      g.sphere( render.sphereSize ?? 30 );
+      g.pop();
     } );
   }
 
   grid.draw(
     gridOptions,
     ( position ) => {
-      sketchState.shape.graphics.push();
-      sketchState.shape.graphics.translate( position );
+      g.push();
+      g.translate( position );
 
       let minDistance = Infinity;
 
@@ -230,7 +164,7 @@ sketch.draw( () => {
           cellSize
         ],
         currentTime: switchIndex,
-        easingFn: easing?.[ options.sketch.animation.easing ] ?? easing.easeOutBack
+        easingFn: easing?.[ render.easing ] ?? easing.easeOutBack
       } );
 
       const fillAlpha = animation.ease( {
@@ -241,7 +175,7 @@ sketch.draw( () => {
         currentTime: switchIndex
       } );
 
-      const hue = sketchState.shape.graphics.noise(
+      const hue = g.noise(
         position.x / columns / 5,
         position.y / rows / 5
       // switchIndex
@@ -252,7 +186,7 @@ sketch.draw( () => {
       const tint = colors.rainbow( {
         hueOffset: switchIndex,
         hueIndex:
-        sketchState.shape.graphics.map(
+        g.map(
           hue,
           0,
           1,
@@ -270,56 +204,39 @@ sketch.draw( () => {
         ]
       } = tint;
 
-      sketchState.shape.graphics.fill(
+      g.fill(
         red,
         green,
         blue,
         fillAlpha
       );
-      sketchState.shape.graphics.stroke(
+      g.stroke(
         red,
         green,
         blue,
         strokeAlpha
       );
 
-      sketchState.shape.graphics.box(
+      g.box(
         w,
         h,
         -depth
       );
 
-      sketchState.shape.graphics.pop();
+      g.pop();
     }
   );
 
   // SHAPE
   p.image(
-    sketchState.shape.graphics,
+    g,
     0,
     0
   );
-  sketchState.shape.graphics.clear();
+  g.clear();
 
-  // WEBCAM - only render if enabled and capture element exists
-  if ( mediapipe.enabled && mediapipe.capture.element ) {
-    sketchState.webcam.graphics.clear();
-    sketchState.webcam.graphics.image(
-      mediapipe.capture.element,
-      0,
-      0,
-      mediapipe.capture.size.width * 2,
-      mediapipe.capture.size.height * 2
-    );
-    // sketchState.webcam.graphics.filter( POSTERIZE );
-    // sketchState.webcam.graphics.filter( INVERT );
-    // sketchState.webcam.graphics.filter( GRAY );
-    p.image(
-      sketchState.webcam.graphics,
-      0,
-      0,
-      p.width,
-      p.height
-    );
-  }
+  // Shared debug/demo overlay (crosshairs, markers, camera preview, legend),
+  // gated by `interaction.visualization` — off by default so the 3D scene
+  // stays clean, but available from the form.
+  drawInteractionOverlay( interaction );
 } );
