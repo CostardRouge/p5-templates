@@ -70,10 +70,20 @@ sketch.draw( async() => {
   const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
   const letterSpeed = options.sketch?.letters?.speed ?? 1;
   const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
+  // The letter walk only returns to its start letter after a whole number of
+  // word cycles per loop — snapped to whole cycles per loop.
+  const letterCycles = Math.round( letterSpeed );
 
   if ( sceneRot.enabled ?? true ) {
+    // animation.angle sweeps exactly TAU per loop, so every rotation rate
+    // below must complete a WHOLE number of turns per loop to land back on
+    // its start pose — snapped to whole turns per loop.
+    const sceneRotTurns = Math.round( sceneRot.speed ?? 1.5 );
+    const microSpeedXTurns = Math.round( sceneRot.microSpeedX ?? 1 );
+    const microSpeedYTurns = Math.round( sceneRot.microSpeedY ?? 0.5 );
+
     p.rotateY( mappers.fn(
-      p.sin( animation.angle * ( sceneRot.speed ?? 1.5 ) ),
+      p.sin( animation.angle * sceneRotTurns ),
       -1,
       1,
       -( sceneRot.amount ?? p.PI / 6 ),
@@ -82,14 +92,14 @@ sketch.draw( async() => {
     ) );
 
     p.rotateX( p.map(
-      p.sin( animation.angle * ( sceneRot.microSpeedX ?? 1 ) ),
+      p.sin( animation.angle * microSpeedXTurns ),
       -1,
       1,
       -p.PI,
       p.PI
     ) / ( sceneRot.microDivisorX ?? 12 ) );
     p.rotateY( p.map(
-      p.cos( animation.angle * ( sceneRot.microSpeedY ?? 0.5 ) ),
+      p.cos( animation.angle * microSpeedYTurns ),
       -1,
       1,
       -p.PI,
@@ -126,7 +136,8 @@ sketch.draw( async() => {
   const useNormalMaterial = color.useNormalMaterial ?? true;
   const palette = color.palette ?? "rainbow";
   const colorFunction = colors?.[ palette ] ?? colors.rainbow;
-  const hueOffsetSpeed = color.hueOffsetSpeed ?? 5;
+  // Whole turns per loop so the hue scroll lands back on its start hue.
+  const hueOffsetSpeed = Math.round( color.hueOffsetSpeed ?? 5 );
 
   // Each cell can mask a different letter, so precompute one alpha field per
   // distinct letter of the word (each cached + spatial-hash accelerated) and
@@ -185,7 +196,7 @@ sketch.draw( async() => {
     const yy = p.cos( animation.angle );
     const spatialTerm = xx * ( x / columns ) + yy * ( y / rows );
     const switchingIndex =
-      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
+      animation.progression * word.length * letterCycles + spatialFactor * spatialTerm;
     const currentLetter = mappers.circularIndex(
       switchingIndex,
       word

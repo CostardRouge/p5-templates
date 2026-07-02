@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
@@ -36,9 +37,14 @@ class SemaphoreLines extends SemaphoreBase {
 
     const divisorMin = motion.divisorMin ?? 1;
     const divisorMax = motion.divisorMax ?? 9;
-    const divisorTimeScale = motion.divisorTimeScale ?? 0.25;
-    const orbitTimeScale = motion.orbitTimeScale ?? 1;
-    const lineTwistScale = motion.lineTwistScale ?? 1;
+
+    // Loop-exact clock: `time` is animation.angle, which sweeps exactly TAU
+    // per loop, so every oscillator driven by it only returns to its start
+    // value when its rate is a WHOLE number of cycles per loop — snap each
+    // raw slider rate to the nearest whole cycle.
+    const divisorCycles = Math.round( motion.divisorTimeScale ?? 0.25 );
+    const orbitCycles = Math.round( motion.orbitTimeScale ?? 1 );
+    const lineTwistCycles = Math.round( motion.lineTwistScale ?? 1 );
 
     const hueScale = colorOpts.hueScale ?? 360;
     const greenScale = colorOpts.greenScale ?? 255;
@@ -68,7 +74,7 @@ class SemaphoreLines extends SemaphoreBase {
         opacityEnd
       );
       const d = p.map(
-        p.sin( time * divisorTimeScale ),
+        p.sin( time * divisorCycles ),
         -1,
         1,
         divisorMin,
@@ -80,7 +86,7 @@ class SemaphoreLines extends SemaphoreBase {
       for ( let angle = 0; angle < p.TAU; angle += angleStep ) {
         p.push();
         p.translate( converters.polar.vector(
-          angle + time * orbitTimeScale + shadowOffset,
+          angle + time * orbitCycles + shadowOffset,
           size
         ) );
 
@@ -122,7 +128,7 @@ class SemaphoreLines extends SemaphoreBase {
           ) / opacityFactor
         );
 
-        const twist = time * lineTwistScale;
+        const twist = time * lineTwistCycles;
 
         p.vertex(
           vector.x * p.sin( twist ),
@@ -150,7 +156,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -166,10 +172,15 @@ sketch.draw( ( time ) => {
   p.clear();
   p.background( ...bg );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` this draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam).
+  const t = animation.angle;
+
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

@@ -147,14 +147,14 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       divisorTimeScale: {
-        label: "Divisor time scale",
+        label: "Divisor time scale (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 5,
         step: 0.01
       },
       orbitTimeScale: {
-        label: "Orbit time scale",
+        label: "Orbit time scale (snaps to whole turns/loop)",
         component: "slider",
         min: -5,
         max: 5,

@@ -96,7 +96,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Letters",
     fields: {
       speed: {
-        label: "Word cycles / loop",
+        label: "Word cycles / loop (snaps to whole cycles/loop)",
         component: "slider",
         min: 0.1,
         max: 10,
@@ -230,21 +230,21 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       speed: {
-        label: "Y speed",
+        label: "Y speed (snaps to whole turns/loop)",
         component: "slider",
         min: -5,
         max: 5,
         step: 0.1
       },
       microSpeedX: {
-        label: "Micro X speed",
+        label: "Micro X speed (snaps to whole turns/loop)",
         component: "slider",
         min: -5,
         max: 5,
         step: 0.1
       },
       microSpeedY: {
-        label: "Micro Y speed",
+        label: "Micro Y speed (snaps to whole turns/loop)",
         component: "slider",
         min: -5,
         max: 5,
@@ -276,7 +276,7 @@ export const formConfiguration: Record<string, any> = {
         options: paletteOptions
       },
       hueOffsetSpeed: {
-        label: "Hue offset speed",
+        label: "Hue offset speed (snaps to whole turns/loop)",
         component: "slider",
         min: -10,
         max: 10,

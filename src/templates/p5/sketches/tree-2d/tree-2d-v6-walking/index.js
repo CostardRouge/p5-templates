@@ -9,6 +9,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const PALETTES = {
@@ -114,7 +115,7 @@ function drawWalkingGrid(
 }
 
 sketch.draw( (
-  time, center, favoriteColor
+  _time, center, favoriteColor
 ) => {
   const p = getP5();
 
@@ -129,6 +130,12 @@ sketch.draw( (
   const gridShow = options.sketch.grid?.show ?? true;
   const gridScrollSpeed = options.sketch.grid?.scrollSpeed ?? 1.5;
   const gridPalette = resolvePalette( options.sketch.grid?.palette ?? "purple" );
+
+  // NOT FIXABLE: drawWalkingGrid accumulates each line's x position frame by
+  // frame (`lines[index] -= scrollSpeed`, wrapping via `cache.store`) rather
+  // than deriving it from animation.progression — an unbounded per-frame
+  // accumulator, same category as trails/feedback buffers. Snapping a rate
+  // can't close a loop for state that isn't a pure function of the clock.
 
   if ( gridShow ) {
     drawWalkingGrid(
@@ -181,6 +188,16 @@ sketch.draw( (
   const hueIndexEasing = easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.easeInOutSine;
   const hueOffsetTimeMix = options.sketch.colors?.hueOffsetTimeMix ?? 0;
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop. The wave-offset oscillator below
+  // has an implicit rate of 1 (no user-facing speed control), so it already
+  // completes exactly one whole turn per loop once `t` is used.
+  const t = animation.angle;
+  const opacityTurns = Math.round( opacitySpeed );
+  const hueTurns = Math.round( hueOffsetTimeMix );
+
   for ( let i = 0; i < steps; i++ ) {
     const stepsProgression = i / steps;
     const circularStepsProgression = mappers.circular(
@@ -222,7 +239,7 @@ sketch.draw( (
 
       position.add(
         mappers.fn(
-          p.sin( wavesOffset - time ),
+          p.sin( wavesOffset - t ),
           -1,
           1,
           -ampX,
@@ -230,7 +247,7 @@ sketch.draw( (
           waveXEasing
         ) * wavesStrength,
         mappers.fn(
-          p.cos( wavesOffset - time ),
+          p.cos( wavesOffset - t ),
           -1,
           1,
           -ampY,
@@ -287,7 +304,7 @@ sketch.draw( (
         if ( pingPongOpacity ) {
           opacityFactor = p.map(
             p.map(
-              p.sin( stepsProgression * opacityGroupCount - time * opacitySpeed ),
+              p.sin( stepsProgression * opacityGroupCount - t * opacityTurns ),
               -1,
               1,
               -1,
@@ -296,7 +313,7 @@ sketch.draw( (
             -1,
             1,
             p.map(
-              p.cos( stepsProgression * opacityGroupCount + time * opacitySpeed ),
+              p.cos( stepsProgression * opacityGroupCount + t * opacityTurns ),
               -1,
               1,
               1,
@@ -307,7 +324,7 @@ sketch.draw( (
         }
 
         p.stroke( palette( {
-          hueOffset: time * hueOffsetTimeMix,
+          hueOffset: t * hueTurns,
           hueIndex: mappers.fn(
             p.sin( stepsProgression ),
             -1,

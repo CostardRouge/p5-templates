@@ -278,7 +278,11 @@ sketch.draw( () => {
     leapCfg.arcHeight ?? 2.6
   );
   const height = arcHeight * Math.sin( Math.PI * local );
-  const spins = leapCfg.spins ?? 1;
+  // The tumble must land the glyph back in its flat, untumbled orientation at
+  // air = 1 (so it reads as "lands flat" and doesn't pop at the next hop's
+  // dwell, which restarts at tumble = 0) — only true for a WHOLE number of
+  // turns, so the raw slider is snapped to whole turns per leap.
+  const spins = Math.round( leapCfg.spins ?? 1 );
   const tumbleEase = easing[ leapCfg.tumbleEasing ] ?? easing.easeInOutCubic;
   // Rotation and morph complete by `settle` of the step — still slightly airborne —
   // so the last bit of the descent is flat and the letter lands cleanly in the

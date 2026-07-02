@@ -81,7 +81,14 @@ sketch.draw( async() => {
   const warpAmount = warp.amount ?? 1 / 6;
   const warpRowDivisor = warp.rowDivisor ?? 10;
   const warpColDivisor = warp.colDivisor ?? 10;
-  const warpSpeed = warp.speed ?? 1;
+  // animation.angle sweeps exactly TAU per loop, so the warp rate must
+  // complete a WHOLE number of turns per loop to land back on its start pose
+  // — snapped to whole turns per loop.
+  const warpSpeed = Math.round( warp.speed ?? 1 );
+
+  // The letter walk only returns to its start letter after a whole number of
+  // word cycles per loop — snapped to whole cycles per loop.
+  const letterCycles = Math.round( letterSpeed );
 
   const palette = color.palette ?? "rainbow";
   const colorFunction = colors?.[ palette ] ?? colors.rainbow;
@@ -148,7 +155,7 @@ sketch.draw( async() => {
     const ySign = p.cos( animation.angle );
     const spatialTerm = xSign * ( x / columns ) + ySign * ( y / rows );
     const switchingIndex =
-      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
+      animation.progression * word.length * letterCycles + spatialFactor * spatialTerm;
     const currentLetter = mappers.circularIndex(
       switchingIndex,
       word

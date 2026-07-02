@@ -73,8 +73,13 @@ sketch.draw( async() => {
   const maskDistance = cellSize * ( options.sketch?.mask?.distance ?? 1 );
 
   if ( sceneRot.enabled ?? true ) {
+    // animation.angle sweeps exactly TAU per loop, so the rotation rate must
+    // complete a WHOLE number of turns per loop to land back on its start
+    // pose — snapped to whole turns per loop.
+    const sceneRotTurns = Math.round( sceneRot.speed ?? 1.5 );
+
     p.rotateY( mappers.fn(
-      p.sin( animation.angle * ( sceneRot.speed ?? 1.5 ) ),
+      p.sin( animation.angle * sceneRotTurns ),
       -1,
       1,
       -( sceneRot.amount ?? p.PI / 6 ),
@@ -83,7 +88,10 @@ sketch.draw( async() => {
     ) );
   }
 
-  const phase = animation.progression * word.length * letterSpeed;
+  // The letter walk only returns to its start letter after a whole number of
+  // word cycles per loop — snapped to whole cycles per loop.
+  const letterCycles = Math.round( letterSpeed );
+  const phase = animation.progression * word.length * letterCycles;
   const currentLetter = mappers.circularIndex(
     phase,
     word
@@ -137,12 +145,14 @@ sketch.draw( async() => {
   const noiseThresholdH = noiseCfg.thresholdH ?? 0.25;
 
   const wobbleAmplitude = wobble.amplitude ?? 100;
-  const wobbleSpeed = wobble.speed ?? 5;
+  // The wobble oscillation and the hue scroll both key off animation.angle
+  // (whole TAU per loop), so their rates must be whole turns/loop too.
+  const wobbleSpeed = Math.round( wobble.speed ?? 5 );
   const wobbleRowMultiplier = wobble.rowMultiplier ?? 4;
 
   const palette = color.palette ?? "rainbow";
   const colorFunction = colors?.[ palette ] ?? colors.rainbow;
-  const hueOffsetSpeed = color.hueOffsetSpeed ?? 1;
+  const hueOffsetSpeed = Math.round( color.hueOffsetSpeed ?? 1 );
 
   const field = await gridMask.field( {
     gridOptions,

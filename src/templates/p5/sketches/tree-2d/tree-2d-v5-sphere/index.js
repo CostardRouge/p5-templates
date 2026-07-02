@@ -242,7 +242,7 @@ sketch.draw( (
         branchCount,
         -p.PI,
         p.PI
-      ) - time / 2 + wavesCount + i / branchPhaseDivider;
+      ) - t * halfCycles + wavesCount + i / branchPhaseDivider;
 
       const ampX = p.width / waveAmpXDivider;
       const ampY = waveAmpY;
@@ -288,7 +288,7 @@ sketch.draw( (
           position.y
         );
 
-        p.rotate( time * rotationSpeed
+        p.rotate( t * rotationTurns
           + b
           + ( i / rotationStepDivider ) * rotationCount );
 
@@ -319,7 +319,7 @@ sketch.draw( (
         if ( pingPongOpacity ) {
           opacityFactor = p.map(
             p.map(
-              p.sin( stepsProgression * opacityGroupCount - time * opacitySpeed ),
+              p.sin( stepsProgression * opacityGroupCount - t * opacityTurns ),
               -1,
               1,
               -1,
@@ -328,7 +328,7 @@ sketch.draw( (
             -1,
             1,
             p.map(
-              p.cos( stepsProgression * opacityGroupCount + time * opacitySpeed ),
+              p.cos( stepsProgression * opacityGroupCount + t * opacityTurns ),
               -1,
               1,
               1,
@@ -339,7 +339,11 @@ sketch.draw( (
         }
 
         p.stroke( palette( {
-          hueOffset: time * hueOffsetTimeMix,
+          hueOffset: t * hueTurns,
+          // p.noise() is not periodic in its input, so this hue index can't
+          // be made loop-exact by snapping — left on the raw, non-wrapping
+          // `time` clock (needs a circular-noise redesign, out of scope
+          // here).
           hueIndex: mappers.fn(
             p.noise(
               branchProgression,

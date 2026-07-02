@@ -264,7 +264,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       spins: {
-        label: "Tumble turns per leap",
+        label: "Tumble turns per leap (snaps to whole turns/leap)",
         component: "slider",
         min: 0,
         max: 4,

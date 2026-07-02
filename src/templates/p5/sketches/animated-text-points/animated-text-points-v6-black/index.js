@@ -63,8 +63,15 @@ sketch.draw( async() => {
   const spatialFactor = options.sketch?.letters?.spatialFactor ?? 0;
 
   if ( sceneRot.enabled ?? true ) {
+    // animation.angle sweeps exactly TAU per loop, so every rotation rate
+    // below must complete a WHOLE number of turns per loop to land back on
+    // its start pose — snapped to whole turns per loop.
+    const sceneRotTurns = Math.round( sceneRot.speed ?? 1 );
+    const microSpeedXTurns = Math.round( sceneRot.microSpeedX ?? 1 );
+    const microSpeedYTurns = Math.round( sceneRot.microSpeedY ?? 2 );
+
     p.rotateY( mappers.fn(
-      p.sin( animation.angle * ( sceneRot.speed ?? 1 ) ),
+      p.sin( animation.angle * sceneRotTurns ),
       -1,
       1,
       -( sceneRot.amount ?? p.PI / 6 ),
@@ -73,14 +80,14 @@ sketch.draw( async() => {
     ) );
 
     p.rotateX( p.map(
-      p.sin( animation.angle * ( sceneRot.microSpeedX ?? 1 ) ),
+      p.sin( animation.angle * microSpeedXTurns ),
       -1,
       1,
       -p.PI,
       p.PI
     ) / ( sceneRot.microDivisorX ?? 12 ) );
     p.rotateY( p.map(
-      p.cos( animation.angle * ( sceneRot.microSpeedY ?? 2 ) ),
+      p.cos( animation.angle * microSpeedYTurns ),
       -1,
       1,
       -p.PI,
@@ -117,7 +124,8 @@ sketch.draw( async() => {
 
   const palette = color.palette ?? "rainbow";
   const colorFunction = colors?.[ palette ] ?? colors.rainbow;
-  const hueOffsetSpeed = color.hueOffsetSpeed ?? 2;
+  // Whole turns per loop so the hue scroll lands back on its start hue.
+  const hueOffsetSpeed = Math.round( color.hueOffsetSpeed ?? 2 );
   const hueIndexMultiplier = color.hueIndexMultiplier ?? 16;
 
   // Each cell can mask a different (letter, font) pair, so precompute one alpha
@@ -178,6 +186,24 @@ sketch.draw( async() => {
     0
   ) ).cells;
 
+  // switchingIndex below walks BOTH the word (length word.length) and the
+  // font list (length fonts.length) circularly off the same clock, so it
+  // only returns to its start letter AND start font after a whole number of
+  // cycles of their least common multiple — snapped to whole cycles of
+  // lcm( word.length, fonts.length ) per loop.
+  const gcd = (
+    a, b
+  ) => ( b ? gcd(
+    b,
+    a % b
+  ) : a );
+  const lcmLength = ( word.length * fonts.length ) / gcd(
+    word.length,
+    fonts.length
+  );
+  const switchingCycles = Math.round( ( word.length * letterSpeed ) / lcmLength );
+  const switchingSpan = switchingCycles * lcmLength;
+
   cells.forEach( (
     cell, cellIndex
   ) => {
@@ -190,7 +216,7 @@ sketch.draw( async() => {
     const yy = p.cos( animation.angle );
     const spatialTerm = xx * ( x / columns ) + yy * ( y / rows );
     const switchingIndex =
-      animation.progression * word.length * letterSpeed + spatialFactor * spatialTerm;
+      animation.progression * switchingSpan + spatialFactor * spatialTerm;
     const currentLetter = mappers.circularIndex(
       switchingIndex,
       word

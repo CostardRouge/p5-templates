@@ -306,7 +306,11 @@ sketch.draw( () => {
     0,
     leapCfg.arcHeight ?? 2.6
   );
-  const spins = leapCfg.spins ?? 1;
+  // The tumble must land the glyph back in its flat, untumbled orientation at
+  // air = 1 (so the trail's cross-sections — and the hero — read as landing
+  // flat instead of popping at the next hop's dwell) — only true for a WHOLE
+  // number of turns, so the raw slider is snapped to whole turns per leap.
+  const spins = Math.round( leapCfg.spins ?? 1 );
   const tumbleEase = easing[ leapCfg.tumbleEasing ] ?? easing.easeInOutCubic;
   const settle = clamp(
     leapCfg.settle ?? 0.85,

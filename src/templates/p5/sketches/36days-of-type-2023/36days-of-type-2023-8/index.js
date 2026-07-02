@@ -188,7 +188,12 @@ sketch.draw( async() => {
   );
 
   if ( options.sketch?.animation?.rotate ?? true ) {
-    const rotationMax = p.PI * ( options.sketch?.animation?.rotationCount ?? 2 );
+    // rotationMax is expressed in half-turns (× PI), so the final v[3] pose
+    // (rX = rotationMax) only reads as identical to the start pose (rX = 0)
+    // once it sweeps a WHOLE number of full 2*PI turns per loop — snapped to
+    // whole turns per loop.
+    const rotationTurns = Math.round( ( options.sketch?.animation?.rotationCount ?? 2 ) / 2 );
+    const rotationMax = p.TAU * rotationTurns;
 
     const {
       x: rX,
@@ -370,11 +375,17 @@ sketch.draw( async() => {
         p.mouseY - p.height / 2
       );
     } else {
+      // Idle-demo animated point (not live input) — sin/cos only return to
+      // their start value when their multiplier is a WHOLE number of turns
+      // per loop, so the raw sliders are snapped to whole turns per loop.
+      const sinTurns = Math.round( options.sketch.interactive.sinMultiplier );
+      const cosTurns = Math.round( options.sketch.interactive.cosMultiplier );
+
       interactive.position = p.createVector(
-        p.sin( animation.angle * options.sketch.interactive.sinMultiplier ) *
+        p.sin( animation.angle * sinTurns ) *
           ( -p.width / 2 ) *
           0.8,
-        p.cos( animation.angle * options.sketch.interactive.cosMultiplier ) *
+        p.cos( animation.angle * cosTurns ) *
           ( -p.height / 2 ) *
           0.8
       );
