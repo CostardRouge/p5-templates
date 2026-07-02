@@ -96,9 +96,29 @@ class Spiral {
   draw(
     index, target, lerpStep = 1 / 800
   ) {
+    const p = getP5();
+
     let {
       position, size, start, end
     } = this;
+
+    // Loop-exact clock: animation.angle (`t`) sweeps exactly TAU per loop.
+    // animation.sinAngle == (angle - PI) / 2 and animation.cosAngle ==
+    // (angle + TAU) / 2, so `k * sinAngle` / `k * cosAngle` only return to
+    // their start value when k / 2 is a WHOLE number of turns of `angle` —
+    // snap each occurrence's k / 2 to the nearest whole turn. A bare
+    // `animation.progression` term (rate 1, i.e. one TAU-th of a turn per
+    // loop) is far below one whole turn, so it snaps to 0 turns.
+    const t = animation.angle;
+    const waveTurns = Math.round( 5 / 2 );
+    const opacityTurns = Math.round( 3 / 2 );
+    const xOffsetSinTurns = Math.round( 2 / 2 );
+    const xOffsetProgTurns = Math.round( 2 / p.TAU );
+    const yOffsetCosTurns = Math.round( 3 / 2 );
+    const yOffsetProgTurns = Math.round( 1 / p.TAU );
+    const sizeProgTurns = Math.round( 1 / p.TAU );
+    const colorSinTurns = Math.round( 1 / 2 );
+    const colorCosTurns = Math.round( 2 / 2 );
 
     target.push();
     target.translate(
@@ -110,7 +130,7 @@ class Spiral {
       const waveAmplitude =
         size *
         mappers.fn(
-          Math.sin( lerpIndex * 2 + animation.sinAngle * 5 ),
+          Math.sin( lerpIndex * 2 + waveTurns * ( t - p.PI ) ),
           -1,
           1,
           0.8,
@@ -123,7 +143,7 @@ class Spiral {
         0,
         1,
         target.map(
-          Math.sin( lerpIndex * f + animation.sinAngle * 3 ),
+          Math.sin( lerpIndex * f + opacityTurns * ( t - p.PI ) ),
           -1,
           1,
           1,
@@ -139,9 +159,8 @@ class Spiral {
       );
 
       const xOffset = mappers.fn(
-        Math.sin( animation.sinAngle * 2 +
-            animation.progression +
-            animation.progression +
+        Math.sin( xOffsetSinTurns * ( t - p.PI ) +
+            xOffsetProgTurns * t +
             8 * lerpIndex ),
         -1,
         1,
@@ -150,7 +169,7 @@ class Spiral {
         easing.easeInOutExpo
       );
       const yOffset = mappers.fn(
-        Math.cos( animation.cosAngle * 3 + animation.progression + 8 * lerpIndex ),
+        Math.cos( yOffsetCosTurns * ( t + p.TAU ) + yOffsetProgTurns * t + 8 * lerpIndex ),
         -1,
         1,
         -waveAmplitude,
@@ -159,7 +178,7 @@ class Spiral {
       );
 
       const s = mappers.fn(
-        Math.sin( animation.progression + 8 * lerpIndex * lerpIndex * -5 ),
+        Math.sin( sizeProgTurns * t + 8 * lerpIndex * lerpIndex * -5 ),
         -1,
         1,
         40,
@@ -189,7 +208,7 @@ class Spiral {
           //   opacityFactor
           // })
           target.map(
-            Math.sin( lerpIndex * a + animation.sinAngle ),
+            Math.sin( lerpIndex * a + colorSinTurns * ( t - p.PI ) ),
             -1,
             1,
             0,
@@ -197,7 +216,7 @@ class Spiral {
           ) /
             opacityFactor,
           target.map(
-            Math.cos( lerpIndex * a - animation.cosAngle * 2 ),
+            Math.cos( lerpIndex * a - colorCosTurns * ( t + p.TAU ) ),
             -1,
             1,
             0,
@@ -205,7 +224,7 @@ class Spiral {
           ) /
             opacityFactor,
           target.map(
-            Math.sin( lerpIndex * a + animation.sinAngle ),
+            Math.sin( lerpIndex * a + colorSinTurns * ( t - p.PI ) ),
             -1,
             1,
             255,
@@ -283,15 +302,21 @@ sketch.draw( () => {
   // position.x = p.map(p.sin(animation.sinAngle), -1, 1, w/2+strokeSize/2, p.width-w/2-strokeSize/2)
   // position.y = p.map(p.cos(animation.cosAngle/3), -1, 1, h/2+strokeSize/2, p.height-h/2-strokeSize/2)
 
+  // Loop-exact clock: same sinAngle/cosAngle -> whole-turns substitution as
+  // in Spiral.draw() above.
+  const maskT = animation.angle;
+  const maskXTurns = Math.round( 5 / 2 );
+  const maskYTurns = Math.round( 1 / 2 );
+
   position.x = p.map(
-    p.sin( animation.sinAngle * 5 ),
+    p.sin( maskXTurns * ( maskT - p.PI ) ),
     -1,
     1,
     20,
     p.width - 20
   );
   position.y = p.map(
-    p.cos( animation.cosAngle ),
+    p.cos( maskYTurns * ( maskT + p.TAU ) ),
     -1,
     1,
     20,

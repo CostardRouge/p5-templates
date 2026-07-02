@@ -54,7 +54,7 @@ export const formConfiguration: Record<string, any> = {
         options: PALETTE_OPTIONS
       },
       hueSpeed: {
-        label: "Hue scroll speed",
+        label: "Hue scroll speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 3,

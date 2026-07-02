@@ -435,6 +435,10 @@ export function renderSplineText( o = {} ) {
   const seed = pointsCfg.seed ?? 7;
 
   // 1. Random anchors: a seeded layout drifting on a noise loop.
+  // Loop-exact clock: animatePoints() (splines/_shared.js) samples noise on
+  // cos/sin(angle * speed), which only returns to its start position when
+  // `speed` is a WHOLE number of turns per loop — snapped here at the call
+  // site since that file is shared with other families.
   const base = ensureBasePoints(
     count,
     seed
@@ -443,7 +447,7 @@ export function renderSplineText( o = {} ) {
     base,
     {
       motion: pointsCfg.motion ?? 0.08,
-      speed: pointsCfg.speed ?? 1,
+      speed: Math.round( pointsCfg.speed ?? 1 ),
       seed,
       angle: animation.angle
     }
@@ -558,13 +562,22 @@ export function renderSplineText( o = {} ) {
 
   // 5. The spline itself, with the shared neon look.
   if ( current.length >= 2 ) {
+    // Loop-exact clock: renderSplines' hue scroll multiplies animation.angle by
+    // hueSpeed directly (splines/_shared.js), which only returns to its start
+    // hue when hueSpeed is a WHOLE number of cycles per loop — snapped here at
+    // the call site since that file is shared with other families.
+    const rawStroke = o.stroke ?? {};
+
     renderSplines(
       [
         current
       ],
       {
         curve: o.curve ?? {},
-        stroke: o.stroke ?? {},
+        stroke: {
+          ...rawStroke,
+          hueSpeed: Math.round( rawStroke.hueSpeed ?? 1 )
+        },
         overlay: o.overlay ?? {}
       }
     );

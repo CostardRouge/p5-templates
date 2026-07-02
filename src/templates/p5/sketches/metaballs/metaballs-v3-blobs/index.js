@@ -142,7 +142,11 @@ sketch.draw( () => {
   const fillOpts = o.fill ?? {};
   const gradient = fillOpts.gradient ?? true;
   const paletteName = fillOpts.palette ?? "fire";
-  const hueShift = animation.progression * ( fillOpts.hueSpeed ?? 0.5 );
+
+  // Palette lookup is mod 1, so the hue scroll only returns to its start value
+  // after a whole number of palette periods per loop — snap the raw speed.
+  const hueCycles = Math.round( fillOpts.hueSpeed ?? 0.5 );
+  const hueShift = animation.progression * hueCycles;
   const solid = fillOpts.color ?? [
     120,
     180,

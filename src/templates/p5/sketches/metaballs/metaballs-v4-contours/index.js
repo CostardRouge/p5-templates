@@ -154,7 +154,11 @@ sketch.draw( () => {
     bands.maxLevel ?? 4
   );
   const paletteName = bands.palette ?? "viridis";
-  const hueShift = animation.progression * ( bands.hueSpeed ?? 0 );
+
+  // Palette lookup is mod 1, so the hue scroll only returns to its start value
+  // after a whole number of palette periods per loop — snap the raw speed.
+  const hueCycles = Math.round( bands.hueSpeed ?? 0 );
+  const hueShift = animation.progression * hueCycles;
   const fillBands = bands.fill ?? true;
   const showLines = bands.lines ?? true;
   const lineWeight = bands.lineWeight ?? 1.5;

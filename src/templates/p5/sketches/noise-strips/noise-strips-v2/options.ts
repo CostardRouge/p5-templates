@@ -249,14 +249,14 @@ export const formConfiguration: Record<string, any> = {
         options: PALETTE_OPTIONS
       },
       paletteSwitchSpeed: {
-        label: "Palette swap speed",
+        label: "Palette swap speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,
         step: 0.01
       },
       precisionSpeed: {
-        label: "Hue precision speed",
+        label: "Hue precision speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,

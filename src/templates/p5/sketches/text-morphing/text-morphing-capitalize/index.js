@@ -11,6 +11,30 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
+import {
+  resolveAnimation
+} from "@/lib/animationConfig";
+
+const TAU = Math.PI * 2;
+
+// The opacity wobble below is driven by the raw (non-wrapping) seconds clock at
+// a literal rate, unrelated to the loop's own duration — it only closed the
+// loop when the duration happened to make the rate land on a whole number of
+// turns. Snap the rate to the nearest whole number of turns over the loop's
+// duration instead, closest to the original tuned speed.
+function snapLoopRate( rawRate ) {
+  const {
+    duration
+  } = resolveAnimation( sketch.sketchOptions?.animation );
+
+  if ( !( duration > 0 ) ) {
+    return rawRate;
+  }
+
+  const cycles = Math.round( ( rawRate * duration ) / TAU );
+
+  return ( cycles * TAU ) / duration;
+}
 
 const sketchState = {
   threeDimensionGraphics: null
@@ -327,7 +351,7 @@ sketch.draw( (
       const opacityFactor =
         mappers.fn(
           p.sin(
-            depthProgression * 20 + progression * 50 + time * 2,
+            depthProgression * 20 + progression * 50 + time * snapLoopRate( 2 ),
             easing.easeInOutExpo
           ),
           -1,
@@ -350,6 +374,11 @@ sketch.draw( (
             // +time
             +0,
         // hueIndex: mappers.circularPolar(progression, 0, 1, -p.PI, p.PI)*2,
+        // NOT FIXABLE: `time` (raw, non-wrapping seconds) scrubs a p.noise()
+        // domain here. p.noise() isn't periodic in its input the way sin/cos
+        // are, so no snapped rate makes this term return to its start value —
+        // it would need a circular-noise redesign (animation.circularProgression
+        // / noiseProgression), which changes the look. Left as-is.
         hueIndex:
             mappers.fn(
               p.noise(

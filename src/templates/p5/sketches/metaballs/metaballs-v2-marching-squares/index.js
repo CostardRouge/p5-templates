@@ -238,7 +238,11 @@ sketch.draw( () => {
   const weight = strokeOpts.weight ?? 3;
   const rainbow = strokeOpts.rainbow ?? true;
   const paletteName = strokeOpts.palette ?? "rainbow";
-  const hueShift = animation.progression * ( strokeOpts.hueSpeed ?? 1 );
+
+  // Palette lookup is mod 1, so the hue scroll only returns to its start value
+  // after a whole number of palette periods per loop — snap the raw speed.
+  const hueCycles = Math.round( strokeOpts.hueSpeed ?? 1 );
+  const hueShift = animation.progression * hueCycles;
   const solid = strokeOpts.color ?? [
     255,
     255,

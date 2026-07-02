@@ -131,9 +131,6 @@ sketch.draw( ( time ) => {
       )
     ];
 
-    const rotationSteps = rotationAngles.length;
-    const phase = animation.progression * rotationSteps;
-
     if ( options.sketch.rotation.syncWithMorphing ) {
       const diffLength = itemsToMorph.length - rotationAngles.length;
 
@@ -149,6 +146,15 @@ sketch.draw( ( time ) => {
         angle.mult( options.sketch.rotation.angleMultiplier );
       } );
     }
+
+    // Loop-exact: `rotationSteps` must match the ARRAY `animation.ease` actually
+    // walks below (`values: rotationAngles`), so it's read AFTER syncWithMorphing
+    // pads the array — reading it before the padding (as the original did) meant
+    // currentTime advanced by the pre-padding count each loop while the ease
+    // walked the padded (longer) array, a non-whole cycle count that never
+    // returned to its start pose.
+    const rotationSteps = rotationAngles.length;
+    const phase = animation.progression * rotationSteps;
 
     const {
       x: rX, y: rY, z: rZ

@@ -762,13 +762,22 @@ sketch.draw( () => {
   );
 
   if ( pointsPx.length >= 2 ) {
+    // Loop-exact clock: renderSplines' hue scroll multiplies animation.angle by
+    // hueSpeed directly (splines/_shared.js), which only returns to its start
+    // hue when hueSpeed is a WHOLE number of cycles per loop — snapped here at
+    // the call site since _shared.js is shared with other families.
+    const rawStroke = o.stroke ?? {};
+
     renderSplines(
       [
         pointsPx
       ],
       {
         curve: o.curve ?? {},
-        stroke: o.stroke ?? {},
+        stroke: {
+          ...rawStroke,
+          hueSpeed: Math.round( rawStroke.hueSpeed ?? 1 )
+        },
         overlay: o.overlay ?? {}
       }
     );

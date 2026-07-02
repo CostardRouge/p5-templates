@@ -102,6 +102,23 @@ sketch.draw( ( time ) => {
   const depth = options.sketch.morphing.depthLayersCount ?? 200 / 4;
   const D = 3 * ( p.width + p.height );
 
+  // getLoopMultiplier() (utils/common.js) snaps its `multiplier` argument to
+  // the nearest whole multiple of TAU (minimum one turn), so every OTHER
+  // component fed through getLoopPhase below (t, depthProgression, progression
+  // — all bounded, ~0..1-ish per loop) ends up contributing exactly whole
+  // turns automatically. Feeding it `animation.angle` directly (below, in the
+  // opacity/hue phases) broke that: angle already sweeps a full TAU per loop,
+  // so double-applying the TAU scaling gave this term a real rate of ~TAU
+  // (≈6.283) turns/loop — not a whole number — and the last frame disagreed
+  // with the first. Swap in the raw progression (no built-in TAU factor) with
+  // an explicit whole-turn multiplier, snapped to the closest whole number to
+  // the original ~TAU-turn/loop rate.
+  const angleTurns = Math.round( p.TAU );
+  const angleComponent = [
+    animation.progression,
+    angleTurns * p.TAU
+  ];
+
   for ( let z = 0; z < depth; z++ ) {
     const depthProgression = z / ( depth - 1 );
 
@@ -167,10 +184,7 @@ sketch.draw( ( time ) => {
       const colorFunction = colors?.[ options.sketch.strokeColor.colorFunction ] ?? colors.rainbow;
       const opacityFactor = mappers.fn(
         Math.sin( getLoopPhase( [
-          [
-            animation.angle,
-            1
-          ],
+          angleComponent,
           [
             depthProgression,
             9
@@ -219,10 +233,7 @@ sketch.draw( ( time ) => {
           //   depthProgression + strokeHueOffset,
           // ),
           Math.sin( getLoopPhase( [
-            [
-              animation.angle,
-              1
-            ],
+            angleComponent,
             [
               depthProgression,
               9

@@ -93,7 +93,14 @@ sketch.draw( async() => {
 
   const paletteA = resolvePalette( options.sketch.colors?.paletteA ?? "rainbow" );
   const paletteB = resolvePalette( options.sketch.colors?.paletteB ?? "purple" );
-  const paletteSwitchSpeed = options.sketch.colors?.paletteSwitchSpeed ?? 0;
+
+  // The palette swap walks a 2-entry circular index on ( … + t ) * speed, so
+  // it only returns to its start palette when the loop's TAU sweep of t
+  // advances the index a WHOLE number of 2-entry cycles — snapped to whole
+  // cycles per loop.
+  const rawPaletteSwitchSpeed = options.sketch.colors?.paletteSwitchSpeed ?? 0;
+  const paletteSwitchCycles = Math.round( rawPaletteSwitchSpeed * p.TAU / 2 );
+  const paletteSwitchSpeed = paletteSwitchCycles * 2 / p.TAU;
 
   const hueOffset = options.sketch.colors?.hueOffset ?? 0;
   const opacityMax = options.sketch.colors?.opacityMax ?? 3;
@@ -106,6 +113,13 @@ sketch.draw( async() => {
   const motionSpeedZ = options.sketch.motion?.speedZ ?? 0.5;
   const displaceYScale = options.sketch.displacement?.yScale ?? 2;
   const colorNoiseScale = options.sketch.colors?.noiseScale ?? 1;
+
+  // colorPrecision below walks a 3-entry circular index on ( spatial noise +
+  // t ) — a previously-implicit rate of 1 on t — so it only returns to its
+  // start entry when the loop's TAU sweep of t advances the index a WHOLE
+  // number of 3-entry cycles, snapped to whole cycles per loop.
+  const colorPrecisionCycles = Math.round( p.TAU / COLOR_PRECISION_VALUES.length );
+  const colorPrecisionRate = colorPrecisionCycles * COLOR_PRECISION_VALUES.length / p.TAU;
 
   const generalXOff = motionEnabled
     ? animation.sequence(
@@ -152,7 +166,7 @@ sketch.draw( async() => {
         ( p.noise(
           xOff * colorNoiseScale,
           yOff * colorNoiseScale
-        ) + t ),
+        ) + t * colorPrecisionRate ),
         COLOR_PRECISION_VALUES
       );
 

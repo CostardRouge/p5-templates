@@ -174,7 +174,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.005
       },
       speed: {
-        label: "Random drift speed",
+        label: "Random drift speed (snaps to whole turns/loop)",
         component: "slider",
         min: 0,
         max: 5,
@@ -306,7 +306,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       hueSpeed: {
-        label: "Hue speed (over time)",
+        label: "Hue speed (over time) (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 5,

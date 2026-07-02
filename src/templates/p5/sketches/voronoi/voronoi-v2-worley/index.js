@@ -153,7 +153,11 @@ sketch.draw( () => {
   const grayscale = render.grayscale ?? false;
   const invert = render.invert ?? false;
   const contrast = render.contrast ?? 1;
-  const hueShift = animation.progression * ( render.hueSpeed ?? 0 );
+
+  // Palette lookup is mod 1, so the hue scroll only returns to its start value
+  // after a whole number of palette periods per loop — snap the raw speed.
+  const hueCycles = Math.round( render.hueSpeed ?? 0 );
+  const hueShift = animation.progression * hueCycles;
   const scale = render.scale ?? 1;
 
   // Normalise distances so a typical cell radius maps to ≈1.

@@ -241,7 +241,7 @@ export const formConfiguration: Record<string, any> = {
         options: PALETTE_OPTIONS
       },
       paletteSwitchSpeed: {
-        label: "Palette swap speed",
+        label: "Palette swap speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,

@@ -160,7 +160,7 @@ export const ballsConfig = {
       step: 0.05
     },
     speed: {
-      label: "Speed (integer loops best)",
+      label: "Speed (snaps to whole turns/loop)",
       component: "slider",
       min: 0,
       max: 6,

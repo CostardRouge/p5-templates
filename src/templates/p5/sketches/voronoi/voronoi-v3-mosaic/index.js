@@ -148,7 +148,11 @@ sketch.draw( () => {
 
   const render = o.render ?? {};
   const paletteName = render.palette ?? "sunset";
-  const hueShift = animation.progression * ( render.hueSpeed ?? 0.25 );
+
+  // Palette lookup is mod 1, so the hue scroll only returns to its start value
+  // after a whole number of palette periods per loop — snap the raw speed.
+  const hueCycles = Math.round( render.hueSpeed ?? 0.25 );
+  const hueShift = animation.progression * hueCycles;
   const shade = render.shade ?? 0.25;
   const edgeWidth = Math.max(
     1,

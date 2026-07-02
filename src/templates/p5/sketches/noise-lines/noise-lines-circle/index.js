@@ -24,6 +24,34 @@ const getBackgroundColor = () =>
     225
   ];
 
+// getFixedOrVariableOption's "variable" mode shades with
+// sin( animation.angle * speedMultiplier + progression * progressionMultiplier )
+// (see @/p5/utils/common.js, off-limits here) — already circular, so it only
+// returns to its start value when speedMultiplier completes a WHOLE number of
+// turns per loop. getFixedOrVariableOption accepts an already-resolved config
+// object as well as an option name, so the snap is applied here, at the call
+// site, without touching the shared helper.
+function getLoopSnappedOption(
+  name, progression
+) {
+  const config = options.sketch?.[ name ];
+
+  if ( !config || config.mode !== "variable" ) {
+    return getFixedOrVariableOption(
+      name,
+      progression
+    );
+  }
+
+  return getFixedOrVariableOption(
+    {
+      ...config,
+      speedMultiplier: Math.round( config.speedMultiplier ?? 1 )
+    },
+    progression
+  );
+}
+
 /**
  * Draws a seamless organic blob using Perlin Noise
  * * @param {number} baseRadius - The average size of the circle
@@ -117,29 +145,29 @@ sketch.draw( () => {
   for ( let i = 0; i < linesCount; i++ ) {
     const lineProgression = i / ( linesCount - 1 );
 
-    const noisePhaseMultiplier = getFixedOrVariableOption(
+    const noisePhaseMultiplier = getLoopSnappedOption(
       "noisePhaseMultiplier",
       lineProgression
     );
 
     const noisePhase = i * noisePhaseMultiplier;
 
-    const radiusOffsetMultiplier = getFixedOrVariableOption(
+    const radiusOffsetMultiplier = getLoopSnappedOption(
       "radiusOffsetMultiplier",
       lineProgression
     );
 
-    const roughness = getFixedOrVariableOption(
+    const roughness = getLoopSnappedOption(
       "roughness",
       lineProgression
     );
 
-    const magnitude = getFixedOrVariableOption(
+    const magnitude = getLoopSnappedOption(
       "magnitude",
       lineProgression
     );
 
-    const baseRadius = getFixedOrVariableOption(
+    const baseRadius = getLoopSnappedOption(
       "baseRadius",
       lineProgression
     );

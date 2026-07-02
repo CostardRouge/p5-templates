@@ -105,7 +105,15 @@ export function animateBalls(
   }
 ) {
   const p = getP5();
-  const a = angle * speed;
+
+  // "drift" walks a closed circle (cos/sin of `a`) through noise space, and
+  // "orbit" oscillates at `a * freqX/freqY` (both integer per-ball) — both are
+  // loop-exact only when `a` itself completes a whole number of turns per
+  // loop, so `speed` is snapped here. The radius pulse below also rides on
+  // `a`, so it closes too. "bounce" accumulates velocity frame to frame and
+  // doesn't use `a` for position, so it's unaffected (and unfixable).
+  const speedTurns = Math.round( speed );
+  const a = angle * speedTurns;
   const cx = Math.cos( a );
   const sx = Math.sin( a );
 
