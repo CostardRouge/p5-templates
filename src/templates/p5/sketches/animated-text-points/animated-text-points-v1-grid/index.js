@@ -44,7 +44,11 @@ sketch.draw( async() => {
     return;
   }
 
-  const phase = animation.angle * morphSpeed / p.TAU;
+  // Loop-exact letter walk: mappers.circularIndex only returns to the start
+  // letter when the phase advances a whole number of word-length cycles per
+  // loop — snapped to whole cycles per loop.
+  const morphCycles = Math.round( morphSpeed / word.length );
+  const phase = animation.progression * morphCycles * word.length;
   const currentLetter = mappers.circularIndex(
     phase,
     word
@@ -92,6 +96,11 @@ sketch.draw( async() => {
   const palette = color.palette ?? "purpleSimple";
   const colorFunction = colors?.[ palette ] ?? colors.purpleSimple;
 
+  // animation.angle sweeps exactly TAU per loop, so the hue scroll rate must
+  // complete a WHOLE number of turns per loop to land back on its start hue
+  // — snapped to whole turns per loop.
+  const hueOffsetTurns = Math.round( color.hueOffsetSpeed ?? 0 );
+
   p.noStroke();
 
   // Per-cell alpha field computed once (spatial-hash accelerated) and cached
@@ -121,7 +130,7 @@ sketch.draw( async() => {
     const alpha = field.alpha[ index ];
 
     const tint = colorFunction( {
-      hueOffset: animation.angle * ( color.hueOffsetSpeed ?? 0 ),
+      hueOffset: animation.angle * hueOffsetTurns,
       hueIndex: mappers.fn(
         cellVector.x / columns + cellVector.y / rows,
         0,

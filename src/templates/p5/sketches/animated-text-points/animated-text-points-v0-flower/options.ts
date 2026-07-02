@@ -110,7 +110,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Morphing",
     fields: {
       speed: {
-        label: "Morph speed (full loops)",
+        label: "Morph speed (full loops) (snaps to whole cycles/loop)",
         component: "slider",
         min: 0.1,
         max: 10,
@@ -148,7 +148,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.05
       },
       rotationSpeed: {
-        label: "Global rotation speed",
+        label: "Global rotation speed (snaps to whole turns/loop)",
         component: "slider",
         min: -5,
         max: 5,
@@ -215,7 +215,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       hueOffsetSpeed: {
-        label: "Hue offset speed",
+        label: "Hue offset speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -10,
         max: 10,
@@ -243,7 +243,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       opacitySpeed: {
-        label: "Opacity wave speed",
+        label: "Opacity wave speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -20,
         max: 20,

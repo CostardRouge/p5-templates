@@ -92,7 +92,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       morphSpeed: {
-        label: "Morph speed (full loops)",
+        label: "Morph speed (full loops) (snaps to whole cycles/loop)",
         component: "slider",
         min: 0.1,
         max: 10,
@@ -154,7 +154,7 @@ export const formConfiguration: Record<string, any> = {
         options: paletteOptions
       },
       hueOffsetSpeed: {
-        label: "Hue offset speed",
+        label: "Hue offset speed (snaps to whole turns/loop)",
         component: "slider",
         min: -10,
         max: 10,

@@ -111,7 +111,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       speed: {
-        label: "Speed",
+        label: "Speed (snaps to whole turns/loop)",
         component: "slider",
         min: 0,
         max: 8,

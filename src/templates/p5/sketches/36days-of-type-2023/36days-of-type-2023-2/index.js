@@ -145,6 +145,13 @@ sketch.draw( async() => {
 
   const t = animation.angle;
 
+  // rotateVector below sweeps a point around a circle whose angle must
+  // retrace itself exactly across the loop seam (its output feeds both the
+  // hue noise lookup and the per-cube tilt below) — the original angle ran
+  // at half a turn per loop and never returned to its start orientation, so
+  // it's snapped here to a whole number of turns per loop.
+  const rotateTurns = Math.round( 0.5 );
+
   alphaPoints.forEach( ( {
     alpha, position
   } ) => {
@@ -168,7 +175,7 @@ sketch.draw( async() => {
       position,
       p.width / 4,
       p.height / 4,
-      t / 2
+      t * rotateTurns
     );
 
     const hue = p.noise(

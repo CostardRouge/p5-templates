@@ -145,7 +145,10 @@ sketch.draw( (
   const waveSpeed = options.sketch.distance?.waveSpeed ?? 1;
   const waveEasing = options.sketch.distance?.waveEasing ?? "easeOutQuad";
   const falloffEasing = options.sketch.distance?.falloffEasing ?? "easeOutQuad";
-  const hueOffsetSpeed = options.sketch.colors?.hueOffsetSpeed ?? 1;
+  // paletteRainbow shades with sin/cos( hueOffset + hueIndex ), so the hue
+  // scroll only returns to its start colour when it completes a WHOLE number
+  // of turns per loop.
+  const hueOffsetTurns = Math.round( options.sketch.colors?.hueOffsetSpeed ?? 1 );
   const hueIndexMultiplier = options.sketch.colors?.hueIndexMultiplier ?? 2;
   const opacityMax = options.sketch.colors?.opacityMax ?? 10;
   const opacityMin = options.sketch.colors?.opacityMin ?? 1;
@@ -171,7 +174,7 @@ sketch.draw( (
       uZTimeMult: zTimeMult,
       uT: t,
       uZMax: zMax,
-      uHueOffset: t * hueOffsetSpeed,
+      uHueOffset: t * hueOffsetTurns,
       uHueIndexMult: hueIndexMultiplier,
       uWaveSpeed: waveSpeed,
       uOpacityMax: opacityMax,

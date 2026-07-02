@@ -8,6 +8,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const PALETTES = {
@@ -109,7 +110,7 @@ function drawGrid(
 }
 
 sketch.draw( (
-  time, center, favoriteColor
+  _time, center, favoriteColor
 ) => {
   const p = getP5();
 
@@ -184,6 +185,16 @@ sketch.draw( (
   const hueOffsetTimeMix = options.sketch.colors?.hueOffsetTimeMix ?? 1;
   const hueOffsetBranchMix = options.sketch.colors?.hueOffsetBranchMix ?? 1;
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop.
+  const t = animation.angle;
+  const branchTurns = Math.round( branchTimeSign );
+  const rotationTurns = Math.round( rotationSpeed );
+  const opacityTurns = Math.round( opacitySpeed );
+  const hueTurns = Math.round( hueOffsetTimeMix );
+
   for ( let i = 0; i < steps; i++ ) {
     const stepsProgression = i / steps;
 
@@ -198,7 +209,7 @@ sketch.draw( (
 
       const wavesOffset = (
         b
-        + time * branchTimeSign
+        + t * branchTurns
         + stepsProgression
         + i / branchPhaseDivider
       );
@@ -277,7 +288,7 @@ sketch.draw( (
           position.y
         );
 
-        p.rotate( time * rotationSpeed
+        p.rotate( t * rotationTurns
           + b
           + ( i / rotationStepDivider ) * rotationCount );
 
@@ -308,7 +319,7 @@ sketch.draw( (
         if ( pingPongOpacity ) {
           opacityFactor = p.map(
             p.map(
-              p.sin( stepsProgression * opacityGroupCount - time * opacitySpeed ),
+              p.sin( stepsProgression * opacityGroupCount - t * opacityTurns ),
               -1,
               1,
               -1,
@@ -317,7 +328,7 @@ sketch.draw( (
             -1,
             1,
             p.map(
-              p.cos( stepsProgression * opacityGroupCount + time * opacitySpeed ),
+              p.cos( stepsProgression * opacityGroupCount + t * opacityTurns ),
               -1,
               1,
               1,
@@ -328,7 +339,7 @@ sketch.draw( (
         }
 
         p.stroke( palette( {
-          hueOffset: time * hueOffsetTimeMix + branchProgression * hueOffsetBranchMix,
+          hueOffset: t * hueTurns + branchProgression * hueOffsetBranchMix,
           hueIndex: mappers.fn(
             stepsProgression,
             0,

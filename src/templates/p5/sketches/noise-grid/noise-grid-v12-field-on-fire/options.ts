@@ -163,7 +163,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Colors",
     fields: {
       hueOffsetSpeed: {
-        label: "Hue offset speed",
+        label: "Hue offset speed (snaps to whole turns/loop)",
         component: "slider",
         min: 0,
         max: 8,

@@ -79,9 +79,12 @@ sketch.draw( (
   const columns = options.sketch.grid?.columns ?? 40;
 
   const rotationAngleMax = options.sketch.rotation?.angleMax ?? p.PI / 2;
-  const rotationSpeed = options.sketch.rotation?.speed ?? 1;
+
+  // The scene rotates on sin( angle * speed ) — already circular — so it's
+  // loop-exact only when speed completes a WHOLE number of turns per loop.
+  const rotationTurns = Math.round( options.sketch.rotation?.speed ?? 1 );
   const sceneAngle = p.map(
-    p.sin( animation.angle * rotationSpeed ),
+    p.sin( animation.angle * rotationTurns ),
     -1,
     1,
     -rotationAngleMax,

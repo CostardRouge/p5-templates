@@ -74,7 +74,11 @@ sketch.draw( () => {
   p.strokeWeight( options.sketch?.strokeWeight ?? 3 );
   p.noFill();
 
-  const phase = animation.angle / p.TAU;
+  // Loop-exact letter walk: mappers.circularIndex only returns to the start
+  // letter when the phase advances a whole number of word-length cycles per
+  // loop — snapped to whole cycles per loop.
+  const letterCycles = Math.round( 1 / word.length );
+  const phase = animation.progression * letterCycles * word.length;
   const currentLetter = mappers.circularIndex(
     phase,
     word
@@ -115,6 +119,18 @@ sketch.draw( () => {
   const opacityMaxMax = color.opacityMaxMax ?? 5;
   const opacityMaxMin = color.opacityMaxMin ?? 1;
 
+  // animation.angle sweeps exactly TAU per loop, so every rate multiplying it
+  // below must complete a WHOLE number of turns/cycles per loop to land back
+  // on its start value — snapped to whole turns/cycles per loop.
+  const rotationTurns = Math.round( rotationSpeed );
+  const opacitySinTurns = Math.round( opacitySinSpeed );
+  const opacityCosTurns = Math.round( opacityCosSpeed );
+
+  // The size pulse walks a 2-value list ([sizeMin, sizeMax]) circularly, so
+  // it only returns to its start size after a whole number of 2-value
+  // cycles per loop.
+  const sizeCycles = Math.round( p.TAU * sizeFrequency / 2 );
+
   for ( let i = 0; i < letterPoints.length; i++ ) {
     const progression = p.map(
       i,
@@ -130,7 +146,7 @@ sketch.draw( () => {
     } = letterPoints[ i ];
 
     const opacityMaxLocal = mappers.fn(
-      p.cos( progression * opacitySinFreq + animation.angle * opacityCosSpeed ),
+      p.cos( progression * opacitySinFreq + animation.angle * opacityCosTurns ),
       -1,
       1,
       opacityMaxMax,
@@ -138,7 +154,7 @@ sketch.draw( () => {
       easing.easeInCubic
     );
     const opacityFactor = mappers.fn(
-      p.sin( progression * opacitySinFreq + animation.angle * opacitySinSpeed ),
+      p.sin( progression * opacitySinFreq + animation.angle * opacitySinTurns ),
       -1,
       1,
       opacityMaxLocal,
@@ -163,9 +179,9 @@ sketch.draw( () => {
       x * positionScale,
       y * positionScale
     );
-    p.rotate( -animation.angle * rotationSpeed + progression * rotationPerPoint );
+    p.rotate( -animation.angle * rotationTurns + progression * rotationPerPoint );
     const dynamicSize = mappers.circularIndex(
-      animation.angle * sizeFrequency + progression,
+      animation.progression * sizeCycles * 2 + progression,
       [
         sizeMin,
         sizeMax

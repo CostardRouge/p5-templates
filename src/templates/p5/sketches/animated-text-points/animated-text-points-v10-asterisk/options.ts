@@ -131,14 +131,14 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       sizeFrequency: {
-        label: "Pulse frequency",
+        label: "Pulse frequency (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 5,
         step: 0.05
       },
       rotationSpeed: {
-        label: "Rotation speed",
+        label: "Rotation speed (snaps to whole turns/loop)",
         component: "slider",
         min: -5,
         max: 5,
@@ -178,7 +178,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       opacitySinSpeed: {
-        label: "Opacity sin speed",
+        label: "Opacity sin speed (snaps to whole turns/loop)",
         component: "slider",
         min: -20,
         max: 20,
@@ -192,7 +192,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       opacityCosSpeed: {
-        label: "Opacity max speed",
+        label: "Opacity max speed (snaps to whole turns/loop)",
         component: "slider",
         min: -20,
         max: 20,

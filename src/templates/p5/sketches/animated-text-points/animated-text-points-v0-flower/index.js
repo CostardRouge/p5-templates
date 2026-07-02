@@ -107,7 +107,13 @@ sketch.draw( () => {
 
   const morphSpeed = morph.speed ?? 1;
   const morphEasingFn = easing?.[ morph.easing ] ?? easing.easeInOutExpo;
-  const phase = animation.angle * morphSpeed / p.TAU;
+
+  // Loop-exact letter walk: mappers.circularIndex below plays the same role
+  // as animation.ease's circular value walk, so the morph only returns to
+  // its start letter when the phase advances a whole number of word-length
+  // cycles per loop — snapped to whole cycles per loop.
+  const morphCycles = Math.round( morphSpeed / word.length );
+  const phase = animation.progression * morphCycles * word.length;
 
   const currentLetter = mappers.circularIndex(
     phase,
@@ -176,6 +182,13 @@ sketch.draw( () => {
   const opacityFrequency = color.opacityFrequency ?? 100;
   const opacitySpeed = color.opacitySpeed ?? 5;
 
+  // animation.angle sweeps exactly TAU per loop, so every rate multiplying it
+  // below must complete a WHOLE number of turns per loop to land back on its
+  // start value — snapped to whole turns/cycles per loop.
+  const rotationTurns = Math.round( rotationSpeed );
+  const hueOffsetTurns = Math.round( hueOffsetSpeed );
+  const opacityTurns = Math.round( opacitySpeed );
+
   const strokeWeightValue = options.sketch?.strokeWeight ?? 2;
 
   p.strokeWeight( strokeWeightValue );
@@ -212,7 +225,7 @@ sketch.draw( () => {
     } );
 
     p.stroke( colorFunction( {
-      hueOffset: animation.angle * hueOffsetSpeed,
+      hueOffset: animation.angle * hueOffsetTurns,
       hueIndex: mappers.fn(
         progression,
         0,
@@ -221,7 +234,7 @@ sketch.draw( () => {
         p.PI
       ) * hueMultiplier,
       opacityFactor: p.map(
-        p.sin( progression * opacityFrequency + animation.angle * opacitySpeed ),
+        p.sin( progression * opacityFrequency + animation.angle * opacityTurns ),
         -1,
         1,
         opacityMax,
@@ -234,7 +247,7 @@ sketch.draw( () => {
       lerped.x * positionScale,
       lerped.y * positionScale
     );
-    p.rotate( -animation.angle * rotationSpeed + progression * rotationPerPoint );
+    p.rotate( -animation.angle * rotationTurns + progression * rotationPerPoint );
     drawFlower(
       p,
       petalSize,

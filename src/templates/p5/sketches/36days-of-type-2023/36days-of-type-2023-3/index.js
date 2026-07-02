@@ -163,7 +163,12 @@ sketch.draw( async() => {
   );
 
   const t = animation.angle;
-  const baseTime = animation.progression * SWAP_VALUES_COUNT * swapSpeed;
+
+  // The swap ease walks its 6-value pattern circularly, so it only returns to
+  // its start pose once the raw slider speed completes a WHOLE number of
+  // 6-value cycles per loop — snapped here to whole cycles per loop.
+  const swapCycles = Math.round( swapSpeed );
+  const baseTime = animation.progression * SWAP_VALUES_COUNT * swapCycles;
 
   pairedPoints.forEach( (
     {

@@ -100,21 +100,21 @@ export const formConfiguration: Record<string, any> = {
     label: "Animated offsets",
     fields: {
       xSpeed: {
-        label: "X speed",
+        label: "X speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 8,
         step: 0.01
       },
       ySpeed: {
-        label: "Y speed",
+        label: "Y speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 8,
         step: 0.01
       },
       zSpeed: {
-        label: "Z speed",
+        label: "Z speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 8,

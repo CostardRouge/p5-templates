@@ -241,6 +241,11 @@ sketch.draw( async() => {
     const waveSpeed = options.sketch?.animation?.waveSpeed ?? 1;
     const waveSpread = options.sketch?.animation?.waveSpread ?? 0.3;
 
+    // switchIndex is a raw progress*waveSpeed value wrapped mod 1, so it only
+    // lands back on its start value when waveSpeed completes a WHOLE number
+    // of wraps per loop — snapped to whole cycles per loop.
+    const waveTurns = Math.round( waveSpeed );
+
     let switchIndex;
 
     if ( waveConfig.mode === "interactive" ) {
@@ -272,7 +277,7 @@ sketch.draw( async() => {
 
         // Apply wave speed and spread like other modes
         switchIndex =
-          ( animation.progression * waveSpeed +
+          ( animation.progression * waveTurns +
             normalizedDistance * waveSpread ) %
           1;
       } else {
@@ -305,10 +310,13 @@ sketch.draw( async() => {
       }
 
       switchIndex =
-        ( animation.progression * waveSpeed + waveOffset * waveSpread ) % 1;
+        ( animation.progression * waveTurns + waveOffset * waveSpread ) % 1;
     }
 
-    const rotationMax = p.TAU * ( options.sketch?.animation?.rotationCount ?? 2 );
+    // rotateY below only wraps back to its start orientation when it sweeps a
+    // WHOLE number of full turns per loop — snapped to whole turns per loop.
+    const rotationTurns = Math.round( options.sketch?.animation?.rotationCount ?? 2 );
+    const rotationMax = p.TAU * rotationTurns;
 
     // Calculate radial rotation for radial mode
     let radialAngle = 0;

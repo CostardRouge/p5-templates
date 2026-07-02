@@ -103,9 +103,13 @@ sketch.draw( () => {
   const detail = options.sketch.noise?.detail ?? 4;
   const falloff = options.sketch.noise?.falloff ?? 0.5;
 
-  const xSpeed = options.sketch.offsets?.xSpeed ?? 1;
-  const ySpeed = options.sketch.offsets?.ySpeed ?? 2;
-  const zSpeed = options.sketch.offsets?.zSpeed ?? 0.5;
+  // The x/y/z noise offsets orbit through noise-space on sin/cos( t * speed )
+  // rather than drifting, so the field itself is exactly periodic — but only
+  // when each speed completes a WHOLE number of turns per loop. Fractional
+  // speeds land the offset somewhere other than its start point at the seam.
+  const xSpeed = Math.round( options.sketch.offsets?.xSpeed ?? 1 );
+  const ySpeed = Math.round( options.sketch.offsets?.ySpeed ?? 2 );
+  const zSpeed = Math.round( options.sketch.offsets?.zSpeed ?? 0.5 );
   const xRangeDivisor = options.sketch.offsets?.xRangeDivisor ?? 2;
   const yRangeDivisor = options.sketch.offsets?.yRangeDivisor ?? 2;
   const zRangeDivisor = options.sketch.offsets?.zRangeDivisor ?? 2;
