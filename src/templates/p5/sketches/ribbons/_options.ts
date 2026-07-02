@@ -307,7 +307,7 @@ export const blurredBackgroundFormConfiguration = ( extras: Record<string, any> 
     },
     animationSpeed: {
       component: "slider",
-      label: "Radial animation speed",
+      label: "Radial animation speed (snaps to whole cycles/loop)",
       min: -2,
       max: 2,
       step: 0.01

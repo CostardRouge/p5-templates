@@ -243,7 +243,7 @@ sketch.draw( () => {
     }
 
     const lineStep = ( lineAngleMax - lineAngleMin ) / linesCount;
-    const hueSpeed = -time * hueSpeedOption;
+    const hueSpeed = -t * hueCycles;
 
     for ( let lineIndex = lineAngleMin; lineIndex < lineAngleMax; lineIndex += lineStep ) {
       const vector = converters.polar.vector(

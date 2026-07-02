@@ -99,7 +99,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       horizontalSwingSpeed: {
-        label: "Horizontal swing speed",
+        label: "Horizontal swing speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 6,
@@ -155,7 +155,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       speed: {
-        label: "Cursor speed",
+        label: "Cursor speed (snaps to whole sweeps/loop)",
         component: "slider",
         min: 1,
         max: 600,
@@ -226,7 +226,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       speed: {
-        label: "Opacity speed",
+        label: "Opacity speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -10,
         max: 10,
@@ -267,7 +267,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       speed: {
-        label: "Rotation speed",
+        label: "Rotation speed (snaps to whole turns/loop)",
         component: "slider",
         min: -10,
         max: 10,
@@ -287,7 +287,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Colors",
     fields: {
       hueSpeed: {
-        label: "Hue speed",
+        label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -10,
         max: 10,

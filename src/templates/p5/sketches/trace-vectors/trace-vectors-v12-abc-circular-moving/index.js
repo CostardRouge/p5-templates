@@ -33,7 +33,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "i.n.f.i.n.i.t.e." );
   const labels = ( options.sketch.grid?.labels ?? "infinite." ).split( "" );
 
@@ -185,12 +184,16 @@ sketch.draw( (
     (
       vector, vectorsListProgression
     ) => {
+      // Loop-exact anchor walk — whole `positions`-length cycles per loop.
       const position = animation.ease( {
         values: positions,
         duration: 1,
         lerpFn: mappers.lerpVector,
         easingFn: easing.easeInOutCubic,
-        currentTime: time + vectorsListProgression
+        currentTime: loopedPhase(
+          1,
+          positions.length
+        ) + vectorsListProgression
       } );
 
       position.add( vector );
@@ -211,8 +214,12 @@ sketch.draw( (
     (
       vectorIndexProgression, chunkIndex = 1
     ) => {
+      // Loop-exact hue scroll — whole turns per loop.
       p.stroke( colors.test( {
-        hueOffset: time + ( options.sketch.colors?.hueOffset ?? 0 ),
+        hueOffset: loopedPhase(
+          1,
+          p.TAU
+        ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
             p.noise(
