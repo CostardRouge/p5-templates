@@ -443,8 +443,12 @@ function resampleByArcLength(
 // A waving fan of five finger-like pipes, used when no hand is detected so the
 // effect (and the template preview) is never an empty frame.
 function demoFingers(
-  p, t
+  p, t, timeScale
 ) {
+  // t sweeps exactly TAU per loop, so waving at whole cycles per loop keeps the
+  // idle demo seamless — its last frame lands back on its first.
+  const wobbleCycles = Math.round( 0.6 * timeScale );
+  const bendCycles = Math.round( 0.8 * timeScale );
   const cx = p.width * 0.5;
   const cy = p.height * 0.66;
   const fingerLength = Math.min(
@@ -461,9 +465,9 @@ function demoFingers(
   const fingers = [];
 
   for ( let i = 0; i < 5; i++ ) {
-    const wobble = Math.sin( t * 0.6 + i * 0.7 ) * 0.13;
+    const wobble = Math.sin( t * wobbleCycles + i * 0.7 ) * 0.13;
     const angle = -Math.PI / 2 + spread[ i ] + wobble;
-    const bend = 0.16 + 0.13 * Math.sin( t * 0.8 + i * 1.1 );
+    const bend = 0.16 + 0.13 * Math.sin( t * bendCycles + i * 1.1 );
     const dirX = Math.cos( angle );
     const dirY = Math.sin( angle );
     const perpX = -dirY;
@@ -513,7 +517,16 @@ sketch.draw( () => {
     0
   ] ) );
 
-  const t = animation.angle * ( o.timeScale ?? 1 );
+  const timeScale = o.timeScale ?? 1;
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop, and the
+  // time-driven rates (hue scroll below, idle-demo waving) are snapped to whole
+  // cycles per loop so the last frame matches the first at the seam.
+  const t = animation.angle;
+
+  // Hue scroll — whole palette periods (one period = 1 / hueSpread) per loop.
+  const hueSpread = colors.hueSpread ?? 1.6;
+  const hueCycles = Math.round( ( colors.hueSpeed ?? 0.6 ) * timeScale * p.TAU * hueSpread );
 
   // ── One pipe per detected finger (base → tip joint chains). ──
   const groups = getPointerGroups( {
@@ -535,7 +548,8 @@ sketch.draw( () => {
   if ( fingerInputs.length === 0 && ( finger.idleDemo ?? true ) ) {
     fingerInputs = demoFingers(
       p,
-      t
+      t,
+      timeScale
     );
   }
 
@@ -614,8 +628,8 @@ sketch.draw( () => {
       },
       uMaxDepth: maxRadiusPx + 4,
       uTwist: tube.twist ?? 1,
-      uHueSpeed: colors.hueSpeed ?? 0.6,
-      uHueSpread: colors.hueSpread ?? 1.6,
+      uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uLengthHueShift: colors.lengthHueShift ?? 1.1,
       uAroundHueShift: colors.aroundHueShift ?? 0.7,
