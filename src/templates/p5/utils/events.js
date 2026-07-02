@@ -36,8 +36,12 @@ const events = {
     events.registeredEvents[ eventName ][ eventId ] = eventFunction;
     events.lastEventId++;
 
+    // Tolerates a registry that was cleared (sketch reset) since this
+    // unregister was handed out.
     return () => {
-      delete events.registeredEvents[ eventName ][ eventId ];
+      if ( events.registeredEvents[ eventName ] ) {
+        delete events.registeredEvents[ eventName ][ eventId ];
+      }
     };
   },
   // GENERAL SKETCH EVENTS

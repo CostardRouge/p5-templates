@@ -15,6 +15,12 @@ import drawMontageDip from "./morph/drawMontageDip.js";
 import drawMontageTitle from "./montageTitle/index.js";
 
 import {
+  registerContentDrag,
+  slideContentScope,
+  GLOBAL_CONTENT_SCOPE
+} from "./contentDrag.js";
+
+import {
   coerceFramerate
 } from "../framerate.js";
 
@@ -49,6 +55,10 @@ const slides = {
         slides.renderMontageTitle();
       }
     );
+
+    // After the render handler above so the drag layer hit-tests / draws on
+    // top of the content items it makes draggable (mouse + touch, engine-wide).
+    registerContentDrag();
 
     events.register(
       "post-draw",
@@ -190,13 +200,19 @@ const slides = {
     );
   },
 
-  render( source ) {
+  render(
+    source, scope = GLOBAL_CONTENT_SCOPE
+  ) {
     // Pass the source straight through. For global content `source` is the
     // live options proxy; destructuring/spreading it would drop every key
     // (its target is empty and it has only a get trap), silently discarding
     // global `content`. freeLayout reads `.content` via the get trap instead.
+    // `scope` tells the content-drag layer which list is rendering.
     // ( _layouts[ source?.layout ] ?? _layouts.auto )( source );
-    _layouts.free( source );
+    _layouts.free(
+      source,
+      scope
+    );
   },
 
   renderCurrentSlide() {
@@ -205,7 +221,15 @@ const slides = {
     if ( !slide ) {
       return;
     }
-    this.render( slide );
+
+    // Wrapped like getSlide() so the scope matches what contentDrag targets.
+    this.render(
+      slide,
+      slideContentScope( wrap(
+        Number( this.index ) || 0,
+        this.count
+      ) )
+    );
   },
 
   // Draw the montage "dip" fade on top of everything when the current slide is

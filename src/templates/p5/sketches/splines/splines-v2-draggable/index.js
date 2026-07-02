@@ -2,7 +2,6 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
-import events from "@/p5/utils/events.js";
 import {
   setSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
@@ -10,6 +9,9 @@ import {
   initInteraction,
   getPointerGroups
 } from "@/p5/utils/interaction/index.js";
+import {
+  createDraggable
+} from "@/p5/utils/interaction/draggable.js";
 import {
   drawInteractionCameraPreview
 } from "@/p5/utils/interaction/overlay.js";
@@ -24,27 +26,17 @@ import {
 //   1. The points are stored NORMALIZED (0..1) in options.sketch.points.items,
 //      so they survive canvas resizes and are saved/exported with the template.
 //      Random by default (seeded); `count`/`seed` regenerate the layout.
-//   2. Dragging never pans the viewport. Touch is claimed by enabling
-//      `interaction.touch` (TemplateSketchPage flips disableTouchGestures), and
-//      the mouse drag is kept off the pan by tagging the canvas `data-no-drag`
-//      while a point is under the cursor (the viewport cancels its pan on that
-//      hook BEFORE it would pause the loop, so the drag stays live).
-//   3. Pointer positions come from the shared interaction layer
-//      (getPointerGroups), which converts client → canvas space correctly even
-//      when the viewport is zoomed/panned. Mouse press state comes from the
-//      engine's wired canvas events; a touch counts as "pressed" while present.
-//
-// The grab → move → release state machine is source-agnostic, so all three
-// inputs feed the same path as one { x, y, pressed } pointer:
-//   - touch  → present finger, always "pressed"
-//   - camera → enable Vision → Hands; the thumb+index midpoint is the pointer
-//              and a PINCH (the two tips closer than the threshold) is "pressed",
-//              so you literally pinch a point and move it. No viewport conflict —
-//              the camera emits no pointer events.
-//   - mouse  → cursor position + button state.
-// Every pointer is independent and keyed by a stable id, so several can drag at
-// once: multi-touch (one point per finger) and multi-hand (one point per
-// pinching hand). The mouse is ignored while fingers are down.
+//   2. The grab → move → release state machine, pointer collection (mouse +
+//      touch) and the keep-off-the-viewport-pan affordance all come from the
+//      shared draggable layer (utils/interaction/draggable.js) — the same
+//      helper that makes the template content items draggable.
+//   3. On top of the built-in mouse/touch pointers, the sketch feeds the
+//      draggable layer camera pointers: enable Vision → Hands and the
+//      thumb+index midpoint is the pointer, a PINCH (the two tips closer than
+//      the threshold) is "pressed" — so you literally pinch a point and move
+//      it. Every pointer is independent, so several can drag at once:
+//      multi-touch (one point per finger) and multi-hand (one point per
+//      pinching hand).
 
 const state = {
   // Working copy of the control points, normalized [0..1].
@@ -54,16 +46,6 @@ const state = {
   // JSON of the items we last took from / wrote to the store, so we can tell an
   // external edit (form, reload) apart from our own drag write.
   syncHash: null,
-  // Mouse button state, fed by the engine's wired canvas events.
-  mouseDown: false,
-  // Active drags, one entry per pointer currently holding a point:
-  // pointer key ("mouse" / "touch-<id>" / "cam-<handId>") → point index. Several
-  // at once = multi-touch and multi-hand dragging in parallel.
-  drags: new Map(),
-  // Point indices to highlight as "hovered" this frame.
-  hovers: new Set(),
-  // Whether the canvas currently carries the `data-no-drag` attribute.
-  noDrag: false,
   // Per-hand camera feedback for drawing: handId → { thumb, index, mid, pinching }.
   cameras: new Map(),
   // Per-hand EMA-smoothed pinch midpoint (camera landmarks are jittery), kept
@@ -72,6 +54,10 @@ const state = {
   // Per-hand pinch latch (hysteresis) so a borderline gap doesn't flicker.
   pinching: new Map()
 };
+
+// Shared grab → move → release drag layer (mouse + touch built in, camera
+// pointers fed per frame).
+const draggable = createDraggable();
 
 function clamp01( value ) {
   return Math.min(
@@ -250,58 +236,6 @@ function syncPoints( cfg ) {
   }
 }
 
-function nearestIndex(
-  pointsPx, x, y, radius
-) {
-  let best = -1;
-  let bestDistance = radius * radius;
-
-  for ( let i = 0; i < pointsPx.length; i++ ) {
-    const dx = pointsPx[ i ].x - x;
-    const dy = pointsPx[ i ].y - y;
-    const distance = dx * dx + dy * dy;
-
-    if ( distance < bestDistance ) {
-      bestDistance = distance;
-      best = i;
-    }
-  }
-
-  return best;
-}
-
-// Tag the canvas so the viewport's gesture layer cancels a mouse pan when the
-// cursor is over (or dragging) a point, and reflect the grab state in the
-// cursor. Touch never needs this — its gestures are already disabled.
-function updateCanvasAffordance(
-  wantNoDrag, grabbing
-) {
-  const element = sketch.getCanvasElement?.();
-
-  if ( !element ) {
-    return;
-  }
-
-  if ( wantNoDrag !== state.noDrag ) {
-    if ( wantNoDrag ) {
-      element.setAttribute(
-        "data-no-drag",
-        ""
-      );
-    } else {
-      element.removeAttribute( "data-no-drag" );
-    }
-
-    state.noDrag = wantNoDrag;
-  }
-
-  const cursor = grabbing ? "grabbing" : wantNoDrag ? "grab" : "";
-
-  if ( element.style.cursor !== cursor ) {
-    element.style.cursor = cursor;
-  }
-}
-
 function drawHighlight(
   p, pointsPx, hovers, grabbed, baseSize
 ) {
@@ -343,32 +277,6 @@ function drawHighlight(
   } );
 
   p.pop();
-}
-
-// Nearest point within `radius`, skipping any already held by another pointer
-// so two fingers / two hands can't fight over the same point.
-function nearestFreeIndex(
-  pointsPx, x, y, radius, taken
-) {
-  let best = -1;
-  let bestDistance = radius * radius;
-
-  for ( let i = 0; i < pointsPx.length; i++ ) {
-    if ( taken.has( i ) ) {
-      continue;
-    }
-
-    const dx = pointsPx[ i ].x - x;
-    const dy = pointsPx[ i ].y - y;
-    const distance = dx * dx + dy * dy;
-
-    if ( distance < bestDistance ) {
-      bestDistance = distance;
-      best = i;
-    }
-  }
-
-  return best;
 }
 
 // One hand's thumb + index pinch. The hands group is ordered
@@ -451,26 +359,13 @@ function resolveHandPinch(
   };
 }
 
-// Every active pointer this frame as { key, x, y, pressed, kind }. All sources
-// coexist — multi-touch + multi-hand + mouse — and each grabs its own point. The
-// mouse is dropped while any finger is down (its position is stale on a
-// touchscreen). Stale per-hand camera state for hands that left is pruned here.
-function collectPointers(
+// Camera pointers for the draggable layer, one per tracked hand: pinch midpoint
+// as position, "pinching" as pressed. Stale per-hand state for hands that left
+// is pruned here.
+function collectCameraPointers(
   o, groups
 ) {
   const pointers = [];
-  const touchGroups = groups.filter( ( group ) => group.source === "touch" );
-
-  touchGroups.forEach( ( group ) => {
-    pointers.push( {
-      key: group.id,
-      x: group.points[ 0 ].x,
-      y: group.points[ 0 ].y,
-      pressed: true,
-      kind: "touch"
-    } );
-  } );
-
   const vision = o.interaction?.vision;
 
   if ( vision?.enabled && vision.hands?.enabled ) {
@@ -508,20 +403,6 @@ function collectPointers(
     state.cameras.clear();
     state.cameraSmooth.clear();
     state.pinching.clear();
-  }
-
-  if ( touchGroups.length === 0 ) {
-    const mouse = groups.find( ( group ) => group.source === "mouse" );
-
-    if ( mouse ) {
-      pointers.push( {
-        key: "mouse",
-        x: mouse.points[ 0 ].x,
-        y: mouse.points[ 0 ].y,
-        pressed: state.mouseDown,
-        kind: "mouse"
-      } );
-    }
   }
 
   return pointers;
@@ -592,28 +473,13 @@ sketch.setup( async() => {
   state.points = [];
   state.signature = null;
   state.syncHash = null;
-  state.mouseDown = false;
-  state.drags = new Map();
-  state.hovers = new Set();
-  state.noDrag = false;
   state.cameras = new Map();
   state.cameraSmooth = new Map();
   state.pinching = new Map();
 
-  // Press / release of the mouse button. Press is canvas-scoped (don't grab when
-  // clicking UI); release is global so letting go off-canvas still ends a drag.
-  events.register(
-    "engine-canvas-mouse-pressed",
-    () => {
-      state.mouseDown = true;
-    }
-  );
-  events.register(
-    "engine-mouse-released",
-    () => {
-      state.mouseDown = false;
-    }
-  );
+  // Re-arm the drag layer's listeners (the engine's event registry is cleared
+  // on reset).
+  draggable.attach();
 
   await initInteraction( options.sketch?.interaction ?? {} );
 } );
@@ -627,7 +493,7 @@ sketch.draw( () => {
 
   // Re-sync from the store only when nothing is being dragged, so a live drag is
   // never snapped back to a stale value.
-  if ( state.drags.size === 0 ) {
+  if ( !draggable.dragging ) {
     syncPoints( cfg );
   }
 
@@ -646,120 +512,41 @@ sketch.draw( () => {
     n.y * p.height
   ) );
 
-  const pointers = collectPointers(
-    o,
-    getPointerGroups( interaction )
-  );
-  const activeKeys = new Set( pointers.map( ( pointer ) => pointer.key ) );
-  let released = false;
+  // One groups fetch per frame, shared by the drag layer (mouse + touch) and
+  // the camera pinch pointers.
+  const groups = getPointerGroups( interaction );
 
-  // Release any drag whose pointer vanished (finger lifted, hand left the frame).
-  for ( const key of [
-    ...state.drags.keys()
-  ] ) {
-    if ( !activeKeys.has( key ) ) {
-      state.drags.delete( key );
-      released = true;
-    }
-  }
+  const {
+    hovers,
+    grabbed,
+    released
+  } = draggable.update( {
+    targets: pointsPx,
+    radius: grabRadius,
+    groups,
+    extraPointers: collectCameraPointers(
+      o,
+      groups
+    ),
+    onMove: (
+      index, pointer
+    ) => {
+      const moved = {
+        x: clamp01( pointer.x / p.width ),
+        y: clamp01( pointer.y / p.height )
+      };
 
-  // Indices currently held, so no two pointers fight over the same point.
-  const grabbed = new Set( state.drags.values() );
-  const hovers = new Set();
-
-  const moveTo = (
-    index, pointer
-  ) => {
-    const moved = {
-      x: clamp01( pointer.x / p.width ),
-      y: clamp01( pointer.y / p.height )
-    };
-
-    state.points[ index ] = moved;
-    pointsPx[ index ] = p.createVector(
-      moved.x * p.width,
-      moved.y * p.height
-    );
-  };
-
-  pointers.forEach( ( pointer ) => {
-    if ( state.drags.has( pointer.key ) ) {
-      const index = state.drags.get( pointer.key );
-
-      if ( pointer.pressed ) {
-        moveTo(
-          index,
-          pointer
-        );
-      } else {
-        state.drags.delete( pointer.key );
-        grabbed.delete( index );
-        released = true;
-      }
-
-      return;
-    }
-
-    if ( pointer.pressed ) {
-      const index = nearestFreeIndex(
-        pointsPx,
-        pointer.x,
-        pointer.y,
-        grabRadius,
-        grabbed
+      state.points[ index ] = moved;
+      pointsPx[ index ] = p.createVector(
+        moved.x * p.width,
+        moved.y * p.height
       );
-
-      if ( index !== -1 ) {
-        state.drags.set(
-          pointer.key,
-          index
-        );
-        grabbed.add( index );
-        moveTo(
-          index,
-          pointer
-        );
-      }
-
-      return;
-    }
-
-    // Aiming (not pressed): highlight the point the mouse / open hand is over.
-    if ( pointer.kind === "mouse" || pointer.kind === "camera" ) {
-      const index = nearestIndex(
-        pointsPx,
-        pointer.x,
-        pointer.y,
-        grabRadius
-      );
-
-      if ( index !== -1 ) {
-        hovers.add( index );
-      }
     }
   } );
-
-  state.hovers = hovers;
 
   if ( released ) {
     persistPoints();
   }
-
-  // Mouse-only: keep the canvas off the viewport pan while it hovers/holds a
-  // point, and mirror the grab in the cursor.
-  const mousePointer = pointers.find( ( pointer ) => pointer.kind === "mouse" );
-  const mouseDragging = state.drags.has( "mouse" );
-  const mouseOverPoint = !!mousePointer && !mouseDragging && nearestIndex(
-    pointsPx,
-    mousePointer.x,
-    mousePointer.y,
-    grabRadius
-  ) !== -1;
-
-  updateCanvasAffordance(
-    mouseDragging || mouseOverPoint,
-    mouseDragging
-  );
 
   if ( pointsPx.length >= 2 ) {
     renderSplines(
@@ -777,7 +564,7 @@ sketch.draw( () => {
   drawHighlight(
     p,
     pointsPx,
-    state.hovers,
+    hovers,
     grabbed,
     o.overlay?.points?.size ?? 16
   );
