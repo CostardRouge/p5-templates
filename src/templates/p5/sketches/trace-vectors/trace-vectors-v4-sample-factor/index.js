@@ -10,7 +10,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime
+  getAlphabet, drawGrid, getFont, loopedPhase
 } from "../_shared.js";
 
 sketch.setup(
@@ -31,7 +31,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "123" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -78,11 +77,15 @@ sketch.draw( (
     0.3
   ];
 
+  // Loop-exact sample-factor cycle — whole `sampleValues`-length cycles per loop.
   const sampleFactor = animation.ease( {
     values: sampleValues,
     duration: 1,
     easingFn: easing.easeInOutExpo,
-    currentTime: time
+    currentTime: loopedPhase(
+      1,
+      sampleValues.length
+    )
   } );
 
   const textSampleFactor = options.sketch.textStyle?.sampleFactor ?? 0.2;
@@ -120,19 +123,25 @@ sketch.draw( (
       );
 
       const zAmp = options.sketch.wave?.zAmplitude ?? 0.5;
+      const zValues = [
+        -H * zAmp,
+        -H * zAmp,
+        0,
+        0,
+        H * zAmp,
+        H * zAmp
+      ];
+
+      // Loop-exact wave — whole `zValues`-length cycles per loop.
       const z = animation.ease( {
-        values: [
-          -H * zAmp,
-          -H * zAmp,
-          0,
-          0,
-          H * zAmp,
-          H * zAmp
-        ],
+        values: zValues,
         duration: 1,
         easingFn: easing.easeInOutExpo,
         currentTime:
-          time + vectorIndexProgression / 2 + vectorsListProgression
+          loopedPhase(
+            1,
+            zValues.length
+          ) + vectorIndexProgression / 2 + vectorsListProgression
       } );
 
       position.add( vector );

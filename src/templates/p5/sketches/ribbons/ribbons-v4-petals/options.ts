@@ -77,7 +77,7 @@ export const formConfiguration: Record<string, any> = {
   shape: shapeFormConfiguration( {
     breathSpeed: {
       component: "slider",
-      label: "Breath speed",
+      label: "Breath speed (snaps to whole cycles/loop)",
       min: -5,
       max: 5,
       step: 0.01
@@ -125,7 +125,7 @@ export const formConfiguration: Record<string, any> = {
       },
       animationSpeed: {
         component: "slider",
-        label: "Animation speed",
+        label: "Animation speed (snaps to whole cycles/loop)",
         min: -3,
         max: 3,
         step: 0.01

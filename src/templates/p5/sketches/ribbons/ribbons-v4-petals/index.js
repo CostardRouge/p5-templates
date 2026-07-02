@@ -61,9 +61,12 @@ sketch.draw( () => {
 
   drawer(
     ( t ) => {
-      const breathSpeed = o.shape?.breathSpeed ?? 1;
+      // Breath oscillation only returns to its start value once per loop
+      // when it is a WHOLE number of cycles — snapped to whole cycles per
+      // loop.
+      const breathCycles = Math.round( o.shape?.breathSpeed ?? 1 );
       const lerpMin = p.map(
-        p.cos( t * breathSpeed ),
+        p.cos( t * breathCycles ),
         -1,
         1,
         -p.PI,
@@ -90,12 +93,16 @@ sketch.draw( () => {
     (
       lerpIndex, lerpMin, lerpMax, t
     ) => {
+      // Opacity oscillation only returns to its start value once per loop
+      // when it completes a WHOLE number of cycles — snapped to whole
+      // cycles per loop.
+      const opacityCycles = Math.round( o.opacity?.speed ?? 3 );
       const opacityFactor = computeOpacityFactor( {
         lerpIndex,
         lerpMax,
         time: t,
         opacityCount: o.opacity?.groupCount ?? 6,
-        opacitySpeed: o.opacity?.speed ?? 3,
+        opacitySpeed: opacityCycles,
         startOpacity: o.opacity?.startFactor ?? 3,
         endOpacity: o.opacity?.endFactor ?? 1,
         pingPong: o.opacity?.pingPong ?? false
@@ -114,15 +121,28 @@ sketch.draw( () => {
         4,
         1
       ];
+
+      // mappers.circularIndex steps discretely through petalsCycle/stepCycle
+      // by truncating its index argument, so each only returns to its start
+      // entry once per loop when the clock advances a WHOLE number of the
+      // array's length in steps — snapped to whole cycles per loop.
+      const petalsCyclesPerLoop = Math.round( p.TAU / petalsCycle.length );
+      const petalsClock = animation.progression * petalsCyclesPerLoop * petalsCycle.length;
+      const stepCyclesPerLoop = Math.round( p.TAU / stepCycle.length );
+      const stepClock = animation.progression * stepCyclesPerLoop * stepCycle.length;
       const lineMax = p.PI / mappers.circularIndex(
-        t,
+        petalsClock,
         petalsCycle
       );
       const lineStep = lineMax / mappers.circularIndex(
-        t,
+        stepClock,
         stepCycle
       );
-      const hueSpeed = -t * ( o.colors?.hueSpeed ?? 2 );
+      // Hue scroll only returns to its start hue once per loop when it
+      // completes a WHOLE number of cycles — snapped to whole cycles per
+      // loop.
+      const hueCycles = Math.round( o.colors?.hueSpeed ?? 2 );
+      const hueSpeed = -t * hueCycles;
       const palette = o.colors?.palette ?? "rainbow";
       const ll = o.lines?.length ?? 100;
 

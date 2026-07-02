@@ -10,7 +10,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, getFont, loopedTime, drawShape
+  getAlphabet, getFont, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -31,7 +31,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "123" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -70,11 +69,12 @@ sketch.draw( (
       // sampleFactor is animated per step, so the clouds cannot be hoisted;
       // routing through traceLetters.points keeps them in the bounded memo
       // (pixel-identical, no unbounded cache growth).
+      // Loop-exact sample-factor cycle — whole `sampleValues`-length cycles per loop.
       const sampleFactor = animation.ease( {
         values: sampleValues,
         duration: 1,
         easingFn: easing.easeInOutExpo,
-        currentTime: progression / 2 + time
+        currentTime: progression / 2 + loopedPhase( 1, sampleValues.length )
       } );
 
       return traceLetters.morph( {
