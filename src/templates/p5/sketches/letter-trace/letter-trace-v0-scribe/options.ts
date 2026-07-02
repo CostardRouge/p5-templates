@@ -233,7 +233,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       hueSpeed: {
-        label: "Hue speed (over time)",
+        label: "Hue speed (over time) (snaps to whole turns/loop)",
         component: "slider",
         min: 0,
         max: 4,

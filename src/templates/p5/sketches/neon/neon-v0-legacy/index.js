@@ -30,8 +30,20 @@ class Spiral extends SpiralBase {
     } = this;
 
     const timeSpeed = motion.timeSpeed ?? 1;
-    const t = time * timeSpeed;
-    const hueCadence = index + t * ( colorOpts.hueSpeed ?? 1 );
+
+    // Loop-exact clock: `time` is animation.angle, which sweeps exactly TAU
+    // per loop, so every oscillator driven by it only returns to its start
+    // value when its rate is a WHOLE number of cycles per loop — snap each
+    // raw rate to the nearest whole cycle below.
+    const motionCycles = Math.round( timeSpeed );
+    const t = time * motionCycles;
+    const hueCycles = Math.round( timeSpeed * ( colorOpts.hueSpeed ?? 1 ) );
+    const hueCadence = index + time * hueCycles;
+
+    // NOTE: animation.sequence below is a lerp-smoothed follower that carries
+    // state across frames (never resets at the loop seam), so xPolarCoefficient
+    // / yPolarCoefficient can't be made to close the loop by snapping their
+    // input rate alone — left as-is (not fixable here).
 
     const polarValuesX = motion.xPolarValues ?? [
       1,
@@ -198,7 +210,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -212,10 +224,15 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` the draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam).
+  const t = animation.angle;
+
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index,
     sketchState.shapes.length
   ) );

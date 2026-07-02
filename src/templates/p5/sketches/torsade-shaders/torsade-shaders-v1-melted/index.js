@@ -4,6 +4,9 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
+import {
+  snapLoopRate
+} from "../_shared.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // torsade-shaders v1 — melted.
@@ -198,6 +201,18 @@ sketch.draw( ( time ) => {
     MAX_SAMPLES
   );
 
+  // Loop-exact rates: uTime is the sketch's raw, non-wrapping clock, so
+  // every rate multiplying it is snapped CPU-side to whole cycles per loop
+  // (see ../_shared.js#snapLoopRate) before being passed to the shader.
+  const cadenceSpeed = snapLoopRate( motion.cadenceSpeed ?? 1 );
+  const hueSpread = colors.hueSpread ?? 1;
+  // The palette scrolls with period 1/hueSpread in hue-phase space, so the
+  // hue scroll is snapped to whole PALETTE periods per loop, not whole
+  // turns — matching the flowers-shaders iridescent hue-scroll fix.
+  const hueSpeed = hueSpread
+    ? snapLoopRate( ( colors.hueSpeed ?? 1 ) * hueSpread ) / hueSpread
+    : 0;
+
   torsade.render( {
     columns: 1,
     rows: 1,
@@ -210,14 +225,14 @@ sketch.draw( ( time ) => {
       uCircleSize: spiral.circleSize ?? 200,
       uCadenceMin: spiral.cadenceMin ?? -4,
       uCadenceMax: spiral.cadenceMax ?? 4,
-      uCadenceSpeed: motion.cadenceSpeed ?? 1,
+      uCadenceSpeed: cadenceSpeed,
       uCadenceIndexScale: motion.cadenceIndexScale ?? 0,
       uSamples: samples,
       uAxis: {
         int: ( layout.axis ?? "vertical" ) === "horizontal" ? 1 : 0
       },
-      uHueSpeed: colors.hueSpeed ?? 1,
-      uHueSpread: colors.hueSpread ?? 1,
+      uHueSpeed: hueSpeed,
+      uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uIndexHueShift: colors.indexHueShift ?? 1,
       uShimmer: colors.shimmer ?? 1.5,

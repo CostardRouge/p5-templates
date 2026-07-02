@@ -3,6 +3,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import converters from "@/p5/utils/converters.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   SpiralBase, rebuildGrid
@@ -16,19 +17,23 @@ const sketchState = {
 class Spiral extends SpiralBase {
   cachedColors = {};
 
+  // `time` here is a pre-scaled, already loop-snapped phase (see the
+  // `halfCycles` clock in draw()) — this used to divide it by 2 internally,
+  // which meant its whole-cycle rate couldn't be snapped independently of
+  // the caller's other `time`-driven terms.
   getVector(
     angle, time, waveAmplitude
   ) {
     const p = getP5();
     const xAngle = p.map(
-      p.sin( angle - time / 2 ),
+      p.sin( angle - time ),
       -1,
       1,
       -p.PI,
       p.PI
     );
     const yAngle = p.map(
-      p.cos( angle + time / 2 ),
+      p.cos( angle + time ),
       -1,
       1,
       -p.PI,
@@ -98,8 +103,19 @@ class Spiral extends SpiralBase {
     } = this;
 
     const timeSpeed = motion.timeSpeed ?? 1;
-    const t = time * timeSpeed;
-    const hueCadence = index + t * ( colorOpts.hueSpeed ?? 1 );
+
+    // Loop-exact clock: `time` is animation.angle, which sweeps exactly TAU
+    // per loop, so every oscillator driven by it only returns to its start
+    // value when its rate is a WHOLE number of cycles per loop — snap each
+    // raw rate to the nearest whole cycle below. getVector's internal ±half
+    // wave needs its own snapped half-rate clock, independent of the direct
+    // full-rate uses of `t` below.
+    const motionCycles = Math.round( timeSpeed );
+    const halfCycles = Math.round( timeSpeed / 2 );
+    const t = time * motionCycles;
+    const tHalf = time * halfCycles;
+    const hueCycles = Math.round( timeSpeed * ( colorOpts.hueSpeed ?? 1 ) );
+    const hueCadence = index + time * hueCycles;
 
     const shadowsCount = spiralOpts.shadowsCount ?? 3;
     const weightMin = spiralOpts.weightMin ?? 75;
@@ -164,7 +180,7 @@ class Spiral extends SpiralBase {
 
         const vector = this.getVector(
           angle,
-          t,
+          tHalf,
           waveAmplitude
         );
         const nextVector = this.getVector(
@@ -258,7 +274,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -272,10 +288,15 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` the draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam).
+  const t = animation.angle;
+
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

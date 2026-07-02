@@ -57,6 +57,12 @@ sketch.draw( (
   const strokeWeightEasingFn = easing?.[ options.sketch.peaks?.point?.strokeWeightEasing ] ?? easing.easeOutCirc;
   const peaksAnimated = options.sketch.peaks?.animated ?? true;
   const peaksAnimSpeed = options.sketch.peaks?.animSpeed ?? 0.2;
+  // Not loop-safe when enabled (default on): this offset scrubs the noise
+  // Z-coordinate linearly (p.noise(..., peaksTime)) for both the spike
+  // amplitude and the colour noise below. p5 noise is not periodic, so no
+  // rounding of the rate can make it return to its start value at the seam
+  // — it would need a circular-noise redesign (sampling on a circle in an
+  // extra dimension), out of scope here.
   const peaksTime = peaksAnimated ? animation.angle * peaksAnimSpeed : 0;
 
   // ── Opacity along depth ───────────────────────────────────────────────────
@@ -69,9 +75,13 @@ sketch.draw( (
   // ── Rotation ──────────────────────────────────────────────────────────────
   const rotationEnabled = options.sketch.rotation?.enabled ?? true;
   const angleMax = options.sketch.rotation?.angleMax ?? ( p.PI / 32 );
-  const xMultiplier = options.sketch.rotation?.xMultiplier ?? 0;
-  const yMultiplier = options.sketch.rotation?.yMultiplier ?? 0;
-  const zMultiplier = options.sketch.rotation?.zMultiplier ?? 1;
+  // Wobble speeds drive sin/cos(animation.angle * multiplier) directly, so the
+  // wobble only returns to its start pose when it completes a WHOLE number of
+  // turns per loop — snapped here (the sliders themselves allow fractional
+  // steps).
+  const xMultiplier = Math.round( options.sketch.rotation?.xMultiplier ?? 0 );
+  const yMultiplier = Math.round( options.sketch.rotation?.yMultiplier ?? 0 );
+  const zMultiplier = Math.round( options.sketch.rotation?.zMultiplier ?? 1 );
 
   const rX = rotationEnabled
     ? mappers.fn(

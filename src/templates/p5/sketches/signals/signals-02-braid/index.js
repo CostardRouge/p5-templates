@@ -277,6 +277,13 @@ sketch.draw( () => {
   const timeScale = o.timeScale ?? 1;
   const t = animation.angle * timeScale;
 
+  // Hue scroll — the shader mixes uT · uHueSpeed straight into the iridescent
+  // phase (period = 1 / uHueSpread), so it only closes the loop when it
+  // completes a whole number of palette periods per loop. Snapped here since
+  // the slider itself isn't step-quantised to integers like spin/pulse/orbit.
+  const hueSpread = colors.hueSpread ?? 1.4;
+  const hueCycles = Math.round( ( colors.hueSpeed ?? 0 ) * timeScale * p.TAU * hueSpread );
+
   const pipeCount = Math.min(
     braid.pipeCount ?? 3,
     MAX_PIPES
@@ -322,8 +329,8 @@ sketch.draw( () => {
       uFocal: focal,
       uPitch: pitch,
       uYaw: ( camera.yaw ?? 0.5 ) + t * ( camera.orbitSpeed ?? 0 ),
-      uHueSpeed: colors.hueSpeed ?? 0,
-      uHueSpread: colors.hueSpread ?? 1.4,
+      uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+      uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uLengthHueShift: colors.lengthHueShift ?? 0.25,
       uPipeHueShift: colors.pipeHueShift ?? 0.33,

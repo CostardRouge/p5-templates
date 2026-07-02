@@ -6,6 +6,9 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   createInstancedFieldRenderer
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  snapLoopRate
+} from "../_shared.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // torsade-shaders v2 — rabbit hole.
@@ -49,6 +52,8 @@ const VERTEX = `
   uniform float uShadowRotationRadians;
   uniform float uSpinSpeed;
   uniform float uJitter;
+  uniform float uJitterXRate;       // jitter's sin() rate (whole turns per loop)
+  uniform float uJitterYRate;       // jitter's cos() rate (whole turns per loop)
 
   uniform float uHueSpeed;
   uniform float uHueSpread;
@@ -95,8 +100,8 @@ const VERTEX = `
     // Progressive jitter — constant within a frame, accumulated per ring step,
     // so the stack of rings leans into a drifting tunnel ("rabbit hole").
     vec2 jitter = vec2(
-      remap(sin(uT * 2.0), -1.0, 1.0, -uJitter, uJitter),
-      remap(cos(uT),       -1.0, 1.0, -uJitter, uJitter)
+      remap(sin(uT * uJitterXRate), -1.0, 1.0, -uJitter, uJitter),
+      remap(cos(uT * uJitterYRate), -1.0, 1.0, -uJitter, uJitter)
     );
     vec2 drift = (stepIndex + 1.0) * jitter;
 
@@ -190,6 +195,22 @@ sketch.draw( ( time ) => {
     shadowSteps = Math.floor( shadowsCount / shadowIndexStep + 1e-9 ) + 1;
   }
 
+  // Loop-exact rates: uT is the sketch's raw, non-wrapping clock, so every
+  // rate multiplying it is snapped CPU-side to whole cycles per loop (see
+  // ../_shared.js#snapLoopRate) — including the literal jitter rates below,
+  // which aren't sliders but still need to close the loop.
+  const spinSpeed = snapLoopRate( motion.spinSpeed ?? 1 );
+  const jitterXRate = snapLoopRate( 2 );
+  const jitterYRate = snapLoopRate( 1 );
+  const opacityCurveSpeed = snapLoopRate( colors.opacityCurveSpeed ?? 5 );
+  const hueSpread = colors.hueSpread ?? 1;
+  // The palette scrolls with period 1/hueSpread in hue-phase space, so the
+  // hue scroll is snapped to whole PALETTE periods per loop, not whole
+  // turns — matching the flowers-shaders/torsade-shaders melted fix.
+  const hueSpeed = hueSpread
+    ? snapLoopRate( ( colors.hueSpeed ?? 1 ) * hueSpread ) / hueSpread
+    : 0;
+
   field.render( {
     columns: angleSubdivisions,
     rows: shadowSteps * spiralCount,
@@ -207,15 +228,17 @@ sketch.draw( ( time ) => {
       uWeightMin: rings.weightMin ?? 20,
       uWeightMax: rings.weightMax ?? 75,
       uShadowRotationRadians: rings.shadowRotationRadians ?? 7,
-      uSpinSpeed: motion.spinSpeed ?? 1,
+      uSpinSpeed: spinSpeed,
       uJitter: motion.jitterAmount ?? 0.33,
-      uHueSpeed: colors.hueSpeed ?? 1,
-      uHueSpread: colors.hueSpread ?? 1,
+      uJitterXRate: jitterXRate,
+      uJitterYRate: jitterYRate,
+      uHueSpeed: hueSpeed,
+      uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uDepthHue: colors.depthHue ?? 1,
       uSaturation: colors.saturation ?? 1,
       uBrightness: colors.brightness ?? 1,
-      uOpacityCurveSpeed: colors.opacityCurveSpeed ?? 5,
+      uOpacityCurveSpeed: opacityCurveSpeed,
       uOpacityMin: colors.opacityMin ?? 1,
       uOpacityMax: colors.opacityMax ?? 15
     }

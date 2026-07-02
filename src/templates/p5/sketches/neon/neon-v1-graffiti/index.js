@@ -4,6 +4,7 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   SpiralBase, rebuildGrid
@@ -29,8 +30,15 @@ class Spiral extends SpiralBase {
     } = this;
 
     const timeSpeed = motion.timeSpeed ?? 1;
-    const t = time * timeSpeed;
-    const hueCadence = index + t * ( colorOpts.hueSpeed ?? 1 );
+
+    // Loop-exact clock: `time` is animation.angle, which sweeps exactly TAU
+    // per loop, so every oscillator driven by it only returns to its start
+    // value when its rate is a WHOLE number of cycles per loop — snap each
+    // raw rate to the nearest whole cycle below.
+    const motionCycles = Math.round( timeSpeed );
+    const t = time * motionCycles;
+    const hueCycles = Math.round( timeSpeed * ( colorOpts.hueSpeed ?? 1 ) );
+    const hueCadence = index + time * hueCycles;
 
     const shadowsCount = spiralOpts.shadowsCount ?? 3;
     const weightMin = spiralOpts.weightMin ?? 100;
@@ -171,7 +179,7 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   rebuildGrid( {
@@ -185,10 +193,15 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` the draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam).
+  const t = animation.angle;
+
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 

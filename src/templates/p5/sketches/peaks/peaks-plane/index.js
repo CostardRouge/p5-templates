@@ -71,6 +71,12 @@ sketch.draw( (
   const fieldTerrainOffset = options.sketch.field?.terrainOffset ?? 50;
   const fieldAnimSpeed = options.sketch.field?.animSpeed ?? 0.1;
   const fieldAnimated = options.sketch.field?.animated ?? true;
+  // Not loop-safe when enabled: this offset scrubs the noise Z-coordinate
+  // linearly (p.noise(..., fieldTime)). p5 noise is not periodic, so no
+  // rounding of the rate can make it return to its start value at the seam
+  // — it would need a circular-noise redesign (sampling on a circle in an
+  // extra dimension), out of scope here. Defaults to off (field.animated
+  // false) so the loop is seamless out of the box.
   const fieldTime = fieldAnimated ? animation.angle * fieldAnimSpeed : 0;
 
   // ── Grid ──────────────────────────────────────────────────────────────────
@@ -85,9 +91,13 @@ sketch.draw( (
   const angleMax = options.sketch.rotation?.angleMax ?? ( p.PI / 32 );
   const xBase = options.sketch.rotation?.xBase ?? ( -p.PI / 4 );
   const yBase = options.sketch.rotation?.yBase ?? 0;
-  const xMultiplier = options.sketch.rotation?.xMultiplier ?? 1;
-  const yMultiplier = options.sketch.rotation?.yMultiplier ?? 0.5;
-  const zMultiplier = options.sketch.rotation?.zMultiplier ?? 0;
+  // Wobble speeds drive sin/cos(animation.angle * multiplier) directly, so the
+  // wobble only returns to its start pose when it completes a WHOLE number of
+  // turns per loop — snapped here (the sliders themselves allow fractional
+  // steps).
+  const xMultiplier = Math.round( options.sketch.rotation?.xMultiplier ?? 1 );
+  const yMultiplier = Math.round( options.sketch.rotation?.yMultiplier ?? 0.5 );
+  const zMultiplier = Math.round( options.sketch.rotation?.zMultiplier ?? 0 );
 
   const rX = xBase + ( rotationEnabled
     ? mappers.fn(

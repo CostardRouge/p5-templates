@@ -213,7 +213,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       rotationSpeed: {
-        label: "Rotation speed",
+        label: "Rotation speed (snaps to whole turns/loop)",
         component: "slider",
         min: -3,
         max: 3,
@@ -241,7 +241,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       opacitySinFactor: {
-        label: "Opacity oscillation factor",
+        label: "Opacity oscillation factor (snaps to whole turns/loop)",
         component: "slider",
         min: 0,
         max: 12,

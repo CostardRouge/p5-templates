@@ -190,7 +190,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Iridescent (low-sat)",
     fields: {
       hueSpeed: {
-        label: "Hue speed (0 = spatial, loop-safe)",
+        label: "Hue speed (0 = spatial, loop-safe) (snaps to whole cycles/loop)",
         component: "slider",
         min: -5,
         max: 5,

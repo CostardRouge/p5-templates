@@ -345,9 +345,14 @@ function strokeColor( {
   const p = getP5();
 
   if ( cfg.rainbow ) {
+    // animation.angle sweeps exactly TAU per loop, and the palettes read it as
+    // a raw radian offset, so the scroll only lands back on its start hue when
+    // it completes a WHOLE number of turns per loop — snapped here.
+    const hueTurns = Math.round( cfg.hueSpeed ?? 0 );
+
     return palette( cfg.palette ?? "rainbow" )( {
       hueIndex,
-      hueOffset: ( cfg.hueOffset ?? 0 ) + animation.angle * ( cfg.hueSpeed ?? 0 ),
+      hueOffset: ( cfg.hueOffset ?? 0 ) + animation.angle * hueTurns,
       alpha
     } );
   }

@@ -6,6 +6,9 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   createInstancedFieldRenderer
 } from "@/p5/utils/noiseFieldGpu.js";
+import {
+  snapLoopRate
+} from "../_shared.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // torsade-shaders v3 — medusa.
@@ -53,6 +56,9 @@ const VERTEX = `
   uniform float uRotationSpeed;
   uniform float uRotationMaxMin;
   uniform float uRotationMaxMax;
+  uniform float uRotationMaxRate;   // rotationMax's sin() rate (whole turns per loop)
+  uniform float uUnitRate;          // lineSize/wMax's sin() rate (whole turns per loop)
+  uniform float uOpacityFalloffRate; // opacityFalloff's sin() rate (whole turns per loop)
   uniform float uWeightMaxMin;
   uniform float uWeightMaxMax;
   uniform float uEndcapWeight;
@@ -111,11 +117,11 @@ const VERTEX = `
     vec2 ringPos = vec2(ringRadius * sin(ringTheta), ringRadius * cos(ringTheta));
 
     // The cluster of dots spins a little more the further along the tentacle.
-    float rotationMax = remap(sin(uT * 0.5), -1.0, 1.0, uRotationMaxMin, uRotationMaxMax);
+    float rotationMax = remap(sin(uT * uRotationMaxRate), -1.0, 1.0, uRotationMaxMin, uRotationMaxMax);
     float rot = -uT * uRotationSpeed + remap(shadowIndex, 0.0, uShadowsCount, 0.0, rotationMax);
 
     float lineSize = clamp(
-      remap(sin(uT), -1.0, 1.0, uLineSizeMin, uLineSizeMax),
+      remap(sin(uT * uUnitRate), -1.0, 1.0, uLineSizeMin, uLineSizeMax),
       min(uLineSizeMin, uLineSizeMax), max(uLineSizeMin, uLineSizeMax)
     );
     float lineAngle = lineIdx * (PI / uLinesCount);
@@ -128,7 +134,7 @@ const VERTEX = `
     center = spiralPos + ringPos + rotated;
 
     // Dots fatten toward the tip; the very last step is a thin endcap.
-    float wMax = remap(sin(uT), -1.0, 1.0, uWeightMaxMin, uWeightMaxMax);
+    float wMax = remap(sin(uT * uUnitRate), -1.0, 1.0, uWeightMaxMin, uWeightMaxMax);
     float weight = clamp(remap(shadowIndex, 0.0, uShadowsCount, 0.0, wMax), 0.0, wMax);
     bool isEndcap = stepIndex >= uShadowSteps - 1.0;
 
@@ -142,7 +148,7 @@ const VERTEX = `
 
     // Iridescent colour with the original's pulsing brightness.
     float opacityFalloff = remap(
-      sin(-uT * 3.0 + angle * 2.0), -1.0, 1.0, uOpacityFalloffMin, uOpacityFalloffMax
+      sin(-uT * uOpacityFalloffRate + angle * 2.0), -1.0, 1.0, uOpacityFalloffMin, uOpacityFalloffMax
     );
     float opacityFactor = remap(
       abs(shadowIndex - uShadowsCount * 2.0), 0.0, uShadowsCount * 2.0, 1.0, opacityFalloff
@@ -184,7 +190,11 @@ function drawGlow(
   const sizeMin = glow.sizeMin ?? 0.166;
   const sizeMax = glow.sizeMax ?? 1;
   const orbitRadius = glow.orbitRadius ?? 30;
-  const orbitSpeed = glow.orbitSpeed ?? 5;
+  // Loop-exact rates: raw time is the sketch's non-wrapping clock, so every
+  // rate multiplying it — including the literal size-pulse rate below — is
+  // snapped to whole cycles per loop (see ../_shared.js#snapLoopRate).
+  const orbitSpeed = snapLoopRate( glow.orbitSpeed ?? 5 );
+  const sizeTimeRate = snapLoopRate( 1 );
   const c = glow.color ?? [
     128,
     128,
@@ -196,7 +206,7 @@ function drawGlow(
   p.stroke( ...c );
 
   const size = p.map(
-    -p.sin( time ),
+    -p.sin( time * sizeTimeRate ),
     -1,
     1,
     p.width * sizeMin,
@@ -269,6 +279,23 @@ sketch.draw( ( time ) => {
     shadowSteps = Math.floor( shadowsCount / shadowIndexStep + 1e-9 ) + 1;
   }
 
+  // Loop-exact rates: uT is the sketch's raw, non-wrapping clock, so every
+  // rate multiplying it is snapped CPU-side to whole cycles per loop (see
+  // ../_shared.js#snapLoopRate) — including the literal rates below, which
+  // aren't sliders but still need to close the loop.
+  const spinSpeed = snapLoopRate( motion.spinSpeed ?? 1 );
+  const rotationSpeed = snapLoopRate( motion.rotationSpeed ?? 3 );
+  const rotationMaxRate = snapLoopRate( 0.5 );
+  const unitRate = snapLoopRate( 1 );
+  const opacityFalloffRate = snapLoopRate( 3 );
+  const hueSpread = colors.hueSpread ?? 1;
+  // The palette scrolls with period 1/hueSpread in hue-phase space, so the
+  // hue scroll is snapped to whole PALETTE periods per loop, not whole
+  // turns — matching the flowers-shaders/torsade-shaders melted fix.
+  const hueSpeed = hueSpread
+    ? snapLoopRate( ( colors.hueSpeed ?? 1 ) * hueSpread ) / hueSpread
+    : 0;
+
   field.render( {
     columns,
     rows: shadowSteps * spiralCount,
@@ -288,16 +315,19 @@ sketch.draw( ( time ) => {
       uRadiusDivisorMax: rings.radiusDivisorMax ?? 5,
       uLineSizeMin: rings.lineSizeMin ?? 50,
       uLineSizeMax: rings.lineSizeMax ?? 150,
-      uSpinSpeed: motion.spinSpeed ?? 1,
-      uRotationSpeed: motion.rotationSpeed ?? 3,
+      uSpinSpeed: spinSpeed,
+      uRotationSpeed: rotationSpeed,
       uRotationMaxMin: motion.rotationMaxMin ?? 1,
       uRotationMaxMax: motion.rotationMaxMax ?? 5,
+      uRotationMaxRate: rotationMaxRate,
+      uUnitRate: unitRate,
+      uOpacityFalloffRate: opacityFalloffRate,
       uWeightMaxMin: colors.weightMaxMin ?? 50,
       uWeightMaxMax: colors.weightMaxMax ?? 100,
       uEndcapWeight: endcap.weight ?? 4,
       uEndcapDarken: endcap.darken ?? 32,
-      uHueSpeed: colors.hueSpeed ?? 1,
-      uHueSpread: colors.hueSpread ?? 1,
+      uHueSpeed: hueSpeed,
+      uHueSpread: hueSpread,
       uHuePhase: colors.huePhase ?? 0,
       uDepthHue: colors.depthHue ?? 1,
       uSaturation: colors.saturation ?? 1,
