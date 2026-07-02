@@ -5,7 +5,7 @@ import {
   getP5
 } from "./sketch.js";
 import {
-  resolveAnimation, totalFramesFor
+  totalFramesFor
 } from "@/lib/animationConfig";
 
 const animation = {
@@ -35,18 +35,21 @@ const animation = {
   },
 
   get progression() {
-    const {
-      duration
-    } = resolveAnimation( sketch.sketchOptions?.animation );
-    const seconds = time.seconds();
-
-    // During recording, don't wrap and don't cap - progression should match frame count
-    if ( time.isRecording ) {
-      return seconds / duration;
-    }
-
-    // Normal playback: wrap around for continuous loop
-    return ( seconds % duration ) / duration;
+    // Delegate to the single canonical loop phase so every progression reader
+    // (this getter, the bridge, the per-frame draw clock, the progression bar)
+    // derives from one source and can never drift apart.
+    return time.phase();
+  },
+  // Duration-driven loop seconds — the canonical replacement for the legacy
+  // `draw(time, …)` first argument. It is the loop phase scaled so one whole
+  // loop spans the baseline duration (`progression × DURATION_DEFAULT`), so a
+  // sketch that thinks in seconds (e.g. feeds a shader `uT`) reads this instead
+  // of the draw argument: it stays duration-driven AND stops depending on the
+  // draw signature. New sketches should prefer `animation.progression` directly;
+  // this exists so the seconds-based sketches migrate as a one-line change with
+  // no visual difference. Backed by the same `time.phase()` as everything else.
+  get loopTime() {
+    return time.drawSeconds();
   },
   get circularProgression() {
     return mappers.circular(

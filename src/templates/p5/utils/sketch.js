@@ -294,9 +294,14 @@ const sketch = {
 
           events.handle( "pre-draw" );
 
-          // Call the user's draw function with the same args as before
+          // Call the user's draw function. The first arg is the duration-scaled
+          // loop clock (time.drawSeconds), NOT raw elapsed seconds: a sketch
+          // that animates off it completes its whole loop within `duration`, so
+          // changing the duration rescales the live preview and the recording
+          // identically. At the default duration it equals the old real-seconds
+          // value, so existing sketches are unchanged there.
           await sketch._drawFn?.(
-            time.seconds(),
+            time.drawSeconds(),
             sketch.getCanvasCenter(),
             sketch.favoriteColors.purple,
             p
@@ -491,35 +496,15 @@ const sketch = {
           return;
         }
 
-        const {
-          duration
-        } = resolveAnimation( sketch.sketchOptions?.animation );
-        const seconds = time.seconds();
-        const progression = time.isRecording
-          ? Math.min(
-            seconds / duration,
-            1.0
-          )
-          : ( seconds % duration ) / duration;
-
-        subscribers.forEach( ( cb ) => cb( progression ) );
+        // Read the single canonical loop phase (same source as
+        // animation.progression and the draw clock) so subscribers never see a
+        // position that disagrees with the running sketch.
+        subscribers.forEach( ( cb ) => cb( time.phase() ) );
       }
     );
 
     registerAnimationBridge( {
-      getProgression: () => {
-        const {
-          duration
-        } = resolveAnimation( sketch.sketchOptions?.animation );
-        const seconds = time.seconds();
-
-        return time.isRecording
-          ? Math.min(
-            seconds / duration,
-            1.0
-          )
-          : ( seconds % duration ) / duration;
-      },
+      getProgression: () => time.phase(),
 
       setProgression: ( value ) => {
         const clamped = Math.max(
