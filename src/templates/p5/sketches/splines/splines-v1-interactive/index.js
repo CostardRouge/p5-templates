@@ -248,7 +248,16 @@ sketch.draw( () => {
   } );
 
   const curve = o.curve ?? {};
-  const stroke = o.stroke ?? {};
+  const rawStroke = o.stroke ?? {};
+
+  // Loop-exact clock: renderSplines' hue scroll multiplies animation.angle by
+  // hueSpeed directly (splines/_shared.js), which only returns to its start hue
+  // when hueSpeed is a WHOLE number of cycles per loop — snapped here at the
+  // call site since _shared.js is shared with other families.
+  const stroke = {
+    ...rawStroke,
+    hueSpeed: Math.round( rawStroke.hueSpeed ?? 1 )
+  };
 
   if ( modeType === "trail" || modeType === "recall" || modeType === "chase" ) {
     // Trails are time-series ribbons, so the raw-polygon / point markers overlay
