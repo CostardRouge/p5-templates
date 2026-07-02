@@ -5,7 +5,7 @@ import sketch, {
 import mappers from "@/p5/utils/mappers.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  SpiralBase, rebuildGrid
+  SpiralBase, rebuildGrid, snapLoopRate
 } from "../_shared.js";
 
 const sketchState = {
@@ -28,7 +28,10 @@ class Spiral extends SpiralBase {
     } = this;
 
     const hueCadence = index;
-    const timeSpeed = motion.timeSpeed ?? 1;
+    // Loop-exact rate: raw time is the sketch's non-wrapping clock, so it's
+    // snapped to whole cycles per loop before feeding sin/cos (see
+    // ../_shared.js#snapLoopRate).
+    const timeSpeed = snapLoopRate( motion.timeSpeed ?? 1 );
     const t = p.sin( time * timeSpeed );
     const mult = p.map(
       t,

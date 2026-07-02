@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 
 import converters from "@/p5/utils/converters.js";
 import mappers from "@/p5/utils/mappers.js";
@@ -10,7 +11,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 sketch.setup( () => {} );
 
 function drawGrid(
-  p, xCount, yCount, time, animSpeed
+  p, xCount, yCount, t, animSpeed
 ) {
   const xSize = p.width / xCount;
   const ySize = p.height / yCount;
@@ -22,8 +23,15 @@ function drawGrid(
     255
   );
 
+  // The vertical scroll (yy) accumulates linearly and wraps via `% p.height`,
+  // so it only lands on the same wrapped position at the seam when it covers
+  // a WHOLE number of screen-heights per loop — snap its rate accordingly.
+  const yySpeed = ySize * animSpeed;
+  const yyCycles = Math.round( yySpeed * p.TAU / p.height );
+  const yySnapped = p.height ? yyCycles * p.height / p.TAU : 0;
+
   const xx = xSize / 2;
-  const yy = ySize * time * animSpeed;
+  const yy = yySnapped * t;
 
   for ( let x = 0; x <= xCount; x++ ) {
     for ( let y = 0; y <= yCount; y++ ) {
@@ -43,7 +51,7 @@ function drawGrid(
   }
 }
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch;
 
@@ -52,12 +60,18 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop.
+  const t = animation.angle;
+
   if ( o.grid?.enabled ?? true ) {
     drawGrid(
       p,
       o.grid?.xCount ?? 5,
       o.grid?.yCount ?? 6,
-      time,
+      t,
       o.grid?.animSpeed ?? 1
     );
   }
@@ -68,11 +82,11 @@ sketch.draw( ( time ) => {
     p.height / 2
   );
 
-  // Symmetric loop angle bounds that pulse with cos(time)
+  // Symmetric loop angle bounds that pulse with cos(t)
   const angleBoundMin = o.shape?.angleBoundMin ?? 0.5;
   const angleBoundMax = o.shape?.angleBoundMax ?? p.PI;
   const angleMax = p.map(
-    p.cos( time ),
+    p.cos( t ),
     -1,
     1,
     angleBoundMin,
@@ -104,6 +118,12 @@ sketch.draw( ( time ) => {
   const hueSpeedOption = o.colors?.hueSpeed ?? 2;
   const greenAngleMult = o.colors?.greenAngleMultiplier ?? 2.5;
 
+  // Every rate multiplying t below is snapped to a WHOLE number of cycles
+  // per loop so the last frame matches the first at the seam.
+  const rotationCycles = Math.round( rotationSpeed );
+  const opacityCycles = Math.round( opacitySpeed );
+  const hueCycles = Math.round( hueSpeedOption );
+
   for ( let angle = angleMin; angle <= angleMax - 1; angle += angleStep ) {
     p.push();
     p.translate(
@@ -122,13 +142,13 @@ sketch.draw( ( time ) => {
     );
 
     // Original uses angle*angle/2 — yields a curling acceleration outwards.
-    p.rotate( time * rotationSpeed + angle * angle * rotationAngleSquared * rotationCount );
+    p.rotate( t * rotationCycles + angle * angle * rotationAngleSquared * rotationCount );
 
     let opacityFactor = mappers.circularMap(
       angle,
       angleMax * 4,
       p.map(
-        p.sin( -time * opacitySpeed + angle * opacityCount ),
+        p.sin( -t * opacityCycles + angle * opacityCount ),
         -1,
         1,
         startOpacity,
@@ -140,7 +160,7 @@ sketch.draw( ( time ) => {
     if ( pingPong ) {
       opacityFactor = p.map(
         p.map(
-          p.sin( angle * opacityCount - time * opacitySpeed ),
+          p.sin( angle * opacityCount - t * opacityCycles ),
           -1,
           1,
           -1,
@@ -149,7 +169,7 @@ sketch.draw( ( time ) => {
         -1,
         1,
         p.map(
-          p.cos( angle * opacityCount + time * opacitySpeed ),
+          p.cos( angle * opacityCount + t * opacityCycles ),
           -1,
           1,
           1,
@@ -163,7 +183,7 @@ sketch.draw( ( time ) => {
 
     if ( changeLinesCount ) {
       linesCount = p.map(
-        p.cos( angle + time ),
+        p.cos( angle + t ),
         -1,
         1,
         1,
@@ -172,7 +192,7 @@ sketch.draw( ( time ) => {
     }
 
     const lineStep = p.TAU / linesCount;
-    const hueSpeed = -time * hueSpeedOption;
+    const hueSpeed = -t * hueCycles;
 
     for ( let lineIndex = 0; lineIndex < p.TAU; lineIndex += lineStep ) {
       const vector = converters.polar.vector(

@@ -5,7 +5,7 @@ import sketch, {
 import mappers from "@/p5/utils/mappers.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  SpiralBase, rebuildGrid
+  SpiralBase, rebuildGrid, snapLoopRate
 } from "../_shared.js";
 
 const sketchState = {
@@ -27,7 +27,10 @@ class Spiral extends SpiralBase {
       position, size, start, end
     } = this;
 
-    const hueCadence = index + time * ( colorOpts.hueSpeed ?? -1 );
+    // Loop-exact rates: raw time is the sketch's non-wrapping clock, so every
+    // rate multiplying it is snapped to whole cycles per loop (see
+    // ../_shared.js#snapLoopRate).
+    const hueCadence = index + time * snapLoopRate( colorOpts.hueSpeed ?? -1 );
 
     p.push();
     p.translate(
@@ -37,13 +40,18 @@ class Spiral extends SpiralBase {
 
     const lerpSteps = spiralOpts.lerpSteps ?? 500;
     const lerpStep = 1 / lerpSteps;
-    const timeSpeed = motion.timeSpeed ?? 1;
+    const rawTimeSpeed = motion.timeSpeed ?? 1;
     const indexScale = motion.indexScale ?? 2;
     const angleScale = motion.angleScale ?? 1;
     const ampScale = spiralOpts.angleAmpScale ?? 1;
     const sMin = spiralOpts.circleSizeMin ?? 10;
     const sMax = spiralOpts.circleSizeMax ?? 100;
     const waveAmplitude = size * ampScale;
+    const timeSpeed = snapLoopRate( rawTimeSpeed );
+    // The angle's sin() multiplies the time term by angleScale before it
+    // reaches the trig call, so the whole combined coefficient (not
+    // timeSpeed alone) is what has to complete whole turns per loop.
+    const angleTimeRate = snapLoopRate( rawTimeSpeed * angleScale / 2 );
 
     for ( let lerpIndex = 0; lerpIndex < 1; lerpIndex += lerpStep ) {
       const lerpPosition = mappers.lerpVector(
@@ -52,7 +60,7 @@ class Spiral extends SpiralBase {
         lerpIndex
       );
       const angle = p.map(
-        p.sin( ( lerpIndex + time * timeSpeed / 2 + index / indexScale ) * angleScale ),
+        p.sin( angleScale * ( lerpIndex + index / indexScale ) + time * angleTimeRate ),
         -1,
         1,
         -p.TAU,

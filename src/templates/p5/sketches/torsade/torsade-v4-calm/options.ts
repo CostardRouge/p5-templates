@@ -118,7 +118,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Motion",
     fields: {
       timeSpeed: {
-        label: "Time speed",
+        label: "Time speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 5,
@@ -145,7 +145,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Colors",
     fields: {
       hueSpeed: {
-        label: "Hue speed",
+        label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -10,
         max: 10,

@@ -4,6 +4,7 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   drawer,
@@ -12,9 +13,15 @@ import {
   paletteStroke
 } from "../_shared.js";
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` this draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam). Every rate multiplying it below
+  // is rounded to a whole number of cycles per loop.
+  const time = animation.angle;
 
   p.clear();
   p.background( ...( o.backgroundColor ?? [
@@ -30,10 +37,14 @@ sketch.draw( ( time ) => {
     255
   ];
 
+  // Background grid wobble only returns to its start offsets once per loop
+  // when it is a WHOLE number of cycles — snapped to whole cycles per loop.
+  const bgAnimationCycles = Math.round( o.background?.animationSpeed ?? 1 );
+
   drawCartesianGrid( {
     columns: o.background?.columns ?? 3,
     rows: o.background?.rows ?? 3,
-    time: time * ( o.background?.animationSpeed ?? 1 ),
+    time: time * bgAnimationCycles,
     strokeColor: p.color(
       bgTint[ 0 ],
       bgTint[ 1 ],

@@ -86,14 +86,14 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       shadowsCountSpeedA: {
-        label: "Shadows count speed A",
+        label: "Shadows count speed A (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,
         step: 0.1
       },
       shadowsCountSpeedB: {
-        label: "Shadows count speed B",
+        label: "Shadows count speed B (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 5,
@@ -183,7 +183,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       rotateSpinSpeed: {
-        label: "Rotate spin speed",
+        label: "Rotate spin speed (snaps to whole turns/loop)",
         component: "slider",
         min: 0,
         max: 100,
@@ -196,7 +196,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Colors",
     fields: {
       opacityPulseSpeed: {
-        label: "Opacity pulse speed",
+        label: "Opacity pulse speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 20,
@@ -262,7 +262,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       driftSpeed: {
-        label: "Drift speed",
+        label: "Drift speed (snaps to whole grid-cell cycles/loop)",
         component: "slider",
         min: 0,
         max: 500,

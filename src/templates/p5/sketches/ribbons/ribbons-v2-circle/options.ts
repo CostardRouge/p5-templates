@@ -80,9 +80,16 @@ export const formConfiguration: Record<string, any> = {
   lines: linesFormConfiguration(),
   opacity: opacityFormConfiguration(),
   rotation: rotationFormConfiguration( {
+    speed: {
+      component: "slider",
+      label: "Rotation speed (snaps to whole turns/loop)",
+      min: -10,
+      max: 10,
+      step: 0.1
+    },
     wobbleSpeed: {
       component: "slider",
-      label: "Wobble speed",
+      label: "Wobble speed (snaps to whole turns/loop)",
       min: -5,
       max: 5,
       step: 0.01
@@ -120,7 +127,7 @@ export const formConfiguration: Record<string, any> = {
       },
       animationSpeed: {
         component: "slider",
-        label: "Animation speed",
+        label: "Animation speed (snaps to whole wraps/loop)",
         min: -3,
         max: 3,
         step: 0.01

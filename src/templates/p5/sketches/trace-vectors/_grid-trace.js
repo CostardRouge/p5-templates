@@ -262,12 +262,20 @@ export function renderGridTraceCommon( {
     (
       vector, vectorsListProgression
     ) => {
+      // Loop-exact anchor walk: when the caller doesn't supply its own clock
+      // (positionTime — e.g. the drift accumulator `gt` in v15/v16, which is
+      // not fixable by snapping), default to a clock that completes a WHOLE
+      // number of `positions`-length cycles per loop instead of the raw
+      // `time` sweep, so the traced glyph returns exactly to its start cell.
       const position = animation.ease( {
         values: positions,
         duration: 1,
         lerpFn: mappers.lerpVector,
         easingFn: positionEasing,
-        currentTime: ( positionTime ?? time ) + positionTimeOffset + vectorsListProgression
+        currentTime: ( positionTime ?? loopedPhase(
+          1,
+          positions.length
+        ) ) + positionTimeOffset + vectorsListProgression
       } );
 
       position.add( vector );
@@ -297,7 +305,13 @@ export function renderGridTraceCommon( {
           vectorIndexProgression
         } )
         : colors.rainbow( {
-          hueOffset: time + ( opts.colors?.hueOffset ?? 0 ),
+          // Loop-exact hue scroll (only reached when the caller relies on the
+          // default clock — every caller that overrides `time` also supplies
+          // its own chunkColor).
+          hueOffset: loopedPhase(
+            1,
+            p.TAU
+          ) + ( opts.colors?.hueOffset ?? 0 ),
           hueIndex:
             mappers.fn(
               p.noise(

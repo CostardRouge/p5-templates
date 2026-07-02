@@ -11,7 +11,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime
+  getAlphabet, drawGrid, getFont, loopedPhase
 } from "../_shared.js";
 
 sketch.setup(
@@ -32,7 +32,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "abcdefghijklmnopqrstuvwxyz" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -141,11 +140,15 @@ sketch.draw( (
   const steps = options.sketch.traced?.steps ?? alphabet.length;
   const zAmp = options.sketch.wave?.amplitude ?? 0.5;
 
-  // sampleFactor is animated but depends only on `time` (constant within a
-  // frame), so it is the same for every step — build the clouds once. The
-  // bounded memo in traceLetters stops the per-frame key churn from leaking.
+  // sampleFactor is animated but depends only on the loop clock (constant
+  // within a frame), so it is the same for every step — build the clouds
+  // once. The bounded memo in traceLetters stops the per-frame key churn
+  // from leaking. Loop-exact oscillation — whole turns per loop.
   const sampleFactor = mappers.fn(
-    p.sin( time ),
+    p.sin( loopedPhase(
+      1,
+      p.TAU
+    ) ),
     -1,
     1,
     options.sketch.textStyle?.sampleFactorMin ?? 0.025,
@@ -184,19 +187,25 @@ sketch.draw( (
         vectorsListProgression
       );
 
+      const zValues = [
+        -H * zAmp,
+        -H * zAmp,
+        0,
+        0,
+        H * zAmp,
+        H * zAmp
+      ];
+
+      // Loop-exact wave — whole `zValues`-length cycles per loop.
       const z = animation.ease( {
-        values: [
-          -H * zAmp,
-          -H * zAmp,
-          0,
-          0,
-          H * zAmp,
-          H * zAmp
-        ],
+        values: zValues,
         duration: 1,
         easingFn: easing.easeInOutExpo,
         currentTime:
-          time + vectorIndexProgression / 2 + vectorsListProgression
+          loopedPhase(
+            1,
+            zValues.length
+          ) + vectorIndexProgression / 2 + vectorsListProgression
       } );
 
       position.add( vector );
@@ -222,7 +231,12 @@ sketch.draw( (
     },
     ( vectorIndexProgression ) => {
       p.stroke( colors.rainbow( {
-        hueOffset: time + ( options.sketch.colors?.hueOffset ?? 0 ),
+        // Loop-exact hue scroll and opacity oscillation — each snapped to
+        // whole turns per loop independently (they had different raw rates).
+        hueOffset: loopedPhase(
+          1,
+          p.TAU
+        ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
             p.noise(
@@ -236,7 +250,10 @@ sketch.draw( (
             p.PI / 2
           ) * ( options.sketch.colors?.hueIndexMultiplier ?? 6 ),
         opacityFactor: p.map(
-          p.sin( time * 2 + vectorIndexProgression * 8 ),
+          p.sin( loopedPhase(
+            2,
+            p.TAU
+          ) + vectorIndexProgression * 8 ),
           -1,
           1,
           options.sketch.colors?.opacityMax ?? 4,

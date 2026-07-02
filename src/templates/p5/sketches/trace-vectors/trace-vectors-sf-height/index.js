@@ -11,7 +11,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime, drawShape
+  getAlphabet, drawGrid, getFont, loopedTime, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -60,17 +60,25 @@ sketch.draw( (
       _, index
     ) => index );
 
+  // Loop-exact letter window: `time / 2` only returns to its start value when
+  // it advances a WHOLE number of `indexValues.length` cycles per loop —
+  // snapped below instead of the raw half-time sweep.
+  const letterWindowTime = loopedPhase(
+    0.5,
+    indexValues.length
+  );
+
   const letterStartIndex = animation.ease( {
     values: indexValues,
     duration: 1,
-    currentTime: time / 2,
+    currentTime: letterWindowTime,
     easingFn: easing.easeInOutSine
   } );
 
   const letterEndIndex = animation.ease( {
     values: indexValues.map( ( idx ) => idx + letterRange ),
     duration: 1,
-    currentTime: time / 2,
+    currentTime: letterWindowTime,
     easingFn: easing.easeInOutSine
   } );
 
@@ -200,7 +208,11 @@ sketch.draw( (
       vectorIndexProgression, chunkIndex = 1
     ) => {
       p.stroke( colors.test( {
-        hueOffset: time + ( options.sketch.colors?.hueOffset ?? 0 ),
+        // Loop-exact hue scroll — whole turns per loop.
+        hueOffset: loopedPhase(
+          1,
+          p.TAU
+        ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
             p.noise(

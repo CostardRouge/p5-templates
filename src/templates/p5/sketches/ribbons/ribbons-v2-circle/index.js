@@ -3,6 +3,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import converters from "@/p5/utils/converters.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   drawer,
@@ -11,9 +12,15 @@ import {
   paletteStroke
 } from "../_shared.js";
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` this draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam). Every rate multiplying it below
+  // is rounded to a whole number of cycles per loop.
+  const time = animation.angle;
 
   p.clear();
   p.background( ...( o.backgroundColor ?? [
@@ -29,9 +36,18 @@ sketch.draw( ( time ) => {
     255
   ];
 
+  // drawConcentricCircles wraps its diameter with `% p.width` at a fixed
+  // internal rate of 100px/radian, so the background only returns to its
+  // start diameters once per loop when the total pixel shift over the loop
+  // (TAU * animationSpeed * 100) is a WHOLE number of `p.width` wraps —
+  // snapped to whole wraps per loop.
+  const bgAnimationRaw = o.background?.animationSpeed ?? 1;
+  const bgWraps = Math.round( bgAnimationRaw * p.TAU * 100 / p.width );
+  const bgAnimationSpeed = bgWraps * p.width / ( p.TAU * 100 );
+
   drawConcentricCircles( {
     count: o.background?.count ?? 15,
-    time: time * ( o.background?.animationSpeed ?? 1 ),
+    time: time * bgAnimationSpeed,
     strokeColor: p.color(
       bgTint[ 0 ],
       bgTint[ 1 ],
@@ -87,27 +103,34 @@ sketch.draw( ( time ) => {
       );
 
       const rotationCount = o.rotation?.count ?? 1;
-      const rotationSpeed = o.rotation?.speed ?? 2;
-      const wobbleSpeed = o.rotation?.wobbleSpeed ?? 0.5;
+      // Rotation and wobble only return to their start angle once per loop
+      // when they are a WHOLE number of turns — snapped to whole turns per
+      // loop.
+      const rotationTurns = Math.round( o.rotation?.speed ?? 2 );
+      const wobbleTurns = Math.round( o.rotation?.wobbleSpeed ?? 0.5 );
       const a = p.map(
-        p.sin( t * wobbleSpeed ),
+        p.sin( t * wobbleTurns ),
         -1,
         1,
         0,
         p.TAU
       );
 
-      p.rotate( t * rotationSpeed + lerpIndex + a * rotationCount );
+      p.rotate( t * rotationTurns + lerpIndex + a * rotationCount );
     },
     (
       lerpIndex, _lMin, lerpMax, t
     ) => {
+      // Opacity oscillation only returns to its start value once per loop
+      // when it completes a WHOLE number of cycles — snapped to whole
+      // cycles per loop.
+      const opacityCycles = Math.round( o.opacity?.speed ?? -2 );
       const opacityFactor = computeOpacityFactor( {
         lerpIndex,
         lerpMax,
         time: t,
         opacityCount: o.opacity?.groupCount ?? 2,
-        opacitySpeed: o.opacity?.speed ?? -2,
+        opacitySpeed: opacityCycles,
         startOpacity: o.opacity?.startFactor ?? 3,
         endOpacity: o.opacity?.endFactor ?? 1,
         pingPong: o.opacity?.pingPong ?? true
@@ -128,7 +151,11 @@ sketch.draw( ( time ) => {
 
       const lineMax = p.PI;
       const lineStep = lineMax / linesCount;
-      const hueSpeed = -t * ( o.colors?.hueSpeed ?? 2 );
+      // Hue scroll only returns to its start hue once per loop when it
+      // completes a WHOLE number of cycles — snapped to whole cycles per
+      // loop.
+      const hueCycles = Math.round( o.colors?.hueSpeed ?? 2 );
+      const hueSpeed = -t * hueCycles;
       const palette = o.colors?.palette ?? "purple";
 
       for ( let lineIndex = 0; lineIndex < lineMax; lineIndex += lineStep ) {

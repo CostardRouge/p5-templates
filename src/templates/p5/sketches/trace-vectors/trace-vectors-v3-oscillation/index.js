@@ -11,7 +11,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, drawShape, getFont, loopedTime
+  getAlphabet, drawGrid, drawShape, getFont, loopedPhase
 } from "../_shared.js";
 
 sketch.setup(
@@ -48,7 +48,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "0123456789" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -137,15 +136,24 @@ sketch.draw( (
         progression
       );
 
+      // Loop-exact waveform: the inner oscillation closes on whole 2-value
+      // cycles, the outer 5-value ease on whole 5-value cycles — snapped
+      // independently since they have different raw rates.
       const h = animation.ease( {
         values: easeOscillation(
-          time + progression * 4,
+          loopedPhase(
+            1,
+            2
+          ) + progression * 4,
           HUDmargin,
           fns
         ),
         duration: 1,
         easingFn: easing.easeInOutElastic,
-        currentTime: time
+        currentTime: loopedPhase(
+          1,
+          fns.length
+        )
       } );
 
       position.add(
@@ -259,21 +267,27 @@ sketch.draw( (
         vectorsListProgression
       );
 
+      const zFns = [
+        easing.easeInOutExpo,
+        square,
+        easing.easeInOutSine,
+        square,
+        undefined
+      ];
+
+      // Loop-exact wave — whole `zFns`-length cycles per loop.
       const z = animation.ease( {
         values: easeOscillation(
           vectorsListProgression * 3,
           H / ( options.sketch.wave?.amplitudeDivisor ?? 5 ),
-          [
-            easing.easeInOutExpo,
-            square,
-            easing.easeInOutSine,
-            square,
-            undefined
-          ]
+          zFns
         ),
         duration: 1,
         easingFn: easing.easeInOutExpo,
-        currentTime: time
+        currentTime: loopedPhase(
+          1,
+          zFns.length
+        )
       } );
 
       position.add( vector );
@@ -297,8 +311,13 @@ sketch.draw( (
       );
     },
     ( vectorIndexProgression ) => {
+      // Loop-exact hue scroll and opacity oscillation — each snapped to
+      // whole turns per loop independently.
       p.stroke( colors.rainbow( {
-        hueOffset: time + ( options.sketch.colors?.hueOffset ?? 0 ),
+        hueOffset: loopedPhase(
+          1,
+          p.TAU
+        ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
             p.noise(
@@ -312,7 +331,10 @@ sketch.draw( (
             p.PI / 2
           ) * ( options.sketch.colors?.hueIndexMultiplier ?? 6 ),
         opacityFactor: p.map(
-          p.sin( time * 2 + vectorIndexProgression * 8 ),
+          p.sin( loopedPhase(
+            2,
+            p.TAU
+          ) + vectorIndexProgression * 8 ),
           -1,
           1,
           options.sketch.colors?.opacityMax ?? 4,

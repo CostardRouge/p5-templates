@@ -48,7 +48,7 @@ class Spiral extends SpiralBase {
 
     const lerpSteps = spiralOpts.lerpSteps ?? 200;
     const lerpStep = 1 / lerpSteps;
-    const timeSpeed = motion.timeSpeed ?? 3;
+    const timeSpeed = snapLoopRate( motion.timeSpeed ?? 3 );
     const alternate = motion.alternateDirection ?? true;
     const dir = alternate ? ( index % 2 === 0 ? 1 : -1 ) : 1;
     const circleSize = spiralOpts.circleSize ?? 80;

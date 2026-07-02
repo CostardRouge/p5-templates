@@ -10,7 +10,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, drawShape, getFont, loopedTime
+  getAlphabet, drawGrid, drawShape, getFont, loopedTime, loopedPhase
 } from "../_shared.js";
 
 sketch.setup(
@@ -116,6 +116,9 @@ sketch.draw( (
         vectorsListProgression
       );
 
+      // Not loop-safe: this ease's currentTime is scrubbed by `p.noise(…+time…)`.
+      // p5 noise is not periodic, so no rounding of `time` can make this term
+      // return to its start value at the seam — left as authored.
       const z = animation.ease( {
         values: [
           -H / 4,
@@ -160,13 +163,21 @@ sketch.draw( (
     ( vectorIndexProgression ) => {
       const hueIndexMultiplier = options.sketch.colors?.hueIndexMultiplier ?? 6;
 
+      // Loop-exact hue scroll, noise phase and opacity oscillation — each
+      // snapped to whole turns per loop independently.
       p.stroke( colors.rainbow( {
-        hueOffset: time + ( options.sketch.colors?.hueOffset ?? 0 ),
+        hueOffset: loopedPhase(
+          1,
+          p.TAU
+        ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
             p.noise(
               vectorIndexProgression * 8,
-              vectorIndexProgression * p.cos( time + vectorIndexProgression )
+              vectorIndexProgression * p.cos( loopedPhase(
+                1,
+                p.TAU
+              ) + vectorIndexProgression )
             ),
             0,
             1,
@@ -174,7 +185,10 @@ sketch.draw( (
             p.PI / 2
           ) * hueIndexMultiplier,
         opacityFactor: p.map(
-          p.sin( time + vectorIndexProgression * 16 ),
+          p.sin( loopedPhase(
+            1,
+            p.TAU
+          ) + vectorIndexProgression * 16 ),
           -1,
           1,
           options.sketch.colors?.opacityMax ?? 3.5,

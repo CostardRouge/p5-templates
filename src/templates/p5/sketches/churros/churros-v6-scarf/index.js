@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 
 import converters from "@/p5/utils/converters.js";
 import mappers from "@/p5/utils/mappers.js";
@@ -10,7 +11,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 sketch.setup( () => {} );
 
 function drawGrid(
-  p, xCount, yCount, time, animSpeed
+  p, xCount, yCount, t, animSpeed
 ) {
   const xSize = p.width / xCount;
   const ySize = p.height / yCount;
@@ -22,8 +23,10 @@ function drawGrid(
     255
   );
 
+  // yy is a bounded cos() oscillation with a coefficient of 1 on t, so it's
+  // already exactly one whole cycle per loop — no snapping needed.
   const xx = xSize / 2;
-  const yy = ySize * p.cos( time ) * 3 * animSpeed;
+  const yy = ySize * p.cos( t ) * 3 * animSpeed;
 
   for ( let x = -10; x <= xCount + 10; x++ ) {
     for ( let y = -10; y <= yCount + 10; y++ ) {
@@ -43,7 +46,7 @@ function drawGrid(
   }
 }
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch;
 
@@ -52,12 +55,18 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop.
+  const t = animation.angle;
+
   if ( o.grid?.enabled ?? true ) {
     drawGrid(
       p,
       o.grid?.xCount ?? 6,
       o.grid?.yCount ?? 8,
-      time,
+      t,
       o.grid?.animSpeed ?? 1
     );
   }
@@ -66,7 +75,7 @@ sketch.draw( ( time ) => {
   const angleBoundMin = o.shape?.angleBoundMin ?? 0.5;
   const angleBoundMax = o.shape?.angleBoundMax ?? p.PI;
   const halfSpan = p.map(
-    p.sin( time ),
+    p.sin( t ),
     -1,
     1,
     angleBoundMin,
@@ -101,6 +110,14 @@ sketch.draw( ( time ) => {
   const hueSpeedOption = o.colors?.hueSpeed ?? 2;
   const hueAngleMult = o.colors?.hueAngleMultiplier ?? 5;
 
+  // Every rate multiplying t below is snapped to a WHOLE number of cycles
+  // per loop so the last frame matches the first at the seam. (rotationSpeed
+  // here is added as a constant offset, not multiplied by t, so it doesn't
+  // need snapping.)
+  const horizontalSwingCycles = Math.round( horizontalSwingSpeed );
+  const opacityCycles = Math.round( opacitySpeed );
+  const hueCycles = Math.round( hueSpeedOption );
+
   for ( let lerpIndex = lerpMin; lerpIndex <= lerpMax; lerpIndex += lerpStep ) {
     p.push();
 
@@ -111,7 +128,7 @@ sketch.draw( ( time ) => {
     );
 
     const l = p.map(
-      p.cos( lerpIndex - time ),
+      p.cos( lerpIndex - t ),
       -1,
       1,
       0,
@@ -121,7 +138,7 @@ sketch.draw( ( time ) => {
 
     p.translate(
       p.map(
-        p.sin( -lerpIndex * horizontalSwingMult + time * horizontalSwingSpeed ),
+        p.sin( -lerpIndex * horizontalSwingMult + t * horizontalSwingCycles ),
         -1,
         1,
         p.width / 2 - horizontalSwing,
@@ -132,14 +149,14 @@ sketch.draw( ( time ) => {
         lerpMin,
         lerpMax,
         p.map(
-          p.cos( time ),
+          p.cos( t ),
           -1,
           1,
           verticalMargin * 2,
           p.height - verticalMargin * 2
         ),
         p.map(
-          p.sin( time ),
+          p.sin( t ),
           -1,
           1,
           verticalMargin * 2,
@@ -148,7 +165,7 @@ sketch.draw( ( time ) => {
       )
     );
 
-    p.rotate( p.cos( time + lerpIndex * l * 2 ) +
+    p.rotate( p.cos( t + lerpIndex * l * 2 ) +
       rotationSpeed +
       lerpIndex * rotationCount );
 
@@ -156,7 +173,7 @@ sketch.draw( ( time ) => {
       lerpIndex,
       lerpMax * 4,
       p.map(
-        p.sin( -time * opacitySpeed + lerpIndex * opacityCount ),
+        p.sin( -t * opacityCycles + lerpIndex * opacityCount ),
         -1,
         1,
         startOpacity,
@@ -168,7 +185,7 @@ sketch.draw( ( time ) => {
     if ( pingPong ) {
       opacityFactor = p.map(
         p.map(
-          p.sin( lerpIndex * opacityCount - time * opacitySpeed ),
+          p.sin( lerpIndex * opacityCount - t * opacityCycles ),
           -1,
           1,
           -1,
@@ -177,7 +194,7 @@ sketch.draw( ( time ) => {
         -1,
         1,
         p.map(
-          p.cos( lerpIndex * opacityCount + time * opacitySpeed ),
+          p.cos( lerpIndex * opacityCount + t * opacityCycles ),
           -1,
           1,
           1,
@@ -191,7 +208,7 @@ sketch.draw( ( time ) => {
 
     if ( changeLinesCount ) {
       linesCount = p.map(
-        p.cos( lerpIndex / 2 - time * 3 ),
+        p.cos( lerpIndex / 2 - t * 3 ),
         0,
         1,
         1,
@@ -202,7 +219,7 @@ sketch.draw( ( time ) => {
 
     const lineMax = p.PI;
     const lineStep = lineMax / linesCount;
-    const hueSpeed = -time * hueSpeedOption;
+    const hueSpeed = -t * hueCycles;
 
     for ( let lineIndex = 0; lineIndex < lineMax; lineIndex += lineStep ) {
       const vector = converters.polar.vector(

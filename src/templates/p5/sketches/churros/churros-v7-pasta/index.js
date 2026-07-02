@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 
 import converters from "@/p5/utils/converters.js";
 import mappers from "@/p5/utils/mappers.js";
@@ -10,7 +11,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 sketch.setup( () => {} );
 
 function drawGrid(
-  p, xCount, yCount, time, animSpeed, weight = 3
+  p, xCount, yCount, t, animSpeed, weight = 3
 ) {
   if ( xCount <= 0 || yCount <= 0 ) {
     return;
@@ -26,8 +27,12 @@ function drawGrid(
     255
   );
 
-  const xx = xSize * p.cos( time + xSize ) * animSpeed;
-  const yy = ySize * p.sin( time + ySize ) * animSpeed;
+  // Both xx and yy are bounded cos()/sin() oscillations with a coefficient of
+  // 1 on t (the caller already snapped any extra speed multiplier into t
+  // before calling drawGrid), so they're already exactly one whole cycle per
+  // loop — no further snapping needed here.
+  const xx = xSize * p.cos( t + xSize ) * animSpeed;
+  const yy = ySize * p.sin( t + ySize ) * animSpeed;
 
   for ( let x = 0; x <= xCount; x++ ) {
     for ( let y = 0; y <= yCount; y++ ) {

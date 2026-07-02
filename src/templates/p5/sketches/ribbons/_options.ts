@@ -67,7 +67,7 @@ export const opacityFormConfiguration = () => ( {
     },
     speed: {
       component: "slider",
-      label: "Speed",
+      label: "Speed (snaps to whole cycles/loop)",
       min: -10,
       max: 10,
       step: 0.1
@@ -152,7 +152,7 @@ export const colorsFormConfiguration = ( extras: Record<string, any> = {} ) => (
   fields: {
     hueSpeed: {
       component: "slider",
-      label: "Hue speed",
+      label: "Hue speed (snaps to whole cycles/loop)",
       min: -10,
       max: 10,
       step: 0.1

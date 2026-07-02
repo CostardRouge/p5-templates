@@ -4,6 +4,7 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   drawer,
@@ -12,9 +13,15 @@ import {
   paletteStroke
 } from "../_shared.js";
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` this draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam). Every rate multiplying it below
+  // is rounded to a whole number of cycles per loop.
+  const time = animation.angle;
 
   p.clear();
   p.background( ...( o.backgroundColor ?? [
@@ -30,10 +37,14 @@ sketch.draw( ( time ) => {
     255
   ];
 
+  // Background grid wobble only returns to its start offsets once per loop
+  // when it is a WHOLE number of cycles — snapped to whole cycles per loop.
+  const bgAnimationCycles = Math.round( o.background?.animationSpeed ?? 1 );
+
   drawCartesianGrid( {
     columns: o.background?.columns ?? 3,
     rows: o.background?.rows ?? 3,
-    time: time * ( o.background?.animationSpeed ?? 1 ),
+    time: time * bgAnimationCycles,
     strokeColor: p.color(
       bgTint[ 0 ],
       bgTint[ 1 ],
@@ -94,12 +105,16 @@ sketch.draw( ( time ) => {
     (
       lerpIndex, _lMin, lerpMax, t
     ) => {
+      // Opacity oscillation only returns to its start value once per loop
+      // when it completes a WHOLE number of cycles — snapped to whole
+      // cycles per loop.
+      const opacityCycles = Math.round( o.opacity?.speed ?? 3 );
       const opacityFactor = computeOpacityFactor( {
         lerpIndex,
         lerpMax,
         time: t,
         opacityCount: o.opacity?.groupCount ?? 2,
-        opacitySpeed: o.opacity?.speed ?? 3,
+        opacitySpeed: opacityCycles,
         startOpacity: o.opacity?.startFactor ?? 3,
         endOpacity: o.opacity?.endFactor ?? 1,
         pingPong: o.opacity?.pingPong ?? false
@@ -120,7 +135,11 @@ sketch.draw( ( time ) => {
 
       const lineMax = p.PI;
       const lineStep = lineMax / linesCount;
-      const hueSpeed = -t * ( o.colors?.hueSpeed ?? 2 );
+      // Hue scroll only returns to its start hue once per loop when it
+      // completes a WHOLE number of cycles — snapped to whole cycles per
+      // loop.
+      const hueCycles = Math.round( o.colors?.hueSpeed ?? 2 );
+      const hueSpeed = -t * hueCycles;
       const palette = o.colors?.palette ?? "rainbow";
       const ll = o.lines?.length ?? 40;
 
@@ -131,17 +150,25 @@ sketch.draw( ( time ) => {
         -20,
         20
       );
+      const zCycle = o.shape?.zCycle ?? [
+        2,
+        5,
+        2,
+        3,
+        2,
+        4,
+        1
+      ];
+
+      // mappers.circularIndex steps discretely through zCycle by truncating
+      // its index argument, so it only returns to its start entry once per
+      // loop when the clock advances a WHOLE number of zCycle-length steps —
+      // snapped to whole cycles per loop.
+      const zCyclesPerLoop = Math.round( p.TAU / zCycle.length );
+      const zClock = animation.progression * zCyclesPerLoop * zCycle.length;
       const lc = mappers.circularIndex(
-        t + c,
-        o.shape?.zCycle ?? [
-          2,
-          5,
-          2,
-          3,
-          2,
-          4,
-          1
-        ]
+        zClock + c,
+        zCycle
       ) / p.map(
         p.cos( lerpIndex / 2 - t ),
         -1,

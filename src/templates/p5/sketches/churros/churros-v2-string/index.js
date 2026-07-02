@@ -119,9 +119,19 @@ sketch.draw( () => {
   const hueSpeedOption = o.colors?.hueSpeed ?? 2;
   const greenAngleMult = o.colors?.greenAngleMultiplier ?? 10;
 
+  // Every rate multiplying t below is snapped to a WHOLE number of cycles per
+  // loop. The accumulator's secondary term (raw rate 1/3) rounds to 0 — it
+  // becomes a static per-angle offset instead of animating, which is the
+  // closest whole-cycle rate to the original.
+  const accumulatorSecondaryCycles = Math.round( 1 / 3 );
+  const wobbleCycles = Math.round( wobbleSpeed );
+  const rotationCycles = Math.round( rotationSpeed );
+  const opacityCycles = Math.round( opacitySpeed );
+  const hueCycles = Math.round( hueSpeedOption );
+
   for ( let angle = angleMin; angle <= angleMax; angle += angleStep ) {
     // Outer accumulating spin — preserves the “string” curl from the original.
-    p.rotate( p.radians( p.cos( time + angle * 2 ) - p.sin( time / 3 - angle * 2 ) ) * accumulatorAmp );
+    p.rotate( p.radians( p.cos( t + angle * 2 ) - p.sin( t * accumulatorSecondaryCycles - angle * 2 ) ) * accumulatorAmp );
 
     p.push();
     p.translate(
@@ -130,7 +140,7 @@ sketch.draw( () => {
         p.width / radiusX,
         angle,
         p.map(
-          p.sin( time * wobbleSpeed ),
+          p.sin( t * wobbleCycles ),
           -1,
           1,
           -3,
@@ -142,7 +152,7 @@ sketch.draw( () => {
         p.height / radiusY,
         angle,
         p.map(
-          p.cos( time * wobbleSpeed ),
+          p.cos( t * wobbleCycles ),
           -1,
           1,
           2,
@@ -151,13 +161,13 @@ sketch.draw( () => {
       )
     );
 
-    p.rotate( time * rotationSpeed + angle * rotationCount );
+    p.rotate( t * rotationCycles + angle * rotationCount );
 
     let opacityFactor = mappers.circularMap(
       angle,
       angleMax * 4,
       p.map(
-        p.sin( -time * opacitySpeed + angle * opacityCount ),
+        p.sin( -t * opacityCycles + angle * opacityCount ),
         -1,
         1,
         startOpacity,
@@ -169,7 +179,7 @@ sketch.draw( () => {
     if ( pingPong ) {
       opacityFactor = p.map(
         p.map(
-          p.sin( angle * opacityCount - time * opacitySpeed ),
+          p.sin( angle * opacityCount - t * opacityCycles ),
           -1,
           1,
           -1,
@@ -178,7 +188,7 @@ sketch.draw( () => {
         -1,
         1,
         p.map(
-          p.cos( angle * opacityCount + time * opacitySpeed ),
+          p.cos( angle * opacityCount + t * opacityCycles ),
           -1,
           1,
           1,
@@ -192,7 +202,7 @@ sketch.draw( () => {
 
     if ( changeLinesCount ) {
       linesCount = p.map(
-        p.cos( angle * 2 + time ),
+        p.cos( angle * 2 + t ),
         -1,
         1,
         1,
@@ -201,7 +211,7 @@ sketch.draw( () => {
     }
 
     const lineStep = p.TAU / linesCount;
-    const hueSpeed = -time * hueSpeedOption;
+    const hueSpeed = -t * hueCycles;
 
     for ( let lineIndex = 0; lineIndex < p.TAU; lineIndex += lineStep ) {
       const vector = converters.polar.vector(

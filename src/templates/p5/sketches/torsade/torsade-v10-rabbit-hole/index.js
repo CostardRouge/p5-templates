@@ -5,7 +5,7 @@ import sketch, {
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  SpiralBase
+  SpiralBase, snapLoopRate
 } from "../_shared.js";
 
 const sketchState = {
@@ -26,7 +26,11 @@ class Spiral extends SpiralBase {
     const {
       position, size
     } = this;
-    const hueCadence = index + time * ( colorOpts.hueSpeed ?? 1 );
+    // Loop-exact rates: raw time is the sketch's non-wrapping clock, so every
+    // rate multiplying it is snapped to whole cycles per loop (see
+    // ../_shared.js#snapLoopRate) — including the literal jitter rates below,
+    // which aren't sliders but still need to close the loop.
+    const hueCadence = index + time * snapLoopRate( colorOpts.hueSpeed ?? 1 );
 
     p.push();
     p.translate(
@@ -43,9 +47,11 @@ class Spiral extends SpiralBase {
     const weightMin = rings.weightMin ?? 20;
     const weightMax = rings.weightMax ?? 75;
     const shadowRotationRadians = rings.shadowRotationRadians ?? 7;
-    const spinSpeed = motion.spinSpeed ?? 1;
+    const spinSpeed = snapLoopRate( motion.spinSpeed ?? 1 );
     const jitterAmount = motion.jitterAmount ?? 0.33;
-    const opacityCurveSpeed = colorOpts.opacityCurveSpeed ?? 5;
+    const jitterXRate = snapLoopRate( 2 );
+    const jitterYRate = snapLoopRate( 1 );
+    const opacityCurveSpeed = snapLoopRate( colorOpts.opacityCurveSpeed ?? 5 );
     const opacityMin = colorOpts.opacityMin ?? 1;
     const opacityMax = colorOpts.opacityMax ?? 15;
 
@@ -64,14 +70,14 @@ class Spiral extends SpiralBase {
 
       p.translate(
         p.map(
-          p.sin( time * 2 ),
+          p.sin( time * jitterXRate ),
           -1,
           1,
           -jitterAmount,
           jitterAmount
         ),
         p.map(
-          p.cos( time ),
+          p.cos( time * jitterYRate ),
           -1,
           1,
           -jitterAmount,

@@ -62,7 +62,14 @@ class Spiral extends SpiralBase {
     const shadowsCountSpeedATurns = Math.round( shadowsCountSpeedA );
     const shadowsCountSpeedBTurns = Math.round( shadowsCountSpeedB );
     const opacityPulseSpeedTurns = Math.round( opacityPulseSpeed );
+
+    // rotateSpinSpeed feeds p.radians() below (its units are DEGREES, not
+    // radians like `time`), so it needs whole 360° turns per loop rather than
+    // whole 2π ones — convert the snapped turn count back to a degrees-per-
+    // clock-radian rate so `time * rotateSpinSpeedRate` sweeps exactly that
+    // many whole rotations.
     const rotateSpinSpeedTurns = Math.round( rotateSpinSpeed );
+    const rotateSpinSpeedRate = rotateSpinSpeedTurns * 360 / p.TAU;
 
     const shadowsCount = p.map(
       p.cos( index + time * shadowsCountSpeedATurns ) + p.sin( -time * shadowsCountSpeedBTurns + index ),
@@ -164,7 +171,7 @@ class Spiral extends SpiralBase {
         p.beginShape();
         p.strokeWeight( size );
 
-        p.rotate( p.radians( time * rotateSpinSpeedTurns + angle * xSpeed ) );
+        p.rotate( p.radians( time * rotateSpinSpeedRate + angle * xSpeed ) );
 
         p.stroke( p.color(
           p.map(

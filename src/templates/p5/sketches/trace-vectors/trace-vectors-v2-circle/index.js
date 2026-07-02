@@ -9,7 +9,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, drawShape, getFont, loopedTime
+  getAlphabet, drawGrid, drawShape, getFont, loopedPhase
 } from "../_shared.js";
 
 sketch.setup(
@@ -30,7 +30,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "0123456789" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -126,13 +125,21 @@ sketch.draw( (
       );
     },
     ( vectorIndexProgression ) => {
+      // Loop-exact hue scroll, noise phase and opacity oscillation — each
+      // snapped to whole turns per loop independently.
       p.stroke( colors.rainbow( {
-        hueOffset: time + ( options.sketch.colors?.hueOffset ?? 0 ),
+        hueOffset: loopedPhase(
+          1,
+          p.TAU
+        ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
             p.noise(
               vectorIndexProgression * 8,
-              vectorIndexProgression * p.cos( time + vectorIndexProgression )
+              vectorIndexProgression * p.cos( loopedPhase(
+                1,
+                p.TAU
+              ) + vectorIndexProgression )
             ),
             0,
             1,
@@ -140,7 +147,10 @@ sketch.draw( (
             p.PI / 2
           ) * ( options.sketch.colors?.hueIndexMultiplier ?? 6 ),
         opacityFactor: p.map(
-          p.sin( time + vectorIndexProgression * 16 ),
+          p.sin( loopedPhase(
+            1,
+            p.TAU
+          ) + vectorIndexProgression * 16 ),
           -1,
           1,
           options.sketch.colors?.opacityMax ?? 5,
