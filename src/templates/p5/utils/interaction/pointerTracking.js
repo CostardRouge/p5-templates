@@ -181,6 +181,29 @@ function _convert(
 }
 
 /**
+ * How many canvas-internal pixels one on-screen (CSS) pixel spans right now —
+ * i.e. `canvasInternalWidth / canvasDisplayWidth`. On a phone the canvas is a
+ * 1080-wide buffer squeezed into ~380 CSS px, so this is ~2.8; on desktop
+ * unzoomed it's ~1; zoomed in it drops below 1. Multiply a desired SCREEN-space
+ * hit radius by this to get the equivalent radius in the canvas-pixel space
+ * that the drag math works in, so a grab target stays the same physical size on
+ * every device instead of collapsing to a few pixels on mobile. Returns 1 when
+ * no canvas is measurable (harmless no-op scaling).
+ */
+export function getCanvasDisplayScale() {
+  const p = getP5();
+  const rect = _canvasRect();
+
+  if ( !p || !rect ) {
+    return 1;
+  }
+
+  // Width and height scale together under the viewport's uniform transform;
+  // width alone is representative.
+  return p.width / rect.width;
+}
+
+/**
  * Mouse + touch pointer groups, always on, in the same shape as the full
  * interaction layer's getPointerGroups() (no smoothing, no offsets).
  * Deliberately does NOT touch the vision/MIDI/audio machinery — that stays
