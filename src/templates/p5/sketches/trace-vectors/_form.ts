@@ -129,7 +129,7 @@ export const loopForm = {
   label: "Loop",
   fields: {
     timeScale: {
-      label: "Time scale (cycles per loop)",
+      label: "Time scale (snaps to whole cycles/loop)",
       component: "slider",
       min: 0,
       max: 16,

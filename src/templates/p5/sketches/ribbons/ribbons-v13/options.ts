@@ -77,7 +77,7 @@ export const formConfiguration: Record<string, any> = {
       },
       sweepDriftSpeed: {
         component: "slider",
-        label: "Sweep drift speed",
+        label: "Sweep drift speed (snaps to whole turns/loop)",
         min: -2,
         max: 2,
         step: 0.01
@@ -122,7 +122,7 @@ export const formConfiguration: Record<string, any> = {
   colors: colorsFormConfiguration( {
     easingChangeSpeed: {
       component: "slider",
-      label: "Easing function change speed",
+      label: "Easing function change speed (snaps to whole cycles/loop)",
       min: 0,
       max: 10,
       step: 0.01

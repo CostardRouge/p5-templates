@@ -92,10 +92,20 @@ sketch.setup( () => {
   sketchState.pixilatedCanvas.pixelDensity( o.background?.pixelDensity ?? 0.05 );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};
   const buffer = sketchState.pixilatedCanvas;
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` this draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam). Every rate multiplying it below
+  // is rounded to a whole number of cycles per loop. NOTE: `buffer` below is
+  // a persistent trail/feedback buffer (blurred + faded, never cleared) —
+  // its accumulated content depends on the sketch's entire draw history, not
+  // just the current progression, so it is NOT fixable by snapping (see
+  // background text on trails/feedback buffers).
+  const time = animation.angle;
 
   p.clear();
   p.background( ...( o.backgroundColor ?? [
@@ -134,6 +144,10 @@ sketch.draw( ( time ) => {
     0.5
   ];
   const foldLerp = o.shape?.foldLerp ?? 0.05;
+  // NOT fixable by snapping: animation.sequence lerp-smooths toward its
+  // target every frame and keeps that smoothed value in module state across
+  // frames, so — like a physics follower — it never returns exactly to its
+  // start value at the loop seam regardless of rate.
   const l = animation.sequence(
     "ribbons-v15-l",
     time,
@@ -147,9 +161,13 @@ sketch.draw( ( time ) => {
     0
   ];
 
+  // Coupled radial wobble only returns to its start offsets once per loop
+  // when it is a WHOLE number of cycles — snapped to whole cycles per loop.
+  const bgAnimationCycles = Math.round( o.background?.animationSpeed ?? 0.25 );
+
   drawCoupledRadial( {
     count: o.background?.linesAmount ?? 60,
-    time: time * ( o.background?.animationSpeed ?? 0.25 ),
+    time: time * bgAnimationCycles,
     strokeColor: p.color(
       bgTint[ 0 ],
       bgTint[ 1 ],
@@ -189,13 +207,16 @@ sketch.draw( ( time ) => {
       _lerpIndex, _lMin, _lMax, _lStep, t, _idx, canvas
     ) => {
       const wobble = o.rotation?.wobble ?? 1;
-      const rotationSpeed = o.rotation?.speed ?? 1;
+      // Rotation is a raw rotate() argument (not wrapped in a trig
+      // function), so it only returns to its start angle once per loop when
+      // it is a WHOLE number of turns — snapped to whole turns per loop.
+      const rotationTurns = Math.round( o.rotation?.speed ?? 1 );
 
       canvas.translate(
         p.width / 2,
         p.height / 2
       );
-      canvas.rotate( t * rotationSpeed + wobble * p.cos( t ) );
+      canvas.rotate( t * rotationTurns + wobble * p.cos( t ) );
     },
     (
       lerpIndex, _lMin, lerpMax, t, _idx, canvas
@@ -206,7 +227,11 @@ sketch.draw( ( time ) => {
         0.1,
         l
       );
-      const hueSpeed = -t * ( o.colors?.hueSpeed ?? 2 );
+      // Hue scroll only returns to its start hue once per loop when it
+      // completes a WHOLE number of cycles — snapped to whole cycles per
+      // loop.
+      const hueCycles = Math.round( o.colors?.hueSpeed ?? 2 );
+      const hueSpeed = -t * hueCycles;
       const palette = o.colors?.palette ?? "gold";
       const ll = o.lines?.length ?? 250;
       const radiusGain = o.shape?.radiusGain ?? 1.55;
@@ -216,6 +241,11 @@ sketch.draw( ( time ) => {
         -ll,
         ll
       );
+
+      // Opacity oscillation only returns to its start value once per loop
+      // when it completes a WHOLE number of cycles — snapped to whole
+      // cycles per loop.
+      const opacityCycles = Math.round( o.opacity?.speed ?? 2 );
 
       for ( let lineIndex = lineMin; lineIndex < lineMax; lineIndex += lineStep ) {
         const vector = converters.polar.vector(
@@ -228,7 +258,7 @@ sketch.draw( ( time ) => {
           lerpMax,
           time: t,
           opacityCount: o.opacity?.groupCount ?? 1,
-          opacitySpeed: o.opacity?.speed ?? 2,
+          opacitySpeed: opacityCycles,
           startOpacity: o.opacity?.startFactor ?? 10,
           endOpacity: o.opacity?.endFactor ?? 1,
           lineIndex,

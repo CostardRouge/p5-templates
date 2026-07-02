@@ -16,7 +16,7 @@ import {
 const rotationFields = {
   speed: {
     component: "slider",
-    label: "Rotation speed",
+    label: "Rotation speed (snaps to whole turns/loop)",
     min: -3,
     max: 3,
     step: 0.01

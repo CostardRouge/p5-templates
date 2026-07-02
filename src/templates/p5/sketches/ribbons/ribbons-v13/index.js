@@ -7,6 +7,7 @@ import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
 import easing from "@/p5/utils/easing.js";
 import graphics from "@/p5/utils/graphics.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   drawRadialPattern,
@@ -30,10 +31,20 @@ sketch.setup( () => {
   sketchState.pixilatedCanvas.pixelDensity( o.background?.pixelDensity ?? 0.1 );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};
   const buffer = sketchState.pixilatedCanvas;
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` this draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam). Every rate multiplying it below
+  // is rounded to a whole number of cycles per loop. NOTE: `buffer` below is
+  // a persistent trail/feedback buffer (blurred + faded, never cleared) —
+  // its accumulated content depends on the sketch's entire draw history, not
+  // just the current progression, so it is NOT fixable by snapping (see
+  // background text on trails/feedback buffers).
+  const time = animation.angle;
 
   p.clear();
   p.background( ...( o.backgroundColor ?? [
@@ -67,9 +78,14 @@ sketch.draw( ( time ) => {
     255
   ];
 
+  // Radial background wobble only returns to its start offsets once per
+  // loop when it is a WHOLE number of cycles — snapped to whole cycles per
+  // loop.
+  const bgAnimationCycles = Math.round( o.background?.animationSpeed ?? 0.25 );
+
   drawRadialPattern( {
     count: o.background?.linesAmount ?? 100,
-    time: time * ( o.background?.animationSpeed ?? 0.25 ),
+    time: time * bgAnimationCycles,
     strokeColor: p.color(
       bgTint[ 0 ],
       bgTint[ 1 ],
@@ -96,8 +112,13 @@ sketch.draw( ( time ) => {
     0
   );
   const size = ( p.width + p.height ) / sizeDivisor;
-  const hueSpeed = time * ( o.colors?.hueSpeed ?? 2 );
-  const sweepDriftSpeed = o.shape?.sweepDriftSpeed ?? 0.25;
+  // Hue scroll only returns to its start hue once per loop when it
+  // completes a WHOLE number of cycles — snapped to whole cycles per loop.
+  const hueCycles = Math.round( o.colors?.hueSpeed ?? 2 );
+  const hueSpeed = time * hueCycles;
+  // The sweep angle only returns to its start position once per loop when
+  // it is a WHOLE number of turns — snapped to whole turns per loop.
+  const sweepDriftTurns = Math.round( o.shape?.sweepDriftSpeed ?? 0.25 );
   const lerpAmpMin = o.shape?.lerpAmpMin ?? 0.5;
   const lerpAmpMax = o.shape?.lerpAmpMax ?? 1;
   const strokeMin = o.lines?.weightMin ?? 3;
@@ -107,13 +128,20 @@ sketch.draw( ( time ) => {
   const palette = o.colors?.palette ?? "rainbow";
   const paletteFn = resolvePalette( palette );
 
+  // mappers.circularIndex steps discretely through easingFunctions by
+  // truncating its index argument, so it only returns to its start entry
+  // once per loop when the easing clock advances a WHOLE number of
+  // easingFunctions-length steps — snapped to whole cycles per loop.
+  const easingCyclesPerLoop = Math.round( functionChangeSpeed * p.TAU / easingFunctions.length );
+  const easingClock = animation.progression * easingCyclesPerLoop * easingFunctions.length;
+
   iterators.angle(
     0,
     p.TAU,
     p.TAU / rayCount,
     ( angle ) => {
       const edge = converters.polar.vector(
-        angle - time * sweepDriftSpeed,
+        angle - time * sweepDriftTurns,
         size
       );
 
@@ -139,10 +167,14 @@ sketch.draw( ( time ) => {
             ,
             easingFunction
           ] = mappers.circularIndex(
-            time * functionChangeSpeed + angle / functionAngleDivisor,
+            easingClock + angle / functionAngleDivisor,
             easingFunctions
           );
 
+          // Opacity oscillation only returns to its start value once per
+          // loop when it completes a WHOLE number of cycles — snapped to
+          // whole cycles per loop.
+          const opacityCycles = Math.round( o.opacity?.speed ?? 2 );
           const opacityFactor = mappers.circularMap(
             p.map(
               p.sin( -time + vectorIndex + angle ),
@@ -153,7 +185,7 @@ sketch.draw( ( time ) => {
             ),
             1,
             p.map(
-              p.sin( time * ( o.opacity?.speed ?? 2 )
+              p.sin( time * opacityCycles
                 + vectorIndex * ( o.opacity?.groupCount ?? 1 ) ),
               -1,
               1,

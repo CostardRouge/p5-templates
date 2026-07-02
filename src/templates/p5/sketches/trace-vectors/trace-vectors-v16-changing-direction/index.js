@@ -9,7 +9,7 @@ import iterators from "@/p5/utils/iterators.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, getFont, loopedTime
+  getAlphabet, getFont, loopedPhase
 } from "../_shared.js";
 import {
   renderGridTraceCommon
@@ -22,6 +22,9 @@ sketch.setup(
   }
 );
 
+// Unbounded drift accumulator (never resets to `progression`) — the position
+// walk it drives (passed to renderGridTraceCommon as time/positionTime below)
+// cannot be made loop-safe by rounding.
 let gt = 0;
 
 function cross(
@@ -107,11 +110,17 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
-
   const directionSpeed = options.sketch.direction?.speed ?? 0.025;
+
+  // Loop-exact direction oscillation — whole turns per loop (this closes
+  // `direction` itself, which the HUD and hue below derive from; `gt`,
+  // which accumulates `direction` every frame and never resets, is a
+  // separate unbounded drift term that stays unfixed further down).
   const direction = mappers.fn(
-    p.sin( time / 2 ),
+    p.sin( loopedPhase(
+      0.5,
+      p.TAU
+    ) ),
     -1,
     1,
     -directionSpeed,

@@ -74,7 +74,7 @@ export const formConfiguration: Record<string, any> = {
     },
     breathSpeed: {
       component: "slider",
-      label: "Breath speed",
+      label: "Breath speed (snaps to whole cycles/loop)",
       min: -5,
       max: 5,
       step: 0.01
@@ -93,7 +93,7 @@ export const formConfiguration: Record<string, any> = {
     fields: {
       speed: {
         component: "slider",
-        label: "Rotation speed",
+        label: "Rotation speed (snaps to whole turns/loop)",
         min: -3,
         max: 3,
         step: 0.01

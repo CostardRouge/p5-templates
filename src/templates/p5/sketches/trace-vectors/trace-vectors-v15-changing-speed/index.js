@@ -10,7 +10,7 @@ import iterators from "@/p5/utils/iterators.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, getFont, loopedTime
+  getAlphabet, getFont, loopedPhase
 } from "../_shared.js";
 import {
   renderGridTraceCommon
@@ -23,6 +23,9 @@ sketch.setup(
   }
 );
 
+// Unbounded drift accumulator (never resets to `progression`) — the position
+// walk it drives (passed to renderGridTraceCommon as time/positionTime below)
+// cannot be made loop-safe by rounding.
 let gt = 3.5;
 
 function cross(
@@ -55,8 +58,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
-
   const speedValues = options.sketch.speed?.values ?? [
     0.01,
     0.01,
@@ -70,11 +71,18 @@ sketch.draw( (
     0.05
   ];
 
+  // Loop-exact speed cycle — whole `speedValues`-length cycles per loop
+  // (this closes `speed` itself, which the HUD and hue below derive from;
+  // `gt`, which accumulates `speed` every frame and never resets, is a
+  // separate unbounded drift term that stays unfixed further down).
   const speed = animation.ease( {
     values: speedValues,
     duration: 1,
     easingFn: easing.easeInOutBack,
-    currentTime: time
+    currentTime: loopedPhase(
+      1,
+      speedValues.length
+    )
   } );
 
   gt += speed;

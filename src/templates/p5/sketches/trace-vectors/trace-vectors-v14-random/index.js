@@ -8,7 +8,7 @@ import mappers from "@/p5/utils/mappers.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, getFont, loopedTime
+  getAlphabet, getFont, loopedTime, loopedPhase
 } from "../_shared.js";
 import {
   renderGridTraceCommon
@@ -53,10 +53,16 @@ sketch.draw( (
     alphabet: text,
     time,
     positionEasing: easing.easeInOutBack,
+    // Loop-exact hue scroll — whole turns per loop. opacityFactor stays as
+    // authored: it's scrubbed by `p.noise(…+time…)`, which p5 noise doesn't
+    // make periodic no matter how `time` is rounded.
     chunkColor: ( {
       p: pp, time: t, opts, chunkIndex, vectorIndexProgression
     } ) => colors.test( {
-      hueOffset: t + chunkIndex + ( opts.colors?.hueOffset ?? 0 ),
+      hueOffset: loopedPhase(
+        1,
+        pp.TAU
+      ) + chunkIndex + ( opts.colors?.hueOffset ?? 0 ),
       hueIndex:
         mappers.fn(
           pp.noise(
