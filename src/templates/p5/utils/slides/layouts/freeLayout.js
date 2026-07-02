@@ -8,9 +8,25 @@ import drawSlideImages from "../common/drawSlideImages.js";
 import drawSlideBackground from "../common/drawSlideBackground.js";
 import drawSlideImagesStack from "../common/drawSlideImagesStack.js";
 import drawSlideQrCode from "../common/drawSlideQrCode.js";
+import {
+  resolveDraggedItem
+} from "../contentDrag.js";
 
-export default function freeLayout( options ) {
-  options?.content?.forEach( ( item ) => {
+// `scope` says which content list is being rendered ("global" or "slide:<n>")
+// so an in-flight on-canvas drag (see contentDrag.js) can substitute the live
+// position of the grabbed item without touching the option store every frame.
+export default function freeLayout(
+  options, scope
+) {
+  options?.content?.forEach( (
+    rawItem, index
+  ) => {
+    const item = resolveDraggedItem(
+      scope,
+      index,
+      rawItem
+    );
+
     switch ( item?.type ) {
       case "background":
         drawSlideBackground( item );

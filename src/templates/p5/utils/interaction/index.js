@@ -32,6 +32,21 @@ import {
 import {
   resolveAssetURL
 } from "@/lib/assets/resolveAssetURL";
+import {
+  ensurePointerTracking,
+  removePointerTracking,
+  getRawMouse,
+  getRawTouches
+} from "@/p5/utils/interaction/pointerTracking.js";
+
+// Re-exported so existing consumers keep one import site; the implementation
+// lives in pointerTracking.js (kept MediaPipe-free so lightweight layers can
+// import it without loading this module).
+export {
+  ensurePointerTracking,
+  clientToCanvas,
+  getBasicPointerGroups
+} from "@/p5/utils/interaction/pointerTracking.js";
 
 // ── Hand landmark indices ──────────────────────────────────────────────────
 // Fingertip indices: thumb, index, middle, ring, pinky
@@ -146,14 +161,6 @@ const FACE_KEYPOINT_ORDER = [
 
 // ── Module-level state ─────────────────────────────────────────────────────
 
-// Raw mouse/touch: tracked via window listeners so coordinates are correct
-// even when the canvas is panned/zoomed inside ScalableViewport (CSS transform).
-const _rawMouse = {
-  clientX: null,
-  clientY: null
-};
-let _rawTouches = []; // Array of { clientX, clientY }
-
 let _noiseOffset = 0;
 // Frame guards for collectors that mutate global state. Without them, every
 // extra call inside the same frame (e.g. the debug overlay running
@@ -178,8 +185,6 @@ const _gyro = {
 let _gyroInitialized = false;
 let _gyroListener = null;
 let _gyroPermissionListener = null;
-let _pointerMoveListener = null;
-let _touchListeners = null;
 
 // MIDI state
 let _midiInitialized = false;
@@ -606,81 +611,11 @@ export async function initInteraction( opts = {} ) {
   _disposeGyro();
 
   // ── Raw mouse / touch tracking ───────────────────────────────────────────
-  // We track raw clientX/Y ourselves so _clientToCanvas() can give correct
-  // canvas-space coordinates regardless of CSS transforms in ScalableViewport.
-  if ( typeof window !== "undefined" ) {
-    // Remove stale listeners from a previous initInteraction call
-    if ( _pointerMoveListener ) {
-      window.removeEventListener(
-        "pointermove",
-        _pointerMoveListener
-      );
-    }
-
-    _rawMouse.clientX = null;
-    _rawMouse.clientY = null;
-
-    _pointerMoveListener = ( e ) => {
-      _rawMouse.clientX = e.clientX;
-      _rawMouse.clientY = e.clientY;
-    };
-    window.addEventListener(
-      "pointermove",
-      _pointerMoveListener,
-      {
-        passive: true
-      }
-    );
-
-    if ( _touchListeners ) {
-      window.removeEventListener(
-        "touchstart",
-        _touchListeners.fn
-      );
-      window.removeEventListener(
-        "touchmove",
-        _touchListeners.fn
-      );
-      window.removeEventListener(
-        "touchend",
-        _touchListeners.fn
-      );
-    }
-
-    _rawTouches = [];
-
-    const _onTouch = ( e ) => {
-      _rawTouches = Array.from( e.touches ).map( ( t ) => ( {
-        clientX: t.clientX,
-        clientY: t.clientY
-      } ) );
-    };
-
-    _touchListeners = {
-      fn: _onTouch
-    };
-    window.addEventListener(
-      "touchstart",
-      _onTouch,
-      {
-        passive: true
-      }
-    );
-    window.addEventListener(
-      "touchmove",
-      _onTouch,
-      {
-        passive: true
-      }
-    );
-    window.addEventListener(
-      "touchend",
-      _onTouch,
-      {
-        passive: true
-      }
-    );
-  }
+  // Raw clientX/Y is tracked (in pointerTracking.js) so _clientToCanvas() can
+  // give correct canvas-space coordinates regardless of CSS transforms in
+  // ScalableViewport. Re-wire from scratch so a fresh sketch starts clean.
+  removePointerTracking();
+  ensurePointerTracking();
 
   // ── MIDI reset (lazy init triggered by _collectMidi) ─────────────────────
   if ( _midiAccess ) {
@@ -726,36 +661,8 @@ export function disposeInteraction() {
   // Gyroscope
   _disposeGyro();
 
-  // Mouse
-  if ( _pointerMoveListener ) {
-    window.removeEventListener(
-      "pointermove",
-      _pointerMoveListener
-    );
-    _pointerMoveListener = null;
-  }
-
-  _rawMouse.clientX = null;
-  _rawMouse.clientY = null;
-
-  // Touch
-  if ( _touchListeners ) {
-    window.removeEventListener(
-      "touchstart",
-      _touchListeners.fn
-    );
-    window.removeEventListener(
-      "touchmove",
-      _touchListeners.fn
-    );
-    window.removeEventListener(
-      "touchend",
-      _touchListeners.fn
-    );
-    _touchListeners = null;
-  }
-
-  _rawTouches = [];
+  // Mouse + touch
+  removePointerTracking();
 
   // MIDI
   if ( _midiAccess ) {
@@ -1061,16 +968,17 @@ function _collectMouse(
   // Use raw client coordinates converted through getBoundingClientRect() so
   // the result is correct even when ScalableViewport has panned/zoomed the
   // canvas (CSS transform on the parent doesn't affect the formula).
+  const rawMouse = getRawMouse();
   let rawX, rawY;
 
-  if ( _rawMouse.clientX === null ) {
+  if ( rawMouse.clientX === null ) {
     // No pointermove yet — fall back to p5's values for the first frame
     rawX = p.mouseX;
     rawY = p.mouseY;
   } else {
     const coords = _clientToCanvas(
-      _rawMouse.clientX,
-      _rawMouse.clientY,
+      rawMouse.clientX,
+      rawMouse.clientY,
       p
     );
 
@@ -1117,9 +1025,10 @@ function _collectTouch(
     return;
   }
 
+  const rawTouches = getRawTouches();
   const maxTouches = touch.maxTouches ?? 5;
   const count = Math.min(
-    _rawTouches.length,
+    rawTouches.length,
     maxTouches
   );
 
@@ -1127,8 +1036,8 @@ function _collectTouch(
     const {
       x, y
     } = _clientToCanvas(
-      _rawTouches[ i ].clientX,
-      _rawTouches[ i ].clientY,
+      rawTouches[ i ].clientX,
+      rawTouches[ i ].clientY,
       p
     );
 
