@@ -138,7 +138,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     fields: {
       tourSpeed: {
-        label: "Tour speed (loops per cycle)",
+        label: "Tour speed (loops per cycle, snaps to whole tours/loop)",
         component: "slider",
         min: 0.25,
         max: 4,

@@ -37,6 +37,11 @@ sketch.draw( (
 
   // Controls from options.ts
   const orbitSpeed = options.sketch?.animation?.orbitSpeed ?? 1;
+
+  // The orbit base angle sweeps TAU * orbitSpeed per loop (see `base` below),
+  // so it only returns to its start angle when orbitSpeed is a whole number
+  // of turns — snapped here to keep the loop seam invisible.
+  const orbitTurns = Math.round( orbitSpeed );
   const outerRadiusFactor = options.sketch?.animation?.outerRadiusFactor ?? 0.8; // away
   const innerRadiusFactor = options.sketch?.animation?.innerRadiusFactor ?? 0.25; // near
 
@@ -62,7 +67,7 @@ sketch.draw( (
     const progression = i / images.length;
 
     const base = p.map(
-      animation.progression * orbitSpeed,
+      animation.progression * orbitTurns,
       0,
       1,
       p.TAU,

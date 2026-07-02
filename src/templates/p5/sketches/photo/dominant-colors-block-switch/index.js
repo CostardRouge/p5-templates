@@ -174,6 +174,11 @@ sketch.draw( async(
     ] )
     .flat( Infinity );
 
+  // Veil switch rate — mappers.circularIndex steps through a 2-entry array
+  // ([1, 0]), so it only returns to its start value once the raw loop
+  // duration (seconds) is snapped to a whole multiple of 2.
+  const veilCycles = Math.round( sketch.sketchOptions.animation.duration / 2 ) * 2;
+
   gridCells.forEach( (
     {
       position, xIndex, yIndex
@@ -213,7 +218,7 @@ sketch.draw( async(
 
     if ( imagePart ) {
       const veil = mappers.circularIndex(
-        animation.progression * sketch.sketchOptions.animation.duration +
+        animation.progression * veilCycles +
           switchIndex,
         [
           1,

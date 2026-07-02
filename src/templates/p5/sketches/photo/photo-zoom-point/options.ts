@@ -65,7 +65,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     fields: {
       count: {
-        label: "Count",
+        label: "Count (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10

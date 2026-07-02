@@ -77,7 +77,7 @@ export const formConfiguration: Record<string, any> = {
       // Orbit motion
       orbitSpeed: {
         component: "slider",
-        label: "Orbit speed",
+        label: "Orbit speed (snaps to whole turns/loop)",
         min: 0,
         max: 3,
         step: 0.01

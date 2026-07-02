@@ -518,7 +518,7 @@ sketch.draw( (
   /* -- where is the tour right now? ------------------------------- */
 
   const stops = filledCount;
-  const speed = clamp(
+  const rawSpeed = clamp(
     motion.tourSpeed ?? 1,
     0.05,
     8
@@ -529,6 +529,12 @@ sketch.draw( (
     0.95
   );
   const easingFn = easing[ motion.easing ] || easing.easeInOutCubic;
+
+  // Loop-exact clock: the tour must complete a WHOLE number of full circuits
+  // through all stops per animation loop, otherwise the fractional remainder
+  // of `speed` leaves the last frame mid-transition while the first frame of
+  // the next loop starts fresh back on stop 0 — snapped to whole tours/loop.
+  const speed = Math.round( rawSpeed );
 
   const travelled = ( ( animation.progression * speed ) % 1 ) * stops;
   const step = Math.floor( travelled ) % stops;

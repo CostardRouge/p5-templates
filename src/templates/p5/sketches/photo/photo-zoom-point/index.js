@@ -248,8 +248,14 @@ sketch.draw( () => {
   displayPhoto( photo.img );
 
   // 2. Animation Logic
+  // Loop-exact clock: triangleProgression only lands back on its start value
+  // when the cycle count completes a WHOLE number of triangle waves per loop
+  // (a fractional count leaves progress = count % 1 !== 0 at the seam) — so
+  // the raw slider count is snapped to whole cycles per loop.
+  const zoomCycles = Math.round( options.sketch.zoom.count ?? 1 );
+
   const zoomStep = mappers.fn(
-    animation.triangleProgression( options.sketch.zoom.count ?? 1 ),
+    animation.triangleProgression( zoomCycles ),
     0,
     1,
     0,

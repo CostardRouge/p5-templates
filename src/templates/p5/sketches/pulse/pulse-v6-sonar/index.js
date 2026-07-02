@@ -4,6 +4,7 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import converters from "@/p5/utils/converters.js";
 import colors from "@/p5/utils/colors.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   SpiralBase, rebuildGrid
@@ -16,7 +17,7 @@ const sketchState = {
 
 class Spiral extends SpiralBase {
   draw(
-    time, index
+    t, index
   ) {
     const p = getP5();
     const o = options.sketch ?? {};
@@ -40,7 +41,14 @@ class Spiral extends SpiralBase {
     const opacityPulseSpeed = colorOpts.opacityPulseSpeed ?? 5;
     const opacityPulseMaxFactor = colorOpts.opacityPulseMaxFactor ?? 10;
 
-    const hueCadence = index + time * hueSpeed;
+    // colors.rainbow() takes its hueIndex as a raw radian angle, and t sweeps
+    // exactly TAU per loop, so the hue/opacity scroll rates must complete a
+    // WHOLE number of turns per loop to land back on their start hue/opacity —
+    // snapped to whole turns per loop.
+    const hueTurns = Math.round( hueSpeed );
+    const opacityPulseTurns = Math.round( opacityPulseSpeed );
+
+    const hueCadence = index + t * hueTurns;
 
     p.push();
     p.translate(
@@ -73,7 +81,7 @@ class Spiral extends SpiralBase {
         0,
         shadowsCount,
         p.map(
-          p.sin( shadowIndex * r + time * opacityPulseSpeed ),
+          p.sin( shadowIndex * r + t * opacityPulseTurns ),
           -1,
           1,
           opacityStart,
@@ -124,8 +132,13 @@ sketch.setup( () => {
   } );
 } );
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (instead of
+  // the raw, non-wrapping seconds clock previously passed in here), so the
+  // hue/opacity scroll rates snapped above land back on their start value.
+  const t = animation.angle;
 
   rebuildGrid( {
     state: sketchState,
@@ -141,7 +154,7 @@ sketch.draw( ( time ) => {
   sketchState.shapes.forEach( (
     shape, index
   ) => shape.draw(
-    time,
+    t,
     index
   ) );
 
