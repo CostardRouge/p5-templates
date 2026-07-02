@@ -453,9 +453,16 @@ sketch.draw( (
   const yMultiplier = options.sketch.rotation?.yMultiplier ?? 2;
   const zMultiplier = options.sketch.rotation?.zMultiplier ?? 0;
 
+  // The ambient wobble sweeps sin/cos( animation.angle * multiplier ) —
+  // already circular — so it only returns to its start orientation when each
+  // multiplier completes a WHOLE number of turns per loop.
+  const xTurns = Math.round( xMultiplier );
+  const yTurns = Math.round( yMultiplier );
+  const zTurns = Math.round( zMultiplier );
+
   const rX = rotationEnabled
     ? mappers.fn(
-      p.sin( animation.angle * xMultiplier ),
+      p.sin( animation.angle * xTurns ),
       -1,
       1,
       -angleMax,
@@ -464,7 +471,7 @@ sketch.draw( (
     : 0;
   const rY = rotationEnabled
     ? mappers.fn(
-      p.cos( animation.angle * yMultiplier ),
+      p.cos( animation.angle * yTurns ),
       -1,
       1,
       -angleMax,
@@ -473,7 +480,7 @@ sketch.draw( (
     : 0;
   const rZ = rotationEnabled
     ? mappers.fn(
-      p.sin( animation.angle * zMultiplier ),
+      p.sin( animation.angle * zTurns ),
       -1,
       1,
       -angleMax,

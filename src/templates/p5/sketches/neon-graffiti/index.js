@@ -5,13 +5,21 @@ import {
 } from "@/p5/utils/sketch.js";
 import neonGraffiti from "@/p5/utils/visuals/neonGraffiti.js";
 
-sketch.draw( ( _time ) => {
+sketch.draw( () => {
   const p = getP5();
 
   p.clear();
   p.background( ...( options.sketch.backgroundColor ?? [
     0
   ] ) );
+
+  // Loop-exact clock: neonGraffiti multiplies animation.angle (which sweeps
+  // exactly TAU per loop) directly by these two rates with no further
+  // snapping downstream, so they must complete a WHOLE number of turns per
+  // loop here at the call site.
+  const sinAngleCycles = Math.round( options.sketch.sinAngleMultiplier ?? 2 );
+  const cosAngleCycles = Math.round( options.sketch.cosAngleMultiplier ?? 2 );
+
   neonGraffiti( {
     amplitude: options.sketch.amplitude,
     shadowsCount: options.sketch.shadowsCount,
@@ -20,8 +28,8 @@ sketch.draw( ( _time ) => {
     stepAngleAmplitude: options.sketch.stepAngleAmplitude,
     sinAmplitudeMultiplier: options.sketch.sinAmplitudeMultiplier,
     cosAmplitudeMultiplier: options.sketch.cosAmplitudeMultiplier,
-    sinAngleMultiplier: options.sketch.sinAngleMultiplier,
-    cosAngleMultiplier: options.sketch.cosAngleMultiplier,
+    sinAngleMultiplier: sinAngleCycles,
+    cosAngleMultiplier: cosAngleCycles,
     hueIndexMultiplier: options.sketch.hueIndexMultiplier,
     hueAmplitude: options.sketch.hueAmplitude,
     positionSinEasing: options.sketch.positionSinEasing,

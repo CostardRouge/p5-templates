@@ -42,6 +42,11 @@ function drawShape( {
   ] ) );
   const canvasFlatDimensionAverage = ( canvas.width + canvas.height ) / 2;
 
+  // Loop-exact anchor walk: animation.ease only returns to its start letter
+  // when currentTime advances a WHOLE multiple of the letter count per loop —
+  // snap the raw morphing speed to the nearest whole number of letter-cycles.
+  const morphCycles = Math.round( options.sketch.shape.morphingSpeed ?? 1 );
+
   const points = animation.ease( {
     values: text.split( "" ).map( ( text ) =>
       string.getTextPoints( {
@@ -57,7 +62,7 @@ function drawShape( {
       } ) ),
     lerpFn: mappers.lerpPoints,
     currentTime:
-      animation.progression * text.length * options.sketch.shape.morphingSpeed,
+      animation.progression * morphCycles * text.length,
     easingFn: easing?.[ options.sketch.shape.morphingEasing ?? "easeInOutExpo" ]
   } );
 
@@ -110,6 +115,10 @@ function drawShape( {
             // +mappers.fn(depthProgression, 0, 1, 0, p.PI/2, easing.easeInOutExpo)
             +animation.progression,
         // hueIndex: mappers.circularPolar(progression, 0, 1, -p.PI, p.PI)*2,
+        // NOTE: canvas.noise() is fed the raw (non-circular) animation.progression
+        // as a coordinate — p5 noise isn't periodic, so this can't be made to
+        // close the loop by snapping a rate; would need a circular-noise
+        // redesign (animation.circularProgression / noiseProgression).
         hueIndex:
             mappers.fn(
               canvas.noise(
@@ -173,6 +182,11 @@ function wave(
     canvas.height * options.sketch.wave.heightEnd
   ];
 
+  // Loop-exact anchor walk: animation.ease only returns to its start height
+  // when currentTime advances a WHOLE multiple of values.length (2) per loop
+  // — snap the raw wave speed to the nearest whole number of 2-value cycles.
+  const speedCycles = Math.round( options.sketch.wave.speed / values.length );
+
   for ( let index = 0; index < 1; index += step ) {
     canvas.vertex(
       index * canvas.width,
@@ -180,7 +194,7 @@ function wave(
         values,
         currentTime:
           +index * options.sketch.wave.count +
-          animation.progression * options.sketch.wave.speed,
+          animation.progression * speedCycles * values.length,
         easingFn: easing?.[ options.sketch.wave.easing ?? "easeInOutSine" ]
       } )
     );

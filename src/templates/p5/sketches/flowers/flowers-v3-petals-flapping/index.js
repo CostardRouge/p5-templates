@@ -34,7 +34,26 @@ sketch.draw( async() => {
     0
   ] ) );
 
-  const t = animation.angle * ( options.sketch.timeScale ?? 1 );
+  const timeScale = options.sketch.timeScale ?? 1;
+
+  // ── Loop-exact clock ─────────────────────────────────────────────────────
+  // animation.angle sweeps exactly TAU per loop, so the loop seam is invisible
+  // only when every time-driven rate completes a WHOLE number of cycles per
+  // loop. Each raw slider rate (× time scale) is therefore rounded to whole
+  // cycles below — fractional rates are what made the last frame disagree with
+  // the first.
+  const t = animation.angle;
+
+  // Raw (unsnapped) scaled clock — kept only for the noise-scrubbed background
+  // pattern and the lerp-smoothed anchor/times followers below (animation.
+  // sequence carries accumulated state, and p5 noise isn't periodic — neither
+  // can be made to loop by snapping).
+  const rawT = t * timeScale;
+
+  // Hue scroll and flap phase advanced at the raw clock rate — snapped to
+  // whole turns per loop.
+  const windTurns = Math.round( timeScale );
+  const tt = t * windTurns;
 
   // ── Dense background grid ─────────────────────────────────────────
   const bgEnabled = options.sketch.background?.enabled ?? true;
@@ -84,9 +103,12 @@ sketch.draw( async() => {
       ) => {
         const xOff = x / columns;
         const yOff = y / rows;
+        // Noise-scrubbed glyph pattern and hue — p5 noise isn't periodic, so
+        // neither can be made to close the loop by snapping; kept on the raw
+        // clock.
         const sides = mappers.circularIndex(
-          t / 2 + p.noise(
-            yOff + t,
+          rawT / 2 + p.noise(
+            yOff + rawT,
             xOff
           ),
           bgPattern
@@ -99,9 +121,9 @@ sketch.draw( async() => {
           ),
           sides,
           borderColor: bgPalette( {
-            hueOffset: t + p.noise(
-              yOff + t,
-              xOff + t
+            hueOffset: rawT + p.noise(
+              yOff + rawT,
+              xOff + rawT
             ),
             hueIndex: mappers.fn(
               x,
@@ -124,9 +146,11 @@ sketch.draw( async() => {
   const anchorSpeed = options.sketch.path?.anchorSpeed ?? 0.33;
   const anchorLerpAmount = options.sketch.path?.anchorLerpAmount ?? 0.1;
 
+  // Lerp-smoothed followers (animation.sequence carries accumulated state
+  // across frames) — not fixable by snapping, kept on the raw clock.
   const start = animation.sequence(
     "flowers-v3-start",
-    t * anchorSpeed,
+    rawT * anchorSpeed,
     [
       p.createVector(
         boundary,
@@ -146,7 +170,7 @@ sketch.draw( async() => {
   );
   const end = animation.sequence(
     "flowers-v3-end",
-    t * anchorSpeed,
+    rawT * anchorSpeed,
     [
       p.createVector(
         p.width - boundary,
@@ -176,12 +200,15 @@ sketch.draw( async() => {
   const sizeMin = options.sketch.foreground?.sizeMin ?? 1;
   const sizeMax = options.sketch.foreground?.sizeMax ?? 250;
   const borderWidth = options.sketch.foreground?.borderWidth ?? 70;
-  const rotationSpeed = options.sketch.foreground?.rotationSpeed ?? 0.5;
   const flapAmplitude = options.sketch.foreground?.flapAmplitude ?? 1;
   const palette = resolvePalette( options.sketch.foreground?.palette ?? "rainbow" );
   const hueIndexMultiplier = options.sketch.foreground?.hueIndexMultiplier ?? 4;
   const opacityMax = options.sketch.foreground?.opacityMax ?? 5;
   const opacityMin = options.sketch.foreground?.opacityMin ?? 1;
+
+  // Foreground rotation — its own rate on top of the raw clock, snapped to
+  // whole turns per loop.
+  const rotationTurns = Math.round( ( options.sketch.foreground?.rotationSpeed ?? 0.5 ) * timeScale );
 
   iterators.vector(
     start,
@@ -190,9 +217,13 @@ sketch.draw( async() => {
     (
       vector, lerpIndex
     ) => {
+      // Lerp-smoothed follower (animation.sequence carries accumulated state
+      // across frames) — not fixable by snapping, kept on the raw clock. The
+      // size ratio, cross size and opacity below derive from it, so they
+      // remain non-looping too.
       const times = animation.sequence(
         "flowers-v3-times",
-        t / 3,
+        rawT / 3,
         timesSeq,
         timesLerpAmount
       );
@@ -212,7 +243,7 @@ sketch.draw( async() => {
       );
 
       const fgColor = palette( {
-        hueOffset: t,
+        hueOffset: tt,
         hueIndex: mappers.fn(
           lerpIndex,
           0,
@@ -221,7 +252,7 @@ sketch.draw( async() => {
           p.PI
         ) * hueIndexMultiplier,
         opacityFactor: mappers.fn(
-          p.cos( sizeRatio + t ),
+          p.cos( sizeRatio + tt ),
           -1,
           1,
           opacityMax,
@@ -234,9 +265,9 @@ sketch.draw( async() => {
         vector.x,
         vector.y
       );
-      p.rotate( -t * rotationSpeed );
+      p.rotate( -t * rotationTurns );
       p.rotate( mappers.fn(
-        p.sin( lerpIndex + t ),
+        p.sin( lerpIndex + tt ),
         -1,
         1,
         0,

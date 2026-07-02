@@ -52,12 +52,19 @@ sketch.draw( () => {
 
   const pointsOptions = o.points ?? {};
   const seed = ensureBasePoints( pointsOptions );
+
+  // Loop-exact clock: animatePoints() samples noise on cos/sin(angle * speed)
+  // (see splines/_shared.js), which only returns to its start position when
+  // `speed` is a WHOLE number of turns per loop — snapped here at the call
+  // site (_shared.js is shared with other families, so its contract stays
+  // untouched).
+  const motionTurns = Math.round( pointsOptions.speed ?? 1 );
   const points = scaleAboutCenter(
     animatePoints(
       state.basePoints,
       {
         motion: pointsOptions.motion ?? 0.05,
-        speed: pointsOptions.speed ?? 1,
+        speed: motionTurns,
         seed,
         angle: animation.angle
       }
@@ -69,13 +76,22 @@ sketch.draw( () => {
     return;
   }
 
+  // Same reasoning for the stroke's hue scroll (renderSplines/emitStroke
+  // multiplies animation.angle by hueSpeed directly), so it's snapped to
+  // whole cycles per loop here too.
+  const strokeOptions = o.stroke ?? {};
+  const hueCycles = Math.round( strokeOptions.hueSpeed ?? 1 );
+
   // The rounding strategy, stroke styling and demonstration overlay all live in
   // renderSpline so the interactive variant shares exactly the same look.
   renderSpline(
     points,
     {
       curve: o.curve ?? {},
-      stroke: o.stroke ?? {},
+      stroke: {
+        ...strokeOptions,
+        hueSpeed: hueCycles
+      },
       overlay: o.overlay ?? {}
     }
   );

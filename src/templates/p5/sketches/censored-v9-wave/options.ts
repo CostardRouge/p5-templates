@@ -112,7 +112,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       morphingSpeed: {
-        label: "Speed",
+        label: "Speed (snaps to whole letter-cycles/loop)",
         component: "slider",
         min: 0.25,
         max: 20,
@@ -176,7 +176,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.25
       },
       speed: {
-        label: "Speed",
+        label: "Speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0.25,
         max: 20,

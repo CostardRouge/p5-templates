@@ -37,7 +37,26 @@ sketch.draw( async() => {
     0
   ] ) );
 
-  const t = animation.angle * ( options.sketch.timeScale ?? 1 );
+  const timeScale = options.sketch.timeScale ?? 1;
+
+  // ── Loop-exact clock ─────────────────────────────────────────────────────
+  // animation.angle sweeps exactly TAU per loop, so the loop seam is invisible
+  // only when every time-driven rate completes a WHOLE number of cycles per
+  // loop. Each raw slider rate (× time scale) is therefore rounded to whole
+  // cycles below — fractional rates are what made the last frame disagree with
+  // the first.
+  const t = animation.angle;
+
+  // Raw (unsnapped) scaled clock — kept only for the noise-scrubbed background
+  // pattern and the lerp-smoothed anchor followers below (animation.sequence
+  // carries accumulated state, and p5 noise isn't periodic — neither can be
+  // made to loop by snapping).
+  const rawT = t * timeScale;
+
+  // Hue scroll advanced at the raw clock rate — snapped to whole turns per
+  // loop.
+  const windTurns = Math.round( timeScale );
+  const tt = t * windTurns;
 
   // ── Background sparse grid ────────────────────────────────────────
   const bgEnabled = options.sketch.background?.enabled ?? true;
@@ -86,9 +105,12 @@ sketch.draw( async() => {
       ) => {
         const xOff = x / columns;
         const yOff = y / rows;
+        // Noise-scrubbed glyph pattern and hue — p5 noise isn't periodic, so
+        // neither can be made to close the loop by snapping; kept on the raw
+        // clock.
         const sides = mappers.circularIndex(
-          t / 2 + p.noise(
-            yOff + t,
+          rawT / 2 + p.noise(
+            yOff + rawT,
             xOff
           ),
           bgPattern
@@ -101,9 +123,9 @@ sketch.draw( async() => {
           ),
           sides,
           borderColor: bgPalette( {
-            hueOffset: t + p.noise(
-              yOff + t,
-              xOff + t
+            hueOffset: rawT + p.noise(
+              yOff + rawT,
+              xOff + rawT
             ),
             hueIndex: mappers.fn(
               x,
@@ -126,9 +148,11 @@ sketch.draw( async() => {
   const anchorSpeed = options.sketch.path?.anchorSpeed ?? 0.5;
   const anchorLerpAmount = options.sketch.path?.anchorLerpAmount ?? 0.1;
 
+  // Lerp-smoothed followers (animation.sequence carries accumulated state
+  // across frames) — not fixable by snapping, kept on the raw clock.
   const start = animation.sequence(
     "flowers-v4-start",
-    t * anchorSpeed,
+    rawT * anchorSpeed,
     [
       p.createVector(
         boundary,
@@ -144,7 +168,7 @@ sketch.draw( async() => {
   );
   const end = animation.sequence(
     "flowers-v4-end",
-    t * anchorSpeed,
+    rawT * anchorSpeed,
     [
       p.createVector(
         p.width - boundary,
@@ -170,6 +194,12 @@ sketch.draw( async() => {
   const opacityMax = options.sketch.foreground?.opacityMax ?? 5;
   const opacityMin = options.sketch.foreground?.opacityMin ?? 1;
 
+  // The easing-function picker walks a circular list via mappers.circularIndex,
+  // so it only returns to its starting entry after a whole number of list
+  // cycles per loop — snap its own clock accordingly.
+  const easingCycles = Math.round( ( timeScale * p.TAU ) / easingFunctions.length );
+  const easingClock = animation.progression * easingCycles * easingFunctions.length;
+
   iterators.vector(
     start,
     end,
@@ -178,7 +208,7 @@ sketch.draw( async() => {
       vector, lerpIndex
     ) => {
       const easingFunction = mappers.circularIndex(
-        t + lerpIndex,
+        lerpIndex + easingClock,
         easingFunctions
       )[ 1 ];
 
@@ -199,7 +229,7 @@ sketch.draw( async() => {
       );
 
       const fgColor = palette( {
-        hueOffset: t,
+        hueOffset: tt,
         hueIndex: mappers.fn(
           lerpIndex,
           0,
@@ -208,7 +238,7 @@ sketch.draw( async() => {
           p.PI
         ) * hueIndexMultiplier,
         opacityFactor: mappers.fn(
-          p.cos( sizeRatio + t ),
+          p.cos( sizeRatio + tt ),
           -1,
           1,
           opacityMax,

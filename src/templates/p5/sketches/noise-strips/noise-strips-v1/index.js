@@ -79,7 +79,14 @@ sketch.draw( async() => {
 
   const paletteA = resolvePalette( options.sketch.colors?.paletteA ?? "rainbow" );
   const paletteB = resolvePalette( options.sketch.colors?.paletteB ?? "purple" );
-  const paletteSwitchSpeed = options.sketch.colors?.paletteSwitchSpeed ?? 1;
+
+  // The palette swap walks a 2-entry circular index on ( … + t ) * speed, so
+  // it only returns to its start palette when the loop's TAU sweep of t
+  // advances the index a WHOLE number of 2-entry cycles — snapped to whole
+  // cycles per loop.
+  const rawPaletteSwitchSpeed = options.sketch.colors?.paletteSwitchSpeed ?? 1;
+  const paletteSwitchCycles = Math.round( rawPaletteSwitchSpeed * p.TAU / 2 );
+  const paletteSwitchSpeed = paletteSwitchCycles * 2 / p.TAU;
 
   const hueOffset = options.sketch.colors?.hueOffset ?? 0;
   const hueIndexMultiplier = options.sketch.colors?.hueIndexMultiplier ?? 2;

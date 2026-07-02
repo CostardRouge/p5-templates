@@ -118,14 +118,14 @@ export const formConfiguration: Record<string, any> = {
     step: 0.1
   },
   sinAngleMultiplier: {
-    label: "Sin angle multiplier",
+    label: "Sin angle multiplier (snaps to whole turns/loop)",
     component: "slider",
     min: 0,
     max: 10,
     step: 0.1
   },
   cosAngleMultiplier: {
-    label: "Cos angle multiplier",
+    label: "Cos angle multiplier (snaps to whole turns/loop)",
     component: "slider",
     min: 0,
     max: 10,
