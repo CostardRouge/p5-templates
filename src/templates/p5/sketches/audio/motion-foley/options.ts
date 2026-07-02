@@ -184,14 +184,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Timing",
     fields: {
       animationDuration: {
-        label: "Tension duration (s)",
+        label: "Tension duration (s, snaps to whole gesture cycles/loop)",
         component: "slider",
         min: 0.2,
         max: 4,
         step: 0.1
       },
       restDuration: {
-        label: "Rest between loops (s)",
+        label: "Rest between loops (s, snaps to whole gesture cycles/loop)",
         component: "slider",
         min: 0,
         max: 3,
@@ -219,14 +219,14 @@ export const formConfiguration: Record<string, any> = {
         component: "checkbox"
       },
       hold: {
-        label: "Hold at peak (s)",
+        label: "Hold at peak (s, snaps to whole gesture cycles/loop)",
         component: "slider",
         min: 0,
         max: 1.5,
         step: 0.05
       },
       releaseRatio: {
-        label: "Release length (× tension)",
+        label: "Release length (× tension, snaps to whole gesture cycles/loop)",
         component: "slider",
         min: 0.1,
         max: 2,

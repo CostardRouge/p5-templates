@@ -8,6 +8,7 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
+import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const PALETTES = {
@@ -181,6 +182,23 @@ sketch.draw( (
   const hueIndexEasing = easing?.[ options.sketch.colors?.hueIndexEasing ] ?? easing.easeInOutCubic;
   const hueNoiseTimeMix = options.sketch.colors?.hueNoiseTimeMix ?? 0.5;
   const hueOffsetTimeMix = options.sketch.colors?.hueOffsetTimeMix ?? 0;
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop.
+  //
+  // NOTE: the hue index below is driven by p.noise( ..., time * hueNoiseTimeMix )
+  // — p5 noise is not periodic, so that term is left on the raw `time` clock
+  // and cannot be made loop-exact by snapping (needs a circular-noise
+  // redesign, out of scope here).
+  const t = animation.angle;
+  const rotationTurns = Math.round( rotationSpeed );
+  const opacityTurns = Math.round( opacitySpeed );
+  const hueTurns = Math.round( hueOffsetTimeMix );
+  // The wave offset's raw rate was an implicit 1/2 (no user-facing speed
+  // control) — rounds to 1 whole cycle per loop.
+  const halfCycles = Math.round( 1 / 2 );
 
   for ( let b = 0; b < branchCount; b++ ) {
     const branchProgression = b / steps;

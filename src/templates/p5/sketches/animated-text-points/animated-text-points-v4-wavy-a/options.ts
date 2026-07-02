@@ -207,14 +207,14 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       circleSpeed: {
-        label: "Circle speed",
+        label: "Circle speed (snaps to whole turns/loop)",
         component: "slider",
         min: -10,
         max: 10,
         step: 0.1
       },
       sphereSpeed: {
-        label: "Sphere speed",
+        label: "Sphere speed (snaps to whole turns/loop)",
         component: "slider",
         min: -10,
         max: 10,
@@ -245,7 +245,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       speed: {
-        label: "Speed",
+        label: "Speed (snaps to whole turns/loop)",
         component: "slider",
         min: -5,
         max: 5,
@@ -270,7 +270,7 @@ export const formConfiguration: Record<string, any> = {
         options: paletteOptions
       },
       hueOffsetSpeed: {
-        label: "Hue offset speed",
+        label: "Hue offset speed (snaps to whole turns/loop)",
         component: "slider",
         min: -10,
         max: 10,
