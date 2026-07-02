@@ -9,7 +9,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime, drawShape
+  getAlphabet, drawGrid, getFont, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -30,7 +30,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "123" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -139,8 +138,12 @@ sketch.draw( (
           -p.PI / 2,
           p.PI / 2
         ) * ( options.sketch.colors?.hueIndexMultiplier ?? 8 ),
+        // Loop-exact opacity oscillation — whole turns per loop.
         opacityFactor: mappers.fn(
-          p.sin( time * 10 + vectorOffset * 10 + chunkOffset * 10 ),
+          p.sin( loopedPhase(
+            10,
+            p.TAU
+          ) + vectorOffset * 10 + chunkOffset * 10 ),
           -1,
           1,
           options.sketch.colors?.opacityMax ?? 5,

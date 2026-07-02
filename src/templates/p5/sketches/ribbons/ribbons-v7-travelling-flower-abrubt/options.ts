@@ -92,14 +92,14 @@ export const formConfiguration: Record<string, any> = {
   rotation: rotationFormConfiguration( {
     drift: {
       component: "slider",
-      label: "Drift speed",
+      label: "Drift speed (snaps to whole turns/loop)",
       min: -5,
       max: 5,
       step: 0.01
     },
     timeMultiplier: {
       component: "slider",
-      label: "Time multiplier",
+      label: "Time multiplier (snaps to whole turns/loop)",
       min: -5,
       max: 5,
       step: 0.01
@@ -137,7 +137,7 @@ export const formConfiguration: Record<string, any> = {
       },
       animationSpeed: {
         component: "slider",
-        label: "Animation speed",
+        label: "Animation speed (snaps to whole cycles/loop)",
         min: -3,
         max: 3,
         step: 0.01

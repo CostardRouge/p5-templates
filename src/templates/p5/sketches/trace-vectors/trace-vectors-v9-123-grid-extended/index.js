@@ -10,7 +10,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime, drawShape
+  getAlphabet, drawGrid, getFont, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -31,7 +31,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "xyz" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -115,19 +114,25 @@ sketch.draw( (
 
       position.add( vector );
 
+      const swayValues = [
+        -swayAmp,
+        -swayAmp,
+        0,
+        0,
+        swayAmp,
+        swayAmp
+      ];
+
+      // Loop-exact sway — whole `swayValues`-length cycles per loop.
       const sway = animation.ease( {
-        values: [
-          -swayAmp,
-          -swayAmp,
-          0,
-          0,
-          swayAmp,
-          swayAmp
-        ],
+        values: swayValues,
         duration: 1,
         easingFn: easing.easeInOutExpo,
         currentTime:
-          time +
+          loopedPhase(
+            1,
+            swayValues.length
+          ) +
           vectorIndexProgression * 3 +
           vectorsListProgression +
           vectorsListProgression
@@ -157,8 +162,12 @@ sketch.draw( (
     (
       vectorIndexProgression, chunkIndex = 1
     ) => {
+      // Loop-exact hue scroll — whole turns per loop.
       p.stroke( colors.test( {
-        hueOffset: time + ( options.sketch.colors?.hueOffset ?? 0 ),
+        hueOffset: loopedPhase(
+          1,
+          p.TAU
+        ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
             p.noise(

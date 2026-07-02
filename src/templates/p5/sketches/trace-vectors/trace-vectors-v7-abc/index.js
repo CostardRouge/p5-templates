@@ -10,7 +10,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime, drawShape
+  getAlphabet, drawGrid, getFont, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -31,7 +31,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "abc" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -114,19 +113,27 @@ sketch.draw( (
 
       position.add( vector );
 
+      const swayValues = [
+        -swayAmp,
+        -swayAmp,
+        0,
+        0,
+        swayAmp,
+        swayAmp
+      ];
+
+      // Loop-exact sway — whole `swayValues`-length cycles per loop (the
+      // noise term only depends on the per-vertex index, not time, so it
+      // stays as a static per-vertex offset).
       const sway = animation.ease( {
-        values: [
-          -swayAmp,
-          -swayAmp,
-          0,
-          0,
-          swayAmp,
-          swayAmp
-        ],
+        values: swayValues,
         duration: 1,
         easingFn: easing.easeInOutBack,
         currentTime:
-          time + p.noise( vectorIndexProgression * 10 ) - vectorsListProgression
+          loopedPhase(
+            1,
+            swayValues.length
+          ) + p.noise( vectorIndexProgression * 10 ) - vectorsListProgression
       } );
 
       position.add(
@@ -155,6 +162,8 @@ sketch.draw( (
     ) => {
       const chunkOffset = chunkIndex / 5;
 
+      // Loop-exact hue anchor walk, hue phase and opacity oscillation — each
+      // snapped to whole cycles per loop independently.
       p.stroke( colors.test( {
         hueOffset:
           animation.ease( {
@@ -164,18 +173,27 @@ sketch.draw( (
             ],
             duration: 1,
             easingFn: easing.easeInOutExpo,
-            currentTime: time / 2
+            currentTime: loopedPhase(
+              0.5,
+              2
+            )
           } ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
-            p.sin( chunkOffset + vectorIndexProgression + time / 4 ),
+            p.sin( chunkOffset + vectorIndexProgression + loopedPhase(
+              0.25,
+              p.TAU
+            ) ),
             -1,
             1,
             -p.PI / 2,
             p.PI / 2
           ) * ( options.sketch.colors?.hueIndexMultiplier ?? 16 ),
         opacityFactor: p.map(
-          p.cos( vectorIndexProgression + chunkIndex * 5 + time ),
+          p.cos( vectorIndexProgression + chunkIndex * 5 + loopedPhase(
+            1,
+            p.TAU
+          ) ),
           -1,
           1,
           options.sketch.colors?.opacityMax ?? 5,

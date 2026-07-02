@@ -6,7 +6,7 @@ import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  SpiralBase
+  SpiralBase, snapLoopRate
 } from "../_shared.js";
 
 const sketchState = {
@@ -44,8 +44,12 @@ class Spiral extends SpiralBase {
     const linesCount = rings.linesCount ?? 3;
     const lineSizeMin = rings.lineSizeMin ?? 50;
     const lineSizeMax = rings.lineSizeMax ?? 150;
-    const spinSpeed = motion.spinSpeed ?? 1;
-    const rotationSpeed = motion.rotationSpeed ?? 3;
+    // Loop-exact rates: raw time is the sketch's non-wrapping clock, so every
+    // rate multiplying it is snapped to whole cycles per loop (see
+    // ../_shared.js#snapLoopRate) — including the literal rates below, which
+    // aren't sliders but still need to close the loop.
+    const spinSpeed = snapLoopRate( motion.spinSpeed ?? 1 );
+    const rotationSpeed = snapLoopRate( motion.rotationSpeed ?? 3 );
     const rotationMaxMin = motion.rotationMaxMin ?? 1;
     const rotationMaxMax = motion.rotationMaxMax ?? 5;
     const opacityFalloffMin = colorOpts.opacityFalloffMin ?? 1;
@@ -54,6 +58,10 @@ class Spiral extends SpiralBase {
     const weightMaxMax = colorOpts.weightMaxMax ?? 100;
     const endcapWeight = endcap.weight ?? 4;
     const endcapDarken = endcap.darken ?? 32;
+    const opacityTimeRate = snapLoopRate( 3 );
+    const rotationMaxTimeRate = snapLoopRate( 0.5 );
+    const unitTimeRate = snapLoopRate( 1 );
+    const hueTimeRate = snapLoopRate( -1 );
 
     for (
       let shadowIndex = 0;
@@ -83,7 +91,7 @@ class Spiral extends SpiralBase {
           shadowIndex,
           shadowsCount * 4,
           p.map(
-            p.sin( -time * 3 + angle * 2 ),
+            p.sin( -time * opacityTimeRate + angle * 2 ),
             -1,
             1,
             opacityFalloffMin,
@@ -98,7 +106,7 @@ class Spiral extends SpiralBase {
 
         p.push();
         const rotationMax = p.map(
-          p.sin( time / 2 ),
+          p.sin( time * rotationMaxTimeRate ),
           -1,
           1,
           rotationMaxMin,
@@ -117,7 +125,7 @@ class Spiral extends SpiralBase {
           const vector = converters.polar.vector(
             lineIndex,
             p.map(
-              p.sin( time ),
+              p.sin( time * unitTimeRate ),
               -1,
               1,
               lineSizeMin,
@@ -128,7 +136,7 @@ class Spiral extends SpiralBase {
 
           p.beginShape();
 
-          const hueSpeed = -time;
+          const hueSpeed = time * hueTimeRate;
           const hueIndex = angle + shadowIndex / 1.5;
           const hue = p.color(
             p.map(
@@ -175,7 +183,7 @@ class Spiral extends SpiralBase {
           );
 
           const wMax = p.map(
-            p.sin( time ),
+            p.sin( time * unitTimeRate ),
             -1,
             1,
             weightMaxMin,
@@ -215,7 +223,11 @@ function drawGlow( time ) {
   const sizeMin = glow.sizeMin ?? 0.166;
   const sizeMax = glow.sizeMax ?? 1;
   const orbitRadius = glow.orbitRadius ?? 30;
-  const orbitSpeed = glow.orbitSpeed ?? 5;
+  // Loop-exact rates: raw time is the sketch's non-wrapping clock, so every
+  // rate multiplying it — including the literal size-pulse rate below — is
+  // snapped to whole cycles per loop (see ../_shared.js#snapLoopRate).
+  const orbitSpeed = snapLoopRate( glow.orbitSpeed ?? 5 );
+  const sizeTimeRate = snapLoopRate( 1 );
   const c = glow.color ?? [
     128,
     128,
@@ -227,7 +239,7 @@ function drawGlow( time ) {
   p.stroke( ...c );
 
   const size = p.map(
-    -p.sin( time ),
+    -p.sin( time * sizeTimeRate ),
     -1,
     1,
     p.width * sizeMin,

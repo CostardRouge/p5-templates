@@ -12,7 +12,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime, drawShape
+  getAlphabet, drawGrid, getFont, loopedTime, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -22,6 +22,9 @@ sketch.setup(
   }
 );
 
+// Unbounded drift accumulator (never resets to `progression`) — the position
+// walk it drives cannot be made loop-safe by rounding, see the comment above
+// the `position` ease below.
 let gt = 0;
 
 sketch.draw( (
@@ -183,6 +186,11 @@ sketch.draw( (
     (
       vector, vectorsListProgression
     ) => {
+      // Not loop-safe: `gt` is a module-level accumulator incremented every
+      // frame (`gt += mappers.circularIndex(time, speedValues)`) and never
+      // reset — an unbounded drift term, like a physics integrator. No
+      // rounding of `time` can close this ease while `gt` keeps drifting —
+      // left as authored.
       const position = animation.ease( {
         values: positions,
         duration: 1,
@@ -212,8 +220,13 @@ sketch.draw( (
     (
       vectorIndexProgression, chunkIndex = 1
     ) => {
+      // Loop-exact hue scroll — whole turns per loop (independent of the
+      // unfixable `gt` accumulator used for position below).
       p.stroke( colors.rainbow( {
-        hueOffset: time + ( options.sketch.colors?.hueOffset ?? 0 ),
+        hueOffset: loopedPhase(
+          1,
+          p.TAU
+        ) + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
             p.noise(

@@ -74,7 +74,10 @@ sketch.draw( (
         values: sampleValues,
         duration: 1,
         easingFn: easing.easeInOutExpo,
-        currentTime: progression / 2 + loopedPhase( 1, sampleValues.length )
+        currentTime: progression / 2 + loopedPhase(
+          1,
+          sampleValues.length
+        )
       } );
 
       return traceLetters.morph( {

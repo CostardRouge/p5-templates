@@ -10,7 +10,7 @@ import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime, drawShape
+  getAlphabet, drawGrid, getFont, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -31,7 +31,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "123456789" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -106,11 +105,16 @@ sketch.draw( (
     ) * ( options.sketch.colors?.hueIndexMultiplier ?? 1 )
   } ) );
 
+  // Loop-exact anchor walks — each snapped to whole cycles of its own
+  // values-list length per loop (hues/positions/glyphs can differ in count).
   const hue = animation.ease( {
     values: hues,
     duration: 1,
     lerpFn: p.lerpColor.bind( p ),
-    currentTime: time
+    currentTime: loopedPhase(
+      1,
+      hues.length
+    )
   } );
 
   const position = animation.ease( {
@@ -118,7 +122,10 @@ sketch.draw( (
     duration: 1,
     lerpFn: mappers.lerpVector,
     easingFn: easing.easeInOutExpo,
-    currentTime: time
+    currentTime: loopedPhase(
+      1,
+      positions.length
+    )
   } );
 
   const sampleFactor = options.sketch.textStyle?.sampleFactor ?? 0.5;
@@ -134,7 +141,10 @@ sketch.draw( (
     duration: 1,
     lerpFn: mappers.lerpPoints,
     easingFn: easing.easeInOutExpo,
-    currentTime: time
+    currentTime: loopedPhase(
+      1,
+      alphabet.length
+    )
   } );
 
   p.push();

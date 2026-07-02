@@ -2,6 +2,7 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import animation from "@/p5/utils/animation.js";
 
 import converters from "@/p5/utils/converters.js";
 import mappers from "@/p5/utils/mappers.js";
@@ -10,7 +11,7 @@ import renderTitle from "@/p5/utils/title/renderTitle.js";
 sketch.setup( () => {} );
 
 function drawGrid(
-  p, xCount, yCount, time, animSpeed, weight = 3
+  p, xCount, yCount, t, animSpeed, weight = 3
 ) {
   if ( xCount <= 0 || yCount <= 0 ) {
     return;
@@ -22,8 +23,12 @@ function drawGrid(
   p.strokeWeight( weight );
   p.stroke( 255 );
 
-  const xx = xSize * p.cos( time + xSize ) * animSpeed;
-  const yy = ySize * p.sin( time + ySize ) * animSpeed;
+  // Both xx and yy are bounded cos()/sin() oscillations with a coefficient of
+  // 1 on t (the caller already snapped any extra speed multiplier into t
+  // before calling drawGrid), so they're already exactly one whole cycle per
+  // loop — no further snapping needed here.
+  const xx = xSize * p.cos( t + xSize ) * animSpeed;
+  const yy = ySize * p.sin( t + ySize ) * animSpeed;
 
   for ( let x = 0; x <= xCount; x++ ) {
     for ( let y = 0; y <= yCount; y++ ) {
@@ -43,7 +48,7 @@ function drawGrid(
   }
 }
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch;
 
@@ -52,12 +57,20 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw,
+  // non-wrapping `time.seconds()` this draw loop used to receive never
+  // returns to its start), so every oscillator driven by it below is snapped
+  // to a WHOLE number of cycles per loop.
+  const t = animation.angle;
+
   if ( o.grid?.enabled ?? true ) {
+    const gridCycles = Math.round( -0.5 * ( o.grid?.animSpeed ?? 1 ) );
+
     drawGrid(
       p,
       o.grid?.xCount ?? 2,
       o.grid?.yCount ?? 2,
-      -time / 2 * ( o.grid?.animSpeed ?? 1 ),
+      t * gridCycles,
       1
     );
   }
@@ -84,7 +97,14 @@ sketch.draw( ( time ) => {
     255,
     255
   ];
-  const cursorIndex = Math.ceil( time * cursorSpeed ) % quality;
+
+  // The cursor index is a linear accumulator (Math.ceil(...) % quality), so
+  // it only lands on the same wrapped index at the seam when it advances a
+  // WHOLE number of full sweeps (quality steps) per loop — snap its rate
+  // accordingly (same idiom as the yy/xx grid scrolls above).
+  const cursorLoopCycles = Math.round( cursorSpeed * p.TAU / quality );
+  const cursorSnappedSpeed = quality ? cursorLoopCycles * quality / p.TAU : 0;
+  const cursorIndex = Math.ceil( t * cursorSnappedSpeed ) % quality;
 
   const opacitySpeed = o.opacity?.speed ?? 3;
   const opacityCount = o.opacity?.groupCount ?? 3;
@@ -104,12 +124,19 @@ sketch.draw( ( time ) => {
   const hueSpeedOption = o.colors?.hueSpeed ?? 2;
   const hueAngleMult = o.colors?.hueAngleMultiplier ?? 5;
 
+  // Every rate multiplying t below is snapped to a WHOLE number of cycles
+  // per loop so the last frame matches the first at the seam.
+  const horizontalSwingCycles = Math.round( horizontalSwingSpeed );
+  const rotationCycles = Math.round( rotationSpeed );
+  const opacityCycles = Math.round( opacitySpeed );
+  const hueCycles = Math.round( hueSpeedOption );
+
   for ( let lerpIndex = lerpMin; lerpIndex <= lerpMax; lerpIndex += lerpStep ) {
     p.push();
 
     p.translate(
       p.map(
-        p.sin( lerpIndex - time * horizontalSwingSpeed ),
+        p.sin( lerpIndex - t * horizontalSwingCycles ),
         -1,
         1,
         p.width / 2 - horizontalSwing,
@@ -161,16 +188,16 @@ sketch.draw( ( time ) => {
     }
 
     if ( cursorEnabled && beyondCursor ) {
-      p.rotate( time * rotationSpeed + lerpIndex * cursorRotationMult * rotationCount );
+      p.rotate( t * rotationCycles + lerpIndex * cursorRotationMult * rotationCount );
     } else {
-      p.rotate( time * rotationSpeed + lerpIndex * rotationCount );
+      p.rotate( t * rotationCycles + lerpIndex * rotationCount );
     }
 
     let opacityFactor = mappers.circularMap(
       lerpIndex,
       lerpMax * 4,
       p.map(
-        p.sin( -time * opacitySpeed + lerpIndex * opacityCount ),
+        p.sin( -t * opacityCycles + lerpIndex * opacityCount ),
         -1,
         1,
         startOpacity,
@@ -182,7 +209,7 @@ sketch.draw( ( time ) => {
     if ( pingPong ) {
       opacityFactor = p.map(
         p.map(
-          p.sin( lerpIndex * opacityCount - time * opacitySpeed ),
+          p.sin( lerpIndex * opacityCount - t * opacityCycles ),
           -1,
           1,
           -1,
@@ -191,7 +218,7 @@ sketch.draw( ( time ) => {
         -1,
         1,
         p.map(
-          p.cos( lerpIndex * opacityCount + time * opacitySpeed ),
+          p.cos( lerpIndex * opacityCount + t * opacityCycles ),
           -1,
           1,
           1,
@@ -209,7 +236,7 @@ sketch.draw( ( time ) => {
 
     if ( changeLinesCount ) {
       linesCount = p.map(
-        p.cos( lerpIndex / 2 - time * 2 ),
+        p.cos( lerpIndex / 2 - t * 2 ),
         0,
         1,
         1,
@@ -219,7 +246,7 @@ sketch.draw( ( time ) => {
     }
 
     const lineStep = ( lineAngleMax - lineAngleMin ) / linesCount;
-    const hueSpeed = -time * hueSpeedOption;
+    const hueSpeed = -t * hueCycles;
 
     for ( let lineIndex = lineAngleMin; lineIndex < lineAngleMax; lineIndex += lineStep ) {
       const vector = converters.polar.vector(

@@ -10,7 +10,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  drawGrid, drawShape, getFont, loopedTime
+  drawGrid, drawShape, getFont, loopedPhase
 } from "../_shared.js";
 
 sketch.setup(
@@ -31,7 +31,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const tx = options.sketch.text ?? {};
   const words = tx.mode === "multiple" && Array.isArray( tx.value ) && tx.value.length
     ? tx.value
@@ -62,8 +61,12 @@ sketch.draw( (
     0
   );
 
+  // Loop-exact quality-line oscillation — whole turns per loop.
   const qualityLine = mappers.fn(
-    p.sin( time / 2 ),
+    p.sin( loopedPhase(
+      0.5,
+      p.TAU
+    ) ),
     -1,
     1,
     -0.05,
@@ -159,11 +162,15 @@ sketch.draw( (
         vectorsListProgression
       );
 
+      // Loop-exact wave — whole `zValues`-length cycles per loop.
       const z = animation.ease( {
         values: zValues,
         duration: 1,
         easingFn: easing.easeInOutSine,
-        currentTime: time / 2 + vectorsListProgression * 2
+        currentTime: loopedPhase(
+          0.5,
+          zValues.length
+        ) + vectorsListProgression * 2
       } );
 
       position.add( vector );
@@ -191,18 +198,26 @@ sketch.draw( (
     ) => {
       const colorFunction = qualityLine > chunkIndex ? colors.rainbow : colors.purple;
 
+      // Loop-exact hue phase and opacity oscillation — each snapped to
+      // whole turns per loop independently.
       p.stroke( colorFunction( {
         hueOffset: options.sketch.colors?.hueOffset ?? 0,
         hueIndex:
           mappers.fn(
-            p.sin( vectorIndexProgression + time / 4 + chunkIndex / 4 ),
+            p.sin( vectorIndexProgression + loopedPhase(
+              0.25,
+              p.TAU
+            ) + chunkIndex / 4 ),
             -1,
             1,
             -p.PI / 2,
             p.PI / 2
           ) * ( options.sketch.colors?.hueIndexMultiplier ?? 16 ),
         opacityFactor: p.map(
-          p.sin( time * 2 + chunkIndex * 7 * vectorIndexProgression ),
+          p.sin( loopedPhase(
+            2,
+            p.TAU
+          ) + chunkIndex * 7 * vectorIndexProgression ),
           -1,
           1,
           options.sketch.colors?.opacityMax ?? 4,

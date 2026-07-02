@@ -5,7 +5,7 @@ import sketch, {
 import mappers from "@/p5/utils/mappers.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
-  SpiralBase, rebuildGrid
+  SpiralBase, rebuildGrid, snapLoopRate
 } from "../_shared.js";
 
 const sketchState = {
@@ -27,8 +27,11 @@ class Spiral extends SpiralBase {
       position, size, start, end
     } = this;
 
-    const timeSpeed = motion.timeSpeed ?? 1;
-    const hueCadence = index + time * ( colorOpts.hueSpeed ?? 1 );
+    // Loop-exact rates: raw time (plus the timeBoost wobble added below) is
+    // the sketch's non-wrapping clock, so every rate multiplying it is
+    // snapped to whole cycles per loop (see ../_shared.js#snapLoopRate).
+    const timeSpeed = snapLoopRate( motion.timeSpeed ?? 1 );
+    const hueCadence = index + time * snapLoopRate( colorOpts.hueSpeed ?? 1 );
     const t = p.sin( time * timeSpeed );
     const mult = p.map(
       t,
@@ -61,7 +64,7 @@ class Spiral extends SpiralBase {
     const dMax = spiralOpts.diameterMax ?? 100;
     const opFalloffMax = colorOpts.opacityFalloffMax ?? 200;
     const opFalloffScale = colorOpts.opacityFalloffScale ?? 10;
-    const opTimeScale = colorOpts.opacityCurveTimeScale ?? 3;
+    const opTimeScale = snapLoopRate( colorOpts.opacityCurveTimeScale ?? 3 );
 
     for ( let lerpIndex = 0; lerpIndex < 1; lerpIndex += lerpStep ) {
       const angle = p.map(
@@ -186,8 +189,12 @@ sketch.draw( ( time ) => {
     0
   ] ) );
 
+  // The wobble added to the clock below is itself sin(time)-driven, so its
+  // own rate (1) must snap to whole cycles per loop too — otherwise
+  // `time + timeBoost` wouldn't advance by exactly one loop's worth of
+  // duration each loop, breaking every downstream rate's snapping.
   const timeBoost = p.map(
-    p.sin( time ),
+    p.sin( time * snapLoopRate( 1 ) ),
     -1,
     1,
     0,

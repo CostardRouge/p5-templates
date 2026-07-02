@@ -13,9 +13,15 @@ import {
   paletteStroke
 } from "../_shared.js";
 
-sketch.draw( ( time ) => {
+sketch.draw( () => {
   const p = getP5();
   const o = options.sketch ?? {};
+
+  // Loop-exact clock: animation.angle sweeps exactly TAU per loop (the raw
+  // `time.seconds()` this draw loop used to receive never wraps, so nothing
+  // driven by it could ever close the seam). Every rate multiplying it below
+  // is rounded to a whole number of cycles per loop.
+  const time = animation.angle;
 
   p.clear();
   p.background( ...( o.backgroundColor ?? [
@@ -31,9 +37,14 @@ sketch.draw( ( time ) => {
     80
   ];
 
+  // Radial background wobble only returns to its start offsets once per
+  // loop when it is a WHOLE number of cycles — snapped to whole cycles per
+  // loop.
+  const bgAnimationCycles = Math.round( o.background?.animationSpeed ?? 0.5 );
+
   drawRadialPattern( {
     count: o.background?.linesAmount ?? 90,
-    time: time * ( o.background?.animationSpeed ?? 0.5 ),
+    time: time * bgAnimationCycles,
     strokeColor: p.color(
       bgTint[ 0 ],
       bgTint[ 1 ],
@@ -69,7 +80,10 @@ sketch.draw( ( time ) => {
       const rotationCount = o.rotation?.count ?? 1;
       const rotationSpeed = o.rotation?.speed ?? 1;
       const rotationIndexMult = o.rotation?.indexMultiplier ?? 2;
-      const rotationTimeMult = o.rotation?.timeMultiplier ?? 2;
+      // The time multiplier is the argument to cos(), so it only returns to
+      // its start value once per loop when it is a WHOLE number of turns —
+      // snapped to whole turns per loop.
+      const rotationTimeMult = Math.round( o.rotation?.timeMultiplier ?? 2 );
 
       p.rotate( p.cos( lerpIndex * rotationIndexMult - t * rotationTimeMult ) * rotationSpeed
           + lerpIndex * rotationIndexMult * rotationCount );
@@ -77,12 +91,16 @@ sketch.draw( ( time ) => {
     (
       lerpIndex, _lMin, lerpMax, t
     ) => {
+      // Opacity oscillation only returns to its start value once per loop
+      // when it completes a WHOLE number of cycles — snapped to whole
+      // cycles per loop.
+      const opacityCycles = Math.round( o.opacity?.speed ?? 3 );
       const opacityFactor = computeOpacityFactor( {
         lerpIndex,
         lerpMax,
         time: t,
         opacityCount: o.opacity?.groupCount ?? 6,
-        opacitySpeed: o.opacity?.speed ?? 3,
+        opacitySpeed: opacityCycles,
         startOpacity: o.opacity?.startFactor ?? 3,
         endOpacity: o.opacity?.endFactor ?? 1,
         pingPong: o.opacity?.pingPong ?? false
@@ -96,6 +114,10 @@ sketch.draw( ( time ) => {
         1.5,
         1
       ];
+      // NOT fixable by snapping: animation.sequence lerp-smooths toward its
+      // target every frame and keeps that smoothed value in module state
+      // across frames, so — like a physics follower — it never returns
+      // exactly to its start value at the loop seam regardless of rate.
       const v = animation.sequence(
         "ribbons-v9-fold",
         t / 2,
@@ -106,7 +128,11 @@ sketch.draw( ( time ) => {
         0.1,
         v
       );
-      const hueSpeed = -t * ( o.colors?.hueSpeed ?? 2 );
+      // Hue scroll only returns to its start hue once per loop when it
+      // completes a WHOLE number of cycles — snapped to whole cycles per
+      // loop.
+      const hueCycles = Math.round( o.colors?.hueSpeed ?? 2 );
+      const hueSpeed = -t * hueCycles;
       const palette = o.colors?.palette ?? "red";
       const ll = o.lines?.length ?? 150;
       const jitter = o.shape?.jitter ?? 15;

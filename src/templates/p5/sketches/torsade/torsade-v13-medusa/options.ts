@@ -153,14 +153,14 @@ export const formConfiguration: Record<string, any> = {
     label: "Motion",
     fields: {
       spinSpeed: {
-        label: "Spin speed",
+        label: "Spin speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -5,
         max: 5,
         step: 0.01
       },
       rotationSpeed: {
-        label: "Rotation speed",
+        label: "Rotation speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -10,
         max: 10,
@@ -230,7 +230,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       orbitSpeed: {
-        label: "Orbit speed",
+        label: "Orbit speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -20,
         max: 20,

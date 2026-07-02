@@ -157,7 +157,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Motion",
     fields: {
       timeSpeed: {
-        label: "Time speed",
+        label: "Time speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 5,
@@ -177,7 +177,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Colors",
     fields: {
       hueSpeed: {
-        label: "Hue speed",
+        label: "Hue speed (snaps to whole cycles/loop)",
         component: "slider",
         min: -10,
         max: 10,
@@ -198,7 +198,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.1
       },
       opacityCurveTimeScale: {
-        label: "Opacity curve time scale",
+        label: "Opacity curve time scale (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,

@@ -10,7 +10,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime, drawShape
+  getAlphabet, drawGrid, getFont, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -31,7 +31,6 @@ sketch.draw( (
   ] ) );
   p.noFill();
 
-  const time = loopedTime();
   const alphabet = getAlphabet( "123" );
   const font = getFont( options.sketch.textStyle?.font );
 
@@ -114,23 +113,37 @@ sketch.draw( (
 
       position.add( vector );
 
+      const swayValues = [
+        -swayAmp,
+        -swayAmp,
+        0,
+        0,
+        swayAmp,
+        swayAmp
+      ];
+
+      // Loop-exact sway: the bare clock term closes on whole `swayValues`-
+      // length cycles, each `cos(time+…)` term closes independently on whole
+      // turns — snapped separately so their sum returns exactly to its start.
       const sway = animation.ease( {
-        values: [
-          -swayAmp,
-          -swayAmp,
-          0,
-          0,
-          swayAmp,
-          swayAmp
-        ],
+        values: swayValues,
         duration: 1,
         easingFn: easing.easeInOutExpo,
         currentTime:
-          time +
+          loopedPhase(
+            1,
+            swayValues.length
+          ) +
           vectorsListProgression +
-          vectorIndexProgression * p.cos( time + vectorIndexProgression * 2 ) +
+          vectorIndexProgression * p.cos( loopedPhase(
+            1,
+            p.TAU
+          ) + vectorIndexProgression * 2 ) +
           vectorsListProgression * 2 +
-          vectorIndexProgression * p.abs( p.cos( time + vectorsListProgression * 2 ) )
+          vectorIndexProgression * p.abs( p.cos( loopedPhase(
+            1,
+            p.TAU
+          ) + vectorsListProgression * 2 ) )
       } );
 
       position.add(
@@ -159,6 +172,8 @@ sketch.draw( (
     ) => {
       const chunkOffset = chunkIndex / 5;
       const vectorOffset = vectorIndexProgression * 5;
+
+      // Loop-exact hue-coefficient anchor walk — whole 2-value cycles per loop.
       const indexCooef = animation.ease( {
         values: [
           1,
@@ -166,7 +181,10 @@ sketch.draw( (
         ],
         duration: 1,
         easingFn: easing.easeInOutExpo,
-        currentTime: time / 2 + chunkIndex + vectorIndexProgression
+        currentTime: loopedPhase(
+          0.5,
+          2
+        ) + chunkIndex + vectorIndexProgression
       } );
 
       const t = p.map(
@@ -177,18 +195,31 @@ sketch.draw( (
         p.PI / 2
       ) * p.PI * 1.5;
 
+      // Loop-exact hue scroll, hue phase and opacity oscillation — each
+      // snapped to whole turns per loop independently (the hue-scroll rate
+      // depends on the per-vertex chunkOffset/vectorOffset, so it is snapped
+      // per call).
       p.stroke( colors.test( {
-        hueOffset: time / 2 * chunkOffset * vectorOffset + 5 + ( options.sketch.colors?.hueOffset ?? 0 ),
+        hueOffset: loopedPhase(
+          chunkOffset * vectorOffset / 2,
+          p.TAU
+        ) + 5 + ( options.sketch.colors?.hueOffset ?? 0 ),
         hueIndex:
           mappers.fn(
-            p.sin( chunkOffset + vectorIndexProgression + indexCooef + time / 4 ),
+            p.sin( chunkOffset + vectorIndexProgression + indexCooef + loopedPhase(
+              0.25,
+              p.TAU
+            ) ),
             -1,
             1,
             -p.PI / 2,
             p.PI / 2
           ) * ( options.sketch.colors?.hueIndexMultiplier ?? 12 ),
         opacityFactor: p.map(
-          p.cos( t + time ),
+          p.cos( t + loopedPhase(
+            1,
+            p.TAU
+          ) ),
           -1,
           1,
           options.sketch.colors?.opacityMax ?? 5,

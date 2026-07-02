@@ -9,7 +9,7 @@ import traceLetters from "@/p5/utils/traceLetters.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
-  getAlphabet, drawGrid, getFont, loopedTime, drawShape
+  getAlphabet, drawGrid, getFont, loopedTime, loopedPhase, drawShape
 } from "../_shared.js";
 
 sketch.setup(
@@ -48,8 +48,12 @@ sketch.draw( (
     0
   );
 
+  // Loop-exact quality-line oscillation — whole turns per loop.
   const qualityLine = mappers.fn(
-    p.sin( time ),
+    p.sin( loopedPhase(
+      1,
+      p.TAU
+    ) ),
     -1,
     1,
     -0.05,
@@ -162,6 +166,10 @@ sketch.draw( (
       const colorFunction =
         qualityLine > chunkIndex ? colors.rainbow : colors.purple;
 
+      // Not loop-safe: hueIndex is scrubbed by `p.noise(…+time…)`. p5 noise
+      // is not periodic, so no rounding of `time` can make that term return
+      // to its start value at the seam — left as authored. The opacity
+      // oscillation below has no bare noise(time) and is fully snapped.
       p.stroke( colorFunction( {
         hueOffset: options.sketch.colors?.hueOffset ?? 0,
         hueIndex:
@@ -176,7 +184,13 @@ sketch.draw( (
             p.PI / 2
           ) * ( options.sketch.colors?.hueIndexMultiplier ?? 8 ),
         opacityFactor: mappers.fn(
-          p.sin( time * 10 + vectorOffset * 2 + p.cos( time * 2 + p.map(
+          p.sin( loopedPhase(
+            10,
+            p.TAU
+          ) + vectorOffset * 2 + p.cos( loopedPhase(
+            2,
+            p.TAU
+          ) + p.map(
             chunkOffset,
             0,
             1,
