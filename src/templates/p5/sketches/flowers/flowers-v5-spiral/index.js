@@ -47,12 +47,31 @@ sketch.draw( async() => {
   p.clear();
   p.background( ...bg );
 
-  const t = animation.angle * ( options.sketch.timeScale ?? 1 );
+  const timeScale = options.sketch.timeScale ?? 1;
+
+  // ── Loop-exact clock ─────────────────────────────────────────────────────
+  // animation.angle sweeps exactly TAU per loop, so the loop seam is invisible
+  // only when every time-driven rate completes a WHOLE number of cycles per
+  // loop. Each raw slider rate (× time scale) is therefore rounded to whole
+  // cycles below — fractional rates are what made the last frame disagree with
+  // the first.
+  const t = animation.angle;
+
+  // Outer cluster spin, and the petal wind-up that advances at the raw clock
+  // rate — snapped to whole turns per loop.
+  const rotationTurns = Math.round( ( options.sketch.foreground?.rotationSpeed ?? 0.5 ) * timeScale );
+  const windTurns = Math.round( timeScale );
 
   // ── Animated start/end via easing ease() ─────────────────────────
   const boundary = options.sketch.path?.boundary ?? 150;
   const anchorTimeScale = options.sketch.path?.anchorTimeScale ?? 0.25;
   const easingFn = resolveEasing( options.sketch.path?.easing ?? "easeOutBounce" );
+
+  // The ease walks its 3 anchors circularly, so it only returns to the start
+  // pose after a whole number of 3-anchor cycles — snap the anchor clock to
+  // complete exactly that many per loop.
+  const anchorCycles = Math.round( ( p.TAU * timeScale * anchorTimeScale ) / 3 );
+  const anchorTime = animation.progression * anchorCycles * 3;
 
   const start = animation.ease( {
     values: [
@@ -69,7 +88,7 @@ sketch.draw( async() => {
         boundary
       )
     ],
-    currentTime: t * anchorTimeScale,
+    currentTime: anchorTime,
     duration: 1,
     easingFn,
     lerpFn: mappers.lerpVector
@@ -90,7 +109,7 @@ sketch.draw( async() => {
         p.height - boundary
       )
     ],
-    currentTime: t * anchorTimeScale,
+    currentTime: anchorTime,
     duration: 1,
     easingFn,
     lerpFn: mappers.lerpVector
@@ -104,7 +123,6 @@ sketch.draw( async() => {
   const borderColor = options.sketch.foreground?.borderColor ?? "black";
   const backgroundColor = options.sketch.foreground?.fillColor ?? "white";
   const borderWidth = options.sketch.foreground?.borderWidth ?? 4;
-  const rotationSpeed = options.sketch.foreground?.rotationSpeed ?? 0.5;
   const innerRotationGain = options.sketch.foreground?.innerRotationGain ?? 10;
 
   iterators.vector(
@@ -135,7 +153,7 @@ sketch.draw( async() => {
         vector.x,
         vector.y
       );
-      p.rotate( -t * rotationSpeed );
+      p.rotate( -t * rotationTurns );
 
       cross( {
         sides,
@@ -161,7 +179,7 @@ sketch.draw( async() => {
             0,
             p.PI
           ) );
-          p.rotate( -t + lerpIndex * innerRotationGain );
+          p.rotate( -t * windTurns + lerpIndex * innerRotationGain );
           flower(
             size,
             flowerPetals

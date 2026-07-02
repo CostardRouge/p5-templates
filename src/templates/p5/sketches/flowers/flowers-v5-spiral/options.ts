@@ -59,7 +59,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.0005
       },
       anchorTimeScale: {
-        label: "Anchor cycle speed",
+        label: "Anchor cycle speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 2,
@@ -119,7 +119,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.5
       },
       rotationSpeed: {
-        label: "Rotation speed",
+        label: "Rotation speed (snaps to whole turns/loop)",
         component: "slider",
         min: -3,
         max: 3,
