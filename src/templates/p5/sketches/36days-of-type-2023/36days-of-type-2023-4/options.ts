@@ -121,14 +121,14 @@ export const formConfiguration: Record<string, any> = {
         component: "checkbox"
       },
       rotationCount: {
-        label: "Rotation count",
+        label: "Rotation count (snaps to whole turns/loop)",
         component: "slider",
         min: 1,
         max: 10,
         step: 0.5
       },
       waveSpeed: {
-        label: "Wave speed",
+        label: "Wave speed (snaps to whole cycles/loop)",
         component: "slider",
         min: 0,
         max: 10,
@@ -205,14 +205,14 @@ export const formConfiguration: Record<string, any> = {
               step: 0.05
             },
             sinMultiplier: {
-              label: "Sin multiplier (animated)",
+              label: "Sin multiplier (animated, snaps to whole turns/loop)",
               component: "slider",
               min: 1,
               max: 9,
               step: 0.1
             },
             cosMultiplier: {
-              label: "Cos multiplier (animated)",
+              label: "Cos multiplier (animated, snaps to whole turns/loop)",
               component: "slider",
               min: 1,
               max: 9,

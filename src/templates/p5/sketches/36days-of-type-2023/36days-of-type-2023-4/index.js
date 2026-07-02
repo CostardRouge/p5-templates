@@ -484,19 +484,22 @@ sketch.draw( async() => {
         p.mouseY
       );
     } else {
-      const sinMult = waveConfig.sinMultiplier ?? 3;
-      const cosMult = waveConfig.cosMultiplier ?? 1;
+      // Idle-demo animated point (not live input) — sin/cos only return to
+      // their start value when their multiplier is a WHOLE number of turns
+      // per loop, so the raw sliders are snapped to whole turns per loop.
+      const sinTurns = Math.round( waveConfig.sinMultiplier ?? 3 );
+      const cosTurns = Math.round( waveConfig.cosMultiplier ?? 1 );
 
       sketchState.interactive.position = p.createVector(
         p.map(
-          Math.sin( animation.angle * sinMult ),
+          Math.sin( animation.angle * sinTurns ),
           -1,
           1,
           0,
           p.width
         ),
         p.map(
-          Math.cos( animation.angle * cosMult ),
+          Math.cos( animation.angle * cosTurns ),
           -1,
           1,
           0,
