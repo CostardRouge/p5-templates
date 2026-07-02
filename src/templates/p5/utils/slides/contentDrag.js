@@ -10,6 +10,9 @@ import {
   createDraggable,
   detachAllDraggables
 } from "../interaction/draggable.js";
+import {
+  getCanvasDisplayScale
+} from "../interaction/pointerTracking.js";
 
 // ── On-canvas drag for template content items ──────────────────────────────
 // Every positioned content item — the global "content" list edited in the
@@ -43,8 +46,13 @@ const DRAGGABLE_TYPES = new Set( [
   "specs"
 ] );
 
-// Pick-up radius (px) around an item's anchor point.
-const GRAB_RADIUS = 44;
+// Pick-up radius around an item's anchor point, in ON-SCREEN (CSS) pixels.
+// Converted to canvas-pixel space per frame (see grabRadius) so the touch
+// target stays the same physical size on every device — a fixed canvas-pixel
+// radius collapses to a handful of screen pixels on a phone (a 1080-wide buffer
+// shown ~380px wide), which is what made items feel un-grabbable on mobile and
+// let the tap fall through to a viewport pan instead.
+const GRAB_RADIUS_SCREEN_PX = 44;
 
 export const GLOBAL_CONTENT_SCOPE = "global";
 
@@ -427,13 +435,18 @@ function handleFrame() {
     return;
   }
 
+  // Keep the grab zone a constant physical size on screen: a CSS-pixel radius
+  // scaled into the canvas-pixel space the drag math (and the capture-phase
+  // pan-cancel hit-test) both work in.
+  const grabRadius = GRAB_RADIUS_SCREEN_PX * getCanvasDisplayScale();
+
   const {
     hovers,
     grabbed,
     released
   } = draggable.update( {
     targets,
-    radius: GRAB_RADIUS,
+    radius: grabRadius,
     onMove: (
       index, pointer
     ) => moveTarget(
