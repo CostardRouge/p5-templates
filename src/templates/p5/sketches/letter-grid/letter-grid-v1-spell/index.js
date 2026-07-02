@@ -142,12 +142,20 @@ sketch.draw( () => {
     p.width,
     p.height
   );
+  // The breathing zoom modulates only what we DRAW; the base cell size is what the
+  // path build reads, so the word layout never breathes with it.
+  const baseCellSize = minDim / cellsAcross;
   const pulse = ( gridCfg.zoomPulse ?? 0 ) * Math.sin( animation.angle );
-  const cellSize = ( minDim / cellsAcross ) * ( 1 + pulse );
+  const cellSize = baseCellSize * ( 1 + pulse );
 
+  // Draw bounds follow the live (breathing) cell size so the screen always fills…
   const viewCols = p.width / cellSize;
   const viewRows = p.height / cellSize;
-  const viewRadius = 0.5 * Math.sqrt( viewCols * viewCols + viewRows * viewRows );
+  // …while the path's view radius is derived from the steady base size, so a
+  // breathing zoom can't jitter it (the path is cached on word/seed only anyway).
+  const baseCols = p.width / baseCellSize;
+  const baseRows = p.height / baseCellSize;
+  const viewRadius = 0.5 * Math.sqrt( baseCols * baseCols + baseRows * baseRows );
 
   const spread = clamp(
     motionCfg.searchSpread ?? 0.6,

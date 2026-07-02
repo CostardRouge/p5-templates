@@ -374,9 +374,21 @@ export function resolveReadingPosition( {
 }
 
 /**
- * Convenience cache wrapper. Owns a `{ key, path, alphabet }` record and only
- * rebuilds the path when an input that shapes it changes. The caller passes the
- * record in so each sketch keeps its own (the engine resets between sketches).
+ * Convenience cache wrapper. Owns a `{ key, path, alphabet }` record and rebuilds
+ * the path only when the letters' IDENTITY changes. The caller passes the record in
+ * so each sketch keeps its own (the engine resets between sketches).
+ *
+ * The cache key is INTENTIONALLY limited to what actually decides which glyphs are
+ * on screen — the word, the resolved alphabet and the seed. Everything the camera
+ * lands on is `cellChar(col, row, seed, alphabet)`, so the letters only *look* like
+ * they change when the path (hence the camera's absolute cell coordinates) moves.
+ * Keeping viewRadius / spread OUT of the key freezes the letters against zoom, cell
+ * size, breathing zoom, view radius, search spread and every other purely visual or
+ * motion control: change any of them and the same letters stay put — which is what
+ * lets them be driven by the binding system and dynamic montage without the field
+ * reshuffling underfoot (a per-frame breathing zoom used to rebuild the path every
+ * frame). viewRadius / spread still SHAPE a freshly built path — they just never
+ * trigger one; the layout re-forms only when the word, alphabet or seed changes.
  */
 export function ensurePath(
   store, {
@@ -394,9 +406,7 @@ export function ensurePath(
   const key = [
     glyphs.join( "" ),
     alphabet,
-    seed,
-    Math.round( viewRadius * 100 ),
-    Math.round( spread * 100 )
+    seed
   ].join( "|" );
 
   if ( key !== store.key ) {
