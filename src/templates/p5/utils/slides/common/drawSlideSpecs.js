@@ -3,8 +3,10 @@ import sketch, {
   getP5
 } from "../../sketch.js";
 import animation from "../../animation.js";
+import time from "../../time.js";
 import buildSpecsLines from "./specsData.js";
 import computeSpecsHeats from "./specsChanges.js";
+import specsSound from "./specsSound.js";
 
 /**
  * Technical / BIOS-style overlay that reveals the current sketch settings.
@@ -80,13 +82,52 @@ export default function drawSlideSpecs( specsOption ) {
     duration: 0.9,
     background: specsOption.fill
   };
-  const heats =
-    highlight.style && highlight.style !== "off"
-      ? computeSpecsHeats(
-        lines,
-        highlight.duration ?? 0.9
-      )
-      : null;
+  const highlightActive = Boolean( highlight.style ) && highlight.style !== "off";
+  const highlightDuration = highlight.duration ?? 0.9;
+
+  // Sound on change rides the same change tracker as the highlight, so it
+  // works with the highlight off too. Single computeSpecsHeats call per frame:
+  // the tracker mutates on read, so a second call would swallow the change.
+  const sound = specsOption.sound;
+  const soundEnabled = Boolean( sound?.enabled );
+  const changedLines = [];
+
+  let heats = null;
+
+  if ( highlightActive || soundEnabled ) {
+    const computed = computeSpecsHeats(
+      lines,
+      highlightDuration,
+      soundEnabled
+        ? (
+          label, index
+        ) => changedLines.push( {
+          label,
+          index
+        } )
+        : undefined
+    );
+
+    heats = highlightActive ? computed : null;
+  }
+
+  if ( soundEnabled ) {
+    const now = time.seconds();
+
+    for ( const change of changedLines ) {
+      specsSound.noteChange(
+        sound,
+        {
+          ...change,
+          lineCount: lines.length,
+          now,
+          highlightDuration
+        }
+      );
+    }
+
+    specsSound.update( now );
+  }
 
   const size = specsOption.size ?? 22;
   const lineStep = size * ( specsOption.lineHeight ?? 1.4 );

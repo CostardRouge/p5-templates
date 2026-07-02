@@ -15,10 +15,13 @@ const tracker = new Map();
  *
  * @param {{ label: string, value: string }[]} lines
  * @param {number} durationSeconds  How long a highlight takes to fade out.
+ * @param {(label: string, index: number) => void} [onChange]  Called once per
+ *   line whose value just changed on THIS call (not for first sightings) —
+ *   the seam the sound feedback hangs off.
  * @returns {Map<string, number>} label -> heat (0..1)
  */
 export default function computeSpecsHeats(
-  lines, durationSeconds
+  lines, durationSeconds, onChange
 ) {
   const now = performance.now();
   const durationMs = Math.max(
@@ -27,9 +30,10 @@ export default function computeSpecsHeats(
   );
   const heats = new Map();
 
-  for ( const {
-    label, value
-  } of lines ) {
+  for ( let index = 0; index < lines.length; index++ ) {
+    const {
+      label, value
+    } = lines[ index ];
     const previous = tracker.get( label );
 
     if ( previous === undefined ) {
@@ -44,6 +48,10 @@ export default function computeSpecsHeats(
     } else if ( previous.value !== value ) {
       previous.value = value;
       previous.changedAt = now;
+      onChange?.(
+        label,
+        index
+      );
     }
 
     const entry = tracker.get( label );

@@ -267,6 +267,102 @@ export const SpecsHighlightSchema = z
     ]
   } );
 
+/* ---------------- specs sound-on-change --------------------------- */
+
+// Synth presets from @/lib/clickSynth — duplicated as a plain list so the
+// schema layer stays free of audio imports (zod enums want literals anyway).
+export const SPECS_SOUND_PRESETS = [
+  "click",
+  "tick",
+  "blip",
+  "pop",
+  "beep",
+  "wood",
+  "typewriter"
+] as const;
+
+const soundRepeatInterval = z.number().min( 0.02 )
+  .max( 2 );
+
+// How a changed line clicks: once, an N-times burst (with optional pitch
+// ramp, for a "spin-up" feel), or repeated for as long as the highlight
+// effect stays hot (Geiger-counter style). Discriminated union so the panel
+// shows only the controls the picked mode uses — same pattern as highlight.
+export const SpecsSoundRepeatSchema = z
+  .discriminatedUnion(
+    "mode",
+    [
+      z.object( {
+        mode: z.literal( "once" )
+      } ),
+      z.object( {
+        mode: z.literal( "count" ),
+        // total clicks per change (first one included)
+        times: z.number().int()
+          .min( 2 )
+          .max( 16 )
+          .default( 3 ),
+        // seconds between clicks of the burst
+        interval: soundRepeatInterval.default( 0.08 ),
+        // pitch ramp per repeat, in octaves ( + rises, - falls, 0 = flat )
+        pitchStep: z.number().min( -0.5 )
+          .max( 0.5 )
+          .default( 0.08 )
+      } ),
+      z.object( {
+        mode: z.literal( "while-highlighted" ),
+        // seconds between clicks while the line's highlight is still hot
+        interval: soundRepeatInterval.default( 0.12 )
+      } )
+    ]
+  )
+  .default( {
+    mode: "once"
+  } );
+
+export const SpecsSoundSchema = z
+  .object( {
+    // Master switch — off by default so existing decks stay silent.
+    enabled: z.boolean().default( false ),
+    // Voice from the shared click synth.
+    preset: z.enum( SPECS_SOUND_PRESETS ).default( "click" ),
+    volume: z.number().min( 0 )
+      .max( 1 )
+      .default( 0.5 ),
+    // Global pitch multiplier (1 = as designed, 2 = octave up).
+    pitch: z.number().min( 0.25 )
+      .max( 4 )
+      .default( 1 ),
+    // Random per-click detune, 0..1 (1 ≈ ±half an octave) — "humanize".
+    pitchVariation: z.number().min( 0 )
+      .max( 1 )
+      .default( 0.1 ),
+    // Pitch offset by line index, in octaves across the whole list, so each
+    // spec line gets its own recognisable tone ( + = lower lines are higher ).
+    linePitchSpread: z.number().min( -1 )
+      .max( 1 )
+      .default( 0 ),
+    // Minimum spacing between clicks (seconds). Simultaneous changes (e.g. a
+    // randomize) are staggered by this amount — the slot-machine cascade —
+    // instead of stacking into one loud transient.
+    minInterval: z.number().min( 0 )
+      .max( 0.5 )
+      .default( 0.05 ),
+    // Per-line retrigger cooldown (seconds): a value that changes every frame
+    // (montage morphs) clicks at most once per this window.
+    lineCooldown: z.number().min( 0 )
+      .max( 2 )
+      .default( 0.15 ),
+    // Hard cap on queued clicks — keeps a deck-wide randomize from becoming a
+    // machine gun.
+    maxBurst: z.number().int()
+      .min( 1 )
+      .max( 32 )
+      .default( 12 ),
+    repeat: SpecsSoundRepeatSchema
+  } )
+  .default( {} );
+
 export const SpecsItemSchema = z.object( {
   type: z.literal( "specs" ),
   style: z.enum( [
@@ -324,7 +420,8 @@ export const SpecsItemSchema = z.object( {
       "sketch"
     ] ),
   visibility: SpecsVisibilitySchema,
-  highlight: SpecsHighlightSchema
+  highlight: SpecsHighlightSchema,
+  sound: SpecsSoundSchema
 } );
 
 export const TextItemSchema = z.object( {
