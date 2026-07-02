@@ -63,6 +63,18 @@ export const BUILTIN_SOURCES = [
   {
     value: "mouse",
     label: "mouse (x, y)"
+  },
+  {
+    value: "fill",
+    label: "fill (colour)"
+  },
+  {
+    value: "stroke",
+    label: "stroke (colour)"
+  },
+  {
+    value: "background",
+    label: "background (colour)"
   }
 ];
 

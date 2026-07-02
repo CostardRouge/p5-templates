@@ -5,8 +5,36 @@ import {
   getP5
 } from "../sketch.js";
 import {
+  clientToCanvas,
+  ensurePointerTracking,
+  getRawMouse
+} from "../interaction/pointerTracking.js";
+import {
   getByPath
 } from "./keyPaths.js";
+
+// Fallback colours for the built-in colour sources, so the swatch always has a
+// chip to draw even when the sketch doesn't expose that param.
+const FALLBACK_COLORS = {
+  fill: [
+    0,
+    255,
+    120,
+    255
+  ],
+  stroke: [
+    255,
+    255,
+    255,
+    255
+  ],
+  background: [
+    0,
+    0,
+    0,
+    255
+  ]
+};
 
 /**
  * Resolve a HUD widget's data source. A `source` is either a built-in live key
@@ -56,6 +84,26 @@ const BUILTINS = {
       };
   },
   mouse: () => {
+    // p5's mouseX/mouseY don't account for the ScalableViewport pan/zoom (a CSS
+    // transform on the canvas' parent), so a crosshair bound to the mouse lands
+    // off-cursor once the preview is zoomed or panned. Convert the raw client
+    // coordinates through the same getBoundingClientRect() math the drag layer
+    // uses, which is correct under any transform.
+    ensurePointerTracking();
+
+    const raw = getRawMouse();
+
+    if ( raw.clientX !== null ) {
+      const point = clientToCanvas(
+        raw.clientX,
+        raw.clientY
+      );
+
+      if ( point ) {
+        return point;
+      }
+    }
+
     const p = getP5();
 
     return p
@@ -67,7 +115,14 @@ const BUILTINS = {
         x: 0,
         y: 0
       };
-  }
+  },
+  // Colour sources for the swatch widget: the sketch's own fill / stroke /
+  // background param when present, else a sensible fallback so a chip still
+  // draws. Colours can't be enumerated as key-paths (they are arrays, which the
+  // source dropdown skips), so they're exposed here as built-ins instead.
+  fill: () => options.sketch?.fill ?? FALLBACK_COLORS.fill,
+  stroke: () => options.sketch?.stroke ?? FALLBACK_COLORS.stroke,
+  background: () => options.sketch?.background ?? FALLBACK_COLORS.background
 };
 
 const BUILTIN_META = {
@@ -106,6 +161,15 @@ const BUILTIN_META = {
   duration: {
     label: "DURATION",
     unit: "s"
+  },
+  fill: {
+    label: "FILL"
+  },
+  stroke: {
+    label: "STROKE"
+  },
+  background: {
+    label: "BG"
   }
 };
 

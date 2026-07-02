@@ -691,7 +691,7 @@ const hudWindow = {
 
 export const HudBadgeSchema = z
   .object( {
-    enabled: z.boolean().default( true ),
+    enabled: z.boolean().default( false ),
     anchor: HudAnchor.default( "top-right" ),
     offset: hudOffset(
       0.95,
@@ -707,7 +707,7 @@ export const HudBadgeSchema = z
 
 export const HudGaugeSchema = z
   .object( {
-    enabled: z.boolean().default( false ),
+    enabled: z.boolean().default( true ),
     source: z.string().default( "progress%" ),
     anchor: HudAnchor.default( "bottom-left" ),
     offset: hudOffset(
@@ -733,7 +733,7 @@ export const HudGaugeSchema = z
 
 export const HudSparklineSchema = z
   .object( {
-    enabled: z.boolean().default( false ),
+    enabled: z.boolean().default( true ),
     source: z.string().default( "progress%" ),
     anchor: HudAnchor.default( "bottom-right" ),
     offset: hudOffset(
@@ -797,7 +797,10 @@ export const HudCrosshairsSchema = z
 export const HudSwatchSchema = z
   .object( {
     enabled: z.boolean().default( false ),
-    source: z.string().default( "" ),
+    // Bind to a live colour source by default (the sketch fill, falling back to
+    // the HUD accent) so the swatch renders a chip out of the box instead of
+    // staying blank on an empty source.
+    source: z.string().default( "fill" ),
     anchor: HudAnchor.default( "top-right" ),
     offset: hudOffset(
       0.95,
@@ -806,9 +809,14 @@ export const HudSwatchSchema = z
     size: z.number().positive()
       .default( 18 ),
     label: z.string().default( "COLOR" ),
-    fill: RGBA.optional(),
-    font: z.string().optional(),
-    blend: Blend.optional(),
+    fill: RGBA.default( [
+      0,
+      255,
+      120,
+      255
+    ] ),
+    font: z.string().default( "spaceMonoRegular" ),
+    blend: Blend.default( "source-over" ),
     ...hudWindow
   } )
   .default( {} );
