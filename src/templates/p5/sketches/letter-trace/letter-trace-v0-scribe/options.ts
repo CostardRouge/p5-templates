@@ -32,7 +32,7 @@ export const formValues = {
       255,
       255,
       255
-    ] as number[],
+    ],
     rainbow: true,
     palette: "purple",
     hueSpread: 0,
@@ -49,7 +49,7 @@ export const formValues = {
       255,
       255,
       255
-    ] as number[],
+    ],
     alpha: 40
   },
   loop: {
@@ -60,8 +60,8 @@ export const formValues = {
     0,
     0,
     0,
-    173
-  ] as number[]
+    255
+  ]
 };
 
 export const formConfiguration: Record<string, any> = {
