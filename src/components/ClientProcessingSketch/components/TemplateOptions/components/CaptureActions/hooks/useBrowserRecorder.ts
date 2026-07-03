@@ -26,16 +26,25 @@ import {
 /**
  * `download` – the default browser recording: capture, then hand the file
  *              to the user via a download.
- * `preview`  – dev-only. After a 3-2-1 countdown, capture a fixed-length
- *              realtime clip and POST it back to the dev server, which
- *              re-encodes it into the sketch's committed `preview.webm`
- *              variants instead of downloading anything. Lets interactive
- *              sketches (webcam / mic / hand tracking) get a real preview
- *              that the headless generator can't produce.
+ * `preview`  – dev-only. Capture a preview clip and POST it back to the dev
+ *              server, which re-encodes it into the sketch's committed
+ *              `preview.webm` variants instead of downloading anything. Two
+ *              flavours, chosen by the recording `mode`:
+ *                • realtime   – after a 3-2-1 countdown, a fixed-length
+ *                  wall-clock capture. Lets interactive sketches (webcam /
+ *                  mic / hand tracking) get a real preview the headless
+ *                  generator can't produce.
+ *                • async-loop – a deterministic frame-by-frame capture of the
+ *                  sketch's loop. No countdown (nothing to prepare) and no
+ *                  frame drops — the front-end equivalent of the headless
+ *                  generator, handy when it isn't available.
  */
 export type RecordingIntent = "download" | "preview";
 
-/** UI phase of a dev "Record preview" run. */
+/**
+ * UI phase of a dev "Record preview" run. `countdown` only applies to the
+ * realtime flavour; async-loop previews go straight to `recording`.
+ */
 export type PreviewPhase = "countdown" | "recording" | "saving";
 
 export type UseBrowserRecorderArgs = {
@@ -361,9 +370,14 @@ export function useBrowserRecorder( {
       }
 
       const isPreview = intent === "preview";
+      // Realtime previews lead in with a 3-2-1 countdown so the author can get
+      // an interaction (webcam / mic / hand tracking) ready. Async-loop
+      // previews are deterministic — nothing to prepare — so they skip the
+      // countdown and step straight into a frame-by-frame capture.
+      const isRealtimePreview = isPreview && mode === "realtime";
 
-      // Preview runs lock controls + count down *before* a recorder exists
-      // so the author can get an interaction ready and still cancel cleanly.
+      // Preview runs lock controls *before* a recorder exists so the author
+      // can (realtime) get an interaction ready and still cancel cleanly.
       // The download path keeps the original ordering (lock only once the
       // recorder is built) so a failed `createRecorder` can't leave the
       // controls stuck — there's nothing to clean up there yet.
@@ -379,17 +393,20 @@ export function useBrowserRecorder( {
           type: "SET_BROWSER_RECORDING",
           payload: true
         } );
-        setPreviewPhase( "countdown" );
 
-        try {
-          await runCountdown( PREVIEW_COUNTDOWN_SECS );
-        } catch {
-          // Cancelled during the countdown — `cancel()` already cleaned up.
-          return;
-        }
+        if ( isRealtimePreview ) {
+          setPreviewPhase( "countdown" );
 
-        if ( !previewActiveRef.current ) {
-          return;
+          try {
+            await runCountdown( PREVIEW_COUNTDOWN_SECS );
+          } catch {
+            // Cancelled during the countdown — `cancel()` already cleaned up.
+            return;
+          }
+
+          if ( !previewActiveRef.current ) {
+            return;
+          }
         }
       }
 
@@ -483,9 +500,11 @@ export function useBrowserRecorder( {
       } );
 
       try {
-        // Preview captures auto-stop after the canonical preview length so
-        // every committed loop is the same duration.
-        await recorder.start( isPreview
+        // Realtime previews auto-stop after the canonical preview length so
+        // every committed loop is the same duration. Async-loop previews run
+        // the sketch's deterministic loop to completion and rely on ffmpeg to
+        // trim to the canonical length when re-encoding.
+        await recorder.start( isRealtimePreview
           ? {
             maxDurationMs: PREVIEW_SECS * 1000
           }

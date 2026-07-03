@@ -14,10 +14,11 @@ import {
 } from "@/lib/previewConfig";
 
 /**
- * Dev-only. Accepts a realtime "Record preview" capture (a WebM/MP4 blob),
- * re-encodes it into the sketch's committed preview variants on disk and
- * flags `hasPreview` in metadata. Nothing is returned to the browser — the
- * author reviews the written files and decides whether to commit them.
+ * Dev-only. Accepts a "Record preview" capture (a WebM/MP4 blob) from either
+ * the realtime or the async-loop flavour, re-encodes it into the sketch's
+ * committed preview variants on disk and flags `hasPreview` in metadata.
+ * Nothing is returned to the browser — the author reviews the written files
+ * and decides whether to commit them.
  */
 export async function POST( request: Request ) {
   if ( process.env.NODE_ENV === "production" ) {
