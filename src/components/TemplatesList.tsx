@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ChevronDown, Grid, List, Search, X
+  ChevronDown, FileUp, Grid, List, Search, X
 } from "lucide-react";
 import {
   useRouter, useSearchParams
@@ -19,6 +19,7 @@ import type {
 import Link from "@/components/HardLink";
 import AnimatedPreview from "@/components/AnimatedPreview";
 import AnimationsToggle from "@/components/AnimationsToggle";
+import Toast from "@/components/Toast";
 import {
   MenuBarSlot
 } from "@/components/MenuBarPortal";
@@ -40,6 +41,9 @@ import {
 import {
   fuzzyFilter
 } from "@/utils/fuzzySearch";
+import {
+  writePendingImport
+} from "@/lib/pendingImportOptions";
 
 const OTHER_SECTION = "__other__";
 const GRID_CLASS =
@@ -213,6 +217,105 @@ export default function TemplatesList( {
     ) }` );
   };
 
+  // "Import .json": read a previously-exported options.json, find the
+  // template it belongs to (by its `name` field) and hard-navigate straight
+  // to it, handing the parsed options off via sessionStorage so the fresh
+  // template page can pre-fill its form (see TemplateOptions.tsx).
+  const importFileInputRef = useRef<HTMLInputElement>( null );
+  const [
+    importing,
+    setImporting
+  ] = useState( false );
+  const [
+    importToast,
+    setImportToast
+  ] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>( null );
+
+  const handleImportClick = () => {
+    importFileInputRef.current?.click();
+  };
+
+  const handleImportFileChange = async( event: React.ChangeEvent<HTMLInputElement> ) => {
+    const file = event.target.files?.[ 0 ];
+
+    if ( !file ) {
+      return;
+    }
+
+    setImporting( true );
+
+    try {
+      const fileContent = await file.text();
+      let parsed: unknown;
+
+      try {
+        parsed = JSON.parse( fileContent );
+      } catch {
+        throw new Error( "Invalid JSON file" );
+      }
+
+      const importedName =
+        parsed && typeof parsed === "object" && typeof ( parsed as {
+          name?: unknown;
+        } ).name === "string"
+          ? ( parsed as {
+            name: string;
+          } ).name.trim()
+          : "";
+
+      if ( !importedName ) {
+        throw new Error( "This file doesn't look like an exported options.json (missing \"name\")" );
+      }
+
+      const matches = Object.values( templates )
+        .flat()
+        .filter( ( t ) => t.name === importedName );
+
+      if ( matches.length === 0 ) {
+        throw new Error( `No template named "${ importedName }" found` );
+      }
+
+      // Disambiguate the rare case of a name shared across engines: prefer
+      // the currently active engine tab, else fall back to the first match.
+      let target = matches[ 0 ];
+
+      if ( matches.length > 1 ) {
+        const preferred = currentEngine !== "all"
+          ? matches.find( ( t ) => templates[ currentEngine ]?.includes( t ) )
+          : undefined;
+
+        target = preferred ?? matches[ 0 ];
+
+        if ( !preferred ) {
+          setImportToast( {
+            message: `"${ importedName }" matches multiple engines — opening one of them`,
+            type: "success"
+          } );
+        }
+      }
+
+      if ( !writePendingImport( parsed ) ) {
+        setImportToast( {
+          message: "Opened the template, but couldn't pre-fill options (storage unavailable). Please import manually on the template page.",
+          type: "error"
+        } );
+      }
+
+      window.location.assign( target.href );
+    } catch( error ) {
+      setImportToast( {
+        message: error instanceof Error ? error.message : "Failed to import options",
+        type: "error"
+      } );
+    } finally {
+      setImporting( false );
+      event.target.value = "";
+    }
+  };
+
   // Filter per engine: exact category match first (when active), then
   // fuzzy keyword over the remaining items.
   const filteredTemplates = Object.entries( templates ).reduce(
@@ -368,60 +471,90 @@ export default function TemplatesList( {
           </div>
         ) }
 
-        {/* Engine Tabs */}
-        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
-          {/* All engines tab */}
-          <button
-            onClick={ () => handleEngineClick( "all" ) }
-            className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
-              currentEngine === "all"
-                ? "bg-foreground text-background"
-                : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
-            }` }
-          >
-            All engines
-            <span
-              className={ `text-xs px-1.5 py-0.5 rounded-md font-mono ${
+        {/* Engine Tabs + Import */}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 scrollbar-hide flex-1 min-w-0">
+            {/* All engines tab */}
+            <button
+              onClick={ () => handleEngineClick( "all" ) }
+              className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
                 currentEngine === "all"
-                  ? "bg-background/20 text-background/80"
-                  : "bg-hover text-foreground/50"
+                  ? "bg-foreground text-background"
+                  : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
               }` }
             >
-              { totalAllCount }
-            </span>
-          </button>
-
-          {/* Per-engine tabs */}
-          { engineOrder.map( ( engineId ) => {
-            const label = engineLabels[ engineId ] || engineId;
-            const count = templates[ engineId ]?.length || 0;
-            const isActive = currentEngine === engineId;
-
-            return (
-              <button
-                key={ engineId }
-                onClick={ () => handleEngineClick( engineId ) }
-                className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
-                  isActive
-                    ? "bg-foreground text-background"
-                    : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
+              All engines
+              <span
+                className={ `text-xs px-1.5 py-0.5 rounded-md font-mono ${
+                  currentEngine === "all"
+                    ? "bg-background/20 text-background/80"
+                    : "bg-hover text-foreground/50"
                 }` }
               >
-                { label }
-                <span
-                  className={ `text-xs px-1.5 py-0.5 rounded-md font-mono ${
+                { totalAllCount }
+              </span>
+            </button>
+
+            {/* Per-engine tabs */}
+            { engineOrder.map( ( engineId ) => {
+              const label = engineLabels[ engineId ] || engineId;
+              const count = templates[ engineId ]?.length || 0;
+              const isActive = currentEngine === engineId;
+
+              return (
+                <button
+                  key={ engineId }
+                  onClick={ () => handleEngineClick( engineId ) }
+                  className={ `flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
                     isActive
-                      ? "bg-background/20 text-background/80"
-                      : "bg-hover text-foreground/50"
+                      ? "bg-foreground text-background"
+                      : "bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50"
                   }` }
                 >
-                  { count }
-                </span>
-              </button>
-            );
-          } ) }
+                  { label }
+                  <span
+                    className={ `text-xs px-1.5 py-0.5 rounded-md font-mono ${
+                      isActive
+                        ? "bg-background/20 text-background/80"
+                        : "bg-hover text-foreground/50"
+                    }` }
+                  >
+                    { count }
+                  </span>
+                </button>
+              );
+            } ) }
+          </div>
+
+          <input
+            ref={ importFileInputRef }
+            type="file"
+            accept=".json"
+            onChange={ handleImportFileChange }
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={ handleImportClick }
+            disabled={ importing }
+            title="Import a previously exported options.json"
+            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">
+              { importing ? "Importing..." : "Import .json" }
+            </span>
+          </button>
         </div>
       </div>
+
+      { importToast && (
+        <Toast
+          message={ importToast.message }
+          type={ importToast.type }
+          onClose={ () => setImportToast( null ) }
+        />
+      ) }
 
       {/* Templates content — view-transition-name scopes the VT animation to this area only */}
       <div style={ {
