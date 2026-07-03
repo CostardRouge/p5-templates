@@ -66,11 +66,16 @@ const MODE_ORDER: ReadonlyArray<RecordingMode> = [
   "realtime"
 ];
 
-// Dev-only group: a realtime webm capture that, instead of downloading,
-// is saved back over the sketch's committed preview after a 3-2-1 lead-in.
-// Lets interactive sketches (webcam / mic / hand tracking) get a real
-// preview the headless generator can't produce.
+// Dev-only groups: a webm capture that, instead of downloading, is saved
+// back over the sketch's committed preview.
+//   • realtime — after a 3-2-1 lead-in, a wall-clock capture. Lets
+//     interactive sketches (webcam / mic / hand tracking) get a real preview
+//     the headless generator can't produce.
+//   • async   — a deterministic frame-by-frame capture of the sketch's loop.
+//     No lead-in, no frame drops — the front-end stand-in for the headless
+//     generator, for when it isn't available.
 const PREVIEW_GROUP_LABEL = "Record preview (dev)";
+const PREVIEW_ASYNC_GROUP_LABEL = "Record preview (dev, async)";
 const IS_DEV = process.env.NODE_ENV === "development";
 
 // One <option> per group entry. The composite value carries everything
@@ -150,12 +155,27 @@ export default function BrowserRecordingButton( {
             "webm"
           ]
         } );
+
+        // The async flavour needs the engine to render arbitrary frames
+        // reproducibly — otherwise the deterministic loop can't be captured.
+        if ( capabilities.supportsDeterministicCapture ) {
+          modeGroups.push( {
+            key: "preview-async",
+            label: PREVIEW_ASYNC_GROUP_LABEL,
+            mode: "async-loop",
+            intent: "preview",
+            formats: [
+              "webm"
+            ]
+          } );
+        }
       }
 
       return modeGroups;
     },
     [
-      capabilities.supportedFormats
+      capabilities.supportedFormats,
+      capabilities.supportsDeterministicCapture
     ]
   );
 
@@ -190,6 +210,8 @@ export default function BrowserRecordingButton( {
     return (
       <PreviewRecordingControls
         phase={ previewPhase }
+        mode={ choice.mode }
+        progress={ progress }
         countdown={ countdown }
         onStop={ onStop }
         onCancel={ onCancel }
@@ -308,18 +330,26 @@ function RealtimeRecordingControls( {
 }
 
 /**
- * Dev "Record preview" lifecycle. A lead-in countdown gives the author
- * time to get an interaction (webcam / mic / hand tracking) ready; the
- * capture then runs for a fixed length and auto-stops; finally the clip is
- * re-encoded server-side into the committed preview variants.
+ * Dev "Record preview" lifecycle, for both flavours. The clip is always
+ * re-encoded server-side into the committed preview variants once captured.
+ *
+ *   • realtime   – a lead-in countdown gives the author time to get an
+ *     interaction (webcam / mic / hand tracking) ready; the capture then runs
+ *     for a fixed length and auto-stops (the author may stop it early).
+ *   • async-loop – no countdown; a deterministic frame-by-frame pass of the
+ *     sketch's loop, surfaced as a progress bar with a cancel affordance.
  */
 function PreviewRecordingControls( {
   phase,
+  mode,
+  progress,
   countdown,
   onStop,
   onCancel
 }: {
   phase: PreviewPhase;
+  mode: RecordingMode;
+  progress: RecorderProgress | null;
   countdown: number;
   onStop: () => void;
   onCancel: () => void;
@@ -359,6 +389,19 @@ function PreviewRecordingControls( {
     );
   }
 
+  // Async-loop previews step through a known frame count — surface it as a
+  // progress bar + cancel (a mid-loop stop would commit a partial preview).
+  if ( mode === "async-loop" ) {
+    return (
+      <PreviewAsyncRecordingControls
+        progress={ progress }
+        onCancel={ onCancel }
+      />
+    );
+  }
+
+  // Realtime previews have no known length: the author stops the capture
+  // once the interaction they're demoing has played out.
   return (
     <div className="flex flex-col gap-1">
       <div className="text-[10px] text-gray-400 text-center min-h-[1em]">
@@ -375,6 +418,79 @@ function PreviewRecordingControls( {
           className="block h-2.5 w-2.5 rounded-full bg-red-500 ring-1 ring-red-500/40 animate-pulse-soft"
         />
         <span className="truncate">Stop preview</span>
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The `recording` phase of an async-loop dev preview. Mirrors the regular
+ * async-loop download button — a fill bar tracking the frame progress that
+ * parks at 100% during encode/finalise — but its stop control cancels the
+ * run and its wording reflects that this capture becomes the preview.
+ */
+function PreviewAsyncRecordingControls( {
+  progress,
+  onCancel
+}: {
+  progress: RecorderProgress | null;
+  onCancel: () => void;
+} ) {
+  const progressLabel = useMemo(
+    () => {
+      if ( !progress ) {
+        return "Recording preview…";
+      }
+
+      if ( progress.stage === "encoding" ) {
+        return "Encoding…";
+      }
+
+      if ( progress.stage === "finalizing" ) {
+        return "Finalising…";
+      }
+
+      const pct = progress.percentage.toFixed( 0 );
+
+      return `${ pct }% (${ progress.frame }/${ progress.totalFrames })`;
+    },
+    [
+      progress
+    ]
+  );
+
+  const targetFillPct = progress
+    ? progress.stage === "capturing"
+      ? progress.percentage
+      : 100
+    : 0;
+
+  const fillRef = useSmoothFill<HTMLSpanElement>(
+    true,
+    targetFillPct
+  );
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-[10px] text-gray-400 text-center min-h-[1em]">
+        {progressLabel}
+      </div>
+      <button
+        type="button"
+        onClick={ onCancel }
+        aria-label="Cancel preview recording"
+        className="relative overflow-hidden rounded-xl px-3 py-2.5 border border-red-500/40 text-red-600 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 bg-background hover:bg-red-500/5"
+      >
+        <span
+          ref={ fillRef }
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 bg-red-500/20 pointer-events-none"
+          style={ {
+            width: "0%"
+          } }
+        />
+        <StopCircle className="relative h-4 w-4 flex-shrink-0" />
+        <span className="relative truncate">Cancel preview</span>
       </button>
     </div>
   );
