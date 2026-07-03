@@ -11,6 +11,7 @@ import clsx from "clsx";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import ResetSettingsButton from "@/components/ResetSettingsButton";
+import PanelDockToggle from "../PanelDockToggle";
 import SaveDefaultsButton from "./SaveDefaultsButton";
 import GenerateThumbnailButton from "./GenerateThumbnailButton";
 import GeneratePreviewButton from "./GeneratePreviewButton";
@@ -35,6 +36,10 @@ type SketchSettingsProps = {
   activeSlideId?: string;
   expanded?: boolean;
   onToggle?: ( expanded: boolean ) => void;
+  /** Whether this panel is docked flush to the left screen edge. */
+  docked?: boolean;
+  /** Toggle the panel between docked and floating. Desktop only. */
+  onToggleDock?: () => void;
 };
 
 const HEADER_ACTION_CLASS =
@@ -140,7 +145,9 @@ export default function SketchSettings( {
   activeSlideIndex,
   activeSlideId,
   expanded,
-  onToggle
+  onToggle,
+  docked,
+  onToggleDock
 }: SketchSettingsProps ) {
   const [
     {
@@ -165,10 +172,17 @@ export default function SketchSettings( {
       onToggle={ onToggle }
       swipeToCollapse
       className={ clsx(
-        "absolute flex flex-col glass shadow-lg overflow-y-auto",
+        "absolute z-50 flex flex-col glass shadow-lg overflow-y-auto border border-theme",
+        // Docked: flush to the left screen edge with the outer (left) corners
+        // squared. Floating: a card in the bottom-left corner.
+        docked ? "left-0" : "left-4",
         expanded
-          ? "left-4 bottom-4 z-50 w-80 max-h-[calc(80svh-5rem)] rounded-2xl border border-theme"
-          : "left-4 bottom-4 z-50 w-fit rounded-full border border-theme"
+          ? docked
+            ? "top-16 bottom-0 w-80 rounded-l-none rounded-r-2xl"
+            : "bottom-4 w-80 max-h-[calc(80svh-5rem)] rounded-2xl"
+          : docked
+            ? "bottom-4 w-fit rounded-l-none rounded-r-full"
+            : "bottom-4 w-fit rounded-full"
       ) }
       headerContainerClassName={ clsx( expanded && "glass sticky top-0 z-10" ) }
       header={ ( isExpanded ) => (
@@ -198,17 +212,25 @@ export default function SketchSettings( {
             />
           </button>
 
-          {isExpanded && (
-            <div
-              className="flex items-center gap-0.5"
-              onClick={ ( e ) => e.stopPropagation() }
-            >
+          <div
+            className="flex items-center gap-0.5"
+            onClick={ ( e ) => e.stopPropagation() }
+          >
+            {isExpanded && (
               <SketchSettingsActions
                 config={ config }
                 basePath={ effectiveBasePath }
               />
-            </div>
-          )}
+            )}
+
+            {onToggleDock && (
+              <PanelDockToggle
+                side="left"
+                docked={ Boolean( docked ) }
+                onToggle={ onToggleDock }
+              />
+            )}
+          </div>
         </div>
       ) }
     >

@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import clsx from "clsx";
 import type React from "react";
 import {
   useEffect, useRef, useState
@@ -40,6 +41,9 @@ import {
 import {
   useCollapsibleStates, CollapsibleProvider
 } from "./hooks/useCollapsibleStates";
+import {
+  usePanelDock
+} from "./hooks/usePanelDock";
 import {
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
@@ -405,6 +409,12 @@ export default function TemplateOptions( {
   // The form context above is shared either way — only the layout changes.
   const isDesktop = useMediaQuery( "(min-width: 768px)" );
 
+  // Whether each desktop side panel is docked flush to its screen edge
+  // (Figma-style) or left floating in the bottom corner. Persisted per side.
+  const {
+    docked, toggleDock
+  } = usePanelDock();
+
   const bodyProps = {
     activeSlideIndex,
     slideFields,
@@ -449,9 +459,17 @@ export default function TemplateOptions( {
         {isDesktop ? (
           <>
             <div
-              className="w-64 absolute right-4 bottom-4 space-y-2"
+              className={ clsx(
+                "absolute",
+                // Docked: flush to the right edge, full-height rail with the
+                // panels' outer (right) corners squared. Floating: a card
+                // anchored in the bottom-right corner.
+                docked.right
+                  ? "right-0 top-16 bottom-0 flex w-72 flex-col justify-end gap-2 p-2 pointer-events-none [&>*]:pointer-events-auto [&>*]:rounded-r-none"
+                  : "right-4 bottom-4 w-64 space-y-2"
+              ) }
               style={ {
-                maxWidth: "calc(50% - 0.75rem)"
+                maxWidth: docked.right ? "50%" : "calc(50% - 0.75rem)"
               } }
             >
               {lifecycle.isLocked && (
@@ -468,6 +486,8 @@ export default function TemplateOptions( {
                 persistedJob={ persistedJob }
                 jobStatus={ lifecycle.currentStatus }
                 onImportOptions={ handleImportOptions }
+                docked={ docked.right }
+                onToggleDock={ () => toggleDock( "right" ) }
                 { ...bodyProps }
               />
 
@@ -489,6 +509,8 @@ export default function TemplateOptions( {
                   "sketchSettings",
                   expanded
                 ) }
+                docked={ docked.left }
+                onToggleDock={ () => toggleDock( "left" ) }
               />
             </TemplateAssetsProvider>
           </>

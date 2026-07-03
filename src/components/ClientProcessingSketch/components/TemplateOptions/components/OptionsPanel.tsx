@@ -17,6 +17,7 @@ import {
 } from "@/types/recording.types";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RootSettings from "./RootSettings/RootSettings";
+import PanelDockToggle from "./PanelDockToggle";
 import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvider";
 
 // The "global content" and "slides" sections start collapsed (see
@@ -62,6 +63,10 @@ type OptionsPanelProps = OptionsPanelBodyProps & {
   persistedJob?: JobModel;
   jobStatus?: string;
   onImportOptions: ( options: SketchOption ) => void;
+  /** Whether this panel is docked flush to the right screen edge. */
+  docked?: boolean;
+  /** Toggle the panel between docked and floating. Desktop only. */
+  onToggleDock?: () => void;
 };
 
 /**
@@ -217,6 +222,8 @@ export default function OptionsPanel( {
   persistedJob,
   jobStatus,
   onImportOptions,
+  docked,
+  onToggleDock,
   ...bodyProps
 }: OptionsPanelProps ) {
   const {
@@ -266,6 +273,14 @@ export default function OptionsPanel( {
               } }
             />
           </button>
+
+          {onToggleDock && (
+            <PanelDockToggle
+              side="right"
+              docked={ Boolean( docked ) }
+              onToggle={ onToggleDock }
+            />
+          )}
         </div>
       ) }
     >
