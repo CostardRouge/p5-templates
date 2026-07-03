@@ -1,5 +1,27 @@
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
+// Shared interaction defaults tuned for this sketch: six orbiting virtual
+// pointers deform the plane out of the box (matching the sketch's original
+// `spheresCount`). Mouse and vision stay opt-in, and the on-canvas overlay is
+// muted since the sketch renders its own 3D spheres for each pointer.
+const interactionDefaults = {
+  ...interactionFormValues,
+  orbit: {
+    ...interactionFormValues.orbit,
+    enabled: true,
+    count: 6
+  },
+  visualization: {
+    ...interactionFormValues.visualization,
+    enabled: false
+  }
+};
+
 export const formValues = {
   texture: {
     image: null,
@@ -15,17 +37,17 @@ export const formValues = {
       hide: false
     }
   },
+  // How the plane reacts to interaction pointers, plus the 3D sphere markers
+  // rendered at each pointer and the optional webcam backdrop.
   animation: {
-    useMouse: false,
-    useHands: false,
     showWebcam: false,
     showSpheres: false,
-    spheresCount: 6,
     sphereSize: 30,
     depth: 100,
     maxInfluenceDistance: 150,
     easing: "easeOutBack"
   },
+  interaction: interactionDefaults,
   title: titleDefaultValues,
   backgroundColor: [
     246,
@@ -86,14 +108,6 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Animation",
     fields: {
-      useMouse: {
-        label: "Use mouse",
-        component: "checkbox"
-      },
-      useHands: {
-        label: "Use hands",
-        component: "checkbox"
-      },
       showWebcam: {
         label: "Show webcam",
         component: "checkbox"
@@ -101,12 +115,6 @@ export const formConfiguration: Record<string, any> = {
       showSpheres: {
         label: "Show spheres",
         component: "checkbox"
-      },
-      spheresCount: {
-        label: "Spheres count",
-        component: "slider",
-        min: 0,
-        max: 24
       },
       sphereSize: {
         label: "Sphere size",
@@ -133,6 +141,7 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
+  interaction: interactionFormConfiguration,
   title: titleFormConfiguration,
   backgroundColor: {
     component: "color",

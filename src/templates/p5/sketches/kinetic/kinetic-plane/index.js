@@ -1,35 +1,24 @@
 import cache from "@/p5/utils/cache.js";
 import easing from "@/p5/utils/easing.js";
 import options from "@/p5/utils/options.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 import graphics from "@/p5/utils/graphics.js";
 import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
 import renderTitle from "@/p5/utils/title/renderTitle.js";
 
-import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
-
-import mediapipe, {
-  init as mediapipeInit,
-  setEnabled as setMediapipeEnabled
-} from "@/p5/utils/mediapipe/mediapipe.js";
+import mediapipe from "@/p5/utils/mediapipe/mediapipe.js";
 import {
-  getP5
-} from "@/p5/utils/sketch.js";
-
-// Key landmarks for interaction (fingertips)
-const interactionIndices = [
-  4,
-  8,
-  12,
-  16,
-  20
-];
+  initInteraction,
+  getPointers
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
 
 const sketchState = {
-  interactive: {
-    image: null
-  },
   plane: {
     graphics: null,
     gridData: null
@@ -39,9 +28,7 @@ const sketchState = {
   }
 };
 
-sketch.setup( async( {
-  canvas
-} ) => {
+sketch.setup( async() => {
   const p = getP5();
 
   p.background( ...getBackgroundColor() );
@@ -54,20 +41,14 @@ sketch.setup( async( {
   );
   sketchState.plane.graphics.pixelDensity( 1 );
 
-  await addScreenPositionFunction( sketchState.plane.graphics );
-
   sketchState.webcam.graphics = p.createGraphics(
     p.width,
     p.height
   );
 
-  await mediapipeInit( {
-    enableCapture: false,
-    worker: false,
-    tasks: [
-      "hands"
-    ]
-  } );
+  // One call boots every enabled interaction source (mouse, vision, orbit…)
+  // declared in the shared `interaction` options.
+  await initInteraction( options.sketch?.interaction ?? {} );
 } );
 
 const getBackgroundColor = () =>
@@ -76,6 +57,20 @@ const getBackgroundColor = () =>
     235,
     225
   ];
+
+// Interaction pointers arrive in top-left canvas space; the plane lives in
+// centered WEBGL model space, so shift each pointer by half the canvas. This
+// replaces the old per-source screenPosition round-trip (≈ identity at the base
+// camera) with a deterministic, camera-independent conversion.
+const toModelSpace = ( pointers ) => {
+  const p = getP5();
+
+  return pointers.map( ( v ) =>
+    p.createVector(
+      v.x - p.width / 2,
+      v.y - p.height / 2
+    ) );
+};
 
 // Creates a grid of triangle vertices
 // Returns an immutable data structure containing all vertex information
@@ -187,18 +182,6 @@ function displayTriangleGrid(
     sketchState.plane.graphics.beginShape( p.TRIANGLES );
 
     triangle.forEach( ( _vertex ) => {
-      const wave = 0;
-
-      //   p.map(
-      //   Math.sin( animation.angle +
-      //     ( _vertex.x / p.width ) * 3 +
-      //     ( _vertex.y / p.height ) * 2 ),
-      //   -1,
-      //   1,
-      //   0,
-      //   900
-      // );
-
       // mouse displacement
       const switchIndex = computeDisplacement(
         p.createVector(
@@ -240,16 +223,11 @@ function displayTriangleGrid(
       sketchState.plane.graphics.vertex( ...vertices );
     } );
 
-    // p.strokeWeight(3)
-    // p.stroke("red")
-    // p.noFill();
-
     if ( options.sketch.grid.stroke.hide ) {
       sketchState.plane.graphics.noStroke();
     } else {
       sketchState.plane.graphics.stroke( ...options.sketch.grid.stroke.color );
     }
-    // sketchState.plane.graphics.noFill();
     sketchState.plane.graphics.endShape();
   } );
 
@@ -290,6 +268,7 @@ function computeDisplacement(
 
 sketch.draw( () => {
   const p = getP5();
+  const interaction = options.sketch?.interaction ?? {};
 
   p.clear();
   p.background( ...getBackgroundColor() );
@@ -310,59 +289,13 @@ sketch.draw( () => {
       )
   );
 
-  // Dynamically enable/disable mediapipe based on useHands option
-  const useHands = options.sketch.animation.useHands ?? true;
-
-  setMediapipeEnabled( useHands );
-
   const _image = options.sketch.texture.useWebcam
     ? mediapipe.capture.element
     : common.getAsset( options.sketch?.texture.image )?.img;
 
-  const targetVectors = [];
-
-  if ( options.sketch.animation.useMouse ?? true ) {
-    sketchState.plane.graphics.screenPosition( p.createVector(
-      p.mouseX - p.width / 2,
-      p.mouseY - p.height / 2
-    ) );
-  }
-
-  if ( options.sketch.animation.useHands ?? true ) {
-    mediapipe.tasks?.hands?.result?.landmarks?.forEach( ( hand ) => {
-      const interactionPoints = interactionIndices
-        .map( ( i ) => hand[ i ] )
-        .filter( Boolean );
-
-      interactionPoints.forEach( ( point ) => {
-        if ( point ) {
-          const x = common.inverseX( point.x ) * p.width;
-          const y = point.y * p.height;
-          const z = ( point.z * ( p.width + p.height ) ) / 2;
-
-          targetVectors.push( sketchState.plane.graphics.screenPosition( p.createVector(
-            x - p.width / 2,
-            y - p.height / 2,
-            z - p.width / 2 + p.height / 2
-          ) ) );
-        }
-      } );
-    } );
-  }
-
-  const margin = 150;
-  const W = p.width / 2 - margin;
-  const H = p.height / 2 - margin;
-  const targetsCount = options.sketch.animation.spheresCount ?? 3;
-
-  for ( let i = 0; i < targetsCount; i++ ) {
-    const targetProgression = i / targetsCount;
-
-    targetVectors.push( sketchState.plane.graphics.screenPosition( p.createVector(
-      Math.sin( animation.angle + i * 3 ) * W,
-      Math.cos( animation.angle + i * targetProgression ) * H
-    ) ) );
-  }
+  // Every enabled source — mouse, hands, orbit, … — merged into one flat list
+  // and mapped into the plane's centered coordinate space.
+  const targetVectors = toModelSpace( getPointers( interaction ) );
 
   displayTriangleGrid(
     sketchState.plane.gridData,
@@ -378,7 +311,6 @@ sketch.draw( () => {
         vector.y,
         50
       );
-      // sketchState.plane.graphics.normalMaterial( );
       sketchState.plane.graphics.sphere( options.sketch.animation.sphereSize ?? 30 );
       sketchState.plane.graphics.pop();
     } );
@@ -408,9 +340,6 @@ sketch.draw( () => {
       mediapipe.capture.size.width * 2,
       mediapipe.capture.size.height * 2
     );
-    // sketchState.webcam.graphics.filter( POSTERIZE );
-    // sketchState.webcam.graphics.filter( INVERT );
-    // sketchState.webcam.graphics.filter( GRAY );
     p.image(
       sketchState.webcam.graphics,
       0,
@@ -421,4 +350,9 @@ sketch.draw( () => {
   }
 
   renderTitle( options.sketch?.title );
+
+  // Shared debug/demo overlay (crosshairs, markers, camera preview, legend),
+  // gated by `interaction.visualization` — off by default so the 3D scene
+  // stays clean, but available from the form.
+  drawInteractionOverlay( interaction );
 } );

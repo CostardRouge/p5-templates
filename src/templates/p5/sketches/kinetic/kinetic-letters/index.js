@@ -1,41 +1,26 @@
 import options from "@/p5/utils/options.js";
 
 import cache from "@/p5/utils/cache.js";
-import shapes from "@/p5/utils/shapes.js";
-import events from "@/p5/utils/events.js";
 import string from "@/p5/utils/string.js";
-import sketch from "@/p5/utils/sketch.js";
-import easing from "@/p5/utils/easing.js";
-import graphics from "@/p5/utils/graphics.js";
-import * as common from "@/p5/utils/common.js";
-import animation from "@/p5/utils/animation.js";
-
-import drawHands from "@/p5/utils/mediapipe/drawHands.js";
-
-import mediapipe, {
-  init as mediapipeInit, setEnabled as setMediapipeEnabled
-} from "@/p5/utils/mediapipe/mediapipe.js";
-import {
+import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
+import easing from "@/p5/utils/easing.js";
+import graphics from "@/p5/utils/graphics.js";
+import animation from "@/p5/utils/animation.js";
 
-// Key landmarks for interaction (palm, fingertips)
-const interactionIndices = [
-  // 0,
-  4,
-  8,
-  12,
-  16
-  // 20,
-];
+import {
+  initInteraction,
+  getPointers
+} from "@/p5/utils/interaction/index.js";
+import {
+  drawInteractionOverlay
+} from "@/p5/utils/interaction/overlay.js";
 
+// The letters live on their own buffer so their per-letter transforms stay
+// isolated from the main canvas; the interaction overlay (crosshairs, pointer
+// markers, camera preview…) then draws on top via drawInteractionOverlay.
 const layers = {
-  hands: {
-    graphics: undefined,
-    size: options.size,
-    background: undefined,
-    erase: 255
-  },
   visuals: {
     graphics: undefined,
     size: options.size,
@@ -43,45 +28,28 @@ const layers = {
       80
     ],
     erase: 255
-  },
-  pointers: {
-    graphics: undefined,
-    size: options.size,
-    background: undefined,
-    erase: 255
   }
 };
 
 const sketchState = {
-  letters: [],
-  handPointingImage: null
+  letters: []
 };
 
-events.register(
-  "engine-window-preload",
-  () => {
-    const p = getP5();
-
-    sketchState.handPointingImage = getP5().loadImage( "/assets/images/handpointing.png" );
-  }
-);
+const getBackgroundColor = () =>
+  options.sketch.backgroundColor ?? [
+    246,
+    235,
+    225
+  ];
 
 sketch.setup( async() => {
   const p = getP5();
 
-  p.background( ...( options.sketch.backgroundColor ?? [
-    246,
-    235,
-    225
-  ] ) );
+  p.background( ...getBackgroundColor() );
 
-  await mediapipeInit( {
-    enableCapture: false,
-    worker: false,
-    tasks: [
-      "hands"
-    ]
-  } );
+  // One call boots every enabled interaction source (mouse, touch, vision,
+  // orbit, audio, gyroscope…) declared in the shared `interaction` options.
+  await initInteraction( options.sketch?.interaction ?? {} );
 
   for ( const layerName in layers ) {
     const {
@@ -101,17 +69,10 @@ sketch.setup( async() => {
 
 sketch.draw( () => {
   const p = getP5();
+  const interaction = options.sketch?.interaction ?? {};
 
   p.clear();
-  p.background( ...( options.sketch.backgroundColor ?? [
-    246,
-    235,
-    225
-  ] ) );
-
-  const useHands = options.sketch.interactive.useHands ?? false;
-
-  setMediapipeEnabled( useHands );
+  p.background( ...getBackgroundColor() );
 
   sketchState.letters = cache.store(
     cache.key(
@@ -125,102 +86,9 @@ sketch.draw( () => {
       )
   );
 
-  drawHands(
-    mediapipe.tasks?.hands?.result,
-    layers.hands.graphics
-  );
-
-  const targetVectors = [];
-
-  if ( options.sketch.interactive.useMouse ) {
-    targetVectors.push( p.createVector(
-      p.mouseX,
-      p.mouseY
-    ) );
-  }
-
-  if ( useHands ) {
-    mediapipe.tasks?.hands?.result?.landmarks?.forEach( ( hand ) => {
-      const interactionPoints = interactionIndices
-        .map( ( i ) => hand[ i ] )
-        .filter( Boolean );
-
-      interactionPoints.forEach( ( point ) => {
-        if ( point ) {
-          const x = common.inverseX( point.x ) * p.width;
-          const y = point.y * p.height;
-
-          targetVectors.push( p.createVector(
-            x,
-            y
-          ) );
-        }
-      } );
-    } );
-  }
-
-  const margin = options.sketch.interactive.pointersMargin ?? 150;
-  const pointersCount = options.sketch.interactive.pointersCount ?? 5;
-  const W = p.width - margin;
-  const H = p.height - margin;
-
-  for ( let pointerIndex = 0; pointerIndex < pointersCount; pointerIndex++ ) {
-    const handProgression = pointerIndex / pointersCount;
-
-    const pointerPosition = p.createVector(
-      p.map(
-        Math.sin( animation.angle *
-            options.sketch.interactive.pointersSinAngleMultiplier +
-            handProgression *
-              options.sketch.interactive.pointersSinProgressionMultiplier ),
-        -1,
-        1,
-        margin,
-        W
-      ),
-      p.map(
-        Math.cos( animation.angle *
-            options.sketch.interactive.pointersCosAngleMultiplier +
-            handProgression *
-              options.sketch.interactive.pointersCosProgressionMultiplier ),
-        -1,
-        1,
-        margin,
-        H
-      )
-    );
-
-    targetVectors.push( pointerPosition );
-  }
-
-  if ( options.sketch.interactive.pointersLinesShow ) {
-    layers.pointers.graphics?.stroke( ...( options.sketch.interactive.pointersLinesStroke ?? [
-      0
-    ] ) );
-
-    layers.pointers.graphics?.strokeWeight( options.sketch.interactive.pointersLinesStrokeWeight );
-
-    targetVectors.forEach( ( vector ) => {
-      shapes.vl(
-        vector.x,
-        layers.pointers.graphics
-      );
-      shapes.hl(
-        vector.y,
-        layers.pointers.graphics
-      );
-
-      if (
-        layers.pointers.graphics && options.sketch.interactive.pointersImageShow
-      ) {
-        layers.pointers.graphics.image(
-          sketchState.handPointingImage,
-          vector.x,
-          vector.y
-        );
-      }
-    } );
-  }
+  // Every enabled source — pointer, hands, orbit, … — merged into one flat list
+  // of influence points, replacing the old hand-rolled mouse/hands/pointer loop.
+  const targetVectors = getPointers( interaction );
 
   if ( layers.visuals.graphics ) {
     drawLetterBodies(
@@ -256,6 +124,11 @@ sketch.draw( () => {
       layer.graphics.clear();
     }
   }
+
+  // Shared debug/demo overlay: crosshair lines, pointer markers, finger chains,
+  // camera preview and legend — all gated by the `interaction.visualization`
+  // options, so it's safe to call unconditionally.
+  drawInteractionOverlay( interaction );
 } );
 
 function addLetterBoxes(
@@ -289,6 +162,8 @@ function drawLetterBodies(
   graphics, bodies, targetVectors
 ) {
   const p = getP5();
+  const response = options.sketch.response ?? {};
+  const easingFn = easing?.[ response.easing ] ?? easing.easeOutSine;
   const sizeValues = [
     options.sketch.minLetterSize,
     options.sketch.maxLetterSize
@@ -305,7 +180,7 @@ function drawLetterBodies(
         y
       ),
       targetVectors,
-      options.sketch.interactive.maxInfluenceDistance ?? 250
+      response.maxInfluenceDistance ?? 250
     );
 
     graphics?.push();
@@ -314,15 +189,14 @@ function drawLetterBodies(
       y
     );
 
-    if ( options.sketch.interactive.varyAngle ) {
+    if ( response.varyAngle ) {
       const angle = animation.ease( {
         values: [
           0,
           p.PI
         ],
         currentTime: switchIndex,
-        easingFn:
-          easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine
+        easingFn
       } );
 
       graphics.rotate( angle );
@@ -337,12 +211,11 @@ function drawLetterBodies(
     graphics.strokeWeight( options.sketch.strokeWeight );
     graphics.textFont( string.fonts?.[ options.sketch.font ] ?? string.fonts.waverseVariable );
 
-    if ( options.sketch.interactive.varySize ) {
+    if ( response.varySize ) {
       const size = animation.ease( {
         values: sizeValues,
         currentTime: switchIndex,
-        easingFn:
-          easing?.[ options.sketch.interactive.easing ] ?? easing.easeOutSine
+        easingFn
       } );
 
       graphics.textSize( size );

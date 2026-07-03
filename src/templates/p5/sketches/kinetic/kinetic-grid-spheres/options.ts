@@ -1,20 +1,50 @@
 import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
+import {
+  interactionFormValues,
+  interactionFormConfiguration
+} from "@/p5/utils/interaction/defaults.js";
+
+// Shared interaction defaults tuned for this sketch: six orbiting virtual
+// pointers drive the grid out of the box (matching the sketch's original
+// `spheresCount`), with hand tracking on by default. The on-canvas overlay is
+// muted since the sketch renders its own 3D spheres for each pointer.
+const interactionDefaults = {
+  ...interactionFormValues,
+  vision: {
+    ...interactionFormValues.vision,
+    enabled: true,
+    hands: {
+      ...interactionFormValues.vision.hands,
+      enabled: true
+    }
+  },
+  orbit: {
+    ...interactionFormValues.orbit,
+    enabled: true,
+    count: 6
+  },
+  visualization: {
+    ...interactionFormValues.visualization,
+    enabled: false
+  }
+};
+
 export const formValues = {
   grid: {
     gap: 3,
     depth: 10,
     columns: 36
   },
+  // How the grid reacts to interaction pointers, plus the 3D sphere markers
+  // rendered at each pointer.
   animation: {
-    useMouse: false,
-    useHands: true,
     showSpheres: true,
-    spheresCount: 6,
     sphereSize: 30,
     maxInfluenceDistance: 150,
     easing: "easeOutBack"
   },
+  interaction: interactionDefaults,
   title: titleDefaultValues,
   color: {
     opacityFactor: 1.5,
@@ -61,23 +91,9 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Animation",
     fields: {
-      useMouse: {
-        label: "Use mouse",
-        component: "checkbox"
-      },
-      useHands: {
-        label: "Use hands",
-        component: "checkbox"
-      },
       showSpheres: {
         label: "Show spheres",
         component: "checkbox"
-      },
-      spheresCount: {
-        label: "Spheres count",
-        component: "slider",
-        min: 0,
-        max: 24
       },
       sphereSize: {
         label: "Sphere size",
@@ -98,6 +114,7 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
+  interaction: interactionFormConfiguration,
   color: {
     component: "nested-object",
     label: "Color",
