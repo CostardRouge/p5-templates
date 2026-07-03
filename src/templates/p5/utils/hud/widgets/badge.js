@@ -9,9 +9,37 @@ import {
   withHudTransform
 } from "./common.js";
 
+// Separator drawn between each printed segment (the "little vertical dot").
+const SEPARATOR = "  ·  ";
+
 /**
- * Badge widget: a compact "resolution · fps" readout. During recording the fps
- * is the target framerate (deterministic); live it shows the measured rate.
+ * Resolve one badge segment token to its display text. `resolution-fps` is a
+ * convenience combining both readouts; the rest map to a single live source.
+ * During recording the fps is the target framerate (deterministic).
+ */
+function segmentText( token ) {
+  switch ( token ) {
+    case "resolution":
+      return String( resolveValue( "resolution" ) ?? "" );
+    case "fps":
+      return `${ resolveValue( "fps" ) } FPS`;
+    case "resolution-fps":
+      return `${ resolveValue( "resolution" ) }${ SEPARATOR }${ resolveValue( "fps" ) } FPS`;
+    case "engine":
+      return String( resolveValue( "engine" ) ?? "" );
+    case "category":
+      return String( resolveValue( "category" ) ?? "" );
+    case "name":
+      return String( resolveValue( "name" ) ?? "" );
+    default:
+      return "";
+  }
+}
+
+/**
+ * Badge widget: a compact, composable readout. `segments` is an ordered list of
+ * value tokens (resolution / fps / engine / category / name …) printed with a
+ * "·" separator; `override` replaces the whole text when set.
  */
 export default function badge(
   cfg, style
@@ -27,13 +55,28 @@ export default function badge(
       cfg.offset
     );
 
+    const override = String( cfg.override ?? "" ).trim();
+    const segments = Array.isArray( cfg.segments ) ? cfg.segments : [];
+
+    const text = override
+      ? override
+      : segments
+        .map( segmentText )
+        .map( ( part ) => part.trim() )
+        .filter( Boolean )
+        .join( SEPARATOR );
+
+    // Nothing to print (no segments / all empty and no override) — draw nothing.
+    if ( !text ) {
+      return;
+    }
+
     const size = cfg.size ?? 20;
     const fill = toColor(
       p,
       cfg.fill ?? style.fill
     );
     const font = getFont( cfg.font ?? style.font );
-    const text = `${ resolveValue( "resolution" ) }  ·  ${ resolveValue( "fps" ) } FPS`;
 
     string.write(
       text,

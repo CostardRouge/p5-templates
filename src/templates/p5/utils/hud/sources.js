@@ -13,6 +13,27 @@ import {
   getByPath
 } from "./keyPaths.js";
 
+/**
+ * Read the running sketch's identity (name / engine label / category), exposed
+ * by the React SketchContext provider as `window.getSketchInfo`. Returns an
+ * empty object when it isn't available (e.g. a bare runtime harness), so the
+ * identity sources degrade to empty strings instead of throwing.
+ */
+function sketchInfo() {
+  if (
+    typeof window !== "undefined" &&
+    typeof window.getSketchInfo === "function"
+  ) {
+    try {
+      return window.getSketchInfo() ?? {};
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
+}
+
 // Fallback colours for the built-in colour sources, so the swatch always has a
 // chip to draw even when the sketch doesn't expose that param.
 const FALLBACK_COLORS = {
@@ -122,7 +143,12 @@ const BUILTINS = {
   // source dropdown skips), so they're exposed here as built-ins instead.
   fill: () => options.sketch?.fill ?? FALLBACK_COLORS.fill,
   stroke: () => options.sketch?.stroke ?? FALLBACK_COLORS.stroke,
-  background: () => options.sketch?.background ?? FALLBACK_COLORS.background
+  background: () => options.sketch?.background ?? FALLBACK_COLORS.background,
+  // Identity text sources (used by the badge): the current sketch's name,
+  // friendly engine label ("p5.js" / "GSAP") and category, or "" when unknown.
+  name: () => sketchInfo().name ?? "",
+  engine: () => sketchInfo().engine ?? "",
+  category: () => sketchInfo().category ?? ""
 };
 
 const BUILTIN_META = {
@@ -170,6 +196,15 @@ const BUILTIN_META = {
   },
   background: {
     label: "BG"
+  },
+  name: {
+    label: "NAME"
+  },
+  engine: {
+    label: "ENGINE"
+  },
+  category: {
+    label: "CATEGORY"
   }
 };
 

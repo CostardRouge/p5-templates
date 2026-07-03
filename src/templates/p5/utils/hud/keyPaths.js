@@ -75,6 +75,18 @@ export const BUILTIN_SOURCES = [
   {
     value: "background",
     label: "background (colour)"
+  },
+  {
+    value: "engine",
+    label: "engine label"
+  },
+  {
+    value: "category",
+    label: "sketch category"
+  },
+  {
+    value: "name",
+    label: "sketch name"
   }
 ];
 

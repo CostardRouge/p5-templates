@@ -11,6 +11,9 @@ import {
   setSketchOptions,
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
+import {
+  getEngineLabel
+} from "@/engines/engineCatalog";
 import type {
   SketchOption
 } from "@/types/sketch.types";
@@ -108,6 +111,34 @@ export default function SketchContextProvider( {
     },
     [
       state.options
+    ]
+  );
+
+  /* ---- Sketch identity → runtime -------------------------------- */
+  // Publish the running sketch's name / engine label / category so the p5
+  // runtime (the HUD badge) can print them. These come from RSC props and are
+  // stable for the provider's lifetime; the getter shape mirrors the other
+  // window bridges (getCurrentSlide / getSketchSettings).
+  useEffect(
+    () => {
+      if ( typeof window === "undefined" ) {
+        return;
+      }
+
+      window.getSketchInfo = () => ( {
+        name: state.name,
+        engine: getEngineLabel( state.engineId ),
+        category: state.category ?? ""
+      } );
+
+      return () => {
+        delete window.getSketchInfo;
+      };
+    },
+    [
+      state.name,
+      state.engineId,
+      state.category
     ]
   );
 
