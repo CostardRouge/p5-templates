@@ -27,6 +27,10 @@ export const ENGINE_CATALOG: readonly EngineCatalogEntry[] = [
   {
     id: "gsap",
     label: "GSAP"
+  },
+  {
+    id: "threejs",
+    label: "Three.js"
   }
 ];
 

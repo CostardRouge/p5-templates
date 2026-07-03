@@ -16,7 +16,11 @@ import {
 import {
   gsapRegistration
 } from "./gsap/index";
+import {
+  threejsRegistration
+} from "./threejs/index";
 
 /* ---- register built-in engines ----------------------------------- */
 registerEngine( p5Registration );
 registerEngine( gsapRegistration );
+registerEngine( threejsRegistration );
