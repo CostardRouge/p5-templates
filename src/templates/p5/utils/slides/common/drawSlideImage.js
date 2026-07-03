@@ -4,6 +4,9 @@ import {
 import imageUtils from "../../imageUtils.js";
 import mappers from "../../mappers.js";
 import animation from "../../animation.js";
+import {
+  reportItemBounds
+} from "./itemBoundsRegistry.js";
 
 export default function drawSlideImage(
   imageOption, slideOptions
@@ -52,6 +55,19 @@ export default function drawSlideImage(
     center: imageOption.center ?? true,
     margin: imageOption.margin ?? 80,
     scale: imageOption.scale,
-    img: image.img
+    img: image.img,
+    // The rectangle actually drawn, for the on-canvas drag's hit-test.
+    callback: (
+      cx, cy, w, h
+    ) => {
+      const centered = imageOption.center ?? true;
+
+      reportItemBounds(
+        centered ? cx - w / 2 : cx,
+        centered ? cy - h / 2 : cy,
+        w,
+        h
+      );
+    }
   } );
 }

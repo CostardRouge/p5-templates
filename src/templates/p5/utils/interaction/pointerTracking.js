@@ -1,4 +1,4 @@
-import {
+import sketch, {
   getP5
 } from "../sketch.js";
 
@@ -161,7 +161,13 @@ function _canvasRect() {
     return null;
   }
 
-  const canvas = document.querySelector( "canvas.p5Canvas" );
+  // Prefer the exact node the running sketch owns, so the rect used for the
+  // hit-test always matches the element the content-drag identity check accepts
+  // (event.target === sketch.getCanvasElement()). Falling back to a class
+  // lookup would risk resolving a DIFFERENT canvas.p5Canvas (an incompletely
+  // torn-down previous sketch, or an attached graphics buffer) — a divergent
+  // rect makes clientToCanvas mis-map the pointer and every hit-test miss.
+  const canvas = sketch.getCanvasElement?.() ?? document.querySelector( "canvas.p5Canvas" );
   const rect = canvas?.getBoundingClientRect();
 
   if ( !rect || rect.width === 0 || rect.height === 0 ) {

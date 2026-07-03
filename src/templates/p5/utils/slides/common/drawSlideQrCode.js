@@ -7,6 +7,9 @@ import sketch, {
 import {
   buildQrUrl, stripScheme
 } from "./qrCodeUrl.js";
+import {
+  reportItemBounds
+} from "./itemBoundsRegistry.js";
 
 // Inlined at build time by Next for NEXT_PUBLIC_* vars, so it is readable in
 // the client/headless sketch bundle. Lets a localhost dev machine encode the
@@ -101,6 +104,14 @@ export default function drawSlideQrCode( qrCodeOption ) {
   const centerY = ( qrCodeOption.position?.y ?? 0.82 ) * p.height;
   const left = centerX - side / 2;
   const top = centerY - side / 2;
+
+  // Exact drawn square, for the on-canvas drag's hit-test.
+  reportItemBounds(
+    left,
+    top,
+    side,
+    side
+  );
 
   p.push();
 
