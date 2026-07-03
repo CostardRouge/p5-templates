@@ -84,6 +84,45 @@ also resets itself when the clock jumps backwards (capture restart).
 
 ---
 
+## Montage transition sound: `sound` option group
+
+New `sound` group on a slide's `transition` config
+(`SlideTransitionSchema.sound`), edited in the **Montage / transition** panel
+under **Transition sound**. Disabled by default; existing montage decks parse
+unchanged (the group is materialised on parse, its own `enabled` gates
+playback).
+
+A montage cycles its source variants deterministically off the loop
+progression, and the "arriving" variant flips at each segment midpoint — the
+same instant the dip fade peaks and the title label switches. This plays a hit
+right there, so the sound lands with the visual transition, "in between" the
+two slides.
+
+| Option             | Default  | What it does                                                                 |
+| ------------------ | -------- | ---------------------------------------------------------------------------- |
+| `enabled`          | `false`  | Master switch (independent of the montage master switch).                    |
+| `preset`           | `blip`   | Voice from the shared click synth.                                           |
+| `volume`           | `0.5`    | Hit gain (0–1).                                                              |
+| `pitch`            | `1`      | Global pitch multiplier (0.25–4).                                            |
+| `pitchVariation`   | `0`      | Random per-transition detune ("humanize", 1 ≈ ±half an octave).             |
+| `slidePitchSpread` | `0`      | Pitch offset by the arriving variant's index (octaves) — each slide its note.|
+| `repeat`           | `once`   | `once` = one hit; `count` = an N-hit burst with an optional `pitchStep` ramp.|
+
+### How it plays — and records
+
+Change detection is polled per drawn frame on the sketch clock
+(`time.seconds()`) by `createMontageSoundScheduler`
+(`src/templates/p5/utils/slides/morph/montageSound.js`), driven from
+`drawMontageSound.js` in `slides.updateMontageSound()` (post-draw). It watches
+the active-variant index and fires a hit through `audio.trigger("click", …)`
+whenever it advances — never on the montage slide's first frame (appearing is
+not a transition), and the scheduler resets its change baseline when the clock
+jumps backwards (capture restart). Because it routes through the sketch audio
+engine, the hits are baked into recordings (realtime and deterministic/server
+captures alike), exactly like the specs sound-on-change.
+
+---
+
 ## Editor UI sounds (`src/lib/uiSound.ts`)
 
 A separate, editor-only sound path: it owns its own `AudioContext` and is
@@ -125,3 +164,10 @@ in `localStorage` (`p5templates.uiSound.v1`):
   scheduler behaviour: staggering, per-line cooldown, burst cap, both repeat
   modes, line pitch spread, backwards-clock reset, and the
   `computeSpecsHeats` change callback.
+- `src/types/__tests__/slideTransition.test.ts` — `SlideTransitionSoundSchema`
+  defaults, count-mode burst defaults, enum/range validation, and the
+  pre-sound montage-deck heal.
+- `src/templates/p5/utils/slides/morph/__tests__/montageSound.test.ts` —
+  montage scheduler behaviour: fires only on variant advance (never on the
+  first frame), burst count + pitch ramp, per-variant pitch spread, and the
+  backwards-clock baseline reset.

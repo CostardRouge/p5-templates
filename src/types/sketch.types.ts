@@ -1062,6 +1062,72 @@ export const SlideTitleSchema = z.object( {
   changeEasing: z.string().default( "easeOutCubic" )
 } );
 
+/* ---------------- montage transition sound ---------------------- */
+
+// How a single transition sounds: one hit, or an N-hit burst with an optional
+// pitch ramp (a "spin-up" whoosh as the variant snaps in). Discriminated union
+// so the panel shows only the controls the picked mode uses, matching the
+// specs sound-on-change pattern.
+export const SlideTransitionSoundRepeatSchema = z
+  .discriminatedUnion(
+    "mode",
+    [
+      z.object( {
+        mode: z.literal( "once" )
+      } ),
+      z.object( {
+        mode: z.literal( "count" ),
+        // total hits per transition (first one included)
+        times: z.number().int()
+          .min( 2 )
+          .max( 16 )
+          .default( 3 ),
+        // seconds between hits of the burst
+        interval: soundRepeatInterval.default( 0.06 ),
+        // pitch ramp per hit, in octaves ( + rises, - falls, 0 = flat )
+        pitchStep: z.number().min( -0.5 )
+          .max( 0.5 )
+          .default( 0.08 )
+      } )
+    ]
+  )
+  .default( {
+    mode: "once"
+  } );
+
+// Sound played when a montage advances from one variant to the next — the
+// audible counterpart of the visual dip / title switch, heard "in between" the
+// two slides at each transition. Off by default so existing decks stay silent;
+// routes through the sketch audio engine (audio.trigger("click", …)) so it is
+// heard live AND baked into recordings, sample-accurate in deterministic
+// captures.
+export const SlideTransitionSoundSchema = z
+  .object( {
+    // Master switch (independent from the montage master switch).
+    enabled: z.boolean().default( false ),
+    // Voice from the shared click synth.
+    preset: z.enum( SPECS_SOUND_PRESETS ).default( "blip" ),
+    volume: z.number().min( 0 )
+      .max( 1 )
+      .default( 0.5 ),
+    // Global pitch multiplier (1 = as designed, 2 = octave up).
+    pitch: z.number().min( 0.25 )
+      .max( 4 )
+      .default( 1 ),
+    // Random per-transition detune, 0..1 (1 ≈ ±half an octave) — "humanize".
+    pitchVariation: z.number().min( 0 )
+      .max( 1 )
+      .default( 0 ),
+    // Pitch offset by the arriving variant's index, in octaves across the
+    // montage, so each slide lands on its own note (a small arpeggio as the
+    // montage cycles). 0 = every transition sounds at the same pitch.
+    slidePitchSpread: z.number().min( -2 )
+      .max( 2 )
+      .default( 0 ),
+    repeat: SlideTransitionSoundRepeatSchema
+  } )
+  .default( {} );
+
 // A "montage" slide morphs the sketch parameters of several OTHER slides into
 // one another over its own duration, in a loop. Only the sources' `sketch`
 // params are interpolated — the montage keeps its own size/animation, so source
@@ -1119,7 +1185,11 @@ export const SlideTransitionSchema = z.object( {
 
   // Overlay naming the variant currently on screen. Always present after parse
   // (its own `enabled` gates rendering) so existing montage decks heal in.
-  title: SlideTitleSchema.default( {} )
+  title: SlideTitleSchema.default( {} ),
+
+  // Sound played at each variant change. Always present after parse (its own
+  // `enabled` gates playback) so existing montage decks heal in silently.
+  sound: SlideTransitionSoundSchema.default( {} )
 } );
 
 /* ---------------- slide schema (with name) ---------------------- */
@@ -1162,6 +1232,7 @@ export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type SlideOption = z.infer<typeof SlideSchema>;
 export type SlideTransitionOption = z.infer<typeof SlideTransitionSchema>;
 export type SlideTitleOption = z.infer<typeof SlideTitleSchema>;
+export type SlideTransitionSoundOption = z.infer<typeof SlideTransitionSoundSchema>;
 export type AssetsOption = z.infer<typeof Assets>;
 
 export type SketchOption = z.infer<typeof OptionsSchema>;
