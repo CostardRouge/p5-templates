@@ -127,6 +127,13 @@ declare global {
       slide: SlideOption;
       index: number;
     };
+    // Running sketch identity, published by the React SketchContext provider so
+    // the runtime (e.g. the HUD badge) can print the name / engine / category.
+    getSketchInfo?: () => {
+      name: string;
+      engine: string;
+      category: string;
+    };
     // Script loader
     removeLoadedScripts: () => void;
 

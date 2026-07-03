@@ -372,6 +372,35 @@ const hudEnabledField: FieldConfig = {
   component: "checkbox"
 };
 
+// Text values the badge can print, in the order picked. Mirrors BADGE_SEGMENTS
+// in sketch.types.ts (kept as labelled options here for the picker).
+const badgeSegmentOptions: SelectOption[] = [
+  {
+    value: "resolution",
+    label: "Resolution"
+  },
+  {
+    value: "fps",
+    label: "FPS"
+  },
+  {
+    value: "resolution-fps",
+    label: "Resolution + FPS"
+  },
+  {
+    value: "engine",
+    label: "Engine label"
+  },
+  {
+    value: "category",
+    label: "Sketch category"
+  },
+  {
+    value: "name",
+    label: "Sketch name"
+  }
+];
+
 const hudLabelField: FieldConfig = {
   label: "Label override",
   component: "text"
@@ -926,10 +955,26 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     font: hudFontField,
     blend: hudBlendField,
     badge: {
-      label: "Badge (resolution · fps)",
+      label: "Badge",
       component: "nested-object",
       fields: {
         enabled: hudEnabledField,
+        // Drag-reorderable list of text values. Each item is a picker over the
+        // available tokens; the widget prints them in order, "·"-separated.
+        segments: {
+          label: "Segments",
+          component: "item-list",
+          itemConfig: {
+            label: "Value",
+            component: "select",
+            options: badgeSegmentOptions
+          }
+        },
+        override: {
+          label: "Override text",
+          component: "text",
+          placeholder: "Replaces the whole badge when set"
+        },
         anchor: hudAnchorField,
         offset: hudOffsetField,
         size: hudSizeField(),
