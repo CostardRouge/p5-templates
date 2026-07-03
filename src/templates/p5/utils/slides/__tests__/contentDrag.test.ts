@@ -86,6 +86,11 @@ jest.mock(
 import {
   registerContentDrag
 } from "../contentDrag.js";
+import {
+  beginItemBounds,
+  reportItemBounds,
+  endItemBounds
+} from "../common/itemBoundsRegistry.js";
 
 // window.getCurrentSlide is read to resolve the slide scope; no slides here.
 ( window as unknown as { getCurrentSlide?: () => unknown } ).getCurrentSlide = () => ( {
@@ -316,6 +321,94 @@ describe(
         // Held pointer 1's position, not pointer 2's (0.1, 0.9).
         expect( update.content[ 0 ].position.x ).toBeCloseTo( 0.6 );
         expect( update.content[ 0 ].position.y ).toBeCloseTo( 0.6 );
+      }
+    );
+  }
+);
+
+describe(
+  "content drag — visible-bounds grabbing",
+  () => {
+    it(
+      "grabs by the drawn rectangle even when it is far from the anchor, and drags by offset",
+      () => {
+        // The renderer reports the item's VISIBLE rect at (700..900, 100..200)
+        // while the anchor sits at (500, 500) — the palette-default text
+        // situation (glyphs centred mid-canvas, anchor at the layout origin).
+        beginItemBounds(
+          "global",
+          0
+        );
+        reportItemBounds(
+          700,
+          100,
+          200,
+          100
+        );
+        endItemBounds();
+
+        // Press inside the visible rect (its centre), far from the anchor.
+        const down = pressAt(
+          "pointerdown",
+          800,
+          150
+        );
+
+        expect( down.defaultPrevented ).toBe( true );
+
+        // Drag +100/+200; release.
+        pressAt(
+          "pointermove",
+          900,
+          350
+        );
+        pressAt(
+          "pointerup",
+          900,
+          350
+        );
+
+        expect( setSketchOptions ).toHaveBeenCalledTimes( 1 );
+
+        const [
+          update
+        ] = setSketchOptions.mock.calls[ 0 ] as [
+          { content: Array<{ position: { x: number;
+            y: number } }> }
+        ];
+
+        // Offset drag: the position moves by the pointer DELTA (+0.1, +0.2)
+        // from its start (0.5, 0.5) — it does not snap the anchor under the
+        // cursor.
+        expect( update.content[ 0 ].position.x ).toBeCloseTo( 0.6 );
+        expect( update.content[ 0 ].position.y ).toBeCloseTo( 0.7 );
+      }
+    );
+
+    it(
+      "does not fall back to the anchor disc when fresh bounds exist elsewhere",
+      () => {
+        beginItemBounds(
+          "global",
+          0
+        );
+        reportItemBounds(
+          700,
+          100,
+          200,
+          100
+        );
+        endItemBounds();
+
+        // Press at the ANCHOR (500,500) — visibly empty, since the item is
+        // drawn at its reported rect. Must fall through to the viewport pan.
+        const down = pressAt(
+          "pointerdown",
+          500,
+          500
+        );
+
+        expect( down.defaultPrevented ).toBe( false );
       }
     );
   }

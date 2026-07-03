@@ -11,10 +11,17 @@ import drawSlideQrCode from "../common/drawSlideQrCode.js";
 import {
   resolveDraggedItem
 } from "../contentDrag.js";
+import {
+  beginItemBounds,
+  endItemBounds
+} from "../common/itemBoundsRegistry.js";
 
 // `scope` says which content list is being rendered ("global" or "slide:<n>")
 // so an in-flight on-canvas drag (see contentDrag.js) can substitute the live
 // position of the grabbed item without touching the option store every frame.
+// Each item's render is bracketed with begin/endItemBounds so the renderer's
+// reportItemBounds() call lands on the right (scope, index) — that visible
+// rectangle is what the drag layer hit-tests.
 export default function freeLayout(
   options, scope
 ) {
@@ -25,6 +32,11 @@ export default function freeLayout(
       scope,
       index,
       rawItem
+    );
+
+    beginItemBounds(
+      scope,
+      index
     );
 
     switch ( item?.type ) {
@@ -74,5 +86,7 @@ export default function freeLayout(
         );
         break;
     }
+
+    endItemBounds();
   } );
 }

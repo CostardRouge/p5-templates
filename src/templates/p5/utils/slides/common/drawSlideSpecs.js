@@ -7,6 +7,9 @@ import time from "../../time.js";
 import buildSpecsLines from "./specsData.js";
 import computeSpecsHeats from "./specsChanges.js";
 import specsSound from "./specsSound.js";
+import {
+  reportItemBounds
+} from "./itemBoundsRegistry.js";
 
 /**
  * Technical / BIOS-style overlay that reveals the current sketch settings.
@@ -401,6 +404,23 @@ export default function drawSlideSpecs( specsOption ) {
 
   const originX = p.width * ( specsOption.position?.x ?? 0.05 );
   const originY = p.height * ( specsOption.position?.y ?? 0.06 );
+
+  // Approximate drawn block (origin, stacked lines) for the on-canvas drag's
+  // hit-test. Ticker style shows one line, boot-log all of them — the full
+  // block is a generous, stable grab zone for both.
+  if ( lines.length > 0 ) {
+    const blockW = Math.max(
+      ...lines.map( ( line ) => measureWidth( `${ line.label }: ${ line.value }` ) ),
+      size * 4
+    );
+
+    reportItemBounds(
+      originX,
+      originY - size,
+      blockW,
+      lines.length * lineStep + size * 2
+    );
+  }
 
   if ( specsOption.style === "ticker" ) {
     // Single line cycling through all parameters. In permanent mode the reveal

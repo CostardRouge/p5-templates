@@ -11,14 +11,28 @@ import {
   clientToCanvas
 } from "../interaction/pointerTracking.js";
 import {
-  nearestTargetIndex
-} from "../interaction/dragMath.js";
+  getItemBounds,
+  clearItemBounds
+} from "./common/itemBoundsRegistry.js";
 
 // ── On-canvas drag for template content items ──────────────────────────────
 // Every positioned content item — the global "content" list edited in the
 // template options AND the per-slide lists edited in the slide editor — can be
-// grabbed at its anchor point and moved with the mouse or a finger. Engine-
+// grabbed BY ITS VISIBLE BODY and moved with the mouse or a finger. Engine-
 // level: registered from slides/index.js for every template, no per-sketch code.
+//
+// Grab what you see. This mirrors why splines-v2-draggable always felt right:
+// there, the visible dots ARE the drag anchors. A content item's normalized
+// `position` anchor, by contrast, is often nowhere near its drawn pixels
+// (rect-mode text centres its glyphs inside a near-full-width layout box, so a
+// fresh text item at position.x = 0 draws mid-canvas while its anchor sits on
+// the left edge). Hit-testing a disc around the anchor therefore missed the
+// item the user was actually clicking, and the press fell through to a
+// viewport pan. Instead, every renderer reports the rectangle it actually
+// drew (itemBoundsRegistry, bracketed per item by freeLayout) and the press
+// is tested against those visible rectangles — topmost first, with the
+// anchor disc kept only as a fallback for items whose renderer reported
+// nothing this frame (e.g. "visual", whose size isn't measurable).
 //
 // Why this owns raw pointer events instead of the shared draggable layer:
 // content templates don't necessarily animate every frame, and the canvas
@@ -214,6 +228,12 @@ function collectTargets( p ) {
       targets.push( {
         x: ( ( position.x ?? defaults.x ) + margin.h ) * p.width,
         y: ( ( position.y ?? defaults.y ) + margin.v ) * p.height,
+        // Where the item was actually drawn (canvas px), when its renderer
+        // reported it — the primary grab surface.
+        bounds: getItemBounds(
+          scope,
+          index
+        ),
         scope,
         index,
         marginX: margin.h,
@@ -246,7 +266,58 @@ function grabRadius() {
   return GRAB_RADIUS_SCREEN_PX * getCanvasDisplayScale();
 }
 
+// Extra forgiveness (canvas px) around a visible rect so near-edge presses
+// still grab; sized in screen pixels like the anchor radius.
+function boundsPadding() {
+  return 10 * getCanvasDisplayScale();
+}
+
+/**
+ * The target under a canvas-space point, or -1. Visible rectangles win; the
+ * anchor disc only catches items whose renderer reported no bounds this
+ * frame. Targets are in draw order (current slide first, then global, each
+ * list front-to-back), so the LAST hit is the one drawn on top.
+ */
+function hitTest(
+  point, targets
+) {
+  const radius = grabRadius();
+  const pad = boundsPadding();
+  let hit = -1;
+
+  targets.forEach( (
+    target, index
+  ) => {
+    const bounds = target.bounds;
+
+    if ( bounds ) {
+      if (
+        point.x >= bounds.x - pad &&
+        point.x <= bounds.x + bounds.w + pad &&
+        point.y >= bounds.y - pad &&
+        point.y <= bounds.y + bounds.h + pad
+      ) {
+        hit = index;
+      }
+
+      return;
+    }
+
+    const dx = target.x - point.x;
+    const dy = target.y - point.y;
+
+    if ( dx * dx + dy * dy <= radius * radius ) {
+      hit = index;
+    }
+  } );
+
+  return hit;
+}
+
 // Write the dragged item's live position from a canvas-space pointer point.
+// The grab offset (anchor − pointer at grab time) is preserved so the item
+// follows the hand from wherever it was picked up instead of snapping its
+// anchor under the cursor.
 function applyMove(
   p, point
 ) {
@@ -260,8 +331,8 @@ function applyMove(
       activeDrag.index
     ),
     {
-      x: clamp01( point.x / p.width - activeDrag.marginX ),
-      y: clamp01( point.y / p.height - activeDrag.marginY )
+      x: clamp01( point.x / p.width + activeDrag.offsetX - activeDrag.marginX ),
+      y: clamp01( point.y / p.height + activeDrag.offsetY - activeDrag.marginY )
     }
   );
 }
@@ -414,11 +485,9 @@ function onPointerDown( event ) {
   }
 
   const targets = collectTargets( p );
-  const hit = nearestTargetIndex(
-    targets,
-    point.x,
-    point.y,
-    grabRadius()
+  const hit = hitTest(
+    point,
+    targets
   );
 
   // Missed every item — let the viewport pan as usual.
@@ -437,7 +506,11 @@ function onPointerDown( event ) {
     scope: target.scope,
     index: target.index,
     marginX: target.marginX,
-    marginY: target.marginY
+    marginY: target.marginY,
+    // Anchor − pointer at grab time (normalized), so the item follows from
+    // where it was picked up instead of jumping its anchor under the cursor.
+    offsetX: target.x / p.width - point.x / p.width,
+    offsetY: target.y / p.height - point.y / p.height
   };
 
   try {
@@ -512,11 +585,9 @@ function onPointerMove( event ) {
   hoverPoint = point;
 
   const targets = collectTargets( p );
-  const hit = nearestTargetIndex(
-    targets,
-    point.x,
-    point.y,
-    grabRadius()
+  const hit = hitTest(
+    point,
+    targets
   );
   const key = hit === -1 ? null : overrideKey(
     targets[ hit ].scope,
@@ -591,11 +662,9 @@ function drawAffordance() {
   } );
 
   if ( !activeDrag && hoverPoint ) {
-    const hit = nearestTargetIndex(
-      targets,
-      hoverPoint.x,
-      hoverPoint.y,
-      grabRadius()
+    const hit = hitTest(
+      hoverPoint,
+      targets
     );
 
     if ( hit !== -1 ) {
@@ -607,41 +676,65 @@ function drawAffordance() {
     return;
   }
 
+  // Outline the grabbable surface itself — the item's visible rectangle —
+  // so the affordance shows exactly what a press will pick up. Anchor circle
+  // only for items without reported bounds (e.g. "visual").
+  const outline = (
+    target, color, weight
+  ) => {
+    p.stroke( ...color );
+    p.strokeWeight( weight );
+
+    if ( target.bounds ) {
+      const pad = boundsPadding() / 2;
+
+      p.rect(
+        target.bounds.x - pad,
+        target.bounds.y - pad,
+        target.bounds.w + pad * 2,
+        target.bounds.h + pad * 2,
+        6
+      );
+    } else {
+      p.circle(
+        target.x,
+        target.y,
+        grabRadius()
+      );
+    }
+  };
+
   p.push();
   p.noFill();
 
   hovers.forEach( ( index ) => {
-    const target = targets[ index ];
-
-    p.stroke(
-      255,
-      255,
-      255,
-      170
-    );
-    p.strokeWeight( 2 );
-    p.circle(
-      target.x,
-      target.y,
-      34
+    outline(
+      targets[ index ],
+      [
+        255,
+        255,
+        255,
+        170
+      ],
+      2
     );
   } );
 
   grabbed.forEach( ( index ) => {
     const target = targets[ index ];
 
-    p.stroke(
-      120,
-      200,
-      255,
-      230
+    outline(
+      target,
+      [
+        120,
+        200,
+        255,
+        230
+      ],
+      3
     );
-    p.strokeWeight( 3 );
-    p.circle(
-      target.x,
-      target.y,
-      40
-    );
+
+    // Anchor dot: the point the stored `position` refers to.
     p.noStroke();
     p.fill(
       120,
@@ -654,6 +747,7 @@ function drawAffordance() {
       target.y,
       6
     );
+    p.noFill();
   } );
 
   p.pop();
@@ -702,6 +796,7 @@ function detachDom() {
  */
 export function registerContentDrag() {
   overrides.clear();
+  clearItemBounds();
   activeDrag = null;
   hoverPoint = null;
   lastHoverKey = null;
