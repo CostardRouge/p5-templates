@@ -10,6 +10,7 @@
 export type SketchModuleLoader = () => Promise<any>;
 
 export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
+  "cavalry:cavalry-player": () => import( "@/cavalry/sketches/cavalry-player/index.js" ),
   "gsap:hello-gsap": () => import( "@/gsap/sketches/hello-gsap/index.jsx" ),
   "gsap:photo/coverflow-3d": () => import( "@/gsap/sketches/photo/coverflow-3d/index.jsx" ),
   "gsap:photo/duo-swap": () => import( "@/gsap/sketches/photo/duo-swap/index.jsx" ),
