@@ -5,8 +5,6 @@ import {
 import {
   createSingleOrMultipleTextOption
 } from "@/utils/sketchOptionUtils";
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   text: {
@@ -67,8 +65,7 @@ export const formValues = {
     0,
     0,
     0
-  ],
-  title: titleDefaultValues
+  ]
 };
 
 // UI configuration only
@@ -224,6 +221,5 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
-  },
-  title: titleFormConfiguration
+  }
 };

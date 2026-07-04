@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues.js";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration.js";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
@@ -12,8 +10,6 @@ export const formValues = {
       225
     ]
   },
-
-  title: titleDefaultValues,
 
   motion: {
     angleSpeed: 1,
@@ -175,7 +171,5 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       }
     }
-  },
-
-  title: titleFormConfiguration
+  }
 };

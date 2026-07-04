@@ -9,7 +9,6 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import traceLetters from "@/p5/utils/traceLetters.js";
 import iterators from "@/p5/utils/iterators.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
   getAlphabet, drawGrid, getFont, loopedTime, drawShape
@@ -241,6 +240,4 @@ sketch.draw( (
     middle,
     true
   );
-
-  renderTitle();
 } );

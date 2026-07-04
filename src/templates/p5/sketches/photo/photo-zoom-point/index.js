@@ -13,10 +13,12 @@ import mappers from "@/p5/utils/mappers.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
   photoGraphics: null,
+  // Which photo (index into options.sketch.items) is on screen this frame.
+  // The click handler needs it so a click lands on the right photo's point.
+  activeIndex: 0,
   // Where the image sits inside the unscaled buffer
   photoRect: {
     x: 0,
@@ -32,6 +34,25 @@ const sketchState = {
     scale: 1
   }
 };
+
+/**
+ * Symmetric 0 → 1 → 0 wave. `t` is a phase in loop units; the fractional part
+ * drives one full zoom-in-then-out, so `t` running 0→N gives N in/out cycles.
+ */
+function triangleWave( t ) {
+  const phase = ( ( t % 1 ) + 1 ) % 1;
+
+  return phase < 0.5
+    ? phase * 2 // Linear up (0 → 1)
+    : ( 1 - phase ) * 2; // Linear down (1 → 0)
+}
+
+/**
+ * Read the photo list from options, tolerating a missing/empty value.
+ */
+function getItems() {
+  return Array.isArray( options.sketch.items ) ? options.sketch.items : [];
+}
 
 /**
  * 1. ROBUST p.SCREEN-TO-CANVAS MAPPING
@@ -69,7 +90,8 @@ function getInternalCanvasPoint( event ) {
 
 /**
  * 2. REVERSE TRANSFORM LOGIC
- * We take the screen click, reverse the zoom/pan, and find the UV on the photo.
+ * We take the screen click, reverse the zoom/pan, and find the UV on the
+ * photo — then store it as the zoom point of the photo currently on screen.
  */
 function handlePointerSelect( screenPoint ) {
   if ( !screenPoint ) {
@@ -111,44 +133,32 @@ function handlePointerSelect( screenPoint ) {
     y: ( bufferY - imgY ) / imgH
   };
 
-  // D. Save Update
-  const currentSlideIndex = getP5().getCurrentSlide?.().index;
-  const sketchUpdate = {
-    point: uvPoint
-  };
+  // D. Save the point on the photo that was on screen when the click happened
+  const items = getItems();
+  const activeIndex = sketchState.activeIndex;
 
-  if (
-    typeof currentSlideIndex === "number" &&
-    Array.isArray( options.slides ) &&
-    options.slides[ currentSlideIndex ]
-  ) {
-    const nextSlides = options.slides.map( (
-      slide, idx
-    ) =>
-      idx === currentSlideIndex
-        ? {
-          ...slide,
-          sketch: {
-            ...( slide?.sketch ?? {} ),
-            ...sketchUpdate
-          }
-        }
-        : slide );
-
-    setSketchOptions(
-      {
-        slides: nextSlides
-      },
-      "p5"
-    );
-  } else {
-    setSketchOptions(
-      {
-        sketch: sketchUpdate
-      },
-      "p5"
-    );
+  if ( !items[ activeIndex ] ) {
+    return;
   }
+
+  const nextItems = items.map( (
+    item, idx
+  ) =>
+    idx === activeIndex
+      ? {
+        ...item,
+        point: uvPoint
+      }
+      : item );
+
+  setSketchOptions(
+    {
+      sketch: {
+        items: nextItems
+      }
+    },
+    "p5"
+  );
 }
 
 sketch.setup( () => {
@@ -159,19 +169,11 @@ sketch.setup( () => {
     p.width,
     p.height
   );
-
-  // Initialize Rect immediately to prevent null errors on start
-  const photo = common.getAsset( options.sketch.photo );
-
-  if ( photo?.img ) {
-    displayPhoto( photo.img );
-  }
 } );
 
 events.register(
   "engine-canvas-mouse-clicked",
   ( event ) => {
-    const p = getP5();
     const screenPoint = getInternalCanvasPoint( event );
 
     handlePointerSelect( screenPoint );
@@ -217,11 +219,11 @@ sketch.draw( () => {
   p.clear();
   p.background( ...options.sketch.backgroundColor );
 
-  const photo = common.getAsset( options.sketch.photo );
+  const items = getItems();
 
-  if ( !photo?.img ) {
+  if ( !items.length ) {
     string.write(
-      "photo-zoom-point:\n\nadd a photo :)",
+      "photo-zoom-point:\n\nadd photos :)",
       0,
       0,
       {
@@ -244,12 +246,32 @@ sketch.draw( () => {
     return;
   }
 
-  // 1. Draw Image to Buffer (Unscaled)
+  // 1. Split the loop into one equal slice per photo, so every photo is seen
+  // once over the sketch duration. `local` is 0→1 progress within the slice.
+  const count = items.length;
+  const scaled = animation.progression * count;
+  const activeIndex = Math.min(
+    count - 1,
+    Math.floor( scaled )
+  ) % count;
+  const local = scaled - Math.floor( scaled );
+
+  sketchState.activeIndex = activeIndex;
+
+  const item = items[ activeIndex ];
+  const photo = common.getAsset( item?.photo );
+
+  if ( !photo?.img ) {
+    // Asset not resolved yet (still loading / removed) — skip this frame.
+    return;
+  }
+
+  // 2. Draw Image to Buffer (Unscaled)
   displayPhoto( photo.img );
 
-  // 2. Animation Logic
+  // 3. Animation Logic — `count` zoom in/out cycles inside this photo's slice
   const zoomStep = mappers.fn(
-    animation.triangleProgression( options.sketch.zoom.count ?? 1 ),
+    triangleWave( local * ( options.sketch.zoom.count ?? 1 ) ),
     0,
     1,
     0,
@@ -263,8 +285,8 @@ sketch.draw( () => {
     zoomStep
   );
 
-  // 3. Focus Point Logic
-  const uvPoint = options.sketch.point ?? {
+  // 4. Focus Point Logic — this photo's own point
+  const uvPoint = item.point ?? {
     x: 0.5,
     y: 0.5
   };
@@ -279,12 +301,12 @@ sketch.draw( () => {
   const focusX = x + ( uvPoint.x * w );
   const focusY = y + ( uvPoint.y * h );
 
-  // 4. Calculate Center Transform
+  // 5. Calculate Center Transform
   // We want the focusPoint to land exactly at (p.width/2, p.height/2)
   const tx = ( p.width / 2 ) - ( focusX * zoomScale );
   const ty = ( p.height / 2 ) - ( focusY * zoomScale );
 
-  // 5. IMPORTANT: Update State for the Click Handler
+  // 6. IMPORTANT: Update State for the Click Handler
   // This allows handlePointerSelect to know "where" the image was during this frame
   sketchState.viewTransform = {
     x: tx,
@@ -292,7 +314,7 @@ sketch.draw( () => {
     scale: zoomScale
   };
 
-  // 6. Apply & Draw
+  // 7. Apply & Draw
   p.push();
   p.translate(
     tx,
@@ -320,6 +342,4 @@ sketch.draw( () => {
     );
   }
   p.pop();
-
-  renderTitle();
 } );

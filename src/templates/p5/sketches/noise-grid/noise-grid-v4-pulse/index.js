@@ -5,7 +5,6 @@ import sketch, {
 import grid from "@/p5/utils/grid.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
   min: Math.PI,
@@ -179,6 +178,4 @@ sketch.draw( async() => {
       p.pop();
     }
   );
-
-  renderTitle();
 } );

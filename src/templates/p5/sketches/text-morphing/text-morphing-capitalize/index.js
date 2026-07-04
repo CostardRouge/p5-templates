@@ -7,7 +7,6 @@ import string from "@/p5/utils/string.js";
 import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -401,6 +400,4 @@ sketch.draw( (
   );
   sketchState.threeDimensionGraphics.clear();
   sketchState.threeDimensionGraphics.reset();
-
-  renderTitle();
 } );

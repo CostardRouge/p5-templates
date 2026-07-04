@@ -4,7 +4,7 @@ import React, {
   useMemo, useState
 } from "react";
 import {
-  Loader2, StopCircle
+  Download, Loader2, StopCircle
 } from "lucide-react";
 import type {
   RecorderCapabilities, RecorderProgress, RecordingFormat, RecordingMode
@@ -15,6 +15,9 @@ import {
 import type {
   PreviewPhase, RecordingIntent
 } from "../hooks/useBrowserRecorder";
+import type {
+  FrameCount, FrameExportProgress
+} from "../hooks/useFrameExporter";
 
 type BrowserRecordingButtonProps = {
   capabilities: RecorderCapabilities;
@@ -31,6 +34,16 @@ type BrowserRecordingButtonProps = {
   ) => void;
   onStop: () => void;
   onCancel: () => void;
+  // Still-frame sequence export ("Frames" group). Shares the sketch engine
+  // with recording, so the two can never run at once — the UI swaps between
+  // them.
+  frameExport: {
+    isExporting: boolean;
+    progress: FrameExportProgress | null;
+    error: Error | null;
+    onExport: ( count: FrameCount ) => void;
+    onCancel: () => void;
+  };
 };
 
 const FORMAT_LABEL: Record<RecordingFormat, string> = {
@@ -66,47 +79,110 @@ const MODE_ORDER: ReadonlyArray<RecordingMode> = [
   "realtime"
 ];
 
-// Dev-only groups: a webm capture that, instead of downloading, is saved
-// back over the sketch's committed preview.
+// Still-frame export group. Each entry samples the loop evenly and bundles
+// the PNGs into a single `.zip` (see `useFrameExporter`). Gated on the engine
+// being able to render arbitrary frames reproducibly — a realtime-only sketch
+// can't be sampled deterministically.
+const FRAMES_GROUP_LABEL = "Frames (.zip)";
+
+const FRAMES_OPTIONS: ReadonlyArray<{
+  key: string;
+  label: string;
+  count: FrameCount;
+}> = [
+  {
+    key: "frames-10",
+    label: "10 × .png",
+    count: 10
+  },
+  {
+    key: "frames-20",
+    label: "20 × .png",
+    count: 20
+  },
+  {
+    key: "frames-all",
+    label: "All frames",
+    count: "all"
+  }
+];
+
+// Dev-only group: a webm capture that, instead of downloading, is saved
+// back over the sketch's committed preview. Both flavours share one compact
+// group so the dropdown stays narrow and never pushes the record button off
+// screen.
+//   • async    — a deterministic frame-by-frame capture of the sketch's loop.
+//     No lead-in, no frame drops — the front-end stand-in for the headless
+//     generator, for when it isn't available.
 //   • realtime — after a 3-2-1 lead-in, a wall-clock capture. Lets
 //     interactive sketches (webcam / mic / hand tracking) get a real preview
 //     the headless generator can't produce.
-//   • async   — a deterministic frame-by-frame capture of the sketch's loop.
-//     No lead-in, no frame drops — the front-end stand-in for the headless
-//     generator, for when it isn't available.
-const PREVIEW_GROUP_LABEL = "Record preview (dev)";
-const PREVIEW_ASYNC_GROUP_LABEL = "Record preview (dev, async)";
+const PREVIEW_GROUP_LABEL = "DEV: previews recording";
+const PREVIEW_ASYNC_OPTION_LABEL = "Async";
+const PREVIEW_REALTIME_OPTION_LABEL = "Realtime";
 const IS_DEV = process.env.NODE_ENV === "development";
 
-// One <option> per group entry. The composite value carries everything
-// `start()` needs; including the group label in the visible text keeps the
+// One <option> per group entry. The composite value carries everything the
+// record button needs; including the group label in the visible text keeps the
 // active choice readable without re-opening the dropdown.
-type Choice = {
+//
+// A choice is either a video recording (`record`) or a still-frame sequence
+// export (`frames`) — the record button branches on `kind`.
+type RecordChoice = {
+  kind: "record";
   format: RecordingFormat;
   mode: RecordingMode;
   intent: RecordingIntent;
 };
 
+type FramesChoice = {
+  kind: "frames";
+  count: FrameCount;
+};
+
+type Choice = RecordChoice | FramesChoice;
+
+// One <option> in the dropdown. The label is what shows when collapsed, so
+// keep it short; the choice carries everything `start()` needs.
+type RecordingOption = {
+  key: string;
+  label: string;
+  choice: Choice;
+};
+
 type RecordingGroup = {
   key: string;
   label: string;
-  mode: RecordingMode;
-  intent: RecordingIntent;
-  formats: RecordingFormat[];
+  options: RecordingOption[];
 };
 
 function encodeChoice( c: Choice ): string {
-  return `${ c.format }|${ c.mode }|${ c.intent }`;
+  return c.kind === "frames"
+    ? `frames|${ c.count }`
+    : `record|${ c.format }|${ c.mode }|${ c.intent }`;
 }
 
 function decodeChoice( value: string ): Choice {
+  const parts = value.split( "|" );
+
+  if ( parts[ 0 ] === "frames" ) {
+    const raw = parts[ 1 ];
+
+    return {
+      kind: "frames",
+      count: raw === "all" ? "all" : Number( raw )
+    };
+  }
+
   const [
+    ,
     format,
     mode,
     intent
-  ] = value.split( "|" ) as [ RecordingFormat, RecordingMode, RecordingIntent ];
+  ] = parts as [ string, RecordingFormat, RecordingMode, RecordingIntent ];
 
   return {
+    kind: "record",
     format,
     mode,
     intent: intent ?? "download"
@@ -129,7 +205,8 @@ export default function BrowserRecordingButton( {
   previewSaved,
   onStart,
   onStop,
-  onCancel
+  onCancel,
+  frameExport
 }: BrowserRecordingButtonProps ) {
   const groups = useMemo<RecordingGroup[]>(
     () => {
@@ -139,36 +216,76 @@ export default function BrowserRecordingButton( {
         .map( ( mode ) => ( {
           key: mode,
           label: MODE_LABEL[ mode ],
-          mode,
-          intent: "download" as RecordingIntent,
-          formats: MODE_FORMATS[ mode ].filter( ( f ) => supported.has( f ) )
+          options: MODE_FORMATS[ mode ]
+            .filter( ( f ) => supported.has( f ) )
+            .map( ( f ) => ( {
+              key: `${ mode }-${ f }`,
+              label: formatChoiceLabel(
+                MODE_LABEL[ mode ],
+                f
+              ),
+              choice: {
+                kind: "record" as const,
+                format: f,
+                mode,
+                intent: "download" as RecordingIntent
+              }
+            } ) )
         } ) )
-        .filter( ( g ) => g.formats.length > 0 );
+        .filter( ( g ) => g.options.length > 0 );
 
       if ( IS_DEV && supported.has( "webm" ) ) {
-        modeGroups.push( {
-          key: "preview",
-          label: PREVIEW_GROUP_LABEL,
-          mode: "realtime",
-          intent: "preview",
-          formats: [
-            "webm"
-          ]
-        } );
+        const previewOptions: RecordingOption[] = [];
 
         // The async flavour needs the engine to render arbitrary frames
         // reproducibly — otherwise the deterministic loop can't be captured.
         if ( capabilities.supportsDeterministicCapture ) {
-          modeGroups.push( {
+          previewOptions.push( {
             key: "preview-async",
-            label: PREVIEW_ASYNC_GROUP_LABEL,
-            mode: "async-loop",
-            intent: "preview",
-            formats: [
-              "webm"
-            ]
+            label: PREVIEW_ASYNC_OPTION_LABEL,
+            choice: {
+              kind: "record",
+              format: "webm",
+              mode: "async-loop",
+              intent: "preview"
+            }
           } );
         }
+
+        previewOptions.push( {
+          key: "preview-realtime",
+          label: PREVIEW_REALTIME_OPTION_LABEL,
+          choice: {
+            kind: "record",
+            format: "webm",
+            mode: "realtime",
+            intent: "preview"
+          }
+        } );
+
+        modeGroups.push( {
+          key: "preview",
+          label: PREVIEW_GROUP_LABEL,
+          options: previewOptions
+        } );
+      }
+
+      // Deterministic engines can be frame-stepped, so offer the still-frame
+      // sequence export. Realtime-only sketches can't be sampled reproducibly,
+      // so the group is simply absent for them.
+      if ( capabilities.supportsDeterministicCapture ) {
+        modeGroups.push( {
+          key: "frames",
+          label: FRAMES_GROUP_LABEL,
+          options: FRAMES_OPTIONS.map( ( frameOption ) => ( {
+            key: frameOption.key,
+            label: frameOption.label,
+            choice: {
+              kind: "frames" as const,
+              count: frameOption.count
+            }
+          } ) )
+        } );
       }
 
       return modeGroups;
@@ -182,15 +299,21 @@ export default function BrowserRecordingButton( {
   const defaultChoice: Choice = useMemo(
     () => {
       const preferredMode = capabilities.defaultMode;
-      const group =
-        groups.find( ( g ) => g.intent === "download" && g.mode === preferredMode ) ??
-          groups.find( ( g ) => g.intent === "download" ) ??
-          groups[ 0 ];
+      const options = groups.flatMap( ( g ) => g.options );
+      // Never default to a frames export — it's an explicit, opt-in action.
+      const match =
+        options.find( ( o ) =>
+          o.choice.kind === "record" &&
+            o.choice.intent === "download" &&
+            o.choice.mode === preferredMode ) ??
+          options.find( ( o ) => o.choice.kind === "record" && o.choice.intent === "download" ) ??
+          options[ 0 ];
 
-      return {
-        mode: group?.mode ?? "async-loop",
-        format: group?.formats[ 0 ] ?? "webm",
-        intent: group?.intent ?? "download"
+      return match?.choice ?? {
+        kind: "record",
+        mode: "async-loop",
+        format: "webm",
+        intent: "download"
       };
     },
     [
@@ -204,13 +327,30 @@ export default function BrowserRecordingButton( {
     setChoice
   ] = useState<Choice>( defaultChoice );
 
+  // Recording controls only render off the back of a record choice, but the
+  // union forces a guard — fall back to the deterministic mode for the (never
+  // reached) frames case.
+  const recordMode: RecordingMode =
+    choice.kind === "record" ? choice.mode : "async-loop";
+
+  // A frames export owns the button for its duration — progress + cancel,
+  // no format dropdown.
+  if ( frameExport.isExporting ) {
+    return (
+      <FramesExportControls
+        progress={ frameExport.progress }
+        onCancel={ frameExport.onCancel }
+      />
+    );
+  }
+
   // A dev "Record preview" run drives its own countdown → recording →
   // saving controls, distinct from the regular realtime / async-loop UI.
   if ( previewPhase ) {
     return (
       <PreviewRecordingControls
         phase={ previewPhase }
-        mode={ choice.mode }
+        mode={ recordMode }
         progress={ progress }
         countdown={ countdown }
         onStop={ onStop }
@@ -220,7 +360,7 @@ export default function BrowserRecordingButton( {
   }
 
   if ( isRecording ) {
-    const isRealtime = choice.mode === "realtime";
+    const isRealtime = recordMode === "realtime";
 
     if ( isRealtime ) {
       return (
@@ -243,24 +383,17 @@ export default function BrowserRecordingButton( {
           id="recording-format"
           value={ encodeChoice( choice ) }
           onChange={ ( e ) => setChoice( decodeChoice( e.target.value ) ) }
-          className="flex-1 px-2 py-2 bg-background text-foreground text-xs focus:outline-none"
+          className="flex-1 min-w-0 px-2 py-2 bg-background text-foreground text-xs focus:outline-none"
           aria-label="Recording format"
         >
           {groups.map( ( group ) => (
             <optgroup key={ group.key } label={ group.label }>
-              {group.formats.map( ( f ) => (
+              {group.options.map( ( option ) => (
                 <option
-                  key={ `${ group.key }-${ f }` }
-                  value={ encodeChoice( {
-                    format: f,
-                    mode: group.mode,
-                    intent: group.intent
-                  } ) }
+                  key={ option.key }
+                  value={ encodeChoice( option.choice ) }
                 >
-                  {formatChoiceLabel(
-                    group.label,
-                    f
-                  )}
+                  {option.label}
                 </option>
               ) )}
             </optgroup>
@@ -269,19 +402,33 @@ export default function BrowserRecordingButton( {
 
         <button
           type="button"
-          onClick={ () => onStart(
-            choice.format,
-            choice.mode,
-            choice.intent
-          ) }
-          aria-label="Start recording"
-          title="Start recording"
-          className="border-l px-2 text-foreground hover:bg-hover transition-colors inline-flex items-center justify-center"
+          onClick={ () => {
+            if ( choice.kind === "frames" ) {
+              frameExport.onExport( choice.count );
+            } else {
+              onStart(
+                choice.format,
+                choice.mode,
+                choice.intent
+              );
+            }
+          } }
+          aria-label={
+            choice.kind === "frames" ? "Export frames" : "Start recording"
+          }
+          title={
+            choice.kind === "frames" ? "Export frames" : "Start recording"
+          }
+          className="flex-shrink-0 border-l px-2 text-foreground hover:bg-hover transition-colors inline-flex items-center justify-center"
         >
-          <span
-            aria-hidden="true"
-            className="block h-3 w-3 rounded-full bg-red-500 ring-1 ring-red-500/40"
-          />
+          {choice.kind === "frames" ? (
+            <Download className="h-4 w-4" />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="block h-3 w-3 rounded-full bg-red-500 ring-1 ring-red-500/40"
+            />
+          )}
         </button>
       </div>
 
@@ -291,9 +438,9 @@ export default function BrowserRecordingButton( {
         </div>
       )}
 
-      {error && (
+      {( error || frameExport.error ) && (
         <div className="text-[10px] text-red-500">
-          {error.message}
+          {( error ?? frameExport.error )?.message}
         </div>
       )}
     </div>
@@ -565,6 +712,74 @@ function AsyncLoopRecordingControls( {
         />
         <StopCircle className="relative h-4 w-4 flex-shrink-0" />
         <span className="relative truncate">Cancel recording</span>
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Progress + cancel affordance for a still-frame sequence export. Mirrors the
+ * async-loop recorder button — a fill bar tracking frame capture that parks at
+ * 100% while the PNGs are zipped — since both step the sketch frame-by-frame.
+ */
+function FramesExportControls( {
+  progress,
+  onCancel
+}: {
+  progress: FrameExportProgress | null;
+  onCancel: () => void;
+} ) {
+  const progressLabel = useMemo(
+    () => {
+      if ( !progress ) {
+        return "Preparing…";
+      }
+
+      if ( progress.stage === "zipping" ) {
+        return "Zipping…";
+      }
+
+      const pct = progress.percentage.toFixed( 0 );
+
+      return `${ pct }% (${ progress.frame }/${ progress.totalFrames })`;
+    },
+    [
+      progress
+    ]
+  );
+
+  const targetFillPct = progress
+    ? progress.stage === "capturing"
+      ? progress.percentage
+      : 100
+    : 0;
+
+  const fillRef = useSmoothFill<HTMLSpanElement>(
+    true,
+    targetFillPct
+  );
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-[10px] text-gray-400 text-center min-h-[1em]">
+        {progressLabel}
+      </div>
+      <button
+        type="button"
+        onClick={ onCancel }
+        aria-label="Cancel frame export"
+        className="relative overflow-hidden rounded-xl px-3 py-2.5 border border-red-500/40 text-red-600 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 bg-background hover:bg-red-500/5"
+      >
+        <span
+          ref={ fillRef }
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 bg-red-500/20 pointer-events-none"
+          style={ {
+            width: "0%"
+          } }
+        />
+        <StopCircle className="relative h-4 w-4 flex-shrink-0" />
+        <span className="relative truncate">Cancel export</span>
       </button>
     </div>
   );

@@ -3,7 +3,6 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import createNoiseFieldRenderer, {
   computeFieldRange, easingId
 } from "@/p5/utils/noiseFieldGpu.js";
@@ -172,6 +171,4 @@ sketch.draw( (
       uFalloffEasing: easingId( falloffEasing )
     }
   } );
-
-  renderTitle();
 } );

@@ -6,7 +6,6 @@ import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import iterators from "@/p5/utils/iterators.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
   getAlphabet, getFont, loopedTime
@@ -256,6 +255,4 @@ sketch.draw( (
       );
     }
   } );
-
-  renderTitle();
 } );

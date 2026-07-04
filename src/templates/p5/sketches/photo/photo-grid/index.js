@@ -5,7 +5,6 @@ import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
-import renderTitle from "@/p5/utils/title/renderTitle";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -101,6 +100,4 @@ sketch.draw( async(
       margin: options.sketch.imageStyle.margin * p.width
     } );
   } );
-
-  renderTitle();
 } );

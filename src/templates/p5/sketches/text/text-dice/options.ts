@@ -1,8 +1,6 @@
 import {
   fontSelectOptions
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 // Six bold, high-contrast face presets. Text fill reads against its own face
 // background; the stroke gives the lettering a clean outline on every face.
@@ -155,12 +153,7 @@ export const formValues = {
   easing: "easeInOutExpo",
 
   rollMode: false,
-  rollSeed: 1,
-
-  title: {
-    ...titleDefaultValues,
-    show: false
-  }
+  rollSeed: 1
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -284,7 +277,5 @@ export const formConfiguration: Record<string, any> = {
     min: 0,
     max: 999,
     step: 1
-  },
-
-  title: titleFormConfiguration
+  }
 };

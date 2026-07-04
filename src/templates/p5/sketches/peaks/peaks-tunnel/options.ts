@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   tunnel: {
@@ -67,10 +65,6 @@ export const formValues = {
     yMultiplier: 1,
     layerProgressionMultiplier: 0.4,
     animMultiplier: 0.3
-  },
-  title: {
-    ...titleDefaultValues,
-    show: false
   }
 };
 
@@ -402,7 +396,6 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  title: titleFormConfiguration,
 
   backgroundColor: {
     component: "color",

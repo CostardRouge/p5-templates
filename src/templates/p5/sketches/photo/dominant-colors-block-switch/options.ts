@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
@@ -19,9 +17,7 @@ export const formValues = {
   borderSize: 0,
 
   // Image processing
-  dominantColorSample: 50,
-
-  title: titleDefaultValues
+  dominantColorSample: 50
 };
 
 // UI configuration only
@@ -72,7 +68,5 @@ export const formConfiguration: Record<string, any> = {
     min: 2,
     max: 200,
     step: 1
-  },
-
-  title: titleFormConfiguration
+  }
 };

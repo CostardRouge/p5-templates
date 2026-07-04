@@ -4,7 +4,6 @@ import sketch from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -153,6 +152,4 @@ sketch.draw( (
 
     p.pop();
   }
-
-  renderTitle();
 } );

@@ -93,10 +93,24 @@ export const sizePresetOptions: SelectOption[] = [
     "Landscape"
   ),
   createSizePresetOption(
+    3840,
+    2160,
+    "4K",
+    "Landscape"
+  ),
+  createSizePresetOption(
     1920 * 4,
     1080 * 4,
     "Ultra HD",
     "Landscape"
+  ),
+
+  // portrait
+  createSizePresetOption(
+    2160,
+    3840,
+    "4K",
+    "Portrait"
   )
 ];
 

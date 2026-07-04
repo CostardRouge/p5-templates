@@ -11,8 +11,6 @@ import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 
-import renderTitle from "@/p5/utils/title/renderTitle";
-
 import Matter from "@/public/assets/libraries/matter.min.js";
 import {
   getP5
@@ -345,6 +343,4 @@ sketch.draw( (
       }
     } );
   } );
-
-  renderTitle();
 } );

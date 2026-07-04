@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import {
   textForm,
   textStyleForm,
@@ -40,10 +38,6 @@ export const formValues = {
   loop: {
     timeScale: 6.7,
     timeOffset: 0
-  },
-  title: {
-    ...titleDefaultValues,
-    show: false
   }
 };
 
@@ -57,6 +51,5 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
-  },
-  title: titleFormConfiguration
+  }
 };

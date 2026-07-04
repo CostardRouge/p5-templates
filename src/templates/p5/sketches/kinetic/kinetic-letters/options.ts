@@ -46,7 +46,6 @@ export const formValues = {
     easing: "easeOutSine"
   },
   interaction: interactionDefaults,
-  // title: titleDefaultValues,
   backgroundColor: [
     246,
     235,
@@ -130,7 +129,6 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   interaction: interactionFormConfiguration,
-  // title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

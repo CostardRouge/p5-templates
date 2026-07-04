@@ -1,0 +1,469 @@
+/* ------------------------------------------------------------------ */
+/*  Three.js sketch runtime                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Self-contained Three.js runtime.
+ *
+ * Mirrors the role of the p5 `sketch.js` singleton: a Three.js template calls
+ * `sketch.setup( fn )` / `sketch.draw( fn )` at import time to register its
+ * lifecycle callbacks, and `ThreeEngine` drives the rest — creating the
+ * WebGL renderer, running the animation loop, and stepping frames
+ * deterministically for capture.
+ *
+ * The loop clock is a duration-scaled loop phase (identical model to the p5
+ * `time` module) so the live preview, the progression bar and a headless
+ * recording all resolve the exact same position in the loop.
+ */
+import {
+  resolveAnimation, DURATION_DEFAULT
+} from "@/lib/animationConfig";
+import {
+  getSketchOptions
+} from "@/p5/shared/syncSketchOptions.js";
+
+/* ---- time / loop clock ------------------------------------------- */
+
+const time = {
+  elapsed: 0,
+  lastUpdate: 0,
+  recordingFrameIndex: 0,
+  isRecording: false,
+
+  seconds() {
+    return time.elapsed / 1000;
+  },
+
+  // Loop phase in [0, 1). During recording it climbs monotonically (never
+  // wraps) so the final captured frame sits just under a full loop.
+  phase() {
+    const {
+      duration
+    } = resolveAnimation( getSketchOptions()?.animation );
+    const seconds = time.seconds();
+
+    return time.isRecording
+      ? seconds / duration
+      : ( seconds % duration ) / duration;
+  },
+
+  // The clock handed to a sketch's `draw( time, … )`. Scaled by the baseline
+  // duration so a sketch authored against it completes its whole loop within
+  // `duration`, and at the default duration equals the historical seconds clock.
+  drawSeconds() {
+    return time.phase() * DURATION_DEFAULT;
+  },
+
+  reset() {
+    time.elapsed = 0;
+    time.lastUpdate = 0;
+    time.recordingFrameIndex = 0;
+  },
+
+  // Advance the clock by one tick. During recording, time is pinned to the
+  // frame index (frame / framerate); otherwise it free-runs on wall-clock.
+  increment( now ) {
+    if ( time.isRecording ) {
+      const {
+        framerate
+      } = resolveAnimation( getSketchOptions()?.animation );
+      const millisecondsPerFrame = 1000 / framerate;
+
+      time.elapsed = time.recordingFrameIndex * millisecondsPerFrame;
+      time.recordingFrameIndex++;
+      return;
+    }
+
+    if ( time.lastUpdate === 0 ) {
+      time.lastUpdate = now;
+    }
+
+    time.elapsed += now - time.lastUpdate;
+    time.lastUpdate = now;
+  }
+};
+
+/* ---- module state ------------------------------------------------ */
+
+let THREE = null;
+let renderer = null;
+let scene = null;
+let camera = null;
+let container = null;
+let rafId = null;
+let frameCount = 0;
+
+// Real draw-rate measurement over a sliding window (frame deltas / elapsed),
+// used for the performance overlay.
+const fpsWindow = {
+  lastSampleTime: 0,
+  lastFrameCount: 0,
+  measured: 0
+};
+
+const progressionSubscribers = new Set();
+
+const DEFAULT_SIZE = {
+  width: 1080,
+  height: 1350
+};
+
+function resolveSize() {
+  const size = getSketchOptions()?.size ?? DEFAULT_SIZE;
+  const width = size.width ?? DEFAULT_SIZE.width;
+  const height = size.ratio ? width / size.ratio : ( size.height ?? DEFAULT_SIZE.height );
+
+  return {
+    width,
+    height
+  };
+}
+
+/** The context object handed to every sketch `setup`/`draw` callback. */
+function drawContext() {
+  return {
+    THREE,
+    renderer,
+    scene,
+    camera,
+    time: time.drawSeconds(),
+    phase: time.phase(),
+    frame: frameCount,
+    width: renderer ? resolveSize().width : DEFAULT_SIZE.width,
+    height: renderer ? resolveSize().height : DEFAULT_SIZE.height
+  };
+}
+
+function notifyProgression() {
+  const value = time.phase() % 1;
+
+  progressionSubscribers.forEach( ( cb ) => {
+    try {
+      cb( value );
+    } catch {
+      // A subscriber must never break the draw loop.
+    }
+  } );
+}
+
+/* ---- render steps ------------------------------------------------ */
+
+function renderScene( ctx ) {
+  sketch._drawFn?.(
+    ctx.time,
+    ctx
+  );
+
+  if ( renderer && scene && camera ) {
+    renderer.render(
+      scene,
+      camera
+    );
+  }
+}
+
+// One live tick: advance the clock, draw, render, update measurements.
+function tick( now ) {
+  time.increment( now );
+
+  const ctx = drawContext();
+
+  renderScene( ctx );
+
+  frameCount++;
+  sampleFps( now );
+  notifyProgression();
+}
+
+function sampleFps( now ) {
+  if ( fpsWindow.lastSampleTime === 0 ) {
+    fpsWindow.lastSampleTime = now;
+    fpsWindow.lastFrameCount = frameCount;
+    return;
+  }
+
+  const elapsed = now - fpsWindow.lastSampleTime;
+
+  if ( elapsed >= 500 ) {
+    const frames = frameCount - fpsWindow.lastFrameCount;
+
+    fpsWindow.measured = ( frames * 1000 ) / elapsed;
+    fpsWindow.lastSampleTime = now;
+    fpsWindow.lastFrameCount = frameCount;
+  }
+}
+
+function loop( now ) {
+  if ( sketch.paused ) {
+    rafId = null;
+    return;
+  }
+
+  rafId = requestAnimationFrame( loop );
+  tick( now );
+}
+
+function startLoop() {
+  if ( rafId !== null ) {
+    return;
+  }
+
+  sketch.paused = false;
+  time.lastUpdate = 0;
+  rafId = requestAnimationFrame( loop );
+}
+
+function stopLoop() {
+  if ( rafId !== null ) {
+    cancelAnimationFrame( rafId );
+    rafId = null;
+  }
+
+  sketch.paused = true;
+}
+
+/* ---- public runtime --------------------------------------------- */
+
+const sketch = {
+  // stored sketch callbacks (set by the sketch module at import time)
+  _setupFn: null,
+  _drawFn: null,
+  sketchOptions: undefined,
+
+  paused: false,
+
+  /* -- registration API (called by sketch modules) ---------------- */
+
+  setup( setupFunction ) {
+    sketch._setupFn = typeof setupFunction === "function"
+      ? setupFunction
+      : null;
+  },
+
+  draw( drawFunction ) {
+    sketch._drawFn = typeof drawFunction === "function"
+      ? drawFunction
+      : null;
+  },
+
+  /* -- lifecycle (called by ThreeEngine) -------------------------- */
+
+  async start( mountContainer ) {
+    THREE = await import( "three" );
+    container = mountContainer;
+
+    const {
+      width, height
+    } = resolveSize();
+
+    renderer = new THREE.WebGLRenderer( {
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true // required so toDataURL() reads real pixels
+    } );
+
+    renderer.setPixelRatio( Math.min(
+      typeof window !== "undefined" ? window.devicePixelRatio : 1,
+      2
+    ) );
+    renderer.setSize(
+      width,
+      height
+    );
+    renderer.setClearColor(
+      0x000000,
+      0
+    );
+
+    // A distinguishing class so the headless capture pipeline can target the
+    // Three.js canvas via a generic CSS selector.
+    renderer.domElement.classList.add( "threejs-canvas" );
+    container.appendChild( renderer.domElement );
+
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(
+      50,
+      width / height,
+      0.1,
+      1000
+    );
+    camera.position.z = 5;
+
+    time.reset();
+    frameCount = 0;
+    fpsWindow.lastSampleTime = 0;
+    fpsWindow.lastFrameCount = 0;
+    fpsWindow.measured = 0;
+
+    await sketch._setupFn?.( drawContext() );
+
+    // Render the very first frame synchronously so the canvas is painted
+    // (and measurable) the instant `start` resolves.
+    tick( performance.now() );
+
+    startLoop();
+  },
+
+  reset() {
+    stopLoop();
+
+    scene?.traverse( ( object ) => {
+      object.geometry?.dispose?.();
+
+      const material = object.material;
+
+      if ( Array.isArray( material ) ) {
+        material.forEach( ( m ) => m.dispose?.() );
+      } else {
+        material?.dispose?.();
+      }
+    } );
+
+    renderer?.dispose?.();
+    renderer?.domElement?.remove?.();
+
+    renderer = null;
+    scene = null;
+    camera = null;
+    container = null;
+    THREE = null;
+    frameCount = 0;
+    progressionSubscribers.clear();
+    time.reset();
+  },
+
+  /* -- playback --------------------------------------------------- */
+
+  play() {
+    startLoop();
+  },
+
+  pause() {
+    stopLoop();
+  },
+
+  stop() {
+    stopLoop();
+    time.reset();
+    frameCount = 0;
+    renderOnce();
+  },
+
+  /* -- scrubbing / capture ---------------------------------------- */
+
+  // Re-render the current state without advancing the loop clock (used while
+  // scrubbing or reflecting an option change while paused).
+  redraw() {
+    renderOnce();
+    notifyProgression();
+  },
+
+  // Deterministically render an explicit frame index. Pins the recording clock
+  // to `frame` so the sketch is drawn at t = frame / framerate.
+  stepFrame( frame ) {
+    time.recordingFrameIndex = Math.max(
+      0,
+      Math.floor( frame ) || 0
+    );
+
+    const ctx = drawContext();
+
+    // In recording mode `increment` derives `elapsed` from the pinned index.
+    time.increment( performance.now() );
+    ctx.time = time.drawSeconds();
+    ctx.phase = time.phase();
+    renderScene( ctx );
+    notifyProgression();
+  },
+
+  enterRecordingMode() {
+    stopLoop();
+    time.reset();
+    time.isRecording = true;
+  },
+
+  exitRecordingMode() {
+    time.isRecording = false;
+    time.reset();
+  },
+
+  /* -- progression bridge ----------------------------------------- */
+
+  getProgression() {
+    return time.phase() % 1;
+  },
+
+  setProgression( value ) {
+    const clamped = Math.max(
+      0,
+      Math.min(
+        1,
+        Number( value ) || 0
+      )
+    );
+    const {
+      duration
+    } = resolveAnimation( getSketchOptions()?.animation );
+
+    time.elapsed = clamped * duration * 1000;
+    time.lastUpdate = 0;
+    renderOnce();
+    notifyProgression();
+  },
+
+  subscribeProgression( cb ) {
+    progressionSubscribers.add( cb );
+
+    return () => progressionSubscribers.delete( cb );
+  },
+
+  /* -- accessors -------------------------------------------------- */
+
+  isPaused() {
+    return sketch.paused;
+  },
+
+  getFrameCount() {
+    return frameCount;
+  },
+
+  getMeasuredFps() {
+    return fpsWindow.measured;
+  },
+
+  getCanvas() {
+    return renderer?.domElement ?? null;
+  },
+
+  getRenderer() {
+    return renderer;
+  },
+
+  getScene() {
+    return scene;
+  },
+
+  getCamera() {
+    return camera;
+  }
+};
+
+// Render the current scene without touching the clock.
+function renderOnce() {
+  if ( !renderer || !scene || !camera ) {
+    return;
+  }
+
+  const ctx = drawContext();
+
+  renderScene( ctx );
+}
+
+export default sketch;
+
+export const getThree = () => THREE;
+export const getScene = () => scene;
+export const getCamera = () => camera;
+export const getRenderer = () => renderer;
+export const getCanvas = () => renderer?.domElement ?? null;

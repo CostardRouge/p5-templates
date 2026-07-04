@@ -7,7 +7,6 @@ import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -297,6 +296,4 @@ sketch.draw( async(
 
     p.pop();
   } );
-
-  renderTitle();
 } );

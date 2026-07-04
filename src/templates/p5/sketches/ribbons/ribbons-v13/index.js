@@ -7,7 +7,6 @@ import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
 import easing from "@/p5/utils/easing.js";
 import graphics from "@/p5/utils/graphics.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   drawRadialPattern,
   resolvePalette
@@ -216,6 +215,4 @@ sketch.draw( ( time ) => {
     }
   );
   p.pop();
-
-  renderTitle();
 } );
