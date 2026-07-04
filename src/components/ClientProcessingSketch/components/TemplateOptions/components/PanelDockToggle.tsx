@@ -6,7 +6,7 @@ import clsx from "clsx";
 
 import type {
   PanelSide
-} from "../hooks/usePanelDock";
+} from "@/hooks/usePanelDock";
 
 type PanelDockToggleProps = {
   side: PanelSide;

@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 
 import {
-  usePanelDock
+  __resetPanelDock, usePanelDock
 } from "../usePanelDock";
 
 const STORAGE_KEY = "p5-templates:panel-dock";
@@ -17,6 +17,7 @@ describe(
   () => {
     beforeEach( () => {
       localStorage.clear();
+      __resetPanelDock();
     } );
 
     it(
@@ -30,6 +31,7 @@ describe(
           left: false,
           right: false
         } );
+        expect( result.current.allDocked ).toBe( false );
       }
     );
 
@@ -50,6 +52,42 @@ describe(
         act( () => result.current.toggleDock( "left" ) );
 
         expect( result.current.docked.left ).toBe( false );
+      }
+    );
+
+    it(
+      "docks and floats both sides through setAllDocked",
+      () => {
+        const {
+          result
+        } = renderHook( () => usePanelDock() );
+
+        act( () => result.current.setAllDocked( true ) );
+
+        expect( result.current.docked ).toEqual( {
+          left: true,
+          right: true
+        } );
+        expect( result.current.allDocked ).toBe( true );
+
+        act( () => result.current.setAllDocked( false ) );
+
+        expect( result.current.docked ).toEqual( {
+          left: false,
+          right: false
+        } );
+      }
+    );
+
+    it(
+      "shares state between separate hook instances",
+      () => {
+        const first = renderHook( () => usePanelDock() );
+        const second = renderHook( () => usePanelDock() );
+
+        act( () => first.result.current.toggleDock( "right" ) );
+
+        expect( second.result.current.docked.right ).toBe( true );
       }
     );
 

@@ -43,7 +43,7 @@ import {
 } from "./hooks/useCollapsibleStates";
 import {
   usePanelDock
-} from "./hooks/usePanelDock";
+} from "@/hooks/usePanelDock";
 import {
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";

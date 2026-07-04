@@ -18,6 +18,7 @@ import {
   Monitor,
   Moon,
   Paintbrush,
+  PanelsLeftRight,
   Share2,
   Sun,
   Video
@@ -45,6 +46,10 @@ import {
 import {
   useMenuBarSlot
 } from "@/components/MenuBarPortal";
+import useMediaQuery from "@/hooks/useMediaQuery";
+import {
+  usePanelDock
+} from "@/hooks/usePanelDock";
 import sleep from "@/utils/sleep";
 
 type MenuBarProps = {
@@ -174,6 +179,15 @@ function MenuBar( {
     pushLoading,
     setPushLoading
   ] = useState( false );
+
+  // Master toggle for the template editor's floating side panels. Only
+  // meaningful on the desktop editor layout — the section is hidden on
+  // other pages and on mobile (where the studio drawer replaces the panels).
+  const {
+    allDocked, setAllDocked
+  } = usePanelDock();
+  const isDesktop = useMediaQuery( "(min-width: 768px)" );
+  const isTemplateEditor = /^\/templates\/[^/]+\/.+/.test( pathname );
 
   useEffect(
     () => {
@@ -535,6 +549,33 @@ function MenuBar( {
                 )}
               </MenuItem>
             )}
+          </>
+        )}
+
+        {isDesktop && isTemplateEditor && (
+          <>
+            <Divider />
+            <SectionLabel>Workspace</SectionLabel>
+            <MenuItem>
+              {( {
+                focus
+              } ) => (
+                <button
+                  type="button"
+                  onClick={ () => setAllDocked( !allDocked ) }
+                  className={ clsx(
+                    itemClass,
+                    focus && "bg-hover"
+                  ) }
+                >
+                  <PanelsLeftRight className="h-4 w-4 text-foreground/70" />
+                  <span className="flex-1 text-left">Stick panels to sides</span>
+                  {allDocked && (
+                    <Check className="h-4 w-4 text-foreground" />
+                  )}
+                </button>
+              )}
+            </MenuItem>
           </>
         )}
 

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import clsx from "clsx";
 import type React from "react";
 import {
   useCallback, useEffect, useMemo, useRef, useState
@@ -24,6 +25,9 @@ import {
 } from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketchThumbnail";
 import useSketchDevWatch from "@/hooks/useSketchDevWatch";
 import usePageVisibility from "@/hooks/usePageVisibility";
+import {
+  usePanelDock
+} from "@/hooks/usePanelDock";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import {
   STUDIO_DRAWER_HEIGHT_VAR
@@ -43,10 +47,23 @@ export default function TemplateSketchPage() {
   const [
     {
       name, capturing, options, persistedJob, engineId, category, sketchLoaded, activeSlideIndex,
-      engine, looping, browserRecording
+      engine, looping, browserRecording, sketchFormConfiguration
     },
     dispatch
   ] = useSketch();
+
+  // Reserve the docked rails' widths so the viewport (and the controls
+  // anchored to it) fit the remaining space instead of sliding under the
+  // panels. Mirrors the panels' own visibility: they only render once the
+  // sketch is loaded and outside captures, and the left panel not at all
+  // when the sketch has no form configuration.
+  const {
+    docked
+  } = usePanelDock();
+  const hasSketchSettingsPanel = Boolean( sketchFormConfiguration && Object.keys( sketchFormConfiguration ).length > 0 );
+  const panelsVisible = sketchLoaded && !capturing;
+  const reserveLeft = panelsVisible && docked.left && hasSketchSettingsPanel;
+  const reserveRight = panelsVisible && docked.right;
 
   const [
     interactionMode,
@@ -268,7 +285,16 @@ export default function TemplateSketchPage() {
           controls so the sketch header (engine · name · perf) never
           slides under them when the drawer compresses the viewport. */}
       <div
-        className="w-full relative pt-12 md:pt-0"
+        className={ clsx(
+          "w-full relative pt-12 md:pt-0",
+          // Shrink to the area between the docked rails (their widths in
+          // TemplateOptions/SketchSettings). The container resize triggers
+          // ScalableViewport's refit observer, and the zoom controls are
+          // anchored to this wrapper so they shift inward with it.
+          reserveLeft && "md:ml-80",
+          reserveRight && "md:mr-72",
+          ( reserveLeft || reserveRight ) && "md:w-auto"
+        ) }
         style={ {
           height: `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
         } }
@@ -338,7 +364,11 @@ export default function TemplateSketchPage() {
       {/* Controls & options panel */}
       { sketchLoaded && !capturing && (
         <>
-          <EngineControls />
+          {/* Positioned against the page (not the shrunken wrapper), so shift
+              it past the docked left rail into the visible canvas area. */}
+          <EngineControls
+            className={ clsx( reserveLeft && "md:translate-x-80" ) }
+          />
 
           <TemplateOptions
             name={ name }

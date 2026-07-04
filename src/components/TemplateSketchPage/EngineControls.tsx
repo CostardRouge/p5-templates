@@ -24,7 +24,13 @@ type ThumbnailSaveState = "idle" | "saving" | "done" | "error";
  * Uses the `SketchEngine` instance from context rather than calling
  * p5-specific globals like `window.toggleLoop()`.
  */
-export function EngineControls( ) {
+export function EngineControls( {
+  className
+}: {
+  /** Extra classes on the floating bar, e.g. to shift it clear of a docked
+   *  side panel. */
+  className?: string;
+} ) {
   const [
     {
       engineId, name, engine, looping, browserRecording
@@ -176,7 +182,12 @@ export function EngineControls( ) {
       : undefined;
 
   return (
-    <div className="absolute top-2 left-[3.25rem] md:top-4 md:left-[3.75rem] flex items-center gap-2 z-50">
+    <div
+      className={ clsx(
+        "absolute top-2 left-[3.25rem] md:top-4 md:left-[3.75rem] flex items-center gap-2 z-50",
+        className
+      ) }
+    >
       <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden">
         { githubUrl && (
           <Link
