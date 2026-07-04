@@ -7,7 +7,7 @@ import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
 import {
-  Volume2, VolumeX
+  ChevronDown, Volume2, VolumeX
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -18,11 +18,24 @@ import {
   setUiSoundSettings,
   subscribeUiSoundSettings
 } from "@/lib/uiSound";
+import SliderInput
+  from "../ContentItems/components/ControlledSliderInput/SliderInput";
+import {
+  BarLabelSegment, ToggleSwitch
+} from "../ContentItems/components/ControlChrome";
+import {
+  CONTROL_BAR_CLASS, CONTROL_CHEVRON_CLASS
+} from "../ContentItems/constants/control-bar";
 
 /**
  * Toggle + settings popover for the editor's value-change click feedback.
  * Lives in the sketch-settings actions row (desktop panel and mobile drawer),
  * next to reset / randomize — the actions it also gives a voice to.
+ *
+ * The controls reuse the shared form chrome — the Blender/Leva {@link SliderInput}
+ * bar, {@link ToggleSwitch} and the segmented select bar — so the panel looks and
+ * feels identical to every other control in the studio, even though it is driven
+ * by the UI-sound store rather than the sketch form.
  */
 export default function UiSoundSettingsButton( {
   className
@@ -47,33 +60,28 @@ export default function UiSoundSettingsButton( {
     step: number,
     onChange: ( next: number ) => void
   ) => (
-    <label className="flex flex-col gap-0.5">
-      <span className="flex justify-between">
-        <span>{label}</span>
-        <span className="opacity-60">{value}</span>
-      </span>
-      <input
-        type="range"
-        min={ min }
-        max={ max }
-        step={ step }
-        value={ value }
-        onChange={ ( e ) => onChange( Number( e.target.value ) ) }
-      />
-    </label>
+    <SliderInput
+      label={ label }
+      value={ value }
+      min={ min }
+      max={ max }
+      step={ step }
+      onChange={ onChange }
+    />
   );
 
-  const checkboxRow = (
+  const toggleRow = (
     label: string,
     checked: boolean,
     onChange: ( next: boolean ) => void
   ) => (
-    <label className="flex items-center justify-between gap-2">
+    <label className="flex cursor-pointer items-center justify-between gap-2 text-label">
       <span>{label}</span>
-      <input
-        type="checkbox"
-        checked={ checked }
-        onChange={ ( e ) => onChange( e.target.checked ) }
+      <ToggleSwitch
+        inputProps={ {
+          checked,
+          onChange: ( e ) => onChange( e.target.checked )
+        } }
       />
     </label>
   );
@@ -106,7 +114,7 @@ export default function UiSoundSettingsButton( {
         anchor="bottom end"
         className="z-[70] flex max-h-[calc(100vh-1rem)] w-64 max-w-[calc(100vw-1rem)] flex-col gap-2 overflow-y-auto rounded-xl border border-theme glass p-3 text-xs text-foreground shadow-lg [--anchor-gap:0.25rem] [--anchor-padding:0.5rem]"
       >
-        {checkboxRow(
+        {toggleRow(
           "Sound on value change",
           settings.enabled,
           ( enabled ) => update( {
@@ -114,7 +122,7 @@ export default function UiSoundSettingsButton( {
           } )
         )}
 
-        {checkboxRow(
+        {toggleRow(
           "Sound on action buttons",
           settings.actionSounds,
           ( actionSounds ) => update( {
@@ -122,10 +130,17 @@ export default function UiSoundSettingsButton( {
           } )
         )}
 
-        <label className="flex items-center justify-between gap-2">
-          <span>Click sound</span>
+        <div className={ CONTROL_BAR_CLASS }>
+          <BarLabelSegment label="Click sound" />
+
+          <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
+            <span className="truncate">{settings.preset}</span>
+            <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+          </span>
+
           <select
-            className="rounded border border-theme bg-transparent px-1 py-0.5"
+            aria-label="Click sound"
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             value={ settings.preset }
             onChange={ ( e ) =>
               update( {
@@ -141,7 +156,7 @@ export default function UiSoundSettingsButton( {
               </option>
             ) )}
           </select>
-        </label>
+        </div>
 
         {sliderRow(
           "Volume",
@@ -176,7 +191,7 @@ export default function UiSoundSettingsButton( {
           } )
         )}
 
-        {checkboxRow(
+        {toggleRow(
           "Pitch varies by field",
           settings.pitchByField,
           ( pitchByField ) => update( {
