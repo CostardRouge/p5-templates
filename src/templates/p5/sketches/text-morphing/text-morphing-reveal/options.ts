@@ -10,15 +10,15 @@ export const formValues = {
     words: "HOW?\nLIKE\nTHIS",
     font: "martian",
     size: 0.22,
-    sampleFactor: 0.15,
+    sampleFactor: 0.4,
     verticalPosition: 0.5
   },
 
   morphing: {
-    hold: 0.45,
-    easing: "easeInOutExpo",
-    scatter: 0.35,
-    scatterCurl: 0.5
+    hold: 0.4,
+    easing: "easeInOutCubic",
+    scatter: 0.93,
+    scatterCurl: 0.7
   },
 
   points: {
@@ -28,8 +28,8 @@ export const formValues = {
       255,
       255
     ],
-    strokeWeight: 10,
-    glow: 24
+    strokeWeight: 4,
+    glow: 6
   },
 
   backgroundColor: [
