@@ -14,6 +14,7 @@ import GenericObjectForm
   from "./RootSettings/components/GenericObjectForm/GenericObjectForm";
 import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvider";
 import RecordingLockBanner from "./RecordingLockBanner";
+import ImportSuccessBanner from "./ImportSuccessBanner";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
 import CaptureActions, {
   type CaptureActionsRef
@@ -55,6 +56,8 @@ type MobileStudioDrawerProps = {
   onImportOptions: ( options: SketchOption ) => void;
   bannerCloning: boolean;
   onBannerClone: () => void;
+  importBanner: string | null;
+  onImportBannerDismiss: () => void;
 };
 
 /**
@@ -76,7 +79,9 @@ export default function MobileStudioDrawer( {
   jobStatus,
   onImportOptions,
   bannerCloning,
-  onBannerClone
+  onBannerClone,
+  importBanner,
+  onImportBannerDismiss
 }: MobileStudioDrawerProps ) {
   const [
     {
@@ -264,6 +269,15 @@ export default function MobileStudioDrawer( {
               state={ capture.lifecycle.state }
               onClone={ onBannerClone }
               cloning={ bannerCloning }
+            />
+          </div>
+        )}
+
+        {importBanner && (
+          <div className="mb-2">
+            <ImportSuccessBanner
+              message={ importBanner }
+              onDismiss={ onImportBannerDismiss }
             />
           </div>
         )}
