@@ -409,11 +409,12 @@ export default function TemplateOptions( {
   // The form context above is shared either way — only the layout changes.
   const isDesktop = useMediaQuery( "(min-width: 768px)" );
 
-  // Whether each desktop side panel is docked flush to its screen edge
-  // (Figma-style) or left floating in the bottom corner. Persisted per side.
+  // The docked workspace layout (edge-to-edge rails) vs the floating layout
+  // (rounded islands in the bottom corners). Desktop-only; a global toggle.
   const {
-    docked, toggleDock
+    docked
   } = usePanelDock();
+  const dockedDesktop = isDesktop && docked;
 
   const bodyProps = {
     activeSlideIndex,
@@ -461,15 +462,16 @@ export default function TemplateOptions( {
             <div
               className={ clsx(
                 "absolute",
-                // Docked: flush to the right edge, full-height rail with the
-                // panels' outer (right) corners squared. Floating: a card
-                // anchored in the bottom-right corner.
-                docked.right
-                  ? "right-0 top-16 bottom-0 flex w-72 flex-col justify-end gap-2 p-2 pointer-events-none [&>*]:pointer-events-auto [&>*]:rounded-r-none"
+                // Docked: a flat, full-height rail flush to the right edge —
+                // one glass surface framing the viewport, the panels inside
+                // rendered flat and the rail scrolling as one. Floating: a
+                // card anchored in the bottom-right corner.
+                dockedDesktop
+                  ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col gap-2 p-2 glass border-l border-theme overflow-y-auto"
                   : "right-4 bottom-4 w-64 space-y-2"
               ) }
-              style={ {
-                maxWidth: docked.right ? "50%" : "calc(50% - 0.75rem)"
+              style={ dockedDesktop ? undefined : {
+                maxWidth: "calc(50% - 0.75rem)"
               } }
             >
               {lifecycle.isLocked && (
@@ -486,8 +488,7 @@ export default function TemplateOptions( {
                 persistedJob={ persistedJob }
                 jobStatus={ lifecycle.currentStatus }
                 onImportOptions={ handleImportOptions }
-                docked={ docked.right }
-                onToggleDock={ () => toggleDock( "right" ) }
+                docked={ dockedDesktop }
                 { ...bodyProps }
               />
 
@@ -495,6 +496,7 @@ export default function TemplateOptions( {
                 <CaptureActions
                   forwardedRef={ captureActionsRef }
                   activeSlideIndex={ activeSlideIndex }
+                  docked={ dockedDesktop }
                   { ...captureProps }
                 />
               )}
@@ -509,8 +511,7 @@ export default function TemplateOptions( {
                   "sketchSettings",
                   expanded
                 ) }
-                docked={ docked.left }
-                onToggleDock={ () => toggleDock( "left" ) }
+                docked={ dockedDesktop }
               />
             </TemplateAssetsProvider>
           </>

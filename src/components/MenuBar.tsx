@@ -180,14 +180,18 @@ function MenuBar( {
     setPushLoading
   ] = useState( false );
 
-  // Master toggle for the template editor's floating side panels. Only
-  // meaningful on the desktop editor layout — the section is hidden on
-  // other pages and on mobile (where the studio drawer replaces the panels).
+  // Master toggle for the editor's docked workspace layout. Only meaningful
+  // on the desktop editor — the section is hidden on other pages and on
+  // mobile (where the studio drawer replaces the panels).
   const {
-    allDocked, setAllDocked
+    docked, toggleDocked
   } = usePanelDock();
   const isDesktop = useMediaQuery( "(min-width: 768px)" );
   const isTemplateEditor = /^\/templates\/[^/]+\/.+/.test( pathname );
+  // In docked mode the menu button portals into the editor's top bar, where
+  // the bar supplies the surface — so drop the floating island chrome.
+  const menuInDockedBar =
+    docked && isDesktop && isTemplateEditor && Boolean( slot?.slotEl && slot.inlineVisible );
 
   useEffect(
     () => {
@@ -403,7 +407,12 @@ function MenuBar( {
       <MenuButton
         aria-label="Open menu"
         title="Menu"
-        className="relative h-9 w-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md inline-flex items-center justify-center hover:bg-hover transition-colors group"
+        className={ clsx(
+          "relative h-9 w-9 inline-flex items-center justify-center hover:bg-hover transition-colors group",
+          menuInDockedBar
+            ? "rounded-lg"
+            : "bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md"
+        ) }
       >
         <MenuIcon className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
         {hasPendingActions && (
@@ -562,15 +571,15 @@ function MenuBar( {
               } ) => (
                 <button
                   type="button"
-                  onClick={ () => setAllDocked( !allDocked ) }
+                  onClick={ toggleDocked }
                   className={ clsx(
                     itemClass,
                     focus && "bg-hover"
                   ) }
                 >
                   <PanelsLeftRight className="h-4 w-4 text-foreground/70" />
-                  <span className="flex-1 text-left">Stick panels to sides</span>
-                  {allDocked && (
+                  <span className="flex-1 text-left">Docked layout</span>
+                  {docked && (
                     <Check className="h-4 w-4 text-foreground" />
                   )}
                 </button>

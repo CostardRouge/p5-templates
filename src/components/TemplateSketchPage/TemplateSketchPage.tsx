@@ -25,9 +25,11 @@ import {
 } from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketchThumbnail";
 import useSketchDevWatch from "@/hooks/useSketchDevWatch";
 import usePageVisibility from "@/hooks/usePageVisibility";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import {
   usePanelDock
 } from "@/hooks/usePanelDock";
+import DockedTopBar from "@/components/TemplateSketchPage/DockedTopBar";
 import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import {
   STUDIO_DRAWER_HEIGHT_VAR
@@ -52,18 +54,26 @@ export default function TemplateSketchPage() {
     dispatch
   ] = useSketch();
 
-  // Reserve the docked rails' widths so the viewport (and the controls
-  // anchored to it) fit the remaining space instead of sliding under the
-  // panels. Mirrors the panels' own visibility: they only render once the
-  // sketch is loaded and outside captures, and the left panel not at all
-  // when the sketch has no form configuration.
+  // Docked workspace layout (desktop only): a squared, edge-to-edge chrome —
+  // a top bar plus left/right rails — frames the viewport, which fits the
+  // space between them. The rails' widths (w-80 / w-72) and the top bar's
+  // height (h-12) are mirrored as insets below. The left rail only appears
+  // when the sketch actually has a settings panel.
   const {
     docked
   } = usePanelDock();
+  const isDesktop = useMediaQuery( "(min-width: 768px)" );
   const hasSketchSettingsPanel = Boolean( sketchFormConfiguration && Object.keys( sketchFormConfiguration ).length > 0 );
-  const panelsVisible = sketchLoaded && !capturing;
-  const reserveLeft = panelsVisible && docked.left && hasSketchSettingsPanel;
-  const reserveRight = panelsVisible && docked.right;
+  const dockedDesktop = docked && isDesktop && sketchLoaded && !capturing;
+  const reserveLeft = dockedDesktop && hasSketchSettingsPanel;
+  const reserveRight = dockedDesktop;
+
+  // Portal target for the viewport's zoom controls when docked (they render
+  // flat inside the top bar instead of floating top-right).
+  const [
+    zoomSlot,
+    setZoomSlot
+  ] = useState<HTMLDivElement | null>( null );
 
   const [
     interactionMode,
@@ -287,16 +297,18 @@ export default function TemplateSketchPage() {
       <div
         className={ clsx(
           "w-full relative pt-12 md:pt-0",
-          // Shrink to the area between the docked rails (their widths in
-          // TemplateOptions/SketchSettings). The container resize triggers
-          // ScalableViewport's refit observer, and the zoom controls are
-          // anchored to this wrapper so they shift inward with it.
+          // Docked: inset the viewport by the top bar (h-12) and the rails
+          // (w-80 / w-72) so it fits the framed area. The container resize
+          // triggers ScalableViewport's refit observer.
+          dockedDesktop && "md:mt-12",
           reserveLeft && "md:ml-80",
           reserveRight && "md:mr-72",
-          ( reserveLeft || reserveRight ) && "md:w-auto"
+          ( reserveLeft || reserveRight || dockedDesktop ) && "md:w-auto"
         ) }
         style={ {
-          height: `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
+          height: dockedDesktop
+            ? `calc(100% - 3rem - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
+            : `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
         } }
         hidden={ !sketchLoaded }
       >
@@ -307,6 +319,8 @@ export default function TemplateSketchPage() {
           isReady={ sketchLoaded }
           disableTouchGestures={ disableTouchGestures }
           lockInteractions={ browserRecording }
+          docked={ dockedDesktop }
+          zoomControlsContainer={ zoomSlot }
           onInteractionStart={ handleInteractionStart }
           onInteractionEnd={ handleInteractionEnd }
         >
@@ -364,11 +378,14 @@ export default function TemplateSketchPage() {
       {/* Controls & options panel */}
       { sketchLoaded && !capturing && (
         <>
-          {/* Positioned against the page (not the shrunken wrapper), so shift
-              it past the docked left rail into the visible canvas area. */}
-          <EngineControls
-            className={ clsx( reserveLeft && "md:translate-x-80" ) }
-          />
+          {/* Docked: the top bar hosts the menu, engine and zoom controls,
+              flat and edge-to-edge. Floating: the engine controls are their
+              own island (menu and zoom float in the corners). */}
+          {dockedDesktop ? (
+            <DockedTopBar zoomSlotRef={ setZoomSlot } />
+          ) : (
+            <EngineControls />
+          )}
 
           <TemplateOptions
             name={ name }

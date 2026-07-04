@@ -11,7 +11,6 @@ import clsx from "clsx";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
 import ResetSettingsButton from "@/components/ResetSettingsButton";
-import PanelDockToggle from "../PanelDockToggle";
 import SaveDefaultsButton from "./SaveDefaultsButton";
 import GenerateThumbnailButton from "./GenerateThumbnailButton";
 import GeneratePreviewButton from "./GeneratePreviewButton";
@@ -36,10 +35,9 @@ type SketchSettingsProps = {
   activeSlideId?: string;
   expanded?: boolean;
   onToggle?: ( expanded: boolean ) => void;
-  /** Whether this panel is docked flush to the left screen edge. */
+  /** Render as the flat, full-height docked left rail instead of a floating
+   *  card. */
   docked?: boolean;
-  /** Toggle the panel between docked and floating. Desktop only. */
-  onToggleDock?: () => void;
 };
 
 const HEADER_ACTION_CLASS =
@@ -138,16 +136,19 @@ export function SketchSettingsActions( {
   );
 }
 
-/** Desktop floating panel (bottom-left). The mobile drawer hosts the same
- * form through {@link useSketchSettings}. */
+/**
+ * Desktop sketch-settings panel. Floating: a collapsible card bottom-left.
+ * Docked: a flat, full-height left rail (always open — the rail supplies the
+ * surface, so no card chrome or collapse-to-pill). The mobile drawer hosts the
+ * same form through {@link useSketchSettings}.
+ */
 export default function SketchSettings( {
   basePath,
   activeSlideIndex,
   activeSlideId,
   expanded,
   onToggle,
-  docked,
-  onToggleDock
+  docked
 }: SketchSettingsProps ) {
   const [
     {
@@ -166,32 +167,25 @@ export default function SketchSettings( {
     return null;
   }
 
+  // In the docked rail the panel is always open and never collapses to a pill.
+  const effectiveExpanded = docked ? true : expanded;
+
   return (
     <CollapsibleItem
-      expanded={ expanded }
-      onToggle={ onToggle }
-      swipeToCollapse
+      expanded={ effectiveExpanded }
+      onToggle={ docked ? undefined : onToggle }
+      swipeToCollapse={ !docked }
       className={ clsx(
-        "absolute z-50 flex flex-col glass shadow-lg overflow-y-auto border border-theme",
-        // Docked: flush to the left screen edge with the outer (left) corners
-        // squared. Floating: a card in the bottom-left corner.
-        docked ? "left-0" : "left-4",
-        expanded
-          ? docked
-            ? "top-16 bottom-0 w-80 rounded-l-none rounded-r-2xl"
-            : "bottom-4 w-80 max-h-[calc(80svh-5rem)] rounded-2xl"
-          : docked
-            ? "bottom-4 w-fit rounded-l-none rounded-r-full"
-            : "bottom-4 w-fit rounded-full"
+        "absolute flex flex-col glass shadow-lg overflow-y-auto border-theme",
+        docked
+          ? "z-40 left-0 top-12 bottom-0 w-80 border-r"
+          : effectiveExpanded
+            ? "z-50 left-4 bottom-4 w-80 max-h-[calc(80svh-5rem)] rounded-2xl border"
+            : "z-50 left-4 bottom-4 w-fit rounded-full border"
       ) }
-      headerContainerClassName={ clsx( expanded && "glass sticky top-0 z-10" ) }
+      headerContainerClassName={ clsx( ( effectiveExpanded || docked ) && "glass sticky top-0 z-10" ) }
       header={ ( isExpanded ) => (
-        <div
-          className={ clsx(
-            "flex w-full items-center justify-between gap-2",
-            isExpanded ? "px-3 py-2" : "px-3 py-2"
-          ) }
-        >
+        <div className="flex w-full items-center justify-between gap-2 px-3 py-2">
           <button
             type="button"
             className="flex items-center gap-1.5 text-xs text-foreground"
@@ -204,33 +198,27 @@ export default function SketchSettings( {
               {activeSlideIndex !== undefined &&
                 ` (slide ${ activeSlideIndex + 1 })`}
             </span>
-            <ChevronDown
-              className="h-3.5 w-3.5 transition-transform"
-              style={ {
-                transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
-              } }
-            />
+            {!docked && (
+              <ChevronDown
+                className="h-3.5 w-3.5 transition-transform"
+                style={ {
+                  transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)"
+                } }
+              />
+            )}
           </button>
 
-          <div
-            className="flex items-center gap-0.5"
-            onClick={ ( e ) => e.stopPropagation() }
-          >
-            {isExpanded && (
+          {isExpanded && (
+            <div
+              className="flex items-center gap-0.5"
+              onClick={ ( e ) => e.stopPropagation() }
+            >
               <SketchSettingsActions
                 config={ config }
                 basePath={ effectiveBasePath }
               />
-            )}
-
-            {onToggleDock && (
-              <PanelDockToggle
-                side="left"
-                docked={ Boolean( docked ) }
-                onToggle={ onToggleDock }
-              />
-            )}
-          </div>
+            </div>
+          )}
         </div>
       ) }
     >

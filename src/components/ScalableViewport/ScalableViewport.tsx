@@ -3,6 +3,9 @@
 import React, {
   ReactNode, useCallback, useEffect, useRef
 } from "react";
+import {
+  createPortal
+} from "react-dom";
 import ZoomControls from "@/components/ScalableViewport/components/ZoomControls";
 import {
   useTransformState
@@ -26,6 +29,8 @@ export default function ScalableViewport( {
   disable = false,
   disableTouchGestures = false,
   lockInteractions = false,
+  docked = false,
+  zoomControlsContainer = null,
   onInteractionStart,
   onInteractionEnd
 }: {
@@ -34,6 +39,10 @@ export default function ScalableViewport( {
   resolutionKey?: string;
   showZoomControls?: boolean;
   disable?: boolean;
+  // In the docked workspace layout the zoom controls render flat and portal
+  // into the top bar (`zoomControlsContainer`) instead of floating top-right.
+  docked?: boolean;
+  zoomControlsContainer?: HTMLElement | null;
   // Ignore touchscreen pan/pinch so fingers reach the content instead of
   // moving the viewport (mouse drag, wheel and zoom controls still work).
   disableTouchGestures?: boolean;
@@ -181,22 +190,34 @@ export default function ScalableViewport( {
     );
   }
 
+  const zoomControls = showZoomControls ? (
+    <ZoomControls
+      scale={ displayScale }
+      onPlus={ zoomIn }
+      onMinus={ zoomOut }
+      onFit={ () => fitToViewport( true ) }
+      onReset={ () => resetToActualPixels( true ) }
+      disabled={ lockInteractions }
+      variant={ docked ? "bar" : "floating" }
+    />
+  ) : null;
+
   return (
     <>
-      {/* Outside the overflow-hidden container so the controls can sit in
-          the top strip the page reserves for the floating bars on mobile —
-          they position against the page wrapper, whose origin stays at the
-          top of the screen regardless of that padding. */}
-      {showZoomControls && (
-        <ZoomControls
-          scale={ displayScale }
-          onPlus={ zoomIn }
-          onMinus={ zoomOut }
-          onFit={ () => fitToViewport( true ) }
-          onReset={ () => resetToActualPixels( true ) }
-          disabled={ lockInteractions }
-        />
-      )}
+      {/* Floating: outside the overflow-hidden container so the controls can
+          sit in the top strip the page reserves for the floating bars on
+          mobile — they position against the page wrapper, whose origin stays
+          at the top of the screen regardless of that padding. Docked: portal
+          the flat controls into the top bar; render nothing until its slot
+          exists so the floating island never flashes first. */}
+      {docked
+        ? zoomControls && zoomControlsContainer
+          ? createPortal(
+            zoomControls,
+            zoomControlsContainer
+          )
+          : null
+        : zoomControls}
 
       <div
         ref={ containerRef }

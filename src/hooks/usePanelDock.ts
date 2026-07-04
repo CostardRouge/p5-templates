@@ -4,31 +4,14 @@ import {
   useCallback, useSyncExternalStore
 } from "react";
 
-/** The two desktop side panels that can be docked to a screen edge. */
-export type PanelSide = "left" | "right";
+const STORAGE_KEY = "p5-templates:docked-workspace";
 
-export type PanelDockStates = Record<PanelSide, boolean>;
+const DEFAULT_DOCKED = false;
 
-const STORAGE_KEY = "p5-templates:panel-dock";
-
-const DEFAULT_STATES: PanelDockStates = {
-  left: false,
-  right: false
-};
-
-function isDockStates( value: unknown ): value is PanelDockStates {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof ( value as PanelDockStates ).left === "boolean" &&
-    typeof ( value as PanelDockStates ).right === "boolean"
-  );
-}
-
-// Module-level store: the dock state is shared across separate React trees —
-// the editor panels, the sketch viewport and the global menu bar (root layout)
-// all read the same snapshot and re-render together.
-let state: PanelDockStates = DEFAULT_STATES;
+// Module-level store: the docked flag is read by separate React trees — the
+// editor panels, the sketch viewport and the global menu bar (root layout) —
+// which all render together off the same snapshot.
+let docked: boolean = DEFAULT_DOCKED;
 let hydrated = false;
 const listeners = new Set<() => void>();
 
@@ -42,14 +25,14 @@ function hydrate() {
   try {
     const stored = localStorage.getItem( STORAGE_KEY );
 
-    if ( !stored ) {
+    if ( stored === null ) {
       return;
     }
 
     const parsed = JSON.parse( stored ) as unknown;
 
-    if ( isDockStates( parsed ) ) {
-      state = parsed;
+    if ( typeof parsed === "boolean" ) {
+      docked = parsed;
     }
   } catch( error ) {
     console.warn(
@@ -59,8 +42,8 @@ function hydrate() {
   }
 }
 
-function setDockStates( next: PanelDockStates ) {
-  state = next;
+function setDockedState( next: boolean ) {
+  docked = next;
 
   try {
     localStorage.setItem(
@@ -85,62 +68,54 @@ function subscribe( listener: () => void ) {
   };
 }
 
-function getSnapshot(): PanelDockStates {
+function getSnapshot(): boolean {
   hydrate();
 
-  return state;
+  return docked;
 }
 
 // Served during SSR and the hydration render; the persisted value applies on
 // the first post-hydration read, so server and client markup always agree.
-function getServerSnapshot(): PanelDockStates {
-  return DEFAULT_STATES;
+function getServerSnapshot(): boolean {
+  return DEFAULT_DOCKED;
 }
 
-/** Test-only: clear the module-level store between test cases. */
+/** Test-only: reset the module-level store between test cases. */
 export function __resetPanelDock() {
-  state = DEFAULT_STATES;
+  docked = DEFAULT_DOCKED;
   hydrated = false;
 }
 
 /**
- * Whether each desktop floating panel is docked flush to its screen side
- * (Figma-style) or left floating in the bottom corner. Persisted in
- * localStorage, keyed by side, and shared across every consumer — the panels
- * themselves, the sketch viewport (which reserves the rail widths) and the
- * menu bar's master toggle.
+ * Whether the desktop template editor is in the docked "workspace" layout —
+ * a squared, edge-to-edge chrome (top bar + left/right rails framing the
+ * viewport) — versus the default floating layout of rounded islands.
+ *
+ * A single global flag, persisted in localStorage and shared across every
+ * consumer: the editor panels, the sketch viewport, and the menu bar toggle
+ * that switches modes. Desktop-only; callers gate the visual on their own
+ * media query.
  */
 export function usePanelDock() {
-  const docked = useSyncExternalStore(
+  const value = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot
   );
 
-  const toggleDock = useCallback(
-    ( side: PanelSide ) => {
-      setDockStates( {
-        ...getSnapshot(),
-        [ side ]: !getSnapshot()[ side ]
-      } );
-    },
+  const setDocked = useCallback(
+    ( next: boolean ) => setDockedState( next ),
     []
   );
 
-  const setAllDocked = useCallback(
-    ( dockedAll: boolean ) => {
-      setDockStates( {
-        left: dockedAll,
-        right: dockedAll
-      } );
-    },
+  const toggleDocked = useCallback(
+    () => setDockedState( !getSnapshot() ),
     []
   );
 
   return {
-    docked,
-    allDocked: docked.left && docked.right,
-    toggleDock,
-    setAllDocked
+    docked: value,
+    setDocked,
+    toggleDocked
   };
 }

@@ -17,7 +17,6 @@ import {
 } from "@/types/recording.types";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RootSettings from "./RootSettings/RootSettings";
-import PanelDockToggle from "./PanelDockToggle";
 import TemplateAssetsProvider from "./TemplateAssetsProvider/TemplateAssetsProvider";
 
 // The "global content" and "slides" sections start collapsed (see
@@ -63,10 +62,9 @@ type OptionsPanelProps = OptionsPanelBodyProps & {
   persistedJob?: JobModel;
   jobStatus?: string;
   onImportOptions: ( options: SketchOption ) => void;
-  /** Whether this panel is docked flush to the right screen edge. */
+  /** Flat variant for the docked rail: drop the panel's own glass card and let
+   *  the rail scroll instead of the body. */
   docked?: boolean;
-  /** Toggle the panel between docked and floating. Desktop only. */
-  onToggleDock?: () => void;
 };
 
 /**
@@ -223,7 +221,6 @@ export default function OptionsPanel( {
   jobStatus,
   onImportOptions,
   docked,
-  onToggleDock,
   ...bodyProps
 }: OptionsPanelProps ) {
   const {
@@ -235,7 +232,12 @@ export default function OptionsPanel( {
   return (
     <CollapsibleItem
       swipeToCollapse
-      className="flex flex-col gap-1 glass p-2 border border-theme rounded-2xl shadow-lg w-full"
+      className={ clsx(
+        "flex flex-col gap-1 w-full",
+        docked
+          ? "px-1"
+          : "glass p-2 border border-theme rounded-2xl shadow-lg"
+      ) }
       contentClassName="flex flex-col gap-1 min-h-0"
       header={ (
         expanded, title
@@ -273,18 +275,12 @@ export default function OptionsPanel( {
               } }
             />
           </button>
-
-          {onToggleDock && (
-            <PanelDockToggle
-              side="right"
-              docked={ Boolean( docked ) }
-              onToggle={ onToggleDock }
-            />
-          )}
         </div>
       ) }
     >
-      <OptionsPanelBody { ...bodyProps } />
+      {/* In the docked rail the rail itself scrolls, so the body renders its
+          full height instead of scrolling internally. */}
+      <OptionsPanelBody scrollable={ !docked } { ...bodyProps } />
     </CollapsibleItem>
   );
 }

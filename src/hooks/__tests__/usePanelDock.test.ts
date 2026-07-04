@@ -10,7 +10,7 @@ import {
   __resetPanelDock, usePanelDock
 } from "../usePanelDock";
 
-const STORAGE_KEY = "p5-templates:panel-dock";
+const STORAGE_KEY = "p5-templates:docked-workspace";
 
 describe(
   "usePanelDock",
@@ -21,61 +21,40 @@ describe(
     } );
 
     it(
-      "defaults both sides to floating",
+      "defaults to the floating layout",
       () => {
         const {
           result
         } = renderHook( () => usePanelDock() );
 
-        expect( result.current.docked ).toEqual( {
-          left: false,
-          right: false
-        } );
-        expect( result.current.allDocked ).toBe( false );
+        expect( result.current.docked ).toBe( false );
       }
     );
 
     it(
-      "toggles a single side without affecting the other",
+      "toggles the docked layout",
       () => {
         const {
           result
         } = renderHook( () => usePanelDock() );
 
-        act( () => result.current.toggleDock( "left" ) );
+        act( () => result.current.toggleDocked() );
+        expect( result.current.docked ).toBe( true );
 
-        expect( result.current.docked ).toEqual( {
-          left: true,
-          right: false
-        } );
-
-        act( () => result.current.toggleDock( "left" ) );
-
-        expect( result.current.docked.left ).toBe( false );
+        act( () => result.current.toggleDocked() );
+        expect( result.current.docked ).toBe( false );
       }
     );
 
     it(
-      "docks and floats both sides through setAllDocked",
+      "sets the docked layout explicitly",
       () => {
         const {
           result
         } = renderHook( () => usePanelDock() );
 
-        act( () => result.current.setAllDocked( true ) );
-
-        expect( result.current.docked ).toEqual( {
-          left: true,
-          right: true
-        } );
-        expect( result.current.allDocked ).toBe( true );
-
-        act( () => result.current.setAllDocked( false ) );
-
-        expect( result.current.docked ).toEqual( {
-          left: false,
-          right: false
-        } );
+        act( () => result.current.setDocked( true ) );
+        expect( result.current.docked ).toBe( true );
       }
     );
 
@@ -85,47 +64,38 @@ describe(
         const first = renderHook( () => usePanelDock() );
         const second = renderHook( () => usePanelDock() );
 
-        act( () => first.result.current.toggleDock( "right" ) );
+        act( () => first.result.current.setDocked( true ) );
 
-        expect( second.result.current.docked.right ).toBe( true );
+        expect( second.result.current.docked ).toBe( true );
       }
     );
 
     it(
-      "persists dock state to localStorage",
+      "persists the docked flag to localStorage",
       () => {
         const {
           result
         } = renderHook( () => usePanelDock() );
 
-        act( () => result.current.toggleDock( "right" ) );
+        act( () => result.current.setDocked( true ) );
 
-        expect( JSON.parse( localStorage.getItem( STORAGE_KEY ) ?? "{}" ) ).toEqual( {
-          left: false,
-          right: true
-        } );
+        expect( localStorage.getItem( STORAGE_KEY ) ).toBe( "true" );
       }
     );
 
     it(
-      "restores persisted dock state on mount",
+      "restores the persisted flag on mount",
       () => {
         localStorage.setItem(
           STORAGE_KEY,
-          JSON.stringify( {
-            left: true,
-            right: false
-          } )
+          "true"
         );
 
         const {
           result
         } = renderHook( () => usePanelDock() );
 
-        expect( result.current.docked ).toEqual( {
-          left: true,
-          right: false
-        } );
+        expect( result.current.docked ).toBe( true );
       }
     );
 
@@ -134,19 +104,14 @@ describe(
       () => {
         localStorage.setItem(
           STORAGE_KEY,
-          JSON.stringify( {
-            left: "yes"
-          } )
+          "\"yes\""
         );
 
         const {
           result
         } = renderHook( () => usePanelDock() );
 
-        expect( result.current.docked ).toEqual( {
-          left: false,
-          right: false
-        } );
+        expect( result.current.docked ).toBe( false );
       }
     );
   }
