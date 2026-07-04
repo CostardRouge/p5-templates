@@ -146,6 +146,58 @@ describe(
     );
 
     test(
+      "resumes the host before emitting \"stop\", so a listener's own play/pause call has the last word",
+      async() => {
+        const totalFrames = 2;
+        const calls: string[] = [];
+        const host = makeHost(
+          totalFrames,
+          30,
+          calls
+        );
+        const addFrameCounter = {
+          count: 0
+        };
+        const receivedParams = {
+          value: null as Parameters<FrameEncoderFactory>[ 0 ] | null
+        };
+        const recorder = new AsyncLoopRecorder(
+          host,
+          "webm",
+          makeEncoderFactory(
+            addFrameCounter,
+            receivedParams
+          )
+        );
+
+        recorder.on(
+          "stop",
+          () => {
+            // Simulates the browser-recorder hook's cleanup(), which decides
+            // the final playback state from its own snapshot and must not be
+            // clobbered by a resume() firing after this listener returns.
+            calls.push( "listener-pause-decision" );
+            host.pause();
+          }
+        );
+
+        await recorder.start();
+        await recorder.stop();
+
+        const resumeIdx = calls.indexOf( "resume" );
+        const stopListenerIdx = calls.indexOf( "listener-pause-decision" );
+
+        expect( resumeIdx ).toBeGreaterThanOrEqual( 0 );
+        expect( stopListenerIdx ).toBeGreaterThanOrEqual( 0 );
+        expect( resumeIdx ).toBeLessThan( stopListenerIdx );
+
+        // The listener's decision, made after resume(), must be the final
+        // call — not overwritten by a later resume().
+        expect( calls[ calls.length - 1 ] ).toBe( "pause" );
+      }
+    );
+
+    test(
       "leaves deterministic mode + resumes the host when setup fails",
       async() => {
         const calls: string[] = [];

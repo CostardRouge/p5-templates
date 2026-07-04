@@ -213,6 +213,13 @@ export class AsyncLoopRecorder extends BaseRecorder {
           stage: "finalizing"
         }
       );
+
+      // Tear down (and resume the host) BEFORE emitting "stop" — listeners
+      // (e.g. the recording hook's cleanup) decide the final play/pause
+      // state synchronously on this event, and that decision must be the
+      // last word. Emitting first would let `resumeHost()` below run after
+      // the listener's decision and silently override it back to playing.
+      this.teardown();
       this.emit(
         "stop",
         result
@@ -221,6 +228,8 @@ export class AsyncLoopRecorder extends BaseRecorder {
       return result;
     } catch( error ) {
       const err = error instanceof Error ? error : new Error( String( error ) );
+
+      this.teardown();
 
       if ( this.cancelled ) {
         this.emit(
@@ -236,20 +245,27 @@ export class AsyncLoopRecorder extends BaseRecorder {
 
       throw err;
     } finally {
-      // Always exit capture mode — leaving it on would silence the next
-      // interactive session as `trigger()` would keep logging instead of
-      // playing.
-      if ( this.audioCaptureActive ) {
-        getAudioBridge()?.endCapture();
-        this.audioCaptureActive = false;
-      }
-
-      this._isRecording = false;
-      this.encoder?.dispose();
-      this.encoder = null;
-      this.exitDeterministic();
-      this.resumeHost();
+      // Safety net for any path that throws before reaching the explicit
+      // `teardown()` calls above — every step inside is idempotent, so a
+      // second invocation here is a no-op in the normal case.
+      this.teardown();
     }
+  }
+
+  private teardown(): void {
+    // Always exit capture mode — leaving it on would silence the next
+    // interactive session as `trigger()` would keep logging instead of
+    // playing.
+    if ( this.audioCaptureActive ) {
+      getAudioBridge()?.endCapture();
+      this.audioCaptureActive = false;
+    }
+
+    this._isRecording = false;
+    this.encoder?.dispose();
+    this.encoder = null;
+    this.exitDeterministic();
+    this.resumeHost();
   }
 
   stop(): Promise<RecorderResult> {
