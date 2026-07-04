@@ -29,6 +29,11 @@ import {
   mergeSlideOverride
 } from "@/lib/effectiveSlideSettings";
 
+import {
+  paintBase,
+  isDelegated as isBackgroundDelegated
+} from "../backgroundLayer.js";
+
 // Safe modulo that wraps negatives too
 const wrap = (
   i, n
@@ -41,17 +46,45 @@ const slides = {
     events.register(
       "pre-draw",
       () => {
-        if ( options?.slides && options?.slides.length ) {
+        // The engine owns the per-frame clear whenever something must survive
+        // under the sketch: slides (historical), back-phase content (would
+        // smear over the previous frame otherwise), or a delegated background
+        // (the sketch's own clearing background() is suppressed).
+        if (
+          ( options?.slides && options?.slides.length ) ||
+          slides.hasBackPhaseContent ||
+          isBackgroundDelegated()
+        ) {
           getP5()?.clear();
         }
+      }
+    );
+
+    // Back pass: registered after the clear handler so back items land on the
+    // freshly cleared canvas, and running in pre-draw so the sketch draws on
+    // top of them.
+    events.register(
+      "pre-draw",
+      () => {
+        paintBase();
+        slides.renderCurrentSlide( "back" );
+        slides.render(
+          options,
+          GLOBAL_CONTENT_SCOPE,
+          "back"
+        );
       }
     );
 
     events.register(
       "post-draw",
       () => {
-        slides.renderCurrentSlide();
-        slides.render( options );
+        slides.renderCurrentSlide( "front" );
+        slides.render(
+          options,
+          GLOBAL_CONTENT_SCOPE,
+          "front"
+        );
         slides.renderMontageOverlay();
         slides.renderMontageTitle();
         slides.updateMontageSound();
@@ -101,6 +134,15 @@ const slides = {
 
   get hasSlides() {
     return this.count > 0;
+  },
+
+  // True when any back-phase item exists in global content or on the current
+  // slide — those need the engine clear to avoid smearing across frames.
+  get hasBackPhaseContent() {
+    const hasBack = ( list ) =>
+      Array.isArray( list ) && list.some( ( item ) => item?.phase === "back" );
+
+    return hasBack( options?.content ) || hasBack( this.current?.content );
   },
 
   get previous() {
@@ -203,21 +245,23 @@ const slides = {
   },
 
   render(
-    source, scope = GLOBAL_CONTENT_SCOPE
+    source, scope = GLOBAL_CONTENT_SCOPE, phase = "front"
   ) {
     // Pass the source straight through. For global content `source` is the
     // live options proxy; destructuring/spreading it would drop every key
     // (its target is empty and it has only a get trap), silently discarding
     // global `content`. freeLayout reads `.content` via the get trap instead.
-    // `scope` tells the content-drag layer which list is rendering.
+    // `scope` tells the content-drag layer which list is rendering; `phase`
+    // selects the front/back pass (see freeLayout).
     // ( _layouts[ source?.layout ] ?? _layouts.auto )( source );
     _layouts.free(
       source,
-      scope
+      scope,
+      phase
     );
   },
 
-  renderCurrentSlide() {
+  renderCurrentSlide( phase = "front" ) {
     const slide = this.current;
 
     if ( !slide ) {
@@ -230,7 +274,8 @@ const slides = {
       slideContentScope( wrap(
         Number( this.index ) || 0,
         this.count
-      ) )
+      ) ),
+      phase
     );
   },
 

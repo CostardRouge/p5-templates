@@ -19,15 +19,22 @@ import {
 // `scope` says which content list is being rendered ("global" or "slide:<n>")
 // so an in-flight on-canvas drag (see contentDrag.js) can substitute the live
 // position of the grabbed item without touching the option store every frame.
-// Each item's render is bracketed with begin/endItemBounds so the renderer's
+// `phase` selects which items this pass draws: "front" (default) runs in
+// post-draw on top of the sketch, "back" runs in pre-draw behind it. Items
+// without a phase are treated as "front" (the historical stacking). Each
+// item's render is bracketed with begin/endItemBounds so the renderer's
 // reportItemBounds() call lands on the right (scope, index) — that visible
 // rectangle is what the drag layer hit-tests.
 export default function freeLayout(
-  options, scope
+  options, scope, phase = "front"
 ) {
   options?.content?.forEach( (
     rawItem, index
   ) => {
+    if ( ( rawItem?.phase ?? "front" ) !== phase ) {
+      return;
+    }
+
     const item = resolveDraggedItem(
       scope,
       index,
