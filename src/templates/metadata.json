@@ -3322,5 +3322,53 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-06-30T11:39:20.946Z",
     "ctime": "2026-06-30T11:38:45.050Z"
+  },
+  {
+    "name": "hand-tracking-v15-puppet-type",
+    "engine": "p5",
+    "category": "hand-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-04T04:03:55.190Z",
+    "ctime": "2026-07-04T04:03:29.334Z"
+  },
+  {
+    "name": "text-morphing-reveal",
+    "engine": "p5",
+    "category": "text-morphing",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-04T04:04:48.282Z",
+    "ctime": "2026-07-04T04:04:26.938Z"
+  },
+  {
+    "name": "voice-portrait",
+    "engine": "p5",
+    "category": "audio",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-04T04:05:55.070Z",
+    "ctime": "2026-07-04T04:05:34.646Z"
+  },
+  {
+    "name": "hand-theremin",
+    "engine": "p5",
+    "category": "audio",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-04T04:07:14.522Z",
+    "ctime": "2026-07-04T04:06:56.402Z"
   }
 ]
