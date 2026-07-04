@@ -39,6 +39,9 @@
       "@/gsap/*": [
         "./src/sketches/gsap/*"
       ],
+      "@/cavalry/*": [
+        "./src/sketches/cavalry/*"
+      ],
       "@/html/*": [
         "./src/sketches/html/*"
       ],
