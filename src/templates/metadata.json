@@ -3292,7 +3292,7 @@
     "engine": "p5",
     "category": "letter-grid",
     "hasSketchForm": true,
-    "hasThumbnail": false,
+    "hasThumbnail": true,
     "hasPreview": true,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
