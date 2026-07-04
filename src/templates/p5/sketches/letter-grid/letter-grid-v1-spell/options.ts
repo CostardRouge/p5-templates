@@ -1,8 +1,6 @@
 import {
   fontSelectOptions
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 const ALPHABET_OPTIONS = [
   {
@@ -92,11 +90,7 @@ export const formValues = {
     8,
     12,
     255
-  ] as number[],
-  title: {
-    ...titleDefaultValues,
-    show: false
-  }
+  ] as number[]
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -245,7 +239,6 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

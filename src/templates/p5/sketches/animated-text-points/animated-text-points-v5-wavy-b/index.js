@@ -9,7 +9,6 @@ import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const drawCross = (
   p, position, size
@@ -222,6 +221,4 @@ sketch.draw( async() => {
       p.pop();
     }
   } );
-
-  renderTitle();
 } );

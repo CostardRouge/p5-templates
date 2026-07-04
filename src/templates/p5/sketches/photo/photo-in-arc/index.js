@@ -2,7 +2,6 @@ import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
-import renderTitle from "../../../utils/title/renderTitle";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -77,6 +76,4 @@ sketch.draw( () => {
       }
     }
   }
-
-  renderTitle();
 } );

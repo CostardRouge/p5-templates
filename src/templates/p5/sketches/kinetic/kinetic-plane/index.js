@@ -7,7 +7,6 @@ import sketch, {
 import graphics from "@/p5/utils/graphics.js";
 import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import mediapipe from "@/p5/utils/mediapipe/mediapipe.js";
 import {
@@ -348,8 +347,6 @@ sketch.draw( () => {
       p.height
     );
   }
-
-  renderTitle( options.sketch?.title );
 
   // Shared debug/demo overlay (crosshairs, markers, camera preview, legend),
   // gated by `interaction.visualization` — off by default so the 3D scene

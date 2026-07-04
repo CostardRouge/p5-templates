@@ -13,7 +13,6 @@ import mediapipe, {
 import {
   drawSegmentationMask
 } from "@/p5/utils/segmentation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   setSketchOptions,
   subscribeSketchOptions
@@ -771,7 +770,6 @@ sketch.draw( () => {
   );
 
   // Title sits behind the cut-out subject: backdrop → title → subject.
-  renderTitle();
 
   drawSubject( p );
   drawMarker( p );

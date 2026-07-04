@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 // Default values only
@@ -17,9 +15,7 @@ export const formValues = {
   // Grid
   rows: 4,
   columns: 3,
-  blur: 9,
-
-  title: titleDefaultValues
+  blur: 9
 };
 
 // UI configuration only
@@ -65,7 +61,5 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
-  },
-
-  title: titleFormConfiguration
+  }
 };

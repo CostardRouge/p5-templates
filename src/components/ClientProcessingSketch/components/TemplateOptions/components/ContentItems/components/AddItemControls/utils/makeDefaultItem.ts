@@ -8,7 +8,8 @@ import {
   TextItemSchema,
   ContentItem,
   VisualItemSchema,
-  QrCodeItemSchema
+  QrCodeItemSchema,
+  TitleItemSchema
 } from "@/types/sketch.types";
 
 import {
@@ -21,6 +22,10 @@ export default function makeDefaultItem( type: ItemKind ): ContentItem {
       return TextItemSchema.parse( {
         type,
         content: "new text"
+      } );
+    case "title":
+      return TitleItemSchema.parse( {
+        type
       } );
     case "image":
       return ImageItemSchema.parse( {

@@ -2,7 +2,6 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   createInstancedFieldRenderer
 } from "@/p5/utils/noiseFieldGpu.js";
@@ -220,6 +219,4 @@ sketch.draw( ( time ) => {
       uOpacityMax: colors.opacityMax ?? 15
     }
   } );
-
-  renderTitle();
 } );

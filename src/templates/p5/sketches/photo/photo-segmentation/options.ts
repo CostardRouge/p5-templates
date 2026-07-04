@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
@@ -62,24 +60,6 @@ export const formValues = {
     ],
     radius: 61,
     weight: 3
-  },
-  title: {
-    ...titleDefaultValues,
-    blend: "source-over",
-    fill: [
-      255,
-      255,
-      255,
-      255
-    ],
-    stroke: [
-      0,
-      0,
-      0,
-      0
-    ],
-    displayFrom: 0.0,
-    displayTo: 1
   },
   backgroundColor: [
     246,
@@ -289,6 +269,5 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Canvas color"
-  },
-  title: titleFormConfiguration
+  }
 };

@@ -5,7 +5,6 @@ import sketch, {
 import animation from "@/p5/utils/animation.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -400,6 +399,4 @@ sketch.draw( () => {
       }
     }
   } );
-
-  renderTitle();
 } );

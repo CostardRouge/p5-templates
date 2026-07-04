@@ -9,7 +9,6 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GLSL vertex shader (GLSL ES 1.00, works in both WebGL1 and WebGL2)
@@ -517,7 +516,6 @@ sketch.draw( (
     );
 
     if ( !ok ) {
-      renderTitle();
       return;
     }
   }
@@ -823,6 +821,4 @@ sketch.draw( (
   );
   g.clear();
   g.reset();
-
-  renderTitle();
 } );

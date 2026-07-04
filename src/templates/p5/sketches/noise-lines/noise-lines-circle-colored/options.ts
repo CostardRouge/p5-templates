@@ -1,5 +1,3 @@
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 
 import {
   createFixedOrVariableOption, createVariableOption
@@ -76,8 +74,7 @@ export const formValues = {
     0,
     0,
     0
-  ],
-  title: titleDefaultValues
+  ]
 };
 
 // UI configuration only
@@ -187,7 +184,6 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

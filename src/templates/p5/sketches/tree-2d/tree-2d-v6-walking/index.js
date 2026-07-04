@@ -9,7 +9,6 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const PALETTES = {
   rainbow: colors.rainbow,
@@ -333,6 +332,4 @@ sketch.draw( (
       }
     }
   }
-
-  renderTitle();
 } );

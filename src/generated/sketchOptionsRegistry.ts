@@ -23,6 +23,7 @@ export const sketchOptionsJsonLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v8-growing": () => import( "@/p5/sketches/hand-capture/hand-tracking-v8-growing/options.json" ),
   "p5:hand-capture/hand-tracking-v9-smear": () => import( "@/p5/sketches/hand-capture/hand-tracking-v9-smear/options.json" ),
   "p5:photo/photo-3d-cylinder": () => import( "@/p5/sketches/photo/photo-3d-cylinder/options.json" ),
+  "p5:photo/photo-segmentation": () => import( "@/p5/sketches/photo/photo-segmentation/options.json" ),
   "p5:text/text-animation-typein-typeout": () => import( "@/p5/sketches/text/text-animation-typein-typeout/options.json" ),
 };
 

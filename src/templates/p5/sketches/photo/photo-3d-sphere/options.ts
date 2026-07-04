@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 // Default values only
@@ -42,9 +40,7 @@ export const formValues = {
       12
     ],
     variableBackgroundColor: false
-  },
-
-  title: titleDefaultValues
+  }
 };
 
 // UI configuration only
@@ -197,7 +193,5 @@ export const formConfiguration: Record<string, any> = {
         component: "checkbox"
       }
     }
-  },
-
-  title: titleFormConfiguration
+  }
 };

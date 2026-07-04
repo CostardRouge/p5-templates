@@ -1,6 +1,7 @@
 export type ItemKind =
   | "visual"
   | "text"
+  | "title"
   | "meta"
   | "specs"
   | "hud"

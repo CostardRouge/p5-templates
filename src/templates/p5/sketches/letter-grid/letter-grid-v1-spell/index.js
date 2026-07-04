@@ -5,7 +5,6 @@ import sketch, {
 import easing from "@/p5/utils/easing.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   LETTERS,
   clamp,
@@ -306,6 +305,4 @@ sketch.draw( () => {
     softness: vignetteCfg.softness ?? 0.5,
     color: vignetteCfg.color ?? background
   } );
-
-  renderTitle();
 } );

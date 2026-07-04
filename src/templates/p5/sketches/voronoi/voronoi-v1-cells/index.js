@@ -3,7 +3,6 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   initInteraction,
   getPointers
@@ -135,7 +134,6 @@ sketch.draw( () => {
 
   if ( sites.length === 0 ) {
     drawInteractionOverlay( interaction );
-    renderTitle();
 
     return;
   }
@@ -265,5 +263,4 @@ sketch.draw( () => {
   }
 
   drawInteractionOverlay( interaction );
-  renderTitle();
 } );

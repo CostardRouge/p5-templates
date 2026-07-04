@@ -5,7 +5,6 @@ import sketch, {
 
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import createPeaksFieldRenderer, {
   easingId
@@ -328,6 +327,4 @@ sketch.draw( () => {
       uHueOffset: hueOffset
     }
   } );
-
-  renderTitle();
 } );

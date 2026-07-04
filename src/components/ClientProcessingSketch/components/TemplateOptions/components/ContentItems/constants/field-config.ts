@@ -1212,6 +1212,109 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     }
     // We can add more fields here and they will auto-generate
   },
+  title: {
+    content: {
+      label: "Content",
+      component: "textarea"
+    },
+    size: {
+      label: "Size",
+      component: "slider",
+      step: 1,
+      min: 1,
+      max: 1024
+    },
+    fill: {
+      label: "Fill",
+      component: "color"
+    },
+    stroke: {
+      label: "Stroke",
+      component: "color"
+    },
+    strokeWeight: {
+      label: "Stroke weight",
+      component: "slider",
+      min: 0,
+      max: 20,
+      step: 0.5
+    },
+    font: {
+      label: "Font",
+      component: "select",
+      options: fontSelectOptions
+    },
+    position: {
+      label: "Position",
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
+    },
+    alignment: {
+      label: "Alignment",
+      component: "nested-object",
+      fields: {
+        horizontal: {
+          label: "Horizontal alignment",
+          component: "select",
+          options: HorizontalAlign.options.map( ( horizontalAlignOption ) => ( {
+            value: horizontalAlignOption,
+            label: horizontalAlignOption
+          } ) )
+        },
+        vertical: {
+          label: "Vertical alignment",
+          component: "select",
+          options: VerticalAlign.options.map( ( verticalAlignOption ) => ( {
+            value: verticalAlignOption,
+            label: verticalAlignOption
+          } ) )
+        }
+      }
+    },
+    margin: {
+      label: "Margin",
+      component: "nested-object",
+      fields: {
+        horizontal: {
+          label: "Horizontal",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        },
+        vertical: {
+          label: "Vertical",
+          component: "slider",
+          step: 0.01,
+          min: 0,
+          max: 1
+        }
+      }
+    },
+    blend: {
+      label: "Blend",
+      component: "select",
+      options: blendSelectOptions
+    },
+    displayFrom: {
+      label: "Display from (0-1)",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    displayTo: {
+      label: "Display to (0-1)",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.01
+    }
+  },
   background: {
     background: {
       label: "Background color",

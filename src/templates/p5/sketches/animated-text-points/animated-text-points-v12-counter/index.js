@@ -10,7 +10,6 @@ import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
 import gridMask from "@/p5/utils/gridMask.js";
 import drawBackgroundPattern from "@/p5/utils/backgroundPattern.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup(
   undefined,
@@ -277,6 +276,4 @@ sketch.draw( async() => {
     );
     p.pop();
   } );
-
-  renderTitle();
 } );

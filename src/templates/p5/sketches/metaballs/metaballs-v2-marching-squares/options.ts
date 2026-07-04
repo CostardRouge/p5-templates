@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import {
   PALETTE_OPTIONS,
   ballsValues,
@@ -39,11 +37,7 @@ export const formValues = {
     8,
     14,
     255
-  ],
-  title: {
-    ...titleDefaultValues,
-    show: false
-  }
+  ]
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -105,6 +99,5 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
-  },
-  title: titleFormConfiguration
+  }
 };

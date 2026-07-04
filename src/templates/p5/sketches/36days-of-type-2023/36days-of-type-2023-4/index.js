@@ -9,7 +9,6 @@ import gridMask from "@/p5/utils/gridMask.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import addScreenPositionFunction from "@/utils/addScreenPositionFunction.js";
 import {
@@ -110,8 +109,6 @@ sketch.draw( async() => {
 
   p.clear();
   p.background( ...getBackgroundColor() );
-
-  renderTitle( options.sketch?.title );
 
   const size = options.sketch?.shape?.size * p.width ?? p.width;
   const sampleFactor = options.sketch?.shape?.sampleFactor ?? 0.1;
