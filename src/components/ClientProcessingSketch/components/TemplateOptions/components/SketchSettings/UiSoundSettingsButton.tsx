@@ -104,7 +104,7 @@ export default function UiSoundSettingsButton( {
 
       <PopoverPanel
         anchor="bottom end"
-        className="z-50 flex max-h-[calc(100vh-1rem)] w-64 max-w-[calc(100vw-1rem)] flex-col gap-2 overflow-y-auto rounded-xl border border-theme glass p-3 text-xs text-foreground shadow-lg [--anchor-gap:0.25rem] [--anchor-padding:0.5rem]"
+        className="z-[70] flex max-h-[calc(100vh-1rem)] w-64 max-w-[calc(100vw-1rem)] flex-col gap-2 overflow-y-auto rounded-xl border border-theme glass p-3 text-xs text-foreground shadow-lg [--anchor-gap:0.25rem] [--anchor-padding:0.5rem]"
       >
         {checkboxRow(
           "Sound on value change",
