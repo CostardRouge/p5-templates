@@ -60,6 +60,7 @@
     "sharp": "^0.34.5",
     "tailwind-merge": "^3.4.0",
     "tar": "^7.4.3",
+    "three": "^0.180.0",
     "uuid": "^11.1.0",
     "web-push": "^3.6.7",
     "zod": "^3.25.76"
@@ -74,6 +75,7 @@
     "@types/p5": "^1.7.7",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.180.0",
     "@types/web-push": "^3.6.3",
     "chokidar": "^4.0.3",
     "eslint": "^9.26.0",
