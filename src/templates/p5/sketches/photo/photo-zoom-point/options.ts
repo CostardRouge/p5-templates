@@ -2,12 +2,34 @@ import titleDefaultValues from "@/p5/utils/title/titleDefaultValues.js";
 import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration.js";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
+const testImagePaths = await getTestImagePaths();
+
 export const formValues = {
-  photo: ( await getTestImagePaths() )[ 2 ],
-  point: {
-    x: 0.5,
-    y: 0.5
-  },
+  // One entry per photo: the image plus the point (UV, 0–1) it zooms into.
+  // Photos are shown one after another, each getting its own zoom in/out.
+  items: [
+    {
+      photo: "/assets/images/test/DSC02023%20Medium.jpeg",
+      point: {
+        x: 0.9182064242978011,
+        y: 0.40390829006230894
+      }
+    },
+    {
+      photo: "/assets/images/test/DSC02644%20Medium.jpeg",
+      point: {
+        x: 0.6311057817804419,
+        y: 0.42686397666971193
+      }
+    },
+    {
+      photo: "/assets/images/test/DSC02930%20Medium.jpeg",
+      point: {
+        x: 0.4961392227346368,
+        y: 0.39759251288904973
+      }
+    }
+  ],
 
   zoom: {
     count: 1,
@@ -45,19 +67,30 @@ export const formValues = {
 };
 
 export const formConfiguration: Record<string, any> = {
-  photo: {
-    component: "image",
-    label: "Photo"
-  },
-
-  point: {
-    component: "vector2d",
-    label: "Point",
-    allowNegative: false,
-    min: 0,
-    max: 1,
-    step: 0.01,
-    yDown: true
+  items: {
+    component: "item-list",
+    label: "Photos",
+    minItems: 1,
+    itemConfig: {
+      component: "nested-object",
+      label: "Photo",
+      initialExpanded: true,
+      fields: {
+        photo: {
+          component: "image",
+          label: "Photo"
+        },
+        point: {
+          component: "vector2d",
+          label: "Zoom point",
+          allowNegative: false,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          yDown: true
+        }
+      }
+    }
   },
 
   zoom: {
@@ -65,7 +98,7 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     fields: {
       count: {
-        label: "Count",
+        label: "Zooms per photo",
         component: "slider",
         min: 0,
         max: 10
