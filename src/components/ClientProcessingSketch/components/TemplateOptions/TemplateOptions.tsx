@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import clsx from "clsx";
 import type React from "react";
 import {
   useEffect, useRef, useState
@@ -41,6 +42,9 @@ import {
 import {
   useCollapsibleStates, CollapsibleProvider
 } from "./hooks/useCollapsibleStates";
+import {
+  usePanelDock
+} from "@/hooks/usePanelDock";
 import {
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
@@ -450,6 +454,13 @@ export default function TemplateOptions( {
   // The form context above is shared either way — only the layout changes.
   const isDesktop = useMediaQuery( "(min-width: 768px)" );
 
+  // The docked workspace layout (edge-to-edge rails) vs the floating layout
+  // (rounded islands in the bottom corners). Desktop-only; a global toggle.
+  const {
+    docked
+  } = usePanelDock();
+  const dockedDesktop = isDesktop && docked;
+
   const bodyProps = {
     activeSlideIndex,
     slideFields,
@@ -494,8 +505,17 @@ export default function TemplateOptions( {
         {isDesktop ? (
           <>
             <div
-              className="w-64 absolute right-4 bottom-4 space-y-2"
-              style={ {
+              className={ clsx(
+                "absolute",
+                // Docked: a flat, full-height rail flush to the right edge —
+                // one glass surface framing the viewport, the panels inside
+                // rendered flat and the rail scrolling as one. Floating: a
+                // card anchored in the bottom-right corner.
+                dockedDesktop
+                  ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col gap-2 p-2 glass border-l border-theme overflow-y-auto"
+                  : "right-4 bottom-4 w-64 space-y-2"
+              ) }
+              style={ dockedDesktop ? undefined : {
                 maxWidth: "calc(50% - 0.75rem)"
               } }
             >
@@ -520,6 +540,7 @@ export default function TemplateOptions( {
                 persistedJob={ persistedJob }
                 jobStatus={ lifecycle.currentStatus }
                 onImportOptions={ handleImportOptions }
+                docked={ dockedDesktop }
                 { ...bodyProps }
               />
 
@@ -527,6 +548,7 @@ export default function TemplateOptions( {
                 <CaptureActions
                   forwardedRef={ captureActionsRef }
                   activeSlideIndex={ activeSlideIndex }
+                  docked={ dockedDesktop }
                   { ...captureProps }
                 />
               )}
@@ -541,6 +563,7 @@ export default function TemplateOptions( {
                   "sketchSettings",
                   expanded
                 ) }
+                docked={ dockedDesktop }
               />
             </TemplateAssetsProvider>
           </>

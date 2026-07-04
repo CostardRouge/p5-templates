@@ -6,6 +6,7 @@ import {
 import React, {
   forwardRef, useImperativeHandle, useState
 } from "react";
+import clsx from "clsx";
 import fetchDownload from "@/utils/fetchDownload";
 import VideoPreviewModal from "@/components/VideoPreviewModal";
 import {
@@ -55,6 +56,9 @@ type CaptureActionsProps = {
   lifecycle: RecordingLifecycle;
   recordingProgress: RecordingProgressionStream | null;
   subscribeToRecordingStatus: ( jobId: JobId ) => void;
+  // Flat variant for the docked rail: the rail supplies the surface, so drop
+  // this component's own glass card (background, border, rounding, shadow).
+  docked?: boolean;
   // next/dynamic does not forward refs, so when CaptureActions is loaded as a
   // lazy chunk the parent passes its imperative-handle ref through this prop
   // instead of `ref`. The native `ref` still works for static call sites.
@@ -73,6 +77,7 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     lifecycle,
     recordingProgress,
     subscribeToRecordingStatus,
+    docked = false,
     forwardedRef
   },
   ref
@@ -703,7 +708,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
 
   return (
     <>
-      <div className="flex flex-col gap-1 glass px-2 py-2 border border-theme rounded-2xl shadow-lg">
+      <div
+        className={ clsx(
+          "flex flex-col gap-1 px-2 py-2",
+          !docked && "glass border border-theme rounded-2xl shadow-lg"
+        ) }
+      >
         <div className="flex flex-col gap-1 h-auto w-full">
           {/* Browser Recording - Only on Compatible Devices */}
           {!isRecording && browserRecordingSupported && recorderCapabilities && (

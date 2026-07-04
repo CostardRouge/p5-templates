@@ -23,8 +23,16 @@ type ThumbnailSaveState = "idle" | "saving" | "done" | "error";
  *
  * Uses the `SketchEngine` instance from context rather than calling
  * p5-specific globals like `window.toggleLoop()`.
+ *
+ * `variant` "floating" (default) renders the rounded island anchored to the
+ * top-left of the viewport; "bar" renders the buttons flat for hosting inside
+ * the docked workspace top bar, which supplies the surface.
  */
-export function EngineControls( ) {
+export function EngineControls( {
+  variant = "floating"
+}: {
+  variant?: "floating" | "bar";
+} = {} ) {
   const [
     {
       engineId, name, engine, looping, browserRecording
@@ -175,95 +183,109 @@ export function EngineControls( ) {
       ? `${ githubRepoUrl }/blob/main/src/templates/${ engineId }/sketches/${ sketchPath }/index.${ entryExtension }`
       : undefined;
 
+  const controls = (
+    <>
+      { githubUrl && (
+        <Link
+          href={ githubUrl }
+          target="_blank"
+          rel="noopener noreferrer"
+          title="View source code on GitHub"
+          aria-label="View source code on GitHub"
+          className="hidden md:inline-flex h-full px-3 hover:bg-hover transition-colors border-r border-border group items-center justify-center"
+        >
+          <Github className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
+        </Link>
+      ) }
+      <button
+        onClick={ () => {
+          if ( looping ) {
+            engine?.pause();
+          } else {
+            engine?.play();
+          }
+
+          dispatch( {
+            type: "SET_LOOPING",
+            payload: !looping
+          } );
+        } }
+        disabled={ browserRecording }
+        title={
+          browserRecording
+            ? "Locked while recording"
+            : looping
+              ? "Pause animation"
+              : "Play animation"
+        }
+        aria-label={ looping ? "Pause animation" : "Play animation" }
+        className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+      >
+        {looping ? (
+          <Pause className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
+        ) : (
+          <Play className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
+        )}
+      </button>
+
+      <button
+        title={
+          thumbnailSaveState === "error"
+            ? ( thumbnailErrorMessage ?? "Error" )
+            : isDev
+              ? "Save canvas as image (double-click: save as sketch thumbnail 1x + 2x)"
+              : "Save canvas as image"
+        }
+        aria-label="Save canvas as image"
+        disabled={ thumbnailSaveState === "saving" }
+        onClick={ handleCaptureClick }
+        onDoubleClick={ handleSaveCanvasAsThumbnail }
+        className="inline-flex h-full px-3 hover:bg-hover transition-colors border-r border-border md:border-r-0 group items-center justify-center"
+      >
+        {thumbnailSaveState === "saving" ? (
+          <Loader2 className="h-4 w-4 text-yellow-400/70 animate-spin" />
+        ) : (
+          <Camera
+            className={ clsx(
+              "h-4 w-4 transition-colors",
+              {
+                "text-foreground/70 group-hover:text-foreground":
+                    thumbnailSaveState === "idle",
+                "text-green-400":
+                    thumbnailSaveState === "done",
+                "text-red-400":
+                    thumbnailSaveState === "error"
+              }
+            ) }
+          />
+        )}
+      </button>
+
+      {/* Mobile shortcut: opens the studio drawer on its Export tab. */}
+      <button
+        title="Record / export"
+        aria-label="Open recording and export options"
+        onClick={ () =>
+          window.dispatchEvent( new CustomEvent( OPEN_EXPORT_DRAWER_EVENT ) ) }
+        className="h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center md:hidden"
+      >
+        <Circle className="h-4 w-4 fill-red-500/80 text-red-500/80 transition-colors group-hover:fill-red-500 group-hover:text-red-500" />
+      </button>
+    </>
+  );
+
+  if ( variant === "bar" ) {
+    return (
+      <div className="flex items-center h-9 overflow-hidden">
+        {controls}
+      </div>
+    );
+  }
+
   return (
     <div className="absolute top-2 left-[3.25rem] md:top-4 md:left-[3.75rem] flex items-center gap-2 z-50">
       <div className="flex items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md overflow-hidden">
-        { githubUrl && (
-          <Link
-            href={ githubUrl }
-            target="_blank"
-            rel="noopener noreferrer"
-            title="View source code on GitHub"
-            aria-label="View source code on GitHub"
-            className="hidden md:inline-flex h-full px-3 hover:bg-hover transition-colors border-r border-border group items-center justify-center"
-          >
-            <Github className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
-          </Link>
-        ) }
-        <button
-          onClick={ () => {
-            if ( looping ) {
-              engine?.pause();
-            } else {
-              engine?.play();
-            }
-
-            dispatch( {
-              type: "SET_LOOPING",
-              payload: !looping
-            } );
-          } }
-          disabled={ browserRecording }
-          title={
-            browserRecording
-              ? "Locked while recording"
-              : looping
-                ? "Pause animation"
-                : "Play animation"
-          }
-          aria-label={ looping ? "Pause animation" : "Play animation" }
-          className="h-full px-3 hover:bg-hover transition-colors border-r border-border group inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-        >
-          {looping ? (
-            <Pause className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
-          ) : (
-            <Play className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
-          )}
-        </button>
-
-        <button
-          title={
-            thumbnailSaveState === "error"
-              ? ( thumbnailErrorMessage ?? "Error" )
-              : isDev
-                ? "Save canvas as image (double-click: save as sketch thumbnail 1x + 2x)"
-                : "Save canvas as image"
-          }
-          aria-label="Save canvas as image"
-          disabled={ thumbnailSaveState === "saving" }
-          onClick={ handleCaptureClick }
-          onDoubleClick={ handleSaveCanvasAsThumbnail }
-          className="inline-flex h-full px-3 hover:bg-hover transition-colors border-r border-border md:border-r-0 group items-center justify-center"
-        >
-          {thumbnailSaveState === "saving" ? (
-            <Loader2 className="h-4 w-4 text-yellow-400/70 animate-spin" />
-          ) : (
-            <Camera
-              className={ clsx(
-                "h-4 w-4 transition-colors",
-                {
-                  "text-foreground/70 group-hover:text-foreground":
-                    thumbnailSaveState === "idle",
-                  "text-green-400":
-                    thumbnailSaveState === "done",
-                  "text-red-400":
-                    thumbnailSaveState === "error"
-                }
-              ) }
-            />
-          )}
-        </button>
-
-        {/* Mobile shortcut: opens the studio drawer on its Export tab. */}
-        <button
-          title="Record / export"
-          aria-label="Open recording and export options"
-          onClick={ () =>
-            window.dispatchEvent( new CustomEvent( OPEN_EXPORT_DRAWER_EVENT ) ) }
-          className="h-full px-3 hover:bg-hover transition-colors group inline-flex items-center justify-center md:hidden"
-        >
-          <Circle className="h-4 w-4 fill-red-500/80 text-red-500/80 transition-colors group-hover:fill-red-500 group-hover:text-red-500" />
-        </button>
+        {controls}
       </div>
     </div>
   );
