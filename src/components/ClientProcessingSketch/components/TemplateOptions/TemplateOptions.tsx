@@ -8,6 +8,9 @@ import {
   FormProvider, useFieldArray, useWatch
 } from "react-hook-form";
 import initOptions from "@/utils/initOptions";
+import {
+  withUiSoundSuppressed
+} from "@/lib/uiSound";
 import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import type {
   JobModel
@@ -188,11 +191,13 @@ export default function TemplateOptions( {
         if ( origin === "react" ) {
           return;
         }
-        syncLeafValues(
+        // Programmatic sync — the sketch pushed these values, not the user.
+        // Suppress UI-sound clicks so opening/loading a sketch stays silent.
+        withUiSoundSuppressed( () => syncLeafValues(
           opts,
           getValues(),
           ""
-        );
+        ) );
       } );
     },
     [
