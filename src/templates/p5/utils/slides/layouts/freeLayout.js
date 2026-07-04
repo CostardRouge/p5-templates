@@ -3,6 +3,7 @@ import drawSlideMeta from "../common/drawSlideMeta.js";
 import drawSlideSpecs from "../common/drawSlideSpecs.js";
 import drawSlideHud from "../common/drawSlideHud.js";
 import drawSlideText from "../common/drawSlideText.js";
+import drawSlideTitle from "../common/drawSlideTitle.js";
 import drawSlideImage from "../common/drawSlideImage.js";
 import drawSlideImages from "../common/drawSlideImages.js";
 import drawSlideBackground from "../common/drawSlideBackground.js";
@@ -54,6 +55,9 @@ export default function freeLayout(
         break;
       case "text":
         drawSlideText( item );
+        break;
+      case "title":
+        drawSlideTitle( item );
         break;
       case "images":
         drawSlideImages(

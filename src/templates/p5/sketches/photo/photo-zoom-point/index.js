@@ -13,7 +13,6 @@ import mappers from "@/p5/utils/mappers.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
   photoGraphics: null,
@@ -343,6 +342,4 @@ sketch.draw( () => {
     );
   }
   p.pop();
-
-  renderTitle();
 } );

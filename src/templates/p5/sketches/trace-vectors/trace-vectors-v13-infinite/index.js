@@ -2,7 +2,6 @@ import options from "@/p5/utils/options.js";
 import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
   getAlphabet, getFont, loopedTime
@@ -42,6 +41,4 @@ sketch.draw( (
     alphabet: text,
     time
   } );
-
-  renderTitle();
 } );

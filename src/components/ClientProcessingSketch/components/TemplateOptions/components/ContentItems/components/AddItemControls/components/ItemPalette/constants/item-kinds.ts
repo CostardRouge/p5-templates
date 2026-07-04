@@ -1,5 +1,6 @@
 import {
   Type as TextIcon,
+  Heading as TitleIcon,
   Info as MetaIcon,
   Image as ImageIcon,
   Layers as StackIcon,
@@ -17,6 +18,7 @@ import {
 export const ITEM_ORDER: ItemKind[] = [
   "visual",
   "text",
+  "title",
   "image",
   "images-stack",
   "meta",
@@ -31,6 +33,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Text",
     Icon: TextIcon,
     description: "Add a text block"
+  },
+  title: {
+    label: "Title",
+    Icon: TitleIcon,
+    description: "Headline with a timed display window (falls back to the sketch name)"
   },
   meta: {
     label: "Meta",

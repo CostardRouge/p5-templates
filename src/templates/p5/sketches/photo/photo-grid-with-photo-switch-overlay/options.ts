@@ -1,5 +1,3 @@
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
@@ -15,9 +13,7 @@ export const formValues = {
     246,
     235,
     225
-  ],
-
-  title: titleDefaultValues
+  ]
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -50,8 +46,6 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-
-  title: titleFormConfiguration,
 
   backgroundColor: {
     component: "color",

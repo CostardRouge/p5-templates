@@ -3,7 +3,6 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   createInstancedFieldRenderer,
   computeFieldRange,
@@ -219,6 +218,4 @@ sketch.draw( () => {
       uWeightEasing: easingId( weightEasing )
     }
   } );
-
-  renderTitle();
 } );

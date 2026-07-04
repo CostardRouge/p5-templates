@@ -8,7 +8,6 @@ import colors from "@/p5/utils/colors.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import * as common from "@/p5/utils/common.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -306,6 +305,4 @@ sketch.draw( async(
       // })
     }
   } );
-
-  renderTitle();
 } );

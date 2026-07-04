@@ -2,7 +2,6 @@ import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -41,6 +40,4 @@ sketch.draw( () => {
     fill: options.sketch?.fill ?? true,
     img: imageAtIndex
   } );
-
-  renderTitle();
 } );

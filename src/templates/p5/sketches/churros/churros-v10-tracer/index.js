@@ -5,7 +5,6 @@ import sketch, {
 
 import converters from "@/p5/utils/converters.js";
 import mappers from "@/p5/utils/mappers.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 sketch.setup( () => {} );
 
@@ -292,6 +291,4 @@ sketch.draw( ( time ) => {
     p.endShape();
     p.pop();
   }
-
-  renderTitle();
 } );

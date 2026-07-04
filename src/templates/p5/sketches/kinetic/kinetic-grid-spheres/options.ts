@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import {
   interactionFormValues,
   interactionFormConfiguration
@@ -45,7 +43,6 @@ export const formValues = {
     easing: "easeOutBack"
   },
   interaction: interactionDefaults,
-  title: titleDefaultValues,
   color: {
     opacityFactor: 1.5,
     fillAlphaStart: 230,
@@ -156,7 +153,6 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

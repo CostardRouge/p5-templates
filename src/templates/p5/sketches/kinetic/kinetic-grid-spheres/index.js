@@ -7,7 +7,6 @@ import grid from "@/p5/utils/grid.js";
 import graphics from "@/p5/utils/graphics.js";
 import colors from "@/p5/utils/colors.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
   initInteraction,
@@ -68,8 +67,6 @@ sketch.draw( () => {
 
   p.clear();
   p.background( ...getBackgroundColor() );
-
-  renderTitle( options.sketch?.title );
 
   const columns = options.sketch?.grid?.columns ?? 65;
   const rows = ( columns * p.height ) / p.width;

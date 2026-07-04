@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
@@ -17,7 +15,6 @@ export const formValues = {
   mask: {
     distance: 0.015
   },
-  title: titleDefaultValues,
   animation: {
     variableDepth: false,
     rotationCount: 1,
@@ -266,7 +263,6 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  title: titleFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

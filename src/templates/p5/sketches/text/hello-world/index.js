@@ -1,7 +1,6 @@
 import options from "@/p5/utils/options.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -13,8 +12,6 @@ sketch.draw( () => {
   p.background( ...( options.sketch?.backgroundColor ?? [
     0
   ] ) );
-
-  renderTitle( options.sketch?.text ?? options.name );
 
   p.strokeWeight( 2 );
   p.stroke( p.color( ...( options.sketch?.font?.stroke ?? [

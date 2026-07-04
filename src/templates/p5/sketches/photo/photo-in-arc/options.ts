@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
@@ -10,8 +8,6 @@ export const formValues = {
     235,
     225
   ],
-
-  title: titleDefaultValues,
 
   arc: {
     anchorX: 0.5,
@@ -136,7 +132,5 @@ export const formConfiguration: Record<string, any> = {
         label: "Point color"
       }
     }
-  },
-
-  title: titleFormConfiguration
+  }
 };

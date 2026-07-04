@@ -1,8 +1,5 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
-  text: titleDefaultValues,
   backgroundColor: [
     0,
     0,
@@ -11,7 +8,6 @@ export const formValues = {
 };
 
 export const formConfiguration: Record<string, any> = {
-  text: titleFormConfiguration,
   backgroundColor: {
     component: "color",
     label: "Background color"

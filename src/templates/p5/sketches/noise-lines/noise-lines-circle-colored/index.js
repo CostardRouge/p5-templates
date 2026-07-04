@@ -2,7 +2,6 @@ import options from "@/p5/utils/options.js";
 import animation from "@/p5/utils/animation.js";
 import colors from "@/p5/utils/colors.js";
 import sketch from "@/p5/utils/sketch.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getFixedOrVariableOption, getVariableOptionValue
 } from "@/p5/utils/common.js";
@@ -178,6 +177,4 @@ sketch.draw( () => {
   }
 
   p.pop();
-
-  renderTitle( options.sketch?.title );
 } );

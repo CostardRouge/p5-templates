@@ -7,7 +7,6 @@ import converters from "@/p5/utils/converters.js";
 import iterators from "@/p5/utils/iterators.js";
 import animation from "@/p5/utils/animation.js";
 import graphics from "@/p5/utils/graphics.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   drawer,
   computeOpacityFactor,
@@ -273,6 +272,4 @@ sketch.draw( ( time ) => {
     0,
     targets
   );
-
-  renderTitle();
 } );

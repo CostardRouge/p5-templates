@@ -1,8 +1,6 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-import titleFormConfiguration from "@/templates/p5/utils/title/titleFormConfiguration";
-import titleDefaultValues from "@/templates/p5/utils/title/titleDefaultValues";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 // Default values only
@@ -18,9 +16,7 @@ export const formValues = {
   ],
   textColor: [
     0
-  ],
-
-  title: titleDefaultValues
+  ]
 };
 
 // UI configuration only
@@ -39,7 +35,5 @@ export const formConfiguration: Record<string, any> = {
   textColor: {
     component: "color",
     label: "Text color"
-  },
-
-  title: titleFormConfiguration
+  }
 };

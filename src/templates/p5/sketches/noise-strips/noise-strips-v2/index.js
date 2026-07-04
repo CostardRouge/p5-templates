@@ -8,7 +8,6 @@ import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const PALETTES = {
   rainbow: colors.rainbow,
@@ -212,6 +211,4 @@ sketch.draw( async() => {
       p.pop();
     }
   );
-
-  renderTitle();
 } );

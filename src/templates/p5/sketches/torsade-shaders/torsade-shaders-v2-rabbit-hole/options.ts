@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 export const formValues = {
   layout: {
@@ -36,11 +34,7 @@ export const formValues = {
     0,
     0,
     0
-  ],
-  title: {
-    ...titleDefaultValues,
-    show: false
-  }
+  ]
 };
 
 // UI configuration only
@@ -226,6 +220,5 @@ export const formConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
-  },
-  title: titleFormConfiguration
+  }
 };

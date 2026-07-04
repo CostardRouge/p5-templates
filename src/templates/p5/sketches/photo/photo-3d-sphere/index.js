@@ -6,7 +6,6 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 /* ------------------------------------------------------------------ */
 /*  Photo sphere carousel                                             */
@@ -437,7 +436,6 @@ function drawTitle() {
     -p.width / 2,
     -p.height / 2
   );
-  renderTitle();
   p.pop();
 }
 

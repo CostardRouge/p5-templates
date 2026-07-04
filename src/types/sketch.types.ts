@@ -470,6 +470,65 @@ export const TextItemSchema = z.object( {
     } )
 } );
 
+// A "title" content-item — the former per-sketch `options.sketch.title`
+// (titleDefaultValues / renderTitle) promoted to a first-class content item so
+// it can be added to the global or per-slide content list like any other item.
+// Keeps the title's distinctive behaviour: an optional display window
+// (displayFrom..displayTo, a fraction of the animation loop) and a fallback to
+// the (uppercased, hyphen-broken) sketch name when `content` is left empty.
+export const TitleItemSchema = z.object( {
+  type: z.literal( "title" ),
+  content: z.string().default( "" ),
+  size: z.number().positive()
+    .default( 128 ),
+  fill: RGBA.default( [
+    255,
+    255,
+    255
+  ] ),
+  stroke: RGBA.default( [
+    0,
+    0,
+    0
+  ] ),
+  strokeWeight: z.number().min( 0 )
+    .default( 2 ),
+  font: z.string().default( "martian" ),
+  blend: Blend.default( "exclusion" ),
+  position: Vec2.default( {
+    x: 0,
+    y: 0
+  } ),
+  alignment: z
+    .object( {
+      horizontal: HorizontalAlign,
+      vertical: VerticalAlign
+    } )
+    .default( {
+      horizontal: "center",
+      vertical: "center"
+    } ),
+  margin: z
+    .object( {
+      horizontal: z.number().min( 0 )
+        .max( 1 )
+        .default( 0.015 ),
+      vertical: z.number().min( 0 )
+        .max( 1 )
+        .default( 0.015 )
+    } )
+    .default( {
+      horizontal: 0.015,
+      vertical: 0.015
+    } ),
+  displayFrom: z.number().min( 0 )
+    .max( 1 )
+    .default( 0 ),
+  displayTo: z.number().min( 0 )
+    .max( 1 )
+    .default( 0.2 )
+} );
+
 export const ImageItemAnimations = z.discriminatedUnion(
   "name",
   [
@@ -906,6 +965,7 @@ export const ContentItemSchema = z.discriminatedUnion(
     MetaItemSchema,
     SpecsItemSchema,
     TextItemSchema,
+    TitleItemSchema,
     ImagesStackItemSchema,
     ImageItemSchema,
     VisualItemSchema,

@@ -7,7 +7,6 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
   getAlphabet, drawGrid, getFont, loopedTime, drawShape
@@ -149,6 +148,4 @@ sketch.draw( (
     false
   );
   p.pop();
-
-  renderTitle();
 } );

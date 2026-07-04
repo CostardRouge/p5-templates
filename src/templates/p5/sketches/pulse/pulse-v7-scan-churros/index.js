@@ -3,7 +3,6 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import converters from "@/p5/utils/converters.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   SpiralBase, rebuildGrid
 } from "../_shared.js";
@@ -195,6 +194,4 @@ sketch.draw( ( time ) => {
     time,
     index
   ) );
-
-  renderTitle();
 } );

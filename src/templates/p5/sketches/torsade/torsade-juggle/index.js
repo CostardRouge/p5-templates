@@ -4,7 +4,6 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import converters from "@/p5/utils/converters.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   SpiralBase, rebuildGrid
 } from "../_shared.js";
@@ -237,6 +236,4 @@ sketch.draw( ( time ) => {
     index,
     sketchState.shapes.length
   ) );
-
-  renderTitle();
 } );

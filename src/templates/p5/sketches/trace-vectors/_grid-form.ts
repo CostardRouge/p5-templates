@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 import {
   textForm,
   textStyleForm,
@@ -160,8 +158,7 @@ export const gridTraceFormConfiguration: Record<string, any> = {
   backgroundColor: {
     component: "color",
     label: "Background color"
-  },
-  title: titleFormConfiguration
+  }
 };
 
 export const gridTraceFormValuesBase = {
@@ -202,9 +199,5 @@ export const gridTraceFormValuesBase = {
   loop: {
     timeScale: 1,
     timeOffset: 0
-  },
-  title: {
-    ...titleDefaultValues,
-    show: false
   }
 };

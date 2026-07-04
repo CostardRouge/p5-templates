@@ -3,7 +3,6 @@ import easing from "@/p5/utils/easing.js";
 import sketch from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
 import string from "@/p5/utils/string.js";
-import renderTitle from "@/p5/utils/title/renderTitle";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -638,8 +637,6 @@ sketch.draw( () => {
   p.background( ...settings.backgroundColor );
 
   if ( settings.faces.length === 0 ) {
-    renderTitle();
-
     return;
   }
 
@@ -704,6 +701,4 @@ sketch.draw( () => {
     0,
     0
   );
-
-  renderTitle();
 } );

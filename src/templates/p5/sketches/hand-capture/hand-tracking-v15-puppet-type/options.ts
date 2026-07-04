@@ -5,8 +5,6 @@ import {
   interactionFormValues,
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 // Default values only — exposed at runtime as `options.sketch.*`
 export const formValues = {
@@ -93,9 +91,7 @@ export const formValues = {
   overlay: {
     show: true,
     subtitle: "puppet type · hand tracking v15"
-  },
-
-  title: titleDefaultValues
+  }
 };
 
 // UI configuration only
@@ -311,7 +307,5 @@ export const formConfiguration: Record<string, any> = {
         label: "Subtitle"
       }
     }
-  },
-
-  title: titleFormConfiguration
+  }
 };

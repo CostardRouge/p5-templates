@@ -4,7 +4,6 @@ import sketch, {
 } from "@/p5/utils/sketch.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   createInstancedFieldRenderer
 } from "@/p5/utils/noiseFieldGpu.js";
@@ -166,6 +165,4 @@ sketch.draw( () => {
       }
     }
   } );
-
-  renderTitle();
 } );

@@ -1,8 +1,6 @@
 import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
-import titleDefaultValues from "@/templates/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/templates/p5/utils/title/titleFormConfiguration";
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
@@ -20,8 +18,6 @@ export const formValues = {
       255
     ]
   },
-
-  title: titleDefaultValues,
 
   cylinder: {
     vertical: false,
@@ -58,8 +54,6 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-
-  title: titleFormConfiguration,
 
   cylinder: {
     label: "Cylinder",

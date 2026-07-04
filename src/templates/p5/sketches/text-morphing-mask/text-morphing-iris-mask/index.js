@@ -4,7 +4,6 @@ import sketch from "@/p5/utils/sketch.js";
 import easing from "@/p5/utils/easing.js";
 import string from "@/p5/utils/string.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 import {
   getP5
 } from "@/p5/utils/sketch.js";
@@ -188,7 +187,6 @@ sketch.draw( () => {
   const words = resolveWords();
 
   if ( words.length === 0 ) {
-    renderTitle();
     return;
   }
 
@@ -221,7 +219,6 @@ sketch.draw( () => {
   );
 
   if ( slots === 0 ) {
-    renderTitle();
     return;
   }
 
@@ -323,6 +320,4 @@ sketch.draw( () => {
       }
     }
   }
-
-  renderTitle();
 } );

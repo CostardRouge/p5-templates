@@ -8,7 +8,6 @@ import easing from "@/p5/utils/easing.js";
 import string from "@/p5/utils/string.js";
 import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 // ── text-morphing-reveal ───────────────────────────────────────────────────
 // The reveal format: a list of words morphs through itself — question into
@@ -44,8 +43,6 @@ sketch.draw( () => {
     .filter( ( word ) => word !== "" );
 
   if ( words.length === 0 ) {
-    renderTitle();
-
     return;
   }
 
@@ -112,8 +109,6 @@ sketch.draw( () => {
     morphing,
     points
   );
-
-  renderTitle();
 } );
 
 /**

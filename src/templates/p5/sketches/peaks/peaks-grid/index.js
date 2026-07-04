@@ -10,7 +10,6 @@ import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import graphics from "@/p5/utils/graphics.js";
 import animation from "@/p5/utils/animation.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 const sketchState = {
   threeDimensionGraphics: null
@@ -219,6 +218,4 @@ sketch.draw( (
   );
   sketchState.threeDimensionGraphics.clear();
   sketchState.threeDimensionGraphics.reset();
-
-  renderTitle();
 } );

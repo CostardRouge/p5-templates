@@ -1,5 +1,3 @@
-import titleDefaultValues from "@/p5/utils/title/titleDefaultValues";
-import titleFormConfiguration from "@/p5/utils/title/titleFormConfiguration";
 
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
@@ -18,9 +16,7 @@ export const formValues = {
 
   rotateSpeed: 1,
   easing: "easeInOutExpo",
-  repeatImages: true,
-
-  title: titleDefaultValues
+  repeatImages: true
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -65,7 +61,5 @@ export const formConfiguration: Record<string, any> = {
   easing: {
     component: "easing",
     label: "Rotation easing"
-  },
-
-  title: titleFormConfiguration
+  }
 };

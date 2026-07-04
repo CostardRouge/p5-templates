@@ -6,7 +6,6 @@ import colors from "@/p5/utils/colors.js";
 import easing from "@/p5/utils/easing.js";
 import mappers from "@/p5/utils/mappers.js";
 import traceLetters from "@/p5/utils/traceLetters.js";
-import renderTitle from "@/p5/utils/title/renderTitle.js";
 
 import {
   getAlphabet, drawGrid, drawShape, getFont, loopedTime
@@ -157,6 +156,4 @@ sketch.draw( (
   p.strokeWeight( options.sketch.extremes?.weight ?? 4 );
   drawShape( end );
   drawShape( start );
-
-  renderTitle();
 } );
