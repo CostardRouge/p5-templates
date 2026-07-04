@@ -66,16 +66,19 @@ const MODE_ORDER: ReadonlyArray<RecordingMode> = [
   "realtime"
 ];
 
-// Dev-only groups: a webm capture that, instead of downloading, is saved
-// back over the sketch's committed preview.
+// Dev-only group: a webm capture that, instead of downloading, is saved
+// back over the sketch's committed preview. Both flavours share one compact
+// group so the dropdown stays narrow and never pushes the record button off
+// screen.
+//   • async    — a deterministic frame-by-frame capture of the sketch's loop.
+//     No lead-in, no frame drops — the front-end stand-in for the headless
+//     generator, for when it isn't available.
 //   • realtime — after a 3-2-1 lead-in, a wall-clock capture. Lets
 //     interactive sketches (webcam / mic / hand tracking) get a real preview
 //     the headless generator can't produce.
-//   • async   — a deterministic frame-by-frame capture of the sketch's loop.
-//     No lead-in, no frame drops — the front-end stand-in for the headless
-//     generator, for when it isn't available.
-const PREVIEW_GROUP_LABEL = "Record preview (dev)";
-const PREVIEW_ASYNC_GROUP_LABEL = "Record preview (dev, async)";
+const PREVIEW_GROUP_LABEL = "DEV: previews recording";
+const PREVIEW_ASYNC_OPTION_LABEL = "Async";
+const PREVIEW_REALTIME_OPTION_LABEL = "Realtime";
 const IS_DEV = process.env.NODE_ENV === "development";
 
 // One <option> per group entry. The composite value carries everything
@@ -87,12 +90,18 @@ type Choice = {
   intent: RecordingIntent;
 };
 
+// One <option> in the dropdown. The label is what shows when collapsed, so
+// keep it short; the choice carries everything `start()` needs.
+type RecordingOption = {
+  key: string;
+  label: string;
+  choice: Choice;
+};
+
 type RecordingGroup = {
   key: string;
   label: string;
-  mode: RecordingMode;
-  intent: RecordingIntent;
-  formats: RecordingFormat[];
+  options: RecordingOption[];
 };
 
 function encodeChoice( c: Choice ): string {
@@ -139,36 +148,55 @@ export default function BrowserRecordingButton( {
         .map( ( mode ) => ( {
           key: mode,
           label: MODE_LABEL[ mode ],
-          mode,
-          intent: "download" as RecordingIntent,
-          formats: MODE_FORMATS[ mode ].filter( ( f ) => supported.has( f ) )
+          options: MODE_FORMATS[ mode ]
+            .filter( ( f ) => supported.has( f ) )
+            .map( ( f ) => ( {
+              key: `${ mode }-${ f }`,
+              label: formatChoiceLabel(
+                MODE_LABEL[ mode ],
+                f
+              ),
+              choice: {
+                format: f,
+                mode,
+                intent: "download" as RecordingIntent
+              }
+            } ) )
         } ) )
-        .filter( ( g ) => g.formats.length > 0 );
+        .filter( ( g ) => g.options.length > 0 );
 
       if ( IS_DEV && supported.has( "webm" ) ) {
-        modeGroups.push( {
-          key: "preview",
-          label: PREVIEW_GROUP_LABEL,
-          mode: "realtime",
-          intent: "preview",
-          formats: [
-            "webm"
-          ]
-        } );
+        const previewOptions: RecordingOption[] = [];
 
         // The async flavour needs the engine to render arbitrary frames
         // reproducibly — otherwise the deterministic loop can't be captured.
         if ( capabilities.supportsDeterministicCapture ) {
-          modeGroups.push( {
+          previewOptions.push( {
             key: "preview-async",
-            label: PREVIEW_ASYNC_GROUP_LABEL,
-            mode: "async-loop",
-            intent: "preview",
-            formats: [
-              "webm"
-            ]
+            label: PREVIEW_ASYNC_OPTION_LABEL,
+            choice: {
+              format: "webm",
+              mode: "async-loop",
+              intent: "preview"
+            }
           } );
         }
+
+        previewOptions.push( {
+          key: "preview-realtime",
+          label: PREVIEW_REALTIME_OPTION_LABEL,
+          choice: {
+            format: "webm",
+            mode: "realtime",
+            intent: "preview"
+          }
+        } );
+
+        modeGroups.push( {
+          key: "preview",
+          label: PREVIEW_GROUP_LABEL,
+          options: previewOptions
+        } );
       }
 
       return modeGroups;
@@ -182,15 +210,16 @@ export default function BrowserRecordingButton( {
   const defaultChoice: Choice = useMemo(
     () => {
       const preferredMode = capabilities.defaultMode;
-      const group =
-        groups.find( ( g ) => g.intent === "download" && g.mode === preferredMode ) ??
-          groups.find( ( g ) => g.intent === "download" ) ??
-          groups[ 0 ];
+      const options = groups.flatMap( ( g ) => g.options );
+      const match =
+        options.find( ( o ) => o.choice.intent === "download" && o.choice.mode === preferredMode ) ??
+          options.find( ( o ) => o.choice.intent === "download" ) ??
+          options[ 0 ];
 
-      return {
-        mode: group?.mode ?? "async-loop",
-        format: group?.formats[ 0 ] ?? "webm",
-        intent: group?.intent ?? "download"
+      return match?.choice ?? {
+        mode: "async-loop",
+        format: "webm",
+        intent: "download"
       };
     },
     [
@@ -243,24 +272,17 @@ export default function BrowserRecordingButton( {
           id="recording-format"
           value={ encodeChoice( choice ) }
           onChange={ ( e ) => setChoice( decodeChoice( e.target.value ) ) }
-          className="flex-1 px-2 py-2 bg-background text-foreground text-xs focus:outline-none"
+          className="flex-1 min-w-0 px-2 py-2 bg-background text-foreground text-xs focus:outline-none"
           aria-label="Recording format"
         >
           {groups.map( ( group ) => (
             <optgroup key={ group.key } label={ group.label }>
-              {group.formats.map( ( f ) => (
+              {group.options.map( ( option ) => (
                 <option
-                  key={ `${ group.key }-${ f }` }
-                  value={ encodeChoice( {
-                    format: f,
-                    mode: group.mode,
-                    intent: group.intent
-                  } ) }
+                  key={ option.key }
+                  value={ encodeChoice( option.choice ) }
                 >
-                  {formatChoiceLabel(
-                    group.label,
-                    f
-                  )}
+                  {option.label}
                 </option>
               ) )}
             </optgroup>
@@ -276,7 +298,7 @@ export default function BrowserRecordingButton( {
           ) }
           aria-label="Start recording"
           title="Start recording"
-          className="border-l px-2 text-foreground hover:bg-hover transition-colors inline-flex items-center justify-center"
+          className="flex-shrink-0 border-l px-2 text-foreground hover:bg-hover transition-colors inline-flex items-center justify-center"
         >
           <span
             aria-hidden="true"
