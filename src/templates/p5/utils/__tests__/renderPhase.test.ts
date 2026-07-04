@@ -1,4 +1,6 @@
 /**
+ * @jest-environment jsdom
+ *
  * Tests for the per-item render phase ("back" = behind the sketch, "front" =
  * on top — the historical default) and the opt-in delegated background.
  *
@@ -7,6 +9,10 @@
  * items on top. backgroundLayer captures a delegated sketch's first opaque
  * background() call so the engine can repaint it under back-phase items
  * instead of letting it erase them.
+ *
+ * freeLayout's real signature is (options, scope, phase) — scope drives the
+ * on-canvas drag system (contentDrag.js) and is irrelevant here, so these
+ * tests pass it through as undefined and target phase explicitly.
  */
 
 jest.mock(
@@ -170,6 +176,7 @@ describe(
           {
             content
           },
+          undefined,
           "back"
         );
 
@@ -186,6 +193,7 @@ describe(
         expect( () => freeLayout( undefined as any ) ).not.toThrow();
         expect( () => freeLayout(
           {},
+          undefined,
           "back"
         ) ).not.toThrow();
       }
