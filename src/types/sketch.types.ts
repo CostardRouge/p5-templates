@@ -1087,12 +1087,18 @@ export const SlideTransitionSoundRepeatSchema = z
         // pitch ramp per hit, in octaves ( + rises, - falls, 0 = flat )
         pitchStep: z.number().min( -0.5 )
           .max( 0.5 )
-          .default( 0.08 )
+          .default( 0.35 )
       } )
     ]
   )
+  // Default to a short 3-hit rising burst: the "spin-up" reads more clearly as
+  // a transition than a single tick. Fully specified so the parsed default is
+  // complete (a bare { mode } would leave the burst fields unbound in the UI).
   .default( {
-    mode: "once"
+    mode: "count",
+    times: 3,
+    interval: 0.06,
+    pitchStep: 0.35
   } );
 
 // Sound played when a montage advances from one variant to the next — the
@@ -1106,7 +1112,7 @@ export const SlideTransitionSoundSchema = z
     // Master switch (independent from the montage master switch).
     enabled: z.boolean().default( false ),
     // Voice from the shared click synth.
-    preset: z.enum( SPECS_SOUND_PRESETS ).default( "blip" ),
+    preset: z.enum( SPECS_SOUND_PRESETS ).default( "pop" ),
     volume: z.number().min( 0 )
       .max( 1 )
       .default( 0.5 ),
@@ -1123,7 +1129,7 @@ export const SlideTransitionSoundSchema = z
     // montage cycles). 0 = every transition sounds at the same pitch.
     slidePitchSpread: z.number().min( -2 )
       .max( 2 )
-      .default( 0 ),
+      .default( 1.05 ),
     repeat: SlideTransitionSoundRepeatSchema
   } )
   .default( {} );

@@ -61,8 +61,8 @@ describe(
         expect( t.title.prefix ).toBe( "VARIANT" );
         // The transition sound is always materialised too, disabled by default.
         expect( t.sound.enabled ).toBe( false );
-        expect( t.sound.preset ).toBe( "blip" );
-        expect( t.sound.repeat.mode ).toBe( "once" );
+        expect( t.sound.preset ).toBe( "pop" );
+        expect( t.sound.repeat.mode ).toBe( "count" );
       }
     );
 
@@ -79,7 +79,10 @@ describe(
 
         expect( t.sound.enabled ).toBe( false );
         expect( t.sound.volume ).toBeGreaterThanOrEqual( 0 );
-        expect( t.sound.slidePitchSpread ).toBe( 0 );
+        expect( t.sound.slidePitchSpread ).toBeCloseTo(
+          1.05,
+          5
+        );
       }
     );
 
@@ -115,12 +118,26 @@ describe(
         const sound = SlideTransitionSoundSchema.parse( {} );
 
         expect( sound.enabled ).toBe( false );
-        expect( sound.preset ).toBe( "blip" );
+        expect( sound.preset ).toBe( "pop" );
         expect( sound.volume ).toBe( 0.5 );
+        // Base pitch is neutral (multiplier 1); transposition comes from the
+        // per-slide spread and the burst ramp instead.
         expect( sound.pitch ).toBe( 1 );
         expect( sound.pitchVariation ).toBe( 0 );
-        expect( sound.slidePitchSpread ).toBe( 0 );
-        expect( sound.repeat.mode ).toBe( "once" );
+        expect( sound.slidePitchSpread ).toBeCloseTo(
+          1.05,
+          5
+        );
+        // Defaults to a 3-hit rising burst.
+        expect( sound.repeat.mode ).toBe( "count" );
+
+        if ( sound.repeat.mode === "count" ) {
+          expect( sound.repeat.times ).toBe( 3 );
+          expect( sound.repeat.pitchStep ).toBeCloseTo(
+            0.35,
+            5
+          );
+        }
       }
     );
 
@@ -140,7 +157,7 @@ describe(
           expect( sound.repeat.times ).toBe( 3 );
           expect( sound.repeat.interval ).toBeGreaterThan( 0 );
           expect( sound.repeat.pitchStep ).toBeCloseTo(
-            0.08,
+            0.35,
             5
           );
         }

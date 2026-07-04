@@ -98,15 +98,15 @@ same instant the dip fade peaks and the title label switches. This plays a hit
 right there, so the sound lands with the visual transition, "in between" the
 two slides.
 
-| Option             | Default  | What it does                                                                 |
-| ------------------ | -------- | ---------------------------------------------------------------------------- |
-| `enabled`          | `false`  | Master switch (independent of the montage master switch).                    |
-| `preset`           | `blip`   | Voice from the shared click synth.                                           |
-| `volume`           | `0.5`    | Hit gain (0–1).                                                              |
-| `pitch`            | `1`      | Global pitch multiplier (0.25–4).                                            |
-| `pitchVariation`   | `0`      | Random per-transition detune ("humanize", 1 ≈ ±half an octave).             |
-| `slidePitchSpread` | `0`      | Pitch offset by the arriving variant's index (octaves) — each slide its note.|
-| `repeat`           | `once`   | `once` = one hit; `count` = an N-hit burst with an optional `pitchStep` ramp.|
+| Option             | Default   | What it does                                                                 |
+| ------------------ | --------- | ---------------------------------------------------------------------------- |
+| `enabled`          | `false`   | Master switch (independent of the montage master switch).                    |
+| `preset`           | `pop`     | Voice from the shared click synth.                                          |
+| `volume`           | `0.5`     | Hit gain (0–1).                                                             |
+| `pitch`            | `1`       | Base pitch multiplier (0.25–4); 1 = neutral.                               |
+| `pitchVariation`   | `0`       | Random per-transition detune ("humanize", 1 ≈ ±half an octave).            |
+| `slidePitchSpread` | `1.05`    | Pitch offset by the arriving variant's index (octaves) — each slide its note.|
+| `repeat`           | `count`   | `once` = one hit; `count` = an N-hit burst with an optional `pitchStep` ramp. Defaults to a 3-hit rising burst (`pitchStep` 0.35). |
 
 ### How it plays — and records
 

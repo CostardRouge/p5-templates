@@ -25,11 +25,11 @@ import audio from "../../audio.js";
  */
 
 const DEFAULTS = {
-  preset: "blip",
+  preset: "pop",
   volume: 0.5,
   pitch: 1,
   pitchVariation: 0,
-  slidePitchSpread: 0
+  slidePitchSpread: 1.05
 };
 
 export function createMontageSoundScheduler(
