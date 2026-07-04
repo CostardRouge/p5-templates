@@ -28,6 +28,8 @@ const fakeP5 = {
   height: 1000,
   isLooping: () => true,
   redraw: jest.fn(),
+  noLoop: jest.fn(),
+  loop: jest.fn(),
   push: jest.fn(),
   pop: jest.fn(),
   noFill: jest.fn(),
@@ -91,6 +93,9 @@ import {
   reportItemBounds,
   endItemBounds
 } from "../common/itemBoundsRegistry.js";
+import {
+  pauseLoop, resumeLoop
+} from "../../loopControl.js";
 
 // window.getCurrentSlide is read to resolve the slide scope; no slides here.
 ( window as unknown as { getCurrentSlide?: () => unknown } ).getCurrentSlide = () => ( {
@@ -124,6 +129,35 @@ function pressAt(
   );
 
   canvasEl.dispatchEvent( event );
+
+  return event;
+}
+
+// Dispatch a hover-only pointermove, optionally on an element other than the
+// canvas (to simulate the pointer leaving it).
+function moveAt(
+  x: number, y: number, target: Element = canvasEl
+) {
+  const event = new Event(
+    "pointermove",
+    {
+      bubbles: true,
+      cancelable: true
+    }
+  ) as PointerEvent & { pointerId: number };
+
+  Object.assign(
+    event,
+    {
+      clientX: x,
+      clientY: y,
+      pointerId: 1,
+      pointerType: "mouse",
+      button: 0
+    }
+  );
+
+  target.dispatchEvent( event );
 
   return event;
 }
@@ -409,6 +443,104 @@ describe(
         );
 
         expect( down.defaultPrevented ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "content drag — hover redraw respects pause",
+  () => {
+    afterEach( () => {
+      fakeP5.isLooping = () => true;
+      resumeLoop( fakeP5 );
+    } );
+
+    it(
+      "redraws on hover-target change for a static (non-looping) sketch",
+      () => {
+        fakeP5.isLooping = () => false;
+
+        moveAt(
+          500,
+          500
+        ); // onto the item
+
+        expect( fakeP5.redraw ).toHaveBeenCalledTimes( 1 );
+      }
+    );
+
+    it(
+      "does not redraw on a hover-target change while explicitly paused",
+      () => {
+        fakeP5.isLooping = () => false;
+
+        moveAt(
+          500,
+          500
+        ); // hover onto the item first, while unpaused
+        fakeP5.redraw.mockClear();
+
+        pauseLoop( fakeP5 );
+
+        moveAt(
+          50,
+          50
+        ); // hover off the item — key changes to null
+
+        expect( fakeP5.redraw ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
+      "does not redraw on mouse-leave while explicitly paused",
+      () => {
+        fakeP5.isLooping = () => false;
+
+        moveAt(
+          500,
+          500
+        ); // hover onto the item, so hoverPoint is set
+        fakeP5.redraw.mockClear();
+
+        pauseLoop( fakeP5 );
+
+        moveAt(
+          0,
+          0,
+          document.body
+        ); // pointer leaves the canvas element
+
+        expect( fakeP5.redraw ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
+      "resumes redrawing on hover changes once unpaused",
+      () => {
+        fakeP5.isLooping = () => false;
+
+        moveAt(
+          500,
+          500
+        );
+        fakeP5.redraw.mockClear();
+
+        pauseLoop( fakeP5 );
+        moveAt(
+          50,
+          50
+        );
+        expect( fakeP5.redraw ).not.toHaveBeenCalled();
+
+        resumeLoop( fakeP5 );
+
+        moveAt(
+          500,
+          500
+        ); // hover back onto the item — key changes again
+
+        expect( fakeP5.redraw ).toHaveBeenCalledTimes( 1 );
       }
     );
   }
