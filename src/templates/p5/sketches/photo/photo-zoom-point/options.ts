@@ -7,16 +7,29 @@ const testImagePaths = await getTestImagePaths();
 export const formValues = {
   // One entry per photo: the image plus the point (UV, 0–1) it zooms into.
   // Photos are shown one after another, each getting its own zoom in/out.
-  items: testImagePaths.slice(
-    0,
-    3
-  ).map( ( photo ) => ( {
-    photo,
-    point: {
-      x: 0.5,
-      y: 0.5
+  items: [
+    {
+      photo: "/assets/images/test/DSC02023%20Medium.jpeg",
+      point: {
+        x: 0.9182064242978011,
+        y: 0.40390829006230894
+      }
+    },
+    {
+      photo: "/assets/images/test/DSC02644%20Medium.jpeg",
+      point: {
+        x: 0.6311057817804419,
+        y: 0.42686397666971193
+      }
+    },
+    {
+      photo: "/assets/images/test/DSC02930%20Medium.jpeg",
+      point: {
+        x: 0.4961392227346368,
+        y: 0.39759251288904973
+      }
     }
-  } ) ),
+  ],
 
   zoom: {
     count: 1,
