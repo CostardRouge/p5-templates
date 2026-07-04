@@ -9,6 +9,14 @@ type MenuBarSlotContextValue = {
   registerSlot: ( el: HTMLElement | null ) => void;
   slotEl: HTMLElement | null;
   inlineVisible: boolean;
+  /**
+   * Lets the currently mounted page contribute an action into the global
+   * menu (e.g. the templates listing registers its "Import .json" handler
+   * here instead of duplicating a page-specific menu). Pass `null` to
+   * unregister on unmount.
+   */
+  registerImportHandler: ( fn: ( () => void ) | null ) => void;
+  importHandler: ( () => void ) | null;
 };
 
 const MenuBarSlotContext = createContext<MenuBarSlotContextValue | null>( null );
@@ -44,6 +52,17 @@ export function MenuBarSlotProvider( {
     inlineVisible,
     setInlineVisible
   ] = useState( false );
+  const [
+    importHandler,
+    setImportHandler
+  ] = useState<( () => void ) | null>( null );
+
+  const registerImportHandler = useCallback(
+    ( fn: ( () => void ) | null ) => {
+      setImportHandler( () => fn );
+    },
+    []
+  );
 
   useEffect(
     () => {
@@ -108,7 +127,9 @@ export function MenuBarSlotProvider( {
       value={ {
         registerSlot,
         slotEl,
-        inlineVisible
+        inlineVisible,
+        registerImportHandler,
+        importHandler
       } }
     >
       {children}

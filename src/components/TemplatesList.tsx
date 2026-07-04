@@ -21,7 +21,7 @@ import AnimatedPreview from "@/components/AnimatedPreview";
 import AnimationsToggle from "@/components/AnimationsToggle";
 import Toast from "@/components/Toast";
 import {
-  MenuBarSlot
+  MenuBarSlot, useMenuBarSlot
 } from "@/components/MenuBarPortal";
 import {
   usePersistedViewMode
@@ -83,6 +83,7 @@ export default function TemplatesList( {
 }: TemplatesListProps ) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const menuBarSlot = useMenuBarSlot();
 
   const [
     view,
@@ -237,6 +238,21 @@ export default function TemplatesList( {
   const handleImportClick = () => {
     importFileInputRef.current?.click();
   };
+
+  // On narrow viewports the button is hidden from the tab row (no room) —
+  // make it reachable from the global menu instead, for as long as this
+  // page stays mounted.
+  useEffect(
+    () => {
+      menuBarSlot?.registerImportHandler( handleImportClick );
+
+      return () => menuBarSlot?.registerImportHandler( null );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      menuBarSlot?.registerImportHandler
+    ]
+  );
 
   const handleImportFileChange = async( event: React.ChangeEvent<HTMLInputElement> ) => {
     const file = event.target.files?.[ 0 ];
@@ -538,10 +554,10 @@ export default function TemplatesList( {
             onClick={ handleImportClick }
             disabled={ importing }
             title="Import a previously exported options.json"
-            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0 whitespace-nowrap bg-background border border-border text-foreground/60 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FileUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">
+            <span>
               { importing ? "Importing..." : "Import .json" }
             </span>
           </button>
