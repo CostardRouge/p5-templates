@@ -31,6 +31,13 @@ function cancelPendingDraw( p ) {
   p._requestAnimId = 0;
 }
 
+// `p.isLooping() === false` alone can't tell an explicitly paused sketch
+// apart from one that's simply static (noLoop by design) — both look
+// identical to callers outside this module. Track the explicit pause intent
+// here, since every pause/resume path in the app (the playback controls and
+// the loop-toggle shortcut) already funnels through these two functions.
+const pausedInstances = new WeakMap();
+
 /**
  * Stop the draw loop and drop the trailing frame p5 leaves scheduled.
  */
@@ -41,6 +48,10 @@ export function pauseLoop( p ) {
 
   p.noLoop();
   cancelPendingDraw( p );
+  pausedInstances.set(
+    p,
+    true
+  );
 }
 
 /**
@@ -50,6 +61,11 @@ export function resumeLoop( p ) {
   if ( !p ) {
     return;
   }
+
+  pausedInstances.set(
+    p,
+    false
+  );
 
   // Already looping: a single chain is live and p5's own `loop()` would be a
   // no-op, so leave it running rather than risk kicking a duplicate.
@@ -61,4 +77,13 @@ export function resumeLoop( p ) {
   // two at once.
   cancelPendingDraw( p );
   p.loop();
+}
+
+/**
+ * Whether `pauseLoop` was explicitly called and hasn't been followed by a
+ * matching `resumeLoop` — as opposed to a sketch that's merely static
+ * (noLoop by design) and has never been paused at all.
+ */
+export function isPaused( p ) {
+  return Boolean( p && pausedInstances.get( p ) );
 }

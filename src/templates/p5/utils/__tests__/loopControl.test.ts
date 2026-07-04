@@ -8,7 +8,7 @@
  * configured target. The helpers must keep at most one pending draw frame.
  */
 import {
-  pauseLoop, resumeLoop
+  pauseLoop, resumeLoop, isPaused
 } from "../loopControl.js";
 
 /**
@@ -154,6 +154,28 @@ describe(
       () => {
         expect( () => pauseLoop( null ) ).not.toThrow();
         expect( () => resumeLoop( null ) ).not.toThrow();
+      }
+    );
+
+    it(
+      "isPaused distinguishes an explicit pause from a never-touched instance",
+      () => {
+        const p = createFakeP5();
+
+        expect( isPaused( p ) ).toBe( false );
+
+        pauseLoop( p );
+        expect( isPaused( p ) ).toBe( true );
+
+        resumeLoop( p );
+        expect( isPaused( p ) ).toBe( false );
+      }
+    );
+
+    it(
+      "isPaused tolerates a null p5 instance",
+      () => {
+        expect( isPaused( null ) ).toBe( false );
       }
     );
   }

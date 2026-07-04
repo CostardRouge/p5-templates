@@ -3,6 +3,9 @@ import sketch, {
   getP5
 } from "../sketch.js";
 import {
+  isPaused
+} from "../loopControl.js";
+import {
   getSketchOptions,
   setSketchOptions
 } from "../../shared/syncSketchOptions.js";
@@ -445,6 +448,19 @@ function requestRedraw( p ) {
   }
 }
 
+// Hover only ever toggles a UI affordance (the ring/cursor) — unlike a real
+// drag, it isn't a change the user asked to see reflected in the canvas, so it
+// must not draw a frame while the sketch is explicitly paused. `isLooping()`
+// alone can't tell "paused" apart from "static by design", which used to make
+// hovering (and mouse-leave) force a frame even while paused.
+function requestHoverRedraw( p ) {
+  if ( isPaused( p ) ) {
+    return;
+  }
+
+  requestRedraw( p );
+}
+
 function setCursor( value ) {
   const element = sketch.getCanvasElement?.();
 
@@ -567,7 +583,7 @@ function onPointerMove( event ) {
       hoverPoint = null;
       lastHoverKey = null;
       setCursor( "" );
-      requestRedraw( p );
+      requestHoverRedraw( p );
     }
 
     return;
@@ -596,11 +612,12 @@ function onPointerMove( event ) {
 
   setCursor( hit === -1 ? "" : "move" );
 
-  // Only force a redraw when the hovered item actually changes, so a paused
-  // sketch shows/hides the ring without redrawing on every mouse move.
+  // Only force a redraw when the hovered item actually changes, so a static
+  // sketch shows/hides the ring without redrawing on every mouse move — and
+  // not at all while explicitly paused.
   if ( key !== lastHoverKey ) {
     lastHoverKey = key;
-    requestRedraw( p );
+    requestHoverRedraw( p );
   }
 }
 
