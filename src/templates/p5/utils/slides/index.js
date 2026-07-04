@@ -12,6 +12,7 @@ import {
 
 import getMontageSketch from "./morph/index.js";
 import drawMontageDip from "./morph/drawMontageDip.js";
+import drawMontageSound from "./morph/drawMontageSound.js";
 import drawMontageTitle from "./montageTitle/index.js";
 
 import {
@@ -53,6 +54,7 @@ const slides = {
         slides.render( options );
         slides.renderMontageOverlay();
         slides.renderMontageTitle();
+        slides.updateMontageSound();
       }
     );
 
@@ -239,6 +241,21 @@ const slides = {
 
     if ( slide?.transition?.enabled && slide.transition.style === "dip" ) {
       drawMontageDip(
+        slide,
+        options?.slides || []
+      );
+    }
+  },
+
+  // Play the montage transition sound: schedules a hit through the sketch
+  // audio engine each time the current montage slide advances to a new variant.
+  // Paints nothing — polled once per frame so it stays deterministic in
+  // captures, like the specs sound-on-change.
+  updateMontageSound() {
+    const slide = this.current;
+
+    if ( slide?.transition?.enabled && slide.transition.sound?.enabled ) {
+      drawMontageSound(
         slide,
         options?.slides || []
       );

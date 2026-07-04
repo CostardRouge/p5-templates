@@ -1,5 +1,8 @@
 import {
-  SlideSchema, SlideTitleSchema, SlideTransitionSchema
+  SlideSchema,
+  SlideTitleSchema,
+  SlideTransitionSchema,
+  SlideTransitionSoundSchema
 } from "@/types/sketch.types";
 
 describe(
@@ -56,6 +59,30 @@ describe(
         expect( t.title.enabled ).toBe( false );
         expect( t.title.mode ).toBe( "alphabet" );
         expect( t.title.prefix ).toBe( "VARIANT" );
+        // The transition sound is always materialised too, disabled by default.
+        expect( t.sound.enabled ).toBe( false );
+        expect( t.sound.preset ).toBe( "pop" );
+        expect( t.sound.repeat.mode ).toBe( "count" );
+      }
+    );
+
+    test(
+      "heals a pre-sound montage deck by materialising a disabled sound",
+      () => {
+        // A montage saved before the sound option existed has no `sound` key;
+        // parsing must add it (disabled) rather than drop it, so old decks stay
+        // silent and new sub-controls have defined values to bind to.
+        const t = SlideTransitionSchema.parse( {
+          enabled: true,
+          style: "morph"
+        } );
+
+        expect( t.sound.enabled ).toBe( false );
+        expect( t.sound.volume ).toBeGreaterThanOrEqual( 0 );
+        expect( t.sound.slidePitchSpread ).toBeCloseTo(
+          1.05,
+          5
+        );
       }
     );
 
@@ -76,6 +103,75 @@ describe(
         } ).success ).toBe( false );
         expect( SlideTransitionSchema.safeParse( {
           sources: "everything"
+        } ).success ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "SlideTransitionSoundSchema",
+  () => {
+    test(
+      "applies sensible defaults, disabled by default",
+      () => {
+        const sound = SlideTransitionSoundSchema.parse( {} );
+
+        expect( sound.enabled ).toBe( false );
+        expect( sound.preset ).toBe( "pop" );
+        expect( sound.volume ).toBe( 0.5 );
+        // Base pitch is neutral (multiplier 1); transposition comes from the
+        // per-slide spread and the burst ramp instead.
+        expect( sound.pitch ).toBe( 1 );
+        expect( sound.pitchVariation ).toBe( 0 );
+        expect( sound.slidePitchSpread ).toBeCloseTo(
+          1.05,
+          5
+        );
+        // Defaults to a 3-hit rising burst.
+        expect( sound.repeat.mode ).toBe( "count" );
+
+        if ( sound.repeat.mode === "count" ) {
+          expect( sound.repeat.times ).toBe( 3 );
+          expect( sound.repeat.pitchStep ).toBeCloseTo(
+            0.35,
+            5
+          );
+        }
+      }
+    );
+
+    test(
+      "fills count-mode burst defaults",
+      () => {
+        const sound = SlideTransitionSoundSchema.parse( {
+          enabled: true,
+          repeat: {
+            mode: "count"
+          }
+        } );
+
+        expect( sound.repeat.mode ).toBe( "count" );
+
+        if ( sound.repeat.mode === "count" ) {
+          expect( sound.repeat.times ).toBe( 3 );
+          expect( sound.repeat.interval ).toBeGreaterThan( 0 );
+          expect( sound.repeat.pitchStep ).toBeCloseTo(
+            0.35,
+            5
+          );
+        }
+      }
+    );
+
+    test(
+      "rejects an unknown preset and out-of-range volume",
+      () => {
+        expect( SlideTransitionSoundSchema.safeParse( {
+          preset: "foghorn"
+        } ).success ).toBe( false );
+        expect( SlideTransitionSoundSchema.safeParse( {
+          volume: 4
         } ).success ).toBe( false );
       }
     );

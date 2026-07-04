@@ -14,6 +14,9 @@ import {
   SketchOptionInput,
   SlideTitleSchema,
   SlideTransitionSchema,
+  SlideTransitionSoundRepeatSchema,
+  SlideTransitionSoundSchema,
+  SPECS_SOUND_PRESETS,
   TITLE_ALIGNMENTS,
   TITLE_CHANGE_ANIMATIONS,
   TITLE_DISPLAY_STYLES,
@@ -81,6 +84,21 @@ const TITLE_ALIGN_LABELS: Record<( typeof TITLE_ALIGNMENTS )[ number ], string> 
   left: "Left",
   center: "Center",
   right: "Right"
+};
+
+const SOUND_PRESET_LABELS: Record<( typeof SPECS_SOUND_PRESETS )[ number ], string> = {
+  click: "Click",
+  tick: "Tick",
+  blip: "Blip",
+  pop: "Pop",
+  beep: "Beep",
+  wood: "Woodblock",
+  typewriter: "Typewriter"
+};
+
+const SOUND_REPEAT_LABELS: Record<"once" | "count", string> = {
+  once: "Once per change",
+  count: "Burst (N hits)"
 };
 
 /**
@@ -590,6 +608,198 @@ function SlideTitleControls( {
   );
 }
 
+/**
+ * "Transition sound" sub-panel of the montage controls: a hit played through
+ * the sketch audio engine each time the montage advances to the next variant
+ * (the audible counterpart of the dip / title switch). Because it routes
+ * through the audio engine, it is baked into recordings too. The repeat "count"
+ * mode reveals its burst controls, mirroring the mode-specific reveals above.
+ */
+function SlideTransitionSoundControls( {
+  base
+}: {
+  base: string;
+} ) {
+  // Untyped like SlideTitleControls: the sound field paths are built from a
+  // runtime string the strict SketchOptionInput field-path type can't narrow.
+  const {
+    control, setValue
+  } = useFormContext();
+  const soundBase = `${ base }.sound`;
+
+  const sound = useWatch( {
+    control,
+    name: soundBase
+  } ) as Record<string, unknown> | undefined;
+
+  const enabled = Boolean( sound?.enabled );
+  const repeat = sound?.repeat as Record<string, unknown> | undefined;
+  const repeatMode = ( repeat?.mode as string ) ?? "once";
+
+  const handleToggle = ( on: boolean ) => {
+    if ( on ) {
+      setValue(
+        soundBase,
+        SlideTransitionSoundSchema.parse( {
+          ...( sound ?? {} ),
+          enabled: true
+        } ),
+        {
+          shouldDirty: true
+        }
+      );
+    } else {
+      setValue(
+        `${ soundBase }.enabled`,
+        false,
+        {
+          shouldDirty: true
+        }
+      );
+    }
+  };
+
+  const handleRepeatMode = ( mode: string ) => {
+    // Reparse the whole repeat group so switching modes fills that mode's
+    // defaults (the discriminated union has different fields per mode).
+    setValue(
+      `${ soundBase }.repeat`,
+      SlideTransitionSoundRepeatSchema.parse( {
+        mode
+      } ),
+      {
+        shouldDirty: true
+      }
+    );
+  };
+
+  return (
+    <div className="mt-1 rounded-lg border border-theme bg-foreground/[0.03] p-1">
+      <label className="flex cursor-pointer items-center justify-between gap-2 px-1 py-1.5 md:py-1 select-none text-foreground">
+        <span className="truncate">Transition sound</span>
+        <span className="relative inline-flex shrink-0 items-center">
+          <input
+            type="checkbox"
+            checked={ enabled }
+            onChange={ ( e ) => handleToggle( e.target.checked ) }
+            className="peer sr-only"
+          />
+          <span className="h-6 w-10 md:h-5 md:w-9 rounded-full border border-theme bg-foreground/10 transition-colors peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-focus/50" />
+          <span className="pointer-events-none absolute left-0.5 top-1/2 h-5 w-5 md:h-4 md:w-4 -translate-y-1/2 rounded-full border border-theme bg-background shadow transition-transform peer-checked:translate-x-4" />
+        </span>
+      </label>
+
+      {enabled && (
+        <div className="flex flex-col gap-1 pt-1">
+          <BarSelect
+            name={ `${ soundBase }.preset` }
+            label="Sound"
+            options={ SPECS_SOUND_PRESETS.map( ( value ) => ( {
+              value,
+              label: SOUND_PRESET_LABELS[ value ]
+            } ) ) }
+          />
+
+          <ResettableSlider
+            name={ `${ soundBase }.volume` }
+            label="Volume"
+            min={ 0 }
+            max={ 1 }
+            step={ 0.05 }
+          />
+
+          <ResettableSlider
+            name={ `${ soundBase }.pitch` }
+            label="Pitch (×)"
+            min={ 0.25 }
+            max={ 4 }
+            step={ 0.05 }
+          />
+
+          <ResettableSlider
+            name={ `${ soundBase }.pitchVariation` }
+            label="Humanize"
+            min={ 0 }
+            max={ 1 }
+            step={ 0.05 }
+          />
+
+          <ResettableSlider
+            name={ `${ soundBase }.slidePitchSpread` }
+            label="Pitch by slide (oct)"
+            min={ -2 }
+            max={ 2 }
+            step={ 0.05 }
+          />
+
+          {/* Reparses the whole repeat group on change so "count" fills its
+              own defaults (times / interval / pitchStep) — BarSelect would set
+              only the mode string and leave the burst sliders unbound. */}
+          <div className={ CONTROL_BAR_CLASS }>
+            <span className="flex shrink-0 items-center px-2.5 text-label">
+              Repeat
+            </span>
+            <span className="pointer-events-none flex min-w-0 flex-1 items-center justify-between gap-1 px-2.5">
+              <span className="truncate">{SOUND_REPEAT_LABELS[ repeatMode as "once" | "count" ] ?? repeatMode}</span>
+              <ChevronDown className={ CONTROL_CHEVRON_CLASS } />
+            </span>
+            <select
+              aria-label="Repeat"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              value={ repeatMode }
+              onChange={ ( e ) => handleRepeatMode( e.target.value ) }
+            >
+              {(
+                [
+                  "once",
+                  "count"
+                ] as const
+              ).map( ( value ) => (
+                <option key={ value } value={ value }>
+                  {SOUND_REPEAT_LABELS[ value ]}
+                </option>
+              ) )}
+            </select>
+          </div>
+
+          {repeatMode === "count" && (
+            <Fragment>
+              <ResettableSlider
+                name={ `${ soundBase }.repeat.times` }
+                label="Hits"
+                min={ 2 }
+                max={ 16 }
+                step={ 1 }
+              />
+              <ResettableSlider
+                name={ `${ soundBase }.repeat.interval` }
+                label="Interval (s)"
+                min={ 0.02 }
+                max={ 2 }
+                step={ 0.01 }
+              />
+              <ResettableSlider
+                name={ `${ soundBase }.repeat.pitchStep` }
+                label="Pitch ramp (oct/hit)"
+                min={ -0.5 }
+                max={ 0.5 }
+                step={ 0.01 }
+              />
+            </Fragment>
+          )}
+
+          <p className="px-1 pt-0.5 text-[0.65rem] leading-snug text-label">
+            Plays a hit at each variant change — the audible counterpart of the
+            dip / title switch. Routes through the sketch audio engine, so it is
+            baked into recordings. &ldquo;Pitch by slide&rdquo; gives each
+            variant its own note.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type Props = {
   activeIndex: number;
 };
@@ -740,6 +950,8 @@ export default function SlideTransitionSettings( {
           )}
 
           <SlideTitleControls base={ base } />
+
+          <SlideTransitionSoundControls base={ base } />
         </div>
       )}
     </div>
