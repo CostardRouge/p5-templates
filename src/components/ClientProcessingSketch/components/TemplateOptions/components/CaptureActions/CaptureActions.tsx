@@ -719,8 +719,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     <>
       <div
         className={ clsx(
-          "flex flex-col gap-1 px-2 py-2",
-          !docked && "glass border border-theme rounded-2xl shadow-lg"
+          "flex flex-col gap-1",
+          // Docked: match the collapsible items' inset (OptionsPanel px-1) so
+          // the buttons line up; the rail's gap handles vertical spacing.
+          docked
+            ? "px-1"
+            : "glass px-2 py-2 border border-theme rounded-2xl shadow-lg"
         ) }
       >
         <div className="flex flex-col gap-1 h-auto w-full">

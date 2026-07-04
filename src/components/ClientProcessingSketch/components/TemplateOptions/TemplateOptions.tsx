@@ -517,7 +517,7 @@ export default function TemplateOptions( {
                 // rendered flat and the rail scrolling as one. Floating: a
                 // card anchored in the bottom-right corner.
                 dockedDesktop
-                  ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col gap-2 p-2 glass border-l border-theme overflow-y-auto"
+                  ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col gap-1 p-2 glass border-l border-theme overflow-y-auto"
                   : "right-4 bottom-4 w-64 space-y-2"
               ) }
               style={ dockedDesktop ? undefined : {

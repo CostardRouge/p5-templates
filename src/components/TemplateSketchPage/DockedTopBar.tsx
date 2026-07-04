@@ -12,10 +12,12 @@ import {
  * edge that frames the viewport together with the left/right rails. It hosts
  * the global menu (relocated here through {@link MenuBarSlot}), the engine
  * playback controls, and — via `zoomSlotRef` — the viewport's zoom controls,
- * each rendered flat and separated by dividers instead of as floating islands.
+ * each rendered flat and separated by full-height dividers instead of as
+ * floating islands.
  *
  * Desktop-only; rendered by {@link TemplateSketchPage} only in the docked
- * layout.
+ * layout. `items-stretch` + `h-full` cells make every divider span the whole
+ * bar height edge-to-edge.
  */
 export default function DockedTopBar( {
   zoomSlotRef
@@ -31,9 +33,7 @@ export default function DockedTopBar( {
 
       <Divider />
 
-      <div className="flex items-center px-1">
-        <EngineControls variant="bar" />
-      </div>
+      <EngineControls variant="bar" />
 
       <div className="flex-1" />
 
@@ -41,12 +41,12 @@ export default function DockedTopBar( {
 
       <div
         ref={ zoomSlotRef }
-        className="flex items-center px-1"
+        className="flex items-stretch"
       />
     </div>
   );
 }
 
 function Divider() {
-  return <div className="my-2 w-px bg-border" />;
+  return <div className="w-px bg-border" />;
 }

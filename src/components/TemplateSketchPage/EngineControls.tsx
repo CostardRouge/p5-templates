@@ -275,8 +275,9 @@ export function EngineControls( {
   );
 
   if ( variant === "bar" ) {
+    // Full height so the buttons' dividers span the whole top bar.
     return (
-      <div className="flex items-center h-9 overflow-hidden">
+      <div className="flex items-stretch h-full overflow-hidden">
         {controls}
       </div>
     );

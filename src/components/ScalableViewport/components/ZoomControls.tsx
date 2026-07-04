@@ -32,9 +32,12 @@ const ZoomControls = ( {
   const buttons = (
     <div
       className={ clsx(
-        "flex items-center h-9 overflow-hidden divide-x divide-border transition-opacity",
-        variant === "floating" &&
-          "bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md",
+        "flex overflow-hidden divide-x divide-border transition-opacity",
+        variant === "floating"
+          // Rounded island.
+          ? "items-center h-9 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md"
+          // Flat, full height so its dividers span the whole top bar.
+          : "items-stretch h-full",
         disabled && "opacity-40 pointer-events-none"
       ) }
       aria-hidden={ disabled }
