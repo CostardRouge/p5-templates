@@ -157,7 +157,7 @@ sketch.draw( () => {
 
   const font = string.fonts[ gridCfg.font ] ?? string.fonts.spaceMonoRegular;
 
-  if ( !font?.font ) {
+  if ( !font?.data ) {
     return;
   }
 

@@ -193,7 +193,7 @@ sketch.draw( () => {
   // ── Draw the visible slice of the grid ────────────────────────────────────
   const font = string.fonts[ gridCfg.font ] ?? string.fonts.spaceMonoRegular;
 
-  if ( font?.font && alphabet.length > 0 ) {
+  if ( font?.data && alphabet.length > 0 ) {
     const letterScale = clamp(
       gridCfg.letterScale ?? 0.62,
       0.1,

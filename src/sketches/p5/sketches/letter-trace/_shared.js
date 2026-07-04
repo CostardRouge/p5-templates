@@ -91,7 +91,8 @@ function buildWord( {
 } ) {
   const p = getP5();
 
-  if ( !font?.font || !text.length ) {
+  // p5 v2: glyph data readiness lives on `font.data` (was `font.font`).
+  if ( !font?.data || !text.length ) {
     return null;
   }
 
@@ -119,14 +120,16 @@ function buildWord( {
       continue;
     }
 
+    // p5 v2: textToPoints reads the size from the renderer state set
+    // above; a 4th positional number would be treated as a wrap width.
     const raw = font.textToPoints(
       char,
       cursor,
       0,
-      size,
       {
         sampleFactor,
-        simplifyThreshold
+        simplifyThreshold,
+        graphics: p
       }
     );
 
@@ -235,7 +238,7 @@ function getWord( cfg ) {
   const simplifyThreshold = cfg.simplifyThreshold ?? 0;
   const contourBreak = cfg.contourBreak ?? 0.18;
   const spacing = cfg.spacing ?? 0.012;
-  const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
+  const fontFamily = font?.name || font?.face?.family || "unknown";
   const key = [
     text,
     fontFamily,

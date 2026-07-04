@@ -1,23 +1,24 @@
-// Promise-aware wrappers around p5's callback-style asset loaders.
+// Promise-aware wrappers around p5's asset loaders.
 //
-// p5's `loadImage`/`loadFont` return their asset object immediately and fill
-// it in later — callers can keep using that object synchronously, but the
-// load itself was invisible: nothing to await, nothing reported. Each wrapper
-// here opens a loading step (see @/lib/assets/loadingProgress) that settles
-// when the browser is done, so the load is awaitable (`ready`), gates
-// deterministic capture via pendingMedia, and shows up in the engine's
-// `loading` event and the sketch-page placeholder.
+// Callers get an asset object immediately that fills in once the load lands —
+// usable synchronously, the way p5 1.x's `loadImage`/`loadFont` behaved. p5 2
+// loaders instead return a promise for a separate object, so each wrapper
+// hands out a placeholder of the right class and grafts the loaded asset onto
+// it (see `graft`). Each load also opens a loading step (see
+// @/lib/assets/loadingProgress) that settles when the browser is done, so it
+// is awaitable (`ready`), gates deterministic capture via pendingMedia, and
+// shows up in the engine's `loading` event and the sketch-page placeholder.
 //
-// Passing a failure callback to p5 is load-bearing, not optional: without one
-// p5 never decrements its preload counter for a failed asset, so a single
-// stale path hangs the sketch on the loading screen forever. Both wrappers
-// always register one, so a caller cannot forget it.
+// The p5 2 loaders are awaited without success/failure callbacks on purpose:
+// when callbacks are passed, the returned promise resolves with the callback's
+// return value and a failure no longer rejects — which would turn a missing
+// asset into a silently "loaded" one.
 
 import {
   beginLoadingStep
 } from "@/lib/assets/loadingProgress";
 import {
-  getP5
+  getHostP5, getP5
 } from "./sketch.js";
 
 function labelFromURL( url ) {
@@ -41,10 +42,42 @@ function labelFromURL( url ) {
   }
 }
 
+// The p5 class, for constructing placeholders. Read off the host instance:
+// getP5() may be an embedded sketch's p5.Graphics surface, whose constructor
+// is p5.Graphics rather than p5.
+function p5Class() {
+  return ( getHostP5() ?? getP5() )?.constructor;
+}
+
+// Make `placeholder` become `loaded`: adopt its class and own state. Any own
+// property that pointed back at `loaded` (p5.Image keeps `_pixelsState = this`)
+// is re-pointed at the placeholder, so pixel reads/writes stay on the object
+// callers actually hold.
+function graft(
+  placeholder, loaded
+) {
+  Object.setPrototypeOf(
+    placeholder,
+    Object.getPrototypeOf( loaded )
+  );
+  Object.assign(
+    placeholder,
+    loaded
+  );
+
+  for ( const key of Object.keys( placeholder ) ) {
+    if ( placeholder[ key ] === loaded ) {
+      placeholder[ key ] = placeholder;
+    }
+  }
+
+  return placeholder;
+}
+
 /**
  * Load an image through p5, with the load reported as a step.
  *
- * Returns `{ img, ready }` — `img` is p5's placeholder object, usable
+ * Returns `{ img, ready }` — `img` is a 1×1 placeholder p5.Image, usable
  * synchronously and filled in on decode; `ready` resolves with the image
  * once decoded, or with `null` if the load failed. `onError` runs on
  * failure so callers can drop their own reference to the broken asset.
@@ -59,27 +92,41 @@ export function loadImageAsset(
     label
   );
 
-  let failed = false;
+  const img = new ( p5Class().Image )(
+    1,
+    1
+  );
 
-  const img = getP5().loadImage(
-    url,
-    () => step.loaded(),
-    ( error ) => {
-      failed = true;
+  const ready = Promise.resolve( getP5().loadImage( url ) )
+    .then( ( loaded ) => {
+      graft(
+        img,
+        loaded
+      );
+      // Force a WebGL texture re-upload for anyone who bound the placeholder.
+      img.setModified( true );
+      step.loaded();
+
+      return img;
+    } )
+    .catch( ( error ) => {
       step.failed( error );
       onError?.( error );
-    }
-  );
+
+      return null;
+    } );
 
   return {
     img,
-    ready: step.promise.then( () => ( failed ? null : img ) )
+    ready
   };
 }
 
 /**
  * Load a font through p5, with the load reported as a step.
- * Same contract as `loadImageAsset`: `ready` resolves with the font, or
+ * Same contract as `loadImageAsset`: `font` is a placeholder p5.Font usable
+ * right away (it renders as sans-serif until the file lands — readiness for
+ * glyph geometry is `font.data`), and `ready` resolves with the font, or
  * `null` when the load failed.
  */
 export function loadFontAsset(
@@ -92,20 +139,33 @@ export function loadFontAsset(
     label
   );
 
-  let failed = false;
+  const font = Object.create( p5Class().Font.prototype );
 
-  const font = getP5().loadFont(
-    path,
-    () => step.loaded(),
-    ( error ) => {
-      failed = true;
+  // p5 2 textFont() reads `face.family` off a p5.Font, so this keeps
+  // textFont( font ) valid in the frames before the real font arrives.
+  font.face = {
+    family: "sans-serif"
+  };
+
+  const ready = Promise.resolve( getP5().loadFont( path ) )
+    .then( ( loaded ) => {
+      graft(
+        font,
+        loaded
+      );
+      step.loaded();
+
+      return font;
+    } )
+    .catch( ( error ) => {
       step.failed( error );
       onError?.( error );
-    }
-  );
+
+      return null;
+    } );
 
   return {
     font,
-    ready: step.promise.then( () => ( failed ? null : font ) )
+    ready
   };
 }

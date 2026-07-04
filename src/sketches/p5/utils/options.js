@@ -80,8 +80,10 @@ const BINDINGS_ENABLED = interactionBindingsEnabled();
 let refreshTimer = -1;
 
 function refreshAssets() {
+  let immediate;
+
   if ( refreshTimer === -1 ) {
-    _refreshAssets();
+    immediate = _refreshAssets();
   }
 
   clearTimeout( refreshTimer );
@@ -89,6 +91,10 @@ function refreshAssets() {
     _refreshAssets,
     80
   );
+
+  // Returned so the engine's preload phase can await the initial load
+  // (p5 v2 loadImage is promise-based; there is no blocking preload()).
+  return immediate;
 }
 
 async function _refreshAssets() {
@@ -232,6 +238,12 @@ async function _refreshAssets() {
       ...newMap.values()
     ]
   );
+
+  // p5 2 has no blocking preload(): the engine awaits this function during
+  // setup instead, so resolve only once every image has decoded (or failed).
+  await Promise.all( [
+    ...newMap.values()
+  ].map( ( o ) => o.ready ) );
 }
 
 async function readExifInfo(

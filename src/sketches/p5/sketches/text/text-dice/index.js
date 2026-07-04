@@ -277,12 +277,12 @@ function resolveFontEntry( face ) {
 }
 
 // Largest text size (starting from baseSize) that still fits inside the
-// available square once auto-fit is on. The bounds come straight from the
-// font metrics, so this is independent of the renderer's current state.
+// available square once auto-fit is on.
 function fitTextSize(
   fontEntry, text, baseSize, maxSize
 ) {
-  const bounds = fontEntry.textBounds(
+  const bounds = string.textBounds(
+    fontEntry,
     text,
     0,
     0,
@@ -319,7 +319,7 @@ function buildFaceTexture(
 
   const text = face.text ?? "";
 
-  if ( !fontEntry?.font || !text ) {
+  if ( !fontEntry?.data || !text ) {
     return g;
   }
 
@@ -443,7 +443,7 @@ function getFaceTexture(
     face,
     size,
     settings,
-    !!fontEntry?.font
+    !!fontEntry?.data
   );
   const cached = textureCache.get( key );
 
