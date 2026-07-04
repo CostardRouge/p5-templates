@@ -205,6 +205,27 @@ export function subscribeUiSoundSettings( listener: () => void ): () => void {
 let _context: AudioContext | null = null;
 let _masterGain: GainNode | null = null;
 let _lastClickAt = -Infinity;
+let _suppressDepth = 0;
+
+/**
+ * Run a batch of programmatic form updates without emitting UI clicks.
+ *
+ * Value changes driven by code — the sketch pushing its options back into the
+ * form, mount-time normalization, etc. — flow through the same `watch()`
+ * callback as real user edits and carry a field name, so they would otherwise
+ * click. Wrap those updates in this scope so only genuine user interaction is
+ * audible. Runs synchronously: react-hook-form fires its watch subscription
+ * inside `setValue`, so the flag is set for the whole batch.
+ */
+export function withUiSoundSuppressed<T>( fn: () => T ): T {
+  _suppressDepth++;
+
+  try {
+    return fn();
+  } finally {
+    _suppressDepth--;
+  }
+}
 
 function ensureContext(): AudioContext | null {
   if ( typeof window === "undefined" ) {
@@ -293,6 +314,10 @@ function playClicks(
  * pitch derives from the field path when `pitchByField` is on.
  */
 export function playValueChange( fieldPath?: string ): void {
+  if ( _suppressDepth > 0 ) {
+    return;
+  }
+
   const current = getUiSoundSettings();
 
   if ( !current.enabled ) {
