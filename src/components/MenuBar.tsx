@@ -9,6 +9,7 @@ import {
   BellOff,
   Check,
   ExternalLink,
+  FileUp,
   Film,
   Github,
   Home,
@@ -441,6 +442,29 @@ function MenuBar( {
             </MenuItem>
           );
         } )}
+
+        {slot?.importHandler && (
+          <>
+            <Divider />
+            <MenuItem>
+              {( {
+                focus
+              } ) => (
+                <button
+                  type="button"
+                  onClick={ slot.importHandler ?? undefined }
+                  className={ clsx(
+                    itemClass,
+                    focus && "bg-hover"
+                  ) }
+                >
+                  <FileUp className="h-4 w-4 text-foreground/70" />
+                  <span className="flex-1 text-left">Import .json</span>
+                </button>
+              )}
+            </MenuItem>
+          </>
+        )}
 
         {IS_DEV && (
           <>

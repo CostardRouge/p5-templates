@@ -21,6 +21,7 @@ import type {
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import OptionsPanel from "./components/OptionsPanel";
 import RecordingLockBanner from "./components/RecordingLockBanner";
+import ImportSuccessBanner from "./components/ImportSuccessBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
 import InteractivePanel from "./components/InteractivePanel/InteractivePanel";
 import TemplateAssetsProvider from "./components/TemplateAssetsProvider/TemplateAssetsProvider";
@@ -43,6 +44,9 @@ import {
 import {
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
+import {
+  readAndClearPendingImport
+} from "@/lib/pendingImportOptions";
 
 // CaptureActions drags the whole recording subtree into the sketch page's
 // initial compile: useBrowserRecorder -> @/engines/recording -> createRecorder
@@ -102,6 +106,14 @@ export default function TemplateOptions( {
     bannerCloning,
     setBannerCloning
   ] = useState( false );
+
+  // Success banner shown above the options panel after an import applies —
+  // covers both the manual Import button and the templates-listing handoff,
+  // since both funnel through handleImportOptions below.
+  const [
+    importBanner,
+    setImportBanner
+  ] = useState<string | null>( null );
 
   const handleBannerClone = async() => {
     if ( !captureActionsRef.current ) {
@@ -398,7 +410,40 @@ export default function TemplateOptions( {
     const processedOptions = initOptions( importedOptions );
 
     reset( processedOptions );
+    setImportBanner( "Options imported successfully" );
   };
+
+  // One-shot handoff from the templates listing page's "Import .json"
+  // button: it stashes the parsed options in sessionStorage right before a
+  // hard navigation to this template, since the listing page and this page
+  // are separate mounted trees with no shared React state. Only applies to
+  // a fresh (non-persisted) load — a persisted job already has its own
+  // import path (ImportOptionsButton -> /api/options/import/:jobId).
+  useEffect(
+    () => {
+      if ( persistedJob ) {
+        return;
+      }
+
+      const pending = readAndClearPendingImport();
+
+      if ( !pending || typeof pending !== "object" ) {
+        return;
+      }
+
+      if ( ( pending as {
+        name?: unknown;
+      } ).name !== name ) {
+        return;
+      }
+
+      handleImportOptions( pending as SketchOption );
+    },
+    // Mount-only: this is a one-shot consume (readAndClearPendingImport
+    // removes the key on first read), not a reactive sync.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   // ≥ md: separate floating panels (template right, sketch settings left).
   // Below: a single bottom drawer with Sketch / Template / Export tabs.
@@ -462,6 +507,13 @@ export default function TemplateOptions( {
                 />
               )}
 
+              {importBanner && (
+                <ImportSuccessBanner
+                  message={ importBanner }
+                  onDismiss={ () => setImportBanner( null ) }
+                />
+              )}
+
               <OptionsPanel
                 methods={ methods }
                 name={ name }
@@ -510,6 +562,8 @@ export default function TemplateOptions( {
             onImportOptions={ handleImportOptions }
             bannerCloning={ bannerCloning }
             onBannerClone={ handleBannerClone }
+            importBanner={ importBanner }
+            onImportBannerDismiss={ () => setImportBanner( null ) }
           />
         )}
 

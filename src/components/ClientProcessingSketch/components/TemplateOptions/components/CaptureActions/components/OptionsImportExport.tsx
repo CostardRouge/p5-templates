@@ -113,10 +113,6 @@ export default function OptionsImportExport( {
       if ( !persistedJobId ) {
         if ( onImportInMemory ) {
           onImportInMemory( importedOptions );
-          setToast( {
-            message: "Options imported successfully",
-            type: "success"
-          } );
         }
       } else {
         const formData = new FormData();
@@ -146,10 +142,6 @@ export default function OptionsImportExport( {
           if ( onImportInMemory ) {
             onImportInMemory( importedOptions );
           }
-          setToast( {
-            message: "Options imported successfully",
-            type: "success"
-          } );
         } else {
           throw new Error( "Failed to import options" );
         }
