@@ -6,12 +6,53 @@ import {
 const string = {
   fonts: {
     loaded: {},
+    // p5 v2: loadFont() is async. Hand out a stable placeholder synchronously
+    // and graft the loaded p5.Font onto it once the promise resolves — same
+    // observable behaviour as v1's lazily-filling font object, so callers may
+    // capture the reference early and re-check readiness via `font.data`.
     loadFont: (
       key, path
     ) => {
-      return (
-        string.fonts.loaded[ key ] ?? ( string.fonts.loaded[ key ] = getP5().loadFont( path ) )
-      );
+      const {
+        loaded
+      } = string.fonts;
+
+      if ( !loaded[ key ] ) {
+        const p = getP5();
+
+        if ( !p ) {
+          return undefined;
+        }
+
+        const placeholder = Object.create( p.constructor.Font.prototype );
+
+        // Keeps textFont(placeholder) valid before the real font arrives.
+        placeholder.face = {
+          family: "sans-serif"
+        };
+        loaded[ key ] = placeholder;
+
+        Promise.resolve( p.loadFont( path ) )
+          .then( ( font ) => {
+            Object.setPrototypeOf(
+              placeholder,
+              Object.getPrototypeOf( font )
+            );
+            Object.assign(
+              placeholder,
+              font
+            );
+          } )
+          .catch( ( error ) => {
+            delete loaded[ key ];
+            console.error(
+              `Failed to load font "${ key }" from ${ path }`,
+              error
+            );
+          } );
+      }
+
+      return loaded[ key ];
     },
     get loraItalic() {
       return string.fonts.loadFont(
@@ -135,9 +176,80 @@ const string = {
 
     graphics.strokeWeight( strokeWeight );
     graphics.textSize( size );
-    graphics.textFont?.( font );
+
+    // p5 v2 textFont() throws on a nullish font instead of ignoring it.
+    if ( font ) {
+      graphics.textFont( font );
+    }
+
     graphics.textAlign( ...textAlign );
     graphics.textWrap( textWrap );
+  },
+  // p5 v2 compat: Font.textBounds/textToPoints no longer take a font size —
+  // they read font/size from a renderer's state, and the 4th positional arg
+  // became a wrap width. These helpers restore the v1 "(str, x, y, size)"
+  // call shape with v1's LEFT/BASELINE origin.
+  textBounds: (
+    font, str, x, y, size, graphics = getP5()
+  ) => {
+    if ( !font?.data || !graphics ) {
+      return {
+        x,
+        y,
+        w: 0,
+        h: 0
+      };
+    }
+
+    graphics.push();
+    graphics.textFont( font );
+    graphics.textSize( size );
+    graphics.textAlign(
+      graphics.LEFT,
+      graphics.BASELINE
+    );
+
+    try {
+      return font.textBounds(
+        str,
+        x,
+        y,
+        {
+          graphics
+        }
+      );
+    } finally {
+      graphics.pop();
+    }
+  },
+  textToPoints: (
+    font, str, x, y, size, options = {}, graphics = getP5()
+  ) => {
+    if ( !font?.data || !graphics ) {
+      return [];
+    }
+
+    graphics.push();
+    graphics.textFont( font );
+    graphics.textSize( size );
+    graphics.textAlign(
+      graphics.LEFT,
+      graphics.BASELINE
+    );
+
+    try {
+      return font.textToPoints(
+        str,
+        x,
+        y,
+        {
+          ...options,
+          graphics
+        }
+      );
+    } finally {
+      graphics.pop();
+    }
   },
   write: function(
     str, x, y, options = {}
@@ -164,7 +276,6 @@ const string = {
     options.textAlign ??= [];
 
     const {
-      size,
       font,
       graphics,
       textWidth,
@@ -174,7 +285,9 @@ const string = {
       popPush
     } = options;
 
-    if ( !font?.font ) {
+    // p5 v2: a font is ready once its glyph data is parsed (`font.data`);
+    // v1 exposed the same readiness via the opentype `font.font` object.
+    if ( !font?.data ) {
       return;
     }
 
@@ -189,11 +302,15 @@ const string = {
 
     string.applyFontStyle( options );
 
+    // applyFontStyle already set font/size on `graphics`; v2 textBounds
+    // reads them from the renderer passed via options.
     const box = font.textBounds(
       str,
       x,
       y,
-      size
+      {
+        graphics
+      }
     );
     const asc = p.int( p.textAscent() * 0.8 );
     const desc = p.int( p.textDescent() * 0.8 );
@@ -275,7 +392,9 @@ const string = {
     sampleFactor = 1,
     simplifyThreshold = 0
   } ) => {
-    const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
+    // p5 v2 fonts carry their family on `name`/`face.family` (v1 kept it in
+    // the opentype names table).
+    const fontFamily = font?.name || font?.face?.family || "unknown";
 
     return cache.key(
       text,
@@ -297,8 +416,9 @@ const string = {
     sampleFactor = 1,
     simplifyThreshold = 0
   } ) => {
-    // Guard clause: Return an empty array to prevent downstream errors
-    if ( !font?.font ) {
+    // Guard clause: Return an empty array to prevent downstream errors.
+    // (`font.data` is p5 v2's "glyph data parsed" readiness flag.)
+    if ( !font?.data ) {
       return [];
     }
 
@@ -318,7 +438,8 @@ const string = {
     const data = cache.store(
       rawPointsCacheKey,
       () => {
-        const rawPoints = font.textToPoints(
+        const rawPoints = string.textToPoints(
+          font,
           text,
           0, // BUG FIX: Always get raw points at the (0, 0) origin
           0, // BUG FIX: Always get raw points at the (0, 0) origin

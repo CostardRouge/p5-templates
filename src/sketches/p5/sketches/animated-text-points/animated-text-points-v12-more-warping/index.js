@@ -41,7 +41,7 @@ sketch.draw( async() => {
   const sampleFactor = shape.sampleFactor ?? 1;
   const simplifyThreshold = shape.simplifyThreshold ?? 0;
 
-  if ( word.length === 0 || !font?.font ) {
+  if ( word.length === 0 || !font?.data ) {
     return;
   }
 

@@ -54,8 +54,10 @@ const BINDINGS_ENABLED = interactionBindingsEnabled();
 let refreshTimer = -1;
 
 function refreshAssets() {
+  let immediate;
+
   if ( refreshTimer === -1 ) {
-    _refreshAssets();
+    immediate = _refreshAssets();
   }
 
   clearTimeout( refreshTimer );
@@ -63,6 +65,10 @@ function refreshAssets() {
     _refreshAssets,
     80
   );
+
+  // Returned so the engine's preload phase can await the initial load
+  // (p5 v2 loadImage is promise-based; there is no blocking preload()).
+  return immediate;
 }
 
 const IMAGE_PATH_RE = /\.(png|jpe?g|webp|gif|svg|avif|bmp|arw)(\?|#|$)/i;
@@ -158,6 +164,7 @@ async function _refreshAssets() {
 
   const prevMap = cache.get( "imagesMap" ) ?? new Map();
   const newMap = new Map();
+  const pendingLoads = [];
 
   for ( const path of allPaths ) {
     let obj = prevMap.get( path );
@@ -171,9 +178,24 @@ async function _refreshAssets() {
       obj = {
         path,
         filename: path.split( "/" ).pop(),
-        img: getP5().loadImage( url ),
+        img: undefined,
         exif: undefined
       };
+
+      // p5 v2: loadImage resolves asynchronously; keep the entry's identity
+      // stable and fill `img` in once decoded, awaiting all loads below so
+      // callers of the returned promise see ready images (v1 preload parity).
+      pendingLoads.push( getP5()
+        .loadImage( url )
+        .then( ( img ) => {
+          obj.img = img;
+        } )
+        .catch( ( error ) => {
+          console.error(
+            `Failed to load image "${ path }"`,
+            error
+          );
+        } ) );
 
       readExifInfo(
         obj,
@@ -187,6 +209,8 @@ async function _refreshAssets() {
     );
     prevMap.delete( path );
   }
+
+  await Promise.all( pendingLoads );
 
   prevMap.forEach( ( o ) => {
     o.img?.remove?.();

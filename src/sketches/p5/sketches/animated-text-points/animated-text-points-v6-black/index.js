@@ -47,7 +47,7 @@ sketch.draw( async() => {
   const fonts = [
     string.fonts?.[ shape.fontA ?? "sans" ],
     string.fonts?.[ shape.fontB ?? "serif" ]
-  ].filter( ( font ) => font?.font );
+  ].filter( ( font ) => font?.data );
 
   if ( fonts.length === 0 ) {
     return;

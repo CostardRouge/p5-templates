@@ -23,10 +23,10 @@ const interactive = {
 
 events.register(
   "engine-window-preload",
-  () => {
+  async() => {
     const p = getP5();
 
-    interactive.image = p.loadImage( "/assets/images/handpointing.png" );
+    interactive.image = await p.loadImage( "/assets/images/handpointing.png" );
   }
 );
 

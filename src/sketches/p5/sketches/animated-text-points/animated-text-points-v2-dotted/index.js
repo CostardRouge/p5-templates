@@ -43,7 +43,7 @@ sketch.draw( async() => {
   const simplifyThreshold = shape.simplifyThreshold ?? 0;
   const letterSpeed = options.sketch?.letters?.speed ?? 1;
 
-  if ( word.length === 0 || !font?.font ) {
+  if ( word.length === 0 || !font?.data ) {
     return;
   }
 

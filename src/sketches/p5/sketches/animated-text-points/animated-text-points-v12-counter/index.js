@@ -42,7 +42,7 @@ sketch.draw( async() => {
   const simplifyThreshold = shape.simplifyThreshold ?? 0;
   const letterSize = shape.letterSize ?? 1000;
 
-  // if ( word.length === 0 || !font?.font ) {
+  // if ( word.length === 0 || !font?.data ) {
   //   return;
   // }
 

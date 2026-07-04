@@ -13,6 +13,7 @@ import {
   pauseLoop, resumeLoop
 } from "./loopControl.js";
 import loadProfiler from "./loadProfiler.js";
+import string from "./string.js";
 import {
   coerceFramerate
 } from "./framerate.js";
@@ -46,11 +47,64 @@ export async function loadP5Class() {
   }
 
   if ( !_p5ClassPromise ) {
-    _p5ClassPromise = import( "p5/lib/p5.js" ).then( ( module ) => {
+    _p5ClassPromise = import( "p5" ).then( ( module ) => {
       const P5 = module?.default ?? globalThis.p5 ?? module;
 
       if ( !P5 ) {
         throw new Error( "Failed to load p5 constructor." );
+      }
+
+      // p5 v2 compat: v1's p5.Graphics exposed every p5 prototype member
+      // (constants like LEFT/WORD, helpers like createVector/constrain/dist).
+      // v2 only delegates a subset; backfill the rest so sketches keep
+      // treating a graphics layer as a drop-in p5 surface.
+      if ( P5.Graphics ) {
+        const graphicsProto = P5.Graphics.prototype;
+        const inChain = (
+          proto, key
+        ) => {
+          for ( let q = proto; q; q = Object.getPrototypeOf( q ) ) {
+            if ( Object.getOwnPropertyNames( q ).includes( key ) ) {
+              return true;
+            }
+          }
+
+          return false;
+        };
+
+        for ( const key of Object.getOwnPropertyNames( P5.prototype ) ) {
+          if ( key.startsWith( "_" ) || key === "constructor" || inChain(
+            graphicsProto,
+            key
+          ) ) {
+            continue;
+          }
+
+          Object.defineProperty(
+            graphicsProto,
+            key,
+            Object.getOwnPropertyDescriptor(
+              P5.prototype,
+              key
+            )
+          );
+        }
+      }
+
+      // p5 v2 compat: v1's Color.levels (0–255 RGBA ints) was removed, but
+      // many sketches destructure it. Rebuild it from the normalized RGBA
+      // readout the v2 Color class still exposes.
+      if ( P5.Color && !( "levels" in P5.Color.prototype ) ) {
+        Object.defineProperty(
+          P5.Color.prototype,
+          "levels",
+          {
+            configurable: true,
+            get() {
+              return this._array.map( ( channel ) => Math.round( channel * 255 ) );
+            }
+          }
+        );
       }
 
       return P5;
@@ -174,10 +228,6 @@ const sketch = {
       ( p ) => {
         setP5( p );
 
-        p.preload = () => {
-          events.handle( "engine-window-preload" );
-        };
-
         p.setup = async() => {
           loadProfiler.markSetupBegin();
 
@@ -197,7 +247,9 @@ const sketch = {
             } = {}
           } = sketchOptions;
 
-          sketch.canvas = p.createCanvas(
+          // p5 v2: createCanvas returns a promise for WebGL canvases (the
+          // renderer awaits its context); awaiting is a no-op for 2D.
+          sketch.canvas = await p.createCanvas(
             width,
             ratio ? width / ratio : height,
             type
@@ -271,6 +323,12 @@ const sketch = {
           if ( effectiveFramerate !== null ) {
             p.frameRate( effectiveFramerate );
           }
+
+          // -- preload (p5 v2: preload() is gone; load functions return
+          // promises). Handlers registered on "engine-window-preload" may
+          // return a promise; awaiting them here restores the v1 guarantee
+          // that preloaded assets are ready before the user's setup/draw.
+          await Promise.all( events.handle( "engine-window-preload" ) ?? [] );
 
           // -- setup (user function) ------------------------------------
           p.noStroke();
@@ -430,6 +488,11 @@ const sketch = {
 
     // Clear all registered events so the next sketch starts fresh
     events.registeredEvents = {};
+
+    // p5 v2 fonts keep a reference to the instance that loaded them; drop the
+    // cache so the next sketch loads fonts against its own live instance
+    // (files come back from the HTTP cache).
+    string.fonts.loaded = {};
 
     // Reset animation time so the next sketch starts at t=0
     time.reset();
@@ -597,8 +660,10 @@ const sketch = {
     ) => {
       const p = getP5();
 
+      // p5 v2: saveCanvas wants the DOM canvas (createCanvas now returns a
+      // renderer, which saveCanvas no longer recognises).
       p?.saveCanvas(
-        sketch.canvas,
+        sketch.getCanvasElement(),
         name,
         type
       );

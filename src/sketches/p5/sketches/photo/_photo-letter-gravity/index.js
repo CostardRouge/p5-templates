@@ -233,7 +233,7 @@ sketch.draw( (
 
   Engine.update( matter.engine );
 
-  if ( string.fonts.agiro.font ) {
+  if ( string.fonts.agiro.data ) {
     const emptyLetterPoints = matter.bodies.filter( ( {
       points
     } ) => points === undefined );

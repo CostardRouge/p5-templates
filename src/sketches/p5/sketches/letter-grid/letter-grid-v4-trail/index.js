@@ -179,7 +179,7 @@ sketch.draw( () => {
 
   const font = string.fonts[ gridCfg.font ] ?? string.fonts.spaceMonoRegular;
 
-  if ( !font?.font ) {
+  if ( !font?.data ) {
     return;
   }
 
@@ -709,7 +709,8 @@ sketch.draw( () => {
         shadowColor[ 2 ],
         a * 255
       );
-      g.beginShape( p.TESS );
+      // p5 v2 removed TESS; the default shape mode tessellates automatically.
+      g.beginShape();
 
       for ( const pt of smp.ring3D ) {
         const t = Math.max(
