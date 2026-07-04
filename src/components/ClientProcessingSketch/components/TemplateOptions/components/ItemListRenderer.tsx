@@ -30,6 +30,9 @@ import {
   ChevronDown, GripVertical, Plus, Trash2
 } from "lucide-react";
 import clsx from "clsx";
+import {
+  withSilentFormWrite
+} from "@/lib/uiSound";
 import FieldRenderer from "./FieldRenderer";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import type {
@@ -201,31 +204,33 @@ export default function ItemListRenderer( {
         Array.isArray( currentValue ) && currentValue.length > 0;
 
       if ( !hasExistingValues ) {
-        if ( config.defaultItems && config.defaultItems.length > 0 ) {
-          setValue(
-            name,
-            config.defaultItems,
-            {
-              shouldDirty: false,
-              shouldTouch: false
-            }
-          );
-        } else if ( config.minItems && config.minItems > 0 ) {
-          setValue(
-            name,
-            Array.from(
+        withSilentFormWrite( () => {
+          if ( config.defaultItems && config.defaultItems.length > 0 ) {
+            setValue(
+              name,
+              config.defaultItems,
               {
-                length: config.minItems
-              },
-              () =>
-                getDefaultValueForConfig( config.itemConfig )
-            ),
-            {
-              shouldDirty: false,
-              shouldTouch: false
-            }
-          );
-        }
+                shouldDirty: false,
+                shouldTouch: false
+              }
+            );
+          } else if ( config.minItems && config.minItems > 0 ) {
+            setValue(
+              name,
+              Array.from(
+                {
+                  length: config.minItems
+                },
+                () =>
+                  getDefaultValueForConfig( config.itemConfig )
+              ),
+              {
+                shouldDirty: false,
+                shouldTouch: false
+              }
+            );
+          }
+        } );
       }
 
       didInitRef.current = true;

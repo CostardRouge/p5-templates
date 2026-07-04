@@ -8,6 +8,9 @@ import {
   FormProvider, useFieldArray, useWatch
 } from "react-hook-form";
 import initOptions from "@/utils/initOptions";
+import {
+  withSilentFormWrite
+} from "@/lib/uiSound";
 import useRecordingStatusStream from "@/hooks/useRecordingStatusStream";
 import type {
   JobModel
@@ -188,11 +191,13 @@ export default function TemplateOptions( {
         if ( origin === "react" ) {
           return;
         }
-        syncLeafValues(
-          opts,
-          getValues(),
-          ""
-        );
+        withSilentFormWrite( () => {
+          syncLeafValues(
+            opts,
+            getValues(),
+            ""
+          );
+        } );
       } );
     },
     [

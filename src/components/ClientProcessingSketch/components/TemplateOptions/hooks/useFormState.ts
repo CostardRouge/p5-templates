@@ -9,7 +9,7 @@ import {
 } from "react-hook-form";
 import initOptions from "@/utils/initOptions";
 import {
-  playValueChange
+  isSilentFormWrite, playValueChange
 } from "@/lib/uiSound";
 import {
   useInterval
@@ -63,9 +63,12 @@ export function useFormState( {
         value, info
       ) => {
         // Audible tick on real value edits (sliders, inputs, action buttons).
-        // Form-level events (reset, initial populate) carry no field name and
-        // stay silent. Muting/throttling lives inside the sound module.
-        if ( info?.name ) {
+        // Form-level events (reset) carry no field name and stay silent.
+        // Programmatic syncs (sketch-driven option sync, list-default
+        // population on mount) carry a field name but are wrapped in
+        // withSilentFormWrite() by their callers, so they stay silent too.
+        // Muting/throttling lives inside the sound module.
+        if ( info?.name && !isSilentFormWrite() ) {
           playValueChange( info.name );
         }
 

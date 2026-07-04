@@ -48,6 +48,34 @@ export interface UiSoundSettings {
 
 export const UI_SOUND_PRESETS = CLICK_PRESET_NAMES;
 
+/* ------------------------------------------------------------------ */
+/*  Silent writes                                                      */
+/* ------------------------------------------------------------------ */
+
+// react-hook-form's watch() fires with a field name for ANY setValue(),
+// whether it came from a user dragging a slider or from code silently
+// syncing the form (sketch-driven option sync, list-default population on
+// mount, …). Callers doing the latter wrap their setValue() calls in
+// withSilentFormWrite() so the value-change click in useFormState doesn't
+// fire for writes the user never made.
+let silentWrite = false;
+
+export function withSilentFormWrite<T>( fn: () => T ): T {
+  const previous = silentWrite;
+
+  silentWrite = true;
+
+  try {
+    return fn();
+  } finally {
+    silentWrite = previous;
+  }
+}
+
+export function isSilentFormWrite(): boolean {
+  return silentWrite;
+}
+
 export const UI_SOUND_DEFAULTS: UiSoundSettings = {
   enabled: false,
   actionSounds: true,
