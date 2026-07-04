@@ -48,7 +48,7 @@ export default function ImportSuccessBanner( {
 
   return (
     <div
-      className={ `flex items-start gap-2 px-2 py-2 border border-green-500/40 bg-green-500/10 backdrop-blur-xl rounded-2xl shadow-lg transition-all duration-300 ${
+      className={ `flex items-start gap-2 px-2 py-2 border border-green-500/40 bg-green-500/10 backdrop-blur-xl rounded-xl shadow-lg transition-all duration-300 ${
         isVisible ? "opacity-100" : "opacity-0"
       }` }
     >
