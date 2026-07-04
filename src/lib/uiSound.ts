@@ -144,6 +144,8 @@ function sanitize( raw: unknown ): UiSoundSettings {
 }
 
 export function getUiSoundSettings(): UiSoundSettings {
+  ensureGestureListeners();
+
   if ( settings ) {
     return settings;
   }
@@ -225,6 +227,98 @@ export function withUiSoundSuppressed<T>( fn: () => T ): T {
   } finally {
     _suppressDepth--;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  User-gesture gate                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A form value can change for two reasons: the user moved a control, or code
+ * wrote it (the sketch syncing its options back on open, a field normalizing
+ * itself on mount, a preset expanding, …). Both flow through the same RHF
+ * `watch()` callback and both carry a field name, so name alone can't tell
+ * them apart. What can: react-hook-form's `setValue` never dispatches a DOM
+ * event, whereas every real edit is driven by a genuine pointer / key / input
+ * gesture. We remember when the last such gesture happened and only click for
+ * changes that land within a short window of one — so opening a sketch (pure
+ * programmatic writes, no gesture) stays silent.
+ */
+const USER_GESTURE_WINDOW_MS = 700;
+
+let _lastGestureAt = -Infinity;
+let _pointerDown = false;
+let _gestureListenersAttached = false;
+
+function nowMs(): number {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+function markGesture(): void {
+  _lastGestureAt = nowMs();
+}
+
+function ensureGestureListeners(): void {
+  if ( _gestureListenersAttached || typeof window === "undefined" ) {
+    return;
+  }
+
+  _gestureListenersAttached = true;
+
+  const opts: AddEventListenerOptions = {
+    capture: true,
+    passive: true
+  };
+
+  // Held pointer keeps a slider drag "live" for its whole duration; discrete
+  // events (keys, native input/change) stamp a fresh timestamp.
+  window.addEventListener(
+    "pointerdown",
+    () => {
+      _pointerDown = true;
+      markGesture();
+    },
+    opts
+  );
+  window.addEventListener(
+    "pointerup",
+    () => {
+      _pointerDown = false;
+      markGesture();
+    },
+    opts
+  );
+  window.addEventListener(
+    "pointercancel",
+    () => {
+      _pointerDown = false;
+    },
+    opts
+  );
+  window.addEventListener(
+    "keydown",
+    markGesture,
+    opts
+  );
+  window.addEventListener(
+    "input",
+    markGesture,
+    opts
+  );
+  window.addEventListener(
+    "change",
+    markGesture,
+    opts
+  );
+  window.addEventListener(
+    "wheel",
+    markGesture,
+    opts
+  );
+}
+
+function hasRecentUserGesture(): boolean {
+  return _pointerDown || nowMs() - _lastGestureAt <= USER_GESTURE_WINDOW_MS;
 }
 
 function ensureContext(): AudioContext | null {
@@ -321,6 +415,12 @@ export function playValueChange( fieldPath?: string ): void {
   const current = getUiSoundSettings();
 
   if ( !current.enabled ) {
+    return;
+  }
+
+  // Only genuine user edits click — programmatic writes (sketch sync on open,
+  // mount-time normalization) reach here with no preceding gesture.
+  if ( !hasRecentUserGesture() ) {
     return;
   }
 
