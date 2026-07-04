@@ -30,6 +30,9 @@ import RecordingActions from "./components/RecordingActions";
 import {
   useBrowserRecorder
 } from "./hooks/useBrowserRecorder";
+import {
+  useFrameExporter
+} from "./hooks/useFrameExporter";
 import useSketch from "@/components/ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import type {
   RecorderCapabilities
@@ -104,6 +107,12 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
     : null;
 
   const browserRecorder = useBrowserRecorder( {
+    engine,
+    options: options as never,
+    activeSlideIndex,
+    sketchName: name
+  } );
+  const frameExporter = useFrameExporter( {
     engine,
     options: options as never,
     activeSlideIndex,
@@ -728,6 +737,13 @@ const CaptureActions = forwardRef<CaptureActionsRef, CaptureActionsProps>( (
               onStart={ browserRecorder.start }
               onStop={ browserRecorder.stop }
               onCancel={ browserRecorder.cancel }
+              frameExport={ {
+                isExporting: frameExporter.isExporting,
+                progress: frameExporter.progress,
+                error: frameExporter.error,
+                onExport: frameExporter.exportFrames,
+                onCancel: frameExporter.cancel
+              } }
             />
           )}
 
