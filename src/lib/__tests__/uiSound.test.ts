@@ -129,5 +129,69 @@ describe(
         expect( scheduleClick ).not.toHaveBeenCalled();
       }
     );
+
+    it(
+      "stays silent for non-sketch fields even during a real gesture",
+      async() => {
+        const mod = await loadModule();
+
+        mod.setUiSoundSettings( {
+          enabled: true
+        } );
+        window.dispatchEvent( new Event( "pointerdown" ) );
+
+        // Content items, slide-level content and general settings never click.
+        mod.playValueChange( "content.0.text" );
+        mod.playValueChange( "slides.1.content.2.hud.badge.enabled" );
+        mod.playValueChange( "slides.0.transition.enabled" );
+        mod.playValueChange( "size.width" );
+        mod.playValueChange( "animation.duration" );
+
+        expect( scheduleClick ).not.toHaveBeenCalled();
+      }
+    );
+
+    it(
+      "clicks for global and per-slide sketch parameters",
+      async() => {
+        const mod = await loadModule();
+
+        mod.setUiSoundSettings( {
+          enabled: true,
+          minGapMs: 0
+        } );
+        window.dispatchEvent( new Event( "pointerdown" ) );
+
+        mod.playValueChange( "sketch.magnitude" );
+        mod.playValueChange( "slides.2.sketch.colors.0" );
+
+        expect( scheduleClick ).toHaveBeenCalledTimes( 2 );
+      }
+    );
+  }
+);
+
+describe(
+  "isSoundFeedbackField",
+  () => {
+    it(
+      "matches only sketch-settings paths",
+      async() => {
+        const mod = await loadModule();
+
+        expect( mod.isSoundFeedbackField( "sketch" ) ).toBe( true );
+        expect( mod.isSoundFeedbackField( "sketch.magnitude" ) ).toBe( true );
+        expect( mod.isSoundFeedbackField( "slides.0.sketch" ) ).toBe( true );
+        expect( mod.isSoundFeedbackField( "slides.12.sketch.colors.0" ) ).toBe( true );
+
+        expect( mod.isSoundFeedbackField( "content.0.text" ) ).toBe( false );
+        expect( mod.isSoundFeedbackField( "slides.0.content.1.type" ) ).toBe( false );
+        expect( mod.isSoundFeedbackField( "slides.0.transition.enabled" ) ).toBe( false );
+        expect( mod.isSoundFeedbackField( "size.width" ) ).toBe( false );
+        expect( mod.isSoundFeedbackField( "animation.duration" ) ).toBe( false );
+        // A field that merely contains "sketch" further down must not match.
+        expect( mod.isSoundFeedbackField( "content.0.sketch" ) ).toBe( false );
+      }
+    );
   }
 );
