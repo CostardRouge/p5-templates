@@ -7,29 +7,33 @@ import animation from "../../animation.js";
 import {
   reportItemBounds
 } from "./itemBoundsRegistry.js";
+import {
+  getP5
+} from "../../sketch.js";
 
 export default function drawSlideImage(
   imageOption, slideOptions
 ) {
+  const p = getP5();
   const image = getAsset( imageOption.source );
 
   if ( !image ) {
     return;
   }
 
-  const imagePosition = createVector(
-    width * imageOption.position.x,
-    height * imageOption.position.y
+  const imagePosition = p.createVector(
+    p.width * imageOption.position.x,
+    p.height * imageOption.position.y
   );
 
   if ( imageOption.animation ) {
     if ( imageOption.animation.name === "noise-floating" ) {
-      noiseDetail( ...( imageOption?.animation?.noiseDetail ?? [
+      p.noiseDetail( ...( imageOption?.animation?.noiseDetail ?? [
         2,
         0.7
       ] ) );
 
-      const imageAngle = noise( animation.angle ) * TAU;
+      const imageAngle = p.noise( animation.angle ) * p.TAU;
 
       imagePosition.add(
         mappers.fn(

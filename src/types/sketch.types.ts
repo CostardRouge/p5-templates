@@ -703,9 +703,9 @@ export const QrCodeItemSchema = z.object( {
   urlSize: z.number().positive()
     .default( 20 ),
   urlFill: RGBA.default( [
-    0,
-    0,
-    0
+    255,
+    255,
+    255
   ] )
 } );
 
