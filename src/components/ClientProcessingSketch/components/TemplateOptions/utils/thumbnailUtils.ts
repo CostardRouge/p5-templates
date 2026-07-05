@@ -1,3 +1,7 @@
+import type {
+  SketchEngine
+} from "@/engines/types";
+
 /**
  * Resolve the live sketch canvas rendered in the main preview, independent of
  * which engine produced it. p5 tags its canvas `p5Canvas`, Three.js tags its
@@ -5,12 +9,41 @@
  * scope to the shared preview container (`EngineSketchRenderer`), which also
  * covers any future canvas engine. Falls back to the legacy p5 selector for
  * routes that don't mount inside the container.
+ *
+ * Note: for a DOM engine (GSAP) this returns the hidden mirror canvas, whose
+ * pixels are only refreshed on demand — prefer `getCurrentFrameCanvas(engine)`
+ * when a *current* frame is needed.
  */
 export function getActiveSketchCanvas(): HTMLCanvasElement | null {
   return (
     document.querySelector<HTMLCanvasElement>( ".sketch-canvas-container canvas" ) ??
     document.querySelector<HTMLCanvasElement>( "canvas.p5Canvas" )
   );
+}
+
+/**
+ * Obtain a canvas holding the engine's *current* frame, engine-agnostically.
+ *
+ * Canvas engines (p5, Three.js) paint straight into a live `<canvas>`, so the
+ * engine's capture source hands it back as-is. GSAP renders to the DOM and has
+ * no live canvas — its capture source rasterises the current stage into a
+ * mirror canvas on read. Going through the engine (rather than a blind DOM
+ * query) is therefore what makes GSAP thumbnails reflect the current frame
+ * instead of the stale one primed at mount.
+ *
+ * Falls back to the DOM lookup when no engine is available (or its read fails),
+ * preserving the legacy behaviour for canvas engines.
+ */
+export async function getCurrentFrameCanvas( engine?: SketchEngine | null ): Promise<CanvasImageSource | null> {
+  if ( engine ) {
+    try {
+      return await engine.getCaptureSource().readFrame();
+    } catch {
+      // Fall through to the DOM lookup below (e.g. capture source not ready).
+    }
+  }
+
+  return getActiveSketchCanvas();
 }
 
 /**
@@ -90,21 +123,27 @@ export function waitForSlideRendered(
 }
 
 /**
- * Captures a thumbnail from the p5.js canvas and returns a data URL
- * Uses native Canvas API for better compatibility with Next.js/Turbopack
+ * Captures a thumbnail from the active sketch's current frame and returns a
+ * JPEG data URL. Works for every engine: `engine` is used to obtain a
+ * current-frame canvas (rasterising the DOM for GSAP), falling back to a live
+ * canvas lookup when no engine is supplied.
+ * Uses native Canvas API for better compatibility with Next.js/Turbopack.
  */
-export async function captureThumbnailFromCanvas(): Promise<string | null> {
-  const canvas = getActiveSketchCanvas();
+export async function captureThumbnailFromCanvas( engine?: SketchEngine | null ): Promise<string | null> {
+  const canvas = await getCurrentFrameCanvas( engine );
 
-  if ( !canvas ) {
+  const sourceWidth = ( canvas as HTMLCanvasElement | null )?.width ?? 0;
+  const sourceHeight = ( canvas as HTMLCanvasElement | null )?.height ?? 0;
+
+  if ( !canvas || !sourceWidth || !sourceHeight ) {
     return null;
   }
 
   try {
     // Target width for thumbnail - optimal for grid display
     const targetWidth = 240;
-    const scaleFactor = targetWidth / canvas.width;
-    const targetHeight = Math.round( canvas.height * scaleFactor );
+    const scaleFactor = targetWidth / sourceWidth;
+    const targetHeight = Math.round( sourceHeight * scaleFactor );
 
     // Create destination canvas
     const destCanvas = document.createElement( "canvas" );

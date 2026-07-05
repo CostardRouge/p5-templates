@@ -4,6 +4,9 @@ import {
 import {
   JobModel
 } from "@/types/recording.types";
+import type {
+  SketchEngine
+} from "@/engines/types";
 import {
   captureThumbnailFromCanvas,
   waitForSlideRendered
@@ -15,12 +18,22 @@ type UseThumbnailsProps = {
   slideFields: Array<{
     id: string;
   }>;
+  // Active engine, used to grab a current-frame canvas engine-agnostically
+  // (notably to rasterise the GSAP DOM). Optional so callers without an engine
+  // fall back to the live-canvas lookup.
+  engine?: SketchEngine | null;
+  // True while an in-browser recording/export is running. Captures are skipped
+  // then: for GSAP a capture rasterises the same singleton mirror canvas the
+  // recorder is driving, so it would collide with the in-flight recording.
+  recording?: boolean;
 };
 
 export function useThumbnails( {
   enabled,
   persistedJob,
-  slideFields
+  slideFields,
+  engine,
+  recording
 }: UseThumbnailsProps ) {
   const [
     thumbnails,
@@ -28,6 +41,14 @@ export function useThumbnails( {
   ] = useState<Record<string, string>>( {} );
   const pendingThumbnailCaptureRef = useRef<number | null>( null );
   const hasLoadedPersistedThumbnails = useRef( false );
+
+  // Keep the latest engine + recording flag in refs so the capture callbacks
+  // stay stable (they feed many effects/deps) while always reading fresh values.
+  const engineRef = useRef( engine );
+  const recordingRef = useRef( recording );
+
+  engineRef.current = engine;
+  recordingRef.current = recording;
 
   // Initialize thumbnails from persisted job
   useEffect(
@@ -151,7 +172,9 @@ export function useThumbnails( {
     async(
       slideId: string, slideIndex?: number
     ) => {
-      if ( !enabled ) {
+      // Don't capture while a recording is in flight — a GSAP capture would
+      // rasterise the same mirror canvas the recorder is driving.
+      if ( !enabled || recordingRef.current ) {
         return;
       }
 
@@ -168,7 +191,7 @@ export function useThumbnails( {
         }
       }
 
-      const dataUrl = await captureThumbnailFromCanvas();
+      const dataUrl = await captureThumbnailFromCanvas( engineRef.current );
 
       if ( dataUrl ) {
         setThumbnails( ( prev ) => ( {
