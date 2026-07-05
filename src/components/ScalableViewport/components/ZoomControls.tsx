@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Minus, Plus, Scan
+  Maximize, Minimize, Minus, Plus, Scan
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -14,6 +14,9 @@ const ZoomControls = ( {
   onMinus,
   onFit,
   onReset,
+  onToggleFullscreen,
+  isFullscreen = false,
+  showFullscreen = false,
   disabled = false,
   variant = "floating"
 }: {
@@ -22,6 +25,11 @@ const ZoomControls = ( {
   onMinus: () => void;
   onReset: () => void;
   onFit: () => void;
+  // Enter/exit browser fullscreen. Only wired up (and the button only shown)
+  // when `showFullscreen` — desktop with a supported Fullscreen API.
+  onToggleFullscreen?: () => void;
+  isFullscreen?: boolean;
+  showFullscreen?: boolean;
   // Recording owns the engine clock — surface the controls as inert so a
   // stray zoom can't disturb an in-flight capture.
   disabled?: boolean;
@@ -83,6 +91,23 @@ const ZoomControls = ( {
       >
         <Scan className={ iconClassName } />
       </button>
+
+      {showFullscreen && (
+        <button
+          onClick={ onToggleFullscreen }
+          disabled={ disabled }
+          className={ buttonClassName }
+          title={ isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen" }
+          aria-label={ isFullscreen ? "Exit fullscreen" : "Enter fullscreen" }
+          aria-pressed={ isFullscreen }
+        >
+          {isFullscreen ? (
+            <Minimize className={ iconClassName } />
+          ) : (
+            <Maximize className={ iconClassName } />
+          )}
+        </button>
+      )}
     </div>
   );
 

@@ -2,6 +2,9 @@
 
 import dynamic from "next/dynamic";
 import clsx from "clsx";
+import {
+  Minimize
+} from "lucide-react";
 import type React from "react";
 import {
   useCallback, useEffect, useMemo, useRef, useState
@@ -26,6 +29,12 @@ import {
 import useSketchDevWatch from "@/hooks/useSketchDevWatch";
 import usePageVisibility from "@/hooks/usePageVisibility";
 import useMediaQuery from "@/hooks/useMediaQuery";
+import useFullscreenViewport from "@/hooks/useFullscreenViewport";
+import {
+  exitViewportFullscreen,
+  registerFullscreenTarget,
+  toggleViewportFullscreen
+} from "@/lib/fullscreen/fullscreenViewport";
 import {
   usePanelDock
 } from "@/hooks/usePanelDock";
@@ -67,6 +76,19 @@ export default function TemplateSketchPage() {
   const dockedDesktop = docked && isDesktop && sketchLoaded && !capturing;
   const reserveLeft = dockedDesktop && hasSketchSettingsPanel;
   const reserveRight = dockedDesktop;
+
+  // Fullscreen mode (desktop only, official Fullscreen API). The viewport
+  // wrapper below is the element that goes fullscreen; the size select and the
+  // zoom-controls button both drive the shared controller.
+  const {
+    isFullscreen, isSupported: fullscreenSupported
+  } = useFullscreenViewport();
+  const fullscreenAvailable = isDesktop && fullscreenSupported;
+
+  const registerViewport = useCallback(
+    ( el: HTMLDivElement | null ) => registerFullscreenTarget( el ),
+    []
+  );
 
   // Portal target for the viewport's zoom controls when docked (they render
   // flat inside the top bar instead of floating top-right).
@@ -295,17 +317,24 @@ export default function TemplateSketchPage() {
           controls so the sketch header (engine · name · perf) never
           slides under them when the drawer compresses the viewport. */}
       <div
+        ref={ registerViewport }
         className={ clsx(
-          "w-full relative pt-12 md:pt-0",
+          "w-full relative",
+          // Fullscreen owns the whole screen: the browser sizes this element to
+          // fill the display, so drop the layout insets/padding and just give
+          // it a solid backdrop.
+          isFullscreen
+            ? "bg-background"
+            : "pt-12 md:pt-0",
           // Docked: inset the viewport by the top bar (h-12) and the rails
           // (w-80 / w-72) so it fits the framed area. The container resize
           // triggers ScalableViewport's refit observer.
-          dockedDesktop && "md:mt-12",
-          reserveLeft && "md:ml-80",
-          reserveRight && "md:mr-72",
-          ( reserveLeft || reserveRight || dockedDesktop ) && "md:w-auto"
+          !isFullscreen && dockedDesktop && "md:mt-12",
+          !isFullscreen && reserveLeft && "md:ml-80",
+          !isFullscreen && reserveRight && "md:mr-72",
+          !isFullscreen && ( reserveLeft || reserveRight || dockedDesktop ) && "md:w-auto"
         ) }
-        style={ {
+        style={ isFullscreen ? undefined : {
           height: dockedDesktop
             ? `calc(100% - 3rem - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
             : `calc(100% - var(${ STUDIO_DRAWER_HEIGHT_VAR }, 0px))`
@@ -321,6 +350,9 @@ export default function TemplateSketchPage() {
           lockInteractions={ browserRecording }
           docked={ dockedDesktop }
           zoomControlsContainer={ zoomSlot }
+          showFullscreen={ fullscreenAvailable }
+          isFullscreen={ isFullscreen }
+          onToggleFullscreen={ toggleViewportFullscreen }
           onInteractionStart={ handleInteractionStart }
           onInteractionEnd={ handleInteractionEnd }
         >
@@ -373,6 +405,22 @@ export default function TemplateSketchPage() {
             </div>
           )}
         </ScalableViewport>
+
+        {/* Docked fullscreen hides the top bar (and with it the zoom-controls
+            fullscreen button), so surface a dedicated exit affordance. The
+            floating layout keeps its zoom controls on-screen, so it doesn't
+            need one. Esc always works either way. */}
+        {isFullscreen && dockedDesktop && (
+          <button
+            onClick={ () => void exitViewportFullscreen() }
+            title="Exit fullscreen (Esc)"
+            aria-label="Exit fullscreen"
+            className="absolute top-4 right-4 z-50 inline-flex items-center gap-1.5 h-9 px-3 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md text-foreground/70 hover:text-foreground hover:bg-hover transition-colors"
+          >
+            <Minimize className="w-4 h-4" />
+            <span className="text-xs font-semibold">Exit fullscreen</span>
+          </button>
+        )}
       </div>
 
       {/* Controls & options panel */}

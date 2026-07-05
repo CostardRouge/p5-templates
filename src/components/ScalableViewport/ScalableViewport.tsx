@@ -31,6 +31,9 @@ export default function ScalableViewport( {
   lockInteractions = false,
   docked = false,
   zoomControlsContainer = null,
+  showFullscreen = false,
+  isFullscreen = false,
+  onToggleFullscreen,
   onInteractionStart,
   onInteractionEnd
 }: {
@@ -39,6 +42,11 @@ export default function ScalableViewport( {
   resolutionKey?: string;
   showZoomControls?: boolean;
   disable?: boolean;
+  // Fullscreen toggle in the zoom controls — owned by the page, which holds
+  // the fullscreen state and the element that goes fullscreen.
+  showFullscreen?: boolean;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
   // In the docked workspace layout the zoom controls render flat and portal
   // into the top bar (`zoomControlsContainer`) instead of floating top-right.
   docked?: boolean;
@@ -197,6 +205,9 @@ export default function ScalableViewport( {
       onMinus={ zoomOut }
       onFit={ () => fitToViewport( true ) }
       onReset={ () => resetToActualPixels( true ) }
+      showFullscreen={ showFullscreen }
+      isFullscreen={ isFullscreen }
+      onToggleFullscreen={ onToggleFullscreen }
       disabled={ lockInteractions }
       variant={ docked ? "bar" : "floating" }
     />

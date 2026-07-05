@@ -2,6 +2,10 @@ import {
   FieldConfig,
   SelectOption
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+import {
+  FULLSCREEN_PRESET_LABEL,
+  FULLSCREEN_PRESET_VALUE
+} from "@/lib/fullscreen/constants";
 
 const createSizePresetOption = (
   width: number,
@@ -15,6 +19,14 @@ const createSizePresetOption = (
 } );
 
 export const sizePresetOptions: SelectOption[] = [
+  // Desktop-only fullscreen mode. Not a fixed W×H — the size select recognises
+  // this sentinel and drives the browser Fullscreen API instead (rendered only
+  // where supported). See ControlledSizePresetSelect / fullscreenViewport.
+  {
+    label: FULLSCREEN_PRESET_LABEL,
+    value: FULLSCREEN_PRESET_VALUE
+  },
+
   // square
   createSizePresetOption(
     768,
