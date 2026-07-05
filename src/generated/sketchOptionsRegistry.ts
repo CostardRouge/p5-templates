@@ -256,6 +256,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:splines/splines-v0-chaikin": () => import( "@/p5/sketches/splines/splines-v0-chaikin/options" ),
   "p5:splines/splines-v1-interactive": () => import( "@/p5/sketches/splines/splines-v1-interactive/options" ),
   "p5:splines/splines-v2-draggable": () => import( "@/p5/sketches/splines/splines-v2-draggable/options" ),
+  "p5:synastar-terminal": () => import( "@/p5/sketches/synastar-terminal/options" ),
   "p5:text-morphing-mask/text-morphing-iris-mask": () => import( "@/p5/sketches/text-morphing-mask/text-morphing-iris-mask/options" ),
   "p5:text-morphing-mask/text-morphing-letter-mask": () => import( "@/p5/sketches/text-morphing-mask/text-morphing-letter-mask/options" ),
   "p5:text-morphing/text-morphing-capitalize": () => import( "@/p5/sketches/text-morphing/text-morphing-capitalize/options" ),
