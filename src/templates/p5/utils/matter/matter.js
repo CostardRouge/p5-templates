@@ -97,6 +97,7 @@ sketch.draw( (
   time, center, favouriteColour
 ) => {
   const p = getP5();
+
   p.background( ...options.colors.background );
 
   if ( !mediapipe.idle ) {
