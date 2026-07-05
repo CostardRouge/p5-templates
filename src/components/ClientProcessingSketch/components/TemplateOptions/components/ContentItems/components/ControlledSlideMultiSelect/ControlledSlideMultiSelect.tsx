@@ -10,6 +10,9 @@ import {
 import {
   CardLabelHeader
 } from "../ControlChrome";
+import {
+  indexToLetters
+} from "@/utils/slideNaming";
 
 type Props = {
   /** Field path to a string[] of slide ids (e.g. slides.2.transition.slideIds). */
@@ -96,7 +99,7 @@ export default function ControlledSlideMultiSelect( {
                 className="flex min-h-[2.5rem] md:min-h-0 cursor-pointer items-center justify-between gap-2 px-2.5 py-1.5 md:py-1 select-none transition-colors hover:bg-hover/50"
               >
                 <span className="min-w-0 truncate">
-                  {slide.name || `Slide ${ slide.index + 1 }`}
+                  {slide.name || indexToLetters( slide.index )}
                 </span>
                 <input
                   type="checkbox"
