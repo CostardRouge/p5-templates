@@ -5,10 +5,14 @@ import * as common from "../../common.js";
 import {
   reportItemBounds
 } from "./itemBoundsRegistry.js";
+import {
+  getP5
+} from "../../sketch.js";
 
 export default function drawSlideImagesStack(
   imagesStackOption, slideOptions
 ) {
+  const p = getP5();
   const {
     sources,
     position,
@@ -31,7 +35,7 @@ export default function drawSlideImagesStack(
     return;
   }
 
-  const imageIndexDisplay = map(
+  const imageIndexDisplay = p.map(
     animation.triangleProgression( 2 ),
     0,
     1,
@@ -47,8 +51,8 @@ export default function drawSlideImagesStack(
   {
     const stackScale = scaleValue ?? 1;
     const stackMargin = imagesStackOption.margin ?? 80;
-    const availableW = width * stackScale - 2 * stackMargin;
-    const availableH = height * stackScale - 2 * stackMargin;
+    const availableW = p.width * stackScale - 2 * stackMargin;
+    const availableH = p.height * stackScale - 2 * stackMargin;
     const img0 = images[ 0 ].img;
 
     if ( img0?.width && availableW > 0 && availableH > 0 ) {
@@ -60,21 +64,21 @@ export default function drawSlideImagesStack(
       const h = img0.height * fit * stackScale;
 
       reportItemBounds(
-        position.x * width - w / 2,
-        position.y * height - h / 2,
+        position.x * p.width - w / 2,
+        position.y * p.height - h / 2,
         w,
         h
       );
     }
   }
 
-  push();
+  p.push();
 
-  translate(
-    position.x * width,
-    position.y * height
+  p.translate(
+    position.x * p.width,
+    position.y * p.height
   );
-  rotate( rotationValue );
+  p.rotate( rotationValue );
 
   for ( let i = 0; i < images.length; i++ ) {
     if ( imageIndexDisplay < i ) {
@@ -82,7 +86,7 @@ export default function drawSlideImagesStack(
     }
 
     if ( progressiveRotation !== 0 ) {
-      rotate( map(
+      p.rotate( p.map(
         i,
         0,
         images.length - 1,
@@ -91,22 +95,22 @@ export default function drawSlideImagesStack(
       ) );
     }
 
-    const imagePosition = createVector();
+    const imagePosition = p.createVector();
 
     if ( imagesStackOption.animation ) {
       if ( imagesStackOption.animation.name === "random" ) {
         const randomShiftMargin = imagesStackOption.animation.shift || 80;
 
         imagePosition.add(
-          map(
-            noise( i ),
+          p.map(
+            p.noise( i ),
             0,
             1,
             -randomShiftMargin,
             randomShiftMargin
           ),
-          map(
-            noise( i ),
+          p.map(
+            p.noise( i ),
             0,
             1,
             -randomShiftMargin,
@@ -125,5 +129,5 @@ export default function drawSlideImagesStack(
     } );
   }
 
-  pop();
+  p.pop();
 }

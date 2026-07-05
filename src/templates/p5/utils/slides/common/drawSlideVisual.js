@@ -1,8 +1,12 @@
 import visualMaps from "../../visuals";
+import {
+  getP5
+} from "../../sketch.js";
 
 export default function drawSlideVisual(
   visualItemOptions, _slideOptions
 ) {
+  const p = getP5();
   const {
     visual,
     position,
@@ -14,16 +18,16 @@ export default function drawSlideVisual(
     return;
   }
 
-  push();
+  p.push();
 
-  translate(
-    position.x * width,
-    position.y * height
+  p.translate(
+    position.x * p.width,
+    position.y * p.height
   );
-  scale( scaleValue );
-  rotate( rotationValue );
+  p.scale( scaleValue );
+  p.rotate( rotationValue );
 
   visualMaps?.[ visual.name ]?.( visual );
 
-  pop();
+  p.pop();
 }
