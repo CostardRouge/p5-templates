@@ -1,5 +1,5 @@
 import {
-  indexToLetters, makeCopyName
+  indexToLetters, makeCopyName, nextSlideLetter
 } from "../slideNaming";
 
 describe(
@@ -29,6 +29,62 @@ describe(
       () => {
         expect( indexToLetters( -5 ) ).toBe( "A" );
         expect( indexToLetters( 2.9 ) ).toBe( "C" );
+      }
+    );
+  }
+);
+
+describe(
+  "nextSlideLetter",
+  () => {
+    it(
+      "starts at A for an empty deck",
+      () => {
+        expect( nextSlideLetter( [] ) ).toBe( "A" );
+      }
+    );
+
+    it(
+      "returns the next letter after a run of base slides",
+      () => {
+        expect( nextSlideLetter( [
+          "A",
+          "B",
+          "C"
+        ] ) ).toBe( "D" );
+      }
+    );
+
+    it(
+      "ignores numbered copies so they do not inflate the count",
+      () => {
+        expect( nextSlideLetter( [
+          "A",
+          "A-1",
+          "B",
+          "B-1",
+          "B-2"
+        ] ) ).toBe( "C" );
+      }
+    );
+
+    it(
+      "fills the lowest freed-up letter",
+      () => {
+        expect( nextSlideLetter( [
+          "A",
+          "C"
+        ] ) ).toBe( "B" );
+      }
+    );
+
+    it(
+      "treats a base whose only slides are copies as free",
+      () => {
+        expect( nextSlideLetter( [
+          "A",
+          "A-1"
+        ] ) ).toBe( "B" );
       }
     );
   }

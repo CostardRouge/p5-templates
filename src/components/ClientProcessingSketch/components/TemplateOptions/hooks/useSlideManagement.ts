@@ -12,7 +12,7 @@ import {
 import deepClone from "@/utils/deepClone";
 import makeSlideId from "@/utils/makeSlideId";
 import {
-  indexToLetters, makeCopyName
+  indexToLetters, makeCopyName, nextSlideLetter
 } from "@/utils/slideNaming";
 import makeDefaultSlide from "../utils/makeDefaultSlide";
 
@@ -232,8 +232,14 @@ export function useSlideManagement( {
         | { framerate: number;
           duration: number }
         | undefined;
+
+      // The next free letter, skipping numbered copies so they never inflate
+      // the count (A, A-1, B, B-1, B-2 → "C", not "F").
+      const existingNames = ( getValues( "slides" ) ?? [] )
+        .map( ( slide ) => slide?.name )
+        .filter( ( name ): name is string => typeof name === "string" && name.length > 0 );
       const newSlide = makeDefaultSlide( {
-        indexForLabel: nextIndex,
+        name: nextSlideLetter( existingNames ),
         sketch: nextIndex === 0 ? currentGlobalSketch : sketchFormValues,
         size: currentGlobalSize,
         animation: currentGlobalAnimation

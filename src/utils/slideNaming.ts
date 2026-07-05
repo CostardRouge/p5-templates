@@ -26,6 +26,23 @@ export function indexToLetters( index: number ): string {
   return result;
 }
 
+/**
+ * Lowest unused letter label for a new slide. Numbered copies ("A-1") are not
+ * letter labels, so they never consume a slot: a deck of A, A-1, B, B-1, B-2
+ * yields "C" (not "F", which counting every slide would give).
+ */
+export function nextSlideLetter( existingNames: Iterable<string> ): string {
+  const used = new Set( existingNames );
+
+  let i = 0;
+
+  while ( used.has( indexToLetters( i ) ) ) {
+    i += 1;
+  }
+
+  return indexToLetters( i );
+}
+
 const NUMBERED_COPY = /^(.+)-(\d+)$/;
 
 /**
