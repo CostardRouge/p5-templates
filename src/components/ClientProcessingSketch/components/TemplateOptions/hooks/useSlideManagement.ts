@@ -11,6 +11,9 @@ import {
 } from "@/types/sketch.types";
 import deepClone from "@/utils/deepClone";
 import makeSlideId from "@/utils/makeSlideId";
+import {
+  indexToLetters, makeCopyName
+} from "@/utils/slideNaming";
 import makeDefaultSlide from "../utils/makeDefaultSlide";
 
 type UseSlideManagementProps = {
@@ -274,9 +277,17 @@ export function useSlideManagement( {
       // id, breaking montage `selected` references and per-slide thumbnails.
       duplicated.id = makeSlideId();
 
-      if ( duplicated?.name ) {
-        duplicated.name = `${ duplicated.name } (copy)`;
-      }
+      // Number the copy off its source ("A" -> "A-1"), branching a copy-of-a-copy
+      // onto a merged base ("A-12" -> "A12-1"), avoiding collisions with siblings.
+      const sourceName = original.name || indexToLetters( indexToDuplicate );
+      const existingNames = allSlides
+        .map( ( slide ) => slide?.name )
+        .filter( ( name ): name is string => typeof name === "string" && name.length > 0 );
+
+      duplicated.name = makeCopyName(
+        sourceName,
+        existingNames
+      );
 
       const insertIndex = indexToDuplicate + 1;
 

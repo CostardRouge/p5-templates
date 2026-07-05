@@ -12,6 +12,9 @@ import type {
 import type {
   SlideOption
 } from "@/types/sketch.types";
+import {
+  indexToLetters
+} from "@/utils/slideNaming";
 
 export interface StepDefinition {
   key: string;
@@ -306,7 +309,7 @@ export function resolveProgressionUIState(
 
     return {
       index: idx,
-      name: slideOptions?.[ idx ]?.name ?? `Slide ${ idx + 1 }`,
+      name: slideOptions?.[ idx ]?.name ?? indexToLetters( idx ),
       status,
       aggregate,
       subSteps

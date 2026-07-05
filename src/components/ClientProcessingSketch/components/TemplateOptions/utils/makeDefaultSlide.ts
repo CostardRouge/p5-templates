@@ -1,6 +1,9 @@
 import {
   SlideOption, SlideSchema
 } from "@/types/sketch.types";
+import {
+  indexToLetters
+} from "@/utils/slideNaming";
 
 export default function makeDefaultSlide( {
   indexForLabel,
@@ -16,7 +19,7 @@ export default function makeDefaultSlide( {
     duration: number };
 } ): SlideOption {
   return SlideSchema.parse( {
-    name: `Slide ${ indexForLabel + 1 }`,
+    name: indexToLetters( indexForLabel ),
     sketch,
     size,
     animation

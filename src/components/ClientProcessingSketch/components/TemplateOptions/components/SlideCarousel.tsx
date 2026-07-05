@@ -25,6 +25,9 @@ import React from "react";
 import {
   SortableRow
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/ContentItems";
+import {
+  indexToLetters
+} from "@/utils/slideNaming";
 import SlideThumbnail from "./SlideThumbnail";
 
 export default function SlideCarousel( {
@@ -123,7 +126,7 @@ export default function SlideCarousel( {
                 : ( field.value as SlideOption );
               const id = field.id;
               const thumbnail = thumbnails[ id ] || null;
-              const name = slide?.name || `Slide ${ index + 1 }`;
+              const name = slide?.name || indexToLetters( index );
 
               return (
                 <SortableRow key={ id } id={ id }>
