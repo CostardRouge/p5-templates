@@ -10,6 +10,17 @@ import {
 import {
   useCollapsibleContext
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/hooks/useCollapsibleStates";
+import {
+  useContentSelection
+} from "@/components/ClientProcessingSketch/components/TemplateOptions/hooks/useContentItemSelection";
+
+// Time (ms) to wait before scrolling, so the zone + item expand animations
+// (CollapsibleItem's ~200ms grid transition) settle first. Matched to the
+// pulse so the item is in view as the ring fires.
+const REVEAL_SCROLL_DELAY_MS = 240;
+// Slightly longer than the select-pulse animation (0.6s × 2) so the class is
+// removed only after it finishes.
+const REVEAL_PULSE_MS = 1300;
 
 export type ItemFormWrapperProps = {
   itemType: string;
@@ -37,14 +48,68 @@ export default function ItemFormWrapper( {
     false
   ) : undefined;
 
+  // Reveal-on-canvas-select: when this item is the one pressed on the canvas,
+  // scroll it into view and pulse its border (macOS menu-bar style).
+  const selection = useContentSelection();
+  const rootRef = React.useRef<HTMLDivElement>( null );
+  const handledNonceRef = React.useRef( -1 );
+
+  const [
+    pulsing,
+    setPulsing
+  ] = React.useState( false );
+
+  React.useEffect(
+    () => {
+      if (
+        !selection ||
+        !itemPath ||
+        selection.path !== itemPath ||
+        selection.nonce === handledNonceRef.current
+      ) {
+        return;
+      }
+
+      handledNonceRef.current = selection.nonce;
+      setPulsing( true );
+
+      const scrollTimer = setTimeout(
+        () => {
+          rootRef.current?.scrollIntoView( {
+            block: "center",
+            behavior: "smooth"
+          } );
+        },
+        REVEAL_SCROLL_DELAY_MS
+      );
+      const pulseTimer = setTimeout(
+        () => setPulsing( false ),
+        REVEAL_PULSE_MS
+      );
+
+      return () => {
+        clearTimeout( scrollTimer );
+        clearTimeout( pulseTimer );
+      };
+    },
+    [
+      selection,
+      itemPath
+    ]
+  );
+
   return (
     <CollapsibleItem
+      rootRef={ rootRef }
       expanded={ expanded }
       onToggle={ collapsibleKey ? ( isExpanded ) => setExpanded(
         collapsibleKey,
         isExpanded
       ) : undefined }
-      className="p-1 border border-theme rounded-lg bg-background "
+      className={ clsx(
+        "p-1 border border-theme rounded-lg bg-background",
+        pulsing && "animate-select-pulse motion-reduce:animate-none"
+      ) }
       header={ ( expanded ) => (
         <div
           ref={ dragBinder?.setHandleRef }
