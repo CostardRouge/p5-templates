@@ -3,12 +3,12 @@ import {
 } from "@/types/sketch.types";
 
 export default function makeDefaultSlide( {
-  indexForLabel,
+  name,
   sketch,
   size,
   animation
 }: {
-  indexForLabel: number;
+  name: string;
   sketch: any; // sschhhhh
   size?: { width: number;
     height: number };
@@ -16,7 +16,7 @@ export default function makeDefaultSlide( {
     duration: number };
 } ): SlideOption {
   return SlideSchema.parse( {
-    name: `Slide ${ indexForLabel + 1 }`,
+    name,
     sketch,
     size,
     animation
