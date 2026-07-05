@@ -29,7 +29,8 @@ import {
 } from "@/engines/metadata";
 import {
   registerAnimationBridge,
-  unregisterAnimationBridge
+  unregisterAnimationBridge,
+  getAnimationBridge
 } from "@/lib/animationBridge";
 
 // Type-only — the concrete runtime (which pulls in three.js + WebGL) is
@@ -277,6 +278,12 @@ export class ThreeEngine implements SketchEngine {
   }
 
   async resetToStart(): Promise<void> {
+    // Explicitly zero the clock — outside deterministic capture mode
+    // (i.e. the realtime recording path) seekAndDraw(0) alone only pins the
+    // *rendered* frame to 0 without resetting the elapsed-time clock that
+    // free-runs on wall-clock, so a realtime recording would otherwise start
+    // mid-loop instead of at phase 0. Mirrors P5Engine.resetToStart().
+    getAnimationBridge()?.setProgression( 0 );
     await this.seekAndDraw( 0 );
   }
 
@@ -336,7 +343,30 @@ export class ThreeEngine implements SketchEngine {
   }
 
   getCaptureSource(): CaptureSource {
-    return createCanvasCaptureSource( () => this.getCanvas() );
+    const base = createCanvasCaptureSource( () => this.getCanvas() );
+
+    return {
+      get width() {
+        return base.width;
+      },
+      get height() {
+        return base.height;
+      },
+      getStreamCanvas: () => base.getStreamCanvas(),
+      readFrame: () => base.readFrame(),
+      // Realtime mode has no beginDeterministicCapture()/endDeterministicCapture()
+      // hook (that pairing is async-loop-only), so this is where a realtime
+      // recording of a transparent-background sketch gets the same
+      // force-opaque treatment async-loop capture gets via enterRecordingMode().
+      beginRealtime: () => {
+        base.beginRealtime();
+        this.runtime?.beginOpaqueCapture();
+      },
+      endRealtime: () => {
+        base.endRealtime();
+        this.runtime?.endOpaqueCapture();
+      }
+    };
   }
 
   /* ---- events ---------------------------------------------------- */

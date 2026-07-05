@@ -44,7 +44,11 @@ export function useLiveThumbnail( {
 
         lastTime = time;
 
-        const srcCanvas = document.querySelector( "canvas.p5Canvas" ) as HTMLCanvasElement | null;
+        // Engine-agnostic: every SketchEngine mounts its one live/mirror
+        // canvas inside `.sketch-canvas-container` (see EngineSketchRenderer),
+        // so this finds the right canvas for p5, GSAP and Three.js alike
+        // instead of only ever matching p5's own `.p5Canvas` class.
+        const srcCanvas = document.querySelector( ".sketch-canvas-container canvas" ) as HTMLCanvasElement | null;
         const thumbCanvas = thumbCanvasRef.current;
 
         if ( !srcCanvas || !thumbCanvas ) {

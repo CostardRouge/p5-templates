@@ -31,25 +31,46 @@ function toColor(
 
 let knot = null;
 let keyLight = null;
+let rimLight = null;
+
+// Geometry is the one thing too expensive to rebuild every frame (220x32
+// segments), so it's only reconstructed when knotP/knotQ actually change —
+// everything else (material, lights, transform) is cheap enough to just
+// re-apply from the live options on every draw call.
+let currentKnotP = null;
+let currentKnotQ = null;
+
+function rebuildKnotGeometry(
+  THREE, knotP, knotQ
+) {
+  knot.geometry.dispose();
+  knot.geometry = new THREE.TorusKnotGeometry(
+    1,
+    0.32,
+    220,
+    32,
+    knotP,
+    knotQ
+  );
+  currentKnotP = knotP;
+  currentKnotQ = knotQ;
+}
 
 sketch.setup( ( {
-  THREE, scene, camera
+  THREE, scene
 } ) => {
   const o = options.sketch;
 
-  camera.position.set(
-    0,
-    0,
-    o.cameraDistance ?? 5
-  );
+  currentKnotP = o.knotP ?? 2;
+  currentKnotQ = o.knotQ ?? 3;
 
   const geometry = new THREE.TorusKnotGeometry(
     1,
     0.32,
     220,
     32,
-    o.knotP ?? 2,
-    o.knotQ ?? 3
+    currentKnotP,
+    currentKnotQ
   );
 
   const material = new THREE.MeshStandardMaterial( {
@@ -84,7 +105,7 @@ sketch.setup( ( {
   );
   scene.add( keyLight );
 
-  const rimLight = new THREE.DirectionalLight(
+  rimLight = new THREE.DirectionalLight(
     toColor(
       THREE,
       o.accentColor,
@@ -114,12 +135,14 @@ sketch.draw( (
   time, ctx
 ) => {
   const {
-    THREE, scene, phase
+    THREE, scene, camera, phase
   } = ctx;
   const o = options.sketch;
 
   // Background — clear color follows the option (transparent alpha kept so the
-  // canvas composites over the app surface when no colour is set).
+  // canvas composites over the app surface when no colour is set; the engine
+  // forces an opaque backdrop for the duration of a recording so exports
+  // never show that transparency as solid black).
   const bg = o.backgroundColor;
 
   if ( Array.isArray( bg ) ) {
@@ -140,6 +163,23 @@ sketch.draw( (
     return;
   }
 
+  camera.position.set(
+    0,
+    0,
+    o.cameraDistance ?? 5
+  );
+
+  const knotP = o.knotP ?? 2;
+  const knotQ = o.knotQ ?? 3;
+
+  if ( knotP !== currentKnotP || knotQ !== currentKnotQ ) {
+    rebuildKnotGeometry(
+      THREE,
+      knotP,
+      knotQ
+    );
+  }
+
   // Rotate a whole number of turns across one loop so the motion is seamless
   // when the loop wraps. `spin` scales how many turns per loop.
   const spin = o.spin ?? 1;
@@ -152,7 +192,7 @@ sketch.draw( (
 
   knot.scale.setScalar( pulse );
 
-  // Keep the material colour live so form edits show instantly.
+  // Keep every material/light property live so form edits show instantly.
   knot.material.color = toColor(
     THREE,
     o.color,
@@ -162,5 +202,17 @@ sketch.draw( (
       255
     ]
   );
+  knot.material.metalness = o.metalness ?? 0.4;
+  knot.material.roughness = o.roughness ?? 0.25;
   knot.material.wireframe = Boolean( o.wireframe );
+
+  rimLight.color = toColor(
+    THREE,
+    o.accentColor,
+    [
+      80,
+      170,
+      255
+    ]
+  );
 } );

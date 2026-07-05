@@ -19,7 +19,7 @@ import {
   resolveAnimation, DURATION_DEFAULT
 } from "@/lib/animationConfig";
 import {
-  getSketchOptions
+  getSketchOptions, subscribeSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
 
 /* ---- time / loop clock ------------------------------------------- */
@@ -103,6 +103,17 @@ const fpsWindow = {
 
 const progressionSubscribers = new Set();
 
+// Set while a recording (async-loop or realtime) is in progress. The clear
+// alpha is forced to 1 for the duration so a sketch that leaves its
+// background transparent (scene.background === null) for a nicer live
+// preview doesn't export as solid black — encoders (gif.js, WebCodecs,
+// MediaRecorder's canvas.captureStream()) all discard the alpha channel.
+let forcingOpaqueCapture = false;
+
+// Options-change subscription set up once in start(), torn down in reset().
+let unsubscribeOptions = null;
+let previousSize = null;
+
 const DEFAULT_SIZE = {
   width: 1080,
   height: 1350
@@ -117,6 +128,50 @@ function resolveSize() {
     width,
     height
   };
+}
+
+function isEqualSize(
+  a, b
+) {
+  return !!a && !!b && a.width === b.width && a.height === b.height;
+}
+
+// Apply a live "size" option change to the already-mounted renderer/camera.
+// Unlike start()'s one-time sizing, this must also update the camera's aspect
+// ratio and re-render immediately so the new resolution is visible on the
+// very next paint instead of the next natural rAF tick.
+function applyResize( size ) {
+  if ( !renderer || !camera ) {
+    return;
+  }
+
+  renderer.setSize(
+    size.width,
+    size.height
+  );
+  camera.aspect = size.width / size.height;
+  camera.updateProjectionMatrix();
+  renderOnce();
+}
+
+// Mirrors p5's options.js `handleOptionsChange`/GSAP's `applyOptions`: the
+// engine stays mounted across option edits (see EngineSketchRenderer), so it
+// must self-subscribe to the shared options store to react to a live
+// resolution change instead of relying on a remount.
+function subscribeToOptionChanges() {
+  previousSize = resolveSize();
+
+  unsubscribeOptions = subscribeSketchOptions( () => {
+    const size = resolveSize();
+
+    if ( !isEqualSize(
+      size,
+      previousSize
+    ) ) {
+      previousSize = size;
+      applyResize( size );
+    }
+  } );
 }
 
 /** The context object handed to every sketch `setup`/`draw` callback. */
@@ -155,6 +210,13 @@ function renderScene( ctx ) {
   );
 
   if ( renderer && scene && camera ) {
+    // A sketch's own draw() may set scene.background back to null every
+    // frame (e.g. to keep a transparent live preview) — force opacity here,
+    // right before the actual GPU clear/draw, so it sticks for a capture.
+    if ( forcingOpaqueCapture ) {
+      renderer.setClearAlpha( 1 );
+    }
+
     renderer.render(
       scene,
       camera
@@ -228,7 +290,6 @@ const sketch = {
   // stored sketch callbacks (set by the sketch module at import time)
   _setupFn: null,
   _drawFn: null,
-  sketchOptions: undefined,
 
   paused: false,
 
@@ -298,6 +359,8 @@ const sketch = {
 
     await sketch._setupFn?.( drawContext() );
 
+    subscribeToOptionChanges();
+
     // Render the very first frame synchronously so the canvas is painted
     // (and measurable) the instant `start` resolves.
     tick( performance.now() );
@@ -307,6 +370,11 @@ const sketch = {
 
   reset() {
     stopLoop();
+
+    unsubscribeOptions?.();
+    unsubscribeOptions = null;
+    previousSize = null;
+    forcingOpaqueCapture = false;
 
     scene?.traverse( ( object ) => {
       object.geometry?.dispose?.();
@@ -381,11 +449,26 @@ const sketch = {
     stopLoop();
     time.reset();
     time.isRecording = true;
+    sketch.beginOpaqueCapture();
   },
 
   exitRecordingMode() {
     time.isRecording = false;
     time.reset();
+    sketch.endOpaqueCapture();
+  },
+
+  // Force an opaque backdrop for the duration of a capture (async-loop mode
+  // enters this via enterRecordingMode(); realtime mode has no analogous
+  // deterministic-capture hook, so ThreeEngine's CaptureSource calls these
+  // directly from beginRealtime()/endRealtime()).
+  beginOpaqueCapture() {
+    forcingOpaqueCapture = true;
+  },
+
+  endOpaqueCapture() {
+    forcingOpaqueCapture = false;
+    renderer?.setClearAlpha( 0 );
   },
 
   /* -- progression bridge ----------------------------------------- */
