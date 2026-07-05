@@ -1,29 +1,33 @@
 import {
   getAssets
 } from "../../common.js";
+import {
+  getP5
+} from "../../sketch.js";
 
 export default function imageSplitLayout( opts ) {
+  const p = getP5();
   const [
     a,
     b
   ] = getAssets( opts );
 
   if ( a ) {
-    image(
+    p.image(
       a.img,
       0,
       0,
       p.width / 2,
-      height
+      p.height
     );
   }
   if ( b ) {
-    image(
+    p.image(
       b.img,
       p.width / 2,
       0,
       p.width / 2,
-      height
+      p.height
     );
   }
 }

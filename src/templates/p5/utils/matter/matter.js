@@ -1,7 +1,9 @@
 import options from "@/p5/utils/options.js";
 
 import string from "@/p5/utils/string.js";
-import sketch from "@/p5/utils/sketch.js";
+import sketch, {
+  getP5
+} from "@/p5/utils/sketch.js";
 import events from "@/p5/utils/events.js";
 import * as common from "@/p5/utils/common.js";
 
@@ -35,52 +37,53 @@ const matter = {
 events.register(
   "pre-setup",
   () => {
+    const p = getP5();
     const margin = BOUNDARY_MARGIN;
     const thickness = BOUNDARY_THICKNESS;
 
     addBoundary(
       p.width / 2,
-      height + thickness / 2 - margin,
-      width,
+      p.height + thickness / 2 - margin,
+      p.width,
       thickness
     );
     addBoundary(
       p.width / 2,
       -thickness / 2 + margin,
-      width,
+      p.width,
       thickness
     );
     addBoundary(
       -thickness / 2 + margin,
-      height / 2,
+      p.height / 2,
       thickness,
-      height
+      p.height
     );
     addBoundary(
-      width + thickness / 2 - margin,
-      height / 2,
+      p.width + thickness / 2 - margin,
+      p.height / 2,
       thickness,
-      height
+      p.height
     );
 
     for ( let i = 0; i < BALLS_COUNT; i++ ) {
       addBall(
-        random(
+        p.random(
           thickness,
-          width - thickness
+          p.width - thickness
         ),
-        random(
+        p.random(
           thickness,
-          height - thickness
+          p.height - thickness
         ),
-        random( ...BALLS_SIZE )
+        p.random( ...BALLS_SIZE )
       );
     }
 
     matter.letterBodies = addLetterBoxes(
       "soup tracking",
       p.width / 2 - 300,
-      height / 2
+      p.height / 2
     );
   }
 );
@@ -93,6 +96,7 @@ matter.engine.gravity = {
 sketch.draw( (
   time, center, favouriteColour
 ) => {
+  const p = getP5();
   p.background( ...options.colors.background );
 
   if ( !mediapipe.idle ) {
@@ -155,7 +159,7 @@ sketch.draw( (
       graphics, background, erase, size
     } = layer;
 
-    image(
+    p.image(
       graphics,
       0,
       0,
