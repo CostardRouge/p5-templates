@@ -5,6 +5,7 @@ import {
 } from "../sources.js";
 import {
   getFont,
+  reportWidgetBounds,
   resolveBlock,
   toColor,
   toHex,
@@ -36,7 +37,7 @@ function toRgbArray( value ) {
  * probe pushed with a colour value (e.g. a dominant colour).
  */
 export default function swatch(
-  cfg, style
+  cfg, style, part
 ) {
   withHudTransform( ( p ) => {
     const arr = toRgbArray( resolveValue( cfg.source ) );
@@ -59,6 +60,15 @@ export default function swatch(
       p,
       cfg.anchor ?? "top-right",
       cfg.offset,
+      blockW,
+      chip
+    );
+
+    // Report the visible rectangle so the on-canvas drag can grab this swatch.
+    reportWidgetBounds(
+      part,
+      blockX,
+      blockY,
       blockW,
       chip
     );

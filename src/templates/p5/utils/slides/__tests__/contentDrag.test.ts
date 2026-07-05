@@ -91,6 +91,7 @@ import {
 import {
   beginItemBounds,
   reportItemBounds,
+  reportItemPartBounds,
   endItemBounds
 } from "../common/itemBoundsRegistry.js";
 import {
@@ -440,6 +441,182 @@ describe(
           "pointerdown",
           500,
           500
+        );
+
+        expect( down.defaultPrevented ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "content drag — HUD sub-item widgets",
+  () => {
+    // A HUD item has no position of its own; each widget carries its own
+    // `offset`. Dragging one widget must move ONLY that widget's offset.
+    beforeEach( () => {
+      store = {
+        content: [
+          {
+            type: "hud",
+            badge: {
+              enabled: true,
+              offset: {
+                x: 0.9,
+                y: 0.1
+              }
+            },
+            gauge: {
+              enabled: true,
+              offset: {
+                x: 0.1,
+                y: 0.9
+              }
+            }
+          }
+        ]
+      };
+      setSketchOptions.mockClear();
+      registerContentDrag();
+    } );
+
+    // Report each enabled widget's drawn rectangle for this frame, the way the
+    // real widget renderers do inside freeLayout's bounds bracket.
+    function reportHudBounds() {
+      beginItemBounds(
+        "global",
+        0
+      );
+      // badge drawn top-right, gauge drawn bottom-left — well separated.
+      reportItemPartBounds(
+        "badge",
+        800,
+        80,
+        150,
+        30
+      );
+      reportItemPartBounds(
+        "gauge",
+        60,
+        820,
+        200,
+        60
+      );
+      endItemBounds();
+    }
+
+    it(
+      "grabs a HUD widget by its drawn rectangle and persists its offset",
+      () => {
+        reportHudBounds();
+
+        // Press inside the badge rect, drag +100/+50, release.
+        const down = pressAt(
+          "pointerdown",
+          850,
+          95
+        );
+
+        expect( down.defaultPrevented ).toBe( true );
+
+        pressAt(
+          "pointermove",
+          950,
+          145
+        );
+        pressAt(
+          "pointerup",
+          950,
+          145
+        );
+
+        expect( setSketchOptions ).toHaveBeenCalledTimes( 1 );
+
+        const [
+          update
+        ] = setSketchOptions.mock.calls[ 0 ] as [
+          { content: Array<{
+            badge: { offset: { x: number;
+              y: number } };
+            gauge: { offset: { x: number;
+              y: number } };
+          }> }
+        ];
+
+        // Badge moved by the pointer delta (+0.1, +0.05) from (0.9, 0.1).
+        expect( update.content[ 0 ].badge.offset.x ).toBeCloseTo( 1 );
+        expect( update.content[ 0 ].badge.offset.y ).toBeCloseTo( 0.15 );
+        // The gauge (a sibling widget) is untouched.
+        expect( update.content[ 0 ].gauge.offset.x ).toBeCloseTo( 0.1 );
+        expect( update.content[ 0 ].gauge.offset.y ).toBeCloseTo( 0.9 );
+      }
+    );
+
+    it(
+      "moves only the pressed widget when two widgets are enabled",
+      () => {
+        reportHudBounds();
+
+        // Press inside the gauge rect this time.
+        pressAt(
+          "pointerdown",
+          120,
+          850
+        );
+        pressAt(
+          "pointermove",
+          220,
+          850
+        );
+        pressAt(
+          "pointerup",
+          220,
+          850
+        );
+
+        const [
+          update
+        ] = setSketchOptions.mock.calls[ 0 ] as [
+          { content: Array<{
+            badge: { offset: { x: number;
+              y: number } };
+            gauge: { offset: { x: number;
+              y: number } };
+          }> }
+        ];
+
+        // Gauge moved +0.1 on x; badge stayed put.
+        expect( update.content[ 0 ].gauge.offset.x ).toBeCloseTo( 0.2 );
+        expect( update.content[ 0 ].badge.offset.x ).toBeCloseTo( 0.9 );
+        expect( update.content[ 0 ].badge.offset.y ).toBeCloseTo( 0.1 );
+      }
+    );
+
+    it(
+      "does not target a disabled widget",
+      () => {
+        store = {
+          content: [
+            {
+              type: "hud",
+              badge: {
+                enabled: false,
+                offset: {
+                  x: 0.9,
+                  y: 0.1
+                }
+              }
+            }
+          ]
+        };
+        registerContentDrag();
+
+        // No bounds reported (disabled widget isn't drawn); a press on empty
+        // canvas must fall through so the viewport can still pan.
+        const down = pressAt(
+          "pointerdown",
+          850,
+          95
         );
 
         expect( down.defaultPrevented ).toBe( false );

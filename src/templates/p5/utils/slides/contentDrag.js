@@ -67,6 +67,49 @@ const DRAGGABLE_TYPES = new Set( [
   "specs"
 ] );
 
+// A "hud" content item has no single position of its own — instead it holds
+// several telemetry widgets, each of which carries its own normalized `offset`
+// anchor and draws independently. Those widgets are draggable SUB-ITEMS: each
+// becomes its own grab target (identified by a `part` key on top of the item's
+// scope + index) and a drag writes back item[part].offset rather than
+// item.position. Only the offset-anchored widgets are listed here — crosshairs
+// (positioned by a data source) and boundingBox (a region rect) place
+// themselves differently and aren't offset-draggable. Ordered to match their
+// draw order in drawSlideHud (later = on top) so hit-testing picks the widget
+// drawn on top when two overlap.
+const HUD_DRAGGABLE_WIDGETS = [
+  "sparkline",
+  "gauge",
+  "swatch",
+  "counter",
+  "badge"
+];
+
+// Per-widget offset defaults (mirroring the Hud*Schema defaults) so a widget
+// with no persisted offset still resolves the anchor point it actually draws at.
+const HUD_OFFSET_DEFAULTS = {
+  badge: {
+    x: 0.95,
+    y: 0.06
+  },
+  gauge: {
+    x: 0.05,
+    y: 0.9
+  },
+  sparkline: {
+    x: 0.95,
+    y: 0.9
+  },
+  counter: {
+    x: 0.05,
+    y: 0.85
+  },
+  swatch: {
+    x: 0.95,
+    y: 0.2
+  }
+};
+
 // Pick-up radius around an item's anchor point, in ON-SCREEN (CSS) pixels.
 // Converted to canvas-pixel space per use (see grabRadius) so the touch target
 // stays the same physical size on every device — a fixed canvas-pixel radius
@@ -147,10 +190,14 @@ function textMargin( item ) {
   };
 }
 
+// `part` scopes the key to a draggable sub-item (a HUD widget) within the item;
+// omit it for a whole-item (position) drag.
 function overrideKey(
-  scope, index
+  scope, index, part
 ) {
-  return `${ scope }:${ index }`;
+  const base = `${ scope }:${ index }`;
+
+  return part == null ? base : `${ base }:${ part }`;
 }
 
 /**
@@ -165,23 +212,51 @@ export function resolveDraggedItem(
     return item;
   }
 
-  const override = overrides.get( overrideKey(
+  // Whole-item position override (text, specs, qrcode, …).
+  const positionOverride = overrides.get( overrideKey(
     scope,
     index
   ) );
 
-  if ( !override ) {
-    return item;
+  let next = positionOverride
+    ? {
+      ...item,
+      position: {
+        ...( item.position ?? {} ),
+        x: positionOverride.x,
+        y: positionOverride.y
+      }
+    }
+    : item;
+
+  // Per-widget offset overrides (HUD sub-items).
+  if ( item.type === "hud" ) {
+    for ( const key of HUD_DRAGGABLE_WIDGETS ) {
+      const widgetOverride = overrides.get( overrideKey(
+        scope,
+        index,
+        key
+      ) );
+
+      if ( !widgetOverride ) {
+        continue;
+      }
+
+      next = {
+        ...next,
+        [ key ]: {
+          ...( next[ key ] ?? {} ),
+          offset: {
+            ...( next[ key ]?.offset ?? {} ),
+            x: widgetOverride.x,
+            y: widgetOverride.y
+          }
+        }
+      };
+    }
   }
 
-  return {
-    ...item,
-    position: {
-      ...( item.position ?? {} ),
-      x: override.x,
-      y: override.y
-    }
-  };
+  return next;
 }
 
 // Same wrap as slides/index.js uses to resolve the rendered slide, so the scope
@@ -213,7 +288,48 @@ function collectTargets( p ) {
     content.forEach( (
       item, index
     ) => {
-      if ( !item || !DRAGGABLE_TYPES.has( item.type ) ) {
+      if ( !item ) {
+        return;
+      }
+
+      // A HUD item contributes one grab target PER enabled offset-anchored
+      // widget instead of a single item-level target.
+      if ( item.type === "hud" ) {
+        HUD_DRAGGABLE_WIDGETS.forEach( ( key ) => {
+          const widget = item[ key ];
+
+          if ( !widget?.enabled ) {
+            return;
+          }
+
+          const defaults = HUD_OFFSET_DEFAULTS[ key ];
+          const override = overrides.get( overrideKey(
+            scope,
+            index,
+            key
+          ) );
+          const offset = override ?? widget.offset ?? {};
+
+          targets.push( {
+            x: ( offset.x ?? defaults.x ) * p.width,
+            y: ( offset.y ?? defaults.y ) * p.height,
+            bounds: getItemBounds(
+              scope,
+              index,
+              key
+            ),
+            scope,
+            index,
+            part: key,
+            marginX: 0,
+            marginY: 0
+          } );
+        } );
+
+        return;
+      }
+
+      if ( !DRAGGABLE_TYPES.has( item.type ) ) {
         return;
       }
 
@@ -239,6 +355,7 @@ function collectTargets( p ) {
         ),
         scope,
         index,
+        part: null,
         marginX: margin.h,
         marginY: margin.v
       } );
@@ -331,7 +448,8 @@ function applyMove(
   overrides.set(
     overrideKey(
       activeDrag.scope,
-      activeDrag.index
+      activeDrag.index,
+      activeDrag.part
     ),
     {
       x: clamp01( point.x / p.width + activeDrag.offsetX - activeDrag.marginX ),
@@ -354,25 +472,58 @@ function applyToContent(
   const next = content.map( (
     item, index
   ) => {
-    const override = overrides.get( overrideKey(
+    if ( !item ) {
+      return item;
+    }
+
+    let updated = item;
+
+    const positionOverride = overrides.get( overrideKey(
       scope,
       index
     ) );
 
-    if ( !override || !item ) {
-      return item;
+    if ( positionOverride ) {
+      changed = true;
+      updated = {
+        ...updated,
+        position: {
+          ...( updated.position ?? {} ),
+          x: positionOverride.x,
+          y: positionOverride.y
+        }
+      };
     }
 
-    changed = true;
+    // HUD sub-items persist into item[widget].offset, not item.position.
+    if ( item.type === "hud" ) {
+      for ( const key of HUD_DRAGGABLE_WIDGETS ) {
+        const widgetOverride = overrides.get( overrideKey(
+          scope,
+          index,
+          key
+        ) );
 
-    return {
-      ...item,
-      position: {
-        ...( item.position ?? {} ),
-        x: override.x,
-        y: override.y
+        if ( !widgetOverride ) {
+          continue;
+        }
+
+        changed = true;
+        updated = {
+          ...updated,
+          [ key ]: {
+            ...( updated[ key ] ?? {} ),
+            offset: {
+              ...( updated[ key ]?.offset ?? {} ),
+              x: widgetOverride.x,
+              y: widgetOverride.y
+            }
+          }
+        };
       }
-    };
+    }
+
+    return updated;
   } );
 
   return changed ? next : null;
@@ -521,6 +672,7 @@ function onPointerDown( event ) {
     pointerId: event.pointerId,
     scope: target.scope,
     index: target.index,
+    part: target.part,
     marginX: target.marginX,
     marginY: target.marginY,
     // Anchor − pointer at grab time (normalized), so the item follows from
@@ -607,7 +759,8 @@ function onPointerMove( event ) {
   );
   const key = hit === -1 ? null : overrideKey(
     targets[ hit ].scope,
-    targets[ hit ].index
+    targets[ hit ].index,
+    targets[ hit ].part
   );
 
   setCursor( hit === -1 ? "" : "move" );
@@ -672,7 +825,8 @@ function drawAffordance() {
     if (
       activeDrag &&
       target.scope === activeDrag.scope &&
-      target.index === activeDrag.index
+      target.index === activeDrag.index &&
+      target.part === activeDrag.part
     ) {
       grabbed.add( index );
     }

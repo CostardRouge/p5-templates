@@ -7,6 +7,7 @@ import {
 import {
   formatValue,
   getFont,
+  reportWidgetBounds,
   resolveBlock,
   toColor,
   withHudTransform
@@ -18,7 +19,7 @@ import {
  * (linear) by default; an optional easingFn restyles it.
  */
 export default function gauge(
-  cfg, style
+  cfg, style, part
 ) {
   withHudTransform( ( p ) => {
     const raw = resolveValue( cfg.source );
@@ -41,6 +42,15 @@ export default function gauge(
       p,
       cfg.anchor ?? "bottom-left",
       cfg.offset,
+      barW,
+      blockH
+    );
+
+    // Report the visible rectangle so the on-canvas drag can grab this gauge.
+    reportWidgetBounds(
+      part,
+      blockX,
+      blockY,
       barW,
       blockH
     );
