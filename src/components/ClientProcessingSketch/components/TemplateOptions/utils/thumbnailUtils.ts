@@ -1,4 +1,19 @@
 /**
+ * Resolve the live sketch canvas rendered in the main preview, independent of
+ * which engine produced it. p5 tags its canvas `p5Canvas`, Three.js tags its
+ * WebGL canvas `threejs-canvas` — rather than hard-coding a per-engine class we
+ * scope to the shared preview container (`EngineSketchRenderer`), which also
+ * covers any future canvas engine. Falls back to the legacy p5 selector for
+ * routes that don't mount inside the container.
+ */
+export function getActiveSketchCanvas(): HTMLCanvasElement | null {
+  return (
+    document.querySelector<HTMLCanvasElement>( ".sketch-canvas-container canvas" ) ??
+    document.querySelector<HTMLCanvasElement>( "canvas.p5Canvas" )
+  );
+}
+
+/**
  * Waits for a specific slide to be rendered by checking the canvas data-slide attribute
  * This synchronizes thumbnail capture with actual slide rendering
  */
@@ -13,8 +28,7 @@ export function waitForSlideRendered(
     let matchedFrames = 0;
 
     const check = () => {
-      // Engine-agnostic canvas lookup — see captureThumbnailFromCanvas() below.
-      const canvas = document.querySelector( ".sketch-canvas-container canvas" ) as HTMLCanvasElement | null;
+      const canvas = getActiveSketchCanvas();
 
       const dataSlide = canvas?.dataset?.slide;
       const dataSlideIndex =
@@ -38,7 +52,13 @@ export function waitForSlideRendered(
         }
       }
 
-      if ( canvas && currentSlideIndex === slideIndex ) {
+      // Engines that don't report a current slide (e.g. Three.js, or a
+      // single-slide p5 sketch) can't be synchronised against `slideIndex`;
+      // once their canvas is up we consider the target rendered.
+      const slideTracked = currentSlideIndex !== undefined;
+      const slideMatched = !slideTracked || currentSlideIndex === slideIndex;
+
+      if ( canvas && slideMatched ) {
         matchedFrames += 1;
 
         // Require a couple frames so the draw loop catches up
@@ -74,10 +94,7 @@ export function waitForSlideRendered(
  * Uses native Canvas API for better compatibility with Next.js/Turbopack
  */
 export async function captureThumbnailFromCanvas(): Promise<string | null> {
-  // Every SketchEngine mounts its one live/mirror canvas inside
-  // `.sketch-canvas-container` (see EngineSketchRenderer), so this resolves
-  // to the right canvas for p5, GSAP and Three.js sketches alike.
-  const canvas = document.querySelector( ".sketch-canvas-container canvas" ) as HTMLCanvasElement;
+  const canvas = getActiveSketchCanvas();
 
   if ( !canvas ) {
     return null;

@@ -1,6 +1,9 @@
 import {
   useEffect, useRef
 } from "react";
+import {
+  getActiveSketchCanvas
+} from "./thumbnailUtils";
 
 // Resolved once at module load — zero runtime cost when disabled.
 const LIVE_THUMBNAIL_ENABLED =
@@ -10,9 +13,11 @@ const TARGET_FPS = 30;
 const FRAME_INTERVAL = 1000 / TARGET_FPS;
 
 /**
- * When NEXT_PUBLIC_LIVE_THUMBNAIL=true, mirrors the main p5 canvas into
- * `thumbCanvasRef` at ~15 fps using a GPU-accelerated drawImage blit.
- * Only runs while `isActive` is true; completely idle for inactive slides.
+ * When NEXT_PUBLIC_LIVE_THUMBNAIL=true, mirrors the main sketch canvas into
+ * `thumbCanvasRef` at ~30 fps using a GPU-accelerated drawImage blit. Works
+ * for any canvas engine (p5, Three.js, …) since it resolves the live canvas
+ * via `getActiveSketchCanvas` rather than a p5-specific selector. Only runs
+ * while `isActive` is true; completely idle for inactive slides.
  *
  * Returns `LIVE_THUMBNAIL_ENABLED` so the consumer knows which element to render.
  */
@@ -44,11 +49,7 @@ export function useLiveThumbnail( {
 
         lastTime = time;
 
-        // Engine-agnostic: every SketchEngine mounts its one live/mirror
-        // canvas inside `.sketch-canvas-container` (see EngineSketchRenderer),
-        // so this finds the right canvas for p5, GSAP and Three.js alike
-        // instead of only ever matching p5's own `.p5Canvas` class.
-        const srcCanvas = document.querySelector( ".sketch-canvas-container canvas" ) as HTMLCanvasElement | null;
+        const srcCanvas = getActiveSketchCanvas();
         const thumbCanvas = thumbCanvasRef.current;
 
         if ( !srcCanvas || !thumbCanvas ) {
