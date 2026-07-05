@@ -3,6 +3,9 @@ import animation from "../../animation.js";
 import sketch, {
   getP5
 } from "../../sketch.js";
+import {
+  reportItemPartBounds
+} from "../../slides/common/itemBoundsRegistry.js";
 
 export const FALLBACK_FILL = [
   0,
@@ -121,6 +124,58 @@ export function resolveBlock(
     anchorX,
     anchorY
   };
+}
+
+/**
+ * Top-left rectangle of an align-anchored block of size w×h whose align corner
+ * sits at (x, y) — the same corner→top-left conversion resolveBlock does, but
+ * from an already-resolved anchor point + alignment (used by the text widgets
+ * that lay out with resolveAnchor rather than resolveBlock).
+ */
+export function anchoredRect(
+  p, x, y, align, w, h
+) {
+  const [
+    anchorX,
+    anchorY
+  ] = align;
+  const rectX =
+    anchorX === p.RIGHT
+      ? x - w
+      : anchorX === p.CENTER
+        ? x - w / 2
+        : x;
+  const rectY =
+    anchorY === p.BOTTOM
+      ? y - h
+      : anchorY === p.CENTER
+        ? y - h / 2
+        : y;
+
+  return {
+    x: rectX,
+    y: rectY,
+    w,
+    h
+  };
+}
+
+/**
+ * Report a widget's drawn rectangle (canvas pixels) under its HUD sub-key, so
+ * the on-canvas content drag can grab and move that one widget by its visible
+ * body. `part` is the widget key (badge, gauge, sparkline, counter, swatch);
+ * a no-op outside a content-item bounds bracket (see itemBoundsRegistry).
+ */
+export function reportWidgetBounds(
+  part, x, y, w, h
+) {
+  reportItemPartBounds(
+    part,
+    x,
+    y,
+    w,
+    h
+  );
 }
 
 /**

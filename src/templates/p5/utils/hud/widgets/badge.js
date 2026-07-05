@@ -3,7 +3,9 @@ import {
   resolveValue
 } from "../sources.js";
 import {
+  anchoredRect,
   getFont,
+  reportWidgetBounds,
   resolveAnchor,
   toColor,
   withHudTransform
@@ -42,7 +44,7 @@ function segmentText( token ) {
  * "·" separator; `override` replaces the whole text when set.
  */
 export default function badge(
-  cfg, style
+  cfg, style, part
 ) {
   withHudTransform( ( p ) => {
     const {
@@ -77,6 +79,31 @@ export default function badge(
       cfg.fill ?? style.fill
     );
     const font = getFont( cfg.font ?? style.font );
+
+    p.push();
+    p.textFont( font );
+    p.textSize( size );
+    const width = p.textWidth( text );
+
+    p.pop();
+
+    // Report the visible rectangle so the on-canvas drag can grab this badge.
+    const rect = anchoredRect(
+      p,
+      x,
+      y,
+      align,
+      width,
+      size
+    );
+
+    reportWidgetBounds(
+      part,
+      rect.x,
+      rect.y,
+      rect.w,
+      rect.h
+    );
 
     string.write(
       text,

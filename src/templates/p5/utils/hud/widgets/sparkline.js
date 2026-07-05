@@ -10,6 +10,7 @@ import {
 import {
   formatValue,
   getFont,
+  reportWidgetBounds,
   resolveBlock,
   toColor,
   withHudTransform
@@ -20,7 +21,7 @@ import {
  * buffer it feeds itself) as a polyline, with the label + current value above.
  */
 export default function sparkline(
-  cfg, style
+  cfg, style, part
 ) {
   withHudTransform( ( p ) => {
     const meta = resolveMeta( cfg.source );
@@ -45,6 +46,15 @@ export default function sparkline(
       p,
       cfg.anchor ?? "bottom-right",
       cfg.offset,
+      boxW,
+      blockH
+    );
+
+    // Report the visible rectangle so the on-canvas drag can grab this sparkline.
+    reportWidgetBounds(
+      part,
+      blockX,
+      blockY,
       boxW,
       blockH
     );

@@ -4,8 +4,10 @@ import {
   resolveValue
 } from "../sources.js";
 import {
+  anchoredRect,
   formatValue,
   getFont,
+  reportWidgetBounds,
   resolveAnchor,
   toColor,
   withHudTransform
@@ -16,7 +18,7 @@ import {
  * its source live each frame (deterministic — no wall-clock lerp).
  */
 export default function counter(
-  cfg, style
+  cfg, style, part
 ) {
   withHudTransform( ( p ) => {
     const raw = resolveValue( cfg.source );
@@ -50,6 +52,39 @@ export default function counter(
           unit
         )
         : `${ raw ?? "—" }`;
+
+    // Report the visible rectangle (label above value) so the on-canvas drag
+    // can grab this counter. The two lines stack from the anchor: label at the
+    // top, value half a line below it.
+    p.push();
+    p.textFont( font );
+    p.textSize( s * 0.42 );
+    const labelWidth = p.textWidth( label );
+
+    p.textSize( s );
+    const valueWidth = p.textWidth( valueText );
+
+    p.pop();
+
+    const rect = anchoredRect(
+      p,
+      x,
+      y,
+      align,
+      Math.max(
+        labelWidth,
+        valueWidth
+      ),
+      s * 1.5
+    );
+
+    reportWidgetBounds(
+      part,
+      rect.x,
+      rect.y,
+      rect.w,
+      rect.h
+    );
 
     string.write(
       label,

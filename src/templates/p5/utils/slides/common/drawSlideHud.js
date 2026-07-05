@@ -56,7 +56,8 @@ export default function drawSlideHud( item ) {
     try {
       render(
         cfg,
-        style
+        style,
+        key
       );
     } catch( error ) {
       // An overlay widget must never break the sketch's render loop.

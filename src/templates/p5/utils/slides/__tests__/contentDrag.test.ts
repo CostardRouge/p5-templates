@@ -91,6 +91,7 @@ import {
 import {
   beginItemBounds,
   reportItemBounds,
+  reportItemPartBounds,
   endItemBounds
 } from "../common/itemBoundsRegistry.js";
 import {
@@ -440,6 +441,306 @@ describe(
           "pointerdown",
           500,
           500
+        );
+
+        expect( down.defaultPrevented ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "content drag — HUD sub-item widgets",
+  () => {
+    // A HUD item has no position of its own; each widget carries its own
+    // `offset`. Dragging one widget must move ONLY that widget's offset.
+    beforeEach( () => {
+      store = {
+        content: [
+          {
+            type: "hud",
+            badge: {
+              enabled: true,
+              offset: {
+                x: 0.9,
+                y: 0.1
+              }
+            },
+            gauge: {
+              enabled: true,
+              offset: {
+                x: 0.1,
+                y: 0.9
+              }
+            }
+          }
+        ]
+      };
+      setSketchOptions.mockClear();
+      registerContentDrag();
+    } );
+
+    // Report each enabled widget's drawn rectangle for this frame, the way the
+    // real widget renderers do inside freeLayout's bounds bracket.
+    function reportHudBounds() {
+      beginItemBounds(
+        "global",
+        0
+      );
+      // badge drawn top-right, gauge drawn bottom-left — well separated.
+      reportItemPartBounds(
+        "badge",
+        800,
+        80,
+        150,
+        30
+      );
+      reportItemPartBounds(
+        "gauge",
+        60,
+        820,
+        200,
+        60
+      );
+      endItemBounds();
+    }
+
+    it(
+      "grabs a HUD widget by its drawn rectangle and persists its offset",
+      () => {
+        reportHudBounds();
+
+        // Press inside the badge rect, drag +100/+50, release.
+        const down = pressAt(
+          "pointerdown",
+          850,
+          95
+        );
+
+        expect( down.defaultPrevented ).toBe( true );
+
+        pressAt(
+          "pointermove",
+          950,
+          145
+        );
+        pressAt(
+          "pointerup",
+          950,
+          145
+        );
+
+        expect( setSketchOptions ).toHaveBeenCalledTimes( 1 );
+
+        const [
+          update
+        ] = setSketchOptions.mock.calls[ 0 ] as [
+          { content: Array<{
+            badge: { offset: { x: number;
+              y: number } };
+            gauge: { offset: { x: number;
+              y: number } };
+          }> }
+        ];
+
+        // Badge moved by the pointer delta (+0.1, +0.05) from (0.9, 0.1).
+        expect( update.content[ 0 ].badge.offset.x ).toBeCloseTo( 1 );
+        expect( update.content[ 0 ].badge.offset.y ).toBeCloseTo( 0.15 );
+        // The gauge (a sibling widget) is untouched.
+        expect( update.content[ 0 ].gauge.offset.x ).toBeCloseTo( 0.1 );
+        expect( update.content[ 0 ].gauge.offset.y ).toBeCloseTo( 0.9 );
+      }
+    );
+
+    it(
+      "moves only the pressed widget when two widgets are enabled",
+      () => {
+        reportHudBounds();
+
+        // Press inside the gauge rect this time.
+        pressAt(
+          "pointerdown",
+          120,
+          850
+        );
+        pressAt(
+          "pointermove",
+          220,
+          850
+        );
+        pressAt(
+          "pointerup",
+          220,
+          850
+        );
+
+        const [
+          update
+        ] = setSketchOptions.mock.calls[ 0 ] as [
+          { content: Array<{
+            badge: { offset: { x: number;
+              y: number } };
+            gauge: { offset: { x: number;
+              y: number } };
+          }> }
+        ];
+
+        // Gauge moved +0.1 on x; badge stayed put.
+        expect( update.content[ 0 ].gauge.offset.x ).toBeCloseTo( 0.2 );
+        expect( update.content[ 0 ].badge.offset.x ).toBeCloseTo( 0.9 );
+        expect( update.content[ 0 ].badge.offset.y ).toBeCloseTo( 0.1 );
+      }
+    );
+
+    it(
+      "does not target a disabled widget",
+      () => {
+        store = {
+          content: [
+            {
+              type: "hud",
+              badge: {
+                enabled: false,
+                offset: {
+                  x: 0.9,
+                  y: 0.1
+                }
+              }
+            }
+          ]
+        };
+        registerContentDrag();
+
+        // No bounds reported (disabled widget isn't drawn); a press on empty
+        // canvas must fall through so the viewport can still pan.
+        const down = pressAt(
+          "pointerdown",
+          850,
+          95
+        );
+
+        expect( down.defaultPrevented ).toBe( false );
+      }
+    );
+  }
+);
+
+describe(
+  "content drag — montage title overlay",
+  () => {
+    // The montage variant-title is a slide-level label at
+    // slide.transition.title.position — not a content-list item.
+    beforeEach( () => {
+      store = {
+        slides: [
+          {
+            content: [],
+            transition: {
+              enabled: true,
+              title: {
+                enabled: true,
+                align: "right",
+                position: {
+                  x: 0.9,
+                  y: 0.1
+                }
+              }
+            }
+          }
+        ]
+      };
+      setSketchOptions.mockClear();
+      registerContentDrag();
+    } );
+
+    // The montage title keys its bounds by the sentinel "index" within its
+    // slide scope (slide:0 → montage-title), and reports the whole-label rect.
+    function reportTitleBounds() {
+      beginItemBounds(
+        "slide:0",
+        "montage-title"
+      );
+      // A right-aligned label whose anchor (0.9,0.1)*1000 = (900,100) sits at
+      // its right edge; the drawn rect spans to the left of it.
+      reportItemBounds(
+        720,
+        100,
+        180,
+        30
+      );
+      endItemBounds();
+    }
+
+    it(
+      "grabs the montage title by its rectangle and persists its position",
+      () => {
+        reportTitleBounds();
+
+        const down = pressAt(
+          "pointerdown",
+          800,
+          115
+        );
+
+        expect( down.defaultPrevented ).toBe( true );
+
+        // Drag +50/+40, release.
+        pressAt(
+          "pointermove",
+          850,
+          155
+        );
+        pressAt(
+          "pointerup",
+          850,
+          155
+        );
+
+        expect( setSketchOptions ).toHaveBeenCalledTimes( 1 );
+
+        const [
+          update,
+          origin
+        ] = setSketchOptions.mock.calls[ 0 ] as [
+          { slides: Array<{ transition: { title: { position: { x: number;
+            y: number } } } }> },
+          string
+        ];
+
+        expect( origin ).toBe( "p5" );
+        // Anchor moved by the pointer delta (+0.05, +0.04) from (0.9, 0.1).
+        expect( update.slides[ 0 ].transition.title.position.x ).toBeCloseTo( 0.95 );
+        expect( update.slides[ 0 ].transition.title.position.y ).toBeCloseTo( 0.14 );
+      }
+    );
+
+    it(
+      "is not draggable when the montage transition is disabled",
+      () => {
+        store = {
+          slides: [
+            {
+              content: [],
+              transition: {
+                enabled: false,
+                title: {
+                  enabled: true,
+                  align: "right",
+                  position: {
+                    x: 0.9,
+                    y: 0.1
+                  }
+                }
+              }
+            }
+          ]
+        };
+        registerContentDrag();
+
+        const down = pressAt(
+          "pointerdown",
+          800,
+          115
         );
 
         expect( down.defaultPrevented ).toBe( false );
