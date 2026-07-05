@@ -11,6 +11,12 @@ import {
 import {
   formatSlideTitle
 } from "./formatTitle.js";
+import {
+  reportItemBounds
+} from "../common/itemBoundsRegistry.js";
+import {
+  resolveMontageTitlePosition
+} from "../contentDrag.js";
 
 /**
  * Overlay that names the variant a montage slide is currently showing. It rides
@@ -376,7 +382,7 @@ function paintRoll(
 }
 
 export default function drawMontageTitle(
-  slide, allSlides
+  slide, allSlides, slideIndex = 0
 ) {
   const transition = slide?.transition;
   const title = transition?.title;
@@ -472,8 +478,39 @@ export default function drawMontageTitle(
     );
   }
 
-  const anchorX = p.width * ( title.position?.x ?? 0.95 );
-  const anchorY = p.height * ( title.position?.y ?? 0.08 );
+  // While the label is being dragged on canvas, follow the live position; the
+  // stored one applies otherwise (the overlay renders outside freeLayout, so it
+  // resolves its own drag override rather than going through resolveDraggedItem).
+  const position = resolveMontageTitlePosition(
+    slideIndex,
+    title.position
+  );
+  const anchorX = p.width * ( position?.x ?? 0.95 );
+  const anchorY = p.height * ( position?.y ?? 0.08 );
+
+  // Report the shown label's rectangle so the drag layer can grab it by its
+  // visible body (the anchor sits at the aligned edge, often off the glyphs).
+  const shownText = switchT < 0.5 ? fromLabel : toLabel;
+
+  if ( shownText ) {
+    p.push();
+    p.textFont( font );
+    p.textSize( size );
+    const shownWidth = p.textWidth( shownText );
+
+    p.pop();
+
+    reportItemBounds(
+      alignLeft(
+        anchorX,
+        shownWidth,
+        title.align
+      ),
+      anchorY,
+      shownWidth,
+      size
+    );
+  }
 
   if ( !changing ) {
     paintLabel(

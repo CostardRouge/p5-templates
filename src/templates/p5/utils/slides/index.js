@@ -18,8 +18,14 @@ import drawMontageTitle from "./montageTitle/index.js";
 import {
   registerContentDrag,
   slideContentScope,
-  GLOBAL_CONTENT_SCOPE
+  GLOBAL_CONTENT_SCOPE,
+  MONTAGE_TITLE_INDEX
 } from "./contentDrag.js";
+
+import {
+  beginItemBounds,
+  endItemBounds
+} from "./common/itemBoundsRegistry.js";
 
 import {
   coerceFramerate
@@ -268,10 +274,23 @@ const slides = {
     const slide = this.current;
 
     if ( slide?.transition?.enabled && slide.transition.title?.enabled ) {
+      const slideIndex = wrap(
+        Number( this.index ) || 0,
+        this.count
+      );
+
+      // Bracket the overlay so its reported rectangle keys to this slide's
+      // montage-title target — the surface the on-canvas drag hit-tests.
+      beginItemBounds(
+        slideContentScope( slideIndex ),
+        MONTAGE_TITLE_INDEX
+      );
       drawMontageTitle(
         slide,
-        options?.slides || []
+        options?.slides || [],
+        slideIndex
       );
+      endItemBounds();
     }
   },
 

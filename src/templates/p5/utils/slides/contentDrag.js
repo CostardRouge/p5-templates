@@ -119,6 +119,19 @@ const GRAB_RADIUS_SCREEN_PX = 44;
 
 export const GLOBAL_CONTENT_SCOPE = "global";
 
+// The montage variant-title overlay (slide.transition.title) is a slide-level
+// positioned label, NOT a content-list item — so it can't be addressed by an
+// array index. It gets this sentinel "index" within its slide scope instead,
+// giving it a bounds/override key of `slide:<n>:montage-title` alongside the
+// numeric content-item keys it can never collide with.
+export const MONTAGE_TITLE_INDEX = "montage-title";
+
+// Renderer defaults for the montage title anchor (mirrors drawMontageTitle).
+const MONTAGE_TITLE_DEFAULTS = {
+  x: 0.95,
+  y: 0.08
+};
+
 export function slideContentScope( index ) {
   return `slide:${ index }`;
 }
@@ -259,6 +272,27 @@ export function resolveDraggedItem(
   return next;
 }
 
+/**
+ * The montage title's live position for the given slide while it is being
+ * dragged, or its stored position otherwise. drawMontageTitle calls this so the
+ * label follows the pointer before the move is persisted (the overlay renders
+ * outside freeLayout, so it can't go through resolveDraggedItem).
+ */
+export function resolveMontageTitlePosition(
+  slideIndex, position
+) {
+  if ( overrides.size === 0 ) {
+    return position;
+  }
+
+  const override = overrides.get( overrideKey(
+    slideContentScope( slideIndex ),
+    MONTAGE_TITLE_INDEX
+  ) );
+
+  return override ?? position;
+}
+
 // Same wrap as slides/index.js uses to resolve the rendered slide, so the scope
 // written here always matches the scope freeLayout renders with.
 function currentSlideIndex( count ) {
@@ -366,11 +400,37 @@ function collectTargets( p ) {
 
   if ( slidesArray.length > 0 ) {
     const slideIndex = currentSlideIndex( slidesArray.length );
+    const slide = slidesArray[ slideIndex ];
 
     add(
       slideContentScope( slideIndex ),
-      slidesArray[ slideIndex ]?.content
+      slide?.content
     );
+
+    // Montage variant-title overlay: a slide-level positioned label, draggable
+    // when the current slide's montage transition and its title are both on.
+    if ( slide?.transition?.enabled && slide.transition.title?.enabled ) {
+      const scope = slideContentScope( slideIndex );
+      const override = overrides.get( overrideKey(
+        scope,
+        MONTAGE_TITLE_INDEX
+      ) );
+      const position = override ?? slide.transition.title.position ?? {};
+
+      targets.push( {
+        x: ( position.x ?? MONTAGE_TITLE_DEFAULTS.x ) * p.width,
+        y: ( position.y ?? MONTAGE_TITLE_DEFAULTS.y ) * p.height,
+        bounds: getItemBounds(
+          scope,
+          MONTAGE_TITLE_INDEX
+        ),
+        scope,
+        index: MONTAGE_TITLE_INDEX,
+        part: null,
+        marginX: 0,
+        marginY: 0
+      } );
+    }
   }
 
   add(
@@ -554,21 +614,50 @@ function persistOverrides() {
   const nextSlides = slidesArray.map( (
     slide, slideIndex
   ) => {
-    const next = applyToContent(
-      slideContentScope( slideIndex ),
+    const scope = slideContentScope( slideIndex );
+    let nextSlide = slide;
+
+    const nextContentList = applyToContent(
+      scope,
       slide?.content
     );
 
-    if ( !next ) {
-      return slide;
+    if ( nextContentList ) {
+      nextSlide = {
+        ...nextSlide,
+        content: nextContentList
+      };
     }
 
-    slidesChanged = true;
+    // Montage title position lives at slide.transition.title.position — not in
+    // the content list, so it persists here rather than through applyToContent.
+    const titleOverride = overrides.get( overrideKey(
+      scope,
+      MONTAGE_TITLE_INDEX
+    ) );
 
-    return {
-      ...slide,
-      content: next
-    };
+    if ( titleOverride && slide?.transition?.title ) {
+      nextSlide = {
+        ...nextSlide,
+        transition: {
+          ...nextSlide.transition,
+          title: {
+            ...nextSlide.transition.title,
+            position: {
+              ...( nextSlide.transition.title.position ?? {} ),
+              x: titleOverride.x,
+              y: titleOverride.y
+            }
+          }
+        }
+      };
+    }
+
+    if ( nextSlide !== slide ) {
+      slidesChanged = true;
+    }
+
+    return nextSlide;
   } );
 
   if ( slidesChanged ) {
