@@ -974,7 +974,7 @@ function drawHeader(
     hx,
     hy,
     W * 0.032,
-    -pr * TAU * 1.6
+    -pr * TAU * 2
   );
   glowOff( p );
   p.pop();
@@ -1470,7 +1470,7 @@ function drawTerrain(
     160,
     1
   );
-  p.rotate( -ph * 2.4 );
+  p.rotate( -ph * 3 );
   hexagon(
     p,
     0,
@@ -2003,7 +2003,10 @@ sketch.draw( () => {
   const W = p.width;
   const H = p.height;
   const pal = THEMES[ o.theme ] ?? THEMES.neonGenesis;
-  const bg = o.backgroundColor ?? pal.bg;
+
+  // The backdrop is theme-driven (same source as the panel fills) so switching
+  // `theme` recolours the whole terminal coherently.
+  const bg = pal.bg;
 
   p.clear();
   p.background(

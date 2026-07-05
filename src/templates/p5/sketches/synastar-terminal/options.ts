@@ -59,12 +59,7 @@ export const formValues = {
     vignette: true,
     grain: 0.6,
     flicker: 0.3
-  },
-  backgroundColor: [
-    6,
-    9,
-    12
-  ]
+  }
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -248,9 +243,5 @@ export const formConfiguration: Record<string, any> = {
         step: 0.05
       }
     }
-  },
-  backgroundColor: {
-    component: "color",
-    label: "Background color"
   }
 };
