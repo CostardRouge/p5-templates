@@ -67,6 +67,17 @@ export default {
             backgroundColor: "transparent"
           }
         },
+        // macOS menu-bar-style attention pulse: an inset accent ring that swells
+        // and fades a couple of times. Inset so it never gets clipped by the
+        // options panel's overflow, and it doesn't disturb layout.
+        "select-pulse": {
+          "0%, 100%": {
+            boxShadow: "inset 0 0 0 0 hsl(var(--focus) / 0)"
+          },
+          "50%": {
+            boxShadow: "inset 0 0 0 2px hsl(var(--focus) / 0.9)"
+          }
+        },
         "gradient-shift": {
           "0%, 100%": {
             "background-position": "0% 50%"
@@ -173,6 +184,7 @@ export default {
         "pulse-soft": "pulse-soft 1.5s ease-in-out infinite",
         slideInFromTop: "slideInFromTop 0.5s ease-out",
         highlightFade: "highlightFade 1s ease-out",
+        "select-pulse": "select-pulse 0.6s ease-in-out 2",
         "gradient-shift": "gradient-shift 8s ease-in-out infinite",
         marquee: "marquee 30s linear infinite",
         "marquee-slow": "marquee 60s linear infinite",

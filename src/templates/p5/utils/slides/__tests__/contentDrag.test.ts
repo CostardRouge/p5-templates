@@ -263,6 +263,53 @@ describe(
     );
 
     it(
+      "announces the pressed item so the options panel can reveal it",
+      () => {
+        const events: Array<{ scope: string;
+          index: number | string;
+          part: string | null }> = [];
+        const listener = ( event: Event ) => {
+          events.push( ( event as CustomEvent ).detail );
+        };
+
+        window.addEventListener(
+          "studio:content-item-select",
+          listener
+        );
+
+        try {
+          // Press on the item (its anchor at 500,500).
+          pressAt(
+            "pointerdown",
+            500,
+            500
+          );
+
+          expect( events ).toHaveLength( 1 );
+          expect( events[ 0 ] ).toEqual( {
+            scope: "global",
+            index: 0,
+            part: null
+          } );
+
+          // A press that misses every item announces nothing.
+          pressAt(
+            "pointerdown",
+            50,
+            50
+          );
+
+          expect( events ).toHaveLength( 1 );
+        } finally {
+          window.removeEventListener(
+            "studio:content-item-select",
+            listener
+          );
+        }
+      }
+    );
+
+    it(
       "moves the item and persists the new position on release",
       () => {
         pressAt(

@@ -709,6 +709,28 @@ function setCursor( value ) {
   }
 }
 
+// Tell the options panel which item was just pressed on the canvas, so it can
+// reveal that item's form section (open its zone/slide, open + scroll to it,
+// and pulse it). Fires on grab — covering both a click and the start of a drag.
+// The event name is duplicated in the React constant CONTENT_ITEM_SELECT_EVENT
+// (constants/drawer-events.ts) — keep the two literals in sync.
+function emitContentItemSelect( target ) {
+  if ( typeof window === "undefined" || !target ) {
+    return;
+  }
+
+  window.dispatchEvent( new CustomEvent(
+    "studio:content-item-select",
+    {
+      detail: {
+        scope: target.scope,
+        index: target.index,
+        part: target.part ?? null
+      }
+    }
+  ) );
+}
+
 // ── Pointer handlers (capture phase on window, ahead of the viewport) ───────
 
 function onPointerDown( event ) {
@@ -756,6 +778,9 @@ function onPointerDown( event ) {
   event.preventDefault();
 
   const target = targets[ hit ];
+
+  // Surface the pressed item in the options panel (click or drag-start).
+  emitContentItemSelect( target );
 
   activeDrag = {
     pointerId: event.pointerId,
