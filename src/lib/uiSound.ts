@@ -404,11 +404,33 @@ function playClicks(
 }
 
 /**
+ * The one rule that decides which field edits are audible. Feedback is scoped
+ * to the sketch's own parameters — the controls under the Sketch Settings
+ * panel, whether the global set (`sketch.*`) or a slide override
+ * (`slides.<n>.sketch.*`). Everything else in the options form stays silent:
+ * content items (text / specs / hud / …), adding / removing / reordering
+ * slides and content items, montage transitions, and the general
+ * size / animation settings. So composing a deck is quiet and only tweaking the
+ * sketch's parameters ticks.
+ */
+const SKETCH_SETTING_FIELD = /^(?:slides\.\d+\.)?sketch(?:\.|$)/;
+
+export function isSoundFeedbackField( fieldPath: string ): boolean {
+  return SKETCH_SETTING_FIELD.test( fieldPath );
+}
+
+/**
  * A template option value changed in the panel. Throttled by `minGapMs`;
  * pitch derives from the field path when `pitchByField` is on.
  */
 export function playValueChange( fieldPath?: string ): void {
   if ( _suppressDepth > 0 ) {
+    return;
+  }
+
+  // Only the sketch's own parameters click — content items, slides, transitions
+  // and general settings stay silent (see isSoundFeedbackField).
+  if ( !fieldPath || !isSoundFeedbackField( fieldPath ) ) {
     return;
   }
 
