@@ -104,13 +104,20 @@ function currentSize() {
 beforeAll( installFullscreenStub );
 
 beforeEach( async() => {
-  // Ensure each test starts outside fullscreen with a clean target.
+  // Ensure each test starts outside fullscreen with a clean target and no
+  // leftover slides from a previous test.
   if ( isViewportFullscreen() ) {
     await exitViewportFullscreen();
   }
 
   fakeFullscreenElement = null;
   registerFullscreenTarget( null );
+  setSketchOptions(
+    {
+      slides: []
+    },
+    "test"
+  );
 } );
 
 describe(
@@ -197,31 +204,73 @@ describe(
     );
 
     it(
-      "does not restore when the size changed by other means while fullscreen",
+      "bare mode stretches every slide's size too, and restores them on exit",
       async() => {
         const target = document.createElement( "div" );
 
         registerFullscreenTarget( target );
-        seedSize(
-          1080,
-          1350
+
+        // A slide deck seeds each slide with its own size — which would mask a
+        // global-only change — so bare mode must rewrite them as well.
+        setSketchOptions(
+          {
+            size: {
+              width: 1080,
+              height: 1350
+            },
+            slides: [
+              {
+                name: "Slide 1",
+                size: {
+                  width: 1080,
+                  height: 1350
+                }
+              },
+              {
+                name: "Slide 2",
+                size: {
+                  width: 1080,
+                  height: 1350
+                }
+              }
+            ]
+          },
+          "test"
         );
 
         await enterViewportFullscreen( "bare" );
 
-        // A sketch (or any other source) changes the size while fullscreen —
-        // the exit must not clobber that with the stashed pre-fullscreen size.
-        seedSize(
-          1080,
-          1080
-        );
+        const inFullscreen = getSketchOptions();
+
+        expect( inFullscreen.size ).toEqual( SCREEN );
+        expect( inFullscreen.slides.map( ( slide: { size: unknown } ) => slide.size ) ).toEqual( [
+          SCREEN,
+          SCREEN
+        ] );
 
         await exitViewportFullscreen();
 
-        expect( currentSize() ).toEqual( {
+        const restored = getSketchOptions();
+
+        expect( restored.size ).toEqual( {
           width: 1080,
-          height: 1080
+          height: 1350
         } );
+        expect( restored.slides.map( ( slide: { size: unknown } ) => slide.size ) ).toEqual( [
+          {
+            width: 1080,
+            height: 1350
+          },
+          {
+            width: 1080,
+            height: 1350
+          }
+        ] );
+        // Non-size slide fields are left untouched.
+        expect( restored.slides.map( ( slide: { name: string } ) => slide.name ) ).toEqual( [
+          "Slide 1",
+          "Slide 2"
+        ] );
       }
     );
 

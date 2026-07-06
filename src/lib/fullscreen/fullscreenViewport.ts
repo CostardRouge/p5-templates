@@ -14,9 +14,12 @@
  * Two modes (see {@link FullscreenMode}):
  * - `hud`  — keep the sketch's on-canvas UI; the canvas keeps its resolution and
  *            is fit into the screen. No resolution change, nothing to restore.
- * - `bare` — canvas only, stretched to the screen resolution. The pre-fullscreen
- *            size is stashed and restored on exit (unless something else changed
- *            it in the meantime).
+ * - `bare` — a true fullscreen: the canvas is re-sized to the screen resolution
+ *            (ratio included), so it fills an external display 1:1 rather than
+ *            being letterboxed. Because a slide deck seeds every slide with its
+ *            own `size` (which the effective-size resolver lets win over the
+ *            global size), we override the global size *and* each slide's size,
+ *            snapshotting the originals and restoring them on exit.
  *
  * Desktop-only in practice: iOS Safari has no element fullscreen. Callers gate
  * the UI on {@link isFullscreenSupported} plus a desktop media query.
@@ -39,14 +42,16 @@ type Size = {
   height: number;
 };
 
+// The `size` / `slides` we replaced on `bare` entry, restored verbatim on exit.
+type SizeSnapshot = {
+  size: unknown;
+  slides: unknown;
+};
+
 let targetElement: HTMLElement | null = null;
 // The mode of the active fullscreen session (null while not fullscreen).
 let activeMode: FullscreenMode | null = null;
-// The resolution active when we entered a `bare` session, restored on exit.
-let sizeBeforeFullscreen: Size | null = null;
-// The screen resolution applied on `bare` entry — used to detect whether the
-// size was changed by other means while fullscreen (then we keep that change).
-let sizeAppliedForFullscreen: Size | null = null;
+let bareSizeSnapshot: SizeSnapshot | null = null;
 let changeListenerBound = false;
 
 const subscribers = new Set<() => void>();
@@ -123,17 +128,12 @@ export function getFullscreenMode(): FullscreenMode | null {
   return isViewportFullscreen() ? activeMode : null;
 }
 
-function readCurrentSize(): Size | null {
-  const size = getSketchOptions()?.size;
-
-  return size && typeof size.width === "number" && typeof size.height === "number"
-    ? {
-      width: size.width,
-      height: size.height
-    }
-    : null;
+function cloneJson( value: unknown ): unknown {
+  return value === undefined ? undefined : JSON.parse( JSON.stringify( value ) );
 }
 
+// The screen's logical resolution. A future "×2 / ×3" supersampling option
+// would multiply this; for now the canvas matches the display 1:1.
 function screenResolution(): Size {
   if ( typeof window === "undefined" ) {
     return {
@@ -150,6 +150,63 @@ function screenResolution(): Size {
   };
 }
 
+// Stretch the canvas to the screen resolution. The effective size a slide deck
+// renders at is `mergeSlideOverride(global, slide.size)` with the slide winning,
+// so we have to rewrite each slide's size too — otherwise the change is masked
+// and the sketch stays at its own ratio.
+function applyScreenResolution(): void {
+  const options = getSketchOptions();
+
+  bareSizeSnapshot = {
+    size: cloneJson( options?.size ),
+    slides: cloneJson( options?.slides )
+  };
+
+  const target = screenResolution();
+  const update: Record<string, unknown> = {
+    size: target
+  };
+  const slides = options?.slides;
+
+  if ( Array.isArray( slides ) && slides.length > 0 ) {
+    update.slides = slides.map( ( slide ) =>
+      slide && typeof slide === "object"
+        ? {
+          ...slide,
+          size: {
+            ...target
+          }
+        }
+        : slide );
+  }
+
+  setSketchOptions(
+    update,
+    FULLSCREEN_ORIGIN
+  );
+}
+
+function restoreResolution(): void {
+  if ( !bareSizeSnapshot ) {
+    return;
+  }
+
+  const update: Record<string, unknown> = {
+    size: bareSizeSnapshot.size
+  };
+
+  if ( bareSizeSnapshot.slides !== undefined ) {
+    update.slides = bareSizeSnapshot.slides;
+  }
+
+  setSketchOptions(
+    update,
+    FULLSCREEN_ORIGIN
+  );
+
+  bareSizeSnapshot = null;
+}
+
 function notify(): void {
   for ( const cb of subscribers ) {
     cb();
@@ -157,31 +214,11 @@ function notify(): void {
 }
 
 function handleFullscreenChange(): void {
-  // Left fullscreen (Esc, the menu, or a programmatic exit). A `bare` session
-  // stashed a resolution: put it back — but only if the current size still
-  // matches what we applied, so a size changed by other means is preserved.
+  // Left fullscreen (Esc, the menu, or a programmatic exit): a `bare` session
+  // rewrote the canvas size — put the snapshot back.
   if ( !isViewportFullscreen() ) {
-    if ( sizeBeforeFullscreen ) {
-      const currentSize = readCurrentSize();
-      const untouched =
-        sizeAppliedForFullscreen !== null &&
-        currentSize !== null &&
-        currentSize.width === sizeAppliedForFullscreen.width &&
-        currentSize.height === sizeAppliedForFullscreen.height;
-
-      if ( untouched ) {
-        setSketchOptions(
-          {
-            size: sizeBeforeFullscreen
-          },
-          FULLSCREEN_ORIGIN
-        );
-      }
-    }
-
+    restoreResolution();
     activeMode = null;
-    sizeBeforeFullscreen = null;
-    sizeAppliedForFullscreen = null;
   }
 
   notify();
@@ -226,8 +263,6 @@ export async function enterViewportFullscreen( mode: FullscreenMode ): Promise<v
     return;
   }
 
-  const before = readCurrentSize();
-
   try {
     await requestElementFullscreen( targetElement );
   } catch {
@@ -244,15 +279,7 @@ export async function enterViewportFullscreen( mode: FullscreenMode ): Promise<v
   activeMode = mode;
 
   if ( mode === "bare" ) {
-    sizeBeforeFullscreen = before;
-    sizeAppliedForFullscreen = screenResolution();
-
-    setSketchOptions(
-      {
-        size: sizeAppliedForFullscreen
-      },
-      FULLSCREEN_ORIGIN
-    );
+    applyScreenResolution();
   }
 
   notify();
