@@ -152,9 +152,12 @@ const ZoomControls = ( {
   );
 
   const menu = showMenu && menuOpen ? (
+    // Flush against the button row (no margin): an empty gap between them would
+    // belong to neither element, so crossing it fires the island's onMouseLeave
+    // and the menu closes before the pointer can reach it.
     <div
       role="menu"
-      className="absolute right-0 top-full mt-1.5 z-[60] min-w-[13rem] overflow-hidden rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-lg"
+      className="absolute right-0 top-full z-[60] min-w-[13rem] overflow-hidden rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-lg"
     >
       {fullscreen!.isFullscreen ? (
         <MenuItem
