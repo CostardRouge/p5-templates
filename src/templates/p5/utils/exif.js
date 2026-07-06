@@ -32,9 +32,19 @@ const exif = {
   load: async( file ) => {
     await exif.loadScripts();
 
-    const result = ExifReader.load( file );
+    // Not every image carries parseable EXIF (PNGs, screenshots, stripped
+    // JPEGs). ExifReader throws "Invalid image format" for those — treat a
+    // parse failure as "no metadata" and return null rather than surfacing it
+    // as an error, since EXIF is optional decoration for the photo sketches.
+    let tags;
 
-    const tags = typeof result?.then === "function" ? await result : result;
+    try {
+      const result = ExifReader.load( file );
+
+      tags = typeof result?.then === "function" ? await result : result;
+    } catch {
+      return null;
+    }
 
     return {
       iso: Number( tags?.ISOSpeedRatings?.description ),
