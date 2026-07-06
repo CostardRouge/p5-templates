@@ -8,9 +8,9 @@ export const formValues = {
 
   count: 8,
   cardWidthRatio: 0.22,
-  cardAspect: 2,
-  radiusFactor: 0.89,
-  perspective: 1630,
+  cardAspect: 1.48,
+  radiusFactor: 1.29,
+  perspective: 2090,
   tilt: -13,
   spinMode: "continuous",
   spins: 1,
