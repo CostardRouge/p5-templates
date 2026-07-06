@@ -3109,7 +3109,7 @@
     "engine": "p5",
     "category": null,
     "hasSketchForm": true,
-    "hasThumbnail": false,
+    "hasThumbnail": true,
     "hasPreview": false,
     "hiddenFromHome": false,
     "hiddenFromTemplates": false,
