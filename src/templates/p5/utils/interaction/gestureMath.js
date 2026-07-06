@@ -274,6 +274,26 @@ export const GESTURE_SOURCES = [
   {
     id: "face.depth",
     label: "Face · Depth (near)"
+  },
+  {
+    id: "face.mouthOpen",
+    label: "Face · Mouth open"
+  },
+  {
+    id: "face.smile",
+    label: "Face · Smile"
+  },
+  {
+    id: "face.blinkLeft",
+    label: "Face · Blink (left)"
+  },
+  {
+    id: "face.blinkRight",
+    label: "Face · Blink (right)"
+  },
+  {
+    id: "face.browUp",
+    label: "Face · Brow raise"
   }
 ];
 
@@ -302,6 +322,12 @@ export function gestureChannelValues( metrics ) {
     "hands.pinch": clamp( hand.pinch ?? 0 ),
     "hands.spread": clamp( hand.spread ?? 0 ),
     "face.count": clamp( ( face.count ?? 0 ) / 4 ),
-    "face.depth": clamp( face.depth ?? 0 )
+    "face.depth": clamp( face.depth ?? 0 ),
+    // Blendshape expression scores (already 0..1 from FaceLandmarker).
+    "face.mouthOpen": clamp( face.mouthOpen ?? 0 ),
+    "face.smile": clamp( face.smile ?? 0 ),
+    "face.blinkLeft": clamp( face.blinkLeft ?? 0 ),
+    "face.blinkRight": clamp( face.blinkRight ?? 0 ),
+    "face.browUp": clamp( face.browUp ?? 0 )
   };
 }

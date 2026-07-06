@@ -3,7 +3,8 @@ const TASK_NAMES = [
   "interactive",
   "poses",
   "hands",
-  "faces"
+  "faces",
+  "faceMesh"
 ];
 
 export class VisionManager {
@@ -26,6 +27,10 @@ export class VisionManager {
         enabled: false
       },
       faces: {
+        task: null,
+        enabled: false
+      },
+      faceMesh: {
         task: null,
         enabled: false
       },
@@ -59,7 +64,8 @@ export class VisionManager {
       PoseLandmarker,
       ImageSegmenter,
       HandLandmarker,
-      FaceDetector
+      FaceDetector,
+      FaceLandmarker
     } = await import( "../../assets/libraries/mediapipe/vision_bundle.js" );
 
     const resolver = await FilesetResolver.forVisionTasks( `${ mediapipeLibraryPath }/wasm` );
@@ -148,6 +154,26 @@ export class VisionManager {
             baseOptions: {
               delegate,
               modelAssetPath: `${ mediapipeLibraryPath }/blaze_face_short_range.tflite`
+            }
+          }
+        )
+    );
+
+    await create(
+      "faceMesh",
+      ( delegate ) =>
+        FaceLandmarker.createFromOptions(
+          resolver,
+          {
+            numFaces: taskOptions.faceMesh?.numFaces ?? 1,
+            minFaceDetectionConfidence: taskOptions.faceMesh?.minConfidence ?? 0.5,
+            // The 52 expression scores (jawOpen, eyeBlink…, mouthSmile…) the
+            // interaction layer surfaces as bindable `face.*` scalars.
+            outputFaceBlendshapes: taskOptions.faceMesh?.blendshapes ?? true,
+            runningMode: "VIDEO",
+            baseOptions: {
+              delegate,
+              modelAssetPath: `${ mediapipeLibraryPath }/face_landmarker.task`
             }
           }
         )
@@ -303,6 +329,25 @@ export class VisionManager {
       } catch( error ) {
         this.warnOnce(
           "faces",
+          error
+        );
+      }
+    }
+
+    if ( this.state.faceMesh.enabled && this.state.faceMesh.task ) {
+      try {
+        const result = this.state.faceMesh.task.detectForVideo(
+          input,
+          timestamp
+        );
+
+        this.emitResult(
+          "faceMesh",
+          result
+        );
+      } catch( error ) {
+        this.warnOnce(
+          "faceMesh",
           error
         );
       }

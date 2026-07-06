@@ -159,6 +159,11 @@ const FACE_KEYPOINT_ORDER = [
   5 // left ear
 ];
 
+// FaceLandmarker (the "faceMesh" tracker) returns 468 dense mesh landmarks per
+// face. Index 1 sits on the nose bridge — a stable centre used as the single
+// representative pointer for the flat collector.
+const FACE_MESH_CENTER_INDEX = 1;
+
 // ── Module-level state ─────────────────────────────────────────────────────
 
 let _noiseOffset = 0;
@@ -723,6 +728,10 @@ const _FLAT_COLLECTORS = [
     _collectFace
   ],
   [
+    "faceMesh",
+    _collectFaceMesh
+  ],
+  [
     "body",
     _collectBody
   ],
@@ -912,6 +921,11 @@ export function getPointerGroups( opts ) {
     groups
   );
   _collectFaceGroups(
+    opts,
+    p,
+    groups
+  );
+  _collectFaceMeshGroups(
     opts,
     p,
     groups
@@ -1309,6 +1323,10 @@ function _desiredVisionTasks( opts ) {
     tasks.push( "faces" );
   }
 
+  if ( vision.faceMesh?.enabled ) {
+    tasks.push( "faceMesh" );
+  }
+
   return tasks;
 }
 
@@ -1352,6 +1370,11 @@ function _visionConfigFor(
       },
       faces: {
         minConfidence: vision.face?.confidence ?? 0.5
+      },
+      faceMesh: {
+        numFaces: vision.faceMesh?.maxFaces ?? 1,
+        minConfidence: vision.faceMesh?.confidence ?? 0.5,
+        blendshapes: vision.faceMesh?.blendshapes ?? true
       }
     }
   };
@@ -1694,6 +1717,39 @@ function _collectFace(
   } );
 }
 
+function _collectFaceMesh(
+  opts, p, out
+) {
+  const vision = opts.vision;
+  const faceMesh = vision?.faceMesh;
+
+  if ( vision?.enabled === false || !faceMesh?.enabled ) {
+    return;
+  }
+
+  const flip = _visionFlip( vision );
+  const faces = getTaskResult(
+    "faceMesh",
+    VISION_RESULT_TTL_MS
+  )?.faceLandmarks ?? [];
+  const maxFaces = faceMesh.maxFaces ?? 1;
+
+  faces.slice(
+    0,
+    maxFaces
+  ).forEach( ( landmarks ) => {
+    const center = landmarks?.[ FACE_MESH_CENTER_INDEX ];
+
+    if ( center ) {
+      out.push( _normToCanvas(
+        center,
+        flip,
+        p
+      ) );
+    }
+  } );
+}
+
 function _collectBody(
   opts, p, out
 ) {
@@ -1945,6 +2001,49 @@ function _collectFaceGroups(
         points
       } );
     }
+  } );
+}
+
+function _collectFaceMeshGroups(
+  opts, p, groups
+) {
+  const vision = opts.vision;
+  const faceMesh = vision?.faceMesh;
+
+  if ( vision?.enabled === false || !faceMesh?.enabled ) {
+    return;
+  }
+
+  const flip = _visionFlip( vision );
+  const maxFaces = faceMesh.maxFaces ?? 1;
+  const faces = getTaskResult(
+    "faceMesh",
+    VISION_RESULT_TTL_MS
+  )?.faceLandmarks ?? [];
+
+  faces.slice(
+    0,
+    maxFaces
+  ).forEach( (
+    landmarks, faceIndex
+  ) => {
+    if ( !landmarks?.length ) {
+      return;
+    }
+
+    // The full 468-point mesh as one group — sketches draw it as a point cloud
+    // (the classic MediaPipe FaceMesh look) or index individual landmarks.
+    const points = landmarks.map( ( lm ) => _normToCanvas(
+      lm,
+      flip,
+      p
+    ) );
+
+    groups.push( {
+      source: "faceMesh",
+      id: `faceMesh-${ faceIndex }`,
+      points
+    } );
   } );
 }
 

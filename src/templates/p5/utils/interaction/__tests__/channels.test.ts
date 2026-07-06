@@ -162,6 +162,7 @@ describe(
           "audio",
           "body",
           "face",
+          "faceMesh",
           "fingers",
           "gyroscope",
           "hands",

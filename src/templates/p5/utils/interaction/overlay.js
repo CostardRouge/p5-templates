@@ -47,6 +47,11 @@ export const INTERACTION_SOURCE_COLORS = {
     30,
     99
   ], // pink
+  faceMesh: [
+    236,
+    64,
+    122
+  ], // rose
   body: [
     0,
     188,
@@ -90,6 +95,7 @@ export const INTERACTION_SOURCE_LABELS = {
   hands: "Hands (MediaPipe)",
   fingers: "Fingers (MediaPipe)",
   face: "Face (MediaPipe)",
+  faceMesh: "Face mesh (MediaPipe)",
   body: "Body (MediaPipe)",
   orbit: "Orbit",
   perlinNoise: "Perlin Noise",
@@ -173,6 +179,39 @@ export function drawInteractionFingerChains( opts ) {
         v.y
       ) );
       p.endShape();
+    } );
+
+  p.pop();
+}
+
+/**
+ * Face-mesh point cloud — the 468 FaceLandmarker points per face drawn as small
+ * dots (the classic MediaPipe FaceMesh look). Gated by `vision.faceMesh.drawOverlay`.
+ */
+export function drawInteractionFaceMesh( opts ) {
+  const vision = opts?.vision;
+
+  if ( vision?.enabled === false || !vision?.faceMesh?.enabled || !vision?.faceMesh?.drawOverlay ) {
+    return;
+  }
+
+  const p = getP5();
+
+  p.push();
+  p.noStroke();
+  p.fill(
+    ...INTERACTION_SOURCE_COLORS.faceMesh,
+    200
+  );
+
+  getPointerGroups( opts )
+    .filter( ( group ) => group.source === "faceMesh" )
+    .forEach( ( group ) => {
+      group.points.forEach( ( v ) => p.circle(
+        v.x,
+        v.y,
+        3
+      ) );
     } );
 
   p.pop();
@@ -366,7 +405,7 @@ export function drawInteractionLegend( opts ) {
 
   // Vision status: starting hint, then live inference stats once running.
   const vision = opts?.vision;
-  const needsCamera = vision?.hands?.enabled || vision?.fingers?.enabled || vision?.face?.enabled || vision?.body?.enabled;
+  const needsCamera = vision?.hands?.enabled || vision?.fingers?.enabled || vision?.face?.enabled || vision?.faceMesh?.enabled || vision?.body?.enabled;
 
   if ( !needsCamera || vision?.enabled === false ) {
     p.pop();
@@ -435,6 +474,7 @@ export function drawInteractionOverlay( opts ) {
 
   drawInteractionCrosshairs( opts );
   drawInteractionFingerChains( opts );
+  drawInteractionFaceMesh( opts );
   drawInteractionPointers( opts );
   drawInteractionLegend( opts );
 }
