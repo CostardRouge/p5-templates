@@ -183,7 +183,7 @@ function _collectGestureChannels(
   }
 
   const wantsHands = vision?.hands?.enabled || vision?.fingers?.enabled;
-  const wantsFace = vision?.face?.enabled;
+  const wantsFace = vision?.face?.enabled || vision?.faceMesh?.enabled;
 
   if ( !wantsHands && !wantsFace ) {
     return;

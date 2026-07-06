@@ -3382,5 +3382,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-07-04T04:07:14.522Z",
     "ctime": "2026-07-04T04:06:56.402Z"
+  },
+  {
+    "name": "face-mesh-v1",
+    "engine": "p5",
+    "category": "face-capture",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-06T22:52:20.753Z",
+    "ctime": "2026-07-06T22:51:51.741Z"
   }
 ]

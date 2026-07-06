@@ -58,6 +58,15 @@ export const interactionFormValues = {
       confidence: 0.5,
       drawOverlay: false
     },
+    faceMesh: {
+      enabled: false,
+      maxFaces: 1,
+      confidence: 0.5,
+      // The 468-point mesh always tracks; blendshapes add the expression
+      // scores (mouth open, blink, smile, brow) as bindable face.* scalars.
+      blendshapes: true,
+      drawOverlay: false
+    },
     body: {
       enabled: false,
       maxPoses: 1,
@@ -449,6 +458,39 @@ export const interactionFormConfiguration = {
             drawOverlay: {
               component: "checkbox",
               label: "Draw bounding box"
+            }
+          }
+        },
+
+        faceMesh: {
+          component: "nested-object",
+          label: "Face mesh",
+          fields: {
+            enabled: {
+              component: "checkbox",
+              label: "Enabled"
+            },
+            maxFaces: {
+              component: "slider",
+              label: "Max faces",
+              min: 1,
+              max: 4,
+              step: 1
+            },
+            confidence: {
+              component: "slider",
+              label: "Min confidence",
+              min: 0.1,
+              max: 0.9,
+              step: 0.05
+            },
+            blendshapes: {
+              component: "checkbox",
+              label: "Expression blendshapes"
+            },
+            drawOverlay: {
+              component: "checkbox",
+              label: "Draw mesh"
             }
           }
         },

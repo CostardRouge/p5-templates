@@ -69,6 +69,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:churros/churros-v9-pasta-rgb-fixer": () => import( "@/p5/sketches/churros/churros-v9-pasta-rgb-fixer/index.js" ),
   "p5:churros/churros-v9-pasta-scanner": () => import( "@/p5/sketches/churros/churros-v9-pasta-scanner/index.js" ),
   "p5:empty-sketch": () => import( "@/p5/sketches/empty-sketch/index.js" ),
+  "p5:face-capture/face-mesh-v1": () => import( "@/p5/sketches/face-capture/face-mesh-v1/index.js" ),
   "p5:flowers-shaders/flowers-shaders-v1-melted": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v1-melted/index.js" ),
   "p5:flowers-shaders/flowers-shaders-v2-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v2-pipes/index.js" ),
   "p5:flowers-shaders/flowers-shaders-v3-hand-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v3-hand-pipes/index.js" ),

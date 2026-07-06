@@ -99,7 +99,13 @@ function _emptyMetrics() {
     face: {
       count: 0,
       present: 0,
-      depth: 0
+      depth: 0,
+      // Blendshape expression scores (0..1), populated by the faceMesh tracker.
+      mouthOpen: 0,
+      smile: 0,
+      blinkLeft: 0,
+      blinkRight: 0,
+      browUp: 0
     }
   };
 }
@@ -251,6 +257,67 @@ function _collectFaceMetrics( opts ) {
   };
 }
 
+// The MediaPipe FaceLandmarker blendshape category names we surface, mapped to
+// the friendly `face.*` metric keys. Left/right are from the subject's own
+// perspective (unaffected by the camera mirror — these are scalar intensities).
+const FACE_MESH_BLENDSHAPES = {
+  mouthOpen: [
+    "jawOpen"
+  ],
+  smile: [
+    "mouthSmileLeft",
+    "mouthSmileRight"
+  ],
+  blinkLeft: [
+    "eyeBlinkLeft"
+  ],
+  blinkRight: [
+    "eyeBlinkRight"
+  ],
+  browUp: [
+    "browInnerUp"
+  ]
+};
+
+// Reads the faceMesh tracker's blendshapes into smoothed 0..1 expression
+// scores. Averages the listed categories (e.g. left+right smile) and eases each
+// with the same EMA as the rest of the snapshot so bound params don't jitter.
+function _collectFaceMeshMetrics( opts ) {
+  const vision = opts?.vision ?? {};
+  const faceMeshCfg = vision.faceMesh ?? {};
+  const result = vision.enabled === false || !faceMeshCfg.enabled
+    ? null
+    : getTaskResult(
+      "faceMesh",
+      VISION_RESULT_TTL_MS
+    );
+
+  const categories = result?.faceBlendshapes?.[ 0 ]?.categories ?? [];
+  const byName = new Map( categories.map( ( c ) => [
+    c.categoryName,
+    c.score ?? 0
+  ] ) );
+  const out = {};
+
+  for ( const key in FACE_MESH_BLENDSHAPES ) {
+    const names = FACE_MESH_BLENDSHAPES[ key ];
+    const sum = names.reduce(
+      (
+        total, name
+      ) => total + ( byName.get( name ) ?? 0 ),
+      0
+    );
+
+    // Persisted keys (never pruned): decay smoothly to 0 when the face leaves.
+    out[ key ] = _ema(
+      `faceMesh:${ key }`,
+      sum / names.length
+    );
+  }
+
+  return out;
+}
+
 /**
  * Compute the gesture snapshot for `opts` (the sketch's `interaction` block).
  * Cached per frame. Reads the latest vision results; does NOT start the camera
@@ -325,7 +392,10 @@ export function computeInteractionMetrics( opts ) {
     };
   }
 
-  metrics.face = _collectFaceMetrics( opts );
+  metrics.face = {
+    ..._collectFaceMetrics( opts ),
+    ..._collectFaceMeshMetrics( opts )
+  };
 
   _cache.frame = frame;
   _cache.metrics = metrics;

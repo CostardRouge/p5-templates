@@ -42,6 +42,11 @@ export const INTERACTION_SOURCES = [
     label: "Face"
   },
   {
+    id: "faceMesh",
+    type: "vector2d",
+    label: "Face mesh"
+  },
+  {
     id: "body",
     type: "vector2d",
     label: "Body"
@@ -170,6 +175,35 @@ export const INTERACTION_SOURCES = [
     id: "face.depth",
     type: "scalar",
     label: "Face · Depth (near)"
+  },
+
+  // ── Semantic face-mesh blendshape scalars (from the faceMesh tracker) ──────
+  // FaceLandmarker's expression scores, surfaced as bindable 0..1 channels.
+  // Populated only when `vision.faceMesh` is enabled with blendshapes on.
+  {
+    id: "face.mouthOpen",
+    type: "scalar",
+    label: "Face · Mouth open"
+  },
+  {
+    id: "face.smile",
+    type: "scalar",
+    label: "Face · Smile"
+  },
+  {
+    id: "face.blinkLeft",
+    type: "scalar",
+    label: "Face · Blink (left)"
+  },
+  {
+    id: "face.blinkRight",
+    type: "scalar",
+    label: "Face · Blink (right)"
+  },
+  {
+    id: "face.browUp",
+    type: "scalar",
+    label: "Face · Brow raise"
   }
 ];
 
@@ -181,6 +215,7 @@ export const FLAT_SOURCE_IDS = [
   "hands",
   "fingers",
   "face",
+  "faceMesh",
   "body",
   "orbit",
   "perlinNoise",
