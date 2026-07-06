@@ -231,7 +231,7 @@ export default function TemplateOptions( {
 
   const [
     {
-      backendRecording, sketchFormValues
+      backendRecording, sketchFormValues, engine, browserRecording
     }
   ] = useSketch();
 
@@ -245,7 +245,9 @@ export default function TemplateOptions( {
   } = useThumbnails( {
     enabled: enableThumbnails,
     persistedJob,
-    slideFields
+    slideFields,
+    engine,
+    recording: browserRecording
   } );
 
   // Slide management

@@ -37,6 +37,9 @@ import {
   getEffectiveSlideSettings
 } from "@/lib/effectiveSlideSettings";
 import {
+  resolveEffectiveSketch
+} from "@/lib/effectiveSketch";
+import {
   resolveAnimation, totalFramesFor
 } from "@/lib/animationConfig";
 import {
@@ -155,15 +158,11 @@ class GsapRuntime {
     const {
       size, animation
     } = this.effectiveSettings;
-    const slide = this.activeSlideIndex !== undefined
-      ? this.options?.slides?.[ this.activeSlideIndex ]
-      : undefined;
-    const sketch = slide?.sketch
-      ? {
-        ...( this.options.sketch ?? {} ),
-        ...slide.sketch
-      }
-      : this.options.sketch;
+    // Shared, engine-agnostic per-slide merge (same resolver p5 + Three.js use).
+    const sketch = resolveEffectiveSketch(
+      this.options,
+      this.activeSlideIndex
+    );
 
     return {
       ...this.options,
