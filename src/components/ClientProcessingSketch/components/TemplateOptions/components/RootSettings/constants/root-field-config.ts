@@ -3,8 +3,7 @@ import {
   SelectOption
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
 import {
-  FULLSCREEN_PRESET_LABEL,
-  FULLSCREEN_PRESET_VALUE
+  FULLSCREEN_PRESETS
 } from "@/lib/fullscreen/constants";
 
 const createSizePresetOption = (
@@ -19,13 +18,13 @@ const createSizePresetOption = (
 } );
 
 export const sizePresetOptions: SelectOption[] = [
-  // Desktop-only fullscreen mode. Not a fixed W×H — the size select recognises
-  // this sentinel and drives the browser Fullscreen API instead (rendered only
-  // where supported). See ControlledSizePresetSelect / fullscreenViewport.
-  {
-    label: FULLSCREEN_PRESET_LABEL,
-    value: FULLSCREEN_PRESET_VALUE
-  },
+  // Desktop-only fullscreen modes. Not fixed W×H — the size select recognises
+  // these sentinels and drives the browser Fullscreen API instead (rendered
+  // only where supported). See ControlledSizePresetSelect / fullscreenViewport.
+  ...FULLSCREEN_PRESETS.map( ( preset ) => ( {
+    label: preset.label,
+    value: preset.value
+  } ) ),
 
   // square
   createSizePresetOption(

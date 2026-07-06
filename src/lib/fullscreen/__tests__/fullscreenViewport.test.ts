@@ -9,6 +9,7 @@ import {
 import {
   enterViewportFullscreen,
   exitViewportFullscreen,
+  getFullscreenMode,
   isFullscreenSupported,
   isViewportFullscreen,
   registerFullscreenTarget
@@ -123,7 +124,7 @@ describe(
     );
 
     it(
-      "enters fullscreen and switches the canvas to the screen resolution",
+      "bare mode enters fullscreen and stretches the canvas to the screen resolution",
       async() => {
         const target = document.createElement( "div" );
 
@@ -133,15 +134,16 @@ describe(
           1350
         );
 
-        await enterViewportFullscreen();
+        await enterViewportFullscreen( "bare" );
 
         expect( isViewportFullscreen() ).toBe( true );
+        expect( getFullscreenMode() ).toBe( "bare" );
         expect( currentSize() ).toEqual( SCREEN );
       }
     );
 
     it(
-      "restores the previous resolution on exit",
+      "hud mode enters fullscreen but leaves the canvas resolution untouched",
       async() => {
         const target = document.createElement( "div" );
 
@@ -151,7 +153,37 @@ describe(
           1350
         );
 
-        await enterViewportFullscreen();
+        await enterViewportFullscreen( "hud" );
+
+        expect( isViewportFullscreen() ).toBe( true );
+        expect( getFullscreenMode() ).toBe( "hud" );
+        expect( currentSize() ).toEqual( {
+          width: 1080,
+          height: 1350
+        } );
+
+        await exitViewportFullscreen();
+
+        expect( getFullscreenMode() ).toBeNull();
+        expect( currentSize() ).toEqual( {
+          width: 1080,
+          height: 1350
+        } );
+      }
+    );
+
+    it(
+      "bare mode restores the previous resolution on exit",
+      async() => {
+        const target = document.createElement( "div" );
+
+        registerFullscreenTarget( target );
+        seedSize(
+          1080,
+          1350
+        );
+
+        await enterViewportFullscreen( "bare" );
         expect( currentSize() ).toEqual( SCREEN );
 
         await exitViewportFullscreen();
@@ -175,7 +207,7 @@ describe(
           1350
         );
 
-        await enterViewportFullscreen();
+        await enterViewportFullscreen( "bare" );
 
         // A sketch (or any other source) changes the size while fullscreen —
         // the exit must not clobber that with the stashed pre-fullscreen size.
@@ -201,7 +233,7 @@ describe(
           1350
         );
 
-        await enterViewportFullscreen();
+        await enterViewportFullscreen( "bare" );
 
         expect( isViewportFullscreen() ).toBe( false );
         expect( currentSize() ).toEqual( {

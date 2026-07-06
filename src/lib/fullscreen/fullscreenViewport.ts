@@ -11,12 +11,12 @@
  * cross-tree bridges (`syncSketchOptions`, the drawer CustomEvents), the state
  * lives in this one module instead of being threaded through a context.
  *
- * Entering fullscreen also switches the *global* canvas size to the screen
- * resolution so a single-size sketch fills the display ~1:1. (A sketch whose
- * active slide overrides the size keeps its own resolution and is simply fit
- * into the screen — its aspect ratio is preserved rather than distorted.)
- * Exiting — via the button or the browser's Esc — restores the size that was
- * active before, unless something else changed it in the meantime.
+ * Two modes (see {@link FullscreenMode}):
+ * - `hud`  — keep the sketch's on-canvas UI; the canvas keeps its resolution and
+ *            is fit into the screen. No resolution change, nothing to restore.
+ * - `bare` — canvas only, stretched to the screen resolution. The pre-fullscreen
+ *            size is stashed and restored on exit (unless something else changed
+ *            it in the meantime).
  *
  * Desktop-only in practice: iOS Safari has no element fullscreen. Callers gate
  * the UI on {@link isFullscreenSupported} plus a desktop media query.
@@ -26,6 +26,9 @@ import {
   getSketchOptions,
   setSketchOptions
 } from "@/lib/syncSketchOptions";
+import type {
+  FullscreenMode
+} from "@/lib/fullscreen/constants";
 
 // Origin tag kept distinct from "react" so the option bridges (SketchContext,
 // TemplateOptions form, engine runtimes) all pick up our size writes.
@@ -37,10 +40,12 @@ type Size = {
 };
 
 let targetElement: HTMLElement | null = null;
-// The resolution that was active when we entered fullscreen, restored on exit.
+// The mode of the active fullscreen session (null while not fullscreen).
+let activeMode: FullscreenMode | null = null;
+// The resolution active when we entered a `bare` session, restored on exit.
 let sizeBeforeFullscreen: Size | null = null;
-// The screen resolution we applied on entry — used to detect whether the user
-// changed the resolution while fullscreen (in which case we keep their choice).
+// The screen resolution applied on `bare` entry — used to detect whether the
+// size was changed by other means while fullscreen (then we keep that change).
 let sizeAppliedForFullscreen: Size | null = null;
 let changeListenerBound = false;
 
@@ -113,6 +118,11 @@ export function isViewportFullscreen(): boolean {
   return targetElement !== null && currentFullscreenElement() === targetElement;
 }
 
+/** The active fullscreen mode, or `null` when the viewport is not fullscreen. */
+export function getFullscreenMode(): FullscreenMode | null {
+  return isViewportFullscreen() ? activeMode : null;
+}
+
 function readCurrentSize(): Size | null {
   const size = getSketchOptions()?.size;
 
@@ -147,26 +157,29 @@ function notify(): void {
 }
 
 function handleFullscreenChange(): void {
-  // Left fullscreen (Esc, the button, or a programmatic exit): put the canvas
-  // back to the pre-fullscreen resolution — but only if it still matches what
-  // we applied, so a size changed by other means while fullscreen is preserved.
-  if ( !isViewportFullscreen() && sizeBeforeFullscreen ) {
-    const currentSize = readCurrentSize();
-    const untouched =
-      sizeAppliedForFullscreen !== null &&
-      currentSize !== null &&
-      currentSize.width === sizeAppliedForFullscreen.width &&
-      currentSize.height === sizeAppliedForFullscreen.height;
+  // Left fullscreen (Esc, the menu, or a programmatic exit). A `bare` session
+  // stashed a resolution: put it back — but only if the current size still
+  // matches what we applied, so a size changed by other means is preserved.
+  if ( !isViewportFullscreen() ) {
+    if ( sizeBeforeFullscreen ) {
+      const currentSize = readCurrentSize();
+      const untouched =
+        sizeAppliedForFullscreen !== null &&
+        currentSize !== null &&
+        currentSize.width === sizeAppliedForFullscreen.width &&
+        currentSize.height === sizeAppliedForFullscreen.height;
 
-    if ( untouched ) {
-      setSketchOptions(
-        {
-          size: sizeBeforeFullscreen
-        },
-        FULLSCREEN_ORIGIN
-      );
+      if ( untouched ) {
+        setSketchOptions(
+          {
+            size: sizeBeforeFullscreen
+          },
+          FULLSCREEN_ORIGIN
+        );
+      }
     }
 
+    activeMode = null;
     sizeBeforeFullscreen = null;
     sizeAppliedForFullscreen = null;
   }
@@ -203,11 +216,12 @@ export function registerFullscreenTarget( element: HTMLElement | null ): void {
 }
 
 /**
- * Enter fullscreen on the registered viewport and switch the canvas to the
- * screen resolution. Must be called from within a user gesture (the request is
- * issued synchronously before the first `await`).
+ * Enter fullscreen on the registered viewport in the given mode. In `bare` mode
+ * the canvas is stretched to the screen resolution; `hud` leaves the resolution
+ * untouched. Must be called from within a user gesture (the request is issued
+ * synchronously before the first `await`).
  */
-export async function enterViewportFullscreen(): Promise<void> {
+export async function enterViewportFullscreen( mode: FullscreenMode ): Promise<void> {
   if ( !targetElement || !isFullscreenSupported() || isViewportFullscreen() ) {
     return;
   }
@@ -227,20 +241,24 @@ export async function enterViewportFullscreen(): Promise<void> {
     return;
   }
 
-  sizeBeforeFullscreen = before;
-  sizeAppliedForFullscreen = screenResolution();
+  activeMode = mode;
 
-  setSketchOptions(
-    {
-      size: sizeAppliedForFullscreen
-    },
-    FULLSCREEN_ORIGIN
-  );
+  if ( mode === "bare" ) {
+    sizeBeforeFullscreen = before;
+    sizeAppliedForFullscreen = screenResolution();
+
+    setSketchOptions(
+      {
+        size: sizeAppliedForFullscreen
+      },
+      FULLSCREEN_ORIGIN
+    );
+  }
 
   notify();
 }
 
-/** Leave fullscreen. The resolution restore happens on `fullscreenchange`. */
+/** Leave fullscreen. Any resolution restore happens on `fullscreenchange`. */
 export async function exitViewportFullscreen(): Promise<void> {
   if ( !isViewportFullscreen() ) {
     return;
@@ -250,14 +268,6 @@ export async function exitViewportFullscreen(): Promise<void> {
     await exitDocumentFullscreen();
   } catch {
     // Ignore — the change handler still reconciles state if we did exit.
-  }
-}
-
-export function toggleViewportFullscreen(): void {
-  if ( isViewportFullscreen() ) {
-    void exitViewportFullscreen();
-  } else {
-    void enterViewportFullscreen();
   }
 }
 

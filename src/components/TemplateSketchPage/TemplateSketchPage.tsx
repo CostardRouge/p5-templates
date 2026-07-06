@@ -31,10 +31,13 @@ import usePageVisibility from "@/hooks/usePageVisibility";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import useFullscreenViewport from "@/hooks/useFullscreenViewport";
 import {
+  enterViewportFullscreen,
   exitViewportFullscreen,
-  registerFullscreenTarget,
-  toggleViewportFullscreen
+  registerFullscreenTarget
 } from "@/lib/fullscreen/fullscreenViewport";
+import type {
+  FullscreenControls
+} from "@/components/ScalableViewport/components/ZoomControls";
 import {
   usePanelDock
 } from "@/hooks/usePanelDock";
@@ -79,15 +82,32 @@ export default function TemplateSketchPage() {
 
   // Fullscreen mode (desktop only, official Fullscreen API). The viewport
   // wrapper below is the element that goes fullscreen; the size select and the
-  // zoom-controls button both drive the shared controller.
+  // zoom-controls hover menu both drive the shared controller. Two modes: `hud`
+  // keeps the on-canvas overlays around the sketch; `bare` shows only the
+  // canvas, stretched to the screen resolution.
   const {
-    isFullscreen, isSupported: fullscreenSupported
+    isFullscreen, mode: fullscreenMode, isSupported: fullscreenSupported
   } = useFullscreenViewport();
   const fullscreenAvailable = isDesktop && fullscreenSupported;
+  const bareFullscreen = isFullscreen && fullscreenMode === "bare";
+  const hudFullscreen = isFullscreen && fullscreenMode === "hud";
 
   const registerViewport = useCallback(
     ( el: HTMLDivElement | null ) => registerFullscreenTarget( el ),
     []
+  );
+
+  const fullscreenControls: FullscreenControls = useMemo(
+    () => ( {
+      available: fullscreenAvailable,
+      isFullscreen,
+      onEnter: ( targetMode ) => void enterViewportFullscreen( targetMode ),
+      onExit: () => void exitViewportFullscreen()
+    } ),
+    [
+      fullscreenAvailable,
+      isFullscreen
+    ]
   );
 
   // Portal target for the viewport's zoom controls when docked (they render
@@ -326,6 +346,9 @@ export default function TemplateSketchPage() {
           isFullscreen
             ? "bg-background"
             : "pt-12 md:pt-0",
+          // Bare fullscreen: canvas only — suppress the on-hover outline (see
+          // the `.fullscreen-bare` rule in globals.css).
+          bareFullscreen && "fullscreen-bare",
           // Docked: inset the viewport by the top bar (h-12) and the rails
           // (w-80 / w-72) so it fits the framed area. The container resize
           // triggers ScalableViewport's refit observer.
@@ -343,20 +366,18 @@ export default function TemplateSketchPage() {
       >
         <ScalableViewport
           disable={ capturing }
-          showZoomControls={ !capturing && sketchLoaded }
+          showZoomControls={ !capturing && sketchLoaded && !bareFullscreen }
           resolutionKey={ `${ effectiveSettings.size.width }x${ effectiveSettings.size.height }` }
           isReady={ sketchLoaded }
           disableTouchGestures={ disableTouchGestures }
           lockInteractions={ browserRecording }
           docked={ dockedDesktop }
           zoomControlsContainer={ zoomSlot }
-          showFullscreen={ fullscreenAvailable }
-          isFullscreen={ isFullscreen }
-          onToggleFullscreen={ toggleViewportFullscreen }
+          fullscreen={ fullscreenControls }
           onInteractionStart={ handleInteractionStart }
           onInteractionEnd={ handleInteractionEnd }
         >
-          {sketchLoaded && !capturing && (
+          {sketchLoaded && !capturing && !bareFullscreen && (
             <div
               onClick={ ( e ) => e.stopPropagation() }
               className="flex justify-between font-mono text-sm mt-2"
@@ -385,7 +406,7 @@ export default function TemplateSketchPage() {
 
           <EngineSketchRenderer />
 
-          {sketchLoaded && !capturing && (
+          {sketchLoaded && !capturing && !bareFullscreen && (
             <div
               className="mt-2 mb-4 truncate"
               data-no-drag="true"
@@ -406,16 +427,17 @@ export default function TemplateSketchPage() {
           )}
         </ScalableViewport>
 
-        {/* Docked fullscreen hides the top bar (and with it the zoom-controls
-            fullscreen button), so surface a dedicated exit affordance. The
-            floating layout keeps its zoom controls on-screen, so it doesn't
-            need one. Esc always works either way. */}
-        {isFullscreen && dockedDesktop && (
+        {/* HUD fullscreen in the docked layout hides the top bar (and with it
+            the zoom-controls fullscreen menu), so surface a dedicated exit
+            affordance. The floating layout keeps its zoom controls on-screen
+            (the menu offers Exit there), and bare fullscreen is canvas-only by
+            design. Esc always works in every case. */}
+        {hudFullscreen && dockedDesktop && (
           <button
             onClick={ () => void exitViewportFullscreen() }
             title="Exit fullscreen (Esc)"
             aria-label="Exit fullscreen"
-            className="absolute top-4 right-4 z-50 inline-flex items-center gap-1.5 h-9 px-3 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md text-foreground/70 hover:text-foreground hover:bg-hover transition-colors"
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-50 inline-flex items-center gap-1.5 h-9 px-3 bg-background/90 backdrop-blur-xl border border-border rounded-xl shadow-md text-foreground/70 hover:text-foreground hover:bg-hover transition-colors"
           >
             <Minimize className="w-4 h-4" />
             <span className="text-xs font-semibold">Exit fullscreen</span>
