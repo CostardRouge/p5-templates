@@ -37,6 +37,7 @@ import MarqueeRows from "@/gsap/sketches/photo/marquee-rows/index.jsx";
 import SplitColumns from "@/gsap/sketches/photo/split-columns/index.jsx";
 import GridWave from "@/gsap/sketches/photo/grid-wave/index.jsx";
 import MosaicMorph from "@/gsap/sketches/photo/mosaic-morph/index.jsx";
+import DuoMix from "@/gsap/sketches/photo/duo-mix/index.jsx";
 import StackFan from "@/gsap/sketches/photo/stack-fan/index.jsx";
 import StackPeel from "@/gsap/sketches/photo/stack-peel/index.jsx";
 import OrbitRing from "@/gsap/sketches/photo/orbit-ring/index.jsx";
@@ -329,6 +330,19 @@ describe(
           }
         } ),
         selector: ".mm-tile"
+      },
+      {
+        name: "duo-mix",
+        Component: DuoMix,
+        options: baseOptions( {
+          grid: {
+            rows: 4,
+            columns: 3
+          },
+          pattern: "wave",
+          transition: "scale"
+        } ),
+        selector: ".dm-tile"
       },
       {
         name: "stack-fan",

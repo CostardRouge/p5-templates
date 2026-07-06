@@ -3396,6 +3396,18 @@
     "ctime": "2026-07-06T22:51:51.741Z"
   },
   {
+    "name": "duo-mix",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-06T23:07:49.866Z",
+    "ctime": "2026-07-06T23:07:32.842Z"
+  },
+  {
     "name": "dragon-corridor-v1",
     "engine": "p5",
     "category": "dragon-corridor",
