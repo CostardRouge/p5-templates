@@ -20,6 +20,17 @@ import {
 import {
   BarLabelSegment
 } from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlChrome";
+import useMediaQuery from "@/hooks/useMediaQuery";
+import useFullscreenViewport from "@/hooks/useFullscreenViewport";
+import {
+  enterViewportFullscreen
+} from "@/lib/fullscreen/fullscreenViewport";
+import {
+  FULLSCREEN_PRESETS,
+  fullscreenModeForValue,
+  fullscreenValueForMode,
+  isFullscreenPresetValue
+} from "@/lib/fullscreen/constants";
 
 type Props = {
   id: string;
@@ -52,8 +63,27 @@ export default function ControlledSizePresetSelect( {
     control,
     name: heightField
   } ) as number | undefined;
-  const currentValue = width && height ? `${ width }x${ height }` : "";
 
+  // Fullscreen is a desktop-only affordance driven by the browser Fullscreen
+  // API. Only surface it where the size config actually carries the sentinel
+  // options (the global canvas size), the viewport is wide, and the browser
+  // permits it.
+  const hasFullscreenOption = options.some( ( option ) => isFullscreenPresetValue( option.value ) );
+  const isDesktop = useMediaQuery( "(min-width: 768px)" );
+  const {
+    isFullscreen, mode, isSupported
+  } = useFullscreenViewport();
+  const fullscreenAvailable = hasFullscreenOption && isDesktop && isSupported;
+  const fullscreenActive = fullscreenAvailable && isFullscreen;
+
+  const currentValue = fullscreenActive
+    ? fullscreenValueForMode( mode ) ?? FULLSCREEN_PRESETS[ 0 ].value
+    : width && height
+      ? `${ width }x${ height }`
+      : "";
+
+  // The fullscreen sentinels are rendered on their own (below); keep them out of
+  // the W×H preset groups so they never land among the size options.
   const {
     ungrouped, groups
   } = useMemo(
@@ -62,6 +92,10 @@ export default function ControlledSizePresetSelect( {
       const groups = new Map<string, SelectOption[]>();
 
       for ( const option of options ) {
+        if ( isFullscreenPresetValue( option.value ) ) {
+          continue;
+        }
+
         if ( option.group ) {
           if ( !groups.has( option.group ) ) {
             groups.set(
@@ -91,6 +125,15 @@ export default function ControlledSizePresetSelect( {
     if ( !value ) {
       return;
     } // keep current size if user picked placeholder
+
+    const fullscreenMode = fullscreenModeForValue( value );
+
+    if ( fullscreenMode ) {
+      // Issued synchronously inside this change handler so the user gesture
+      // still authorises the Fullscreen request.
+      void enterViewportFullscreen( fullscreenMode );
+      return;
+    }
 
     const parsedSizePreset = parseSizePreset( value );
 
@@ -144,9 +187,17 @@ export default function ControlledSizePresetSelect( {
       >
         {noneLabel ? <option value="">{noneLabel}</option> : null}
 
+        {/* Fullscreen modes — desktop only, and only when the browser allows it. */}
+        {fullscreenAvailable &&
+          FULLSCREEN_PRESETS.map( ( preset ) => (
+            <option key={ preset.value } value={ preset.value }>
+              {preset.label}
+            </option>
+          ) )}
+
         {/* Keep the native select consistent when the current size matches
             no preset. */}
-        {currentValue && !matchedOption && (
+        {currentValue && !isFullscreenPresetValue( currentValue ) && !matchedOption && (
           <option value={ currentValue } hidden>
             {displayLabel}
           </option>

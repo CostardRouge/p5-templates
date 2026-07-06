@@ -104,6 +104,13 @@
     @apply outline-theme;
 }
 
+/* Bare fullscreen is canvas-only — drop the hover affordance so nothing frames
+   the sketch while it fills the screen. */
+.fullscreen-bare .sketch-canvas-container canvas:hover,
+.fullscreen-bare .sketch-canvas-container .sketch-surface:hover {
+    outline: none;
+}
+
 /* GSAP/HTML stage: the fixed-size box the template renders into. The
    ScalableViewport measures + scales it exactly like the p5 canvas. */
 .sketch-canvas-container .gsap-stage {
