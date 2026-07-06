@@ -35,6 +35,10 @@ import {
   mergeSlideOverride
 } from "@/lib/effectiveSlideSettings";
 
+import {
+  resolveEffectiveSketch
+} from "@/lib/effectiveSketch";
+
 // Safe modulo that wraps negatives too
 const wrap = (
   i, n
@@ -319,12 +323,13 @@ const slides = {
       }
     }
 
-    const slideSketch = currentSlide?.sketch || {};
-
-    return {
-      ...globalSketch,
-      ...slideSketch
-    };
+    // Non-montage slides use the shared, engine-agnostic per-slide merge (the
+    // same resolver GSAP + Three.js go through) so there is a single source of
+    // truth for how a slide's overrides layer over the global sketch block.
+    return resolveEffectiveSketch(
+      optionsTarget,
+      this.index
+    );
   }
 };
 

@@ -93,6 +93,14 @@ let container = null;
 let rafId = null;
 let frameCount = 0;
 
+// Index of the slide currently on screen, or null when the deck has no slides.
+// Driven by the shared studio UI through `ThreeEngine` → `window.setSlide`, and
+// read back by the options accessor so `options.sketch` merges this slide's
+// overrides (see @/threejs/utils/options.js). Without it, editing a parameter
+// once slides exist would look frozen — the edit lands on the slide override,
+// not the global block the accessor would otherwise return.
+let activeSlideIndex = null;
+
 // Real draw-rate measurement over a sliding window (frame deltas / elapsed),
 // used for the performance overlay.
 const fpsWindow = {
@@ -397,6 +405,7 @@ const sketch = {
     container = null;
     THREE = null;
     frameCount = 0;
+    activeSlideIndex = null;
     progressionSubscribers.clear();
     time.reset();
   },
@@ -469,6 +478,33 @@ const sketch = {
   endOpaqueCapture() {
     forcingOpaqueCapture = false;
     renderer?.setClearAlpha( 0 );
+  },
+
+  /* -- slides ----------------------------------------------------- */
+
+  // Switch to a slide. `ThreeEngine` wires the shared `window.setSlide` here so
+  // the slide carousel drives Three.js like it drives p5/GSAP. Records the index
+  // (read by the options accessor to merge per-slide overrides), tags the canvas
+  // with `data-slide` (thumbnail slide-sync + headless recorder key off it), and
+  // repaints so the switch is visible immediately even while paused.
+  setSlide( index ) {
+    const next =
+      typeof index === "number" && Number.isFinite( index ) && index >= 0
+        ? Math.floor( index )
+        : 0;
+
+    activeSlideIndex = next;
+
+    if ( renderer?.domElement ) {
+      renderer.domElement.dataset.slide = String( next );
+    }
+
+    renderOnce();
+    notifyProgression();
+  },
+
+  getActiveSlideIndex() {
+    return activeSlideIndex;
   },
 
   /* -- progression bridge ----------------------------------------- */
@@ -550,3 +586,4 @@ export const getScene = () => scene;
 export const getCamera = () => camera;
 export const getRenderer = () => renderer;
 export const getCanvas = () => renderer?.domElement ?? null;
+export const getActiveSlideIndex = () => activeSlideIndex;

@@ -66,6 +66,9 @@ export class ThreeEngine implements SketchEngine {
   private runtime: ThreeRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
   private unsubscribeProgression: ( () => void ) | null = null;
+  // Saved `window.setSlide` so switching back to a p5/GSAP sketch restores its
+  // binding (mirrors GsapEngine — p5 registers the global once at module load).
+  private previousSetSlide: ( ( index: number ) => void ) | undefined;
 
   private perfLoopId: number | null = null;
   private perfSample = {
@@ -189,6 +192,15 @@ export class ThreeEngine implements SketchEngine {
       renderFrame: ( index ) => this.runtime?.stepFrame( index )
     } );
 
+    // Expose the slide switch the shared UI + headless recorder call. p5 sets
+    // this from its `slides` module; the Three.js runtime is the equivalent
+    // here. Without it, switching slides never reaches the running sketch, so
+    // the options accessor keeps merging the wrong (or no) per-slide overrides.
+    if ( typeof window !== "undefined" ) {
+      this.previousSetSlide = window.setSlide;
+      window.setSlide = ( index: number ) => this.runtime?.setSlide( index );
+    }
+
     this.emit(
       "ready",
       undefined as any
@@ -199,6 +211,12 @@ export class ThreeEngine implements SketchEngine {
     this.stopPerformanceLoop();
     unregisterServerCaptureController();
     unregisterAnimationBridge();
+
+    if ( typeof window !== "undefined" &&
+      window.setSlide !== this.previousSetSlide ) {
+      window.setSlide = this.previousSetSlide as ( index: number ) => void;
+    }
+    this.previousSetSlide = undefined;
 
     this.unsubscribeProgression?.();
     this.unsubscribeProgression = null;
