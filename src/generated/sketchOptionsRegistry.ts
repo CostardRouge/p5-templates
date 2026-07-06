@@ -24,6 +24,7 @@ export const sketchOptionsJsonLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v9-smear": () => import( "@/p5/sketches/hand-capture/hand-tracking-v9-smear/options.json" ),
   "p5:photo/photo-3d-cylinder": () => import( "@/p5/sketches/photo/photo-3d-cylinder/options.json" ),
   "p5:photo/photo-segmentation": () => import( "@/p5/sketches/photo/photo-segmentation/options.json" ),
+  "p5:photo/photo-trail": () => import( "@/p5/sketches/photo/photo-trail/options.json" ),
   "p5:text/text-animation-typein-typeout": () => import( "@/p5/sketches/text/text-animation-typein-typeout/options.json" ),
 };
 
@@ -184,6 +185,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:photo/photo-switch-blurry-background": () => import( "@/p5/sketches/photo/photo-switch-blurry-background/options" ),
   "p5:photo/photo-switch-letter-mask": () => import( "@/p5/sketches/photo/photo-switch-letter-mask/options" ),
   "p5:photo/photo-switch-tiles": () => import( "@/p5/sketches/photo/photo-switch-tiles/options" ),
+  "p5:photo/photo-trail": () => import( "@/p5/sketches/photo/photo-trail/options" ),
   "p5:photo/photo-unzoom-bounce": () => import( "@/p5/sketches/photo/photo-unzoom-bounce/options" ),
   "p5:photo/photo-zoom-point": () => import( "@/p5/sketches/photo/photo-zoom-point/options" ),
   "p5:pulse/pulse-v1-guts": () => import( "@/p5/sketches/pulse/pulse-v1-guts/options" ),

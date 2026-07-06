@@ -3382,5 +3382,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-07-04T04:07:14.522Z",
     "ctime": "2026-07-04T04:06:56.402Z"
+  },
+  {
+    "name": "photo-trail",
+    "engine": "p5",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": true,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-06T23:15:10.344Z",
+    "ctime": "2026-07-06T23:12:18.460Z"
   }
 ]

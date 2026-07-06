@@ -165,6 +165,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:photo/photo-switch-blurry-background": () => import( "@/p5/sketches/photo/photo-switch-blurry-background/index.js" ),
   "p5:photo/photo-switch-letter-mask": () => import( "@/p5/sketches/photo/photo-switch-letter-mask/index.js" ),
   "p5:photo/photo-switch-tiles": () => import( "@/p5/sketches/photo/photo-switch-tiles/index.js" ),
+  "p5:photo/photo-trail": () => import( "@/p5/sketches/photo/photo-trail/index.js" ),
   "p5:photo/photo-unzoom-bounce": () => import( "@/p5/sketches/photo/photo-unzoom-bounce/index.js" ),
   "p5:photo/photo-zoom-point": () => import( "@/p5/sketches/photo/photo-zoom-point/index.js" ),
   "p5:pulse/pulse-v1-guts": () => import( "@/p5/sketches/pulse/pulse-v1-guts/index.js" ),
