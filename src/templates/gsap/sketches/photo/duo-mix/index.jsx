@@ -297,9 +297,27 @@ export default function DuoMix( {
         radius
       );
 
+      // "none" keeps the reveal system but holds it still: every tile rests in
+      // its fully-revealed state so the second image sits statically over the
+      // first (a fixed mix), with no tweens on the timeline.
+      const revealMotion = transition !== "none";
+
       tileEls.forEach( (
         el, index
       ) => {
+        if ( !revealMotion ) {
+          tl.set(
+            el,
+            {
+              ...neutral,
+              opacity: overlayOpacity
+            },
+            0
+          );
+
+          return;
+        }
+
         const u = degenerate ? 0 : ( rawOrders[ index ] - minOrder ) / orderSpan;
         const start = u * effectiveSpread * duration;
 

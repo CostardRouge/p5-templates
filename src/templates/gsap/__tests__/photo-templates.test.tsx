@@ -530,3 +530,50 @@ describe(
     );
   }
 );
+
+describe(
+  "duo-mix static mode",
+  () => {
+    it(
+      "holds every tile fully revealed with no motion when transition is 'none'",
+      () => {
+        const options = baseOptions( {
+          grid: {
+            rows: 4,
+            columns: 3
+          },
+          transition: "none",
+          overlayOpacity: 0.6,
+          breathing: 0
+        } );
+        const {
+          tl, stage, ctx
+        } = buildTimeline(
+          DuoMix,
+          options
+        );
+        const tiles = Array.from( stage.querySelectorAll<HTMLElement>( ".dm-tile" ) );
+
+        expect( tiles.length ).toBeGreaterThan( 0 );
+
+        // No tweens → a zero-length timeline (nothing moves across the loop).
+        expect( tl.duration() ).toBe( 0 );
+
+        // Every tile sits at the fixed mix opacity, at rest.
+        tl.time( 0 );
+        const atStart = snapshot( tiles );
+
+        tiles.forEach( ( tile ) => {
+          expect( tile.style.opacity ).toBe( "0.6" );
+        } );
+
+        tl.time( DURATION );
+        const atEnd = snapshot( tiles );
+
+        expect( atEnd ).toEqual( atStart );
+
+        ctx.revert();
+      }
+    );
+  }
+);

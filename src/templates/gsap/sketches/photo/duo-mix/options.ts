@@ -108,6 +108,10 @@ export const formConfiguration: Record<string, any> = {
     label: "Tile transition",
     options: [
       {
+        label: "None (static)",
+        value: "none"
+      },
+      {
         label: "Fade",
         value: "fade"
       },
