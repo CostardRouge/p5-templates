@@ -374,6 +374,7 @@ export default function TemplateSketchPage() {
           docked={ dockedDesktop }
           zoomControlsContainer={ zoomSlot }
           fullscreen={ fullscreenControls }
+          actualPixels={ bareFullscreen }
           onInteractionStart={ handleInteractionStart }
           onInteractionEnd={ handleInteractionEnd }
         >

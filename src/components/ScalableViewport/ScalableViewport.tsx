@@ -35,6 +35,7 @@ export default function ScalableViewport( {
   docked = false,
   zoomControlsContainer = null,
   fullscreen,
+  actualPixels = false,
   onInteractionStart,
   onInteractionEnd
 }: {
@@ -46,6 +47,9 @@ export default function ScalableViewport( {
   // Fullscreen options in the zoom controls — owned by the page, which holds
   // the fullscreen state and the element that goes fullscreen.
   fullscreen?: FullscreenControls;
+  // Auto-layout at 1:1 (actual pixels) instead of the padded fit — used in bare
+  // fullscreen so a screen-sized canvas fills the display exactly.
+  actualPixels?: boolean;
   // In the docked workspace layout the zoom controls render flat and portal
   // into the top bar (`zoomControlsContainer`) instead of floating top-right.
   docked?: boolean;
@@ -108,7 +112,19 @@ export default function ScalableViewport( {
       animateTo
     } );
 
-  // Fit to viewport when resolution changes or when ready
+  // Auto-layout used by the resize/resolution observers below. Bare fullscreen
+  // wants a true 1:1 (actual pixels) fill; everything else uses the padded fit.
+  const applyAutoLayout = useCallback(
+    ( animate: boolean ) =>
+      ( actualPixels ? resetToActualPixels : fitToViewport )( animate ),
+    [
+      actualPixels,
+      resetToActualPixels,
+      fitToViewport
+    ]
+  );
+
+  // Lay out when resolution changes or when ready
   useEffect(
     () => {
       if ( !isReady || !contentRef.current ) {
@@ -116,12 +132,12 @@ export default function ScalableViewport( {
       }
 
       // Use requestAnimationFrame to ensure the canvas has been resized
-      // before we calculate the fit. This handles the case where the
+      // before we calculate the layout. This handles the case where the
       // resolution changes but the DOM hasn't updated yet.
       const rafId = requestAnimationFrame( () => {
         // Double RAF to ensure layout has been calculated
         requestAnimationFrame( () => {
-          fitToViewport( false );
+          applyAutoLayout( false );
         } );
       } );
 
@@ -130,7 +146,7 @@ export default function ScalableViewport( {
     [
       resolutionKey,
       isReady,
-      fitToViewport
+      applyAutoLayout
     ]
   );
 
@@ -143,11 +159,11 @@ export default function ScalableViewport( {
 
       const observer = new ResizeObserver( ( entries ) => {
         for ( const entry of entries ) {
-          // Only refit if the content size actually changed
+          // Only re-layout if the content size actually changed
           if ( entry.contentBoxSize && entry.contentBoxSize.length > 0 ) {
-            // Use requestAnimationFrame to batch the refit
+            // Use requestAnimationFrame to batch the re-layout
             requestAnimationFrame( () => {
-              fitToViewport( false );
+              applyAutoLayout( false );
             } );
           }
         }
@@ -159,7 +175,7 @@ export default function ScalableViewport( {
     },
     [
       isReady,
-      fitToViewport
+      applyAutoLayout
     ]
   );
 
@@ -172,7 +188,7 @@ export default function ScalableViewport( {
 
       const observer = new ResizeObserver( () => {
         requestAnimationFrame( () => {
-          fitToViewport( false );
+          applyAutoLayout( false );
         } );
       } );
 
@@ -182,7 +198,7 @@ export default function ScalableViewport( {
     },
     [
       isReady,
-      fitToViewport
+      applyAutoLayout
     ]
   );
 
