@@ -3406,5 +3406,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-07-06T23:32:58.864Z",
     "ctime": "2026-07-06T23:32:29.940Z"
+  },
+  {
+    "name": "dragon-corridor-v1",
+    "engine": "threejs",
+    "category": "dragon-corridor",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-07T01:11:37.387Z",
+    "ctime": "2026-07-07T01:11:30.927Z"
   }
 ]

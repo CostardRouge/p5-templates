@@ -311,5 +311,6 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:voronoi/voronoi-v1-cells": () => import( "@/p5/sketches/voronoi/voronoi-v1-cells/options" ),
   "p5:voronoi/voronoi-v2-worley": () => import( "@/p5/sketches/voronoi/voronoi-v2-worley/options" ),
   "p5:voronoi/voronoi-v3-mosaic": () => import( "@/p5/sketches/voronoi/voronoi-v3-mosaic/options" ),
+  "threejs:dragon-corridor/dragon-corridor-v1": () => import( "@/threejs/sketches/dragon-corridor/dragon-corridor-v1/options" ),
   "threejs:hello-threejs": () => import( "@/threejs/sketches/hello-threejs/options" ),
 };
