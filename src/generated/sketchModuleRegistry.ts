@@ -51,6 +51,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:audio/motion-foley": () => import( "@/p5/sketches/audio/motion-foley/index.js" ),
   "p5:audio/ping-pong": () => import( "@/p5/sketches/audio/ping-pong/index.js" ),
   "p5:audio/voice-portrait": () => import( "@/p5/sketches/audio/voice-portrait/index.js" ),
+  "p5:audio/wavetable-v1": () => import( "@/p5/sketches/audio/wavetable-v1/index.js" ),
   "p5:background/background-crosses": () => import( "@/p5/sketches/background/background-crosses/index.js" ),
   "p5:background/background-dots": () => import( "@/p5/sketches/background/background-dots/index.js" ),
   "p5:background/background-grid": () => import( "@/p5/sketches/background/background-grid/index.js" ),

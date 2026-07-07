@@ -3420,6 +3420,18 @@
     "ctime": "2026-07-07T01:11:30.927Z"
   },
   {
+    "name": "wavetable-v1",
+    "engine": "p5",
+    "category": "audio",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-07T04:52:51.027Z",
+    "ctime": "2026-07-07T04:52:22.927Z"
+  },
+  {
     "name": "duo-swap",
     "engine": "gsap",
     "category": "photo",
