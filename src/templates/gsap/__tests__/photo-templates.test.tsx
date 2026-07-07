@@ -37,6 +37,7 @@ import MarqueeRows from "@/gsap/sketches/photo/marquee-rows/index.jsx";
 import SplitColumns from "@/gsap/sketches/photo/split-columns/index.jsx";
 import GridWave from "@/gsap/sketches/photo/grid-wave/index.jsx";
 import MosaicMorph from "@/gsap/sketches/photo/mosaic-morph/index.jsx";
+import DuoSwap from "@/gsap/sketches/photo/duo-swap/index.jsx";
 import StackFan from "@/gsap/sketches/photo/stack-fan/index.jsx";
 import StackPeel from "@/gsap/sketches/photo/stack-peel/index.jsx";
 import OrbitRing from "@/gsap/sketches/photo/orbit-ring/index.jsx";
@@ -331,6 +332,17 @@ describe(
         selector: ".mm-tile"
       },
       {
+        name: "duo-swap",
+        Component: DuoSwap,
+        options: baseOptions( {
+          columns: 3,
+          rows: 2,
+          pattern: "wave",
+          transition: "scale"
+        } ),
+        selector: ".ds-tile"
+      },
+      {
         name: "stack-fan",
         Component: StackFan,
         options: baseOptions( {
@@ -508,6 +520,51 @@ describe(
 
         tl.time( 0 );
         const atStart = snapshot( targets );
+
+        expect( atEnd ).toEqual( atStart );
+
+        ctx.revert();
+      }
+    );
+  }
+);
+
+describe(
+  "duo-swap static mode",
+  () => {
+    it(
+      "holds every tile fully swapped with no motion when transition is 'none'",
+      () => {
+        const options = baseOptions( {
+          columns: 3,
+          rows: 2,
+          transition: "none",
+          overlayOpacity: 0.6,
+          breathing: 0
+        } );
+        const {
+          tl, stage, ctx
+        } = buildTimeline(
+          DuoSwap,
+          options
+        );
+        const tiles = Array.from( stage.querySelectorAll<HTMLElement>( ".ds-tile" ) );
+
+        expect( tiles.length ).toBeGreaterThan( 0 );
+
+        // No tweens → a zero-length timeline (nothing moves across the loop).
+        expect( tl.duration() ).toBe( 0 );
+
+        // Every tile sits at the fixed mix opacity, at rest.
+        tl.time( 0 );
+        const atStart = snapshot( tiles );
+
+        tiles.forEach( ( tile ) => {
+          expect( tile.style.opacity ).toBe( "0.6" );
+        } );
+
+        tl.time( DURATION );
+        const atEnd = snapshot( tiles );
 
         expect( atEnd ).toEqual( atStart );
 

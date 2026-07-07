@@ -3418,5 +3418,17 @@
     "hiddenFromTemplates": false,
     "mtime": "2026-07-07T01:11:37.387Z",
     "ctime": "2026-07-07T01:11:30.927Z"
+  },
+  {
+    "name": "duo-swap",
+    "engine": "gsap",
+    "category": "photo",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromTemplates": false,
+    "mtime": "2026-07-07T06:55:11.198Z",
+    "ctime": "2026-07-06T23:07:32.842Z"
   }
 ]

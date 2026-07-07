@@ -12,6 +12,7 @@ export type SketchModuleLoader = () => Promise<any>;
 export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "gsap:hello-gsap": () => import( "@/gsap/sketches/hello-gsap/index.jsx" ),
   "gsap:photo/coverflow-3d": () => import( "@/gsap/sketches/photo/coverflow-3d/index.jsx" ),
+  "gsap:photo/duo-swap": () => import( "@/gsap/sketches/photo/duo-swap/index.jsx" ),
   "gsap:photo/grid-cascade": () => import( "@/gsap/sketches/photo/grid-cascade/index.jsx" ),
   "gsap:photo/grid-wave": () => import( "@/gsap/sketches/photo/grid-wave/index.jsx" ),
   "gsap:photo/ken-burns-frame": () => import( "@/gsap/sketches/photo/ken-burns-frame/index.jsx" ),
