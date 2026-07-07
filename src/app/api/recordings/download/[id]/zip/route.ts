@@ -84,7 +84,7 @@ export async function GET(
     );
     headers.set(
       "Content-Disposition",
-      `attachment; filename="${ job.template }-${ jobId }.zip"`
+      `attachment; filename="${ job.sketch }-${ jobId }.zip"`
     );
 
     // Convert archive to web stream

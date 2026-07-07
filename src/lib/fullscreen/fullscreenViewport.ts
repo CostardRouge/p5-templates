@@ -34,7 +34,7 @@ import type {
 } from "@/lib/fullscreen/constants";
 
 // Origin tag kept distinct from "react" so the option bridges (SketchContext,
-// TemplateOptions form, engine runtimes) all pick up our size writes.
+// SketchOptions form, engine runtimes) all pick up our size writes.
 const FULLSCREEN_ORIGIN = "fullscreen";
 
 type Size = {

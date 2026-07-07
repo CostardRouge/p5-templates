@@ -197,7 +197,7 @@ export class P5Engine implements SketchEngine {
     await new Promise<void>( async( resolve ) => {
       const {
         default: events
-      } = await import( "@/templates/p5/utils/events.js" );
+      } = await import( "@/sketches/p5/utils/events.js" );
 
       const unregister = events.register(
         "post-draw",

@@ -18,7 +18,7 @@ import {
   DURATION_DEFAULT, FRAMERATE_DEFAULT
 } from "@/lib/animationConfig";
 import initOptions from "@/utils/initOptions";
-import rootFormConfig from "@/components/ClientProcessingSketch/components/TemplateOptions/components/RootSettings/constants/root-field-config";
+import rootFormConfig from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/constants/root-field-config";
 
 describe(
   "duration slider ↔ schema invariant",

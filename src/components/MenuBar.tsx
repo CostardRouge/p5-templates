@@ -188,11 +188,11 @@ function MenuBar( {
     docked, toggleDocked
   } = usePanelDock();
   const isDesktop = useMediaQuery( "(min-width: 768px)" );
-  const isTemplateEditor = /^\/templates\/[^/]+\/.+/.test( pathname );
+  const isSketchEditor = /^\/sketches\/[^/]+\/.+/.test( pathname );
   // In docked mode the menu button portals into the editor's top bar, where
   // the bar supplies the surface — so drop the floating island chrome.
   const menuInDockedBar =
-    docked && isDesktop && isTemplateEditor && Boolean( slot?.slotEl && slot.inlineVisible );
+    docked && isDesktop && isSketchEditor && Boolean( slot?.slotEl && slot.inlineVisible );
 
   useEffect(
     () => {
@@ -343,8 +343,8 @@ function MenuBar( {
       Icon: Home
     },
     {
-      href: "/templates",
-      label: "Templates",
+      href: "/sketches",
+      label: "Sketches",
       Icon: Paintbrush
     }
   ];
@@ -585,7 +585,7 @@ function MenuBar( {
           </>
         )}
 
-        {isDesktop && isTemplateEditor && (
+        {isDesktop && isSketchEditor && (
           <>
             <Divider />
             <SectionLabel>Workspace</SectionLabel>

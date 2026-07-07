@@ -65,7 +65,7 @@ export async function POST(
         "process-recording",
         {
           jobId: job.id,
-          template: job.template
+          sketch: job.sketch
         },
         {
           jobId,

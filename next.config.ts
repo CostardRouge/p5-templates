@@ -46,6 +46,25 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_LIVE_THUMBNAIL: process.env.LIVE_THUMBNAIL,
     NEXT_PUBLIC_PREVIEW_ON_HOVER: process.env.PREVIEW_ON_HOVER,
     NEXT_PUBLIC_INTERACTION_BINDINGS: process.env.INTERACTION_BINDINGS
+  },
+
+  // The gallery/editor moved from /templates to /sketches. Permanent (308)
+  // redirects keep every previously shared link, bookmark, and indexed URL
+  // alive — including old recording jobs whose stored path still starts with
+  // "templates/" (Playwright follows the redirect during backend capture).
+  async redirects() {
+    return [
+      {
+        source: "/templates",
+        destination: "/sketches",
+        permanent: true
+      },
+      {
+        source: "/templates/:path*",
+        destination: "/sketches/:path*",
+        permanent: true
+      }
+    ];
   }
 };
 

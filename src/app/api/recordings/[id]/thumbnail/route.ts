@@ -79,14 +79,14 @@ export async function GET(
     }
 
     // Fall back to sketch template thumbnail
-    // job.template is "templates/{engine}/{optional-category}/{name}"
+    // job.sketch is "sketches/{engine}/{optional-category}/{name}" (legacy rows: "templates/…")
     // parts[0] = "templates", parts[1] = engine, last part = sketch name
-    const templateParts = job.template.split( "/" );
-    const templateEngine = templateParts[ 1 ] ?? templateParts[ 0 ];
-    const templateName = templateParts[ templateParts.length - 1 ];
+    const sketchParts = job.sketch.split( "/" );
+    const sketchEngine = sketchParts[ 1 ] ?? sketchParts[ 0 ];
+    const sketchName = sketchParts[ sketchParts.length - 1 ];
     const templateThumbnailUrl = getSketchThumbnailURL(
-      templateEngine,
-      templateName
+      sketchEngine,
+      sketchName
     );
 
     // Convert relative URL to absolute URL for redirect

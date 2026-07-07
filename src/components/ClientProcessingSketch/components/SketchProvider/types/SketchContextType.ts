@@ -6,7 +6,7 @@ import {
 } from "@/types/recording.types";
 import {
   FieldConfig
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 import type {
   SketchEngine
 } from "@/engines/types";

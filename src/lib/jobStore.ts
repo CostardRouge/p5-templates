@@ -13,14 +13,14 @@ import {
  */
 export async function createJob(
   id: string,
-  template: string,
+  sketch: string,
   status: JobStatusEnum
 ): Promise<JobModel> {
   return prisma.job.create( {
     data: {
       id,
       status,
-      template,
+      sketch,
       progress: 0
     }
   } );

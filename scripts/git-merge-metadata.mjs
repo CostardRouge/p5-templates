@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Custom git merge driver for src/templates/metadata.json.
+// Custom git merge driver for src/sketches/metadata.json.
 //
 // metadata.json is GENERATED from the filesystem by watch-sketches.mjs, so a
 // textual 3-way merge is meaningless: it conflicts every time two branches each
@@ -63,8 +63,8 @@ for ( const entry of [
   existing.hasThumbnail = existing.hasThumbnail || entry.hasThumbnail;
   existing.hasPreview = existing.hasPreview || entry.hasPreview;
   existing.hiddenFromHome = existing.hiddenFromHome || entry.hiddenFromHome;
-  existing.hiddenFromTemplates =
-    existing.hiddenFromTemplates || entry.hiddenFromTemplates;
+  existing.hiddenFromGallery =
+    existing.hiddenFromGallery || entry.hiddenFromGallery;
 }
 
 // Match watch-sketches.mjs ordering (ascending mtime) so the file stays stable

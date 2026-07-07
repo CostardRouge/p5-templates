@@ -140,7 +140,9 @@ export async function GET(
       videos: videoData.filter( Boolean ),
       zipSize,
       recordingDuration: job.recordingDuration,
-      template: job.template,
+      sketch: job.sketch,
+      // Deprecated alias of "sketch" — kept for pre-rename consumers.
+      template: job.sketch,
       isZipArchive: false
     } );
   } catch( error ) {

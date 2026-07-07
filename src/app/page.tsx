@@ -7,8 +7,8 @@ import {
   buildOgTitle, getBaseUrl, SITE_DESCRIPTION, SITE_NAME
 } from "@/lib/seo";
 import {
-  getTemplatesData
-} from "./templates/getTemplatesData";
+  getSketchesData
+} from "./sketches/getSketchesData";
 
 export const metadata: Metadata = {
   title: SITE_NAME,
@@ -27,16 +27,16 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const {
-    templatesByEngine, engineLabels
-  } = await getTemplatesData();
+    sketchesByEngine, engineLabels
+  } = await getSketchesData();
 
-  const allTemplates = Object.values( templatesByEngine ).flat();
+  const allSketches = Object.values( sketchesByEngine ).flat();
 
   // `.hidden-template` is the public gate — anything hidden from the gallery
   // page is also hidden from the home page, search included. `.hidden-home`
   // entries stay searchable from the home page but are filtered out of its
   // latest/random sections by HomePage itself.
-  const galleryTemplates = allTemplates.filter( ( t ) => !t.hiddenFromTemplates );
+  const gallerySketches = allSketches.filter( ( t ) => !t.hiddenFromGallery );
 
   const baseUrl = getBaseUrl();
 
@@ -51,7 +51,7 @@ export default async function Home() {
     <>
       <BreadcrumbJsonLd items={ breadcrumbItems } />
       <HomePage
-        templates={ galleryTemplates }
+        sketches={ gallerySketches }
         engineLabels={ engineLabels }
       />
     </>

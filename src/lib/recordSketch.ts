@@ -43,15 +43,15 @@ import {
 /**
  * Wait for the sketch canvas to be ready.
  *
- * Routes (`/templates/…`) signal readiness via a
+ * Routes (`/sketches/…`, legacy `/templates/…`) signal readiness via a
  * `[data-engine-ready]` attribute set by `EngineSketchRenderer`.
  * Legacy p5 routes use the `canvas.p5Canvas.loaded` selector.
  */
 async function waitForSketchReady(
   page: Page,
-  template: string
+  sketch: string
 ): Promise<void> {
-  if ( template.startsWith( "templates/" ) ) {
+  if ( /^(sketches|templates)\//.test( sketch ) ) {
     await page.waitForSelector( "[data-engine-ready]" );
   } else {
     await page.waitForSelector( "canvas.p5Canvas.loaded" );
@@ -167,7 +167,7 @@ function calculateTotalFrames( animationOptions: any ): number {
  */
 async function recordSketch(
   jobId: string,
-  template: string,
+  sketch: string,
   options: Record<string, any>,
   temporaryDirectoryPath: string
 ) {
@@ -206,7 +206,7 @@ async function recordSketch(
       // ─── Multi-slide recording ─────────────────────────────────────────────
       await recordMultipleSlides(
         jobId,
-        template,
+        sketch,
         options,
         slides,
         recordingState.page,
@@ -216,7 +216,7 @@ async function recordSketch(
       // ─── Single recording ──────────────────────────────────────────────────
       await recordSingleSketch(
         jobId,
-        template,
+        sketch,
         options,
         recordingState.page,
         temporaryDirectoryPath
@@ -255,7 +255,7 @@ async function recordSketch(
 
     await notificationService.sendJobFailureNotification(
       jobId,
-      template
+      sketch
     );
 
     throw error;
@@ -279,7 +279,7 @@ async function recordSketch(
  */
 async function recordSingleSketch(
   jobId: string,
-  template: string,
+  sketch: string,
   options: Record<string, any>,
   page: Page,
   temporaryDirectoryPath: string
@@ -293,12 +293,12 @@ async function recordSingleSketch(
 
   await gotoSketchPage(
     page,
-    `http://localhost:3000/${ template }?id=${ jobId }&capturing`
+    `http://localhost:3000/${ sketch }?id=${ jobId }&capturing`
   );
 
   await waitForSketchReady(
     page,
-    template
+    sketch
   );
 
   await updateRecordingStepPercentage(
@@ -312,7 +312,7 @@ async function recordSingleSketch(
   const framerate = resolveAnimation( options.animation ).framerate;
   const outputVideoPath = path.join(
     temporaryDirectoryPath,
-    `${ path.basename( template ) }-${ jobId }.mp4`
+    `${ path.basename( sketch ) }-${ jobId }.mp4`
   );
   const thumbnailPath = path.join(
     temporaryDirectoryPath,
@@ -392,7 +392,7 @@ async function recordSingleSketch(
 
   await notificationService.sendJobCompletionNotification(
     jobId,
-    template
+    sketch
   );
 }
 
@@ -401,7 +401,7 @@ async function recordSingleSketch(
  */
 async function recordMultipleSlides(
   jobId: string,
-  template: string,
+  sketch: string,
   options: Record<string, any>,
   slides: any[],
   page: Page,
@@ -410,7 +410,7 @@ async function recordMultipleSlides(
   const slideVideoPaths: string[] = [];
   const slideThumbnailPaths: string[] = [];
 
-  // ─── Launch browser & load template (shared step, done once) ─────────────
+  // ─── Launch browser & load sketch (shared step, done once) ─────────────
   await updateRecordingStepPercentage(
     jobId,
     buildRecordingStepPath( RECORDING_STEPS.LAUNCHING_BROWSER.key ),
@@ -419,12 +419,12 @@ async function recordMultipleSlides(
 
   await gotoSketchPage(
     page,
-    `http://localhost:3000/${ template }?id=${ jobId }&capturing`
+    `http://localhost:3000/${ sketch }?id=${ jobId }&capturing`
   );
 
   await waitForSketchReady(
     page,
-    template
+    sketch
   );
 
   await updateRecordingStepPercentage(
@@ -444,12 +444,12 @@ async function recordMultipleSlides(
       // Re-navigate for subsequent slides (no dedicated step)
       await gotoSketchPage(
         page,
-        `http://localhost:3000/${ template }?id=${ jobId }&capturing`
+        `http://localhost:3000/${ sketch }?id=${ jobId }&capturing`
       );
 
       await waitForSketchReady(
         page,
-        template
+        sketch
       );
     }
 
@@ -481,7 +481,7 @@ async function recordMultipleSlides(
 
     const slideVideoPath = path.join(
       temporaryDirectoryPath,
-      `${ path.basename( template ) }_${ slideIndex }.mp4`
+      `${ path.basename( sketch ) }_${ slideIndex }.mp4`
     );
     const slideThumbnailPath = path.join(
       temporaryDirectoryPath,
@@ -579,7 +579,7 @@ async function recordMultipleSlides(
 
   await notificationService.sendJobCompletionNotification(
     jobId,
-    template
+    sketch
   );
 }
 

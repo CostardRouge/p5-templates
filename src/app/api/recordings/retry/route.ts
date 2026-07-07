@@ -56,7 +56,7 @@ export async function POST( req: NextRequest ) {
           "process-recording",
           {
             jobId: existing.id,
-            template: existing.template
+            sketch: existing.sketch
           },
           {
             jobId,

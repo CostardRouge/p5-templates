@@ -24,7 +24,7 @@ const __dirname = path.dirname( __filename );
 
 // Test configuration
 const TEST_CONFIG = {
-  url: "http://localhost:3000/templates/basic-template?capturing",
+  url: "http://localhost:3000/sketches/basic-template?capturing",
   totalFrames: 60, // 1 second at 60fps
   outputDir: path.join(
     __dirname,

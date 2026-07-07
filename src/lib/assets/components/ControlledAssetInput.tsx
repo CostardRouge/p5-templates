@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 import useAssetsBridge from "@/hooks/useAssetsBridge";
-import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
+import useSketchAssets from "@/components/ClientProcessingSketch/components/SketchOptions/components/SketchAssetsProvider/hooks/useSketchAssets";
 
 import DropZoneButton from "@/components/DropZoneButton";
 import {
@@ -32,7 +32,7 @@ export default function ControlledAssetInput( {
   } = useAssetsBridge();
   const {
     jobId
-  } = useTemplateAssets();
+  } = useSketchAssets();
 
   const {
     kind, instances, setSinglePath

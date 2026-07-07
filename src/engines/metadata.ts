@@ -9,7 +9,7 @@ import type {
   SketchMetadata
 } from "@/engines/types";
 
-import allMetadata from "@/templates/metadata.json";
+import allMetadata from "@/sketches/metadata.json";
 
 /* ---- types ------------------------------------------------------- */
 

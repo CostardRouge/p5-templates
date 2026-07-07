@@ -35,7 +35,7 @@ interface MediaData {
   resultUrl?: string;
   recordingDuration?: number;
   zipSize?: number;
-  template?: string;
+  sketch?: string;
 }
 
 function formatFileSize( bytes: number ): string {
@@ -247,7 +247,7 @@ export default function VideoPreviewModal( {
 
                 {/* Open Recording Link */}
                 <a
-                  href={ `${ media.template }?id=${ jobId }` }
+                  href={ `/${ media.sketch }?id=${ jobId }` }
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
                   title="Open recording page"
@@ -257,12 +257,12 @@ export default function VideoPreviewModal( {
                 </a>
 
                 {/* Open Template Link */}
-                {media.template && (
+                {media.sketch && (
                   <a
-                    href={ `/${ media.template }` }
+                    href={ `/${ media.sketch }` }
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3 py-2 bg-hover hover:bg-hover/70 border border-border rounded-lg transition-all text-sm font-medium group"
-                    title="Open template"
+                    title="Open sketch"
                   >
                     <ExternalLink className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="hidden sm:inline">Template</span>

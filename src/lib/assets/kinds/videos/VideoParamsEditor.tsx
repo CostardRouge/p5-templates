@@ -8,7 +8,7 @@ import type {
 } from "../../types";
 import Vector2DPad, {
   type Vector2DInputConfig
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/ControlledVector2DInput/Vector2DPad";
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledVector2DInput/Vector2DPad";
 
 // Screen-space position pad: centered [-1, 1] on both axes (0 = centered in the
 // draw box), with the Y axis pointing down so dragging the handle up moves the

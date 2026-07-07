@@ -73,7 +73,7 @@ export async function POST(
 
     await RecordingService.getInstance().startRecording(
       job.id,
-      job.template
+      job.sketch
     );
 
     return NextResponse.json( {

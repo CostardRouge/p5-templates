@@ -55,8 +55,8 @@ export function buildCanonicalPath(
   category?: string | null
 ): string {
   return category
-    ? `/templates/${ engineId }/${ category }/${ sketchName }`
-    : `/templates/${ engineId }/${ sketchName }`;
+    ? `/sketches/${ engineId }/${ category }/${ sketchName }`
+    : `/sketches/${ engineId }/${ sketchName }`;
 }
 
 /** Returns the absolute thumbnail URL for a sketch. */

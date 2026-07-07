@@ -12,7 +12,7 @@ const ROOT_DIR = path.join(
 );
 const TEMPLATES_DIR = path.join(
   ROOT_DIR,
-  "src/templates"
+  "src/sketches"
 );
 const META_OUTPUT = path.join(
   TEMPLATES_DIR,
@@ -58,7 +58,7 @@ function findEntryFile( dir ) {
  *
  * Visibility markers (touch one of these files inside the sketch dir):
  *   .hidden-home      → hide from the home page showcase
- *   .hidden-template  → hide from the /templates gallery (forward-looking)
+ *   .hidden-template  → hide from the /sketches gallery (forward-looking)
  *
  * Markers are committed to git like any other source file; they survive
  * metadata regenerations because watch-sketches.mjs reads them on every scan.
@@ -93,7 +93,7 @@ function buildRecord(
       sketchDir,
       ".hidden-home"
     ) ),
-    hiddenFromTemplates: fs.existsSync( path.join(
+    hiddenFromGallery: fs.existsSync( path.join(
       sketchDir,
       ".hidden-template"
     ) ),
@@ -197,7 +197,7 @@ function scanEngine( engineId ) {
 }
 
 /**
- * Discover all engine directories under src/templates/ and scan each.
+ * Discover all engine directories under src/sketches/ and scan each.
  */
 function scanAll() {
   const engineIds = listSubDirs( TEMPLATES_DIR );

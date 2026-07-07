@@ -29,7 +29,7 @@ export class RecordingService {
   }
 
   public async enqueueRecording( {
-    template,
+    sketch,
     options,
     status,
     files,
@@ -37,14 +37,14 @@ export class RecordingService {
     thumbnails
   }: {
     status: JobStatusEnum;
-    template: string;
+    sketch: string;
     options: string;
     files: File[];
     jobId?: string;
     thumbnails?: Record<string, string>;
   } ): Promise<string> {
     return this.queueService.enqueueRecording( {
-      template,
+      sketch,
       options,
       status,
       files,
@@ -54,13 +54,13 @@ export class RecordingService {
   }
 
   public async startRecording(
-    jobId: string, template: string
+    jobId: string, sketch: string
   ): Promise<void> {
     await this.queueService.getQueue().add(
       "process-recording",
       {
         jobId,
-        template
+        sketch
       },
       {
         jobId,

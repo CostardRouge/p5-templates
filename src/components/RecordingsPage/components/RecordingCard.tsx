@@ -112,17 +112,17 @@ export default function RecordingCard( {
         {/* Template & ID */}
         <div className="space-y-1 sm:space-y-1.5">
           <HardLink
-            href={ `/${ job.template }` }
+            href={ `/${ job.sketch }` }
             className="block text-xs sm:text-sm font-semibold text-foreground hover:text-foreground/70 transition-colors truncate group/link"
           >
-            {job.template}
+            {job.sketch}
             <span className="inline-block ml-1 opacity-0 group-hover/link:opacity-100 transition-opacity">
               →
             </span>
           </HardLink>
 
           <HardLink
-            href={ `/${ job.template }?id=${ job.id }` }
+            href={ `/${ job.sketch }?id=${ job.id }` }
             className="block text-[10px] sm:text-xs font-mono text-foreground/60 hover:text-foreground/80 transition-colors group/link"
           >
             <span className="truncate">

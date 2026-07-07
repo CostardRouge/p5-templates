@@ -9,7 +9,7 @@ export type SortField =
   | "createdAt"
   | "updatedAt"
   | "status"
-  | "template"
+  | "sketch"
   | "duration"
   | "id";
 export type SortOrder = "asc" | "desc";
@@ -56,8 +56,8 @@ export function useSorting(
             comparison = STATUS_ORDER[ a.status ] - STATUS_ORDER[ b.status ];
             break;
 
-          case "template":
-            comparison = a.template.localeCompare( b.template );
+          case "sketch":
+            comparison = a.sketch.localeCompare( b.sketch );
             break;
 
           case "duration":

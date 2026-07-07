@@ -64,8 +64,8 @@ const QUICK_LINKS = [
     path: "/"
   },
   {
-    label: "Templates index",
-    path: "/templates"
+    label: "Sketches index",
+    path: "/sketches"
   },
   {
     label: "Recordings",
@@ -458,7 +458,7 @@ export default function OpenGraphDiagnostics( {
           <input
             value={ input }
             onChange={ ( e ) => setInput( e.target.value ) }
-            placeholder="/ or /templates/p5/photo-balloons or a full URL"
+            placeholder="/ or /sketches/p5/photo-balloons or a full URL"
             className="flex-1 bg-transparent px-3 py-2 font-mono text-sm outline-none placeholder:text-label/60"
             spellCheck={ false }
             autoCapitalize="off"

@@ -118,7 +118,7 @@ export async function POST( request: Request ) {
 
     const metadataPath = path.join(
       process.cwd(),
-      "src/templates/metadata.json"
+      "src/sketches/metadata.json"
     );
     const raw = await fs.readFile(
       metadataPath,

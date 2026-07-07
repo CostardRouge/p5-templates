@@ -1,0 +1,34 @@
+"use client";
+
+import * as React from "react";
+
+import ItemPalette from "./components/ItemPalette/ItemPalette";
+
+import {
+  ItemKind
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/components/ItemPalette/types/item-kinds";
+
+import makeDefaultItem from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/utils/makeDefaultItem";
+import useContentArray from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentArrayProvider/hooks/useContentArray";
+
+export default function AddItemControls() {
+  const {
+    append
+  } = useContentArray();
+
+  const handleAdd = React.useCallback(
+    ( kind: ItemKind ) => {
+      append(
+        makeDefaultItem( kind ),
+        {
+          shouldFocus: false
+        }
+      );
+    },
+    [
+      append
+    ]
+  );
+
+  return <ItemPalette onAdd={ handleAdd } />;
+}

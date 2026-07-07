@@ -138,7 +138,7 @@ The previous `concurrently` setup didn't properly restore terminal state when in
 
 Watches sketch files for changes and regenerates, in one pass:
 
-- `src/templates/metadata.json` — the sketch catalogue used for routing/listing.
+- `src/sketches/metadata.json` — the sketch catalogue used for routing/listing.
 - `src/generated/sketchModuleRegistry.ts` — client+server map of `"<engine>:<sketchPath>" → () => import(".../index.js")` thunks.
 - `src/generated/sketchOptionsRegistry.ts` — `server-only` map of `options.ts` / `options.json` loaders.
 
@@ -204,7 +204,7 @@ To verify the server-side frame capture migration:
 curl http://localhost:3000
 
 # Check if sketch loads
-open http://localhost:3000/templates/basic-template?capturing
+open http://localhost:3000/sketches/basic-template?capturing
 ```
 
 ### Test fails with "ECONNREFUSED"
