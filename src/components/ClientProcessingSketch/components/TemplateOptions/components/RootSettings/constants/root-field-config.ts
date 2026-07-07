@@ -130,8 +130,10 @@ export const framerateOptions = [
   5,
   10,
   24,
+  25,
   30,
   48,
+  50,
   60,
   120,
   240
