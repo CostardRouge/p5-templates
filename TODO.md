@@ -4,6 +4,26 @@
 
 ---
 
+## 🏷️ Rename follow-ups (owner-only actions)
+
+The codebase is renamed to **Sketchbook** (`sketch` = the unit, `preset` = a saved
+configuration, `/sketches` = the gallery, with permanent redirects from `/templates`).
+What's left requires actions only the repo owner can take, in this order:
+
+- [ ] **Rename the GitHub repo** `CostardRouge/p5-templates` → `CostardRouge/sketchbook`
+  (GitHub redirects the old URL automatically). Then update `GITHUB_URL` in
+  `src/components/HomePage.tsx` and `NEXT_PUBLIC_GITHUB_REPO_URL` in deploy env.
+- [ ] **GHCR image** — after the repo rename, CI publishes under the new path; update
+  `docker-compose.yml` default (`APP_IMAGE`), `deploy/README.md`, and the
+  Watchtower `DEPLOY_WEBHOOK_URL`. Old `ghcr.io/costardrouge/p5-templates` packages
+  stay pullable but stop receiving tags.
+- [ ] **VAPID subject** — set `VAPID_SUBJECT=mailto:<real address>` in deploy env
+  (code falls back to the historical `admin@social-templates.com`).
+- [ ] Optional cleanup once old clients are gone: drop the `template` fallbacks
+  (enqueue form field, media response alias, localStorage/sessionStorage legacy keys).
+
+---
+
 ## 🎬 Recording System
 
 - [ ] **Batch recordings** — queue multiple template+options combinations in a single action; needs UI (select multiple drafts → start all) and backend atomic/sequential enqueue
