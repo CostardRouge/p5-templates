@@ -256,7 +256,7 @@ export default function VideoPreviewModal( {
                   <span className="hidden sm:inline">Recording</span>
                 </a>
 
-                {/* Open Template Link */}
+                {/* Open Sketch Link */}
                 {media.sketch && (
                   <a
                     href={ `/${ media.sketch }` }
@@ -265,7 +265,7 @@ export default function VideoPreviewModal( {
                     title="Open sketch"
                   >
                     <ExternalLink className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="hidden sm:inline">Template</span>
+                    <span className="hidden sm:inline">Sketch</span>
                   </a>
                 )}
               </>

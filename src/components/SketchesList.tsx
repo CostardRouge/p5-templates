@@ -71,13 +71,13 @@ function runViewTransition( update: () => void ) {
 }
 
 interface SketchesListProps {
-  templates: Record<string, SketchItem[]>;
+  sketches: Record<string, SketchItem[]>;
   engineLabels: Record<string, string>;
   activeEngine: string; // "all" | engine id
 }
 
 export default function SketchesList( {
-  templates,
+  sketches,
   engineLabels,
   activeEngine
 }: SketchesListProps ) {
@@ -89,7 +89,7 @@ export default function SketchesList( {
     view,
     setView
   ] = usePersistedViewMode<"grid" | "list">(
-    "templates-view-mode",
+    "sketchbook:view-mode",
     "grid"
   );
   const [
@@ -125,7 +125,7 @@ export default function SketchesList( {
     isOpen: isSectionExpanded,
     toggle: toggleSection
   } = usePersistedAccordion(
-    "templates-expanded-categories",
+    "sketchbook:expanded-categories",
     () => [],
     PERSIST_EXPANDED
   );
@@ -219,9 +219,9 @@ export default function SketchesList( {
   };
 
   // "Import .json": read a previously-exported options.json, find the
-  // template it belongs to (by its `name` field) and hard-navigate straight
+  // sketch it belongs to (by its `name` field) and hard-navigate straight
   // to it, handing the parsed options off via sessionStorage so the fresh
-  // template page can pre-fill its form (see SketchOptions.tsx).
+  // sketch page can pre-fill its form (see SketchOptions.tsx).
   const importFileInputRef = useRef<HTMLInputElement>( null );
   const [
     importing,
@@ -286,12 +286,12 @@ export default function SketchesList( {
         throw new Error( "This file doesn't look like an exported options.json (missing \"name\")" );
       }
 
-      const matches = Object.values( templates )
+      const matches = Object.values( sketches )
         .flat()
         .filter( ( t ) => t.name === importedName );
 
       if ( matches.length === 0 ) {
-        throw new Error( `No template named "${ importedName }" found` );
+        throw new Error( `No sketch named "${ importedName }" found` );
       }
 
       // Disambiguate the rare case of a name shared across engines: prefer
@@ -300,7 +300,7 @@ export default function SketchesList( {
 
       if ( matches.length > 1 ) {
         const preferred = currentEngine !== "all"
-          ? matches.find( ( t ) => templates[ currentEngine ]?.includes( t ) )
+          ? matches.find( ( t ) => sketches[ currentEngine ]?.includes( t ) )
           : undefined;
 
         target = preferred ?? matches[ 0 ];
@@ -315,7 +315,7 @@ export default function SketchesList( {
 
       if ( !writePendingImport( parsed ) ) {
         setImportToast( {
-          message: "Opened the template, but couldn't pre-fill options (storage unavailable). Please import manually on the template page.",
+          message: "Opened the sketch, but couldn't pre-fill options (storage unavailable). Please import manually on the sketch page.",
           type: "error"
         } );
       }
@@ -334,7 +334,7 @@ export default function SketchesList( {
 
   // Filter per engine: exact category match first (when active), then
   // fuzzy keyword over the remaining items.
-  const filteredTemplates = Object.entries( templates ).reduce(
+  const filteredSketches = Object.entries( sketches ).reduce(
     (
       acc, [
         engineId,
@@ -364,25 +364,25 @@ export default function SketchesList( {
   );
 
   // Narrow to the selected engine tab (or keep all)
-  const displayedTemplates =
+  const displayedSketches =
     currentEngine === "all"
-      ? filteredTemplates
-      : Object.fromEntries( Object.entries( filteredTemplates ).filter( ( [
+      ? filteredSketches
+      : Object.fromEntries( Object.entries( filteredSketches ).filter( ( [
         id
       ] ) => id === currentEngine ) );
 
-  const totalCount = Object.values( displayedTemplates ).reduce(
+  const totalCount = Object.values( displayedSketches ).reduce(
     (
       sum, items
     ) => sum + items.length,
     0
   );
 
-  const engineOrder = Object.keys( templates ).sort( (
+  const engineOrder = Object.keys( sketches ).sort( (
     a, b
-  ) => ( templates[ b ]?.length ?? 0 ) - ( templates[ a ]?.length ?? 0 ) );
+  ) => ( sketches[ b ]?.length ?? 0 ) - ( sketches[ a ]?.length ?? 0 ) );
 
-  const totalAllCount = Object.values( templates ).reduce(
+  const totalAllCount = Object.values( sketches ).reduce(
     (
       sum, items
     ) => sum + items.length,
@@ -397,7 +397,7 @@ export default function SketchesList( {
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <MenuBarSlot />
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">
-              Templates
+              Sketches
             </h1>
           </div>
           <AnimationsToggle
@@ -413,7 +413,7 @@ export default function SketchesList( {
             <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground/40" />
             <input
               type="text"
-              placeholder="Search templates..."
+              placeholder="Search sketches..."
               value={ search }
               onChange={ ( e ) => setSearch( e.target.value ) }
               className={ `pl-9 py-2 sm:pl-11 sm:py-2.5 rounded-lg sm:rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-xs sm:text-sm placeholder:text-foreground/40 ${
@@ -514,7 +514,7 @@ export default function SketchesList( {
             {/* Per-engine tabs */}
             { engineOrder.map( ( engineId ) => {
               const label = engineLabels[ engineId ] || engineId;
-              const count = templates[ engineId ]?.length || 0;
+              const count = sketches[ engineId ]?.length || 0;
               const isActive = currentEngine === engineId;
 
               return (
@@ -572,9 +572,9 @@ export default function SketchesList( {
         />
       ) }
 
-      {/* Templates content — view-transition-name scopes the VT animation to this area only */}
+      {/* Sketches content — view-transition-name scopes the VT animation to this area only */}
       <div style={ {
-        viewTransitionName: "templates-list"
+        viewTransitionName: "sketches-list"
       } }>
 
         {/* Empty State */}
@@ -584,7 +584,7 @@ export default function SketchesList( {
               <Search className="w-6 h-6 sm:w-8 sm:h-8 text-foreground/40" />
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
-              No templates found
+              No sketches found
             </h3>
             <p className="text-xs sm:text-sm text-foreground/60">
               Try adjusting your search term
@@ -592,8 +592,8 @@ export default function SketchesList( {
           </div>
         ) }
 
-        {/* Templates grouped by engine */}
-        { Object.entries( displayedTemplates )
+        {/* Sketches grouped by engine */}
+        { Object.entries( displayedSketches )
           .sort( (
             [
               a
@@ -669,7 +669,7 @@ export default function SketchesList( {
                 { uncategorized.length > 0 && (
                   hasCategoryGroups ? (
                     <CategorySection
-                      title={ `Other ${ label } templates` }
+                      title={ `Other ${ label } sketches` }
                       count={ uncategorized.length }
                       expanded={ searchActive || isSectionExpanded( sectionId(
                         engineId,
@@ -702,7 +702,7 @@ export default function SketchesList( {
                           href, name, thumbnail, preview, hasSketchForm, hiddenFromGallery
                         }, index
                       ) => (
-                        <TemplateCard
+                        <SketchCard
                           key={ name }
                           href={ href }
                           name={ name }
@@ -727,7 +727,7 @@ export default function SketchesList( {
 }
 
 /**
- * A category block. Templates render at full size with live previews, just
+ * A category block. Sketches render at full size with live previews, just
  * like the rest of the gallery. By default a grid-view category lays its cards
  * out in a single horizontal, scrollable row (showing as many as fit the
  * viewport — same column counts as the full grid) so the page stays short.
@@ -815,7 +815,7 @@ function CategorySection( {
   const cards = items.map( (
     item, index
   ) => (
-    <TemplateCard
+    <SketchCard
       key={ item.name }
       href={ item.href }
       name={ item.name }
@@ -840,7 +840,7 @@ function CategorySection( {
             type="button"
             onClick={ onToggle }
             aria-expanded={ expanded }
-            aria-label={ expanded ? `Collapse ${ title }` : `Show all ${ title } templates` }
+            aria-label={ expanded ? `Collapse ${ title }` : `Show all ${ title } sketches` }
             title={ expanded ? "Collapse" : "Show all" }
             className="flex-shrink-0 grid place-items-center w-5 h-5 rounded-md border border-border text-foreground/50 hover:text-foreground hover:border-foreground/30 hover:bg-hover/50 transition-colors"
           >
@@ -884,7 +884,7 @@ function CategorySection( {
   );
 }
 
-function TemplateCard( {
+function SketchCard( {
   href,
   name,
   thumbnail,
@@ -962,7 +962,7 @@ function TemplateCard( {
           ) }
         </div>
 
-        {/* Template name */}
+        {/* Sketch name */}
         <div
           className="bg-background border-t border-border px-1 py-2 overflow-hidden"
           onMouseEnter={ handleNameEnter }

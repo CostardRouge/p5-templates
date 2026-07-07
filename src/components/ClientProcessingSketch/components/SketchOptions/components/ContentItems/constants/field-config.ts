@@ -298,7 +298,7 @@ export const fontNames = [
 ];
 
 // Reusable select options derived from the canonical sources above.
-// Import these in template options.ts files instead of hardcoding arrays.
+// Import these in sketch options.ts files instead of hardcoding arrays.
 export const fontSelectOptions: SelectOption[] = fontNames.map( ( fontName ) => ( {
   value: fontName,
   label: fontName

@@ -1,5 +1,5 @@
 import type {
-  EngineRegistration, TemplateMetadata
+  EngineRegistration, SketchSummary
 } from "@/engines/types";
 import {
   P5Engine
@@ -8,7 +8,7 @@ import {
   getEngineLabel
 } from "@/engines/engineCatalog";
 import {
-  findSketchMeta, listTemplatesForEngine
+  findSketchMeta, listSketchesForEngine
 } from "@/engines/metadata";
 
 export const p5Registration: EngineRegistration = {
@@ -17,21 +17,21 @@ export const p5Registration: EngineRegistration = {
 
   createEngine: () => new P5Engine(),
 
-  resolveTemplatePath( sketchName: string ): string {
+  resolveSketchPath( sketchName: string ): string {
     const meta = findSketchMeta(
       sketchName,
       "p5"
     );
 
     if ( !meta ) {
-      throw new Error( `P5 template "${ sketchName }" not found in metadata.` );
+      throw new Error( `P5 sketch "${ sketchName }" not found in metadata.` );
     }
 
     return meta.sketchPath;
   },
 
-  listTemplates(): TemplateMetadata[] {
-    return listTemplatesForEngine( "p5" ).map( ( m ) => ( {
+  listSketches(): SketchSummary[] {
+    return listSketchesForEngine( "p5" ).map( ( m ) => ( {
       name: m.name,
       engine: m.engine,
       category: m.category,

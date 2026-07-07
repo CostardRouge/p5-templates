@@ -2,11 +2,12 @@ import {
   useCallback, useEffect, useState
 } from "react";
 
-const STORAGE_KEY = "templates-animations-enabled";
+const STORAGE_KEY = "sketchbook:animations-enabled";
+const LEGACY_STORAGE_KEY = "templates-animations-enabled";
 
 function readStored(): boolean | null {
   try {
-    const raw = localStorage.getItem( STORAGE_KEY );
+    const raw = localStorage.getItem( STORAGE_KEY ) ?? localStorage.getItem( LEGACY_STORAGE_KEY );
 
     if ( raw === null ) {
       return null;

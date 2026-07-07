@@ -24,7 +24,7 @@ const REPO_ROOT = path.resolve(
   __dirname,
   "../../.."
 );
-const TEMPLATES_DIR = path.join(
+const SKETCHES_DIR = path.join(
   REPO_ROOT,
   "src/sketches"
 );
@@ -43,14 +43,14 @@ const SKETCH_ENTRY_FILES = [
 function sketchDir( entry: SketchMetadata ): string {
   return entry.category
     ? path.join(
-      TEMPLATES_DIR,
+      SKETCHES_DIR,
       entry.engine,
       "sketches",
       entry.category,
       entry.name
     )
     : path.join(
-      TEMPLATES_DIR,
+      SKETCHES_DIR,
       entry.engine,
       "sketches",
       entry.name
@@ -87,7 +87,7 @@ function expectInSync( problems: string[] ): void {
       + "\n\nmetadata.json is out of sync with the filesystem."
       + "\nRun `npm run sketch:meta:write` and commit the regenerated files."
       + "\n(The pre-commit hook runs this automatically when a sketch or a"
-      + " template asset changes.)" );
+      + " sketch asset changes.)" );
   }
 }
 
@@ -228,9 +228,9 @@ describe(
         category: string | null;
         name: string;
         dir: string }> = [];
-      const engineDirs = fs.readdirSync( TEMPLATES_DIR ).filter( ( name ) => {
+      const engineDirs = fs.readdirSync( SKETCHES_DIR ).filter( ( name ) => {
         const full = path.join(
-          TEMPLATES_DIR,
+          SKETCHES_DIR,
           name
         );
 
@@ -243,7 +243,7 @@ describe(
 
       for ( const engine of engineDirs ) {
         const sketchesDir = path.join(
-          TEMPLATES_DIR,
+          SKETCHES_DIR,
           engine,
           "sketches"
         );

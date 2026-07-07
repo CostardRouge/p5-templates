@@ -108,7 +108,7 @@ afterEach( () => {
 } );
 
 describe(
-  "GSAP runtime — single template duration",
+  "GSAP runtime — single sketch duration",
   () => {
     test(
       "totalFrames follows the global duration and frame f → f/totalFrames",

@@ -109,7 +109,7 @@ export default function RecordingCard( {
 
       {/* Content Section */}
       <div className="p-2 sm:p-4 space-y-2 sm:space-y-3">
-        {/* Template & ID */}
+        {/* Sketch & ID */}
         <div className="space-y-1 sm:space-y-1.5">
           <HardLink
             href={ `/${ job.sketch }` }

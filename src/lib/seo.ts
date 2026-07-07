@@ -73,7 +73,7 @@ export function buildSketchDescription(
   sketchTitle: string,
   engineLabel: string
 ): string {
-  return `Create ${ sketchTitle } content with ${ engineLabel }. A template for generating social media visuals.`;
+  return `Create ${ sketchTitle } content with ${ engineLabel }. A customizable creative-coding sketch.`;
 }
 
 /** Builds the keyword list for a sketch detail page. */
@@ -86,7 +86,7 @@ export function buildSketchKeywords(
   return [
     title,
     engineLabel,
-    "social media template",
+    "creative coding sketch",
     "video generator",
     "creative coding",
     ...sketchName.split( "-" )

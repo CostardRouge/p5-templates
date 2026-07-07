@@ -49,9 +49,9 @@ export function findSketchMeta(
 }
 
 /**
- * Return all templates that belong to `engineId`.
+ * Return all sketches that belong to `engineId`.
  */
-export function listTemplatesForEngine( engineId: string ): SketchMetadata[] {
+export function listSketchesForEngine( engineId: string ): SketchMetadata[] {
   return getMetadata().filter( ( m ) => m.engine === engineId );
 }
 

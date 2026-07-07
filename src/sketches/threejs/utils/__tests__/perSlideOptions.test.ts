@@ -17,7 +17,7 @@ import {
   getSketchOptions
 } from "@/p5/shared/syncSketchOptions.js";
 
-// The default export is a `Proxy<{}>` (typed empty); a template reads it as a
+// The default export is a `Proxy<{}>` (typed empty); a sketch reads it as a
 // loose options bag, so mirror that here for the assertions.
 const options = optionsProxy as unknown as Record<string, any>;
 

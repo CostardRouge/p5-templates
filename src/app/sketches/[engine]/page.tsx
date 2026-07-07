@@ -37,8 +37,8 @@ export async function generateMetadata( {
   }
 
   const label = ( await getSketchesData() ).engineLabels[ engine ] || engine;
-  const title = `${ label } Templates`;
-  const description = `Browse all ${ label } templates. Create stunning social media visuals with ${ label }.`;
+  const title = `${ label } Sketches`;
+  const description = `Browse all ${ label } sketches. Create stunning visuals with ${ label }.`;
 
   return {
     title,
@@ -56,7 +56,7 @@ export async function generateMetadata( {
   };
 }
 
-export default async function EngineTemplatesPage( {
+export default async function EngineSketchesPage( {
   params
 }: {
   params: Promise<RouteParams>;
@@ -82,11 +82,11 @@ export default async function EngineTemplatesPage( {
       url: baseUrl
     },
     {
-      name: "Templates",
+      name: "Sketches",
       url: `${ baseUrl }/sketches`
     },
     {
-      name: `${ label } Templates`,
+      name: `${ label } Sketches`,
       url: `${ baseUrl }/sketches/${ engine }`
     }
   ];
@@ -96,7 +96,7 @@ export default async function EngineTemplatesPage( {
       <BreadcrumbJsonLd items={ breadcrumbItems } />
       <Suspense>
         <SketchesList
-          templates={ filterSketchesForGallery( sketchesByEngine ) }
+          sketches={ filterSketchesForGallery( sketchesByEngine ) }
           engineLabels={ engineLabels }
           activeEngine={ engine }
         />

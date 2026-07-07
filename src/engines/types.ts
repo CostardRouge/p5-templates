@@ -50,12 +50,12 @@ export interface SketchEngine {
   /* ---- lifecycle ------------------------------------------------- */
 
   /**
-   * Mount the engine into `container`, load the template module and
+   * Mount the engine into `container`, load the sketch module and
    * apply `options`. Resolves when the first frame is visible.
    */
   init(
     container: HTMLElement,
-    templatePath: string,
+    sketchName: string,
     options: SketchOption,
   ): Promise<void>;
 
@@ -176,7 +176,7 @@ export interface SketchEngine {
 
 /**
  * Each engine package exports an `EngineRegistration` which the central
- * registry uses to create engine instances and load templates on demand.
+ * registry uses to create engine instances and load sketches on demand.
  */
 export interface EngineRegistration {
   /** Must match the URL segment, e.g. "p5", "gsap", "threejs". */
@@ -189,20 +189,20 @@ export interface EngineRegistration {
   createEngine(): SketchEngine;
 
   /**
-   * Resolve a template by name (+ optional category prefix) and
+   * Resolve a sketch by name (+ optional category prefix) and
    * return its file-system path relative to the sketches directory.
-   * Throws if the template does not exist.
+   * Throws if the sketch does not exist.
    */
-  resolveTemplatePath( sketchName: string ): string;
+  resolveSketchPath( sketchName: string ): string;
 
   /**
-   * Return metadata for all known templates so the home page can
+   * Return metadata for all known sketches so the home page can
    * display a catalogue.
    */
-  listTemplates(): TemplateMetadata[];
+  listSketches(): SketchSummary[];
 }
 
-export interface TemplateMetadata {
+export interface SketchSummary {
   name: string;
   engine: string;
   category: string | null;

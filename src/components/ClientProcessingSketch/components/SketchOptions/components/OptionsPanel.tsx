@@ -68,9 +68,9 @@ type OptionsPanelProps = OptionsPanelBodyProps & {
 };
 
 /**
- * The template sections (general settings, global content, slides) without
+ * The sketch's option sections (general settings, global content, slides) without
  * panel chrome — rendered in the desktop floating panel and in the mobile
- * drawer's Template tab.
+ * drawer's Settings tab.
  */
 export function OptionsPanelBody( {
   activeSlideIndex,

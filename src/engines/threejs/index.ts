@@ -1,5 +1,5 @@
 import type {
-  EngineRegistration, TemplateMetadata
+  EngineRegistration, SketchSummary
 } from "@/engines/types";
 import {
   ThreeEngine
@@ -8,7 +8,7 @@ import {
   getEngineLabel
 } from "@/engines/engineCatalog";
 import {
-  findSketchMeta, listTemplatesForEngine
+  findSketchMeta, listSketchesForEngine
 } from "@/engines/metadata";
 
 export const threejsRegistration: EngineRegistration = {
@@ -17,21 +17,21 @@ export const threejsRegistration: EngineRegistration = {
 
   createEngine: () => new ThreeEngine(),
 
-  resolveTemplatePath( sketchName: string ): string {
+  resolveSketchPath( sketchName: string ): string {
     const meta = findSketchMeta(
       sketchName,
       "threejs"
     );
 
     if ( !meta ) {
-      throw new Error( `Three.js template "${ sketchName }" not found in metadata.` );
+      throw new Error( `Three.js sketch "${ sketchName }" not found in metadata.` );
     }
 
     return meta.sketchPath;
   },
 
-  listTemplates(): TemplateMetadata[] {
-    return listTemplatesForEngine( "threejs" ).map( ( m ) => ( {
+  listSketches(): SketchSummary[] {
+    return listSketchesForEngine( "threejs" ).map( ( m ) => ( {
       name: m.name,
       engine: m.engine,
       category: m.category,

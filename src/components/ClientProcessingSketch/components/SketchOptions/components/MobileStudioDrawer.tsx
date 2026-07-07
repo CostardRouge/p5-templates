@@ -46,7 +46,7 @@ type MobileStudioDrawerProps = {
   /** Stable id of the active slide; remounts the form on identity changes. */
   activeSlideId?: string;
   jobId?: string;
-  /** Template tab: the options panel sections. */
+  /** Settings tab: the options panel sections. */
   body: Omit<OptionsPanelBodyProps, "scrollable">;
   /** Export tab: capture actions (recording support already filtered by caller). */
   capture: CaptureProps;
@@ -61,7 +61,7 @@ type MobileStudioDrawerProps = {
 };
 
 /**
- * Single bottom drawer hosting the whole studio on mobile: Sketch, Template
+ * Single bottom drawer hosting the whole studio on mobile: Sketch, Settings
  * and Export tabs share one surface (and the form context owned by
  * SketchOptions), so the panels never compete for the small screen.
  * Desktop keeps the separate floating panels.

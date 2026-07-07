@@ -118,7 +118,7 @@ export default function SketchOptions( {
   ] = useState( false );
 
   // Success banner shown above the options panel after an import applies —
-  // covers both the manual Import button and the templates-listing handoff,
+  // covers both the manual Import button and the sketches-listing handoff,
   // since both funnel through handleImportOptions below.
   const [
     importBanner,
@@ -427,9 +427,9 @@ export default function SketchOptions( {
     setImportBanner( "Options imported successfully" );
   };
 
-  // One-shot handoff from the templates listing page's "Import .json"
+  // One-shot handoff from the sketches listing page's "Import .json"
   // button: it stashes the parsed options in sessionStorage right before a
-  // hard navigation to this template, since the listing page and this page
+  // hard navigation to this sketch, since the listing page and this page
   // are separate mounted trees with no shared React state. Only applies to
   // a fresh (non-persisted) load — a persisted job already has its own
   // import path (ImportOptionsButton -> /api/options/import/:jobId).
@@ -459,8 +459,8 @@ export default function SketchOptions( {
     []
   );
 
-  // ≥ md: separate floating panels (template right, sketch settings left).
-  // Below: a single bottom drawer with Sketch / Template / Export tabs.
+  // ≥ md: separate floating panels (general settings right, sketch settings left).
+  // Below: a single bottom drawer with Sketch / Settings / Export tabs.
   // The form context above is shared either way — only the layout changes.
   const isDesktop = useMediaQuery( "(min-width: 768px)" );
 

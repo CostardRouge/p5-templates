@@ -176,7 +176,7 @@ export function EngineControls( {
     name,
     engineId
   ) : undefined;
-  // DOM engines (GSAP/HTML) author templates as React `.jsx`; p5 uses `.js`.
+  // DOM engines (GSAP/HTML) author sketches as React `.jsx`; p5 uses `.js`.
   const entryExtension = engineId === "gsap" ? "jsx" : "js";
   const githubUrl =
     githubRepoUrl && sketchPath

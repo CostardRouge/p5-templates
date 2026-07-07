@@ -107,7 +107,7 @@ export async function generateMetadata( {
             url: thumbnailUrl,
             width: 1200,
             height: 630,
-            alt: `${ title } template preview`
+            alt: `${ title } sketch preview`
           }
         ]
       } )
@@ -262,11 +262,11 @@ export default async function StudioPage( {
       url: baseUrl
     },
     {
-      name: "Templates",
+      name: "Sketches",
       url: `${ baseUrl }/sketches`
     },
     {
-      name: `${ engineLabel } Templates`,
+      name: `${ engineLabel } Sketches`,
       url: `${ baseUrl }/sketches/${ engineId }`
     },
     {

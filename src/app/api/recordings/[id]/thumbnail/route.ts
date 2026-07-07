@@ -80,7 +80,7 @@ export async function GET(
 
     // Fall back to sketch template thumbnail
     // job.sketch is "sketches/{engine}/{optional-category}/{name}" (legacy rows: "templates/…")
-    // parts[0] = "templates", parts[1] = engine, last part = sketch name
+    // parts[0] = "sketches"/"templates", parts[1] = engine, last part = sketch name
     const sketchParts = job.sketch.split( "/" );
     const sketchEngine = sketchParts[ 1 ] ?? sketchParts[ 0 ];
     const sketchName = sketchParts[ sketchParts.length - 1 ];

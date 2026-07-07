@@ -133,7 +133,7 @@ function buildTimeline(
   spy.mockRestore();
 
   if ( !builder ) {
-    throw new Error( "Template did not register a timeline." );
+    throw new Error( "Sketch did not register a timeline." );
   }
 
   const tl = gsap.timeline( {
@@ -219,7 +219,7 @@ afterEach( () => {
 } );
 
 describe(
-  "GSAP photo templates",
+  "GSAP photo sketches",
   () => {
     const cases: Array<{
       name: string;

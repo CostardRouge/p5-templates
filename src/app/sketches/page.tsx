@@ -15,9 +15,9 @@ import {
   getSketchesData
 } from "./getSketchesData";
 
-const TITLE = "Templates";
+const TITLE = "Sketches";
 const DESCRIPTION =
-  "Browse all available social media templates. Choose from p5.js sketches, GSAP animations, and HTML templates to create stunning visual content.";
+  "Browse all available creative-coding sketches. Choose from p5.js, GSAP, and Three.js sketches to create stunning visual content.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -34,13 +34,13 @@ export const metadata: Metadata = {
   }
 };
 
-export default async function TemplatesPage() {
+export default async function SketchesPage() {
   const {
     sketchesByEngine, engineLabels
   } = await getSketchesData();
   const baseUrl = getBaseUrl();
 
-  // In production we hide templates marked `.hidden-template` entirely.
+  // In production we hide sketches marked `.hidden-template` entirely.
   // In development they stay visible but are rendered grayed-out + still
   // clickable (the flag is forwarded so the UI can style them).
   const filteredByEngine = filterSketchesForGallery( sketchesByEngine );
@@ -51,7 +51,7 @@ export default async function TemplatesPage() {
       url: baseUrl
     },
     {
-      name: "Templates",
+      name: "Sketches",
       url: `${ baseUrl }/sketches`
     }
   ];
@@ -61,7 +61,7 @@ export default async function TemplatesPage() {
       <BreadcrumbJsonLd items={ breadcrumbItems } />
       <Suspense>
         <SketchesList
-          templates={ filteredByEngine }
+          sketches={ filteredByEngine }
           engineLabels={ engineLabels }
           activeEngine="all"
         />

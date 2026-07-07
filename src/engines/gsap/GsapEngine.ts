@@ -65,7 +65,7 @@ export class GsapEngine implements SketchEngine {
 
   async init(
     container: HTMLElement,
-    templatePath: string,
+    sketchName: string,
     options: SketchOption
   ): Promise<void> {
     this.container = container;
@@ -85,7 +85,7 @@ export class GsapEngine implements SketchEngine {
     );
 
     const sketchPath = resolveSketchPath(
-      templatePath,
+      sketchName,
       "gsap"
     );
 

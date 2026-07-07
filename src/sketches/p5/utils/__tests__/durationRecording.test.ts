@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  *
- * Regression tests for "setting the template duration has no effect" on the p5
+ * Regression tests for "setting the sketch duration has no effect" on the p5
  * recording path (front browser capture + back headless capture share this
  * clock).
  *

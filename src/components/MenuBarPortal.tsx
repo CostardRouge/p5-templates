@@ -11,7 +11,7 @@ type MenuBarSlotContextValue = {
   inlineVisible: boolean;
   /**
    * Lets the currently mounted page contribute an action into the global
-   * menu (e.g. the templates listing registers its "Import .json" handler
+   * menu (e.g. the sketches listing registers its "Import .json" handler
    * here instead of duplicating a page-specific menu). Pass `null` to
    * unregister on unmount.
    */
