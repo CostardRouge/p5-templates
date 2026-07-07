@@ -29,6 +29,9 @@ const time = {
   lastUpdate: 0,
   recordingFrameIndex: 0,
   isRecording: false,
+  // Real-time accumulator for framerate-quantised playback stepping (live
+  // preview only — recording pins the clock to the frame index instead).
+  accumulator: 0,
 
   seconds() {
     return time.elapsed / 1000;
@@ -58,28 +61,27 @@ const time = {
     time.elapsed = 0;
     time.lastUpdate = 0;
     time.recordingFrameIndex = 0;
+    time.accumulator = 0;
   },
 
-  // Advance the clock by one tick. During recording, time is pinned to the
-  // frame index (frame / framerate); otherwise it free-runs on wall-clock.
-  increment( now ) {
-    if ( time.isRecording ) {
-      const {
-        framerate
-      } = resolveAnimation( getSketchOptions()?.animation );
-      const millisecondsPerFrame = 1000 / framerate;
+  // Advance the clock by exactly one frame. During recording, time is pinned
+  // to the frame index (frame / framerate); otherwise it advances by a fixed
+  // framerate-sized step — the live loop (see `loop()`) only calls this once
+  // enough wall-clock time has accumulated, so the configured framerate is
+  // what actually paces the draw, not the display's refresh rate.
+  step() {
+    const {
+      framerate
+    } = resolveAnimation( getSketchOptions()?.animation );
+    const millisecondsPerFrame = 1000 / framerate;
 
+    if ( time.isRecording ) {
       time.elapsed = time.recordingFrameIndex * millisecondsPerFrame;
       time.recordingFrameIndex++;
       return;
     }
 
-    if ( time.lastUpdate === 0 ) {
-      time.lastUpdate = now;
-    }
-
-    time.elapsed += now - time.lastUpdate;
-    time.lastUpdate = now;
+    time.elapsed += millisecondsPerFrame;
   }
 };
 
@@ -232,16 +234,15 @@ function renderScene( ctx ) {
   }
 }
 
-// One live tick: advance the clock, draw, render, update measurements.
-function tick( now ) {
-  time.increment( now );
+// One live tick: advance the clock by exactly one frame, draw, render.
+function tick() {
+  time.step();
 
   const ctx = drawContext();
 
   renderScene( ctx );
 
   frameCount++;
-  sampleFps( now );
   notifyProgression();
 }
 
@@ -263,6 +264,10 @@ function sampleFps( now ) {
   }
 }
 
+// Drives the preview at the configured framerate rather than the display's
+// refresh rate: rAF still fires as fast as the browser paints, but a frame is
+// only stepped/drawn once enough wall-clock time has accumulated for it
+// (identical model to the GSAP engine's `startRaf()`).
 function loop( now ) {
   if ( sketch.paused ) {
     rafId = null;
@@ -270,7 +275,36 @@ function loop( now ) {
   }
 
   rafId = requestAnimationFrame( loop );
-  tick( now );
+
+  if ( time.lastUpdate === 0 ) {
+    time.lastUpdate = now;
+  }
+
+  const delta = ( now - time.lastUpdate ) / 1000;
+
+  time.lastUpdate = now;
+
+  const {
+    framerate
+  } = resolveAnimation( getSketchOptions()?.animation );
+  const frameDuration = 1 / Math.max(
+    1,
+    framerate
+  );
+
+  time.accumulator += delta;
+
+  // Cap after a stall (e.g. backgrounded tab) to avoid a burst of steps.
+  if ( time.accumulator > 0.25 ) {
+    time.accumulator = frameDuration;
+  }
+
+  while ( time.accumulator >= frameDuration ) {
+    tick();
+    time.accumulator -= frameDuration;
+  }
+
+  sampleFps( now );
 }
 
 function startLoop() {
@@ -280,6 +314,7 @@ function startLoop() {
 
   sketch.paused = false;
   time.lastUpdate = 0;
+  time.accumulator = 0;
   rafId = requestAnimationFrame( loop );
 }
 
@@ -370,8 +405,9 @@ const sketch = {
     subscribeToOptionChanges();
 
     // Render the very first frame synchronously so the canvas is painted
-    // (and measurable) the instant `start` resolves.
-    tick( performance.now() );
+    // (and measurable) the instant `start` resolves — at phase 0, without
+    // consuming a step from the framerate-paced loop.
+    renderOnce();
 
     startLoop();
   },
@@ -446,8 +482,8 @@ const sketch = {
 
     const ctx = drawContext();
 
-    // In recording mode `increment` derives `elapsed` from the pinned index.
-    time.increment( performance.now() );
+    // In recording mode `step` derives `elapsed` from the pinned index.
+    time.step();
     ctx.time = time.drawSeconds();
     ctx.phase = time.phase();
     renderScene( ctx );
