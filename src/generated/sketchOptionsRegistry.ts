@@ -70,6 +70,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:audio/motion-foley": () => import( "@/p5/sketches/audio/motion-foley/options" ),
   "p5:audio/ping-pong": () => import( "@/p5/sketches/audio/ping-pong/options" ),
   "p5:audio/voice-portrait": () => import( "@/p5/sketches/audio/voice-portrait/options" ),
+  "p5:audio/wavetable-v1": () => import( "@/p5/sketches/audio/wavetable-v1/options" ),
   "p5:background/background-crosses": () => import( "@/p5/sketches/background/background-crosses/options" ),
   "p5:background/background-dots": () => import( "@/p5/sketches/background/background-dots/options" ),
   "p5:background/background-grid": () => import( "@/p5/sketches/background/background-grid/options" ),
