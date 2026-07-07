@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Setting up Social Templates Renderer..."
+echo "🚀 Setting up Sketchbook..."
 echo ""
 
 # Check if .env exists

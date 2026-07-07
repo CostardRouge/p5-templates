@@ -2,7 +2,7 @@
 
 ## Overview
 
-Social Templates Renderer is a full-stack application that enables the creation, parameterization, and rendering of p5.js sketches into video format. The system is designed to support automated video generation from creative coding sketches with a focus on scalability and maintainability.
+Sketchbook is a full-stack application that enables the creation, parameterization, and rendering of creative-coding sketches into video format. The system is designed to support automated video generation from creative coding sketches with a focus on scalability and maintainability.
 
 ## System Architecture
 

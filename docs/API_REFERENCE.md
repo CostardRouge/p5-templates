@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive reference for all API endpoints in the Social Templates Renderer application.
+This document provides a comprehensive reference for all API endpoints in the Sketchbook application.
 
 **Base URL:** `http://localhost:3000/api` (development)
 

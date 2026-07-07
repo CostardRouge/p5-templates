@@ -1,11 +1,11 @@
-# Social Templates Renderer
+# Sketchbook
 
-A Next.js app for building and exporting social media visuals using P5.js sketch templates. Configure templates through a UI, then render and export them as images or videos — either in-browser or via a headless Playwright backend.
+A Next.js app for building and exporting visuals from creative-coding sketches. Sketches run on multiple engines (p5.js, GSAP, Three.js); configure them through a UI, then render and export them as images or videos — either in-browser or via a headless Playwright backend.
 
 ## Stack
 
 - **Next.js 15** (App Router) · **TypeScript** · **Tailwind CSS**
-- **P5.js** for rendering sketches
+- **p5.js**, **GSAP**, and **Three.js** rendering engines
 - **Prisma + PostgreSQL** for persistence
 - **BullMQ + Redis** for background job processing
 - **MinIO** for S3-compatible video/image storage
@@ -100,7 +100,7 @@ src/
 ├── app/              # Next.js pages & API routes
 ├── components/       # React components
 ├── lib/              # Core business logic
-├── p5-sketches/      # P5.js sketch templates
+├── templates/        # The sketches themselves (p5/gsap/threejs) + shared utils
 └── utils/            # Utility helpers
 prisma/               # DB schema & migrations
 public/assets/        # Fonts, images, libraries

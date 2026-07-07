@@ -1,6 +1,6 @@
 # Sketch Creation Guide
 
-A comprehensive guide to creating p5.js sketches for the Social Templates Renderer.
+A comprehensive guide to creating p5.js sketches for Sketchbook.
 
 ## Table of Contents
 
