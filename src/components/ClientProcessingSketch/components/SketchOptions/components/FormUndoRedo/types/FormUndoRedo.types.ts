@@ -71,7 +71,6 @@ export type FormUndoRedoContextType<T = any> = {
 export type FormUndoRedoConfig = {
   maxHistory?: number;
   hotkeys?: boolean;
-  captureInitial?: boolean;
   autoCapture?: FormUndoRedoAutoCaptureMode;
   debounceMs?: number;
   watchPaths?: string[];

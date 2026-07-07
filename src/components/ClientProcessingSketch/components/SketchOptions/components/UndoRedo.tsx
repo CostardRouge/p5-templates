@@ -4,6 +4,12 @@ import {
 
 import useFormUndoRedo from "@/components/ClientProcessingSketch/components/SketchOptions/components/FormUndoRedo/hooks/useFormUndoRedo";
 
+/**
+ * Undo/redo buttons for the sketch options form. Must render inside
+ * <FormUndoRedo /> (which itself lives inside the form's FormProvider).
+ * Clicks stop propagation so the buttons can sit in collapsible headers
+ * without toggling them.
+ */
 export default function UndoRedo() {
   const {
     redo, undo, canUndo, canRedo
@@ -12,21 +18,31 @@ export default function UndoRedo() {
   return (
     <div className="flex gap-1">
       <button
-        onClick={ undo }
+        type="button"
+        onClick={ ( e ) => {
+          e.stopPropagation();
+          undo();
+        } }
         disabled={ !canUndo }
-        className="p-0.5 rounded-xl bg-background border border-theme text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+        className="text-xs flex items-center text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         title={ canUndo ? "Undo (Cmd/Ctrl+Z)" : "No history to undo" }
+        aria-label="Undo"
       >
-        <Undo className="h-3" />
+        <Undo className="h-3.5" />
       </button>
 
       <button
-        onClick={ redo }
+        type="button"
+        onClick={ ( e ) => {
+          e.stopPropagation();
+          redo();
+        } }
         disabled={ !canRedo }
-        className="p-0.5 rounded-xl bg-background border border-theme text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+        className="text-xs flex items-center text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         title={ canRedo ? "Redo (Cmd/Ctrl+Shift+Z)" : "No history to redo" }
+        aria-label="Redo"
       >
-        <Redo className="h-3" />
+        <Redo className="h-3.5" />
       </button>
     </div>
   );

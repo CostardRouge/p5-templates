@@ -21,7 +21,6 @@ function BasicForm() {
         maxHistory={50}
         hotkeys
         autoCapture="debounced"
-        captureInitial
       >
         <UndoRedo />
       </FormUndoRedo>
@@ -371,7 +370,6 @@ function SketchOptions() {
           "slides",
           "animation"
         ]}
-        captureInitial
         usePatches={true}
         debug={process.env.NODE_ENV === "development"}
       >

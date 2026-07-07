@@ -4,9 +4,6 @@ import React from "react";
 import {
   useFormContext, FieldValues
 } from "react-hook-form";
-import {
-  nanoid
-} from "nanoid";
 
 import FormUndoRedoContext from "./contexts/FormUndoRedoContext";
 import {
@@ -33,10 +30,20 @@ export type FormUndoRedoProps<T extends FieldValues = FieldValues> =
     children?: React.ReactNode;
   };
 
+// Batch ids only need to be unique within a session; a counter plus a random
+// suffix avoids pulling in an id library for this.
+let batchIdCounter = 0;
+
+const createBatchId = () =>
+  `batch-${ ++batchIdCounter }-${ Math.random().toString( 36 )
+    .slice(
+      2,
+      8
+    ) }`;
+
 export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   maxHistory = 50,
   hotkeys = true,
-  captureInitial = false,
   autoCapture = "off",
   debounceMs = 400,
   watchPaths,
@@ -83,9 +90,14 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     totalOperations: 0
   } );
 
+  const [
+    debugEnabled,
+    setDebugEnabled
+  ] = React.useState( debug );
+
   const debugLog = React.useCallback(
     ( ...args: any[] ) => {
-      if ( debug ) {
+      if ( debugEnabled ) {
         console.log(
           "[FormUndoRedo]",
           ...args
@@ -93,7 +105,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
     },
     [
-      debug
+      debugEnabled
     ]
   );
 
@@ -259,9 +271,18 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
 
       const previous = lastCommittedRef.current;
+
+      if ( !previous ) {
+        // Nothing to undo back to — just adopt the new state as the baseline.
+        setCommitted( current );
+        return;
+      }
+
+      // The past stack holds the state *before* each change, so a single undo
+      // restores it. Patches (previous → current) describe the change itself.
       const entry = createHistoryEntry(
-        current,
-        usePatches ? previous || undefined : undefined,
+        previous,
+        usePatches ? current : undefined,
         description,
         undefined,
         currentBatchIdRef.current || undefined
@@ -435,6 +456,11 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
       try {
         const targetEntry = targetStack[ index ];
+        const currentEntry = createHistoryEntry(
+          snapshot(),
+          usePatches ? targetEntry.state : undefined,
+          direction === "past" ? "Redo point" : "Undo point"
+        );
 
         reset(
           targetEntry.state,
@@ -442,11 +468,14 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         );
         setCommitted( targetEntry.state );
 
-        // Reorganize stacks
+        // Reorganize stacks. Equivalent to repeated undo/redo down to the
+        // target: skipped entries land on the opposite stack in reverse
+        // (pop-from-the-end) order, with the pre-jump state on top-most.
         if ( direction === "past" ) {
           stacks.future = [
-            ...stacks.past.slice( index + 1 ),
-            ...stacks.future
+            ...stacks.future,
+            currentEntry,
+            ...stacks.past.slice( index + 1 ).reverse()
           ];
           stacks.past = stacks.past.slice(
             0,
@@ -455,12 +484,13 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         } else {
           stacks.past = [
             ...stacks.past,
-            ...stacks.future.slice(
-              0,
-              index
-            )
+            currentEntry,
+            ...stacks.future.slice( index + 1 ).reverse()
           ];
-          stacks.future = stacks.future.slice( index + 1 );
+          stacks.future = stacks.future.slice(
+            0,
+            index
+          );
         }
 
         syncFlags();
@@ -485,8 +515,10 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     [
       reset,
       resetOptions,
+      snapshot,
       setCommitted,
       syncFlags,
+      usePatches,
       debugLog
     ]
   );
@@ -513,7 +545,7 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
   const startBatch = React.useCallback(
     ( description?: string ): string => {
-      const batchId = nanoid( 8 );
+      const batchId = createBatchId();
 
       currentBatchIdRef.current = batchId;
       currentBatchDescriptionRef.current = description || null;
@@ -609,10 +641,6 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     []
   );
 
-  const [
-    debugEnabled,
-    setDebugEnabled
-  ] = React.useState( debug );
   const enableDebug = React.useCallback(
     ( enabled: boolean ) => {
       setDebugEnabled( enabled );
@@ -625,25 +653,11 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     () => {
       loadPersistedHistory();
 
-      const initial = snapshot();
-
-      setCommitted( initial );
-
-      if ( captureInitial ) {
-        const entry = createHistoryEntry(
-          initial,
-          undefined,
-          "Initial state"
-        );
-
-        stacksRef.current.past.push( entry );
-        syncFlags();
-      }
+      setCommitted( snapshot() );
 
       debugLog(
         "Initialized",
         {
-          captureInitial,
           autoCapture,
           maxHistory,
           usePatches
@@ -652,13 +666,11 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     },
     [
       autoCapture,
-      captureInitial,
       debugLog,
       loadPersistedHistory,
       maxHistory,
       setCommitted,
       snapshot,
-      syncFlags,
       usePatches
     ]
   );
