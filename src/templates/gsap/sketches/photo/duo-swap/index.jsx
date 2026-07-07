@@ -236,6 +236,13 @@ export default function DuoSwap( {
     )
   );
 
+  const transition = sketch.transition ?? "scale";
+  // In the static mode the tiles simply carry their swap opacity — no GSAP
+  // layers. A non-normal blend mode is the only reason to pay for an isolated
+  // compositing context, so gate both on actual use.
+  const revealMotion = transition !== "none";
+  const useBlend = blendMode !== "normal";
+
   const urls = resolveImages( options );
   const imageA = imageAt(
     urls,
@@ -336,94 +343,81 @@ export default function DuoSwap( {
         )
       );
 
-      const random = makeRandom( seed );
-      const rawOrders = tileEls.map( (
-        _, index
-      ) => tileOrder(
-        pattern,
-        Math.floor( index / columns ),
-        index % columns,
-        rows,
-        columns,
-        angleRad,
-        random()
-      ) );
+      // Static "none" mode does no timeline work at all — the tiles carry their
+      // swap opacity inline (see the render below), so the loop is empty and a
+      // rebuild on every settings edit stays essentially free. Motion modes
+      // build one yoyo per tile.
+      if ( transition !== "none" ) {
+        const random = makeRandom( seed );
+        const rawOrders = tileEls.map( (
+          _, index
+        ) => tileOrder(
+          pattern,
+          Math.floor( index / columns ),
+          index % columns,
+          rows,
+          columns,
+          angleRad,
+          random()
+        ) );
 
-      const minOrder = Math.min( ...rawOrders );
-      const maxOrder = Math.max( ...rawOrders );
-      const orderSpan = maxOrder - minOrder;
-      const degenerate = orderSpan <= 0;
+        const minOrder = Math.min( ...rawOrders );
+        const maxOrder = Math.max( ...rawOrders );
+        const orderSpan = maxOrder - minOrder;
+        const degenerate = orderSpan <= 0;
 
-      // With a normalised order the last tile begins at `spread · duration` and
-      // its forward+back reveal (2·rise) lands exactly on `duration`.
-      const effectiveSpread = degenerate ? 0 : spread;
-      const rise = ( duration * ( 1 - effectiveSpread ) ) / 2;
+        // With a normalised order the last tile begins at `spread · duration`
+        // and its forward+back reveal (2·rise) lands exactly on `duration`.
+        const effectiveSpread = degenerate ? 0 : spread;
+        const rise = ( duration * ( 1 - effectiveSpread ) ) / 2;
 
-      const {
-        enter, neutral
-      } = transitionStates(
-        transition,
-        direction,
-        tileScale,
-        tileRotate,
-        perspective,
-        radius
-      );
+        const {
+          enter, neutral
+        } = transitionStates(
+          transition,
+          direction,
+          tileScale,
+          tileRotate,
+          perspective,
+          radius
+        );
 
-      // "none" keeps the reveal system but holds it still: every tile rests in
-      // its fully-swapped state so the opposite image sits statically over the
-      // seam (a fixed swap), with no tweens on the timeline.
-      const revealMotion = transition !== "none";
+        tileEls.forEach( (
+          el, index
+        ) => {
+          const u = degenerate ? 0 : ( rawOrders[ index ] - minOrder ) / orderSpan;
+          const start = u * effectiveSpread * duration;
 
-      tileEls.forEach( (
-        el, index
-      ) => {
-        if ( !revealMotion ) {
+          // Frame-0 state: hidden in the "enter" pose, so the loop's start and
+          // end states line up.
           tl.set(
             el,
             {
-              ...neutral,
-              opacity: overlayOpacity
+              ...enter,
+              opacity: 0
             },
             0
           );
 
-          return;
-        }
-
-        const u = degenerate ? 0 : ( rawOrders[ index ] - minOrder ) / orderSpan;
-        const start = u * effectiveSpread * duration;
-
-        // Frame-0 state: hidden in the "enter" pose. Explicitly set so that
-        // before a tile's window opens (and after it closes) it reads identical
-        // — the loop's start and end states line up.
-        tl.set(
-          el,
-          {
-            ...enter,
-            opacity: 0
-          },
-          0
-        );
-
-        tl.fromTo(
-          el,
-          {
-            ...enter,
-            opacity: 0
-          },
-          {
-            ...neutral,
-            opacity: overlayOpacity,
-            duration: rise,
-            ease,
-            yoyo: true,
-            repeat: 1,
-            immediateRender: false
-          },
-          start
-        );
-      } );
+          tl.fromTo(
+            el,
+            {
+              ...enter,
+              opacity: 0
+            },
+            {
+              ...neutral,
+              opacity: overlayOpacity,
+              duration: rise,
+              ease,
+              yoyo: true,
+              repeat: 1,
+              immediateRender: false
+            },
+            start
+          );
+        } );
+      }
 
       // Optional whole-frame breathing zoom. The sine ease returns to its
       // starting value at progress 1, so it stays seamless.
@@ -471,7 +465,7 @@ export default function DuoSwap( {
           width: "100%",
           height: "100%",
           overflow: "hidden",
-          isolation: "isolate",
+          isolation: useBlend ? "isolate" : "auto",
           willChange: "transform"
         } }
       >
@@ -487,7 +481,7 @@ export default function DuoSwap( {
                 width: "100%",
                 height: "100%",
                 objectFit: fit,
-                filter,
+                filter: filter === "none" ? undefined : filter,
                 clipPath: panelAClip
               } }
             />
@@ -506,7 +500,7 @@ export default function DuoSwap( {
                 width: "100%",
                 height: "100%",
                 objectFit: fit,
-                filter,
+                filter: filter === "none" ? undefined : filter,
                 clipPath: panelBClip
               } }
             />
@@ -545,7 +539,7 @@ export default function DuoSwap( {
           style={ {
             position: "absolute",
             inset: 0,
-            mixBlendMode: blendMode
+            mixBlendMode: useBlend ? blendMode : undefined
           } }
         >
           { tiles.map( (
@@ -564,12 +558,17 @@ export default function DuoSwap( {
                 borderRadius: radius,
                 overflow: "hidden",
                 boxShadow: shadow,
+                // Static tiles carry their swap opacity directly; motion tiles
+                // start hidden and GSAP drives them.
+                opacity: revealMotion ? 0 : overlayOpacity,
                 backgroundImage: tile.image ? `url("${ tile.image }")` : undefined,
                 backgroundRepeat: "no-repeat",
                 backgroundSize,
                 backgroundPosition: `${ -tile.left }px ${ -tile.top }px`,
-                filter,
-                willChange: "transform, opacity, clip-path"
+                filter: filter === "none" ? undefined : filter,
+                // Only promote to a compositor layer while actually animating —
+                // a permanent layer per tile would blow up with large grids.
+                willChange: revealMotion ? "transform, opacity" : undefined
               } }
             />
           ) ) }
