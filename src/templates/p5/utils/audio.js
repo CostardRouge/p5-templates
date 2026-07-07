@@ -206,6 +206,233 @@ function playTickOn(
   };
 }
 
+// Air-displacement whoosh: a noise burst through a bandpass whose centre
+// frequency rises then falls across the sound (the classic fly-by sweep),
+// with an optional stereo pan so the pass can be placed left/right. The
+// bandpass strips most of the noise energy, so a fixed makeup gain keeps
+// `gain` on the same perceived scale as the oscillator presets.
+const WHOOSH_MAKEUP = 2.2;
+
+function playWhooshOn(
+  ctx, destination, startTime, {
+    duration = 0.45,
+    freq = 550,
+    sweep = 2.4,
+    q = 1.4,
+    gain = 0.5,
+    pan = 0
+  } = {}
+) {
+  const frameCount = Math.max(
+    1,
+    Math.floor( ctx.sampleRate * duration )
+  );
+  const buffer = ctx.createBuffer(
+    1,
+    frameCount,
+    ctx.sampleRate
+  );
+  const data = buffer.getChannelData( 0 );
+
+  for ( let i = 0; i < frameCount; i++ ) {
+    data[ i ] = Math.random() * 2 - 1;
+  }
+
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const envelope = ctx.createGain();
+
+  source.buffer = buffer;
+  filter.type = "bandpass";
+  filter.Q.value = q;
+
+  // Rise into the pass, fall away after it.
+  const peakAt = startTime + duration * 0.35;
+
+  filter.frequency.setValueAtTime(
+    Math.max(
+      1,
+      freq * 0.55
+    ),
+    startTime
+  );
+  filter.frequency.exponentialRampToValueAtTime(
+    Math.max(
+      1,
+      freq * sweep
+    ),
+    peakAt
+  );
+  filter.frequency.exponentialRampToValueAtTime(
+    Math.max(
+      1,
+      freq * 0.45
+    ),
+    startTime + duration
+  );
+
+  envelope.gain.setValueAtTime(
+    MIN_GAIN,
+    startTime
+  );
+  envelope.gain.exponentialRampToValueAtTime(
+    Math.max(
+      MIN_GAIN,
+      gain * WHOOSH_MAKEUP
+    ),
+    peakAt
+  );
+  envelope.gain.exponentialRampToValueAtTime(
+    MIN_GAIN,
+    startTime + duration
+  );
+
+  source.connect( filter );
+  filter.connect( envelope );
+
+  let panner = null;
+
+  if ( pan && typeof ctx.createStereoPanner === "function" ) {
+    panner = ctx.createStereoPanner();
+    panner.pan.value = Math.max(
+      -1,
+      Math.min(
+        1,
+        pan
+      )
+    );
+    envelope.connect( panner );
+    panner.connect( destination );
+  } else {
+    envelope.connect( destination );
+  }
+
+  source.start( startTime );
+  source.stop( startTime + duration + 0.05 );
+
+  return {
+    source,
+    filter,
+    envelope,
+    panner
+  };
+}
+
+// One grain of a continuous drone bed: band-limited noise (breath) over a soft
+// sine sub an octave below, with a trapezoid envelope so grains fired at a
+// regular spacing crossfade into a steady, seamless hum. Continuous sounds are
+// built from overlapping grains rather than an endless node so the capture
+// pipeline (which replays logged one-shot events offline) reproduces them.
+const DRONE_MAKEUP = 2.0;
+
+function playDroneOn(
+  ctx, destination, startTime, {
+    duration = 0.6,
+    freq = 175,
+    q = 0.9,
+    gain = 0.4,
+    sub = 0.5,
+    pan = 0
+  } = {}
+) {
+  const frameCount = Math.max(
+    1,
+    Math.floor( ctx.sampleRate * duration )
+  );
+  const buffer = ctx.createBuffer(
+    1,
+    frameCount,
+    ctx.sampleRate
+  );
+  const data = buffer.getChannelData( 0 );
+
+  for ( let i = 0; i < frameCount; i++ ) {
+    data[ i ] = Math.random() * 2 - 1;
+  }
+
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const noiseGain = ctx.createGain();
+  const osc = ctx.createOscillator();
+  const oscGain = ctx.createGain();
+  const envelope = ctx.createGain();
+
+  source.buffer = buffer;
+  filter.type = "bandpass";
+  filter.frequency.value = Math.max(
+    1,
+    freq
+  );
+  filter.Q.value = q;
+  noiseGain.gain.value = DRONE_MAKEUP;
+
+  osc.type = "sine";
+  osc.frequency.value = Math.max(
+    1,
+    freq * 0.5
+  );
+  oscGain.gain.value = sub;
+
+  // Trapezoid: linear ramps overlap-add to a near-constant level, where
+  // exponential ones would comb.
+  const rise = duration * 0.3;
+
+  envelope.gain.setValueAtTime(
+    0,
+    startTime
+  );
+  envelope.gain.linearRampToValueAtTime(
+    gain,
+    startTime + rise
+  );
+  envelope.gain.setValueAtTime(
+    gain,
+    startTime + duration - rise
+  );
+  envelope.gain.linearRampToValueAtTime(
+    0,
+    startTime + duration
+  );
+
+  source.connect( filter );
+  filter.connect( noiseGain );
+  noiseGain.connect( envelope );
+  osc.connect( oscGain );
+  oscGain.connect( envelope );
+
+  let panner = null;
+
+  if ( pan && typeof ctx.createStereoPanner === "function" ) {
+    panner = ctx.createStereoPanner();
+    panner.pan.value = Math.max(
+      -1,
+      Math.min(
+        1,
+        pan
+      )
+    );
+    envelope.connect( panner );
+    panner.connect( destination );
+  } else {
+    envelope.connect( destination );
+  }
+
+  source.start( startTime );
+  source.stop( startTime + duration + 0.05 );
+  osc.start( startTime );
+  osc.stop( startTime + duration + 0.05 );
+
+  return {
+    source,
+    filter,
+    noiseGain,
+    osc,
+    oscGain,
+    envelope,
+    panner
+  };
+}
+
 function playSampleOn(
   ctx, destination, startTime, buffer, {
     gain = 1,
@@ -267,6 +494,22 @@ function scheduleOn(
       break;
     case "tick":
       playTickOn(
+        ctx,
+        destination,
+        startTime,
+        params
+      );
+      break;
+    case "whoosh":
+      playWhooshOn(
+        ctx,
+        destination,
+        startTime,
+        params
+      );
+      break;
+    case "drone":
+      playDroneOn(
         ctx,
         destination,
         startTime,
@@ -339,6 +582,53 @@ function playTickLive( params ) {
     handles.source.disconnect();
     handles.filter.disconnect();
     handles.envelope.disconnect();
+  };
+}
+
+function playWhooshLive( params ) {
+  const ctx = ensureContext();
+
+  if ( !ctx ) {
+    return;
+  }
+
+  const handles = playWhooshOn(
+    ctx,
+    _masterGain,
+    ctx.currentTime,
+    params
+  );
+
+  handles.source.onended = () => {
+    handles.source.disconnect();
+    handles.filter.disconnect();
+    handles.envelope.disconnect();
+    handles.panner?.disconnect();
+  };
+}
+
+function playDroneLive( params ) {
+  const ctx = ensureContext();
+
+  if ( !ctx ) {
+    return;
+  }
+
+  const handles = playDroneOn(
+    ctx,
+    _masterGain,
+    ctx.currentTime,
+    params
+  );
+
+  handles.source.onended = () => {
+    handles.source.disconnect();
+    handles.filter.disconnect();
+    handles.noiseGain.disconnect();
+    handles.osc.disconnect();
+    handles.oscGain.disconnect();
+    handles.envelope.disconnect();
+    handles.panner?.disconnect();
   };
 }
 
@@ -559,6 +849,12 @@ const audio = {
         break;
       case "tick":
         playTickLive( params );
+        break;
+      case "whoosh":
+        playWhooshLive( params );
+        break;
+      case "drone":
+        playDroneLive( params );
         break;
       case "bounce":
         playVoiceLive( {
