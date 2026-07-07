@@ -3,35 +3,35 @@ export const formValues = {
   timeScale: 1,
   motion: {
     direction: "backward" as "backward" | "forward",
-    swimX: 0.11,
-    swimY: 0.08,
-    swimWaves: 2,
-    swimSpeed: 1,
+    swimX: 0.25,
+    swimY: 0.19,
+    swimWaves: 4,
+    swimSpeed: -2.3,
     swimPhase: 1.7
   },
   dragon: {
-    pipeCount: 3,
-    pipeRadius: 0.09,
+    pipeCount: 4,
+    pipeRadius: 0.07,
     braidRadius: 0.13,
-    twist: 0.8,
+    twist: 0.14,
     spin: 0,
     radiusPulse: 0.35,
     pulseWaves: 3,
-    pulseTravel: 2,
-    tailThin: 0.3,
-    headGap: 1.9,
-    headMerge: 1,
-    headRound: 0.1
+    pulseTravel: -0.45,
+    tailThin: 0.9,
+    headGap: 1.3,
+    headMerge: 1.25,
+    headRound: 0.4
   },
   dodge: {
-    hesitation: 0.25,
-    sharpness: 1.6,
-    bunch: 0.5
+    hesitation: 0,
+    sharpness: 2.1,
+    bunch: 0.32
   },
   obstacles: {
-    segmentsPerLoop: 5,
-    seed: 7,
-    weave: 0.36,
+    segmentsPerLoop: 9,
+    seed: 128,
+    weave: 0.29,
     glassAlpha: 0.32,
     thickness: 0.12,
     edgeSoftness: 0.03,
@@ -52,9 +52,9 @@ export const formValues = {
       26,
       41
     ],
-    wallGlow: 0.7,
-    ribs: 2,
-    fogDensity: 0.13
+    wallGlow: 1.82,
+    ribs: 3,
+    fogDensity: 0.135
   },
   camera: {
     x: 0,
@@ -62,7 +62,7 @@ export const formValues = {
     z: 2.5,
     pitch: -0.05,
     yaw: 0,
-    fov: 62,
+    fov: 90,
     fpvFollow: 0,
     fpvAim: 0,
     fpvBank: 0,
