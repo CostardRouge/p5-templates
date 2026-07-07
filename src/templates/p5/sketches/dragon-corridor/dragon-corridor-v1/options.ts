@@ -10,26 +10,26 @@ export const formValues = {
     swimPhase: 1.7
   },
   dragon: {
-    pipeCount: 3,
-    pipeRadius: 0.09,
-    braidRadius: 0.13,
-    twist: 0.8,
-    spin: 0,
+    pipeCount: 4,
+    pipeRadius: 0.05,
+    braidRadius: 0.12,
+    twist: 2.57,
+    spin: -1.9,
     radiusPulse: 0.35,
-    pulseWaves: 3,
+    pulseWaves: 7,
     pulseTravel: 2,
     tailThin: 0.3,
-    headGap: 1.9,
+    headGap: 0.65,
     headMerge: 1,
-    headRound: 0.1
+    headRound: 0.33
   },
   dodge: {
-    hesitation: 0.25,
-    sharpness: 1.6,
-    bunch: 0.5
+    hesitation: 0,
+    sharpness: 0.55,
+    bunch: 0
   },
   obstacles: {
-    segmentsPerLoop: 5,
+    segmentsPerLoop: 10,
     seed: 7,
     weave: 0.36,
     glassAlpha: 0.32,
@@ -39,7 +39,7 @@ export const formValues = {
     frostScale: 9,
     milk: 0.3,
     glassTint: 0.3,
-    edgeGlow: 0.8,
+    edgeGlow: 1.07,
     glassColor: [
       140,
       200,
@@ -53,7 +53,7 @@ export const formValues = {
       41
     ],
     wallGlow: 0.7,
-    ribs: 2,
+    ribs: 5,
     fogDensity: 0.13
   },
   camera: {
@@ -62,22 +62,32 @@ export const formValues = {
     z: 2.5,
     pitch: -0.05,
     yaw: 0,
-    fov: 62,
-    fpvFollow: 0,
-    fpvAim: 0,
+    fov: 90,
+    fpvFollow: 0.19,
+    fpvAim: 0.19,
     fpvBank: 0,
     fpvSmooth: 0.5,
     quality: 0.85
   },
+  sound: {
+    whooshEnabled: true,
+    whooshVolume: 0.36,
+    whooshPitch: 0.61,
+    whooshLength: 0.88,
+    whooshPan: 1,
+    humEnabled: false,
+    humVolume: 0.45,
+    humPitch: 0.53
+  },
   colors: {
     hueSpeed: 1,
-    hueSpread: 1.6,
+    hueSpread: 1.14,
     huePhase: 0.4,
-    lengthHueShift: 0.22,
-    pipeHueShift: 0.33,
-    shimmer: 0.9,
-    saturation: 0.9,
-    brightness: 1.1
+    lengthHueShift: 0.43,
+    pipeHueShift: -0.47,
+    shimmer: 1.43,
+    saturation: 0.47,
+    brightness: 1.13
   },
   light: {
     azimuth: -0.6,
@@ -86,8 +96,8 @@ export const formValues = {
     diffuse: 0.8,
     specular: 0.5,
     specPower: 32,
-    fresnelPower: 2.8,
-    rimStrength: 0.45
+    fresnelPower: 2.45,
+    rimStrength: 0.3
   },
   backgroundColor: [
     4,
@@ -474,6 +484,62 @@ export const formConfiguration: Record<string, any> = {
         min: 0.4,
         max: 1,
         step: 0.05
+      }
+    }
+  },
+  sound: {
+    component: "nested-object",
+    label: "Sound",
+    fields: {
+      whooshEnabled: {
+        label: "Whoosh on wall pass",
+        component: "checkbox"
+      },
+      whooshVolume: {
+        label: "Whoosh volume",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      whooshPitch: {
+        label: "Whoosh pitch",
+        component: "slider",
+        min: 0.4,
+        max: 2.5,
+        step: 0.01
+      },
+      whooshLength: {
+        label: "Whoosh length (s)",
+        component: "slider",
+        min: 0.1,
+        max: 1.2,
+        step: 0.01
+      },
+      whooshPan: {
+        label: "Whoosh stereo pan",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      humEnabled: {
+        label: "Dragon hum (constant)",
+        component: "checkbox"
+      },
+      humVolume: {
+        label: "Hum volume",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      humPitch: {
+        label: "Hum pitch",
+        component: "slider",
+        min: 0.4,
+        max: 2.5,
+        step: 0.01
       }
     }
   },

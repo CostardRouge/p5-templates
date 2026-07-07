@@ -3,6 +3,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
+import audio from "@/p5/utils/audio.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -610,6 +611,15 @@ function openCentre(
   ];
 }
 
+// Camera position along the corridor, in wall units, from the previous frame —
+// crossing an integer means a glass wall just swept past the camera plane.
+let lastWallU = null;
+
+// Index of the last fired hum grain. The dragon's constant hum is a bed of
+// overlapping drone grains fired at a fixed count per loop, so it loops
+// seamlessly, pauses with the animation, and records deterministically.
+let lastGrainIndex = null;
+
 sketch.setup(
   () => {},
   {}
@@ -626,6 +636,7 @@ sketch.draw( () => {
   const camera = o.camera ?? {};
   const colors = o.colors ?? {};
   const light = o.light ?? {};
+  const sound = o.sound ?? {};
 
   p.clear();
   p.background( ...( o.backgroundColor ?? [
@@ -812,6 +823,89 @@ sketch.draw( () => {
   const dxds = ( weaveAt( camS + bankEps )[ 0 ] - weaveAt( camS - bankEps )[ 0 ] )
     / ( 2 * bankEps );
   const roll = fpvBank * dxds * direction;
+
+  // ── Whoosh on every wall pass ──────────────────────────────────────────────
+  // The camera sits at u = camS / SEG in wall units; each time u crosses an
+  // integer, a glass slab has just swept past the camera plane. The comparison
+  // is wrap-aware (the loop seam jumps u by exactly `period`), and scrub jumps
+  // of more than two walls stay silent instead of machine-gunning. In capture
+  // mode audio.trigger only logs the event, so recordings get the whoosh muxed
+  // in at the exact frame time.
+  const wallU = camS / SEG;
+
+  if ( lastWallU === null ) {
+    lastWallU = wallU;
+  } else if ( wallU !== lastWallU ) {
+    let delta = wallU - lastWallU;
+
+    if ( delta > period / 2 ) {
+      delta -= period;
+    } else if ( delta < -period / 2 ) {
+      delta += period;
+    }
+
+    const crossings = Math.floor( wallU ) - Math.floor( wallU - delta );
+
+    if ( ( sound.whooshEnabled ?? true )
+      && crossings !== 0
+      && Math.abs( crossings ) <= 2 ) {
+      // The wall just crossed: its blocked half places the whoosh in the
+      // stereo field (left/right walls pan, top/bottom shift the pitch).
+      const crossed = delta > 0 ? Math.floor( wallU ) : Math.ceil( wallU );
+      const dir = dirs[ ( ( crossed % period ) + period ) % period ];
+
+      const panAmount = sound.whooshPan ?? 0.7;
+      const pitch = sound.whooshPitch ?? 1;
+      const pitchShift = dir === 0 ? 1.18 : dir === 2 ? 0.85 : 1;
+
+      audio.trigger(
+        "whoosh",
+        {
+          duration: sound.whooshLength ?? 0.45,
+          freq: 550 * pitch * pitchShift,
+          gain: 0.55 * ( sound.whooshVolume ?? 0.6 ),
+          pan: dir === 1 ? panAmount : dir === 3 ? -panAmount : 0
+        }
+      );
+    }
+
+    lastWallU = wallU;
+  }
+
+  // ── Constant dragon hum ────────────────────────────────────────────────────
+  // A bed of overlapping drone grains fired at a fixed count per loop: the
+  // trapezoid envelopes crossfade into a steady breathy rumble that follows the
+  // head in the stereo field, wobbles gently with the swim, loops seamlessly,
+  // and (being one-shot events) records correctly in deterministic capture.
+  if ( sound.humEnabled ?? true ) {
+    const loopDuration = sketch.sketchOptions?.animation?.duration ?? 12;
+    const grainsPerLoop = Math.max(
+      4,
+      Math.round( loopDuration / 0.35 )
+    );
+    const grainIndex = Math.floor( animation.progression * grainsPerLoop ) % grainsPerLoop;
+
+    if ( grainIndex !== lastGrainIndex ) {
+      lastGrainIndex = grainIndex;
+
+      const grainSpacing = loopDuration / grainsPerLoop;
+      const humPitch = sound.humPitch ?? 1;
+      const wobble = 1 + 0.1 * Math.sin( swimT );
+
+      audio.trigger(
+        "drone",
+        {
+          duration: grainSpacing * 2.2,
+          freq: 175 * humPitch * wobble,
+          gain: 0.4 * ( sound.humVolume ?? 0.45 ),
+          sub: 0.4,
+          pan: headW[ 0 ] * 0.8
+        }
+      );
+    }
+  } else {
+    lastGrainIndex = null;
+  }
 
   const az = light.azimuth ?? -0.6;
   const el = light.elevation ?? 0.7;
