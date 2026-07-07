@@ -37,7 +37,7 @@ import MarqueeRows from "@/gsap/sketches/photo/marquee-rows/index.jsx";
 import SplitColumns from "@/gsap/sketches/photo/split-columns/index.jsx";
 import GridWave from "@/gsap/sketches/photo/grid-wave/index.jsx";
 import MosaicMorph from "@/gsap/sketches/photo/mosaic-morph/index.jsx";
-import DuoMix from "@/gsap/sketches/photo/duo-mix/index.jsx";
+import DuoSwap from "@/gsap/sketches/photo/duo-swap/index.jsx";
 import StackFan from "@/gsap/sketches/photo/stack-fan/index.jsx";
 import StackPeel from "@/gsap/sketches/photo/stack-peel/index.jsx";
 import OrbitRing from "@/gsap/sketches/photo/orbit-ring/index.jsx";
@@ -332,17 +332,15 @@ describe(
         selector: ".mm-tile"
       },
       {
-        name: "duo-mix",
-        Component: DuoMix,
+        name: "duo-swap",
+        Component: DuoSwap,
         options: baseOptions( {
-          grid: {
-            rows: 4,
-            columns: 3
-          },
+          columns: 3,
+          rows: 2,
           pattern: "wave",
           transition: "scale"
         } ),
-        selector: ".dm-tile"
+        selector: ".ds-tile"
       },
       {
         name: "stack-fan",
@@ -532,16 +530,14 @@ describe(
 );
 
 describe(
-  "duo-mix static mode",
+  "duo-swap static mode",
   () => {
     it(
-      "holds every tile fully revealed with no motion when transition is 'none'",
+      "holds every tile fully swapped with no motion when transition is 'none'",
       () => {
         const options = baseOptions( {
-          grid: {
-            rows: 4,
-            columns: 3
-          },
+          columns: 3,
+          rows: 2,
           transition: "none",
           overlayOpacity: 0.6,
           breathing: 0
@@ -549,10 +545,10 @@ describe(
         const {
           tl, stage, ctx
         } = buildTimeline(
-          DuoMix,
+          DuoSwap,
           options
         );
-        const tiles = Array.from( stage.querySelectorAll<HTMLElement>( ".dm-tile" ) );
+        const tiles = Array.from( stage.querySelectorAll<HTMLElement>( ".ds-tile" ) );
 
         expect( tiles.length ).toBeGreaterThan( 0 );
 

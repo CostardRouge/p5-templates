@@ -6,7 +6,7 @@ import {
 export const formValues = {
   ...( await getCommonPhotoValues() ),
 
-  // The tiled reveal reads best edge-to-edge, so start gap-less and square.
+  // Square-edged swap tiles read best; keep them gap-tight by default.
   cornerRadius: 0,
   gap: 0,
   shadow: {
@@ -17,22 +17,33 @@ export const formValues = {
   },
 
   swap: false,
-  grid: {
-    rows: 6,
-    columns: 5
-  },
-  pattern: "wave",
-  angle: 135,
-  transition: "scale",
+  splitAxis: "horizontal",
+  splitRatio: 0.5,
+  dividerWidth: 0,
+  dividerColor: [
+    255,
+    255,
+    255
+  ],
+
+  columns: 1,
+  rows: 2,
+  tileSize: 0.3,
+  centerX: 0.5,
+  centerY: 0.5,
+
+  transition: "none",
   direction: "up",
+  pattern: "checker",
+  angle: 128,
   tileScale: 0,
-  tileRotate: 0,
-  spread: 0.55,
+  tileRotate: 173,
+  spread: 0.51,
   overlayOpacity: 1,
   blendMode: "normal",
-  perspective: 1200,
+  perspective: 850,
   breathing: 0,
-  seed: 7
+  seed: 1
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -42,66 +53,72 @@ export const formConfiguration: Record<string, any> = {
     component: "checkbox",
     label: "Swap images"
   },
-  grid: {
-    component: "nested-object",
-    label: "Tiles",
-    fields: {
-      rows: {
-        component: "slider",
-        label: "Rows",
-        min: 1,
-        max: 24,
-        step: 1
-      },
-      columns: {
-        component: "slider",
-        label: "Columns",
-        min: 1,
-        max: 24,
-        step: 1
-      }
-    }
-  },
-  pattern: {
+  splitAxis: {
     component: "select",
-    label: "Reveal pattern",
+    label: "Split axis",
     options: [
       {
-        label: "Wave",
-        value: "wave"
+        label: "Vertical (side by side)",
+        value: "vertical"
       },
       {
-        label: "Checker",
-        value: "checker"
-      },
-      {
-        label: "Random",
-        value: "random"
-      },
-      {
-        label: "Radial",
-        value: "radial"
-      },
-      {
-        label: "Spiral",
-        value: "spiral"
-      },
-      {
-        label: "Rows",
-        value: "rows"
-      },
-      {
-        label: "Columns",
-        value: "columns"
+        label: "Horizontal (top / bottom)",
+        value: "horizontal"
       }
     ]
   },
-  angle: {
+  splitRatio: {
     component: "slider",
-    label: "Wave angle",
+    label: "Split position",
+    min: 0.05,
+    max: 0.95,
+    step: 0.01
+  },
+  dividerWidth: {
+    component: "slider",
+    label: "Divider width",
     min: 0,
-    max: 360,
+    max: 40,
     step: 1
+  },
+  dividerColor: {
+    component: "color",
+    label: "Divider color"
+  },
+  columns: {
+    component: "slider",
+    label: "Swap tiles across",
+    min: 1,
+    max: 12,
+    step: 1
+  },
+  rows: {
+    component: "slider",
+    label: "Swap tiles down",
+    min: 1,
+    max: 12,
+    step: 1
+  },
+  tileSize: {
+    component: "slider",
+    label: "Tile size",
+    min: 0.05,
+    max: 0.9,
+    step: 0.01
+  },
+  centerX: {
+    component: "slider",
+    label: "Tiles center X",
+    min: 0,
+    max: 1,
+    step: 0.01
+  },
+  centerY: {
+    component: "slider",
+    label: "Tiles center Y",
+    min: 0,
+    max: 1,
+    step: 0.01
   },
   transition: {
     component: "select",
@@ -155,6 +172,47 @@ export const formConfiguration: Record<string, any> = {
       }
     ]
   },
+  pattern: {
+    component: "select",
+    label: "Reveal pattern",
+    options: [
+      {
+        label: "Wave",
+        value: "wave"
+      },
+      {
+        label: "Checker",
+        value: "checker"
+      },
+      {
+        label: "Random",
+        value: "random"
+      },
+      {
+        label: "Radial",
+        value: "radial"
+      },
+      {
+        label: "Spiral",
+        value: "spiral"
+      },
+      {
+        label: "Rows",
+        value: "rows"
+      },
+      {
+        label: "Columns",
+        value: "columns"
+      }
+    ]
+  },
+  angle: {
+    component: "slider",
+    label: "Wave angle",
+    min: 0,
+    max: 360,
+    step: 1
+  },
   tileScale: {
     component: "slider",
     label: "Tile enter scale",
@@ -178,7 +236,7 @@ export const formConfiguration: Record<string, any> = {
   },
   overlayOpacity: {
     component: "slider",
-    label: "Mix opacity",
+    label: "Swap opacity",
     min: 0,
     max: 1,
     step: 0.01

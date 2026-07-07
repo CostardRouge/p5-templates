@@ -1,26 +1,24 @@
 "use client";
 
 /**
- * Duo Mix — two photos blended into one another through a grid of tiles.
+ * Duo Swap — two photos placed side by side, split down the middle, with a set
+ * of tiles at mid-frame whose content is *swapped* between the two images.
  *
- * The first image fills the whole frame as a base layer. On top, a grid of
- * tiles is a set of perfectly-registered windows into the *second* image — laid
- * out so that, at full reveal, the tiles reconstruct image B exactly over image
- * A. Each tile fades / scales / flips / slides / wipes image B in, holds, then
- * releases it again, so the frame morphs A → B → A on a seamless loop.
+ * The frame is divided by a movable seam: one side shows image A, the other
+ * image B. Both images are laid out as a full-frame `cover`, so a pixel at (x, y)
+ * belongs to the same spot in either photo. A grid of "swap tiles" then sits
+ * over the seam: a tile on image A's side is a window into image B (in perfect
+ * register), and a tile on image B's side is a window into image A — so each
+ * tile shows the opposite photo exactly where it would be, weaving the two
+ * pictures into one another.
  *
- * The reveal order is driven by a chosen pattern (wave, checker, random,
- * radial, spiral, rows, columns) and spread across the loop by a stagger, so
- * image B washes over image A like a tide. A `mix-blend-mode` + peak-opacity
- * pair lets the two photos genuinely blend (screen / multiply / difference / …)
- * instead of one simply covering the other.
- *
- * Seamlessness: every tile is a `fromTo` that yoyos (enter → neutral → enter)
- * inside a window fully contained in [0, duration]. At t=0 and t=duration all
- * tiles rest in their hidden "enter" state, so the loop wraps without a jump.
- * Reveal order is normalised (min → 0, max → 1) so the last tile always lands
- * exactly on `duration` regardless of pattern, filling the loop. Everything is
- * seeded, so the scrubbed frame-capture stays deterministic.
+ * The tiles reveal / hold / release the swapped content on a seamless loop using
+ * the shared reveal system (fade / scale / flip / slide / wipe, or a static
+ * "none" mode that simply holds the swap in place). Every tile is a `fromTo`
+ * that yoyos inside a window contained in [0, duration], the reveal order is
+ * normalised so the last tile lands exactly on `duration`, and all randomness
+ * is seeded — so the loop wraps seamlessly and stays deterministic under
+ * frame-stepped capture.
  */
 import {
   useTimeline,
@@ -90,7 +88,7 @@ function tileOrder(
     case "wave":
     default: {
       // Project the tile centre onto the angle direction so the reveal sweeps
-      // across the frame along an arbitrary heading (diagonals included).
+      // across the band along an arbitrary heading (diagonals included).
       const px = nx - 0.5;
       const py = ny - 0.5;
 
@@ -162,7 +160,7 @@ function transitionStates(
   };
 }
 
-export default function DuoMix( {
+export default function DuoSwap( {
   options
 } ) {
   const sketch = options?.sketch ?? {};
@@ -171,15 +169,15 @@ export default function DuoMix( {
     height: 1350
   };
 
-  const rows = Math.max(
-    1,
-    Math.round( sketch.grid?.rows ?? 6 )
-  );
   const columns = Math.max(
     1,
-    Math.round( sketch.grid?.columns ?? 5 )
+    Math.round( sketch.columns ?? 2 )
   );
-  const gap = sketch.gap ?? 0;
+  const rows = Math.max(
+    1,
+    Math.round( sketch.rows ?? 1 )
+  );
+  const gap = sketch.gap ?? 8;
   const radius = sketch.cornerRadius ?? 0;
   const fit = sketch.imageFit ?? "cover";
   const background = toCssColor(
@@ -190,9 +188,45 @@ export default function DuoMix( {
   const shadow = boxShadowCss( sketch.shadow );
 
   const swap = Boolean( sketch.swap );
-  const pattern = sketch.pattern ?? "wave";
-  const transition = sketch.transition ?? "scale";
-  const direction = sketch.direction ?? "up";
+  const splitAxis = sketch.splitAxis ?? "vertical";
+  const splitRatio = Math.max(
+    0.05,
+    Math.min(
+      0.95,
+      sketch.splitRatio ?? 0.5
+    )
+  );
+  const dividerWidth = Math.max(
+    0,
+    sketch.dividerWidth ?? 0
+  );
+  const dividerColor = toCssColor(
+    sketch.dividerColor,
+    "#ffffff"
+  );
+
+  const tileSize = Math.max(
+    0.02,
+    Math.min(
+      0.9,
+      sketch.tileSize ?? 0.3
+    )
+  );
+  const centerX = Math.max(
+    0,
+    Math.min(
+      1,
+      sketch.centerX ?? 0.5
+    )
+  );
+  const centerY = Math.max(
+    0,
+    Math.min(
+      1,
+      sketch.centerY ?? 0.5
+    )
+  );
+
   const blendMode = sketch.blendMode ?? "normal";
   const overlayOpacity = Math.max(
     0,
@@ -203,20 +237,40 @@ export default function DuoMix( {
   );
 
   const urls = resolveImages( options );
-  const baseUrl = imageAt(
+  const imageA = imageAt(
     urls,
     swap ? 1 : 0
   );
-  const overlayUrl = imageAt(
+  const imageB = imageAt(
     urls,
     swap ? 0 : 1
   );
 
-  const cellWidth = size.width / columns;
-  const cellHeight = size.height / rows;
+  const isVertical = splitAxis === "vertical";
   const backgroundSize = fit === "contain"
     ? "contain"
     : `${ size.width }px ${ size.height }px`;
+
+  // Seam clip for each base panel (a full-frame image clipped to its half).
+  const panelAClip = isVertical
+    ? `inset(0% ${ ( 1 - splitRatio ) * 100 }% 0% 0%)`
+    : `inset(0% 0% ${ ( 1 - splitRatio ) * 100 }% 0%)`;
+  const panelBClip = isVertical
+    ? `inset(0% 0% 0% ${ splitRatio * 100 }%)`
+    : `inset(${ splitRatio * 100 }% 0% 0% 0%)`;
+
+  // Swap-tile grid geometry, centred on (centerX, centerY).
+  const minDim = Math.min(
+    size.width,
+    size.height
+  );
+  const tilePx = tileSize * minDim;
+  const gridWidth = columns * tilePx + ( columns - 1 ) * gap;
+  const gridHeight = rows * tilePx + ( rows - 1 ) * gap;
+  const originX = centerX * size.width - gridWidth / 2;
+  const originY = centerY * size.height - gridHeight / 2;
+  const seamX = splitRatio * size.width;
+  const seamY = splitRatio * size.height;
 
   const tiles = Array.from(
     {
@@ -224,10 +278,26 @@ export default function DuoMix( {
     },
     (
       _, index
-    ) => ( {
-      row: Math.floor( index / columns ),
-      col: index % columns
-    } )
+    ) => {
+      const row = Math.floor( index / columns );
+      const col = index % columns;
+      const left = originX + col * ( tilePx + gap );
+      const top = originY + row * ( tilePx + gap );
+      const tileCenterX = left + tilePx / 2;
+      const tileCenterY = top + tilePx / 2;
+      // A tile sitting over panel A shows image B, and vice-versa — the swap.
+      const overPanelA = isVertical
+        ? tileCenterX < seamX
+        : tileCenterY < seamY;
+
+      return {
+        row,
+        col,
+        left,
+        top,
+        image: overPanelA ? imageB : imageA
+      };
+    }
   );
 
   useTimeline(
@@ -236,30 +306,33 @@ export default function DuoMix( {
     } ) => {
       const duration = opts?.animation?.duration ?? 12;
       const ease = toGsapEase( opts?.sketch?.ease );
-      const tileEls = gsap.utils.toArray( ".dm-tile" );
-      const seed = Math.round( sketch.seed ?? 7 );
-      const angleRad = ( ( sketch.angle ?? 135 ) * Math.PI ) / 180;
+      const tileEls = gsap.utils.toArray( ".ds-tile" );
+      const transition = opts?.sketch?.transition ?? "scale";
+      const direction = opts?.sketch?.direction ?? "up";
+      const pattern = opts?.sketch?.pattern ?? "wave";
+      const seed = Math.round( opts?.sketch?.seed ?? 7 );
+      const angleRad = ( ( opts?.sketch?.angle ?? 135 ) * Math.PI ) / 180;
       const spread = Math.max(
         0,
         Math.min(
           0.95,
-          sketch.spread ?? 0.55
+          opts?.sketch?.spread ?? 0.55
         )
       );
       const tileScale = Math.max(
         0,
         Math.min(
           2,
-          sketch.tileScale ?? 0
+          opts?.sketch?.tileScale ?? 0
         )
       );
-      const tileRotate = sketch.tileRotate ?? 0;
-      const perspective = sketch.perspective ?? 1200;
+      const tileRotate = opts?.sketch?.tileRotate ?? 0;
+      const perspective = opts?.sketch?.perspective ?? 1200;
       const breathing = Math.max(
         0,
         Math.min(
           0.3,
-          sketch.breathing ?? 0
+          opts?.sketch?.breathing ?? 0
         )
       );
 
@@ -298,8 +371,8 @@ export default function DuoMix( {
       );
 
       // "none" keeps the reveal system but holds it still: every tile rests in
-      // its fully-revealed state so the second image sits statically over the
-      // first (a fixed mix), with no tweens on the timeline.
+      // its fully-swapped state so the opposite image sits statically over the
+      // seam (a fixed swap), with no tweens on the timeline.
       const revealMotion = transition !== "none";
 
       tileEls.forEach( (
@@ -356,7 +429,7 @@ export default function DuoMix( {
       // starting value at progress 1, so it stays seamless.
       if ( breathing > 0 ) {
         tl.fromTo(
-          ".dm-frame",
+          ".ds-frame",
           {
             scale: 1
           },
@@ -376,25 +449,13 @@ export default function DuoMix( {
     [
       rows,
       columns,
-      gap,
-      radius,
-      pattern,
-      transition,
-      direction,
-      overlayOpacity,
-      sketch.angle,
-      sketch.spread,
-      sketch.tileScale,
-      sketch.tileRotate,
-      sketch.perspective,
-      sketch.breathing,
-      sketch.seed
+      radius
     ]
   );
 
   return (
     <div
-      className="dm-stage"
+      className="ds-stage"
       style={ {
         position: "relative",
         width: "100%",
@@ -404,7 +465,7 @@ export default function DuoMix( {
       } }
     >
       <div
-        className="dm-frame"
+        className="ds-frame"
         style={ {
           position: "relative",
           width: "100%",
@@ -414,11 +475,11 @@ export default function DuoMix( {
           willChange: "transform"
         } }
       >
-        { baseUrl
+        { imageA
           ? (
             <img
-              className="dm-base"
-              src={ baseUrl }
+              className="ds-panel-a"
+              src={ imageA }
               alt=""
               style={ {
                 position: "absolute",
@@ -426,14 +487,61 @@ export default function DuoMix( {
                 width: "100%",
                 height: "100%",
                 objectFit: fit,
-                filter
+                filter,
+                clipPath: panelAClip
+              } }
+            />
+          )
+          : null }
+
+        { imageB
+          ? (
+            <img
+              className="ds-panel-b"
+              src={ imageB }
+              alt=""
+              style={ {
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: fit,
+                filter,
+                clipPath: panelBClip
+              } }
+            />
+          )
+          : null }
+
+        { dividerWidth > 0
+          ? (
+            <div
+              className="ds-divider"
+              style={ {
+                position: "absolute",
+                background: dividerColor,
+                ...( isVertical
+                  ? {
+                    top: 0,
+                    bottom: 0,
+                    left: seamX,
+                    width: dividerWidth,
+                    transform: "translateX(-50%)"
+                  }
+                  : {
+                    left: 0,
+                    right: 0,
+                    top: seamY,
+                    height: dividerWidth,
+                    transform: "translateY(-50%)"
+                  } )
               } }
             />
           )
           : null }
 
         <div
-          className="dm-overlay"
+          className="ds-overlay"
           style={ {
             position: "absolute",
             inset: 0,
@@ -446,22 +554,20 @@ export default function DuoMix( {
             <div
               // eslint-disable-next-line react/no-array-index-key
               key={ index }
-              className="dm-tile"
+              className="ds-tile"
               style={ {
                 position: "absolute",
-                left: tile.col * cellWidth + gap / 2,
-                top: tile.row * cellHeight + gap / 2,
-                width: cellWidth - gap,
-                height: cellHeight - gap,
+                left: tile.left,
+                top: tile.top,
+                width: tilePx,
+                height: tilePx,
                 borderRadius: radius,
                 overflow: "hidden",
                 boxShadow: shadow,
-                backgroundImage: overlayUrl ? `url("${ overlayUrl }")` : undefined,
+                backgroundImage: tile.image ? `url("${ tile.image }")` : undefined,
                 backgroundRepeat: "no-repeat",
                 backgroundSize,
-                backgroundPosition:
-                  `${ -( tile.col * cellWidth + gap / 2 ) }px ` +
-                  `${ -( tile.row * cellHeight + gap / 2 ) }px`,
+                backgroundPosition: `${ -tile.left }px ${ -tile.top }px`,
                 filter,
                 willChange: "transform, opacity, clip-path"
               } }
