@@ -1,23 +1,45 @@
 
 export const formValues = {
   timeScale: 1,
+  motion: {
+    direction: "backward" as "backward" | "forward",
+    swimX: 0.11,
+    swimY: 0.08,
+    swimWaves: 2,
+    swimSpeed: 1,
+    swimPhase: 1.7
+  },
   dragon: {
     pipeCount: 3,
-    pipeRadius: 0.08,
+    pipeRadius: 0.09,
     braidRadius: 0.13,
     twist: 0.8,
     spin: 0,
     radiusPulse: 0.35,
     pulseWaves: 3,
+    pulseTravel: 2,
+    tailThin: 0.3,
     headGap: 1.9,
     headMerge: 1,
     headRound: 0.1
   },
+  dodge: {
+    hesitation: 0.25,
+    sharpness: 1.6,
+    bunch: 0.5
+  },
   obstacles: {
     segmentsPerLoop: 5,
+    seed: 7,
     weave: 0.36,
-    glassAlpha: 0.3,
+    glassAlpha: 0.32,
+    thickness: 0.12,
+    edgeSoftness: 0.03,
+    frost: 0.5,
+    frostScale: 9,
+    milk: 0.3,
     glassTint: 0.3,
+    edgeGlow: 0.8,
     glassColor: [
       140,
       200,
@@ -31,7 +53,8 @@ export const formValues = {
       41
     ],
     wallGlow: 0.7,
-    fogDensity: 0.11
+    ribs: 2,
+    fogDensity: 0.13
   },
   camera: {
     x: 0,
@@ -40,6 +63,10 @@ export const formValues = {
     pitch: -0.05,
     yaw: 0,
     fov: 62,
+    fpvFollow: 0,
+    fpvAim: 0,
+    fpvBank: 0,
+    fpvSmooth: 0.5,
     quality: 0.85
   },
   colors: {
@@ -76,6 +103,61 @@ export const formConfiguration: Record<string, any> = {
     min: 0,
     max: 5,
     step: 0.01
+  },
+  motion: {
+    component: "nested-object",
+    label: "Motion",
+    fields: {
+      direction: {
+        label: "Corridor direction",
+        component: "select",
+        options: [
+          {
+            label: "Flying in (scene recedes)",
+            value: "backward"
+          },
+          {
+            label: "Rushing past (scene approaches)",
+            value: "forward"
+          }
+        ]
+      },
+      swimX: {
+        label: "Swim sway X",
+        component: "slider",
+        min: 0,
+        max: 0.5,
+        step: 0.01
+      },
+      swimY: {
+        label: "Swim sway Y",
+        component: "slider",
+        min: 0,
+        max: 0.5,
+        step: 0.01
+      },
+      swimWaves: {
+        label: "Swim waves / loop",
+        component: "slider",
+        min: 1,
+        max: 8,
+        step: 1
+      },
+      swimSpeed: {
+        label: "Swim speed (snaps to whole cycles/loop)",
+        component: "slider",
+        min: -4,
+        max: 4,
+        step: 0.01
+      },
+      swimPhase: {
+        label: "Swim axis phase (π/2 ≈ circling)",
+        component: "slider",
+        min: 0,
+        max: 6.2832,
+        step: 0.01
+      }
+    }
   },
   dragon: {
     component: "nested-object",
@@ -130,6 +212,20 @@ export const formConfiguration: Record<string, any> = {
         max: 12,
         step: 1
       },
+      pulseTravel: {
+        label: "Pulse travel (snaps to whole cycles/loop)",
+        component: "slider",
+        min: -6,
+        max: 6,
+        step: 0.01
+      },
+      tailThin: {
+        label: "Tail thinning",
+        component: "slider",
+        min: 0,
+        max: 0.9,
+        step: 0.01
+      },
       headGap: {
         label: "Head distance",
         component: "slider",
@@ -153,6 +249,33 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
+  dodge: {
+    component: "nested-object",
+    label: "Dodge behaviour",
+    fields: {
+      hesitation: {
+        label: "Hesitation (hold before dodging)",
+        component: "slider",
+        min: 0,
+        max: 0.85,
+        step: 0.01
+      },
+      sharpness: {
+        label: "Commit sharpness",
+        component: "slider",
+        min: 0.5,
+        max: 4,
+        step: 0.05
+      },
+      bunch: {
+        label: "Body bunch around the corner",
+        component: "slider",
+        min: 0,
+        max: 1.5,
+        step: 0.01
+      }
+    }
+  },
   obstacles: {
     component: "nested-object",
     label: "Obstacles (glass walls)",
@@ -161,7 +284,14 @@ export const formConfiguration: Record<string, any> = {
         label: "Walls per loop (speed)",
         component: "slider",
         min: 2,
-        max: 12,
+        max: 16,
+        step: 1
+      },
+      seed: {
+        label: "Obstacle pattern seed",
+        component: "slider",
+        min: 0,
+        max: 200,
         step: 1
       },
       weave: {
@@ -178,11 +308,53 @@ export const formConfiguration: Record<string, any> = {
         max: 0.9,
         step: 0.01
       },
+      thickness: {
+        label: "Glass thickness",
+        component: "slider",
+        min: 0.02,
+        max: 1.2,
+        step: 0.01
+      },
+      edgeSoftness: {
+        label: "Edge softness (small = sharp)",
+        component: "slider",
+        min: 0.002,
+        max: 0.35,
+        step: 0.002
+      },
+      frost: {
+        label: "Frost mottling",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      frostScale: {
+        label: "Frost grain scale",
+        component: "slider",
+        min: 1,
+        max: 30,
+        step: 0.5
+      },
+      milk: {
+        label: "Milkiness (white scatter)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
       glassTint: {
         label: "Glass iridescence",
         component: "slider",
         min: 0,
         max: 1,
+        step: 0.01
+      },
+      edgeGlow: {
+        label: "Edge glow",
+        component: "slider",
+        min: 0,
+        max: 2,
         step: 0.01
       },
       glassColor: {
@@ -205,6 +377,13 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 2,
         step: 0.01
+      },
+      ribs: {
+        label: "Wall ribs / segment (0 = plain)",
+        component: "slider",
+        min: 0,
+        max: 8,
+        step: 1
       },
       fogDensity: {
         label: "Fog density",
@@ -237,7 +416,7 @@ export const formConfiguration: Record<string, any> = {
         label: "Position Z",
         component: "slider",
         min: -1,
-        max: 2,
+        max: 4,
         step: 0.01
       },
       pitch: {
@@ -260,6 +439,34 @@ export const formConfiguration: Record<string, any> = {
         min: 30,
         max: 100,
         step: 1
+      },
+      fpvFollow: {
+        label: "FPV follow (ride the path)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      fpvAim: {
+        label: "FPV aim at head",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      fpvBank: {
+        label: "FPV banking roll",
+        component: "slider",
+        min: -2,
+        max: 2,
+        step: 0.01
+      },
+      fpvSmooth: {
+        label: "FPV smoothing (lazy chase)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
       },
       quality: {
         label: "Render quality",
@@ -296,7 +503,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       lengthHueShift: {
-        label: "Length hue shift",
+        label: "Length hue shift (snaps for seamless loop)",
         component: "slider",
         min: -2,
         max: 2,
