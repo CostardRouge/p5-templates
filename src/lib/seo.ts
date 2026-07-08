@@ -55,8 +55,8 @@ export function buildCanonicalPath(
   category?: string | null
 ): string {
   return category
-    ? `/templates/${ engineId }/${ category }/${ sketchName }`
-    : `/templates/${ engineId }/${ sketchName }`;
+    ? `/sketches/${ engineId }/${ category }/${ sketchName }`
+    : `/sketches/${ engineId }/${ sketchName }`;
 }
 
 /** Returns the absolute thumbnail URL for a sketch. */
@@ -73,7 +73,7 @@ export function buildSketchDescription(
   sketchTitle: string,
   engineLabel: string
 ): string {
-  return `Create ${ sketchTitle } content with ${ engineLabel }. A template for generating social media visuals.`;
+  return `Create ${ sketchTitle } content with ${ engineLabel }. A customizable creative-coding sketch.`;
 }
 
 /** Builds the keyword list for a sketch detail page. */
@@ -86,7 +86,7 @@ export function buildSketchKeywords(
   return [
     title,
     engineLabel,
-    "social media template",
+    "creative coding sketch",
     "video generator",
     "creative coding",
     ...sketchName.split( "-" )

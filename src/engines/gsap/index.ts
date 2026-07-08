@@ -1,5 +1,5 @@
 import type {
-  EngineRegistration, TemplateMetadata
+  EngineRegistration, SketchSummary
 } from "@/engines/types";
 import {
   GsapEngine
@@ -8,7 +8,7 @@ import {
   getEngineLabel
 } from "@/engines/engineCatalog";
 import {
-  findSketchMeta, listTemplatesForEngine
+  findSketchMeta, listSketchesForEngine
 } from "@/engines/metadata";
 
 export const gsapRegistration: EngineRegistration = {
@@ -17,21 +17,21 @@ export const gsapRegistration: EngineRegistration = {
 
   createEngine: () => new GsapEngine(),
 
-  resolveTemplatePath( sketchName: string ): string {
+  resolveSketchPath( sketchName: string ): string {
     const meta = findSketchMeta(
       sketchName,
       "gsap"
     );
 
     if ( !meta ) {
-      throw new Error( `GSAP template "${ sketchName }" not found in metadata.` );
+      throw new Error( `GSAP sketch "${ sketchName }" not found in metadata.` );
     }
 
     return meta.sketchPath;
   },
 
-  listTemplates(): TemplateMetadata[] {
-    return listTemplatesForEngine( "gsap" ).map( ( m ) => ( {
+  listSketches(): SketchSummary[] {
+    return listSketchesForEngine( "gsap" ).map( ( m ) => ( {
       name: m.name,
       engine: m.engine,
       category: m.category,

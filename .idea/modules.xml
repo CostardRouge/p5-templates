@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/social-templates-renderer.iml" filepath="$PROJECT_DIR$/.idea/social-templates-renderer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/sketchbook.iml" filepath="$PROJECT_DIR$/.idea/sketchbook.iml" />
     </modules>
   </component>
 </project>

@@ -4,8 +4,8 @@ Guidance for AI assistants (and humans) working in this repository.
 
 ## What this project is
 
-**Social Templates Renderer** (`p5-templates`) is a Next.js 15 app for building,
-parameterizing, and exporting social-media visuals from creative-coding sketches.
+**Sketchbook** (`sketchbook`) is a Next.js 15 app for building,
+parameterizing, and exporting visuals from creative-coding sketches.
 Users pick a template, tweak its parameters through an auto-generated form, preview
 it live, and export it as an image or video — either recorded in-browser or rendered
 headlessly on the backend with Playwright + FFmpeg.

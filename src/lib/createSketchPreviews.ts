@@ -54,8 +54,8 @@ async function createSketchPreviews( options: CreateSketchPreviewsOptions = {} )
       name, engine, category
     } ) => ( {
       href: category
-        ? `templates/${ engine }/${ category }/${ name }`
-        : `templates/${ engine }/${ name }`,
+        ? `sketches/${ engine }/${ category }/${ name }`
+        : `sketches/${ engine }/${ name }`,
       name,
       engine
     } ) );
@@ -77,7 +77,7 @@ async function createSketchPreviews( options: CreateSketchPreviewsOptions = {} )
 
     const metadataPath = path.join(
       process.cwd(),
-      "src/templates/metadata.json"
+      "src/sketches/metadata.json"
     );
 
     for ( const {

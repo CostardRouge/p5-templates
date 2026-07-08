@@ -87,7 +87,7 @@ export class P5Engine implements SketchEngine {
 
   async init(
     container: HTMLElement,
-    templatePath: string,
+    sketchName: string,
     options: SketchOption
   ): Promise<void> {
     this.container = container;
@@ -112,7 +112,7 @@ export class P5Engine implements SketchEngine {
     // sketch.setup(fn, opts) and sketch.draw(fn) which store
     // the functions without creating the p5 instance yet.
     const sketchPath = resolveSketchPath(
-      templatePath,
+      sketchName,
       "p5"
     );
 
@@ -197,7 +197,7 @@ export class P5Engine implements SketchEngine {
     await new Promise<void>( async( resolve ) => {
       const {
         default: events
-      } = await import( "@/templates/p5/utils/events.js" );
+      } = await import( "@/sketches/p5/utils/events.js" );
 
       const unregister = events.register(
         "post-draw",

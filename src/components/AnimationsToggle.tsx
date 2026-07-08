@@ -7,7 +7,7 @@ interface AnimationsToggleProps {
 }
 
 /**
- * iOS-style switch for toggling animated previews on the templates page.
+ * iOS-style switch for toggling animated previews on the sketches page.
  */
 export default function AnimationsToggle( {
   enabled,

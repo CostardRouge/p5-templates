@@ -30,16 +30,16 @@
         "./public/*"
       ],
       "@/p5/*": [
-        "./src/templates/p5/*"
+        "./src/sketches/p5/*"
       ],
       "@/gsap/*": [
-        "./src/templates/gsap/*"
+        "./src/sketches/gsap/*"
       ],
       "@/html/*": [
-        "./src/templates/html/*"
+        "./src/sketches/html/*"
       ],
       "@/threejs/*": [
-        "./src/templates/threejs/*"
+        "./src/sketches/threejs/*"
       ]
     },
     "strictNullChecks": true

@@ -10,6 +10,6 @@
 #   - metadata.json is a JSON array → a small custom driver unions it by sketch
 #     identity (see scripts/git-merge-metadata.mjs), wired up per-clone by
 #     scripts/setup-git-merge-drivers.mjs (run from `npm install`).
-src/templates/metadata.json            merge=sketch-metadata
+src/sketches/metadata.json            merge=sketch-metadata
 src/generated/sketchModuleRegistry.ts  merge=union
 src/generated/sketchOptionsRegistry.ts merge=union

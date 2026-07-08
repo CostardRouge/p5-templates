@@ -62,7 +62,8 @@ export const UI_SOUND_DEFAULTS: UiSoundSettings = {
   repeatPitchStep: 0.08
 };
 
-const STORAGE_KEY = "p5templates.uiSound.v1";
+const STORAGE_KEY = "sketchbook.uiSound.v1";
+const LEGACY_STORAGE_KEY = "p5templates.uiSound.v1";
 
 let settings: UiSoundSettings | null = null;
 const listeners = new Set<() => void>();
@@ -154,7 +155,7 @@ export function getUiSoundSettings(): UiSoundSettings {
 
   if ( typeof window !== "undefined" ) {
     try {
-      const raw = window.localStorage.getItem( STORAGE_KEY );
+      const raw = window.localStorage.getItem( STORAGE_KEY ) ?? window.localStorage.getItem( LEGACY_STORAGE_KEY );
 
       stored = raw ? JSON.parse( raw ) : null;
     } catch {

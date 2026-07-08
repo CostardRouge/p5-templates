@@ -67,7 +67,7 @@ export default function ActiveRecordingBanner( {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">
-                    Recording: {job.template}
+                    Recording: {job.sketch}
                   </h3>
                   <p className="text-xs text-foreground/60 font-mono">
                     #{job.id.slice(
@@ -78,7 +78,7 @@ export default function ActiveRecordingBanner( {
                 </div>
               </div>
               <HardLink
-                href={ `templates/${ job.template }?id=${ job.id }` }
+                href={ `/${ job.sketch }?id=${ job.id }` }
                 className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors"
               >
                 View Details →

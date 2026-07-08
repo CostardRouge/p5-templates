@@ -49,7 +49,7 @@ async function runRecording( jobId: string ) {
     // ─── 3. Record sketch (handles both single and multi-slide) ───────────────
     await recordSketch(
       jobId,
-      persistedJob.template,
+      persistedJob.sketch,
       options,
       temporaryDirectoryPath
     );

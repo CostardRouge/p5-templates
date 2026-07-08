@@ -1,0 +1,190 @@
+import {
+  fontNames
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+
+import {
+  createSingleOrMultipleTextOption
+} from "@/utils/sketchOptionUtils";
+
+export const formValues = {
+  text: {
+    mode: "multiple",
+    value: [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11"
+    ]
+  },
+  textStyle: {
+    font: "waverseVariable",
+    size: 0.5,
+    sampleFactor: 0.0625,
+    simplifyThreshold: 0
+  },
+  rotation: {
+    enabled: true,
+    xMultiplier: 1,
+    yMultiplier: 1,
+    easing: "easeInOutElastic"
+  },
+  morphing: {
+    easing: "easeInOutExpo",
+    depthEasing: "easeOutExpo",
+    depthLayersCount: 50,
+    depthLength: -0.2
+  },
+  point: {
+    varyStrokeWithDepthProgression: true,
+    strokeWeightMax: 10,
+    strokeWeightMin: 5,
+    strokeWeightEasing: "easeInOutExpo"
+  },
+  backgroundColor: [
+    0,
+    0,
+    0
+  ]
+};
+
+// UI configuration only
+export const formConfiguration: Record<string, any> = {
+  text: createSingleOrMultipleTextOption( "text" ),
+  textStyle: {
+    component: "nested-object",
+    label: "Text style",
+    fields: {
+      font: {
+        component: "select",
+        label: "Font name",
+        options: fontNames.map( ( fontName ) => ( {
+          value: fontName,
+          label: fontName
+        } ) )
+      },
+      size: {
+        label: "Size",
+        component: "slider",
+        min: 0.1,
+        max: 4,
+        step: 0.1
+      },
+      sampleFactor: {
+        label: "Text sample factor",
+        component: "slider",
+        min: 0.01,
+        max: 1,
+        step: 0.01
+      },
+      simplifyThreshold: {
+        label: "Simplify threshold",
+        component: "slider",
+        min: 0,
+        max: 10,
+        step: 0.1
+      }
+    }
+  },
+  morphing: {
+    component: "nested-object",
+    label: "Morphing animation",
+    fields: {
+      depthLayersCount: {
+        label: "Depth layers count",
+        component: "slider",
+        min: 1,
+        max: 1000,
+        step: 1
+      },
+      depthLength: {
+        label: "Depth length multiplier",
+        component: "slider",
+        min: -4,
+        max: 4,
+        step: 0.01
+      },
+      depthEasing: {
+        component: "easing",
+        label: "Depth easing function"
+      },
+      easing: {
+        component: "easing",
+        label: "Morphing easing function"
+      }
+    }
+  },
+  rotation: {
+    component: "nested-object",
+    label: "Rotation animation",
+    fields: {
+      enabled: {
+        label: "Enable rotation?",
+        component: "checkbox"
+      },
+      xMultiplier: {
+        label: "X multiplier",
+        component: "slider",
+        min: -10,
+        max: 10,
+        step: 0.1
+      },
+      yMultiplier: {
+        label: "Y multiplier",
+        component: "slider",
+        min: -10,
+        max: 10,
+        step: 0.1
+      },
+      depthProgressionMultiplier: {
+        label: "depthProgressionMultiplier multiplier",
+        component: "slider",
+        min: -10,
+        max: 10,
+        step: 0.1
+      },
+      easing: {
+        component: "easing",
+        label: "Rotation easing function"
+      }
+    }
+  },
+  point: {
+    component: "nested-object",
+    label: "Point settings",
+    fields: {
+      varyStrokeWithDepthProgression: {
+        label: "Vary stroke weight with depth progression?",
+        component: "checkbox"
+      },
+      strokeWeightMax: {
+        label: "Max stroke weight",
+        component: "slider",
+        min: 1,
+        max: 500,
+        step: 1
+      },
+      strokeWeightMin: {
+        label: "Min stroke weight",
+        component: "slider",
+        min: 1,
+        max: 500,
+        step: 1
+      },
+      strokeWeightEasing: {
+        component: "easing",
+        label: "Stroke weight easing function"
+      }
+    }
+  },
+  backgroundColor: {
+    component: "color",
+    label: "Background color"
+  }
+};

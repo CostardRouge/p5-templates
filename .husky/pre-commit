@@ -1,13 +1,13 @@
 # Keep sketch metadata + import registries in sync with what is on disk, so the
-# committed files never drift (see src/templates/__tests__/sketches.test.ts).
+# committed files never drift (see src/sketches/__tests__/sketches.test.ts).
 # Triggered when a sketch source OR a template asset (thumbnail/preview) is part
 # of the commit. Regeneration is idempotent — unchanged entries produce no diff.
 if git diff --cached --name-only --diff-filter=ACMRD \
-  | grep -qE '^(src/templates/|public/assets/images/templates/)'; then
+  | grep -qE '^(src/sketches/|public/assets/images/templates/)'; then
   echo "↻ Syncing sketch metadata + registries (npm run sketch:meta:write)…"
   node scripts/watch-sketches.mjs --once || exit 1
   git add \
-    src/templates/metadata.json \
+    src/sketches/metadata.json \
     src/generated/sketchModuleRegistry.ts \
     src/generated/sketchOptionsRegistry.ts
 fi

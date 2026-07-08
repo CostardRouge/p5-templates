@@ -60,7 +60,7 @@ async function createSketchThumbnails( options: CreateSketchThumbnailsOptions = 
     const templates = filtered.map( ( {
       name, engine, category
     } ) => ( {
-      href: category ? `templates/${ engine }/${ category }/${ name }` : `templates/${ engine }/${ name }`,
+      href: category ? `sketches/${ engine }/${ category }/${ name }` : `sketches/${ engine }/${ name }`,
       name,
       engine
     } ) );
@@ -121,7 +121,7 @@ async function createSketchThumbnails( options: CreateSketchThumbnailsOptions = 
       // Mark hasThumbnail: true in metadata.json
       const metadataPath = path.join(
         process.cwd(),
-        "src/templates/metadata.json"
+        "src/sketches/metadata.json"
       );
       const raw = await fs.readFile(
         metadataPath,

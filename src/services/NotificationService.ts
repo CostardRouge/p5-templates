@@ -3,10 +3,11 @@ import {
   prisma
 } from "@/lib/connections/prisma";
 
-// Initialize VAPID details
+// Initialize VAPID details. The subject is configurable so deployments are
+// not tied to the historical social-templates.com address.
 if ( process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY ) {
   webpush.setVapidDetails(
-    "mailto:admin@social-templates.com",
+    process.env.VAPID_SUBJECT || "mailto:sketchbook@steevepommier.com",
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   );

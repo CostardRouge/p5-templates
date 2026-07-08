@@ -30,10 +30,10 @@ const config = {
     ]
   },
   moduleNameMapper: {
-    "^@/p5/(.*)$": "<rootDir>/src/templates/p5/$1",
-    "^@/gsap/(.*)$": "<rootDir>/src/templates/gsap/$1",
-    "^@/html/(.*)$": "<rootDir>/src/templates/html/$1",
-    "^@/threejs/(.*)$": "<rootDir>/src/templates/threejs/$1",
+    "^@/p5/(.*)$": "<rootDir>/src/sketches/p5/$1",
+    "^@/gsap/(.*)$": "<rootDir>/src/sketches/gsap/$1",
+    "^@/html/(.*)$": "<rootDir>/src/sketches/html/$1",
+    "^@/threejs/(.*)$": "<rootDir>/src/sketches/threejs/$1",
     "^@/public/(.*)$": "<rootDir>/public/$1",
     "^@/(.*)$": "<rootDir>/src/$1",
     "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js"

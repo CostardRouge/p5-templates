@@ -85,7 +85,7 @@ export class ThreeEngine implements SketchEngine {
 
   async init(
     container: HTMLElement,
-    templatePath: string,
+    sketchName: string,
     options: SketchOption
   ): Promise<void> {
     this.container = container;
@@ -106,7 +106,7 @@ export class ThreeEngine implements SketchEngine {
     );
 
     const sketchPath = resolveSketchPath(
-      templatePath,
+      sketchName,
       "threejs"
     );
 

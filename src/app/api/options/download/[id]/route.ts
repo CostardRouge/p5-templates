@@ -50,7 +50,7 @@ export async function GET(
     }
 
     // Extract sketch name from template (e.g., "p5/photo-in-circle" -> "photo-in-circle")
-    const sketchName = job.template.split( "/" ).pop() || "sketch";
+    const sketchName = job.sketch.split( "/" ).pop() || "sketch";
     const jobIdShort = jobId.slice(
       0,
       8

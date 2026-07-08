@@ -74,7 +74,7 @@ export async function POST(
     // Create new job record in database
     await createJob(
       newJobId,
-      originalJob.template,
+      originalJob.sketch,
       "draft"
     );
 

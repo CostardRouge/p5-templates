@@ -24,14 +24,16 @@ import {
   fuzzyFilter
 } from "@/utils/fuzzySearch";
 import type {
-  TemplateItem
-} from "@/app/templates/getTemplatesData";
+  SketchItem
+} from "@/app/sketches/getSketchesData";
 
 type HomePageProps = {
-  templates: TemplateItem[];
+  sketches: SketchItem[];
   engineLabels: Record<string, string>;
 };
 
+// Still the p5-templates slug until the repo itself is renamed (see TODO.md,
+// "Rename follow-ups") — GitHub will redirect the old URL afterwards.
 const GITHUB_URL = "https://github.com/CostardRouge/p5-templates";
 const LATEST_COUNT = 8;
 const RANDOM_COUNT = 4;
@@ -47,7 +49,7 @@ const FEATURES = [
   {
     icon: SlidersHorizontal,
     title: "Live parameters",
-    text: "Sliders, colors, text fields and image drop-zones — generated per template. Every change re-renders on the canvas instantly."
+    text: "Sliders, colors, text fields and image drop-zones — generated per sketch. Every change re-renders on the canvas instantly."
   },
   {
     icon: Shuffle,
@@ -72,7 +74,7 @@ const FEATURES = [
   {
     icon: Github,
     title: "Open source",
-    text: "MIT-licensed and reusable — fork it, add your own templates, run it anywhere."
+    text: "MIT-licensed and reusable — fork it, add your own sketches, run it anywhere."
   }
 ];
 
@@ -182,16 +184,16 @@ function SectionHeader( {
   );
 }
 
-function TemplateCard( {
-  template,
+function SketchCard( {
+  sketch,
   eager = false
 }: {
-  template: TemplateItem;
+  sketch: SketchItem;
   eager?: boolean;
 } ) {
   return (
     <HardLink
-      href={ template.href }
+      href={ sketch.href }
       className="group relative block w-full bg-background rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-foreground/20 transition duration-300 hover:shadow-lg hover:shadow-active/10 hover:-translate-y-0.5"
     >
       {/* 4:5 aspect box — same ratio as the gallery cards */}
@@ -201,20 +203,20 @@ function TemplateCard( {
           paddingTop: "125%"
         } }
       >
-        { template.preview ? (
+        { sketch.preview ? (
           <AnimatedPreview
-            previewUrl={ template.preview }
-            previewUrlDesktop={ template.previewMd ?? undefined }
-            thumbnailUrl={ template.thumbnail }
-            name={ template.name }
+            previewUrl={ sketch.preview }
+            previewUrlDesktop={ sketch.previewMd ?? undefined }
+            thumbnailUrl={ sketch.thumbnail }
+            name={ sketch.name }
             eager={ eager }
             imgClassName="w-full h-full object-cover"
           />
         ) : (
           <img
-            alt={ template.name }
-            src={ template.thumbnail }
-            srcSet={ `${ template.thumbnail } 1x, ${ template.thumbnail.replace(
+            alt={ sketch.name }
+            src={ sketch.thumbnail }
+            srcSet={ `${ sketch.thumbnail } 1x, ${ sketch.thumbnail.replace(
               /\.webp$/,
               "-2x.webp"
             ) } 2x` }
@@ -225,10 +227,10 @@ function TemplateCard( {
       </div>
       <div className="bg-background border-t border-border px-2 py-2">
         <p
-          title={ template.name }
+          title={ sketch.name }
           className="text-xs sm:text-sm font-medium text-foreground text-center truncate"
         >
-          { template.name }
+          { sketch.name }
         </p>
       </div>
     </HardLink>
@@ -236,7 +238,7 @@ function TemplateCard( {
 }
 
 export default function HomePage( {
-  templates,
+  sketches,
   engineLabels
 }: HomePageProps ) {
   const [
@@ -247,9 +249,9 @@ export default function HomePage( {
   // `.hidden-home` entries stay searchable but never appear in the
   // latest/random sections.
   const homePool = useMemo(
-    () => templates.filter( ( t ) => !t.hiddenFromHome ),
+    () => sketches.filter( ( t ) => !t.hiddenFromHome ),
     [
-      templates
+      sketches
     ]
   );
 
@@ -269,7 +271,7 @@ export default function HomePage( {
     ]
   );
 
-  // Random picks avoid duplicating the latest row and prefer templates with
+  // Random picks avoid duplicating the latest row and prefer sketches with
   // an animated preview when enough are available.
   const randomPool = useMemo(
     () => {
@@ -325,7 +327,7 @@ export default function HomePage( {
   const results = useMemo(
     () => ( searchActive
       ? fuzzyFilter(
-        templates,
+        sketches,
         query,
         ( t ) => [
           t.name,
@@ -334,7 +336,7 @@ export default function HomePage( {
       )
       : [] ),
     [
-      templates,
+      sketches,
       query,
       searchActive
     ]
@@ -342,8 +344,8 @@ export default function HomePage( {
 
   const engineCount = Object.keys( engineLabels ).length;
   const libraryHref = searchActive
-    ? `/templates?keyword=${ encodeURIComponent( query.trim() ) }`
-    : "/templates";
+    ? `/sketches?keyword=${ encodeURIComponent( query.trim() ) }`
+    : "/sketches";
 
   return (
     <div className="relative w-full bg-background text-foreground">
@@ -368,7 +370,7 @@ export default function HomePage( {
           <MenuBarSlot className="md:hidden mb-6" />
 
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-label mb-6 sm:mb-8">
-            <span className="tabular-nums">{ templates.length } templates</span>
+            <span className="tabular-nums">{ sketches.length } sketches</span>
             <span className="h-1 w-1 rounded-full bg-fuchsia-500" />
             <span className="tabular-nums">{ engineCount } engines</span>
             <span className="h-1 w-1 rounded-full bg-foreground/30" />
@@ -382,7 +384,7 @@ export default function HomePage( {
           </h1>
 
           <p className="mt-5 sm:mt-6 max-w-[60ch] text-sm sm:text-base text-label leading-relaxed [text-wrap:pretty]">
-            Customizable templates built on{ " " }
+            Customizable sketches built on{ " " }
             <span className="text-foreground font-medium">p5.js</span>,{ " " }
             <span className="text-foreground font-medium">gsap</span> and{ " " }
             <span className="text-foreground font-medium">html stages</span>.
@@ -398,7 +400,7 @@ export default function HomePage( {
                 type="text"
                 value={ query }
                 onChange={ ( e ) => setQuery( e.target.value ) }
-                placeholder={ `Search ${ templates.length } templates...` }
+                placeholder={ `Search ${ sketches.length } sketches...` }
                 autoComplete="off"
                 className={ `pl-11 py-3 rounded-xl w-full bg-background border border-border hover:border-foreground/30 focus:border-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/10 transition-all text-sm placeholder:text-foreground/40 ${
                   query ? "pr-11" : "pr-4"
@@ -418,7 +420,7 @@ export default function HomePage( {
             </div>
 
             <Link
-              href="/templates"
+              href="/sketches"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform flex-shrink-0"
             >
               <span>Open the library</span>
@@ -469,11 +471,11 @@ export default function HomePage( {
                       MAX_RESULTS
                     )
                     .map( (
-                      template, index
+                      sketch, index
                     ) => (
-                      <TemplateCard
-                        key={ template.href }
-                        template={ template }
+                      <SketchCard
+                        key={ sketch.href }
+                        sketch={ sketch }
                         eager={ index === 0 }
                       />
                     ) ) }
@@ -502,21 +504,21 @@ export default function HomePage( {
               <section className="pb-12 sm:pb-16">
                 <SectionHeader label="/latest" title="Recently added">
                   <Link
-                    href="/templates"
+                    href="/sketches"
                     className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-label hover:text-foreground transition-colors flex-shrink-0"
                   >
-                    <span>View all { templates.length }</span>
+                    <span>View all { sketches.length }</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
                   </Link>
                 </SectionHeader>
 
                 <div className={ CARD_GRID }>
                   { latest.map( (
-                    template, index
+                    sketch, index
                   ) => (
-                    <TemplateCard
-                      key={ template.href }
-                      template={ template }
+                    <SketchCard
+                      key={ sketch.href }
+                      sketch={ sketch }
                       eager={ index === 0 }
                     />
                   ) ) }
@@ -539,8 +541,8 @@ export default function HomePage( {
                 </SectionHeader>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  { randomPicks.map( ( template ) => (
-                    <TemplateCard key={ template.href } template={ template } />
+                  { randomPicks.map( ( sketch ) => (
+                    <SketchCard key={ sketch.href } sketch={ sketch } />
                   ) ) }
                 </div>
               </section>
@@ -580,15 +582,15 @@ export default function HomePage( {
           <footer className="border-t border-border pt-10 sm:pt-14 flex flex-col items-center text-center gap-5 sm:gap-6">
             <p className="max-w-[48ch] text-sm sm:text-base text-label leading-relaxed">
               <span className="font-mono tabular-nums text-foreground">
-                { templates.length }
+                { sketches.length }
               </span>{ " " }
-              templates ready to customize, record and export. No signup, no
+              sketches ready to customize, record and export. No signup, no
               install — everything runs in your browser.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
-                href="/templates"
+                href="/sketches"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground text-background px-6 py-3 text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-transform"
               >
                 <span>Open the library</span>

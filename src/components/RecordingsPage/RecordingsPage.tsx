@@ -100,7 +100,7 @@ export default function RecordingsPage() {
     search,
     ( job ) => [
       job.id,
-      job.template
+      job.sketch
     ]
   ).filter( ( job ) => {
     const matchStatus = statusFilter === "all" || job.status === statusFilter;

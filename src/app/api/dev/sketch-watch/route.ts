@@ -19,7 +19,7 @@ function getSketchDir(
   return path.join(
     process.cwd(),
     "src",
-    "templates",
+    "sketches",
     engineId,
     "sketches",
     sketchPath

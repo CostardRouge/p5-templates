@@ -25,7 +25,7 @@ export type JobStatusEnum = ( typeof validStatuses )[ number ];
 export type JobModel = {
   id: JobId;
   snapshotId: string | null;
-  template: string;
+  sketch: string;
   status: JobStatusEnum;
   progress: number; // 0–100
   resultUrl: string | null;
@@ -63,7 +63,7 @@ export type RecordingStatus = {
 
 export interface RecordingJobData {
   jobId: string;
-  template: string;
+  sketch: string;
 }
 
 export interface JobConfiguration {
@@ -85,7 +85,7 @@ export interface QueueHealthResponse {
 }
 
 export interface EnqueueRecordingRequest {
-  template: string;
+  sketch: string;
   formData: FormData;
 }
 

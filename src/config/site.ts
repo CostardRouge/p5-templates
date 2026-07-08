@@ -1,9 +1,9 @@
 // ─── Site Identity ────────────────────────────────────────────────────────────
-export const SITE_NAME = "Coded templates";
-export const SITE_SHORT_NAME = "Coded Templates";
-export const SITE_TAGLINE = "a studio for social visuals.";
+export const SITE_NAME = "Sketchbook";
+export const SITE_SHORT_NAME = "Sketchbook";
+export const SITE_TAGLINE = "a studio for creative-coding visuals.";
 export const SITE_DESCRIPTION =
-  "Customizable templates built on p5.js, gsap, and html stages. Tweak parameters in a live editor, then export images or record full animations to video — never leaving the browser.";
+  "Customizable creative-coding sketches built on p5.js, GSAP, and Three.js. Tweak parameters in a live editor, then export images or record full animations to video — never leaving the browser.";
 
 // ─── Author / Publisher ───────────────────────────────────────────────────────
 export const SITE_AUTHOR = "Steeve Pommier";
@@ -14,21 +14,19 @@ export const SITE_CATEGORY = "technology";
 
 // ─── SEO Keywords ─────────────────────────────────────────────────────────────
 export const SITE_KEYWORDS: string[] = [
-  "code templates",
-  "social media templates",
+  "creative coding",
+  "creative coding sketches",
+  "sketchbook",
   "video generator",
   "p5.js",
   "GSAP animation",
-  "creative coding",
-  "social media content",
-  "video recording",
-  "animation templates",
-  "Instagram templates",
-  "TikTok templates",
+  "Three.js",
   "generative art",
   "motion graphics",
-  "HTML templates",
+  "video recording",
   "video export",
+  "animation editor",
+  "social media visuals",
   "content creation tool"
 ];
 
@@ -46,9 +44,9 @@ export const THEME_COLOR_DARK = "#000000";
 
 // ─── App Feature List (for JSON-LD WebApplication) ───────────────────────────
 export const APP_FEATURE_LIST = [
-  "p5.js template rendering",
-  "GSAP animation templates",
-  "HTML template capture",
+  "p5.js sketch rendering",
+  "GSAP animation sequences",
+  "Three.js 3D scene rendering",
   "Video recording and export",
   "Customizable sketch options",
   "EXIF data overlay",

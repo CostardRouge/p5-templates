@@ -35,7 +35,7 @@ export const FULLSCREEN_PRESETS: FullscreenPreset[] = [
 
 export const FULLSCREEN_PRESET_VALUES = FULLSCREEN_PRESETS.map( ( preset ) => preset.value );
 
-export function isFullscreenPresetValue( value: string | number | null | undefined ): boolean {
+export function isFullscreenFormatValue( value: string | number | null | undefined ): boolean {
   return typeof value === "string" && FULLSCREEN_PRESET_VALUES.includes( value );
 }
 

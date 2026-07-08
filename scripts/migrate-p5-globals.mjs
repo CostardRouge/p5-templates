@@ -416,7 +416,7 @@ function processFile( filePath ) {
 
 // Find all sketch JS files
 const files = execSync(
-  "find src/templates/p5/sketches -name \"*.js\"",
+  "find src/sketches/p5/sketches -name \"*.js\"",
   {
     cwd: "/Users/mac-SPOMMI16/Documents/GitHub/p5-templates2",
     encoding: "utf-8"

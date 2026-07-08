@@ -10,7 +10,8 @@ import {
   __resetPanelDock, usePanelDock
 } from "../usePanelDock";
 
-const STORAGE_KEY = "p5-templates:docked-workspace";
+const STORAGE_KEY = "sketchbook:docked-workspace";
+const LEGACY_STORAGE_KEY = "p5-templates:docked-workspace";
 
 describe(
   "usePanelDock",
@@ -105,6 +106,44 @@ describe(
         localStorage.setItem(
           STORAGE_KEY,
           "\"yes\""
+        );
+
+        const {
+          result
+        } = renderHook( () => usePanelDock() );
+
+        expect( result.current.docked ).toBe( false );
+      }
+    );
+
+    it(
+      "migrates the pre-rename p5-templates key forward on first read",
+      () => {
+        localStorage.setItem(
+          LEGACY_STORAGE_KEY,
+          "true"
+        );
+
+        const {
+          result
+        } = renderHook( () => usePanelDock() );
+
+        expect( result.current.docked ).toBe( true );
+        expect( localStorage.getItem( STORAGE_KEY ) ).toBe( "true" );
+        expect( localStorage.getItem( LEGACY_STORAGE_KEY ) ).toBeNull();
+      }
+    );
+
+    it(
+      "prefers the new key over a stale legacy value",
+      () => {
+        localStorage.setItem(
+          STORAGE_KEY,
+          "false"
+        );
+        localStorage.setItem(
+          LEGACY_STORAGE_KEY,
+          "true"
         );
 
         const {

@@ -27,8 +27,8 @@ const SORT_OPTIONS: {
     label: "Status"
   },
   {
-    value: "template",
-    label: "Template"
+    value: "sketch",
+    label: "Sketch"
   },
   {
     value: "duration",

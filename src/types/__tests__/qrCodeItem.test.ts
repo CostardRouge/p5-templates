@@ -13,10 +13,10 @@ import {
   ContentItemSchema, QrCodeItemSchema
 } from "@/types/sketch.types";
 import makeDefaultItem
-  from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/components/AddItemControls/utils/makeDefaultItem";
+  from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/AddItemControls/utils/makeDefaultItem";
 import {
   formConfig
-} from "@/components/ClientProcessingSketch/components/TemplateOptions/components/ContentItems/constants/field-config";
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 
 describe(
   "qrcode content item",

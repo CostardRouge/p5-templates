@@ -4,7 +4,10 @@ import {
   useCallback, useSyncExternalStore
 } from "react";
 
-const STORAGE_KEY = "p5-templates:docked-workspace";
+const STORAGE_KEY = "sketchbook:docked-workspace";
+// Key used before the project was renamed from p5-templates — read once and
+// migrated forward so users keep their saved layout.
+const LEGACY_STORAGE_KEY = "p5-templates:docked-workspace";
 
 const DEFAULT_DOCKED = false;
 
@@ -23,10 +26,21 @@ function hydrate() {
   hydrated = true;
 
   try {
-    const stored = localStorage.getItem( STORAGE_KEY );
+    let stored = localStorage.getItem( STORAGE_KEY );
 
     if ( stored === null ) {
-      return;
+      stored = localStorage.getItem( LEGACY_STORAGE_KEY );
+
+      if ( stored === null ) {
+        return;
+      }
+
+      // Migrate the legacy value forward, then drop the old key.
+      localStorage.setItem(
+        STORAGE_KEY,
+        stored
+      );
+      localStorage.removeItem( LEGACY_STORAGE_KEY );
     }
 
     const parsed = JSON.parse( stored ) as unknown;

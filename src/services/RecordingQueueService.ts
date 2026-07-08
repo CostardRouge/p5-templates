@@ -70,7 +70,7 @@ export class RecordingQueueService {
   }
 
   public async enqueueRecording( {
-    template,
+    sketch,
     options,
     status,
     files,
@@ -78,7 +78,7 @@ export class RecordingQueueService {
     thumbnails
   }: {
     status: JobStatusEnum;
-    template: string;
+    sketch: string;
     options: string;
     files: File[];
     jobId?: string;
@@ -93,7 +93,7 @@ export class RecordingQueueService {
       if ( !persistedJob ) {
         persistedJob = await createJob(
           jobId,
-          template,
+          sketch,
           status
         );
       }
@@ -175,7 +175,7 @@ export class RecordingQueueService {
           "process-recording",
           {
             jobId,
-            template
+            sketch
           },
           {
             jobId,

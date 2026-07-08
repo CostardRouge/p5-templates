@@ -13,7 +13,9 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
   try {
     const formData = await request.formData();
     const jobIdRaw = formData.get( "jobId" );
-    const template = formData.get( "template" );
+    // "sketch" is the canonical field; "template" is accepted for older
+    // clients and scripts recorded against the pre-rename API.
+    const sketch = formData.get( "sketch" ) ?? formData.get( "template" );
     const status = formData.get( "status" ) ?? "queued";
     const thumbnailsRaw = formData.get( "thumbnails" );
     const thumbnails =
@@ -21,11 +23,11 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
         ? JSON.parse( thumbnailsRaw )
         : undefined;
 
-    if ( !template || typeof template !== "string" ) {
+    if ( !sketch || typeof sketch !== "string" ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Template is required"
+          error: "Sketch is required"
         },
         {
           status: 400
@@ -109,7 +111,7 @@ export async function POST( request: NextRequest ): Promise<NextResponse<Enqueue
 
     const recordingService = RecordingService.getInstance();
     const jobId = await recordingService.enqueueRecording( {
-      template,
+      sketch,
       files: collectedFiles,
       status: status as JobStatusEnum,
       options: JSON.stringify(

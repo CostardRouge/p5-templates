@@ -31,7 +31,7 @@
 
 ```bash
 git clone <repository-url>
-cd social-templates-renderer
+cd sketchbook
 ```
 
 2. **Install dependencies**
@@ -96,7 +96,7 @@ The `npm run watch` command runs three processes concurrently:
 ## Project Structure
 
 ```
-social-templates-renderer/
+sketchbook/
 ├── docs/                           # Documentation
 │   ├── ARCHITECTURE.md
 │   ├── API_REFERENCE.md

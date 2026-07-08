@@ -299,11 +299,11 @@
     from { opacity: 0; }
 }
 
-::view-transition-old(templates-list) {
+::view-transition-old(sketches-list) {
     animation: 120ms ease-in both vt-fade-out;
 }
 
-::view-transition-new(templates-list) {
+::view-transition-new(sketches-list) {
     animation: 200ms ease-out 80ms both vt-fade-in;
 }
 

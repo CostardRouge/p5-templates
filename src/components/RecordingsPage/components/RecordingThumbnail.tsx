@@ -37,22 +37,22 @@ export default function RecordingThumbnail( {
     setShowPreview
   ] = useState( false );
 
-  const templateParts = job.template.split( "/" );
-  // job.template is "templates/{engine}/{optional-category}/{name}"
-  // parts[0] = "templates", parts[1] = engine, last part = sketch name
-  const templateEngine = templateParts[ 1 ] ?? templateParts[ 0 ];
-  const templateName = templateParts[ templateParts.length - 1 ];
+  const sketchParts = job.sketch.split( "/" );
+  // job.sketch is "sketches/{engine}/{optional-category}/{name}" (legacy rows: "templates/…")
+  // parts[0] = "sketches"/"templates", parts[1] = engine, last part = sketch name
+  const sketchEngine = sketchParts[ 1 ] ?? sketchParts[ 0 ];
+  const sketchName = sketchParts[ sketchParts.length - 1 ];
   const {
     thumbnailUrl: src
   } = useSketchThumbnail( {
-    engine: templateEngine,
-    name: templateName,
+    engine: sketchEngine,
+    name: sketchName,
     persistedJob: job,
     updatedAt: new Date( job.updatedAt ).getTime()
   } );
-  const templateFallbackUrl = getSketchThumbnailURL(
-    templateEngine,
-    templateName
+  const sketchFallbackUrl = getSketchThumbnailURL(
+    sketchEngine,
+    sketchName
   );
   const showEyeIcon =
     job.status === "completed" && job.videoUrls && job.thumbnails;
@@ -118,11 +118,11 @@ export default function RecordingThumbnail( {
       )}
       <img
         src={ src }
-        alt={ job.template }
+        alt={ job.sketch }
         loading="lazy"
         onError={ ( e ) => {
-          if ( e.currentTarget.src !== window.location.origin + templateFallbackUrl ) {
-            e.currentTarget.src = templateFallbackUrl;
+          if ( e.currentTarget.src !== window.location.origin + sketchFallbackUrl ) {
+            e.currentTarget.src = sketchFallbackUrl;
           }
         } }
         className={ clsx(

@@ -32,8 +32,8 @@ function deriveCategory( sketchName: string ): string {
     neon: "neon effects",
     mask: "masking effects",
     dominant: "color analysis",
-    hello: "starter template",
-    empty: "blank template"
+    hello: "starter sketch",
+    empty: "blank sketch"
   };
 
   return categoryMap[ prefix ] || "creative coding";
@@ -46,7 +46,7 @@ export function generateSketchMetadata(
   const category = deriveCategory( sketchName );
   const baseUrl = getBaseUrl();
 
-  const description = `Create ${ sketchTitle } videos and images. A ${ category } template for generating social media content.`;
+  const description = `Create ${ sketchTitle } videos and images. A customizable ${ category } sketch for generating visual content.`;
 
   const thumbnailPath = getSketchThumbnailURL(
     engine,
@@ -62,7 +62,7 @@ export function generateSketchMetadata(
       sketchTitle,
       engine,
       category,
-      "social media template",
+      "creative coding sketch",
       "video generator",
       "creative coding",
       "generative art",
@@ -81,7 +81,7 @@ export function generateSketchMetadata(
           url: thumbnailUrl,
           width: 1200,
           height: 630,
-          alt: `${ sketchTitle } - ${ engine } template preview`
+          alt: `${ sketchTitle } - ${ engine } sketch preview`
         }
       ],
       type: "website"

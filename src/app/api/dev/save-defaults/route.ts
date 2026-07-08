@@ -19,7 +19,7 @@ function getOptionsFilePath(
   return path.join(
     process.cwd(),
     "src",
-    "templates",
+    "sketches",
     engineId,
     "sketches",
     meta.sketchPath,

@@ -5,7 +5,7 @@ import {
 import useAssetDrop, {
   AssetType
 } from "@/hooks/useAssetDrop";
-import useTemplateAssets from "@/components/ClientProcessingSketch/components/TemplateOptions/components/TemplateAssetsProvider/hooks/useTemplateAssets";
+import useSketchAssets from "@/components/ClientProcessingSketch/components/SketchOptions/components/SketchAssetsProvider/hooks/useSketchAssets";
 
 /**
  * Counts how many content items across all slides still reference a given
@@ -37,7 +37,7 @@ function countImageRefs(
 export default function useAssetsBridge() {
   const {
     assetsName, scope
-  } = useTemplateAssets();
+  } = useSketchAssets();
   const {
     getValues, setValue
   } = useFormContext();

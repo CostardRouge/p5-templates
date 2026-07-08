@@ -210,7 +210,7 @@ export default function ActionsMenu( {
               focus
             } ) => (
               <HardLink
-                href={ `templates/${ job.template }?id=${ job.id }` }
+                href={ `/${ job.sketch }?id=${ job.id }` }
                 className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
                 <Link className="h-4 w-4 text-foreground/70" />
@@ -231,14 +231,14 @@ export default function ActionsMenu( {
               focus
             } ) => (
               <HardLink
-                href={ `templates/${ job.template }` }
+                href={ `/${ job.sketch }` }
                 className={ `${ focus ? "bg-hover" : "" } flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors` }
               >
                 <Clapperboard className="h-4 w-4 text-foreground/70" />
                 <div className="flex-1 min-w-0">
-                  <span className="font-medium">Open Template</span>
+                  <span className="font-medium">Open Sketch</span>
                   <p className="text-xs text-foreground/50 truncate">
-                    {job.template}
+                    {job.sketch}
                   </p>
                 </div>
               </HardLink>

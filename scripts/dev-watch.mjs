@@ -99,7 +99,7 @@ function startProcess(
 }
 
 async function main() {
-  console.log( "🎬 Starting Social Templates Renderer in development mode...\n" );
+  console.log( "🎬 Starting Sketchbook in development mode...\n" );
 
   // Handle termination signals — just kill children and exit
   for ( const signal of [
