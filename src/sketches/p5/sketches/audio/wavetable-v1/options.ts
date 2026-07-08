@@ -117,32 +117,32 @@ const MORPH_MODE_OPTIONS = [
 export const formValues = {
   wavetable: {
     mode: "harmonics",
-    frames: 9,
-    frameSize: 320,
-    harmonics: 26,
-    brightness: 0.74,
-    character: 0.1,
-    seed: 524,
+    frames: 16,
+    frameSize: 512,
+    harmonics: 10,
+    brightness: 1,
+    character: 0.91,
+    seed: 606,
     name: "aurora-pad"
   },
   notes: {
-    root: "D2",
-    scale: "majorPentatonic",
-    octaves: 2,
-    steps: 11,
+    root: "E3",
+    scale: "wholeTone",
+    octaves: 3,
+    steps: 32,
     pattern: "up",
-    gate: 0.35
+    gate: 0.8
   },
   audio: {
     enabled: true,
-    volume: 0.37,
-    attack: 0.273,
-    release: 0.27,
-    drive: 0.27
+    volume: 0.4,
+    attack: 0.125,
+    release: 0.83,
+    drive: 0.49
   },
   morph: {
-    mode: "static",
-    start: 0.3,
+    mode: "sweep",
+    start: 0.03,
     end: 1
   },
   io: {
