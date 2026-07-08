@@ -3,7 +3,7 @@ services:
     # Prod (Portainer) pulls this published image; the moving `:main` tag lets
     # the Portainer webhook re-pull the latest build. Override APP_IMAGE to pin
     # an immutable `sha-<short>` tag for rollbacks. Local dev still uses `build`.
-    image: ${APP_IMAGE:-ghcr.io/costardrouge/p5-templates:main}
+    image: ${APP_IMAGE:-ghcr.io/costardrouge/sketchbook:main}
     build:
       context: .
       args:
