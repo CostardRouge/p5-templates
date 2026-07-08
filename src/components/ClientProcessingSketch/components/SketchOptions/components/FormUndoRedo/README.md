@@ -52,7 +52,6 @@ function MyForm() {
         autoCapture="debounced"
         debounceMs={400}
         watchPaths={["content", "slides"]}
-        captureInitial
       >
         <UndoRedo />
       </FormUndoRedo>
@@ -69,7 +68,6 @@ function MyForm() {
 type FormUndoRedoConfig = {
   maxHistory?: number;              // Max history entries (default: 50)
   hotkeys?: boolean;                // Enable Cmd/Ctrl+Z shortcuts (default: true)
-  captureInitial?: boolean;         // Capture initial state (default: false)
   autoCapture?: "off" | "debounced" | "immediate"; // Auto-capture mode (default: "off")
   debounceMs?: number;              // Debounce delay in ms (default: 400)
   watchPaths?: string[];            // Specific paths to track (default: all)

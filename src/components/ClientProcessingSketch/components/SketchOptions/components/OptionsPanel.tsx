@@ -32,6 +32,7 @@ const SlideEditor = dynamic( () => import( "./SlideEditor" ) );
 
 import ContentArrayProvider from "./ContentArrayProvider/ContentArrayProvider";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
+import UndoRedo from "./UndoRedo";
 import initOptions from "@/utils/initOptions";
 import type {
   CollapsibleSection, CollapsibleStates
@@ -243,6 +244,8 @@ export default function OptionsPanel( {
         expanded, title
       ) => (
         <div className="flex gap-1">
+          <UndoRedo />
+
           <OptionsImportExport
             options={ options }
             name={ name }

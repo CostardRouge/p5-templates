@@ -24,6 +24,9 @@ import type {
 } from "./components/CaptureActions";
 import useBrowserRecordingSupported from "./components/CaptureActions/hooks/useBrowserRecordingSupported";
 import OptionsPanel from "./components/OptionsPanel";
+import {
+  FormUndoRedo
+} from "./components/FormUndoRedo";
 import RecordingLockBanner from "./components/RecordingLockBanner";
 import ImportSuccessBanner from "./components/ImportSuccessBanner";
 import SketchSettings from "./components/SketchSettings/SketchSettings";
@@ -511,108 +514,115 @@ export default function SketchOptions( {
 
   return (
     <FormProvider { ...methods }>
-      <CollapsibleProvider>
-        <ContentSelectionProvider>
-          <ContentSelectionListener
-            setSection={ setSection }
-            onSelectSlide={ handleSlideSelect }
-            activeSlideIndex={ activeSlideIndex }
-          />
-          {isDesktop ? (
-            <>
-              <div
-                className={ clsx(
-                  "absolute",
-                  // Docked: a flat, full-height rail flush to the right edge —
-                  // one glass surface framing the viewport, the panels inside
-                  // rendered flat and the rail scrolling as one. Floating: a
-                  // card anchored in the bottom-right corner.
-                  dockedDesktop
-                    ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col gap-1 p-2 glass border-l border-theme overflow-y-auto"
-                    : "right-4 bottom-4 w-64 space-y-2"
-                ) }
-                style={ dockedDesktop ? undefined : {
-                  maxWidth: "calc(50% - 0.75rem)"
-                } }
-              >
-                {lifecycle.isLocked && (
-                  <RecordingLockBanner
-                    state={ lifecycle.state }
-                    onClone={ handleBannerClone }
-                    cloning={ bannerCloning }
-                  />
-                )}
-
-                {importBanner && (
-                  <ImportSuccessBanner
-                    message={ importBanner }
-                    onDismiss={ () => setImportBanner( null ) }
-                  />
-                )}
-
-                <OptionsPanel
-                  methods={ methods }
-                  name={ name }
-                  persistedJob={ persistedJob }
-                  jobStatus={ lifecycle.currentStatus }
-                  onImportOptions={ handleImportOptions }
-                  docked={ dockedDesktop }
-                  { ...bodyProps }
-                />
-
-                {recordingSupported && (
-                  <CaptureActions
-                    forwardedRef={ captureActionsRef }
-                    activeSlideIndex={ activeSlideIndex }
-                    docked={ dockedDesktop }
-                    { ...captureProps }
-                  />
-                )}
-              </div>
-
-              <SketchAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
-                <SketchSettings
-                  activeSlideIndex={ activeSlideIndex }
-                  activeSlideId={ activeSlideId }
-                  expanded={ collapsibleStates.sketchSettings }
-                  onToggle={ ( expanded ) => setSection(
-                    "sketchSettings",
-                    expanded
-                  ) }
-                  docked={ dockedDesktop }
-                />
-              </SketchAssetsProvider>
-            </>
-          ) : (
-            <MobileStudioDrawer
-              expanded={ collapsibleStates.sketchSettings }
-              onToggle={ ( expanded ) => setSection(
-                "sketchSettings",
-                expanded
-              ) }
+      {/* Undo/redo history over the whole options form. Auto-captures a
+          snapshot 400ms after the user stops editing (form fields as well as
+          sketch-driven changes like canvas drags, which sync into the form),
+          and wires Cmd/Ctrl+Z / Shift+Z hotkeys. Undo/redo replay through
+          reset(), which propagates to the sketch like an options import. */}
+      <FormUndoRedo autoCapture="debounced">
+        <CollapsibleProvider>
+          <ContentSelectionProvider>
+            <ContentSelectionListener
+              setSection={ setSection }
+              onSelectSlide={ handleSlideSelect }
               activeSlideIndex={ activeSlideIndex }
-              activeSlideId={ activeSlideId }
-              jobId={ jobId }
-              body={ bodyProps }
-              capture={ captureProps }
-              captureActionsRef={ captureActionsRef }
-              recordingSupported={ recordingSupported }
-              jobStatus={ lifecycle.currentStatus }
-              onImportOptions={ handleImportOptions }
-              bannerCloning={ bannerCloning }
-              onBannerClone={ handleBannerClone }
-              importBanner={ importBanner }
-              onImportBannerDismiss={ () => setImportBanner( null ) }
             />
-          )}
+            {isDesktop ? (
+              <>
+                <div
+                  className={ clsx(
+                    "absolute",
+                    // Docked: a flat, full-height rail flush to the right edge —
+                    // one glass surface framing the viewport, the panels inside
+                    // rendered flat and the rail scrolling as one. Floating: a
+                    // card anchored in the bottom-right corner.
+                    dockedDesktop
+                      ? "right-0 top-12 bottom-0 z-40 flex w-72 flex-col gap-1 p-2 glass border-l border-theme overflow-y-auto"
+                      : "right-4 bottom-4 w-64 space-y-2"
+                  ) }
+                  style={ dockedDesktop ? undefined : {
+                    maxWidth: "calc(50% - 0.75rem)"
+                  } }
+                >
+                  {lifecycle.isLocked && (
+                    <RecordingLockBanner
+                      state={ lifecycle.state }
+                      onClone={ handleBannerClone }
+                      cloning={ bannerCloning }
+                    />
+                  )}
 
-          {/* The central Interactive mixer — one overview of every binding, with
+                  {importBanner && (
+                    <ImportSuccessBanner
+                      message={ importBanner }
+                      onDismiss={ () => setImportBanner( null ) }
+                    />
+                  )}
+
+                  <OptionsPanel
+                    methods={ methods }
+                    name={ name }
+                    persistedJob={ persistedJob }
+                    jobStatus={ lifecycle.currentStatus }
+                    onImportOptions={ handleImportOptions }
+                    docked={ dockedDesktop }
+                    { ...bodyProps }
+                  />
+
+                  {recordingSupported && (
+                    <CaptureActions
+                      forwardedRef={ captureActionsRef }
+                      activeSlideIndex={ activeSlideIndex }
+                      docked={ dockedDesktop }
+                      { ...captureProps }
+                    />
+                  )}
+                </div>
+
+                <SketchAssetsProvider scope="global" assetsName="assets" jobId={ jobId }>
+                  <SketchSettings
+                    activeSlideIndex={ activeSlideIndex }
+                    activeSlideId={ activeSlideId }
+                    expanded={ collapsibleStates.sketchSettings }
+                    onToggle={ ( expanded ) => setSection(
+                      "sketchSettings",
+                      expanded
+                    ) }
+                    docked={ dockedDesktop }
+                  />
+                </SketchAssetsProvider>
+              </>
+            ) : (
+              <MobileStudioDrawer
+                expanded={ collapsibleStates.sketchSettings }
+                onToggle={ ( expanded ) => setSection(
+                  "sketchSettings",
+                  expanded
+                ) }
+                activeSlideIndex={ activeSlideIndex }
+                activeSlideId={ activeSlideId }
+                jobId={ jobId }
+                body={ bodyProps }
+                capture={ captureProps }
+                captureActionsRef={ captureActionsRef }
+                recordingSupported={ recordingSupported }
+                jobStatus={ lifecycle.currentStatus }
+                onImportOptions={ handleImportOptions }
+                bannerCloning={ bannerCloning }
+                onBannerClone={ handleBannerClone }
+                importBanner={ importBanner }
+                onImportBannerDismiss={ () => setImportBanner( null ) }
+              />
+            )}
+
+            {/* The central Interactive mixer — one overview of every binding, with
               per-layer solo / mute / weight. Floats bottom-center (desktop only,
               where it doesn't collide with the mobile drawer); hidden unless the
               plugin is on and the scope has bindings. */}
-          {isDesktop && <InteractivePanel basePath={ sketchBasePath } />}
-        </ContentSelectionProvider>
-      </CollapsibleProvider>
+            {isDesktop && <InteractivePanel basePath={ sketchBasePath } />}
+          </ContentSelectionProvider>
+        </CollapsibleProvider>
+      </FormUndoRedo>
     </FormProvider>
   );
 }

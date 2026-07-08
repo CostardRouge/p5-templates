@@ -16,6 +16,7 @@ import SketchAssetsProvider from "./SketchAssetsProvider/SketchAssetsProvider";
 import RecordingLockBanner from "./RecordingLockBanner";
 import ImportSuccessBanner from "./ImportSuccessBanner";
 import OptionsImportExport from "./CaptureActions/components/OptionsImportExport";
+import UndoRedo from "./UndoRedo";
 import CaptureActions, {
   type CaptureActionsRef
 } from "./CaptureActions";
@@ -237,6 +238,10 @@ export default function MobileStudioDrawer( {
                     {tab.label}
                   </button>
                 ) )}
+              </div>
+
+              <div className="shrink-0 px-1">
+                <UndoRedo />
               </div>
 
               <button
