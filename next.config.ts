@@ -48,6 +48,27 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_INTERACTION_BINDINGS: process.env.INTERACTION_BINDINGS
   },
 
+  // Allow the /embed route to be framed by other sites (the whole point of an
+  // embed). Every other route keeps the browser default (same-origin framing
+  // only). Restrict which origins may embed by setting EMBED_FRAME_ANCESTORS
+  // (space-separated, e.g. "https://portfolio.example https://staging.example");
+  // defaults to "*" so a fresh install works as a public widget out of the box.
+  async headers() {
+    const frameAncestors = process.env.EMBED_FRAME_ANCESTORS?.trim() || "*";
+
+    return [
+      {
+        source: "/embed/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: `frame-ancestors ${ frameAncestors }`
+          }
+        ]
+      }
+    ];
+  },
+
   // The gallery/editor moved from /templates to /sketches. Permanent (308)
   // redirects keep every previously shared link, bookmark, and indexed URL
   // alive — including old recording jobs whose stored path still starts with

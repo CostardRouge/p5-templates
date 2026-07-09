@@ -117,6 +117,22 @@
     display: block;
 }
 
+/* Embeddable sketch host (/embed route): canvas-only, fills the frame, no
+   editor affordances. Sits over the shared layout's <main>. */
+.embed-root {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+}
+
+.embed-root .sketch-canvas-container canvas:hover,
+.embed-root .sketch-canvas-container .sketch-surface:hover {
+    outline: none;
+}
+
 .glass {
     @apply bg-background/80;
     backdrop-filter: blur(0.9rem);

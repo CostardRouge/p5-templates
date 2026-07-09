@@ -10,7 +10,7 @@ import {
 } from "react";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import GoogleAnalyticsTracker from "@/components/GoogleAnalyticsTracker";
-import MenuBar from "@/components/MenuBar";
+import MenuBarGate from "@/components/MenuBarGate";
 import {
   MenuBarSlotProvider
 } from "@/components/MenuBarPortal";
@@ -163,7 +163,7 @@ export default function RootLayout( {
               <main className="h-full overflow-auto overscroll-contain relative">{children}</main>
 
               <Suspense>
-                <MenuBar
+                <MenuBarGate
                   showRecordings={ process.env.BACKEND_RECORDING === "true" }
                   hasMissingThumbnails={ hasMissingThumbnails }
                   hasMissingPreviews={ hasMissingPreviews }
