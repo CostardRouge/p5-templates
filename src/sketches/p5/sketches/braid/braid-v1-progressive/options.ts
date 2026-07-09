@@ -6,7 +6,8 @@ export const formValues = {
     pipeRadius: 0.16,
     braidRadius: 0.6,
     knotType: "plait" as "plait" | "spiral",
-    plaitDepth: 0.45,
+    plaitDepth: 0.6,
+    roundness: 0.2,
     wind: 3,
     scrollSpeed: 1,
     radiusPulse: 0,
@@ -17,8 +18,16 @@ export const formValues = {
     height: -1,
     sharpness: 0.5
   },
+  distortion: {
+    min: 1,
+    max: 1,
+    frequency: 0.75,
+    travelSpeed: 1,
+    easing: "easeInOutSine"
+  },
   loose: {
     spread: 1.1,
+    stagger: 1,
     sway: 0.12,
     swayFreq: 1.2,
     swaySpeed: 1
@@ -52,7 +61,8 @@ export const formValues = {
     specular: 0.99,
     specPower: 24,
     fresnelPower: 3.3,
-    rimStrength: 0.87
+    rimStrength: 0.87,
+    shadowSoftness: 16
   },
   aberration: {
     amount: 3,
@@ -116,10 +126,17 @@ export const formConfiguration: Record<string, any> = {
         ]
       },
       plaitDepth: {
-        label: "Plait depth (over-under)",
+        label: "Plait depth (auto-floored for clearance)",
         component: "slider",
         min: 0.1,
         max: 1,
+        step: 0.01
+      },
+      roundness: {
+        label: "Weave roundness (auto-floored for clearance)",
+        component: "slider",
+        min: 0,
+        max: 0.8,
         step: 0.01
       },
       wind: {
@@ -179,6 +196,44 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
+  distortion: {
+    component: "nested-object",
+    label: "Distortion (size curve)",
+    fields: {
+      min: {
+        label: "Min scale (valleys)",
+        component: "slider",
+        min: 0.2,
+        max: 1.5,
+        step: 0.01
+      },
+      max: {
+        label: "Max scale (peaks)",
+        component: "slider",
+        min: 0.5,
+        max: 2.5,
+        step: 0.01
+      },
+      frequency: {
+        label: "Bumps per unit height",
+        component: "slider",
+        min: 0.1,
+        max: 2,
+        step: 0.05
+      },
+      travelSpeed: {
+        label: "Travel speed (snaps to whole cycles/loop)",
+        component: "slider",
+        min: -4,
+        max: 4,
+        step: 0.01
+      },
+      easing: {
+        label: "Bump easing (expo = sharp bulges)",
+        component: "easing"
+      }
+    }
+  },
   loose: {
     component: "nested-object",
     label: "Loose strands",
@@ -189,6 +244,13 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 3,
         step: 0.01
+      },
+      stagger: {
+        label: "Depth stagger (anti-overlap)",
+        component: "slider",
+        min: 0,
+        max: 3,
+        step: 0.05
       },
       sway: {
         label: "Sway amplitude",
@@ -382,6 +444,13 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 2,
         step: 0.01
+      },
+      shadowSoftness: {
+        label: "Strand shadows (0 = off, higher = harder)",
+        component: "slider",
+        min: 0,
+        max: 64,
+        step: 1
       }
     }
   },

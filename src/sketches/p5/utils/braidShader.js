@@ -50,6 +50,7 @@ export const BRAID_UNIFORMS_GLSL = `
   uniform float uSpecPower;
   uniform float uFresnelPower;    // rim sharpness
   uniform float uRimStrength;     // iridescent edge glow
+  uniform float uShadowSoft;      // soft-shadow hardness (0 = shadows off)
 
   // ── Camera / fog ──
   uniform float uCamDist;         // eye distance from the scene axis
@@ -134,6 +135,27 @@ export function braidShadingGlsl( {
     return clamp(1.0 - 2.5 * occ, 0.0, 1.0);
   }
 
+  // Raymarched soft shadow toward the light (iq's penumbra estimate). Strand-on-
+  // strand cast shadows are what makes crossings read as one tube passing OVER
+  // another instead of two surfaces merging. Note mapScene is Lipschitz-divided,
+  // so the returned distances are conservative — uShadowSoft is tuned against
+  // that (larger values = harder shadow edges).
+  float softShadow(vec3 ro, vec3 rd) {
+    float res = 1.0;
+    float t = 0.02;
+
+    for (int i = 0; i < 24; i++) {
+      float d = mapScene(ro + rd * t);
+
+      res = min(res, uShadowSoft * d / t);
+      t += clamp(d, 0.01, 0.4);
+
+      if (res < 0.01 || t > 6.0) { break; }
+    }
+
+    return clamp(res, 0.0, 1.0);
+  }
+
   vec3 shade(vec3 pos, vec3 n, vec3 rd) {
     float k = nearestPipe(pos);
 
@@ -151,6 +173,12 @@ export function braidShadingGlsl( {
     vec3  hlf = normalize(uLightDir - rd);
     float spec = pow(max(dot(n, hlf), 0.0), uSpecPower) * uSpecular;
     float ao = calcAO(pos, n);
+    float sh = uShadowSoft > 0.0
+      ? softShadow(pos + n * SURF_EPS * 4.0, uLightDir)
+      : 1.0;
+
+    diff *= sh;
+    spec *= sh;
 
     vec3 col = base * (uAmbient + uDiffuse * diff * ao);
     col += base * fres * uRimStrength; // iridescent edge glow

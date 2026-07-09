@@ -13,6 +13,10 @@ import {
   focalFromFov,
   lipschitzDivisor
 } from "@/p5/utils/braidShader.js";
+import easing from "@/p5/utils/easing.js";
+import {
+  easingId
+} from "@/p5/utils/easingGlsl.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // braid v1 — progressive.
@@ -44,7 +48,24 @@ import {
 // per-height centre drift makes the union-of-tubes field a bound rather than a
 // true distance, so the march divides by a CPU-computed Lipschitz factor
 // (lipschitzDivisor) — same technique as v2, but the bound now also covers the
-// loose→knot blend slope and the sway.
+// loose→knot blend slope, the sway and the distortion profile.
+//
+// ── No interpenetration (cheats, not collisions) ─────────────────────────────
+// Strands never pass through each other, by construction rather than by any
+// collision solve: (1) the plait depth is floored on the CPU so crossing
+// strands always clear by ~15% of their diameter; (2) even strand counts pair
+// strands in phase opposition whose sin(2θ) depths are IDENTICAL — a floored
+// cos(θ) "roundness" orbit separates those head-on pairs; (3) the z (depth)
+// engagement completes BEFORE the lateral weave starts, and waiting strands
+// are alternately staggered in z, so the transition zone never crosses
+// coplanar tubes; (4) raymarched soft shadows make every over/under pass read
+// as one tube in front of another instead of two surfaces melting together.
+//
+// ── Distortion ────────────────────────────────────────────────────────────────
+// A size profile along the axis — a triangle wave shaped by the form's easing
+// picker (applyEasing, so expo gives sharp exponential bulges) between a min
+// and max scale — multiplies both the tube radius and the weave amplitude, and
+// travels with the braid a whole number of cycles per loop (seam-safe).
 //
 // ── Loop safety ──────────────────────────────────────────────────────────────
 // uT sweeps animation.angle (0 → TAU per loop); every time-driven rate (scroll,
@@ -71,12 +92,14 @@ const FRAGMENT = `
   uniform float uPipeRadius;      // tube thickness
   uniform float uBraidRadius;     // braided-pattern amplitude
   uniform int   uKnotType;        // 0 = spiral, 1 = plait (over-under weave)
-  uniform float uPlaitDepth;      // plait z amplitude as a ratio of x
+  uniform float uPlaitDepth;      // plait z amplitude (CPU-floored: clearance)
+  uniform float uZRound;          // cos(θ) z term — separates opposite pairs
   uniform float uWind;            // winding rate (radians per unit height)
   uniform float uScroll;          // whole pattern cycles per loop (CPU-rounded)
   uniform float uFrontY;          // braiding-front height (world y)
   uniform float uFrontW;          // front half-width (attach sharpness)
   uniform float uLooseSpread;     // half-width of the loose fan
+  uniform float uStaggerZ;        // alternating z offset of waiting strands
   uniform float uSway;            // loose-strand sway amplitude
   uniform float uSwayFreq;        // sway spatial frequency along y
   uniform float uSwaySpeed;       // sway cycles per loop (CPU-rounded)
@@ -85,17 +108,36 @@ const FRAGMENT = `
   uniform float uPulseSpeed;      // pulse cycles per loop (CPU-rounded)
   uniform float uCentreLipschitz; // CPU-computed safety divisor for the march
 
+  // ── Distortion profile (size curve along the braid) ──
+  uniform float uDistMin;         // scale at the profile's valley
+  uniform float uDistMax;         // scale at the profile's peak
+  uniform float uDistFreq;        // bumps per unit height
+  uniform float uDistTravel;      // profile scroll (whole cycles/loop, / TAU)
+  uniform int   uDistEasing;      // applyEasing id shaping the bump
+
   ${ IRIDESCENT_GLSL }
 
-  // How braided the bundle is at height y: 0 = loose fan, 1 = fully tied.
-  // World-fixed, so the tying always happens at the same (screen) place.
-  float engagement(float y) {
-    return smoothstep(uFrontY - uFrontW, uFrontY + uFrontW, y);
+  // Thickness/amplitude multiplier at height y: a triangle wave (seamless when
+  // tiled along the infinite axis AND when scrolled whole cycles per loop)
+  // shaped by the selected easing — expo easings give sharp exponential bulges.
+  float distortionAt(float y) {
+    float u = y * uDistFreq - uT * uDistTravel;
+    float tri = 1.0 - 2.0 * abs(fract(u) - 0.5);
+
+    return mix(uDistMin, uDistMax, applyEasing(uDistEasing, tri));
   }
 
-  // Strand k's tube centre in the xz-plane at height y.
-  vec2 strandCentre(float k, float y) {
-    // Loose arrangement: a row along x, swaying seamlessly while it waits.
+  // Strand k's tube centre in the xz-plane at height y (s = distortion scale).
+  vec2 strandCentre(float k, float y, float s) {
+    // Two engagement envelopes, both world-fixed so the tying always happens
+    // at the same (screen) place. Depth (z) engages BEFORE the lateral weave
+    // (x): strands take up their over/under lanes while still separated in x,
+    // so no crossing ever starts from a coplanar state.
+    float ex = smoothstep(uFrontY - uFrontW, uFrontY + uFrontW, y);
+    float ez = smoothstep(uFrontY - 2.2 * uFrontW, uFrontY - 0.2 * uFrontW, y);
+
+    // Loose arrangement: a row along x, swaying seamlessly while it waits,
+    // alternately staggered in z so waiting strands are never coplanar.
     float fx = uStrandCount > 1.0
       ? (k / (uStrandCount - 1.0) - 0.5) * 2.0
       : 0.0;
@@ -103,38 +145,47 @@ const FRAGMENT = `
 
     loose.x += uSway * sin(y * uSwayFreq + uT * uSwaySpeed + k * 2.399);
     loose.y += uSway * 0.6 * cos(y * uSwayFreq * 0.8 + uT * uSwaySpeed + k * 1.7);
+    loose.y += (mod(k, 2.0) * 2.0 - 1.0) * uPipeRadius * 1.4 * uStaggerZ * s;
 
     // Braided arrangement at the traveling winding phase.
     float phase = y * uWind - uT * uScroll;
     float a = TAU * k / uStrandCount;
-    float br = uBraidRadius
+    float br = s * uBraidRadius
       * (1.0 + uRadiusPulse * sin(y * uPulseFreq + uT * uPulseSpeed));
 
     vec2 knot;
 
     if (uKnotType == 1) {
-      // Plait: three-phase lissajous — sin for the side-to-side crossing,
-      // sin(2θ) for the over-under depth, the classic hair-braid weave.
+      // Plait: phase-shifted lissajous — sin for the side-to-side crossing,
+      // sin(2θ) for the over-under depth (CPU-floored so crossing strands
+      // always clear each other), plus a small cos(θ) orbit that separates
+      // the opposite-phase pairs an even strand count would otherwise slam
+      // through each other head-on.
       float th = phase + a;
-      knot = vec2(br * sin(th), br * uPlaitDepth * sin(2.0 * th));
+      knot = vec2(
+        br * sin(th),
+        br * (uPlaitDepth * sin(2.0 * th) + uZRound * cos(th))
+      );
     } else {
       // Spiral: the proven v2-pipes helix bundle.
       knot = br * vec2(cos(a + phase), sin(a + phase));
     }
 
-    return mix(loose, knot, engagement(y));
+    return vec2(mix(loose.x, knot.x, ex), mix(loose.y, knot.y, ez));
   }
 
-  // Signed-distance bound to the bundle: union of tubes whose centres drift
-  // with height, kept conservative by the CPU Lipschitz divisor.
+  // Signed-distance bound to the bundle: union of tubes whose centres (and
+  // radius) drift with height, kept conservative by the CPU Lipschitz divisor.
   float mapScene(vec3 p) {
+    float s = distortionAt(p.y);
+    float r = uPipeRadius * s;
     float best = 1e9;
 
     for (int k = 0; k < ${ MAX_STRANDS }; k++) {
       if (float(k) >= uStrandCount) { break; }
 
-      vec2 c = strandCentre(float(k), p.y);
-      float d = length(p.xz - c) - uPipeRadius;
+      vec2 c = strandCentre(float(k), p.y, s);
+      float d = length(p.xz - c) - r;
 
       best = min(best, d);
     }
@@ -144,13 +195,14 @@ const FRAGMENT = `
 
   // Which strand owns this point — recomputed at the hit for colour banding.
   float nearestPipe(vec3 p) {
+    float s = distortionAt(p.y);
     float best = 1e9;
     float bestK = 0.0;
 
     for (int k = 0; k < ${ MAX_STRANDS }; k++) {
       if (float(k) >= uStrandCount) { break; }
 
-      vec2 c = strandCentre(float(k), p.y);
+      vec2 c = strandCentre(float(k), p.y, s);
       float d = length(p.xz - c);
 
       if (d < best) { best = d; bestK = float(k); }
@@ -167,6 +219,39 @@ const FRAGMENT = `
 `;
 
 const braidRenderer = createNoiseFieldRenderer( FRAGMENT );
+
+// Steepest slope of an easing curve over [0,1], sampled once per key — feeds
+// the Lipschitz bound so sharp curves (expo, elastic) can't out-run the march.
+const easingSlopeCache = new Map();
+
+function maxEasingSlope( key ) {
+  if ( easingSlopeCache.has( key ) ) {
+    return easingSlopeCache.get( key );
+  }
+
+  const fn = typeof easing[ key ] === "function" ? easing[ key ] : ( x ) => x;
+  const samples = 64;
+
+  let slope = 0;
+  let prev = fn( 0 );
+
+  for ( let i = 1; i <= samples; i++ ) {
+    const value = fn( i / samples );
+
+    slope = Math.max(
+      slope,
+      Math.abs( value - prev ) * samples
+    );
+    prev = value;
+  }
+
+  easingSlopeCache.set(
+    key,
+    slope
+  );
+
+  return slope;
+}
 
 sketch.setup(
   () => {},
@@ -214,7 +299,6 @@ sketch.draw( () => {
   const pipeRadius = braid.pipeRadius ?? 0.16;
   const braidRadius = braid.braidRadius ?? 0.6;
   const knotType = braid.knotType ?? "plait";
-  const plaitDepth = braid.plaitDepth ?? 0.45;
   const wind = braid.wind ?? 3;
   const radiusPulse = braid.radiusPulse ?? 0;
   const pulseFreq = braid.pulseFreq ?? 1;
@@ -226,22 +310,77 @@ sketch.draw( () => {
   );
 
   const looseSpread = loose.spread ?? 1.1;
+  const stagger = loose.stagger ?? 1;
   const sway = loose.sway ?? 0.12;
   const swayFreq = loose.swayFreq ?? 1.2;
 
+  // ── Guaranteed strand clearance (the "cheat", no collision system) ──────
+  // Two crossing strands are separated in z by 2·br·depth·sin(δ) (δ = their
+  // phase gap), so flooring the plait depth at 1.15·r / (br·sin δmin) keeps
+  // every crossing at least ~15% clear of touching, whatever the sliders say.
+  // Opposite-phase pairs (even strand counts) have sin δ = 0 — the sin(2θ)
+  // term gives them IDENTICAL z and they'd pass straight through each other —
+  // so a cos(θ) orbit term (roundness) is floored to take over there.
+  const brFloor = Math.max(
+    braidRadius * ( 1 - radiusPulse ),
+    0.001
+  );
+
+  let sinMin = 1;
+  let hasOppositePair = false;
+
+  for ( let i = 1; i < strandCount; i++ ) {
+    const sinDelta = Math.abs( Math.sin( ( 2 * Math.PI * i ) / strandCount ) );
+
+    if ( sinDelta < 0.05 ) {
+      hasOppositePair = true;
+    } else {
+      sinMin = Math.min(
+        sinMin,
+        sinDelta
+      );
+    }
+  }
+
+  const plaitDepth = Math.max(
+    braid.plaitDepth ?? 0.6,
+    ( 1.15 * pipeRadius ) / ( brFloor * sinMin )
+  );
+  const zRound = Math.max(
+    braid.roundness ?? 0.2,
+    hasOppositePair ? ( 1.15 * pipeRadius ) / brFloor : 0
+  );
+
+  // ── Distortion profile (size curve along the braid) ─────────────────────
+  const distortion = o.distortion ?? {};
+  const distMin = distortion.min ?? 1;
+  const distMax = distortion.max ?? 1;
+  const distFreq = distortion.frequency ?? 0.75;
+  const distEasingKey = distortion.easing ?? "easeInOutSine";
+  const distTravelCycles = Math.round( ( distortion.travelSpeed ?? 1 ) * timeScale );
+  const sMax = Math.max(
+    distMin,
+    distMax
+  );
+  const distSlope = Math.abs( distMax - distMin )
+    * maxEasingSlope( distEasingKey ) * 2 * distFreq;
+
   // ── Conservative Lipschitz bound for the blended field ──────────────────
   // The tube centres drift with height at a rate bounded by: the winding slope
-  // of the braided pattern (amplified by the plait's 2θ depth term and the
-  // radius pulse), the loose→knot blend slope across the front (smoothstep max
-  // slope 1.5 / (2w) times the biggest centre jump), and the sway slope.
+  // of the braided pattern (amplified by the plait's depth + roundness terms
+  // and the radius pulse), the loose→knot blend slope across the front
+  // (smoothstep max slope 1.5 / (2w) times the biggest centre jump), the sway
+  // slope, and the distortion profile's slope (which also varies the radius).
   const brMax = braidRadius * ( 1 + radiusPulse );
   const knotSlope = brMax * wind * Math.max(
     1,
-    2 * plaitDepth
+    2 * plaitDepth + zRound
   ) + braidRadius * radiusPulse * pulseFreq;
-  const mixSlope = ( 1.5 / ( 2 * frontW ) ) * ( looseSpread + brMax + sway * 1.6 );
+  const mixSlope = ( 1.5 / ( 2 * frontW ) )
+    * ( looseSpread + brMax + sway * 1.6 + stagger * pipeRadius * 1.4 );
   const swaySlope = sway * swayFreq * 1.6;
-  const centreLipschitz = lipschitzDivisor( knotSlope + mixSlope + swaySlope );
+  const centreLipschitz = lipschitzDivisor( sMax * ( knotSlope + mixSlope + swaySlope )
+      + ( 2 * brMax + pipeRadius ) * distSlope );
 
   const fov = camera.fov ?? 55;
   const focal = focalFromFov( fov );
@@ -281,11 +420,13 @@ sketch.draw( () => {
         int: knotType === "spiral" ? 0 : 1
       },
       uPlaitDepth: plaitDepth,
+      uZRound: zRound,
       uWind: wind,
       uScroll: scrollCycles,
       uFrontY: frontY,
       uFrontW: frontW,
       uLooseSpread: looseSpread,
+      uStaggerZ: stagger,
       uSway: sway,
       uSwayFreq: swayFreq,
       uSwaySpeed: swayCycles,
@@ -293,6 +434,11 @@ sketch.draw( () => {
       uPulseFreq: pulseFreq,
       uPulseSpeed: pulseCycles,
       uCentreLipschitz: centreLipschitz,
+      uDistMin: distMin,
+      uDistMax: distMax,
+      uDistFreq: distFreq,
+      uDistTravel: distTravelCycles / p.TAU,
+      uDistEasing: easingId( distEasingKey ),
       uCamDist: camDist,
       uFocal: focal,
       uPitch: camera.pitch ?? 0,
@@ -313,6 +459,7 @@ sketch.draw( () => {
       uSpecPower: light.specPower ?? 24,
       uFresnelPower: light.fresnelPower ?? 3.3,
       uRimStrength: light.rimStrength ?? 0.87,
+      uShadowSoft: light.shadowSoftness ?? 16,
       uFogDensity: camera.fogDensity ?? 0.12,
       uFogStart: camDist,
       uMaxDist: camDist + 10,
