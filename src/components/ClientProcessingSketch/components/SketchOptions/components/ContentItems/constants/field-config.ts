@@ -124,9 +124,15 @@ interface HiddenConfig extends BaseConfig {
   component: "hidden";
 }
 
+// The standardized JSON field, on par with the asset kinds (images, videos,
+// audios). Renders an "Upload .json" file picker plus a text editor; the
+// stored value is the parsed JSON once valid, or the raw string mid-edit.
 interface JsonConfig extends BaseConfig {
   component: "json";
+  /** Rows for the text editor. Defaults to 4. */
   rows?: number;
+  /** `accept` attribute for the file picker. Defaults to `.json`. */
+  accept?: string;
 }
 
 interface ImagesStackConfig extends BaseConfig {

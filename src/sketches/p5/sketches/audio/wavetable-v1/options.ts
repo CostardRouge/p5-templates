@@ -347,8 +347,8 @@ export const formConfiguration: Record<string, any> = {
         options: SOURCE_OPTIONS
       },
       customJson: {
-        label: "Custom wavetable .json (paste to load — wins over source)",
-        component: "textarea"
+        label: "Custom wavetable .json (upload or paste — wins over source)",
+        component: "json"
       }
     }
   },

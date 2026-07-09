@@ -256,19 +256,25 @@ function morphAt(
 }
 
 /**
- * Table source priority: pasted .json (textarea) → bundled preset → generator
- * spec. A broken paste falls back to the generator instead of blanking the
- * sketch.
+ * Table source priority: custom .json (uploaded or pasted) → bundled preset →
+ * generator spec. A broken payload falls back to the generator instead of
+ * blanking the sketch.
+ *
+ * The `json` field stores parsed JSON once valid, or the raw string while the
+ * user is mid-edit, so accept both — `parseWavetable` already does.
  */
 function resolveTable( o ) {
   const io = o.io ?? {};
-  const customJson = ( io.customJson ?? "" ).trim();
+  const customJson = io.customJson;
+  const hasCustom = typeof customJson === "string"
+    ? customJson.trim().length > 0
+    : customJson != null && typeof customJson === "object";
 
-  if ( customJson ) {
+  if ( hasCustom ) {
     try {
       return parseWavetable( customJson );
     } catch {
-      // Invalid paste — fall through to the configured source.
+      // Invalid payload — fall through to the configured source.
     }
   }
 
