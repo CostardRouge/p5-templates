@@ -3,32 +3,32 @@ export const formValues = {
   timeScale: 1,
   braid: {
     strandCount: 6,
-    pipeRadius: 0.14,
+    pipeRadius: 0.18,
     braidRadius: 0.66,
     knotType: "spiral" as "plait" | "spiral",
     plaitDepth: 0.1,
-    roundness: 0.2,
-    wind: 2.48,
-    scrollSpeed: 1.98,
-    radiusPulse: 0.11,
-    pulseFreq: 0.81,
-    pulseSpeed: 0.97
+    roundness: 0.06,
+    wind: 1.4,
+    scrollSpeed: 3.06,
+    radiusPulse: 0.44,
+    pulseFreq: 0.23,
+    pulseSpeed: 2
   },
   front: {
-    height: -0.5,
-    sharpness: 1.35
+    height: -0.4,
+    sharpness: 3
   },
   distortion: {
-    min: 0.82,
-    max: 0.62,
-    frequency: 0.65,
+    min: 0.85,
+    max: 1.06,
+    frequency: 0.5,
     travelSpeed: -1.61,
     easing: "easeInOutSine"
   },
   loose: {
-    spread: 2.11,
-    stagger: 2.4,
-    sway: 0.35,
+    spread: 1.65,
+    stagger: 3,
+    sway: 0,
     swayFreq: 2.72,
     swaySpeed: 1.07
   },
@@ -38,38 +38,38 @@ export const formValues = {
   },
   camera: {
     distance: 6,
-    fov: 55,
-    pitch: 0,
+    fov: 90,
+    pitch: -0.3,
     yaw: 0,
-    fogDensity: 0.12
+    fogDensity: 0.065
   },
   colors: {
     hueSpeed: 1,
-    hueSpread: 3.31,
-    huePhase: 2.25,
+    hueSpread: 2.61,
+    huePhase: 3.32,
     lengthHueShift: -0.35,
-    pipeHueShift: -0.95,
+    pipeHueShift: -0.24,
     shimmer: 0.93,
-    saturation: 0.09,
+    saturation: 0.66,
     brightness: 0.82
   },
   light: {
-    azimuth: -1.29,
-    elevation: -0.44,
-    ambient: 0.33,
-    diffuse: 0.6,
-    specular: 0.99,
+    azimuth: 0.05,
+    elevation: 0.04,
+    ambient: 0.32,
+    diffuse: 0.42,
+    specular: 0.85,
     specPower: 21,
-    fresnelPower: 1.06,
-    rimStrength: 0,
-    shadowSoftness: 16
+    fresnelPower: 1.52,
+    rimStrength: 0.05,
+    shadowSoftness: 35
   },
   aberration: {
     amount: 0,
     mode: "radial" as "radial" | "horizontal"
   },
   rendering: {
-    resolutionScale: 0.75
+    resolutionScale: 1
   },
   backgroundColor: [
     0,
