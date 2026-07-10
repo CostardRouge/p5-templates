@@ -77,6 +77,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:background/background-lines": () => import( "@/p5/sketches/background/background-lines/options" ),
   "p5:braid/braid-v1-progressive": () => import( "@/p5/sketches/braid/braid-v1-progressive/options" ),
   "p5:braid/braid-v2-wire-mesh": () => import( "@/p5/sketches/braid/braid-v2-wire-mesh/options" ),
+  "p5:braid/braid-v3-chainmail": () => import( "@/p5/sketches/braid/braid-v3-chainmail/options" ),
   "p5:censored-v9-wave": () => import( "@/p5/sketches/censored-v9-wave/options" ),
   "p5:churros/churros-v1-circle": () => import( "@/p5/sketches/churros/churros-v1-circle/options" ),
   "p5:churros/churros-v10-tracer": () => import( "@/p5/sketches/churros/churros-v10-tracer/options" ),
