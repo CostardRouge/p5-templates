@@ -2,51 +2,51 @@
 export const formValues = {
   timeScale: 1,
   chainmail: {
-    ringRadius: 0.5,
-    wireRadius: 0.07,
-    tilt: 0.55,
-    rowSpacing: 0.55,
-    columnGap: 0.02,
-    scrollRows: 2
+    ringRadius: 0.81,
+    wireRadius: 0.12,
+    tilt: 0.78,
+    rowSpacing: 0.53,
+    columnGap: 0.27,
+    scrollRows: -3.3
   },
   front: {
-    height: -1.6,
-    growSpan: 1.5
+    height: -4,
+    growSpan: 0.25
   },
   orientation: {
     x: 0,
     y: 1
   },
   camera: {
-    distance: 7,
-    fov: 55,
-    pitch: 0.5,
-    yaw: 0.3,
-    fogDensity: 0.14
+    distance: 13.65,
+    fov: 40,
+    pitch: -0.04,
+    yaw: -0.84,
+    fogDensity: 0.305
   },
   colors: {
     hueSpeed: 0,
-    hueSpread: 2,
-    huePhase: 2.6,
+    hueSpread: 1.7,
+    huePhase: 1.76,
     lengthHueShift: -0.15,
     pipeHueShift: 0.35,
-    shimmer: 1.6,
+    shimmer: 1.8,
     saturation: 0.6,
     brightness: 1.25
   },
   light: {
-    azimuth: -1.1,
-    elevation: 0.5,
-    ambient: 0.28,
+    azimuth: -0.76,
+    elevation: -0.18,
+    ambient: 0.32,
     diffuse: 0.85,
     specular: 1.3,
     specPower: 56,
-    fresnelPower: 3,
-    rimStrength: 0.7,
+    fresnelPower: 1.39,
+    rimStrength: 0,
     shadowSoftness: 24
   },
   aberration: {
-    amount: 2,
+    amount: 0,
     mode: "radial" as "radial" | "horizontal"
   },
   rendering: {
