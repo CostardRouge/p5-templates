@@ -189,7 +189,7 @@ sketch.draw( () => {
 
   const fov = camera.fov ?? 50;
   const focal = focalFromFov( fov );
-  const camDist = camera.distance ?? 5.5;
+  const camDist = camera.distance ?? 8.5;
 
   const orientation = o.orientation ?? {};
   const ox = orientation.x ?? 0;
@@ -224,7 +224,7 @@ sketch.draw( () => {
       uLipschitz: lipschitz,
       uCamDist: camDist,
       uFocal: focal,
-      uPitch: camera.pitch ?? 0.2,
+      uPitch: camera.pitch ?? 0.42,
       uYaw: ( camera.yaw ?? 0 ) + t * orbitTurns,
       uRoll: roll,
       uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
@@ -243,7 +243,7 @@ sketch.draw( () => {
       uFresnelPower: light.fresnelPower ?? 3,
       uRimStrength: light.rimStrength ?? 0.7,
       uShadowSoft: light.shadowSoftness ?? 22,
-      uFogDensity: camera.fogDensity ?? 0.12,
+      uFogDensity: camera.fogDensity ?? 0.1,
       uFogStart: camDist,
       uMaxDist: camDist + 12,
       uAberration: aberration.amount ?? 2,
