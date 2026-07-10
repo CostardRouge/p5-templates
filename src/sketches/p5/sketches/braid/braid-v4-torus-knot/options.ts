@@ -2,11 +2,11 @@
 export const formValues = {
   timeScale: 1,
   rope: {
-    strands: 3,
-    turns: 5,
-    tubeRadius: 0.16,
+    strands: 4,
+    turns: 4,
+    tubeRadius: 0.2,
     minorRadius: 0.4,
-    ringRadius: 1.6,
+    ringRadius: 1.54,
     spin: 1
   },
   orientation: {
@@ -14,12 +14,12 @@ export const formValues = {
     y: 1
   },
   camera: {
-    distance: 5.5,
-    fov: 50,
+    distance: 12,
+    fov: 47,
     pitch: 0.2,
     yaw: 0,
     orbitSpeed: 1,
-    fogDensity: 0.12
+    fogDensity: 0.17
   },
   colors: {
     hueSpeed: 0,
@@ -39,11 +39,11 @@ export const formValues = {
     specular: 1.2,
     specPower: 48,
     fresnelPower: 3,
-    rimStrength: 0.7,
+    rimStrength: 0,
     shadowSoftness: 22
   },
   aberration: {
-    amount: 2,
+    amount: 0,
     mode: "radial" as "radial" | "horizontal"
   },
   rendering: {
