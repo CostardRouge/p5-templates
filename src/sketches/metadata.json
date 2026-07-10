@@ -3478,5 +3478,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-07-10T06:54:57.765Z",
     "ctime": "2026-07-10T06:54:26.097Z"
+  },
+  {
+    "name": "braid-v4-torus-knot",
+    "engine": "p5",
+    "category": "braid",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-10T07:07:07.161Z",
+    "ctime": "2026-07-10T07:06:41.357Z"
   }
 ]
