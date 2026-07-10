@@ -3,20 +3,20 @@ export const formValues = {
   timeScale: 1,
   weave: {
     strands: 3,
-    leads: 5,
-    wireRadius: 0.09,
-    depth: 0.14,
-    minorRadius: 0.45,
-    ringRadius: 1.7,
-    spin: 0
+    leads: 2,
+    wireRadius: 0.16,
+    depth: 0.19,
+    minorRadius: 0.22,
+    ringRadius: 1.35,
+    spin: -2.2
   },
   orientation: {
     x: 0,
     y: 1
   },
   camera: {
-    distance: 11.5,
-    fov: 50,
+    distance: 14,
+    fov: 45,
     pitch: 0.42,
     yaw: 0,
     orbitSpeed: 1,
@@ -24,27 +24,27 @@ export const formValues = {
   },
   colors: {
     hueSpeed: 0,
-    hueSpread: 2,
+    hueSpread: 3.16,
     huePhase: 2.6,
     lengthHueShift: 0.35,
     pipeHueShift: 0.5,
-    shimmer: 2,
-    saturation: 0.7,
-    brightness: 1.3
+    shimmer: 2.34,
+    saturation: 0.83,
+    brightness: 1.27
   },
   light: {
-    azimuth: -1.1,
+    azimuth: -0.86,
     elevation: 0.5,
     ambient: 0.3,
-    diffuse: 0.85,
+    diffuse: 0.39,
     specular: 1.2,
-    specPower: 48,
+    specPower: 54,
     fresnelPower: 3,
-    rimStrength: 0.7,
-    shadowSoftness: 22
+    rimStrength: 0,
+    shadowSoftness: 64
   },
   aberration: {
-    amount: 2,
+    amount: 0,
     mode: "radial" as "radial" | "horizontal"
   },
   rendering: {
