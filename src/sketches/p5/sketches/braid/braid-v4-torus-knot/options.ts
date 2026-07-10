@@ -14,12 +14,12 @@ export const formValues = {
     y: 1
   },
   camera: {
-    distance: 5.5,
+    distance: 8.5,
     fov: 50,
-    pitch: 0.2,
+    pitch: 0.42,
     yaw: 0,
     orbitSpeed: 1,
-    fogDensity: 0.12
+    fogDensity: 0.1
   },
   colors: {
     hueSpeed: 0,
