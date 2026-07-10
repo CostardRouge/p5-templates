@@ -2,25 +2,25 @@
 export const formValues = {
   timeScale: 1,
   mesh: {
-    spacing: 0.55,
-    wireRadius: 0.07,
-    crimp: 0.12,
+    spacing: 0.25,
+    wireRadius: 0.05,
+    crimp: 0.04,
     scrollRows: 2
   },
   front: {
     height: -1.2,
-    sharpness: 0.35
+    sharpness: 0.1
   },
   orientation: {
     x: 0,
     y: 1
   },
   camera: {
-    distance: 6.5,
-    fov: 55,
-    pitch: 0.45,
-    yaw: 0.35,
-    fogDensity: 0.15
+    distance: 8.2,
+    fov: 20,
+    pitch: -0.55,
+    yaw: -0.74,
+    fogDensity: 0.035
   },
   colors: {
     hueSpeed: 0,
@@ -34,21 +34,21 @@ export const formValues = {
   },
   light: {
     azimuth: -1.1,
-    elevation: 0.5,
+    elevation: -0.05,
     ambient: 0.3,
-    diffuse: 0.8,
-    specular: 1.2,
-    specPower: 48,
-    fresnelPower: 3,
-    rimStrength: 0.7,
+    diffuse: 0.74,
+    specular: 0.69,
+    specPower: 50,
+    fresnelPower: 2.4,
+    rimStrength: 0,
     shadowSoftness: 20
   },
   aberration: {
-    amount: 2,
+    amount: 0,
     mode: "radial" as "radial" | "horizontal"
   },
   rendering: {
-    resolutionScale: 0.75
+    resolutionScale: 0.6
   },
   backgroundColor: [
     0,
