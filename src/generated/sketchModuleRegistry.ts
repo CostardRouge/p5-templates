@@ -60,6 +60,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:braid/braid-v2-wire-mesh": () => import( "@/p5/sketches/braid/braid-v2-wire-mesh/index.js" ),
   "p5:braid/braid-v3-chainmail": () => import( "@/p5/sketches/braid/braid-v3-chainmail/index.js" ),
   "p5:braid/braid-v4-torus-knot": () => import( "@/p5/sketches/braid/braid-v4-torus-knot/index.js" ),
+  "p5:braid/braid-v5-turks-head": () => import( "@/p5/sketches/braid/braid-v5-turks-head/index.js" ),
   "p5:censored-v9-wave": () => import( "@/p5/sketches/censored-v9-wave/index.js" ),
   "p5:churros/churros-v1-circle": () => import( "@/p5/sketches/churros/churros-v1-circle/index.js" ),
   "p5:churros/churros-v10-tracer": () => import( "@/p5/sketches/churros/churros-v10-tracer/index.js" ),
