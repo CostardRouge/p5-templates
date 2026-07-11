@@ -3502,5 +3502,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-07-10T07:28:41.201Z",
     "ctime": "2026-07-10T07:28:13.661Z"
+  },
+  {
+    "name": "rings-v1-flythrough",
+    "engine": "p5",
+    "category": "rings",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-11T22:07:56.073Z",
+    "ctime": "2026-07-11T22:07:27.769Z"
   }
 ]
