@@ -27,7 +27,8 @@ export const formValues = {
   dodge: {
     hesitation: 0.12,
     sharpness: 1.5,
-    bunch: 0.3
+    bunch: 0.3,
+    flow: 0.8
   },
   obstacles: {
     segmentsPerLoop: 10,
@@ -296,6 +297,13 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 1.5,
+        step: 0.01
+      },
+      flow: {
+        label: "Flow (0 = darting, 1 = smooth spline)",
+        component: "slider",
+        min: 0,
+        max: 1,
         step: 0.01
       }
     }

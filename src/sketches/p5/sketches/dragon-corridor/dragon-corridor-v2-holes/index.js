@@ -36,6 +36,12 @@ import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 //     (uSwimDip): the body gathers itself, slips through the hole dead-centre,
 //     then breathes again in the open stretch — obstacle-course body language.
 //
+//   • The hole-to-hole path is a cubic Hermite spline with Catmull-Rom
+//     tangents scaled by a "flow" option: at 0 the body stalls on each hole
+//     then darts (v1-style hesitation), at 1 it sweeps through every hole at
+//     an angle with continuous velocity — no fold in the body, no whip in the
+//     FPV camera.
+//
 // ── Looping ──────────────────────────────────────────────────────────────────
 // Identical bookkeeping to v1: everything spatial is a function of
 // s = z − scroll, periodic in s with period L = SEG · PERIOD (hole pattern,
@@ -99,6 +105,7 @@ const FRAGMENT = `
   uniform float uDodgeHold;       // fraction of a segment to hold before darting
   uniform float uDodgeSharp;      // commit curve exponent (higher = later, snappier)
   uniform float uBunch;           // body accumulation while threading a hole
+  uniform float uFlow;            // 0 = eased dart between holes, 1 = flowing spline
 
   // ── Camera ──
   uniform vec3  uCamPos;
@@ -193,38 +200,61 @@ const FRAGMENT = `
     return w * w * (3.0 - 2.0 * w);
   }
 
-  // Dragon centreline at scroll-coord s: hole-to-hole weave (with hesitation),
-  // riding the undulating tube, plus the swim sway pinched at each wall plane
-  // so the body threads the hole dead-centre. activity peaks mid-transition
-  // and drives the body bunching.
+  // Dragon centreline at scroll-coord s: hole-to-hole weave riding the
+  // undulating tube, plus the swim sway pinched at each wall plane so the
+  // body threads the hole dead-centre. activity peaks mid-transition and
+  // drives the body bunching.
+  //
+  // The path is a cubic Hermite through the hole centres with Catmull-Rom
+  // tangents scaled by uFlow. At uFlow = 0 the tangents vanish and the eased
+  // dart takes over (the body stalls on each hole, then darts — v1 body
+  // language); at 1 the parameter is linear and the spline crosses every hole
+  // AT AN ANGLE with continuous velocity, so the body never folds in two and
+  // the FPV camera never whips at a wall plane.
   void weaveInfo(float s, out vec2 centre, out float activity) {
     float f = s / SEG;
     float n0 = floor(f);
     float u = f - n0;
-    float fr = transitionShape(u);
+    float w = mix(transitionShape(u), u, uFlow);
 
+    int iPrev = int(mod(n0 - 1.0, uPeriod) + 0.5);
     int i0 = int(mod(n0, uPeriod) + 0.5);
     int i1 = int(mod(n0 + 1.0, uPeriod) + 0.5);
+    int iNext = int(mod(n0 + 2.0, uPeriod) + 0.5);
+    vec2 hPrev = vec2(0.0);
     vec2 h0 = vec2(0.0);
     vec2 h1 = vec2(0.0);
+    vec2 hNext = vec2(0.0);
 
     for (int i = 0; i < ${ MAX_PERIOD }; i++) {
+      if (i == iPrev) { hPrev = uHoles[i]; }
       if (i == i0) { h0 = uHoles[i]; }
       if (i == i1) { h1 = uHoles[i]; }
+      if (i == iNext) { hNext = uHoles[i]; }
     }
+
+    vec2 m0 = 0.5 * uFlow * (h1 - hPrev);
+    vec2 m1 = 0.5 * uFlow * (hNext - h0);
+
+    float w2 = w * w;
+    float w3 = w2 * w;
 
     // sin²(πu) is 0 at every wall plane with zero slope, so the sway pause is
     // C¹ across segments and vanishes exactly where the hole must be threaded.
     float win = sin(PI * u);
     float dip = mix(1.0, win * win, uSwimDip);
 
-    centre = mix(h0, h1, fr) + corridorCentre(s);
+    centre = h0 * (2.0 * w3 - 3.0 * w2 + 1.0)
+      + m0 * (w3 - 2.0 * w2 + w)
+      + h1 * (-2.0 * w3 + 3.0 * w2)
+      + m1 * (w3 - w2)
+      + corridorCentre(s);
     centre += dip * vec2(
       uSwimAmp.x * sin(s * uSwimFreq + uSwimT),
       uSwimAmp.y * sin(s * uSwimFreq + uSwimT + uSwimAxisPhase)
     );
 
-    activity = 4.0 * fr * (1.0 - fr);
+    activity = 4.0 * w * (1.0 - w);
   }
 
   // Smooth intersection (iq): fillets the corner where the tube meets its cap.
@@ -750,6 +780,13 @@ sketch.draw( () => {
   );
   const dodgeSharp = dodge.sharpness ?? 1.6;
   const bunch = dodge.bunch ?? 0.5;
+  const flow = Math.min(
+    Math.max(
+      dodge.flow ?? 0.8,
+      0
+    ),
+    1
+  );
 
   // Conservative Lipschitz divisor for the marched dragon field. The radial
   // gradient is amplified by the helix winding (maxR·twist), the travelling
@@ -767,7 +804,14 @@ sketch.draw( () => {
     + pipeRadius * ( 1 + bunch );
   const pulseSlope = braidRadius * radiusPulse * pulseFreq;
   const waveSlope = waveAmpX * waveFreqX + waveAmpY * waveFreqY;
-  const weaveSlope = ( 1.5 * ( 2 * maxHoleOffset ) * transRate ) / SEG
+
+  // Hermite slope bound: |dP/dw| ≤ (3 + 2·flow)·maxOffset (basis extrema plus
+  // the two flow-scaled tangents) and |dw/du| ≤ (1 − flow)·transRate + flow.
+  const paramRate = Math.max(
+    ( 1 - flow ) * transRate + flow,
+    1
+  );
+  const weaveSlope = ( ( 3 + 2 * flow ) * maxHoleOffset * paramRate ) / SEG
     + ( swimAmpX + swimAmpY ) * ( swimFreq + ( Math.PI / SEG ) * swimDip )
     + waveSlope;
   const bunchSlope = ( ( 0.25 * braidRadius * ( 1 + radiusPulse ) + pipeRadius )
@@ -817,20 +861,32 @@ sketch.draw( () => {
     const f = s / SEG;
     const n0 = Math.floor( f );
     const u = f - n0;
-    const fr = transitionShape( u );
+    const w = transitionShape( u ) * ( 1 - flow ) + u * flow;
+    const iPrev = ( ( ( n0 - 1 ) % period ) + period ) % period;
     const i0 = ( ( n0 % period ) + period ) % period;
     const i1 = ( ( ( n0 + 1 ) % period ) + period ) % period;
+    const iNext = ( ( ( n0 + 2 ) % period ) + period ) % period;
+    const hPrev = holes[ iPrev ];
     const a = holes[ i0 ];
     const b = holes[ i1 ];
+    const hNext = holes[ iNext ];
+    const w2 = w * w;
+    const w3 = w2 * w;
+    const b00 = 2 * w3 - 3 * w2 + 1;
+    const b10 = w3 - 2 * w2 + w;
+    const b01 = -2 * w3 + 3 * w2;
+    const b11 = w3 - w2;
     const win = Math.sin( Math.PI * u );
     const dip = 1 + swimDip * ( win * win - 1 );
     const cc = corridorCentreAt( s );
 
     return [
-      a[ 0 ] + ( b[ 0 ] - a[ 0 ] ) * fr + cc[ 0 ]
-        + dip * swimAmpX * Math.sin( s * swimFreq + swimT ),
-      a[ 1 ] + ( b[ 1 ] - a[ 1 ] ) * fr + cc[ 1 ]
-        + dip * swimAmpY * Math.sin( s * swimFreq + swimT + swimAxisPhase )
+      a[ 0 ] * b00 + 0.5 * flow * ( b[ 0 ] - hPrev[ 0 ] ) * b10
+        + b[ 0 ] * b01 + 0.5 * flow * ( hNext[ 0 ] - a[ 0 ] ) * b11
+        + cc[ 0 ] + dip * swimAmpX * Math.sin( s * swimFreq + swimT ),
+      a[ 1 ] * b00 + 0.5 * flow * ( b[ 1 ] - hPrev[ 1 ] ) * b10
+        + b[ 1 ] * b01 + 0.5 * flow * ( hNext[ 1 ] - a[ 1 ] ) * b11
+        + cc[ 1 ] + dip * swimAmpY * Math.sin( s * swimFreq + swimT + swimAxisPhase )
     ];
   };
 
@@ -1053,6 +1109,7 @@ sketch.draw( () => {
       uDodgeHold: dodgeHold,
       uDodgeSharp: dodgeSharp,
       uBunch: bunch,
+      uFlow: flow,
       uCamPos: [
         camX,
         camY,
