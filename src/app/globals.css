@@ -133,6 +133,20 @@
     outline: none;
 }
 
+/* In-embed control strip: a compact, collapsible glass panel floating over the
+   canvas (bottom-left, full-width on narrow frames). Sits above the scaled
+   viewport but is not itself scaled by it. */
+.embed-controls {
+    position: absolute;
+    z-index: 10;
+    left: 0.5rem;
+    bottom: 0.5rem;
+    width: min(20rem, calc(100% - 1rem));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
 .glass {
     @apply bg-background/80;
     backdrop-filter: blur(0.9rem);

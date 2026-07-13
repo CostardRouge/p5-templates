@@ -2,6 +2,7 @@
 
 import "@/engines/index"; // register p5/gsap/threejs in the browser bundle
 
+import dynamic from "next/dynamic";
 import {
   useEffect, useMemo, useRef, useState
 } from "react";
@@ -14,6 +15,9 @@ import type {
 import type {
   SketchOption
 } from "@/types/sketch.types";
+import type {
+  FieldConfig
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
 import {
   deepMerge, structuredClone
@@ -22,11 +26,23 @@ import {
   parseEmbedHash
 } from "@/lib/embedOptions";
 
+// The control strip pulls in the whole FieldRenderer subtree (RHF + every
+// Controlled* input). Load it as its own chunk, mounted only when the URL asks
+// for controls (#c=), so a display-only embed stays lean.
+const EmbedControlPanel = dynamic(
+  () => import( "@/components/EmbedSketch/EmbedControlPanel" ),
+  {
+    ssr: false
+  }
+);
+
 type EmbedSketchClientProps = {
   engineId: string;
   name: string;
   /** Template defaults (OptionsSchema base + form defaults on `.sketch`). */
   baseOptions: SketchOption;
+  /** Per-field UI config, used to render whitelisted controls. */
+  formConfiguration?: Record<string, FieldConfig>;
   width: number;
   height: number;
 };
@@ -45,6 +61,7 @@ export default function EmbedSketchClient( {
   engineId,
   name,
   baseOptions,
+  formConfiguration,
   width,
   height
 }: EmbedSketchClientProps ) {
@@ -54,28 +71,48 @@ export default function EmbedSketchClient( {
     setReady
   ] = useState( false );
 
-  // Merge the URL-fragment delta over the template defaults for the initial
-  // mount. Reading location.hash during render is stable for the mount, and the
+  // The control whitelist comes from the URL fragment, which only exists on the
+  // client — so the panel must not participate in SSR / first-hydration render
+  // or its presence would diverge from the server markup. Flip on after mount.
+  const [
+    hydrated,
+    setHydrated
+  ] = useState( false );
+
+  useEffect(
+    () => setHydrated( true ),
+    []
+  );
+
+  // Parse the URL fragment once: `#o=` is merged over the template defaults for
+  // the initial mount, `#c=` selects which fields to expose as live controls.
+  // Reading location.hash during render is stable for the mount, and the
   // container markup is identical with or without a hash, so there is no
   // hydration mismatch.
-  const mountOptions = useMemo(
+  const {
+    mountOptions, controls
+  } = useMemo(
     () => {
       const merged = structuredClone( baseOptions ) as SketchOption;
+      let hashControls: string[] | null = null;
 
       if ( typeof window !== "undefined" ) {
-        const {
-          options
-        } = parseEmbedHash( window.location.hash );
+        const parsed = parseEmbedHash( window.location.hash );
 
-        if ( options ) {
+        if ( parsed.options ) {
           merged.sketch = deepMerge(
             merged.sketch ?? {},
-            options
+            parsed.options
           );
         }
+
+        hashControls = parsed.controls;
       }
 
-      return merged;
+      return {
+        mountOptions: merged,
+        controls: hashControls
+      };
     },
     [
       baseOptions
@@ -179,6 +216,14 @@ export default function EmbedSketchClient( {
       >
         <div ref={ containerRef } className="sketch-canvas-container" />
       </ScalableViewport>
+
+      {hydrated && controls && controls.length > 0 && (
+        <EmbedControlPanel
+          mountOptions={ mountOptions }
+          formConfiguration={ formConfiguration }
+          controls={ controls }
+        />
+      )}
     </div>
   );
 }

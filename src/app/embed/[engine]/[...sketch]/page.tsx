@@ -78,7 +78,7 @@ export default async function EmbedPage( {
   const sketchOptions = OptionsSchema.parse( {} );
 
   const {
-    formValues
+    formValues, formConfiguration
   } = await getSketchMeta(
     sketchName,
     engineId
@@ -112,6 +112,7 @@ export default async function EmbedPage( {
       engineId={ engineId }
       name={ sketchName }
       baseOptions={ sketchOptions }
+      formConfiguration={ formConfiguration }
       width={ sketchOptions.size.width }
       height={ sketchOptions.size.height }
     />
