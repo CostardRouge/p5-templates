@@ -110,6 +110,57 @@ export function decodeEmbedOptions( encoded: string ): Record<string, unknown> |
   }
 }
 
+/* ---- delta vs defaults -------------------------------------------- */
+
+const UNCHANGED = Symbol( "unchanged" );
+
+function isPlainObject( value: unknown ): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray( value );
+}
+
+function diffValue(
+  current: unknown,
+  base: unknown
+): unknown | typeof UNCHANGED {
+  if ( isPlainObject( current ) && isPlainObject( base ) ) {
+    const out: Record<string, unknown> = {};
+
+    for ( const key of Object.keys( current ) ) {
+      const diff = diffValue(
+        current[ key ],
+        base[ key ]
+      );
+
+      if ( diff !== UNCHANGED ) {
+        out[ key ] = diff;
+      }
+    }
+
+    return Object.keys( out ).length > 0 ? out : UNCHANGED;
+  }
+
+  // Arrays and primitives compare whole (JSON): a changed array ships in full.
+  return JSON.stringify( current ) === JSON.stringify( base ) ? UNCHANGED : current;
+}
+
+/**
+ * Minimal delta of a sketch's current params against its template defaults —
+ * only changed leaves survive, so a share URL stays short. Feed the result to
+ * `encodeEmbedOptions` / `buildEmbedHash`. Keys present in defaults but dropped
+ * from current are not represented (the embed merges onto defaults anyway).
+ */
+export function diffSketchOptions(
+  current: Record<string, unknown> | undefined,
+  defaults: Record<string, unknown> | undefined
+): Record<string, unknown> {
+  const diff = diffValue(
+    current ?? {},
+    defaults ?? {}
+  );
+
+  return diff === UNCHANGED || !isPlainObject( diff ) ? {} : diff;
+}
+
 /* ---- hash parsing ------------------------------------------------- */
 
 /**

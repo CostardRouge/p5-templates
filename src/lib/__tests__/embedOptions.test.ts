@@ -1,6 +1,7 @@
 import {
   buildEmbedHash,
   decodeEmbedOptions,
+  diffSketchOptions,
   encodeEmbedOptions,
   parseEmbedHash
 } from "@/lib/embedOptions";
@@ -129,3 +130,135 @@ describe(
     );
   }
 );
+
+describe(
+  "diffSketchOptions",
+  () => {
+    const defaults = {
+      grid: {
+        rows: 352,
+        columns: 18
+      },
+      noise: {
+        seed: 0,
+        falloff: 0.5
+      },
+      backgroundColor: [
+        0,
+        0,
+        0,
+        255
+      ]
+    };
+
+    it(
+      "keeps only changed leaves, deeply",
+      () => {
+        const current = {
+          grid: {
+            rows: 60,
+            columns: 18
+          },
+          noise: {
+            seed: 0,
+            falloff: 0.5
+          },
+          backgroundColor: [
+            0,
+            0,
+            0,
+            255
+          ]
+        };
+
+        expect( diffSketchOptions(
+          current,
+          defaults
+        ) ).toEqual( {
+          grid: {
+            rows: 60
+          }
+        } );
+      }
+    );
+
+    it(
+      "returns {} when nothing changed",
+      () => {
+        expect( diffSketchOptions(
+          structuredCloneSafe( defaults ),
+          defaults
+        ) ).toEqual( {} );
+      }
+    );
+
+    it(
+      "ships a changed array in full",
+      () => {
+        const current = {
+          ...defaults,
+          backgroundColor: [
+            10,
+            20,
+            30,
+            255
+          ]
+        };
+
+        expect( diffSketchOptions(
+          current,
+          defaults
+        ) ).toEqual( {
+          backgroundColor: [
+            10,
+            20,
+            30,
+            255
+          ]
+        } );
+      }
+    );
+
+    it(
+      "round-trips a delta back onto defaults via encode/decode",
+      () => {
+        const current = {
+          ...defaults,
+          noise: {
+            seed: 7,
+            falloff: 0.5
+          }
+        };
+        const delta = diffSketchOptions(
+          current,
+          defaults
+        );
+        const decoded = decodeEmbedOptions( encodeEmbedOptions( delta ) );
+
+        expect( decoded ).toEqual( {
+          noise: {
+            seed: 7
+          }
+        } );
+      }
+    );
+
+    it(
+      "treats a new key not in defaults as a change",
+      () => {
+        expect( diffSketchOptions(
+          {
+            extra: 1
+          },
+          {}
+        ) ).toEqual( {
+          extra: 1
+        } );
+      }
+    );
+  }
+);
+
+function structuredCloneSafe<T>( value: T ): T {
+  return JSON.parse( JSON.stringify( value ) );
+}

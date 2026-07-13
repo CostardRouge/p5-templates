@@ -12,6 +12,7 @@ import {
   resolveSketchPath
 } from "@/engines/metadata";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
+import SketchShareDialog from "./SketchShareDialog";
 import {
   OPEN_EXPORT_DRAWER_EVENT
 } from "../ClientProcessingSketch/components/SketchOptions/constants/drawer-events";
@@ -227,6 +228,8 @@ export function EngineControls( {
           <Play className="h-4 w-4 text-foreground/70 group-hover:text-foreground transition-colors" />
         )}
       </button>
+
+      <SketchShareDialog />
 
       <button
         title={
