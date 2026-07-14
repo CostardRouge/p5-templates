@@ -20,6 +20,8 @@ export const formValues = {
   },
   camera: {
     fov: 110,
+    motion: "flow" as "flow" | "ease",
+    lookAhead: 1.4,
     easing: "smoothstep",
     glide: 0.02,
     bank: -0.8,
@@ -183,12 +185,33 @@ export const formConfiguration: Record<string, any> = {
         max: 110,
         step: 1
       },
+      motion: {
+        label: "Motion",
+        component: "select",
+        options: [
+          {
+            label: "Flow (smooth, never stops)",
+            value: "flow"
+          },
+          {
+            label: "Ease into each ring",
+            value: "ease"
+          }
+        ]
+      },
+      lookAhead: {
+        label: "Look ahead (Flow: how far the gaze anticipates)",
+        component: "slider",
+        min: 0.2,
+        max: 4,
+        step: 0.05
+      },
       easing: {
-        label: "Approach easing (per ring segment)",
+        label: "Approach easing (Ease mode, per ring segment)",
         component: "easing"
       },
       glide: {
-        label: "Glide (0 = constant speed, 1 = dwell at each ring)",
+        label: "Glide (Ease mode: 0 = constant speed, 1 = dwell at each ring)",
         component: "slider",
         min: 0,
         max: 1,
