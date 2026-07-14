@@ -18,9 +18,9 @@ export const formValues = {
   text: {
     content: "DROP",
     font: "martian",
-    size: 0.14,
+    size: 0.2,
     colorMode: "rainbow",
-    hueSpread: 1,
+    hueSpread: 2.1,
     fill: [
       245,
       240,
@@ -33,11 +33,11 @@ export const formValues = {
   // together set how long the loop takes to fill and settle.
   physics: {
     gravity: 1.1,
-    bounce: 0.35,
-    friction: 0.35,
+    bounce: 0.45,
+    friction: 0.6,
     dropSpread: 7,
-    settleSteps: 130,
-    spin: 0.25,
+    settleSteps: 245,
+    spin: 0.55,
     seed: 7
   },
 
@@ -55,7 +55,7 @@ export const formValues = {
       60,
       70
     ],
-    floorWeight: 3
+    floorWeight: 7
   }
 };
 
