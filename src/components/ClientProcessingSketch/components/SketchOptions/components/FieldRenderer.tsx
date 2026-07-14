@@ -487,18 +487,14 @@ export default function FieldRenderer( {
 
       case "json":
         return (
-          <div className={ CONTROL_CARD_CLASS }>
-            <CardLabelHeader
-              label={ inlineLabel }
-              isModified={ isModified }
-              onReset={ handleReset }
-            />
-            <ControlledJsonInput
-              config={ config }
-              name={ registeredName }
-              textareaClassName={ `${ CONTROL_CARD_TEXTAREA_CLASS } font-mono` }
-            />
-          </div>
+          <ControlledJsonInput
+            config={ config }
+            name={ registeredName }
+            label={ inlineLabel }
+            isModified={ isModified }
+            onReset={ handleReset }
+            textareaClassName={ `${ CONTROL_CARD_TEXTAREA_CLASS } font-mono` }
+          />
         );
 
       case "item-list":
