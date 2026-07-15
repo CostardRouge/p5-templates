@@ -327,42 +327,126 @@ sketch.draw( () => {
     radii[ k ] = tubeR * ( 1 + pulse * Math.sin( pulseCycles * t + ( p.TAU * k * pulseStagger ) / count ) );
   }
 
-  // ── Eased camera: one full circuit per loop ──────────────────────────────
-  const glide = Math.max(
-    0,
-    Math.min(
-      camera.glide ?? 0.85,
-      1
-    )
-  );
-  const easeKey = camera.easing ?? "easeInOutCubic";
-  const easeFn = typeof easing[ easeKey ] === "function" ? easing[ easeKey ] : ( x ) => x;
+  // ── Camera: one full circuit per loop ────────────────────────────────────
+  // Two motions share the same circuit (position and gaze stay continuous
+  // across the loop seam in both):
+  //   • "flow"  — constant-speed glide that never slows at a ring. The rings
+  //               sit ON the circuit, so the smooth path threads each one
+  //               dead-centre; the gaze aims at a point further along the SAME
+  //               path, so orientation is C-infinity smooth with no per-ring
+  //               deceleration.
+  //   • "ease"  — accelerate out of the ring just crossed and settle into the
+  //               next (the original per-segment easing + look-at blend).
+  const motion = camera.motion ?? "flow";
+  const bank = camera.bank ?? 0.5;
 
   const progress = ( ( t / p.TAU ) % 1 + 1 ) % 1;
   const s = progress * count;
-  const seg = Math.min(
-    Math.floor( s ),
-    count - 1
-  );
-  const u = s - seg;
-  const ue = u + ( easeFn( u ) - u ) * glide;
+  const angleOf = ( ss ) => ( p.TAU * ss ) / count;
 
-  const camPos = pathPoint(
-    ( p.TAU * ( seg + ue ) ) / count,
-    pathConfig
-  );
+  let camPos;
+  let fwd;
+  let roll = 0;
 
-  // Gaze: from the middle of the target ring onto the one after, eased with
-  // the same curve as the position — continuous at every ring crossing.
-  const target = lerp3(
-    centres[ ( seg + 1 ) % count ],
-    centres[ ( seg + 2 ) % count ],
-    ue
-  );
-  const fwd = normalize( sub(
-    target,
-    camPos
-  ) );
+  if ( motion === "flow" ) {
+    const ahead = Math.max(
+      camera.lookAhead ?? 1.4,
+      0.2
+    );
+
+    camPos = pathPoint(
+      angleOf( s ),
+      pathConfig
+    );
+    fwd = normalize( sub(
+      pathPoint(
+        angleOf( s + ahead ),
+        pathConfig
+      ),
+      camPos
+    ) );
+
+    if ( bank !== 0 ) {
+      // Smooth bank from the path's turn rate over a one-segment window.
+      const before = normalize( sub(
+        camPos,
+        pathPoint(
+          angleOf( s - 0.5 ),
+          pathConfig
+        )
+      ) );
+      const after = normalize( sub(
+        pathPoint(
+          angleOf( s + 0.5 ),
+          pathConfig
+        ),
+        camPos
+      ) );
+
+      roll = bank * Math.atan2(
+        before[ 0 ] * after[ 2 ] - before[ 2 ] * after[ 0 ],
+        before[ 0 ] * after[ 0 ] + before[ 2 ] * after[ 2 ]
+      );
+    }
+  } else {
+    const glide = Math.max(
+      0,
+      Math.min(
+        camera.glide ?? 0.85,
+        1
+      )
+    );
+    const easeKey = camera.easing ?? "easeInOutCubic";
+    const easeFn = typeof easing[ easeKey ] === "function" ? easing[ easeKey ] : ( x ) => x;
+
+    const seg = Math.min(
+      Math.floor( s ),
+      count - 1
+    );
+    const u = s - seg;
+    const ue = u + ( easeFn( u ) - u ) * glide;
+
+    camPos = pathPoint(
+      angleOf( seg + ue ),
+      pathConfig
+    );
+
+    // Gaze: from the middle of the target ring onto the one after, eased with
+    // the same curve as the position — continuous at every ring crossing.
+    const target = lerp3(
+      centres[ ( seg + 1 ) % count ],
+      centres[ ( seg + 2 ) % count ],
+      ue
+    );
+
+    fwd = normalize( sub(
+      target,
+      camPos
+    ) );
+
+    if ( bank !== 0 ) {
+      const turnAt = ( i ) => {
+        const prev = centres[ ( i - 1 + count ) % count ];
+        const here = centres[ i % count ];
+        const next = centres[ ( i + 1 ) % count ];
+        const v1 = normalize( sub(
+          here,
+          prev
+        ) );
+        const v2 = normalize( sub(
+          next,
+          here
+        ) );
+
+        return Math.atan2(
+          v1[ 0 ] * v2[ 2 ] - v1[ 2 ] * v2[ 0 ],
+          v1[ 0 ] * v2[ 0 ] + v1[ 2 ] * v2[ 2 ]
+        );
+      };
+
+      roll = bank * ( turnAt( seg + 1 ) + ( turnAt( seg + 2 ) - turnAt( seg + 1 ) ) * ue );
+    }
+  }
 
   let right = normalize( cross(
     [
@@ -377,30 +461,8 @@ sketch.draw( () => {
     right
   );
 
-  // ── Bank into the upcoming horizontal turn (FPV roll) ────────────────────
-  const bank = camera.bank ?? 0.5;
-
-  if ( bank !== 0 ) {
-    const turnAt = ( i ) => {
-      const prev = centres[ ( i - 1 + count ) % count ];
-      const here = centres[ i % count ];
-      const next = centres[ ( i + 1 ) % count ];
-      const v1 = normalize( sub(
-        here,
-        prev
-      ) );
-      const v2 = normalize( sub(
-        next,
-        here
-      ) );
-
-      return Math.atan2(
-        v1[ 0 ] * v2[ 2 ] - v1[ 2 ] * v2[ 0 ],
-        v1[ 0 ] * v2[ 0 ] + v1[ 2 ] * v2[ 2 ]
-      );
-    };
-
-    const roll = bank * ( turnAt( seg + 1 ) + ( turnAt( seg + 2 ) - turnAt( seg + 1 ) ) * ue );
+  // ── Apply the FPV bank roll to the camera basis ──────────────────────────
+  if ( roll !== 0 ) {
     const cr = Math.cos( roll );
     const sr = Math.sin( roll );
     const rolledRight = [
