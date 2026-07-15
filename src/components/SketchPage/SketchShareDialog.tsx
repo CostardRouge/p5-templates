@@ -63,7 +63,16 @@ export default function SketchShareDialog() {
 
   useEffect(
     () => {
-      setOrigin( process.env.NEXT_PUBLIC_SITE_URL || window.location.origin );
+      // In development, always use the origin the editor is actually served
+      // from (protocol + host + port) so "Open" and the iframe snippet point at
+      // the local dev server — NEXT_PUBLIC_SITE_URL is baked at build time and
+      // usually holds the production domain, which is untestable locally. In
+      // production, prefer that canonical domain, falling back to the live origin.
+      const isDev = process.env.NODE_ENV === "development";
+
+      setOrigin( isDev
+        ? window.location.origin
+        : ( process.env.NEXT_PUBLIC_SITE_URL || window.location.origin ) );
     },
     []
   );
