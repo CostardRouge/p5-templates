@@ -15,9 +15,11 @@ type Props = {
   className?: string;
 };
 
-const gap = "gap-1";
-const size = "h-4 w-4 md:h-3 md:w-3";
-
+/**
+ * The palette of content-item types. Each type is a labeled tile (icon + name)
+ * laid out three per row, so kinds that share a family of icons (specs, hud,
+ * meta…) stay easy to tell apart at a glance.
+ */
 export default function ItemPalette( {
   onAdd,
   kinds = ITEM_ORDER,
@@ -26,9 +28,7 @@ export default function ItemPalette( {
   return (
     <div
       className={ clsx(
-        "grid grid-cols-6",
-        gap,
-        "rounded-md border border-theme bg-background p-0.5 overflow-hidden",
+        "grid grid-cols-3 gap-1",
         className
       ) }
       role="list"
@@ -43,15 +43,21 @@ export default function ItemPalette( {
             type="button"
             onClick={ () => onAdd( kind ) }
             className={ clsx(
-              "flex items-center justify-center rounded",
-              "min-h-[2.5rem] md:min-h-0 p-1 transition hover:bg-hover",
-              "active:scale-[0.98]"
+              "group flex min-h-[3.25rem] flex-col items-center justify-center gap-1",
+              "rounded-lg border border-theme bg-background px-1 py-1.5 text-center",
+              "transition hover:bg-hover hover:border-foreground/20 active:scale-[0.98]"
             ) }
             role="listitem"
             aria-label={ meta.label }
             title={ meta.description ?? meta.label }
           >
-            <meta.Icon className={ size } strokeWidth={ 1.75 } />
+            <meta.Icon
+              className="h-4 w-4 shrink-0 text-foreground/70 transition-colors group-hover:text-foreground"
+              strokeWidth={ 1.75 }
+            />
+            <span className="text-[11px] leading-tight text-foreground/80 transition-colors group-hover:text-foreground">
+              {meta.label}
+            </span>
           </button>
         );
       } )}
