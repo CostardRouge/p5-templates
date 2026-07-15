@@ -502,6 +502,7 @@ function getLocationOn(
 //   [a, b] / [a,b,c]    -> vec2 / vec3 / vec4
 //   { floatv: [...] }   -> float[]  uniform1fv  (a `uniform float u[N]`)
 //   { vec2v:  [...] }   -> vec2[]   uniform2fv  (flattened x0,y0,x1,y1,…)
+//   { vec4v:  [...] }   -> vec4[]   uniform4fv  (flattened x0,y0,z0,w0,…)
 //   { intv:   [...] }   -> int[]    uniform1iv
 // The *v forms upload a whole GLSL uniform array in one call; query the array's
 // base name (e.g. "uPoints", not "uPoints[0]") for its location.
@@ -533,6 +534,15 @@ function setUniformOn(
       gl.uniform2fv(
         loc,
         value.vec2v
+      );
+
+      return;
+    }
+
+    if ( "vec4v" in value ) {
+      gl.uniform4fv(
+        loc,
+        value.vec4v
       );
 
       return;

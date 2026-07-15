@@ -239,6 +239,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:ribbons/ribbons-v8-globule": () => import( "@/p5/sketches/ribbons/ribbons-v8-globule/options" ),
   "p5:ribbons/ribbons-v9-atom": () => import( "@/p5/sketches/ribbons/ribbons-v9-atom/options" ),
   "p5:rings/rings-v1-flythrough": () => import( "@/p5/sketches/rings/rings-v1-flythrough/options" ),
+  "p5:rings/rings-v2-letters": () => import( "@/p5/sketches/rings/rings-v2-letters/options" ),
   "p5:semaphore/semaphore-v0-dots": () => import( "@/p5/sketches/semaphore/semaphore-v0-dots/options" ),
   "p5:semaphore/semaphore-v1-lines": () => import( "@/p5/sketches/semaphore/semaphore-v1-lines/options" ),
   "p5:shader-loops/shader-loops-v1-hypnotic": () => import( "@/p5/sketches/shader-loops/shader-loops-v1-hypnotic/options" ),
