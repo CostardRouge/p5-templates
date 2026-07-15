@@ -426,7 +426,7 @@ function MenuBar( {
 
       <MenuItems
         anchor="bottom start"
-        className="z-50 w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-none [--anchor-gap:0.5rem]"
+        className="z-[70] w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-none [--anchor-gap:0.5rem]"
       >
         <SectionLabel>Navigate</SectionLabel>
         {navLinks.map( ( {
@@ -681,7 +681,7 @@ function MenuBar( {
   }
 
   return (
-    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-50">
+    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-[70] md:z-50">
       {menuNode}
     </div>
   );
