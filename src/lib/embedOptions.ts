@@ -16,8 +16,10 @@
  *      encoded, which keeps typical share URLs short; a full `sketch` object is
  *      equally valid (it just merges over defaults that already match).
  *   c  optional comma-separated whitelist of field paths to expose as live
- *      controls in the embed (consumed in a later phase — parsed here so the
- *      wire format is stable from the start).
+ *      controls in the embed.
+ *   a  optional autoplay policy: absent → "on" (default), "off" → never
+ *      autoplay, "desktop" → autoplay on desktop only (off on touch/mobile).
+ *      `prefers-reduced-motion` always wins over this at runtime.
  *
  * base64url (RFC 4648 §5) is used instead of raw `encodeURIComponent(JSON)` so
  * the payload never contains characters a CMS, markdown renderer, or copy-paste
@@ -26,12 +28,23 @@
 
 export const EMBED_OPTIONS_HASH_KEY = "o";
 export const EMBED_CONTROLS_HASH_KEY = "c";
+export const EMBED_AUTOPLAY_HASH_KEY = "a";
+
+/**
+ * Autoplay policy baked into a share URL.
+ * - `on`      — autoplay everywhere (default; omitted from the URL)
+ * - `off`     — never autoplay; the embed shows a poster + play affordance
+ * - `desktop` — autoplay on desktop, off on touch/mobile
+ */
+export type AutoplayPolicy = "on" | "off" | "desktop";
 
 export type EmbedHash = {
   /** Decoded sketch-params delta, or null when absent/undecodable. */
   options: Record<string, unknown> | null;
   /** Field paths to expose as controls, or null when unspecified. */
   controls: string[] | null;
+  /** Autoplay policy; defaults to "on" when absent or unrecognised. */
+  autoplay: AutoplayPolicy;
 };
 
 /* ---- base64url ---------------------------------------------------- */
@@ -110,6 +123,57 @@ export function decodeEmbedOptions( encoded: string ): Record<string, unknown> |
   }
 }
 
+/* ---- delta vs defaults -------------------------------------------- */
+
+const UNCHANGED = Symbol( "unchanged" );
+
+function isPlainObject( value: unknown ): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray( value );
+}
+
+function diffValue(
+  current: unknown,
+  base: unknown
+): unknown | typeof UNCHANGED {
+  if ( isPlainObject( current ) && isPlainObject( base ) ) {
+    const out: Record<string, unknown> = {};
+
+    for ( const key of Object.keys( current ) ) {
+      const diff = diffValue(
+        current[ key ],
+        base[ key ]
+      );
+
+      if ( diff !== UNCHANGED ) {
+        out[ key ] = diff;
+      }
+    }
+
+    return Object.keys( out ).length > 0 ? out : UNCHANGED;
+  }
+
+  // Arrays and primitives compare whole (JSON): a changed array ships in full.
+  return JSON.stringify( current ) === JSON.stringify( base ) ? UNCHANGED : current;
+}
+
+/**
+ * Minimal delta of a sketch's current params against its template defaults —
+ * only changed leaves survive, so a share URL stays short. Feed the result to
+ * `encodeEmbedOptions` / `buildEmbedHash`. Keys present in defaults but dropped
+ * from current are not represented (the embed merges onto defaults anyway).
+ */
+export function diffSketchOptions(
+  current: Record<string, unknown> | undefined,
+  defaults: Record<string, unknown> | undefined
+): Record<string, unknown> {
+  const diff = diffValue(
+    current ?? {},
+    defaults ?? {}
+  );
+
+  return diff === UNCHANGED || !isPlainObject( diff ) ? {} : diff;
+}
+
 /* ---- hash parsing ------------------------------------------------- */
 
 /**
@@ -123,6 +187,7 @@ export function parseEmbedHash( hash: string ): EmbedHash {
   ) );
   const rawOptions = params.get( EMBED_OPTIONS_HASH_KEY );
   const rawControls = params.get( EMBED_CONTROLS_HASH_KEY );
+  const rawAutoplay = params.get( EMBED_AUTOPLAY_HASH_KEY );
 
   return {
     options: rawOptions ? decodeEmbedOptions( rawOptions ) : null,
@@ -131,18 +196,25 @@ export function parseEmbedHash( hash: string ): EmbedHash {
         .split( "," )
         .map( ( path ) => path.trim() )
         .filter( Boolean )
-      : null
+      : null,
+    autoplay: rawAutoplay === "off" || rawAutoplay === "desktop"
+      ? rawAutoplay
+      : "on"
   };
 }
 
 /**
- * Build the embed URL fragment from a sketch-params delta and an optional
- * control whitelist. Inverse of `parseEmbedHash`. Returns "" when there is
- * nothing to encode (so a default share produces a clean, hashless URL).
+ * Build the embed URL fragment from a sketch-params delta, an optional control
+ * whitelist, and optional extras (autoplay policy). Inverse of `parseEmbedHash`.
+ * Returns "" when there is nothing to encode (so a default share produces a
+ * clean, hashless URL). Default-valued extras (`autoplay: "on"`) are omitted.
  */
 export function buildEmbedHash(
   delta: Record<string, unknown>,
-  controls?: string[]
+  controls?: string[],
+  extra?: {
+    autoplay?: AutoplayPolicy;
+  }
 ): string {
   const params = new URLSearchParams();
   const hasDelta = delta && Object.keys( delta ).length > 0;
@@ -161,7 +233,41 @@ export function buildEmbedHash(
     );
   }
 
+  if ( extra?.autoplay === "off" || extra?.autoplay === "desktop" ) {
+    params.set(
+      EMBED_AUTOPLAY_HASH_KEY,
+      extra.autoplay
+    );
+  }
+
   const query = params.toString();
 
   return query ? `#${ query }` : "";
+}
+
+/**
+ * Resolve an autoplay policy to an actual boolean for the current environment.
+ * `prefers-reduced-motion` is honoured above everything (accessibility), then
+ * the explicit policy, then the desktop/mobile split.
+ */
+export function resolveAutoplay(
+  policy: AutoplayPolicy,
+  environment: {
+    reducedMotion: boolean;
+    mobile: boolean;
+  }
+): boolean {
+  if ( environment.reducedMotion ) {
+    return false;
+  }
+
+  if ( policy === "off" ) {
+    return false;
+  }
+
+  if ( policy === "desktop" && environment.mobile ) {
+    return false;
+  }
+
+  return true;
 }
