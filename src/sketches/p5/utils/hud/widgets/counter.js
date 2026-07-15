@@ -7,6 +7,7 @@ import {
   anchoredRect,
   formatValue,
   getFont,
+  paintWidgetBackground,
   reportWidgetBounds,
   resolveAnchor,
   toColor,
@@ -84,6 +85,15 @@ export default function counter(
       rect.y,
       rect.w,
       rect.h
+    );
+
+    paintWidgetBackground(
+      style,
+      rect.x,
+      rect.y,
+      rect.w,
+      rect.h,
+      s
     );
 
     string.write(

@@ -37,7 +37,22 @@ export default function drawSlideHud( item ) {
       255
     ],
     font: item.font ?? "spaceMonoRegular",
-    blend: item.blend ?? "source-over"
+    blend: item.blend ?? "source-over",
+    // Shared background panel painted behind each boxed widget's readout.
+    // Transparent by default (draws nothing); see paintWidgetBackground.
+    background: item.backgroundColor ?? [
+      0,
+      0,
+      0,
+      0
+    ],
+    backgroundStroke: item.backgroundStroke ?? [
+      0,
+      0,
+      0,
+      0
+    ],
+    backgroundRadius: item.backgroundRadius ?? 0
   };
 
   for ( const key of WIDGET_ORDER ) {

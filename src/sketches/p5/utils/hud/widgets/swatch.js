@@ -5,6 +5,7 @@ import {
 } from "../sources.js";
 import {
   getFont,
+  paintWidgetBackground,
   reportWidgetBounds,
   resolveBlock,
   toColor,
@@ -71,6 +72,15 @@ export default function swatch(
       blockY,
       blockW,
       chip
+    );
+
+    paintWidgetBackground(
+      style,
+      blockX,
+      blockY,
+      blockW,
+      chip,
+      s
     );
 
     const textFill = toColor(

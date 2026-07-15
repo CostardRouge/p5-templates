@@ -610,6 +610,21 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       label: "Fill",
       component: "color"
     },
+    backgroundColor: {
+      label: "Background",
+      component: "color"
+    },
+    backgroundStroke: {
+      label: "Background stroke",
+      component: "color"
+    },
+    backgroundRadius: {
+      label: "Background radius",
+      component: "slider",
+      min: 0,
+      max: 200,
+      step: 1
+    },
     font: {
       label: "Font",
       component: "select",
@@ -957,6 +972,21 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     fill: {
       label: "Default fill",
       component: "color"
+    },
+    backgroundColor: {
+      label: "Background",
+      component: "color"
+    },
+    backgroundStroke: {
+      label: "Background stroke",
+      component: "color"
+    },
+    backgroundRadius: {
+      label: "Background radius",
+      component: "slider",
+      min: 0,
+      max: 200,
+      step: 1
     },
     font: hudFontField,
     blend: hudBlendField,

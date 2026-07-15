@@ -377,6 +377,27 @@ export const SpecsItemSchema = z.object( {
     255,
     120
   ] ),
+  // Panel painted behind the specs block. Transparent black by default (draws
+  // nothing) — set a colour to keep the text readable over busy sketches.
+  backgroundColor: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
+  // Optional outline around that panel. Defaults to the text fill colour with
+  // zero opacity (so it draws nothing) — raise the alpha to reveal a border in
+  // the same colour as the text.
+  backgroundStroke: RGBA.default( [
+    0,
+    255,
+    120,
+    0
+  ] ),
+  // Corner radius of that panel, in pixels. 0 = sharp rectangle.
+  backgroundRadius: z.number().min( 0 )
+    .max( 200 )
+    .default( 0 ),
   blend: Blend.default( "source-over" ),
   position: Vec2.default( {
     x: 0.05,
@@ -947,6 +968,29 @@ export const HudItemSchema = z.object( {
     120,
     255
   ] ),
+  // Panel painted behind each widget's readout. Transparent black by default
+  // (draws nothing) — set a colour to keep the telemetry readable over busy
+  // sketches. Applies to the boxed widgets, not the full-canvas crosshairs /
+  // bounding-box overlays.
+  backgroundColor: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
+  // Optional outline around each widget's panel. Defaults to the fill colour
+  // with zero opacity (draws nothing) — raise the alpha to reveal a border in
+  // the same colour as the readout.
+  backgroundStroke: RGBA.default( [
+    0,
+    255,
+    120,
+    0
+  ] ),
+  // Corner radius of those panels, in pixels. 0 = sharp rectangle.
+  backgroundRadius: z.number().min( 0 )
+    .max( 200 )
+    .default( 0 ),
   font: z.string().default( "spaceMonoRegular" ),
   blend: Blend.default( "source-over" ),
   badge: HudBadgeSchema,
@@ -1114,6 +1158,29 @@ export const SlideTitleSchema = z.object( {
     255,
     120
   ] ),
+  // Panel painted behind the label. Transparent black by default (draws
+  // nothing) — set a colour (e.g. a solid dark) to keep a light label readable
+  // over busy sketches. For the "bracket" style the panel extends to enclose
+  // the [ ] glyphs too.
+  backgroundColor: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
+  // Optional outline around that panel. Defaults to the label fill colour with
+  // zero opacity (draws nothing) — raise the alpha to reveal a border in the
+  // same colour as the label.
+  backgroundStroke: RGBA.default( [
+    0,
+    255,
+    120,
+    0
+  ] ),
+  // Corner radius of that panel, in pixels. 0 = sharp rectangle.
+  backgroundRadius: z.number().min( 0 )
+    .max( 200 )
+    .default( 0 ),
   blend: Blend.default( "source-over" ),
   style: z.enum( TITLE_DISPLAY_STYLES ).default( "bracket" ),
 

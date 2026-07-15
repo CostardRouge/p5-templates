@@ -7,6 +7,9 @@ import time from "../../time.js";
 import buildSpecsLines from "./specsData.js";
 import computeSpecsHeats from "./specsChanges.js";
 import specsSound from "./specsSound.js";
+import drawItemBackground, {
+  measureVerticalTextBox
+} from "./drawItemBackground.js";
 import {
   reportItemBounds
 } from "./itemBoundsRegistry.js";
@@ -405,15 +408,15 @@ export default function drawSlideSpecs( specsOption ) {
   const originX = p.width * ( specsOption.position?.x ?? 0.05 );
   const originY = p.height * ( specsOption.position?.y ?? 0.06 );
 
+  const blockW = Math.max(
+    ...lines.map( ( line ) => measureWidth( `${ line.label }: ${ line.value }` ) ),
+    size * 4
+  );
+
   // Approximate drawn block (origin, stacked lines) for the on-canvas drag's
   // hit-test. Ticker style shows one line, boot-log all of them — the full
   // block is a generous, stable grab zone for both.
   if ( lines.length > 0 ) {
-    const blockW = Math.max(
-      ...lines.map( ( line ) => measureWidth( `${ line.label }: ${ line.value }` ) ),
-      size * 4
-    );
-
     reportItemBounds(
       originX,
       originY - size,
@@ -421,6 +424,52 @@ export default function drawSlideSpecs( specsOption ) {
       lines.length * lineStep + size * 2
     );
   }
+
+  // Background panel behind the block, drawn first so text sits on top. Height
+  // tracks the shown lines — one for the ticker, the whole list for boot-log —
+  // and it fades with the overlay alpha. The vertical extent comes from the
+  // real glyph bounds of the first/last visible line (measureVerticalTextBox),
+  // so the panel hugs the text symmetrically instead of the nominal em box.
+  const bgLineCount = specsOption.style === "ticker" ? 1 : lines.length;
+  const lastLineIndex = Math.min(
+    bgLineCount - 1,
+    lines.length - 1
+  );
+  const firstText = `${ lines[ 0 ].label }: ${ lines[ 0 ].value }`;
+  const lastText = `${ lines[ lastLineIndex ].label }: ${ lines[ lastLineIndex ].value }`;
+  const firstBox = measureVerticalTextBox(
+    font,
+    firstText,
+    originX,
+    originY,
+    size
+  );
+  const lastBox = measureVerticalTextBox(
+    font,
+    lastText,
+    originX,
+    originY + lastLineIndex * lineStep,
+    size
+  );
+  const bgPad = size * 0.35;
+
+  drawItemBackground( {
+    x: originX - bgPad,
+    y: firstBox.top - bgPad,
+    w: blockW + bgPad * 2,
+    h: lastBox.bottom - firstBox.top + bgPad * 2,
+    color: specsOption.backgroundColor,
+    radius: specsOption.backgroundRadius ?? 0,
+    alpha: alpha / 255,
+    stroke: specsOption.backgroundStroke,
+    strokeWeight: Math.min(
+      Math.max(
+        1,
+        size * 0.06
+      ),
+      4
+    )
+  } );
 
   if ( specsOption.style === "ticker" ) {
     // Single line cycling through all parameters. In permanent mode the reveal
