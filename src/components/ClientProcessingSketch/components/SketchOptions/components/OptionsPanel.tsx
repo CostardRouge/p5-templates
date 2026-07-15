@@ -134,7 +134,7 @@ export function OptionsPanelBody( {
         header={ ( expanded ) => (
           <button
             className={ clsx(
-              "flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-0",
+              "flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-[1.75rem]",
               {
                 "mb-1": expanded
               }
@@ -174,7 +174,7 @@ export function OptionsPanelBody( {
             header={ ( expanded ) => (
               <button
                 className={ clsx(
-                  "flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-0",
+                  "flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-[1.75rem]",
                   {
                     "mb-1": expanded
                   }
@@ -232,7 +232,8 @@ export default function OptionsPanel( {
 
   return (
     <CollapsibleItem
-      swipeToCollapse
+      swipeToCollapse={ !docked }
+      expanded={ docked ? true : undefined }
       className={ clsx(
         "flex flex-col gap-1 w-full",
         docked
@@ -266,18 +267,20 @@ export default function OptionsPanel( {
             } }
           />
 
-          <button
-            title={ title }
-            className="text-foreground text-sm w-full flex items-center justify-end"
-            aria-label={ expanded ? "Collapse controls" : "Expand controls" }
-          >
-            <ArrowDownFromLine
-              className="inline text-foreground h-3 w-3 ml-1"
-              style={ {
-                rotate: expanded ? "0deg" : "180deg"
-              } }
-            />
-          </button>
+          {!docked && (
+            <button
+              title={ title }
+              className="text-foreground text-sm w-full flex items-center justify-end"
+              aria-label={ expanded ? "Collapse controls" : "Expand controls" }
+            >
+              <ArrowDownFromLine
+                className="inline text-foreground h-3 w-3 ml-1"
+                style={ {
+                  rotate: expanded ? "0deg" : "180deg"
+                } }
+              />
+            </button>
+          )}
         </div>
       ) }
     >

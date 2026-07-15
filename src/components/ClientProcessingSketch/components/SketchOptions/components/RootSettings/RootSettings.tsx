@@ -38,7 +38,7 @@ export default function RootSettings( {
       }` }
       header={ ( expanded ) => (
         <button
-          className="flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-0"
+          className="flex w-full items-center gap-1.5 text-left text-foreground text-xs min-h-[2.5rem] md:min-h-[1.75rem]"
           aria-label={ expanded ? "Collapse controls" : "Expand controls" }
         >
           <ListCollapse
