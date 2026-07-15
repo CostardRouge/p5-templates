@@ -578,6 +578,11 @@ function SlideTitleControls( {
             label="Background"
           />
 
+          <ResettableColor
+            name={ `${ titleBase }.backgroundStroke` }
+            label="Background stroke"
+          />
+
           <ResettableSlider
             name={ `${ titleBase }.backgroundRadius` }
             label="Background radius"

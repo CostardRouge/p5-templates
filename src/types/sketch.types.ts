@@ -385,6 +385,13 @@ export const SpecsItemSchema = z.object( {
     0,
     0
   ] ),
+  // Optional outline around that panel. Transparent by default (no border).
+  backgroundStroke: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
   // Corner radius of that panel, in pixels. 0 = sharp rectangle.
   backgroundRadius: z.number().min( 0 )
     .max( 200 )
@@ -969,6 +976,13 @@ export const HudItemSchema = z.object( {
     0,
     0
   ] ),
+  // Optional outline around each widget's panel. Transparent by default.
+  backgroundStroke: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
   // Corner radius of those panels, in pixels. 0 = sharp rectangle.
   backgroundRadius: z.number().min( 0 )
     .max( 200 )
@@ -1142,8 +1156,16 @@ export const SlideTitleSchema = z.object( {
   ] ),
   // Panel painted behind the label. Transparent black by default (draws
   // nothing) — set a colour (e.g. a solid dark) to keep a light label readable
-  // over busy sketches.
+  // over busy sketches. For the "bracket" style the panel extends to enclose
+  // the [ ] glyphs too.
   backgroundColor: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
+  // Optional outline around that panel. Transparent by default (no border).
+  backgroundStroke: RGBA.default( [
     0,
     0,
     0,

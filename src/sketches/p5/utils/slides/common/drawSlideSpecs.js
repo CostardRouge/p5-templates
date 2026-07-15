@@ -7,7 +7,9 @@ import time from "../../time.js";
 import buildSpecsLines from "./specsData.js";
 import computeSpecsHeats from "./specsChanges.js";
 import specsSound from "./specsSound.js";
-import drawItemBackground from "./drawItemBackground.js";
+import drawItemBackground, {
+  measureVerticalTextBox
+} from "./drawItemBackground.js";
 import {
   reportItemBounds
 } from "./itemBoundsRegistry.js";
@@ -425,20 +427,48 @@ export default function drawSlideSpecs( specsOption ) {
 
   // Background panel behind the block, drawn first so text sits on top. Height
   // tracks the shown lines — one for the ticker, the whole list for boot-log —
-  // and it fades with the overlay alpha.
+  // and it fades with the overlay alpha. The vertical extent comes from the
+  // real glyph bounds of the first/last visible line (measureVerticalTextBox),
+  // so the panel hugs the text symmetrically instead of the nominal em box.
   const bgLineCount = specsOption.style === "ticker" ? 1 : lines.length;
-  const bgPadX = size * 0.4;
-  const bgPadTop = size * 0.35;
-  const bgPadBottom = size * 0.35;
+  const lastLineIndex = Math.min(
+    bgLineCount - 1,
+    lines.length - 1
+  );
+  const firstText = `${ lines[ 0 ].label }: ${ lines[ 0 ].value }`;
+  const lastText = `${ lines[ lastLineIndex ].label }: ${ lines[ lastLineIndex ].value }`;
+  const firstBox = measureVerticalTextBox(
+    font,
+    firstText,
+    originX,
+    originY,
+    size
+  );
+  const lastBox = measureVerticalTextBox(
+    font,
+    lastText,
+    originX,
+    originY + lastLineIndex * lineStep,
+    size
+  );
+  const bgPad = size * 0.35;
 
   drawItemBackground( {
-    x: originX - bgPadX,
-    y: originY - bgPadTop,
-    w: blockW + bgPadX * 2,
-    h: ( bgLineCount - 1 ) * lineStep + size + bgPadTop + bgPadBottom,
+    x: originX - bgPad,
+    y: firstBox.top - bgPad,
+    w: blockW + bgPad * 2,
+    h: lastBox.bottom - firstBox.top + bgPad * 2,
     color: specsOption.backgroundColor,
     radius: specsOption.backgroundRadius ?? 0,
-    alpha: alpha / 255
+    alpha: alpha / 255,
+    stroke: specsOption.backgroundStroke,
+    strokeWeight: Math.min(
+      Math.max(
+        1,
+        size * 0.06
+      ),
+      4
+    )
   } );
 
   if ( specsOption.style === "ticker" ) {

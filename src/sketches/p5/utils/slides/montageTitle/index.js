@@ -14,7 +14,9 @@ import {
 import {
   reportItemBounds
 } from "../common/itemBoundsRegistry.js";
-import drawItemBackground from "../common/drawItemBackground.js";
+import drawItemBackground, {
+  measureVerticalTextBox
+} from "../common/drawItemBackground.js";
 import {
   resolveMontageTitlePosition
 } from "../contentDrag.js";
@@ -516,17 +518,58 @@ export default function drawMontageTitle(
 
     // Background panel behind the label, drawn before chrome/text so both sit
     // on top. Transparent by default; a colour keeps a light label readable.
-    const bgPadX = size * 0.35;
-    const bgPadTop = size * 0.2;
-    const bgPadBottom = size * 0.3;
+    // Vertical extent from the real glyph bounds so the panel hugs the caps and
+    // descenders symmetrically instead of the nominal em box.
+    const {
+      top: bgTop,
+      bottom: bgBottom
+    } = measureVerticalTextBox(
+      font,
+      shownText,
+      shownLeft,
+      anchorY,
+      size
+    );
+
+    let bgLeft = shownLeft;
+    let bgRight = shownLeft + shownWidth;
+
+    // The bracket style draws "[" / "]" outside the label box, so the panel has
+    // to reach out to enclose them (plus a couple of pixels of breathing room)
+    // — the other styles paint within or below the label box already.
+    if ( title.style === "bracket" ) {
+      p.push();
+      p.textFont( font );
+      p.textSize( size );
+      const bracketGap = size * 0.35;
+      const openWidth = p.textWidth( "[" );
+      const closeWidth = p.textWidth( "]" );
+
+      p.pop();
+
+      const bracketMargin = 2;
+
+      bgLeft -= bracketGap + openWidth + bracketMargin;
+      bgRight += bracketGap + closeWidth + bracketMargin;
+    }
+
+    const bgPad = size * 0.28;
 
     drawItemBackground( {
-      x: shownLeft - bgPadX,
-      y: anchorY - bgPadTop,
-      w: shownWidth + bgPadX * 2,
-      h: size + bgPadTop + bgPadBottom,
+      x: bgLeft - bgPad,
+      y: bgTop - bgPad,
+      w: bgRight - bgLeft + bgPad * 2,
+      h: bgBottom - bgTop + bgPad * 2,
       color: title.backgroundColor,
-      radius: title.backgroundRadius ?? 0
+      radius: title.backgroundRadius ?? 0,
+      stroke: title.backgroundStroke,
+      strokeWeight: Math.min(
+        Math.max(
+          1,
+          size * 0.05
+        ),
+        4
+      )
     } );
 
     // The panel paints under BLEND; p5's 2D pop() does not restore blendMode,

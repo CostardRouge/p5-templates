@@ -190,16 +190,23 @@ export function paintWidgetBackground(
   style, x, y, w, h, size = 12
 ) {
   const padX = size * 0.35;
-  const padTop = size * 0.25;
-  const padBottom = size * 0.3;
+  const padY = size * 0.3;
 
   drawItemBackground( {
     x: x - padX,
-    y: y - padTop,
+    y: y - padY,
     w: w + padX * 2,
-    h: h + padTop + padBottom,
+    h: h + padY * 2,
     color: style?.background,
-    radius: style?.backgroundRadius ?? 0
+    radius: style?.backgroundRadius ?? 0,
+    stroke: style?.backgroundStroke,
+    strokeWeight: Math.min(
+      Math.max(
+        1,
+        size * 0.06
+      ),
+      4
+    )
   } );
 }
 

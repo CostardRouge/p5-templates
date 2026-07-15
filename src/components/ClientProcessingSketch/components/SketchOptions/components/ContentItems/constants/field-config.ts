@@ -614,6 +614,10 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       label: "Background",
       component: "color"
     },
+    backgroundStroke: {
+      label: "Background stroke",
+      component: "color"
+    },
     backgroundRadius: {
       label: "Background radius",
       component: "slider",
@@ -971,6 +975,10 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
     },
     backgroundColor: {
       label: "Background",
+      component: "color"
+    },
+    backgroundStroke: {
+      label: "Background stroke",
       component: "color"
     },
     backgroundRadius: {

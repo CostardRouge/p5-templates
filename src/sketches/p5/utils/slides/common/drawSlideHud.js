@@ -46,6 +46,12 @@ export default function drawSlideHud( item ) {
       0,
       0
     ],
+    backgroundStroke: item.backgroundStroke ?? [
+      0,
+      0,
+      0,
+      0
+    ],
     backgroundRadius: item.backgroundRadius ?? 0
   };
 
