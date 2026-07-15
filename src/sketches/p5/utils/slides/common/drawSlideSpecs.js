@@ -7,6 +7,7 @@ import time from "../../time.js";
 import buildSpecsLines from "./specsData.js";
 import computeSpecsHeats from "./specsChanges.js";
 import specsSound from "./specsSound.js";
+import drawItemBackground from "./drawItemBackground.js";
 import {
   reportItemBounds
 } from "./itemBoundsRegistry.js";
@@ -405,15 +406,15 @@ export default function drawSlideSpecs( specsOption ) {
   const originX = p.width * ( specsOption.position?.x ?? 0.05 );
   const originY = p.height * ( specsOption.position?.y ?? 0.06 );
 
+  const blockW = Math.max(
+    ...lines.map( ( line ) => measureWidth( `${ line.label }: ${ line.value }` ) ),
+    size * 4
+  );
+
   // Approximate drawn block (origin, stacked lines) for the on-canvas drag's
   // hit-test. Ticker style shows one line, boot-log all of them — the full
   // block is a generous, stable grab zone for both.
   if ( lines.length > 0 ) {
-    const blockW = Math.max(
-      ...lines.map( ( line ) => measureWidth( `${ line.label }: ${ line.value }` ) ),
-      size * 4
-    );
-
     reportItemBounds(
       originX,
       originY - size,
@@ -421,6 +422,24 @@ export default function drawSlideSpecs( specsOption ) {
       lines.length * lineStep + size * 2
     );
   }
+
+  // Background panel behind the block, drawn first so text sits on top. Height
+  // tracks the shown lines — one for the ticker, the whole list for boot-log —
+  // and it fades with the overlay alpha.
+  const bgLineCount = specsOption.style === "ticker" ? 1 : lines.length;
+  const bgPadX = size * 0.4;
+  const bgPadTop = size * 0.35;
+  const bgPadBottom = size * 0.35;
+
+  drawItemBackground( {
+    x: originX - bgPadX,
+    y: originY - bgPadTop,
+    w: blockW + bgPadX * 2,
+    h: ( bgLineCount - 1 ) * lineStep + size + bgPadTop + bgPadBottom,
+    color: specsOption.backgroundColor,
+    radius: specsOption.backgroundRadius ?? 0,
+    alpha: alpha / 255
+  } );
 
   if ( specsOption.style === "ticker" ) {
     // Single line cycling through all parameters. In permanent mode the reveal

@@ -14,6 +14,7 @@ import {
 import {
   reportItemBounds
 } from "../common/itemBoundsRegistry.js";
+import drawItemBackground from "../common/drawItemBackground.js";
 import {
   resolveMontageTitlePosition
 } from "../contentDrag.js";
@@ -500,16 +501,37 @@ export default function drawMontageTitle(
 
     p.pop();
 
+    const shownLeft = alignLeft(
+      anchorX,
+      shownWidth,
+      title.align
+    );
+
     reportItemBounds(
-      alignLeft(
-        anchorX,
-        shownWidth,
-        title.align
-      ),
+      shownLeft,
       anchorY,
       shownWidth,
       size
     );
+
+    // Background panel behind the label, drawn before chrome/text so both sit
+    // on top. Transparent by default; a colour keeps a light label readable.
+    const bgPadX = size * 0.35;
+    const bgPadTop = size * 0.2;
+    const bgPadBottom = size * 0.3;
+
+    drawItemBackground( {
+      x: shownLeft - bgPadX,
+      y: anchorY - bgPadTop,
+      w: shownWidth + bgPadX * 2,
+      h: size + bgPadTop + bgPadBottom,
+      color: title.backgroundColor,
+      radius: title.backgroundRadius ?? 0
+    } );
+
+    // The panel paints under BLEND; p5's 2D pop() does not restore blendMode,
+    // so re-assert the title's blend before the label draws over it.
+    p.blendMode( title.blend ?? "source-over" );
   }
 
   if ( !changing ) {

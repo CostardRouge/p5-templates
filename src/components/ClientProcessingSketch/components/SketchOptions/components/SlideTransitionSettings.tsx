@@ -573,6 +573,19 @@ function SlideTitleControls( {
 
           <ResettableColor name={ `${ titleBase }.fill` } label="Fill" />
 
+          <ResettableColor
+            name={ `${ titleBase }.backgroundColor` }
+            label="Background"
+          />
+
+          <ResettableSlider
+            name={ `${ titleBase }.backgroundRadius` }
+            label="Background radius"
+            min={ 0 }
+            max={ 200 }
+            step={ 1 }
+          />
+
           <BarSelect
             name={ `${ titleBase }.style` }
             label="Style"

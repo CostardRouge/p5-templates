@@ -6,6 +6,7 @@ import sketch, {
 import {
   reportItemPartBounds
 } from "../../slides/common/itemBoundsRegistry.js";
+import drawItemBackground from "../../slides/common/drawItemBackground.js";
 
 export const FALLBACK_FILL = [
   0,
@@ -176,6 +177,30 @@ export function reportWidgetBounds(
     w,
     h
   );
+}
+
+/**
+ * Paint the shared HUD background panel behind one widget's readout, using the
+ * rectangle it just reported. `size` is the widget's font size, driving the
+ * padding so the chip hugs the text. A no-op unless the HUD item sets a
+ * non-transparent `backgroundColor` (see drawSlideHud). Call it right after
+ * reportWidgetBounds, before drawing the widget's own marks.
+ */
+export function paintWidgetBackground(
+  style, x, y, w, h, size = 12
+) {
+  const padX = size * 0.35;
+  const padTop = size * 0.25;
+  const padBottom = size * 0.3;
+
+  drawItemBackground( {
+    x: x - padX,
+    y: y - padTop,
+    w: w + padX * 2,
+    h: h + padTop + padBottom,
+    color: style?.background,
+    radius: style?.backgroundRadius ?? 0
+  } );
 }
 
 /**

@@ -5,6 +5,7 @@ import {
 import {
   anchoredRect,
   getFont,
+  paintWidgetBackground,
   reportWidgetBounds,
   resolveAnchor,
   toColor,
@@ -103,6 +104,15 @@ export default function badge(
       rect.y,
       rect.w,
       rect.h
+    );
+
+    paintWidgetBackground(
+      style,
+      rect.x,
+      rect.y,
+      rect.w,
+      rect.h,
+      size
     );
 
     string.write(

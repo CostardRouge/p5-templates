@@ -377,6 +377,18 @@ export const SpecsItemSchema = z.object( {
     255,
     120
   ] ),
+  // Panel painted behind the specs block. Transparent black by default (draws
+  // nothing) — set a colour to keep the text readable over busy sketches.
+  backgroundColor: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
+  // Corner radius of that panel, in pixels. 0 = sharp rectangle.
+  backgroundRadius: z.number().min( 0 )
+    .max( 200 )
+    .default( 0 ),
   blend: Blend.default( "source-over" ),
   position: Vec2.default( {
     x: 0.05,
@@ -947,6 +959,20 @@ export const HudItemSchema = z.object( {
     120,
     255
   ] ),
+  // Panel painted behind each widget's readout. Transparent black by default
+  // (draws nothing) — set a colour to keep the telemetry readable over busy
+  // sketches. Applies to the boxed widgets, not the full-canvas crosshairs /
+  // bounding-box overlays.
+  backgroundColor: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
+  // Corner radius of those panels, in pixels. 0 = sharp rectangle.
+  backgroundRadius: z.number().min( 0 )
+    .max( 200 )
+    .default( 0 ),
   font: z.string().default( "spaceMonoRegular" ),
   blend: Blend.default( "source-over" ),
   badge: HudBadgeSchema,
@@ -1114,6 +1140,19 @@ export const SlideTitleSchema = z.object( {
     255,
     120
   ] ),
+  // Panel painted behind the label. Transparent black by default (draws
+  // nothing) — set a colour (e.g. a solid dark) to keep a light label readable
+  // over busy sketches.
+  backgroundColor: RGBA.default( [
+    0,
+    0,
+    0,
+    0
+  ] ),
+  // Corner radius of that panel, in pixels. 0 = sharp rectangle.
+  backgroundRadius: z.number().min( 0 )
+    .max( 200 )
+    .default( 0 ),
   blend: Blend.default( "source-over" ),
   style: z.enum( TITLE_DISPLAY_STYLES ).default( "bracket" ),
 

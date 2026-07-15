@@ -7,6 +7,7 @@ import {
 import {
   formatValue,
   getFont,
+  paintWidgetBackground,
   reportWidgetBounds,
   resolveBlock,
   toColor,
@@ -53,6 +54,15 @@ export default function gauge(
       blockY,
       barW,
       blockH
+    );
+
+    paintWidgetBackground(
+      style,
+      blockX,
+      blockY,
+      barW,
+      blockH,
+      s
     );
 
     const fill = toColor(
