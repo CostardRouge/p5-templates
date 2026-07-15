@@ -3574,5 +3574,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-07-15T08:37:02.819Z",
     "ctime": "2026-07-15T08:36:18.431Z"
+  },
+  {
+    "name": "dragon-corridor-v3-grid",
+    "engine": "p5",
+    "category": "dragon-corridor",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-15T17:15:18.246Z",
+    "ctime": "2026-07-15T17:11:00.754Z"
   }
 ]
