@@ -385,11 +385,13 @@ export const SpecsItemSchema = z.object( {
     0,
     0
   ] ),
-  // Optional outline around that panel. Transparent by default (no border).
+  // Optional outline around that panel. Defaults to the text fill colour with
+  // zero opacity (so it draws nothing) — raise the alpha to reveal a border in
+  // the same colour as the text.
   backgroundStroke: RGBA.default( [
     0,
-    0,
-    0,
+    255,
+    120,
     0
   ] ),
   // Corner radius of that panel, in pixels. 0 = sharp rectangle.
@@ -976,11 +978,13 @@ export const HudItemSchema = z.object( {
     0,
     0
   ] ),
-  // Optional outline around each widget's panel. Transparent by default.
+  // Optional outline around each widget's panel. Defaults to the fill colour
+  // with zero opacity (draws nothing) — raise the alpha to reveal a border in
+  // the same colour as the readout.
   backgroundStroke: RGBA.default( [
     0,
-    0,
-    0,
+    255,
+    120,
     0
   ] ),
   // Corner radius of those panels, in pixels. 0 = sharp rectangle.
@@ -1164,11 +1168,13 @@ export const SlideTitleSchema = z.object( {
     0,
     0
   ] ),
-  // Optional outline around that panel. Transparent by default (no border).
+  // Optional outline around that panel. Defaults to the label fill colour with
+  // zero opacity (draws nothing) — raise the alpha to reveal a border in the
+  // same colour as the label.
   backgroundStroke: RGBA.default( [
     0,
-    0,
-    0,
+    255,
+    120,
     0
   ] ),
   // Corner radius of that panel, in pixels. 0 = sharp rectangle.
