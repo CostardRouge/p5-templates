@@ -681,7 +681,7 @@ function MenuBar( {
   }
 
   return (
-    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-30 md:z-50">
+    <div className="fixed top-2 left-2 md:top-4 md:left-4 z-[70] md:z-50">
       {menuNode}
     </div>
   );
