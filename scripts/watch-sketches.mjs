@@ -393,11 +393,15 @@ function generate() {
 
   writeIfChanged(
     META_OUTPUT,
-    JSON.stringify(
+    // Trailing newline (POSIX convention) so the generator agrees with the merge
+    // driver (scripts/git-merge-metadata.mjs) and editors' "insert final newline".
+    // Without it the last line flip-flops between `]` and `]\n`, which git reports
+    // as a conflict ("No newline at end of file") even when the content is equal.
+    `${ JSON.stringify(
       meta,
       null,
       2
-    ),
+    ) }\n`,
     `metadata.json (${ meta.length } templates)`
   );
 
