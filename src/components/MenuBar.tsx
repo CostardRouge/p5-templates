@@ -426,7 +426,7 @@ function MenuBar( {
 
       <MenuItems
         anchor="bottom start"
-        className="z-50 w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-none [--anchor-gap:0.5rem]"
+        className="z-[70] w-60 border border-border rounded-xl bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden focus:outline-none [--anchor-gap:0.5rem]"
       >
         <SectionLabel>Navigate</SectionLabel>
         {navLinks.map( ( {
