@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Check, Copy, Share2, X
+  Check, Copy, ExternalLink, Share2, X
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -13,6 +13,9 @@ import {
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import {
   buildEmbedHash, diffSketchOptions
+} from "@/lib/embedOptions";
+import type {
+  AutoplayPolicy
 } from "@/lib/embedOptions";
 import {
   EMBED_CONTROLS_ALL
@@ -45,6 +48,10 @@ export default function SketchShareDialog() {
     picked,
     setPicked
   ] = useState<Set<string>>( new Set() );
+  const [
+    autoplay,
+    setAutoplay
+  ] = useState<AutoplayPolicy>( "on" );
   const [
     copied,
     setCopied
@@ -131,7 +138,10 @@ export default function SketchShareDialog() {
   const embedPath = `/embed/${ engineId }/${ category ? `${ category }/` : "" }${ name }`;
   const hash = buildEmbedHash(
     delta,
-    controls
+    controls,
+    {
+      autoplay
+    }
   );
   const link = `${ origin }${ embedPath }${ hash }`;
 
@@ -286,6 +296,46 @@ export default function SketchShareDialog() {
             )}
           </div>
 
+          {/* Autoplay */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
+              Autoplay
+            </span>
+            <div className="flex flex-col gap-1">
+              {( [
+                {
+                  value: "on",
+                  label: "Play automatically"
+                },
+                {
+                  value: "off",
+                  label: "Off — click to play"
+                },
+                {
+                  value: "desktop",
+                  label: "Auto on desktop only (off on mobile)"
+                }
+              ] as const ).map( ( option ) => (
+                <label
+                  key={ option.value }
+                  className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
+                >
+                  <input
+                    type="radio"
+                    name="embed-autoplay"
+                    checked={ autoplay === option.value }
+                    onChange={ () => setAutoplay( option.value ) }
+                    className="accent-foreground"
+                  />
+                  {option.label}
+                </label>
+              ) )}
+            </div>
+            <p className="text-xs text-foreground/50">
+              Reduced-motion viewers never autoplay, whatever you pick.
+            </p>
+          </div>
+
           {/* Link */}
           <ShareField
             label="Link"
@@ -294,6 +344,11 @@ export default function SketchShareDialog() {
             onCopy={ () => copy(
               link,
               "link"
+            ) }
+            onOpen={ () => window.open(
+              link,
+              "_blank",
+              "noopener"
             ) }
           />
 
@@ -341,13 +396,16 @@ function ShareField( {
   value,
   multiline = false,
   copied,
-  onCopy
+  onCopy,
+  onOpen
 }: {
   label: string;
   value: string;
   multiline?: boolean;
   copied: boolean;
   onCopy: () => void;
+  /** When set, renders an "open in new tab" affordance next to Copy. */
+  onOpen?: () => void;
 } ) {
   return (
     <div className="flex flex-col gap-1">
@@ -355,23 +413,37 @@ function ShareField( {
         <span className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
           {label}
         </span>
-        <button
-          type="button"
-          onClick={ onCopy }
-          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-foreground/70 transition-colors hover:bg-hover hover:text-foreground"
-        >
-          {copied ? (
-            <>
-              <Check className="h-3.5 w-3.5 text-green-400" />
-              Copied
-            </>
-          ) : (
-            <>
-              <Copy className="h-3.5 w-3.5" />
-              Copy
-            </>
+        <div className="flex items-center gap-1">
+          {onOpen && (
+            <button
+              type="button"
+              onClick={ onOpen }
+              title="Open the embed in a new tab"
+              aria-label="Open the embed in a new tab"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-foreground/70 transition-colors hover:bg-hover hover:text-foreground"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Open
+            </button>
           )}
-        </button>
+          <button
+            type="button"
+            onClick={ onCopy }
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-foreground/70 transition-colors hover:bg-hover hover:text-foreground"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-green-400" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5" />
+                Copy
+              </>
+            )}
+          </button>
+        </div>
       </div>
       {multiline ? (
         <textarea

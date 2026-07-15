@@ -3,7 +3,8 @@ import {
   decodeEmbedOptions,
   diffSketchOptions,
   encodeEmbedOptions,
-  parseEmbedHash
+  parseEmbedHash,
+  resolveAutoplay
 } from "@/lib/embedOptions";
 
 describe(
@@ -101,11 +102,13 @@ describe(
       () => {
         expect( parseEmbedHash( "" ) ).toEqual( {
           options: null,
-          controls: null
+          controls: null,
+          autoplay: "on"
         } );
         expect( parseEmbedHash( "#" ) ).toEqual( {
           options: null,
-          controls: null
+          controls: null,
+          autoplay: "on"
         } );
 
         const controlsOnly = parseEmbedHash( "#c=a.b , c.d ,," );
@@ -126,6 +129,117 @@ describe(
           {},
           []
         ) ).toBe( "" );
+      }
+    );
+
+    it(
+      "carries the autoplay policy, omitting the default 'on'",
+      () => {
+        expect( buildEmbedHash(
+          {},
+          [],
+          {
+            autoplay: "on"
+          }
+        ) ).toBe( "" );
+        expect( buildEmbedHash(
+          {},
+          [],
+          {
+            autoplay: "off"
+          }
+        ) ).toBe( "#a=off" );
+        expect( buildEmbedHash(
+          {},
+          [],
+          {
+            autoplay: "desktop"
+          }
+        ) ).toBe( "#a=desktop" );
+      }
+    );
+
+    it(
+      "round-trips autoplay through parse",
+      () => {
+        expect( parseEmbedHash( buildEmbedHash(
+          {},
+          undefined,
+          {
+            autoplay: "desktop"
+          }
+        ) ).autoplay ).toBe( "desktop" );
+        expect( parseEmbedHash( "#a=bogus" ).autoplay ).toBe( "on" );
+      }
+    );
+  }
+);
+
+describe(
+  "resolveAutoplay",
+  () => {
+    it(
+      "lets reduced-motion win over every policy",
+      () => {
+        for ( const policy of [
+          "on",
+          "off",
+          "desktop"
+        ] as const ) {
+          expect( resolveAutoplay(
+            policy,
+            {
+              reducedMotion: true,
+              mobile: false
+            }
+          ) ).toBe( false );
+        }
+      }
+    );
+
+    it(
+      "honours the explicit off policy",
+      () => {
+        expect( resolveAutoplay(
+          "off",
+          {
+            reducedMotion: false,
+            mobile: false
+          }
+        ) ).toBe( false );
+      }
+    );
+
+    it(
+      "runs on desktop but not mobile for the desktop policy",
+      () => {
+        expect( resolveAutoplay(
+          "desktop",
+          {
+            reducedMotion: false,
+            mobile: false
+          }
+        ) ).toBe( true );
+        expect( resolveAutoplay(
+          "desktop",
+          {
+            reducedMotion: false,
+            mobile: true
+          }
+        ) ).toBe( false );
+      }
+    );
+
+    it(
+      "runs everywhere for the on policy",
+      () => {
+        expect( resolveAutoplay(
+          "on",
+          {
+            reducedMotion: false,
+            mobile: true
+          }
+        ) ).toBe( true );
       }
     );
   }

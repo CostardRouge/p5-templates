@@ -19,11 +19,16 @@ import type {
   FieldConfig
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 import ScalableViewport from "@/components/ScalableViewport/ScalableViewport";
+import EmbedPoster from "@/components/EmbedSketch/EmbedPoster";
+import EmbedPlaybackToggle from "@/components/EmbedSketch/EmbedPlaybackToggle";
 import {
   deepMerge, structuredClone
 } from "@/p5/shared/utils.js";
 import {
-  parseEmbedHash
+  parseEmbedHash, resolveAutoplay
+} from "@/lib/embedOptions";
+import type {
+  AutoplayPolicy
 } from "@/lib/embedOptions";
 
 // The control strip pulls in the whole FieldRenderer subtree (RHF + every
@@ -43,6 +48,8 @@ type EmbedSketchClientProps = {
   baseOptions: SketchOption;
   /** Per-field UI config, used to render whitelisted controls. */
   formConfiguration?: Record<string, FieldConfig>;
+  thumbnailUrl: string;
+  hasThumbnail: boolean;
   width: number;
   height: number;
 };
@@ -62,39 +69,47 @@ export default function EmbedSketchClient( {
   name,
   baseOptions,
   formConfiguration,
+  thumbnailUrl,
+  hasThumbnail,
   width,
   height
 }: EmbedSketchClientProps ) {
   const containerRef = useRef<HTMLDivElement | null>( null );
+  const engineRef = useRef<SketchEngine | null>( null );
   const [
     ready,
     setReady
   ] = useState( false );
 
-  // The control whitelist comes from the URL fragment, which only exists on the
-  // client — so the panel must not participate in SSR / first-hydration render
-  // or its presence would diverge from the server markup. Flip on after mount.
+  // `started` gates the engine mount: while false, neither the canvas nor p5
+  // itself is loaded — an idle (autoplay-off) embed costs only the poster image.
+  // `decided` guards SSR / first-hydration render: the autoplay decision needs
+  // client-only signals (URL hash, reduced-motion, pointer type), so the server
+  // and the first client render both show the neutral shell, then the mount
+  // effect flips to poster or canvas — no hydration mismatch either way.
   const [
-    hydrated,
-    setHydrated
+    decided,
+    setDecided
+  ] = useState( false );
+  const [
+    started,
+    setStarted
+  ] = useState( false );
+  const [
+    playing,
+    setPlaying
   ] = useState( false );
 
-  useEffect(
-    () => setHydrated( true ),
-    []
-  );
-
   // Parse the URL fragment once: `#o=` is merged over the template defaults for
-  // the initial mount, `#c=` selects which fields to expose as live controls.
-  // Reading location.hash during render is stable for the mount, and the
-  // container markup is identical with or without a hash, so there is no
-  // hydration mismatch.
+  // the initial mount, `#c=` selects which fields to expose as live controls,
+  // `#a=` is the autoplay policy.
   const {
-    mountOptions, controls
+    mountOptions, controls, autoplay
   } = useMemo(
     () => {
       const merged = structuredClone( baseOptions ) as SketchOption;
       let hashControls: string[] | null = null;
+      let hashAutoplay: AutoplayPolicy = "on";
 
       if ( typeof window !== "undefined" ) {
         const parsed = parseEmbedHash( window.location.hash );
@@ -107,11 +122,13 @@ export default function EmbedSketchClient( {
         }
 
         hashControls = parsed.controls;
+        hashAutoplay = parsed.autoplay;
       }
 
       return {
         mountOptions: merged,
-        controls: hashControls
+        controls: hashControls,
+        autoplay: hashAutoplay
       };
     },
     [
@@ -119,14 +136,61 @@ export default function EmbedSketchClient( {
     ]
   );
 
+  // Resolve autoplay against the live environment after mount, then commit the
+  // start decision. reduced-motion / touch-pointer are read here (not at render)
+  // so the choice never runs during SSR.
   useEffect(
     () => {
-      if ( !containerRef.current ) {
+      const reducedMotion = window.matchMedia( "(prefers-reduced-motion: reduce)" ).matches;
+      const mobile = window.matchMedia( "(pointer: coarse)" ).matches;
+      const shouldStart = resolveAutoplay(
+        autoplay,
+        {
+          reducedMotion,
+          mobile
+        }
+      );
+
+      setStarted( shouldStart );
+      setPlaying( shouldStart );
+      setDecided( true );
+    },
+    [
+      autoplay
+    ]
+  );
+
+  const handleStart = () => {
+    setStarted( true );
+    setPlaying( true );
+  };
+
+  const togglePlayback = () => {
+    const engine = engineRef.current;
+
+    if ( !engine ) {
+      return;
+    }
+
+    if ( playing ) {
+      engine.pause();
+      setPlaying( false );
+    } else {
+      engine.play();
+      setPlaying( true );
+    }
+  };
+
+  useEffect(
+    () => {
+      if ( !started || !containerRef.current ) {
         return;
       }
 
       const registration = getEngine( engineId );
       const instance: SketchEngine = registration.createEngine();
+
+      engineRef.current = instance;
 
       const handleReady = () => setReady( true );
 
@@ -154,10 +218,12 @@ export default function EmbedSketchClient( {
           handleReady
         );
         instance.destroy();
+        engineRef.current = null;
         setReady( false );
       };
     },
     [
+      started,
       engineId,
       name,
       mountOptions
@@ -208,21 +274,41 @@ export default function EmbedSketchClient( {
 
   return (
     <div className="embed-root">
-      <ScalableViewport
-        showZoomControls={ false }
-        lockInteractions
-        resolutionKey={ `${ width }x${ height }` }
-        isReady={ ready }
-      >
-        <div ref={ containerRef } className="sketch-canvas-container" />
-      </ScalableViewport>
-
-      {hydrated && controls && controls.length > 0 && (
-        <EmbedControlPanel
-          mountOptions={ mountOptions }
-          formConfiguration={ formConfiguration }
-          controls={ controls }
+      {decided && !started && (
+        <EmbedPoster
+          thumbnailUrl={ thumbnailUrl }
+          hasThumbnail={ hasThumbnail }
+          label={ name }
+          onStart={ handleStart }
         />
+      )}
+
+      {started && (
+        <>
+          <ScalableViewport
+            showZoomControls={ false }
+            lockInteractions
+            resolutionKey={ `${ width }x${ height }` }
+            isReady={ ready }
+          >
+            <div ref={ containerRef } className="sketch-canvas-container" />
+          </ScalableViewport>
+
+          {controls && controls.length > 0 && (
+            <EmbedControlPanel
+              mountOptions={ mountOptions }
+              formConfiguration={ formConfiguration }
+              controls={ controls }
+            />
+          )}
+
+          {ready && (
+            <EmbedPlaybackToggle
+              playing={ playing }
+              onToggle={ togglePlayback }
+            />
+          )}
+        </>
       )}
     </div>
   );

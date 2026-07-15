@@ -19,6 +19,7 @@ import {
   getJSONSketchOptions,
   getSketchMeta
 } from "@/utils/getSketchOptions";
+import getSketchThumbnailURL from "@/utils/getSketchThumbnailURL";
 import EmbedSketchClient from "@/components/EmbedSketch/EmbedSketchClient";
 
 /* ------------------------------------------------------------------ */
@@ -113,6 +114,11 @@ export default async function EmbedPage( {
       name={ sketchName }
       baseOptions={ sketchOptions }
       formConfiguration={ formConfiguration }
+      thumbnailUrl={ getSketchThumbnailURL(
+        engineId,
+        sketchName
+      ) }
+      hasThumbnail={ sketchMeta.hasThumbnail }
       width={ sketchOptions.size.width }
       height={ sketchOptions.size.height }
     />
