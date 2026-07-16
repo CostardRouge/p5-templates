@@ -64,7 +64,8 @@ const DRAGGABLE_TYPES = new Set( [
   "images-stack",
   "visual",
   "qrcode",
-  "specs"
+  "specs",
+  "breakdown"
 ] );
 
 // A "hud" content item has no single position of its own — instead it holds
@@ -182,6 +183,11 @@ function positionDefaults( type ) {
       return {
         x: 0.05,
         y: 0.06
+      };
+    case "breakdown":
+      return {
+        x: 0.06,
+        y: 0.08
       };
     default:
       return {
@@ -364,6 +370,14 @@ function collectTargets( p ) {
       }
 
       if ( !DRAGGABLE_TYPES.has( item.type ) ) {
+        return;
+      }
+
+      // A roaming breakdown places itself (corner tour, one anchor per step)
+      // and ignores item.position entirely. It must be excluded HERE — the
+      // hit-test's anchor-disc fallback would otherwise still grab it at its
+      // unused stored position even though it reports no bounds.
+      if ( item.type === "breakdown" && item.placement === "roaming" ) {
         return;
       }
 

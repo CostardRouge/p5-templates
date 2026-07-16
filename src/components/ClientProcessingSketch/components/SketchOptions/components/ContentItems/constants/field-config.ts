@@ -591,6 +591,171 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       }
     }
   },
+  breakdown: {
+    placement: {
+      label: "Placement",
+      component: "select",
+      options: [
+        {
+          value: "fixed",
+          label: "Fixed position"
+        },
+        {
+          value: "roaming",
+          label: "Roaming (moves each step)"
+        }
+      ]
+    },
+    position: {
+      label: "Position (fixed placement only)",
+      component: "vector2d",
+      allowNegative: false,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      yDown: true
+    },
+    showHeader: {
+      label: "Show header row",
+      component: "checkbox"
+    },
+    showCounter: {
+      label: "Show step counter",
+      component: "checkbox"
+    },
+    showTitle: {
+      label: "Show step title",
+      component: "checkbox"
+    },
+    counterMode: {
+      label: "Counter style",
+      component: "select",
+      options: [
+        {
+          value: "numeric",
+          label: "Numeric (1/3)"
+        },
+        {
+          value: "letters",
+          label: "Letters (A, B, C…)"
+        }
+      ]
+    },
+    fill: {
+      label: "Fill",
+      component: "color"
+    },
+    backgroundColor: {
+      label: "Background",
+      component: "color"
+    },
+    backgroundStroke: {
+      label: "Background stroke",
+      component: "color"
+    },
+    backgroundRadius: {
+      label: "Background radius",
+      component: "slider",
+      min: 0,
+      max: 200,
+      step: 1
+    },
+    font: {
+      label: "Font",
+      component: "select",
+      options: fontSelectOptions
+    },
+    size: {
+      label: "Size",
+      component: "slider",
+      min: 8,
+      max: 96,
+      step: 1
+    },
+    lineHeight: {
+      label: "Line height",
+      component: "slider",
+      min: 1,
+      max: 3,
+      step: 0.05
+    },
+    blend: {
+      label: "Blend",
+      component: "select",
+      options: blendSelectOptions
+    },
+    build: {
+      label: "Breakdown engine",
+      component: "nested-object",
+      initialExpanded: true,
+      fields: {
+        selection: {
+          label: "Steps",
+          component: "select",
+          options: [
+            {
+              value: "changed",
+              label: "Changed parameters only (diff vs defaults)"
+            },
+            {
+              value: "all",
+              label: "All parameters"
+            }
+          ]
+        },
+        departure: {
+          label: "Departure (how far values start)",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.05
+        },
+        introRatio: {
+          label: "Intro span (loop fraction)",
+          component: "slider",
+          min: 0,
+          max: 0.3,
+          step: 0.01
+        },
+        outroRatio: {
+          label: "Outro span (loop fraction)",
+          component: "slider",
+          min: 0,
+          max: 0.4,
+          step: 0.01
+        },
+        holdRatio: {
+          label: "Hold after lock (per step)",
+          component: "slider",
+          min: 0,
+          max: 0.9,
+          step: 0.01
+        },
+        easing: {
+          label: "Step easing",
+          component: "easing"
+        },
+        snapKeys: {
+          label: "Snap keys (no lerp)",
+          component: "item-list",
+          itemConfig: {
+            label: "Key",
+            component: "text",
+            placeholder: "e.g. seed or sites.seed"
+          }
+        },
+        excludeKeys: {
+          label: "Excluded keys (never animated)",
+          component: "item-list",
+          itemConfig: {
+            label: "Key",
+            component: "text",
+            placeholder: "e.g. backgroundColor"
+          }
+        }
+      }
+    }
+  },
   specs: {
     style: {
       label: "Style",

@@ -11,6 +11,10 @@ import {
 } from "./layouts";
 
 import getMontageSketch from "./morph/index.js";
+import getBreakdownSketch, {
+  findActiveBreakdownItem
+} from "./breakdown/index.js";
+import animation from "../animation.js";
 import drawMontageDip from "./morph/drawMontageDip.js";
 import drawMontageSound from "./morph/drawMontageSound.js";
 import drawMontageTitle from "./montageTitle/index.js";
@@ -320,6 +324,30 @@ const slides = {
 
       if ( montage ) {
         return montage;
+      }
+    }
+
+    // Breakdown diff narration: when a "breakdown" content item governs this
+    // frame (current slide's content wins over global), return the
+    // interpolated in-progress parameters instead of the settled merge —
+    // same injection seam as the montage above (which wins on its own
+    // slides). Reads raw store arrays only; the orchestrator memoizes.
+    const breakdownItem = findActiveBreakdownItem(
+      optionsTarget,
+      this.index,
+      Array.isArray( optionsTarget?.slides ) ? optionsTarget.slides.length : 0
+    );
+
+    if ( breakdownItem ) {
+      const built = getBreakdownSketch(
+        globalSketch,
+        currentSlide?.sketch,
+        breakdownItem,
+        animation.progression
+      );
+
+      if ( built ) {
+        return built;
       }
     }
 

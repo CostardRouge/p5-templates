@@ -9,6 +9,7 @@ import drawSlideImages from "../common/drawSlideImages.js";
 import drawSlideBackground from "../common/drawSlideBackground.js";
 import drawSlideImagesStack from "../common/drawSlideImagesStack.js";
 import drawSlideQrCode from "../common/drawSlideQrCode.js";
+import drawSlideBreakdown from "../common/drawSlideBreakdown.js";
 import {
   resolveDraggedItem
 } from "../contentDrag.js";
@@ -49,6 +50,9 @@ export default function freeLayout(
         break;
       case "specs":
         drawSlideSpecs( item );
+        break;
+      case "breakdown":
+        drawSlideBreakdown( item );
         break;
       case "hud":
         drawSlideHud( item );

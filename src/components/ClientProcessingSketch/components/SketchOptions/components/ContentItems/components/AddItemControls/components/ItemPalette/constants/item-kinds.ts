@@ -8,7 +8,8 @@ import {
   Sparkles as VisualIcon,
   Terminal as SpecsIcon,
   QrCode as QrCodeIcon,
-  Gauge as HudIcon
+  Gauge as HudIcon,
+  ListOrdered as BreakdownIcon
 } from "lucide-react";
 import {
   ItemKind,
@@ -23,6 +24,7 @@ export const ITEM_ORDER: ItemKind[] = [
   "images-stack",
   "meta",
   "specs",
+  "breakdown",
   "hud",
   "background",
   "qrcode"
@@ -48,6 +50,11 @@ export const ITEM_META: Record<ItemKind, ItemKindMeta> = {
     label: "Specs",
     Icon: SpecsIcon,
     description: "Technical overlay of the sketch settings"
+  },
+  breakdown: {
+    label: "Breakdown",
+    Icon: BreakdownIcon,
+    description: "Step-by-step diff: the sketch stabilizes while each changed parameter is narrated"
   },
   hud: {
     label: "HUD",
