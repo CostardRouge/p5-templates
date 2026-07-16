@@ -1,5 +1,5 @@
 import {
-  ChevronDown, RotateCcw
+  ChevronDown, CopyPlus, RotateCcw
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -37,6 +37,13 @@ import ControlledJoypadDeviceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
+import ApplyToAllSlidesButton from "@/components/ApplyToAllSlidesButton";
+import FieldContextMenu, {
+  useFieldContextMenu
+} from "./FieldContextMenu";
+import {
+  applyToAllSlides, canApplyToAllSlides
+} from "../utils/applyToAllSlides";
 import BindingAffordance
   from "./ContentItems/components/BindingAffordance/BindingAffordance";
 import {
@@ -135,6 +142,39 @@ export default function FieldRenderer( {
         shouldTouch: true,
         shouldValidate: true
       }
+    );
+  };
+
+  // Right-click a field (or block) to apply its value to every other slide.
+  // Only active in a multi-slide context, and never over editable inputs — so
+  // the native menu (copy/paste/spellcheck) is preserved and no permanent icon
+  // is added to each row.
+  const contextMenu = useFieldContextMenu();
+
+  const canApply = canApplyToAllSlides(
+    getValues,
+    registeredName
+  );
+
+  const handleFieldContextMenu = ( event: React.MouseEvent ) => {
+    if ( !canApply ) {
+      return;
+    }
+
+    const target = event.target as HTMLElement;
+
+    if ( target.closest( "input, textarea, [contenteditable=\"true\"]" ) ) {
+      return;
+    }
+
+    contextMenu.open( event );
+  };
+
+  const handleApplyToAllSlides = () => {
+    applyToAllSlides(
+      getValues,
+      setValue,
+      registeredName
     );
   };
 
@@ -390,6 +430,10 @@ export default function FieldRenderer( {
                     basePath={ registeredName }
                     className="text-foreground p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
                   />
+                  <ApplyToAllSlidesButton
+                    basePath={ registeredName }
+                    className="text-foreground p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
+                  />
                 </div>
               </div>
             ) }
@@ -623,7 +667,25 @@ export default function FieldRenderer( {
   ) : null;
 
   return (
-    <div className="text-sm md:text-xs">
+    <div
+      className="text-sm md:text-xs"
+      onContextMenu={ handleFieldContextMenu }
+    >
+      {contextMenu.position && (
+        <FieldContextMenu
+          position={ contextMenu.position }
+          onClose={ contextMenu.close }
+          items={ [
+            {
+              label: config.label
+                ? `Appliquer « ${ config.label } » à tous les slides`
+                : "Appliquer à tous les slides",
+              icon: CopyPlus,
+              onClick: handleApplyToAllSlides
+            }
+          ] }
+        />
+      )}
       {needsOuterLabel &&
         config.label &&
         !hideLabel && (
