@@ -105,6 +105,80 @@ export function formatCounter(
   return `${ index + 1 }/${ total }`;
 }
 
+/**
+ * Every text a lerping value can render as, sampled at t = 0, 0.1 … 1.
+ * The overlay reserves its value column at the WIDEST of these — measuring
+ * only the endpoints under-reserves ("5.13" between "2" and "8") and the
+ * panel overflows mid-lerp. Lerps are monotone per component, so a 0.1 grid
+ * bounds the real maximum. Snapping values only ever show their endpoints.
+ */
+export function sampleValueTexts(
+  start, final, snap = false
+) {
+  const endpoints = () =>
+    [
+      formatValue( start ),
+      formatValue( final )
+    ].filter( ( text ) => text !== null );
+
+  if (
+    snap ||
+    start === null ||
+    final === null ||
+    typeof start === "boolean" ||
+    typeof start === "string" ||
+    typeof start !== typeof final
+  ) {
+    return endpoints();
+  }
+
+  const lerpNumber = (
+    a, b, t
+  ) => a + ( b - a ) * t;
+
+  const texts = [];
+
+  for ( let i = 0; i <= 10; i++ ) {
+    const t = i / 10;
+
+    let value;
+
+    if ( typeof start === "number" ) {
+      value = lerpNumber(
+        start,
+        final,
+        t
+      );
+    } else if (
+      Array.isArray( start ) &&
+      Array.isArray( final ) &&
+      start.length === final.length
+    ) {
+      value = start.map( (
+        component, k
+      ) => (
+        typeof component === "number" && typeof final[ k ] === "number"
+          ? lerpNumber(
+            component,
+            final[ k ],
+            t
+          )
+          : t < 0.5 ? component : final[ k ]
+      ) );
+    } else {
+      return endpoints();
+    }
+
+    const text = formatValue( value );
+
+    if ( text !== null ) {
+      texts.push( text );
+    }
+  }
+
+  return texts;
+}
+
 // Relative-epsilon numeric equality shared by the diff selection (deriveSteps)
 // and the min≈final opposite-end rule (startValues).
 export function nearlyEqual(

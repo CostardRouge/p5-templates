@@ -471,6 +471,20 @@ export const BREAKDOWN_PLACEMENTS = [
   "roaming"
 ] as const;
 
+// How a line's changing value is rendered:
+//   - "bar": gauge-style progress bar filling start → final (the default)
+//   - "ticker": the live interpolated value printed as text
+//   - "roll": per-character odometer from the start text to the final text
+//   - "fade": alpha crossfade start text → final text
+//   - "rise": start text slides up and out, final text rises in from below
+export const BREAKDOWN_VALUE_STYLES = [
+  "bar",
+  "ticker",
+  "roll",
+  "fade",
+  "rise"
+] as const;
+
 // Engine/derivation settings, grouped under `build` on purpose: this object's
 // identity is the derived-cache key in the breakdown orchestrator, and it
 // survives the drag layer's per-frame { ...item, position } wrapper — keying
@@ -500,6 +514,13 @@ export const BreakdownBuildSchema = z
       .default( 0.15 ),
     // Easing key from easing.js applied to each step's local progress.
     easing: z.string().default( "easeInOutCubic" ),
+    // Per-line offset WITHIN a step (0..1): 0 = every leaf of the group
+    // animates together (default), 1 ≈ strictly one line after another.
+    // Lives in `build` because it shifts the INJECTED values, not just the
+    // overlay — the orchestrator's derived cache keys on this object.
+    lineStagger: z.number().min( 0 )
+      .max( 1 )
+      .default( 0 ),
     // Params that snap at their window midpoint instead of lerping —
     // discrete or cache-invalidating values (montage precedent).
     snapKeys: z.array( z.string() ).default( [
@@ -532,9 +553,13 @@ export const BreakdownItemSchema = z.object( {
   showCounter: z.boolean().default( true ),
   showTitle: z.boolean().default( true ),
   counterMode: z.enum( BREAKDOWN_COUNTER_MODES ).default( "numeric" ),
+  // Typewriter effect on the line text. Off by default: labels show up
+  // whole immediately — only the value in front of them animates.
+  typewriter: z.boolean().default( false ),
+  valueStyle: z.enum( BREAKDOWN_VALUE_STYLES ).default( "bar" ),
   font: z.string().default( "spaceMonoRegular" ),
   size: z.number().positive()
-    .default( 22 ),
+    .default( 16 ),
   lineHeight: z.number().positive()
     .default( 1.4 ),
   fill: RGBA.default( [

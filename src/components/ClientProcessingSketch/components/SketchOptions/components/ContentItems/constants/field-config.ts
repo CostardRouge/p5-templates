@@ -641,6 +641,36 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         }
       ]
     },
+    typewriter: {
+      label: "Typewriter on labels",
+      component: "checkbox"
+    },
+    valueStyle: {
+      label: "Value animation",
+      component: "select",
+      options: [
+        {
+          value: "bar",
+          label: "Progress bar (gauge)"
+        },
+        {
+          value: "ticker",
+          label: "Ticker (live value)"
+        },
+        {
+          value: "roll",
+          label: "Roll (odometer)"
+        },
+        {
+          value: "fade",
+          label: "Fade"
+        },
+        {
+          value: "rise",
+          label: "Rise"
+        }
+      ]
+    },
     fill: {
       label: "Fill",
       component: "color"
@@ -734,6 +764,13 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
         easing: {
           label: "Step easing",
           component: "easing"
+        },
+        lineStagger: {
+          label: "Line stagger (0 = together)",
+          component: "slider",
+          min: 0,
+          max: 1,
+          step: 0.05
         },
         snapKeys: {
           label: "Snap keys (no lerp)",

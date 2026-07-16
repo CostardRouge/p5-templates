@@ -6,13 +6,16 @@ import {
   getBreakdownRuntimeState
 } from "../breakdown/index.js";
 import {
-  getByPath
+  getByPath,
+  matchesKeyList
 } from "../breakdown/deriveSteps.js";
 import {
   formatCounter,
   formatValue,
-  humanizeKey
+  humanizeKey,
+  sampleValueTexts
 } from "../breakdown/format.js";
+import staggeredProgress from "../morph/staggeredProgress.js";
 import drawItemBackground, {
   measureVerticalTextBox
 } from "./drawItemBackground.js";
@@ -26,23 +29,29 @@ import {
  * overlay tells the story of the CURRENT step only, in the specs visual
  * language (same text colour for text + panel outline, black panel):
  *
- *   1/3  DOTS                ← header: counter + step title (hideable)
- *   COUNT: 42                ← the group's changing leaves, typed in
- *   FILL: rgba(255, 0, 0) ▪  ← colours carry a live-animating chip
+ *   1/3  DOTS                ← header: counter + step title (hideable; the
+ *                              title hides itself on isolated single params
+ *                              whose body line repeats the same name)
+ *   COUNT: ▓▓▓░░░ 42         ← changing leaves; the value renders per
+ *   FILL:  ▓▓░░░░ ▪            `valueStyle`: gauge-style bar (default),
+ *                              live ticker, roll / fade / rise transitions
  *
- * During the outro the whole block fades out, leaving the settled sketch.
- * Everything derives from the shared schedule (animation.progression) — no
- * wall clock, so frame-by-frame capture reproduces the narration exactly.
+ * Labels appear whole by default — only the value animates; `typewriter`
+ * re-enables per-character typing, and `build.lineStagger` offsets the lines
+ * of a group (0 = all together, 1 ≈ one after another; it also staggers the
+ * injected values, so overlay and sketch stay in lock-step via the shared
+ * per-leaf progress). Layout reserves each value column at the widest text
+ * the lerp can produce (sampleValueTexts), so nothing overflows the panel
+ * mid-animation. During the outro the whole block fades out.
  *
  * Placement: "fixed" uses the draggable position; "roaming" walks a
- * deterministic corner tour (one anchor per step, `currentStep % 5`) so the
- * block never hides the same region of the sketch twice.
+ * deterministic corner tour (one anchor per step, `currentStep % 5`). All
+ * timing derives from animation.progression — capture-deterministic.
  */
 
 // Corner tour for roaming placement: top-left → top-right → bottom-right →
 // bottom-left → center. (x, y) is the anchor point in canvas fractions;
-// (ax, ay) is which corner of the BLOCK sits on that point, so the block
-// hugs each edge without overflowing.
+// (ax, ay) is which corner of the BLOCK sits on that point.
 const ROAM_ANCHORS = [
   {
     x: 0.06,
@@ -76,8 +85,8 @@ const ROAM_ANCHORS = [
   }
 ];
 
-// Fraction of each step window the body lines take to type in.
-const TYPE_IN_SPAN = 0.4;
+// Fraction of each step window over which lines reveal (stagger/typewriter).
+const REVEAL_SPAN = 0.4;
 
 function clamp01( value ) {
   return value < 0 ? 0 : value > 1 ? 1 : value;
@@ -101,6 +110,7 @@ export default function drawSlideBreakdown( breakdownOption ) {
     animSteps,
     progress,
     currentFlat,
+    leafT,
     startValues
   } = state;
 
@@ -131,10 +141,16 @@ export default function drawSlideBreakdown( breakdownOption ) {
     return;
   }
 
-  const size = breakdownOption.size ?? 22;
+  const size = breakdownOption.size ?? 16;
   const lineStep = size * ( breakdownOption.lineHeight ?? 1.4 );
   const font =
     string.fonts?.[ breakdownOption.font ] ?? string.fonts.spaceMonoRegular;
+  const valueStyle = breakdownOption.valueStyle ?? "bar";
+  const typewriter = breakdownOption.typewriter ?? false;
+  const lineStagger = breakdownOption.build?.lineStagger ?? 0;
+  const snapKeys = breakdownOption.build?.snapKeys ?? [
+    "seed"
+  ];
 
   const measureWidth = ( text ) => {
     p.push();
@@ -147,15 +163,33 @@ export default function drawSlideBreakdown( breakdownOption ) {
     return w;
   };
 
-  /* ---- row model (measured at FINAL values: stable within a step) --- */
+  const baseFill = () => {
+    const c = p.color( ...( breakdownOption.fill ?? [
+      0,
+      255,
+      120
+    ] ) );
+
+    c.setAlpha( alpha );
+
+    return c;
+  };
+
+  /* ---- header --------------------------------------------------------- */
 
   const showHeader = breakdownOption.showHeader ?? true;
   const showCounter = breakdownOption.showCounter ?? true;
   const showTitle = breakdownOption.showTitle ?? true;
 
+  // An isolated single param's body line repeats the full parameter name —
+  // a header title would be a word-for-word duplicate. Groups reduced to one
+  // changed sub-property keep theirs (GRID / COLUMNS: 8 is informative).
+  const titleRedundant =
+    step.leaves.length === 1 && !step.leaves[ 0 ].path.includes( "." );
+
   let headerText = "";
 
-  if ( showHeader && ( showCounter || showTitle ) ) {
+  if ( showHeader && ( showCounter || ( showTitle && !titleRedundant ) ) ) {
     const parts = [];
 
     if ( showCounter ) {
@@ -166,47 +200,69 @@ export default function drawSlideBreakdown( breakdownOption ) {
       ) );
     }
 
-    if ( showTitle ) {
+    if ( showTitle && !titleRedundant ) {
       parts.push( step.label );
     }
 
     headerText = parts.join( "  " );
   }
 
-  // One body line per leaf: "SUB LABEL: value". Nested leaves label with the
-  // path past the group prefix; an isolated leaf repeats its own name (needed
-  // when the header is hidden).
+  /* ---- row model -------------------------------------------------------
+   * Column layout, reserved up front so nothing can overflow mid-lerp:
+   *   LABEL:  [ value zone ]
+   * The value zone is sized at the WIDEST text the lerp can render
+   * (sampleValueTexts) plus the bar / colour chip the style adds.
+   */
+
   const chipSide = size * 0.9;
-  const chipGap = size * 0.4;
+  const gap = size * 0.4;
+  const barW = size * 6;
+  const barH = size * 0.45;
 
   const bodyLines = step.leaves.map( ( leaf ) => {
     const subPath = leaf.path.startsWith( `${ step.id }.` )
       ? leaf.path.slice( step.id.length + 1 )
       : leaf.path;
-    const label = humanizeKey( subPath );
-    const finalText = `${ label }: ${ formatValue( leaf.value ) ?? "" }`;
-
-    // In-flight values sit BETWEEN start and final, so their rendered text
-    // never outgrows the wider of the two extremes (plus a small margin for
-    // the fractional digits a lerp introduces between integer endpoints).
-    // Measuring only the final would under-reserve — mid-lerp a right-
-    // anchored roaming block would overflow the canvas edge.
+    const labelText = `${ humanizeKey( subPath ) }: `;
     const startValue = getByPath(
       startValues,
       leaf.path
     );
-    const startText = `${ label }: ${ formatValue( startValue ) ?? "" }`;
+    const isColor = leaf.cls === "colors";
+    const snap = matchesKeyList(
+      leaf.path,
+      snapKeys
+    );
+
+    const maxTextW = Math.max(
+      0,
+      ...sampleValueTexts(
+        startValue,
+        leaf.value,
+        snap
+      ).map( measureWidth )
+    );
+
+    // What the style renders inside the value zone:
+    //   bar    → bar [+ live text | chip]
+    //   ticker → live text [+ chip]
+    //   roll/fade/rise → start/final texts crossfading [+ chip]
+    let valueZoneW;
+
+    if ( valueStyle === "bar" ) {
+      valueZoneW = barW + gap + ( isColor ? chipSide : maxTextW );
+    } else {
+      valueZoneW = maxTextW + ( isColor ? gap + chipSide : 0 );
+    }
 
     return {
       leaf,
-      label,
-      width:
-        Math.max(
-          measureWidth( finalText ),
-          measureWidth( startText )
-        ) +
-        size * 0.8 +
-        ( leaf.cls === "colors" ? chipGap + chipSide : 0 )
+      labelText,
+      startValue,
+      isColor,
+      labelW: measureWidth( labelText ),
+      valueZoneW,
+      width: measureWidth( labelText ) + valueZoneW
     };
   } );
 
@@ -223,7 +279,7 @@ export default function drawSlideBreakdown( breakdownOption ) {
   );
   const blockH = ( rows - 1 ) * lineStep + size;
 
-  /* ---- placement ----------------------------------------------------- */
+  /* ---- placement ------------------------------------------------------- */
 
   p.push();
   if ( sketch.sketchOptions?.type === "webgl" ) {
@@ -258,26 +314,20 @@ export default function drawSlideBreakdown( breakdownOption ) {
     );
   }
 
-  /* ---- panel (specs invocation, drawn first) -------------------------- */
+  /* ---- panel (specs invocation, drawn first) ---------------------------- */
 
-  const texts = [];
-
-  if ( headerText ) {
-    texts.push( headerText );
-  }
-
-  bodyLines.forEach( ( line ) => texts.push( `${ line.label }: ${ formatValue( line.leaf.value ) ?? "" }` ) );
-
+  const firstText = headerText || bodyLines[ 0 ].labelText;
+  const lastLine = bodyLines[ bodyLines.length - 1 ];
   const firstBox = measureVerticalTextBox(
     font,
-    texts[ 0 ],
+    firstText,
     originX,
     originY,
     size
   );
   const lastBox = measureVerticalTextBox(
     font,
-    texts[ texts.length - 1 ],
+    lastLine ? lastLine.labelText : firstText,
     originX,
     originY + ( rows - 1 ) * lineStep,
     size
@@ -302,19 +352,19 @@ export default function drawSlideBreakdown( breakdownOption ) {
     )
   } );
 
-  /* ---- text ------------------------------------------------------------ */
+  /* ---- drawing helpers --------------------------------------------------- */
 
-  const textFill = p.color( ...( breakdownOption.fill ?? [
-    0,
-    255,
-    120
-  ] ) );
-
-  textFill.setAlpha( alpha );
-
-  const writeLine = (
-    text, x, y
+  const writeText = (
+    text, x, y, alphaFactor = 1
   ) => {
+    if ( !text ) {
+      return;
+    }
+
+    const fill = baseFill();
+
+    fill.setAlpha( Math.round( alpha * clamp01( alphaFactor ) ) );
+
     string.write(
       text,
       x,
@@ -322,7 +372,7 @@ export default function drawSlideBreakdown( breakdownOption ) {
       {
         size,
         font,
-        fill: textFill,
+        fill,
         stroke: false,
         strokeWeight: 0,
         blendMode: breakdownOption.blend,
@@ -335,10 +385,111 @@ export default function drawSlideBreakdown( breakdownOption ) {
     );
   };
 
+  const drawChip = (
+    x, y, liveValue
+  ) => {
+    if ( !Array.isArray( liveValue ) ) {
+      return;
+    }
+
+    const chipY = y + ( size - chipSide ) / 2;
+    const chipColor = p.color(
+      liveValue[ 0 ] ?? 0,
+      liveValue[ 1 ] ?? 0,
+      liveValue[ 2 ] ?? 0
+    );
+
+    chipColor.setAlpha( Math.min(
+      liveValue[ 3 ] ?? 255,
+      alpha
+    ) );
+
+    const border = baseFill();
+
+    border.setAlpha( Math.min(
+      120,
+      alpha
+    ) );
+
+    p.push();
+    p.blendMode( p.BLEND );
+    p.noStroke();
+    p.fill( chipColor );
+    p.rect(
+      x,
+      chipY,
+      chipSide,
+      chipSide
+    );
+    p.noFill();
+    p.stroke( border );
+    p.strokeWeight( 1 );
+    p.rect(
+      x,
+      chipY,
+      chipSide,
+      chipSide
+    );
+    p.pop();
+  };
+
+  const drawBar = (
+    x, y, t
+  ) => {
+    const barY = y + ( size - barH ) / 2;
+    const track = baseFill();
+
+    track.setAlpha( Math.min(
+      60,
+      alpha
+    ) );
+
+    p.push();
+    p.blendMode( p.BLEND );
+    p.noStroke();
+    p.fill( track );
+    p.rect(
+      x,
+      barY,
+      barW,
+      barH
+    );
+    p.fill( baseFill() );
+    p.rect(
+      x,
+      barY,
+      barW * clamp01( t ),
+      barH
+    );
+    p.pop();
+  };
+
+  // Clip to one line's value zone so rise/roll glyphs sliding vertically
+  // never bleed into the neighbouring lines.
+  const withLineClip = (
+    x, y, w, draw
+  ) => {
+    const ctx = p.drawingContext;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(
+      x,
+      y - size * 0.2,
+      w,
+      size * 1.4
+    );
+    ctx.clip();
+    draw();
+    ctx.restore();
+  };
+
+  /* ---- text -------------------------------------------------------------- */
+
   let y = originY;
 
   if ( headerText ) {
-    writeLine(
+    writeText(
       headerText,
       originX,
       y
@@ -346,92 +497,216 @@ export default function drawSlideBreakdown( breakdownOption ) {
     y += lineStep;
   }
 
-  // Body lines type in over the first part of the step window: earlier lines
-  // full, the appearing line per-character (specs boot-log pattern).
-  const exactLines =
-    clamp01( stepLocalT / TYPE_IN_SPAN ) * bodyLines.length;
-  const fullyVisible = Math.floor( exactLines );
-  const typingFraction = exactLines - fullyVisible;
+  const leafCount = bodyLines.length;
 
   bodyLines.forEach( (
     line, index
   ) => {
-    if ( index > fullyVisible ) {
+    // Per-line reveal: with lineStagger 0 every line is on from the step's
+    // first frame; higher values wash the lines in one after another over
+    // the first REVEAL_SPAN of the window.
+    const reveal = staggeredProgress(
+      clamp01( stepLocalT / REVEAL_SPAN ),
+      leafCount > 1 ? index / ( leafCount - 1 ) : 0,
+      lineStagger
+    );
+
+    if ( reveal <= 0 ) {
+      y += lineStep;
+
       return;
     }
 
-    const liveValue = currentFlat.has( line.leaf.path )
-      ? currentFlat.get( line.leaf.path )
+    const path = line.leaf.path;
+    const t = leafT.get( path ) ?? 1;
+    const liveValue = currentFlat.has( path )
+      ? currentFlat.get( path )
       : line.leaf.value;
-    const full = `${ line.label }: ${ formatValue( liveValue ) ?? "" }`;
+    const startText = formatValue( line.startValue ) ?? "";
+    const finalText = formatValue( line.leaf.value ) ?? "";
+    const liveText = formatValue( liveValue ) ?? "";
 
-    if ( index < fullyVisible ) {
-      writeLine(
-        full,
-        originX,
-        y
-      );
+    // Label: whole by default; per-character only when typewriter is on.
+    const labelText = typewriter
+      ? line.labelText.slice(
+        0,
+        Math.ceil( line.labelText.length * reveal )
+      )
+      : line.labelText;
 
-      // Live colour chip after the text (HUD swatch look: filled square +
-      // 1px border in the text colour).
-      if ( line.leaf.cls === "colors" && Array.isArray( liveValue ) ) {
-        const chipX = originX + measureWidth( full ) + chipGap;
-        const chipY = y + ( size - chipSide ) / 2;
-        const chipColor = p.color(
-          liveValue[ 0 ] ?? 0,
-          liveValue[ 1 ] ?? 0,
-          liveValue[ 2 ] ?? 0
-        );
+    writeText(
+      labelText,
+      originX,
+      y
+    );
 
-        chipColor.setAlpha( Math.min(
-          liveValue[ 3 ] ?? 255,
-          alpha
-        ) );
+    // The value zone renders once the label is fully in.
+    const valueReady = !typewriter || reveal >= 1;
+    const valueX = originX + line.labelW;
 
-        const border = p.color( ...( breakdownOption.fill ?? [
-          0,
-          255,
-          120
-        ] ) );
+    if ( valueReady ) {
+      switch ( valueStyle ) {
+        case "ticker":
+          writeText(
+            liveText,
+            valueX,
+            y
+          );
 
-        border.setAlpha( Math.min(
-          120,
-          alpha
-        ) );
+          if ( line.isColor ) {
+            drawChip(
+              valueX + measureWidth( liveText ) + gap,
+              y,
+              liveValue
+            );
+          }
 
-        p.push();
-        p.blendMode( p.BLEND );
-        p.noStroke();
-        p.fill( chipColor );
-        p.rect(
-          chipX,
-          chipY,
-          chipSide,
-          chipSide
-        );
-        p.noFill();
-        p.stroke( border );
-        p.strokeWeight( 1 );
-        p.rect(
-          chipX,
-          chipY,
-          chipSide,
-          chipSide
-        );
-        p.pop();
+          break;
+
+        case "fade":
+          writeText(
+            startText,
+            valueX,
+            y,
+            1 - t
+          );
+          writeText(
+            finalText,
+            valueX,
+            y,
+            t
+          );
+
+          if ( line.isColor ) {
+            drawChip(
+              valueX + line.valueZoneW - chipSide,
+              y,
+              liveValue
+            );
+          }
+
+          break;
+
+        case "rise": {
+          const amp = size * 0.55;
+          const textZoneW = line.valueZoneW - ( line.isColor ? gap + chipSide : 0 );
+
+          withLineClip(
+            valueX,
+            y,
+            textZoneW,
+            () => {
+              writeText(
+                startText,
+                valueX,
+                y - t * amp,
+                1 - t
+              );
+              writeText(
+                finalText,
+                valueX,
+                y + ( 1 - t ) * amp,
+                t
+              );
+            }
+          );
+
+          if ( line.isColor ) {
+            drawChip(
+              valueX + line.valueZoneW - chipSide,
+              y,
+              liveValue
+            );
+          }
+
+          break;
+        }
+
+        case "roll": {
+          // Per-character odometer: each column rolls from the start glyph
+          // to the final glyph, later columns trailing slightly.
+          const textZoneW = line.valueZoneW - ( line.isColor ? gap + chipSide : 0 );
+          const charW = measureWidth( "0" ) || size * 0.6;
+          const maxLen = Math.max(
+            startText.length,
+            finalText.length
+          );
+
+          withLineClip(
+            valueX,
+            y,
+            textZoneW,
+            () => {
+              for ( let k = 0; k < maxLen; k++ ) {
+                const fromChar = startText[ k ] ?? "";
+                const toChar = finalText[ k ] ?? "";
+                const charT = staggeredProgress(
+                  t,
+                  maxLen > 1 ? k / ( maxLen - 1 ) : 0,
+                  0.35
+                );
+                const x = valueX + k * charW;
+
+                if ( fromChar === toChar ) {
+                  writeText(
+                    toChar,
+                    x,
+                    y
+                  );
+                  continue;
+                }
+
+                writeText(
+                  fromChar,
+                  x,
+                  y - charT * size * 1.1,
+                  1 - charT
+                );
+                writeText(
+                  toChar,
+                  x,
+                  y + ( 1 - charT ) * size * 1.1,
+                  charT
+                );
+              }
+            }
+          );
+
+          if ( line.isColor ) {
+            drawChip(
+              valueX + line.valueZoneW - chipSide,
+              y,
+              liveValue
+            );
+          }
+
+          break;
+        }
+
+        case "bar":
+        default:
+          drawBar(
+            valueX,
+            y,
+            t
+          );
+
+          if ( line.isColor ) {
+            drawChip(
+              valueX + barW + gap,
+              y,
+              liveValue
+            );
+          } else {
+            writeText(
+              liveText,
+              valueX + barW + gap,
+              y
+            );
+          }
+
+          break;
       }
-    } else {
-      // Line currently being typed: reveal character by character.
-      const visibleCount = Math.ceil( full.length * typingFraction );
-
-      writeLine(
-        full.slice(
-          0,
-          visibleCount
-        ),
-        originX,
-        y
-      );
     }
 
     y += lineStep;

@@ -19,6 +19,7 @@
 //     live playback recomputes once per frame.
 
 import lerpParams from "../morph/lerpParams.js";
+import staggeredProgress from "../morph/staggeredProgress.js";
 import easing from "../../easing.js";
 import animation from "../../animation.js";
 import {
@@ -184,36 +185,63 @@ function getFrame(
     derived.easingFn
   );
 
-  // Flat path → in-progress value for every animated leaf. Fully locked
-  // steps contribute nothing (their leaves read final via the reify reuse).
+  // Flat path → in-progress value for every animated leaf, plus the eased
+  // per-leaf progress the overlay renders (bars, crossfades). With
+  // build.lineStagger > 0 the leaves of one step animate offset from each
+  // other (staggeredProgress within the step's raw window) — one line after
+  // another at 1. Fully locked leaves contribute no currentFlat entry (they
+  // read final via the reify reuse).
   const currentFlat = new Map();
+  const leafT = new Map();
+  const spread = derived.build.lineStagger ?? 0;
+  const snapKeys = derived.build.snapKeys ?? [];
 
   let allLocked = true;
 
   derived.animSteps.forEach( (
     step, index
   ) => {
-    const t = progress.stepT[ index ];
+    const raw = progress.rawStepT[ index ];
+    const denom = step.paths.length - 1;
 
-    if ( t >= 1 ) {
-      return;
-    }
+    step.paths.forEach( (
+      path, leafIndex
+    ) => {
+      const leafRaw = staggeredProgress(
+        raw,
+        denom > 0 ? leafIndex / denom : 0,
+        spread
+      );
+      const eased =
+        leafRaw <= 0 ? 0 : leafRaw >= 1 ? 1 : derived.easingFn( leafRaw );
 
-    allLocked = false;
+      leafT.set(
+        path,
+        eased
+      );
 
-    const slice = lerpParams(
-      derived.startSlices[ index ],
-      step.finalSlice,
-      t,
-      derived.build.snapKeys ?? []
-    );
+      if ( leafRaw >= 1 ) {
+        return;
+      }
 
-    for ( const path of step.paths ) {
+      allLocked = false;
+
+      const slice = lerpParams(
+        {
+          [ path ]: derived.startSlices[ index ][ path ]
+        },
+        {
+          [ path ]: step.finalSlice[ path ]
+        },
+        eased,
+        snapKeys
+      );
+
       currentFlat.set(
         path,
         slice[ path ]
       );
-    }
+    } );
   } );
 
   frameCache = {
@@ -221,6 +249,7 @@ function getFrame(
     progression,
     progress,
     currentFlat,
+    leafT,
     allLocked,
     nested: null
   };
@@ -335,7 +364,8 @@ export function getBreakdownState(
     startValues: derived.startValues,
     finalSketch: derived.finalSketch,
     progress: frame.progress,
-    currentFlat: frame.currentFlat
+    currentFlat: frame.currentFlat,
+    leafT: frame.leafT
   };
 }
 

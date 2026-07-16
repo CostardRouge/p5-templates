@@ -8,7 +8,8 @@ import {
   humanizeKey,
   looksLikeColor,
   looksLikeVector,
-  nearlyEqual
+  nearlyEqual,
+  sampleValueTexts
 } from "../format.js";
 
 describe(
@@ -114,6 +115,76 @@ describe(
           99,
           "letters"
         ) ).toBe( "AB" );
+      }
+    );
+  }
+);
+
+describe(
+  "sampleValueTexts",
+  () => {
+    it(
+      "captures mid-lerp texts wider than both endpoints",
+      () => {
+        const texts = sampleValueTexts(
+          2,
+          8
+        );
+
+        // endpoints are single chars; intermediates carry decimals
+        expect( texts ).toContain( "2" );
+        expect( texts ).toContain( "8" );
+        expect( texts.some( ( t ) => t.length > 1 ) ).toBe( true );
+      }
+    );
+
+    it(
+      "samples colors with whole channels",
+      () => {
+        const texts = sampleValueTexts(
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            255,
+            255,
+            255
+          ]
+        );
+
+        expect( texts[ 0 ] ).toBe( "rgba(0, 0, 0)" );
+        expect( texts[ texts.length - 1 ] ).toBe( "rgba(255, 255, 255)" );
+        expect( texts ).toContain( "rgba(128, 128, 128)" );
+      }
+    );
+
+    it(
+      "snapping and non-lerpable values only show their endpoints",
+      () => {
+        expect( sampleValueTexts(
+          2,
+          8,
+          true
+        ) ).toEqual( [
+          "2",
+          "8"
+        ] );
+        expect( sampleValueTexts(
+          "linear",
+          "smooth"
+        ) ).toEqual( [
+          "linear",
+          "smooth"
+        ] );
+        expect( sampleValueTexts(
+          true,
+          false
+        ) ).toEqual( [
+          "on",
+          "off"
+        ] );
       }
     );
   }

@@ -42,8 +42,10 @@ describe(
           showCounter: true,
           showTitle: true,
           counterMode: "numeric",
+          typewriter: false,
+          valueStyle: "bar",
           font: "spaceMonoRegular",
-          size: 22,
+          size: 16,
           lineHeight: 1.4,
           backgroundRadius: 0
         } );
@@ -75,6 +77,7 @@ describe(
           outroRatio: 0.1,
           holdRatio: 0.15,
           easing: "easeInOutCubic",
+          lineStagger: 0,
           snapKeys: [
             "seed"
           ],
@@ -249,6 +252,12 @@ describe(
           BreakdownItemSchema.parse( {
             type: "breakdown",
             counterMode: "roman"
+          } ) ).toThrow();
+
+        expect( () =>
+          BreakdownItemSchema.parse( {
+            type: "breakdown",
+            valueStyle: "confetti"
           } ) ).toThrow();
       }
     );

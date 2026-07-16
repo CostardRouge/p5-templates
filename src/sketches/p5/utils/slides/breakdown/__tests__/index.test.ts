@@ -27,6 +27,7 @@ const makeItem = ( buildOverrides = {} ) => ( {
     outroRatio: 0.1,
     holdRatio: 0,
     easing: "linear",
+    lineStagger: 0,
     snapKeys: [
       "seed"
     ],
@@ -322,7 +323,88 @@ describe(
         expect( state.progress.phase ).toBe( "build" );
         expect( state.progress.currentStep ).toBe( 0 );
         expect( state.currentFlat.get( "amplitude" ) ).toBeGreaterThan( 0 );
+        expect( state.leafT.get( "amplitude" ) ).toBeGreaterThan( 0 );
+        expect( state.leafT.get( "amplitude" ) ).toBeLessThan( 1 );
         expect( state.schedule.windows ).toHaveLength( 3 );
+      }
+    );
+  }
+);
+
+describe(
+  "lineStagger",
+  () => {
+    const twoLeafSketch = {
+      grid: {
+        columns: 8,
+        rows: 4
+      }
+    };
+
+    it(
+      "0 = every leaf of a step shares the same progress",
+      () => {
+        const state = getBreakdownState(
+          twoLeafSketch,
+          undefined,
+          makeItem(),
+          0.5
+        );
+
+        expect( state.leafT.get( "grid.columns" ) ).toBeCloseTo( state.leafT.get( "grid.rows" ) );
+      }
+    );
+
+    it(
+      "> 0 offsets the leaves of a step (also shifting the injected values)",
+      () => {
+        const item = makeItem( {
+          lineStagger: 0.8
+        } );
+        const state = getBreakdownState(
+          twoLeafSketch,
+          undefined,
+          item,
+          0.5
+        );
+
+        const first = state.leafT.get( "grid.columns" );
+        const second = state.leafT.get( "grid.rows" );
+
+        expect( first ).toBeGreaterThan( second );
+
+        // The injected values reflect the offset too — first leaf further
+        // along its 0 → final travel than the second.
+        const out = getBreakdownSketch(
+          twoLeafSketch,
+          undefined,
+          item,
+          0.5
+        );
+
+        expect( out.grid.columns / 8 ).toBeGreaterThan( out.grid.rows / 4 );
+      }
+    );
+
+    it(
+      "changing lineStagger (new build ref) invalidates the caches",
+      () => {
+        const a = getBreakdownSketch(
+          twoLeafSketch,
+          undefined,
+          makeItem(),
+          0.5
+        );
+        const b = getBreakdownSketch(
+          twoLeafSketch,
+          undefined,
+          makeItem( {
+            lineStagger: 1
+          } ),
+          0.5
+        );
+
+        expect( b ).not.toBe( a );
       }
     );
   }
