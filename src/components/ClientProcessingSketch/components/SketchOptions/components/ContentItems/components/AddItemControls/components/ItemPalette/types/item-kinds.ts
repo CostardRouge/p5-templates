@@ -4,6 +4,7 @@ export type ItemKind =
   | "title"
   | "meta"
   | "specs"
+  | "breakdown"
   | "hud"
   | "image"
   | "images-stack"

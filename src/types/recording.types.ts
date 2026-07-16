@@ -134,6 +134,14 @@ declare global {
       engine: string;
       category: string;
     };
+    // Sketch form metadata (stock defaults + per-field config), published by
+    // the SketchContext provider so the breakdown overlay can diff the tuned
+    // values against stock and bound its start values by each parameter's
+    // real form range.
+    getSketchFormMeta?: () => {
+      formValues?: Record<string, any>;
+      formConfiguration?: Record<string, any>;
+    };
     // Script loader
     removeLoadedScripts: () => void;
 

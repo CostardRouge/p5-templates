@@ -445,6 +445,148 @@ export const SpecsItemSchema = z.object( {
   sound: SpecsSoundSchema
 } );
 
+/* ---------------- sketch breakdown (diff overlay) ------------------ */
+
+// Which parameters become breakdown steps:
+//   - "changed": only params whose final value differs from the sketch's
+//     stock defaults (formValues, via window.getSketchFormMeta) — the diff.
+//     Degrades to "all" when the bridge is unreachable (bare harness).
+//   - "all": every animatable parameter group.
+export const BREAKDOWN_SELECTION_MODES = [
+  "changed",
+  "all"
+] as const;
+
+// Header counter style: "1/3" vs spreadsheet letters "A", "B", …
+export const BREAKDOWN_COUNTER_MODES = [
+  "numeric",
+  "letters"
+] as const;
+
+// Where the block sits: a fixed draggable anchor, or roaming — a
+// deterministic corner-tour that moves to a different anchor each step so
+// the block never hides the same region of the sketch twice.
+export const BREAKDOWN_PLACEMENTS = [
+  "fixed",
+  "roaming"
+] as const;
+
+// How a line's changing value is rendered:
+//   - "bar": gauge-style progress bar filling start → final (the default)
+//   - "ticker": the live interpolated value printed as text
+//   - "roll": per-character odometer from the start text to the final text
+//   - "fade": alpha crossfade start text → final text
+//   - "rise": start text slides up and out, final text rises in from below
+export const BREAKDOWN_VALUE_STYLES = [
+  "bar",
+  "ticker",
+  "roll",
+  "fade",
+  "rise"
+] as const;
+
+// Engine/derivation settings, grouped under `build` on purpose: this object's
+// identity is the derived-cache key in the breakdown orchestrator, and it
+// survives the drag layer's per-frame { ...item, position } wrapper — keying
+// on the item itself would make the HUD (dragged wrapper) and the injection
+// (raw store item) thrash the single-slot cache against each other.
+export const BreakdownBuildSchema = z
+  .object( {
+    selection: z.enum( BREAKDOWN_SELECTION_MODES ).default( "changed" ),
+    // How far start values depart from the final value (1 = the full
+    // opposite end of the field's range, 0.1 = already close — the
+    // breakdown just "stabilizes" the sketch).
+    departure: z.number().min( 0 )
+      .max( 1 )
+      .default( 1 ),
+    // Loop fractions reserved before step 1 and after the last step (the
+    // block fades out during the outro, leaving the settled sketch alone).
+    introRatio: z.number().min( 0 )
+      .max( 0.3 )
+      .default( 0 ),
+    outroRatio: z.number().min( 0 )
+      .max( 0.4 )
+      .default( 0.1 ),
+    // Fraction of each step window held ON the final value before the next
+    // step starts (front-loaded morph, then lock).
+    holdRatio: z.number().min( 0 )
+      .max( 0.9 )
+      .default( 0.15 ),
+    // Easing key from easing.js applied to each step's local progress.
+    easing: z.string().default( "easeInOutCubic" ),
+    // Per-line offset WITHIN a step (0..1): 0 = every leaf of the group
+    // animates together (default), 1 ≈ strictly one line after another.
+    // Lives in `build` because it shifts the INJECTED values, not just the
+    // overlay — the orchestrator's derived cache keys on this object.
+    lineStagger: z.number().min( 0 )
+      .max( 1 )
+      .default( 0 ),
+    // Params that snap at their window midpoint instead of lerping —
+    // discrete or cache-invalidating values (montage precedent).
+    snapKeys: z.array( z.string() ).default( [
+      "seed"
+    ] ),
+    // Params that never animate (always final) and get no breakdown step.
+    excludeKeys: z.array( z.string() ).default( [] )
+  } )
+  .default( {} );
+
+// Diff-style narration overlay: only the parameters that change become
+// steps, shown ONE AT A TIME in the specs visual language (same text/stroke
+// colour, black panel) while the injected interpolation makes the running
+// sketch visibly stabilize group by group. Parameter interpolation is
+// injected in slides.getSketchSettings (see sketches/p5/utils/slides/
+// breakdown/) — montage slides win; the first breakdown item per list wins
+// (slide content over global).
+export const BreakdownItemSchema = z.object( {
+  type: z.literal( "breakdown" ),
+  build: BreakdownBuildSchema,
+  placement: z.enum( BREAKDOWN_PLACEMENTS ).default( "fixed" ),
+  // Fixed placement only — roaming ignores it (and disables dragging).
+  position: Vec2.default( {
+    x: 0.06,
+    y: 0.08
+  } ),
+  // Header row: "1/3 DOTS". Three independent switches — header kills the
+  // whole row; counter and title hide their own half.
+  showHeader: z.boolean().default( true ),
+  showCounter: z.boolean().default( true ),
+  showTitle: z.boolean().default( true ),
+  counterMode: z.enum( BREAKDOWN_COUNTER_MODES ).default( "numeric" ),
+  // Typewriter effect on the line text. Off by default: labels show up
+  // whole immediately — only the value in front of them animates.
+  typewriter: z.boolean().default( false ),
+  valueStyle: z.enum( BREAKDOWN_VALUE_STYLES ).default( "bar" ),
+  font: z.string().default( "spaceMonoRegular" ),
+  size: z.number().positive()
+    .default( 16 ),
+  lineHeight: z.number().positive()
+    .default( 1.4 ),
+  fill: RGBA.default( [
+    0,
+    255,
+    120
+  ] ),
+  // Unlike specs, the panel is VISIBLE by default: black at 50%, outlined in
+  // the text colour ("text and contour share the same colour").
+  backgroundColor: RGBA.default( [
+    0,
+    0,
+    0,
+    128
+  ] ),
+  backgroundStroke: RGBA.default( [
+    0,
+    255,
+    120,
+    255
+  ] ),
+  backgroundRadius: z.number().min( 0 )
+    .max( 200 )
+    .default( 0 ),
+  blend: Blend.default( "source-over" )
+} );
+
 export const TextItemSchema = z.object( {
   type: z.literal( "text" ),
   content: z.string().default( "" ),
@@ -1008,6 +1150,7 @@ export const ContentItemSchema = z.discriminatedUnion(
     BackgroundItemSchema,
     MetaItemSchema,
     SpecsItemSchema,
+    BreakdownItemSchema,
     TextItemSchema,
     TitleItemSchema,
     ImagesStackItemSchema,
@@ -1362,6 +1505,8 @@ export const OptionsSchema = z.object( {
 } );
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;
+export type BreakdownItemOption = z.infer<typeof BreakdownItemSchema>;
+export type BreakdownBuildOption = z.infer<typeof BreakdownBuildSchema>;
 export type SlideOption = z.infer<typeof SlideSchema>;
 export type SlideTransitionOption = z.infer<typeof SlideTransitionSchema>;
 export type SlideTitleOption = z.infer<typeof SlideTitleSchema>;

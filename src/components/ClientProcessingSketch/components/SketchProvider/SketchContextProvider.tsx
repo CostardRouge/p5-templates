@@ -142,6 +142,42 @@ export default function SketchContextProvider( {
     ]
   );
 
+  /* ---- Sketch form metadata → runtime ---------------------------- */
+  // Publish the sketch's stock defaults + per-field form config (ranges,
+  // components) so the breakdown overlay can diff the tuned values against
+  // the stock ones and bound its start values by each parameter's real
+  // slider range. The returned object is memoized on the two state refs —
+  // the breakdown orchestrator ref-keys its derived cache on
+  // formValues/formConfiguration identity, so a fresh wrapper per call must
+  // not translate into a fresh payload per call.
+  const formMeta = useMemo(
+    () => ( {
+      formValues: state.sketchFormValues,
+      formConfiguration: state.sketchFormConfiguration
+    } ),
+    [
+      state.sketchFormValues,
+      state.sketchFormConfiguration
+    ]
+  );
+
+  useEffect(
+    () => {
+      if ( typeof window === "undefined" ) {
+        return;
+      }
+
+      window.getSketchFormMeta = () => formMeta;
+
+      return () => {
+        delete window.getSketchFormMeta;
+      };
+    },
+    [
+      formMeta
+    ]
+  );
+
   /* ---- p5 → React sync ------------------------------------------ */
   useEffect(
     () =>
