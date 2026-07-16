@@ -156,18 +156,38 @@ export default function FieldRenderer( {
     registeredName
   );
 
-  const handleFieldContextMenu = ( event: React.MouseEvent ) => {
+  // Whether this field should host the "apply to all slides" affordances:
+  // a multi-slide context, and not over an editable input (whose native menu
+  // and pointer behaviour we leave alone).
+  const canContextApply = ( target: EventTarget | null ): boolean => {
     if ( !canApply ) {
-      return;
+      return false;
     }
 
-    const target = event.target as HTMLElement;
+    const element = target as HTMLElement | null;
 
-    if ( target.closest( "input, textarea, [contenteditable=\"true\"]" ) ) {
+    return !element?.closest( "input, textarea, [contenteditable=\"true\"]" );
+  };
+
+  const handleFieldContextMenu = ( event: React.MouseEvent ) => {
+    if ( !canContextApply( event.target ) ) {
       return;
     }
 
     contextMenu.open( event );
+  };
+
+  // Swallow the secondary-button press before it reaches the underlying control.
+  // Custom controls (e.g. the slider's pointer-driven drag) don't filter the
+  // mouse button, so a right-click would otherwise change the value on
+  // pointerdown — before the context menu even opens. Capturing here stops the
+  // synthetic event from reaching the child handlers.
+  const handleSecondaryButtonCapture = ( event: React.PointerEvent | React.MouseEvent ) => {
+    if ( event.button !== 2 || !canContextApply( event.target ) ) {
+      return;
+    }
+
+    event.stopPropagation();
   };
 
   const handleApplyToAllSlides = () => {
@@ -669,6 +689,8 @@ export default function FieldRenderer( {
   return (
     <div
       className="text-sm md:text-xs"
+      onPointerDownCapture={ handleSecondaryButtonCapture }
+      onMouseDownCapture={ handleSecondaryButtonCapture }
       onContextMenu={ handleFieldContextMenu }
     >
       {contextMenu.position && (
@@ -678,8 +700,8 @@ export default function FieldRenderer( {
           items={ [
             {
               label: config.label
-                ? `Appliquer « ${ config.label } » à tous les slides`
-                : "Appliquer à tous les slides",
+                ? `Apply "${ config.label }" to all slides`
+                : "Apply to all slides",
               icon: CopyPlus,
               onClick: handleApplyToAllSlides
             }

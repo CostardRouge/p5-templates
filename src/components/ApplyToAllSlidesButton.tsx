@@ -53,7 +53,7 @@ export default function ApplyToAllSlidesButton( {
       type="button"
       onClick={ handleApply }
       className={ className }
-      title="Appliquer à tous les slides"
+      title="Apply to all slides"
     >
       <CopyPlus className="w-3.5 h-3.5" />
     </button>
