@@ -59,9 +59,9 @@ export const formValues = {
     view: "orbit" as "orbit" | "top" | "follow" | "pov",
     distance: 1.45,
     elevation: 0.72,
-    orbitTurns: 1,
+    orbitTurns: 0,
     orbitPhase: 0.6,
-    trackHead: 0.25,
+    trackHead: 0,
     followDistance: 2.2,
     followHeight: 0.8,
     aimAhead: 0.5,
@@ -473,7 +473,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       orbitTurns: {
-        label: "Orbit turns / loop (snaps whole)",
+        label: "Orbit spin / loop (0 = static, snaps whole)",
         component: "slider",
         min: -2,
         max: 2,
@@ -487,7 +487,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       trackHead: {
-        label: "Track the head (orbit/top aim)",
+        label: "Track the head (0 = locked on grid centre)",
         component: "slider",
         min: 0,
         max: 1,

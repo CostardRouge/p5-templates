@@ -1103,13 +1103,13 @@ sketch.draw( () => {
         ),
         1.5
       );
-    const orbitTurnsInt = Math.round( camera.orbitTurns ?? 1 );
+    const orbitTurnsInt = Math.round( camera.orbitTurns ?? 0 );
     const az = ( camera.orbitPhase ?? 0.6 )
       + p.TAU * orbitTurnsInt * animation.progression;
     const dist = ( camera.distance ?? 1.45 ) * ( gridRadius + 1.4 );
     const trackHead = Math.min(
       Math.max(
-        camera.trackHead ?? 0.25,
+        camera.trackHead ?? 0,
         0
       ),
       1
