@@ -1437,11 +1437,14 @@ export const SlideTransitionSchema = z.object( {
 
   loop: z.enum( TRANSITION_LOOP_MODES ).default( "cyclic" ),
 
-  // morph only — spread [0..0.9] of the per-group phase offset, so top-level
-  // param groups don't all morph in lockstep (e.g. colours lead, geometry
-  // follows). 0 = every group morphs together.
+  // morph only — how sequentially the individual parameters that differ between
+  // the source slides change [0..1]. 0 = every changing param morphs together;
+  // 1 = they change strictly one after another, each over its own even slice of
+  // the transition (param 1, then 2, then 3, …). In between, the per-param
+  // windows shrink and slide apart. Only leaves that actually differ are
+  // sequenced.
   stagger: z.number().min( 0 )
-    .max( 0.9 )
+    .max( 1 )
     .default( 0 ),
 
   // morph only — param paths (dotted, or a leaf name like "seed") that SNAP at

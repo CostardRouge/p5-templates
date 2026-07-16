@@ -4,7 +4,7 @@ import {
   mapProgressionToSegment
 } from "./segmentMapper.js";
 import lerpParams, {
-  lerpParamsStaggered
+  lerpParamsSequenced
 } from "./lerpParams.js";
 
 /**
@@ -78,7 +78,7 @@ export default function getMontageSketch(
   const stagger = transition.stagger ?? 0;
 
   if ( stagger > 0 ) {
-    return lerpParamsStaggered(
+    return lerpParamsSequenced(
       fromSketch,
       toSketch,
       localT,
