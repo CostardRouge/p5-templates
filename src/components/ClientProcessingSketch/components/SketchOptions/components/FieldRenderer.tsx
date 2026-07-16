@@ -1,5 +1,5 @@
 import {
-  ChevronDown, RotateCcw
+  ChevronDown, CopyPlus, RotateCcw
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -37,6 +37,13 @@ import ControlledJoypadDeviceSelect
   from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/ControlledJoypadDeviceSelect";
 import CollapsibleItem from "@/components/CollapsibleItem";
 import RandomizeSettingsButton from "@/components/RandomizeSettingsButton";
+import ApplyToAllSlidesButton from "@/components/ApplyToAllSlidesButton";
+import FieldContextMenu, {
+  useFieldContextMenu
+} from "./FieldContextMenu";
+import {
+  applyToAllSlides, canApplyToAllSlides
+} from "../utils/applyToAllSlides";
 import BindingAffordance
   from "./ContentItems/components/BindingAffordance/BindingAffordance";
 import {
@@ -135,6 +142,59 @@ export default function FieldRenderer( {
         shouldTouch: true,
         shouldValidate: true
       }
+    );
+  };
+
+  // Right-click a field (or block) to apply its value to every other slide.
+  // Only active in a multi-slide context, and never over editable inputs — so
+  // the native menu (copy/paste/spellcheck) is preserved and no permanent icon
+  // is added to each row.
+  const contextMenu = useFieldContextMenu();
+
+  const canApply = canApplyToAllSlides(
+    getValues,
+    registeredName
+  );
+
+  // Whether this field should host the "apply to all slides" affordances:
+  // a multi-slide context, and not over an editable input (whose native menu
+  // and pointer behaviour we leave alone).
+  const canContextApply = ( target: EventTarget | null ): boolean => {
+    if ( !canApply ) {
+      return false;
+    }
+
+    const element = target as HTMLElement | null;
+
+    return !element?.closest( "input, textarea, [contenteditable=\"true\"]" );
+  };
+
+  const handleFieldContextMenu = ( event: React.MouseEvent ) => {
+    if ( !canContextApply( event.target ) ) {
+      return;
+    }
+
+    contextMenu.open( event );
+  };
+
+  // Swallow the secondary-button press before it reaches the underlying control.
+  // Custom controls (e.g. the slider's pointer-driven drag) don't filter the
+  // mouse button, so a right-click would otherwise change the value on
+  // pointerdown — before the context menu even opens. Capturing here stops the
+  // synthetic event from reaching the child handlers.
+  const handleSecondaryButtonCapture = ( event: React.PointerEvent | React.MouseEvent ) => {
+    if ( event.button !== 2 || !canContextApply( event.target ) ) {
+      return;
+    }
+
+    event.stopPropagation();
+  };
+
+  const handleApplyToAllSlides = () => {
+    applyToAllSlides(
+      getValues,
+      setValue,
+      registeredName
     );
   };
 
@@ -390,6 +450,10 @@ export default function FieldRenderer( {
                     basePath={ registeredName }
                     className="text-foreground p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
                   />
+                  <ApplyToAllSlidesButton
+                    basePath={ registeredName }
+                    className="text-foreground p-2 md:p-0.5 hover:bg-theme/20 rounded-md transition-colors"
+                  />
                 </div>
               </div>
             ) }
@@ -623,7 +687,27 @@ export default function FieldRenderer( {
   ) : null;
 
   return (
-    <div className="text-sm md:text-xs">
+    <div
+      className="text-sm md:text-xs"
+      onPointerDownCapture={ handleSecondaryButtonCapture }
+      onMouseDownCapture={ handleSecondaryButtonCapture }
+      onContextMenu={ handleFieldContextMenu }
+    >
+      {contextMenu.position && (
+        <FieldContextMenu
+          position={ contextMenu.position }
+          onClose={ contextMenu.close }
+          items={ [
+            {
+              label: config.label
+                ? `Apply "${ config.label }" to all slides`
+                : "Apply to all slides",
+              icon: CopyPlus,
+              onClick: handleApplyToAllSlides
+            }
+          ] }
+        />
+      )}
       {needsOuterLabel &&
         config.label &&
         !hideLabel && (
