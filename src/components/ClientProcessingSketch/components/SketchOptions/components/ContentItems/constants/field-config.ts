@@ -534,6 +534,138 @@ const dotsPatternFields: ItemFormConfig = {
   }
 };
 
+// Sound-on-change panel, shared by the specs and breakdown items: both narrate
+// value changes (specs when a line's value changes, breakdown when a parameter
+// locks into place) and drive the same click synth off the same SpecsSoundSchema.
+const soundOnChangeField: FieldConfig = {
+  label: "Sound on change",
+  component: "nested-object",
+  fields: {
+    enabled: {
+      label: "Enabled",
+      component: "checkbox"
+    },
+    preset: {
+      label: "Click sound",
+      component: "select",
+      options: SPECS_SOUND_PRESETS.map( ( presetName ) => ( {
+        value: presetName,
+        label: presetName
+      } ) )
+    },
+    volume: {
+      label: "Volume",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.05
+    },
+    pitch: {
+      label: "Pitch (×)",
+      component: "slider",
+      min: 0.25,
+      max: 4,
+      step: 0.05
+    },
+    pitchVariation: {
+      label: "Humanize (random pitch)",
+      component: "slider",
+      min: 0,
+      max: 1,
+      step: 0.05
+    },
+    linePitchSpread: {
+      label: "Pitch spread by line (octaves)",
+      component: "slider",
+      min: -1,
+      max: 1,
+      step: 0.05
+    },
+    minInterval: {
+      label: "Stagger between clicks (s)",
+      component: "slider",
+      min: 0,
+      max: 0.5,
+      step: 0.01
+    },
+    lineCooldown: {
+      label: "Per-line cooldown (s)",
+      component: "slider",
+      min: 0,
+      max: 2,
+      step: 0.05
+    },
+    maxBurst: {
+      label: "Max queued clicks",
+      component: "slider",
+      min: 1,
+      max: 32,
+      step: 1
+    },
+    repeat: {
+      label: "Repeat",
+      component: "conditional-group",
+      conditionalOn: "mode",
+      hideNone: true,
+      typeSelector: {
+        label: "Mode",
+        options: [
+          {
+            value: "once",
+            label: "Once per change"
+          },
+          {
+            value: "count",
+            label: "Burst (N clicks)"
+          },
+          {
+            value: "while-highlighted",
+            label: "While highlighted"
+          }
+        ]
+      },
+      configs: {
+        once: {},
+        count: {
+          times: {
+            label: "Clicks per change",
+            component: "slider",
+            min: 2,
+            max: 16,
+            step: 1
+          },
+          interval: {
+            label: "Interval (s)",
+            component: "slider",
+            min: 0.02,
+            max: 2,
+            step: 0.01
+          },
+          pitchStep: {
+            label: "Pitch ramp per click (octaves)",
+            component: "slider",
+            min: -0.5,
+            max: 0.5,
+            step: 0.01
+          }
+        },
+        "while-highlighted": {
+          interval: {
+            label: "Interval (s)",
+            component: "slider",
+            min: 0.02,
+            max: 2,
+            step: 0.01
+          }
+        }
+      },
+
+      // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
+      schema: SpecsSoundRepeatSchema
+    }
+  }
+};
+
 // Main configuration object
 // The top-level keys MUST match the 'type' in your Zod discriminated union
 export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
@@ -714,6 +846,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       component: "select",
       options: blendSelectOptions
     },
+    sound: soundOnChangeField,
     build: {
       label: "Breakdown engine",
       component: "nested-object",
@@ -1041,134 +1174,7 @@ export const formConfig: Record<ContentItem[ "type" ], ItemFormConfig> = {
       // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
       schema: SpecsHighlightSchema
     },
-    sound: {
-      label: "Sound on change",
-      component: "nested-object",
-      fields: {
-        enabled: {
-          label: "Enabled",
-          component: "checkbox"
-        },
-        preset: {
-          label: "Click sound",
-          component: "select",
-          options: SPECS_SOUND_PRESETS.map( ( presetName ) => ( {
-            value: presetName,
-            label: presetName
-          } ) )
-        },
-        volume: {
-          label: "Volume",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.05
-        },
-        pitch: {
-          label: "Pitch (×)",
-          component: "slider",
-          min: 0.25,
-          max: 4,
-          step: 0.05
-        },
-        pitchVariation: {
-          label: "Humanize (random pitch)",
-          component: "slider",
-          min: 0,
-          max: 1,
-          step: 0.05
-        },
-        linePitchSpread: {
-          label: "Pitch spread by line (octaves)",
-          component: "slider",
-          min: -1,
-          max: 1,
-          step: 0.05
-        },
-        minInterval: {
-          label: "Stagger between clicks (s)",
-          component: "slider",
-          min: 0,
-          max: 0.5,
-          step: 0.01
-        },
-        lineCooldown: {
-          label: "Per-line cooldown (s)",
-          component: "slider",
-          min: 0,
-          max: 2,
-          step: 0.05
-        },
-        maxBurst: {
-          label: "Max queued clicks",
-          component: "slider",
-          min: 1,
-          max: 32,
-          step: 1
-        },
-        repeat: {
-          label: "Repeat",
-          component: "conditional-group",
-          conditionalOn: "mode",
-          hideNone: true,
-          typeSelector: {
-            label: "Mode",
-            options: [
-              {
-                value: "once",
-                label: "Once per change"
-              },
-              {
-                value: "count",
-                label: "Burst (N clicks)"
-              },
-              {
-                value: "while-highlighted",
-                label: "While highlighted"
-              }
-            ]
-          },
-          configs: {
-            once: {},
-            count: {
-              times: {
-                label: "Clicks per change",
-                component: "slider",
-                min: 2,
-                max: 16,
-                step: 1
-              },
-              interval: {
-                label: "Interval (s)",
-                component: "slider",
-                min: 0.02,
-                max: 2,
-                step: 0.01
-              },
-              pitchStep: {
-                label: "Pitch ramp per click (octaves)",
-                component: "slider",
-                min: -0.5,
-                max: 0.5,
-                step: 0.01
-              }
-            },
-            "while-highlighted": {
-              interval: {
-                label: "Interval (s)",
-                component: "slider",
-                min: 0.02,
-                max: 2,
-                step: 0.01
-              }
-            }
-          },
-
-          // @ts-expect-error schema carries a .default() wrapper, like VisualOptions
-          schema: SpecsSoundRepeatSchema
-        }
-      }
-    }
+    sound: soundOnChangeField
   },
   hud: {
     fill: {
