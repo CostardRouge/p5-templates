@@ -584,7 +584,11 @@ export const BreakdownItemSchema = z.object( {
   backgroundRadius: z.number().min( 0 )
     .max( 200 )
     .default( 0 ),
-  blend: Blend.default( "source-over" )
+  blend: Blend.default( "source-over" ),
+  // Sound on change — the breakdown narrates a diff one step at a time; each
+  // parameter clicks into place as its value locks. Reuses the specs
+  // sound-on-change schema (same click synth, staggering and repeat knobs).
+  sound: SpecsSoundSchema
 } );
 
 export const TextItemSchema = z.object( {

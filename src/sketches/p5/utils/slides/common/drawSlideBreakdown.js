@@ -2,6 +2,8 @@ import string from "../../string.js";
 import sketch, {
   getP5
 } from "../../sketch.js";
+import time from "../../time.js";
+import breakdownSound from "./breakdownSound.js";
 import {
   getBreakdownRuntimeState
 } from "../breakdown/index.js";
@@ -119,6 +121,23 @@ export default function drawSlideBreakdown( breakdownOption ) {
   // differs.
   if ( !animSteps.length ) {
     return;
+  }
+
+  // Sound on change: click as each parameter locks into place. Scheduled off
+  // the same runtime state the overlay draws, so a click can never drift from
+  // the value it narrates. Runs regardless of the drawing early-returns below
+  // (outro fade, missing step) so the last step's clicks still flush.
+  const sound = breakdownOption.sound;
+
+  if ( sound?.enabled ) {
+    breakdownSound.noteFrame(
+      sound,
+      {
+        animSteps,
+        leafT,
+        now: time.seconds()
+      }
+    );
   }
 
   const {
