@@ -871,12 +871,12 @@ export default function createNoiseFieldRenderer( fragmentSource ) {
     );
 
     if ( g.width !== bufferWidth || g.height !== bufferHeight ) {
+      // p5 v2: width/height are getters backed by the renderer, which
+      // resizeCanvas already updates — assigning them now throws.
       g.resizeCanvas(
         bufferWidth,
         bufferHeight
       );
-      g.width = bufferWidth;
-      g.height = bufferHeight;
     }
 
     const gl = g.drawingContext;
