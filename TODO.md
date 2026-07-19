@@ -141,12 +141,12 @@ What's left requires actions only the repo owner can take, in this order:
 
 ## 🎨 Design & UX
 
-- [ ] **Animated thumbnail on hover** — play a short looping preview clip (GIF or MP4) on card hover; pre-generate and store alongside the static thumbnail
-- [ ] **New navigation bar** — redesign top bar: slim, logo + nav links + settings icon; mobile-friendly (collapses to hamburger or bottom nav)
-- [ ] **Sketch settings design** — visual redesign of the sketch settings panel (consistent typography, spacing, control styles)
-- [ ] **Templates options design** — same redesign for the right-hand template options panel
-- [ ] **Recording progress bar placeholder** — styled "waiting" state for cards in `queued` status with no steps yet (replace blank/misaligned bar)
-- [ ] **Remove bare loading text** — replace all "Loading…" text placeholders with skeleton loaders or spinners that match surrounding UI
+- [x] **Animated thumbnail on hover** — play a short looping preview clip (GIF or MP4) on card hover; pre-generate and store alongside the static thumbnail
+- [x] **New navigation bar** — redesign top bar: slim, logo + nav links + settings icon; mobile-friendly (collapses to hamburger or bottom nav)
+- [x] **Sketch settings design** — visual redesign of the sketch settings panel (consistent typography, spacing, control styles)
+- [x] **Templates options design** — same redesign for the right-hand template options panel
+- [x] **Recording progress bar placeholder** — styled "waiting" state for cards in `queued` status with no steps yet (replace blank/misaligned bar)
+- [x] **Remove bare loading text** — replace all "Loading…" text placeholders with skeleton loaders or spinners that match surrounding UI
 
 ---
 
