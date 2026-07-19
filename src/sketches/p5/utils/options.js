@@ -21,6 +21,10 @@ import {
 } from "../shared/utils.js";
 
 import {
+  loadImageAsset
+} from "./assetLoaders.js";
+
+import {
   coerceFramerate
 } from "./framerate.js";
 
@@ -187,6 +191,9 @@ async function _refreshAssets() {
         path,
         filename: path.split( "/" ).pop(),
         img: null,
+        // Resolves once the image is decoded — awaitable by sketches, and
+        // already tracked so capture and the loading report wait on it.
+        ready: null,
         exif: undefined
       };
 
@@ -195,14 +202,22 @@ async function _refreshAssets() {
       // a `global/...` S3 object that no longer exists) would hang the whole
       // sketch on the loading screen forever. On failure the 1×1 placeholder
       // is dropped so sketches see "no image" instead of a broken pixel.
-      obj.img = getP5().loadImage(
+      // `loadImageAsset` always wires one up and reports the load as a step.
+      const {
+        img,
+        ready
+      } = loadImageAsset(
         url,
-        undefined,
-        () => {
-          console.warn( `[assets] failed to load image: ${ url }` );
-          obj.img = null;
+        {
+          onError: () => {
+            console.warn( `[assets] failed to load image: ${ url }` );
+            obj.img = null;
+          }
         }
       );
+
+      obj.img = img;
+      obj.ready = ready;
 
       readExifInfo(
         obj,

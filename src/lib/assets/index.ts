@@ -55,3 +55,18 @@ export type {
 export {
   trackPendingMedia, awaitPendingMedia
 } from "./pendingMedia";
+
+export {
+  beginLoadingStep,
+  reportAssetLoading,
+  subscribeLoadingProgress,
+  getLoadingProgressSnapshot,
+  resetLoadingProgress
+} from "./loadingProgress";
+export type {
+  LoadingAssetKind,
+  LoadingStep,
+  LoadingStepStatus,
+  LoadingStepHandle,
+  LoadingProgressSnapshot
+} from "./loadingProgress";

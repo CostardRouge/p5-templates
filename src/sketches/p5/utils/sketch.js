@@ -10,6 +10,9 @@ import {
   registerAnimationBridge
 } from "@/lib/animationBridge";
 import {
+  reportAssetLoading
+} from "@/lib/assets/loadingProgress";
+import {
   pauseLoop, resumeLoop
 } from "./loopControl.js";
 import loadProfiler from "./loadProfiler.js";
@@ -46,15 +49,19 @@ export async function loadP5Class() {
   }
 
   if ( !_p5ClassPromise ) {
-    _p5ClassPromise = import( "p5/lib/p5.js" ).then( ( module ) => {
-      const P5 = module?.default ?? globalThis.p5 ?? module;
+    _p5ClassPromise = reportAssetLoading(
+      "module",
+      "p5",
+      import( "p5/lib/p5.js" ).then( ( module ) => {
+        const P5 = module?.default ?? globalThis.p5 ?? module;
 
-      if ( !P5 ) {
-        throw new Error( "Failed to load p5 constructor." );
-      }
+        if ( !P5 ) {
+          throw new Error( "Failed to load p5 constructor." );
+        }
 
-      return P5;
-    } );
+        return P5;
+      } )
+    );
   }
 
   return _p5ClassPromise;

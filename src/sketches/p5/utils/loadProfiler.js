@@ -10,6 +10,10 @@
 // Pairs with the "[vision warmup]" log (mediapipe.js), which breaks down the
 // MediaPipe worker + model load and the first shader-compiling inference.
 
+import {
+  getLoadingProgressSnapshot
+} from "@/lib/assets/loadingProgress";
+
 const FRAME_WINDOW_MS = 2500; // how long after the first draw to sample frames
 const SLOW_FRAME_MS = 20; // a frame gap above this counts as jank (≈ <50fps)
 
@@ -181,6 +185,50 @@ function frameTimeMs( index ) {
   return total;
 }
 
+// Per-asset loading steps recorded by @/lib/assets/loadingProgress, as one
+// compact line: kind counts plus the slowest individual loads.
+function assetSummary() {
+  const {
+    steps
+  } = getLoadingProgressSnapshot();
+
+  if ( steps.length === 0 ) {
+    return "";
+  }
+
+  const byKind = {};
+
+  for ( const step of steps ) {
+    byKind[ step.kind ] = ( byKind[ step.kind ] ?? 0 ) + 1;
+  }
+
+  const counts = Object.entries( byKind )
+    .map( ( [
+      kind,
+      count
+    ] ) => `${ kind } ×${ count }` )
+    .join( ", " );
+
+  const slowest = steps
+    .filter( ( step ) => step.settledAt !== undefined )
+    .sort( (
+      a, b
+    ) => ( b.settledAt - b.startedAt ) - ( a.settledAt - a.startedAt ) )
+    .slice(
+      0,
+      4
+    )
+    .map( ( step ) => `${ step.label } ${ round( step.settledAt - step.startedAt ) }ms` +
+      ( step.status === "failed" ? " (failed)" : "" ) )
+    .join( ", " );
+
+  const pending = steps.filter( ( step ) => step.status === "pending" ).length;
+
+  return `${ counts }` +
+    ( pending ? `, ${ pending } still pending` : "" ) +
+    ( slowest ? ` — slowest: ${ slowest }` : "" );
+}
+
 function logProfile() {
   profile.logged = true;
 
@@ -200,6 +248,7 @@ function logProfile() {
     profile.setupEndAt > profile.firstDrawAt;
 
   const analysis = frameAnalysis();
+  const assets = assetSummary();
 
   console.info( `[load profile] ${ profile.name }\n` +
       `  page:   ${ pageMilestones() || "n/a" }\n` +
@@ -207,6 +256,7 @@ function logProfile() {
       `first draw ${ startToDraw }ms after engine start` +
       ( overlap ? " (draw loop runs during async setup)" : "" ) + "\n" +
       `  frames: ${ analysis.summary }\n` +
+      ( assets ? `  assets: ${ assets }\n` : "" ) +
       ( analysis.worst ? `  worst:  ${ analysis.worst }\n` : "" ) +
       "  (see [vision warmup] for the MediaPipe worker+model+shader breakdown)" );
 }

@@ -2,16 +2,39 @@ import cache from "./cache.js";
 import {
   getP5
 } from "./sketch.js";
+import {
+  loadFontAsset
+} from "./assetLoaders.js";
 
 const string = {
   fonts: {
     loaded: {},
+    // Per-key promises resolving with the font once it's actually parsed.
+    ready: {},
     loadFont: (
       key, path
     ) => {
-      return (
-        string.fonts.loaded[ key ] ?? ( string.fonts.loaded[ key ] = getP5().loadFont( path ) )
-      );
+      if ( !string.fonts.loaded[ key ] ) {
+        const {
+          font,
+          ready
+        } = loadFontAsset(
+          path,
+          key
+        );
+
+        string.fonts.loaded[ key ] = font;
+        string.fonts.ready[ key ] = ready;
+      }
+
+      return string.fonts.loaded[ key ];
+    },
+    /**
+     * Resolves once every font requested so far has settled. Sketches can
+     * `await string.fonts.whenLoaded()` in setup after touching the getters.
+     */
+    whenLoaded: () => {
+      return Promise.allSettled( Object.values( string.fonts.ready ) );
     },
     get loraItalic() {
       return string.fonts.loadFont(

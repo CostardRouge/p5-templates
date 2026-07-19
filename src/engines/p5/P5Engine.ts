@@ -36,6 +36,11 @@ import {
 import {
   FrameRateMeter
 } from "@/engines/frameRateMeter";
+import {
+  resetLoadingProgress,
+  subscribeLoadingProgress,
+  reportAssetLoading
+} from "@/lib/assets/loadingProgress";
 
 type P5SketchRuntime = {
   start: ( container: HTMLElement ) => Promise<any>;
@@ -75,6 +80,7 @@ export class P5Engine implements SketchEngine {
   private container: HTMLElement | null = null;
   private sketchRuntime: P5SketchRuntime | null = null;
   private listeners = new Map<string, Set<( payload: any ) => void>>();
+  private unsubscribeLoading: ( () => void ) | null = null;
   private perfLoopId: number | null = null;
   // Measures the real draw rate from p5's frameCount: counter deltas over a
   // sliding window converge within ~1s of a framerate change, where sampling
@@ -99,6 +105,18 @@ export class P5Engine implements SketchEngine {
     options: SketchOption
   ): Promise<void> {
     this.container = container;
+
+    // Fresh loading report for this sketch run, re-emitted as the engine's
+    // `loading` event so the UI can show per-asset progress while `init()`
+    // is still in flight.
+    resetLoadingProgress();
+    this.unsubscribeLoading?.();
+    this.unsubscribeLoading = subscribeLoadingProgress( ( snapshot ) => {
+      this.emit(
+        "loading",
+        snapshot
+      );
+    } );
 
     // Remove stale canvases from a previous run
     container
@@ -150,9 +168,13 @@ export class P5Engine implements SketchEngine {
       loadSketchModule
     } = await import( "@/generated/sketchModuleRegistry" );
 
-    await loadSketchModule(
-      "p5",
-      sketchPath
+    await reportAssetLoading(
+      "module",
+      sketchPath ?? sketchName,
+      loadSketchModule(
+        "p5",
+        sketchPath
+      )
     )
       .catch( ( error ) => {
         this.emit(
@@ -261,6 +283,8 @@ export class P5Engine implements SketchEngine {
     this.destroyed = true;
 
     this.stopPerformanceLoop();
+    this.unsubscribeLoading?.();
+    this.unsubscribeLoading = null;
     unregisterServerCaptureController();
 
     // p5 instance cleanup — removes canvas, stops draw, unbinds events.

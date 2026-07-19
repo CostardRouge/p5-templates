@@ -53,7 +53,7 @@ export default function SketchPage() {
   const [
     {
       name, capturing, options, persistedJob, engineId, category, sketchLoaded, activeSlideIndex,
-      engine, looping, browserRecording
+      engine, looping, browserRecording, loadingProgress
     },
     dispatch
   ] = useSketch();
@@ -397,6 +397,34 @@ export default function SketchPage() {
               {" → loading "}
               <span className="font-bold">{name}</span> ({engineId})
             </p>
+
+            {/* Fine-grained loading steps from the engine's `loading` event:
+                overall counter plus the labels currently in flight. */}
+            {loadingProgress && loadingProgress.total > 0 && (
+              <div className="text-xs text-muted-foreground text-center">
+                <p>
+                  {loadingProgress.total - loadingProgress.pending}
+                  {" / "}
+                  {loadingProgress.total}
+                  {" assets"}
+                  {loadingProgress.failed > 0 && (
+                    <span> · {loadingProgress.failed} failed</span>
+                  )}
+                </p>
+                {loadingProgress.pending > 0 && (
+                  <p className="max-w-60 truncate">
+                    {loadingProgress.steps
+                      .filter( ( step ) => step.status === "pending" )
+                      .slice(
+                        0,
+                        3
+                      )
+                      .map( ( step ) => `${ step.kind }: ${ step.label }` )
+                      .join( " · " )}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

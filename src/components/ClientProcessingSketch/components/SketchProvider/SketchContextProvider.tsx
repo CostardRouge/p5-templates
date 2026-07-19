@@ -48,6 +48,11 @@ function sketchReducer(
         ...state,
         engine: action.payload
       };
+    case "SET_LOADING_PROGRESS":
+      return {
+        ...state,
+        loadingProgress: action.payload
+      };
     case "SET_LOOPING":
       return {
         ...state,
@@ -76,6 +81,7 @@ export default function SketchContextProvider( {
     ...props,
     sketchLoaded: false,
     engine: null,
+    loadingProgress: null,
     looping: true,
     browserRecording: false
   };

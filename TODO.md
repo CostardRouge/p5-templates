@@ -162,12 +162,13 @@ What's left requires actions only the repo owner can take, in this order:
 ## 🔬 Loading & Asset System
 
 - [ ] **Pending promises / asset loading system** — sketches must register asset loading promises; engine waits for all to resolve before starting draw loop and before frame capture begins
-  - [ ] Wait for images to load
-  - [ ] Wait for fonts to load
-  - [ ] Wait for audio assets to load
-  - [ ] Wait for video assets to load
-  - [ ] Support custom sketch-defined loading operations
-- [ ] **P5 loading steps reporting** — sketches report fine-grained loading progress in real time (n of N images, fonts, audio, video); feeds the progress bar and prevents premature "ready" signal
+  - [x] Wait for images to load
+  - [x] Wait for fonts to load
+  - [x] Wait for audio assets to load
+  - [x] Wait for video assets to load
+  - [x] Support custom sketch-defined loading operations — `beginLoadingStep` / `reportAssetLoading`
+  - [ ] Gate the draw loop / the engine `ready` event on the steps settling — needs a timeout + failure policy first, or one dead asset path hangs the sketch forever
+- [x] **P5 loading steps reporting** — sketches report fine-grained loading progress in real time (n of N images, fonts, audio, video); the engine `loading` event feeds the sketch-page placeholder
 
 ---
 
