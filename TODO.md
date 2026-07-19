@@ -82,11 +82,11 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] Vector (2D / 3D) — XY(Z) number inputs with optional linked scaling
   - [ ] Camera — rotation and translate controls
   - [ ] Global animation curve — waveform picker (sine, square, linear, triangle) + multiplier + speed
-  - [ ] Webcam picker — dropdown of available `videoDeviceId`s
-  - [ ] Joypad picker — list connected gamepads
-  - [ ] MIDI device picker — list connected MIDI inputs
-  - [ ] Audio source picker — microphone / line-in selector
-  - [ ] Reset / Random button — inline button per field to reset or randomize its value
+  - [x] Webcam picker — dropdown of available `videoDeviceId`s
+  - [x] Joypad picker — list connected gamepads
+  - [x] MIDI device picker — list connected MIDI inputs
+  - [x] Audio source picker — microphone / line-in selector
+  - [x] Reset / Random button — inline button per field to reset or randomize its value
   - [ ] Animation value visualizer — small sparkline showing an animated value over time
 - [ ] **Readonly mode** — `readOnly` prop on `TemplateOptions` that disables all fields; useful for share/embed views
 - [ ] **Tags** — free-form labels on sketches and recordings; stored in DB, displayed as pills, filterable on recordings page
