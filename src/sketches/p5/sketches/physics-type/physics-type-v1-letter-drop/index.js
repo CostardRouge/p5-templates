@@ -259,7 +259,7 @@ function layoutLetters(
 ) {
   const random = makeRandom( params.seed );
   const font = string.fonts?.[ params.font ] ?? string.fonts.martian;
-  const fontReady = Boolean( font?.font );
+  const fontReady = Boolean( font?.data );
 
   if ( fontReady ) {
     p.push();
@@ -428,7 +428,7 @@ function drawLetters(
 
   p.push();
 
-  if ( font?.font ) {
+  if ( font?.data ) {
     p.textFont( font );
   }
 

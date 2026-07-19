@@ -28,13 +28,18 @@ export function measureVerticalTextBox(
   let top = y;
   let bottom = y + size;
 
-  if ( font && typeof font.textBounds === "function" && font.font && text ) {
+  // p5 v2: readiness lives on `font.data`, and textBounds reads size and
+  // alignment from the renderer state set above (a 4th positional number
+  // would be treated as a wrap width).
+  if ( font && typeof font.textBounds === "function" && font.data && text ) {
     try {
       const box = font.textBounds(
         text,
         x,
         y,
-        size
+        {
+          graphics: p
+        }
       );
 
       if ( box && Number.isFinite( box.y ) && Number.isFinite( box.h ) ) {
