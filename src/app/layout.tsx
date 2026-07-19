@@ -164,7 +164,6 @@ export default function RootLayout( {
 
               <Suspense>
                 <MenuBarGate
-                  showRecordings={ process.env.BACKEND_RECORDING === "true" }
                   hasMissingThumbnails={ hasMissingThumbnails }
                   hasMissingPreviews={ hasMissingPreviews }
                 />
