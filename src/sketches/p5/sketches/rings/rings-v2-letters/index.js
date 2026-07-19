@@ -334,7 +334,8 @@ function buildLetterField( {
   const p = getP5();
   const font = string.fonts[ fontName ] ?? string.fonts.sans;
 
-  if ( !font?.font || !text.length ) {
+  // p5 v2: glyph data readiness lives on `font.data` (was `font.font`).
+  if ( !font?.data || !text.length ) {
     return null;
   }
 
@@ -366,14 +367,16 @@ function buildLetterField( {
       continue;
     }
 
+    // p5 v2: textToPoints reads the size from the renderer state set
+    // above; a 4th positional number would be treated as a wrap width.
     const raw = font.textToPoints(
       char,
       0,
       0,
-      BUILD_SIZE,
       {
         sampleFactor,
-        simplifyThreshold
+        simplifyThreshold,
+        graphics: p
       }
     );
 
@@ -541,7 +544,7 @@ function buildLetterField( {
 
 function getLetterField( cfg ) {
   const font = string.fonts[ cfg.fontName ] ?? string.fonts.sans;
-  const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
+  const fontFamily = font?.name || font?.face?.family || "unknown";
   const key = [
     cfg.text,
     fontFamily,

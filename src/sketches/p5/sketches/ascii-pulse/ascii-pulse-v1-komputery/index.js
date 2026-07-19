@@ -314,7 +314,7 @@ function drawGrid(
 
   p.push();
 
-  if ( font?.font ) {
+  if ( font?.data ) {
     p.textFont( font );
   }
 
