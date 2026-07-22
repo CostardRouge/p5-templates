@@ -54,6 +54,12 @@ export async function loadP5Class() {
         throw new Error( "Failed to load p5 constructor." );
       }
 
+      // p5 v2's full build wraps every prototype method in a zod-based
+      // argument validator (friendly errors). Per-call validation dominates
+      // draw-loop profiles — disable it; the flag is checked first in the
+      // wrapper, so calls fall straight through to the implementation.
+      P5.disableFriendlyErrors = true;
+
       // p5 v2 compat: v1's p5.Graphics exposed every p5 prototype member
       // (constants like LEFT/WORD, helpers like createVector/constrain/dist).
       // v2 only delegates a subset; backfill the rest so sketches keep
@@ -93,7 +99,8 @@ export async function loadP5Class() {
 
       // p5 v2 compat: v1's Color.levels (0–255 RGBA ints) was removed, but
       // many sketches destructure it. Rebuild it from the normalized RGBA
-      // readout the v2 Color class still exposes.
+      // readout the v2 Color class still exposes, memoized per instance —
+      // sketches read it per point per frame and v1 precomputed it once.
       if ( P5.Color && !( "levels" in P5.Color.prototype ) ) {
         Object.defineProperty(
           P5.Color.prototype,
@@ -101,7 +108,18 @@ export async function loadP5Class() {
           {
             configurable: true,
             get() {
-              return this._array.map( ( channel ) => Math.round( channel * 255 ) );
+              const levels = this._array.map( ( channel ) => Math.round( channel * 255 ) );
+
+              Object.defineProperty(
+                this,
+                "levels",
+                {
+                  configurable: true,
+                  value: levels
+                }
+              );
+
+              return levels;
             }
           }
         );
