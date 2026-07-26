@@ -151,7 +151,7 @@ describe(
           size
         );
 
-        expect( next.slides ).toBeUndefined();
+        expect( ( next as { slides?: unknown } ).slides ).toBeUndefined();
       }
     );
   }
