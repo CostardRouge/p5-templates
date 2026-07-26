@@ -5,30 +5,30 @@ import {
 export const formValues = {
   timeScale: 1,
   text: {
-    value: "a",
-    font: "agiro",
+    value: "x",
+    font: "multicoloure",
     detail: 1,
     spacing: 0.12,
     simplify: 0
   },
   material: {
-    size: 2.1,
-    thickness: 0.08,
-    fusion: 0.1
+    size: 2.45,
+    thickness: 0.02,
+    fusion: 0.215
   },
   camera: {
-    fov: 60,
-    distance: 4,
+    fov: 59,
+    distance: 4.4,
     orbit: 1,
     phase: 0,
-    elevation: 0.15,
+    elevation: 0.05,
     bob: 0,
     bobCycles: 1,
     motion: "flow" as "flow" | "ease",
     easing: "easeInOutCubic",
     glide: 0.48,
-    fogDensity: 0.04,
-    fogStart: 2
+    fogDensity: 0.075,
+    fogStart: 2.15
   },
   colors: {
     hueSpeed: 1,
@@ -43,9 +43,9 @@ export const formValues = {
   light: {
     azimuth: -1.1,
     elevation: 0.45,
-    ambient: 0.3,
-    diffuse: 0.75,
-    specular: 1.04,
+    ambient: 0.48,
+    diffuse: 0.56,
+    specular: 1.52,
     specPower: 31,
     fresnelPower: 1.62,
     rimStrength: 0,
