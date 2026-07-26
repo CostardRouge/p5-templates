@@ -5,7 +5,7 @@ import {
   Popover, PopoverButton, PopoverPanel
 } from "@headlessui/react";
 import {
-  Activity, Plus, RotateCcw, Trash2, X
+  Activity, ChevronDown, Plus, RotateCcw, Trash2, X
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -147,6 +147,15 @@ export default function BindingAffordance( {
   const bound = layers.length > 0;
   const sourceOptions = channelSourceOptions( kind );
   const domain = fieldDomain( config );
+
+  // The selected input source's full "Family · Detail" label — shown only on
+  // the closed control, since the open list already groups by family under
+  // an <optgroup> heading (a short label there would be redundant).
+  const selectedSourceOption = binding && sourceOptions.find( ( option ) => option.value === encodeSource(
+    binding.source,
+    binding.project
+  ) );
+  const selectedSourceLabel = selectedSourceOption?.label ?? binding?.source ?? "";
 
   // Path of the selected binding object in the form; sub-fields (mapping.min,
   // smoothing, enabled…) are edited in place so they round-trip like any other
@@ -551,38 +560,52 @@ export default function BindingAffordance( {
               )}
 
               {category === "input" && (
-                <select
-                  value={ encodeSource(
-                    binding.source,
-                    binding.project
-                  ) }
-                  onChange={ ( e ) => {
-                    const {
-                      source, project
-                    } = decodeSource( e.target.value );
+                <div className="relative">
+                  {/* Visible, non-interactive: shows the full "Family · Detail"
+                      label so the source's group stays legible once collapsed —
+                      the native <select> below would otherwise only echo back
+                      the short, group-less option text. */}
+                  <div
+                    aria-hidden
+                    className="flex h-8 w-full items-center justify-between gap-1 rounded-md border border-theme bg-background px-2 text-foreground"
+                  >
+                    <span className="truncate">{selectedSourceLabel}</span>
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-label" />
+                  </div>
+                  <select
+                    value={ encodeSource(
+                      binding.source,
+                      binding.project
+                    ) }
+                    onChange={ ( e ) => {
+                      const {
+                        source, project
+                      } = decodeSource( e.target.value );
 
-                    setField(
-                      "source",
-                      source
-                    );
-                    setField(
-                      "project",
-                      project ?? null
-                    );
-                    enableSourceInputs( source );
-                  } }
-                  className="h-8 w-full rounded-md border border-theme bg-background px-2 text-foreground"
-                >
-                  {channelSourceGroups( kind ).map( ( group ) => (
-                    <optgroup key={ group.key } label={ group.label }>
-                      {group.options.map( ( option ) => (
-                        <option key={ option.value } value={ option.value }>
-                          {sourceOptionShortLabel( option )}
-                        </option>
-                      ) )}
-                    </optgroup>
-                  ) )}
-                </select>
+                      setField(
+                        "source",
+                        source
+                      );
+                      setField(
+                        "project",
+                        project ?? null
+                      );
+                      enableSourceInputs( source );
+                    } }
+                    aria-label="Source"
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  >
+                    {channelSourceGroups( kind ).map( ( group ) => (
+                      <optgroup key={ group.key } label={ group.label }>
+                        {group.options.map( ( option ) => (
+                          <option key={ option.value } value={ option.value }>
+                            {sourceOptionShortLabel( option )}
+                          </option>
+                        ) )}
+                      </optgroup>
+                    ) )}
+                  </select>
+                </div>
               )}
 
               {category === "oscillator" && (
