@@ -13,7 +13,9 @@
     "lint": "eslint --cache --cache-location .next/cache/eslint src scripts eslint.config.mjs next.config.ts tailwind.config.ts postcss.config.mjs",
     "lint:fix": "eslint --cache --cache-location .next/cache/eslint --fix src scripts eslint.config.mjs next.config.ts tailwind.config.ts postcss.config.mjs",
     "format": "npm run lint:fix",
-    "check": "npm run lint && npm test",
+    "typecheck": "node node_modules/typescript7/bin/tsc --noEmit",
+    "typecheck:watch": "node node_modules/typescript7/bin/tsc --noEmit --watch",
+    "check": "npm run lint && npm run typecheck && npm test",
     "test": "jest",
     "test:watch": "jest --watch",
     "postinstall": "npx prisma generate",
@@ -92,7 +94,8 @@
     "prisma": "^7.8.0",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.4.5",
-    "typescript": "^5"
+    "typescript": "^6.0.3",
+    "typescript7": "npm:typescript@^7.0.2"
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx,mjs,cjs}": [

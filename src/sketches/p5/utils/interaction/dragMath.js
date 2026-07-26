@@ -52,11 +52,13 @@ export function nearestTargetIndex(
  *
  * Reads/writes only `drags` (mutated in place) and reports what happened.
  *
+ * @typedef {{ key: string, x: number, y: number, pressed: boolean, kind: string }} DragPointer
+ *
  * @param {Map<string, number>} drags - Active drags, pointer key → target index.
- * @param {Array<{key: string, x: number, y: number, pressed: boolean, kind: string}>} pointers
+ * @param {Array<DragPointer>} pointers
  * @param {Array<{x: number, y: number}>} targets - Pixel-space targets.
  * @param {number} radius - Pick-up radius (px).
- * @param {(index: number, pointer: object) => void} onMove - Called for every
+ * @param {(index: number, pointer: DragPointer) => void} onMove - Called for every
  *   grabbed target that should follow its pointer this step. May mutate
  *   `targets[index]` so later pointers in the same step see the new position.
  * @returns {{ hovers: Set<number>, grabbed: Set<number>, released: boolean }}

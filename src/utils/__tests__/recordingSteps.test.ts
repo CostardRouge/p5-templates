@@ -24,7 +24,7 @@ describe(
       snapshotId: null,
       progress,
       status: status as any,
-      template: "test-template",
+      sketch: "test-sketch",
       resultUrl: null,
       thumbnails: [],
       videoUrls: [],
