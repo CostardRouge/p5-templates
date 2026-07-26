@@ -61,7 +61,7 @@ import easing from "@/p5/utils/easing.js";
 // ── Loop / camera ────────────────────────────────────────────────────────────
 // Camera + Flow/Ease motion are lifted from rings v1 (one circuit per loop, hue
 // scroll in whole periods), so the frame at uT = TAU equals uT = 0. All the
-// iridescent / lighting / fog / aberration parameters are the family's shared
+// iridescent / lighting / aberration parameters are the family's shared
 // braidShader vocabulary — identical knobs to v1.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -868,7 +868,7 @@ sketch.draw( () => {
     right = rolledRight;
   }
 
-  // ── Palette / lighting / fog ────────────────────────────────────────────────
+  // ── Palette / lighting ───────────────────────────────────────────────────────
   const hueSpread = colors.hueSpread ?? 2;
   const hueCycles = Math.round( ( colors.hueSpeed ?? 1 ) * timeScale * p.TAU * hueSpread );
 
@@ -906,8 +906,6 @@ sketch.draw( () => {
       uFresnelPower: light.fresnelPower ?? 2.6,
       uRimStrength: light.rimStrength ?? 0.8,
       uShadowSoft: light.shadowSoftness ?? 0,
-      uFogDensity: camera.fogDensity ?? 0.09,
-      uFogStart: camera.fogStart ?? 1.5,
       uMaxDist: maxDist,
       uAberration: aberration.amount ?? 0,
       uAberrationMode: {

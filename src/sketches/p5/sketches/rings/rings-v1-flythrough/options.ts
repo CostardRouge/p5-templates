@@ -24,9 +24,7 @@ export const formValues = {
     lookAhead: 1.4,
     easing: "smoothstep",
     glide: 0.02,
-    bank: -0.8,
-    fogDensity: 0.27,
-    fogStart: 3.65
+    bank: -0.8
   },
   colors: {
     hueSpeed: 1,
@@ -223,20 +221,6 @@ export const formConfiguration: Record<string, any> = {
         min: -2,
         max: 2,
         step: 0.01
-      },
-      fogDensity: {
-        label: "Fog density",
-        component: "slider",
-        min: 0,
-        max: 0.5,
-        step: 0.005
-      },
-      fogStart: {
-        label: "Fog start distance",
-        component: "slider",
-        min: 0,
-        max: 8,
-        step: 0.05
       }
     }
   },
