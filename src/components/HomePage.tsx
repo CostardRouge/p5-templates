@@ -6,7 +6,6 @@ import {
 } from "react";
 import {
   ArrowUpRight,
-  Github,
   Layers,
   Radio,
   Search,
@@ -15,6 +14,7 @@ import {
   SlidersHorizontal,
   X
 } from "lucide-react";
+import Github from "@/components/ui/GithubIcon";
 import AnimatedPreview from "@/components/AnimatedPreview";
 import HardLink from "@/components/HardLink";
 import {

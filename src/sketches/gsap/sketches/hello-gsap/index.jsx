@@ -187,7 +187,6 @@ export default function HelloGsap( {
           word, index
         ) => (
           <span
-            // eslint-disable-next-line react/no-array-index-key
             key={ index }
             className="hg-word-wrap"
             style={ {

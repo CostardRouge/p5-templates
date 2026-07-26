@@ -238,7 +238,6 @@ export default function StackPeel( {
           url, index
         ) => (
           <div
-            // eslint-disable-next-line react/no-array-index-key
             key={ index }
             className="sp-card"
             style={ {

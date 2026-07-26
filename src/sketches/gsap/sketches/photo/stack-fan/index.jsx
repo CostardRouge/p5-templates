@@ -169,7 +169,6 @@ export default function StackFan( {
           card, index
         ) => (
           <div
-            // eslint-disable-next-line react/no-array-index-key
             key={ index }
             className="sf-card"
             style={ {

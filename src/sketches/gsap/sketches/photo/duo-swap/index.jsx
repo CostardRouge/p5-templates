@@ -546,7 +546,6 @@ export default function DuoSwap( {
             tile, index
           ) => (
             <div
-              // eslint-disable-next-line react/no-array-index-key
               key={ index }
               className="ds-tile"
               style={ {

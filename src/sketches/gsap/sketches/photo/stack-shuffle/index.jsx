@@ -272,7 +272,6 @@ export default function StackShuffle( {
           url, index
         ) => (
           <div
-            // eslint-disable-next-line react/no-array-index-key
             key={ index }
             className="ss-card"
             data-index={ index }

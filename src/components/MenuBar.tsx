@@ -11,7 +11,6 @@ import {
   ExternalLink,
   FileUp,
   Film,
-  Github,
   Home,
   ImageIcon,
   ImagePlus,
@@ -38,6 +37,7 @@ import {
 import {
   createPortal
 } from "react-dom";
+import Github from "@/components/ui/GithubIcon";
 import {
   subscribeUser, unsubscribeUser
 } from "@/app/actions/notifications";

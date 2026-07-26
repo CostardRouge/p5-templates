@@ -15,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "types": [
       "node",
@@ -54,7 +54,8 @@
     ".next/types/**/*.ts",
     "/tmp/p5-templates-build/types/**/*.ts",
     "next-env.d.ts",
-    "/tmp/p5b/types/**/*.ts"
+    "/tmp/p5b/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

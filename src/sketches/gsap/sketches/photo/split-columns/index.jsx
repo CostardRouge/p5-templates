@@ -173,7 +173,6 @@ export default function SplitColumns( {
         col, c
       ) => (
         <div
-          // eslint-disable-next-line react/no-array-index-key
           key={ c }
           className="sc-col"
           style={ {
@@ -203,7 +202,6 @@ export default function SplitColumns( {
               url, i
             ) => (
               <div
-                // eslint-disable-next-line react/no-array-index-key
                 key={ i }
                 className="sc-item"
                 style={ {

@@ -1,23 +1,13 @@
 import stylistic from "@stylistic/eslint-plugin";
-import nextCoreWebVitals from "eslint-config-next/core-web-vitals.js";
-import nextTypescript from "eslint-config-next/typescript.js";
-import {
-  dirname
-} from "path";
-import {
-  fileURLToPath
-} from "url";
-import {
-  FlatCompat
-} from "@eslint/eslintrc";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 
-const __filename = fileURLToPath( import.meta.url );
-const __dirname = dirname( __filename );
-
-const compat = new FlatCompat( {
-  baseDirectory: __dirname
-} );
-
+// eslint-config-next 16 publishes native flat configs, so these spread in
+// directly — the @eslint/eslintrc FlatCompat shim that used to wrap them is
+// gone. core-web-vitals already bundles eslint-plugin-react, react-hooks,
+// import, jsx-a11y and @next/next with their recommended rules, so the separate
+// `plugin:react/recommended`, `plugin:react-hooks/recommended` and
+// `plugin:@next/next/recommended` entries are redundant and no longer listed.
 const eslintConfig = [
   {
     ignores: [
@@ -31,11 +21,8 @@ const eslintConfig = [
       "public/assets/libraries/**"
     ]
   },
-  ...compat.config( nextCoreWebVitals ),
-  ...compat.config( nextTypescript ),
-  ...compat.extends( "plugin:react/recommended" ),
-  ...compat.extends( "plugin:react-hooks/recommended" ),
-  ...compat.extends( "plugin:@next/next/recommended" ),
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   {
     plugins: {
       "@stylistic": stylistic
@@ -230,6 +217,17 @@ const eslintConfig = [
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
+
+      // React Compiler rules, new in eslint-plugin-react-hooks 7 and switched
+      // on by eslint-config-next 16. They report 70 genuine findings across 42
+      // files here — mostly the imperative canvas plumbing (reading refs while
+      // rendering, syncing engine state back through setState in an effect).
+      // Each needs judging against live-preview behaviour, so they stay visible
+      // as warnings rather than either blocking CI or being silently disabled.
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
 
       // Braces: require { } on all control flow, never inline
       curly: [

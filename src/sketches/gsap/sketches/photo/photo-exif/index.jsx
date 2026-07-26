@@ -486,7 +486,8 @@ export default function PhotoExif( {
         i
       );
       const filename = path
-        ? decodeURIComponent( String( path ).split( "/" ).pop() )
+        ? decodeURIComponent( String( path ).split( "/" )
+          .pop() )
         : "";
 
       return {
@@ -1094,7 +1095,7 @@ export default function PhotoExif( {
 
       return (
         <div
-          // eslint-disable-next-line react/no-array-index-key
+
           key={ index }
           className="px-slide"
           style={ {
@@ -1150,7 +1151,7 @@ export default function PhotoExif( {
 
     return (
       <div
-        // eslint-disable-next-line react/no-array-index-key
+
         key={ index }
         className="px-slide"
         style={ {
