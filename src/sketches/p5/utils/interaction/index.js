@@ -757,7 +757,11 @@ const _FLAT_COLLECTORS = [
   ],
   [
     "joypad",
-    _collectJoypad
+    _collectJoypadLeft
+  ],
+  [
+    "joypadRight",
+    _collectJoypadRight
   ]
 ];
 
@@ -842,8 +846,9 @@ export function getPointersDebug( opts ) {
  *   - fingers→ one group per detected finger (joint chain, base → fingertip)
  *   - body   → one group per detected pose  (wrist→elbow→shoulder→…→wrist)
  *   - face   → one group per detected face  (ear→eye→nose→mouth→eye→ear arc)
- *   - orbit / perlinNoise / audio / touch / midi / joypad / mouse / gyroscope
+ *   - orbit / perlinNoise / audio / touch / midi / mouse / gyroscope
  *            → one group holding that source's points
+ *   - joypad → one group per stick (left → "joypad", right → "joypadRight")
  *
  * Set `opts.smoothing` (0..1) to temporally smooth each group/point so jittery
  * camera landmarks produce calm curves.
@@ -953,7 +958,11 @@ export function getPointerGroups( opts ) {
   );
   addPerPoint(
     "joypad",
-    _collectJoypad
+    _collectJoypadLeft
+  );
+  addPerPoint(
+    "joypadRight",
+    _collectJoypadRight
   );
 
   return _smoothGroups(
@@ -2501,29 +2510,22 @@ export function getInteractionMetrics( opts = options.sketch?.interaction ?? {} 
   return computeInteractionMetrics( opts );
 }
 
-function _collectJoypad(
-  opts, p, out
-) {
-  const joypad = opts.joypad;
-
-  if ( !joypad?.enabled ) {
-    return;
+// Gamepads matching `opts.joypad`, up to `count` (deviceId "" = any connected
+// pad; identical controllers share an id, so several may still match). Shared
+// by the left/right stick collectors so both read the same resolved pad set.
+function _resolveJoypads( joypad ) {
+  if ( !joypad?.enabled || typeof navigator.getGamepads !== "function" ) {
+    return [];
   }
 
-  if ( typeof navigator.getGamepads !== "function" ) {
-    return;
-  }
-
-  const gamepads = navigator.getGamepads();
   const maxCount = joypad.count ?? 1;
-  const deadzone = joypad.deadzone ?? 0.1;
-  // "" reads any connected pad; a specific id restricts to matching pads
-  // (identical controllers share an id, so several may still match).
   const deviceId = joypad.deviceId || "";
-  let added = 0;
+  const matched = [];
 
-  for ( let i = 0; i < gamepads.length && added < maxCount; i++ ) {
-    const gp = gamepads[ i ];
+  for ( const gp of navigator.getGamepads() ) {
+    if ( matched.length >= maxCount ) {
+      break;
+    }
 
     if ( !gp || !gp.connected ) {
       continue;
@@ -2533,9 +2535,24 @@ function _collectJoypad(
       continue;
     }
 
-    // Left stick: axes[0] = X, axes[1] = Y
-    let axisX = gp.axes[ 0 ] ?? 0;
-    let axisY = gp.axes[ 1 ] ?? 0;
+    matched.push( gp );
+  }
+
+  return matched;
+}
+
+// Reads one stick's pair of axes, applying the deadzone and mapping to canvas
+// space. `axisIndexX`/`axisIndexY` select the left stick (0, 1) or the right
+// stick (2, 3).
+function _collectJoypadStick(
+  opts, p, out, axisIndexX, axisIndexY
+) {
+  const joypad = opts.joypad;
+  const deadzone = joypad?.deadzone ?? 0.1;
+
+  for ( const gp of _resolveJoypads( joypad ) ) {
+    let axisX = gp.axes[ axisIndexX ] ?? 0;
+    let axisY = gp.axes[ axisIndexY ] ?? 0;
 
     if ( Math.abs( axisX ) < deadzone ) {
       axisX = 0;
@@ -2561,6 +2578,32 @@ function _collectJoypad(
         p.height
       )
     ) );
-    added++;
   }
+}
+
+// Left stick: axes[0] = X, axes[1] = Y.
+function _collectJoypadLeft(
+  opts, p, out
+) {
+  _collectJoypadStick(
+    opts,
+    p,
+    out,
+    0,
+    1
+  );
+}
+
+// Right stick: axes[2] = X, axes[3] = Y. Active by default alongside the left
+// stick whenever `joypad.enabled` is on — no separate flag to flip.
+function _collectJoypadRight(
+  opts, p, out
+) {
+  _collectJoypadStick(
+    opts,
+    p,
+    out,
+    2,
+    3
+  );
 }

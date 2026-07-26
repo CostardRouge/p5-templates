@@ -79,7 +79,12 @@ export const INTERACTION_SOURCES = [
   {
     id: "joypad",
     type: "vector2d",
-    label: "Joypad"
+    label: "Joypad · Left stick"
+  },
+  {
+    id: "joypadRight",
+    type: "vector2d",
+    label: "Joypad · Right stick"
   },
 
   // ── Semantic audio scalars (from getAudio().bands) ────────────────────────
@@ -222,7 +227,8 @@ export const FLAT_SOURCE_IDS = [
   "gyroscope",
   "midi",
   "audio",
-  "joypad"
+  "joypad",
+  "joypadRight"
 ];
 
 // The getAudio().bands keys exposed as `audio.<band>` scalar channels.
