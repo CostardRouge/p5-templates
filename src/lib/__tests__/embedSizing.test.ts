@@ -146,7 +146,8 @@ describe(
             size: {
               width: 100,
               height: 100
-            }
+            },
+            slides: undefined as unknown[] | undefined
           },
           size
         );
