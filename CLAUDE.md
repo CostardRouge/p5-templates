@@ -4,7 +4,7 @@ Guidance for AI assistants (and humans) working in this repository.
 
 ## What this project is
 
-**Sketchbook** (`sketchbook`) is a Next.js 15 app for building,
+**Sketchbook** (`sketchbook`) is a Next.js 16 app for building,
 parameterizing, and exporting visuals from creative-coding sketches.
 Users pick a template, tweak its parameters through an auto-generated form, preview
 it live, and export it as an image or video — either recorded in-browser or rendered
@@ -15,14 +15,33 @@ The rendering layer is **engine-agnostic**: p5.js is the primary engine, with a 
 
 ## Tech stack
 
-- **Next.js 15** (App Router, Turbopack) · **React 19** · **TypeScript** (strict) · **Tailwind CSS 3**
-- **p5.js** and **GSAP** rendering engines
+- **Next.js 16** (App Router, Turbopack) · **React 19** · **TypeScript** (strict) · **Tailwind CSS 3**
+- **p5.js 1.x** and **GSAP** rendering engines
 - **Prisma 7 + PostgreSQL** for persistence (client generated to `src/generated/prisma`)
 - **BullMQ + Redis (ioredis)** for the background recording queue
 - **MinIO / S3** (`@aws-sdk/client-s3`) for video/image/thumbnail storage
 - **Playwright** (headless Chromium) + **FFmpeg** for server-side recording
-- **React Hook Form + Zod** for form state and validation
+- **React Hook Form + Zod 4** for form state and validation
 - **Jest** (`ts-jest`, jsdom) + **fast-check** for tests
+
+### Two TypeScript compilers, on purpose
+
+TypeScript 7 is the native (Go) port and its npm package no longer exports the
+classic JS compiler API, which ts-jest and typescript-eslint both still need
+(they exclude it by peer range). So the tree carries both:
+
+| Package | Version | Used by |
+|---|---|---|
+| `typescript` | 6.x (JS-based, full API) | ts-jest, typescript-eslint, `next build` |
+| `typescript7` (alias of `typescript@7`) | 7.x (native) | `npm run typecheck` |
+
+`npm run typecheck` is the authority on type errors — it covers everything in
+`tsconfig.json` (tests included) in ~8s, where TS 6 takes ~33s. Both agree on
+this codebase. Don't "simplify" this by moving `typescript` to 7: lint and test
+break immediately.
+
+Note `tsconfig.json` sets `types: ["node", "jest"]` explicitly — TS 6+ stopped
+auto-including every `node_modules/@types` package.
 
 ## Getting started
 
@@ -45,13 +64,15 @@ Services: App `:3000` · MinIO console `:9001` · Postgres `:5432` · Redis `:63
 | `npm run build` | Production build (also compiles every sketch route — catches broken imports) |
 | `npm run lint` / `npm run lint:fix` | ESLint (cached). `format` is an alias for `lint:fix` |
 | `npm test` / `npm run test:watch` | Jest |
-| `npm run check` | **`lint` + `test`** — run this before considering work done |
+| `npm run typecheck` / `npm run typecheck:watch` | TypeScript 7 (native) `tsc --noEmit` |
+| `npm run check` | **`lint` + `typecheck` + `test`** — run this before considering work done |
 | `npm run sketch:meta` | Watch sketches → regenerate `metadata.json` + registries |
 | `npm run sketch:meta:write` | One-shot regenerate of sketch metadata/registries |
 | `npx prisma migrate dev` | Create & apply a migration · `npx prisma studio` to browse |
 
-CI (`.github/workflows/ci.yml`) runs three parallel jobs on Node 24: **lint**, **test**, **build**.
-Docs/markdown-only changes are path-ignored. Match CI locally with `npm run check` + `npm run build`.
+CI (`.github/workflows/ci.yml`) runs four parallel jobs on Node 24: **lint**, **typecheck**,
+**test**, **build**. Docs/markdown-only changes are path-ignored. Match CI locally with
+`npm run check` + `npm run build`.
 
 ## Repository layout
 
@@ -186,8 +207,8 @@ match the surrounding code, and let `npm run lint:fix` handle formatting:
 ## Working agreements
 
 - **Branch**: develop on the assigned feature branch; never push to `main` without explicit permission.
-- **Before finishing**: run `npm run check` (lint + test). For sketch or route changes, also
-  `npm run build`, since the build compiles every sketch route.
+- **Before finishing**: run `npm run check` (lint + typecheck + test). For sketch or route
+  changes, also `npm run build`, since the build compiles every sketch route.
 - **Generated files** (`src/generated/*`, `src/templates/metadata.json`) come from the
   sketch generator or Prisma — regenerate, don't hand-edit.
 - **Migrations**: change `prisma/schema.prisma`, then `npx prisma migrate dev` — don't edit generated migration SQL after the fact.

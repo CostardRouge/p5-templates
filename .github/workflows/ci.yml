@@ -44,6 +44,32 @@ jobs:
       - name: Lint
         run: npm run lint
 
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          HUSKY: 0
+
+      # TypeScript 7 (the native compiler), installed alongside the JS-based
+      # `typescript` that ts-jest and typescript-eslint still need. `next build`
+      # type-checks too, but only what the app graph reaches — this covers
+      # everything in tsconfig, tests included, and takes ~8s.
+      - name: Typecheck
+        run: npm run typecheck
+
   test:
     name: Test
     runs-on: ubuntu-latest
