@@ -167,6 +167,7 @@ describe(
           "gyroscope",
           "hands",
           "joypad",
+          "joypadRight",
           "midi",
           "mouse",
           "orbit",

@@ -504,6 +504,14 @@ export function interactionEnablePaths( source: string ): string[] {
         `${ source }.enabled`
       ];
 
+    // Right stick shares the left stick's single `joypad.enabled` flag — no
+    // per-stick flag to derive from the source id.
+    case "joypadRight":
+      return [
+        "enabled",
+        "joypad.enabled"
+      ];
+
     default:
       // Generators (oscillator / ramp / sequence / noise / random) and unknown
       // ids have no interaction source to enable.

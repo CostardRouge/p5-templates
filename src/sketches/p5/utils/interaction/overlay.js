@@ -86,7 +86,12 @@ export const INTERACTION_SOURCE_COLORS = {
     77,
     182,
     172
-  ] // teal-green
+  ], // teal-green
+  joypadRight: [
+    255,
+    202,
+    40
+  ] // amber
 };
 
 export const INTERACTION_SOURCE_LABELS = {
@@ -102,7 +107,8 @@ export const INTERACTION_SOURCE_LABELS = {
   gyroscope: "Gyroscope",
   midi: "MIDI",
   audio: "Audio (Mic)",
-  joypad: "Joypad / Gamepad"
+  joypad: "Joypad / Gamepad (left stick)",
+  joypadRight: "Joypad / Gamepad (right stick)"
 };
 
 const DEFAULT_COLOR = [
