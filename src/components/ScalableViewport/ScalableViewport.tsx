@@ -36,6 +36,7 @@ export default function ScalableViewport( {
   zoomControlsContainer = null,
   fullscreen,
   actualPixels = false,
+  fitMarginFactor,
   onInteractionStart,
   onInteractionEnd
 }: {
@@ -50,6 +51,9 @@ export default function ScalableViewport( {
   // Auto-layout at 1:1 (actual pixels) instead of the padded fit — used in bare
   // fullscreen so a screen-sized canvas fills the display exactly.
   actualPixels?: boolean;
+  // Fraction of the viewport a "fit" fills. Defaults to the studio's padded
+  // 0.9; pass 1 for a flush, gutter-free fit (embeds without a margin).
+  fitMarginFactor?: number;
   // In the docked workspace layout the zoom controls render flat and portal
   // into the top bar (`zoomControlsContainer`) instead of floating top-right.
   docked?: boolean;
@@ -109,7 +113,8 @@ export default function ScalableViewport( {
       contentRef,
       transform,
       setTransform,
-      animateTo
+      animateTo,
+      fitMarginFactor
     } );
 
   // Auto-layout used by the resize/resolution observers below. Bare fullscreen
