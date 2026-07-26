@@ -396,7 +396,7 @@ export const SOURCE_CATEGORIES: Array<{
 }> = [
   {
     value: "input",
-    label: "Input"
+    label: "Interaction Inputs"
   },
   {
     value: "oscillator",
