@@ -10,6 +10,11 @@ export const MAX_SCALE = 6;
 // matching the exponential factor used by wheel zoom.
 export const ZOOM_STEP_FACTOR = 1.25;
 
+// Fraction of the viewport a "fit" fills. The studio leaves a gutter so the
+// canvas edges read against the workspace; surfaces that want the sketch flush
+// with its frame (the embed, by default) pass 1.
+export const FIT_MARGIN_FACTOR = 0.9;
+
 export function calculateZoomTarget(
   newScale: number,
   clientX: number,
@@ -46,7 +51,8 @@ export function calculateFitToViewport(
   contentWidth: number,
   contentHeight: number,
   viewportWidth: number,
-  viewportHeight: number
+  viewportHeight: number,
+  marginFactor: number = FIT_MARGIN_FACTOR
 ): TransformState {
   if ( contentWidth === 0 || contentHeight === 0 ) {
     return {
@@ -61,7 +67,7 @@ export function calculateFitToViewport(
   const bestFitScale = Math.min(
     widthRatio,
     heightRatio
-  ) * 0.9;
+  ) * marginFactor;
   const newScale = clamp(
     bestFitScale,
     MIN_SCALE,

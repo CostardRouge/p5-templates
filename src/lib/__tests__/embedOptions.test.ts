@@ -2,8 +2,11 @@ import {
   buildEmbedHash,
   decodeEmbedOptions,
   diffSketchOptions,
+  EMBED_SIZE_FILL,
   encodeEmbedOptions,
+  formatEmbedSize,
   parseEmbedHash,
+  parseEmbedSize,
   resolveAutoplay
 } from "@/lib/embedOptions";
 
@@ -103,12 +106,16 @@ describe(
         expect( parseEmbedHash( "" ) ).toEqual( {
           options: null,
           controls: null,
-          autoplay: "on"
+          autoplay: "on",
+          size: null,
+          margin: false
         } );
         expect( parseEmbedHash( "#" ) ).toEqual( {
           options: null,
           controls: null,
-          autoplay: "on"
+          autoplay: "on",
+          size: null,
+          margin: false
         } );
 
         const controlsOnly = parseEmbedHash( "#c=a.b , c.d ,," );
@@ -170,6 +177,111 @@ describe(
           }
         ) ).autoplay ).toBe( "desktop" );
         expect( parseEmbedHash( "#a=bogus" ).autoplay ).toBe( "on" );
+      }
+    );
+
+    it(
+      "carries a fixed resolution and round-trips it",
+      () => {
+        const hash = buildEmbedHash(
+          {},
+          [],
+          {
+            size: {
+              width: 1920,
+              height: 1080
+            }
+          }
+        );
+
+        expect( hash ).toBe( "#s=1920x1080" );
+        expect( parseEmbedHash( hash ).size ).toEqual( {
+          width: 1920,
+          height: 1080
+        } );
+      }
+    );
+
+    it(
+      "carries the fill sentinel",
+      () => {
+        const hash = buildEmbedHash(
+          {},
+          [],
+          {
+            size: EMBED_SIZE_FILL
+          }
+        );
+
+        expect( hash ).toBe( "#s=fill" );
+        expect( parseEmbedHash( hash ).size ).toBe( EMBED_SIZE_FILL );
+      }
+    );
+
+    it(
+      "carries the margin flag, omitting the default (no margin)",
+      () => {
+        expect( buildEmbedHash(
+          {},
+          [],
+          {
+            margin: false
+          }
+        ) ).toBe( "" );
+
+        const hash = buildEmbedHash(
+          {},
+          [],
+          {
+            margin: true
+          }
+        );
+
+        expect( hash ).toBe( "#m=1" );
+        expect( parseEmbedHash( hash ).margin ).toBe( true );
+      }
+    );
+  }
+);
+
+describe(
+  "parseEmbedSize",
+  () => {
+    it(
+      "accepts the fill sentinel and a well-formed W×H",
+      () => {
+        expect( parseEmbedSize( EMBED_SIZE_FILL ) ).toBe( EMBED_SIZE_FILL );
+        expect( parseEmbedSize( "1080x1350" ) ).toEqual( {
+          width: 1080,
+          height: 1350
+        } );
+      }
+    );
+
+    it(
+      "rejects malformed, empty, or out-of-range values so the sketch's own size stands",
+      () => {
+        expect( parseEmbedSize( null ) ).toBeNull();
+        expect( parseEmbedSize( "" ) ).toBeNull();
+        expect( parseEmbedSize( "wide" ) ).toBeNull();
+        expect( parseEmbedSize( "1080" ) ).toBeNull();
+        expect( parseEmbedSize( "1080x" ) ).toBeNull();
+        expect( parseEmbedSize( "-10x20" ) ).toBeNull();
+        expect( parseEmbedSize( "10x10" ) ).toBeNull();
+        expect( parseEmbedSize( "99999x1080" ) ).toBeNull();
+      }
+    );
+
+    it(
+      "round-trips through formatEmbedSize",
+      () => {
+        const size = {
+          width: 768,
+          height: 1366
+        };
+
+        expect( parseEmbedSize( formatEmbedSize( size ) ) ).toEqual( size );
+        expect( formatEmbedSize( EMBED_SIZE_FILL ) ).toBe( EMBED_SIZE_FILL );
       }
     );
   }

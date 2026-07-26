@@ -8,6 +8,7 @@ import {
   calculateFitToViewport,
   calculateActualPixels,
   calculateZoomTarget,
+  FIT_MARGIN_FACTOR,
   ZOOM_STEP_FACTOR
 } from "../utils/zoomCalculations";
 
@@ -27,6 +28,8 @@ interface UseViewportActionsProps {
     contentElement: HTMLDivElement | null
   ) => void;
   animateTo: ( targetX: number, targetY: number, targetScale: number ) => void;
+  /** Fraction of the viewport a fit fills — 1 puts the content flush with the edges. */
+  fitMarginFactor?: number;
 }
 
 export function useViewportActions( {
@@ -34,7 +37,8 @@ export function useViewportActions( {
   contentRef,
   transform,
   setTransform,
-  animateTo
+  animateTo,
+  fitMarginFactor = FIT_MARGIN_FACTOR
 }: UseViewportActionsProps ) {
   const applyLayout = useCallback(
     (
@@ -83,11 +87,20 @@ export function useViewportActions( {
 
   const fitToViewport = useCallback(
     ( animate = false ) => applyLayout(
-      calculateFitToViewport,
+      (
+        contentWidth, contentHeight, viewportWidth, viewportHeight
+      ) => calculateFitToViewport(
+        contentWidth,
+        contentHeight,
+        viewportWidth,
+        viewportHeight,
+        fitMarginFactor
+      ),
       animate
     ),
     [
-      applyLayout
+      applyLayout,
+      fitMarginFactor
     ]
   );
 

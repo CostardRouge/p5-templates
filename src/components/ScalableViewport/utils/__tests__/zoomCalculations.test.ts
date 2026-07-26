@@ -87,6 +87,24 @@ describe(
     );
 
     it(
+      "fills the limiting dimension edge-to-edge with a margin factor of 1",
+      () => {
+        const result = calculateFitToViewport(
+          200,
+          100,
+          1000,
+          1000,
+          1
+        );
+
+        // No gutter: ( 1000 / 200 ) * 1 = 5, so the content spans the full width.
+        expect( result.scale ).toBeCloseTo( 5 );
+        expect( result.x ).toBeCloseTo( 0 );
+        expect( result.y ).toBeCloseTo( ( 1000 - 100 * 5 ) / 2 );
+      }
+    );
+
+    it(
       "returns the identity transform for empty content",
       () => {
         expect( calculateFitToViewport(

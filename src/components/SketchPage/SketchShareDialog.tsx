@@ -12,16 +12,25 @@ import {
 } from "react-dom";
 import useSketch from "../ClientProcessingSketch/components/SketchProvider/hooks/useSketch";
 import {
-  buildEmbedHash, diffSketchOptions
+  buildEmbedHash, diffSketchOptions, EMBED_SIZE_FILL, parseEmbedSize
 } from "@/lib/embedOptions";
 import type {
-  AutoplayPolicy
+  AutoplayPolicy, EmbedSize
 } from "@/lib/embedOptions";
 import {
   EMBED_CONTROLS_ALL
 } from "@/lib/embedControls";
+import {
+  formatOptions
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/RootSettings/constants/root-field-config";
+import {
+  isFullscreenFormatValue
+} from "@/lib/fullscreen/constants";
 
 type ControlsMode = "none" | "all" | "custom";
+
+/** Sentinel select value meaning "whatever the editor canvas is set to". */
+const SIZE_CHOICE_EDITOR = "";
 
 /**
  * Share / embed affordance for the preview page. Serialises the CURRENT sketch
@@ -52,6 +61,14 @@ export default function SketchShareDialog() {
     autoplay,
     setAutoplay
   ] = useState<AutoplayPolicy>( "on" );
+  const [
+    sizeChoice,
+    setSizeChoice
+  ] = useState<string>( SIZE_CHOICE_EDITOR );
+  const [
+    margin,
+    setMargin
+  ] = useState( false );
   const [
     copied,
     setCopied
@@ -144,20 +161,85 @@ export default function SketchShareDialog() {
     ]
   );
 
+  // Resolution presets, minus the fullscreen sentinels the canvas-size select
+  // uses — those drive the Fullscreen API, which means nothing inside a frame.
+  const sizePresets = useMemo(
+    () => {
+      const groups = new Map<string, {
+        label: string;
+        value: string;
+      }[]>();
+
+      for ( const option of formatOptions ) {
+        if ( isFullscreenFormatValue( option.value ) ) {
+          continue;
+        }
+
+        const group = option.group ?? "Other";
+
+        if ( !groups.has( group ) ) {
+          groups.set(
+            group,
+            []
+          );
+        }
+
+        groups.get( group )!.push( {
+          label: option.label,
+          value: String( option.value )
+        } );
+      }
+
+      return [
+        ...groups.entries()
+      ];
+    },
+    []
+  );
+
+  const canvasWidth = options.size?.width ?? 1080;
+  const canvasHeight = options.size?.height ?? 1350;
+  const canvasSize = useMemo(
+    () => ( {
+      width: canvasWidth,
+      height: canvasHeight
+    } ),
+    [
+      canvasWidth,
+      canvasHeight
+    ]
+  );
+
+  // "Match the editor" tracks the live canvas size instead of freezing a value,
+  // so tweaking the format in the editor updates the link as you look at it.
+  const embedSize: EmbedSize = sizeChoice === SIZE_CHOICE_EDITOR
+    ? canvasSize
+    : parseEmbedSize( sizeChoice ) ?? canvasSize;
+  const fillFrame = embedSize === EMBED_SIZE_FILL;
+
   const embedPath = `/embed/${ engineId }/${ category ? `${ category }/` : "" }${ name }`;
   const hash = buildEmbedHash(
     delta,
     controls,
     {
-      autoplay
+      autoplay,
+      size: embedSize,
+      margin
     }
   );
   const link = `${ origin }${ embedPath }${ hash }`;
 
-  const width = options.size?.width ?? 1080;
-  const height = options.size?.height ?? 1350;
+  // The frame box the snippet suggests: a fixed resolution dictates its own
+  // ratio; in fill mode nothing does, so the editor canvas seeds a sane box the
+  // host is free to change — the sketch re-sizes to whatever it ends up being.
+  const frame = fillFrame ? canvasSize : embedSize;
+  // The snippet is HTML, so the hash's `&` separators have to be escaped — a
+  // sanitiser or validator on the host side would otherwise mangle the URL.
   const iframeSnippet =
-    `<iframe\n  src="${ link }"\n  style="width:100%; aspect-ratio:${ width }/${ height }; border:0"\n  allow="camera; microphone"\n  loading="lazy"\n></iframe>`;
+    `<iframe\n  src="${ link.replace(
+      /&/g,
+      "&amp;"
+    ) }"\n  style="width:100%; aspect-ratio:${ frame.width }/${ frame.height }; border:0"\n  allow="camera; microphone"\n  loading="lazy"\n></iframe>`;
 
   const changedCount = Object.keys( delta ).length;
 
@@ -240,6 +322,63 @@ export default function SketchShareDialog() {
               ? "Sharing the default look. Tweak the sketch first to bake your settings into the link."
               : `${ changedCount } setting${ changedCount === 1 ? "" : "s" } changed from the defaults will be baked into the link.`}
           </p>
+
+          {/* Frame — resolution + margin */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
+              Frame
+            </span>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-foreground/60">Resolution</span>
+              <select
+                value={ sizeChoice }
+                onChange={ ( event ) => setSizeChoice( event.target.value ) }
+                className={ clsx(
+                  "w-full cursor-pointer rounded-xl border border-border bg-hover/30 px-2.5 py-2 text-sm text-foreground",
+                  "focus:outline-none focus:ring-1 focus:ring-focus"
+                ) }
+              >
+                <option value={ SIZE_CHOICE_EDITOR }>
+                  {`Match the editor (${ canvasWidth } × ${ canvasHeight })`}
+                </option>
+                <option value={ EMBED_SIZE_FILL }>
+                  Fill the frame — follow the iframe size
+                </option>
+                {sizePresets.map( ( [
+                  groupLabel,
+                  presets
+                ] ) => (
+                  <optgroup key={ groupLabel } label={ groupLabel }>
+                    {presets.map( ( preset ) => (
+                      <option key={ preset.value } value={ preset.value }>
+                        {preset.label}
+                      </option>
+                    ) )}
+                  </optgroup>
+                ) )}
+              </select>
+            </label>
+
+            <p className="text-xs text-foreground/50">
+              {fillFrame
+                ? "The canvas is re-drawn at the iframe's own size and follows it on resize — nothing is letterboxed."
+                : "The canvas renders at this resolution and is scaled to fit the iframe."}
+            </p>
+
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={ margin }
+                onChange={ () => setMargin( ( current ) => !current ) }
+                className="h-4 w-4 accent-foreground"
+              />
+              Leave a margin around the sketch
+            </label>
+            <p className="text-xs text-foreground/50">
+              Off by default: the sketch sits flush against the frame edges.
+            </p>
+          </div>
 
           {/* Controls exposure */}
           <div className="flex flex-col gap-2">
