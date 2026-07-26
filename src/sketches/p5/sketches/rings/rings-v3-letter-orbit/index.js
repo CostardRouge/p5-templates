@@ -19,50 +19,33 @@ import {
 import easing from "@/p5/utils/easing.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// rings v2 — letters.
+// rings v3 — letter orbit.
 //
-// The ring family, but each "ring" is now a LETTER: the iridescent tube wraps
-// the outline of a glyph instead of a circle, and the fly-through camera threads
-// one letter after another — a textual journey, letter by letter, in the same
-// pipes/iridescent material as v1.
+// The letters variant, contemplative edition: instead of a fly-through circuit,
+// the word (often a single letter) sits STILL at the centre of the frame while
+// the camera orbits around it — or holds a fixed viewpoint when the orbit is
+// disabled. Same tube material, same text sampling, same iridescent / lighting
+// vocabulary as rings-v2-letters; the circuit and the chromatic aberration are
+// gone.
 //
 // ── Geometry ─────────────────────────────────────────────────────────────────
-// A word is sampled into per-glyph closed contours (letterPaths: textToPoints →
-// splitContours → resampleContour). Each contour becomes a chain of round
-// capsules (segments), and a letter is the union of its capsules — an exact-ish
-// distance field wrapping the glyph outline in a tube of radius uTubeR, with the
-// third dimension coming for free (the planar outline extruded to a tube:
-// dist³ᴰ = hypot(dist²ᴰ-to-outline, out-of-plane)).
+// Identical pipeline to v2: textToPoints → splitContours → resampleContour,
+// each glyph becoming a chain of round capsules melted together with a
+// polynomial smooth-minimum (uSmoothK fillet). The difference is placement:
+// glyphs are laid out side by side on their natural advances, the whole word is
+// recentred on its bounding box, and everything lives in ONE upright plane at
+// the world origin. No largest-empty-circle recentring and no tube-radius cap —
+// nothing has to be threaded, so the thickness slider is free.
 //
-// ── Smooth junctions (the requested "fusion") ────────────────────────────────
-// Where two parts of a glyph meet or run close — a t's bar and stem, serifs,
-// the pinch of an e — a hard union would show a crease. Instead the capsules are
-// combined with a POLYNOMIAL SMOOTH-MINIMUM (iq's smin): nearby surfaces melt
-// into a rounded fillet governed by uSmoothK, so the material reads as one
-// continuous skin poured over the letter rather than separate strokes butted
-// together.
-//
-// ── Threading each letter (no stem collisions) ───────────────────────────────
-// The camera flies through each letter's LARGEST-EMPTY-CIRCLE centre (the pole
-// of inaccessibility of the outline — the hole of an o, a clear quadrant of a t,
-// the side of an i's stem), computed once on the CPU. Each glyph is shifted so
-// that open point sits on the flight path, so the camera always threads a gap
-// instead of ploughing through a stroke, and the tube radius is capped against
-// that gap so the passage stays open.
-//
-// ── Per-letter planes + culling ──────────────────────────────────────────────
-// Letters are placed like v1's rings: at even parameters of a closed circuit,
-// each in a plane facing the path tangent so you read it head-on as you approach
-// then pass through. Geometry stays in normalised glyph space; per letter the
-// shader gets a centre + right/up basis and a bounding radius, and skips a
-// letter's capsule loop entirely (a conservative disc bound) when the ray point
-// is far from its plane — so only the 1–2 nearest letters cost anything.
-//
-// ── Loop / camera ────────────────────────────────────────────────────────────
-// Camera + Flow/Ease motion are lifted from rings v1 (one circuit per loop, hue
-// scroll in whole periods), so the frame at uT = TAU equals uT = 0. All the
-// iridescent / lighting / aberration parameters are the family's shared
-// braidShader vocabulary — identical knobs to v1.
+// ── Camera / loop ────────────────────────────────────────────────────────────
+// The camera sits on a sphere around the origin (distance + elevation) and
+// always looks at the centre. Per loop it completes a WHOLE number of orbit
+// turns (snapped, so uT = TAU matches uT = 0); 0 turns = a static camera at the
+// start angle. Motion reuses the family's Flow/Ease pair: Flow is a constant
+// glide, Ease divides the loop into one stop per turn and eases into each
+// viewpoint (easing + glide knobs, same as v2). A vertical bob (whole cycles
+// per loop) adds an optional gentle rise and fall. Hue scroll still snaps to
+// whole periods per loop.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_LETTERS = 8; // letters rendered (word is truncated past this)
@@ -78,7 +61,7 @@ const FRAGMENT = `
 
   // ── Letter field (normalised glyph space; per-letter plane in world) ──
   uniform int   uLetterCount;
-  uniform vec3  uLetCtr[${ MAX_LETTERS }];   // letter centre (gap) in world
+  uniform vec3  uLetCtr[${ MAX_LETTERS }];   // letter centre in world
   uniform vec3  uLetRt[${ MAX_LETTERS }];    // in-plane right (unit)
   uniform vec3  uLetUp[${ MAX_LETTERS }];    // in-plane up (unit)
   uniform float uLetRad[${ MAX_LETTERS }];   // bounding radius (normalised)
@@ -201,33 +184,14 @@ const FRAGMENT = `
     maxSteps: MAX_STEPS
   } ) }
 
-  // First-person camera fed by CPU look-at basis (same as rings v1).
+  // Orbit camera fed by CPU look-at basis. Single ray — no aberration here.
   void main() {
     vec2 frag = vec2(vUv.x * uResolution.x, vUv.y * uResolution.y);
     vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
-    vec3 ro = uCamPos;
+    vec3 rd = normalize(uCamFwd * uFocal + uCamRight * uv.x + uCamUp * uv.y);
 
-    if (uAberration < 0.5) {
-      vec3 rd = normalize(uCamFwd * uFocal + uCamRight * uv.x + uCamUp * uv.y);
-      gl_FragColor = traceRay(ro, rd);
-      return;
-    }
-
-    vec2 dir = uAberrationMode == 1
-      ? vec2(1.0, 0.0)
-      : normalize(uv + vec2(1e-4));
-    vec2 off = dir * (uAberration / uResolution.y);
-
-    vec3 rdR = normalize(uCamFwd * uFocal + uCamRight * (uv.x + off.x) + uCamUp * (uv.y + off.y));
-    vec3 rdG = normalize(uCamFwd * uFocal + uCamRight * uv.x + uCamUp * uv.y);
-    vec3 rdB = normalize(uCamFwd * uFocal + uCamRight * (uv.x - off.x) + uCamUp * (uv.y - off.y));
-
-    vec4 cr4 = traceRay(ro, rdR);
-    vec4 cg4 = traceRay(ro, rdG);
-    vec4 cb4 = traceRay(ro, rdB);
-
-    gl_FragColor = vec4(cr4.r, cg4.g, cb4.b, max(cr4.a, max(cg4.a, cb4.a)));
+    gl_FragColor = traceRay(uCamPos, rd);
   }
 `;
 
@@ -242,16 +206,6 @@ const CAMERA_UNIFORMS = `
 const lettersRenderer = createNoiseFieldRenderer( CAMERA_UNIFORMS + FRAGMENT );
 
 // ── Vector helpers (arrays as [x, y, z]) ─────────────────────────────────────
-function sub(
-  a, b
-) {
-  return [
-    a[ 0 ] - b[ 0 ],
-    a[ 1 ] - b[ 1 ],
-    a[ 2 ] - b[ 2 ]
-  ];
-}
-
 function cross(
   a, b
 ) {
@@ -282,47 +236,14 @@ function normalize( v ) {
     ];
 }
 
-function lerp3(
-  a, b, t
-) {
-  return [
-    a[ 0 ] + ( b[ 0 ] - a[ 0 ] ) * t,
-    a[ 1 ] + ( b[ 1 ] - a[ 1 ] ) * t,
-    a[ 2 ] + ( b[ 2 ] - a[ 2 ] ) * t
-  ];
-}
-
-// Distance from a 2D point to a segment (CPU mirror of segDist2D, for the
-// largest-empty-circle search).
-function segDist2D(
-  px, py, ax, ay, bx, by
-) {
-  const bax = bx - ax;
-  const bay = by - ay;
-  const pax = px - ax;
-  const pay = py - ay;
-  const denom = bax * bax + bay * bay || 1e-6;
-  const h = Math.max(
-    0,
-    Math.min(
-      1,
-      ( pax * bax + pay * bay ) / denom
-    )
-  );
-
-  return Math.hypot(
-    pax - bax * h,
-    pay - bay * h
-  );
-}
-
 // ── Letter geometry (built once per text/font/detail, memoised) ──────────────
 const geometryMemo = new Map();
 const GEOMETRY_MEMO_MAX = 12;
 
-// Build the flat capsule field for a word: per-letter normalised segments,
-// each glyph recentred on its largest-empty-circle (so the flight path threads
-// an open gap), plus per-letter bounding radius and open-gap radius.
+// Build the flat capsule field for a centred word: glyphs sampled one by one on
+// their natural advances, each recentred on its own bounding box (small bounds
+// for culling), the word as a whole recentred on origin. Per-letter offsets are
+// returned in normalised units ([x, y], y up).
 function buildLetterField( {
   text,
   fontName,
@@ -350,10 +271,11 @@ function buildLetterField( {
   const seg = new Float32Array( MAX_TOTAL_SEG * 4 );
   const segCount = new Int32Array( MAX_LETTERS );
   const radius = new Float32Array( MAX_LETTERS );
-  const gapRadius = new Float32Array( MAX_LETTERS );
+  const centreX = new Float32Array( MAX_LETTERS ); // word space (build units)
+  const centreY = new Float32Array( MAX_LETTERS );
 
   let letterIndex = 0;
-  let cursor = 0; // flat segment write head
+  let pen = 0; // baseline x advance in build units
   let truncated = false;
 
   for ( const char of text ) {
@@ -362,13 +284,16 @@ function buildLetterField( {
       break;
     }
 
+    const advance = p.textWidth( char );
+
     if ( char.trim() === "" ) {
+      pen += advance;
       continue;
     }
 
     const raw = font.textToPoints(
       char,
-      0,
+      pen,
       0,
       BUILD_SIZE,
       {
@@ -376,6 +301,8 @@ function buildLetterField( {
         simplifyThreshold
       }
     );
+
+    pen += advance;
 
     if ( !raw.length ) {
       continue;
@@ -396,7 +323,7 @@ function buildLetterField( {
       continue;
     }
 
-    // Bounding box + centroid of the glyph (build space).
+    // Bounding box of the glyph (word space) — its centre anchors the letter.
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
@@ -423,52 +350,12 @@ function buildLetterField( {
       }
     }
 
-    // Largest-empty-circle: the point in the glyph bbox farthest from every
-    // outline segment. The camera threads THIS, so it never hits a stroke.
-    let gapX = ( minX + maxX ) / 2;
-    let gapY = ( minY + maxY ) / 2;
-    let gapDist = -1;
-    const GRID = 22;
-
-    for ( let gy = 0; gy <= GRID; gy++ ) {
-      for ( let gx = 0; gx <= GRID; gx++ ) {
-        const sx = minX + ( ( maxX - minX ) * gx ) / GRID;
-        const sy = minY + ( ( maxY - minY ) * gy ) / GRID;
-
-        let nearest = Infinity;
-
-        for ( const contour of contours ) {
-          const m = contour.length;
-
-          for ( let i = 0; i < m; i++ ) {
-            const a = contour[ i ];
-            const b = contour[ ( i + 1 ) % m ];
-            const d = segDist2D(
-              sx,
-              sy,
-              a.x,
-              a.y,
-              b.x,
-              b.y
-            );
-
-            if ( d < nearest ) {
-              nearest = d;
-            }
-          }
-        }
-
-        if ( nearest > gapDist ) {
-          gapDist = nearest;
-          gapX = sx;
-          gapY = sy;
-        }
-      }
-    }
+    const ctrX = ( minX + maxX ) / 2;
+    const ctrY = ( minY + maxY ) / 2;
 
     // Emit normalised capsules into this letter's fixed stride slice (recentred
-    // on the gap, y flipped to point up, divided by BUILD_SIZE so a glyph unit ≈
-    // cap height). The base offset is letterIndex * SEG_STRIDE.
+    // on the glyph bbox, y flipped to point up, divided by BUILD_SIZE so a
+    // glyph unit ≈ cap height). The base offset is letterIndex * SEG_STRIDE.
     const base = letterIndex * SEG_STRIDE;
     let local = 0;
     let maxR = 0;
@@ -484,10 +371,10 @@ function buildLetterField( {
 
         const a = contour[ i ];
         const b = contour[ ( i + 1 ) % m ];
-        const ax = ( a.x - gapX ) / BUILD_SIZE;
-        const ay = -( a.y - gapY ) / BUILD_SIZE;
-        const bx = ( b.x - gapX ) / BUILD_SIZE;
-        const by = -( b.y - gapY ) / BUILD_SIZE;
+        const ax = ( a.x - ctrX ) / BUILD_SIZE;
+        const ay = -( a.y - ctrY ) / BUILD_SIZE;
+        const bx = ( b.x - ctrX ) / BUILD_SIZE;
+        const by = -( b.y - ctrY ) / BUILD_SIZE;
         const w = ( base + local ) * 4;
 
         seg[ w ] = ax;
@@ -516,7 +403,8 @@ function buildLetterField( {
 
     segCount[ letterIndex ] = local;
     radius[ letterIndex ] = maxR;
-    gapRadius[ letterIndex ] = gapDist / BUILD_SIZE;
+    centreX[ letterIndex ] = ctrX;
+    centreY[ letterIndex ] = ctrY;
     letterIndex++;
   }
 
@@ -527,7 +415,56 @@ function buildLetterField( {
   }
 
   if ( truncated ) {
-    console.warn( `rings-v2-letters: word truncated to ${ letterIndex } letters (max ${ MAX_LETTERS }, ${ SEG_STRIDE } capsules/letter). Use a shorter word or raise the capsule spacing.` );
+    console.warn( `rings-v3-letter-orbit: word truncated to ${ letterIndex } letters (max ${ MAX_LETTERS }, ${ SEG_STRIDE } capsules/letter). Use a shorter word or raise the capsule spacing.` );
+  }
+
+  // Recentre the WORD: per-letter offsets relative to the word's bbox centre,
+  // normalised, y flipped to world-up.
+  let wordMinX = Infinity;
+  let wordMaxX = -Infinity;
+  let wordMinY = Infinity;
+  let wordMaxY = -Infinity;
+
+  for ( let k = 0; k < letterIndex; k++ ) {
+    const r = radius[ k ] * BUILD_SIZE;
+
+    wordMinX = Math.min(
+      wordMinX,
+      centreX[ k ] - r
+    );
+    wordMaxX = Math.max(
+      wordMaxX,
+      centreX[ k ] + r
+    );
+    wordMinY = Math.min(
+      wordMinY,
+      centreY[ k ] - r
+    );
+    wordMaxY = Math.max(
+      wordMaxY,
+      centreY[ k ] + r
+    );
+  }
+
+  const wordCtrX = ( wordMinX + wordMaxX ) / 2;
+  const wordCtrY = ( wordMinY + wordMaxY ) / 2;
+  const offsets = new Float32Array( MAX_LETTERS * 2 );
+
+  let wordRadius = 0;
+
+  for ( let k = 0; k < letterIndex; k++ ) {
+    const ox = ( centreX[ k ] - wordCtrX ) / BUILD_SIZE;
+    const oy = -( centreY[ k ] - wordCtrY ) / BUILD_SIZE;
+
+    offsets[ k * 2 ] = ox;
+    offsets[ k * 2 + 1 ] = oy;
+    wordRadius = Math.max(
+      wordRadius,
+      Math.hypot(
+        ox,
+        oy
+      ) + radius[ k ]
+    );
   }
 
   return {
@@ -535,7 +472,8 @@ function buildLetterField( {
     seg,
     segCount,
     radius,
-    gapRadius
+    offsets,
+    wordRadius
   };
 }
 
@@ -576,20 +514,6 @@ function getLetterField( cfg ) {
   return field;
 }
 
-// ── Closed circuit the letters sit on (mirrors rings v1) ─────────────────────
-function pathPoint(
-  a, path
-) {
-  const radius = path.spread
-    * ( 1 + path.wobble * Math.sin( path.wobbleCycles * a + 0.9 ) );
-
-  return [
-    radius * Math.sin( a ),
-    path.waveAmplitude * Math.sin( path.waveCycles * a + 2.1 ),
-    -radius * Math.cos( a )
-  ];
-}
-
 sketch.setup(
   () => {},
   {}
@@ -600,11 +524,9 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
   const textCfg = o.text ?? {};
   const material = o.material ?? {};
-  const path = o.path ?? {};
   const camera = o.camera ?? {};
   const colors = o.colors ?? {};
   const light = o.light ?? {};
-  const aberration = o.aberration ?? {};
   const rendering = o.rendering ?? {};
 
   p.clear();
@@ -615,7 +537,7 @@ sketch.draw( () => {
   ] ) );
 
   const field = getLetterField( {
-    text: ( textCfg.value ?? "type" ).toString(),
+    text: ( textCfg.value ?? "a" ).toString(),
     fontName: textCfg.font ?? "martian",
     sampleFactor: textCfg.detail ?? 0.25,
     simplifyThreshold: textCfg.simplify ?? 0,
@@ -632,46 +554,21 @@ sketch.draw( () => {
   const t = animation.angle;
   const count = field.count;
 
-  // ── Material (tube) ────────────────────────────────────────────────────────
+  // ── Material (tube) — no gap cap: nothing is threaded, thickness is free ───
   const letterScale = Math.max(
-    material.size ?? 3.3,
+    material.size ?? 2.1,
     0.1
   );
-
-  // Cap the tube against the tightest open gap so every letter stays threadable
-  // (min gap radius across letters, in world units).
-  let minGapWorld = Infinity;
-
-  for ( let k = 0; k < count; k++ ) {
-    minGapWorld = Math.min(
-      minGapWorld,
-      field.gapRadius[ k ] * letterScale
-    );
-  }
-
-  const tubeR = Math.min(
-    material.thickness ?? 0.14,
-    Math.max(
-      minGapWorld * 0.6,
-      0.02
-    )
+  const tubeR = Math.max(
+    material.thickness ?? 0.06,
+    0.005
   );
   const smoothK = Math.max(
     material.fusion ?? 0.09,
     0.001
   );
 
-  // ── Circuit / placement ────────────────────────────────────────────────────
-  const pathConfig = {
-    spread: path.spread ?? 4.2,
-    wobble: path.wobble ?? 0.08,
-    wobbleCycles: Math.round( path.wobbleCycles ?? 3 ),
-    waveAmplitude: path.waveAmplitude ?? 0.8,
-    waveCycles: Math.round( path.waveCycles ?? 2 )
-  };
-
-  const centres = [];
-
+  // ── Placement: the whole word in one upright plane at the origin ───────────
   const uniforms = {
     uT: t,
     uLetterCount: {
@@ -692,153 +589,89 @@ sketch.draw( () => {
   };
 
   for ( let k = 0; k < count; k++ ) {
-    const a = ( p.TAU * k ) / count;
-    const centre = pathPoint(
-      a,
-      pathConfig
-    );
-    const tangent = normalize( sub(
-      pathPoint(
-        a + 0.01,
-        pathConfig
-      ),
-      pathPoint(
-        a - 0.01,
-        pathConfig
-      )
-    ) );
-
-    // In-plane basis: right horizontal-ish, up vertical-ish, plane ⟂ tangent so
-    // the letter faces along the path (read head-on, then flown through).
-    const right = normalize( cross(
-      [
-        0,
-        1,
-        0
-      ],
-      tangent
-    ) );
-    const up = cross(
-      tangent,
-      right
-    );
-
-    centres.push( centre );
-    uniforms[ `uLetCtr[${ k }]` ] = centre;
-    uniforms[ `uLetRt[${ k }]` ] = right;
-    uniforms[ `uLetUp[${ k }]` ] = up;
+    uniforms[ `uLetCtr[${ k }]` ] = [
+      field.offsets[ k * 2 ] * letterScale,
+      field.offsets[ k * 2 + 1 ] * letterScale,
+      0
+    ];
+    uniforms[ `uLetRt[${ k }]` ] = [
+      1,
+      0,
+      0
+    ];
+    uniforms[ `uLetUp[${ k }]` ] = [
+      0,
+      1,
+      0
+    ];
   }
 
-  // ── Camera: one circuit per loop, Flow (smooth) or Ease (per-letter) ────────
-  const motion = camera.motion ?? "flow";
-  const bank = camera.bank ?? 0.4;
+  // ── Orbit camera: whole turns per loop, Flow (constant) or Ease (stops) ────
+  const distance = Math.max(
+    camera.distance ?? 4,
+    0.5
+  );
+  const orbitTurns = Math.round( camera.orbit ?? 1 ); // 0 = static camera
+  const phase = camera.phase ?? 0;
+  const elevation = Math.max(
+    -1.4,
+    Math.min(
+      camera.elevation ?? 0.15,
+      1.4
+    )
+  );
+  const bobAmplitude = camera.bob ?? 0;
+  const bobCycles = Math.round( camera.bobCycles ?? 1 );
 
   const progress = ( ( t / p.TAU ) % 1 + 1 ) % 1;
-  const s = progress * count;
-  const angleOf = ( ss ) => ( p.TAU * ss ) / count;
+  const motion = camera.motion ?? "flow";
 
-  let camPos;
-  let fwd;
-  let roll = 0;
+  let azimuth = phase;
 
-  if ( motion === "flow" ) {
-    const ahead = Math.max(
-      camera.lookAhead ?? 0.9,
-      0.2
-    );
-
-    camPos = pathPoint(
-      angleOf( s ),
-      pathConfig
-    );
-    fwd = normalize( sub(
-      pathPoint(
-        angleOf( s + ahead ),
-        pathConfig
-      ),
-      camPos
-    ) );
-
-    if ( bank !== 0 ) {
-      const before = normalize( sub(
-        camPos,
-        pathPoint(
-          angleOf( s - 0.5 ),
-          pathConfig
+  if ( orbitTurns !== 0 ) {
+    if ( motion === "flow" ) {
+      azimuth = phase + progress * orbitTurns * p.TAU;
+    } else {
+      // Ease: one stop per orbit turn — the camera eases into evenly spaced
+      // viewpoints around the letter (same easing/glide knobs as v2).
+      const glide = Math.max(
+        0,
+        Math.min(
+          camera.glide ?? 0.85,
+          1
         )
-      ) );
-      const after = normalize( sub(
-        pathPoint(
-          angleOf( s + 0.5 ),
-          pathConfig
-        ),
-        camPos
-      ) );
-
-      roll = bank * Math.atan2(
-        before[ 0 ] * after[ 2 ] - before[ 2 ] * after[ 0 ],
-        before[ 0 ] * after[ 0 ] + before[ 2 ] * after[ 2 ]
       );
-    }
-  } else {
-    const glide = Math.max(
-      0,
-      Math.min(
-        camera.glide ?? 0.85,
-        1
-      )
-    );
-    const easeKey = camera.easing ?? "easeInOutCubic";
-    const easeFn = typeof easing[ easeKey ] === "function" ? easing[ easeKey ] : ( x ) => x;
+      const easeKey = camera.easing ?? "easeInOutCubic";
+      const easeFn = typeof easing[ easeKey ] === "function" ? easing[ easeKey ] : ( x ) => x;
 
-    const seg = Math.min(
-      Math.floor( s ),
-      count - 1
-    );
-    const u = s - seg;
-    const ue = u + ( easeFn( u ) - u ) * glide;
+      const stops = Math.abs( orbitTurns );
+      const s = progress * stops;
+      const segIndex = Math.min(
+        Math.floor( s ),
+        stops - 1
+      );
+      const u = s - segIndex;
+      const ue = u + ( easeFn( u ) - u ) * glide;
 
-    camPos = pathPoint(
-      angleOf( seg + ue ),
-      pathConfig
-    );
-
-    const target = lerp3(
-      centres[ ( seg + 1 ) % count ],
-      centres[ ( seg + 2 ) % count ],
-      ue
-    );
-
-    fwd = normalize( sub(
-      target,
-      camPos
-    ) );
-
-    if ( bank !== 0 ) {
-      const turnAt = ( i ) => {
-        const prev = centres[ ( i - 1 + count ) % count ];
-        const here = centres[ i % count ];
-        const next = centres[ ( i + 1 ) % count ];
-        const v1 = normalize( sub(
-          here,
-          prev
-        ) );
-        const v2 = normalize( sub(
-          next,
-          here
-        ) );
-
-        return Math.atan2(
-          v1[ 0 ] * v2[ 2 ] - v1[ 2 ] * v2[ 0 ],
-          v1[ 0 ] * v2[ 0 ] + v1[ 2 ] * v2[ 2 ]
-        );
-      };
-
-      roll = bank * ( turnAt( seg + 1 ) + ( turnAt( seg + 2 ) - turnAt( seg + 1 ) ) * ue );
+      azimuth = phase + ( ( segIndex + ue ) / stops ) * orbitTurns * p.TAU;
     }
   }
 
-  let right = normalize( cross(
+  const bobY = bobAmplitude * Math.sin( bobCycles * t );
+  const cosE = Math.cos( elevation );
+
+  const camPos = [
+    distance * cosE * Math.sin( azimuth ),
+    distance * Math.sin( elevation ) + bobY,
+    -distance * cosE * Math.cos( azimuth )
+  ];
+
+  const fwd = normalize( [
+    -camPos[ 0 ],
+    -camPos[ 1 ],
+    -camPos[ 2 ]
+  ] );
+  const right = normalize( cross(
     [
       0,
       1,
@@ -846,36 +679,17 @@ sketch.draw( () => {
     ],
     fwd
   ) );
-  let up = cross(
+  const up = cross(
     fwd,
     right
   );
-
-  if ( roll !== 0 ) {
-    const cr = Math.cos( roll );
-    const sr = Math.sin( roll );
-    const rolledRight = [
-      right[ 0 ] * cr + up[ 0 ] * sr,
-      right[ 1 ] * cr + up[ 1 ] * sr,
-      right[ 2 ] * cr + up[ 2 ] * sr
-    ];
-
-    up = [
-      up[ 0 ] * cr - right[ 0 ] * sr,
-      up[ 1 ] * cr - right[ 1 ] * sr,
-      up[ 2 ] * cr - right[ 2 ] * sr
-    ];
-    right = rolledRight;
-  }
 
   // ── Palette / lighting ───────────────────────────────────────────────────────
   const hueSpread = colors.hueSpread ?? 2;
   const hueCycles = Math.round( ( colors.hueSpeed ?? 1 ) * timeScale * p.TAU * hueSpread );
 
-  const fov = camera.fov ?? 90;
-  const maxRadius = pathConfig.spread * ( 1 + Math.abs( pathConfig.wobble ) );
-  const maxDist = 2 * maxRadius + 2 * Math.abs( pathConfig.waveAmplitude )
-    + letterScale + 2;
+  const fov = camera.fov ?? 60;
+  const maxDist = distance + field.wordRadius * letterScale + Math.abs( bobAmplitude ) + 2;
 
   const lightDir = lightDirFrom(
     light.azimuth ?? -1.1,
@@ -906,11 +720,7 @@ sketch.draw( () => {
       uFresnelPower: light.fresnelPower ?? 2.6,
       uRimStrength: light.rimStrength ?? 0.8,
       uShadowSoft: light.shadowSoftness ?? 0,
-      uMaxDist: maxDist,
-      uAberration: aberration.amount ?? 0,
-      uAberrationMode: {
-        int: ( aberration.mode ?? "radial" ) === "horizontal" ? 1 : 0
-      }
+      uMaxDist: maxDist
     }
   );
 

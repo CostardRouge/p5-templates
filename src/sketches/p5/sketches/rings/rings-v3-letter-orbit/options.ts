@@ -5,31 +5,28 @@ import {
 export const formValues = {
   timeScale: 1,
   text: {
-    value: "2027isnextyearalready",
-    font: "agiro",
+    value: "x",
+    font: "multicoloure",
     detail: 1,
     spacing: 0.12,
     simplify: 0
   },
   material: {
-    size: 2.1,
+    size: 2.45,
     thickness: 0.02,
-    fusion: 0.25
-  },
-  path: {
-    spread: 2,
-    waveAmplitude: 1.09,
-    waveCycles: 2,
-    wobble: 0.18,
-    wobbleCycles: 1
+    fusion: 0.215
   },
   camera: {
-    fov: 109,
-    motion: "ease" as "flow" | "ease",
-    lookAhead: 2.75,
+    fov: 59,
+    distance: 4.4,
+    orbit: 1,
+    phase: 0,
+    elevation: 0.05,
+    bob: 0,
+    bobCycles: 1,
+    motion: "flow" as "flow" | "ease",
     easing: "easeInOutCubic",
-    glide: 0.48,
-    bank: -0.64
+    glide: 0.48
   },
   colors: {
     hueSpeed: 1,
@@ -44,17 +41,13 @@ export const formValues = {
   light: {
     azimuth: -1.1,
     elevation: 0.45,
-    ambient: 0.3,
-    diffuse: 0.75,
-    specular: 1.04,
+    ambient: 0.48,
+    diffuse: 0.56,
+    specular: 1.52,
     specPower: 31,
     fresnelPower: 1.62,
     rimStrength: 0,
     shadowSoftness: 0
-  },
-  aberration: {
-    amount: 0,
-    mode: "radial" as "radial" | "horizontal"
   },
   rendering: {
     resolutionScale: 0.7
@@ -79,7 +72,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Text",
     fields: {
       value: {
-        label: "Word (max 8 letters)",
+        label: "Letter / word (max 8 letters)",
         component: "text"
       },
       font: {
@@ -125,11 +118,11 @@ export const formConfiguration: Record<string, any> = {
         step: 0.05
       },
       thickness: {
-        label: "Tube thickness (auto-capped to keep the gap open)",
+        label: "Tube thickness",
         component: "slider",
-        min: 0.02,
+        min: 0.005,
         max: 0.35,
-        step: 0.01
+        step: 0.005
       },
       fusion: {
         label: "Junction fusion (smooth-union fillet)",
@@ -140,50 +133,9 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  path: {
-    component: "nested-object",
-    label: "Circuit (spacing)",
-    fields: {
-      spread: {
-        label: "Spacing (tight ↔ far apart)",
-        component: "slider",
-        min: 2,
-        max: 14,
-        step: 0.05
-      },
-      waveAmplitude: {
-        label: "Vertical wave amplitude",
-        component: "slider",
-        min: 0,
-        max: 3,
-        step: 0.01
-      },
-      waveCycles: {
-        label: "Vertical wave cycles",
-        component: "slider",
-        min: 0,
-        max: 6,
-        step: 1
-      },
-      wobble: {
-        label: "Radial wobble",
-        component: "slider",
-        min: 0,
-        max: 0.4,
-        step: 0.01
-      },
-      wobbleCycles: {
-        label: "Radial wobble cycles",
-        component: "slider",
-        min: 0,
-        max: 6,
-        step: 1
-      }
-    }
-  },
   camera: {
     component: "nested-object",
-    label: "Camera",
+    label: "Camera (orbit)",
     fields: {
       fov: {
         label: "Field of view °",
@@ -192,43 +144,71 @@ export const formConfiguration: Record<string, any> = {
         max: 110,
         step: 1
       },
+      distance: {
+        label: "Distance from the letter",
+        component: "slider",
+        min: 0.5,
+        max: 12,
+        step: 0.05
+      },
+      orbit: {
+        label: "Orbit turns per loop (0 = static camera)",
+        component: "slider",
+        min: -4,
+        max: 4,
+        step: 1
+      },
+      phase: {
+        label: "Start angle (static viewpoint when orbit = 0)",
+        component: "slider",
+        min: 0,
+        max: 6.2832,
+        step: 0.01
+      },
+      elevation: {
+        label: "Elevation (look down ↔ up at the letter)",
+        component: "slider",
+        min: -1.4,
+        max: 1.4,
+        step: 0.01
+      },
+      bob: {
+        label: "Vertical bob amplitude",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.01
+      },
+      bobCycles: {
+        label: "Vertical bob cycles per loop",
+        component: "slider",
+        min: 0,
+        max: 6,
+        step: 1
+      },
       motion: {
-        label: "Motion",
+        label: "Orbit motion",
         component: "select",
         options: [
           {
-            label: "Flow (smooth, never stops)",
+            label: "Flow (constant glide)",
             value: "flow"
           },
           {
-            label: "Ease into each letter",
+            label: "Ease into each viewpoint (one stop per turn)",
             value: "ease"
           }
         ]
       },
-      lookAhead: {
-        label: "Look ahead (Flow: how far the gaze anticipates)",
-        component: "slider",
-        min: 0.2,
-        max: 4,
-        step: 0.05
-      },
       easing: {
-        label: "Approach easing (Ease mode, per letter)",
+        label: "Approach easing (Ease mode)",
         component: "easing"
       },
       glide: {
-        label: "Glide (Ease mode: 0 = constant speed, 1 = dwell at each letter)",
+        label: "Glide (Ease mode: 0 = constant speed, 1 = dwell at each stop)",
         component: "slider",
         min: 0,
         max: 1,
-        step: 0.01
-      },
-      bank: {
-        label: "Bank into turns (FPV roll)",
-        component: "slider",
-        min: -2,
-        max: 2,
         step: 0.01
       }
     }
@@ -361,33 +341,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 64,
         step: 1
-      }
-    }
-  },
-  aberration: {
-    component: "nested-object",
-    label: "Chromatic aberration",
-    fields: {
-      amount: {
-        label: "Amount px (0 = off)",
-        component: "slider",
-        min: 0,
-        max: 40,
-        step: 0.5
-      },
-      mode: {
-        label: "Direction",
-        component: "select",
-        options: [
-          {
-            label: "Radial",
-            value: "radial"
-          },
-          {
-            label: "Horizontal",
-            value: "horizontal"
-          }
-        ]
       }
     }
   },
