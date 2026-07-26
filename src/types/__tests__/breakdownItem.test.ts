@@ -142,7 +142,7 @@ describe(
         };
         const buildFields = Object.keys( buildConfig.fields );
 
-        for ( const field of Object.keys( BreakdownBuildSchema.removeDefault().shape ) ) {
+        for ( const field of Object.keys( BreakdownBuildSchema.unwrap().shape ) ) {
           expect( buildFields ).toContain( field );
         }
       }

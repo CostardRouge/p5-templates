@@ -156,7 +156,6 @@ export default function MarqueeRows( {
         row, r
       ) => (
         <div
-          // eslint-disable-next-line react/no-array-index-key
           key={ r }
           className="mr-row"
           style={ {
@@ -182,7 +181,6 @@ export default function MarqueeRows( {
               url, i
             ) => (
               <div
-                // eslint-disable-next-line react/no-array-index-key
                 key={ i }
                 className="mr-item"
                 style={ {

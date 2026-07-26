@@ -169,7 +169,6 @@ export default function OrbitRing( {
             slot, index
           ) => (
             <div
-              // eslint-disable-next-line react/no-array-index-key
               key={ index }
               className="or-slot"
               style={ {

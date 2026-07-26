@@ -267,6 +267,11 @@ function buildLevel(
  * `formMeta` is `{ formValues, formConfiguration }` from the sketch's
  * options.ts (via the window.getSketchFormMeta bridge) — optional; without
  * it the numeric heuristics take over (bare capture harness).
+ *
+ * @param {any} finalSketch - The resolved sketch options to walk back from.
+ * @param {{ departure?: number, snapKeys?: string[], excludeKeys?: string[] }} [build]
+ * @param {{ formValues?: any, formConfiguration?: any }} [formMeta]
+ * @returns {Record<string, any>} Start values mirroring `finalSketch`'s shape.
  */
 export default function buildStartValues(
   finalSketch, build = {}, formMeta = {}

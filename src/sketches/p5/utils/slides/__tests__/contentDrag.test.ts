@@ -53,7 +53,9 @@ jest.mock(
 
 // A mutable in-memory option store.
 let store: Record<string, unknown> = {};
-const setSketchOptions = jest.fn( ( update: Record<string, unknown> ) => {
+const setSketchOptions = jest.fn( (
+  update: Record<string, unknown>, _origin: string = "react"
+) => {
   store = {
     ...store,
     ...update
@@ -65,7 +67,7 @@ jest.mock(
   () => ( {
     __esModule: true,
     getSketchOptions: () => store,
-    setSketchOptions: ( ...args: unknown[] ) => setSketchOptions( ...args as [Record<string, unknown>] )
+    setSketchOptions: ( ...args: unknown[] ) => setSketchOptions( ...args as [Record<string, unknown>, string] )
   } )
 );
 

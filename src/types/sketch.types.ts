@@ -16,7 +16,8 @@ const RGB = z.tuple( [
 const RGBA = z.union( [
   RGB,
   z.tuple( [
-    ...RGB.items,
+    // zod 4 moved a tuple's member schemas from `.items` to `.def.items`.
+    ...RGB.def.items,
     z.number().optional()
       .default( 255 )
   ] )
@@ -361,7 +362,7 @@ export const SpecsSoundSchema = z
       .default( 12 ),
     repeat: SpecsSoundRepeatSchema
   } )
-  .default( {} );
+  .prefault( {} );
 
 export const SpecsItemSchema = z.object( {
   type: z.literal( "specs" ),
@@ -529,7 +530,7 @@ export const BreakdownBuildSchema = z
     // Params that never animate (always final) and get no breakdown step.
     excludeKeys: z.array( z.string() ).default( [] )
   } )
-  .default( {} );
+  .prefault( {} );
 
 // Diff-style narration overlay: only the parameters that change become
 // steps, shown ONE AT A TIME in the specs visual language (same text/stroke
@@ -702,13 +703,18 @@ export const ImageItemAnimations = z.discriminatedUnion(
     z.object( {
       name: z.literal( "noise-floating" ),
       amplitude: z.number().default( 50 ),
+      // p5's noiseDetail( lod, falloff ) — a fixed pair, each with its own
+      // range (mirrored by the two sliders in field-config). This was written
+      // as `z.array( lod, falloff )`, where zod 3 silently swallowed the second
+      // schema as its params argument, so `falloff` went unvalidated and the
+      // tuple accepted any length. zod 4 rejects the extra argument outright.
       noiseDetail: z
-        .array(
+        .tuple( [
           z.number().min( 0 )
             .max( 8 ),
           z.number().min( 0 )
             .max( 1 )
-        )
+        ] )
         .default( [
           2,
           0.7
@@ -954,7 +960,7 @@ export const HudBadgeSchema = z
     font: z.string().optional(),
     blend: Blend.optional()
   } )
-  .default( {} );
+  .prefault( {} );
 
 export const HudGaugeSchema = z
   .object( {
@@ -980,7 +986,7 @@ export const HudGaugeSchema = z
     blend: Blend.optional(),
     ...hudWindow
   } )
-  .default( {} );
+  .prefault( {} );
 
 export const HudSparklineSchema = z
   .object( {
@@ -1008,7 +1014,7 @@ export const HudSparklineSchema = z
     blend: Blend.optional(),
     ...hudWindow
   } )
-  .default( {} );
+  .prefault( {} );
 
 export const HudCounterSchema = z
   .object( {
@@ -1031,7 +1037,7 @@ export const HudCounterSchema = z
     blend: Blend.optional(),
     ...hudWindow
   } )
-  .default( {} );
+  .prefault( {} );
 
 export const HudCrosshairsSchema = z
   .object( {
@@ -1043,7 +1049,7 @@ export const HudCrosshairsSchema = z
     blend: Blend.optional(),
     ...hudWindow
   } )
-  .default( {} );
+  .prefault( {} );
 
 export const HudSwatchSchema = z
   .object( {
@@ -1070,7 +1076,7 @@ export const HudSwatchSchema = z
     blend: Blend.default( "source-over" ),
     ...hudWindow
   } )
-  .default( {} );
+  .prefault( {} );
 
 export const HudBoundingBoxSchema = z
   .object( {
@@ -1104,7 +1110,7 @@ export const HudBoundingBoxSchema = z
     blend: Blend.optional(),
     ...hudWindow
   } )
-  .default( {} );
+  .prefault( {} );
 
 export const HudItemSchema = z.object( {
   type: z.literal( "hud" ),
@@ -1170,7 +1176,7 @@ export const Assets = z
     images: z.array( z.string() ).default( [] ),
     videos: z.array( z.string() ).default( [] )
   } )
-  .default( {} );
+  .prefault( {} );
 
 /* ----------- shared size / animation schemas -------------------- */
 export const SketchSizeSchema = z.object( {
@@ -1406,7 +1412,7 @@ export const SlideTransitionSoundSchema = z
       .default( 1.05 ),
     repeat: SlideTransitionSoundRepeatSchema
   } )
-  .default( {} );
+  .prefault( {} );
 
 // A "montage" slide morphs the sketch parameters of several OTHER slides into
 // one another over its own duration, in a loop. Only the sources' `sketch`
@@ -1468,11 +1474,11 @@ export const SlideTransitionSchema = z.object( {
 
   // Overlay naming the variant currently on screen. Always present after parse
   // (its own `enabled` gates rendering) so existing montage decks heal in.
-  title: SlideTitleSchema.default( {} ),
+  title: SlideTitleSchema.prefault( {} ),
 
   // Sound played at each variant change. Always present after parse (its own
   // `enabled` gates playback) so existing montage decks heal in silently.
-  sound: SlideTransitionSoundSchema.default( {} )
+  sound: SlideTransitionSoundSchema.prefault( {} )
 } );
 
 /* ---------------- slide schema (with name) ---------------------- */
@@ -1508,7 +1514,11 @@ export const OptionsSchema = z.object( {
   content: z.array( ContentItemSchema ).default( [] ),
   assets: Assets,
   slides: z.array( SlideSchema ).default( [] ),
-  sketch: z.any()
+  // zod 3 treated a bare `z.any()` key as implicitly optional; zod 4 requires
+  // the key to be present unless it says so. Spelled out to match SlideSchema
+  // above and keep `OptionsSchema.parse( {} )` working — per-sketch params are
+  // supplied by each sketch's own options.ts, not by this root schema.
+  sketch: z.any().optional()
 } );
 
 export type ContentItem = z.infer<typeof ContentItemSchema>;

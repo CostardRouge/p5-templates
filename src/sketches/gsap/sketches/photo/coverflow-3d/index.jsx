@@ -175,7 +175,6 @@ export default function Coverflow3d( {
             url, index
           ) => (
             <div
-              // eslint-disable-next-line react/no-array-index-key
               key={ index }
               className="cf-card"
               style={ {

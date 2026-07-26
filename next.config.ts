@@ -38,9 +38,8 @@ const nextConfig: NextConfig = {
     "172.20.10.3"
   ],
   crossOrigin: "anonymous",
-  eslint: {
-    ignoreDuringBuilds: true
-  },
+  // Next 16 removed `next lint` and with it the `eslint` config key — linting
+  // was already never part of `next build` here (it ran as its own CI job).
   env: {
     NEXT_PUBLIC_BACKEND_RECORDING: process.env.BACKEND_RECORDING,
     NEXT_PUBLIC_NOTIFICATIONS: process.env.NOTIFICATIONS,

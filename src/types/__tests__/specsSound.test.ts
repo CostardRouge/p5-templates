@@ -102,7 +102,7 @@ describe(
           throw new Error( "specs.sound should be a nested-object group" );
         }
 
-        const schemaKeys = Object.keys( SpecsSoundSchema.removeDefault().shape );
+        const schemaKeys = Object.keys( SpecsSoundSchema.unwrap().shape );
         const configKeys = Object.keys( soundConfig.fields );
 
         expect( configKeys.sort() ).toEqual( schemaKeys.sort() );

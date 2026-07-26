@@ -9,7 +9,9 @@ import {
   getDownloadUrlFromS3Url
 } from "@/lib/connections/s3";
 import downloadFromUrlResponse from "@/utils/downloadFromUrlResponse";
-import archiver from "archiver";
+import {
+  ZipArchive
+} from "archiver";
 import {
   Readable
 } from "stream";
@@ -65,15 +67,13 @@ export async function GET(
       );
     }
 
-    // Create a zip archive
-    const archive = archiver(
-      "zip",
-      {
-        zlib: {
-          level: 0
-        }
+    // Create a zip archive. archiver 8 dropped the callable factory in favour
+    // of per-format classes.
+    const archive = new ZipArchive( {
+      zlib: {
+        level: 0
       }
-    ); // No compression for speed
+    } ); // No compression for speed
 
     // Set up response headers
     const headers = new Headers();

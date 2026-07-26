@@ -1,8 +1,9 @@
 "use client";
 
 import {
-  Camera, Circle, Github, Loader2, Pause, Play
+  Camera, Circle, Loader2, Pause, Play
 } from "lucide-react";
+import Github from "@/components/ui/GithubIcon";
 import Link from "next/link";
 import {
   useRef, useState
