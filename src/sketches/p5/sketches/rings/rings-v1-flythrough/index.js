@@ -22,7 +22,7 @@ import easing from "@/p5/utils/easing.js";
 // glides, and settles into the next one — while its gaze eases onto the middle
 // of the target ring, so every approach is aimed at the ring's centre and
 // angle before threading it. Reuses the shared pipes vocabulary (iridescent
-// palette + fresnel/rim shading + fog + aberration) from braidShader.
+// palette + fresnel/rim shading + aberration) from braidShader.
 //
 // ── Geometry ─────────────────────────────────────────────────────────────────
 // Ring k sits at parameter aₖ = TAU·k/N of a closed path: a circle of radius
@@ -479,7 +479,7 @@ sketch.draw( () => {
     right = rolledRight;
   }
 
-  // ── Palette / lighting / fog ─────────────────────────────────────────────
+  // ── Palette / lighting ───────────────────────────────────────────────────
   const hueSpread = colors.hueSpread ?? 2;
   const hueCycles = Math.round( ( colors.hueSpeed ?? 1 ) * timeScale * p.TAU * hueSpread );
 
@@ -520,8 +520,6 @@ sketch.draw( () => {
     uFresnelPower: light.fresnelPower ?? 2.6,
     uRimStrength: light.rimStrength ?? 0.8,
     uShadowSoft: light.shadowSoftness ?? 0,
-    uFogDensity: camera.fogDensity ?? 0.09,
-    uFogStart: camera.fogStart ?? 1.5,
     uMaxDist: maxDist,
     uAberration: aberration.amount ?? 0,
     uAberrationMode: {

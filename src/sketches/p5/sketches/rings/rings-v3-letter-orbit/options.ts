@@ -26,9 +26,7 @@ export const formValues = {
     bobCycles: 1,
     motion: "flow" as "flow" | "ease",
     easing: "easeInOutCubic",
-    glide: 0.48,
-    fogDensity: 0.04,
-    fogStart: 2
+    glide: 0.48
   },
   colors: {
     hueSpeed: 1,
@@ -212,20 +210,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 1,
         step: 0.01
-      },
-      fogDensity: {
-        label: "Fog density",
-        component: "slider",
-        min: 0,
-        max: 0.5,
-        step: 0.005
-      },
-      fogStart: {
-        label: "Fog start distance",
-        component: "slider",
-        min: 0,
-        max: 8,
-        step: 0.05
       }
     }
   },

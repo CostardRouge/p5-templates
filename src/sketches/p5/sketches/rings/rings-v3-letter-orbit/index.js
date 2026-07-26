@@ -684,7 +684,7 @@ sketch.draw( () => {
     right
   );
 
-  // ── Palette / lighting / fog ────────────────────────────────────────────────
+  // ── Palette / lighting ───────────────────────────────────────────────────────
   const hueSpread = colors.hueSpread ?? 2;
   const hueCycles = Math.round( ( colors.hueSpeed ?? 1 ) * timeScale * p.TAU * hueSpread );
 
@@ -720,8 +720,6 @@ sketch.draw( () => {
       uFresnelPower: light.fresnelPower ?? 2.6,
       uRimStrength: light.rimStrength ?? 0.8,
       uShadowSoft: light.shadowSoftness ?? 0,
-      uFogDensity: camera.fogDensity ?? 0.04,
-      uFogStart: camera.fogStart ?? 2,
       uMaxDist: maxDist
     }
   );
