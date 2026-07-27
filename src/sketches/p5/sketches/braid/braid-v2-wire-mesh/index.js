@@ -49,7 +49,12 @@ import {
 // The fabric scrolls a WHOLE, EVEN number of rows per loop (the weave pattern
 // repeats every 2 rows), and each row's shuttle sweep is a pure function of
 // that row's distance above the front — so the frame at uT = TAU is identical
-// to uT = 0.
+// to uT = 0. Hue bands obey the same rule (see v3-chainmail): a weft row's
+// palette index may only repeat on a period that DIVIDES the rows scrolled per
+// loop, so weft bands run mod 4 when the scroll is a multiple of 4 rows and
+// fall back to row parity (mod 2) otherwise — a fixed mod 4 would shift the
+// colours by 2 bands at the seam whenever scrollRows ≡ 2 (mod 4). Warp
+// columns never scroll, so they keep their 4 bands unconditionally.
 //
 // Orientation reuses the family's vector2d → screen-roll (uRoll), so the mesh
 // can be woven in any on-screen direction, front and shuttle included.
@@ -68,6 +73,7 @@ const FRAGMENT = `
   uniform float uFrontY;      // weaving-front height (world y)
   uniform float uFrontW;      // warp crimp ramp half-width
   uniform float uHalfW;       // shuttle sweep span (covers the visible width)
+  uniform float uWeftHueMod;  // weft hue-band period (divides scrollRows: 4 or 2)
   uniform float uCentreLipschitz; // CPU safety divisor for the march
 
   ${ IRIDESCENT_GLSL }
@@ -123,14 +129,16 @@ const FRAGMENT = `
   }
 
   // Wire identity for the palette: warp and weft each cycle a few hue bands,
-  // offset from each other so the two families read distinctly.
+  // offset from each other so the two families read distinctly. The weft's
+  // band period must divide the rows scrolled per loop (CPU-picked: 4 or 2),
+  // or the colours jump at the loop seam.
   float nearestPipe(vec3 p) {
     float scrollY = uT * uScrollVel;
 
     if (weftDistance(p, scrollY) < warpDistance(p, scrollY)) {
       float i = floor((p.y + scrollY) / uSpacing + 0.5);
 
-      return mod(i, 4.0);
+      return mod(i, uWeftHueMod);
     }
 
     float j = floor(p.x / uSpacing + 0.5);
@@ -176,6 +184,11 @@ sketch.draw( () => {
   // The plain-weave pattern repeats every 2 rows, so the scroll must advance a
   // whole EVEN number of rows per loop for the seam to be invisible.
   const scrollRows = 2 * Math.round( ( ( mesh.scrollRows ?? 2 ) * timeScale ) / 2 );
+
+  // The weft's hue-band period must divide the rows scrolled per loop, or the
+  // bands land shifted when the loop restarts: full 4-band cycle when the
+  // scroll allows it, row parity otherwise.
+  const weftHueMod = Math.abs( scrollRows ) % 4 === 0 ? 4 : 2;
 
   // Hue scroll — whole palette periods per loop (same rule as the siblings).
   const hueSpread = colors.hueSpread ?? 2;
@@ -250,6 +263,7 @@ sketch.draw( () => {
       uFrontY: frontY,
       uFrontW: frontW,
       uHalfW: halfW,
+      uWeftHueMod: weftHueMod,
       uCentreLipschitz: centreLipschitz,
       uCamDist: camDist,
       uFocal: focal,
@@ -272,7 +286,7 @@ sketch.draw( () => {
       uFresnelPower: light.fresnelPower ?? 3,
       uRimStrength: light.rimStrength ?? 0.7,
       uShadowSoft: light.shadowSoftness ?? 20,
-      uFogDensity: camera.fogDensity ?? 0.15,
+      uFogDensity: 0, // the shared shading chunk needs it — this sketch keeps fog off
       uFogStart: camDist,
       uMaxDist: camDist + 10,
       uAberration: aberration.amount ?? 2,

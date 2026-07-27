@@ -19,8 +19,7 @@ export const formValues = {
     distance: 8.2,
     fov: 20,
     pitch: -0.55,
-    yaw: -0.74,
-    fogDensity: 0.035
+    yaw: -0.74
   },
   colors: {
     hueSpeed: 0,
@@ -157,13 +156,6 @@ export const formConfiguration: Record<string, any> = {
         min: -3.1416,
         max: 3.1416,
         step: 0.01
-      },
-      fogDensity: {
-        label: "Fog density",
-        component: "slider",
-        min: 0,
-        max: 0.6,
-        step: 0.005
       }
     }
   },
