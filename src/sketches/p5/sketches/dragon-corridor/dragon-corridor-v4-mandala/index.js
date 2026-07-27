@@ -45,7 +45,7 @@ import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 // ── Looping ──────────────────────────────────────────────────────────────────
 // The head advances by exactly K waypoints per loop over a cyclic path, and
 // every pattern on the body (pulse, swim, hue) is anchored to the head, so
-// loop closure is automatic. Time-driven rates (stripe spin, pulse travel,
+// loop closure is automatic. Time-driven rates (braid spin, pulse travel,
 // swim travel, hue scroll, mandala spin, camera drift) are snapped to whole
 // cycles per loop, so the last frame reproduces the first.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ const FRAGMENT = `
   uniform float uSwimPhase;   // second-axis sway phase offset
 
   // ── Body radii ──
-  uniform float uBodyRadius;
+  uniform float uPipeRadius;
   uniform float uTailLen;     // waypoints over which the tail tapers away
   uniform float uHeadBulge;   // head swell amount
   uniform float uHeadLen;     // head swell falloff (waypoints behind the head)
@@ -86,12 +86,13 @@ const FRAGMENT = `
   uniform float uBoundPad;    // CPU-computed inflation for the per-arc bound
   uniform float uLip;         // CPU-computed safety divisor for the march
 
-  // ── Braid stripes (shading-only pipes) ──
-  uniform float uStripes;     // stripe count around the body (0 = plain skin)
-  uniform float uStripeDepth; // groove darkening between stripes
-  uniform float uTwist;       // stripe winding (rad per waypoint along the body)
-  uniform float uSpin;        // stripe rotation over time (whole turns per loop)
-  uniform float uStripeHueShift;
+  // ── Pipe braid (the v1/v2 bundle, wound around the free centreline) ──
+  uniform float uPipeCount;   // pipes in the bundle (1 = plain snake)
+  uniform float uBraidRadius; // bundle orbit radius (0 = pipes merged)
+  uniform float uBraidMerge;  // body length over which the braid unwinds into the head
+  uniform float uTwist;       // braid winding (rad per waypoint along the body)
+  uniform float uSpin;        // braid rotation over time (whole turns per loop)
+  uniform float uPipeHueShift;
 
   // ── Kaleidoscope fold ──
   uniform float uSectorAngle; // TAU / sectors
@@ -189,12 +190,12 @@ const FRAGMENT = `
     return vec3(xy, z);
   }
 
-  // Body radius at a distance behind the head — tail taper, head swell,
+  // Pipe radius at a distance behind the head — tail taper, head swell,
   // travelling pulse. Body-anchored, so the loop closes by construction.
-  float bodyRadiusAt(float behind) {
+  float pipeRadiusAt(float behind) {
     float taper = smoothstep(uBodyLen, uBodyLen - uTailLen, behind);
     float hb = behind / max(uHeadLen, 0.05);
-    float r = uBodyRadius * mix(0.08, 1.0, taper);
+    float r = uPipeRadius * mix(0.08, 1.0, taper);
 
     r *= 1.0 + uHeadBulge * exp(-hb * hb);
     r *= 1.0 + uRadiusPulse * sin(behind * uPulseFreq - uPulseT);
@@ -202,13 +203,51 @@ const FRAGMENT = `
     return r;
   }
 
-  // Tapered capsule (radius lerped along the axis); uLip covers the shortfall.
-  float coneCap(vec3 p, vec3 a, vec3 b, float r1, float r2) {
+  // Braid orbit radius: the bundle unwinds into a single rounded head over
+  // uBraidMerge (exactly v2's head merge) and collapses again at the tail tip.
+  float braidRadiusAt(float behind) {
+    float merge = smoothstep(0.0, max(uBraidMerge, 0.02), behind);
+    float taper = smoothstep(uBodyLen, uBodyLen - uTailLen, behind);
+
+    return uBraidRadius * merge * taper;
+  }
+
+  // One braided capsule segment. Instead of one tube per pipe, the angle
+  // around the local axis is FOLDED by the pipe count (v1/v2's untwist trick,
+  // per capsule): a single circle distance then covers every pipe of the
+  // bundle, so the cost is independent of how many pipes there are. Slightly
+  // non-metric (taper, twist) — uLip covers the shortfall.
+  float braidCap(vec3 p, vec3 a, vec3 b, float bA, float bB) {
     vec3 pa = p - a;
     vec3 ba = b - a;
-    float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-8), 0.0, 1.0);
+    float bb = max(dot(ba, ba), 1e-8);
+    float h = clamp(dot(pa, ba) / bb, 0.0, 1.0);
+    vec3 q = pa - ba * h;
+    float behind = mix(bA, bB, h);
+    float pr = pipeRadiusAt(behind);
+    float br = braidRadiusAt(behind);
 
-    return length(pa - ba * h) - mix(r1, r2, h);
+    if (uPipeCount < 1.5 || br < 0.004) {
+      return length(q) - (pr + br);
+    }
+
+    vec3 T = ba * inversesqrt(bb);
+    vec3 refUp = normalize(mix(
+      vec3(0.0, 1.0, 0.0),
+      vec3(1.0, 0.0, 0.0),
+      smoothstep(0.8, 0.98, abs(T.y))
+    ));
+    vec3 fN = normalize(cross(refUp, T));
+    vec3 fB = cross(T, fN);
+    vec3 perp = q - T * dot(q, T);
+    float rho = length(perp);
+    float phi = atan(dot(perp, fB), dot(perp, fN) + 1e-6);
+    float psi = phi + uTwist * behind + uSpin;
+    float sector = TAU / uPipeCount;
+    float pm = mod(psi + 0.5 * sector, sector) - 0.5 * sector;
+    float d2 = dot(q, q) + br * br - 2.0 * rho * br * cos(pm);
+
+    return sqrt(max(d2, 0.0)) - pr;
   }
 
   // ── Dragon SDF (one copy, evaluated in cell space) ────────────────────────
@@ -246,16 +285,16 @@ const FRAGMENT = `
       if (bound > best) { continue; }
 
       vec3 prev = arcPoint(k, u0, P, M, Z);
-      float rPrev = bodyRadiusAt(uHead - (k + u0));
+      float bPrev = uHead - (k + u0);
 
       for (int m = 1; m <= ${ ARC_SAMPLES }; m++) {
         float un = mix(u0, u1, float(m) / ${ ARC_SAMPLES.toFixed( 1 ) });
         vec3 cur = arcPoint(k, un, P, M, Z);
-        float rCur = bodyRadiusAt(uHead - (k + un));
+        float bCur = uHead - (k + un);
 
-        best = min(best, coneCap(p, prev, cur, rPrev, rCur));
+        best = min(best, braidCap(p, prev, cur, bPrev, bCur));
         prev = cur;
-        rPrev = rCur;
+        bPrev = bCur;
       }
     }
 
@@ -305,7 +344,7 @@ const FRAGMENT = `
   }
 
   // Winning folded point at the hit, for the shading walk (body coordinate,
-  // stripe frame). Same gating as mapScene.
+  // pipe id). Same gating as mapScene.
   vec3 foldWinner(vec3 p) {
     float c = cos(uMandalaSpin);
     float s = sin(uMandalaSpin);
@@ -338,13 +377,15 @@ const FRAGMENT = `
     return q;
   }
 
-  // Body coordinate of the closest point on the capsule chain (cell space).
-  float dragonS(vec3 p) {
+  // Body coordinate of the closest point on the chain (cell space) and which
+  // pipe of the bundle owns the hit (for its hue band).
+  vec2 dragonInfo(vec3 p) {
     float sTail = uHead - uBodyLen;
     float kStart = floor(sTail);
     float kLast = floor(uHead) + 0.5;
     float best = 1e9;
     float sBest = uHead;
+    float pipeBest = 0.0;
 
     for (int i = 0; i < ${ MAX_SEQ }; i++) {
       if (float(i) >= uSeqLen) { break; }
@@ -372,50 +413,48 @@ const FRAGMENT = `
 
       float uPrev = u0;
       vec3 prev = arcPoint(k, u0, P, M, Z);
-      float rPrev = bodyRadiusAt(uHead - (k + u0));
+      float bPrev = uHead - (k + u0);
 
       for (int m = 1; m <= ${ ARC_SAMPLES }; m++) {
         float un = mix(u0, u1, float(m) / ${ ARC_SAMPLES.toFixed( 1 ) });
         vec3 cur = arcPoint(k, un, P, M, Z);
-        float rCur = bodyRadiusAt(uHead - (k + un));
-
-        vec3 pa = p - prev;
-        vec3 ba = cur - prev;
-        float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-8), 0.0, 1.0);
-        float d = length(pa - ba * h) - mix(rPrev, rCur, h);
+        float bCur = uHead - (k + un);
+        float d = braidCap(p, prev, cur, bPrev, bCur);
 
         if (d < best) {
           best = d;
+
+          // Recover the owning pipe from the winning capsule's fold.
+          vec3 pa = p - prev;
+          vec3 ba = cur - prev;
+          float bb = max(dot(ba, ba), 1e-8);
+          float h = clamp(dot(pa, ba) / bb, 0.0, 1.0);
+          vec3 qq = pa - ba * h;
+          vec3 T = ba * inversesqrt(bb);
+          vec3 refUp = normalize(mix(
+            vec3(0.0, 1.0, 0.0),
+            vec3(1.0, 0.0, 0.0),
+            smoothstep(0.8, 0.98, abs(T.y))
+          ));
+          vec3 fN = normalize(cross(refUp, T));
+          vec3 fB = cross(T, fN);
+          vec3 perp = qq - T * dot(qq, T);
+          float phi = atan(dot(perp, fB), dot(perp, fN) + 1e-6);
+          float behind = mix(bPrev, bCur, h);
+          float psi = phi + uTwist * behind + uSpin;
+          float sector = TAU / max(uPipeCount, 1.0);
+
           sBest = k + mix(uPrev, un, h);
+          pipeBest = mod(floor(psi / sector + 0.5), max(uPipeCount, 1.0));
         }
 
         uPrev = un;
         prev = cur;
-        rPrev = rCur;
+        bPrev = bCur;
       }
     }
 
-    return sBest;
-  }
-
-  // Exact centreline point at an arbitrary body coordinate — used only at the
-  // hit for smooth stripe shading.
-  vec3 pathPointAt(float s) {
-    float k = floor(s);
-    float ki = mod(k, uSeqLen);
-    vec4 P = vec4(0.0);
-    vec4 M = vec4(0.0);
-    vec4 Z = vec4(0.0);
-
-    for (int i = 0; i < ${ MAX_SEQ }; i++) {
-      if (abs(float(i) - ki) < 0.5) {
-        P = uArcP[i];
-        M = uArcM[i];
-        Z = uArcZ[i];
-      }
-    }
-
-    return arcPoint(k, s - k, P, M, Z);
+    return vec2(sBest, pipeBest);
   }
 
   // 4-tap tetrahedron normal on the folded scene.
@@ -446,37 +485,16 @@ const FRAGMENT = `
     return clamp(1.0 - 2.5 * occ, 0.0, 1.0);
   }
 
-  // Iridescent wet-scale shading; the braid is painted on as stripes around a
-  // smooth tangent frame, evaluated in the winning folded cell so every copy
-  // shows the same living pattern. Lighting stays in world space, so each
-  // copy of the rosette catches the light from its own angle.
+  // Iridescent wet-tube shading, v2 style: each pipe of the braid carries its
+  // own hue band (fading into the merged head), evaluated in the winning
+  // folded cell so every copy shows the same living bundle. Lighting stays in
+  // world space, so each copy of the rosette catches the light from its own
+  // angle.
   vec3 shadeDragon(vec3 pos, vec3 n, vec3 rd) {
     vec3 q = foldWinner(pos);
-    float sB = dragonS(q);
-    vec3 core = pathPointAt(sB);
-    vec3 axis = normalize(
-      pathPointAt(sB + 0.03) - pathPointAt(sB - 0.03) + vec3(1e-6)
-    );
-
-    float behind = max(uHead - sB, 0.0);
-
-    vec3 refUp = normalize(mix(
-      vec3(0.0, 1.0, 0.0),
-      vec3(1.0, 0.0, 0.0),
-      smoothstep(0.8, 0.98, abs(axis.y))
-    ));
-    vec3 fN = normalize(cross(refUp, axis));
-    vec3 fB = cross(axis, fN);
-    vec3 rad = q - core;
-    float phi = atan(dot(rad, fB), dot(rad, fN) + 1e-5);
-
-    float band = 0.0;
-    float groove = 0.0;
-
-    if (uStripes > 0.5) {
-      band = cos(phi * uStripes - behind * uTwist + uSpin);
-      groove = 0.5 - 0.5 * band;
-    }
+    vec2 info = dragonInfo(q);
+    float behind = max(uHead - info.x, 0.0);
+    float merge = smoothstep(0.0, max(uBraidMerge, 0.02), behind);
 
     // Optional per-sector hue: which copy of the rosette is this?
     float wAng = atan(pos.y, pos.x) - uMandalaSpin;
@@ -484,11 +502,9 @@ const FRAGMENT = `
 
     float fres = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), uFresnelPower);
     float phase = behind * uLengthHueShift + uHueSpeed
-      + band * uStripeHueShift
+      + info.y * uPipeHueShift * merge
       + sectorId * uSectorHueShift;
     vec3 base = iridescent(phase + uShimmer * fres);
-
-    base *= 1.0 - uStripeDepth * groove;
 
     float diff = max(dot(n, uLightDir), 0.0);
     vec3 hlf = normalize(uLightDir - rd);
@@ -829,21 +845,33 @@ sketch.draw( () => {
     ),
     waypoints - 0.55
   );
-  const bodyRadius = Math.max(
-    dragon.bodyRadius ?? 0.14,
-    0.03
+  const pipeCount = Math.min(
+    Math.max(
+      Math.round( dragon.pipes ?? 5 ),
+      1
+    ),
+    8
   );
+  const pipeRadius = Math.max(
+    dragon.pipeRadius ?? 0.05,
+    0.02
+  );
+  const braidRadius = Math.max(
+    dragon.braidRadius ?? 0.12,
+    0
+  );
+  const braidMerge = dragon.braidMerge ?? 0.5;
   const headBulge = dragon.headBulge ?? 0.35;
   const headLen = dragon.headLength ?? 0.6;
   const tailLen = Math.min(
     dragon.tailLength ?? 1.4,
     bodyLen
   );
-  const radiusPulse = dragon.radiusPulse ?? 0.18;
+  const radiusPulse = dragon.radiusPulse ?? 0.08;
 
   const pulseWavesInt = Math.max(
     1,
-    Math.round( dragon.pulseWaves ?? 4 )
+    Math.round( dragon.pulseWaves ?? 3 )
   );
   const pulseFreq = ( p.TAU * pulseWavesInt ) / bodyLen;
   const pulseTravelInt = Math.round( ( dragon.pulseTravel ?? -3 ) * timeScale );
@@ -859,9 +887,7 @@ sketch.draw( () => {
   const swimAmpY = path.swimY ?? 0.05;
   const swimPhase = path.swimPhase ?? 1.6;
 
-  const stripes = Math.round( dragon.stripes ?? 5 );
-  const stripeDepth = dragon.stripeDepth ?? 0.35;
-  const twist = ( p.TAU * ( dragon.twist ?? 3 ) ) / bodyLen;
+  const twist = ( p.TAU * ( dragon.twist ?? 1.5 ) ) / bodyLen;
   const spinTurns = Math.round( ( dragon.spin ?? -2 ) * timeScale );
 
   // ── March safety ───────────────────────────────────────────────────────────
@@ -902,12 +928,28 @@ sketch.draw( () => {
     swimAmpX,
     swimAmpY
   );
-  const maxR = bodyRadius * ( 1 + headBulge ) * ( 1 + radiusPulse );
+  const maxR = braidRadius
+    + pipeRadius * ( 1 + headBulge ) * ( 1 + radiusPulse );
   const overshoot = ( 8 / 27 ) * maxTangent;
   const reach = overshoot + swimLen + maxR + 0.05;
   const boundPad = reach;
 
-  const lipschitz = 1.3 + bodyRadius * (
+  // Lipschitz divisor: taper/pulse slopes plus the braid's own twist gradient
+  // (pipe positions rotate along the body, steepening the field between pipes).
+  let minChord = Infinity;
+
+  for ( const arc of arcs ) {
+    minChord = Math.min(
+      minChord,
+      Math.hypot(
+        arc.p1[ 0 ] - arc.p0[ 0 ],
+        arc.p1[ 1 ] - arc.p0[ 1 ],
+        arc.z1 - arc.z0
+      )
+    );
+  }
+
+  const lipschitz = 1.3 + pipeRadius * (
     radiusPulse * pulseFreq
     + headBulge / Math.max(
       headLen,
@@ -916,6 +958,15 @@ sketch.draw( () => {
     + 1 / Math.max(
       tailLen,
       0.3
+    )
+  ) + braidRadius * (
+    twist / Math.max(
+      minChord,
+      0.4
+    )
+    + 1 / Math.max(
+      braidMerge,
+      0.25
     )
   );
 
@@ -1155,7 +1206,7 @@ sketch.draw( () => {
       uSwimFreq: swimFreq,
       uSwimT: swimT,
       uSwimPhase: swimPhase,
-      uBodyRadius: bodyRadius,
+      uPipeRadius: pipeRadius,
       uTailLen: tailLen,
       uHeadBulge: headBulge,
       uHeadLen: headLen,
@@ -1164,11 +1215,12 @@ sketch.draw( () => {
       uPulseT: t * pulseTravelInt,
       uBoundPad: boundPad,
       uLip: lipschitz,
-      uStripes: stripes,
-      uStripeDepth: stripeDepth,
+      uPipeCount: pipeCount,
+      uBraidRadius: braidRadius,
+      uBraidMerge: braidMerge,
       uTwist: twist,
       uSpin: t * spinTurns,
-      uStripeHueShift: colors.stripeHueShift ?? 0.35,
+      uPipeHueShift: colors.pipeHueShift ?? 0.33,
       uSectorAngle: sectorAngle,
       uCellAngle: cellAngle,
       uMirror: mirror ? 1 : 0,

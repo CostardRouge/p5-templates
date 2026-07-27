@@ -26,16 +26,17 @@ export const formValues = {
   },
   dragon: {
     bodyLength: 4.5,
-    bodyRadius: 0.15,
+    pipes: 5,
+    pipeRadius: 0.065,
+    braidRadius: 0.1,
+    braidMerge: 0.5,
     headBulge: 0.35,
     headLength: 0.6,
     tailLength: 1.6,
     radiusPulse: 0.18,
     pulseWaves: 5,
     pulseTravel: -3,
-    stripes: 5,
-    stripeDepth: 0.35,
-    twist: 3,
+    twist: 2,
     spin: -2
   },
   wall: {
@@ -68,7 +69,7 @@ export const formValues = {
     hueSpread: 1.55,
     huePhase: 1.17,
     bodyHueWaves: 1.5,
-    stripeHueShift: 0.35,
+    pipeHueShift: 0.33,
     shimmer: 1.1,
     saturation: 0.9,
     brightness: 1.05
@@ -262,12 +263,33 @@ export const formConfiguration: Record<string, any> = {
         max: 14,
         step: 0.5
       },
-      bodyRadius: {
-        label: "Body radius",
+      pipes: {
+        label: "Pipes (braid bundle size)",
         component: "slider",
-        min: 0.05,
-        max: 0.35,
-        step: 0.01
+        min: 1,
+        max: 8,
+        step: 1
+      },
+      pipeRadius: {
+        label: "Pipe radius",
+        component: "slider",
+        min: 0.02,
+        max: 0.2,
+        step: 0.005
+      },
+      braidRadius: {
+        label: "Braid radius (pipe orbit)",
+        component: "slider",
+        min: 0,
+        max: 0.3,
+        step: 0.005
+      },
+      braidMerge: {
+        label: "Head merge (braid → head)",
+        component: "slider",
+        min: 0.1,
+        max: 2,
+        step: 0.05
       },
       headBulge: {
         label: "Head swell",
@@ -311,29 +333,15 @@ export const formConfiguration: Record<string, any> = {
         max: 6,
         step: 0.01
       },
-      stripes: {
-        label: "Braid stripes (0 = plain skin)",
-        component: "slider",
-        min: 0,
-        max: 8,
-        step: 1
-      },
-      stripeDepth: {
-        label: "Stripe groove depth",
-        component: "slider",
-        min: 0,
-        max: 0.8,
-        step: 0.01
-      },
       twist: {
-        label: "Stripe twist (turns along the body)",
+        label: "Braid twist (turns along the body)",
         component: "slider",
         min: 0,
         max: 8,
         step: 0.05
       },
       spin: {
-        label: "Stripe spin (snaps to whole turns/loop)",
+        label: "Braid spin (snaps to whole turns/loop)",
         component: "slider",
         min: -4,
         max: 4,
@@ -512,8 +520,8 @@ export const formConfiguration: Record<string, any> = {
         max: 4,
         step: 0.05
       },
-      stripeHueShift: {
-        label: "Stripe hue shift",
+      pipeHueShift: {
+        label: "Pipe hue shift",
         component: "slider",
         min: -2,
         max: 2,
