@@ -51,7 +51,7 @@ import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_SEQ = 16; // max waypoints per loop (uniform array size)
-const ARC_SAMPLES = 9; // tapered capsules sampled per arc
+const ARC_SAMPLES = 10; // tapered capsules sampled per arc
 const MAX_STEPS = 88; // sphere-trace iterations per ray
 const SURF_EPS = 0.0012; // hit threshold (world units)
 const MAX_DIST = 30.0; // ray cutoff / far plane
@@ -190,6 +190,25 @@ const FRAGMENT = `
     return vec3(xy, z);
   }
 
+  // Analytic (unnormalised) centreline tangent at the same parameter — the
+  // Hermite derivative in the cell plane and in depth. Adjacent capsules
+  // share their sample tangents, so the braid frame built on them is
+  // CONTINUOUS along the whole body (chord-based frames would jump at every
+  // joint and chop the pipes into segments).
+  vec3 arcTangent(float k, float u, vec4 P, vec4 M, vec4 Z) {
+    float w = mix(u, u * u * (3.0 - 2.0 * u), uPose);
+    float w2 = w * w;
+    float g00 = 6.0 * w2 - 6.0 * w;
+    float g10 = 3.0 * w2 - 4.0 * w + 1.0;
+    float g01 = -6.0 * w2 + 6.0 * w;
+    float g11 = 3.0 * w2 - 2.0 * w;
+
+    vec2 xy = P.xy * g00 + M.xy * g10 + P.zw * g01 + M.zw * g11;
+    float z = Z.x * g00 + Z.z * g10 + Z.y * g01 + Z.w * g11;
+
+    return vec3(xy, z);
+  }
+
   // Pipe radius at a distance behind the head — tail taper, head swell,
   // travelling pulse. Body-anchored, so the loop closes by construction.
   float pipeRadiusAt(float behind) {
@@ -197,7 +216,11 @@ const FRAGMENT = `
     float hb = behind / max(uHeadLen, 0.05);
     float r = uPipeRadius * mix(0.08, 1.0, taper);
 
-    r *= 1.0 + uHeadBulge * exp(-hb * hb);
+    // The swell only appears where the braid has already merged into one
+    // head — swelling separate pipes would bead them into a grape cluster.
+    float mg = smoothstep(0.0, max(uBraidMerge, 0.02), behind);
+
+    r *= 1.0 + uHeadBulge * exp(-hb * hb) * (1.0 - mg);
     r *= 1.0 + uRadiusPulse * sin(behind * uPulseFreq - uPulseT);
 
     return r;
@@ -215,9 +238,11 @@ const FRAGMENT = `
   // One braided capsule segment. Instead of one tube per pipe, the angle
   // around the local axis is FOLDED by the pipe count (v1/v2's untwist trick,
   // per capsule): a single circle distance then covers every pipe of the
-  // bundle, so the cost is independent of how many pipes there are. Slightly
-  // non-metric (taper, twist) — uLip covers the shortfall.
-  float braidCap(vec3 p, vec3 a, vec3 b, float bA, float bB) {
+  // bundle, so the cost is independent of how many pipes there are. The frame
+  // rides the SMOOTH end tangents (shared between neighbouring capsules), so
+  // the pipes flow seamlessly across the joints. Slightly non-metric (taper,
+  // twist) — uLip covers the shortfall.
+  float braidCap(vec3 p, vec3 a, vec3 b, float bA, float bB, vec3 tA, vec3 tB) {
     vec3 pa = p - a;
     vec3 ba = b - a;
     float bb = max(dot(ba, ba), 1e-8);
@@ -231,7 +256,9 @@ const FRAGMENT = `
       return length(q) - (pr + br);
     }
 
-    vec3 T = ba * inversesqrt(bb);
+    vec3 Tm = mix(tA, tB, h);
+    float tl = dot(Tm, Tm);
+    vec3 T = tl > 1e-6 ? Tm * inversesqrt(tl) : ba * inversesqrt(bb);
     vec3 refUp = normalize(mix(
       vec3(0.0, 1.0, 0.0),
       vec3(1.0, 0.0, 0.0),
@@ -285,15 +312,18 @@ const FRAGMENT = `
       if (bound > best) { continue; }
 
       vec3 prev = arcPoint(k, u0, P, M, Z);
+      vec3 tPrev = arcTangent(k, u0, P, M, Z);
       float bPrev = uHead - (k + u0);
 
       for (int m = 1; m <= ${ ARC_SAMPLES }; m++) {
         float un = mix(u0, u1, float(m) / ${ ARC_SAMPLES.toFixed( 1 ) });
         vec3 cur = arcPoint(k, un, P, M, Z);
+        vec3 tCur = arcTangent(k, un, P, M, Z);
         float bCur = uHead - (k + un);
 
-        best = min(best, braidCap(p, prev, cur, bPrev, bCur));
+        best = min(best, braidCap(p, prev, cur, bPrev, bCur, tPrev, tCur));
         prev = cur;
+        tPrev = tCur;
         bPrev = bCur;
       }
     }
@@ -413,24 +443,29 @@ const FRAGMENT = `
 
       float uPrev = u0;
       vec3 prev = arcPoint(k, u0, P, M, Z);
+      vec3 tPrev = arcTangent(k, u0, P, M, Z);
       float bPrev = uHead - (k + u0);
 
       for (int m = 1; m <= ${ ARC_SAMPLES }; m++) {
         float un = mix(u0, u1, float(m) / ${ ARC_SAMPLES.toFixed( 1 ) });
         vec3 cur = arcPoint(k, un, P, M, Z);
+        vec3 tCur = arcTangent(k, un, P, M, Z);
         float bCur = uHead - (k + un);
-        float d = braidCap(p, prev, cur, bPrev, bCur);
+        float d = braidCap(p, prev, cur, bPrev, bCur, tPrev, tCur);
 
         if (d < best) {
           best = d;
 
-          // Recover the owning pipe from the winning capsule's fold.
+          // Recover the owning pipe from the winning capsule's fold, in the
+          // same smooth-tangent frame braidCap used.
           vec3 pa = p - prev;
           vec3 ba = cur - prev;
           float bb = max(dot(ba, ba), 1e-8);
           float h = clamp(dot(pa, ba) / bb, 0.0, 1.0);
           vec3 qq = pa - ba * h;
-          vec3 T = ba * inversesqrt(bb);
+          vec3 Tm = mix(tPrev, tCur, h);
+          float tl = dot(Tm, Tm);
+          vec3 T = tl > 1e-6 ? Tm * inversesqrt(tl) : ba * inversesqrt(bb);
           vec3 refUp = normalize(mix(
             vec3(0.0, 1.0, 0.0),
             vec3(1.0, 0.0, 0.0),
@@ -450,6 +485,7 @@ const FRAGMENT = `
 
         uPrev = un;
         prev = cur;
+        tPrev = tCur;
         bPrev = bCur;
       }
     }
@@ -803,14 +839,14 @@ sketch.draw( () => {
   // ── The dance ──────────────────────────────────────────────────────────────
   const flow = Math.min(
     Math.max(
-      path.flow ?? 0.65,
+      path.flow ?? 0.78,
       0
     ),
     1
   );
   const pose = Math.min(
     Math.max(
-      path.pose ?? 0.5,
+      path.pose ?? 0.4,
       0
     ),
     1
@@ -853,11 +889,11 @@ sketch.draw( () => {
     8
   );
   const pipeRadius = Math.max(
-    dragon.pipeRadius ?? 0.05,
+    dragon.pipeRadius ?? 0.04,
     0.02
   );
   const braidRadius = Math.max(
-    dragon.braidRadius ?? 0.12,
+    dragon.braidRadius ?? 0.09,
     0
   );
   const braidMerge = dragon.braidMerge ?? 0.5;
@@ -887,7 +923,7 @@ sketch.draw( () => {
   const swimAmpY = path.swimY ?? 0.05;
   const swimPhase = path.swimPhase ?? 1.6;
 
-  const twist = ( p.TAU * ( dragon.twist ?? 1.5 ) ) / bodyLen;
+  const twist = ( p.TAU * ( dragon.twist ?? 0.8 ) ) / bodyLen;
   const spinTurns = Math.round( ( dragon.spin ?? -2 ) * timeScale );
 
   // ── March safety ───────────────────────────────────────────────────────────

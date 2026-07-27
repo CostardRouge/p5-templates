@@ -13,8 +13,8 @@ export const formValues = {
   path: {
     waypointsPerLoop: 6,
     seed: 11,
-    pose: 0.5,
-    flow: 0.65,
+    pose: 0.4,
+    flow: 0.78,
     petalWeave: true,
     swimX: 0.05,
     swimY: 0.05,
@@ -25,8 +25,8 @@ export const formValues = {
   dragon: {
     bodyLength: 3,
     pipes: 5,
-    pipeRadius: 0.05,
-    braidRadius: 0.12,
+    pipeRadius: 0.04,
+    braidRadius: 0.09,
     braidMerge: 0.5,
     headBulge: 0.35,
     headLength: 0.6,
@@ -34,7 +34,7 @@ export const formValues = {
     radiusPulse: 0.08,
     pulseWaves: 3,
     pulseTravel: -3,
-    twist: 1.5,
+    twist: 0.8,
     spin: -2
   },
   window: {
