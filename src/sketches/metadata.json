@@ -3610,5 +3610,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-07-27T21:52:25.851Z",
     "ctime": "2026-07-27T21:51:56.827Z"
+  },
+  {
+    "name": "rings-v5-constellation",
+    "engine": "p5",
+    "category": "rings",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-27T23:25:23.580Z",
+    "ctime": "2026-07-27T23:24:46.100Z"
   }
 ]
