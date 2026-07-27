@@ -243,6 +243,7 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:rings/rings-v2-letters": () => import( "@/p5/sketches/rings/rings-v2-letters/options" ),
   "p5:rings/rings-v3-letter-orbit": () => import( "@/p5/sketches/rings/rings-v3-letter-orbit/options" ),
   "p5:rings/rings-v4-letter-morph": () => import( "@/p5/sketches/rings/rings-v4-letter-morph/options" ),
+  "p5:rings/rings-v5-constellation": () => import( "@/p5/sketches/rings/rings-v5-constellation/options" ),
   "p5:semaphore/semaphore-v0-dots": () => import( "@/p5/sketches/semaphore/semaphore-v0-dots/options" ),
   "p5:semaphore/semaphore-v1-lines": () => import( "@/p5/sketches/semaphore/semaphore-v1-lines/options" ),
   "p5:shader-loops/shader-loops-v1-hypnotic": () => import( "@/p5/sketches/shader-loops/shader-loops-v1-hypnotic/options" ),
