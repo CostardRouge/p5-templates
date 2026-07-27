@@ -11,35 +11,35 @@ export const formValues = {
     simplify: 0
   },
   material: {
-    size: 2.1,
-    thickness: 0.08,
-    fusion: 0.1
+    size: 3.25,
+    thickness: 0.035,
+    fusion: 0.25
   },
   morph: {
-    hold: 0.35,
-    stagger: 0.4,
+    hold: 0.29,
+    stagger: 0.9,
     easing: "easeInOutCubic"
   },
   camera: {
     fov: 60,
-    distance: 4,
+    distance: 6.75,
     orbit: 0,
     phase: 0,
-    elevation: 0.15,
-    sway: 0.12,
-    swayCycles: 2,
+    elevation: 0.37,
+    sway: 0.45,
+    swayCycles: 3,
     motion: "ease" as "flow" | "ease",
     easing: "easeInOutCubic",
-    glide: 0.6
+    glide: 0.21
   },
   colors: {
-    hueSpeed: 1,
+    hueSpeed: -0.15,
     hueSpread: 1.73,
     huePhase: 2.6,
     lengthHueShift: -0.25,
     pipeHueShift: 0.3,
     shimmer: 3,
-    saturation: 1,
+    saturation: 0.96,
     brightness: 1.25
   },
   light: {
@@ -49,7 +49,7 @@ export const formValues = {
     diffuse: 0.75,
     specular: 1.04,
     specPower: 31,
-    fresnelPower: 1.62,
+    fresnelPower: 0.98,
     rimStrength: 0,
     shadowSoftness: 0
   },
