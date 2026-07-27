@@ -4,6 +4,7 @@ import sketch from "@/p5/utils/sketch.js";
 import {
   HandCaptureScene
 } from "../_shared.js";
+import renderLegacyTitle from "@/p5/utils/title/renderLegacyTitle.js";
 
 // v8 "growing" is v7's echo rebuilt on the shader-based spline pipeline (the
 // same GPU glow as `splines · interactive`) instead of the legacy CPU neonLine.
@@ -21,7 +22,6 @@ sketch.draw( () => {
   const spline = options.sketch?.spline ?? {};
   const echo = options.sketch?.echo ?? {};
   const effect = options.sketch?.effect ?? {};
-  const text = options.sketch?.text ?? {};
   const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
@@ -42,10 +42,9 @@ sketch.draw( () => {
     darken: effect.darken ?? 0.12
   } );
 
-  scene.drawTitle( {
-    title: text.title ?? "growing",
-    subtitle: text.subtitle ?? "hand tracking v8",
-    show: text.show ?? true,
+  renderLegacyTitle( {
+    title: options.sketch?.title ?? "",
+    subtitle: options.sketch?.subtitle ?? "",
     color: background
   } );
 } );

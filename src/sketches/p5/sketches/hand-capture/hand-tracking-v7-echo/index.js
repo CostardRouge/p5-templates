@@ -4,6 +4,7 @@ import sketch from "@/p5/utils/sketch.js";
 import {
   HandCaptureScene
 } from "../_shared.js";
+import renderLegacyTitle from "@/p5/utils/title/renderLegacyTitle.js";
 
 const scene = new HandCaptureScene( {
   layers: {
@@ -19,7 +20,6 @@ sketch.draw( () => {
   const interaction = options.sketch?.interaction ?? {};
   const handDrawing = options.sketch?.hands ?? {};
   const echo = options.sketch?.echo ?? {};
-  const text = options.sketch?.text ?? {};
   const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
@@ -38,10 +38,9 @@ sketch.draw( () => {
   } );
   scene.compose();
 
-  scene.drawTitle( {
-    title: text.title ?? "echo",
-    subtitle: text.subtitle ?? "hand tracking v7",
-    show: text.show ?? true,
+  renderLegacyTitle( {
+    title: options.sketch?.title ?? "",
+    subtitle: options.sketch?.subtitle ?? "",
     color: background
   } );
 } );

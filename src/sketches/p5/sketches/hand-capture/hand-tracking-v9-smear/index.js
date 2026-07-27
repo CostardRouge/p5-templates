@@ -10,6 +10,7 @@ import mediapipe from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   HandCaptureScene
 } from "../_shared.js";
+import renderLegacyTitle from "@/p5/utils/title/renderLegacyTitle.js";
 
 const scene = new HandCaptureScene( {
   layers: {
@@ -56,7 +57,6 @@ sketch.draw( () => {
   const brush = options.sketch?.brush ?? {};
   const trail = options.sketch?.trail ?? {};
   const handDrawing = options.sketch?.hands ?? {};
-  const text = options.sketch?.text ?? {};
   const background = options.sketch?.backgroundColor ?? options.colors?.background ?? [
     0
   ];
@@ -111,9 +111,9 @@ sketch.draw( () => {
 
   scene.compose();
 
-  scene.drawTitle( {
-    subtitle: text.subtitle ?? "smear · hand tracking v8",
-    show: text.show ?? true,
+  renderLegacyTitle( {
+    title: options.sketch?.title ?? "",
+    subtitle: options.sketch?.subtitle ?? "",
     color: background
   } );
 } );

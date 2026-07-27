@@ -64,11 +64,9 @@ export const formValues = {
     trail: 255
   },
 
-  text: {
-    show: true,
-    title: "repulse",
-    subtitle: "hand tracking v2"
-  }
+  // Legacy centred splash (rendered by @/p5/utils/title/renderLegacyTitle.js)
+  title: "repulse",
+  subtitle: "hand tracking v2"
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -200,22 +198,13 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  text: {
-    component: "nested-object",
-    label: "Overlay text",
-    fields: {
-      show: {
-        label: "Show text",
-        component: "checkbox"
-      },
-      title: {
-        label: "Title",
-        component: "text"
-      },
-      subtitle: {
-        label: "Subtitle",
-        component: "text"
-      }
-    }
+  title: {
+    label: "Title",
+    component: "text"
+  },
+
+  subtitle: {
+    label: "Subtitle",
+    component: "text"
   }
 };

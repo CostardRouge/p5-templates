@@ -70,11 +70,9 @@ export const formValues = {
     show: true
   },
 
-  // Overlay text
-  text: {
-    show: true,
-    subtitle: "catch · hand tracking v5"
-  }
+  // Legacy centred splash (rendered by @/p5/utils/title/renderLegacyTitle.js)
+  title: "",
+  subtitle: "catch · hand tracking v5"
 };
 
 // UI configuration only
@@ -204,18 +202,13 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  text: {
-    component: "nested-object",
-    label: "Overlay text",
-    fields: {
-      show: {
-        label: "Show text",
-        component: "checkbox"
-      },
-      subtitle: {
-        label: "Subtitle",
-        component: "text"
-      }
-    }
+  title: {
+    label: "Title",
+    component: "text"
+  },
+
+  subtitle: {
+    label: "Subtitle",
+    component: "text"
   }
 };

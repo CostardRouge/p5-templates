@@ -71,11 +71,9 @@ export const formValues = {
     resolution: 0.1
   },
 
-  // Overlay text
-  text: {
-    show: true,
-    subtitle: "smear · hand tracking v8"
-  }
+  // Legacy centred splash (rendered by @/p5/utils/title/renderLegacyTitle.js)
+  title: "",
+  subtitle: "smear · hand tracking v8"
 };
 
 // UI configuration only
@@ -238,18 +236,13 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  text: {
-    component: "nested-object",
-    label: "Overlay text",
-    fields: {
-      show: {
-        component: "checkbox",
-        label: "Show text"
-      },
-      subtitle: {
-        component: "text",
-        label: "Subtitle"
-      }
-    }
+  title: {
+    label: "Title",
+    component: "text"
+  },
+
+  subtitle: {
+    label: "Subtitle",
+    component: "text"
   }
 };

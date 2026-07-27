@@ -1308,57 +1308,6 @@ export class HandCaptureScene {
     }
   }
 
-  drawTitle( {
-    title, subtitle, show = true, color
-  } = {} ) {
-    if ( !show ) {
-      return;
-    }
-
-    const p = getP5();
-    const fill = color ? p.color( ...color ) : p.color( 0 );
-
-    if ( title ) {
-      string.write(
-        title,
-        0,
-        p.height / 2,
-        {
-          size: 172,
-          strokeWeight: 0,
-          stroke: fill,
-          fill,
-          font: string.fonts.martian,
-          textAlign: [
-            p.CENTER,
-            p.CENTER
-          ],
-          blendMode: p.EXCLUSION
-        }
-      );
-    }
-
-    if ( subtitle ) {
-      string.write(
-        subtitle,
-        0,
-        ( p.height * 6 ) / 10,
-        {
-          size: 32,
-          strokeWeight: 0,
-          stroke: fill,
-          fill,
-          font: string.fonts.loraItalic,
-          textAlign: [
-            p.CENTER,
-            p.CENTER
-          ],
-          blendMode: p.EXCLUSION
-        }
-      );
-    }
-  }
-
   /** Big centered counter near the top — an implicit score for game variants. */
   drawScore( {
     value = 0, label = "", show = true, color
