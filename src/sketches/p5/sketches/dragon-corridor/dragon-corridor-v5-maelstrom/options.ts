@@ -1,17 +1,33 @@
 
 export const formValues = {
   timeScale: 1,
-  grid: {
-    cols: 4,
-    rows: 4,
-    divesPerLoop: 12,
-    seed: 7,
-    holeRadius: 0.34
+  vortex: {
+    shrink: 0.78,
+    swirlOffset: 2.4,
+    fallSpeed: 1,
+    steepness: 0.75,
+    ringSpread: 0.3,
+    hover: 0.3,
+    drainFade: 0.28,
+    octaveHueShift: 0.12
+  },
+  path: {
+    waypointsPerLoop: 10,
+    seed: 17,
+    pose: 0.3,
+    flow: 0.85,
+    weave: true,
+    heightJitter: 0.15,
+    swimX: 0.06,
+    swimY: 0.06,
+    swimWaves: 3,
+    swimSpeed: 2,
+    swimPhase: 1.6
   },
   dragon: {
-    bodyLength: 4,
+    bodyLength: 4.5,
     pipes: 5,
-    pipeRadius: 0.06,
+    pipeRadius: 0.065,
     braidRadius: 0.1,
     braidMerge: 0.5,
     headBulge: 0.35,
@@ -19,58 +35,34 @@ export const formValues = {
     tailLength: 1.6,
     radiusPulse: 0.18,
     pulseWaves: 5,
-    pulseTravel: -4,
+    pulseTravel: -3,
     twist: 2,
     spin: -2
   },
-  motion: {
-    apexHeight: 0.85,
-    diveDepth: 0.75,
-    arcJitter: 0.5,
-    hesitation: 0.55,
-    flow: 0.35,
-    swimX: 0.05,
-    swimZ: 0.05,
-    swimWaves: 3,
-    swimSpeed: 2,
-    swimPhase: 1.6,
-    swimDip: 0.85
-  },
-  plate: {
+  wall: {
     color: [
-      150,
-      190,
-      235
+      30,
+      42,
+      70
     ],
-    alpha: 0.55,
-    thickness: 0.1,
-    edgeSoftness: 0.02,
-    frost: 0.45,
-    frostScale: 7,
-    milk: 0.5,
-    tint: 0.12,
-    holeGlow: 0.9,
-    borderGlow: 0.6,
-    targetGlow: 1.2,
-    shadow: 0.55,
-    shadowSoft: 0.35,
-    depthDim: 0.55
+    rim: 4.2,
+    drainHole: 0.3,
+    arms: 3,
+    armPitch: 2,
+    armSharpness: 5,
+    streakGlow: 0.8,
+    hueStep: 0.05,
+    drainDarkness: 3,
+    rimGlow: 0.25
   },
   camera: {
-    view: "orbit" as "orbit" | "top" | "follow" | "pov",
-    distance: 1.45,
-    elevation: 0.72,
-    orbitTurns: 0,
-    orbitPhase: 0.6,
-    trackHead: 0,
-    followDistance: 2.2,
-    followHeight: 0.8,
-    aimAhead: 0.5,
-    smoothing: 0.5,
-    bank: 0.6,
-    povLift: 0.12,
-    fov: 55,
-    quality: 0.8
+    view: "brink" as "brink" | "abyss" | "drift",
+    distance: 1,
+    elevation: 0.95,
+    azimuth: 0.6,
+    driftTurns: 1,
+    fov: 50,
+    quality: 0.75
   },
   colors: {
     hueSpeed: 1,
@@ -83,8 +75,8 @@ export const formValues = {
     brightness: 1.05
   },
   light: {
-    azimuth: -0.9,
-    elevation: 0.85,
+    azimuth: 2.4,
+    elevation: 0.9,
     ambient: 0.3,
     diffuse: 1,
     specular: 0.6,
@@ -93,20 +85,20 @@ export const formValues = {
     rimStrength: 0.5
   },
   sound: {
-    splashEnabled: false,
-    splashVolume: 0.6,
-    splashPitch: 1,
-    splashLength: 0.5,
-    splashPan: 0.7,
+    eddyEnabled: false,
+    eddyVolume: 0.6,
+    eddyPitch: 1,
+    eddyLength: 0.7,
+    eddyPan: 0.7,
     humEnabled: false,
-    humVolume: 0.45,
-    humPitch: 1
+    humVolume: 0.5,
+    humPitch: 0.7
   },
-  fogDensity: 0.05,
+  fogDensity: 0.02,
   backgroundColor: [
-    6,
-    8,
-    16
+    4,
+    5,
+    12
   ]
 };
 
@@ -118,43 +110,144 @@ export const formConfiguration: Record<string, any> = {
     max: 5,
     step: 0.01
   },
-  grid: {
+  vortex: {
     component: "nested-object",
-    label: "Hole grid",
+    label: "Vortex (the screw)",
     fields: {
-      cols: {
-        label: "Columns",
+      shrink: {
+        label: "Shrink per octave (deeper = smaller)",
         component: "slider",
-        min: 2,
-        max: 6,
+        min: 0.5,
+        max: 0.94,
+        step: 0.01
+      },
+      swirlOffset: {
+        label: "Swirl offset per octave (rad)",
+        component: "slider",
+        min: 0,
+        max: 6.2832,
+        step: 0.01
+      },
+      fallSpeed: {
+        label: "Fall speed (octaves / loop, snaps whole)",
+        component: "slider",
+        min: 1,
+        max: 3,
         step: 1
       },
-      rows: {
-        label: "Rows",
+      steepness: {
+        label: "Funnel steepness",
         component: "slider",
-        min: 2,
-        max: 6,
-        step: 1
+        min: 0.2,
+        max: 2,
+        step: 0.01
       },
-      divesPerLoop: {
-        label: "Dives per loop (speed, snaps even ≤ holes)",
+      ringSpread: {
+        label: "Ring spread (radial wobble of the dance)",
         component: "slider",
-        min: 2,
-        max: 24,
-        step: 2
+        min: 0.05,
+        max: 0.8,
+        step: 0.01
+      },
+      hover: {
+        label: "Hover above the wall",
+        component: "slider",
+        min: 0.05,
+        max: 1,
+        step: 0.01
+      },
+      drainFade: {
+        label: "Drain fade (deep copies go dark)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      octaveHueShift: {
+        label: "Hue drift per octave of depth",
+        component: "slider",
+        min: -0.5,
+        max: 0.5,
+        step: 0.01
+      }
+    }
+  },
+  path: {
+    component: "nested-object",
+    label: "The dance (ring path)",
+    fields: {
+      waypointsPerLoop: {
+        label: "Poses per loop (circling speed)",
+        component: "slider",
+        min: 4,
+        max: 16,
+        step: 1
       },
       seed: {
-        label: "Hole choice seed",
+        label: "Choreography seed",
         component: "slider",
         min: 0,
         max: 200,
         step: 1
       },
-      holeRadius: {
-        label: "Hole radius",
+      pose: {
+        label: "Pose (settle on each figure)",
         component: "slider",
-        min: 0.15,
-        max: 0.48,
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      flow: {
+        label: "Flow (0 = darts, 1 = calligraphy)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      weave: {
+        label: "Weave (alternate inner/outer poses)",
+        component: "checkbox"
+      },
+      heightJitter: {
+        label: "Height wobble of the poses",
+        component: "slider",
+        min: 0,
+        max: 0.6,
+        step: 0.01
+      },
+      swimX: {
+        label: "Swim sway X",
+        component: "slider",
+        min: 0,
+        max: 0.25,
+        step: 0.005
+      },
+      swimY: {
+        label: "Swim sway Y",
+        component: "slider",
+        min: 0,
+        max: 0.25,
+        step: 0.005
+      },
+      swimWaves: {
+        label: "Swim waves along the body",
+        component: "slider",
+        min: 1,
+        max: 8,
+        step: 1
+      },
+      swimSpeed: {
+        label: "Swim speed (snaps to whole cycles/loop)",
+        component: "slider",
+        min: -4,
+        max: 4,
+        step: 0.01
+      },
+      swimPhase: {
+        label: "Swim axis phase",
+        component: "slider",
+        min: 0,
+        max: 6.2832,
         step: 0.01
       }
     }
@@ -164,10 +257,10 @@ export const formConfiguration: Record<string, any> = {
     label: "Dragon (finite snake)",
     fields: {
       bodyLength: {
-        label: "Body length (in dives)",
+        label: "Body length (in poses, < poses/loop)",
         component: "slider",
         min: 1,
-        max: 12,
+        max: 14,
         step: 0.5
       },
       pipes: {
@@ -178,7 +271,7 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       pipeRadius: {
-        label: "Pipe radius (bundle auto-fits the holes)",
+        label: "Pipe radius",
         component: "slider",
         min: 0.02,
         max: 0.2,
@@ -188,7 +281,7 @@ export const formConfiguration: Record<string, any> = {
         label: "Braid radius (pipe orbit)",
         component: "slider",
         min: 0,
-        max: 0.25,
+        max: 0.3,
         step: 0.005
       },
       braidMerge: {
@@ -256,186 +349,75 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  motion: {
+  wall: {
     component: "nested-object",
-    label: "Motion (dive behaviour)",
+    label: "Funnel wall",
     fields: {
-      apexHeight: {
-        label: "Leap height (above the plate)",
-        component: "slider",
-        min: 0.15,
-        max: 1.8,
-        step: 0.01
+      color: {
+        label: "Wall color",
+        component: "color"
       },
-      diveDepth: {
-        label: "Dive depth (below the plate)",
+      rim: {
+        label: "Bowl radius (the brink)",
         component: "slider",
-        min: 0.15,
-        max: 1.8,
-        step: 0.01
+        min: 2.5,
+        max: 7,
+        step: 0.05
       },
-      arcJitter: {
-        label: "Per-arc height variety",
+      drainHole: {
+        label: "Open throat radius (0 = closed)",
         component: "slider",
         min: 0,
-        max: 1,
+        max: 1.2,
         step: 0.01
       },
-      hesitation: {
-        label: "Hesitation (head hangs at the apex)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      flow: {
-        label: "Flow (0 = periscope dives, 1 = slither through)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      swimX: {
-        label: "Swim sway X",
-        component: "slider",
-        min: 0,
-        max: 0.25,
-        step: 0.005
-      },
-      swimZ: {
-        label: "Swim sway Z",
-        component: "slider",
-        min: 0,
-        max: 0.25,
-        step: 0.005
-      },
-      swimWaves: {
-        label: "Swim waves along the body",
+      arms: {
+        label: "Spiral arms",
         component: "slider",
         min: 1,
         max: 8,
         step: 1
       },
-      swimSpeed: {
-        label: "Swim speed (snaps to whole cycles/loop)",
+      armPitch: {
+        label: "Arm pitch (turns per octave, snaps whole)",
         component: "slider",
         min: -4,
         max: 4,
-        step: 0.01
+        step: 1
       },
-      swimPhase: {
-        label: "Swim axis phase",
-        component: "slider",
-        min: 0,
-        max: 6.2832,
-        step: 0.01
-      },
-      swimDip: {
-        label: "Swim pause at the holes (thread dead-centre)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      }
-    }
-  },
-  plate: {
-    component: "nested-object",
-    label: "Ice plate (frosted glass)",
-    fields: {
-      color: {
-        label: "Plate color",
-        component: "color"
-      },
-      alpha: {
-        label: "Plate opacity",
-        component: "slider",
-        min: 0,
-        max: 0.9,
-        step: 0.01
-      },
-      thickness: {
-        label: "Plate thickness",
-        component: "slider",
-        min: 0.02,
-        max: 0.6,
-        step: 0.01
-      },
-      edgeSoftness: {
-        label: "Hole rim softness (small = sharp)",
-        component: "slider",
-        min: 0.002,
-        max: 0.25,
-        step: 0.002
-      },
-      frost: {
-        label: "Frost mottling",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      frostScale: {
-        label: "Frost grain scale",
+      armSharpness: {
+        label: "Arm sharpness",
         component: "slider",
         min: 1,
-        max: 30,
+        max: 16,
         step: 0.5
       },
-      milk: {
-        label: "Milkiness (white scatter)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      tint: {
-        label: "Plate iridescence",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      holeGlow: {
-        label: "Hole rim glow",
+      streakGlow: {
+        label: "Arm glow",
         component: "slider",
         min: 0,
         max: 2,
         step: 0.01
       },
-      borderGlow: {
-        label: "Plate edge glow",
+      hueStep: {
+        label: "Iridescent banding per octave",
+        component: "slider",
+        min: -0.4,
+        max: 0.4,
+        step: 0.01
+      },
+      drainDarkness: {
+        label: "Drain darkness onset (octaves down)",
+        component: "slider",
+        min: 0.5,
+        max: 8,
+        step: 0.1
+      },
+      rimGlow: {
+        label: "Brink lip glow",
         component: "slider",
         min: 0,
         max: 2,
-        step: 0.01
-      },
-      targetGlow: {
-        label: "Next-hole telegraph glow",
-        component: "slider",
-        min: 0,
-        max: 3,
-        step: 0.01
-      },
-      shadow: {
-        label: "Dragon shadow on the plate",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      shadowSoft: {
-        label: "Shadow softness",
-        component: "slider",
-        min: 0.05,
-        max: 1,
-        step: 0.01
-      },
-      depthDim: {
-        label: "Submerged murk (body below the ice)",
-        component: "slider",
-        min: 0,
-        max: 1,
         step: 0.01
       }
     }
@@ -449,104 +431,51 @@ export const formConfiguration: Record<string, any> = {
         component: "select",
         options: [
           {
-            label: "Orbit (whole scene)",
-            value: "orbit"
+            label: "Brink (over the rim, static)",
+            value: "brink"
           },
           {
-            label: "Top (whack-a-mole)",
-            value: "top"
+            label: "Abyss (straight down the throat, static)",
+            value: "abyss"
           },
           {
-            label: "Follow (chase the head)",
-            value: "follow"
-          },
-          {
-            label: "POV (ride the head)",
-            value: "pov"
+            label: "Drift (slow orbit / loop)",
+            value: "drift"
           }
         ]
       },
       distance: {
-        label: "Orbit distance",
+        label: "Distance (1 = the bowl fills the frame)",
         component: "slider",
-        min: 0.7,
-        max: 3,
+        min: 0.4,
+        max: 2.5,
         step: 0.01
       },
       elevation: {
-        label: "Orbit elevation (high = bird's-eye)",
+        label: "Elevation (brink/drift)",
         component: "slider",
-        min: 0.12,
+        min: 0.25,
         max: 1.5,
         step: 0.01
       },
-      orbitTurns: {
-        label: "Orbit spin / loop (0 = static, snaps whole)",
+      azimuth: {
+        label: "Azimuth",
+        component: "slider",
+        min: -3.1416,
+        max: 3.1416,
+        step: 0.01
+      },
+      driftTurns: {
+        label: "Drift orbits / loop (snaps whole)",
         component: "slider",
         min: -2,
         max: 2,
         step: 1
       },
-      orbitPhase: {
-        label: "Orbit start angle",
-        component: "slider",
-        min: 0,
-        max: 6.2832,
-        step: 0.01
-      },
-      trackHead: {
-        label: "Track the head (0 = locked on grid centre)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      followDistance: {
-        label: "Follow distance",
-        component: "slider",
-        min: 0.5,
-        max: 4,
-        step: 0.05
-      },
-      followHeight: {
-        label: "Follow height",
-        component: "slider",
-        min: 0,
-        max: 2,
-        step: 0.05
-      },
-      aimAhead: {
-        label: "Aim ahead of the head",
-        component: "slider",
-        min: 0,
-        max: 2,
-        step: 0.05
-      },
-      smoothing: {
-        label: "Camera smoothing (lazy chase)",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      bank: {
-        label: "Banking roll (follow/pov)",
-        component: "slider",
-        min: -2,
-        max: 2,
-        step: 0.01
-      },
-      povLift: {
-        label: "POV lift above the head",
-        component: "slider",
-        min: 0,
-        max: 0.5,
-        step: 0.01
-      },
       fov: {
         label: "Field of view °",
         component: "slider",
-        min: 30,
+        min: 25,
         max: 100,
         step: 1
       },
@@ -687,51 +616,51 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Sound",
     fields: {
-      splashEnabled: {
-        label: "Splash on every crossing",
+      eddyEnabled: {
+        label: "Eddy whoosh on every pose",
         component: "checkbox"
       },
-      splashVolume: {
-        label: "Splash volume",
+      eddyVolume: {
+        label: "Eddy volume",
         component: "slider",
         min: 0,
         max: 1,
         step: 0.01
       },
-      splashPitch: {
-        label: "Splash pitch",
+      eddyPitch: {
+        label: "Eddy pitch",
         component: "slider",
         min: 0.4,
         max: 2.5,
         step: 0.01
       },
-      splashLength: {
-        label: "Splash length (s)",
+      eddyLength: {
+        label: "Eddy length (s)",
         component: "slider",
         min: 0.1,
-        max: 1.2,
+        max: 1.5,
         step: 0.01
       },
-      splashPan: {
-        label: "Splash stereo pan",
+      eddyPan: {
+        label: "Eddy stereo pan",
         component: "slider",
         min: 0,
         max: 1,
         step: 0.01
       },
       humEnabled: {
-        label: "Dragon hum (constant)",
+        label: "Maelström roar (constant)",
         component: "checkbox"
       },
       humVolume: {
-        label: "Hum volume",
+        label: "Roar volume",
         component: "slider",
         min: 0,
         max: 1,
         step: 0.01
       },
       humPitch: {
-        label: "Hum pitch",
+        label: "Roar pitch",
         component: "slider",
         min: 0.4,
         max: 2.5,
