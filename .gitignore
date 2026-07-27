@@ -47,3 +47,6 @@ next-env.d.ts
 /src/generated/prisma
 prisma/prisma/database.db
 /tmp
+
+# ssh-sketch PoC host key
+scripts/ssh-sketch/.host-key
