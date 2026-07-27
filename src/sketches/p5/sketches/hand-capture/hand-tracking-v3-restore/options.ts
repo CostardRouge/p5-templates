@@ -61,11 +61,9 @@ export const formValues = {
     dotScale: 1
   },
 
-  text: {
-    show: true,
-    title: "restore",
-    subtitle: "hand tracking v3"
-  }
+  // Legacy centred splash (rendered by @/p5/utils/title/renderLegacyTitle.js)
+  title: "restore",
+  subtitle: "hand tracking v3"
 };
 
 export const formConfiguration: Record<string, any> = {
@@ -183,22 +181,13 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  text: {
-    component: "nested-object",
-    label: "Overlay text",
-    fields: {
-      show: {
-        label: "Show text",
-        component: "checkbox"
-      },
-      title: {
-        label: "Title",
-        component: "text"
-      },
-      subtitle: {
-        label: "Subtitle",
-        component: "text"
-      }
-    }
+  title: {
+    label: "Title",
+    component: "text"
+  },
+
+  subtitle: {
+    label: "Subtitle",
+    component: "text"
   }
 };

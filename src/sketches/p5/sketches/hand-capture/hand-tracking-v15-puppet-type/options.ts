@@ -87,11 +87,9 @@ export const formValues = {
     resolution: 0.1
   },
 
-  // Overlay text
-  overlay: {
-    show: true,
-    subtitle: "puppet type · hand tracking v15"
-  }
+  // Legacy centred splash (rendered by @/p5/utils/title/renderLegacyTitle.js)
+  title: "",
+  subtitle: "puppet type · hand tracking v15"
 };
 
 // UI configuration only
@@ -294,18 +292,13 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  overlay: {
-    component: "nested-object",
-    label: "Overlay text",
-    fields: {
-      show: {
-        component: "checkbox",
-        label: "Show text"
-      },
-      subtitle: {
-        component: "text",
-        label: "Subtitle"
-      }
-    }
+  title: {
+    label: "Title",
+    component: "text"
+  },
+
+  subtitle: {
+    label: "Subtitle",
+    component: "text"
   }
 };

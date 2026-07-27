@@ -178,6 +178,4 @@ sketch.draw( () => {
   //     popPush: true,
   //   }
   // );
-
-  // renderTitle( options.sketch?.text ?? options.name );
 } );

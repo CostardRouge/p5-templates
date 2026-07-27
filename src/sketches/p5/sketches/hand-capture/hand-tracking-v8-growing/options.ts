@@ -64,12 +64,9 @@ export const formValues = {
     darken: 0.12
   },
 
-  // Overlay text — centered title (like the move / attract / restore sketches)
-  text: {
-    show: true,
-    title: "growing",
-    subtitle: "hand tracking v8"
-  }
+  // Legacy centred splash (rendered by @/p5/utils/title/renderLegacyTitle.js)
+  title: "growing",
+  subtitle: "hand tracking v8"
 };
 
 // UI configuration only
@@ -193,22 +190,13 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  text: {
-    component: "nested-object",
-    label: "Overlay text",
-    fields: {
-      show: {
-        label: "Show text",
-        component: "checkbox"
-      },
-      title: {
-        label: "Title",
-        component: "text"
-      },
-      subtitle: {
-        label: "Subtitle",
-        component: "text"
-      }
-    }
+  title: {
+    label: "Title",
+    component: "text"
+  },
+
+  subtitle: {
+    label: "Subtitle",
+    component: "text"
   }
 };

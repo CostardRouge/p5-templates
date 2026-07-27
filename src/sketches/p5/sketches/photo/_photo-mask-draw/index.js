@@ -172,7 +172,6 @@ sketch.draw( (
   if ( animation.progression < 0.2 ) {
     string.write(
       defaultTitle,
-      // options.texts.title || defaultTitle,
       p.width / 2,
       p.height / 2,
       {

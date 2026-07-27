@@ -11,6 +11,7 @@ import {
 import {
   HandCaptureScene
 } from "../_shared.js";
+import renderLegacyTitle from "@/p5/utils/title/renderLegacyTitle.js";
 
 // ── puppet-type ────────────────────────────────────────────────────────────
 // The word is a marionette and your hand is the puppeteer. Each letter is a
@@ -55,7 +56,6 @@ sketch.draw( () => {
   const spring = options.sketch?.spring ?? {};
   const motion = options.sketch?.motion ?? {};
   const handDrawing = options.sketch?.hands ?? {};
-  const overlay = options.sketch?.overlay ?? {};
   const background = options.sketch?.backgroundColor ?? [
     12,
     12,
@@ -99,9 +99,9 @@ sketch.draw( () => {
 
   scene.compose();
 
-  scene.drawTitle( {
-    subtitle: overlay.subtitle ?? "puppet type · hand tracking v15",
-    show: overlay.show ?? true,
+  renderLegacyTitle( {
+    title: options.sketch?.title ?? "",
+    subtitle: options.sketch?.subtitle ?? "",
     color: background
   } );
 } );
