@@ -113,7 +113,7 @@ function getTextTargets( {
   count,
   position
 } ) {
-  const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
+  const fontFamily = font?.name || font?.face?.family || "unknown";
   const key = [
     text,
     fontFamily,
@@ -254,7 +254,8 @@ function drawText( {
   cfg,
   envelope
 } ) {
-  if ( !font?.font || !text.length ) {
+  // p5 v2: glyph data readiness lives on `font.data` (was `font.font`).
+  if ( !font?.data || !text.length ) {
     return;
   }
 
@@ -273,7 +274,8 @@ function drawText( {
 
   // Match getTextPoints: offset so the glyph bounding-box centre lands on
   // `position` (textToPoints/textBounds share the same metrics).
-  const bounds = font.textBounds(
+  const bounds = string.textBounds(
+    font,
     text,
     0,
     0,

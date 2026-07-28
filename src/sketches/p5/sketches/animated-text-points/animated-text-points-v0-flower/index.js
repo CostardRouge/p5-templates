@@ -100,7 +100,7 @@ sketch.draw( () => {
   const sampleFactor = shape.sampleFactor ?? 0.5;
   const simplifyThreshold = shape.simplifyThreshold ?? 0;
 
-  if ( word.length === 0 || !font?.font ) {
+  if ( word.length === 0 || !font?.data ) {
     return;
   }
 

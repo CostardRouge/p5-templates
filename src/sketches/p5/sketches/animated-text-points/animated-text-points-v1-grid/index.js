@@ -39,7 +39,7 @@ sketch.draw( async() => {
   const simplifyThreshold = shape.simplifyThreshold ?? 0;
   const morphSpeed = shape.morphSpeed ?? 2;
 
-  if ( word.length === 0 || !font?.font ) {
+  if ( word.length === 0 || !font?.data ) {
     return;
   }
 

@@ -26,10 +26,10 @@ const sketchState = {
 
 events.register(
   "engine-window-preload",
-  () => {
+  async() => {
     const p = getP5();
 
-    sketchState.interactive.image = p.loadImage( "/assets/images/handpointing.png" );
+    sketchState.interactive.image = await p.loadImage( "/assets/images/handpointing.png" );
   }
 );
 

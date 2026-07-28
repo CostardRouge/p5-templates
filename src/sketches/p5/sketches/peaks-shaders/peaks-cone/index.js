@@ -219,19 +219,24 @@ function bindAttrib(
 }
 
 // Extract [r,g,b,a] as 0–1 floats from a p5.Color created by colors.rainbow.
+// p5 v2 dropped `.levels` (0–255 ints); `._array` is the normalized readout.
 function colorLevels( c ) {
-  const lvl = c?.levels ?? [
-    255,
-    255,
-    255,
-    255
-  ];
+  const rgba = c?._array;
+
+  if ( !Array.isArray( rgba ) ) {
+    return [
+      1,
+      1,
+      1,
+      1
+    ];
+  }
 
   return [
-    lvl[ 0 ] / 255,
-    lvl[ 1 ] / 255,
-    lvl[ 2 ] / 255,
-    lvl[ 3 ] / 255
+    rgba[ 0 ],
+    rgba[ 1 ],
+    rgba[ 2 ],
+    rgba[ 3 ] ?? 1
   ];
 }
 
@@ -527,8 +532,15 @@ sketch.draw( (
   g.rotateY( rY );
   g.rotateZ( rZ );
 
-  const mvMat = g._renderer.uMVMatrix.mat4.slice();
-  const pMat = g._renderer.uPMatrix.mat4.slice();
+  // p5 v2 splits the old uMVMatrix into uModelMatrix × uViewMatrix under
+  // _renderer.states.
+  const {
+    states
+  } = g._renderer;
+  const mvMat = states.uModelMatrix.copy()
+    .mult( states.uViewMatrix ).mat4
+    .slice();
+  const pMat = states.uPMatrix.mat4.slice();
 
   g.pop();
 

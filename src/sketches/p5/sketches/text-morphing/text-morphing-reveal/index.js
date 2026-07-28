@@ -48,7 +48,7 @@ sketch.draw( () => {
 
   const font = string.fonts?.[ text.font ] ?? string.fonts.martian;
 
-  if ( !font?.font ) {
+  if ( !font?.data ) {
     // First frames while the font streams in — nothing to sample yet.
     return;
   }

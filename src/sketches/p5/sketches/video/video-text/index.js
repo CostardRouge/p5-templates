@@ -78,7 +78,7 @@ sketch.draw( () => {
   const font = getFont();
 
   // Font may still be loading on the first frames.
-  if ( !font?.font ) {
+  if ( !font?.data ) {
     return;
   }
 

@@ -19,7 +19,7 @@ export default async function addScreenPositionFunction( p5Instance ) {
   // the stack to keep track of matrices when using push and pop
   if ( context == R_2D ) {
     p._renderer.matrixStack = [
-      new p5Class.Matrix()
+      new p5Class.Matrix( 4 )
     ];
   }
 
@@ -31,7 +31,7 @@ export default async function addScreenPositionFunction( p5Instance ) {
     p.draw = function( ...args ) {
       if ( context == R_2D ) {
         p._renderer.matrixStack = [
-          new p5Class.Matrix()
+          new p5Class.Matrix( 4 )
         ];
       }
       drawNative.apply(
@@ -47,7 +47,7 @@ export default async function addScreenPositionFunction( p5Instance ) {
     p.resetMatrix = function( ...args ) {
       if ( context == R_2D ) {
         p._renderer.matrixStack = [
-          new p5Class.Matrix()
+          new p5Class.Matrix( 4 )
         ];
       }
       resetMatrixNative.apply(
@@ -168,7 +168,7 @@ export default async function addScreenPositionFunction( p5Instance ) {
         let rad = p._toRadians( args[ 0 ] );
         let stack = p._renderer.matrixStack;
         let m = last( stack );
-        let sm = new p5Class.Matrix();
+        let sm = new p5Class.Matrix( 4 );
 
         sm.mat4[ 4 ] = Math.tan( rad );
         sm.mult( m );
@@ -189,7 +189,7 @@ export default async function addScreenPositionFunction( p5Instance ) {
         let rad = p._toRadians( args[ 0 ] );
         let stack = p._renderer.matrixStack;
         let m = last( stack );
-        let sm = new p5Class.Matrix();
+        let sm = new p5Class.Matrix( 4 );
 
         sm.mat4[ 1 ] = Math.tan( rad );
         sm.mult( m );
@@ -209,7 +209,7 @@ export default async function addScreenPositionFunction( p5Instance ) {
       if ( context == R_2D ) {
         let stack = p._renderer.matrixStack;
         let m = last( stack );
-        let sm = new p5Class.Matrix();
+        let sm = new p5Class.Matrix( 4 );
 
         sm.mat4[ 0 ] = args[ 0 ];
         sm.mat4[ 1 ] = args[ 1 ];
@@ -277,7 +277,7 @@ export default async function addScreenPositionFunction( p5Instance ) {
     if ( context == R_2D ) {
       let m = last( p._renderer.matrixStack );
       // probably not needed:
-      // let mInv = (new p5Class.Matrix()).invert(m);
+      // let mInv = (new p5Class.Matrix( 4 )).invert(m);
 
       let v = p.createVector(
         x,
@@ -299,7 +299,17 @@ export default async function addScreenPositionFunction( p5Instance ) {
       );
 
       // Calculate the ModelViewProjection Matrix.
-      let mvp = ( p._renderer.uMVMatrix.copy() ).mult( p._renderer.uPMatrix );
+      // p5 v2 splits the old uMVMatrix into uModelMatrix × uViewMatrix,
+      // all living under _renderer.states.
+      const {
+        uModelMatrix,
+        uViewMatrix,
+        uPMatrix
+      } = p._renderer.states;
+
+      let mvp = uModelMatrix.copy()
+        .mult( uViewMatrix )
+        .mult( uPMatrix );
 
       // Transform the vector to Normalized Device Coordinate.
       let vNDC = multMatrixVector(

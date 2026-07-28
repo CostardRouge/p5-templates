@@ -22,13 +22,12 @@ const graphics = {
       (
         nw, nh
       ) => {
+        // p5 v2: width/height are getters backed by the renderer, which
+        // resizeCanvas already updates — assigning them now throws.
         _graphics.resizeCanvas(
           nw,
           nh
         );
-
-        _graphics.width = nw;
-        _graphics.height = nh;
 
         callback?.(
           nw,

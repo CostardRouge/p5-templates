@@ -151,7 +151,7 @@ function syncLetters(
   const p = getP5();
   const content = text.content ?? "PULL ME";
   const size = ( text.size ?? 0.16 ) * p.width;
-  const fontReady = Boolean( font?.font );
+  const fontReady = Boolean( font?.data );
   const key = `${ content }:${ size }:${ text.font }:${ fontReady }:${ p.width }x${ p.height }`;
 
   if ( key === state.layoutKey ) {
@@ -289,7 +289,7 @@ function renderLetters(
 
   p.push();
 
-  if ( font?.font ) {
+  if ( font?.data ) {
     p.textFont( font );
   }
 
