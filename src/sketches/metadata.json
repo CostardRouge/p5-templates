@@ -3622,5 +3622,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-07-27T23:25:23.580Z",
     "ctime": "2026-07-27T23:24:46.100Z"
+  },
+  {
+    "name": "flowers-shaders-v4-pearls",
+    "engine": "p5",
+    "category": "flowers-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-30T20:49:06.393Z",
+    "ctime": "2026-07-30T20:48:37.701Z"
   }
 ]
