@@ -23,9 +23,9 @@ export const formValues = {
   },
 
   material: {
-    size: 3,
-    thickness: 0.06,
-    fusion: 0.12
+    size: 2.65,
+    thickness: 0.065,
+    fusion: 0.061
   },
 
   sculpt: {
@@ -38,15 +38,256 @@ export const formValues = {
     depthGain: 1,
     // Persisted sculpt state (no form UI): one { x, y, z } offset per handle,
     // tied to the glyph build it was sculpted on. Any mismatch resets flat.
-    signature: "",
-    offsets: [] as Array<{ x: number;
+    signature: "R|Agiro|1|0|48",
+    offsets: [
+      {
+        x: -0.21170444399515848,
+        y: -0.06802171578805415,
+        z: 0
+      },
+      {
+        x: -0.042118784438434864,
+        y: 0.027028418603034475,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: -0.21946350407513882,
+        y: -0.05260812091787642,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0.04850139001551386,
+        y: -0.22852607135107167,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0.16951137342991202,
+        y: -0.17504254091995064,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0.03607440318754379,
+        y: 0.03479665148252717,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: -0.005183930470199077,
+        y: 0.002794110814276274,
+        z: 0
+      },
+      {
+        x: 0.13620294286133006,
+        y: -0.11351494991822686,
+        z: 0
+      },
+      {
+        x: 0.039559954651134654,
+        y: -0.041807105069258804,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0.1489304436469197,
+        y: 0.1984694125069,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0.006055862554250488,
+        y: -0.0051327578642014204,
+        z: 0
+      },
+      {
+        x: 0.09408129549255115,
+        y: 0.19133003874285237,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: -0.018284773696345402,
+        y: 0.01912858769082021,
+        z: 0
+      },
+      {
+        x: -0.17327609602087068,
+        y: 0.1500617451145403,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: -0.2616987644378602,
+        y: -0.04512527787408748,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0.0195155744550885,
+        y: 0.1451144813030183,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0.07497695895466702,
+        y: 0.07535557221914828,
+        z: 0
+      },
+      {
+        x: 0.09841311039386688,
+        y: -0.0021783460979366565,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0.034950380002518704,
+        y: -0.09363804803023874,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      {
+        x: -0.1158367700845003,
+        y: 0.08498862243234873,
+        z: 0
+      },
+      {
+        x: 0.1371266176389777,
+        y: 0.007641035089214002,
+        z: 0
+      },
+      {
+        x: 0,
+        y: 0,
+        z: 0
+      }
+    ] as Array<{ x: number;
       y: number;
       z: number }>
   },
 
   grab: {
     // Pick-up radius (px) around a handle: a press/touch/pinch within it grabs it.
-    radius: 44,
+    radius: 120,
     // Camera pinch: the finger tips must be closer than this (px) to count as
     // "pressed". Released at 1.6× this (hysteresis). Shared by both gestures.
     pinch: 70,
@@ -104,14 +345,14 @@ export const formValues = {
   },
 
   camera: {
-    fov: 60,
+    fov: 62,
     distance: 6.5,
     // A touch of yaw/elevation so the sculpted relief reads at rest; sculpting
     // stays exact at any angle (the CPU mirrors the shader camera).
-    phase: 0.35,
-    elevation: 0.2,
-    orbit: 0,
-    sway: 0,
+    phase: 0.42,
+    elevation: 0.34,
+    orbit: -1,
+    sway: 0.4,
     swayCycles: 2,
     fogDensity: 0.06
   },
@@ -146,8 +387,8 @@ export const formValues = {
   overlay: {
     points: {
       show: true,
-      size: 14,
-      coreRatio: 0.5,
+      size: 25,
+      coreRatio: 0.82,
       color: [
         255,
         255,
