@@ -20,8 +20,8 @@ export const formValues = {
     // (overwriting the list) when either changes.
     items: [
       {
-        x: 0.5,
-        y: 0.2
+        x: 0.5093134555590859,
+        y: 0.2157030790665661
       },
       {
         x: 0.712,
@@ -85,7 +85,7 @@ export const formValues = {
       ...interactionFormValues.vision,
       hands: {
         ...interactionFormValues.vision.hands,
-        enabled: true,
+        enabled: false,
         maxHands: 2,
         landmarks: {
           fingertips: true,
@@ -106,7 +106,7 @@ export const formValues = {
   // The usual hand-capture look for detected hands: a glowing spline through
   // the fingertips, plus the per-hand pinch markers (always on).
   hands: {
-    show: true,
+    show: false,
     weight: 14,
     glow: 2,
     iterations: 5,
@@ -115,18 +115,18 @@ export const formValues = {
   },
 
   weave: {
-    strands: 3,
-    leads: 5,
-    wireRadius: 0.07,
-    depth: 0.12,
-    minorRadius: 0.35,
-    spin: 1
+    strands: 2,
+    leads: 2,
+    wireRadius: 0.11,
+    depth: 0.05,
+    minorRadius: 0.39,
+    spin: -2.3
   },
 
   camera: {
-    distance: 11.5,
-    fov: 50,
-    fogDensity: 0.08
+    distance: 15.7,
+    fov: 45,
+    fogDensity: 0.175
   },
 
   colors: {
@@ -135,21 +135,21 @@ export const formValues = {
     huePhase: 2.6,
     lengthHueShift: 0.35,
     pipeHueShift: 0.5,
-    shimmer: 2,
+    shimmer: 1.86,
     saturation: 0.75,
     brightness: 1.3
   },
 
   light: {
-    azimuth: -1.1,
+    azimuth: -0.51,
     elevation: 0.5,
-    ambient: 0.3,
-    diffuse: 0.85,
-    specular: 1.2,
+    ambient: 0.13,
+    diffuse: 0.76,
+    specular: 0.81,
     specPower: 48,
-    fresnelPower: 3,
-    rimStrength: 0.7,
-    shadowSoftness: 22
+    fresnelPower: 2.56,
+    rimStrength: 0,
+    shadowSoftness: 64
   },
 
   aberration: {
@@ -158,7 +158,7 @@ export const formValues = {
   },
 
   rendering: {
-    resolutionScale: 0.6
+    resolutionScale: 0.7
   },
 
   overlay: {
