@@ -12,15 +12,17 @@ export const formValues = {
     pulseSpeed: 0
   },
   pearls: {
-    count: 2,
-    size: 0.15,
-    speed: -0.59,
-    swirl: 4,
-    gravity: 0.72,
-    orbitRadius: 1.15,
-    deform: -1.09,
-    deformRadius: 0.62,
-    span: 6.5,
+    count: 3,
+    size: 0.3,
+    speed: 1,
+    swirl: 1,
+    gravity: 0.35,
+    orbitRadius: 1.25,
+    phase: 0,
+    spread: 0.5,
+    deform: 0.8,
+    deformRadius: 0.8,
+    span: 6,
     tint: 0.35,
     brightness: 1.15,
     hueShift: -1.08
@@ -55,10 +57,6 @@ export const formValues = {
     specPower: 10,
     fresnelPower: 1.88,
     rimStrength: 0
-  },
-  aberration: {
-    amount: 0,
-    mode: "radial" as "radial" | "horizontal"
   },
   backgroundColor: [
     0,
@@ -181,6 +179,20 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0.5,
         max: 3,
+        step: 0.01
+      },
+      phase: {
+        label: "Phase (rotate the formation, turns)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      spread: {
+        label: "Spread (azimuth stagger between pearls, turns)",
+        component: "slider",
+        min: -1,
+        max: 1,
         step: 0.01
       },
       deform: {
@@ -409,33 +421,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 2,
         step: 0.01
-      }
-    }
-  },
-  aberration: {
-    component: "nested-object",
-    label: "Chromatic aberration",
-    fields: {
-      amount: {
-        label: "Amount px (0 = off)",
-        component: "slider",
-        min: 0,
-        max: 40,
-        step: 0.5
-      },
-      mode: {
-        label: "Direction",
-        component: "select",
-        options: [
-          {
-            label: "Radial",
-            value: "radial"
-          },
-          {
-            label: "Horizontal",
-            value: "horizontal"
-          }
-        ]
       }
     }
   },
