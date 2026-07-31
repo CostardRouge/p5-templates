@@ -3634,5 +3634,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-07-30T20:49:06.393Z",
     "ctime": "2026-07-30T20:48:37.701Z"
+  },
+  {
+    "name": "braid-v6-interactive-ring",
+    "engine": "p5",
+    "category": "braid",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-30T20:51:24.310Z",
+    "ctime": "2026-07-30T20:49:40.698Z"
   }
 ]
