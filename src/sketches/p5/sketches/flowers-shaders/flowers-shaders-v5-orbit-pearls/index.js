@@ -49,7 +49,7 @@ import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 const MAX_PIPES = 12; // matches the "pipes" slider max
 const MAX_PEARLS = 6; // matches the "pearls" slider max
-const MAX_STEPS = 128; // sphere-trace iterations per ray
+const MAX_STEPS = 160; // sphere-trace iterations per ray
 const SURF_EPS = 0.001; // hit threshold (world units)
 
 const FRAGMENT = `
@@ -301,32 +301,32 @@ const FRAGMENT = `
   // far braid melts into the p5 background instead of a hard cut).
   vec4 traceRay(vec3 ro, vec3 rd) {
     float t = 0.0;
-    float dMin = 1e9;
-    float tMin = 0.0;
+    float d = 1e9;
     bool  hit = false;
+    bool  escaped = false;
 
     for (int i = 0; i < ${ MAX_STEPS }; i++) {
       vec3  pos = ro + rd * t;
-      float d = mapScene(pos);
+      d = mapScene(pos);
 
       if (d < SURF_EPS) { hit = true; break; }
 
-      if (d < dMin) { dMin = d; tMin = t; }
-
       t += d;
 
-      if (t > uMaxDist) { break; }
+      if (t > uMaxDist) { escaped = true; break; }
     }
 
     // Step-starved rays: where one pipe presses onto another (or a strong warp
-    // inflates the Lipschitz divisor), a ray grazing the crease creeps along
-    // tiny steps and runs out of iterations without ever crossing SURF_EPS —
-    // classically leaving a dark "invisible contour" along the overlap. Those
-    // rays did brush the surface, so shade their closest-approach point
-    // instead of dropping them to the background.
-    if (!hit && dMin < SURF_EPS * 8.0) {
+    // inflates the Lipschitz divisor), a ray creeping along the contact crease
+    // runs out of iterations without ever crossing SURF_EPS — classically
+    // leaving a dark "invisible contour" along the overlap. Accept ONLY rays
+    // that ended their budget still glued to the surface (final d a hair above
+    // the hit threshold): their end point is on the crease, so its normal and
+    // colour are sound. Rays that merely grazed something and flew past
+    // (escaped, or stalled mid-gap with a larger d) must stay background —
+    // shading those instead paints ghost membranes across every gap.
+    if (!hit && !escaped && d < SURF_EPS * 4.0) {
       hit = true;
-      t = tMin;
     }
 
     if (!hit) { return vec4(0.0); }
