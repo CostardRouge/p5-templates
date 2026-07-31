@@ -2,14 +2,13 @@ import {
   fontNames
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 import {
-  interactionFormValues,
-  interactionFormConfiguration
+  interactionFormConfiguration, interactionFormValues
 } from "@/p5/utils/interaction/defaults.js";
 
-// v6's hand-sculpted letter plus VIRTUAL POINTERS: the system cursor is hidden
-// over the canvas and drawn as an artwork instead, swapped by state — pointing
-// hand while free, open hand over a sculpt handle, closed hand while dragging
-// one (Input sources → Virtual pointers picks the three images).
+// v6's hand-sculpted letter, plus the option structure for VIRTUAL POINTERS:
+// fictional cursors that will move around the canvas on their own. This is the
+// groundwork only — the three artworks are declared and loaded, nothing is
+// drawn yet (Input sources → Virtual pointers → Images).
 //
 // One glyph of the v4 liquid-tube material, sculpted by hand: every outline
 // sample is a draggable 3D handle. Thumb + index pinch (or mouse / finger)
@@ -336,13 +335,15 @@ export const formValues = {
       ...interactionFormValues.visualization,
       enabled: false
     },
-    // The drawn stand-in for the mouse / finger: one artwork per pointer
-    // state. Same `image` asset field as the photo sketches.
+    // Artworks for the fictional cursors, one per pointer state. Same `image`
+    // asset field as the photo sketches, so the options module loads each path
+    // into the shared images cache — ready to be drawn once the animation is
+    // specified.
     virtualPointers: {
       images: {
-        pointing: "/assets/images/cursors/handpointing.svg",
-        open: "/assets/images/cursors/handopen.svg",
-        grabbing: "/assets/images/cursors/handgrabbing.svg"
+        pointing: "/assets/images/cursors/handpointing.png",
+        open: "/assets/images/cursors/handopen.png",
+        grabbing: "/assets/images/cursors/handgrabbing.png "
       }
     }
   },
@@ -365,8 +366,8 @@ export const formValues = {
     // stays exact at any angle (the CPU mirrors the shader camera).
     phase: 0.42,
     elevation: 0.34,
-    orbit: -1,
-    sway: 0.4,
+    orbit: 0,
+    sway: 0,
     swayCycles: 2,
     fogDensity: 0.06
   },

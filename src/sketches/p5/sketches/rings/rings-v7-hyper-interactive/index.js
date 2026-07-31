@@ -35,33 +35,11 @@ import {
   drawInteractionCameraPreview
 } from "@/p5/utils/interaction/overlay.js";
 import {
-  createVirtualCursor
-} from "@/p5/utils/interaction/virtualCursor.js";
-import {
   renderSplines
 } from "../../splines/_shared.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// rings v7 — hyper interactive.
-//
-// v6's hand-sculpted letter, now with VIRTUAL POINTERS: the OS cursor is
-// hidden over the canvas and replaced by an artwork drawn into the sketch,
-// swapped by what the pointer is doing — a pointing hand while free, an open
-// hand the moment it is over a sculpt handle, a closed hand while actually
-// dragging one. A plain mouse therefore reads on screen (and in an exported
-// video) like a hand reaching into the letter.
-//
-// Why: camera hand-tracking is the destination, but it is fragile and leaves
-// nothing behind in a capture. Driving the exact same grab → move → release
-// path with a mouse — while it LOOKS like a hand — lets the interaction design
-// and its code be built and judged now, and is the same seam the planned
-// pre-recorded "virtual hands" will plug into: anything that emits
-// `{ key, x, y, pressed, kind }` pointers gets a cursor for free. The layer
-// itself is shared (utils/interaction/virtualCursor.js) so any sketch can
-// adopt it; the three artworks are ordinary `image` options (Input sources →
-// Virtual pointers → Images), the same asset field the photo sketches use.
-//
-// Everything below this point is v6's sculptor, unchanged:
+// rings v6 — letter sculpt.
 //
 // ONE glyph of v4's liquid tube material sits at the centre — but instead of
 // melting on its own clock, it is SCULPTED by hand: every outline sample is a
@@ -69,9 +47,9 @@ import {
 // (mouse + touch + camera-tracked hand pinches, several hands at once) is
 // applied to the letter's own points. Pinch thumb + index on a handle and pull
 // to stretch the stroke; the capsule field re-fuses around wherever the points
-// go. No automatic morph — a single letter keeps the whole loop budget with
-// the sculptor. (Later versions may reintroduce letter-to-letter morphs driven
-// by the same hands.)
+// go. No automatic morph — v6 deliberately keeps a single letter so the whole
+// loop budget belongs to the sculptor. (Later versions may reintroduce
+// letter-to-letter morphs driven by the same hands.)
 //
 // ── Geometry (glyph → sculpt handles) ────────────────────────────────────────
 // textToPoints → splitContours → resampleContour, the family recipe — but where
@@ -458,8 +436,6 @@ const state = {
 
 const draggable = createDraggable();
 const pinch = createPinchTracker();
-// The mouse/touch pointers' on-canvas face (see the header).
-const cursor = createVirtualCursor();
 
 function isOffset( value ) {
   return !!value
@@ -1078,7 +1054,6 @@ sketch.setup( async() => {
   draggable.attach();
   pinch.clear();
   depthPinch.clear();
-  cursor.clear();
 
   await initInteraction( options.sketch?.interaction ?? {} );
 } );
@@ -1208,16 +1183,13 @@ sketch.draw( () => {
     targets[ index ].depth = projected.depth;
   };
 
-  const grabRadius = grab.radius ?? 44;
-
   const {
     hovers,
     grabbed,
-    released,
-    pointers
+    released
   } = draggable.update( {
     targets,
-    radius: grabRadius,
+    radius: grab.radius ?? 44,
     groups,
     extraPointers: [
       ...camPointers,
@@ -1404,24 +1376,4 @@ sketch.draw( () => {
   pinch.draw();
   depthPinch.draw();
   drawInteractionCameraPreview( interaction );
-
-  // The virtual cursor goes on top of everything — including the webcam
-  // preview — and after draggable.update(), whose own `grab`/`grabbing` writes
-  // to the canvas cursor style this layer overrides with "none".
-  //
-  // Only the direct pointers get a drawn hand: camera pinches already carry
-  // their own markers (and the real hand is right there in frame). Feeding the
-  // drag layer's live `drags` map plus this frame's targets/radius is what
-  // keeps the icon honest — it opens on exactly what is grabbable and closes
-  // on exactly what is held.
-  cursor.update(
-    pointers.filter( ( pointer ) => pointer.kind === "mouse" || pointer.kind === "touch" ),
-    {
-      drags: draggable.drags,
-      targets,
-      radius: grabRadius,
-      smoothing: 0.35
-    }
-  );
-  cursor.draw( interaction.virtualPointers?.images );
 } );
