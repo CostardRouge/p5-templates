@@ -86,6 +86,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:flowers-shaders/flowers-shaders-v2-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v2-pipes/index.js" ),
   "p5:flowers-shaders/flowers-shaders-v3-hand-pipes": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v3-hand-pipes/index.js" ),
   "p5:flowers-shaders/flowers-shaders-v4-pearls": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v4-pearls/index.js" ),
+  "p5:flowers-shaders/flowers-shaders-v5-orbit-pearls": () => import( "@/p5/sketches/flowers-shaders/flowers-shaders-v5-orbit-pearls/index.js" ),
   "p5:flowers/flowers-v0-turbine": () => import( "@/p5/sketches/flowers/flowers-v0-turbine/index.js" ),
   "p5:flowers/flowers-v1-recursive": () => import( "@/p5/sketches/flowers/flowers-v1-recursive/index.js" ),
   "p5:flowers/flowers-v2-triple": () => import( "@/p5/sketches/flowers/flowers-v2-triple/index.js" ),

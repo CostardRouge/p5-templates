@@ -3648,6 +3648,18 @@
     "ctime": "2026-07-30T20:49:40.698Z"
   },
   {
+    "name": "flowers-shaders-v5-orbit-pearls",
+    "engine": "p5",
+    "category": "flowers-shaders",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-31T10:02:43.229Z",
+    "ctime": "2026-07-31T10:02:05.389Z"
+  },
+  {
     "name": "rings-v6-letter-sculpt",
     "engine": "p5",
     "category": "rings",

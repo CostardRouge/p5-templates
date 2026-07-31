@@ -6,46 +6,45 @@ import animation from "@/p5/utils/animation.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// flowers-shaders v4 — pearls.
+// flowers-shaders v5 — orbit pearls.
 //
-// "flowers-shaders v2 — pipes" (which stays untouched) renders the iridescent
-// tornado: a bundle of solid pipes winding helically around a shared vertical
-// axis. This version drops PEARLS into that tornado — glossy spheres that fall
-// along the braid axis, from the top of the funnel to the bottom, the way a
-// bead would drop through a vortex under gravity. Each pearl carries a
-// DEFORMATION field: as it passes, the braid locally reacts to it. With a
-// positive deformation the pipes bulge outward around the pearl (the tornado
-// opens to let it through); with a negative one they pinch inward, drawn onto
-// the pearl as if it attracted them. Zero deformation lets the pearls thread
-// the funnel without disturbing it.
+// In "flowers-shaders v4 — pearls" (which stays untouched) the pearls fell
+// INSIDE the funnel, threading the braid axis, and their deformation was a
+// bulge/pinch of the braid radius — purely axial. Here the pearls fall on the
+// OUTSIDE of the tornado: each one orbits at a configurable radius beyond the
+// pipes, and an optional SWIRL makes it corkscrew around the structure as it
+// falls (whole turns per fall, so the wrap back to the top stays seamless)
+// instead of dropping in a straight vertical line. Several staggered pearls
+// with swirl enabled chase each other down a helical path, and their combined
+// influence prints a travelling spiral wave onto the braid.
 //
-// ── What is kept from v2, and what is new ────────────────────────────────────
-// Kept: the whole braid geometry (untwist trick, radius pulse), the cosine
-// iridescent palette, the shading model (Fresnel oil-slick hue slide, rim
-// glow, spec, AO, fog) and the chromatic-aberration option.
+// ── The deformation: a 3D domain warp (this is the new part) ─────────────────
+// An off-axis pearl can't be expressed as a braid-radius modulation (that is
+// rotationally symmetric by construction), so v5 deforms SPACE instead of the
+// radius. Every pearl carries a Gaussian displacement field
 //
-// New:
-//   • N pearls on the braid axis, evenly staggered in phase, travelling the
-//     visible span once per fall. Their motion is loop-exact: the fall rate is
-//     snapped to whole falls per loop, and a "gravity" slider eases each fall
-//     from linear (0) to accelerating (1) — the shaping keeps u = 0 → 0 and
-//     u = 1 → 1, so the wrap (pearl exits the bottom, re-enters the top) lands
-//     exactly on the loop seam. A negative fall speed reverses the direction
-//     (the pearls rise through the funnel instead).
-//   • The deformation: each pearl multiplies the local braid radius by
-//     1 + deform · exp(−((y − pearlY)/reach)²) — a Gaussian bulge (deform > 0)
-//     or pinch (deform < 0, clamped so the radius never goes negative) centred
-//     on the pearl and fading over "reach" world units.
+//   v(p) = deform · u · exp(−|u|²),   u = (p − pearl) / reach
 //
-// ── Marching with the extra deformation ──────────────────────────────────────
-// The pearls themselves are exact sphere SDFs unioned in world space — they
-// need no correction. The braid field, however, gains a new slope along y (the
-// Gaussian's derivative), so the conservative Lipschitz divisor from v2 is
-// extended: the radial amplification now uses the worst-case bulged radius,
-// and the pulse-slope term adds the Gaussian's maximum slope (√(2/e)/reach per
-// pearl, summed as if all pearls overlapped — conservative, never wrong). The
-// march step budget is raised to compensate, and a render-scale option is
-// exposed for the heavy end of the sliders.
+// and the braid SDF is sampled at p − Σ v(p): with deform > 0 the sampled
+// point is pulled toward the pearl, so the surface appears PUSHED AWAY from it
+// (repulsion — the pipes dent aside to let the pearl pass); with deform < 0
+// the pipes lean out of the funnel toward the pearl (attraction). The linear-
+// in-u form keeps the field smooth through the pearl's centre (no normalise()
+// singularity) and caps the displacement at 0.43 · deform world units.
+//
+// ── Marching safety ──────────────────────────────────────────────────────────
+// A domain warp scales distances, so the sphere-trace divisor now has two
+// factors: v2's twist Lipschitz bound (unchanged — the underlying geometry is
+// the plain braid) times the warp's own Lipschitz bound. The Jacobian of
+// u·exp(−|u|²) is bounded by 1.213 (attained at |u| = 1/√2), giving
+// warpLip = 1 + 1.213 · |deform| · count / reach, with every pearl summed as
+// if their fields overlapped — conservative, never wrong. Both factors are
+// computed on the CPU and passed pre-multiplied.
+//
+// Pearl motion is loop-exact like v4: whole falls per loop, gravity-eased
+// (u = 0 → 0, u = 1 → 1 preserved), fall speed sign = direction (negative
+// rises), and the swirl is snapped to whole turns per fall so the top-wrap
+// lands on the same azimuth the pearl left from.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_PIPES = 12; // matches the "pipes" slider max
@@ -67,17 +66,17 @@ const FRAGMENT = `
   uniform float uRadiusPulse;     // 0..1 swell of braidRadius along the length
   uniform float uPulseFreq;       // spatial frequency of that swell
   uniform float uPulseSpeed;      // how fast the swell travels over time
-  uniform float uTwistLipschitz;  // CPU-computed safety divisor for the march
+  uniform float uMarchLipschitz;  // CPU-computed twist × warp safety divisor
 
-  // ── Pearls ──
-  uniform float uPearlCount;               // pearls falling through the funnel
-  uniform float uPearlY[${ MAX_PEARLS }];  // axis height of each pearl (CPU-side motion)
-  uniform float uPearlRadius;              // pearl size
-  uniform float uDeform;                   // braid reaction: >0 repel, <0 attract
-  uniform float uDeformWidth;              // reach (world units) of that reaction
-  uniform float uPearlTint;                // 0 = pure white nacre, 1 = full iridescence
+  // ── Pearls (orbiting OUTSIDE the funnel) ──
+  uniform float uPearlCount;              // pearls corkscrewing around the braid
+  uniform vec4  uPearl[${ MAX_PEARLS }];  // xyz = world position (CPU-side motion)
+  uniform float uPearlRadius;             // pearl size
+  uniform float uDeform;                  // displacement: >0 repel, <0 attract
+  uniform float uDeformWidth;             // reach (world units) of the warp
+  uniform float uPearlTint;               // 0 = pure white nacre, 1 = full iridescence
   uniform float uPearlBrightness;
-  uniform float uPearlHueShift;            // hue offset between pearls
+  uniform float uPearlHueShift;           // hue offset between pearls
 
   // ── Camera ──
   uniform float uCamDist;         // eye distance from the braid axis
@@ -85,7 +84,7 @@ const FRAGMENT = `
   uniform float uPitch;           // eye elevation
   uniform float uYaw;             // eye orbit angle (base + time orbit, CPU-side)
 
-  // ── Iridescent palette (shared vocabulary with v1 / v2 / torsade-shaders) ──
+  // ── Iridescent palette (shared vocabulary with v1 / v2 / v4) ──
   uniform float uHueSpeed;        // spectrum scroll over time
   uniform float uHueSpread;       // spectral cycles packed into the palette
   uniform float uHuePhase;        // base hue rotation
@@ -108,9 +107,9 @@ const FRAGMENT = `
   uniform float uMaxDist;         // ray cutoff
 
   // Oil-slick / thin-film iridescence — identical palette to flowers-shaders
-  // v1/v2: a cosine (IQ) spectrum with the RGB channels phase-shifted so the
-  // hue sweeps cleanly through the rainbow, desaturated toward luma and scaled
-  // by brightness.
+  // v1/v2/v4: a cosine (IQ) spectrum with the RGB channels phase-shifted so
+  // the hue sweeps cleanly through the rainbow, desaturated toward luma and
+  // scaled by brightness.
   vec3 iridescent(float t) {
     vec3 spectrum = 0.5 + 0.5 * cos(
       TAU * (uHueSpread * t + vec3(0.0, 0.33, 0.67)) + uHuePhase
@@ -121,36 +120,35 @@ const FRAGMENT = `
     return clamp(mix(vec3(luma), spectrum, uSaturation) * uBrightness, 0.0, 1.0);
   }
 
-  // Summed Gaussian influence of every pearl at height y — the deformation the
-  // pearls print onto the funnel as they pass.
-  float pearlInfluence(float y) {
-    if (uPearlCount < 0.5) { return 0.0; }
+  // The pearls' Gaussian displacement field (see header): sampling the braid
+  // at the warped point makes its surface dent away from (deform > 0) or lean
+  // toward (deform < 0) each passing pearl.
+  vec3 warpByPearls(vec3 p) {
+    if (uPearlCount < 0.5 || abs(uDeform) < 1e-6) { return p; }
 
-    float sum = 0.0;
+    vec3 q = p;
 
     for (int k = 0; k < ${ MAX_PEARLS }; k++) {
       if (float(k) >= uPearlCount) { break; }
 
-      float dy = (y - uPearlY[k]) / uDeformWidth;
+      vec3 u = (p - uPearl[k].xyz) / uDeformWidth;
 
-      sum += exp(-dy * dy);
+      q -= uDeform * u * exp(-dot(u, u));
     }
 
-    return sum;
+    return q;
   }
 
-  // braidRadius along the axis: v2's travelling pulse, multiplied by the pearl
-  // reaction — bulge (deform > 0) or pinch (deform < 0). The clamp keeps a
-  // strong pinch from folding the radius negative (pipes stop at the axis).
+  // braidRadius pulsing along the axis — unchanged from v2.
   float braidRadiusAt(float y) {
-    float pulse = 1.0 + uRadiusPulse * sin(y * uPulseFreq + uT * uPulseSpeed);
-    float react = max(1.0 + uDeform * pearlInfluence(y), 0.0);
-
-    return uBraidRadius * pulse * react;
+    return uBraidRadius * (1.0 + uRadiusPulse * sin(y * uPulseFreq + uT * uPulseSpeed));
   }
 
-  // Signed distance to the braid: untwist space, then union N straight tubes.
-  float mapPipes(vec3 p) {
+  // Signed distance to the deformed braid: warp space by the pearls, untwist,
+  // then union N straight tubes.
+  float mapPipes(vec3 rawP) {
+    vec3 p = warpByPearls(rawP);
+
     float phi = p.y * uTwist + uT * uSpin;
     float c = cos(phi);
     float s = sin(phi);
@@ -169,18 +167,18 @@ const FRAGMENT = `
       best = min(best, d);
     }
 
-    // Conservative bound for the twisted + deformed metric (see header).
-    return best / uTwistLipschitz;
+    // Conservative bound for the twisted + warped metric (see header).
+    return best / uMarchLipschitz;
   }
 
-  // Exact distance to the nearest pearl (spheres on the braid axis).
+  // Exact distance to the nearest pearl (spheres on their orbit path).
   float mapPearls(vec3 p) {
     float best = 1e9;
 
     for (int k = 0; k < ${ MAX_PEARLS }; k++) {
       if (float(k) >= uPearlCount) { break; }
 
-      best = min(best, length(p - vec3(0.0, uPearlY[k], 0.0)) - uPearlRadius);
+      best = min(best, length(p - uPearl[k].xyz) - uPearlRadius);
     }
 
     return best;
@@ -194,7 +192,7 @@ const FRAGMENT = `
     for (int k = 0; k < ${ MAX_PEARLS }; k++) {
       if (float(k) >= uPearlCount) { break; }
 
-      float d = length(p - vec3(0.0, uPearlY[k], 0.0));
+      float d = length(p - uPearl[k].xyz);
 
       if (d < best) { best = d; bestK = float(k); }
     }
@@ -206,8 +204,11 @@ const FRAGMENT = `
     return min(mapPipes(p), mapPearls(p));
   }
 
-  // Which pipe owns this point — recomputed once at the hit for colour banding.
-  float nearestPipe(vec3 p) {
+  // Which pipe owns this point — recomputed once at the hit for colour
+  // banding, in the same warped space the surface was traced in.
+  float nearestPipe(vec3 rawP) {
+    vec3 p = warpByPearls(rawP);
+
     float phi = p.y * uTwist + uT * uSpin;
     float c = cos(phi);
     float s = sin(phi);
@@ -315,14 +316,14 @@ const FRAGMENT = `
       if (t > uMaxDist) { escaped = true; break; }
     }
 
-    // Step-starved rays: where one pipe presses onto another (or a strong
-    // deformation inflates the Lipschitz divisor), a ray creeping along the
-    // contact crease runs out of iterations without ever crossing SURF_EPS —
-    // classically leaving a dark "invisible contour" along the overlap. Accept
-    // ONLY rays that ended their budget still glued to the surface (final d a
-    // hair above the hit threshold): their end point is on the crease, so its
-    // normal and colour are sound. Rays that merely grazed something and flew
-    // past (escaped, or stalled mid-gap with a larger d) must stay background —
+    // Step-starved rays: where one pipe presses onto another (or a strong warp
+    // inflates the Lipschitz divisor), a ray creeping along the contact crease
+    // runs out of iterations without ever crossing SURF_EPS — classically
+    // leaving a dark "invisible contour" along the overlap. Accept ONLY rays
+    // that ended their budget still glued to the surface (final d a hair above
+    // the hit threshold): their end point is on the crease, so its normal and
+    // colour are sound. Rays that merely grazed something and flew past
+    // (escaped, or stalled mid-gap with a larger d) must stay background —
     // shading those instead paints ghost membranes across every gap.
     if (!hit && !escaped && d < SURF_EPS * 4.0) {
       hit = true;
@@ -361,7 +362,7 @@ const FRAGMENT = `
   }
 `;
 
-const pearls = createNoiseFieldRenderer( FRAGMENT );
+const orbitPearls = createNoiseFieldRenderer( FRAGMENT );
 
 sketch.setup(
   () => {},
@@ -389,7 +390,7 @@ sketch.draw( () => {
   // animation.angle sweeps exactly TAU per loop, so the loop seam is invisible
   // only when every time-driven rate completes a WHOLE number of cycles per
   // loop. Each raw slider rate (× time scale) is therefore rounded to whole
-  // cycles below — including the pearls' falls.
+  // cycles below — including the pearls' falls and their swirl.
   const t = animation.angle;
 
   const spinTurns = Math.round( ( braid.spin ?? 0.6 ) * timeScale );
@@ -411,51 +412,61 @@ sketch.draw( () => {
   const pulseFreq = braid.pulseFreq ?? 0.8;
 
   // ── Pearl motion (CPU-side — positions are just uniforms to the shader) ───
-  // Each pearl falls the whole travel span once per fall, staggered in phase
-  // so N pearls thread the funnel evenly. The gravity slider eases each fall
-  // from linear (0) toward accelerating (1); the shaping fixes u = 0 → 0 and
-  // u = 1 → 1, so the wrap back to the top always lands on the loop seam.
-  // Negative fall speed reverses the direction (pearls rise).
+  // Each pearl falls the whole travel span once per fall on an orbit OUTSIDE
+  // the funnel, staggered in fall phase so N pearls chase each other evenly.
+  // The swirl corkscrews the pearl around the braid as it falls — snapped to
+  // whole turns per fall so the wrap back to the top re-enters on the azimuth
+  // it left from. Gravity eases the fall (and the swirl with it, like a
+  // tightening vortex); negative fall speed reverses the direction.
+  //
+  // Azimuth = phase (rotates the whole formation) + spread · k/N (the stagger
+  // BETWEEN pearls) + the swirl's own contribution. The spread slider matters
+  // because swirl already shifts each pearl's azimuth by swirl·k/N turns (its
+  // fall phase feeds its swirl), so some count/swirl combinations collapse
+  // onto one vertical column — e.g. 2 pearls with 1 swirl turn line up
+  // exactly. Spread breaks (or deliberately creates) that alignment.
   const pearlCount = Math.min(
-    pearl.count ?? 1,
+    pearl.count ?? 3,
     MAX_PEARLS
   );
   const fallCycles = Math.round( ( pearl.speed ?? 1 ) * timeScale );
+  const swirlTurns = Math.round( pearl.swirl ?? 1 );
   const gravity = pearl.gravity ?? 0.35;
   const span = pearl.span ?? 6;
-  const pearlRadius = pearl.size ?? 0.34;
-  const deform = pearl.deform ?? 0.6;
+  const orbitRadius = pearl.orbitRadius ?? 1.25;
+  const pearlRadius = pearl.size ?? 0.3;
+  const phaseTurns = pearl.phase ?? 0;
+  const spreadTurns = pearl.spread ?? 0.5;
+  const deform = pearl.deform ?? 0.8;
   const deformWidth = Math.max(
-    pearl.deformRadius ?? 0.9,
+    pearl.deformRadius ?? 0.8,
     0.05
   );
 
-  const pearlY = new Float32Array( MAX_PEARLS );
+  const pearlData = new Float32Array( MAX_PEARLS * 4 );
 
   for ( let k = 0; k < pearlCount; k++ ) {
     const raw = ( t / p.TAU ) * fallCycles + k / pearlCount;
     const u = ( ( raw % 1 ) + 1 ) % 1;
     const shaped = u + gravity * ( u * u - u );
+    const theta = p.TAU * ( phaseTurns + ( spreadTurns * k ) / pearlCount )
+      + p.TAU * swirlTurns * shaped;
 
-    pearlY[ k ] = span * ( 0.5 - shaped );
+    pearlData[ k * 4 ] = orbitRadius * Math.cos( theta );
+    pearlData[ k * 4 + 1 ] = span * ( 0.5 - shaped );
+    pearlData[ k * 4 + 2 ] = orbitRadius * Math.sin( theta );
   }
 
-  // Conservative Lipschitz bound for the twisted + deformed field. Relative to
-  // v2: the radial term uses the worst-case bulged radius (every Gaussian at
-  // its peak), and the axial slope adds the pulse's slope times that bulge
-  // plus the Gaussians' own maximum slope (√(2/e)/reach each, summed as if
-  // all pearls overlapped). A 10% margin keeps the march from overshooting.
-  const bulgeMax = 1 + Math.max(
-    deform,
-    0
-  ) * pearlCount;
-  const maxR = braidRadius * ( 1 + radiusPulse ) * bulgeMax + pipeRadius;
-  const gaussSlope = Math.sqrt( 2 / Math.E ) / deformWidth;
-  const pulseSlope = braidRadius * (
-    radiusPulse * pulseFreq * bulgeMax
-    + ( 1 + radiusPulse ) * Math.abs( deform ) * pearlCount * gaussSlope
-  );
+  // Conservative Lipschitz bound for the march, in two factors (see header):
+  // v2's twist bound for the plain braid, times the pearls' warp bound —
+  // 1.213 is the maximum Jacobian norm of u·exp(−|u|²), and every pearl is
+  // summed as if their fields overlapped. A 10% margin on the twist factor
+  // keeps the march from overshooting.
+  const maxR = braidRadius * ( 1 + radiusPulse ) + pipeRadius;
+  const pulseSlope = braidRadius * radiusPulse * pulseFreq;
   const twistLipschitz = Math.sqrt( 1 + ( maxR * twist + pulseSlope ) ** 2 ) * 1.1;
+  const warpLipschitz = 1 + ( 1.213 * Math.abs( deform ) * pearlCount ) / deformWidth;
+  const marchLipschitz = twistLipschitz * warpLipschitz;
 
   // Field of view (degrees) → focal length of the pinhole camera.
   const fov = camera.fov ?? 45;
@@ -471,7 +482,7 @@ sketch.draw( () => {
     -Math.cos( el ) * Math.cos( az )
   ];
 
-  pearls.render( {
+  orbitPearls.render( {
     columns: 1,
     rows: 1,
     resolutionScale: quality.renderScale ?? 0.85,
@@ -485,10 +496,10 @@ sketch.draw( () => {
       uRadiusPulse: radiusPulse,
       uPulseFreq: pulseFreq,
       uPulseSpeed: pulseCycles,
-      uTwistLipschitz: twistLipschitz,
+      uMarchLipschitz: marchLipschitz,
       uPearlCount: pearlCount,
-      uPearlY: {
-        floatv: pearlY
+      uPearl: {
+        vec4v: pearlData
       },
       uPearlRadius: pearlRadius,
       uDeform: deform,

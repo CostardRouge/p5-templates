@@ -2,56 +2,60 @@
 export const formValues = {
   timeScale: 1,
   braid: {
-    pipeCount: 7,
-    pipeRadius: 0.07,
-    braidRadius: 0.15,
-    twist: 2.42,
-    spin: 2.08,
-    radiusPulse: 0,
+    pipeCount: 4,
+    pipeRadius: 0.1,
+    braidRadius: 0.56,
+    twist: 0.51,
+    spin: 1.56,
+    radiusPulse: 0.47,
     pulseFreq: 0,
     pulseSpeed: 0
   },
   pearls: {
-    count: 2,
-    size: 0.19,
-    speed: -2.15,
-    gravity: 0.66,
-    deform: 1.84,
-    deformRadius: 0.33,
-    span: 3.2,
-    tint: 0.3,
-    brightness: 0.76,
-    hueShift: -0.86
+    count: 4,
+    size: 0.21,
+    speed: -0.81,
+    swirl: -3,
+    gravity: 0.35,
+    orbitRadius: 1.06,
+    phase: 0,
+    spread: 1,
+    deform: -1.5,
+    deformRadius: 0.87,
+    span: 7.5,
+    tint: 0.35,
+    brightness: 1.14,
+    hueShift: -1.08
   },
   camera: {
-    distance: 5.1,
-    fov: 58,
-    pitch: -0.03,
-    yaw: -0.4,
+    distance: 10,
+    fov: 60,
+    pitch: 0.03,
+    yaw: -0.94,
     orbitSpeed: 0.21,
     fogDensity: 0.21
   },
   quality: {
-    renderScale: 0.85
+    renderScale: 1
   },
   colors: {
     hueSpeed: 1.15,
-    hueSpread: 2.25,
+    hueSpread: 1.37,
     huePhase: 2.63,
     lengthHueShift: -0.36,
     pipeHueShift: -0.96,
     shimmer: 2.82,
-    saturation: 0.41,
+    saturation: 0.46,
     brightness: 1.3
   },
   light: {
     azimuth: -1.29,
     elevation: -0.6,
     ambient: 0.34,
-    diffuse: 0.66,
+    diffuse: 0.75,
     specular: 0.99,
-    specPower: 24,
-    fresnelPower: 2,
+    specPower: 10,
+    fresnelPower: 1.88,
     rimStrength: 0
   },
   backgroundColor: [
@@ -133,7 +137,7 @@ export const formConfiguration: Record<string, any> = {
   },
   pearls: {
     component: "nested-object",
-    label: "Pearls",
+    label: "Pearls (outside orbit)",
     fields: {
       count: {
         label: "Pearls (0 = plain tornado)",
@@ -156,6 +160,13 @@ export const formConfiguration: Record<string, any> = {
         max: 3,
         step: 0.01
       },
+      swirl: {
+        label: "Swirl (turns/fall, 0 = straight drop, negative = reverse)",
+        component: "slider",
+        min: -4,
+        max: 4,
+        step: 1
+      },
       gravity: {
         label: "Gravity (0 = steady, 1 = accelerating)",
         component: "slider",
@@ -163,18 +174,39 @@ export const formConfiguration: Record<string, any> = {
         max: 1,
         step: 0.01
       },
+      orbitRadius: {
+        label: "Orbit radius (distance from the axis)",
+        component: "slider",
+        min: 0.5,
+        max: 3,
+        step: 0.01
+      },
+      phase: {
+        label: "Phase (rotate the formation, turns)",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      spread: {
+        label: "Spread (azimuth stagger between pearls, turns)",
+        component: "slider",
+        min: -1,
+        max: 1,
+        step: 0.01
+      },
       deform: {
         label: "Deformation (negative = attract pipes)",
         component: "slider",
-        min: -1,
-        max: 2,
+        min: -1.5,
+        max: 1.5,
         step: 0.01
       },
       deformRadius: {
         label: "Deformation reach",
         component: "slider",
         min: 0.1,
-        max: 3,
+        max: 2,
         step: 0.01
       },
       span: {
