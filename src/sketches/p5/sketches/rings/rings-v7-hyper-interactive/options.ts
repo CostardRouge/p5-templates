@@ -350,7 +350,7 @@ export const formValues = {
       },
       // Drawn size, normalized: × the artwork's natural resolution (the
       // shipped images are 256 px, so 0.18 ≈ 46 px on screen).
-      scale: 0.18,
+      scale: 0.44,
       count: 8,
       seed: 7,
       easing: "easeInOutCubic",
@@ -413,7 +413,7 @@ export const formValues = {
     specular: 1.1,
     specPower: 42,
     fresnelPower: 2.2,
-    rimStrength: 0.6,
+    rimStrength: 0,
     shadowSoftness: 0
   },
 

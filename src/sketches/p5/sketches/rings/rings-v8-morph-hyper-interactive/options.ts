@@ -20,22 +20,22 @@ export const formValues = {
 
   text: {
     words: [
-      "R",
-      "V",
-      "8"
+      "x",
+      "y",
+      "z"
     ] as string[],
     font: "agiro",
     detail: 1,
     simplify: 0,
     // Points sampled along each text's outlines (split proportionally to
     // contour perimeter, ≥ 3 per ring).
-    handles: 48
+    handles: 28
   },
 
   material: {
-    size: 2.2,
-    thickness: 0.05,
-    fusion: 0.12
+    size: 1.55,
+    thickness: 0.03,
+    fusion: 0.064
   },
 
   morph: {
@@ -46,7 +46,7 @@ export const formValues = {
 
   grab: {
     // Pick-up radius (px) around a handle: a press/touch/pinch within it grabs it.
-    radius: 44,
+    radius: 49,
     // Camera pinch: the finger tips must be closer than this (px) to count as
     // "pressed". Released at 1.6× this (hysteresis). Shared by both gestures.
     pinch: 70,
@@ -108,8 +108,8 @@ export const formValues = {
       },
       // Drawn size, normalized: × the artwork's natural resolution (the
       // shipped images are 256 px, so 0.18 ≈ 46 px on screen).
-      scale: 0.18,
-      count: 6,
+      scale: 0.4,
+      count: 8,
       seed: 7,
       easing: "easeInOutCubic",
       timing: {
@@ -124,7 +124,7 @@ export const formValues = {
       // window) show the spinning beach ball instead of the plain pointer.
       idle: {
         beachball: true,
-        spinSpeed: 1
+        spinSpeed: 1.95
       }
     }
   },
@@ -141,30 +141,30 @@ export const formValues = {
   },
 
   camera: {
-    fov: 62,
-    distance: 6.5,
+    fov: 30,
+    distance: 11.8,
     // Auto-fit eases the distance from each text's fitted framing to the
     // next's during the conversion — words and letters mix freely.
     autoFit: {
       enabled: true,
-      margin: 0.35
+      margin: 0.15
     },
     phase: 0.3,
     elevation: 0.2,
     orbit: 0,
-    sway: 0,
-    swayCycles: 2,
+    sway: 0.04,
+    swayCycles: 1,
     fogDensity: 0.06
   },
 
   colors: {
-    hueSpeed: 0.5,
-    hueSpread: 2,
+    hueSpeed: -0.12,
+    hueSpread: 4.03,
     huePhase: 2.6,
     lengthHueShift: -0.25,
     pipeHueShift: 0.6,
     shimmer: 2.2,
-    saturation: 0.8,
+    saturation: 0.9,
     brightness: 1.25
   },
 
@@ -176,12 +176,12 @@ export const formValues = {
     specular: 1.1,
     specPower: 42,
     fresnelPower: 2.2,
-    rimStrength: 0.6,
+    rimStrength: 0,
     shadowSoftness: 0
   },
 
   rendering: {
-    resolutionScale: 0.7
+    resolutionScale: 1
   },
 
   overlay: {
