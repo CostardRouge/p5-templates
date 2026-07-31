@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  useRef, type KeyboardEvent, type PointerEvent
+  useEffect, useRef, type KeyboardEvent, type PointerEvent
 } from "react";
 
 import clamp from "@/utils/clamp";
@@ -28,6 +28,16 @@ const DIRECTION_LOCK_THRESHOLD = 6;
  * scroll with a finger that happens to land on the bar doesn't jump it. The
  * element must carry `touch-action: pan-y` so the browser keeps owning vertical
  * pans. Mouse / pen keep the classic click-anywhere-then-drag behaviour.
+ *
+ * A drag emits at most one `onChange` per animation frame, and never re-emits a
+ * value the bar already holds. Pointer moves arrive far faster than the options
+ * form can consume them — a single change fans out through react-hook-form,
+ * every field watching it, and the sketch bridge — so calling `onChange` from
+ * each move buries the main thread in redundant renders and lets React's
+ * nested-update guard ("Maximum update depth exceeded") trip on a chain of
+ * updates scheduled straight from the event handler. Coalescing keeps the drag
+ * to one update per painted frame; the trailing value is flushed on pointer-up
+ * so the gesture always lands where the finger left it.
  */
 export default function useDragSlider( {
   min,
@@ -43,6 +53,26 @@ export default function useDragSlider( {
     startX: number;
     startY: number;
   } | null>( null );
+
+  // Latest value the gesture produced but hasn't handed to `onChange` yet, and
+  // the frame scheduled to do so.
+  const pending = useRef<number | null>( null );
+  const frame = useRef<number | null>( null );
+  // Last value this gesture emitted — the baseline for skipping no-op changes.
+  // Null between gestures, where the `value` prop is the baseline instead.
+  const emitted = useRef<number | null>( null );
+
+  // A drag can outlive the slider (collapsing the panel mid-gesture), so drop
+  // any frame still owed on unmount.
+  useEffect(
+    () => () => {
+      if ( frame.current !== null ) {
+        cancelAnimationFrame( frame.current );
+        frame.current = null;
+      }
+    },
+    []
+  );
 
   const stepDecimals = ( () => {
     const text = String( step );
@@ -74,7 +104,48 @@ export default function useDragSlider( {
     );
   };
 
+  const commit = ( next: number ) => {
+    if ( next === ( emitted.current ?? value ) ) {
+      return;
+    }
+
+    emitted.current = next;
+    onChange( next );
+  };
+
+  const flushPending = () => {
+    if ( frame.current !== null ) {
+      cancelAnimationFrame( frame.current );
+      frame.current = null;
+    }
+
+    const next = pending.current;
+
+    pending.current = null;
+
+    if ( next !== null ) {
+      commit( next );
+    }
+  };
+
+  // Hold the value until the next frame, so a burst of moves costs one update.
+  const scheduleCommit = ( clientX: number ) => {
+    pending.current = valueFromClientX( clientX );
+
+    if ( frame.current !== null ) {
+      return;
+    }
+
+    frame.current = requestAnimationFrame( () => {
+      frame.current = null;
+      flushPending();
+    } );
+  };
+
   const onPointerDown = ( event: PointerEvent<HTMLDivElement> ) => {
+    emitted.current = null;
+    pending.current = null;
+
     if ( event.pointerType === "touch" ) {
       // Wait for the first move to tell a scroll from an adjust.
       gesture.current = {
@@ -95,7 +166,7 @@ export default function useDragSlider( {
       startY: event.clientY
     };
     ref.current?.setPointerCapture( event.pointerId );
-    onChange( valueFromClientX( event.clientX ) );
+    commit( valueFromClientX( event.clientX ) );
   };
 
   const onPointerMove = ( event: PointerEvent<HTMLDivElement> ) => {
@@ -116,7 +187,7 @@ export default function useDragSlider( {
       if ( dx >= dy ) {
         state.mode = "dragging";
         ref.current?.setPointerCapture( event.pointerId );
-        onChange( valueFromClientX( event.clientX ) );
+        scheduleCommit( event.clientX );
       } else {
         // Vertical intent: hand the gesture back to the page for scrolling.
         state.mode = "scrolling";
@@ -126,7 +197,7 @@ export default function useDragSlider( {
     }
 
     if ( state.mode === "dragging" ) {
-      onChange( valueFromClientX( event.clientX ) );
+      scheduleCommit( event.clientX );
     }
   };
 
@@ -140,8 +211,13 @@ export default function useDragSlider( {
     // A tap (no committed direction) sets the value at the touch point, keeping
     // the familiar tap-to-set affordance — but only on a real pointerup, never
     // on the pointercancel the browser fires when it takes over for scrolling.
-    if ( state.mode === "pending" && event.type === "pointerup" ) {
-      onChange( valueFromClientX( event.clientX ) );
+    if ( state.mode === "pending" ) {
+      if ( event.type === "pointerup" ) {
+        commit( valueFromClientX( event.clientX ) );
+      }
+    } else {
+      // Land the value the last move produced, whether or not its frame ran.
+      flushPending();
     }
 
     if ( ref.current?.hasPointerCapture( event.pointerId ) ) {
@@ -149,6 +225,7 @@ export default function useDragSlider( {
     }
 
     gesture.current = null;
+    emitted.current = null;
   };
 
   const onKeyDown = ( event: KeyboardEvent<HTMLDivElement> ) => {
