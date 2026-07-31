@@ -3646,5 +3646,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-07-30T20:51:24.310Z",
     "ctime": "2026-07-30T20:49:40.698Z"
+  },
+  {
+    "name": "rings-v6-letter-sculpt",
+    "engine": "p5",
+    "category": "rings",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-31T10:18:38.912Z",
+    "ctime": "2026-07-31T10:17:48.772Z"
   }
 ]
