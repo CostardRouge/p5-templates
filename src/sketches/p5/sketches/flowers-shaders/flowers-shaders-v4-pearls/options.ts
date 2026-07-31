@@ -54,10 +54,6 @@ export const formValues = {
     fresnelPower: 2,
     rimStrength: 0
   },
-  aberration: {
-    amount: 0,
-    mode: "radial" as "radial" | "horizontal"
-  },
   backgroundColor: [
     0,
     0,
@@ -393,33 +389,6 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 2,
         step: 0.01
-      }
-    }
-  },
-  aberration: {
-    component: "nested-object",
-    label: "Chromatic aberration",
-    fields: {
-      amount: {
-        label: "Amount px (0 = off)",
-        component: "slider",
-        min: 0,
-        max: 40,
-        step: 0.5
-      },
-      mode: {
-        label: "Direction",
-        component: "select",
-        options: [
-          {
-            label: "Radial",
-            value: "radial"
-          },
-          {
-            label: "Horizontal",
-            value: "horizontal"
-          }
-        ]
       }
     }
   },

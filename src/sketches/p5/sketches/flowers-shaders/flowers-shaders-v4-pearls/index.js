@@ -107,10 +107,6 @@ const FRAGMENT = `
   uniform float uFogStart;        // distance at which fog begins (≈ camera dist)
   uniform float uMaxDist;         // ray cutoff
 
-  // ── Chromatic aberration ──
-  uniform float uAberration;      // channel separation (0 = off)
-  uniform int   uAberrationMode;  // 0 = radial, 1 = horizontal
-
   // Oil-slick / thin-film iridescence — identical palette to flowers-shaders
   // v1/v2: a cosine (IQ) spectrum with the RGB channels phase-shifted so the
   // hue sweeps cleanly through the rainbow, desaturated toward luma and scaled
@@ -304,6 +300,8 @@ const FRAGMENT = `
   // far braid melts into the p5 background instead of a hard cut).
   vec4 traceRay(vec3 ro, vec3 rd) {
     float t = 0.0;
+    float dMin = 1e9;
+    float tMin = 0.0;
     bool  hit = false;
 
     for (int i = 0; i < ${ MAX_STEPS }; i++) {
@@ -312,9 +310,22 @@ const FRAGMENT = `
 
       if (d < SURF_EPS) { hit = true; break; }
 
+      if (d < dMin) { dMin = d; tMin = t; }
+
       t += d;
 
       if (t > uMaxDist) { break; }
+    }
+
+    // Step-starved rays: where one pipe presses onto another (or a strong
+    // deformation inflates the Lipschitz divisor), a ray grazing the crease
+    // creeps along tiny steps and runs out of iterations without ever crossing
+    // SURF_EPS — classically leaving a dark "invisible contour" along the
+    // overlap. Those rays did brush the surface, so shade their
+    // closest-approach point instead of dropping them to the background.
+    if (!hit && dMin < SURF_EPS * 8.0) {
+      hit = true;
+      t = tMin;
     }
 
     if (!hit) { return vec4(0.0); }
@@ -344,27 +355,9 @@ const FRAGMENT = `
     vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), fwd));
     vec3 up = cross(fwd, right);
 
-    if (uAberration < 0.5) {
-      vec3 rd = normalize(fwd * uFocal + right * uv.x + up * uv.y);
-      gl_FragColor = traceRay(ro, rd);
-      return;
-    }
+    vec3 rd = normalize(fwd * uFocal + right * uv.x + up * uv.y);
 
-    // Split R/B along slightly offset rays for a lens-like colour fringe.
-    vec2 dir = uAberrationMode == 1
-      ? vec2(1.0, 0.0)
-      : normalize(uv + vec2(1e-4));
-    vec2 off = dir * (uAberration / uResolution.y);
-
-    vec3 rdR = normalize(fwd * uFocal + right * (uv.x + off.x) + up * (uv.y + off.y));
-    vec3 rdG = normalize(fwd * uFocal + right * uv.x + up * uv.y);
-    vec3 rdB = normalize(fwd * uFocal + right * (uv.x - off.x) + up * (uv.y - off.y));
-
-    vec4 cr = traceRay(ro, rdR);
-    vec4 cg = traceRay(ro, rdG);
-    vec4 cb = traceRay(ro, rdB);
-
-    gl_FragColor = vec4(cr.r, cg.g, cb.b, max(cr.a, max(cg.a, cb.a)));
+    gl_FragColor = traceRay(ro, rd);
   }
 `;
 
@@ -384,7 +377,6 @@ sketch.draw( () => {
   const quality = o.quality ?? {};
   const colors = o.colors ?? {};
   const light = o.light ?? {};
-  const aberration = o.aberration ?? {};
 
   p.clear();
   p.background( ...( o.backgroundColor ?? [
@@ -525,11 +517,7 @@ sketch.draw( () => {
       uRimStrength: light.rimStrength ?? 0.7,
       uFogDensity: camera.fogDensity ?? 0.14,
       uFogStart: camDist,
-      uMaxDist: camDist + 10,
-      uAberration: aberration.amount ?? 0,
-      uAberrationMode: {
-        int: ( aberration.mode ?? "radial" ) === "horizontal" ? 1 : 0
-      }
+      uMaxDist: camDist + 10
     }
   } );
 } );
