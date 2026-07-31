@@ -2,62 +2,62 @@
 export const formValues = {
   timeScale: 1,
   braid: {
-    pipeCount: 4,
-    pipeRadius: 0.21,
-    braidRadius: 0.56,
-    twist: 2.08,
-    spin: -0.77,
+    pipeCount: 5,
+    pipeRadius: 0.18,
+    braidRadius: 0.32,
+    twist: 2.31,
+    spin: 1.56,
     radiusPulse: 0.47,
-    pulseFreq: 1.38,
-    pulseSpeed: 2.12
+    pulseFreq: 0,
+    pulseSpeed: 0
   },
   pearls: {
-    count: 3,
-    size: 0.3,
-    speed: 1,
-    swirl: 1,
-    gravity: 0.35,
-    orbitRadius: 1.25,
-    deform: 0.8,
-    deformRadius: 0.8,
-    span: 6,
+    count: 2,
+    size: 0.15,
+    speed: -0.59,
+    swirl: 4,
+    gravity: 0.72,
+    orbitRadius: 1.15,
+    deform: -1.09,
+    deformRadius: 0.62,
+    span: 6.5,
     tint: 0.35,
     brightness: 1.15,
-    hueShift: 0.4
+    hueShift: -1.08
   },
   camera: {
-    distance: 5.1,
-    fov: 58,
-    pitch: -0.03,
-    yaw: -0.4,
+    distance: 10,
+    fov: 60,
+    pitch: 0.03,
+    yaw: -0.94,
     orbitSpeed: 0.21,
     fogDensity: 0.21
   },
   quality: {
-    renderScale: 0.85
+    renderScale: 1
   },
   colors: {
     hueSpeed: 1.15,
-    hueSpread: 2.03,
+    hueSpread: 1.37,
     huePhase: 2.63,
     lengthHueShift: -0.36,
     pipeHueShift: -0.96,
     shimmer: 2.82,
-    saturation: 0.88,
+    saturation: 0.46,
     brightness: 1.3
   },
   light: {
     azimuth: -1.29,
     elevation: -0.6,
     ambient: 0.34,
-    diffuse: 0.66,
+    diffuse: 0.75,
     specular: 0.99,
-    specPower: 24,
-    fresnelPower: 3.3,
-    rimStrength: 0.87
+    specPower: 10,
+    fresnelPower: 1.88,
+    rimStrength: 0
   },
   aberration: {
-    amount: 3,
+    amount: 0,
     mode: "radial" as "radial" | "horizontal"
   },
   backgroundColor: [
