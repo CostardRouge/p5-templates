@@ -3670,5 +3670,17 @@
     "hiddenFromGallery": false,
     "mtime": "2026-07-31T10:18:38.912Z",
     "ctime": "2026-07-31T10:17:48.772Z"
+  },
+  {
+    "name": "rings-v7-hyper-interactive",
+    "engine": "p5",
+    "category": "rings",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": false,
+    "hiddenFromGallery": false,
+    "mtime": "2026-07-31T18:58:52.720Z",
+    "ctime": "2026-07-31T12:57:43.303Z"
   }
 ]

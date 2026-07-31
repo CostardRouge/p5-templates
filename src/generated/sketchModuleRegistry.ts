@@ -229,6 +229,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:rings/rings-v4-letter-morph": () => import( "@/p5/sketches/rings/rings-v4-letter-morph/index.js" ),
   "p5:rings/rings-v5-constellation": () => import( "@/p5/sketches/rings/rings-v5-constellation/index.js" ),
   "p5:rings/rings-v6-letter-sculpt": () => import( "@/p5/sketches/rings/rings-v6-letter-sculpt/index.js" ),
+  "p5:rings/rings-v7-hyper-interactive": () => import( "@/p5/sketches/rings/rings-v7-hyper-interactive/index.js" ),
   "p5:semaphore/semaphore-v0-dots": () => import( "@/p5/sketches/semaphore/semaphore-v0-dots/index.js" ),
   "p5:semaphore/semaphore-v1-lines": () => import( "@/p5/sketches/semaphore/semaphore-v1-lines/index.js" ),
   "p5:shader-loops/shader-loops-v1-hypnotic": () => import( "@/p5/sketches/shader-loops/shader-loops-v1-hypnotic/index.js" ),
