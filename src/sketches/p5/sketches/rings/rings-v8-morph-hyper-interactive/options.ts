@@ -5,306 +5,62 @@ import {
   interactionFormConfiguration, interactionFormValues
 } from "@/p5/utils/interaction/defaults.js";
 
-// v6's hand-sculpted letter, plus the option structure for VIRTUAL POINTERS:
-// fictional cursors that will move around the canvas on their own. This is the
-// groundwork only — the three artworks are declared and loaded, nothing is
-// drawn yet (Input sources → Virtual pointers → Images).
-//
-// One glyph of the v4 liquid-tube material, sculpted by hand: every outline
-// sample is a draggable 3D handle. Thumb + index pinch (or mouse / finger)
-// drags a handle in the letter plane; thumb + MIDDLE pinch (index extended) or
-// SHIFT + mouse-drag pushes/pulls it in depth. The sculpt offsets are
-// persisted below (signature-guarded, hidden from the form) so a sculpted
-// letter survives reloads and is exported with the template.
+// A cycle of texts (single letters or whole words) physically converted into
+// one another by a troupe of virtual pointers: matched points are dragged to
+// their new positions, missing points are carried in from outside the canvas
+// (add-pointer icon), surplus points are grabbed and carried off (the icon
+// flips to the remove-pointer as the cursor retreats). Each finished text
+// holds legible for a fraction of its beat; cursors that are between jobs
+// wait as a spinning beach ball. The whole show lives on the loop clock, so
+// frame 0 (first text formed, no cursors) wraps seamlessly — live and in a
+// deterministic capture. The camera can auto-fit the current/next text's
+// width, so words and letters can mix freely in one cycle.
 export const formValues = {
   timeScale: 1,
 
   text: {
-    value: "R",
+    words: [
+      "R",
+      "V",
+      "8"
+    ] as string[],
     font: "agiro",
     detail: 1,
-    simplify: 0
+    simplify: 0,
+    // Points sampled along each text's outlines (split proportionally to
+    // contour perimeter, ≥ 3 per ring).
+    handles: 48
   },
 
   material: {
-    size: 2.65,
-    thickness: 0.065,
-    fusion: 0.061
+    size: 2.2,
+    thickness: 0.05,
+    fusion: 0.12
   },
 
-  sculpt: {
-    // Handles along the glyph outlines (regenerates the layout — and resets
-    // the sculpt, like any letter/font/detail change).
-    handles: 48,
-    // Max displacement of a handle (glyph units; the glyph is ~1 unit tall).
-    range: 1,
-    // Depth gesture gain (negative inverts push/pull).
-    depthGain: 1,
-    // Persisted sculpt state (no form UI): one { x, y, z } offset per handle,
-    // tied to the glyph build it was sculpted on. Any mismatch resets flat.
-    signature: "R|Agiro|1|0|48",
-    offsets: [
-      {
-        x: -0.21170444399515848,
-        y: -0.06802171578805415,
-        z: 0
-      },
-      {
-        x: -0.042118784438434864,
-        y: 0.027028418603034475,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: -0.21946350407513882,
-        y: -0.05260812091787642,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0.04850139001551386,
-        y: -0.22852607135107167,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0.16951137342991202,
-        y: -0.17504254091995064,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0.03607440318754379,
-        y: 0.03479665148252717,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: -0.005183930470199077,
-        y: 0.002794110814276274,
-        z: 0
-      },
-      {
-        x: 0.13620294286133006,
-        y: -0.11351494991822686,
-        z: 0
-      },
-      {
-        x: 0.039559954651134654,
-        y: -0.041807105069258804,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0.1489304436469197,
-        y: 0.1984694125069,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0.006055862554250488,
-        y: -0.0051327578642014204,
-        z: 0
-      },
-      {
-        x: 0.09408129549255115,
-        y: 0.19133003874285237,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: -0.018284773696345402,
-        y: 0.01912858769082021,
-        z: 0
-      },
-      {
-        x: -0.17327609602087068,
-        y: 0.1500617451145403,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: -0.2616987644378602,
-        y: -0.04512527787408748,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0.0195155744550885,
-        y: 0.1451144813030183,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0.07497695895466702,
-        y: 0.07535557221914828,
-        z: 0
-      },
-      {
-        x: 0.09841311039386688,
-        y: -0.0021783460979366565,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0.034950380002518704,
-        y: -0.09363804803023874,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      {
-        x: -0.1158367700845003,
-        y: 0.08498862243234873,
-        z: 0
-      },
-      {
-        x: 0.1371266176389777,
-        y: 0.007641035089214002,
-        z: 0
-      },
-      {
-        x: 0,
-        y: 0,
-        z: 0
-      }
-    ] as Array<{ x: number;
-      y: number;
-      z: number }>
+  morph: {
+    // Fraction of each beat the finished text stays legible before the troupe
+    // starts converting it into the next one.
+    hold: 0.3
   },
 
   grab: {
     // Pick-up radius (px) around a handle: a press/touch/pinch within it grabs it.
-    radius: 120,
+    radius: 44,
     // Camera pinch: the finger tips must be closer than this (px) to count as
     // "pressed". Released at 1.6× this (hysteresis). Shared by both gestures.
     pinch: 70,
     // EMA lag on the pinch midpoint to calm jittery hand landmarks (0 = none,
     // higher = smoother but laggier). Mouse / touch stay unsmoothed.
-    cameraSmoothing: 0.4
+    cameraSmoothing: 0.4,
+    // Depth gesture gain (negative inverts push/pull).
+    depthGain: 1
   },
 
-  // Mouse + touch + camera hands drive the sculpting. Touch MUST stay enabled
-  // so the viewport hands the touchscreen to the sketch instead of panning.
-  // Vision is armed (Hands pre-selected for the pinches) but starts OFF — flip
-  // Vision → Enabled to sculpt by pinching; raise Max hands to let a small
-  // crowd of hands sculpt the letter together.
+  // Mouse + touch + camera hands can still sculpt mid-show. Touch MUST stay
+  // enabled so the viewport hands the touchscreen to the sketch instead of
+  // panning. Vision is armed (Hands pre-selected for the pinches) but starts
+  // OFF — flip Vision → Enabled to sculpt by pinching.
   interaction: {
     ...interactionFormValues,
     mouse: {
@@ -335,37 +91,40 @@ export const formValues = {
       ...interactionFormValues.visualization,
       enabled: false
     },
-    // The scripted sculpting crowd: cursors that enter from outside the
-    // canvas, split the handles evenly, hover → grab → drag each one to a
-    // random (outward-biased) spot, then retreat and fade out. One artwork per
-    // pointer state (same `image` asset field as the photo sketches); timings
-    // are in loop seconds, so the whole show replays identically every loop
-    // and in a deterministic capture.
+    // The stage crew: cursors that convert each text into the next. One
+    // artwork per pointer state (same `image` asset field as the photo
+    // sketches); the timing values are WEIGHTS shaping the rhythm inside each
+    // task's slice of the conversion window — the window itself is set by the
+    // beat layout, so the show always completes and the loop always closes.
     virtualPointers: {
       enabled: true,
       images: {
         pointing: "/assets/images/cursors/handpointing.png",
         open: "/assets/images/cursors/handopen.png",
-        grabbing: "/assets/images/cursors/handgrabbing.png"
+        grabbing: "/assets/images/cursors/handgrabbing.png",
+        add: "/assets/images/cursors/addpointer.png",
+        remove: "/assets/images/cursors/removepointer.png",
+        waiting: "/assets/images/cursors/beachball.png"
       },
       // Drawn size, normalized: × the artwork's natural resolution (the
       // shipped images are 256 px, so 0.18 ≈ 46 px on screen).
       scale: 0.18,
-      count: 8,
+      count: 6,
       seed: 7,
       easing: "easeInOutCubic",
       timing: {
-        stagger: 0.25,
-        entryPause: 0.35,
+        stagger: 0.2,
         travel: 0.45,
         hover: 0.2,
         drag: 0.6,
         release: 0.15,
-        fade: 0.45
+        fade: 0.35
       },
-      displacement: {
-        amount: 0.35,
-        outwardBias: 0.75
+      // Cursors caught between jobs (a hold beat, or waiting for their next
+      // window) show the spinning beach ball instead of the plain pointer.
+      idle: {
+        beachball: true,
+        spinSpeed: 1
       }
     }
   },
@@ -384,10 +143,14 @@ export const formValues = {
   camera: {
     fov: 62,
     distance: 6.5,
-    // A touch of yaw/elevation so the sculpted relief reads at rest; sculpting
-    // stays exact at any angle (the CPU mirrors the shader camera).
-    phase: 0.42,
-    elevation: 0.34,
+    // Auto-fit eases the distance from each text's fitted framing to the
+    // next's during the conversion — words and letters mix freely.
+    autoFit: {
+      enabled: true,
+      margin: 0.35
+    },
+    phase: 0.3,
+    elevation: 0.2,
     orbit: 0,
     sway: 0,
     swayCycles: 2,
@@ -424,8 +187,8 @@ export const formValues = {
   overlay: {
     points: {
       show: true,
-      size: 25,
-      coreRatio: 0.82,
+      size: 14,
+      coreRatio: 0.5,
       color: [
         255,
         255,
@@ -459,11 +222,17 @@ export const formConfiguration: Record<string, any> = {
 
   text: {
     component: "nested-object",
-    label: "Letter",
+    label: "Texts",
     fields: {
-      value: {
-        label: "Letter (first character is used)",
-        component: "text"
+      words: {
+        label: "Cycle (letters or words, one beat each)",
+        component: "item-list",
+        minItems: 1,
+        maxItems: 8,
+        itemConfig: {
+          label: "Text",
+          component: "text"
+        }
       },
       font: {
         label: "Font",
@@ -486,6 +255,13 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 2,
         step: 0.05
+      },
+      handles: {
+        label: "Points per text",
+        component: "slider",
+        min: 12,
+        max: 64,
+        step: 1
       }
     }
   },
@@ -495,7 +271,7 @@ export const formConfiguration: Record<string, any> = {
     label: "Material (tube)",
     fields: {
       size: {
-        label: "Letter size (world)",
+        label: "Text size (world)",
         component: "slider",
         min: 0.5,
         max: 5,
@@ -518,38 +294,22 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  // Only the sculpt knobs are exposed — `signature` / `offsets` are the
-  // persisted sculpt state, written by the sketch on every release.
-  sculpt: {
+  morph: {
     component: "nested-object",
-    label: "Sculpt",
+    label: "Cycle",
     fields: {
-      handles: {
-        label: "Handles along the outline (resets the sculpt)",
+      hold: {
+        label: "Hold (fraction of each beat the text stays legible)",
         component: "slider",
-        min: 12,
-        max: 64,
-        step: 1
-      },
-      range: {
-        label: "Reach (max displacement, glyph units)",
-        component: "slider",
-        min: 0.1,
-        max: 2,
-        step: 0.05
-      },
-      depthGain: {
-        label: "Depth gesture gain (negative inverts)",
-        component: "slider",
-        min: -4,
-        max: 4,
-        step: 0.1
+        min: 0,
+        max: 0.85,
+        step: 0.01
       }
     }
   },
 
   grab: {
-    label: "Grab",
+    label: "Grab (manual sculpting)",
     component: "nested-object",
     fields: {
       radius: {
@@ -572,13 +332,19 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 0.95,
         step: 0.05
+      },
+      depthGain: {
+        label: "Depth gesture gain (negative inverts)",
+        component: "slider",
+        min: -4,
+        max: 4,
+        step: 0.1
       }
     }
   },
 
   // Focused subset of the shared interaction form: only the modalities this
-  // sketch reads (mouse, touch, camera hands). The Max-hands slider is widened
-  // beyond the shared default so a whole crowd of hands can sculpt at once.
+  // sketch reads (mouse, touch, camera hands) plus the stage crew.
   interaction: {
     component: "nested-object",
     label: "Input sources",
@@ -610,7 +376,7 @@ export const formConfiguration: Record<string, any> = {
         label: "Virtual pointers",
         fields: {
           enabled: {
-            label: "Enabled (run the sculpting show)",
+            label: "Enabled (run the conversion show)",
             component: "checkbox"
           },
           images: {
@@ -622,11 +388,23 @@ export const formConfiguration: Record<string, any> = {
                 component: "image"
               },
               open: {
-                label: "Open hand (over a handle)",
+                label: "Open hand (over a point)",
                 component: "image"
               },
               grabbing: {
-                label: "Closed hand (dragging a handle)",
+                label: "Closed hand (dragging a point)",
+                component: "image"
+              },
+              add: {
+                label: "Add pointer (carrying a new point in)",
+                component: "image"
+              },
+              remove: {
+                label: "Remove pointer (carrying a point away)",
+                component: "image"
+              },
+              waiting: {
+                label: "Waiting (spins between jobs)",
                 component: "image"
               }
             }
@@ -639,14 +417,14 @@ export const formConfiguration: Record<string, any> = {
             step: 0.01
           },
           count: {
-            label: "Cursors (handles are split evenly)",
+            label: "Cursors (tasks are split between them)",
             component: "slider",
             min: 1,
             max: 16,
             step: 1
           },
           seed: {
-            label: "Random seed (targets & directions)",
+            label: "Random seed",
             component: "slider",
             min: 0,
             max: 100,
@@ -658,52 +436,45 @@ export const formConfiguration: Record<string, any> = {
           },
           timing: {
             component: "nested-object",
-            label: "Timing (loop seconds)",
+            label: "Rhythm (weights within each task)",
             fields: {
               stagger: {
-                label: "Entry stagger between cursors",
-                component: "slider",
-                min: 0,
-                max: 2,
-                step: 0.05
-              },
-              entryPause: {
-                label: "Pause after entering",
+                label: "Start stagger between cursors",
                 component: "slider",
                 min: 0,
                 max: 2,
                 step: 0.05
               },
               travel: {
-                label: "Travel time to a handle",
+                label: "Travel weight",
                 component: "slider",
                 min: 0.05,
                 max: 3,
                 step: 0.05
               },
               hover: {
-                label: "Hover delay before grabbing",
+                label: "Hover weight (pause before grabbing)",
                 component: "slider",
                 min: 0,
                 max: 2,
                 step: 0.05
               },
               drag: {
-                label: "Drag duration",
+                label: "Drag weight",
                 component: "slider",
                 min: 0.05,
                 max: 3,
                 step: 0.05
               },
               release: {
-                label: "Open-hand pause after releasing",
+                label: "Release weight (pause after letting go)",
                 component: "slider",
                 min: 0,
                 max: 2,
                 step: 0.05
               },
               fade: {
-                label: "Fade in/out duration",
+                label: "Fade in/out duration (loop seconds)",
                 component: "slider",
                 min: 0,
                 max: 2,
@@ -711,23 +482,20 @@ export const formConfiguration: Record<string, any> = {
               }
             }
           },
-          displacement: {
+          idle: {
             component: "nested-object",
-            label: "Displacement",
+            label: "Waiting",
             fields: {
-              amount: {
-                label: "Amount (glyph units)",
-                component: "slider",
-                min: 0,
-                max: 1.5,
-                step: 0.01
+              beachball: {
+                label: "Spin the waiting icon between jobs",
+                component: "checkbox"
               },
-              outwardBias: {
-                label: "Outward bias (1 = always outward)",
+              spinSpeed: {
+                label: "Spin speed (turns per loop second)",
                 component: "slider",
                 min: 0,
-                max: 1,
-                step: 0.01
+                max: 4,
+                step: 0.05
               }
             }
           }
@@ -784,7 +552,7 @@ export const formConfiguration: Record<string, any> = {
 
   camera: {
     component: "nested-object",
-    label: "Camera (orbit)",
+    label: "Camera",
     fields: {
       fov: {
         label: "Field of view °",
@@ -794,11 +562,28 @@ export const formConfiguration: Record<string, any> = {
         step: 1
       },
       distance: {
-        label: "Distance from the letter",
+        label: "Distance (used when auto-fit is off)",
         component: "slider",
         min: 0.5,
-        max: 12,
+        max: 20,
         step: 0.05
+      },
+      autoFit: {
+        component: "nested-object",
+        label: "Auto-fit",
+        fields: {
+          enabled: {
+            label: "Fit the distance to each text's width",
+            component: "checkbox"
+          },
+          margin: {
+            label: "Fit margin",
+            component: "slider",
+            min: 0,
+            max: 1.5,
+            step: 0.05
+          }
+        }
       },
       phase: {
         label: "Yaw (viewpoint angle)",
@@ -808,7 +593,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       elevation: {
-        label: "Elevation (look down ↔ up at the letter)",
+        label: "Elevation (look down ↔ up at the text)",
         component: "slider",
         min: -1.4,
         max: 1.4,
@@ -969,7 +754,7 @@ export const formConfiguration: Record<string, any> = {
         step: 0.01
       },
       shadowSoftness: {
-        label: "Letter shadows (0 = off, higher = harder)",
+        label: "Text shadows (0 = off, higher = harder)",
         component: "slider",
         min: 0,
         max: 64,
@@ -993,15 +778,15 @@ export const formConfiguration: Record<string, any> = {
   },
 
   overlay: {
-    label: "Sculpt handle markers",
+    label: "Point markers",
     component: "nested-object",
     fields: {
       points: {
-        label: "Handles",
+        label: "Points",
         component: "nested-object",
         fields: {
           show: {
-            label: "Show handles",
+            label: "Show points",
             component: "checkbox"
           },
           size: {

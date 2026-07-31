@@ -19,9 +19,6 @@ import {
   focalFromFov
 } from "@/p5/utils/braidShader.js";
 import {
-  setSketchOptions
-} from "@/p5/shared/syncSketchOptions.js";
-import {
   initInteraction,
   getPointerGroups
 } from "@/p5/utils/interaction/index.js";
@@ -35,89 +32,68 @@ import {
   drawInteractionCameraPreview
 } from "@/p5/utils/interaction/overlay.js";
 import {
+  DURATION_DEFAULT
+} from "@/lib/animationConfig";
+import {
   renderSplines
 } from "../../splines/_shared.js";
 import {
-  createPointerTroupe,
-  VIRTUAL_POINTER_PREFIX
+  createMorphTroupe,
+  buildTransition
 } from "./virtualPointers.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// rings v7 — hyper interactive.
+// rings v8 — morph hyper interactive.
 //
-// v6's hand-sculpted letter, sculpted by a troupe of VIRTUAL POINTERS: scripted
-// cursors (drawn with the three artworks from Input sources → Virtual pointers
-// → Images) enter from outside the canvas, split the sculpt handles evenly
-// between them, and one by one hover (open hand), grab (closed hand) and drag
-// each handle to a randomly chosen spot — more often outward than inward —
-// then retreat and fade out once their share of the letter is done. The
-// choreography lives in ./virtualPointers.js; it feeds plain pointers into the
-// SAME drag layer as the mouse, so everything below is v6's sculptor
-// unchanged, and you can still sculpt by hand mid-performance. Timing runs on
-// the loop clock (deterministic capture replays the exact same show; every
-// loop restarts it from the same letter), and virtual releases skip the
-// options persistence so the performance never rewrites the saved sculpt.
+// v7 let a troupe of virtual pointers sculpt ONE letter at random. v8 gives
+// the troupe a SCRIPT: a list of texts (single letters or whole words), and
+// the cursors physically convert each one into the next — the loop is cut
+// into one beat per text, each beat holding the finished word legible for a
+// configurable fraction and spending the rest as the conversion window.
 //
-// Everything below is v6:
+// ── Point bookkeeping (where v8 differs from v4's morph) ─────────────────────
+// Texts rarely share a point count or contour structure, so instead of v4's
+// fixed slot layout the words meet through a TRANSITION PLAN (see
+// virtualPointers.js): matched points are DRAGGED to their new positions,
+// missing points are CARRIED IN from outside the canvas by an add-pointer
+// cursor, surplus points are grabbed and CARRIED OFF — the cursor's icon
+// flipping to the remove-pointer as it retreats. The live shape is a pool of
+// point slots: at every beat boundary the pool SNAPS to the finished word
+// (positions + ring links), so the conversion may be as messy as it likes —
+// including your own mouse meddling mid-show — and the word still lands
+// exactly. Carried-in points float as lone beads until the snap splices them
+// into the outline.
 //
-// ONE glyph of v4's liquid tube material sits at the centre — but instead of
-// melting on its own clock, it is SCULPTED by hand: every outline sample is a
-// draggable handle, and braid-v6-interactive-ring's interaction contract
-// (mouse + touch + camera-tracked hand pinches, several hands at once) is
-// applied to the letter's own points. Pinch thumb + index on a handle and pull
-// to stretch the stroke; the capsule field re-fuses around wherever the points
-// go. No automatic morph — v6 deliberately keeps a single letter so the whole
-// loop budget belongs to the sculptor. (Later versions may reintroduce
-// letter-to-letter morphs driven by the same hands.)
-//
-// ── Geometry (glyph → sculpt handles) ────────────────────────────────────────
-// textToPoints → splitContours → resampleContour, the family recipe — but where
-// v4 forced a fixed slot layout for morph correspondence, v6 has no morph and
-// simply spreads a "handles" budget over the glyph's contours proportionally to
-// their perimeter (≥ 3 per ring). Each handle is a base point (glyph space,
-// bbox-centred, y up) plus a persisted sculpt OFFSET — a full 3D displacement:
-// the letter starts flat in the z = 0 plane and gains relief as handles are
-// pushed and pulled. Offsets live in the saved options (signature-guarded:
-// letter / font / detail / handle-count changes reset the sculpt) so a sculpted
-// letter survives reloads and is exported with the template.
-//
-// ── Screen ↔ world (why sculpting stays exact off-axis) ──────────────────────
-// braid-v6 locked its camera face-on to keep the drag mapping invertible. v6
-// instead mirrors the shared braidShader orbit camera IN FULL on the CPU
-// (same ro / right / up / fwd basis, same focal), so any world point projects
-// to the exact pixel the shader shades it at — for ANY yaw / pitch. Dragging
-// unprojects the pointer at the handle's current view depth (a move in the
-// view-parallel plane through the point), so a marker never slides off the
-// tube it deforms even while the camera sways.
-//
-// ── Depth sculpting (the z gesture) ──────────────────────────────────────────
-// XY dragging is the usual thumb + INDEX pinch (or mouse / finger). Depth uses
-// a second same-hand gesture: pinch thumb + MIDDLE finger (index kept clear —
-// the tracker requires it extended, so the two pinches never fight) and move
-// the hand vertically to push the grabbed point away / pull it toward the
-// camera along world z. With the mouse, hold SHIFT while dragging for the same
-// push/pull. Give the camera a bit of yaw/elevation (or sway) and the relief
-// reads immediately; fog adds a depth cue on pushed points.
+// ── Camera ───────────────────────────────────────────────────────────────────
+// Words differ in width, so the camera can auto-fit: the distance eases from
+// one text's fitted distance to the next's during the conversion window
+// (whole words stay in frame without touching the slider). The fit respects
+// the fov and canvas aspect with a margin knob; switch it off to drive the
+// distance manually. Everything else — the raymarched capsule material, the
+// exact CPU mirror of the shader camera, manual mouse/touch/pinch sculpting
+// through the shared drag layer, the SHIFT/middle-pinch depth gesture — is
+// v7 unchanged. Nothing persists: the cycle is the artwork.
 //
 // ── Loop safety ──────────────────────────────────────────────────────────────
-// Geometry is static within a frame (only user edits move it). Camera sway
-// snaps to whole cycles per loop, orbit to whole turns, and the hue scroll to
-// whole palette periods — uT = TAU matches uT = 0, capture stays seamless.
+// The schedule lives on the loop clock: frame 0 is word[0] fully formed with
+// every cursor gone, and the final beat reserves time for the exodus — so
+// uT = TAU meets uT = 0 exactly, live and in deterministic capture.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MAX_POINTS = 64; // sculpt handles = capsules (uniform array size)
-const MAX_CONTOURS = 4; // outlines kept per glyph (longest first)
+const MAX_POINTS = 128; // pool slots = capsules (uniform array size)
+const MAX_WORD_POINTS = 64; // handle budget cap per text
+const MAX_CONTOURS = 12; // outlines kept per text (longest first)
 const MAX_STEPS = 96; // sphere-trace iterations per ray
 const BUILD_SIZE = 100; // glyph sampling size; geometry normalised by it
 
 const FRAGMENT = `
   ${ BRAID_UNIFORMS_GLSL }
 
-  // ── Sculpted letter field (glyph units, scaled to world by uScale) ──
+  // ── Morphing word field (glyph units, scaled to world by uScale) ──
   uniform int   uSegCount;              // capsules active this frame
   uniform vec4  uSegA[${ MAX_POINTS }]; // capsule start: xyz + arc identity in w
   uniform vec4  uSegB[${ MAX_POINTS }]; // capsule end: xyz
-  uniform float uRad;                   // bounding radius (offsets included)
+  uniform float uRad;                   // bounding radius (live pool)
   uniform float uScale;                 // world size of one glyph unit
   uniform float uTubeR;                 // tube radius (world)
   uniform float uSmoothK;               // smooth-union fillet (world)
@@ -131,9 +107,8 @@ const FRAGMENT = `
     return mix(b, a, h) - k * h * (1.0 - h);
   }
 
-  // Distance to the 3D segment a→b (round-capped capsule axis). The letter is
-  // no longer a flat extrusion — sculpted points leave the z = 0 plane, so the
-  // capsules are genuinely 3D.
+  // Distance to the 3D segment a→b (round-capped capsule axis). A lone bead
+  // (a == b) degenerates to a sphere — that is how carried points render.
   float segDist3D(vec3 p, vec3 a, vec3 b) {
     vec3 pa = p - a;
     vec3 ba = b - a;
@@ -148,8 +123,8 @@ const FRAGMENT = `
     float kn = max(uSmoothK * inv, 1e-4);
     vec3 q = p * inv;
 
-    // Bounding sphere around the sculpt (recomputed on the CPU every frame) —
-    // rays far from the letter skip the capsule loop entirely.
+    // Bounding sphere around the live pool (recomputed on the CPU every
+    // frame) — rays far from the word skip the capsule loop entirely.
     float bound = length(q) - uRad - tubeRn - kn;
 
     if (bound > 0.3) { return bound * uScale; }
@@ -166,7 +141,7 @@ const FRAGMENT = `
   }
 
   // Hue identity = the nearest capsule's arc position along the outline (0..1),
-  // so uPipeHueShift drifts the palette around the letter's contours.
+  // so uPipeHueShift drifts the palette around the word's contours.
   float nearestPipe(vec3 p) {
     vec3 q = p / max(uScale, 1e-4);
     float best = 1e9;
@@ -190,7 +165,7 @@ const FRAGMENT = `
   ${ BRAID_CAMERA_MAIN_GLSL }
 `;
 
-const sculptRenderer = createNoiseFieldRenderer( FRAGMENT );
+const morphRenderer = createNoiseFieldRenderer( FRAGMENT );
 
 function clamp(
   value, min, max
@@ -204,9 +179,9 @@ function clamp(
   );
 }
 
-// ── Letter geometry (built once per letter/font/detail/handles, memoised) ────
+// ── Word geometry (built once per text/font/detail/handles, memoised) ────────
 const geometryMemo = new Map();
-const GEOMETRY_MEMO_MAX = 8;
+const GEOMETRY_MEMO_MAX = 16;
 
 function perimeterOf( points ) {
   let total = 0;
@@ -221,14 +196,14 @@ function perimeterOf( points ) {
   return total;
 }
 
-// Sample ONE glyph into up to MAX_CONTOURS closed rings of handles: the
-// `handles` budget is spread proportionally to contour perimeter (≥ 3 per
-// ring), each ring is resampled to constant arc spacing, and everything is
-// normalised to glyph space (bbox centre at the origin, y up). `next` closes
-// each ring (index → following index within the same contour) and `ids` is the
-// 0..1 arc identity the shader uses for the outline hue drift.
-function buildLetter( {
-  letter,
+// Sample a whole text (single letter or word) into up to MAX_CONTOURS closed
+// rings: the handle budget spreads proportionally to contour perimeter (≥ 3
+// per ring), each ring resamples to constant arc spacing, and everything is
+// normalised to glyph space (text bbox centre at the origin, y up). Returns
+// the ring structure (`contours`, `next`) the transition plan and the shader
+// upload both need, plus the bbox half-extents the auto-fit camera reads.
+function buildWord( {
+  word,
   fontName,
   sampleFactor,
   simplifyThreshold,
@@ -237,7 +212,7 @@ function buildLetter( {
   const p = getP5();
   const font = string.fonts[ fontName ] ?? string.fonts.sans;
 
-  if ( !font?.font || !letter ) {
+  if ( !font?.font || !word ) {
     return null;
   }
 
@@ -246,7 +221,7 @@ function buildLetter( {
   p.textSize( BUILD_SIZE );
 
   const raw = font.textToPoints(
-    letter,
+    word,
     0,
     0,
     BUILD_SIZE,
@@ -262,7 +237,7 @@ function buildLetter( {
     return null;
   }
 
-  const contours = splitContours(
+  const outlines = splitContours(
     raw,
     0.2 * BUILD_SIZE
   )
@@ -279,28 +254,26 @@ function buildLetter( {
       MAX_CONTOURS
     );
 
-  if ( !contours.length ) {
+  if ( !outlines.length ) {
     return null;
   }
 
   const budget = clamp(
     Math.round( handles ),
     12,
-    MAX_POINTS
+    MAX_WORD_POINTS
   );
-  const totalPerimeter = contours.reduce(
+  const totalPerimeter = outlines.reduce(
     (
-      sum, contour
-    ) => sum + contour.perimeter,
+      sum, outline
+    ) => sum + outline.perimeter,
     0
   );
-  const counts = contours.map( ( contour ) => Math.max(
+  const counts = outlines.map( ( outline ) => Math.max(
     3,
-    Math.round( budget * contour.perimeter / totalPerimeter )
+    Math.round( budget * outline.perimeter / totalPerimeter )
   ) );
 
-  // Trim the largest rings until the budget fits the uniform array (the ≥ 3
-  // floors can push the proportional split past it).
   let sum = counts.reduce(
     (
       total, n
@@ -308,7 +281,10 @@ function buildLetter( {
     0
   );
 
-  while ( sum > budget ) {
+  while ( sum > Math.max(
+    budget,
+    outlines.length * 3
+  ) ) {
     const i = counts.indexOf( Math.max( ...counts ) );
 
     if ( counts[ i ] <= 3 ) {
@@ -321,20 +297,19 @@ function buildLetter( {
 
   const sampled = [];
   const next = [];
+  const contours = [];
 
-  contours.forEach( (
-    contour, contourIndex
+  outlines.forEach( (
+    outline, outlineIndex
   ) => {
-    // Spacing = perimeter / n yields exactly n ring samples (the closing
-    // duplicate is dropped by the util).
     const samples = resampleContour(
-      contour.pts,
-      contour.perimeter / counts[ contourIndex ],
+      outline.pts,
+      outline.perimeter / counts[ outlineIndex ],
       true
     );
     const count = Math.min(
       samples.length,
-      MAX_POINTS - sampled.length
+      MAX_WORD_POINTS - sampled.length
     );
 
     if ( count < 3 ) {
@@ -347,13 +322,17 @@ function buildLetter( {
       sampled.push( samples[ i ] );
       next.push( start + ( i + 1 ) % count );
     }
+
+    contours.push( {
+      start,
+      count
+    } );
   } );
 
   if ( sampled.length < 3 ) {
     return null;
   }
 
-  // Glyph bbox centre — the anchor everything is normalised around.
   let minX = Infinity;
   let maxX = -Infinity;
   let minY = Infinity;
@@ -393,15 +372,18 @@ function buildLetter( {
     count: points.length,
     points,
     next,
-    ids
+    ids,
+    contours,
+    halfW: ( maxX - minX ) / 2 / BUILD_SIZE,
+    halfH: ( maxY - minY ) / 2 / BUILD_SIZE
   };
 }
 
-function getLetter( cfg ) {
+function getWord( cfg ) {
   const font = string.fonts[ cfg.fontName ] ?? string.fonts.sans;
   const fontFamily = font?.font?.names?.fontFamily?.en || "unknown";
   const key = [
-    cfg.letter,
+    cfg.word,
     fontFamily,
     cfg.sampleFactor,
     cfg.simplifyThreshold,
@@ -414,7 +396,7 @@ function getLetter( cfg ) {
     return cached;
   }
 
-  const built = buildLetter( cfg );
+  const built = buildWord( cfg );
 
   // Font still loading → don't cache the null, retry next frame.
   if ( !built ) {
@@ -438,120 +420,121 @@ function getLetter( cfg ) {
   return geometry;
 }
 
-// ── Sculpt offsets: working copy ↔ saved options ─────────────────────────────
-// Same contract as braid-v6's control points: the working copy is the truth
-// while dragging, the options store is the truth otherwise (form edits,
-// reloads, resets), and every release persists — so a sculpt survives reloads
-// and is exported with the template. The signature ties offsets to the glyph
-// build they belong to; any letter/font/detail/handles change resets the relief.
+// ── Transition plans (memoised per word pair) ───────────────────────────────
+const transitionMemo = new Map();
+const TRANSITION_MEMO_MAX = 24;
+
+function getTransition(
+  src, dst
+) {
+  const key = `${ src.key }→${ dst.key }`;
+  const cached = transitionMemo.get( key );
+
+  if ( cached ) {
+    return cached;
+  }
+
+  const transition = buildTransition(
+    src,
+    dst
+  );
+
+  transitionMemo.set(
+    key,
+    transition
+  );
+
+  if ( transitionMemo.size > TRANSITION_MEMO_MAX ) {
+    transitionMemo.delete( transitionMemo.keys().next().value );
+  }
+
+  return transition;
+}
+
+// ── Live pool: the points currently on stage ────────────────────────────────
+// Slot layout per beat: [0, srcCount) = the current word's points (active,
+// ring-linked), then one slot per planned add (inactive until its cursor
+// fetches it; a lone floating bead once alive). Rebuilt — i.e. SNAPPED to the
+// beat's word — every time the step or the cycle signature changes.
 const state = {
-  // Working copy: one { x, y, z } offset (glyph units) per handle.
-  offsets: [],
-  // Geometry key the offsets belong to.
-  signature: null,
-  // JSON of the items last exchanged with the store (detects external edits).
-  syncHash: null
+  poolKey: null,
+  slots: []
 };
 
 const draggable = createDraggable();
 const pinch = createPinchTracker();
+const troupe = createMorphTroupe();
 
-function isOffset( value ) {
-  return !!value
-    && typeof value.x === "number"
-    && typeof value.y === "number"
-    && typeof value.z === "number";
-}
-
-function adoptOffsets( items ) {
-  state.offsets = items.map( ( n ) => ( {
-    x: n.x,
-    y: n.y,
-    z: n.z
-  } ) );
-  state.syncHash = JSON.stringify( items );
-}
-
-function persistOffsets( signature ) {
-  const items = state.offsets.map( ( n ) => ( {
-    x: n.x,
-    y: n.y,
-    z: n.z
+function rebuildPool(
+  src, transition
+) {
+  const slots = src.points.map( (
+    pt, i
+  ) => ( {
+    x: pt.x,
+    y: pt.y,
+    z: 0,
+    active: true,
+    next: src.next[ i ],
+    id: src.ids[ i ]
   } ) );
 
-  state.syncHash = JSON.stringify( items );
+  transition.adds.slice(
+    0,
+    MAX_POINTS - slots.length
+  ).forEach( ( dstIndex ) => {
+    slots.push( {
+      x: 0,
+      y: 0,
+      z: 0,
+      active: false,
+      next: -1,
+      id: dstIndex / MAX_WORD_POINTS
+    } );
+  } );
 
-  // deepMerge preserves the sibling keys (range, depthGain…); origin "p5" so
-  // the options module skips its own change handler (no feedback loop).
-  setSketchOptions(
-    {
-      sketch: {
-        sculpt: {
-          signature,
-          offsets: items
-        }
+  state.slots = slots;
+}
+
+// SHIFT state for the mouse depth gesture, tracked at module scope: p5's own
+// keyIsDown depends on per-instance window bindings the engine tears down and
+// recreates between runs, so one global listener is both simpler and reliable.
+let shiftDown = false;
+
+if ( typeof window !== "undefined" ) {
+  window.addEventListener(
+    "keydown",
+    ( event ) => {
+      if ( event.key === "Shift" ) {
+        shiftDown = true;
       }
-    },
-    "p5"
+    }
+  );
+  window.addEventListener(
+    "keyup",
+    ( event ) => {
+      if ( event.key === "Shift" ) {
+        shiftDown = false;
+      }
+    }
+  );
+  window.addEventListener(
+    "blur",
+    () => {
+      shiftDown = false;
+    }
   );
 }
 
-function resetOffsets(
-  count, signature
-) {
-  adoptOffsets( new Array( count )
-    .fill( null )
-    .map( () => ( {
-      x: 0,
-      y: 0,
-      z: 0
-    } ) ) );
-  persistOffsets( signature );
-}
-
-// Reconcile the working copy with the stored options (skipped while a drag is
-// in flight so a grabbed handle isn't snapped back to a stale value).
-function syncOffsets(
-  cfg, geometry
-) {
-  const items = Array.isArray( cfg.offsets ) ? cfg.offsets : [];
-  const valid = cfg.signature === geometry.key
-    && items.length === geometry.count
-    && items.every( isOffset );
-
-  if ( state.signature !== geometry.key ) {
-    if ( valid ) {
-      adoptOffsets( items );
-    } else {
-      resetOffsets(
-        geometry.count,
-        geometry.key
-      );
-    }
-
-    state.signature = geometry.key;
-
-    return;
-  }
-
-  if ( !valid ) {
-    resetOffsets(
-      geometry.count,
-      geometry.key
-    );
-
-    return;
-  }
-
-  if ( JSON.stringify( items ) !== state.syncHash ) {
-    adoptOffsets( items );
-  }
-}
+// Last pointer position per drag key, for delta-based depth moves.
+const dragCursor = new Map();
+// Pool indices moved in depth this frame (drawn with the amber accent).
+const depthActive = new Set();
 
 // ── Camera rig: the shared braidShader orbit camera, mirrored on the CPU ─────
 // Exact same basis construction as BRAID_CAMERA_MAIN_GLSL (uRoll stays 0), so
 // projectPoint/unprojectPoint agree with the shader to the pixel for any
-// yaw/pitch — that agreement is what lets the sculpt stay grabbable off-axis.
+// yaw/pitch — that agreement is what lets the show stay grabbable off-axis.
 
 function vNormalize( v ) {
   const len = Math.hypot(
@@ -584,10 +567,10 @@ function vDot(
 }
 
 function cameraRig(
-  camera, t, progress
+  camera, t, progress, distanceOverride
 ) {
   const dist = Math.max(
-    camera.distance ?? 6.5,
+    distanceOverride ?? camera.distance ?? 6.5,
     0.5
   );
   const focal = focalFromFov( camera.fov ?? 60 );
@@ -687,13 +670,27 @@ function unprojectPoint(
   ];
 }
 
-// ── Depth pinch: thumb + MIDDLE finger = grab in z ──────────────────────────
-// The XY layer's counterpart for the third axis. Same hand-group contract as
-// the shared pinch tracker (trailing five points are the fingertips in
-// MediaPipe order), same hysteresis latch — but it only ENGAGES while the
-// index is clearly extended, so it can never fight the thumb+index XY pinch:
-// closing all three fingers reads as an XY grab, thumb-to-middle with the
-// index up reads as a depth grab.
+// The camera distance at which a shape's bbox (plus tube reach and margin)
+// fits both screen axes: uv is normalised by height, so a point fits when
+// focal·|y|/d ≤ 0.5 vertically and focal·|x|/d ≤ aspect/2 horizontally.
+function fitDistance(
+  shape, camera, scale, tubeR, aspect, margin
+) {
+  const focal = focalFromFov( camera.fov ?? 60 );
+  const reach = tubeR * 2;
+  const halfW = shape.halfW * scale + reach;
+  const halfH = shape.halfH * scale + reach;
+
+  return Math.max(
+    2 * focal * halfH,
+    2 * focal * halfW / Math.max(
+      aspect,
+      0.1
+    )
+  ) * ( 1 + margin );
+}
+
+// ── Depth pinch: thumb + MIDDLE finger = grab in z (v7, unchanged) ──────────
 function createDepthPinch() {
   const hands = new Map();
   const smooth = new Map();
@@ -795,8 +792,6 @@ function createDepthPinch() {
       return pointers;
     },
 
-    // Thumb + middle markers (amber while a depth grab is engaged) so the
-    // second gesture is as visible as the shared tracker's first.
     draw() {
       if ( hands.size === 0 ) {
         return;
@@ -855,61 +850,6 @@ function createDepthPinch() {
 }
 
 const depthPinch = createDepthPinch();
-// The scripted sculpting crowd (see ./virtualPointers.js and the header).
-const troupe = createPointerTroupe();
-
-// SHIFT state for the mouse depth gesture, tracked at module scope: p5's own
-// keyIsDown depends on per-instance window bindings the engine tears down and
-// recreates between runs, so one global listener is both simpler and reliable.
-let shiftDown = false;
-
-if ( typeof window !== "undefined" ) {
-  window.addEventListener(
-    "keydown",
-    ( event ) => {
-      if ( event.key === "Shift" ) {
-        shiftDown = true;
-      }
-    }
-  );
-  window.addEventListener(
-    "keyup",
-    ( event ) => {
-      if ( event.key === "Shift" ) {
-        shiftDown = false;
-      }
-    }
-  );
-  window.addEventListener(
-    "blur",
-    () => {
-      shiftDown = false;
-    }
-  );
-}
-
-// Last pointer position per drag key, for delta-based depth moves.
-const dragCursor = new Map();
-// Handle indices moved in depth this frame (drawn with the amber accent).
-const depthActive = new Set();
-
-function clampOffset(
-  offset, range
-) {
-  const len = Math.hypot(
-    offset.x,
-    offset.y,
-    offset.z
-  );
-
-  if ( len > range ) {
-    const s = range / len;
-
-    offset.x *= s;
-    offset.y *= s;
-    offset.z *= s;
-  }
-}
 
 // The usual hand-capture look for every detected hand: one glowing spline
 // through the fingertips (batched in a single GPU pass by renderSplines).
@@ -955,8 +895,12 @@ function drawHandRibbons(
   );
 }
 
+// Inactive pool slots park their target here — unreachable by any pointer and
+// skipped by the marker pass.
+const SENTINEL = -1e6;
+
 // Handle markers (dot + core, perspective-scaled by view depth) with the
-// braid-v6 hover/grab accents — plus amber for handles held by a depth grab.
+// hover/grab accents — amber for handles held by a depth grab.
 function drawHandles(
   p, targets, rig, hovers, grabbed, overlay
 ) {
@@ -991,6 +935,10 @@ function drawHandles(
   p.noStroke();
 
   targets.forEach( ( target ) => {
+    if ( target.x < SENTINEL / 2 ) {
+      return;
+    }
+
     const s = size * scaleOf( target );
 
     p.fill( ...color );
@@ -1010,7 +958,7 @@ function drawHandles(
   p.noFill();
 
   hovers.forEach( ( index ) => {
-    if ( grabbed.has( index ) ) {
+    if ( grabbed.has( index ) || targets[ index ].x < SENTINEL / 2 ) {
       return;
     }
 
@@ -1031,6 +979,10 @@ function drawHandles(
   } );
 
   grabbed.forEach( ( index ) => {
+    if ( targets[ index ].x < SENTINEL / 2 ) {
+      return;
+    }
+
     const target = targets[ index ];
     const accent = depthActive.has( index )
       ? [
@@ -1064,14 +1016,13 @@ const segA = new Float32Array( MAX_POINTS * 4 );
 const segB = new Float32Array( MAX_POINTS * 4 );
 
 sketch.setup( async() => {
-  state.offsets = [];
-  state.signature = null;
-  state.syncHash = null;
+  state.poolKey = null;
+  state.slots = [];
   dragCursor.clear();
   depthActive.clear();
 
   // Re-arm the drag layer's listeners (the engine's event registry is cleared
-  // on reset) and forget any hands from a previous run.
+  // on reset) and forget any hands / schedules from a previous run.
   draggable.attach();
   pinch.clear();
   depthPinch.clear();
@@ -1085,7 +1036,7 @@ sketch.draw( () => {
   const o = options.sketch ?? {};
   const textCfg = o.text ?? {};
   const material = o.material ?? {};
-  const sculpt = o.sculpt ?? {};
+  const morph = o.morph ?? {};
   const interaction = o.interaction ?? {};
   const camera = o.camera ?? {};
   const colors = o.colors ?? {};
@@ -1100,74 +1051,140 @@ sketch.draw( () => {
     0
   ] ) );
 
-  const geometry = getLetter( {
-    letter: [
-      ...( textCfg.value ?? "R" ).toString().trim()
-    ][ 0 ] ?? "",
-    fontName: textCfg.font ?? "agiro",
-    sampleFactor: textCfg.detail ?? 1,
-    simplifyThreshold: textCfg.simplify ?? 0,
-    handles: sculpt.handles ?? 48
-  } );
+  // ── The text cycle: one geometry per entry (letters or words) ──────────────
+  const wordList = ( Array.isArray( textCfg.words ) ? textCfg.words : [] )
+    .map( ( word ) => ( word ?? "" ).toString().trim() )
+    .filter( Boolean );
 
-  // Font still loading (or empty text) — background only until it resolves.
-  if ( !geometry ) {
+  if ( !wordList.length ) {
     return;
   }
 
-  // Re-sync from the store only when nothing is being dragged — except on a
-  // geometry change, which must win (it releases stale drags via the target
-  // count anyway).
-  if ( !draggable.dragging || state.signature !== geometry.key ) {
-    syncOffsets(
-      sculpt,
-      geometry
+  const shapes = wordList.map( ( word ) => getWord( {
+    word,
+    fontName: textCfg.font ?? "agiro",
+    sampleFactor: textCfg.detail ?? 1,
+    simplifyThreshold: textCfg.simplify ?? 0,
+    handles: textCfg.handles ?? 48
+  } ) );
+
+  // Font still loading (or an entry produced no outline) — wait it out.
+  if ( shapes.some( ( shape ) => !shape ) ) {
+    return;
+  }
+
+  // ── Beat layout on the loop clock ──────────────────────────────────────────
+  const T = DURATION_DEFAULT;
+  const t = ( ( animation.loopTime % T ) + T ) % T;
+  const stepCount = shapes.length;
+  const stepDur = T / stepCount;
+  const holdFrac = clamp(
+    morph.hold ?? 0.3,
+    0,
+    0.85
+  );
+  const holdDur = stepDur * holdFrac;
+  const stepIndex = Math.min(
+    Math.floor( t / stepDur ),
+    stepCount - 1
+  );
+  const src = shapes[ stepIndex ];
+  const dst = shapes[ ( stepIndex + 1 ) % stepCount ];
+  const transition = getTransition(
+    src,
+    dst
+  );
+
+  // Snap the pool to this beat's word (finishes the previous conversion and
+  // recovers from any scrub) whenever the beat or the cycle itself changes.
+  const cycleKey = shapes.map( ( shape ) => shape.key ).join( "," );
+  const poolKey = `${ cycleKey }#${ stepIndex }`;
+
+  if ( state.poolKey !== poolKey ) {
+    state.poolKey = poolKey;
+    rebuildPool(
+      src,
+      transition
     );
   }
 
-  const t = animation.angle;
-  const progress = ( ( t / p.TAU ) % 1 + 1 ) % 1;
+  const scale = Math.max(
+    material.size ?? 2.2,
+    0.1
+  );
+  const tubeR = Math.max(
+    material.thickness ?? 0.05,
+    0.005
+  );
+
+  // ── Camera: auto-fit distance eases from this word to the next ─────────────
+  const autoFit = camera.autoFit ?? {};
+  let distanceOverride = null;
+
+  if ( autoFit.enabled !== false ) {
+    const aspect = p.width / Math.max(
+      p.height,
+      1
+    );
+    const margin = autoFit.margin ?? 0.35;
+    const fitSrc = fitDistance(
+      src,
+      camera,
+      scale,
+      tubeR,
+      aspect,
+      margin
+    );
+    const fitDst = fitDistance(
+      dst,
+      camera,
+      scale,
+      tubeR,
+      aspect,
+      margin
+    );
+    const morphU = clamp(
+      ( t - stepIndex * stepDur - holdDur ) / Math.max(
+        stepDur - holdDur,
+        1e-4
+      ),
+      0,
+      1
+    );
+
+    distanceOverride = fitSrc + ( fitDst - fitSrc ) * morphU;
+  }
+
+  const progress = t / T;
   const rig = cameraRig(
     camera,
     t,
-    progress
+    progress,
+    distanceOverride
   );
 
-  const scale = Math.max(
-    material.size ?? 3,
-    0.1
-  );
-  const range = sculpt.range ?? 1;
+  // ── Live pool projections = the drag targets ───────────────────────────────
+  // Fixed length for the whole beat so drag indices stay stable; inactive
+  // slots sit on the sentinel where no pointer can reach them.
+  const targets = state.slots.map( ( slot ) => {
+    if ( !slot.active ) {
+      return {
+        x: SENTINEL,
+        y: SENTINEL,
+        depth: rig.dist
+      };
+    }
 
-  // Sculpted handle positions (glyph units) and their screen projections —
-  // the drag targets. onMove mutates entries in place so later pointers in the
-  // same frame see updated positions.
-  const glyphAt = ( index ) => {
-    const base = geometry.points[ index ];
-    const offset = state.offsets[ index ];
-
-    return [
-      base.x + ( offset?.x ?? 0 ),
-      base.y + ( offset?.y ?? 0 ),
-      offset?.z ?? 0
-    ];
-  };
-  const targets = [];
-
-  for ( let i = 0; i < geometry.count; i++ ) {
-    const g = glyphAt( i );
-    const projected = projectPoint(
+    return projectPoint(
       p,
       rig,
       [
-        g[ 0 ] * scale,
-        g[ 1 ] * scale,
-        g[ 2 ] * scale
+        slot.x * scale,
+        slot.y * scale,
+        slot.z * scale
       ]
     );
-
-    targets.push( projected );
-  }
+  } );
 
   // One groups fetch per frame, shared by the drag layer (mouse + touch), both
   // pinch trackers and the hand visuals.
@@ -1188,58 +1205,110 @@ sketch.draw( () => {
 
   depthActive.clear();
 
-  // The scripted crowd resolves BEFORE the drag layer so its pointers grab
-  // through the exact same path as the mouse this very frame. It reads the
-  // live targets/offsets and returns plain { key, x, y, pressed } pointers.
+  // ── The stage crew ─────────────────────────────────────────────────────────
   const vpCfg = interaction.virtualPointers ?? {};
+  const steps = shapes.map( (
+    shape, k
+  ) => ( {
+    srcCount: shape.count,
+    transition: getTransition(
+      shape,
+      shapes[ ( k + 1 ) % stepCount ]
+    )
+  } ) );
   const virtualPointers = troupe.update( {
-    now: animation.loopTime,
+    now: t,
     config: vpCfg,
+    steps,
+    stepDur,
+    holdDur,
     targets,
-    offsets: state.offsets,
-    glyphBase: ( i ) => geometry.points[ i ],
-    projectGlyph: ( g ) => projectPoint(
-      p,
-      rig,
-      [
-        g.x * scale,
-        g.y * scale,
-        g.z * scale
-      ]
-    ),
-    range,
+    projectShapePoint: (
+      k, i
+    ) => {
+      const pt = shapes[ k ].points[ i ] ?? {
+        x: 0,
+        y: 0
+      };
+
+      return projectPoint(
+        p,
+        rig,
+        [
+          pt.x * scale,
+          pt.y * scale,
+          0
+        ]
+      );
+    },
+    activatePoint: (
+      i, screenPt
+    ) => {
+      const slot = state.slots[ i ];
+
+      if ( !slot || slot.active ) {
+        return;
+      }
+
+      // The new point pops into existence under the add pointer, off-canvas:
+      // unproject at the word plane's depth so the bead hangs on the cursor.
+      const world = unprojectPoint(
+        p,
+        rig,
+        screenPt,
+        rig.dist
+      );
+
+      slot.x = world[ 0 ] / scale;
+      slot.y = world[ 1 ] / scale;
+      slot.z = 0;
+      slot.active = true;
+      slot.next = -1;
+
+      targets[ i ] = projectPoint(
+        p,
+        rig,
+        [
+          slot.x * scale,
+          slot.y * scale,
+          0
+        ]
+      );
+    },
+    deactivatePoint: ( i ) => {
+      const slot = state.slots[ i ];
+
+      if ( !slot || !slot.active ) {
+        return;
+      }
+
+      slot.active = false;
+
+      // Splice the ring shut behind the departed point.
+      state.slots.forEach( ( other ) => {
+        if ( other.next === i ) {
+          other.next = slot.next === i ? -1 : slot.next;
+        }
+      } );
+      slot.next = -1;
+      targets[ i ].x = SENTINEL;
+      targets[ i ].y = SENTINEL;
+    },
     width: p.width,
     height: p.height,
-    geometryKey: geometry.key
+    signature: [
+      cycleKey,
+      stepCount,
+      holdFrac,
+      JSON.stringify( vpCfg.timing ?? {} ),
+      vpCfg.count ?? "",
+      vpCfg.easing ?? ""
+    ].join( "|" )
   } );
-
-  const refreshTarget = ( index ) => {
-    const g = glyphAt( index );
-    const projected = projectPoint(
-      p,
-      rig,
-      [
-        g[ 0 ] * scale,
-        g[ 1 ] * scale,
-        g[ 2 ] * scale
-      ]
-    );
-
-    targets[ index ].x = projected.x;
-    targets[ index ].y = projected.y;
-    targets[ index ].depth = projected.depth;
-  };
-
-  // Who is holding what before this frame's update — the released-key diff
-  // below tells human releases (persist) apart from virtual ones (ephemeral).
-  const heldBefore = [
-    ...draggable.drags.keys()
-  ];
 
   const {
     hovers,
-    grabbed,
-    released
+    grabbed
   } = draggable.update( {
     targets,
     radius: grab.radius ?? 44,
@@ -1252,9 +1321,9 @@ sketch.draw( () => {
     onMove: (
       index, pointer
     ) => {
-      const offset = state.offsets[ index ];
+      const slot = state.slots[ index ];
 
-      if ( !offset ) {
+      if ( !slot || !slot.active ) {
         return;
       }
 
@@ -1264,18 +1333,21 @@ sketch.draw( () => {
 
       if ( depthMode ) {
         // Vertical pointer travel → push/pull along world z, converted through
-        // the letter-plane pixel scale so hand travel and depth travel feel
-        // 1:1 on screen (then scaled by the depth gain).
+        // the word-plane pixel scale so hand travel and depth travel feel 1:1.
         if ( last ) {
           const pxPerWorld = rig.focal / rig.dist * p.height;
-          const gain = sculpt.depthGain ?? 1;
+          const gain = grab.depthGain ?? 1;
 
-          offset.z += ( last.y - pointer.y ) / pxPerWorld * gain / scale;
+          slot.z = clamp(
+            slot.z + ( last.y - pointer.y ) / pxPerWorld * gain / scale,
+            -1.5,
+            1.5
+          );
         }
 
         depthActive.add( index );
       } else {
-        // Move in the view-parallel plane through the handle (its view depth
+        // Move in the view-parallel plane through the point (its view depth
         // stays what it was this frame), so the marker tracks the pointer
         // exactly for any camera yaw/pitch.
         const world = unprojectPoint(
@@ -1284,17 +1356,32 @@ sketch.draw( () => {
           pointer,
           targets[ index ].depth
         );
-        const base = geometry.points[ index ];
 
-        offset.x = world[ 0 ] / scale - base.x;
-        offset.y = world[ 1 ] / scale - base.y;
+        slot.x = clamp(
+          world[ 0 ] / scale,
+          -6,
+          6
+        );
+        slot.y = clamp(
+          world[ 1 ] / scale,
+          -6,
+          6
+        );
       }
 
-      clampOffset(
-        offset,
-        range
+      const projected = projectPoint(
+        p,
+        rig,
+        [
+          slot.x * scale,
+          slot.y * scale,
+          slot.z * scale
+        ]
       );
-      refreshTarget( index );
+
+      targets[ index ].x = projected.x;
+      targets[ index ].y = projected.y;
+      targets[ index ].depth = projected.depth;
       dragCursor.set(
         pointer.key,
         {
@@ -1305,7 +1392,8 @@ sketch.draw( () => {
     }
   } );
 
-  // Forget delta anchors of pointers that stopped dragging.
+  // Forget delta anchors of pointers that stopped dragging. Nothing persists
+  // in v8 — the cycle itself is the artwork.
   for ( const key of [
     ...dragCursor.keys()
   ] ) {
@@ -1314,47 +1402,41 @@ sketch.draw( () => {
     }
   }
 
-  // Persist on HUMAN releases only. The troupe's displacements stay ephemeral
-  // (each loop replays the show from the saved sculpt), so the performance
-  // never rewrites what was authored by hand.
-  const humanReleased = released && heldBefore.some( ( key ) => !draggable.drags.has( key )
-    && !key.startsWith( VIRTUAL_POINTER_PREFIX ) );
-
-  if ( humanReleased ) {
-    persistOffsets( geometry.key );
-  }
-
-  // ── Upload the sculpted capsule field (glyph units) ────────────────────────
+  // ── Upload the live capsule field (glyph units) ────────────────────────────
+  let written = 0;
   let radius = 0;
 
-  for ( let i = 0; i < geometry.count; i++ ) {
-    const a = glyphAt( i );
-    const b = glyphAt( geometry.next[ i ] );
+  state.slots.forEach( ( slot ) => {
+    if ( !slot.active || written >= MAX_POINTS ) {
+      return;
+    }
+
+    const linked = slot.next >= 0 ? state.slots[ slot.next ] : null;
+    const other = linked?.active ? linked : slot;
 
     radius = Math.max(
       radius,
       Math.hypot(
-        a[ 0 ],
-        a[ 1 ],
-        a[ 2 ]
+        slot.x,
+        slot.y,
+        slot.z
       )
     );
 
-    segA[ i * 4 ] = a[ 0 ];
-    segA[ i * 4 + 1 ] = a[ 1 ];
-    segA[ i * 4 + 2 ] = a[ 2 ];
-    segA[ i * 4 + 3 ] = geometry.ids[ i ];
-    segB[ i * 4 ] = b[ 0 ];
-    segB[ i * 4 + 1 ] = b[ 1 ];
-    segB[ i * 4 + 2 ] = b[ 2 ];
-    segB[ i * 4 + 3 ] = 0;
-  }
+    const w = written * 4;
+
+    segA[ w ] = slot.x;
+    segA[ w + 1 ] = slot.y;
+    segA[ w + 2 ] = slot.z;
+    segA[ w + 3 ] = slot.id;
+    segB[ w ] = other.x;
+    segB[ w + 1 ] = other.y;
+    segB[ w + 2 ] = other.z;
+    segB[ w + 3 ] = 0;
+    written++;
+  } );
 
   const timeScale = o.timeScale ?? 1;
-  const tubeR = Math.max(
-    material.thickness ?? 0.06,
-    0.005
-  );
   const smoothK = Math.max(
     material.fusion ?? 0.12,
     0.001
@@ -1368,54 +1450,56 @@ sketch.draw( () => {
     light.elevation ?? 0.45
   );
 
-  sculptRenderer.render( {
-    columns: 1,
-    rows: 1,
-    resolutionScale: rendering.resolutionScale ?? 0.7,
-    uniforms: {
-      uT: t,
-      uSegCount: {
-        int: geometry.count
-      },
-      uSegA: {
-        vec4v: segA
-      },
-      uSegB: {
-        vec4v: segB
-      },
-      uRad: radius,
-      uScale: scale,
-      uTubeR: tubeR,
-      uSmoothK: smoothK,
-      uCamDist: rig.dist,
-      uYaw: rig.yaw,
-      uPitch: rig.pitch,
-      uRoll: 0,
-      uFocal: rig.focal,
-      uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
-      uHueSpread: hueSpread,
-      uHuePhase: colors.huePhase ?? 2.6,
-      uLengthHueShift: colors.lengthHueShift ?? -0.25,
-      uPipeHueShift: colors.pipeHueShift ?? 0.6,
-      uShimmer: colors.shimmer ?? 2.2,
-      uSaturation: colors.saturation ?? 0.8,
-      uBrightness: colors.brightness ?? 1.25,
-      uLightDir: lightDir,
-      uAmbient: light.ambient ?? 0.3,
-      uDiffuse: light.diffuse ?? 0.75,
-      uSpecular: light.specular ?? 1.1,
-      uSpecPower: light.specPower ?? 42,
-      uFresnelPower: light.fresnelPower ?? 2.2,
-      uRimStrength: light.rimStrength ?? 0.6,
-      uShadowSoft: light.shadowSoftness ?? 0,
-      // Fog starts at the letter's centre plane: pulled points stay clear,
-      // pushed points fade — a depth cue that works even face-on.
-      uFogDensity: camera.fogDensity ?? 0.06,
-      uFogStart: rig.dist,
-      uMaxDist: rig.dist + radius * scale + 2,
-      uAberration: 0
-    }
-  } );
+  if ( written > 0 ) {
+    morphRenderer.render( {
+      columns: 1,
+      rows: 1,
+      resolutionScale: rendering.resolutionScale ?? 0.7,
+      uniforms: {
+        uT: animation.angle,
+        uSegCount: {
+          int: written
+        },
+        uSegA: {
+          vec4v: segA
+        },
+        uSegB: {
+          vec4v: segB
+        },
+        uRad: radius,
+        uScale: scale,
+        uTubeR: tubeR,
+        uSmoothK: smoothK,
+        uCamDist: rig.dist,
+        uYaw: rig.yaw,
+        uPitch: rig.pitch,
+        uRoll: 0,
+        uFocal: rig.focal,
+        uHueSpeed: hueSpread ? hueCycles / ( p.TAU * hueSpread ) : 0,
+        uHueSpread: hueSpread,
+        uHuePhase: colors.huePhase ?? 2.6,
+        uLengthHueShift: colors.lengthHueShift ?? -0.25,
+        uPipeHueShift: colors.pipeHueShift ?? 0.6,
+        uShimmer: colors.shimmer ?? 2.2,
+        uSaturation: colors.saturation ?? 0.8,
+        uBrightness: colors.brightness ?? 1.25,
+        uLightDir: lightDir,
+        uAmbient: light.ambient ?? 0.3,
+        uDiffuse: light.diffuse ?? 0.75,
+        uSpecular: light.specular ?? 1.1,
+        uSpecPower: light.specPower ?? 42,
+        uFresnelPower: light.fresnelPower ?? 2.2,
+        uRimStrength: light.rimStrength ?? 0.6,
+        uShadowSoft: light.shadowSoftness ?? 0,
+        // Fog starts at the word's centre plane: pulled points stay clear,
+        // pushed points fade — a depth cue that works even face-on.
+        uFogDensity: camera.fogDensity ?? 0.06,
+        uFogStart: rig.dist,
+        uMaxDist: rig.dist + ( radius + 1 ) * scale + 2,
+        uAberration: 0
+      }
+    } );
+  }
 
   drawHandles(
     p,
@@ -1426,9 +1510,8 @@ sketch.draw( () => {
     o.overlay
   );
 
-  // Hands (usual glowing ribbons), the per-hand XY pinch markers, the depth
-  // pinch markers and the optional webcam preview, drawn last so they stack on
-  // top of the letter. All no-op unless Vision is on / a hand is seen.
+  // Hands (usual glowing ribbons), the per-hand pinch markers, the webcam
+  // preview — then the stage crew on top of everything: they are the show.
   drawHandRibbons(
     handGroups,
     o.hands
@@ -1436,10 +1519,9 @@ sketch.draw( () => {
   pinch.draw();
   depthPinch.draw();
   drawInteractionCameraPreview( interaction );
-
-  // The scripted hands go on top of everything — they are the show.
   troupe.draw(
     p,
-    vpCfg
+    vpCfg,
+    t
   );
 } );
