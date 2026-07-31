@@ -6,6 +6,11 @@ import {
   interactionFormConfiguration
 } from "@/p5/utils/interaction/defaults.js";
 
+// v6's hand-sculpted letter plus VIRTUAL POINTERS: the system cursor is hidden
+// over the canvas and drawn as an artwork instead, swapped by state — pointing
+// hand while free, open hand over a sculpt handle, closed hand while dragging
+// one (Input sources → Virtual pointers picks the three images).
+//
 // One glyph of the v4 liquid-tube material, sculpted by hand: every outline
 // sample is a draggable 3D handle. Thumb + index pinch (or mouse / finger)
 // drags a handle in the letter plane; thumb + MIDDLE pinch (index extended) or
@@ -330,6 +335,15 @@ export const formValues = {
     visualization: {
       ...interactionFormValues.visualization,
       enabled: false
+    },
+    // The drawn stand-in for the mouse / finger: one artwork per pointer
+    // state. Same `image` asset field as the photo sketches.
+    virtualPointers: {
+      images: {
+        pointing: "/assets/images/cursors/handpointing.svg",
+        open: "/assets/images/cursors/handopen.svg",
+        grabbing: "/assets/images/cursors/handgrabbing.svg"
+      }
     }
   },
 
@@ -563,6 +577,30 @@ export const formConfiguration: Record<string, any> = {
                 min: 1,
                 max: 10,
                 step: 1
+              }
+            }
+          }
+        }
+      },
+      virtualPointers: {
+        component: "nested-object",
+        label: "Virtual pointers",
+        fields: {
+          images: {
+            component: "nested-object",
+            label: "Images",
+            fields: {
+              pointing: {
+                label: "Default pointer",
+                component: "image"
+              },
+              open: {
+                label: "Open hand (over a handle)",
+                component: "image"
+              },
+              grabbing: {
+                label: "Closed hand (dragging a handle)",
+                component: "image"
               }
             }
           }
