@@ -2,26 +2,26 @@
 export const formValues = {
   timeScale: 1,
   braid: {
-    pipeCount: 4,
-    pipeRadius: 0.21,
-    braidRadius: 0.56,
-    twist: 2.08,
-    spin: -0.77,
-    radiusPulse: 0.47,
-    pulseFreq: 1.38,
-    pulseSpeed: 2.12
+    pipeCount: 7,
+    pipeRadius: 0.07,
+    braidRadius: 0.15,
+    twist: 2.42,
+    spin: 2.08,
+    radiusPulse: 0,
+    pulseFreq: 0,
+    pulseSpeed: 0
   },
   pearls: {
-    count: 1,
-    size: 0.34,
-    speed: 1,
-    gravity: 0.35,
-    deform: 0.6,
-    deformRadius: 0.9,
-    span: 6,
-    tint: 0.35,
-    brightness: 1.15,
-    hueShift: 0.4
+    count: 2,
+    size: 0.19,
+    speed: -2.15,
+    gravity: 0.66,
+    deform: 1.84,
+    deformRadius: 0.33,
+    span: 3.2,
+    tint: 0.3,
+    brightness: 0.76,
+    hueShift: -0.86
   },
   camera: {
     distance: 5.1,
@@ -36,12 +36,12 @@ export const formValues = {
   },
   colors: {
     hueSpeed: 1.15,
-    hueSpread: 2.03,
+    hueSpread: 2.25,
     huePhase: 2.63,
     lengthHueShift: -0.36,
     pipeHueShift: -0.96,
     shimmer: 2.82,
-    saturation: 0.88,
+    saturation: 0.41,
     brightness: 1.3
   },
   light: {
@@ -51,11 +51,11 @@ export const formValues = {
     diffuse: 0.66,
     specular: 0.99,
     specPower: 24,
-    fresnelPower: 3.3,
-    rimStrength: 0.87
+    fresnelPower: 2,
+    rimStrength: 0
   },
   aberration: {
-    amount: 3,
+    amount: 0,
     mode: "radial" as "radial" | "horizontal"
   },
   backgroundColor: [
