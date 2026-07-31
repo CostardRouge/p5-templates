@@ -335,15 +335,37 @@ export const formValues = {
       ...interactionFormValues.visualization,
       enabled: false
     },
-    // Artworks for the fictional cursors, one per pointer state. Same `image`
-    // asset field as the photo sketches, so the options module loads each path
-    // into the shared images cache — ready to be drawn once the animation is
-    // specified.
+    // The scripted sculpting crowd: cursors that enter from outside the
+    // canvas, split the handles evenly, hover → grab → drag each one to a
+    // random (outward-biased) spot, then retreat and fade out. One artwork per
+    // pointer state (same `image` asset field as the photo sketches); timings
+    // are in loop seconds, so the whole show replays identically every loop
+    // and in a deterministic capture.
     virtualPointers: {
+      enabled: true,
       images: {
         pointing: "/assets/images/cursors/handpointing.png",
         open: "/assets/images/cursors/handopen.png",
-        grabbing: "/assets/images/cursors/handgrabbing.png "
+        grabbing: "/assets/images/cursors/handgrabbing.png"
+      },
+      // Drawn size, normalized: × the artwork's natural resolution (the
+      // shipped images are 256 px, so 0.18 ≈ 46 px on screen).
+      scale: 0.18,
+      count: 8,
+      seed: 7,
+      easing: "easeInOutCubic",
+      timing: {
+        stagger: 0.25,
+        entryPause: 0.35,
+        travel: 0.45,
+        hover: 0.2,
+        drag: 0.6,
+        release: 0.15,
+        fade: 0.45
+      },
+      displacement: {
+        amount: 0.35,
+        outwardBias: 0.75
       }
     }
   },
@@ -587,6 +609,10 @@ export const formConfiguration: Record<string, any> = {
         component: "nested-object",
         label: "Virtual pointers",
         fields: {
+          enabled: {
+            label: "Enabled (run the sculpting show)",
+            component: "checkbox"
+          },
           images: {
             component: "nested-object",
             label: "Images",
@@ -602,6 +628,106 @@ export const formConfiguration: Record<string, any> = {
               grabbing: {
                 label: "Closed hand (dragging a handle)",
                 component: "image"
+              }
+            }
+          },
+          scale: {
+            label: "Image scale (× natural size)",
+            component: "slider",
+            min: 0.02,
+            max: 1,
+            step: 0.01
+          },
+          count: {
+            label: "Cursors (handles are split evenly)",
+            component: "slider",
+            min: 1,
+            max: 16,
+            step: 1
+          },
+          seed: {
+            label: "Random seed (targets & directions)",
+            component: "slider",
+            min: 0,
+            max: 100,
+            step: 1
+          },
+          easing: {
+            label: "Movement easing",
+            component: "easing"
+          },
+          timing: {
+            component: "nested-object",
+            label: "Timing (loop seconds)",
+            fields: {
+              stagger: {
+                label: "Entry stagger between cursors",
+                component: "slider",
+                min: 0,
+                max: 2,
+                step: 0.05
+              },
+              entryPause: {
+                label: "Pause after entering",
+                component: "slider",
+                min: 0,
+                max: 2,
+                step: 0.05
+              },
+              travel: {
+                label: "Travel time to a handle",
+                component: "slider",
+                min: 0.05,
+                max: 3,
+                step: 0.05
+              },
+              hover: {
+                label: "Hover delay before grabbing",
+                component: "slider",
+                min: 0,
+                max: 2,
+                step: 0.05
+              },
+              drag: {
+                label: "Drag duration",
+                component: "slider",
+                min: 0.05,
+                max: 3,
+                step: 0.05
+              },
+              release: {
+                label: "Open-hand pause after releasing",
+                component: "slider",
+                min: 0,
+                max: 2,
+                step: 0.05
+              },
+              fade: {
+                label: "Fade in/out duration",
+                component: "slider",
+                min: 0,
+                max: 2,
+                step: 0.05
+              }
+            }
+          },
+          displacement: {
+            component: "nested-object",
+            label: "Displacement",
+            fields: {
+              amount: {
+                label: "Amount (glyph units)",
+                component: "slider",
+                min: 0,
+                max: 1.5,
+                step: 0.01
+              },
+              outwardBias: {
+                label: "Outward bias (1 = always outward)",
+                component: "slider",
+                min: 0,
+                max: 1,
+                step: 0.01
               }
             }
           }

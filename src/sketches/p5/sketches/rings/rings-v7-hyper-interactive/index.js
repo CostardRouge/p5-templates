@@ -37,9 +37,28 @@ import {
 import {
   renderSplines
 } from "../../splines/_shared.js";
+import {
+  createPointerTroupe,
+  VIRTUAL_POINTER_PREFIX
+} from "./virtualPointers.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// rings v6 — letter sculpt.
+// rings v7 — hyper interactive.
+//
+// v6's hand-sculpted letter, sculpted by a troupe of VIRTUAL POINTERS: scripted
+// cursors (drawn with the three artworks from Input sources → Virtual pointers
+// → Images) enter from outside the canvas, split the sculpt handles evenly
+// between them, and one by one hover (open hand), grab (closed hand) and drag
+// each handle to a randomly chosen spot — more often outward than inward —
+// then retreat and fade out once their share of the letter is done. The
+// choreography lives in ./virtualPointers.js; it feeds plain pointers into the
+// SAME drag layer as the mouse, so everything below is v6's sculptor
+// unchanged, and you can still sculpt by hand mid-performance. Timing runs on
+// the loop clock (deterministic capture replays the exact same show; every
+// loop restarts it from the same letter), and virtual releases skip the
+// options persistence so the performance never rewrites the saved sculpt.
+//
+// Everything below is v6:
 //
 // ONE glyph of v4's liquid tube material sits at the centre — but instead of
 // melting on its own clock, it is SCULPTED by hand: every outline sample is a
@@ -836,6 +855,8 @@ function createDepthPinch() {
 }
 
 const depthPinch = createDepthPinch();
+// The scripted sculpting crowd (see ./virtualPointers.js and the header).
+const troupe = createPointerTroupe();
 
 // SHIFT state for the mouse depth gesture, tracked at module scope: p5's own
 // keyIsDown depends on per-instance window bindings the engine tears down and
@@ -1054,6 +1075,7 @@ sketch.setup( async() => {
   draggable.attach();
   pinch.clear();
   depthPinch.clear();
+  troupe.reset();
 
   await initInteraction( options.sketch?.interaction ?? {} );
 } );
@@ -1166,6 +1188,31 @@ sketch.draw( () => {
 
   depthActive.clear();
 
+  // The scripted crowd resolves BEFORE the drag layer so its pointers grab
+  // through the exact same path as the mouse this very frame. It reads the
+  // live targets/offsets and returns plain { key, x, y, pressed } pointers.
+  const vpCfg = interaction.virtualPointers ?? {};
+  const virtualPointers = troupe.update( {
+    now: animation.loopTime,
+    config: vpCfg,
+    targets,
+    offsets: state.offsets,
+    glyphBase: ( i ) => geometry.points[ i ],
+    projectGlyph: ( g ) => projectPoint(
+      p,
+      rig,
+      [
+        g.x * scale,
+        g.y * scale,
+        g.z * scale
+      ]
+    ),
+    range,
+    width: p.width,
+    height: p.height,
+    geometryKey: geometry.key
+  } );
+
   const refreshTarget = ( index ) => {
     const g = glyphAt( index );
     const projected = projectPoint(
@@ -1183,6 +1230,12 @@ sketch.draw( () => {
     targets[ index ].depth = projected.depth;
   };
 
+  // Who is holding what before this frame's update — the released-key diff
+  // below tells human releases (persist) apart from virtual ones (ephemeral).
+  const heldBefore = [
+    ...draggable.drags.keys()
+  ];
+
   const {
     hovers,
     grabbed,
@@ -1193,7 +1246,8 @@ sketch.draw( () => {
     groups,
     extraPointers: [
       ...camPointers,
-      ...depthPointers
+      ...depthPointers,
+      ...virtualPointers
     ],
     onMove: (
       index, pointer
@@ -1260,7 +1314,13 @@ sketch.draw( () => {
     }
   }
 
-  if ( released ) {
+  // Persist on HUMAN releases only. The troupe's displacements stay ephemeral
+  // (each loop replays the show from the saved sculpt), so the performance
+  // never rewrites what was authored by hand.
+  const humanReleased = released && heldBefore.some( ( key ) => !draggable.drags.has( key )
+    && !key.startsWith( VIRTUAL_POINTER_PREFIX ) );
+
+  if ( humanReleased ) {
     persistOffsets( geometry.key );
   }
 
@@ -1376,4 +1436,10 @@ sketch.draw( () => {
   pinch.draw();
   depthPinch.draw();
   drawInteractionCameraPreview( interaction );
+
+  // The scripted hands go on top of everything — they are the show.
+  troupe.draw(
+    p,
+    vpCfg
+  );
 } );
