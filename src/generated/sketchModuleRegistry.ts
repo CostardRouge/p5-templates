@@ -176,6 +176,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:photo/photo-segmentation": () => import( "@/p5/sketches/photo/photo-segmentation/index.js" ),
   "p5:photo/photo-stack": () => import( "@/p5/sketches/photo/photo-stack/index.js" ),
   "p5:photo/photo-stack-top-bottom": () => import( "@/p5/sketches/photo/photo-stack-top-bottom/index.js" ),
+  "p5:photo/photo-swap-collage": () => import( "@/p5/sketches/photo/photo-swap-collage/index.js" ),
   "p5:photo/photo-switch": () => import( "@/p5/sketches/photo/photo-switch/index.js" ),
   "p5:photo/photo-switch-blurry-background": () => import( "@/p5/sketches/photo/photo-switch-blurry-background/index.js" ),
   "p5:photo/photo-switch-letter-mask": () => import( "@/p5/sketches/photo/photo-switch-letter-mask/index.js" ),
