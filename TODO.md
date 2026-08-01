@@ -1,6 +1,6 @@
 # TODO — sketchbook
 
-> Last cleaned: 2026-05-24
+> Last cleaned: 2026-07-19
 
 ---
 
@@ -42,14 +42,14 @@ What's left requires actions only the repo owner can take, in this order:
 ## 🖼️ Sketch / Canvas
 
 - [x] **Sketch duration control** — top-level global duration field (per-slide values override it); needs UI input and schema update
-- [ ] **Full screen button** — Fullscreen API toggle on the canvas viewport; must account for scalable viewport dimensions on resize
+- [x] **Full screen button** — Fullscreen API toggle on the canvas viewport; must account for scalable viewport dimensions on resize
 - [x] **Sketch preview page** — `/sketch/:id/preview` route showing canvas only (no settings, no header); accept query params to override options
 - [ ] **Sketch layout uses full window height** — fix flex/grid so canvas fills all available vertical space on desktop
 - [ ] **Lazy slide rendering** — only the active slide's P5 sketch runs; inactive slides show their saved thumbnail to save memory and CPU
   - [ ] Swap active sketch in/out without losing form state
   - [ ] Display other slides as page indicators or a static thumbnail strip
 - [x] **Revamp slide carousel** — show current slide large in viewport, others as a horizontal strip of static thumbnails; non-active slides must not run the sketch
-- [ ] **Drag items on canvas** — pick up content items by position and update their x/y in form values in real time (decision: P5 events vs React overlay — see bug B4)
+- [x] **Drag items on canvas** — pick up content items by position and update their x/y in form values in real time (decision: P5 events vs React overlay — see bug B4)
 - [ ] **Copy / paste items** — Ctrl+C / Ctrl+V to deep-clone a selected item and append it to the slide's content array
 - [ ] **Resize guide** — alignment snap lines / rulers overlay when resizing or moving items, implemented as a second canvas layer
 - [ ] **Crop and rotate images on the fly** — in-canvas transform controls for image items; store params in item options, apply during render and frame capture
@@ -82,11 +82,11 @@ What's left requires actions only the repo owner can take, in this order:
   - [ ] Vector (2D / 3D) — XY(Z) number inputs with optional linked scaling
   - [ ] Camera — rotation and translate controls
   - [ ] Global animation curve — waveform picker (sine, square, linear, triangle) + multiplier + speed
-  - [ ] Webcam picker — dropdown of available `videoDeviceId`s
-  - [ ] Joypad picker — list connected gamepads
-  - [ ] MIDI device picker — list connected MIDI inputs
-  - [ ] Audio source picker — microphone / line-in selector
-  - [ ] Reset / Random button — inline button per field to reset or randomize its value
+  - [x] Webcam picker — dropdown of available `videoDeviceId`s
+  - [x] Joypad picker — list connected gamepads
+  - [x] MIDI device picker — list connected MIDI inputs
+  - [x] Audio source picker — microphone / line-in selector
+  - [x] Reset / Random button — inline button per field to reset or randomize its value
   - [ ] Animation value visualizer — small sparkline showing an animated value over time
 - [ ] **Readonly mode** — `readOnly` prop on `TemplateOptions` that disables all fields; useful for share/embed views
 - [ ] **Tags** — free-form labels on sketches and recordings; stored in DB, displayed as pills, filterable on recordings page
@@ -123,7 +123,7 @@ What's left requires actions only the repo owner can take, in this order:
 - [ ] **N8n integration** — webhook trigger so recordings can be kicked off from N8n; needs API key auth on `POST /api/recordings/enqueue` and payload docs for N8n's HTTP node
 - [ ] **API cleanup + OpenAPI** — consistent error formats, Zod input validation, remove dead endpoints, auto-generate OpenAPI 3.0 spec
 - [ ] **P5 → backend data push** — allow a sketch to push structured output during/after recording: an image (final frame as PNG) or a JSON object (metrics, generated text); feeds automations
-- [ ] **Sharable sketch link** — public URL with options baked in (compressed query param or short-code resolving to saved options); viewer sees sketch in readonly mode
+- [x] **Sharable sketch link** — public URL with options baked in (compressed query param or short-code resolving to saved options); viewer sees sketch in readonly mode
 
 ---
 
@@ -141,12 +141,12 @@ What's left requires actions only the repo owner can take, in this order:
 
 ## 🎨 Design & UX
 
-- [ ] **Animated thumbnail on hover** — play a short looping preview clip (GIF or MP4) on card hover; pre-generate and store alongside the static thumbnail
-- [ ] **New navigation bar** — redesign top bar: slim, logo + nav links + settings icon; mobile-friendly (collapses to hamburger or bottom nav)
-- [ ] **Sketch settings design** — visual redesign of the sketch settings panel (consistent typography, spacing, control styles)
-- [ ] **Templates options design** — same redesign for the right-hand template options panel
-- [ ] **Recording progress bar placeholder** — styled "waiting" state for cards in `queued` status with no steps yet (replace blank/misaligned bar)
-- [ ] **Remove bare loading text** — replace all "Loading…" text placeholders with skeleton loaders or spinners that match surrounding UI
+- [x] **Animated thumbnail on hover** — play a short looping preview clip (GIF or MP4) on card hover; pre-generate and store alongside the static thumbnail
+- [x] **New navigation bar** — redesign top bar: slim, logo + nav links + settings icon; mobile-friendly (collapses to hamburger or bottom nav)
+- [x] **Sketch settings design** — visual redesign of the sketch settings panel (consistent typography, spacing, control styles)
+- [x] **Templates options design** — same redesign for the right-hand template options panel
+- [x] **Recording progress bar placeholder** — styled "waiting" state for cards in `queued` status with no steps yet (replace blank/misaligned bar)
+- [x] **Remove bare loading text** — replace all "Loading…" text placeholders with skeleton loaders or spinners that match surrounding UI
 
 ---
 
@@ -176,8 +176,8 @@ What's left requires actions only the repo owner can take, in this order:
 - [ ] **Save draft removes capture actions** — capture actions panel disappears or resets after saving a draft; should persist with its current state
 - [ ] **LocalStorage drift** — UI state (collapsed sections, view mode) stored in `localStorage` can fall out of sync with DB state; audit and add reconciliation on load
 - [ ] **Keep sketch options open with same collapsibles** — collapsible sections reset to default on navigation; persist open/closed state per-sketch in `localStorage` or URL hash
-- [ ] **Drag items — decision pending** — item drag on canvas is partially implemented but inconsistent; must decide between P5 events vs React overlay before more work
+- [x] **Drag items — decision pending** — item drag on canvas is partially implemented but inconsistent; must decide between P5 events vs React overlay before more work
 - [ ] **useAudio / MIDI not working** — audio and MIDI hooks are wired but non-functional; likely async init order issue or missing user-gesture unlock for Web Audio / WebMidi
-- [ ] **Apply sketch options to other slides** — "apply to all slides" action shallow-copies nested objects and drops nested keys; fix the deep-merge logic
+- [x] **Apply sketch options to other slides** — "apply to all slides" action shallow-copies nested objects and drops nested keys; fix the deep-merge logic
 - [ ] **Fix clone features — assets ignored** — cloning a recording does not copy uploaded assets to the new job; new job silently uses stale/inaccessible paths
 - [ ] **Prevent too much image fetch** — thumbnails and asset images are re-fetched on every render in some cases; add caching headers and/or a client-side URL cache
