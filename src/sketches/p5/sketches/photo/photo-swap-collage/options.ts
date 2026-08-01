@@ -11,10 +11,11 @@ export const formValues = {
 
   background: {
     zoom: 1.8,
-    zoomAmplitude: 0.08
+    zoomAmplitude: 0
   },
 
   swapZone: {
+    content: "crop",
     width: 0.34,
     height: 0.35,
     position: {
@@ -87,6 +88,20 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     label: "Swap zone",
     fields: {
+      content: {
+        component: "select",
+        label: "Content",
+        options: [
+          {
+            label: "Cropped zone (swap)",
+            value: "crop"
+          },
+          {
+            label: "Full image",
+            value: "full"
+          }
+        ]
+      },
       width: {
         label: "Width",
         component: "slider",

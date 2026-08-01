@@ -7,7 +7,6 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import events from "@/p5/utils/events.js";
-import mappers from "@/p5/utils/mappers.js";
 import animation from "@/p5/utils/animation.js";
 import imageUtils from "@/p5/utils/imageUtils.js";
 
@@ -28,25 +27,34 @@ const sketchState = {
 };
 
 // object-fit: cover via the 9-arg p5 image() — the crop happens at the
-// source rect, so a zoomed background never bleeds outside its half
+// source rect, so a zoomed background never bleeds outside its half.
+// `frame` is the virtual cover area the image is fitted to; the drawn rect
+// samples its sub-region, so rect === frame (the default) is a plain cover.
 function drawImageCover( {
   img,
   x,
   y,
   width,
   height,
-  zoom = 1
+  zoom = 1,
+  frame = null
 } ) {
   const p = getP5();
+  const coverFrame = frame ?? {
+    x,
+    y,
+    width,
+    height
+  };
 
   const coverScale = Math.max(
-    width / img.width,
-    height / img.height
+    coverFrame.width / img.width,
+    coverFrame.height / img.height
   ) * zoom;
-  const sourceWidth = width / coverScale;
-  const sourceHeight = height / coverScale;
-  const sourceX = ( img.width - sourceWidth ) / 2;
-  const sourceY = ( img.height - sourceHeight ) / 2;
+  const frameSourceWidth = coverFrame.width / coverScale;
+  const frameSourceHeight = coverFrame.height / coverScale;
+  const frameSourceX = ( img.width - frameSourceWidth ) / 2;
+  const frameSourceY = ( img.height - frameSourceHeight ) / 2;
 
   p.image(
     img,
@@ -54,10 +62,10 @@ function drawImageCover( {
     y,
     width,
     height,
-    sourceX,
-    sourceY,
-    sourceWidth,
-    sourceHeight
+    frameSourceX + ( x - coverFrame.x ) / coverScale,
+    frameSourceY + ( y - coverFrame.y ) / coverScale,
+    width / coverScale,
+    height / coverScale
   );
 }
 
@@ -277,18 +285,21 @@ sketch.draw( () => {
     return;
   }
 
-  const pairPosition = animation.progression * images.length;
-  const pairIndex = Math.floor( pairPosition );
-  const pairProgression = pairPosition - pairIndex;
+  // fixed, non-overlapping pairs (1-2, 3-4, …): a single pair displays
+  // statically, extra pairs share the loop; an odd leftover image is ignored
+  const pairCount = Math.max(
+    1,
+    Math.floor( images.length / 2 )
+  );
+  const pairPosition = animation.progression * pairCount;
+  const pairIndex = Math.min(
+    pairCount - 1,
+    Math.floor( pairPosition )
+  );
+  const pairProgression = pairPosition - Math.floor( pairPosition );
 
-  const firstImage = mappers.circularIndex(
-    pairIndex,
-    images
-  )?.img;
-  const secondImage = mappers.circularIndex(
-    pairIndex + 1,
-    images
-  )?.img;
+  const firstImage = images[ pairIndex * 2 ]?.img;
+  const secondImage = images[ pairIndex * 2 + 1 ]?.img;
 
   if ( !firstImage || !secondImage ) {
     return;
@@ -313,11 +324,14 @@ sketch.draw( () => {
     zoom: backgroundZoom
   } );
 
-  // swap zone: one rect per half, showing that half's own photo unswapped
+  // swap zone: one rect per half, showing that half's own photo unswapped.
+  // "crop" content samples the region the photo would occupy as this half's
+  // background (same cover + zoom), so aligned portraits swap just the zone
   const rectWidth = o.swapZone.width * p.width;
   const rectHeight = o.swapZone.height * p.height;
   const positionA = o.swapZone.position ?? SEAM_DEFAULTS[ direction ];
   const positionB = mirrorPosition( positionA );
+  const cropContent = ( o.swapZone.content ?? "crop" ) === "crop";
 
   drawImageCover( {
     img: firstImage,
@@ -326,7 +340,9 @@ sketch.draw( () => {
       positionA,
       rectWidth,
       rectHeight
-    )
+    ),
+    frame: cropContent ? halfA : null,
+    zoom: cropContent ? backgroundZoom : 1
   } );
 
   drawImageCover( {
@@ -336,6 +352,8 @@ sketch.draw( () => {
       positionB,
       rectWidth,
       rectHeight
-    )
+    ),
+    frame: cropContent ? halfB : null,
+    zoom: cropContent ? backgroundZoom : 1
   } );
 } );
