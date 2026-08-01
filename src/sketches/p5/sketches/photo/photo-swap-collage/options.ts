@@ -5,15 +5,24 @@ export const formValues = {
   // Assets
   images: await getTestImagePaths(),
 
+  layout: {
+    direction: "horizontal"
+  },
+
   background: {
     zoom: 1.8,
     zoomAmplitude: 0.08
   },
 
-  inner: {
-    width: 0.68,
-    aspect: 1.3,
-    verticalOffset: 0
+  swapZone: {
+    width: 0.34,
+    height: 0.35,
+    position: {
+      x: 1,
+      y: 0.5
+    },
+    horizontalMirror: true,
+    verticalMirror: true
   },
 
   // Colors
@@ -30,6 +39,27 @@ export const formConfiguration: Record<string, any> = {
   images: {
     component: "images-stack",
     label: "Images"
+  },
+
+  layout: {
+    component: "nested-object",
+    label: "Layout",
+    fields: {
+      direction: {
+        component: "select",
+        label: "Collage direction",
+        options: [
+          {
+            label: "Horizontal (side by side)",
+            value: "horizontal"
+          },
+          {
+            label: "Vertical (stacked)",
+            value: "vertical"
+          }
+        ]
+      }
+    }
   },
 
   background: {
@@ -53,30 +83,40 @@ export const formConfiguration: Record<string, any> = {
     }
   },
 
-  inner: {
+  swapZone: {
     component: "nested-object",
-    label: "Inner collage",
+    label: "Swap zone",
     fields: {
       width: {
         label: "Width",
         component: "slider",
-        min: 0.2,
+        min: 0.05,
         max: 0.95,
         step: 0.01
       },
-      aspect: {
-        label: "Aspect ratio",
+      height: {
+        label: "Height",
         component: "slider",
-        min: 0.5,
-        max: 2,
-        step: 0.05
-      },
-      verticalOffset: {
-        label: "Vertical offset",
-        component: "slider",
-        min: -0.4,
-        max: 0.4,
+        min: 0.05,
+        max: 0.95,
         step: 0.01
+      },
+      position: {
+        component: "vector2d",
+        label: "Position (click the canvas)",
+        allowNegative: false,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        yDown: true
+      },
+      horizontalMirror: {
+        label: "Horizontal mirror",
+        component: "checkbox"
+      },
+      verticalMirror: {
+        label: "Vertical mirror",
+        component: "checkbox"
       }
     }
   },
