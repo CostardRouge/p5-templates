@@ -28,8 +28,9 @@ const sketchState = {
 
 // object-fit: cover via the 9-arg p5 image() — the crop happens at the
 // source rect, so a zoomed background never bleeds outside its half.
-// `frame` is the virtual cover area the image is fitted to; the drawn rect
-// samples its sub-region, so rect === frame (the default) is a plain cover.
+// `frame` is the virtual cover area the image is fitted to and `sample` the
+// canvas-space region of that frame to read; both default to the drawn rect,
+// which makes the plain call a simple cover fit.
 function drawImageCover( {
   img,
   x,
@@ -37,15 +38,17 @@ function drawImageCover( {
   width,
   height,
   zoom = 1,
-  frame = null
+  frame = null,
+  sample = null
 } ) {
   const p = getP5();
-  const coverFrame = frame ?? {
+  const sampleRect = sample ?? {
     x,
     y,
     width,
     height
   };
+  const coverFrame = frame ?? sampleRect;
 
   const coverScale = Math.max(
     coverFrame.width / img.width,
@@ -62,10 +65,10 @@ function drawImageCover( {
     y,
     width,
     height,
-    frameSourceX + ( x - coverFrame.x ) / coverScale,
-    frameSourceY + ( y - coverFrame.y ) / coverScale,
-    width / coverScale,
-    height / coverScale
+    frameSourceX + ( sampleRect.x - coverFrame.x ) / coverScale,
+    frameSourceY + ( sampleRect.y - coverFrame.y ) / coverScale,
+    sampleRect.width / coverScale,
+    sampleRect.height / coverScale
   );
 }
 
@@ -324,36 +327,41 @@ sketch.draw( () => {
     zoom: backgroundZoom
   } );
 
-  // swap zone: one rect per half, showing that half's own photo unswapped.
-  // "crop" content samples the region the photo would occupy as this half's
-  // background (same cover + zoom), so aligned portraits swap just the zone
+  // swap zone: one rect per half. In "crop" mode the rects exchange what
+  // they hide: rect A reveals the patch of the first photo's background
+  // (drawn on half B) that rect B covers, and vice versa — a true swap
   const rectWidth = o.swapZone.width * p.width;
   const rectHeight = o.swapZone.height * p.height;
   const positionA = o.swapZone.position ?? SEAM_DEFAULTS[ direction ];
   const positionB = mirrorPosition( positionA );
   const cropContent = ( o.swapZone.content ?? "crop" ) === "crop";
 
+  const rectA = placeSwapRect(
+    halfA,
+    positionA,
+    rectWidth,
+    rectHeight
+  );
+  const rectB = placeSwapRect(
+    halfB,
+    positionB,
+    rectWidth,
+    rectHeight
+  );
+
   drawImageCover( {
     img: firstImage,
-    ...placeSwapRect(
-      halfA,
-      positionA,
-      rectWidth,
-      rectHeight
-    ),
-    frame: cropContent ? halfA : null,
+    ...rectA,
+    frame: cropContent ? halfB : null,
+    sample: cropContent ? rectB : null,
     zoom: cropContent ? backgroundZoom : 1
   } );
 
   drawImageCover( {
     img: secondImage,
-    ...placeSwapRect(
-      halfB,
-      positionB,
-      rectWidth,
-      rectHeight
-    ),
-    frame: cropContent ? halfB : null,
+    ...rectB,
+    frame: cropContent ? halfA : null,
+    sample: cropContent ? rectA : null,
     zoom: cropContent ? backgroundZoom : 1
   } );
 } );

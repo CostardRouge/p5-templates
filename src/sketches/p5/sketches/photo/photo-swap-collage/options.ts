@@ -10,7 +10,7 @@ export const formValues = {
   },
 
   background: {
-    zoom: 1.8,
+    zoom: 1,
     zoomAmplitude: 0
   },
 
