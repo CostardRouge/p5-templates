@@ -4,6 +4,9 @@ import {
 import {
   interactionFormConfiguration, interactionFormValues
 } from "@/p5/utils/interaction/defaults.js";
+import {
+  dragClickFormConfiguration, dragClickFormValues
+} from "@/p5/utils/interaction/dragClickOptions.js";
 
 // A cycle of texts (single letters or whole words) physically converted into
 // one another by a troupe of virtual pointers: matched points are dragged to
@@ -127,6 +130,16 @@ export const formValues = {
         spinSpeed: 1.95
       }
     }
+  },
+
+  // The sound of the show: an uploaded click for the button going down (a
+  // pointer grabbing a point) and another for it coming back up (release).
+  // Drop any audio file on the two fields — until then the built-in synth
+  // click stands in. Sounds are triggered through the sketch audio engine, so
+  // they are heard live, mixed into a browser recording, and rendered
+  // sample-accurately into a server capture.
+  sound: {
+    ...dragClickFormValues
   },
 
   // The usual hand-capture look for detected hands: a glowing spline through
@@ -503,6 +516,8 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
+
+  sound: dragClickFormConfiguration,
 
   hands: {
     label: "Hand visuals",

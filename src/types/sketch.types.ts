@@ -1174,7 +1174,8 @@ export const ContentItemSchema = z.discriminatedUnion(
 export const Assets = z
   .object( {
     images: z.array( z.string() ).default( [] ),
-    videos: z.array( z.string() ).default( [] )
+    videos: z.array( z.string() ).default( [] ),
+    audios: z.array( z.string() ).default( [] )
   } )
   .prefault( {} );
 

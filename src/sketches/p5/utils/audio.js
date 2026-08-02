@@ -5,15 +5,19 @@ import {
   scheduleClick
 } from "@/lib/clickSynth";
 import time from "./time.js";
+import {
+  isAudioPath
+} from "./audioPaths.js";
 
 /**
  * Code-driven sound engine for sketches (raw Web Audio, no p5.sound).
  *
  * Sounds are synthesised on demand — an oscillator plus a gain envelope is
  * enough for the bips/ticks aesthetic — so sketches stay asset-free by
- * default. `registerSample()` / `loadSample()` are the seam for the future
- * audio-asset system: once a sample is registered under a name,
- * `trigger(name)` plays it instead of the synth fallback.
+ * default. `registerSample()` / `loadSample()` carry the audio-asset system
+ * (`audioAssets.js`): an uploaded sound is decoded once and registered under
+ * its asset path, and `trigger(path)` then plays it instead of the synth —
+ * through the very same live / realtime / offline paths as a synth voice.
  *
  * Everything is lazy: no AudioContext is created until the first trigger,
  * so sketches that never make sound pay nothing. The context starts
@@ -479,6 +483,13 @@ function scheduleOn(
     return;
   }
 
+  // An asset path with no decoded sample behind it (upload removed, decode
+  // failed): stay silent. Falling through to the default voice would replace
+  // a missing sound with a stray beep in the rendered file.
+  if ( isAudioPath( name ) ) {
+    return;
+  }
+
   switch ( name ) {
     // UI-style click presets (specs overlay, value-change feedback). The
     // concrete voice is picked by `params.preset` inside the shared synth so
@@ -840,6 +851,11 @@ const audio = {
         params
       );
 
+      return;
+    }
+
+    // See `scheduleOn`: a missing asset is silence, never a fallback beep.
+    if ( isAudioPath( name ) ) {
       return;
     }
 
