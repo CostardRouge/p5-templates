@@ -916,6 +916,11 @@ export function createMorphTroupe() {
         };
       }
 
+      // Release pause: keep the grip pinned on the exact destination. The
+      // drag's last in-flight frame always lands short of the target by one
+      // frame's travel (badly so when a slice is compressed or the canvas is
+      // tall), and a released point would sit visibly off until the beat snap
+      // "repaired" it — pinning here deposits it precisely instead.
       return {
         pos: anchorEnd(
           active,
@@ -923,7 +928,8 @@ export function createMorphTroupe() {
         ),
         icon: OPEN,
         alpha,
-        pressed: false
+        pressed: true,
+        targetIndex: active.poolIndex
       };
     }
 
@@ -989,11 +995,14 @@ export function createMorphTroupe() {
       };
     }
 
+    // Same pinned deposit as the move release: the carried bead settles on
+    // the exact destination before the cursor lets go.
     return {
       pos: dstPos,
       icon: ADD,
       alpha,
-      pressed: false
+      pressed: true,
+      targetIndex: active.poolIndex
     };
   }
 
@@ -1073,6 +1082,27 @@ export function createMorphTroupe() {
         }
 
         return resolved;
+      } );
+
+      // Safety sweep: a remove whose carry window fell between two frames
+      // must still retire its point — otherwise it lingers mid-canvas until
+      // the beat snap teleports it away.
+      const sweepStep = Math.min(
+        Math.floor( ctx.now / ctx.stepDur ),
+        ctx.steps.length - 1
+      );
+      const bounds = subBounds( timing );
+
+      state.cursors.forEach( ( cursor ) => {
+        cursor.events.forEach( ( event ) => {
+          if ( event.type !== "remove" || event.step !== sweepStep ) {
+            return;
+          }
+
+          if ( ctx.now >= event.t0 + bounds[ 2 ] * ( event.t1 - event.t0 ) ) {
+            ctx.deactivatePoint( event.poolIndex );
+          }
+        } );
       } );
 
       return pointers;
