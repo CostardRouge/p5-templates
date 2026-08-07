@@ -140,6 +140,36 @@ Simultaneous grabs are capped (`maxVoices`) and share a `1/√n` gain with a
 deterministic per-voice detune (`spread`), so a crowd of cursors grabbing on
 the same frame reads as one click, not a comb.
 
+## When a sound doesn't play
+
+Every failure below is silent by design in the rendered output — a missing
+sound must never become a stray beep in a video — so the diagnosis lives in the
+console. From the page running the sketch:
+
+```js
+window.__sketchAudioAssets()
+// [ { path, status, registered, url }, … ]
+```
+
+| What you see | What it means |
+|---|---|
+| `status: "ready"`, `registered: true` | The sound is loaded and will play. |
+| `status: "loading"` | Still decoding; the synth fallback covers the gap. |
+| `status: "error"` | Fetch or decode failed — a `[audio]` warning names the reason (an HTTP status, a decode error). |
+| the path is absent entirely | The field value never reached the sketch: check `window.sketchOptions.sketch.<block>` for the path. |
+| `registered: false` while `status: "ready"` | The engine lost the sample (Fast Refresh, sketch reset). `ready()` re-arms the entry and the next frame decodes it again. |
+
+Two more things silence a sound that is otherwise fine:
+
+- **A suspended AudioContext.** Browsers start it suspended until the page gets
+  a real click or key press, and anything scheduled meanwhile is discarded.
+  Any gesture resumes it, and `trigger` now nudges a suspended context back
+  awake — but the very first sounds of a page that has never been clicked are
+  lost, by browser policy.
+- **Nothing is grabbing.** The clicks fire on grab/release of a point, so a
+  loop where the pointer show has already finished (or where the virtual
+  pointers are off and you haven't dragged) is legitimately silent.
+
 ## Adding another asset kind
 
 The kind descriptor is the whole contract — `src/lib/assets/kinds/audios.tsx`

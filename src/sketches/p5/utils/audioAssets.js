@@ -73,8 +73,22 @@ export function load( path ) {
   const existing = _assets.get( path );
 
   // Re-decode only when the file behind the path actually moved (blob → S3),
-  // or after a failure — a ready sample is never fetched twice.
-  if ( existing && existing.url === url && existing.status !== "error" ) {
+  // after a failure, or when the engine has lost the sample we thought was
+  // ready — a genuinely ready sample is never fetched twice.
+  if (
+    existing &&
+    existing.url === url &&
+    existing.status === "loading"
+  ) {
+    return existing;
+  }
+
+  if (
+    existing &&
+    existing.url === url &&
+    existing.status === "ready" &&
+    audio.hasSample( path )
+  ) {
     return existing;
   }
 
@@ -132,9 +146,30 @@ export function sync( node ) {
   return paths;
 }
 
-/** True once `path` is decoded and can be triggered. */
+/**
+ * True once `path` is decoded AND still registered with the audio engine.
+ *
+ * The engine's registry is the authority, not our own status flag: the two can
+ * drift (a module re-evaluated by Fast Refresh, a sketch reset), and a stale
+ * "ready" would make the caller trigger a path the engine can't play — silence
+ * instead of the audible synth fallback. When they disagree we re-arm the
+ * entry so the next `sync()` decodes it again.
+ */
 export function ready( path ) {
-  return _assets.get( path )?.status === "ready";
+  const entry = _assets.get( path );
+
+  if ( entry?.status !== "ready" ) {
+    return false;
+  }
+
+  if ( audio.hasSample( path ) ) {
+    return true;
+  }
+
+  entry.status = "stale";
+  _signature = null;
+
+  return false;
 }
 
 /** The asset entry for `path` (status / buffer / resolved url), if any. */
@@ -190,5 +225,17 @@ const audioAssets = {
   play,
   reset
 };
+
+// One-line diagnosis from the browser console: every sound the sketch knows
+// about, its resolved URL, whether it decoded, and whether the audio engine
+// still holds it. A sound that never plays is otherwise invisible.
+if ( typeof window !== "undefined" ) {
+  window.__sketchAudioAssets = () => list().map( ( entry ) => ( {
+    path: entry.path,
+    status: entry.status,
+    registered: audio.hasSample( entry.path ),
+    url: entry.url
+  } ) );
+}
 
 export default audioAssets;

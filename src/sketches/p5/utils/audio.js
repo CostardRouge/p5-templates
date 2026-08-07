@@ -47,6 +47,19 @@ let _capturedEvents = []; // { t, name, params }
 
 const MIN_GAIN = 0.0001; // exponentialRamp target — can't reach true zero
 
+// Names already reported as "triggered but nothing decoded behind it", so a
+// per-frame trigger warns once instead of flooding the console.
+const _warnedMissing = new Set();
+
+function warnMissingSample( name ) {
+  if ( _warnedMissing.has( name ) ) {
+    return;
+  }
+
+  _warnedMissing.add( name );
+  console.warn( `[audio] "${ name }" was triggered but no sample is registered under that path — staying silent. The upload may still be decoding, or it failed to load.` );
+}
+
 function attachUnlockListeners() {
   if ( _unlockAttached || typeof window === "undefined" ) {
     return;
@@ -846,6 +859,13 @@ const audio = {
     const sample = _samples.get( name );
 
     if ( sample ) {
+      // The context can be suspended long after it was created — the autoplay
+      // policy at startup, or the browser parking a backgrounded tab. Nudge it
+      // back, or every sound from here on is silently discarded.
+      if ( _context?.state === "suspended" ) {
+        resume();
+      }
+
       playSampleLive(
         sample,
         params
@@ -855,7 +875,11 @@ const audio = {
     }
 
     // See `scheduleOn`: a missing asset is silence, never a fallback beep.
+    // Say so once — a sound that never arrives is otherwise indistinguishable
+    // from one that plays too quietly to notice.
     if ( isAudioPath( name ) ) {
+      warnMissingSample( name );
+
       return;
     }
 
@@ -889,9 +913,19 @@ const audio = {
   beep: playVoiceLive,
   tick: playTickLive,
 
+  /**
+   * Whether a sample is registered under `name` RIGHT NOW. The engine's
+   * registry is the only authority on "can this be played" — a caller that
+   * tracks its own loading state can drift from it (a module re-evaluated by
+   * Fast Refresh, a sketch reset), and a stale "ready" flag turns into
+   * silence.
+   */
+  hasSample: ( name ) => _samples.has( name ),
+
   registerSample: (
     name, buffer
   ) => {
+    _warnedMissing.delete( name );
     _samples.set(
       name,
       buffer
@@ -912,7 +946,15 @@ const audio = {
       _samplePromises.set(
         url,
         fetch( url )
-          .then( ( response ) => response.arrayBuffer() )
+          .then( ( response ) => {
+            // A 404 hands back an HTML body, which decodeAudioData rejects with
+            // a message that says nothing about the real problem. Name it here.
+            if ( !response.ok ) {
+              throw new Error( `HTTP ${ response.status } fetching ${ url }` );
+            }
+
+            return response.arrayBuffer();
+          } )
           .then( ( bytes ) => ctx.decodeAudioData( bytes ) )
       );
     }
@@ -920,14 +962,19 @@ const audio = {
     try {
       const buffer = await _samplePromises.get( url );
 
+      _warnedMissing.delete( name );
       _samples.set(
         name,
         buffer
       );
 
       return buffer;
-    } catch {
+    } catch( error ) {
       _samplePromises.delete( url );
+      console.warn(
+        `[audio] Could not load the sound "${ name }" — it will stay silent.`,
+        error
+      );
 
       return null;
     }
