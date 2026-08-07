@@ -3,6 +3,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
+import easing from "@/p5/utils/easing.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import string from "@/p5/utils/string.js";
 import {
@@ -1175,7 +1176,15 @@ sketch.draw( () => {
       margin
     );
 
-    distanceOverride = fitSrc + ( fitDst - fitSrc ) * morphU;
+    // The zoom rides an easing curve instead of the raw morph progress, so it
+    // coasts into each word's framing with a decelerating tail (pick a Back
+    // ease for a touch of overshoot) rather than stopping dead at the beat
+    // boundary. Every curve lands on exactly 0/1 at the ends, so the hold
+    // windows and the loop wrap stay seamless.
+    const fitEaseKey = autoFit.easing ?? "easeInOutCubic";
+    const fitEase = typeof easing[ fitEaseKey ] === "function" ? easing[ fitEaseKey ] : ( x ) => x;
+
+    distanceOverride = fitSrc + ( fitDst - fitSrc ) * fitEase( morphU );
   }
 
   const progress = t / T;

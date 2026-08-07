@@ -121,8 +121,13 @@ export const formValues = {
         fade: 0.35
       },
       // Cursors caught between jobs (a hold beat, or waiting for their next
-      // window) show the spinning beach ball instead of the plain pointer.
+      // window): where they wait is the mode — "stay" on the finished point,
+      // "aside" at a random spot along the canvas border (still visible, the
+      // finished text breathes), or "exit" off-canvas entirely (they fade out
+      // and re-enter like the entrance/exodus). The beach ball spins wherever
+      // they wait visibly.
       idle: {
+        mode: "aside",
         beachball: true,
         spinSpeed: 1.95
       }
@@ -144,10 +149,13 @@ export const formValues = {
     fov: 30,
     distance: 11.8,
     // Auto-fit eases the distance from each text's fitted framing to the
-    // next's during the conversion — words and letters mix freely.
+    // next's during the conversion — words and letters mix freely. The zoom
+    // rides the easing curve, so it coasts into each framing instead of
+    // stopping dead (a Back ease adds a touch of overshoot).
     autoFit: {
       enabled: true,
-      margin: 0.15
+      margin: 0.15,
+      easing: "easeInOutCubic"
     },
     phase: 0.3,
     elevation: 0.2,
@@ -486,6 +494,24 @@ export const formConfiguration: Record<string, any> = {
             component: "nested-object",
             label: "Waiting",
             fields: {
+              mode: {
+                label: "Between jobs",
+                component: "select",
+                options: [
+                  {
+                    value: "stay",
+                    label: "Stay on the finished point"
+                  },
+                  {
+                    value: "aside",
+                    label: "Step aside to the canvas edge"
+                  },
+                  {
+                    value: "exit",
+                    label: "Leave the canvas, re-enter for the next job"
+                  }
+                ]
+              },
               beachball: {
                 label: "Spin the waiting icon between jobs",
                 component: "checkbox"
@@ -582,6 +608,10 @@ export const formConfiguration: Record<string, any> = {
             min: 0,
             max: 1.5,
             step: 0.05
+          },
+          easing: {
+            label: "Zoom easing (how the framing settles)",
+            component: "easing"
           }
         }
       },
