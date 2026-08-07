@@ -15,9 +15,12 @@
 
 export const dragClickFormValues = {
   enabled: true,
-  // Uploaded sounds, one per edge of the "click". Empty = use the synth preset.
-  down: "",
-  up: "",
+  // One sound per edge of the "click". These ship with the app, next to the
+  // cursor artwork they belong to, so a drag layer clicks out of the box;
+  // drop your own file on either field to replace it, or clear it to fall
+  // back to the synth preset below.
+  down: "/assets/audios/cursors/mousedown.wav",
+  up: "/assets/audios/cursors/mouseup.wav",
   volume: 0.6,
   // Whether the scripted pointer troupe clicks too (off = only real hands do).
   virtual: true,
@@ -97,8 +100,9 @@ export const dragClickFormConfiguration = {
       label: "Virtual pointers click too",
       component: "checkbox"
     },
+    // Only heard when a sound field above is cleared — a file always wins.
     fallback: {
-      label: "Synth click (used when no sound is uploaded)",
+      label: "Synth click (used when a sound field is empty)",
       component: "select",
       options: CLICK_PRESET_OPTIONS
     },

@@ -45,6 +45,12 @@ Uploads land in the shared asset pool (`assets.audios`), so they follow the
 usual lifecycle: a `blob:` URL locally, uploaded to S3 with the job when a
 recording is enqueued, and resolved through `resolveAssetURL` in both cases.
 
+A default can also point at a file shipped with the app, exactly like the
+cursor artwork does — `"/assets/audios/cursors/mousedown.wav"` resolves to the
+static folder, so the sketch makes sound before anyone uploads anything.
+Shipped sounds live under `public/assets/audios/`, mirroring
+`public/assets/images/`.
+
 ## Playing a sound from a sketch
 
 ```js
@@ -129,6 +135,11 @@ sketch.draw( () => {
 (`sound: { ...dragClickFormValues }` + `sound: dragClickFormConfiguration`).
 It is import-free on purpose: `options.ts` is loaded by the form and by the
 metadata generator, and must never reach the audio engine.
+
+Its defaults point at the two shipped click sounds
+(`public/assets/audios/cursors/`), so adopting the block is enough to make a
+drag layer click. Replace either one by dropping a file on the field; clear it
+to fall back to the synth preset.
 
 Because the layer reads the drag layer's own state rather than raw pointer
 events, every pointer source clicks through it — mouse, touch, camera pinch and

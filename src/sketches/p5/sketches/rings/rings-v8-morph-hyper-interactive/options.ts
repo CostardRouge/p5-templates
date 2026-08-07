@@ -132,12 +132,12 @@ export const formValues = {
     }
   },
 
-  // The sound of the show: an uploaded click for the button going down (a
-  // pointer grabbing a point) and another for it coming back up (release).
-  // Drop any audio file on the two fields — until then the built-in synth
-  // click stands in. Sounds are triggered through the sketch audio engine, so
-  // they are heard live, mixed into a browser recording, and rendered
-  // sample-accurately into a server capture.
+  // The sound of the show: a click for the button going down (a pointer
+  // grabbing a point) and another for it coming back up (release). Both ship
+  // with the app — drop your own audio file on either field to replace it.
+  // Sounds are triggered through the sketch audio engine, so they are heard
+  // live, mixed into a browser recording, and rendered sample-accurately into
+  // a server capture.
   sound: {
     ...dragClickFormValues
   },
