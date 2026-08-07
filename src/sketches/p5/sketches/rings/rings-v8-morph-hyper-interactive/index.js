@@ -47,7 +47,8 @@ import {
 // rings v8 — morph hyper interactive.
 //
 // v7 let a troupe of virtual pointers sculpt ONE letter at random. v8 gives
-// the troupe a SCRIPT: a list of texts (single letters or whole words), and
+// the troupe a SCRIPT: a list of texts (single letters, whole words or
+// multi-line blocks — each line centred and stacked by the line spacing), and
 // the cursors physically convert each one into the next — the loop is cut
 // into one beat per text, each beat holding the finished word legible for a
 // configurable fraction and spending the rest as the conversion window.
@@ -87,7 +88,10 @@ import {
 
 const MAX_POINTS = 128; // pool slots = capsules (uniform array size)
 const MAX_WORD_POINTS = 64; // handle budget cap per text
-const MAX_CONTOURS = 12; // outlines kept per text (longest first)
+// Outlines kept per text (longest first). Multi-line texts carry one outline
+// per letter (plus counters), and no more than budget/3 rings can ever earn
+// their ≥ 3 points anyway — so this is the natural ceiling, not 12.
+const MAX_CONTOURS = 21;
 const MAX_STEPS = 96; // sphere-trace iterations per ray
 const BUILD_SIZE = 100; // glyph sampling size; geometry normalised by it
 
@@ -212,7 +216,8 @@ function buildWord( {
   fontName,
   sampleFactor,
   simplifyThreshold,
-  handles
+  handles,
+  lineSpacing
 } ) {
   const p = getP5();
   const font = string.fonts[ fontName ] ?? string.fonts.sans;
@@ -225,16 +230,61 @@ function buildWord( {
   p.textFont( font );
   p.textSize( BUILD_SIZE );
 
-  const raw = font.textToPoints(
-    word,
-    0,
-    0,
-    BUILD_SIZE,
-    {
-      sampleFactor,
-      simplifyThreshold
-    }
+  // Multi-line texts: each line is sampled on its own baseline and centred
+  // horizontally, so a cycle entry can be a whole stacked block (vertical
+  // reels-style layouts). Blank lines keep their slot as breathing room.
+  const lines = word.split( "\n" ).map( ( line ) => line.trim() );
+  const lineHeight = BUILD_SIZE * Math.max(
+    lineSpacing ?? 1.15,
+    0.5
   );
+  const raw = [];
+
+  lines.forEach( (
+    line, lineIndex
+  ) => {
+    if ( !line ) {
+      return;
+    }
+
+    const linePoints = font.textToPoints(
+      line,
+      0,
+      lineIndex * lineHeight,
+      BUILD_SIZE,
+      {
+        sampleFactor,
+        simplifyThreshold
+      }
+    );
+
+    if ( !linePoints.length ) {
+      return;
+    }
+
+    let lineMinX = Infinity;
+    let lineMaxX = -Infinity;
+
+    for ( const pt of linePoints ) {
+      lineMinX = Math.min(
+        lineMinX,
+        pt.x
+      );
+      lineMaxX = Math.max(
+        lineMaxX,
+        pt.x
+      );
+    }
+
+    const lineCtrX = ( lineMinX + lineMaxX ) / 2;
+
+    for ( const pt of linePoints ) {
+      raw.push( {
+        x: pt.x - lineCtrX,
+        y: pt.y
+      } );
+    }
+  } );
 
   p.pop();
 
@@ -392,7 +442,8 @@ function getWord( cfg ) {
     fontFamily,
     cfg.sampleFactor,
     cfg.simplifyThreshold,
-    cfg.handles
+    cfg.handles,
+    cfg.lineSpacing
   ].join( "|" );
 
   const cached = geometryMemo.get( key );
@@ -1070,9 +1121,14 @@ sketch.draw( () => {
     0
   ] ) );
 
-  // ── The text cycle: one geometry per entry (letters or words) ──────────────
+  // ── The text cycle: one geometry per entry (letters, words or multi-line
+  // blocks — real newlines from the textarea, or a literal "\n") ─────────────
   const wordList = ( Array.isArray( textCfg.words ) ? textCfg.words : [] )
-    .map( ( word ) => ( word ?? "" ).toString().trim() )
+    .map( ( word ) => ( word ?? "" ).toString().replace(
+      /\\n/g,
+      "\n"
+    )
+      .trim() )
     .filter( Boolean );
 
   if ( !wordList.length ) {
@@ -1084,7 +1140,8 @@ sketch.draw( () => {
     fontName: textCfg.font ?? "agiro",
     sampleFactor: textCfg.detail ?? 1,
     simplifyThreshold: textCfg.simplify ?? 0,
-    handles: textCfg.handles ?? 48
+    handles: textCfg.handles ?? 48,
+    lineSpacing: textCfg.lineSpacing ?? 1.15
   } ) );
 
   // Font still loading (or an entry produced no outline) — wait it out.

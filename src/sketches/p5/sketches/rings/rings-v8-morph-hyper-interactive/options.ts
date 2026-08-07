@@ -29,7 +29,10 @@ export const formValues = {
     simplify: 0,
     // Points sampled along each text's outlines (split proportionally to
     // contour perimeter, ≥ 3 per ring).
-    handles: 28
+    handles: 28,
+    // Baseline-to-baseline distance between the lines of a multi-line entry,
+    // in font-size units (vertical reels layouts).
+    lineSpacing: 1.15
   },
 
   material: {
@@ -233,13 +236,13 @@ export const formConfiguration: Record<string, any> = {
     label: "Texts",
     fields: {
       words: {
-        label: "Cycle (letters or words, one beat each)",
+        label: "Cycle (one beat each — line breaks make stacked blocks)",
         component: "item-list",
         minItems: 1,
         maxItems: 8,
         itemConfig: {
           label: "Text",
-          component: "text"
+          component: "textarea"
         }
       },
       font: {
@@ -270,6 +273,13 @@ export const formConfiguration: Record<string, any> = {
         min: 12,
         max: 64,
         step: 1
+      },
+      lineSpacing: {
+        label: "Line spacing (× font size)",
+        component: "slider",
+        min: 0.6,
+        max: 2,
+        step: 0.05
       }
     }
   },
