@@ -30,6 +30,9 @@ import {
   createPinchTracker
 } from "@/p5/utils/interaction/handPinch.js";
 import {
+  createDragClicks
+} from "@/p5/utils/interaction/dragClicks.js";
+import {
   drawInteractionCameraPreview
 } from "@/p5/utils/interaction/overlay.js";
 import {
@@ -65,6 +68,15 @@ import {
 // including your own mouse meddling mid-show — and the word still lands
 // exactly. Carried-in points float as lone beads until the snap splices them
 // into the outline.
+//
+// ── The clicks (Click sounds) ────────────────────────────────────────────────
+// The conversion is audible: drop an audio file on "Mouse down" and another on
+// "Mouse up" and every grab / release of a point fires them — the two halves of
+// a real click. Because the sound layer watches the DRAG layer, not the pointer
+// devices, the scripted cursors, the mouse, a finger and a camera pinch all
+// click through the same path, and a press over empty canvas stays silent.
+// Without an upload a built-in synth click stands in. See
+// @/p5/utils/interaction/dragClicks.js.
 //
 // ── Camera ───────────────────────────────────────────────────────────────────
 // Words differ in width, so the camera can auto-fit: the distance eases from
@@ -524,6 +536,8 @@ const state = {
 const draggable = createDraggable();
 const pinch = createPinchTracker();
 const troupe = createMorphTroupe();
+// Mouse-button sound for every grab and release, real or scripted (Click sounds).
+const clicks = createDragClicks();
 
 function rebuildPool(
   src, dst, transition
@@ -1097,6 +1111,7 @@ sketch.setup( async() => {
   pinch.clear();
   depthPinch.clear();
   troupe.reset();
+  clicks.reset();
 
   await initInteraction( options.sketch?.interaction ?? {} );
 } );
@@ -1510,6 +1525,16 @@ sketch.draw( () => {
       );
     }
   } );
+
+  // The sound of the show: one click when a pointer takes a point, another
+  // when it lets go — the mouse-down / mouse-up pair. Reading the drag layer's
+  // own state means a mouse, a finger, a camera pinch and a scripted cursor all
+  // click on exactly the frame they take hold, and a press over empty canvas
+  // stays silent.
+  clicks.update(
+    draggable.drags,
+    o.sound
+  );
 
   // Forget delta anchors of pointers that stopped dragging. Nothing persists
   // in v8 — the cycle itself is the artwork.

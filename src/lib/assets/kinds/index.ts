@@ -12,6 +12,10 @@ import {
 import {
   videosKind
 } from "./videos";
+import {
+  audiosKind
+} from "./audios";
 
 registerAssetKind( imagesKind );
 registerAssetKind( videosKind );
+registerAssetKind( audiosKind );

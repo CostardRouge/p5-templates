@@ -148,3 +148,66 @@ export function stepDrag(
     released
   };
 }
+
+/**
+ * Diff two snapshots of a `drags` map into the grab / let-go transitions
+ * between them — what a caller needs to react to the EDGES of a drag (click
+ * feedback, haptics, undo checkpoints) rather than to its steady state.
+ *
+ * A pointer that swaps handles between the two snapshots counts as both an up
+ * (on the handle it left) and a down (on the one it took) — the same two
+ * button events a hand would make.
+ *
+ * @param {Map<string, number>} previous - Pointer key → target index, before.
+ * @param {Map<string, number>} current - The same map, after.
+ * @returns {{ downs: Array<{key: string, index: number}>,
+ *   ups: Array<{key: string, index: number}> }}
+ */
+export function diffDrags(
+  previous, current
+) {
+  const downs = [];
+  const ups = [];
+
+  current.forEach( (
+    index, key
+  ) => {
+    if ( !previous.has( key ) ) {
+      downs.push( {
+        key,
+        index
+      } );
+
+      return;
+    }
+
+    const before = previous.get( key );
+
+    if ( before !== index ) {
+      ups.push( {
+        key,
+        index: before
+      } );
+      downs.push( {
+        key,
+        index
+      } );
+    }
+  } );
+
+  previous.forEach( (
+    index, key
+  ) => {
+    if ( !current.has( key ) ) {
+      ups.push( {
+        key,
+        index
+      } );
+    }
+  } );
+
+  return {
+    downs,
+    ups
+  };
+}

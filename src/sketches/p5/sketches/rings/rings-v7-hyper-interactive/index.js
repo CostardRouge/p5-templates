@@ -32,6 +32,9 @@ import {
   createPinchTracker
 } from "@/p5/utils/interaction/handPinch.js";
 import {
+  createDragClicks
+} from "@/p5/utils/interaction/dragClicks.js";
+import {
   drawInteractionCameraPreview
 } from "@/p5/utils/interaction/overlay.js";
 import {
@@ -57,6 +60,15 @@ import {
 // the loop clock (deterministic capture replays the exact same show; every
 // loop restarts it from the same letter), and virtual releases skip the
 // options persistence so the performance never rewrites the saved sculpt.
+//
+// ── The clicks (Click sounds) ────────────────────────────────────────────────
+// The sculpting is audible: drop an audio file on "Mouse down" and another on
+// "Mouse up" and every grab / release of a handle fires them — the two halves
+// of a real click. Because the sound layer watches the DRAG layer, not the
+// pointer devices, the scripted cursors, the mouse, a finger and a camera
+// pinch all click through the same path, and a press over empty canvas stays
+// silent. Without an upload a built-in synth click stands in. See
+// @/p5/utils/interaction/dragClicks.js.
 //
 // Everything below is v6:
 //
@@ -857,6 +869,8 @@ function createDepthPinch() {
 const depthPinch = createDepthPinch();
 // The scripted sculpting crowd (see ./virtualPointers.js and the header).
 const troupe = createPointerTroupe();
+// Mouse-button sound for every grab and release, real or scripted (Click sounds).
+const clicks = createDragClicks();
 
 // SHIFT state for the mouse depth gesture, tracked at module scope: p5's own
 // keyIsDown depends on per-instance window bindings the engine tears down and
@@ -1076,6 +1090,7 @@ sketch.setup( async() => {
   pinch.clear();
   depthPinch.clear();
   troupe.reset();
+  clicks.reset();
 
   await initInteraction( options.sketch?.interaction ?? {} );
 } );
@@ -1331,6 +1346,16 @@ sketch.draw( () => {
       );
     }
   } );
+
+  // The sound of the sculpting: one click when a pointer takes a handle,
+  // another when it lets go — the mouse-down / mouse-up pair. Reading the drag
+  // layer's own state means a mouse, a finger, a camera pinch and a scripted
+  // cursor all click on exactly the frame they take hold, and a press over
+  // empty canvas stays silent.
+  clicks.update(
+    draggable.drags,
+    o.sound
+  );
 
   // Forget delta anchors of pointers that stopped dragging.
   for ( const key of [
