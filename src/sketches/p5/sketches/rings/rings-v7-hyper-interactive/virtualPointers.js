@@ -685,11 +685,15 @@ export function createPointerTroupe() {
           return;
         }
 
+        // targetIndex names the handle a dragging cursor is holding, so the
+        // sketch can bind the drag explicitly instead of relying on the
+        // proximity pick (which can miss when a frame lands mid-drag).
         pointers.push( {
           key: `${ VIRTUAL_POINTER_PREFIX }${ cursor.index }`,
           x: cursor.pos.x,
           y: cursor.pos.y,
           pressed: cursor.phase === "drag",
+          targetIndex: cursor.phase === "drag" ? cursor.queue[ cursor.qi ] : undefined,
           kind: "virtual"
         } );
       } );

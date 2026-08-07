@@ -3,6 +3,7 @@ import sketch, {
   getP5
 } from "@/p5/utils/sketch.js";
 import animation from "@/p5/utils/animation.js";
+import easing from "@/p5/utils/easing.js";
 import createNoiseFieldRenderer from "@/p5/utils/noiseFieldGpu.js";
 import string from "@/p5/utils/string.js";
 import {
@@ -77,7 +78,11 @@ import {
 // ── Loop safety ──────────────────────────────────────────────────────────────
 // The schedule lives on the loop clock: frame 0 is word[0] fully formed with
 // every cursor gone, and the final beat reserves time for the exodus — so
-// uT = TAU meets uT = 0 exactly, live and in deterministic capture.
+// uT = TAU meets uT = 0 exactly, live and in deterministic capture. Colours
+// close too: each capsule's hue identity eases from its current word's arc id
+// to the id it will carry after the beat snap (rings-v4's continuous uPipeId,
+// per point), so no boundary — including the wrap back to word[0] — recolours
+// the word abruptly.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MAX_POINTS = 128; // pool slots = capsules (uniform array size)
@@ -458,7 +463,11 @@ function getTransition(
 // beat's word — every time the step or the cycle signature changes.
 const state = {
   poolKey: null,
-  slots: []
+  slots: [],
+  // Per-slot hue identity AFTER the snap to the next word (null = the point
+  // does not survive the conversion). Uploaded ids ease toward these over the
+  // morph window so the snap never recolours a capsule — see "Loop safety".
+  dstIds: []
 };
 
 const draggable = createDraggable();
@@ -466,7 +475,7 @@ const pinch = createPinchTracker();
 const troupe = createMorphTroupe();
 
 function rebuildPool(
-  src, transition
+  src, dst, transition
 ) {
   const slots = src.points.map( (
     pt, i
@@ -478,22 +487,31 @@ function rebuildPool(
     next: src.next[ i ],
     id: src.ids[ i ]
   } ) );
+  const dstIds = slots.map( () => null );
+
+  transition.moves.forEach( ( move ) => {
+    dstIds[ move.from ] = dst.ids[ move.to ];
+  } );
 
   transition.adds.slice(
     0,
     MAX_POINTS - slots.length
   ).forEach( ( dstIndex ) => {
+    // A carried-in bead wears its destination arc id from the start, so the
+    // splice at the beat boundary keeps its colour.
     slots.push( {
       x: 0,
       y: 0,
       z: 0,
       active: false,
       next: -1,
-      id: dstIndex / MAX_WORD_POINTS
+      id: dst.ids[ dstIndex ]
     } );
+    dstIds.push( dst.ids[ dstIndex ] );
   } );
 
   state.slots = slots;
+  state.dstIds = dstIds;
 }
 
 // SHIFT state for the mouse depth gesture, tracked at module scope: p5's own
@@ -1018,6 +1036,7 @@ const segB = new Float32Array( MAX_POINTS * 4 );
 sketch.setup( async() => {
   state.poolKey = null;
   state.slots = [];
+  state.dstIds = [];
   dragCursor.clear();
   depthActive.clear();
 
@@ -1104,6 +1123,7 @@ sketch.draw( () => {
     state.poolKey = poolKey;
     rebuildPool(
       src,
+      dst,
       transition
     );
   }
@@ -1115,6 +1135,18 @@ sketch.draw( () => {
   const tubeR = Math.max(
     material.thickness ?? 0.05,
     0.005
+  );
+
+  // Progress through this beat's conversion window (0 through the hold, then
+  // 0 → 1 across the morph) — drives the camera auto-fit ease and the hue
+  // identity blend toward the next word.
+  const morphU = clamp(
+    ( t - stepIndex * stepDur - holdDur ) / Math.max(
+      stepDur - holdDur,
+      1e-4
+    ),
+    0,
+    1
   );
 
   // ── Camera: auto-fit distance eases from this word to the next ─────────────
@@ -1143,16 +1175,16 @@ sketch.draw( () => {
       aspect,
       margin
     );
-    const morphU = clamp(
-      ( t - stepIndex * stepDur - holdDur ) / Math.max(
-        stepDur - holdDur,
-        1e-4
-      ),
-      0,
-      1
-    );
 
-    distanceOverride = fitSrc + ( fitDst - fitSrc ) * morphU;
+    // The zoom rides an easing curve instead of the raw morph progress, so it
+    // coasts into each word's framing with a decelerating tail (pick a Back
+    // ease for a touch of overshoot) rather than stopping dead at the beat
+    // boundary. Every curve lands on exactly 0/1 at the ends, so the hold
+    // windows and the loop wrap stay seamless.
+    const fitEaseKey = autoFit.easing ?? "easeInOutCubic";
+    const fitEase = typeof easing[ fitEaseKey ] === "function" ? easing[ fitEaseKey ] : ( x ) => x;
+
+    distanceOverride = fitSrc + ( fitDst - fitSrc ) * fitEase( morphU );
   }
 
   const progress = t / T;
@@ -1306,6 +1338,36 @@ sketch.draw( () => {
     ].join( "|" )
   } );
 
+  // A troupe grab must never miss its point. When a task slice is compressed
+  // (long words, many tasks, the exodus-shortened final beat) the cursor's
+  // first pressed frame can already sit outside the pick-up radius, and a
+  // proximity pick would leave the point behind — it would then pop into
+  // place at the beat snap instead of being carried in like the others. The
+  // schedule knows exactly which slot each cursor holds, so bind the drag
+  // explicitly; a slot already held by another pointer (mouse, touch, pinch)
+  // is left alone.
+  const heldSlots = new Set( draggable.drags.values() );
+
+  virtualPointers.forEach( ( pointer ) => {
+    if ( !pointer.pressed || pointer.targetIndex === undefined ) {
+      return;
+    }
+
+    if (
+      draggable.drags.get( pointer.key ) === pointer.targetIndex
+        || heldSlots.has( pointer.targetIndex )
+        || !state.slots[ pointer.targetIndex ]?.active
+    ) {
+      return;
+    }
+
+    draggable.drags.set(
+      pointer.key,
+      pointer.targetIndex
+    );
+    heldSlots.add( pointer.targetIndex );
+  } );
+
   const {
     hovers,
     grabbed
@@ -1406,7 +1468,9 @@ sketch.draw( () => {
   let written = 0;
   let radius = 0;
 
-  state.slots.forEach( ( slot ) => {
+  state.slots.forEach( (
+    slot, index
+  ) => {
     if ( !slot.active || written >= MAX_POINTS ) {
       return;
     }
@@ -1423,12 +1487,19 @@ sketch.draw( () => {
       )
     );
 
+    // Ease the hue identity toward what the snap will assign, so the beat
+    // boundary (and the loop wrap) never recolours the finished word.
+    const dstId = state.dstIds[ index ] ?? null;
+    const hueId = dstId === null
+      ? slot.id
+      : slot.id + ( dstId - slot.id ) * morphU;
+
     const w = written * 4;
 
     segA[ w ] = slot.x;
     segA[ w + 1 ] = slot.y;
     segA[ w + 2 ] = slot.z;
-    segA[ w + 3 ] = slot.id;
+    segA[ w + 3 ] = hueId;
     segB[ w ] = other.x;
     segB[ w + 1 ] = other.y;
     segB[ w + 2 ] = other.z;

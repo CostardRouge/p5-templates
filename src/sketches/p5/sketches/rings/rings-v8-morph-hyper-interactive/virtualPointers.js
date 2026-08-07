@@ -1,5 +1,8 @@
 import cache from "@/p5/utils/cache.js";
 import easing from "@/p5/utils/easing.js";
+import {
+  hashedRandom
+} from "@/p5/utils/letterPaths.js";
 
 // ── Virtual pointers v8: the word-morphing troupe ───────────────────────────
 // v7's crowd sculpted one letter at random. Here the cursors are the STAGE
@@ -9,8 +12,12 @@ import easing from "@/p5/utils/easing.js";
 // from outside the canvas when the next word needs more (add-pointer icon),
 // and CARRYING OFF points the next word doesn't need (the cursor grabs one,
 // retreats, and its icon flips to the remove-pointer as it leaves). Between
-// two conversions the finished word holds legible, and any cursor still on
-// stage waits — optionally as a spinning beach ball.
+// two conversions the finished word holds legible, and where a cursor waits
+// out the gap is the `idle.mode` option: "stay" parks it on the point it just
+// finished (optionally spinning as a beach ball), "aside" walks it to a
+// hashed spot along the canvas border so the word breathes with the troupe
+// still on stage, and "exit" sends it off-canvas entirely — it fades out like
+// the exodus and re-enters for its next task.
 //
 // ── Scheduling (why every loop is the same show) ──
 // The whole cycle is laid out ON the loop clock: with W words the loop is cut
@@ -82,6 +89,10 @@ const DEFAULTS = {
     fade: 0.35
   },
   idle: {
+    // Where a cursor waits between jobs: "stay" (on the point it finished),
+    // "aside" (a hashed spot along the canvas border), or "exit" (off-canvas,
+    // fading out and re-entering like the entrance/exodus).
+    mode: "stay",
     beachball: true,
     spinSpeed: 1
   }
@@ -496,6 +507,87 @@ export function createMorphTroupe() {
     return null;
   }
 
+  // Where a cursor waits out the gap after `prev`, per the idle mode: the
+  // finished point itself ("stay"), a hashed spot along the canvas border
+  // ("aside" — deterministic in cursor index and beat, so scrubbing replays
+  // it), or an off-canvas point beyond the finished point ("exit").
+  function parkSpot(
+    prev, ctx, cfg, cursorIndex, mode
+  ) {
+    const anchor = anchorEnd(
+      prev,
+      ctx
+    );
+
+    if ( !anchor || mode === "stay" ) {
+      return anchor;
+    }
+
+    if ( mode === "exit" ) {
+      return offCanvasPoint(
+        anchor,
+        outwardDir(
+          anchor,
+          ctx.width,
+          ctx.height
+        ),
+        ctx.width,
+        ctx.height,
+        80
+      );
+    }
+
+    // "aside": a point on the border rectangle inset a little from the canvas
+    // edge, picked by perimeter position — visible, but clear of the word.
+    const seed = Math.round( cfg.seed ?? DEFAULTS.seed ) * 1009;
+    const u = hashedRandom( seed + cursorIndex * 13 + prev.step * 29 + 3 );
+    const inset = 0.07 * Math.min(
+      ctx.width,
+      ctx.height
+    );
+    const rw = Math.max(
+      ctx.width - 2 * inset,
+      1
+    );
+    const rh = Math.max(
+      ctx.height - 2 * inset,
+      1
+    );
+    let d = u * 2 * ( rw + rh );
+
+    if ( d < rw ) {
+      return {
+        x: inset + d,
+        y: inset
+      };
+    }
+
+    d -= rw;
+
+    if ( d < rh ) {
+      return {
+        x: ctx.width - inset,
+        y: inset + d
+      };
+    }
+
+    d -= rh;
+
+    if ( d < rw ) {
+      return {
+        x: ctx.width - inset - d,
+        y: ctx.height - inset
+      };
+    }
+
+    d -= rw;
+
+    return {
+      x: inset,
+      y: ctx.height - inset - d
+    };
+  }
+
   // Resolve one cursor at loop time `now`: { pos, icon, alpha, pressed } or
   // null while off-stage. Everything derives from the schedule + the live
   // projections — nothing accumulates frame to frame.
@@ -508,6 +600,8 @@ export function createMorphTroupe() {
       return null;
     }
 
+    const cfg = ctx.config ?? {};
+    const idleMode = cfg.idle?.mode ?? DEFAULTS.idle.mode;
     const first = events[ 0 ];
     const exit = events[ events.length - 1 ];
 
@@ -519,7 +613,7 @@ export function createMorphTroupe() {
       timing.fade,
       0.01
     );
-    const alpha = Math.min(
+    let alpha = Math.min(
       clamp(
         ( now - first.t0 ) / fade,
         0,
@@ -556,24 +650,87 @@ export function createMorphTroupe() {
 
     const bounds = subBounds( timing );
     const margin = 80;
+    // Did an idle gap precede the active event? (Consecutive tasks touch, so
+    // a real gap only opens across a hold beat or an empty morph window.)
+    const gapBefore = !!prev && ( active ? active.t0 - prev.t1 : now - prev.t1 ) > 1e-3;
 
-    // Idling between tasks (a hold beat): stay where the last task ended,
-    // showing the waiting artwork.
+    // A cursor coming back from an off-canvas park fades back in like its
+    // first entrance.
+    if ( active && gapBefore && idleMode === "exit" ) {
+      alpha = Math.min(
+        alpha,
+        clamp(
+          ( now - active.t0 ) / fade,
+          0,
+          1
+        )
+      );
+    }
+
+    // Idling between tasks (a hold beat): travel to the parking spot of the
+    // configured idle mode and wait there.
     if ( !active ) {
-      const pos = prev
+      const anchor = prev
         ? anchorEnd(
           prev,
           ctx
         )
         : null;
 
-      if ( !pos ) {
+      if ( !anchor ) {
         return null;
+      }
+
+      if ( idleMode === "stay" ) {
+        return {
+          pos: anchor,
+          icon: WAITING,
+          alpha,
+          pressed: false
+        };
+      }
+
+      const spot = parkSpot(
+        prev,
+        ctx,
+        cfg,
+        cursor.index,
+        idleMode
+      ) ?? anchor;
+      const travelDur = Math.max(
+        timing.travel,
+        0.01
+      );
+      const u = clamp(
+        ( now - prev.t1 ) / travelDur,
+        0,
+        1
+      );
+      const pos = lerpPoint(
+        anchor,
+        spot,
+        ease( u )
+      );
+
+      if ( idleMode === "exit" ) {
+        return {
+          pos,
+          icon: POINTING,
+          alpha: Math.min(
+            alpha,
+            1 - clamp(
+              ( now - prev.t1 ) / fade,
+              0,
+              1
+            )
+          ),
+          pressed: false
+        };
       }
 
       return {
         pos,
-        icon: WAITING,
+        icon: u < 1 ? POINTING : WAITING,
         alpha,
         pressed: false
       };
@@ -588,14 +745,25 @@ export function createMorphTroupe() {
       1
     );
 
-    // Where this event STARTS: the previous event's end, or (first
-    // appearance) off-canvas beyond the first approach target.
+    // Where this event STARTS: the previous event's end (or, after an idle
+    // gap, the parking spot the cursor waited on), or (first appearance)
+    // off-canvas beyond the first approach target.
     const startAnchor = () => {
       if ( prev ) {
-        return anchorEnd(
-          prev,
-          ctx
-        ) ?? {
+        const from = gapBefore
+          ? parkSpot(
+            prev,
+            ctx,
+            cfg,
+            cursor.index,
+            idleMode
+          )
+          : anchorEnd(
+            prev,
+            ctx
+          );
+
+        return from ?? {
           x: ctx.width / 2,
           y: -margin
         };
@@ -701,7 +869,8 @@ export function createMorphTroupe() {
             ),
             icon: GRABBING,
             alpha,
-            pressed: true
+            pressed: true,
+            targetIndex: active.poolIndex
           };
         }
 
@@ -727,7 +896,8 @@ export function createMorphTroupe() {
           ),
           icon: v < 0.35 ? GRABBING : REMOVE,
           alpha,
-          pressed: true
+          pressed: true,
+          targetIndex: active.poolIndex
         };
       }
 
@@ -814,7 +984,8 @@ export function createMorphTroupe() {
         ),
         icon: ADD,
         alpha,
-        pressed: true
+        pressed: true,
+        targetIndex: active.poolIndex
       };
     }
 
@@ -888,11 +1059,15 @@ export function createMorphTroupe() {
         );
 
         if ( resolved ) {
+          // targetIndex names the pool slot a pressed cursor is carrying, so
+          // the sketch can bind the drag explicitly instead of relying on the
+          // proximity pick (which can miss when a task slice is compressed).
           pointers.push( {
             key: `${ VIRTUAL_POINTER_PREFIX }${ cursor.index }`,
             x: resolved.pos.x,
             y: resolved.pos.y,
             pressed: resolved.pressed,
+            targetIndex: resolved.targetIndex,
             kind: "virtual"
           } );
         }
