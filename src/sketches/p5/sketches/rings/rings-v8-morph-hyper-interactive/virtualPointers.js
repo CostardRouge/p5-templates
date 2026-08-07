@@ -701,7 +701,8 @@ export function createMorphTroupe() {
             ),
             icon: GRABBING,
             alpha,
-            pressed: true
+            pressed: true,
+            targetIndex: active.poolIndex
           };
         }
 
@@ -727,7 +728,8 @@ export function createMorphTroupe() {
           ),
           icon: v < 0.35 ? GRABBING : REMOVE,
           alpha,
-          pressed: true
+          pressed: true,
+          targetIndex: active.poolIndex
         };
       }
 
@@ -814,7 +816,8 @@ export function createMorphTroupe() {
         ),
         icon: ADD,
         alpha,
-        pressed: true
+        pressed: true,
+        targetIndex: active.poolIndex
       };
     }
 
@@ -888,11 +891,15 @@ export function createMorphTroupe() {
         );
 
         if ( resolved ) {
+          // targetIndex names the pool slot a pressed cursor is carrying, so
+          // the sketch can bind the drag explicitly instead of relying on the
+          // proximity pick (which can miss when a task slice is compressed).
           pointers.push( {
             key: `${ VIRTUAL_POINTER_PREFIX }${ cursor.index }`,
             x: resolved.pos.x,
             y: resolved.pos.y,
             pressed: resolved.pressed,
+            targetIndex: resolved.targetIndex,
             kind: "virtual"
           } );
         }

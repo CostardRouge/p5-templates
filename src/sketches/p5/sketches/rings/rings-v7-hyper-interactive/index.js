@@ -1230,6 +1230,33 @@ sketch.draw( () => {
     targets[ index ].depth = projected.depth;
   };
 
+  // A troupe grab must never miss its handle: on a frame that lands mid-drag
+  // the cursor can already be outside the pick-up radius, and a proximity
+  // pick would leave the handle behind. The troupe knows which handle each
+  // dragging cursor holds, so bind the drag explicitly; a handle already held
+  // by another pointer (mouse, touch, pinch) is left alone.
+  const heldHandles = new Set( draggable.drags.values() );
+
+  virtualPointers.forEach( ( pointer ) => {
+    if ( !pointer.pressed || pointer.targetIndex === undefined ) {
+      return;
+    }
+
+    if (
+      draggable.drags.get( pointer.key ) === pointer.targetIndex
+        || heldHandles.has( pointer.targetIndex )
+        || pointer.targetIndex >= targets.length
+    ) {
+      return;
+    }
+
+    draggable.drags.set(
+      pointer.key,
+      pointer.targetIndex
+    );
+    heldHandles.add( pointer.targetIndex );
+  } );
+
   // Who is holding what before this frame's update — the released-key diff
   // below tells human releases (persist) apart from virtual ones (ephemeral).
   const heldBefore = [
