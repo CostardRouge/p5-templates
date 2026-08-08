@@ -2,7 +2,10 @@ import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
   photo: {
-    image: "global/images/DSC02455.jpg",
+    // A bundled test image: a `global/...` S3 path only resolves for the
+    // account that uploaded it, so it 404s (and used to hang the loader)
+    // for everyone else.
+    image: ( await getTestImagePaths() )[ 0 ],
     margin: 0.1,
     scale: 1.1,
     center: true,
