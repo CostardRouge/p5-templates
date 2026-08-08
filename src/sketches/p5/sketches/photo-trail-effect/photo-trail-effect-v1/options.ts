@@ -36,8 +36,8 @@ export const formValues = {
     // Normalized (0-1) focus point fed to the interactive segmenter. Click
     // the canvas to move it — that is how the subject is chosen dynamically.
     roi: {
-      x: 0.44326979424839197,
-      y: 0.5386447230522758
+      x: 0.4720334741274328,
+      y: 0.2927933578609266
     },
     inverse: true,
     edgeSoftness: 0.25,
@@ -62,16 +62,14 @@ export const formValues = {
     // edit them here; the count slider manages the list length.
     items: [
       {
-        // Tuned for the default test photo: the band sits on the colourful
-        // mural so the ribbon picks up its greens, pinks and purples.
         band: {
           a: {
             x: 0.52,
             y: 0.2
           },
           b: {
-            x: 0.62,
-            y: 0.42
+            x: 0.6255905214890259,
+            y: 0.30463631511733497
           }
         },
         guides: {
