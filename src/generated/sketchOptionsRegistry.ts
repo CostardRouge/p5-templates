@@ -22,8 +22,8 @@ export const sketchOptionsJsonLoaders: Record<string, SketchModuleLoader> = {
   "p5:hand-capture/hand-tracking-v7-echo": () => import( "@/p5/sketches/hand-capture/hand-tracking-v7-echo/options.json" ),
   "p5:hand-capture/hand-tracking-v8-growing": () => import( "@/p5/sketches/hand-capture/hand-tracking-v8-growing/options.json" ),
   "p5:hand-capture/hand-tracking-v9-smear": () => import( "@/p5/sketches/hand-capture/hand-tracking-v9-smear/options.json" ),
+  "p5:photo-segmentation/photo-segmentation-v1-mask": () => import( "@/p5/sketches/photo-segmentation/photo-segmentation-v1-mask/options.json" ),
   "p5:photo/photo-3d-cylinder": () => import( "@/p5/sketches/photo/photo-3d-cylinder/options.json" ),
-  "p5:photo/photo-segmentation": () => import( "@/p5/sketches/photo/photo-segmentation/options.json" ),
   "p5:text/text-animation-typein-typeout": () => import( "@/p5/sketches/text/text-animation-typein-typeout/options.json" ),
 };
 
@@ -180,6 +180,8 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:peaks/peaks-sphere": () => import( "@/p5/sketches/peaks/peaks-sphere/options" ),
   "p5:peaks/peaks-tunnel": () => import( "@/p5/sketches/peaks/peaks-tunnel/options" ),
   "p5:photo-trail-effect/photo-trail-effect-v1": () => import( "@/p5/sketches/photo-trail-effect/photo-trail-effect-v1/options" ),
+  "p5:photo-segmentation/photo-segmentation-v1-mask": () => import( "@/p5/sketches/photo-segmentation/photo-segmentation-v1-mask/options" ),
+  "p5:photo-segmentation/photo-segmentation-v2-noise-reveal": () => import( "@/p5/sketches/photo-segmentation/photo-segmentation-v2-noise-reveal/options" ),
   "p5:photo/dominant-colors-block-switch": () => import( "@/p5/sketches/photo/dominant-colors-block-switch/options" ),
   "p5:photo/photo-3d-cylinder": () => import( "@/p5/sketches/photo/photo-3d-cylinder/options" ),
   "p5:photo/photo-3d-sphere": () => import( "@/p5/sketches/photo/photo-3d-sphere/options" ),
@@ -193,7 +195,6 @@ export const sketchFormLoaders: Record<string, SketchModuleLoader> = {
   "p5:photo/photo-grid-with-photo-switch-overlay": () => import( "@/p5/sketches/photo/photo-grid-with-photo-switch-overlay/options" ),
   "p5:photo/photo-in-arc": () => import( "@/p5/sketches/photo/photo-in-arc/options" ),
   "p5:photo/photo-in-circle": () => import( "@/p5/sketches/photo/photo-in-circle/options" ),
-  "p5:photo/photo-segmentation": () => import( "@/p5/sketches/photo/photo-segmentation/options" ),
   "p5:photo/photo-stack": () => import( "@/p5/sketches/photo/photo-stack/options" ),
   "p5:photo/photo-stack-top-bottom": () => import( "@/p5/sketches/photo/photo-stack-top-bottom/options" ),
   "p5:photo/photo-swap-collage": () => import( "@/p5/sketches/photo/photo-swap-collage/options" ),

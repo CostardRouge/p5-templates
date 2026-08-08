@@ -3718,5 +3718,29 @@
     "hiddenFromGallery": false,
     "mtime": "2026-08-08T11:07:38.543Z",
     "ctime": "2026-08-08T11:06:51.039Z"
+  },
+  {
+    "name": "photo-segmentation-v1-mask",
+    "engine": "p5",
+    "category": "photo-segmentation",
+    "hasSketchForm": true,
+    "hasThumbnail": true,
+    "hasPreview": true,
+    "hiddenFromHome": true,
+    "hiddenFromGallery": false,
+    "mtime": "2026-08-08T11:21:04.407Z",
+    "ctime": "2026-08-07T15:23:43.575Z"
+  },
+  {
+    "name": "photo-segmentation-v2-noise-reveal",
+    "engine": "p5",
+    "category": "photo-segmentation",
+    "hasSketchForm": true,
+    "hasThumbnail": false,
+    "hasPreview": false,
+    "hiddenFromHome": true,
+    "hiddenFromGallery": false,
+    "mtime": "2026-08-08T11:51:07.033Z",
+    "ctime": "2026-08-08T11:50:37.437Z"
   }
 ]
