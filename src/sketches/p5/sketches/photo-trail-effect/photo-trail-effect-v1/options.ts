@@ -2,6 +2,10 @@
 // sampled across a draggable band of the photo, stretched along a curve to
 // the canvas edge, with the MediaPipe-segmented subject drawn back on top.
 
+import getTestImagePaths from "@/utils/getTestImagePaths";
+
+const testImagePaths = await getTestImagePaths();
+
 type TrailPoint = {x: number;
   y: number };
 
@@ -19,7 +23,9 @@ phase: number };
 
 export const formValues = {
   photo: {
-    image: "global/images/DSC02455.jpg",
+    // A repo-shipped test photo so the sketch renders out of the box (no
+    // S3/MinIO dependency); pick any image from the asset picker.
+    image: testImagePaths[ 0 ] ?? "/assets/images/test/DSC02023%20Medium.jpeg",
     margin: 0.1,
     scale: 1.1,
     center: true,
@@ -56,14 +62,16 @@ export const formValues = {
     // edit them here; the count slider manages the list length.
     items: [
       {
+        // Tuned for the default test photo: the band sits on the colourful
+        // mural so the ribbon picks up its greens, pinks and purples.
         band: {
           a: {
-            x: 0.4,
-            y: 0.38
+            x: 0.52,
+            y: 0.2
           },
           b: {
-            x: 0.48,
-            y: 0.66
+            x: 0.62,
+            y: 0.42
           }
         },
         guides: {
@@ -88,7 +96,7 @@ export const formValues = {
     // Tilt of the launch relative to the band perpendicular (degrees).
     startAngle: 0,
     // Total heading change from launch to exit (degrees) — the swoosh.
-    bend: 70,
+    bend: 120,
     // Where the bending happens along the ribbon.
     easing: "easeInOutSine",
     // Ribbon length as a fraction of the canvas diagonal.
@@ -100,9 +108,9 @@ export const formValues = {
   },
   wave: {
     // Sideways sine offset, as a fraction of the smaller canvas dimension.
-    amplitude: 0.05,
+    amplitude: 0.1,
     // Number of full oscillations along the ribbon (the torsions).
-    twists: 1.5,
+    twists: 2,
     // Bunches the twists toward the start (>1) or the end (<1).
     warp: 1,
     // Whole wave cycles per animation loop — 0 keeps the trails still,
