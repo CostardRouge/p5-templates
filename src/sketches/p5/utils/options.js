@@ -171,9 +171,23 @@ async function _refreshAssets() {
       obj = {
         path,
         filename: path.split( "/" ).pop(),
-        img: getP5().loadImage( url ),
+        img: null,
         exif: undefined
       };
+
+      // The failure callback is load-bearing: without one p5 never decrements
+      // its preload counter for a failed image, so one stale asset path (e.g.
+      // a `global/...` S3 object that no longer exists) would hang the whole
+      // sketch on the loading screen forever. On failure the 1×1 placeholder
+      // is dropped so sketches see "no image" instead of a broken pixel.
+      obj.img = getP5().loadImage(
+        url,
+        undefined,
+        () => {
+          console.warn( `[assets] failed to load image: ${ url }` );
+          obj.img = null;
+        }
+      );
 
       readExifInfo(
         obj,
