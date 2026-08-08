@@ -160,6 +160,7 @@ export const sketchModuleLoaders: Record<string, SketchModuleLoader> = {
   "p5:peaks/peaks-plane": () => import( "@/p5/sketches/peaks/peaks-plane/index.js" ),
   "p5:peaks/peaks-sphere": () => import( "@/p5/sketches/peaks/peaks-sphere/index.js" ),
   "p5:peaks/peaks-tunnel": () => import( "@/p5/sketches/peaks/peaks-tunnel/index.js" ),
+  "p5:photo-trail-effect/photo-trail-effect-v1": () => import( "@/p5/sketches/photo-trail-effect/photo-trail-effect-v1/index.js" ),
   "p5:photo/dominant-colors-block-switch": () => import( "@/p5/sketches/photo/dominant-colors-block-switch/index.js" ),
   "p5:photo/photo-3d-cylinder": () => import( "@/p5/sketches/photo/photo-3d-cylinder/index.js" ),
   "p5:photo/photo-3d-sphere": () => import( "@/p5/sketches/photo/photo-3d-sphere/index.js" ),
