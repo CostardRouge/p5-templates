@@ -19,7 +19,19 @@ function pointKey( pt ) {
   return `${ pt.x.toFixed( 5 ) },${ pt.y.toFixed( 5 ) }`;
 }
 
-export function createMultiMaskSegmenter() {
+/**
+ * @param {object} [config]
+ * @param {boolean} [config.adoptLatest=false] - Attribute a result whose
+ *   focus point was replaced while its inference ran to the next point still
+ *   missing a mask, instead of discarding it. Single-point sketches that
+ *   re-pick faster than the segmenter answers (the v2 noise walk) want this:
+ *   it reproduces the pre-manager racing semantics where the latest landed
+ *   result was always shown. Multi-point sketches must keep it off — an
+ *   unpicked zone's mask must never be attributed to another point.
+ */
+export function createMultiMaskSegmenter( {
+  adoptLatest = false
+} = {} ) {
   const state = {
     // Focus points, normalized (0-1) image space.
     points: [],
@@ -110,13 +122,25 @@ export function createMultiMaskSegmenter() {
       if ( result?.result && result.updatedAt !== state.lastResultAt ) {
         state.lastResultAt = result.updatedAt;
 
-        if ( state.inFlightKey ) {
-          // The point may have been unpicked while its inference ran.
-          const stillWanted = state.points.some( ( pt ) => pointKey( pt ) === state.inFlightKey );
+        // The point may have been unpicked while its inference ran; with
+        // adoptLatest the orphaned result goes to the next maskless point
+        // (old racing semantics), otherwise it is discarded.
+        let targetKey =
+          state.inFlightKey &&
+          state.points.some( ( pt ) => pointKey( pt ) === state.inFlightKey )
+            ? state.inFlightKey
+            : null;
 
-          if ( stillWanted ) {
+        if ( !targetKey && adoptLatest ) {
+          const orphanTarget = state.points.find( ( pt ) => !state.masks.has( pointKey( pt ) ) );
+
+          targetKey = orphanTarget ? pointKey( orphanTarget ) : null;
+        }
+
+        if ( state.inFlightKey || adoptLatest ) {
+          if ( targetKey ) {
             state.masks.set(
-              state.inFlightKey,
+              targetKey,
               result.result
             );
             state.version++;
