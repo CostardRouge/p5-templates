@@ -2,9 +2,8 @@ import getTestImagePaths from "@/utils/getTestImagePaths";
 
 export const formValues = {
   photo: {
-    // A bundled test image: a `global/...` S3 path only resolves for the
-    // account that uploaded it, so it 404s (and used to hang the loader)
-    // for everyone else.
+    // Author-uploaded S3 asset; when it isn't reachable the sketch falls back
+    // to its "add a photo :)" prompt instead of hanging.
     image: "global/images/IMG_1821.jpeg",
     margin: 0.1,
     scale: 1.1,

@@ -696,18 +696,6 @@
     "ctime": "2026-05-20T12:32:21.530Z"
   },
   {
-    "name": "photo-segmentation",
-    "engine": "p5",
-    "category": "photo",
-    "hasSketchForm": true,
-    "hasThumbnail": true,
-    "hasPreview": true,
-    "hiddenFromHome": true,
-    "hiddenFromGallery": false,
-    "mtime": "2026-05-25T16:21:29.869Z",
-    "ctime": "2026-05-20T12:32:21.531Z"
-  },
-  {
     "name": "photo-switch-blurry-background",
     "engine": "p5",
     "category": "photo",
