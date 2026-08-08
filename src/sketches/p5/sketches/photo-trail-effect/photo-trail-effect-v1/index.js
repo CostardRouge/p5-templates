@@ -8,13 +8,17 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
 import easing from "@/p5/utils/easing.js";
-import mediapipe, {
-  init as mediapipeInit,
-  interact
+import {
+  init as mediapipeInit
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   drawSegmentationMask
 } from "@/p5/utils/segmentation.js";
+import {
+  createMultiMaskSegmenter,
+  drawFocusMarkers,
+  hitFocusMarker
+} from "@/p5/utils/multiSegmentation.js";
 import {
   setSketchOptions,
   subscribeSketchOptions
@@ -34,8 +38,11 @@ import {
 /*                                                                     */
 /*    1. the full photo (original / blur / dim / color backdrop),      */
 /*    2. the trails,                                                   */
-/*    3. the subject cut out with MediaPipe's interactive segmenter    */
-/*       (click the canvas to pick the subject — an animal, a person). */
+/*    3. the subject cut out with MediaPipe's interactive segmenter.   */
+/*       Click the photo to pick a subject (an animal, a person, …) —  */
+/*       every click adds a focus point with its own mask, the cut-out */
+/*       is their union, and clicking a focus marker (the circle with  */
+/*       the minus) unpicks that zone again.                           */
 /*                                                                     */
 /*  Every trail is defined by draggable, persisted handles             */
 /*  (normalized 0..1 so they survive resizes and exports):             */
@@ -63,26 +70,21 @@ const state = {
   // Path of the photo currently driving the segmenter.
   imagePath: null,
 
-  // Last focus point sent to the segmenter, normalized (0-1) image space.
-  roi: {
-    x: 0.5,
-    y: 0.5
-  },
+  // Working copy of the focus points, normalized (0-1) image space. One
+  // mask per point; the subject is their union.
+  focusPoints: [],
+  focusSyncHash: null,
 
-  // Raw category mask from MediaPipe: { data, width, height } at image
-  // resolution.
-  rawMask: null,
-  lastResultAt: null,
-
-  // Finished cut-out (photo with the feathered mask applied).
+  // Finished cut-out (photo with the feathered union mask applied).
   subject: null,
   builtWith: {
     inverse: null,
     softness: null,
     expand: null
   },
+  // Segmenter mask-set version the cached subject was built from.
+  builtVersion: -1,
   maskDirty: false,
-  pendingSegment: false,
 
   // Where the photo sits on the canvas — used both to map clicks onto the
   // image and to detect layout changes that invalidate the pixel samples.
@@ -128,6 +130,9 @@ const state = {
 
 const draggable = createDraggable();
 
+// One inference per focus point, run sequentially; masks cached per point.
+const segmenter = createMultiMaskSegmenter();
+
 /* ------------------------------------------------------------------ */
 /*  Small helpers                                                      */
 /* ------------------------------------------------------------------ */
@@ -167,20 +172,77 @@ function resolveImagePath( value ) {
   return value || null;
 }
 
-function currentRoi() {
-  const roi = options.sketch?.segmentation?.roi;
-
-  if ( roi && typeof roi.x === "number" && typeof roi.y === "number" ) {
+function sanitizeFocusPoint( value ) {
+  if ( !isPoint( value ) ) {
+    // A fresh, not-yet-edited form item — park it in the middle.
     return {
-      x: clamp01( roi.x ),
-      y: clamp01( roi.y )
+      x: 0.5,
+      y: 0.5
     };
   }
 
   return {
-    x: 0.5,
-    y: 0.5
+    x: clamp01( value.x ),
+    y: clamp01( value.y )
   };
+}
+
+// The stored focus points. Templates saved before multi-mask kept a single
+// `roi` point — adopt it as the first (and only) point. An explicit empty
+// `points` array means "no subject picked" and is respected.
+function storedFocusPoints() {
+  const seg = options.sketch?.segmentation ?? {};
+
+  if ( Array.isArray( seg.points ) ) {
+    return seg.points.map( sanitizeFocusPoint );
+  }
+
+  if ( isPoint( seg.roi ) ) {
+    return [
+      sanitizeFocusPoint( seg.roi )
+    ];
+  }
+
+  return [];
+}
+
+// Reconcile the working copy with the stored options (form edit, reload,
+// preset): adopt whenever the stored list differs from what we last synced.
+function syncFocusPoints() {
+  const seg = options.sketch?.segmentation ?? {};
+  const raw = Array.isArray( seg.points ) ? seg.points : null;
+  const rawHash = JSON.stringify( raw );
+
+  if ( rawHash === state.focusSyncHash ) {
+    return;
+  }
+
+  state.focusSyncHash = rawHash;
+  state.focusPoints = storedFocusPoints();
+  segmenter.setPoints( state.focusPoints );
+}
+
+// Persist the picked zones so they survive reloads and are exported with
+// the template. Origin "p5" so the options module skips its own change
+// handler while React still picks the new values up.
+function persistFocusPoints() {
+  const points = state.focusPoints.map( ( pt ) => ( {
+    x: pt.x,
+    y: pt.y
+  } ) );
+
+  state.focusSyncHash = JSON.stringify( points );
+
+  setSketchOptions(
+    {
+      sketch: {
+        segmentation: {
+          points
+        }
+      }
+    },
+    "p5"
+  );
 }
 
 function photoSettings() {
@@ -305,8 +367,9 @@ function getInternalCanvasPoint( event ) {
   };
 }
 
-// Map a canvas click onto the photo and re-run the segmenter there — unless
-// the click landed on (or just released) a trail handle.
+// Route a canvas click: a trail handle wins (the drag layer owns it), then
+// a focus marker (the circle with the minus) unpicks its zone, and anywhere
+// else on the photo picks a new one.
 function handleCanvasClick( event ) {
   const point = getInternalCanvasPoint( event );
 
@@ -326,6 +389,29 @@ function handleCanvasClick( event ) {
     return;
   }
 
+  const marker = options.sketch?.marker ?? {};
+
+  if ( marker.show ) {
+    const hit = hitFocusMarker(
+      state.focusPoints,
+      state.photoRect,
+      point,
+      marker.radius ?? 16
+    );
+
+    if ( hit !== -1 ) {
+      state.focusPoints.splice(
+        hit,
+        1
+      );
+      segmenter.setPoints( state.focusPoints );
+      persistFocusPoints();
+      state.maskDirty = true;
+
+      return;
+    }
+  }
+
   const {
     x, y, w, h
   } = state.photoRect;
@@ -338,68 +424,37 @@ function handleCanvasClick( event ) {
     return;
   }
 
-  const roi = {
+  state.focusPoints.push( {
     x: clamp01( ( point.x - x ) / w ),
     y: clamp01( ( point.y - y ) / h )
-  };
-
-  state.roi = roi;
-
-  // Persist as a sketch-origin change so the 2D pad reflects it without the
-  // subscribe handler bouncing it back through the segmenter again.
-  setSketchOptions(
-    {
-      sketch: {
-        segmentation: {
-          roi
-        }
-      }
-    },
-    "p5"
-  );
-
-  triggerSegmentation();
+  } );
+  segmenter.setPoints( state.focusPoints );
+  persistFocusPoints();
 }
 
 /* ------------------------------------------------------------------ */
-/*  Segmentation (same pipeline as photo-segmentation)                 */
+/*  Segmentation (same pipeline as photo-segmentation-v1-mask)         */
 /* ------------------------------------------------------------------ */
 
-function triggerSegmentation() {
-  const photo = common.getAsset( state.imagePath );
-
-  if ( !photo?.img?.width || !mediapipe.processor.ready ) {
-    state.pendingSegment = true;
-
-    return;
-  }
-
-  const roi = currentRoi();
-  const imageElement = photo.img.canvas || photo.img.elt || photo.img;
-
-  interact(
-    roi.x * photo.img.width,
-    roi.y * photo.img.height,
-    imageElement
-  );
-}
-
-// Build the cut-out from the latest raw mask using the current edge
-// settings: blur the binary mask, then remap its alpha through a smoothstep
-// whose centre shifts the edge (expand) and whose width sets the softness.
+// Build the cut-out from the union of every picked mask using the current
+// edge settings: blur the binary union, then remap its alpha through a
+// smoothstep whose centre shifts the edge (expand) and whose width sets the
+// softness.
 function rebuildSubject() {
   const photo = common.getAsset( state.imagePath );
-  const raw = state.rawMask;
+  const seg = options.sketch?.segmentation ?? {};
+  const inverse = seg.inverse ?? true;
+  const combined = segmenter.combined( inverse );
 
-  if ( !photo?.img?.width || !raw?.data ) {
+  if ( !photo?.img?.width || !combined ) {
+    state.subject = null;
+
     return;
   }
 
   const {
     data, width, height
-  } = raw;
-  const seg = options.sketch?.segmentation ?? {};
-  const inverse = seg.inverse ?? true;
+  } = combined;
   const softness = clamp01( seg.edgeSoftness ?? 0 );
   const expand = clamp(
     seg.edgeExpand ?? 0,
@@ -413,6 +468,8 @@ function rebuildSubject() {
     height
   );
 
+  // The union already applied `inverse` per raw mask, so it is passed as
+  // false here.
   drawSegmentationMask(
     binary,
     data,
@@ -422,7 +479,7 @@ function rebuildSubject() {
       255,
       255
     ],
-    inverse
+    false
   );
 
   let mask = binary;
@@ -676,34 +733,19 @@ function drawSubject( p ) {
   p.pop();
 }
 
-function drawMarker( p ) {
+function drawMarkers( p ) {
   const marker = options.sketch?.marker ?? {};
 
   if ( !marker.show ) {
     return;
   }
 
-  const roi = currentRoi();
-  const {
-    x, y, w, h
-  } = state.photoRect;
-
-  if ( w <= 0 || h <= 0 ) {
-    return;
-  }
-
-  p.push();
-  p.noFill();
-  p.stroke( ...( marker.color ?? [
-    255
-  ] ) );
-  p.strokeWeight( marker.weight ?? 3 );
-  p.circle(
-    x + roi.x * w,
-    y + roi.y * h,
-    ( marker.radius ?? 16 ) * 2
+  drawFocusMarkers(
+    p,
+    state.focusPoints,
+    state.photoRect,
+    marker
   );
-  p.pop();
 }
 
 /* ------------------------------------------------------------------ */
@@ -1733,7 +1775,6 @@ sketch.setup( () => {
   p.background( ...options.sketch.backgroundColor );
 
   state.imagePath = resolveImagePath( options.sketch?.photo?.image );
-  state.roi = currentRoi();
 
   // Every buffer belongs to the previous p5 instance after a sketch reset —
   // drop them so they are recreated lazily against the fresh one.
@@ -1753,9 +1794,15 @@ sketch.setup( () => {
   state.samplePixelsReady = false;
   state.handleTargets = [];
   state.handleMeta = [];
-  state.rawMask = null;
   state.subject = null;
-  state.lastResultAt = null;
+  state.focusPoints = [];
+  state.focusSyncHash = null;
+  state.builtVersion = -1;
+  state.maskDirty = false;
+
+  segmenter.reset();
+  segmenter.setImage( state.imagePath );
+  syncFocusPoints();
 
   // Re-arm the listeners (the engine's registries are cleared on reset).
   draggable.attach();
@@ -1784,24 +1831,14 @@ sketch.setup( () => {
 
     if ( nextImage !== state.imagePath ) {
       state.imagePath = nextImage;
-      state.rawMask = null;
       state.subject = null;
-      state.lastResultAt = null;
-      state.pendingSegment = true;
       state.sampleDirty = true;
+      segmenter.setImage( nextImage );
 
       return;
     }
 
-    const roi = sk.segmentation?.roi;
-
-    if ( roi && ( roi.x !== state.roi.x || roi.y !== state.roi.y ) ) {
-      state.roi = {
-        x: roi.x,
-        y: roi.y
-      };
-      triggerSegmentation();
-    }
+    // Point-list edits are adopted from the draw loop via syncFocusPoints().
 
     const seg = sk.segmentation ?? {};
 
@@ -1814,11 +1851,9 @@ sketch.setup( () => {
     }
   } );
 
-  // Segment the default focus point as soon as the photo + processor are
-  // ready. Fire-and-forget: awaiting init would block the first draw on the
-  // ~4s model load, so the photo and trails render right away instead.
-  state.pendingSegment = true;
-
+  // Fire-and-forget: awaiting init would block the first draw on the ~4s
+  // model load, so the photo and trails render right away and the draw loop
+  // segments each focus point as soon as the processor is ready.
   mediapipeInit( {
     enableIdle: false,
     worker: false,
@@ -1869,27 +1904,14 @@ sketch.draw( () => {
   p.frameRate( options.animation.framerate );
   ensureCanvasGraphics( p );
 
-  // Kick off a deferred segmentation once everything it needs is available.
-  if (
-    state.pendingSegment &&
-    mediapipe.processor.ready &&
-    !mediapipe.processor.busy
-  ) {
-    state.pendingSegment = false;
-    triggerSegmentation();
-  }
+  // Adopt external point edits, then let the segmenter pump one inference
+  // per focus point that is still missing its mask.
+  syncFocusPoints();
+  segmenter.update( photo );
 
-  // A fresh inference landed → cache it and flag a rebuild.
-  const result = mediapipe.tasks.interactive;
-
-  if ( result?.result && result.updatedAt !== state.lastResultAt ) {
-    state.lastResultAt = result.updatedAt;
-    state.rawMask = result.result;
-    state.maskDirty = true;
-  }
-
-  if ( state.maskDirty && state.rawMask ) {
+  if ( state.maskDirty || state.builtVersion !== segmenter.version ) {
     state.maskDirty = false;
+    state.builtVersion = segmenter.version;
     rebuildSubject();
   }
 
@@ -1989,5 +2011,5 @@ sketch.draw( () => {
     );
   }
 
-  drawMarker( p );
+  drawMarkers( p );
 } );

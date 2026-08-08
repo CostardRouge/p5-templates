@@ -33,12 +33,15 @@ export const formValues = {
     fill: false
   },
   segmentation: {
-    // Normalized (0-1) focus point fed to the interactive segmenter. Click
-    // the canvas to move it — that is how the subject is chosen dynamically.
-    roi: {
-      x: 0.4720334741274328,
-      y: 0.2927933578609266
-    },
+    // Normalized (0-1) focus points fed to the interactive segmenter — one
+    // mask per point, the subject is their union. Click the photo to add a
+    // point, click a marker (the circle with the minus) to unpick its zone.
+    points: [
+      {
+        x: 0.4720334741274328,
+        y: 0.2927933578609266
+      }
+    ],
     inverse: true,
     edgeSoftness: 0.25,
     edgeExpand: 0
@@ -151,7 +154,9 @@ export const formValues = {
     size: 16
   },
   marker: {
-    show: false,
+    // Focus markers double as the unpick control (click the circle with
+    // the minus to remove that zone), so they show by default.
+    show: true,
     color: [
       255,
       255,
@@ -209,14 +214,18 @@ export const formConfiguration: Record<string, any> = {
     label: "Segmentation",
     component: "nested-object",
     fields: {
-      roi: {
-        component: "vector2d",
-        label: "Focus point (click the canvas)",
-        allowNegative: false,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        yDown: true
+      points: {
+        label: "Focus points (click photo to add, click a marker to remove)",
+        component: "item-list",
+        itemConfig: {
+          component: "vector2d",
+          label: "Focus point",
+          allowNegative: false,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          yDown: true
+        }
       },
       inverse: {
         label: "Inverse mask",
@@ -581,11 +590,11 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   marker: {
-    label: "Focus marker",
+    label: "Focus markers",
     component: "nested-object",
     fields: {
       show: {
-        label: "Show marker",
+        label: "Show markers (click one to unpick its zone)",
         component: "checkbox"
       },
       color: {
