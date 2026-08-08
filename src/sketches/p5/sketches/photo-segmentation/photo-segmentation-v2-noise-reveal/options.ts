@@ -5,7 +5,7 @@ export const formValues = {
     // A bundled test image: a `global/...` S3 path only resolves for the
     // account that uploaded it, so it 404s (and used to hang the loader)
     // for everyone else.
-    image: ( await getTestImagePaths() )[ 0 ],
+    image: "global/images/IMG_1821.jpeg",
     margin: 0.1,
     scale: 1.1,
     center: true,
@@ -17,9 +17,9 @@ export const formValues = {
   auto: {
     enabled: true,
     seed: 0,
-    picksPerLoop: 8,
+    picksPerLoop: 11,
     // Noise-circle radius: small = smooth drift between picks, large = jumps.
-    variety: 1,
+    variety: 0.7,
     // Wander range from the photo centre, per axis.
     spreadX: 0.9,
     spreadY: 0.9,
@@ -30,8 +30,8 @@ export const formValues = {
     // Normalized (0-1) focus point. Driven by the auto walk when enabled;
     // click the canvas (or use the 2D pad) to pick manually.
     roi: {
-      x: 0.5,
-      y: 0.5
+      x: 0.5294017091740059,
+      y: 0.4069322968871885
     },
     inverse: true,
     // Feather the cut-out border so the mask blends instead of showing the hard,
