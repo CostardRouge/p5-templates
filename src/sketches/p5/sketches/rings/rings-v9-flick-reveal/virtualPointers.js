@@ -7,14 +7,16 @@ import {
 // ── Virtual pointers v9: the flicking troupe ────────────────────────────────
 // v8's crew chauffeured every point: press, then walk it all the way to its
 // destination. v9 keeps the same script (a text cycle, adds carried in,
-// surplus removed) but changes the delivery: the cursor grabs a point, draws
-// it BACK a touch — a slingshot pull away from where the point must land —
-// and lets go. From the release the point travels on its own, springing onto
-// its spot in the next text with an elastic settle (the flick easing), while
-// the cursor is already off plucking its next point. Adds are thrown IN from
-// their off-canvas fetch spot; surplus points are flicked OFF-canvas and
-// retire when their flight ends. The next text is revealed by ricochet —
-// several points in the air at once, each snapping into place.
+// surplus removed) but changes the delivery: the cursor grabs a point and
+// DRAWS it — dragging it opposite to where it must land, by default all the
+// way to the canvas edge like stretching an elastic (flick.pullMode "edge";
+// "opposite" pulls a fixed distance instead) — and lets go. From the release
+// the point travels on its own, springing onto its spot in the next text
+// with an elastic settle (the flick easing), while the cursor is already off
+// plucking its next point. Adds are thrown IN from their off-canvas fetch
+// spot; surplus points are flicked OFF-canvas and retire when their flight
+// ends. The next text is revealed by ricochet — several points in the air at
+// once, each snapping into place.
 //
 // ── Scheduling (why every loop is the same show) ──
 // Identical to v8: with W words the loop is cut into W beats of [hold][morph];
@@ -85,17 +87,21 @@ const DEFAULTS = {
     stagger: 0.2,
     travel: 0.45,
     hover: 0.15,
-    // The slingshot draw replaces v8's long drag — grabbing and pulling the
-    // point back is quick; the flight does the travelling.
-    pull: 0.3,
-    release: 0.25,
+    // The slingshot draw replaces v8's destination drag: by default it is a
+    // long stretch out to the canvas edge, so it earns a decent share of the
+    // slice; the flight does the delivering.
+    pull: 0.45,
+    release: 0.2,
     fade: 0.35
   },
-  // The throw itself: how far the point is drawn back before release (px),
-  // how long the free flight lasts (loop seconds, clamped inside the beat)
-  // and the easing it lands with — elastic by default, so every point snaps
-  // into place with a spring.
+  // The throw itself. pullMode picks the draw: "edge" drags the point along
+  // the opposite-of-destination direction all the way to the canvas edge —
+  // the full elastic stretch — while "opposite" pulls it back a fixed `pull`
+  // px only. flightTime is the free flight (loop seconds, clamped inside the
+  // beat) and easing is what it lands with — elastic by default, so every
+  // point snaps into place with a spring.
   flick: {
+    pullMode: "edge",
     pull: 36,
     flightTime: 0.9,
     easing: "easeOutElastic"
@@ -198,13 +204,22 @@ function offCanvasPoint(
     crossings.push( -pos.y / dir.y );
   }
 
-  const t = ( crossings.length ? Math.min( ...crossings.filter( ( c ) => c > 0 ) ) : 0 ) + margin;
+  // Negative margins land INSIDE the border (the elastic draw stops at the
+  // canvas edge, not beyond it); a point already closer than that stays put.
+  const t = Math.max(
+    ( crossings.length ? Math.min( ...crossings.filter( ( c ) => c > 0 ) ) : 0 ) + margin,
+    0
+  );
 
   return {
     x: pos.x + dir.x * t,
     y: pos.y + dir.y * t
   };
 }
+
+// How far inside the border an "edge" draw stops, so the stretched point and
+// the gripping cursor stay visible at full draw.
+const EDGE_INSET = 28;
 
 // ── Transition plan: how word A's points become word B's ────────────────────
 // Contours are paired by rank (both shapes sort theirs longest-first). Within
@@ -539,12 +554,15 @@ export function createFlickTroupe() {
     );
   }
 
-  // The slingshot draw: where a task's point sits at the moment of release —
-  // its static position nudged `pull` px AWAY from where the throw must land.
-  // Adds pull back from their off-canvas fetch spot; moves and removes from
-  // the point's place in the current word.
+  // The slingshot draw: where a task's point sits at the moment of release.
+  // The draw direction is always AWAY from where the throw must land; the
+  // draw length is the pullMode — "edge" stretches the point to the canvas
+  // border (the full elastic), "opposite" pulls it back a fixed `pull` px.
+  // Adds pull back from their off-canvas fetch spot (already at the border,
+  // so both modes just overdraw by `pull`); moves and removes draw from the
+  // point's place in the current word.
   function pulledSpot(
-    event, ctx, pull
+    event, ctx, flick
   ) {
     const target = flightTarget(
       event,
@@ -571,9 +589,19 @@ export function createFlickTroupe() {
       from.y - target.y
     );
 
+    if ( event.type !== "add" && flick.pullMode !== "opposite" ) {
+      return offCanvasPoint(
+        from,
+        dir,
+        ctx.width,
+        ctx.height,
+        -EDGE_INSET
+      );
+    }
+
     return {
-      x: from.x + dir.x * pull,
-      y: from.y + dir.y * pull
+      x: from.x + dir.x * flick.pull,
+      y: from.y + dir.y * flick.pull
     };
   }
 
@@ -606,13 +634,13 @@ export function createFlickTroupe() {
   // chaining and idle parking both start here — the thrown point itself lands
   // elsewhere (flightTarget).
   function anchorEnd(
-    event, ctx, pull
+    event, ctx, flick
   ) {
     if ( event.type === "move" || event.type === "add" || event.type === "remove" ) {
       return pulledSpot(
         event,
         ctx,
-        pull
+        flick
       );
     }
 
@@ -624,12 +652,12 @@ export function createFlickTroupe() {
   // deterministic in cursor index and beat, so scrubbing replays it), or an
   // off-canvas point beyond the release spot ("exit").
   function parkSpot(
-    prev, ctx, cfg, cursorIndex, mode, pull
+    prev, ctx, cfg, cursorIndex, mode, flick
   ) {
     const anchor = anchorEnd(
       prev,
       ctx,
-      pull
+      flick
     );
 
     if ( !anchor || mode === "stay" ) {
@@ -705,7 +733,7 @@ export function createFlickTroupe() {
   // null while off-stage. Everything derives from the schedule + the live
   // projections — nothing accumulates frame to frame.
   function resolveCursor(
-    cursor, now, ctx, timing, ease, pull
+    cursor, now, ctx, timing, ease, flick
   ) {
     const events = cursor.events;
 
@@ -787,7 +815,7 @@ export function createFlickTroupe() {
         ? anchorEnd(
           prev,
           ctx,
-          pull
+          flick
         )
         : null;
 
@@ -810,7 +838,7 @@ export function createFlickTroupe() {
         cfg,
         cursor.index,
         idleMode,
-        pull
+        flick
       ) ?? anchor;
       const travelDur = Math.max(
         timing.travel,
@@ -872,12 +900,12 @@ export function createFlickTroupe() {
             cfg,
             cursor.index,
             idleMode,
-            pull
+            flick
           )
           : anchorEnd(
             prev,
             ctx,
-            pull
+            flick
           );
 
         return from ?? {
@@ -981,7 +1009,7 @@ export function createFlickTroupe() {
             pulledSpot(
               active,
               ctx,
-              pull
+              flick
             ),
             v
           ),
@@ -999,7 +1027,7 @@ export function createFlickTroupe() {
         pos: pulledSpot(
           active,
           ctx,
-          pull
+          flick
         ),
         icon: active.type === "remove" ? REMOVE : OPEN,
         alpha,
@@ -1062,7 +1090,7 @@ export function createFlickTroupe() {
           pulledSpot(
             active,
             ctx,
-            pull
+            flick
           ),
           v
         ),
@@ -1078,7 +1106,7 @@ export function createFlickTroupe() {
       pos: pulledSpot(
         active,
         ctx,
-        pull
+        flick
       ),
       icon: ADD,
       alpha,
@@ -1141,11 +1169,13 @@ export function createFlickTroupe() {
         ...DEFAULTS.flick,
         ...( cfg.flick ?? {} )
       };
-      const pull = clamp(
+
+      flick.pull = clamp(
         flick.pull ?? DEFAULTS.flick.pull,
         0,
         400
       );
+
       const easeKey = cfg.easing ?? DEFAULTS.easing;
       const ease = typeof easing[ easeKey ] === "function" ? easing[ easeKey ] : ( x ) => x;
       const pointers = [];
@@ -1157,7 +1187,7 @@ export function createFlickTroupe() {
           ctx,
           timing,
           ease,
-          pull
+          flick
         );
 
         if ( resolved ) {
@@ -1227,7 +1257,7 @@ export function createFlickTroupe() {
           const from = pulledSpot(
             event,
             ctx,
-            pull
+            flick
           );
 
           // An add whose pull window fell between two frames still needs its

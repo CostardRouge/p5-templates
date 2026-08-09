@@ -10,10 +10,12 @@ import {
 
 // A cycle of texts (single letters or whole words) converted into one another
 // by a troupe of virtual pointers — but unlike v8's chauffeured drags, each
-// cursor only grabs a point, draws it back like a slingshot and lets go: the
-// point flies to its position in the next text on its own and lands with an
-// elastic spring (the flick easing), so the next text is revealed by ricochet
-// while the cursors are already plucking further points. Missing points are
+// cursor grabs a point and stretches it like an elastic: by default the drag
+// goes all the way to the canvas edge, opposite the point's next destination
+// (flick.pullMode; "opposite" pulls a fixed distance instead), and on release
+// the point flies to its position in the next text on its own, landing with
+// an elastic spring (the flick easing) — the next text is revealed by
+// ricochet while the cursors are already plucking further points. Missing points are
 // thrown in from outside the canvas (add-pointer icon), surplus points are
 // flicked off-canvas (remove-pointer icon). Each finished text holds legible
 // for a fraction of its beat; cursors between jobs wait as a spinning beach
@@ -125,11 +127,12 @@ export const formValues = {
         stagger: 0.2,
         travel: 0.45,
         hover: 0.15,
-        pull: 0.3,
-        release: 0.25,
+        pull: 0.45,
+        release: 0.2,
         fade: 0.35
       },
       flick: {
+        pullMode: "edge",
         pull: 36,
         flightTime: 0.9,
         easing: "easeOutElastic"
@@ -525,8 +528,22 @@ export const formConfiguration: Record<string, any> = {
             component: "nested-object",
             label: "Flick (the throw)",
             fields: {
+              pullMode: {
+                label: "Elastic draw",
+                component: "select",
+                options: [
+                  {
+                    value: "edge",
+                    label: "Stretch to the canvas edge (opposite the landing spot)"
+                  },
+                  {
+                    value: "opposite",
+                    label: "Pull back a fixed distance (opposite the landing spot)"
+                  }
+                ]
+              },
               pull: {
-                label: "Pull-back distance before release (px)",
+                label: "Pull-back distance (px, fixed-distance mode)",
                 component: "slider",
                 min: 0,
                 max: 150,

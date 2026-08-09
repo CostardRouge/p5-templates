@@ -53,12 +53,14 @@ import {
 // v8's troupe chauffeured every point: a cursor pressed on it and walked it
 // all the way to its next position. v9 keeps the same script — a cycle of
 // texts converted one into the next, one beat per text — but changes the
-// delivery: the cursor grabs a point, draws it back like a slingshot, and
-// LETS GO. From the release the point crosses the canvas on its own and
-// settles onto its spot in the next text with an elastic spring (the flick
-// easing — swap it for any curve), while the cursor is already off plucking
-// its next point. The next text is revealed by ricochet: several points in
-// the air at once, each snapping into place.
+// delivery: the cursor grabs a point and STRETCHES it like an elastic — by
+// default the drag goes all the way to the canvas edge, opposite the point's
+// next destination (flick.pullMode; "opposite" pulls a fixed distance
+// instead) — then LETS GO. From the release the point crosses the canvas on
+// its own and settles onto its spot in the next text with an elastic spring
+// (the flick easing — swap it for any curve), while the cursor is already
+// off plucking its next point. The next text is revealed by ricochet:
+// several points in the air at once, each snapping into place.
 //
 // ── Point bookkeeping (the v8 pool, unchanged) ──────────────────────────────
 // Texts rarely share a point count or contour structure, so the words meet
