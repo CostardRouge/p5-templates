@@ -52,6 +52,7 @@ import {
   DEFAULT_RANDOM,
   encodeSource,
   getSketchScope,
+  interactiveScopeFor,
   interactionEnablePaths,
   makeDefaultBinding,
   SEQUENCE_MODE_OPTIONS,
@@ -94,8 +95,10 @@ function fieldDomain( config: FieldConfig ) {
  * the channel's activity; clicking it opens a popover to pick the source,
  * range, curve and smoothing — or to remove the binding.
  *
- * Bindings are stored as data at `<scope>.bindings` (an array on the sketch
- * settings), resolved at read time by the options proxy. The mapping-range and
+ * Bindings are stored as data at the sketch scope's paired `interactive`
+ * namespace (`interactive.bindings` / `slides.N.interactive.bindings` — see
+ * interactiveScopeFor), resolved at read time by the options proxy so binding
+ * data never pollutes the sketch's own parameters. The mapping-range and
  * smoothing controls are real `ControlledSliderInput`s and the enable/invert
  * toggles are the shared `ToggleSwitch`, both bound to the binding's path in
  * the form so they behave exactly like every other control in the panel.
@@ -111,7 +114,10 @@ export default function BindingAffordance( {
 
   const scope = getSketchScope( fieldPath );
   const target = toSketchRelativePath( fieldPath );
-  const bindingsPath = scope ? `${ scope }.bindings` : "";
+  // Binding data lives in the `interactive` namespace paired with the field's
+  // sketch scope — never inside the sketch parameters themselves.
+  const interactiveScope = scope ? interactiveScopeFor( scope ) : "";
+  const bindingsPath = interactiveScope ? `${ interactiveScope }.bindings` : "";
 
   const bindings = useWatch( {
     name: bindingsPath || "__no_bindings__"
@@ -170,20 +176,22 @@ export default function BindingAffordance( {
   // control.
   const bindingPath = `${ bindingsPath }.${ index }`;
 
-  // Strip the scope's `interaction` block once no binding needs it any more —
-  // the inverse of enableSourceInputs' on-demand seed below. Checked after
-  // every bindings-array write (add / remove / reset) and every source-
+  // Strip the plugin-managed `interaction` block once no binding needs it any
+  // more — the inverse of enableSourceInputs' on-demand seed below. Checked
+  // after every bindings-array write (add / remove / reset) and every source-
   // category switch, so a sketch never carries the block, or shows its
   // settings panel (gated the same way in GenericObjectForm), once its last
-  // interactive binding is gone.
+  // interactive binding is gone. Only the `interactive` namespace is pruned —
+  // a sketch-DECLARED block at `${scope}.interaction` is a real sketch
+  // parameter (hand-tracking, audio, …) and is never touched.
   const pruneInteractionIfUnused = ( nextList: Binding[] ) => {
     if ( needsInteractionBlock( nextList ) ) {
       return;
     }
 
-    if ( getValues( `${ scope }.interaction` ) !== undefined ) {
+    if ( getValues( `${ interactiveScope }.interaction` ) !== undefined ) {
       setValue(
-        `${ scope }.interaction`,
+        `${ interactiveScope }.interaction`,
         undefined,
         {
           shouldDirty: true
@@ -217,29 +225,38 @@ export default function BindingAffordance( {
 
   // Picking an interaction input source should make it actually produce a
   // channel — flip the matching `interaction.*` enable flags on so the camera /
-  // mic / sensor for that source boots immediately. The scope's `interaction`
-  // block only exists once something needs it (seeded server-side for sketches
-  // that already ship input-sourced bindings, pruned client-side otherwise —
-  // see getSketchMeta / pruneInteractionIfUnused), so the first pick seeds an
-  // inert clone of the shared defaults before flipping its flags on.
+  // mic / sensor for that source boots immediately. The flags land wherever
+  // the interaction block actually lives: a sketch-DECLARED block at the
+  // sketch scope (hand-tracking, audio, … — their own panel and sketch code
+  // read it, and the engine gives it precedence) is written in place;
+  // otherwise the plugin-managed block in the `interactive` namespace is
+  // seeded from an inert clone of the shared defaults on first use, then
+  // flipped. The seed never touches sketch parameters, and is pruned again by
+  // pruneInteractionIfUnused once no binding needs it.
   const enableSourceInputs = async( source: string ) => {
-    if ( getValues( `${ scope }.interaction` ) === undefined ) {
-      const {
-        inertInteractionFormValues
-      } = await import( "@/p5/utils/interaction/defaults.js" );
+    let interactionScope = scope;
 
-      setValue(
-        `${ scope }.interaction`,
-        inertInteractionFormValues(),
-        {
-          shouldDirty: true
-        }
-      );
+    if ( getValues( `${ scope }.interaction` ) === undefined ) {
+      interactionScope = interactiveScope;
+
+      if ( getValues( `${ interactiveScope }.interaction` ) === undefined ) {
+        const {
+          inertInteractionFormValues
+        } = await import( "@/p5/utils/interaction/defaults.js" );
+
+        setValue(
+          `${ interactiveScope }.interaction`,
+          inertInteractionFormValues(),
+          {
+            shouldDirty: true
+          }
+        );
+      }
     }
 
     for ( const path of interactionEnablePaths( source ) ) {
       setValue(
-        `${ scope }.interaction.${ path }`,
+        `${ interactionScope }.interaction.${ path }`,
         true,
         {
           shouldDirty: true

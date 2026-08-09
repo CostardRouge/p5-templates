@@ -6,8 +6,8 @@ import {
   FieldConfig
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
 import {
-  needsInteractionBlock
-} from "@/p5/utils/interaction/bindings.js";
+  interactiveScopeFor
+} from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/components/BindingAffordance/bindingUtils";
 
 // FieldRenderer is the heavy hub of the option form: it statically pulls in all
 // nine Controlled* inputs and recurses through ItemListRenderer (a large
@@ -26,32 +26,38 @@ type GenericObjectFormProps = {
   config: Record<string, FieldConfig>;
 };
 
-// The shared Interaction block's field descriptor is present in `config`
-// unconditionally (it's a static, cheap schema — see getSketchMeta), but the
-// block itself — and this panel — should only show up once a live binding
-// actually reads from it. Otherwise every sketch with the plugin on would
-// show a giant "Interaction" settings group despite having zero bindings.
-// Watching `bindings` (rather than `interaction` itself) means the panel
-// disappears the instant the last qualifying binding is removed, matching
-// BindingAffordance/InteractivePanel's pruning of the value block.
-function InteractionField( {
-  fieldBasePath, fieldName, config
+// The plugin-INJECTED Interaction panel (config.managed — see getSketchMeta).
+// Its field descriptor is present in `config` unconditionally (a static,
+// cheap schema), but the panel only shows while the plugin-managed block
+// actually exists in the scope's `interactive` namespace — seeded the first
+// time a binding picks a live input source, pruned when the last such binding
+// goes (see BindingAffordance) — so its lifecycle exactly tracks the value
+// block it edits, and a sketch with zero bindings never shows a giant
+// "Interaction" settings group. It edits the `interactive` namespace, never
+// the sketch parameters.
+//
+// A sketch-DECLARED interaction config (no `managed` flag — hand-tracking,
+// audio, …) never routes through here: it is a real sketch parameter, edited
+// at the sketch scope and rendered unconditionally like any other field.
+function ManagedInteractionField( {
+  sketchBasePath, fieldName, config
 }: {
-  fieldBasePath: string;
+  sketchBasePath: string;
   fieldName: string;
   config: FieldConfig;
 } ) {
-  const bindings = useWatch( {
-    name: `${ fieldBasePath }.bindings`
+  const interactiveScope = interactiveScopeFor( sketchBasePath );
+  const interaction = useWatch( {
+    name: `${ interactiveScope }.interaction`
   } );
 
-  if ( !needsInteractionBlock( bindings ) ) {
+  if ( interaction === undefined ) {
     return null;
   }
 
   return (
     <FieldRenderer
-      fieldBasePath={ fieldBasePath }
+      fieldBasePath={ interactiveScope }
       fieldName={ fieldName }
       config={ config }
     />
@@ -74,11 +80,11 @@ export default function GenericObjectForm( {
           return null;
         }
 
-        if ( fieldName === "interaction" ) {
+        if ( fieldName === "interaction" && fieldConfig.managed ) {
           return (
-            <InteractionField
+            <ManagedInteractionField
               key={ fieldName }
-              fieldBasePath={ basePath }
+              sketchBasePath={ basePath }
               fieldName={ fieldName }
               config={ fieldConfig }
             />

@@ -25,7 +25,8 @@ import {
 import {
   type Binding,
   bindingSourceLabel,
-  humanizeTarget
+  humanizeTarget,
+  interactiveScopeFor
 } from "../ContentItems/components/BindingAffordance/bindingUtils";
 
 type Props = {
@@ -56,7 +57,11 @@ export default function InteractivePanel( {
     expanded,
     setExpanded
   ] = useState( false );
-  const bindingsPath = `${ basePath }.bindings`;
+  // Binding data lives in the `interactive` namespace paired with the scope's
+  // sketch settings ("sketch" → "interactive", "slides.N.sketch" →
+  // "slides.N.interactive") — never inside the sketch parameters.
+  const interactiveScope = interactiveScopeFor( basePath );
+  const bindingsPath = `${ interactiveScope }.bindings`;
   const bindings = useWatch( {
     name: bindingsPath
   } ) as Binding[] | undefined;
@@ -139,13 +144,15 @@ export default function InteractivePanel( {
     );
 
     // Mirrors BindingAffordance.pruneInteractionIfUnused: the mixer can also
-    // remove the scope's last binding that needed the interaction block.
+    // remove the scope's last binding that needed the interaction block. Only
+    // the plugin-managed block in the `interactive` namespace is pruned — a
+    // sketch-declared `sketch.interaction` is a real parameter and stays.
     if (
       !needsInteractionBlock( next ) &&
-      getValues( `${ basePath }.interaction` ) !== undefined
+      getValues( `${ interactiveScope }.interaction` ) !== undefined
     ) {
       setValue(
-        `${ basePath }.interaction`,
+        `${ interactiveScope }.interaction`,
         undefined,
         {
           shouldDirty: true

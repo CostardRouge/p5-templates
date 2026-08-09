@@ -307,6 +307,22 @@ export function toSketchRelativePath( registeredName: string ): string | null {
   return String( registeredName ).slice( scope.length + 1 );
 }
 
+/**
+ * The `interactive` namespace scope paired with a sketch-settings scope —
+ * where the binding system stores its data (`bindings`, and the plugin-managed
+ * `interaction` block), OUTSIDE the sketch's own parameters:
+ *   "sketch"          → "interactive"
+ *   "slides.2.sketch" → "slides.2.interactive"
+ */
+export function interactiveScopeFor( sketchScope: string ): string {
+  return sketchScope === "sketch"
+    ? "interactive"
+    : sketchScope.replace(
+      /\.sketch$/,
+      ".interactive"
+    );
+}
+
 // ── Default binding factory ─────────────────────────────────────────────────
 
 function makeId(): string {

@@ -552,7 +552,13 @@ function hasEnabledInteractionSource( interaction ) {
 // collectors instead.
 function initInteractionForOptions() {
   try {
-    const interaction = liveSketchBase( getSketchOptions() )?.interaction;
+    const live = getSketchOptions();
+    const {
+      interaction
+    } = effectiveInteractive(
+      live,
+      liveSketchBase( live )
+    );
 
     if (
       interaction &&
@@ -584,7 +590,7 @@ export function disposeInteractionOnReset() {
     .catch( () => {} );
 }
 
-// The per-slide-merged sketch settings object the bindings live on.
+// The per-slide-merged sketch settings object binding targets resolve against.
 function liveSketchBase( live ) {
   if ( typeof window !== "undefined" && window.getSketchSettings ) {
     try {
@@ -595,6 +601,42 @@ function liveSketchBase( live ) {
   }
 
   return live.sketch ?? {};
+}
+
+// The active slide (when the slides module is loaded), for resolving the
+// per-slide `interactive` override without re-deriving slide state here.
+function liveCurrentSlide() {
+  if ( typeof window !== "undefined" && window.getCurrentSlide ) {
+    try {
+      return window.getCurrentSlide()?.slide ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+// The effective interaction-bindings state for the current frame. Bindings and
+// the plugin-managed interaction block live in the top-level `interactive`
+// namespace (root, overridden key-by-key by the active slide's own), NOT
+// inside the sketch parameters. Two deliberate fallbacks:
+//   - bindings: a legacy `bindings` array still sitting on the merged sketch
+//     (pre-migration capture snapshots load without passing through
+//     initOptions) keeps working;
+//   - interaction: a block on the merged sketch WINS — that's a sketch-declared
+//     parameter (hand-tracking, audio, … read it from their own code), and the
+//     binding UI writes source-enable flags into it when it exists.
+function effectiveInteractive(
+  live, base
+) {
+  const root = live?.interactive;
+  const slide = liveCurrentSlide()?.interactive;
+
+  return {
+    bindings: slide?.bindings ?? root?.bindings ?? base?.bindings,
+    interaction: base?.interaction ?? slide?.interaction ?? root?.interaction
+  };
 }
 
 // The generator context: the loop-normalized progression (deterministic during
@@ -624,14 +666,24 @@ function publishChannelsFrame() {
   }
 
   try {
-    const base = liveSketchBase( getSketchOptions() );
-    const channels = sampleChannels( base?.interaction );
+    const live = getSketchOptions();
+    const base = liveSketchBase( live );
+    const {
+      bindings, interaction
+    } = effectiveInteractive(
+      live,
+      base
+    );
+    const channels = sampleChannels( interaction );
 
     publishChannels( channels );
 
-    if ( base && Array.isArray( base.bindings ) && base.bindings.length > 0 ) {
+    if ( Array.isArray( bindings ) && bindings.length > 0 ) {
       publishBindingSignals( computeBindingSignals(
-        base,
+        {
+          ...base,
+          bindings
+        },
         channels,
         bindingContext()
       ) );
@@ -676,26 +728,44 @@ export function syncEffectivePrevious(
 /* ------------------------------------------------------------------ */
 
 // Resolve the per-slide-merged sketch object, then layer interactive bindings
-// over it. `resolveBindings` returns the same object untouched when the sketch
-// declares no bindings, so non-interactive sketches pay nothing.
+// over it. Bindings come from the top-level `interactive` namespace (see
+// effectiveInteractive); with none active the base object is returned
+// untouched, so non-interactive sketches pay nothing — no per-access
+// allocation on this hot path (the proxy runs it on every `.sketch` read).
 function resolveSketch( live ) {
   const base = liveSketchBase( live );
 
-  if (
-    !BINDINGS_ENABLED ||
-    !base ||
-    !Array.isArray( base.bindings ) ||
-    base.bindings.length === 0
-  ) {
+  if ( !BINDINGS_ENABLED || !base ) {
+    return base;
+  }
+
+  const {
+    bindings, interaction
+  } = effectiveInteractive(
+    live,
+    base
+  );
+
+  if ( !Array.isArray( bindings ) || bindings.length === 0 ) {
     return base;
   }
 
   try {
     const context = bindingContext();
 
+    // The shim also grafts the effective interaction onto the resolved clone,
+    // so sketch code reading `options.sketch.interaction` sees the block the
+    // engine actually sampled, wherever it is stored. (resolveBindings
+    // memoizes the clone per frame, so this stays off the per-access path.)
     return resolveBindings(
-      base,
-      sampleChannels( base.interaction ),
+      {
+        ...base,
+        bindings,
+        ...( interaction !== undefined && {
+          interaction
+        } )
+      },
+      sampleChannels( interaction ),
       context.frame,
       context
     );
