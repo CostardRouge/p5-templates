@@ -20,12 +20,12 @@ export const formValues = {
   photo: {
     // A repo-shipped test photo so the sketch renders out of the box (no
     // S3/MinIO dependency); pick any image from the asset picker.
-    image: testImagePaths[ 0 ] ?? "/assets/images/test/DSC02023%20Medium.jpeg",
+    image: testImagePaths[ 1 ] ?? "/assets/images/test/DSC02023%44Medium.jpeg",
     margin: 0.1,
     scale: 1.1,
     center: true,
     clip: false,
-    fill: false
+    fill: true
   },
   segmentation: {
     // Normalized (0-1) focus points fed to the interactive segmenter — one
@@ -33,8 +33,8 @@ export const formValues = {
     // point, click a marker (the circle with the minus) to unpick its zone.
     points: [
       {
-        x: 0.4720334741274328,
-        y: 0.2927933578609266
+        x: 0.6159245171740532,
+        y: 0.41899350991726275
       }
     ],
     inverse: true,
@@ -55,8 +55,8 @@ export const formValues = {
   trail: {
     // Normalized handles. Drag them on the canvas or edit them here.
     anchor: {
-      x: 0.47,
-      y: 0.35
+      x: 0.49990822049731387,
+      y: 0.48710985538957857
     },
     guides: {
       a: {
@@ -74,13 +74,13 @@ export const formValues = {
     // draggable guide handles steer the trail (Chaikin corner-cutting).
     mode: "angles" as "angles" | "spline",
     // Launch heading in degrees: 0 = up, positive = clockwise.
-    startAngle: -135,
+    startAngle: -9,
     // Total heading change from launch to exit (degrees) — the swoosh.
-    bend: 70,
+    bend: -20,
     // Where the bending happens along the trail.
     easing: "easeInOutSine",
     // Trail length as a fraction of the canvas diagonal.
-    length: 0.45,
+    length: 0.15,
     // Also stamp ghosts the other way, mirrored through the anchor.
     bidirectional: false,
     // Chaikin iterations for the spline mode.
@@ -88,15 +88,15 @@ export const formValues = {
   },
   echo: {
     // Number of ghost copies along the path.
-    copies: 6,
+    copies: 7,
     // Opacity of the nearest / farthest ghost.
-    opacityStart: 0.55,
-    opacityEnd: 0.1,
+    opacityStart: 0.74,
+    opacityEnd: 0.24,
     // Size multipliers of the nearest / farthest ghost (× subject size).
     scaleStart: 0.95,
-    scaleEnd: 0.7,
+    scaleEnd: 2,
     // Extra rotation of the farthest ghost (degrees), eased along the path.
-    rotate: 0,
+    rotate: -98,
     // Also rotate each ghost with the local path direction.
     alignToPath: false,
     // How opacity / scale / rotation / tint progress along the path.

@@ -25,7 +25,7 @@ export const formValues = {
   photo: {
     // A repo-shipped test photo so the sketch renders out of the box (no
     // S3/MinIO dependency); pick any image from the asset picker.
-    image: testImagePaths[ 0 ] ?? "/assets/images/test/DSC02023%20Medium.jpeg",
+    image: testImagePaths[ 0 ] ?? "/assets/images/test/DSC02023%44Medium.jpeg",
     margin: 0.1,
     scale: 1.1,
     center: true,
