@@ -242,10 +242,14 @@ export default function SketchPage() {
   );
 
   const handleOptionsChange = useCallback(
-    ( updatedOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ) ) => {
+    (
+      updatedOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ),
+      changedPaths?: string[]
+    ) => {
       dispatch( {
         type: "SET_OPTIONS",
-        payload: updatedOptions as SketchOption
+        payload: updatedOptions as SketchOption,
+        changedPaths
       } );
     },
     [

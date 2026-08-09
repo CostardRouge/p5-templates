@@ -2,11 +2,12 @@ import type {
   Patch
 } from "immer";
 
-// History entry with metadata
+// History entry with metadata. Entries hold only the granular patches
+// between two states — never full snapshots, whose retention (up to
+// maxHistory of them) is a real memory cost on mobile devices.
 export type HistoryEntry<T = any> = {
-  state: T; // Full state snapshot
-  patches?: Patch[]; // Immer patches (for efficient storage)
-  inversePatches?: Patch[]; // For undo
+  patches: Patch[]; // The change itself (replayed by redo)
+  inversePatches: Patch[]; // The way back (replayed by undo)
   timestamp: number;
   description?: string; // Optional description of the change
   affectedPaths?: string[]; // Which form paths were modified
@@ -74,7 +75,6 @@ export type FormUndoRedoConfig = {
   autoCapture?: FormUndoRedoAutoCaptureMode;
   debounceMs?: number;
   watchPaths?: string[];
-  usePatches?: boolean; // Use Immer patches for efficiency
   enablePersistence?: boolean; // Save to localStorage
   persistenceKey?: string;
   debug?: boolean;

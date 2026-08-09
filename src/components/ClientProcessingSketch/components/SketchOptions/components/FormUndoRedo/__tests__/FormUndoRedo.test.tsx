@@ -18,35 +18,37 @@ import useFormUndoRedo from "../hooks/useFormUndoRedo";
 
 // autoCapture="immediate" keeps the tests synchronous (no debounce timers);
 // the debounced mode funnels into the same capture() path.
-function Wrapper( {
-  children
-}: React.PropsWithChildren ) {
-  const methods = useForm( {
-    defaultValues: {
-      title: "initial",
-      nested: {
-        count: 0
+function makeWrapper( autoCapture: "immediate" | "debounced" ) {
+  return function Wrapper( {
+    children
+  }: React.PropsWithChildren ) {
+    const methods = useForm( {
+      defaultValues: {
+        title: "initial",
+        nested: {
+          count: 0
+        }
       }
-    }
-  } );
+    } );
 
-  return (
-    <FormProvider { ...methods }>
-      <FormUndoRedo autoCapture="immediate" hotkeys={ false }>
-        {children}
-      </FormUndoRedo>
-    </FormProvider>
-  );
+    return (
+      <FormProvider { ...methods }>
+        <FormUndoRedo autoCapture={ autoCapture } hotkeys={ false }>
+          {children}
+        </FormUndoRedo>
+      </FormProvider>
+    );
+  };
 }
 
-function renderHarness() {
+function renderHarness( autoCapture: "immediate" | "debounced" = "immediate" ) {
   return renderHook(
     () => ( {
       history: useFormUndoRedo(),
       form: useFormContext()
     } ),
     {
-      wrapper: Wrapper
+      wrapper: makeWrapper( autoCapture )
     }
   );
 }
@@ -248,6 +250,96 @@ describe(
 
         expect( result.current.form.getValues( "title" ) ).toBe( "silent" );
         expect( result.current.history.canUndo ).toBe( false );
+      }
+    );
+
+    it(
+      "jumpTo replays several past entries in one go, and back again",
+      async() => {
+        const {
+          result
+        } = renderHarness();
+
+        for ( const title of [
+          "one",
+          "two",
+          "three"
+        ] ) {
+          await act( async() => {
+            result.current.form.setValue(
+              "title",
+              title
+            );
+          } );
+        }
+
+        // Jump to the middle of the past stack: undoes "three" and "two".
+        await act( async() => {
+          result.current.history.jumpTo(
+            1,
+            "past"
+          );
+        } );
+
+        expect( result.current.form.getValues( "title" ) ).toBe( "one" );
+        expect( result.current.history.canUndo ).toBe( true );
+        expect( result.current.history.canRedo ).toBe( true );
+
+        // Jump to the far end of the future stack: redoes both again.
+        await act( async() => {
+          result.current.history.jumpTo(
+            0,
+            "future"
+          );
+        } );
+
+        expect( result.current.form.getValues( "title" ) ).toBe( "three" );
+        expect( result.current.history.canRedo ).toBe( false );
+
+        // The moved entries went back in replayable order.
+        await act( async() => {
+          result.current.history.undo();
+        } );
+
+        expect( result.current.form.getValues( "title" ) ).toBe( "two" );
+      }
+    );
+
+    it(
+      "undo commits a pending debounced edit instead of discarding it",
+      async() => {
+        jest.useFakeTimers();
+
+        try {
+          const {
+            result
+          } = renderHarness( "debounced" );
+
+          await act( async() => {
+            result.current.form.setValue(
+              "title",
+              "edited"
+            );
+          } );
+
+          // The debounce (400 ms) has not fired — nothing committed yet.
+          expect( result.current.history.canUndo ).toBe( false );
+
+          await act( async() => {
+            result.current.history.undo();
+          } );
+
+          expect( result.current.form.getValues( "title" ) ).toBe( "initial" );
+          expect( result.current.history.canRedo ).toBe( true );
+
+          await act( async() => {
+            result.current.history.redo();
+          } );
+
+          expect( result.current.form.getValues( "title" ) ).toBe( "edited" );
+        } finally {
+          jest.useRealTimers();
+        }
       }
     );
 

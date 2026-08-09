@@ -1,27 +1,18 @@
 import {
-  applyPatches, enablePatches, produceWithPatches, Patch
+  applyPatches, enablePatches, produceWithPatches, setAutoFreeze, Patch
 } from "immer";
+import {
+  valuesEqual
+} from "@/p5/shared/utils.js";
 import type {
   HistoryEntry
 } from "../types/FormUndoRedo.types";
 
-// Enable Immer patches
+// Enable Immer patches. Auto-freeze is disabled because patch values and
+// reconstructed states are handed to react-hook-form's reset(), which must
+// stay free to mutate its own form state.
 enablePatches();
-
-/**
- * Create a stable hash for state comparison
- */
-export function createStateHash( state: any ): string {
-  try {
-    return JSON.stringify( state );
-  } catch( error ) {
-    console.warn(
-      "Failed to hash state:",
-      error
-    );
-    return String( Date.now() );
-  }
-}
+setAutoFreeze( false );
 
 /**
  * Deep clone with circular reference handling
@@ -43,46 +34,88 @@ export function safeDeepClone<T>( obj: T ): T {
   }
 }
 
+function isPlainRecord( value: any ): boolean {
+  return typeof value === "object" && value !== null && !Array.isArray( value );
+}
+
 /**
- * Create a history entry with patches
+ * Mutates an Immer draft field-by-field until it matches `next`, so the
+ * produced patches describe only the values that actually changed. Assigning
+ * the whole next state at once would yield a single root-replace patch — a
+ * full snapshot — which is exactly the memory cost this module avoids.
+ * Changed values are cloned so patches never alias live form state.
  */
-export function createHistoryEntry<T>(
-  state: T,
-  previousState?: T,
-  description?: string,
-  affectedPaths?: string[],
-  batchId?: string
-): HistoryEntry<T> {
-  const entry: HistoryEntry<T> = {
-    state: safeDeepClone( state ),
-    timestamp: Date.now(),
-    description,
-    affectedPaths,
-    batchId
-  };
-
-  // Generate patches if we have a previous state
-  if ( previousState ) {
-    try {
-      const [
-        , patches,
-        inversePatches
-      ] = produceWithPatches(
-        previousState,
-        () => state
-      );
-
-      entry.patches = patches;
-      entry.inversePatches = inversePatches;
-    } catch( error ) {
-      console.warn(
-        "Failed to generate patches:",
-        error
-      );
+function applyStateDiff(
+  draft: any, next: any
+): void {
+  for ( const key of Object.keys( draft ) ) {
+    if ( !( key in next ) ) {
+      delete draft[ key ];
     }
   }
 
-  return entry;
+  for ( const key of Object.keys( next ) ) {
+    const nextValue = next[ key ];
+    const draftValue = draft[ key ];
+
+    if ( isPlainRecord( nextValue ) && isPlainRecord( draftValue ) ) {
+      applyStateDiff(
+        draftValue,
+        nextValue
+      );
+    } else if ( !valuesEqual(
+      draftValue,
+      nextValue
+    ) ) {
+      draft[ key ] = safeDeepClone( nextValue );
+    }
+  }
+}
+
+/**
+ * Create a history entry holding the granular patches between two states.
+ * Returns null when the states are effectively equal (nothing to record) or
+ * when diffing fails.
+ */
+export function createHistoryEntry<T>(
+  previousState: T,
+  nextState: T,
+  description?: string,
+  batchId?: string
+): HistoryEntry<T> | null {
+  try {
+    const [
+      , patches,
+      inversePatches
+    ] = produceWithPatches(
+      previousState,
+      ( draft: any ) => {
+        applyStateDiff(
+          draft,
+          nextState
+        );
+      }
+    );
+
+    if ( patches.length === 0 ) {
+      return null;
+    }
+
+    return {
+      patches,
+      inversePatches,
+      timestamp: Date.now(),
+      description,
+      affectedPaths: extractAffectedPaths( patches ),
+      batchId
+    };
+  } catch( error ) {
+    console.warn(
+      "Failed to diff states for history:",
+      error
+    );
+    return null;
+  }
 }
 
 /**
@@ -180,6 +213,7 @@ export function mergeBatchEntries<T>( entries: HistoryEntry<T>[] ): HistoryEntry
   }
 
   const merged: HistoryEntry<T>[] = [];
+
   let currentBatch: HistoryEntry<T>[] = [];
   let currentBatchId: string | undefined;
 
@@ -219,10 +253,14 @@ function mergeBatchGroup<T>( entries: HistoryEntry<T>[] ): HistoryEntry<T> {
   }
 
   const first = entries[ 0 ];
-  const last = entries[ entries.length - 1 ];
 
   return {
-    state: last.state,
+    // Forward patches replay in order; inverse patches unwind in reverse.
+    patches: entries.flatMap( ( e ) => e.patches ),
+    inversePatches: [
+      ...entries
+    ].reverse()
+      .flatMap( ( e ) => e.inversePatches ),
     timestamp: first.timestamp,
     description:
       first.description || `Batch operation (${ entries.length } changes)`,
