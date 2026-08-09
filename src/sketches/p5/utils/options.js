@@ -517,6 +517,26 @@ export function registerEvents() {
 // dispose-on-reset only loads the (lazy) module when there's something to free.
 let _interactionInited = false;
 
+// The handler-managed source groups, each gated by its own `enabled` flag
+// (`vision` covers all camera trackers). Mirrors the per-source guards the
+// collectors in interaction/index.js check, like interactionEnablePaths in
+// the BindingAffordance does on the form side.
+const INTERACTION_SOURCE_GROUPS = [
+  "mouse",
+  "touch",
+  "vision",
+  "orbit",
+  "perlinNoise",
+  "gyroscope",
+  "midi",
+  "audio",
+  "joypad"
+];
+
+function hasEnabledInteractionSource( interaction ) {
+  return INTERACTION_SOURCE_GROUPS.some( ( source ) => interaction[ source ]?.enabled === true );
+}
+
 // Engine-managed interaction init: when a sketch's options carry an enabled
 // `interaction` block, boot the handler once at setup so its sources (webcam,
 // audio, gyro, touch, …) are available as binding channels with no per-sketch
@@ -524,11 +544,21 @@ let _interactionInited = false;
 // of the core module-eval chain. `initInteraction` is idempotent (re-arms
 // listeners), so it's safe alongside sketches that still call it themselves;
 // fire-and-forget so vision warm-up doesn't block setup.
+//
+// A block with NO enabled source (e.g. the inert one seeded on every sketch
+// when the bindings plugin is on) must not boot: there is nothing to sample,
+// and the baseline mouse binding works without the handler (channels.js keeps
+// its own listener). Sources enabled later at runtime lazy-init from their
+// collectors instead.
 function initInteractionForOptions() {
   try {
     const interaction = liveSketchBase( getSketchOptions() )?.interaction;
 
-    if ( interaction && interaction.enabled !== false ) {
+    if (
+      interaction &&
+      interaction.enabled !== false &&
+      hasEnabledInteractionSource( interaction )
+    ) {
       _interactionInited = true;
       import( "./interaction/index.js" )
         .then( ( mod ) => mod.initInteraction( interaction ) )

@@ -96,11 +96,23 @@ export async function getSketchMeta(
       interactionFormValues, interactionFormConfiguration
     } = await import( "@/p5/utils/interaction/defaults.js" );
 
+    // The canonical defaults ship "live" (enabled + orbit on) for the sketches
+    // that import them deliberately, but a seeded sketch has no bindings yet —
+    // an active block would boot the interaction handler and run the orbit
+    // virtual pointer on every non-interactive sketch. Seed it INERT instead;
+    // picking an input source on a binding flips `enabled` (and the source's
+    // own flag) back on — see interactionEnablePaths / enableSourceInputs in
+    // the BindingAffordance.
+    const seededInteraction = structuredClone( interactionFormValues );
+
+    seededInteraction.enabled = false;
+    seededInteraction.orbit.enabled = false;
+
     return {
       formValues: needValues
         ? {
           ...loaded.formValues,
-          interaction: structuredClone( interactionFormValues )
+          interaction: seededInteraction
         }
         : loaded.formValues,
       formConfiguration: needConfig
