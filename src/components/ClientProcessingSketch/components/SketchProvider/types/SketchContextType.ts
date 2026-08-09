@@ -23,6 +23,13 @@ export type SketchState = {
   sketchFormValues?: Record<string, any>;
   sketchFormConfiguration?: Record<string, FieldConfig>;
   sketchLoaded: boolean;
+  /**
+   * Dotted form paths covered by the latest SET_OPTIONS, when known. Lets
+   * the runtime sync push only the changed subtrees instead of walking the
+   * whole options tree on every form tick; undefined means "unknown — sync
+   * the full tree".
+   */
+  optionsChangedPaths?: string[];
   engine: SketchEngine | null;
   /** Whether the engine draw-loop is currently running. */
   looping: boolean;
@@ -37,7 +44,9 @@ export type SketchState = {
 export type SketchAction =
   | {
     type: "SET_OPTIONS";
-    payload: SketchOption
+    payload: SketchOption;
+    /** See SketchState.optionsChangedPaths. */
+    changedPaths?: string[]
   }
   | {
     type: "SET_LOADED";

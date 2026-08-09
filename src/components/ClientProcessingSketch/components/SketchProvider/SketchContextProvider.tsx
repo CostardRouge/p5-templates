@@ -8,6 +8,7 @@ import type {
   SketchState, SketchAction, SketchContextProviderProps
 } from "./types/SketchContextType";
 import {
+  extractOptionsSubset,
   setSketchOptions,
   subscribeSketchOptions
 } from "@/lib/syncSketchOptions";
@@ -25,7 +26,8 @@ function sketchReducer(
     case "SET_OPTIONS":
       return {
         ...state,
-        options: action.payload
+        options: action.payload,
+        optionsChangedPaths: action.changedPaths
       };
     case "SET_LOADED":
       return {
@@ -98,8 +100,18 @@ export default function SketchContextProvider( {
 
   useEffect(
     () => {
+      // When the changed form paths are known, push only those subtrees into
+      // the store — the store's merge then touches a handful of values
+      // instead of walking the entire options tree on every form tick.
+      const subset = state.optionsChangedPaths?.length
+        ? extractOptionsSubset(
+          state.options,
+          state.optionsChangedPaths
+        )
+        : null;
+
       setSketchOptions(
-        state.options,
+        subset ?? state.options,
         "react"
       );
 
@@ -110,7 +122,8 @@ export default function SketchContextProvider( {
       }
     },
     [
-      state.options
+      state.options,
+      state.optionsChangedPaths
     ]
   );
 

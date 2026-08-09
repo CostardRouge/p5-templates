@@ -7,13 +7,12 @@ import {
 
 import FormUndoRedoContext from "./contexts/FormUndoRedoContext";
 import {
+  applyHistoryPatches,
   createHistoryEntry,
-  createStateHash,
   safeDeepClone,
   shouldTrackPath,
   compressHistory,
-  estimateHistorySize,
-  extractAffectedPaths
+  estimateHistorySize
 } from "./utils/historyUtils";
 
 import type {
@@ -47,7 +46,6 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   autoCapture = "off",
   debounceMs = 400,
   watchPaths,
-  usePatches = true,
   enablePersistence = false,
   persistenceKey = "form-undo-redo",
   debug = false,
@@ -75,7 +73,6 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
 
   // Tracking refs
   const lastCommittedRef = React.useRef<T | null>( null );
-  const lastCommittedHashRef = React.useRef<string | null>( null );
   const inReplayRef = React.useRef( false );
   const pauseCountRef = React.useRef( 0 );
   const debounceTimerRef = React.useRef<number | null>( null );
@@ -110,15 +107,6 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   );
 
   const paused = () => pauseCountRef.current > 0;
-
-  const snapshot = React.useCallback(
-    (): T => {
-      return safeDeepClone( getValues() ) as T;
-    },
-    [
-      getValues
-    ]
-  );
 
   const syncFlags = React.useCallback(
     () => {
@@ -178,9 +166,11 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         if ( stored ) {
           const data = JSON.parse( stored );
 
-          // Only load if less than 1 hour old
+          // Only load if less than 1 hour old. Drop malformed entries (e.g.
+          // snapshot-based ones persisted by an older build) — undo can only
+          // replay entries that carry patches.
           if ( Date.now() - data.timestamp < 3600000 ) {
-            stacksRef.current.past = data.past || [];
+            stacksRef.current.past = ( data.past || [] ).filter( ( entry: HistoryEntry<T> ) => entry.patches && entry.inversePatches );
             syncFlags();
             debugLog(
               "Loaded persisted history:",
@@ -250,7 +240,6 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
   const setCommitted = React.useCallback(
     ( state: T ) => {
       lastCommittedRef.current = safeDeepClone( state );
-      lastCommittedHashRef.current = createStateHash( state );
     },
     []
   );
@@ -261,44 +250,36 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         return;
       }
 
-      const current = snapshot();
-      const currentHash = createStateHash( current );
+      const previous = lastCommittedRef.current;
+      const currentValues = getValues() as T;
 
-      // Skip if no change
-      if ( currentHash === lastCommittedHashRef.current ) {
+      if ( !previous ) {
+        // Nothing to undo back to — just adopt the new state as the baseline.
+        setCommitted( currentValues );
+        return;
+      }
+
+      // The entry's inverse patches lead back to the state before the
+      // change, so a single undo restores it; the forward patches describe
+      // the change itself and are what redo replays. Diffing against the
+      // live form values also doubles as the no-change check (null entry).
+      const entry = createHistoryEntry(
+        previous,
+        currentValues,
+        description,
+        currentBatchIdRef.current || undefined
+      );
+
+      if ( !entry ) {
         debugLog( "Skipped capture: no changes detected" );
         return;
       }
 
-      const previous = lastCommittedRef.current;
-
-      if ( !previous ) {
-        // Nothing to undo back to — just adopt the new state as the baseline.
-        setCommitted( current );
-        return;
-      }
-
-      // The past stack holds the state *before* each change, so a single undo
-      // restores it. Patches (previous → current) describe the change itself.
-      const entry = createHistoryEntry(
-        previous,
-        usePatches ? current : undefined,
-        description,
-        undefined,
-        currentBatchIdRef.current || undefined
-      );
-
-      // Extract affected paths from patches if available
-      if ( entry.patches ) {
-        entry.affectedPaths = extractAffectedPaths( entry.patches );
-      }
-
       pushToHistory( entry );
-      setCommitted( current );
+      setCommitted( currentValues );
     },
     [
-      snapshot,
-      usePatches,
+      getValues,
       pushToHistory,
       setCommitted,
       debugLog
@@ -321,23 +302,22 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       try {
         const prevEntry = stacks.past.pop()!;
 
-        // Capture current state BEFORE reset
-        const currentState = snapshot();
-        const currentEntry = createHistoryEntry(
-          currentState,
-          usePatches ? prevEntry.state : undefined,
-          "Redo point"
+        // Rebuild the previous state by unwinding the entry's inverse
+        // patches from the committed state. The same entry moves to the
+        // future stack — redo replays its forward patches.
+        const base = lastCommittedRef.current ?? ( safeDeepClone( getValues() ) as T );
+        const previousState = applyHistoryPatches(
+          base,
+          prevEntry.inversePatches
         );
 
-        // Push to future for redo
-        stacks.future.push( currentEntry );
+        stacks.future.push( prevEntry );
 
-        // Reset to previous state
         reset(
-          prevEntry.state,
+          previousState,
           resetOptions
         );
-        setCommitted( prevEntry.state );
+        setCommitted( previousState );
         syncFlags();
 
         const duration = performance.now() - startTime;
@@ -361,12 +341,11 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
     },
     [
+      getValues,
       reset,
       resetOptions,
-      snapshot,
       setCommitted,
       syncFlags,
-      usePatches,
       debugLog
     ]
   );
@@ -387,23 +366,22 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       try {
         const nextEntry = stacks.future.pop()!;
 
-        // Capture current state BEFORE reset
-        const currentState = snapshot();
-        const currentEntry = createHistoryEntry(
-          currentState,
-          usePatches ? nextEntry.state : undefined,
-          "Undo point"
+        // Rebuild the next state by replaying the entry's forward patches
+        // on the committed state. The same entry moves back to the past
+        // stack — undo unwinds its inverse patches.
+        const base = lastCommittedRef.current ?? ( safeDeepClone( getValues() ) as T );
+        const nextState = applyHistoryPatches(
+          base,
+          nextEntry.patches
         );
 
-        // Push to past for undo
-        stacks.past.push( currentEntry );
+        stacks.past.push( nextEntry );
 
-        // Reset to next state
         reset(
-          nextEntry.state,
+          nextState,
           resetOptions
         );
-        setCommitted( nextEntry.state );
+        setCommitted( nextState );
         syncFlags();
 
         const duration = performance.now() - startTime;
@@ -427,12 +405,11 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
     },
     [
+      getValues,
       reset,
       resetOptions,
-      snapshot,
       setCommitted,
       syncFlags,
-      usePatches,
       debugLog
     ]
   );
@@ -455,27 +432,27 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       inReplayRef.current = true;
 
       try {
-        const targetEntry = targetStack[ index ];
-        const currentEntry = createHistoryEntry(
-          snapshot(),
-          usePatches ? targetEntry.state : undefined,
-          direction === "past" ? "Redo point" : "Undo point"
-        );
+        // Equivalent to repeated undo/redo down to the target: replay each
+        // skipped entry's patches from the committed state, and move the
+        // replayed entries to the opposite stack in reverse
+        // (pop-from-the-end) order.
+        let state = lastCommittedRef.current ?? ( safeDeepClone( getValues() ) as T );
 
-        reset(
-          targetEntry.state,
-          resetOptions
-        );
-        setCommitted( targetEntry.state );
+        for ( let i = targetStack.length - 1; i >= index; i-- ) {
+          const entry = targetStack[ i ];
 
-        // Reorganize stacks. Equivalent to repeated undo/redo down to the
-        // target: skipped entries land on the opposite stack in reverse
-        // (pop-from-the-end) order, with the pre-jump state on top-most.
+          state = applyHistoryPatches(
+            state,
+            direction === "past" ? entry.inversePatches : entry.patches
+          );
+        }
+
+        const moved = targetStack.slice( index ).reverse();
+
         if ( direction === "past" ) {
           stacks.future = [
             ...stacks.future,
-            currentEntry,
-            ...stacks.past.slice( index + 1 ).reverse()
+            ...moved
           ];
           stacks.past = stacks.past.slice(
             0,
@@ -484,14 +461,19 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
         } else {
           stacks.past = [
             ...stacks.past,
-            currentEntry,
-            ...stacks.future.slice( index + 1 ).reverse()
+            ...moved
           ];
           stacks.future = stacks.future.slice(
             0,
             index
           );
         }
+
+        reset(
+          state,
+          resetOptions
+        );
+        setCommitted( state );
 
         syncFlags();
         debugLog(
@@ -513,12 +495,11 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
       }
     },
     [
+      getValues,
       reset,
       resetOptions,
-      snapshot,
       setCommitted,
       syncFlags,
-      usePatches,
       debugLog
     ]
   );
@@ -653,25 +634,23 @@ export default function FormUndoRedo<T extends FieldValues = FieldValues>( {
     () => {
       loadPersistedHistory();
 
-      setCommitted( snapshot() );
+      setCommitted( getValues() as T );
 
       debugLog(
         "Initialized",
         {
           autoCapture,
-          maxHistory,
-          usePatches
+          maxHistory
         }
       );
     },
     [
       autoCapture,
       debugLog,
+      getValues,
       loadPersistedHistory,
       maxHistory,
-      setCommitted,
-      snapshot,
-      usePatches
+      setCommitted
     ]
   );
 

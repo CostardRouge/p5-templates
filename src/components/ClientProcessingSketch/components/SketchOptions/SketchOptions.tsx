@@ -81,7 +81,8 @@ type SketchOptionsProps = {
   options: SketchOption;
   persistedJob?: JobModel;
   onOptionsChange: (
-    nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void )
+    nextOptions: SketchOption | ( ( existingOptions: SketchOption ) => void ),
+    changedPaths?: string[]
   ) => void;
   onActiveSlideChange?: ( index: number | undefined ) => void;
   enableThumbnails?: boolean;

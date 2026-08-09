@@ -37,7 +37,6 @@ export type {
 
 // Utils
 export {
-  createStateHash,
   safeDeepClone,
   shouldTrackPath,
   estimateHistorySize
