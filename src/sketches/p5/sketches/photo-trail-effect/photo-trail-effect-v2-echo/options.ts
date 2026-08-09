@@ -1,6 +1,6 @@
-// photo-trail-effect-v1 — the Instagram "trail effect": pixel ribbons
-// sampled across a draggable band of the photo, stretched along a curve to
-// the canvas edge, with the MediaPipe-segmented subject drawn back on top.
+// photo-trail-effect-v2-echo — the "echo" trail: fading, shrinking,
+// optionally tinted ghost copies of the MediaPipe-segmented subject stamped
+// along a draggable curve, with the cut-out drawn back on top.
 
 import getTestImagePaths from "@/utils/getTestImagePaths";
 
@@ -9,28 +9,23 @@ const testImagePaths = await getTestImagePaths();
 type TrailPoint = {x: number;
   y: number };
 
-// One trail: `band` is the sampled cross-section (its length is the ribbon
-// width, so it can cover just the body of a bird), `guides` are the
-// spline-mode control points steering the ribbon toward the canvas edge,
-// `flip` picks which side of the band the ribbon leaves from (angles mode)
-// and `phase` (0..1) offsets the wave so trails don't oscillate in sync.
-type TrailItem = {band: {a: TrailPoint;
-  b: TrailPoint };
-guides: {a: TrailPoint;
-  b: TrailPoint };
-flip: boolean;
-phase: number };
+// The ghost path handles: `anchor` is where the trail leaves the subject
+// (drop it on the subject's centre), `guides` are the spline-mode control
+// points steering the trail.
+type TrailHandles = {anchor: TrailPoint;
+  guides: {a: TrailPoint;
+    b: TrailPoint } };
 
 export const formValues = {
   photo: {
     // A repo-shipped test photo so the sketch renders out of the box (no
     // S3/MinIO dependency); pick any image from the asset picker.
-    image: testImagePaths[ 0 ] ?? "/assets/images/test/DSC02023%44Medium.jpeg",
+    image: testImagePaths[ 1 ] ?? "/assets/images/test/DSC02023%44Medium.jpeg",
     margin: 0.1,
     scale: 1.1,
     center: true,
     clip: false,
-    fill: false
+    fill: true
   },
   segmentation: {
     // Normalized (0-1) focus points fed to the interactive segmenter — one
@@ -38,8 +33,8 @@ export const formValues = {
     // point, click a marker (the circle with the minus) to unpick its zone.
     points: [
       {
-        x: 0.4720334741274328,
-        y: 0.2927933578609266
+        x: 0.6159245171740532,
+        y: 0.41899350991726275
       }
     ],
     inverse: true,
@@ -57,79 +52,80 @@ export const formValues = {
     blur: 12,
     dim: 0.45
   },
-  trails: {
-    // Number of trails. Growing appends freshly generated bands, shrinking
-    // drops the tail — surviving trails keep their dragged handles.
-    count: 1,
-    // Normalized handles, one entry per trail. Drag them on the canvas or
-    // edit them here; the count slider manages the list length.
-    items: [
-      {
-        band: {
-          a: {
-            x: 0.52,
-            y: 0.2
-          },
-          b: {
-            x: 0.6255905214890259,
-            y: 0.30463631511733497
-          }
-        },
-        guides: {
-          a: {
-            x: 0.68,
-            y: 0.3
-          },
-          b: {
-            x: 0.9,
-            y: 0.52
-          }
-        },
-        flip: false,
-        phase: 0
+  trail: {
+    // Normalized handles. Drag them on the canvas or edit them here.
+    anchor: {
+      x: 0.49990822049731387,
+      y: 0.48710985538957857
+    },
+    guides: {
+      a: {
+        x: 0.3,
+        y: 0.3
+      },
+      b: {
+        x: 0.12,
+        y: 0.5
       }
-    ] as TrailItem[]
-  },
+    }
+  } as TrailHandles,
   direction: {
     // angles → launch angle + bend, no control points; spline → the two
-    // draggable guide handles steer the ribbon (Chaikin corner-cutting).
+    // draggable guide handles steer the trail (Chaikin corner-cutting).
     mode: "angles" as "angles" | "spline",
-    // Tilt of the launch relative to the band perpendicular (degrees).
-    startAngle: 0,
+    // Launch heading in degrees: 0 = up, positive = clockwise.
+    startAngle: -9,
     // Total heading change from launch to exit (degrees) — the swoosh.
-    bend: 120,
-    // Where the bending happens along the ribbon.
+    bend: -20,
+    // Where the bending happens along the trail.
     easing: "easeInOutSine",
-    // Ribbon length as a fraction of the canvas diagonal.
-    length: 0.9,
-    // Also grow the ribbon the other way, mirrored through the band.
-    bidirectional: true,
+    // Trail length as a fraction of the canvas diagonal.
+    length: 0.15,
+    // Also stamp ghosts the other way, mirrored through the anchor.
+    bidirectional: false,
     // Chaikin iterations for the spline mode.
     iterations: 4
   },
+  echo: {
+    // Number of ghost copies along the path.
+    copies: 7,
+    // Opacity of the nearest / farthest ghost.
+    opacityStart: 0.74,
+    opacityEnd: 0.24,
+    // Size multipliers of the nearest / farthest ghost (× subject size).
+    scaleStart: 0.95,
+    scaleEnd: 2,
+    // Extra rotation of the farthest ghost (degrees), eased along the path.
+    rotate: -98,
+    // Also rotate each ghost with the local path direction.
+    alignToPath: false,
+    // How opacity / scale / rotation / tint progress along the path.
+    easing: "linear",
+    // Whole march-along-the-path cycles per animation loop — 0 keeps the
+    // ghosts still, integers keep the exported video seamless.
+    travel: 0,
+    tint: {
+      // Push the ghosts toward this colour, stronger toward the tail.
+      // Amount 0 leaves the photo colours untouched.
+      color: [
+        64,
+        120,
+        255
+      ],
+      amount: 0
+    }
+  },
   wave: {
-    // Sideways sine offset, as a fraction of the smaller canvas dimension.
-    amplitude: 0.1,
-    // Number of full oscillations along the ribbon (the torsions).
-    twists: 2,
-    // Bunches the twists toward the start (>1) or the end (<1).
+    // Sideways sine offset of the path, as a fraction of the smaller
+    // canvas dimension.
+    amplitude: 0,
+    // Number of full oscillations along the path.
+    twists: 1.5,
+    // Bunches the oscillations toward the start (>1) or the end (<1).
     warp: 1,
-    // Whole wave cycles per animation loop — 0 keeps the trails still,
+    // Whole wave cycles per animation loop — 0 keeps the path still,
     // integers keep the exported video seamless.
     speed: 0
-  },
-  ribbon: {
-    // Colour samples across the band — low values read as bold stripes.
-    resolution: 96,
-    // Interpolate between samples (off = hard-edged stripes).
-    smoothing: true,
-    opacity: 1,
-    // Width multipliers at the band and at the far end (taper / flare).
-    widthStart: 1,
-    widthEnd: 1,
-    widthEasing: "easeInOutSine",
-    // Length of one ribbon slice in pixels — smaller is smoother, slower.
-    sliceStep: 4
   },
   subject: {
     scale: 1,
@@ -147,7 +143,7 @@ export const formValues = {
     }
   },
   handles: {
-    // Master switch for the on-canvas drag handles (band ends + guides).
+    // Master switch for the on-canvas drag handles (anchor + guides).
     // Turn off for the final render / export.
     show: true,
     radius: 44,
@@ -297,81 +293,37 @@ export const formConfiguration: Record<string, any> = {
       }
     }
   },
-  trails: {
-    label: "Trails",
+  trail: {
+    label: "Trail handles (normalized 0..1)",
     component: "nested-object",
-    initialExpanded: true,
     fields: {
-      count: {
-        label: "Number of trails",
-        component: "slider",
-        min: 1,
-        max: 12,
-        step: 1
+      anchor: {
+        label: "Anchor (drop on the subject)",
+        component: "vector2d",
+        min: 0,
+        max: 1,
+        step: 0.001,
+        yDown: true
       },
-      items: {
-        label: "Trail handles (normalized 0..1)",
-        component: "item-list",
-        locked: true,
-        itemConfig: {
-          label: "Trail",
-          component: "nested-object",
-          fields: {
-            band: {
-              label: "Band (sampled cross-section)",
-              component: "nested-object",
-              fields: {
-                a: {
-                  label: "Start",
-                  component: "vector2d",
-                  min: 0,
-                  max: 1,
-                  step: 0.001,
-                  yDown: true
-                },
-                b: {
-                  label: "End",
-                  component: "vector2d",
-                  min: 0,
-                  max: 1,
-                  step: 0.001,
-                  yDown: true
-                }
-              }
-            },
-            guides: {
-              label: "Direction guides (spline mode)",
-              component: "nested-object",
-              fields: {
-                a: {
-                  label: "Guide 1",
-                  component: "vector2d",
-                  min: 0,
-                  max: 1,
-                  step: 0.001,
-                  yDown: true
-                },
-                b: {
-                  label: "Guide 2",
-                  component: "vector2d",
-                  min: 0,
-                  max: 1,
-                  step: 0.001,
-                  yDown: true
-                }
-              }
-            },
-            flip: {
-              label: "Flip side (angles mode)",
-              component: "checkbox"
-            },
-            phase: {
-              label: "Wave phase offset",
-              component: "slider",
-              min: 0,
-              max: 1,
-              step: 0.01
-            }
+      guides: {
+        label: "Direction guides (spline mode)",
+        component: "nested-object",
+        fields: {
+          a: {
+            label: "Guide 1",
+            component: "vector2d",
+            min: 0,
+            max: 1,
+            step: 0.001,
+            yDown: true
+          },
+          b: {
+            label: "Guide 2",
+            component: "vector2d",
+            min: 0,
+            max: 1,
+            step: 0.001,
+            yDown: true
           }
         }
       }
@@ -397,10 +349,10 @@ export const formConfiguration: Record<string, any> = {
         ]
       },
       startAngle: {
-        label: "Start angle (°, from the band perpendicular)",
+        label: "Launch angle (°, 0 = up)",
         component: "slider",
-        min: -90,
-        max: 90,
+        min: -180,
+        max: 180,
         step: 1
       },
       bend: {
@@ -417,12 +369,12 @@ export const formConfiguration: Record<string, any> = {
       length: {
         label: "Length (× canvas diagonal)",
         component: "slider",
-        min: 0.1,
-        max: 2,
+        min: 0.05,
+        max: 1.5,
         step: 0.05
       },
       bidirectional: {
-        label: "Grow both ways",
+        label: "Echo both ways",
         component: "checkbox"
       },
       iterations: {
@@ -431,6 +383,87 @@ export const formConfiguration: Record<string, any> = {
         min: 0,
         max: 6,
         step: 1
+      }
+    }
+  },
+  echo: {
+    label: "Echo",
+    component: "nested-object",
+    initialExpanded: true,
+    fields: {
+      copies: {
+        label: "Ghost copies",
+        component: "slider",
+        min: 1,
+        max: 24,
+        step: 1
+      },
+      opacityStart: {
+        label: "Opacity at the subject",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      opacityEnd: {
+        label: "Opacity at the tail",
+        component: "slider",
+        min: 0,
+        max: 1,
+        step: 0.01
+      },
+      scaleStart: {
+        label: "Scale × at the subject",
+        component: "slider",
+        min: 0.1,
+        max: 2,
+        step: 0.05
+      },
+      scaleEnd: {
+        label: "Scale × at the tail",
+        component: "slider",
+        min: 0,
+        max: 2,
+        step: 0.05
+      },
+      rotate: {
+        label: "Rotation at the tail (°)",
+        component: "slider",
+        min: -360,
+        max: 360,
+        step: 1
+      },
+      alignToPath: {
+        label: "Rotate with the path",
+        component: "checkbox"
+      },
+      easing: {
+        label: "Falloff easing",
+        component: "easing"
+      },
+      travel: {
+        label: "Travel (cycles per loop)",
+        component: "slider",
+        min: 0,
+        max: 6,
+        step: 1
+      },
+      tint: {
+        label: "Tint",
+        component: "nested-object",
+        fields: {
+          color: {
+            label: "Color",
+            component: "color"
+          },
+          amount: {
+            label: "Amount at the tail",
+            component: "slider",
+            min: 0,
+            max: 1,
+            step: 0.01
+          }
+        }
       }
     }
   },
@@ -464,55 +497,6 @@ export const formConfiguration: Record<string, any> = {
         component: "slider",
         min: 0,
         max: 6,
-        step: 1
-      }
-    }
-  },
-  ribbon: {
-    label: "Ribbon",
-    component: "nested-object",
-    fields: {
-      resolution: {
-        label: "Stripe resolution (colour samples)",
-        component: "slider",
-        min: 4,
-        max: 512,
-        step: 1
-      },
-      smoothing: {
-        label: "Smooth stripes",
-        component: "checkbox"
-      },
-      opacity: {
-        label: "Opacity",
-        component: "slider",
-        min: 0,
-        max: 1,
-        step: 0.01
-      },
-      widthStart: {
-        label: "Width × at the band",
-        component: "slider",
-        min: 0.1,
-        max: 2,
-        step: 0.05
-      },
-      widthEnd: {
-        label: "Width × at the end",
-        component: "slider",
-        min: 0,
-        max: 2,
-        step: 0.05
-      },
-      widthEasing: {
-        label: "Taper easing",
-        component: "easing"
-      },
-      sliceStep: {
-        label: "Slice length (px)",
-        component: "slider",
-        min: 2,
-        max: 16,
         step: 1
       }
     }
