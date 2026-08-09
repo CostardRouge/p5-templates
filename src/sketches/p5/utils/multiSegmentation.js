@@ -7,8 +7,8 @@ import mediapipe, {
 // segmenter. The segmenter answers one point at a time (a single result
 // slot), so the manager runs one inference per point sequentially, caches
 // each point's raw category mask, and exposes the union of every mask as
-// the combined subject. Used by photo-segmentation-v1-mask and
-// photo-trail-effect-v1, which share the click-to-pick /
+// the combined subject. Used by photo-segmentation-v1-mask and the
+// photo-trail-effect sketches, which share the click-to-pick /
 // click-a-marker-to-unpick interaction.
 
 // An in-flight request that never lands (dropped message, worker restart)
