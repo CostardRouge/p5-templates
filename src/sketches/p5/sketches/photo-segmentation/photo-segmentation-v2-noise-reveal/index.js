@@ -8,12 +8,14 @@ import imageUtils from "@/p5/utils/imageUtils.js";
 import * as common from "@/p5/utils/common.js";
 import animation from "@/p5/utils/animation.js";
 import mediapipe, {
-  init as mediapipeInit,
-  interact
+  init as mediapipeInit
 } from "@/p5/utils/mediapipe/mediapipe.js";
 import {
   drawSegmentationMask
 } from "@/p5/utils/segmentation.js";
+import {
+  createMultiMaskSegmenter
+} from "@/p5/utils/multiSegmentation.js";
 import {
   setSketchOptions,
   subscribeSketchOptions
@@ -40,12 +42,6 @@ const state = {
   // Seed the noise generator was last configured with, to re-seed on edits.
   seededWith: null,
 
-  // Raw category mask from MediaPipe: { data, width, height } at image
-  // resolution. Kept around so edge tweaks rebuild the cut-out without a new
-  // inference.
-  rawMask: null,
-  lastResultAt: null,
-
   // Finished cut-out (photo with the feathered mask applied).
   subject: null,
   // Edge settings the cached subject was built with, so we only rebuild when
@@ -55,8 +51,9 @@ const state = {
     softness: null,
     expand: null
   },
+  // Segmenter mask-set version the cached subject was built from.
+  builtVersion: -1,
   maskDirty: false,
-  pendingSegment: false,
 
   // Where the (unscaled) photo sits on the canvas — the reference rectangle
   // used to translate a click into a point on the image.
@@ -73,6 +70,28 @@ const state = {
   binaryMaskG: null, // hard 1-bit mask straight from the model
   softMaskG: null // feathered + grown/shrunk mask actually used to cut out
 };
+
+// Shared inference plumbing (pump, retry, mask cache). The reveal shows one
+// mask at a time, so the walk keeps exactly one focus point in the set —
+// each pick replaces it. adoptLatest keeps the pre-manager racing
+// semantics: when the walk re-picks before an inference lands, the landed
+// result is still shown (attributed to the current point) instead of being
+// discarded — otherwise a fast pick cadence could outrun the segmenter and
+// never reveal anything.
+const segmenter = createMultiMaskSegmenter( {
+  adoptLatest: true
+} );
+
+// Point the segmenter at a new focus point. The previous mask is pruned
+// immediately, but the on-screen subject is kept until the new inference
+// lands (see the rebuild guard in draw), so the reveal reads exactly as
+// before: one mask replacing the other.
+function applyRoi( roi ) {
+  state.roi = roi;
+  segmenter.setPoints( [
+    roi
+  ] );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Small helpers                                                       */
@@ -290,11 +309,11 @@ function runAutoFocus( p ) {
   }
 
   state.autoPickIndex = segment;
-  state.roi = autoRoiForSegment(
+  applyRoi( autoRoiForSegment(
     p,
     segment,
     auto
-  );
+  ) );
 
   // Persist as a sketch-origin change so the 2D pad tracks the walk without
   // the subscribe handler bouncing it back through the segmenter again.
@@ -308,8 +327,6 @@ function runAutoFocus( p ) {
     },
     "p5"
   );
-
-  triggerSegmentation();
 }
 
 /* ------------------------------------------------------------------ */
@@ -384,7 +401,7 @@ function handlePointerSelect( point ) {
     )
   };
 
-  state.roi = roi;
+  applyRoi( roi );
 
   setSketchOptions(
     {
@@ -396,33 +413,11 @@ function handlePointerSelect( point ) {
     },
     "p5"
   );
-
-  triggerSegmentation();
 }
 
 /* ------------------------------------------------------------------ */
 /*  Segmentation                                                        */
 /* ------------------------------------------------------------------ */
-
-function triggerSegmentation() {
-  const photo = common.getAsset( state.imagePath );
-
-  if ( !photo?.img?.width || !mediapipe.processor.ready ) {
-    // Try again from the draw loop once the photo / processor are ready.
-    state.pendingSegment = true;
-
-    return;
-  }
-
-  const roi = state.roi ?? currentRoi();
-  const imageElement = photo.img.canvas || photo.img.elt || photo.img;
-
-  interact(
-    roi.x * photo.img.width,
-    roi.y * photo.img.height,
-    imageElement
-  );
-}
 
 function smoothstep( t ) {
   const c = clamp(
@@ -434,23 +429,26 @@ function smoothstep( t ) {
   return c * c * ( 3 - 2 * c );
 }
 
-// Build the cut-out from the latest raw mask using the current edge settings.
-// Feathering and grow/shrink are done in one pass: the binary mask is blurred,
-// then its alpha is remapped through a smoothstep whose centre shifts the edge
-// (expand) and whose width controls the softness.
+// Build the cut-out from the current pick's mask using the current edge
+// settings. Feathering and grow/shrink are done in one pass: the binary mask
+// is blurred, then its alpha is remapped through a smoothstep whose centre
+// shifts the edge (expand) and whose width controls the softness. When no
+// mask is available yet (the walk just moved and its inference is still
+// running) the previous subject is kept, so masks replace each other with no
+// blank frame in between.
 function rebuildSubject() {
   const photo = common.getAsset( state.imagePath );
-  const raw = state.rawMask;
+  const seg = options.sketch?.segmentation ?? {};
+  const inverse = seg.inverse ?? true;
+  const combined = segmenter.combined( inverse );
 
-  if ( !photo?.img?.width || !raw?.data ) {
+  if ( !photo?.img?.width || !combined ) {
     return;
   }
 
   const {
     data, width, height
-  } = raw;
-  const seg = options.sketch?.segmentation ?? {};
-  const inverse = seg.inverse ?? true;
+  } = combined;
   const softness = clamp(
     seg.edgeSoftness ?? 0,
     0,
@@ -469,7 +467,9 @@ function rebuildSubject() {
   );
 
   // White where kept, fully transparent elsewhere — p5's mask() keys off the
-  // alpha channel (destination-in), so only the alpha matters here.
+  // alpha channel (destination-in), so only the alpha matters here. The
+  // combined mask already applied `inverse` per raw mask, so it is passed as
+  // false.
   drawSegmentationMask(
     binary,
     data,
@@ -479,7 +479,7 @@ function rebuildSubject() {
       255,
       255
     ],
-    inverse
+    false
   );
 
   let mask = binary;
@@ -772,9 +772,17 @@ sketch.setup( () => {
   p.background( ...options.sketch.backgroundColor );
 
   state.imagePath = resolveImagePath( options.sketch?.photo?.image );
-  state.roi = currentRoi();
   state.autoPickIndex = -1;
   state.seededWith = null;
+  state.subject = null;
+  state.builtVersion = -1;
+  state.maskDirty = false;
+
+  segmenter.reset();
+  segmenter.setImage( state.imagePath );
+  // Segments the default focus point as soon as the photo + processor are
+  // ready (covers the auto-walk-disabled case).
+  applyRoi( currentRoi() );
 
   subscribeSketchOptions( (
     newOptions, origin
@@ -790,10 +798,8 @@ sketch.setup( () => {
 
     if ( nextImage !== state.imagePath ) {
       state.imagePath = nextImage;
-      state.rawMask = null;
       state.subject = null;
-      state.lastResultAt = null;
-      state.pendingSegment = true;
+      segmenter.setImage( nextImage );
 
       return;
     }
@@ -804,11 +810,10 @@ sketch.setup( () => {
       roi &&
       ( roi.x !== state.roi.x || roi.y !== state.roi.y )
     ) {
-      state.roi = {
+      applyRoi( {
         x: roi.x,
         y: roi.y
-      };
-      triggerSegmentation();
+      } );
     }
 
     const seg = sk.segmentation ?? {};
@@ -821,10 +826,6 @@ sketch.setup( () => {
       state.maskDirty = true;
     }
   } );
-
-  // Segment the default focus point as soon as the photo + processor are ready
-  // (covers the auto-walk-disabled case).
-  state.pendingSegment = true;
 
   // Fire-and-forget: awaiting init would block setup (and therefore the first
   // draw) on the ~4s model-load + prewarm. Instead the photo renders right away
@@ -883,31 +884,21 @@ sketch.draw( () => {
   p.frameRate( options.animation.framerate );
   ensureCanvasGraphics( p );
 
-  // Kick off a deferred segmentation once everything it needs is available.
-  if (
-    state.pendingSegment &&
-    mediapipe.processor.ready &&
-    !mediapipe.processor.busy
-  ) {
-    state.pendingSegment = false;
-    triggerSegmentation();
-  }
-
   // The noise walk clicks around the photo on its own, one pick per loop
   // segment.
   runAutoFocus( p );
 
-  // A fresh inference landed → cache it and flag a rebuild.
-  const result = mediapipe.tasks.interactive;
+  // Pump the pending inference (one at a time) and rebuild once its mask is
+  // in — until then the previous subject stays up, so the reveal never shows
+  // a blank frame between picks.
+  segmenter.update( photo );
 
-  if ( result?.result && result.updatedAt !== state.lastResultAt ) {
-    state.lastResultAt = result.updatedAt;
-    state.rawMask = result.result;
-    state.maskDirty = true;
-  }
-
-  if ( state.maskDirty && state.rawMask ) {
+  if (
+    ( state.maskDirty || state.builtVersion !== segmenter.version ) &&
+    segmenter.maskCount > 0
+  ) {
     state.maskDirty = false;
+    state.builtVersion = segmenter.version;
     rebuildSubject();
   }
 

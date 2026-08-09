@@ -13,12 +13,15 @@ export const formValues = {
     fill: false
   },
   segmentation: {
-    // Normalized (0-1) focus point fed to the interactive segmenter. Click the
-    // canvas to move it; it is also editable from the 2D pad below.
-    roi: {
-      x: 0.44326979424839197,
-      y: 0.5386447230522758
-    },
+    // Normalized (0-1) focus points fed to the interactive segmenter — one
+    // mask per point, the subject is their union. Click the photo to add a
+    // point, click a marker (the circle with the minus) to unpick its zone.
+    points: [
+      {
+        x: 0.44326979424839197,
+        y: 0.5386447230522758
+      }
+    ],
     inverse: true,
     // Feather the cut-out border so the mask blends instead of showing the hard,
     // aliased model edge. 0 = crisp, 1 = very soft.
@@ -114,14 +117,18 @@ export const formConfiguration: Record<string, any> = {
     component: "nested-object",
     initialExpanded: true,
     fields: {
-      roi: {
-        component: "vector2d",
-        label: "Focus point",
-        allowNegative: false,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        yDown: true
+      points: {
+        label: "Focus points (click photo to add, click a marker to remove)",
+        component: "item-list",
+        itemConfig: {
+          component: "vector2d",
+          label: "Focus point",
+          allowNegative: false,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          yDown: true
+        }
       },
       inverse: {
         label: "Inverse mask",
@@ -242,11 +249,11 @@ export const formConfiguration: Record<string, any> = {
     }
   },
   marker: {
-    label: "Focus marker",
+    label: "Focus markers",
     component: "nested-object",
     fields: {
       show: {
-        label: "Show marker",
+        label: "Show markers (click one to unpick its zone)",
         component: "checkbox"
       },
       color: {
