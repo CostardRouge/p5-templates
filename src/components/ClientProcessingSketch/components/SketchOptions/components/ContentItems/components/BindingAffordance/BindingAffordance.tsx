@@ -26,6 +26,14 @@ import {
 import {
   interactionBindingsEnabled
 } from "@/lib/interactionBindings";
+// bindings.js is already a small, pure module statically imported by the
+// engine runtime for every sketch (see options.js) — importing it here too is
+// no added weight. defaults.js (the ~1000-line panel/values data) is dynamic
+// -imported lazily inside enableSourceInputs below, so an editor session that
+// never binds a live input source never pulls it into the client bundle.
+import {
+  needsInteractionBlock
+} from "@/p5/utils/interaction/bindings.js";
 import {
   type Binding,
   type BindingKind,
@@ -98,7 +106,7 @@ export default function BindingAffordance( {
   config
 }: Props ) {
   const {
-    setValue, register
+    setValue, register, getValues
   } = useFormContext();
 
   const scope = getSketchScope( fieldPath );
@@ -162,6 +170,28 @@ export default function BindingAffordance( {
   // control.
   const bindingPath = `${ bindingsPath }.${ index }`;
 
+  // Strip the scope's `interaction` block once no binding needs it any more —
+  // the inverse of enableSourceInputs' on-demand seed below. Checked after
+  // every bindings-array write (add / remove / reset) and every source-
+  // category switch, so a sketch never carries the block, or shows its
+  // settings panel (gated the same way in GenericObjectForm), once its last
+  // interactive binding is gone.
+  const pruneInteractionIfUnused = ( nextList: Binding[] ) => {
+    if ( needsInteractionBlock( nextList ) ) {
+      return;
+    }
+
+    if ( getValues( `${ scope }.interaction` ) !== undefined ) {
+      setValue(
+        `${ scope }.interaction`,
+        undefined,
+        {
+          shouldDirty: true
+        }
+      );
+    }
+  };
+
   const writeBindings = ( next: Binding[] ) => {
     setValue(
       bindingsPath,
@@ -170,6 +200,7 @@ export default function BindingAffordance( {
         shouldDirty: true
       }
     );
+    pruneInteractionIfUnused( next );
   };
 
   const setField = (
@@ -186,10 +217,26 @@ export default function BindingAffordance( {
 
   // Picking an interaction input source should make it actually produce a
   // channel — flip the matching `interaction.*` enable flags on so the camera /
-  // mic / sensor for that source boots immediately. `sketch.interaction` exists
-  // on every sketch (seeded in getSketchMeta), so these writes land and the
-  // Interaction panel's own toggles reflect them.
-  const enableSourceInputs = ( source: string ) => {
+  // mic / sensor for that source boots immediately. The scope's `interaction`
+  // block only exists once something needs it (seeded server-side for sketches
+  // that already ship input-sourced bindings, pruned client-side otherwise —
+  // see getSketchMeta / pruneInteractionIfUnused), so the first pick seeds an
+  // inert clone of the shared defaults before flipping its flags on.
+  const enableSourceInputs = async( source: string ) => {
+    if ( getValues( `${ scope }.interaction` ) === undefined ) {
+      const {
+        inertInteractionFormValues
+      } = await import( "@/p5/utils/interaction/defaults.js" );
+
+      setValue(
+        `${ scope }.interaction`,
+        inertInteractionFormValues(),
+        {
+          shouldDirty: true
+        }
+      );
+    }
+
     for ( const path of interactionEnablePaths( source ) ) {
       setValue(
         `${ scope }.interaction.${ path }`,
@@ -201,18 +248,24 @@ export default function BindingAffordance( {
     }
   };
 
-  // Append a new layer (binding) for this parameter and select it.
+  // Append a new layer (binding) for this parameter and select it. The default
+  // source is the baseline input (mouse) — an interactive binding as soon as
+  // it exists, so it seeds/enables the interaction block like any explicit
+  // source pick.
   const addLayer = () => {
+    const first = sourceOptions[ 0 ];
+
     writeBindings( [
       ...list,
       makeDefaultBinding(
         target,
         kind,
-        sourceOptions[ 0 ],
+        first,
         config
       )
     ] );
     setSelLayer( layers.length );
+    void enableSourceInputs( first.source );
   };
 
   // Remove the selected layer, then select a remaining one.
@@ -382,7 +435,20 @@ export default function BindingAffordance( {
         "project",
         first.project ?? null
       );
-      enableSourceInputs( first.source );
+      void enableSourceInputs( first.source );
+    }
+
+    // Switching THIS binding away from an input source may have removed the
+    // scope's last reason to carry the interaction block — check with the
+    // projected next source (the write above hasn't round-tripped through
+    // form state yet within this same tick).
+    if ( next !== "input" ) {
+      pruneInteractionIfUnused( list.map( (
+        b, i
+      ) => ( i === index ? {
+        ...b,
+        source: next
+      } : b ) ) );
     }
   };
 
@@ -590,7 +656,7 @@ export default function BindingAffordance( {
                         "project",
                         project ?? null
                       );
-                      enableSourceInputs( source );
+                      void enableSourceInputs( source );
                     } }
                     aria-label="Source"
                     className="absolute inset-0 h-full w-full cursor-pointer opacity-0"

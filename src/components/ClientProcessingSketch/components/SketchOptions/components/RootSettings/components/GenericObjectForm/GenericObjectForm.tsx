@@ -1,7 +1,13 @@
 import dynamic from "next/dynamic";
 import {
+  useWatch
+} from "react-hook-form";
+import {
   FieldConfig
 } from "@/components/ClientProcessingSketch/components/SketchOptions/components/ContentItems/constants/field-config";
+import {
+  needsInteractionBlock
+} from "@/p5/utils/interaction/bindings.js";
 
 // FieldRenderer is the heavy hub of the option form: it statically pulls in all
 // nine Controlled* inputs and recurses through ItemListRenderer (a large
@@ -20,6 +26,38 @@ type GenericObjectFormProps = {
   config: Record<string, FieldConfig>;
 };
 
+// The shared Interaction block's field descriptor is present in `config`
+// unconditionally (it's a static, cheap schema — see getSketchMeta), but the
+// block itself — and this panel — should only show up once a live binding
+// actually reads from it. Otherwise every sketch with the plugin on would
+// show a giant "Interaction" settings group despite having zero bindings.
+// Watching `bindings` (rather than `interaction` itself) means the panel
+// disappears the instant the last qualifying binding is removed, matching
+// BindingAffordance/InteractivePanel's pruning of the value block.
+function InteractionField( {
+  fieldBasePath, fieldName, config
+}: {
+  fieldBasePath: string;
+  fieldName: string;
+  config: FieldConfig;
+} ) {
+  const bindings = useWatch( {
+    name: `${ fieldBasePath }.bindings`
+  } );
+
+  if ( !needsInteractionBlock( bindings ) ) {
+    return null;
+  }
+
+  return (
+    <FieldRenderer
+      fieldBasePath={ fieldBasePath }
+      fieldName={ fieldName }
+      config={ config }
+    />
+  );
+}
+
 export default function GenericObjectForm( {
   basePath = "",
   config
@@ -34,6 +72,17 @@ export default function GenericObjectForm( {
         if ( !fieldConfig ) {
           console.warn( `No form config found for field "${ fieldName }".` );
           return null;
+        }
+
+        if ( fieldName === "interaction" ) {
+          return (
+            <InteractionField
+              key={ fieldName }
+              fieldBasePath={ basePath }
+              fieldName={ fieldName }
+              config={ fieldConfig }
+            />
+          );
         }
 
         return (

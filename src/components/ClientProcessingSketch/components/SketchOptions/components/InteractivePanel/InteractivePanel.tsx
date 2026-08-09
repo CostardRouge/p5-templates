@@ -20,6 +20,9 @@ import {
 import ControlledSliderInput
   from "../ContentItems/components/ControlledSliderInput/ControlledSliderInput";
 import {
+  needsInteractionBlock
+} from "@/p5/utils/interaction/bindings.js";
+import {
   type Binding,
   bindingSourceLabel,
   humanizeTarget
@@ -47,7 +50,7 @@ export default function InteractivePanel( {
   basePath
 }: Props ) {
   const {
-    setValue
+    setValue, getValues
   } = useFormContext();
   const [
     expanded,
@@ -123,15 +126,32 @@ export default function InteractivePanel( {
   };
 
   const removeAt = ( index: number ) => {
+    const next = list.filter( (
+      _, j
+    ) => j !== index );
+
     setValue(
       bindingsPath,
-      list.filter( (
-        _, j
-      ) => j !== index ),
+      next,
       {
         shouldDirty: true
       }
     );
+
+    // Mirrors BindingAffordance.pruneInteractionIfUnused: the mixer can also
+    // remove the scope's last binding that needed the interaction block.
+    if (
+      !needsInteractionBlock( next ) &&
+      getValues( `${ basePath }.interaction` ) !== undefined
+    ) {
+      setValue(
+        `${ basePath }.interaction`,
+        undefined,
+        {
+          shouldDirty: true
+        }
+      );
+    }
   };
 
   const clearSolos = () => {

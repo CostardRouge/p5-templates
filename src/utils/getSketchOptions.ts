@@ -73,46 +73,48 @@ export async function getSketchMeta(
       return loaded;
     }
 
-    const needValues = !!loaded.formValues && !loaded.formValues.interaction;
     const needConfig = !!loaded.formConfiguration && !loaded.formConfiguration.interaction;
+
+    // Only seed the actual VALUES when this sketch already ships bindings
+    // that need them (e.g. a demo sketch with default `bindings` pointing at
+    // a live input) — most sketches have none at load time, and get the block
+    // seeded lazily client-side the first time a binding picks a live input
+    // source (see BindingAffordance.enableSourceInputs). The schema
+    // (formConfiguration) is still added unconditionally: it's a static, cheap
+    // field descriptor with no runtime cost, and the client needs it available
+    // to render the panel once a binding actually requires it. `bindings.js` is
+    // a small pure module (no MediaPipe/DOM), but still dynamic-imported here
+    // — like defaults.js below — so a plugin-off build never pulls either in.
+    const {
+      needsInteractionBlock
+    } = await import( "@/p5/utils/interaction/bindings.js" );
+    const needValues = !!loaded.formValues &&
+      !loaded.formValues.interaction &&
+      needsInteractionBlock( loaded.formValues.bindings );
 
     if ( !needValues && !needConfig ) {
       return loaded;
     }
 
-    // Surface the shared Interaction block on every sketch that doesn't declare
-    // its own: seed `sketch.interaction` (so the channel sampler can read
-    // hands / audio / orbit / … live) AND add the classic Interaction settings
-    // panel to the form. Loaded lazily so a plugin-off build never pulls it in.
-    // Each sketch gets its own clone of the values so runtime edits never leak
-    // across sketches; the config is static and shared. Sketches that declare
-    // their own `interaction` (e.g. interaction-test) are left untouched.
+    // Loaded lazily so a plugin-off build never pulls the panel/defaults
+    // module in. Each sketch gets its own clone of the values so runtime
+    // edits never leak across sketches; the config is static and shared.
+    // Sketches that declare their own `interaction` (e.g. interaction-test)
+    // are left untouched.
     //
     // `loaded` is the dynamic-import module namespace — its exports are
     // read-only getters, so we build a fresh meta object rather than assigning
     // onto it (assigning throws, which the catch below would turn into a sketch
     // with no form at all).
     const {
-      interactionFormValues, interactionFormConfiguration
+      inertInteractionFormValues, interactionFormConfiguration
     } = await import( "@/p5/utils/interaction/defaults.js" );
-
-    // The canonical defaults ship "live" (enabled + orbit on) for the sketches
-    // that import them deliberately, but a seeded sketch has no bindings yet —
-    // an active block would boot the interaction handler and run the orbit
-    // virtual pointer on every non-interactive sketch. Seed it INERT instead;
-    // picking an input source on a binding flips `enabled` (and the source's
-    // own flag) back on — see interactionEnablePaths / enableSourceInputs in
-    // the BindingAffordance.
-    const seededInteraction = structuredClone( interactionFormValues );
-
-    seededInteraction.enabled = false;
-    seededInteraction.orbit.enabled = false;
 
     return {
       formValues: needValues
         ? {
           ...loaded.formValues,
-          interaction: seededInteraction
+          interaction: inertInteractionFormValues()
         }
         : loaded.formValues,
       formConfiguration: needConfig
